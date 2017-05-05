@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <k_api.h>
+#include <test_fw.h>
+
+#define TASK_TEST_STACK_SIZE 1024
+#define LOOP_CNT 1
+
+ktask_t *task_0_test;
+static uint32_t cnt;
+
+void task_sleep_entry(void *arg)
+{
+    while (1) {
+        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+        cnt++;
+
+        if (cnt == LOOP_CNT) {
+            test_case_success++;
+            cnt = 0u;
+            PRINT_RESULT("task_sleep", PASS);
+            next_test_case_notify();
+            yunos_task_dyn_del(g_active_task);
+        }
+    }
+}
+
+void task_sleep_test(void)
+{
+    if (yunos_task_dyn_create(&task_0_test, "task_sleep_test", 0, 10,
+                           0, TASK_TEST_STACK_SIZE,
+                           task_sleep_entry, 1) != YUNOS_SUCCESS) {
+        printf("task_sleep_test fail \n");
+    }
+}
+

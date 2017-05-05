@@ -1,0 +1,39 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef BUF_QUEUE_TEST_H
+#define BUF_QUEUE_TEST_H
+
+#define TASK_TEST_STACK_SIZE 256
+
+#define BUFQUEUE_VAL_CHK(value) do {if ((int)(value) == 0) \
+        { \
+            test_case_critical_enter(); \
+            test_case_check_err++;  \
+            test_case_critical_exit(); \
+            printf("buf queue test is [FAIL %d],file %s, func %s, line %d\n", \
+                   (int)++test_case_check_err, __FILE__, __FUNCTION__, __LINE__); \
+        }  \
+    } while (0)
+
+kstat_t task_buf_queue_send_test(void);
+kstat_t task_buf_queue_recv_test(void);
+kstat_t task_buf_queue_del_test(void);
+kstat_t task_buf_queue_flush_test(void);
+kstat_t task_buf_queue_info_get_test(void);
+kstat_t task_buf_queue_dyn_create_test(void);
+
+#endif /* BUF_QUEUE_TEST_H */

@@ -1,0 +1,1993 @@
+Archive member included to satisfy reference by file (symbol)
+
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+                              /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o (main)
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (csp_os_init)
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (parse_options)
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o) (hw_start_hal)
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o) (linuxhost_sensor_module)
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o) (linux_aes_get_module)
+out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o) (yunos_init)
+out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (tick_list_init)
+out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (dyn_mem_proc_task_start)
+out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (idle_task)
+out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (g_dyn_queue_msg)
+out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (yunos_queue_create)
+out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o) (yunos_sem_count_get)
+out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (yunos_task_create)
+out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (k_err_proc)
+out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o) (ringbuf_push)
+out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (kobj_list_init)
+out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o) (yunos_task_sem_create)
+out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (timer_init)
+out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o) (yunos_mutex_create)
+out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o) (pend_task_wakeup)
+out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (runqueue_init)
+out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (yloop_init)
+out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (local_event_service_init)
+out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (vfs_init)
+out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (vfs_device_init)
+out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+                              out/linuxapp@linuxhost/libraries/vfs.a(vfs.o) (inode_init)
+out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+                              out/linuxapp@linuxhost/libraries/vfs.a(device.o) (yunos_register_driver)
+out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+                              out/linuxapp@linuxhost/libraries/vfs.a(vfs.o) (csp_mutex_new)
+out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+                              out/linuxapp@linuxhost/libraries/yloop.a(yloop.o) (yos_task_key_create)
+out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o) (yoc_hal_init)
+out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o) (hal_aes_register)
+out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+                              out/linuxapp@linuxhost/libraries/wrapper.a(csp.o) (hal_flash_conf_read)
+out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+                              out/linuxapp@linuxhost/libraries/hal.a(hal.o) (hal_ur_mesh_init)
+out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o) (hal_sensor_register_module)
+out/linuxapp@linuxhost/libraries/hal.a(time.o)
+                              out/linuxapp@linuxhost/libraries/yloop.a(yloop.o) (hal_time_gettimeofday)
+out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o) (hal_wifi_register_module)
+out/linuxapp@linuxhost/libraries/log.a(log.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (yos_set_log_level)
+out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (ysh_init)
+out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+                              out/linuxapp@linuxhost/libraries/ysh.a(ysh.o) (ysh_history_cmd_list_init)
+out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+                              out/linuxapp@linuxhost/libraries/ysh.a(ysh.o) (ysh_register)
+out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+                              out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o) (ysh_reg_cmd_help)
+out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o) (cpu_intrpt_save)
+out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_longjmp_32.o)
+                              out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o) (rhino_setjmp)
+out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o) (application_start)
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o) (soc_hr_hw_cnt_get)
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o) (yunos_idle_hook)
+out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+                              out/linuxapp@linuxhost/libraries/ysh.a(ysh.o) (soc_term_init)
+out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o) (yunos_mm_bf_alloc)
+out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+                              out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o) (yunos_mm_region_init)
+out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+                              out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o) (yunos_tick_proc)
+/usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_udivdi3.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_time.o) (__udivdi3)
+/usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_umoddi3.o)
+                              out/linuxapp@linuxhost/libraries/rhino.a(k_time.o) (__umoddi3)
+/usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+                              /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o (__libc_csu_init)
+
+As-needed library included to satisfy reference by file (symbol)
+
+libpthread.so.0               out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o) (write@@GLIBC_2.0)
+libcrypto.so.1.0.0            out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o) (AES_set_decrypt_key@@OPENSSL_1.0.0)
+
+Allocating common symbols
+Common symbol       size              file
+
+g_sched_lock        0x1               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_ysh_task_stack    0x800             out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+g_cur_intrpt_disable_max_time
+                    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_sys_measure_waste
+                    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_timer_count       0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_ready_queue       0x104             out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_ysh_cmd_list      0x4               out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+g_timer_ctrl        0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_history_cmd       0x4               out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+g_dyn_mem_proc_task
+                    0x7c              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_timer_mutex       0x30              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_timer_head        0x8               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_active_task       0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_idle_task_spawned
+                    0x1               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_dyn_mem_proc_stack
+                    0x400             out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+sys_pool_start      0x19000           out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+g_preferred_ready_task
+                    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_history_cmd_head  0x10              out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+g_dyn_queue_msg     0x78              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_idle_task         0x7c              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_kobj_list         0x40              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_tick_task         0x7c              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_timer_task        0x7c              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_tick_head         0x40              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_dyn_queue         0x4c              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_intrpt_disable_time_start
+                    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_ysh_only_term     0x864             out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+g_ysh_task          0x7c              out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+g_sys_time_tick     0x8               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_cur_sched_disable_max_time
+                    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_idle_count        0x8               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_sched_disable_time_start
+                    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_tick_task_stack   0x400             out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_sched_disable_max_time
+                    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_intrpt_nested_level
+                    0x1               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_tick_count        0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_intrpt_disable_times
+                    0x2               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_workqueue_mutex   0x30              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_workqueue_head    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_timer_sem         0x2c              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_tick_sem          0x2c              out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_idle_task_stack   0x190             out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_vfs_mutex         0x4               out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+g_intrpt_disable_max_time
+                    0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_sys_stat          0x4               out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+g_timer_task_stack  0x320             out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+
+Discarded input sections
+
+ .note.GNU-stack
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ .gnu_debuglink
+                0x0000000000000000        0xc /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+ .gnu_debuglink
+                0x0000000000000000        0xc /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/hal.a(time.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_udivdi3.o)
+ .note.GNU-stack
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_umoddi3.o)
+ .group         0x0000000000000000        0x8 /usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+ .text.__x86.get_pc_thunk.bx
+                0x0000000000000000        0x4 /usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+ .note.GNU-stack
+                0x0000000000000000        0x0 /usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+ .note.GNU-stack
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crtn.o
+ .gnu_debuglink
+                0x0000000000000000        0xc /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crtn.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+START GROUP
+LOAD out/linuxapp@linuxhost/libraries/linuxapp.a
+LOAD out/linuxapp@linuxhost/libraries/board_linuxhost.a
+LOAD out/linuxapp@linuxhost/libraries/rhino.a
+LOAD out/linuxapp@linuxhost/libraries/yloop.a
+LOAD out/linuxapp@linuxhost/libraries/vfs.a
+LOAD out/linuxapp@linuxhost/libraries/wrapper.a
+LOAD out/linuxapp@linuxhost/libraries/hal.a
+LOAD out/linuxapp@linuxhost/libraries/log.a
+LOAD out/linuxapp@linuxhost/libraries/ysh.a
+LOAD out/linuxapp@linuxhost/libraries/yunit.a
+LOAD out/linuxapp@linuxhost/libraries/vcall.a
+LOAD out/linuxapp@linuxhost/libraries/linuximpl.a
+LOAD out/linuxapp@linuxhost/libraries/test.a
+END GROUP
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/libpthread.so
+START GROUP
+LOAD /lib/i386-linux-gnu/libpthread.so.0
+LOAD /usr/lib/i386-linux-gnu/libpthread_nonshared.a
+END GROUP
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/libm.so
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/libcrypto.so
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc_s.so
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/libc.so
+START GROUP
+LOAD /lib/i386-linux-gnu/libc.so.6
+LOAD /usr/lib/i386-linux-gnu/libc_nonshared.a
+LOAD /lib/i386-linux-gnu/ld-linux.so.2
+END GROUP
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc_s.so
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+LOAD /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crtn.o
+                0x0000000008048000                PROVIDE (__executable_start, 0x8048000)
+                0x0000000008048154                . = (0x8048000 + SIZEOF_HEADERS)
+
+.interp         0x0000000008048154       0x13
+ *(.interp)
+ .interp        0x0000000008048154       0x13 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.note.ABI-tag   0x0000000008048168       0x20
+ .note.ABI-tag  0x0000000008048168       0x20 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.note.gnu.build-id
+                0x0000000008048188       0x24
+ *(.note.gnu.build-id)
+ .note.gnu.build-id
+                0x0000000008048188       0x24 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.hash
+ *(.hash)
+
+.gnu.hash       0x00000000080481ac       0x24
+ *(.gnu.hash)
+ .gnu.hash      0x00000000080481ac       0x24 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.dynsym         0x00000000080481d0      0x3f0
+ *(.dynsym)
+ .dynsym        0x00000000080481d0      0x3f0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.dynstr         0x00000000080485c0      0x329
+ *(.dynstr)
+ .dynstr        0x00000000080485c0      0x329 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.gnu.version    0x00000000080488ea       0x7e
+ *(.gnu.version)
+ .gnu.version   0x00000000080488ea       0x7e /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.gnu.version_d  0x0000000008048968        0x0
+ *(.gnu.version_d)
+ .gnu.version_d
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.gnu.version_r  0x0000000008048968       0xc0
+ *(.gnu.version_r)
+ .gnu.version_r
+                0x0000000008048968       0xc0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.rel.dyn        0x0000000008048a28       0x10
+ *(.rel.init)
+ *(.rel.text .rel.text.* .rel.gnu.linkonce.t.*)
+ .rel.text      0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ .rel.text.startup
+                0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ *(.rel.fini)
+ *(.rel.rodata .rel.rodata.* .rel.gnu.linkonce.r.*)
+ *(.rel.data.rel.ro .rel.data.rel.ro.* .rel.gnu.linkonce.d.rel.ro.*)
+ *(.rel.data .rel.data.* .rel.gnu.linkonce.d.*)
+ .rel.data      0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ *(.rel.tdata .rel.tdata.* .rel.gnu.linkonce.td.*)
+ *(.rel.tbss .rel.tbss.* .rel.gnu.linkonce.tb.*)
+ *(.rel.ctors)
+ *(.rel.dtors)
+ *(.rel.got)
+ .rel.got       0x0000000008048a28        0x8 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ *(.rel.bss .rel.bss.* .rel.gnu.linkonce.b.*)
+ .rel.bss       0x0000000008048a30        0x8 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ *(.rel.ifunc)
+
+.rel.plt        0x0000000008048a38      0x1c8
+ *(.rel.plt)
+ .rel.plt       0x0000000008048a38      0x1c8 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x0000000008048c00                PROVIDE (__rel_iplt_start, .)
+ *(.rel.iplt)
+ .rel.iplt      0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x0000000008048c00                PROVIDE (__rel_iplt_end, .)
+
+.init           0x0000000008048c00       0x23
+ *(SORT(.init))
+ .init          0x0000000008048c00       0x1e /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+                0x0000000008048c00                _init
+ .init          0x0000000008048c1e        0x5 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crtn.o
+
+.plt            0x0000000008048c30      0x3a0
+ *(.plt)
+ .plt           0x0000000008048c30      0x3a0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x0000000008048c40                __errno_location@@GLIBC_2.0
+                0x0000000008048c50                sigemptyset@@GLIBC_2.0
+                0x0000000008048c60                AES_set_encrypt_key@@OPENSSL_1.0.0
+                0x0000000008048c70                open@@GLIBC_2.0
+                0x0000000008048c80                creat@@GLIBC_2.0
+                0x0000000008048c90                pwrite@@GLIBC_2.2
+                0x0000000008048ca0                strerror@@GLIBC_2.0
+                0x0000000008048cb0                getchar@@GLIBC_2.0
+                0x0000000008048cc0                __strncpy_chk@@GLIBC_2.3.4
+                0x0000000008048cd0                __vprintf_chk@@GLIBC_2.3.4
+                0x0000000008048ce0                signal@@GLIBC_2.0
+                0x0000000008048d00                realloc@@GLIBC_2.0
+                0x0000000008048d10                strsep@@GLIBC_2.0
+                0x0000000008048d20                __printf_chk@@GLIBC_2.3.4
+                0x0000000008048d30                calloc@@GLIBC_2.0
+                0x0000000008048d40                strncpy@@GLIBC_2.0
+                0x0000000008048d50                AES_cbc_encrypt@@OPENSSL_1.0.0
+                0x0000000008048d60                write@@GLIBC_2.0
+                0x0000000008048d70                pthread_kill@@GLIBC_2.0
+                0x0000000008048d80                setitimer@@GLIBC_2.0
+                0x0000000008048d90                __libc_start_main@@GLIBC_2.0
+                0x0000000008048da0                __memcpy_chk@@GLIBC_2.3.4
+                0x0000000008048db0                eventfd@@GLIBC_2.7
+                0x0000000008048dc0                __assert_fail@@GLIBC_2.0
+                0x0000000008048dd0                sigaltstack@@GLIBC_2.0
+                0x0000000008048de0                perror@@GLIBC_2.0
+                0x0000000008048df0                usleep@@GLIBC_2.0
+                0x0000000008048e00                gettimeofday@@GLIBC_2.0
+                0x0000000008048e10                free@@GLIBC_2.0
+                0x0000000008048e20                backtrace_symbols@@GLIBC_2.1
+                0x0000000008048e30                sigaction@@GLIBC_2.0
+                0x0000000008048e40                fflush@@GLIBC_2.0
+                0x0000000008048e50                pread@@GLIBC_2.2
+                0x0000000008048e60                getrlimit@@GLIBC_2.2
+                0x0000000008048e70                pthread_mutex_unlock@@GLIBC_2.0
+                0x0000000008048e80                umask@@GLIBC_2.0
+                0x0000000008048e90                strlen@@GLIBC_2.0
+                0x0000000008048ea0                AES_set_decrypt_key@@OPENSSL_1.0.0
+                0x0000000008048eb0                raise@@GLIBC_2.0
+                0x0000000008048ec0                select@@GLIBC_2.0
+                0x0000000008048ed0                close@@GLIBC_2.0
+                0x0000000008048ee0                malloc@@GLIBC_2.0
+                0x0000000008048ef0                pthread_mutex_lock@@GLIBC_2.0
+                0x0000000008048f00                sigprocmask@@GLIBC_2.0
+                0x0000000008048f10                __stack_chk_fail@@GLIBC_2.4
+                0x0000000008048f20                setrlimit@@GLIBC_2.2
+                0x0000000008048f30                strtok@@GLIBC_2.0
+                0x0000000008048f40                poll@@GLIBC_2.0
+                0x0000000008048f50                sigaddset@@GLIBC_2.0
+                0x0000000008048f60                backtrace@@GLIBC_2.1
+                0x0000000008048f70                memmove@@GLIBC_2.0
+                0x0000000008048f80                __snprintf_chk@@GLIBC_2.3.4
+                0x0000000008048f90                snprintf@@GLIBC_2.0
+                0x0000000008048fa0                strcmp@@GLIBC_2.0
+                0x0000000008048fb0                exit@@GLIBC_2.0
+                0x0000000008048fc0                pthread_self@@GLIBC_2.0
+ *(.iplt)
+ .iplt          0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.text           0x0000000008048fd0     0x8d12
+ *(.text.unlikely .text.*_unlikely .text.unlikely.*)
+ *(.text.exit .text.exit.*)
+ *(.text.startup .text.startup.*)
+ .text.startup  0x0000000008048fd0      0x13c out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+                0x0000000008048fd0                main
+ *(.text.hot .text.hot.*)
+ *(.text .stub .text.* .gnu.linkonce.t.*)
+ .text          0x000000000804910c       0x22 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x000000000804910c                _start
+ .text          0x000000000804912e        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+ *fill*         0x000000000804912e        0x2 
+ .gnu.linkonce.t.__x86.get_pc_thunk.bx
+                0x0000000008049130        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+                0x0000000008049130                __x86.get_pc_thunk.bx
+ *fill*         0x0000000008049134        0xc 
+ .text          0x0000000008049140       0xbd /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+ .text          0x00000000080491fd       0x44 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+                0x000000000804922c                csp_get_args
+ .text          0x0000000008049241      0x159 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+                0x000000000804926b                csp_poll
+                0x0000000008049336                hal_arch_time_msleep
+                0x000000000804934d                hal_arch_get_time_counter
+                0x0000000008049354                csp_os_init
+                0x0000000008049365                csp_os_start
+                0x000000000804936e                csp_printf
+                0x0000000008049393                yoc_get_free_heap_size
+ .text          0x000000000804939a      0x268 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+                0x00000000080493cf                parse_options
+ .text          0x0000000008049602      0x403 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+                0x00000000080499c0                hw_start_hal
+ .text          0x0000000008049a05       0xbc out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .text          0x0000000008049ac1      0x187 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+                0x0000000008049ac1                linux_aes_init_v2
+                0x0000000008049ac8                linux_aes_destroy_v2
+                0x0000000008049acf                linux_aes_cbc_encrypt_v2
+                0x0000000008049b86                linux_aes_cbc_decrypt_v2
+                0x0000000008049c3e                linux_aes_get_module
+ .text          0x0000000008049c48      0x239 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+                0x0000000008049cce                yunos_init
+                0x0000000008049cd7                yunos_start
+                0x0000000008049d1d                kernel_start
+                0x0000000008049d74                yunos_intrpt_enter
+                0x0000000008049de5                yunos_intrpt_exit
+                0x0000000008049e6d                yunos_global_space_get
+                0x0000000008049e77                yunos_version_get
+ .text          0x0000000008049e81      0x281 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+                0x0000000008049e81                tick_list_init
+                0x0000000008049e9a                tick_list_insert
+                0x0000000008049ef9                tick_list_rm
+                0x0000000008049f1c                tick_list_update
+                0x000000000804a0b8                tick_task_start
+ .text          0x000000000804a102       0x67 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+                0x000000000804a102                dyn_mem_proc_task
+                0x000000000804a13e                dyn_mem_proc_task_start
+ .text          0x000000000804a169       0x46 out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+                0x000000000804a169                idle_task
+ .text          0x000000000804a1af        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+ .text          0x000000000804a1af      0x8de out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+                0x000000000804a317                yunos_queue_create
+                0x000000000804a3bc                yunos_queue_del
+                0x000000000804a4b5                yunos_queue_dyn_create
+                0x000000000804a5b1                yunos_queue_dyn_del
+                0x000000000804a6c0                yunos_queue_front_send
+                0x000000000804a6db                yunos_queue_back_send
+                0x000000000804a6f6                yunos_queue_all_send
+                0x000000000804a710                yunos_queue_recv
+                0x000000000804a8d9                yunos_queue_is_full
+                0x000000000804a961                yunos_queue_flush
+                0x000000000804a9ff                yunos_queue_info_get
+ .text          0x000000000804aa8d      0x6a1 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+                0x000000000804ab9f                yunos_sem_create
+                0x000000000804ac11                yunos_sem_del
+                0x000000000804acf8                yunos_sem_dyn_create
+                0x000000000804ada5                yunos_sem_dyn_del
+                0x000000000804ae9b                yunos_sem_give
+                0x000000000804aeb4                yunos_sem_give_all
+                0x000000000804aed0                yunos_sem_take
+                0x000000000804b038                yunos_sem_count_set
+                0x000000000804b10d                yunos_sem_count_get
+ .text          0x000000000804b12e      0xf94 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+                0x000000000804b356                yunos_task_create
+                0x000000000804b3f6                yunos_task_dyn_create
+                0x000000000804b4de                yunos_task_sleep
+                0x000000000804b5db                yunos_task_yield
+                0x000000000804b636                task_suspend
+                0x000000000804b749                yunos_task_suspend
+                0x000000000804b76b                task_resume
+                0x000000000804b840                yunos_task_resume
+                0x000000000804b857                yunos_task_stack_min_free
+                0x000000000804b890                yunos_task_stack_cur_free
+                0x000000000804b96e                task_pri_change
+                0x000000000804ba6b                yunos_task_pri_change
+                0x000000000804bb53                yunos_task_del
+                0x000000000804bcce                yunos_task_dyn_del
+                0x000000000804beb6                yunos_task_time_slice_set
+                0x000000000804bf2b                yunos_sched_policy_set
+                0x000000000804bf9c                yunos_sched_policy_get
+                0x000000000804c00a                yunos_task_info_set
+                0x000000000804c065                yunos_task_info_get
+                0x000000000804c096                yunos_task_deathbed
+ .text          0x000000000804c0c2       0x11 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+                0x000000000804c0c2                k_err_proc
+ .text          0x000000000804c0d3      0x639 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+                0x000000000804c139                ringbuf_is_full
+                0x000000000804c15b                ringbuf_push
+                0x000000000804c271                ringbuf_head_push
+                0x000000000804c39d                ringbuf_is_empty
+                0x000000000804c3b0                ringbuf_pop
+                0x000000000804c511                ringbuf_reset
+                0x000000000804c52b                ringbuf_init
+                0x000000000804c56e                yunos_ringbuf_reset
+                0x000000000804c585                yunos_ringbuf_init
+                0x000000000804c60b                yunos_ringbuf_push
+                0x000000000804c65a                yunos_ringbuf_head_push
+                0x000000000804c6a9                yunos_ringbuf_pop
+                0x000000000804c6e4                yunos_ringbuf_is_empty
+                0x000000000804c6f8                yunos_ringbuf_is_full
+ .text          0x000000000804c70c      0x124 out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+                0x000000000804c70c                kobj_list_init
+                0x000000000804c7b1                intrpt_disable_measure_start
+                0x000000000804c7d4                intrpt_disable_measure_stop
+                0x000000000804c80a                yunos_overhead_measure
+ .text          0x000000000804c830       0xc9 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+                0x000000000804c830                yunos_task_sem_create
+                0x000000000804c86d                yunos_task_sem_del
+                0x000000000804c88a                yunos_task_sem_give
+                0x000000000804c8a7                yunos_task_sem_take
+                0x000000000804c8bf                yunos_task_sem_count_set
+                0x000000000804c8dc                yunos_task_sem_count_get
+ .text          0x000000000804c8f9      0x55c out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+                0x000000000804c9e8                yunos_timer_del
+                0x000000000804ca5c                yunos_timer_dyn_del
+                0x000000000804cad8                yunos_timer_start
+                0x000000000804cb54                yunos_timer_dyn_create
+                0x000000000804cc2f                yunos_timer_create
+                0x000000000804cccd                yunos_timer_stop
+                0x000000000804cd47                yunos_timer_change
+                0x000000000804cdb4                timer_task_sched
+                0x000000000804cde1                timer_init
+ .text          0x000000000804ce55      0x6e9 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+                0x000000000804ce55                mutex_create
+                0x000000000804cebc                yunos_mutex_create
+                0x000000000804cece                yunos_mutex_dyn_create
+                0x000000000804cf2e                mutex_pri_limit
+                0x000000000804cf57                mutex_pri_look
+                0x000000000804cfbb                yunos_mutex_del
+                0x000000000804d0b3                yunos_mutex_dyn_del
+                0x000000000804d1b7                mutex_task_pri_reset
+                0x000000000804d1db                yunos_mutex_lock
+                0x000000000804d3d3                yunos_mutex_unlock
+ .text          0x000000000804d53e      0x207 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+                0x000000000804d54f                pend_task_wakeup
+                0x000000000804d5bf                pend_to_blk_obj
+                0x000000000804d643                pend_task_rm
+                0x000000000804d6b3                pend_list_reorder
+                0x000000000804d6fa                pend_state_end_proc
+ .text          0x000000000804d745      0x466 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+                0x000000000804d78e                yunos_sched_disable
+                0x000000000804d803                runqueue_init
+                0x000000000804d825                ready_list_add_head
+                0x000000000804d868                ready_list_add_tail
+                0x000000000804d8a1                ready_list_add
+                0x000000000804d8ca                ready_list_rm
+                0x000000000804d9ab                ready_list_head_to_tail
+                0x000000000804d9c3                preferred_ready_task_get
+                0x000000000804d9dd                core_sched
+                0x000000000804da6a                yunos_sched_enable
+                0x000000000804db20                time_slice_update
+ .text          0x000000000804dbab      0x77e out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+                0x000000000804dbfe                timersub
+                0x000000000804dc2c                yloop_set_eventfd
+                0x000000000804dc3f                yloop_get_eventfd
+                0x000000000804dc4f                yloop_init
+                0x000000000804dcd9                yloop_register_read_sock
+                0x000000000804ddc1                yloop_unregister_read_sock
+                0x000000000804de89                yloop_register_timeout
+                0x000000000804df84                yloop_cancel_timeout
+                0x000000000804e00c                yloop_run
+                0x000000000804e204                yloop_terminate
+                0x000000000804e215                yloop_destroy
+                0x000000000804e29d                yloop_terminated
+                0x000000000804e2ae                yos_poll_read_fd
+                0x000000000804e2cc                yos_cancel_poll_read_fd
+                0x000000000804e2d5                yos_event_loop_run
+                0x000000000804e2de                yos_post_delayed_action
+                0x000000000804e30e                yos_cancel_delayed_action
+ .text          0x000000000804e329      0x1ef out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+                0x000000000804e3a7                local_event_service_init
+                0x000000000804e424                yos_local_event_post
+                0x000000000804e459                yos_local_event_listener_register
+                0x000000000804e498                yos_local_event_listener_unregister
+                0x000000000804e4e5                yos_schedule_call
+ .text          0x000000000804e518      0x58a out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+                0x000000000804e55e                vfs_init
+                0x000000000804e59c                yunos_open
+                0x000000000804e645                yunos_close
+                0x000000000804e6db                yunos_read
+                0x000000000804e772                yunos_write
+                0x000000000804e809                yunos_ioctl
+                0x000000000804e884                yunos_poll
+                0x000000000804e9f5                yunos_fcntl
+                0x000000000804ea13                yunos_ioctl_in_loop
+ .text          0x000000000804eaa2      0x37c out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+                0x000000000804ed77                vfs_device_init
+ .text          0x000000000804ee1e      0x199 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+                0x000000000804ee1e                inode_init
+                0x000000000804ee35                inode_alloc
+                0x000000000804ee58                inode_del
+                0x000000000804eec7                inode_open
+                0x000000000804ef02                inode_ptr_get
+                0x000000000804ef28                inode_ref
+                0x000000000804ef4a                inode_unref
+                0x000000000804ef7a                inode_busy
+                0x000000000804ef9b                inode_avail_count
+ .text          0x000000000804efb7      0x190 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+                0x000000000804efb7                yunos_register_driver
+                0x000000000804f0cc                yunos_unregister_driver
+ .text          0x000000000804f147      0x352 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+                0x000000000804f147                yos_sem_signal
+                0x000000000804f150                yos_msleep
+                0x000000000804f159                yos_task_exit
+                0x000000000804f169                csp_mutex_new
+                0x000000000804f192                yos_mutex_new
+                0x000000000804f19b                csp_mutex_lock
+                0x000000000804f1bd                yos_mutex_lock
+                0x000000000804f1c6                csp_mutex_unlock
+                0x000000000804f1e6                yos_mutex_unlock
+                0x000000000804f1ef                csp_mutex_free
+                0x000000000804f219                yos_mutex_free
+                0x000000000804f222                csp_sem_new
+                0x000000000804f24f                yos_sem_new
+                0x000000000804f258                csp_sem_wait
+                0x000000000804f289                yos_sem_wait
+                0x000000000804f292                csp_sem_signal
+                0x000000000804f29b                csp_sem_free
+                0x000000000804f2c5                yos_sem_free
+                0x000000000804f2ce                csp_task_new_ext
+                0x000000000804f2ff                yos_task_new_ext
+                0x000000000804f308                csp_task_new
+                0x000000000804f323                yos_task_new
+                0x000000000804f32c                csp_task_exit
+                0x000000000804f33c                csp_now
+                0x000000000804f358                yos_now
+                0x000000000804f361                csp_sys_reset
+                0x000000000804f382                csp_sys_free
+                0x000000000804f389                csp_net_errno
+ .text          0x000000000804f499       0x94 out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+                0x000000000804f499                yos_task_key_create
+                0x000000000804f4d3                yos_task_key_delete
+                0x000000000804f4ed                yos_task_setspecific
+                0x000000000804f509                yos_task_getspecific
+ .text          0x000000000804f52d       0x29 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+                0x000000000804f52d                yoc_hal_init
+ .text          0x000000000804f556      0x174 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+                0x000000000804f556                hal_aes_register
+                0x000000000804f595                hal_aes_init
+                0x000000000804f5f3                hal_aes_destroy
+                0x000000000804f63e                hal_aes_cbc_encrypt
+                0x000000000804f684                hal_aes_cbc_decrypt
+ .text          0x000000000804f6ca      0x125 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+                0x000000000804f6ca                hal_flash_get_default_module
+                0x000000000804f6e0                hal_flash_conf_write
+                0x000000000804f72d                hal_flash_conf_read
+                0x000000000804f77a                hal_flash_conf_get_max_size
+                0x000000000804f7a2                hal_flash_register_module
+                0x000000000804f7c1                hal_flash_init
+ .text          0x000000000804f7ef      0x5df out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+                0x000000000804f7ef                hal_ur_mesh_init
+                0x000000000804f823                hal_ur_mesh_register_module
+                0x000000000804f842                hal_ur_mesh_get_default_module
+                0x000000000804f858                hal_ur_mesh_get_next_module
+                0x000000000804f86e                hal_ur_mesh_enable
+                0x000000000804f896                hal_ur_mesh_disable
+                0x000000000804f8be                hal_ur_mesh_send_ucast_request
+                0x000000000804f913                hal_ur_mesh_send_bcast_request
+                0x000000000804f95c                hal_ur_mesh_register_receiver
+                0x000000000804f993                hal_ur_mesh_start_beacons
+                0x000000000804f9df                hal_ur_mesh_stop_beacons
+                0x000000000804fa07                hal_ur_mesh_set_bcast_mtu
+                0x000000000804fa3b                hal_ur_mesh_get_bcast_mtu
+                0x000000000804fa63                hal_ur_mesh_set_ucast_mtu
+                0x000000000804fa97                hal_ur_mesh_get_ucast_mtu
+                0x000000000804fabf                hal_ur_mesh_set_bcast_channel
+                0x000000000804faf3                hal_ur_mesh_get_bcast_channel
+                0x000000000804fb1b                hal_ur_mesh_get_bcast_chnlist
+                0x000000000804fb4c                hal_ur_mesh_set_ucast_channel
+                0x000000000804fb80                hal_ur_mesh_get_ucast_channel
+                0x000000000804fba8                hal_ur_mesh_get_ucast_chnlist
+                0x000000000804fbd9                hal_ur_mesh_set_txpower
+                0x000000000804fc0d                hal_ur_mesh_get_txpower
+                0x000000000804fc35                hal_ur_mesh_set_meshnetid
+                0x000000000804fc66                hal_ur_mesh_get_meshnetid
+                0x000000000804fc8d                hal_ur_mesh_set_mac_address
+                0x000000000804fcbe                hal_ur_mesh_get_mac_address
+                0x000000000804fce5                hal_ur_mesh_set_key
+                0x000000000804fd36                hal_ur_mesh_activate_key
+                0x000000000804fd6d                hal_ur_mesh_expire_key
+                0x000000000804fda4                hal_ur_mesh_get_stats
+ .text          0x000000000804fdce      0x14e out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+                0x000000000804fdce                hal_sensor_register_module
+                0x000000000804fded                hal_sensor_get_default_module
+                0x000000000804fe03                hal_sensor_get_sensor_list
+                0x000000000804fe34                hal_sensor_enable
+                0x000000000804fe65                hal_sensor_disable
+                0x000000000804fe96                hal_sensor_read
+                0x000000000804fedf                hal_sensor_get_next_module
+                0x000000000804fef2                hal_sensor_init
+ .text          0x000000000804ff1c       0x33 out/linuxapp@linuxhost/libraries/hal.a(time.o)
+                0x000000000804ff1c                hal_time_refresh_base
+                0x000000000804ff21                hal_time_set_base
+                0x000000000804ff26                hal_time_get
+                0x000000000804ff3d                hal_time_gettimeofday
+                0x000000000804ff46                hal_time_msleep
+ .text          0x000000000804ff4f      0x2c3 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+                0x000000000804ff4f                hal_wifi_register_module
+                0x000000000804ff75                hal_wifi_set_mode
+                0x000000000804ffb1                hal_wifi_get_mode
+                0x000000000804ffbc                hal_wifi_install_event
+                0x000000000804ffca                hal_wifi_connect
+                0x000000000804ffe7                hal_wifi_disconnect
+                0x0000000008050004                hal_wifi_scan
+                0x000000000805004c                hal_wifi_smartconfig
+                0x0000000008050063                hal_wifi_has_smartconfig
+                0x0000000008050083                hal_wifi_enter_promiscuous
+                0x00000000080500a4                hal_wifi_leave_promiscuous
+                0x00000000080500c5                hal_wifi_get_channel
+                0x00000000080500e6                hal_wifi_set_channel
+                0x0000000008050109                hal_wifi_set_auto_connect
+                0x000000000805012c                hal_wifi_get_default_module
+                0x0000000008050142                hal_wifi_is_connected
+                0x0000000008050166                hal_wifi_get_mac
+                0x0000000008050194                hal_wifi_get_ap_rssi
+                0x00000000080501be                hal_wifi_get_broadcast_port
+                0x00000000080501e8                hal_wifi_init
+ .text          0x0000000008050212       0x3f out/linuxapp@linuxhost/libraries/log.a(log.o)
+                0x0000000008050212                yos_set_log_level
+ .text          0x0000000008050251      0x443 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+                0x000000000805039f                ysh_task_entry
+                0x00000000080505b2                ysh_register_cmd
+                0x00000000080505ee                ysh_init_cmd_list
+                0x000000000805061f                ysh_init
+                0x0000000008050663                ysh_task_start
+ .text          0x0000000008050694      0x17c out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+                0x0000000008050694                ysh_history_cmd_list_init
+                0x00000000080506bc                ysh_history_cmd_add
+                0x000000000805076e                ysh_history_cmd_printf
+                0x00000000080507a2                ysh_history_cmd_get_cur
+                0x00000000080507be                ysh_history_cmd_get_prev
+                0x00000000080507db                ysh_history_cmd_get_next
+                0x00000000080507f9                ysh_history_get_state
+                0x0000000008050803                ysh_history_set_state
+ .text          0x0000000008050810        0x9 out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+                0x0000000008050810                ysh_register
+ .text          0x0000000008050819       0xce out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+                0x00000000080508aa                ysh_reg_cmd_help
+ .text          0x00000000080508e7      0x5e9 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+                0x0000000008050a58                cpu_intrpt_save
+                0x0000000008050aa5                cpu_intrpt_restore
+                0x0000000008050ad1                cpu_task_switch
+                0x0000000008050b2b                cpu_intrpt_switch
+                0x0000000008050b5a                cpu_first_task_start
+                0x0000000008050bb4                cpu_task_stack_init
+                0x0000000008050c36                cpu_task_create_hook
+                0x0000000008050c42                cpu_task_del_hook
+                0x0000000008050c47                cpu_idle_hook
+                0x0000000008050c59                cpu_event_malloc
+                0x0000000008050c62                cpu_event_free
+                0x0000000008050d04                cpu_notify_event
+                0x0000000008050d9f                cpu_init_hook
+                0x0000000008050e7f                cpu_start_hook
+ .text          0x0000000008050ed0       0x35 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_longjmp_32.o)
+                0x0000000008050ed0                rhino_setjmp
+                0x0000000008050eec                rhino_longjmp
+ .text          0x0000000008050f05      0x1c7 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+                0x0000000008051082                application_start
+ .text          0x00000000080510cc       0x8c out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+                0x00000000080510cc                soc_err_proc
+                0x00000000080510d1                soc_hr_hw_cnt_get
+                0x00000000080510d8                soc_sys_mem_init
+                0x00000000080510f4                soc_mm_alloc
+                0x0000000008051121                soc_mm_free
+                0x0000000008051153                soc_apps_entry
+ .text          0x0000000008051158       0x3c out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+                0x0000000008051158                soc_hw_timer_init
+                0x000000000805115d                yunos_idle_hook
+                0x0000000008051166                yunos_init_hook
+                0x000000000805116f                yunos_start_hook
+                0x0000000008051178                yunos_task_create_hook
+                0x0000000008051181                yunos_task_del_hook
+                0x000000000805118a                yunos_task_switch_hook
+                0x000000000805118f                yunos_tick_hook
+ .text          0x0000000008051194      0x12e out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+                0x0000000008051194                yoc_set_simulate_mode
+                0x00000000080511a3                yoc_ram_datasize_get
+                0x00000000080511aa                yoc_ram_bsssize_get
+                0x00000000080511b1                yoc_ram_totalsize_get
+                0x00000000080511b8                soc_term_init
+                0x00000000080511bf                soc_term_puts
+                0x00000000080511e5                soc_term_gets_impl
+                0x0000000008051290                soc_term_gets
+                0x00000000080512a6                soc_term_release
+                0x00000000080512ab                soc_term_exit
+                0x00000000080512b0                yoc_backtrace
+                0x00000000080512b9                yoc_backtrace_symbols
+ .text          0x00000000080512c2      0x38a out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+                0x00000000080512c2                yunos_mm_bf_alloc
+                0x00000000080514b3                yunos_mm_bf_free
+ .text          0x000000000805164c      0x290 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+                0x000000000805164c                yunos_mm_region_init
+                0x0000000008051792                yunos_mm_region_insert2freelist
+                0x00000000080517e0                yunos_mm_region_get_free_size
+                0x0000000008051834                check_mm_info_func
+ .text          0x00000000080518dc      0x103 out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+                0x00000000080518dc                yunos_tick_proc
+                0x000000000805190e                yunos_sys_tick_get
+                0x000000000805191e                yunos_sys_time_get
+                0x000000000805194b                yunos_ms_to_ticks
+                0x00000000080519b2                yunos_ticks_to_ms
+ *fill*         0x00000000080519df        0x1 
+ .text          0x00000000080519e0      0x124 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_udivdi3.o)
+                0x00000000080519e0                __udivdi3
+ *fill*         0x0000000008051b04        0xc 
+ .text          0x0000000008051b10      0x157 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_umoddi3.o)
+                0x0000000008051b10                __umoddi3
+ *fill*         0x0000000008051c67        0x9 
+ .text          0x0000000008051c70       0x72 /usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+                0x0000000008051c70                __libc_csu_init
+                0x0000000008051ce0                __libc_csu_fini
+ .text          0x0000000008051ce2        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+ .text          0x0000000008051ce2        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crtn.o
+ *(.gnu.warning)
+
+.fini           0x0000000008051ce4       0x14
+ *(SORT(.fini))
+ .fini          0x0000000008051ce4        0xf /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+                0x0000000008051ce4                _fini
+ .fini          0x0000000008051cf3        0x5 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crtn.o
+                0x0000000008051cf8                PROVIDE (__etext, .)
+                0x0000000008051cf8                PROVIDE (_etext, .)
+                0x0000000008051cf8                PROVIDE (etext, .)
+
+.rodata         0x0000000008051cf8      0x67b
+ *(.rodata .rodata.* .gnu.linkonce.r.*)
+ .rodata        0x0000000008051cf8        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x0000000008051cf8                _fp_hw
+ .rodata.cst4   0x0000000008051cfc        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x0000000008051cfc                _IO_stdin_used
+ .rodata.str1.1
+                0x0000000008051d00       0x59 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .rodata.str1.1
+                0x0000000008051d59       0x5a out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+                                         0x5b (size before relaxing)
+ .rodata.str1.1
+                0x0000000008051db3       0x3f out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ *fill*         0x0000000008051df2        0x2 
+ .rodata        0x0000000008051df4       0x28 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .rodata.str1.1
+                0x0000000008051e1c       0xac out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .rodata        0x0000000008051ec8        0x8 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .rodata.str1.1
+                0x0000000008051ed0       0x1f out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .rodata.str1.1
+                0x0000000008051eef       0x18 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .rodata.str1.1
+                0x0000000008051f07       0x12 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ *fill*         0x0000000008051f19        0x3 
+ .rodata        0x0000000008051f1c       0x60 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .rodata.str1.1
+                0x0000000008051f7c       0x23 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .rodata.str1.1
+                0x0000000008051f9f       0x40 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+                                         0x42 (size before relaxing)
+ .rodata.str1.1
+                0x0000000008051fdf        0xd out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .rodata.str1.1
+                0x0000000008051fec       0x3c out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .rodata.str1.1
+                0x0000000008052028       0x16 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ *fill*         0x000000000805203e        0x2 
+ .rodata        0x0000000008052040       0x14 out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .rodata.str1.1
+                0x0000000008052054       0x74 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+                                         0x79 (size before relaxing)
+ .rodata.str1.1
+                0x00000000080520c8       0x82 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .rodata.str1.1
+                0x000000000805214a       0x32 out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+                                         0x37 (size before relaxing)
+ .rodata.str1.1
+                0x000000000805217c       0xc7 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+                                         0xd5 (size before relaxing)
+ *fill*         0x0000000008052243        0x1 
+ .rodata        0x0000000008052244       0x50 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .rodata.str1.1
+                0x0000000008052294       0x35 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+                                         0x39 (size before relaxing)
+ *fill*         0x00000000080522c9        0x3 
+ .rodata        0x00000000080522cc       0x62 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .rodata.str1.1
+                0x000000000805232e       0x34 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ *fill*         0x0000000008052362        0x2 
+ .rodata        0x0000000008052364        0xc out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .rodata.str1.1
+                0x0000000008052370        0x3 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+
+.rodata1
+ *(.rodata1)
+
+.eh_frame_hdr   0x0000000008052374      0xd1c
+ *(.eh_frame_hdr)
+ .eh_frame_hdr  0x0000000008052374      0xd1c out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+
+.eh_frame       0x0000000008053090     0x3e78
+ *(.eh_frame)
+ .eh_frame      0x0000000008053090       0x3c /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                                         0x40 (size before relaxing)
+ .eh_frame      0x00000000080530cc       0x78 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+                                         0x90 (size before relaxing)
+ .eh_frame      0x0000000008053144      0x10c out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+                                        0x124 (size before relaxing)
+ .eh_frame      0x0000000008053250       0x68 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+                                         0x80 (size before relaxing)
+ .eh_frame      0x00000000080532b8      0x23c out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+                                        0x254 (size before relaxing)
+ .eh_frame      0x00000000080534f4       0xa0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+                                         0xb8 (size before relaxing)
+ .eh_frame      0x0000000008053594       0xb8 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+                                         0xd0 (size before relaxing)
+ .eh_frame      0x000000000805364c      0x110 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+                                        0x128 (size before relaxing)
+ .eh_frame      0x000000000805375c       0xd8 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+                                         0xf0 (size before relaxing)
+ .eh_frame      0x0000000008053834       0x3c out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+                                         0x54 (size before relaxing)
+ .eh_frame      0x0000000008053870       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+                                         0x38 (size before relaxing)
+ .eh_frame      0x0000000008053890      0x1f0 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+                                        0x208 (size before relaxing)
+ .eh_frame      0x0000000008053a80      0x1a8 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+                                        0x1c0 (size before relaxing)
+ .eh_frame      0x0000000008053c28      0x3bc out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+                                        0x3d4 (size before relaxing)
+ .eh_frame      0x0000000008053fe4       0x28 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+                                         0x40 (size before relaxing)
+ .eh_frame      0x000000000805400c      0x270 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+                                        0x288 (size before relaxing)
+ .eh_frame      0x000000000805427c       0x84 out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+                                         0x9c (size before relaxing)
+ .eh_frame      0x0000000008054300       0xe8 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+                                        0x100 (size before relaxing)
+ .eh_frame      0x00000000080543e8      0x19c out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+                                        0x1b4 (size before relaxing)
+ .eh_frame      0x0000000008054584      0x1c0 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+                                        0x1d8 (size before relaxing)
+ .eh_frame      0x0000000008054744       0xdc out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+                                         0xf4 (size before relaxing)
+ .eh_frame      0x0000000008054820      0x1f4 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+                                        0x20c (size before relaxing)
+ .eh_frame      0x0000000008054a14      0x2d4 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+                                        0x2ec (size before relaxing)
+ .eh_frame      0x0000000008054ce8      0x104 out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+                                        0x11c (size before relaxing)
+ .eh_frame      0x0000000008054dec      0x178 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+                                        0x190 (size before relaxing)
+ .eh_frame      0x0000000008054f64      0x16c out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+                                        0x184 (size before relaxing)
+ .eh_frame      0x00000000080550d0      0x12c out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+                                        0x144 (size before relaxing)
+ .eh_frame      0x00000000080551fc       0x54 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+                                         0x6c (size before relaxing)
+ .eh_frame      0x0000000008055250      0x3c8 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+                                        0x3e0 (size before relaxing)
+ .eh_frame      0x0000000008055618       0x80 out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+                                         0x98 (size before relaxing)
+ .eh_frame      0x0000000008055698       0x28 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+                                         0x40 (size before relaxing)
+ .eh_frame      0x00000000080556c0       0xf4 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+                                        0x10c (size before relaxing)
+ .eh_frame      0x00000000080557b4      0x104 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+                                        0x11c (size before relaxing)
+ .eh_frame      0x00000000080558b8      0x570 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+                                        0x588 (size before relaxing)
+ .eh_frame      0x0000000008055e28      0x150 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+                                        0x168 (size before relaxing)
+ .eh_frame      0x0000000008055f78       0xa0 out/linuxapp@linuxhost/libraries/hal.a(time.o)
+                                         0xb8 (size before relaxing)
+ .eh_frame      0x0000000008056018      0x2b8 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+                                        0x2d0 (size before relaxing)
+ .eh_frame      0x00000000080562d0       0x20 out/linuxapp@linuxhost/libraries/log.a(log.o)
+                                         0x38 (size before relaxing)
+ .eh_frame      0x00000000080562f0       0xd8 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+                                         0xf0 (size before relaxing)
+ .eh_frame      0x00000000080563c8      0x124 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+                                        0x13c (size before relaxing)
+ .eh_frame      0x00000000080564ec       0x20 out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+                                         0x38 (size before relaxing)
+ .eh_frame      0x000000000805650c       0x4c out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+                                         0x64 (size before relaxing)
+ .eh_frame      0x0000000008056558      0x2bc out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+                                        0x2d4 (size before relaxing)
+ .eh_frame      0x0000000008056814       0xa4 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+                                         0xbc (size before relaxing)
+ .eh_frame      0x00000000080568b8       0xc0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+                                         0xd8 (size before relaxing)
+ .eh_frame      0x0000000008056978      0x100 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+                                        0x118 (size before relaxing)
+ .eh_frame      0x0000000008056a78      0x194 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+                                        0x1ac (size before relaxing)
+ .eh_frame      0x0000000008056c0c       0x60 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+                                         0x78 (size before relaxing)
+ .eh_frame      0x0000000008056c6c       0xbc out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+                                         0xd4 (size before relaxing)
+ .eh_frame      0x0000000008056d28       0xb4 out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+                                         0xcc (size before relaxing)
+ .eh_frame      0x0000000008056ddc       0x6c /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_udivdi3.o)
+                                         0x84 (size before relaxing)
+ .eh_frame      0x0000000008056e48       0x6c /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_umoddi3.o)
+                                         0x84 (size before relaxing)
+ .eh_frame      0x0000000008056eb4       0x50 /usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+                                         0x7c (size before relaxing)
+ .eh_frame      0x0000000008056f04        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+
+.gcc_except_table
+ *(.gcc_except_table .gcc_except_table.*)
+
+.exception_ranges
+ *(.exception_ranges .exception_ranges*)
+                0x0000000008056f08                . = (ALIGN (0x1000) - ((0x1000 - .) & 0xfff))
+                0x0000000008057ef8                . = DATA_SEGMENT_ALIGN (0x1000, 0x1000)
+
+.eh_frame
+ *(.eh_frame)
+
+.gcc_except_table
+ *(.gcc_except_table .gcc_except_table.*)
+
+.exception_ranges
+ *(.exception_ranges .exception_ranges*)
+
+.tdata
+ *(.tdata .tdata.* .gnu.linkonce.td.*)
+
+.tbss
+ *(.tbss .tbss.* .gnu.linkonce.tb.*)
+ *(.tcommon)
+
+.preinit_array  0x0000000008057ef8        0x0
+                0x0000000008057ef8                PROVIDE (__preinit_array_start, .)
+ *(.preinit_array)
+                0x0000000008057ef8                PROVIDE (__preinit_array_end, .)
+
+.init_array     0x0000000008057ef8        0x4
+                0x0000000008057ef8                PROVIDE (__init_array_start, .)
+ *(SORT(.init_array.*) SORT(.ctors.*))
+ *(.init_array EXCLUDE_FILE(*crtend?.o *crtend.o *crtbegin?.o *crtbegin.o) .ctors)
+ .init_array    0x0000000008057ef8        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+                0x0000000008057efc                PROVIDE (__init_array_end, .)
+
+.fini_array     0x0000000008057efc        0x4
+                0x0000000008057efc                PROVIDE (__fini_array_start, .)
+ *(SORT(.fini_array.*) SORT(.dtors.*))
+ *(.fini_array EXCLUDE_FILE(*crtend?.o *crtend.o *crtbegin?.o *crtbegin.o) .dtors)
+ .fini_array    0x0000000008057efc        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+                0x0000000008057f00                PROVIDE (__fini_array_end, .)
+
+.ctors
+ *crtbegin.o(.ctors)
+ *crtbegin?.o(.ctors)
+ *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
+ *(SORT(.ctors.*))
+ *(.ctors)
+
+.dtors
+ *crtbegin.o(.dtors)
+ *crtbegin?.o(.dtors)
+ *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
+ *(SORT(.dtors.*))
+ *(.dtors)
+
+.jcr            0x0000000008057f00        0x4
+ *(.jcr)
+ .jcr           0x0000000008057f00        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+ .jcr           0x0000000008057f00        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+
+.data.rel.ro
+ *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*)
+ *(.data.rel.ro .data.rel.ro.* .gnu.linkonce.d.rel.ro.*)
+
+.dynamic        0x0000000008057f04       0xf8
+ *(.dynamic)
+ .dynamic       0x0000000008057f04       0xf8 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x0000000008057f04                _DYNAMIC
+
+.got            0x0000000008057ffc        0x4
+ *(.got)
+ .got           0x0000000008057ffc        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ *(.igot)
+                0x0000000008058ff4                . = DATA_SEGMENT_RELRO_END (., (SIZEOF (.got.plt) >= 0xc)?0xc:0x0)
+
+.got.plt        0x0000000008058000       0xf0
+ *(.got.plt)
+ .got.plt       0x0000000008058000       0xf0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x0000000008058000                _GLOBAL_OFFSET_TABLE_
+ *(.igot.plt)
+ .igot.plt      0x0000000000000000        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+
+.data           0x00000000080580f0      0x144
+ *(.data .data.* .gnu.linkonce.d.*)
+ .data          0x00000000080580f0        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x00000000080580f0                data_start
+                0x00000000080580f0                __data_start
+ .data          0x00000000080580f4        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+ .data          0x00000000080580f4        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+                0x00000000080580f4                __dso_handle
+ .data          0x00000000080580f8        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .data          0x00000000080580f8        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .data          0x00000000080580f8        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .data          0x00000000080580f8       0x6c out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .data          0x0000000008058164       0x28 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+                0x0000000008058164                linuxhost_sensor_module
+ .data          0x000000000805818c       0x18 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+                0x000000000805818c                linux_aes_module_openssl
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .data          0x00000000080581a4        0x0 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .data          0x00000000080581a4       0x10 out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .data          0x00000000080581b4        0x0 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .data          0x00000000080581b4       0x30 out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .data          0x00000000080581e4        0x0 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .data          0x00000000080581e4        0x0 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .data          0x00000000080581e4        0x0 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .data          0x00000000080581e4        0x0 out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .data          0x00000000080581e4        0x0 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .data          0x00000000080581e4        0x0 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .data          0x00000000080581e4        0x8 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .data          0x00000000080581ec        0x8 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .data          0x00000000080581f4        0x8 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .data          0x00000000080581fc        0x0 out/linuxapp@linuxhost/libraries/hal.a(time.o)
+ .data          0x00000000080581fc        0x8 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .data          0x0000000008058204        0x4 out/linuxapp@linuxhost/libraries/log.a(log.o)
+                0x0000000008058204                yos_log_level
+ .data          0x0000000008058208       0x10 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+                0x0000000008058208                g_prompt
+                0x000000000805820c                g_greeting
+                0x0000000008058210                g_cmd_not_found
+                0x0000000008058214                g_exe_cmd_failed
+ .data          0x0000000008058218        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .data          0x0000000008058218        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+ .data          0x0000000008058218        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .data          0x0000000008058218       0x10 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .data          0x0000000008058228        0x0 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_longjmp_32.o)
+ .data          0x0000000008058228        0x0 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .data          0x0000000008058228        0xc out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+                0x0000000008058228                g_err_proc
+ .data          0x0000000008058234        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+ .data          0x0000000008058234        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .data          0x0000000008058234        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .data          0x0000000008058234        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .data          0x0000000008058234        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+ .data          0x0000000008058234        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_udivdi3.o)
+ .data          0x0000000008058234        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_umoddi3.o)
+ .data          0x0000000008058234        0x0 /usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+ .data          0x0000000008058234        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+ .data          0x0000000008058234        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crtn.o
+
+.tm_clone_table
+                0x0000000008058234        0x0
+ .tm_clone_table
+                0x0000000008058234        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+ .tm_clone_table
+                0x0000000008058234        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+
+.data1
+ *(.data1)
+                0x0000000008058234                _edata = .
+                0x0000000008058234                PROVIDE (edata, .)
+                0x0000000008058234                . = .
+                0x0000000008058234                __bss_start = .
+
+.bss            0x0000000008058240    0x1c6cc
+ *(.dynbss)
+ *fill*         0x0000000008058240        0x0 
+ .dynbss        0x0000000008058240        0x4 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+                0x0000000008058240                stdout@@GLIBC_2.0
+ *(.bss .bss.* .gnu.linkonce.b.*)
+ .bss           0x0000000008058244        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crt1.o
+ .bss           0x0000000008058244        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crti.o
+ .bss           0x0000000008058244        0x1 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+ *fill*         0x0000000008058245        0x3 
+ .bss           0x0000000008058248       0x18 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .bss           0x0000000008058260        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+ .bss           0x0000000008058260        0x8 out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+                0x0000000008058260                g_mm_region_list_head
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .bss           0x0000000008058268        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .bss           0x0000000008058268        0x8 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .bss           0x0000000008058270        0x0 out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .bss           0x0000000008058270        0x1 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ *fill*         0x0000000008058271        0x3 
+ .bss           0x0000000008058274       0x14 out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .bss           0x0000000008058288      0x1f4 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .bss           0x000000000805847c        0x0 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .bss           0x000000000805847c        0x8 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .bss           0x0000000008058484        0x4 out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .bss           0x0000000008058488        0x0 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .bss           0x0000000008058488        0x4 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .bss           0x000000000805848c        0x0 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .bss           0x000000000805848c        0x0 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .bss           0x000000000805848c        0x0 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .bss           0x000000000805848c        0x0 out/linuxapp@linuxhost/libraries/hal.a(time.o)
+ .bss           0x000000000805848c        0x0 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .bss           0x000000000805848c        0x0 out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .bss           0x000000000805848c        0x4 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .bss           0x0000000008058490        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .bss           0x0000000008058490        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+ .bss           0x0000000008058490        0x0 out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .bss           0x0000000008058490     0x1148 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .bss           0x00000000080595d8        0x0 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_longjmp_32.o)
+ .bss           0x00000000080595d8        0x8 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .bss           0x00000000080595e0       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .bss           0x0000000008059600        0x0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+ .bss           0x0000000008059600        0x4 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+                0x0000000008059600                g_ysh_mode
+ .bss           0x0000000008059604        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .bss           0x0000000008059604        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .bss           0x0000000008059604        0x0 out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+ .bss           0x0000000008059604        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_udivdi3.o)
+ .bss           0x0000000008059604        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_umoddi3.o)
+ .bss           0x0000000008059604        0x0 /usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+ .bss           0x0000000008059604        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+ .bss           0x0000000008059604        0x0 /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../i386-linux-gnu/crtn.o
+ *(COMMON)
+ *fill*         0x0000000008059604        0x4 
+ COMMON         0x0000000008059608     0x1208 out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+                0x0000000008059608                g_sched_lock
+                0x000000000805960c                g_cur_intrpt_disable_max_time
+                0x0000000008059610                g_sys_measure_waste
+                0x0000000008059614                g_timer_count
+                0x0000000008059618                g_ready_queue
+                0x000000000805971c                g_timer_ctrl
+                0x0000000008059720                g_dyn_mem_proc_task
+                0x000000000805979c                g_timer_mutex
+                0x00000000080597cc                g_timer_head
+                0x00000000080597d4                g_active_task
+                0x00000000080597d8                g_idle_task_spawned
+                0x00000000080597dc                g_dyn_mem_proc_stack
+                0x0000000008059bdc                g_preferred_ready_task
+                0x0000000008059be0                g_dyn_queue_msg
+                0x0000000008059c58                g_idle_task
+                0x0000000008059cd4                g_kobj_list
+                0x0000000008059d14                g_tick_task
+                0x0000000008059d90                g_timer_task
+                0x0000000008059e0c                g_tick_head
+                0x0000000008059e4c                g_dyn_queue
+                0x0000000008059e98                g_intrpt_disable_time_start
+                0x0000000008059ea0                g_sys_time_tick
+                0x0000000008059ea8                g_cur_sched_disable_max_time
+                0x0000000008059eb0                g_idle_count
+                0x0000000008059eb8                g_sched_disable_time_start
+                0x0000000008059ebc                g_tick_task_stack
+                0x000000000805a2bc                g_sched_disable_max_time
+                0x000000000805a2c0                g_intrpt_nested_level
+                0x000000000805a2c4                g_tick_count
+                0x000000000805a2c8                g_intrpt_disable_times
+                0x000000000805a2cc                g_workqueue_mutex
+                0x000000000805a2fc                g_workqueue_head
+                0x000000000805a300                g_timer_sem
+                0x000000000805a32c                g_tick_sem
+                0x000000000805a358                g_idle_task_stack
+                0x000000000805a4e8                g_intrpt_disable_max_time
+                0x000000000805a4ec                g_sys_stat
+                0x000000000805a4f0                g_timer_task_stack
+ COMMON         0x000000000805a810        0x4 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+                0x000000000805a810                g_vfs_mutex
+ COMMON         0x000000000805a814     0x10e8 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+                0x000000000805a814                g_ysh_task_stack
+                0x000000000805b014                g_ysh_cmd_list
+                0x000000000805b018                g_history_cmd
+                0x000000000805b01c                g_ysh_only_term
+                0x000000000805b880                g_ysh_task
+ COMMON         0x000000000805b8fc       0x10 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+                0x000000000805b8fc                g_history_cmd_head
+ COMMON         0x000000000805b90c    0x19000 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+                0x000000000805b90c                sys_pool_start
+                0x000000000807490c                . = ALIGN ((. != 0x0)?0x4:0x1)
+                0x000000000807490c                . = ALIGN (0x4)
+                0x000000000807490c                . = SEGMENT_START ("ldata-segment", .)
+                0x000000000807490c                . = ALIGN (0x4)
+                0x000000000807490c                _end = .
+                0x000000000807490c                PROVIDE (end, .)
+                0x000000000807490c                . = DATA_SEGMENT_END (.)
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment        0x0000000000000000       0x2b
+ *(.comment)
+ .comment       0x0000000000000000       0x2b /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtbegin.o
+                                         0x2c (size before relaxing)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/hal.a(time.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .comment       0x0000000000000000       0x2c out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+ .comment       0x0000000000000000       0x2c /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_udivdi3.o)
+ .comment       0x0000000000000000       0x2c /usr/lib/gcc/x86_64-linux-gnu/4.8/32/libgcc.a(_umoddi3.o)
+ .comment       0x0000000000000000       0x2c /usr/lib/i386-linux-gnu/libc_nonshared.a(elf-init.oS)
+ .comment       0x0000000000000000       0x2c /usr/lib/gcc/x86_64-linux-gnu/4.8/32/crtend.o
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges  0x0000000000000000      0x660
+ *(.debug_aranges)
+ .debug_aranges
+                0x0000000000000000       0x28 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .debug_aranges
+                0x0000000000000028       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .debug_aranges
+                0x0000000000000048       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .debug_aranges
+                0x0000000000000068       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .debug_aranges
+                0x0000000000000088       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .debug_aranges
+                0x00000000000000a8       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+ .debug_aranges
+                0x00000000000000c8       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .debug_aranges
+                0x00000000000000e8       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .debug_aranges
+                0x0000000000000108       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .debug_aranges
+                0x0000000000000128       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+ .debug_aranges
+                0x0000000000000148       0x18 out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+ .debug_aranges
+                0x0000000000000160       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .debug_aranges
+                0x0000000000000180       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .debug_aranges
+                0x00000000000001a0       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .debug_aranges
+                0x00000000000001c0       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+ .debug_aranges
+                0x00000000000001e0       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .debug_aranges
+                0x0000000000000200       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .debug_aranges
+                0x0000000000000220       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .debug_aranges
+                0x0000000000000240       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .debug_aranges
+                0x0000000000000260       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .debug_aranges
+                0x0000000000000280       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .debug_aranges
+                0x00000000000002a0       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .debug_aranges
+                0x00000000000002c0       0x20 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .debug_aranges
+                0x00000000000002e0       0x20 out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .debug_aranges
+                0x0000000000000300       0x20 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .debug_aranges
+                0x0000000000000320       0x20 out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .debug_aranges
+                0x0000000000000340       0x20 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .debug_aranges
+                0x0000000000000360       0x20 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .debug_aranges
+                0x0000000000000380       0x20 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .debug_aranges
+                0x00000000000003a0       0x20 out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .debug_aranges
+                0x00000000000003c0       0x20 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .debug_aranges
+                0x00000000000003e0       0x20 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .debug_aranges
+                0x0000000000000400       0x20 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .debug_aranges
+                0x0000000000000420       0x20 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .debug_aranges
+                0x0000000000000440       0x20 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .debug_aranges
+                0x0000000000000460       0x20 out/linuxapp@linuxhost/libraries/hal.a(time.o)
+ .debug_aranges
+                0x0000000000000480       0x20 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .debug_aranges
+                0x00000000000004a0       0x20 out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .debug_aranges
+                0x00000000000004c0       0x20 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .debug_aranges
+                0x00000000000004e0       0x20 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .debug_aranges
+                0x0000000000000500       0x20 out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+ .debug_aranges
+                0x0000000000000520       0x20 out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .debug_aranges
+                0x0000000000000540       0x20 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .debug_aranges
+                0x0000000000000560       0x20 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_longjmp_32.o)
+ .debug_aranges
+                0x0000000000000580       0x20 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .debug_aranges
+                0x00000000000005a0       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .debug_aranges
+                0x00000000000005c0       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+ .debug_aranges
+                0x00000000000005e0       0x20 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .debug_aranges
+                0x0000000000000600       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .debug_aranges
+                0x0000000000000620       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .debug_aranges
+                0x0000000000000640       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+
+.debug_pubnames
+ *(.debug_pubnames)
+
+.debug_info     0x0000000000000000    0x1f227
+ *(.debug_info .gnu.linkonce.wi.*)
+ .debug_info    0x0000000000000000      0x67c out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .debug_info    0x000000000000067c      0xdde out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .debug_info    0x000000000000145a      0x3a1 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .debug_info    0x00000000000017fb     0x1286 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .debug_info    0x0000000000002a81      0x4ed out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .debug_info    0x0000000000002f6e      0x571 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+ .debug_info    0x00000000000034df      0xdd9 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .debug_info    0x00000000000042b8      0xd90 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .debug_info    0x0000000000005048      0x911 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .debug_info    0x0000000000005959      0x149 out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+ .debug_info    0x0000000000005aa2      0xd7b out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+ .debug_info    0x000000000000681d     0x1463 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .debug_info    0x0000000000007c80     0x1121 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .debug_info    0x0000000000008da1     0x1b34 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .debug_info    0x000000000000a8d5      0x292 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+ .debug_info    0x000000000000ab67      0xbca out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .debug_info    0x000000000000b731      0x33c out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .debug_info    0x000000000000ba6d      0xa24 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .debug_info    0x000000000000c491     0x11e0 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .debug_info    0x000000000000d671     0x1188 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .debug_info    0x000000000000e7f9      0xbc7 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .debug_info    0x000000000000f3c0      0xf8e out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .debug_info    0x000000000001034e      0xe0a out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .debug_info    0x0000000000011158      0x72a out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .debug_info    0x0000000000011882      0xa73 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .debug_info    0x00000000000122f5      0xc0c out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .debug_info    0x0000000000012f01      0x4a6 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .debug_info    0x00000000000133a7      0x503 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .debug_info    0x00000000000138aa     0x1489 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .debug_info    0x0000000000014d33      0x91a out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .debug_info    0x000000000001564d       0xec out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .debug_info    0x0000000000015739      0x37e out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .debug_info    0x0000000000015ab7      0x432 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .debug_info    0x0000000000015ee9      0xf05 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .debug_info    0x0000000000016dee      0x4e7 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .debug_info    0x00000000000172d5      0x1fe out/linuxapp@linuxhost/libraries/hal.a(time.o)
+ .debug_info    0x00000000000174d3      0xa49 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .debug_info    0x0000000000017f1c      0x12d out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .debug_info    0x0000000000018049     0x1190 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .debug_info    0x00000000000191d9      0x54a out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .debug_info    0x0000000000019723       0x4c out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+ .debug_info    0x000000000001976f      0x43e out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .debug_info    0x0000000000019bad     0x1bad out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .debug_info    0x000000000001b75a       0x5f out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_longjmp_32.o)
+ .debug_info    0x000000000001b7b9      0xb07 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .debug_info    0x000000000001c2c0      0x565 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .debug_info    0x000000000001c825      0x773 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+ .debug_info    0x000000000001cf98      0x9fd out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .debug_info    0x000000000001d995      0x738 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .debug_info    0x000000000001e0cd      0x7c7 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .debug_info    0x000000000001e894      0x993 out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+
+.debug_abbrev   0x0000000000000000     0x6dda
+ *(.debug_abbrev)
+ .debug_abbrev  0x0000000000000000      0x23a out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .debug_abbrev  0x000000000000023a      0x347 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .debug_abbrev  0x0000000000000581      0x18b out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .debug_abbrev  0x000000000000070c      0x302 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .debug_abbrev  0x0000000000000a0e      0x1b9 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .debug_abbrev  0x0000000000000bc7      0x1ad out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+ .debug_abbrev  0x0000000000000d74      0x23e out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .debug_abbrev  0x0000000000000fb2      0x256 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .debug_abbrev  0x0000000000001208      0x160 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .debug_abbrev  0x0000000000001368       0xfe out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+ .debug_abbrev  0x0000000000001466       0xfe out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+ .debug_abbrev  0x0000000000001564      0x308 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .debug_abbrev  0x000000000000186c      0x326 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .debug_abbrev  0x0000000000001b92      0x405 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .debug_abbrev  0x0000000000001f97       0xb8 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+ .debug_abbrev  0x000000000000204f      0x302 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .debug_abbrev  0x0000000000002351      0x117 out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .debug_abbrev  0x0000000000002468      0x199 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .debug_abbrev  0x0000000000002601      0x2d9 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .debug_abbrev  0x00000000000028da      0x34f out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .debug_abbrev  0x0000000000002c29      0x263 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .debug_abbrev  0x0000000000002e8c      0x32c out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .debug_abbrev  0x00000000000031b8      0x423 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .debug_abbrev  0x00000000000035db      0x2cc out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .debug_abbrev  0x00000000000038a7      0x2cb out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .debug_abbrev  0x0000000000003b72      0x280 out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .debug_abbrev  0x0000000000003df2      0x1a8 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .debug_abbrev  0x0000000000003f9a      0x1b7 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .debug_abbrev  0x0000000000004151      0x2e5 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .debug_abbrev  0x0000000000004436      0x18b out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .debug_abbrev  0x00000000000045c1       0x81 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .debug_abbrev  0x0000000000004642      0x196 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .debug_abbrev  0x00000000000047d8      0x1bc out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .debug_abbrev  0x0000000000004994      0x274 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .debug_abbrev  0x0000000000004c08      0x1bc out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .debug_abbrev  0x0000000000004dc4      0x143 out/linuxapp@linuxhost/libraries/hal.a(time.o)
+ .debug_abbrev  0x0000000000004f07      0x249 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .debug_abbrev  0x0000000000005150       0xa5 out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .debug_abbrev  0x00000000000051f5      0x382 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .debug_abbrev  0x0000000000005577      0x257 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .debug_abbrev  0x00000000000057ce       0x4d out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+ .debug_abbrev  0x000000000000581b      0x208 out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .debug_abbrev  0x0000000000005a23      0x4f7 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .debug_abbrev  0x0000000000005f1a       0x14 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_longjmp_32.o)
+ .debug_abbrev  0x0000000000005f2e      0x228 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .debug_abbrev  0x0000000000006156      0x1da out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .debug_abbrev  0x0000000000006330      0x194 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+ .debug_abbrev  0x00000000000064c4      0x2c3 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .debug_abbrev  0x0000000000006787      0x212 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .debug_abbrev  0x0000000000006999      0x217 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .debug_abbrev  0x0000000000006bb0      0x22a out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+
+.debug_line     0x0000000000000000     0x672c
+ *(.debug_line .debug_line.* .debug_line_end)
+ .debug_line    0x0000000000000000      0x1b1 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .debug_line    0x00000000000001b1      0x29c out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .debug_line    0x000000000000044d      0x168 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .debug_line    0x00000000000005b5      0x33c out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .debug_line    0x00000000000008f1       0xd0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .debug_line    0x00000000000009c1      0x146 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+ .debug_line    0x0000000000000b07      0x238 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .debug_line    0x0000000000000d3f      0x26c out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .debug_line    0x0000000000000fab      0x17a out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .debug_line    0x0000000000001125      0x12a out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+ .debug_line    0x000000000000124f      0x167 out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+ .debug_line    0x00000000000013b6      0x3e9 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .debug_line    0x000000000000179f      0x366 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .debug_line    0x0000000000001b05      0x4d0 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .debug_line    0x0000000000001fd5       0x76 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+ .debug_line    0x000000000000204b      0x3d1 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .debug_line    0x000000000000241c      0x10a out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .debug_line    0x0000000000002526      0x18b out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .debug_line    0x00000000000026b1      0x2f8 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .debug_line    0x00000000000029a9      0x340 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .debug_line    0x0000000000002ce9      0x209 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .debug_line    0x0000000000002ef2      0x310 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .debug_line    0x0000000000003202      0x3cf out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .debug_line    0x00000000000035d1      0x1d9 out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .debug_line    0x00000000000037aa      0x247 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .debug_line    0x00000000000039f1      0x2ae out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .debug_line    0x0000000000003c9f      0x1b3 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .debug_line    0x0000000000003e52      0x19c out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .debug_line    0x0000000000003fee      0x33a out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .debug_line    0x0000000000004328      0x18d out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .debug_line    0x00000000000044b5       0x87 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .debug_line    0x000000000000453c      0x142 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .debug_line    0x000000000000467e       0xf3 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .debug_line    0x0000000000004771      0x287 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .debug_line    0x00000000000049f8      0x109 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .debug_line    0x0000000000004b01       0xf5 out/linuxapp@linuxhost/libraries/hal.a(time.o)
+ .debug_line    0x0000000000004bf6      0x17e out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .debug_line    0x0000000000004d74       0x9b out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .debug_line    0x0000000000004e0f      0x2f4 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .debug_line    0x0000000000005103      0x1f7 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .debug_line    0x00000000000052fa       0x6c out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+ .debug_line    0x0000000000005366      0x16e out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .debug_line    0x00000000000054d4      0x45a out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .debug_line    0x000000000000592e       0x67 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_longjmp_32.o)
+ .debug_line    0x0000000000005995      0x239 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .debug_line    0x0000000000005bce      0x14b out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .debug_line    0x0000000000005d19      0x164 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+ .debug_line    0x0000000000005e7d      0x21d out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .debug_line    0x000000000000609a      0x2a6 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .debug_line    0x0000000000006340      0x23d out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .debug_line    0x000000000000657d      0x1af out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+
+.debug_frame
+ *(.debug_frame)
+
+.debug_str      0x0000000000000000     0x51d2
+ *(.debug_str)
+ .debug_str     0x0000000000000000      0x4d4 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+                                        0x55e (size before relaxing)
+ .debug_str     0x00000000000004d4      0xaa4 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+                                        0xc95 (size before relaxing)
+ .debug_str     0x0000000000000f78       0x3c out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+                                        0x236 (size before relaxing)
+ .debug_str     0x0000000000000fb4      0x71e out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+                                        0x9d9 (size before relaxing)
+ .debug_str     0x00000000000016d2       0x8c out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+                                        0x32f (size before relaxing)
+ .debug_str     0x000000000000175e      0x124 out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+                                        0x2d4 (size before relaxing)
+ .debug_str     0x0000000000001882      0x629 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+                                        0xf71 (size before relaxing)
+ .debug_str     0x0000000000001eab      0x172 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+                                        0xdec (size before relaxing)
+ .debug_str     0x000000000000201d       0x6c out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+                                        0xbd7 (size before relaxing)
+ .debug_str     0x0000000000002089       0x2b out/linuxapp@linuxhost/libraries/rhino.a(k_idle.o)
+                                        0x193 (size before relaxing)
+ .debug_str     0x00000000000020b4      0x20f out/linuxapp@linuxhost/libraries/rhino.a(k_obj.o)
+                                        0xf90 (size before relaxing)
+ .debug_str     0x00000000000022c3      0x1b8 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+                                        0xecc (size before relaxing)
+ .debug_str     0x000000000000247b       0xaf out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+                                        0xdf7 (size before relaxing)
+ .debug_str     0x000000000000252a      0x271 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+                                       0x10e7 (size before relaxing)
+ .debug_str     0x000000000000279b       0x36 out/linuxapp@linuxhost/libraries/rhino.a(k_err.o)
+                                        0x6ac (size before relaxing)
+ .debug_str     0x00000000000027d1      0x165 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+                                        0x8ae (size before relaxing)
+ .debug_str     0x0000000000002936       0x4a out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+                                        0x2cb (size before relaxing)
+ .debug_str     0x0000000000002980       0x78 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+                                        0xc44 (size before relaxing)
+ .debug_str     0x00000000000029f8      0x147 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+                                        0xe64 (size before relaxing)
+ .debug_str     0x0000000000002b3f       0x91 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+                                        0xe59 (size before relaxing)
+ .debug_str     0x0000000000002bd0       0x29 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+                                        0xc66 (size before relaxing)
+ .debug_str     0x0000000000002bf9      0x109 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+                                        0xe87 (size before relaxing)
+ .debug_str     0x0000000000002d02      0x382 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+                                        0x5cd (size before relaxing)
+ .debug_str     0x0000000000003084      0x14f out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+                                        0x39e (size before relaxing)
+ .debug_str     0x00000000000031d3      0x1c0 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+                                        0x3a9 (size before relaxing)
+ .debug_str     0x0000000000003393      0x12f out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+                                        0x3cb (size before relaxing)
+ .debug_str     0x00000000000034c2       0x5d out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+                                        0x282 (size before relaxing)
+ .debug_str     0x000000000000351f       0x33 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+                                        0x2ab (size before relaxing)
+ .debug_str     0x0000000000003552      0x1c2 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+                                        0xf3f (size before relaxing)
+ .debug_str     0x0000000000003714       0x38 out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+                                        0xbd8 (size before relaxing)
+ .debug_str     0x000000000000374c       0x52 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+                                        0x146 (size before relaxing)
+ .debug_str     0x000000000000379e       0x74 out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+                                        0x22a (size before relaxing)
+ .debug_str     0x0000000000003812       0x7f out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+                                        0x27c (size before relaxing)
+ .debug_str     0x0000000000003891      0x7e2 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+                                        0x9d6 (size before relaxing)
+ .debug_str     0x0000000000004073       0xb0 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+                                        0x2cf (size before relaxing)
+ .debug_str     0x0000000000004123       0x6d out/linuxapp@linuxhost/libraries/hal.a(time.o)
+                                        0x1ef (size before relaxing)
+ .debug_str     0x0000000000004190      0x1cb out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+                                        0x6fe (size before relaxing)
+ .debug_str     0x000000000000435b       0x12 out/linuxapp@linuxhost/libraries/log.a(log.o)
+                                        0x224 (size before relaxing)
+ .debug_str     0x000000000000436d      0x328 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+                                        0xf1c (size before relaxing)
+ .debug_str     0x0000000000004695       0x9a out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+                                        0x391 (size before relaxing)
+ .debug_str     0x000000000000472f       0x2a out/linuxapp@linuxhost/libraries/ysh.a(ysh_register.o)
+                                         0x9e (size before relaxing)
+ .debug_str     0x0000000000004759       0x27 out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+                                        0x2b7 (size before relaxing)
+ .debug_str     0x0000000000004780      0x5f6 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+                                       0x135d (size before relaxing)
+ .debug_str     0x0000000000004d76       0x72 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+                                        0x6f8 (size before relaxing)
+ .debug_str     0x0000000000004de8       0xe1 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+                                        0x826 (size before relaxing)
+ .debug_str     0x0000000000004ec9       0x48 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hook_impl.o)
+                                        0x6c2 (size before relaxing)
+ .debug_str     0x0000000000004f11      0x13e out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+                                        0xa35 (size before relaxing)
+ .debug_str     0x000000000000504f       0x97 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+                                        0x863 (size before relaxing)
+ .debug_str     0x00000000000050e6       0x81 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+                                        0x8e6 (size before relaxing)
+ .debug_str     0x0000000000005167       0x6b out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+                                        0xc44 (size before relaxing)
+
+.debug_loc      0x0000000000000000     0x6cf9
+ *(.debug_loc)
+ .debug_loc     0x0000000000000000       0x29 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .debug_loc     0x0000000000000029      0x209 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .debug_loc     0x0000000000000232       0xd0 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .debug_loc     0x0000000000000302      0x318 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .debug_loc     0x000000000000061a       0xc8 out/linuxapp@linuxhost/libraries/board_linuxhost.a(sensor.o)
+ .debug_loc     0x00000000000006e2      0x1bd out/linuxapp@linuxhost/libraries/board_linuxhost.a(crypto_impl.o)
+ .debug_loc     0x000000000000089f       0x13 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .debug_loc     0x00000000000008b2      0x280 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .debug_loc     0x0000000000000b32       0x13 out/linuxapp@linuxhost/libraries/rhino.a(k_dyn_mem_proc.o)
+ .debug_loc     0x0000000000000b45      0x585 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .debug_loc     0x00000000000010ca      0x376 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .debug_loc     0x0000000000001440      0x9ac out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .debug_loc     0x0000000000001dec      0xabc out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .debug_loc     0x00000000000028a8       0x67 out/linuxapp@linuxhost/libraries/rhino.a(k_stats.o)
+ .debug_loc     0x000000000000290f      0x115 out/linuxapp@linuxhost/libraries/rhino.a(k_task_sem.o)
+ .debug_loc     0x0000000000002a24      0x491 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .debug_loc     0x0000000000002eb5      0x387 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .debug_loc     0x000000000000323c      0x166 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .debug_loc     0x00000000000033a2      0x2fc out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .debug_loc     0x000000000000369e      0x5e0 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .debug_loc     0x0000000000003c7e      0x1cf out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .debug_loc     0x0000000000003e4d      0x4c4 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .debug_loc     0x0000000000004311      0x44a out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .debug_loc     0x000000000000475b      0x1a3 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .debug_loc     0x00000000000048fe       0xf1 out/linuxapp@linuxhost/libraries/vfs.a(vfs_driver.o)
+ .debug_loc     0x00000000000049ef      0x2a7 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .debug_loc     0x0000000000004c96       0x2c out/linuxapp@linuxhost/libraries/wrapper.a(api.o)
+ .debug_loc     0x0000000000004cc2       0x40 out/linuxapp@linuxhost/libraries/hal.a(hal.o)
+ .debug_loc     0x0000000000004d02      0x11b out/linuxapp@linuxhost/libraries/hal.a(crypto.o)
+ .debug_loc     0x0000000000004e1d       0xc4 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .debug_loc     0x0000000000004ee1      0x4be out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .debug_loc     0x000000000000539f       0xf9 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .debug_loc     0x0000000000005498      0x266 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .debug_loc     0x00000000000056fe       0x7b out/linuxapp@linuxhost/libraries/log.a(log.o)
+ .debug_loc     0x0000000000005779      0x318 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .debug_loc     0x0000000000005a91      0x24e out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .debug_loc     0x0000000000005cdf      0x1da out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .debug_loc     0x0000000000005eb9      0x2ff out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .debug_loc     0x00000000000061b8       0x1f out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .debug_loc     0x00000000000061d7       0x53 out/linuxapp@linuxhost/libraries/board_linuxhost.a(soc_impl.o)
+ .debug_loc     0x000000000000622a       0xf4 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .debug_loc     0x000000000000631e      0x4d1 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .debug_loc     0x00000000000067ef      0x481 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+ .debug_loc     0x0000000000006c70       0x89 out/linuxapp@linuxhost/libraries/rhino.a(k_time.o)
+
+.debug_macinfo
+ *(.debug_macinfo)
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+
+.debug_pubtypes
+ *(.debug_pubtypes)
+
+.debug_ranges   0x0000000000000000      0x928
+ *(.debug_ranges)
+ .debug_ranges  0x0000000000000000       0x18 out/linuxapp@linuxhost/libraries/board_linuxhost.a(main.o)
+ .debug_ranges  0x0000000000000018       0x68 out/linuxapp@linuxhost/libraries/board_linuxhost.a(csp_rhino.o)
+ .debug_ranges  0x0000000000000080       0x18 out/linuxapp@linuxhost/libraries/board_linuxhost.a(arg_options.o)
+ .debug_ranges  0x0000000000000098       0x30 out/linuxapp@linuxhost/libraries/board_linuxhost.a(hw.o)
+ .debug_ranges  0x00000000000000c8       0x18 out/linuxapp@linuxhost/libraries/rhino.a(k_sys.o)
+ .debug_ranges  0x00000000000000e0       0x30 out/linuxapp@linuxhost/libraries/rhino.a(k_tick.o)
+ .debug_ranges  0x0000000000000110       0xe8 out/linuxapp@linuxhost/libraries/rhino.a(k_queue.o)
+ .debug_ranges  0x00000000000001f8       0xc0 out/linuxapp@linuxhost/libraries/rhino.a(k_sem.o)
+ .debug_ranges  0x00000000000002b8       0xa0 out/linuxapp@linuxhost/libraries/rhino.a(k_task.o)
+ .debug_ranges  0x0000000000000358      0x110 out/linuxapp@linuxhost/libraries/rhino.a(k_ringbuf.o)
+ .debug_ranges  0x0000000000000468       0x18 out/linuxapp@linuxhost/libraries/rhino.a(k_timer.o)
+ .debug_ranges  0x0000000000000480       0x30 out/linuxapp@linuxhost/libraries/rhino.a(k_mutex.o)
+ .debug_ranges  0x00000000000004b0       0x30 out/linuxapp@linuxhost/libraries/rhino.a(k_pend.o)
+ .debug_ranges  0x00000000000004e0       0x38 out/linuxapp@linuxhost/libraries/rhino.a(k_sched.o)
+ .debug_ranges  0x0000000000000518       0x40 out/linuxapp@linuxhost/libraries/yloop.a(yloop.o)
+ .debug_ranges  0x0000000000000558       0x30 out/linuxapp@linuxhost/libraries/yloop.a(local_event.o)
+ .debug_ranges  0x0000000000000588       0x18 out/linuxapp@linuxhost/libraries/vfs.a(vfs.o)
+ .debug_ranges  0x00000000000005a0       0x98 out/linuxapp@linuxhost/libraries/vfs.a(device.o)
+ .debug_ranges  0x0000000000000638       0x20 out/linuxapp@linuxhost/libraries/vfs.a(vfs_inode.o)
+ .debug_ranges  0x0000000000000658       0x48 out/linuxapp@linuxhost/libraries/wrapper.a(csp.o)
+ .debug_ranges  0x00000000000006a0       0x18 out/linuxapp@linuxhost/libraries/hal.a(flash.o)
+ .debug_ranges  0x00000000000006b8       0x18 out/linuxapp@linuxhost/libraries/hal.a(mesh.o)
+ .debug_ranges  0x00000000000006d0       0x18 out/linuxapp@linuxhost/libraries/hal.a(sensor.o)
+ .debug_ranges  0x00000000000006e8       0x30 out/linuxapp@linuxhost/libraries/hal.a(wifi.o)
+ .debug_ranges  0x0000000000000718       0x60 out/linuxapp@linuxhost/libraries/ysh.a(ysh.o)
+ .debug_ranges  0x0000000000000778       0x30 out/linuxapp@linuxhost/libraries/ysh.a(ysh_history.o)
+ .debug_ranges  0x00000000000007a8       0x28 out/linuxapp@linuxhost/libraries/ysh.a(ysh_help.o)
+ .debug_ranges  0x00000000000007d0       0x80 out/linuxapp@linuxhost/libraries/linuximpl.a(cpu_impl.o)
+ .debug_ranges  0x0000000000000850       0x18 out/linuxapp@linuxhost/libraries/linuxapp.a(main.o)
+ .debug_ranges  0x0000000000000868       0x18 out/linuxapp@linuxhost/libraries/board_linuxhost.a(ysh_impl.o)
+ .debug_ranges  0x0000000000000880       0x88 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_bestfit.o)
+ .debug_ranges  0x0000000000000908       0x20 out/linuxapp@linuxhost/libraries/rhino.a(k_mm_region.o)
+
+.debug_macro
+ *(.debug_macro)
+
+.gnu.attributes
+ *(.gnu.attributes)
+
+/DISCARD/
+ *(.note.GNU-stack)
+ *(.gnu_debuglink)
+ *(.gnu.lto_*)
+OUTPUT(out/linuxapp@linuxhost/binary/linuxapp@linuxhost.elf elf32-i386)

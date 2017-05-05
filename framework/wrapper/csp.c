@@ -1,0 +1,264 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <stdlib.h>
+#include <string.h>
+#include <csp.h>
+#include <hal/hal.h>
+#include <yos/kernel.h>
+
+int yos_mutex_new(yos_mutex_t *mutex) {
+    return csp_mutex_new(mutex);
+}
+
+uint32_t yos_mutex_lock(yos_mutex_t mutex) {
+    return csp_mutex_lock(mutex);
+}
+
+uint32_t yos_mutex_unlock(yos_mutex_t mutex)
+{
+    return csp_mutex_unlock(mutex);
+}
+
+void yos_mutex_free(yos_mutex_t *mutex)
+{
+    csp_mutex_free(mutex);
+}
+
+int yos_sem_new(yos_sem_t *sem, int32_t count)
+{
+    return csp_sem_new(sem, count);
+}
+
+uint32_t yos_sem_wait(yos_sem_t sem, uint32_t timeout)
+{
+    return csp_sem_wait(sem, timeout);
+}
+
+void yos_sem_signal(yos_sem_t sem)
+{
+    csp_sem_signal(sem);
+}
+
+void yos_sem_free(yos_sem_t *sem)
+{
+    csp_sem_free(sem);
+}
+
+uint64_t yos_now(void)
+{
+    return csp_now();
+}
+
+void yos_msleep(int ms)
+{
+    hal_time_msleep(ms);
+}
+
+int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stacksize)
+{
+    return csp_task_new(name, fn, arg, stacksize);
+}
+
+int yos_task_new_ext(const char *name, void (*fn)(void *),
+                     void *arg, int stacksize, int prio)
+{
+    return csp_task_new_ext(name, fn, arg, stacksize, prio);
+}
+
+void yos_task_exit(int code)
+{
+    csp_task_exit(code);
+}
+
+#ifdef HAVE_RHINO_KERNEL
+#include <k_api.h>
+
+int csp_mutex_new(csp_mutex_t *mutex)
+{
+    kmutex_t *s = malloc(sizeof(kmutex_t));
+    yunos_mutex_create(s, "csp");
+    mutex->hdl = s;
+    return 0;
+}
+
+uint32_t csp_mutex_lock(csp_mutex_t mutex)
+{
+    kstat_t ret = yunos_mutex_lock(mutex.hdl, YUNOS_WAIT_FOREVER);
+
+    /*rhino allow nested*/
+    if (ret == YUNOS_MUTEX_OWNER_NESTED)
+    {ret = YUNOS_SUCCESS;}
+
+    return ret;
+}
+
+uint32_t csp_mutex_unlock(csp_mutex_t mutex)
+{
+    kstat_t ret = yunos_mutex_unlock(mutex.hdl);
+
+    /*rhino allow nested*/
+    if (ret == YUNOS_MUTEX_OWNER_NESTED)
+    {ret = YUNOS_SUCCESS;}
+
+    return ret;
+}
+
+void csp_mutex_free(csp_mutex_t *mutex)
+{
+    kmutex_t *s = mutex->hdl;
+    yunos_mutex_del(s);
+    mutex->hdl = NULL;
+    free(s);
+}
+
+int csp_sem_new(csp_sem_t *sem, int32_t count)
+{
+    ksem_t *s = malloc(sizeof(ksem_t));
+    yunos_sem_create(s, "csp", count);
+    sem->hdl = s;
+    return 0;
+}
+
+uint32_t csp_sem_wait(csp_sem_t sem, uint32_t timeout)
+{
+    if (timeout == YUNOS_WAIT_FOREVER) {
+        return yunos_sem_take(sem.hdl, YUNOS_WAIT_FOREVER);
+    } else {
+        int onetick = 1000 / YUNOS_CONFIG_TICKS_PER_SECOND;
+        timeout = (timeout + onetick - 1) / onetick;
+        return yunos_sem_take(sem.hdl, timeout);
+    }
+
+    return 0;
+}
+
+void csp_sem_signal(csp_sem_t sem)
+{
+    yunos_sem_give(sem.hdl);
+}
+
+void csp_sem_free(csp_sem_t *sem)
+{
+    ksem_t *s = sem->hdl;
+    yunos_sem_del(s);
+    sem->hdl = NULL;
+    free(s);
+}
+
+int csp_task_new_ext(const char *name, void (*fn)(void *), void *arg,
+                     int stacksize, int prio)
+{
+    int ret = 0;
+#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+    ktask_t *task_handle = NULL;
+    ret = yunos_task_dyn_create(&task_handle, name, arg,
+                              prio, 0, stacksize / sizeof(cpu_stack_t), fn, 1u);
+#endif
+
+    return ret;
+}
+#endif /* HAVE_RHINO_KERNEL */
+
+int csp_task_new(const char *name, void (*fn)(void *), void *arg,
+                 int stacksize)
+{
+    return csp_task_new_ext(name, fn, arg, stacksize, 9);
+}
+
+#ifdef HAVE_RHINO_KERNEL
+void csp_task_exit(int code)
+{
+    /* delete my self*/
+#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+    yunos_task_dyn_del(NULL);
+#endif
+}
+
+uint64_t csp_now(void)
+{
+    return yunos_sys_time_get() * 1000 * 1000;
+}
+
+int csp_sys_reset()
+{
+    if (hal_arch_reboot) {
+        hal_arch_reboot();
+    }
+
+    return 0xff;
+}
+
+int csp_sys_free(uint32_t *f)
+{
+    return 0;
+}
+#endif /* HAVE_RHINO_KERNEL */
+
+int csp_net_errno(int fd)
+{
+#ifdef HAL_ARCH_SPEICAL_ERRNO
+    return arch_get_net_errno(fd);
+#else
+    return errno;
+#endif
+}
+
+static char **strsplit(char *src, int max_fields)
+{
+    char *  token;
+    char ** argv = malloc((max_fields + 1) * sizeof(char *));
+    int     args = 0;
+
+    argv[args++] = "yoc";
+    for (token = strsep(&src, ","); token != NULL; token = strsep(&src, ",")) {
+        if (strlen(token) == 0)
+            continue;
+        if (args >= max_fields) {
+            break;
+        }
+        argv[args ++] = token;
+    }
+    argv[args] = NULL;
+    return argv;
+}
+
+int weak_attr csp_get_args(const char ***pargv)
+{
+    static const char **argv;
+    static int argc;
+
+    if (argc) {
+        *pargv = argv;
+        return argc;
+    }
+
+    char *buf = malloc(256);
+    if (buf == NULL)
+        return 0;
+
+    int ret = hal_flash_conf_read(NULL, "yoc.cmdline", (unsigned char *)buf, 256);
+    if (ret < 0) {
+        free(buf);
+        return 0;
+    }
+
+    argv = (const char **)strsplit(buf, 7);
+    while (argv[argc]) argc++;
+    *pargv = argv;
+    return argc;
+}
+

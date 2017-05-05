@@ -1,0 +1,22 @@
+##
+## Copyright (C) 2016 YunOS Project. All rights reserved.
+##
+
+## chip&version configs
+CONFIG_CHIP_COMPILE_PREFIX=arm-none-eabi-
+CONFIG_CHIP_VERSION=stm32_f429zi
+CONFIG_CHIP_ARCH=armv7-m4
+
+CONFIG_TARGET_ROOT_PATH=stm32/stm32f429zi
+CONFIG_TARGET_BOARD=stm32f429zi
+
+## aos configs
+CONFIG_YOC_RHINO=y
+CONFIG_YOC_VFS=n
+CONFIG_YOC_FRAMEWORK=n
+CONFIG_YOC_PRODUCT=n
+CONFIG_YOC_HAL=n
+
+## rhino test
+CONFIG_YOC_UT_RHINO=y
+

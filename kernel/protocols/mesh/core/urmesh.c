@@ -1,0 +1,496 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <string.h>
+
+#include <yoc/framework.h>
+
+#include "hal/mesh.h"
+#include "hal/wifi.h"
+#include "mesh_types.h"
+#include "urmesh.h"
+#include "lwip_adapter.h"
+#include "mesh_forwarder.h"
+#include "logging.h"
+#include "message.h"
+#include "mesh_mgmt.h"
+#include "mesh_forwarder.h"
+#include "network_data.h"
+#include "cli.h"
+#include "encoding.h"
+#include "network_data.h"
+#include "mac_whitelist.h"
+#include "mcast.h"
+#include "lowpan6.h"
+#include "router_mgr.h"
+#include "interfaces.h"
+#include "link_mgmt.h"
+
+typedef void (*yoc_call_t)(void *);
+extern int yoc_schedule_call(yoc_call_t f, void *arg);
+
+typedef struct transmit_frame_s {
+    message_t     *message;
+    ur_ip6_addr_t dest;
+} transmit_frame_t;
+
+typedef struct urmesh_state_s {
+    mm_cb_t                mm_cb;
+    ur_netif_ip6_address_t ucast_address[IP6_UCAST_ADDR_NUM];
+    ur_netif_ip6_address_t mcast_address[IP6_MCAST_ADDR_NUM];
+    nd_updater_t           network_data_updater;
+    ur_adapter_callback_t  *adapter_callback;
+    bool                   initialized;
+    bool                   started;
+} urmesh_state_t;
+
+static urmesh_state_t g_um_state = {.initialized = false , .started = false};
+
+static void update_ipaddr(void)
+{
+    const ur_ip6_addr_t *mcast;
+    uint32_t addr;
+    network_context_t *network;
+
+    network = get_default_network_context();
+    memset(g_um_state.ucast_address[0].addr.m8, 0, sizeof(g_um_state.ucast_address[0].addr.m8));
+    g_um_state.ucast_address[0].addr.m32[0] = ur_swap32(0xfc000000);
+    g_um_state.ucast_address[0].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
+    addr = (get_sub_netid(network->meshnetid) << 16) | mm_get_local_sid();
+    g_um_state.ucast_address[0].addr.m32[3] = ur_swap32(addr);
+    g_um_state.ucast_address[0].prefix_length = 64;
+
+    g_um_state.ucast_address[0].next = &g_um_state.ucast_address[1];
+    memset(g_um_state.ucast_address[1].addr.m8, 0, sizeof(g_um_state.ucast_address[1].addr.m8));
+    g_um_state.ucast_address[1].addr.m32[0] = ur_swap32(0xfc000000);
+    g_um_state.ucast_address[1].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
+    memcpy(&g_um_state.ucast_address[1].addr.m8[8], mm_get_local_ueid(), 8);
+    g_um_state.ucast_address[1].prefix_length = 64;
+
+    mcast = nd_get_subscribed_mcast();
+    memcpy(&g_um_state.mcast_address[0].addr, mcast, sizeof(g_um_state.mcast_address[0].addr));
+    g_um_state.mcast_address[0].prefix_length = 64;
+}
+
+static void network_data_update_handler(bool stable)
+{
+    if (stable) {
+        update_ipaddr();
+        if (g_um_state.adapter_callback) {
+            g_um_state.adapter_callback->interface_update();
+        }
+    }
+}
+
+static ur_error_t ur_mesh_interface_up(void)
+{
+    update_ipaddr();
+
+    if (g_um_state.adapter_callback) {
+        g_um_state.adapter_callback->interface_up();
+    }
+
+    yoc_local_event_post(EV_MESH, CODE_MESH_CONNECTED, 0);
+
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_API, "mesh interface up\r\n");
+    return UR_ERROR_NONE;
+}
+
+static ur_error_t ur_mesh_interface_down(void)
+{
+    if (g_um_state.adapter_callback) {
+        g_um_state.adapter_callback->interface_down();
+    }
+    return UR_ERROR_NONE;
+}
+
+static void output_message_handler(void *args)
+{
+    transmit_frame_t *frame = (transmit_frame_t *)args;
+    mf_send_ip6(frame->message, &frame->dest);
+    ur_mem_free(frame, sizeof(transmit_frame_t));
+}
+
+ur_error_t ur_mesh_ipv6_output(message_t *message, const ur_ip6_addr_t *dest)
+{
+    transmit_frame_t *frame;
+    uint8_t          append_length;
+
+    if (mm_get_device_state() < DEVICE_STATE_LEAF) {
+        return UR_ERROR_FAIL;
+    }
+
+    frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
+    if (frame == NULL) {
+        return UR_ERROR_FAIL;
+    }
+    append_length = sizeof(mcast_header_t) + 2;
+    frame->message = message_alloc(NULL, message->data->tot_len + append_length);
+    if (frame->message == NULL) {
+        ur_mem_free(frame, sizeof(transmit_frame_t));
+        return UR_ERROR_FAIL;
+    }
+    message_set_payload_offset(frame->message, -append_length);
+    message_copy(frame->message, message);
+    memcpy(&frame->dest, dest, sizeof(frame->dest));
+    yoc_schedule_call(output_message_handler, frame);
+    return UR_ERROR_NONE;
+}
+
+static void input_message_handler(void *args)
+{
+    if (g_um_state.adapter_callback) {
+        g_um_state.adapter_callback->input((message_t *)args);
+    } else {
+        message_free((message_t *)args);
+    }
+}
+
+ur_error_t ur_mesh_input(message_t *message)
+{
+    if (g_um_state.adapter_callback) {
+        yoc_schedule_call(input_message_handler, message);
+    } else {
+        message_free(message);
+    }
+    return UR_ERROR_NONE;
+}
+
+int csp_get_args(const char ***pargv);
+static void parse_args(void)
+{
+    int i, argc;
+    const char **argv;
+    argc = csp_get_args(&argv);
+    for (i=0;i<argc;i++) {
+        if (strcmp(argv[i], "-s") == 0) {
+            g_cli_silent = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--mesh-log") == 0) {
+            ur_log_set_level(str2lvl(argv[i+1]));
+
+            i += 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--mesh-mode") == 0) {
+            int mode = atoi(argv[i+1]);
+            mm_set_mode(mode);
+
+            i += 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--mesh-router") == 0) {
+            int id = atoi(argv[i+1]);
+            ur_router_set_default_router(id);
+
+            i += 1;
+            continue;
+        }
+    }
+}
+
+ur_error_t ur_mesh_init(void *config)
+{
+    if (g_um_state.initialized)
+        return UR_ERROR_NONE;
+
+    g_um_state.mm_cb.interface_up = ur_mesh_interface_up;
+    g_um_state.mm_cb.interface_down = ur_mesh_interface_down;
+    ur_adapter_interface_init();
+    ur_router_register_module();
+    mm_init();
+    interface_init();
+    neighbors_init();
+    cli_init();
+    mf_init();
+    nd_init();
+    lp_init();
+    message_stats_reset();
+    g_um_state.initialized = true;
+
+    parse_args();
+    return UR_ERROR_NONE;
+}
+
+bool ur_mesh_is_initialized(void)
+{
+    return g_um_state.initialized;
+}
+
+ur_error_t ur_mesh_start()
+{
+    ur_mesh_hal_module_t *wifi_hal = NULL;
+
+    if (g_um_state.started) {
+        return UR_ERROR_NONE;
+    }
+
+    g_um_state.started = true;
+    wifi_hal = hal_ur_mesh_get_default_module();
+    if (wifi_hal) {
+        hal_ur_mesh_enable(wifi_hal);
+    }
+    interface_start();
+    mm_start(&g_um_state.mm_cb);
+
+    g_um_state.network_data_updater.handler = network_data_update_handler;
+    nd_register_update_handler(&g_um_state.network_data_updater);
+
+    yoc_local_event_post(EV_MESH, CODE_MESH_STARTED, 0);
+
+    return UR_ERROR_NONE;
+}
+
+ur_error_t ur_mesh_stop(void)
+{
+    ur_mesh_hal_module_t *wifi_hal = NULL;
+
+    if (g_um_state.started == false) {
+        return UR_ERROR_NONE;
+    }
+
+    g_um_state.started = false;
+    wifi_hal = hal_ur_mesh_get_default_module();
+    if (wifi_hal) {
+        hal_ur_mesh_disable(wifi_hal);
+    }
+
+    nd_unregister_update_handler(&g_um_state.network_data_updater);
+
+    ur_mesh_interface_down();
+    mm_stop();
+    interface_stop();
+    return UR_ERROR_NONE;
+}
+
+/* per device APIs */
+uint8_t ur_mesh_get_device_state(void)
+{
+    return (uint8_t)mm_get_device_state();
+}
+
+ur_error_t ur_mesh_register_callback(ur_adapter_callback_t *callback)
+{
+    g_um_state.adapter_callback = callback;
+    return UR_ERROR_NONE;
+}
+
+uint8_t ur_mesh_get_mode(void)
+{
+    return (uint8_t)mm_get_mode();
+}
+
+void ur_mesh_set_mode(uint8_t mode)
+{
+    mm_set_mode(mode);
+}
+
+uint8_t ur_mesh_get_seclevel(void)
+{
+    return mm_get_seclevel();
+}
+
+ur_error_t ur_mesh_set_seclevel(uint8_t level)
+{
+    return mm_set_seclevel(level);
+}
+
+/* per network APIs */
+const mac_address_t *ur_mesh_net_get_mac_address(ur_mesh_net_index_t nettype)
+{
+    return mm_get_mac_address();
+}
+
+const uint16_t ur_mesh_net_get_meshnetid(ur_mesh_net_index_t nettype)
+{
+    return mm_get_meshnetid(NULL);
+}
+
+void ur_mesh_net_set_meshnetid(ur_mesh_net_index_t nettype, uint16_t meshnetid)
+{
+    mm_set_meshnetid(NULL, meshnetid);
+}
+
+const uint16_t ur_mesh_net_get_meshnetsize(ur_mesh_net_index_t nettype)
+{
+    return mm_get_meshnetsize();
+}
+
+const uint16_t ur_mesh_net_get_sid(ur_mesh_net_index_t nettype)
+{
+    return mm_get_local_sid();
+}
+
+const ur_ip6_addr_t *ur_mesh_get_subscribed_mcast(void)
+{
+    return nd_get_subscribed_mcast();
+}
+
+ur_error_t ur_mesh_set_subscribed_mcast(const ur_ip6_addr_t *addr)
+{
+    return nd_set_subscribed_mcast(addr);
+}
+
+bool ur_mesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)
+{
+    return nd_is_subscribed_mcast(addr);
+}
+
+const ur_netif_ip6_address_t *ur_mesh_get_ucast_addr(void)
+{
+    return g_um_state.ucast_address;
+}
+
+const ur_netif_ip6_address_t *ur_mesh_get_mcast_addr(void)
+{
+    return g_um_state.mcast_address;
+}
+
+ur_error_t ur_mesh_add_addr(ur_ip6_addr_t *addr)
+{
+    ur_error_t error = UR_ERROR_NONE;
+
+    if (mm_get_device_state() != DEVICE_STATE_LEADER) {
+        return UR_ERROR_FAIL;
+    }
+
+    if (ur_is_mcast(addr)) {
+        memcpy(&g_um_state.mcast_address[0].addr, addr, sizeof(g_um_state.mcast_address[0].addr));
+        error = ur_mesh_set_subscribed_mcast(addr);
+    } else {
+        error = UR_ERROR_FAIL;
+    }
+
+    return error;
+}
+
+ur_error_t ur_mesh_del_addr(ur_ip6_addr_t *addr)
+{
+    ur_error_t error = UR_ERROR_NONE;
+
+    if (mm_get_device_state() != DEVICE_STATE_LEADER) {
+        return UR_ERROR_FAIL;
+    }
+
+    if (ur_is_mcast(addr) &&
+        (memcmp(&g_um_state.mcast_address[0].addr, addr, sizeof(g_um_state.mcast_address[0].addr)) == 0)) {
+            memset(g_um_state.mcast_address, 0 , sizeof(g_um_state.mcast_address));
+            error = ur_mesh_set_subscribed_mcast(addr);
+    } else {
+        error = UR_ERROR_FAIL;
+    }
+
+    return error;
+}
+
+ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest, sid_t *dest_sid)
+{
+    return mf_resolve_dest(dest, dest_sid);
+}
+
+void ur_mesh_enable_whitelist(void)
+{
+    whitelist_enable();
+}
+
+void ur_mesh_disable_whitelist(void)
+{
+    whitelist_disable();
+}
+
+ur_error_t ur_mesh_add_whitelist(const mac_address_t *address)
+{
+    whitelist_entry_t *entry;
+
+    entry = whitelist_add(address);
+    if (entry) {
+        return UR_ERROR_NONE;
+    }
+    return UR_ERROR_MEM;
+}
+
+ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi)
+{
+    whitelist_entry_t *entry;
+
+    entry = whitelist_add(address);
+    if (entry == NULL) {
+        return UR_ERROR_MEM;
+    }
+    whitelist_set_constant_rssi(entry, rssi);
+    return UR_ERROR_NONE;
+}
+
+void ur_mesh_remove_whitelist(const mac_address_t*address)
+{
+    whitelist_remove(address);
+}
+
+void ur_mesh_clear_whitelist(void)
+{
+    whitelist_clear();
+}
+
+void ur_mesh_get_channel(channel_t *channel)
+{
+    ur_mesh_hal_module_t   *ur_wifi_hal = NULL;
+    hal_wifi_module_t *wifi_hal = NULL;
+
+    if (channel) {
+        wifi_hal = hal_wifi_get_default_module();
+        channel->wifi_channel = (uint16_t)hal_wifi_get_channel(wifi_hal);
+        // TODO: get channel from network context
+        channel->channel = channel->wifi_channel;
+        ur_wifi_hal = hal_ur_mesh_get_default_module();
+        channel->hal_ucast_channel = (uint16_t)hal_ur_mesh_get_ucast_channel(ur_wifi_hal);
+        channel->hal_bcast_channel = (uint16_t)hal_ur_mesh_get_bcast_channel(ur_wifi_hal);
+    }
+}
+
+const ur_link_stats_t *ur_mesh_get_link_stats(void)
+{
+    return mf_get_stats();
+}
+
+const frame_stats_t *ur_mesh_get_hal_stats(void)
+{
+    ur_mesh_hal_module_t *wifi_hal = NULL;
+
+    wifi_hal = hal_ur_mesh_get_default_module();
+    return hal_ur_mesh_get_stats(wifi_hal);
+}
+
+const ur_message_stats_t *ur_mesh_get_message_stats(void)
+{
+    return message_get_stats();
+}
+
+const ur_mem_stats_t *ur_mesh_get_mem_stats(void)
+{
+    return ur_mem_get_stats();
+}
+
+slist_t *ur_mesh_get_hals(void) {
+    return get_hal_contexts();
+}
+
+slist_t *ur_mesh_get_networks(void) {
+    return get_network_contexts();
+}

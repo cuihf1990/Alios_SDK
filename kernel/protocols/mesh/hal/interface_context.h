@@ -1,0 +1,233 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "yoc/mesh.h"
+
+#include "hal/mesh.h"
+#include "message.h"
+#include "timer.h"
+#include "topology.h"
+
+#ifndef UR_INTERFACE_CONTEXT_H
+#define UR_INTERFACE_CONTEXT_H
+
+typedef enum interface_state_s {
+     INTERFACE_UP,
+     INTERFACE_DOWN,
+} interface_state_t;
+
+typedef enum attach_state_s {
+    ATTACH_IDLE,
+    ATTACH_REQUEST,
+    ATTACH_SID_REQUEST,
+    ATTACH_DONE,
+} attach_state_t;
+
+static inline const char *attachstate2str(attach_state_t state)
+{
+    switch (state) {
+    case ATTACH_IDLE: return "idle";
+    case ATTACH_REQUEST: return "attaching";
+    case ATTACH_SID_REQUEST: return "sid";
+    case ATTACH_DONE: return "done";
+    }
+    return "unknown";
+}
+
+static inline const char *mediatype2str(media_type_t media)
+{
+    switch (media) {
+    case MEDIA_TYPE_WIFI: return "wifi";
+    case MEDIA_TYPE_BLE: return "ble";
+    case MEDIA_TYPE_15_4: return "15.4";
+    }
+    return "unknown";
+}
+
+typedef struct channel_list_s {
+    const uint8_t *channels;
+    uint8_t num;
+} channel_list_t;
+
+typedef struct scan_result_s {
+    slist_t       next;
+    mac_address_t addr;
+    uint16_t      meshnetid;
+    uint8_t       channel;
+    int8_t        rssi;
+} scan_result_t;
+
+typedef struct network_data_s {
+    uint8_t  version;
+    uint16_t size;
+} network_data_t;
+
+typedef struct lowpan_context_s {
+    ur_ip6_addr_t prefix;
+    uint8_t       prefix_length;
+    uint8_t       context_id;
+} lowpan_context_t;
+
+enum {
+    MCAST_CACHE_ENTRIES_SIZE = 32,
+};
+
+typedef struct mcast_entry_s {
+    uint8_t subnetid;
+    uint16_t sid;
+    uint8_t  sequence;
+    uint8_t  lifetime;
+} mcast_entry_t;
+
+enum {
+    PF_NODE_NUM = 128,
+};
+
+enum {
+    CMD_QUEUE,
+    DATA_QUEUE,
+    PENDING_QUEUE,
+    QUEUE_SIZE = 3,
+};
+
+enum {
+    EVENTS_NUM = 2,
+};
+
+typedef struct router_cb_s {
+    ur_error_t (*start)(void);
+    ur_error_t (*stop)(void);
+    ur_error_t (*handle_neighbor_updated)(neighbor_t *);
+    ur_error_t (*handle_message_received)(const uint8_t *data,
+                                          uint16_t length);
+    ur_error_t (*handle_subscribe_event)(uint8_t event, uint8_t *data,
+                                         uint8_t len);
+    uint16_t   (*get_next_hop_sid)(uint16_t dest_sid);
+} router_cb;
+
+typedef struct subscribe_events_s
+{
+    uint8_t events[EVENTS_NUM];
+    uint8_t num;
+} subscribe_events_t;
+
+typedef struct network_context_s network_context_t;
+typedef struct router_s {
+    uint8_t            id;
+    uint8_t            sid_type;
+    router_cb          cb;
+    subscribe_events_t events;
+    slist_t            next;
+    network_context_t *network;
+} router_t;
+
+enum {
+    SENDING_UCAST = 1 << 0,
+    SENDING_BCAST = 1 << 1,
+    SENDING_DATA  = 1 << 2,
+    SENDING_CMD   = 1 << 3,
+};
+
+typedef struct hal_context_s {
+    slist_t              next;
+    ur_mesh_hal_module_t *module;
+    channel_list_t       channel_list;
+    mac_address_t        mac_addr;
+
+    // queue
+    message_queue_t      send_queue[QUEUE_SIZE];
+    ur_timer_t           bcast_sending_timer;
+    ur_timer_t           ucast_sending_timer;
+    uint8_t              sending_flags;
+    message_t            *send_message;
+    frame_t              frame;
+    ur_link_stats_t      link_stats;
+
+    // neighbors
+    slist_t               neighbors_list;
+    uint8_t               neighbors_num;
+    ur_timer_t            update_nbr_timer;
+    ur_timer_t            link_quality_update_timer;
+    ur_timer_t            link_request_timer;
+    uint32_t              neighbor_update_interval;
+    uint32_t              link_request_interval;
+
+    // discovery
+    uint8_t               discovery_channel;
+    uint8_t               discovery_times;
+    uint8_t               discovery_timeouts;
+    ur_timer_t            discovery_timer;
+    scan_result_t         discovery_result;
+    uint32_t              discovery_interval;
+
+    int                   last_sent;  // 0 success, -1 fail
+    uint32_t              last_tx_time;
+} hal_context_t;
+
+typedef struct network_context_s {
+    slist_t               next;
+    uint8_t               index;
+#define NETWORK_PERMANENT_LEADER 0x01
+    uint8_t               flags;
+
+    hal_context_t         *hal;
+
+    interface_state_t     state;
+    // attach
+    attach_state_t        attach_state;
+    uint16_t              path_cost;
+    uint16_t              sid;
+    uint16_t              channel;
+    uint16_t              meshnetid;
+    uint16_t              candidate_meshnetid;
+
+    neighbor_t            *attach_node;
+    neighbor_t            *attach_candidate;
+    uint8_t               retry_times;
+    uint8_t               leader_times;
+    uint8_t               migrate_timeout;
+    bool                  change_sid;
+    ur_timer_t            attach_timer;
+    uint32_t              attach_interval;
+    ur_timer_t            advertisement_timer;
+    uint32_t              advertisement_interval;
+    ur_timer_t            migrate_wait_timer;
+    uint32_t              migrate_interval;
+    uint16_t              prev_netid;
+    uint16_t              prev_path_cost;
+
+    // network data
+    network_data_t        network_data;
+
+    // sid
+    slist_t               sid_nodes_list;
+    uint16_t              sid_nodes_num;
+    uint16_t              sid_shift;
+    uint16_t              sid_prefix;
+    uint16_t              sid_pf_nodes_num;
+    uint32_t              sid_attach_free_bits;
+    uint32_t              sid_mobile_free_bits[(PF_NODE_NUM + 31) / 32];
+
+    // mcast
+    uint8_t               mcast_sequence;
+    ur_timer_t            mcast_timer;
+    mcast_entry_t         mcast_entry[MCAST_CACHE_ENTRIES_SIZE];
+
+    // routing
+    router_t              *router;
+} network_context_t;
+
+#endif  /* UR_INTERFACE_CONTEXT_H */

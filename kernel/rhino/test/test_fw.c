@@ -1,0 +1,146 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <k_api.h>
+#include <test_fw.h>
+
+uint32_t            test_case_success;
+uint32_t            test_case_fail;
+uint32_t            test_case_check_err;
+static ksem_t       test_case_sem;
+static kmutex_t     test_case_mutex;
+static test_case_t *case_func_runner = NULL;
+
+extern void task_test(void);
+extern void mm_test(void);
+extern void mm_blk_test(void);
+extern void time_test(void);
+extern void sys_test(void);
+extern void event_test(void);
+extern void sem_test(void);
+extern void tasksem_test(void);
+extern void mutex_test(void);
+extern void timer_test(void);
+extern void queue_test(void);
+extern void buf_queue_test(void);
+extern void comb_test(void);
+extern void workqueue_test(void);
+extern void ysh_cmd_test(void);
+extern void mm_region_test(void);
+extern void trace_test(void);
+extern void ringbuf_test(void);
+
+test_case_map_t test_fw_map[] = {
+#if (YUNOS_CONFIG_TRACE > 0)
+    {"trace_test", trace_test},
+#endif
+    {"task_test", task_test},
+    {"mm_blk_test", mm_blk_test},
+    {"mm_region_test", mm_region_test},
+    {"time_test", time_test},
+    {"sys_test", sys_test},
+    {"event_test", event_test},
+    {"sem_test", sem_test},
+    {"tasksem_test", tasksem_test},
+    {"mutex_test", mutex_test},
+    {"timer_test", timer_test},
+    {"ringbuf_test",ringbuf_test},
+    {"queue_test", queue_test},
+#if (YUNOS_CONFIG_WORKQUEUE > 0)
+    {"workqueue_test", workqueue_test},
+#endif
+    {"buf_queue_test", buf_queue_test},
+    {"comb_test", comb_test},
+#ifdef CSP_LINUXHOST
+    {"ysh_cmd_test", ysh_cmd_test},
+#endif
+    /* last must be NULL! */
+    {NULL, NULL},
+};
+
+uint8_t test_case_register(test_case_t *case_runner)
+{
+    if (case_func_runner == NULL) {
+        case_func_runner = case_runner;
+        return 0;
+    }
+
+    return 1;
+}
+
+void test_case_unregister(void)
+{
+    if (case_func_runner != NULL) {
+        case_func_runner = NULL;
+    }
+}
+
+void test_case_run(void)
+{
+    test_case_t *runner;
+
+    runner = (test_case_t *)case_func_runner;
+
+    while (1) {
+        if (*runner == NULL) {
+            break;
+        }
+
+        (*runner)();
+        runner++;
+        next_test_case_wait();
+    }
+}
+
+void test_case_init(void)
+{
+    test_case_success = 0;
+    test_case_fail = 0;
+    yunos_sem_create(&test_case_sem, "test_case_sem", 0);
+    yunos_mutex_create(&test_case_mutex, "test_case_mutex");
+}
+
+void test_case_cleanup(void)
+{
+    yunos_sem_del(&test_case_sem);
+    yunos_mutex_del(&test_case_mutex);
+}
+
+void test_case_critical_enter(void)
+{
+    yunos_mutex_lock(&test_case_mutex, YUNOS_WAIT_FOREVER);
+}
+
+void test_case_critical_exit(void)
+{
+    yunos_mutex_unlock(&test_case_mutex);
+}
+
+void next_test_case_notify(void)
+{
+    if (yunos_sem_give(&test_case_sem) != YUNOS_SUCCESS) {
+        printf("next_test_case_notify failed!!!\n");
+    }
+}
+
+void next_test_case_wait(void)
+{
+    if (yunos_sem_take(&test_case_sem, YUNOS_WAIT_FOREVER) != YUNOS_SUCCESS) {
+        printf("next_test_case_wait failed!!!\n");
+    }
+
+    yunos_task_sleep(10);
+}
