@@ -27,7 +27,7 @@ void yos_task_key_delete(yos_task_key_t key)
 
 int yos_task_setspecific(yos_task_key_t key, void *vp)
 {
-    yunos_task_info_set(g_active_task, key, vp);
+    return yunos_task_info_set(g_active_task, key, vp);
 }
 
 void *yos_task_getspecific(yos_task_key_t key)

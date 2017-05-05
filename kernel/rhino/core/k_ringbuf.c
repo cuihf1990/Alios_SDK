@@ -57,8 +57,8 @@ static size_t ringbuf_headlen_decompress(size_t buf_len, uint8_t *cmp_buf)
 
 kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
 {
-    int      len_bytes                   = 0;
-    int      split_len                   = 0;
+    size_t   len_bytes                   = 0;
+    size_t   split_len                   = 0;
     uint8_t  c_len[RINGBUF_LEN_MAX_SIZE] = {0};
 
     if(ringbuf_is_full(p_ringbuf)) {
@@ -139,8 +139,8 @@ kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
 
 kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void * data, size_t len)
 {
-    int      len_bytes                   = 0;
-    int      split_len                   = 0;
+    size_t   len_bytes                   = 0;
+    size_t   split_len                   = 0;
     uint8_t  c_len[RINGBUF_LEN_MAX_SIZE] = {0};
 
     if (ringbuf_is_full(p_ringbuf)) {
@@ -163,7 +163,7 @@ kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void * data, size_t len)
             return YUNOS_INV_PARAM;
         }
 
-        if (p_ringbuf->freesize < len_bytes + len_bytes ) {
+        if (p_ringbuf->freesize < len_bytes + len ) {
             return YUNOS_RINGBUF_FULL;
         }
 
@@ -322,7 +322,7 @@ uint8_t ringbuf_is_full(k_ringbuf_t *p_ringbuf)
 
 uint8_t ringbuf_is_empty(k_ringbuf_t *p_ringbuf)
 {
-    if (p_ringbuf->freesize == (p_ringbuf->end - p_ringbuf->buf)) {
+    if (p_ringbuf->freesize == (size_t)(p_ringbuf->end - p_ringbuf->buf)) {
         return true;
     }
 

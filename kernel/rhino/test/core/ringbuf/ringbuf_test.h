@@ -20,7 +20,7 @@
 #define TASK_RINGBUF_PRI   16
 #define TASK_TEST_STACK_SIZE 1024
 
-#define MYASSERT(value) do {if ((int)(value) == 0) { printf("%s:%d\n", __FUNCTION__, __LINE__); }} while (0)
+#define MYASSERT(value) do {if ((value) == 0) { printf("%s:%d\n", __FUNCTION__, __LINE__); }} while (0)
 
 extern ktask_t *task_ringbuf;
 extern ktask_t *task_ringbuf_co;

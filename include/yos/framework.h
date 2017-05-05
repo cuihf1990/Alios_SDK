@@ -15,8 +15,8 @@
  */
 
 /**
- * @file yoc/framework.h
- * @brief YoC Framework APIs
+ * @file yos/framework.h
+ * @brief YOS Framework APIs
  * @version since 5.5.0
  */
 
@@ -67,12 +67,12 @@ extern "C"
 
 /**
  * @struct input_event_t
- * @brief yoc event structure
+ * @brief yos event structure
  */
 typedef struct {
-    /** The time event is generated, auto filled by yoc event system */
+    /** The time event is generated, auto filled by yos event system */
     uint32_t time;
-    /** Event type, value < 0x1000 are used by yoc system */
+    /** Event type, value < 0x1000 are used by yos system */
     uint16_t type;
     /** Defined according to type */
     uint16_t code;
@@ -88,6 +88,8 @@ typedef void (*yos_free_cb)(void *private_data);
 typedef void (*yos_event_cb)(input_event_t *event, void *private_data);
 /** Delayed execution callback */
 typedef void (*yos_call_t)(void *arg);
+/** Delayed execution callback */
+typedef void (*yos_poll_call_t)(int fd, void *arg);
 
 /**
  * @brief Register system event callback
@@ -96,15 +98,13 @@ typedef void (*yos_call_t)(void *arg);
  * @param private_data data to be bypassed to cb
  * @return None
  */
-void yos_local_event_listener_register(yos_event_cb cb,
-                                       yos_free_cb free_cb,
-                                       void *private_data);
+void yos_local_event_listener_register(yos_event_cb cb, void *priv);
 
 /**
  * @brief Unregister native event callback
  * @param yos_event_cb system event callback
  */
-void yos_local_event_listener_unregister(yos_event_cb cb);
+void yos_local_event_listener_unregister(yos_event_cb cb, void *priv);
 
 /**
  * @brief Post local event.
@@ -124,7 +124,7 @@ int yos_local_event_post(uint16_t type, uint16_t code, unsigned long  value);
  * @param param private data past to action
  * @returns None
  */
-void yos_poll_read_fd(int fd, yos_call_t action, void *param);
+void yos_poll_read_fd(int fd, yos_poll_call_t action, void *param);
 
 /**
  * @brief Cancel a poll event to be executed in main loop
@@ -134,7 +134,7 @@ void yos_poll_read_fd(int fd, yos_call_t action, void *param);
  * @returns None
  * @note all the parameters must be the same as yos_poll_read_fd
  */
-void yos_cancel_poll_read_fd(int fd, yos_call_t action, void *param);
+void yos_cancel_poll_read_fd(int fd, yos_poll_call_t action, void *param);
 
 /**
  * @brief Post a delayed action to be executed in main loop
@@ -163,9 +163,64 @@ void yos_cancel_delayed_action(yos_call_t action, void *arg);
  * @retval >=0 success
  * @retval <0  failure
  * @note Unlike yos_post_delayed_action,
- *       this function can be called from non-yoc-main-loop context.
+ *       this function can be called from non-yos-main-loop context.
  */
 int yos_schedule_call(yos_call_t action, void *arg);
+
+typedef void *yos_loop_t;
+
+/**
+ * @brief init a per-task event loop
+ * @param None
+ * @retval ==NULL failure
+ * @retval !=NULL success
+ */
+yos_loop_t yos_loop_init(void);
+
+/**
+ * @brief get current event loop
+ * @param None
+ * @retval default event loop
+ */
+yos_loop_t yos_current_loop(void);
+
+/**
+ * @brief start event loop
+ * @param None
+ * @retval None
+ * @note this function won't return until yos_loop_exit called
+ */
+void yos_loop_run(void);
+
+/**
+ * @brief exit event loop, yos_loop_run() will return
+ * @param None
+ * @retval None
+ * @note this function must be called from the task runninng the event loop
+ */
+void yos_loop_exit(void);
+
+/**
+ * @brief free event loop resources
+ * @param None
+ * @retval None
+ * @note this function should be called after yos_loop_run() return
+ */
+void yos_loop_destroy(void);
+
+/**
+ * @brief Schedule a callback specified event loop
+ * @param loop event loop to be scheduled, NULL for default main loop
+ * @param action action to be executed
+ * @param arg private data past to action
+ * @retval >=0 success
+ * @retval <0  failure
+ * @note Unlike yos_post_delayed_action,
+ *       this function can be called from non-yos-main-loop context.
+ */
+int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
+
+int yos_schedule_work(yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2);
 
 /** @} */ //end of Framework API
 

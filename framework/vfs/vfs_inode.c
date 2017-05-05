@@ -36,101 +36,78 @@ int inode_alloc()
 
     for (; e < YUNOS_CONFIG_VFS_DEV_NODES; e++) {
         if (g_vfs_dev_nodes[e].type == VFS_TYPE_NOT_INIT) {
-            return e + YUNOS_CONFIG_VFS_FD_OFFSET;
+            return e;
         }
     }
 
     return E_VFS_INODE_NO_AVAIL;
 }
 
-int inode_del(int fd)
+int inode_del(inode_t *node)
 {
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET || fd >= YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES) {
-        return E_VFS_FD_ILLEGAL;
-    }
-
-    fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
-
-    if (g_vfs_dev_nodes[fd].refs > 0) {
+    if (node->refs > 0) {
         return E_VFS_BUSY;
     }
 
-    if (g_vfs_dev_nodes[fd].refs == 0) {
-        if (g_vfs_dev_nodes[fd].i_name != NULL) {
-            free(g_vfs_dev_nodes[fd].i_name);
+    if (node->refs == 0) {
+        if (node->i_name != NULL) {
+            free(node->i_name);
         }
 
-        g_vfs_dev_nodes[fd].i_name = NULL;
-        g_vfs_dev_nodes[fd].i_arg = NULL;
-        g_vfs_dev_nodes[fd].i_flags = 0;
-        g_vfs_dev_nodes[fd].type = VFS_TYPE_NOT_INIT;
+        node->i_name = NULL;
+        node->i_arg = NULL;
+        node->i_flags = 0;
+        node->type = VFS_TYPE_NOT_INIT;
     }
 
     return VFS_SUCCESS;
 }
 
-int inode_open(const char *path)
+inode_t *inode_open(const char *path)
 {
     int e = 0;
+    inode_t *node;
 
     for (; e < YUNOS_CONFIG_VFS_DEV_NODES; e++) {
-        if ((g_vfs_dev_nodes[e].i_name != NULL) && (strcmp(g_vfs_dev_nodes[e].i_name, path) == 0)) {
-            return e + YUNOS_CONFIG_VFS_FD_OFFSET;
+        node = &g_vfs_dev_nodes[e];
+        if (node == NULL)
+            continue;
+        if (node->i_name == NULL)
+            continue;
+        if (strcmp(node->i_name, path) == 0) {
+            return node;
         }
     }
 
-    return E_VFS_INODE_NOT_FOUND;
+    return NULL;
 }
 
 int inode_ptr_get(int fd, inode_t **node)
 {
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET || fd >= YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES) {
+    if (fd < 0 || fd >= YUNOS_CONFIG_VFS_DEV_NODES) {
         return E_VFS_FD_ILLEGAL;
     }
-
-    fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
 
     *node = &g_vfs_dev_nodes[fd];
 
     return VFS_SUCCESS;
 }
 
-int inode_ref(int fd)
+void inode_ref(inode_t *node)
 {
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET || fd >= YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES) {
-        return E_VFS_FD_ILLEGAL;
-    }
-
-    fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
-
-    g_vfs_dev_nodes[fd].refs++;
-    return VFS_SUCCESS;
+    node->refs++;
 }
 
-int inode_unref(int fd)
+void inode_unref(inode_t *node)
 {
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET || fd >= YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES) {
-        return E_VFS_FD_ILLEGAL;
+    if (node->refs > 0) {
+        node->refs--;
     }
-
-    fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
-
-    if (g_vfs_dev_nodes[fd].refs > 0) {
-        g_vfs_dev_nodes[fd].refs--;
-    }
-
-    return VFS_SUCCESS;
 }
 
-int inode_busy(int fd)
+int inode_busy(inode_t *node)
 {
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET || fd >= YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES) {
-        return E_VFS_FD_ILLEGAL;
-    }
-
-    fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
-
-    return g_vfs_dev_nodes[fd].refs;
+    return node->refs > 0;
 }
 
 int inode_avail_count(void)

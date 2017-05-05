@@ -127,7 +127,7 @@ static void task_queue2_entry(void *arg)
 {
     kstat_t ret;
     kbuf_queue_info_t info;
-    int count = 0;
+    size_t count = 0;
 
     while (1) {
 

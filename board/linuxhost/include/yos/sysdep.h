@@ -1,14 +1,15 @@
 #ifndef __YOC_SYSDEP_H__
 #define __YOC_SYSDEP_H__
 
-#include <k_api.h>
-
 #include <stddef.h>
 #include <errno.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 #include <malloc.h>
+#include <signal.h>
+
+#include <k_api.h>
 
 /* fs */
 #include <poll.h>

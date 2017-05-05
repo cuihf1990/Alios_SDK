@@ -153,7 +153,7 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
     return YUNOS_CMD_SUCCESS;
 }
 
-#ifdef CONFIG_MMREGION_ON
+#ifdef CONFIG_YOS_RHINO_MMREGION
 extern klist_t g_mm_region_list_head;
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 {
@@ -200,7 +200,7 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
             if ((YUNOS_MM_REGION_CORRUPT_DYE & min->dye) != YUNOS_MM_REGION_CORRUPT_DYE) {
                 csp_printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s flag:0x%0x\r\n", i,
                            (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "corrupt", min->dye);
-            } 
+            }
             csp_printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s flag:0x%0x\r\n", i,
                        (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "taken", min->dye);
 #else
@@ -283,7 +283,7 @@ static uint32_t cmd_dumpsys_func(char *buf, uint32_t len, cmd_item_t *item, cmd_
     }else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "info")) {
         ret = dumpsys_info_func(buf, len);
         return ret;
-#ifdef CONFIG_MMREGION_ON
+#ifdef CONFIG_YOS_RHINO_MMREGION
     } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "mm_info")) {
         ret = dumpsys_mm_info_func(buf, len);
         return ret;
@@ -314,7 +314,7 @@ void ysh_reg_cmd_dumpsys(void)
     tmp->info      = "dumpsys command show the system's runing info.";
     tmp->help_info = "dumpsys :\r\n"
                      "\tdumpsys task       : show the task info.\r\n"
-#ifdef CONFIG_MMREGION_ON
+#ifdef CONFIG_YOS_RHINO_MMREGION
                      "\tdumpsys mm_info    : show the memory has alloced.\r\n"
                      "\tdumpsys mm_leak    : show the memory maybe leak.\r\n"
                      "\tdumpsys leak_check : leak check control comand.\r\n"

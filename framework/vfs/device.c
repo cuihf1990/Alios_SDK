@@ -27,81 +27,7 @@
 extern void *soc_mm_alloc(size_t size);
 extern void soc_mm_free(void *mem);
 #if (YUNOS_CONFIG_VFS_POLL_SUPPORT > 0)
-typedef struct {
-    csp_mutex_t    mutex;
-    struct pollfd *fd;
-    void          *sem;
-    int            counter;
-} signal_dev_t;
-
-static signal_dev_t sdev;
 static int inited;
-
-static int signal_open(inode_t *node)
-{
-    return 0;
-}
-
-static ssize_t signal_read(inode_t *node, char *buf, size_t nbytes)
-{
-    csp_mutex_lock(sdev.mutex);
-
-    int cnt = sdev.counter;
-    sdev.counter = 0;
-
-    csp_mutex_unlock(sdev.mutex);
-    return cnt;
-}
-
-static ssize_t signal_write(inode_t *node, const char *buf, size_t len)
-{
-    csp_mutex_lock(sdev.mutex);
-
-    sdev.counter += len;
-
-    if (sdev.fd) {
-        sdev.fd->revents |= POLLIN;
-
-        if (sdev.sem != NULL) {
-            csp_sem_t csp_sem;
-            csp_sem.hdl = sdev.sem;
-            csp_sem_signal(csp_sem);
-        }
-    }
-
-    csp_mutex_unlock(sdev.mutex);
-    return len;
-}
-
-static int signal_poll(bool setup, struct pollfd *pfd, void *sem)
-{
-    if (!setup) {
-        sdev.fd  = NULL;
-        sdev.sem = NULL;
-        return 0;
-    }
-
-    sdev.fd = pfd;
-    sdev.sem = sem;
-
-    if (sdev.counter) {
-        pfd->revents |= POLLIN;
-        csp_sem_t csp_sem;
-        csp_sem.hdl = sem;
-        csp_sem_signal(csp_sem);
-    }
-
-    return 0;
-}
-
-static file_ops_t signal_fops = {
-    .open  = signal_open,
-    .close = NULL,
-    .read  = signal_read,
-    .write = signal_write,
-    .ioctl = NULL,
-    .poll  = signal_poll
-};
 
 typedef struct {
     csp_mutex_t    mutex;
@@ -119,29 +45,20 @@ typedef struct {
     char buf[];
 } dev_event_t;
 
-static int event_open(inode_t *node)
+static int event_open(inode_t *node, file_t *file)
 {
-    event_dev_t *pdev = soc_mm_alloc(sizeof(*pdev));
+    event_dev_t *pdev = soc_mm_alloc(sizeof *pdev);
+    bzero(pdev, sizeof *pdev);
     csp_mutex_new(&pdev->mutex);
     dlist_init(&pdev->bufs);
     dlist_init(&pdev->buf_cache);
-    node->i_arg = pdev;
+    file->f_arg = pdev;
     return 0;
 }
 
-static int event_close(inode_t *node)
+static ssize_t event_write(file_t *f, const void *buf, size_t len)
 {
-    event_dev_t *pdev = node->i_arg;
-    soc_mm_free(node->i_arg);
-    node->i_arg = NULL;
-    csp_mutex_free(&pdev->mutex);
-    return 0;
-}
-
-static ssize_t event_write(inode_t *node, const char *buf, size_t len)
-{
-    event_dev_t *pdev = node->i_arg;
-
+    event_dev_t *pdev = f->f_arg;
     csp_mutex_lock(pdev->mutex);
 
     dev_event_t *evt;
@@ -180,9 +97,9 @@ out:
     return len;
 }
 
-static ssize_t event_read(inode_t *node, char *buf, size_t len)
+static ssize_t event_read(file_t *f, void *buf, size_t len)
 {
-    event_dev_t *pdev = node->i_arg;
+    event_dev_t *pdev = f->f_arg;
     int cnt = pdev->counter;
 
     if (!cnt) {
@@ -210,9 +127,9 @@ static ssize_t event_read(inode_t *node, char *buf, size_t len)
     return cnt;
 }
 
-static int event_poll(inode_t * node, bool setup, struct pollfd *pfd, void *sem)
+static int event_poll(file_t *f, bool setup, struct pollfd *pfd, void *sem)
 {
-    event_dev_t *pdev = node->i_arg;
+    event_dev_t *pdev = f->f_arg;
     if (!setup) {
         pdev->fd = NULL;
         pdev->sem = NULL;
@@ -237,7 +154,6 @@ static file_ops_t event_fops = {
     .read = event_read,
     .write = event_write,
     .poll = event_poll,
-    .close = event_close,
 };
 
 int vfs_device_init(void)
@@ -248,20 +164,7 @@ int vfs_device_init(void)
         return  VFS_SUCCESS;
     }
 
-    ret = csp_mutex_new(&sdev.mutex);
-    if (ret)
-        return E_VFS_NO_MEM;
-
-    ret = yunos_register_driver("/dev/signal", &signal_fops, NULL);
-
-    if (ret != VFS_SUCCESS) {
-        return ret;
-    }
-
-    ret = yunos_register_driver("/dev/event0", &event_fops, NULL);
-    ret = yunos_register_driver("/dev/event1", &event_fops, NULL);
-    ret = yunos_register_driver("/dev/event2", &event_fops, NULL);
-    ret = yunos_register_driver("/dev/event3", &event_fops, NULL);
+    ret = yunos_register_driver("/dev/event", &event_fops, NULL);
 
     if (ret != VFS_SUCCESS) {
         return ret;

@@ -5,12 +5,12 @@ MODULE              := 1062
 HOST_ARCH           := linux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  += yloop vfs wrapper hal log ysh yunit vcall
+$(NAME)_COMPONENTS  := yloop vfs wrapper hal log vcall ysh
 
 $(NAME)_INCLUDES    += .
 GLOBAL_INCLUDES     += include
 GLOBAL_LDFLAGS      += -lpthread -lm -lcrypto
-GLOBAL_DEFINES      += CONFIG_YOC_RHINO_MMREGION
+GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 
 $(NAME)_SOURCES     := main/arg_options.c
 $(NAME)_SOURCES     += main/main.c

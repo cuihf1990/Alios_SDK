@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#ifdef CONFIG_YOC_LPM
+#ifdef CONFIG_YOS_LPM
 #include <hal/hal.h>
 #endif
 
@@ -52,6 +52,9 @@ typedef struct {
     void        *real_stack_end;
     void        *signal_stack;
     int          in_signals;
+#if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
+    int          vid;
+#endif
 } task_ext_t;
 
 static sigset_t cpu_sig_set;
@@ -162,12 +165,15 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tcb_ext->arg   = arg;
     tcb_ext->entry = entry;
     /* todo+ replace malloc with mmap */
-    tcb_ext->real_stack = malloc(real_size);
+    tcb_ext->real_stack = soc_mm_alloc(real_size);
     tcb_ext->real_stack_end = tcb_ext->real_stack + real_size;
     bzero(tcb_ext->real_stack, real_size);
-    VALGRIND_STACK_REGISTER(tcb_ext->real_stack, (char *)(tcb_ext->real_stack) + real_size);
+#if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
+    tcb_ext->vid = VALGRIND_STACK_REGISTER(tcb_ext->real_stack, (char *)(tcb_ext->real_stack) + real_size);
+#endif
 
-    tcb_ext->signal_stack = malloc(4096);
+    tcb_ext->signal_stack = soc_mm_alloc(4096);
+    bzero(tcb_ext->signal_stack, 4096);
 
     rhino_setjmp(tcb_ext->env);
 
@@ -189,7 +195,16 @@ void cpu_task_create_hook(ktask_t *tcb)
 
 void cpu_task_del_hook(ktask_t *tcb)
 {
+    task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;
     LOG("--- Task '%-20s' is deleted\n", tcb->task_name);
+#if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
+    VALGRIND_STACK_DEREGISTER(tcb_ext->vid);
+#endif
+    g_sched_lock++;
+    yunos_queue_back_send(&g_dyn_queue, tcb_ext->real_stack);
+    yunos_queue_back_send(&g_dyn_queue, tcb_ext->signal_stack);
+    g_sched_lock--;
+
 }
 
 void task_proc(void)
@@ -368,7 +383,7 @@ void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
     yunos_intrpt_exit();
     leave_signal(signo);
 }
-#ifdef CONFIG_YOC_LPM
+#ifdef CONFIG_YOS_LPM
 extern uint32_t lpm_sleep_time;
 void cpu_lpm_wait(void)
 {

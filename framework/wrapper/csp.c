@@ -17,8 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <csp.h>
-#include <hal/hal.h>
 #include <yos/kernel.h>
+#include <hal/hal.h>
 
 int yos_mutex_new(yos_mutex_t *mutex) {
     return csp_mutex_new(mutex);
@@ -206,6 +206,102 @@ int csp_sys_free(uint32_t *f)
 {
     return 0;
 }
+
+#if defined(CONFIG_YOS_NET_PROTOCOL)
+#include "lwip/sys.h"
+
+static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)
+{
+    int fd = (int)(long)handle->docker;
+    uint64_t val = 1;
+
+    lwip_write(fd, &val, sizeof val);
+}
+
+static int create_eventfd(csp_sem_t sem, kobj_set_t *handle)
+{
+    int fd = lwip_eventfd(0, 0);
+
+    handle->notify = sem_notify_cb;
+    handle->docker = (void *)fd;
+    ((blk_obj_t *)sem.hdl)->handle = handle;
+
+    sem_count_t count;
+    yunos_sem_count_get(sem.hdl, &count);
+    if (count > 0)
+        sem_notify_cb((blk_obj_t *)sem.hdl, handle);
+
+    return fd;
+}
+
+static void remove_eventfd(csp_sem_t sem, kobj_set_t *handle)
+{
+    int fd = (int)(long)handle->docker;
+    close(fd);
+    ((blk_obj_t *)sem.hdl)->handle = NULL;
+}
+
+static int csp_select(int maxfds, fd_set *rfds, fd_set *wfds, uint32_t timeout, csp_sem_t sem)
+{
+    struct timeval tv = {
+        .tv_sec = timeout / 1024,
+        .tv_usec = (timeout % 1024) * 1024,
+    };
+    kobj_set_t obj_handle;
+    int ret;
+
+    int efd = create_eventfd(sem, &obj_handle);
+    if (efd >= maxfds)
+        maxfds = efd + 1;
+    FD_SET(efd, rfds);
+
+    ret = lwip_select(maxfds, rfds, wfds, NULL, &tv);
+    remove_eventfd(sem, &obj_handle);
+
+    return ret;
+}
+
+int csp_poll(struct pollfd *pollfds, int nfds, csp_sem_t sem, uint32_t timeout)
+{
+    int maxfds = 0;
+    int i;
+    fd_set rfds, wfds;
+    int ret;
+
+    FD_ZERO(&rfds);
+    FD_ZERO(&wfds);
+
+    for (i=0;i<nfds;i++) {
+        struct pollfd *pfd = pollfds + i;
+        FD_CLR(pfd->fd, &rfds);
+        FD_CLR(pfd->fd, &wfds);
+        if (pfd->fd > maxfds)
+            maxfds = pfd->fd;
+
+        if (pfd->events & POLLIN)
+            FD_SET(pfd->fd, &rfds);
+        if (pfd->events & POLLOUT)
+            FD_SET(pfd->fd, &wfds);
+    }
+
+    ret = csp_select(maxfds+1, &rfds, &wfds, timeout, sem);
+    if (ret >= 0) {
+        for (i=0;i<nfds;i++) {
+            struct pollfd *pfd = pollfds + i;
+            int events = 0;
+            if (FD_ISSET(pfd->fd, &rfds))
+                events |= POLLIN;
+            if (FD_ISSET(pfd->fd, &wfds))
+                events |= POLLOUT;
+            if (!events) continue;
+
+            pollfds[i].revents = events;
+        }
+    }
+
+    return ret;
+}
+#endif
 #endif /* HAVE_RHINO_KERNEL */
 
 int csp_net_errno(int fd)
@@ -223,7 +319,7 @@ static char **strsplit(char *src, int max_fields)
     char ** argv = malloc((max_fields + 1) * sizeof(char *));
     int     args = 0;
 
-    argv[args++] = "yoc";
+    argv[args++] = "yos";
     for (token = strsep(&src, ","); token != NULL; token = strsep(&src, ",")) {
         if (strlen(token) == 0)
             continue;
@@ -250,7 +346,7 @@ int weak_attr csp_get_args(const char ***pargv)
     if (buf == NULL)
         return 0;
 
-    int ret = hal_flash_conf_read(NULL, "yoc.cmdline", (unsigned char *)buf, 256);
+    int ret = hal_flash_conf_read(NULL, "yos.cmdline", (unsigned char *)buf, 256);
     if (ret < 0) {
         free(buf);
         return 0;
@@ -261,4 +357,3 @@ int weak_attr csp_get_args(const char ***pargv)
     *pargv = argv;
     return argc;
 }
-

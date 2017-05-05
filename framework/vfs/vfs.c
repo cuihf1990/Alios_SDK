@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <csp.h>
+#include <yos/kernel.h>
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
@@ -22,7 +22,7 @@
 
 static uint8_t    g_vfs_init;
 
-csp_mutex_t g_vfs_mutex;
+yos_mutex_t g_vfs_mutex;
 
 #ifdef IO_NEED_TRAP
 #include <sys/types.h>
@@ -92,7 +92,7 @@ int vfs_init(void)
         return VFS_SUCCESS;
     }
 
-    if (csp_mutex_new(&g_vfs_mutex) != 0) {
+    if (yos_mutex_new(&g_vfs_mutex) != 0) {
         return E_VFS_K_ERR;
     }
 
@@ -103,9 +103,58 @@ int vfs_init(void)
     return VFS_SUCCESS;
 }
 
+#define MAX_FILE_NUM (YUNOS_CONFIG_VFS_DEV_NODES * 2)
+static file_t files[MAX_FILE_NUM];
+
+static inline int get_fd(file_t *file)
+{
+    return (file - files) + YUNOS_CONFIG_VFS_FD_OFFSET;
+}
+
+static inline file_t *get_file(int fd)
+{
+    file_t *f;
+
+    fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
+    if (fd < 0)
+        return NULL;
+
+    if (fd >= MAX_FILE_NUM)
+        return NULL;
+
+    f = &files[fd];
+    return f->node ? f : NULL;
+}
+
+static file_t *new_file(inode_t *node)
+{
+    file_t *f;
+    int idx;
+    for (idx=0;idx<MAX_FILE_NUM;idx++) {
+        f = &files[idx];
+        if (f->node == NULL)
+            goto got_file;
+    }
+
+    return NULL;
+
+got_file:
+    f->node = node;
+    f->f_arg = NULL;
+    f->offset = 0;
+    inode_ref(node);
+    return f;
+}
+
+static void del_file(file_t *file)
+{
+    inode_unref(file->node);
+    file->node = NULL;
+}
+
 int yunos_open(const char *path, int flags)
 {
-    int      fd;
+    file_t  *file;
     inode_t *node;
     int      err = VFS_SUCCESS;
 
@@ -113,119 +162,79 @@ int yunos_open(const char *path, int flags)
         return E_VFS_NULL_PTR;
     }
 
-    if (csp_mutex_lock(g_vfs_mutex) != 0) {
+    if (yos_mutex_lock(g_vfs_mutex) != 0) {
         return E_VFS_K_ERR;
     }
 
-    fd = inode_open(path);
+    node = inode_open(path);
 
-    if (fd  ==  E_VFS_INODE_NOT_FOUND) {
-        csp_mutex_unlock(g_vfs_mutex);
+    if (node == NULL) {
+        yos_mutex_unlock(g_vfs_mutex);
         return trap_open(path);
     }
 
-    inode_ref(fd);
-    inode_ptr_get(fd, &node);
     node->i_flags = flags;
+    file = new_file(node);
 
-    if (csp_mutex_unlock(g_vfs_mutex) != 0) {
+    yos_mutex_unlock(g_vfs_mutex);
+
+    if (file == NULL) {
         return E_VFS_K_ERR;
     }
 
     if ((node->ops->open) != NULL) {
-        err = node->ops->open(node);
-    }
-    return (err == VFS_SUCCESS)?fd:err;
-}
-
-static int pseudo_ops_check(int fd, inode_t **node)
-{
-    if ((fd < YUNOS_CONFIG_VFS_FD_OFFSET) || (fd >= YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES)) {
-        return E_VFS_FD_ILLEGAL;
+        err = node->ops->open(node, file);
     }
 
-    inode_ptr_get(fd, node);
-
-    if ((*node)->type == VFS_TYPE_NOT_INIT) {
-        return E_VFS_INODE_NOT_INIT;
+    if (err != VFS_SUCCESS) {
+        del_file(file);
+        return err;
     }
 
-    /* not support other dev */
-    if ((*node)->type != VFS_TYPE_CHAR_DEV) {
-        return E_VFS_INODE_TYPE_ILLEAGL;
-    }
-
-    return VFS_SUCCESS;
+    return get_fd(file);
 }
 
 int yunos_close(int fd)
 {
     int      err = VFS_SUCCESS;
+    file_t  *f;
     inode_t *node;
 
-    if (fd < 0) {
-        return E_VFS_ERR_PARAM;
-    }
-
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+    f = get_file(fd);
+    if (f == NULL) {
         return trap_close(fd);
     }
 
-    if (csp_mutex_lock(g_vfs_mutex) != 0) {
-        return E_VFS_K_ERR;
-    }
-
-    err = pseudo_ops_check(fd, &node);
-
-    if (err != VFS_SUCCESS) {
-        csp_mutex_unlock(g_vfs_mutex);
-        return err;
-    }
-
-    if (csp_mutex_unlock(g_vfs_mutex) != 0) {
-        return E_VFS_K_ERR;
-    }
-
+    node = f->node;
     if ((node->ops->close) != NULL) {
-        err = (node->ops->close)(node);
+        (node->ops->close)(f);
     }
 
-    inode_unref(fd);
+    if (yos_mutex_lock(g_vfs_mutex) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    del_file(f);
+
+    yos_mutex_unlock(g_vfs_mutex);
 
     return err;
 }
 
 ssize_t yunos_read(int fd, void *buf, size_t nbytes)
 {
-    inode_t *node  = NULL;
-    ssize_t  nread = 0;
-    int      err   = VFS_SUCCESS;
+    ssize_t  nread = -1;
+    file_t  *f;
+    inode_t *node;
 
-    if (fd < 0) {
-        return E_VFS_ERR_PARAM;
-    }
-
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+    f = get_file(fd);
+    if (f == NULL) {
         return trap_read(fd, buf, nbytes);
     }
 
-    if (csp_mutex_lock(g_vfs_mutex) != 0) {
-        return E_VFS_K_ERR;
-    }
-
-    err = pseudo_ops_check(fd, &node);
-
-    if (err != VFS_SUCCESS) {
-        csp_mutex_unlock(g_vfs_mutex);
-        return err;
-    }
-
-    if (csp_mutex_unlock(g_vfs_mutex) != 0) {
-        return E_VFS_K_ERR;
-    }
-
+    node = f->node;
     if ((node->ops->read) != NULL) {
-        nread = (node->ops->read)(node, (char *)buf, nbytes);
+        nread = (node->ops->read)(f, buf, nbytes);
     }
 
     return nread;
@@ -233,35 +242,18 @@ ssize_t yunos_read(int fd, void *buf, size_t nbytes)
 
 ssize_t yunos_write(int fd, const void *buf, size_t nbytes)
 {
-    inode_t *node   = NULL;
-    ssize_t  nwrite = 0;
-    int      err    = VFS_SUCCESS;
+    ssize_t  nwrite = -1;
+    file_t  *f;
+    inode_t *node;
 
-    if (fd < 0) {
-        return E_VFS_ERR_PARAM;
-    }
-
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+    f = get_file(fd);
+    if (f == NULL) {
         return trap_write(fd, buf, nbytes);
     }
 
-    if (csp_mutex_lock(g_vfs_mutex) != 0) {
-        return E_VFS_K_ERR;
-    }
-
-    err = pseudo_ops_check(fd, &node);
-
-    if (err != VFS_SUCCESS) {
-        csp_mutex_unlock(g_vfs_mutex);
-        return err;
-    }
-
-    if (csp_mutex_unlock(g_vfs_mutex) != 0) {
-        return E_VFS_K_ERR;
-    }
-
+    node = f->node;
     if ((node->ops->write) != NULL) {
-        nwrite = (node->ops->write)(node, (const char *)buf, nbytes);
+        nwrite = (node->ops->write)(f, buf, nbytes);
     }
 
     return nwrite;
@@ -269,26 +261,21 @@ ssize_t yunos_write(int fd, const void *buf, size_t nbytes)
 
 int yunos_ioctl(int fd, int cmd, unsigned long arg)
 {
+    int      err = E_VFS_K_ERR;
+    file_t  *f;
     inode_t *node;
-    int      err;
 
-    if (csp_mutex_lock(g_vfs_mutex) != 0) {
+    if (fd < 0)
+        return E_VFS_FD_ILLEGAL;
+
+    f = get_file(fd);
+    if (f == NULL) {
         return E_VFS_K_ERR;
     }
 
-    err = pseudo_ops_check(fd, &node);
-
-    if (err != VFS_SUCCESS) {
-        csp_mutex_unlock(g_vfs_mutex);
-        return err;
-    }
-
-    if (csp_mutex_unlock(g_vfs_mutex) != 0) {
-        return E_VFS_K_ERR;
-    }
-
+    node = f->node;
     if ((node->ops->ioctl) != NULL) {
-        err = (node->ops->ioctl)(node, cmd, arg);
+        err = (node->ops->ioctl)(f, cmd, arg);
     }
 
     return err;
@@ -297,15 +284,14 @@ int yunos_ioctl(int fd, int cmd, unsigned long arg)
 #if (YUNOS_CONFIG_VFS_POLL_SUPPORT>0)
 int yunos_poll(struct pollfd *fds, int nfds, int timeout)
 {
-    csp_sem_t sem;
-    inode_t  *node = NULL;
+    yos_sem_t sem;
     int       ret = VFS_SUCCESS;
     int       i;
     int       j;
     int       succeed = 1;
     int       n_i_fds = 0;
 
-    csp_sem_new(&sem, 0);
+    yos_sem_new(&sem, 0);
 
     for (i = 0; i < nfds; i++) {
         struct pollfd *pfd = &fds[i];
@@ -314,6 +300,7 @@ int yunos_poll(struct pollfd *fds, int nfds, int timeout)
     }
 
     for (i = 0; i < nfds; i++) {
+        file_t  *f;
         struct pollfd *pfd = &fds[i];
 
         if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
@@ -321,9 +308,9 @@ int yunos_poll(struct pollfd *fds, int nfds, int timeout)
             continue;
         }
 
-        ret = inode_ptr_get(pfd->fd, &node);
+        f = get_file(pfd->fd);
 
-        if (ret != VFS_SUCCESS) {
+        if (f == NULL) {
             succeed = 0;
             break;
         }
@@ -335,7 +322,7 @@ int yunos_poll(struct pollfd *fds, int nfds, int timeout)
         }
 
         pfd = &fds[n_i_fds];
-        (node->ops->poll)(node, true, pfd, sem.hdl);
+        (f->node->ops->poll)(f, true, pfd, sem.hdl);
         n_i_fds ++;
     }
 
@@ -343,7 +330,7 @@ int yunos_poll(struct pollfd *fds, int nfds, int timeout)
     { goto check_poll; }
 
     if (succeed == 1) {
-        ret = csp_sem_wait(sem, timeout);
+        ret = yos_sem_wait(sem, timeout);
     } else if (succeed == 2) {
         ret = csp_poll(fds + n_i_fds, nfds - n_i_fds, sem, timeout);
     }
@@ -351,22 +338,26 @@ int yunos_poll(struct pollfd *fds, int nfds, int timeout)
 check_poll:
 
     for (j = 0; j < i; j++) {
+        file_t  *f;
         struct pollfd *pfd = &fds[j];
 
         if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET)
         { continue; }
 
 
-        inode_ptr_get(pfd->fd, &node);
+        f = get_file(pfd->fd);
+        if (f == NULL) {
+            continue;
+        }
 
-        (node->ops->poll)(node, false, pfd, sem.hdl);
+        (f->node->ops->poll)(f, false, pfd, sem.hdl);
 
         if (pfd->revents) {
             ret ++;
         }
     }
 
-    csp_sem_free(&sem);
+    yos_sem_free(&sem);
 
     return ret < 0 ? 0 : ret;
 }
@@ -386,28 +377,30 @@ int yunos_fcntl(int fd, int cmd, int val)
 
 int yunos_ioctl_in_loop(int cmd, unsigned long arg)
 {
-    inode_t *node;
     int      err;
     int      fd;
 
     for (fd = YUNOS_CONFIG_VFS_FD_OFFSET; fd < YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES; fd++) {
-        if (csp_mutex_lock(g_vfs_mutex) != 0) {
+        file_t  *f;
+        inode_t *node;
+        if (yos_mutex_lock(g_vfs_mutex) != 0) {
             return E_VFS_K_ERR;
         }
 
-        err = pseudo_ops_check(fd, &node);
+        f = get_file(fd);
 
-        if (err != VFS_SUCCESS) {
-            csp_mutex_unlock(g_vfs_mutex);
+        if (f == NULL) {
+            yos_mutex_unlock(g_vfs_mutex);
             return err;
         }
 
-        if (csp_mutex_unlock(g_vfs_mutex) != 0) {
+        if (yos_mutex_unlock(g_vfs_mutex) != 0) {
             return E_VFS_K_ERR;
         }
 
+        node = f->node;
         if ((node->ops->ioctl) != NULL) {
-            err = (node->ops->ioctl)(node, cmd, arg);
+            err = (node->ops->ioctl)(f, cmd, arg);
 
             if (err != VFS_SUCCESS) {
                 return err;

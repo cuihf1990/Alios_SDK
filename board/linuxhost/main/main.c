@@ -33,8 +33,6 @@ extern int tfs_emulate_id2_index;
 extern void csp_os_init(void);
 extern void csp_os_start(void);
 extern void hw_start_hal();
-extern void ysh_task_start(void);
-extern void ysh_init();
 extern void yos_set_simulate_mode(void);
 extern void yunos_lwip_init(int enable_tapif);
 extern void osupdate_online_test_run(char *bin, int id2_index);
@@ -69,13 +67,6 @@ void yoc_features_init(void)
 #ifdef CONFIG_YOS_NET_PROTOCOL
     if (options.lwip.enable) {
         yunos_lwip_init(options.lwip.tapif);
-    }
-#endif
-
-#ifdef HAVE_RHINO_KERNEL
-    if (options.mode != MODE_YTS) {
-        ysh_init();
-        ysh_task_start();
     }
 #endif
 
@@ -144,11 +135,23 @@ int setrlimit_for_vfs(void)
     return 0;
 }
 
-extern int application_start(void);
+extern int application_start(int argc, char **argv);
+
+static void app_entry(void *arg)
+{
+    application_start(options.argc, options.argv);
+}
+
+static void start_app()
+{
+    yos_task_new("app", app_entry, NULL, 8192);
+}
 
 int main(int argc, char **argv)
 {
     int ret;
+
+    setvbuf(stdout, NULL, _IONBF, 0);
 
     options.argc        = argc;
     options.argv        = argv;
@@ -181,8 +184,7 @@ int main(int argc, char **argv)
     vfs_init();
     vfs_device_init();
 
-    yloop_init();
-    local_event_service_init();
+    yos_loop_init();
 
     switch (options.mode) {
 #ifdef CONFIG_YOS_UT
@@ -194,7 +196,7 @@ int main(int argc, char **argv)
     case MODE_MESH_MASTER:
         break;
     default:
-        application_start();
+        start_app(argc, argv);
         break;
     }
 

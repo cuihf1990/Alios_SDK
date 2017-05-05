@@ -30,7 +30,7 @@ enum {
     VFS_TYPE_CHAR_DEV
 };
 
-typedef struct file_ops file_ops_t;
+typedef const struct file_ops file_ops_t;
 
 /* this structure represents inode for driver and fs*/
 typedef struct {
@@ -42,38 +42,32 @@ typedef struct {
     uint8_t     refs;     /* refs for inode */
 } inode_t;
 
-#ifdef YUNOS_CONFIG_VFS_POLL_SUPPORT
-#define YUNOS_VFS_FILE_OPS_FIELDS  \
-    int (*open)(inode_t * node);\
-    int (*close)(inode_t * node);\
-    ssize_t (*read)(inode_t * node, char *buf, size_t len);\
-    ssize_t (*write)(inode_t * node, const char *buf, size_t len);\
-    int (*ioctl)(inode_t * node, int cmd, unsigned long arg);\
-    int (*poll)(inode_t * node, bool setup, struct pollfd *pfd, void *sem);\
-
-#else
-#define YUNOS_VFS_FILE_OPS_FIELDS  \
-    int (*open)(inode_t *node);\
-    int (*close)(inode_t *node);\
-    ssize_t (*read)(inode_t *node, char *buf, size_t len);\
-    ssize_t (*write)(inode_t *node, const char *buf, size_t len);\
-    int (*ioctl)(inode_t *node, int cmd, unsigned long arg);\
-
-#endif
+typedef struct {
+    inode_t    *node;
+    void       *f_arg;
+    size_t      offset;
+} file_t;
 
 struct file_ops {
-    YUNOS_VFS_FILE_OPS_FIELDS
+    int (*open)(inode_t *, file_t *);
+    int (*close)(file_t *);
+    ssize_t (*read)(file_t *, void *, size_t);
+    ssize_t (*write)(file_t *, const void *buf, size_t len);
+    int (*ioctl)(file_t *, int cmd, unsigned long arg);
+#ifdef YUNOS_CONFIG_VFS_POLL_SUPPORT
+    int (*poll)(file_t *, bool , struct pollfd *, void *);
+#endif
 };
 
-int inode_init(void);
-int inode_alloc(void);
-int inode_del(int fd);
-int inode_open(const char *path);
-int inode_ptr_get(int fd, inode_t **node);
-int inode_avail_count(void);
-int inode_ref(int fd);
-int inode_unref(int fd);
-int inode_busy(int fd);
+int     inode_init(void);
+int     inode_alloc(void);
+int     inode_del(inode_t *node);
+inode_t *inode_open(const char *path);
+int     inode_ptr_get(int fd, inode_t **node);
+int     inode_avail_count(void);
+void    inode_ref(inode_t *);
+void    inode_unref(inode_t *);
+int     inode_busy(inode_t *);
 
 #ifdef __cplusplus
 }

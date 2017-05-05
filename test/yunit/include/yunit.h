@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef YOC_UNIT_TEST_H
-#define YOC_UNIT_TEST_H
+#ifndef YOS_UNIT_TEST_H
+#define YOS_UNIT_TEST_H
 
 #include <stddef.h>
 #include <string.h>
@@ -174,5 +174,5 @@ void yunit_add_test_case_result(
 }
 #endif
 
-#endif /* YOC_UNIT_TEST_H */
+#endif /* YOS_UNIT_TEST_H */
 

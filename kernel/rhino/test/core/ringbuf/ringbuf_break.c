@@ -197,7 +197,7 @@ static uint8_t ringbuf_break_case_dyn(void)
 {
 #if (YUNOS_CONFIG_RINGBUF_VENDOR > 0)
     kstat_t ret;
-    int     data_len;
+    size_t  data_len;
     size_t  len;
     size_t  i = 0;
 

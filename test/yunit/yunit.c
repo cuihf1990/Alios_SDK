@@ -133,6 +133,8 @@ int yunit_add_test_case(void *test_suite, const char *name, yunit_test_case_proc
     }
 
     yunit_test_case_node_t *node = malloc(sizeof(yunit_test_case_node_t));
+    memset(node,0,sizeof(yunit_test_case_node_t));
+
     if (node == NULL) {
         printf("%s\n", "out of memory");
         return -1;
@@ -304,7 +306,7 @@ void yunit_add_test_case_result(int type, const char *file, size_t line, const c
         printf("%s\n", "out of memory");
         return;
     }
-    memset(result, 0, sizeof(yunit_test_case_result_t)); 
+    memset(result, 0, sizeof(yunit_test_case_result_t));
 
     va_list args;
     va_start(args, fmt);

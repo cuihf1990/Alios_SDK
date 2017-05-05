@@ -38,9 +38,9 @@ int yunos_register_driver(const char *path, file_ops_t *ops, void *arg)
         return E_VFS_K_ERR;
     }
 
-    ret = inode_open(path);
+    node = inode_open(path);
 
-    if (ret != E_VFS_INODE_NOT_FOUND) {
+    if (node != NULL) {
         csp_mutex_unlock(g_vfs_mutex);
         return E_VFS_REGISTERED;
     }
@@ -79,8 +79,8 @@ int yunos_register_driver(const char *path, file_ops_t *ops, void *arg)
 
 int yunos_unregister_driver(const char *path)
 {
-    int fd;
     int ret;
+    inode_t *node;
 
     if (path == NULL) {
         return E_VFS_NULL_PTR;
@@ -90,14 +90,14 @@ int yunos_unregister_driver(const char *path)
         return E_VFS_K_ERR;
     }
 
-    fd = inode_open(path);
+    node = inode_open(path);
 
-    if (fd == E_VFS_INODE_NOT_FOUND) {
+    if (node == NULL) {
         csp_mutex_unlock(g_vfs_mutex);
         return E_VFS_INODE_NOT_FOUND;
     }
 
-    ret = inode_del(fd);
+    ret = inode_del(node);
 
     if (csp_mutex_unlock(g_vfs_mutex) != 0) {
         return E_VFS_K_ERR;
