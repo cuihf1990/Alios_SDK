@@ -36,6 +36,7 @@ extern void test_mesh(void);
 extern void test_netconf(void);
 extern void test_uradar(void);
 extern void test_yloop(void);
+extern void test_cjson(void);
 
 static void add_test(void);
 
@@ -90,4 +91,6 @@ void add_test(void)
     test_basic();
 
     test_yloop();
+
+    test_cjson();
 }

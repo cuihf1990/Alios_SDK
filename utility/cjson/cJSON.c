@@ -44,7 +44,6 @@
 #include <unistd.h>
 
 #include <cJSON.h>
-#include <debug_mem.h>
 #include <yos/log.h>
 
 #ifndef LOGE
@@ -67,8 +66,8 @@ static const unsigned char firstByteMark[7] =
 static void *(*cJSON_malloc)(size_t sz) = malloc;
 static void (*cJSON_free)(void *ptr)    = free;
 
-#define cJSON_malloc(n) DEBUG_MALLOC(n)
-#define cJSON_free(p) DEBUG_FREE(p)
+#define cJSON_malloc(n) malloc(n)
+#define cJSON_free(p) free(p)
 
 
 /****************************************************************************
@@ -1026,7 +1025,7 @@ static char *print_object(cJSON *item, int depth, int fmt)
     }
 
   if (!numentries)
-    return DEBUG_STRDUP("{\n}");
+    return strdup("{\n}");
 
   /* Allocate space for the names and the objects */
 
