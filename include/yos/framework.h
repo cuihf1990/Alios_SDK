@@ -38,6 +38,9 @@ extern "C"
 
 #ifndef YOS_DOXYGEN_MODE
 
+/** special event filter */
+#define EV_ALL                       0
+
 /** system event */
 #define EV_SYS                     0x0001
 #define CODE_SYS_ON_STARTING         1
@@ -82,8 +85,6 @@ typedef struct {
     unsigned long extra;
 } input_event_t;
 
-/** Free callback  */
-typedef void (*yos_free_cb)(void *private_data);
 /** Event callback */
 typedef void (*yos_event_cb)(input_event_t *event, void *private_data);
 /** Delayed execution callback */
@@ -92,19 +93,19 @@ typedef void (*yos_call_t)(void *arg);
 typedef void (*yos_poll_call_t)(int fd, void *arg);
 
 /**
- * @brief Register system event callback
+ * @brief Register system event filter callback
+ * @param type event type interested
  * @param yos_event_cb system event callback
- * @param yos_free_cb free data callback
  * @param private_data data to be bypassed to cb
  * @return None
  */
-void yos_local_event_listener_register(yos_event_cb cb, void *priv);
+int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv);
 
 /**
  * @brief Unregister native event callback
  * @param yos_event_cb system event callback
  */
-void yos_local_event_listener_unregister(yos_event_cb cb, void *priv);
+int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv);
 
 /**
  * @brief Post local event.
@@ -115,7 +116,7 @@ void yos_local_event_listener_unregister(yos_event_cb cb, void *priv);
  * @retval <=0 failure
  * @see input_event_t
  */
-int yos_local_event_post(uint16_t type, uint16_t code, unsigned long  value);
+int yos_post_event(uint16_t type, uint16_t code, unsigned long  value);
 
 /**
  * @brief Register a poll event in main loop

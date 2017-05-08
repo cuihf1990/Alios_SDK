@@ -28,8 +28,9 @@
 typedef struct {
     dlist_t       node;
     yos_event_cb  cb;
-    void         *private_data;
-} local_event_list_node_t;
+    void         *priv;
+    uint16_t      type_filter;
+} event_list_node_t;
 
 static struct {
     void *handle;
@@ -57,10 +58,12 @@ void handle_events(input_event_t *event)
         return;
     }
 
-    local_event_list_node_t *event_node = NULL;
-    dlist_for_each_entry(&g_local_event_list, event_node,
-                        local_event_list_node_t, node) {
-        (event_node->cb)(event, event_node->private_data);
+    event_list_node_t *event_node = NULL;
+    dlist_for_each_entry(&g_local_event_list, event_node, event_list_node_t, node) {
+        if (event_node->type_filter != EV_ALL
+            && event_node->type_filter != event->type)
+            continue;
+        (event_node->cb)(event, event_node->priv);
     }
 }
 
@@ -95,7 +98,7 @@ int yos_event_service_deinit(int fd)
     yos_cancel_poll_read_fd(fd, event_read_cb, NULL);
 }
 
-int yos_local_event_post(uint16_t type, uint16_t code, unsigned long value)
+int yos_post_event(uint16_t type, uint16_t code, unsigned long value)
 {
     input_event_t event = {
         .type  = type,
@@ -106,29 +109,41 @@ int yos_local_event_post(uint16_t type, uint16_t code, unsigned long value)
     return input_add_event(local_event.fd, &event);
 }
 
-void yos_local_event_listener_register(yos_event_cb cb, void *priv)
+int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 {
-    local_event_list_node_t* event_node = malloc(sizeof(local_event_list_node_t));
+    event_list_node_t* event_node = malloc(sizeof(event_list_node_t));
     if(NULL == event_node){
-        return;
+        return -1;
     }
 
     event_node->cb           = cb;
-    event_node->private_data = priv;
+    event_node->type_filter  = type;
+    event_node->priv         = priv;
 
     dlist_add_tail(&event_node->node, &g_local_event_list);
+
+    return 0;
 }
 
-void yos_local_event_listener_unregister(yos_event_cb cb, void *priv)
+int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 {
-    local_event_list_node_t* event_node = NULL;
-    dlist_for_each_entry(&g_local_event_list, event_node, local_event_list_node_t, node) {
-        if(event_node->cb == cb && event_node->private_data == priv) {
-            dlist_del(&event_node->node);
-            free(event_node);
-            return;
-        }
+    event_list_node_t* event_node = NULL;
+    dlist_for_each_entry(&g_local_event_list, event_node, event_list_node_t, node) {
+        if (event_node->type_filter != type)
+            continue;
+
+        if (event_node->cb != cb)
+            continue;
+
+        if (event_node->priv != priv)
+            continue;
+
+        dlist_del(&event_node->node);
+        free(event_node);
+        return 0;
     }
+
+    return -1;
 }
 
 /*

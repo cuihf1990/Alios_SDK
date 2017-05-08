@@ -35,11 +35,31 @@ struct task_cookie {
 #define T_WORK_DONE_FLAG    0x02
 #define T_WORK_FLAG         0x04
 #define T_ACTION_TERM_FLAG  0x08
-#define T_ALL 0x0f
+#define T_FILTER_ALL_FLAG   0x10
+#define T_FILTER_ONE_FLAG   0x20
+#define T_ALL 0x3f
 
+#define T_FILTER_FLAG       0x01
 static uint32_t done_flag;
+static uint32_t unexpected_flag;
 
 #define yos_task_name() g_active_task->task_name
+
+#define TYPE_TEST_1 (EV_USER + 1)
+#define TYPE_TEST_2 (EV_USER + 2)
+
+static void filter_all(input_event_t *event, void *private_data)
+{
+    done_flag |= T_FILTER_ALL_FLAG;
+}
+
+static void filter_one(input_event_t *event, void *private_data)
+{
+    if (event->type != TYPE_TEST_1)
+        unexpected_flag |= T_FILTER_FLAG;
+    else
+        done_flag |= T_FILTER_ONE_FLAG;
+}
 
 static void app_delayed_action(void *arg)
 {
@@ -137,9 +157,20 @@ static void app_second_entry(void *arg)
 
 static void test_simple_case(void)
 {
+    yos_register_event_filter(EV_ALL, filter_all, NULL);
+    yos_register_event_filter(TYPE_TEST_1, filter_one, NULL);
+
     yos_task_new(TASK1, app_main_entry, &cookie1, 8192);
     yos_task_new(TASK2, app_second_entry, &cookie2, 8192);
+
+    yos_post_event(TYPE_TEST_1, 0, 0);
+    yos_post_event(TYPE_TEST_2, 0, 0);
+
     check_cond_wait(done_flag == T_ALL, 10);
+    YUNIT_ASSERT(unexpected_flag == 0);
+
+    YUNIT_ASSERT(0 == yos_unregister_event_filter(EV_ALL, filter_all, NULL));
+    YUNIT_ASSERT(0 == yos_unregister_event_filter(TYPE_TEST_1, filter_one, NULL));
 }
 
 static int init(void)
