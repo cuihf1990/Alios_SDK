@@ -22,7 +22,6 @@
 #include <yos/framework.h>
 #include <yos/list.h>
 
-#include "debug_mem.h"
 #include "vfs.h"
 #include "yloop.h"
 
@@ -109,7 +108,7 @@ int yos_local_event_post(uint16_t type, uint16_t code, unsigned long value)
 
 void yos_local_event_listener_register(yos_event_cb cb, void *priv)
 {
-    local_event_list_node_t* event_node = DEBUG_MALLOC(sizeof(local_event_list_node_t));
+    local_event_list_node_t* event_node = malloc(sizeof(local_event_list_node_t));
     if(NULL == event_node){
         return;
     }
@@ -126,7 +125,7 @@ void yos_local_event_listener_unregister(yos_event_cb cb, void *priv)
     dlist_for_each_entry(&g_local_event_list, event_node, local_event_list_node_t, node) {
         if(event_node->cb == cb && event_node->private_data == priv) {
             dlist_del(&event_node->node);
-            DEBUG_FREE(event_node);
+            free(event_node);
             return;
         }
     }

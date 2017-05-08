@@ -205,11 +205,12 @@ static int linuxhost_flash_init(hal_flash_module_t *m, void *something)
 static int linuxhost_flash_read_conf(hal_flash_module_t *m, char *key, unsigned char *buf, int buf_size)
 {
     int flash_fd = open_flash(key, false);
+    int ret;
     if (flash_fd < 0)
         return -1;
-    pread(flash_fd, buf, buf_size, 0);
+    ret = pread(flash_fd, buf, buf_size, 0);
     close(flash_fd);
-    return 0;
+    return ret > 0 ? 0 : -1;
 }
 
 static int linuxhost_flash_write_conf(hal_flash_module_t *m, char *key, unsigned char *buf, int buf_size)

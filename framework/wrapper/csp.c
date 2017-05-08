@@ -207,6 +207,16 @@ int csp_sys_free(uint32_t *f)
     return 0;
 }
 
+void *yos_malloc(size_t sz)
+{
+    return soc_mm_alloc(sz);
+}
+
+void yos_free(void *p)
+{
+    soc_mm_free(p);
+}
+
 #if defined(CONFIG_YOS_NET_PROTOCOL)
 #include "lwip/sys.h"
 

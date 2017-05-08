@@ -20,21 +20,19 @@
 #include <csp.h>
 
 #ifndef WITH_LWIP
-#define lwip_write write
-#define lwip_eventfd eventfd
-#endif
-
 static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)
 {
     int fd = (int)(long)handle->docker;
     uint64_t val = 1;
+    int ret;
 
-    lwip_write(fd, &val, sizeof val);
+    ret = write(fd, &val, sizeof val);
+    (void)ret;
 }
 
 static int create_eventfd(csp_sem_t sem, kobj_set_t *handle)
 {
-    int fd = lwip_eventfd(0, 0);
+    int fd = eventfd(0, 0);
 
     handle->notify = sem_notify_cb;
     handle->docker = (void *)fd;
@@ -54,73 +52,6 @@ static void remove_eventfd(csp_sem_t sem, kobj_set_t *handle)
     close(fd);
     ((blk_obj_t *)sem.hdl)->handle = NULL;
 }
-
-#ifdef WITH_LWIP
-#include "lwip/sys.h"
-
-extern void hw_start_hal(void);
-
-static int csp_select(int maxfds, fd_set *rfds, fd_set *wfds, uint32_t timeout, csp_sem_t sem)
-{
-    struct timeval tv = {
-        .tv_sec = timeout / 1024,
-        .tv_usec = (timeout % 1024) * 1024,
-    };
-    kobj_set_t obj_handle;
-    int ret;
-
-    int efd = create_eventfd(sem, &obj_handle);
-    if (efd >= maxfds)
-        maxfds = efd + 1;
-    FD_SET(efd, rfds);
-
-    ret = lwip_select(maxfds, rfds, wfds, NULL, &tv);
-    remove_eventfd(sem, &obj_handle);
-
-    return ret;
-}
-
-int csp_poll(struct pollfd *pollfds, int nfds, csp_sem_t sem, uint32_t timeout)
-{
-    int maxfds = 0;
-    int i;
-    fd_set rfds, wfds;
-    int ret;
-
-    FD_ZERO(&rfds);
-    FD_ZERO(&wfds);
-
-    for (i=0;i<nfds;i++) {
-        struct pollfd *pfd = pollfds + i;
-        FD_CLR(pfd->fd, &rfds);
-        FD_CLR(pfd->fd, &wfds);
-        if (pfd->fd > maxfds)
-            maxfds = pfd->fd;
-
-        if (pfd->events & POLLIN)
-            FD_SET(pfd->fd, &rfds);
-        if (pfd->events & POLLOUT)
-            FD_SET(pfd->fd, &wfds);
-    }
-
-    ret = csp_select(maxfds+1, &rfds, &wfds, timeout, sem);
-    if (ret >= 0) {
-        for (i=0;i<nfds;i++) {
-            struct pollfd *pfd = pollfds + i;
-            int events = 0;
-            if (FD_ISSET(pfd->fd, &rfds))
-                events |= POLLIN;
-            if (FD_ISSET(pfd->fd, &wfds))
-                events |= POLLOUT;
-            if (!events) continue;
-
-            pollfds[i].revents = events;
-        }
-    }
-
-    return ret;
-}
-#else
 
 int csp_poll(struct pollfd *pollfds, int nfds, csp_sem_t sem,
                   uint32_t timeout)

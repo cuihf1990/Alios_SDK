@@ -41,7 +41,7 @@ typedef struct {
 
 typedef struct {
     dlist_t node;
-    int len;
+    size_t len;
     char buf[];
 } dev_event_t;
 

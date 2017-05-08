@@ -122,9 +122,10 @@ int yos_local_event_post(uint16_t type, uint16_t code, unsigned long  value);
  * @param fd poll fd
  * @param action action to be executed
  * @param param private data past to action
- * @returns None
+ * @return ==0 succeed
+ * @return !=0 failed
  */
-void yos_poll_read_fd(int fd, yos_poll_call_t action, void *param);
+int yos_poll_read_fd(int fd, yos_poll_call_t action, void *param);
 
 /**
  * @brief Cancel a poll event to be executed in main loop
@@ -141,11 +142,12 @@ void yos_cancel_poll_read_fd(int fd, yos_poll_call_t action, void *param);
  * @param ms milliseconds to wait
  * @param action action to be executed
  * @param arg private data past to action
- * @return none
+ * @return ==0 succeed
+ * @return !=0 failed
  * @note This function must be called under main loop context.
  *       after 'action' is fired, resource will be automatically released.
  */
-void yos_post_delayed_action(int ms, yos_call_t action, void *arg);
+int yos_post_delayed_action(int ms, yos_call_t action, void *arg);
 
 /**
  * @brief Cancel a delayed action to be executed in main loop
@@ -221,6 +223,9 @@ void yos_loop_destroy(void);
 int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
 
 int yos_schedule_work(yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2);
+
+void *yos_malloc(size_t);
+void yos_free(void *);
 
 /** @} */ //end of Framework API
 
