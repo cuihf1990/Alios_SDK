@@ -23,6 +23,7 @@
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_driver.h>
+#include <event_device.h>
 
 extern void *soc_mm_alloc(size_t size);
 extern void soc_mm_free(void *mem);
@@ -56,7 +57,7 @@ static int event_open(inode_t *node, file_t *file)
     return 0;
 }
 
-static ssize_t event_write(file_t *f, const void *buf, size_t len)
+static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
 {
     event_dev_t *pdev = f->f_arg;
     csp_mutex_lock(pdev->mutex);
@@ -80,7 +81,10 @@ static ssize_t event_write(file_t *f, const void *buf, size_t len)
 
     evt->len = len;
     memcpy(evt->buf, buf, len);
-    dlist_add_tail(&evt->node, &pdev->bufs);
+    if (urgent)
+        dlist_add(&evt->node, &pdev->bufs);
+    else
+        dlist_add_tail(&evt->node, &pdev->bufs);
 
     if (pdev->fd) {
         pdev->fd->revents |= POLLIN;
@@ -95,6 +99,26 @@ static ssize_t event_write(file_t *f, const void *buf, size_t len)
 out:
     csp_mutex_unlock(pdev->mutex);
     return len;
+}
+
+static ssize_t event_write(file_t *f, const void *buf, size_t len)
+{
+    return _event_write(f, buf, len, false);
+}
+
+static int event_ioctl(file_t *f, int cmd, unsigned long arg)
+{
+    int len = _GET_LEN(cmd);
+    void *buf = (void *)arg;
+    cmd = _GET_CMD(cmd);
+    switch (cmd) {
+    case IOCTL_WRITE_NORMAL:
+        return _event_write(f, buf, len, false);
+    case IOCTL_WRITE_URGENT:
+        return _event_write(f, buf, len, true);
+    }
+
+    return -1;
 }
 
 static ssize_t event_read(file_t *f, void *buf, size_t len)
@@ -154,6 +178,7 @@ static file_ops_t event_fops = {
     .read = event_read,
     .write = event_write,
     .poll = event_poll,
+    .ioctl = event_ioctl,
 };
 
 int vfs_device_init(void)

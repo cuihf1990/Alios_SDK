@@ -23,6 +23,7 @@
 #include <yos/list.h>
 
 #include "vfs.h"
+#include "event_device.h"
 #include "yloop.h"
 
 typedef struct {
@@ -69,7 +70,16 @@ void handle_events(input_event_t *event)
 
 static int input_add_event(int fd, input_event_t *event)
 {
-    return yunos_write(fd, event, sizeof(*event));
+    bool urgent = event->type & EV_FLAG_URGENT;
+    event->type &= ~EV_FLAG_URGENT;
+    int cmd;
+
+    if (urgent)
+        cmd = MK_CMD(IOCTL_WRITE_URGENT, sizeof(*event));
+    else
+        cmd = MK_CMD(IOCTL_WRITE_NORMAL, sizeof(*event));
+
+    return yunos_ioctl(fd, cmd, (unsigned long)event);
 }
 
 void event_read_cb(int fd, void *param)
@@ -149,7 +159,7 @@ int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 /*
  * schedule a callback in yos loop main thread
  */
-int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg)
+static int _schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg, bool urgent)
 {
     input_event_t event = {
         .type = EV_RPC,
@@ -160,12 +170,24 @@ int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg)
     if (fd < 0)
         fd = local_event.fd;
 
+    if (urgent)
+        event.type |= EV_FLAG_URGENT;
     return input_add_event(fd, &event);
+}
+
+int yos_loop_schedule_urgent_call(yos_loop_t *loop, yos_call_t fun, void *arg)
+{
+    return _schedule_call(loop, fun, arg, true);
+}
+
+int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg)
+{
+    return _schedule_call(loop, fun, arg, false);
 }
 
 int yos_schedule_call(yos_call_t fun, void *arg)
 {
-    return yos_loop_schedule_call(NULL, fun, arg);
+    return _schedule_call(NULL, fun, arg, false);
 }
 
 typedef struct work_para {

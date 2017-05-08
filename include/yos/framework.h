@@ -40,6 +40,7 @@ extern "C"
 
 /** special event filter */
 #define EV_ALL                       0
+#define EV_FLAG_URGENT             0x8000
 
 /** system event */
 #define EV_SYS                     0x0001
@@ -63,7 +64,7 @@ extern "C"
 #define  CODE_MESH_ATTACHED       3
 #define  CODE_MESH_DETACHED       4
 
-/** user app start */
+/** user app start 0x1000 - 0x7fff */
 #define EV_USER     0x1000
 
 #endif
