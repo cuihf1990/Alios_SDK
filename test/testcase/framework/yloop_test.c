@@ -124,7 +124,8 @@ static void app_main_entry(void *arg)
     yos_loop_run();
     yos_loop_run();
 
-    yos_schedule_work(mywork, arg, work_done, arg);
+    YUNIT_ASSERT(yos_schedule_work(0, mywork, arg, NULL, arg) == 0);
+    YUNIT_ASSERT(yos_schedule_work(100, mywork, arg, work_done, arg) == 0);
     yos_loop_run();
 }
 

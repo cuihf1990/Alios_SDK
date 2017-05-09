@@ -224,7 +224,19 @@ void yos_loop_destroy(void);
  */
 int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
 
-int yos_schedule_work(yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2);
+/**
+ * @brief Schedule a work to be executed in workqueue 
+ * @param ms milliseconds to delay before execution, 0 means immediately
+ * @param action action to be executed
+ * @param arg1 private data past to action
+ * @param fini_cb finish callback to be executed after action is done in current event loop
+ * @param arg2 private data past to fini_cb
+ * @retval >=0 success
+ * @retval <0  failure
+ * @note Unlike yos_post_delayed_action,
+ *       this function can be called from non-yos-main-loop context.
+ */
+int yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2);
 
 void *yos_malloc(size_t);
 void yos_free(void *);

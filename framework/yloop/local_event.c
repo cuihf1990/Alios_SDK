@@ -212,7 +212,7 @@ static void run_my_work(void *arg)
     free(wpar);
 }
 
-int yos_schedule_work(yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
+int yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
 {
     static workqueue_t *wq;
 
@@ -233,7 +233,9 @@ int yos_schedule_work(yos_call_t action, void *arg1, yos_call_t fini_cb, void *a
     wpar->fini_cb = fini_cb;
     wpar->arg2 = arg2;
 
-    yunos_work_init(work, run_my_work, wpar, 0);
-    yunos_work_run(wq, work);
+    ms = ms * YUNOS_CONFIG_TICKS_PER_SECOND;
+    ms = (ms + 999) / 1000;
+    yunos_work_init(work, run_my_work, wpar, ms);
+    return yunos_work_run(wq, work);
 }
 
