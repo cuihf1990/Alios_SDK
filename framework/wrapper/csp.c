@@ -341,29 +341,3 @@ static char **strsplit(char *src, int max_fields)
     argv[args] = NULL;
     return argv;
 }
-
-int weak_attr csp_get_args(const char ***pargv)
-{
-    static const char **argv;
-    static int argc;
-
-    if (argc) {
-        *pargv = argv;
-        return argc;
-    }
-
-    char *buf = malloc(256);
-    if (buf == NULL)
-        return 0;
-
-    int ret = hal_flash_conf_read(NULL, "yos.cmdline", (unsigned char *)buf, 256);
-    if (ret < 0) {
-        free(buf);
-        return 0;
-    }
-
-    argv = (const char **)strsplit(buf, 7);
-    while (argv[argc]) argc++;
-    *pargv = argv;
-    return argc;
-}
