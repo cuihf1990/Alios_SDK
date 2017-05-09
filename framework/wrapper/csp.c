@@ -217,7 +217,7 @@ void yos_free(void *p)
     soc_mm_free(p);
 }
 
-#if defined(CONFIG_YOS_NET_PROTOCOL)
+#if defined(WITH_LWIP)
 #include "lwip/sys.h"
 
 static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)

@@ -21,3 +21,21 @@ $(NAME)_SOURCES     += csp/csp_rhino.c
 $(NAME)_SOURCES     += soc/soc_impl.c
 $(NAME)_SOURCES     += soc/hook_impl.c
 $(NAME)_SOURCES     += soc/ysh_impl.c
+
+$(info $(COMPONENTS))
+ifneq (,$(filter protocols.net,$(COMPONENTS)))
+$(NAME)_DEFINES     += CONFIG_YOS_NET_PROTOCOL
+
+$(info "net is enabled")
+$(NAME)_SOURCES     += \
+    csp/lwip/netif/delif.c \
+    csp/lwip/netif/fifo.c \
+    csp/lwip/netif/list.c \
+    csp/lwip/netif/pcapif.c \
+    csp/lwip/netif/sio.c \
+    csp/lwip/netif/tapif.c \
+    csp/lwip/netif/tcpdump.c \
+    csp/lwip/netif/tunif.c
+
+$(NAME)_SOURCES     += csp/lwip/lwip_linuxhost.c
+endif
