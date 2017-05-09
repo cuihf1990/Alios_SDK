@@ -8,7 +8,7 @@ HOST_MCU_FAMILY     := linux
 $(NAME)_COMPONENTS  := yloop vfs wrapper hal log vcall ysh
 
 $(NAME)_INCLUDES    += .
-GLOBAL_INCLUDES     += include
+GLOBAL_INCLUDES     += include csp/lwip/include
 GLOBAL_LDFLAGS      += -lpthread -lm -lcrypto
 GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 GLOBAL_CFLAGS       += -Wno-missing-field-initializers
