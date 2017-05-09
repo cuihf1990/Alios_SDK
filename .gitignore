@@ -1,0 +1,6 @@
+out
+.gdbinit
+.openocd_cfg
+copy_bootloader_output_for_eclipse
+copy_output_for_eclipse
+*.sw*
