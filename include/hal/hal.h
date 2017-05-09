@@ -29,10 +29,6 @@ extern "C" {
 
 #include <hal/base.h>
 
-#include <hal/wifi.h>
-
-#include <hal/crypto.h>
-
 #include <hal/kv_flash.h>
 
 #include <hal/time.h>
