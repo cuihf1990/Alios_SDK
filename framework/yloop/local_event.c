@@ -205,7 +205,8 @@ static void run_my_work(void *arg)
 
     wpar->action(wpar->arg1);
 
-    yos_loop_schedule_call(wpar->loop, wpar->fini_cb, wpar->arg2);
+    if (wpar->fini_cb)
+        yos_loop_schedule_call(wpar->loop, wpar->fini_cb, wpar->arg2);
 
     free(wpar->work);
     free(wpar);
