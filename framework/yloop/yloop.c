@@ -209,7 +209,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
         return -1;
     }
 
-    hal_time_gettimeofday(&timeout->time, NULL);
+    gettimeofday(&timeout->time, NULL);
     timeout->time.tv_sec += ms / 1000;
     timeout->time.tv_usec += (ms % 1000) * 1000;
 
@@ -262,7 +262,7 @@ void yos_loop_run(void)
 
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            hal_time_gettimeofday(&now, NULL);
+            gettimeofday(&now, NULL);
 
             if (timercmp(&now, &tmo->time, <)) {
                 timersub(&tmo->time, &now, &tv);
@@ -288,7 +288,7 @@ void yos_loop_run(void)
         /* check if some registered timeouts have occurred */
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            hal_time_gettimeofday(&now, NULL);
+            gettimeofday(&now, NULL);
 
             if (!timercmp(&now, &tmo->time, <)) {
                 dlist_del(&tmo->next);

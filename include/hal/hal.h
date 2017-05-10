@@ -29,8 +29,6 @@ extern "C" {
 
 #include <hal/base.h>
 
-#include <hal/time.h>
-
 #include <hal/random.h>
 
 #include <hal/sensor.h>
