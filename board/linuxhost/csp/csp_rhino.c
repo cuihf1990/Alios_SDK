@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <k_api.h>
 #include <csp.h>
+#include <hal/timer.h>
 
 #ifndef WITH_LWIP
 static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)
@@ -77,16 +78,6 @@ int csp_poll(struct pollfd *pollfds, int nfds, csp_sem_t sem,
 }
 #endif
 
-void hal_arch_time_msleep(int ms)
-{
-    yunos_task_sleep(ms * YUNOS_CONFIG_TICKS_PER_SECOND / 1000);
-}
-
-unsigned long hal_arch_get_time_counter(void)
-{
-    return 0;
-}
-
 void csp_os_init(void)
 {
     hw_start_hal();
@@ -115,3 +106,32 @@ uint32_t yoc_get_free_heap_size(void)
     return 0u;
 }
 
+#define us2tick(us) \
+    ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
+
+static void _timer_cb(void *timer, void *arg)
+{
+    hal_timer_t *tmr = arg;
+    tmr->cb(tmr->arg);
+}
+
+void hal_timer_init(hal_timer_t *tmr, unsigned first_us, unsigned period_us, hal_timer_cb_t cb, void *arg)
+{
+    bzero(tmr, sizeof(*tmr));
+    tmr->cb = cb;
+    tmr->arg = arg;
+    yunos_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
+                           us2tick(first_us), us2tick(period_us), tmr, 0);
+}
+
+int hal_timer_start(hal_timer_t *tmr)
+{
+    return yunos_timer_start(tmr->priv);
+}
+
+void hal_timer_stop(hal_timer_t *tmr)
+{
+    yunos_timer_stop(tmr->priv);
+    yunos_timer_dyn_del(tmr->priv);
+    tmr->priv = NULL;
+}
