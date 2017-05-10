@@ -29,8 +29,6 @@ extern "C" {
 
 #include <hal/base.h>
 
-#include <hal/random.h>
-
 #include <hal/sensor.h>
 /*
  * @brief Main
