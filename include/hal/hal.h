@@ -29,12 +29,6 @@ extern "C" {
 
 #include <hal/base.h>
 
-#include <hal/kv_flash.h>
-
-#include <hal/time.h>
-
-#include <hal/random.h>
-
 #include <hal/sensor.h>
 /*
  * @brief Main

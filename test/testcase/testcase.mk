@@ -2,6 +2,7 @@ NAME := testcase
 
 $(NAME)_SOURCES     := yts_main.c
 $(NAME)_SOURCES     += basic_test.c
+$(NAME)_SOURCES     += hal_test.c
 $(NAME)_SOURCES     += framework/yloop_test.c 
 $(NAME)_SOURCES     += utility/cjson_test.c
 
