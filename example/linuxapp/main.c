@@ -14,7 +14,9 @@ static void app_delayed_action(void *arg)
     struct cookie *cookie = arg;
     struct hostent *hent = gethostbyname("www.taobao.com");
     printf("%s - %s\n", __func__, g_active_task->task_name);
-    printf("%s - %s\n", __func__, hent->h_name);
+    if(hent) {
+        printf("%s - %s\n", __func__, hent->h_name);
+    }
     if (cookie->flag != 0) {
         yos_post_delayed_action(3000, app_delayed_action, arg);
     }
