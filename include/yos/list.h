@@ -108,6 +108,28 @@ static inline int dlist_empty(const dlist_t *head)
          &node->member != (queue); \
          node = yos_container_of(n, type, member), n = n ? n->next : NULL)
 
+/**
+* list_entry - get the struct for this entry
+* @ptr:        the &struct list_head pointer.
+* @type:       the type of the struct this is embedded in.
+* @member:     the name of the list_struct within the struct.
+*/
+#define list_entry(ptr, type, member) \
+        yos_container_of(ptr, type, member)
+
+/**
+* list_for_each_entry_reverse_t - iterate backwards over list of given type.
+* @pos:        the type * to use as a loop cursor.
+* @head:       the head for your list.
+* @member:     the name of the list_head within the struct.
+* @type:       the type of the struct this is embedded in.
+*/
+#define dlist_for_each_entry_reverse(pos, head, member, type) \
+    for (pos = list_entry((head)->prev, type, member);  \
+         &pos->member != (head);    \
+         pos = list_entry(pos->member.prev, type, member))
+
+
 #define dlist_entry_number(queue) ({ \
     int num; \
     dlist_t *cur = queue; \
