@@ -231,12 +231,20 @@ int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
  * @param arg1 private data past to action
  * @param fini_cb finish callback to be executed after action is done in current event loop
  * @param arg2 private data past to fini_cb
- * @retval >=0 success
- * @retval <0  failure
- * @note Unlike yos_post_delayed_action,
- *       this function can be called from non-yos-main-loop context.
+ * @retval  0 failure
+ * @retval !0 work handle
+ * @note  this function can be called from non-yos-main-loop context.
  */
-int yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2);
+void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2);
+
+/**
+ * @brief Cancel a work
+ * @param work work to be cancelled
+ * @param action action to be cancelled
+ * @param arg1 private data past to action
+ * @retval None
+ */
+void yos_cancel_work(void *work, yos_call_t action, void *arg1);
 
 void *yos_malloc(size_t);
 void yos_free(void *);
