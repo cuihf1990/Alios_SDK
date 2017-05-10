@@ -31,8 +31,6 @@ $(NAME)_SOURCES     += \
     csp/lwip/netif/delif.c \
     csp/lwip/netif/fifo.c \
     csp/lwip/netif/list.c \
-    csp/lwip/netif/pcapif.c \
-    csp/lwip/netif/sio.c \
     csp/lwip/netif/tapif.c \
     csp/lwip/netif/tcpdump.c \
     csp/lwip/netif/tunif.c
