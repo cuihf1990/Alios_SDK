@@ -1,0 +1,590 @@
+#include "yos/list.h"
+#include "wsf_client.h"
+#include "wsf_log.h"
+#include "wsf_worker.h"
+#include "wsf_msg.h"
+#include "wsf_config.h"
+#include "wsf_msg_queue.h"
+#include "wsf_network.h"
+#include "wsf.h"
+#include "yos/kernel.h"
+#include "os.h"
+
+wsf_request_queue_t *global_request_queue;
+
+static void *recv_thread;
+
+extern wsf_connection_t *wsf_conn;
+
+extern wsf_push_callback push_callback;
+
+extern wsf_error_callback error_callback;
+
+static volatile int network_up = 1;
+
+static dlist_t g_list;
+static void *g_req_mutex;
+
+static int wsf_running;
+static int total_req_nodes = 0;
+
+typedef void (*msg_handler)(wsf_msg_t *msg, int length);
+
+static void process_msg_response(wsf_msg_t *msg, int length);
+static void process_msg_request(wsf_msg_t *msg, int length);
+static void process_heartbeat_response(wsf_msg_t *msg, int length);
+static void process_register_response(wsf_msg_t *msg, int length);
+static void process_deregister_connection(wsf_msg_t *msg, int length);
+static void __process_msg_request(wsf_msg_t *msg, int length);
+
+static void wsf_keep_connection(wsf_config_t *config);
+
+void request_msg_handle(void *arg);
+
+static work_t request_msg_work;
+static workqueue_t g_workqueue;
+static int flag_work_init = 0;
+
+static msg_handler msg_handlers[MSG_TYPE_END] =
+    { process_msg_request,                    //0
+      process_msg_response,                   //1
+      NULL,                                   //2
+      process_heartbeat_response,             //3
+      NULL,                                   //4
+      process_register_response,              //5
+      process_deregister_connection,          //6
+     };
+
+static void stop_request_work()
+{
+    kstat_t ret = 0;
+   
+    if(!flag_work_init)
+        return;
+
+    ret = yunos_workqueue_del(&g_workqueue);
+ 
+    if(ret != YUNOS_SUCCESS){
+        LOGE(MODULE_NAME,"failed to delete msg queue\n");
+        return; 
+    }
+
+   flag_work_init = 0;
+}
+
+static void start_request_work()
+{
+    kstat_t ret = 0;
+    cpu_stack_t stack_buf[1024];
+    size_t stack_size = sizeof(stack_buf);
+    if(flag_work_init)
+        return;
+    
+    ret = yunos_workqueue_create(&g_workqueue
+                                ,"request msg work"
+                                ,0 ,stack_buf ,stack_size);
+    if(ret != YUNOS_SUCCESS){
+        LOGE(MODULE_NAME,"failed to create msg queue\n");
+        return; 
+    }
+
+    ret = yunos_work_init(&request_msg_work
+                        ,request_msg_handle
+                        , NULL, 0);
+
+    if(ret != YUNOS_SUCCESS){
+        LOGE(MODULE_NAME,"failed to init msg queue\n");
+        return; 
+    }
+
+    ret = yunos_work_run(&g_workqueue, &request_msg_work);
+    
+    if(ret != YUNOS_SUCCESS){
+        LOGE(MODULE_NAME,"failed to init msg queue\n");
+        return; 
+    }
+    
+    flag_work_init = 1;
+}
+
+static void process_msg_response(wsf_msg_t *msg, int length)
+{
+    wsf_msg_t *rsp = (wsf_msg_t *) malloc(length + 1);
+    wsf_request_node_t *node = NULL;
+    if (rsp) {
+        memset(rsp, 0, length + 1);
+        memcpy(rsp, msg, length);
+        node = wsf_request_queue_trigger(global_request_queue, rsp);
+        if (node) {
+            LOGW(MODULE_NAME,"process_msg_response, send signal");
+            wsf_msg_session_signal(&node->session);
+        } else {
+            LOGW(MODULE_NAME,"unknown response msg");
+            free(rsp);
+        }
+    } else {
+        LOGE(MODULE_NAME,"failed to malloc memory");
+    }
+}
+
+/*
+ * put the msg in the queue, and process in the callback_worker
+ * msg will be freed after this function, copy the msg for the queue
+ */
+static void process_msg_request(wsf_msg_t *msg, int length)
+{
+    struct request_msg_node *node;
+
+    if (total_req_nodes >= CONFIG_REQMSG_LENGTH) {
+        LOGW(MODULE_NAME,"request queue has too nodes to handle");
+        return;
+    }
+
+    node = (struct request_msg_node *)malloc(sizeof(struct request_msg_node) + length);
+    OS_CHECK_MALLOC(node);
+
+    memcpy(node->msg, (uint8_t *)msg, length);
+    node->length = length;
+    pthread_mutex_lock(g_req_mutex);
+    dlist_add(&node->list_head, &g_list);
+    total_req_nodes ++;
+    pthread_mutex_unlock(g_req_mutex);
+
+    start_request_work();
+}
+
+void init_req_glist(void)
+{
+    total_req_nodes = 0;
+    g_req_mutex = os_mutex_init();
+    dlist_init(&g_list);
+}
+
+void deinit_req_glist(void)
+{
+    struct request_msg_node *node;
+    dlist_t *tmp = NULL;
+    stop_request_work();
+
+    pthread_mutex_lock(g_req_mutex);
+    dlist_for_each_entry_safe(&g_list,tmp, node, struct request_msg_node, list_head) {
+        dlist_del(&(node->list_head));
+        free(node);
+    }
+    pthread_mutex_unlock(g_req_mutex);
+
+    total_req_nodes = 0;
+    if (g_req_mutex) {
+        os_mutex_destroy(g_req_mutex);
+        g_req_mutex = NULL;
+    }
+}
+
+void request_msg_handle(void *arg)
+{
+    struct request_msg_node *node, *n;
+    dlist_t *tmp = NULL;
+    pthread_mutex_lock(g_req_mutex);
+    dlist_for_each_entry_safe(&g_list,tmp, node, struct request_msg_node, list_head) {
+        pthread_mutex_unlock(g_req_mutex);
+
+        __process_msg_request((wsf_msg_t *)node->msg, node->length);
+        total_req_nodes --;
+
+        pthread_mutex_lock(g_req_mutex);
+
+        dlist_del(&(node->list_head));
+        free(node);
+    }
+    pthread_mutex_unlock(g_req_mutex);
+
+    if (!dlist_empty(&g_list))
+        start_request_work();
+}
+
+static void __process_msg_request(wsf_msg_t *msg, int length)
+{
+    uint32_t msg_id;
+    uint32_t start_time, end_time;
+
+    start_time = os_get_time_ms();
+    memcpy(&msg_id, msg->header.msg_id, sizeof(uint32_t));
+    wsf_response_t *callback_rsp = NULL;
+
+    if (push_callback) {
+        uint8_t *pp = msg->payload;
+        pp += (*pp + 1);                        //servicename len &value
+        pp += (*pp + 1);                        //sessionid len &value
+        pp += (*pp + 1);                        //deviceid len &value
+        pp += (*pp + 1);                        //secret len &value
+        int param_count = *pp;                  //param count
+        if (param_count > 0) {
+            uint32_t param1_len = os_get_unaligned_be32(++pp);
+            pp += 4; //param1 value
+            LOGW(MODULE_NAME,"start push cmd to device");
+            callback_rsp = push_callback(pp, param1_len);
+        } else {
+            callback_rsp = push_callback(NULL, 0);
+        }
+    }
+    wsf_msg_t *rsp = NULL;
+    if (!callback_rsp) {
+        rsp = wsf_msg_response_create(msg_id, INVOKE_RIGHT, NULL, 0);
+    } else {
+        rsp = wsf_msg_response_create(msg_id, callback_rsp->result, callback_rsp->data, callback_rsp->length);
+    }
+
+    if (!rsp) {
+        LOGE(MODULE_NAME,"create response failed");
+        return;
+    }
+
+    end_time = os_get_time_ms();
+    if ((end_time - start_time) > wsf_get_config()->request_timeout * 1000) {
+        LOGE(MODULE_NAME,"user callback block %d ms !!!", (end_time - start_time));
+    }
+
+    uint32_t msg_len;
+
+    memcpy(&msg_len, rsp->header.msg_length, sizeof(uint32_t));
+    wsf_msg_header_encode((char *)rsp, msg_len);
+    LOGW(MODULE_NAME,"send response to service");
+
+    wsf_send_msg(wsf_conn, (const char *)rsp, msg_len);
+
+    if (callback_rsp) {
+        wsf_response_destroy(callback_rsp, 0);
+    }
+
+    free(rsp);
+
+    return;
+}
+
+static void process_heartbeat_response(wsf_msg_t *msg, int length) {
+    //reset the counter
+    wsf_reset_heartbeat_counter(wsf_conn);
+}
+
+static void process_register_response(wsf_msg_t *msg, int length) {
+    uint8_t *pp = msg->payload;
+    invoke_result_code result_code = (invoke_result_code)(*pp); //result code
+    if (result_code == INVOKE_RIGHT) {
+        pp++;
+        int8_t len = *pp; //device id len
+        if (len) {
+            char *device_id = malloc(len + 1);
+            OS_CHECK_MALLOC(device_id);
+
+            pp++;
+            memcpy(device_id, pp, len);
+            device_id[len] = '\0';
+            wsf_device_id_set(device_id);
+            free(device_id);
+        }
+
+        wsf_conn->conn_state = CONN_READY;
+        wsf_set_state(CONNECT_STATE_READY);
+    } else if (result_code == INVOKE_SESSION_EXPIRE_ERROR) {
+        LOGE(MODULE_NAME,"wsf register: INVOKE_SESSION_EXPIRE_ERROR");
+        wsf_reset_connection(wsf_conn, 1);
+    } else {
+        LOGE(MODULE_NAME,"wsf register: other error");
+        wsf_reset_connection(wsf_conn, 0);
+    }
+
+}
+
+static void process_deregister_connection(wsf_msg_t *msg, int length) {
+
+    if (wsf_conn && wsf_conn->ssl) {
+       //close the connection
+        wsf_reset_connection(wsf_conn, 1);
+    }
+
+    LOGE(MODULE_NAME,"connection deregister received");
+
+    if (error_callback) {
+        error_callback(WSF_CONNECTION_DEREGISTERED);
+    }
+
+}
+
+/*
+ * clear the whole wsf message, but remain the next wsf message if exist.
+ * return: 1, more pkg; 0, no more pkg.
+ */
+static int wsf_recvbuff_clear_first_msg() {
+    wsf_msg_header_t *msg_header = (wsf_msg_header_t *)wsf_conn->recv_buf;
+    int buf_len = wsf_conn->recv_buf_pos;
+    int pkg_len = 0;
+
+    /* after wsf_msg_header_decode(), no need to ntohl trans */
+    memcpy(&pkg_len, msg_header->msg_length, sizeof(int));
+
+    if (buf_len == pkg_len)
+        wsf_conn->recv_buf_pos = 0;
+    else if (buf_len > pkg_len) {
+        LOGE(MODULE_NAME,"ssl recv more than 1 pkg! buf_len:%d, pkg_len:%d",
+                buf_len, pkg_len);
+        memmove(wsf_conn->recv_buf, wsf_conn->recv_buf + pkg_len,
+                wsf_conn->recv_buf_pos - pkg_len);
+        wsf_conn->recv_buf_pos = wsf_conn->recv_buf_pos - pkg_len;
+        return 1;
+    } else {
+        /*
+         * after deregister, wsf_reset_connection was called,
+         * and wsf_conn->recv_buf_pos clear to 0.
+         */
+        if (buf_len)
+            OS_ASSERT(0, "should never reach here! %d < %d", buf_len, pkg_len);
+        wsf_conn->recv_buf_pos = 0;
+    }
+
+    return 0;
+}
+
+static void process_received_buf(wsf_connection_t *conn) {
+    wsf_code ret = wsf_recvbuff_check(conn);
+
+    if (ret != WSF_SUCCESS) {
+        wsf_recvbuff_clear(conn);
+        LOGE(MODULE_NAME,"recv buffer error, drop the msg");
+        return;
+    }
+
+reprocess:
+    if (!wsf_msg_accept(conn->recv_buf, conn->recv_buf_pos)) {
+        wsf_recvbuff_clear(conn);
+        LOGE(MODULE_NAME,"unknown message received");
+        return;
+    }
+
+    if (wsf_msg_complete(conn->recv_buf, conn->recv_buf_pos)) {
+
+        wsf_msg_header_t *msg_header = wsf_msg_header_decode(conn->recv_buf,
+                conn->recv_buf_pos);
+
+        msg_type mtype = get_msg_type(msg_header);
+
+        if (mtype < MSG_TYPE_END) {
+            msg_handler handler = msg_handlers[mtype];
+            if (handler) {
+                uint32_t length;
+                memcpy(&length, msg_header->msg_length, sizeof(length));
+                handler((wsf_msg_t *)msg_header, length);
+            }
+        }
+
+        if (wsf_recvbuff_clear_first_msg(conn))
+            goto reprocess; //more package in conn->recv_buf, so process again.
+    }
+}
+
+
+static void *receive_worker(void *arg) {
+
+    wsf_config_t *config = (wsf_config_t *)arg;
+
+    wsf_msg_t hb_req;
+    uint32_t msg_len; //hb_req.header.msg_length;
+
+    int i, retval, count;
+    uint32_t timeout;
+    void *fd_read[OS_SOCKET_MAXNUMS];
+
+    for (i = 0; i < OS_SOCKET_MAXNUMS; i++)
+        fd_read[i] = OS_INVALID_FD;
+
+    wsf_msg_heartbeat_request_init(&hb_req);
+    memcpy(&msg_len, hb_req.header.msg_length, sizeof(uint32_t));
+    wsf_msg_header_encode((char *)&hb_req, msg_len);
+
+    LOG("","--------->");
+    while (wsf_running) {
+        timeout = config->heartbeat_interval;
+
+        /* only fd_read[0] is used */
+        if (wsf_conn && wsf_conn->ssl) {
+            fd_read[0] = wsf_conn->tcp;
+            retval = os_select(fd_read, NULL, timeout * 1000);
+            LOGW(MODULE_NAME,"select(%d) retval:%d", timeout, retval);
+        } else {
+            sleep(timeout);
+            wsf_keep_connection(config);
+            continue;
+        }
+
+        if (retval < 0) {
+            LOGE(MODULE_NAME,"wsf: select ret -1, reconnect");
+            wsf_reset_connection(wsf_conn, 0);
+        } else if (retval == 0) {
+            //TIMEOUT to send heartbeat when connection ready
+
+            if (wsf_is_heartbeat_timeout(wsf_conn)) {
+                //close the connection
+                LOGE(MODULE_NAME,"wsf: heartbeat timeout, reconnect");
+                wsf_reset_connection(wsf_conn, 0);
+            }
+
+           if (wsf_conn && wsf_conn->ssl) {
+                wsf_send_msg(wsf_conn, (const char *)&hb_req, msg_len);
+                LOGW(MODULE_NAME,"send heartbeat");
+                wsf_dec_heartbeat_counter(wsf_conn);
+            }
+
+            /* NOTE: wsf_reset_connection() only called in this thread */
+            wsf_keep_connection(config);
+        } else {
+        	if (wsf_conn && (OS_INVALID_FD != fd_read[0])) {
+                char *buf = wsf_conn->recv_buf + wsf_conn->recv_buf_pos;
+                int len = wsf_conn->recv_buf_len - wsf_conn->recv_buf_pos;
+                if (NULL != wsf_conn->ssl) {
+                    count = os_ssl_recv(wsf_conn->ssl, buf, len);
+                } else {
+                    count = os_tcp_recv(wsf_conn->tcp, buf, len);
+                }
+                if (count <= 0) {
+                    if (!len)
+                        LOGE(MODULE_NAME,"wsf recv buffer full!");
+                    else
+                        LOGE(MODULE_NAME,"closing socket for tcp/ssl read error.");
+                    wsf_reset_connection(wsf_conn, 0);
+                    continue;
+                } else
+                    wsf_conn->recv_buf_pos += count;
+                process_received_buf(wsf_conn);
+            }
+        }
+    }
+
+    //LOGT();
+    os_thread_exit(recv_thread);
+    return NULL;
+}
+
+wsf_msg_t *__wsf_invoke_sync(wsf_msg_t * req)
+{
+    wsf_msg_t *p_rsp = NULL;
+
+    if (!req)
+        return NULL;
+
+    if (wsf_running) {
+        if (!wsf_conn || !wsf_conn->ssl || wsf_conn->conn_state != CONN_READY) {
+            LOGE(MODULE_NAME,"wsf connect not ready");
+            return NULL;
+        }
+
+        uint32_t msg_id, msg_length;
+        memcpy(&msg_id, req->header.msg_id, sizeof(uint32_t));
+        memcpy(&msg_length, req->header.msg_length, sizeof(uint32_t));
+
+        wsf_msg_header_encode((char *)req, msg_length);
+
+        wsf_request_node_t *node = (wsf_request_node_t *) malloc(sizeof(wsf_request_node_t));
+        wsf_msg_session_init(&node->session);
+        node->session.id = msg_id;
+
+        if (!wsf_request_queue_push(global_request_queue, node)) {
+            wsf_code ret = wsf_send_msg(wsf_conn, (const char *)req, msg_length);
+            if (ret == WSF_SUCCESS) {
+                LOGW(MODULE_NAME,"waiting for response, id=%d", msg_id);
+                if (!wsf_msg_session_timewait(&node->session, wsf_get_config()->request_timeout)) {
+                    LOGW(MODULE_NAME,"get reponse, id=%d", node->session.id);
+                    p_rsp = node->session.response;
+                } else {
+                    LOGW(MODULE_NAME,"waiting response id=%d timeout", msg_id);
+                }
+            } else {
+                LOGE(MODULE_NAME,"failed to send message(len=%d).", msg_length);
+            }
+            wsf_request_queue_pop(global_request_queue, node);
+        }
+
+        wsf_msg_session_destroy(&node->session);
+        free(node);
+
+        //check session id & device id
+        if (p_rsp) {
+            char *pp = (char *)p_rsp + sizeof(wsf_msg_header_t);
+            //skip result code
+            pp++;
+            //session id len
+            uint8_t len = *pp;
+            //session id
+            pp++;
+            if (len > 0) {
+                char *session_id = (char *)malloc(len + 1);
+                if (session_id) {
+                    memcpy(session_id, pp, len);
+                    session_id[len] = '\0';
+                    pp += len;
+                    if (!wsf_conn->session_id || strcmp(session_id, wsf_conn->session_id) != 0) {
+                        wsf_session_id_set(session_id);
+                    }
+                    free(session_id);
+                }
+            }
+            if (!wsf_conn->device_id) {
+                //device id len
+                len = *pp;
+                pp++;
+                if (len > 0) {
+                    char *device_id = (char *)malloc(len + 1);
+                    if (device_id) {
+                        memcpy(device_id, pp, len);
+
+                        device_id[len] = '\0';
+                        wsf_device_id_set(device_id);
+                        free(device_id);
+                    }
+                }
+            }
+        }
+    }
+    return p_rsp;
+}
+
+wsf_code wsf_start_worker(wsf_config_t *config)
+{
+    wsf_running = 1;
+
+    recv_thread = os_thread_create("wsf_receive_worker", receive_worker, config);
+    if ( NULL == recv_thread) {
+        LOGF(MODULE_NAME,"failed to start receiver_worker");
+        return WSF_FAIL;
+    }
+    return WSF_SUCCESS;
+}
+
+void wsf_wait_worker(void) {
+    if (recv_thread) {
+        LOG();
+        os_thread_join(recv_thread);
+    }
+}
+
+void wsf_stop_worker(void) {
+    wsf_running = 0;
+
+    wsf_wait_worker();
+}
+
+static void wsf_keep_connection(wsf_config_t *config) {
+    if (!wsf_conn) {
+        return;
+    }
+
+    os_sys_net_wait_ready();
+
+    if ((!wsf_conn->ssl || wsf_conn->conn_state != CONN_READY)
+            && network_up) {
+        LOGI(MODULE_NAME,"try to reconnect");
+        wsf_code result = wsf_open_connection(config);
+        if (result != WSF_SUCCESS) {
+            LOGE(MODULE_NAME,"failed to setup the link");
+        }
+        return;
+    }
+}
