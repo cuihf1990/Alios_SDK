@@ -58,6 +58,7 @@ typedef struct yloop_timeout_s {
     struct timeval   time;
     void            *private_data;
     yos_call_t       cb;
+    int              ms;
 } yloop_timeout_t;
 
 typedef struct {
@@ -220,6 +221,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
 
     timeout->private_data = param;
     timeout->cb = action;
+    timeout->ms = ms;
 
     yloop_timeout_t *tmp;
 
@@ -234,18 +236,24 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
     return 0;
 }
 
-void yos_cancel_delayed_action(yos_call_t cb, void *private_data)
+void yos_cancel_delayed_action(int ms, yos_call_t cb, void *private_data)
 {
     yloop_ctx_t *ctx = get_context();
     yloop_timeout_t *tmp;
 
     dlist_for_each_entry(&ctx->timeouts, tmp, yloop_timeout_t, next) {
-        if (tmp->cb == cb &&
-            tmp->private_data == private_data) {
-            dlist_del(&tmp->next);
-            free(tmp);
-            return;
-        }
+        if (ms != -1 && tmp->ms != ms)
+            continue;
+
+        if (tmp->cb != cb)
+            continue;
+
+        if (tmp->private_data != private_data)
+            continue;
+
+        dlist_del(&tmp->next);
+        free(tmp);
+        return;
     }
 }
 

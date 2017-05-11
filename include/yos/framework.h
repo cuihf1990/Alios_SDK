@@ -153,12 +153,13 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *arg);
 
 /**
  * @brief Cancel a delayed action to be executed in main loop
+ * @param ms milliseconds to wait, -1 means don't care
  * @param action action to be executed
  * @param arg private data past to action
  * @returns None
  * @note all the parameters must be the same as yos_post_delayed_action
  */
-void yos_cancel_delayed_action(yos_call_t action, void *arg);
+void yos_cancel_delayed_action(int ms, yos_call_t action, void *arg);
 
 /**
  * @brief Schedule a callback in next event loop
