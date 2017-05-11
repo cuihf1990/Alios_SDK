@@ -11,6 +11,7 @@ $(NAME)_INCLUDES    += .
 GLOBAL_INCLUDES     += include csp/lwip/include
 GLOBAL_LDFLAGS      += -lpthread -lm -lcrypto
 GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
+GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
 GLOBAL_CFLAGS       += -Wno-missing-field-initializers
 
 $(NAME)_SOURCES     := main/arg_options.c
