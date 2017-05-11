@@ -17,9 +17,9 @@
 #include "ysh.h"
 #include <hal/hal.h>
 #include <hal/platform.h>
-#include <yoc/conf.h>
-#include <yoc/log.h>
-#include <yoc/framework.h>
+#include <yos/conf.h>
+#include <yos/log.h>
+#include <yos/framework.h>
 #include <assert.h>
 
 extern int  smart_config_start(void);

@@ -15,7 +15,7 @@
  */
 #include <malloc.h>
 #include <string.h>
-#include <yoc/log.h>
+#include <yos/log.h>
 #include "k_api.h"
 #include "ysh.h"
 
@@ -153,67 +153,6 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
     return YUNOS_CMD_SUCCESS;
 }
 
-#ifdef CONFIG_YOS_RHINO_MMREGION
-extern klist_t g_mm_region_list_head;
-uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
-{
-    uint32_t i = 0;
-    k_mm_region_list_t *min  = NULL;
-    klist_t *head = NULL;
-    klist_t *end  = NULL;
-    klist_t *cur  = NULL;
-    klist_t * region_list_cur = NULL , *region_list_head = NULL;
-    k_mm_region_head_t * cur_region;
-    NULL_PARA_CHK(g_mm_region_list_head.next);
-    NULL_PARA_CHK(g_mm_region_list_head.prev);
-    region_list_head =  &g_mm_region_list_head;
-    for(region_list_cur = region_list_head->next; region_list_cur != region_list_head;region_list_cur = region_list_cur->next){
-        cur_region = yunos_list_entry(region_list_cur,k_mm_region_head_t,regionlist);
-        csp_printf("----------------------------------------------------------------------\r\n");
-        csp_printf("region info frag number:%d free size:%d\r\n", cur_region->frag_num, cur_region->freesize);
-        head = &cur_region->probe;
-        end = head;
-        if (1 == is_klist_empty(head)) {
-            csp_printf("the memory list is empty\r\n");
-            continue;
-        }
-        csp_printf("free list: \r\n");
-
-        for (cur = head->next; cur != end; cur = cur->next) {
-            min = yunos_list_entry(cur, k_mm_region_list_t, list);
-#if (YUNOS_CONFIG_MM_DEBUG > 0)
-            csp_printf("[%-4d]:adress:0x%0x                  len:%-5d type:%s  flag:0x%0x\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "free", min->dye);
-#else
-            csp_printf("[%-4d]:adress:0x%0x                  len:%-5d type:%s\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "free");
-#endif
-            i++;
-        }
-        i=0;
-        head = &cur_region->alloced;
-        end = head;
-        csp_printf("alloced list: \r\n");
-        for (cur = head->next; cur != end; cur = cur->next) {
-            min = yunos_list_entry(cur, k_mm_region_list_t, list);
-#if (YUNOS_CONFIG_MM_DEBUG > 0)
-            if ((YUNOS_MM_REGION_CORRUPT_DYE & min->dye) != YUNOS_MM_REGION_CORRUPT_DYE) {
-                csp_printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s flag:0x%0x\r\n", i,
-                           (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "corrupt", min->dye);
-            }
-            csp_printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s flag:0x%0x\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "taken", min->dye);
-#else
-            csp_printf("[%-4d]:adress:0x%0x len:%-5d type:%s\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "taken");
-
-#endif
-            i++;
-
-        }
-    }
-    return YUNOS_CMD_SUCCESS;
-}
 
 uint32_t dumpsys_mm_leak_func(char *buf, uint32_t len)
 {
@@ -264,7 +203,6 @@ uint32_t dumpsys_mm_leak_check_func(cmd_item_t *item, char *buf, uint32_t len)
 
     return YUNOS_CMD_SUCCESS;
 }
-#endif
 static uint32_t cmd_dumpsys_func(char *buf, uint32_t len, cmd_item_t *item, cmd_info_t *info)
 {
     ysh_stat_t ret;
@@ -283,7 +221,6 @@ static uint32_t cmd_dumpsys_func(char *buf, uint32_t len, cmd_item_t *item, cmd_
     }else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "info")) {
         ret = dumpsys_info_func(buf, len);
         return ret;
-#ifdef CONFIG_YOS_RHINO_MMREGION
     } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "mm_info")) {
         ret = dumpsys_mm_info_func(buf, len);
         return ret;
@@ -293,7 +230,6 @@ static uint32_t cmd_dumpsys_func(char *buf, uint32_t len, cmd_item_t *item, cmd_
     } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "leak_check")) {
         ret = dumpsys_mm_leak_check_func(item, buf, len);
         return ret;
-#endif
     } else {
         snprintf(buf, len, "%s\r\n", info->help_info);
         return YUNOS_CMD_SUCCESS;
@@ -314,11 +250,9 @@ void ysh_reg_cmd_dumpsys(void)
     tmp->info      = "dumpsys command show the system's runing info.";
     tmp->help_info = "dumpsys :\r\n"
                      "\tdumpsys task       : show the task info.\r\n"
-#ifdef CONFIG_YOS_RHINO_MMREGION
                      "\tdumpsys mm_info    : show the memory has alloced.\r\n"
                      "\tdumpsys mm_leak    : show the memory maybe leak.\r\n"
                      "\tdumpsys leak_check : leak check control comand.\r\n"
-#endif
                      "\tdumpsys info       : show the system info";
     tmp->func      = cmd_dumpsys_func;
 
