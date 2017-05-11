@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * @file yos/framework.h
- * @brief YOS Framework APIs
- * @version since 5.5.0
- */
-
 #ifndef YOS_FRAMEWORK_API_H
 #define YOS_FRAMEWORK_API_H
 
@@ -249,6 +243,16 @@ void yos_cancel_work(void *work, yos_call_t action, void *arg1);
 
 void *yos_malloc(size_t);
 void yos_free(void *);
+
+struct pollfd;
+
+int yos_open(const char *path, int flags);
+int yos_close(int fd);
+ssize_t yos_read(int fd, void *buf, size_t nbytes);
+ssize_t yos_write(int fd, const void *buf, size_t nbytes);
+int yos_ioctl(int fd, int cmd, unsigned long arg);
+int yos_poll(struct pollfd *fds, int nfds, int timeout);
+int yos_fcntl(int fd, int cmd, int val);
 
 /** @} */ //end of Framework API
 

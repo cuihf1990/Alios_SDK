@@ -16,13 +16,15 @@
 
 #include <sys/time.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <poll.h>
 
 #include <yos/kernel.h>
-#include <hal/hal.h>
 #include <yos/framework.h>
+#include <yos/network.h>
 #include <yos/log.h>
-
-#include "vfs.h"
+#include <yos/list.h>
 
 #include "yloop.h"
 
@@ -155,8 +157,8 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
         return -1;
     }
 
-    int status = yunos_fcntl(sock, F_GETFL, 0);
-    yunos_fcntl(sock, F_SETFL, status | O_NONBLOCK);
+    int status = yos_fcntl(sock, F_GETFL, 0);
+    yos_fcntl(sock, F_SETFL, status | O_NONBLOCK);
 
     ctx->reader_count++;
     ctx->readers = new_sock;
@@ -286,10 +288,10 @@ void yos_loop_run(void)
             ctx->pollfds[i].events = POLLIN;
         }
 
-        int res = yunos_poll(ctx->pollfds, readers, delayed_ms);
+        int res = yos_poll(ctx->pollfds, readers, delayed_ms);
 
         if (res < 0 && errno != EINTR) {
-            LOGE(TAG, "yunos_poll");
+            LOGE(TAG, "yos_poll");
             return;
         }
 

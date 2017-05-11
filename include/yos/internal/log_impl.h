@@ -17,8 +17,6 @@
 #ifndef YOS_LOG_IMPL_H
 #define YOS_LOG_IMPL_H
 
-#include <yos/sysdep.h>
-
 #if defined(__cplusplus)
 extern "C"
 {

@@ -18,6 +18,7 @@
 #include <signal.h>
 #include <sys/resource.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
@@ -116,6 +117,7 @@ void signal_handler(int signo)
     exit(0);
 }
 
+#define ARCH_MAX_NOFILE 64
 int setrlimit_for_vfs(void)
 {
     int           ret;

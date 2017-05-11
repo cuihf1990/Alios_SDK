@@ -17,11 +17,14 @@
 #ifndef K_SYS_CSP_H
 #define K_SYS_CSP_H
 
-#include <yos/sysdep.h>
-
 #ifndef weak_attr
 #define weak_attr __attribute__ ((weak))
 #endif
+
+#include <k_api.h>
+
+#include <stdint.h>
+struct pollfd;
 
 #ifdef __cplusplus
 extern "C"

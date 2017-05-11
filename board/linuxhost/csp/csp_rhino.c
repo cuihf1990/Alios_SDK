@@ -16,8 +16,10 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <k_api.h>
 #include <csp.h>
+#include <poll.h>
 #include <hal/timer.h>
 
 #ifndef WITH_LWIP

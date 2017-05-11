@@ -17,12 +17,14 @@
  * limitations under the License.
  */
 
+#include <stdbool.h>
+#include <stdlib.h>
+
 #include <k_api.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/list.h>
 
-#include "vfs.h"
 #include "event_device.h"
 #include "yloop.h"
 
@@ -79,13 +81,13 @@ static int input_add_event(int fd, input_event_t *event)
     else
         cmd = MK_CMD(IOCTL_WRITE_NORMAL, sizeof(*event));
 
-    return yunos_ioctl(fd, cmd, (unsigned long)event);
+    return yos_ioctl(fd, cmd, (unsigned long)event);
 }
 
 void event_read_cb(int fd, void *param)
 {
     input_event_t event;
-    int ret = yunos_read(fd, &event, sizeof(event));
+    int ret = yos_read(fd, &event, sizeof(event));
     if (ret == sizeof(event)) {
         handle_events(&event);
     }
@@ -93,7 +95,7 @@ void event_read_cb(int fd, void *param)
 
 int yos_event_service_init(void)
 {
-    int fd = yunos_open("/dev/event", 0);
+    int fd = yos_open("/dev/event", 0);
 
     if (local_event.fd < 0)
         local_event.fd = fd;

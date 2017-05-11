@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <csp.h>
 #include <yos/kernel.h>
 #include <hal/hal.h>
+#include <poll.h>
+#include <k_api.h>
 
 int yos_mutex_new(yos_mutex_t *mutex) {
     return csp_mutex_new(mutex);
@@ -317,11 +321,7 @@ int csp_poll(struct pollfd *pollfds, int nfds, csp_sem_t sem, uint32_t timeout)
 
 int csp_net_errno(int fd)
 {
-#ifdef HAL_ARCH_SPEICAL_ERRNO
-    return arch_get_net_errno(fd);
-#else
     return errno;
-#endif
 }
 
 static char **strsplit(char *src, int max_fields)
