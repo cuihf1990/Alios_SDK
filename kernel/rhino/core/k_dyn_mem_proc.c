@@ -30,7 +30,7 @@ void dyn_mem_proc_task(void *arg)
             k_err_proc(YUNOS_DYN_MEM_PROC_ERR);
         }
 
-        soc_mm_free(recv_msg);
+        yunos_mm_free(recv_msg);
     }
 }
 

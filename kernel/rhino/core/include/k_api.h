@@ -48,8 +48,7 @@ extern "C" {
 #include <k_stats.h>
 #include <k_mm_blk.h>
 #include <k_mm_region.h>
-#include <k_mm_bestfit.h>
-#include <k_mm_firstfit.h>
+#include <k_mm.h>
 #include <k_workqueue.h>
 #include <k_internal.h>
 #include <k_trace.h>

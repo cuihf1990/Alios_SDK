@@ -65,40 +65,13 @@ tick_t soc_elapsed_ticks_get(void)
 #endif
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-k_mm_region_t       g_mm_region;
-k_mm_region_head_t  g_mm_region_head;
 
 extern char _estack;
 extern char _Min_Stack_Size;
 extern char _end;
 
-void soc_sys_mem_init(void)
-{
-    g_mm_region.start = &_end;
-    g_mm_region.len   = (uint32_t)&_estack - (uint32_t)&_end - (uint32_t)&_Min_Stack_Size;
+k_mm_region_t g_mm_region[] = {&_end,(uint32_t)&_estack - (uint32_t)&_end - (uint32_t)&_Min_Stack_Size};
 
-    yunos_mm_region_init(&g_mm_region_head, &g_mm_region, 1);
-}
-
-void *soc_mm_alloc(size_t size)
-{
-    void   *tmp      = NULL;
-    kstat_t err      = YUNOS_SUCCESS;
-    size_t  alloctor = (size_t)__builtin_return_address(YOC_MM_ALLOC_DEPTH);
-
-    err = yunos_mm_bf_alloc(&g_mm_region_head, &tmp, size, alloctor);
-    if (err != YUNOS_SUCCESS) {
-        return NULL;
-    }
-
-    return tmp;
-}
-
-
-void soc_mm_free(void *mem)
-{
-    yunos_mm_bf_free(&g_mm_region_head, mem);
-}
 #endif
 
 void soc_err_proc(kstat_t err)

@@ -312,7 +312,6 @@ uint32_t dump_mmleak()
     return 1;
 }
 
-extern klist_t g_mm_region_list_head;
 
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 {

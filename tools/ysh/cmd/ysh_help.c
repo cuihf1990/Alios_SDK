@@ -56,7 +56,7 @@ void ysh_reg_cmd_help(void)
 {
     cmd_info_t *tmp = NULL;
 
-    tmp = soc_mm_alloc(sizeof(cmd_info_t));
+    tmp = (cmd_info_t*)yos_malloc(sizeof(cmd_info_t));
     if (tmp == NULL) {
         return;
     }

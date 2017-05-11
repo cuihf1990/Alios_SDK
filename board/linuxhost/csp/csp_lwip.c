@@ -196,12 +196,12 @@ uint32_t yoc_get_free_heap_size(void)
     return 0u;
 }
 
-void *soc_mm_alloc(size_t size)
+void *yos_malloc(size_t size)
 {
     return malloc(size);
 }
 
-void soc_mm_free(void *mem)
+void yos_free(void *mem)
 {
     free(mem);
 }

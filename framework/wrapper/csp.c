@@ -210,12 +210,12 @@ int csp_sys_free(uint32_t *f)
 
 void *yos_malloc(size_t sz)
 {
-    return soc_mm_alloc(sz);
+    return yunos_mm_alloc(sz);
 }
 
 void yos_free(void *p)
 {
-    soc_mm_free(p);
+    yunos_mm_free(p);
 }
 
 #if defined(WITH_LWIP)

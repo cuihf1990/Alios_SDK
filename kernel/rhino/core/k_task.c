@@ -143,22 +143,22 @@ kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
 
     NULL_PARA_CHK(task);
 
-    task_stack = soc_mm_alloc(stack * sizeof(cpu_stack_t));
+    task_stack = yunos_mm_alloc(stack * sizeof(cpu_stack_t));
     if (task_stack == NULL) {
         return YUNOS_NO_MEM;
     }
 
-    task_obj = soc_mm_alloc(sizeof(ktask_t));
+    task_obj = yunos_mm_alloc(sizeof(ktask_t));
     if (task_obj == NULL) {
-        soc_mm_free(task_stack);
+        yunos_mm_free(task_stack);
         return YUNOS_NO_MEM;
     }
 
     ret = task_create(task_obj, name, arg, pri, ticks, task_stack, stack, entry,
                       autorun, K_OBJ_DYN_ALLOC);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
-        soc_mm_free(task_stack);
-        soc_mm_free(task_obj);
+        yunos_mm_free(task_stack);
+        yunos_mm_free(task_obj);
 
         return ret;
     }
