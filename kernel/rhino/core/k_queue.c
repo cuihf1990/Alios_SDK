@@ -118,21 +118,21 @@ kstat_t yunos_queue_dyn_create(kqueue_t **queue, const name_t *name, size_t msg_
 
     NULL_PARA_CHK(queue);
 
-    queue_obj = soc_mm_alloc(sizeof(kqueue_t));
+    queue_obj = yunos_mm_alloc(sizeof(kqueue_t));
     if (queue_obj == NULL) {
         return YUNOS_NO_MEM;
     }
 
-    msg_start = soc_mm_alloc(msg_num * sizeof(void *));
+    msg_start = yunos_mm_alloc(msg_num * sizeof(void *));
     if (msg_start == NULL) {
-        soc_mm_free(queue_obj);
+        yunos_mm_free(queue_obj);
         return YUNOS_NO_MEM;
     }
 
     stat = queue_create(queue_obj, name, (void **)msg_start, msg_num, K_OBJ_DYN_ALLOC);
     if (stat != YUNOS_SUCCESS) {
-        soc_mm_free(msg_start);
-        soc_mm_free(queue_obj);
+        yunos_mm_free(msg_start);
+        yunos_mm_free(queue_obj);
         return stat;
     }
 
@@ -180,8 +180,8 @@ kstat_t yunos_queue_dyn_del(kqueue_t *queue)
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
-    soc_mm_free(queue->msg_q.queue_start);
-    soc_mm_free(queue);
+    yunos_mm_free(queue->msg_q.queue_start);
+    yunos_mm_free(queue);
 
     return YUNOS_SUCCESS;
 }

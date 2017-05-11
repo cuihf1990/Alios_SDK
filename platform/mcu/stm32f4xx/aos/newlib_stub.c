@@ -23,7 +23,7 @@
 #include <stm32f4xx_hal_uart.h>
 
 extern UART_HandleTypeDef  UartHandle;
-extern k_mm_region_head_t  g_mm_region_head;
+extern k_mm_region_head_t  g_kmm_region_head;
 #define YOC_MM_ALLOC_DEPTH 0
 
 int _execve_r(struct _reent *ptr, const char * name, char *const *argv, char *const *env)
@@ -164,15 +164,7 @@ int _gettimeofday_r(struct _reent *ptr, struct timeval *__tp, void *__tzp)
 
 void *_malloc_r(struct _reent *ptr, size_t size)
 {
-    void    *tmp;
-    kstat_t  err = YUNOS_SUCCESS;
-    size_t   alloctor = (size_t)__builtin_return_address(YOC_MM_ALLOC_DEPTH);
-    err = yunos_mm_bf_alloc(&g_mm_region_head, &tmp, size, alloctor);
-    if (err != YUNOS_SUCCESS) {
-        return NULL;
-    }
-
-    return tmp;
+    return  yunos_mm_alloc(size);
 }
 
 
@@ -190,7 +182,7 @@ void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
 
 void _free_r(struct _reent *ptr, void *addr)
 {
-    yunos_mm_bf_free(&g_mm_region_head, addr);
+    yunos_mm_free(addr);
 }
 
 void _exit(int status)

@@ -49,11 +49,6 @@ void   soc_tick_interrupt_set(tick_t next_ticks,tick_t elapsed_ticks);
 tick_t soc_elapsed_ticks_get(void);
 #endif
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-void  soc_sys_mem_init(void);
-void *soc_mm_alloc(size_t size);
-void  soc_mm_free(void *mem);
-#endif
 
 void soc_err_proc(kstat_t err);
 

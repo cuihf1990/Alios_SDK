@@ -104,7 +104,7 @@ kstat_t yunos_sem_dyn_create(ksem_t **sem, const name_t *name, sem_count_t count
 
     NULL_PARA_CHK(sem);
 
-    sem_obj = soc_mm_alloc(sizeof(ksem_t));
+    sem_obj = yunos_mm_alloc(sizeof(ksem_t));
 
     if (sem_obj == NULL) {
         return YUNOS_NO_MEM;
@@ -113,7 +113,7 @@ kstat_t yunos_sem_dyn_create(ksem_t **sem, const name_t *name, sem_count_t count
     stat = sem_create(sem_obj, name, count, K_OBJ_DYN_ALLOC);
 
     if (stat != YUNOS_SUCCESS) {
-        soc_mm_free(sem_obj);
+        yunos_mm_free(sem_obj);
         return stat;
     }
 
@@ -160,7 +160,7 @@ kstat_t yunos_sem_dyn_del(ksem_t *sem)
 
     TRACE_SEM_DEL(g_active_task, sem);
 
-    soc_mm_free(sem);
+    yunos_mm_free(sem);
 
     return YUNOS_SUCCESS;
 }

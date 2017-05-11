@@ -129,14 +129,14 @@ kstat_t yunos_mutex_dyn_create(kmutex_t **mutex, const name_t *name)
 
     NULL_PARA_CHK(mutex);
 
-    mutex_obj = soc_mm_alloc(sizeof(kmutex_t));
+    mutex_obj = yunos_mm_alloc(sizeof(kmutex_t));
     if (mutex_obj == NULL) {
         return YUNOS_NO_MEM;
     }
 
     stat = mutex_create(mutex_obj, name, K_OBJ_DYN_ALLOC);
     if (stat != YUNOS_SUCCESS) {
-        soc_mm_free(mutex_obj);
+        yunos_mm_free(mutex_obj);
         return stat;
     }
 
@@ -196,7 +196,7 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
 
     TRACE_MUTEX_DEL(g_active_task, mutex);
 
-    soc_mm_free(mutex);
+    yunos_mm_free(mutex);
 
     return YUNOS_SUCCESS;
 }

@@ -101,7 +101,7 @@ kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name, uint32_t fl
         return YUNOS_NULL_PTR;
     }
 
-    event_obj = soc_mm_alloc(sizeof(kevent_t));
+    event_obj = yunos_mm_alloc(sizeof(kevent_t));
 
     if (event_obj == NULL) {
         return YUNOS_NO_MEM;
@@ -110,7 +110,7 @@ kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name, uint32_t fl
     stat = event_create(event_obj, name, flags, K_OBJ_DYN_ALLOC);
 
     if (stat != YUNOS_SUCCESS) {
-        soc_mm_free(event_obj);
+        yunos_mm_free(event_obj);
         return stat;
     }
 
@@ -156,7 +156,7 @@ kstat_t yunos_event_dyn_del(kevent_t *event)
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
-    soc_mm_free(event);
+    yunos_mm_free(event);
 
     return YUNOS_SUCCESS;
 }

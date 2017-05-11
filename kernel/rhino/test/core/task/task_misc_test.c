@@ -167,11 +167,11 @@ void task_misc_entry(void *arg)
         test_case_fail++;
     }
 
-    task_misc2_stack = soc_mm_alloc(TASK_TEST_STACK_SIZE);
+    task_misc2_stack = yunos_mm_alloc(TASK_TEST_STACK_SIZE);
 
     if (task_misc2_stack == NULL) {
 
-        PRINT_RESULT("soc_mm_alloc failed", FAIL);
+        PRINT_RESULT("yunos_mm_alloc failed", FAIL);
     }
 
     yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
@@ -259,7 +259,7 @@ void task_misc_entry(void *arg)
 
     yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
 
-    soc_mm_free(task_misc2_stack);
+    yunos_mm_free(task_misc2_stack);
 
     PRINT_RESULT("yunos_task_del", PASS);
 
