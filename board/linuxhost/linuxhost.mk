@@ -36,3 +36,14 @@ $(NAME)_SOURCES     += \
 
 $(NAME)_SOURCES     += csp/lwip/lwip_linuxhost.c
 endif
+
+ifneq (,$(filter dda,$(COMPONENTS)))
+$(info "dda is enabled")
+$(NAME)_DEFINES += CONFIG_YOS_DDA
+$(NAME)_DEFINES += CONFIG_YOS_DDM
+endif
+
+ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
+$(info "mesh is enabled")
+$(NAME)_DEFINES += CONFIG_YOS_MESH
+endif

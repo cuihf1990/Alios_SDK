@@ -18,6 +18,7 @@
 #define YOS_FRAMEWORK_API_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -245,8 +246,8 @@ struct pollfd;
 
 int yos_open(const char *path, int flags);
 int yos_close(int fd);
-ssize_t yos_read(int fd, void *buf, size_t nbytes);
-ssize_t yos_write(int fd, const void *buf, size_t nbytes);
+size_t yos_read(int fd, void *buf, size_t nbytes);
+size_t yos_write(int fd, const void *buf, size_t nbytes);
 int yos_ioctl(int fd, int cmd, unsigned long arg);
 int yos_poll(struct pollfd *fds, int nfds, int timeout);
 int yos_fcntl(int fd, int cmd, int val);

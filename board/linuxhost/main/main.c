@@ -85,7 +85,7 @@ void yoc_features_init(void)
         break;
 #endif
 
-#ifdef CONFIG_YOS_URADAR_MESH
+#ifdef CONFIG_YOS_UMESH
     case MODE_MESH_NODE:
         start_uradar(options.argc, options.argv);
         break;
