@@ -30,7 +30,7 @@ GLOBAL_CFLAGS += -g -c -W -Os  \
                  -fno-builtin
 
 $(NAME)_SOURCES := core/k_err.c          \
-                   core/k_mm_bestfit.c   \
+                   core/k_mm.c           \
                    core/k_mm_region.c    \
                    core/k_mm_debug.c     \
                    core/k_obj_set.c      \
@@ -49,7 +49,6 @@ $(NAME)_SOURCES := core/k_err.c          \
                    core/k_workqueue.c    \
                    core/k_dyn_mem_proc.c \
                    core/k_idle.c         \
-                   core/k_mm_firstfit.c  \
                    core/k_obj.c          \
                    core/k_queue.c        \
                    core/k_sem.c          \

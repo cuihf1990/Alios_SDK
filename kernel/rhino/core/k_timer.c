@@ -132,14 +132,14 @@ kstat_t yunos_timer_dyn_create(ktimer_t **timer, const name_t *name, timer_cb_t 
 
     NULL_PARA_CHK(timer);
 
-    timer_obj = soc_mm_alloc(sizeof(ktimer_t));
+    timer_obj = yunos_mm_alloc(sizeof(ktimer_t));
     if (timer_obj == NULL) {
         return YUNOS_NO_MEM;
     }
 
     ret = timer_create(timer_obj, name, cb, first, round, arg, auto_run, K_OBJ_DYN_ALLOC);
     if (ret != YUNOS_SUCCESS) {
-        soc_mm_free(timer_obj);
+        yunos_mm_free(timer_obj);
 
         return ret;
     }
@@ -173,7 +173,7 @@ kstat_t yunos_timer_dyn_del(ktimer_t *timer)
 
     yunos_mutex_unlock(&g_timer_mutex);
 
-    soc_mm_free(timer);
+    yunos_mm_free(timer);
 
     return YUNOS_SUCCESS;
 }

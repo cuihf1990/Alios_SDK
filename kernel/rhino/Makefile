@@ -26,8 +26,7 @@ SRCS := \
     core/k_idle.c \
     core/k_mm_blk.c \
     core/k_mm_region.c \
-    core/k_mm_firstfit.c \
-    core/k_mm_bestfit.c \
+    core/k_mm.c \
     core/k_mutex.c \
     core/k_obj.c \
     core/k_pend.c \

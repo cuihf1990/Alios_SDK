@@ -15,6 +15,184 @@
  */
 
 #include <k_api.h>
+#include <assert.h>
+
+#if (YUNOS_CONFIG_MM_BESTFIT > 0)
+
+kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t size, size_t allocator)
+{
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+    CPSR_ALLOC();
+#endif
+    k_mm_region_list_t *pcur            = NULL;
+    k_mm_region_list_t *pregion         = NULL;
+    k_mm_region_list_t *find            = NULL;
+    klist_t            *head            = NULL;
+    klist_t            *end             = NULL;
+    klist_t            *next            = NULL;
+    klist_t            *tmp             = NULL;
+    size_t              addr_align_mask = 0u;
+    size_t              left            = 0u;
+
+    if (size == 0u) {
+        return YUNOS_MM_ALLOC_SIZE_ERR;
+    }
+
+    NULL_PARA_CHK(region_head);
+    NULL_PARA_CHK(mem);
+
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+    YUNOS_CRITICAL_ENTER();
+#else
+    yunos_mutex_lock(&(region_head->mm_region_mutex), YUNOS_WAIT_FOREVER);
+#endif
+
+    addr_align_mask = sizeof(void *) - 1u;
+
+    /* padding the memory size to alignment */
+    if ((size & addr_align_mask) != 0u) {
+        size = ((size & (~addr_align_mask)) + sizeof(void *));
+    }
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(region_head, sizeof(k_mm_region_head_t)));
+
+    head = &region_head->probe;
+    end  = head;
+
+    if (is_klist_empty(head) || size >= region_head->freesize) {
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+        YUNOS_CRITICAL_EXIT();
+#else
+        yunos_mutex_unlock(&(region_head->mm_region_mutex));
+#endif
+        *mem = NULL;
+        return YUNOS_NO_MEM;
+    }
+
+    left = YUNOS_MM_REGION_MAX_FRAGSIZE;
+
+
+    for (tmp = head->next; tmp != end; ) {
+
+        pcur = yunos_list_entry(tmp, k_mm_region_list_t, list);
+
+        VGF(VALGRIND_MAKE_MEM_DEFINED(pcur,sizeof(k_mm_region_list_t)));
+
+        if (pcur->len >= size) {
+
+            if (left > pcur->len - size) {
+                left = pcur->len - size;
+                find = pcur;
+            }
+
+            if (0 == left) {
+                break;
+            }
+        }
+        tmp = tmp->next;
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(pcur,sizeof(k_mm_region_list_t)));
+
+    }
+
+    if (NULL == find) {
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+        YUNOS_CRITICAL_EXIT();
+#else
+        yunos_mutex_unlock(&(region_head->mm_region_mutex));
+#endif
+        *mem = NULL;
+        return YUNOS_NO_MEM;
+    }
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(find,sizeof(k_mm_region_list_t)));
+
+    next = find->list.next;
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(find->list.prev,sizeof(klist_t)));
+
+    klist_rm(&(find->list));
+
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.prev,sizeof(klist_t)));
+
+    if (find->len < size + sizeof(k_mm_region_list_t) + sizeof(void *)) {
+        find->type  = YUNOS_MM_REGION_ALLOCED;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0)
+        find->owner = allocator;
+#endif
+
+        region_head->freesize -= find->len;
+
+        VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced,sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next,sizeof(klist_t)));
+
+        klist_add(&region_head->alloced, &(find->list));
+
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next,sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(find,sizeof(k_mm_region_list_t)));
+
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+        YUNOS_CRITICAL_EXIT();
+#else
+        yunos_mutex_unlock(&region_head->mm_region_mutex);
+#endif
+        *mem = (void *)((size_t)find + sizeof(k_mm_region_list_t));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(*mem,size));
+        VGF(VALGRIND_MALLOCLIKE_BLOCK(*mem, size,0,0));
+
+        return YUNOS_SUCCESS;
+    }
+
+    pregion = (k_mm_region_list_t *)((size_t)find + sizeof(k_mm_region_list_t) + size);
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pregion,sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next->prev,sizeof(klist_t)));
+
+    pregion->type  = YUNOS_MM_REGION_FREE;
+    pregion->len   = find->len - sizeof(k_mm_region_list_t) - size;
+
+    klist_insert(next, &(pregion->list));
+
+
+    find->type  = YUNOS_MM_REGION_ALLOCED;
+    find->len   = size;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
+    pregion->dye = YUNOS_MM_REGION_CORRUPT_DYE;
+    find->owner  = allocator;
+#endif
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next,sizeof(klist_t)));
+
+    klist_add(&region_head->alloced, &(find->list));
+
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(pregion,sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find,sizeof(k_mm_region_list_t)));
+
+    region_head->frag_num++;
+    region_head->freesize -= (size + sizeof(k_mm_region_list_t));
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(region_head, sizeof(k_mm_region_head_t)));
+
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+    YUNOS_CRITICAL_EXIT();
+#else
+    yunos_mutex_unlock(&(region_head->mm_region_mutex));
+#endif
+
+    *mem = (void *)((size_t)find + sizeof(k_mm_region_list_t));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(*mem,size));
+    VGF(VALGRIND_MALLOCLIKE_BLOCK(*mem, size, 0, 0));
+
+    return YUNOS_SUCCESS;
+}
+#endif
 
 #if (YUNOS_CONFIG_MM_FIRSTFIT > 0)
 
@@ -176,7 +354,10 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
 
     return YUNOS_SUCCESS;
 }
-kstat_t yunos_mm_ff_free(k_mm_region_head_t * region_head, void *mem)
+#endif /* YUNOS_CONFIG_MM_FIRSTFIT */
+
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
+kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem)
 {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
@@ -271,6 +452,38 @@ kstat_t yunos_mm_ff_free(k_mm_region_head_t * region_head, void *mem)
     return YUNOS_SUCCESS;
 }
 
+#endif
 
-#endif /* YUNOS_CONFIG_MM_FIRSTFIT */
+
+void *yunos_mm_alloc(size_t size)
+{
+    void   *tmp      = NULL;
+    kstat_t err      = YUNOS_SUCCESS;
+    size_t  alloctor = (size_t)__builtin_return_address(3);
+
+#if (YUNOS_CONFIG_MM_BESTFIT > 0)
+    err = yunos_mm_bf_alloc(&g_kmm_region_head, &tmp, size, alloctor);
+#elif(YUNOS_CONFIG_MM_FIRSTFIT > 0)
+    err = yunos_mm_ff_alloc(&g_kmm_region_head, &tmp, size, alloctor);
+#else
+    err = YUNOS_NO_MEM;
+#endif
+    if (err != YUNOS_SUCCESS) {
+        dumpsys_mm_info_func(NULL, 0);
+        tmp = NULL;
+    }
+    return tmp;
+
+}
+
+void yunos_mm_free(void * ptr)
+{
+    kstat_t ret;
+
+    ret = yunos_mm_xf_free(&g_kmm_region_head,ptr);
+
+    /*halt when free failed?*/
+    assert(ret == YUNOS_SUCCESS);
+}
+
 

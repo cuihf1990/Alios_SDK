@@ -24,8 +24,8 @@
 #include <vfs_err.h>
 #include <vfs_driver.h>
 
-extern void *soc_mm_alloc(size_t size);
-extern void soc_mm_free(void *mem);
+extern void *yos_malloc(size_t size);
+extern void yos_free(void *mem);
 #if (YUNOS_CONFIG_VFS_POLL_SUPPORT > 0)
 typedef struct {
     csp_mutex_t    mutex;
@@ -140,7 +140,7 @@ static ssize_t event_write(inode_t *node, const char *buf, size_t len)
         dlist_del(&evt->node);
         edev.cache_count --;
     } else {
-        evt = soc_mm_alloc(sizeof(*evt) + len);
+        evt = yos_malloc(sizeof(*evt) + len);
     }
 
     if (evt == NULL) {
@@ -188,7 +188,7 @@ static ssize_t event_read(inode_t *node, char *buf, size_t len)
         dlist_add(&evt->node, &edev.buf_cache);
         edev.cache_count ++;
     } else {
-        soc_mm_free(evt);
+        yos_free(evt);
     }
 
     edev.counter --;

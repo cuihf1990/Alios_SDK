@@ -18,16 +18,13 @@
 #include <stddef.h>
 #include "memory.h"
 
-extern void *soc_mm_alloc(size_t size);
-extern void soc_mm_free(void *mem);
-
 static ur_mem_stats_t g_stats;
 
 void *ur_mem_alloc(uint16_t size)
 {
     void *mem;
 
-    mem = soc_mm_alloc((size_t)size);
+    mem = yos_malloc((size_t)size);
     if (mem) {
         g_stats.num += size;
     }
@@ -37,7 +34,7 @@ void *ur_mem_alloc(uint16_t size)
 void ur_mem_free(void *mem, uint16_t size)
 {
     g_stats.num -= size;
-    soc_mm_free(mem);
+    yos_free(mem);
 }
 
 const ur_mem_stats_t *ur_mem_get_stats(void)

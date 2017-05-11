@@ -18,6 +18,7 @@
 #include "ysh_port.h"
 #include "ysh_history.h"
 #include "ysh_register.h"
+#include <yos/kernel.h>
 
 char *g_exe_cmd_failed = " Execute Command Faild.\r\n";
 char *g_cmd_not_found  = " Command Not FOUND.\r\n";
@@ -43,7 +44,7 @@ uint32_t ysh_register_cmd(cmd_info_t *info)
         return 0;
     }
 
-    tmp = soc_mm_alloc(sizeof(cmd_list_t));
+    tmp = yos_malloc(sizeof(cmd_list_t));
     if (tmp == NULL) {
         return 0;
     }
@@ -138,7 +139,7 @@ static ysh_stdio_t *ysh_new_term(void)
 
 static uint32_t ysh_session(ysh_stdio_t *pstate)
 {
-    uint8_t    ret  = 0;
+    int32_t    ret  = 0;
     ysh_stat_t stat;
 
     pstate->func_tbl.puts((ysh_ctrl_tbl_t *)pstate, g_greeting, strlen(g_greeting));
@@ -195,7 +196,7 @@ static uint32_t ysh_session(ysh_stdio_t *pstate)
 
 uint32_t ysh_init_cmd_list(void)
 {
-    g_ysh_cmd_list = soc_mm_alloc(sizeof(cmd_list_t));
+    g_ysh_cmd_list = yos_malloc(sizeof(cmd_list_t));
     if (g_ysh_cmd_list == NULL) {
         return YUNOS_NO_MEM;
     }

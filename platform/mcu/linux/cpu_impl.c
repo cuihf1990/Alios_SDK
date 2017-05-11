@@ -165,14 +165,14 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tcb_ext->arg   = arg;
     tcb_ext->entry = entry;
     /* todo+ replace malloc with mmap */
-    tcb_ext->real_stack = soc_mm_alloc(real_size);
+    tcb_ext->real_stack = yos_malloc(real_size);
     tcb_ext->real_stack_end = tcb_ext->real_stack + real_size;
     bzero(tcb_ext->real_stack, real_size);
 #if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
     tcb_ext->vid = VALGRIND_STACK_REGISTER(tcb_ext->real_stack, (char *)(tcb_ext->real_stack) + real_size);
 #endif
 
-    tcb_ext->signal_stack = soc_mm_alloc(4096);
+    tcb_ext->signal_stack = yos_malloc(4096);
     bzero(tcb_ext->signal_stack, 4096);
 
     rhino_setjmp(tcb_ext->env);

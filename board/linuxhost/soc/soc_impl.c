@@ -26,45 +26,9 @@ hr_timer_t soc_hr_hw_cnt_get(void)
 #endif
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-#define SYS_DYN_POOL_SIZE (10*1024 *1024)
-size_t  sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
-#ifdef CONFIG_YOS_RHINO_MMREGION
-static k_mm_region_head_t my_mm_region_list_head;
-static k_mm_region_t      g_kregions[] = {{(uint8_t*)&sys_pool_start,SYS_DYN_POOL_SIZE}};
-#endif
-
-void soc_sys_mem_init(void)
-{
-
-#ifdef CONFIG_YOS_RHINO_MMREGION
-    yunos_mm_region_init(&my_mm_region_list_head,g_kregions,sizeof(g_kregions)/sizeof(k_mm_region_t));
-#endif
-}
-
-void *soc_mm_alloc(size_t size)
-{
-    kstat_t ret;
-    void   *mem;
-#ifdef CONFIG_YOS_RHINO_MMREGION
-        size_t  alloctor = (size_t)__builtin_return_address(1);
-        ret = yunos_mm_bf_alloc(&my_mm_region_list_head, (void **)&mem, size, alloctor);
-#endif
-    if (ret != YUNOS_SUCCESS) {
-       // assert(0);
-        return NULL;
-    }
-
-    return mem;
-}
-
-void soc_mm_free(void *mem)
-{
-    kstat_t ret;
-#ifdef CONFIG_YOS_RHINO_MMREGION
-    ret = yunos_mm_bf_free(&my_mm_region_list_head,mem);
-#endif
-    assert(ret == YUNOS_SUCCESS);
-}
+#define       SYS_DYN_POOL_SIZE (10*1024 *1024)
+size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
+k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start,SYS_DYN_POOL_SIZE}};
 #endif
 
 #ifdef CONFIG_YOS_LPM
