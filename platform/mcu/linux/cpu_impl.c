@@ -22,6 +22,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include <yos/kernel.h>
+
 #ifdef CONFIG_YOS_LPM
 #include <hal/hal.h>
 #endif

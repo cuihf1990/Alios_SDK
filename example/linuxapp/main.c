@@ -37,7 +37,7 @@ static void app_main_entry(void *arg)
 
 int application_start(void)
 {
-    struct cookie *cookie = malloc(sizeof(*cookie));
+    struct cookie *cookie = yos_malloc(sizeof(*cookie));
     bzero(cookie, sizeof(*cookie));
 
     ysh_init();
