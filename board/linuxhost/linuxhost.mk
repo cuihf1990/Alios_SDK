@@ -24,8 +24,6 @@ $(NAME)_SOURCES     += soc/ysh_impl.c
 
 $(info $(COMPONENTS))
 ifneq (,$(filter protocols.net,$(COMPONENTS)))
-$(NAME)_DEFINES     += CONFIG_YOS_NET_PROTOCOL
-
 $(info "net is enabled")
 $(NAME)_SOURCES     += \
     csp/lwip/netif/delif.c \

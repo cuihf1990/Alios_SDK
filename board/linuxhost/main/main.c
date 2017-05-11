@@ -64,7 +64,7 @@ void yoc_features_init(void)
     dda_disable();
 #endif
 
-#ifdef CONFIG_YOS_NET_PROTOCOL
+#ifdef WITH_LWIP
     if (options.lwip.enable) {
         yunos_lwip_init(options.lwip.tapif);
     }

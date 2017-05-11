@@ -2,7 +2,7 @@ NAME := net
 
 include kernel/protocols/net/Filelists.mk
 GLOBAL_INCLUDES += include
-GLOBAL_DEFINES += YOS_NET_PROTOCOL WITH_LWIP
+GLOBAL_DEFINES += WITH_LWIP
 
 $(NAME)_INCLUDES += port/include
 

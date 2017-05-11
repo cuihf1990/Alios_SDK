@@ -1,5 +1,5 @@
-#ifndef __YOC_SYSDEP_H__
-#define __YOC_SYSDEP_H__
+#ifndef __YOS_SYSDEP_H__
+#define __YOS_SYSDEP_H__
 
 #include <stddef.h>
 #include <errno.h>
