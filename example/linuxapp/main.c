@@ -9,7 +9,7 @@
 extern void ysh_task_start(void);
 extern void ysh_init();
 
-static struct cookie {
+struct cookie {
     int flag;
 };
 

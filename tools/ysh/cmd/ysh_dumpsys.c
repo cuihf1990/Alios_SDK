@@ -47,7 +47,7 @@ static uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     size_t pc = 0;
     size_t c_frame = 0;
     size_t n_frame = 0;
-    size_t depth = YUNOS_BACKTRACE_DEPTH;
+    int depth = YUNOS_BACKTRACE_DEPTH;
 
     yunos_sched_disable();
     preferred_ready_task_get(&g_ready_queue);
