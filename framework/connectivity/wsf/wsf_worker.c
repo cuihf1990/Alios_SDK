@@ -8,6 +8,7 @@
 #include "wsf_network.h"
 #include "wsf.h"
 #include "yos/kernel.h"
+#include "yos/framework.h"
 #include "os.h"
 
 wsf_request_queue_t *global_request_queue;
@@ -36,14 +37,10 @@ static void process_heartbeat_response(wsf_msg_t *msg, int length);
 static void process_register_response(wsf_msg_t *msg, int length);
 static void process_deregister_connection(wsf_msg_t *msg, int length);
 static void __process_msg_request(wsf_msg_t *msg, int length);
-
+static void process_received_buf(wsf_connection_t *conn);
 static void wsf_keep_connection(wsf_config_t *config);
 
 void request_msg_handle(void *arg);
-
-static work_t request_msg_work;
-static workqueue_t g_workqueue;
-static int flag_work_init = 0;
 
 static msg_handler msg_handlers[MSG_TYPE_END] =
     { process_msg_request,                    //0
@@ -55,56 +52,134 @@ static msg_handler msg_handlers[MSG_TYPE_END] =
       process_deregister_connection,          //6
      };
 
-static void stop_request_work()
+
+static int __cb_wsf_recv(int fd,void *arg);
+static void __cb_wsf_close(int fd,void *arg);
+static void __cb_wsf_timeout(void *arg);
+
+typedef int (*cb_wsf_recv_t)(int ,void *);
+typedef struct {
+    int             sock;
+    int             timeout;//ms  
+    cb_wsf_recv_t   cb_recv; 
+    yos_call_t      cb_timeout;
+    yos_poll_call_t cb_close;
+    void            *extra;
+}cb_network;
+
+static cb_network g_wsf_cb;
+
+static void cb_recv(int fd,void *arg)
 {
-    kstat_t ret = 0;
-   
-    if(!flag_work_init)
+    cb_network *cb = (cb_network *)arg;
+    if(!cb)
         return;
+    //the connection is closed. 
+    if(0 == cb->cb_recv(fd,cb))
+        cb->cb_close(fd,cb);
 
-    ret = yunos_workqueue_del(&g_workqueue);
- 
-    if(ret != YUNOS_SUCCESS){
-        LOGE(MODULE_NAME,"failed to delete msg queue\n");
-        return; 
-    }
-
-   flag_work_init = 0;
+    yos_cancel_delayed_action(cb->cb_timeout,cb);
+    yos_post_delayed_action(cb->timeout,cb->cb_timeout,cb);
 }
 
-static void start_request_work()
+static void start_network(cb_network *cb)
 {
-    kstat_t ret = 0;
-    cpu_stack_t stack_buf[1024];
-    size_t stack_size = sizeof(stack_buf);
-    if(flag_work_init)
+    if(!cb)
+        return;
+    yos_poll_read_fd(cb->sock,cb_recv,cb);
+    yos_post_delayed_action(cb->timeout,cb->cb_timeout,cb);
+}
+
+static void receive_worker(void *arg)
+{
+    wsf_config_t *config = (wsf_config_t *)arg;
+    if(!config)
         return;
     
-    ret = yunos_workqueue_create(&g_workqueue
-                                ,"request msg work"
-                                ,0 ,stack_buf ,stack_size);
-    if(ret != YUNOS_SUCCESS){
-        LOGE(MODULE_NAME,"failed to create msg queue\n");
-        return; 
+    memset(&g_wsf_cb,0,sizeof(cb_network));
+    if(wsf_conn && wsf_conn->ssl){
+        g_wsf_cb.sock = (long)wsf_conn->tcp;
     }
+    g_wsf_cb.timeout = 1000*config->heartbeat_interval;
+    g_wsf_cb.cb_recv = __cb_wsf_recv;
+    g_wsf_cb.cb_close = __cb_wsf_close;
+    g_wsf_cb.cb_timeout = __cb_wsf_timeout;
+    g_wsf_cb.extra = arg; 
+    start_network(&g_wsf_cb);
+}
 
-    ret = yunos_work_init(&request_msg_work
-                        ,request_msg_handle
-                        , NULL, 0);
+static void __cb_wsf_close(int fd,void *arg)
+{
+    LOGE(MODULE_NAME,"wsf: select ret -1, reconnect");
+    wsf_reset_connection(wsf_conn, 0);
+}
 
-    if(ret != YUNOS_SUCCESS){
-        LOGE(MODULE_NAME,"failed to init msg queue\n");
-        return; 
+static int  __cb_wsf_recv(int fd,void *arg)
+{
+    int count = 0;
+    if (wsf_conn && (-1 != fd)) {
+        char *buf = wsf_conn->recv_buf + wsf_conn->recv_buf_pos;
+        int len = wsf_conn->recv_buf_len - wsf_conn->recv_buf_pos;
+        if (NULL != wsf_conn->ssl) {
+            count = os_ssl_recv(wsf_conn->ssl, buf, len);
+        } else {
+            count = os_tcp_recv(wsf_conn->tcp, buf, len);
+        }
+        LOGD(MODULE_NAME,"wsf recv : %s\n",buf);
+        if (count <= 0) {
+            if (!len)
+                LOGE(MODULE_NAME,"wsf recv buffer full!");
+            else
+                LOGE(MODULE_NAME,"closing socket for tcp/ssl read error.");
+            return 0;
+        } else
+            wsf_conn->recv_buf_pos += count;
+        process_received_buf(wsf_conn);
     }
+    return 1;
+}
 
-    ret = yunos_work_run(&g_workqueue, &request_msg_work);
+static void __cb_wsf_timeout(void *arg)
+{
+    static wsf_msg_t hb_req;
+    static uint32_t len = 0;
+    cb_network *cb = (cb_network *)arg;
+    wsf_config_t *config = NULL; 
+    if(!cb)
+        return;
+    config = (wsf_config_t *)cb->extra;
     
-    if(ret != YUNOS_SUCCESS){
-        LOGE(MODULE_NAME,"failed to init msg queue\n");
+    if(cb->sock != (long)wsf_conn->tcp && 
+            wsf_conn && wsf_conn->ssl){
+        cb->sock = (long)wsf_conn->tcp;
+        wsf_keep_connection(config);
+        start_network(cb);
+        LOGW(MODULE_NAME,"re-start wsf network register.\n");
         return; 
     }
-    
-    flag_work_init = 1;
+
+    if(hb_req.header.msg_type_version == 0){
+        wsf_msg_heartbeat_request_init(&hb_req);
+        memcpy(&len, hb_req.header.msg_length, sizeof(uint32_t));
+        wsf_msg_header_encode((char *)&hb_req, len);
+    }
+
+    //TIMEOUT to send heartbeat when connection ready
+    if (wsf_is_heartbeat_timeout(wsf_conn)) {
+        //close the connection
+        LOGE(MODULE_NAME,"wsf: heartbeat timeout, reconnect");
+        wsf_reset_connection(wsf_conn, 0);
+    }
+
+    if (wsf_conn && wsf_conn->ssl) {
+        wsf_send_msg(wsf_conn, (const char *)&hb_req, len);
+        LOGW(MODULE_NAME,"send heartbeat");
+        wsf_dec_heartbeat_counter(wsf_conn);
+    }
+
+    wsf_keep_connection(config);
+    /* NOTE: wsf_reset_connection() only called in this thread */
+    yos_post_delayed_action(cb->timeout,cb->cb_timeout,cb);
 }
 
 static void process_msg_response(wsf_msg_t *msg, int length)
@@ -150,7 +225,7 @@ static void process_msg_request(wsf_msg_t *msg, int length)
     total_req_nodes ++;
     pthread_mutex_unlock(g_req_mutex);
 
-    start_request_work();
+    yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
 }
 
 void init_req_glist(void)
@@ -164,7 +239,8 @@ void deinit_req_glist(void)
 {
     struct request_msg_node *node;
     dlist_t *tmp = NULL;
-    stop_request_work();
+    //FIXME: add delete interface. 
+    //stop_request_work();
 
     pthread_mutex_lock(g_req_mutex);
     dlist_for_each_entry_safe(&g_list,tmp, node, struct request_msg_node, list_head) {
@@ -199,7 +275,7 @@ void request_msg_handle(void *arg)
     pthread_mutex_unlock(g_req_mutex);
 
     if (!dlist_empty(&g_list))
-        start_request_work();
+        yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
 }
 
 static void __process_msg_request(wsf_msg_t *msg, int length)
@@ -381,7 +457,7 @@ reprocess:
     }
 }
 
-
+#if 0
 static void *receive_worker(void *arg) {
 
     wsf_config_t *config = (wsf_config_t *)arg;
@@ -462,7 +538,7 @@ static void *receive_worker(void *arg) {
     os_thread_exit(recv_thread);
     return NULL;
 }
-
+#endif
 wsf_msg_t *__wsf_invoke_sync(wsf_msg_t * req)
 {
     wsf_msg_t *p_rsp = NULL;
@@ -549,12 +625,13 @@ wsf_msg_t *__wsf_invoke_sync(wsf_msg_t * req)
 wsf_code wsf_start_worker(wsf_config_t *config)
 {
     wsf_running = 1;
-
-    recv_thread = os_thread_create("wsf_receive_worker", receive_worker, config);
+    receive_worker(config);
+    
+    /*recv_thread = os_thread_create("wsf_receive_worker", receive_worker, config);
     if ( NULL == recv_thread) {
         LOGF(MODULE_NAME,"failed to start receiver_worker");
         return WSF_FAIL;
-    }
+    }*/
     return WSF_SUCCESS;
 }
 

@@ -196,7 +196,7 @@ int platform_thread_get_stack_size(_IN_ const char *thread_name)
         printf("get alcs thread\n");
         return 10240;
     } 
-    else if (0 == strcmp(thread_name, "work queue"))
+    else if (0 == strcmp(thread_name, "main_loop"))
     {
         printf("get work queue thread\n");
         return 10240;

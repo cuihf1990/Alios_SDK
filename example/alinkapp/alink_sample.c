@@ -69,7 +69,11 @@ char *device_attr[] = {
 
 static int need_report = 1; /* force to report when device login */
 
-void cloud_connected(void) { printf("alink cloud connected!\n"); }
+void helper_api_test(void);
+int activate_button_pressed(void);
+void cloud_connected(void) { 
+    printf("alink cloud connected!\n"); 
+}
 void cloud_disconnected(void) { printf("alink cloud disconnected!\n"); }
 
 #ifndef RAW_DATA_DEVICE
@@ -232,18 +236,21 @@ int alink_post_raw_data(uint8_t *byte_stream, int len)
 }
 #endif
 
-static uint32_t work_time = 60*60; //default work time 1s
+static uint32_t work_time = 30*24*60*60; //default work time 1s
 
-void main_loop(void)
+
+void *main_loop(void *arg)
 {
     uint32_t time_start, time_end;
     struct timeval tv = { 0 };
 
     gettimeofday(&tv, NULL);
     time_start = tv.tv_sec;
-
+    alink_wait_connect(ALINK_WAIT_FOREVER);
+    activate_button_pressed();
+    helper_api_test();
     do {
-        if (need_report) {
+        if (need_report != 1000) {
 #ifdef RAW_DATA_DEVICE
             /*
              * Note: post data to cloud,
@@ -267,11 +274,13 @@ void main_loop(void)
 
             need_report = 0;
         }
-        usleep(100);
+        usleep(1000*1000);
         gettimeofday(&tv, NULL);
         time_end = tv.tv_sec;
     } while ((time_start + work_time) > time_end);
+    return NULL;
 }
+
 
 int alink_get_time(unsigned int *utc_time)
 {
@@ -439,14 +448,12 @@ int application_start(int argc, char *argv[])
 #endif
 
     alink_start();
-
-    alink_wait_connect(ALINK_WAIT_FOREVER);
-
-    activate_button_pressed();
-
-    helper_api_test();
-
-    main_loop();
+    os_thread_create("main_loop",main_loop,NULL);
+    //FIXME: we should nerver use this function on AOS.
+    //alink_wait_connect(ALINK_WAIT_FOREVER);
+    //yos_task_new("alink_demo", main_loop, NULL, 2048);
+    //yos_post_delayed_action(10*1000, post_data_period, NULL);
+    yos_loop_run();
 
     //‘›∆¡±Œ∏¥Œª¥˙¬Î£¨±‹√‚≤‚ ‘÷–ŒÛ÷ÿ∆Ù
     //alink_factory_reset();
