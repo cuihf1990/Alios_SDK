@@ -80,10 +80,7 @@ enum log_level_bit {
 
 #endif
 
-static inline int void_func(const char *fmt, ...)
-{
-    return 0;
-}
+#define void_func(fmt, ...)
 
 #ifndef os_printf
 #ifndef csp_printf
