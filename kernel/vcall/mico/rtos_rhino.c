@@ -149,6 +149,8 @@ OSStatus mico_rtos_print_thread_status( char* pcWriteBuffer, int xWriteBufferLen
     pcWriteBuffer[0] = 'n';
     pcWriteBuffer[1] = '\0';
 
+    (void)xWriteBufferLen;
+
     return kNoErr;
 }
 

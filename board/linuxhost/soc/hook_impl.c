@@ -55,10 +55,15 @@ void yunos_task_del_hook(ktask_t *task)
 
 void yunos_task_switch_hook(ktask_t *orgin,ktask_t *dest)
 {
-
+    (void)orgin;
+    (void)dest;
 }
 
 void yunos_tick_hook(void)
 {
 }
 
+void yunos_task_abort_hook(ktask_t *task)
+{
+    (void)task;
+}
