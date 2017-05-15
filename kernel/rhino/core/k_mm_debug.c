@@ -315,6 +315,8 @@ uint32_t dump_mmleak()
 
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 {
+    (void)buf;
+    (void)len;
     uint32_t i = 0;
     k_mm_region_list_t *min  = NULL;
     klist_t *head = NULL;

@@ -29,6 +29,7 @@ GLOBAL_LDFLAGS +=
 GLOBAL_CFLAGS += -g -c -W -Os  \
                  -fno-builtin
 
+$(NAME)_CFLAGS += -Wall -Werror
 $(NAME)_SOURCES := core/k_err.c          \
                    core/k_mm.c           \
                    core/k_mm_region.c    \
