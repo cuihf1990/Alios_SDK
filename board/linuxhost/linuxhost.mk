@@ -13,6 +13,7 @@ GLOBAL_LDFLAGS      += -lpthread -lm -lcrypto
 GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
 GLOBAL_CFLAGS       += -Wno-missing-field-initializers
+GLOBAL_DEFINES      += CSP_LINUXHOST
 
 $(NAME)_SOURCES     := main/arg_options.c
 $(NAME)_SOURCES     += main/main.c
@@ -39,11 +40,11 @@ endif
 
 ifneq (,$(filter dda,$(COMPONENTS)))
 $(info "dda is enabled")
-$(NAME)_DEFINES += CONFIG_YOS_DDA
-$(NAME)_DEFINES += CONFIG_YOS_DDM
+GLOBAL_DEFINES += CONFIG_YOS_DDA
+GLOBAL_DEFINES += CONFIG_YOS_DDM
 endif
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(info "mesh is enabled")
-$(NAME)_DEFINES += CONFIG_YOS_MESH
+GLOBAL_DEFINES += CONFIG_YOS_MESH
 endif

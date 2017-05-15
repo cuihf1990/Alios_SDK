@@ -140,7 +140,7 @@ static uint32_t cmd_test_func(char *buf, uint32_t len, cmd_item_t *item, cmd_inf
             snprintf(buf, len, "%s\r\n", ret < 0 ? "fail" : "success");
         }
     } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "publish")) {
-#if defined(CONFIG_YOC_URADAR_MESH) && !defined(CONFIG_YOC_CLOUD)
+#if defined(CONFIG_YOS_MESH) && !defined(CONFIG_YOC_CLOUD)
         int yoc_cloud_publish(const char *idsu, const char *payload);
         yoc_cloud_publish(item->items[2], item->items[3]);
 #endif

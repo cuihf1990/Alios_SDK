@@ -49,7 +49,7 @@ void yunos_lwip_init(int enable_tapif)
 
 struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)
 {
-#ifdef CONFIG_YOC_URADAR_MESH
+#ifdef CONFIG_YOS_MESH
     return ur_adapter_ip6_route(src, dest);
 #endif
 
@@ -58,7 +58,7 @@ struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)
 
 bool lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest)
 {
-#ifdef CONFIG_YOC_URADAR_MESH
+#ifdef CONFIG_YOS_MESH
     return ur_adapter_is_mcast_subscribed(dest);
 #endif
 

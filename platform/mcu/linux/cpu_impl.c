@@ -370,7 +370,6 @@ void cpu_start_hook(void)
 void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
 {
     if (pthread_self() != rhino_cpu_thread) {
-        pthread_kill(rhino_cpu_thread, signo);
         return;
     }
 
