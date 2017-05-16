@@ -3,6 +3,7 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <yos/kernel.h>
 
@@ -12,25 +13,30 @@
 #include "yts.h"
 
 extern int dda_enable(int agent_id);
+extern int dda_service_init(void);
+extern int dda_service_start(void);
+extern void dda_service_stop(void);
+extern void dda_service_deinit(void);
 static int ddm_pid, ddm_fd = -1;
 static int start_ddm(void)
 {
     int pipefd[2];
     int pid;
+    int ret;
 
-    pipe(pipefd);
+    ret = pipe(pipefd);
+    if (ret < 0) {
+        return -1;
+    }
 
     pid = fork();
     if (pid == 0) {
-        const char **argv;
-        int argc = csp_get_args(&argv);
-        char *topology_file = getenv("mesh_topology");
         char * const args[] = {
-            argc > 0 ? (char *)argv[0] : "./out/yts@linuxhost/yts@linuxhost.elf",
+            "./out/meshapp@linuxhost/binary/meshapp@linuxhost.elf",
             "--mesh-master",
             "-l",
             "/tmp/ddm_log_ut.txt",
-            topology_file ? :"tools/dda/configs/mesh_topology.txt",
+            "tools/dda/configs/mesh_topology.txt",
             NULL
         };
         close(pipefd[1]);
@@ -54,25 +60,22 @@ void ur_ut_send_cmd_to_ddm(const char *cmd)
         perror("write ddm:");
 }
 
-static void start_dda(void)
+static void start_dda(void *args)
 {
     dda_enable(11);
-    ut_init_service("dda_service");
-    ut_start_service("dda_service");
+    dda_service_init();
+    dda_service_start();
 }
 
-static void stop_dda(void)
+static void stop_dda(void *args)
 {
-    ut_stop_service("dda_service");
-    ut_deinit_service("dda_service");
+    dda_service_stop();
+    dda_service_deinit();
 }
 
 static bool dda_connected;
 static void input_event_executor(input_event_t *eventinfo, void* cb_para)
 {
-    if (eventinfo->type != EV_DDA)
-        return;
-
     if (eventinfo->code != CODE_DDA_ON_CONNECTED)
         return;
 
@@ -81,19 +84,19 @@ static void input_event_executor(input_event_t *eventinfo, void* cb_para)
 
 static int init(void)
 {
-    yos_local_event_listener_register(input_event_executor, NULL);
+    yos_register_event_filter(EV_DDA, input_event_executor, NULL);
 
     ddm_pid = start_ddm();
     ur_ut_send_cmd_to_ddm("log off 0");
 
-    start_dda();
+    yos_schedule_call(start_dda, NULL);
 
     int cnt = 0;
     while (!dda_connected && cnt++ < 100) {
         yos_msleep(100);
     }
 
-    ut_init_service("uradar_service");
+    ur_mesh_init();
     yos_msleep(1000);
 
     return cnt < 100 ? 0 : -1;
@@ -101,14 +104,14 @@ static int init(void)
 
 static int cleanup(void)
 {
-    stop_dda();
+    yos_schedule_call(stop_dda, NULL);
 
     ur_ut_send_cmd_to_ddm("goto master");
     ur_ut_send_cmd_to_ddm("ls");
     ur_ut_send_cmd_to_ddm("q");
     waitpid(ddm_pid, NULL, 0);
 
-    yos_local_event_listener_unregister(input_event_executor, NULL);
+    yos_register_event_filter(EV_DDA, input_event_executor, NULL);
 
     return 0;
 }
@@ -232,7 +235,7 @@ static yunit_test_suite_t com_suites[] = {
 };
 
 static yunit_test_suite_t stress_suites[] = {
-    { "uradar_stress", init, cleanup, setup, teardown, yunos_uradar_stress_testcases },
+    { "mesh_stress", init, cleanup, setup, teardown, yunos_uradar_stress_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
@@ -242,7 +245,7 @@ void test_uradar(void)
     const char **argv;
 
     argc = csp_get_args(&argv);
-    if (argc > 2) {
+    if (argc > 1) {
         yunit_add_test_suites(sub_suites);
         yunit_add_test_suites(com_suites);
         yunit_add_test_suites(stress_suites);

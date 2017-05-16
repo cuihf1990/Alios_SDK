@@ -109,7 +109,7 @@ static void stop_node(int id)
     cmd_to_master(cmd);
 }
 
-static void inline __dummy__(void)
+inline static void __dummy__(void)
 {
     cmd_to_agent(NULL);
     set_line_rssi(0, 0);
@@ -128,19 +128,19 @@ struct wait_cb_data {
     char *buf;
 };
 
-void *soc_mm_alloc(size_t size);
-void  soc_mm_free(void *mem);
+extern void *yos_malloc(size_t size);
+extern void  yos_free(void *mem);
 
 static void dda_p2p_wait_cb(const char *buf,  int len, void *cb_data)
 {
     struct wait_cb_data *pdata = cb_data;
     int sz = strlen(buf) + 1;
-    pdata->buf = soc_mm_alloc(sz);
+    pdata->buf = yos_malloc(sz);
     memcpy(pdata->buf, buf, sz);
     csp_sem_signal(pdata->sem);
 }
 
-static inline char *dda_p2p_req_and_wait(int dst_id, const char *cmd, int max_wait_second)
+inline static char *dda_p2p_req_and_wait(int dst_id, const char *cmd, int max_wait_second)
 {
     struct wait_cb_data wait_data = {};
 
@@ -169,8 +169,8 @@ static inline char *dda_p2p_req_and_wait(int dst_id, const char *cmd, int max_wa
         yos_msleep(1000); \
         str = dda_p2p_req_and_wait(did, cmd, 1); \
         if ((i==(sec-1) || DDA_DEBUG) && str) printf("%d %s -> %s\n", did, cmd, str); \
-        if (str && strcmp(ret, str) == 0) { soc_mm_free(str);break;} \
-        if (str) { soc_mm_free(str);} \
+        if (str && strcmp(ret, str) == 0) { yos_free(str);break;} \
+        if (str) { yos_free(str);} \
     } \
     YUNIT_ASSERT(i<sec); \
 } while(0)

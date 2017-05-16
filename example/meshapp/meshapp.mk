@@ -1,4 +1,4 @@
-NAME := meshhapp
+NAME := meshapp
 
 $(NAME)_SOURCES     := main.c
 

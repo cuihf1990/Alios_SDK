@@ -4,7 +4,6 @@
 #include "core/topology.h"
 #include "core/mesh_mgmt.h"
 
-extern void hal_arch_time_msleep(int ms);
 void test_uradar_urmesh_case(void)
 {
     ur_ip6_addr_t ip6addr;
@@ -12,7 +11,7 @@ void test_uradar_urmesh_case(void)
     YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_init(NULL));
     YUNIT_ASSERT(BCAST_SID != ur_mesh_get_sid());
     YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_start());
-    hal_arch_time_msleep(5000); /* wait till node become leader */
+    yos_msleep(5000); /* wait till node become leader */
     if (mm_get_device_state() == DEVICE_STATE_LEADER) {
         ur_mesh_set_meshnetid(0x1000);
         YUNIT_ASSERT(0x1000 == ur_mesh_get_meshnetid());
