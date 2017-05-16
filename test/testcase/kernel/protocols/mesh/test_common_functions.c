@@ -1,0 +1,31 @@
+#include "yunit.h"
+
+#include "yos/framework.h"
+#include "yos/kernel.h"
+
+#include "core/mesh_mgmt.h"
+
+#include "dda_util.h"
+
+extern void ur_ut_send_cmd_to_ddm(const char *cmd);
+void topo_test_function(uint16_t first_node, uint16_t num, uint32_t timeout)
+{
+    uint16_t index;
+
+    set_full_rssi(first_node, first_node + num - 1);
+
+    for (index = 1; index < num; index++) {
+        start_node(index + first_node);
+    }
+    cmd_to_agent("start");
+    check_cond_wait(num == mm_get_meshnetsize(), timeout);
+
+    ur_ut_send_cmd_to_ddm("sendall sids");
+    yos_msleep(2 * 1000);
+
+    for (index = 1; index < num; index++) {
+        stop_node(index + first_node);
+    }
+    cmd_to_agent("stop");
+}
+
