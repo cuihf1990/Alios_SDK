@@ -15,15 +15,10 @@
  */
 
 #include <hal/hal.h>
-#include <hal/mesh.h>
 
 int yoc_hal_init()
 {
     int err = 0;
-
-    if ((err = hal_ur_mesh_init()) != 0) {
-        return err;
-    }
 
     if ((err = hal_sensor_init()) != 0) {
         return err;
