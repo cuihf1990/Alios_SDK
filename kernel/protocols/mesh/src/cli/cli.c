@@ -54,6 +54,7 @@ static void process_nbrs(int argc, char *argv[]);
 static void process_networks(int argc, char *argv[]);
 static void process_ping(int argc, char *argv[]);
 static void process_prefix(int argc, char *argv[]);
+static void process_rawdata(int argc, char *argv[]);
 static void process_router(int argc, char *argv[]);
 static void process_seclevel(int argc, char *argv[]);
 static void process_start(int argc, char *argv[]);
@@ -81,6 +82,7 @@ const cli_command_t g_commands[] = {
     { "networks", &process_networks },
     { "ping", &process_ping },
     { "prefix", &process_prefix },
+    { "rawdata", &process_rawdata },
     { "router", &process_router },
     { "seclevel", &process_seclevel },
     { "start", &process_start },
@@ -194,21 +196,20 @@ void response_append(const char *format, ...)
 {
     va_list list;
     char res_buf[CMD_LINE_SIZE];
-    int len;
+    uint16_t len;
 
     va_start(list, format);
     len = vsnprintf(res_buf, sizeof(res_buf)-1, format, list);
     va_end(list);
-    if (len >= (int)sizeof(res_buf)) {
-        len = (int)sizeof(res_buf) - 1;
+    if (len >= sizeof(res_buf)) {
+        len = sizeof(res_buf) - 1;
         res_buf[len] = 0;
     }
 
-    if (g_cur_cmd_cb) {
+    if (g_cur_cmd_cb)
         g_cur_cmd_cb(res_buf, len, g_cur_cmd_priv);
-    } else {
+    else
         ur_cli_output((const uint8_t *)res_buf, len);
-    }
 }
 
 static void handle_autotest_print_timer(void *args)
@@ -490,6 +491,11 @@ void process_mode(int argc, char *argv[])
     mode = ur_mesh_get_mode();
 
     for (index = 0; index < argc; index++) {
+        if (strcmp(argv[index], "none") == 0) {
+            mode = 0;
+            break;
+        }
+
         if (strcmp(argv[index], "SUPER") == 0) {
             mode |= MODE_SUPER;
             continue;
@@ -524,6 +530,11 @@ void process_mode(int argc, char *argv[])
     }
     ur_mesh_set_mode(mode);
 
+    if (mode == 0) {
+        response_append("none\r\n");
+        return;
+    }
+
     if (mode & MODE_SUPER) {
         response_append("SUPER");
     } else {
@@ -541,6 +552,7 @@ void process_mode(int argc, char *argv[])
     } else {
         response_append(" | FIXED");
     }
+
     response_append("\r\n");
 }
 
@@ -729,6 +741,14 @@ void show_router(uint8_t id)
     }
 }
 
+void process_rawdata(int argc, char *argv[])
+{
+    uint8_t rawdata[] = "test";
+
+    umesh_send_raw_data(NULL, NULL, rawdata, sizeof(rawdata));
+    response_append("done\r\n");
+}
+
 void process_router(int argc, char *argv[])
 {
     uint8_t id = 0, index;
@@ -769,14 +789,14 @@ void process_router(int argc, char *argv[])
 
 void process_seclevel(int argc, char *argv[])
 {
-    int8_t level;
+    uint8_t level;
     char    *end;
 
     if (argc == 0) {
         level = ur_mesh_get_seclevel();
         response_append("%d\r\n", level);
     } else if (argc > 0) {
-        level = (int8_t)strtol(argv[0], &end, 0);
+        level = (uint8_t)strtol(argv[0], &end, 0);
         ur_mesh_set_seclevel(level);
     }
     response_append("done\r\n");

@@ -465,7 +465,7 @@ static void got_p2p_response(const void* arg)
     dda_p2p_t *req;
 
     dlist_for_each_entry(&agent_info.p2p_queue, req, dda_p2p_t, next) {
-        if (req->seqno != cmsg->cmd_private)
+        if (req->seqno != (int)cmsg->cmd_private)
             continue;
 
         dlist_del(&req->next);
