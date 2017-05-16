@@ -589,10 +589,10 @@ kstat_t yunos_task_wait_abort(ktask_t *task)
     YUNOS_CRITICAL_EXIT_SCHED();
 
 #if (YUNOS_CONFIG_USER_HOOK > 0)
-    yunos_task_abort_hook(g_active_task, task);
+    yunos_task_abort_hook(task);
 #endif
 
-    TRACE_TASK_WAIT_ABORT(task);
+    TRACE_TASK_WAIT_ABORT(g_active_task, task);
 
     return YUNOS_SUCCESS;
 }
