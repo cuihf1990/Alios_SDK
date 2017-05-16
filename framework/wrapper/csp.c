@@ -252,7 +252,7 @@ static int create_eventfd(csp_sem_t sem, kobj_set_t *handle)
 static void remove_eventfd(csp_sem_t sem, kobj_set_t *handle)
 {
     int fd = (int)(long)handle->docker;
-    close(fd);
+    lwip_close(fd);
     ((blk_obj_t *)sem.hdl)->handle = NULL;
 }
 

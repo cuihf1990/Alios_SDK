@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-#include <pthread.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdbool.h>
+#include <yos/kernel.h>
+#include <yos/framework.h>
+#include <yos/network.h>
+#include <yos/wlan.h>
 
-#include "yoc/framework.h"
+#include <k_api.h>
 
-extern int dda_enable(int agent_id);
+extern void ysh_task_start(void);
+extern void ysh_init();
 
-void start_uradar(int argc, char **argv)
+int application_start(void)
 {
-    dda_enable(atoi(argv[argc-1]));
-    yoc_init_one_service("dda_service");
-    yoc_start_one_service("dda_service");
+    ysh_init();
+    ysh_task_start();
+
+    return 0;
 }

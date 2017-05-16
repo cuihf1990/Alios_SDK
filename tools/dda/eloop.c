@@ -21,8 +21,6 @@
 #include <errno.h>
 #include <signal.h>
 
-#include "yos/network.h"
-
 #include "eloop.h"
 
 #ifndef timercmp

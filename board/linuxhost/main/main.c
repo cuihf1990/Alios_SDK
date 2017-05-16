@@ -40,7 +40,6 @@ extern void osupdate_online_test_run(char *bin, int id2_index);
 /* check in gcc sources gcc/gcov-io.h for the prototype */
 extern void __gcov_flush(void);
 extern void dda_disable(void);
-extern void start_uradar(int argc, char **argv);
 extern void ddm_run(int argc, char **argv);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
@@ -48,7 +47,7 @@ extern void lpm_init(void);
 
 static options_t options = { 0 };
 
-static void yoc_features_init(void);
+static void yos_features_init(void);
 static void signal_handler(int signo);
 static int  setrlimit_for_vfs(void);
 
@@ -58,7 +57,7 @@ int csp_get_args(const char ***pargv)
     return options.argc;
 }
 
-void yoc_features_init(void)
+void yos_features_init(void)
 {
 #ifdef CONFIG_YOS_DDA
     /* disable it by default, will be reanbled if passed --mesh-node */
@@ -85,9 +84,13 @@ void yoc_features_init(void)
         break;
 #endif
 
-#ifdef CONFIG_YOS_UMESH
+#ifdef CONFIG_YOS_MESH
     case MODE_MESH_NODE:
-        start_uradar(options.argc, options.argv);
+    #ifdef CONFIG_YOS_DDA
+        dda_enable(atoi(options.argv[options.argc-1]));
+        dda_service_init();
+        dda_service_start();
+    #endif
         break;
 #endif
 #ifdef CONFIG_YOS_DDM
@@ -181,7 +184,7 @@ int main(int argc, char **argv)
 
     csp_os_init();
 
-    yoc_features_init();
+    yos_features_init();
 
     vfs_init();
     vfs_device_init();
@@ -196,7 +199,6 @@ int main(int argc, char **argv)
 #endif
     case MODE_MESH_NODE:
     case MODE_MESH_MASTER:
-        break;
     default:
         start_app(argc, argv);
         break;

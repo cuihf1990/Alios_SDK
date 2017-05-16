@@ -30,12 +30,12 @@ extern hal_sensor_module_t linuxhost_sensor_module;
 
 void hw_start_hal(void)
 {
-#ifdef CONFIG_YOC_URADAR_MESH
+#if defined(CONFIG_YOS_MESH) && defined(CONFIG_YOS_DDA)
     extern void linuxhost_hal_urmesh_register(void);
     linuxhost_hal_urmesh_register();
 #endif
     hal_sensor_register_module(&linuxhost_sensor_module);
 
-    /* Do YOC startup */
+    /* Do YOS HAL startup */
     yoc_hal_init();
 }
