@@ -26,7 +26,7 @@
 #define TEST_BUFQUEUE_MSG_NUM       3
 #define TEST_BUFQUEUE_MSG_MAX       (TEST_BUFQUEUE_BUF0_SIZE/TEST_BUFQUEUE_MSG_NUM)-sizeof(size_t)
 /* four char here */
-static char send_char[TEST_BUFQUEUE_MSG_NUM + 1] = "yoc";
+static char send_char[TEST_BUFQUEUE_MSG_NUM + 1] = "yos";
 
 #define TEST_BUFQUEUE_RCV_TASK_RPI       10
 #define TEST_BUFQUEUE_SND_TASK_HIGH_RPI  9
@@ -111,7 +111,7 @@ static void task_queue1_entry(void *arg)
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
 
-        memset(g_test_send_msg0, 'c', TEST_BUFQUEUE_MSG_MAX);
+        memset(g_test_send_msg0, 's', TEST_BUFQUEUE_MSG_MAX);
         ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
@@ -131,7 +131,7 @@ static void task_queue2_entry(void *arg)
 
     while (1) {
 
-        memset(g_test_send_msg1, 'c', TEST_BUFQUEUE_MSG_MAX);
+        memset(g_test_send_msg1, 's', TEST_BUFQUEUE_MSG_MAX);
         ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1, TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
         count++;
