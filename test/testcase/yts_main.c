@@ -96,4 +96,8 @@ void add_test(void)
     test_hal();
 
     test_cjson();
+
+    test_rhino();
+
+    test_rhino_port();
 }
