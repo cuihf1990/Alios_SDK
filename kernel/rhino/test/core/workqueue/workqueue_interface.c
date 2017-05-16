@@ -66,6 +66,12 @@ static void work6_func(void *arg)
     printf("--%s--\n", (char *)arg);
 }
 
+#define WORK_STACK_BUF 512
+
+cpu_stack_t stack0_buf[WORK_STACK_BUF];
+cpu_stack_t stack1_buf[WORK_STACK_BUF];
+cpu_stack_t stack2_buf[WORK_STACK_BUF];
+
 static uint8_t workqueue_interface_case1(void)
 {
     kstat_t     ret;
@@ -79,12 +85,10 @@ static uint8_t workqueue_interface_case1(void)
     workqueue_t wq0;
     workqueue_t wq1;
     workqueue_t wq2;
-    cpu_stack_t stack0_buf[512];
-    size_t      stack0_size = 512;
-    cpu_stack_t stack1_buf[512];
-    size_t      stack1_size = 512;
-    cpu_stack_t stack2_buf[512];
-    size_t      stack2_size = 512;
+
+    size_t      stack0_size = WORK_STACK_BUF;
+    size_t      stack1_size = WORK_STACK_BUF;
+    size_t      stack2_size = WORK_STACK_BUF;
 
     printf("==========WORKQUEUE TEST START!==========\n");
 
