@@ -195,7 +195,7 @@ void task_misc_entry(void *arg)
     yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
                       0, task_misc2_stack, 0, task_misc_entry2, 1);
 
-     yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
+    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
                       0, task_misc2_stack, 0, task_misc_entry2, 1);
 
     yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
@@ -364,16 +364,6 @@ void task_misc_entry(void *arg)
     }
 
 #define INFO_IDX (YUNOS_CONFIG_TASK_INFO_NUM - 1)
-    ret = yunos_task_info_set(task_misc, INFO_IDX, NULL);
-
-    if (ret == YUNOS_NULL_PTR) {
-        test_case_success++;
-        PRINT_RESULT("yunos_task_info_set para 1", PASS);
-    } else {
-        PRINT_RESULT("yunos_task_info_set para 1", FAIL);
-        test_case_fail++;
-    }
-
     ret = yunos_task_info_set(NULL, INFO_IDX, (void *)0x111);
 
     if (ret == YUNOS_NULL_PTR) {
@@ -413,6 +403,7 @@ void task_misc_entry(void *arg)
         PRINT_RESULT("yunos_task_info_get para 2", FAIL);
         test_case_fail++;
     }
+
 #undef INFO_IDX
 
     task_free = yunos_global_space_get();
@@ -441,6 +432,7 @@ void task_misc_entry(void *arg)
     yunos_sem_give(sem3);
 
     ret = yunos_sem_dyn_create(&sem4, "del", 0);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_sem_dyn_create", PASS);
@@ -450,6 +442,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_sem_dyn_del(sem4);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_sem_dyn_del", PASS);
@@ -459,6 +452,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_mutex_dyn_create(&mutex4, "mutex4");
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_mutex_dyn_create", PASS);
@@ -468,6 +462,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_mutex_dyn_del(mutex4);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_mutex_dyn_del", PASS);
@@ -477,6 +472,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_event_dyn_create(&event4, "event4", 0);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_event_dyn_create", PASS);
@@ -486,6 +482,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_event_dyn_del(event4);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_event_dyn_del", PASS);
@@ -495,6 +492,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_timer_dyn_create(&timer4, "timer4", timer_cb4, 10, 0, 0, 0);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_timer_dyn_create", PASS);
@@ -504,6 +502,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_timer_dyn_del(timer4);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_timer_dyn_del", PASS);
@@ -513,6 +512,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_buf_queue_dyn_create(&buf_queue4, "queue4", 100, 20);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_buf_queue_dyn_create", PASS);
@@ -522,6 +522,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_buf_queue_dyn_del(buf_queue4);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_buf_queue_dyn_del", PASS);
@@ -531,6 +532,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_queue_dyn_create(&queue4, "queue4", 10);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_queue_dyn_create", PASS);
@@ -540,6 +542,7 @@ void task_misc_entry(void *arg)
     }
 
     ret = yunos_queue_dyn_del(queue4);
+
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_queue_dyn_del", PASS);
@@ -557,6 +560,7 @@ void task_misc_test(void)
     yunos_task_dyn_create(NULL, "task_misc_test", 0, 10,
                           0, TASK_TEST_STACK_SIZE,
                           task_misc_entry, 1);
+
 
     yunos_task_dyn_create(&task_misc, "task_misc_test", 0, 10,
                           0, TASK_TEST_STACK_SIZE * 10000,
