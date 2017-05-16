@@ -50,19 +50,12 @@ void    test_case_critical_exit(void);
 #include <stdio.h>
 #endif /* _MSC_VER */
 
-
 #define PASS 0
 #define FAIL 1
 
-#if (defined CONFIG_YOC_UT) || (defined CONFIG_YOC_UT_RHINO)
 #define PRINT_PASS(s) printf("%-30s test [PASS %d]\n", s, (int)test_case_success)
 #define PRINT_FAIL(s) printf("%-30s test [FAIL %d]\n", s, (int)test_case_fail)
 #define PRINT_RESULT(s, f) do { if (f == PASS) { PRINT_PASS(s); } else { PRINT_FAIL(s); }} while (0)
-#else
-#define PRINT_PASS(s)
-#define PRINT_FAIL(s)
-#define PRINT_RESULT(s, f)
-#endif
 
 #define TEST_FW_VAL_CHK(module_name,value) do {if ((int)(value) == 0) \
         { \

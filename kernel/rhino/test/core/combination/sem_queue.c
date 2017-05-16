@@ -29,7 +29,8 @@ static blk_obj_t   *select_obj;
 
 #define TEST_MSG_SIZE   8
 #define OBJ_SET_COUNT   8
-extern void *queue1_msg_buff[TEST_MSG_SIZE];
+
+static void *queue1_msg_buff[TEST_MSG_SIZE];
 void *queue2_msg_buff[TEST_MSG_SIZE];
 
 #define MSG_SIGNATURE   0x5A
