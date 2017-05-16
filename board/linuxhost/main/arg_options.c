@@ -31,26 +31,7 @@ static void shift_argv(options_t *options, int i)
 void parse_options(options_t *options)
 {
     char      **argv = options->argv;
-    const char *mode = options->argc > 1 ? argv[1] : "";
     int         i;
-
-    if (strlen(mode) == 0) {
-        options->mode = MODE_DFL;
-    } else if (strcmp(mode, "yts") == 0) {
-        options->mode = MODE_YTS;
-        options->lwip.tapif = false;
-    } else if(strcmp(argv[1], "ota") == 0) {
-        options->mode = MODE_OTA;
-    } else if (strcmp(mode, "--mesh-node") == 0) {
-        options->mode = MODE_MESH_NODE;
-        options->lwip.tapif = false;
-    } else if (strcmp(mode, "--mesh-master") == 0) {
-        options->mode = MODE_MESH_MASTER;
-        options->lwip.enable = false;
-        options->lwip.tapif = false;
-    } else {
-        options->mode = MODE_NONE;
-    }
 
     for (i = 0; i < options->argc;) {
         if (!strcmp(argv[i], "--tapif")) {

@@ -19,20 +19,9 @@
 
 #include <stdbool.h>
 
-enum {
-    MODE_DFL = 1,
-    MODE_YTS,
-    MODE_OTA,
-    MODE_MESH_NODE,
-    MODE_MESH_MASTER,
-
-    MODE_NONE,
-};
-
 typedef struct {
     int    argc;
     char **argv;
-    int    mode;
 #ifdef TFS_EMULATE
     int    id2_index;
 #endif

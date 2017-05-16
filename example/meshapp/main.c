@@ -25,10 +25,25 @@
 extern void ysh_task_start(void);
 extern void ysh_init();
 
-int application_start(void)
+int application_start(int argc, char **argv)
 {
+    const char *mode = argc > 1 ? argv[1] : "";
+
     ysh_init();
     ysh_task_start();
+
+    if (strcmp(mode, "--mesh-node") == 0) {
+#ifdef CONFIG_YOS_DDA
+        dda_enable(atoi(argv[argc-1]));
+        dda_service_init();
+        dda_service_start();
+#endif
+    }
+    else if (strcmp(mode, "--mesh-master") == 0) {
+#ifdef CONFIG_YOS_DDM
+        ddm_run(argc, argv);
+#endif
+    }
 
     return 0;
 }

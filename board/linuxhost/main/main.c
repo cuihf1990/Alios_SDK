@@ -33,14 +33,9 @@ extern int tfs_emulate_id2_index;
 
 extern void csp_os_init(void);
 extern void csp_os_start(void);
-extern void hw_start_hal();
-extern void yos_set_simulate_mode(void);
 extern void yunos_lwip_init(int enable_tapif);
-extern void osupdate_online_test_run(char *bin, int id2_index);
 /* check in gcc sources gcc/gcov-io.h for the prototype */
 extern void __gcov_flush(void);
-extern void dda_disable(void);
-extern void ddm_run(int argc, char **argv);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
 extern void lpm_init(void);
@@ -59,11 +54,6 @@ int csp_get_args(const char ***pargv)
 
 void yos_features_init(void)
 {
-#ifdef CONFIG_YOS_DDA
-    /* disable it by default, will be reanbled if passed --mesh-node */
-    dda_disable();
-#endif
-
 #ifdef WITH_LWIP
     if (options.lwip.enable) {
         yunos_lwip_init(options.lwip.tapif);
@@ -73,35 +63,6 @@ void yos_features_init(void)
 #ifdef CONFIG_YOS_LPM
     lpm_init();
 #endif
-
-    switch (options.mode) {
-#ifdef CONFIG_YOS_UT
-    case MODE_YTS:
-        yos_set_in_ut(true);
-    #ifdef HAVE_RHINO_KERNEL
-        yos_set_simulate_mode();
-    #endif
-        break;
-#endif
-
-#ifdef CONFIG_YOS_MESH
-    case MODE_MESH_NODE:
-    #ifdef CONFIG_YOS_DDA
-        dda_enable(atoi(options.argv[options.argc-1]));
-        dda_service_init();
-        dda_service_start();
-    #endif
-        break;
-#endif
-#ifdef CONFIG_YOS_DDM
-    case MODE_MESH_MASTER:
-        ddm_run(options.argc, options.argv);
-        break;
-#endif
-    default:
-        break;
-    }
-
 }
 
 void signal_handler(int signo)
@@ -161,7 +122,11 @@ int main(int argc, char **argv)
     options.argc        = argc;
     options.argv        = argv;
     options.lwip.enable = true;
+#ifdef TAPIF_DEFAULT_OFF
+    options.lwip.tapif  = false;
+#else
     options.lwip.tapif  = true;
+#endif
     options.log_level   = YOS_LL_WARN;
 
     signal(SIGINT, signal_handler);
@@ -191,18 +156,7 @@ int main(int argc, char **argv)
 
     yos_loop_init();
 
-    switch (options.mode) {
-#ifdef CONFIG_YOS_UT
-    case MODE_OTA:
-        osupdate_online_test_run(argv[0], options.id2_index);
-        return 0;
-#endif
-    case MODE_MESH_NODE:
-    case MODE_MESH_MASTER:
-    default:
-        start_app(argc, argv);
-        break;
-    }
+    start_app(argc, argv);
 
     csp_os_start();
 
