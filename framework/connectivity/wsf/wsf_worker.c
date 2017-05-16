@@ -78,7 +78,7 @@ static void cb_recv(int fd,void *arg)
     if(0 == cb->cb_recv(fd,cb))
         cb->cb_close(fd,cb);
 
-    yos_cancel_delayed_action(cb->cb_timeout,cb);
+    yos_cancel_delayed_action(cb->timeout,cb->cb_timeout,cb);
     yos_post_delayed_action(cb->timeout,cb->cb_timeout,cb);
 }
 
