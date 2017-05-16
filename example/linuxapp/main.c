@@ -2,7 +2,6 @@
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/network.h>
-#include <yos/wlan.h>
 
 #include <k_api.h>
 
