@@ -139,6 +139,10 @@ typedef struct channel_s {
     uint16_t hal_bcast_channel;
 } channel_t;
 
+typedef ur_error_t (* umesh_raw_data_received)(ur_addr_t *src,
+                                               uint8_t *payload,
+                                               uint8_t length);
+
 typedef struct frame_stats_s {
     uint32_t in_frames;
     uint32_t out_frames;

@@ -17,6 +17,7 @@
 #include <string.h>
 #include <yos/framework.h>
 
+#include "hal/base.h"
 #include "umesh.h"
 #include "umesh_hal.h"
 #include "core/mcast.h"
@@ -101,7 +102,6 @@ static ur_error_t ur_mesh_interface_up(void)
     }
 
     yos_post_event(EV_MESH, CODE_MESH_CONNECTED, 0);
-
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_API, "mesh interface up\r\n");
     return UR_ERROR_NONE;
 }
@@ -212,6 +212,28 @@ ur_error_t ur_mesh_input(umessage_t *message)
     return UR_ERROR_NONE;
 }
 
+ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
+                               uint8_t *payload, uint8_t length)
+{
+    ur_error_t        error = UR_ERROR_NONE;
+    network_context_t *network;
+
+    network = get_default_network_context();
+    error = send_raw_data(network, dest, dest2, payload, length);
+    return error;
+}
+
+ur_error_t umesh_raw_data_receiver(ur_addr_t *src,
+                                   uint8_t *payload, uint8_t length)
+{
+    return UR_ERROR_NONE;
+}
+
+ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver)
+{
+    return UR_ERROR_NONE;
+}
+
 int csp_get_args(const char ***pargv);
 static void parse_args(void)
 {
@@ -269,6 +291,7 @@ ur_error_t ur_mesh_init(void *config)
     lp_init();
     message_stats_reset();
     g_um_state.initialized = true;
+    register_raw_data_receiver(umesh_raw_data_receiver);
 
     parse_args();
     return UR_ERROR_NONE;

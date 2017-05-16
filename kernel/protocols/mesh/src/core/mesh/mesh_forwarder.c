@@ -200,6 +200,7 @@ static void resolve_message_info(received_frame_t *frame)
             offset += SHORT_ADDR_SIZE;
             break;
         default:
+            info->src.addr.len = 0;
             break;
     }
 
@@ -753,6 +754,45 @@ ur_error_t mf_send_message(message_t *message)
     return error;
 }
 
+static bool proxy_check(message_t *message)
+{
+    network_context_t *network;
+    message_info_t    *info;
+
+    info = message->info;
+    network = get_default_network_context();
+
+    if (is_bcast_sid(&info->src) ||
+        is_same_mainnet(info->src.netid, mm_get_meshnetid(network)) == false ||
+        (mm_get_seclevel() > SEC_LEVEL_0 && (info->flags & ENCRYPT_ENABLE_FLAG) == 0)) {
+        if (info->type == MESH_FRAME_TYPE_DATA) {
+            return false;
+        }
+
+        network = get_network_context_by_meshnetid(info->dest.netid);
+        if (info->dest.netid != BCAST_NETID &&
+            (network == NULL || info->dest.addr.short_addr != mm_get_local_sid())) {
+            return false;
+        }
+
+        if (info->dest.netid != BCAST_NETID &&
+            (info->dest2.addr.len != SHORT_ADDR_SIZE || is_bcast_sid(&info->dest2)) == false) {
+            return false;
+        }
+
+        // TODO: add rate control of packets with no src addr
+        if (info->dest2.addr.len != SHORT_ADDR_SIZE ||
+            info->dest.addr.short_addr == LEADER_SID) {
+            info->dest2.addr.len = 0;
+        } else {
+            info->dest2.addr.short_addr = LEADER_SID;
+            info->dest2.netid = get_main_netid(mm_get_meshnetid(network));
+        }
+    }
+
+    return true;
+}
+
 static void message_handler(void *args)
 {
     ur_error_t error = UR_ERROR_NONE;
@@ -768,6 +808,12 @@ static void message_handler(void *args)
     frame = (received_frame_t *)args;
     info = frame->message->info;
     network = get_default_network_context();
+
+    if (proxy_check(frame->message) == false) {
+        message_free(frame->message);
+        ur_mem_free(frame, sizeof(received_frame_t));
+        return;
+    }
 
     if (memcmp(&info->dest.addr, mm_get_mac_address(), sizeof(info->dest.addr)) == 0) {
         recv = true;

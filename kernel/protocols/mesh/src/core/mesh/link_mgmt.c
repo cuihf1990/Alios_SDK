@@ -298,8 +298,19 @@ neighbor_t *update_neighbor(const message_info_t *info,
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
+    path_cost = (mm_cost_tv_t *)mm_get_tv(tlvs, length, TYPE_PATH_COST);
+    src_ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, length, TYPE_SRC_UEID);
+    ssid_info = (mm_ssid_info_tv_t *)mm_get_tv(tlvs, length, TYPE_SSID_INFO);
+    mode = (mm_mode_tv_t *)mm_get_tv(tlvs, length, TYPE_MODE);
+
     hal = get_hal_context(info->hal_type);
     nbr = get_neighbor_by_mac_addr(&info->src_mac.addr);
+
+    // remove nbr, if mode changed
+    if (nbr && mode && nbr->mode != 0 && nbr->mode != mode->mode) {
+        remove_neighbor(hal, nbr);
+        nbr = NULL;
+    }
 
     if (nbr == NULL) {
         nbr = new_neighbor(hal, &info->src_mac.addr, tlvs, length, is_attach);
@@ -310,17 +321,6 @@ neighbor_t *update_neighbor(const message_info_t *info,
     }
     if (nbr == NULL) {
         return NULL;
-    }
-
-    path_cost = (mm_cost_tv_t *)mm_get_tv(tlvs, length, TYPE_PATH_COST);
-    src_ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, length, TYPE_SRC_UEID);
-    ssid_info = (mm_ssid_info_tv_t *)mm_get_tv(tlvs, length, TYPE_SSID_INFO);
-    mode = (mm_mode_tv_t *)mm_get_tv(tlvs, length, TYPE_MODE);
-
-    // remove nbr, if mode changed
-    if (nbr && mode && nbr->mode != 0 && nbr->mode != mode->mode) {
-        remove_neighbor(hal, nbr);
-        nbr = NULL;
     }
 
     if (src_ueid != NULL) {
@@ -576,12 +576,12 @@ static ur_error_t send_link_accept(network_context_t *network,
                                    ur_addr_t *dest,
                                    uint8_t *tlvs, uint8_t tlvs_length)
 {
-    ur_error_t     error = UR_ERROR_NONE;
-    mm_header_t    *mm_header;
-    message_t      *message;
-    uint8_t        *data;
-    int16_t        length;
-    neighbor_t     *node;
+    ur_error_t  error = UR_ERROR_NONE;
+    mm_header_t *mm_header;
+    message_t   *message;
+    uint8_t     *data;
+    int16_t     length;
+    neighbor_t  *node;
     message_info_t *info;
 
     node = get_neighbor_by_mac_addr(&dest->addr);

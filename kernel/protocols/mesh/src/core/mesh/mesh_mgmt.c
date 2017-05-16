@@ -47,9 +47,10 @@ typedef struct mm_device_s {
 } mm_device_t;
 
 typedef struct mesh_mgmt_state_s {
-    mm_device_t  device;
-    mm_cb_t      *callback;
-    nd_updater_t network_data_updater;
+    mm_device_t             device;
+    mm_cb_t                 *callback;
+    nd_updater_t            network_data_updater;
+    umesh_raw_data_received raw_data_receiver;
 } mesh_mgmt_state_t;
 
 static mesh_mgmt_state_t g_mm_state;
@@ -999,8 +1000,11 @@ static ur_error_t send_sid_request(network_context_t *network)
     info->dest.addr.len = SHORT_ADDR_SIZE;
     if ((g_mm_state.device.mode & MODE_MOBILE) ||
         (network->router->sid_type != STRUCTURED_SID)) {
-        info->dest.addr.short_addr = LEADER_SID;
+        info->dest.addr.short_addr = network->attach_candidate->addr.addr.short_addr;
         info->dest.netid = get_main_netid(network->attach_candidate->addr.netid);
+        info->dest2.addr.len = SHORT_ADDR_SIZE;
+        info->dest2.addr.short_addr = BCAST_SID;
+        info->dest2.netid = BCAST_NETID;
     } else {
         info->dest.addr.short_addr = network->attach_candidate->addr.addr.short_addr;
         info->dest.netid = network->attach_candidate->addr.netid;
@@ -1153,13 +1157,115 @@ static ur_error_t handle_sid_request(message_t *message)
         dest.netid = attach_node_id->meshnetid;
         dest2.addr.len = EXT_ADDR_SIZE;
         memcpy(dest2.addr.addr, ueid->ueid, sizeof(dest2.addr.addr));
-        dest2.netid = attach_node_id->meshnetid;
+        dest2.netid = BCAST_NETID;
         network = get_network_context_by_meshnetid(dest.netid);
         if (network == NULL) {
             network = get_default_network_context();
         }
         error = send_sid_response(network, &dest, &dest2, &node_id);
     }
+
+    return error;
+}
+
+ur_error_t send_raw_data(network_context_t *network,
+                         ur_addr_t *dest, ur_addr_t *dest2,
+                         uint8_t *payload, uint8_t payload_length)
+{
+    ur_error_t     error = UR_ERROR_NONE;
+    mm_header_t    *mm_header;
+    mm_ueid_tv_t   *ueid;
+    message_t      *message;
+    uint8_t        *data;
+    uint16_t       length;
+    message_info_t *info;
+    hal_context_t  *hal;
+    neighbor_t     *nbr;
+
+    hal = network->hal;
+    if (dest == NULL && hal->discovery_result.meshnetid == BCAST_NETID) {
+        return UR_ERROR_FAIL;
+    }
+
+    length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) + payload_length;
+    message = message_alloc(length);
+    if (message == NULL) {
+        return UR_ERROR_MEM;
+    }
+
+    data = message_get_payload(message);
+    mm_header = (mm_header_t *)data;
+    mm_header->command = COMMAND_RAW_DATA;
+    data += sizeof(mm_header_t);
+
+    ueid = (mm_ueid_tv_t *)data;
+    mm_init_tv_base((mm_tv_t *)ueid, TYPE_SRC_UEID);
+    memcpy(ueid->ueid, g_mm_state.device.ueid, sizeof(ueid->ueid));
+    data += sizeof(mm_ueid_tv_t);
+
+    memcpy(data, payload, payload_length);
+    data += payload_length;
+
+    info = message->info;
+    info->network = network;
+    // dest
+    if (dest == NULL) {
+        nbr = get_neighbor_by_mac_addr(&hal->discovery_result.addr);
+        if (nbr == NULL) {
+            message_free(message);
+            return UR_ERROR_FAIL;
+        }
+        info->dest.addr.len = SHORT_ADDR_SIZE;
+        info->dest.addr.short_addr = nbr->addr.addr.short_addr;
+        info->dest.netid = get_main_netid(nbr->addr.netid);
+        info->dest2.addr.len = SHORT_ADDR_SIZE;
+        info->dest2.addr.short_addr = BCAST_SID;
+        info->dest2.netid = BCAST_NETID;
+    } else {
+        memcpy(&info->dest, dest, sizeof(info->dest));
+        if (dest2) {
+            memcpy(&info->dest2, dest2, sizeof(info->dest2));
+        }
+    }
+
+    set_command_type(info, mm_header->command);
+    error = mf_send_message(message);
+
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
+           "send raw data, len %d\r\n", length);
+
+    return error;
+}
+
+ur_error_t register_raw_data_receiver(umesh_raw_data_received receiver)
+{
+    g_mm_state.raw_data_receiver = receiver;
+    return UR_ERROR_NONE;
+}
+
+ur_error_t handle_raw_data(message_t *message)
+{
+    ur_error_t   error = UR_ERROR_NONE;
+    mm_ueid_tv_t *ueid;
+    uint8_t      *tlvs;
+    ur_addr_t    src;
+    uint8_t      *payload;
+    uint8_t      length;
+
+    tlvs = message_get_payload(message) + sizeof(mm_header_t);
+
+    if ((ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, sizeof(mm_ueid_tv_t), TYPE_SRC_UEID)) == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    src.addr.len = EXT_ADDR_SIZE;
+    memcpy(&src.addr.addr, ueid, sizeof(src.addr.addr));
+    payload = tlvs + sizeof(mm_ueid_tv_t);
+    length = message_get_msglen(message) - sizeof(mm_header_t) - sizeof(mm_ueid_tv_t);
+    error = g_mm_state.raw_data_receiver(&src, payload, length);
+
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle raw data\r\n");
+
     return error;
 }
 
@@ -1660,6 +1766,9 @@ ur_error_t mm_handle_frame_received(message_t *message)
             break;
         case COMMAND_ROUTING_INFO_UPDATE:
             error = handle_router_message_received(message);
+            break;
+        case COMMAND_RAW_DATA:
+            error = handle_raw_data(message);
             break;
         default:
             break;

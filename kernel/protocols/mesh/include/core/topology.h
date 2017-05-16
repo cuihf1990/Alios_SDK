@@ -63,6 +63,7 @@ enum {
 };
 
 typedef enum node_mode_s {
+    MODE_NONE   = 0x0,  // this is for testing that not joining net
     MODE_SUPER  = 0x1,
     MODE_RX_ON  = 0x2,
     MODE_MOBILE = 0x4,

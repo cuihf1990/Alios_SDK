@@ -34,6 +34,10 @@ typedef struct ur_adapter_callback_s {
     adapter_interface_update_t interface_update;
 } ur_adapter_callback_t;
 
+ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
+                               uint8_t *payload, uint8_t length);
+ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver);
+
 ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *ip6addr);
 ur_error_t ur_mesh_input(umessage_t *p);
 

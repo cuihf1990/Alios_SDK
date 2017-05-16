@@ -777,7 +777,12 @@ static int start_one_device(master_info_t *master, int id, int mode, int router,
     if (agent->pid == 0) {
         /* disable stdin/stdout */
         int fd[2];
-        pipe(fd);
+        int ret;
+
+        ret = pipe(fd);
+        if (ret < 0) {
+            return -1;
+        }
         close(STDIN_FILENO);
         dup2(fd[0], STDIN_FILENO);
 
@@ -1220,14 +1225,19 @@ static void cli_run(void)
 {
     while(1) {
         char *line = readline(cli_status.cmd_prefix);
+        int ret;
+
         if (!line)
             continue;
         if (strlen(line) > 0)
             add_history(line);
-        write(pipefd[1], &line, sizeof line);
+        ret = write(pipefd[1], &line, sizeof line);
+        if (ret < 0) {
+            perror("read from pipe");
+        }
 
         /* a simple handshake */
-        int ret = read(pipefd_reply[0], &line, 1);
+        ret = read(pipefd_reply[0], &line, 1);
         if (ret < 0)
             perror("read from pipe");
     }
@@ -1236,13 +1246,17 @@ static void cli_run(void)
 static void master_recv_line(int fd, void *d1, void *d2)
 {
     char *line;
+    int ret;
 
     if (sizeof(line) == read(fd, &line, sizeof line)) {
         dispatch_command(line);
         free(line);
     }
 
-    write(pipefd_reply[1], &fd, 1);
+    ret = write(pipefd_reply[1], &fd, 1);
+    if (ret < 0) {
+        perror("read from pipe");
+    }
 }
 
 static int ddm_init(dda_config_result_t *pcres)
@@ -1251,8 +1265,14 @@ static int ddm_init(dda_config_result_t *pcres)
     master_info_t *master = &master_info;
     int ret;
 
-    pipe2(pipefd, O_NONBLOCK);
-    pipe2(pipefd_reply, 0);
+    ret = pipe2(pipefd, O_NONBLOCK);
+    if (ret < 0) {
+        goto out;
+    }
+    ret = pipe2(pipefd_reply, 0);
+    if (ret < 0) {
+        goto out;
+    }
 
     ret = create_socket();
     if (ret < 0) {
