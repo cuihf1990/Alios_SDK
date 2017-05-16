@@ -19,6 +19,7 @@
 #include <vfs_err.h>
 #include <vfs_inode.h>
 #include <vfs.h>
+#include <stdio.h>
 
 static uint8_t    g_vfs_init;
 
@@ -152,7 +153,7 @@ static void del_file(file_t *file)
     file->node = NULL;
 }
 
-int yunos_open(const char *path, int flags)
+int yos_open(const char *path, int flags)
 {
     file_t  *file;
     inode_t *node;
@@ -194,7 +195,7 @@ int yunos_open(const char *path, int flags)
     return get_fd(file);
 }
 
-int yunos_close(int fd)
+int yos_close(int fd)
 {
     int      err = VFS_SUCCESS;
     file_t  *f;
@@ -221,7 +222,7 @@ int yunos_close(int fd)
     return err;
 }
 
-ssize_t yunos_read(int fd, void *buf, size_t nbytes)
+ssize_t yos_read(int fd, void *buf, size_t nbytes)
 {
     ssize_t  nread = -1;
     file_t  *f;
@@ -240,7 +241,7 @@ ssize_t yunos_read(int fd, void *buf, size_t nbytes)
     return nread;
 }
 
-ssize_t yunos_write(int fd, const void *buf, size_t nbytes)
+ssize_t yos_write(int fd, const void *buf, size_t nbytes)
 {
     ssize_t  nwrite = -1;
     file_t  *f;
@@ -259,7 +260,7 @@ ssize_t yunos_write(int fd, const void *buf, size_t nbytes)
     return nwrite;
 }
 
-int yunos_ioctl(int fd, int cmd, unsigned long arg)
+int yos_ioctl(int fd, int cmd, unsigned long arg)
 {
     int      err = E_VFS_K_ERR;
     file_t  *f;
@@ -282,7 +283,7 @@ int yunos_ioctl(int fd, int cmd, unsigned long arg)
 }
 
 #if (YUNOS_CONFIG_VFS_POLL_SUPPORT>0)
-int yunos_poll(struct pollfd *fds, int nfds, int timeout)
+int yos_poll(struct pollfd *fds, int nfds, int timeout)
 {
     yos_sem_t sem;
     int       ret = VFS_SUCCESS;
@@ -363,7 +364,7 @@ check_poll:
 }
 #endif
 
-int yunos_fcntl(int fd, int cmd, int val)
+int yos_fcntl(int fd, int cmd, int val)
 {
     if (fd < 0) {
         return E_VFS_ERR_PARAM;
@@ -375,7 +376,7 @@ int yunos_fcntl(int fd, int cmd, int val)
     return 0;
 }
 
-int yunos_ioctl_in_loop(int cmd, unsigned long arg)
+int yos_ioctl_in_loop(int cmd, unsigned long arg)
 {
     int      err;
     int      fd;

@@ -25,8 +25,6 @@
 #include <vfs_driver.h>
 #include <event_device.h>
 
-extern void *soc_mm_alloc(size_t size);
-extern void soc_mm_free(void *mem);
 #if (YUNOS_CONFIG_VFS_POLL_SUPPORT > 0)
 static int inited;
 
@@ -48,7 +46,7 @@ typedef struct {
 
 static int event_open(inode_t *node, file_t *file)
 {
-    event_dev_t *pdev = soc_mm_alloc(sizeof *pdev);
+    event_dev_t *pdev = (event_dev_t *)yos_malloc(sizeof *pdev);
     bzero(pdev, sizeof *pdev);
     csp_mutex_new(&pdev->mutex);
     dlist_init(&pdev->bufs);
@@ -69,7 +67,7 @@ static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
         dlist_del(&evt->node);
         pdev->cache_count --;
     } else {
-        evt = soc_mm_alloc(sizeof(*evt) + len);
+        evt = (dev_event_t*)yos_malloc(sizeof(*evt) + len);
     }
 
     if (evt == NULL) {
@@ -141,7 +139,7 @@ static ssize_t event_read(file_t *f, void *buf, size_t len)
         dlist_add(&evt->node, &pdev->buf_cache);
         pdev->cache_count ++;
     } else {
-        soc_mm_free(evt);
+        yos_free(evt);
     }
 
     pdev->counter --;

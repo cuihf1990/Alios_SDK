@@ -16,13 +16,15 @@
 
 #include <sys/time.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <poll.h>
 
 #include <yos/kernel.h>
-#include <hal/hal.h>
 #include <yos/framework.h>
+#include <yos/network.h>
 #include <yos/log.h>
-
-#include "vfs.h"
+#include <yos/list.h>
 
 #include "yloop.h"
 
@@ -58,6 +60,7 @@ typedef struct yloop_timeout_s {
     struct timeval   time;
     void            *private_data;
     yos_call_t       cb;
+    int              ms;
 } yloop_timeout_t;
 
 typedef struct {
@@ -154,8 +157,8 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
         return -1;
     }
 
-    int status = yunos_fcntl(sock, F_GETFL, 0);
-    yunos_fcntl(sock, F_SETFL, status | O_NONBLOCK);
+    int status = yos_fcntl(sock, F_GETFL, 0);
+    yos_fcntl(sock, F_SETFL, status | O_NONBLOCK);
 
     ctx->reader_count++;
     ctx->readers = new_sock;
@@ -209,7 +212,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
         return -1;
     }
 
-    hal_time_gettimeofday(&timeout->time, NULL);
+    gettimeofday(&timeout->time, NULL);
     timeout->time.tv_sec += ms / 1000;
     timeout->time.tv_usec += (ms % 1000) * 1000;
 
@@ -220,6 +223,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
 
     timeout->private_data = param;
     timeout->cb = action;
+    timeout->ms = ms;
 
     yloop_timeout_t *tmp;
 
@@ -234,18 +238,24 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
     return 0;
 }
 
-void yos_cancel_delayed_action(yos_call_t cb, void *private_data)
+void yos_cancel_delayed_action(int ms, yos_call_t cb, void *private_data)
 {
     yloop_ctx_t *ctx = get_context();
     yloop_timeout_t *tmp;
 
     dlist_for_each_entry(&ctx->timeouts, tmp, yloop_timeout_t, next) {
-        if (tmp->cb == cb &&
-            tmp->private_data == private_data) {
-            dlist_del(&tmp->next);
-            free(tmp);
-            return;
-        }
+        if (ms != -1 && tmp->ms != ms)
+            continue;
+
+        if (tmp->cb != cb)
+            continue;
+
+        if (tmp->private_data != private_data)
+            continue;
+
+        dlist_del(&tmp->next);
+        free(tmp);
+        return;
     }
 }
 
@@ -262,7 +272,7 @@ void yos_loop_run(void)
 
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            hal_time_gettimeofday(&now, NULL);
+            gettimeofday(&now, NULL);
 
             if (timercmp(&now, &tmo->time, <)) {
                 timersub(&tmo->time, &now, &tv);
@@ -278,17 +288,17 @@ void yos_loop_run(void)
             ctx->pollfds[i].events = POLLIN;
         }
 
-        int res = yunos_poll(ctx->pollfds, readers, delayed_ms);
+        int res = yos_poll(ctx->pollfds, readers, delayed_ms);
 
         if (res < 0 && errno != EINTR) {
-            LOGE(TAG, "yunos_poll");
+            LOGE(TAG, "yos_poll");
             return;
         }
 
         /* check if some registered timeouts have occurred */
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            hal_time_gettimeofday(&now, NULL);
+            gettimeofday(&now, NULL);
 
             if (!timercmp(&now, &tmo->time, <)) {
                 dlist_del(&tmo->next);

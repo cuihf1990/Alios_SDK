@@ -23,22 +23,10 @@ extern "C" {
 
 #include <sys/types.h>
 #include <vfs_conf.h>
-
-struct pollfd;
+#include <poll.h>
 
 int vfs_init(void);
 
-int yunos_open(const char *path, int flags);
-int yunos_close(int fd);
-ssize_t yunos_read(int fd, void *buf, size_t nbytes);
-ssize_t yunos_write(int fd, const void *buf, size_t nbytes);
-int yunos_ioctl(int fd, int cmd, unsigned long arg);
-
-#if (YUNOS_CONFIG_VFS_POLL_SUPPORT>0)
-int yunos_poll(struct pollfd *fds, int nfds, int timeout);
-#endif
-int yunos_fcntl(int fd, int cmd, int val);
-int yunos_ioctl_in_loop(int cmd, unsigned long arg);
 #ifdef __cplusplus
 }
 #endif

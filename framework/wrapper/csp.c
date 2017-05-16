@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <csp.h>
 #include <yos/kernel.h>
 #include <hal/hal.h>
+#include <poll.h>
+#include <k_api.h>
 
 int yos_mutex_new(yos_mutex_t *mutex) {
     return csp_mutex_new(mutex);
@@ -63,9 +67,12 @@ uint64_t yos_now(void)
     return csp_now();
 }
 
+#define ms2tick(ms) \
+    ((ms * YUNOS_CONFIG_TICKS_PER_SECOND + 999) / 1000)
+
 void yos_msleep(int ms)
 {
-    hal_time_msleep(ms);
+    yunos_task_sleep(ms2tick(ms));
 }
 
 int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stacksize)
@@ -138,9 +145,7 @@ uint32_t csp_sem_wait(csp_sem_t sem, uint32_t timeout)
     if (timeout == YUNOS_WAIT_FOREVER) {
         return yunos_sem_take(sem.hdl, YUNOS_WAIT_FOREVER);
     } else {
-        int onetick = 1000 / YUNOS_CONFIG_TICKS_PER_SECOND;
-        timeout = (timeout + onetick - 1) / onetick;
-        return yunos_sem_take(sem.hdl, timeout);
+        return yunos_sem_take(sem.hdl, ms2tick(timeout));
     }
 
     return 0;
@@ -209,15 +214,15 @@ int csp_sys_free(uint32_t *f)
 
 void *yos_malloc(size_t sz)
 {
-    return soc_mm_alloc(sz);
+    return yunos_mm_alloc(sz);
 }
 
 void yos_free(void *p)
 {
-    soc_mm_free(p);
+    yunos_mm_free(p);
 }
 
-#if defined(CONFIG_YOS_NET_PROTOCOL)
+#if defined(WITH_LWIP)
 #include "lwip/sys.h"
 
 static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)
@@ -247,7 +252,7 @@ static int create_eventfd(csp_sem_t sem, kobj_set_t *handle)
 static void remove_eventfd(csp_sem_t sem, kobj_set_t *handle)
 {
     int fd = (int)(long)handle->docker;
-    close(fd);
+    lwip_close(fd);
     ((blk_obj_t *)sem.hdl)->handle = NULL;
 }
 
@@ -316,11 +321,7 @@ int csp_poll(struct pollfd *pollfds, int nfds, csp_sem_t sem, uint32_t timeout)
 
 int csp_net_errno(int fd)
 {
-#ifdef HAL_ARCH_SPEICAL_ERRNO
-    return arch_get_net_errno(fd);
-#else
     return errno;
-#endif
 }
 
 static char **strsplit(char *src, int max_fields)

@@ -100,24 +100,24 @@ static uint8_t mm_region_break_case1(void)
     MYASSERT(my_mm_region_list_head.frag_num == r_num);
     MYASSERT(NULL != ptmp2);
 
-    ret = yunos_mm_bf_free(NULL, ptmp);
+    ret = yunos_mm_xf_free(NULL, ptmp);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_mm_bf_free(&my_mm_region_list_head, ptmp);
+    ret = yunos_mm_xf_free(&my_mm_region_list_head, ptmp);
     MYASSERT(ret == YUNOS_SUCCESS);
     check_free += 48;
     free = yunos_mm_region_get_free_size(&my_mm_region_list_head);
     MYASSERT(free == check_free);
     MYASSERT(my_mm_region_list_head.frag_num == r_num);
 
-    ret = yunos_mm_bf_free(&my_mm_region_list_head, ptmp1);
+    ret = yunos_mm_xf_free(&my_mm_region_list_head, ptmp1);
     MYASSERT(ret == YUNOS_SUCCESS);
     check_free += 60 + sizeof(k_mm_region_list_t);
     free = yunos_mm_region_get_free_size(&my_mm_region_list_head);
     MYASSERT(free == check_free);
     MYASSERT(my_mm_region_list_head.frag_num == --r_num);
 
-    ret = yunos_mm_bf_free(&my_mm_region_list_head, ptmp2);
+    ret = yunos_mm_xf_free(&my_mm_region_list_head, ptmp2);
     MYASSERT(ret == YUNOS_SUCCESS);
     check_free = MM_REGION_1_SIZE + MM_REGION_2_SIZE -MM_REGION_VALID_REGION*sizeof(k_mm_region_list_t);
     free = yunos_mm_region_get_free_size(&my_mm_region_list_head);
@@ -202,24 +202,24 @@ static uint8_t mm_region_break_case2(void)
     MYASSERT(my_mm_region_list_head2.frag_num == r_num);
     MYASSERT(NULL != ptmp2);
 
-    ret = yunos_mm_ff_free(NULL, ptmp);
+    ret = yunos_mm_xf_free(NULL, ptmp);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_mm_ff_free(&my_mm_region_list_head2, ptmp);
+    ret = yunos_mm_xf_free(&my_mm_region_list_head2, ptmp);
     MYASSERT(ret == YUNOS_SUCCESS);
     check_free += 48;
     free = yunos_mm_region_get_free_size(&my_mm_region_list_head2);
     MYASSERT(free == check_free);
     MYASSERT(my_mm_region_list_head2.frag_num == r_num);
 
-    ret = yunos_mm_ff_free(&my_mm_region_list_head2, ptmp1);
+    ret = yunos_mm_xf_free(&my_mm_region_list_head2, ptmp1);
     MYASSERT(ret == YUNOS_SUCCESS);
     check_free += 60 + sizeof(k_mm_region_list_t);
     free = yunos_mm_region_get_free_size(&my_mm_region_list_head2);
     MYASSERT(free == check_free);
     MYASSERT(my_mm_region_list_head2.frag_num == --r_num);
 
-    ret = yunos_mm_ff_free(&my_mm_region_list_head2, ptmp2);
+    ret = yunos_mm_xf_free(&my_mm_region_list_head2, ptmp2);
     MYASSERT(ret == YUNOS_SUCCESS);
     check_free = MM_REGION_1_SIZE + MM_REGION_2_SIZE -MM_REGION_VALID_REGION*sizeof(k_mm_region_list_t);
     free = yunos_mm_region_get_free_size(&my_mm_region_list_head2);

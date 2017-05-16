@@ -17,12 +17,14 @@
  * limitations under the License.
  */
 
+#include <stdbool.h>
+#include <stdlib.h>
+
 #include <k_api.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/list.h>
 
-#include "vfs.h"
 #include "event_device.h"
 #include "yloop.h"
 
@@ -79,13 +81,13 @@ static int input_add_event(int fd, input_event_t *event)
     else
         cmd = MK_CMD(IOCTL_WRITE_NORMAL, sizeof(*event));
 
-    return yunos_ioctl(fd, cmd, (unsigned long)event);
+    return yos_ioctl(fd, cmd, (unsigned long)event);
 }
 
 void event_read_cb(int fd, void *param)
 {
     input_event_t event;
-    int ret = yunos_read(fd, &event, sizeof(event));
+    int ret = yos_read(fd, &event, sizeof(event));
     if (ret == sizeof(event)) {
         handle_events(&event);
     }
@@ -93,7 +95,7 @@ void event_read_cb(int fd, void *param)
 
 int yos_event_service_init(void)
 {
-    int fd = yunos_open("/dev/event", 0);
+    int fd = yos_open("/dev/event", 0);
 
     if (local_event.fd < 0)
         local_event.fd = fd;
@@ -212,19 +214,47 @@ static void run_my_work(void *arg)
     free(wpar);
 }
 
-int yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
+void yos_cancel_work(void *work, yos_call_t action, void *arg1)
+{
+    /* ToDo */
+}
+
+#define WQ_STACK_SIZE 8192
+static workqueue_t *create_wq(void)
+{
+    workqueue_t *wq;
+    wq = malloc(sizeof(*wq));
+    if (!wq)
+        goto err_out;
+
+    kstat_t ret;
+    void *stack = malloc(WQ_STACK_SIZE);
+    ret = yunos_workqueue_create(wq, "loop", 9, stack, WQ_STACK_SIZE / 4);
+    if (ret != YUNOS_SUCCESS) {
+        free(stack);
+        goto err_out;
+    }
+
+    return wq;
+err_out:
+    free(wq);
+    return NULL;
+}
+
+void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
 {
     static workqueue_t *wq;
+    kstat_t ret;
 
     if (!wq) {
-        wq = malloc(sizeof(*wq));
-#define WQ_STACK_SIZE 8192
-        void *stack = malloc(WQ_STACK_SIZE);
-        yunos_workqueue_create(wq, "loop", 9, stack, WQ_STACK_SIZE / 4);
+        wq = create_wq();
     }
 
     work_t *work = malloc(sizeof(*work));
     work_par_t *wpar = malloc(sizeof(*wpar));
+
+    if (!wq || !work || !wpar)
+        goto err_out;
 
     wpar->work = work;
     wpar->loop = yos_current_loop();
@@ -235,7 +265,17 @@ int yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb,
 
     ms = ms * YUNOS_CONFIG_TICKS_PER_SECOND;
     ms = (ms + 999) / 1000;
-    yunos_work_init(work, run_my_work, wpar, ms);
-    return yunos_work_run(wq, work);
+    ret = yunos_work_init(work, run_my_work, wpar, ms);
+    if (ret != YUNOS_SUCCESS)
+        goto err_out;
+    ret = yunos_work_run(wq, work);
+    if (ret != YUNOS_SUCCESS)
+        goto err_out;
+
+    return work;
+err_out:
+    free(work);
+    free(wpar);
+    return NULL;
 }
 

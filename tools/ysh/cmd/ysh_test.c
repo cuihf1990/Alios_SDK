@@ -17,9 +17,9 @@
 #include "ysh.h"
 #include <hal/hal.h>
 #include <hal/platform.h>
-#include <yoc/conf.h>
-#include <yoc/log.h>
-#include <yoc/framework.h>
+#include <yos/conf.h>
+#include <yos/log.h>
+#include <yos/framework.h>
 #include <assert.h>
 
 extern int  smart_config_start(void);
@@ -140,7 +140,7 @@ static uint32_t cmd_test_func(char *buf, uint32_t len, cmd_item_t *item, cmd_inf
             snprintf(buf, len, "%s\r\n", ret < 0 ? "fail" : "success");
         }
     } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "publish")) {
-#if defined(CONFIG_YOC_URADAR_MESH) && !defined(CONFIG_YOC_CLOUD)
+#if defined(CONFIG_YOS_MESH) && !defined(CONFIG_YOC_CLOUD)
         int yoc_cloud_publish(const char *idsu, const char *payload);
         yoc_cloud_publish(item->items[2], item->items[3]);
 #endif
@@ -172,7 +172,7 @@ void ysh_reg_cmd_test(void)
 {
     cmd_info_t *tmp = NULL;
 
-    tmp = soc_mm_alloc(sizeof(cmd_info_t));
+    tmp = yos_malloc(sizeof(cmd_info_t));
 
     if (tmp == NULL) {
         return;

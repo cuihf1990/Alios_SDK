@@ -109,7 +109,8 @@ extern kmutex_t     g_workqueue_mutex;
 #endif
 
 #if (YUNOS_CONFIG_MM_BESTFIT > 0)
-extern klist_t g_mm_region_list_head;
+extern klist_t            g_mm_region_list_head;
+extern k_mm_region_head_t g_kmm_region_head;
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 1)
 extern kmutex_t             g_mm_region_mutex;
 #endif

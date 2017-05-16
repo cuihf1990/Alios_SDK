@@ -96,6 +96,20 @@ uint32_t yos_sem_wait(yos_sem_t sem, uint32_t timeout);
 void yos_sem_signal(yos_sem_t sem);
 
 /**
+ * alloc memory
+ * @param[in]       size        size of the mem to malloc
+ * @return  the operation status, NULL is error, others is memory address
+ */
+void * yos_malloc(size_t size);
+
+/**
+ * free memory
+ * @param[in]       ptr        address point of the mem
+ */
+void   yos_free(void * ptr);
+
+
+/**
  * get current time in nano seconds
  * @return elapsed time in nano seconds from system starting
  */

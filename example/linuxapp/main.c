@@ -1,18 +1,25 @@
 #include <stdio.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
+#include <yos/network.h>
+
+#include <k_api.h>
 
 extern void ysh_task_start(void);
 extern void ysh_init();
 
-static struct cookie {
+struct cookie {
     int flag;
 };
 
 static void app_delayed_action(void *arg)
 {
     struct cookie *cookie = arg;
+    struct hostent *hent = gethostbyname("www.taobao.com");
     printf("%s - %s\n", __func__, g_active_task->task_name);
+    if(hent) {
+        printf("%s - %s\n", __func__, hent->h_name);
+    }
     if (cookie->flag != 0) {
         yos_post_delayed_action(3000, app_delayed_action, arg);
     }
@@ -30,7 +37,7 @@ static void app_main_entry(void *arg)
 
 int application_start(void)
 {
-    struct cookie *cookie = malloc(sizeof(*cookie));
+    struct cookie *cookie = yos_malloc(sizeof(*cookie));
     bzero(cookie, sizeof(*cookie));
 
     ysh_init();

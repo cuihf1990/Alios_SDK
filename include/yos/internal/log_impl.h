@@ -17,8 +17,6 @@
 #ifndef YOS_LOG_IMPL_H
 #define YOS_LOG_IMPL_H
 
-#include <yos/sysdep.h>
-
 #if defined(__cplusplus)
 extern "C"
 {
@@ -82,10 +80,7 @@ enum log_level_bit {
 
 #endif
 
-static inline int void_func(const char *fmt, ...)
-{
-    return 0;
-}
+#define void_func(fmt, ...)
 
 #ifndef os_printf
 #ifndef csp_printf

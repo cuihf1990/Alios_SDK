@@ -121,24 +121,24 @@ kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
         return YUNOS_BUF_QUEUE_SIZE_ZERO;
     }
 
-    queue_obj = soc_mm_alloc(sizeof(kbuf_queue_t));
+    queue_obj = yunos_mm_alloc(sizeof(kbuf_queue_t));
 
     if (queue_obj == NULL) {
         return YUNOS_NO_MEM;
     }
 
-    queue_buf = soc_mm_alloc(size);
+    queue_buf = yunos_mm_alloc(size);
 
     if (queue_buf == NULL) {
-        soc_mm_free(queue_obj);
+        yunos_mm_free(queue_obj);
         return YUNOS_NO_MEM;
     }
 
     stat = buf_queue_create(queue_obj, name, queue_buf, size, max_msg, K_OBJ_DYN_ALLOC);
 
     if (stat != YUNOS_SUCCESS) {
-        soc_mm_free(queue_buf);
-        soc_mm_free(queue_obj);
+        yunos_mm_free(queue_buf);
+        yunos_mm_free(queue_obj);
         return stat;
     }
 
@@ -182,7 +182,7 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
-    soc_mm_free(queue);
+    yunos_mm_free(queue);
 
     return YUNOS_SUCCESS;
 }

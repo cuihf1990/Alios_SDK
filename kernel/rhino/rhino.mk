@@ -29,9 +29,11 @@ GLOBAL_LDFLAGS +=
 GLOBAL_CFLAGS += -g -c -W -Os  \
                  -fno-builtin
 
+$(NAME)_CFLAGS += -Wall -Werror
 $(NAME)_SOURCES := core/k_err.c          \
-                   core/k_mm_bestfit.c   \
+                   core/k_mm.c           \
                    core/k_mm_region.c    \
+                   core/k_mm_debug.c     \
                    core/k_obj_set.c      \
                    core/k_ringbuf.c      \
                    core/k_stats.c        \
@@ -48,7 +50,6 @@ $(NAME)_SOURCES := core/k_err.c          \
                    core/k_workqueue.c    \
                    core/k_dyn_mem_proc.c \
                    core/k_idle.c         \
-                   core/k_mm_firstfit.c  \
                    core/k_obj.c          \
                    core/k_queue.c        \
                    core/k_sem.c          \

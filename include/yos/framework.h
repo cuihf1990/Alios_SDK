@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-/**
- * @file yos/framework.h
- * @brief YOS Framework APIs
- * @version since 5.5.0
- */
-
 #ifndef YOS_FRAMEWORK_API_H
 #define YOS_FRAMEWORK_API_H
 
 #include <stdint.h>
+#include <stddef.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -153,12 +149,13 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *arg);
 
 /**
  * @brief Cancel a delayed action to be executed in main loop
+ * @param ms milliseconds to wait, -1 means don't care
  * @param action action to be executed
  * @param arg private data past to action
  * @returns None
  * @note all the parameters must be the same as yos_post_delayed_action
  */
-void yos_cancel_delayed_action(yos_call_t action, void *arg);
+void yos_cancel_delayed_action(int ms, yos_call_t action, void *arg);
 
 /**
  * @brief Schedule a callback in next event loop
@@ -231,15 +228,30 @@ int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
  * @param arg1 private data past to action
  * @param fini_cb finish callback to be executed after action is done in current event loop
  * @param arg2 private data past to fini_cb
- * @retval >=0 success
- * @retval <0  failure
- * @note Unlike yos_post_delayed_action,
- *       this function can be called from non-yos-main-loop context.
+ * @retval  0 failure
+ * @retval !0 work handle
+ * @note  this function can be called from non-yos-main-loop context.
  */
-int yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2);
+void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2);
 
-void *yos_malloc(size_t);
-void yos_free(void *);
+/**
+ * @brief Cancel a work
+ * @param work work to be cancelled
+ * @param action action to be cancelled
+ * @param arg1 private data past to action
+ * @retval None
+ */
+void yos_cancel_work(void *work, yos_call_t action, void *arg1);
+
+struct pollfd;
+
+int yos_open(const char *path, int flags);
+int yos_close(int fd);
+ssize_t yos_read(int fd, void *buf, size_t nbytes);
+ssize_t yos_write(int fd, const void *buf, size_t nbytes);
+int yos_ioctl(int fd, int cmd, unsigned long arg);
+int yos_poll(struct pollfd *fds, int nfds, int timeout);
+int yos_fcntl(int fd, int cmd, int val);
 
 /** @} */ //end of Framework API
 

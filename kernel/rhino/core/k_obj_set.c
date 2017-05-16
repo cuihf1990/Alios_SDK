@@ -38,13 +38,13 @@ kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name, size_
         return YUNOS_NULL_PTR;
     }
 
-    kobj_set = soc_mm_alloc(sizeof(kobj_set_t));
+    kobj_set = yunos_mm_alloc(sizeof(kobj_set_t));
 
     if (kobj_set == NULL) {
         return YUNOS_NO_MEM;
     }
 
-    start = soc_mm_alloc(sizeof(void *)*msg_num);
+    start = yunos_mm_alloc(sizeof(void *)*msg_num);
 
     if (start == NULL) {
         return YUNOS_NO_MEM;
@@ -53,8 +53,8 @@ kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name, size_
     stat  = yunos_queue_create(&(kobj_set->queue), name, (void **)start, msg_num);
 
     if (stat != YUNOS_SUCCESS) {
-        soc_mm_free(kobj_set);
-        soc_mm_free(start);
+        yunos_mm_free(kobj_set);
+        yunos_mm_free(start);
         return stat;
     }
 
@@ -74,8 +74,8 @@ kstat_t yunos_kobj_set_dyn_del(kobj_set_t *handle)
     }
 
     stat = yunos_queue_del(&(handle->queue));
-    soc_mm_free((void *)((handle->queue).msg_q.queue_start));
-    soc_mm_free((void *)handle);
+    yunos_mm_free((void *)((handle->queue).msg_q.queue_start));
+    yunos_mm_free((void *)handle);
 
     return stat;
 }

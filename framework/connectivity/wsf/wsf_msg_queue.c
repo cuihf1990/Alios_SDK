@@ -1,0 +1,136 @@
+#include "wsf_config.h"
+#include "wsf_log.h"
+#include "wsf_msg_queue.h"
+#include "wsf.h"
+#include "yos/log.h"
+#include "os.h"
+
+extern wsf_list_node_t *wsf_list_pop_front(wsf_list_t *list);
+
+void wsf_msg_queue_init(wsf_request_queue_t **req_queue) {
+    wsf_request_queue_t *pqueue;
+
+    if (req_queue)
+        *req_queue = NULL;
+
+    pqueue = (wsf_request_queue_t *)malloc(sizeof(wsf_request_queue_t));
+    if ( NULL == pqueue )
+    {
+        LOGW(MODULE_NAME,"memory allocate fail.");
+        return;
+    }
+
+    memset(pqueue, 0, sizeof(wsf_request_queue_t));
+
+    pqueue->mutex = os_mutex_init();
+    if ( NULL == pqueue->mutex )
+    {
+        LOGW(MODULE_NAME,"create mutex fail.");
+        goto do_error;
+    }
+
+    pqueue->psem = os_semaphore_init();
+    if ( NULL == pqueue->psem )
+    {
+        LOGW(MODULE_NAME,"create semaphore fail.");
+        goto do_error;
+    }
+
+    dlist_init(&pqueue->list);
+    pqueue->length = 0;
+
+
+    if (req_queue)
+        *req_queue = pqueue;
+
+    return ;
+
+do_error:
+    wsf_msg_queue_destroy(pqueue);
+
+    return;
+}
+
+//destroy the queue
+void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
+{
+    if (!req_queue) {
+        return;
+    }
+
+    pthread_mutex_lock(req_queue->mutex);
+    dlist_t *list = &req_queue->list;
+
+    wsf_request_node_t *node, *next;
+    dlist_t *tmp = NULL;
+    dlist_for_each_entry_safe(list, tmp,node,wsf_request_node_t,list_head) {
+        if (node) {
+            wsf_msg_session_t session = node->session;
+            free(session.request);
+            free(session.response);
+            free(node);
+        }
+    }
+    pthread_mutex_unlock(req_queue->mutex);
+    pthread_mutex_destroy(req_queue->mutex);
+    os_semaphore_destroy(req_queue->psem);
+
+    free(req_queue);
+}
+
+int wsf_request_queue_push(wsf_request_queue_t * req_queue, wsf_request_node_t * req_node)
+{
+    if (!req_node || !req_queue || req_queue->length >= wsf_get_config()->max_msg_queue_length) {
+        LOGE(MODULE_NAME,"!!!wsf_request_queue_push err, length=%d", req_queue->length);
+        return -1;
+    }
+
+    pthread_mutex_lock(req_queue->mutex);
+    dlist_add(&req_node->list_head, &req_queue->list);
+    req_queue->length++;
+    pthread_mutex_unlock(req_queue->mutex);
+
+    return 0;
+}
+
+int wsf_request_queue_pop(wsf_request_queue_t * req_queue, wsf_request_node_t * req_node)
+{
+    if (!req_node || !req_queue || !req_queue->length) {
+        LOGE(MODULE_NAME,"!!!wsf_request_queue_pop err, length=%d", req_queue->length);
+        return -1;
+    }
+
+    pthread_mutex_lock(req_queue->mutex);
+    dlist_del(&req_node->list_head);
+    req_queue->length--;
+    pthread_mutex_unlock(req_queue->mutex);
+
+    return 0;
+}
+
+wsf_request_node_t *wsf_request_queue_trigger(wsf_request_queue_t * req_queue, wsf_msg_t * rsp)
+{
+    wsf_request_node_t *ret = NULL;
+    uint32_t msg_id = 0;
+
+    if (!req_queue || !rsp) {
+        LOGE(MODULE_NAME,"!!!wsf_request_queue_trigger error");
+        return ret;
+    }
+    memcpy(&msg_id, &rsp->header.msg_id, sizeof(uint32_t));
+
+    pthread_mutex_lock(req_queue->mutex);
+    dlist_t *list = &req_queue->list;
+    wsf_request_node_t *node = NULL;
+    dlist_for_each_entry(list, node, wsf_request_node_t, list_head) {
+        wsf_msg_session_t *session = &node->session;
+        if (session && session->id == msg_id) {
+            session->response = rsp;
+            ret = node;
+            break;
+        }
+    }
+    pthread_mutex_unlock(req_queue->mutex);
+
+    return ret;
+}

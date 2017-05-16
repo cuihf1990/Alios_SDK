@@ -16,6 +16,8 @@
 
 #include <k_api.h>
 
+extern k_mm_region_t g_mm_region;
+
 YUNOS_INLINE void rhino_stack_check_init(void)
 {
 #if (YUNOS_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
@@ -50,7 +52,8 @@ YUNOS_INLINE kstat_t rhino_init(void)
 #endif
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-    soc_sys_mem_init();
+    /* init memory region */
+    yunos_mm_region_init(&g_kmm_region_head,&g_mm_region,sizeof(g_mm_region)/sizeof(k_mm_region_t));
 
     yunos_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                        YUNOS_CONFIG_K_DYN_QUEUE_MSG);

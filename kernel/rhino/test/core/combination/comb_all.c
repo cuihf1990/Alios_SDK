@@ -29,7 +29,7 @@ static kevent_t event_comb_all;
 static kqueue_t queue_comb_all;
 
 #define TEST_MSG_SIZE   8
-void *queue1_msg_buff[TEST_MSG_SIZE];
+static void *queue1_msg_buff[TEST_MSG_SIZE];
 void *queue1_trigger_msg;
 
 #define MSG_SIGNATURE   0x5A

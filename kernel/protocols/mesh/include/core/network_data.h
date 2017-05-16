@@ -1,0 +1,76 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <stdbool.h>
+
+#include "core/lowpan6.h"
+#include "ipv6/ip6.h"
+#include "utilities/configs.h"
+#include "hal/interface_context.h"
+
+#ifndef UR_NETWORK_DATA_H
+#define UR_NETWORK_DATA_H
+
+enum {
+    STABLE_MAIN_VERSION_OFFSET = 5,
+    STABLE_MAIN_VERSION_MASK   = 0xe0,
+    STABLE_MINOR_VERSION_MASK  = 0x1f,
+};
+
+enum {
+    MCAST_NUM          = 1,
+    LOWPAN_CONTEXT_NUM = 1,
+};
+
+typedef struct stable_network_data_s {
+    uint8_t          main_version:3;
+    uint8_t          minor_version:5;
+    uint16_t         meshnetid;
+    uint8_t          channel;
+    ur_ip6_addr_t    mcast_addr[MCAST_NUM];
+    lowpan_context_t context[LOWPAN_CONTEXT_NUM];
+} stable_network_data_t;
+
+typedef void (* nd_update_handler_t)(bool stable);
+typedef struct nd_updater_s {
+    slist_t             next;
+    nd_update_handler_t handler;
+} nd_updater_t;
+
+ur_error_t nd_init(void);
+ur_error_t nd_register_update_handler(nd_updater_t *updater);
+ur_error_t nd_unregister_update_handler(nd_updater_t *handler);
+
+// stable network data
+ur_error_t nd_stable_set(stable_network_data_t *stable_network_data);
+ur_error_t nd_set_stable_main_version(uint8_t version);
+uint8_t nd_get_stable_main_version(void);
+uint8_t nd_get_stable_minor_version(void);
+uint16_t nd_get_stable_meshnetid(void);
+ur_error_t nd_set_stable_meshnetid(uint16_t meshnetid);
+const ur_ip6_addr_t *nd_get_subscribed_mcast(void);
+ur_error_t nd_set_subscribed_mcast(const ur_ip6_addr_t *addr);
+bool nd_is_subscribed_mcast(const ur_ip6_addr_t *addr);
+ur_error_t nd_get_ip6_prefix(ur_ip6_prefix_t *prefix);
+
+// network data
+ur_error_t nd_set(network_context_t *network, network_data_t *network_data);
+uint8_t nd_get_version(network_context_t *network);
+uint16_t nd_get_meshnetsize(network_context_t *network);
+ur_error_t nd_set_meshnetsize(network_context_t *network,
+                              uint32_t meshnetsize);
+
+#endif  /* UR_NETWORK_DATA_H */
