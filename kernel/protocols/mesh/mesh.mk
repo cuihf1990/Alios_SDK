@@ -35,3 +35,5 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/utilities/memory.c \
                    src/utilities/configs.c \
                    src/cli/cli.c
+
+GLOBAL_DEFINES += CONFIG_YOS_MESH

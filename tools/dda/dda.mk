@@ -10,3 +10,6 @@ $(NAME)_SOURCES := eloop.c \
                    hal.c \
                    config_parser.c \
                    master.c
+
+GLOBAL_DEFINES += CONFIG_YOS_DDA
+GLOBAL_DEFINES += CONFIG_YOS_DDM

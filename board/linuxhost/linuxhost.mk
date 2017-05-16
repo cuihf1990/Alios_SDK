@@ -26,7 +26,6 @@ $(NAME)_SOURCES     += soc/ysh_impl.c
 
 $(info $(COMPONENTS))
 ifneq (,$(filter protocols.net,$(COMPONENTS)))
-$(info "net is enabled")
 $(NAME)_SOURCES     += \
     csp/lwip/netif/delif.c \
     csp/lwip/netif/fifo.c \
@@ -36,15 +35,4 @@ $(NAME)_SOURCES     += \
     csp/lwip/netif/tunif.c
 
 $(NAME)_SOURCES     += csp/lwip/lwip_linuxhost.c
-endif
-
-ifneq (,$(filter dda,$(COMPONENTS)))
-$(info "dda is enabled")
-GLOBAL_DEFINES += CONFIG_YOS_DDA
-GLOBAL_DEFINES += CONFIG_YOS_DDM
-endif
-
-ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
-$(info "mesh is enabled")
-GLOBAL_DEFINES += CONFIG_YOS_MESH
 endif
