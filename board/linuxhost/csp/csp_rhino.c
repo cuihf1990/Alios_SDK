@@ -20,7 +20,8 @@
 #include <k_api.h>
 #include <csp.h>
 #include <poll.h>
-#include <hal/timer.h>
+#include <hal/soc/timer.h>
+
 
 #ifndef WITH_LWIP
 static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)
@@ -117,13 +118,20 @@ static void _timer_cb(void *timer, void *arg)
     tmr->cb(tmr->arg);
 }
 
-void hal_timer_init(hal_timer_t *tmr, unsigned first_us, unsigned period_us, hal_timer_cb_t cb, void *arg)
+void hal_timer_init(hal_timer_t *tmr, unsigned int period, unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg)
 {
+    (void)ch;
     bzero(tmr, sizeof(*tmr));
     tmr->cb = cb;
     tmr->arg = arg;
-    yunos_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
-                           us2tick(first_us), us2tick(period_us), tmr, 0);
+    if (auto_reload > 0u) {
+        yunos_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
+                                us2tick(period), us2tick(period), tmr, 0);
+    }
+    else {
+        yunos_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
+                                us2tick(period), 0, tmr, 0);
+    }
 }
 
 int hal_timer_start(hal_timer_t *tmr)

@@ -29,15 +29,15 @@ typedef struct {
 /**
  * @brief init a hardware timer
  * @param tmr timer struct
- * @param first_us micro seconds for first timer trigger
- * @param period_us micro seconds for repeat timer trigger
- *                  set to 0, if you just need oneshot timer
+ * @param period micro seconds for repeat timer trigger
+ * @param auto_reoad set to 0, if you just need oneshot timer
  * @param cb callback to be triggered after useconds
+ * @ch    timer channel
  * @param arg passed to cb
- * @note     first   period   period   period
+ * @note  period   auto   auto   auto
  *         *-------|--------|--------|--------|
  */
-void hal_timer_init(hal_timer_t *tmr, unsigned first_us, unsigned period_us, hal_timer_cb_t cb, void *arg);
+void hal_timer_init(hal_timer_t *tmr, unsigned int period, unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg);
 
 /**
  * @brief init a hardware timer

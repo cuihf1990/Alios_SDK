@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 #include <yos/list.h>
-#include <hal/timer.h>
+#include <hal/soc/timer.h>
 
 #include <yunit.h>
 #include <yts.h>
@@ -32,8 +32,7 @@ static void test_timer_case(void)
 {
     int counter = 0, old_counter;
     hal_timer_t t;
-    hal_timer_init(&t, 10000, 50000, test_timer_cb, &counter);
-
+    hal_timer_init(&t, 50000, 1, 0, test_timer_cb, &counter);
     yos_msleep(1000);
     YUNIT_ASSERT(counter == 0);
 
