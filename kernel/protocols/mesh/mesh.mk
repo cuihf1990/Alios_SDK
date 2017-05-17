@@ -10,10 +10,9 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/core/mesh/link_mgmt.c \
                    src/core/mesh/network_data.c \
                    src/core/mesh/mesh_forwarder.c \
-                   src/core/mesh/address_resolver.c \
+                   src/core/mesh/address_mgmt.c \
                    src/core/mesh/lowpan6.c \
                    src/core/mesh/mcast.c \
-                   src/core/mesh/address_cache.c \
                    src/core/routing/router_mgr.c \
                    src/core/routing/sid_router.c \
                    src/core/routing/vector_router.c \
