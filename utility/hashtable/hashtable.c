@@ -90,7 +90,7 @@ void ht_unlock(void *ht)
 {
     ht_t *p = (ht_t *)ht;
     if (p && p->locker) {
-        pthead_mutex_unlock(p->locker);
+        pthread_mutex_unlock(p->locker);
     }
 }
 
@@ -350,6 +350,35 @@ int ht_del(void *ht, const void *key, unsigned int len_key)
 }
 
 /**
+ * @brief polling the hashtable @ht and invoke the inte_func @func
+ *
+ * @param[in] ht: the hander of hashtable.
+ * @param[in] func: the deal function.
+ *
+ */
+void ht_iterator_lockless(void *ht, iter_func func, void *extra)
+{
+    int i = 0;
+    ht_t *pt = ht;
+    ht_item_t *item = NULL;
+
+    if (!pt || !func) {
+        return;
+    }
+
+    for (i = 0; i < pt->cnt; i++) {
+        item = pt->item + i;
+
+        while (item) {
+            if(item->key && item->val)
+                func(item->key, item->val, extra);
+            
+            item = item->next;
+        }
+    }
+}
+
+/**
  * @brief delete all the items in the @ht.
  *
  * @param[in] ht: the hander of hashtable.
@@ -413,7 +442,7 @@ int ht_destroy(void *ht)
 
     ht_unlock(pt);
 
-    pthead_mutex_destroy(pt->locker);
+    pthread_mutex_destroy(pt->locker);
     free(pt->locker);
     free(pt);
 
