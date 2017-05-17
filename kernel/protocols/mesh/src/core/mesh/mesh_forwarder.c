@@ -27,7 +27,7 @@
 #include "core/network_data.h"
 #include "core/mcast.h"
 #include "core/sid_allocator.h"
-#include "core/address_resolver.h"
+#include "core/address_mgmt.h"
 #include "core/keys_mgr.h"
 #include "core/link_mgmt.h"
 #include "utilities/logging.h"
@@ -38,7 +38,7 @@
 #include "ipv6/ip6.h"
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
-#include "diags/diags.h"
+#include "tools/diags.h"
 
 typedef void (*yos_call_t)(void *);
 extern int yos_schedule_call(yos_call_t f, void *arg);

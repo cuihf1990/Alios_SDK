@@ -609,9 +609,12 @@ void dda_cli_log(char *buf)
     send_data(&agent_info, TYPE_MISC, CMD_MISC_CLI, 0, buf, strlen(buf)+1);
 }
 
+extern void linuxhost_hal_urmesh_register(void);
 int dda_service_init(void) {
     if (agent_info.agent_id == -1ULL)
         return 0;
+
+    linuxhost_hal_urmesh_register();
 
     int ret;
     ret = create_socket();

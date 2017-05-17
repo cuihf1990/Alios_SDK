@@ -3,9 +3,9 @@
  */
 #include <stdio.h>
 
-#include <hal/hal.h>
-#include "umesh_hal.h"
 #include <yos/log.h>
+
+#include "umesh_hal.h"
 #include "msg.h"
 #include "packet.h"
 

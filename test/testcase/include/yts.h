@@ -22,8 +22,8 @@ void yts_run(int argc, char **argv);
 void osupdate_online_test_run(char *bin, int id2);
 
 #define check_cond_wait(cond, seconds) do { \
-    int i; \
-    for (i=0;i<seconds && !(cond);i++) { \
+    unsigned int i; \
+    for (i=0;i<(unsigned int)seconds && !(cond);i++) { \
         yos_msleep(1000); \
     } \
     YUNIT_ASSERT(cond); \
@@ -33,15 +33,6 @@ void osupdate_online_test_run(char *bin, int id2);
     int i; \
     for (i=0;i<times;i++, func); \
 } while(0);
-
-#define ut_init_service(arg) \
-    yos_schedule_call((yos_call_t)yos_init_one_service, arg)
-#define ut_deinit_service(arg) \
-    yos_schedule_call((yos_call_t)yos_deinit_one_service, arg)
-#define ut_start_service(arg) \
-    yos_schedule_call((yos_call_t)yos_start_one_service, arg)
-#define ut_stop_service(arg) \
-    yos_schedule_call((yos_call_t)yos_stop_one_service, arg)
 
 #endif /* YTS_H */
 

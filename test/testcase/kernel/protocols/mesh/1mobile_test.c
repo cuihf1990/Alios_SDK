@@ -8,7 +8,7 @@
 #include "core/sid_allocator.h"
 #include "utilities/logging.h"
 #include "utilities/encoding.h"
-#include "cli/cli.h"
+#include "tools/cli.h"
 
 #include "dda_util.h"
 

@@ -10,7 +10,7 @@
 #include "core/router_mgr.h"
 #include "utilities/logging.h"
 #include "utilities/encoding.h"
-#include "cli/cli.h"
+#include "tools/cli.h"
 
 #include "dda_util.h"
 
@@ -83,7 +83,7 @@ static void dual_if_topology_line_case(void)
     YUNIT_ASSERT(ipaddr != NULL);
     if (ipaddr) {
         snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping %s", ipaddr);
-        soc_mm_free(ipaddr);
+        yos_free(ipaddr);
 
         cmd_to_master(ping_cmd);
         check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);

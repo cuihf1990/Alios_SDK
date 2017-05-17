@@ -55,7 +55,6 @@ int dda_register_message_handler(int message_type, message_handler_t hdl, void *
 int dda_unregister_message_handler(int message_type, message_handler_t hdl, void *ctx);
 
 #include "umesh_hal.h"
-#include "hal/hal.h"
 
 typedef void (*dda_p2p_cb)(const char *, int, void *);
 void dda_p2p_request(int dst_id, const char *cmd, dda_p2p_cb cb, void *cb_data);

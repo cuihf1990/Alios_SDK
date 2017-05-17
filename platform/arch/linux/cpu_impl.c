@@ -24,10 +24,6 @@
 
 #include <yos/kernel.h>
 
-#ifdef CONFIG_YOS_LPM
-#include <hal/hal.h>
-#endif
-
 #include <cpu_event.h>
 #include <cpu_longjmp.h>
 #include <k_api.h>
@@ -388,7 +384,7 @@ void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
 extern uint32_t lpm_sleep_time;
 void cpu_lpm_wait(void)
 {
-    hal_time_msleep(lpm_sleep_time);
+    yos_msleep(lpm_sleep_time);
 }
 
 void cpu_lpm_doze(void)
