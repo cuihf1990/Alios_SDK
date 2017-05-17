@@ -16,7 +16,6 @@
 
 #include <string.h>
 
-#include "hal/hal.h"
 #include "utilities/configs.h"
 
 enum {

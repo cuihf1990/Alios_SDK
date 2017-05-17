@@ -20,7 +20,7 @@
 
 #include <csp.h>
 #include <yos/kernel.h>
-#include <hal/hal.h>
+#include <hal/soc/hal.h>
 #include <poll.h>
 #include <k_api.h>
 

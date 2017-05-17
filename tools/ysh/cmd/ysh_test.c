@@ -15,7 +15,6 @@
  */
 
 #include "ysh.h"
-#include <hal/hal.h>
 #include <hal/platform.h>
 #include <yos/conf.h>
 #include <yos/log.h>
