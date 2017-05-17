@@ -27,7 +27,7 @@
 #include "core/network_data.h"
 #include "core/mcast.h"
 #include "core/sid_allocator.h"
-#include "core/address_resolver.h"
+#include "core/address_mgmt.h"
 #include "core/keys_mgr.h"
 #include "core/link_mgmt.h"
 #include "utilities/logging.h"

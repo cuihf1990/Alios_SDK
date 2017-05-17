@@ -21,11 +21,12 @@
 
 #include "core/sid_allocator.h"
 #include "core/mesh_forwarder.h"
-#include "core/sid_allocator.h"
 #include "hal/interface_context.h"
 
 enum {
     UR_MESH_ADDRESS_CACHE_SIZE = 8,
+
+    ADDR_CACHE_CHECK_INTERVAL = 60000,  /* 1 mins */
 };
 
 typedef enum {
@@ -35,7 +36,7 @@ typedef enum {
 } cache_state_t;
 
 typedef struct address_cache_s {
-    uint8_t       ueid[8];
+    uint8_t       ueid[EXT_ADDR_SIZE];
     uint16_t      meshnetid;
     uint16_t      sid;
     uint16_t      attach_sid;
@@ -69,5 +70,15 @@ ur_error_t handle_address_notification(message_t *message);
 
 ur_error_t send_address_notification(network_context_t *network,
                                      ur_addr_t *dest);
+
+void start_addr_cache(void);
+void stop_addr_cache(void);
+
+ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
+                                ur_node_id_t *attach);
+
+void get_attach_by_nodeid(ur_node_id_t *attach, ur_node_id_t *target);
+void get_attach_by_addr(ur_node_id_t *attach, ur_addr_t *target);
+void get_target_by_ueid(ur_node_id_t *node_id, uint8_t *ueid);
 
 #endif  /* UR_AR_H */
