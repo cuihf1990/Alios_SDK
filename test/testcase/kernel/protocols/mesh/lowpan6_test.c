@@ -197,117 +197,155 @@ void test_uradar_6lowpan_case(void)
     message_t *reass_pkt = NULL;
     uint8_t   *data;
     uint16_t  size = 256, length = 96, offset = 0;
+    message_info_t *info;
 
     message = message_alloc(length + sizeof(frag_header_t) - 1);
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xC0 | ((size & 0x0700) >> 8); /* FRAG_1 packet from 0x1000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x01;
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x1000;
     YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(NULL, &reass_pkt));
-    YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
 
     message = message_alloc(length + sizeof(frag_header_t) - 1);
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xC0 | ((size & 0x0700) >> 8); /* repeated FRAG_1 packet from 0x1000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x01;
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x1000;
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    message_free(message);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1);
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xC0 | ((size & 0x0700) >> 8); /* FRAG_1 packet from 0x2000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x02;
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     offset = length;
     message = message_alloc(length + sizeof(frag_header_t));
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xE0 | ((size & 0x0700) >> 8); /* FRAG_N packet from 0x2000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x02;
     data[4] = (offset >> 3);
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     message = message_alloc(length + sizeof(frag_header_t));
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xE0 | ((size & 0x0700) >> 8); /* repeated FRAG_N packet from 0x2000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x02;
     data[4] = (offset >> 3);
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    message_free(message);
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     offset += length;
     message = message_alloc(size - 2 * length + sizeof(frag_header_t));
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xE0 | ((size & 0x0700) >> 8); /* FRAG_N packet from 0x2000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x02;
     data[4] = (offset >> 3);
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NOT_NULL(reass_pkt);
 
     offset += length;
     message = message_alloc(length + sizeof(frag_header_t));
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xE0 | ((size & 0x0700) >> 8); /*rougue FRAG_N packet from 0x2000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x03;
     data[4] = (offset >> 3);
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    message_free(message);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1);
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xC0 | ((size & 0x0700) >> 8); /* FRAG_1 packet from 0x2000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x04;
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     offset += length;
     offset += length; /* pack with unexpected offset */
     message = message_alloc(size - 2 * length + sizeof(frag_header_t));
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xE0 | ((size & 0x0700) >> 8); /* FRAG_N packet from 0x2000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x04;
     data[4] = (offset >> 3);
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    message_free(message);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1);
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xC0 | ((size & 0x0700) >> 8); /* FRAG_1 packet from 0x3000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x02;
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x3000;
     YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1);
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xC0 | ((size & 0x0700) >> 8); /* FRAG_1 packet from 0x4000 */
     data[1] = size & 0xff;
     data[2] = 0x00;
     data[3] = 0x02;
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = 0x4000;
     YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     message = message_alloc(length + sizeof(frag_header_t));
+    info = message->info;
     data = message_get_payload(message);
     data[0] = 0xA0 | ((size & 0x0700) >> 8); /* packet with wrong DISPATCH */
     data[1] = size & 0xff;
@@ -315,7 +353,9 @@ void test_uradar_6lowpan_case(void)
     data[3] = 0x02;
     data[4] = (offset >> 3);
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    message_free(message);
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
+    message_free(reass_pkt);
     yos_msleep(6000); /* wait timer_hanlder to clean up incomplete fragments */
 }
