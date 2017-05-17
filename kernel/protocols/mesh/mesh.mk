@@ -21,7 +21,6 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/core/routing/rsid_allocator.c \
                    src/core/security/dtls.c \
                    src/core/security/keys_mgr.c \
-                   src/diags/diags.c \
                    src/ipv6/lwip_adapter.c \
                    src/ipv6/ip6_address.c \
                    src/ipv6/lwip_ip6.c \
@@ -34,6 +33,7 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/utilities/mac_whitelist.c \
                    src/utilities/memory.c \
                    src/utilities/configs.c \
-                   src/cli/cli.c
+                   src/tools/diags.c \
+                   src/tools/cli.c
 
 GLOBAL_DEFINES += CONFIG_YOS_MESH

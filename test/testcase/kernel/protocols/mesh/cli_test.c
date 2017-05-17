@@ -1,6 +1,6 @@
 #include "yunit.h"
 
-#include "cli/cli.h"
+#include "tools/cli.h"
 
 extern void hal_arch_time_msleep(int ms);
 extern void ur_ut_send_cmd_to_ddm(const char *cmd);

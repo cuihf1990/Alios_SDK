@@ -10,7 +10,7 @@
 #include "utilities/logging.h"
 #include "utilities/encoding.h"
 #include "hal/hals.h"
-#include "cli/cli.h"
+#include "tools/cli.h"
 
 #include "dda_util.h"
 

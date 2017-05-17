@@ -38,7 +38,7 @@
 #include "ipv6/ip6.h"
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
-#include "diags/diags.h"
+#include "tools/diags.h"
 
 typedef void (*yos_call_t)(void *);
 extern int yos_schedule_call(yos_call_t f, void *arg);

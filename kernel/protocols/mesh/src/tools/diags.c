@@ -17,8 +17,8 @@
 #include "core/mesh_mgmt_tlvs.h"
 #include "core/mesh_mgmt.h"
 #include "utilities/logging.h"
-#include "diags/diags.h"
 #include "hal/interfaces.h"
+#include "tools/diags.h"
 
 static ur_error_t send_trace_route_response(network_context_t *network,
                                             ur_addr_t *dest,
