@@ -33,9 +33,9 @@
 #include "utilities/logging.h"
 #include "ipv6/ip6.h"
 #include "hal/interfaces.h"
-#include "cli/cli.h"
-#include "cli/cli_serial.h"
-#include "diags/diags.h"
+#include "tools/cli.h"
+#include "tools/diags.h"
+#include "tools/cli_serial.h"
 
 extern int yos_schedule_call(void (*action)(void *), void *arg);
 extern mm_device_state_t mm_get_local_device_state(void);

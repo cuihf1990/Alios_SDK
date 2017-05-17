@@ -7,7 +7,7 @@
 #include "core/link_mgmt.h"
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
-#include "cli/cli.h"
+#include "tools/cli.h"
 
 #include "dda_util.h"
 

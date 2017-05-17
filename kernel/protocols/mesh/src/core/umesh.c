@@ -35,7 +35,7 @@
 #include "utilities/encoding.h"
 #include "utilities/mac_whitelist.h"
 #include "hal/interfaces.h"
-#include "cli/cli.h"
+#include "tools/cli.h"
 
 typedef void (*yos_call_t)(void *);
 extern int yos_schedule_call(yos_call_t f, void *arg);

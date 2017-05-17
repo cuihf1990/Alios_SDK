@@ -5,7 +5,7 @@
 #include "utilities/logging.h"
 #include "utilities/encoding.h"
 #include "utilities/message.h"
-#include "cli/cli.h"
+#include "tools/cli.h"
 
 #include "dda_util.h"
 

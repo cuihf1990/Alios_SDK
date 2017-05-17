@@ -9,10 +9,10 @@
 #include "core/router_mgr.h"
 #include "utilities/encoding.h"
 #include "utilities/logging.h"
-#include "cli/cli.h"
 #include "hal/hals.h"
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
+#include "tools/cli.h"
 
 #include "dda_util.h"
 
