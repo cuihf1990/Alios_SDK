@@ -14,16 +14,11 @@
  * limitations under the License.
  */
 
-#include <hal/hal.h>
+#include <yts.h>
 
-int yoc_hal_init()
+int application_start(int argc, char **argv)
 {
-    int err = 0;
-
-    if ((err = hal_sensor_init()) != 0) {
-        return err;
-    }
-
-    return err;
+    yts_run(argc, argv);
+    exit(0);
 }
 
