@@ -1,188 +1,89 @@
-#include "service.h"
-#include "log.h"
-#include "os.h"
-#include "log.h"
+#include "yos/log.h"
 #include "os.h"
 #include "kvmgr.h"
-#include "crc.h"
 #include "digest_algorithm.h"
+#include "crc.h"
+#include "hashtable.h"
 
 #define KV_BUFFER_SIZE  (128 * 1024)
-#define KVFILE_NAME "KVfile"
-#define KVFILE_NAME_BACKUP "KVfile_backup"
+#define INT2BYTE(p,value) \
+    *p ++ = value & 0xff, \
+*p ++ = (value >> 8) & 0xff, \
+*p ++ = (value >> 16) & 0xff, \
+*p ++ = (value >> 24) & 0xff
 
-char *alink_base64_encode_alloc(void *data, int len);
-static HashNode *hashTable[HASH_TABLE_MAX_SIZE] = { NULL };
+#define BYTE2INT(p, value) \
+    value = (*p ++ & 0xff), \
+value |= ((*p ++ << 8) & 0xff00), \
+value |= ((*p ++ << 16) & 0xff0000), \
+value |= ((*p ++ << 24) & 0xff000000)
 
-static int hash_table_size;
-static void *kv_mutex = NULL;
-
-static void hash_table_init();
-static int hash_table_insert(const char *skey, const char *cvalue, int len, int inflash, int sync);
-static int hash_table_remove(const char *skey);
-static HashNode *hash_table_lookup(const char *skey);
-static void hash_table_print();
-static void hash_table_release();
+static void *g_ht = NULL; 
+static void *g_mutex = NULL;
 static void save_key_value();
 
-void hash_table_init()
-{
-    hash_table_size = 0;
-    memset(hashTable, 0, sizeof(HashNode *) * HASH_TABLE_MAX_SIZE);
-}
+typedef struct{
+    char *key;
+    char *val;
+    uint16_t len_val; 
+    uint8_t sync;
+}kv_item_t;
 
-unsigned int hash_table_hash_str(const char *skey)
+
+#define MODULE_NAME_KV "kv"
+
+static kv_item_t *new_kv_item(const char *skey, const char *cvalue, int nlength, int sync)
 {
-    const signed char *p = (const signed char *)skey;
-    unsigned int h = *p;
-    if (h) {
-        for (p += 1; *p != '\0'; ++p)
-            h = (h << 5) - h + *p;
+    kv_item_t *new = NULL;
+
+    if(!skey || !cvalue)
+        return NULL;
+
+    new = os_malloc(sizeof(kv_item_t));
+    if(!new)
+        return NULL;
+    memset(new,0,sizeof(kv_item_t));
+    new->key = os_malloc(strlen(skey)+1);
+    if(!new->key){
+        os_free(new);
+        return NULL;
     }
-    return h;
+    memcpy(new->key,skey,strlen(skey)+1);
+
+    new->val = os_malloc(nlength);
+    if(!new->val){
+        os_free(new->key);
+        os_free(new);
+        return NULL;
+    }
+    memcpy(new->val,cvalue,nlength);
+    new->len_val = nlength;
+    new->sync = sync;
+
+    return new;
 }
 
-int hash_table_insert(const char *skey, const char *cvalue, int nlength, int inflash, int sync)
+static int hash_table_insert(const char *skey, const char *cvalue, int nlength, int sync)
 {
+    kv_item_t *new = NULL;
+    int ret = -1;
+
     if (strlen(skey) > MAX_KV_LEN || nlength > MAX_KV_LEN) {
-        LOGI("key/value too long!");
-        return SERVICE_RESULT_ERR;
+        LOGI(MODULE_NAME_KV,"key/value too long!");
+        return ret;
     }
 
-    if (hash_table_size >= HASH_TABLE_MAX_SIZE) {
-        LOGI("out of hash table memory!");
-        return SERVICE_RESULT_ERR;
-    }
-    unsigned int pos = hash_table_hash_str(skey) % HASH_TABLE_MAX_SIZE;
+    new = new_kv_item(skey,cvalue,nlength,sync);
 
-    platform_mutex_lock(kv_mutex);
-    HashNode *pHead = hashTable[pos];
-    while (pHead) {
-        if (strcmp(pHead->sKey, skey) == 0) {
-            if (pHead->nLength == nlength && !memcmp(pHead->cValue, cvalue, nlength)) {
-                LOGI("%s already exists!", skey);
-                platform_mutex_unlock(kv_mutex);
-                return SERVICE_RESULT_OK;
-            } else {
-                if (pHead->cValue)
-                    os_free(pHead->cValue);
+    if(!new)
+        return ret;
 
-                pHead->cValue = (char *)os_malloc(nlength);
-                if (pHead->cValue == NULL) {
-                    platform_mutex_unlock(kv_mutex);
-                    return SERVICE_RESULT_ERR;
-                }
-                pHead->nLength = nlength;
-                memcpy(pHead->cValue, cvalue, nlength);
-                if (sync == 1)
-                    save_key_value();
-                platform_mutex_unlock(kv_mutex);
-                return SERVICE_RESULT_OK;
-            }
-        }
-        pHead = pHead->pNext;
-    }
-
-    HashNode *pNewNode = (HashNode *) os_malloc(sizeof(HashNode));
-    memset(pNewNode, 0, sizeof(HashNode));
-    pNewNode->sKey = (char *)os_malloc(sizeof(char) * (strlen(skey) + 1));
-    strcpy(pNewNode->sKey, skey);
-
-    pNewNode->cValue = (char *)os_malloc(nlength);
-    if (pNewNode->cValue == NULL) {
-        platform_mutex_unlock(kv_mutex);
-        return SERVICE_RESULT_ERR;
-    }
-    memcpy(pNewNode->cValue, cvalue, nlength);
-    pNewNode->nLength = nlength;
-    pNewNode->inflash = inflash;
-    pNewNode->pNext = hashTable[pos];
-    hashTable[pos] = pNewNode;
-
-    hash_table_size++;
-
-    if (sync == 1)
+    ret = ht_add_lockless(g_ht,skey,strlen(skey)+1,&new,sizeof(new)); 
+    if (0 == ret && 1 == sync)
         save_key_value();
-    platform_mutex_unlock(kv_mutex);
 
-    return SERVICE_RESULT_OK;
-}
-
-int hash_table_remove(const char *skey)
-{
-    unsigned int pos = hash_table_hash_str(skey) % HASH_TABLE_MAX_SIZE;
-
-    platform_mutex_lock(kv_mutex);
-    if (hashTable[pos]) {
-        HashNode *pHead = hashTable[pos];
-        HashNode *pLast = NULL;
-        HashNode *pRemove = NULL;
-        while (pHead) {
-            if (strcmp(skey, pHead->sKey) == 0) {
-                pRemove = pHead;
-                break;
-            }
-            pLast = pHead;
-            pHead = pHead->pNext;
-        }
-        if (pRemove) {
-            if (pLast)
-                pLast->pNext = pRemove->pNext;
-            else
-                hashTable[pos] = pRemove->pNext;
-
-            hash_table_size--;
-            os_free(pRemove->sKey);
-            os_free(pRemove->cValue);
-            os_free(pRemove);
-            pRemove = NULL;
-        } else {
-            LOGI("key/value no exists");
-            platform_mutex_unlock(kv_mutex);
-            return SERVICE_RESULT_ERR;
-        }
-    }
-
-    save_key_value();
-    platform_mutex_unlock(kv_mutex);
-
-    return SERVICE_RESULT_OK;
-}
-
-HashNode *hash_table_lookup(const char *skey)
-{
-    unsigned int pos = hash_table_hash_str(skey) % HASH_TABLE_MAX_SIZE;
-
-    platform_mutex_lock(kv_mutex);
-
-    if (hashTable[pos]) {
-        HashNode *pHead = hashTable[pos];
-        while (pHead) {
-            if (strcmp(skey, pHead->sKey) == 0) {
-                platform_mutex_unlock(kv_mutex);
-                return pHead;
-            }
-            pHead = pHead->pNext;
-        }
-    }
-    platform_mutex_unlock(kv_mutex);
-    return NULL;
-}
-
-void hash_table_print()
-{
-    int i;
-
-    platform_mutex_lock(kv_mutex);
-    for (i = 0; i < HASH_TABLE_MAX_SIZE; ++i) {
-        if (hashTable[i]) {
-            HashNode *pHead = hashTable[i];
-            while (pHead) {
-                pHead = pHead->pNext;
-            }
-        }
-    }
-    platform_mutex_unlock(kv_mutex);
+    LOGD(MODULE_NAME_KV,"sel kv, key: %s, %p-%p-%p\n",skey,new,new->key,new->val);
+    return ret;
 }
 
 static int load_kvfile(const char *file, char *buffer, int buffer_len)
@@ -193,26 +94,26 @@ static int load_kvfile(const char *file, char *buffer, int buffer_len)
 
     filepath = (char *)os_malloc(STR_LONG_LEN);
     OS_CHECK_MALLOC(filepath);
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", os_get_storage_directory(), file);
+    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, file);
 
     fd = fopen(filepath, "r+");
     if (!fd) {
-        LOGI("%s not exist", file);
+        LOGI(MODULE_NAME_KV,"%s not exist", file);
         goto exit;
     }
     fseek(fd, 0L, SEEK_END);
     fsize = ftell(fd);
     fseek(fd, 0L, SEEK_SET);
     if (fsize > buffer_len || fsize == 0) {
-        LOGI("file size too large or file null");
+        LOGI(MODULE_NAME_KV,"file size too large or file null");
         goto exit;
     }
 
     if (!(fsize = fread(buffer, 1, fsize, fd))) {
-        LOGI("read KVfile failed");
+        LOGI(MODULE_NAME_KV,"read KVfile failed");
         goto exit;
     }
-    LOGI("file size %d", fsize);
+    LOGI(MODULE_NAME_KV,"file size %d", fsize);
 
 exit:
     if (fd)
@@ -230,16 +131,16 @@ static int update_kvfile(const char *file, char *buffer, int filelen)
 
     filepath = (char *)os_malloc(STR_LONG_LEN);
     OS_CHECK_MALLOC(filepath);
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", os_get_storage_directory(), file);
+    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, file);
 
     FILE *fd = fopen(filepath, "w+");
     if (!fd) {
-        LOGI("open %s failed", file);
+        LOGI(MODULE_NAME_KV,"open %s failed", file);
         goto exit;
     }
 
     if (!fwrite(buffer, 1, filelen, fd)) {
-        LOGI("write %s failed", file);
+        LOGI(MODULE_NAME_KV,"write %s failed", file);
     } else {
         ret = 0;
     }
@@ -260,11 +161,11 @@ static int restore_kvfile(const char *src_file, const char *dst_file)
 
     filepath = (char *)os_malloc(STR_LONG_LEN);
     OS_CHECK_MALLOC(filepath);
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", os_get_storage_directory(), src_file);
+    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, src_file);
 
     fd_src = fopen(filepath, "r+");
     if (!fd_src) {
-        LOGI("open %s failed", src_file);
+        LOGI(MODULE_NAME_KV,"open %s failed", src_file);
         goto exit;
     }
     fseek(fd_src, 0L, SEEK_END);
@@ -274,10 +175,10 @@ static int restore_kvfile(const char *src_file, const char *dst_file)
     buffer = (char *)os_malloc(fsize);
     OS_CHECK_MALLOC(buffer);
 
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", os_get_storage_directory(), dst_file);
+    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, dst_file);
     fd_dst = fopen(filepath, "w+");
     if (!fd_dst) {
-        LOGI("open %s failed", dst_file);
+        LOGI(MODULE_NAME_KV,"open %s failed", dst_file);
         goto exit;
     }
 
@@ -286,7 +187,7 @@ static int restore_kvfile(const char *src_file, const char *dst_file)
     if (ret == fsize) {
         if ((ret = fwrite(buffer, 1, fsize, fd_dst)) == fsize) {
             ret = 0;
-            LOGI("restore key/value success");
+            LOGI(MODULE_NAME_KV,"restore key/value success");
         }
     } else {
         ret = -1;
@@ -313,23 +214,23 @@ static int check_file_same(const char *src_file, const char *dst_file)
 
     filepath = (char *)os_malloc(STR_LONG_LEN);
     OS_CHECK_MALLOC(filepath);
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", os_get_storage_directory(), src_file);
+    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, src_file);
 
     memset(md5_src, 0, sizeof(md5_src));
     memset(md5_dst, 0, sizeof(md5_dst));
     if (digest_md5_file(filepath, (uint8_t *)md5_src) != 0) {
-        LOGI("getting the MD5 of file %s is failed", filepath);
+        LOGI(MODULE_NAME_KV,"getting the MD5 of file %s is failed", filepath);
         goto exit;
     }
 
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", os_get_storage_directory(), dst_file);
+    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, dst_file);
     if (digest_md5_file(filepath, (uint8_t *)md5_dst) != 0) {
-        LOGI("getting the MD5 of file %s is failed", filepath);
+        LOGI(MODULE_NAME_KV,"getting the MD5 of file %s is failed", filepath);
         goto exit;
     }
 
     if (!strncmp(md5_src, md5_dst, sizeof(md5_src))) {
-        LOGI("the files(KVfile, KVfile_backup) are same");
+        LOGI(MODULE_NAME_KV,"the files(KVfile, KVfile_backup) are same");
         ret = 0;
     }
 
@@ -340,46 +241,59 @@ exit:
     return ret;
 }
 
+typedef struct{
+    char *p;
+    int len;
+}kv_storeage_t;
+static void *__get_kv_inflash_cb(void *key, void *val, void *extra)
+{
+    kv_item_t *item = NULL;
+    kv_storeage_t *store = extra;
+    int len = 0;
+
+    item = *((kv_item_t **)val);
+
+    len = strlen(item->key);
+    INT2BYTE(store->p, len);
+    store->len += 4;
+
+    memcpy(store->p, item->key, len);
+    store->len += len;
+    store->p += len;
+
+    INT2BYTE(store->p, item->len_val);
+    store->len += 4;
+    memcpy(store->p, item->val, item->len_val);
+
+    store->p += item->len_val;
+    store->len += item->len_val;
+
+    return NULL;
+}
+
 static void save_key_value()
 {
-    int i, len = 0, filelen = 0;
-    char *p, *kv_buffer;
+    char *kv_buffer,*p;
+    kv_storeage_t store;
 
-    kv_buffer = (char *)os_malloc(KV_BUFFER_SIZE);
-    OS_CHECK_MALLOC(kv_buffer);
+    store.p = (char *)os_malloc(KV_BUFFER_SIZE);
+    OS_CHECK_MALLOC(store.p);
 
-    p = kv_buffer + 4;
-    for (i = 0; i < HASH_TABLE_MAX_SIZE; ++i) {
-        if (hashTable[i]) {
-            HashNode *pHead = hashTable[i];
-            while (pHead && pHead->inflash == INFLASH) {
-                len = strlen(pHead->sKey);
-                INT2BYTE(p, len);
-                filelen += 4;
-                memcpy(p, pHead->sKey, len);
-                filelen += len;
-                p += len;
-                INT2BYTE(p, pHead->nLength);
-                filelen += 4;
-                memcpy(p, pHead->cValue, pHead->nLength);
-                p += pHead->nLength;
-                filelen += pHead->nLength;
-                pHead = pHead->pNext;
-            }
-        }
-    }
+    kv_buffer = store.p;
+    store.len = 0; 
+    store.p += 4; 
+    ht_iterator_lockless(g_ht,__get_kv_inflash_cb,&store); 
 
     p = kv_buffer + 4;
-    uint32_t crc32_value = utils_crc32((uint8_t *)p, filelen);
-    p = kv_buffer;
+    uint32_t crc32_value = utils_crc32((uint8_t *)p, store.len);
+    p -= 4;
     INT2BYTE(p, crc32_value);
-    filelen += 4;
+    store.len += 4;
 
-    if (!update_kvfile(KVFILE_NAME, kv_buffer, filelen)) {
-        update_kvfile(KVFILE_NAME_BACKUP, kv_buffer, filelen);
+    if (!update_kvfile(KVFILE_NAME, kv_buffer, store.len)) {
+        update_kvfile(KVFILE_NAME_BACKUP, kv_buffer, store.len);
     }
     os_free(kv_buffer);
-    return;
 }
 
 static int load_key_value(const char *file)
@@ -396,7 +310,7 @@ static int load_key_value(const char *file)
 
     fsize = load_kvfile(file, kv_buffer, KV_BUFFER_SIZE);
     if (fsize == 0) {
-        LOGI("read kvfile failed");
+        LOGI(MODULE_NAME_KV,"read kvfile failed");
         goto exit;
     }
 
@@ -404,10 +318,11 @@ static int load_key_value(const char *file)
     BYTE2INT(p, crc32_value);
     fsize -= 4;
     if (crc32_value != utils_crc32((uint8_t *)p, fsize)) {
-        LOGI("KV file is not complete");
+        LOGI(MODULE_NAME_KV,"KV file is not complete");
         goto exit;
     }
 
+    ht_lock(g_ht);
     while (fsize) {
         BYTE2INT(p, len);
         memcpy(key, p, len);
@@ -418,10 +333,9 @@ static int load_key_value(const char *file)
         memcpy(value, p, len);
         p += len;
         fsize -= (len + 4);
-        ret = hash_table_insert(key, value, len, INFLASH, 0);
+        ret = hash_table_insert(key, value, len, 0);
     }
-    hash_table_print();
-
+    ht_unlock(g_ht);
 exit:
     if(key)
         os_free(key);
@@ -433,142 +347,17 @@ exit:
     return ret;
 }
 
-//os_free the memory of the hash table
-void hash_table_release()
-{
-    int i;
-
-    platform_mutex_lock(kv_mutex);
-    for (i = 0; i < HASH_TABLE_MAX_SIZE; ++i) {
-        if (hashTable[i]) {
-            HashNode *pHead = hashTable[i];
-            while (pHead) {
-                HashNode *pTemp = pHead;
-                pHead = pHead->pNext;
-                if (pTemp) {
-                    os_free(pTemp->sKey);
-                    os_free(pTemp->cValue);
-                    os_free(pTemp);
-                }
-
-            }
-        }
-    }
-    platform_mutex_unlock(kv_mutex);
-}
-
-#define MAX_STR_LEN 20
-#define MIN_STR_LEN 10
-
-void rand_str(char r[])
-{
-    int i;
-    int len = MIN_STR_LEN + rand() % (MAX_STR_LEN - MIN_STR_LEN);
-    for (i = 0; i < len - 1; ++i)
-        r[i] = 'a' + rand() % ('z' - 'a');
-    r[len - 1] = '\0';
-}
-
-int rand_value(char r[])
-{
-    int i;
-    int len = MIN_STR_LEN + rand() % (MAX_STR_LEN - MIN_STR_LEN);
-    for (i = 0; i < len - 1; ++i) {
-        r[i] = rand() % 0x7f;
-    }
-    return len - 1;
-}
-
-static char a2x(char ch)
-{
-    switch (ch) {
-        case '1':
-            return 1;
-        case '2':
-            return 2;
-        case '3':
-            return 3;
-        case '4':
-            return 4;
-        case '5':
-            return 5;
-        case '6':
-            return 6;
-        case '7':
-            return 7;
-        case '8':
-            return 8;
-        case '9':
-            return 9;
-        case 'A':
-        case 'a':
-            return 10;
-        case 'B':
-        case 'b':
-            return 11;
-        case 'C':
-        case 'c':
-            return 12;
-        case 'D':
-        case 'd':
-            return 13;
-        case 'E':
-        case 'e':
-            return 14;
-        case 'F':
-        case 'f':
-            return 15;
-        default:
-            break;;
-    }
-    return 0;
-}
-
-void *alink_base64_decode_alloc(const char *str, int *len)
-{
-    int i = 0;
-    int str_len = strlen(str);
-    char *buf = (char *)os_malloc(str_len * sizeof(char));
-
-    while (i <= str_len) {
-        buf[i / 2] = (a2x(str[i]) << 4) | a2x(str[i + 1]);
-        i += 2;
-    }
-    buf[i / 2] = '\0';
-    *len = i / 2;
-
-    return buf;
-}
-
-static char base64_buffer[512];
-
-char *alink_base64_encode_alloc(void *data, int len)
-{
-    int i;
-    unsigned char *ptr = (unsigned char *)data;
-
-    for (i = 0; i < len; i++) {
-        sprintf(base64_buffer + 2 * i, "%02X", ptr[i]);
-    }
-    base64_buffer[len * 2] = '\0';
-
-    return base64_buffer;
-}
-
-void alink_base64_release(void *data)
-{
-    os_free(data);
-}
-
-int init_kv()
+int yos_kv_init()
 {
     int ret = -1;
 
-    kv_mutex = platform_mutex_init();
-    hash_table_init();
+    if(g_ht)
+        return ret;
+
+    g_ht = ht_init(HASH_TABLE_MAX_SIZE); 
 
     if ((ret = load_key_value(KVFILE_NAME)) != 0) {
-        LOGI("load backup key/value file");
+        LOGI(MODULE_NAME_KV,"load backup key/value file");
         if ((ret = load_key_value(KVFILE_NAME_BACKUP)) == 0) {
             ret = restore_kvfile(KVFILE_NAME_BACKUP, KVFILE_NAME);
         }
@@ -580,41 +369,86 @@ int init_kv()
     return ret;
 }
 
-void deinit_kv()
+static void *__del_all_kv_cb(void *key, void *val, void *extra)
 {
-    hash_table_release();
-    platform_mutex_destroy(kv_mutex);
+    kv_item_t *item = NULL;
+
+    item = *((kv_item_t **)val);
+
+    LOGD(MODULE_NAME_KV,"del kv, key: %s, %p-%p-%p\n",key,item,item->key,item->val);
+    os_free(item->val);
+    os_free(item->key);
+    os_free(item);
+    
+    return NULL;
 }
 
-int set_kv_in_flash(const char *key, const void *value, int len, int sync)
+void yos_kv_deinit()
 {
-    if (len <= 0)
-        return SERVICE_RESULT_ERR;
-    return hash_table_insert(key, value, len, INFLASH, sync);
+    if(!g_ht)
+        return;
+    
+    ht_lock(g_ht);
+    ht_iterator_lockless(g_ht,__del_all_kv_cb,NULL); 
+    ht_unlock(g_ht);
+    ht_destroy(g_ht);
+    g_ht = NULL;
 }
 
-int get_kv(const char *key, char *buffer, int *buffer_len)
+int yos_kv_set(const char *key, const void *value, int len, int sync)
 {
-    HashNode *node;
+    int ret = 0;
 
-    node = hash_table_lookup(key);
-    if (node == NULL || *buffer_len < node->nLength) {
-        return SERVICE_RESULT_ERR;
+    if (!key || !value || len <= 0)
+        return -1;
+    ht_lock(g_ht);
+    ret = hash_table_insert(key, value, len, sync);
+    ht_unlock(g_ht); 
+    
+    return ret; 
+}
+
+int yos_kv_get(const char *key, char *buffer, int *buffer_len)
+{
+    kv_item_t *item = NULL;
+    void *ret = NULL;
+
+    ret = ht_find(g_ht,key,strlen(key)+1,NULL,NULL); 
+    if(!ret)
+        return -1;
+
+    item = *((kv_item_t **)ret);
+    if (*buffer_len < item->len_val) {
+        *buffer_len = item->len_val;
+        return -1;
     } else {
-        memcpy(buffer, node->cValue, node->nLength);
-        *buffer_len = node->nLength;
+        memcpy(buffer, item->val, item->len_val);
+        *buffer_len = item->len_val;
     }
-    return SERVICE_RESULT_OK;
+
+    LOGD(MODULE_NAME_KV,"gel kv, key: %s, %p-%p-%p\n",key,item,item->key,item->val);
+    return 0;
 }
 
-int remove_kv(const char *key)
+int yos_kv_del(const char *key)
 {
-    return hash_table_remove(key);
+    kv_item_t *item = NULL;
+    void *ret = NULL;
+
+    ht_lock(g_ht);
+    ret = ht_find_lockless(g_ht,key,strlen(key)+1,NULL,NULL); 
+    if(!ret){
+        ht_unlock(g_ht); 
+        return -1;
+    }
+
+    item = *((kv_item_t **)ret);
+
+    LOGD(MODULE_NAME_KV,"del kv, key: %s, %p-%p-%p\n",key,item,item->key,item->val);
+    os_free(item->val);
+    os_free(item->key);
+    os_free(item);
+    ht_del_lockless(g_ht,key,strlen(key)+1);
+    ht_unlock(g_ht);
 }
 
-int set_kv_in_ram(const char *key, const void *value, int len)
-{
-    if (len <= 0)
-        return SERVICE_RESULT_ERR;
-    return hash_table_insert(key, value, len, INRAM, 0);
-}
