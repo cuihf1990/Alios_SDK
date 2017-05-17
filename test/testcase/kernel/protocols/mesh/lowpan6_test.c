@@ -8,8 +8,6 @@
 #include "utilities/encoding.h"
 #include "utilities/message.h"
 
-extern void hal_arch_time_msleep(int ms);
-
 void test_uradar_6lowpan_case(void)
 {
     uint8_t ip6_buffer[50];
@@ -319,5 +317,5 @@ void test_uradar_6lowpan_case(void)
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
-    hal_arch_time_msleep(6000); /* wait timer_hanlder to clean up incomplete fragments */
+    yos_msleep(6000); /* wait timer_hanlder to clean up incomplete fragments */
 }
