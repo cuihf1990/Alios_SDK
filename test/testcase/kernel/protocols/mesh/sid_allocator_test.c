@@ -13,6 +13,8 @@ void test_uradar_sid_allocator_case(void)
     uint16_t index;
     network_context_t *network;
 
+    ur_router_register_module();
+    interface_init();
     interface_start();
     network = get_default_network_context();
     allocator_init(network);
@@ -34,25 +36,13 @@ void test_uradar_sid_allocator_case(void)
 
     allocator_deinit(network);
     allocator_init(network);
-    node_id.sid = 0x1000;
-    node_id.mode = MODE_RX_ON;
-    YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(network, &node_id));
-    YUNIT_ASSERT(0x1100 == node_id.sid);
-
-    node_id.sid = 0x2000;
-    allocator_deinit(network);
-    allocator_init(network);
-    YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(network, &node_id));
-    YUNIT_ASSERT(0x2100 == node_id.sid);
-
     node_id.ueid[0] += 1;
-    node_id.sid = 0x2000;
     node_id.mode = MODE_MOBILE;
-    allocator_deinit(network);
-    allocator_init(network);
     YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(network, &node_id));
     YUNIT_ASSERT(0xc001 == node_id.sid);
     YUNIT_ASSERT(true == is_partial_function_sid(node_id.sid));
+    node_id.ueid[0] += 1;
+    node_id.mode = MODE_MOBILE;
     YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(network, &node_id));
     YUNIT_ASSERT(0xc002 == node_id.sid);
     YUNIT_ASSERT(true == is_partial_function_sid(node_id.sid));
