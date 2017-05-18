@@ -17,6 +17,7 @@
 #ifndef K_TYPES_H
 #define K_TYPES_H
 
+#include <stdint.h>
 /* Be very careful here, you can modyfy the following code, if only you understand what yor are doing! */
 
 #define YUNOS_NO_WAIT                0u

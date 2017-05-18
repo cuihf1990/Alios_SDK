@@ -9,20 +9,9 @@
  */
 #undef WITH_LWIP
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include <hal/hal.h>
-#include <csp.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
-#include <yos/log.h>
 
 #define TAG "hw"
 

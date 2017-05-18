@@ -24,6 +24,7 @@
 #include <yos/framework.h>
 #include <yos/log.h>
 #include <arg_options.h>
+#include <vfs.h>
 
 #define TAG "main"
 

@@ -5,7 +5,7 @@ MODULE              := 1062
 HOST_ARCH           := linux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  := yloop vfs wrapper hal log vcall ysh
+$(NAME)_COMPONENTS  := yloop vfs hal log vcall ysh
 
 $(NAME)_INCLUDES    += .
 GLOBAL_INCLUDES     += include csp/lwip/include

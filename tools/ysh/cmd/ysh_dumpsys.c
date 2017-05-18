@@ -16,6 +16,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <yos/log.h>
+#include <yos/kernel.h>
 #include "k_api.h"
 #include "ysh.h"
 

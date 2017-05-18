@@ -17,10 +17,15 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/eventfd.h>
+
 #include <k_api.h>
-#include <csp.h>
+#include <yos/kernel.h>
 #include <poll.h>
 #include <hal/timer.h>
+
+extern void hw_start_hal(void);
 
 #ifndef WITH_LWIP
 static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)
@@ -33,7 +38,7 @@ static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)
     (void)ret;
 }
 
-static int create_eventfd(csp_sem_t sem, kobj_set_t *handle)
+static int create_eventfd(yos_sem_t sem, kobj_set_t *handle)
 {
     int fd = eventfd(0, 0);
 
@@ -49,14 +54,14 @@ static int create_eventfd(csp_sem_t sem, kobj_set_t *handle)
     return fd;
 }
 
-static void remove_eventfd(csp_sem_t sem, kobj_set_t *handle)
+static void remove_eventfd(yos_sem_t sem, kobj_set_t *handle)
 {
     int fd = (int)(long)handle->docker;
     close(fd);
     ((blk_obj_t *)sem.hdl)->handle = NULL;
 }
 
-int csp_poll(struct pollfd *pollfds, int nfds, csp_sem_t sem,
+int csp_poll(struct pollfd *pollfds, int nfds, yos_sem_t sem,
                   uint32_t timeout)
 {
     kobj_set_t obj_handle;

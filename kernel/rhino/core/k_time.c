@@ -122,10 +122,6 @@ sys_time_t yunos_ticks_to_ms(tick_t ticks)
     uint32_t   surplus;
     sys_time_t time;
 
-    if ((sizeof(tick_t) >= sizeof(sys_time_t)) && \
-        (((ticks + YUNOS_CONFIG_TICKS_PER_SECOND) / YUNOS_CONFIG_TICKS_PER_SECOND) * 1000 > (sys_time_t) - 1)) {
-        return (sys_time_t) - 1;
-    }
 
     surplus = ticks % YUNOS_CONFIG_TICKS_PER_SECOND;
     time = (ticks / YUNOS_CONFIG_TICKS_PER_SECOND) * 1000;

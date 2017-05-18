@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <yos/list.h>
+#include <yos/kernel.h>
+
 #include <hal/timer.h>
 
 #include <yunit.h>
