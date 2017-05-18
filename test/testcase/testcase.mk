@@ -11,7 +11,9 @@ $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
 $(NAME)_COMPONENTS  := yunit cjson
 
+ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_INCLUDES := ../../kernel/protocols/mesh/include
 $(NAME)_INCLUDES += ../../tools/dda
 include test/testcase/kernel/protocols/mesh/filelists.mk
 $(NAME)_SOURCES += $(MESHYTSFILE)
+endif
