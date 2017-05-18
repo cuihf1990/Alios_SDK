@@ -92,6 +92,8 @@ typedef enum mm_command_s {
     COMMAND_ADDRESS_ERROR           = 0x15,
     COMMAND_ROUTING_INFO_UPDATE     = 0x16,
 
+    COMMAND_RAW_DATA                = 0x70,
+
     // diags command
     COMMAND_TRACE_ROUTE_REQUEST     = 0x71,
     COMMAND_TRACE_ROUTE_RESPONSE    = 0x72,
@@ -186,6 +188,11 @@ ur_error_t attach_start(hal_context_t *hal, neighbor_t *node);
 void become_leader(void);
 void become_detached(void);
 
+ur_error_t send_raw_data(network_context_t *network,
+                         ur_addr_t *dest, ur_addr_t *dest2,
+                         uint8_t *payload, uint8_t payload_length);
+ur_error_t register_raw_data_receiver(umesh_raw_data_received receiver);
+
 uint16_t tlvs_set_value(uint8_t *buf, const uint8_t *tlvs,
                         uint8_t tlvs_length);
 int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length);
@@ -201,4 +208,13 @@ static inline uint16_t mm_get_sub_netid(network_context_t *network)
 {
     return get_sub_netid(mm_get_meshnetid(network));
 }
+
+static inline bool is_bcast_sid(ur_addr_t *addr)
+{
+    if (addr->addr.len == SHORT_ADDR_SIZE && addr->addr.short_addr == BCAST_SID) {
+        return true;
+    }
+    return false;
+}
+
 #endif  /* UR_MM_H */

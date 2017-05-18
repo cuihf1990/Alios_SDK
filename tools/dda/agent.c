@@ -20,7 +20,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "yos/network.h"
+#include <netdb.h>
+#include <sys/socket.h>
 #include "yos/internal/event_type_code.h"
 #ifdef CSP_LINUXHOST
 #include <arpa/inet.h>
@@ -290,7 +291,9 @@ static int connect_master(agent_info_t *agent)
 
 static void yos_loop(void *arg)
 {
+    ur_mesh_init(NULL);
     ur_mesh_start();
+    yos_loop_run();
     csp_task_exit(0);
 }
 #else
@@ -302,15 +305,12 @@ static void cpu_call_handler(void (*f)(const void*), const void *arg)
 }
 #endif
 
-int  yos_is_in_ut(void);
 static void run_yos_loop(const void* arg)
 {
     yos_post_event(EV_DDA, CODE_DDA_ON_CONNECTED, 0u);
 
 #ifdef CSP_LINUXHOST
-    if (yos_is_in_ut() != 0)
-        return;
-    csp_task_new("yos", yos_loop, NULL, 4096);
+    yos_task_new("yos", yos_loop, NULL, 8192);
 #endif
 }
 
@@ -370,7 +370,7 @@ static void handle_mesh(agent_info_t *agent, ipc_msg_t *msg, struct sockaddr *pa
         handle_data(agent, msg, paddr);
 }
 
-#ifdef CONFIG_YOS_UMESH
+#ifdef CONFIG_YOS_MESH
 #define CLI_RES_SIZE 0x10000
 void dda_cli_log(char *buf);
 void ur_cli_input(char *buf, int len);
@@ -465,7 +465,7 @@ static void got_p2p_response(const void* arg)
     dda_p2p_t *req;
 
     dlist_for_each_entry(&agent_info.p2p_queue, req, dda_p2p_t, next) {
-        if (req->seqno != cmsg->cmd_private)
+        if (req->seqno != (int)cmsg->cmd_private)
             continue;
 
         dlist_del(&req->next);
@@ -609,9 +609,12 @@ void dda_cli_log(char *buf)
     send_data(&agent_info, TYPE_MISC, CMD_MISC_CLI, 0, buf, strlen(buf)+1);
 }
 
+extern void linuxhost_hal_urmesh_register(void);
 int dda_service_init(void) {
     if (agent_info.agent_id == -1ULL)
         return 0;
+
+    linuxhost_hal_urmesh_register();
 
     int ret;
     ret = create_socket();

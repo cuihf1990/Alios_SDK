@@ -30,7 +30,7 @@
 #include "ysh_test.h"
 #endif
 
-#ifdef CONFIG_YOC_URADAR_MESH
+#ifdef CONFIG_YOS_MESH
 #include "ysh_urmesh.h"
 #endif
 
@@ -54,7 +54,7 @@ void ysh_register(void)
     ysh_reg_cmd_test();
 #endif
 
-#ifdef CONFIG_YOC_URADAR_MESH
+#ifdef CONFIG_YOS_MESH
     ysh_reg_cmd_urmesh();
 #endif
 

@@ -121,6 +121,18 @@ int ht_del_lockless(void *ht, const void *key, unsigned int len_key);
  */
 int ht_del(void *ht, const void  *key, unsigned int len_key);
 
+/*the function to be invoked while polling the hashtable*/
+typedef void *(*iter_func)(void *key, void *val, void *extra);
+
+/**
+ * @brief polling the hashtable @ht and invoke the inte_func @func
+ *
+ * @param[in] ht: the hander of hashtable.
+ * @param[in] func: the deal function.
+ *
+ */
+void ht_iterator_lockless(void *ht, iter_func func, void *extra);
+
 /**
  * @brief delete all the items in the @ht in lockless mode.
  *

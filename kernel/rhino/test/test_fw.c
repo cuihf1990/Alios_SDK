@@ -64,9 +64,6 @@ test_case_map_t test_fw_map[] = {
 #endif
     {"buf_queue_test", buf_queue_test},
     {"comb_test", comb_test},
-#ifdef CSP_LINUXHOST
-    {"ysh_cmd_test", ysh_cmd_test},
-#endif
     /* last must be NULL! */
     {NULL, NULL},
 };

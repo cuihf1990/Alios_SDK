@@ -101,11 +101,6 @@ tick_t     yunos_ms_to_ticks(sys_time_t ms)
     uint16_t  surplus;
     tick_t    ticks;
 
-    if ((sizeof(sys_time_t) >= sizeof(tick_t)) && \
-        (((ms + 1000) / 1000) * YUNOS_CONFIG_TICKS_PER_SECOND > (tick_t) - 1)) {
-        return (tick_t) - 1;
-    }
-
     surplus = ms % 1000;
     ticks = (ms / 1000) * YUNOS_CONFIG_TICKS_PER_SECOND;
     padding = 1000 / YUNOS_CONFIG_TICKS_PER_SECOND;
@@ -121,7 +116,6 @@ sys_time_t yunos_ticks_to_ms(tick_t ticks)
     uint32_t   padding;
     uint32_t   surplus;
     sys_time_t time;
-
 
     surplus = ticks % YUNOS_CONFIG_TICKS_PER_SECOND;
     time = (ticks / YUNOS_CONFIG_TICKS_PER_SECOND) * 1000;

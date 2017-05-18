@@ -73,9 +73,11 @@ static void handle_discovery_timer(void *args)
         hal->discovery_channel++;
         return;
     } else if (hal->discovery_result.meshnetid != BCAST_NETID) {
-        nbr = get_neighbor_by_mac_addr(&hal->discovery_result.addr);
         mm_set_channel(network, hal->discovery_result.channel);
-        dtls_start(hal, nbr, dtls_connected_handler);
+        if (mm_get_mode() != 0) {
+            nbr = get_neighbor_by_mac_addr(&hal->discovery_result.addr);
+            dtls_start(hal, nbr, dtls_connected_handler);
+        }
         return;
     }
 
@@ -225,12 +227,12 @@ ur_error_t handle_discovery_request(message_t *message)
 
 ur_error_t handle_discovery_response(message_t *message)
 {
-    uint8_t         *tlvs;
-    uint16_t        tlvs_length;
-    neighbor_t      *nbr;
-    scan_result_t   *res;
+    uint8_t           *tlvs;
+    uint16_t          tlvs_length;
+    neighbor_t        *nbr;
+    scan_result_t     *res;
     network_context_t *network;
-    message_info_t *info;
+    message_info_t    *info;
 
     if (mm_get_device_state() != DEVICE_STATE_DETACHED) {
         return UR_ERROR_NONE;

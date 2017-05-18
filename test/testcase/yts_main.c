@@ -101,4 +101,8 @@ void add_test(void)
     test_rhino();
 
     test_rhino_port();
+
+#ifdef CONFIG_YOS_MESH
+    test_uradar();
+#endif
 }

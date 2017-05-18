@@ -1,46 +1,31 @@
-/**
- ******************************************************************************
- * @file    MicoDriverFlash.h
- * @author  William Xu
- * @version V1.0.0
- * @date    16-Sep-2014
- * @brief   This file provides all the headers of Flash operation functions.
- ******************************************************************************
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
  *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- ******************************************************************************
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#ifndef __MICODRIVERFLASH_H__
-#define __MICODRIVERFLASH_H__
+
+#ifndef __YOS_DRIVERFLASH_H__
+#define __YOS_DRIVERFLASH_H__
 
 #pragma once
-#include "common.h"
-#include "platform.h"
+#include <stdint.h>
 
 /** @addtogroup HAL_PLATFORM
 * @{
 */
 
-/** @defgroup HAL_FLASH MICO Flash Driver
+/** @defgroup HAL_FLASH YOS Flash Driver
 * @brief  Flash operation Functions
 * @{
 */
@@ -70,7 +55,7 @@
 typedef enum
 {
     HAL_PARTITION_ERROR = -1,
-    HAL_PARTITION_BOOTLOADER = HAL_PARTITION_USER_MAX,
+    HAL_PARTITION_BOOTLOADER,
     HAL_PARTITION_APPLICATION,
     HAL_PARTITION_ATE,
     HAL_PARTITION_OTA_TEMP,
@@ -84,7 +69,9 @@ typedef enum
     HAL_PARTITION_NONE,
 } hal_partition_t;
 
-typedef platform_logic_partition_t  hal_logic_partition_t;
+typedef struct {
+    uint32_t size;
+} hal_logic_partition_t;
 
 
 /******************************************************
@@ -117,10 +104,10 @@ hal_logic_partition_t *hal_flash_get_info(hal_partition_t in_partition);
  * @param  off_set         : Start address of the erased flash area
  * @param  size    	   : Size of the erased flash area
  *
- * @return  kNoErr        : On success.
- * @return  kGeneralErr   : If an error occurred with any step
+ * @return  0        : On success.
+ * @return  <0   : If an error occurred with any step
  */
-hal_stat_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t size);
+int hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t size);
 
 /**@brief  Write data to an area on a Flash logical partition
  *
@@ -132,10 +119,10 @@ hal_stat_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint3
  * @param  inBuffer       : point to the data buffer that will be written to flash
  * @param  inBufferLength : The length of the buffer
  *
- * @return  kNoErr        : On success.
- * @return  kGeneralErr   : If an error occurred with any step
+ * @return  0        : On success.
+ * @return  <0   : If an error occurred with any step
  */
-hal_stat_t hal_flash_write(hal_partition_t in_partition, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len);
+int hal_flash_write(hal_partition_t in_partition, uint32_t* off_set, const void* in_buf ,uint32_t in_buf_len);
 
 /**@brief    Read data from an area on a Flash to data buffer in RAM
  *
@@ -147,10 +134,10 @@ hal_stat_t hal_flash_write(hal_partition_t in_partition, volatile uint32_t* off_
  * @param    outBuffer      : Point to the data buffer that stores the data read from flash
  * @param    inBufferLength : The length of the buffer
  *
- * @return    kNoErr        : On success.
- * @return    kGeneralErr   : If an error occurred with any step
+ * @return  0        : On success.
+ * @return  <0   : If an error occurred with any step
  */
-hal_stat_t hal_flash_read(hal_partition_t in_partition, volatile uint32_t* off_set, uint8_t* out_buf, uint32_t in_buf_len);
+int hal_flash_read(hal_partition_t in_partition, uint32_t* off_set, void* out_buf, uint32_t in_buf_len);
 
 
 
@@ -163,10 +150,10 @@ hal_stat_t hal_flash_read(hal_partition_t in_partition, volatile uint32_t* off_s
  *                          update this start address.
  * @param    size          : Size of enabled flash area
  *
- * @return    kNoErr        : On success.
- * @return    kGeneralErr   : If an error occurred with any step
+ * @return  0        : On success.
+ * @return  <0   : If an error occurred with any step
  */
-hal_stat_t hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
+int hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
 
 
 
@@ -180,10 +167,10 @@ hal_stat_t hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, 
  *                          update this start address.
  * @param    size          : Size of disabled flash area
  *
- * @return   kNoErr        : On success.
- * @return   kGeneralErr   : If an error occurred with any step
+ * @return  0        : On success.
+ * @return  <0   : If an error occurred with any step
  */
-hal_stat_t hal_flash_dis_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
+int hal_flash_dis_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
 #endif
 
 
