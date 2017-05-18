@@ -27,6 +27,8 @@ extern "C" {
 
 int vfs_init(void);
 
+int vfs_device_init(void);
+
 #ifdef __cplusplus
 }
 #endif

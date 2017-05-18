@@ -25,6 +25,8 @@ static uint8_t    g_vfs_init;
 
 yos_mutex_t g_vfs_mutex;
 
+int csp_poll(struct pollfd *pollfds, int nfds, yos_sem_t sem, uint32_t timeout);
+
 #ifdef IO_NEED_TRAP
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -163,7 +165,7 @@ int yos_open(const char *path, int flags)
         return E_VFS_NULL_PTR;
     }
 
-    if (yos_mutex_lock(g_vfs_mutex) != 0) {
+    if (yos_mutex_lock(g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return E_VFS_K_ERR;
     }
 
@@ -211,7 +213,7 @@ int yos_close(int fd)
         (node->ops->close)(f);
     }
 
-    if (yos_mutex_lock(g_vfs_mutex) != 0) {
+    if (yos_mutex_lock(g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return E_VFS_K_ERR;
     }
 
@@ -384,7 +386,7 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
     for (fd = YUNOS_CONFIG_VFS_FD_OFFSET; fd < YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES; fd++) {
         file_t  *f;
         inode_t *node;
-        if (yos_mutex_lock(g_vfs_mutex) != 0) {
+        if (yos_mutex_lock(g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
             return E_VFS_K_ERR;
         }
 

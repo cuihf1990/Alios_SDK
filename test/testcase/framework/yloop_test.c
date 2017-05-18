@@ -15,6 +15,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <yos/kernel.h>
 #include <yos/framework.h>
@@ -42,8 +43,6 @@ struct task_cookie {
 #define T_FILTER_FLAG       0x01
 static uint32_t done_flag;
 static uint32_t unexpected_flag;
-
-#define yos_task_name() g_active_task->task_name
 
 #define TYPE_TEST_1 (EV_USER + 1)
 #define TYPE_TEST_2 (EV_USER + 2)

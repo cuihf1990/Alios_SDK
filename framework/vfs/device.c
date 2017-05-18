@@ -16,9 +16,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <csp.h>
 #include <yos/list.h>
-#include <csp.h>
+#include <yos/kernel.h>
 
 #include <vfs_conf.h>
 #include <vfs_err.h>
@@ -29,7 +28,7 @@
 static int inited;
 
 typedef struct {
-    csp_mutex_t    mutex;
+    yos_mutex_t    mutex;
     struct pollfd *fd;
     void          *sem;
     int            counter;
@@ -48,7 +47,7 @@ static int event_open(inode_t *node, file_t *file)
 {
     event_dev_t *pdev = (event_dev_t *)yos_malloc(sizeof *pdev);
     bzero(pdev, sizeof *pdev);
-    csp_mutex_new(&pdev->mutex);
+    yos_mutex_new(&pdev->mutex);
     dlist_init(&pdev->bufs);
     dlist_init(&pdev->buf_cache);
     file->f_arg = pdev;
@@ -58,7 +57,7 @@ static int event_open(inode_t *node, file_t *file)
 static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
 {
     event_dev_t *pdev = f->f_arg;
-    csp_mutex_lock(pdev->mutex);
+    yos_mutex_lock(pdev->mutex, YOS_WAIT_FOREVER);
 
     dev_event_t *evt;
     evt = (dev_event_t *)pdev->buf_cache.next;
@@ -88,14 +87,14 @@ static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
         pdev->fd->revents |= POLLIN;
 
         if (pdev->sem != NULL) {
-            csp_sem_t csp_sem;
-            csp_sem.hdl = pdev->sem;
-            csp_sem_signal(csp_sem);
+            yos_sem_t yos_sem;
+            yos_sem.hdl = pdev->sem;
+            yos_sem_signal(yos_sem);
         }
     }
 
 out:
-    csp_mutex_unlock(pdev->mutex);
+    yos_mutex_unlock(pdev->mutex);
     return len;
 }
 
@@ -128,7 +127,7 @@ static ssize_t event_read(file_t *f, void *buf, size_t len)
         return 0;
     }
 
-    csp_mutex_lock(pdev->mutex);
+    yos_mutex_lock(pdev->mutex, YOS_WAIT_FOREVER);
 
     dev_event_t *evt = (dev_event_t *)pdev->bufs.next;
     dlist_del(&evt->node);
@@ -144,7 +143,7 @@ static ssize_t event_read(file_t *f, void *buf, size_t len)
 
     pdev->counter --;
 
-    csp_mutex_unlock(pdev->mutex);
+    yos_mutex_unlock(pdev->mutex);
 
     return cnt;
 }
@@ -163,9 +162,9 @@ static int event_poll(file_t *f, bool setup, struct pollfd *pfd, void *sem)
 
     if (pdev->counter) {
         pfd->revents |= POLLIN;
-        csp_sem_t csp_sem;
-        csp_sem.hdl = sem;
-        csp_sem_signal(csp_sem);
+        yos_sem_t yos_sem;
+        yos_sem.hdl = sem;
+        yos_sem_signal(yos_sem);
     }
 
     return 0;

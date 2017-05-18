@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <yos/kernel.h>
+
 #include "ysh.h"
 #include "ysh_help.h"
 

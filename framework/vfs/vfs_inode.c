@@ -16,7 +16,6 @@
 
 #include <malloc.h>
 #include <string.h>
-#include <csp.h>
 
 #include <vfs_conf.h>
 #include <vfs_err.h>
