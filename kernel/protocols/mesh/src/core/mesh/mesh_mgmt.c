@@ -143,7 +143,7 @@ static void handle_device_alive_timer(void *args)
 
     g_mm_state.device.alive_timer = NULL;
     network = get_default_network_context();
-    send_address_notification(network, LEADER_SID);
+    send_address_notification(network, NULL);
 
     g_mm_state.device.alive_timer = ur_start_timer(network->notification_interval, handle_device_alive_timer, NULL);
 }
@@ -194,6 +194,16 @@ void set_command_type(message_info_t *info, uint8_t command)
 {
     info->type = MESH_FRAME_TYPE_CMD;
     info->command = command;
+}
+
+void get_leader_addr(ur_addr_t *addr)
+{
+    network_context_t *network;
+
+    network = get_default_network_context();
+    addr->addr.len = SHORT_ADDR_SIZE;
+    addr->addr.short_addr = LEADER_SID;
+    addr->netid = mm_get_main_netid(network);
 }
 
 void become_leader(void)
@@ -919,7 +929,7 @@ static ur_error_t handle_attach_response(message_t *message)
         network->attach_node = nbr;
         network->attach_node->state = STATE_PARENT;
         network->attach_candidate = NULL;
-        send_address_notification(network, LEADER_SID);
+        send_address_notification(network, NULL);
         if (network->advertisement_timer == NULL) {
             network->advertisement_timer = ur_start_timer(network->hal->advertisement_interval,
                                                           handle_advertisement_timer, network);
@@ -1130,6 +1140,9 @@ static ur_error_t handle_sid_request(message_t *message)
         node_id.sid = src_sid->sid;
     }
 
+    if (mode->mode & MODE_MOBILE) {
+        network = get_sub_network_context(network->hal);
+    }
     switch (network->router->sid_type) {
         memcpy(&node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
         case STRUCTURED_SID:
@@ -1361,7 +1374,7 @@ static ur_error_t handle_sid_response(message_t *message)
     start_keep_alive_timer(network);
     network->meshnetid = network->attach_node->addr.netid;
     ur_router_sid_updated(network, network->sid);
-    send_address_notification(network, LEADER_SID);
+    send_address_notification(network, NULL);
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
              "allocate sid 0x%04x, become %s in net %04x\r\n",

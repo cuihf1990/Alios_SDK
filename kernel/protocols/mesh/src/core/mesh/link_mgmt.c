@@ -641,7 +641,7 @@ ur_error_t handle_link_request(message_t *message)
         tlvs = NULL;
         tlvs_length = 0;
     }
-    send_link_accept_and_request(network, &info->src, tlvs, tlvs_length);
+    send_link_accept_and_request(network, &info->src_mac, tlvs, tlvs_length);
     return UR_ERROR_NONE;
 }
 
@@ -682,7 +682,7 @@ ur_error_t handle_link_accept_and_request(message_t *message)
         tlvs = NULL;
         tlvs_length = 0;
     }
-    send_link_accept(network, &info->src, tlvs, tlvs_length);
+    send_link_accept(network, &info->src_mac, tlvs, tlvs_length);
     return UR_ERROR_NONE;
 }
 

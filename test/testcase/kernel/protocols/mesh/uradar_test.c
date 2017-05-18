@@ -60,11 +60,12 @@ void ur_ut_send_cmd_to_ddm(const char *cmd)
         perror("write ddm:");
 }
 
-static void start_dda(void *args)
+void start_dda(void)
 {
     dda_enable(11);
     dda_service_init();
     dda_service_start();
+    ur_mesh_init();
 }
 
 static void stop_dda(void *args)
@@ -89,14 +90,13 @@ static int init(void)
     ddm_pid = start_ddm();
     ur_ut_send_cmd_to_ddm("log off 0");
 
-    yos_schedule_call(start_dda, NULL);
+    start_dda();
 
     int cnt = 0;
     while (!dda_connected && cnt++ < 100) {
         yos_msleep(100);
     }
 
-    ur_mesh_init();
     yos_msleep(1000);
 
     return cnt < 100 ? 0 : -1;

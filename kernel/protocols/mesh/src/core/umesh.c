@@ -153,10 +153,11 @@ static void output_message_handler(void *args)
     } else {
         message_free(frame->message);
         ur_mem_free(frame, sizeof(transmit_frame_t));
-        return;  /* TODO:support all kinds of IPv6 addresses */
+        return;
     }
 
     info->type = MESH_FRAME_TYPE_DATA;
+    info->flags = 0;
     mf_send_message(frame->message);
     ur_mem_free(frame, sizeof(transmit_frame_t));
 }

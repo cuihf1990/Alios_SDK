@@ -537,6 +537,38 @@ static neighbor_t *get_next_node(network_context_t *network, message_info_t *inf
     return next;
 }
 
+static void set_dest_info(message_info_t *info, address_cache_t *target)
+{
+    info->dest.netid = target->meshnetid;
+    if (is_partial_function_sid(target->sid)) {
+        info->dest2.addr.len = SHORT_ADDR_SIZE;
+        info->dest2.addr.short_addr = target->sid;
+        info->dir = DIR_UP;
+        info->dest.addr.len = SHORT_ADDR_SIZE;
+        info->dest.addr.short_addr = target->attach_sid;
+    } else {
+        info->dest.addr.len = SHORT_ADDR_SIZE;
+        info->dest.addr.short_addr = target->sid;
+    }
+}
+
+static void set_src_info(message_info_t *info)
+{
+    network_context_t *network;
+
+    if (info->network == NULL) {
+        network = get_network_context_by_meshnetid(info->dest.netid);
+        if (network == NULL) {
+            network = get_default_network_context();
+        }
+        info->network = network;
+    }
+    info->src.netid = mm_get_meshnetid(info->network);
+    info->src.addr.len = SHORT_ADDR_SIZE;
+    info->src.addr.short_addr = mm_get_local_sid();
+    info->flags |= INSERT_LOWPAN_FLAG;
+}
+
 static void address_resolved_handler(network_context_t *network, address_cache_t *target,
                                      ur_error_t error)
 {
@@ -549,34 +581,16 @@ static void address_resolved_handler(network_context_t *network, address_cache_t
 
     hal = network->hal;
     for_each_message(message, &hal->send_queue[PENDING_QUEUE]) {
-        ip6_header = (ur_ip6_header_t *)message_get_payload(message);
+        ip6_header = (ur_ip6_header_t *)(message_get_payload(message) + 1);
         dest = ur_swap16(ip6_header->dest.m16[7]);
         meshnetid = ur_swap16(ip6_header->dest.m16[3]) | ur_swap16(ip6_header->dest.m16[6]);
-
         if ((dest == target->sid && meshnetid == target->meshnetid) ||
              (memcmp(target->ueid, &ip6_header->dest.m8[8], sizeof(target->ueid)) == 0)) {
             message_queue_dequeue(message);
             if (error == UR_ERROR_NONE) {
                 info = message->info;
-                info->dest.netid = target->meshnetid;
-                if (is_partial_function_sid(target->sid)) {
-                    info->dest2.addr.len = SHORT_ADDR_SIZE;
-                    info->dest2.addr.short_addr = target->sid;
-                    info->dir = DIR_UP;
-                    info->dest.addr.len = SHORT_ADDR_SIZE;
-                    info->dest.addr.short_addr = target->attach_sid;
-                } else {
-                    info->dest.addr.len = SHORT_ADDR_SIZE;
-                    info->dest.addr.short_addr = target->sid;
-                }
-                info->network = get_network_context_by_meshnetid(info->dest.netid);
-                if (info->network == NULL) {
-                    info->network = get_default_network_context();
-                }
-                info->src.netid = mm_get_meshnetid(info->network);
-                info->src.addr.len = SHORT_ADDR_SIZE;
-                info->src.addr.short_addr = mm_get_local_sid();
-                info->flags |= (INSERT_LOWPAN_FLAG | ENABLE_COMPRESS_FLAG);
+                set_dest_info(info, target);
+                set_src_info(info);
                 network = info->network;
                 message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE], message);
                 yos_schedule_call(send_datagram, network->hal);
@@ -709,17 +723,11 @@ ur_error_t mf_send_message(message_t *message)
             message_queue_enqueue(&hal->send_queue[PENDING_QUEUE], message);
             return error;
         } else if (error == UR_ERROR_NONE) {
-            info->dest.netid = target.meshnetid;
-            if (is_partial_function_sid(target.sid)) {
-                info->dest2.addr.len = SHORT_ADDR_SIZE;
-                info->dest2.addr.short_addr = target.sid;
-                info->dir = DIR_DOWN;
-                info->dest.addr.len = SHORT_ADDR_SIZE;
-                info->dest.addr.short_addr = attach.sid;
-            } else {
-                info->dest.addr.len = SHORT_ADDR_SIZE;
-                info->dest.addr.short_addr = target.sid;
-            }
+            address_cache_t target_cache;
+            target_cache.attach_sid = attach.sid;
+            target_cache.sid = target.sid;
+            target_cache.meshnetid = target.meshnetid;
+            set_dest_info(info, &target_cache);
         } else {
             message_free(message);
             return error;
@@ -732,20 +740,10 @@ ur_error_t mf_send_message(message_t *message)
         memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
     }
 
+    set_src_info(info);
     network = info->network;
-    if (network == NULL) {
-        network = get_network_context_by_meshnetid(info->dest.netid);
-        if (network == NULL) {
-            network = get_default_network_context();
-        }
-        info->network = network;
-    }
-    info->src.netid = mm_get_meshnetid(network);
-    info->src.addr.len = SHORT_ADDR_SIZE;
-    info->src.addr.short_addr = mm_get_local_sid();
     hal = network->hal;
     if (info->type == MESH_FRAME_TYPE_DATA) {
-        info->flags |= INSERT_LOWPAN_FLAG;
         message_queue_enqueue(&hal->send_queue[DATA_QUEUE], message);
     } else {
         message_queue_enqueue(&hal->send_queue[CMD_QUEUE], message);
@@ -780,7 +778,6 @@ static bool proxy_check(message_t *message)
             return false;
         }
 
-        // TODO: add rate control of packets with no src addr
         if (info->dest2.addr.len != SHORT_ADDR_SIZE ||
             info->dest.addr.short_addr == LEADER_SID) {
             info->dest2.addr.len = 0;
@@ -1043,12 +1040,15 @@ static void handle_datagram(void *args)
                 message_free(message);
                 return;
             }
-            info->flags = INSERT_MESH_HEADER;
+            if (info->flags & ENCRYPT_ENABLE_FLAG) {
+                info->flags = ENCRYPT_ENABLE_FLAG;
+            }
+            info->flags |= INSERT_MESH_HEADER;
             hals = get_hal_contexts();
             slist_for_each_entry(hals, hal, hal_context_t, next) {
-                network = get_hal_default_network_context(hal);
                 relay_message = message_alloc(message_get_msglen(message));
                 if (relay_message != NULL) {
+                    relay_message->info->network = (void *)get_hal_default_network_context(hal);
                     message_copy(relay_message, message);
                     message_queue_enqueue(&hal->send_queue[DATA_QUEUE], relay_message);
                     yos_schedule_call(send_datagram, hal);
