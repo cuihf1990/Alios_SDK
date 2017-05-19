@@ -20,7 +20,8 @@ COMPONENT_DIRECTORIES := . \
                          utility   \
                          framework \
                          tools     \
-                         test      
+                         test \
+                         security
 #                        demos \
                          MiCO \
                          MiCO/net \
