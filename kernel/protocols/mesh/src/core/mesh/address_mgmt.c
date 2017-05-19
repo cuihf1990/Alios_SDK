@@ -355,17 +355,7 @@ static ur_error_t send_address_query_response(network_context_t *network,
     info = message->info;
     info->network = network;
     // dest
-    info->dest.addr.len = SHORT_ADDR_SIZE;
-    info->dest.netid = dest->netid;
-    if (is_partial_function_sid(dest->addr.short_addr)) {
-        get_attach_by_addr(&attach, dest);
-        info->dest.addr.short_addr= attach.sid;
-        info->dest2.addr.len = SHORT_ADDR_SIZE;
-        info->dest2.addr.short_addr = dest->addr.short_addr;
-    } else {
-        info->dest.addr.short_addr = dest->addr.short_addr;
-    }
-
+    memcpy(&info->dest, dest, sizeof(info->dest));
     set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
@@ -664,27 +654,6 @@ void get_attach_by_nodeid(ur_node_id_t *attach, ur_node_id_t *target)
     slist_for_each_entry(&g_ac_state.cache_list, node, sid_node_t, next) {
         if (node->node_id.sid == target->sid && node->node_id.meshnetid == target->meshnetid) {
             memcpy(target->ueid, node->node_id.ueid, sizeof(target->ueid));
-            break;
-        }
-    }
-    if (node) {
-        attach->sid = node->node_id.attach_sid;
-        attach->meshnetid = node->node_id.meshnetid;
-    }
-}
-
-void get_attach_by_addr(ur_node_id_t *attach, ur_addr_t *target)
-{
-    sid_node_t *node;
-
-    if (attach == NULL || target == NULL) {
-        return;
-    }
-    attach->sid = INVALID_SID;
-    attach->meshnetid = INVALID_NETID;
-    slist_for_each_entry(&g_ac_state.cache_list, node, sid_node_t, next) {
-        if (node->node_id.sid == target->addr.short_addr &&
-            node->node_id.meshnetid == target->netid) {
             break;
         }
     }
