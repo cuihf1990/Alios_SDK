@@ -21,6 +21,7 @@
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
 #include "core/sid_allocator.h"
+#include "core/network_data.h"
 #include "core/link_mgmt.h"
 #include "utilities/timer.h"
 #include "utilities/logging.h"

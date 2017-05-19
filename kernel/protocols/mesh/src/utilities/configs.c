@@ -15,7 +15,7 @@
  */
 
 #include <string.h>
-#include <hal/soc/flash.h>
+#include <yos/framework.h>
 
 #include "utilities/configs.h"
 
@@ -27,12 +27,13 @@ enum {
 ur_error_t ur_configs_read(ur_configs_t *config)
 {
     int ret = -1;
+    int len = sizeof(*config);
 
     if (config == NULL) {
         return UR_ERROR_FAIL;
     }
 
-    ret = hal_flash_read(HAL_PARTITION_PARAMETER_1, NULL, config, sizeof(*config));
+    ret = yos_kv_get("umesh", config, &len);
     if (ret < 0) {
         return UR_ERROR_FAIL;
     }
@@ -55,7 +56,10 @@ ur_error_t ur_configs_write(ur_configs_t *config)
     config->magic_number = CONFIGS_MAGIC_NUMBER;
     config->version = CONFIGS_VERSION;
 
-    hal_flash_write(HAL_PARTITION_PARAMETER_1, NULL, config, sizeof(*config));
+    ret = yos_kv_set("umesh", config, sizeof(*config), 1);
+    if (ret < 0) {
+        return UR_ERROR_FAIL;
+    }
 
     return UR_ERROR_NONE;
 }

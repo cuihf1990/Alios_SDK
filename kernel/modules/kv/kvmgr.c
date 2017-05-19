@@ -389,7 +389,7 @@ int yos_kv_set(const char *key, const void *value, int len, int sync)
     return ret; 
 }
 
-int yos_kv_get(const char *key, char *buffer, int *buffer_len)
+int yos_kv_get(const char *key, void *buffer, int *buffer_len)
 {
     kv_item_t *item = NULL;
     void *ret = NULL;
