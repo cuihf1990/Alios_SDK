@@ -33,9 +33,9 @@ typedef struct {
 	int writer;
 } rwlock;
 
-static void thread_free_resource(void *thread_info);
+static void thread_os_free_resource(void *thread_info);
 static int thread_init_info(pthread_info_t thread_info);
-static void thread_free_info(pthread_info_t thread_info);
+static void thread_os_free_info(pthread_info_t thread_info);
 
 static thread_info_t thread_info_pool[THREAD_NUM];
 static void *thread_info_mutex = NULL;
@@ -57,7 +57,7 @@ static int thread_init_info(pthread_info_t thread_info)
 	return 0;
 }
 
-static void thread_free_info(pthread_info_t thread_info)
+static void thread_os_free_info(pthread_info_t thread_info)
 {
 	//assert whether @thread is valid.
 
@@ -69,7 +69,7 @@ static void thread_free_info(pthread_info_t thread_info)
 
 static pthread_info_t thread_allocate_info(const char *thread_name)
 {
-	int i, record_free = -1;
+	int i, record_os_free = -1;
 
 	if (NULL == thread_info_mutex) {
 		thread_info_mutex = platform_mutex_init();
@@ -87,9 +87,9 @@ static pthread_info_t thread_allocate_info(const char *thread_name)
                     "%s: Must call os_thread_exit before exiting\n",
                     pthread_info->name);
 
-			//free the thread resource if not any other thread recycle its resource.
+			//os_free the thread resource if not any other thread recycle its resource.
 			if (TS_STOP == pthread_info->state) {
-				thread_free_resource(pthread_info);
+				thread_os_free_resource(pthread_info);
 				pthread_info->state = TS_ZOMBIE;
 			}
 
@@ -103,16 +103,16 @@ static pthread_info_t thread_allocate_info(const char *thread_name)
 			return pthread_info;
 		}
 
-		if ((-1 == record_free) && (TS_INEXISTENCE == thread_info_pool[i].state)) {
-			record_free = i;
+		if ((-1 == record_os_free) && (TS_INEXISTENCE == thread_info_pool[i].state)) {
+			record_os_free = i;
 		}
 	}
 
 	//no match, allocate a new element
-	if (-1 != record_free) {
-		thread_init_info(&thread_info_pool[record_free]);
+	if (-1 != record_os_free) {
+		thread_init_info(&thread_info_pool[record_os_free]);
 		platform_mutex_unlock(thread_info_mutex);
-		return &thread_info_pool[record_free];
+		return &thread_info_pool[record_os_free];
 	}
 
 	platform_mutex_unlock(thread_info_mutex);
@@ -126,14 +126,14 @@ static pthread_info_t thread_allocate_info(const char *thread_name)
 }
 
 /**
- * @brief free resource of the thread(@thread), but keep the state.
+ * @brief os_free resource of the thread(@thread), but keep the state.
  *
  * @param thread [in].
  * @return none
  * @see none.
  * @note after calling this function, must not to access mutex.
  */
-static void thread_free_resource(void *thread_info)
+static void thread_os_free_resource(void *thread_info)
 {
 	pthread_info_t pthread_info = (pthread_info_t) thread_info;
 
@@ -170,7 +170,7 @@ void *os_thread_create(const char *thread_name, void *thread_func, void *arg)
 
 	stack_size = platform_thread_get_stack_size(thread_name);
 
-	stack_orign = stack = platform_malloc(stack_size);
+	stack_orign = stack = os_malloc(stack_size);
 	if (NULL == stack) {
 		goto do_error;
 	}
@@ -181,7 +181,7 @@ void *os_thread_create(const char *thread_name, void *thread_func, void *arg)
 
 	OS_ASSERT(NULL != thread, NULL);
 
-	if (0 == stack_used)					//stack that allocated just now was not be used, so free it.
+	if (0 == stack_used)					//stack that allocated just now was not be used, so os_free it.
 	{
 		platform_free(stack_orign);
 		stack_orign = stack = NULL;
@@ -205,7 +205,7 @@ void *os_thread_create(const char *thread_name, void *thread_func, void *arg)
 
 do_error:
 	if (NULL != thread_info) {
-		thread_free_info(thread_info);
+		thread_os_free_info(thread_info);
 	}
 
 	if (NULL != stack) {
@@ -243,7 +243,7 @@ int os_thread_join(void *thread_info)
 		platform_msleep(10);
 	}
 
-	thread_free_resource(pthread_info);
+	thread_os_free_resource(pthread_info);
 
 	pthread_info->handle = NULL;
 	pthread_info->state = TS_ZOMBIE;

@@ -337,7 +337,7 @@ static void SHA256_Transform(SHA256_CTX * context, const sha2_word32 * data)
 
 static void SHA256_Update(SHA256_CTX * context, const sha2_byte * data, uint32_t len)
 {
-	unsigned int freespace, usedspace;
+	unsigned int os_freespace, usedspace;
 
 	if (len == 0) {
 		/* Calling with no data is valid - we do nothing */
@@ -349,22 +349,22 @@ static void SHA256_Update(SHA256_CTX * context, const sha2_byte * data, uint32_t
 
 	usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
 	if (usedspace > 0) {
-		/* Calculate how much free space is available in the buffer */
-		freespace = SHA256_BLOCK_LENGTH - usedspace;
+		/* Calculate how much os_free space is available in the buffer */
+		os_freespace = SHA256_BLOCK_LENGTH - usedspace;
 
-		if (len >= freespace) {
+		if (len >= os_freespace) {
 			/* Fill the buffer completely and process it */
-			MEMCPY_BCOPY(&context->buffer[usedspace], data, freespace);
-			context->bitcount += freespace << 3;
-			len -= freespace;
-			data += freespace;
+			MEMCPY_BCOPY(&context->buffer[usedspace], data, os_freespace);
+			context->bitcount += os_freespace << 3;
+			len -= os_freespace;
+			data += os_freespace;
 			SHA256_Transform(context, (sha2_word32 *) context->buffer);
 		} else {
 			/* The buffer is not yet full */
 			MEMCPY_BCOPY(&context->buffer[usedspace], data, len);
 			context->bitcount += len << 3;
 			/* Clean up: */
-			usedspace = freespace = 0;
+			usedspace = os_freespace = 0;
 			return;
 		}
 	}
@@ -381,7 +381,7 @@ static void SHA256_Update(SHA256_CTX * context, const sha2_byte * data, uint32_t
 		context->bitcount += len << 3;
 	}
 	/* Clean up: */
-	usedspace = freespace = 0;
+	usedspace = os_freespace = 0;
 }
 
 static void SHA256_Final(sha2_byte digest[], SHA256_CTX * context)
@@ -526,7 +526,7 @@ static void SHA512_Transform(SHA512_CTX * context, const sha2_word64 * data)
 
 static void SHA512_Update(SHA512_CTX * context, const sha2_byte * data, uint32_t len)
 {
-	unsigned int freespace, usedspace;
+	unsigned int os_freespace, usedspace;
 
 	if (len == 0) {
 		/* Calling with no data is valid - we do nothing */
@@ -538,22 +538,22 @@ static void SHA512_Update(SHA512_CTX * context, const sha2_byte * data, uint32_t
 
 	usedspace = (context->bitcount[0] >> 3) % SHA512_BLOCK_LENGTH;
 	if (usedspace > 0) {
-		/* Calculate how much free space is available in the buffer */
-		freespace = SHA512_BLOCK_LENGTH - usedspace;
+		/* Calculate how much os_free space is available in the buffer */
+		os_freespace = SHA512_BLOCK_LENGTH - usedspace;
 
-		if (len >= freespace) {
+		if (len >= os_freespace) {
 			/* Fill the buffer completely and process it */
-			MEMCPY_BCOPY(&context->buffer[usedspace], data, freespace);
-			ADDINC128(context->bitcount, freespace << 3);
-			len -= freespace;
-			data += freespace;
+			MEMCPY_BCOPY(&context->buffer[usedspace], data, os_freespace);
+			ADDINC128(context->bitcount, os_freespace << 3);
+			len -= os_freespace;
+			data += os_freespace;
 			SHA512_Transform(context, (sha2_word64 *) context->buffer);
 		} else {
 			/* The buffer is not yet full */
 			MEMCPY_BCOPY(&context->buffer[usedspace], data, len);
 			ADDINC128(context->bitcount, len << 3);
 			/* Clean up: */
-			usedspace = freespace = 0;
+			usedspace = os_freespace = 0;
 			return;
 		}
 	}
@@ -570,7 +570,7 @@ static void SHA512_Update(SHA512_CTX * context, const sha2_byte * data, uint32_t
 		ADDINC128(context->bitcount, len << 3);
 	}
 	/* Clean up: */
-	usedspace = freespace = 0;
+	usedspace = os_freespace = 0;
 }
 
 static void SHA512_Last(SHA512_CTX * context)

@@ -577,7 +577,6 @@ do{ \
  */
     extern void *__os_malloc_debug(const char *func, uint32_t size);
 #ifdef DEBUG
-#error "xxxxxxxxxxx"
 #define os_malloc(size)     __os_malloc_debug(__func__, size)
 #else
     static inline void *os_malloc(_IN_ uint32_t size) {

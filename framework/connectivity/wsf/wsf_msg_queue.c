@@ -13,7 +13,7 @@ void wsf_msg_queue_init(wsf_request_queue_t **req_queue) {
     if (req_queue)
         *req_queue = NULL;
 
-    pqueue = (wsf_request_queue_t *)malloc(sizeof(wsf_request_queue_t));
+    pqueue = (wsf_request_queue_t *)os_malloc(sizeof(wsf_request_queue_t));
     if ( NULL == pqueue )
     {
         LOGW(MODULE_NAME,"memory allocate fail.");
@@ -66,23 +66,64 @@ void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
     dlist_for_each_entry_safe(list, tmp,node,wsf_request_node_t,list_head) {
         if (node) {
             wsf_msg_session_t session = node->session;
-            free(session.request);
-            free(session.response);
-            free(node);
+            //LOG("--->session: %p, req: %p, res: %p\n",node,session.request,session.response);
+            if(session.cb)
+                session.cb(NULL,session.extra);
+            if(session.psem)    
+                os_semaphore_destroy(session.psem);
+            if(session.request) 
+                os_free(session.request);
+            if(session.response) 
+                os_free(session.response);
+            os_free(node);
         }
     }
     pthread_mutex_unlock(req_queue->mutex);
     pthread_mutex_destroy(req_queue->mutex);
     os_semaphore_destroy(req_queue->psem);
 
-    free(req_queue);
+    os_free(req_queue);
 }
 
+static void wsf_del_first_msg(wsf_request_queue_t * req_queue)
+{
+    dlist_t *node = NULL;
+    wsf_request_node_t * req_node = NULL;
+
+    if(!req_queue)
+        return;
+
+    pthread_mutex_lock(req_queue->mutex);
+    
+    node = req_queue->list.prev;
+    if(!node){
+        pthread_mutex_unlock(req_queue->mutex);
+        return;
+    }
+
+    req_node = (wsf_request_node_t *)node;
+    dlist_del(node);
+    req_queue->length--;
+
+    wsf_msg_session_destroy(&req_node->session);
+    os_free(req_node);
+    pthread_mutex_unlock(req_queue->mutex);
+}
+
+//FIXME: delete the msg.
 int wsf_request_queue_push(wsf_request_queue_t * req_queue, wsf_request_node_t * req_node)
 {
-    if (!req_node || !req_queue || req_queue->length >= wsf_get_config()->max_msg_queue_length) {
-        LOGE(MODULE_NAME,"!!!wsf_request_queue_push err, length=%d", req_queue->length);
+    if (!req_node || !req_queue) {
+        LOGE(MODULE_NAME,"!!!wsf_request_queue_push err\n");
         return -1;
+    }
+
+    if(req_queue->length >= wsf_get_config()->max_msg_queue_length){
+        if(req_node->session.cb){
+            LOGI(MODULE_NAME,"wsf msg queue is full , drop the last msg.\n");    
+            wsf_del_first_msg(req_queue);
+        }else
+            return -1;        
     }
 
     pthread_mutex_lock(req_queue->mutex);

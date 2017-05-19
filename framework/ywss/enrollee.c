@@ -52,9 +52,9 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
         return;
     }
 
-    model = malloc(OS_PRODUCT_MODEL_LEN);
-    devid = malloc(OS_PRODUCT_SN_LEN);
-    secret = malloc(OS_PRODUCT_SECRET_LEN);
+    model = os_malloc(OS_PRODUCT_MODEL_LEN);
+    devid = os_malloc(OS_PRODUCT_SN_LEN);
+    secret = os_malloc(OS_PRODUCT_SECRET_LEN);
     OS_CHECK_MALLOC(model && devid && secret);
 
     os_product_get_model(model);
@@ -72,7 +72,7 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
 
         /* calc sign */
         text_len = sizeof(uint32_t) + devid_len + model_len;
-        text = malloc(text_len + 1); /* +1 for string print */
+        text = os_malloc(text_len + 1); /* +1 for string print */
         OS_CHECK_MALLOC(text);
 
         memcpy(text, &rand, sizeof(uint32_t));
@@ -83,14 +83,14 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
                 (const unsigned char *)text, text_len,
                 (const unsigned char *)secret, secret_len, sign);
 
-        free(text);
+        os_free(text);
         LOGW(MODULE_NAME,"dump random(4)+devid(n)+model(n): %s", text);
     }
 
     ie_len = model_len + devid_len + ENROLLEE_IE_FIX_LEN;
     enrollee_frame_len = sizeof(probe_req_frame) + ie_len;
 
-    enrollee_frame = malloc(enrollee_frame_len);
+    enrollee_frame = os_malloc(enrollee_frame_len);
     OS_CHECK_MALLOC(enrollee_frame);
 
     /* construct the enrollee frame right now */
@@ -147,15 +147,15 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
         platform_printf("\r\n");
     }
 
-    free(model);
-    free(devid);
-    free(secret);
+    os_free(model);
+    os_free(devid);
+    os_free(secret);
 }
 
 void awss_destroy_enrollee_info(void)
 {
     if (enrollee_frame_len) {
-        free(enrollee_frame);
+        os_free(enrollee_frame);
         enrollee_frame_len = 0;
         enrollee_frame = NULL;
         g_devid = NULL;
@@ -242,16 +242,16 @@ static int decrypt_ssid_passwd(
         return -2;
     }
 
-    secret = malloc(OS_PRODUCT_SECRET_LEN);
+    secret = os_malloc(OS_PRODUCT_SECRET_LEN);
     if (!secret) {
         return -2;
     }
     os_product_get_secret(secret);
 
     text_len = strlen(secret) + p_devid[0];
-    text = malloc(text_len);
+    text = os_malloc(text_len);
     if (!text) {
-        free(secret);
+        os_free(secret);
         return -2;
     }
 
@@ -287,10 +287,10 @@ static int decrypt_ssid_passwd(
     awss_set_enrollee_token(&p_token[1], p_token[0]);
 
     if (secret) {
-        free(secret);
+        os_free(secret);
     }
     if (text) {
-        free(text);
+        os_free(text);
     }
 
     return 0;/* success */

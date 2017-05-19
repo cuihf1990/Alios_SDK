@@ -21,14 +21,14 @@ wsf_msg_t *__wsf_invoke_sync(wsf_msg_t *req);
 extern wsf_request_queue_t *global_request_queue;
 
 static wsf_response_t *wsf_respone_create();
-static void wsf_free_resource(void);
+static void wsf_os_free_resource(void);
 
 static volatile int initialized = 0;
 
 wsf_push_callback push_callback = NULL;
 
 wsf_error_callback error_callback = NULL;
-
+#define MODULE_NAME "wsf_client" 
 char *global_secret_key = NULL;
 static wsf_code wsf_allocate_resource(void)
 {
@@ -43,7 +43,7 @@ static wsf_code wsf_allocate_resource(void)
             || (NULL == sess_lock)
             || (NULL == device_lock)
             || (NULL == global_request_queue)) {
-        wsf_free_resource();
+        wsf_os_free_resource();
 
         return WSF_FAIL;
     }
@@ -52,7 +52,7 @@ static wsf_code wsf_allocate_resource(void)
 }
 
 
-static void wsf_free_resource(void)
+static void wsf_os_free_resource(void)
 {
 	if ( NULL != msg_id_lock )
 	{
@@ -124,7 +124,7 @@ wsf_code wsf_shutdown() {
     wsf_stop_worker();
     wsf_destroy_connections();
 
-    wsf_free_resource();
+    wsf_os_free_resource();
 
     wsf_destroy_config();
 
@@ -133,22 +133,16 @@ wsf_code wsf_shutdown() {
     //LOGT();
     return WSF_SUCCESS;
 }
-
-wsf_response_t *wsf_invoke(const char *service_name, wsf_list_t *parameters, int timeout)
+typedef struct{
+    wsf_async_cb_t  cb;
+    wsf_msg_t       *req ; 
+    void            *extra;
+}__wsf_client_cb_t;
+static void *__analy_resp(wsf_msg_t *response,void *arg)
 {
-    if (!initialized) {
-        LOGI(MODULE_NAME,"wsf is uninitialized.\n");
-        return NULL;
-    }
-
-    wsf_msg_t *request = wsf_msg_request_create(service_name, parameters);
-    if (NULL == request)
-        return NULL;
-
-    wsf_msg_t *response = __wsf_invoke_sync(request);
-
     wsf_response_t *ret = wsf_respone_create();
-
+    __wsf_client_cb_t *cb = (__wsf_client_cb_t *)arg;
+    LOG("get response back.\n");
     //timeout as server error
     if (!response) {
         if (ret) {
@@ -171,7 +165,7 @@ wsf_response_t *wsf_invoke(const char *service_name, wsf_list_t *parameters, int
 
         pp += sizeof(int32_t);
 
-        ret->data = (char *)malloc(ret->length + 1);
+        ret->data = (char *)os_malloc(ret->length + 1);
         if (ret->data) {
             memset(ret->data, 0, ret->length + 1);
             memcpy(ret->data, pp, ret->length);
@@ -181,8 +175,55 @@ wsf_response_t *wsf_invoke(const char *service_name, wsf_list_t *parameters, int
     }
 
     if (response)
-        free(response);
-    free(request);
+        os_free(response);
+    if(cb){
+        cb->cb(ret,cb->extra);
+        os_free(cb->req);
+        os_free(cb);
+    }
+    return ret;
+}
+
+
+int wsf_invoke_async(const char *service_name, wsf_list_t *parameters,wsf_async_cb_t cb, void *arg)
+{
+    if (!initialized) {
+        LOGI(MODULE_NAME,"wsf is uninitialized.\n");
+        return -1;
+    }
+
+    wsf_msg_t *request = wsf_msg_request_create(service_name, parameters);
+    if (NULL == request)
+        return -1;
+    __wsf_client_cb_t *_cb = NULL;
+    if(cb){
+        _cb = (__wsf_client_cb_t *)os_malloc(sizeof(__wsf_client_cb_t)); 
+        if(!_cb){
+            os_free(request);
+            return -1;
+        }
+        _cb->cb = cb;
+        _cb->extra = arg;
+        _cb->req = request;
+    } 
+    return __wsf_invoke_async(request,__analy_resp,_cb);
+}
+
+wsf_response_t *wsf_invoke(const char *service_name, wsf_list_t *parameters, int timeout)
+{
+    if (!initialized) {
+        LOGI(MODULE_NAME,"wsf is uninitialized.\n");
+        return NULL;
+    }
+
+    wsf_msg_t *request = wsf_msg_request_create(service_name, parameters);
+    if (NULL == request)
+        return NULL;
+
+    wsf_msg_t *response = __wsf_invoke_sync(request);
+   
+    wsf_response_t *ret = __analy_resp(response,NULL);
+    os_free(request);
     return ret;
 }
 
@@ -192,7 +233,7 @@ wsf_code wsf_register_push_callback(wsf_push_callback callback) {
 }
 
 static wsf_response_t *wsf_respone_create() {
-    wsf_response_t *ret = (wsf_response_t *) malloc(sizeof(wsf_response_t));
+    wsf_response_t *ret = (wsf_response_t *) os_malloc(sizeof(wsf_response_t));
     if (ret) {
         ret->result = INVOKE_RIGHT;
         ret->length = 0;
@@ -205,11 +246,11 @@ static wsf_response_t *wsf_respone_create() {
 }
 
 
-wsf_code wsf_response_destroy(wsf_response_t *response, int free_data) {
-    if (free_data && response->data) {
-        free(response->data);
+wsf_code wsf_response_destroy(wsf_response_t *response, int os_free_data) {
+    if (os_free_data && response->data) {
+        os_free(response->data);
     }
-    free(response);
+    os_free(response);
     return WSF_SUCCESS;
 }
 
@@ -220,12 +261,12 @@ void wsf_wait() {
 wsf_code wsf_set_secret_key(const char *secret_key) {
     if (!secret_key) {
         if (global_secret_key) {
-            free(global_secret_key);
+            os_free(global_secret_key);
         }
         global_secret_key = NULL;
     } else {
         size_t len = strlen(secret_key);
-        char *tmp = (char *)malloc(len);
+        char *tmp = (char *)os_malloc(len);
         if (!tmp) {
             LOGE(MODULE_NAME,"failed to copy secret key, out of memory");
             return WSF_FAIL;

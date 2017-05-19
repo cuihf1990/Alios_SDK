@@ -51,6 +51,75 @@ int wsf_disconnect() {
     return wsf_shutdown();
 }
 
+typedef void *(*_wsf_send_cb)(void *,void *);
+typedef struct{
+    _wsf_send_cb cb;
+    void *arg;
+    uint32_t time;
+}__wsf_send_cb_t;
+
+static void *__analy_resp(wsf_response_t *wsf_rsp,__wsf_send_cb_t *cb)
+{
+    __wsf_send_cb_t *_cb = cb;
+    uint32_t time_after_send;
+    connectivity_rsp_t* conn_rsp = NULL;
+    if (wsf_rsp) {
+        if (wsf_rsp->result == 0) {
+            conn_rsp = (connectivity_rsp_t*)wsf_uplink_buff;
+            memset(conn_rsp, 0, sizeof(wsf_uplink_buff));
+            conn_rsp->result = CONNECT_RESULT_OK;
+            conn_rsp->len = wsf_rsp->length;
+            memcpy(conn_rsp->data, wsf_rsp->data, wsf_rsp->length);
+            wsf_clear_message(conn_rsp->data, conn_rsp->len);
+            wsf_debug(MODULE_NAME,"response: %s", conn_rsp->data);
+            time_after_send = os_get_time_ms();
+            last_rtt =  time_after_send - cb->time;
+            average_rtt = (average_rtt *send_time +last_rtt) / (send_time + 1);
+            send_time ++;
+        } else {
+            LOGE(MODULE_NAME,"wsf_invoke:%d", wsf_rsp->result);
+        }
+        wsf_response_destroy(wsf_rsp, 1);
+    } else {
+        LOGE(MODULE_NAME,"wsf_invoke timeout!!!");
+    }
+   
+    if(_cb->cb){
+        _cb->cb(conn_rsp,_cb->arg); 
+        os_free(_cb);
+    }
+    LOG("conn_rsp cb done: %p\n",_cb->cb);
+    return conn_rsp; 
+}
+
+int wsf_send_async(void *pdata, int len,void *(*cb)(connectivity_rsp_t* rsp,void *),void *arg)
+{
+    connectivity_rsp_t* conn_rsp = NULL;
+    char *service_name = "devService.request";
+    uint32_t time_before_send = os_get_time_ms();
+    int reqtimeout_interval = config_get_reqtimeout_interval();
+    wsf_debug(MODULE_NAME,"wsf_send: %s", (char *)pdata);
+    wsf_list_t arg_list;
+    __wsf_send_cb_t *_cb = NULL;
+
+    if(cb){
+        _cb = os_malloc(sizeof(__wsf_send_cb_t));
+        if(!_cb)
+            return 0;
+        _cb->cb = (_wsf_send_cb)cb;
+        _cb->arg = arg;
+        _cb->time = time_before_send;
+    }
+
+    wsf_list_init(&arg_list);
+    wsf_list_push_back(&arg_list, pdata, len);
+    int ret = wsf_invoke_async(service_name, &arg_list, __analy_resp,_cb);
+    wsf_list_os_free(&arg_list);
+    
+    return ret;
+}
+
+
 /* wsf_invoke response result
 0 调用成功
 1 登录成功
@@ -67,7 +136,6 @@ connectivity_rsp_t* wsf_send(void *pdata, int len) {
     connectivity_rsp_t* conn_rsp = 0;
     char *service_name = "devService.request";
     uint32_t time_before_send = os_get_time_ms();
-    uint32_t time_after_send;
     int reqtimeout_interval = config_get_reqtimeout_interval();
     wsf_debug(MODULE_NAME,"wsf_send: %s", (char *)pdata);
     wsf_list_t arg_list;
@@ -75,29 +143,11 @@ connectivity_rsp_t* wsf_send(void *pdata, int len) {
     wsf_list_init(&arg_list);
     wsf_list_push_back(&arg_list, pdata, len);
     wsf_response_t *wsf_rsp = wsf_invoke(service_name, &arg_list, reqtimeout_interval);
-    wsf_list_free(&arg_list);
-
-    if (wsf_rsp) {
-        if (wsf_rsp->result == 0) {
-            conn_rsp = (connectivity_rsp_t*)wsf_uplink_buff;
-            memset(conn_rsp, 0, sizeof(wsf_uplink_buff));
-            conn_rsp->result = CONNECT_RESULT_OK;
-            conn_rsp->len = wsf_rsp->length;
-            memcpy(conn_rsp->data, wsf_rsp->data, wsf_rsp->length);
-            wsf_clear_message(conn_rsp->data, conn_rsp->len);
-            wsf_debug(MODULE_NAME,"response: %s", conn_rsp->data);
-            time_after_send = os_get_time_ms();
-            last_rtt =  time_after_send - time_before_send;
-            average_rtt = (average_rtt *send_time +last_rtt) / (send_time + 1);
-            send_time ++;
-        } else {
-            LOGE(MODULE_NAME,"wsf_invoke:%d", wsf_rsp->result);
-        }
-        wsf_response_destroy(wsf_rsp, 1);
-    } else {
-        LOGE(MODULE_NAME,"wsf_invoke timeout!!!");
-    }
-    return conn_rsp;
+    wsf_list_os_free(&arg_list);
+    __wsf_send_cb_t _cb;
+    _cb.cb = NULL;
+    _cb.time = time_before_send;
+    return __analy_resp(wsf_rsp,&_cb);
 }
 
 int wsf_add_listener(connectivity_cb func) {
@@ -164,7 +214,7 @@ static wsf_response_t* wsf_data_listener(void *data, int dlen) {
     memset(wsf_downlink_buff, 0, sizeof(wsf_downlink_buff));
     wsf_broadcast_data(data, dlen, result, &rlen);
 
-    /* rsp will be free by wsf callback thread */
+    /* rsp will be os_free by wsf callback thread */
     wsf_response_t *rsp = (wsf_response_t *)os_malloc(sizeof(wsf_response_t));
     rsp->result = INVOKE_RIGHT;
     rsp->length = rlen;

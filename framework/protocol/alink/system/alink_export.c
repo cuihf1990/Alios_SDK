@@ -151,7 +151,7 @@ int alink_wait_connect(int timeout_ms)
 }
 
 /**
- * @brief destroy alink service and free resources
+ * @brief destroy alink service and os_free resources
  *
  * @param None.
  * @retval 0 on success, otherwise -1 will return
@@ -188,7 +188,7 @@ int alink_end(void)
 
     /* deinit global variable */
     memset(alink_cb_func, 0, sizeof(alink_cb_func));
-    //os_exit();
+    os_exit();
 
     return 0;
 }
@@ -387,6 +387,20 @@ int alink_report(const char *method, const char *json_buffer)
 
     return ret;
 }
+
+int alink_report_async(const char *method, const char *json_buffer,void *(*cb)(void *),void *arg)
+{
+    alink_data_t data = {(char *)method, (char *)json_buffer};
+    service_t *service = sm_get_service("accs");
+    int ret;
+
+    if (!method || !json_buffer || !service)
+        return -1;
+    ret = service->put_async((void*)&data, sizeof(data),cb,arg);//accs_put
+
+    return ret;
+}
+
 
 /**
  * @brief query alink cloud service, like getAlinkTime...

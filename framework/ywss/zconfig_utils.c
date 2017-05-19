@@ -201,14 +201,14 @@ char *zconfig_calc_tpsk(char *model, char *secret, char *tpsk, int tpsk_len)
 {
 	u8 digest[SHA256_DIGEST_SIZE];
 	int len = strlen(model) + strlen(secret);
-	char *buffer = malloc(len);
-	warn_on(!buffer, "malloc failed!\r\n");
+	char *buffer = os_malloc(len);
+	warn_on(!buffer, "os_malloc failed!\r\n");
 
 	memcpy(buffer, model, strlen(model));
 	memcpy(buffer + strlen(model), secret, strlen(secret));
 
 	SHA256_hash(buffer, len, digest);
-    free(buffer);
+    os_free(buffer);
 #if 0
 	int i;
 	for (i = 0; i < SHA256_DIGEST_SIZE; i++)

@@ -53,7 +53,7 @@ void wsf_list_init(wsf_list_t *list) {
     list->head = NULL;
     list->tail = NULL;
 }
-void wsf_list_free(wsf_list_t *list) {
+void wsf_list_os_free(wsf_list_t *list) {
     wsf_list_node_t *node = NULL;
     while ((node = wsf_list_pop_front(list)) != NULL) { 
         os_free(node);

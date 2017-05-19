@@ -237,49 +237,39 @@ int alink_post_raw_data(uint8_t *byte_stream, int len)
 }
 #endif
 
-static uint32_t work_time = 30*24*60*60; //default work time 1s
+static uint32_t work_time = 24*60*60; //default work time 1s
 
-
-void *main_loop(void *arg)
+void main_loop(void *arg)
 {
-    uint32_t time_start, time_end;
-    struct timeval tv = { 0 };
-
-    gettimeofday(&tv, NULL);
-    time_start = tv.tv_sec;
-    alink_wait_connect(ALINK_WAIT_FOREVER);
-    activate_button_pressed();
-    helper_api_test();
-    do {
-        if (need_report != 1000) {
+    //TODO: async
+    //activate_button_pressed();
+    //helper_api_test();
 #ifdef RAW_DATA_DEVICE
-            /*
-             * Note: post data to cloud,
-             * use sample alink_post_raw_data()
-             * or alink_post()
-             */
-            /* sample for raw data device */
-            alink_post_raw_data(device_state_raw_data, RAW_DATA_SIZE);
+    /*
+     * Note: post data to cloud,
+     * use sample alink_post_raw_data()
+     * or alink_post()
+     */
+    /* sample for raw data device */
+    alink_post_raw_data(device_state_raw_data, RAW_DATA_SIZE);
 
 #else
-            /* sample for json data device */
-            snprintf(post_data_buffer, post_data_buffer_size, PostDataFormat,
-                    device_state[ATTR_ERRORCODE_INDEX],
-                    device_state[ATTR_HUE_INDEX],
-                    device_state[ATTR_LUMINANCE_INDEX],
-                    device_state[ATTR_SWITCH_INDEX],
-                    device_state[ATTR_WORKMODE_INDEX]);
-
-            alink_report(Method_PostData, post_data_buffer);
+    /* sample for json data device */
+    snprintf(post_data_buffer, post_data_buffer_size, PostDataFormat,
+            device_state[ATTR_ERRORCODE_INDEX],
+            device_state[ATTR_HUE_INDEX],
+            device_state[ATTR_LUMINANCE_INDEX],
+            device_state[ATTR_SWITCH_INDEX],
+            device_state[ATTR_WORKMODE_INDEX]);
+    printf("start report async\n");
+    alink_report_async(Method_PostData, post_data_buffer,NULL, NULL);
 #endif
-
-            need_report = 0;
-        }
-        usleep(1000*1000);
-        gettimeofday(&tv, NULL);
-        time_end = tv.tv_sec;
-    } while ((time_start + work_time) > time_end);
-    return NULL;
+    if(--work_time)
+        yos_post_delayed_action(1*1000,main_loop, NULL);
+    else{
+        yos_loop_exit();
+        printf("alink sample will stop. \n"); 
+    }
 }
 
 
@@ -444,7 +434,6 @@ int application_start(int argc, char *argv[])
 
     test_kv();
     //awss_demo();
-    yos_set_log_level(5); 
     if (env == SANDBOX)
         alink_enable_sandbox_mode();
     else if (env == DAILY)
@@ -469,16 +458,13 @@ int application_start(int argc, char *argv[])
 #endif
 
     alink_start();
-    os_thread_create("main_loop",main_loop,NULL);
-    //FIXME: we should nerver use this function on AOS.
-    //alink_wait_connect(ALINK_WAIT_FOREVER);
-    //yos_task_new("alink_demo", main_loop, NULL, 2048);
-    //yos_post_delayed_action(10*1000, post_data_period, NULL);
+
+    yos_post_delayed_action(4*1000,main_loop, NULL);
     yos_loop_run();
 
     //‘›∆¡±Œ∏¥Œª¥˙¬Î£¨±‹√‚≤‚ ‘÷–ŒÛ÷ÿ∆Ù
     //alink_factory_reset();
-
+    printf("alink end.\n");
     alink_end();
 
     return 0;

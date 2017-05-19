@@ -16,7 +16,6 @@
 #include "os.h"
 #include "enrollee.h"
 
-#define ALINK_PROTOCOL_DEBUG 0
 #if(ALINK_PROTOCOL_DEBUG==1)
     #define alink_debug_protocol LOGD
 #else
@@ -39,7 +38,7 @@ extern uint8_t* uplink_buff;
 extern uint8_t* downlink_buff;
 extern const device_t* main_device;
 extern const connectivity_t* remote_conn;
-extern void start_accs_work();
+extern void start_accs_work(int delay);
 
 AlinkRequestState last_state = {0, 0, {0}};
 
@@ -69,12 +68,14 @@ static int alink_phase;
 
 static void get_protocol_buff(void)
 {
+    LOG("--->>> lock \n");
     pthread_mutex_lock(link_buff_mutex);
     memset(uplink_buff, 0, ALINK_BUF_SIZE);
 }
 
 static void put_protocol_buff(void)
 {
+    LOG("<<<--- unlock \n");
     pthread_mutex_unlock(link_buff_mutex);
 }
 
@@ -172,6 +173,7 @@ static void alink_request_json_system(char *buf, int rspid, const char *target, 
     }
 }
 
+//TODO: add one async version.
 int32_t alink_sync_time(char *time, int len) {
     int ret;
     connectivity_rsp_t* rsp;
@@ -206,8 +208,8 @@ const char *alink_get_sdk_version(char *buff,unsigned int len)
 
     OS_CHECK_PARAMS(buff);
 
-    version = (char *)malloc(STR_SHORT_LEN);
-    module_name = (char *)malloc(STR_SHORT_LEN);
+    version = (char *)os_malloc(STR_SHORT_LEN);
+    module_name = (char *)os_malloc(STR_SHORT_LEN);
     OS_CHECK_MALLOC(version && module_name);
 
     memset(version,0,STR_SHORT_LEN);
@@ -217,16 +219,76 @@ const char *alink_get_sdk_version(char *buff,unsigned int len)
     os_get_module_name(module_name);
 
     snprintf(buff,len,"A[%s|%s|%04x]OS[%s]T[%s.%s]",main_device->info->alink_version,ALINK_AGENT_GIT_VERSION,0x0000,version,module_name,ALINK_AGENT_BUILD_TIME);//todo: feature to be complete
-    free(version);
-    free(module_name);
+    os_free(version);
+    os_free(module_name);
     return buff;
 }
+
+typedef struct{
+    int (*cb)(int);
+    char *uuid;
+    char *token;
+}_alink_reg_t;
+
+static void *_alink_reg_cb(connectivity_rsp_t *rsp,void *cb)
+{
+    int ret = 0;
+    _alink_reg_t *reg = cb;
+    LOG("\n");
+    if(!rsp) {
+        ret = ALINK_CODE_ERROR_TIMEOUT;
+    } else {
+        ret = alink_response_get_x(rsp->data, reg->uuid, UUID_LEN, "uuid");
+        ret = alink_response_get_x(rsp->data, reg->token, TOKEN_LEN, "token");
+        alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"result: uuid %s, token %s", reg->uuid, reg->token);
+        config_update();
+    }
+    put_protocol_buff();
+    alink_error_code_handler(ret);
+    reg->cb(ALINK_CODE_SUCCESS == ret);
+    os_free(reg);
+    return NULL;
+}
+
+int32_t alink_register_async(const device_t *dev,int (*cb)(int)) {
+    int ret;
+    connectivity_rsp_t* rsp;
+    char *alink_version = NULL;
+    _alink_reg_t *reg = NULL;
+
+    alink_version = (char *)os_malloc(STR_LONG_LEN);
+    OS_CHECK_MALLOC(alink_version);
+    reg = (_alink_reg_t *)os_malloc(sizeof(_alink_reg_t));
+    OS_CHECK_MALLOC(reg);
+    memset(alink_version,0,STR_LONG_LEN);
+    alink_get_sdk_version(alink_version,STR_LONG_LEN);
+
+    get_protocol_buff();
+    alink_request_json_system(uplink_buff, -1, "", "");
+    snprintf(uplink_buff+strlen(uplink_buff), ALINK_BUF_SIZE-strlen(uplink_buff), RegisterDeviceFormat,
+#ifdef ALINK_SECURITY
+            "device.register",
+#else
+            "registerDevice",
+#endif
+            dev->info->model, dev->info->sn, dev->info->mac, dev->info->firmware_version,alink_version,
+            alink_generate_trans_id());
+    os_free(alink_version);
+    alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_register: %s", uplink_buff);
+
+    reg->cb = cb;
+    reg->uuid = dev->config->uuid;
+    reg->token = dev->config->token;
+    ret = remote_conn->send_async(uplink_buff, strlen(uplink_buff),_alink_reg_cb,reg);
+    return ret;
+}
+
 int32_t alink_register(const device_t *dev) {
     int ret;
     connectivity_rsp_t* rsp;
     char *alink_version = NULL;
 
-    alink_version = (char *)malloc(STR_LONG_LEN);
+    alink_version = (char *)os_malloc(STR_LONG_LEN);
     OS_CHECK_MALLOC(alink_version);
     memset(alink_version,0,STR_LONG_LEN);
     alink_get_sdk_version(alink_version,STR_LONG_LEN);
@@ -241,7 +303,7 @@ int32_t alink_register(const device_t *dev) {
 #endif
             dev->info->model, dev->info->sn, dev->info->mac, dev->info->firmware_version,alink_version,
             alink_generate_trans_id());
-    free(alink_version);
+    os_free(alink_version);
     alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_register: %s", uplink_buff);
 
     rsp = remote_conn->send(uplink_buff, strlen(uplink_buff));
@@ -257,12 +319,32 @@ int32_t alink_register(const device_t *dev) {
     alink_error_code_handler(ret);
     return ret;
 }
-int32_t alink_login(void) {
+
+static void *_alink_login_cb(connectivity_rsp_t *rsp, void *cb)
+{
+    int ret = 0;
+    int (*_cb)(int) = cb;
+    if(!rsp) {
+        ret = ALINK_CODE_ERROR_TIMEOUT;
+    } else {
+        alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"result: %s", (char*)rsp->data);
+        ret = alink_response_get_x(rsp->data, NULL, 0, NULL);
+    }
+    put_protocol_buff();
+    alink_error_code_handler(ret);
+    
+    if(_cb)
+        _cb(ret);
+
+    return NULL;
+}
+
+int32_t alink_login_async(int (*cb)(int)) {
     int ret;
     connectivity_rsp_t* rsp;
     char *alink_version = NULL;
 
-    alink_version = (char *)malloc(STR_LONG_LEN);
+    alink_version = (char *)os_malloc(STR_LONG_LEN);
     OS_CHECK_MALLOC(alink_version);
     memset(alink_version,0,STR_LONG_LEN);
     alink_get_sdk_version(alink_version,STR_LONG_LEN);
@@ -279,7 +361,36 @@ int32_t alink_login(void) {
     }
     //sprintf(uplink_buff+strlen(uplink_buff), LoginFormat, alink_version, alink_generate_trans_id());
     alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_login : %s", uplink_buff);
-    free(alink_version);
+    os_free(alink_version);
+
+    ret = remote_conn->send_async(uplink_buff, strlen(uplink_buff), _alink_login_cb,cb);
+    return ret;
+}
+
+
+int32_t alink_login(void) {
+    int ret;
+    connectivity_rsp_t* rsp;
+    char *alink_version = NULL;
+
+    alink_version = (char *)os_malloc(STR_LONG_LEN);
+    OS_CHECK_MALLOC(alink_version);
+    memset(alink_version,0,STR_LONG_LEN);
+    alink_get_sdk_version(alink_version,STR_LONG_LEN);
+
+    get_protocol_buff();
+    alink_request_json_system(uplink_buff, -1, "", "");
+    char ssid[PLATFORM_MAX_SSID_LEN];
+    memset(ssid, 0, PLATFORM_MAX_SSID_LEN);
+    os_wifi_get_ap_info( ssid ,NULL, NULL);
+    if ((strcmp(ssid,DEFAULT_SSID) == 0) || (NULL == awss_get_enrollee_token()) || (0 == strlen(awss_get_enrollee_token()))){
+        sprintf(uplink_buff+strlen(uplink_buff), LoginFormat, alink_version, alink_generate_trans_id());
+    } else {
+        sprintf(uplink_buff+strlen(uplink_buff), LoginFormatWithToken, alink_version, awss_get_enrollee_token(), alink_generate_trans_id());
+    }
+    //sprintf(uplink_buff+strlen(uplink_buff), LoginFormat, alink_version, alink_generate_trans_id());
+    alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_login : %s", uplink_buff);
+    os_free(alink_version);
 
     rsp = remote_conn->send(uplink_buff, strlen(uplink_buff));
     if(!rsp) {
@@ -313,6 +424,62 @@ int32_t alink_logout(void) {
     return ret;
 }
 
+typedef struct{
+    void *(*cb)(void *);
+    void *arg;
+}__alink_post_cb_t;
+static void *__alink_post_cb(connectivity_rsp_t *rsp,void *cb)
+{
+    int ret = 0;
+    __alink_post_cb_t *_cb = cb;
+    if(!rsp) {
+        ret = ALINK_CODE_ERROR_TIMEOUT;
+    } else {
+        alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_post:%s", (char*)rsp->data);
+        ret = alink_response_get_x(rsp->data, NULL, 0, NULL);
+    }
+    alink_error_code_handler(ret);
+    LOG("get posted respon back , cb: %p. \n",_cb);
+    if(_cb){
+        _cb->cb(_cb->arg);
+        os_free(_cb); 
+    }
+    
+    return NULL;
+}
+
+
+int32_t __alink_post_async(const char *method, char *buff, void *(*cb)(void *),void *arg) {
+    int ret;
+    connectivity_rsp_t* rsp;
+    __alink_post_cb_t *_cb = NULL;
+
+    if(cb){
+        _cb = os_malloc(sizeof(__alink_post_cb_t));
+        OS_CHECK_PARAMS(_cb);
+        _cb->cb = cb;
+        _cb->arg = arg;
+    }
+    
+    get_protocol_buff();
+    if(last_state.state) {
+        alink_request_json_system(uplink_buff, last_state.id, last_state.account, "");
+        alink_clear_push_state();
+    } else {
+        alink_request_json_system(uplink_buff, -1, "", "");
+    }
+#ifdef _ALINK_MAINTENANCE_
+    alink_attrfilter(buff);
+#endif
+    sprintf(uplink_buff+strlen(uplink_buff), PostFormat, method, buff, alink_generate_trans_id());
+    alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_post:%s", (char*)uplink_buff);
+
+    ret = remote_conn->send_async(uplink_buff, strlen(uplink_buff),__alink_post_cb,_cb);
+    put_protocol_buff();
+    return ret;
+}
+
+
 int32_t __alink_post(const char *method, char *buff) {
     int ret;
     connectivity_rsp_t* rsp;
@@ -342,12 +509,66 @@ int32_t __alink_post(const char *method, char *buff) {
     return ret;
 }
 
+int32_t alink_post_async(const char *method, char *buff, void *(*cb)(void *),void *arg) {
+    if (!cloud_is_connected())
+        return SERVICE_RESULT_ERR;
+    return (__alink_post_async(method, buff,cb,arg) == ALINK_CODE_SUCCESS)? SERVICE_RESULT_OK: SERVICE_RESULT_ERR;
+}
+
 
 int32_t alink_post(const char *method, char *buff) {
     if (!cloud_is_connected())
         return SERVICE_RESULT_ERR;
     return (__alink_post(method, buff) == ALINK_CODE_SUCCESS)? SERVICE_RESULT_OK: SERVICE_RESULT_ERR;
 }
+
+typedef struct {
+    char *res;
+    int len;
+}_alink_prot_cb_t;
+static void *_alink_protocol_parser(connectivity_rsp_t *rsp,void *cb)
+{
+    int ret = 0;
+    _alink_prot_cb_t *_cb = cb;
+    if(!rsp) {
+        ret = ALINK_CODE_ERROR_TIMEOUT;
+    } else {
+        alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_get:%s", (char*)rsp->data);
+        ret = alink_response_get_data(rsp->data, _cb->res, _cb->len);
+    }
+    
+    os_free(_cb); 
+    alink_error_code_handler(ret);
+    return NULL;
+}
+
+int32_t alink_get_async(const char *method, char *buff, char *result, int len) {
+    int ret;
+    connectivity_rsp_t* rsp;
+    _alink_prot_cb_t *cb = NULL;
+
+    if (!cloud_is_connected())
+        return SERVICE_RESULT_ERR;
+
+    cb = os_malloc(sizeof(_alink_prot_cb_t));
+    if(!cb)
+        return 0;
+    cb->res = result;
+    cb->len = len;
+
+    get_protocol_buff();
+    alink_request_json_system(uplink_buff, -1, "", "");
+#ifdef _ALINK_MAINTENANCE_
+    alink_attrfilter(buff);
+#endif
+    sprintf(uplink_buff+strlen(uplink_buff), PostFormat, method, buff, alink_generate_trans_id());
+    alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_get:%s", (char*)uplink_buff);
+
+    ret = remote_conn->send_async(uplink_buff, strlen(uplink_buff),_alink_protocol_parser,cb);
+    put_protocol_buff();
+    return ret;
+}
+
 
 int32_t alink_get(const char *method, char *buff, char *result, int len) {
     int ret;
@@ -522,6 +743,41 @@ int32_t alink_parse_request(char *p_cJsonStr, int iStrLen, AlinkRequest *p_stReq
     return json_parse_name_value(p_cJsonStr, iStrLen, alink_parse_request_CB, (void*)p_stReq);
 }
 
+static void * _alink_unreg_cb(connectivity_rsp_t *rsp,void *cb) 
+{
+    int ret = 0;   
+    int (*_cb)(int) = cb;
+    if(!rsp) {
+        ret = ALINK_CODE_ERROR_TIMEOUT;
+    } else {
+        alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"result: %s", (char*)rsp->data);
+        ret = alink_response_get_x(rsp->data, NULL, 0, NULL);
+    }
+    put_protocol_buff();
+    alink_error_code_handler(ret);
+    
+    _cb(ret);
+    return NULL;
+}
+
+int32_t alink_unregister_async(int (*cb)(int))
+{
+    int ret;
+    connectivity_rsp_t* rsp;
+
+    get_protocol_buff();
+    alink_request_json_system(uplink_buff, -1, "", "");
+    snprintf(uplink_buff+strlen(uplink_buff), ALINK_BUF_SIZE-strlen(uplink_buff),
+            UnregisterDeviceFormat,
+            main_device->info->model, main_device->info->sn, main_device->info->mac,
+            alink_generate_trans_id());
+    alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL,"alink_unregister: %s", uplink_buff);
+
+    ret = remote_conn->send_async(uplink_buff, strlen(uplink_buff),_alink_unreg_cb,cb);
+    return ret;
+}
+
+
 int32_t alink_unregister(void)
 {
     int ret;
@@ -567,7 +823,7 @@ int alink_error_code_handler(uint32_t code)
         case ALINK_CODE_ERROR_DEV_NOT_LOGIN:
             LOGW(MODULE_NAME_ALINK_PROTOCOL,"device need to re-login(%d)", code);
             alink_phase = PHASE_REGISTER;
-            start_accs_work();
+            start_accs_work(0);
             break;
         //RE-HANDSHAKE
         case ALINK_CODE_ERROR_TOKEN:
@@ -583,7 +839,7 @@ int alink_error_code_handler(uint32_t code)
             main_device->config->uuid[0] = 0;
             LOGW(MODULE_NAME_ALINK_PROTOCOL,"device need to re-register(%d)", code);
             alink_phase = PHASE_REGISTER;
-            start_accs_work();
+            start_accs_work(0);
             break;
         //FATAL, system hang
         case ALINK_CODE_ERROR_MISSING_PARAM:
@@ -627,6 +883,70 @@ int alink_error_code_handler(uint32_t code)
     }
     return alink_phase;
 }
+static int _g_handshake_cnt = 9+4;
+
+static int _alink_handshake_cycle(int ret)
+{
+    if(--_g_handshake_cnt <= 0)
+        return;
+    LOG("cnt: %d ,phase: %d\n",_g_handshake_cnt,alink_phase);
+    switch (alink_phase) {
+        case PHASE_INIT:
+            if (main_device->config->uuid[0] == 0)
+                alink_phase = PHASE_REGISTER;
+            else
+                alink_phase = PHASE_LOGIN;
+            break;
+        case PHASE_REGISTER:
+            if(ret)
+                alink_phase = PHASE_LOGIN;
+            else 
+                return alink_register_async(main_device,_alink_handshake_cycle);
+            break;
+        case PHASE_LOGIN:
+            if(ret){
+                alink_phase = PHASE_LOGIN_SUCCESS;
+                awss_clear_enrollee_token();
+                break;
+            }else
+                return alink_login_async(_alink_handshake_cycle);
+        case PHASE_LOGIN_SUCCESS:
+            if (!config_get_unregister_flag())
+                alink_phase = PHASE_READY;
+            else
+                alink_phase = PHASE_UNREGISTER;
+            break;
+        case PHASE_UNREGISTER:
+            if(ret){
+                main_device->config->uuid[0] = 0;
+                config_set_unregister_flag(0);
+                alink_phase = PHASE_REGISTER;
+            }else{
+                return alink_unregister_async(_alink_handshake_cycle); 
+            }
+            break;
+        case PHASE_READY:
+            LOGI(MODULE_NAME_ALINK_PROTOCOL,"accs_handshake success");
+            return SERVICE_RESULT_OK;
+        case PHASE_WAIT:
+            start_accs_work(2 * 1000);
+        case PHASE_ABORT:
+        default:
+            return SERVICE_RESULT_ERR;
+    }
+    return _alink_handshake_cycle(0);
+}
+
+int alink_handshake_async()
+{
+    LOG(MODULE_NAME_ALINK_PROTOCOL);
+    OS_ASSERT(main_device, "invalid main device");
+    
+    _g_handshake_cnt = 9 + 4; 
+    alink_phase = PHASE_INIT;
+    return _alink_handshake_cycle(0);
+}
+
 
 int alink_handshake(void)
 {

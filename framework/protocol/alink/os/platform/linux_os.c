@@ -48,7 +48,7 @@ void platform_free(void *ptr)
 
 void *platform_mutex_init(void)
 {
-	pthread_mutex_t *mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
+	pthread_mutex_t *mutex = (pthread_mutex_t *)platform_malloc(sizeof(pthread_mutex_t));
 	if (NULL == mutex)
 	{
 		return NULL;
@@ -56,7 +56,7 @@ void *platform_mutex_init(void)
 
 	if (0 != pthread_mutex_init(mutex, NULL))
 	{
-        free(mutex);
+        platform_free(mutex);
         return NULL;
 	}
 
@@ -79,7 +79,7 @@ void platform_mutex_unlock(void *mutex)
 void platform_mutex_destroy(void *mutex)
 {
 	pthread_mutex_destroy((pthread_mutex_t *)mutex);
-	free(mutex);
+	platform_free(mutex);
 }
 
 
@@ -87,7 +87,7 @@ void platform_mutex_destroy(void *mutex)
 
 void *platform_semaphore_init(void)
 {
-	sem_t *sem = (sem_t *)malloc(sizeof(sem_t));
+	sem_t *sem = (sem_t *)platform_malloc(sizeof(sem_t));
 	if (NULL == sem)
 	{
 		return NULL;
@@ -95,7 +95,7 @@ void *platform_semaphore_init(void)
 
 	if (0 != sem_init(sem, 0, 0))
 	{
-        free(sem);
+        platform_free(sem);
         return NULL;
 	}
 
@@ -147,7 +147,7 @@ void platform_semaphore_post(void *sem)
 void platform_semaphore_destroy(void *sem)
 {
 	sem_destroy((sem_t *)sem);
-	free(sem);
+	platform_free(sem);
 }
 
 /****************************************************************************/

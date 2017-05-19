@@ -35,14 +35,16 @@ static int accs_broadcast_event(int);
 static int accs_notify_data(service_cb, void*, int, void*, int*);
 static int accs_broadcast_data(void*, int, void*, int*);
 static void accs_handshake(void *arg);
+static void accs_handshake_async(void *arg);
 static int accs_event_handler(int type, void *data, int dlen, void *result, int *rlen);
 
 #define MODULE_NAME_ACCS "accs"
 SERVICE_DEFINE(accs);
 
-void start_accs_work()
+void start_accs_work(int delay)
 {
-    yos_schedule_work(0,accs_handshake,NULL,NULL,NULL);
+    //yos_schedule_work(0,accs_handshake,NULL,NULL,NULL);
+    yos_schedule_work(delay,accs_handshake_async,NULL,NULL,NULL);
 }
 
 /*
@@ -65,7 +67,7 @@ int accs_prepare() {
 }
 
 int accs_start() {
-    start_accs_work(NULL);
+    //start_accs_work(0);
     accs_add_listener(&accs_event_handler);
     return SERVICE_RESULT_OK;
 }
@@ -80,6 +82,19 @@ int accs_stop() {
         accs_del_listener(&accs_event_handler);
     }
     return SERVICE_RESULT_OK;
+}
+
+int accs_put_async(void* in, int len,void *(*cb)(void *),void *arg)
+{
+    int ret;
+    if(accs_get_state() != SERVICE_STATE_READY) {
+        LOGW(MODULE_NAME_ACCS,"accs not ready!");
+        return (0-accs_get_state());
+    }
+    /* handle transaction */
+    alink_data_t *pack = (alink_data_t*)in;
+    ret = __alink_post_async(pack->method, pack->data,cb,arg);
+    return (ret==ALINK_CODE_SUCCESS)? SERVICE_RESULT_OK : ret;
 }
 
 int accs_put(void *in, int len) {
@@ -112,7 +127,7 @@ int accs_get(void *in, int inlen, void *out, int outlen) {
 }
 
 int accs_add_listener(service_cb func) {
-    service_listener_t *listener = (service_listener_t *)malloc(sizeof(service_listener_t));
+    service_listener_t *listener = (service_listener_t *)os_malloc(sizeof(service_listener_t));
     listener->listen = func;
     dlist_add(&listener->list_head, &g_accs_listener_list);
     LOGD(MODULE_NAME_ACCS,"accs add listerner: %p\n", func);
@@ -128,7 +143,7 @@ int accs_del_listener(service_cb func) {
             LOGD(MODULE_NAME_ACCS,"accs del listerner: %p\n", func);
             accs_notify_event(func, SERVICE_DETACH);
             dlist_del(&pos->list_head);
-            free(pos);
+            os_free(pos);
         }
     }
     return SERVICE_RESULT_OK;
@@ -154,7 +169,8 @@ static int accs_conn_listener(int type, void *data, int dlen, void *result, int 
             ; //ignore connect open event
         }else if(st == CONNECT_STATE_READY) {
             accs_set_state(SERVICE_STATE_PREPARE);
-            start_accs_work();
+            LOG("we will start handshake work.\n");
+            start_accs_work(0);
         }else if(st == CONNECT_STATE_CLOSE) {
             void *cb = alink_cb_func[_ALINK_CLOUD_DISCONNECTED];
             if (cb) {
@@ -210,6 +226,23 @@ static int accs_notify_data(service_cb func, void *data, int dlen, void *result,
 
 static int accs_broadcast_data(void *data, int dlen, void *result, int *rlen) {
     return accs_broadcast(SERVICE_DATA, data, dlen, result, rlen);
+}
+
+static void accs_handshake_async(void *arg)
+{
+    LOG("handshake work started. \n");
+    if (accs_get_state() == SERVICE_STATE_PREPARE) {
+        if (alink_handshake_async() == SERVICE_RESULT_OK) {
+            void *cb = alink_cb_func[_ALINK_CLOUD_CONNECTED];
+            accs_set_state(SERVICE_STATE_READY);
+            if (cb) {
+                void (*func)(void) = cb;
+                func();
+            }
+        } else {
+            accs_set_state(SERVICE_STATE_PREPARE);
+        }
+    }
 }
 
 static void accs_handshake(void *arg)

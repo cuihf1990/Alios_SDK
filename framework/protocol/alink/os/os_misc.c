@@ -384,19 +384,19 @@ uint8_t *os_wifi_get_mac(uint8_t mac[OS_ETH_ALEN])
 int memory_current_usage;
 int memory_peak_usage;
 void *os_malloc_lock;
-static dlist_t malloc_list = YOS_DLIST_INIT(malloc_list);
+static dlist_t os_malloc_list = YOS_DLIST_INIT(os_malloc_list);
 
 /*
- * with DEBUG enabled, each memory block was prefixed with malloc_node, and
- * suffixed with malloc_magic string.
- * malloc_node info + memory block + malloc_magic_string
+ * with DEBUG enabled, each memory block was prefixed with os_malloc_node, and
+ * suffixed with os_malloc_magic string.
+ * os_malloc_node info + memory block + os_malloc_magic_string
  */
 
 #define MALLOC_MAGIC         "OSMA"
 #define MALLOC_MAGIC_LEN    (strlen(MALLOC_MAGIC))
-#define MALLOC_NODE_LEN     (sizeof(struct malloc_node) + MALLOC_MAGIC_LEN)
+#define MALLOC_NODE_LEN     (sizeof(struct os_malloc_node) + MALLOC_MAGIC_LEN)
     
-struct malloc_node {
+struct os_malloc_node {
     long size;
     dlist_t list;
     char caller[STR_SHORT_LEN]; /* caller name */
@@ -407,7 +407,7 @@ void os_init(void)
 {
     if (!os_malloc_lock) {
         os_malloc_lock = os_mutex_init();
-        dlist_init(&malloc_list);
+        dlist_init(&os_malloc_list);
         memory_current_usage = 0;
         memory_peak_usage = 0;
     }
@@ -416,10 +416,10 @@ void os_init(void)
 void os_exit(void)
 {
     if (os_malloc_lock) {
-        struct malloc_node *node;
+        struct os_malloc_node *node;
         int memory_leak = 0;
         dlist_t *tmp = NULL;
-        dlist_for_each_entry_safe(&malloc_list,tmp, node, struct malloc_node, list) {
+        dlist_for_each_entry_safe(&os_malloc_list,tmp, node, struct os_malloc_node, list) {
             platform_printf("memory leak, ptr:%p, size:%d, caller:%s\r\n",
                     node->ptr, node->size, node->caller);
             memory_leak += node->size;
@@ -439,13 +439,13 @@ void os_exit(void)
 
 void os_malloc_dump_memory_usage(void)
 {
-    struct malloc_node *node;
+    struct os_malloc_node *node;
     dlist_t *tmp = NULL;
     if (!os_malloc_lock)
         return;
 
     os_mutex_lock(os_malloc_lock);
-    dlist_for_each_entry_safe(&malloc_list,tmp, node, struct malloc_node, list)
+    dlist_for_each_entry_safe(&os_malloc_list,tmp, node, struct os_malloc_node, list)
         platform_printf("memory ptr:%p, size:%d, caller:%s\r\n",
                 node->ptr, node->size, node->caller);
     os_mutex_unlock(os_malloc_lock);
@@ -466,17 +466,17 @@ void *__os_malloc_debug(const char *name, uint32_t size)
 {
 #ifdef DEBUG
     char *buffer = NULL;
-    struct malloc_node *node;
+    struct os_malloc_node *node;
 
     if (!os_malloc_lock)
         os_init();
 
-    size += sizeof(struct malloc_node) + MALLOC_MAGIC_LEN;
+    size += sizeof(struct os_malloc_node) + MALLOC_MAGIC_LEN;
     buffer = platform_malloc(size);
 
     if (buffer) {
-        /* suppose malloc return address align to struct malloc_node boundary */
-        node = (struct malloc_node *)buffer;
+        /* suppose os_malloc return address align to struct os_malloc_node boundary */
+        node = (struct os_malloc_node *)buffer;
         node->size = size;
         strncpy(node->caller, name, STR_SHORT_LEN);
         node->caller[STR_SHORT_LEN - 1] = '\0';
@@ -484,7 +484,7 @@ void *__os_malloc_debug(const char *name, uint32_t size)
         dlist_init(&node->list);
 
         os_mutex_lock(os_malloc_lock);
-        dlist_add(&node->list, &malloc_list);
+        dlist_add(&node->list, &os_malloc_list);
         os_mutex_unlock(os_malloc_lock);
 
         memcpy(buffer + size - MALLOC_MAGIC_LEN, MALLOC_MAGIC, MALLOC_MAGIC_LEN);
@@ -493,13 +493,13 @@ void *__os_malloc_debug(const char *name, uint32_t size)
         if (memory_peak_usage < memory_current_usage)
             memory_peak_usage = memory_current_usage;
 
-        //platform_printf("malloc:%p, size:%d, caller:%s\r\n",
-        //        buffer, size - sizeof(struct malloc_node) - MALLOC_MAGIC_LEN, name);
-        return buffer + sizeof(struct malloc_node);
+        platform_printf("os_malloc:%p, size:%d, caller:%s\r\n",
+                buffer, size - sizeof(struct os_malloc_node) - MALLOC_MAGIC_LEN, name);
+        return buffer + sizeof(struct os_malloc_node);
     } else
         return NULL;
 #else 
-    return platform_malloc(size);
+    return platform_os_malloc(size);
 #endif
 }
 
@@ -508,27 +508,27 @@ void __os_free_debug(const char *name, void *ptr)
 #ifdef DEBUG
     int size = 0, equal = 0;
     char *buffer = ptr, *magic;
-    struct malloc_node *node;
+    struct os_malloc_node *node;
 
-    OS_ASSERT(os_malloc_lock, "malloc mutext lock uninit");
+    OS_ASSERT(os_malloc_lock, "os_malloc mutext lock uninit");
     if (!ptr) {
-        platform_printf("#######os_free NULL pointer, caller: %s\n", name);
+        platform_printf("#######os_free NULL pointer, caller: %s, pointer: %p\n", name,ptr);
         return;
     }
 
-    buffer -= sizeof(struct malloc_node);
-    node = (struct malloc_node *)buffer;
+    buffer -= sizeof(struct os_malloc_node);
+    node = (struct os_malloc_node *)buffer;
     size = node->size;
 
     magic = buffer + size - MALLOC_MAGIC_LEN;
 
     equal = memcmp(magic, MALLOC_MAGIC, MALLOC_MAGIC_LEN);
-    OS_ASSERT(equal == 0, "caller:%s malloc buffer:%p, size:%d overflow!",
+    OS_ASSERT(equal == 0, "caller:%s os_malloc buffer:%p, size:%d overflow!",
             node->caller, buffer,
-            size - sizeof(struct malloc_node) - MALLOC_MAGIC_LEN);
+            size - sizeof(struct os_malloc_node) - MALLOC_MAGIC_LEN);
 
     OS_ASSERT(buffer == node->ptr,
-            "wired, invaid free pointer real(%p) != expect(%p)",
+            "wired, invaid os_free pointer real(%p) != expect(%p)",
             buffer, node->ptr);
 
     os_mutex_lock(os_malloc_lock);
@@ -539,6 +539,6 @@ void __os_free_debug(const char *name, void *ptr)
 
     platform_free(buffer);
 #else
-    platform_free(ptr);
+    platform_os_free(ptr);
 #endif
 }

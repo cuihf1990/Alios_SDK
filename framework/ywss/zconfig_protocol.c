@@ -252,7 +252,7 @@ static inline int zconfig_recv_completed(u8 tods)
 				zc_ssid_is_gbk = 0;
 
 			buf = zconfig_malloc(256);
-			bug_on(!buf, "malloc failed!\r\n");
+			bug_on(!buf, "os_malloc failed!\r\n");
 
 			info("chinese ssid auto-complete: %s\r\n", zc_ssid);
 			encode_chinese(zc_ssid, ssid_len, buf, &buf_len);
@@ -384,7 +384,7 @@ static inline int zconfig_get_ssid_passwd(u8 tods)
 
         buf = zconfig_malloc(256);
         tmp = zconfig_malloc(128);
-        bug_on(!buf || !tmp, "malloc failed!\r\n");
+        bug_on(!buf || !tmp, "os_malloc failed!\r\n");
 
 	/* package num */
 	package_num = pkg_len(1) & 0x7F;/* total len, include len(1B) & crc(2B) */
@@ -1755,11 +1755,11 @@ void zconfig_init(char *model, char *secret)
 	zconfig_finished = 0;
 
 	zconfig_data = (struct zconfig_data *)zconfig_malloc(sizeof(struct zconfig_data));
-	bug_on(!zconfig_data, "malloc failed!\r\n");
+	bug_on(!zconfig_data, "os_malloc failed!\r\n");
 	memset(zconfig_data, 0, sizeof(struct zconfig_data));
 
 	zconfig_aplist = (struct ap_info *)zconfig_malloc(sizeof(struct ap_info) * MAX_APLIST_NUM);
-	bug_on(!zconfig_aplist, "malloc failed!\r\n");
+	bug_on(!zconfig_aplist, "os_malloc failed!\r\n");
 	memset(zconfig_aplist, 0, sizeof(sizeof(struct ap_info) * MAX_APLIST_NUM));
 
 	zconfig_calc_tpsk(model, secret, (char *)zc_tpsk, ZC_TPSK_LEN + 1);
