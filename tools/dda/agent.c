@@ -45,8 +45,8 @@ void  yos_free(void *mem);
 #ifndef LINUXHOST_RHINO
 #include "yos/log.h"
 #include "csp.h"
-#define dda_task_new csp_task_new
-#define dda_task_exit csp_task_exit
+#define dda_task_new yos_task_new
+#define dda_task_exit yos_task_exit
 #else
 #define LOGD(mod, arg...)
 #define LOGI(mod, arg...) printf(mod arg)
@@ -64,8 +64,8 @@ static void dda_task_exit(int code)
     pthread_exit(NULL);
 }
 
-extern int csp_task_new(const char *name, void (*fn)(void *), void *arg, int stacksize);
-extern void csp_task_exit(int code);
+extern int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stacksize);
+extern void yos_task_exit(int code);
 #endif
 
 #include "eloop.h"
@@ -296,7 +296,7 @@ static void yos_loop(void *arg)
     ur_mesh_start();
 #endif
     yos_loop_run();
-    csp_task_exit(0);
+    yos_task_exit(0);
 }
 #else
 #define cpu_event_malloc malloc
