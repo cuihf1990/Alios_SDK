@@ -33,19 +33,6 @@
 
 #include <stdint.h>
 
-/* for double link list */
-typedef struct dlist_s {
-    struct dlist_s *prev;
-    struct dlist_s *next;
-} dlist_t;
-
-typedef struct {
-    dlist_t      list;
-    int          magic;
-    const char  *name;
-    void        *priv_dev; /* Driver may want to describe it */
-} hal_module_base_t;
-
 
 /** @defgroup yos_hal_wifi WiFi HAL API
  *  @{

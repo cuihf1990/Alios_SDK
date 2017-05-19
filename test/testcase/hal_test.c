@@ -24,6 +24,9 @@
 
 #include <yunit.h>
 #include <yts.h>
+#include <hal/base.h>
+#include <hal/wifi.h>
+
 
 static void test_timer_cb(void *arg)
 {
@@ -52,6 +55,42 @@ static void test_timer_case(void)
         printf("%s %d %d\n", __func__, counter, old_counter);
 }
 
+
+static int wifi_init(hal_wifi_module_t *m)
+{
+    printf("wifi init success!!\n");
+    return 0;
+};
+
+static int wifi_get_mac_addr(uint8_t *mac)
+{
+    printf("wifi_get_mac_addr!!\n");
+
+    mac[0] = 0x11;
+
+    return 0;
+};
+
+
+static hal_wifi_module_t sim_yos_wifi_module = {
+    .base.name          = "sim_yos_wifi_module",
+    .init               =  wifi_init,
+    .get_mac_addr       =  wifi_get_mac_addr
+};
+
+static void test_wifi_case(void)
+{
+    uint8_t mac[6];
+
+    printf("start wifi test case\n");
+
+    hal_wifi_register_module(&sim_yos_wifi_module);
+    hal_wifi_init();
+    hal_wifi_get_mac_addr(&sim_yos_wifi_module, mac);
+
+    printf("first mac addr is 0x%x\n", mac[0]);
+}
+
 static int init(void)
 {
     return 0;
@@ -74,6 +113,7 @@ static void teardown(void)
 
 static yunit_test_case_t yunos_basic_testcases[] = {
     { "timer", test_timer_case },
+    { "wifi",  test_wifi_case },
     YUNIT_TEST_CASE_NULL
 };
 
