@@ -46,7 +46,8 @@ typedef struct connectivity {
     void (*init_buff)(uint8_t**, uint8_t**);
     int (*connect)(void);
     int (*disconnect)(void);
-    connectivity_rsp_t* (*send)(void*, int);
+    connectivity_rsp_t* (*send)(void *, int);
+    int (*send_async)(void*, int,void *(*p)(connectivity_rsp_t* rsp,void *),void *);
     int (*add_listener)(connectivity_cb);
     int (*del_listener)(connectivity_cb);
 } connectivity_t;
@@ -70,6 +71,7 @@ typedef struct connectivity_listener {
         conn.connect = &conn##_connect; \
         conn.disconnect = &conn##_disconnect; \
         conn.send = &conn##_send; \
+        conn.send_async = &conn##_send_async; \
         conn.add_listener = &conn##_add_listener; \
         conn.del_listener = &conn##_del_listener; \
         dlist_init(&g_##conn##_listener_list); \

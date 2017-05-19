@@ -107,6 +107,7 @@ int alink_factory_reset(void);
  */
 int alink_report(const char *method, const char *json_buffer);
 
+int alink_report_async(const char *method, const char *json_buffer,void *(*cb)(void *),void *arg);
 /**
  * @brief query alink cloud service, like getAlinkTime...
  *

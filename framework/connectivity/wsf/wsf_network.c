@@ -56,14 +56,14 @@ static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
 
 wsf_code wsf_open_connection(wsf_config_t *config) {
     if (!wsf_conn) {
-        wsf_conn = (wsf_connection_t *)malloc(sizeof(wsf_connection_t));
+        wsf_conn = (wsf_connection_t *)os_malloc(sizeof(wsf_connection_t));
         if (wsf_conn) {
             memset(wsf_conn, 0, sizeof(wsf_connection_t));
             wsf_conn->tcp = OS_INVALID_FD;
             wsf_conn->mutex = os_mutex_init();
 
             if (!wsf_rx_buffer) {
-                wsf_rx_buffer = malloc(wsf_get_config()->max_msg_recv_length);
+                wsf_rx_buffer = os_malloc(wsf_get_config()->max_msg_recv_length);
                 OS_CHECK_MALLOC(wsf_rx_buffer);
             }
 
@@ -102,7 +102,7 @@ wsf_code wsf_reset_connection(wsf_connection_t *conn, int clear_session) {
         //FIXME: reuse session unstable, better to clear session now
         //if (conn->session_id && clear_session) {
         if (conn->session_id) {
-            free(conn->session_id);
+            os_free(conn->session_id);
             conn->session_id = NULL;
         }
 
@@ -121,15 +121,15 @@ wsf_code wsf_destroy_connections() {
     	LOGI(MODULE_NAME,"wsf: destroy connection");
         wsf_reset_connection(wsf_conn, 1);
         if (wsf_conn->device_id) {
-            free(wsf_conn->device_id);
+            os_free(wsf_conn->device_id);
             wsf_conn->device_id =  NULL;
         }
         os_mutex_destroy(wsf_conn->mutex);
-        free(wsf_conn);
+        os_free(wsf_conn);
         wsf_conn = NULL;
 
         if (wsf_rx_buffer) {
-            free(wsf_rx_buffer);
+            os_free(wsf_rx_buffer);
             wsf_rx_buffer = NULL;
         }
     }
@@ -187,7 +187,7 @@ char *wsf_session_id_get() {
     pthread_mutex_lock(sess_lock);
     if (wsf_conn->session_id) {
         size_t len = strlen(wsf_conn->session_id);
-        ret = (char *)malloc(len + 1);
+        ret = (char *)os_malloc(len + 1);
         if (ret) {
             strcpy(ret, wsf_conn->session_id);
         } else {
@@ -208,16 +208,16 @@ void wsf_session_id_set(const char *session_id) {
     pthread_mutex_lock(sess_lock);
     if (!session_id) {
         if (wsf_conn->session_id) {
-            free(wsf_conn->session_id);
+            os_free(wsf_conn->session_id);
         }
         wsf_conn->session_id = NULL;
     } else {
         size_t len = strlen(session_id);
-        char *tmp = (char *)malloc(len + 1);
+        char *tmp = (char *)os_malloc(len + 1);
         if (tmp) {
             strcpy(tmp, session_id);
             if (wsf_conn->session_id) {
-                free(wsf_conn->session_id);
+                os_free(wsf_conn->session_id);
             }
             wsf_conn->session_id = tmp;
         } else {
@@ -237,7 +237,7 @@ char *wsf_device_id_get() {
     pthread_mutex_lock(device_lock);
     if (wsf_conn->device_id) {
         size_t len = strlen(wsf_conn->device_id);
-        ret = (char *)malloc(len + 1);
+        ret = (char *)os_malloc(len + 1);
         if (ret) {
             strcpy(ret, wsf_conn->device_id);
         } else {
@@ -258,16 +258,16 @@ void wsf_device_id_set(const char *device_id) {
     pthread_mutex_lock(device_lock);
     if (!device_id) {
         if (wsf_conn->device_id) {
-            free(wsf_conn->device_id);
+            os_free(wsf_conn->device_id);
         }
         wsf_conn->device_id = NULL;
     } else {
         size_t len = strlen(device_id);
-        char *tmp = (char *)malloc(len + 1);
+        char *tmp = (char *)os_malloc(len + 1);
         if (tmp) {
             strcpy(tmp, device_id);
             if (wsf_conn->device_id) {
-                free(wsf_conn->device_id);
+                os_free(wsf_conn->device_id);
             }
             wsf_conn->device_id = tmp;
         } else {
@@ -319,6 +319,6 @@ static void wsf_regist_device() {
         LOGE(MODULE_NAME,"register device failed");
     }
 
-    free(register_req);
+    os_free(register_req);
 
 }

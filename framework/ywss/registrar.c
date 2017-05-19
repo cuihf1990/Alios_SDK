@@ -334,8 +334,8 @@ int alink_report_enrollee(int dev_type, unsigned char *devid, int devid_len,
     os_wifi_get_ap_info(ssid, passwd, bssid);
     OS_CHECK_PARAMS(devid && devid_len && payload && payload_len);
 
-    devid_str = malloc(devid_len + 1);
-    payload_str = malloc(payload_len * 2 + 1);
+    devid_str = os_malloc(devid_len + 1);
+    payload_str = os_malloc(payload_len * 2 + 1);
     OS_CHECK_MALLOC(devid_str && payload_str);
 
     memcpy(devid_str, devid, devid_len);
@@ -345,7 +345,7 @@ int alink_report_enrollee(int dev_type, unsigned char *devid, int devid_len,
     }
     payload_str[payload_len * 2] = '\0'; /* sprintf not add '\0' in the end of string in qcom */
 
-    buf = malloc(ALINK_BUF_SIZE);
+    buf = os_malloc(ALINK_BUF_SIZE);
     OS_CHECK_MALLOC(buf);
 
     len += sprintf(&buf[len], "{");
@@ -368,13 +368,13 @@ int alink_report_enrollee(int dev_type, unsigned char *devid, int devid_len,
     ret = 10;//report enrollee info duration
 
     if (buf) {
-        free(buf);
+        os_free(buf);
     }
     if (devid_str) {
-        free(devid_str);
+        os_free(devid_str);
     }
     if (payload_str) {
-        free(payload_str);
+        os_free(payload_str);
     }
 
     return ret;
@@ -401,7 +401,7 @@ static void enrollee_report(void *arg)
                 uint32_t timestamp = yos_get_time_ms();
                 if (timestamp - enrollee->report_timestamp > enrollee_report_period_ms) {
                     int payload_len = 1 + enrollee->model_len + sizeof(uint32_t) + ENROLLEE_SIGN_SIZE;
-                    uint8_t *payload = malloc(payload_len);
+                    uint8_t *payload = os_malloc(payload_len);
                     if (!payload) {
                         return;
                     }
@@ -425,7 +425,7 @@ static void enrollee_report(void *arg)
 
                     enrollee->report_timestamp = timestamp;
                     if (payload) {
-                        free(payload);
+                        os_free(payload);
                     }
                 }
             }
@@ -639,9 +639,9 @@ static void registrar_raw_frame_init(struct enrollee_info *enr)
     ie_len = devid_len + ssid_len + passwd_len + token_len + REGISTRAR_IE_FIX_LEN;
     registrar_frame_len = sizeof(probe_req_frame) + ie_len;
 
-    registrar_frame = malloc(registrar_frame_len);
+    registrar_frame = os_malloc(registrar_frame_len);
     if (!registrar_frame) {
-        LOGE(MODULE_NAME_ENROLLEE,"error: malloc size %d faild\r\n", registrar_frame_len);
+        LOGE(MODULE_NAME_ENROLLEE,"error: os_malloc size %d faild\r\n", registrar_frame_len);
         return;
     }
 
@@ -710,7 +710,7 @@ static void registrar_raw_frame_init(struct enrollee_info *enr)
 static void registrar_raw_frame_destroy(void)
 {
     if (registrar_frame_len) {
-        free(registrar_frame);
+        os_free(registrar_frame);
         registrar_frame = NULL;
         registrar_frame_len = 0;
     }

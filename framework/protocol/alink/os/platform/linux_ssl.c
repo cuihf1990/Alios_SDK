@@ -270,6 +270,5 @@ int platform_ssl_send(void *ssl, const char *buf, int len)
     platform_mutex_lock(mutex);
     ret = SSL_write((SSL*)ssl, buf, len);
     platform_mutex_unlock(mutex);
-
     return (ret > 0) ? ret : -1;
 }

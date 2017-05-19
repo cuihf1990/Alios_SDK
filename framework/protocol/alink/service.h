@@ -43,6 +43,7 @@ typedef struct service {
 	int (*start)(void);
 	int (*stop)(void);
 	int (*put)(void*, int);
+	int (*put_async)(void*, int, void *(*)(void *), void *);
 	int (*get)(void*, int, void*, int);
 	int (*add_listener)(service_cb);
 	int (*del_listener)(service_cb);
@@ -64,6 +65,7 @@ typedef struct service_listener {
 			int (*start)(void); \
 			int (*stop)(void); \
 			int (*put)(void*, int); \
+			int (*put_async)(void*, int, void *(*)(void *), void *); \
 			int (*get)(void*, int); \
 			int (*addlistener)(service_cb*); \
 		} svc##_service_t; \
@@ -85,6 +87,7 @@ typedef struct service_listener {
 			svc.start = &svc##_start; \
 			svc.stop = &svc##_stop; \
 			svc.put = &svc##_put; \
+			svc.put_async = &svc##_put_async; \
 			svc.get = &svc##_get; \
 			svc.add_listener = &svc##_add_listener; \
 			svc.del_listener = &svc##_del_listener; \

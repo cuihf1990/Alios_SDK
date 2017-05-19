@@ -15,11 +15,11 @@ uint32_t yos_get_time_ms(void)
 pthread_mutex_t *yos_mutex_init()
 {
     pthread_mutex_t *ret = NULL;
-    ret = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
+    ret = (pthread_mutex_t *)os_malloc(sizeof(pthread_mutex_t));
     if(!ret)
         return NULL;
     if(0 != pthread_mutex_init(ret,NULL)){
-        free(ret);
+        os_free(ret);
         return NULL;
     }
     return ret;
@@ -29,7 +29,7 @@ void yos_mutex_destroy(pthread_mutex_t *mutex)
 {
     if(mutex){
         pthread_mutex_destroy(mutex); 
-        free(mutex);
+        os_free(mutex);
     }
 }
 
@@ -44,7 +44,7 @@ uint32_t yos_get_unaligned_be32(uint8_t * ptr)
 
 void *yos_semaphore_init(void)
 {
-	sem_t *sem = (sem_t *)malloc(sizeof(sem_t));
+	sem_t *sem = (sem_t *)os_malloc(sizeof(sem_t));
 	if (NULL == sem)
 	{
 		return NULL;
@@ -52,7 +52,7 @@ void *yos_semaphore_init(void)
 
 	if (0 != sem_init(sem, 0, 0))
 	{
-        free(sem);
+        os_free(sem);
         return NULL;
 	}
 
@@ -103,7 +103,7 @@ void yos_semaphore_post(sem_t *sem)
 void yos_semaphore_destroy(sem_t *sem)
 {
 	sem_destroy(sem);
-	free(sem);
+	os_free(sem);
 }
  
 

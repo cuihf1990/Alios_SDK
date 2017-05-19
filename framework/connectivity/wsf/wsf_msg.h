@@ -28,11 +28,15 @@ typedef struct wsf_msg_t {
     uint8_t payload[0];
 } wsf_msg_t;
 
+//the 1st para maybe: wsf_msg_t/wsf_response_t 
+typedef void *(*wsf_async_cb_t)(void *,void *);
 typedef struct wsf_msg_session_t {
-    void *psem;
-    wsf_msg_t *request;
-    wsf_msg_t *response;
-    unsigned int id;
+    void            *psem;
+    wsf_async_cb_t  cb;
+    void            *extra;
+    wsf_msg_t       *request;
+    wsf_msg_t       *response;
+    unsigned int    id;
 } wsf_msg_session_t;
 
 typedef struct wsf_request_node_t {

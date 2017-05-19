@@ -34,7 +34,7 @@ static X509 *ssl_load_cert(const char *cert_str)
     cert = PEM_read_bio_X509(in,NULL,NULL,NULL);
 
     if (in) {
-        BIO_free(in);
+        BIO_os_free(in);
     }
     return cert;
 }
@@ -84,7 +84,7 @@ static int ssl_verify_ca(X509* target_cert)
     }
 end:
     if (store_ctx) {
-        X509_STORE_CTX_free(store_ctx);
+        X509_STORE_CTX_os_free(store_ctx);
     }
 
     return (ret == 1) ? 0: -1;
@@ -164,7 +164,7 @@ static int ssl_establish(int sock, SSL **ppssl)
     {
         goto err;
     }
-    X509_free(server_cert);
+    X509_os_free(server_cert);
 #endif
 
     printf("success to verify cert \n");
@@ -176,11 +176,11 @@ static int ssl_establish(int sock, SSL **ppssl)
 err:
     if (ssl_temp)
     {
-        SSL_free(ssl_temp);
+        SSL_os_free(ssl_temp);
     }
     if (server_cert)
     {
-        X509_free(server_cert);
+        X509_os_free(server_cert);
     }
 
     *ppssl = NULL;
@@ -215,23 +215,23 @@ void *yos_ssl_connect(void *tcp_fd,
 int yos_ssl_close(void *ssl)
 {
     SSL_set_shutdown((SSL*)ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
-    SSL_free((SSL*)ssl);
+    SSL_os_free((SSL*)ssl);
 
     if (ssl_ctx)
     {
-        SSL_CTX_free(ssl_ctx);
+        SSL_CTX_os_free(ssl_ctx);
         ssl_ctx = NULL;
     }
 
     if (ca)
     {
-        X509_free(ca);
+        X509_os_free(ca);
         ca = NULL;
     }
 
     if (ca_store)
     {
-        X509_STORE_free(ca_store);
+        X509_STORE_os_free(ca_store);
         ca_store = NULL;
     }
 

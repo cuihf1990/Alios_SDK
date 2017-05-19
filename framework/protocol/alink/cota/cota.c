@@ -139,7 +139,7 @@ static int alink_get_config(char *param, char *result)
     char *data = NULL;
     int ret = SERVICE_RESULT_ERR;
 
-    data = (char *)malloc(CONFIG_DATA_LEN);
+    data = (char *)os_malloc(CONFIG_DATA_LEN);
     OS_CHECK_MALLOC(data);
     memset(data, 0x00, CONFIG_DATA_LEN);
 
@@ -149,11 +149,11 @@ static int alink_get_config(char *param, char *result)
         snprintf(result, strlen(AlinkResponseWithDataFormat) + CONFIG_DATA_LEN,
                 AlinkResponseWithDataFormat, "success", 1000, data);
     } else {
-        free(data);
+        os_free(data);
         return ret;
     }
     LOGW(MODULE_NAME_COTA,"config info %s", result);
-    free(data);
+    os_free(data);
     ret = SERVICE_RESULT_ERR;
 
     return ret;
@@ -206,7 +206,7 @@ static void collect_stats(void *work)
     char method[] = "debug.postDebugInfo";
     char *devstats;
 
-    devstats = malloc(STATS_DATA_LEN);
+    devstats = os_malloc(STATS_DATA_LEN);
     OS_CHECK_MALLOC(devstats);
     memset(devstats, 0x00, STATS_DATA_LEN);
     alink_data_t data = { method, devstats };
@@ -227,7 +227,7 @@ static void collect_stats(void *work)
         device_statisticsdata_save(devstats, strlen(devstats));
         config_set_stats_flag(1);
     }
-    free(devstats);
+    os_free(devstats);
 
     return;
 }

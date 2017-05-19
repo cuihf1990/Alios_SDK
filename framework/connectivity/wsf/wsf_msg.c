@@ -13,11 +13,13 @@ void *msg_id_lock = NULL;
 static uint32_t global_msg_id = 0;
 
 #define MAGIC_CODE "WSF1"
-
+#define MODULE_NAME "wsf_msg"
 void wsf_msg_session_init(wsf_msg_session_t *session) {
     session->psem = os_semaphore_init();
     session->request = NULL;
     session->response = NULL;
+    session->cb = NULL;
+    session->extra = NULL;
 }
 
 
@@ -25,6 +27,8 @@ void wsf_msg_session_destroy(wsf_msg_session_t *session) {
     os_semaphore_destroy(session->psem);
     session->request = NULL;
     session->response = NULL;
+    session->cb = NULL;
+    session->extra = NULL;
 }
 
 void wsf_msg_session_wait(wsf_msg_session_t *session) {
@@ -68,15 +72,15 @@ wsf_msg_t *wsf_msg_response_create(int msg_id, invoke_result_code result,
     msg_size += 4;                              //response data length
     msg_size += length;
 
-    wsf_msg_t *rsp = (wsf_msg_t *)malloc(msg_size);
+    wsf_msg_t *rsp = (wsf_msg_t *)os_malloc(msg_size);
 
     if (!rsp) {
         LOGE(MODULE_NAME,"failed to create response, out of memory");
         if (session_id) {
-            free(session_id);
+            os_free(session_id);
         }
         if (device_id) {
-            free(device_id);
+            os_free(device_id);
         }
         return NULL;
 
@@ -102,7 +106,7 @@ wsf_msg_t *wsf_msg_response_create(int msg_id, invoke_result_code result,
         pp++;
         memcpy(pp, session_id, len);       //session id
         pp += len;
-        free(session_id);
+        os_free(session_id);
     } else {
         *pp = 0;
         pp++;
@@ -114,7 +118,7 @@ wsf_msg_t *wsf_msg_response_create(int msg_id, invoke_result_code result,
         pp++;
         memcpy(pp, device_id, len);       //device id
         pp += len;
-        free(device_id);
+        os_free(device_id);
     } else {
         *pp = 0;
         pp++;
@@ -168,16 +172,16 @@ wsf_msg_t *wsf_msg_request_create(const char *servcie_name,
             pnode = pnode->next;
         }
     }
-
-    wsf_msg_t *req = (wsf_msg_t *) malloc(msg_size);
-
+    LOG("msg_size: %d\n",msg_size);
+    wsf_msg_t *req = (wsf_msg_t *) os_malloc(msg_size);
+    LOG("msg_size: %d, %p\n",msg_size,req);
     if (!req) {
         LOGE(MODULE_NAME,"failed to create request, out of memory");
         if (session_id) {
-            free(session_id);
+            os_free(session_id);
         }
         if (device_id) {
-            free(device_id);
+            os_free(device_id);
         }
         return NULL;
     }
@@ -205,7 +209,7 @@ wsf_msg_t *wsf_msg_request_create(const char *servcie_name,
         pp++;
         memcpy(pp, session_id, len);       //session id
         pp += len;
-        free(session_id);
+        os_free(session_id);
     } else {
         *pp = 0;
         pp++;
@@ -217,7 +221,7 @@ wsf_msg_t *wsf_msg_request_create(const char *servcie_name,
         pp++;
         memcpy(pp, device_id, len);       //device id
         pp += len;
-        free(device_id);
+        os_free(device_id);
     } else {
         *pp = 0;
         pp++;
@@ -271,15 +275,15 @@ wsf_msg_t *wsf_msg_register_request_create() {
         msg_size += 1;
     }
 
-    wsf_msg_t *req = (wsf_msg_t *) malloc(msg_size);
+    wsf_msg_t *req = (wsf_msg_t *) os_malloc(msg_size);
 
     if (!req) {
         LOGE(MODULE_NAME,"failed to create register request, out of memory");
         if (session_id) {
-            free(session_id);
+            os_free(session_id);
         }
         if (device_id) {
-            free(device_id);
+            os_free(device_id);
         }
         return NULL;
     }
@@ -303,7 +307,7 @@ wsf_msg_t *wsf_msg_register_request_create() {
         pp++;
         memcpy(pp, session_id, len);       //session id
         pp += len;
-        free(session_id);
+        os_free(session_id);
     } else {
         *pp = 0;
         pp++;
@@ -315,7 +319,7 @@ wsf_msg_t *wsf_msg_register_request_create() {
         pp++;
         memcpy(pp, device_id, len);       //device id
         pp += len;
-        free(device_id);
+        os_free(device_id);
     } else {
         *pp = 0;
         pp++;
@@ -388,11 +392,11 @@ wsf_msg_header_t *wsf_msg_header_decode(const char *buf, int length) {
     memcpy(&temp, msg_header->msg_length, sizeof(uint32_t));
     temp = htonl(temp);
     memcpy(msg_header->msg_length, &temp, sizeof(temp));
-
+    LOG("len: %d\n",temp);
     memcpy(&temp, msg_header->msg_id, sizeof(uint32_t));
     temp = htonl(temp);
     memcpy(msg_header->msg_id, &temp, sizeof(temp));
-
+    LOG("id: %d\n",temp);
     return msg_header;
 }
 

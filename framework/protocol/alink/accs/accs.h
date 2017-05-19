@@ -3,12 +3,13 @@
 
 #include "service.h"
 
-void start_accs_work();
+void start_accs_work(int delay);
 void stop_accs_work();
 int accs_prepare();
 int accs_start();
 int accs_stop();
 int accs_put(void*, int);
+int accs_put_async(void*, int,void *(*cb)(void *),void *arg);
 int accs_get(void*, int, void*, int);
 int accs_add_listener(service_cb);
 int accs_del_listener(service_cb);

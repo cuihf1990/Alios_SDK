@@ -34,7 +34,7 @@ static const int default_enable_ssl = 1;
 static const ssl_version default_ssl_version = TLSV1;
 
 extern char *default_ca_str;
-
+#define MODULE_NAME "wsf_msg"
 wsf_config_t *wsf_get_config() {
     return &wsf_global_config;
 }
@@ -50,10 +50,10 @@ wsf_code wsf_config(config_opt opt, void *value) {
 
     case SERVER_NAME_STRING:
         if (wsf_global_config.server_name) {
-            free(wsf_global_config.server_name);
+            os_free(wsf_global_config.server_name);
         }
         char *str = (char *)value;
-        wsf_global_config.server_name = (char *)malloc(strlen(str) + 1);
+        wsf_global_config.server_name = (char *)os_malloc(strlen(str) + 1);
         if (wsf_global_config.server_name) {
             strcpy(wsf_global_config.server_name, str);
         } else {
@@ -110,7 +110,7 @@ wsf_code wsf_config(config_opt opt, void *value) {
 wsf_code wsf_init_config() {
     if (!wsf_global_config.server_name) {
         size_t len = strlen(default_server_name);
-        wsf_global_config.server_name = (char *)malloc(len + 1);
+        wsf_global_config.server_name = (char *)os_malloc(len + 1);
         if (wsf_global_config.server_name) {
             strcpy(wsf_global_config.server_name, default_server_name) ;
         } else {
@@ -157,7 +157,7 @@ wsf_code wsf_init_config() {
 
 wsf_code wsf_destroy_config() {
     if (wsf_global_config.server_name) {
-        free(wsf_global_config.server_name);
+        os_free(wsf_global_config.server_name);
         wsf_global_config.server_name = NULL;
     }
     return WSF_SUCCESS;

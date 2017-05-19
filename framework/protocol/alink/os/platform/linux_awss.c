@@ -110,7 +110,7 @@ void *monitor_thread_func(void *arg)
 {
     platform_awss_recv_80211_frame_cb_t ieee80211_handler = arg;
     /* buffer to hold the 80211 frame */
-    char *ether_frame = malloc(IP_MAXPACKET);
+    char *ether_frame = platform_malloc(IP_MAXPACKET);
 	assert(ether_frame);
 
     int fd = open_socket();
@@ -151,7 +151,7 @@ void *monitor_thread_func(void *arg)
         (*ieee80211_handler)(ether_frame, len, link_type, with_fcs);
     }
 
-    free(ether_frame);
+    platform_free(ether_frame);
     close(fd);
 
     return NULL;

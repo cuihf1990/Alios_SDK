@@ -11,6 +11,7 @@
 void wsf_init_buff(uint8_t**, uint8_t**);
 int wsf_connect(void);
 int wsf_disconnect(void);
+int wsf_send_async(void *pdata, int len,void *(*cb)(connectivity_rsp_t* rsp,void *),void *arg);
 connectivity_rsp_t* wsf_send(void*, int);
 int wsf_add_listener(connectivity_cb func);
 int wsf_del_listener(connectivity_cb func);
