@@ -238,6 +238,7 @@ include $(MAKEFILES_PATH)/micoder_toolchain_arm-none-eabi.mk
 else # ifneq ($(filter $(HOST_ARCH),Cortex-M3 Cortex-M4 Cortex-R4),)
 ifneq ($(filter $(HOST_ARCH),linux),)
 include $(MAKEFILES_PATH)/toolchain_host.mk
+include $(MAKEFILES_PATH)/micoder_toolchain_HOSTGCC.mk
 endif # ifneq ($(filter $(HOST_ARCH),MIPS),)
 endif # ifneq ($(filter $(HOST_ARCH),Cortex-M3 Cortex-M4 Cortex-R4),)
 
