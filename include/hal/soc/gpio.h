@@ -1,40 +1,26 @@
-/**
- ******************************************************************************
- * @file    MicoDriverGpio.h
- * @author  William Xu
- * @version V1.0.0
- * @date    16-Sep-2014
- * @brief   This file provides all the headers of GPIO operation functions.
- ******************************************************************************
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
  *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- ******************************************************************************
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#ifndef __MICODRIVERGPIO_H__
-#define __MICODRIVERGPIO_H__
+
+#ifndef YOS_GPIO_H
+#define YOS_GPIO_H
 
 #pragma once
 #include "common.h"
-#include "platform.h"
+#include "board_platform.h"
 #include "platform_peripheral.h"
 
 /** @addtogroup HAL_PLATFORM
@@ -83,7 +69,7 @@ typedef platform_gpio_irq_callback_t            hal_gpio_irq_handler_t;
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_gpio_init(hal_gpio_t gpio, hal_gpio_config_t configuration);
+int hal_gpio_init(hal_gpio_t gpio, hal_gpio_config_t configuration);
 
 
 /**@brief DeInitialises a GPIO pin
@@ -95,7 +81,7 @@ hal_stat_t hal_gpio_init(hal_gpio_t gpio, hal_gpio_config_t configuration);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_gpio_finalize(hal_gpio_t gpio);
+int hal_gpio_finalize(hal_gpio_t gpio);
 
 
 /**@brief Sets an output GPIO pin high
@@ -107,7 +93,7 @@ hal_stat_t hal_gpio_finalize(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_gpio_output_high(hal_gpio_t gpio);
+int hal_gpio_output_high(hal_gpio_t gpio);
 
 
 /**@brief Sets an output GPIO pin low
@@ -119,7 +105,7 @@ hal_stat_t hal_gpio_output_high(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_gpio_output_low(hal_gpio_t gpio);
+int hal_gpio_output_low(hal_gpio_t gpio);
 
 /** Trigger an output GPIO pin 
  *
@@ -131,7 +117,7 @@ hal_stat_t hal_gpio_output_low(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_gpio_output_trigger(hal_gpio_t gpio);
+int hal_gpio_output_trigger(hal_gpio_t gpio);
 
 
 
@@ -163,7 +149,7 @@ bool hal_gpio_inputget(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_gpio_enable_irq(hal_gpio_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpio_irq_handler_t handler, void* arg);
+int hal_gpio_enable_irq(hal_gpio_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpio_irq_handler_t handler, void* arg);
 
 
 /**@brief Disables an interrupt trigger for an input GPIO pin
@@ -177,7 +163,7 @@ hal_stat_t hal_gpio_enable_irq(hal_gpio_t gpio, hal_gpio_irq_trigger_t trigger, 
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_gpio_disable_irq(hal_gpio_t gpio);
+int hal_gpio_disable_irq(hal_gpio_t gpio);
 
 /** @} */
 /** @} */

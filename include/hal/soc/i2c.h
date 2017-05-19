@@ -1,72 +1,27 @@
-/**
- ******************************************************************************
- * @file    MicoDriverI2C.h
- * @author  William Xu
- * @version V1.0.0
- * @date    16-Sep-2014
- * @brief   This file provides all the headers of I2C operation functions.
- ******************************************************************************
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
  *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- ******************************************************************************
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#ifndef __MICODRIVERI2C_H__
-#define __MICODRIVERI2C_H__
+#ifndef YOS_I2C_H
+#define YOS_I2C_H
 
 #pragma once
 #include "common.h"
 #include "platform.h"
 #include "platform_peripheral.h"
 
-/** @addtogroup MICO_PLATFORM
-* @{
-*/
-
-/** @defgroup MICO_I2C MICO I2C Driver
-* @brief  Inter-IC bus (I2C) Functions
-* @{
-*/
-
-/******************************************************
- *                   Macros
- ******************************************************/  
-
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-// typedef enum
-// {
-//     I2C_ADDRESS_WIDTH_7BIT,     /**< I2C device has 7bit address */
-//     I2C_ADDRESS_WIDTH_10BIT,    /**< I2C device has 10bit address */
-//     I2C_ADDRESS_WIDTH_16BIT,    /**< I2C device has 16bit address */
-// } hal_i2c_bus_address_width_t;
-
-// typedef enum
-// {
-//     I2C_LOW_SPEED_MODE,         /**< I2C clock speed for 10Khz devices */
-//     I2C_STANDARD_SPEED_MODE,    /**< I2C clock speed for 100Khz devices */
-//     I2C_HIGH_SPEED_MODE         /**< I2C clock speed for 400Khz devices */
-// } hal_i2c_speed_mode_t;
 
 /******************************************************
  *                    Structures
@@ -76,7 +31,7 @@ typedef platform_i2c_bus_address_width_t hal_i2c_bus_address_width_t;
 
 typedef platform_i2c_speed_mode_t        hal_i2c_speed_mode_t;
 
-typedef platform_i2c_msg_t               hal_i2c_msg_t;
+typedef platform_i2c_message_t           hal_i2c_msg_t;
 
 typedef struct
 {
@@ -86,15 +41,6 @@ typedef struct
    hal_i2c_speed_mode_t        speed_mode;     /**< Speed mode the device operates in */
 } hal_i2c_device_t;
 
-// typedef struct
-// {
-//     const void*  tx_buffer;  /**< A pointer to the data to be transmitted. If NULL, the message is an RX message when 'combined' is FALSE */
-//     void*        rx_buffer;  /**< A pointer to the data to be transmitted. If NULL, the message is an TX message when 'combined' is FALSE */
-//     uint16_t     tx_length;  /**< Number of bytes to transmit */
-//     uint16_t     rx_length;  /**< Number of bytes to receive */
-//     uint16_t     retries;    /**< Number of times to retry the message */
-//     bool combined;           /**< If set, this message is used for both tx and rx. */
-// } mico_i2c_message_t;
 
 /******************************************************
  *                 Type Definitions
@@ -117,7 +63,7 @@ typedef struct
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during initialisation
  */
-hal_stat_t hal_i2c_init(hal_i2c_device_t *device);
+int hal_i2c_init(hal_i2c_device_t *device);
 
 
 /**@brief Checks whether the device is available on a bus or not
@@ -141,7 +87,7 @@ bool hal_i2c_probe_device(hal_i2c_device_t *device, int retries);
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-hal_stat_t hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf, uint16_t tx_buf_len, uint16_t retries);
+int hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf, uint16_t tx_buf_len, uint16_t retries);
 
 /**@brief Initialize the mico_i2c_message_t structure for i2c rx transaction
  *
@@ -153,7 +99,7 @@ hal_stat_t hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf, uint16_t
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-hal_stat_t hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void* rx_buf, uint16_t rx_buf_len, uint16_t retries);
+int hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void* rx_buf, uint16_t rx_buf_len, uint16_t retries);
 
 
 /**@brief Initialize the mico_i2c_message_t structure for i2c combined transaction
@@ -168,7 +114,7 @@ hal_stat_t hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void* rx_buf, uint16_t rx_bu
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-hal_stat_t hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf, void *rx_buf, uint16_t tx_buf_len, uint16_t rx_buf_len, uint16_t retries);
+int hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf, void *rx_buf, uint16_t tx_buf_len, uint16_t rx_buf_len, uint16_t retries);
 
 
 /**@brief Transmits and/or receives data over an I2C interface
@@ -180,7 +126,7 @@ hal_stat_t hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf, vo
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during message transfer
  */
-hal_stat_t hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg, uint16_t num);
+int hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg, uint16_t num);
 
 
 /**@brief Deinitialises an I2C device
@@ -190,7 +136,7 @@ hal_stat_t hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg, uint16
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during deinitialisation
  */
-hal_stat_t hal_i2c_finalize(hal_i2c_device_t *device);
+int hal_i2c_finalize(hal_i2c_device_t *device);
 
 
 /** @} */
