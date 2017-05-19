@@ -245,6 +245,13 @@ void yos_cancel_work(void *work, yos_call_t action, void *arg1);
 
 struct pollfd;
 
+#ifndef O_RDONLY
+#define O_RDONLY 0x01
+#define O_WRONLY 0x02
+#define O_RDWR   0x03
+#define O_CREAT  0x04
+#endif
+
 int yos_open(const char *path, int flags);
 int yos_close(int fd);
 ssize_t yos_read(int fd, void *buf, size_t nbytes);
