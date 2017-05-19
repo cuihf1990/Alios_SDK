@@ -572,31 +572,37 @@ static void set_src_info(message_info_t *info)
 static void address_resolved_handler(network_context_t *network, address_cache_t *target,
                                      ur_error_t error)
 {
-    message_t       *message;
-    ur_ip6_header_t *ip6_header;
-    message_info_t  *info;
-    uint16_t        dest;
-    uint16_t        meshnetid;
-    hal_context_t   *hal;
+    message_t      *message;
+    message_info_t *info;
+    hal_context_t  *hal;
+    bool           matched = false;
 
     hal = network->hal;
     for_each_message(message, &hal->send_queue[PENDING_QUEUE]) {
-        ip6_header = (ur_ip6_header_t *)(message_get_payload(message) + 1);
-        dest = ur_swap16(ip6_header->dest.m16[7]);
-        meshnetid = ur_swap16(ip6_header->dest.m16[3]) | ur_swap16(ip6_header->dest.m16[6]);
-        if ((dest == target->sid && meshnetid == target->meshnetid) ||
-             (memcmp(target->ueid, &ip6_header->dest.m8[8], sizeof(target->ueid)) == 0)) {
-            message_queue_dequeue(message);
-            if (error == UR_ERROR_NONE) {
-                info = message->info;
-                set_dest_info(info, target);
-                set_src_info(info);
-                network = info->network;
-                message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE], message);
-                yos_schedule_call(send_datagram, network->hal);
-            } else {
-                message_free(message);
+        info = message->info;
+        if (info->dest.addr.len == SHORT_ADDR_SIZE) {
+            if (info->dest.addr.short_addr == target->sid &&
+                info->dest.netid == target->meshnetid) {
+                matched = true;
             }
+        } else if (info->dest.addr.len == EXT_ADDR_SIZE) {
+            if (memcmp(target->ueid, info->dest.addr.addr, sizeof(target->ueid)) == 0) {
+                matched = true;
+            }
+        }
+
+        if (matched == false) {
+            continue;
+        }
+        message_queue_dequeue(message);
+        if (error == UR_ERROR_NONE) {
+            set_dest_info(info, target);
+            set_src_info(info);
+            network = info->network;
+            message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE], message);
+            yos_schedule_call(send_datagram, network->hal);
+        } else {
+            message_free(message);
         }
     }
 }
@@ -1025,10 +1031,14 @@ static void handle_datagram(void *args)
         info->network = get_network_context_by_meshnetid(info->dest.netid);
     } else if (info->src.netid != BCAST_NETID) {
         info->network = get_network_context_by_meshnetid(info->src.netid);
+        if (info->network == NULL) {
+            hal = get_hal_context(info->hal_type);
+            info->network = get_hal_default_network_context(hal);
+        }
     }
     if (info->network == NULL) {
-        hal = get_hal_context(info->hal_type);
-        info->network = get_hal_default_network_context(hal);
+        message_free(message);
+        return;
     }
 
     if (info->type == MESH_FRAME_TYPE_DATA) {

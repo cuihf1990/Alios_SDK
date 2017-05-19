@@ -1608,6 +1608,11 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_NONE;
     }
 
+    if ((g_mm_state.device.mode & MODE_SUPER) && (mode->mode & MODE_SUPER) &&
+        is_subnet(network->meshnetid) && is_subnet(info->src.netid)) {
+        return UR_ERROR_NONE;
+    }
+
     nbr = update_neighbor(info, tlvs, tlvs_length, false);
     if (nbr == NULL) {
         return UR_ERROR_NONE;

@@ -78,7 +78,6 @@ ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
                                 ur_node_id_t *attach);
 
 void get_attach_by_nodeid(ur_node_id_t *attach, ur_node_id_t *target);
-void get_attach_by_addr(ur_node_id_t *attach, ur_addr_t *target);
 void get_target_by_ueid(ur_node_id_t *node_id, uint8_t *ueid);
 
 #endif  /* UR_AR_H */

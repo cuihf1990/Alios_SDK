@@ -418,7 +418,7 @@ neighbor_t *get_neighbor_by_mac_addr(const mac_address_t *mac_addr)
             if (mac_addr->len == nbr->mac.len &&
                 memcmp(mac_addr->addr, &nbr->mac.addr, sizeof(nbr->mac.addr)) == 0 &&
                 nbr->state > STATE_INVALID) {
-                break;
+                return nbr;
             }
         }
     }
