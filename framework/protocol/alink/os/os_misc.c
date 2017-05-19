@@ -536,7 +536,9 @@ void __os_free_debug(const char *name, void *ptr)
     os_mutex_unlock(os_malloc_lock);
 
     memory_current_usage -= size;
-
+    
+    platform_printf("os_free: %p, size:%d, caller:%s\r\n",
+                buffer, size - sizeof(struct os_malloc_node) - MALLOC_MAGIC_LEN, name);
     platform_free(buffer);
 #else
     platform_os_free(ptr);
