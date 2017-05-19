@@ -1,7 +1,7 @@
 #ifndef _ENROLLEE_H_
 #define _ENROLLEE_H_
 #include "os.h"
-#include "digest_algorithm/digest_algorithm.h"
+#include "digest_algorithm.h"
 
 /* enrollee/registrar doc see following
  * http://docs.alibaba-inc.com/pages/viewpage.action?pageId=450855381

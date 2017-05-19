@@ -1,6 +1,6 @@
 #include "aws_lib.h"
 #include <stdlib.h>
-#include "digest_algorithm/digest_algorithm.h"
+#include "digest_algorithm.h"
 #include "os.h"
 #include "yos/log.h"
 #include "enrollee.h"
