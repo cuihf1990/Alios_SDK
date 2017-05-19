@@ -1,8 +1,68 @@
+#include "wifi.h"
 #include <stdio.h>
-#include <hal/base.h>
-#include <hal/wifi.h>
+
+#define yos_offsetof(type, member) ({ \
+    type tmp;                         \
+    (long)(&tmp.member) - (long)&tmp; \
+})
+
+#define YOS_DLIST_HEAD_INIT(name) { &(name), &(name) }
+#define YOS_DLIST_HEAD(name) \
+        dlist_t name = YOS_DLIST_HEAD_INIT(name)
+
+
+
+static inline void __dlist_add(dlist_t *node, dlist_t *prev, dlist_t *next)
+{
+    node->next = next;
+    node->prev = prev;
+
+    prev->next = node;
+    next->prev = node;
+}
+
+#define dlist_entry(addr, type, member) ({         \
+    (type *)((long)addr - yos_offsetof(type, member)); \
+})
+
+#define dlist_first_entry(ptr, type, member) \
+    dlist_entry((ptr)->next, type, member)
+
+#define dlist_for_each(pos, head) \
+    for (pos = (head)->next; pos != (head); pos = pos->next)
+
+static inline void dlist_add(dlist_t *node, dlist_t *queue)
+{
+    __dlist_add(node, queue, queue->next);
+}
+
+static inline void dlist_add_tail(dlist_t *node, dlist_t *queue)
+{
+    __dlist_add(node, queue->prev, queue);
+}
+
+static inline void dlist_del(dlist_t *node)
+{
+    dlist_t *prev = node->prev;
+    dlist_t *next = node->next;
+
+    prev->next = next;
+    next->prev = prev;
+}
+
+static inline void dlist_init(dlist_t *node)
+{
+    node->next = node->prev = node;
+}
+
+static inline int dlist_empty(const dlist_t *head)
+{
+      return head->next == head;
+}
+
 
 static YOS_DLIST_HEAD(g_wifi_module);
+
 
 hal_wifi_module_t *hal_wifi_get_default_module(void)
 {
@@ -16,6 +76,7 @@ hal_wifi_module_t *hal_wifi_get_default_module(void)
 
     return m;
 }
+
 
 void hal_wifi_register_module(hal_wifi_module_t *module)
 {
@@ -156,3 +217,24 @@ void hal_wifi_install_event(hal_wifi_module_t *m, hal_wifi_event_cb_t *cb)
     m->ev_cb = cb;
 }
 
+
+static int hce_wifi_init(hal_wifi_module_t *m)
+{
+    printf("wifi init\n");
+    return 0;
+};
+
+
+hal_wifi_module_t esp32_yos_wifi_module = {
+    .base.name          = "yos_wifi_module_esp32",
+    .init               = hce_wifi_init,
+};
+
+
+int main(void)
+{
+    hal_wifi_register_module(&esp32_yos_wifi_module);
+    hal_wifi_init();
+    return 0;
+
+}

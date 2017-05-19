@@ -1,4 +1,4 @@
 NAME := hal
 
-$(NAME)_SOURCES     :=
+$(NAME)_SOURCES     := wifi.c
 $(NAME)_SOURCES     +=
