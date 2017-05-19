@@ -1,11 +1,12 @@
 #include "yos/log.h"
+#include "yos/framework.h"
 #include "os.h"
 #include "kvmgr.h"
 #include "digest_algorithm.h"
 #include "crc.h"
 #include "hashtable.h"
 
-#define KV_BUFFER_SIZE  (128 * 1024)
+#define KV_BUFFER_SIZE  (16 * 1024)
 #define INT2BYTE(p,value) \
     *p ++ = value & 0xff, \
 *p ++ = (value >> 8) & 0xff, \
@@ -89,103 +90,75 @@ static int hash_table_insert(const char *skey, const char *cvalue, int nlength, 
 static int load_kvfile(const char *file, char *buffer, int buffer_len)
 {
     int fsize = 0;
-    char *filepath;
-    FILE *fd;
+    int fd;
 
-    filepath = (char *)os_malloc(STR_LONG_LEN);
-    OS_CHECK_MALLOC(filepath);
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, file);
-
-    fd = fopen(filepath, "r+");
-    if (!fd) {
+    fd = yos_open(file, O_RDONLY);
+    if (fd < 0) {
         LOGI(MODULE_NAME_KV,"%s not exist", file);
         goto exit;
     }
-    fseek(fd, 0L, SEEK_END);
-    fsize = ftell(fd);
-    fseek(fd, 0L, SEEK_SET);
-    if (fsize > buffer_len || fsize == 0) {
-        LOGI(MODULE_NAME_KV,"file size too large or file null");
-        goto exit;
-    }
 
-    if (!(fsize = fread(buffer, 1, fsize, fd))) {
+    if (!(fsize = yos_read(fd, buffer, buffer_len))) {
         LOGI(MODULE_NAME_KV,"read KVfile failed");
         goto exit;
     }
     LOGI(MODULE_NAME_KV,"file size %d", fsize);
 
 exit:
-    if (fd)
-        fclose(fd);
-    if (filepath)
-        os_free(filepath);
+    if (fd >= 0)
+        yos_close(fd);
 
     return fsize;
 }
 
 static int update_kvfile(const char *file, char *buffer, int filelen)
 {
-    char *filepath;
     int ret = -1;
 
-    filepath = (char *)os_malloc(STR_LONG_LEN);
-    OS_CHECK_MALLOC(filepath);
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, file);
-
-    FILE *fd = fopen(filepath, "w+");
-    if (!fd) {
+    int fd = yos_open(file, O_WRONLY);
+    if (fd < 0) {
         LOGI(MODULE_NAME_KV,"open %s failed", file);
         goto exit;
     }
 
-    if (!fwrite(buffer, 1, filelen, fd)) {
+    if (!yos_write(fd, buffer, filelen)) {
         LOGI(MODULE_NAME_KV,"write %s failed", file);
     } else {
         ret = 0;
     }
 
 exit:
-    if (fd)
-        fclose(fd);
-    if (filepath)
-        os_free(filepath);
+    if (fd >= 0)
+        yos_close(fd);
     return ret;
 }
 
 static int restore_kvfile(const char *src_file, const char *dst_file)
 {
-    FILE *fd_src = NULL, *fd_dst = NULL;
-    char *filepath = NULL, *buffer = NULL;
-    int fsize, ret = -1;
+    int fd_src = -1, fd_dst = -1;
+    char *buffer = NULL;
+    int fsize = KV_BUFFER_SIZE, ret = -1;
 
-    filepath = (char *)os_malloc(STR_LONG_LEN);
-    OS_CHECK_MALLOC(filepath);
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, src_file);
-
-    fd_src = fopen(filepath, "r+");
-    if (!fd_src) {
+    fd_src = yos_open(src_file, O_RDWR);
+    if (fd_src < 0) {
         LOGI(MODULE_NAME_KV,"open %s failed", src_file);
         goto exit;
     }
-    fseek(fd_src, 0L, SEEK_END);
-    fsize = ftell(fd_src);
-    fseek(fd_src, 0L, SEEK_SET);
 
     buffer = (char *)os_malloc(fsize);
     OS_CHECK_MALLOC(buffer);
 
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, dst_file);
-    fd_dst = fopen(filepath, "w+");
-    if (!fd_dst) {
+    fd_dst = yos_open(dst_file, O_WRONLY);
+    if (fd_dst < 0) {
         LOGI(MODULE_NAME_KV,"open %s failed", dst_file);
         goto exit;
     }
 
-    ret = fread(buffer, 1, fsize, fd_src);
+    ret = yos_read(fd_src, buffer, fsize);
 
-    if (ret == fsize) {
-        if ((ret = fwrite(buffer, 1, fsize, fd_dst)) == fsize) {
+    if (ret > 0) {
+        fsize = ret;
+        if ((ret = yos_write(fd_dst, buffer, fsize)) == fsize) {
             ret = 0;
             LOGI(MODULE_NAME_KV,"restore key/value success");
         }
@@ -194,38 +167,30 @@ static int restore_kvfile(const char *src_file, const char *dst_file)
     }
 
 exit:
-    if (filepath)
-        os_free(filepath);
     if (buffer)
         os_free(buffer);
-    if (fd_src)
-        fclose(fd_src);
-    if (fd_dst)
-        fclose(fd_dst);
+    if (fd_src >= 0)
+        yos_close(fd_src);
+    if (fd_dst >= 0)
+        yos_close(fd_dst);
 
     return ret;
 }
 
 static int check_file_same(const char *src_file, const char *dst_file)
 {
-    char *filepath;
     char md5_src[33], md5_dst[33];
     int ret = -1;
 
-    filepath = (char *)os_malloc(STR_LONG_LEN);
-    OS_CHECK_MALLOC(filepath);
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, src_file);
-
     memset(md5_src, 0, sizeof(md5_src));
     memset(md5_dst, 0, sizeof(md5_dst));
-    if (digest_md5_file(filepath, (uint8_t *)md5_src) != 0) {
-        LOGI(MODULE_NAME_KV,"getting the MD5 of file %s is failed", filepath);
+    if (digest_md5_file(src_file, (uint8_t *)md5_src) != 0) {
+        LOGI(MODULE_NAME_KV,"getting the MD5 of file %s is failed", src_file);
         goto exit;
     }
 
-    snprintf(filepath, STR_LONG_LEN, "%s/%s", KVFILE_PATH, dst_file);
-    if (digest_md5_file(filepath, (uint8_t *)md5_dst) != 0) {
-        LOGI(MODULE_NAME_KV,"getting the MD5 of file %s is failed", filepath);
+    if (digest_md5_file(dst_file, (uint8_t *)md5_dst) != 0) {
+        LOGI(MODULE_NAME_KV,"getting the MD5 of file %s is failed", dst_file);
         goto exit;
     }
 
@@ -235,9 +200,6 @@ static int check_file_same(const char *src_file, const char *dst_file)
     }
 
 exit:
-    if (filepath)
-        os_free(filepath);
-
     return ret;
 }
 

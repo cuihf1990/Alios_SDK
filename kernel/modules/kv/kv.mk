@@ -8,3 +8,4 @@ $(NAME)_INCLUDES += ./include/ ../../../framework/protocol/alink/digest_algorith
 $(NAME)_INCLUDES += ../../../framework/protocol/alink/system/ 
 $(NAME)_INCLUDES += ../../../utility/hashtable 
 
+GLOBAL_INCLUDES  += include
