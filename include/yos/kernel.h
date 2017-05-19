@@ -131,13 +131,13 @@ void yos_mutex_free(yos_mutex_t *mutex);
  * lock a mutex
  * @param[in] mutex mutex object,it contains kernel obj pointer which yos_mutex_new alloced
  */
-int yos_mutex_lock(yos_mutex_t mutex, unsigned int timeout);
+int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout);
 
 /**
  * unlock a mutex
  * @param[in] mutex mutex object,,it contains kernel obj pointer which oc_mutex_new alloced
  */
-int yos_mutex_unlock(yos_mutex_t mutex);
+int yos_mutex_unlock(yos_mutex_t *mutex);
 
 /**
  * alloc a semaphore
@@ -158,13 +158,13 @@ void yos_sem_free(yos_sem_t *sem);
  * @param[in] sem semaphore object,,it contains kernel obj pointer which yos_sem_new alloced
  * @param[in] timeout waiting until timeout in milliseconds
  */
-int yos_sem_wait(yos_sem_t sem, unsigned int timeout);
+int yos_sem_wait(yos_sem_t *sem, unsigned int timeout);
 
 /**
  * release a semaphore
  * @param[in] sem semaphore object,,it contains kernel obj pointer which yos_sem_new alloced
  */
-void yos_sem_signal(yos_sem_t sem);
+void yos_sem_signal(yos_sem_t *sem);
 
 /**
  * This function will create a queue

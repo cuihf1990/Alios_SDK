@@ -35,21 +35,21 @@ int yunos_register_driver(const char *path, file_ops_t *ops, void *arg)
         return E_VFS_NULL_PTR;
     }
 
-    if (yos_mutex_lock(g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return E_VFS_K_ERR;
     }
 
     node = inode_open(path);
 
     if (node != NULL) {
-        yos_mutex_unlock(g_vfs_mutex);
+        yos_mutex_unlock(&g_vfs_mutex);
         return E_VFS_REGISTERED;
     }
 
     ret = inode_alloc();
 
     if (ret < 0) {
-        yos_mutex_unlock(g_vfs_mutex);
+        yos_mutex_unlock(&g_vfs_mutex);
         return ret;
     }
 
@@ -61,7 +61,7 @@ int yunos_register_driver(const char *path, file_ops_t *ops, void *arg)
     mem = malloc(len + 1);
 
     if (mem == NULL) {
-        yos_mutex_unlock(g_vfs_mutex);
+        yos_mutex_unlock(&g_vfs_mutex);
         return E_VFS_NO_MEM;
     }
 
@@ -71,7 +71,7 @@ int yunos_register_driver(const char *path, file_ops_t *ops, void *arg)
     node->type   = VFS_TYPE_CHAR_DEV;
 
     /* step out critical area for type is allocated */
-    if (yos_mutex_unlock(g_vfs_mutex) != 0) {
+    if (yos_mutex_unlock(&g_vfs_mutex) != 0) {
         return E_VFS_K_ERR;
     }
 
@@ -87,20 +87,20 @@ int yunos_unregister_driver(const char *path)
         return E_VFS_NULL_PTR;
     }
 
-    if (yos_mutex_lock(g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return E_VFS_K_ERR;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
-        yos_mutex_unlock(g_vfs_mutex);
+        yos_mutex_unlock(&g_vfs_mutex);
         return E_VFS_INODE_NOT_FOUND;
     }
 
     ret = inode_del(node);
 
-    if (yos_mutex_unlock(g_vfs_mutex) != 0) {
+    if (yos_mutex_unlock(&g_vfs_mutex) != 0) {
         return E_VFS_K_ERR;
     }
 
