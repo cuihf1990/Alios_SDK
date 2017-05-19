@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
 
