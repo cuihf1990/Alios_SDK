@@ -115,9 +115,7 @@ ur_error_t address_resolve(uint8_t query_type, ur_node_id_t *target,
     }
 
     network = get_default_network_context();
-    dest.addr.len = SHORT_ADDR_SIZE;
-    dest.addr.short_addr = LEADER_SID;
-    dest.netid = mm_get_main_netid(network);
+    get_leader_addr(&dest);
     switch (cache->state) {
         case AQ_STATE_INVALID:
             memcpy(cache->ueid, target->ueid, sizeof(cache->ueid));
@@ -497,7 +495,11 @@ ur_error_t send_address_notification(network_context_t *network,
     info = message->info;
     info->network = network;
     // dest
-    memcpy(&info->dest, &dest, sizeof(info->dest));
+    if (dest == NULL) {
+        get_leader_addr(&info->dest);
+    } else {
+        memcpy(&info->dest, dest, sizeof(info->dest));
+    }
 
     set_command_type(info, mm_header->command);
     error = mf_send_message(message);

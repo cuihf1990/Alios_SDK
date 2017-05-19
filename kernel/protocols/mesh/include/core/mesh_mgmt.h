@@ -198,6 +198,7 @@ uint16_t tlvs_set_value(uint8_t *buf, const uint8_t *tlvs,
 int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length);
 
 void set_command_type(message_info_t *info, uint8_t command);
+void get_leader_addr(ur_addr_t *addr);
 
 static inline uint16_t mm_get_main_netid(network_context_t *network)
 {
