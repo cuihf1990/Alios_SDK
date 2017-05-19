@@ -68,12 +68,31 @@ static int hash_table_insert(const char *skey, const char *cvalue, int nlength, 
 {
     kv_item_t *new = NULL;
     int ret = -1;
+    kv_item_t *item = NULL;
+    void *found = NULL;
 
     if (strlen(skey) > MAX_KV_LEN || nlength > MAX_KV_LEN) {
         LOGI(MODULE_NAME_KV,"key/value too long!");
         return ret;
     }
 
+    found = ht_find_lockless(g_ht,skey,strlen(skey)+1,NULL,NULL); 
+    if(found){ //replace the repeated value with the current.
+        item = *((kv_item_t **)found);
+        os_free(item->val);
+        item->val = NULL;
+        item->len_val = nlength;
+        item->val = os_malloc(nlength);
+        if(!item->val){
+            os_free(item->key);
+            os_free(item);
+            return -1;
+        }
+        memcpy(item->val,cvalue,nlength);
+        item->sync = sync;
+        return 0;
+    }
+ 
     new = new_kv_item(skey,cvalue,nlength,sync);
 
     if(!new)

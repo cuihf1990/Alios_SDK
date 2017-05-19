@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
+#include "yos/log.h"
 #include "alink_export.h"
 #include "json_parser.h"
 #include "yos/framework.h"
@@ -237,7 +238,7 @@ int alink_post_raw_data(uint8_t *byte_stream, int len)
 }
 #endif
 
-static uint32_t work_time = 24*60*60; //default work time 1s
+static uint32_t work_time = 60*60; //default work time 1s
 
 void main_loop(void *arg)
 {
@@ -431,7 +432,7 @@ void test_kv()
 int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
-
+    yos_set_log_level(YOS_LL_DEBUG);
     test_kv();
     //awss_demo();
     if (env == SANDBOX)

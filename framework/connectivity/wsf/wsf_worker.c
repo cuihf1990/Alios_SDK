@@ -110,7 +110,7 @@ static void receive_worker(void *arg)
 static void stop_receive_worker()
 {
     yos_cancel_poll_read_fd(g_wsf_cb.sock,cb_recv,&g_wsf_cb);
-    yos_cancel_delayed_action(g_wsf_cb.cb_timeout,&g_wsf_cb);
+    yos_cancel_delayed_action(g_wsf_cb.timeout,g_wsf_cb.cb_timeout,&g_wsf_cb);
 }
 
 

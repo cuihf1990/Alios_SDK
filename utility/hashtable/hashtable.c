@@ -41,24 +41,24 @@ void *ht_init(int max_cnt)
         return NULL;
     }
 
-    p = malloc(sizeof(ht_t));
+    p = os_malloc(sizeof(ht_t));
     if (NULL == p) {
         return NULL;
     }
     memset(p, 0, sizeof(ht_t));
 
-    p->item = malloc(len);
+    p->item = os_malloc(len);
     if (NULL == p->item) {
-        free(p);
+        os_free(p);
         return NULL;
     }
     memset(p->item, 0, len);
-    p->locker = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
+    p->locker = (pthread_mutex_t *)os_malloc(sizeof(pthread_mutex_t));
     if (NULL == p->locker || 
             0 != pthread_mutex_init(p->locker, NULL)) {
-        free(p->item);
-        free(p->locker);
-        free(p);
+        os_free(p->item);
+        os_free(p->locker);
+        os_free(p);
         return NULL;
     }
     
@@ -184,14 +184,14 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
     p_item = _ht_find_lockless(ht, key, len_key);
 
     if (!p_item->key) {
-        p_item->key = malloc(len_key);
+        p_item->key = os_malloc(len_key);
         if (!p_item->key) {
             return -1;
         }
         memcpy(p_item->key, key, len_key);
-        p_item->val = malloc(size_val);
+        p_item->val = os_malloc(size_val);
         if (!p_item->val) {
-            free(p_item->key);
+            os_free(p_item->key);
             p_item->key = NULL;
             return -1;
         }
@@ -206,11 +206,11 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
     while (p_tmp) {
         if (NULL != p_tmp->key && !memcmp(p_tmp->key, key, len_key)) {
             LOGD(MODULE,"repeated key , free last val: %p, malloc\n", p_tmp->val);
-            free(p_tmp->val);
+            os_free(p_tmp->val);
             p_tmp->val = NULL;
-            p_tmp->val = malloc(size_val);
+            p_tmp->val = os_malloc(size_val);
             if (!p_item->val) {
-                free(p_tmp);
+                os_free(p_tmp);
                 LOGE(MODULE,"failed to malloc new value.\n");
                 return -1;
             }
@@ -222,28 +222,28 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
         p_tmp = p_tmp->next;
     }
 
-    new_tb = (ht_item_t *)malloc(sizeof(ht_item_t));
+    new_tb = (ht_item_t *)os_malloc(sizeof(ht_item_t));
     if (!new_tb) {
         return -1;
     }
     memset(new_tb, 0, sizeof(ht_item_t));
-    new_tb->key = malloc(len_key);
+    new_tb->key = os_malloc(len_key);
     if (!new_tb->key) {
-        free(new_tb);
+        os_free(new_tb);
         return -1;
     }
     memcpy(new_tb->key, key, len_key);
-    new_tb->val = malloc(size_val);
+    new_tb->val = os_malloc(size_val);
     if (!new_tb->val) {
-        free(new_tb->key);
-        free(new_tb);
+        os_free(new_tb->key);
+        os_free(new_tb);
         return -1;
     }
     new_tb->size_val = size_val;
     memcpy(new_tb->val, val, size_val);
     p_item->next = new_tb;
 
-    LOGD(MODULE,"conflict key: <malloc>%p, val: <malloc>%p,\
+    LOGD(MODULE,"conflict key: <malloc>%p, val: <os_malloc>%p,\
             node: <malloc>%p, before: %p\n", new_tb->key, new_tb->val, new_tb, p_item);
     return 0;
 }
@@ -289,14 +289,14 @@ static int _ht_del_node(void *ht_item, const void *key, unsigned int len_key)
 
             LOGD(MODULE,"del  key: <free>%p, val: <free>%p,\
                     node: %p ,<%s>current: %p, next: %p\n", parent->key, parent->val,
-                      !flag ? NULL : parent, !flag ? "" : "free", parent, next);
-            free(parent->key);
+                      !flag ? NULL : parent, !flag ? "" : "os_free", parent, next);
+            os_free(parent->key);
             parent->key = NULL;
-            free(parent->val);
+            os_free(parent->val);
             parent->val = NULL;
             ret = 0;
-            if (1 == flag) {//just free the added item not the root item.
-                free(parent);
+            if (1 == flag) {//just os_free the added item not the root item.
+                os_free(parent);
                 p_tmp->next = next;
             } else {
                 p_tmp = parent;
@@ -438,13 +438,13 @@ int ht_destroy(void *ht)
 
     ht_clear_lockless(pt);
     LOGD(MODULE,"destroy hashtable: <free>%p. <free>%p \n", pt, pt->item);
-    free(pt->item);
+    os_free(pt->item);
 
     ht_unlock(pt);
 
     pthread_mutex_destroy(pt->locker);
-    free(pt->locker);
-    free(pt);
+    os_free(pt->locker);
+    os_free(pt);
 
     return 0;
 }
