@@ -1,0 +1,2 @@
+1. 声明PLATFORM_LINUX，则调用gettimeofday函数计算接口性能，并使用 us来表示耗时，否则使用pal_get_current_time来计算接口性能，并使用ms来表示耗时。
+2. 声明DEBUG_PRESS， 则计算性能时会对各个接口压测1000次，将平均值作为每个接口的真正耗时，否则每个接口仅执行一次。

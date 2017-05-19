@@ -39,6 +39,7 @@ extern void test_uradar(void);
 extern void test_yloop(void);
 extern void test_cjson(void);
 extern void test_hal(void);
+extern void test_tfs(void);
 
 static void add_test(void);
 
@@ -101,6 +102,8 @@ void add_test(void)
     test_rhino();
 
     test_rhino_port();
+
+    test_tfs();
 
 #ifdef CONFIG_YOS_MESH
     test_uradar();
