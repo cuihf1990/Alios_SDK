@@ -1,42 +1,26 @@
-/**
- ******************************************************************************
- * @file    MicoDriverUart.h
- * @author  William Xu
- * @version V1.0.0
- * @date    16-Sep-2014
- * @brief   This file provides all the headers of UART operation functions.
- ******************************************************************************
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
  *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- ******************************************************************************
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-
-#ifndef __MICODRIVERUART_H__
-#define __MICODRIVERUART_H__
+#ifndef YOS_UART_H
+#define YOS_UART_H
 
 #pragma once
 #include "common.h"
 #include "RingBufferUtils.h"
-#include "platform.h"
+#include "board_platform.h"
 #include "platform_peripheral.h"
 
 /** @addtogroup HAL_PLATFORM
@@ -78,7 +62,7 @@
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_uart_init(hal_uart_t uart, const hal_uart_config_t *config, ring_buf_t *optional_rx_buf);
+int hal_uart_init(hal_uart_t uart, const hal_uart_config_t *config, ring_buf_t *optional_rx_buf);
 
 
 /**@brief Initialises a STDIO UART interface, internal use only
@@ -91,7 +75,7 @@ hal_stat_t hal_uart_init(hal_uart_t uart, const hal_uart_config_t *config, ring_
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_stdio_uart_init(const hal_uart_config_t *config, ring_buf_t *optional_rx_buf);
+int hal_stdio_uart_init(const hal_uart_config_t *config, ring_buf_t *optional_rx_buf);
 
 
 /**@brief Deinitialises a UART interface
@@ -101,7 +85,7 @@ hal_stat_t hal_stdio_uart_init(const hal_uart_config_t *config, ring_buf_t *opti
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_uart_finalize(hal_uart_t uart);
+int hal_uart_finalize(hal_uart_t uart);
 
 
 /**@brief Transmit data on a UART interface
@@ -113,7 +97,7 @@ hal_stat_t hal_uart_finalize(hal_uart_t uart);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_uart_send(hal_uart_t uart, const void *data, uint32_t size);
+int hal_uart_send(hal_uart_t uart, const void *data, uint32_t size);
 
 
 /**@brief Receive data on a UART interface
@@ -126,7 +110,7 @@ hal_stat_t hal_uart_send(hal_uart_t uart, const void *data, uint32_t size);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_uart_recv(hal_uart_t uart, void *data, uint32_t size, uint32_t timeout);
+int hal_uart_recv(hal_uart_t uart, void *data, uint32_t size, uint32_t timeout);
 
 /**@brief Read the length of the data that is already recived by uart driver and stored in buffer
  *

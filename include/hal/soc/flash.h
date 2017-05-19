@@ -15,8 +15,8 @@
  */
 
 
-#ifndef __YOS_DRIVERFLASH_H__
-#define __YOS_DRIVERFLASH_H__
+#ifndef YOS_FLASh_H
+#define YOS_FLASh_H
 
 #pragma once
 #include <stdint.h>

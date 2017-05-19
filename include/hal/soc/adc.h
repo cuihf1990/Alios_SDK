@@ -1,73 +1,27 @@
-/**
- ******************************************************************************
- * @file    MicoDriverAdc.h
- * @author  William Xu
- * @version V1.0.0
- * @date    16-Sep-2014
- * @brief   This file provides all the headers of ADC operation functions.
- ******************************************************************************
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
  *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- ******************************************************************************
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#ifndef __MICODRIVERADC_H__
-#define __MICODRIVERADC_H__
+
+#ifndef YOS_ADC_H
+#define YOS_ADC_H
 
 #pragma once
 #include "common.h"
-#include "platform.h"
+#include "board_platform.h"
 
-/** @addtogroup MICO_PLATFORM
-* @{
-*/
-
-/** @defgroup MICO_ADC MICO ADC Driver
-  * @brief  Analog to Digital Converter (ADC) Functions
-  * @{
-  */
-
-/******************************************************
- *                   Macros
- ******************************************************/  
-
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-/******************************************************
- *                 Type Definitions
- ******************************************************/
-
-/******************************************************
- *                    Structures
- ******************************************************/
-
-/******************************************************
- *                     Variables
- ******************************************************/
-
-/******************************************************
- *               Function Declarations
- ******************************************************/
 
 /**@biref Initialises an ADC interface
  *
@@ -81,7 +35,7 @@
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_adc_init(hal_adc_t adc, uint32_t sampling_cycle);
+int hal_adc_init(hal_adc_t adc, uint32_t sampling_cycle);
 
 
 /**@biref Takes a single sample from an ADC interface
@@ -94,7 +48,7 @@ hal_stat_t hal_adc_init(hal_adc_t adc, uint32_t sampling_cycle);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_adc_task_sample(hal_adc_t adc, uint16_t* output );
+int hal_adc_task_sample(hal_adc_t adc, uint16_t *output );
 
 
 /**@biref Takes multiple samples from an ADC interface
@@ -111,7 +65,7 @@ hal_stat_t hal_adc_task_sample(hal_adc_t adc, uint16_t* output );
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t hal_adc_take_sample_streram(hal_adc_t adc, void* buf, uint16_t buf_len);
+int hal_adc_take_sample_streram(hal_adc_t adc, void *buf, uint16_t buf_len);
 
 
 /**@biref     De-initialises an ADC interface
@@ -123,7 +77,7 @@ hal_stat_t hal_adc_take_sample_streram(hal_adc_t adc, void* buf, uint16_t buf_le
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-hal_stat_t  hal_adc_finalize(hal_adc_t adc);
+int  hal_adc_finalize(hal_adc_t adc);
 
 /** @} */
 /** @} */
