@@ -165,21 +165,21 @@ int yos_open(const char *path, int flags)
         return E_VFS_NULL_PTR;
     }
 
-    if (yos_mutex_lock(g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return E_VFS_K_ERR;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
-        yos_mutex_unlock(g_vfs_mutex);
+        yos_mutex_unlock(&g_vfs_mutex);
         return trap_open(path);
     }
 
     node->i_flags = flags;
     file = new_file(node);
 
-    yos_mutex_unlock(g_vfs_mutex);
+    yos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
         return E_VFS_K_ERR;
@@ -213,13 +213,13 @@ int yos_close(int fd)
         (node->ops->close)(f);
     }
 
-    if (yos_mutex_lock(g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return E_VFS_K_ERR;
     }
 
     del_file(f);
 
-    yos_mutex_unlock(g_vfs_mutex);
+    yos_mutex_unlock(&g_vfs_mutex);
 
     return err;
 }
@@ -333,7 +333,7 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout)
     { goto check_poll; }
 
     if (succeed == 1) {
-        ret = yos_sem_wait(sem, timeout);
+        ret = yos_sem_wait(&sem, timeout);
     } else if (succeed == 2) {
         ret = csp_poll(fds + n_i_fds, nfds - n_i_fds, sem, timeout);
     }
@@ -386,18 +386,18 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
     for (fd = YUNOS_CONFIG_VFS_FD_OFFSET; fd < YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES; fd++) {
         file_t  *f;
         inode_t *node;
-        if (yos_mutex_lock(g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
             return E_VFS_K_ERR;
         }
 
         f = get_file(fd);
 
         if (f == NULL) {
-            yos_mutex_unlock(g_vfs_mutex);
+            yos_mutex_unlock(&g_vfs_mutex);
             return err;
         }
 
-        if (yos_mutex_unlock(g_vfs_mutex) != 0) {
+        if (yos_mutex_unlock(&g_vfs_mutex) != 0) {
             return E_VFS_K_ERR;
         }
 

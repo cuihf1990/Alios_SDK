@@ -136,14 +136,14 @@ void yos_mutex_free(yos_mutex_t *mutex)
     mutex->hdl = NULL;
 }
 
-int yos_mutex_lock(yos_mutex_t mutex, unsigned int timeout)
+int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
 {
     kstat_t ret;
 
     if (timeout == YOS_WAIT_FOREVER) {
-        ret = yunos_mutex_lock(mutex.hdl, YUNOS_WAIT_FOREVER);
+        ret = yunos_mutex_lock(mutex->hdl, YUNOS_WAIT_FOREVER);
     } else {
-        ret = yunos_mutex_lock(mutex.hdl, MS2TICK(timeout));
+        ret = yunos_mutex_lock(mutex->hdl, MS2TICK(timeout));
     }
 
     /* rhino allow nested */
@@ -154,9 +154,9 @@ int yos_mutex_lock(yos_mutex_t mutex, unsigned int timeout)
     return ret;
 }
 
-int yos_mutex_unlock(yos_mutex_t mutex)
+int yos_mutex_unlock(yos_mutex_t *mutex)
 {
-    kstat_t ret = yunos_mutex_unlock(mutex.hdl);
+    kstat_t ret = yunos_mutex_unlock(mutex->hdl);
 
     /* rhino allow nested */
     if (ret == YUNOS_MUTEX_OWNER_NESTED) {
@@ -191,22 +191,22 @@ void yos_sem_free(yos_sem_t *sem)
     sem->hdl = NULL;
 }
 
-int yos_sem_wait(yos_sem_t sem, unsigned int timeout)
+int yos_sem_wait(yos_sem_t *sem, unsigned int timeout)
 {
     kstat_t ret;
 
     if (timeout == YOS_WAIT_FOREVER) {
-        ret = yunos_sem_take(sem.hdl, YUNOS_WAIT_FOREVER);
+        ret = yunos_sem_take(sem->hdl, YUNOS_WAIT_FOREVER);
     } else {
-        ret = yunos_sem_take(sem.hdl, MS2TICK(timeout));
+        ret = yunos_sem_take(sem->hdl, MS2TICK(timeout));
     }
 
     return ret;
 }
 
-void yos_sem_signal(yos_sem_t sem)
+void yos_sem_signal(yos_sem_t *sem)
 {
-    yunos_sem_give(sem.hdl);
+    yunos_sem_give(sem->hdl);
 }
 
 int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
