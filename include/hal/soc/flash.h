@@ -14,24 +14,8 @@
  * limitations under the License.
  */
 
-
-#ifndef YOS_FLASh_H
-#define YOS_FLASh_H
-
-#pragma once
-#include <stdint.h>
-
-/** @addtogroup HAL_PLATFORM
-* @{
-*/
-
-/** @defgroup HAL_FLASH YOS Flash Driver
-* @brief  Flash operation Functions
-* @{
-*/
-/******************************************************
- *                   Macros
- ******************************************************/  
+#ifndef YOS_FLASH_H
+#define YOS_FLASH_H
 
 #define PAR_OPT_READ_POS      ( 0 )
 #define PAR_OPT_WRITE_POS     ( 1 )
@@ -62,23 +46,27 @@ typedef enum
     HAL_PARTITION_RF_FIRMWARE,
     HAL_PARTITION_PARAMETER_1,
     HAL_PARTITION_PARAMETER_2,
-#ifdef HAL_USE_BT_PARTITION
     HAL_PARTITION_BT_FIRMWARE,
-#endif
     HAL_PARTITION_MAX,
     HAL_PARTITION_NONE,
 } hal_partition_t;
 
+typedef enum
+{
+    HAL_FLASH_EMBEDDED,
+    HAL_FLASH_SPI,
+    HAL_FLASH_QSPI,
+    HAL_FLASH_MAX,
+} hal_flash_t;
+
 typedef struct {
-    uint32_t size;
+    hal_flash_t partition_owner;
+    const char *partition_description;
+    uint32_t    partition_start_addr;
+    uint32_t    partition_length;
+    uint32_t    partition_options;
 } hal_logic_partition_t;
 
-
-/******************************************************
- *                 Global Variables
- ******************************************************/
-
-extern const char*  flash_name[];  /**< A name string of a Flash drive */
 
  /******************************************************
  *                 Function Declarations
@@ -156,8 +144,6 @@ int hal_flash_read(hal_partition_t in_partition, uint32_t* off_set, void* out_bu
 int hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
 
 
-
-#ifdef BOOTLOADER
 /**@brief    Disable security options on a logical partition
  *
  * @param    partition     : The target flash logical partition
@@ -171,8 +157,6 @@ int hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, uint32_
  * @return  <0   : If an error occurred with any step
  */
 int hal_flash_dis_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
-#endif
-
 
 /** @} */
 /** @} */

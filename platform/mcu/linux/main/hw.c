@@ -20,7 +20,7 @@
 #include <fcntl.h>
 
 #include <yos/log.h>
-#include <hal/soc/flash.h>
+#include <hal/soc/soc.h>
 
 #define TAG "hw"
 

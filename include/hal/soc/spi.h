@@ -14,22 +14,9 @@
  * limitations under the License.
  */
 
-
 #ifndef YOS_SPI_H
 #define YOS_SPI_H
 
-#pragma once
-#include "common.h"
-#include "board_platform.h"
-#include "platform_peripheral.h"
-
-/** @addtogroup HAL_PLATFORM
-* @{
-*/
-/** @defgroup hal_SPI MICO SPI Driver
-* @brief  Serial Peripheral Interface (SPI) Functions
-* @{
-*/
 /******************************************************
  *                    Constants
  ******************************************************/
@@ -62,6 +49,7 @@ typedef enum
     HAL__SPI_MAX,
 } hal_spi_t;
 
+
 typedef struct
 {
     hal_spi_t  port;
@@ -71,16 +59,16 @@ typedef struct
     uint8_t    bits;
 } hal_spi_device_t;
 
-typedef platform_spi_message_segment_t hal_spi_msg_segment_t;
 
-/******************************************************
- *                     Variables
- ******************************************************/
- 
-/******************************************************
- *                 Function Declarations
- ******************************************************/
-
+/**
+ * SPI message segment
+ */
+typedef struct
+{
+    const void* tx_buffer;
+    void       *rx_buffer;
+    uint32_t    length;
+} hal_spi_msg_segment_t;
 
 
 /**@brief Initialises the SPI interface for a given SPI device

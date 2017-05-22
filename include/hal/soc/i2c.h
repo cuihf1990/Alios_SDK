@@ -17,21 +17,42 @@
 #ifndef YOS_I2C_H
 #define YOS_I2C_H
 
-#pragma once
-#include "common.h"
-#include "platform.h"
-#include "platform_peripheral.h"
+/**
+ * I2C address width
+ */
+typedef enum
+{
+    I2C_ADDRESS_WIDTH_7BIT,
+    I2C_ADDRESS_WIDTH_10BIT,
+    I2C_ADDRESS_WIDTH_16BIT,
+} hal_i2c_bus_address_width_t;
 
 
-/******************************************************
- *                    Structures
- ******************************************************/
+/**
+ * I2C speed mode
+ */
+typedef enum
+{
+    I2C_LOW_SPEED_MODE,         /* 10Khz devices */
+    I2C_STANDARD_SPEED_MODE,    /* 100Khz devices */
+    I2C_HIGH_SPEED_MODE         /* 400Khz devices */
+} hal_i2c_speed_mode_t;
 
-typedef platform_i2c_bus_address_width_t hal_i2c_bus_address_width_t;
 
-typedef platform_i2c_speed_mode_t        hal_i2c_speed_mode_t;
+/**
+ * I2C message
+ */
+typedef struct
+{
+    const void *tx_buffer;
+    void*       rx_buffer;
+    uint16_t    tx_length;
+    uint16_t    rx_length;
+    uint16_t    retries;    /* Number of times to retry the message */
+    char        combined;   /**< If set, this message is used for both tx and rx. */
+    uint8_t     flags;      /* MESSAGE_DISABLE_DMA : if set, this flag disables use of DMA for the message */
+} hal_i2c_msg_t;
 
-typedef platform_i2c_message_t           hal_i2c_msg_t;
 
 typedef enum
 {
@@ -83,7 +104,7 @@ int hal_i2c_init(hal_i2c_device_t *device);
  * @return    true : device is found.
  * @return    false: device is not found
  */
-bool hal_i2c_probe_device(hal_i2c_device_t *device, int retries);
+char hal_i2c_probe_device(hal_i2c_device_t *device, int retries);
 
 
 /**@brief Initialize the mico_i2c_message_t structure for i2c tx transaction

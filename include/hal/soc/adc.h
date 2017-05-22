@@ -55,7 +55,7 @@ int hal_adc_init(hal_adc_t adc, uint32_t sampling_cycle);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_adc_task_sample(hal_adc_t adc, uint16_t *output );
+int hal_adc_task_sample(hal_adc_t adc, uint16_t *output);
 
 
 /**@biref Takes multiple samples from an ADC interface

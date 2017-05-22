@@ -18,13 +18,6 @@
 #ifndef YOS_GPIO_H
 #define YOS_GPIO_H
 
-#pragma once
-#include "common.h"
-#include "board_platform.h"
-#include "platform_peripheral.h"
-
-
-
 typedef enum
 {
     HAL_GPIO_0,
@@ -73,11 +66,35 @@ typedef enum
 } hal_gpio_t;
 
 
-typedef platform_pin_config_t                   hal_gpio_config_t;
+/**
+ * Pin configuration
+ */
+typedef enum
+{
+    INPUT_PULL_UP,             /* Input with an internal pull-up resistor - use with devices that actively drive the signal low - e.g. button connected to ground */
+    INPUT_PULL_DOWN,           /* Input with an internal pull-down resistor - use with devices that actively drive the signal high - e.g. button connected to a power rail */
+    INPUT_HIGH_IMPEDANCE,      /* Input - must always be driven, either actively or by an external pullup resistor */
+    OUTPUT_PUSH_PULL,          /* Output actively driven high and actively driven low - must not be connected to other active outputs - e.g. LED output */
+    OUTPUT_OPEN_DRAIN_NO_PULL, /* Output actively driven low but is high-impedance when set high - can be connected to other open-drain/open-collector outputs. Needs an external pull-up resistor */
+    OUTPUT_OPEN_DRAIN_PULL_UP, /* Output actively driven low and is pulled high with an internal resistor when set high - can be connected to other open-drain/open-collector outputs. */
+} hal_gpio_config_t;
 
-typedef platform_gpio_irq_trigger_t             hal_gpio_irq_trigger_t;
 
-typedef platform_gpio_irq_callback_t            hal_gpio_irq_handler_t;
+/**
+ * GPIO interrupt trigger
+ */
+typedef enum
+{
+    IRQ_TRIGGER_RISING_EDGE  = 0x1, /* Interrupt triggered at input signal's rising edge  */
+    IRQ_TRIGGER_FALLING_EDGE = 0x2, /* Interrupt triggered at input signal's falling edge */
+    IRQ_TRIGGER_BOTH_EDGES   = IRQ_TRIGGER_RISING_EDGE | IRQ_TRIGGER_FALLING_EDGE,
+} hal_gpio_irq_trigger_t;
+
+
+ /**
+  * GPIO interrupt callback handler
+  */
+ typedef void (*hal_gpio_irq_handler_t)(void* arg);
 
 
  /******************************************************
@@ -96,7 +113,7 @@ typedef platform_gpio_irq_callback_t            hal_gpio_irq_handler_t;
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_init(hal_gpio_t gpio, hal_gpio_config_t configuration);
+int hal_gpio_init(hal_gpio_t gpio, hal_gpio_config_t config);
 
 
 /**@brief DeInitialises a GPIO pin
@@ -158,7 +175,7 @@ int hal_gpio_output_trigger(hal_gpio_t gpio);
  * @return    true  : if high
  * @return    fasle : if low
  */
-bool hal_gpio_inputget(hal_gpio_t gpio);
+char hal_gpio_inputget(hal_gpio_t gpio);
 
 
 /**@brief Enables an interrupt trigger for an input GPIO pin
@@ -176,7 +193,7 @@ bool hal_gpio_inputget(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_enable_irq(hal_gpio_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpio_irq_handler_t handler, void* arg);
+int hal_gpio_enable_irq(hal_gpio_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpio_irq_handler_t handler, void *arg);
 
 
 /**@brief Disables an interrupt trigger for an input GPIO pin
