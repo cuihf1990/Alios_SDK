@@ -33,6 +33,15 @@ typedef platform_i2c_speed_mode_t        hal_i2c_speed_mode_t;
 
 typedef platform_i2c_message_t           hal_i2c_msg_t;
 
+typedef enum
+{
+    HAL_I2C_0,
+    HAL_I2C_1,
+    HAL_I2C_2,
+    HAL_I2C_3,
+    HAL_I2C_MAX,
+} hal_i2c_t;
+
 typedef struct
 {
    hal_i2c_t                   port;           /**< Platform I2C port that is connected to the target I2C device, - e.g. MICO_I2C_1 */

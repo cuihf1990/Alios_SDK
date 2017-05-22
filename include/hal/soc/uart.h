@@ -49,6 +49,16 @@
  *                 Function Declarations
  ******************************************************/
 
+typedef enum
+{
+    HAL_UART_0,
+    HAL_UART_1,
+    HAL_UART_2,
+    HAL_UART_3,
+    HAL_UART_4,
+    HAL_UART_MAX,
+} hal_uart_t;
+
 
 
 /**@brief Initialises a UART interface

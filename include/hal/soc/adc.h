@@ -18,9 +18,16 @@
 #ifndef YOS_ADC_H
 #define YOS_ADC_H
 
-#pragma once
-#include "common.h"
-#include "board_platform.h"
+typedef enum
+{
+    HAL_ADC_0,
+    HAL_ADC_1,
+    HAL_ADC_2,
+    HAL_ADC_3,
+    HAL_ADC_4,
+    HAL_ADC_5,
+    HAL_ADC_MAX,
+} hal_adc_t;
 
 
 /**@biref Initialises an ADC interface
@@ -77,7 +84,7 @@ int hal_adc_take_sample_streram(hal_adc_t adc, void *buf, uint16_t buf_len);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int  hal_adc_finalize(hal_adc_t adc);
+int hal_adc_finalize(hal_adc_t adc);
 
 /** @} */
 /** @} */

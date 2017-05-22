@@ -62,13 +62,11 @@ static int wifi_init(hal_wifi_module_t *m)
     return 0;
 };
 
-static int wifi_get_mac_addr(uint8_t *mac)
+static void wifi_get_mac_addr(uint8_t *mac)
 {
     printf("wifi_get_mac_addr!!\n");
 
     mac[0] = 0x11;
-
-    return 0;
 };
 
 
