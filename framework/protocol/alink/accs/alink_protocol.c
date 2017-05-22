@@ -888,7 +888,7 @@ static int _g_handshake_cnt = 9+4;
 static int _alink_handshake_cycle(int ret)
 {
     if(--_g_handshake_cnt <= 0)
-        return;
+        return 0;
     LOG("cnt: %d ,phase: %d\n",_g_handshake_cnt,alink_phase);
     switch (alink_phase) {
         case PHASE_INIT:
