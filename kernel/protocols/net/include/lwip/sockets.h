@@ -544,15 +544,12 @@ int lwip_eventfd(unsigned int initval, int flags);
 #define sendto(s,dataptr,size,flags,to,tolen)     lwip_sendto(s,dataptr,size,flags,to,tolen)
 /** @ingroup socket */
 #define socket(domain,type,protocol)              lwip_socket(domain,type,protocol)
-#ifndef CSP_LINUXHOST
 /** @ingroup socket */
 #define select(maxfdp1,readset,writeset,exceptset,timeout)     lwip_select(maxfdp1,readset,writeset,exceptset,timeout)
 /** @ingroup socket */
-#endif
 #define ioctlsocket(s,cmd,argp)                   lwip_ioctl(s,cmd,argp)
 
 #if LWIP_POSIX_SOCKETS_IO_NAMES
-#ifndef CSP_LINUXHOST
 /** @ingroup socket */
 #define read(s,mem,len)                           lwip_read(s,mem,len)
 /** @ingroup socket */
@@ -561,7 +558,6 @@ int lwip_eventfd(unsigned int initval, int flags);
 /** @ingroup socket */
 #define ioctl(s,cmd,argp)                         lwip_ioctl(s,cmd,argp)
 #define eventfd(v, f)                             lwip_eventfd(v, f)
-#endif
 #define writev(s,iov,iovcnt)                      lwip_writev(s,iov,iovcnt)
 /** @ingroup socket */
 #define close(s)                                  lwip_close(s)
