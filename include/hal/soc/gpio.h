@@ -18,54 +18,6 @@
 #ifndef YOS_GPIO_H
 #define YOS_GPIO_H
 
-typedef enum
-{
-    HAL_GPIO_0,
-    HAL_GPIO_1 ,
-    HAL_GPIO_2,
-    HAL_GPIO_3,
-    HAL_GPIO_4,
-    HAL_GPIO_5,
-    HAL_GPIO_6,
-    HAL_GPIO_7,
-    HAL_GPIO_8,
-    HAL_GPIO_9,
-    HAL_GPIO_10,
-    HAL_GPIO_11,
-    HAL_GPIO_12,
-    HAL_GPIO_13,
-    HAL_GPIO_14,
-    HAL_GPIO_15,
-    HAL_GPIO_16,
-    HAL_GPIO_17,
-    HAL_GPIO_18,
-    HAL_GPIO_19,
-    HAL_GPIO_20,
-    HAL_GPIO_21,
-    HAL_GPIO_22,
-    HAL_GPIO_23,
-    HAL_GPIO_24,
-    HAL_GPIO_25,
-    HAL_GPIO_26,
-    HAL_GPIO_27,
-    HAL_GPIO_28,
-    HAL_GPIO_29,
-    HAL_GPIO_30,
-    HAL_GPIO_31,
-    HAL_GPIO_32,
-    HAL_GPIO_33,
-    HAL_GPIO_34,
-    HAL_GPIO_35,
-    HAL_GPIO_36,
-    HAL_GPIO_37,
-    HAL_GPIO_38,
-    HAL_GPIO_39,
-    HAL_GPIO_40,
-    HAL_GPIO_41,
-    HAL_GPIO_MAX,
-} hal_gpio_t;
-
-
 /**
  * Pin configuration
  */
@@ -113,7 +65,7 @@ typedef enum
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_init(hal_gpio_t gpio, hal_gpio_config_t config);
+int32_t hal_gpio_init(uint8_t gpio, hal_gpio_config_t config);
 
 
 /**@brief DeInitialises a GPIO pin
@@ -125,7 +77,7 @@ int hal_gpio_init(hal_gpio_t gpio, hal_gpio_config_t config);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_finalize(hal_gpio_t gpio);
+int32_t hal_gpio_finalize(uint8_t gpio);
 
 
 /**@brief Sets an output GPIO pin high
@@ -137,7 +89,7 @@ int hal_gpio_finalize(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_output_high(hal_gpio_t gpio);
+int32_t hal_gpio_output_high(uint8_t gpio);
 
 
 /**@brief Sets an output GPIO pin low
@@ -149,7 +101,7 @@ int hal_gpio_output_high(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_output_low(hal_gpio_t gpio);
+int32_t hal_gpio_output_low(uint8_t gpio);
 
 /** Trigger an output GPIO pin 
  *
@@ -161,7 +113,7 @@ int hal_gpio_output_low(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_output_trigger(hal_gpio_t gpio);
+int32_t hal_gpio_output_trigger(uint8_t gpio);
 
 
 
@@ -175,7 +127,7 @@ int hal_gpio_output_trigger(hal_gpio_t gpio);
  * @return    true  : if high
  * @return    fasle : if low
  */
-char hal_gpio_inputget(hal_gpio_t gpio);
+int8_t hal_gpio_inputget(uint8_t gpio);
 
 
 /**@brief Enables an interrupt trigger for an input GPIO pin
@@ -193,7 +145,7 @@ char hal_gpio_inputget(hal_gpio_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_enable_irq(hal_gpio_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpio_irq_handler_t handler, void *arg);
+int32_t hal_gpio_enable_irq(uint8_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpio_irq_handler_t handler, void *arg);
 
 
 /**@brief Disables an interrupt trigger for an input GPIO pin
@@ -207,7 +159,7 @@ int hal_gpio_enable_irq(hal_gpio_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpi
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_gpio_disable_irq(hal_gpio_t gpio);
+int32_t hal_gpio_disable_irq(uint8_t gpio);
 
 /** @} */
 /** @} */

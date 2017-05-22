@@ -26,7 +26,7 @@
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_random_num_read(void *in_buf, int bytes);
+int32_t hal_random_num_read(void *in_buf, int32_t bytes);
 
 /** @} */
 /** @} */

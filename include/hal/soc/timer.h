@@ -20,10 +20,10 @@
 typedef void (*hal_timer_cb_t)(void *arg);
 
 typedef struct {
-    int ch;
-    void *priv;
+    int8_t         ch;
+    void          *priv;
     hal_timer_cb_t cb;
-    void *arg;
+    void          *arg;
 } hal_timer_t;
 
 /**
@@ -45,7 +45,7 @@ void hal_timer_init(hal_timer_t *tmr, unsigned int period, unsigned char auto_re
  * @retval 0 == success
  *        <0 == failure
  */
-int hal_timer_start(hal_timer_t *tmr);
+int32_t hal_timer_start(hal_timer_t *tmr);
 
 /**
  * @brief stop a hardware timer

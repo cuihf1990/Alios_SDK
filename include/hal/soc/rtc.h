@@ -50,7 +50,7 @@ void hal_rtc_init(void);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_rtc_get_time(hal_rtc_time_t *time);
+int32_t hal_rtc_get_time(hal_rtc_time_t *time);
 
 /**@brief This function will set MCU RTC time to a new value. Time value must be given in the format of
  * the structure hal_rtc_time_t
@@ -60,7 +60,7 @@ int hal_rtc_get_time(hal_rtc_time_t *time);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_rtc_set_time(hal_rtc_time_t *time);
+int32_t hal_rtc_set_time(hal_rtc_time_t *time);
 
 /** @} */
 /** @} */

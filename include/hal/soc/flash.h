@@ -95,7 +95,7 @@ hal_logic_partition_t *hal_flash_get_info(hal_partition_t in_partition);
  * @return  0        : On success.
  * @return  <0   : If an error occurred with any step
  */
-int hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t size);
+int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t size);
 
 /**@brief  Write data to an area on a Flash logical partition
  *
@@ -110,7 +110,7 @@ int hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t siz
  * @return  0        : On success.
  * @return  <0   : If an error occurred with any step
  */
-int hal_flash_write(hal_partition_t in_partition, uint32_t* off_set, const void* in_buf ,uint32_t in_buf_len);
+int32_t hal_flash_write(hal_partition_t in_partition, uint32_t* off_set, const void* in_buf ,uint32_t in_buf_len);
 
 /**@brief    Read data from an area on a Flash to data buffer in RAM
  *
@@ -125,7 +125,7 @@ int hal_flash_write(hal_partition_t in_partition, uint32_t* off_set, const void*
  * @return  0        : On success.
  * @return  <0   : If an error occurred with any step
  */
-int hal_flash_read(hal_partition_t in_partition, uint32_t* off_set, void* out_buf, uint32_t in_buf_len);
+int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set, void *out_buf, uint32_t in_buf_len);
 
 
 
@@ -141,7 +141,7 @@ int hal_flash_read(hal_partition_t in_partition, uint32_t* off_set, void* out_bu
  * @return  0        : On success.
  * @return  <0   : If an error occurred with any step
  */
-int hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
+int32_t hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
 
 
 /**@brief    Disable security options on a logical partition
@@ -156,7 +156,7 @@ int hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, uint32_
  * @return  0        : On success.
  * @return  <0   : If an error occurred with any step
  */
-int hal_flash_dis_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
+int32_t hal_flash_dis_secure(hal_partition_t partition, uint32_t off_set, uint32_t size);
 
 /** @} */
 /** @} */

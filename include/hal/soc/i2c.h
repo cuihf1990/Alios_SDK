@@ -49,23 +49,16 @@ typedef struct
     uint16_t    tx_length;
     uint16_t    rx_length;
     uint16_t    retries;    /* Number of times to retry the message */
-    char        combined;   /**< If set, this message is used for both tx and rx. */
+    int8_t      combined;   /**< If set, this message is used for both tx and rx. */
     uint8_t     flags;      /* MESSAGE_DISABLE_DMA : if set, this flag disables use of DMA for the message */
 } hal_i2c_msg_t;
 
 
-typedef enum
-{
-    HAL_I2C_0,
-    HAL_I2C_1,
-    HAL_I2C_2,
-    HAL_I2C_3,
-    HAL_I2C_MAX,
-} hal_i2c_t;
+
 
 typedef struct
 {
-   hal_i2c_t                   port;           /**< Platform I2C port that is connected to the target I2C device, - e.g. MICO_I2C_1 */
+   uint8_t                     port;           /**< Platform I2C port that is connected to the target I2C device, - e.g. MICO_I2C_1 */
    uint16_t                    address;        /**< The address of the device on the I2C bus */
    hal_i2c_bus_address_width_t address_width;  /**< I2C device's address length */
    hal_i2c_speed_mode_t        speed_mode;     /**< Speed mode the device operates in */
@@ -93,7 +86,7 @@ typedef struct
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during initialisation
  */
-int hal_i2c_init(hal_i2c_device_t *device);
+int32_t hal_i2c_init(hal_i2c_device_t *device);
 
 
 /**@brief Checks whether the device is available on a bus or not
@@ -104,7 +97,7 @@ int hal_i2c_init(hal_i2c_device_t *device);
  * @return    true : device is found.
  * @return    false: device is not found
  */
-char hal_i2c_probe_device(hal_i2c_device_t *device, int retries);
+int8_t hal_i2c_probe_device(hal_i2c_device_t *device, int32_t retries);
 
 
 /**@brief Initialize the mico_i2c_message_t structure for i2c tx transaction
@@ -117,7 +110,7 @@ char hal_i2c_probe_device(hal_i2c_device_t *device, int retries);
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-int hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf, uint16_t tx_buf_len, uint16_t retries);
+int32_t hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf, uint16_t tx_buf_len, uint16_t retries);
 
 /**@brief Initialize the mico_i2c_message_t structure for i2c rx transaction
  *
@@ -129,7 +122,7 @@ int hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf, uint16_t tx_buf
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-int hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void* rx_buf, uint16_t rx_buf_len, uint16_t retries);
+int32_t hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void *rx_buf, uint16_t rx_buf_len, uint16_t retries);
 
 
 /**@brief Initialize the mico_i2c_message_t structure for i2c combined transaction
@@ -144,7 +137,7 @@ int hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void* rx_buf, uint16_t rx_buf_len, 
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-int hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf, void *rx_buf, uint16_t tx_buf_len, uint16_t rx_buf_len, uint16_t retries);
+int32_t hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf, void *rx_buf, uint16_t tx_buf_len, uint16_t rx_buf_len, uint16_t retries);
 
 
 /**@brief Transmits and/or receives data over an I2C interface
@@ -156,7 +149,7 @@ int hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf, void *rx_
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during message transfer
  */
-int hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg, uint16_t num);
+int32_t hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg, uint16_t num);
 
 
 /**@brief Deinitialises an I2C device
@@ -166,7 +159,7 @@ int hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg, uint16_t num)
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during deinitialisation
  */
-int hal_i2c_finalize(hal_i2c_device_t *device);
+int32_t hal_i2c_finalize(hal_i2c_device_t *device);
 
 
 /** @} */

@@ -18,18 +18,6 @@
 #define YOS_PWM_H
 
 
-typedef enum
-{
-    HAL_PWM_0,
-    HAL_PWM_1,
-    HAL_PWM_2,
-    HAL_PWM_3,
-    HAL_PWM_4,
-    HAL_PWM_5,
-    HAL_PWM_MAX,
-} hal_pwm_t;
-
-
 /**@brief Initialises a PWM pin
  *
  * @note  Prepares a Pulse-Width Modulation pin for use.
@@ -42,7 +30,7 @@ typedef enum
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_pwm_init(hal_pwm_t pwm, uint32_t freq, float duty_cycle);
+int32_t hal_pwm_init(uint8_t pwm, uint32_t freq, float duty_cycle);
 
 
 /**@brief Starts PWM output on a PWM interface
@@ -54,7 +42,7 @@ int hal_pwm_init(hal_pwm_t pwm, uint32_t freq, float duty_cycle);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_pwm_start(hal_pwm_t pwm);
+int32_t hal_pwm_start(uint8_t pwm);
 
 
 /**@brief Stops output on a PWM pin
@@ -66,7 +54,7 @@ int hal_pwm_start(hal_pwm_t pwm);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_pwm_stop(hal_pwm_t pwm);
+int32_t hal_pwm_stop(uint8_t pwm);
 
 /** @} */
 /** @} */

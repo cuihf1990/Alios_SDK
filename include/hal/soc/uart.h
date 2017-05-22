@@ -73,23 +73,6 @@
  } hal_uart_config_t;
 
 
-
-/******************************************************
- *                 Function Declarations
- ******************************************************/
-
-typedef enum
-{
-    HAL_UART_0,
-    HAL_UART_1,
-    HAL_UART_2,
-    HAL_UART_3,
-    HAL_UART_4,
-    HAL_UART_MAX,
-} hal_uart_t;
-
-
-
 /**@brief Initialises a UART interface
  *
  * @note Prepares an UART hardware interface for communications
@@ -101,7 +84,7 @@ typedef enum
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_uart_init(hal_uart_t uart, const hal_uart_config_t *config);
+int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config);
 
 
 /**@brief Initialises a STDIO UART interface, internal use only
@@ -114,7 +97,7 @@ int hal_uart_init(hal_uart_t uart, const hal_uart_config_t *config);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_stdio_uart_init(const hal_uart_config_t *config);
+int32_t hal_stdio_uart_init(const hal_uart_config_t *config);
 
 
 /**@brief Deinitialises a UART interface
@@ -124,7 +107,7 @@ int hal_stdio_uart_init(const hal_uart_config_t *config);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_uart_finalize(hal_uart_t uart);
+int32_t hal_uart_finalize(uint8_t uart);
 
 
 /**@brief Transmit data on a UART interface
@@ -136,7 +119,7 @@ int hal_uart_finalize(hal_uart_t uart);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_uart_send(hal_uart_t uart, const void *data, uint32_t size);
+int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size);
 
 
 /**@brief Receive data on a UART interface
@@ -149,7 +132,7 @@ int hal_uart_send(hal_uart_t uart, const void *data, uint32_t size);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_uart_recv(hal_uart_t uart, void *data, uint32_t size, uint32_t timeout);
+int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t size, uint32_t timeout);
 
 /**@brief Read the length of the data that is already recived by uart driver and stored in buffer
  *
@@ -157,7 +140,7 @@ int hal_uart_recv(hal_uart_t uart, void *data, uint32_t size, uint32_t timeout);
  *
  * @return    Data length
  */
-uint32_t hal_uart_get_len_in_buf(hal_uart_t uart); 
+uint32_t hal_uart_get_len_in_buf(int uart); 
 
 /** @} */
 /** @} */
