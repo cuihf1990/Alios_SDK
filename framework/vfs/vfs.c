@@ -15,6 +15,7 @@
  */
 
 #include <yos/kernel.h>
+#include <yos/framework.h>
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
