@@ -7,6 +7,7 @@ $(NAME)_SOURCES     += basic_test.c
 $(NAME)_SOURCES     += hal_test.c
 $(NAME)_SOURCES     += framework/yloop_test.c 
 $(NAME)_SOURCES     += utility/cjson_test.c
+$(NAME)_SOURCES     += utility/hashtable_test.c
 $(NAME)_SOURCES     += tfs/tfs_test.c
 $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
