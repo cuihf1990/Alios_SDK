@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <ota/ota.h>
+#include <hal/ota.h>
 #include <yos/framework.h>
 #include <yos/log.h>
 #include <yos_version.h>

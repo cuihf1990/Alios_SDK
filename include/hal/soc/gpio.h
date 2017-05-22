@@ -23,29 +23,56 @@
 #include "board_platform.h"
 #include "platform_peripheral.h"
 
-/** @addtogroup HAL_PLATFORM
-* @{
-*/
 
 
-/** @defgroup HAL_GPIO GPIO Driver
-* @brief  General Purpose Input/Output pin (GPIO) Functions
-* @{
-*/
+typedef enum
+{
+    HAL_GPIO_0,
+    HAL_GPIO_1 ,
+    HAL_GPIO_2,
+    HAL_GPIO_3,
+    HAL_GPIO_4,
+    HAL_GPIO_5,
+    HAL_GPIO_6,
+    HAL_GPIO_7,
+    HAL_GPIO_8,
+    HAL_GPIO_9,
+    HAL_GPIO_10,
+    HAL_GPIO_11,
+    HAL_GPIO_12,
+    HAL_GPIO_13,
+    HAL_GPIO_14,
+    HAL_GPIO_15,
+    HAL_GPIO_16,
+    HAL_GPIO_17,
+    HAL_GPIO_18,
+    HAL_GPIO_19,
+    HAL_GPIO_20,
+    HAL_GPIO_21,
+    HAL_GPIO_22,
+    HAL_GPIO_23,
+    HAL_GPIO_24,
+    HAL_GPIO_25,
+    HAL_GPIO_26,
+    HAL_GPIO_27,
+    HAL_GPIO_28,
+    HAL_GPIO_29,
+    HAL_GPIO_30,
+    HAL_GPIO_31,
+    HAL_GPIO_32,
+    HAL_GPIO_33,
+    HAL_GPIO_34,
+    HAL_GPIO_35,
+    HAL_GPIO_36,
+    HAL_GPIO_37,
+    HAL_GPIO_38,
+    HAL_GPIO_39,
+    HAL_GPIO_40,
+    HAL_GPIO_41,
+    HAL_GPIO_MAX,
+} hal_gpio_t;
 
-/******************************************************
- *                   Macros
- ******************************************************/  
 
-//#define MicoGpioInputGet hal_gpio_input_get
-
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-/******************************************************
- *                 Type Definitions
- ******************************************************/
 typedef platform_pin_config_t                   hal_gpio_config_t;
 
 typedef platform_gpio_irq_trigger_t             hal_gpio_irq_trigger_t;

@@ -53,6 +53,14 @@
  *                    Structures
  ******************************************************/
 
+typedef enum
+{
+    HAL_SPI_0,
+    HAL_SPI_1,
+    HAL_SPI_2,
+    HAL_SPI_3,
+    HAL__SPI_MAX,
+} hal_spi_t;
 
 typedef struct
 {

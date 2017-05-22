@@ -17,31 +17,17 @@
 #ifndef YOS_PWM_H
 #define YOS_PWM_H
 
-#pragma once
-#include "common.h"
-#include "board_platform.h"
 
-/** @addtogroup MICO_PLATFORM
-  * @{
-  */
-
-/** @defgroup MICO_PWM MICO PWM Driver
-  * @brief  Pulse-Width Modulation (PWM) Functions
-  * @{
-  */
-
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-/******************************************************
- *                 Type Definitions
- ******************************************************/
-
- /******************************************************
- *                 Function Declarations
- ******************************************************/
-
+typedef enum
+{
+    HAL_PWM_0,
+    HAL_PWM_1,
+    HAL_PWM_2,
+    HAL_PWM_3,
+    HAL_PWM_4,
+    HAL_PWM_5,
+    HAL_PWM_MAX,
+} hal_pwm_t;
 
 
 /**@brief Initialises a PWM pin
