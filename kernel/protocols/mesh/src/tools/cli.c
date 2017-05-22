@@ -410,6 +410,7 @@ void process_nbrs(int argc, char *argv[])
             response_append(",0x%04x", nbr->addr.netid);
             response_append(",0x%04x", nbr->addr.addr.short_addr);
             response_append(",%d", nbr->stats.link_cost);
+            response_append(",%d", nbr->ssid_info.child_num);
 
             switch (nbr->state) {
                 case STATE_CANDIDATE:

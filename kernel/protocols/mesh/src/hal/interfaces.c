@@ -276,7 +276,7 @@ network_context_t *get_sub_network_context(hal_context_t *hal)
     network_context_t *network = get_default_network_context();
 
     if (slist_entry_number(&g_networks_list) < 2) {
-        return NULL;
+        return network;
     }
     slist_for_each_entry(&g_networks_list, network, network_context_t, next) {
         if (network->hal == hal) {

@@ -26,7 +26,7 @@ void test_uradar_sid_allocator_case(void)
     }
     YUNIT_ASSERT(11 == get_allocated_number(network));
     node_id.sid = 0x1000;
-    free_sid(network, &node_id);
+    free_sid(network, node_id.sid);
     node_id.mode = MODE_RX_ON;
     YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(network, &node_id));
     YUNIT_ASSERT(0x1000 == node_id.sid);

@@ -98,7 +98,7 @@ bool is_direct_child(network_context_t *network, uint16_t sid)
     uint16_t sidmask = 0;
     uint8_t  index;
 
-    if (sid == LEADER_SID || sid == INVALID_SID) {
+    if (network == NULL || sid == LEADER_SID || sid == INVALID_SID) {
         return false;
     }
     allocator = (ssid_allocator_t *)network->sid_base;
@@ -140,7 +140,7 @@ ur_error_t update_sid_mapping(network_context_t *network,
 
     if (to_add == false) {
         if (node) {
-            free_sid(network, node_id);
+            free_sid(network, node_id->sid);
             slist_del(&node->next, &allocator->base.node_list);
         }
         return UR_ERROR_NONE;
@@ -148,7 +148,7 @@ ur_error_t update_sid_mapping(network_context_t *network,
 
     if (new_node) {
         if (node_id->sid != INVALID_SID && node_id->sid != new_node->node_id.sid) {
-            free_sid(network, &new_node->node_id);
+            free_sid(network, new_node->node_id.sid);
         }
     } else {
         new_node = (sid_node_t *)ur_mem_alloc(sizeof(sid_node_t));
@@ -164,30 +164,30 @@ ur_error_t update_sid_mapping(network_context_t *network,
     return UR_ERROR_NONE;
 }
 
-void free_sid(network_context_t *network, ur_node_id_t *node_id)
+void free_sid(network_context_t *network, uint16_t sid)
 {
     ssid_allocator_t *allocator;
     uint8_t len;
 
     allocator = (ssid_allocator_t *)network->sid_base;
-    if (is_partial_function_sid(node_id->sid)) {
-        uint16_t idx = node_id->sid - (MOBILE_PREFIX << PF_SID_PREFIX_OFFSET);
+    if (is_partial_function_sid(sid)) {
+        uint16_t idx = sid - (MOBILE_PREFIX << PF_SID_PREFIX_OFFSET);
         if (release_bit(allocator->mobile_free_bits, PF_NODE_NUM, idx)) {
             allocator->pf_node_num --;
         }
         return;
     }
 
-    if (!is_direct_child(network, node_id->sid)) {
+    if (!is_direct_child(network, sid)) {
         return;
     }
-    node_id->sid -= allocator->sid_prefix;
-    node_id->sid >>= allocator->sid_shift;
+    sid -= allocator->sid_prefix;
+    sid >>= allocator->sid_shift;
     len = 1 << SID_MASK_LEN;
     if (allocator->sid_prefix == LEADER_SID) {
         len = 12;
     }
-    if (release_bit(&allocator->attach_free_bits, len, node_id->sid)) {
+    if (release_bit(&allocator->attach_free_bits, len, sid)) {
         allocator->base.node_num --;
     }
 }
@@ -249,7 +249,7 @@ ur_error_t allocate_sid(network_context_t *network, ur_node_id_t *node_id)
     }
 
     if (node_id->sid == INVALID_SID) {
-        node_id->sid = node->addr.addr.short_addr;
+        goto new_sid;
     }
 
     node_id->type = allocator->sid_shift == 0 ? LEAF_NODE : ROUTER_NODE;

@@ -511,7 +511,6 @@ ur_error_t handle_address_notification(message_t *message)
     uint16_t     tlvs_length;
     ur_node_id_t target;
     ur_node_id_t attach;
-    neighbor_t   *nbr = NULL;
     hal_context_t *hal;
     network_context_t *network;
     message_info_t *info;
@@ -538,10 +537,6 @@ ur_error_t handle_address_notification(message_t *message)
     info = message->info;
     network = info->network;
     hal = network->hal;
-    nbr = get_neighbor_by_sid(hal, target.sid, target.meshnetid);
-    if (nbr) {
-        memcpy(nbr->ueid, target_ueid->ueid, sizeof(nbr->ueid));
-    }
     if (attach_node) {
         attach.sid = attach_node->sid;
         attach.meshnetid = attach_node->meshnetid;
