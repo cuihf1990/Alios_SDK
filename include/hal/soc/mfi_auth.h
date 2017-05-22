@@ -14,45 +14,8 @@
  * limitations under the License.
  */
 
-
 #ifndef YOS_MFI_AUTH_H
 #define YOS_MFI_AUTH_H
-
-#pragma once
-#include "common.h"
-#include "board_platform.h"
-
-/** @addtogroup MICO_PLATFORM
-* @{
-*/
-
-
-/** @defgroup MICO_MFIAUTH MICO MFiAuth
-  * @brief  Provide APIs for Apple Authentication Coprocessor operations
-  * @{
-  */
-
-/******************************************************
- *                   Macros
- ******************************************************/  
-
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-/******************************************************
- *                    Structures
- ******************************************************/
-
-/******************************************************
- *                 Type Definitions
- ******************************************************/
-
-
-
-/******************************************************
- *                 Function Declarations
- ******************************************************/
 
 /** @brief     PlatformMFiAuthInitialize
  *

@@ -17,33 +17,62 @@
 #ifndef YOS_UART_H
 #define YOS_UART_H
 
-#pragma once
-#include "common.h"
-#include "RingBufferUtils.h"
-#include "board_platform.h"
-#include "platform_peripheral.h"
+ /**
+  * UART data width
+  */
+ typedef enum
+ {
+     DATA_WIDTH_5BIT,
+     DATA_WIDTH_6BIT,
+     DATA_WIDTH_7BIT,
+     DATA_WIDTH_8BIT,
+     DATA_WIDTH_9BIT
+ } hal_uart_data_width_t;
+ 
+ /**
+  * UART stop bits
+  */
+ typedef enum
+ {
+     STOP_BITS_1,
+     STOP_BITS_2,
+ } hal_uart_stop_bits_t;
+ 
+ /**
+  * UART flow control
+  */
+ typedef enum
+ {
+     FLOW_CONTROL_DISABLED,
+     FLOW_CONTROL_CTS,
+     FLOW_CONTROL_RTS,
+     FLOW_CONTROL_CTS_RTS
+ } hal_uart_flow_control_t;
+ 
+ /**
+  * UART parity
+  */
+ typedef enum
+ {
+     NO_PARITY,
+     ODD_PARITY,
+     EVEN_PARITY,
+ } hal_uart_parity_t;
 
-/** @addtogroup HAL_PLATFORM
-* @{
-*/
+ /**
+  * UART configuration
+  */
+ typedef struct
+ {
+     uint32_t                baud_rate;
+     hal_uart_data_width_t   data_width;
+     hal_uart_parity_t       parity;
+     hal_uart_stop_bits_t    stop_bits;
+     hal_uart_flow_control_t flow_control;
+     uint8_t                 flags; /**< if set, UART can wake up MCU from stop mode, reference: @ref UART_WAKEUP_DISABLE and @ref UART_WAKEUP_ENABLE*/
+ } hal_uart_config_t;
 
-/** @defgroup hal_UART MICO UART Driver
-* @brief  Universal Asynchronous Receiver Transmitter (UART) Functions
-* @{
-*/
 
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-/******************************************************
- *                    Structures
- ******************************************************/
-
-/******************************************************
- *                 Type Definitions
- ******************************************************/
- typedef platform_uart_config_t                  hal_uart_config_t;
 
 /******************************************************
  *                 Function Declarations
@@ -72,7 +101,7 @@ typedef enum
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_uart_init(hal_uart_t uart, const hal_uart_config_t *config, ring_buf_t *optional_rx_buf);
+int hal_uart_init(hal_uart_t uart, const hal_uart_config_t *config);
 
 
 /**@brief Initialises a STDIO UART interface, internal use only
@@ -85,7 +114,7 @@ int hal_uart_init(hal_uart_t uart, const hal_uart_config_t *config, ring_buf_t *
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_stdio_uart_init(const hal_uart_config_t *config, ring_buf_t *optional_rx_buf);
+int hal_stdio_uart_init(const hal_uart_config_t *config);
 
 
 /**@brief Deinitialises a UART interface

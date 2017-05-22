@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef YOS_RNG_H
-#define YOS_RNG_H
+#ifndef YOS_SOC_H
+#define YOS_SOC_H
 
-/**@brief Fill in a memory buffer with random data
- *
- * @param inBuffer        : Point to a valid memory buffer, this function will fill 
-                            in this memory with random numbers after executed
- * @param inByteCount     : Length of the memory buffer (bytes)
- *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
- */
-int hal_random_num_read(void *in_buf, int bytes);
-
-/** @} */
-/** @} */
+#include <stdint.h>
+#include "gpio.h"
+#include "spi.h"
+#include "adc.h"
+#include "flash.h"
+#include "i2c.h"
+#include "mfi_auth.h"
+#include "pwm.h"
+#include "rng.h"
+#include "rtc.h"
+#include "timer.h"
+#include "uart.h"
+#include "wdg.h"
 
 #endif
-
 

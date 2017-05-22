@@ -20,7 +20,7 @@
 #include <yos/list.h>
 #include <yos/kernel.h>
 
-#include <hal/soc/timer.h>
+#include <hal/soc/soc.h>
 
 #include <yunit.h>
 #include <yts.h>

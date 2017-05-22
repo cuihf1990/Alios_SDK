@@ -17,46 +17,19 @@
 #ifndef YOS_RTC_H
 #define YOS_RTC_H
 
-#pragma once
-#include "common.h"
-#include "board_platform.h"
-#include "platform_peripheral.h"
-
-/** @addtogroup MICO_PLATFORM
-* @{
-*/
-
-/** @defgroup MICO_RTC MICO RTC Driver
-* @brief  Real-time clock (RTC) Functions
-* @{
-*/
-
-/******************************************************
- *                   Macros
- ******************************************************/  
-
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-/******************************************************
- *                 Type Definitions
- ******************************************************/
-
-typedef platform_rtc_time_t           hal_rtc_time_t;
-
- /******************************************************
- *                    Structures
- ******************************************************/
-
-/******************************************************
- *                     Variables
- ******************************************************/
-
-/******************************************************
-                Function Declarations
- ******************************************************/
-
+ /**
+  * RTC time
+  */
+ typedef struct
+ {
+    uint8_t sec;
+    uint8_t min;
+    uint8_t hr;
+    uint8_t weekday;
+    uint8_t date;
+    uint8_t month;
+    uint8_t year;
+ } hal_rtc_time_t;
 
 
 /**@brief This function will initialize the on board CPU real time clock

@@ -17,36 +17,6 @@
 #ifndef YOS_WDG_H
 #define YOS_WDG_H
 
-#pragma once
-#include "common.h"
-#include "board_platform.h"
-
-#define PlatformWDGInitialize   hal_wdg_init
-#define PlatformWDGReload       hal_wdg_reload
-#define PlatformWDGFinalize     hal_wdg_finalize
-
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-/******************************************************
- *                Type Definitions
- ******************************************************/
-
- /******************************************************
- *                    Structures
- ******************************************************/
-
-
-/******************************************************
- *                     Variables
- ******************************************************/
-
-/******************************************************
- *              Function Declarations
- ******************************************************/
-
-
 /**
  * @biref This function will initialize the on board CPU hardware watch dog
  *
