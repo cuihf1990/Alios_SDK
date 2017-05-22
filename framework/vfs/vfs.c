@@ -25,8 +25,6 @@ static uint8_t    g_vfs_init;
 
 yos_mutex_t g_vfs_mutex;
 
-int csp_poll(struct pollfd *pollfds, int nfds, yos_sem_t sem, uint32_t timeout);
-
 #ifdef IO_NEED_TRAP
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -285,16 +283,23 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
 }
 
 #if (YUNOS_CONFIG_VFS_POLL_SUPPORT>0)
-int yos_poll(struct pollfd *fds, int nfds, int timeout)
-{
-    yos_sem_t sem;
-    int       ret = VFS_SUCCESS;
-    int       i;
-    int       j;
-    int       succeed = 1;
-    int       n_i_fds = 0;
+#include <yos/network.h>
 
-    yos_sem_new(&sem, 0);
+struct poll_arg {
+    int efd;
+};
+
+static void vfs_poll_notify(struct pollfd *fd, void *arg)
+{
+    struct poll_arg *parg = arg;
+    uint64_t val = 1;
+    write(parg->efd, &val, sizeof val);
+}
+
+static int pre_poll(struct pollfd *fds, int nfds, fd_set *rfds, void *parg)
+{
+    int i;
+    int maxfd = 0;
 
     for (i = 0; i < nfds; i++) {
         struct pollfd *pfd = &fds[i];
@@ -307,40 +312,29 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout)
         struct pollfd *pfd = &fds[i];
 
         if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
-            succeed = 2;
+            FD_SET(pfd->fd, rfds);
+            maxfd = pfd->fd > maxfd ? pfd->fd : maxfd;
             continue;
         }
 
         f = get_file(pfd->fd);
 
         if (f == NULL) {
-            succeed = 0;
-            break;
+            return -1;
         }
 
-        if (i != n_i_fds) {
-            struct pollfd tmp = fds[n_i_fds];
-            fds[n_i_fds] = fds[i];
-            fds[i] = tmp;
-        }
-
-        pfd = &fds[n_i_fds];
-        (f->node->ops->poll)(f, true, pfd, sem.hdl);
-        n_i_fds ++;
+        pfd = &fds[i];
+        (f->node->ops->poll)(f, true, vfs_poll_notify, pfd, parg);
     }
 
-    if (!timeout)
-    { goto check_poll; }
+    return maxfd;
+}
 
-    if (succeed == 1) {
-        ret = yos_sem_wait(&sem, timeout);
-    } else if (succeed == 2) {
-        ret = csp_poll(fds + n_i_fds, nfds - n_i_fds, sem, timeout);
-    }
-
-check_poll:
-
-    for (j = 0; j < i; j++) {
+static int post_poll(struct pollfd *fds, int nfds)
+{
+    int j;
+    int ret = 0;
+    for (j = 0; j < nfds; j++) {
         file_t  *f;
         struct pollfd *pfd = &fds[j];
 
@@ -353,16 +347,62 @@ check_poll:
             continue;
         }
 
-        (f->node->ops->poll)(f, false, pfd, sem.hdl);
+        (f->node->ops->poll)(f, false, NULL, NULL, NULL);
 
         if (pfd->revents) {
             ret ++;
         }
     }
 
-    yos_sem_free(&sem);
+    return ret;
+}
 
-    return ret < 0 ? 0 : ret;
+int yos_poll(struct pollfd *fds, int nfds, int timeout)
+{
+    struct timeval tv = {
+        .tv_sec = timeout / 1024,
+        .tv_usec = (timeout % 1024) * 1024,
+    };
+    fd_set rfds;
+    int ret = VFS_SUCCESS;
+    int nset = 0;
+    int maxfd = 0;
+    int efd;
+    struct poll_arg parg;
+
+    efd = eventfd(0, 0);
+    if (efd < 0) {
+        return -1;
+    }
+
+    parg.efd = efd;
+    FD_ZERO(&rfds);
+    FD_SET(efd, &rfds);
+    ret = pre_poll(fds, nfds, &rfds, &parg);
+
+    if (ret < 0)
+        goto check_poll;
+
+    maxfd = ret > efd ? ret : efd;
+    ret = select(maxfd + 1, &rfds, NULL, NULL, timeout >= 0 ? &tv : NULL);
+
+    if (ret >= 0) {
+        int i;
+        for (i=0;i<nfds;i++) {
+            struct pollfd *pfd = fds + i;
+            if (FD_ISSET(pfd->fd, &rfds))
+                pfd->revents |= POLLIN;
+        }
+
+        nset += ret;
+    }
+
+check_poll:
+    nset += post_poll(fds, nfds);
+
+    close(efd);
+
+    return ret < 0 ? 0 : nset;
 }
 #endif
 
