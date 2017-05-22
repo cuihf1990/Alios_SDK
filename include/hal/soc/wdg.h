@@ -21,26 +21,9 @@
 #include "common.h"
 #include "board_platform.h"
 
-/** @addtogroup MICO_PLATFORM
-* @{
-*/
-
-/** @defgroup MICO_WDG MICO WDG Driver
-* @brief  Hardware watch dog Functions (WDG) Functions
-* @note   These Functions are used by MICO's system monitor service, If any defined system monitor 
-*          cannot be reloaded for some reason, system monitor service use this hardware watch dog 
-*          to perform a system reset. So the watch dog reload time should be greater than system 
-*          monitor's refresh time.
-* @{
-*/
-
-/******************************************************
- *                   Macros
- ******************************************************/  
-
-#define PlatformWDGInitialize   hal_wdg_init /**< For API compatiable with older version */
-#define PlatformWDGReload       hal_wdg_reload     /**< For API compatiable with older version */
-#define PlatformWDGFinalize     hal_wdg_finalize   /**< For API compatiable with older version */
+#define PlatformWDGInitialize   hal_wdg_init
+#define PlatformWDGReload       hal_wdg_reload
+#define PlatformWDGFinalize     hal_wdg_finalize
 
 /******************************************************
  *                   Enumerations
