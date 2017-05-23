@@ -9,7 +9,6 @@
 #include "alink_export.h"
 #include "json_parser.h"
 #include "yos/framework.h"
-#include "kvmgr.h"
 
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
@@ -414,7 +413,6 @@ void test_kv()
 {
     char buf[64] = {0};
     int len = 0;
-    yos_kv_init();
 
     yos_kv_set("name","tiger",5,1);
     yos_kv_set("name","cat",3,1);
@@ -426,7 +424,6 @@ void test_kv()
     len = sizeof(buf);
     yos_kv_get("name",buf,&len);
     printf("get ---> %s\n",buf);
-    yos_kv_deinit();
 }
 
 int application_start(int argc, char *argv[])
@@ -463,7 +460,6 @@ int application_start(int argc, char *argv[])
     yos_post_delayed_action(4*1000,main_loop, NULL);
     yos_loop_run();
 
-    //‘›∆¡±Œ∏¥Œª¥˙¬Î£¨±‹√‚≤‚ ‘÷–ŒÛ÷ÿ∆Ù
     //alink_factory_reset();
     printf("alink end.\n");
     alink_end();
