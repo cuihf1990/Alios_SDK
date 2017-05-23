@@ -48,6 +48,8 @@ typedef struct {
     size_t      offset;
 } file_t;
 
+struct pollfd;
+typedef void (*poll_notify_t)(struct pollfd *, void *);
 struct file_ops {
     int (*open)(inode_t *, file_t *);
     int (*close)(file_t *);
@@ -55,7 +57,7 @@ struct file_ops {
     ssize_t (*write)(file_t *, const void *buf, size_t len);
     int (*ioctl)(file_t *, int cmd, unsigned long arg);
 #ifdef YUNOS_CONFIG_VFS_POLL_SUPPORT
-    int (*poll)(file_t *, bool , struct pollfd *, void *);
+    int (*poll)(file_t *, bool , poll_notify_t, struct pollfd *, void *);
 #endif
 };
 

@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef YUNOS_VFS_H
-#define YUNOS_VFS_H
+#ifndef YOC_SYS_VERSION
+#define YOC_SYS_VERSION
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+const char *get_yoc_product_name(void);
+const char *get_yoc_factory_id(void);
+const char *get_yoc_product_model(void);
+const char *get_yoc_device_type(void);
+const char *get_yoc_terminal_type(void);
+const char *get_yoc_os_version (void);
+const char *get_yoc_os_internal_version(void);
+const char *get_yoc_product_internal_type(void);
 
-#include <sys/types.h>
-#include <vfs_conf.h>
+#endif /* YOC_SYS_VERSION */
 
-int vfs_init(void);
-
-int vfs_device_init(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif

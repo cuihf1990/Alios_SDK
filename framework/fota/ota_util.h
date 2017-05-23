@@ -14,20 +14,37 @@
  * limitations under the License.
  */
 
-#ifndef YUNOS_VFS_H
-#define YUNOS_VFS_H
+#ifndef _OTA_UTIL_H_
+#define _OTA_UTIL_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"{
 #endif
 
-#include <sys/types.h>
-#include <vfs_conf.h>
+#include <stdint.h>
+#include "ota_constants.h"
 
-int vfs_init(void);
+#define PACKET_VER_SIZE   32
 
-int vfs_device_init(void);
+typedef enum OTA_STATUS {
+    E_OTA_IDLE,
+    E_OTA_HOLD,
+    E_OTA_DOWNLOAD_SUC,
+    E_OTA_DOWNLOAD_FAIL,
+    E_OTA_END
+} OTA_STATUS_T;
 
+void ota_set_status(OTA_STATUS_T status);
+OTA_STATUS_T ota_get_status(void);
+
+char* ota_get_id2(void);
+void ota_handle_error(void);
+
+void ota_set_packet_version(char* ver, uint32_t len);
+
+int ota_http_init(const char *server, int port);
+int ota_write(int fd,void* buffer,int length);
+int ota_read(int fd,void *buffer,int length, int range);
 #ifdef __cplusplus
 }
 #endif

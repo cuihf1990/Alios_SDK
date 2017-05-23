@@ -3,6 +3,6 @@ NAME := linuxapp
 $(NAME)_SOURCES     := main.c
 
 $(NAME)_COMPONENTS  := ysh
-ifeq ($(NET),1)
+ifeq ($(LWIP),1)
 $(NAME)_COMPONENTS  += protocols.net
 endif

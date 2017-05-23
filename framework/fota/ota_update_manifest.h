@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef YUNOS_VFS_H
-#define YUNOS_VFS_H
+#ifndef OTA_UPDATE_MANIFEST_H_
+#define OTA_UPDATE_MANIFEST_H_
+#include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "ota_transport.h"
 
-#include <sys/types.h>
-#include <vfs_conf.h>
+typedef int (*write_flash_cb_t)(int32_t writed_size, uint8_t *buf,
+                                  int32_t buf_len, int type);
 
-int vfs_init(void);
+typedef int (*ota_finish_cb_t)(int32_t finish_result, const char *updated_version);
 
-int vfs_device_init(void);
+int8_t ota_pub_request(ota_request_params *request_parmas);
 
-#ifdef __cplusplus
-}
-#endif
+int8_t ota_do_update(ota_response_params *response_parmas,ota_request_params *request_parmas,
+                               write_flash_cb_t func, ota_finish_cb_t fcb);
 
-#endif
+
+#endif /* OTA_UPDATE_MANIFEST_H_ */

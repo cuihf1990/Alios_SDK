@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef YUNOS_VFS_H
-#define YUNOS_VFS_H
+#ifndef _OTA_UPDATE_PACKET_H
+#define _OTA_UPDATE_PACKET_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"{
 #endif
 
-#include <sys/types.h>
-#include <vfs_conf.h>
-
-int vfs_init(void);
-
-int vfs_device_init(void);
+int get_update_packet(const char* url, write_flash_cb_t func);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* _OTA_UPDATE_PACKET_H */

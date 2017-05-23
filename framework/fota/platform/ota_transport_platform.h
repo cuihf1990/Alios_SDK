@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * ota_transport_platform.h
+ *
+ *  Created on: 2017年5月17日
+ *      Author: ting.guit
+ */
 
-#ifndef YUNOS_VFS_H
-#define YUNOS_VFS_H
+#ifndef OTA_TRANSPORT_PLATFORM_H_
+#define OTA_TRANSPORT_PLATFORM_H_
+#include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+char * ota_get_iotId();
 
-#include <sys/types.h>
-#include <vfs_conf.h>
+int8_t ota_sub_platform(const char *topic, int len, void *msgCallback);
 
-int vfs_init(void);
+int8_t ota_pub_platform(const char *topic, const char *pub_info, int len);
 
-int vfs_device_init(void);
+int8_t ota_dissub_info(const char *topic);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* OTA_TRANSPORT_PLATFORM_H_ */

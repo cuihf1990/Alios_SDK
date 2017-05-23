@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef YUNOS_VFS_H
-#define YUNOS_VFS_H
+#ifndef _OTA_LOG_H_
+#define _OTA_LOG_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#undef LOG_TAG
+#define LOG_TAG "OTA"
 
-#include <sys/types.h>
-#include <vfs_conf.h>
+#include "yos/log.h"
 
-int vfs_init(void);
+#define OTA_LOG_D(format, ...) LOGD(LOG_TAG, format"\r\n",##__VA_ARGS__)
+#define OTA_LOG_I(format, ...) LOGI(LOG_TAG, format"\r\n",##__VA_ARGS__)
+#define OTA_LOG_W(format, ...) LOGW(LOG_TAG, format"\r\n",##__VA_ARGS__)
+#define OTA_LOG_E(format, ...) LOGE(LOG_TAG, format"\r\n",##__VA_ARGS__)
 
-int vfs_device_init(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif  // _OTA_LOG_H_

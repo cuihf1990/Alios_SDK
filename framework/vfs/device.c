@@ -18,6 +18,7 @@
 #include <string.h>
 #include <yos/list.h>
 #include <yos/kernel.h>
+#include <yos/framework.h>
 
 #include <vfs_conf.h>
 #include <vfs_err.h>
@@ -29,8 +30,9 @@ static int inited;
 
 typedef struct {
     yos_mutex_t    mutex;
+    poll_notify_t  poll_cb;
     struct pollfd *fd;
-    void          *sem;
+    void          *poll_data;
     int            counter;
     dlist_t        bufs;
     int            cache_count;
@@ -83,16 +85,10 @@ static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
     else
         dlist_add_tail(&evt->node, &pdev->bufs);
 
-    if (pdev->fd) {
+    if (pdev->poll_cb != NULL) {
         pdev->fd->revents |= POLLIN;
-
-        if (pdev->sem != NULL) {
-            yos_sem_t yos_sem;
-            yos_sem.hdl = pdev->sem;
-            yos_sem_signal(&yos_sem);
-        }
+        pdev->poll_cb(pdev->fd, pdev->poll_data);
     }
-
 out:
     yos_mutex_unlock(&pdev->mutex);
     return len;
@@ -148,23 +144,22 @@ static ssize_t event_read(file_t *f, void *buf, size_t len)
     return cnt;
 }
 
-static int event_poll(file_t *f, bool setup, struct pollfd *pfd, void *sem)
+static int event_poll(file_t *f, bool setup, poll_notify_t notify, struct pollfd *fd, void *opa)
 {
     event_dev_t *pdev = f->f_arg;
     if (!setup) {
-        pdev->fd = NULL;
-        pdev->sem = NULL;
+        pdev->poll_cb = NULL;
+        pdev->poll_data = NULL;
         return 0;
     }
 
-    pdev->fd = pfd;
-    pdev->sem = sem;
+    pdev->poll_cb = notify;
+    pdev->fd = fd;
+    pdev->poll_data = opa;
 
     if (pdev->counter) {
-        pfd->revents |= POLLIN;
-        yos_sem_t yos_sem;
-        yos_sem.hdl = sem;
-        yos_sem_signal(&yos_sem);
+        pdev->fd->revents |= POLLIN;
+        (*notify)(fd, opa);
     }
 
     return 0;

@@ -28,64 +28,6 @@
 
 extern void hw_start_hal(void);
 
-#ifndef WITH_LWIP
-static void sem_notify_cb(blk_obj_t *obj, kobj_set_t *handle)
-{
-    int fd = (int)(long)handle->docker;
-    uint64_t val = 1;
-    int ret;
-
-    ret = write(fd, &val, sizeof val);
-    (void)ret;
-}
-
-static int create_eventfd(yos_sem_t sem, kobj_set_t *handle)
-{
-    int fd = eventfd(0, 0);
-
-    handle->notify = sem_notify_cb;
-    handle->docker = (void *)fd;
-    ((blk_obj_t *)sem.hdl)->handle = handle;
-
-    sem_count_t count;
-    yunos_sem_count_get(sem.hdl, &count);
-    if (count > 0)
-        sem_notify_cb((blk_obj_t *)sem.hdl, handle);
-
-    return fd;
-}
-
-static void remove_eventfd(yos_sem_t sem, kobj_set_t *handle)
-{
-    int fd = (int)(long)handle->docker;
-    close(fd);
-    ((blk_obj_t *)sem.hdl)->handle = NULL;
-}
-
-int csp_poll(struct pollfd *pollfds, int nfds, yos_sem_t sem,
-                  uint32_t timeout)
-{
-    kobj_set_t obj_handle;
-    int ret;
-    int sz = sizeof(struct pollfd) * (nfds + 1);
-    struct pollfd *pfds = malloc(sz);
-    struct pollfd *evt_fdp = pfds + nfds;
-
-    bzero(pfds, sz);
-    memcpy(pfds, pollfds, sz - sizeof(struct pollfd));
-    evt_fdp->fd = create_eventfd(sem, &obj_handle);
-    evt_fdp->events = POLLIN;
-
-    ret = poll(pfds, nfds+1, timeout);
-
-    memcpy(pollfds, pfds, sz - sizeof(struct pollfd));
-
-    remove_eventfd(sem, &obj_handle);
-
-    return ret;
-}
-#endif
-
 void csp_os_init(void)
 {
     hw_start_hal();

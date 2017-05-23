@@ -50,6 +50,7 @@ typedef struct {
     void        *real_stack_end;
     void        *signal_stack;
     int          in_signals;
+    int          int_lvl;
 #if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
     int          vid;
 #endif
@@ -106,15 +107,34 @@ static inline int in_signal(void)
 sigset_t cpu_intrpt_save(void)
 {
     sigset_t    oldset = {};
-    if (!in_signal())
-        sigprocmask(SIG_BLOCK, &cpu_sig_set, &oldset);
+    if (in_signal())
+        return oldset;
+
+    sigprocmask(SIG_BLOCK, &cpu_sig_set, &oldset);
+    if (g_active_task) {
+        task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
+        tcb_ext->int_lvl ++;
+    }
+
     return oldset;
 }
 
 void cpu_intrpt_restore(sigset_t cpsr)
 {
-    if (!in_signal())
-        sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+    if (in_signal())
+        return;
+
+    if (!g_active_task) {
+        goto out;
+    }
+
+    task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
+    tcb_ext->int_lvl --;
+    if (tcb_ext->int_lvl)
+        return;
+
+out:
+    sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
 }
 
 void cpu_task_switch(void)
