@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <stdio.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
@@ -141,6 +157,16 @@ int hal_wifi_suspend_station(hal_wifi_module_t *m)
 }
 
 int hal_wifi_suspend_soft_ap(hal_wifi_module_t *m)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    return m->suspend_soft_ap(m);
+}
+
+
+int hal_wifi_set_channel(hal_wifi_module_t *m, int ch)
 {
     if (m == NULL) {
         m = hal_wifi_get_default_module();

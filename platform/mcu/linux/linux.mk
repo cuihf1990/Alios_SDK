@@ -24,6 +24,7 @@ $(NAME)_SOURCES += $(ARCH_LINUX)/cpu_longjmp_32.S
 $(NAME)_SOURCES     += main/arg_options.c
 $(NAME)_SOURCES     += main/main.c
 $(NAME)_SOURCES     += main/hw.c
+$(NAME)_SOURCES     += main/wifi_port.c
 $(NAME)_SOURCES     += csp/csp_rhino.c
 $(NAME)_SOURCES     += soc/soc_impl.c
 $(NAME)_SOURCES     += soc/hook_impl.c
