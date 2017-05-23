@@ -14,20 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * @file hal/wifi.h
- * @brief WiFi HAL API for YOS
- * @detail WiFi HAL defines basic WiFi management functionalities including <BR>
- *         getting mac address, connect to specified AP(ssid/password), enter promiscuous mode. <BR>
- *         On the other hand, integration with TCP/IP stack is not the scope.
- *         <BR>
- *         <BR>
- *         Definition of some terms: <BR>
- *         Smart Config - a vendor providied method to config a device from other device, typically Smart Phone <BR>
- *         Promisicious Mode - also known as Monitor Mode, a special mode that WiFi Chip pass all data to upper layer <BR>
- * @version since 5.5.0
- */
-
 #ifndef HAL_WIFI_H
 #define HAL_WIFI_H
 
@@ -231,7 +217,7 @@ int  hal_wifi_suspend(hal_wifi_module_t *m);
 int  hal_wifi_suspend_station(hal_wifi_module_t *m);
 
 int  hal_wifi_suspend_soft_ap(hal_wifi_module_t *m);
-int  hal_wifi_set_channel(int ch);
+int  hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
 
 void hal_wifi_start_wifi_monitor(hal_wifi_module_t *m);
 void hal_wifi_stop_wifi_monitor(hal_wifi_module_t *m);
