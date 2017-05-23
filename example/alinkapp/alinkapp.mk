@@ -1,7 +1,7 @@
 NAME := alinkapp
 
 $(NAME)_SOURCES := alink_sample.c
-$(NAME)_COMPONENTS  := base64 hashtable log connectivity ywss protocol.alink modules.kv
+$(NAME)_COMPONENTS  := base64 hashtable log connectivity ywss protocol.alink modules.kv netmgr
 $(NAME)_INCLUDES := ../../framework/protocol/alink/system/ ../../framework/protocol/alink/json/
 $(NAME)_INCLUDES += ../../kernel/modules/kv/include  
 GLOBAL_LDFLAGS += -lssl
