@@ -56,99 +56,111 @@ static void test_timer_case(void)
 }
 
 
+static uint8_t fixmac[6] = {0xd8,0x96,0xe0,0x03,0x04,0x01};
+
 static int wifi_init(hal_wifi_module_t *m)
 {
     printf("wifi init success!!\n");
     return 0;
 };
 
-static void wifi_get_mac_addr(uint8_t *mac)
+static void wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)
 {
     printf("wifi_get_mac_addr!!\n");
-
-    mac[0] = 0x11;
+    memcpy(mac, fixmac, 6);
 };
 
-static int wifi_start(hal_wifi_init_type_t *init_para)
+static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
 {
     (void)init_para;
+
+   
 
     return 0;
 }
 
-static int wifi_start_adv(hal_wifi_init_type_adv_t *init_para_adv)
+static int wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_para_adv)
 {
     (void)init_para_adv;
 
     return 0;
 }
 
-int get_ip_stat(hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type)
+int get_ip_stat(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type)
 {
-    (void)out_net_para;
     (void)wifi_type;
+
+    char ip[4]   = {0x7f, 0x00, 0x00, 0x01};
+    char mask[4] = {0xFF, 0xFF, 0xFF, 0x00};
+    char gate[4] = {0x7f, 0x00, 0x00, 0x01};
+
+    memcpy(out_net_para->ip, ip, 4);
+    memcpy(out_net_para->mask, mask, 4);
+    memcpy(out_net_para->gate, gate, 4);
+    memcpy(out_net_para->ip, ip, 5);
+    memcpy(out_net_para->mac, fixmac, 6);
 
     return 0;
 }
 
-int get_link_stat(hal_wifi_link_stat_t *out_stat)
+int get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)
 {
     (void)out_stat;
     return 0;
 }
 
-void start_scan(void)
+void start_scan(hal_wifi_module_t *m)
 {
 
 }
 
-void start_scan_adv(void)
+void start_scan_adv(hal_wifi_module_t *m)
 {
 }
 
 
-int power_off(void)
-{
-    return 0;
-}
-
-int power_on(void)
+int power_off(hal_wifi_module_t *m)
 {
     return 0;
 }
 
-int suspend(void)
+int power_on(hal_wifi_module_t *m)
 {
     return 0;
 }
 
-int suspend_station(void)
+int suspend(hal_wifi_module_t *m)
 {
     return 0;
 }
 
-int suspend_soft_ap(void)
+int suspend_station(hal_wifi_module_t *m)
+{
+    return 0;
+}
+
+int suspend_soft_ap(hal_wifi_module_t *m)
 {
 
     return 0;
 }
 
-int set_channel(int ch)
+int set_channel(hal_wifi_module_t *m, int ch)
 {
     return 0;
 }
 
-void start_monitor(void)
+void start_monitor(hal_wifi_module_t *m)
 {
 
 }
 
-void stop_monitor(void)
+void stop_monitor(hal_wifi_module_t *m)
 {
 
 }
 
-void register_monitor_cb(wifi_cb_t fn)
+void register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 {
 
 }
