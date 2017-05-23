@@ -25,7 +25,7 @@
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_wdg_init(uint32_t timeout);
+int32_t hal_wdg_init(uint32_t timeout);
 
 /**
  * @biref Reload watchdog counter.
@@ -43,7 +43,7 @@ void hal_wdg_reload(void);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_wdg_finalize(void);
+int32_t hal_wdg_finalize(void);
 
 /** @} */
 /** @} */

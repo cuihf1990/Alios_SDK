@@ -18,18 +18,6 @@
 #ifndef YOS_ADC_H
 #define YOS_ADC_H
 
-typedef enum
-{
-    HAL_ADC_0,
-    HAL_ADC_1,
-    HAL_ADC_2,
-    HAL_ADC_3,
-    HAL_ADC_4,
-    HAL_ADC_5,
-    HAL_ADC_MAX,
-} hal_adc_t;
-
-
 /**@biref Initialises an ADC interface
  *
  * Prepares an ADC hardware interface for sampling
@@ -42,7 +30,7 @@ typedef enum
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_adc_init(hal_adc_t adc, uint32_t sampling_cycle);
+int32_t hal_adc_init(uint8_t adc, uint32_t sampling_cycle);
 
 
 /**@biref Takes a single sample from an ADC interface
@@ -55,7 +43,7 @@ int hal_adc_init(hal_adc_t adc, uint32_t sampling_cycle);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_adc_task_sample(hal_adc_t adc, uint16_t *output);
+int32_t intask_sample(uint8_t adc, uint16_t *output);
 
 
 /**@biref Takes multiple samples from an ADC interface
@@ -72,7 +60,7 @@ int hal_adc_task_sample(hal_adc_t adc, uint16_t *output);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_adc_take_sample_streram(hal_adc_t adc, void *buf, uint16_t buf_len);
+int32_t intake_sample_streram(uint8_t adc, void *buf, uint16_t buf_len);
 
 
 /**@biref     De-initialises an ADC interface
@@ -84,7 +72,7 @@ int hal_adc_take_sample_streram(hal_adc_t adc, void *buf, uint16_t buf_len);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_adc_finalize(hal_adc_t adc);
+int32_t hal_adc_finalize(uint8_t adc);
 
 /** @} */
 /** @} */

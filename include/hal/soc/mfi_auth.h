@@ -28,7 +28,7 @@
  *  @return    kNoErr        : on success.
  *  @return    kGeneralErr   : if an error occurred with any step
  */
-int hal_mfi_auth_init(hal_i2c_t i2c);
+int32_t hal_mfi_auth_init(uint8_t i2c);
 
 
 /** @brief    PlatformMFiAuthFinalize

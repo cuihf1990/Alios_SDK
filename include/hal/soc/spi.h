@@ -40,23 +40,13 @@
  *                    Structures
  ******************************************************/
 
-typedef enum
-{
-    HAL_SPI_0,
-    HAL_SPI_1,
-    HAL_SPI_2,
-    HAL_SPI_3,
-    HAL__SPI_MAX,
-} hal_spi_t;
-
-
 typedef struct
 {
-    hal_spi_t  port;
-    hal_gpio_t chip_select;
-    uint32_t   speed;
-    uint8_t    mode;
-    uint8_t    bits;
+    uint8_t  port;
+    uint8_t  chip_select;
+    uint32_t speed;
+    uint8_t  mode;
+    uint8_t  bits;
 } hal_spi_device_t;
 
 
@@ -80,7 +70,7 @@ typedef struct
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if the SPI device could not be initialised
  */
-int hal_spi_init(const hal_spi_device_t *spi);
+int32_t hal_spi_init(const hal_spi_device_t *spi);
 
 
 /**@brief Transmits and/or receives data from a SPI device
@@ -92,7 +82,7 @@ int hal_spi_init(const hal_spi_device_t *spi);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred
  */
-int hal_spi_transfer(const hal_spi_device_t *spi, const hal_spi_msg_segment_t *segments, uint16_t num);
+int32_t hal_spi_transfer(const hal_spi_device_t *spi, const hal_spi_msg_segment_t *segments, uint16_t num);
 
 
 /**@brief De-initialises a SPI interface
@@ -104,7 +94,7 @@ int hal_spi_transfer(const hal_spi_device_t *spi, const hal_spi_msg_segment_t *s
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred
  */
-int hal_spi_finalize(const hal_spi_device_t *spi);
+int32_t hal_spi_finalize(const hal_spi_device_t *spi);
 
 /** @} */
 /** @} */
