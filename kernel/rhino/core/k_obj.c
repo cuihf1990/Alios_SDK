@@ -52,7 +52,7 @@ uint32_t     g_timer_ctrl;
 ktask_t      g_timer_task;
 cpu_stack_t  g_timer_task_stack[YUNOS_CONFIG_TIMER_TASK_STACK_SIZE];
 ksem_t       g_timer_sem;
-kmutex_t      g_timer_mutex;
+kmutex_t     g_timer_mutex;
 #endif
 
 #if (YUNOS_CONFIG_DYNTICKLESS > 0)
@@ -97,24 +97,24 @@ ctx_switch_t g_sys_ctx_switch_times;
 #endif
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-kqueue_t     g_dyn_queue;
-void        *g_dyn_queue_msg[YUNOS_CONFIG_K_DYN_QUEUE_MSG];
-ktask_t      g_dyn_mem_proc_task;
-cpu_stack_t  g_dyn_mem_proc_stack[YUNOS_CONFIG_K_DYN_TASK_STACK];
+kqueue_t    g_dyn_queue;
+void       *g_dyn_queue_msg[YUNOS_CONFIG_K_DYN_QUEUE_MSG];
+ktask_t     g_dyn_mem_proc_task;
+cpu_stack_t g_dyn_mem_proc_stack[YUNOS_CONFIG_K_DYN_TASK_STACK];
 #endif
 
 #if (YUNOS_CONFIG_WORKQUEUE > 0)
-workqueue_t *g_workqueue_head;
-kmutex_t     g_workqueue_mutex;
+kworkqueue_t *g_workqueue_head;
+kmutex_t      g_workqueue_mutex;
 #endif
 
 #if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRST_FIT > 0)
-klist_t             g_mm_region_list_head = { NULL, NULL };
-k_mm_region_head_t  g_kmm_region_head; /*kernel mm region*/
+klist_t            g_mm_region_list_head = { NULL, NULL };
+k_mm_region_head_t g_kmm_region_head; /*kernel mm region*/
 
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 1)
-kmutex_t             g_mm_region_mutex;
+kmutex_t g_mm_region_mutex;
 #endif
 #endif
 

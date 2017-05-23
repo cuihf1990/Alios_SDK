@@ -74,21 +74,21 @@ cpu_stack_t stack2_buf[WORK_STACK_BUF];
 
 static uint8_t workqueue_interface_case1(void)
 {
-    kstat_t     ret;
-    work_t      work0;
-    work_t      work1;
-    work_t      work2;
-    work_t      work3;
-    work_t      work4;
-    work_t      work5;
-    work_t      work6;
-    workqueue_t wq0;
-    workqueue_t wq1;
-    workqueue_t wq2;
+    kstat_t      ret;
+    kwork_t      work0;
+    kwork_t      work1;
+    kwork_t      work2;
+    kwork_t      work3;
+    kwork_t      work4;
+    kwork_t      work5;
+    kwork_t      work6;
+    kworkqueue_t wq0;
+    kworkqueue_t wq1;
+    kworkqueue_t wq2;
 
-    size_t      stack0_size = WORK_STACK_BUF;
-    size_t      stack1_size = WORK_STACK_BUF;
-    size_t      stack2_size = WORK_STACK_BUF;
+    size_t stack0_size = WORK_STACK_BUF;
+    size_t stack1_size = WORK_STACK_BUF;
+    size_t stack2_size = WORK_STACK_BUF;
 
     printf("==========WORKQUEUE TEST START!==========\n");
 

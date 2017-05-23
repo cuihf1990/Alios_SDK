@@ -77,9 +77,9 @@ void _trace_mblk_pool_create(ktask_t *task, mblk_pool_t *pool);
 void _trace_mm_region_create(ktask_t *task, k_mm_region_t *regions);
 
 /* work queue trace */
-void _trace_work_init(ktask_t *task, work_t *work);
-void _trace_workqueue_create(ktask_t *task, workqueue_t *workqueue);
-void _trace_workqueue_del(ktask_t *task, workqueue_t *workqueue);
+void _trace_work_init(ktask_t *task, kwork_t *work);
+void _trace_workqueue_create(ktask_t *task, kworkqueue_t *workqueue);
+void _trace_workqueue_del(ktask_t *task, kworkqueue_t *workqueue);
 
 /* task trace */
 #define TRACE_INIT()                                   _trace_init()

@@ -1449,7 +1449,7 @@ void _trace_mm_region_create(ktask_t *task, k_mm_region_t *regions)
 }
 
 /* work queue trace */
-void _trace_work_init(ktask_t *task, work_t *work)
+void _trace_work_init(ktask_t *task, kwork_t *work)
 {
     uint32_t  buf[20];
     char     *addr_first = (char  *)buf;
@@ -1490,7 +1490,7 @@ void _trace_work_init(ktask_t *task, work_t *work)
     fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
 }
 
-void _trace_workqueue_create(ktask_t *task, workqueue_t *workqueue)
+void _trace_workqueue_create(ktask_t *task, kworkqueue_t *workqueue)
 {
     uint32_t  buf[20];
     char     *addr_first = (char  *)buf;
@@ -1531,7 +1531,7 @@ void _trace_workqueue_create(ktask_t *task, workqueue_t *workqueue)
     fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
 }
 
-void _trace_workqueue_del(ktask_t *task, workqueue_t *workqueue)
+void _trace_workqueue_del(ktask_t *task, kworkqueue_t *workqueue)
 {
     uint32_t  buf[20];
     char     *addr_first = (char  *)buf;

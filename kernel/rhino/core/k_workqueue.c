@@ -17,9 +17,9 @@
 #include <k_api.h>
 
 #if (YUNOS_CONFIG_WORKQUEUE > 0)
-static kstat_t workqueue_is_exist(workqueue_t *workqueue)
+static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
 {
-    workqueue_t *wq = g_workqueue_head;
+    kworkqueue_t *wq = g_workqueue_head;
 
     if (g_workqueue_head == NULL) {
         return YUNOS_WORKQUEUE_NOT_EXIST;
@@ -30,7 +30,7 @@ static kstat_t workqueue_is_exist(workqueue_t *workqueue)
             return YUNOS_WORKQUEUE_EXIST;
         }
 
-        wq = yunos_list_entry(wq->workqueue_node.next, workqueue_t, workqueue_node);
+        wq = yunos_list_entry(wq->workqueue_node.next, kworkqueue_t, workqueue_node);
     } while(wq != g_workqueue_head);
 
     return YUNOS_WORKQUEUE_NOT_EXIST;
@@ -38,9 +38,9 @@ static kstat_t workqueue_is_exist(workqueue_t *workqueue)
 
 static void worker_task(void *arg)
 {
-    kstat_t      ret;
-    work_t      *work = NULL;
-    workqueue_t *wq   = (workqueue_t *)arg;
+    kstat_t       ret;
+    kwork_t      *work = NULL;
+    kworkqueue_t *wq   = (kworkqueue_t *)arg;
 
     while (1) {
         ret = yunos_sem_take(&(wq->sem), YUNOS_WAIT_FOREVER);
@@ -56,7 +56,7 @@ static void worker_task(void *arg)
             if (work->work_node.next == &(work->work_node)) {
                 wq->work_head = NULL;
             } else {
-                wq->work_head = yunos_list_entry(work->work_node.next, work_t, work_node);
+                wq->work_head = yunos_list_entry(work->work_node.next, kwork_t, work_node);
                 klist_rm(&(work->work_node));
             }
 
@@ -69,7 +69,7 @@ static void worker_task(void *arg)
     }
 }
 
-kstat_t yunos_workqueue_create(workqueue_t *workqueue, const name_t *name,
+kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
                                uint8_t pri, cpu_stack_t *stack_buf, size_t stack_size)
 {
     kstat_t ret;
@@ -136,7 +136,7 @@ kstat_t yunos_workqueue_create(workqueue_t *workqueue, const name_t *name,
     return YUNOS_SUCCESS;
 }
 
-kstat_t yunos_workqueue_del(workqueue_t *workqueue)
+kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
 {
     kstat_t ret;
 
@@ -162,7 +162,7 @@ kstat_t yunos_workqueue_del(workqueue_t *workqueue)
             g_workqueue_head = NULL;
         } else {
             g_workqueue_head = yunos_list_entry(workqueue->workqueue_node.next,
-                                                workqueue_t, workqueue_node);
+                                                kworkqueue_t, workqueue_node);
             klist_rm(&(workqueue->workqueue_node));
         }
     } else {
@@ -196,9 +196,9 @@ kstat_t yunos_workqueue_del(workqueue_t *workqueue)
 
 static void work_timer_cb(void *timer, void *arg)
 {
-    kstat_t      ret;
-    work_t      *work = yunos_list_entry(timer, work_t, timer);
-    workqueue_t *wq   = (workqueue_t *)arg;
+    kstat_t       ret;
+    kwork_t      *work = yunos_list_entry(timer, kwork_t, timer);
+    kworkqueue_t *wq   = (kworkqueue_t *)arg;
 
     yunos_mutex_lock(&(wq->work_mutex), YUNOS_WAIT_FOREVER);
 
@@ -224,7 +224,7 @@ static void work_timer_cb(void *timer, void *arg)
     }
 }
 
-kstat_t yunos_work_init(work_t *work, work_handle_t handle, void *arg, tick_t dly)
+kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg, tick_t dly)
 {
     kstat_t ret;
 
@@ -258,7 +258,7 @@ kstat_t yunos_work_init(work_t *work, work_handle_t handle, void *arg, tick_t dl
     return YUNOS_SUCCESS;
 }
 
-kstat_t yunos_work_run(workqueue_t *workqueue, work_t *work)
+kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
 {
     kstat_t ret;
 

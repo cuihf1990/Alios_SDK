@@ -292,15 +292,15 @@ int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
 {
     kstat_t ret;
 
-    cpu_stack_t *stk;
-    workqueue_t *wq;
+    cpu_stack_t  *stk;
+    kworkqueue_t *wq;
 
     stk = yos_malloc(stack_size);
     if (stk == NULL) {
         return -1;
     }
 
-    wq = yos_malloc(sizeof(workqueue_t));
+    wq = yos_malloc(sizeof(kworkqueue_t));
     if (wq == NULL) {
         return -1;
     }
@@ -328,9 +328,9 @@ int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
 {
     kstat_t ret;
 
-    work_t *w;
+    kwork_t *w;
 
-    w = yos_malloc(sizeof(work_t));
+    w = yos_malloc(sizeof(kwork_t));
     if (w == NULL) {
         return -1;
     }
