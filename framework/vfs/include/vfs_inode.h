@@ -48,6 +48,7 @@ typedef struct {
     size_t      offset;
 } file_t;
 
+struct pollfd;
 typedef void (*poll_notify_t)(struct pollfd *, void *);
 struct file_ops {
     int (*open)(inode_t *, file_t *);

@@ -18,7 +18,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <poll.h>
 
 #include <yos/kernel.h>
 #include <yos/framework.h>
