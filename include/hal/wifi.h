@@ -229,7 +229,7 @@ int  hal_wifi_suspend(hal_wifi_module_t *m);
 int  hal_wifi_suspend_station(hal_wifi_module_t *m);
 
 int  hal_wifi_suspend_soft_ap(hal_wifi_module_t *m);
-int  hal_wifi_set_channel(int ch);
+int  hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
 
 void hal_wifi_start_wifi_monitor(hal_wifi_module_t *m);
 void hal_wifi_stop_wifi_monitor(hal_wifi_module_t *m);

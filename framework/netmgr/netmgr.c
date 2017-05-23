@@ -94,11 +94,11 @@ static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
 {
     switch (stat) {
         case NOTIFY_STATION_UP:
-            yos_local_event_post(EV_WIFI, CODE_WIFI_ON_CONNECTED,
-                                 (unsigned long)g_netmgr_cxt.ap_config.ssid);
+            yos_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED,
+                           (unsigned long)g_netmgr_cxt.ap_config.ssid);
             break;
         case NOTIFY_STATION_DOWN:
-            yos_local_event_post(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0u);
+            yos_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0u);
             break;
         case NOTIFY_AP_UP:
             break;

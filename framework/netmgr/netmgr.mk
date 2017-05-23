@@ -1,3 +1,5 @@
 NAME := netmgr
 
-$(NAME)_SOURCES     := netmgr.c
+$(NAME)_SOURCES := netmgr.c
+
+GLOBAL_INCLUDES += include

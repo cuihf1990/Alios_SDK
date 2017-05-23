@@ -181,3 +181,6 @@ void hal_wifi_install_event(hal_wifi_module_t *m, const hal_wifi_event_cb_t *cb)
     m->ev_cb = cb;
 }
 
+int  hal_wifi_set_channel(hal_wifi_module_t *m, int ch)
+{
+}
