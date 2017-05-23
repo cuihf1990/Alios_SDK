@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 typedef struct hal_ota_module_s hal_ota_module_t;
+
 typedef int hal_stat_t;
 
 struct hal_ota_module_s
