@@ -148,7 +148,7 @@ typedef struct
     void (*fatal_err)(hal_wifi_module_t *m, void* arg);
 } hal_wifi_event_cb_t;
 
-typedef void (*wifi_cb_t)(uint8_t*data, int len);
+typedef void (*monitor_data_cb_t)(uint8_t*data, int len);
 
 /**
  * @struct hal_wifi_module_t
@@ -160,22 +160,22 @@ struct hal_wifi_module_s
     hal_wifi_event_cb_t *ev_cb;
 
     int  (*init)(hal_wifi_module_t *m);
-    void (*get_mac_addr)(uint8_t *mac);
-    int  (*start)(hal_wifi_init_type_t *init_para);
-    int  (*start_adv)(hal_wifi_init_type_adv_t *init_para_adv);
-    int  (*get_ip_stat)(hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type);
-    int  (*get_link_stat)(hal_wifi_link_stat_t *out_stat);
-    void (*start_scan)(void);
-    void (*start_scan_adv)(void);
-    int  (*power_off)(void);
-    int  (*power_on)(void);
-    int  (*suspend)(void);
-    int  (*suspend_station)(void);
-    int  (*suspend_soft_ap)(void);
-    int  (*set_channel)(int ch);
-    void (*start_monitor)(void);
-    void (*stop_monitor)(void);
-    void (*register_monitor_cb)(wifi_cb_t fn);
+    void (*get_mac_addr)(hal_wifi_module_t *m, uint8_t *mac);
+    int  (*start)(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para);
+    int  (*start_adv)(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_para_adv);
+    int  (*get_ip_stat)(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type);
+    int  (*get_link_stat)(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat);
+    void (*start_scan)(hal_wifi_module_t *m);
+    void (*start_scan_adv)(hal_wifi_module_t *m);
+    int  (*power_off)(hal_wifi_module_t *m);
+    int  (*power_on)(hal_wifi_module_t *m);
+    int  (*suspend)(hal_wifi_module_t *m);
+    int  (*suspend_station)(hal_wifi_module_t *m);
+    int  (*suspend_soft_ap)(hal_wifi_module_t *m);
+    int  (*set_channel)(hal_wifi_module_t *m, int ch);
+    void (*start_monitor)(hal_wifi_module_t *m);
+    void (*stop_monitor)(hal_wifi_module_t *m);
+    void (*register_monitor_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
 };
 
 
@@ -235,7 +235,7 @@ int  hal_wifi_set_channel(int ch);
 
 void hal_wifi_start_wifi_monitor(hal_wifi_module_t *m);
 void hal_wifi_stop_wifi_monitor(hal_wifi_module_t *m);
-void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, wifi_cb_t fn);
+void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
 
 /**
  * @brief Set the event callback function array for the wifi
