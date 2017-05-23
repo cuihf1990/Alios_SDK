@@ -69,11 +69,109 @@ static void wifi_get_mac_addr(uint8_t *mac)
     mac[0] = 0x11;
 };
 
+static int wifi_start(hal_wifi_init_type_t *init_para)
+{
+    (void)init_para;
+
+    return 0;
+}
+
+static int wifi_start_adv(hal_wifi_init_type_adv_t *init_para_adv)
+{
+    (void)init_para_adv;
+
+    return 0;
+}
+
+int get_ip_stat(hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type)
+{
+    (void)out_net_para;
+    (void)wifi_type;
+
+    return 0;
+}
+
+int get_link_stat(hal_wifi_link_stat_t *out_stat)
+{
+    (void)out_stat;
+    return 0;
+}
+
+void start_scan(void)
+{
+
+}
+
+void start_scan_adv(void)
+{
+}
+
+
+int power_off(void)
+{
+    return 0;
+}
+
+int power_on(void)
+{
+    return 0;
+}
+
+int suspend(void)
+{
+    return 0;
+}
+
+int suspend_station(void)
+{
+    return 0;
+}
+
+int suspend_soft_ap(void)
+{
+
+    return 0;
+}
+
+int set_channel(int ch)
+{
+    return 0;
+}
+
+void start_monitor(void)
+{
+
+}
+
+void stop_monitor(void)
+{
+
+}
+
+void register_monitor_cb(wifi_cb_t fn)
+{
+
+}
 
 static hal_wifi_module_t sim_yos_wifi_module = {
-    .base.name          = "sim_yos_wifi_module",
-    .init               =  wifi_init,
-    .get_mac_addr       =  wifi_get_mac_addr
+    .base.name           = "sim_yos_wifi_module",
+    .init                =  wifi_init,
+    .get_mac_addr        =  wifi_get_mac_addr,
+    .start               =  wifi_start,
+    .start_adv           =  wifi_start_adv,
+    .get_ip_stat         =  get_ip_stat,
+    .get_link_stat       =  get_link_stat,
+    .start_scan          =  start_scan,
+    .start_scan_adv      =  start_scan_adv,
+    .power_off           =  power_off,
+    .power_on            =  power_on,
+    .suspend             =  suspend,
+    .suspend_station     =  suspend_station,
+    .suspend_soft_ap     =  suspend_soft_ap,
+    .set_channel         =  set_channel,
+    .start_monitor       =  start_monitor,
+    .stop_monitor        =  stop_monitor,
+    .register_monitor_cb =  register_monitor_cb,
 };
 
 static void test_wifi_case(void)

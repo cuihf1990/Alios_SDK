@@ -148,6 +148,8 @@ typedef struct
     void (*fatal_err)(hal_wifi_module_t *m, void* arg);
 } hal_wifi_event_cb_t;
 
+typedef void (*wifi_cb_t)(uint8_t*data, int len);
+
 /**
  * @struct hal_wifi_module_t
  * @brief The Wifi module for manufacture to implement
@@ -170,6 +172,10 @@ struct hal_wifi_module_s
     int  (*suspend)(void);
     int  (*suspend_station)(void);
     int  (*suspend_soft_ap)(void);
+    int  (*set_channel)(int ch);
+    void (*start_monitor)(void);
+    void (*stop_monitor)(void);
+    void (*register_monitor_cb)(wifi_cb_t fn);
 };
 
 
@@ -225,6 +231,11 @@ int  hal_wifi_suspend(hal_wifi_module_t *m);
 int  hal_wifi_suspend_station(hal_wifi_module_t *m);
 
 int  hal_wifi_suspend_soft_ap(hal_wifi_module_t *m);
+int  hal_wifi_set_channel(int ch);
+
+void hal_wifi_start_wifi_monitor(hal_wifi_module_t *m);
+void hal_wifi_stop_wifi_monitor(hal_wifi_module_t *m);
+void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, wifi_cb_t fn);
 
 /**
  * @brief Set the event callback function array for the wifi

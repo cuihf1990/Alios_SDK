@@ -149,6 +149,32 @@ int hal_wifi_suspend_soft_ap(hal_wifi_module_t *m)
     return m->suspend_soft_ap();
 }
 
+void hal_wifi_start_wifi_monitor(hal_wifi_module_t *m)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    m->start_monitor();
+}
+
+void hal_wifi_stop_wifi_monitor(hal_wifi_module_t *m)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    m->stop_monitor();
+}
+
+void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, wifi_cb_t fn)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    m->register_monitor_cb(fn);
+}
 
 void hal_wifi_install_event(hal_wifi_module_t *m, hal_wifi_event_cb_t *cb)
 {
