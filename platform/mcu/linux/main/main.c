@@ -25,6 +25,8 @@
 #include <yos/log.h>
 #include <arg_options.h>
 #include <vfs.h>
+#include <vflash.h>
+#include <kvmgr.h>
 
 #define TAG "main"
 
@@ -114,6 +116,13 @@ static void start_app()
     yos_task_new("app", app_entry, NULL, 8192);
 }
 
+static void register_devices(void)
+{
+    int i;
+    for (i=0;i<10;i++)
+        vflash_register_partition(i);
+}
+
 int main(int argc, char **argv)
 {
     int ret;
@@ -154,6 +163,9 @@ int main(int argc, char **argv)
 
     vfs_init();
     vfs_device_init();
+    register_devices();
+
+    yos_kv_init();
 
     yos_loop_init();
 
