@@ -53,7 +53,7 @@ extern uint32_t    g_timer_ctrl;
 extern ktask_t     g_timer_task;
 extern cpu_stack_t g_timer_task_stack[YUNOS_CONFIG_TIMER_TASK_STACK_SIZE];
 extern ksem_t      g_timer_sem;
-extern kmutex_t     g_timer_mutex;
+extern kmutex_t    g_timer_mutex;
 #endif
 
 #if (YUNOS_CONFIG_DYNTICKLESS > 0)
@@ -63,7 +63,7 @@ extern tick_t g_elapsed_ticks;
 #endif
 
 #if (YUNOS_CONFIG_TICK_TASK > 0)
-extern ktask_t      g_tick_task;
+extern ktask_t     g_tick_task;
 extern cpu_stack_t g_tick_task_stack[YUNOS_CONFIG_TICK_TASK_STACK_SIZE];
 extern ksem_t      g_tick_sem;
 #endif
@@ -104,15 +104,15 @@ extern ktask_t   g_dyn_mem_proc_task;
 #endif
 
 #if (YUNOS_CONFIG_WORKQUEUE > 0)
-extern workqueue_t *g_workqueue_head;
-extern kmutex_t     g_workqueue_mutex;
+extern kworkqueue_t *g_workqueue_head;
+extern kmutex_t      g_workqueue_mutex;
 #endif
 
 #if (YUNOS_CONFIG_MM_BESTFIT > 0)
 extern klist_t            g_mm_region_list_head;
 extern k_mm_region_head_t g_kmm_region_head;
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 1)
-extern kmutex_t             g_mm_region_mutex;
+extern kmutex_t           g_mm_region_mutex;
 #endif
 #endif
 
@@ -147,10 +147,10 @@ void ready_list_head_to_tail(runqueue_t *rq, ktask_t *task);
 void time_slice_update(uint8_t task_pri);
 void timer_task_sched(void);
 
-void    pend_list_reorder(ktask_t *task);
-void    pend_task_wakeup(ktask_t *task);
-void    pend_to_blk_obj(blk_obj_t *blk_obj, ktask_t *task, tick_t timeout);
-void    pend_task_rm(ktask_t *task);
+void pend_list_reorder(ktask_t *task);
+void pend_task_wakeup(ktask_t *task);
+void pend_to_blk_obj(blk_obj_t *blk_obj, ktask_t *task, tick_t timeout);
+void pend_task_rm(ktask_t *task);
 
 #ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
 kstat_t pend_state_end_proc(ktask_t *task);
@@ -181,7 +181,7 @@ void intrpt_disable_measure_stop(void);
 void dyn_mem_proc_task_start(void);
 void cpu_usage_stats_start(void);
 
-kstat_t ringbuf_init   (k_ringbuf_t *p_ringbuf, void *buf, size_t len, size_t type, size_t block_size);
+kstat_t ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len, size_t type, size_t block_size);
 kstat_t ringbuf_reset(k_ringbuf_t *p_ringbuf);
 kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data,size_t len);
 kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void * data,size_t len);

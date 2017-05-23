@@ -193,7 +193,7 @@ int yos_schedule_call(yos_call_t fun, void *arg)
 }
 
 typedef struct work_para {
-    work_t *work;
+    kwork_t *work;
     yos_loop_t loop;
     yos_call_t action;
     void *arg1;
@@ -220,9 +220,9 @@ void yos_cancel_work(void *work, yos_call_t action, void *arg1)
 }
 
 #define WQ_STACK_SIZE 8192
-static workqueue_t *create_wq(void)
+static kworkqueue_t *create_wq(void)
 {
-    workqueue_t *wq;
+    kworkqueue_t *wq;
     wq = malloc(sizeof(*wq));
     if (!wq)
         goto err_out;
@@ -243,14 +243,14 @@ err_out:
 
 void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
 {
-    static workqueue_t *wq;
+    static kworkqueue_t *wq;
     kstat_t ret;
 
     if (!wq) {
         wq = create_wq();
     }
 
-    work_t *work = malloc(sizeof(*work));
+    kwork_t *work = malloc(sizeof(*work));
     work_par_t *wpar = malloc(sizeof(*wpar));
 
     if (!wq || !work || !wpar)
