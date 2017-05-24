@@ -64,7 +64,7 @@ static void trace_entry(void *arg)
     }
 }
 
-#if (CONFIG_CHIP_ARCH == linux)
+#ifdef CSP_LINUXHOST
 void trace_test()
 {
     if (yunos_task_dyn_create(&task_trace_test_0, "task_trace_test0", NULL, 7,

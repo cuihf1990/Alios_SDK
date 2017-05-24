@@ -78,7 +78,7 @@
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
 #define YUNOS_CONFIG_K_DYN_QUEUE_MSG         30
 #define YUNOS_CONFIG_K_DYN_TASK_STACK        256
-#define YUNOS_CONFIG_K_DYN_MEM_TASK_PRI      YUNOS_CONFIG_USER_PRI_MAX
+#define YUNOS_CONFIG_K_DYN_MEM_TASK_PRI      5
 #endif
 
 /* kernel idle conf */
@@ -97,7 +97,7 @@
 #define YUNOS_CONFIG_CPU_USAGE_TASK_STACK    256
 
 /* kernel trace conf */
-#define YUNOS_CONFIG_TRACE                   0
+#define YUNOS_CONFIG_TRACE                   1
 
 #endif /* K_CONFIG_H */
 
