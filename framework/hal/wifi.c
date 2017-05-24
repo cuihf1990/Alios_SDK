@@ -202,8 +202,11 @@ void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
     m->register_monitor_cb(m, fn);
 }
 
-void hal_wifi_install_event(hal_wifi_module_t *m, hal_wifi_event_cb_t *cb)
+void hal_wifi_install_event(hal_wifi_module_t *m, const hal_wifi_event_cb_t *cb)
 {
     m->ev_cb = cb;
 }
 
+int  hal_wifi_set_channel(hal_wifi_module_t *m, int ch)
+{
+}

@@ -1,20 +1,28 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <net/if.h>	      // struct ifreq
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/ip.h>       // IP_MAXPACKET (65535)
-#include <net/ethernet.h>     // ETH_P_ALL
-#include <linux/if_packet.h>
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+#include <hal/base.h>
+#include <hal/wifi.h>
+#include <netmgr.h>
+#include <yos/framework.h>
 
 #include "platform.h"
 #include "platform_config.h"
+
+platform_awss_recv_80211_frame_cb_t g_ieee80211_handler;
 
 //一键配置超时时间, 建议超时时间1-3min, APP侧一键配置1min超时
 int platform_awss_get_timeout_interval_ms(void)
@@ -38,123 +46,22 @@ int platform_awss_get_channelscan_interval_ms(void)
 void platform_awss_switch_channel(char primary_channel,
 		char secondary_channel, uint8_t bssid[ETH_ALEN])
 {
-#define HAL_PRIME_CHNL_OFFSET_DONT_CARE	0
-#define HAL_PRIME_CHNL_OFFSET_LOWER	1
-#define HAL_PRIME_CHNL_OFFSET_UPPER	2
-	int flag = (primary_channel <= 4
-			? HAL_PRIME_CHNL_OFFSET_LOWER : HAL_PRIME_CHNL_OFFSET_UPPER);
-	char buf[256];
+    hal_wifi_module_t *module;
 
-	snprintf(buf, sizeof(buf), "echo \"%d %d 0\" > /proc/net/rtl8188eu/%s/monitor",
-			primary_channel, flag, WLAN_IFNAME);
-	system(buf);
-}
-
-int open_socket(void)
-{
-	int fd;
-#if 0
-	if (getuid() != 0)
-		err("root privilege needed!\n");
-#endif
-	//create a raw socket that shall sniff
-	fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-	assert(fd >= 0);
-
-	struct ifreq ifr;
-	int sockopt = 1;
-
-	memset(&ifr, 0, sizeof(ifr));
-
-	/* set interface to promiscuous mode */
-	strncpy(ifr.ifr_name, WLAN_IFNAME, sizeof(ifr.ifr_name));
-	if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0) {
-		perror("ioctl(SIOCGIFFLAGS)");
-		goto exit;
-	}
-	ifr.ifr_flags |= IFF_PROMISC;
-	if (ioctl(fd, SIOCSIFFLAGS, &ifr) < 0) {
-		perror("ioctl(SIOCSIFFLAGS)");
-		goto exit;
-	}
-
-	/* allow the socket to be reused */
-	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
-                &sockopt, sizeof(sockopt)) < 0) {
-		perror("setsockopt(SO_REUSEADDR)");
-		goto exit;
-	}
-
-	/* bind to device */
-	struct sockaddr_ll ll;
-
-	memset(&ll, 0, sizeof(ll));
-	ll.sll_family = PF_PACKET;
-	ll.sll_protocol = htons(ETH_P_ALL);
-	ll.sll_ifindex = if_nametoindex(WLAN_IFNAME);
-	if (bind(fd, (struct sockaddr *)&ll, sizeof(ll)) < 0) {
-		perror("bind[PF_PACKET] failed");
-		goto exit;
-	}
-
-	return fd;
-exit:
-	close(fd);
-	exit(EXIT_FAILURE);
-}
-
-pthread_t monitor_thread;
-char monitor_running;
-
-void *monitor_thread_func(void *arg)
-{
-    platform_awss_recv_80211_frame_cb_t ieee80211_handler = arg;
-    /* buffer to hold the 80211 frame */
-    char *ether_frame = platform_malloc(IP_MAXPACKET);
-	assert(ether_frame);
-
-    int fd = open_socket();
-    int len, ret;
-    fd_set rfds;
-    struct timeval tv;
-
-    while (monitor_running) {
-        FD_ZERO(&rfds);
-        FD_SET(fd, &rfds);
-
-        tv.tv_sec = 0;
-        tv.tv_usec = 100 * 1000;//100ms
-
-        ret = select(fd + 1, &rfds, NULL, NULL, &tv);
-        assert(ret >= 0);
-
-        if (!ret)
-            continue;
-
-        //memset(ether_frame, 0, IP_MAXPACKET);
-        len = recv(fd, ether_frame, IP_MAXPACKET, 0);
-        if (len < 0) {
-            perror ("recv() failed:");
-            //Something weird happened
-            continue;
-        }
-
-        /*
-         * Note: use tcpdump -i wlan0 -w file.pacp to check link type and FCS
-         */
-
-        /* rtl8188: include 80211 FCS field(4 byte) */
-        int with_fcs = 1;
-        /* rtl8188: link-type IEEE802_11_RADIO (802.11 plus radiotap header) */
-        int link_type = AWSS_LINK_TYPE_80211_RADIO;
-
-        (*ieee80211_handler)(ether_frame, len, link_type, with_fcs);
+    module = hal_wifi_get_default_module();
+    if (module == NULL) {
+        return;
     }
 
-    platform_free(ether_frame);
-    close(fd);
+    hal_wifi_set_channel(module, (int)primary_channel);
+}
 
-    return NULL;
+static void monitor_data_handler(uint8_t *buf, int len)
+{
+    int with_fcs = 1;
+    int link_type = AWSS_LINK_TYPE_80211_RADIO;
+
+    (*g_ieee80211_handler)(buf, len, link_type, with_fcs);
 }
 
 //进入monitor模式, 并做好一些准备工作，如
@@ -163,35 +70,30 @@ void *monitor_thread_func(void *arg)
 //若是rtos的平台，注册收包回调函数aws_80211_frame_handler()到系统接口
 void platform_awss_open_monitor(platform_awss_recv_80211_frame_cb_t cb)
 {
-	char buf[256];
-	int ret;
+    hal_wifi_module_t *module = hal_wifi_get_default_module();
 
-	snprintf(buf, sizeof(buf), "ifconfig %s up", WLAN_IFNAME);
-	ret = system(buf);
+    if (module == NULL) {
+        return;
+    }
 
-	snprintf(buf, sizeof(buf), "iwconfig %s mode monitor", WLAN_IFNAME);
-	ret = system(buf);
-
-    monitor_running = 1;
-
-    ret = pthread_create(&monitor_thread, NULL, monitor_thread_func, cb);
-    assert(!ret);
+    g_ieee80211_handler = cb;
+    hal_wifi_register_monitor_cb(module, monitor_data_handler);
+    hal_wifi_start_wifi_monitor(module);
+    platform_awss_switch_channel(6, 0, NULL);
 }
 
 //退出monitor模式，回到station模式, 其他资源回收
 void platform_awss_close_monitor(void)
 {
-	char buf[256];
+    hal_wifi_module_t *module;
 
-    monitor_running = 0;
+    module = hal_wifi_get_default_module();
+    if (module == NULL) {
+        return;
+    }
 
-    pthread_join(monitor_thread, NULL);
-
-	snprintf(buf, sizeof(buf), "ifconfig %s up", WLAN_IFNAME);
-	system(buf);
-
-	snprintf(buf, sizeof(buf), "iwconfig %s mode managed", WLAN_IFNAME);
-	system(buf);
+    hal_wifi_register_monitor_cb(module, NULL);
+    hal_wifi_stop_wifi_monitor(module);
 }
 
 int platform_awss_connect_ap(
@@ -203,26 +105,15 @@ int platform_awss_connect_ap(
         _IN_OPT_ uint8_t bssid[ETH_ALEN],
         _IN_OPT_ uint8_t channel)
 {
-	char buf[256];
-	int ret;
+    int ret;
+    netmgr_ap_config_t config;
 
-	snprintf(buf, sizeof(buf), "ifconfig %s up", WLAN_IFNAME);
-	ret = system(buf);
+    strcpy(config.ssid, ssid);
+    strcpy(config.pwd, passwd);
+    yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0u);
+    ret = netmgr_set_ap_config(&config);
 
-	snprintf(buf, sizeof(buf), "iwconfig %s mode managed", WLAN_IFNAME);
-	ret = system(buf);
-
-	snprintf(buf, sizeof(buf), "wpa_cli -i %s status | grep 'wpa_state=COMPLETED'", WLAN_IFNAME);
-	do {
-		ret = system(buf);
-		usleep(100 * 1000);
-	} while (ret);
-
-	snprintf(buf, sizeof(buf), "udhcpc -i %s", WLAN_IFNAME);
-	ret = system(buf);
-
-	//TODO: wait dhcp ready here
-    return 0;
+    return ret;
 }
 
 int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)
@@ -293,3 +184,26 @@ int platform_wifi_send_80211_raw_frame(_IN_ enum platform_awss_frame_type type,
 {
     return -2;
 }
+
+static int smart_config_start(void)
+{
+    awss_start();
+    return 0;
+}
+
+static void smart_config_stop(void)
+{
+    awss_stop();
+}
+
+static void smart_config_result_cb(int result, uint32_t ip)
+{
+    yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0u);
+}
+
+autoconfig_plugin_t g_vendor_smartconfig = {
+    .description = "alink_smartconfig",
+    .autoconfig_start = smart_config_start,
+    .autoconfig_stop = smart_config_stop,
+    .config_result_cb = smart_config_result_cb
+};

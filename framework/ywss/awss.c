@@ -40,14 +40,14 @@ int awss_start(void)
 
     aws_destroy();
 
-    uint32_t startAwssConnectingTimestamp = yos_get_time_ms();
+    uint32_t startAwssConnectingTimestamp = yos_now() / 1000000;
     int tryCount = 0;
     do {
         if (stopAwssConnecting){
             break;
         }
         if (strcmp(ssid, DEFAULT_SSID) == 0){
-            uint32_t now = yos_get_time_ms();
+            uint32_t now = yos_now() / 1000000;
             if ((0 != os_awss_get_connect_default_ssid_timeout_interval_ms()) &&
                 (now - startAwssConnectingTimestamp > os_awss_get_connect_default_ssid_timeout_interval_ms())) {
                 break;
@@ -91,7 +91,7 @@ int awss_stop(void)
 
     stopAwssConnecting = 1;
     aws_destroy();
-    stop_awss_work();
+    //stop_awss_work();
 
     while(1){
         if (awssFinished) break;

@@ -134,7 +134,7 @@ typedef struct
     void (*fatal_err)(hal_wifi_module_t *m, void* arg);
 } hal_wifi_event_cb_t;
 
-typedef void (*monitor_data_cb_t)(uint8_t*data, int len);
+typedef void (*monitor_data_cb_t)(uint8_t *data, int len);
 
 /**
  * @struct hal_wifi_module_t
@@ -143,7 +143,7 @@ typedef void (*monitor_data_cb_t)(uint8_t*data, int len);
 struct hal_wifi_module_s
 {
     hal_module_base_t    base;
-    hal_wifi_event_cb_t *ev_cb;
+    const hal_wifi_event_cb_t *ev_cb;
 
     int  (*init)(hal_wifi_module_t *m);
     void (*get_mac_addr)(hal_wifi_module_t *m, uint8_t *mac);
@@ -163,8 +163,6 @@ struct hal_wifi_module_s
     void (*stop_monitor)(hal_wifi_module_t *m);
     void (*register_monitor_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
 };
-
-
 
 /**
  * @brief Get the default wifi instance.
@@ -230,7 +228,7 @@ void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
  * @return None
  * @note Please don't do time consuming work in these callbacks
  */
-void hal_wifi_install_event(hal_wifi_module_t *m, hal_wifi_event_cb_t *cb);
+void hal_wifi_install_event(hal_wifi_module_t *m, const hal_wifi_event_cb_t *cb);
 
 #endif /* HAL_WIFI_H */
 
