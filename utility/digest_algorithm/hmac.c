@@ -1,5 +1,5 @@
 #include "digest_algorithm.h"
-
+#include <string.h>
 static int digest_hmac_md5(const unsigned char *msg, uint32_t msg_len, const unsigned char *key, uint32_t key_len, unsigned char *digest)
 {
 	void *context;

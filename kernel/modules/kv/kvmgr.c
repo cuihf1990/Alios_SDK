@@ -4,6 +4,9 @@
 #include "digest_algorithm.h"
 #include "crc.h"
 #include "hashtable.h"
+#include "yos/kernel.h"
+#include "k_api.h"
+
 
 #define KV_BUFFER_SIZE  (16 * 1024)
 #define INT2BYTE(p,value) \
