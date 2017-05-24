@@ -57,11 +57,7 @@
 #define MEM_ALIGNMENT                   4
 #define MEM_SIZE                        0x100000
 
-#ifdef CONFIG_YOC_RHINO
 #define MEM_LIBC_MALLOC                 0
-#else
-#define MEM_LIBC_MALLOC                 1
-#endif
 
 #define MEMP_MEM_MALLOC                 1
 #define MEMP_OVERFLOW_CHECK             1
