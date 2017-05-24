@@ -50,6 +50,31 @@ typedef struct _km_enc_param {
     km_padding_type padding_type;
 } km_enc_param;
 
+//for import raw format
+typedef struct _rsa_key_t {
+    uint32_t n_len;
+    uint32_t e_len;
+    uint32_t d_len;
+    uint32_t p_len;
+    uint32_t q_len;
+    uint32_t dp_len;
+    uint32_t dq_len;
+    uint32_t iq_len;
+    uint8_t *n;
+    uint8_t *e;
+    uint8_t *d;
+    uint8_t *dp;
+    uint8_t *dq;
+    uint8_t *iq;
+} rsa_key_t;
+
+typedef struct _km_key_data_t {
+    km_key_type type;
+    union {
+        rsa_key_t rsa_data;
+    };
+} km_key_data_t;
+
 //0 succrss -1 failed
 int32_t generate_key(const char *name, const uint32_t name_len,
                      uint32_t key_type, void *arg);
