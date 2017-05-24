@@ -247,7 +247,7 @@ int yunit_run_test_suite(void *test_suite)
     return 0;
 }
 
-int yunit_run_test_case(void *test_suite, void *test_case)
+static int _run_test_case(void *test_suite, void *test_case)
 {
     yunit_test_suite_node_t *test_suite_node = test_suite;
     yunit_test_case_node_t *test_case_node = test_case;
@@ -267,6 +267,33 @@ int yunit_run_test_case(void *test_suite, void *test_case)
     return 0;
 }
 
+int yunit_run_test_case(void *test_suite, void *test_case)
+{
+    int ret = 0;
+
+    yunit_test_suite_node_t *tnode = test_suite;
+    yunit_test_case_node_t *tcase = test_case;
+
+    printf("run test suites %s\n", tnode->name);
+
+    if (tnode->init != NULL) {
+        tnode->init();
+    }
+
+    ret = _run_test_case(tnode, tcase);
+
+    if (tnode->deinit != NULL) {
+        tnode->deinit();
+    }
+
+    if (ret != 0) {
+        LOGE(TAG, "run test suite %s error: ret = %d", tnode->name, ret);
+        return ret;
+    }
+
+    return 0;
+}
+
 int yunit_run_test_case_list(yunit_test_suite_node_t *test_suite,
     yunit_test_case_node_t *test_case_list_header)
 {
@@ -275,7 +302,7 @@ int yunit_run_test_case_list(yunit_test_suite_node_t *test_suite,
     yunit_test_case_node_t *node = test_case_list_header->next;
 
     while (node != NULL) {
-        ret = yunit_run_test_case(test_suite, node);
+        ret = _run_test_case(test_suite, node);
         if (ret != 0) {
             return ret;
         }
