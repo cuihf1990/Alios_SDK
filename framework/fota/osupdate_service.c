@@ -120,12 +120,11 @@ int osupdate_service_start(void) {
 void osupdate_service_stop(void) {
 }
 
-extern void IOT_service_start();
 
 void osupdate_service_event(input_event_t *event) {
     if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP) {
-        //test_new_channel_rhino();
-        csp_task_new("iot", IOT_service_start, NULL, 1024 * 12);
+        //csp_task_new("iot", IOT_service_start, NULL, 1024 * 12);
+        ota_sub_upgrade(osupdate_do_update);
     }
 }
 

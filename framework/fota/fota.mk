@@ -19,23 +19,17 @@ NAME := fota
 $(NAME)_SOURCES += \
     ota_update_packet.c \
     ota_util.c \
-    ota_transport.c \
-    platform/ota_transport_platform.c \
     ota_update_manifest.c \
-    md5_sum.c \
-    md5.c \
     version.c \
     osupdate_service.c
-
+    
+$(NAME)_COMPONENTS += fota.platform.alink 
+$(NAME)_COMPONENTS += fota.md5
 
 $(NAME)_INCLUDES := \
     ./ \
-    ../../utility/cjson/include \
     ../../include/hal \
-    ./platform/
+    ./md5 \
+    ./platform/alink/
 
-ifneq ($(CONFIG_YOS_SECURITY),n)
-$(NAME)_INCLUDES += \
-    security/tfs/include
-endif
 

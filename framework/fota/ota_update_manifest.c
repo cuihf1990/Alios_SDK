@@ -16,8 +16,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <cJSON.h>
-
 
 #include "ota_update_manifest.h"
 #include "ota_log.h"
