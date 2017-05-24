@@ -71,7 +71,7 @@ typedef struct rsid_allocator_s {
 void allocator_init(network_context_t *network);
 void allocator_deinit(network_context_t *network);
 ur_error_t allocate_sid(network_context_t *network, ur_node_id_t *node_id);
-void free_sid(network_context_t *network, ur_node_id_t *node_id);
+void free_sid(network_context_t *network, uint16_t sid);
 ur_error_t update_sid_mapping(network_context_t *network,
                               ur_node_id_t *node_id, bool to_add);
 

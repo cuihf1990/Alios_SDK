@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <stdlib.h>
 #include <yts.h>
 
 int application_start(int argc, char **argv)
