@@ -12,11 +12,11 @@
 #include "os.h"
 #include "service.h"
 
-#define ACCS_DEBUG 0
+#define ACCS_DEBUG 1
 #if(ACCS_DEBUG==1)
     #define accs_debug LOGD
 #else
-    #define accs_debug ;
+    #define accs_debug
 #endif
 
 static dlist_t g_accs_listener_list;
@@ -311,7 +311,24 @@ static int accs_event_handler(int type, void *data, int dlen, void *result, int 
         } else if (!strcmp(p->method, "setDeviceStatusArray")) {
             ret = EVENT_IGNORE;
             //TODO: setDeviceStatusArray not support
-        } else
+        }else if(!strcmp(p->method, "upgradeDevice")) {
+            LOGW(MODULE_NAME_ACCS,"start to OTA now...%s\n",p->data); 
+            cb = alink_cb_func[_ALINK_UPGRADE_DEVICE];
+            ret = EVENT_CONSUMED;
+            if (cb) {
+                int (*func)(char *) = cb;
+                func(p->data);
+            }
+        } else if(!strcmp(p->method, "unUpgradeDevice")) {
+            LOGW(MODULE_NAME_ACCS,"stop to OTA now...%s\n",p->data); 
+            cb = alink_cb_func[_ALINK_CANCEL_UPGRADE_DEVICE];
+            ret = EVENT_CONSUMED;
+            if (cb) {
+                int (*func)(char *) = cb;
+                func(p->data);
+            }
+        } 
+        else
             ret = EVENT_IGNORE;
 
         return ret;

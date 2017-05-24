@@ -169,6 +169,18 @@ enum ALINK_WIFI_CALLBACK {
      * void callback_write_device_rawdata(const char *params)
      */
     ALINK_SET_DEVICE_RAWDATA,
+
+    /**
+     * int callback_upgrade_device(const char *params)
+     * @n@nuccessfully
+     */
+    ALINK_UPGRADE_DEVICE,
+
+    /**
+     * int callback_cancel_upgrade_device(const char *params)
+     * @n@nuccessfully
+     */
+    ALINK_CANCEL_UPGRADE_DEVICE
 };
 
 /**
