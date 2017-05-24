@@ -16,8 +16,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <cJSON.h>
-
 
 #include "ota_update_manifest.h"
 #include "ota_log.h"
@@ -46,7 +44,7 @@
 
 int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *request_parmas)
 {
-    if(strcmp(response_parmas->primary_version , request_parmas->primary_version) > 0 )
+    if(strncmp(response_parmas->primary_version , request_parmas->primary_version, sizeof response_parmas->primary_version) > 0 )
         return 1;
     return 0;
 }

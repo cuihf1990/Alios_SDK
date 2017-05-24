@@ -15,6 +15,7 @@
  */
 #include <unistd.h>
 #include <stdint.h>
+#include <string.h>
 #include <md5.h>
 #include <stdbool.h>
 #include <yos/log.h>
@@ -92,7 +93,7 @@ static int request_packet(void);
 static void ota_finish(const char *buffer, int32_t len);
 static void clear_header_info(void)
 {
-    memset(&g_packet_info, 0, sizeof(packet_format_t));
+    memset((void *)&g_packet_info, 0, sizeof(packet_format_t));
 }
 
 static void clear_file_block(void)
@@ -170,10 +171,6 @@ static enum FILE_TYPE get_file_type(const char* buf)
             return BOOTLOADER;
         case 0x82:
             return IMAGE;
-#if defined(CONFIG_MODULE_OTA_ENABLE)
-        case 0x83:
-            return MODULE_APP;
-#endif
         default:
             OTA_LOG_E("file_type is wrong.\n");
     }

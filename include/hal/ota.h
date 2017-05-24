@@ -18,10 +18,13 @@
 #define __OTA_H__
 
 #pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <stdint.h>
+#include "base.h"
 typedef struct hal_ota_module_s hal_ota_module_t;
 
 typedef int hal_stat_t;
