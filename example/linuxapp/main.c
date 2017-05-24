@@ -3,8 +3,6 @@
 #include <yos/framework.h>
 #include <yos/network.h>
 
-#include <k_api.h>
-
 extern void ysh_task_start(void);
 extern void ysh_init();
 

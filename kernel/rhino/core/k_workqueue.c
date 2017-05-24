@@ -17,6 +17,9 @@
 #include <k_api.h>
 
 #if (YUNOS_CONFIG_WORKQUEUE > 0)
+extern kworkqueue_t g_workqueue_default;
+extern cpu_stack_t  g_workqueue_stack[YUNOS_CONFIG_WORKQUEUE_STACK_SIZE];
+
 static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
 {
     kworkqueue_t *wq = g_workqueue_head;
@@ -60,7 +63,7 @@ static void worker_task(void *arg)
                 klist_rm(&(work->work_node));
             }
 
-            work->running = 0;
+            work->running = 2;
 
             yunos_mutex_unlock(&(wq->work_mutex));
 
@@ -202,7 +205,7 @@ static void work_timer_cb(void *timer, void *arg)
 
     yunos_mutex_lock(&(wq->work_mutex), YUNOS_WAIT_FOREVER);
 
-    if (work->running == 1) {
+    if (work->running > 0) {
         yunos_mutex_unlock(&(wq->work_mutex));
         /* YUNOS_WORKQUEUE_WORK_EXIST */
         return;
@@ -213,6 +216,8 @@ static void work_timer_cb(void *timer, void *arg)
     } else {
         klist_insert(&(wq->work_head->work_node), &(work->work_node));
     }
+
+    work->wq = wq;
 
     work->running = 1;
 
@@ -244,6 +249,7 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg, tick_t d
     work->handle  = handle;
     work->arg     = arg;
     work->dly     = dly;
+    work->wq      = NULL;
 
     if (dly > 0) {
         ret = yunos_timer_create(&(work->timer), "WORK-TIMER", work_timer_cb,
@@ -268,7 +274,7 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
     if (work->dly == 0) {
         yunos_mutex_lock(&(workqueue->work_mutex), YUNOS_WAIT_FOREVER);
 
-        if (work->running == 1) {
+        if (work->running > 0) {
             yunos_mutex_unlock(&(workqueue->work_mutex));
             return YUNOS_WORKQUEUE_WORK_EXIST;
         }
@@ -278,6 +284,8 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
         } else {
             klist_insert(&(workqueue->work_head->work_node), &(work->work_node));
         }
+
+        work->wq = workqueue;
 
         work->running = 1;
 
@@ -300,10 +308,41 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
     return YUNOS_SUCCESS;
 }
 
+kstat_t yunos_work_sched(kwork_t *work)
+{
+    return yunos_work_run(&g_workqueue_default, work);
+}
+
+kstat_t yunos_work_cancel(kwork_t *work)
+{
+    kworkqueue_t *wq = (kworkqueue_t *)work->wq;
+
+    yunos_mutex_lock(&(wq->work_mutex), YUNOS_WAIT_FOREVER);
+
+    if (work->running == 1) {
+        klist_rm(&(work->work_node));
+        yunos_mutex_unlock(&(wq->work_mutex));
+        return YUNOS_WORKQUEUE_WORK_RUNNING;
+    }
+
+    yunos_mutex_unlock(&(wq->work_mutex));
+
+    if (work->dly > 0) {
+        yunos_timer_stop(&(work->timer));
+        yunos_timer_del(&(work->timer));
+    }
+
+    return YUNOS_SUCCESS;
+}
+
 void workqueue_init(void)
 {
     g_workqueue_head = NULL;
+
     yunos_mutex_create(&g_workqueue_mutex, "WORKQUEUE-MUTEX");
+
+    yunos_workqueue_create(&g_workqueue_default, "DEFAULT-WORKQUEUE", 9,
+                           g_workqueue_stack, YUNOS_CONFIG_WORKQUEUE_STACK_SIZE);
 }
 #endif
 

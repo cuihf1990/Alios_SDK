@@ -47,6 +47,10 @@
 #define YUNOS_CONFIG_WORKQUEUE               0
 #endif
 
+#ifndef YUNOS_CONFIG_WORKQUEUE_STACK_SIZE
+#define YUNOS_CONFIG_WORKQUEUE_STACK_SIZE    200
+#endif
+
 #ifndef YUNOS_CONFIG_EVENT_FLAG
 #define YUNOS_CONFIG_EVENT_FLAG              0
 #endif
