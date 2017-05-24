@@ -25,6 +25,8 @@
 #include <fifo.h>
 #include <trace_hal.h>
 
+#if (YUNOS_CONFIG_TRACE > 0)
+
 #define TASK_TEST_STACK_SIZE 512
 #define LOOP_CNT 1
 
@@ -64,7 +66,6 @@ static void trace_entry(void *arg)
     }
 }
 
-#if (CONFIG_CHIP_ARCH == linux)
 void trace_test()
 {
     if (yunos_task_dyn_create(&task_trace_test_0, "task_trace_test0", NULL, 7,
@@ -72,9 +73,6 @@ void trace_test()
         printf("task_del_test 0 creat fail \n");
     }
 }
-#else
-void trace_test()
-{
-}
+
 #endif
 

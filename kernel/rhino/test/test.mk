@@ -90,5 +90,6 @@ $(NAME)_SOURCES := \
     core/combination/comb_all.c  \
     core/combination/mutex_queue_buf.c \
     core/combination/sem_queue.c\
-    core/combination/mutex_queue.c
+    core/combination/mutex_queue.c \
+    core/trace/trace_test.c
 

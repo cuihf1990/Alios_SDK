@@ -8,7 +8,7 @@ GLOBAL_INCLUDES += . $(ARCH_LINUX)
 $(NAME)_COMPONENTS  := vflash
 
 $(NAME)_INCLUDES    += .
-GLOBAL_INCLUDES     += include csp/lwip/include
+GLOBAL_INCLUDES     += include include/yos csp/lwip/include
 GLOBAL_LDFLAGS      += -lpthread -lm -lcrypto
 GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
@@ -29,6 +29,9 @@ $(NAME)_SOURCES     += csp/csp_rhino.c
 $(NAME)_SOURCES     += soc/soc_impl.c
 $(NAME)_SOURCES     += soc/hook_impl.c
 $(NAME)_SOURCES     += soc/ysh_impl.c
+$(NAME)_SOURCES     += soc/trace_impl.c
+$(NAME)_SOURCES     += soc/trace_hal.c
+$(NAME)_SOURCES     += soc/fifo.c
 
 $(info $(COMPONENTS))
 ifneq (,$(filter protocols.net,$(COMPONENTS)))
