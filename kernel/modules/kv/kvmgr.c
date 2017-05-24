@@ -1,6 +1,5 @@
 #include "yos/log.h"
 #include "yos/framework.h"
-#include "os.h"
 #include "kvmgr.h"
 #include "digest_algorithm.h"
 #include "crc.h"
@@ -40,21 +39,21 @@ static kv_item_t *new_kv_item(const char *skey, const char *cvalue, int nlength,
     if(!skey || !cvalue)
         return NULL;
 
-    new = os_malloc(sizeof(kv_item_t));
+    new = yos_malloc(sizeof(kv_item_t));
     if(!new)
         return NULL;
     memset(new,0,sizeof(kv_item_t));
-    new->key = os_malloc(strlen(skey)+1);
+    new->key = yos_malloc(strlen(skey)+1);
     if(!new->key){
-        os_free(new);
+        yos_free(new);
         return NULL;
     }
     memcpy(new->key,skey,strlen(skey)+1);
 
-    new->val = os_malloc(nlength);
+    new->val = yos_malloc(nlength);
     if(!new->val){
-        os_free(new->key);
-        os_free(new);
+        yos_free(new->key);
+        yos_free(new);
         return NULL;
     }
     memcpy(new->val,cvalue,nlength);
@@ -79,13 +78,13 @@ static int hash_table_insert(const char *skey, const char *cvalue, int nlength, 
     found = ht_find_lockless(g_ht,skey,strlen(skey)+1,NULL,NULL); 
     if(found){ //replace the repeated value with the current.
         item = *((kv_item_t **)found);
-        os_free(item->val);
+        yos_free(item->val);
         item->val = NULL;
         item->len_val = nlength;
-        item->val = os_malloc(nlength);
+        item->val = yos_malloc(nlength);
         if(!item->val){
-            os_free(item->key);
-            os_free(item);
+            yos_free(item->key);
+            yos_free(item);
             return -1;
         }
         memcpy(item->val,cvalue,nlength);
@@ -164,8 +163,7 @@ static int restore_kvfile(const char *src_file, const char *dst_file)
         goto exit;
     }
 
-    buffer = (char *)os_malloc(fsize);
-    OS_CHECK_MALLOC(buffer);
+    buffer = (char *)yos_malloc(fsize);
 
     fd_dst = yos_open(dst_file, O_WRONLY);
     if (fd_dst < 0) {
@@ -187,7 +185,7 @@ static int restore_kvfile(const char *src_file, const char *dst_file)
 
 exit:
     if (buffer)
-        os_free(buffer);
+        yos_free(buffer);
     if (fd_src >= 0)
         yos_close(fd_src);
     if (fd_dst >= 0)
@@ -257,8 +255,7 @@ static void save_key_value()
     char *kv_buffer,*p;
     kv_storeage_t store;
 
-    store.p = (char *)os_malloc(KV_BUFFER_SIZE);
-    OS_CHECK_MALLOC(store.p);
+    store.p = (char *)yos_malloc(KV_BUFFER_SIZE);
 
     kv_buffer = store.p;
     store.len = 0; 
@@ -274,7 +271,7 @@ static void save_key_value()
     if (!update_kvfile(KVFILE_NAME, kv_buffer, store.len)) {
         update_kvfile(KVFILE_NAME_BACKUP, kv_buffer, store.len);
     }
-    os_free(kv_buffer);
+    yos_free(kv_buffer);
 }
 
 static int load_key_value(const char *file)
@@ -284,10 +281,9 @@ static int load_key_value(const char *file)
     uint32_t crc32_value;
     int ret = -1;
 
-    kv_buffer = (char *)os_malloc(KV_BUFFER_SIZE);
-    key = (char *)os_malloc(MAX_KV_LEN);
-    value = (char *)os_malloc(MAX_KV_LEN);
-    OS_CHECK_MALLOC(kv_buffer && key && value);
+    kv_buffer = (char *)yos_malloc(KV_BUFFER_SIZE);
+    key = (char *)yos_malloc(MAX_KV_LEN);
+    value = (char *)yos_malloc(MAX_KV_LEN);
 
     fsize = load_kvfile(file, kv_buffer, KV_BUFFER_SIZE);
     if (fsize == 0) {
@@ -319,11 +315,11 @@ static int load_key_value(const char *file)
     ht_unlock(g_ht);
 exit:
     if(key)
-        os_free(key);
+        yos_free(key);
     if(value)
-        os_free(value);
+        yos_free(value);
     if(kv_buffer)
-        os_free(kv_buffer);
+        yos_free(kv_buffer);
 
     return ret;
 }
@@ -357,9 +353,9 @@ static void *__del_all_kv_cb(void *key, void *val, void *extra)
     item = *((kv_item_t **)val);
 
     LOGD(MODULE_NAME_KV,"del kv, key: %s, %p-%p-%p\n",key,item,item->key,item->val);
-    os_free(item->val);
-    os_free(item->key);
-    os_free(item);
+    yos_free(item->val);
+    yos_free(item->key);
+    yos_free(item);
     
     return NULL;
 }
@@ -426,9 +422,9 @@ int yos_kv_del(const char *key)
     item = *((kv_item_t **)ret);
 
     LOGD(MODULE_NAME_KV,"del kv, key: %s, %p-%p-%p\n",key,item,item->key,item->val);
-    os_free(item->val);
-    os_free(item->key);
-    os_free(item);
+    yos_free(item->val);
+    yos_free(item->key);
+    yos_free(item);
     ht_del_lockless(g_ht,key,strlen(key)+1);
     ht_unlock(g_ht);
 }

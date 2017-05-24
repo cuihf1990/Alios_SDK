@@ -33,11 +33,13 @@
  */
 
 #include <string.h>
-#include "os.h"
-extern uint32_t os_be32toh(uint32_t data);
-extern uint32_t os_htobe32(uint32_t data);
-extern uint64_t os_be64toh(uint64_t data);
-extern uint64_t os_htobe64(uint64_t data);
+#include <stdint.h>
+#include <endian.h>
+#define os_be32toh be32toh
+#define os_htobe32 htobe32
+#define os_be64toh be64toh
+#define os_htobe64 htobe64
+#define OS_ASSERT(a, b)
 
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/

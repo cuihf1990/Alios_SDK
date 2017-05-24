@@ -1227,8 +1227,11 @@ static void cli_run(void)
         char *line = readline(cli_status.cmd_prefix);
         int ret;
 
-        if (!line)
+        if (!line) {
+            perror("pipe closed:");
+            exit(0);
             continue;
+        }
         if (strlen(line) > 0)
             add_history(line);
         ret = write(pipefd[1], &line, sizeof line);

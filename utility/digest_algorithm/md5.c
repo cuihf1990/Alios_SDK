@@ -33,7 +33,7 @@
  */
 
 #include <string.h>
-#include "os.h"
+#include <stdint.h>
 #ifndef STDCALL
 #define STDCALL
 #endif
