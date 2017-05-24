@@ -1,6 +1,8 @@
 #ifndef _crc_h_
 #define _crc_h_
 
+#include <stdint.h>
+
 #if defined(__cplusplus) /* If this is a C++ compiler, use C linkage */
 extern "C"
 {

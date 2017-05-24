@@ -1,4 +1,3 @@
-#include "os.h"
 #include "digest_algorithm.h"
 
 static int digest_hmac_md5(const unsigned char *msg, uint32_t msg_len, const unsigned char *key, uint32_t key_len, unsigned char *digest)
