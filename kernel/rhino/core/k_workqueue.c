@@ -317,19 +317,25 @@ kstat_t yunos_work_cancel(kwork_t *work)
 {
     kworkqueue_t *wq = (kworkqueue_t *)work->wq;
 
+    if (wq == NULL) {
+        if (work->dly > 0) {
+            yunos_timer_stop(&(work->timer));
+            yunos_timer_del(&(work->timer));
+        }
+
+        return YUNOS_SUCCESS;
+    }
+
     yunos_mutex_lock(&(wq->work_mutex), YUNOS_WAIT_FOREVER);
 
     if (work->running == 1) {
         klist_rm(&(work->work_node));
+        work->running = 0;
+        work->wq      = NULL;
+        yunos_mutex_unlock(&(wq->work_mutex));
+    } else if (work->running == 2){
         yunos_mutex_unlock(&(wq->work_mutex));
         return YUNOS_WORKQUEUE_WORK_RUNNING;
-    }
-
-    yunos_mutex_unlock(&(wq->work_mutex));
-
-    if (work->dly > 0) {
-        yunos_timer_stop(&(work->timer));
-        yunos_timer_del(&(work->timer));
     }
 
     return YUNOS_SUCCESS;
