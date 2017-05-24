@@ -296,7 +296,9 @@ new_sid:
         release_bit(allocator->mobile_free_bits, PF_NODE_NUM, newsid);
         return UR_ERROR_FAIL;
     }
-    allocator->pf_node_num++;
+    if (newsid > 0) {
+        allocator->pf_node_num++;
+    }
 
 out:
     return UR_ERROR_NONE;

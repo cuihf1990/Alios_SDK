@@ -1,5 +1,6 @@
 #include "yunit.h"
 
+#include "yos/kernel.h"
 #include "umesh.h"
 #include "core/topology.h"
 #include "core/mesh_mgmt.h"
@@ -26,12 +27,10 @@ void test_uradar_urmesh_case(void)
     memset(ip6addr.m8, 0x00, sizeof(ip6addr.m8));
     ip6addr.m8[0] = 0xff;
     ip6addr.m8[1] = 0x08;
-    ip6addr.m8[15] = 0xfd;
-    if (mm_get_device_state() == DEVICE_STATE_LEADER) {
-        YUNIT_ASSERT(true == ur_mesh_is_mcast_subscribed(&ip6addr));
-    } else {
-        YUNIT_ASSERT(false == ur_mesh_is_mcast_subscribed(&ip6addr));
-    }
+    ip6addr.m8[6] = (ur_mesh_get_meshnetid() >> 8);
+    ip6addr.m8[7] = ur_mesh_get_meshnetid();
+    ip6addr.m8[15] = 0xfc;
+    YUNIT_ASSERT(true == ur_mesh_is_mcast_subscribed(&ip6addr));
 
     YUNIT_ASSERT(NULL != ur_mesh_get_ucast_addr());
     YUNIT_ASSERT(NULL != ur_mesh_get_mcast_addr());
