@@ -80,11 +80,10 @@ int alink_start(void)
     LOGI(MODULE_NAME,"Build Time: %s", ALINK_AGENT_BUILD_DATE);
     LOGI(MODULE_NAME,"Git Version: %s", ALINK_AGENT_GIT_VERSION);
 
-    //os_init();
+    os_init();
 
     sm_init();
     cm_init();
-    //workqueue_init();
     config_init();
     device_init();
     //system_monitor_init();
