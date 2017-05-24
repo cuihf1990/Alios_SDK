@@ -38,6 +38,7 @@ extern void test_netconf(void);
 extern void test_uradar(void);
 extern void test_yloop(void);
 extern void test_cjson(void);
+extern void test_hashtable(void);
 extern void test_hal(void);
 extern void test_tfs(void);
 
@@ -98,6 +99,7 @@ void add_test(void)
     test_hal();
 
     test_cjson();
+    test_hashtable();
 
     test_rhino();
 

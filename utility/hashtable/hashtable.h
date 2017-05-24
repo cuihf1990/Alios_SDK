@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "os.h"
 #include "yos/log.h"
 
 #if defined(__cplusplus) /* If this is a C++ compiler, use C linkage */
