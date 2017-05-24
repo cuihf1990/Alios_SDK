@@ -84,7 +84,7 @@ static int get_ip_stat(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, h
     return 0;
 }
 
-static get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)
+static int get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)
 {
     out_stat->is_connected = 1;
     return 0;
