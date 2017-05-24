@@ -30,7 +30,7 @@ typedef struct {
 #define MAX_ID_LEN 64
 
 typedef struct {
-    const char primary_version[MAX_VERSION_LEN];
+    char primary_version[MAX_VERSION_LEN];
     const char *product_type;
     char download_url[MAX_URL_LEN];
     int frimware_size;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <string.h>
 #include <hal/ota.h>
 #include <yos/framework.h>
 #include <yos/log.h>
@@ -33,17 +33,17 @@ static ota_finish_cb_t  ota_finish_callbak;
 
 static const char *ota_get_product_type(void)
 {
-    return get_yos_product_model();
+    return (char *)get_yos_product_model();
 }
 
 static const char *ota_get_system_version(void)
 {
-    return get_yos_os_version();
+    return (char *)get_yos_os_version();
 }
 
 static const char *ota_get_product_internal_type(void)
 {
-    return get_yos_product_internal_type();
+    return (char *)get_yos_product_internal_type();
 }
 
 static void ota_set_callbacks(write_flash_cb_t flash_cb,
