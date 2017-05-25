@@ -78,7 +78,6 @@ static void network_data_update_handler(bool stable)
 static void neighbor_updated_handler(neighbor_t *nbr)
 {
     network_context_t *network;
-    neighbor_t        *attach_node;
 
     network = get_network_context_by_meshnetid(nbr->addr.netid);
     if (network == NULL || network->attach_node != nbr) {
@@ -1560,7 +1559,7 @@ static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
     attach_start(nbr);
 }
 
-static bool update_network_data(network_context_t *network,
+static void update_network_data(network_context_t *network,
                                 mm_netinfo_tv_t *netinfo)
 {
     int8_t         diff;
