@@ -7,7 +7,7 @@
 #include "log.h"
 #include "hal_aes.h"
 
-#ifdef TFS_TEE
+#if defined(TFS_TEE)
 #include "tee_aes.h"
 #endif
 
@@ -19,7 +19,11 @@ int32_t hal_aes128_cbc_enc(const uint8_t *key,
                            const uint8_t *input,
                            uint8_t *output)
 {
+#if defined(TFS_TEE)
     return tee_aes_cbc_encrypt(key, iv, input_len, input, output);
+#else
+	return -1;
+#endif
 }
 
 int32_t hal_aes128_cbc_dec(const uint8_t *key,
@@ -28,6 +32,10 @@ int32_t hal_aes128_cbc_dec(const uint8_t *key,
                            const uint8_t *input,
                            uint8_t *output)
 {
+#if defined(TFS_TEE)
     return tee_aes_cbc_decrypt(key, iv, input_len, input, output);
+#else
+	return -1;
+#endif
 }
 

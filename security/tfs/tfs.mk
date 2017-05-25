@@ -3,7 +3,6 @@
 NAME := tfs
 
 $(NAME)_SOURCES := src/core/aes/src/aes128.c \
-				   src/core/id2/src/device_info.c \
 				   src/core/id2/src/id2.c \
 				   src/core/tfs_aes.c \
 				   src/core/tfs_id2.c \
@@ -56,18 +55,18 @@ ifeq ($(CONFIG_TFS_ID2_3DES), y)
     $(NAME)_DEFINES += TFS_ID2_3DES
     ifeq ($(CONFIG_TFS_EMULATE), y)
         $(NAME)_SOURCES += src/emulator/src/emu_3des.c
-	else
-	    $(NAME)_SOURCES += src/hal/src/hal_3des.c
-	endif
+    else
+        $(NAME)_SOURCES += src/hal/src/hal_3des.c
+    endif
 endif
 
 ifeq ($(CONFIG_TFS_ID2_RSA), y)
     $(NAME)_DEFINES += TFS_ID2_RSA
     ifeq ($(CONFIG_TFS_EMULATE), y)
         $(NAME)_SOURCES += src/emulator/src/emu_rsa.c
-	else
-	    $(NAME)_SOURCES += src/hal/src/hal_rsa.c
-	endif
+    else
+        $(NAME)_SOURCES += src/hal/src/hal_rsa.c
+    endif
 endif
 
 ifeq ($(CONFIG_TFS_DEBUG), y)
@@ -76,6 +75,18 @@ endif
 
 ifeq ($(CONFIG_TFS_TEE), y)
     $(NAME)_DEFINES += TFS_TEE
+endif
+
+PLATFORM := linuxhost
+
+ifeq ($(CONFIG_TFS_SW), y)
+    $(NAME)_DEFINES += TFS_SW
+    $(NAME)_INCLUDES += ../libid2/include/
+    ifeq ($(HOST_ARCH), linux)
+	    PLATFORM := linuxhost
+    endif
+    $(NAME)_PREBUILT_LIBRARY += ../libid2/lib/$(PLATFORM)/libid2.a
+    $(NAME)_PREBUILT_LIBRARY += ../libkm/lib/$(PLATFORM)/libkm.a
 endif
 
 ifeq ($(HOST_ARCH), linux)
@@ -88,7 +99,7 @@ ifeq ($(HOST_ARCH), linux)
 				   platform/linux/pal_platform_md5.c \
 				   platform/linux/pal_platform_memory.c \
 				   platform/linux/pal_platform_network.c \
-				   platform/linux/pal_platform_product.c \
+				   platform/linux/pal_platform_device.c \
 				   platform/linux/pal_platform_random.c \
 				   platform/linux/pal_platform_storage.c \
 				   platform/linux/pal_platform_time.c

@@ -23,7 +23,7 @@ int fill_package(uint8_t *package, uint32_t cmd, uint8_t *arg, uint32_t arg_len)
     int pack_len = 0;
 
     if (package == NULL) {
-        LOGE(TAG_CMD, "\n%s: fill package error!\n", __FUNCTION__);
+        LOGE(TAG_CMD, "%s: fill package error!\n", __FUNCTION__);
         return -1;
     }
 
@@ -63,20 +63,20 @@ int hal_cmd(uint32_t cmd, void *in, uint32_t in_len, void *out, uint32_t *out_le
 
     //ret = pthread_mutex_lock(&g_tfs_hal_lock);
     if (ret != 0) {
-        LOGE(TAG_CMD, "\n%s: Failed to acquire tfs lock!\n", __FUNCTION__);
+        LOGE(TAG_CMD, "%s: Failed to acquire tfs lock!\n", __FUNCTION__);
         return -1;
     }
 
     ret = open_session(&handle);
     if (ret != 0) {
-        LOGE(TAG_CMD, "\n%s: open_session error!\n", __FUNCTION__);
+        LOGE(TAG_CMD, "%s: open_session error!\n", __FUNCTION__);
         //pthread_mutex_unlock(&g_tfs_hal_lock);
         return -1;
     }
 
     ret = invoke_command(handle, cmd, in, in_len, out, out_len);
     if (ret != 0) {
-        LOGE(TAG_CMD, "\n%s: invoke_command error!\n", __FUNCTION__);
+        LOGE(TAG_CMD, "%s: invoke_command error!\n", __FUNCTION__);
         close_session(handle);
         //pthread_mutex_unlock(&g_tfs_hal_lock);
         return -1;
@@ -86,7 +86,7 @@ int hal_cmd(uint32_t cmd, void *in, uint32_t in_len, void *out, uint32_t *out_le
 
     //ret = pthread_mutex_unlock(&g_tfs_hal_lock);
     if (ret != 0) {
-        LOGE(TAG_CMD, "\n%s: Failed to release tfs lock!\n", __FUNCTION__);
+        LOGE(TAG_CMD, "%s: Failed to release tfs lock!\n", __FUNCTION__);
     }
 
     return _verify_package(cmd, out, *out_len);
@@ -108,7 +108,7 @@ static int _verify_package(uint32_t cmd, uint8_t *package, uint32_t len)
     if ((((sum >> 8) & 0XFF) == *(package + i)) && ((sum & 0XFF) == *(package + i + 1))) {
         return 0;
     } else {
-        LOGE(TAG_CMD, "\n%s: sum verify error!\n", __FUNCTION__);
+        LOGE(TAG_CMD, "%s: sum verify error!\n", __FUNCTION__);
         return -1;
     }
 }

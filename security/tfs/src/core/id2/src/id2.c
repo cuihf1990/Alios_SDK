@@ -7,7 +7,6 @@
 #include "pal.h"
 #include "http.h"
 #include "log.h"
-#include "device_info.h"
 
 #ifdef TFS_EMULATE
 #include "emu_id2.h"
@@ -69,7 +68,7 @@ static int _get_seed(const char *id2, const char *random,
 int get_ID2(uint8_t *id2, uint32_t *len)
 {
     if (id2 == NULL || len == NULL) {
-        LOGE(TAG_ID2, "id2 or len is NULL");
+        LOGE(TAG_ID2, "id2 or len is NULL.\n");
         return -1;
     }
     return _get_ID2(id2, len);
@@ -79,7 +78,7 @@ int id2_sign(const uint8_t *in, uint32_t in_len,
              uint8_t *sign, uint32_t *sign_len)
 {
     if (in == NULL || in_len == 0 || sign == NULL || sign_len == NULL) {
-        LOGE(TAG_ID2, "para wrong");
+        LOGE(TAG_ID2, "para wrong.\n");
         return -1;
     }
 
@@ -115,7 +114,7 @@ int id2_verify(const uint8_t *in, uint32_t in_len,
                uint8_t *sign, uint32_t sign_len)
 {
     if (in == NULL || in_len == 0 || sign == NULL || sign_len == 0) {
-        LOGE(TAG_ID2, "para wrong");
+        LOGE(TAG_ID2, "para wrong.\n");
         return -1;
     }
 
@@ -151,7 +150,7 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
                 uint8_t *out, uint32_t *out_len)
 {
     if (in == NULL || in_len == 0 || out == NULL || out_len == NULL) {
-        LOGE(TAG_ID2, "para wrong");
+        LOGE(TAG_ID2, "para wrong.\n");
         return -1;
     }
 
@@ -227,7 +226,7 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
                 uint8_t *out, uint32_t *out_len)
 {
     if (in == NULL || in_len == 0 || out == NULL || out_len == NULL) {
-        LOGE(TAG_ID2, "para wrong");
+        LOGE(TAG_ID2, "para wrong.\n");
         return -1;
     }
 
@@ -291,7 +290,7 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
 int get_auth_code(uint8_t *auth_code, uint32_t *len)
 {
     if (auth_code == NULL || len == NULL) {
-        LOGE(TAG_ID2, "para error");
+        LOGE(TAG_ID2, "para error.\n");
         return -1;
     }
 
@@ -317,7 +316,7 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
 
     ret = _get_ID2((uint8_t *)id2, &id2_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "get ID2 error");
+        LOGE(TAG_ID2, "get ID2 error.\n");
         goto error_exit;
     }
 
@@ -328,13 +327,13 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
 
     ret = id2_sign((uint8_t *)random_id2, 22, (uint8_t *)random_id2_signed, &s_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "sign data error");
+        LOGE(TAG_ID2, "sign data error.\n");
         goto error_exit;
     }
 
     ret = _get_seed(id2, random, random_id2_signed, seed);
     if (ret < 0) {
-        LOGE(TAG_ID2, "get seed error!");
+        LOGE(TAG_ID2, "get seed error!\n");
         goto error_exit;
     }
 
@@ -347,7 +346,7 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
 
     ret = id2_sign((uint8_t *)auth_code + 2, 11, (uint8_t *)code_signed, &s_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "sign data error");
+        LOGE(TAG_ID2, "sign data error.\n");
         goto error_exit;
     }
 
@@ -389,7 +388,7 @@ normal_exit:
 int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len)
 {
     if (auth_code == NULL || auth_len == NULL) {
-        LOGE(TAG_ID2, "para error");
+        LOGE(TAG_ID2, "para error.\n");
         return -1;
     }
 
@@ -413,7 +412,7 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
 
     ret = _get_ID2((uint8_t *)id2, &id2_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "get ID2 error");
+        LOGE(TAG_ID2, "get ID2 error.\n");
         goto error_exit;
     }
 
@@ -425,7 +424,7 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
 
     ret = id2_sign((uint8_t *)random_id2_timestamp, strlen(random_id2_timestamp), (uint8_t *)random_id2_timestamp_signed, &s_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "sign data error");
+        LOGE(TAG_ID2, "sign data error.\n");
         goto error_exit;
     }
 
@@ -471,8 +470,8 @@ normal_exit:
 
 int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len)
 {
-    if (digest == NULL || auth_code == NULL || auth_len == NULL) {
-        LOGE(TAG_ID2, "para error");
+    if (digest == NULL || digest_len == 0 || auth_code == NULL || auth_len == NULL) {
+        LOGE(TAG_ID2, "para error.\n");
         return -1;
     }
 
@@ -494,7 +493,7 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
 
     ret = _get_ID2((uint8_t *)id2, &id2_len);
     if (ret != 0) {
-        LOGE(TAG_ID2, "get ID2 error");
+        LOGE(TAG_ID2, "get ID2 error.\n");
         goto error_exit;
     }
 
@@ -505,7 +504,7 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
 
     ret = id2_sign((uint8_t *)id2_digest_timestamp, strlen(id2_digest_timestamp), (uint8_t *)id2_digest_timestamp_signed, &s_len);
     if (ret != 0) {
-        LOGE(TAG_ID2, "sign data error");
+        LOGE(TAG_ID2, "sign data error.\n");
         goto error_exit;
     }
 
@@ -585,9 +584,9 @@ static int _get_ID2(uint8_t *id2, uint32_t *len)
 
     if (_g_cached_flag == 0) {
 #ifdef TFS_EMULATE
-        ret = emu_get_ID2(_g_cached_ID2, NULL);
+        ret = emu_get_ID2(_g_cached_ID2, len);
 #else
-        ret = hal_get_ID2(_g_cached_ID2, NULL);
+        ret = hal_get_ID2(_g_cached_ID2, len);
 #endif
 
         if (ret != 0) {
@@ -619,7 +618,7 @@ static int _get_crypt_algo(void)
         ret = _get_ID2(NULL, NULL);
 
         if (ret != 0) {
-            LOGE(TAG_ID2, "get ID2 error");
+            LOGE(TAG_ID2, "get ID2 error.\n");
             return -1;
         }
     }
@@ -637,7 +636,7 @@ static int _get_crypt_algo(void)
 
         default:
             g_sign_algo = -1;
-            LOGE(TAG_ID2, "sign algo error");
+            LOGE(TAG_ID2, "sign algo error.\n");
     }
 
     LOGD(TAG_ID2, "sign algo is: %d\n", g_sign_algo);
@@ -676,7 +675,7 @@ static int _get_seed(const char *id2, const char *random,
     pal_memory_free(sign_base64);
 
     if (ret < 0) {
-        LOGE(TAG_ID2, "get seed error");
+        LOGE(TAG_ID2, "get seed error.\n");
         return -1;
     }
 
@@ -695,7 +694,7 @@ int is_id2_activated()
     }
 
     if ((strlen(activate_buf) < ACTIVATE_LEN - 1) || (strncmp(activate_buf, ACTIVATE_SUCCESS_MSG, ACTIVATE_LEN) != 0)) {
-        LOGE(TAG_ID2, "compare activated msg error!");
+        LOGE(TAG_ID2, "compare activated msg error!\n");
         return -1;
     }
 
@@ -704,10 +703,10 @@ int is_id2_activated()
 
 int activate_device(void)
 {
-    LOGD(TAG_ID2, "[%s] enter.", __func__);
+    LOGD(TAG_ID2, "[%s] enter.\n", __func__);
 
     int ret = -1;
-    struct product_info device_info;
+    struct device_info dev_info;
     char id2[ID2_LEN + 1] = {0};
     uint32_t id2_len = ID2_LEN + 1;
     char info[512] = {0};
@@ -719,7 +718,7 @@ int activate_device(void)
     char argu_str[1024] = {0};
 
     if (is_id2_activated() == 0) {
-        LOGD(TAG_ID2, "the device has already been activated!");
+        LOGD(TAG_ID2, "the device has already been activated!\n");
         return 0;
     }
 
@@ -733,7 +732,7 @@ int activate_device(void)
         LOGD(TAG_ID2, "%s: ID2 is %s\n", __func__, id2);
 
         // get device info
-        ret = collection(&device_info);
+        ret = pal_collect_device_info(&dev_info);
         if (ret < 0) {
             LOGE(TAG_ID2, "%s: get device info error!\n", __func__);
             break;
@@ -743,148 +742,161 @@ int activate_device(void)
         sprintf(argu_str + strlen(argu_str), "&model=%s", ACTIVATE_SIGN_MODEL);
         sprintf(argu_str + strlen(argu_str), "&version=%s", ACTIVATE_VERSION);
 
-        if (device_info.bt_mac) {
-            if (strlen(argu_str) + strlen("&bt_mac=") + strlen(device_info.bt_mac) > sizeof(argu_str)
-                || strlen(info) + strlen("bt_mac") + strlen(device_info.bt_mac) > sizeof(info)) {
-                LOGE(TAG_ID2, "bt_mac too long");
+        if (dev_info.bt_mac) {
+            if (strlen(argu_str) + strlen("&btMac=") + strlen(dev_info.bt_mac) > sizeof(argu_str)
+                || strlen(info) + strlen("btMac") + strlen(dev_info.bt_mac) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "bt_mac too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&bt_mac=%s", device_info.bt_mac);
-            strcat(info + strlen(info), "bt_mac");
-            strcat(info + strlen(info), device_info.bt_mac);
+            sprintf(argu_str + strlen(argu_str), "&btMac=%s", dev_info.bt_mac);
+            strcat(info + strlen(info), "btMac");
+            strcat(info + strlen(info), dev_info.bt_mac);
         }
 
-        if (device_info.build_time) {
-            if (strlen(argu_str) + strlen("&build_time=") + strlen(device_info.build_time) > sizeof(argu_str)
-                || strlen(info) + strlen("build_time") + strlen(device_info.build_time) > sizeof(info)) {
-                LOGE(TAG_ID2, "build_time too long");
+        if (dev_info.build_time) {
+            if (strlen(argu_str) + strlen("&buildTime=") + strlen(dev_info.build_time) > sizeof(argu_str)
+                || strlen(info) + strlen("buildTime") + strlen(dev_info.build_time) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "build_time too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&build_time=%s", device_info.build_time);
-            strcat(info + strlen(info), "build_time");
-            strcat(info + strlen(info), device_info.build_time);
+            sprintf(argu_str + strlen(argu_str), "&buildTime=%s", dev_info.build_time);
+            strcat(info + strlen(info), "buildTime");
+            strcat(info + strlen(info), dev_info.build_time);
         }
 
-        if (device_info.camera_resolution) {
-            if (strlen(argu_str) + strlen("&camera_resolution=") + strlen(device_info.camera_resolution) > sizeof(argu_str)
-                || strlen(info) + strlen("camera_resolution") + strlen(device_info.camera_resolution) > sizeof(info)) {
-                LOGE(TAG_ID2, "camera_resolution too long");
+        if (dev_info.camera_resolution) {
+            if (strlen(argu_str) + strlen("&cameraResolution=") + strlen(dev_info.camera_resolution) > sizeof(argu_str)
+                || strlen(info) + strlen("cameraResolution") + strlen(dev_info.camera_resolution) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "camera_resolution too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&camera_resolution=%s", device_info.camera_resolution);
-            strcat(info + strlen(info), "camera_resolution");
-            strcat(info + strlen(info), device_info.camera_resolution);
+            sprintf(argu_str + strlen(argu_str), "&cameraResolution=%s", dev_info.camera_resolution);
+            strcat(info + strlen(info), "cameraResolution");
+            strcat(info + strlen(info), dev_info.camera_resolution);
         }
 
-        if (device_info.cup_info) {
-            if (strlen(argu_str) + strlen("&cup_info=") + strlen(device_info.cup_info) > sizeof(argu_str)
-                || strlen(info) + strlen("cup_info") + strlen(device_info.cup_info) > sizeof(info)) {
-                LOGE(TAG_ID2, "cup_info too long");
+        if (dev_info.cup_info) {
+            if (strlen(argu_str) + strlen("&cpuInfo=") + strlen(dev_info.cup_info) > sizeof(argu_str)
+                || strlen(info) + strlen("cpuInfo") + strlen(dev_info.cup_info) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "cup_info too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&cup_info=%s", device_info.cup_info);
-            strcat(info + strlen(info), "cup_info");
-            strcat(info + strlen(info), device_info.cup_info);
+            sprintf(argu_str + strlen(argu_str), "&cpuInfo=%s", dev_info.cup_info);
+            strcat(info + strlen(info), "cpuInfo");
+            strcat(info + strlen(info), dev_info.cup_info);
         }
 
-        if (device_info.dm_dpi) {
-            if (strlen(argu_str) + strlen("&dm_dpi=") + strlen(device_info.dm_dpi) > sizeof(argu_str)
-                || strlen(info) + strlen("dm_dpi") + strlen(device_info.dm_dpi) > sizeof(info)) {
-                LOGE(TAG_ID2, "dm_dpi too long");
+        if (dev_info.dm_dpi) {
+            if (strlen(argu_str) + strlen("&dmDpi=") + strlen(dev_info.dm_dpi) > sizeof(argu_str)
+                || strlen(info) + strlen("dmDpi") + strlen(dev_info.dm_dpi) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "dm_dpi too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&dm_dpi=%s", device_info.dm_dpi);
-            strcat(info + strlen(info), "dm_dpi");
-            strcat(info + strlen(info), device_info.dm_dpi);
+            sprintf(argu_str + strlen(argu_str), "&dmDpi=%s", dev_info.dm_dpi);
+            strcat(info + strlen(info), "dmDpi");
+            strcat(info + strlen(info), dev_info.dm_dpi);
         }
 
-        if (device_info.dm_pixels) {
-            if (strlen(argu_str) + strlen("&dm_pixels=") + strlen(device_info.dm_pixels) > sizeof(argu_str)
-                || strlen(info) + strlen("dm_pixels") + strlen(device_info.dm_pixels) > sizeof(info)) {
-                LOGE(TAG_ID2, "dm_pixels too long");
+        if (dev_info.dm_pixels) {
+            if (strlen(argu_str) + strlen("&dmPixels=") + strlen(dev_info.dm_pixels) > sizeof(argu_str)
+                || strlen(info) + strlen("dmPixels") + strlen(dev_info.dm_pixels) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "dm_pixels too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&dm_pixels=%s", device_info.dm_pixels);
-            strcat(info + strlen(info), "dm_pixels");
-            strcat(info + strlen(info), device_info.dm_pixels);
+            sprintf(argu_str + strlen(argu_str), "&dmPixels=%s", dev_info.dm_pixels);
+            strcat(info + strlen(info), "dmPixels");
+            strcat(info + strlen(info), dev_info.dm_pixels);
         }
 
-        if (device_info.hardware_id) {
-            if (strlen(argu_str) + strlen("&hardware_id=") + strlen(device_info.hardware_id) > sizeof(argu_str)
-                || strlen(info) + strlen("hardware_id") + strlen(device_info.hardware_id) > sizeof(info)) {
-                LOGE(TAG_ID2, "hardware_id too long");
+        if (dev_info.hardware_id) {
+            if (strlen(argu_str) + strlen("&hardwareId=") + strlen(dev_info.hardware_id) > sizeof(argu_str)
+                || strlen(info) + strlen("hardwareId") + strlen(dev_info.hardware_id) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "hardware_id too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&hardware_id=%s", device_info.hardware_id);
-            strcat(info + strlen(info), "hardware_id");
-            strcat(info + strlen(info), device_info.hardware_id);
+            sprintf(argu_str + strlen(argu_str), "&hardwareId=%s", dev_info.hardware_id);
+            strcat(info + strlen(info), "hardwareId");
+            strcat(info + strlen(info), dev_info.hardware_id);
         }
 
         strcat(info + strlen(info), "id2");
         strcat(info + strlen(info), id2);
 
-        if (device_info.imei) {
-            if (strlen(argu_str) + strlen("&imei=") + strlen(device_info.imei) > sizeof(argu_str)
-                || strlen(info) + strlen("imei") + strlen(device_info.imei) > sizeof(info)) {
-                LOGE(TAG_ID2, "imei too long");
+        if (dev_info.imei) {
+            if (strlen(argu_str) + strlen("&imei=") + strlen(dev_info.imei) > sizeof(argu_str)
+                || strlen(info) + strlen("imei") + strlen(dev_info.imei) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "imei too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&imei=%s", device_info.imei);
+            sprintf(argu_str + strlen(argu_str), "&imei=%s", dev_info.imei);
             strcat(info + strlen(info), "imei");
-            strcat(info + strlen(info), device_info.imei);
+            strcat(info + strlen(info), dev_info.imei);
         }
 
-        if (device_info.mac) {
-            if (strlen(argu_str) + strlen("&mac=") + strlen(device_info.mac) > sizeof(argu_str)
-                || strlen(info) + strlen("mac") + strlen(device_info.mac) > sizeof(info)) {
-                LOGE(TAG_ID2, "mac too long");
+        if (dev_info.mac) {
+            if (strlen(argu_str) + strlen("&mac=") + strlen(dev_info.mac) > sizeof(argu_str)
+                || strlen(info) + strlen("mac") + strlen(dev_info.mac) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "mac too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&mac=%s", device_info.mac);
+            sprintf(argu_str + strlen(argu_str), "&mac=%s", dev_info.mac);
             strcat(info + strlen(info), "mac");
-            strcat(info + strlen(info), device_info.mac);
+            strcat(info + strlen(info), dev_info.mac);
         }
 
-        if (device_info.os_version) {
-            if (strlen(argu_str) + strlen("&mac=") + strlen(device_info.os_version) > sizeof(argu_str)
-                || strlen(info) + strlen("mac") + strlen(device_info.os_version) > sizeof(info)) {
-                LOGE(TAG_ID2, "mac too long");
+        if (dev_info.os_version) {
+            if (strlen(argu_str) + strlen("&osVersion=") + strlen(dev_info.os_version) > sizeof(argu_str)
+                || strlen(info) + strlen("osVersion") + strlen(dev_info.os_version) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "os_version too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&mac=%s", device_info.os_version);
-            strcat(info + strlen(info), "mac");
-            strcat(info + strlen(info), device_info.os_version);
+            sprintf(argu_str + strlen(argu_str), "&osVersion=%s", dev_info.os_version);
+            strcat(info + strlen(info), "osVersion");
+            strcat(info + strlen(info), dev_info.os_version);
         }
 
         strcat(info + strlen(info), "model");
         strcat(info + strlen(info), ACTIVATE_SIGN_MODEL);
 
-        if (device_info.product_name) {
-            if (strlen(argu_str) + strlen("&product_name=") + strlen(device_info.product_name) > sizeof(argu_str)
-                || strlen(info) + strlen("product_name") + strlen(device_info.product_name) > sizeof(info)) {
-                LOGE(TAG_ID2, "product_name too long");
+        if (dev_info.product_name) {
+            if (strlen(argu_str) + strlen("&productName=") + strlen(dev_info.product_name) > sizeof(argu_str)
+                || strlen(info) + strlen("productName") + strlen(dev_info.product_name) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "product_name too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&product_name=%s", device_info.product_name);
-            strcat(info + strlen(info), "product_name");
-            strcat(info + strlen(info), device_info.product_name);
+            sprintf(argu_str + strlen(argu_str), "&productName=%s", dev_info.product_name);
+            strcat(info + strlen(info), "productName");
+            strcat(info + strlen(info), dev_info.product_name);
         }
 
-        if (device_info.storage_total) {
-            if (strlen(argu_str) + strlen("&storage_total=") + strlen(device_info.storage_total) > sizeof(argu_str)
-                || strlen(info) + strlen("storage_total") + strlen(device_info.storage_total) > sizeof(info)) {
-                LOGE(TAG_ID2, "storage_total too long");
+        if (dev_info.storage_total) {
+            if (strlen(argu_str) + strlen("&storageTotal=") + strlen(dev_info.storage_total) > sizeof(argu_str)
+                || strlen(info) + strlen("storageTotal") + strlen(dev_info.storage_total) > sizeof(info)) {
+                ret = -1;
+                LOGE(TAG_ID2, "storage_total too long\n");
                 break;
             }
-            sprintf(argu_str + strlen(argu_str), "&storage_total=%s", device_info.storage_total);
-            strcat(info + strlen(info), "storage_total");
-            strcat(info + strlen(info), device_info.storage_total);
+            sprintf(argu_str + strlen(argu_str), "&storageTotal=%s", dev_info.storage_total);
+            strcat(info + strlen(info), "storageTotal");
+            strcat(info + strlen(info), dev_info.storage_total);
         }
 
         strcat(info + strlen(info), "version");
         strcat(info + strlen(info), ACTIVATE_VERSION);
 
         LOGD(TAG_ID2, "info : %s\n", info);
+        LOGD(TAG_ID2, "argu_str : %s\n", argu_str);
         LOGD(TAG_ID2, "%s: info max len 1024, actual len is %d!\n", __func__, (int)strlen(info));
 
         // sign device info
@@ -906,6 +918,8 @@ int activate_device(void)
         LOGD(TAG_ID2, "%s: _info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(_info_signed_base64));
 
         _replace_spec_char(_info_signed_base64, info_signed_base64);
+        LOGD(TAG_ID2, "%s: _info_signed_base64 is %s!\n", __func__, _info_signed_base64);
+        LOGD(TAG_ID2, "%s: info_signed_base64 is %s!\n", __func__, info_signed_base64);
         LOGD(TAG_ID2, "%s: info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(info_signed_base64));
 
         sprintf(argu_str + strlen(argu_str), "&sign=%s", info_signed_base64);
@@ -914,7 +928,7 @@ int activate_device(void)
         ret = http_activate_dev(ID2_ACTIVATE_DEV, argu_str);
 
         if (ret != 0) {
-            LOGE(TAG_ID2, "%s: try failed, network error!\n", __func__);
+            LOGE(TAG_ID2, "%s: http_activate_dev error!\n", __func__);
             break;
         }
 
@@ -925,7 +939,7 @@ int activate_device(void)
         }
     }while (0);
 
-    if (ret < 0) {
+    if (ret != 0) {
         LOGE(TAG_ID2, "%s: activate fail!\n", __func__);
     }
     else {

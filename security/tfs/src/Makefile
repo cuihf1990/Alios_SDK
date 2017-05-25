@@ -7,11 +7,11 @@ AR ?= ar
 RM := rm
 
 SRCS := \
-   $(wildcard core/*.c) \
-   $(wildcard core/id2/src/*.c) \
-   $(wildcard core/aes/src/*.c) \
-   $(wildcard common/src/*.c) \
-   $(wildcard network/src/*.c)
+    $(wildcard core/*.c) \
+    $(wildcard core/id2/src/*.c) \
+    $(wildcard core/aes/src/*.c) \
+    $(wildcard common/src/*.c) \
+    $(wildcard network/src/*.c)
 
 INCLUDES := \
            -I./core/id2/include/ \
@@ -26,27 +26,12 @@ CFLAGS += -g -Wpointer-arith -Wundef -Wall -Wl,-EL -fno-inline-functions -nostdl
 endif
 
 ifeq ($(PLATFORM), linux)
-    ifeq ($(DEST), lib-release)
-        SRCS += ./hal/src/cmd.c
-        SRCS += ./hal/src/hal_id2.c
-        SRCS += ./hal/src/hal_aes.c
-        ifeq ($(CRYPTO), rsa)
-            SRCS += ./hal/src/hal_rsa.c
-        else
-            ifeq ($(CRYPTO), 3des)
-                SRCS += ./hal/src/hal_3des.c
-            endif
-        endif
-        INCLUDES += -I./hal/include
-    else
-        CFLAGS += -DPLATFORM_LINUX
-        SRCS += $(wildcard ../platform/${PLATFORM}/*.c)
-        CFLAGS += -DTFS_EMULATE
-        SRCS += $(wildcard emulator/src/*.c)
-        INCLUDES += -I./emulator/include/
-        CFLAGS += -DTFS_OPENSSL
-        INCLUDES += -I../external/lib/openssl/include
-    endif
+    SRCS += $(wildcard ../platform/${PLATFORM}/*.c)
+    CFLAGS += -DTFS_EMULATE
+    SRCS += $(wildcard emulator/src/*.c)
+    INCLUDES += -I./emulator/include/
+    CFLAGS += -DTFS_OPENSSL
+#    INCLUDES += -I../external/lib/openssl/include
 else
     SRCS += ./hal/src/cmd.c
     SRCS += ./hal/src/hal_id2.c
@@ -72,7 +57,7 @@ OBJS := $(patsubst %.c,%.o,$(SRCS))
 
 #$(warning $(OBJS))
 
-#CFLAGS += -DDEBUG
+CFLAGS += -DTFS_DEBUG
 ifeq ($(HW), tee)
     CFLAGS += -DTFS_TEE
 endif

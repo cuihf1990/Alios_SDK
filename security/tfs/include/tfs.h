@@ -55,7 +55,7 @@ int tfs_id2_sign(const uint8_t *in, uint32_t in_len,
  * @return: 0~OK, other~ERROR
  * @note None.
  */
-int tfs_id2_decrypt(uint8_t *in, uint32_t in_len,
+int tfs_id2_decrypt(const uint8_t *in, uint32_t in_len,
                     uint8_t *out, uint32_t *out_len);
 
 /**
@@ -107,50 +107,6 @@ int tfs_id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth
  * @note None.
  */
 int tfs_id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len);
-
-/**
- * @brief aes128 cbc encryption
- *
- * @param[in] key: key for aes128, key length should be 16 bytes.
- * @param[in] iv: initial vector for cbc, iv length should be 16 bytes.
- * @param[in] input_len:input data length, when padding type is nopadding, it should be multiple of 16, which must <= 2MB.
- * @param[in] input: input data for encryption.
- * @param[out] out_len:output data length.
- * @param[out] output: output data for encryption.
- * @param[in] padding: padding type, support pkcs7 padding, zero padding and no padding now.
- * @return: 0~OK, other~ERROR.
- * @note None.
- */
-int32_t tfs_aes128_cbc_enc(const uint8_t *key,
-                           const uint8_t *iv,
-                           int32_t input_len,
-                           const uint8_t *input,
-                           int32_t *output_len,
-                           uint8_t *output,
-                           uint8_t padding);
-
-
-
-/**
- * @brief aes128 cbc decryption
- *
- * @param[in] key: key for aes128, key length should be 16 bytes.
- * @param[in] iv: initial vector for cbc, iv length should be 16 bytes.
- * @param[in] input_len:input data length, it should be multiple of 16, which must <= 2MB.
- * @param[in] input: input data for decryption.
- * @param[out] out_len:output data length.
- * @param[out] output: output data for decryption .
- * @param[in] padding: padding type, support pkcs7 padding, zero padding and no padding now.
- * @return: 0~OK, other~ERROR.
- * @note None.
- */
-int32_t tfs_aes128_cbc_dec(const uint8_t *key,
-                           const uint8_t *iv,
-                           int32_t input_len,
-                           const uint8_t *input,
-                           int32_t *output_len,
-                           uint8_t *output,
-                           uint8_t padding);
 
 #ifdef __cplusplus
 }
