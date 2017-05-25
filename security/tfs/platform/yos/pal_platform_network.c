@@ -21,11 +21,11 @@ int pal_network_send(int sockfd, const char *buf, int len)
     do {
         ret = send(sockfd, buf + ret, len,0);
         if (ret < 0 || ret == 0) {
-            LOGE(TAG_PAL_NETWORK, "write EINTR errno=%d %s ret = %d", errno, strerror(errno), ret);
+            LOGE(TAG_PAL_NETWORK, "write EINTR errno=%d %s ret = %d\n", errno, strerror(errno), ret);
             if (errno == EINTR) {
                 continue;
             }
-            LOGE(TAG_PAL_NETWORK, "write socket error, ret = %d", ret);
+            LOGE(TAG_PAL_NETWORK, "write socket error, ret = %d\n", ret);
             return -1;
         }
         len -= ret;
@@ -42,11 +42,11 @@ int pal_network_recv(int sockfd, char *buf, int *len)
     do {
         ret = recv(sockfd, buf + count, HTTP_PACKET_MAX - count,0);
         if (ret < 0) {
-            LOGE(TAG_PAL_NETWORK, "read EINTR errno=%d %s ret = %d", errno, strerror(errno), ret);
+            LOGE(TAG_PAL_NETWORK, "read EINTR errno=%d %s ret = %d\n", errno, strerror(errno), ret);
             if (errno == EINTR) {
                 continue;
             }
-            LOGE(TAG_PAL_NETWORK, "read socket error, ret = %d", ret);
+            LOGE(TAG_PAL_NETWORK, "read socket error, ret = %d\n", ret);
             return -1;
         }
         count += ret;
@@ -77,7 +77,7 @@ int pal_network_create(const char *server, int port)
 
     host = gethostbyname(server);
     if (host == NULL) {
-        LOGE(TAG_PAL_NETWORK, "get host by name error");
+        LOGE(TAG_PAL_NETWORK, "get host by name error\n");
         return -1;
     }
 
@@ -89,7 +89,7 @@ int pal_network_create(const char *server, int port)
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (sockfd < 0) {
-        LOGE(TAG_PAL_NETWORK, "socket init error");
+        LOGE(TAG_PAL_NETWORK, "socket init error\n");
         return -1;
     }
 
@@ -101,13 +101,13 @@ int pal_network_create(const char *server, int port)
     ret = connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr));
     if (ret < 0) {
         if (errno == EINTR) {
-            LOGE(TAG_PAL_NETWORK, "connect EINTR errno=%d %s ret = %d", errno, strerror(errno), ret);
+            LOGE(TAG_PAL_NETWORK, "connect EINTR errno=%d %s ret = %d\n", errno, strerror(errno), ret);
             if (_http_check_conn(sockfd) == 0) {
                 return sockfd;
             }
         }
         close(sockfd);
-        LOGE(TAG_PAL_NETWORK, "connect error");
+        LOGE(TAG_PAL_NETWORK, "connect error\n");
         return -1;
     }
 

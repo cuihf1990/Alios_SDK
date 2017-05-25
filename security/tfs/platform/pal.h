@@ -23,6 +23,9 @@ int pal_network_close(int fd);
 void pal_base64_encode(const unsigned char *src, int len,
                              unsigned char *dst, int *out_len);
 
+void pal_base64_decode(const unsigned char *src, int len,
+                             unsigned char *dst, int *out_len);
+
 // md5
 void pal_md5_sum(const uint8_t *addr, const int len, uint8_t *mac);
 
@@ -51,19 +54,28 @@ void pal_md5_sum(const uint8_t *addr, const int len, uint8_t *mac);
 int pal_json_get_string_value(char *json_str, const char **tokens, int tokens_size, char *value);
 int pal_json_get_number_value(char *json_str, const char **tokens, int tokens_size, int *value);
 
-// product info
-const char *pal_get_product_name();
-const char *pal_get_imei();
-const char *pal_get_hardware_id();
-const char *pal_get_mac();
-const char *pal_get_bt_mac();
-const char *pal_get_build_time();
-const char *pal_get_os_version();
-const char *pal_get_dm_pixels();
-const char *pal_get_dm_dpi();
-const char *pal_get_cpu_info();
-const char *pal_get_storage_total();
-const char *pal_get_camera_resolution();
+// device info
+struct device_info
+{
+    const char *product_name;
+    const char *imei;
+    const char *hardware_id;
+    const char *mac;
+    const char *bt_mac;
+    const char *build_time;
+    const char *os_version;
+    const char *dm_pixels;
+    const char *dm_dpi;
+    const char *cup_info;
+    const char *storage_total;
+    const char *camera_resolution;
+};
+
+/*
+ * @return: -1~ERROR, 0~OK
+ * @note product_name is must, others are optional.
+ */
+int pal_collect_device_info(struct device_info *pInfo);
 
 // storage
 int pal_save_info(const char *key, char *value);

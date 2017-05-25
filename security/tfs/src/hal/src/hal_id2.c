@@ -6,8 +6,10 @@
 #include "pal.h"
 #include "log.h"
 
-#ifdef TFS_TEE
+#if defined(TFS_TEE)
 #include "tee_id2.h"
+#elif defined(TFS_SW)
+#include "sm_id2.h"
 #else
 #include "cmd.h"
 #endif
@@ -18,10 +20,16 @@ int hal_get_ID2(uint8_t *id2, uint32_t *len)
 {
     int ret = 0;
 
-#ifdef TFS_TEE
+#if defined(TFS_TEE)
    ret = tee_get_ID2(id2, len);
     if (ret != 0) {
         LOGE(TAG_HAL_ID2, "%s:tee env error!\n", __FUNCTION__);
+        return -1;
+    }
+#elif defined(TFS_SW)
+    ret = tee_get_ID2(id2, len);
+    if (ret != 0) {
+        LOGE(TAG_HAL_ID2, "%s:sw env error!\n", __FUNCTION__);
         return -1;
     }
 #else

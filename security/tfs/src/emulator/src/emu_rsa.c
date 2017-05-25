@@ -40,15 +40,15 @@ int emu_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint8_t sign_type;
 
     if (type != EMU_TYPE_MD5 && type != EMU_TYPE_SHA1 && type != EMU_TYPE_SHA256) {
-        LOGE(TAG_EMU_RSA, "\n%s: not support sign type!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: not support sign type!\n", __FUNCTION__);
         return -1;
     }
 
-    LOGD(TAG_EMU_RSA, "\n%s: for id : %d.\n", __FUNCTION__, ID);
+    LOGD(TAG_EMU_RSA, "%s: for id : %d.\n", __FUNCTION__, ID);
     if (type == EMU_TYPE_MD5) {
         sign_type = NID_md5;
     } else {
-        LOGE(TAG_EMU_RSA, "\n%s: to do support...\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: to do support...\n", __FUNCTION__);
         return -1;
     }
 
@@ -61,7 +61,7 @@ int emu_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     ret = RSA_sign(sign_type, md5, MD5_MAX, sign, sign_len, key);
     if (ret != 1) {
-        LOGE(TAG_EMU_RSA, "\n%s: sign error , ret = %d\n", __FUNCTION__, ret);
+        LOGE(TAG_EMU_RSA, "%s: sign error , ret = %d\n", __FUNCTION__, ret);
         return -1;
     }
 
@@ -75,7 +75,7 @@ int emu_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint8_t hash[16];
     mbedtls_rsa_context rsa;
 
-    LOGD(TAG_EMU_RSA, "\n%s: for id : %d.\n", __FUNCTION__, ID);
+    LOGD(TAG_EMU_RSA, "%s: for id : %d.\n", __FUNCTION__, ID);
 
     mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
     if ((ret = mbedtls_mpi_read_string(&rsa.N, 16, RSA_N)) != 0 ||
@@ -86,21 +86,21 @@ int emu_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
         (ret = mbedtls_mpi_read_string(&rsa.DP, 16, RSA_DP)) != 0 ||
         (ret = mbedtls_mpi_read_string(&rsa.DQ, 16, RSA_DQ)) != 0 ||
         (ret = mbedtls_mpi_read_string(&rsa.QP, 16, RSA_QP)) != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls rsa init error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls rsa init error!\n", __FUNCTION__);
         return -1;
     }
     rsa.len = (mbedtls_mpi_bitlen(&rsa.N) + 7) >> 3;
 
     if (mbedtls_rsa_check_pubkey(&rsa) != 0 ||
         mbedtls_rsa_check_privkey(&rsa) != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls rsa check error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls rsa check error!\n", __FUNCTION__);
         return -1;
     }
 
     pal_md5_sum(in, in_len, hash);
     ret = mbedtls_rsa_pkcs1_sign(&rsa, NULL, NULL, MBEDTLS_RSA_PRIVATE, MBEDTLS_MD_MD5, 16, hash, sign);
     if (ret != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls sign error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls sign error!\n", __FUNCTION__);
         return -1;
     }
 
@@ -124,16 +124,16 @@ int emu_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint8_t sign_type;
 
     if (type != EMU_TYPE_MD5 && type != EMU_TYPE_SHA1 && type != EMU_TYPE_SHA256) {
-        LOGE(TAG_EMU_RSA, "\n%s: not support sign type!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: not support sign type!\n", __FUNCTION__);
         return -1;
     }
 
-    LOGD(TAG_EMU_RSA, "\n%s: for id : %d.\n", __FUNCTION__, ID);
+    LOGD(TAG_EMU_RSA, "%s: for id : %d.\n", __FUNCTION__, ID);
 
     if (type == EMU_TYPE_MD5) {
         sign_type = NID_md5;
     } else {
-        LOGE(TAG_EMU_RSA, "\n%s: to do support...\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: to do support...\n", __FUNCTION__);
         return -1;
     }
 
@@ -146,7 +146,7 @@ int emu_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     ret = RSA_verify(sign_type, md5, MD5_MAX, sign, sign_len, key);
     if (ret != 1) {
-        LOGE(TAG_EMU_RSA, "\n%s: verify error , ret = %d\n", __FUNCTION__, ret);
+        LOGE(TAG_EMU_RSA, "%s: verify error , ret = %d\n", __FUNCTION__, ret);
         return -1;
     }
     ret = 0;
@@ -159,12 +159,12 @@ int emu_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint8_t hash[16];
     mbedtls_rsa_context rsa;
 
-    LOGD(TAG_EMU_RSA, "\n%s: for id : %d.\n", __FUNCTION__, ID);
+    LOGD(TAG_EMU_RSA, "%s: for id : %d.\n", __FUNCTION__, ID);
 
     mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
     if ((ret = mbedtls_mpi_read_string(&rsa.N, 16, RSA_N)) != 0 ||
         (ret = mbedtls_mpi_read_string(&rsa.E, 16, RSA_E)) != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls rsa init error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls rsa init error!\n", __FUNCTION__);
         return -1;
     }
     rsa.len = (mbedtls_mpi_bitlen(&rsa.N) + 7) >> 3;
@@ -172,7 +172,7 @@ int emu_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
     pal_md5_sum(in, in_len, hash);
     ret = mbedtls_rsa_pkcs1_verify(&rsa, NULL, NULL, MBEDTLS_RSA_PUBLIC, MBEDTLS_MD_MD5, 16, hash, sign);
     if (ret != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls verify error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls verify error!\n", __FUNCTION__);
         return -1;
     }
 
@@ -193,15 +193,15 @@ int emu_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint8_t padding_type;
 
     if (padding != EMU_PKCS1_PADDING && padding != EMU_NO_PADDING) {
-        LOGE(TAG_EMU_RSA, "\n%s: not supported padding type.\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: not supported padding type.\n", __FUNCTION__);
         return -1;
     }
-    LOGD(TAG_EMU_RSA, "\n%s: for id : %d.\n", __FUNCTION__, ID);
+    LOGD(TAG_EMU_RSA, "%s: for id : %d.\n", __FUNCTION__, ID);
 
     if (padding == EMU_PKCS1_PADDING) {
         padding_type = RSA_PKCS1_PADDING;
     } else {
-        LOGE(TAG_EMU_RSA, "\n%s: to do support.\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: to do support.\n", __FUNCTION__);
         return -1;
     }
 
@@ -215,7 +215,7 @@ int emu_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
     // public key encrypt
     ret = RSA_public_encrypt(in_len, in, out, key, padding_type);
     if (ret < 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: encrypt error , ret = %d\n", __FUNCTION__, ret);
+        LOGE(TAG_EMU_RSA, "%s: encrypt error , ret = %d\n", __FUNCTION__, ret);
         return -1;
     }
     *out_len = ret;
@@ -238,18 +238,18 @@ int emu_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
         mbedtls_entropy_init(&entropy);
         ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, pers, strlen(pers));
         if (ret != 0) {
-            LOGE(TAG_EMU_RSA,  "\n%s: mbedtls_ctr_drbg_seed error!\n", __FUNCTION__);
+            LOGE(TAG_EMU_RSA,  "%s: mbedtls_ctr_drbg_seed error!\n", __FUNCTION__);
             mbedtls_ctr_drbg_DEBUG_FREE(&ctr_drbg);
             mbedtls_entropy_DEBUG_FREE(&entropy);
             return -1;
         }
     */
-    LOGD(TAG_EMU_RSA, "\n%s: for id : %d.\n", __FUNCTION__, ID);
+    LOGD(TAG_EMU_RSA, "%s: for id : %d.\n", __FUNCTION__, ID);
 
     mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
     if ((ret = mbedtls_mpi_read_string(&rsa.N, 16, RSA_N)) != 0 ||
         (ret = mbedtls_mpi_read_string(&rsa.E, 16, RSA_E)) != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls rsa init error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls rsa init error!\n", __FUNCTION__);
         return -1;
     }
     rsa.len = (mbedtls_mpi_bitlen(&rsa.N) + 7) >> 3;
@@ -257,7 +257,7 @@ int emu_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
     ret = mbedtls_rsa_pkcs1_encrypt(&rsa, NULL, NULL,
                                     MBEDTLS_RSA_PUBLIC, in_len, in, out);
     if (ret != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls priv-encrypt error, ret = %d\n", __FUNCTION__, ret);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls priv-encrypt error, ret = %d\n", __FUNCTION__, ret);
 //        mbedtls_ctr_drbg_DEBUG_FREE(&ctr_drbg);
 //        mbedtls_entropy_DEBUG_FREE(&entropy);
         return -1;
@@ -284,15 +284,15 @@ int emu_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
     uint8_t padding_type;
 
     if (padding != EMU_PKCS1_PADDING && padding != EMU_NO_PADDING) {
-        LOGE(TAG_EMU_RSA, "\n%s: not supported padding type.\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: not supported padding type.\n", __FUNCTION__);
         return -1;
     }
 
-    LOGD(TAG_EMU_RSA, "\n%s: for id : %d.\n", __FUNCTION__, ID);
+    LOGD(TAG_EMU_RSA, "%s: for id : %d.\n", __FUNCTION__, ID);
     if (padding == EMU_PKCS1_PADDING) {
         padding_type = RSA_PKCS1_PADDING;
     } else {
-        LOGE(TAG_EMU_RSA, "\n%s: to do support.\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: to do support.\n", __FUNCTION__);
         return -1;
     }
 
@@ -306,12 +306,12 @@ int emu_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
     ret = RSA_private_decrypt(in_len, in, out, key, padding_type);
     if (ret < 0) {
         *out_len = 0;
-        LOGE(TAG_EMU_RSA, "\n%s: decrypt error , ret = %d\n", __FUNCTION__, ret);
+        LOGE(TAG_EMU_RSA, "%s: decrypt error , ret = %d\n", __FUNCTION__, ret);
         return -1;
     }
     *out_len = ret;
     ret = 0;
-    LOGD(TAG_EMU_RSA, "decrypted len:%d, ret:%d ", *out_len, ret);
+    LOGD(TAG_EMU_RSA, "decrypted len:%d, ret:%d\n", *out_len, ret);
 
     RSA_free(key);
 
@@ -328,14 +328,14 @@ int emu_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
         mbedtls_entropy_init(&entropy);
         ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, pers, strlen(pers));
         if (ret != 0) {
-            LOGE(TAG_EMU_RSA,  "\n%s: mbedtls_ctr_drbg_seed error!\n", __FUNCTION__);
+            LOGE(TAG_EMU_RSA,  "%s: mbedtls_ctr_drbg_seed error!\n", __FUNCTION__);
             mbedtls_ctr_drbg_DEBUG_FREE(&ctr_drbg);
             mbedtls_entropy_DEBUG_FREE(&entropy);
             return -1;
         }
     */
 
-    LOGD(TAG_EMU_RSA, "\n%s: for id : %d.\n", __FUNCTION__, ID);
+    LOGD(TAG_EMU_RSA, "%s: for id : %d.\n", __FUNCTION__, ID);
 
     mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
     if ((ret = mbedtls_mpi_read_string(&rsa.N, 16, RSA_N)) != 0 ||
@@ -346,21 +346,21 @@ int emu_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
         (ret = mbedtls_mpi_read_string(&rsa.DP, 16, RSA_DP)) != 0 ||
         (ret = mbedtls_mpi_read_string(&rsa.DQ, 16, RSA_DQ)) != 0 ||
         (ret = mbedtls_mpi_read_string(&rsa.QP, 16, RSA_QP)) != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls rsa init error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls rsa init error!\n", __FUNCTION__);
         return -1;
     }
     rsa.len = (mbedtls_mpi_bitlen(&rsa.N) + 7) >> 3;
 
     if (mbedtls_rsa_check_pubkey(&rsa) != 0 ||
         mbedtls_rsa_check_privkey(&rsa) != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls rsa check error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls rsa check error!\n", __FUNCTION__);
         return -1;
     }
 
     ret = mbedtls_rsa_pkcs1_decrypt(&rsa, NULL, NULL,
                                     MBEDTLS_RSA_PRIVATE, (size_t *)out_len, in, out, 1024);
     if (ret != 0) {
-        LOGE(TAG_EMU_RSA, "\n%s: mbedtls priv-decrypt error, ret = %d\n", __FUNCTION__, ret);
+        LOGE(TAG_EMU_RSA, "%s: mbedtls priv-decrypt error, ret = %d\n", __FUNCTION__, ret);
 //        mbedtls_ctr_drbg_DEBUG_FREE(&ctr_drbg);
 //        mbedtls_entropy_DEBUG_FREE(&entropy);
         return -1;

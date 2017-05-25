@@ -63,7 +63,7 @@ int tfs_id2_verify(const uint8_t *in, uint32_t in_len,
  * @return: 0~OK, other~ERROR
  * @note None.
  */
-int tfs_id2_encrypt(uint8_t *in, uint32_t in_len,
+int tfs_id2_encrypt(const uint8_t *in, uint32_t in_len,
                     uint8_t *out, uint32_t *out_len);
 
 /*
@@ -76,7 +76,7 @@ int tfs_id2_encrypt(uint8_t *in, uint32_t in_len,
  * @return: 0~OK, other~ERROR
  * @note None.
  */
-int tfs_id2_decrypt(uint8_t *in, uint32_t in_len,
+int tfs_id2_decrypt(const uint8_t *in, uint32_t in_len,
                     uint8_t *out, uint32_t *out_len);
 
 /*

@@ -12,6 +12,10 @@
 #include "tfs_aes.h"
 #include "log.h"
 
+#ifndef TFS_ONLINE
+#include "tfs_test_decrypt.h"
+#endif
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -21,12 +25,13 @@ static int test_tfs_id2_sign(void);
 static int test_tfs_id2_verify(void);
 static int test_tfs_id2_encrypt(void);
 static int test_tfs_id2_decrypt(void);
-static int test_tfs_get_auth_code(void);
+#ifndef TFS_ONLINE
+static int test_tfs_id2_decrypt_daily(void);
+#endif
 static int test_tfs_activate_device(void);
+static int test_tfs_get_auth_code(void);
 static int test_tfs_id2_get_auth_code(void);
 static int test_tfs_id2_get_digest_auth_code(void);
-static int test_tfs_aes128_enc_dec(int size, uint8_t padding);
-static int test_tfs_aes128_enc_dec_performance(int size, uint8_t padding);
 
 /****************************************************************************
  * Private Data
@@ -47,9 +52,15 @@ uint64_t end;
 #define PRESS_TIME 1000
 #endif
 
+//#define CREATE_ID2_SIGN
+#ifdef CREATE_ID2_SIGN
+static int create_id2_sign(void);
+#endif
+
 #define TAG_TFS_TEST "TFS_TEST"
 
 void tfs_test() {
+
     prepare_test_data();
     LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_get_ID2 <<<<<<\n");
     test_tfs_get_ID2();
@@ -66,36 +77,27 @@ void tfs_test() {
     LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_id2_decrypt <<<<<<\n");
     test_tfs_id2_decrypt();
 
-    LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_get_auth_code <<<<<<\n");
-    test_tfs_get_auth_code();
+#ifdef CREATE_ID2_SIGN
+    LOGI(TAG_TFS_TEST,">>>>>>func: create_id2_sign <<<<<<\n");
+    create_id2_sign();
+#endif
+
+#ifndef TFS_ONLINE
+    LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_id2_decrypt_daily <<<<<<\n");
+    test_tfs_id2_decrypt_daily();
+#endif
 
     LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_activate_device <<<<<<\n");
     test_tfs_activate_device();
+
+    LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_get_auth_code <<<<<<\n");
+    test_tfs_get_auth_code();
 
     LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_id2_get_auth_code <<<<<<\n");
     test_tfs_id2_get_auth_code();
 
     LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_id2_get_digest_auth_code <<<<<<\n");
     test_tfs_id2_get_digest_auth_code();
-	
-    LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_aes128_enc_dec <<<<<<\n");
-    LOGI(TAG_TFS_TEST,">>>> TFS_AES_PKCS7_PADDING <<<<\n");
-    test_tfs_aes128_enc_dec(50, TFS_AES_PKCS7_PADDING);
-    test_tfs_aes128_enc_dec(64, TFS_AES_PKCS7_PADDING);
-    LOGI(TAG_TFS_TEST,">>>> TFS_AES_ZERO_PADDING <<<<\n");
-    test_tfs_aes128_enc_dec(50, TFS_AES_ZERO_PADDING);
-    test_tfs_aes128_enc_dec(64, TFS_AES_ZERO_PADDING);
-    LOGI(TAG_TFS_TEST,">>>> TFS_AES_NO_PADDING <<<<\n");
-    test_tfs_aes128_enc_dec(50, TFS_AES_NO_PADDING);
-    test_tfs_aes128_enc_dec(64, TFS_AES_NO_PADDING);
-
-    LOGI(TAG_TFS_TEST,">>>>>>func: test_tfs_aes128_enc_dec_performance <<<<<<\n");
-    LOGI(TAG_TFS_TEST,">>>> TFS_AES_PKCS7_PADDING <<<<\n");
-    test_tfs_aes128_enc_dec_performance(4*1024, TFS_AES_PKCS7_PADDING);
-    LOGI(TAG_TFS_TEST,">>>> TFS_AES_ZERO_PADDING <<<<\n");
-    test_tfs_aes128_enc_dec_performance(4*1024, TFS_AES_ZERO_PADDING);
-    LOGI(TAG_TFS_TEST,">>>> TFS_AES_NO_PADDING <<<<\n");
-    test_tfs_aes128_enc_dec_performance(4*1024, TFS_AES_NO_PADDING);
 }
 
 static void prepare_test_data() {
@@ -129,7 +131,7 @@ static int test_tfs_get_ID2(void)
     end = pal_get_current_time();
     cost_time = end - start;
 
-    LOGI(TAG_TFS_TEST,"\ntfs_get_ID2: ret = %d, the ID2(%d): %s\n\ntime: %lld\n\n", ret, len, id2, cost_time);
+    LOGI(TAG_TFS_TEST,"tfs_get_ID2: ret = %d, the ID2(%d): %s\n\ntime: %lld\n\n", ret, len, id2, cost_time);
     return 0;
 }
 
@@ -153,7 +155,7 @@ static int test_tfs_id2_sign(void)
 #ifdef DEBUG_PRESS
     total_time = 0;
     for (i = 0; i < PRESS_TIME; i ++) {
-    //LOGI(TAG_TFS_TEST,"sign: %d time.", i + 1);
+    //LOGI(TAG_TFS_TEST,"sign: %d time.\n", i + 1);
 #endif
     start = pal_get_current_time();
     ret = tfs_id2_sign((const uint8_t *)in_data, strlen(in_data), out_data, &len);
@@ -168,7 +170,7 @@ static int test_tfs_id2_sign(void)
 #else
     cost_time = end -start;
 #endif
-    LOGI(TAG_TFS_TEST,"\ntfs_id2_sign: ret = %d, sign out(%d) \n\ntime:%lld\n\n", ret, len, cost_time);
+    LOGI(TAG_TFS_TEST,"tfs_id2_sign: ret = %d, sign out(%d) \n\ntime:%lld\n\n", ret, len, cost_time);
     hexdump(out_data, len);
 
     return 0;
@@ -195,7 +197,7 @@ static int test_tfs_id2_verify(void)
 #ifdef DEBUG_PRESS
     total_time = 0;
     for (i = 0; i < PRESS_TIME; i ++) {
-    //LOGI(TAG_TFS_TEST,"verify: %d time.", i + 1);
+    //LOGI(TAG_TFS_TEST,"verify: %d time.\n", i + 1);
 #endif
     start = pal_get_current_time();
     ret = tfs_id2_verify((const uint8_t *)in_data, in_len, out_data, len); //then verify
@@ -210,7 +212,7 @@ static int test_tfs_id2_verify(void)
 #else
     cost_time = end -start;
 #endif 
-    LOGI(TAG_TFS_TEST,"\ntfs_id2_verify: ret = %d!\n\ntime:%lld\n\n", ret, cost_time);
+    LOGI(TAG_TFS_TEST,"tfs_id2_verify: ret = %d!\n\ntime:%lld\n\n", ret, cost_time);
     return 0;
 }
 
@@ -233,7 +235,7 @@ static int test_tfs_id2_encrypt(void)
 #ifdef DEBUG_PRESS
     total_time = 0;
     for (i = 0; i < PRESS_TIME; i ++) {
-    // LOGI(TAG_TFS_TEST,"encrypt: %d time.", i + 1);
+    // LOGI(TAG_TFS_TEST,"encrypt: %d time.\n", i + 1);
 #endif
     start = pal_get_current_time();
     ret = tfs_id2_encrypt((uint8_t *)in_data, in_len, out_data, &len);
@@ -248,7 +250,7 @@ static int test_tfs_id2_encrypt(void)
 #else
     cost_time = end -start;
 #endif
-    LOGI(TAG_TFS_TEST,"\ntfs_id2_encrypt: ret = %d, encrypt out(%d)\n\ntime:%lld\n\n", ret, len, cost_time);
+    LOGI(TAG_TFS_TEST,"tfs_id2_encrypt: ret = %d, encrypt out(%d)\n\ntime:%lld\n\n", ret, len, cost_time);
     hexdump(out_data, len);
 
     return 0;
@@ -276,7 +278,7 @@ static int test_tfs_id2_decrypt(void)
 #ifdef DEBUG_PRESS
     total_time = 0; 
     for (i = 0; i < PRESS_TIME; i ++) {
-    //LOGI(TAG_TFS_TEST,"decrypt: %d time.", i + 1);
+    //LOGI(TAG_TFS_TEST,"decrypt: %d time.\n", i + 1);
 #endif
     start = pal_get_current_time();
     ret = tfs_id2_decrypt(out_data, enc_len, dec_out, &dec_len); //then decrypt
@@ -291,10 +293,96 @@ static int test_tfs_id2_decrypt(void)
 #else
     cost_time = end -start;
 #endif
-    LOGI(TAG_TFS_TEST,"\ntfs_id2_decrypt: ret = %d, decrypt out(%d): %s\n\ntime:%lld\n\n", ret, dec_len, dec_out, cost_time);
+    LOGI(TAG_TFS_TEST,"tfs_id2_decrypt: ret = %d, decrypt out(%d): %s\n\ntime:%lld\n\n", ret, dec_len, dec_out, cost_time);
 
     return 0;
 }
+
+static int create_id2_sign(void) {
+    int ret = 0;
+    uint32_t id2_len = TFS_ID2_LEN + 1;
+    uint8_t id2[TFS_ID2_LEN + 1] = {0};
+    uint8_t id2_sign[BUF_MAX];
+    uint32_t id2_sign_len = 0;
+    uint8_t id2_sign_base64[BUF_MAX];
+    uint32_t id2_sign_base64_len;
+    uint8_t *encrypted_data_base64 = "JKSX1+AIE7EE1VWP5sQRlw==";
+    uint8_t encrypted_data[BUF_MAX];
+    uint32_t encrypted_data_len;
+    uint32_t i = 0;
+
+    ret = tfs_get_ID2(id2, &id2_len);
+    if (ret != 0) {
+        LOGE(TAG_TFS_TEST, "tfs_get_id2 error.\n");
+        return -1;
+    }
+
+    memset(id2_sign, 0, BUF_MAX);
+    memset(id2_sign_base64, 0, BUF_MAX);
+    ret = tfs_id2_sign(id2, id2_len, id2_sign, &id2_sign_len);
+    if (ret != 0) {
+        LOGE(TAG_TFS_TEST, "sign id2 error.\n");
+        return -1;
+    }
+
+    for (i = 0;i < id2_sign_len; i ++) {
+        LOG("%X", id2_sign[i]);
+    }
+
+    LOGI(TAG_TFS_TEST, "id2 is %s.\n", id2);
+
+    pal_base64_encode(id2_sign, id2_sign_len, id2_sign_base64, &id2_sign_base64_len);
+    LOGI(TAG_TFS_TEST, "id2_sign_base64 is %s.\n", id2_sign_base64);
+
+    pal_base64_decode(encrypted_data_base64, strlen(encrypted_data_base64), encrypted_data, &encrypted_data_len);
+    LOGI(TAG_TFS_TEST, "encrypted_data_base64 is %s.\n", encrypted_data_base64);
+
+    for (i = 0;i < encrypted_data_len; i ++) {
+        if (i != 0 && i % 8 == 0) {
+            LOG("\n");
+        }
+        LOG("0x%02X,", encrypted_data[i]);
+    }
+}
+
+#ifndef TFS_ONLINE
+int test_tfs_id2_decrypt_daily(void) {
+    int ret = 0;
+    uint32_t id2_len = TFS_ID2_LEN + 1;
+    uint8_t id2[TFS_ID2_LEN + 1] = {0};
+    uint32_t dec_len = BUF_MAX;
+    int test_id2_list_len = sizeof(tfs_test_id2)/(TFS_ID2_LEN + 1);
+    int index = 0;
+
+    ret = tfs_get_ID2(id2, &id2_len);
+    if (ret != 0) {
+        LOGE(TAG_TFS_TEST, "tfs_get_id2 error.\n");
+        return -1;
+    }
+
+    LOGI(TAG_TFS_TEST, "id2 is %s.\n", id2);
+
+    LOGI(TAG_TFS_TEST, "id2 list len: %d.\n", test_id2_list_len);
+    for (index = 0;index < test_id2_list_len; index ++) {
+        if(memcmp(id2, tfs_test_id2[index], TFS_ID2_LEN) == 0) {
+            break;
+        }
+    }
+
+    if (index > test_id2_list_len) {
+        LOGE(TAG_TFS_TEST, "no test id2 data.\n");
+        return -1;
+    }
+
+    LOGI(TAG_TFS_TEST, "index is %d.\n", index);
+    memset(dec_out, 0, BUF_MAX);
+    ret = tfs_id2_decrypt(tfs_test_cipher_text[index], sizeof(tfs_test_cipher_text[index]), dec_out, &dec_len); //then decrypt
+
+    LOGI(TAG_TFS_TEST,"tfs_id2_decrypt: ret = %d, decrypt out(%d): %s\n\n", ret, dec_len, dec_out);
+
+    return 0;
+}
+#endif
 
 static int test_tfs_get_auth_code(void)
 {
@@ -304,7 +392,7 @@ static int test_tfs_get_auth_code(void)
     memset(out_data, 0, BUF_MAX);
     ret = tfs_get_auth_code(out_data, &len);
 
-    LOGI(TAG_TFS_TEST,"\ntfs_get_auth_code: ret = %d, the auth_code(%d): %s\n\n", ret, len, out_data);
+    LOGI(TAG_TFS_TEST,"tfs_get_auth_code: ret = %d, the auth_code(%d): %s\n\n", ret, len, out_data);
     return 0;
 }
 
@@ -313,7 +401,7 @@ static int test_tfs_activate_device(void) {
 
     ret = tfs_activate_device();
 
-    LOGI(TAG_TFS_TEST,"\ntfs_activate_device: ret = %d.\n\n", ret);
+    LOGI(TAG_TFS_TEST,"tfs_activate_device: ret = %d.\n\n", ret);
     return 0;
 }
 
@@ -328,14 +416,14 @@ static int test_tfs_id2_get_auth_code(void)
 
     memset(out_data, 0, BUF_MAX);
     ret = tfs_id2_get_auth_code(timestamp, out_data, &len);
-    LOGI(TAG_TFS_TEST,"\ntfs_id2_get_auth_code: ret = %d, the auth_code(%d): %s\n\n", ret, len, out_data);
+    LOGI(TAG_TFS_TEST,"tfs_id2_get_auth_code: ret = %d, the auth_code(%d): %s\n\n", ret, len, out_data);
     return 0;
 }
 
 static int test_tfs_id2_get_digest_auth_code(void)
 {
     int ret = -1;
-    int len = BUF_MAX;
+    uint32_t len = BUF_MAX;
     uint64_t timestamp = 0; // in ms
     uint8_t *digest = "abcd";
 
@@ -344,154 +432,7 @@ static int test_tfs_id2_get_digest_auth_code(void)
 
     memset(out_data, 0, BUF_MAX);
     ret = tfs_id2_get_digest_auth_code(timestamp, digest, strlen(digest), out_data, &len);
-    LOGI(TAG_TFS_TEST,"\ntfs_id2_get_digest_auth_code: ret = %d, the auth_code(%d): %s\n\n", ret, len, out_data);
+    LOGI(TAG_TFS_TEST,"tfs_id2_get_digest_auth_code: ret = %d, the auth_code(%d): %s\n\n", ret, len, out_data);
     return 0;
 }
 
-static int test_tfs_aes128_enc_dec(int size, uint8_t padding)
-{
-    int ret = -1;
-    const uint8_t in[64] = "Hello World!1234567890123456789012345678901234567890";
-    uint8_t out[128];
-    uint8_t iv_enc[16] = {0};
-    uint8_t iv_dec[16] = {0};
-    const uint8_t key[16] = "Demo-Test";
-    uint8_t dec[128] = {0};
-    int32_t in_len = size;
-    int32_t out_len = 0;
-    int32_t dec_len = 0;
-    int32_t i = 0;
-
-    LOGI(TAG_TFS_TEST, "source data len %d:\n", in_len);
-    hexdump(in, in_len);
-    ret = tfs_aes128_cbc_enc(key, iv_enc, in_len, in, &out_len, out, padding);
-    if (ret == -1) {
-        LOGE(TAG_TFS_TEST,"tfs_aes128_enc error.\n");
-        return -1;
-    }
-
-    LOGI(TAG_TFS_TEST, "encrypted data len %d:\n", out_len);
-    hexdump(out, out_len);
-
-    ret = tfs_aes128_cbc_dec(key, iv_dec, out_len, out, &dec_len, dec, padding);
-    if (ret == -1) {
-        LOGE(TAG_TFS_TEST,"tfs_aes128_dec error.\n");
-        return -1;
-    }
-    LOGI(TAG_TFS_TEST, "decrypted data len %d:\n", dec_len);
-    hexdump(dec, dec_len);
-
-    if (in_len > dec_len || (in_len < dec_len && padding != TFS_AES_ZERO_PADDING)) {
-        LOGE(TAG_TFS_TEST, "decrypted data len error.\n");
-        return -1;
-    }
-
-    for (i = 0;i < in_len ; i ++) {
-        if (in[i] != dec[i]) {
-            break;
-        }
-    }
-    if (i < in_len) {
-        LOGE(TAG_TFS_TEST, "decrypted data is not equal to in data.\n");
-        return -1;
-    }
-
-    if (in_len < dec_len) {
-    // for zero padding
-        for (i = in_len;i < dec_len; i ++) {
-            if (dec[i] != 0) {
-                break;
-            }
-        } 
-        if (i < dec_len) {
-            LOGE(TAG_TFS_TEST, "decrypted data padding error when zero padding.\n");
-            return -1;
-        }
-    }
-
-    LOGI(TAG_TFS_TEST, "aes encryption and decryption ok!\n");
-    return 0;
-}
-
-static int test_tfs_aes128_enc_dec_performance(int size, uint8_t padding)
-{
-    int ret = -1;
-    uint8_t *in;
-    uint8_t *out;
-    uint8_t iv_enc[16] = {0};
-    uint8_t iv_dec[16] = {0};
-    const uint8_t key[16] = "Demo-Test";
-    uint8_t *dec;
-    uint64_t cost_time;
-    int i;
-    int32_t in_len;
-    int32_t out_len;
-    int32_t dec_len;
-#ifdef DEBUG_PRESS
-    uint64_t total_time;
-    uint64_t average_time;
-#endif
-
-    in = (uint8_t *)pal_memory_malloc(size);
-    out = (uint8_t *)pal_memory_malloc(size + 16);
-    dec = (uint8_t *)pal_memory_malloc(size + 16);
-
-    for (i = 0 ; i < size;i ++) {
-        *(in + i) = i%10 + '0';
-    }
-
-    in_len = size;
-#ifdef DEBUG_PRESS
-    total_time = 0; 
-    for (i = 0; i < PRESS_TIME; i ++) {
-#endif
-    start = pal_get_current_time();
-    ret = tfs_aes128_cbc_enc(key, iv_enc, in_len, in, &out_len, out, padding);
-    if (ret == -1) {
-        LOGE(TAG_TFS_TEST,"tfs_aes128_cbc_enc error.\n");
-        return -1;
-    }
-    end = pal_get_current_time();
-#ifdef DEBUG_PRESS
-    total_time += end - start;
-    }
-    average_time = total_time/PRESS_TIME;
-#endif
-#ifdef DEBUG_PRESS
-    cost_time = average_time;
-#else
-    cost_time = end -start;
-#endif
-
-    LOGI(TAG_TFS_TEST,"\ntfs_aes128_cbc_enc: ret = %d, time: %lld\n\n", ret, cost_time);
-
-#ifdef DEBUG_PRESS
-    total_time = 0; 
-    for (i = 0; i < PRESS_TIME; i ++) {
-#endif
-    start = pal_get_current_time();
-    ret = tfs_aes128_cbc_dec(key, iv_dec, out_len, out, &dec_len, dec, padding);
-    if (ret == -1) {
-        LOGE(TAG_TFS_TEST,"tfs_aes128_cbc_dec error.\n");
-        return -1;
-    }
-    end = pal_get_current_time();
-#ifdef DEBUG_PRESS
-    total_time += end - start;
-    }
-    average_time = total_time/PRESS_TIME;
-#endif
-#ifdef DEBUG_PRESS
-    cost_time = average_time;
-#else
-    cost_time = end -start;
-#endif
-
-    LOGI(TAG_TFS_TEST,"\ntfs_aes128_cbc_dec: ret = %d, time: %lld\n\n", ret, cost_time);
-
-    pal_memory_free(in);
-    pal_memory_free(out);
-    pal_memory_free(dec);
-
-    return ret;
-}
