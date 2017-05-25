@@ -7,6 +7,12 @@ HOST_MCU_FAMILY     := linux
 
 $(NAME)_COMPONENTS  := yloop vfs hal log vcall ysh alicrypto modules.kv tfs netmgr
 
+ifeq ($(valgrind), 1)
+GLOBAL_DEFINES += $(shell [ -f /usr/include/valgrind/valgrind.h ] && echo HAVE_VALGRIND_VALGRIND_H)
+GLOBAL_DEFINES += $(shell [ -f /usr/include/valgrind.h ] && echo HAVE_VALGRIND_H)
+endif
+
+
 CONFIG_LIB_TFS := y
 CONFIG_TFS_ID2_RSA := y
 CONFIG_TFS_ID2_3DES := n
