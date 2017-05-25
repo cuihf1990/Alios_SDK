@@ -315,7 +315,6 @@ static ur_error_t send_address_query_response(network_context_t *network,
     uint8_t     *data;
     uint16_t    length;
     message_info_t *info;
-    ur_node_id_t attach;
 
     length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t) +
              sizeof(mm_ueid_tv_t);
@@ -511,9 +510,6 @@ ur_error_t handle_address_notification(message_t *message)
     uint16_t     tlvs_length;
     ur_node_id_t target;
     ur_node_id_t attach;
-    hal_context_t *hal;
-    network_context_t *network;
-    message_info_t *info;
 
     if (mm_get_device_state() != DEVICE_STATE_LEADER &&
         mm_get_device_state() != DEVICE_STATE_SUPER_ROUTER) {
@@ -534,9 +530,6 @@ ur_error_t handle_address_notification(message_t *message)
 
     target.sid = target_node->sid;
     target.meshnetid = target_node->meshnetid;
-    info = message->info;
-    network = info->network;
-    hal = network->hal;
     if (attach_node) {
         attach.sid = attach_node->sid;
         attach.meshnetid = attach_node->meshnetid;
