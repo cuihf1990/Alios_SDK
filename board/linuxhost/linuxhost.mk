@@ -5,7 +5,7 @@ MODULE              := 1062
 HOST_ARCH           := linux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  := yloop vfs hal log vcall ysh alicrypto modules.kv mbedtls tfs netmgr
+$(NAME)_COMPONENTS  := yloop vfs hal log vcall ysh alicrypto modules.kv tfs netmgr
 
 CONFIG_LIB_TFS := y
 CONFIG_TFS_ID2_RSA := y

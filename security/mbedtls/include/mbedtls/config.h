@@ -28,8 +28,6 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
-#if defined(CONFIG_LINUX_HOST)
-
 /* System support */
 #define MBEDTLS_HAVE_ASM
 
@@ -39,7 +37,7 @@
 #define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 #define MBEDTLS_SSL_PROTO_TLS1_2
 #define MBEDTLS_THREADING_C
-#define MBEDTLS_THREADING_PTHREAD
+#define MBEDTLS_THREADING_ALT
 
 /* mbed TLS modules */
 #define MBEDTLS_AES_C
@@ -47,6 +45,7 @@
 #define MBEDTLS_BIGNUM_C
 #define MBEDTLS_CIPHER_C
 #define MBEDTLS_MD_C
+#define MBEDTLS_MD5_C
 #define MBEDTLS_NET_C
 #define MBEDTLS_PK_C
 #define MBEDTLS_PK_PARSE_C
@@ -57,25 +56,16 @@
 #define MBEDTLS_SSL_TLS_C
 #define MBEDTLS_X509_CRT_PARSE_C
 #define MBEDTLS_X509_USE_C
+#define MBEDTLS_BASE64_C
+#define MBEDTLS_PEM_PARSE_C
+
+/* mbed TLS debug */
+//#define MBEDTLS_DEBUG_C
 
 /* OEM configure */
 #define MBEDTLS_IOT_SPECIFIC
 
-/* For test certificates */
-#define MBEDTLS_BASE64_C
-#define MBEDTLS_CERTS_C
-#define MBEDTLS_PEM_PARSE_C
-
-#define MBEDTLS_SSL_MAX_CONTENT_LEN    (3 * 1024)    /*  Size of the input / output buffer */
-
-#endif /* CONFIG_LINUX_HOST */
-
-#if defined(CONFIG_TLS_DEBUG)
-
-#define MBEDTLS_FS_IO
-#define MBEDTLS_DEBUG_C
-
-#endif /* CONFIG_TLS_DEBUG */
+#define MBEDTLS_SSL_MAX_CONTENT_LEN    (3 * 1024)    /* Size of the input / output buffer */
 
 #include "mbedtls/check_config.h"
 
