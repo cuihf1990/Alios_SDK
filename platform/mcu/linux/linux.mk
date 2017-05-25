@@ -14,12 +14,11 @@ GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
 GLOBAL_DEFINES      += CONFIG_YOS_KVFILE=\"/dev/flash0\"
 GLOBAL_DEFINES      += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash1\"
-GLOBAL_CFLAGS       += -Wno-missing-field-initializers
+GLOBAL_CFLAGS       += -Wall -Wno-missing-field-initializers
 GLOBAL_DEFINES      += CSP_LINUXHOST
 
 # arch linux
 $(NAME)_SOURCES := $(ARCH_LINUX)/cpu_impl.c
-$(NAME)_SOURCES += $(ARCH_LINUX)/cpu_longjmp_32.S
 # mcu
 $(NAME)_SOURCES     += main/arg_options.c
 $(NAME)_SOURCES     += main/main.c
