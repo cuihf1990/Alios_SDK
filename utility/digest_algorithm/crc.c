@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "crc.h"
 
 #define CRC16_SEED   0xFFFF

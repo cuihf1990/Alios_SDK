@@ -11,6 +11,7 @@ $(NAME)_SOURCES     += utility/hashtable_test.c
 $(NAME)_SOURCES     += tfs/tfs_test.c
 $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
+$(NAME)_SOURCES     += kernel/module/kv_test.c
 $(NAME)_COMPONENTS  := yunit cjson
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))

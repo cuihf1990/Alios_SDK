@@ -57,7 +57,7 @@ void *ht_init(int max_cnt)
     yos_mutex_new(&p->lock);
     
     p->cnt = max_cnt;
-    LOGD(MODULE,"create hashtable : <malloc>%p, item: <malloc>: %p\n", p, p->item);
+    //LOGD(MODULE,"create hashtable : <malloc>%p, item: <malloc>: %p\n", p, p->item);
     return p;
 }
 
@@ -191,7 +191,7 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
         }
         memcpy(p_item->val, val, size_val);
         p_item->size_val = size_val;
-        LOGD(MODULE,"key: <malloc>%p, val: <malloc>%p\n", p_item->key, p_item->val);
+        //LOGD(MODULE,"key: <malloc>%p, val: <malloc>%p\n", p_item->key, p_item->val);
         return 0;
     }
 
@@ -199,7 +199,7 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
     p_tmp = p_item;
     while (p_tmp) {
         if (NULL != p_tmp->key && !memcmp(p_tmp->key, key, len_key)) {
-            LOGD(MODULE,"repeated key , free last val: %p, malloc\n", p_tmp->val);
+            //LOGD(MODULE,"repeated key , free last val: %p, malloc\n", p_tmp->val);
             free(p_tmp->val);
             p_tmp->val = NULL;
             p_tmp->val = malloc(size_val);
@@ -237,8 +237,7 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
     memcpy(new_tb->val, val, size_val);
     p_item->next = new_tb;
 
-    LOGD(MODULE,"conflict key: <malloc>%p, val: <malloc>%p,\
-            node: <malloc>%p, before: %p\n", new_tb->key, new_tb->val, new_tb, p_item);
+    //LOGD(MODULE,"conflict key: <malloc>%p, val: <malloc>%p,node: <malloc>%p, before: %p\n", new_tb->key, new_tb->val, new_tb, p_item);
     return 0;
 }
 
@@ -281,9 +280,8 @@ static int _ht_del_node(void *ht_item, const void *key, unsigned int len_key)
                 (!key || !memcmp(parent->key, key, len_key))) {
             next = parent->next;//store its next item befroe free.
 
-            LOGD(MODULE,"del  key: <free>%p, val: <free>%p,\
-                    node: %p ,<%s>current: %p, next: %p\n", parent->key, parent->val,
-                      !flag ? NULL : parent, !flag ? "" : "free", parent, next);
+            //LOGD(MODULE,"del  key: <free>%p, val: <free>%p,node: %p ,<%s>current: %p, next: %p\n", 
+                   // parent->key, parent->val,!flag ? NULL : parent, !flag ? "" : "free", parent, next);
             free(parent->key);
             parent->key = NULL;
             free(parent->val);
@@ -431,7 +429,7 @@ int ht_destroy(void *ht)
     ht_lock(pt);
 
     ht_clear_lockless(pt);
-    LOGD(MODULE,"destroy hashtable: <free>%p. <free>%p \n", pt, pt->item);
+    //LOGD(MODULE,"destroy hashtable: <free>%p. <free>%p \n", pt, pt->item);
     free(pt->item);
 
     ht_unlock(pt);

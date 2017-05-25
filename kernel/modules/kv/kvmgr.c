@@ -71,7 +71,6 @@ static int hash_table_insert(const char *skey, const char *cvalue, int nlength, 
     int ret = -1;
     kv_item_t *item = NULL;
     void *found = NULL;
-
     if (strlen(skey) > MAX_KV_LEN || nlength > MAX_KV_LEN) {
         LOGI(MODULE_NAME_KV,"key/value too long!");
         return ret;
@@ -166,13 +165,14 @@ static int restore_kvfile(const char *src_file, const char *dst_file)
     }
 
     buffer = (char *)yos_malloc(fsize);
+    if(!buffer)
+        goto exit; 
 
     fd_dst = yos_open(dst_file, O_WRONLY);
     if (fd_dst < 0) {
         LOGI(MODULE_NAME_KV,"open %s failed", dst_file);
         goto exit;
     }
-
     ret = yos_read(fd_src, buffer, fsize);
 
     if (ret > 0) {
@@ -258,6 +258,9 @@ static void save_key_value()
     kv_storeage_t store;
 
     store.p = (char *)yos_malloc(KV_BUFFER_SIZE);
+    if(!store.p)
+        return;
+
 
     kv_buffer = store.p;
     store.len = 0; 
@@ -284,8 +287,20 @@ static int load_key_value(const char *file)
     int ret = -1;
 
     kv_buffer = (char *)yos_malloc(KV_BUFFER_SIZE);
+    if(!kv_buffer)
+        return -1;
+
     key = (char *)yos_malloc(MAX_KV_LEN);
+    if(!key){
+        yos_free(kv_buffer);
+        return -1;
+    } 
     value = (char *)yos_malloc(MAX_KV_LEN);
+    if(!value){
+        yos_free(kv_buffer);
+        yos_free(key);
+        return -1;
+    }
 
     fsize = load_kvfile(file, kv_buffer, KV_BUFFER_SIZE);
     if (fsize == 0) {
@@ -329,9 +344,8 @@ exit:
 int yos_kv_init()
 {
     int ret = -1;
-
     if(g_ht)
-        return ret;
+        return 0;
 
     g_ht = ht_init(HASH_TABLE_MAX_SIZE); 
 
