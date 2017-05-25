@@ -215,6 +215,7 @@ void become_leader(void)
         network->attach_state = ATTACH_DONE;
         network->attach_candidate = NULL;
         network->candidate_meshnetid = BCAST_NETID;
+        ur_stop_timer(&network->migrate_wait_timer, network);
         network->sid = LEADER_SID;
         network->meshnetid = generate_meshnetid(network->sid, index);
         ++index;
@@ -516,7 +517,6 @@ static void handle_migrate_wait_timer(void *args)
     network_context_t *network = (network_context_t *)args;
 
     network->migrate_wait_timer = NULL;
-    network->migrate_times = 0;
     network->candidate_meshnetid = BCAST_NETID;
 }
 
@@ -1532,20 +1532,20 @@ static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
     uint16_t netid;
 
     netid = nbr->addr.netid;
-    if (netid == network->candidate_meshnetid ||
-        network->candidate_meshnetid == BCAST_NETID) {
-        network->candidate_meshnetid = netid;
-        if (network->migrate_times == 0) {
-            network->migrate_wait_timer = ur_start_timer(network->migrate_interval,
-                                                         handle_migrate_wait_timer, network);
-        }
-        network->migrate_times++;
-        if (network->migrate_times >= MIGRATE_TIMEOUT) {
-            migrate = true;
-        }
+    if (netid == BCAST_NETID) {
+        return;
     }
-
-    if (migrate == false) {
+    if (network->migrate_wait_timer == NULL) {
+        network->migrate_times = 0;
+        network->migrate_wait_timer = ur_start_timer(network->migrate_interval,
+                                                     handle_migrate_wait_timer, network);
+        network->candidate_meshnetid = netid;
+    } else if (netid == network->candidate_meshnetid) {
+        network->migrate_times++;
+    }
+    if (network->migrate_times >= MIGRATE_TIMEOUT) {
+        migrate = true;
+    } else {
         return;
     }
 
@@ -1556,7 +1556,6 @@ static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
         return;
     }
 
-    network->migrate_times = 0;
     ur_stop_timer(&network->migrate_wait_timer, network);
     attach_start(nbr);
 }
