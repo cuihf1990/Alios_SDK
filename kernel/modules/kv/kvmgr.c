@@ -22,7 +22,6 @@ value |= ((*p ++ << 16) & 0xff0000), \
 value |= ((*p ++ << 24) & 0xff000000)
 
 static void *g_ht = NULL; 
-static void *g_mutex = NULL;
 static void save_key_value();
 
 typedef struct{
@@ -430,5 +429,7 @@ int yos_kv_del(const char *key)
     yos_free(item);
     ht_del_lockless(g_ht,key,strlen(key)+1);
     ht_unlock(g_ht);
+
+    return 0;
 }
 
