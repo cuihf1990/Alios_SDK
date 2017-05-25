@@ -45,6 +45,10 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size
 {
     ktask_t *task_handle = NULL;
 
+    if (stack_size < sizeof(cpu_stack_t)) {
+        return -1;
+    }
+
     return (int)yunos_task_dyn_create(&task_handle, name, arg, 9, 0,
                                       stack_size / sizeof(cpu_stack_t), fn, 1u);
 }
