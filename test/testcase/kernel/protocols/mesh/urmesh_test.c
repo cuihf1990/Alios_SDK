@@ -4,11 +4,15 @@
 #include "umesh.h"
 #include "core/topology.h"
 #include "core/mesh_mgmt.h"
+#include "hal/interfaces.h"
+#include "hal/interface_context.h"
 
 void test_uradar_urmesh_case(void)
 {
     ur_ip6_addr_t ip6addr;
 
+    interface_init();
+    interface_start();
     YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_init(NULL));
     YUNIT_ASSERT(BCAST_SID != ur_mesh_get_sid());
     YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_start());
