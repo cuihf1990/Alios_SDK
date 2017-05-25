@@ -97,7 +97,7 @@ ur_error_t nd_stable_set(stable_network_data_t *network_data)
     nd_updater_t *updater;
 
     diff = network_data->minor_version - g_nd_state.stable_network_data.minor_version;
-    if (diff > 0 || g_nd_state.stable_network_data.minor_version == 0) {
+    if (diff >= 0 || g_nd_state.stable_network_data.minor_version == 0) {
         memcpy(&g_nd_state.stable_network_data, network_data,
                sizeof(g_nd_state.stable_network_data));
         for_each_updater(updater) {

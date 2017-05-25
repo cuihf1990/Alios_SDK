@@ -39,7 +39,6 @@ extern uint32_t os_htobe32(uint32_t data);
 extern uint64_t os_be64toh(uint64_t data);
 extern uint64_t os_htobe64(uint64_t data);
 
-
 /*** SHA-256/384/512 Various Length Definitions ***********************/
 /*** SHA-256/384/512 Various Length Definitions ***********************/
 #define SHA256_BLOCK_LENGTH		64
@@ -56,7 +55,6 @@ extern uint64_t os_htobe64(uint64_t data);
 #define SHA256_SHORT_BLOCK_LENGTH	(SHA256_BLOCK_LENGTH - 8)
 #define SHA384_SHORT_BLOCK_LENGTH	(SHA384_BLOCK_LENGTH - 16)
 #define SHA512_SHORT_BLOCK_LENGTH	(SHA512_BLOCK_LENGTH - 16)
-
 
 typedef uint8_t sha2_byte;			/* Exactly 1 byte */
 typedef uint32_t sha2_word32;		/* Exactly 4 bytes */

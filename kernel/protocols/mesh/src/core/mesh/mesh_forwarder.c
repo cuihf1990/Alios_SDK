@@ -395,9 +395,12 @@ static void handle_sending_timer(void *args)
 {
     hal_context_t *hal = args;
 
+    hal->sending_timer = NULL;
+    if (hal->send_message == NULL) {
+        return;
+    }
     hal->last_sent = SENT_FAIL;
     message_sent_task(hal);
-    hal->sending_timer = NULL;
     hal->link_stats.sending_timeouts++;
 }
 
@@ -486,6 +489,9 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
                                                handle_sent, hal);
     }
 
+    if (error != UR_ERROR_NONE) {
+        error = UR_ERROR_FAIL;
+    }
     hal->frag_info.offset += frag_length;
     return error;
 }
@@ -500,7 +506,7 @@ static neighbor_t *get_next_node(network_context_t *network, message_info_t *inf
 
     local_sid = mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
-        next = get_neighbor_by_mac_addr(&info->dest.addr);
+        next = get_neighbor_by_mac_addr(&(info->dest.addr));
         return next;
     }
 
@@ -801,7 +807,8 @@ static void message_handler(void *args)
     ur_error_t error = UR_ERROR_NONE;
     uint8_t *nexth;
     message_t *assemble_message;
-    network_context_t *network;
+    network_context_t *network = NULL;
+    hal_context_t *hal = NULL;
     message_info_t *info;
     bool recv = false;
     bool forward = false;
@@ -852,6 +859,7 @@ static void message_handler(void *args)
             if (info->dest.addr.len == EXT_ADDR_SIZE) {
                 info->dest.netid = BCAST_NETID;
             }
+            hal = (hal_context_t *)nbr->hal;
         } else {
             message_free(frame->message);
             ur_mem_free(frame, sizeof(received_frame_t));
@@ -860,16 +868,21 @@ static void message_handler(void *args)
     }
 
     if (forward == true) {
-        network = get_network_context_by_meshnetid(info->dest.netid);
-        if (network == NULL) {
+        if (info->dest.netid != BCAST_NETID) {
+            network = get_network_context_by_meshnetid(info->dest.netid);
+        }
+        if (network == NULL && hal == NULL) {
             network = get_default_network_context();
+        } else if (network == NULL && hal) {
+            network = get_hal_default_network_context(hal);
         }
         info->network = network;
         info->payload_offset = 0;
+        hal = network->hal;
         if (info->type == MESH_FRAME_TYPE_DATA) {
-            message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE], frame->message);
+            message_queue_enqueue(&hal->send_queue[DATA_QUEUE], frame->message);
         } else {
-            message_queue_enqueue(&network->hal->send_queue[CMD_QUEUE], frame->message);
+            message_queue_enqueue(&hal->send_queue[CMD_QUEUE], frame->message);
         }
         yos_schedule_call(send_datagram, network->hal);
         return;
@@ -1006,7 +1019,7 @@ static void send_datagram(void *args)
     if (error == UR_ERROR_NONE) {
         hal->sending_timer = ur_start_timer(SENDING_TIMEOUT,
                                             handle_sending_timer, hal);
-    } else {
+    } else if (error == UR_ERROR_FAIL) {
         hal->last_sent = SENT_FAIL;
         yos_schedule_call(message_sent_task, hal);
     }

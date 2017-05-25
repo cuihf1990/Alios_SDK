@@ -91,7 +91,8 @@ typedef struct ssid_info_s {
 
 typedef struct neighbor_s {
     slist_t next;
-    uint8_t ueid[8];
+    void *hal;
+    uint8_t ueid[EXT_ADDR_SIZE];
     mac_address_t mac;
     ur_addr_t addr;
     uint16_t path_cost;

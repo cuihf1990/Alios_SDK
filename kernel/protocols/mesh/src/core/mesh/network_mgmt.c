@@ -38,7 +38,7 @@ static void dtls_connected_handler(hal_context_t *hal, neighbor_t *nbr,
                                    bool connected)
 {
     if (connected) {
-        attach_start(hal, nbr);
+        attach_start(nbr);
     }
 }
 
@@ -75,7 +75,7 @@ static void handle_discovery_timer(void *args)
     } else if (hal->discovery_result.meshnetid != BCAST_NETID) {
         mm_set_channel(network, hal->discovery_result.channel);
         if (mm_get_mode() != 0) {
-            nbr = get_neighbor_by_mac_addr(&hal->discovery_result.addr);
+            nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
             dtls_start(hal, nbr, dtls_connected_handler);
         }
         return;

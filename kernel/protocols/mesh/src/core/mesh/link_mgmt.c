@@ -98,7 +98,7 @@ static void handle_link_quality_update_timer(void *args)
     slist_t *networks;
     network_context_t *network;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle neighbor update timer\r\n");
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link quality update timer\r\n");
 
     hal->link_quality_update_timer = ur_start_timer(
                                  hal->link_request_interval * LINK_ESTIMATE_TIMES,
@@ -114,8 +114,11 @@ static void handle_link_quality_update_timer(void *args)
         }
 
         update_link_cost(&attach_node->stats);
+        if (attach_node->stats.link_cost >= LINK_COST_MAX) {
+            attach_node->state = STATE_INVALID;
+            g_neighbor_updater_head(attach_node);
+        }
     }
-    g_neighbor_updater_head(hal);
 }
 
 static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
@@ -157,6 +160,7 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
     return NULL;
 
 get_nbr:
+    nbr->hal                = (void *)hal;
     memset(nbr->ueid, 0xff, sizeof(nbr->ueid));
     memcpy(&nbr->mac, addr, sizeof(nbr->mac));
     nbr->addr.netid         = BCAST_NETID;
@@ -176,8 +180,15 @@ get_nbr:
 
 static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
 {
+    network_context_t *network;
+
     if (neighbor == NULL) {
         return UR_ERROR_NONE;
+    }
+
+    network = get_network_context_by_meshnetid(neighbor->addr.netid);
+    if (network && network->router->sid_type == STRUCTURED_SID) {
+        free_sid(network, neighbor->addr.addr.short_addr);
     }
 
     slist_del(&neighbor->next, &hal->neighbors_list);
@@ -190,7 +201,6 @@ static void handle_update_nbr_timer(void *args)
 {
     neighbor_t    *node;
     hal_context_t *hal = (hal_context_t *)args;
-    ur_node_id_t  node_id;
     uint16_t sid = mm_get_local_sid();
     network_context_t *network = NULL;
 
@@ -210,25 +220,14 @@ static void handle_update_nbr_timer(void *args)
 
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
                "%x neighbor " EXT_ADDR_FMT " become inactive\r\n",
-               sid, EXT_ADDR_DATA(node->addr.addr.addr));
-        if (node->state == STATE_CHILD) {
-            network = get_network_context_by_meshnetid(node->addr.netid);
-            if (network) {
-                memcpy(&node_id.ueid, node->ueid, sizeof(node_id.ueid));
-                node_id.attach_sid = sid;
-                node_id.sid = node->addr.addr.short_addr;
-                free_sid(network, &node_id);
-            }
+               sid, EXT_ADDR_DATA(node->mac.addr));
+        network = get_network_context_by_meshnetid(node->addr.netid);
+        if (network && network->router->sid_type == STRUCTURED_SID &&
+            node->state == STATE_CHILD) {
+            free_sid(network, node->addr.addr.short_addr);
         }
         node->state = STATE_INVALID;
-    }
-
-    network = get_default_network_context();
-    node = mm_get_attach_node(network);
-    if (node && node->state == STATE_INVALID) {
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-               "it is my parent, restart attach\r\n");
-        attach_start(hal, NULL);
+        g_neighbor_updater_head(node);
     }
 
     hal->update_nbr_timer = ur_start_timer(hal->advertisement_interval,
@@ -252,40 +251,6 @@ void neighbors_init(void)
     }
 }
 
-static void handle_child_status(const message_info_t *info,
-                                neighbor_t *child)
-{
-    network_context_t *network;
-    uint16_t netid;
-    uint16_t mysid;
-    ur_node_id_t node_id;
-
-    netid = info->src.netid;
-    mysid = mm_get_local_sid();
-    network = info->network;
-
-    memcpy(&node_id.ueid, child->ueid, sizeof(node_id.ueid));
-    node_id.attach_sid = mysid;
-    node_id.meshnetid = info->src.netid;
-    node_id.sid = child->addr.addr.short_addr;
-
-    if (child->addr.netid != netid) {
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-               EXT_ADDR_FMT " netid changed from %04x to %04x\r\n",
-               EXT_ADDR_DATA(child->ueid), netid, child->addr.netid);
-        free_sid(network, &node_id);
-        child->state = STATE_NEIGHBOR;
-        return;
-    }
-
-    if (child->addr.addr.short_addr != info->src.addr.short_addr) {
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-               EXT_ADDR_FMT " sid changed from %04x to %04x\r\n",
-               EXT_ADDR_DATA(child->ueid), child->addr.addr.short_addr, info->src.addr.short_addr);
-        free_sid(network, &node_id);
-    }
-}
-
 neighbor_t *update_neighbor(const message_info_t *info,
                             uint8_t *tlvs, uint16_t length, bool is_attach)
 {
@@ -295,6 +260,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     mm_ssid_info_tv_t *ssid_info = NULL;
     mm_mode_tv_t      *mode;
     hal_context_t     *hal;
+    network_context_t *network;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
@@ -304,7 +270,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     mode = (mm_mode_tv_t *)mm_get_tv(tlvs, length, TYPE_MODE);
 
     hal = get_hal_context(info->hal_type);
-    nbr = get_neighbor_by_mac_addr(&info->src_mac.addr);
+    nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
 
     // remove nbr, if mode changed
     if (nbr && mode && nbr->mode != 0 && nbr->mode != mode->mode) {
@@ -326,15 +292,11 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (src_ueid != NULL) {
         memcpy(nbr->ueid, src_ueid->ueid, sizeof(src_ueid->ueid));
     }
-    if (ssid_info != NULL) {
-        nbr->ssid_info.child_num = ssid_info->child_num;
-        nbr->ssid_info.free_slots = ssid_info->free_slots;
-    }
     if (mode != NULL) {
         nbr->mode = (node_mode_t)mode->mode;
     }
 
-    if (nbr->state < STATE_NEIGHBOR) {
+    if (nbr->state < STATE_CANDIDATE) {
         nbr->state = STATE_NEIGHBOR;
         nbr->stats.link_cost = 256;
     }
@@ -347,18 +309,29 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (nbr->addr.netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
-    if (nbr->state == STATE_CHILD) {
-        handle_child_status(info, nbr);
-    }
-
-    nbr->addr.netid = info->src.netid;
-    nbr->addr.addr.short_addr = info->src.addr.short_addr;
     nbr->last_heard = ur_get_now();
 
-    if (nbr->addr.netid == info->src.netid) {
-        nbr->state = is_direct_child(info->network, nbr->addr.addr.short_addr)?
-                     STATE_CHILD : STATE_NEIGHBOR;
+    network = info->network;
+    if (network->router->sid_type == STRUCTURED_SID) {
+        if (ssid_info != NULL) {
+            nbr->ssid_info.child_num = ssid_info->child_num;
+            nbr->ssid_info.free_slots = ssid_info->free_slots;
+        }
+
+        if (nbr->state == STATE_CHILD &&
+            ((nbr->flags & NBR_NETID_CHANGED) ||
+             (nbr->flags & NBR_SID_CHANGED))) {
+            free_sid(network, nbr->addr.addr.short_addr);
+            nbr->state = STATE_NEIGHBOR;
+        }
+        network = get_network_context_by_meshnetid(info->src.netid);
+        if (is_direct_child(network, info->src.addr.short_addr)) {
+            nbr->state = STATE_CHILD;
+        }
     }
+    nbr->addr.addr.short_addr = info->src.addr.short_addr;
+    nbr->addr.netid = info->src.netid;
+    g_neighbor_updater_head(nbr);
 
     if (hal->update_nbr_timer == NULL) {
         hal->update_nbr_timer = ur_start_timer(hal->advertisement_interval,
@@ -416,7 +389,7 @@ neighbor_t *get_neighbor_by_mac_addr(const mac_address_t *mac_addr)
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
             if (mac_addr->len == nbr->mac.len &&
-                memcmp(mac_addr->addr, &nbr->mac.addr, sizeof(nbr->mac.addr)) == 0 &&
+                memcmp(mac_addr->addr, nbr->mac.addr, sizeof(nbr->mac.addr)) == 0 &&
                 nbr->state > STATE_INVALID) {
                 return nbr;
             }
@@ -659,7 +632,7 @@ ur_error_t handle_link_accept_and_request(message_t *message)
 
     info = message->info;
     network = info->network;
-    node = get_neighbor_by_mac_addr(&info->src_mac.addr);
+    node = get_neighbor_by_mac_addr(&(info->src_mac.addr));
     if (node == NULL) {
         return UR_ERROR_NONE;
     }
@@ -697,7 +670,7 @@ ur_error_t handle_link_accept(message_t *message)
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link accept\r\n");
 
     info = message->info;
-    node = get_neighbor_by_mac_addr(&info->src_mac.addr);
+    node = get_neighbor_by_mac_addr(&(info->src_mac.addr));
     if (node == NULL) {
         return UR_ERROR_NONE;
     }

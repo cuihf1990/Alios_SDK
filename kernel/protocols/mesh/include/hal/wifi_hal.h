@@ -23,14 +23,14 @@ enum {
     WIFI_SID_REQUEST_TIMEOUT         = 3000,   /* ms */
     WIFI_LINK_REQUEST_MOBILE_TIMEOUT = 1000,     /* ms */
     WIFI_LINK_REQUEST_TIMEOUT        = 30000,   /* ms */
-#ifndef CONFIG_YOS_UT
+#ifndef CONFIG_YOS_DDA
     WIFI_ADVERTISEMENT_TIMEOUT       = 20000,  /* ms, 20 seconds */
     WIFI_NEIGHBOR_ALIVE_TIMEOUT      = 120000, /* ms, 2  mins */
 #else
     WIFI_ADVERTISEMENT_TIMEOUT       = 4000,  /* ms, 20 seconds */
     WIFI_NEIGHBOR_ALIVE_TIMEOUT      = 160000, /* ms, 2  mins */
 #endif
-    WIFI_MIGRATE_WAIT_TIMEOUT        = 8 * WIFI_ADVERTISEMENT_TIMEOUT,
+    WIFI_MIGRATE_WAIT_TIMEOUT        = 5 * WIFI_ADVERTISEMENT_TIMEOUT,
     WIFI_NOTIFICATION_TIMEOUT        = 60000,  /* ms, 1 mins */
     WIFI_ADDR_CACHE_ALIVE_TIMEOUT    = 3,
 };

@@ -1,3 +1,4 @@
+#include <yos/kernel.h>
 #include "hashtable.h"
 
 #define MODULE "hashtable"
@@ -5,7 +6,7 @@
 /*the hashtable hander*/
 typedef struct {
     int             cnt;//the count of hashtable items .
-    pthread_mutex_t *locker;
+    yos_mutex_t     lock;
     ht_item_t       *item;
 } ht_t;
 
@@ -53,14 +54,7 @@ void *ht_init(int max_cnt)
         return NULL;
     }
     memset(p->item, 0, len);
-    p->locker = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
-    if (NULL == p->locker || 
-            0 != pthread_mutex_init(p->locker, NULL)) {
-        free(p->item);
-        free(p->locker);
-        free(p);
-        return NULL;
-    }
+    yos_mutex_new(&p->lock);
     
     p->cnt = max_cnt;
     //LOGD(MODULE,"create hashtable : <malloc>%p, item: <malloc>: %p\n", p, p->item);
@@ -76,8 +70,8 @@ void *ht_init(int max_cnt)
 void ht_lock(void *ht)
 {
     ht_t *p = (ht_t *)ht;
-    if (p && p->locker) {
-        pthread_mutex_lock(p->locker);
+    if (p) {
+        yos_mutex_lock(&p->lock, YOS_WAIT_FOREVER);
     }
 }
 
@@ -89,8 +83,8 @@ void ht_lock(void *ht)
 void ht_unlock(void *ht)
 {
     ht_t *p = (ht_t *)ht;
-    if (p && p->locker) {
-        pthread_mutex_unlock(p->locker);
+    if (p) {
+        yos_mutex_lock(&p->lock, YOS_WAIT_FOREVER);
     }
 }
 
@@ -440,8 +434,7 @@ int ht_destroy(void *ht)
 
     ht_unlock(pt);
 
-    pthread_mutex_destroy(pt->locker);
-    free(pt->locker);
+    yos_mutex_free(&pt->lock);
     free(pt);
 
     return 0;

@@ -75,30 +75,22 @@ static void network_data_update_handler(bool stable)
 {
 }
 
-static void neighbor_updated_handler(hal_context_t *hal)
+static void neighbor_updated_handler(neighbor_t *nbr)
 {
-    slist_t *networks;
     network_context_t *network;
-    bool need_attach = false;
+    neighbor_t        *attach_node;
 
-    if (hal == NULL) {
+    network = get_network_context_by_meshnetid(nbr->addr.netid);
+    if (network == NULL || network->attach_node != nbr) {
+        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED)) ;
         return;
     }
 
-    networks = get_network_contexts();
-    slist_for_each_entry(networks, network, network_context_t, next) {
-        if (network->hal != hal || network->state != INTERFACE_UP) {
-            continue;
-        }
-        if (network->attach_node &&
-            network->attach_node->stats.link_cost >= LINK_COST_MAX) {
-            network->attach_node->state = STATE_INVALID;
-            need_attach = true;
-        }
-    }
-
-    if (need_attach) {
-        attach_start(hal, NULL);
+    if (nbr->state == STATE_INVALID || nbr->flags & NBR_SID_CHANGED ||
+        nbr->flags & NBR_NETID_CHANGED) {
+        become_detached();
+        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED)) ;
+        attach_start(NULL);
     }
 }
 
@@ -489,7 +481,7 @@ static void handle_attach_timer(void *args)
         if (g_mm_state.device.state < DEVICE_STATE_LEAF || network->change_sid == true) {
             network->leader_times++;
             if (network->leader_times < BECOME_LEADER_TIMEOUT) {
-                attach_start(network->hal, NULL);
+                attach_start(NULL);
             } else {
                 network->leader_times = 0;
                 if ((g_mm_state.device.mode & MODE_SUPER || g_mm_state.device.mode & MODE_RX_ON) &&
@@ -1143,8 +1135,8 @@ static ur_error_t handle_sid_request(message_t *message)
     if (mode->mode & MODE_MOBILE) {
         network = get_sub_network_context(network->hal);
     }
+    memcpy(node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
     switch (network->router->sid_type) {
-        memcpy(&node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
         case STRUCTURED_SID:
             if (attach_node_id->mode & MODE_SUPER) {
                 node_id.attach_sid = SUPER_ROUTER_SID;
@@ -1164,7 +1156,7 @@ static ur_error_t handle_sid_request(message_t *message)
     if (error == UR_ERROR_NONE) {
         ur_addr_t dest;
         ur_addr_t dest2;
-        dest.addr.len =  SHORT_ADDR_SIZE;
+        dest.addr.len = SHORT_ADDR_SIZE;
         dest.addr.short_addr = attach_node_id->sid;
         dest.netid = attach_node_id->meshnetid;
         dest2.addr.len = EXT_ADDR_SIZE;
@@ -1301,6 +1293,9 @@ static ur_error_t handle_sid_response(message_t *message)
 
     info = message->info;
     network = info->network;
+    if (network->attach_candidate == NULL) {
+        return UR_ERROR_NONE;
+    }
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
@@ -1349,7 +1344,6 @@ static ur_error_t handle_sid_response(message_t *message)
             return UR_ERROR_FAIL;
     }
     network->sid = allocated_sid->sid;
-    sid_allocator_init(network);
     network->attach_state = ATTACH_DONE;
     network->attach_node = network->attach_candidate;
     network->attach_candidate->flags &=
@@ -1364,17 +1358,22 @@ static ur_error_t handle_sid_response(message_t *message)
     memset(&network->network_data, 0,  sizeof(network->network_data));
     ur_stop_timer(&network->attach_timer, network);
     ur_stop_timer(&network->advertisement_timer, network);
+
     start_neighbor_updater();
     nm_stop_discovery();
+
     network->meshnetid = network->attach_node->addr.netid;
     ur_router_sid_updated(network, network->sid);
+    sid_allocator_init(network);
     start_advertisement_timer(network);
     network->state = INTERFACE_UP;
+    ur_router_sid_updated(network, network->sid);
+
     g_mm_state.callback->interface_up();
     start_keep_alive_timer(network);
-    network->meshnetid = network->attach_node->addr.netid;
-    ur_router_sid_updated(network, network->sid);
     send_address_notification(network, NULL);
+
+    ur_stop_timer(&network->migrate_wait_timer, network);
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
              "allocate sid 0x%04x, become %s in net %04x\r\n",
@@ -1435,7 +1434,7 @@ void become_detached(void)
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "become detached\r\n");
 }
 
-ur_error_t attach_start(hal_context_t *hal, neighbor_t *nbr)
+ur_error_t attach_start(neighbor_t *nbr)
 {
     ur_error_t        error = UR_ERROR_NONE;
     network_context_t *network = NULL;
@@ -1521,9 +1520,10 @@ static void read_prev_netinfo(void)
     if (network == NULL) {
         return;
     }
-    ur_configs_read(&configs);
-    network->prev_netid = configs.prev_netinfo.meshnetid;
-    network->prev_path_cost = configs.prev_netinfo.path_cost;
+    if (ur_configs_read(&configs) == UR_ERROR_NONE) {
+        network->prev_netid = configs.prev_netinfo.meshnetid;
+        network->prev_path_cost = configs.prev_netinfo.path_cost;
+    }
 }
 
 static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
@@ -1558,7 +1558,27 @@ static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
 
     network->migrate_times = 0;
     ur_stop_timer(&network->migrate_wait_timer, network);
-    attach_start(network->hal, nbr);
+    attach_start(nbr);
+}
+
+static bool update_network_data(network_context_t *network,
+                                mm_netinfo_tv_t *netinfo)
+{
+    int8_t         diff;
+    network_data_t network_data;
+
+    if (g_mm_state.device.state == DEVICE_STATE_LEADER) {
+        return;
+    }
+
+    diff = (int8_t)(netinfo->version - nd_get_version(NULL));
+    if (diff > 0) {
+        network_data.version = netinfo->version;
+        network_data.size = netinfo->size;
+        nd_set(NULL, &network_data);
+        network_data.size = get_subnetsize_from_netinfo(netinfo);
+        nd_set(network, &network_data);
+    }
 }
 
 static ur_error_t handle_advertisement(message_t *message)
@@ -1638,15 +1658,6 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    // attach node changed
-    if (nbr == attach_node &&
-        ((nbr->flags & NBR_NETID_CHANGED) || (nbr->flags & NBR_SID_CHANGED))) {
-        become_detached();
-        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED)) ;
-        attach_start(network->hal, nbr);
-        return UR_ERROR_NONE;
-    }
-
     // not try to migrate to pf node
     if (mode->mode & MODE_MOBILE) {
         return UR_ERROR_NONE;
@@ -1663,6 +1674,7 @@ static ur_error_t handle_advertisement(message_t *message)
     }
 
     if (from_same_net) {
+        update_network_data(network, netinfo);
         main_version = (netinfo->stable_version & STABLE_MAIN_VERSION_MASK) >>
                        STABLE_MAIN_VERSION_OFFSET;
         diff = (main_version + 8 - nd_get_stable_main_version()) % 8;
@@ -1896,14 +1908,20 @@ uint16_t mm_get_meshnetsize(void)
 
 uint16_t mm_get_local_sid(void)
 {
+    uint16_t sid = INVALID_SID;
     network_context_t *network;
 
     network = get_default_network_context();
-    if (!network) {
-        return INVALID_SID;
+    if (network == NULL) {
+        return sid;
     }
 
-    return network->sid;
+    if (network->attach_state == ATTACH_IDLE || network->attach_state == ATTACH_DONE) {
+        sid = network->sid;
+    } else {
+        sid = BCAST_SID;
+    }
+    return sid;
 }
 
 ur_error_t mm_set_local_sid(uint16_t sid)

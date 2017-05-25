@@ -38,7 +38,7 @@ ur_error_t handle_link_reject(message_t *message);
 void start_neighbor_updater(void);
 void stop_neighbor_updater(void);
 
-typedef void (* neighbor_updated_t)(hal_context_t *hal);
+typedef void (* neighbor_updated_t)(neighbor_t *nbr);
 ur_error_t register_neighbor_updater(neighbor_updated_t updater);
 
 void       neighbors_init(void);
