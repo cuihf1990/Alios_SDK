@@ -31,8 +31,10 @@ static int start_ddm(void)
 
     pid = fork();
     if (pid == 0) {
+        const char **argv;
+        int argc = yts_get_args(&argv);
         char * const args[] = {
-            "./out/meshapp@linuxhost/binary/meshapp@linuxhost.elf",
+            argv[0],
             "--mesh-master",
             "-l",
             "/tmp/ddm_log_ut.txt",
@@ -109,6 +111,7 @@ static int cleanup(void)
     ur_ut_send_cmd_to_ddm("goto master");
     ur_ut_send_cmd_to_ddm("ls");
     ur_ut_send_cmd_to_ddm("q");
+
     waitpid(ddm_pid, NULL, 0);
 
     yos_register_event_filter(EV_DDA, input_event_executor, NULL);

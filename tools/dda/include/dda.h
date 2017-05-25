@@ -14,29 +14,13 @@
  * limitations under the License.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#pragma once
 
-#include <yts.h>
-#include <dda.h>
-#include <ysh.h>
-
-int application_start(int argc, char **argv)
-{
-    const char *mode = argc > 1 ? argv[1] : "";
-
-    if (strcmp(mode, "--mesh-node") == 0) {
-        dda_enable(atoi(argv[argc-1]));
-        dda_service_init();
-        dda_service_start();
-        return 0;
-    }
-    else if (strcmp(mode, "--mesh-master") == 0) {
-        ddm_run(argc, argv);
-        return 0;
-    }
-
-    yts_run(argc, argv);
-    exit(0);
-}
+int dda_enable(int agent_id);
+void dda_disable(void);
+void dda_log(char *buf);
+void dda_cli_log(char *buf);
+int dda_service_init(void);
+int dda_service_start(void);
+int ddm_run(int argc, char **argv);
 

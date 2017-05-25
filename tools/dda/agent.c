@@ -291,10 +291,8 @@ static int connect_master(agent_info_t *agent)
 
 static void yos_loop(void *arg)
 {
-#ifndef CONFIG_YOS_MESHYTS
     ur_mesh_init(NULL);
     ur_mesh_start();
-#endif
     yos_loop_run();
     yos_task_exit(0);
 }

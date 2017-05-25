@@ -17,6 +17,7 @@
 #ifndef YTS_H
 #define YTS_H
 
+int yts_get_args(const char ***argv);
 void yts_run(int argc, char **argv);
 
 void osupdate_online_test_run(char *bin, int id2);

@@ -18,11 +18,8 @@
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/network.h>
-
-#include <k_api.h>
-
-extern void ysh_task_start(void);
-extern void ysh_init();
+#include <dda.h>
+#include <ysh.h>
 
 int application_start(int argc, char **argv)
 {
