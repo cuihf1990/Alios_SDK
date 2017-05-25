@@ -43,6 +43,8 @@ int application_start(void)
     ysh_init();
     ysh_task_start();
 
+    netmgr_start();
+
     yos_task_new("appmain", app_main_entry, cookie, 8192);
     return 0;
 }

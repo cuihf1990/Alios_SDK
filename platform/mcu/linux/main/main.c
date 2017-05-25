@@ -42,6 +42,7 @@ extern void __gcov_flush(void);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
 extern void lpm_init(void);
+extern void hw_start_hal(void);
 
 static options_t options = { 0 };
 
@@ -166,6 +167,9 @@ int main(int argc, char **argv)
     register_devices();
 
     yos_kv_init();
+
+    hw_start_hal();
+    netmgr_init();
 
     yos_loop_init();
 

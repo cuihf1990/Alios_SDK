@@ -21,6 +21,8 @@
 
 #include <yos/log.h>
 #include <hal/soc/soc.h>
+#include <hal/base.h>
+#include <hal/wifi.h>
 
 #define TAG "hw"
 
@@ -70,6 +72,8 @@ int hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_
     return ret < 0 ? ret : 0;
 }
 
+extern hal_wifi_module_t sim_yos_wifi_linux;
 void hw_start_hal(void)
 {
+    hal_wifi_register_module(&sim_yos_wifi_linux);
 }
