@@ -25,9 +25,9 @@
 #include <yos/kernel.h>
 
 #include <cpu_event.h>
-#include <cpu_longjmp.h>
 #include <k_api.h>
 #include <time.h>
+#include <ucontext.h>
 
 #ifdef HAVE_VALGRIND_H
 #include <valgrind.h>
@@ -45,7 +45,7 @@ typedef struct {
     ktask_t     *tcb;
     void        *arg;
     task_entry_t entry;
-    jmp_buf      env;
+    ucontext_t  uctx;
     void        *real_stack;
     void        *real_stack_end;
     void        *signal_stack;
@@ -166,14 +166,13 @@ void cpu_first_task_start(void)
 
     setitimer(ITIMER_REAL, &value, &ovalue);
 
-    rhino_longjmp(tcb_ext->env, 1);
+    setcontext(&tcb_ext->uctx);
 
     raise(SIGABRT);
 }
 
 void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_t entry)
 {
-    unsigned long top;
     size_t real_size = size > MIN_STACK_SIZE ? size : MIN_STACK_SIZE;
     task_ext_t   *tcb_ext = (task_ext_t *)base;
 
@@ -193,12 +192,15 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tcb_ext->signal_stack = yos_malloc(4096);
     bzero(tcb_ext->signal_stack, 4096);
 
-    rhino_setjmp(tcb_ext->env);
+    int ret = getcontext(&tcb_ext->uctx);
+    if (ret < 0) {
+        return NULL;
+    }
 
-    top = (unsigned long)tcb_ext->real_stack + real_size - sizeof(jmp_buf);
-    tcb_ext->env[0].esp = top;
-    tcb_ext->env[0].ebp = top;
-    tcb_ext->env[0].eip = (unsigned long)task_proc;
+    tcb_ext->uctx.uc_stack.ss_sp = tcb_ext->real_stack;
+    tcb_ext->uctx.uc_stack.ss_size = real_size;
+    makecontext(&tcb_ext->uctx, task_proc, 0);
+
     return base;
 }
 
@@ -272,9 +274,7 @@ static void _cpu_task_switch(void)
         from_tcb->task_name, from_tcb->task_state,
         to_tcb->task_name, to_tcb->task_state);
 
-    if (rhino_setjmp(from_tcb_ext->env) == 0) {
-        rhino_longjmp(to_tcb_ext->env, 1);
-    }
+    swapcontext(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
 }
 
 void cpu_idle_hook(void)
