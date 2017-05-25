@@ -31,15 +31,13 @@
  *
  * $Id: sha2.c,v 1.1 2001/11/08 00:01:51 adg Exp adg $
  */
-
-#include <string.h>
 #include <stdint.h>
-#include <endian.h>
-#define os_be32toh be32toh
-#define os_htobe32 htobe32
-#define os_be64toh be64toh
-#define os_htobe64 htobe64
-#define OS_ASSERT(a, b)
+#include <string.h>
+
+extern uint32_t os_be32toh(uint32_t data);
+extern uint32_t os_htobe32(uint32_t data);
+extern uint64_t os_be64toh(uint64_t data);
+extern uint64_t os_htobe64(uint64_t data);
 
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/
@@ -247,7 +245,71 @@ static const sha2_word64 sha512_initial_hash_value[8] = {
 	0x1f83d9abfb41bd6bULL,
 	0x5be0cd19137e2179ULL
 };
+static inline int os_is_big_endian(void) {
+    uint32_t data = 0xFF000000;
 
+    if (0xFF == *(uint8_t *) & data) {
+        return 1;									//big endian
+    }
+
+    return 0;										//little endian
+}
+
+//reverse byte order
+static inline uint32_t reverse_32bit(uint32_t data)
+{
+	data = (data >> 16) | (data << 16);
+	return ((data & 0xff00ff00UL) >> 8) | ((data & 0x00ff00ffUL) << 8);
+}
+
+uint32_t os_htole32(uint32_t data)
+{
+	if (os_is_big_endian()) {
+		return reverse_32bit(data);
+	}
+
+	return data;
+}
+
+static inline uint64_t reverse_64bit(uint64_t data)
+{
+	data = (data >> 32) | (data << 32);
+	data = ((data & 0xff00ff00ff00ff00ULL) >> 8) | ((data & 0x00ff00ff00ff00ffULL) << 8);
+
+	return ((data & 0xffff0000ffff0000ULL) >> 16) | ((data & 0x0000ffff0000ffffULL) << 16);
+}
+
+//big endian to host byte order
+uint32_t os_be32toh(uint32_t data)
+{
+	return os_htobe32(data);
+}
+
+//host byte order to big endian
+uint32_t os_htobe32(uint32_t data)
+{
+	if (os_is_big_endian()) {
+		return data;
+	}
+
+	return reverse_32bit(data);
+}
+
+//host to big endian
+uint64_t os_htobe64(uint64_t data)
+{
+	if (os_is_big_endian()) {
+		return data;
+	}
+
+	return reverse_64bit(data);
+}
+
+//big endian to host
+uint64_t os_be64toh(uint64_t data)
+{
+	return os_htobe64(data);
+}
 
 /*** SHA-256: *********************************************************/
 static void SHA256_Init(SHA256_CTX * context)
@@ -347,8 +409,8 @@ static void SHA256_Update(SHA256_CTX * context, const sha2_byte * data, uint32_t
 	}
 
 	/* Sanity check: */
-	OS_ASSERT(context != (SHA256_CTX *) 0 && data != (sha2_byte *) 0, NULL);
-
+	if(context == NULL || data == NULL)
+        return;
 	usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
 	if (usedspace > 0) {
 		/* Calculate how much os_free space is available in the buffer */
@@ -392,7 +454,8 @@ static void SHA256_Final(sha2_byte digest[], SHA256_CTX * context)
 	unsigned int usedspace;
 
 	/* Sanity check: */
-	OS_ASSERT(context != (SHA256_CTX *) 0, NULL);
+	if(context == NULL)
+        return;
 
 	/* If no digest buffer is passed, we don't bother doing this: */
 	if (digest != (sha2_byte *) 0) {
@@ -536,7 +599,8 @@ static void SHA512_Update(SHA512_CTX * context, const sha2_byte * data, uint32_t
 	}
 
 	/* Sanity check: */
-	OS_ASSERT(context != (SHA512_CTX *) 0 && data != (sha2_byte *) 0, NULL);
+	if(context == NULL || data == NULL)
+        return;
 
 	usedspace = (context->bitcount[0] >> 3) % SHA512_BLOCK_LENGTH;
 	if (usedspace > 0) {
@@ -621,7 +685,8 @@ static void SHA512_Final(sha2_byte digest[], SHA512_CTX * context)
 	sha2_word64 *d = (sha2_word64 *) digest;
 
 	/* Sanity check: */
-	OS_ASSERT(context != (SHA512_CTX *) 0, NULL);
+	if(context == NULL)
+        return;
 
 	/* If no digest buffer is passed, we don't bother doing this: */
 	if (digest != (sha2_byte *) 0) {
@@ -664,7 +729,8 @@ static void SHA384_Final(sha2_byte digest[], SHA384_CTX * context)
 	sha2_word64 *d = (sha2_word64 *) digest;
 
 	/* Sanity check: */
-	OS_ASSERT(context != (SHA384_CTX *) 0, NULL);
+	if(context == NULL)
+        return;
 
 	/* If no digest buffer is passed, we don't bother doing this: */
 	if (digest != (sha2_byte *) 0) {
