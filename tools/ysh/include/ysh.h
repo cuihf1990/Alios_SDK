@@ -84,6 +84,8 @@ typedef struct ysh_stdio_s {
     ysh_ctrl_tbl_t func_tbl;
 } ysh_stdio_t;
 
+int32_t ysh_init(void);
+void ysh_task_start(void);
 #ifdef __cplusplus
 }
 #endif

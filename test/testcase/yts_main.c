@@ -44,8 +44,19 @@ extern void test_tfs(void);
 
 static void add_test(void);
 
+static int yts_argc;
+static char **yts_argv;
+int yts_get_args(const char ***argv)
+{
+    *argv = yts_argv;
+    return yts_argc;
+}
+
 void yts_run(int argc, char **argv)
 {
+    yts_argc = argc;
+    yts_argv = argv;
+
     yos_msleep(2 * 1000);
 
     yunit_test_init();
