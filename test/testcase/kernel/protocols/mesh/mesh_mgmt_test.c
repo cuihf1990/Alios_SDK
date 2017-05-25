@@ -31,7 +31,7 @@ void test_uradar_mesh_mgmt_case(void)
     YUNIT_ASSERT(UR_ERROR_NONE == mm_deinit());
     YUNIT_ASSERT(DEVICE_STATE_DISABLED == mm_get_device_state());
     YUNIT_ASSERT(UR_ERROR_NONE == mm_init());
-    YUNIT_ASSERT(BCAST_SID == mm_get_local_sid());
+    YUNIT_ASSERT(INVALID_SID == mm_get_local_sid());
     uint8_t *ueid;
     YUNIT_ASSERT_PTR_NOT_NULL((ueid = mm_get_local_ueid()));
     YUNIT_ASSERT(0 != memcmp(ueid, INVALID_UEID, 8));

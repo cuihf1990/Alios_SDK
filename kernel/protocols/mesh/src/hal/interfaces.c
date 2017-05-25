@@ -38,6 +38,7 @@ static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
     memset(network, 0, sizeof(network_context_t));
     network->index = index;
     network->hal = hal;
+    network->sid = INVALID_SID;
 
     network->mcast_sequence = 0;
     memset(network->mcast_entry, 0, sizeof(network->mcast_entry));
