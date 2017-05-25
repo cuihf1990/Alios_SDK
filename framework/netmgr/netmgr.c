@@ -20,7 +20,13 @@
 #include <yos/framework.h>
 #include <yos/log.h>
 #include <tfs.h>
+
 #include "netmgr.h"
+
+#define TAG "netmgr"
+
+#define DEMO_AP_SSID "yos"
+#define DEMO_AP_PASSWORD "yos__yos"
 
 #define MAX_RETRY_CONNECT 120
 #define RETRY_INTERVAL_MS 500
@@ -37,7 +43,7 @@ typedef struct {
     monitor_data_cb_t          monitor_dt_cb;
     int32_t                    ipv4_owned;
     int8_t                     disconnected_times;
-    yos_persistent_conf_wifi_t *persistent_conf_wifi;
+    yos_persistent_conf_wifi_t persistent_conf_wifi;
     bool                       auto_start_smartconfig;
 } netmgr_cxt_t;
 
@@ -85,7 +91,7 @@ static void netmgr_ip_got_event(hal_wifi_module_t *m,
     for (index = 0; index < 4; index++) {
         ip |= (pnet->ip[index] << (index * 8));
     }
-    g_netmgr_cxt.ipv4_owned = *(uint32_t*)ip;
+    g_netmgr_cxt.ipv4_owned = ip;
     yos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
 }
 
@@ -171,11 +177,53 @@ static void handle_wifi_disconnect(void)
 
     g_netmgr_cxt.disconnected_times++;
 
-    if (has_valid_ap() == 1) {
+    if (has_valid_ap() == 1 && g_netmgr_cxt.disconnected_times < MAX_RETRY_CONNECT) {
         yos_post_delayed_action(RETRY_INTERVAL_MS, reconnect_wifi, NULL);
     } else {
         netmgr_wifi_config_start();
     }
+}
+
+static void get_wifi_ssid(void)
+{
+    memset(g_netmgr_cxt.ap_config.ssid, 0, sizeof(g_netmgr_cxt.ap_config.ssid));
+    strncpy(g_netmgr_cxt.ap_config.ssid,
+            g_netmgr_cxt.persistent_conf_wifi.ssid, MAX_SSID_SIZE);
+
+    memset(g_netmgr_cxt.ap_config.pwd, 0, sizeof(g_netmgr_cxt.ap_config.pwd));
+    strncpy(g_netmgr_cxt.ap_config.pwd,
+            g_netmgr_cxt.persistent_conf_wifi.pwd, MAX_PWD_SIZE);
+}
+
+static int clear_wifi_ssid(void)
+{
+    int ret = 0;
+
+    memset(g_netmgr_cxt.ap_config.ssid, 0, sizeof(g_netmgr_cxt.ap_config.ssid));
+    memset(g_netmgr_cxt.ap_config.pwd, 0, sizeof(g_netmgr_cxt.ap_config.pwd));
+
+    memset(&g_netmgr_cxt.persistent_conf_wifi, 0, sizeof(yos_persistent_conf_wifi_t));
+    ret = yos_kv_set("wifi", (unsigned char *)(&g_netmgr_cxt.persistent_conf_wifi),
+                     sizeof(yos_persistent_conf_wifi_t), 1);
+
+    return ret;
+}
+
+static int set_wifi_ssid(void)
+{
+    int ret = 0;
+
+    memset(&g_netmgr_cxt.persistent_conf_wifi, 0,
+           sizeof(yos_persistent_conf_wifi_t));
+    strncpy(g_netmgr_cxt.persistent_conf_wifi.ssid,
+            g_netmgr_cxt.ap_config.ssid, MAX_SSID_SIZE);
+    strncpy(g_netmgr_cxt.persistent_conf_wifi.pwd,
+            g_netmgr_cxt.ap_config.pwd, MAX_PWD_SIZE);
+
+    ret = yos_kv_set("wifi", (unsigned char *)&g_netmgr_cxt.persistent_conf_wifi,
+                     sizeof(yos_persistent_conf_wifi_t), 1);
+
+    return ret;
 }
 
 static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
@@ -201,6 +249,12 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
                     (unsigned long)(&g_netmgr_cxt.ipv4_owned));
             }
             break;
+        case CODE_WIFI_ON_GOT_IP:
+            if (g_netmgr_cxt.autoconfig != NULL) {
+                set_wifi_ssid();
+                g_netmgr_cxt.autoconfig = NULL;
+            }
+            break;
         case CODE_WIFI_CMD_RECONNECT:
             g_netmgr_cxt.disconnected_times = 0;
             reconnect_wifi(NULL);
@@ -218,35 +272,6 @@ void wifi_get_ip(char ips[16])
 void wifi_set_monitor_data_handler(monitor_data_cb_t cb)
 {
     g_netmgr_cxt.monitor_dt_cb = cb;
-}
-
-static int clear_wifi_ssid(void)
-{
-    int ret = 0;
-
-    memset(g_netmgr_cxt.ap_config.ssid, 0, sizeof(g_netmgr_cxt.ap_config.ssid));
-    memset(g_netmgr_cxt.ap_config.pwd, 0, sizeof(g_netmgr_cxt.ap_config.pwd));
-
-    return ret;
-}
-
-static int set_wifi_ssid(void)
-{
-    int ret = 0;
-
-    if (g_netmgr_cxt.persistent_conf_wifi != NULL) {
-        memset(g_netmgr_cxt.persistent_conf_wifi, 0,
-               sizeof(yos_persistent_conf_wifi_t));
-        strncpy(g_netmgr_cxt.persistent_conf_wifi->ssid,
-                g_netmgr_cxt.ap_config.ssid, MAX_SSID_SIZE);
-        strncpy(g_netmgr_cxt.persistent_conf_wifi->pwd,
-                g_netmgr_cxt.ap_config.pwd, MAX_PWD_SIZE);
-        LOGD(TAG, "hal_flash_conf_write password :%s, %s",
-            g_netmgr_cxt.persistent_conf_wifi->ssid,
-            g_netmgr_cxt.persistent_conf_wifi->pwd);
-    }
-
-    return ret;
 }
 
 static void netmgr_wifi_config_start(void)
@@ -285,9 +310,37 @@ static autoconfig_plugin_t *get_autoconfig_plugin(void)
 
 int netmgr_set_ap_config(netmgr_ap_config_t *config)
 {
+    int ret = 0;
+
     strncpy(g_netmgr_cxt.ap_config.ssid, config->ssid, MAX_SSID_SIZE);
     strncpy(g_netmgr_cxt.ap_config.pwd, config->pwd, MAX_PWD_SIZE);
-    return 0;
+
+    strncpy(g_netmgr_cxt.persistent_conf_wifi.ssid,
+            config->ssid, sizeof(g_netmgr_cxt.persistent_conf_wifi.ssid) - 1);
+    strncpy(g_netmgr_cxt.persistent_conf_wifi.pwd,
+            config->pwd, sizeof(g_netmgr_cxt.persistent_conf_wifi.pwd) - 1);
+
+    ret = yos_kv_set("wifi", (unsigned char *)&g_netmgr_cxt.persistent_conf_wifi,
+                     sizeof(yos_persistent_conf_wifi_t), 1);
+    return ret;
+}
+
+static void read_persistent_conf(void)
+{
+#ifdef CONFIG_USE_DEF_AP
+    strncpy(g_netmgr_cxt.ap_config.ssid, DEMO_AP_SSID, MAX_SSID_SIZE);
+    strncpy(g_netmgr_cxt.ap_config.pwd, DEMO_AP_PASSWORD, MAX_PWD_SIZE);
+#else
+    int ret;
+    int len;
+
+    len = sizeof(yos_persistent_conf_wifi_t);
+    ret = yos_kv_get("wifi", (unsigned char *)&g_netmgr_cxt.persistent_conf_wifi, &len);
+    if (ret < 0) {
+        return;
+    }
+    get_wifi_ssid();
+#endif
 }
 
 int netmgr_init(void)
@@ -297,10 +350,12 @@ int netmgr_init(void)
     module = hal_wifi_get_default_module();
     memset(&g_netmgr_cxt, 0, sizeof(g_netmgr_cxt));
     g_netmgr_cxt.wifi_hal_mod = module;
+#ifndef CONFIG_USE_DEF_AP
     add_autoconfig_plugin(&g_vendor_smartconfig);
+#endif
     hal_wifi_install_event(g_netmgr_cxt.wifi_hal_mod, &g_wifi_hal_event);
     g_netmgr_cxt.auto_start_smartconfig = true;
-
+    read_persistent_conf();
     return 0;
 }
 
