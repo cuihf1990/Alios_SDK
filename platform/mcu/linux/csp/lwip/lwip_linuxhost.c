@@ -11,7 +11,6 @@
 #include "netif/etharp.h"
 
 static ip4_addr_t ipaddr, netmask, gw;
-static ip4_addr_t dnssrv;
 static struct netif netif;
 #define IP_MAX_LEN  17
 static void tcpip_init_done_callback(void *arg)
@@ -22,6 +21,7 @@ static void tcpip_init_done_callback(void *arg)
     IP4_ADDR(&ipaddr, 192,168,0,2);
     IP4_ADDR(&netmask, 255,255,255,0);
 #if 0
+    ip4_addr_t dnssrv;
     IP4_ADDR(&dnssrv,10,65,1,2);
     dns_setserver(0, (ip_addr_t *)&dnssrv);
 #endif
@@ -50,6 +50,7 @@ void yunos_lwip_init(int enable_tapif)
 struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)
 {
 #ifdef CONFIG_YOS_MESH
+    extern struct netif *ur_adapter_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest);
     return ur_adapter_ip6_route(src, dest);
 #endif
 
@@ -59,6 +60,7 @@ struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)
 bool lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest)
 {
 #ifdef CONFIG_YOS_MESH
+    extern bool ur_adapter_is_mcast_subscribed(const ip6_addr_t *addr);
     return ur_adapter_is_mcast_subscribed(dest);
 #endif
 
