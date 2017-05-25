@@ -32,9 +32,14 @@
 
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
+#include "mbedtls/threading.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/error.h"
 #include "mbedtls/certs.h"
+
+#if defined(MBEDTLS_THREADING_ALT)
+#include "mbedtls/threading.h"
+#endif
 
 #include <string.h>
 
@@ -42,9 +47,31 @@
 #define SERVER_NAME "localhost"
 #define GET_REQUEST "GET / HTTP/1.0\r\n\r\n"
 
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 1
 
-static int my_random(void *p_rng, unsigned char *output, size_t output_len)
+const char *mbedtls_test_ca_pem = "-----BEGIN CERTIFICATE-----\n" \
+"MIIDhzCCAm+gAwIBAgIBADANBgkqhkiG9w0BAQUFADA7MQswCQYDVQQGEwJOTDER\n" \
+"MA8GA1UEChMIUG9sYXJTU0wxGTAXBgNVBAMTEFBvbGFyU1NMIFRlc3QgQ0EwHhcN\n" \
+"MTEwMjEyMTQ0NDAwWhcNMjEwMjEyMTQ0NDAwWjA7MQswCQYDVQQGEwJOTDERMA8G\n" \
+"A1UEChMIUG9sYXJTU0wxGTAXBgNVBAMTEFBvbGFyU1NMIFRlc3QgQ0EwggEiMA0G\n" \
+"CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDA3zf8F7vglp0/ht6WMn1EpRagzSHx\n" \
+"mdTs6st8GFgIlKXsm8WL3xoemTiZhx57wI053zhdcHgH057Zk+i5clHFzqMwUqny\n" \
+"50BwFMtEonILwuVA+T7lpg6z+exKY8C4KQB0nFc7qKUEkHHxvYPZP9al4jwqj+8n\n" \
+"YMPGn8u67GB9t+aEMr5P+1gmIgNb1LTV+/Xjli5wwOQuvfwu7uJBVcA0Ln0kcmnL\n" \
+"R7EUQIN9Z/SG9jGr8XmksrUuEvmEF/Bibyc+E1ixVA0hmnM3oTDPb5Lc9un8rNsu\n" \
+"KNF+AksjoBXyOGVkCeoMbo4bF6BxyLObyavpw/LPh5aPgAIynplYb6LVAgMBAAGj\n" \
+"gZUwgZIwDAYDVR0TBAUwAwEB/zAdBgNVHQ4EFgQUtFrkpbPe0lL2udWmlQ/rPrzH\n" \
+"/f8wYwYDVR0jBFwwWoAUtFrkpbPe0lL2udWmlQ/rPrzH/f+hP6Q9MDsxCzAJBgNV\n" \
+"BAYTAk5MMREwDwYDVQQKEwhQb2xhclNTTDEZMBcGA1UEAxMQUG9sYXJTU0wgVGVz\n" \
+"dCBDQYIBADANBgkqhkiG9w0BAQUFAAOCAQEAuP1U2ABUkIslsCfdlc2i94QHHYeJ\n" \
+"SsR4EdgHtdciUI5I62J6Mom+Y0dT/7a+8S6MVMCZP6C5NyNyXw1GWY/YR82XTJ8H\n" \
+"DBJiCTok5DbZ6SzaONBzdWHXwWwmi5vg1dxn7YxrM9d0IjxM27WNKs4sDQhZBQkF\n" \
+"pjmfs2cb4oPl4Y9T9meTx/lvdkRYEug61Jfn6cA+qHpyPYdTH+UshITnmp5/Ztkf\n" \
+"m/UTSLBNFNHesiTZeH31NcxYGdHSme9Nc/gfidRa0FLOCfWxRlFqAI47zG9jAQCZ\n" \
+"7Z2mCGDNMhjQc+BYcdnl0lPXjdDK6V0qCg1dVewhUBcW5gZKzV7e9+DpVA==\n"     \
+"-----END CERTIFICATE-----\n";
+
+static int ssl_random(void *p_rng, unsigned char *output, size_t output_len)
 {
     size_t i;
 
@@ -57,14 +84,13 @@ static int my_random(void *p_rng, unsigned char *output, size_t output_len)
     return 0;
 }
 
-static void my_debug( void *ctx, int level,
-                      const char *file, int line,
-                      const char *str )
+static void ssl_debug( void *ctx, int level,
+                      const char *file, int line, const char *str )
 {
+    ((void) ctx);
     ((void) level);
 
-    mbedtls_fprintf( (FILE *) ctx, "%s:%04d: %s", file, line, str );
-    fflush(  (FILE *) ctx  );
+    mbedtls_printf("%s, line: %d: %s", file, line, str);
 }
 
 int application_start(int argc, char **argv)
@@ -89,6 +115,12 @@ int application_start(int argc, char **argv)
     mbedtls_ssl_config_init( &conf );
     mbedtls_x509_crt_init( &cacert );
 
+#if defined(MBEDTLS_THREADING_ALT)
+    mbedtls_threading_set_alt(threading_mutex_init,
+                              threading_mutex_free,
+                              threading_mutex_lock,
+                              threading_mutex_unlock);
+#endif
 
     /*
      * 0. Initialize certificates
@@ -96,8 +128,8 @@ int application_start(int argc, char **argv)
     mbedtls_printf( "  . Loading the CA root certificate ..." );
     fflush( stdout );
 
-    ret = mbedtls_x509_crt_parse( &cacert, (const unsigned char *) mbedtls_test_cas_pem,
-                          mbedtls_test_cas_pem_len );
+    ret = mbedtls_x509_crt_parse( &cacert, (const unsigned char *) mbedtls_test_ca_pem,
+                          strlen(mbedtls_test_ca_pem) + 1 );
     if( ret < 0 )
     {
         mbedtls_printf( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret );
@@ -143,8 +175,8 @@ int application_start(int argc, char **argv)
     mbedtls_ssl_conf_authmode( &conf, MBEDTLS_SSL_VERIFY_OPTIONAL );
     mbedtls_ssl_conf_ca_chain( &conf, &cacert, NULL );
 
-    mbedtls_ssl_conf_rng( &conf, my_random, NULL );
-    mbedtls_ssl_conf_dbg( &conf, my_debug, stdout );
+    mbedtls_ssl_conf_rng( &conf, ssl_random, NULL );
+    mbedtls_ssl_conf_dbg( &conf, ssl_debug, NULL );
 
     if( ( ret = mbedtls_ssl_setup( &ssl, &conf ) ) != 0 )
     {
@@ -254,12 +286,14 @@ int application_start(int argc, char **argv)
     mbedtls_ssl_close_notify( &ssl );
 
 exit:
-
     mbedtls_net_free( &server_fd );
-
     mbedtls_x509_crt_free( &cacert );
     mbedtls_ssl_free( &ssl );
     mbedtls_ssl_config_free( &conf );
+
+#if defined(MBEDTLS_THREADING_ALT)
+    mbedtls_threading_free_alt();
+#endif
 
     return( ret );
 }
