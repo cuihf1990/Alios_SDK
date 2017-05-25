@@ -31,7 +31,7 @@ void system_monitor(void)
     log_info("sdk memory usage: peak %d, current %d",
             memory_peak_usage, memory_cur_usage);
 
-    //os_malloc_dump_memory_usage();
+    os_malloc_dump_memory_usage();
 
     queue_delayed_work(&monitor_work, MONITOR_WORK_CYCLE);
 }

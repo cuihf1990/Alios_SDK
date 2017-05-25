@@ -16,17 +16,18 @@
 #include "os.h"
 #include "enrollee.h"
 
+#define ALINK_PROTOCOL_DEBUG 0
 #if(ALINK_PROTOCOL_DEBUG==1)
     #define alink_debug_protocol LOGD
 #else
-    #define alink_debug_protocol ;
+    #define alink_debug_protocol  
 #endif
 
 #define ALINK_JSON_PARSE_DEBUG 0
 #if(ALINK_JSON_PARSE_DEBUG==1)
     #define alink_debug_parse LOGD
 #else
-    #define alink_debug_parse ;
+    #define alink_debug_parse 
 #endif
 
 #define SIGNATURE_RESULT_MAX_SIZE   (256)
@@ -68,14 +69,14 @@ static int alink_phase;
 
 static void get_protocol_buff(void)
 {
-    LOG("--->>> lock \n");
+    LOGE("accs","------->>> lock <<<------- \n");
     pthread_mutex_lock(link_buff_mutex);
     memset(uplink_buff, 0, ALINK_BUF_SIZE);
 }
 
 static void put_protocol_buff(void)
 {
-    LOG("<<<--- unlock \n");
+    LOGE("accs","------->>> unlock <<<--------\n");
     pthread_mutex_unlock(link_buff_mutex);
 }
 
@@ -674,9 +675,16 @@ int32_t alink_response_get_x(char *in, char *out, int outLen, char *key) {
 
 int32_t alink_parse_response_CB(char *p_cName, int iNameLen, char *p_cValue, int iValueLen, int iValueType, void *p_CBData) {
     int i;
-    alink_debug_parse("\nName:\n  "); if(p_cName)  {for(i=0; i<iNameLen; i++) alink_debug_parse("%c", *(p_cName+i));}
-    alink_debug_parse("\nValue:\n  "); if(p_cValue) {for(i=0; i<iValueLen; i++) alink_debug_parse("%c", *(p_cValue+i));}
-    alink_debug_parse("\n");
+    alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"\nName:\n  "); if(p_cName)  {
+        for(i=0; i<iNameLen; i++) 
+            alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"%c", *(p_cName+i));
+    }
+    alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"\nValue:\n  "); 
+    if(p_cValue) {
+        for(i=0; i<iValueLen; i++) 
+            alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"%c", *(p_cValue+i));
+    }
+    alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"\n");
 
     if(!strncmp(p_cName, "result", iNameLen)){
         AlinkResponse *p_stRsp = (AlinkResponse*)p_CBData;
@@ -704,9 +712,17 @@ int32_t alink_parse_request_CB(char *p_cName, int iNameLen, char *p_cValue, int 
     int mokstrLen = 0, moktestidLen = 0;
     char *mokstr=NULL, *moktestid=NULL;
     int need_update = -1;
-    alink_debug_parse("\nName:\n  "); if(p_cName)  {for(i=0; i<iNameLen; i++) alink_debug_parse("%c", *(p_cName+i));}
-    alink_debug_parse("\nValue:\n  "); if(p_cValue) {for(i=0; i<iValueLen; i++) alink_debug_parse("%c", *(p_cValue+i));}
-    alink_debug_parse("\n");
+    alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"\nName:\n  "); 
+    if(p_cName)  {
+        for(i=0; i<iNameLen; i++) 
+            alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"%c", *(p_cName+i));
+    }
+    alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"\nValue:\n  "); 
+    if(p_cValue) {
+        for(i=0; i<iValueLen; i++) 
+            alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"%c", *(p_cValue+i));
+    }
+    alink_debug_parse(MODULE_NAME_ALINK_PROTOCOL,"\n");
 
     AlinkRequest *p_stReq = (AlinkRequest*)p_CBData;
     if(!strncmp(p_cName, "system", iNameLen)){

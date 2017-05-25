@@ -936,7 +936,7 @@ static inline void *os_zalloc(uint32_t size) {
  *
  * @param[in] handle @n The network connection handle.
  * @param[in] server_cert @n Specify the sever certificate.
- * @param[in] server_cert_len @n Length of sever certificate, in bytes.
+ * @param[in] server_cert_len @n Length of sever certificate in bytes , '\0' is not included.
  * @return SSL handle.
  * @see None.
  * @note None.

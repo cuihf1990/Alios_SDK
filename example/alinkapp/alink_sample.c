@@ -9,6 +9,7 @@
 #include "alink_export.h"
 #include "json_parser.h"
 #include "yos/framework.h"
+#include "kvmgr.h"
 
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
@@ -77,8 +78,22 @@ void cloud_connected(void) {
 }
 void cloud_disconnected(void) { printf("alink cloud disconnected!\n"); }
 
+int callback_upgrade_device(const char *params)
+{
+    printf("alink device start to upgrade. \n");
+}
+
+int callback_cancel_upgrade_device(const char *params)
+{
+    printf("alink device stop to upgrade. \n");
+}
+
 #ifndef RAW_DATA_DEVICE
-void cloud_get_device_status(char *json_buffer) { need_report = 1; }
+void cloud_get_device_status(char *json_buffer) 
+{ 
+    need_report = 1; 
+    printf("---> get device status :  %s\n",json_buffer);
+}
 
 int cloud_set_device_status(char *json_buffer)
 {
@@ -86,7 +101,7 @@ int cloud_set_device_status(char *json_buffer)
     char *value_str = NULL, *attr_str = NULL;
 
     need_report = 1;
-
+    printf("---> set device status :  %s\n",json_buffer);
     for (i = 0; device_attr[i]; i++) {
         attr_str = json_get_value_by_name(json_buffer, strlen(json_buffer),
                 device_attr[i], &attr_len, NULL);
@@ -237,35 +252,38 @@ int alink_post_raw_data(uint8_t *byte_stream, int len)
 }
 #endif
 
-static uint32_t work_time = 60*60; //default work time 1s
+static uint32_t work_time = 60*60*10; //default work time 1s
 
 void main_loop(void *arg)
 {
     //TODO: async
     //activate_button_pressed();
     //helper_api_test();
+    if(need_report){
 #ifdef RAW_DATA_DEVICE
-    /*
-     * Note: post data to cloud,
-     * use sample alink_post_raw_data()
-     * or alink_post()
-     */
-    /* sample for raw data device */
-    alink_post_raw_data(device_state_raw_data, RAW_DATA_SIZE);
+        /*
+         * Note: post data to cloud,
+         * use sample alink_post_raw_data()
+         * or alink_post()
+         */
+        /* sample for raw data device */
+        alink_post_raw_data(device_state_raw_data, RAW_DATA_SIZE);
 
 #else
-    /* sample for json data device */
-    snprintf(post_data_buffer, post_data_buffer_size, PostDataFormat,
-            device_state[ATTR_ERRORCODE_INDEX],
-            device_state[ATTR_HUE_INDEX],
-            device_state[ATTR_LUMINANCE_INDEX],
-            device_state[ATTR_SWITCH_INDEX],
-            device_state[ATTR_WORKMODE_INDEX]);
-    printf("start report async\n");
-    alink_report_async(Method_PostData, post_data_buffer,NULL, NULL);
+        /* sample for json data device */
+        snprintf(post_data_buffer, post_data_buffer_size, PostDataFormat,
+                device_state[ATTR_ERRORCODE_INDEX],
+                device_state[ATTR_HUE_INDEX],
+                device_state[ATTR_LUMINANCE_INDEX],
+                device_state[ATTR_SWITCH_INDEX],
+                device_state[ATTR_WORKMODE_INDEX]);
+        printf("start report async\n");
+        alink_report_async(Method_PostData, post_data_buffer,NULL, NULL);
 #endif
+        need_report = 0;
+    }
     if(--work_time)
-        yos_post_delayed_action(1*1000,main_loop, NULL);
+        yos_post_delayed_action(100,main_loop, NULL);
     else{
         yos_loop_exit();
         printf("alink sample will stop. \n"); 
@@ -409,28 +427,10 @@ void parse_opt(int argc, char *argv[])
             env_str[env], work_time, log_level);
 }
 
-void test_kv()
-{
-    char buf[64] = {0};
-    int len = 0;
-
-    yos_kv_set("name","tiger",5,1);
-    yos_kv_set("name","cat",3,1);
-    len = sizeof(buf);
-    yos_kv_get("name",buf,&len);
-    printf("get ---> %s, len: %d\n",buf,len);
-    yos_kv_del("name");
-    memset(buf,0,sizeof(buf));
-    len = sizeof(buf);
-    yos_kv_get("name",buf,&len);
-    printf("get ---> %s\n",buf);
-}
-
 int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
     yos_set_log_level(YOS_LL_DEBUG);
-    test_kv();
     //awss_demo();
     if (env == SANDBOX)
         alink_enable_sandbox_mode();
@@ -454,12 +454,14 @@ int application_start(int argc, char *argv[])
     alink_register_callback(ALINK_GET_DEVICE_STATUS, &cloud_get_device_status);
     alink_register_callback(ALINK_SET_DEVICE_STATUS, &cloud_set_device_status);
 #endif
-
+    alink_register_callback(ALINK_UPGRADE_DEVICE,&callback_upgrade_device);
+    alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,&callback_cancel_upgrade_device);
     alink_start();
 
     yos_post_delayed_action(4*1000,main_loop, NULL);
     yos_loop_run();
 
+    //‘›∆¡±Œ∏¥Œª¥˙¬Î£¨±‹√‚≤‚ ‘÷–ŒÛ÷ÿ∆Ù
     //alink_factory_reset();
     printf("alink end.\n");
     alink_end();

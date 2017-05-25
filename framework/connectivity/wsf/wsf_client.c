@@ -142,7 +142,7 @@ static void *__analy_resp(wsf_msg_t *response,void *arg)
 {
     wsf_response_t *ret = wsf_respone_create();
     __wsf_client_cb_t *cb = (__wsf_client_cb_t *)arg;
-    LOG("get response back.\n");
+    //LOG("get response back.\n");
     //timeout as server error
     if (!response) {
         if (ret) {

@@ -85,7 +85,6 @@ static inline uint64_t reverse_64bit(uint64_t data)
 	return ((data & 0xffff0000ffff0000ULL) >> 16) | ((data & 0x0000ffff0000ffffULL) << 16);
 }
 
-
 //host to little endian
 uint64_t os_htole64(uint64_t data)
 {
@@ -95,7 +94,6 @@ uint64_t os_htole64(uint64_t data)
 
 	return data;
 }
-
 
 //little endian to host
 uint64_t os_le64toh(uint64_t data)
@@ -453,8 +451,8 @@ void *__os_malloc_debug(const char *name, uint32_t size)
         if (memory_peak_usage < memory_current_usage)
             memory_peak_usage = memory_current_usage;
 
-        platform_printf("os_malloc:%p, size:%d, caller:%s\r\n",
-                buffer, size - sizeof(struct os_malloc_node) - MALLOC_MAGIC_LEN, name);
+        //platform_printf("os_malloc:%p, size:%d, caller:%s\r\n",
+         //       buffer, size - sizeof(struct os_malloc_node) - MALLOC_MAGIC_LEN, name);
         return buffer + sizeof(struct os_malloc_node);
     } else
         return NULL;
@@ -497,8 +495,8 @@ void __os_free_debug(const char *name, void *ptr)
 
     memory_current_usage -= size;
     
-    platform_printf("os_free: %p, size:%d, caller:%s\r\n",
-                buffer, size - sizeof(struct os_malloc_node) - MALLOC_MAGIC_LEN, name);
+    //platform_printf("os_free: %p, size:%d, caller:%s\r\n",
+     //           buffer, size - sizeof(struct os_malloc_node) - MALLOC_MAGIC_LEN, name);
     platform_free(buffer);
 #else
     platform_os_free(ptr);

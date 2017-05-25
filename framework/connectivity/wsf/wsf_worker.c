@@ -10,9 +10,9 @@
 #include "yos/kernel.h"
 #include "yos/framework.h"
 #include "os.h"
+#include <k_api.h>
 
 wsf_request_queue_t *global_request_queue;
-
 
 extern wsf_connection_t *wsf_conn;
 
@@ -66,6 +66,8 @@ typedef struct {
     void            *extra;
 }cb_network;
 
+static kwork_t g_work_deal_req;
+static kworkqueue_t g_wq_deal_req;
 static cb_network g_wsf_cb;
 
 static void cb_recv(int fd,void *arg)
@@ -131,12 +133,13 @@ static int  __cb_wsf_recv(int fd,void *arg)
         } else {
             count = os_tcp_recv(wsf_conn->tcp, buf, len);
         }
-        LOGD(MODULE_NAME,"wsf recv : %s\n",buf);
+        //LOGD(MODULE_NAME,"wsf recv : %s\n",buf);
         if (count <= 0) {
             if (!len)
                 LOGE(MODULE_NAME,"wsf recv buffer full!");
-            else
+            else{
                 LOGE(MODULE_NAME,"closing socket for tcp/ssl read error.");
+            }
             return 0;
         } else
             wsf_conn->recv_buf_pos += count;
@@ -197,7 +200,7 @@ static void process_msg_response(wsf_msg_t *msg, int length)
         memcpy(rsp, msg, length);
         node = wsf_request_queue_trigger(global_request_queue, rsp);
         if (node) {
-            LOGW(MODULE_NAME,"process_msg_response, send signal");
+            //LOGW(MODULE_NAME,"process_msg_response, send signal");
             __copy_session(rsp);
             if(node->session.cb)
             {
@@ -223,6 +226,7 @@ static void process_msg_response(wsf_msg_t *msg, int length)
 static void process_msg_request(wsf_msg_t *msg, int length)
 {
     struct request_msg_node *node;
+    kstat_t ret;
 
     if (total_req_nodes >= CONFIG_REQMSG_LENGTH) {
         LOGW(MODULE_NAME,"request queue has too nodes to handle");
@@ -239,7 +243,11 @@ static void process_msg_request(wsf_msg_t *msg, int length)
     total_req_nodes ++;
     pthread_mutex_unlock(g_req_mutex);
 
-    yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
+    ret = yunos_work_run(&g_wq_deal_req, &g_work_deal_req);
+    if (ret != YUNOS_SUCCESS) {
+        LOGE(MODULE_NAME,"failed to run the work. \n");
+        return ;
+    }
 }
 
 void init_req_glist(void)
@@ -359,7 +367,7 @@ static void process_heartbeat_response(wsf_msg_t *msg, int length) {
 static void process_register_response(wsf_msg_t *msg, int length) {
     uint8_t *pp = msg->payload;
     invoke_result_code result_code = (invoke_result_code)(*pp); //result code
-    LOGW(MODULE_NAME,"result: %d\n",result_code); 
+    //LOGW(MODULE_NAME,"result: %d\n",result_code); 
     if (result_code == INVOKE_RIGHT) {
         pp++;
         int8_t len = *pp; //device id len
@@ -373,7 +381,7 @@ static void process_register_response(wsf_msg_t *msg, int length) {
             wsf_device_id_set(device_id);
             os_free(device_id);
         }
-        LOGW(MODULE_NAME,"len: %d\n",len); 
+        //LOGW(MODULE_NAME,"len: %d\n",len); 
         wsf_conn->conn_state = CONN_READY;
         wsf_set_state(CONNECT_STATE_READY);
     } else if (result_code == INVOKE_SESSION_EXPIRE_ERROR) {
@@ -457,7 +465,7 @@ reprocess:
                 conn->recv_buf_pos);
 
         msg_type mtype = get_msg_type(msg_header);
-        LOG("-->type: %d\n",mtype);
+        //LOG("-->type: %d\n",mtype);
         if (mtype < MSG_TYPE_END) {
             msg_handler handler = msg_handlers[mtype];
             if (handler) {
@@ -587,11 +595,26 @@ int __wsf_invoke_async(wsf_msg_t * req,wsf_async_cb_t cb,void *arg)
     return (NULL == node);
 }
 
+#define WORK_STACK_BUF_REQ 0x800 
+static cpu_stack_t g_stack_buf_deal_req[WORK_STACK_BUF_REQ];
 wsf_code wsf_start_worker(wsf_config_t *config)
 {
+    kstat_t ret; 
     wsf_running = 1;
     receive_worker(config);
    
+    ret = yunos_workqueue_create(&g_wq_deal_req, "deal_req", 1, g_stack_buf_deal_req,WORK_STACK_BUF_REQ);
+
+    if (ret != YUNOS_SUCCESS) {
+        LOGE("wsf_worker","failed to create workqueue to deal with req\n");
+        return -1; 
+    }
+    ret = yunos_work_init(&g_work_deal_req, request_msg_handle, NULL, 0);
+    if (ret != YUNOS_SUCCESS) {
+        LOGE(MODULE_NAME,"failed to create work to deal with req \n");
+        return;
+    }
+
     return WSF_SUCCESS;
 }
 
