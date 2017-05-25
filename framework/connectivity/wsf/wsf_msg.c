@@ -172,9 +172,7 @@ wsf_msg_t *wsf_msg_request_create(const char *servcie_name,
             pnode = pnode->next;
         }
     }
-    LOG("msg_size: %d\n",msg_size);
     wsf_msg_t *req = (wsf_msg_t *) os_malloc(msg_size);
-    LOG("msg_size: %d, %p\n",msg_size,req);
     if (!req) {
         LOGE(MODULE_NAME,"failed to create request, out of memory");
         if (session_id) {
@@ -392,11 +390,9 @@ wsf_msg_header_t *wsf_msg_header_decode(const char *buf, int length) {
     memcpy(&temp, msg_header->msg_length, sizeof(uint32_t));
     temp = htonl(temp);
     memcpy(msg_header->msg_length, &temp, sizeof(temp));
-    LOG("len: %d\n",temp);
     memcpy(&temp, msg_header->msg_id, sizeof(uint32_t));
     temp = htonl(temp);
     memcpy(msg_header->msg_id, &temp, sizeof(temp));
-    LOG("id: %d\n",temp);
     return msg_header;
 }
 
