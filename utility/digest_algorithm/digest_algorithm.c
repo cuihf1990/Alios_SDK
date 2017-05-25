@@ -1,4 +1,12 @@
 #include <stdio.h>
+#include <yos/kernel.h>
+#include <endian.h>
+#define os_be32toh be32toh
+#define os_htobe32 htobe32
+#define os_be64toh be64toh
+#define os_htobe64 htobe64
+#define OS_ASSERT(a, b)
+
 #include "digest_algorithm.h"
 #include "md5.c"
 #include "sha2.c"

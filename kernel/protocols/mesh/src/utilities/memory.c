@@ -17,6 +17,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <yos/kernel.h>
+
 #include "utilities/memory.h"
 
 static ur_mem_stats_t g_stats;

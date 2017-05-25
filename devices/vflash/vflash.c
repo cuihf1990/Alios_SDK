@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <vfs_driver.h>
+#include <hal/soc/flash.h>
 
 static int flash_open(inode_t *node, file_t *file)
 {
