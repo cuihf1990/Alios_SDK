@@ -1004,7 +1004,7 @@ static ur_error_t send_sid_request(network_context_t *network)
         info->dest.netid = get_main_netid(network->attach_candidate->addr.netid);
         info->dest2.addr.len = SHORT_ADDR_SIZE;
         info->dest2.addr.short_addr = BCAST_SID;
-        info->dest2.netid = BCAST_NETID;
+        info->dest2.netid = info->dest.netid;
     } else {
         info->dest.addr.short_addr = network->attach_candidate->addr.addr.short_addr;
         info->dest.netid = network->attach_candidate->addr.netid;

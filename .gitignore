@@ -1,3 +1,5 @@
+trace_test
+activate
 out
 *.out
 *.db
