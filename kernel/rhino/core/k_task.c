@@ -338,9 +338,9 @@ kstat_t task_resume(ktask_t *task)
             return YUNOS_INV_TASK_STATE;
     }
 
-    YUNOS_CRITICAL_EXIT_SCHED();
-
     TRACE_TASK_RESUME(g_active_task, task);
+
+    YUNOS_CRITICAL_EXIT_SCHED();
 
     return YUNOS_SUCCESS;
 }
