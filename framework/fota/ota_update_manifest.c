@@ -49,7 +49,7 @@ int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *req
     return 0;
 }
 
-int8_t ota_do_update(ota_response_params *response_parmas,ota_request_params *request_parmas,
+int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_params *request_parmas,
                                write_flash_cb_t func, ota_finish_cb_t fcb)
 {
     int ret = 0;
@@ -57,7 +57,10 @@ int8_t ota_do_update(ota_response_params *response_parmas,ota_request_params *re
     ret = ota_if_need(response_parmas,request_parmas);
     if(1 != ret) return ret;
 
-    ret = get_update_packet(response_parmas->download_url, func);
+    http_download(response_parmas->download_url, func);
+
+    LOGD("fota", "downlaod over");
+
     if(NULL != fcb) {
         fcb(ret,response_parmas->primary_version);
     }

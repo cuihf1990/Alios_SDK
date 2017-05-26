@@ -38,7 +38,7 @@ typedef struct {
     char md5[MAX_MD5_LEN];
 } ota_response_params;
 
-typedef void message_arrived(const char *msg, int len);
+typedef void message_arrived(const char *msg);
 
 int8_t parse_ota_requset(const char* request, int *buf_len, ota_request_params * request_parmas);
 
