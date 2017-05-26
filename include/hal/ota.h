@@ -35,9 +35,9 @@ struct hal_ota_module_s
 
     /* Link to HW */
     int (*init)(hal_ota_module_t *m, void *something);
-    int (*write)(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len);
-    int (*read)(hal_ota_module_t *m,  volatile uint32_t* off_set, uint8_t* out_buf ,uint32_t out_buf_len);
-    int (*set_boot)(hal_ota_module_t *m, void *something);
+    int (*ota_write)(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len);
+    int (*ota_read)(hal_ota_module_t *m,  volatile uint32_t* off_set, uint8_t* out_buf ,uint32_t out_buf_len);
+    int (*ota_set_boot)(hal_ota_module_t *m, void *something);
 };
  /******************************************************
  *                 Function Declarations
@@ -80,12 +80,12 @@ hal_stat_t hal_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_
  *                          returned, so you can call this function serval times without
  *                          update this start address.
  * @param  out_buf        : Point to the data buffer that stores the data read from flash
- * @param  in_buf_len     : The length of the buffer
+ * @param  out_buf_len     : The length of the buffer
  *
  * @return 0         : On success.
  * @return 1    : If an error occurred with any step
  */
-hal_stat_t hal_ota_read(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* out_buf, uint32_t in_buf_len);
+hal_stat_t hal_ota_read(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* out_buf, uint32_t out_buf_len);
 
 /**@brief  Set boot options when ota reboot
  *
