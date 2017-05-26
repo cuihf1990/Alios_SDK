@@ -322,13 +322,15 @@ static void process_msg_request(wsf_msg_t *msg, int length)
     dlist_add(&node->list_head, &g_list);
     total_req_nodes ++;
     os_mutex_unlock(g_req_mutex);
-    
-    //yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
+
+    yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
+#if 0 
     ret = yunos_work_run(&g_wq_deal_req, &g_work_deal_req);
     if (ret != YUNOS_SUCCESS) {
         LOGE(MODULE_NAME,"failed to run the work. \n");
         return ;
     }
+#endif
 }
 
 void init_req_glist(void)
@@ -379,8 +381,10 @@ void request_msg_handle(void *arg)
     os_mutex_unlock(g_req_mutex);
 
     if (!dlist_empty(&g_list))
+        yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
+#if 0
         yunos_work_run(&g_wq_deal_req, &g_work_deal_req);
-        //yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
+#endif
 }
 
 static void __process_msg_request(wsf_msg_t *msg, int length)

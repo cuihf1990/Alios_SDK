@@ -229,7 +229,7 @@ static kworkqueue_t *create_wq(void)
 
     kstat_t ret;
     void *stack = malloc(WQ_STACK_SIZE);
-    ret = yunos_workqueue_create(wq, "loop", 9, stack, WQ_STACK_SIZE / 4);
+    ret = yunos_workqueue_create(wq, "loop", 5, stack, WQ_STACK_SIZE / 4);
     if (ret != YUNOS_SUCCESS) {
         free(stack);
         goto err_out;

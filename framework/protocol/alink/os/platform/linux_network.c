@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <linux/tcp.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -68,6 +69,9 @@ static int network_create_socket( pplatform_netaddr_t netaddr, int type, struct 
             return -1;
         }
     }
+
+    int tcp_nodelay = 1;
+    setsockopt(*psock, IPPROTO_TCP, TCP_NODELAY, (const void *) &tcp_nodelay, sizeof(int));
 
     paddr->sin_addr.s_addr = ip;
 	paddr->sin_family = AF_INET;
