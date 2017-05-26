@@ -17,11 +17,11 @@
 NAME := fota
 
 $(NAME)_SOURCES += \
-    ota_update_packet.c \
     ota_util.c \
     ota_update_manifest.c \
     version.c \
-    osupdate_service.c
+    ota_service.c \
+    ota_download.c
     
 $(NAME)_COMPONENTS += fota.platform.alink 
 $(NAME)_COMPONENTS += fota.md5
