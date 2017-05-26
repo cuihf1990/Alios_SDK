@@ -19,6 +19,7 @@
 
 #include "core/mesh_mgmt.h"
 #include "hal/interface_context.h"
+#include "core/router_mgr.h"
 
 enum {
     STRUCTURED_SID = 0,
