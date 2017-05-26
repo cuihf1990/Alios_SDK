@@ -62,14 +62,13 @@ enum log_level_bit {
 #define COL_MAG "\x1B[35m"
 
 #include <sys/time.h>
-#define CONFIG_LOGMACRO_DETAILS
 #ifdef CONFIG_LOGMACRO_DETAILS
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
     do { \
         if (CON) { \
             struct timeval tv; \
             gettimeofday(&tv, NULL); \
-            csp_printf(COLOR" [%d.%06d]<%s> %s [%s#%d] : ", tv.tv_sec, tv.tv_usec, LVL, MOD, __FUNCTION__, __LINE__); \
+            csp_printf(COLOR" [%d.%06d]<%s> %s [%s#%d] : ", (int)tv.tv_sec, (int)tv.tv_usec, LVL, MOD, __FUNCTION__, __LINE__); \
             csp_printf(FMT COL_DEF"\r\n", ##__VA_ARGS__); \
         } \
     } while (0)
@@ -80,7 +79,7 @@ enum log_level_bit {
         if (CON) { \
             struct timeval tv; \
             gettimeofday(&tv, NULL); \
-            csp_printf("[%lld.%06d]<%s> "FMT"\n", tv.tv_sec, tv.tv_usec, LVL, ##__VA_ARGS__); \
+            csp_printf(" [%d.%06d]<%s> "FMT"\n", (int)tv.tv_sec, (int)tv.tv_usec, LVL, ##__VA_ARGS__); \
         } \
     } while (0)
 
