@@ -19,7 +19,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-
+#include <stdio.h>
 #include <k_api.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
@@ -268,7 +268,9 @@ void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_c
     ret = yunos_work_init(work, run_my_work, wpar, ms);
     if (ret != YUNOS_SUCCESS)
         goto err_out;
+    printf("-------------------------< \n"); 
     ret = yunos_work_run(wq, work);
+    printf("------------------------->\n"); 
     if (ret != YUNOS_SUCCESS)
         goto err_out;
 

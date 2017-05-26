@@ -45,9 +45,9 @@ void wsf_msg_session_signal(wsf_msg_session_t *session) {
 
 int wsf_msg_id_get() {
     int ret;
-    pthread_mutex_lock(msg_id_lock);
+    os_mutex_lock(msg_id_lock);
     ret = global_msg_id++;
-    pthread_mutex_unlock(msg_id_lock);
+    os_mutex_unlock(msg_id_lock);
     return ret;
 }
 

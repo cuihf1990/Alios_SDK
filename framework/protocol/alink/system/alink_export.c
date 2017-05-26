@@ -141,7 +141,7 @@ int alink_wait_connect(int timeout_ms)
 
         if (timeout_ms == ALINK_WAIT_FOREVER ||
                 os_get_time_ms() < expires)
-            usleep(100*1000);
+            os_sleep(100*1000);
         else
             break; /* timeout */
     };

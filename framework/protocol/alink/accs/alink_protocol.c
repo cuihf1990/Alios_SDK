@@ -70,14 +70,14 @@ static int alink_phase;
 static void get_protocol_buff(void)
 {
     LOGE("accs","------->>> lock <<<------- \n");
-    pthread_mutex_lock(link_buff_mutex);
+    os_mutex_lock(link_buff_mutex);
     memset(uplink_buff, 0, ALINK_BUF_SIZE);
 }
 
 static void put_protocol_buff(void)
 {
     LOGE("accs","------->>> unlock <<<--------\n");
-    pthread_mutex_unlock(link_buff_mutex);
+    os_mutex_unlock(link_buff_mutex);
 }
 
 static inline unsigned int alink_generate_trans_id() {

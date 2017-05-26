@@ -244,7 +244,7 @@ int yos_ssl_recv(void *ssl, char *buf, int len)
 {
     int ret, total_len = 0;
     
-    pthread_mutex_lock(mutex);
+    os_mutex_lock(mutex);
 
     do {
         ret = SSL_read((SSL*)ssl, buf, len);
@@ -257,7 +257,7 @@ int yos_ssl_recv(void *ssl, char *buf, int len)
         }
     } while (ssl && SSL_pending((SSL *)ssl));
 
-    pthread_mutex_unlock(mutex);
+    os_mutex_unlock(mutex);
 
     //printf("ssl recv %d\n", total_len);
 
@@ -268,9 +268,9 @@ int yos_ssl_send(void *ssl, const char *buf, int len)
 {
     int ret;
     
-    pthread_mutex_lock(mutex);
+    os_mutex_lock(mutex);
     ret = SSL_write((SSL*)ssl, buf, len);
-    pthread_mutex_unlock(mutex);
+    os_mutex_unlock(mutex);
 
     return (ret > 0) ? ret : -1;
 }

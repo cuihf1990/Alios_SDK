@@ -61,6 +61,7 @@ enum log_level_bit {
 #define COL_CYN "\x1B[36m"
 #define COL_MAG "\x1B[35m"
 
+#define CONFIG_LOGMACRO_DETAILS
 #ifdef CONFIG_LOGMACRO_DETAILS
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
     do { \

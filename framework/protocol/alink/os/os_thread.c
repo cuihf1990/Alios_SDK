@@ -170,7 +170,7 @@ void *os_thread_create(const char *thread_name, void *thread_func, void *arg)
 
 	stack_size = platform_thread_get_stack_size(thread_name);
 
-	stack_orign = stack = os_malloc(stack_size);
+	stack_orign = stack = platform_malloc(stack_size);
 	if (NULL == stack) {
 		goto do_error;
 	}

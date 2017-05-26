@@ -239,7 +239,8 @@ int platform_sys_net_is_ready(void)
 
 void platform_sys_reboot(void)
 {
-    system(REBOOT_CMD);
+    int ret = 0;
+    ret = system(REBOOT_CMD);
 }
 
 char *platform_get_module_name(char name_str[STR_SHORT_LEN])
