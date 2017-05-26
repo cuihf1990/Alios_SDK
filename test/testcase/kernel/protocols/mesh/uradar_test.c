@@ -67,7 +67,6 @@ void start_dda(void)
     dda_enable(11);
     dda_service_init();
     dda_service_start();
-    ur_mesh_init();
 }
 
 static void stop_dda(void *args)

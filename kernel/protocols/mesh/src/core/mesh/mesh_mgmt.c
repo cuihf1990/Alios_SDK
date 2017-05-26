@@ -1527,7 +1527,6 @@ static void read_prev_netinfo(void)
 
 static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
 {
-    bool     migrate = false;
     uint16_t netid;
 
     netid = nbr->addr.netid;
@@ -1542,9 +1541,7 @@ static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
     } else if (netid == network->candidate_meshnetid) {
         network->migrate_times++;
     }
-    if (network->migrate_times >= MIGRATE_TIMEOUT) {
-        migrate = true;
-    } else {
+    if (network->migrate_times < MIGRATE_TIMEOUT) {
         return;
     }
 

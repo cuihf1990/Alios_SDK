@@ -12,6 +12,7 @@ GLOBAL_DEFINES += $(shell [ -f /usr/include/valgrind/valgrind.h ] && echo HAVE_V
 GLOBAL_DEFINES += $(shell [ -f /usr/include/valgrind.h ] && echo HAVE_VALGRIND_H)
 endif
 
+GLOBAL_DEFINES += CONFIG_USE_DEF_AP
 
 CONFIG_LIB_TFS := y
 CONFIG_TFS_ID2_RSA := y
