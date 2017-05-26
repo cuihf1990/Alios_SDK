@@ -575,7 +575,7 @@ void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int b
             eid = buffer[0];
             len = buffer[1];
             if (buffer[0] != 0) {
-                //LOGW(MODULE_NAME_ENROLLEE,"error eid, should be 0!");
+                LOGW(MODULE_NAME_ENROLLEE,"error eid, should be 0, now is :%d!",eid);
                 return;
             }
 

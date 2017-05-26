@@ -169,7 +169,6 @@ int yos_open(const char *path, int flags)
     }
 
     node = inode_open(path);
-
     if (node == NULL) {
         yos_mutex_unlock(&g_vfs_mutex);
         return trap_open(path);
@@ -361,10 +360,12 @@ static int post_poll(struct pollfd *fds, int nfds)
 int yos_poll(struct pollfd *fds, int nfds, int timeout)
 {
     struct timeval tv = {
-        .tv_sec = timeout / 1024,
+        .tv_sec  = timeout / 1024,
         .tv_usec = (timeout % 1024) * 1024,
     };
+
     fd_set rfds;
+
     int ret = VFS_SUCCESS;
     int nset = 0;
     int maxfd = 0;
@@ -380,13 +381,12 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout)
     FD_ZERO(&rfds);
     FD_SET(efd, &rfds);
     ret = pre_poll(fds, nfds, &rfds, &parg);
-
-    if (ret < 0)
+    if (ret < 0) {
         goto check_poll;
+    }
 
     maxfd = ret > efd ? ret : efd;
     ret = select(maxfd + 1, &rfds, NULL, NULL, timeout >= 0 ? &tv : NULL);
-
     if (ret >= 0) {
         int i;
         for (i=0;i<nfds;i++) {

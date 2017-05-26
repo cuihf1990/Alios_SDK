@@ -457,7 +457,7 @@ void *__os_malloc_debug(const char *name, uint32_t size)
     } else
         return NULL;
 #else 
-    return platform_os_malloc(size);
+    return platform_malloc(size);
 #endif
 }
 
@@ -499,6 +499,6 @@ void __os_free_debug(const char *name, void *ptr)
      //           buffer, size - sizeof(struct os_malloc_node) - MALLOC_MAGIC_LEN, name);
     platform_free(buffer);
 #else
-    platform_os_free(ptr);
+    platform_free(ptr);
 #endif
 }

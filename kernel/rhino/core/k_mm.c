@@ -459,7 +459,7 @@ void *yunos_mm_alloc(size_t size)
 {
     void   *tmp      = NULL;
     kstat_t err      = YUNOS_SUCCESS;
-    size_t  alloctor = (size_t)__builtin_return_address(3);
+    size_t  alloctor = 0;
 
 #if (YUNOS_CONFIG_MM_BESTFIT > 0)
     err = yunos_mm_bf_alloc(&g_kmm_region_head, &tmp, size, alloctor);

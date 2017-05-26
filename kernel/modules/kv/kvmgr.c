@@ -102,7 +102,7 @@ static int hash_table_insert(const char *skey, const char *cvalue, int nlength, 
     if (0 == ret && 1 == sync)
         save_key_value();
 
-    LOGD(MODULE_NAME_KV,"sel kv, key: %s, %p-%p-%p\n",skey,new,new->key,new->val);
+    //LOGD(MODULE_NAME_KV,"sel kv, key: %s, %p-%p-%p\n",skey,new,new->key,new->val);
     return ret;
 }
 
@@ -261,7 +261,6 @@ static void save_key_value()
     if(!store.p)
         return;
 
-
     kv_buffer = store.p;
     store.len = 0; 
     store.p += 4; 
@@ -419,7 +418,7 @@ int yos_kv_get(const char *key, void *buffer, int *buffer_len)
         *buffer_len = item->len_val;
     }
 
-    LOGD(MODULE_NAME_KV,"gel kv, key: %s, %p-%p-%p\n",key,item,item->key,item->val);
+    //LOGD(MODULE_NAME_KV,"gel kv, key: %s, %p-%p-%p\n",key,item,item->key,item->val);
     return 0;
 }
 

@@ -43,6 +43,7 @@ extern void test_kv(void);
 extern void test_hal(void);
 extern void test_tfs(void);
 extern void test_aosapi(void);
+extern void test_vfs(void);
 
 static void add_test(void);
 
@@ -112,7 +113,9 @@ void add_test(void)
     test_hal();
 
     test_cjson();
+
     test_hashtable();
+
     test_kv();
 
     test_rhino();
@@ -121,9 +124,12 @@ void add_test(void)
 
     test_tfs();
 
+    test_vfs();
+
 #ifdef CONFIG_YOS_MESH
     test_uradar();
 #endif
 
     test_aosapi();
 }
+

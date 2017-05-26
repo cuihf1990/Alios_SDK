@@ -46,5 +46,5 @@ char *product_get_debug_secret(char secret_str[PRODUCT_SECRET_LEN])
 
 char *product_get_sn(char sn_str[PRODUCT_SN_LEN])
 {
-	return strncpy(sn_str, "6923450656860", PRODUCT_SN_LEN);
+	return strncpy(sn_str, "1923450656869", PRODUCT_SN_LEN);
 }

@@ -55,7 +55,6 @@ ur_error_t nd_init(void)
     slist_t *networks;
     network_context_t *network;
 
-    slist_init(&g_nd_state.updater_list);
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         memset(&network->network_data, 0, sizeof(network->network_data));
@@ -150,6 +149,8 @@ ur_error_t nd_set_stable_meshnetid(uint16_t meshnetid)
     if (network_data.meshnetid != meshnetid && meshnetid != INVALID_NETID) {
         network_data.minor_version++;
         network_data.meshnetid = meshnetid;
+        network_data.mcast_addr[0].m8[6] = (meshnetid >> 8);
+        network_data.mcast_addr[0].m8[7] = meshnetid;
         error = nd_stable_set(&network_data);
     }
     return error;

@@ -40,6 +40,7 @@ int application_start(void)
     struct cookie *cookie = yos_malloc(sizeof(*cookie));
     bzero(cookie, sizeof(*cookie));
 
+    yos_free(yos_malloc(10));
     ysh_init();
     ysh_task_start();
 

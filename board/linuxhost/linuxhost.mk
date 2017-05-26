@@ -7,9 +7,9 @@ HOST_MCU_FAMILY     := linux
 
 $(NAME)_COMPONENTS  := yloop vfs hal log vcall ysh alicrypto modules.kv tfs netmgr
 
-ifeq ($(valgrind), 1)
-GLOBAL_DEFINES += $(shell [ -f /usr/include/valgrind/valgrind.h ] && echo HAVE_VALGRIND_VALGRIND_H)
-GLOBAL_DEFINES += $(shell [ -f /usr/include/valgrind.h ] && echo HAVE_VALGRIND_H)
+ifeq ($(gcov),1)
+GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
+GLOBAL_LDFLAGS += --coverage
 endif
 
 GLOBAL_DEFINES += CONFIG_USE_DEF_AP
@@ -28,3 +28,6 @@ CONFIG_TFS_SE_LIB := libtfshal.a
 CONFIG_TFS_TEE := n
 CONFIG_TFS_SW := y
 CONFIG_TFS_TEST := n
+
+GLOBAL_CFLAGS += -m32
+GLOBAL_LDFLAGS += -m32

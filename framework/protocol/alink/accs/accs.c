@@ -24,7 +24,7 @@ const device_t *main_device = 0;
 const connectivity_t *remote_conn = 0;
 uint8_t *uplink_buff = 0;
 uint8_t *downlink_buff = 0;
-void *link_buff_mutex;
+void *link_buff_sem;
 
 static int accs_set_state(int);
 static int accs_get_state(void);
@@ -44,6 +44,7 @@ SERVICE_DEFINE(accs);
 void start_accs_work(int delay)
 {
     //yos_schedule_work(0,accs_handshake,NULL,NULL,NULL);
+    
     yos_schedule_work(delay,accs_handshake_async,NULL,NULL,NULL);
 }
 
@@ -59,7 +60,8 @@ int accs_prepare() {
         main_device = get_main_dev();
         remote_conn = cm_get_conn("wsf");
         cm_bind_conn("wsf", &accs_conn_listener);
-        link_buff_mutex = os_mutex_init();
+        link_buff_sem = os_semaphore_init();
+        os_semaphore_post(link_buff_sem);
         remote_conn->init_buff(&uplink_buff, &downlink_buff);
         remote_conn->connect();//FIXME: what happen if connection failed
     }
@@ -78,7 +80,7 @@ int accs_stop() {
         cm_get_conn("wsf")->disconnect();//wsf_disconnect
         cm_release_conn("wsf", &accs_conn_listener);
         accs_set_state(SERVICE_STATE_STOP);
-        os_mutex_destroy(link_buff_mutex);
+        os_semaphore_destroy(link_buff_sem);
         accs_del_listener(&accs_event_handler);
     }
     return SERVICE_RESULT_OK;

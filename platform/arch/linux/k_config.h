@@ -60,7 +60,7 @@
 #define YUNOS_CONFIG_TICK_TASK_PRI           1
 #endif
 #define YUNOS_CONFIG_TICKLESS                0
-#define YUNOS_CONFIG_TICKS_PER_SECOND        10
+#define YUNOS_CONFIG_TICKS_PER_SECOND        100
 /* must be 2^n size!, such as 1, 2, 4, 8, 16,32, etc....... */
 #define YUNOS_CONFIG_TICK_HEAD_ARRAY         8
 #define YUNOS_CONFIG_TIMER_TASK_STACK_SIZE   200

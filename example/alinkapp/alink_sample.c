@@ -26,7 +26,7 @@
 
 #define PostDataFormat      "{\"ErrorCode\":{\"value\":\"%d\"},\"Hue\":{\"value\":\"%d\"},\"Luminance\":{\"value\":\"%d\"},\"Switch\":{\"value\":\"%d\"},\"WorkMode\":{\"value\":\"%d\"}}"
 #define post_data_buffer_size    (512)
-
+void main_loop(void *arg);
 #ifndef RAW_DATA_DEVICE
 static char post_data_buffer[post_data_buffer_size];
 #else
@@ -91,7 +91,9 @@ int callback_cancel_upgrade_device(const char *params)
 #ifndef RAW_DATA_DEVICE
 void cloud_get_device_status(char *json_buffer) 
 { 
-    need_report = 1; 
+    need_report = 1;
+    yos_schedule_work(0,main_loop,NULL,NULL,NULL);
+   // yos_schedule_call(main_loop,NULL); 
     printf("---> get device status :  %s\n",json_buffer);
 }
 
@@ -116,7 +118,8 @@ int cloud_set_device_status(char *json_buffer)
             device_state[i] = value;
         }
     }
-
+    yos_schedule_work(0,main_loop,NULL,NULL,NULL);
+    //yos_schedule_call(main_loop,NULL); 
     return 0;
 }
 
@@ -252,44 +255,40 @@ int alink_post_raw_data(uint8_t *byte_stream, int len)
 }
 #endif
 
-static uint32_t work_time = 60*60*10; //default work time 1s
+static uint32_t work_time = 60*60*10*1000; //default work time 1ms
 
 void main_loop(void *arg)
 {
     //TODO: async
     //activate_button_pressed();
     //helper_api_test();
-    if(need_report){
+   // while(1)
+    {
+        if(1){
 #ifdef RAW_DATA_DEVICE
-        /*
-         * Note: post data to cloud,
-         * use sample alink_post_raw_data()
-         * or alink_post()
-         */
-        /* sample for raw data device */
-        alink_post_raw_data(device_state_raw_data, RAW_DATA_SIZE);
+            /*
+             * Note: post data to cloud,
+             * use sample alink_post_raw_data()
+             * or alink_post()
+             */
+            /* sample for raw data device */
+            alink_post_raw_data(device_state_raw_data, RAW_DATA_SIZE);
 
 #else
-        /* sample for json data device */
-        snprintf(post_data_buffer, post_data_buffer_size, PostDataFormat,
-                device_state[ATTR_ERRORCODE_INDEX],
-                device_state[ATTR_HUE_INDEX],
-                device_state[ATTR_LUMINANCE_INDEX],
-                device_state[ATTR_SWITCH_INDEX],
-                device_state[ATTR_WORKMODE_INDEX]);
-        printf("start report async\n");
-        alink_report_async(Method_PostData, post_data_buffer,NULL, NULL);
+            /* sample for json data device */
+            snprintf(post_data_buffer, post_data_buffer_size, PostDataFormat,
+                    device_state[ATTR_ERRORCODE_INDEX],
+                    device_state[ATTR_HUE_INDEX],
+                    device_state[ATTR_LUMINANCE_INDEX],
+                    device_state[ATTR_SWITCH_INDEX],
+                    device_state[ATTR_WORKMODE_INDEX]);
+            printf("start report async\n");
+            alink_report_async(Method_PostData, post_data_buffer,NULL, NULL);
 #endif
-        need_report = 0;
-    }
-    if(--work_time)
-        yos_post_delayed_action(100,main_loop, NULL);
-    else{
-        yos_loop_exit();
-        printf("alink sample will stop. \n"); 
-    }
+            need_report = 0;
+        }
+    } 
 }
-
 
 int alink_get_time(unsigned int *utc_time)
 {
@@ -457,11 +456,14 @@ int application_start(int argc, char *argv[])
     alink_register_callback(ALINK_UPGRADE_DEVICE,&callback_upgrade_device);
     alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,&callback_cancel_upgrade_device);
     alink_start();
-
-    yos_post_delayed_action(4*1000,main_loop, NULL);
+   
+    //pthread_t id;
+    //pthread_create(&id,NULL,main_loop,NULL);
+    //yos_task_new("main_loop", main_loop, NULL, 8192);
+    //yos_post_delayed_action(500,main_loop, NULL);
     yos_loop_run();
 
-    //‘›∆¡±Œ∏¥Œª¥˙¬Î£¨±‹√‚≤‚ ‘÷–ŒÛ÷ÿ∆Ù
+    //???¡±Œ∏?Œª???Î£¨????????????????
     //alink_factory_reset();
     printf("alink end.\n");
     alink_end();

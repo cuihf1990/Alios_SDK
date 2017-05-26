@@ -87,7 +87,7 @@ wsf_code wsf_reset_connection(wsf_connection_t *conn, int clear_session) {
 
     LOGI(MODULE_NAME,"wsf: reset connection");
     if (conn) {
-        pthread_mutex_lock(conn->mutex);
+        os_mutex_lock(conn->mutex);
         if (conn->ssl) {
             os_ssl_close(conn->ssl);
             conn->ssl = NULL;
@@ -108,7 +108,7 @@ wsf_code wsf_reset_connection(wsf_connection_t *conn, int clear_session) {
 
         conn->heartbeat_unack_counter = WSF_MAX_UNACK_HEARTBEART;
         conn->conn_state = CONN_CLOSED;
-        pthread_mutex_unlock(conn->mutex);
+        os_mutex_unlock(conn->mutex);
 
         wsf_set_state(CONNECT_STATE_CLOSE);
     }
@@ -151,7 +151,7 @@ wsf_code wsf_send_msg(wsf_connection_t *wsf_conn, const char *data, int length) 
     printf("\n");
     */
     /* =============  debug ================ */
-    pthread_mutex_lock(wsf_conn->mutex);
+    os_mutex_lock(wsf_conn->mutex);
     if (wsf_conn->ssl) {
         int ret = os_ssl_send(wsf_conn->ssl, data + count, length - count);
         if (ret == -1) {
@@ -159,7 +159,8 @@ wsf_code wsf_send_msg(wsf_connection_t *wsf_conn, const char *data, int length) 
             LOGE(MODULE_NAME,"ssl send error, len:%d", length - count);
             return WSF_SEND_ERROR;
         }
-        pthread_mutex_unlock(wsf_conn->mutex);
+        printf("wsf send succeed->  %d\n",ret);
+        os_mutex_unlock(wsf_conn->mutex);
         return WSF_SUCCESS;
     }
 
@@ -167,13 +168,13 @@ wsf_code wsf_send_msg(wsf_connection_t *wsf_conn, const char *data, int length) 
         bytes = os_tcp_send(wsf_conn->tcp, data + count, length - count);
 
         if (bytes == -1 || bytes == 0) {
-            pthread_mutex_unlock(wsf_conn->mutex);
+            os_mutex_unlock(wsf_conn->mutex);
             return WSF_SEND_ERROR;
         }
 
         count += bytes;
     }
-    pthread_mutex_unlock(wsf_conn->mutex);
+    os_mutex_unlock(wsf_conn->mutex);
 
     return WSF_SUCCESS;
 }
@@ -184,7 +185,7 @@ char *wsf_session_id_get() {
         return ret;
     }
 
-    pthread_mutex_lock(sess_lock);
+    os_mutex_lock(sess_lock);
     if (wsf_conn->session_id) {
         size_t len = strlen(wsf_conn->session_id);
         ret = (char *)os_malloc(len + 1);
@@ -196,7 +197,7 @@ char *wsf_session_id_get() {
 
     }
 
-    pthread_mutex_unlock(sess_lock);
+    os_mutex_unlock(sess_lock);
     return ret;
 }
 
@@ -205,7 +206,7 @@ void wsf_session_id_set(const char *session_id) {
         return;
     }
 
-    pthread_mutex_lock(sess_lock);
+    os_mutex_lock(sess_lock);
     if (!session_id) {
         if (wsf_conn->session_id) {
             os_free(wsf_conn->session_id);
@@ -225,7 +226,7 @@ void wsf_session_id_set(const char *session_id) {
         }
     }
 
-    pthread_mutex_unlock(sess_lock);
+    os_mutex_unlock(sess_lock);
 }
 
 char *wsf_device_id_get() {
@@ -234,7 +235,7 @@ char *wsf_device_id_get() {
         return ret;
     }
 
-    pthread_mutex_lock(device_lock);
+    os_mutex_lock(device_lock);
     if (wsf_conn->device_id) {
         size_t len = strlen(wsf_conn->device_id);
         ret = (char *)os_malloc(len + 1);
@@ -246,7 +247,7 @@ char *wsf_device_id_get() {
 
     }
 
-    pthread_mutex_unlock(device_lock);
+    os_mutex_unlock(device_lock);
     return ret;
 }
 
@@ -255,7 +256,7 @@ void wsf_device_id_set(const char *device_id) {
         return;
     }
 
-    pthread_mutex_lock(device_lock);
+    os_mutex_lock(device_lock);
     if (!device_id) {
         if (wsf_conn->device_id) {
             os_free(wsf_conn->device_id);
@@ -275,7 +276,7 @@ void wsf_device_id_set(const char *device_id) {
         }
     }
 
-    pthread_mutex_unlock(device_lock);
+    os_mutex_unlock(device_lock);
 
 }
 

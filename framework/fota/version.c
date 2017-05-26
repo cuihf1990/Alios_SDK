@@ -71,8 +71,7 @@ YOS_EXPORT YOS_WEAK const char   *get_yos_product_internal_type(void)
 
 YOS_EXPORT YOS_WEAK const char   *get_yos_os_version(void)
 {
-    char *ret = SYSINFO_OS_VERSION;
-
+    char *ret = "v2.0.0.0";
     return (const char *)ret;
 }
 

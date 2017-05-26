@@ -257,7 +257,7 @@ int platform_ssl_recv(void *ssl, char *buf, int len)
     } while (ssl && SSL_pending((SSL *)ssl));
 
     platform_mutex_unlock(mutex);
-
+    SSL_load_error_strings();
     //printf("ssl recv %d\n", total_len);
 
     return (ret >= 0) ? total_len: -1;

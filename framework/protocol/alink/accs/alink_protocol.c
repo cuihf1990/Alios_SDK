@@ -34,7 +34,7 @@
 #define SIGNATURE_FORMAT_MAX_SIZE   (256)
 
 #define MODULE_NAME_ALINK_PROTOCOL "alink_protocol"
-extern void *link_buff_mutex;
+extern void *link_buff_sem;
 extern uint8_t* uplink_buff;
 extern uint8_t* downlink_buff;
 extern const device_t* main_device;
@@ -70,14 +70,14 @@ static int alink_phase;
 static void get_protocol_buff(void)
 {
     LOGE("accs","------->>> lock <<<------- \n");
-    pthread_mutex_lock(link_buff_mutex);
+    os_semaphore_wait(link_buff_sem, OS_WAIT_INFINITE);
     memset(uplink_buff, 0, ALINK_BUF_SIZE);
 }
 
 static void put_protocol_buff(void)
 {
     LOGE("accs","------->>> unlock <<<--------\n");
-    pthread_mutex_unlock(link_buff_mutex);
+    os_semaphore_post(link_buff_sem);
 }
 
 static inline unsigned int alink_generate_trans_id() {

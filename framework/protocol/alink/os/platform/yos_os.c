@@ -18,7 +18,10 @@
 #include <time.h>
 #include <yos/kernel.h>
 #include <yos/log.h>
-#include <platform.h>
+#include "platform.h"
+#include <stdarg.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define TAG "alink_os"
 
@@ -32,6 +35,18 @@ typedef struct {
     start_routine_cb start_routine;
     void            *arg;
 } platform_thread_arg_t;
+
+void platform_printf(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	vprintf(fmt, args);
+	va_end(args);
+
+	fflush(stdout);
+}
+
 
 void *platform_malloc(uint32_t size)
 {
@@ -52,7 +67,7 @@ void *platform_mutex_init(void)
     }
 
     if (0 != yos_mutex_new(mutex)) {
-        free(mutex);
+        platform_free(mutex);
         return NULL;
     }
 
@@ -72,19 +87,19 @@ void platform_mutex_unlock(void *mutex)
 void platform_mutex_destroy(void *mutex)
 {
     yos_mutex_free((yos_mutex_t *)mutex);
-    free(mutex);
+    platform_free(mutex);
 }
 
 void *platform_semaphore_init(void)
 {
-    yos_sem_t *sem = (yos_sem_t *)malloc(sizeof(yos_sem_t));
+    yos_sem_t *sem = (yos_sem_t *)platform_malloc(sizeof(yos_sem_t));
 
     if (NULL == sem) {
         return NULL;
     }
 
     if (0 != yos_sem_new(sem, 0)) {
-        free(sem);
+        platform_free(sem);
         return NULL;
     }
 
@@ -108,7 +123,7 @@ void platform_semaphore_post(void *sem)
 void platform_semaphore_destroy(void *sem)
 {
     yos_sem_free((yos_sem_t *)sem);
-    free(sem);
+    platform_free(sem);
 }
 
 void platform_msleep(_IN_ uint32_t ms)
@@ -171,7 +186,7 @@ int platform_thread_get_stack_size(_IN_ const char *thread_name)
         return 8192;
     }
 
-    assert(0);
+    //assert(0);
 }
 
 int platform_thread_create(

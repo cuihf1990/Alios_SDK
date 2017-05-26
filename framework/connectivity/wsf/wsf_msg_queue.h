@@ -8,7 +8,7 @@
 
 typedef struct wsf_request_queue_t {
     dlist_t list;
-    pthread_mutex_t *mutex;
+    void *mutex;
     sem_t *psem;
     int length;
 } wsf_request_queue_t;

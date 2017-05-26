@@ -253,7 +253,7 @@ void _trace_task_resume(ktask_t *task, ktask_t *task_resumed)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
 }
 
 void _trace_task_del(ktask_t *task, ktask_t *task_del)

@@ -54,22 +54,20 @@ void ota_set_packet_version(char* ver, uint32_t len)
     g_ota_info->packet_ver[len] = 0;
 }
 
-extern char *get_clientID();
 
 char* ota_get_id2(void) {
 
-    OTA_LOG_D("id2: %s", get_clientID);
-    return get_clientID();
-//    static char id2[TFS_ID2_LEN+1] = {0};
-//    if (!strlen(id2)) {
-//        uint32_t len = 0;
-//        if ( tfs_get_ID2((unsigned char *)id2, &len) < 0 ) {
-//            OTA_LOG_E("get_ID2 failed!");
-//        }
-//    }
-//
-//    OTA_LOG_D("id2: %s", id2);
-//    return id2;
+
+    static char id2[TFS_ID2_LEN+1] = {0};
+    if (!strlen(id2)) {
+        uint32_t len = 0;
+        if ( tfs_get_ID2((unsigned char *)id2, &len) < 0 ) {
+            OTA_LOG_E("get_ID2 failed!");
+        }
+    }
+
+    OTA_LOG_D("id2: %s", id2);
+    return id2;
 }
 
 static int _ota_socket_check_conn(int sock) {

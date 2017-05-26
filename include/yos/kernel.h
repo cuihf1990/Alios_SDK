@@ -174,7 +174,7 @@ void yos_sem_signal(yos_sem_t *sem);
  * @param[in]  max_msg  the max size of the msg
  * @return  the operation status, 0 is OK, others is error
  */
-int yunos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg);
+int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg);
 
 /**
  * This function will delete a queue

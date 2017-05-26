@@ -14,6 +14,7 @@ void test_uradar_mcast_case(void)
     neighbor_t *attach_node;
     set_line_rssi(11, 14);
 
+    cmd_to_agent("stop");
     start_node_ext(12, MODE_RX_ON, -1, -1);
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
     start_node_ext(13, MODE_RX_ON, -1, -1);

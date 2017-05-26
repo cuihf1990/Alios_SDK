@@ -58,7 +58,7 @@ void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
         return;
     }
 
-    pthread_mutex_lock(req_queue->mutex);
+    os_mutex_lock(req_queue->mutex);
     dlist_t *list = &req_queue->list;
 
     wsf_request_node_t *node, *next;
@@ -78,8 +78,8 @@ void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
             os_free(node);
         }
     }
-    pthread_mutex_unlock(req_queue->mutex);
-    pthread_mutex_destroy(req_queue->mutex);
+    os_mutex_unlock(req_queue->mutex);
+    os_mutex_destroy(req_queue->mutex);
     os_semaphore_destroy(req_queue->psem);
 
     os_free(req_queue);
@@ -93,11 +93,11 @@ static void wsf_del_first_msg(wsf_request_queue_t * req_queue)
     if(!req_queue)
         return;
 
-    pthread_mutex_lock(req_queue->mutex);
+    os_mutex_lock(req_queue->mutex);
     
     node = req_queue->list.prev;
     if(!node){
-        pthread_mutex_unlock(req_queue->mutex);
+        os_mutex_unlock(req_queue->mutex);
         return;
     }
 
@@ -107,7 +107,7 @@ static void wsf_del_first_msg(wsf_request_queue_t * req_queue)
 
     wsf_msg_session_destroy(&req_node->session);
     os_free(req_node);
-    pthread_mutex_unlock(req_queue->mutex);
+    os_mutex_unlock(req_queue->mutex);
 }
 
 //FIXME: delete the msg.
@@ -126,10 +126,10 @@ int wsf_request_queue_push(wsf_request_queue_t * req_queue, wsf_request_node_t *
             return -1;        
     }
 
-    pthread_mutex_lock(req_queue->mutex);
+    os_mutex_lock(req_queue->mutex);
     dlist_add(&req_node->list_head, &req_queue->list);
     req_queue->length++;
-    pthread_mutex_unlock(req_queue->mutex);
+    os_mutex_unlock(req_queue->mutex);
 
     return 0;
 }
@@ -141,10 +141,10 @@ int wsf_request_queue_pop(wsf_request_queue_t * req_queue, wsf_request_node_t * 
         return -1;
     }
 
-    pthread_mutex_lock(req_queue->mutex);
+    os_mutex_lock(req_queue->mutex);
     dlist_del(&req_node->list_head);
     req_queue->length--;
-    pthread_mutex_unlock(req_queue->mutex);
+    os_mutex_unlock(req_queue->mutex);
 
     return 0;
 }
@@ -160,7 +160,7 @@ wsf_request_node_t *wsf_request_queue_trigger(wsf_request_queue_t * req_queue, w
     }
     memcpy(&msg_id, &rsp->header.msg_id, sizeof(uint32_t));
 
-    pthread_mutex_lock(req_queue->mutex);
+    os_mutex_lock(req_queue->mutex);
     dlist_t *list = &req_queue->list;
     wsf_request_node_t *node = NULL;
     dlist_for_each_entry(list, node, wsf_request_node_t, list_head) {
@@ -171,7 +171,7 @@ wsf_request_node_t *wsf_request_queue_trigger(wsf_request_queue_t * req_queue, w
             break;
         }
     }
-    pthread_mutex_unlock(req_queue->mutex);
+    os_mutex_unlock(req_queue->mutex);
 
     return ret;
 }
