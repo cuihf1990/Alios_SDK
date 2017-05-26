@@ -61,6 +61,8 @@ enum {
 static void send_datagram(void *args);
 static void handle_datagram(void *message);
 static neighbor_t *get_next_node(network_context_t *network, message_info_t *info);
+static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
+                                mac_address_t *addr);
 
 static inline bool is_lowpan_iphc(uint8_t control)
 {
@@ -654,7 +656,8 @@ static void set_dest_encrypt_flag(message_info_t *info)
     }
 }
 
-neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid, mac_address_t *addr)
+static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
+                                mac_address_t *addr)
 {
     network_context_t *network;
     neighbor_t *nbr = NULL;
@@ -686,7 +689,7 @@ ur_error_t mf_send_message(message_t *message)
     ur_node_id_t      target;
     ur_node_id_t      attach;
     network_context_t *network = NULL;
-    uint8_t           query_type;
+    uint8_t           query_type = PF_ATTACH_QUERY;
     neighbor_t        *nbr = NULL;
     bool              is_mcast = false;
     bool              need_resolve = false;
@@ -812,7 +815,7 @@ static void message_handler(void *args)
     message_info_t *info;
     bool recv = false;
     bool forward = false;
-    neighbor_t *nbr;
+    neighbor_t *nbr = NULL;
     received_frame_t *frame = NULL;
 
     frame = (received_frame_t *)args;
@@ -849,14 +852,19 @@ static void message_handler(void *args)
     }
 
     if (recv && info->dest2.addr.len != 0) {
+        memcpy(&info->dest.addr, &info->dest2.addr, sizeof(info->dest.addr));
+        info->dest2.addr.len = 0;
+        message_set_payload_offset(frame->message, -info->payload_offset);
+        info->flags |= INSERT_MESH_HEADER;
+        set_src_info(info);
         forward = true;
     }
 
     if (forward == true) {
         network = NULL;
+        nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
         if (info->dest.addr.len == EXT_ADDR_SIZE) {
             info->dest.netid = BCAST_NETID;
-            nbr = get_neighbor(info->type, info->dest.netid, &info->dest2.addr);
             if (nbr) {
                 hal = (hal_context_t *)nbr->hal;
                 network = get_hal_default_network_context(hal);
@@ -868,15 +876,13 @@ static void message_handler(void *args)
             }
         }
         if (network == NULL) {
-            printf("network NULL, dest netid %x\r\n", info->dest.netid);
             message_free(frame->message);
             ur_mem_free(frame, sizeof(received_frame_t));
             return;
         }
-        memcpy(&info->dest.addr, &info->dest2.addr, sizeof(info->dest.addr));
-        info->dest2.addr.len = 0;
-        message_set_payload_offset(frame->message, -info->payload_offset);
-        info->flags |= INSERT_MESH_HEADER;
+        if (nbr) {
+            memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
+        }
         info->network = network;
         info->payload_offset = 0;
         hal = network->hal;
@@ -1020,7 +1026,7 @@ static void send_datagram(void *args)
     if (error == UR_ERROR_NONE) {
         hal->sending_timer = ur_start_timer(SENDING_TIMEOUT,
                                             handle_sending_timer, hal);
-    } else if (error == UR_ERROR_FAIL) {
+    } else if (error == UR_ERROR_DROP) {
         hal->last_sent = SENT_FAIL;
         yos_schedule_call(message_sent_task, hal);
     }
