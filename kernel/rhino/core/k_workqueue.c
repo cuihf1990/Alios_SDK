@@ -347,8 +347,9 @@ void workqueue_init(void)
 
     yunos_mutex_create(&g_workqueue_mutex, "WORKQUEUE-MUTEX");
 
-    yunos_workqueue_create(&g_workqueue_default, "DEFAULT-WORKQUEUE", 9,
-                           g_workqueue_stack, YUNOS_CONFIG_WORKQUEUE_STACK_SIZE);
+    yunos_workqueue_create(&g_workqueue_default, "DEFAULT-WORKQUEUE",
+                           YUNOS_CONFIG_WORKQUEUE_TASK_PRIO, g_workqueue_stack,
+                           YUNOS_CONFIG_WORKQUEUE_STACK_SIZE);
 }
 #endif
 
