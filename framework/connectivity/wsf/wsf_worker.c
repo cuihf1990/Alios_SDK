@@ -66,8 +66,8 @@ typedef struct {
     void            *extra;
 }cb_network;
 
-static work_t g_work_deal_req;
-static workqueue_t g_wq_deal_req;
+static kwork_t g_work_deal_req;
+static kworkqueue_t g_wq_deal_req;
 static cb_network g_wsf_cb;
 
 static void cb_recv(int fd,void *arg)
