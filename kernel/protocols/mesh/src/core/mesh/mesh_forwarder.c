@@ -686,7 +686,7 @@ ur_error_t mf_send_message(message_t *message)
     ur_node_id_t      target;
     ur_node_id_t      attach;
     network_context_t *network = NULL;
-    uint8_t           query_type;
+    uint8_t           query_type = PF_ATTACH_QUERY;
     neighbor_t        *nbr = NULL;
     bool              is_mcast = false;
     bool              need_resolve = false;

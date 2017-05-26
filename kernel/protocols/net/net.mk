@@ -15,3 +15,7 @@ $(NAME)_SOURCES += $(NETIFFILES)
 ifneq (,$(filter linuxhost,$(COMPONENTS)))
 $(NAME)_SOURCES += port/sys_arch.c
 endif
+
+ifneq (,$(filter armhflinux,$(COMPONENTS)))
+$(NAME)_SOURCES += port/sys_arch.c
+endif

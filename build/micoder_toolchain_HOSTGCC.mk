@@ -1,9 +1,9 @@
 PATH    := $(PATH):/bin:/usr/bin:/usr/local/bin
-CC      := /usr/bin/gcc -m32
-CXX     := g++
-AS      := as
-AR      := ar
-LD      := ld
+CC      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gcc
+CXX     := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)g++
+AS      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)as
+AR      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)ar
+LD      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)ld
 OPTIONS_IN_FILE_OPTION    := @
 
 export PATH

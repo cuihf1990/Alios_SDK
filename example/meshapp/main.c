@@ -18,7 +18,9 @@
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/network.h>
+#ifdef CONFIG_YOS_DDA
 #include <dda.h>
+#endif
 #include <ysh.h>
 
 int application_start(int argc, char **argv)
