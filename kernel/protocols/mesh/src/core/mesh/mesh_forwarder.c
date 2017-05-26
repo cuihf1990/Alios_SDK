@@ -849,33 +849,34 @@ static void message_handler(void *args)
     }
 
     if (recv && info->dest2.addr.len != 0) {
-        nbr = get_neighbor(info->type, info->dest.netid, &info->dest2.addr);
-        if (nbr) {
-            memcpy(&info->dest.addr, &info->dest2.addr, sizeof(info->dest.addr));
-            info->dest2.addr.len = 0;
-            forward = true;
-            message_set_payload_offset(frame->message, -info->payload_offset);
-            info->flags |= INSERT_MESH_HEADER;
-            if (info->dest.addr.len == EXT_ADDR_SIZE) {
-                info->dest.netid = BCAST_NETID;
+        forward = true;
+    }
+
+    if (forward == true) {
+        network = NULL;
+        if (info->dest.addr.len == EXT_ADDR_SIZE) {
+            info->dest.netid = BCAST_NETID;
+            nbr = get_neighbor(info->type, info->dest.netid, &info->dest2.addr);
+            if (nbr) {
+                hal = (hal_context_t *)nbr->hal;
+                network = get_hal_default_network_context(hal);
             }
-            hal = (hal_context_t *)nbr->hal;
-        } else {
+        } else if (info->dest.netid != BCAST_NETID) {
+            network = get_network_context_by_meshnetid(info->dest.netid);
+            if (network == NULL) {
+                network = get_default_network_context();
+            }
+        }
+        if (network == NULL) {
+            printf("network NULL, dest netid %x\r\n", info->dest.netid);
             message_free(frame->message);
             ur_mem_free(frame, sizeof(received_frame_t));
             return;
         }
-    }
-
-    if (forward == true) {
-        if (info->dest.netid != BCAST_NETID) {
-            network = get_network_context_by_meshnetid(info->dest.netid);
-        }
-        if (network == NULL && hal == NULL) {
-            network = get_default_network_context();
-        } else if (network == NULL && hal) {
-            network = get_hal_default_network_context(hal);
-        }
+        memcpy(&info->dest.addr, &info->dest2.addr, sizeof(info->dest.addr));
+        info->dest2.addr.len = 0;
+        message_set_payload_offset(frame->message, -info->payload_offset);
+        info->flags |= INSERT_MESH_HEADER;
         info->network = network;
         info->payload_offset = 0;
         hal = network->hal;

@@ -37,7 +37,7 @@ void test_uradar_sid_allocator_case(void)
     YUNIT_ASSERT(1 == get_allocated_number(network));
 
     node_id.ueid[0] += 1;
-    YUNIT_ASSERT(UR_ERROR_NONE != allocate_sid(network, &node_id));
+    YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(network, &node_id));
 
     allocator_deinit(network);
     network->sid = 0x0000;
