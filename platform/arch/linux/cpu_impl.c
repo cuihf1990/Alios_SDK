@@ -173,6 +173,8 @@ void cpu_first_task_start(void)
 
 void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_t entry)
 {
+    CPSR_ALLOC();
+
     size_t real_size = size > MIN_STACK_SIZE ? size : MIN_STACK_SIZE;
     task_ext_t   *tcb_ext = (task_ext_t *)base;
 
@@ -192,14 +194,19 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tcb_ext->signal_stack = yos_malloc(4096);
     bzero(tcb_ext->signal_stack, 4096);
 
+    YUNOS_CPU_INTRPT_DISABLE();
+
     int ret = getcontext(&tcb_ext->uctx);
     if (ret < 0) {
+        YUNOS_CPU_INTRPT_ENABLE();
         return NULL;
     }
 
     tcb_ext->uctx.uc_stack.ss_sp = tcb_ext->real_stack;
     tcb_ext->uctx.uc_stack.ss_size = real_size;
     makecontext(&tcb_ext->uctx, task_proc, 0);
+
+    YUNOS_CPU_INTRPT_ENABLE();
 
     return base;
 }
