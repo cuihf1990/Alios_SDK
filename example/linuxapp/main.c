@@ -5,6 +5,8 @@
 #include <ysh.h>
 #include <k_api.h>
 
+extern void netmgr_start(void);
+
 struct cookie {
     int flag;
 };

@@ -43,6 +43,7 @@ extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
 extern void lpm_init(void);
 extern void hw_start_hal(void);
+extern void netmgr_init(void);
 
 static options_t options = { 0 };
 

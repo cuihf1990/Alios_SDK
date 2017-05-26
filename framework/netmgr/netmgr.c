@@ -25,8 +25,10 @@
 
 #define TAG "netmgr"
 
+#ifdef CONFIG_USE_DEF_AP
 #define DEMO_AP_SSID "yos"
 #define DEMO_AP_PASSWORD "yos__yos"
+#endif
 
 #define MAX_RETRY_CONNECT 120
 #define RETRY_INTERVAL_MS 500
@@ -137,7 +139,7 @@ static void netmgr_fatal_err_event(hal_wifi_module_t *m, void* arg)
 {
 }
 
-static void netmgr_monitor_data(hal_wifi_module_t *m, void *buf, uint16_t len)
+static void netmgr_monitor_data(uint8_t *buf, int len)
 {
     if (g_netmgr_cxt.monitor_dt_cb!= NULL) {
         g_netmgr_cxt.monitor_dt_cb(buf, len);
@@ -166,22 +168,6 @@ static void reconnect_wifi(void *arg)
     memcpy(type.wifi_ssid, ap_config->ssid, sizeof(type.wifi_ssid));
     memcpy(type.wifi_key, ap_config->pwd, sizeof(type.wifi_key));
     hal_wifi_start(module, &type);
-}
-
-static void handle_wifi_disconnect(void)
-{
-    if (g_netmgr_cxt.autoconfig != NULL) {
-        g_netmgr_cxt.autoconfig->autoconfig_stop();
-        g_netmgr_cxt.autoconfig = NULL;
-    }
-
-    g_netmgr_cxt.disconnected_times++;
-
-    if (has_valid_ap() == 1 && g_netmgr_cxt.disconnected_times < MAX_RETRY_CONNECT) {
-        yos_post_delayed_action(RETRY_INTERVAL_MS, reconnect_wifi, NULL);
-    } else {
-        netmgr_wifi_config_start();
-    }
 }
 
 static void get_wifi_ssid(void)
@@ -225,6 +211,24 @@ static int set_wifi_ssid(void)
 
     return ret;
 }
+
+static void handle_wifi_disconnect(void)
+{
+    if (g_netmgr_cxt.autoconfig != NULL) {
+        g_netmgr_cxt.autoconfig->autoconfig_stop();
+        g_netmgr_cxt.autoconfig = NULL;
+    }
+
+    g_netmgr_cxt.disconnected_times++;
+
+    if (has_valid_ap() == 1 && g_netmgr_cxt.disconnected_times < MAX_RETRY_CONNECT) {
+        yos_post_delayed_action(RETRY_INTERVAL_MS, reconnect_wifi, NULL);
+    } else {
+        clear_wifi_ssid();
+        netmgr_wifi_config_start();
+    }
+}
+
 
 static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
 {
@@ -277,10 +281,13 @@ void wifi_set_monitor_data_handler(monitor_data_cb_t cb)
 static void netmgr_wifi_config_start(void)
 {
     autoconfig_plugin_t * valid_plugin = get_autoconfig_plugin();
+    hal_wifi_module_t *module;
 
     if (valid_plugin != NULL) {
         valid_plugin->autoconfig_start();
         g_netmgr_cxt.autoconfig = valid_plugin;
+        module = hal_wifi_get_default_module();
+        hal_wifi_register_monitor_cb(module, netmgr_monitor_data);
     } else {
         LOGW(TAG, "net mgr none config policy");
     }
@@ -299,7 +306,7 @@ static int32_t has_valid_ap(void)
 
 static void add_autoconfig_plugin(autoconfig_plugin_t *plugin)
 {
-    plugin->next = g_netmgr_cxt.autoconfig;
+    plugin->next = NULL;
     g_netmgr_cxt.autoconfig = plugin;
 }
 
@@ -321,16 +328,12 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
             config->pwd, sizeof(g_netmgr_cxt.persistent_conf_wifi.pwd) - 1);
 
     ret = yos_kv_set("wifi", (unsigned char *)&g_netmgr_cxt.persistent_conf_wifi,
-                     sizeof(yos_persistent_conf_wifi_t), 1);
+                     sizeof(yos_persistent_conf_wifi_t), 0);
     return ret;
 }
 
 static void read_persistent_conf(void)
 {
-#ifdef CONFIG_USE_DEF_AP
-    strncpy(g_netmgr_cxt.ap_config.ssid, DEMO_AP_SSID, MAX_SSID_SIZE);
-    strncpy(g_netmgr_cxt.ap_config.pwd, DEMO_AP_PASSWORD, MAX_PWD_SIZE);
-#else
     int ret;
     int len;
 
@@ -340,7 +343,6 @@ static void read_persistent_conf(void)
         return;
     }
     get_wifi_ssid();
-#endif
 }
 
 int netmgr_init(void)
@@ -350,9 +352,7 @@ int netmgr_init(void)
     module = hal_wifi_get_default_module();
     memset(&g_netmgr_cxt, 0, sizeof(g_netmgr_cxt));
     g_netmgr_cxt.wifi_hal_mod = module;
-#ifndef CONFIG_USE_DEF_AP
     add_autoconfig_plugin(&g_vendor_smartconfig);
-#endif
     hal_wifi_install_event(g_netmgr_cxt.wifi_hal_mod, &g_wifi_hal_event);
     g_netmgr_cxt.auto_start_smartconfig = true;
     read_persistent_conf();
@@ -365,13 +365,41 @@ void netmgr_deinit(void)
 
 int netmgr_start(void)
 {
+    yos_register_event_filter(EV_WIFI, netmgr_events_executor, NULL);
+
     if (has_valid_ap() == 1) {
         yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
     } else {
         netmgr_wifi_config_start();
     }
-
-    yos_register_event_filter(EV_WIFI, netmgr_events_executor, NULL);
-
     return 0;
 }
+
+#ifdef CONFIG_USE_DEF_AP
+static int def_smart_config_start(void)
+{
+    netmgr_ap_config_t config;
+
+    memcpy(config.ssid, DEMO_AP_SSID, sizeof(config.ssid));
+    memcpy(config.pwd, DEMO_AP_PASSWORD, sizeof(config.pwd));
+    netmgr_set_ap_config(&config);
+    yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
+    return 0;
+}
+
+static void def_smart_config_stop(void)
+{
+    yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
+        (unsigned long)(&g_netmgr_cxt.ipv4_owned));
+}
+
+static void def_smart_config_result_cb(int result, uint32_t ip) {
+}
+
+autoconfig_plugin_t g_vendor_smartconfig = {
+    .description = "def_smartconfig",
+    .autoconfig_start = def_smart_config_start,
+    .autoconfig_stop = def_smart_config_stop,
+    .config_result_cb = def_smart_config_result_cb
+};
+#endif
