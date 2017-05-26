@@ -79,8 +79,8 @@ static void neighbor_updated_handler(neighbor_t *nbr)
 {
     network_context_t *network;
 
-    network = get_network_context_by_meshnetid(nbr->addr.netid);
-    if (network == NULL || network->attach_node != nbr) {
+    network = get_default_network_context();
+    if (network->attach_node != nbr) {
         nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED)) ;
         return;
     }
