@@ -25,7 +25,6 @@
 static yos_mutex_t g_mutex1;
 static yos_mutex_t g_mutex2;
 static yos_sem_t sync_sem;
-
 static const uint32_t LOOP_COUNT = 1000000;
 
 #define TEST_TASK_STACK_SIZE (8192)
@@ -33,9 +32,9 @@ static const uint32_t LOOP_COUNT = 1000000;
 ///////////////////////////////////////////////////////////////////////////////////////////////
 static void CASE_aosapi_kernel_mutex_param()
 {
+#if 0
 	int ret;
 	yos_mutex_t mutex;
-#if 0
 	// FIXME: null pointer:coredump
 	ret = yos_mutex_new(NULL);
 	YUNIT_ASSERT_MSG(ret==YUNOS_NULL_PTR, "ret=%d", ret);
@@ -121,6 +120,7 @@ static void CASE_aosapi_kernel_mutex_lock()
 
     YUNIT_ASSERT_MSG(flag==0, "flag=%d", flag);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 void TASK_aosapi_kernel_mutex_deadlock1(void *arg)
@@ -237,5 +237,11 @@ void aosapi_kernel_mutex_test_entry(yunit_test_suite_t* suite)
 //	yunit_add_test_case(suite, "kernel.mutex.locktimeout", CASE_aosapi_kernel_mutex_lock_timeout);
 	yunit_add_test_case(suite, "kernel.mutex.repeat", CASE_aosapi_kernel_mutex_repeatlock);
 //	yunit_add_test_case(suite, "kernel.mutex.deadlock", CASE_aosapi_kernel_mutex_deadlock);
+
+	(void)CASE_aosapi_kernel_mutex_deadlock;
+	(void)CASE_aosapi_kernel_mutex_lock;
+	(void)CASE_aosapi_kernel_mutex_lock_timeout;
+	(void)CASE_aosapi_kernel_mutex_deadlock;
+
 }
 
