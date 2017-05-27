@@ -338,10 +338,10 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     for(region_list_cur = region_list_head->next; region_list_cur != region_list_head;){
         cur_region = yunos_list_entry(region_list_cur,k_mm_region_head_t,regionlist);
 
+        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region,sizeof(k_mm_region_head_t)));
+
         printf("----------------------------------------------------------------------\r\n");
         printf("region info frag number:%d free size:%d\r\n", cur_region->frag_num, cur_region->freesize);
-
-        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region,sizeof(k_mm_region_head_t)));
 
         head = &cur_region->probe;
         end = head;

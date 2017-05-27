@@ -11,6 +11,7 @@ $(NAME)_SOURCES     += framework/vfs_test.c
 $(NAME)_SOURCES     += framework/netmgr_test.c 
 $(NAME)_SOURCES     += utility/cjson_test.c
 $(NAME)_SOURCES     += utility/hashtable_test.c
+$(NAME)_SOURCES     += utility/digest_algorithm.c
 $(NAME)_SOURCES     += tfs/tfs_test.c
 $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
@@ -38,4 +39,5 @@ include test/testcase/kernel/protocols/mesh/filelists.mk
 $(NAME)_SOURCES += $(MESHYTSFILE)
 endif
 $(NAME)_INCLUDES += ../../framework/protocol/alink/system/
+$(NAME)_INCLUDES += ../../framework/fota/platform/alink/
 GLOBAL_LDFLAGS += -lssl

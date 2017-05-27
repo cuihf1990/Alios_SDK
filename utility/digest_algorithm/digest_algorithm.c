@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "digest_algorithm.h"
+#include "yos/kernel.h"
 #include "md5.c"
 #include "sha2.c"
 #include "hmac.c"
 
 void *digest_md5_init(void)
 {
-	MD5_CTX *ctx = (MD5_CTX *) malloc(sizeof(MD5_CTX));
+	MD5_CTX *ctx = (MD5_CTX *) yos_malloc(sizeof(MD5_CTX));
 	if (NULL == ctx) {
 		return NULL;
 	}
@@ -25,13 +26,13 @@ int digest_md5_update(void *md5, const void *data, uint32_t length)
 int digest_md5_final(void *md5, unsigned char *digest)
 {
 	MD5_Final(digest, md5);
-	free(md5);
+	yos_free(md5);
 	return 0;
 }
 
 int digest_md5(const void *data, uint32_t length, unsigned char *digest)
 {
-	MD5_CTX *ctx = (MD5_CTX *) malloc(sizeof(MD5_CTX));
+	MD5_CTX *ctx = (MD5_CTX *) yos_malloc(sizeof(MD5_CTX));
 	if (NULL == ctx) {
 		return -1;
 	}
@@ -39,7 +40,7 @@ int digest_md5(const void *data, uint32_t length, unsigned char *digest)
 	MD5_Init(ctx);
 	MD5_Update(ctx, data, length);
 	MD5_Final(digest, ctx);
-	free(ctx);
+	yos_free(ctx);
 	return 0;
 }
 
@@ -51,12 +52,13 @@ int digest_md5_file(const char *path, unsigned char *md5)
 	unsigned char digest[16];
 	int i;
 
-	MD5_CTX *ctx = (MD5_CTX *) malloc(sizeof(MD5_CTX));
+	MD5_CTX *ctx = (MD5_CTX *) yos_malloc(sizeof(MD5_CTX));
 	if (NULL == ctx) {
 		return -1;
 	}
 
 	if (fp == NULL) {
+        yos_free(ctx);
 		return -1;
 	}
 
@@ -73,13 +75,13 @@ int digest_md5_file(const char *path, unsigned char *md5)
 	}
 
 	fclose(fp);
-	free(ctx);
+	yos_free(ctx);
 	return 0;
 }
 
 void *digest_sha256_init(void)
 {
-	SHA256_CTX *ctx = (SHA256_CTX *) malloc(sizeof(SHA256_CTX));
+	SHA256_CTX *ctx = (SHA256_CTX *) yos_malloc(sizeof(SHA256_CTX));
 	if (NULL == ctx) {
 		return NULL;
 	}
@@ -98,13 +100,13 @@ int digest_sha256_update(void *sha256, const void *data, uint32_t length)
 int digest_sha256_final(void *sha256, unsigned char *digest)
 {
 	SHA256_Final(digest, sha256);
-	free(sha256);
+	yos_free(sha256);
 	return 0;
 }
 
 int digest_sha256(const void *data, uint32_t length, unsigned char *digest)
 {
-	SHA256_CTX *ctx = (SHA256_CTX *) malloc(sizeof(SHA256_CTX));
+	SHA256_CTX *ctx = (SHA256_CTX *) yos_malloc(sizeof(SHA256_CTX));
 	if (NULL == ctx) {
 		return -1;
 	}
@@ -114,14 +116,14 @@ int digest_sha256(const void *data, uint32_t length, unsigned char *digest)
 	SHA256_Init(ctx);
 	SHA256_Update(ctx, data, length);
 	SHA256_Final(digest, ctx);
-	free(ctx);
+	yos_free(ctx);
 
 	return 0;
 }
 
 void *digest_sha384_init(void)
 {
-	SHA384_CTX *ctx = (SHA384_CTX *) malloc(sizeof(SHA384_CTX));
+	SHA384_CTX *ctx = (SHA384_CTX *) yos_malloc(sizeof(SHA384_CTX));
 	if (NULL == ctx) {
 		return NULL;
 	}
@@ -140,13 +142,13 @@ int digest_sha384_update(void *sha384, const void *data, uint32_t length)
 int digest_sha384_final(void *sha384, unsigned char *digest)
 {
 	SHA384_Final(digest, sha384);
-	free(sha384);
+	yos_free(sha384);
 	return 0;
 }
 
 int digest_sha384(const void *data, uint32_t length, unsigned char *digest)
 {
-	SHA384_CTX *ctx = (SHA384_CTX *) malloc(sizeof(SHA384_CTX));
+	SHA384_CTX *ctx = (SHA384_CTX *) yos_malloc(sizeof(SHA384_CTX));
 	if (NULL == ctx) {
 		return -1;
 	}
@@ -154,14 +156,14 @@ int digest_sha384(const void *data, uint32_t length, unsigned char *digest)
 	SHA384_Init(ctx);
 	SHA384_Update(ctx, data, length);
 	SHA384_Final(digest, ctx);
-	free(ctx);
+	yos_free(ctx);
 
 	return 0;
 }
 
 void *digest_sha512_init(void)
 {
-	SHA512_CTX *ctx = (SHA512_CTX *) malloc(sizeof(SHA512_CTX));
+	SHA512_CTX *ctx = (SHA512_CTX *) yos_malloc(sizeof(SHA512_CTX));
 	if (NULL == ctx) {
 		return NULL;
 	}
@@ -180,13 +182,13 @@ int digest_sha512_update(void *sha512, const void *data, uint32_t length)
 int digest_sha512_final(void *sha512, unsigned char *digest)
 {
 	SHA512_Final(digest, sha512);
-	free(sha512);
+	yos_free(sha512);
 	return 0;
 }
 
 int digest_sha512(const void *data, uint32_t length, unsigned char *digest)
 {
-	SHA512_CTX *ctx = (SHA512_CTX *) malloc(sizeof(SHA512_CTX));
+	SHA512_CTX *ctx = (SHA512_CTX *) yos_malloc(sizeof(SHA512_CTX));
 	if (NULL == ctx) {
 		return -1;
 	}
@@ -194,7 +196,7 @@ int digest_sha512(const void *data, uint32_t length, unsigned char *digest)
 	SHA512_Init(ctx);
 	SHA512_Update(ctx, data, length);
 	SHA512_Final(digest, ctx);
-	free(ctx);
+	yos_free(ctx);
 
 	return 0;
 }

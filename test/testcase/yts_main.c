@@ -47,6 +47,7 @@ extern void test_aosapi(void);
 extern void test_vfs(void);
 extern void test_vcall(void);
 extern void test_netmgr(void);
+extern void test_digest_algorithm(void);
 
 static void add_test(void);
 
@@ -120,7 +121,9 @@ void add_test(void)
     test_cjson();
 
     test_hashtable();
-
+    
+    test_digest_algorithm();
+   
     test_kv();
 
     test_vcall();
