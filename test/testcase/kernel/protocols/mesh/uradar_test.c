@@ -32,8 +32,8 @@ static int start_ddm(void)
     pid = fork();
     if (pid == 0) {
         const char **argv;
-        int argc = yts_get_args(&argv);
-        char * const args[] = {
+        yts_get_args(&argv);
+        const char * const args[] = {
             argv[0],
             "--mesh-master",
             "-l",
@@ -246,7 +246,7 @@ void test_uradar(void)
     int argc;
     const char **argv;
 
-    argc = csp_get_args(&argv);
+    argc = yts_get_args(&argv);
     if (argc > 1) {
         yunit_add_test_suites(sub_suites);
         yunit_add_test_suites(com_suites);
