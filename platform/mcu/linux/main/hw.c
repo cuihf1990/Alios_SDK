@@ -23,6 +23,7 @@
 #include <hal/soc/soc.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
+#include <hal/ota.h>
 
 #define TAG "hw"
 
