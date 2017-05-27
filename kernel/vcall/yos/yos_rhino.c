@@ -378,6 +378,15 @@ int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
     return ret;
 }
 
+void yos_work_destroy(yos_work_t *work)
+{
+    if (work == NULL)
+        return;
+
+    yos_free(work->hdl);
+    work->hdl = NULL;
+}
+
 int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
 {
     return yunos_work_run(workqueue->hdl, work->hdl);

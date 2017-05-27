@@ -199,6 +199,13 @@ typedef struct work_para {
     void *arg2;
 } work_par_t;
 
+static void free_wpar(work_par_t *wpar)
+{
+    yos_work_destroy(wpar->work);
+    yos_free(wpar->work);
+    yos_free(wpar);
+}
+
 static void run_my_work(void *arg)
 {
     work_par_t *wpar = arg;
@@ -208,8 +215,7 @@ static void run_my_work(void *arg)
     if (wpar->fini_cb)
         yos_loop_schedule_call(wpar->loop, wpar->fini_cb, wpar->arg2);
 
-    free(wpar->work);
-    free(wpar);
+    free_wpar(wpar);
 }
 
 void yos_cancel_work(void *work, yos_call_t action, void *arg)
@@ -222,16 +228,15 @@ void yos_cancel_work(void *work, yos_call_t action, void *arg)
     if (wpar->work != work)
         return;
 
-    free(wpar->work);
-    free(wpar);
+    free_wpar(wpar);
 }
 
 void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
 {
     int ret;
 
-    yos_work_t *work = malloc(sizeof(*work));
-    work_par_t *wpar = malloc(sizeof(*wpar));
+    yos_work_t *work = yos_malloc(sizeof(*work));
+    work_par_t *wpar = yos_malloc(sizeof(*wpar));
 
     if (!work || !wpar)
         goto err_out;
@@ -252,8 +257,8 @@ void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_c
 
     return work;
 err_out:
-    free(work);
-    free(wpar);
+    yos_free(work);
+    yos_free(wpar);
     return NULL;
 }
 

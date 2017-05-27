@@ -274,6 +274,13 @@ void yos_workqueue_del(yos_workqueue_t *workqueue);
 int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly);
 
 /**
+ * This function will destroy a work
+ * @param[in]  work  the work to be destroied
+ * @return None
+ */
+void yos_work_destroy(yos_work_t *work);
+
+/**
  * This function will run a work on a workqueue
  * @param[in]  workqueue  the workqueue to run work
  * @param[in]  work       the work to run
