@@ -21,10 +21,14 @@
 #include <valgrind.h>
 #include <memcheck.h>
 #define VGF(X) X
+#undef VALGRIND_MAKE_MEM_NOACCESS
+#define VALGRIND_MAKE_MEM_NOACCESS(x,y)
 #elif defined(HAVE_VALGRIND_VALGRIND_H)
 #include <valgrind/valgrind.h>
 #include <valgrind/memcheck.h>
 #define VGF(X) X
+#undef VALGRIND_MAKE_MEM_NOACCESS
+#define VALGRIND_MAKE_MEM_NOACCESS(x,y)
 #else
 #define VGF(X)
 #endif
