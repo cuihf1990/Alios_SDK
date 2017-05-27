@@ -11,6 +11,8 @@ $(NAME)_SOURCES := eloop.c \
                    config_parser.c \
                    master.c
 
+$(NAME)_CFLAGS += -Wall -Werror
+
 GLOBAL_DEFINES += CONFIG_YOS_DDA
 GLOBAL_DEFINES += CONFIG_YOS_DDM
 
