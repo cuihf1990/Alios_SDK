@@ -6,6 +6,7 @@ $(NAME)_SOURCES     := yts_main.c
 $(NAME)_SOURCES     += basic_test.c
 $(NAME)_SOURCES     += framework/hal/hal_test.c
 $(NAME)_SOURCES     += framework/yloop_test.c
+$(NAME)_SOURCES     += framework/fota_test.c
 $(NAME)_SOURCES     += framework/vfs_test.c
 $(NAME)_SOURCES     += utility/cjson_test.c
 $(NAME)_SOURCES     += utility/hashtable_test.c
