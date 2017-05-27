@@ -21,4 +21,8 @@
 #define LOGE(tag, _fmt, _arg ...) LOG("E:%s: "_fmt, tag, ##_arg)
 #endif
 
+#if __GNUC__ < 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ < 9 || (__GNUC_MINOR__ == 9 && __GNUC_PATCHLEVEL__ < 5)))
+#define __func__ __FUNCTION__
+#endif
+
 #endif // _TFS_LOG_H

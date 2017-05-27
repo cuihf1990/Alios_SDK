@@ -13,7 +13,7 @@
 #define CRYPT_IN_MAX  512
 #define CRYPT_OUT_MAX 512
 
-#if defined(TFS_TEE)
+#if defined(TFS_TEE) || defined(TFS_TEE_MOBILE)
 #include "tee_id2.h"
 #elif defined(TFS_SW)
 #include "sm_id2.h"
@@ -28,18 +28,26 @@ int hal_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
 {
     int ret = 0;
 
+    LOGD(TAG_HAL_RSA, "[%s]: enter.\n", __func__);
 #if defined(TFS_TEE)
+    *sign_len = 128;
+    ret = tee_RSA_sign(ID, in, in_len, sign, sign_len, type);
+    if (ret != 0) {
+        LOGE(TAG_HAL_RSA, "[%s]:tee env error!\n", __func__);
+        return -1;
+    }
+#elif defined(TFS_TEE_MOBILE)
     *sign_len = 128;
     ret =  tee_ID2_sign(in, in_len, sign, sign_len, type);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s:tee env error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]:tee mobile env error!\n", __func__);
         return -1;
     }
-#elif defined (TFS_SW)
+#elif defined(TFS_SW)
     *sign_len = 128;
     ret =  tee_RSA_sign(ID, in, in_len, sign, sign_len, type);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s:sw env error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]:sw env error!\n", __func__);
         return -1;
     }
 #else
@@ -51,7 +59,7 @@ int hal_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     memset(out, 0, SIGN_OUT_MAX + 11);
 
     if (in_len > SIGN_IN_MAX) {
-        LOGE(TAG_HAL_RSA, "%s: input data error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: input data error!\n", __func__);
         pal_memory_free(out);
         return -1;
     }
@@ -59,14 +67,14 @@ int hal_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     _in_len = in_len + 13;
     _in = (uint8_t *)pal_memory_malloc(_in_len);
     if (_in == NULL) {
-        LOGE(TAG_HAL_RSA, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: malloc error!\n", __func__);
         pal_memory_free(out);
         return -1;
     }
 
     arg = (uint8_t *)pal_memory_malloc(in_len + 5);
     if (arg == NULL) {
-        LOGE(TAG_HAL_RSA, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: malloc error!\n", __func__);
         pal_memory_free(_in);
         pal_memory_free(out);
         return -1;
@@ -83,7 +91,7 @@ int hal_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     ret = hal_cmd(CMD_RSA_SIGN, _in, _in_len, out, &out_len);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s: hal_cmd error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: hal_cmd error!\n", __func__);
         pal_memory_free(out);
         pal_memory_free(_in);
         return -1;
@@ -91,7 +99,7 @@ int hal_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     pal_memory_free(_in);
 
     if (out[out_len - 3] != RES_OK) {
-        LOGE(TAG_HAL_RSA, "%s: response error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: response error!\n", __func__);
         pal_memory_free(out);
         return -1;
     }
@@ -99,7 +107,7 @@ int hal_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     *sign_len = (out[6] & 0XFF) << 8;
     *sign_len |= out[7] & 0XFF;
     if (*sign_len > SIGN_OUT_MAX) {
-        LOGE(TAG_HAL_RSA, "%s: pub-key too long!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: pub-key too long!\n", __func__);
         pal_memory_free(out);
         return -1;
     }
@@ -116,16 +124,23 @@ int hal_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
 {
     int ret = 0;
 
+    LOGD(TAG_HAL_RSA, "[%s]: enter.\n", __func__);
 #if defined(TFS_TEE)
+    ret = tee_RSA_verify(ID, in, in_len, sign, sign_len, type);
+    if (ret != 0) {
+        LOGE(TAG_HAL_RSA, "[%s]:tee env error!\n", __func__);
+        return -1;
+    }
+#elif defined(TFS_TEE_MOBILE)
     ret =  tee_ID2_verify(in, in_len, sign, sign_len, type);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s:tee env error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]:tee mobile env error!\n", __func__);
         return -1;
     }
 #elif defined(TFS_SW)
     ret =  tee_RSA_verify(ID, in, in_len, sign, sign_len, type);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s:sw env error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]:sw env error!\n", __func__);
         return -1;
     }
 #else
@@ -136,20 +151,20 @@ int hal_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint8_t *arg = NULL;
 
     if (in_len > SIGN_IN_MAX || sign_len > SIGN_OUT_MAX) {
-        LOGE(TAG_HAL_RSA, "%s: input data error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: input data error!\n", __func__);
         return -1;
     }
 
     _in_len = in_len + sign_len + 15;
     _in = (uint8_t *)pal_memory_malloc(_in_len);
     if (_in == NULL) {
-        LOGE(TAG_HAL_RSA, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: malloc error!\n", __func__);
         return -1;
     }
 
     arg = (uint8_t *)pal_memory_malloc(in_len + sign_len + 7);
     if (arg == NULL) {
-        LOGE(TAG_HAL_RSA, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: malloc error!\n", __func__);
         pal_memory_free(_in);
         return -1;
     }
@@ -168,14 +183,14 @@ int hal_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     ret = hal_cmd(CMD_RSA_VERIFY, _in, _in_len, out, &out_len);
     if (ret != 0 || out_len != 9) {
-        LOGE(TAG_HAL_RSA, "%s: hal_cmd error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: hal_cmd error!\n", __func__);
         pal_memory_free(_in);
         return -1;
     }
     pal_memory_free(_in);
 
     if (out[out_len - 3] != RES_OK) {
-        LOGE(TAG_HAL_RSA, "%s: response error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: response error!\n", __func__);
         return -1;
     }
 
@@ -188,18 +203,26 @@ int hal_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
 {
     int ret = 0;
 
+    LOGD(TAG_HAL_RSA, "[%s]: enter.\n", __func__);
 #if defined(TFS_TEE)
+    *out_len = 128;
+    ret = tee_RSA_public_encrypt(ID, in, in_len, out, out_len, padding);
+    if (ret != 0) {
+        LOGE(TAG_HAL_RSA, "[%s]:tee env error!\n", __func__);
+        return -1;
+    }
+#elif defined(TFS_TEE_MOBILE)
     *out_len = 128;
     ret =  tee_ID2_encrypt(in, in_len, out, out_len, padding);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s:tee env error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]:tee mobile env error!\n", __func__);
         return -1;
     }
 #elif defined(TFS_SW)
     *out_len = 128;
     ret =  tee_RSA_public_encrypt(ID, in, in_len, out, out_len, padding);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s:sw env error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]:sw env error!\n", __func__);
         return -1;
     }
 #else
@@ -211,20 +234,20 @@ int hal_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint8_t *arg = NULL;
 
     if (in_len > CRYPT_IN_MAX) {
-        LOGE(TAG_HAL_RSA, "%s: input data error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: input data error!\n", __func__);
         return -1;
     }
 
     _in_len = in_len + 12;
     _in = (uint8_t *)pal_memory_malloc(_in_len);
     if (_in == NULL) {
-        LOGE(TAG_HAL_RSA, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: malloc error!\n", __func__);
         return -1;
     }
 
     arg = (uint8_t *)pal_memory_malloc(in_len + 4);
     if (arg == NULL) {
-        LOGE(TAG_HAL_RSA, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: malloc error!\n", __func__);
         pal_memory_free(_in);
         return -1;
     }
@@ -238,14 +261,14 @@ int hal_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     ret = hal_cmd(CMD_RSA_ENCRYPT, _in, _in_len, _out, &_out_len);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s: hal_cmd error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: hal_cmd error!\n", __func__);
         pal_memory_free(_in);
         return -1;
     }
     pal_memory_free(_in);
 
     if (_out[_out_len - 3] != RES_OK) {
-        LOGE(TAG_HAL_RSA, "%s: response error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: response error!\n", __func__);
         return -1;
     }
 
@@ -253,7 +276,7 @@ int hal_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
     *out_len |= _out[7] & 0XFF;
     LOGD(TAG_HAL_RSA, "out_len: %d\n", (int)(*out_len));
     if (*out_len > CRYPT_OUT_MAX) {
-        LOGE(TAG_HAL_RSA, "%s: input data error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: input data error!\n", __func__);
         return -1;
     }
 
@@ -268,16 +291,23 @@ int hal_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
 {
     int ret = 0;
 
+    LOGD(TAG_HAL_RSA, "[%s]: enter.\n", __func__);
 #if defined(TFS_TEE)
+    ret = tee_RSA_private_decrypt(ID, in, in_len, out, out_len, padding);
+    if (ret != 0) {
+        LOGE(TAG_HAL_RSA, "[%s]:tee env error!\n", __func__);
+        return -1;
+    }
+#elif defined(TFS_TEE_MOBILE)
     ret =  tee_ID2_decrypt(in, in_len, out, out_len, padding);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s:tee env error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]:tee mobile env error!\n", __func__);
         return -1;
     }
 #elif defined(TFS_SW)
     ret = tee_RSA_private_decrypt(ID, in, in_len, out, out_len, padding);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s:sw env error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]:sw env error!\n", __func__);
         return -1;
     }
 #else
@@ -289,20 +319,20 @@ int hal_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
     uint8_t *arg = NULL;
 
     if (in_len > CRYPT_IN_MAX) {
-        LOGE(TAG_HAL_RSA, "%s: input data error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: input data error!\n", __func__);
         return -1;
     }
 
     _in_len = in_len + 12;
     _in = (uint8_t *)pal_memory_malloc(_in_len);
     if (_in == NULL) {
-        LOGE(TAG_HAL_RSA, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: malloc error!\n", __func__);
         return -1;
     }
 
     arg = (uint8_t *)pal_memory_malloc(in_len + 4);
     if (arg == NULL) {
-        LOGE(TAG_HAL_RSA, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: malloc error!\n", __func__);
         pal_memory_free(_in);
         return -1;
     }
@@ -316,21 +346,21 @@ int hal_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
 
     ret = hal_cmd(CMD_RSA_DECRYPT, _in, _in_len, _out, &_out_len);
     if (ret != 0) {
-        LOGE(TAG_HAL_RSA, "%s: hal_cmd error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: hal_cmd error!\n", __func__);
         pal_memory_free(_in);
         return -1;
     }
     pal_memory_free(_in);
 
     if (_out[_out_len - 3] != RES_OK) {
-        LOGE(TAG_HAL_RSA, "%s: response error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: response error!\n", __func__);
         return -1;
     }
 
     *out_len = (_out[6] & 0XFF) << 8;
     *out_len |= _out[7] & 0XFF;
     if (*out_len > CRYPT_OUT_MAX) {
-        LOGE(TAG_HAL_RSA, "%s: input data error!\n", __FUNCTION__);
+        LOGE(TAG_HAL_RSA, "[%s]: input data error!\n", __func__);
         return -1;
     }
 

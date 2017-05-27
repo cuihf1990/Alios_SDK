@@ -67,8 +67,9 @@ static int _get_seed(const char *id2, const char *random,
 
 int get_ID2(uint8_t *id2, uint32_t *len)
 {
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (id2 == NULL || len == NULL) {
-        LOGE(TAG_ID2, "id2 or len is NULL.\n");
+        LOGE(TAG_ID2, "[%s]: id2 or len is NULL.\n", __func__);
         return -1;
     }
     return _get_ID2(id2, len);
@@ -77,8 +78,9 @@ int get_ID2(uint8_t *id2, uint32_t *len)
 int id2_sign(const uint8_t *in, uint32_t in_len,
              uint8_t *sign, uint32_t *sign_len)
 {
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (in == NULL || in_len == 0 || sign == NULL || sign_len == NULL) {
-        LOGE(TAG_ID2, "para wrong.\n");
+        LOGE(TAG_ID2, "[%s]: para wrong.\n", __func__);
         return -1;
     }
 
@@ -113,8 +115,9 @@ int id2_sign(const uint8_t *in, uint32_t in_len,
 int id2_verify(const uint8_t *in, uint32_t in_len,
                uint8_t *sign, uint32_t sign_len)
 {
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (in == NULL || in_len == 0 || sign == NULL || sign_len == 0) {
-        LOGE(TAG_ID2, "para wrong.\n");
+        LOGE(TAG_ID2, "[%s]: para wrong.\n", __func__);
         return -1;
     }
 
@@ -149,8 +152,9 @@ int id2_verify(const uint8_t *in, uint32_t in_len,
 int id2_encrypt(uint8_t *in, uint32_t in_len,
                 uint8_t *out, uint32_t *out_len)
 {
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (in == NULL || in_len == 0 || out == NULL || out_len == NULL) {
-        LOGE(TAG_ID2, "para wrong.\n");
+        LOGE(TAG_ID2, "[%s]: para wrong.\n", __func__);
         return -1;
     }
 
@@ -170,7 +174,7 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
         case SIGN_ALGO_RSA:
 #ifdef TFS_ID2_RSA
             if (in_len > RSA_MAX_SIZE_DEC_IN) {
-                LOGE(TAG_ID2, "\nRSA: in_len must not larger than %d!\n", RSA_MAX_SIZE_DEC_IN);
+                LOGE(TAG_ID2, "[%s]: RSA: in_len must not larger than %d!\n", __func__, RSA_MAX_SIZE_DEC_IN);
                 return -1;
             }
 
@@ -195,7 +199,7 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
                                              section_len, out + len_sum, &len, TFS_PKCS1_PADDING);
 #endif
                 if (ret != 0) {
-                    LOGE(TAG_ID2, "\nRSA: encrypt error!\n");
+                    LOGE(TAG_ID2, "[%s]: RSA: encrypt error!\n", __func__);
                     return -1;
                 }
                 len_sum += len;
@@ -225,8 +229,9 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
 int id2_decrypt(uint8_t *in, uint32_t in_len,
                 uint8_t *out, uint32_t *out_len)
 {
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (in == NULL || in_len == 0 || out == NULL || out_len == NULL) {
-        LOGE(TAG_ID2, "para wrong.\n");
+        LOGE(TAG_ID2, "[%s]: para wrong.\n", __func__);
         return -1;
     }
 
@@ -244,7 +249,7 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
         case SIGN_ALGO_RSA:
 #ifdef TFS_ID2_RSA
             if (in_len > RSA_MAX_SIZE_DEC_IN) {
-                LOGE(TAG_ID2, "\nRSA: in_len must not larger than %d!\n", RSA_MAX_SIZE_DEC_IN);
+                LOGE(TAG_ID2, "[%s]: RSA: in_len must not larger than %d!\n", __func__, RSA_MAX_SIZE_DEC_IN);
                 return -1;
             }
 
@@ -260,7 +265,7 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
                                                RSA_KEY_SIZE, out + len_sum, &len, TFS_PKCS1_PADDING);
 #endif
                 if (ret != 0) {
-                    LOGE(TAG_ID2, "\nRSA: decrypt error!\n");
+                    LOGE(TAG_ID2, "[%s]: RSA: decrypt error!\n", __func__);
                     return -1;
                 }
                 len_sum += len;
@@ -289,8 +294,9 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
 
 int get_auth_code(uint8_t *auth_code, uint32_t *len)
 {
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (auth_code == NULL || len == NULL) {
-        LOGE(TAG_ID2, "para error.\n");
+        LOGE(TAG_ID2, "[%s]: para error.\n", __func__);
         return -1;
     }
 
@@ -316,7 +322,7 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
 
     ret = _get_ID2((uint8_t *)id2, &id2_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "get ID2 error.\n");
+        LOGE(TAG_ID2, "[%s]: get ID2 error.\n", __func__);
         goto error_exit;
     }
 
@@ -327,13 +333,13 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
 
     ret = id2_sign((uint8_t *)random_id2, 22, (uint8_t *)random_id2_signed, &s_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "sign data error.\n");
+        LOGE(TAG_ID2, "[%s]: sign data error.\n", __func__);
         goto error_exit;
     }
 
     ret = _get_seed(id2, random, random_id2_signed, seed);
     if (ret < 0) {
-        LOGE(TAG_ID2, "get seed error!\n");
+        LOGE(TAG_ID2, "[%s]: get seed error!\n", __func__);
         goto error_exit;
     }
 
@@ -346,7 +352,7 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
 
     ret = id2_sign((uint8_t *)auth_code + 2, 11, (uint8_t *)code_signed, &s_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "sign data error.\n");
+        LOGE(TAG_ID2, "[%s]: sign data error.\n", __func__);
         goto error_exit;
     }
 
@@ -357,12 +363,12 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
     pal_base64_encode((const uint8_t *)code_signed, SIGN_LEN_3DES, (uint8_t *)code_signed_base64, &size);
 #endif
 
-    LOGD(TAG_ID2, "code_signed_out size: %d\n", size);
+    LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
     memcpy(auth_code + 14, code_signed_base64, strlen(code_signed_base64));
     *len = strlen((const char *)auth_code);
 
-    LOGD(TAG_ID2, "authcode = %s,%d\n", auth_code, *len);
+    LOGD(TAG_ID2, "[%s]: authcode = %s,%d\n", __func__, auth_code, *len);
     goto normal_exit;
 
 error_exit:
@@ -387,8 +393,9 @@ normal_exit:
 
 int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len)
 {
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (auth_code == NULL || auth_len == NULL) {
-        LOGE(TAG_ID2, "para error.\n");
+        LOGE(TAG_ID2, "[%s]: para error.\n", __func__);
         return -1;
     }
 
@@ -412,7 +419,7 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
 
     ret = _get_ID2((uint8_t *)id2, &id2_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "get ID2 error.\n");
+        LOGE(TAG_ID2, "[%s]: get ID2 error.\n", __func__);
         goto error_exit;
     }
 
@@ -424,7 +431,7 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
 
     ret = id2_sign((uint8_t *)random_id2_timestamp, strlen(random_id2_timestamp), (uint8_t *)random_id2_timestamp_signed, &s_len);
     if (ret < 0) {
-        LOGE(TAG_ID2, "sign data error.\n");
+        LOGE(TAG_ID2, "[%s]: sign data error.\n", __func__);
         goto error_exit;
     }
 
@@ -442,12 +449,12 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
     pal_base64_encode((const uint8_t *)random_id2_timestamp_signed, SIGN_LEN_3DES, (uint8_t *)random_id2_timestamp_signed_base64, &size);
 #endif
 
-    LOGD(TAG_ID2, "code_signed_out size: %d\n", size);
+    LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
     memcpy(auth_code + 8 + strlen(timestamp_str), random_id2_timestamp_signed_base64, strlen(random_id2_timestamp_signed_base64));
     *auth_len = strlen((const char *)auth_code);
 
-    LOGD(TAG_ID2, "authcode = %s,%d\n", auth_code, *auth_len);
+    LOGD(TAG_ID2, "[%s]: authcode = %s,%d\n", __func__, auth_code, *auth_len);
     goto normal_exit;
 
 error_exit:
@@ -470,8 +477,9 @@ normal_exit:
 
 int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len)
 {
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (digest == NULL || digest_len == 0 || auth_code == NULL || auth_len == NULL) {
-        LOGE(TAG_ID2, "para error.\n");
+        LOGE(TAG_ID2, "[%s]: para error.\n", __func__);
         return -1;
     }
 
@@ -493,7 +501,7 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
 
     ret = _get_ID2((uint8_t *)id2, &id2_len);
     if (ret != 0) {
-        LOGE(TAG_ID2, "get ID2 error.\n");
+        LOGE(TAG_ID2, "[%s]: get ID2 error.\n", __func__);
         goto error_exit;
     }
 
@@ -504,7 +512,7 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
 
     ret = id2_sign((uint8_t *)id2_digest_timestamp, strlen(id2_digest_timestamp), (uint8_t *)id2_digest_timestamp_signed, &s_len);
     if (ret != 0) {
-        LOGE(TAG_ID2, "sign data error.\n");
+        LOGE(TAG_ID2, "[%s]: sign data error.\n", __func__);
         goto error_exit;
     }
 
@@ -515,7 +523,7 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
     pal_base64_encode((const uint8_t *)id2_digest_timestamp_signed, SIGN_LEN_3DES, (uint8_t *)id2_digest_timestamp_signed_base64, &size);
 #endif
 
-    LOGD(TAG_ID2, "code_signed_out size: %d\n", size);
+    LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
     sprintf((char *)auth_code, "%d", SIGN_MODEL);
     strcat((char *)auth_code + 1, "~");
@@ -524,7 +532,7 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
     strcat((char *)auth_code + strlen(timestamp_str) + 3, id2_digest_timestamp_signed_base64);
     *auth_len = strlen((const char *)auth_code);
 
-    LOGD(TAG_ID2, "authcode = %s,%d\n", auth_code, *auth_len);
+    LOGD(TAG_ID2, "[%s]: authcode = %s,%d\n", __func__, auth_code, *auth_len);
     goto normal_exit;
 
 error_exit:
@@ -552,6 +560,7 @@ int _replace_spec_char(char *in, char *out)
     char *equal = "%3D";
     int len = strlen(in);
 
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     for (i = 0; i < len; i++) {
         switch (in[i]) {
             case '+':
@@ -582,6 +591,7 @@ static int _get_ID2(uint8_t *id2, uint32_t *len)
 {
     int ret = 0;
 
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (_g_cached_flag == 0) {
 #ifdef TFS_EMULATE
         ret = emu_get_ID2(_g_cached_ID2, len);
@@ -590,7 +600,7 @@ static int _get_ID2(uint8_t *id2, uint32_t *len)
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_ID2, "get ID2 error\n");
+            LOGE(TAG_ID2, "[%s]: get ID2 error\n", __func__);
             return -1;
         }
 
@@ -611,6 +621,7 @@ static int _get_crypt_algo(void)
 {
     int ret;
 
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (g_sign_algo != -1)
     { return g_sign_algo; }
 
@@ -618,7 +629,7 @@ static int _get_crypt_algo(void)
         ret = _get_ID2(NULL, NULL);
 
         if (ret != 0) {
-            LOGE(TAG_ID2, "get ID2 error.\n");
+            LOGE(TAG_ID2, "[%s]: get ID2 error.\n", __func__);
             return -1;
         }
     }
@@ -636,10 +647,10 @@ static int _get_crypt_algo(void)
 
         default:
             g_sign_algo = -1;
-            LOGE(TAG_ID2, "sign algo error.\n");
+            LOGE(TAG_ID2, "[%s]: sign algo error.\n", __func__);
     }
 
-    LOGD(TAG_ID2, "sign algo is: %d\n", g_sign_algo);
+    LOGD(TAG_ID2, "[%s]: sign algo is: %d\n", __func__, g_sign_algo);
     return g_sign_algo;
 }
 
@@ -652,6 +663,8 @@ static int _get_seed(const char *id2, const char *random,
     char* argu_str = (char*)pal_memory_malloc(300);
     char* _sign_base64 = (char*)pal_memory_malloc(256);
     char* sign_base64 = (char*) pal_memory_malloc(256);
+
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     memset(argu_str,0,300);
     memset(_sign_base64,0,256);
     memset(sign_base64,0,256);
@@ -666,7 +679,7 @@ static int _get_seed(const char *id2, const char *random,
     sprintf(argu_str, "&id2=%s&sid=%s&sign=%s&model=%d",
             id2, random, sign_base64, SIGN_MODEL);
 
-    LOGD(TAG_ID2, "argu_str: %s\n", argu_str);
+    LOGD(TAG_ID2, "[%s]: argu_str: %s\n", __func__, argu_str);
 
     ret = http_get_seed(ID2_GET_SEED, argu_str, seed);
 
@@ -675,7 +688,7 @@ static int _get_seed(const char *id2, const char *random,
     pal_memory_free(sign_base64);
 
     if (ret < 0) {
-        LOGE(TAG_ID2, "get seed error.\n");
+        LOGE(TAG_ID2, "[%s]: get seed error.\n", __func__);
         return -1;
     }
 
@@ -687,14 +700,15 @@ int is_id2_activated()
     char activate_buf[ACTIVATE_LEN + 1] = {0};
     int ret = -1;
 
+    LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     ret = pal_get_info(FILE_ID2_ACTIVATED, activate_buf);
     if (ret == -1) {
-        LOGE(TAG_ID2, "read activate info fail\n");
+        LOGE(TAG_ID2, "[%s]: read activate info fail\n", __func__);
         return -1;
     }
 
     if ((strlen(activate_buf) < ACTIVATE_LEN - 1) || (strncmp(activate_buf, ACTIVATE_SUCCESS_MSG, ACTIVATE_LEN) != 0)) {
-        LOGE(TAG_ID2, "compare activated msg error!\n");
+        LOGE(TAG_ID2, "[%s]: compare activated msg error!\n", __func__);
         return -1;
     }
 
@@ -718,7 +732,7 @@ int activate_device(void)
     char argu_str[1024] = {0};
 
     if (is_id2_activated() == 0) {
-        LOGD(TAG_ID2, "the device has already been activated!\n");
+        LOGD(TAG_ID2, "[%s]: the device has already been activated!\n", __func__);
         return 0;
     }
 
@@ -726,15 +740,15 @@ int activate_device(void)
         // get id2
         ret = _get_ID2((uint8_t *)id2, &id2_len);
         if (ret < 0) {
-            LOGE(TAG_ID2, "%s: get ID2 error!\n", __func__);
+            LOGE(TAG_ID2, "[%s]: get ID2 error!\n", __func__);
             break;
         }
-        LOGD(TAG_ID2, "%s: ID2 is %s\n", __func__, id2);
+        LOGD(TAG_ID2, "[%s]: ID2 is %s\n", __func__, id2);
 
         // get device info
         ret = pal_collect_device_info(&dev_info);
         if (ret < 0) {
-            LOGE(TAG_ID2, "%s: get device info error!\n", __func__);
+            LOGE(TAG_ID2, "[%s]: get device info error!\n", __func__);
             break;
         }
 
@@ -746,7 +760,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&btMac=") + strlen(dev_info.bt_mac) > sizeof(argu_str)
                 || strlen(info) + strlen("btMac") + strlen(dev_info.bt_mac) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "bt_mac too long\n");
+                LOGE(TAG_ID2, "[%s]: bt_mac too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&btMac=%s", dev_info.bt_mac);
@@ -758,7 +772,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&buildTime=") + strlen(dev_info.build_time) > sizeof(argu_str)
                 || strlen(info) + strlen("buildTime") + strlen(dev_info.build_time) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "build_time too long\n");
+                LOGE(TAG_ID2, "[%s]: build_time too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&buildTime=%s", dev_info.build_time);
@@ -770,7 +784,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&cameraResolution=") + strlen(dev_info.camera_resolution) > sizeof(argu_str)
                 || strlen(info) + strlen("cameraResolution") + strlen(dev_info.camera_resolution) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "camera_resolution too long\n");
+                LOGE(TAG_ID2, "[%s]: camera_resolution too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&cameraResolution=%s", dev_info.camera_resolution);
@@ -782,7 +796,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&cpuInfo=") + strlen(dev_info.cup_info) > sizeof(argu_str)
                 || strlen(info) + strlen("cpuInfo") + strlen(dev_info.cup_info) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "cup_info too long\n");
+                LOGE(TAG_ID2, "[%s]: cup_info too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&cpuInfo=%s", dev_info.cup_info);
@@ -794,7 +808,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&dmDpi=") + strlen(dev_info.dm_dpi) > sizeof(argu_str)
                 || strlen(info) + strlen("dmDpi") + strlen(dev_info.dm_dpi) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "dm_dpi too long\n");
+                LOGE(TAG_ID2, "[%s]: dm_dpi too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&dmDpi=%s", dev_info.dm_dpi);
@@ -806,7 +820,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&dmPixels=") + strlen(dev_info.dm_pixels) > sizeof(argu_str)
                 || strlen(info) + strlen("dmPixels") + strlen(dev_info.dm_pixels) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "dm_pixels too long\n");
+                LOGE(TAG_ID2, "[%s]: dm_pixels too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&dmPixels=%s", dev_info.dm_pixels);
@@ -818,7 +832,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&hardwareId=") + strlen(dev_info.hardware_id) > sizeof(argu_str)
                 || strlen(info) + strlen("hardwareId") + strlen(dev_info.hardware_id) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "hardware_id too long\n");
+                LOGE(TAG_ID2, "[%s]: hardware_id too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&hardwareId=%s", dev_info.hardware_id);
@@ -833,7 +847,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&imei=") + strlen(dev_info.imei) > sizeof(argu_str)
                 || strlen(info) + strlen("imei") + strlen(dev_info.imei) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "imei too long\n");
+                LOGE(TAG_ID2, "[%s]: imei too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&imei=%s", dev_info.imei);
@@ -845,7 +859,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&mac=") + strlen(dev_info.mac) > sizeof(argu_str)
                 || strlen(info) + strlen("mac") + strlen(dev_info.mac) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "mac too long\n");
+                LOGE(TAG_ID2, "[%s]: mac too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&mac=%s", dev_info.mac);
@@ -853,11 +867,14 @@ int activate_device(void)
             strcat(info + strlen(info), dev_info.mac);
         }
 
+        strcat(info + strlen(info), "model");
+        strcat(info + strlen(info), ACTIVATE_SIGN_MODEL);
+
         if (dev_info.os_version) {
             if (strlen(argu_str) + strlen("&osVersion=") + strlen(dev_info.os_version) > sizeof(argu_str)
                 || strlen(info) + strlen("osVersion") + strlen(dev_info.os_version) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "os_version too long\n");
+                LOGE(TAG_ID2, "[%s]: os_version too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&osVersion=%s", dev_info.os_version);
@@ -865,14 +882,11 @@ int activate_device(void)
             strcat(info + strlen(info), dev_info.os_version);
         }
 
-        strcat(info + strlen(info), "model");
-        strcat(info + strlen(info), ACTIVATE_SIGN_MODEL);
-
         if (dev_info.product_name) {
             if (strlen(argu_str) + strlen("&productName=") + strlen(dev_info.product_name) > sizeof(argu_str)
                 || strlen(info) + strlen("productName") + strlen(dev_info.product_name) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "product_name too long\n");
+                LOGE(TAG_ID2, "[%s]: product_name too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&productName=%s", dev_info.product_name);
@@ -884,7 +898,7 @@ int activate_device(void)
             if (strlen(argu_str) + strlen("&storageTotal=") + strlen(dev_info.storage_total) > sizeof(argu_str)
                 || strlen(info) + strlen("storageTotal") + strlen(dev_info.storage_total) > sizeof(info)) {
                 ret = -1;
-                LOGE(TAG_ID2, "storage_total too long\n");
+                LOGE(TAG_ID2, "[%s]: storage_total too long\n", __func__);
                 break;
             }
             sprintf(argu_str + strlen(argu_str), "&storageTotal=%s", dev_info.storage_total);
@@ -895,17 +909,17 @@ int activate_device(void)
         strcat(info + strlen(info), "version");
         strcat(info + strlen(info), ACTIVATE_VERSION);
 
-        LOGD(TAG_ID2, "info : %s\n", info);
-        LOGD(TAG_ID2, "argu_str : %s\n", argu_str);
-        LOGD(TAG_ID2, "%s: info max len 1024, actual len is %d!\n", __func__, (int)strlen(info));
+        LOGD(TAG_ID2, "[%s]: info : %s\n", __func__, info);
+        LOGD(TAG_ID2, "[%s]: argu_str : %s\n", __func__, argu_str);
+        LOGD(TAG_ID2, "[%s]: info max len 1024, actual len is %d!\n", __func__, (int)strlen(info));
 
         // sign device info
         ret = id2_sign((uint8_t *)info, strlen(info), (uint8_t *)info_signed, (uint32_t *)&info_signed_len);
         if (ret < 0) {
-            LOGE(TAG_ID2, "%s: sign error!\n", __func__);
+            LOGE(TAG_ID2, "[%s]: sign error!\n", __func__);
             break;
         }
-        LOGD(TAG_ID2, "%s: info_signed max len 128, actual len is %d!\n", __func__, info_signed_len);
+        LOGD(TAG_ID2, "[%s]: info_signed max len 128, actual len is %d!\n", __func__, info_signed_len);
 
         // base 64
 #ifdef TFS_ID2_RSA
@@ -915,35 +929,35 @@ int activate_device(void)
         pal_base64_encode((const uint8_t *)info_signed, SIGN_LEN_3DES, (uint8_t *)_info_signed_base64, &size);
 #endif
 
-        LOGD(TAG_ID2, "%s: _info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(_info_signed_base64));
+        LOGD(TAG_ID2, "[%s]: _info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(_info_signed_base64));
 
         _replace_spec_char(_info_signed_base64, info_signed_base64);
-        LOGD(TAG_ID2, "%s: _info_signed_base64 is %s!\n", __func__, _info_signed_base64);
-        LOGD(TAG_ID2, "%s: info_signed_base64 is %s!\n", __func__, info_signed_base64);
-        LOGD(TAG_ID2, "%s: info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(info_signed_base64));
+        LOGD(TAG_ID2, "[%s]: _info_signed_base64 is %s!\n", __func__, _info_signed_base64);
+        LOGD(TAG_ID2, "[%s]: info_signed_base64 is %s!\n", __func__, info_signed_base64);
+        LOGD(TAG_ID2, "[%s]: info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(info_signed_base64));
 
         sprintf(argu_str + strlen(argu_str), "&sign=%s", info_signed_base64);
-        LOGD(TAG_ID2, "%s: argu_str max len is %d, actual len is %d!\n", __func__, (int)sizeof(argu_str), (int)strlen(argu_str));
+        LOGD(TAG_ID2, "[%s]: argu_str max len is %d, actual len is %d!\n", __func__, (int)sizeof(argu_str), (int)strlen(argu_str));
 
         ret = http_activate_dev(ID2_ACTIVATE_DEV, argu_str);
 
         if (ret != 0) {
-            LOGE(TAG_ID2, "%s: http_activate_dev error!\n", __func__);
+            LOGE(TAG_ID2, "[%s]: http_activate_dev error!\n", __func__);
             break;
         }
 
         ret = pal_save_info(FILE_ID2_ACTIVATED, ACTIVATE_SUCCESS_MSG);
         if (ret < 0) {
-            LOGE(TAG_ID2, "save activate msg error!\n");
+            LOGE(TAG_ID2, "[%s]: save activate msg error!\n", __func__);
             break;
         }
     }while (0);
 
     if (ret != 0) {
-        LOGE(TAG_ID2, "%s: activate fail!\n", __func__);
+        LOGE(TAG_ID2, "[%s]: activate fail!\n", __func__);
     }
     else {
-        LOGD(TAG_ID2, "%s: id2 device activate success!\n", __func__);
+        LOGD(TAG_ID2, "[%s]: id2 device activate success!\n", __func__);
     }
 
     return ret;
