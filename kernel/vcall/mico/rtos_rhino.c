@@ -5,10 +5,18 @@
 #include "mico_rtos_common.h"
 #include "common.h"
 
-extern void cpu_dis_interpt(void);
-extern void cpu_en_interpt(void);
 
 static int32_t critical_nest;
+
+void __attribute__ ((weak)) cpu_dis_interpt(void)
+{
+
+}
+
+void __attribute__ ((weak)) cpu_en_interpt( void )
+{
+
+}
 
 void mico_rtos_enter_critical( void )
 {
@@ -28,8 +36,13 @@ void mico_rtos_exit_critical( void )
 OSStatus mico_rtos_create_thread( mico_thread_t* thread, uint8_t priority, const char* name, mico_thread_function_t function, uint32_t stack_size, mico_thread_arg_t arg )
 {
     kstat_t ret;
+    ktask_t *task_tmp;
 
-    ret = yunos_task_dyn_create((ktask_t **)thread, name, (void *)arg, priority, 0, stack_size, (task_entry_t)function, 1);
+    if (thread == NULL) {
+        ret = yunos_task_dyn_create(&task_tmp, name, (void *)arg, priority, 0, stack_size, (task_entry_t)function, 1);
+    } else {
+        ret = yunos_task_dyn_create((ktask_t **)thread, name, (void *)arg, priority, 0, stack_size, (task_entry_t)function, 1);
+    }
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -42,7 +55,11 @@ OSStatus mico_rtos_delete_thread( mico_thread_t* thread )
 {
     kstat_t ret;
 
-    ret = yunos_task_dyn_del(*((ktask_t **)thread));
+    if (thread == NULL) {
+        ret = yunos_task_dyn_del(NULL);
+    } else {
+        ret = yunos_task_dyn_del(*((ktask_t **)thread));
+    }
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -81,14 +98,6 @@ long mico_rtos_resume_all_thread(void)
 
 OSStatus mico_rtos_thread_join( mico_thread_t* thread )
 {
-    ktask_t *t;
-
-    t = *((ktask_t **)thread);
-
-    while (t->task_state != K_DELETED) {
-        mico_rtos_delay_milliseconds(10);
-    }
-
     return kNoErr;
 }
 
@@ -134,7 +143,7 @@ OSStatus mico_rtos_delay_milliseconds( uint32_t num_ms )
 {
     uint32_t ticks;
 
-    ticks = num_ms / YUNOS_CONFIG_TICKS_PER_SECOND;
+    ticks = yunos_ms_to_ticks(num_ms);
     if (ticks == 0) {
         ticks = 1;
     }
@@ -302,7 +311,7 @@ OSStatus mico_rtos_pop_from_queue( mico_queue_t* queue, void* message, uint32_t 
     kstat_t ret;
     size_t msg_len;
 
-    ret = yunos_buf_queue_recv(*((kbuf_queue_t **)queue), timeout_ms / YUNOS_CONFIG_TICKS_PER_SECOND, message, &msg_len);
+    ret = yunos_buf_queue_recv(*((kbuf_queue_t **)queue), yunos_ms_to_ticks(timeout_ms), message, &msg_len);
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -372,7 +381,7 @@ bool mico_rtos_is_queue_full( mico_queue_t* queue )
 
 mico_time_t mico_rtos_get_time( void )
 {
-    return (mico_time_t) (yunos_sys_tick_get() * YUNOS_CONFIG_TICKS_PER_SECOND);
+    return yunos_ticks_to_ms(yunos_sys_tick_get());
 }
 
 static void timmer_wrapper(void *timer, void *arg)
@@ -393,7 +402,8 @@ OSStatus mico_rtos_init_timer( mico_timer_t* timer, uint32_t time_ms, timer_hand
     timer->function = function;
     timer->arg      = arg;
 
-    ret = yunos_timer_dyn_create((ktimer_t **)(&timer->handle),"timer", timmer_wrapper, time_ms, time_ms, timer, 0);
+    ret = yunos_timer_dyn_create((ktimer_t **)(&timer->handle),"timer", timmer_wrapper, 
+                                  yunos_ms_to_ticks(time_ms), yunos_ms_to_ticks(time_ms), timer, 0);
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -402,11 +412,12 @@ OSStatus mico_rtos_init_timer( mico_timer_t* timer, uint32_t time_ms, timer_hand
     return kGeneralErr;
 }
 
+
 OSStatus mico_rtos_start_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    ret = yunos_timer_start(*((ktimer_t **)timer));
+    ret = yunos_timer_start(*((ktimer_t **)(timer->handle)));
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -433,14 +444,7 @@ OSStatus mico_rtos_reload_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    ret = yunos_timer_stop(*((ktimer_t **)timer));
-
-    if (ret == YUNOS_SUCCESS) {
-        return kNoErr;
-    }
-    else {
-        return kGeneralErr;
-    }
+    yunos_timer_stop(*((ktimer_t **)timer));
 
     ret = yunos_timer_start(*((ktimer_t **)timer));
 
