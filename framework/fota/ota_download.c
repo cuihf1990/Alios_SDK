@@ -70,8 +70,12 @@ void http_string_lower(char* s) {
 void http_gethost_info(char* src, char* web, char* file, int* port) {
     char* pa;
     char* pb;
-    memset(web, 0, sizeof(web));
-    memset(file, 0, sizeof(file));
+
+    if(!src || !web || !file) {
+        OTA_LOG_E("http_gethost_info parms error!\n");
+        return;
+    }
+
     *port = 0;
     if (!(*src)) {
         return;
@@ -172,17 +176,17 @@ err_out:
 
 int http_download(char *url, write_flash_cb_t func) {
     int sockfd = 0;
-    char buffer[1024] = "";
+    char buffer[1024] = {0};
     int port = 0;
     int nbytes = 0;
-    char host_file[128] = "";
-    char host_addr[256] = "";
-    char request[1024] = "";
+    char host_file[128] = {0};
+    char host_addr[256] = {0};
+    char request[1024] = {0};
     int send = 0;
     int totalsend = 0;
     int i = 0;
     //char *pt = NULL;
-    char psave[4096];
+    char psave[4096] = {0};;
     size_t index = 0;
 
     OTA_LOG_I("parameter.1 is: %s\n ", url);
