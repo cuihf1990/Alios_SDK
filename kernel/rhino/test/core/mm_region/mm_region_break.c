@@ -20,9 +20,12 @@
 #include "mm_region_test.h"
 
 #define MODULE_NAME "mm_region_break"
-#define YOC_MM_ALLOC_DEPTH  0
+#define YOS_MM_ALLOC_DEPTH  0
 
-static k_mm_region_head_t  my_mm_region_list_head,my_mm_region_list_head2;
+static k_mm_region_head_t  my_mm_region_list_head,my_mm_region_list_head2,my_mm_region_list_head_2;
+static void * mp[10]       = {0};
+static void * mp2[10]      = {0};
+
 static uint8_t mm_region_break_case1(void)
 {
     kstat_t  ret;
@@ -32,7 +35,8 @@ static uint8_t mm_region_break_case1(void)
     uint32_t r_num      = MM_REGION_VALID_REGION + MM_REGION_INVALID_REGION;
     size_t   free       = 0;
     size_t   check_free = 0;
-    size_t   allocator  = (size_t)__builtin_return_address(YOC_MM_ALLOC_DEPTH);
+    size_t   i          = 0;
+    size_t   allocator  = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
 
     memset(&my_mm_region_list_head,0,sizeof(k_mm_region_head_t));
     ret  =  yunos_mm_region_init(NULL,NULL, r_num);
@@ -59,7 +63,7 @@ static uint8_t mm_region_break_case1(void)
     ret = yunos_mm_bf_alloc(&my_mm_region_list_head, (void **)&ptmp,0,allocator);
     MYASSERT(ret == YUNOS_MM_ALLOC_SIZE_ERR);
 
-    ret = yunos_mm_bf_alloc(NULL, (void **)&ptmp,allocator,48);
+    ret = yunos_mm_bf_alloc(NULL, (void **)&ptmp,48,allocator);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
 
@@ -124,6 +128,34 @@ static uint8_t mm_region_break_case1(void)
     MYASSERT(free == check_free);
     MYASSERT(my_mm_region_list_head.frag_num == --r_num);
 
+    memset(regions1[0].start,0,regions1[0].len);
+
+    ret  =  yunos_mm_region_init(&my_mm_region_list_head_2,regions1, 1);
+    MYASSERT(ret == YUNOS_SUCCESS);
+    //add for best fit test
+    for(i=1;i<10;i++){
+        ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp[i],4*i+1,allocator);
+        MYASSERT(ret == YUNOS_SUCCESS);
+    }
+    for(i=1;i<10;i++){
+        if(i%2 == 0){
+            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp[i]);
+            MYASSERT(ret == YUNOS_SUCCESS);
+        }
+    }
+    for(i=1;i<10;i++){
+        if(i%2 == 0){
+            ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp2[i],4*i,allocator);
+            MYASSERT(ret == YUNOS_SUCCESS);
+            MYASSERT(mp[i] == mp2[i]);
+            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp2[i]);
+            MYASSERT(ret == YUNOS_SUCCESS);
+        }
+        else{
+            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp[i]);
+            MYASSERT(ret == YUNOS_SUCCESS);
+        }
+    }
     return 0;
 }
 static uint8_t mm_region_break_case2(void)
@@ -135,7 +167,7 @@ static uint8_t mm_region_break_case2(void)
     uint32_t r_num      = MM_REGION_VALID_REGION + MM_REGION_INVALID_REGION;
     size_t   free       = 0;
     size_t   check_free = 0;
-    size_t   allocator  = (size_t)__builtin_return_address(YOC_MM_ALLOC_DEPTH);
+    size_t   allocator  = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
 
     memset(&my_mm_region_list_head2,0,sizeof(k_mm_region_head_t));
     ret  =  yunos_mm_region_init(NULL,NULL, r_num);
@@ -212,6 +244,9 @@ static uint8_t mm_region_break_case2(void)
     MYASSERT(free == check_free);
     MYASSERT(my_mm_region_list_head2.frag_num == r_num);
 
+    ret = check_mm_info_func();
+    MYASSERT(ret == YUNOS_SUCCESS);
+
     ret = yunos_mm_xf_free(&my_mm_region_list_head2, ptmp1);
     MYASSERT(ret == YUNOS_SUCCESS);
     check_free += 60 + sizeof(k_mm_region_list_t);
@@ -228,7 +263,6 @@ static uint8_t mm_region_break_case2(void)
 
     return 0;
 }
-
 
 
 static const test_func_t mm_region_func_runner[] = {
