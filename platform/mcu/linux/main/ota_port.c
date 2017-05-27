@@ -6,16 +6,14 @@
 #include "hal/ota.h"
 #include "yos/log.h"
 
-static const char *TAG      = "yos_fota";
-
 static int linuxhost_ota_init(hal_ota_module_t *m, void *something)
 {
     return 0;
 }
 
 static FILE* ota_fd = NULL;
-#define OTA_IMAGE_TMP_FILE "./out/alinkapp@linuxhost/ota_main_temp"
-#define OTA_IMAGE_FILE     "./out/alinkapp@linuxhost/main"
+#define OTA_IMAGE_TMP_FILE "./out/aos_firmware_temp"
+#define OTA_IMAGE_FILE     "./out/aos_firmware"
 
 int linuxhost_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
 {
