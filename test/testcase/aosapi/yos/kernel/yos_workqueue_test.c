@@ -52,7 +52,7 @@ static void CASE_aosapi_kernel_workqueue_param()
 static void CASE_aosapi_kernel_workqueue_default()
 {
 	// TODO: not implement
-	// yos_work_cancle() and yos_work_schedule()
+	// yos_work_cancle() and yos_work_sched()
 }
 
 static void WORK_aosapi_kernel_workqueue_custom(void *arg)
@@ -123,7 +123,7 @@ static void CASE_aosapi_kernel_work_param()
 
 #if 0
 	// TODO: not implement
-	ret = yos_work_schedule(NULL);
+	ret = yos_work_sched(NULL);
 	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
 #endif
 
