@@ -319,7 +319,7 @@ void _trace_task_abort(ktask_t *task, ktask_t *task_abort)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
 }
 
 /* semaphore trace function */
