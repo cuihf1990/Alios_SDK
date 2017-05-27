@@ -17,14 +17,9 @@
 #ifndef YOC_SYS_VERSION
 #define YOC_SYS_VERSION
 
-const char *get_yoc_product_name(void);
-const char *get_yoc_factory_id(void);
-const char *get_yoc_product_model(void);
-const char *get_yoc_device_type(void);
-const char *get_yoc_terminal_type(void);
-const char *get_yoc_os_version (void);
-const char *get_yoc_os_internal_version(void);
-const char *get_yoc_product_internal_type(void);
+const char *get_yos_product_model(void);
+const char *get_yos_os_version (void);
+const char *get_yos_product_internal_type(void);
 
 #endif /* YOC_SYS_VERSION */
 
