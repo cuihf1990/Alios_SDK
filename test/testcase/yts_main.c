@@ -44,6 +44,7 @@ extern void test_hal(void);
 extern void test_tfs(void);
 extern void test_aosapi(void);
 extern void test_vfs(void);
+extern void test_vcall(void);
 
 static void add_test(void);
 
@@ -119,7 +120,7 @@ void add_test(void)
     test_hashtable();
 
     test_kv();
-
+    test_vcall();
     test_rhino();
 
     test_rhino_port();
