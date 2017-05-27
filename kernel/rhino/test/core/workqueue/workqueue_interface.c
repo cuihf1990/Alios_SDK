@@ -245,21 +245,21 @@ static uint8_t workqueue_interface_case1(void)
         return 1;
     }
 
-    ret = yunos_work_run(&wq2, &work4);
+    ret = yunos_work_sched(&work4);
     if (ret != YUNOS_SUCCESS) {
         MYASSERT(ret);
         yunos_sem_give(&g_wq_test_sem);
         return 1;
     }
 
-    ret = yunos_work_run(&wq2, &work5);
+    ret = yunos_work_sched(&work5);
     if (ret != YUNOS_SUCCESS) {
         MYASSERT(ret);
         yunos_sem_give(&g_wq_test_sem);
         return 1;
     }
 
-    ret = yunos_work_run(&wq2, &work6);
+    ret = yunos_work_sched(&work6);
     if (ret != YUNOS_SUCCESS) {
         MYASSERT(ret);
         yunos_sem_give(&g_wq_test_sem);
@@ -269,7 +269,7 @@ static uint8_t workqueue_interface_case1(void)
     /* wait for task4 */
     yunos_sem_take(&g_wq_test_sem, YUNOS_WAIT_FOREVER);
 
-    ret = yunos_work_run(&wq2, &work5);
+    ret = yunos_work_sched(&work5);
     if (ret != YUNOS_SUCCESS) {
         MYASSERT(ret);
         yunos_sem_give(&g_wq_test_sem);

@@ -46,6 +46,11 @@ typedef unsigned int yos_task_key_t;
 void yos_reboot(void);
 
 /**
+ * get HZ
+ */
+int yos_get_hz(void);
+
+/**
  * Get kernel version
  *
  * @return the operation status, YUNOS_SUCCESS is OK, others is error

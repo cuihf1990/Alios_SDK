@@ -19,7 +19,6 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <k_api.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/list.h>
@@ -104,7 +103,7 @@ int yos_event_service_init(void)
     return 0;
 }
 
-int yos_event_service_deinit(int fd)
+void yos_event_service_deinit(int fd)
 {
     yos_cancel_poll_read_fd(fd, event_read_cb, NULL);
 }
@@ -192,7 +191,7 @@ int yos_schedule_call(yos_call_t fun, void *arg)
 }
 
 typedef struct work_para {
-    kwork_t *work;
+    yos_work_t *work;
     yos_loop_t loop;
     yos_call_t action;
     void *arg1;
@@ -219,18 +218,17 @@ void yos_cancel_work(void *work, yos_call_t action, void *arg1)
 }
 
 #define WQ_STACK_SIZE 8192
-static kworkqueue_t *create_wq(void)
+static yos_workqueue_t *create_wq(void)
 {
-    kworkqueue_t *wq;
+    yos_workqueue_t *wq;
     wq = malloc(sizeof(*wq));
-    if (!wq)
+    if (!wq) {
         goto err_out;
+    }
 
-    kstat_t ret;
-    void *stack = malloc(WQ_STACK_SIZE);
-    ret = yunos_workqueue_create(wq, "loop", 5, stack, WQ_STACK_SIZE / 4);
-    if (ret != YUNOS_SUCCESS) {
-        free(stack);
+    int ret;
+    ret = yos_workqueue_create(wq, 5, WQ_STACK_SIZE);
+    if (ret != 0) {
         goto err_out;
     }
 
@@ -242,14 +240,14 @@ err_out:
 
 void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
 {
-    static kworkqueue_t *wq;
-    kstat_t ret;
+    static yos_workqueue_t *wq;
+    int ret;
 
     if (!wq) {
         wq = create_wq();
     }
 
-    kwork_t *work = malloc(sizeof(*work));
+    yos_work_t *work = malloc(sizeof(*work));
     work_par_t *wpar = malloc(sizeof(*wpar));
 
     if (!wq || !work || !wpar)
@@ -262,13 +260,11 @@ void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_c
     wpar->fini_cb = fini_cb;
     wpar->arg2 = arg2;
 
-    ms = ms * YUNOS_CONFIG_TICKS_PER_SECOND;
-    ms = (ms + 999) / 1000;
-    ret = yunos_work_init(work, run_my_work, wpar, ms);
-    if (ret != YUNOS_SUCCESS)
+    ret = yos_work_init(work, run_my_work, wpar, ms);
+    if (ret != 0)
         goto err_out;
-    ret = yunos_work_run(wq, work);
-    if (ret != YUNOS_SUCCESS)
+    ret = yos_work_run(wq, work);
+    if (ret != 0)
         goto err_out;
 
     return work;

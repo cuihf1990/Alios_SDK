@@ -24,6 +24,7 @@
 #include "yts.h"
 
 extern void test_basic(void);
+extern void test_fota(void);
 extern void test_rhino(void);
 extern void test_rhino_port(void);
 extern void test_csp(void);
@@ -53,7 +54,7 @@ static int yts_argc;
 static char **yts_argv;
 int yts_get_args(const char ***argv)
 {
-    *argv = yts_argv;
+    *argv = (const char **)yts_argv;
     return yts_argc;
 }
 
@@ -109,9 +110,9 @@ void yts_run(int argc, char **argv)
 void add_test(void)
 {
     test_basic();
-    
+
     test_fota();
-    
+
     test_yloop();
 
     test_hal();
@@ -121,7 +122,9 @@ void add_test(void)
     test_hashtable();
 
     test_kv();
+
     test_vcall();
+
     test_rhino();
 
     test_rhino_port();
