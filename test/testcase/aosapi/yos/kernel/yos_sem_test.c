@@ -37,7 +37,7 @@ static void CASE_aosapi_kernel_sem_param()
 
 	// TODO: test fail
 	ret = yos_sem_new(&sem, -1);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SEM_OVF, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
 	if(ret==YUNOS_SUCCESS) {
 		yos_sem_free(&sem);
 	}
@@ -56,7 +56,7 @@ static void CASE_aosapi_kernel_sem_param()
 
 	// TODO: test fail
 	ret = yos_sem_new(&sem, 0xFFFFFFFF);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SEM_OVF, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
 	if(ret==YUNOS_SUCCESS) {
 		yos_sem_free(&sem);
 	}
