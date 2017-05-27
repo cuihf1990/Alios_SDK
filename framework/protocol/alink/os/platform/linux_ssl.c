@@ -124,7 +124,15 @@ static int ssl_init( const char *my_ca )
     return 0;
 }
 
+static int should_retry(void *ssl, int err)
+{
+    int s_err = SSL_get_error(ssl, err);
+    if (s_err == SSL_ERROR_WANT_READ || s_err == SSL_ERROR_WANT_WRITE)
+        return 1;
 
+    printf("ssl error %d\n", s_err);
+    return 0;
+}
 
 static int ssl_establish(int sock, SSL **ppssl)
 {
@@ -141,13 +149,20 @@ static int ssl_establish(int sock, SSL **ppssl)
     ssl_temp = SSL_new(ssl_ctx);
 
     SSL_set_fd(ssl_temp, sock);
-    err = SSL_connect(ssl_temp);
 
-    if (err == -1)
-    {
-        printf("failed create ssl connection \n");
-        goto err;
-    }
+    do {
+        err = SSL_connect(ssl_temp);
+
+        if (err < 0)
+        {
+            if (should_retry(ssl_temp, err))
+                continue;
+            printf("failed create ssl connection\n");
+            goto err;
+        }
+
+        break;
+    } while (1);
 
     //TODO:rex linux platform not support ca?
 #if 0
@@ -247,8 +262,11 @@ int platform_ssl_recv(void *ssl, char *buf, int len)
 
     do {
         ret = SSL_read((SSL*)ssl, buf, len);
-        if (ret <= 0)
+        if (ret <= 0) {
+            if (should_retry(ssl, ret))
+                continue;
             break;
+        }
         else {
             total_len += ret;
             buf += ret;
@@ -268,7 +286,13 @@ int platform_ssl_send(void *ssl, const char *buf, int len)
     int ret;
     
     platform_mutex_lock(mutex);
+retry:
     ret = SSL_write((SSL*)ssl, buf, len);
+    if (ret < 0) {
+        if (should_retry(ssl, ret))
+            goto retry;
+        printf("%s %d\n", __func__, SSL_get_error(ssl, ret));
+    }
     platform_mutex_unlock(mutex);
     return (ret > 0) ? ret : -1;
 }
