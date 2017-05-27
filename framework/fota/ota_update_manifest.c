@@ -61,6 +61,7 @@ void ota_download_start(void * buf)
     if(NULL != g_finish_cb) {
         g_finish_cb(0,"");
     }
+    OTA_LOG_E("/************************************task update over**************************************/");
     free_global_topic();
 }
 
@@ -71,16 +72,14 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
 {
     int ret = 0;
 
-    OTA_LOG_E("/************************************update start**************************************/");
     ret = ota_if_need(response_parmas,request_parmas);
     if(1 != ret) return ret;
 
     g_write_func = func;
     g_finish_cb = fcb;
     strncpy(url, response_parmas->download_url,sizeof url);
-    ret = yos_task_new("ota", ota_download_start, NULL, 8192);
+    ret = yos_task_new("ota", ota_download_start, NULL, 8196);
 
-    OTA_LOG_E("/************************************update over**************************************/");
     return ret;
 }
 
