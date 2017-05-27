@@ -38,7 +38,7 @@ static yos_queue_t g_queue;
 static yos_sem_t sync_sem;
 static Message send_msg;
 static Message recv_msg;
-static int recv_size = 0;
+static unsigned int recv_size = 0;
 
 
 static void CASE_aosapi_kernel_queue_param()
@@ -96,7 +96,7 @@ static void CASE_aosapi_kernel_queue_param()
 #endif
 
 	ret = yos_queue_recv(&queue, 0, &recv_msg, &recv_size);
-	YUNIT_ASSERT_MSG(ret==YUNOS_NO_PEND_WAIT, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
 
 	ret= yos_queue_recv(&queue, YUNOS_WAIT_FOREVER, NULL, &recv_size);
 	YUNIT_ASSERT_MSG(ret==YUNOS_NULL_PTR, "ret=%d", ret);
@@ -202,9 +202,10 @@ static void CASE_aosapi_kernel_queue_full()
 
 void aosapi_kernel_queue_test_entry(yunit_test_suite_t *suite)
 {
-//	yunit_add_test_suites(aosapi_kernel_queue_testsuites);
 	yunit_add_test_case(suite, "kernel.queue.param", CASE_aosapi_kernel_queue_param);
 //	yunit_add_test_case(suite, "kernel.queue.sendrecv", CASE_aosapi_kernel_queue_send_recv);
 	yunit_add_test_case(suite, "kernel.queue.full", CASE_aosapi_kernel_queue_full);
+
+	(void)CASE_aosapi_kernel_queue_send_recv;
 }
 

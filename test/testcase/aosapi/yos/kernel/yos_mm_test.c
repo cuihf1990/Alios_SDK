@@ -23,7 +23,6 @@
 
 static void CASE_aosapi_kernel_mm_param()
 {
-	char *p = NULL;
 	/* dumpsys_mm_info_func here */
 	yos_malloc(0);
 
