@@ -107,7 +107,9 @@ void yts_run(int argc, char **argv)
 void add_test(void)
 {
     test_basic();
-
+    
+    test_fota();
+    
     test_yloop();
 
     test_hal();

@@ -42,6 +42,7 @@ extern "C"
 #define CODE_SYS_ON_START_COMPLETED  2
 #define CODE_SYS_ON_START_FAILED     4
 #define CODE_SYS_ON_IDLE             3
+#define CODE_SYS_ON_START_FOTA       5
 
 /** WiFi event */
 #define  EV_WIFI                0x0002
