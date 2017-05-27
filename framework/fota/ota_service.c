@@ -110,6 +110,7 @@ void ota_check_update(const char *buf, int len)
 
 }
 
+
 void ota_service_event(input_event_t *event, void *priv_data) {
     if (event->type == EV_SYS && event->code == CODE_SYS_ON_START_FOTA) {
         LOGD(TAG, "ota_service_event-------------fota");

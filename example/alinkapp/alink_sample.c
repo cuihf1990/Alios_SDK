@@ -76,9 +76,11 @@ void cloud_connected(void) {
 }
 void cloud_disconnected(void) { printf("alink cloud disconnected!\n"); }
 
+extern void do_update(const char *buf);
 int callback_upgrade_device(const char *params)
 {
     printf("alink device start to upgrade. \n");
+    do_update(params);
 }
 
 int callback_cancel_upgrade_device(const char *params)

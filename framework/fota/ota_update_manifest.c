@@ -16,14 +16,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <yos/kernel.h>
 #include "ota_update_manifest.h"
 #include "ota_log.h"
-#include "ota_update_packet.h"
 #include "ota_transport.h"
 #include "ota_util.h"
 
-#define OTA_URL_MAX_LEN 500
+#define OTA_URL_MAX_LEN 512
 
 /*
  param-name           meaning                      value-examples
@@ -50,20 +49,36 @@ int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *req
     return 0;
 }
 
+write_flash_cb_t g_write_func;
+ota_finish_cb_t g_finish_cb;
+char url[OTA_URL_MAX_LEN];
+
+void ota_download_start(void * buf)
+{
+    OTA_LOG_E("/************************************task update start**************************************/");
+    http_download(url, g_write_func);
+
+    if(NULL != g_finish_cb) {
+        g_finish_cb(0,"");
+    }
+    free_global_topic();
+}
+
+
+
 int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_params *request_parmas,
                                write_flash_cb_t func, ota_finish_cb_t fcb)
 {
     int ret = 0;
+
     OTA_LOG_E("/************************************update start**************************************/");
     ret = ota_if_need(response_parmas,request_parmas);
     if(1 != ret) return ret;
 
-    http_download(response_parmas->download_url, func);
-
-    if(NULL != fcb) {
-        fcb(ret,response_parmas->primary_version);
-    }
-    free_global_topic();
+    g_write_func = func;
+    g_finish_cb = fcb;
+    strncpy(url, response_parmas->download_url,sizeof url);
+    ret = yos_task_new("ota", ota_download_start, NULL, 8192);
 
     OTA_LOG_E("/************************************update over**************************************/");
     return ret;
