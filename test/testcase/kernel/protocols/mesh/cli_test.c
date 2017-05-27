@@ -1,3 +1,4 @@
+#include <yos/kernel.h>
 #include "yunit.h"
 
 #include "tools/cli.h"
