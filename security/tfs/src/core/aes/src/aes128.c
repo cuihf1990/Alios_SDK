@@ -28,20 +28,20 @@ int aes128_cbc_enc(const uint8_t *key,
     int32_t last_section_len = 0;
     unsigned char padding_char;
     int ret = 0;
-    LOGD(TAG_AES128, "%s: enter.\n", __func__);
+    LOGD(TAG_AES128, "[%s]: enter.\n", __func__);
 
     if (key == NULL || iv == NULL || input_len <= 0 || input == NULL || output_len == NULL || output == NULL) {
-        LOGE(TAG_AES128, "%s: input param error!\n", __func__);
+        LOGE(TAG_AES128, "[%s]: input param error!\n", __func__);
         return -1;
     }
 
     if (padding != AES_PKCS7_PADDING && padding != AES_ZERO_PADDING && padding != AES_NO_PADDING) {
-        LOGE(TAG_AES128, "%s: not supported padding!\n", __func__);
+        LOGE(TAG_AES128, "[%s]: not supported padding!\n", __func__);
         return -1;
     }
 
     if (padding == AES_NO_PADDING && input_len % 16 != 0) {
-        LOGE(TAG_AES128, "%s: input_len should be multiple of 16 when padding type is nopadding.\n", __func__);
+        LOGE(TAG_AES128, "[%s]: input_len should be multiple of 16 when padding type is nopadding.\n", __func__);
         return -1;
     }
 
@@ -52,7 +52,7 @@ int aes128_cbc_enc(const uint8_t *key,
         ret = hal_aes128_cbc_enc(key, iv, input_len, input, output);
 #endif
         if (ret != 0) {
-            LOGE(TAG_AES128,"%s: encrypt error!\n", __func__);
+            LOGE(TAG_AES128,"[%s]: encrypt error!\n", __func__);
             return -1;
         }
         *output_len = input_len;
@@ -77,7 +77,7 @@ int aes128_cbc_enc(const uint8_t *key,
         ret = hal_aes128_cbc_enc(key, iv, input_len - last_section_len, input, output);
 #endif
         if (ret != 0) {
-            LOGE(TAG_AES128,"%s: encrypt1 error!\n", __func__);
+            LOGE(TAG_AES128,"[%s]: encrypt1 error!\n", __func__);
             return -1;
         }
 
@@ -88,7 +88,7 @@ int aes128_cbc_enc(const uint8_t *key,
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_AES128,"%s: encrypt2 error!\n", __func__);
+            LOGE(TAG_AES128,"[%s]: encrypt2 error!\n", __func__);
             return -1;
         }
         *output_len = input_len - last_section_len + 16;
@@ -107,20 +107,20 @@ int aes128_cbc_dec(const uint8_t *key,
     int ret = 0;
     int i = 0;
     uint8_t last_section[16];
-    LOGD(TAG_AES128, "%s: enter.\n", __func__);
+    LOGD(TAG_AES128, "[%s]: enter.\n", __func__);
 
     if (key == NULL || iv == NULL || input_len <= 0 || input == NULL || output_len == NULL || output == NULL) {
-        LOGE(TAG_AES128, "%s: input param error!\n", __func__);
+        LOGE(TAG_AES128, "[%s]: input param error!\n", __func__);
         return -1;
     }
 
     if (padding != AES_PKCS7_PADDING && padding != AES_ZERO_PADDING && padding != AES_NO_PADDING) {
-        LOGE(TAG_AES128, "%s: not supported padding!\n", __func__);
+        LOGE(TAG_AES128, "[%s]: not supported padding!\n", __func__);
         return -1;
     }
 
     if (input_len % 16 != 0) {
-        LOGE(TAG_AES128, "%s: input_len should be multiple of 16.\n", __func__);
+        LOGE(TAG_AES128, "[%s]: input_len should be multiple of 16.\n", __func__);
         return -1;
     }
 
@@ -132,7 +132,7 @@ int aes128_cbc_dec(const uint8_t *key,
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_AES128,"%s: decrypt error!\n", __func__);
+            LOGE(TAG_AES128,"[%s]: decrypt error!\n", __func__);
             return -1;
         }
 
@@ -145,7 +145,7 @@ int aes128_cbc_dec(const uint8_t *key,
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_AES128,"%s: decrypt error1!\n", __func__);
+            LOGE(TAG_AES128,"[%s]: decrypt error1!\n", __func__);
             return -1;
         }
 
@@ -156,12 +156,12 @@ int aes128_cbc_dec(const uint8_t *key,
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_AES128,"%s: decrypt error2!\n", __func__);
+            LOGE(TAG_AES128,"[%s]: decrypt error2!\n", __func__);
             return -1;
         }
 
         if ((unsigned char)last_section[15] > 16) {
-            LOGE(TAG_AES128,"%s: decrypted data error1!\n", __func__);
+            LOGE(TAG_AES128,"[%s]: decrypted data error1!\n", __func__);
             return -1;
         }
 
@@ -171,7 +171,7 @@ int aes128_cbc_dec(const uint8_t *key,
             }
         }
         if (i != 16) {
-            LOGE(TAG_AES128,"%s: decrypted data error2!\n", __func__);
+            LOGE(TAG_AES128,"[%s]: decrypted data error2!\n", __func__);
             return -1;
         }
 

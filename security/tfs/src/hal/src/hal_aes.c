@@ -11,7 +11,7 @@
 #include "tee_aes.h"
 #endif
 
-#define TAG_HAL_RSA "TFS_HAL_AES"
+#define TAG_HAL_AES "TFS_HAL_AES"
 
 int32_t hal_aes128_cbc_enc(const uint8_t *key,
                            const uint8_t *iv,
@@ -19,6 +19,7 @@ int32_t hal_aes128_cbc_enc(const uint8_t *key,
                            const uint8_t *input,
                            uint8_t *output)
 {
+    LOGD(TAG_HAL_AES, "[%s]: enter.\n", __func__);
 #if defined(TFS_TEE)
     return tee_aes_cbc_encrypt(key, iv, input_len, input, output);
 #else
@@ -32,6 +33,7 @@ int32_t hal_aes128_cbc_dec(const uint8_t *key,
                            const uint8_t *input,
                            uint8_t *output)
 {
+    LOGD(TAG_HAL_AES, "[%s]: enter.\n", __func__);
 #if defined(TFS_TEE)
     return tee_aes_cbc_decrypt(key, iv, input_len, input, output);
 #else
