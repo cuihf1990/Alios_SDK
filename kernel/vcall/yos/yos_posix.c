@@ -228,7 +228,7 @@ int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
 {
 }
 
-int yos_work_schedule(yos_work_t *work)
+int yos_work_sched(yos_work_t *work)
 {
 }
 
