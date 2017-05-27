@@ -175,6 +175,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
 {
     CPSR_ALLOC();
 
+    size *= sizeof(cpu_stack_t);
     size_t real_size = size > MIN_STACK_SIZE ? size : MIN_STACK_SIZE;
     task_ext_t   *tcb_ext = (task_ext_t *)base;
 
