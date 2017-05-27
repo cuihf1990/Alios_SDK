@@ -24,6 +24,8 @@
 
 #include "ota_update_manifest.h"
 
+#define BUFFER_MAX_SIZE 1024
+
 /**
  * @brief http_string_strchr 搜索字符串右边起的第一个匹配字符
  *
@@ -176,17 +178,17 @@ err_out:
 
 int http_download(char *url, write_flash_cb_t func) {
     int sockfd = 0;
-    char buffer[1024] = {0};
+    char buffer[BUFFER_MAX_SIZE] = {0};
     int port = 0;
     int nbytes = 0;
     char host_file[128] = {0};
     char host_addr[256] = {0};
-    char request[1024] = {0};
+    char request[BUFFER_MAX_SIZE] = {0};
     int send = 0;
     int totalsend = 0;
     int i = 0;
     //char *pt = NULL;
-    char psave[4096] = {0};;
+    char psave[BUFFER_MAX_SIZE] = {0};;
     size_t index = 0;
 
     OTA_LOG_I("parameter.1 is: %s\n ", url);
@@ -226,7 +228,7 @@ int http_download(char *url, write_flash_cb_t func) {
 
     i = 0;
     /*连接成功了，接收http响应,每次处理4096个字节*/
-    memset(psave, 0, 4096);
+    memset(psave, 0, BUFFER_MAX_SIZE);
     while ((nbytes = read(sockfd, buffer, 1)) == 1) {
         if (i < 4) {
             /*这里处理http头部*/
@@ -239,17 +241,17 @@ int http_download(char *url, write_flash_cb_t func) {
         } else /*如果结尾部分不为\r\n\r\n则表示头接收完毕，下面是请求内容*/
         {
             psave[index++] = buffer[0];
-            OTA_LOG_I("%c", buffer[0]);
-            if (index > 4096) {
-                func(4096, (uint8_t *)psave, 4096, 0);
-                memset(psave, 0, 4096);
+            OTA_LOG_E("%c", buffer[0]);
+            if (index > BUFFER_MAX_SIZE) {
+                func(BUFFER_MAX_SIZE, (uint8_t *)psave, BUFFER_MAX_SIZE, 0);
+                memset(psave, 0, BUFFER_MAX_SIZE);
                 index = 0;
             }
         }
     }
     /*将剩余的字符写入文件*/
-    if (index <= 4096) {
-        func(4096, (uint8_t*)psave, index, 0);
+    if (index <= BUFFER_MAX_SIZE) {
+        func(BUFFER_MAX_SIZE, (uint8_t*)psave, index, 0);
     }
     close(sockfd);
 
