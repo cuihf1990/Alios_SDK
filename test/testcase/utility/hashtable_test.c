@@ -12,7 +12,7 @@ typedef struct {
 } stu_user_info;
 
 static void *g_ht = NULL;
-static int   g_ht_size = 100;
+static int   g_ht_size = 5;
 
 static int key_integer = 5;
 static int val_integer = 10;
@@ -24,8 +24,25 @@ static stu_user_info val_stu = {"xxxxx", "yyyyyyyy", "zzzzzzzzzzz"};
 static void test_ht_add(void)
 {
     int ret = 0;
+    int i;
+
+    for (i=0;i<g_ht_size*2;i++) {
+        ret = ht_add(g_ht, &i, sizeof(i), &i, sizeof(int));
+        YUNIT_ASSERT(0 == ret);
+    }
     
-    ret = ht_add(g_ht, &key_integer, sizeof(&key_integer), &val_integer, sizeof(int));
+    for (i=0;i<g_ht_size*2;i++) {
+        int tmp, len;
+        ht_find(g_ht, &i, sizeof(i), &tmp, &len);
+        YUNIT_ASSERT(i == tmp && len == sizeof(i));
+        ret = ht_del(g_ht, &i, sizeof(i));
+        YUNIT_ASSERT(0 == ret);
+    }
+
+    ret = ht_add(g_ht, &key_integer, sizeof(key_integer), &val_integer, sizeof(int));
+    YUNIT_ASSERT(0 == ret);
+
+    ret = ht_add(g_ht, &key_integer, sizeof(key_integer), &val_integer, sizeof(int));
     YUNIT_ASSERT(0 == ret);
 
     ret = ht_add(g_ht, key_str, strlen(key_str) + 1, val_str, strlen(val_str) + 1);
@@ -117,6 +134,9 @@ static int init(void)
 static int cleanup(void)
 {
     int ret = 0;
+
+    ret = ht_clear(g_ht);
+    YUNIT_ASSERT(ret == 0);
 
     ret = ht_destroy(g_ht);
     YUNIT_ASSERT(ret == 0);
