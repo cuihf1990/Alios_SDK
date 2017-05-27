@@ -1854,6 +1854,7 @@ ur_error_t mm_start(mm_cb_t *mm_cb)
 
 ur_error_t mm_stop(void)
 {
+    g_mm_state.device.mode = MODE_RX_ON;
     stop_neighbor_updater();
     mf_init();
     nd_init();

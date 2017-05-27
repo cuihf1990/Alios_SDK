@@ -93,6 +93,7 @@ static void dual_if_topology_line_case(void)
     stop_node(13);
     stop_node(14);
     stop_node(15);
+    cmd_to_agent("stop");
 }
 
 void test_uradar_layer_routing_2mobile_case(void)
