@@ -70,7 +70,7 @@ static int network_create_socket( pplatform_netaddr_t netaddr, int type, struct 
         }
     }
 
-    int tcp_nodelay = 1;
+    int tcp_nodelay = 0;
     setsockopt(*psock, IPPROTO_TCP, TCP_NODELAY, (const void *) &tcp_nodelay, sizeof(int));
 
     paddr->sin_addr.s_addr = ip;

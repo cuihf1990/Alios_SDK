@@ -10,7 +10,6 @@
 #include "yos/kernel.h"
 #include "yos/framework.h"
 #include "os.h"
-#include <k_api.h>
 
 wsf_request_queue_t *global_request_queue;
 
@@ -66,8 +65,6 @@ typedef struct {
     void            *extra;
 }cb_network;
 
-static kwork_t g_work_deal_req;
-static kworkqueue_t g_wq_deal_req;
 static cb_network g_wsf_cb;
 
 static void cb_recv(int fd,void *arg)
@@ -204,6 +201,7 @@ static void __cb_wsf_close(int fd,void *arg)
 static int  __cb_wsf_recv(int fd,void *arg)
 {
     int count = 0;
+
     if (wsf_conn && (-1 != fd)) {
         char *buf = wsf_conn->recv_buf + wsf_conn->recv_buf_pos;
         int len = wsf_conn->recv_buf_len - wsf_conn->recv_buf_pos;
@@ -306,7 +304,6 @@ static void process_msg_response(wsf_msg_t *msg, int length)
 static void process_msg_request(wsf_msg_t *msg, int length)
 {
     struct request_msg_node *node;
-    kstat_t ret;
 
     if (total_req_nodes >= CONFIG_REQMSG_LENGTH) {
         LOGW(MODULE_NAME,"request queue has too nodes to handle");
@@ -324,13 +321,6 @@ static void process_msg_request(wsf_msg_t *msg, int length)
     os_mutex_unlock(g_req_mutex);
 
     yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
-#if 0 
-    ret = yunos_work_run(&g_wq_deal_req, &g_work_deal_req);
-    if (ret != YUNOS_SUCCESS) {
-        LOGE(MODULE_NAME,"failed to run the work. \n");
-        return ;
-    }
-#endif
 }
 
 void init_req_glist(void)
@@ -382,9 +372,6 @@ void request_msg_handle(void *arg)
 
     if (!dlist_empty(&g_list))
         yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
-#if 0
-        yunos_work_run(&g_wq_deal_req, &g_work_deal_req);
-#endif
 }
 
 static void __process_msg_request(wsf_msg_t *msg, int length)
@@ -682,34 +669,11 @@ int __wsf_invoke_async(wsf_msg_t * req,wsf_async_cb_t cb,void *arg)
     return (NULL == node);
 }
 
-#define WORK_STACK_BUF_REQ 0x800 
-static cpu_stack_t g_stack_buf_deal_req[WORK_STACK_BUF_REQ];
 wsf_code wsf_start_worker(wsf_config_t *config)
 {
-    kstat_t ret; 
     wsf_running = 1;
     receive_worker(config);
      
-    //yos_task_new("wsf", _receive_worker, config, 8192);
-    /*void * recv_thread = NULL; 
-    recv_thread = os_thread_create("wsf_receive_worker", _receive_worker, config);
-    if ( NULL == recv_thread) {
-        printf("failed to start receiver_worker");
-        return ;
-    }*/  
-    ret = yunos_workqueue_create(&g_wq_deal_req, "deal_req", 1, g_stack_buf_deal_req,WORK_STACK_BUF_REQ);
-
-    if (ret != YUNOS_SUCCESS) {
-        LOGE("wsf_worker","failed to create workqueue to deal with req\n");
-        return -1; 
-    }
-    
-    ret = yunos_work_init(&g_work_deal_req, request_msg_handle, NULL, 0);
-    if (ret != YUNOS_SUCCESS) {
-        LOGE(MODULE_NAME,"failed to create work to deal with req \n");
-        return -1;
-    }
-
     return WSF_SUCCESS;
 }
 
