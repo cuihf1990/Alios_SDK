@@ -3,3 +3,4 @@ NAME := yts
 $(NAME)_SOURCES := main.c
 $(NAME)_COMPONENTS := testcase
 
+GLOBAL_DEFINES += CONFIG_USE_DEF_AP
