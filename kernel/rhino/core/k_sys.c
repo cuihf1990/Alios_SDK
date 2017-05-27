@@ -33,6 +33,7 @@ YUNOS_INLINE void rhino_stack_check_init(void)
 #endif
 }
 
+void workqueue_init(void);
 YUNOS_INLINE kstat_t rhino_init(void)
 {
     g_sys_stat = YUNOS_STOPPED;
@@ -86,6 +87,8 @@ YUNOS_INLINE kstat_t rhino_start(void)
     if (g_sys_stat == YUNOS_STOPPED) {
         preferred_ready_task_get(&g_ready_queue);
         g_active_task = g_preferred_ready_task;
+
+        workqueue_init();
 
 #if (YUNOS_CONFIG_USER_HOOK > 0)
         yunos_start_hook();

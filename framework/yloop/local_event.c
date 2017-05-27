@@ -212,45 +212,28 @@ static void run_my_work(void *arg)
     free(wpar);
 }
 
-void yos_cancel_work(void *work, yos_call_t action, void *arg1)
+void yos_cancel_work(void *work, yos_call_t action, void *arg)
 {
-    /* ToDo */
-}
+    int ret = yos_work_cancel(work);
+    if (ret != 0)
+        return;
 
-#define WQ_STACK_SIZE 8192
-static yos_workqueue_t *create_wq(void)
-{
-    yos_workqueue_t *wq;
-    wq = malloc(sizeof(*wq));
-    if (!wq) {
-        goto err_out;
-    }
+    work_par_t *wpar = arg;
+    if (wpar->work != work)
+        return;
 
-    int ret;
-    ret = yos_workqueue_create(wq, 5, WQ_STACK_SIZE);
-    if (ret != 0) {
-        goto err_out;
-    }
-
-    return wq;
-err_out:
-    free(wq);
-    return NULL;
+    free(wpar->work);
+    free(wpar);
 }
 
 void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
 {
-    static yos_workqueue_t *wq;
     int ret;
-
-    if (!wq) {
-        wq = create_wq();
-    }
 
     yos_work_t *work = malloc(sizeof(*work));
     work_par_t *wpar = malloc(sizeof(*wpar));
 
-    if (!wq || !work || !wpar)
+    if (!work || !wpar)
         goto err_out;
 
     wpar->work = work;
@@ -263,7 +246,7 @@ void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_c
     ret = yos_work_init(work, run_my_work, wpar, ms);
     if (ret != 0)
         goto err_out;
-    ret = yos_work_run(wq, work);
+    ret = yos_work_sched(work);
     if (ret != 0)
         goto err_out;
 
