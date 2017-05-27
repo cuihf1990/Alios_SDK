@@ -39,7 +39,7 @@ static uint8_t tasksem_count_case1(void)
     MYASSERT(ret == YUNOS_NULL_PTR);
 
     ret = yunos_task_sem_count_set(task_tasksem, (sem_count_t)-1);
-    MYASSERT(ret == YUNOS_SEM_OVF);
+    MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_task_sem_del(task_tasksem);
     MYASSERT(ret == YUNOS_SUCCESS);
