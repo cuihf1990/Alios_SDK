@@ -22,10 +22,6 @@ static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count, ui
     NULL_PARA_CHK(sem);
     NULL_PARA_CHK(name);
 
-    if (count == (sem_count_t)-1) {
-        return YUNOS_SEM_OVF;
-    }
-
     /* init the list */
     klist_init(&sem->blk_obj.blk_list);
 
