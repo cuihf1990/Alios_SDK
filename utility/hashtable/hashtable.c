@@ -84,7 +84,7 @@ void ht_unlock(void *ht)
 {
     ht_t *p = (ht_t *)ht;
     if (p) {
-        yos_mutex_lock(&p->lock, YOS_WAIT_FOREVER);
+        yos_mutex_unlock(&p->lock);
     }
 }
 

@@ -65,7 +65,7 @@ static yunit_test_case_t yunos_basic_testcases[] = {
 };
 
 static yunit_test_suite_t suites[] = {
-    { "yloop", init, cleanup, setup, teardown, yunos_basic_testcases },
+    { "fota", init, cleanup, setup, teardown, yunos_basic_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

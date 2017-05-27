@@ -45,6 +45,7 @@ extern void test_tfs(void);
 extern void test_aosapi(void);
 extern void test_vfs(void);
 extern void test_vcall(void);
+extern void test_alink(void);
 
 static void add_test(void);
 
@@ -132,7 +133,8 @@ void add_test(void)
 #ifdef CONFIG_YOS_MESH
     test_uradar();
 #endif
-
+    test_alink();
+    
     test_aosapi();
 }
 

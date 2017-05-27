@@ -281,7 +281,7 @@ int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work);
  * @param[in]  work  the work to run
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_work_schedule(yos_work_t *work);
+int yos_work_sched(yos_work_t *work);
 
 /**
  * This function will cancel a work on the default workqueue

@@ -311,10 +311,6 @@ kstat_t yunos_sem_count_set(ksem_t *sem, sem_count_t sem_count)
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (sem_count == (sem_count_t)-1) {
-        return YUNOS_SEM_OVF;
-    }
-
     blk_list_head = &sem->blk_obj.blk_list;
 
     YUNOS_CRITICAL_ENTER();

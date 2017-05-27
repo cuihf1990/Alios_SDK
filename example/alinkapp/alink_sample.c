@@ -98,7 +98,6 @@ int cloud_set_device_status(char *json_buffer)
     int attr_len = 0, value_len = 0, value = 0, i;
     char *value_str = NULL, *attr_str = NULL;
 
-    need_report = 1;
     printf("---> set device status :  %s\n",json_buffer);
     for (i = 0; device_attr[i]; i++) {
         attr_str = json_get_value_by_name(json_buffer, strlen(json_buffer),
@@ -205,8 +204,6 @@ int cloud_get_device_raw_data(char *json_buffer)
     int ret = 0, raw_data_len = RAW_DATA_SIZE;
     uint8_t raw_data[RAW_DATA_SIZE] = { 0 };
 
-    need_report = 1;
-
     ret = raw_data_unserialize(json_buffer, raw_data, &raw_data_len);
     if (!ret)
         return uart_send(raw_data, raw_data_len);
@@ -218,8 +215,6 @@ int cloud_set_device_raw_data(char *json_buffer)
 {
     int ret = 0, raw_data_len = RAW_DATA_SIZE;
     uint8_t raw_data[RAW_DATA_SIZE] = { 0 };
-
-    need_report = 1;
 
     ret = raw_data_unserialize(json_buffer, raw_data, &raw_data_len);
     if (!ret) {
