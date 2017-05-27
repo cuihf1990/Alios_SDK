@@ -79,8 +79,8 @@ static void test_yos_vfs_case(void)
         YUNIT_ASSERT(ret == 0);
 
         fd = yos_open(names[i], 0);
-        YUNIT_ASSERT(fd < 0);
-        YUNIT_ASSERT(E_VFS_FD_ILLEGAL == yos_ioctl(fd, 0, 0));
+        ret = yos_ioctl(fd, 0, 0);
+        YUNIT_ASSERT(E_VFS_K_ERR == ret);
     }
 }
 
