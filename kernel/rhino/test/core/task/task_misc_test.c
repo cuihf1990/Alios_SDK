@@ -21,6 +21,7 @@
 static ktask_t *task_misc;
 static ktask_t  task_misc2;
 static ktask_t *task_misc3;
+static ktask_t *task_misc4;
 
 static ksem_t *sem;
 static ksem_t *sem2;
@@ -66,6 +67,27 @@ void task_misc_entry3(void *arg)
 
     yunos_task_dyn_del(task_misc3);
 }
+
+void task_misc_entry4(void *arg)
+{
+    kstat_t ret;
+
+    yunos_task_suspend(task_misc);
+    ret = yunos_task_wait_abort(task_misc);
+
+    if (ret == YUNOS_SUCCESS) {
+        test_case_success++;
+        PRINT_RESULT("yunos_task_wait_abort suspend", PASS);
+    } else {
+        PRINT_RESULT("yunos_task_wait_abort suspend", FAIL);
+        test_case_fail++;
+    }
+
+    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+    yunos_task_dyn_del(task_misc4);
+}
+
 
 static void timer_cb4(void *timer, void *arg)
 {
@@ -548,6 +570,41 @@ void task_misc_entry(void *arg)
         PRINT_RESULT("yunos_queue_dyn_del", PASS);
     } else {
         PRINT_RESULT("yunos_queue_dyn_del", FAIL);
+        test_case_fail++;
+    }
+
+    ret = yunos_task_wait_abort(g_active_task);
+
+    if (ret == YUNOS_SUCCESS) {
+        test_case_success++;
+        PRINT_RESULT("yunos_task_wait_abort ready", PASS);
+    } else {
+        PRINT_RESULT("yunos_task_wait_abort ready", FAIL);
+        test_case_fail++;
+    }
+
+    yunos_task_dyn_create(&task_misc4, "task_misc_test4", 0, 1,
+                          0, TASK_TEST_STACK_SIZE,
+                          task_misc_entry4, 1);
+
+    ret = yunos_task_wait_abort(task_misc4);
+
+    if (ret == YUNOS_SUCCESS) {
+        test_case_success++;
+        PRINT_RESULT("yunos_task_wait_abort sleep", PASS);
+    } else {
+        PRINT_RESULT("yunos_task_wait_abort sleep", FAIL);
+        test_case_fail++;
+    }
+
+    yunos_task_suspend(task_misc4);
+    ret = yunos_task_wait_abort(task_misc4);
+
+    if (ret == YUNOS_SUCCESS) {
+        test_case_success++;
+        PRINT_RESULT("yunos_task_wait_abort suspend sleep", PASS);
+    } else {
+        PRINT_RESULT("yunos_task_wait_abort suspend sleep", FAIL);
         test_case_fail++;
     }
 
