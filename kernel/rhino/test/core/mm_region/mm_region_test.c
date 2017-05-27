@@ -27,7 +27,12 @@ static uint8_t data[MM_REGION_TOTAL_SIZE] = {0};
 k_mm_region_t regions[]={
     {data,      MM_REGION_0_SIZE},
     {data+16,   MM_REGION_1_SIZE},
+    {data+16+MM_REGION_1_SIZE+1, 64},
     {data+500,  MM_REGION_2_SIZE},
+};
+
+k_mm_region_t regions1[]={
+    {data+1024,  MM_REGION_TOTAL_SIZE - 1024},
 };
 
 k_mm_region_t regions2[]={

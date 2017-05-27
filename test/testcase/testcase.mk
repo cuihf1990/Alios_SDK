@@ -8,6 +8,7 @@ $(NAME)_SOURCES     += framework/hal/hal_test.c
 $(NAME)_SOURCES     += framework/yloop_test.c
 $(NAME)_SOURCES     += framework/fota_test.c
 $(NAME)_SOURCES     += framework/vfs_test.c
+$(NAME)_SOURCES     += framework/alink_test.c
 $(NAME)_SOURCES     += utility/cjson_test.c
 $(NAME)_SOURCES     += utility/hashtable_test.c
 $(NAME)_SOURCES     += tfs/tfs_test.c
@@ -28,10 +29,13 @@ $(NAME)_SOURCES    += aosapi/yos/kernel/yos_workqueue_test.c
 
 $(NAME)_COMPONENTS  := yunit cjson
 
+$(NAME)_COMPONENTS  += base64 hashtable log connectivity ywss protocol.alink modules.kv
+
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_INCLUDES := ../../kernel/protocols/mesh/include
 $(NAME)_INCLUDES += ../../tools/dda
 include test/testcase/kernel/protocols/mesh/filelists.mk
 $(NAME)_SOURCES += $(MESHYTSFILE)
 endif
-
+$(NAME)_INCLUDES += ../../framework/protocol/alink/system/
+GLOBAL_LDFLAGS += -lssl

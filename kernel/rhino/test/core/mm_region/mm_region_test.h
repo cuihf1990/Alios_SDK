@@ -20,7 +20,7 @@
 #define TASK_MM_REGION_PRI   16
 #define TASK_TEST_STACK_SIZE 1024
 
-#define MM_REGION_TOTAL_SIZE 2000
+#define MM_REGION_TOTAL_SIZE 32000
 #define MM_REGION_0_SIZE 8
 #define MM_REGION_1_SIZE 300
 #define MM_REGION_2_SIZE 500
@@ -34,6 +34,7 @@
 extern ktask_t *task_mm_region;
 extern ktask_t *task_mm_region_co;
 extern k_mm_region_t regions[];
+extern k_mm_region_t regions1[];
 extern k_mm_region_t regions2[];
 
 typedef uint8_t (*test_func_t)(void);

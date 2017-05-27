@@ -203,7 +203,7 @@ int platform_config_write(const char *buffer, int length)
 	if (!fp)
 		return -1;
 
-	written_len = fwrite(buffer, length, 1, fp);
+	written_len = fwrite(buffer, 1, length, fp);
 
     fclose(fp);
 
