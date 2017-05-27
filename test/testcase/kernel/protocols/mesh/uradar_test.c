@@ -150,9 +150,13 @@ extern void test_uradar_layer_routing_2mobile_case(void);
 extern void test_uradar_dest_become_unreachable_case(void);
 extern void test_uradar_asymmetric_link_case(void);
 extern void test_uradar_topo_case(void);
+extern void test_hal_mesh_case(void);
+extern void test_diags_case(void);
 
 /* submodule ut */
 static yunit_test_case_t yunos_uradar_sub_testcases[] = {
+    { "hal_mesh", test_hal_mesh_case },
+    { "diags", test_diags_case },
     { "sid_router", test_uradar_sid_router_case },
     { "vector_router", test_uradar_vector_router_case },
     { "6lowpan", test_uradar_6lowpan_case },
@@ -192,6 +196,8 @@ static yunit_test_case_t yunos_uradar_stress_testcases[] = {
 
 static yunit_test_case_t yunos_uradar_testcases[] = {
     /* submodule ut */
+    { "hal_mesh", test_hal_mesh_case },
+    { "diags", test_diags_case },
     { "sid_router", test_uradar_sid_router_case },
     { "vector_router", test_uradar_vector_router_case },
     { "6lowpan", test_uradar_6lowpan_case },

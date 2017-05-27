@@ -29,8 +29,8 @@ static void me_as_leader(bool vector_router)
 
     YUNIT_ASSERT(ur_mesh_get_device_state() == DEVICE_STATE_LEADER);
 
-    cmd_to_agent("stop");
     cmd_to_agent("router SID_ROUTER");
+    cmd_to_agent("stop");
     stop_node(12);
 
     yos_msleep(2 * 1000);

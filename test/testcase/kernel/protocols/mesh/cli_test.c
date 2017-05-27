@@ -1,128 +1,71 @@
+#include <stdio.h>
+#include <stdint.h>
+
 #include <yos/kernel.h>
 #include "yunit.h"
 
-#include "tools/cli.h"
+#include "dda_util.h"
 
-extern void ur_ut_send_cmd_to_ddm(const char *cmd);
+#include "umesh.h"
+#include "utilities/logging.h"
+#include "utilities/encoding.h"
+#include "core/mesh_mgmt.h"
+#include "tools/cli.h"
 
 void test_uradar_cli_case(void)
 {
-    uint16_t startup_time = 5000;
-    ur_ut_send_cmd_to_ddm("rssi 1 2 2 2");
-    ur_ut_send_cmd_to_ddm("rssi 1 3 2 2");
-    ur_ut_send_cmd_to_ddm("rssi 2 3 2 2");
-    ur_ut_send_cmd_to_ddm("rssi 1 4 0 0");
-    ur_ut_send_cmd_to_ddm("rssi 2 4 2 2");
-    ur_ut_send_cmd_to_ddm("rssi 3 4 0 0");
-    ur_ut_send_cmd_to_ddm("start 1");
-    yos_msleep(startup_time);
-    ur_ut_send_cmd_to_ddm("start 2");
-    yos_msleep(startup_time);
-    ur_ut_send_cmd_to_ddm("start 3");
-    yos_msleep(startup_time);
-    ur_ut_send_cmd_to_ddm("start 4");
-    yos_msleep(startup_time);
+    cmd_to_agent("stop");
+    cmd_to_agent("start");
+    check_cond_wait(ur_mesh_get_device_state() == DEVICE_STATE_LEADER, 10);
 
-    ur_ut_send_cmd_to_ddm("goto 2");
-    ur_ut_send_cmd_to_ddm("help");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("channel");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("ipaddr");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("ipaddr add ff00::0001");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("ipaddr del ff00::0001");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("loglevel");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("macaddr");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("meshnetid");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("meshnetid 0x1000");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("meshnetsize");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("mode");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("mode RX_OFF MOBILE");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("mode RX_ON FIXED");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("nbrs");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("ping fc00:0:0:beef:0:0:0:0");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("prefix");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("router");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("router VECTOR_ROUTER");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("router SID_ROUTER");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("sids");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("state");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("stats");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("status");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist enable");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist add");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist add 01020304a50607");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist add G10203B405060708");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist add 010203B405060708");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist add 010203B405060708 1");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist remove 010203B405060708");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist clear");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("whitelist disable");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("stop");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("state");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("start");
-    ur_ut_send_cmd_to_ddm("state");
-    yos_msleep(startup_time);
-    ur_ut_send_cmd_to_ddm("state");
-    yos_msleep(startup_time);
-    ur_ut_send_cmd_to_ddm("state");
-    yos_msleep(200);
+    cmd_to_agent("help");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("channel");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("loglevel");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("ipaddr");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("macaddr");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("meshnetsize");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("meshnetid");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("autotest");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("prefix");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("seclevel");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("state");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("stats");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("whitelist");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("whitelist add 0100000000000000");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("whitelist remove 0100000000000000");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("whitelist enable");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("whitelist disable");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("whitelist clear");
+    yos_msleep(1 * 1000);
+    cmd_to_agent("networks");
+    yos_msleep(1 * 1000);
 
-    ur_ut_send_cmd_to_ddm("goto 0");
-    ur_ut_send_cmd_to_ddm("goto 1");
-    ur_ut_send_cmd_to_ddm("state");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("sids");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("autotest fc00:0:0:beef:0:0:0:2000");
-    yos_msleep(200);
-    ur_ut_send_cmd_to_ddm("autotest fc08::fc");
-    yos_msleep(2000);
+    char ping_cmd[64];
+    const ur_netif_ip6_address_t *myaddr;
 
-    ur_ut_send_cmd_to_ddm("goto 0");
-    ur_ut_send_cmd_to_ddm("goto 2");
-    ur_ut_send_cmd_to_ddm("autotest fc08::fc");
-    yos_msleep(2000);
+    myaddr = ur_mesh_get_ucast_addr();
+    snprintf(ping_cmd, sizeof ping_cmd, "autotest " IP6_ADDR_FMT " 2", IP6_ADDR_DATA(myaddr->addr));
+    cmd_to_agent(ping_cmd);
+    yos_msleep(17 * 1000);
 
-    ur_ut_send_cmd_to_ddm("goto 0");
-    ur_ut_send_cmd_to_ddm("stop 4");
-    ur_ut_send_cmd_to_ddm("stop 3");
-    ur_ut_send_cmd_to_ddm("stop 2");
-    ur_ut_send_cmd_to_ddm("stop 1");
+    cmd_to_agent("stop");
+    yos_msleep(2 * 1000);
 }
-
 
