@@ -193,6 +193,11 @@ int http_download(char *url, write_flash_cb_t func) {
     http_gethost_info(url, host_addr, host_file, &port);/*分析网址、端口、文件名等*/
 
     sockfd = http_socket_init(port, host_addr);
+    if(sockfd < 0 )
+    {
+        OTA_LOG_E("http_socket_init error\n ");
+        return -1;
+    }
     sprintf(request,
             "GET   /%s   HTTP/1.1\r\nAccept:   */*\r\nAccept-Language:   zh-cn\r\n"
                     "User-Agent:   Mozilla/4.0   (compatible;   MSIE   5.01;   Windows   NT   5.0)\r\n"
@@ -234,6 +239,7 @@ int http_download(char *url, write_flash_cb_t func) {
         } else /*如果结尾部分不为\r\n\r\n则表示头接收完毕，下面是请求内容*/
         {
             psave[index++] = buffer[0];
+            OTA_LOG_I("%c", buffer[0]);
             if (index > 4096) {
                 func(4096, (uint8_t *)psave, 4096, 0);
                 memset(psave, 0, 4096);
