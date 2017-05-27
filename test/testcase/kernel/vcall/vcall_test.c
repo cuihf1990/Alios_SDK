@@ -18,19 +18,27 @@ static mico_timer_t timer1;
 static void task1_entry(mico_thread_arg_t arg )
 {
     char msg[MSG_SIZE];
-    
+
+    mico_rtos_suspend_thread(NULL);
+    mico_rtos_suspend_thread(&task1);
+
     mico_rtos_is_current_thread(&task1);
     mico_rtos_set_semaphore(&sem1);
     msg[0] = 0x11;
     msg[MSG_SIZE - 1] = 0x33;
+
+    mico_rtos_push_to_queue(&queue1, NULL, 0);
     mico_rtos_push_to_queue(&queue1, msg, 0);
-    
-    mico_rtos_delete_thread(NULL);
+
+    mico_rtos_delete_thread(&task1);
 }
 
 
 static void task2_entry(mico_thread_arg_t arg )
 {
+    yunos_task_resume((ktask_t *)task1);
+    yunos_task_resume((ktask_t *)task1);
+
     mico_rtos_delete_thread(NULL);
 }
 
@@ -67,20 +75,26 @@ static void test_vcall_case(void)
     char msg[50];
 
     printf("vcall test\n");
-
+    mico_rtos_delay_milliseconds(0);
     mico_rtos_init_semaphore(&sem1, 0);
+    mico_rtos_init_semaphore(NULL, 0);
+    mico_rtos_thread_join(NULL);
+    mico_rtos_get_semaphore(&sem1, 0);
+
+    mico_rtos_delete_thread((mico_thread_t*)&g_idle_task);
 
     mico_rtos_enter_critical();
     mico_rtos_exit_critical();
 
-    mico_rtos_create_thread(&task1, 10, "test", task1_entry, 1024, 0);
-    mico_rtos_create_thread(NULL, 10, "test2", task2_entry, 1024, 0);
+    mico_rtos_create_thread(&task1, 10, NULL, task1_entry, 1024, 0);
+    mico_rtos_create_thread(&task1, 30, "test", task1_entry, 1024, 0);
+    mico_rtos_create_thread(NULL, 40, "test2", task2_entry, 1024, 0);
 
     mico_rtos_suspend_all_thread();
     mico_rtos_resume_all_thread();
     mico_rtos_is_current_thread(&task1);
     mico_rtos_thread_force_awake(&task1);
-
+    
     task_tmp = mico_rtos_get_current_thread();
     (void)task_tmp;
 
@@ -92,13 +106,14 @@ static void test_vcall_case(void)
     mico_rtos_unlock_mutex(&mutex1);
     mico_rtos_deinit_mutex(&mutex1);
 
-    mico_rtos_init_queue(&queue1, "queue1", MSG_SIZE, 2);
+    mico_rtos_init_queue(&queue1, NULL, MSG_SIZE, 2);
     mico_rtos_pop_from_queue(&queue1, msg, 10000);
 
     YUNIT_ASSERT((msg[0] == 0x11) && (msg[MSG_SIZE -1] == 0x33));
 
     mico_rtos_is_queue_empty(&queue1);
     mico_rtos_is_queue_full(&queue1);
+    mico_rtos_deinit_queue(&queue1);
     mico_rtos_get_time();
 
     mico_rtos_init_timer(&timer1, 50, timer_callback, (void *)0x11);
