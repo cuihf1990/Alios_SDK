@@ -12,8 +12,6 @@ GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
 GLOBAL_LDFLAGS += --coverage
 endif
 
-GLOBAL_DEFINES += CONFIG_USE_DEF_AP
-
 CONFIG_LIB_TFS := y
 CONFIG_TFS_ID2_RSA := y
 CONFIG_TFS_ID2_3DES := n
