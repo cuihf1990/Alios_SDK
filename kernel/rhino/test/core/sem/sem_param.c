@@ -31,7 +31,7 @@ static uint8_t sem_param_case1(void)
     MYASSERT(ret == YUNOS_NULL_PTR);
 
     ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, (sem_count_t)-1);
-    MYASSERT(ret == YUNOS_SEM_OVF);
+    MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, 0);
     MYASSERT(ret == YUNOS_SUCCESS);
@@ -149,7 +149,7 @@ static uint8_t sem_param_case4(void)
     MYASSERT(ret == YUNOS_NULL_PTR);
 
     ret = yunos_sem_count_set(test_sem, (sem_count_t)-1);
-    MYASSERT(ret == YUNOS_SEM_OVF);
+    MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_sem_dyn_del(test_sem);
     MYASSERT(ret == YUNOS_SUCCESS);
