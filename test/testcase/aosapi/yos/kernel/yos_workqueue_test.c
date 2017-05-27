@@ -126,13 +126,14 @@ static void CASE_aosapi_kernel_work_param()
 	ret = yos_work_schedule(NULL);
 	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
 #endif
+
+	(void)WORK_aosapi_kernel_work_param;
 }
 
 
 
 void aosapi_kernel_workqueue_test_entry(yunit_test_suite_t *suite)
 {
-//	yunit_add_test_suites(aosapi_kernel_workqueue_testsuites);
 	yunit_add_test_case(suite, "kernel.workqueue.param", CASE_aosapi_kernel_workqueue_param);
 	yunit_add_test_case(suite, "kernel.workqueue.default", CASE_aosapi_kernel_workqueue_default);
 	yunit_add_test_case(suite, "kernel.workqueue.custom", CASE_aosapi_kernel_workqueue_custom);

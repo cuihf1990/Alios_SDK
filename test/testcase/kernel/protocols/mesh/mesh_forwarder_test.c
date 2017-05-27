@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include <yos/kernel.h>
 #include "yunit.h"
 
 #include "core/mesh_forwarder.h"

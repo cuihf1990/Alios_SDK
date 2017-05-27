@@ -44,6 +44,7 @@ extern void test_hal(void);
 extern void test_tfs(void);
 extern void test_aosapi(void);
 extern void test_vfs(void);
+extern void test_vcall(void);
 
 static void add_test(void);
 
@@ -107,7 +108,9 @@ void yts_run(int argc, char **argv)
 void add_test(void)
 {
     test_basic();
-
+    
+    test_fota();
+    
     test_yloop();
 
     test_hal();
@@ -117,7 +120,7 @@ void add_test(void)
     test_hashtable();
 
     test_kv();
-
+    test_vcall();
     test_rhino();
 
     test_rhino_port();

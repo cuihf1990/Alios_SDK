@@ -41,6 +41,7 @@
  "http://10.101.111.160/update/manifest?productType＝XJ-1& \
  phone=XJ-1R&uuid=yos_id2&system=1.0.0-R-20150101.1201";*/
 
+extern int http_download(char *url, write_flash_cb_t func);
 
 int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *request_parmas)
 {
@@ -53,19 +54,18 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
                                write_flash_cb_t func, ota_finish_cb_t fcb)
 {
     int ret = 0;
-
+    OTA_LOG_E("/************************************update start**************************************/");
     ret = ota_if_need(response_parmas,request_parmas);
     if(1 != ret) return ret;
 
     http_download(response_parmas->download_url, func);
 
-    LOGD("fota", "downlaod over");
-
     if(NULL != fcb) {
         fcb(ret,response_parmas->primary_version);
     }
-
     free_global_topic();
+
+    OTA_LOG_E("/************************************update over**************************************/");
     return ret;
 }
 

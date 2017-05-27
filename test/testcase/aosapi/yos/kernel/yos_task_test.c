@@ -87,8 +87,8 @@ void TASK_aosapi_kernel_task_new_stack(void *arg)
 }
 static void CASE_aosapi_kernel_task_new_stack()
 {
-	int ret = YUNOS_SUCCESS;
 #if 0
+	int ret = YUNOS_SUCCESS;
 	ret = yos_task_new("TASK_aosapi_kernel_task_new_stack",
 					   TASK_aosapi_kernel_task_new_stack, NULL, 256);
 	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
@@ -137,6 +137,7 @@ static void CASE_aosapi_kernel_task_getname()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
+#if 0
 void TASK_aosapi_kernel_task_new_priority(void *arg)
 {
 	yos_sem_signal(&sync_sem);
@@ -204,6 +205,7 @@ static void CASE_aosapi_kernel_task_new_priority()
 	YUNIT_ASSERT_MSG(success_count==sizeof(pris)/sizeof(pris[0]), "success_count=%d", success_count);
 #endif
 }
+#endif
 
 
 void aosapi_kernel_task_test_entry(yunit_test_suite_t *suite)

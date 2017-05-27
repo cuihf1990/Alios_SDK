@@ -22,6 +22,7 @@
 
 #include <netdb.h>
 #include <sys/socket.h>
+#include <yos/framework.h>
 #include "yos/internal/event_type_code.h"
 #ifdef CSP_LINUXHOST
 #include <arpa/inet.h>
@@ -353,7 +354,7 @@ static void handle_data(agent_info_t *agent, ipc_msg_t *msg, struct sockaddr *pa
     cmsg->fino.rssi = rssi;
     cmsg->fino.channel = chn;
     cmsg->fino.key_index = key_index;
-    *(uint64_t *)cmsg->fino.peer.addr = msg->src;
+    cmsg->fino.peer.value = msg->src;
     cmsg->fino.peer.len = 8;
 
     cmsg->frm.data = (void *)(cmsg + 1);
