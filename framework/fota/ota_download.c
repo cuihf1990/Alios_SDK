@@ -23,6 +23,7 @@
 #include "ota_log.h"
 
 #include "ota_update_manifest.h"
+
 /**
  * @brief http_string_strchr 搜索字符串右边起的第一个匹配字符
  *
@@ -104,6 +105,25 @@ void http_gethost_info(char* src, char* web, char* file, int* port) {
     }
 }
 
+static int _ota_socket_check_conn(int sock) {
+    struct pollfd fd = { .fd = sock, .events = POLLOUT };
+    int ret = 0;
+    socklen_t len = 0;
+
+    while (poll(&fd, 1, -1) == -1) {
+        if (errno != EINTR ){
+             return -1;
+        }
+    }
+
+    len = sizeof(ret);
+    if (getsockopt (sock, SOL_SOCKET, SO_ERROR, &ret, &len) == -1 ||
+        ret != 0) {
+        return -1;
+    }
+    return 0;
+}
+
 /**
  * @brief http_socket_init 初始化套接字
  *
@@ -118,13 +138,13 @@ int http_socket_init(int port, char *host_addr) {
     int sockfd;
     if ((host = gethostbyname(host_addr)) == NULL)/*取得主机IP地址*/
     {
-        fprintf(stderr, "Gethostname   error,   %s\n ", strerror(errno));
+        OTA_LOG_E("Gethostname   error,   %s\n ", strerror(errno));
         return -1;
     }
     /*   客户程序开始建立   sockfd描述符   */
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)/*建立SOCKET连接*/
     {
-        fprintf(stderr, "Socket   Error:%s\a\n ", strerror(errno));
+        OTA_LOG_E("Socket   Error:%s\a\n ", strerror(errno));
         return -1;
     }
     /*   客户程序填充服务端的资料   */
@@ -133,36 +153,40 @@ int http_socket_init(int port, char *host_addr) {
     server_addr.sin_port = htons(port);
     server_addr.sin_addr = *((struct in_addr*) host->h_addr);
     /*   客户程序发起连接请求   */
-    if (connect(sockfd, (struct sockaddr*) (&server_addr),
-            sizeof(struct sockaddr)) == -1)/*连接网站*/
+    if (connect(sockfd, (struct sockaddr*) (&server_addr), sizeof(struct sockaddr)) == -1)/*连接网站*/
     {
-        fprintf(stderr, "Connect   Error:%s\a\n ", strerror(errno));
-        return -1;
+        OTA_LOG_E("socket connecting %s failed!\n",  strerror(errno));
+        if (errno != EINTR)
+            goto err_out;
+        if (_ota_socket_check_conn(sockfd) < 0)
+            goto err_out;
     }
     return sockfd;
+
+err_out:
+    close(sockfd);
+    return -1;
 }
+
+
 
 int http_download(char *url, write_flash_cb_t func) {
     int sockfd = 0;
     char buffer[1024] = "";
     int port = 0;
     int nbytes = 0;
-    char host_file[1024] = "";
+    char host_file[128] = "";
     char host_addr[256] = "";
     char request[1024] = "";
     int send = 0;
     int totalsend = 0;
     int i = 0;
-    char *pt;
+    //char *pt = NULL;
     char psave[4096];
-    char *file_name;
     size_t index = 0;
 
-    printf("parameter.1 is: %s\n ", url);
+    OTA_LOG_I("parameter.1 is: %s\n ", url);
     http_gethost_info(url, host_addr, host_file, &port);/*分析网址、端口、文件名等*/
-    printf("webhost:%s\n ", host_addr);
-    printf("hostfile:%s\n ", host_file);
-    printf("port:%d\n\n ", port);
 
     sockfd = http_socket_init(port, host_addr);
     sprintf(request,
@@ -170,13 +194,13 @@ int http_download(char *url, write_flash_cb_t func) {
                     "User-Agent:   Mozilla/4.0   (compatible;   MSIE   5.01;   Windows   NT   5.0)\r\n"
                     "Host:   %s:%d\r\nConnection:   Close\r\n\r\n ", host_file,
             host_addr, port);
-    printf("%s\n", request);/*准备request，将要发送给主机*/
-    /*取得真实的文件名*/
-    if (*host_file) {
-        pt = http_string_strchr(host_file, '/');
-    } else {
-        pt = 0;
-    }
+    OTA_LOG_I("%s\n", request);/*准备request，将要发送给主机*/
+//    /*取得真实的文件名*/
+//    if (*host_file) {
+//        pt = http_string_strchr(host_file, '/');
+//    } else {
+//        pt = 0;
+//    }
     /*发送http请求request*/
     send = 0;
     totalsend = 0;
@@ -184,11 +208,11 @@ int http_download(char *url, write_flash_cb_t func) {
     while (totalsend < nbytes) {
         send = write(sockfd, request + totalsend, nbytes - totalsend);
         if (send == -1) {
-            printf("send error!%s\n ", strerror(errno));
+            OTA_LOG_E("send error!%s\n ", strerror(errno));
             exit(0);
         }
         totalsend += send;
-        printf("%d bytes send OK!\n ", totalsend);
+        OTA_LOG_I("%d bytes send OK!\n ", totalsend);
     }
 
     i = 0;
@@ -202,12 +226,12 @@ int http_download(char *url, write_flash_cb_t func) {
             } else {
                 i = 0;
             }
-            printf("%c", buffer[0]);/*把http头信息打印在屏幕上*/
+            OTA_LOG_I("%c", buffer[0]);/*把http头信息打印在屏幕上*/
         } else /*如果结尾部分不为\r\n\r\n则表示头接收完毕，下面是请求内容*/
         {
             psave[index++] = buffer[0];
             if (index > 4096) {
-                func(4096, psave, 4096, 0);
+                func(4096, (uint8_t *)psave, 4096, 0);
                 memset(psave, 0, 4096);
                 index = 0;
             }
@@ -215,7 +239,7 @@ int http_download(char *url, write_flash_cb_t func) {
     }
     /*将剩余的字符写入文件*/
     if (index <= 4096) {
-        func(4096, psave, index, 0);
+        func(4096, (uint8_t*)psave, index, 0);
     }
     close(sockfd);
 
