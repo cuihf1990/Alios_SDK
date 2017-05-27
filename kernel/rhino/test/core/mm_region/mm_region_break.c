@@ -23,8 +23,8 @@
 #define YOS_MM_ALLOC_DEPTH  0
 
 static k_mm_region_head_t  my_mm_region_list_head,my_mm_region_list_head2,my_mm_region_list_head_2;
-static void * mp[10]       = {0};
-static void * mp2[10]      = {0};
+static void * mp[11]       = {0};
+static void * mp2[11]      = {0};
 
 static uint8_t mm_region_break_case1(void)
 {
@@ -134,25 +134,25 @@ static uint8_t mm_region_break_case1(void)
     MYASSERT(ret == YUNOS_SUCCESS);
     //add for best fit test
     for(i=1;i<10;i++){
-        ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp[i],4*i+1,allocator);
+        ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp[i-1],4*i+1,allocator);
         MYASSERT(ret == YUNOS_SUCCESS);
     }
     for(i=1;i<10;i++){
         if(i%2 == 0){
-            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp[i]);
+            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp[i-1]);
             MYASSERT(ret == YUNOS_SUCCESS);
         }
     }
     for(i=1;i<10;i++){
         if(i%2 == 0){
-            ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp2[i],4*i,allocator);
+            ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp2[i-1],4*i,allocator);
             MYASSERT(ret == YUNOS_SUCCESS);
-            MYASSERT(mp[i] == mp2[i]);
-            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp2[i]);
+            MYASSERT(mp[i-1] == mp2[i-1]);
+            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp2[i-1]);
             MYASSERT(ret == YUNOS_SUCCESS);
         }
         else{
-            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp[i]);
+            ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp[i-1]);
             MYASSERT(ret == YUNOS_SUCCESS);
         }
     }
@@ -169,7 +169,6 @@ static uint8_t mm_region_break_case2(void)
     size_t   check_free = 0;
     size_t   allocator  = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
 
-    memset(&my_mm_region_list_head2,0,sizeof(k_mm_region_head_t));
     ret  =  yunos_mm_region_init(NULL,NULL, r_num);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
