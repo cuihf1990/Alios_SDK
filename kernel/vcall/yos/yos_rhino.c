@@ -351,16 +351,14 @@ int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
     return yunos_work_run(workqueue->hdl, work->hdl);
 }
 
-int yos_work_schedule(yos_work_t *work)
+int yos_work_sched(yos_work_t *work)
 {
-    (void)work;
-    return -1;
+    return yunos_work_sched(work->hdl);
 }
 
 int yos_work_cancel(yos_work_t *work)
 {
-    (void)work;
-    return -1;
+    return yunos_work_cancel(work->hdl);
 }
 
 void *yos_malloc(int size)

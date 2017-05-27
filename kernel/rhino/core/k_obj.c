@@ -106,6 +106,8 @@ cpu_stack_t g_dyn_mem_proc_stack[YUNOS_CONFIG_K_DYN_TASK_STACK];
 #if (YUNOS_CONFIG_WORKQUEUE > 0)
 kworkqueue_t *g_workqueue_head;
 kmutex_t      g_workqueue_mutex;
+kworkqueue_t  g_workqueue_default;
+cpu_stack_t   g_workqueue_stack[YUNOS_CONFIG_WORKQUEUE_STACK_SIZE];
 #endif
 
 #if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRST_FIT > 0)
