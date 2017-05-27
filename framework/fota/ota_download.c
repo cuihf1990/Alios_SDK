@@ -241,7 +241,6 @@ int http_download(char *url, write_flash_cb_t func) {
         } else /*如果结尾部分不为\r\n\r\n则表示头接收完毕，下面是请求内容*/
         {
             psave[index++] = buffer[0];
-            OTA_LOG_E("%c", buffer[0]);
             if (index > BUFFER_MAX_SIZE) {
                 func(BUFFER_MAX_SIZE, (uint8_t *)psave, BUFFER_MAX_SIZE, 0);
                 memset(psave, 0, BUFFER_MAX_SIZE);

@@ -78,7 +78,7 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
     g_write_func = func;
     g_finish_cb = fcb;
     strncpy(url, response_parmas->download_url,sizeof url);
-    ret = yos_task_new("ota", ota_download_start, NULL, 10240);
+    ret = yos_task_new("ota", ota_download_start, NULL, 8196);
 
     return ret;
 }
