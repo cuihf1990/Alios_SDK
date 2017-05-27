@@ -16,6 +16,8 @@
 
 NAME := fota
 
+$(NAME)_CFLAGS += -Wall -Werror
+
 $(NAME)_SOURCES += \
     ota_util.c \
     ota_update_manifest.c \
