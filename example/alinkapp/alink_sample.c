@@ -378,7 +378,7 @@ void parse_opt(int argc, char *argv[])
 {
     char ch;
 
-    while ((ch = getopt(argc, argv, "e:t:l:h")) != -1) {
+    while (argc > 1 && (ch = getopt(argc, argv, "e:t:l:h")) != -1) {
         switch (ch) {
         case 'e':
             if (!strcmp(optarg, "daily"))
