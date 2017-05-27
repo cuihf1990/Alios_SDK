@@ -41,7 +41,7 @@ static void CASE_aosapi_kernel_task_new_param()
 #if 1
 	ret = yos_task_new("TASK_aosapi_kernel_task_new_param",
 			           TASK_aosapi_kernel_task_new_param, NULL, 0);
-	YUNIT_ASSERT_MSG(ret==-1, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==YUNOS_INV_PARAM, "ret=%d", ret);
 #endif
 }
 
