@@ -29,7 +29,7 @@ extern void ota_service_init(void);
 
 extern void do_update(const char *buf);
 
-const char *ota_info = "{\"md5\":\"6B21342306D0F619AF97006B7025D18A\",\"resourceUrl\":\"http:\/\/otalink.alicdn.com\/ALINKTEST_LIVING_LIGHT_ALINK_TEST\/v2.0.0.1\/uthash-master.zip\",\"size\":\"265694 \",\"uuid\":\"5B7CFD5C6B1D6A231F5FB6B7DB2B71FD\",\"version\":\"v2.0.0.1\",\"zip\":\"0\"}";
+const char *ota_info = "{\"md5\":\"6B21342306D0F619AF97006B7025D18A\",\"resourceUrl\":\"http://otalink.alicdn.com/ALINKTEST_LIVING_LIGHT_ALINK_TEST/v2.0.0.1/uthash-master.zip\",\"size\":\"265694 \",\"uuid\":\"5B7CFD5C6B1D6A231F5FB6B7DB2B71FD\",\"version\":\"v2.0.0.1\",\"zip\":\"0\"}";
 
 static void test_fota_case(void)
 {
