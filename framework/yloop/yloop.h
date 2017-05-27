@@ -27,7 +27,7 @@ int yos_loop_get_eventfd(void *loop);
 int yos_event_service_init(void);
 
 /* deinit per-loop event service */
-int yos_event_service_deinit(int fd);
+void yos_event_service_deinit(int fd);
 
 #endif /* YLOOP_H */
 

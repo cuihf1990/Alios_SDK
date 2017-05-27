@@ -30,6 +30,11 @@ void yos_reboot(void)
 
 }
 
+int yos_get_hz(void)
+{
+    return YUNOS_CONFIG_TICKS_PER_SECOND;
+}
+
 const char *yos_version_get(void)
 {
 	return yunos_version_get();
