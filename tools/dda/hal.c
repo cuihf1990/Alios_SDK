@@ -64,7 +64,7 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
-    int dst_id = *(uint64_t *)dest->addr;
+    int dst_id = (int)dest->value;
     cmd_priv_t cmd_priv = {
         .mesh = {
             .channel = priv->channel,
@@ -166,7 +166,7 @@ static const mac_address_t *linuxhost_ur_get_mac_address(
 {
     static mac_address_t mac;
     mac.len = 8;
-    *(uint64_t *)mac.addr = dda_mesh_get_agent_id();
+    mac.value = dda_mesh_get_agent_id();
     return &mac;
 }
 

@@ -90,6 +90,7 @@ typedef struct ur_netif_ip6_address_s {
 
 typedef struct mac_address_s {
     union {
+        uint64_t value;
         uint16_t short_addr;
         uint8_t  addr[EXT_ADDR_SIZE];
     };
