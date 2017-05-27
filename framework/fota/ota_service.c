@@ -83,10 +83,6 @@ void do_update(const char *buf)
         return;
     }
 
-//    buf = ota_info;
-//
-//    printf("do_update :%s\n", ota_info);
-
     ota_request_parmas.primary_version = ota_get_system_version();
     ota_request_parmas.product_type = ota_get_product_type();
     ota_request_parmas.product_internal_type = ota_get_product_internal_type();
@@ -101,10 +97,6 @@ void do_update(const char *buf)
             ota_finish_callbak);
 }
 
-void ota_do_update(const char *buf)
-{
-    //yos_schedule_call(do_update, (char *)buf);
-}
 
 void ota_check_update(const char *buf, int len)
 {
@@ -113,18 +105,14 @@ void ota_check_update(const char *buf, int len)
     ota_request_parmas.product_internal_type = ota_get_product_internal_type();
     ota_request_parmas.device_uuid = ota_get_id2();
 
-    ota_sub_request_reply(ota_do_update);
+    ota_sub_request_reply(do_update);
+    ota_pub_request(&ota_request_parmas);
 
-    int8_t ret = ota_pub_request(&ota_request_parmas);
-    if(ret) {
-        return;
-    }
 }
 
 void ota_service_event(input_event_t *event, void *priv_data) {
     if (event->type == EV_SYS && event->code == CODE_SYS_ON_START_FOTA) {
         LOGD(TAG, "ota_service_event-------------fota");
-
         ota_request_parmas.primary_version = ota_get_system_version();
         ota_request_parmas.product_type = ota_get_product_type();
         ota_request_parmas.product_internal_type = ota_get_product_internal_type();

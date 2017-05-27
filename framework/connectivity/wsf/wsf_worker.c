@@ -707,7 +707,7 @@ wsf_code wsf_start_worker(wsf_config_t *config)
     ret = yunos_work_init(&g_work_deal_req, request_msg_handle, NULL, 0);
     if (ret != YUNOS_SUCCESS) {
         LOGE(MODULE_NAME,"failed to create work to deal with req \n");
-        return;
+        return -1;
     }
 
     return WSF_SUCCESS;

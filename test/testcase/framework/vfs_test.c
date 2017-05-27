@@ -39,16 +39,16 @@ static void test_yos_vfs_case(void)
     int ret = 0;
 
     char *names[] = {
-        "/abcd0",
-        "/abcd1",
-        "/abcd2",
-        "/abcd3",
-        "/abcd4",
-        "/abcd5",
-        "/abcd6",
-        "/abcd7",
-        "/abcd8",
-        "/abcd9",
+        "/tmp/abcd0",
+        "/tmp/abcd1",
+        "/tmp/abcd2",
+        "/tmp/abcd3",
+        "/tmp/abcd4",
+        "/tmp/abcd5",
+        "/tmp/abcd6",
+        "/tmp/abcd7",
+        "/tmp/abcd8",
+        "/tmp/abcd9",
     };
 
     file_ops_t myops = {

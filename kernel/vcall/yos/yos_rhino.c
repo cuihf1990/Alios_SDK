@@ -45,10 +45,6 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size
 {
     ktask_t *task_handle = NULL;
 
-    if (stack_size < sizeof(cpu_stack_t)) {
-        return -1;
-    }
-
     return (int)yunos_task_dyn_create(&task_handle, name, arg, 9, 0,
                                       stack_size / sizeof(cpu_stack_t), fn, 1u);
 }
@@ -119,10 +115,14 @@ int yos_mutex_new(yos_mutex_t *mutex)
 
     kmutex_t *m = yos_malloc(sizeof(kmutex_t));
     if (m == NULL) {
-        return -1;
+        return YUNOS_NO_MEM;
     }
 
     ret = yunos_mutex_create(m, "YOS");
+    if (ret != YUNOS_SUCCESS) {
+        yos_free(m);
+        return ret;
+    }
 
     mutex->hdl = m;
 
@@ -176,10 +176,14 @@ int yos_sem_new(yos_sem_t *sem, int count)
 
     ksem_t *s = yos_malloc(sizeof(ksem_t));
     if (s == NULL) {
-        return -1;
+        return YUNOS_NO_MEM;
     }
 
     ret = yunos_sem_create(s, "YOS", count);
+    if (ret != YUNOS_SUCCESS) {
+        yos_free(s);
+        return ret;
+    }
 
     sem->hdl = s;
 
@@ -219,10 +223,14 @@ int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
 
     kbuf_queue_t *q = yos_malloc(sizeof(kbuf_queue_t));
     if (q == NULL) {
-        return -1;
+        return YUNOS_NO_MEM;
     }
 
-    ret = yunos_buf_queue_create(queue->hdl, "YOS", buf, size, max_msg);
+    ret = yunos_buf_queue_create(q, "YOS", buf, size, max_msg);
+    if (ret != YUNOS_SUCCESS) {
+        yos_free(q);
+        return ret;
+    }
 
     queue->hdl = q;
 
@@ -254,13 +262,18 @@ int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms, int
 
     ktimer_t *t = yos_malloc(sizeof(ktimer_t));
     if (t == NULL) {
-        return -1;
+        return YUNOS_NO_MEM;
     }
 
     if (repeat == 0) {
         ret = yunos_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
     } else {
         ret = yunos_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms), arg, 1);
+    }
+
+    if (ret != YUNOS_SUCCESS) {
+        yos_free(t);
+        return ret;
     }
 
     timer->hdl = t;
@@ -299,17 +312,27 @@ int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
     cpu_stack_t  *stk;
     kworkqueue_t *wq;
 
+    if (stack_size < sizeof(cpu_stack_t)) {
+        return YUNOS_TASK_INV_STACK_SIZE;
+    }
+
     stk = yos_malloc(stack_size);
     if (stk == NULL) {
-        return -1;
+        return YUNOS_NO_MEM;
     }
 
     wq = yos_malloc(sizeof(kworkqueue_t));
     if (wq == NULL) {
-        return -1;
+        yos_free(stk);
+        return YUNOS_NO_MEM;
     }
 
     ret = yunos_workqueue_create(wq, "YOS", pri, stk, stack_size / sizeof(cpu_stack_t));
+    if (ret != YUNOS_SUCCESS) {
+        yos_free(wq);
+        yos_free(stk);
+        return ret;
+    }
 
     workqueue->hdl = wq;
     workqueue->stk = stk;
@@ -336,10 +359,14 @@ int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
 
     w = yos_malloc(sizeof(kwork_t));
     if (w == NULL) {
-        return -1;
+        return YUNOS_NO_MEM;
     }
 
     ret = yunos_work_init(w, fn, arg, MS2TICK(dly));
+    if (ret != YUNOS_SUCCESS) {
+        yos_free(w);
+        return ret;
+    }
 
     work->hdl = w;
 
@@ -351,16 +378,14 @@ int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
     return yunos_work_run(workqueue->hdl, work->hdl);
 }
 
-int yos_work_schedule(yos_work_t *work)
+int yos_work_sched(yos_work_t *work)
 {
-    (void)work;
-    return -1;
+    return yunos_work_sched(work->hdl);
 }
 
 int yos_work_cancel(yos_work_t *work)
 {
-    (void)work;
-    return -1;
+    return yunos_work_cancel(work->hdl);
 }
 
 void *yos_malloc(int size)

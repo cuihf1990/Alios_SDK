@@ -73,7 +73,9 @@ int hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_
 }
 
 extern hal_wifi_module_t sim_yos_wifi_linux;
+extern struct hal_ota_module_s linuxhost_ota_module;
 void hw_start_hal(void)
 {
     hal_wifi_register_module(&sim_yos_wifi_linux);
+    hal_ota_register_module(&linuxhost_ota_module);
 }

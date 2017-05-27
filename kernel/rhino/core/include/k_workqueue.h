@@ -29,6 +29,7 @@ typedef struct {
     void         *arg;
     tick_t        dly;
     ktimer_t      timer;
+    void         *wq;
 } kwork_t;
 
 typedef struct {
@@ -70,12 +71,26 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue);
 kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg, tick_t dly);
 
 /**
- * This function will delete a workqueue
+ * This function will run a work on a workqueue
  * @param[in]  workqueue  the workqueue to run work
  * @param[in]  work       the work to run
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
 kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work);
+
+/**
+ * This function will run a work on the default workqueue
+ * @param[in]  work  the work to run
+ * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ */
+kstat_t yunos_work_sched(kwork_t *work);
+
+/**
+ * This function will cancel a work
+ * @param[in]  work  the work to cancel
+ * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ */
+kstat_t yunos_work_cancel(kwork_t *work);
 #endif
 
 #endif /* K_WORKQUEUE_H */

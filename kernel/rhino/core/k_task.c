@@ -143,6 +143,10 @@ kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
 
     NULL_PARA_CHK(task);
 
+    if (stack == 0) {
+        return YUNOS_INV_PARAM;
+    }
+
     task_stack = yunos_mm_alloc(stack * sizeof(cpu_stack_t));
     if (task_stack == NULL) {
         return YUNOS_NO_MEM;

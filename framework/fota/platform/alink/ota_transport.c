@@ -121,13 +121,15 @@ int8_t ota_sub_request_reply(message_arrived *msgCallback)
 
 int8_t ota_sub_upgrade(message_arrived *msgCallback)
 {
-    return alink_register_callback(ALINK_UPGRADE_DEVICE,msgCallback);
+    //return alink_register_callback(ALINK_UPGRADE_DEVICE,msgCallback);
+    return 0;
 }
 
 
 int8_t ota_cancel_upgrade(message_arrived *msgCallback)
 {
-    return alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,msgCallback);
+    //return alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,msgCallback);
+    return 0;
 }
 
 

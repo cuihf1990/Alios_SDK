@@ -79,7 +79,7 @@ static void CASE_aosapi_kernel_queue_param()
 	ret = yos_queue_send(&queue, &send_msg, 0);
 	YUNIT_ASSERT_MSG(ret==YUNOS_INV_PARAM, "ret=%d", ret);
 
-	ret = yos_queue_send(&queue, &send_msg, TEST_QUEUE_MAX_MSG_SIZE+1);
+	ret = yos_queue_send(&queue, &send_msg, TEST_QUEUE_MAX_MSG_SIZE);
 	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
 
 	ret = yos_sem_new(&tmp_sem, 0);
