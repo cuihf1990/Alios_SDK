@@ -42,6 +42,7 @@ extern void test_hashtable(void);
 extern void test_kv(void);
 extern void test_hal(void);
 extern void test_tfs(void);
+extern void test_aosapi(void);
 extern void test_vfs(void);
 
 static void add_test(void);
@@ -128,5 +129,7 @@ void add_test(void)
 #ifdef CONFIG_YOS_MESH
     test_uradar();
 #endif
+
+    test_aosapi();
 }
 

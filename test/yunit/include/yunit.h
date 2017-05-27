@@ -96,6 +96,14 @@ void yunit_add_test_case_result(
             __FILE__, __LINE__, "%s", #expr); \
     } while (0);
 
+/* print msg if failure, else nothing */
+#define YUNIT_ASSERT_MSG(expr, fmt, args...) \
+    do { \
+       yunit_add_test_case_result( \
+           (expr) ? TEST_RESULT_SUCCESS : TEST_RESULT_FAILURE, \
+            __FILE__, __LINE__, "expect (%s) but actual ("fmt")", #expr, ##args); \
+    } while (0);
+
 #define YUNIT_ASSERT_FETAL(expr) \
     do { \
        yunit_add_test_case_result( \
@@ -169,6 +177,28 @@ void yunit_add_test_case_result(
            result ? "%s(%p)!=%s(%p)" : "expect %s(%p) but actual is %s(%p)", \
            #expect, expect, #actual, actual); \
     } while (0);
+
+
+#define PRINT_TASK_INFO(task) \
+	printf("\t%-40s%-10d%-20d\n",\
+		   task->task_name, \
+		   (int)task->task_state, \
+		   (int)task->stack_size*sizeof(cpu_stack_t))
+
+#define PRINT_ALL_TASK_INFO() do { \
+	klist_t *taskhead = &g_kobj_list.task_head; \
+	klist_t *taskend  = taskhead;\
+	klist_t *tmp;\
+	ktask_t  *task; \
+	printf("\t--------------------------------------------------------------\n");\
+	printf("\t%-40s%-10s%-20s\n", "Name","State", "StackSize");\
+	printf("\t--------------------------------------------------------------\n");\
+	for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) { \
+		task = yunos_list_entry(tmp, ktask_t, task_stats_item);\
+		PRINT_TASK_INFO(task);\
+	}\
+	printf("\t--------------------------------------------------------------\n");\
+}while(0)
 
 #ifdef __cplusplus
 }

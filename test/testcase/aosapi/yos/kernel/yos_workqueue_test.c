@@ -1,0 +1,140 @@
+/*
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <k_api.h>
+#include <yos/kernel.h>
+
+#include <yunit.h>
+
+static yos_workqueue_t workqueue;
+static yos_work_t work;
+static yos_sem_t sync_sem;
+static void CASE_aosapi_kernel_workqueue_param()
+{
+	int ret;
+#if 0
+	// TODO: test fail(nullptr coredump)
+	ret = yos_workqueue_create(NULL, 10, 1024);
+	YUNIT_ASSERT(ret == YUNOS_SUCCESS);
+#endif
+
+	ret = yos_workqueue_create(&workqueue, YUNOS_CONFIG_PRI_MAX, 1024);
+	YUNIT_ASSERT_MSG(ret==YUNOS_BEYOND_MAX_PRI, "ret=%d", ret);
+
+	ret = yos_workqueue_create(&workqueue, YUNOS_CONFIG_PRI_MAX+1, 1024);
+	YUNIT_ASSERT_MSG(ret==YUNOS_BEYOND_MAX_PRI, "ret=%d", ret);
+
+	// TODO: test fail(YUNOS_TASK_INV_STACK_SIZE)
+	ret = yos_workqueue_create(&workqueue, 10, 0);
+	YUNIT_ASSERT_MSG(ret==YUNOS_TASK_INV_STACK_SIZE, "ret=%d", ret);
+
+#if 0
+	// TODO: test fail(nullptr coredump)
+	yos_workqueue_del(NULL);
+#endif
+}
+
+static void CASE_aosapi_kernel_workqueue_default()
+{
+	// TODO: not implement
+	// yos_work_cancle() and yos_work_schedule()
+}
+
+static void WORK_aosapi_kernel_workqueue_custom(void *arg)
+{
+	int i = 4;
+	while(i--) {
+		yos_msleep(1000);
+		printf("workqueue:%d\n", i);
+	}
+	yos_sem_signal(&sync_sem);
+}
+static void CASE_aosapi_kernel_workqueue_custom()
+{
+	int ret = 0;
+
+	ret = yos_sem_new(&sync_sem, 0);
+	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+
+	ret = yos_workqueue_create(&workqueue, 10, 1024);
+	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+
+	ret = yos_work_init(&work, WORK_aosapi_kernel_workqueue_custom, NULL, 100);
+	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+
+	ret = yos_work_run(&workqueue, &work);
+	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+
+	ret = yos_sem_wait(&sync_sem, YUNOS_WAIT_FOREVER);
+	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	yos_workqueue_del(&workqueue);
+}
+
+static void WORK_aosapi_kernel_work_param(void* arg)
+{
+}
+static void CASE_aosapi_kernel_work_param()
+{
+	int ret = 0;
+#if 0
+	// TODO: nullptr coredump
+	ret = yos_work_init(NULL,WORK_aosapi_kernel_work_param,  NULL, 1000);
+	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+#endif
+
+	ret = yos_work_init(&work, NULL, NULL, 1024);
+	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+
+#if 0
+	// TODO: nullptr coredump
+	ret = yos_work_run(NULL, &work);
+	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+#endif
+
+#if 0
+	// TODO: nullptr coredump
+	ret = yos_workqueue_create(&workqueue, 10, 1024);
+	YUNIT_ASSERT(ret == YUNOS_SUCCESS);
+	yos_work_run(&workqueue, NULL);
+	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	yos_workqueue_del(&workqueue);
+#endif
+
+#if 0
+	// TODO: not implement
+	ret = yos_work_cancel(NULL);
+	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+#endif
+
+#if 0
+	// TODO: not implement
+	ret = yos_work_schedule(NULL);
+	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+#endif
+}
+
+
+
+void aosapi_kernel_workqueue_test_entry(yunit_test_suite_t *suite)
+{
+//	yunit_add_test_suites(aosapi_kernel_workqueue_testsuites);
+	yunit_add_test_case(suite, "kernel.workqueue.param", CASE_aosapi_kernel_workqueue_param);
+	yunit_add_test_case(suite, "kernel.workqueue.default", CASE_aosapi_kernel_workqueue_default);
+	yunit_add_test_case(suite, "kernel.workqueue.custom", CASE_aosapi_kernel_workqueue_custom);
+	yunit_add_test_case(suite, "kernel.work.param", CASE_aosapi_kernel_work_param);
+}

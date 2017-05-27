@@ -13,6 +13,17 @@ $(NAME)_SOURCES     += tfs/tfs_test.c
 $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
 $(NAME)_SOURCES     += kernel/module/kv_test.c
+
+$(NAME)_SOURCES    += aosapi/yos/kernel/test_kernel.c
+$(NAME)_SOURCES    += aosapi/yos/kernel/yos_sys_test.c
+$(NAME)_SOURCES    += aosapi/yos/kernel/yos_task_test.c
+$(NAME)_SOURCES    += aosapi/yos/kernel/yos_mm_test.c
+$(NAME)_SOURCES    += aosapi/yos/kernel/yos_mutex_test.c
+$(NAME)_SOURCES    += aosapi/yos/kernel/yos_queue_test.c
+$(NAME)_SOURCES    += aosapi/yos/kernel/yos_sem_test.c
+$(NAME)_SOURCES    += aosapi/yos/kernel/yos_timer_test.c
+$(NAME)_SOURCES    += aosapi/yos/kernel/yos_workqueue_test.c
+
 $(NAME)_COMPONENTS  := yunit cjson
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
