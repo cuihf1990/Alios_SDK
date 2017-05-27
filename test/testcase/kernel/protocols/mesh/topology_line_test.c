@@ -30,6 +30,7 @@ static void topology_line_case(bool vector_router)
      */
     set_line_rssi(11, 13);
 
+    cmd_to_agent("stop");
     /* make 7 leader */
     start_node_ext(13, MODE_RX_ON, vector_router ? VECTOR_ROUTER : SID_ROUTER, -1);
     check_p2p_str_wait("leader", 13, "testcmd state", 10);
@@ -65,7 +66,8 @@ static void topology_line_case(bool vector_router)
 
     /* wait network id changed, as we expect migration */
     int tmo_ms = 2 * (WIFI_NEIGHBOR_ALIVE_TIMEOUT + WIFI_ADVERTISEMENT_TIMEOUT * MIGRATE_TIMEOUT);
-    check_cond_wait(netid != ur_mesh_get_meshnetid(), tmo_ms / 1000);
+    check_cond_wait(netid != ur_mesh_get_meshnetid() && ur_mesh_get_device_state() == 6,
+                    tmo_ms / 1000);
 
     /* check if ping work */
     yos_msleep(2 * 1000);
