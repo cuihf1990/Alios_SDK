@@ -87,9 +87,8 @@ static int devinfo_init(void)
 
 #ifdef SUPPORT_ID2
     {
-        uint8_t id2[TFS_KEY_LEN + 1] = { 0 };
-        int len = 0;
-
+        uint8_t id2[TFS_ID2_LEN + 1] = { 0 };
+        uint32_t len = TFS_ID2_LEN;
         tfs_get_ID2(id2, &len);
         OS_ASSERT(id2[0], "get ID2 failed");
 

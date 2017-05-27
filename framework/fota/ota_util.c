@@ -60,7 +60,7 @@ char* ota_get_id2(void) {
 
     static char id2[TFS_ID2_LEN+1] = {0};
     if (!strlen(id2)) {
-        uint32_t len = 0;
+        uint32_t len = TFS_ID2_LEN;
         if ( tfs_get_ID2((unsigned char *)id2, &len) < 0 ) {
             OTA_LOG_E("get_ID2 failed!");
         }

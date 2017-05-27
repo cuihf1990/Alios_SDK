@@ -25,7 +25,9 @@
 #define MM_LEAK_CHECK_ROUND_SCOND 10*60*5*1000
 #define YUNOS_BACKTRACE_DEPTH     10
 
+#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
 extern uint32_t dump_mmleak(void);
+#endif
 
 ktimer_t g_mm_leak_check_timer;
 
@@ -154,6 +156,7 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
     return YUNOS_CMD_SUCCESS;
 }
 
+#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
 
 uint32_t dumpsys_mm_leak_func(char *buf, uint32_t len)
 {
@@ -204,6 +207,7 @@ uint32_t dumpsys_mm_leak_check_func(cmd_item_t *item, char *buf, uint32_t len)
 
     return YUNOS_CMD_SUCCESS;
 }
+#endif
 static uint32_t cmd_dumpsys_func(char *buf, uint32_t len, cmd_item_t *item, cmd_info_t *info)
 {
     ysh_stat_t ret;
@@ -225,13 +229,17 @@ static uint32_t cmd_dumpsys_func(char *buf, uint32_t len, cmd_item_t *item, cmd_
     } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "mm_info")) {
         ret = dumpsys_mm_info_func(buf, len);
         return ret;
-    } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "mm_leak")) {
+    }
+#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
+    else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "mm_leak")) {
         ret = dumpsys_mm_leak_func(buf, len);
         return ret;
     } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "leak_check")) {
         ret = dumpsys_mm_leak_check_func(item, buf, len);
         return ret;
-    } else {
+    }
+#endif
+    else {
         snprintf(buf, len, "%s\r\n", info->help_info);
         return YUNOS_CMD_SUCCESS;
     }
