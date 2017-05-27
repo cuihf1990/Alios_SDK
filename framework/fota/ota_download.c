@@ -52,9 +52,8 @@ void http_gethost_info(char* src, char* web, char* file, int* port) {
     pa = src;
     if (!strncmp(pa, "http://", strlen("http://"))) {
         pa = src + strlen("http://");
-    } else if (!strncmp(pa, "https://", strlen("https://"))) {
-        pa = src + strlen("https://");
     }
+
     pb = strchr(pa, '/');
     if (pb) {
         memcpy(web, pa, strlen(pa) - strlen(pb));
@@ -106,6 +105,11 @@ static int _ota_socket_check_conn(int sock) {
  * Returns: socket fd
  */
 int http_socket_init(int port, char *host_addr) {
+    if(host_addr == NULL || port < 0)
+    {
+        OTA_LOG_E("http_socket_init parms   error\n ");
+        return -1;
+    }
     struct sockaddr_in server_addr;
     struct hostent *host;
     int sockfd;

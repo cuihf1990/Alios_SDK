@@ -38,4 +38,5 @@ include test/testcase/kernel/protocols/mesh/filelists.mk
 $(NAME)_SOURCES += $(MESHYTSFILE)
 endif
 $(NAME)_INCLUDES += ../../framework/protocol/alink/system/
+$(NAME)_INCLUDES += ../../framework/fota/platform/alink/
 GLOBAL_LDFLAGS += -lssl
