@@ -177,8 +177,12 @@ static hal_wifi_module_t sim_yos_wifi_module = {
 static void test_wifi_case(void)
 {
     uint8_t mac[6];
+    hal_wifi_module_t *tmp;
 
     printf("start wifi test case\n");
+
+    tmp = hal_wifi_get_default_module();
+    (void)tmp;
 
     hal_wifi_register_module(&sim_yos_wifi_module);
     hal_wifi_init();
