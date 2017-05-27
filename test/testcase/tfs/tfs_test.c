@@ -4,6 +4,11 @@
 #include <stdio.h>
 
 extern int tfs_id2_encrypt(const uint8_t *in, uint32_t in_len,uint8_t *out, uint32_t *out_len);
+extern int tfs_id2_verify(const uint8_t *in, uint32_t in_len, uint8_t *sign, uint32_t sign_len);
+extern int pal_get_info(const char *key, char *value);
+extern int pal_save_info(const char *key, char *value);
+extern int pal_json_get_string_value(char *json_str, const char **tokens, int tokens_size, char *value);
+extern int pal_json_get_number_value(char *json_str, const char **tokens, int tokens_size, int *value);
 
 #define IN_DATA_SIZE 117
 char in_data[IN_DATA_SIZE + 1];
@@ -69,7 +74,9 @@ static void test_tfs_id2_sign(void)
     in_len = strlen(in_data);
     memset(out_data, 0, BUF_MAX);
     ret = tfs_id2_sign((const uint8_t *)in_data, in_len, out_data, &len);
+    YUNIT_ASSERT(ret == 0);
 
+	ret = tfs_id2_verify((const uint8_t *)in_data, in_len, out_data, len);
     YUNIT_ASSERT(ret == 0);
 }
 
@@ -429,6 +436,83 @@ static void teardown(void)
 
 }
 
+static void test_tfs_pal_storage(void) {
+    int ret = -1;
+    ret = pal_save_info(NULL, "ok");
+    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_save_info("key", NULL);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_save_info(NULL, NULL);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_get_info("key", NULL);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_get_info(NULL, "ok");
+    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_get_info(NULL, NULL);
+    YUNIT_ASSERT(ret != 0);
+}
+
+static void test_tfs_pal_json(void) {
+    int ret = -1;
+	char *json_str = "{\"code\":18, \"msg\":\"id2 not exist\", \"value\":false}";
+	char *json_str1 = "{code:18, msg:\"id2 not exist\", value:false}";
+    const char *tokens[1];
+	int tokens_size = 1;
+	char code[3] = {0};
+	int msg;
+
+    tokens[0] = "code";
+    ret = pal_json_get_string_value(NULL, tokens, tokens_size, code);
+    YUNIT_ASSERT(ret != 0);
+    ret = pal_json_get_string_value(json_str, NULL, tokens_size, code);
+    YUNIT_ASSERT(ret != 0);
+    ret = pal_json_get_string_value(json_str, tokens, 0, code);
+    YUNIT_ASSERT(ret != 0);
+    ret = pal_json_get_string_value(json_str, tokens, tokens_size, NULL);
+    YUNIT_ASSERT(ret != 0);
+    ret = pal_json_get_string_value(NULL, NULL, 0, NULL);
+    YUNIT_ASSERT(ret != 0);
+
+    tokens[0] = "code2";
+    ret = pal_json_get_string_value(json_str1, tokens, tokens_size, code);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_json_get_string_value(json_str, tokens, tokens_size, code);
+    YUNIT_ASSERT(ret != 0);
+
+    tokens[0] = "code";
+    ret = pal_json_get_string_value(json_str, tokens, tokens_size, code);
+    YUNIT_ASSERT(ret != 0);
+
+    tokens[0] = "msg";
+    ret = pal_json_get_number_value(NULL, tokens, tokens_size, &msg);
+    YUNIT_ASSERT(ret != 0);
+    ret = pal_json_get_number_value(json_str, NULL, tokens_size, &msg);
+    YUNIT_ASSERT(ret != 0);
+    ret = pal_json_get_number_value(json_str, tokens, 0, &msg);
+    YUNIT_ASSERT(ret != 0);
+    ret = pal_json_get_number_value(json_str, tokens, tokens_size, NULL);
+    YUNIT_ASSERT(ret != 0);
+    ret = pal_json_get_number_value(NULL, NULL, 0, NULL);
+    YUNIT_ASSERT(ret != 0);
+
+    tokens[0] = "msg2";
+    ret = pal_json_get_number_value(json_str1, tokens, tokens_size, &msg);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_json_get_number_value(json_str, tokens, tokens_size, &msg);
+    YUNIT_ASSERT(ret != 0);
+
+    tokens[0] = "msg";
+    ret = pal_json_get_number_value(json_str, tokens, tokens_size, &msg);
+    YUNIT_ASSERT(ret != 0);
+}
+
 static yunit_test_case_t yunos_tfs_testcases[] = {
     { "tfs_get_ID2", test_tfs_get_ID2},
     { "tfs_get_ID2_param_id2_null", test_tfs_get_ID2_param_id2_null},
@@ -461,6 +545,8 @@ static yunit_test_case_t yunos_tfs_testcases[] = {
     { "tfs_id2_get_digest_auth_code_param_auth_code_null", test_tfs_id2_get_digest_auth_code_param_auth_code_null},
     { "tfs_id2_get_digest_auth_code_param_auth_len_null", test_tfs_id2_get_digest_auth_code_param_auth_len_null},
     { "tfs_id2_get_digest_auth_code_all_param_null", test_tfs_id2_get_digest_auth_code_all_param_null},
+    { "test_tfs_pal_storage", test_tfs_pal_storage},
+    { "test_tfs_pal_json", test_tfs_pal_json},
     YUNIT_TEST_CASE_NULL
 };
 

@@ -5,6 +5,7 @@ $(NAME)_SOURCES     := main.c
 $(NAME)_COMPONENTS  := ysh
 $(NAME)_COMPONENTS  += protocols.net protocols.mesh
 GLOBAL_DEFINES      += TAPIF_DEFAULT_OFF
+GLOBAL_DEFINES      += CONFIG_USE_DEF_AP
 
 ifneq (,$(filter linuxhost,$(COMPONENTS)))
 DDA := 1

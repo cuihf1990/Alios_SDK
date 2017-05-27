@@ -24,48 +24,17 @@
 
 #include "ota_update_manifest.h"
 
+#define BUFFER_MAX_SIZE 1024
+
+
+
 /**
- * @brief http_string_strchr 搜索字符串右边起的第一个匹配字符
+ * @brief http_gethost_info
  *
- * @Param: s  原始字符串
- * @Param: x  待匹配的字符
- *
- * Returns: 索到即返回x对应的值，否则返回0
- */
-char* http_string_strchr(char* s, char x) {
-    int i = strlen(s);
-    if (!(*s)) {
-        return 0;
-    }
-    while (s[i - 1]) {
-        if (strchr(s + (i - 1), x)) {
-            return (s + (i - 1));
-        } else {
-            i--;
-        }
-    }
-    return 0;
-}
-/**
- * @brief http_string_lower 字符串转换为全小写
- *
- * @Param: s  原始字符串
- */
-void http_string_lower(char* s) {
-    char *p = s;
-    while (*p && *p != '\0') {
-        if (*p > 'A' && *p < 'Z')
-            *p = *p + 32;
-        p++;
-    }
-}
-/**
- * @brief http_gethost_info 字符串src中分析出网站地址和端口，并得到用户要下载的文件
- *
- * @Param: src  输入字符串
- * @Param: web  WEB地址
- * @Param: file  需要下载的文件
- * @Param: port  WEB端口号，默认为80
+ * @Param: src  url
+ * @Param: web  WEB
+ * @Param: file  download filename
+ * @Param: port  default 80
  */
 void http_gethost_info(char* src, char* web, char* file, int* port) {
     char* pa;
@@ -129,12 +98,12 @@ static int _ota_socket_check_conn(int sock) {
 }
 
 /**
- * @brief http_socket_init 初始化套接字
+ * @brief http_socket_init
  *
  * @Param: port
  * @Param: host_addr
  *
- * Returns: 返回套接字描述符
+ * Returns: socket fd
  */
 int http_socket_init(int port, char *host_addr) {
     struct sockaddr_in server_addr;
@@ -176,21 +145,21 @@ err_out:
 
 int http_download(char *url, write_flash_cb_t func) {
     int sockfd = 0;
-    char buffer[1024] = {0};
+    char buffer[BUFFER_MAX_SIZE] = {0};
     int port = 0;
     int nbytes = 0;
     char host_file[128] = {0};
     char host_addr[256] = {0};
-    char request[1024] = {0};
+    char request[BUFFER_MAX_SIZE] = {0};
     int send = 0;
     int totalsend = 0;
     int i = 0;
     //char *pt = NULL;
-    char psave[4096] = {0};;
+    char psave[BUFFER_MAX_SIZE] = {0};;
     size_t index = 0;
 
     OTA_LOG_I("parameter.1 is: %s\n ", url);
-    http_gethost_info(url, host_addr, host_file, &port);/*分析网址、端口、文件名等*/
+    http_gethost_info(url, host_addr, host_file, &port);
 
     sockfd = http_socket_init(port, host_addr);
     if(sockfd < 0 )
@@ -203,14 +172,7 @@ int http_download(char *url, write_flash_cb_t func) {
                     "User-Agent:   Mozilla/4.0   (compatible;   MSIE   5.01;   Windows   NT   5.0)\r\n"
                     "Host:   %s:%d\r\nConnection:   Close\r\n\r\n ", host_file,
             host_addr, port);
-    OTA_LOG_I("%s\n", request);/*准备request，将要发送给主机*/
-//    /*取得真实的文件名*/
-//    if (*host_file) {
-//        pt = http_string_strchr(host_file, '/');
-//    } else {
-//        pt = 0;
-//    }
-    /*发送http请求request*/
+    OTA_LOG_I("%s\n", request);
     send = 0;
     totalsend = 0;
     nbytes = strlen(request);
@@ -225,31 +187,30 @@ int http_download(char *url, write_flash_cb_t func) {
     }
 
     i = 0;
-    /*连接成功了，接收http响应,每次处理4096个字节*/
-    memset(psave, 0, 4096);
+    /*连接成功了，接收http响应,每次处理1024个字节*/
+    memset(psave, 0, BUFFER_MAX_SIZE);
     while ((nbytes = read(sockfd, buffer, 1)) == 1) {
         if (i < 4) {
-            /*这里处理http头部*/
+            /* process head packet*/
             if (buffer[0] == '\r' || buffer[0] == '\n') {
                 i++;
             } else {
                 i = 0;
             }
-            OTA_LOG_I("%c", buffer[0]);/*把http头信息打印在屏幕上*/
-        } else /*如果结尾部分不为\r\n\r\n则表示头接收完毕，下面是请求内容*/
+            OTA_LOG_I("%c", buffer[0]);
+        } else /*if buffer not ended with \r\n\r\n，request packet content*/
         {
             psave[index++] = buffer[0];
-            OTA_LOG_I("%c", buffer[0]);
-            if (index > 4096) {
-                func(4096, (uint8_t *)psave, 4096, 0);
-                memset(psave, 0, 4096);
+            if (index > BUFFER_MAX_SIZE) {
+                func(BUFFER_MAX_SIZE, (uint8_t *)psave, BUFFER_MAX_SIZE, 0);
+                memset(psave, 0, BUFFER_MAX_SIZE);
                 index = 0;
             }
         }
     }
-    /*将剩余的字符写入文件*/
-    if (index <= 4096) {
-        func(4096, (uint8_t*)psave, index, 0);
+    /*write remaining bytes*/
+    if (index <= BUFFER_MAX_SIZE) {
+        func(BUFFER_MAX_SIZE, (uint8_t*)psave, index, 0);
     }
     close(sockfd);
 

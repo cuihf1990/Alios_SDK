@@ -21,8 +21,6 @@
 #define MODULE_NAME "workqueue_interface"
 
 #if (YUNOS_CONFIG_WORKQUEUE > 0)
-extern void workqueue_init(void);
-
 static ksem_t g_wq_test_sem;
 
 static void work0_func(void *arg)
@@ -91,8 +89,6 @@ static uint8_t workqueue_interface_case1(void)
     size_t stack2_size = WORK_STACK_BUF;
 
     printf("==========WORKQUEUE TEST START!==========\n");
-
-    workqueue_init();
 
     yunos_sem_create(&g_wq_test_sem, "WORKQUEUE-SEM", 0);
 

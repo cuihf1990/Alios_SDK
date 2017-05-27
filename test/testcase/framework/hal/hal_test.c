@@ -75,25 +75,6 @@ static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
 {
     (void)init_para;
 
-    hal_wifi_ip_stat_t ip_stat;
-
-    char ip[4]   = {0x7f, 0x00, 0x00, 0x01};
-    char mask[4] = {0xFF, 0xFF, 0xFF, 0x00};
-    char gate[4] = {0x7f, 0x00, 0x00, 0x01};
-
-    memcpy(ip_stat.ip, ip, 4);
-    memcpy(ip_stat.mask, mask, 4);
-    memcpy(ip_stat.gate, gate, 4);
-    memcpy(ip_stat.mac, fixmac, 6);
-
-    if (m->ev_cb->stat_chg != NULL) {
-        m->ev_cb->stat_chg(m, NOTIFY_STATION_UP, NULL);
-    }
-
-    if (m->ev_cb->ip_got != NULL) {
-        m->ev_cb->ip_got(m, &ip_stat, NULL);
-    }
-
     return 0;
 }
 
@@ -108,34 +89,17 @@ static int get_ip_stat(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, h
 {
     (void)wifi_type;
 
-    char ip[4]   = {0x7f, 0x00, 0x00, 0x01};
-    char mask[4] = {0xFF, 0xFF, 0xFF, 0x00};
-    char gate[4] = {0x7f, 0x00, 0x00, 0x01};
-
-    memcpy(out_net_para->ip, ip, 4);
-    memcpy(out_net_para->mask, mask, 4);
-    memcpy(out_net_para->gate, gate, 4);
-    memcpy(out_net_para->mac, fixmac, 6);
-
     return 0;
 }
 
 static int get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)
 {
-    out_stat->is_connected = 1;
     return 0;
 }
 
 static void start_scan(hal_wifi_module_t *m)
 {
-    hal_wifi_scan_result_t scan_ret;
-    scan_ret.ap_num = 1;
-    scan_ret.ap_list->ap_power = 80;
-    memcpy(scan_ret.ap_list->ssid, "test", 5);
-
-    if (m->ev_cb->scan_compeleted != NULL) {
-        m->ev_cb->scan_compeleted(m, &scan_ret, NULL);
-    }
+   
 }
 
 static void start_scan_adv(hal_wifi_module_t *m)
@@ -213,13 +177,31 @@ static hal_wifi_module_t sim_yos_wifi_module = {
 static void test_wifi_case(void)
 {
     uint8_t mac[6];
+    hal_wifi_module_t *tmp;
 
     printf("start wifi test case\n");
+
+    tmp = hal_wifi_get_default_module();
+    (void)tmp;
 
     hal_wifi_register_module(&sim_yos_wifi_module);
     hal_wifi_init();
     hal_wifi_get_mac_addr(&sim_yos_wifi_module, mac);
-
+    hal_wifi_start(&sim_yos_wifi_module, NULL);
+    hal_wifi_start_adv(&sim_yos_wifi_module, NULL);
+    hal_wifi_get_ip_stat(&sim_yos_wifi_module, NULL, Soft_AP);
+    hal_wifi_get_link_stat(&sim_yos_wifi_module, NULL);
+    hal_wifi_start_scan(&sim_yos_wifi_module);
+    hal_wifi_start_scan_adv(&sim_yos_wifi_module);
+    hal_wifi_power_off(&sim_yos_wifi_module);
+    hal_wifi_power_on(&sim_yos_wifi_module);
+    hal_wifi_suspend(&sim_yos_wifi_module);
+    hal_wifi_suspend_station(&sim_yos_wifi_module);
+    hal_wifi_suspend_soft_ap(&sim_yos_wifi_module);
+    hal_wifi_set_channel(&sim_yos_wifi_module, 0);
+    hal_wifi_start_wifi_monitor(&sim_yos_wifi_module);
+    hal_wifi_stop_wifi_monitor(&sim_yos_wifi_module);
+    hal_wifi_register_monitor_cb(&sim_yos_wifi_module, NULL);
     printf("first mac addr is 0x%x\n", mac[0]);
 }
 

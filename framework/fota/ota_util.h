@@ -23,9 +23,6 @@ extern "C"{
 
 #include <stdint.h>
 #include "ota_constants.h"
-
-#define PACKET_VER_SIZE   32
-
 typedef enum OTA_STATUS {
     E_OTA_IDLE,
     E_OTA_HOLD,
@@ -38,13 +35,7 @@ void ota_set_status(OTA_STATUS_T status);
 OTA_STATUS_T ota_get_status(void);
 
 char* ota_get_id2(void);
-void ota_handle_error(void);
 
-void ota_set_packet_version(char* ver, uint32_t len);
-
-int ota_http_init(const char *server, int port);
-int ota_write(int fd,void* buffer,int length);
-int ota_read(int fd,void *buffer,int length, int range);
 #ifdef __cplusplus
 }
 #endif

@@ -103,6 +103,11 @@ static void work_done(void *arg)
     done_flag |= T_WORK_DONE_FLAG;
 }
 
+static void work_not_exec(void *arg)
+{
+    YUNIT_ASSERT(0);
+}
+
 static void mywork(void *arg)
 {
     struct task_cookie *cookie = arg;
@@ -124,7 +129,12 @@ static void app_main_entry(void *arg)
     yos_loop_run();
 
     YUNIT_ASSERT(yos_schedule_work(0, mywork, arg, NULL, arg) != 0);
-    YUNIT_ASSERT(yos_schedule_work(100, mywork, arg, work_done, arg) != 0);
+    YUNIT_ASSERT(yos_schedule_work(1000, mywork, arg, work_done, arg) != 0);
+
+    void *w = yos_schedule_work(500, mywork, arg, work_not_exec, arg);
+    YUNIT_ASSERT(w != 0);
+    yos_cancel_work(w, work_not_exec, arg);
+
     yos_loop_run();
 }
 

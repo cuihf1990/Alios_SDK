@@ -19,7 +19,6 @@
 #include <stdbool.h>
 #include <yos/framework.h>
 #include <yos/log.h>
-#include <tfs.h>
 
 #include "netmgr.h"
 

@@ -25,7 +25,7 @@ extern "C" {
  * @brief get ID2 informaiton
  *
  * @param[out] id2: the mem must >= TFS_ID2_LEN.
- * @param[out] len: TFS_ID2_LEN.
+ * @param[inout] len: TFS_ID2_LEN.
  * @return: 0~OK, other~ERROR.
  * @note None.
  */
@@ -38,7 +38,7 @@ int tfs_get_ID2(uint8_t *id2, uint32_t *len);
  * @param[in] in: input data.
  * @param[in] in_len: the length of intput data, which must <= 512 bytes.
  * @param[out] sign: signature for input data.
- * @param[out] sign_len: the length of signature.
+ * @param[inout] sign_len: the length of signature.
  * @return: 0~OK, other~ERROR
  * @note None.
  */
@@ -51,7 +51,7 @@ int tfs_id2_sign(const uint8_t *in, uint32_t in_len,
  * @param[in] in: input data.
  * @param[in] in_len: the length of intput data, which mush <= 128 bytes.
  * @param[out] out: decrypted data.
- * @param[out] out_len: the length of decrypted data.
+ * @param[inout] out_len: the length of decrypted data.
  * @return: 0~OK, other~ERROR
  * @note None.
  */
