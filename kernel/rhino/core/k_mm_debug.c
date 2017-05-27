@@ -25,6 +25,7 @@
 
 extern klist_t g_mm_region_list_head;
 
+#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
 static mm_scan_region_t g_mm_scan_region[YOS_MM_SCAN_REGION_MAX];
 static void           **g_leak_match;
 static uint32_t         g_recheck_flag = 0;
@@ -83,7 +84,7 @@ static uint32_t check_active_task_stack(void ** p)
         end = g_active_task->task_stack_base + g_active_task->stack_size - offset;
     } else {
         k_err_proc(YUNOS_SYS_SP_ERR);
-        return 1;
+        return 0;
     }
 
     if ((uint32_t)p >= (uint32_t)g_active_task->task_stack_base &&
@@ -280,6 +281,7 @@ uint32_t dump_mmleak()
         end = head;
 
         if (1 == is_klist_empty(head)) {
+            yunos_sched_enable();
             return 0;
         }
 
@@ -311,6 +313,7 @@ uint32_t dump_mmleak()
 
     return 1;
 }
+#endif
 
 
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
