@@ -5,7 +5,7 @@ MODULE              := 1062
 HOST_ARCH           := linux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  := yloop vfs hal log vcall ysh alicrypto modules.kv tfs netmgr
+$(NAME)_COMPONENTS  := yloop vfs hal log fota vcall ysh alicrypto modules.kv tfs netmgr
 
 ifeq ($(gcov),1)
 GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
@@ -29,5 +29,5 @@ CONFIG_TFS_TEE := n
 CONFIG_TFS_SW := y
 CONFIG_TFS_TEST := n
 
-GLOBAL_CFLAGS += -m32
+GLOBAL_CFLAGS += -m32  -std=gnu99
 GLOBAL_LDFLAGS += -m32
