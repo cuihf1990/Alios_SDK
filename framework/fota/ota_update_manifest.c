@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <yos/kernel.h>
 #include "ota_update_manifest.h"
 #include "ota_log.h"
 #include "ota_transport.h"
