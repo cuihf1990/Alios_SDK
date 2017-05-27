@@ -34,7 +34,7 @@ static uint8_t tasksem_param_case1(void)
     MYASSERT(ret == YUNOS_NULL_PTR);
 
     ret = yunos_task_sem_create(task_tasksem, &test_tasksem, MODULE_NAME, (sem_count_t)-1);
-    MYASSERT(ret == YUNOS_SEM_OVF);
+    MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_task_sem_create(task_tasksem, &test_tasksem, MODULE_NAME, 0);
     MYASSERT(ret == YUNOS_SUCCESS);
