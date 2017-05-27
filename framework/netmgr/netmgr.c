@@ -24,10 +24,8 @@
 
 #define TAG "netmgr"
 
-#ifdef CONFIG_USE_DEF_AP
 #define DEMO_AP_SSID "yos"
 #define DEMO_AP_PASSWORD "yos__yos"
-#endif
 
 #define MAX_RETRY_CONNECT 120
 #define RETRY_INTERVAL_MS 500
@@ -40,7 +38,7 @@ typedef struct {
 typedef struct {
     netmgr_ap_config_t         ap_config;
     hal_wifi_module_t          *wifi_hal_mod;
-    autoconfig_plugin_t        *autoconfig;
+    autoconfig_plugin_t        *autoconfig_chain;
     monitor_data_cb_t          monitor_dt_cb;
     int32_t                    ipv4_owned;
     int8_t                     disconnected_times;
@@ -48,11 +46,12 @@ typedef struct {
     bool                       auto_start_smartconfig;
 } netmgr_cxt_t;
 
-extern autoconfig_plugin_t g_vendor_smartconfig;
 static netmgr_cxt_t        g_netmgr_cxt;
+static autoconfig_plugin_t g_def_smartconfig;
 
 static void netmgr_wifi_config_start(void);
 static void add_autoconfig_plugin(autoconfig_plugin_t *plugin);
+static void del_first_autoconfig_plugin(void);
 static int32_t has_valid_ap(void);
 static autoconfig_plugin_t *get_autoconfig_plugin(void);
 
@@ -159,7 +158,7 @@ static void reconnect_wifi(void *arg)
 {
     hal_wifi_module_t    *module;
     hal_wifi_init_type_t type;
-    netmgr_ap_config_t  *ap_config = &(g_netmgr_cxt.ap_config);
+    netmgr_ap_config_t   *ap_config = &(g_netmgr_cxt.ap_config);
 
     module = hal_wifi_get_default_module();
 
@@ -213,9 +212,9 @@ static int set_wifi_ssid(void)
 
 static void handle_wifi_disconnect(void)
 {
-    if (g_netmgr_cxt.autoconfig != NULL) {
-        g_netmgr_cxt.autoconfig->autoconfig_stop();
-        g_netmgr_cxt.autoconfig = NULL;
+    if (g_netmgr_cxt.autoconfig_chain != NULL) {
+        g_netmgr_cxt.autoconfig_chain->autoconfig_stop();
+        del_first_autoconfig_plugin();
     }
 
     g_netmgr_cxt.disconnected_times++;
@@ -243,19 +242,19 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
             handle_wifi_disconnect();
             break;
         case CODE_WIFI_ON_PRE_GOT_IP:
-            if (g_netmgr_cxt.autoconfig != NULL) {
-                g_netmgr_cxt.autoconfig->config_result_cb(
+            if (g_netmgr_cxt.autoconfig_chain != NULL) {
+                g_netmgr_cxt.autoconfig_chain->config_result_cb(
                     0, g_netmgr_cxt.ipv4_owned);
-                g_netmgr_cxt.autoconfig->autoconfig_stop();
+                g_netmgr_cxt.autoconfig_chain->autoconfig_stop();
             } else {
                 yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
                     (unsigned long)(&g_netmgr_cxt.ipv4_owned));
             }
             break;
         case CODE_WIFI_ON_GOT_IP:
-            if (g_netmgr_cxt.autoconfig != NULL) {
+            if (g_netmgr_cxt.autoconfig_chain != NULL) {
                 set_wifi_ssid();
-                g_netmgr_cxt.autoconfig = NULL;
+                del_first_autoconfig_plugin();
             }
             break;
         case CODE_WIFI_CMD_RECONNECT:
@@ -284,7 +283,7 @@ static void netmgr_wifi_config_start(void)
 
     if (valid_plugin != NULL) {
         valid_plugin->autoconfig_start();
-        g_netmgr_cxt.autoconfig = valid_plugin;
+        g_netmgr_cxt.autoconfig_chain = valid_plugin;
         module = hal_wifi_get_default_module();
         hal_wifi_register_monitor_cb(module, netmgr_monitor_data);
     } else {
@@ -305,13 +304,18 @@ static int32_t has_valid_ap(void)
 
 static void add_autoconfig_plugin(autoconfig_plugin_t *plugin)
 {
-    plugin->next = NULL;
-    g_netmgr_cxt.autoconfig = plugin;
+    plugin->next = g_netmgr_cxt.autoconfig_chain;
+    g_netmgr_cxt.autoconfig_chain = plugin;
+}
+
+static void del_first_autoconfig_plugin(void)
+{
+    g_netmgr_cxt.autoconfig_chain = g_netmgr_cxt.autoconfig_chain->next;
 }
 
 static autoconfig_plugin_t *get_autoconfig_plugin(void)
 {
-    return g_netmgr_cxt.autoconfig;
+    return g_netmgr_cxt.autoconfig_chain;
 }
 
 int netmgr_set_ap_config(netmgr_ap_config_t *config)
@@ -329,6 +333,12 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
     ret = yos_kv_set("wifi", (unsigned char *)&g_netmgr_cxt.persistent_conf_wifi,
                      sizeof(yos_persistent_conf_wifi_t), 0);
     return ret;
+}
+
+void netmgr_set_smart_config(autoconfig_plugin_t *plugin)
+{
+    add_autoconfig_plugin(plugin);
+    netmgr_wifi_config_start();
 }
 
 static void read_persistent_conf(void)
@@ -351,7 +361,7 @@ int netmgr_init(void)
     module = hal_wifi_get_default_module();
     memset(&g_netmgr_cxt, 0, sizeof(g_netmgr_cxt));
     g_netmgr_cxt.wifi_hal_mod = module;
-    add_autoconfig_plugin(&g_vendor_smartconfig);
+    add_autoconfig_plugin(&g_def_smartconfig);
     hal_wifi_install_event(g_netmgr_cxt.wifi_hal_mod, &g_wifi_hal_event);
     g_netmgr_cxt.auto_start_smartconfig = true;
     read_persistent_conf();
@@ -374,7 +384,6 @@ int netmgr_start(void)
     return 0;
 }
 
-#ifdef CONFIG_USE_DEF_AP
 static int def_smart_config_start(void)
 {
     netmgr_ap_config_t config;
@@ -395,10 +404,9 @@ static void def_smart_config_stop(void)
 static void def_smart_config_result_cb(int result, uint32_t ip) {
 }
 
-autoconfig_plugin_t g_vendor_smartconfig = {
+static autoconfig_plugin_t g_def_smartconfig = {
     .description = "def_smartconfig",
     .autoconfig_start = def_smart_config_start,
     .autoconfig_stop = def_smart_config_stop,
     .config_result_cb = def_smart_config_result_cb
 };
-#endif
