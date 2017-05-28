@@ -55,14 +55,15 @@ char url[OTA_URL_MAX_LEN];
 
 void ota_download_start(void * buf)
 {
-    OTA_LOG_E("/************************************task update start**************************************/");
+    OTA_LOG_E("task update start");
     ota_set_status(E_OTA_IDLE);
     int ret = http_download(url, g_write_func); 
     if(ret < 0 ) {
-       OTA_LOG_E(" ota download error");
+       OTA_LOG_E("ota download error");
        ota_set_status(E_OTA_DOWNLOAD_FAIL);
        return;
     }
+    memset(url, 0, sizeof url);
     OTA_LOG_I(" ota status %d",ota_get_status());
     ota_set_status(E_OTA_DOWNLOAD_SUC);
     if(NULL != g_finish_cb) {
@@ -70,7 +71,7 @@ void ota_download_start(void * buf)
     }
  
     ota_set_status(E_OTA_END);
-    OTA_LOG_E("/************************************task update over**************************************/");
+    OTA_LOG_E("task update over");
     free_global_topic();
 }
 

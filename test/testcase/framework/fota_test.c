@@ -36,16 +36,15 @@ const char *ota_info = "{\"md5\":\"6B21342306D0F619AF97006B7025D18A\",\"resource
 
 static void test_fota_case(void)
 {
-    ota_service_init();
     yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+    ota_service_init();
     ota_check_update("",1);
-    do_update(ota_info);
+    ota_download_start(NULL);
     do_update(NULL);
+    do_update(ota_info);
 
     http_gethost_info(NULL, NULL, NULL, NULL);
     http_socket_init(0, NULL);
-
-    ota_download_start(NULL);
 
     parse_ota_requset(NULL, NULL, NULL);
     parse_ota_response(NULL, 0, NULL);

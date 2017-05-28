@@ -40,7 +40,7 @@ void http_gethost_info(char* src, char* web, char* file, int* port) {
     char* pa;
     char* pb;
 
-    if(!src || !web || !file) {
+    if(!src || strlen(src) == 0) {
         OTA_LOG_E("http_gethost_info parms error!\n");
         return;
     }
@@ -105,7 +105,7 @@ static int _ota_socket_check_conn(int sock) {
  * Returns: socket fd
  */
 int http_socket_init(int port, char *host_addr) {
-    if(host_addr == NULL || port < 0)
+    if(host_addr == NULL || strlen(host_addr) == 0 || port <= 0)
     {
         OTA_LOG_E("http_socket_init parms   error\n ");
         return -1;
@@ -148,6 +148,10 @@ err_out:
 
 
 int http_download(char *url, write_flash_cb_t func) {
+    if(!url || strlen(url) == 0 || func == NULL) {
+        OTA_LOG_E("http_download error!\n");
+        return -1;
+    }
     int sockfd = 0;
     char buffer[BUFFER_MAX_SIZE] = {0};
     int port = 0;
