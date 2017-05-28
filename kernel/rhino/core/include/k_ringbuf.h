@@ -51,8 +51,8 @@ typedef struct {
     size_t    blk_size:     (8 * sizeof(size_t) -1);
 } k_ringbuf_t;
 
-#define COMPRESS_LEN(x) (x) <= RINGBUF_LEN_1BYTE_MAXVALUE ? 1: (x) <= RINGBUF_LEN_2BYTES_MAXVALUE ? 2: \
-                        (x) <= RINGBUF_LEN_3BYTES_MAXVALUE ? 3 : YUNOS_INV_PARAM
+#define COMPRESS_LEN(x) ((x) <= RINGBUF_LEN_1BYTE_MAXVALUE ? 1: (x) <= RINGBUF_LEN_2BYTES_MAXVALUE ? 2: \
+                        (x) <= RINGBUF_LEN_3BYTES_MAXVALUE ? 3 : YUNOS_INV_PARAM)
 
 
 #if (YUNOS_CONFIG_RINGBUF_VENDOR > 0)
