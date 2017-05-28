@@ -46,7 +46,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
     } else {
         char* info = cJSON_Print(root);
         OTA_LOG_D("root is %s", info);
-        free(info);
+        cJSON_free(info);
 
         cJSON *uuid = cJSON_GetObjectItem(root, "uuid");
         if (!uuid) {

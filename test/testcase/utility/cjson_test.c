@@ -13,7 +13,7 @@ static void test_simple_case(void)
     cJSON_AddStringToObject(obj, "a", "b");
     char *p = cJSON_PrintUnformatted(obj);
     YUNIT_ASSERT(strcmp(p, "{\"a\":\"b\"}") == 0);
-    free(p);
+    cJSON_free(p);
 
     cJSON_Delete(obj);
 }
