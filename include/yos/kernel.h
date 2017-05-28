@@ -307,7 +307,7 @@ int yos_work_cancel(yos_work_t *work);
  * @param[in] size size of the mem to malloc
  * @return  the operation status, NULL is error, others is memory address
  */
-void *yos_malloc(int size);
+void *yos_malloc(unsigned int size);
 
 /**
  * free memory

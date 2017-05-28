@@ -402,7 +402,7 @@ int yos_work_cancel(yos_work_t *work)
     return yunos_work_cancel(work->hdl);
 }
 
-void *yos_malloc(int size)
+void *yos_malloc(unsigned int size)
 {
     return yunos_mm_alloc(size);
 }

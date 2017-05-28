@@ -86,8 +86,10 @@ static int init(void)
 
 static int cleanup(void)
 {
-    yos_kv_deinit();
-
+	/*wangbin change it because it's a global table,
+	call deinit it will cause whole system crash*/
+    //yos_kv_deinit();
+	
     return 0;
 }
 
