@@ -135,6 +135,9 @@ void message_sent_task(void *args)
     uint16_t msg_length;
 
     ur_stop_timer(&hal->sending_timer, hal);
+    if (hal->send_message == NULL) {
+        return;
+    }
     message = hal->send_message;
     msg_length = message_get_msglen(message);
     if (hal->frag_info.offset < msg_length) {

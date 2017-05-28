@@ -12,6 +12,8 @@ MESHYTSFILE = $(MESHYTSPATH)/uradar_test.c \
               $(MESHYTSPATH)/misc_test.c \
               $(MESHYTSPATH)/mesh_forwarder_test.c \
               $(MESHYTSPATH)/mesh_mgmt_test.c \
+              $(MESHYTSPATH)/hal_mesh_test.c \
+              $(MESHYTSPATH)/diags_test.c \
               $(MESHYTSPATH)/mcast_test.c \
               $(MESHYTSPATH)/1hop_test.c \
               $(MESHYTSPATH)/1mobile_test.c \
