@@ -2,8 +2,8 @@
  * Copyright (C) 2016 The YunOS Project. All rights reserved.
  */
 
-#include "tee_crypto.h"
-#include "tee_crypto_test.h"
+#include "ali_crypto.h"
+#include "ali_crypto_test.h"
 
 #define TEST_KEY_SIZE           (16)
 #define TEST_DATA_SIZE          (141)
@@ -71,107 +71,153 @@ static uint8_t hmac_sha512[SHA512_HASH_SIZE] = {
     0xfd, 0x81, 0x3f, 0x0b
 };
 
-int tee_crypto_hmac_test(void)
+int ali_crypto_hmac_test(void)
 {
-    tee_crypto_result result;
+    ali_crypto_result result;
     hash_type_t type;
     void *hmac_ctx = NULL;
     uint32_t hmac_ctx_size;
     uint8_t md[MAX_HASH_SIZE];
 
+    /* for gcov coverage */
+    result = ali_hmac_get_ctx_size(MD5, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+    result = ali_hmac_get_ctx_size(HASH_NONE, &hmac_ctx_size);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+    result = ali_hmac_init(MD5, test_key, TEST_KEY_SIZE, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+    result = ali_hmac_init(HASH_NONE, test_key, TEST_KEY_SIZE, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+    result = ali_hmac_update(_g_test_data, 13, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+    result = ali_hmac_final(md, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+    result = ali_hmac_digest(MD5, NULL, TEST_KEY_SIZE,
+                                     _g_test_data, TEST_DATA_SIZE, md);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+    result = ali_hmac_reset(NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+    result = ali_hmac_copy_context(NULL, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
     for (type = SHA1; type <= MD5; type++) {
-        result = tee_hmac_get_ctx_size(type, &hmac_ctx_size);
-        if (result != TEE_CRYPTO_SUCCESS) {
-            CRYPT_ERR("get ctx size fail(%08x)\n", result);
-            goto _error;
+        result = ali_hmac_get_ctx_size(type, &hmac_ctx_size);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            GO_RET(result, "get ctx size fail(%08x)\n", result);
         }
 
         hmac_ctx = CRYPT_MALLOC(hmac_ctx_size);
         if (hmac_ctx == NULL) {
-            CRYPT_ERR("kmalloc(%d) fail\n", hmac_ctx_size);
-            goto _error;
+            GO_RET(ALI_CRYPTO_OUTOFMEM, "kmalloc(%d) fail\n", hmac_ctx_size);
         }
         CRYPT_MEMSET(hmac_ctx, 0, hmac_ctx_size);
 
-        if ((type & 0x1) == 0x0) {
-            result = tee_hmac_init(type, test_key, TEST_KEY_SIZE, hmac_ctx);
-            if (result != TEE_CRYPTO_SUCCESS) {
-                CRYPT_ERR("init fail(%08x)", result);
-                goto _error;
+        {
+            result = ali_hmac_init(type, test_key, TEST_KEY_SIZE, hmac_ctx);
+            if (result != ALI_CRYPTO_SUCCESS) {
+                GO_RET(result, "init fail(%08x)", result);
             }
 
-            result = tee_hmac_update(_g_test_data, 13, hmac_ctx);
-            if (result != TEE_CRYPTO_SUCCESS) {
-                CRYPT_ERR("update 1th fail(%08x)", result);
-                goto _error;
-            }
-            result = tee_hmac_update(_g_test_data + 13, 63, hmac_ctx);
-            if (result != TEE_CRYPTO_SUCCESS) {
-                CRYPT_ERR("update 2th fail(%08x)", result);
-                goto _error;
-            }
-            result = tee_hmac_update(_g_test_data + 13 + 63, 65, hmac_ctx);
-            if (result != TEE_CRYPTO_SUCCESS) {
-                CRYPT_ERR("update 3th fail(%08x)", result);
-                goto _error;
+            /* for gcov coverage */
+            result = ali_hmac_update(NULL, 13, hmac_ctx);
+            if (result == ALI_CRYPTO_SUCCESS) {
+                goto _OUT;
             }
 
-            result = tee_hmac_final(md, hmac_ctx);
-            if (result != TEE_CRYPTO_SUCCESS) {
-                CRYPT_ERR("final fail(%08x)", result);
-                goto _error;
+            result = ali_hmac_update(_g_test_data, 13, hmac_ctx);
+            if (result != ALI_CRYPTO_SUCCESS) {
+                GO_RET(result, "update 1th fail(%08x)", result);
             }
-        } else {
-            result = tee_hmac_digest(type, test_key, TEST_KEY_SIZE,
+            result = ali_hmac_update(_g_test_data + 13, 63, hmac_ctx);
+            if (result != ALI_CRYPTO_SUCCESS) {
+                GO_RET(result, "update 2th fail(%08x)", result);
+            }
+            result = ali_hmac_update(_g_test_data + 13 + 63, 65, hmac_ctx);
+            if (result != ALI_CRYPTO_SUCCESS) {
+                GO_RET(result, "update 3th fail(%08x)", result);
+            }
+
+            result = ali_hmac_final(md, hmac_ctx);
+            if (result != ALI_CRYPTO_SUCCESS) {
+                GO_RET(result, "final fail(%08x)", result);
+            }
+
+            /* for gcov coverage */
+            result = ali_hmac_digest(HASH_NONE, test_key, TEST_KEY_SIZE,
                                      _g_test_data, TEST_DATA_SIZE, md);
-            if (result != TEE_CRYPTO_SUCCESS) {
-                CRYPT_ERR("digest fail(%08x)", result);
-                goto _error;
+            if (result == ALI_CRYPTO_SUCCESS) {
+                goto _OUT;
+            }
+
+            result = ali_hmac_digest(type, test_key, TEST_KEY_SIZE,
+                                     _g_test_data, TEST_DATA_SIZE, md);
+            if (result != ALI_CRYPTO_SUCCESS) {
+                GO_RET(result, "digest fail(%08x)", result);
             }
         }
 
+        ali_hmac_copy_context(hmac_ctx, hmac_ctx);
+        ali_hmac_reset(hmac_ctx);
         CRYPT_FREE(hmac_ctx);
         hmac_ctx = NULL;
 
         if (type == SHA1) {
             if(CRYPT_MEMCMP(md, hmac_sha1, SHA1_HASH_SIZE)) {
-                CRYPT_INF("HMAC-SHA1 test fail!\n");
-                tee_crypto_print_data("hmac-sha1", md, SHA1_HASH_SIZE);
+                ali_crypto_print_data("hmac-sha1", md, SHA1_HASH_SIZE);
+                GO_RET(-1, "HMAC-SHA1 test fail!\n");
             } else {
                 CRYPT_INF("HMAC-SHA1 test success!\n");
             }
         } else if (type == SHA224) {
             if(CRYPT_MEMCMP(md, hmac_sha224, SHA224_HASH_SIZE)) {
-                CRYPT_INF("HMAC-SHA224 test fail!\n");
-                tee_crypto_print_data("hmac-sha224", md, SHA224_HASH_SIZE);
+                ali_crypto_print_data("hmac-sha224", md, SHA224_HASH_SIZE);
+                GO_RET(-1, "HMAC-SHA224 test fail!\n");
             } else {
                 CRYPT_INF("HMAC-SHA224 test success!\n");
             }
         } else if (type == SHA256) {
             if(CRYPT_MEMCMP(md, hmac_sha256, SHA256_HASH_SIZE)) {
-                CRYPT_INF("HMAC-SHA256 test fail!\n");
-                tee_crypto_print_data("hmac-sha256", md, SHA256_HASH_SIZE);
+                ali_crypto_print_data("hmac-sha256", md, SHA256_HASH_SIZE);
+                GO_RET(-1, "HMAC-SHA256 test fail!\n");
             } else {
                 CRYPT_INF("HMAC-SHA256 test success!\n");
             }
         } else if (type == SHA384) {
             if(CRYPT_MEMCMP(md, hmac_sha384, SHA384_HASH_SIZE)) {
-                CRYPT_INF("HMAC-SHA384 test fail!\n");
-                tee_crypto_print_data("hmac-sha384", md, SHA384_HASH_SIZE);
+                ali_crypto_print_data("hmac-sha384", md, SHA384_HASH_SIZE);
+                GO_RET(-1, "HMAC-SHA384 test fail!\n");
             } else {
                 CRYPT_INF("HMAC-SHA384 test success!\n");
             }
         } else if (type == SHA512) {
             if(CRYPT_MEMCMP(md, hmac_sha512, SHA512_HASH_SIZE)) {
-                CRYPT_INF("HMAC-SHA512 test fail!\n");
-                tee_crypto_print_data("hmac-sha512", md, SHA512_HASH_SIZE);
+                ali_crypto_print_data("hmac-sha512", md, SHA512_HASH_SIZE);
+                GO_RET(-1, "HMAC-SHA512 test fail!\n");
             } else {
                 CRYPT_INF("HMAC-SHA512 test success!\n");
             }
         } else if (type == MD5) {
             if(CRYPT_MEMCMP(md, hmac_md5, MD5_HASH_SIZE)) {
-                CRYPT_INF("HMAC-MD5 test fail!\n");
-                tee_crypto_print_data("hmac-md5", md, MD5_HASH_SIZE);
+                ali_crypto_print_data("hmac-md5", md, MD5_HASH_SIZE);
+                GO_RET(-1, "HMAC-MD5 test fail!\n");
             } else {
                 CRYPT_INF("HMAC-MD5 test success!\n");
             }
@@ -180,7 +226,7 @@ int tee_crypto_hmac_test(void)
 
     return 0;
 
-_error:
+_OUT:
     if (hmac_ctx) {
         CRYPT_FREE(hmac_ctx);
     }

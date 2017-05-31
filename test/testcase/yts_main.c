@@ -48,6 +48,7 @@ extern void test_vfs(void);
 extern void test_vcall(void);
 extern void test_netmgr(void);
 extern void test_digest_algorithm(void);
+extern void test_alicrypto(void);
 
 static void add_test(void);
 
@@ -143,5 +144,7 @@ void add_test(void)
 #endif
 
     test_aosapi();
+
+    test_alicrypto();
 }
 

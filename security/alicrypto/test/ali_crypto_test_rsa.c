@@ -44,69 +44,183 @@ static uint8_t RSA_1024_D[128] = {
     0xd8, 0x0c, 0x06, 0x22, 0xad, 0x79, 0xc6, 0xdc,
     0xee, 0x88, 0x35, 0x47, 0xc6, 0xa3, 0xb3, 0x25
 };
-static int _ali_crypto_init_key(
-               rsa_keypair_t **keypair, rsa_pubkey_t **pubkey)
+
+static int _rsa_test_gen_key(void)
 {
-    ali_crypto_result ret;
+    int ret, result;
     uint8_t rsa_n[RSA_KEY_LEN];
     uint8_t rsa_e[RSA_KEY_LEN];
     uint8_t rsa_d[RSA_KEY_LEN];
+    uint8_t rsa_p[RSA_KEY_LEN];
+    uint8_t rsa_q[RSA_KEY_LEN];
+    uint8_t rsa_dp[RSA_KEY_LEN];
+    uint8_t rsa_dq[RSA_KEY_LEN];
+    uint8_t rsa_qp[RSA_KEY_LEN];
     uint32_t n_size = RSA_KEY_LEN;
     uint32_t e_size = RSA_KEY_LEN;
     uint32_t d_size = RSA_KEY_LEN;
+    uint32_t p_size = RSA_KEY_LEN;
+    uint32_t q_size = RSA_KEY_LEN;
+    uint32_t dp_size = RSA_KEY_LEN;
+    uint32_t dq_size = RSA_KEY_LEN;
+    uint32_t qp_size = RSA_KEY_LEN;
     uint8_t *pub_key = NULL;
     uint8_t *key_pair = NULL;
     size_t pub_key_len, key_pair_len;
+    uint8_t src_data[RSA_KEY_LEN];
+    uint8_t ciphertext[RSA_KEY_LEN];
+    uint8_t plaintext[RSA_KEY_LEN];
+    size_t src_size, dst_size;
+    rsa_padding_t rsa_padding;
 
-    if (keypair == NULL || pubkey == NULL) {
-        CRYPT_ERR("init_key: invalid input args!\n");
+    (void)result;
+
+    CRYPT_INF("rsa gen key test!\n");
+    /* for gcov coverage */
+    ret = ali_rsa_get_pubkey_size(RSA_KEY_LEN << 3, NULL);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_get_pubkey_size(255, &pub_key_len);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_get_keypair_size(RSA_KEY_LEN << 3, NULL);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_get_keypair_size(255, &key_pair_len);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_init_keypair(RSA_KEY_LEN << 3,
+             rsa_n, n_size, rsa_e, e_size, rsa_d, d_size,
+              NULL , 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
+             rsa_n, n_size, rsa_e, e_size, NULL);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
+             rsa_n, n_size, rsa_e, e_size, NULL);
+    if (ret == ALI_CRYPTO_SUCCESS) {
         return -1;
     }
 
     ret = ali_rsa_get_pubkey_size(RSA_KEY_LEN << 3, &pub_key_len);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("init_key: get pubkey size fail(%08x)\n", ret);
-        return -1;
+        PRINT_RET(-1, "init_key: get pubkey size fail(%08x)\n", ret)
     }
     ret = ali_rsa_get_keypair_size(RSA_KEY_LEN << 3, &key_pair_len);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("init_key: get keypair size fail(%08x)\n", ret);
-        return -1;
+        PRINT_RET(-1, "init_key: get keypair size fail(%08x)\n", ret)
     }
 
     pub_key = CRYPT_MALLOC(pub_key_len);
     if (pub_key == NULL) {
-        CRYPT_ERR("init_key: malloc(%d) fail\n", (int)pub_key_len);
-        goto _error;
+        GO_RET(-1, "init_key: malloc(%d) fail\n", (int)pub_key_len);
     }
     key_pair = CRYPT_MALLOC(key_pair_len);
     if (pub_key == NULL) {
-        CRYPT_ERR("init_key: malloc(%d) fail\n", (int)pub_key_len);
-        goto _error;
+        GO_RET(-1, "init_key: malloc(%d) fail\n", (int)pub_key_len);
     }
 
-#if 0
+    /* for gcov coverage */
+    ret = ali_rsa_gen_keypair(RSA_KEY_LEN << 3, NULL, 0, NULL);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_gen_keypair: not expect\n");
+    }
+
     ret = ali_rsa_gen_keypair(RSA_KEY_LEN << 3, NULL, 0, (rsa_keypair_t *)key_pair);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("init_key: gen keypair fail(%08x)\n", ret);
-        goto _error;
+        GO_RET(-1, "init_key: gen keypair fail(%08x)\n", ret);
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_get_key_attr(RSA_MODULUS,
+                     NULL, rsa_n, (size_t *)&n_size);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_get_key_attr: not expect\n");
+    }
+    /* for gcov coverage */
+    ret = ali_rsa_get_key_attr((rsa_key_attr_t)-1,
+                     (rsa_keypair_t *)key_pair, rsa_n, (size_t *)&n_size);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_get_key_attr: not expect\n");
     }
 
     /* get key attrs */
     ret = ali_rsa_get_key_attr(RSA_MODULUS,
                      (rsa_keypair_t *)key_pair, rsa_n, (size_t *)&n_size);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        goto _error;
+        goto _OUT;
     }
     ret = ali_rsa_get_key_attr(RSA_PUBLIC_EXPONENT,
                      (rsa_keypair_t *)key_pair, rsa_e, (size_t *)&e_size);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        goto _error;
+        goto _OUT;
     }
     ret = ali_rsa_get_key_attr(RSA_PRIVATE_EXPONENT,
                      (rsa_keypair_t *)key_pair, rsa_d, (size_t *)&d_size);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        goto _error;
+        goto _OUT;
+    }
+    ret = ali_rsa_get_key_attr(RSA_PRIME1,
+                     (rsa_keypair_t *)key_pair, rsa_p, (size_t *)&p_size);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
+    }
+    ret = ali_rsa_get_key_attr(RSA_PRIME2,
+                     (rsa_keypair_t *)key_pair, rsa_q, (size_t *)&q_size);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
+    }
+    ret = ali_rsa_get_key_attr(RSA_EXPONENT1,
+                     (rsa_keypair_t *)key_pair, rsa_dp, (size_t *)&dp_size);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
+    }
+    ret = ali_rsa_get_key_attr(RSA_EXPONENT2,
+                     (rsa_keypair_t *)key_pair, rsa_dq, (size_t *)&dq_size);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
+    }
+    ret = ali_rsa_get_key_attr(RSA_COEFFICIENT,
+                     (rsa_keypair_t *)key_pair, rsa_qp, (size_t *)&qp_size);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_init_keypair(RSA_KEY_LEN << 3,
+             rsa_n, 129, rsa_e, e_size, rsa_d, d_size,
+              NULL , 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, (rsa_keypair_t *)key_pair);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_init_keypair: not expect\n");
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_init_keypair(RSA_KEY_LEN << 3,
+             rsa_n, n_size, rsa_e, e_size, rsa_d, d_size,
+             rsa_p, p_size, rsa_q, q_size, rsa_dp, dp_size, rsa_dq, dq_size,
+             rsa_qp, qp_size, (rsa_keypair_t *)key_pair);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
     }
 
     CRYPT_MEMSET(key_pair, 0, key_pair_len);
@@ -114,42 +228,69 @@ static int _ali_crypto_init_key(
              rsa_n, n_size, rsa_e, e_size, rsa_d, d_size,
               NULL , 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, (rsa_keypair_t *)key_pair);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("init_key: init keypair fail(%08x)\n", ret);
-        goto _error;
+        GO_RET(ret, "init_key: init keypair fail(%08x)\n", ret);
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
+             rsa_n, 129, rsa_e, e_size, (rsa_pubkey_t *)pub_key);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_init_pubkey: not expect\n");
     }
 
     CRYPT_MEMSET(pub_key, 0, pub_key_len);
     ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
              rsa_n, n_size, rsa_e, e_size, (rsa_pubkey_t *)pub_key);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("init_key: init pub_key fail(%08x)\n", ret);
-        goto _error;
+        GO_RET(ALI_CRYPTO_ERROR, "init_key: init pub_key fail(%08x)\n", ret);
     }
-#else
-    CRYPT_MEMSET(key_pair, 0, key_pair_len);
-    ret = ali_rsa_init_keypair(RSA_KEY_LEN << 3,
-             RSA_1024_N, n_size, RSA_1024_E, 3, RSA_1024_D, d_size,
-              NULL , 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, (rsa_keypair_t *)key_pair);
+
+    rsa_padding.type = RSAES_PKCS1_V1_5;
+    /* for gcov coverage */
+    src_size = RSA_KEY_LEN;
+    dst_size = RSA_KEY_LEN;
+    ret = ali_rsa_public_encrypt((const rsa_pubkey_t *)NULL, src_data, src_size,
+                                 ciphertext, &dst_size, rsa_padding);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_public_encrypt: not expect\n");
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_private_decrypt(NULL, ciphertext, RSA_KEY_LEN,
+                                  plaintext, &dst_size, rsa_padding);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_private_decrypt: not expect\n");
+    }
+
+    CRYPT_MEMSET(&rsa_padding, 0, sizeof(rsa_padding_t));
+    rsa_padding.type = RSAES_PKCS1_V1_5;
+    src_size = RSA_KEY_LEN - 11;
+    CRYPT_MEMSET(src_data, 0xa, src_size);
+
+    dst_size = RSA_KEY_LEN;
+    ret = ali_rsa_public_encrypt((const rsa_pubkey_t *)pub_key, src_data, src_size,
+                                 ciphertext, &dst_size, rsa_padding);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("init_key: init keypair fail(%08x)\n", ret);
-        goto _error;
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_public_encrypt: rsa_v1_5 fail %d\n", ret);
     }
 
-    CRYPT_MEMSET(pub_key, 0, pub_key_len);
-    ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
-             RSA_1024_N, n_size, RSA_1024_E, 3, (rsa_pubkey_t *)pub_key);
-    if (ret != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("init_key: init pub_key fail(%08x)\n", ret);
-        goto _error;
+    ret = ali_rsa_private_decrypt((const rsa_keypair_t *)key_pair, ciphertext, RSA_KEY_LEN,
+                                  plaintext, &dst_size, rsa_padding);
+    if (ret != ALI_CRYPTO_SUCCESS || dst_size != src_size) {
+        GO_RET(ALI_CRYPTO_ERROR, "ali_rsa_private_decrypt: rsa_v1_5 fail %d\n", ret);
     }
-#endif
+    if (CRYPT_MEMCMP(src_data, plaintext, src_size)) {
+        ali_crypto_print_data("pliantext", plaintext, src_size);
+        ali_crypto_print_data("ciphertext", ciphertext, dst_size);
+        PRINT_RET(-1, "RSA encrypt/decrypt with PKCS1_V1_5 test fail!\n");
+    } else {
+        CRYPT_INF("RSA encrypt/decrypt with PKCS1_V1_5 test success!\n");
+    }
 
-    *pubkey = (rsa_pubkey_t *)pub_key;
-    *keypair = (rsa_keypair_t *)key_pair;
-
+    CRYPT_FREE(pub_key);
+    CRYPT_FREE(key_pair);
     return 0;
-
-_error:
+_OUT:
     if (pub_key) {
         CRYPT_FREE(pub_key);
     }
@@ -160,6 +301,121 @@ _error:
     return -1;
 }
 
+static int _ali_crypto_init_key(
+               rsa_keypair_t **keypair, rsa_pubkey_t **pubkey)
+{
+    ali_crypto_result ret, result;
+    uint8_t rsa_n[RSA_KEY_LEN];
+    uint8_t rsa_e[RSA_KEY_LEN];
+    uint8_t rsa_d[RSA_KEY_LEN];
+    uint32_t n_size = RSA_KEY_LEN;
+    uint32_t e_size = RSA_KEY_LEN;
+    uint32_t d_size = RSA_KEY_LEN;
+    uint8_t *pub_key = NULL;
+    uint8_t *key_pair = NULL;
+    size_t pub_key_len, key_pair_len;
+
+    (void)e_size;
+    (void)rsa_d;
+    (void)rsa_e;
+    (void)rsa_n;
+    (void)result;
+    if (keypair == NULL || pubkey == NULL) {
+        PRINT_RET(-1, "init_key: invalid input args!\n");
+    }
+
+    ret = ali_rsa_get_pubkey_size(RSA_KEY_LEN << 3, &pub_key_len);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        PRINT_RET(-1, "init_key: get pubkey size fail(%08x)\n", ret);
+    }
+    ret = ali_rsa_get_keypair_size(RSA_KEY_LEN << 3, &key_pair_len);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        PRINT_RET(-1, "init_key: get keypair size fail(%08x)\n", ret);
+    }
+
+    pub_key = CRYPT_MALLOC(pub_key_len);
+    if (pub_key == NULL) {
+        GO_RET(-1, "init_key: malloc(%d) fail\n", (int)pub_key_len);
+    }
+    key_pair = CRYPT_MALLOC(key_pair_len);
+    if (pub_key == NULL) {
+        GO_RET(-1, "init_key: malloc(%d) fail\n", (int)pub_key_len);
+    }
+
+#if 0
+    ret = ali_rsa_gen_keypair(RSA_KEY_LEN << 3, NULL, 0, (rsa_keypair_t *)key_pair);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        CRYPT_ERR("init_key: gen keypair fail(%08x)\n", ret);
+        goto _OUT;
+    }
+
+    /* get key attrs */
+    ret = ali_rsa_get_key_attr(RSA_MODULUS,
+                     (rsa_keypair_t *)key_pair, rsa_n, (size_t *)&n_size);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
+    }
+    ret = ali_rsa_get_key_attr(RSA_PUBLIC_EXPONENT,
+                     (rsa_keypair_t *)key_pair, rsa_e, (size_t *)&e_size);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
+    }
+    ret = ali_rsa_get_key_attr(RSA_PRIVATE_EXPONENT,
+                     (rsa_keypair_t *)key_pair, rsa_d, (size_t *)&d_size);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        goto _OUT;
+    }
+
+    CRYPT_MEMSET(key_pair, 0, key_pair_len);
+    ret = ali_rsa_init_keypair(RSA_KEY_LEN << 3,
+             rsa_n, n_size, rsa_e, e_size, rsa_d, d_size,
+              NULL , 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, (rsa_keypair_t *)key_pair);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        CRYPT_ERR("init_key: init keypair fail(%08x)\n", ret);
+        goto _OUT;
+    }
+
+    CRYPT_MEMSET(pub_key, 0, pub_key_len);
+    ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
+             rsa_n, n_size, rsa_e, e_size, (rsa_pubkey_t *)pub_key);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        CRYPT_ERR("init_key: init pub_key fail(%08x)\n", ret);
+        goto _OUT;
+    }
+#else
+    CRYPT_MEMSET(key_pair, 0, key_pair_len);
+    ret = ali_rsa_init_keypair(RSA_KEY_LEN << 3,
+             RSA_1024_N, n_size, RSA_1024_E, 3, RSA_1024_D, d_size,
+              NULL , 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, (rsa_keypair_t *)key_pair);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        GO_RET(-1, "init_key: init keypair fail(%08x)\n", ret);
+    }
+
+    CRYPT_MEMSET(pub_key, 0, pub_key_len);
+    ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
+             RSA_1024_N, n_size, RSA_1024_E, 3, (rsa_pubkey_t *)pub_key);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        GO_RET(-1, "init_key: init pub_key fail(%08x)\n", ret);
+    }
+#endif
+
+    *pubkey = (rsa_pubkey_t *)pub_key;
+    *keypair = (rsa_keypair_t *)key_pair;
+
+    return 0;
+
+_OUT:
+    if (pub_key) {
+        CRYPT_FREE(pub_key);
+    }
+    if (key_pair) {
+        CRYPT_FREE(key_pair);
+    }
+
+    return -1;
+}
+
+#if 0
 static int _ali_crypto_encrypt_decrypt_nopad(
                    rsa_pubkey_t *pubkey, rsa_keypair_t *keypair)
 {
@@ -204,6 +460,7 @@ static int _ali_crypto_encrypt_decrypt_nopad(
 
     return 0;
 }
+#endif
 
 static int _ali_crypto_encrypt_decrypt_v1_5(
                    rsa_pubkey_t *pubkey, rsa_keypair_t *keypair)
@@ -216,8 +473,7 @@ static int _ali_crypto_encrypt_decrypt_v1_5(
     rsa_padding_t rsa_padding;
 
     if (pubkey == NULL || keypair == NULL) {
-        CRYPT_ERR("rsa_v1_5: invalid input args!\n");
-        return -1;
+        PRINT_RET(-1, "rsa_v1_5: invalid input args!\n");
     }
 
     CRYPT_MEMSET(&rsa_padding, 0, sizeof(rsa_padding_t));
@@ -229,22 +485,26 @@ static int _ali_crypto_encrypt_decrypt_v1_5(
     ret = ali_rsa_public_encrypt(pubkey, src_data, src_size,
                                  ciphertext, &dst_size, rsa_padding);
     if (ret != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("rsa_v1_5: public encrypt fail(%08x)\n", ret);
+        PRINT_RET(-1, "rsa_v1_5: public encrypt fail(%08x)\n", ret);
+    }
+
+    /* for gcov coverage */
+    ret = ali_rsa_public_encrypt(pubkey, src_data, RSA_KEY_LEN,
+                                 ciphertext, &dst_size, rsa_padding);
+    if (ret == ALI_CRYPTO_SUCCESS) {
         return -1;
     }
 
     ret = ali_rsa_private_decrypt(keypair, ciphertext, RSA_KEY_LEN,
                                   plaintext, &dst_size, rsa_padding);
     if (ret != ALI_CRYPTO_SUCCESS || dst_size != src_size) {
-        CRYPT_ERR("rsa_v1_5: private decrypt fail(%08x)\n", ret);
-        return -1;
+        PRINT_RET(-1, "rsa_v1_5: public decrypt fail(%08x)\n", ret);
     }
 
     if (CRYPT_MEMCMP(src_data, plaintext, src_size)) {
-        CRYPT_ERR("RSA encrypt/decrypt with PKCS1_V1_5 test fail!\n");
         ali_crypto_print_data("pliantext", plaintext, src_size);
         ali_crypto_print_data("ciphertext", ciphertext, dst_size);
-        return -1;
+        PRINT_RET(-1, "RSA encrypt/decrypt with PKCS1_V1_5 test fail!\n");
     } else {
         CRYPT_INF("RSA encrypt/decrypt with PKCS1_V1_5 test success!\n");
     }
@@ -266,7 +526,7 @@ static int _ali_crypto_encrypt_decrypt_oaep(
 
     if (pubkey == NULL || keypair == NULL) {
         CRYPT_ERR("rsa_v1_5: invalid input args!\n");
-        return -1;
+        PRINT_RET(-1, "rsa_v1_5: invalid input args!\n");
     }
 
     rsa_padding.type = RSAES_PKCS1_OAEP_MGF1;
@@ -285,19 +545,20 @@ static int _ali_crypto_encrypt_decrypt_oaep(
         ret = ali_rsa_public_encrypt(pubkey, src_data, src_size,
                                      ciphertext, &dst_size, rsa_padding);
         if (ret != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("rsa_oaep: public encrypt(without lparam) fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1,
+                "rsa_oaep: public encrypt(without lparam) fail(%08x)\n", ret);
         }
         ret = ali_rsa_private_decrypt(keypair, ciphertext, RSA_KEY_LEN,
                                       plaintext, &dst_size, rsa_padding);
         if (ret != ALI_CRYPTO_SUCCESS || dst_size != src_size) {
-            CRYPT_ERR("rsa_oaep: private decrypt(without lparam) fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1,
+                "rsa_oaep: private decrypt(without lparam) fail(%08x)\n", ret);
         }
         if (CRYPT_MEMCMP(src_data, plaintext, src_size)) {
-            CRYPT_ERR("RSA encrypt/decrypt with PKCS1_OAEP(without lparam) test fail!\n");
             ali_crypto_print_data("pliantext", plaintext, src_size);
             ali_crypto_print_data("ciphertext", ciphertext, dst_size);
+            PRINT_RET(-1,
+            "RSA encrypt/decrypt with PKCS1_OAEP(without lparam) test fail!\n");
         } else {
             CRYPT_INF("RSA encrypt/decrypt with PKCS1_OAEP(without lparam) test success!\n");
         }
@@ -308,20 +569,21 @@ static int _ali_crypto_encrypt_decrypt_oaep(
         ret = ali_rsa_public_encrypt(pubkey, src_data, src_size,
                                      ciphertext, &dst_size, rsa_padding);
         if (ret != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("rsa_oaep: public encrypt(with lparam) fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1,
+                "rsa_oaep: public encrypt(with lparam) fail(%08x)\n", ret);
         }
         ret = ali_rsa_private_decrypt(keypair, ciphertext, RSA_KEY_LEN,
                                       plaintext, &dst_size, rsa_padding);
         if (ret != ALI_CRYPTO_SUCCESS || dst_size != src_size) {
-            CRYPT_ERR("rsa_oaep: private decrypt(with lparam) fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1,
+                "rsa_oaep: private decrypt(with lparam) fail(%08x)\n", ret);
+
         }
         if (CRYPT_MEMCMP(src_data, plaintext, src_size)) {
-            CRYPT_ERR("RSA encrypt/decrypt with PKCS1_OAEP(with lparam) test fail!\n");
             ali_crypto_print_data("pliantext", plaintext, src_size);
             ali_crypto_print_data("ciphertext", ciphertext, dst_size);
-            return -1;
+            PRINT_RET(-1,
+            "RSA encrypt/decrypt with PKCS1_OAEP(with lparam) test fail!\n");
         } else {
             CRYPT_INF("RSA encrypt/decrypt with PKCS1_OAEP(with lparam) test success!\n");
         }
@@ -342,8 +604,7 @@ static int _ali_crypto_sign_verify_v1_5(
     rsa_padding_t rsa_padding;
 
     if (pubkey == NULL || keypair == NULL) {
-        CRYPT_ERR("rsa_v1_5: invalid input args!\n");
-        return -1;
+        PRINT_RET(-1, "rsa_v1_5: invalid input args!\n");
     }
 
     rsa_padding.type = RSASSA_PKCS1_V1_5;
@@ -361,30 +622,26 @@ static int _ali_crypto_sign_verify_v1_5(
         ret = ali_rsa_sign(keypair, src_data, src_size,
                            signature, &dst_size, rsa_padding);
         if (ret != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("rsa_v1_5: sign fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1, "rsa_v1_5: sign fail(%08x)\n", ret);
         }
 
         ret = ali_rsa_verify(pubkey, src_data, src_size,
                              signature, dst_size, rsa_padding, &result1);
         if (ret != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("rsa_v1_5: verify fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1, "rsa_v1_5: verify fail(%08x)\n", ret);
         }
 
         src_data[0] = src_data[0] ^ 0x1;
         ret = ali_rsa_verify(pubkey, src_data, src_size,
                              signature, dst_size, rsa_padding, &result2);
         if (ret == ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("rsa_v1_5: verify fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1, "rsa_v1_5: verify fail(%08x)\n", ret);
         }
 
         if (result1 == true && result2 == false) {
             CRYPT_INF("RSA sign/verify with PKCS1_V1_5 success!\n");
         } else {
-            CRYPT_INF("RSA sign/verify with PKCS1_V1_5 fail!\n");
-            return -1;
+            PRINT_RET(-1, "RSA sign/verify with PKCS1_V1_5 fail!\n");
         }
     }
 
@@ -403,8 +660,7 @@ static int _ali_crypto_sign_verify_pss(
     rsa_padding_t rsa_padding;
 
     if (pubkey == NULL || keypair == NULL) {
-        CRYPT_ERR("rsa_pss: invalid input args!\n");
-        return -1;
+        PRINT_RET(-1, "rsa_pss: invalid input args!\n");
     }
 
     rsa_padding.type = RSASSA_PKCS1_PSS_MGF1;
@@ -421,36 +677,33 @@ static int _ali_crypto_sign_verify_pss(
         }
 
         src_size = HASH_SIZE(hash_type);
+
         CRYPT_MEMSET(src_data, 0xa, src_size);
 
         dst_size = RSA_KEY_LEN;
         ret = ali_rsa_sign(keypair, src_data, src_size,
                            signature, &dst_size, rsa_padding);
         if (ret != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("rsa_pss: sign fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1, "rsa_pss: sign fail(%08x)\n", ret);
         }
 
         ret = ali_rsa_verify(pubkey, src_data, src_size,
                              signature, dst_size, rsa_padding, &result1);
         if (ret != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("rsa_pss: verify fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1, "rsa_pss: verify fail(%08x)\n", ret);
         }
 
         src_data[0] = src_data[0] ^ 0x1;
         ret = ali_rsa_verify(pubkey, src_data, src_size,
                              signature, dst_size, rsa_padding, &result2);
         if (ret == ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("rsa_pss: verify fail(%08x)\n", ret);
-            return -1;
+            PRINT_RET(-1, "rsa_pss: verify fail(%08x)\n", ret);
         }
 
         if (result1 == true && result2 == false) {
             CRYPT_INF("RSA sign/verify with PKCS1_PSS_MGF1 success!\n");
         } else {
-            CRYPT_INF("RSA sign/verify with PKCS1_PSS_MGF1 fail!\n");
-            return -1;
+            PRINT_RET(-1, "RSA sign/verify with PKCS1_PSS_MGF1 fail!\n");
         }
     }
 
@@ -462,6 +715,11 @@ int ali_crypto_rsa_test(void)
     int ret;
     rsa_pubkey_t *pubkey = NULL;
     rsa_keypair_t *keypair = NULL;
+
+    ret = _rsa_test_gen_key();
+    if (ret < 0) {
+        goto _out;
+    }
 
     ret = _ali_crypto_init_key(&keypair, &pubkey);
     if (ret < 0) {

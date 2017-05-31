@@ -16,14 +16,18 @@ int ali_crypto_rand_test(void)
 
     result = ali_seed(seed, seed_len);
     if (result != ALI_CRYPTO_SUCCESS) {
-        CRYPT_INF("ali_seed fail(%08x)\n", result);
-        return -1;
+        PRINT_RET(-1, "ali_seed fail(%08x)\n", result);
+    }
+
+    /* for gcov coverage */
+    result = ali_rand_gen(NULL, rand_len);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        PRINT_RET(-1, "gen rand fail(%08x)\n", result);
     }
 
     result = ali_rand_gen(rand_buf, rand_len);
     if (result != ALI_CRYPTO_SUCCESS) {
-        CRYPT_INF("gen rand fail(%08x)\n", result);
-        return -1;
+        PRINT_RET(-1, "gen rand fail(%08x)\n", result);
     }
 
     while(i++ < 10) {
@@ -31,15 +35,13 @@ int ali_crypto_rand_test(void)
 
         result = ali_rand_gen(rand_buf, rand_len);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_INF("gen rand fail(%08x)\n", result);
-            return -1;
+            PRINT_RET(-1, "gen rand fail(%08x)\n", result);
         }
 
         if (!CRYPT_MEMCMP(tmp_buf, rand_buf, rand_len)) {
-            CRYPT_INF("RAND test fail!\n");
             ali_crypto_print_data("tmp_buf", tmp_buf, rand_len);
             ali_crypto_print_data("rand_buf", rand_buf, rand_len);
-            return -1;
+            PRINT_RET(-1, "RAND test fail!\n");
         }
     }
 
