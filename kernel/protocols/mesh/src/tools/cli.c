@@ -884,6 +884,10 @@ static void process_status(int argc, char *argv[])
         response_append("\trouter\t");
         show_router(network->router->id);
         response_append("\r\n");
+        response_append("\tbcast_mtu %d\r\n",
+                        hal_ur_mesh_get_bcast_mtu(network->hal->module));
+        response_append("\tucast_mtu %d\r\n",
+                        hal_ur_mesh_get_ucast_mtu(network->hal->module));
     }
 
     process_nbrs(0, NULL);
