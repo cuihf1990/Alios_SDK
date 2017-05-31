@@ -246,6 +246,8 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size, i
             queue->min_free_buf_size = queue->ringbuf.freesize;
         }
 
+        TRACE_BUF_QUEUE_POST(g_active_task, queue, msg, msg_size);
+
         YUNOS_CRITICAL_EXIT();
 
 #if (YUNOS_CONFIG_KOBJ_SET > 0)
@@ -255,8 +257,6 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size, i
         }
 
 #endif
-        TRACE_BUF_QUEUE_POST(g_active_task, queue, msg, msg_size);
-
         return YUNOS_SUCCESS;
     }
 

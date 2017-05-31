@@ -85,9 +85,8 @@ kstat_t yunos_sem_del(ksem_t *sem)
     klist_rm(&sem->sem_item);
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
-
     TRACE_SEM_DEL(g_active_task, sem);
+    YUNOS_CRITICAL_EXIT_SCHED();
 
     return YUNOS_SUCCESS;
 }
@@ -152,9 +151,8 @@ kstat_t yunos_sem_dyn_del(ksem_t *sem)
     klist_rm(&sem->sem_item);
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
-
     TRACE_SEM_DEL(g_active_task, sem);
+    YUNOS_CRITICAL_EXIT_SCHED();
 
     yunos_mm_free(sem);
 
@@ -185,8 +183,10 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
 
     if (is_klist_empty(blk_list_head)) {
         if (sem->count == (sem_count_t)-1) {
-            YUNOS_CRITICAL_EXIT();
+
             TRACE_SEM_OVERFLOW(g_active_task, sem);
+            YUNOS_CRITICAL_EXIT();
+
             return YUNOS_SEM_OVF;
         }
 
@@ -197,6 +197,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
             sem->peak_count = sem->count;
         }
 
+        TRACE_SEM_CNT_INCREASE(g_active_task, sem);
         YUNOS_CRITICAL_EXIT();
 
 #if (YUNOS_CONFIG_KOBJ_SET > 0)
@@ -204,8 +205,6 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
             sem->blk_obj.handle->notify((blk_obj_t *)sem,sem->blk_obj.handle);
         }
 #endif
-        TRACE_SEM_CNT_INCREASE(g_active_task, sem);
-
         return YUNOS_SUCCESS;
     }
 
@@ -264,9 +263,9 @@ kstat_t yunos_sem_take(ksem_t *sem, tick_t ticks)
 
     if (sem->count > 0u) {
         sem->count--;
-        YUNOS_CRITICAL_EXIT();
 
         TRACE_SEM_GET_SUCCESS(g_active_task, sem);
+        YUNOS_CRITICAL_EXIT();
 
         return YUNOS_SUCCESS;
     }

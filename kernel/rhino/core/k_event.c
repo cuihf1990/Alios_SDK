@@ -84,9 +84,9 @@ kstat_t yunos_event_del(kevent_t *event)
     klist_rm(&event->event_item);
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
-
     TRACE_EVENT_DEL(g_active_task, event);
+
+    YUNOS_CRITICAL_EXIT_SCHED();
 
     return YUNOS_SUCCESS;
 }
@@ -209,9 +209,8 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
             event->flags &= ~flags;
         }
 
-        YUNOS_CRITICAL_EXIT();
-
         TRACE_EVENT_GET(g_active_task, event);
+        YUNOS_CRITICAL_EXIT();
 
         return YUNOS_SUCCESS;
     }

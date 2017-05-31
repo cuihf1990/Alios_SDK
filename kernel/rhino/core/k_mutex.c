@@ -110,9 +110,9 @@ kstat_t yunos_mutex_del(kmutex_t *mutex)
     klist_rm(&mutex->mutex_item);
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
-
     TRACE_MUTEX_DEL(g_active_task, mutex);
+
+    YUNOS_CRITICAL_EXIT_SCHED();
 
     return YUNOS_SUCCESS;
 }
@@ -192,9 +192,9 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
     klist_rm(&mutex->mutex_item);
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
-
     TRACE_MUTEX_DEL(g_active_task, mutex);
+
+    YUNOS_CRITICAL_EXIT_SCHED();
 
     yunos_mm_free(mutex);
 
@@ -329,9 +329,9 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
         g_active_task->mutex_list = mutex;
         mutex->owner_nested       = 1u;
 
-        YUNOS_CRITICAL_EXIT();
-
         TRACE_MUTEX_GET(g_active_task, mutex, ticks);
+
+        YUNOS_CRITICAL_EXIT();
 
         return YUNOS_SUCCESS;
     }
@@ -420,9 +420,9 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
     if (is_klist_empty(blk_list_head)) {
         /* No wait task */
         mutex->mutex_task = NULL;
-        YUNOS_CRITICAL_EXIT();
 
         TRACE_MUTEX_RELEASE_SUCCESS(g_active_task, mutex);
+        YUNOS_CRITICAL_EXIT();
 
         return YUNOS_SUCCESS;
     }
