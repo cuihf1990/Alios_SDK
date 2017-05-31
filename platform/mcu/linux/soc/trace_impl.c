@@ -8,7 +8,8 @@
 #define TRACE_BUFFER_SIZE 1024
 #define ROUND_POINT(sz) (((sz) + (4 - 1)) & ~(4 - 1))
 
-#define TRACE_PACKET_LENGTH 160
+#define TRACE_PACKET_LENGTH 120
+#define MAX_MODULE_NAME 40
 
 struct k_fifo trace_fifo;
 static uint32_t buffer[TRACE_BUFFER_SIZE];
@@ -103,6 +104,11 @@ void _trace_task_create(ktask_t *task)
 
     buf[0] = 0x103;
     buf[1] = 0x1;
+
+    if ((strlen(task->task_name) + 1) > MAX_MODULE_NAME) {
+
+        task->task_name = "max_length_limited_task";
+    }
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task->task_name);
@@ -342,6 +348,10 @@ void _trace_sem_create(ktask_t *task, ksem_t *sem)
     buf[0] = 0x201;
     buf[1] = 0x2;
 
+    if ((strlen(sem->blk_obj.name) + 1) > MAX_MODULE_NAME) {
+        sem->blk_obj.name = "max_length_limited_sem";
+    }
+
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task_name);
     addr_second = (char *)&buf[2] + strlen(task_name) + 1;
@@ -497,7 +507,7 @@ void _trace_sem_get_blk(ktask_t *task, ksem_t *sem, tick_t wait_option)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
 }
 
 void _trace_sem_task_wake(ktask_t *task, ktask_t *task_waked_up, ksem_t *sem, uint8_t opt_wake_all)
@@ -595,6 +605,10 @@ void _trace_mutex_create(ktask_t *task, kmutex_t *mutex, const name_t *name)
 
     buf[0] = 0x301;
     buf[1] = 0x2;
+
+    if ((strlen(mutex->blk_obj.name) + 1) > MAX_MODULE_NAME) {
+        mutex->blk_obj.name = "max_length_limited_mutex";
+    }
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task_name);
@@ -759,7 +773,7 @@ void _trace_mutex_get_blk(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
 }
 
 void _trace_mutex_release_success(ktask_t *task, kmutex_t *mutex)
@@ -885,6 +899,10 @@ void _trace_event_create(ktask_t *task, kevent_t *event, const name_t *name, uin
 
     buf[0] = 0x401;
     buf[1] = 0x3;
+
+    if ((strlen(event->blk_obj.name) + 1) > MAX_MODULE_NAME) {
+        event->blk_obj.name = "max_length_limited_event";
+    }
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task_name);
@@ -1073,6 +1091,10 @@ void _trace_buf_queue_create(ktask_t *task, kbuf_queue_t *buf_queue)
 
     buf[0] = 0x501;
     buf[1] = 0x2;
+
+    if ((strlen(buf_queue->blk_obj.name) + 1) > MAX_MODULE_NAME) {
+        buf_queue->blk_obj.name = "max_length_limited_buf_queue";
+    }
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task_name);
@@ -1265,6 +1287,10 @@ void _trace_timer_create(ktask_t *task, ktimer_t *timer)
 
     buf[0] = 0x601;
     buf[1] = 0x2;
+
+    if ((strlen(timer->name) + 1) > MAX_MODULE_NAME) {
+        timer->name = "max_length_limited_timer";
+    }
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task_name);
@@ -1508,6 +1534,10 @@ void _trace_workqueue_create(ktask_t *task, kworkqueue_t *workqueue)
 
     buf[0] = 0xa02;
     buf[1] = 0x2;
+
+    if ((strlen(workqueue->name) + 1) > MAX_MODULE_NAME) {
+        workqueue->name = "max_length_limited_workqueue";
+    }
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task_name);
