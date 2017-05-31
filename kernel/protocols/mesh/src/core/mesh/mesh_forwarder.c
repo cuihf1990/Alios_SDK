@@ -74,11 +74,6 @@ static inline bool is_uncompressed(uint8_t control)
     return control == UNCOMPRESSED_DISPATCH;
 }
 
-static inline bool is_mm_header(uint8_t control)
-{
-    return (control & MM_HEADER_DISPATCH_MASK) == MM_HEADER_DISPATCH;
-}
-
 static inline bool is_mesh_header(uint8_t control)
 {
     return (control & MESH_HEADER_DISPATCH_MASK) == MESH_HEADER_DISPATCH;
