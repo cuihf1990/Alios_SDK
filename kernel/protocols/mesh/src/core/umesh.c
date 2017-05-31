@@ -476,7 +476,6 @@ void ur_mesh_get_channel(channel_t *channel)
 
     if (channel) {
         channel->wifi_channel = 1;
-        // TODO: get channel from network context
         channel->channel = channel->wifi_channel;
         ur_wifi_hal = hal_ur_mesh_get_default_module();
         channel->hal_ucast_channel = (uint16_t)hal_ur_mesh_get_ucast_channel(ur_wifi_hal);
@@ -484,17 +483,24 @@ void ur_mesh_get_channel(channel_t *channel)
     }
 }
 
-const ur_link_stats_t *ur_mesh_get_link_stats(void)
+const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type)
 {
-    return mf_get_stats();
+    hal_context_t *hal;
+
+    hal = get_hal_context(type);
+    return mf_get_stats(hal);
 }
 
-const frame_stats_t *ur_mesh_get_hal_stats(void)
+const frame_stats_t *ur_mesh_get_hal_stats(media_type_t type)
 {
-    ur_mesh_hal_module_t *wifi_hal = NULL;
+    hal_context_t *hal;
 
-    wifi_hal = hal_ur_mesh_get_default_module();
-    return hal_ur_mesh_get_stats(wifi_hal);
+    hal = get_hal_context(type);
+    if (hal == NULL) {
+        return NULL;
+    }
+
+    return hal_ur_mesh_get_stats(hal->module);
 }
 
 const ur_message_stats_t *ur_mesh_get_message_stats(void)

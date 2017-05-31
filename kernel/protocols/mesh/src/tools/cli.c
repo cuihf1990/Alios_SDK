@@ -823,32 +823,39 @@ void process_state(int argc, char *argv[])
 
 void process_stats(int argc, char *argv[])
 {
+    slist_t                  *hals;
+    hal_context_t            *hal;
     const ur_link_stats_t    *link_stats;
     const ur_message_stats_t *message_stats;
     const frame_stats_t      *hal_stats;
     const ur_mem_stats_t     *mem_stats;
 
-    link_stats = ur_mesh_get_link_stats();
-    if (link_stats) {
-        response_append("link stats\r\n");
-        response_append("  in_frames %d\r\n", link_stats->in_frames);
-        response_append("  in_command %d\r\n", link_stats->in_command);
-        response_append("  in_data %d\r\n", link_stats->in_data);
-        response_append("  in_filterings %d\r\n", link_stats->in_filterings);
-        response_append("  in_drops %d\r\n", link_stats->in_drops);
-        response_append("  out_frames %d\r\n", link_stats->out_frames);
-        response_append("  out_command %d\r\n", link_stats->out_command);
-        response_append("  out_data %d\r\n", link_stats->out_data);
-        response_append("  out_errors %d\r\n", link_stats->out_errors);
-        response_append("  sending %s\r\n", link_stats->sending ? "true" : "false");
-        response_append("  sending_timeouts %d\r\n", link_stats->sending_timeouts);
-    }
+    hals = ur_mesh_get_hals();
+    slist_for_each_entry(hals, hal, hal_context_t, next) {
+        link_stats = ur_mesh_get_link_stats(hal->module->type);
+        if (link_stats) {
+            response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
+            response_append("link stats\r\n");
+            response_append("  in_frames %d\r\n", link_stats->in_frames);
+            response_append("  in_command %d\r\n", link_stats->in_command);
+            response_append("  in_data %d\r\n", link_stats->in_data);
+            response_append("  in_filterings %d\r\n", link_stats->in_filterings);
+            response_append("  in_drops %d\r\n", link_stats->in_drops);
+            response_append("  out_frames %d\r\n", link_stats->out_frames);
+            response_append("  out_command %d\r\n", link_stats->out_command);
+            response_append("  out_data %d\r\n", link_stats->out_data);
+            response_append("  out_errors %d\r\n", link_stats->out_errors);
+            response_append("  sending %s\r\n", link_stats->sending ? "true" : "false");
+            response_append("  sending_timeouts %d\r\n", link_stats->sending_timeouts);
+        }
 
-    hal_stats = ur_mesh_get_hal_stats();
-    if (hal_stats) {
-        response_append("hal stats\r\n");
-        response_append("  in_frames %d\r\n", hal_stats->in_frames);
-        response_append("  out_frames %d\r\n", hal_stats->out_frames);
+        hal_stats = ur_mesh_get_hal_stats(hal->module->type);
+        if (hal_stats) {
+            response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
+            response_append("hal stats\r\n");
+            response_append("  in_frames %d\r\n", hal_stats->in_frames);
+            response_append("  out_frames %d\r\n", hal_stats->out_frames);
+        }
     }
 
     message_stats = ur_mesh_get_message_stats();
