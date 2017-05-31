@@ -28,6 +28,11 @@ $(NAME)_SOURCES    += aosapi/yos/kernel/yos_sem_test.c
 $(NAME)_SOURCES    += aosapi/yos/kernel/yos_timer_test.c
 $(NAME)_SOURCES    += aosapi/yos/kernel/yos_workqueue_test.c
 
+ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+# only for for linux host now
+$(NAME)_SOURCES    += alicrypto/alicrypto_test.c
+endif
+
 $(NAME)_COMPONENTS  := yunit cjson
 
 $(NAME)_COMPONENTS  += base64 hashtable log connectivity ywss protocol.alink modules.kv

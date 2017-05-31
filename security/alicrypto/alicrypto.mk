@@ -1,6 +1,6 @@
 
 NAME := alicrypto
-ALICRYPTO_TEST := no
+ALICRYPTO_TEST := yes
 
 $(NAME)_SOURCES :=
 $(NAME)_COMPONENTS :=
@@ -10,6 +10,7 @@ GLOBAL_LDFLAGS      +=
 GLOBAL_DEFINES      += CONFIG_ALICRYPTO
 GLOBAL_CFLAGS       +=
 
+#$(NAME)_SOURCES += test/ali_crypto_test_weak.c
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 
 $(NAME)_PREBUILT_LIBRARY := lib/linuxhost/libmbedcrypto.a  \
@@ -25,6 +26,7 @@ $(NAME)_SOURCES += \
 				test/ali_crypto_test_hash.c \
 				test/ali_crypto_test_rand.c \
 				test/ali_crypto_test_rsa.c \
+				test/ali_crypto_test_hmac.c \
 				
 endif
 

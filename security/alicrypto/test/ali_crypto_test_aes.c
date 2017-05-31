@@ -96,37 +96,79 @@ static int _aes_ecb_encrypt_decrypt(uint32_t idx, bool is_enc,
     ali_crypto_result result;
     size_t dst_size;
 
+    /* for gcov coverage */
     result = ali_aes_init(AES_ECB, is_enc,
-                 _g_aes_key, NULL, key_len, NULL, aes_ctx);
-    if (result != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("aes_ecb init fail(%08x)\n", result);
+                 NULL, NULL, key_len, NULL, aes_ctx);
+    if (result == ALI_CRYPTO_SUCCESS) {
         return -1;
     }
 
+    /* for gcov coverage */
+    result = ali_aes_init(AES_ECB, is_enc,
+                 _g_aes_key, NULL, 0, NULL, aes_ctx);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_aes_init((aes_type_t)-1, is_enc,
+                 _g_aes_key, NULL, key_len, NULL, aes_ctx);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    result = ali_aes_init(AES_ECB, is_enc,
+                 _g_aes_key, NULL, key_len, NULL, aes_ctx);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        PRINT_RET(-1, "aes_ecb init fail(%08x)\n", result);
+    }
+
+
     if ((idx & 0x1) != 0x0) {
-        result = ali_aes_process(src, dst, 16, aes_ctx);
-        if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_ecb process 1th fail(%08x)", result);
+        /* for gcov coverage */
+        result = ali_aes_process(src, dst, 16, NULL);
+        if (result == ALI_CRYPTO_SUCCESS) {
             return -1;
         }
-        result = ali_aes_process(src + 16, dst + 16, 16, aes_ctx);
-        if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_ecb process 2th fail(%08x)", result);
+        /* for gcov coverage */
+        result = ali_aes_process(NULL, dst, 16, aes_ctx);
+        if (result == ALI_CRYPTO_SUCCESS) {
             return -1;
         }
-        result = ali_aes_process(src + 32, dst + 32, 16, aes_ctx);
-        if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_ecb process 3th fail(%08x)", result);
+        /* for gcov coverage */
+        result = ali_aes_process(src, dst, 17, aes_ctx);
+        if (result == ALI_CRYPTO_SUCCESS) {
             return -1;
         }
 
+        result = ali_aes_process(src, dst, 16, aes_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            PRINT_RET(-1, "aes_ecb process 1th fail(%08x)", result);
+        }
+        result = ali_aes_process(src + 16, dst + 16, 16, aes_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            PRINT_RET(-1, "aes_ecb process 2th fail(%08x)", result);
+        }
+        result = ali_aes_process(src + 32, dst + 32, 16, aes_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            PRINT_RET(-1, "aes_ecb process 3th fail(%08x)", result);
+        }
+
         dst_size = TEST_ECB_SIZE - 48;
+
+        /* for gcov coverage */
+        result = ali_aes_finish(
+                     src + 48, TEST_ECB_SIZE - 48,
+                     dst + 48, &dst_size, SYM_NOPAD, NULL);
+        if (result == ALI_CRYPTO_SUCCESS) {
+            return -1;
+        }
+
         result = ali_aes_finish(
                      src + 48, TEST_ECB_SIZE - 48,
                      dst + 48, &dst_size, SYM_NOPAD, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("finish fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "finish fail(%08x)", result);
         }
     } else {
         dst_size = TEST_ECB_SIZE;
@@ -134,8 +176,7 @@ static int _aes_ecb_encrypt_decrypt(uint32_t idx, bool is_enc,
                      src, TEST_ECB_SIZE,
                      dst, &dst_size, SYM_NOPAD, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS || dst_size != TEST_ECB_SIZE) {
-            CRYPT_ERR("finish fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "finish fail(%08x)", result);
         }
     }
 
@@ -148,28 +189,36 @@ static int _aes_cbc_encrypt_decrypt(uint32_t idx, bool is_enc,
     ali_crypto_result result;
     size_t dst_size;
 
+    /* for gcov coverage */
     result = ali_aes_init(AES_CBC, is_enc,
-                 _g_aes_key, NULL, key_len, _g_aes_iv, aes_ctx);
-    if (result != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("aes_cbc init fail(%08x)\n", result);
+                 _g_aes_key, NULL, key_len, NULL, aes_ctx);
+    if (result == ALI_CRYPTO_SUCCESS) {
         return -1;
     }
 
+    result = ali_aes_init(AES_CBC, is_enc,
+                 _g_aes_key, NULL, key_len, _g_aes_iv, aes_ctx);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        PRINT_RET(-1, "aes_cbc init fail(%08x)\n", result);
+    }
+
     if ((idx & 0x1) != 0x0) {
+        /* for gcov coverage */
+        result = ali_aes_process(src, dst, 17, aes_ctx);
+        if (result == ALI_CRYPTO_SUCCESS) {
+            return -1;
+        }
         result = ali_aes_process(src, dst, 16, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_cbc process 1th fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_cbc process 1th fail(%08x)", result);
         }
         result = ali_aes_process(src + 16, dst + 16, 16, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_cbc process 2th fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_cbc process 2th fail(%08x)", result);
         }
         result = ali_aes_process(src + 32, dst + 32, 16, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_cbc process 3th fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_cbc process 3th fail(%08x)", result);
         }
 
         dst_size = TEST_CBC_SIZE - 48;
@@ -177,8 +226,7 @@ static int _aes_cbc_encrypt_decrypt(uint32_t idx, bool is_enc,
                      src + 48, TEST_CBC_SIZE - 48,
                      dst + 48, &dst_size, SYM_NOPAD, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_cbc finish fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_cbc finish fail(%08x)", result);
         }
     } else {
         dst_size = TEST_CBC_SIZE;
@@ -186,8 +234,7 @@ static int _aes_cbc_encrypt_decrypt(uint32_t idx, bool is_enc,
                      src, TEST_CBC_SIZE,
                      dst, &dst_size, SYM_NOPAD, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS || dst_size != TEST_CBC_SIZE) {
-            CRYPT_ERR("aes_cbc finish fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_cbc finish fail(%08x)", result);
         }
     }
 
@@ -200,28 +247,31 @@ static int _aes_ctr_encrypt_decrypt(uint32_t idx, bool is_enc,
     ali_crypto_result result;
     size_t dst_size;
 
+    /* for gcov coverage */
+    result = ali_aes_init(AES_CTR, is_enc,
+                 _g_aes_key, NULL, key_len, NULL, aes_ctx);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
     result = ali_aes_init(AES_CTR, is_enc,
                  _g_aes_key, NULL, key_len, _g_aes_iv, aes_ctx);
     if (result != ALI_CRYPTO_SUCCESS) {
-        CRYPT_ERR("aes_ctr init fail(%08x)\n", result);
-        return -1;
+        PRINT_RET(-1, "aes_ctr init fail(%08x)\n", result);
     }
 
     if ((idx & 0x1) != 0x0) {
         result = ali_aes_process(src, dst, 13, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_ctr process 1th fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_ctr process 1th fail(%08x)", result);
         }
         result = ali_aes_process(src + 13, dst + 13, 27, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_ctr process 2th fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_ctr process 2th fail(%08x)", result);
         }
         result = ali_aes_process(src + 40, dst + 40, 8, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_ctr process 3th fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_ctr process 3th fail(%08x)", result);
         }
 
         dst_size = TEST_CTR_SIZE - 48;
@@ -229,8 +279,7 @@ static int _aes_ctr_encrypt_decrypt(uint32_t idx, bool is_enc,
                      src + 48, TEST_CTR_SIZE - 48,
                      dst + 48, &dst_size, SYM_NOPAD, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("aes_ctr finish fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_ctr finish fail(%08x)", result);
         }
     } else {
         dst_size = TEST_CTR_SIZE;
@@ -238,8 +287,7 @@ static int _aes_ctr_encrypt_decrypt(uint32_t idx, bool is_enc,
                      src, TEST_CTR_SIZE,
                      dst, &dst_size, SYM_NOPAD, aes_ctx);
         if (result != ALI_CRYPTO_SUCCESS || dst_size != TEST_CTR_SIZE) {
-            CRYPT_ERR("aes_ctr finish fail(%08x)", result);
-            return -1;
+            PRINT_RET(-1, "aes_ctr finish fail(%08x)", result);
         }
     }
 
@@ -364,6 +412,25 @@ static int _ali_crypto_aes_ecb_test(void)
     uint8_t plaintext[TEST_ECB_SIZE];
     uint8_t ciphertext[TEST_ECB_SIZE];
 
+    /* for gcov coverage */
+    result = ali_aes_init(AES_ECB, true,
+                 NULL, NULL, 16, NULL, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_aes_reset(NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_aes_copy_context(NULL, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
     for (i = 0; i < 3; i++) {
         if (i == 0) {
             key_len = 16;
@@ -378,14 +445,12 @@ static int _ali_crypto_aes_ecb_test(void)
 
         result = ali_aes_get_ctx_size(type, &aes_ctx_size);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("get ctx size fail(%08x)\n", result);
-            goto _error;
+            PRINT_RET(-1, "get ctx size fail(%08x)\n", result);
         }
 
         aes_ctx = CRYPT_MALLOC(aes_ctx_size);
         if (aes_ctx == NULL) {
-            CRYPT_ERR("kmalloc(%d) fail\n", (int)aes_ctx_size);
-            goto _error;
+            GO_RET(-1, "kmalloc(%d) fail\n", (int)aes_ctx_size);
         }
 
         /* encrypt */
@@ -393,8 +458,7 @@ static int _ali_crypto_aes_ecb_test(void)
         ret = _aes_ecb_encrypt_decrypt(i, true,
                       key_len, _g_test_data, ciphertext, aes_ctx);
         if (ret < 0) {
-            CRYPT_ERR("ecb encrypt fail!\n");
-            goto _error;
+            GO_RET(-1, "ecb encrypt fail!\n");
         }
 
         /* decrypt */
@@ -402,28 +466,35 @@ static int _ali_crypto_aes_ecb_test(void)
         ret = _aes_ecb_encrypt_decrypt(i, false,
                        key_len, ciphertext, plaintext, aes_ctx);
         if (ret < 0) {
-            CRYPT_ERR("ecb decrypt fail!\n");
-            goto _error;
+            GO_RET(-1, "ecb decrypt fail!\n");
         }
 
         /* check result */
         if(CRYPT_MEMCMP(ciphertext, ecb_enc_exp, TEST_ECB_SIZE) ||
             CRYPT_MEMCMP(plaintext, _g_test_data, TEST_ECB_SIZE)) {
-            CRYPT_INF("AES_ECB_%d test fail!\n", (int)key_len << 3);
             ali_crypto_print_data("plaintext", plaintext, TEST_ECB_SIZE);
             ali_crypto_print_data("ciphertext", ciphertext, TEST_ECB_SIZE);
-            goto _error;
+            GO_RET(-1, "AES_ECB_%d test fail!\n", (int)key_len << 3);
         } else {
             CRYPT_INF("AES_ECB_%d test success!\n", (int)key_len << 3);
         }
 
+        result = ali_aes_copy_context(aes_ctx, aes_ctx);
+        if (result == ALI_CRYPTO_SUCCESS) {
+            GO_RET(-1, "ali_aes_copy_context not expect!\n");
+        }
+
+        result = ali_aes_reset(aes_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            GO_RET(-1, "ali_aes_reset fail %d!\n", result);
+        }
         CRYPT_FREE(aes_ctx);
         aes_ctx = NULL;
     }
 
     return 0;
 
-_error:
+_OUT:
     if (aes_ctx) {
         CRYPT_FREE(aes_ctx);
     }
@@ -453,14 +524,12 @@ static int _ali_crypto_aes_cbc_test(void)
 
         result = ali_aes_get_ctx_size(type, &aes_ctx_size);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("get ctx size fail(%08x)\n", result);
-            goto _error;
+            GO_RET(-1, "get ctx size fail(%08x)\n", result);
         }
 
         aes_ctx = CRYPT_MALLOC(aes_ctx_size);
         if (aes_ctx == NULL) {
-            CRYPT_ERR("malloc(%d) fail\n", (int)aes_ctx_size);
-            goto _error;
+            GO_RET(-1, "malloc(%d) fail\n", (int)aes_ctx_size);
         }
 
         /* encrypt */
@@ -468,8 +537,7 @@ static int _ali_crypto_aes_cbc_test(void)
         ret = _aes_cbc_encrypt_decrypt(i, true,
                       key_len, _g_test_data, ciphertext, aes_ctx);
         if (ret < 0) {
-            CRYPT_ERR("cbc encrypt fail!\n");
-            goto _error;
+            GO_RET(-1, "cbc encrypt fail!\n");
         }
 
         /* decrypt */
@@ -477,16 +545,14 @@ static int _ali_crypto_aes_cbc_test(void)
         ret = _aes_cbc_encrypt_decrypt(i, false,
                        key_len, ciphertext, plaintext, aes_ctx);
         if (ret < 0) {
-            CRYPT_ERR("cbc decrypt fail!\n");
-            goto _error;
+            GO_RET(-1, "cbc decrypt fail!\n");
         }
 
         /* check result */
         if(CRYPT_MEMCMP(plaintext, _g_test_data, TEST_CBC_SIZE)) {
-            CRYPT_INF("AES_CBC_%d test fail!\n", (int)key_len << 3);
             ali_crypto_print_data("plaintext", plaintext, TEST_CBC_SIZE);
             ali_crypto_print_data("ciphertext", ciphertext, TEST_CBC_SIZE);
-            goto _error;
+            GO_RET(-1, "AES_CBC_%d test fail!\n", (int)key_len << 3);
         } else {
             CRYPT_INF("AES_CBC_%d test success!\n", (int)key_len << 3);
         }
@@ -497,7 +563,7 @@ static int _ali_crypto_aes_cbc_test(void)
 
     return 0;
 
-_error:
+_OUT:
     if (aes_ctx) {
         CRYPT_FREE(aes_ctx);
     }
@@ -527,14 +593,12 @@ static int _ali_crypto_aes_ctr_test(void)
 
         result = ali_aes_get_ctx_size(type, &aes_ctx_size);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("get ctx size fail(%08x)\n", result);
-            goto _error;
+            GO_RET(-1, "get ctx size fail(%08x)\n", result);
         }
 
         aes_ctx = CRYPT_MALLOC(aes_ctx_size);
         if (aes_ctx == NULL) {
-            CRYPT_ERR("malloc(%d) fail\n", (int)aes_ctx_size);
-            goto _error;
+            GO_RET(-1, "malloc(%d) fail\n", (int)aes_ctx_size);
         }
 
         /* encrypt */
@@ -542,8 +606,7 @@ static int _ali_crypto_aes_ctr_test(void)
         ret = _aes_ctr_encrypt_decrypt(i, true,
                       key_len, _g_test_data, ciphertext, aes_ctx);
         if (ret < 0) {
-            CRYPT_ERR("ctr encrypt fail!\n");
-            goto _error;
+            GO_RET(-1, "ctr encrypt fail!\n");
         }
 
         /* decrypt */
@@ -551,16 +614,14 @@ static int _ali_crypto_aes_ctr_test(void)
         ret = _aes_ctr_encrypt_decrypt(i, false,
                        key_len, ciphertext, plaintext, aes_ctx);
         if (ret < 0) {
-            CRYPT_ERR("ctr decrypt fail!\n");
-            goto _error;
+            GO_RET(-1, "ctr decrypt fail!\n");
         }
 
         /* check result */
         if(CRYPT_MEMCMP(plaintext, _g_test_data, TEST_CTR_SIZE)) {
-            CRYPT_INF("AES_CTR_%d test fail!\n", (int)key_len << 3);
             ali_crypto_print_data("plaintext", plaintext, TEST_CTR_SIZE);
             ali_crypto_print_data("ciphertext", ciphertext, TEST_CTR_SIZE);
-            goto _error;
+            GO_RET(-1, "AES_CTR_%d test fail!\n", (int)key_len << 3);
         } else {
             CRYPT_INF("AES_CTR_%d test success!\n", (int)key_len << 3);
         }
@@ -571,7 +632,7 @@ static int _ali_crypto_aes_ctr_test(void)
 
     return 0;
 
-_error:
+_OUT:
     if (aes_ctx) {
         CRYPT_FREE(aes_ctx);
     }
@@ -603,13 +664,13 @@ static int _ali_crypto_aes_cts_test(void)
         result = ali_aes_get_ctx_size(type, &aes_ctx_size);
         if (result != ALI_CRYPTO_SUCCESS) {
             CRYPT_ERR("get ctx size fail(%08x)\n", result);
-            goto _error;
+            goto _OUT;
         }
 
         aes_ctx = CRYPT_MALLOC(aes_ctx_size);
         if (aes_ctx == NULL) {
             CRYPT_ERR("kmalloc(%d) fail\n", aes_ctx_size);
-            goto _error;
+            goto _OUT;
         }
 
         /* encrypt */
@@ -618,7 +679,7 @@ static int _ali_crypto_aes_cts_test(void)
                       key_len, _g_test_data, ciphertext, aes_ctx);
         if (ret < 0) {
             CRYPT_ERR("cts encrypt fail!\n");
-            goto _error;
+            goto _OUT;
         }
 
         /* decrypt */
@@ -627,7 +688,7 @@ static int _ali_crypto_aes_cts_test(void)
                        key_len, ciphertext, plaintext, aes_ctx);
         if (ret < 0) {
             CRYPT_ERR("cts decrypt fail!\n");
-            goto _error;
+            goto _OUT;
         }
 
         /* check result */
@@ -635,7 +696,7 @@ static int _ali_crypto_aes_cts_test(void)
             CRYPT_INF("AES_CTS_%d test fail!\n", key_len << 3);
             ali_crypto_print_data("plaintext", plaintext, TEST_CTS_SIZE);
             ali_crypto_print_data("ciphertext", ciphertext, TEST_CTS_SIZE);
-            goto _error;
+            goto _OUT;
         } else {
             CRYPT_INF("AES_CTS_%d test success!\n", key_len << 3);
         }
@@ -646,7 +707,7 @@ static int _ali_crypto_aes_cts_test(void)
 
     return 0;
 
-_error:
+_OUT:
     if (aes_ctx) {
         CRYPT_FREE(aes_ctx);
     }
@@ -677,13 +738,13 @@ static int _ali_crypto_aes_xts_test(void)
         result = ali_aes_get_ctx_size(type, &aes_ctx_size);
         if (result != ALI_CRYPTO_SUCCESS) {
             CRYPT_ERR("get ctx size fail(%08x)\n", result);
-            goto _error;
+            goto _OUT;
         }
 
         aes_ctx = CRYPT_MALLOC(aes_ctx_size);
         if (aes_ctx == NULL) {
             CRYPT_ERR("kmalloc(%d) fail\n", aes_ctx_size);
-            goto _error;
+            goto _OUT;
         }
 
         /* encrypt */
@@ -692,7 +753,7 @@ static int _ali_crypto_aes_xts_test(void)
                       key_len, _g_test_data, ciphertext, aes_ctx);
         if (ret < 0) {
             CRYPT_ERR("xts encrypt fail!\n");
-            goto _error;
+            goto _OUT;
         }
 
         /* decrypt */
@@ -701,7 +762,7 @@ static int _ali_crypto_aes_xts_test(void)
                        key_len, ciphertext, plaintext, aes_ctx);
         if (ret < 0) {
             CRYPT_ERR("xts decrypt fail!\n");
-            goto _error;
+            goto _OUT;
         }
 
         /* check result */
@@ -709,7 +770,7 @@ static int _ali_crypto_aes_xts_test(void)
             CRYPT_INF("AES_XTS_%d test fail!\n", key_len << 3);
             ali_crypto_print_data("plaintext", plaintext, TEST_XTS_SIZE);
             ali_crypto_print_data("ciphertext", ciphertext, TEST_XTS_SIZE);
-            goto _error;
+            goto _OUT;
         } else {
             CRYPT_INF("AES_XTS_%d test success!\n", key_len << 3);
         }
@@ -720,7 +781,7 @@ static int _ali_crypto_aes_xts_test(void)
 
     return 0;
 
-_error:
+_OUT:
     if (aes_ctx) {
         CRYPT_FREE(aes_ctx);
     }
@@ -732,6 +793,12 @@ _error:
 int ali_crypto_aes_test(void)
 {
     int ret;
+
+    /* for gcov coverage */
+    ret = ali_aes_get_ctx_size(AES_ECB, NULL);
+    if (ret == ALI_CRYPTO_SUCCESS) {
+        return ALI_CRYPTO_ERROR;
+    }
 
     CRYPT_INF("Test aes ecb:\n");
     ret = _ali_crypto_aes_ecb_test();

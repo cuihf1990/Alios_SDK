@@ -74,109 +74,163 @@ int ali_crypto_hash_test(void)
     uint8_t hash[MAX_HASH_SIZE];
     uint8_t hash_all[MAX_HASH_SIZE];
 
+    /* for gcov coverage */
+    result = ali_hash_get_ctx_size(HASH_NONE, &hash_ctx_size);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_get_ctx_size(HASH_NONE, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_init(HASH_NONE, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_init(HASH_NONE, hash_ctx);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_update(_g_test_data, 13, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_update(NULL, 13, (void *)-1);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_final(hash, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_final(hash, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_reset(NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
+    /* for gcov coverage */
+    result = ali_hash_copy_context(NULL, NULL);
+    if (result == ALI_CRYPTO_SUCCESS) {
+        return -1;
+    }
+
     for (type = SHA1; type <= MD5; type++) {
         result = ali_hash_get_ctx_size(type, &hash_ctx_size);
         if (result != ALI_CRYPTO_SUCCESS) {
-            CRYPT_ERR("get ctx size fail(%08x)\n", result);
-            goto _error;
+            GO_RET(result, "get ctx size fail(%08x)\n", result);
         }
 
         hash_ctx = CRYPT_MALLOC(hash_ctx_size);
         if (hash_ctx == NULL) {
-            CRYPT_ERR("malloc(%d) fail\n", (int)hash_ctx_size);
-            goto _error;
+            GO_RET(result, "malloc(%d) fail\n", (int)hash_ctx_size);
         }
         CRYPT_MEMSET(hash_ctx, 0, hash_ctx_size);
 
-            result = ali_hash_init(type, hash_ctx);
-            if (result != ALI_CRYPTO_SUCCESS) {
-                CRYPT_ERR("init fail(%08x)", result);
-                goto _error;
-            }
+        result = ali_hash_init(type, hash_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            GO_RET(result, "init fail(%08x)", result);
+        }
 
-            result = ali_hash_update(_g_test_data, 13, hash_ctx);
-            if (result != ALI_CRYPTO_SUCCESS) {
-                CRYPT_ERR("update 1th fail(%08x)", result);
-                goto _error;
-            }
-            result = ali_hash_update(_g_test_data + 13, 63, hash_ctx);
-            if (result != ALI_CRYPTO_SUCCESS) {
-                CRYPT_ERR("update 2th fail(%08x)", result);
-                goto _error;
-            }
-            result = ali_hash_update(_g_test_data + 13 + 63, 65, hash_ctx);
-            if (result != ALI_CRYPTO_SUCCESS) {
-                CRYPT_ERR("update 3th fail(%08x)", result);
-                goto _error;
-            }
+        result = ali_hash_update(_g_test_data, 13, hash_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            GO_RET(result, "update 1th fail(%08x)", result);
+        }
+        result = ali_hash_update(_g_test_data + 13, 63, hash_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            GO_RET(result, "update 2th fail(%08x)", result);
+        }
+        result = ali_hash_update(_g_test_data + 13 + 63, 65, hash_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            GO_RET(result, "update 3th fail(%08x)", result);
+        }
 
-            result = ali_hash_final(hash, hash_ctx);
-            if (result != ALI_CRYPTO_SUCCESS) {
-                CRYPT_ERR("final fail(%08x)", result);
-                goto _error;
-            }
+        result = ali_hash_final(hash, hash_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            GO_RET(result, "final fail(%08x)", result);
+        }
 
-            result = ali_hash_digest(type, _g_test_data, TEST_DATA_SIZE, hash_all);
-            if (result != ALI_CRYPTO_SUCCESS) {
-                CRYPT_ERR("digest fail(%08x)", result);
-                goto _error;
-            }
+        result = ali_hash_digest(type, _g_test_data, TEST_DATA_SIZE, hash_all);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            GO_RET(result, "digest fail(%08x)", result);
+        }
 
+        /* for gcov coverage */
+        result = ali_hash_copy_context(hash_ctx, hash_ctx);
+        if (result == ALI_CRYPTO_SUCCESS) {
+            result = ALI_CRYPTO_ERROR;
+            goto _OUT;
+        }
+
+        result = ali_hash_reset(hash_ctx);
         CRYPT_FREE(hash_ctx);
         hash_ctx = NULL;
 
         if (type == SHA1) {
             if(CRYPT_MEMCMP(hash, hash_sha1, SHA1_HASH_SIZE) ||
                 CRYPT_MEMCMP(hash_all, hash_sha1, SHA1_HASH_SIZE)) {
-                CRYPT_INF("SHA1 test fail!\n");
                 ali_crypto_print_data("sha1", hash, SHA1_HASH_SIZE);
-                goto _error;
+                GO_RET(-1, "SHA1 test fail!");
             } else {
                 CRYPT_INF("SHA1 test success!\n");
             }
         } else if (type == SHA224) {
             if(CRYPT_MEMCMP(hash, hash_sha224, SHA224_HASH_SIZE) ||
                     CRYPT_MEMCMP(hash_all, hash_sha224, SHA224_HASH_SIZE)) {
-                CRYPT_INF("SHA224 test fail!\n");
                 ali_crypto_print_data("sha224", hash, SHA224_HASH_SIZE);
-                goto _error;
+                GO_RET(-1, "SHA224 test fail!\n");
             } else {
                 CRYPT_INF("SHA224 test success!\n");
             }
         } else if (type == SHA256) {
             if(CRYPT_MEMCMP(hash, hash_sha256, SHA256_HASH_SIZE) ||
                 CRYPT_MEMCMP(hash_all, hash_sha256, SHA256_HASH_SIZE)) {
-                CRYPT_INF("SHA256 test fail!\n");
                 ali_crypto_print_data("sha256", hash, SHA256_HASH_SIZE);
-                goto _error;
+                GO_RET(-1, "SHA256 test fail!\n");
             } else {
                 CRYPT_INF("SHA256 test success!\n");
             }
         } else if (type == SHA384) {
             if(CRYPT_MEMCMP(hash, hash_sha384, SHA384_HASH_SIZE) ||
                     CRYPT_MEMCMP(hash_all, hash_sha384, SHA384_HASH_SIZE)) {
-                CRYPT_INF("SHA384 test fail!\n");
                 ali_crypto_print_data("sha384", hash, SHA384_HASH_SIZE);
-                goto _error;
+                GO_RET(-1, "SHA384 test fail!\n");
             } else {
                 CRYPT_INF("SHA384 test success!\n");
             }
         } else if (type == SHA512) {
             if(CRYPT_MEMCMP(hash, hash_sha512, SHA512_HASH_SIZE) ||
                     CRYPT_MEMCMP(hash_all, hash_sha512, SHA512_HASH_SIZE)) {
-                CRYPT_INF("SHA512 test fail!\n");
                 ali_crypto_print_data("sha512", hash, SHA512_HASH_SIZE);
                 ali_crypto_print_data("sha512", hash_all, SHA512_HASH_SIZE);
-                goto _error;
+                GO_RET(-1, "SHA512 test fail!\n");
             } else {
                 CRYPT_INF("SHA512 test success!\n");
             }
         } else if (type == MD5) {
             if(CRYPT_MEMCMP(hash, hash_md5, MD5_HASH_SIZE) ||
                 CRYPT_MEMCMP(hash_all, hash_md5, MD5_HASH_SIZE)) {
-                CRYPT_INF("md5 test fail!\n");
                 ali_crypto_print_data("md5", hash, MD5_HASH_SIZE);
-                goto _error;
+                GO_RET(-1, "md5 test fail!\n");
             } else {
                 CRYPT_INF("md5 test success!\n");
             }
@@ -185,7 +239,7 @@ int ali_crypto_hash_test(void)
 
     return 0;
 
-_error:
+_OUT:
     if (hash_ctx) {
         CRYPT_FREE(hash_ctx);
     }

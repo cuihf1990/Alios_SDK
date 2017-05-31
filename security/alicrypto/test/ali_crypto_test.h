@@ -19,6 +19,17 @@
 #define CRYPT_MEMCPY           memcpy
 #define CRYPT_MEMCMP           memcmp
 
+#define PRINT_RET(_ret, _f, _a ...) do {            \
+    CRYPT_ERR(_f, ##_a);                            \
+    return _ret;                                    \
+} while (0);
+
+#define GO_RET(_ret, _f, _a ...) do {               \
+    CRYPT_ERR(_f, ##_a);                            \
+    result = _ret;                                  \
+    goto _OUT;                                      \
+} while (0);
+
 void ali_crypto_print_data(const char *name, uint8_t *data, size_t size);
 
 int ali_crypto_hash_test(void);
