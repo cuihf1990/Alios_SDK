@@ -104,9 +104,9 @@ static int ssl_init( const char *my_ca )
 
         SSLeay_add_ssl_algorithms();
 #if OPENSSL_VERSION_NUMBER > 0x100010afL
-        meth = TLS_client_method();
+        meth = (const SSL_METHOD *)TLS_client_method();
 #else
-        meth = TLSv1_2_client_method(); 
+        meth = (const SSL_METHOD *)TLSv1_2_client_method();
 #endif
         SSL_load_error_strings();
         ssl_ctx = SSL_CTX_new(meth);
