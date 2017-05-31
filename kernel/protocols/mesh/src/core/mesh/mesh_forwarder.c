@@ -866,6 +866,10 @@ static void message_handler(void *args)
         forward = true;
     }
 
+    if (info->type == MESH_FRAME_TYPE_CMD) {
+        handle_diags_command(frame->message, recv);
+    }
+
     if (forward == true) {
         network = NULL;
         nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);

@@ -40,8 +40,8 @@ static ur_error_t handle_trace_route_request(message_t *message)
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle trace route request\r\n");
 
     info = message->info;
-    tlvs = message_get_payload(message) + sizeof(mm_header_t);
-    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
+    tlvs = message_get_payload(message) + sizeof(mm_header_t) + info->payload_offset;
+    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t) - info->payload_offset;
 
     timestamp = (mm_timestamp_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TIMESTAMP);
     network = get_network_context_by_meshnetid(info->src.netid);
@@ -67,8 +67,9 @@ static ur_error_t handle_trace_route_response(message_t *message)
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle trace route response\r\n");
 
-    tlvs = message_get_payload(message) + sizeof(mm_header_t);
-    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
+    info = message->info;
+    tlvs = message_get_payload(message) + sizeof(mm_header_t) + info->payload_offset;
+    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t) - info->payload_offset;
 
     timestamp = (mm_timestamp_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TIMESTAMP);
     time = ur_get_now() - timestamp->timestamp;
@@ -159,8 +160,10 @@ ur_error_t handle_diags_command(message_t *message, bool dest_reached)
 {
     ur_error_t  error = UR_ERROR_NONE;
     mm_header_t *mm_header;
+    message_info_t *info;
 
-    mm_header = (mm_header_t *)message_get_payload(message);
+    info = message->info;
+    mm_header = (mm_header_t *)(message_get_payload(message) + info->payload_offset);
     switch (mm_header->command & COMMAND_COMMAND_MASK) {
         case COMMAND_TRACE_ROUTE_REQUEST:
             error = handle_trace_route_request(message);
