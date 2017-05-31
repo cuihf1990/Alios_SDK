@@ -9,6 +9,9 @@ extern int pal_get_info(const char *key, char *value);
 extern int pal_save_info(const char *key, char *value);
 extern int pal_json_get_string_value(char *json_str, const char **tokens, int tokens_size, char *value);
 extern int pal_json_get_number_value(char *json_str, const char **tokens, int tokens_size, int *value);
+extern int pal_network_create(const char *server, int port);
+extern int pal_network_send(int sockfd, const char *buf, int len);
+extern int pal_network_recv(int sockfd, char *buf, int *len);
 
 #define IN_DATA_SIZE 117
 char in_data[IN_DATA_SIZE + 1];
@@ -478,10 +481,10 @@ static void test_tfs_pal_json(void) {
     ret = pal_json_get_string_value(NULL, NULL, 0, NULL);
     YUNIT_ASSERT(ret != 0);
 
-    tokens[0] = "code2";
     ret = pal_json_get_string_value(json_str1, tokens, tokens_size, code);
     YUNIT_ASSERT(ret != 0);
 
+    tokens[0] = "code2";
     ret = pal_json_get_string_value(json_str, tokens, tokens_size, code);
     YUNIT_ASSERT(ret != 0);
 
@@ -501,15 +504,39 @@ static void test_tfs_pal_json(void) {
     ret = pal_json_get_number_value(NULL, NULL, 0, NULL);
     YUNIT_ASSERT(ret != 0);
 
-    tokens[0] = "msg2";
     ret = pal_json_get_number_value(json_str1, tokens, tokens_size, &msg);
     YUNIT_ASSERT(ret != 0);
 
+    tokens[0] = "msg2";
     ret = pal_json_get_number_value(json_str, tokens, tokens_size, &msg);
     YUNIT_ASSERT(ret != 0);
 
     tokens[0] = "msg";
     ret = pal_json_get_number_value(json_str, tokens, tokens_size, &msg);
+    YUNIT_ASSERT(ret != 0);
+}
+
+static void test_tfs_pal_network(void) {
+    int ret = 0;
+    const char *hostname = "id2server.yunos.com";
+    const char *hostname2 = "hello.yunos.com";
+    int port = 300;
+    char buf[20] = {"helloworld!"};
+    int buf_len = 10;
+
+//    memset(buf, 0, 20);
+//    memcpy(buf, "helloworld!", strlen("helloworld!") + 1);
+
+    ret = pal_network_create(hostname2, port);
+    YUNIT_ASSERT(ret != 0);
+
+//    ret = pal_network_create(hostname, port);
+//    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_network_send(200, buf, buf_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = pal_network_recv(200, buf, &buf_len);
     YUNIT_ASSERT(ret != 0);
 }
 
@@ -547,6 +574,7 @@ static yunit_test_case_t yunos_tfs_testcases[] = {
     { "tfs_id2_get_digest_auth_code_all_param_null", test_tfs_id2_get_digest_auth_code_all_param_null},
     { "test_tfs_pal_storage", test_tfs_pal_storage},
     { "test_tfs_pal_json", test_tfs_pal_json},
+    { "test_tfs_pal_network", test_tfs_pal_network},
     YUNIT_TEST_CASE_NULL
 };
 

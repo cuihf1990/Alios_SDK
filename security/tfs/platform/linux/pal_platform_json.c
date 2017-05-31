@@ -16,13 +16,11 @@ int pal_json_get_string_value(char *json_str, const char **tokens, int tokens_si
         return -1;
     }
 
-	LOGD(TAG_PAL_JSON, "parse json.\n");
     json = cJSON_Parse(json_str);
     root_json = json;
 
-	LOGD(TAG_PAL_JSON, "search value.\n");
 	if(root_json == NULL) {
-	    LOGD(TAG_PAL_JSON, "json is null");
+	    LOGE(TAG_PAL_JSON, "parse json fail.\n");
 		return -1;
 	}
 
@@ -34,21 +32,19 @@ int pal_json_get_string_value(char *json_str, const char **tokens, int tokens_si
         json = json_item;
     }
 
-	LOGD(TAG_PAL_JSON, "search value complete.\n");
     if (i != tokens_size) {
         LOGE(TAG_PAL_JSON, "get value error\n");
-        cJSON_Delete(json);
+        cJSON_Delete(root_json);
         return -1;
     }
 
 	LOGD(TAG_PAL_JSON, "check value type.\n");
     if (json_item->type != cJSON_String) {
         LOGE(TAG_PAL_JSON, "get value type error\n");
-        cJSON_Delete(json);
+        cJSON_Delete(root_json);
         return -1;
     }
 
-	LOGD(TAG_PAL_JSON, "copy value.\n");
     strncpy(value, json_item->valuestring, strlen(json_item->valuestring));
     cJSON_Delete(root_json);
 
@@ -70,7 +66,7 @@ int pal_json_get_number_value(char *json_str, const char **tokens, int tokens_si
     root_json = json;
 
 	if(root_json == NULL) {
-	    LOGD(TAG_PAL_JSON, "json is null");
+	    LOGD(TAG_PAL_JSON, "parse json fail.\n");
 		return -1;
 	}
 
@@ -84,13 +80,13 @@ int pal_json_get_number_value(char *json_str, const char **tokens, int tokens_si
 
     if (i != tokens_size) {
         LOGE(TAG_PAL_JSON, "get value error\n");
-        cJSON_Delete(json);
+        cJSON_Delete(root_json);
         return -1;
     }
 
     if (json_item->type != cJSON_Number) {
         LOGE(TAG_PAL_JSON, "get value type error\n");
-        cJSON_Delete(json);
+        cJSON_Delete(root_json);
         return -1;
     }
 
