@@ -172,7 +172,6 @@ void task_trace_proc(void *buf , uint32_t len)
 				len_remain = len_remain - 16 - str_len;
 				break;
 			default:
-				//assert(0);
 				break;
 		}
 
@@ -317,7 +316,6 @@ void sema_trace_proc(void *buf , uint32_t len)
 				break;
 
 			default:
-				//assert(0);
 				break;
 		}
 
@@ -479,7 +477,6 @@ void mutex_trace_proc(void *buf , uint32_t len)
 				break;
 
 			default:
-				//assert(0);
 				break;
 		}
 
@@ -594,7 +591,6 @@ void event_trace_proc(void *buf, uint32_t len)
 				break;
 				
 			default:
-				//assert(0);
 				break;
 		}
 
@@ -711,7 +707,6 @@ void buf_queue_trace_proc(void *buf, uint32_t len)
 				break;
 
 			default:
-				//assert(0);
 				break;
 		}
 
@@ -774,7 +769,6 @@ void timer_trace_proc(void *buf, uint32_t len)
 				break;
 
 			default:
-				//assert(0);
 				break;
 		}
 
@@ -896,13 +890,11 @@ void misc_trace_proc(void *buf, uint32_t len)
 				break;
 
 			default:
-				//assert(0);
 				break;
 		}
 
 	}
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -926,7 +918,11 @@ int main(int argc, char* argv[])
 
 		len = read(fh1, trace_buf, len_remain);
 
-		assert(len_remain == len);
+        if (len_remain != len) {
+            printf("trace analyse finsihed\n");
+            close(fh1);
+            exit(0);
+        }
 
 		while (1)  {
 
@@ -946,8 +942,8 @@ int main(int argc, char* argv[])
 		}
     }
 
-	//while (1);
-	
+    printf("trace analyse finsihed\n");
+
 	return 0;
 }
 
