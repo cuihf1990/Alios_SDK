@@ -91,8 +91,8 @@ ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi)
 void ur_mesh_remove_whitelist(const mac_address_t*address);
 void ur_mesh_clear_whitelist(void);
 
-const ur_link_stats_t *ur_mesh_get_link_stats(void);
-const frame_stats_t *ur_mesh_get_hal_stats(void);
+const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type);
+const frame_stats_t *ur_mesh_get_hal_stats(media_type_t type);
 const ur_message_stats_t *ur_mesh_get_message_stats(void);
 const ur_mem_stats_t *ur_mesh_get_mem_stats(void);
 

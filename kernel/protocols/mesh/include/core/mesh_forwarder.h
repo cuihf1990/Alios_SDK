@@ -149,7 +149,7 @@ ur_error_t mf_init(void);
 ur_error_t mf_deinit(void);
 ur_error_t mf_send_message(message_t *message);
 ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr);
-const ur_link_stats_t *mf_get_stats(void);
+const ur_link_stats_t *mf_get_stats(hal_context_t *hal);
 
 #ifdef __cplusplus
 }

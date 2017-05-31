@@ -157,8 +157,10 @@ static void handle_sent(void *context, frame_t *frame, int error)
 {
     hal_context_t *hal = (hal_context_t *)context;
 
+    hal->link_stats.out_frames++;
     if (error != SENT_SUCCESS) {
         error = SENT_FAIL;
+        hal->link_stats.out_errors++;
     }
     hal->last_sent = error;
     yos_schedule_call(message_sent_task, hal);
@@ -822,12 +824,14 @@ static void message_handler(void *args)
     received_frame_t *frame = NULL;
 
     frame = (received_frame_t *)args;
+    hal = frame->hal;
     info = frame->message->info;
     network = get_default_network_context();
 
     if (proxy_check(frame->message) == false) {
         message_free(frame->message);
         ur_mem_free(frame, sizeof(received_frame_t));
+        hal->link_stats.in_drops++;
         return;
     }
 
@@ -849,6 +853,7 @@ static void message_handler(void *args)
     }
 
     if (recv != true && forward != true) {
+        hal->link_stats.in_filterings++;
         message_free(frame->message);
         ur_mem_free(frame, sizeof(received_frame_t));
         return;
@@ -879,6 +884,7 @@ static void message_handler(void *args)
             }
         }
         if (network == NULL) {
+            hal->link_stats.in_drops++;
             message_free(frame->message);
             ur_mem_free(frame, sizeof(received_frame_t));
             return;
@@ -913,6 +919,12 @@ static void message_handler(void *args)
         }
     }
 
+    if (info->type == MESH_FRAME_TYPE_DATA) {
+        hal->link_stats.in_data++;
+    } else {
+        hal->link_stats.in_command++;
+    }
+
     yos_schedule_call(handle_datagram, frame->message);
     ur_mem_free(frame, sizeof(received_frame_t));
 }
@@ -928,7 +940,7 @@ static void handle_received_frame(void *context, frame_t *frame,
 
     hal->link_stats.in_frames++;
     if (mm_get_device_state() == DEVICE_STATE_DISABLED) {
-        hal->link_stats.in_filterings++;
+        hal->link_stats.in_drops++;
         return;
     }
 
@@ -947,12 +959,12 @@ static void handle_received_frame(void *context, frame_t *frame,
 
     message = message_alloc(frame->len);
     if (message == NULL) {
-        hal->link_stats.in_filterings++;
+        hal->link_stats.in_drops++;
         return;
     }
     rx_frame = (received_frame_t *)ur_mem_alloc(sizeof(received_frame_t));
     if (rx_frame == NULL) {
-        hal->link_stats.in_filterings++;
+        hal->link_stats.in_drops++;
         message_free(message);
         return;
     }
@@ -983,8 +995,13 @@ static void send_datagram(void *args)
     }
     if (message == NULL) {
         message = message_queue_get_head(&hal->send_queue[CMD_QUEUE]);
-        if (message == NULL) {
+        if (message) {
+            hal->link_stats.out_command++;
+        } else {
             message = message_queue_get_head(&hal->send_queue[DATA_QUEUE]);
+            if (message) {
+                hal->link_stats.out_data++;
+            }
         }
         if (message == NULL) {
             return;
@@ -1045,7 +1062,7 @@ static void handle_datagram(void *args)
     uint8_t           *nexth;
     slist_t           *hals;
     hal_context_t     *hal;
-    network_context_t *network;
+    network_context_t *network = NULL;
 
     message = (message_t *)args;
     info = message->info;
@@ -1107,10 +1124,7 @@ static void handle_datagram(void *args)
     }
 }
 
-const ur_link_stats_t *mf_get_stats(void) {
-    hal_context_t *hal;
-
-    hal = get_default_hal_context();
+const ur_link_stats_t *mf_get_stats(hal_context_t *hal) {
     if (hal == NULL) {
         return NULL;
     }
