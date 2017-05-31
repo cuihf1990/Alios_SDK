@@ -144,7 +144,7 @@ static void output_message_handler(void *args)
     } else if (ur_is_unique_local(&frame->dest)) {
         if (is_sid_address(&frame->dest.m8[8]) == false) {
             info->dest.addr.len = EXT_ADDR_SIZE;
-            memcpy(&info->dest.addr, &frame->dest.m8[8], sizeof(info->dest.addr));
+            memcpy(info->dest.addr.addr, &frame->dest.m8[8], sizeof(info->dest.addr.addr));
         } else {
             info->dest.addr.len = SHORT_ADDR_SIZE;
             info->dest.addr.short_addr = ur_swap16(frame->dest.m16[7]);

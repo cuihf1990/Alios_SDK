@@ -718,11 +718,14 @@ ur_error_t mf_send_message(message_t *message)
         } else if (info->dest.addr.short_addr == BCAST_SID) {
             is_mcast = true;
         }
-    } else if (info->dest.addr.len == EXT_ADDR_SIZE) {
-        if (nbr == NULL && info->type == MESH_FRAME_TYPE_DATA) {
+    } else if (info->dest.addr.len == EXT_ADDR_SIZE &&
+               info->type == MESH_FRAME_TYPE_DATA) {
+        if (nbr == NULL) {
             need_resolve = true;
             memcpy(target.ueid, &info->dest.addr.addr, sizeof(target.ueid));
             query_type = TARGET_QUERY;
+        } else {
+            info->dest.netid = nbr->addr.netid;
         }
     }
     if ((info->dest.addr.len != SHORT_ADDR_SIZE && info->dest.addr.len != EXT_ADDR_SIZE) ||
