@@ -278,9 +278,9 @@ kstat_t task_suspend(ktask_t *task)
             return YUNOS_INV_TASK_STATE;
     }
 
-    YUNOS_CRITICAL_EXIT_SCHED();
-
     TRACE_TASK_SUSPEND(g_active_task, task);
+
+    YUNOS_CRITICAL_EXIT_SCHED();
 
     return YUNOS_SUCCESS;
 }
@@ -536,9 +536,9 @@ kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
         return error;
     }
 
-    YUNOS_CRITICAL_EXIT_SCHED();
-
     TRACE_TASK_PRI_CHANGE(g_active_task, task, pri);
+
+    YUNOS_CRITICAL_EXIT_SCHED();
 
     return YUNOS_SUCCESS;
 }
