@@ -287,6 +287,8 @@ static int _rsa_test_gen_key(void)
         CRYPT_INF("RSA encrypt/decrypt with PKCS1_V1_5 test success!\n");
     }
 
+    CRYPT_FREE(pub_key);
+    CRYPT_FREE(key_pair);
     return 0;
 _OUT:
     if (pub_key) {
@@ -675,6 +677,7 @@ static int _ali_crypto_sign_verify_pss(
         }
 
         src_size = HASH_SIZE(hash_type);
+
         CRYPT_MEMSET(src_data, 0xa, src_size);
 
         dst_size = RSA_KEY_LEN;
