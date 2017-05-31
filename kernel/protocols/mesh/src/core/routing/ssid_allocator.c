@@ -345,6 +345,9 @@ slist_t *get_ssid_nodes_list(network_context_t *network)
 {
     ssid_allocator_t *allocator;
 
+    if (network == NULL) {
+        return NULL;
+    }
     allocator = (ssid_allocator_t *)network->sid_base;
     return &allocator->base.node_list;
 }
