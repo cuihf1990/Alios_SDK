@@ -14,6 +14,8 @@ $(NAME)_INCLUDES := src/core/id2/include/ \
 					src/network/include/ \
 					platform
 
+$(NAME)_COMPONENTS := cjson
+
 GLOBAL_INCLUDES += include/
 
 ifeq ($(CONFIG_TFS_TEST), y)
