@@ -134,7 +134,7 @@ static uint8_t mm_region_break_case1(void)
     MYASSERT(ret == YUNOS_SUCCESS);
     //add for best fit test
     for(i=1;i<10;i++){
-        ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp[i-1],4*i+1,allocator);
+        ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp[i-1],4*i+2,allocator);
         MYASSERT(ret == YUNOS_SUCCESS);
     }
     for(i=1;i<10;i++){
@@ -145,13 +145,16 @@ static uint8_t mm_region_break_case1(void)
     }
     for(i=1;i<10;i++){
         if(i%2 == 0){
-            ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp2[i-1],4*i,allocator);
+            ret = yunos_mm_bf_alloc(&my_mm_region_list_head_2, &mp2[i-1],4*i+1,allocator);
             MYASSERT(ret == YUNOS_SUCCESS);
             MYASSERT(mp[i-1] == mp2[i-1]);
             ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp2[i-1]);
             MYASSERT(ret == YUNOS_SUCCESS);
         }
-        else{
+    }
+
+    for(i=1;i<10;i++){
+        if(i%2 != 0){
             ret = yunos_mm_xf_free(&my_mm_region_list_head_2, mp[i-1]);
             MYASSERT(ret == YUNOS_SUCCESS);
         }
