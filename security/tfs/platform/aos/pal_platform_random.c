@@ -1,13 +1,9 @@
 #include <stdlib.h>
-#include <sys/time.h>
-#include "hal/hal.h"
+#include "yos/kernel.h"
 
 int pal_get_random()
 {
-    struct timeval tv;
-
-    hal_time_gettimeofday(&tv, NULL);
-    srand((unsigned int)tv.tv_sec);
+    srand((unsigned int)yos_now()/1000);
     return rand();
 }
 

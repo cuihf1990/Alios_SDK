@@ -16,12 +16,17 @@ int pal_json_get_string_value(char *json_str, const char **tokens, int tokens_si
     int i = 0;
 
     if (json_str == NULL || tokens == NULL || tokens_size <= 0 || value == NULL) {
-        LOGE(TAG_PAL_JSON, "para error\n");
+        LOGE(TAG_PAL_JSON, "[%s]: para error\n", __func__);
         return -1;
     }
 
     json = cJSON_Parse(json_str);
     root_json = json;
+
+	if(root_json == NULL) {
+	    LOGE(TAG_PAL_JSON, "[%s]: parse json fail.\n", __func__);
+		return -1;
+	}
 
     for (; i < tokens_size; i ++) {
         json_item = cJSON_GetObjectItem(json, tokens[i]);
@@ -32,14 +37,15 @@ int pal_json_get_string_value(char *json_str, const char **tokens, int tokens_si
     }
 
     if (i != tokens_size) {
-        LOGE(TAG_PAL_JSON, "get value error\n");
-        cJSON_Delete(json);
+        LOGE(TAG_PAL_JSON, "[%s]: get value error\n", __func__);
+        cJSON_Delete(root_json);
         return -1;
     }
 
+	LOGD(TAG_PAL_JSON, "[%s]: check value type.\n", __func__);
     if (json_item->type != cJSON_String) {
-        LOGE(TAG_PAL_JSON, "get value type error\n");
-        cJSON_Delete(json);
+        LOGE(TAG_PAL_JSON, "[%s]: get value type error\n", __func__);
+        cJSON_Delete(root_json);
         return -1;
     }
 
@@ -56,12 +62,17 @@ int pal_json_get_number_value(char *json_str, const char **tokens, int tokens_si
     int i = 0;
 
     if (json_str == NULL || tokens == NULL || tokens_size <= 0 || value == NULL) {
-        LOGE(TAG_PAL_JSON, "para error\n");
+        LOGE(TAG_PAL_JSON, "[%s]: para error\n", __func__);
         return -1;
     }
 
     json = cJSON_Parse(json_str);
     root_json = json;
+
+	if(root_json == NULL) {
+	    LOGE(TAG_PAL_JSON, "[%s]: parse json fail.\n", __func__);
+		return -1;
+	}
 
     for (; i < tokens_size; i ++) {
         json_item = cJSON_GetObjectItem(json, tokens[i]);
@@ -72,14 +83,14 @@ int pal_json_get_number_value(char *json_str, const char **tokens, int tokens_si
     }
 
     if (i != tokens_size) {
-        LOGE(TAG_PAL_JSON, "get value error\n");
-        cJSON_Delete(json);
+        LOGE(TAG_PAL_JSON, "[%s]: get value error\n", __func__);
+        cJSON_Delete(root_json);
         return -1;
     }
 
     if (json_item->type != cJSON_Number) {
-        LOGE(TAG_PAL_JSON, "get value type error\n");
-        cJSON_Delete(json);
+        LOGE(TAG_PAL_JSON, "[%s]: get value type error\n", __func__);
+        cJSON_Delete(root_json);
         return -1;
     }
 

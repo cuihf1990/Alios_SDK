@@ -3,12 +3,9 @@
  */
 
 #include <string.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <netdb.h>
 #include "log.h"
+#include "yos/network.h"
+#include "yos/framework.h"
 
 #define HTTP_PACKET_MAX 512
 
@@ -21,11 +18,11 @@ int pal_network_send(int sockfd, const char *buf, int len)
     do {
         ret = send(sockfd, buf + ret, len,0);
         if (ret < 0 || ret == 0) {
-            LOGE(TAG_PAL_NETWORK, "write EINTR errno=%d %s ret = %d", errno, strerror(errno), ret);
+            LOGD(TAG_PAL_NETWORK, "[%s]: write EINTR errno=%d %s ret = %d\n", __func__, errno, strerror(errno), ret);
             if (errno == EINTR) {
                 continue;
             }
-            LOGE(TAG_PAL_NETWORK, "write socket error, ret = %d", ret);
+            LOGE(TAG_PAL_NETWORK, "[%s]: write socket error, ret = %d\n", __func__, ret);
             return -1;
         }
         len -= ret;
@@ -42,11 +39,11 @@ int pal_network_recv(int sockfd, char *buf, int *len)
     do {
         ret = recv(sockfd, buf + count, HTTP_PACKET_MAX - count,0);
         if (ret < 0) {
-            LOGE(TAG_PAL_NETWORK, "read EINTR errno=%d %s ret = %d", errno, strerror(errno), ret);
+            LOGD(TAG_PAL_NETWORK, "[%s]: read EINTR errno=%d %s ret = %d\n", __func__, errno, strerror(errno), ret);
             if (errno == EINTR) {
                 continue;
             }
-            LOGE(TAG_PAL_NETWORK, "read socket error, ret = %d", ret);
+            LOGE(TAG_PAL_NETWORK, "[%s]: read socket error, ret = %d\n", __func__, ret);
             return -1;
         }
         count += ret;
@@ -65,7 +62,28 @@ int pal_network_close(int fd)
 }
 
 int _http_check_conn(int sockfd) {
-    return -1;
+    struct pollfd fd = { .fd = sockfd, .events = POLLOUT };
+    int ret = 0;
+    socklen_t len = 0;
+
+    LOGD(TAG_PAL_NETWORK, "[%s]: enter.\n", __func__);
+    while (yos_poll(&fd, 1, -1) == -1) {
+        if (errno != EINTR ){
+             LOGE(TAG_PAL_NETWORK, "[%s]: poll EINTR\n", __func__);
+             return -1;
+        }
+    }
+    len = sizeof(ret);
+    if (getsockopt (sockfd, SOL_SOCKET, SO_ERROR, &ret, &len) == -1) {
+        LOGE(TAG_PAL_NETWORK, "[%s]: getsockopt error\n", __func__);
+        return -1;
+    }
+    if (ret != 0) {
+        LOGE(TAG_PAL_NETWORK, "[%s]: socket %d connect failed: %s\n",__func__, sockfd, strerror(ret));
+        return -1;
+    }
+
+    return 0;
 }
 
 int pal_network_create(const char *server, int port)
@@ -77,7 +95,7 @@ int pal_network_create(const char *server, int port)
 
     host = gethostbyname(server);
     if (host == NULL) {
-        LOGE(TAG_PAL_NETWORK, "get host by name error");
+        LOGE(TAG_PAL_NETWORK, "[%s]: get host by name error\n", __func__);
         return -1;
     }
 
@@ -89,7 +107,7 @@ int pal_network_create(const char *server, int port)
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (sockfd < 0) {
-        LOGE(TAG_PAL_NETWORK, "socket init error");
+        LOGE(TAG_PAL_NETWORK, "[%s]: socket init error\n", __func__);
         return -1;
     }
 
@@ -101,13 +119,13 @@ int pal_network_create(const char *server, int port)
     ret = connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr));
     if (ret < 0) {
         if (errno == EINTR) {
-            LOGE(TAG_PAL_NETWORK, "connect EINTR errno=%d %s ret = %d", errno, strerror(errno), ret);
+            LOGE(TAG_PAL_NETWORK, "[%s]: connect EINTR errno=%d %s ret = %d\n", __func__, errno, strerror(errno), ret);
             if (_http_check_conn(sockfd) == 0) {
                 return sockfd;
             }
         }
         close(sockfd);
-        LOGE(TAG_PAL_NETWORK, "connect error");
+        LOGE(TAG_PAL_NETWORK, "[%s]: connect error\n", __func__);
         return -1;
     }
 

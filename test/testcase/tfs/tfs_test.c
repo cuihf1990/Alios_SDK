@@ -2,6 +2,7 @@
 #include <yts.h>
 #include <tfs.h>
 #include <stdio.h>
+#include "yos/framework.h"
 
 extern int tfs_id2_encrypt(const uint8_t *in, uint32_t in_len,uint8_t *out, uint32_t *out_len);
 extern int tfs_id2_verify(const uint8_t *in, uint32_t in_len, uint8_t *sign, uint32_t sign_len);
@@ -36,6 +37,17 @@ static void test_tfs_get_ID2(void)
     ret = tfs_get_ID2(id2, &len);
 
     YUNIT_ASSERT(ret == 0);
+}
+
+static void test_tfs_get_ID2_len_short(void)
+{
+    int ret = 0;
+    uint32_t len = TFS_ID2_LEN - 1;
+    uint8_t id2[TFS_ID2_LEN - 1] = {0};
+
+    ret = tfs_get_ID2(id2, &len);
+
+    YUNIT_ASSERT(ret != 0);
 }
 
 static void test_tfs_get_ID2_param_id2_null(void)
@@ -283,6 +295,9 @@ static void test_tfs_get_auth_code_all_param_null(void)
 
 static void test_tfs_activate_device(void) {
     int ret = -1;
+    const char *key = "activate";
+
+    yos_kv_del(key);
 
     ret = tfs_is_device_activated();
     YUNIT_ASSERT(ret != 0);
@@ -524,9 +539,6 @@ static void test_tfs_pal_network(void) {
     char buf[20] = {"helloworld!"};
     int buf_len = 10;
 
-//    memset(buf, 0, 20);
-//    memcpy(buf, "helloworld!", strlen("helloworld!") + 1);
-
     ret = pal_network_create(hostname2, port);
     YUNIT_ASSERT(ret != 0);
 
@@ -541,10 +553,11 @@ static void test_tfs_pal_network(void) {
 }
 
 static yunit_test_case_t yunos_tfs_testcases[] = {
-    { "tfs_get_ID2", test_tfs_get_ID2},
     { "tfs_get_ID2_param_id2_null", test_tfs_get_ID2_param_id2_null},
     { "tfs_get_ID2_param_len_null", test_tfs_get_ID2_param_len_null},
     { "tfs_get_ID2_all_param_null", test_tfs_get_ID2_all_param_null},
+    { "tfs_get_ID2_len_short", test_tfs_get_ID2_len_short},
+    { "tfs_get_ID2", test_tfs_get_ID2},
     { "tfs_id2_sign", test_tfs_id2_sign},
     { "tfs_id2_sign_param_in_null", test_tfs_id2_sign_param_in_null},
     { "tfs_id2_sign_param_in_len_zero", test_tfs_id2_sign_param_in_len_zero},
