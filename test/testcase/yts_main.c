@@ -42,6 +42,7 @@ extern void test_cjson(void);
 extern void test_hashtable(void);
 extern void test_kv(void);
 extern void test_hal(void);
+extern void test_tls(void);
 extern void test_tfs(void);
 extern void test_aosapi(void);
 extern void test_vfs(void);
@@ -132,6 +133,8 @@ void add_test(void)
     test_rhino();
 
     test_rhino_port();
+
+    test_tls();
 
     test_tfs();
 

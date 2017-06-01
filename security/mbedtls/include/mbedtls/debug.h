@@ -64,6 +64,11 @@
     mbedtls_debug_print_crt( ssl, level, __FILE__, __LINE__, text, crt )
 #endif
 
+#define MBEDTLS_DEBUG_BUF( level, text, buf, len )                \
+    mbedtls_debug_print_buf( ssl, level, __FILE__, __LINE__, text, buf, len )
+
+#define MBEDTLS_ALT_DEBUG_BUF( level, text, buf, len )           \
+    mbedtls_debug_print_data(level, __FILE__, __LINE__, text, buf, len )
 #else /* MBEDTLS_DEBUG_C */
 
 #define MBEDTLS_SSL_DEBUG_MSG( level, args )            do { } while( 0 )
@@ -72,6 +77,7 @@
 #define MBEDTLS_SSL_DEBUG_MPI( level, text, X )         do { } while( 0 )
 #define MBEDTLS_SSL_DEBUG_ECP( level, text, X )         do { } while( 0 )
 #define MBEDTLS_SSL_DEBUG_CRT( level, text, crt )       do { } while( 0 )
+#define MBEDTLS_ALT_DEBUG_BUF( level, text, buf, len )  do { } while( 0 )
 
 #endif /* MBEDTLS_DEBUG_C */
 
@@ -218,6 +224,10 @@ void mbedtls_debug_print_ecp( const mbedtls_ssl_context *ssl, int level,
 void mbedtls_debug_print_crt( const mbedtls_ssl_context *ssl, int level,
                       const char *file, int line,
                       const char *text, const mbedtls_x509_crt *crt );
+
+void mbedtls_debug_print_data(int level,
+                const char *file, int line,
+                const char *name, const unsigned char *data, int len);
 #endif
 
 #ifdef __cplusplus

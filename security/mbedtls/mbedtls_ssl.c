@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <yos/kernel.h>
 
 #include "mbedtls/config.h"
@@ -19,7 +20,10 @@
 
 #define SSL_DEBUG_LEVEL    1
 
+#define SSL_PARAM_MAGIC    0x54321212
+
 typedef struct _ssl_param_t {
+    size_t magic;
     mbedtls_net_context net;
     mbedtls_x509_crt ca_cert;
     mbedtls_ssl_config conf;
@@ -40,6 +44,7 @@ static int ssl_random(void *prng, unsigned char *output, size_t output_len)
     return 0;
 }
 
+#if defined(MBEDTLS_DEBUG_C)
 static void ssl_debug(void *ctx, int level,
                       const char *file, int line, const char *str)
 {
@@ -50,6 +55,7 @@ static void ssl_debug(void *ctx, int level,
 
     return;
 }
+#endif
 
 void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
 {
@@ -79,10 +85,13 @@ void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
         printf("ssl_connect: malloc(%d) fail\n", sizeof(ssl_param_t));
         return NULL;
     } else {
+        memset(ssl_param, 0, sizeof(ssl_param_t));
+
         mbedtls_net_init(&ssl_param->net);
         mbedtls_x509_crt_init(&ssl_param->ca_cert);
         mbedtls_ssl_config_init(&ssl_param->conf);
         mbedtls_ssl_init(&ssl_param->ssl);
+        ssl_param->magic = SSL_PARAM_MAGIC;
     }
 
     /* 
@@ -132,7 +141,10 @@ void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
     mbedtls_ssl_conf_authmode(&ssl_param->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
     mbedtls_ssl_conf_ca_chain(&ssl_param->conf, &ssl_param->ca_cert, NULL);
     mbedtls_ssl_conf_rng(&ssl_param->conf, ssl_random, NULL);
+
+#if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&ssl_param->conf, ssl_debug, NULL);
+#endif
 
     ret = mbedtls_ssl_setup(&ssl_param->ssl, &ssl_param->conf);
     if (ret != 0) {
@@ -208,6 +220,11 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
 #endif
 
     ssl_param = (ssl_param_t *)ssl;
+    if (ssl_param->magic != SSL_PARAM_MAGIC) {
+        printf("ssl_send: invalid magic - 0x%x\n", ssl_param->magic);
+        return -1;
+    }
+
     ret = mbedtls_ssl_write(&ssl_param->ssl,
               (const unsigned char *)buffer, (size_t)length);
     if (ret < 0) {
@@ -244,6 +261,10 @@ int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
         return -1;
     } else {
         ssl_param = (ssl_param_t *)ssl;
+        if (ssl_param->magic != SSL_PARAM_MAGIC) {
+            printf("ssl_recv: invalid magic - 0x%x\n", ssl_param->magic);
+            return -1;
+        }
     }
 
 #if defined(CONFIG_SSL_DEBUG)
@@ -302,12 +323,19 @@ int mbedtls_ssl_close(void *ssl)
     }
 
     ssl_param = (ssl_param_t *)ssl;
+    if (ssl_param->magic != SSL_PARAM_MAGIC) {
+        printf("ssl_close: invalid magic - 0x%x\n", ssl_param->magic);
+        return -1;
+    }
+
     mbedtls_ssl_close_notify(&ssl_param->ssl);
 
     mbedtls_net_free( &ssl_param->net);
     mbedtls_x509_crt_free(&ssl_param->ca_cert);
     mbedtls_ssl_free(&ssl_param->ssl);
     mbedtls_ssl_config_free(&ssl_param->conf);
+
+    memset(ssl_param, 0, sizeof(ssl_param_t));
     free(ssl_param);
 
 #if defined(MBEDTLS_THREADING_ALT)
