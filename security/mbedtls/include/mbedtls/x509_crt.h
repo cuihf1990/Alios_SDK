@@ -124,6 +124,7 @@ mbedtls_x509_crt_profile;
 #define MBEDTLS_X509_MAX_FILE_PATH_LEN 512
 #endif
 
+#if defined(MBEDTLS_X509_CRT_WRITE_C)
 /**
  * Container for writing a certificate (CRT)
  */
@@ -141,6 +142,7 @@ typedef struct mbedtls_x509write_cert
     mbedtls_asn1_named_data *extensions;
 }
 mbedtls_x509write_cert;
+#endif /* MBEDTLS_X509_CRT_WRITE_C */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 /**

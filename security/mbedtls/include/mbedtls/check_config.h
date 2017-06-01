@@ -472,7 +472,8 @@
 #error "MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO and MBEDTLS_PLATFORM_STD_NV_SEED_WRITE cannot be defined simultaneously"
 #endif
 
-#if defined(MBEDTLS_RSA_C) && ( !defined(MBEDTLS_BIGNUM_C) ||         \
+#if defined(MBEDTLS_RSA_C) && (                                      \
+    ( !defined(MBEDTLS_BIGNUM_C) && !defined(MBEDTLS_PK_ALT) ) ||    \
     ( !defined(MBEDTLS_OID_C) && !defined(MBEDTLS_IOT_SPECIFIC) ) )
 #error "MBEDTLS_RSA_C defined, but not all prerequisites"
 #endif
@@ -618,7 +619,8 @@
 #error "MBEDTLS_VERSION_FEATURES defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_X509_USE_C) && ( !defined(MBEDTLS_BIGNUM_C) ||  \
+#if defined(MBEDTLS_X509_USE_C) && (                                \
+    ( !defined(MBEDTLS_BIGNUM_C) && !defined(MBEDTLS_PK_ALT)) ||    \
     (!defined(MBEDTLS_OID_C) && !defined(MBEDTLS_IOT_SPECIFIC)) ||  \
     !defined(MBEDTLS_ASN1_PARSE_C) || !defined(MBEDTLS_PK_PARSE_C) )
 #error "MBEDTLS_X509_USE_C defined, but not all prerequisites"

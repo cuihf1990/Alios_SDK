@@ -12,6 +12,7 @@ $(NAME)_SOURCES     += framework/netmgr_test.c
 $(NAME)_SOURCES     += utility/cjson_test.c
 $(NAME)_SOURCES     += utility/hashtable_test.c
 $(NAME)_SOURCES     += utility/digest_algorithm.c
+$(NAME)_SOURCES     += tls/tls_test.c
 $(NAME)_SOURCES     += tfs/tfs_test.c
 $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
@@ -34,6 +35,8 @@ $(NAME)_SOURCES    += alicrypto/alicrypto_test.c
 endif
 
 $(NAME)_COMPONENTS  := yunit cjson
+
+$(NAME)_COMPONENTS  += mbedtls
 
 $(NAME)_COMPONENTS  += base64 hashtable log connectivity ywss protocol.alink modules.kv
 

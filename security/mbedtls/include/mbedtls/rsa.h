@@ -29,6 +29,8 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
+#if !defined(MBEDTLS_PK_ALT)
+
 #include "bignum.h"
 #include "md.h"
 
@@ -648,5 +650,9 @@ int mbedtls_rsa_self_test( int verbose );
 #endif
 
 #endif /* MBEDTLS_RSA_C */
+
+#else  /* MBEDTLS_PK_ALT */
+#include "rsa_alt.h"
+#endif /* MBEDTLS_PK_ALT */
 
 #endif /* rsa.h */

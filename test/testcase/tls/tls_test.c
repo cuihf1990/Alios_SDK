@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <yos/network.h>
 
 #include "mbedtls/mbedtls_ssl.h"
@@ -31,6 +32,28 @@ const char *mbedtls_real_ca_pem = "-----BEGIN CERTIFICATE-----\n"   \
 "rJ/t7PbiC/sn8SR7+0ATOMh0vRSA9HuuvoDz0adMhoFnba2FwiENfsLlhw==\n"    \
 "-----END CERTIFICATE-----\n";
 
+const char *mbedtls_fake_ca_pem = "-----BEGIN CERTIFICATE-----\n" \
+"MIIDhzCCAm+gAwIBAgIBADANBgkqhkiG9w0BAQUFADA7MQswCQYDVQQGEwJOTDER\n" \
+"MA8GA1UEChMIUG9sYXJTU0wxGTAXBgNVBAMTEFBvbGFyU1NMIFRlc3QgQ0EwHhcN\n" \
+"MTEwMjEyMTQ0NDAwWhcNMjEwMjEyMTQ0NDAwWjA7MQswCQYDVQQGEwJOTDERMA8G\n" \
+"A1UEChMIUG9sYXJTU0wxGTAXBgNVBAMTEFBvbGFyU1NMIFRlc3QgQ0EwggEiMA0G\n" \
+"CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDA3zf8F7vglp0/ht6WMn1EpRagzSHx\n" \
+"mdTs6st8GFgIlKXsm8WL3xoemTiZhx57wI053zhdcHgH057Zk+i5clHFzqMwUqny\n" \
+"50BwFMtEonILwuVA+T7lpg6z+exKY8C4KQB0nFc7qKUEkHHxvYPZP9al4jwqj+8n\n" \
+"YMPGn8u67GB9t+aEMr5P+1gmIgNb1LTV+/Xjli5wwOQuvfwu7uJBVcA0Ln0kcmnL\n" \
+"R7EUQIN9Z/SG9jGr8XmksrUuEvmEF/Bibyc+E1ixVA0hmnM3oTDPb5Lc9un8rNsu\n" \
+"KNF+AksjoBXyOGVkCeoMbo4bF6BxyLObyavpw/LPh5aPgAIynplYb6LVAgMBAAGj\n" \
+"gZUwgZIwDAYDVR0TBAUwAwEB/zAdBgNVHQ4EFgQUtFrkpbPe0lL2udWmlQ/rPrzH\n" \
+"/f8wYwYDVR0jBFwwWoAUtFrkpbPe0lL2udWmlQ/rPrzH/f+hP6Q9MDsxCzAJBgNV\n" \
+"BAYTAk5MMREwDwYDVQQKEwhQb2xhclNTTDEZMBcGA1UEAxMQUG9sYXJTU0wgVGVz\n" \
+"dCBDQYIBADANBgkqhkiG9w0BAQUFAAOCAQEAuP1U2ABUkIslsCfdlc2i94QHHYeJ\n" \
+"SsR4EdgHtdciUI5I62J6Mom+Y0dT/7a+8S6MVMCZP6C5NyNyXw1GWY/YR82XTJ8H\n" \
+"DBJiCTok5DbZ6SzaONBzdWHXwWwmi5vg1dxn7YxrM9d0IjxM27WNKs4sDQhZBQkF\n" \
+"pjmfs2cb4oPl4Y9T9meTx/lvdkRYEug61Jfn6cA+qHpyPYdTH+UshITnmp5/Ztkf\n" \
+"m/UTSLBNFNHesiTZeH31NcxYGdHSme9Nc/gfidRa0FLOCfWxRlFqAI47zG9jAQCZ\n" \
+"7Z2mCGDNMhjQc+BYcdnl0lPXjdDK6V0qCg1dVewhUBcW5gZKzV7e9+DpVA==\n"     \
+"-----END CERTIFICATE-----\n";
+
 const char *server_name = "alink.tcp.aliyun.com";
 const int server_port = 443;
 
@@ -48,6 +71,7 @@ static void *network_socket_create(const char *net_addr, int port)
     int tcp_fd;
     struct hostent *host;
     struct sockaddr_in saddr;
+    int opt_val = 1;
 
     tcp_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_fd < 0) {
@@ -66,17 +90,16 @@ static void *network_socket_create(const char *net_addr, int port)
     saddr.sin_port = htons(port);
     saddr.sin_addr.s_addr = *(unsigned long *)(host->h_addr);
 
-    struct timeval tv;
-    tv.tv_sec  = 5;
-    tv.tv_usec = 0;
+    setsockopt(tcp_fd, SOL_SOCKET, SO_RCVTIMEO, &opt_val, sizeof(opt_val));
 
-    setsockopt(tcp_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
-
-    ret = connect(tcp_fd, (struct sockaddr*)&saddr, sizeof(struct sockaddr));
-    if (ret < 0) {
-        printf("socket connect fail - %d\n", ret);
-        goto _err;
-    }
+    do {
+        errno = 0;
+        ret = connect(tcp_fd, (struct sockaddr*)&saddr, sizeof(struct sockaddr));
+        if (ret < 0 && errno != EINTR) {
+            printf("socket connect fail - errno: %d\n", errno);
+            goto _err;
+        }
+    } while (ret < 0);
 
     return (void *)tcp_fd;
 
@@ -129,6 +152,18 @@ static void test_tls_ssl_connect(void)
     /*
      * testcase #4
      */
+    ssl = mbedtls_ssl_connect(sock_fd,
+          mbedtls_fake_ca_pem, strlen(mbedtls_fake_ca_pem));
+    YUNIT_ASSERT(ssl == NULL);
+
+    network_socket_destroy(sock_fd);
+
+    /*
+     * testcase #5
+     */
+    sock_fd = network_socket_create(server_name, server_port);
+    YUNIT_ASSERT(sock_fd != NULL);
+
     ssl = mbedtls_ssl_connect(sock_fd,
               mbedtls_real_ca_pem, strlen(mbedtls_real_ca_pem));
     YUNIT_ASSERT(ssl != NULL);

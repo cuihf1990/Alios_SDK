@@ -37,6 +37,7 @@
 #define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 #define MBEDTLS_SSL_PROTO_TLS1_2
 #define MBEDTLS_THREADING_C
+//#define MBEDTLS_THREADING_PTHREAD
 #define MBEDTLS_THREADING_ALT
 
 /* mbed TLS modules */
@@ -64,6 +65,8 @@
 
 /* OEM configure */
 #define MBEDTLS_IOT_SPECIFIC
+#define MBEDTLS_PK_ALT
+#define MBEDTLS_AES_ALT
 
 #define MBEDTLS_SSL_MAX_CONTENT_LEN    (3 * 1024)    /* Size of the input / output buffer */
 
