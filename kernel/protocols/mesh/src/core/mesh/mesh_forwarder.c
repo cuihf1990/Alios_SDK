@@ -1071,6 +1071,13 @@ static void handle_datagram(void *args)
 
     if (info->dest.netid != BCAST_NETID) {
         info->network = get_network_context_by_meshnetid(info->dest.netid);
+        if (info->network == NULL) {
+            network = get_default_network_context();
+            if (info->dest.addr.short_addr == BCAST_SID &&
+                is_same_mainnet(info->dest.netid, mm_get_main_netid(network))) {
+                info->network = network;
+            }
+        }
     } else if (info->src.netid != BCAST_NETID) {
         info->network = get_network_context_by_meshnetid(info->src.netid);
         if (info->network == NULL) {
