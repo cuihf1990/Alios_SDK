@@ -20,53 +20,79 @@
 
 #define MODULE_NAME "mm_param"
 
+#if (YUNOS_CONFIG_MM_TLF > 0)
+
 static uint8_t mm_param_case1(void)
 {
     kstat_t ret;
 
-    ret = yunos_mm_pool_init(NULL, MODULE_NAME, (void *)mm_pool, MM_POOL_SIZE);
+    ret = yunos_init_mm_head(NULL, (void *)mm_pool, MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_mm_pool_init(&mm_pool_test, NULL, (void *)mm_pool, MM_POOL_SIZE);
+    ret = yunos_init_mm_head(&pmmhead, NULL, MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, NULL, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_NULL_PTR);
-
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, (void *)mm_pool, MM_POOL_MIN_SIZE-4);
+    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MIN_FREE_MEMORY_SIZE + DEF_TOTAL_FIXEDBLK_SIZE-4);
     MYASSERT(ret == YUNOS_MM_POOL_SIZE_ERR);
 
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, (void *)(mm_pool+1), MM_POOL_SIZE);
+    ret = yunos_init_mm_head(&pmmhead, (void *)(mm_pool+1), MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_INV_ALIGN);
 
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, (void *)mm_pool, MM_POOL_SIZE+1);
+    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE-1);
     MYASSERT(ret == YUNOS_INV_ALIGN);
+
+    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    MYASSERT(ret == YUNOS_SUCCESS);
+
+    ret = yunos_add_mm_region(NULL, (void *)&mm_pool[MM_POOL_SIZE], MM_POOL_SIZE);
+    MYASSERT(ret == YUNOS_NULL_PTR);
+
+    ret = yunos_add_mm_region(pmmhead, NULL, MM_POOL_SIZE);
+    MYASSERT(ret == YUNOS_NULL_PTR);
+
+    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE], 4);
+    MYASSERT(ret == YUNOS_MM_POOL_SIZE_ERR);
+
+    ret = yunos_add_mm_region(pmmhead, (void *)(&mm_pool[MM_POOL_SIZE]+1), MM_POOL_SIZE);
+    MYASSERT(ret == YUNOS_INV_ALIGN);
+
+    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE], MM_POOL_SIZE-1);
+    MYASSERT(ret == YUNOS_INV_ALIGN);
+
+    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE], MM_POOL_SIZE);
+    MYASSERT(ret == YUNOS_SUCCESS);
+
+    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE*3], MM_POOL_SIZE);
+    MYASSERT(ret == YUNOS_SUCCESS);
+
+    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE*2], MM_POOL_SIZE);
+    MYASSERT(ret == YUNOS_SUCCESS);
 
     return 0;
 }
 
 static uint8_t mm_param_case2(void)
 {
-    kstat_t ret;
     void   *ptr;
+    void   *tmp;
 
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ptr = k_mm_alloc( NULL,64);
+    MYASSERT(ptr == NULL);
 
-    ret = yunos_mm_alloc(NULL, &ptr, 64);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    ptr = k_mm_alloc(pmmhead, 0);
+    MYASSERT(ptr == NULL);
 
-    ret = yunos_mm_alloc(&mm_pool_test, NULL, 64);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    ptr = k_mm_alloc(pmmhead, 64);
+    MYASSERT((ptr > (void*)mm_pool && ptr < (void *)mm_pool + MM_POOL_SIZE)
+        ||(ptr > (void*)&mm_pool[MM_POOL_SIZE] && ptr < (void *)&mm_pool[MM_POOL_SIZE*2] ));
 
-    ret = yunos_mm_alloc(&mm_pool_test, &ptr, 0);
-    MYASSERT(ret == YUNOS_MM_ALLOC_SIZE_ERR);
+    k_mm_free(pmmhead, ptr);
 
-    ret = yunos_mm_free(NULL, ptr);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    ptr = k_mm_alloc(pmmhead, 16);
+    tmp = pmmhead->fixedmblk->mbinfo.buffer;
+    MYASSERT((ptr > (void*)pmmhead->fixedmblk->mbinfo.buffer) && (ptr < ((void *)tmp + (pmmhead->fixedmblk->size & YUNOS_MM_BLKSIZE_MASK))));
 
-    ret = yunos_mm_free(&mm_pool_test, NULL);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    k_mm_free(pmmhead, ptr);
 
     return 0;
 }
@@ -90,4 +116,6 @@ void mm_param_test(void)
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 }
+
+#endif
 

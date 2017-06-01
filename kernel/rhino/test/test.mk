@@ -32,6 +32,10 @@ $(NAME)_SOURCES := \
     core/event/event_param.c \
     core/event/event_reinit.c \
     core/event/event_test.c \
+    core/mm/mm_break.c \
+    core/mm/mm_opr.c \
+    core/mm/mm_param.c \
+    core/mm/mm_test.c \
     core/mm_blk/mm_blk_break.c \
     core/mm_blk/mm_blk_fragment.c \
     core/mm_blk/mm_blk_opr.c \

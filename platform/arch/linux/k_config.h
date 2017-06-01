@@ -33,6 +33,7 @@
 #define YUNOS_CONFIG_MM_BESTFIT              1
 #define YUNOS_CONFIG_MM_DEBUG                1
 #define YUNOS_CONFIG_MM_TLF                  1
+#define YUNOS_CONFIG_GCC_RETADDR             1
 #define YUNOS_CONFIG_MM_LEAKCHECK            0
 #define K_MM_STATISTIC                       1
 #define YUNOS_CONFIG_KOBJ_SET                1

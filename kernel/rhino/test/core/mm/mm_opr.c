@@ -22,21 +22,22 @@
 #define MODULE_NAME_CO "mm_coopr"
 static void *co_ptr;
 
+#if (YUNOS_CONFIG_MM_TLF > 0)
+
 static uint8_t mm_opr_case1(void)
 {
     void   *ptr;
     kstat_t ret;
 
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, (void *)mm_pool, MM_POOL_SIZE);
+    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_mm_alloc(&mm_pool_test, &ptr, 64);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ptr = k_mm_alloc(pmmhead, 64);
+    MYASSERT(ptr != NULL);
 
-    ret = yunos_mm_free(&mm_pool_test, ptr);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    k_mm_free(pmmhead, ptr);
 
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, (void *)mm_pool, MM_POOL_SIZE);
+    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     return 0;
@@ -48,19 +49,22 @@ static uint8_t mm_opr_case2(void)
     int8_t  cnt;
     kstat_t ret;
 
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, (void *)mm_pool, MM_POOL_SIZE);
+    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     /* alloc out of mm pools then free all */
     cnt = 0;
-    do {
-        ret = yunos_mm_alloc(&mm_pool_test, &r_ptr[cnt++], 128);
-    } while (ret != YUNOS_NO_MEM);
+    for(cnt = 0; cnt < 16; ++cnt) {
+        r_ptr[cnt] = k_mm_alloc(pmmhead, 1023);
+        if(r_ptr[cnt] ==  NULL){
+            break;
+        }
+    }
 
     cnt--;
     do {
-        ret = yunos_mm_free(&mm_pool_test, r_ptr[--cnt]);
-        MYASSERT(ret == YUNOS_SUCCESS);
+        k_mm_free(pmmhead, r_ptr[--cnt]);
+
     } while (cnt > 0);
 
     return 0;
@@ -90,7 +94,7 @@ static void task_mm_co1_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_mm_pool_init(&mm_pool_test, MODULE_NAME, (void *)mm_pool, MM_POOL_SIZE);
+    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
     if(ret != YUNOS_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
@@ -98,15 +102,18 @@ static void task_mm_co1_entry(void *arg)
     }
 
     while (1) {
-        yunos_mm_alloc(&mm_pool_test, &co_ptr, 16);
+        co_ptr = k_mm_alloc(pmmhead, 16);
         yunos_task_sleep(5);
-        yunos_mm_alloc(&mm_pool_test, &co_ptr, 3);
+        co_ptr = k_mm_alloc(pmmhead, 18);
         yunos_task_sleep(5);
-        yunos_mm_alloc(&mm_pool_test, &co_ptr, 100);
+        co_ptr = k_mm_alloc(pmmhead, 32);
         yunos_task_sleep(5);
-        yunos_mm_alloc(&mm_pool_test, &co_ptr, 66);
+        co_ptr = k_mm_alloc(pmmhead, 65);
         yunos_task_sleep(5);
-
+        co_ptr = k_mm_alloc(pmmhead, 178);
+        yunos_task_sleep(5);
+        co_ptr = k_mm_alloc(pmmhead, 333);
+        yunos_task_sleep(5);
         break;
     }
 
@@ -116,25 +123,23 @@ static void task_mm_co1_entry(void *arg)
 static void task_mm_co2_entry(void *arg)
 {
     while (1) {
-        yunos_mm_free(&mm_pool_test, co_ptr);
+        k_mm_free(pmmhead, co_ptr);
         yunos_task_sleep(5);
-        yunos_mm_free(&mm_pool_test, co_ptr);
+        k_mm_free(pmmhead, co_ptr);
         yunos_task_sleep(5);
-        yunos_mm_free(&mm_pool_test, co_ptr);
+        k_mm_free(pmmhead, co_ptr);
         yunos_task_sleep(5);
-        yunos_mm_free(&mm_pool_test, co_ptr);
+        k_mm_free(pmmhead, co_ptr);
         yunos_task_sleep(5);
-
+        k_mm_free(pmmhead, co_ptr);
+        yunos_task_sleep(5);
+        k_mm_free(pmmhead, co_ptr);
+        yunos_task_sleep(5);
         break;
     }
 
-    if (mm_pool_test.avail == (MM_POOL_SIZE - (MM_HEAD_SIZE << 1))) {
-        test_case_success++;
-        PRINT_RESULT(MODULE_NAME_CO, PASS);
-    } else {
-        test_case_fail++;
-        PRINT_RESULT(MODULE_NAME_CO, FAIL);
-    }
+    test_case_success++;
+    PRINT_RESULT(MODULE_NAME_CO, PASS);
 
     next_test_case_notify();
     yunos_task_dyn_del(g_active_task);
@@ -158,4 +163,6 @@ void mm_coopr_test(void)
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
     }
 }
+
+#endif
 
