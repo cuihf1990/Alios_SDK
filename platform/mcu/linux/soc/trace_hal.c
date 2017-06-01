@@ -25,14 +25,23 @@
 
 #include "trace_hal.h"
 
+static int trace_is_started;
+
 void *trace_hal_init(void)
 {
     int fh1;
 
-    fh1 = open("trace_test", O_CREAT | O_RDWR,
+    if (trace_is_started == 0) {
+        fh1 = open("trace_test", O_CREAT | O_RDWR,
                 S_IROTH | S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP | S_IWOTH);
 
-    return (void *)fh1;
+        trace_is_started = 1;
+        return (void *)fh1;
+    }
+
+    yunos_task_dyn_del(NULL);
+
+    return 0;
 }
 
 

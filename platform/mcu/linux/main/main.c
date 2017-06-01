@@ -44,6 +44,7 @@ extern void rl_cleanup_after_signal(void);
 extern void lpm_init(void);
 extern void hw_start_hal(void);
 extern void netmgr_init(void);
+extern void trace_start(int flag);
 
 static options_t options = { 0 };
 
@@ -173,6 +174,8 @@ int main(int argc, char **argv)
     netmgr_init();
 
     yos_loop_init();
+
+    trace_start(options.trace_flag);
 
     start_app(argc, argv);
 

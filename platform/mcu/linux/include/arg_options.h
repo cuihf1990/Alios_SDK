@@ -26,6 +26,7 @@ typedef struct {
     int    id2_index;
 #endif
     int    log_level;
+    int    trace_flag;
 
     struct {
         bool enable;
