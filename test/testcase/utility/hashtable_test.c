@@ -27,13 +27,14 @@ static void test_ht_add(void)
     int i;
 
     for (i=0;i<g_ht_size*2;i++) {
-        ret = ht_add(g_ht, &i, sizeof(i), &i, sizeof(int));
+        ret = ht_add(g_ht, &i, sizeof(int *), &i, sizeof(int));
         YUNIT_ASSERT(0 == ret);
     }
     
     for (i=0;i<g_ht_size*2;i++) {
         int tmp, len;
-        ht_find(g_ht, &i, sizeof(i), &tmp, &len);
+        len = sizeof(int);
+        ht_find(g_ht, &i, sizeof(int *), &tmp, &len);
         YUNIT_ASSERT(i == tmp && len == sizeof(i));
         ret = ht_del(g_ht, &i, sizeof(i));
         YUNIT_ASSERT(0 == ret);
