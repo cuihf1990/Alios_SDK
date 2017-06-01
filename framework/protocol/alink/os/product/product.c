@@ -25,6 +25,8 @@
 #define product_debug_key       "dpZZEpm9eBfqzK7yVeLq"
 #define product_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
 
+char *g_sn = "1923450656869";
+
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 {
 	return strncpy(name_str, "alink_product", PRODUCT_NAME_LEN);
@@ -62,5 +64,5 @@ char *product_get_debug_secret(char secret_str[PRODUCT_SECRET_LEN])
 
 char *product_get_sn(char sn_str[PRODUCT_SN_LEN])
 {
-	return strncpy(sn_str, "1923450656869", PRODUCT_SN_LEN);
+	return strncpy(sn_str, g_sn, PRODUCT_SN_LEN);
 }

@@ -411,10 +411,15 @@ void parse_opt(int argc, char *argv[])
     printf("alink server: %s, work_time: %ds, log level: %d\n",
             env_str[env], work_time, log_level);
 }
-
+extern char *g_sn;
 int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
+   
+    if(argc > 1 && strlen(argv[1]) <= 65){
+        printf("reset sn to : %s\n",argv[1]);
+        g_sn = argv[1]; 
+    }
     yos_set_log_level(YOS_LL_DEBUG);
     //awss_demo();
     if (env == SANDBOX)
