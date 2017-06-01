@@ -1618,8 +1618,9 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    if ((is_subnet(network->meshnetid) && is_subnet(info->src.netid) == 0) ||
-        (is_subnet(network->meshnetid) == 0 && is_subnet(info->src.netid))) {
+    if (network->meshnetid != BCAST_NETID && network->meshnetid != INVALID_NETID &&
+        ((is_subnet(network->meshnetid) && is_subnet(info->src.netid) == 0) ||
+        (is_subnet(network->meshnetid) == 0 && is_subnet(info->src.netid)))) {
         return UR_ERROR_NONE;
     }
 
