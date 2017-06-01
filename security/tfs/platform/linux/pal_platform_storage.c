@@ -14,7 +14,7 @@ int pal_save_info(const char *key, char *value) {
     int fd = -1;
     int writed = -1;
     if (key == NULL || value == NULL) {
-        LOGE(TAG_PAL_STORAGE, "para error\n");
+        LOGE(TAG_PAL_STORAGE, "[%s]: para error\n", __func__);
         return -1;
     }
 
@@ -23,13 +23,13 @@ int pal_save_info(const char *key, char *value) {
     fd = open(key, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     umask(mask);
     if (fd == -1) {
-        LOGE(TAG_PAL_STORAGE, "open file %s failed: %s\n", key, strerror(errno));
+        LOGE(TAG_PAL_STORAGE, "[%s]: open file %s failed: %s\n", __func__, key, strerror(errno));
         return -1;
     }
 
     fp = fdopen(fd, "wb");
     if (fp == NULL) {
-        LOGE(TAG_PAL_STORAGE, "can not find %s\n", key);
+        LOGE(TAG_PAL_STORAGE, "[%s]: can not find %s\n", __func__,  key);
         return -1;
     }
 
@@ -39,7 +39,7 @@ int pal_save_info(const char *key, char *value) {
     close(fd);
     sync();
     if (writed != (int)(strlen(value) + 1)) {
-        LOGE(TAG_PAL_STORAGE, "write file %s failed: %s\n", key, strerror(errno));
+        LOGE(TAG_PAL_STORAGE, "[%s]: write file %s failed: %s\n", __func__, key, strerror(errno));
         return -1;
     }
 
@@ -52,13 +52,13 @@ int pal_get_info(const char *key, char *value) {
     int file_len = -1;
     int readed = -1;
     if (key == NULL || value == NULL) {
-        LOGE(TAG_PAL_STORAGE, "para error\n");
+        LOGE(TAG_PAL_STORAGE, "[%s]: para error\n", __func__);
         return -1;
     }
 
     fp = fopen(key, "rb");
     if (fp == NULL) {
-        LOGE(TAG_PAL_STORAGE, "can not find %s\n", key);
+        LOGE(TAG_PAL_STORAGE, "[%s]: can not find %s\n", __func__, key);
         return -1;
     }
 
@@ -67,7 +67,7 @@ int pal_get_info(const char *key, char *value) {
     fseek(fp, 0, SEEK_SET);
     if (file_len < 0) {
         fclose(fp);
-        LOGE(TAG_PAL_STORAGE, "%s is too short\n", key);
+        LOGE(TAG_PAL_STORAGE, "[%s]: %s is too short\n", __func__, key);
         return -1;
     }
 
@@ -75,7 +75,7 @@ int pal_get_info(const char *key, char *value) {
     fclose(fp);
 
     if (readed < file_len) {
-        LOGE(TAG_PAL_STORAGE, "read data error\n");
+        LOGE(TAG_PAL_STORAGE, "[%s]: read data error\n", __func__);
         return -1;
     }
 

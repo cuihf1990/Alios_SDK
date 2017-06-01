@@ -89,48 +89,15 @@ ifeq ($(CONFIG_TFS_SW), y)
     $(NAME)_PREBUILT_LIBRARY += ../libkm/lib/$(PLATFORM)/libkm.a
 endif
 
-ifeq ($(HOST_ARCH), linux)
-    $(NAME)_SOURCES += \
-				   platform/linux/base64.c \
-				   platform/linux/cJSON.c \
-				   platform/linux/md5.c \
-				   platform/linux/pal_platform_base64.c \
-				   platform/linux/pal_platform_json.c \
-				   platform/linux/pal_platform_md5.c \
-				   platform/linux/pal_platform_memory.c \
-				   platform/linux/pal_platform_network.c \
-				   platform/linux/pal_platform_device.c \
-				   platform/linux/pal_platform_random.c \
-				   platform/linux/pal_platform_storage.c \
-				   platform/linux/pal_platform_time.c
-else
-ifeq ($(HOST_ARCH), armhflinux)
-    $(NAME)_SOURCES += \
-				   platform/linux/base64.c \
-				   platform/linux/cJSON.c \
-				   platform/linux/md5.c \
-				   platform/linux/pal_platform_base64.c \
-				   platform/linux/pal_platform_json.c \
-				   platform/linux/pal_platform_md5.c \
-				   platform/linux/pal_platform_memory.c \
-				   platform/linux/pal_platform_network.c \
-				   platform/linux/pal_platform_device.c \
-				   platform/linux/pal_platform_random.c \
-				   platform/linux/pal_platform_storage.c \
-				   platform/linux/pal_platform_time.c
-else
-    $(NAME)_SOURCES += \
-				   platform/aos/base64.c \
-				   platform/aos/cJSON.c \
-				   platform/aos/md5.c \
+$(NAME)_INCLUDES += ../../utility/base64/
+$(NAME)_INCLUDES += ../../utility/cjson/include/
+$(NAME)_INCLUDES += ../../kernel/vcall/mico/include/
+
+$(NAME)_SOURCES += \
 				   platform/aos/pal_platform_base64.c \
 				   platform/aos/pal_platform_json.c \
-				   platform/aos/pal_platform_md5.c \
 				   platform/aos/pal_platform_memory.c \
 				   platform/aos/pal_platform_network.c \
-				   platform/aos/pal_platform_product.c \
+				   platform/aos/pal_platform_device.c \
 				   platform/aos/pal_platform_random.c \
-				   platform/aos/pal_platform_storage.c \
-				   platform/aos/pal_platform_time.c
-endif
-endif
+				   platform/aos/pal_platform_storage.c

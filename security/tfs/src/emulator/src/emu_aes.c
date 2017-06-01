@@ -24,21 +24,21 @@ int32_t emu_aes128_cbc_enc(const uint8_t *key,
     AES_KEY aeskey;
     char key128[16];
 
-    LOGD(TAG_EMU_AES, "%s: enter\n", __func__);
+    LOGD(TAG_EMU_AES, "[%s]: enter\n", __func__);
     memcpy(key128, key, 16);
 
     if (AES_set_encrypt_key((unsigned char*)key128, 128, &aeskey) < 0) {
-        LOGE(TAG_EMU_AES, "aes128_set key failed\n");
+        LOGE(TAG_EMU_AES, "[%s]: aes128_set key failed\n", __func__);
         return -1;
     }
 
     AES_cbc_encrypt((unsigned char*)input, (unsigned char*)output,
                     input_len, &aeskey, (unsigned char *)iv, AES_ENCRYPT);
-    LOGD(TAG_EMU_AES, "aes128_cbc enc\n");
+    LOGD(TAG_EMU_AES, "[%s]: aes128_cbc enc\n", __func__);
 
     return 0;
 #else
-    LOGE(TAG_EMU_AES, "aes128_cbc enc no implement!\n");
+    LOGE(TAG_EMU_AES, "[%s]: aes128_cbc enc no implement!\n", __func__);
     return -1;
 #endif
 }
@@ -53,22 +53,22 @@ int32_t emu_aes128_cbc_dec(const uint8_t *key,
     AES_KEY aeskey;
     char key128[16];
 
-    LOGD(TAG_EMU_AES, "%s: enter\n", __func__);
+    LOGD(TAG_EMU_AES, "[%s]: enter\n", __func__);
     memcpy(key128, key, 16);
 
     if (AES_set_decrypt_key((unsigned char*)key128, 128, &aeskey) < 0) {
-        LOGE(TAG_EMU_AES, "aes128_set key failed\n");
+        LOGE(TAG_EMU_AES, "[%s]: aes128_set key failed\n", __func__);
         return -1;
     }
 
     AES_cbc_encrypt(input, output,
                     input_len, &aeskey, (unsigned char *)iv, AES_DECRYPT);
 
-    LOGD(TAG_EMU_AES, "aes128_cbc dec\n");
+    LOGD(TAG_EMU_AES, "[%s]: aes128_cbc dec\n", __func__);
 
     return 0;
 #else
-    LOGE(TAG_EMU_AES, "aes128_cbc dec no implement!\n");
+    LOGE(TAG_EMU_AES, "[%s]: aes128_cbc dec no implement!\n", __func__);
     return -1;
 #endif
 }

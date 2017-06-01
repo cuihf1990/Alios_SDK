@@ -47,7 +47,7 @@ int emu_3DES_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     ret = emu_3DES_sign(ID, in, in_len, sign_out_buf, &len, mode);
     if (ret != 0) {
-        LOGE(TAG_EMU_3DES, "%s: emu_3DES_sign error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_3DES, "[%s]: emu_3DES_sign error!\n", __func__);
         return -1;
     }
     if (len != sign_len)
@@ -71,7 +71,7 @@ int emu_3DES_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     if (in == NULL || in_len <= 0 || out == NULL || out_len == NULL
         || (mode != TFS_3DES_ECB && mode != TFS_3DES_CBC)) {
-        LOGE(TAG_EMU_3DES, "%s: wrong para!\n", __FUNCTION__);
+        LOGE(TAG_EMU_3DES, "[%s]: wrong para!\n", __func__);
         return -1;
     }
 
@@ -85,7 +85,7 @@ int emu_3DES_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
     len = in_len + padding;
     _in = (uint8_t *)pal_memory_malloc(len);
     if (_in == NULL) {
-        LOGE(TAG_EMU_3DES, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_3DES, "[%s]: malloc error!\n", __func__);
         return -1;
     }
     memcpy(_in, in, in_len);
@@ -127,7 +127,7 @@ int emu_3DES_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
 
     if (in == NULL || in_len <= 0 || out == NULL || out_len == NULL
         || (mode != TFS_3DES_ECB && mode != TFS_3DES_CBC)) {
-        LOGE(TAG_EMU_3DES, "%s: wrong para!\n", __FUNCTION__);
+        LOGE(TAG_EMU_3DES, "[%s]: wrong para!\n", __func__);
         return -1;
     }
 
@@ -139,7 +139,7 @@ int emu_3DES_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
 
     _out = (uint8_t *)pal_memory_malloc(in_len);
     if (_out == NULL) {
-        LOGE(TAG_EMU_3DES, "%s: malloc error!\n", __FUNCTION__);
+        LOGE(TAG_EMU_3DES, "[%s]: malloc error!\n", __func__);
         return -1;
     }
 

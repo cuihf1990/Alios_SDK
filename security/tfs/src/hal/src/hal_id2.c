@@ -24,13 +24,13 @@ int hal_get_ID2(uint8_t *id2, uint32_t *len)
 #if defined(TFS_TEE)
    ret = tee_get_ID2(id2, len);
     if (ret != 0) {
-        LOGE(TAG_HAL_ID2, "%s:tee env error!\n", __func__);
+        LOGE(TAG_HAL_ID2, "[%s]:tee env error!\n", __func__);
         return -1;
     }
 #elif defined(TFS_SW)
     ret = tee_get_ID2(id2, len);
     if (ret != 0) {
-        LOGE(TAG_HAL_ID2, "%s:sw env error!\n", __func__);
+        LOGE(TAG_HAL_ID2, "[%s]:sw env error!\n", __func__);
         return -1;
     }
 #else
@@ -44,7 +44,7 @@ int hal_get_ID2(uint8_t *id2, uint32_t *len)
     ret = hal_cmd(CMD_GET_ID2, in, in_len, out, &out_len);
 
     if (ret != 0 || out_len != 27) {
-        LOGE(TAG_HAL_ID2, "%s: hal_cmd error!\n", __func__);
+        LOGE(TAG_HAL_ID2, "[%s]: hal_cmd error!\n", __func__);
         return -1;
     }
 

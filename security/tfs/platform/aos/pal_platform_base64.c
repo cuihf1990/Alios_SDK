@@ -5,3 +5,4 @@ void pal_base64_encode(const unsigned char *src, int len,
     base64_encode(src, len, dst, (size_t *)out_len);
     return;
 }
+

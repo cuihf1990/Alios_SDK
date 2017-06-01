@@ -72,6 +72,11 @@ int get_ID2(uint8_t *id2, uint32_t *len)
         LOGE(TAG_ID2, "[%s]: id2 or len is NULL.\n", __func__);
         return -1;
     }
+
+    if (*len < ID2_LEN) {
+        LOGE(TAG_ID2, "[%s]: id2 buf too short.\n", __func__);
+        return -1;
+    }
     return _get_ID2(id2, len);
 }
 
