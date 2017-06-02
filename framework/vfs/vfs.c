@@ -51,8 +51,7 @@ static int trap_write(int fd, const void *buf, int len)
 
 static int trap_close(int fd)
 {
-    close(fd);
-    return VFS_SUCCESS;
+    return close(fd);
 }
 
 static int trap_fcntl(int fd, int cmd, int val)
@@ -118,11 +117,12 @@ static inline file_t *get_file(int fd)
     file_t *f;
 
     fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
+
     if (fd < 0)
-        return NULL;
+    { return NULL; }
 
     if (fd >= MAX_FILE_NUM)
-        return NULL;
+    { return NULL; }
 
     f = &files[fd];
     return f->node ? f : NULL;
@@ -132,10 +132,12 @@ static file_t *new_file(inode_t *node)
 {
     file_t *f;
     int idx;
-    for (idx=0;idx<MAX_FILE_NUM;idx++) {
+
+    for (idx = 0; idx < MAX_FILE_NUM; idx++) {
         f = &files[idx];
+
         if (f->node == NULL)
-            goto got_file;
+        { goto got_file; }
     }
 
     return NULL;
@@ -169,6 +171,7 @@ int yos_open(const char *path, int flags)
     }
 
     node = inode_open(path);
+
     if (node == NULL) {
         yos_mutex_unlock(&g_vfs_mutex);
         return trap_open(path);
@@ -202,11 +205,13 @@ int yos_close(int fd)
     inode_t *node;
 
     f = get_file(fd);
+
     if (f == NULL) {
         return trap_close(fd);
     }
 
     node = f->node;
+
     if ((node->ops->close) != NULL) {
         (node->ops->close)(f);
     }
@@ -229,11 +234,13 @@ ssize_t yos_read(int fd, void *buf, size_t nbytes)
     inode_t *node;
 
     f = get_file(fd);
+
     if (f == NULL) {
         return trap_read(fd, buf, nbytes);
     }
 
     node = f->node;
+
     if ((node->ops->read) != NULL) {
         nread = (node->ops->read)(f, buf, nbytes);
     }
@@ -248,11 +255,13 @@ ssize_t yos_write(int fd, const void *buf, size_t nbytes)
     inode_t *node;
 
     f = get_file(fd);
+
     if (f == NULL) {
         return trap_write(fd, buf, nbytes);
     }
 
     node = f->node;
+
     if ((node->ops->write) != NULL) {
         nwrite = (node->ops->write)(f, buf, nbytes);
     }
@@ -267,14 +276,16 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
     inode_t *node;
 
     if (fd < 0)
-        return E_VFS_FD_ILLEGAL;
+    { return E_VFS_FD_ILLEGAL; }
 
     f = get_file(fd);
+
     if (f == NULL) {
         return E_VFS_K_ERR;
     }
 
     node = f->node;
+
     if ((node->ops->ioctl) != NULL) {
         err = (node->ops->ioctl)(f, cmd, arg);
     }
@@ -334,6 +345,7 @@ static int post_poll(struct pollfd *fds, int nfds)
 {
     int j;
     int ret = 0;
+
     for (j = 0; j < nfds; j++) {
         file_t  *f;
         struct pollfd *pfd = &fds[j];
@@ -343,6 +355,7 @@ static int post_poll(struct pollfd *fds, int nfds)
 
 
         f = get_file(pfd->fd);
+
         if (f == NULL) {
             continue;
         }
@@ -373,6 +386,7 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout)
     struct poll_arg parg;
 
     efd = eventfd(0, 0);
+
     if (efd < 0) {
         return -1;
     }
@@ -381,18 +395,22 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout)
     FD_ZERO(&rfds);
     FD_SET(efd, &rfds);
     ret = pre_poll(fds, nfds, &rfds, &parg);
+
     if (ret < 0) {
         goto check_poll;
     }
 
     maxfd = ret > efd ? ret : efd;
     ret = select(maxfd + 1, &rfds, NULL, NULL, timeout >= 0 ? &tv : NULL);
+
     if (ret >= 0) {
         int i;
-        for (i=0;i<nfds;i++) {
+
+        for (i = 0; i < nfds; i++) {
             struct pollfd *pfd = fds + i;
+
             if (FD_ISSET(pfd->fd, &rfds))
-                pfd->revents |= POLLIN;
+            { pfd->revents |= POLLIN; }
         }
 
         nset += ret;
@@ -427,6 +445,7 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
     for (fd = YUNOS_CONFIG_VFS_FD_OFFSET; fd < YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES; fd++) {
         file_t  *f;
         inode_t *node;
+
         if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
             return E_VFS_K_ERR;
         }
@@ -443,6 +462,7 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
         }
 
         node = f->node;
+
         if ((node->ops->ioctl) != NULL) {
             err = (node->ops->ioctl)(f, cmd, arg);
 
