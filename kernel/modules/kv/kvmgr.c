@@ -38,7 +38,7 @@ value |= ((*p ++ << 16) & 0xff0000), \
 value |= ((*p ++ << 24) & 0xff000000)
 
 static void *g_ht = NULL; 
-static void save_key_value();
+static int save_key_value();
 
 typedef struct{
     char *key;
@@ -106,7 +106,7 @@ static int hash_table_insert(const char *skey, const char *cvalue, int nlength, 
         }
         memcpy(item->val,cvalue,nlength);
         item->sync = sync;
-        return 0;
+        return (sync == 0 ? 0 : save_key_value());
     }
  
     new = new_kv_item(skey,cvalue,nlength,sync);
@@ -116,7 +116,7 @@ static int hash_table_insert(const char *skey, const char *cvalue, int nlength, 
 
     ret = ht_add_lockless(g_ht,skey,strlen(skey)+1,&new,sizeof(new)); 
     if (0 == ret && 1 == sync)
-        save_key_value();
+        ret = save_key_value();
 
     //LOGD(MODULE_NAME_KV,"sel kv, key: %s, %p-%p-%p\n",skey,new,new->key,new->val);
     return ret;
@@ -241,6 +241,7 @@ exit:
 typedef struct{
     char *p;
     int len;
+    int ret;
 }kv_storeage_t;
 static void *__get_kv_inflash_cb(void *key, void *val, void *extra)
 {
@@ -249,6 +250,11 @@ static void *__get_kv_inflash_cb(void *key, void *val, void *extra)
     int len = 0;
 
     item = *((kv_item_t **)val);
+ 
+    if(store->len + 4 + strlen(item->key) + 4 + item->len_val + 4 >= KV_BUFFER_SIZE){
+        store->ret = -1;
+        return NULL;
+    }
 
     len = strlen(item->key);
     INT2BYTE(store->p, len);
@@ -265,21 +271,23 @@ static void *__get_kv_inflash_cb(void *key, void *val, void *extra)
     store->p += item->len_val;
     store->len += item->len_val;
 
+    store->ret = 0; 
     return NULL;
 }
 
-static void save_key_value()
+static int save_key_value()
 {
     char *kv_buffer,*p;
     kv_storeage_t store;
 
     store.p = (char *)yos_malloc(KV_BUFFER_SIZE);
     if(!store.p)
-        return;
+        return -1;
 
     kv_buffer = store.p;
     store.len = 0; 
     store.p += 4; 
+    store.ret = 0;
     ht_iterator_lockless(g_ht,__get_kv_inflash_cb,&store); 
 
     p = kv_buffer + 4;
@@ -292,6 +300,7 @@ static void save_key_value()
         update_kvfile(KVFILE_NAME_BACKUP, kv_buffer, store.len);
     }
     yos_free(kv_buffer);
+    return store.ret;
 }
 
 static int load_key_value(const char *file)
@@ -420,6 +429,10 @@ int yos_kv_get(const char *key, void *buffer, int *buffer_len)
 {
     kv_item_t *item = NULL;
     void *ret = NULL;
+ 
+    if(!key || !buffer || !buffer_len || *buffer_len <= 0)
+        return -1;
+
 
     ret = ht_find(g_ht,key,strlen(key)+1,NULL,NULL); 
     if(!ret)
@@ -443,6 +456,10 @@ int yos_kv_del(const char *key)
     kv_item_t *item = NULL;
     void *ret = NULL;
 
+    if(!key)
+        return -1;
+
+
     ht_lock(g_ht);
     ret = ht_find_lockless(g_ht,key,strlen(key)+1,NULL,NULL); 
     if(!ret){
@@ -457,6 +474,7 @@ int yos_kv_del(const char *key)
     yos_free(item->key);
     yos_free(item);
     ht_del_lockless(g_ht,key,strlen(key)+1);
+    save_key_value();
     ht_unlock(g_ht);
 
     return 0;
