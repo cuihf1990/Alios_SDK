@@ -45,6 +45,7 @@ extern void lpm_init(void);
 extern void hw_start_hal(void);
 extern void netmgr_init(void);
 extern void trace_start(int flag);
+extern void ota_service_init(void);
 
 static options_t options = { 0 };
 
@@ -173,8 +174,9 @@ int main(int argc, char **argv)
     hw_start_hal();
     netmgr_init();
 
+    ota_service_init();
     yos_loop_init();
-
+    
     trace_start(options.trace_flag);
 
     start_app(argc, argv);
