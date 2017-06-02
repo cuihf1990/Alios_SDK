@@ -76,11 +76,9 @@ void cloud_connected(void) {
 }
 void cloud_disconnected(void) { printf("alink cloud disconnected!\n"); }
 
-extern void do_update(const char *buf);
 int callback_upgrade_device(const char *params)
 {
     printf("alink device start to upgrade. \n");
-    do_update(params);
 }
 
 int callback_cancel_upgrade_device(const char *params)
@@ -444,8 +442,9 @@ int application_start(int argc, char *argv[])
     alink_register_callback(ALINK_GET_DEVICE_STATUS, &cloud_get_device_status);
     alink_register_callback(ALINK_SET_DEVICE_STATUS, &cloud_set_device_status);
 #endif
-    alink_register_callback(ALINK_UPGRADE_DEVICE,&callback_upgrade_device);
-    alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,&callback_cancel_upgrade_device);
+    yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+    //alink_register_callback(ALINK_UPGRADE_DEVICE,&callback_upgrade_device);
+    //alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,&callback_cancel_upgrade_device);
     alink_start();
    
     yos_loop_run();
