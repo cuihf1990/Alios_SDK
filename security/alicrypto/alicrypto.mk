@@ -32,7 +32,7 @@ endif
 
 else
 
-ifeq ($(findstring linuxhost, $(BUILD_STRING)), armhflinux)
+ifeq ($(findstring armhflinux, $(BUILD_STRING)), armhflinux)
 $(NAME)_PREBUILT_LIBRARY := lib/armhflinux/libmbedcrypto.a  \
 		lib/armhflinux/libalicrypto.a
 
@@ -48,7 +48,7 @@ $(NAME)_SOURCES += \
 				test/ali_crypto_test_rsa.c \
 				test/ali_crypto_test_hmac.c \
 				
-endif # end ALICRYPTO_TEST=yes 
+endif # end ALICRYPTO_TEST=yes
 
 endif
 
