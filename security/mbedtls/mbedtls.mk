@@ -15,9 +15,16 @@ endif
 $(NAME)_COMPONENTS := alicrypto
 
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
-#$(NAME)_COMPONENTS += libmbedtls
+
 $(NAME)_PREBUILT_LIBRARY := lib/linuxhost/libmbedtls.a
+
+else ifeq ($(findstring armhflinux, $(BUILD_STRING)), armhflinux)
+
+$(NAME)_PREBUILT_LIBRARY := lib/armhflinux/libmbedtls.a
+
 else
+
 $(error "not find correct platform!")
+
 endif
 
