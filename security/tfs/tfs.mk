@@ -14,7 +14,7 @@ $(NAME)_INCLUDES := src/core/id2/include/ \
 					src/network/include/ \
 					platform
 
-$(NAME)_COMPONENTS := cjson
+$(NAME)_COMPONENTS := cjson alicrypto
 
 GLOBAL_INCLUDES += include/
 
