@@ -483,6 +483,12 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     hal->frame.len = header_length + append_length + frag_length;
     hal->frame.key_index = info->key_index;
 
+    if (info->type == MESH_FRAME_TYPE_DATA) {
+        hal->link_stats.out_data++;
+    } else {
+        hal->link_stats.out_command++;
+    }
+
     if (next_node) {
         error = hal_ur_mesh_send_ucast_request(hal->module, &hal->frame, &next_node->mac,
                                                handle_sent, hal);
@@ -906,6 +912,12 @@ static void message_handler(void *args)
         return;
     }
 
+    if (info->type == MESH_FRAME_TYPE_DATA) {
+        hal->link_stats.in_data++;
+    } else {
+        hal->link_stats.in_command++;
+    }
+
     message_set_payload_offset(frame->message, -info->payload_offset);
     nexth = message_get_payload(frame->message);
     if (is_fragment_header(*nexth)) {
@@ -919,12 +931,6 @@ static void message_handler(void *args)
             }
             return;
         }
-    }
-
-    if (info->type == MESH_FRAME_TYPE_DATA) {
-        hal->link_stats.in_data++;
-    } else {
-        hal->link_stats.in_command++;
     }
 
     yos_schedule_call(handle_datagram, frame->message);
@@ -997,13 +1003,8 @@ static void send_datagram(void *args)
     }
     if (message == NULL) {
         message = message_queue_get_head(&hal->send_queue[CMD_QUEUE]);
-        if (message) {
-            hal->link_stats.out_command++;
-        } else {
+        if (message == NULL) {
             message = message_queue_get_head(&hal->send_queue[DATA_QUEUE]);
-            if (message) {
-                hal->link_stats.out_data++;
-            }
         }
         if (message == NULL) {
             return;
