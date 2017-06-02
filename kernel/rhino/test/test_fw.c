@@ -48,6 +48,9 @@ test_case_map_t test_fw_map[] = {
     {"trace_test", trace_test},
 #endif
     {"task_test", task_test},
+#if (YUNOS_CONFIG_MM_TLF > 0)
+    {"mm_test",   mm_test},
+#endif
     {"mm_blk_test", mm_blk_test},
     {"mm_region_test", mm_region_test},
     {"time_test", time_test},

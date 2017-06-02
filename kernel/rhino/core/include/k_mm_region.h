@@ -35,6 +35,7 @@
 
 #define YUNOS_MM_REGION_FREE         0
 #define YUNOS_MM_REGION_ALLOCED      1
+#define YUNOS_MM_REGION_PREVFREE     1
 #define YUNOS_MM_REGION_MAX          10
 #define YUNOS_MM_REGION_CORRUPT_DYE  0xfefe
 #define YUNOS_MM_REGION_MAX_FRAGSIZE 0x0fffffff
@@ -95,6 +96,53 @@ size_t yunos_mm_region_get_free_size(k_mm_region_head_t * region_head);
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
 kstat_t check_mm_info_func();
+
+/**
+ * This function will alloc a mem from a region best fit algorithm
+ * @param[in]       region_head     pointer to the memory region
+ * @param[out]      mem             pointer to the mem
+ * @param[in]       mem_size        size of the mem to malloc
+ * @param[in]       allocator      allocator of memory
+ * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ */
+#if (YUNOS_CONFIG_MM_BESTFIT > 0)
+kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t size, size_t allocator);
+#endif
+/**
+ * This function will alloc a mem from a region with first fit algorithm
+ * @param[in]       region_head     pointer to the memory region
+ * @param[out]      mem             pointer to the mem
+ * @param[in]       mem_size        size of the mem to malloc
+ * @param[in]       allocator      allocator of memory
+ * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ */
+#if (YUNOS_CONFIG_MM_FIRSTFIT > 0)
+kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t size, size_t allocator);
+#endif
+
+/**
+ * This function will free mem of a region which malloc by first-fit or best-fit
+ * @param[in]  pool  pointer to the pool
+ * @param[in]  mem   pointer to the mem
+ * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ */
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
+kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem);
+#endif
+
+/**
+ * This function is wrapper of mm allocation
+ * @param[in]       size        size of the mem to malloc
+ * @return  the operation status, NULL is error, others is memory address
+ */
+void * yunos_mm_alloc(size_t size);
+
+/**
+ * This function is wrapper of mm free
+ * @param[in]       ptr        address point of the mem
+ */
+
+void   yunos_mm_free(void * ptr);
 
 #endif /* K_MM_REGION_H */
 

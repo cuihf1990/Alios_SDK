@@ -18,10 +18,13 @@
 #include <test_fw.h>
 #include "mm_test.h"
 
+#if (YUNOS_CONFIG_MM_TLF > 0)
+
 ktask_t   *task_mm;
 ktask_t   *task_mm_co;
-mm_pool_t mm_pool_test;
-char      mm_pool[MM_POOL_SIZE];
+k_mm_head *pmmhead;
+char       mm_pool[MM_POOL_SIZE * 4] = {0};
+
 
 static test_func_t *module_runner;
 static const char  *module_name;
@@ -29,7 +32,7 @@ static uint8_t      module_casenum;
 
 static const test_case_t mm_case_runner[] = {
     mm_param_test,
-    mm_reinit_test,
+    /*mm_reinit_test,*/
     mm_break_test,
     mm_opr_test,
     mm_coopr_test,
@@ -88,4 +91,5 @@ void task_mm_entry(void *arg)
     next_test_case_notify();
     yunos_task_dyn_del(g_active_task);
 }
+#endif
 
