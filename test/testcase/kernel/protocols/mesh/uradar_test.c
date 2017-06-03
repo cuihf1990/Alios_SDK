@@ -134,7 +134,6 @@ extern void test_uradar_rsid_allocator_case(void);
 extern void test_uradar_urmesh_case(void);
 extern void test_uradar_misc_case(void);
 extern void test_uradar_lwip_adapter_case(void);
-extern void test_uradar_forwarder_case(void);
 extern void test_uradar_mesh_mgmt_case(void);
 extern void test_uradar_cli_case(void);
 extern void test_uradar_mcast_case(void);
@@ -165,7 +164,6 @@ static yunit_test_case_t yunos_uradar_sub_testcases[] = {
     { "urmesh", test_uradar_urmesh_case },
     { "misc", test_uradar_misc_case },
     { "lwip_adapter", test_uradar_lwip_adapter_case },
-    { "forwarder", test_uradar_forwarder_case },
     { "mesh_mgmt", test_uradar_mesh_mgmt_case },
     { "cli", test_uradar_cli_case },
     YUNIT_TEST_CASE_NULL
@@ -206,7 +204,6 @@ static yunit_test_case_t yunos_uradar_testcases[] = {
     { "urmesh", test_uradar_urmesh_case },
     { "misc", test_uradar_misc_case },
     { "lwip_adapter", test_uradar_lwip_adapter_case },
-    { "forwarder", test_uradar_forwarder_case },
     { "mesh_mgmt", test_uradar_mesh_mgmt_case },
     { "cli", test_uradar_cli_case },
     /* compound case */

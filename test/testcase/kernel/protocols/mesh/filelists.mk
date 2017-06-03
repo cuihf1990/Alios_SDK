@@ -10,7 +10,6 @@ MESHYTSFILE = $(MESHYTSPATH)/uradar_test.c \
               $(MESHYTSPATH)/sid_allocator_test.c \
               $(MESHYTSPATH)/rsid_allocator_test.c \
               $(MESHYTSPATH)/misc_test.c \
-              $(MESHYTSPATH)/mesh_forwarder_test.c \
               $(MESHYTSPATH)/mesh_mgmt_test.c \
               $(MESHYTSPATH)/hal_mesh_test.c \
               $(MESHYTSPATH)/diags_test.c \
