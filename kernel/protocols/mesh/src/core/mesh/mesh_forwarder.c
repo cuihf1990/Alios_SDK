@@ -908,6 +908,7 @@ static void message_handler(void *args)
         } else {
             message_queue_enqueue(&hal->send_queue[CMD_QUEUE], frame->message);
         }
+        ur_mem_free(frame, sizeof(received_frame_t));
         yos_schedule_call(send_datagram, network->hal);
         return;
     }
@@ -927,8 +928,8 @@ static void message_handler(void *args)
         } else {
             if (error != UR_ERROR_NONE) {
                 message_free(frame->message);
-                ur_mem_free(frame, sizeof(received_frame_t));
             }
+            ur_mem_free(frame, sizeof(received_frame_t));
             return;
         }
     }
