@@ -873,6 +873,8 @@ void process_sids(int argc, char *argv[])
     slist_t       *hals;
     hal_context_t *hal;
     slist_t       *nodes_list;
+    slist_t       *networks;
+    network_context_t *network;
 
     response_append("me=%04x\r\n", ur_mesh_get_sid());
 
@@ -887,14 +889,18 @@ void process_sids(int argc, char *argv[])
         }
     }
 
-    nodes_list = get_ssid_nodes_list(get_default_network_context());
-    if (nodes_list == NULL)
-        return;
     response_append("mobile:\r\n");
-    slist_for_each_entry(nodes_list, mobile_node, sid_node_t, next) {
-        if (is_partial_function_sid(mobile_node->node_id.sid)) {
-            response_append(EXT_ADDR_FMT ", %04x\r\n",
-                            EXT_ADDR_DATA(mobile_node->node_id.ueid), mobile_node->node_id.sid);
+    networks = ur_mesh_get_networks();
+    slist_for_each_entry(networks, network, network_context_t, next) {
+        nodes_list = get_ssid_nodes_list(network);
+        if (nodes_list == NULL) {
+            continue;
+        }
+        slist_for_each_entry(nodes_list, mobile_node, sid_node_t, next) {
+            if (is_partial_function_sid(mobile_node->node_id.sid)) {
+                response_append(EXT_ADDR_FMT ", %04x\r\n",
+                                EXT_ADDR_DATA(mobile_node->node_id.ueid), mobile_node->node_id.sid);
+            }
         }
     }
 }
