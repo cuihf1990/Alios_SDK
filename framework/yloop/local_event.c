@@ -121,8 +121,11 @@ int yos_post_event(uint16_t type, uint16_t code, unsigned long value)
 
 int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 {
+    if (cb == NULL)
+        return -1;
+
     event_list_node_t* event_node = malloc(sizeof(event_list_node_t));
-    if(NULL == event_node){
+    if (NULL == event_node) {
         return -1;
     }
 
