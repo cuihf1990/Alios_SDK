@@ -586,6 +586,7 @@ static void handle_addr_cache_timer(void *args)
                 }
             }
             slist_del(&node->next, &g_ac_state.cache_list);
+            ur_mem_free(node, sizeof(sid_node_t));
             g_ac_state.cache_num--;
         }
     }

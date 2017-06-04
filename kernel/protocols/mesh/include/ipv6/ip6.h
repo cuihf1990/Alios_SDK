@@ -61,7 +61,6 @@ typedef struct ur_udp_header_s {
 typedef void (* raw_data_handler_t)(const uint8_t *payload, uint16_t length);
 
 int echo_socket(raw_data_handler_t handler);
-int autotest_raw_socket(raw_data_handler_t handler);
 int autotest_udp_socket(raw_data_handler_t handler, uint16_t port);
 int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
                ur_ip6_addr_t *dest, uint16_t port);

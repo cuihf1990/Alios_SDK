@@ -56,16 +56,6 @@ int echo_socket(raw_data_handler_t handler)
     return g_echo.socket;
 }
 
-int autotest_raw_socket(raw_data_handler_t handler)
-{
-    static listen_sockets_t raw_autotest;
-
-    raw_autotest.socket = lwip_socket(AF_INET6, SOCK_RAW, IPPROTO_UDP);
-    raw_autotest.handler = handler;
-    yos_poll_read_fd(raw_autotest.socket, ur_sock_read_cb, &raw_autotest);
-    return raw_autotest.socket;
-}
-
 int autotest_udp_socket(raw_data_handler_t handler, uint16_t port)
 {
     static listen_sockets_t udp_autotest;

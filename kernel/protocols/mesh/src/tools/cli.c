@@ -122,7 +122,6 @@ typedef struct cli_state_s {
     uint16_t      icmp_seq;
     uint16_t      icmp_acked;
     int           icmp_socket;
-    int           autotest_raw_socket;
     int           autotest_udp_socket;
     ur_timer_t    autotest_timer;
     ur_timer_t    autotest_print_timer;
@@ -244,12 +243,8 @@ static void handle_autotest_timer(void *args)
         src = ur_mesh_get_ucast_addr();
         memcpy(payload + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE,
                (uint8_t *)src->addr.m8, sizeof(ur_ip6_addr_t));
-        if (ur_is_mcast(&g_cl_state.autotest_target)) {
-            ip6_sendto(g_cl_state.autotest_raw_socket, payload, g_cl_state.autotest_length, &g_cl_state.autotest_target, 0);
-        } else {
-            ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
-                       &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
-        }
+        ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
+                   &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cl_state.autotest_length);
         g_cl_state.autotest_times--;
     }
@@ -328,12 +323,8 @@ void process_autotest(int argc, char *argv[])
     src = ur_mesh_get_ucast_addr();
     memcpy(payload + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE, (uint8_t *)src->addr.m8,
            sizeof(ur_ip6_addr_t));
-    if (ur_is_mcast(&g_cl_state.autotest_target)) {
-        ip6_sendto(g_cl_state.autotest_raw_socket, payload, g_cl_state.autotest_length, &g_cl_state.autotest_target, 0);
-    } else {
-        ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
-                   &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
-    }
+    ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
+               &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
 
     ur_mem_free(payload, g_cl_state.autotest_length);
     g_cl_state.autotest_times--;
@@ -652,37 +643,6 @@ static bool update_autotest_acked_info(uint16_t subnetid, uint16_t sid, uint16_t
     return false;
 }
 
-static void handle_raw_autotest(const uint8_t *payload, uint16_t length)
-{
-    const uint8_t                *cmd;
-    uint8_t                      *data;
-    ur_ip6_addr_t                dest;
-    const ur_netif_ip6_address_t *src;
-
-    if (length == 0) {
-        return;
-    }
-
-    cmd = payload + UR_IP6_HLEN + sizeof(ur_udp_header_t);
-    memcpy(&dest, cmd + AUTOTEST_CMD_SIZE, sizeof(ur_ip6_addr_t));
-    if (*cmd == AUTOTEST_REQUEST) {
-        response_append("%d bytes autotest echo request from " IP6_ADDR_FMT ", seq %d\r\n",
-                        length - UR_IP6_HLEN - sizeof(ur_udp_header_t),
-                        IP6_ADDR_DATA(dest), ur_swap16(*(uint16_t *)(cmd + 1)));
-        data = (uint8_t *)ur_mem_alloc(length - UR_IP6_HLEN);
-        if (data == NULL) {
-            return;
-        }
-        data[sizeof(ur_udp_header_t)] = AUTOTEST_REPLY;
-        memcpy(data + sizeof(ur_udp_header_t) + 1, cmd + 1, 2);
-        src = ur_mesh_get_ucast_addr();
-        memcpy(data + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE, (uint8_t *)src->addr.m8,
-               sizeof(ur_ip6_addr_t));
-        ip6_sendto(g_cl_state.autotest_udp_socket, data, length - UR_IP6_HLEN, &dest, AUTOTEST_UDP_PORT);
-        ur_mem_free(data, length - UR_IP6_HLEN);
-    }
-}
-
 static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
 {
     const uint8_t                *cmd;
@@ -913,6 +873,8 @@ void process_sids(int argc, char *argv[])
     slist_t       *hals;
     hal_context_t *hal;
     slist_t       *nodes_list;
+    slist_t       *networks;
+    network_context_t *network;
 
     response_append("me=%04x\r\n", ur_mesh_get_sid());
 
@@ -927,14 +889,18 @@ void process_sids(int argc, char *argv[])
         }
     }
 
-    nodes_list = get_ssid_nodes_list(get_default_network_context());
-    if (nodes_list == NULL)
-        return;
     response_append("mobile:\r\n");
-    slist_for_each_entry(nodes_list, mobile_node, sid_node_t, next) {
-        if (is_partial_function_sid(mobile_node->node_id.sid)) {
-            response_append(EXT_ADDR_FMT ", %04x\r\n",
-                            EXT_ADDR_DATA(mobile_node->node_id.ueid), mobile_node->node_id.sid);
+    networks = ur_mesh_get_networks();
+    slist_for_each_entry(networks, network, network_context_t, next) {
+        nodes_list = get_ssid_nodes_list(network);
+        if (nodes_list == NULL) {
+            continue;
+        }
+        slist_for_each_entry(nodes_list, mobile_node, sid_node_t, next) {
+            if (is_partial_function_sid(mobile_node->node_id.sid)) {
+                response_append(EXT_ADDR_FMT ", %04x\r\n",
+                                EXT_ADDR_DATA(mobile_node->node_id.ueid), mobile_node->node_id.sid);
+            }
         }
     }
 }
@@ -1126,7 +1092,6 @@ ur_error_t cli_init(void)
 {
     slist_init(&g_cl_state.autotest_acked_list);
     g_cl_state.icmp_socket = echo_socket(&cli_handle_echo_response);
-    g_cl_state.autotest_raw_socket = autotest_raw_socket(&handle_raw_autotest);
     g_cl_state.autotest_udp_socket = autotest_udp_socket(&handle_udp_autotest, AUTOTEST_UDP_PORT);
     return UR_ERROR_NONE;
 }
