@@ -106,6 +106,7 @@ int yos_event_service_init(void)
 void yos_event_service_deinit(int fd)
 {
     yos_cancel_poll_read_fd(fd, event_read_cb, NULL);
+    yos_close(fd);
 }
 
 int yos_post_event(uint16_t type, uint16_t code, unsigned long value)

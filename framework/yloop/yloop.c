@@ -333,7 +333,10 @@ void yos_loop_exit(void)
 
 void yos_loop_destroy(void)
 {
-    yloop_ctx_t *ctx = get_context();
+    yloop_ctx_t *ctx = _get_context();
+
+    if (ctx == NULL)
+        return;
 
     yos_event_service_deinit(ctx->eventfd);
 

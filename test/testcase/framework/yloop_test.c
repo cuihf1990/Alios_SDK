@@ -152,6 +152,13 @@ static void app_second_entry(void *arg)
 {
     struct task_cookie *cookie = arg;
     YUNIT_ASSERT(strcmp(yos_task_name(), cookie->name) == 0);
+    int i;
+
+    for (i=0;i<1000;i++) {
+        yos_loop_init();
+        yos_loop_destroy();
+        yos_loop_destroy();
+    }
 
     yos_loop_init();
 
