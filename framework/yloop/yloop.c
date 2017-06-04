@@ -205,6 +205,9 @@ void yos_cancel_poll_read_fd(int sock, yos_poll_call_t action, void *param)
 
 int yos_post_delayed_action(int ms, yos_call_t action, void *param)
 {
+    if (action == NULL)
+        return -1;
+
     yloop_ctx_t *ctx = get_context();
     yloop_timeout_t *timeout = malloc(sizeof(*timeout));
     if (timeout == NULL) {

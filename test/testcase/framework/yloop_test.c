@@ -175,6 +175,8 @@ static void test_simple_case(void)
     YUNIT_ASSERT(ret < 0);
     ret = yos_schedule_call(NULL, NULL);
     YUNIT_ASSERT(ret < 0);
+    ret = yos_post_delayed_action(1000, NULL, NULL);
+    YUNIT_ASSERT(ret < 0);
 
     yos_register_event_filter(EV_ALL, filter_all, NULL);
     yos_register_event_filter(TYPE_TEST_1, filter_one, NULL);
