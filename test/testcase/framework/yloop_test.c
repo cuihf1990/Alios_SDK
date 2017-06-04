@@ -131,9 +131,10 @@ static void app_main_entry(void *arg)
     YUNIT_ASSERT(yos_schedule_work(0, mywork, arg, NULL, arg) != 0);
     YUNIT_ASSERT(yos_schedule_work(1000, mywork, arg, work_done, arg) != 0);
 
-    void *w = yos_schedule_work(500, mywork, arg, work_not_exec, arg);
+    void *w = yos_schedule_work(500, work_not_exec, NULL, NULL, NULL);
     YUNIT_ASSERT(w != 0);
-    yos_cancel_work(w, work_not_exec, arg);
+    yos_cancel_work(w, work_not_exec, NULL);
+    yos_cancel_work(NULL, work_not_exec, NULL);
 
     yos_loop_run();
 }

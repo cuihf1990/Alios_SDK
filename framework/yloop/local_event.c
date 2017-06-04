@@ -218,14 +218,21 @@ static void run_my_work(void *arg)
     free_wpar(wpar);
 }
 
-void yos_cancel_work(void *work, yos_call_t action, void *arg)
+void yos_cancel_work(void *w, yos_call_t action, void *arg1)
 {
-    int ret = yos_work_cancel(work);
-    if (ret != 0)
+    work_par_t *wpar = w;
+
+    if (wpar == NULL)
         return;
 
-    work_par_t *wpar = arg;
-    if (wpar->work != work)
+    if (wpar->action != action)
+        return;
+
+    if (wpar->arg1 != arg1)
+        return;
+
+    int ret = yos_work_cancel(wpar->work);
+    if (ret != 0)
         return;
 
     free_wpar(wpar);
@@ -255,7 +262,7 @@ void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_c
     if (ret != 0)
         goto err_out;
 
-    return work;
+    return wpar;
 err_out:
     yos_free(work);
     yos_free(wpar);
