@@ -186,7 +186,6 @@ void       mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
 mm_tv_t    *mm_get_tv(const uint8_t *data, const uint16_t length, uint8_t type);
 ur_error_t mm_handle_frame_received(message_t *message);
 
-ur_error_t attach_start(neighbor_t *node);
 void become_leader(void);
 void become_detached(void);
 

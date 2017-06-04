@@ -22,7 +22,8 @@
 #include "core/topology.h"
 #include "core/network_data.h"
 #include "core/link_mgmt.h"
-#include "core/dtls.h"
+#include "core/master_key.h"
+#include "core/keys_mgr.h"
 #include "utilities/logging.h"
 #include "utilities/message.h"
 #include "utilities/timer.h"
@@ -34,18 +35,9 @@ static ur_error_t send_discovery_request(network_context_t *netowrk);
 static ur_error_t send_discovery_response(network_context_t *network,
                                           ur_addr_t *dest);
 
-static void dtls_connected_handler(hal_context_t *hal, neighbor_t *nbr,
-                                   bool connected)
-{
-    if (connected) {
-        attach_start(nbr);
-    }
-}
-
 static void handle_discovery_timer(void *args)
 {
     uint32_t discovery_interval;
-    neighbor_t    *nbr;
     network_context_t *network = (network_context_t *)args;
     hal_context_t *hal = network->hal;
 
@@ -74,9 +66,8 @@ static void handle_discovery_timer(void *args)
         return;
     } else if (hal->discovery_result.meshnetid != BCAST_NETID) {
         mm_set_channel(network, hal->discovery_result.channel);
-        if (mm_get_mode() != 0) {
-            nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
-            dtls_start(hal, nbr, dtls_connected_handler);
+        if (mm_get_mode() != MODE_NONE) {
+            master_key_request_start();
         }
         return;
     }
