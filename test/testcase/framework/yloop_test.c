@@ -169,6 +169,13 @@ static void app_second_entry(void *arg)
 
 static void test_simple_case(void)
 {
+    int ret;
+
+    ret = yos_register_event_filter(EV_ALL, NULL, NULL);
+    YUNIT_ASSERT(ret < 0);
+    ret = yos_schedule_call(NULL, NULL);
+    YUNIT_ASSERT(ret < 0);
+
     yos_register_event_filter(EV_ALL, filter_all, NULL);
     yos_register_event_filter(TYPE_TEST_1, filter_one, NULL);
 
