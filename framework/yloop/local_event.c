@@ -242,6 +242,9 @@ void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_c
 {
     int ret;
 
+    if (action == NULL)
+        return NULL;
+
     yos_work_t *work = yos_malloc(sizeof(*work));
     work_par_t *wpar = yos_malloc(sizeof(*wpar));
 
