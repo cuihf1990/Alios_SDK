@@ -164,6 +164,9 @@ int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv)
  */
 static int _schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg, bool urgent)
 {
+    if (fun == NULL)
+        return -1;
+
     input_event_t event = {
         .type = EV_RPC,
         .value = (unsigned long)fun,
