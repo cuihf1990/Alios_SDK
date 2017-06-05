@@ -14,24 +14,13 @@
  # limitations under the License.
 ##
 
-NAME := fota
+NAME := fota_platform
 
-$(NAME)_CFLAGS += -Wall -Werror
+ifneq (,$(filter protocol.alink,$(COMPONENTS)))   
+$(NAME)_COMPONENTS += fota.platform.alink 
+else
+$(NAME)_COMPONENTS += fota.platform.common
+endif
 
-$(NAME)_SOURCES += \
-    ota_util.c \
-    ota_update_manifest.c \
-    version.c \
-    ota_service.c \
-    ota_download.c
-    
-$(NAME)_COMPONENTS += fota.md5
-$(NAME)_COMPONENTS += fota.platform 
-
-$(NAME)_INCLUDES := \
-    ./ \
-    ../../include/hal \
-    ./md5 \
-    ./platform/alink/
 
 
