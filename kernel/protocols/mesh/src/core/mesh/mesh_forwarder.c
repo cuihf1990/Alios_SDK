@@ -702,7 +702,11 @@ ur_error_t mf_send_message(message_t *message)
     neighbor_t        *nbr = NULL;
     bool              is_mcast = false;
     bool              need_resolve = false;
+    slist_t           *hals;
     hal_context_t     *hal;
+    hal_context_t     *tx_hal;
+    message_t         *mcast_message;
+    uint8_t           append_length;
 
     info = message->info;
     if (is_local_ucast_address(info)) {
@@ -769,13 +773,32 @@ ur_error_t mf_send_message(message_t *message)
 
     set_src_info(info);
     network = info->network;
-    hal = network->hal;
+    tx_hal = network->hal;
     if (info->type == MESH_FRAME_TYPE_DATA) {
-        message_queue_enqueue(&hal->send_queue[DATA_QUEUE], message);
+        message_queue_enqueue(&tx_hal->send_queue[DATA_QUEUE], message);
+        yos_schedule_call(send_datagram, tx_hal);
+        if (is_mcast) {
+            hals = get_hal_contexts();
+            slist_for_each_entry(hals, hal, hal_context_t, next) {
+                if (hal == tx_hal) {
+                    continue;
+                }
+                append_length = sizeof(mcast_header_t) + 1;
+                mcast_message = message_alloc(message_get_msglen(message) + append_length);
+                if (mcast_message == NULL) {
+                    break;
+                }
+                message_set_payload_offset(mcast_message, -append_length);
+                message_copy(mcast_message, message);
+                mcast_message->info->network = (void *)get_hal_default_network_context(hal);
+                message_queue_enqueue(&hal->send_queue[DATA_QUEUE], mcast_message);
+                yos_schedule_call(send_datagram, hal);
+            }
+        }
     } else {
-        message_queue_enqueue(&hal->send_queue[CMD_QUEUE], message);
+        message_queue_enqueue(&tx_hal->send_queue[CMD_QUEUE], message);
+        yos_schedule_call(send_datagram, tx_hal);
     }
-    yos_schedule_call(send_datagram, hal);
     return error;
 }
 
@@ -1112,8 +1135,8 @@ static void handle_datagram(void *args)
             slist_for_each_entry(hals, hal, hal_context_t, next) {
                 relay_message = message_alloc(message_get_msglen(message));
                 if (relay_message != NULL) {
-                    relay_message->info->network = (void *)get_hal_default_network_context(hal);
                     message_copy(relay_message, message);
+                    relay_message->info->network = (void *)get_hal_default_network_context(hal);
                     message_queue_enqueue(&hal->send_queue[DATA_QUEUE], relay_message);
                     yos_schedule_call(send_datagram, hal);
                 }
