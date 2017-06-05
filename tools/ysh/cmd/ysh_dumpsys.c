@@ -226,10 +226,15 @@ static uint32_t cmd_dumpsys_func(char *buf, uint32_t len, cmd_item_t *item, cmd_
     }else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "info")) {
         ret = dumpsys_info_func(buf, len);
         return ret;
-    } else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "mm_info")) {
+    }
+
+#if (YUNOS_CONFIG_MM_DEBUG> 0)
+    else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "mm_info")) {
         ret = dumpsys_mm_info_func(buf, len);
         return ret;
     }
+#endif
+
 #if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
     else if (NULL != item->items[1] && 0 == strcmp(item->items[1], "mm_leak")) {
         ret = dumpsys_mm_leak_func(buf, len);

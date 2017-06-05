@@ -736,7 +736,9 @@ void *yunos_mm_alloc(size_t size)
     err = YUNOS_NO_MEM;
 #endif
     if (err != YUNOS_SUCCESS) {
+#if (YUNOS_CONFIG_MM_DEBUG > 0)
         dumpsys_mm_info_func(NULL, 0);
+#endif
         tmp = NULL;
     }
     return tmp;
