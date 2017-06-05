@@ -32,6 +32,12 @@
 #define YUNOS_CONFIG_MM_FIRSTFIT             1
 #define YUNOS_CONFIG_MM_BESTFIT              1
 #define YUNOS_CONFIG_MM_DEBUG                1
+#define YUNOS_CONFIG_MM_TLF                  0
+#define YUNOS_CONFIG_GCC_RETADDR             0
+#define YUNOS_CONFIG_MM_LEAKCHECK            0
+#define K_MM_STATISTIC                       0
+#define YUNOS_CONFIG_RINGBUF_VENDOR          0
+
 #define YUNOS_CONFIG_KOBJ_SET                1
 
 /* kernel task conf */
@@ -48,6 +54,9 @@
 /* kernel workqueue conf */
 #define YUNOS_CONFIG_WORKQUEUE               1
 
+/* kernel mm_region conf */
+#define YUNOS_CONFIG_MM_REGION_MUTEX         0
+
 /* kernel timer&tick conf */
 #define YUNOS_CONFIG_HW_COUNT                0
 #define YUNOS_CONFIG_TICK_TASK               0
@@ -58,7 +67,7 @@
 #endif
 
 #define YUNOS_CONFIG_TICKLESS                0
-#define YUNOS_CONFIG_TICKS_PER_SECOND        1000
+#define YUNOS_CONFIG_TICKS_PER_SECOND        500
 /* must be 2^n size!, such as 1, 2, 4, 8, 16,32, etc....... */
 #define YUNOS_CONFIG_TICK_HEAD_ARRAY         8
 #define YUNOS_CONFIG_TIMER_TASK_STACK_SIZE   200
