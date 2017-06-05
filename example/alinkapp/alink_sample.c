@@ -72,6 +72,7 @@ char *device_attr[] = {
 void helper_api_test(void);
 int activate_button_pressed(void);
 void cloud_connected(void) { 
+    do_report();
     printf("alink cloud connected!\n"); 
 }
 void cloud_disconnected(void) { printf("alink cloud disconnected!\n"); }
