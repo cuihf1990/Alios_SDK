@@ -7,11 +7,6 @@ HOST_MCU_FAMILY     := linux
 
 $(NAME)_COMPONENTS  := yloop vfs hal log vcall ysh alicrypto modules.kv netmgr
 
-ifeq ($(gcov),1)
-GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
-GLOBAL_LDFLAGS += --coverage
-endif
-
 GLOBAL_CFLAGS += -I$(SOURCE_ROOT)/board/armhflinux/include
 GLOBAL_LDFLAGS += -L$(SOURCE_ROOT)/board/armhflinux/lib
 

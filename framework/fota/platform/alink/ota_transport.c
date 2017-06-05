@@ -18,8 +18,10 @@
 #include <stdlib.h>
 #include <cJSON.h>
 
+#include "alink_export.h"
 #include "ota_transport.h"
 #include "ota_log.h"
+
 
 /*
  *  "md5":"6B21342306D0F619AF97006B7025D18A",
@@ -28,9 +30,6 @@
     "uuid":"35C858CFCD6A1FF9F734D749033A29A0",
     "version":"v2.0.0.1","zip":"0"
 */
-
-#define ALINK_UPGRADE_DEVICE 1
-#define ALINK_CANCEL_UPGRADE_DEVICE 2
 
 int8_t parse_ota_requset(const char* request, int *buf_len, ota_request_params * request_parmas)
 {
@@ -121,15 +120,13 @@ int8_t ota_sub_request_reply(message_arrived *msgCallback)
 
 int8_t ota_sub_upgrade(message_arrived *msgCallback)
 {
-    //return alink_register_callback(ALINK_UPGRADE_DEVICE,msgCallback);
-    return 0;
+    return alink_register_callback(ALINK_UPGRADE_DEVICE,msgCallback);
 }
 
 
 int8_t ota_cancel_upgrade(message_arrived *msgCallback)
 {
-    //return alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,msgCallback);
-    return 0;
+    return alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,msgCallback);
 }
 
 

@@ -7,9 +7,20 @@ GLOBAL_INCLUDES += . $(ARCH_LINUX)
 
 $(NAME)_COMPONENTS  := vflash
 
+ifeq ($(openssl),1)
+GLOBAL_LDFLAGS += -lssl -lcrypto
+else
+$(NAME)_COMPONENTS += mbedtls
+endif
+
+ifeq ($(gcov),1)
+GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
+GLOBAL_LDFLAGS += --coverage
+endif
+
 $(NAME)_INCLUDES    += .
 GLOBAL_INCLUDES     += include include/yos csp/lwip/include
-GLOBAL_LDFLAGS      += -lpthread -lm -lcrypto
+GLOBAL_LDFLAGS      += -lpthread -lm
 GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
 GLOBAL_DEFINES      += CONFIG_YOS_KVFILE=\"/dev/flash0\"
