@@ -86,7 +86,7 @@ void do_update(const char *buf)
     ota_request_parmas.primary_version = ota_get_system_version();
     ota_request_parmas.product_type = ota_get_product_type();
     ota_request_parmas.product_internal_type = ota_get_product_internal_type();
-    ota_request_parmas.device_uuid = ota_get_id2();
+    ota_request_parmas.device_uuid = ota_get_id();
 
 
     ota_response_params response_parmas;
@@ -103,7 +103,7 @@ void ota_check_update(const char *buf, int len)
     ota_request_parmas.primary_version = ota_get_system_version();
     ota_request_parmas.product_type = ota_get_product_type();
     ota_request_parmas.product_internal_type = ota_get_product_internal_type();
-    ota_request_parmas.device_uuid = ota_get_id2();
+    ota_request_parmas.device_uuid = ota_get_id();
 
     ota_sub_request_reply(do_update);
     ota_pub_request(&ota_request_parmas);
@@ -117,7 +117,7 @@ void ota_service_event(input_event_t *event, void *priv_data) {
         ota_request_parmas.primary_version = ota_get_system_version();
         ota_request_parmas.product_type = ota_get_product_type();
         ota_request_parmas.product_internal_type = ota_get_product_internal_type();
-        ota_request_parmas.device_uuid = ota_get_id2();
+        ota_request_parmas.device_uuid = ota_get_id();
         ota_sub_upgrade(do_update);
     }
 }

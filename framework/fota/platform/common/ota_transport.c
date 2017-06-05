@@ -63,6 +63,11 @@ void free_global_topic()
 {
 }
 
+char *ota_get_id()
+{
+   return NULL;
+}
+
 
 
 
