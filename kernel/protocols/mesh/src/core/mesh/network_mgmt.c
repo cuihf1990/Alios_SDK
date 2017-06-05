@@ -83,6 +83,8 @@ static void handle_discovery_timer(void *args)
 
     if ((mm_get_mode() & MODE_MOBILE) == 0) {
         become_leader();
+    } else {
+        mm_set_channel(network, hal->channel_list.channels[0]);
     }
 }
 
