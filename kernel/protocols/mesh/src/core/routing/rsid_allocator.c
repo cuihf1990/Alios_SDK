@@ -110,6 +110,8 @@ ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id)
     }
     if (error == UR_ERROR_NONE) {
         new_node->node_id.sid = node_id->sid;
+        node_id->type = ROUTER_NODE;
+        new_node->node_id.type = node_id->type;
         new_node->node_id.attach_sid = INVALID_SID;
         memcpy(new_node->node_id.ueid, node_id->ueid, sizeof(new_node->node_id.ueid));
     } else {
