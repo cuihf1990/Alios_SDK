@@ -537,6 +537,9 @@ static neighbor_t *get_next_node(network_context_t *network, message_info_t *inf
     if (same_net == true) {
         if (same_subnet == true) {
             next_hop = ur_router_get_next_hop(network, info->dest.addr.short_addr);
+            if (next_hop == LEADER_SID) {
+                next_hop = get_leader_sid(info->dest.netid);
+            }
             next = get_neighbor_by_sid(network->hal, next_hop, info->dest.netid);
         } else if (is_subnet(network->meshnetid)) {
             next = mm_get_attach_node(network);
