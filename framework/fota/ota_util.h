@@ -34,8 +34,6 @@ typedef enum OTA_STATUS {
 void ota_set_status(OTA_STATUS_T status);
 OTA_STATUS_T ota_get_status(void);
 
-char* ota_get_id2(void);
-
 #ifdef __cplusplus
 }
 #endif

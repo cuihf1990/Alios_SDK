@@ -129,7 +129,11 @@ int8_t ota_cancel_upgrade(message_arrived *msgCallback)
     return alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,msgCallback);
 }
 
+extern char *config_get_main_uuid(void);
 
+char* ota_get_id(void) {
+   return config_get_main_uuid();
+}
 
 void free_global_topic()
 {

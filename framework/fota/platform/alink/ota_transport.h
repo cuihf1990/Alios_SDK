@@ -52,5 +52,5 @@ int8_t ota_sub_request_reply(message_arrived *msgCallback);
 
 void free_global_topic();
 
-
+char *ota_get_id();
 #endif /* OTA_TRANSPORT_H_ */
