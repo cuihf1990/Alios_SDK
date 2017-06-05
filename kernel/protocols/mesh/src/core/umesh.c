@@ -85,12 +85,6 @@ static void update_ipaddr(void)
 
 static void network_data_update_handler(bool stable)
 {
-    if (stable) {
-        update_ipaddr();
-        if (g_um_state.adapter_callback) {
-            g_um_state.adapter_callback->interface_update();
-        }
-    }
 }
 
 static ur_error_t ur_mesh_interface_up(void)
