@@ -14,7 +14,7 @@ $(NAME)_INCLUDES := src/core/id2/include/ \
 					src/network/include/ \
 					platform
 
-$(NAME)_COMPONENTS := cjson alicrypto
+$(NAME)_COMPONENTS := cjson alicrypto base64
 
 GLOBAL_INCLUDES += include/
 
@@ -90,10 +90,6 @@ ifeq ($(CONFIG_TFS_SW), y)
     $(NAME)_PREBUILT_LIBRARY += ../libid2/lib/$(PLATFORM)/libid2.a
     $(NAME)_PREBUILT_LIBRARY += ../libkm/lib/$(PLATFORM)/libkm.a
 endif
-
-$(NAME)_INCLUDES += ../../utility/base64/
-$(NAME)_INCLUDES += ../../utility/cjson/include/
-$(NAME)_INCLUDES += ../../kernel/vcall/mico/include/
 
 $(NAME)_SOURCES += \
 				   platform/aos/pal_platform_base64.c \
