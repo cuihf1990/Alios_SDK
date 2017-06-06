@@ -18,7 +18,7 @@
 #include "uart_pub.h"
 #include "app.h"
 #include "ke_event.h"
-
+#include "k_api.h"
 
 #if 1
 #define RECORD_COUNT 128
@@ -43,17 +43,96 @@ void rec_func(int val)
 }
 #endif
 
+mico_mutex_t stdio_tx_mutex;
+
+static void init_app_thread( void *arg )
+{
+	mico_rtos_init_mutex( &stdio_tx_mutex );
+	application_start();
+}
+
+ktask_t task_test22;
+cpu_stack_t task_stk[512];
+
+ktask_t *task_test_obj;
+ktask_t *task_test_obj2;
+
+extern void fclk_init(void);
+extern void test_case_task_start(void);
+extern void test_mtbf_task_start(void);
+
+static int test_cnt;
+
+extern void bk_send_byte(UINT8 data);
+
+_ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
+{
+    int i;
+    UINT8 *t;
+    t = buf;
+
+    if (fd == 1) {
+        for (i = 0; i < len; i++) {
+
+            bk_send_byte(*(t + i));
+        }
+
+        return len;
+    }
+
+    return 0;
+}
+
+
+void task_test2(void *arg)
+{
+    fclk_init();
+
+    return;
+
+    test_case_task_start();
+
+    while (1) {
+
+        //bk_printf("test_cnt$$$666 is %d\r\n", test_cnt++);
+       // printf("test_cnt$$$9999 is %d\r\n", test_cnt++);
+
+        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+
+    }
+}
+
+void task_test3(void *arg)
+{
+    while (1) {
+
+       printf("test_cnt$$$aaaa222 is %d\r\n", test_cnt++);
+
+        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+
+    }
+}
+
+
+
 void entry_main(void)
-{  
+{
+    yunos_init();
+
+    /* step 0: system basic component initialization*/
+    os_mem_init();
+
     /* step 1: driver layer initialization*/
     driver_init();
 
     /* step 2: function layer initialization*/
-    func_init();  
+    func_init();
 
-	app_start();
-         
-    vTaskStartScheduler();
+    yunos_task_dyn_create(&task_test_obj, "task_test", 0, 10, 0, 512, task_test2, 1);
+
+    yunos_task_dyn_create(&task_test_obj2, "task_test2", 0, 20, 0, 512, task_test3, 1);
+
+    yunos_start();
 }
 // eof
 

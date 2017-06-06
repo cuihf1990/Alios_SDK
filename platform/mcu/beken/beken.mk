@@ -470,5 +470,9 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/mico_rtos.c \
                     beken7231/mico_api/mico_wlan.c \
                     beken7231/mico_api/mxchipWNet.c \
-                    beken7231/mico_api/tcp_server.c
+                    beken7231/mico_api/tcp_server.c \
+                    ../../arch/arm/armv5/port_c.c \
+                    ../../arch/arm/armv5/port_s.S \
+                    ../../arch/arm/armv5/soc_impl.c 
+		    
 
