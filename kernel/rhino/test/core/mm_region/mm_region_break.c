@@ -246,8 +246,10 @@ static uint8_t mm_region_break_case2(void)
     MYASSERT(free == check_free);
     MYASSERT(my_mm_region_list_head2.frag_num == r_num);
 
+#if(YUNOS_CONFIG_MM_DEBUG>0)
     ret = check_mm_info_func();
     MYASSERT(ret == YUNOS_SUCCESS);
+#endif
 
     ret = yunos_mm_xf_free(&my_mm_region_list_head2, ptmp1);
     MYASSERT(ret == YUNOS_SUCCESS);

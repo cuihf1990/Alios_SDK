@@ -394,8 +394,10 @@ void* k_mm_alloc(k_mm_head *mmhead, size_t size)
     k_mm_list_t *b, *b2, *next_b;
     size_t       fl, sl;
     size_t       tmp_size;
-    size_t       allocator = 0;
 
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
+    size_t       allocator = 0;
+#endif
 
     if(!mmhead){
         return NULL;
@@ -555,7 +557,10 @@ void* k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     k_mm_list_t *b, *tmp_b, *next_b;
     size_t       fl, sl;
     size_t       tmp_size;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
     size_t       allocator = 0;
+#endif
 
     if (!oldmem) {
         if (new_size)
