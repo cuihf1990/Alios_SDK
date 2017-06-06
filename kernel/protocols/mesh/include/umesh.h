@@ -38,7 +38,8 @@ ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
                                uint8_t *payload, uint8_t length);
 ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver);
 
-ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *ip6addr);
+ur_error_t ur_mesh_ipv6_output(umessage_t *message,
+                               const ur_ip6_addr_t *ip6addr);
 ur_error_t ur_mesh_input(umessage_t *p);
 
 ur_error_t ur_mesh_init(void *config);
@@ -78,7 +79,8 @@ bool ur_mesh_is_mcast_subscribed(const ur_ip6_addr_t *addr);
 const ur_netif_ip6_address_t *ur_mesh_get_ucast_addr(void);
 const ur_netif_ip6_address_t *ur_mesh_get_mcast_addr(void);
 
-ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr);
+ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest,
+                                ur_addr_t *dest_addr);
 void ur_mesh_get_channel(channel_t *channel);
 
 slist_t *ur_mesh_get_hals(void);
@@ -87,8 +89,9 @@ slist_t *ur_mesh_get_networks(void);
 void ur_mesh_enable_whitelist(void);
 void ur_mesh_disable_whitelist(void);
 ur_error_t ur_mesh_add_whitelist(const mac_address_t *address);
-ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi);
-void ur_mesh_remove_whitelist(const mac_address_t*address);
+ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address,
+                                      int8_t rssi);
+void ur_mesh_remove_whitelist(const mac_address_t *address);
 void ur_mesh_clear_whitelist(void);
 
 const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type);

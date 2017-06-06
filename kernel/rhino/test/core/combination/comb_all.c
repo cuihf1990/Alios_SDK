@@ -46,10 +46,11 @@ static void task_sem_opr_entry(void *arg)
     yunos_sem_dyn_create(&sem_comb_all, "semcomball", 0);
     yunos_mutex_create(&mutex_comb_all, "mutexcomball");
     yunos_event_create(&event_comb_all, "eventcomball", 0x2);
-    yunos_queue_create(&queue_comb_all, "queue1", (void **)&queue1_msg_buff, TEST_MSG_SIZE);
+    yunos_queue_create(&queue_comb_all, "queue1", (void **)&queue1_msg_buff,
+                       TEST_MSG_SIZE);
 
     ret = yunos_sem_take(sem_comb_all, YUNOS_WAIT_FOREVER);
-    if ((ret == YUNOS_SUCCESS) && (mutex_count == 66)){
+    if ((ret == YUNOS_SUCCESS) && (mutex_count == 66)) {
         test_case_success++;
         PRINT_RESULT(MODULE_NAME, PASS);
     } else {
@@ -70,7 +71,8 @@ static void task_mutex_opr_entry(void *arg)
 {
     uint32_t flag;
 
-    yunos_event_get(&event_comb_all, 0x1, YUNOS_AND_CLEAR, &flag, YUNOS_WAIT_FOREVER);
+    yunos_event_get(&event_comb_all, 0x1, YUNOS_AND_CLEAR, &flag,
+                    YUNOS_WAIT_FOREVER);
 
     yunos_mutex_lock(&mutex_comb_all, YUNOS_WAIT_FOREVER);
     yunos_mutex_lock(&mutex_comb_all, YUNOS_WAIT_FOREVER);
@@ -102,8 +104,10 @@ static void task_event_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_queue_recv(&queue_comb_all, YUNOS_WAIT_FOREVER, (void *)&queue1_trigger_msg);
-    if ((*(uint8_t *)&queue1_trigger_msg == MSG_SIGNATURE) && (ret == YUNOS_SUCCESS)) {
+    ret = yunos_queue_recv(&queue_comb_all, YUNOS_WAIT_FOREVER,
+                           (void *)&queue1_trigger_msg);
+    if ((*(uint8_t *)&queue1_trigger_msg == MSG_SIGNATURE) &&
+        (ret == YUNOS_SUCCESS)) {
         yunos_event_set(&event_comb_all, 0x1, YUNOS_OR);
         yunos_task_dyn_del(g_active_task);
     }
@@ -121,28 +125,28 @@ void comb_all_coopr_test(void)
     kstat_t ret;
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_COMB_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI+1,
-                                 0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
+    ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI + 1,
+                                0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_COMB_PRI+2,
-                                 0, TASK_TEST_STACK_SIZE, task_event_opr_entry, 1);
+    ret = yunos_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_COMB_PRI + 2,
+                                0, TASK_TEST_STACK_SIZE, task_event_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_queue, MODULE_NAME, 0, TASK_COMB_PRI+3,
-                                 0, TASK_TEST_STACK_SIZE, task_queue_opr_entry, 1);
+    ret = yunos_task_dyn_create(&task_queue, MODULE_NAME, 0, TASK_COMB_PRI + 3,
+                                0, TASK_TEST_STACK_SIZE, task_queue_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

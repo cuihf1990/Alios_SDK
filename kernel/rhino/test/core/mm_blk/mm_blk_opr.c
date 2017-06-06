@@ -29,7 +29,7 @@ static uint8_t mm_blk_opr_case1(void)
     kstat_t ret;
 
     ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
-                               MBLK_POOL_SIZE>>2, MBLK_POOL_SIZE);
+                               MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_mblk_alloc(&mblk_pool_test, &ptr);
@@ -50,10 +50,11 @@ void mm_blk_opr_test(void)
 {
     kstat_t ret;
 
-    task_mm_blk_entry_register(MODULE_NAME, (test_func_t *)mm_blk_func_runner, sizeof(mm_blk_func_runner)/sizeof(test_func_t));
+    task_mm_blk_entry_register(MODULE_NAME, (test_func_t *)mm_blk_func_runner,
+                               sizeof(mm_blk_func_runner) / sizeof(test_func_t));
 
     ret = yunos_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
@@ -64,8 +65,9 @@ static void task_mm_blk_co1_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool, MBLK_POOL_SIZE>>2, MBLK_POOL_SIZE);
-    if(ret != YUNOS_SUCCESS) {
+    ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
+                               MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
+    if (ret != YUNOS_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
         return;
@@ -120,14 +122,15 @@ void mm_blk_coopr_test(void)
     kstat_t ret;
 
     ret = yunos_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_co1_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_mm_blk_co1_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_mm_blk_co, MODULE_NAME, 0, TASK_MM_BLK_PRI+1,
-                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_co2_entry, 1);
+    ret = yunos_task_dyn_create(&task_mm_blk_co, MODULE_NAME, 0,
+                                TASK_MM_BLK_PRI + 1,
+                                0, TASK_TEST_STACK_SIZE, task_mm_blk_co2_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);

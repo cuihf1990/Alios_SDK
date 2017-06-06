@@ -48,7 +48,8 @@ static void task_queue0_entry(void *arg)
         queue_send_msg  = (void *)1;
         queue_recv_msg  = (void *)1;
 
-        ret = yunos_queue_create(&g_test_queue0, "test_queue0", (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
+        ret = yunos_queue_create(&g_test_queue0, "test_queue0",
+                                 (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
         QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         /* check yunos_queue_all_send param */

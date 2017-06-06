@@ -26,7 +26,8 @@ extern ktask_t *task_workqueue;
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_workqueue_entry_register(const char *name, test_func_t *runner, uint8_t casenum);
+void task_workqueue_entry_register(const char *name, test_func_t *runner,
+                                   uint8_t casenum);
 void task_workqueue_entry(void *arg);
 void workqueue_test(void);
 void workqueue_interface_test(void);

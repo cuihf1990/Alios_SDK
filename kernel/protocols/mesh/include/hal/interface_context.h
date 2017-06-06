@@ -24,8 +24,8 @@
 #include "utilities/timer.h"
 
 typedef enum interface_state_s {
-     INTERFACE_UP,
-     INTERFACE_DOWN,
+    INTERFACE_UP,
+    INTERFACE_DOWN,
 } interface_state_t;
 
 typedef enum attach_state_s {
@@ -38,10 +38,14 @@ typedef enum attach_state_s {
 static inline const char *attachstate2str(attach_state_t state)
 {
     switch (state) {
-    case ATTACH_IDLE: return "idle";
-    case ATTACH_REQUEST: return "attaching";
-    case ATTACH_SID_REQUEST: return "sid";
-    case ATTACH_DONE: return "done";
+        case ATTACH_IDLE:
+            return "idle";
+        case ATTACH_REQUEST:
+            return "attaching";
+        case ATTACH_SID_REQUEST:
+            return "sid";
+        case ATTACH_DONE:
+            return "done";
     }
     return "unknown";
 }
@@ -49,9 +53,12 @@ static inline const char *attachstate2str(attach_state_t state)
 static inline const char *mediatype2str(media_type_t media)
 {
     switch (media) {
-    case MEDIA_TYPE_WIFI: return "wifi";
-    case MEDIA_TYPE_BLE: return "ble";
-    case MEDIA_TYPE_15_4: return "15.4";
+        case MEDIA_TYPE_WIFI:
+            return "wifi";
+        case MEDIA_TYPE_BLE:
+            return "ble";
+        case MEDIA_TYPE_15_4:
+            return "15.4";
     }
     return "unknown";
 }

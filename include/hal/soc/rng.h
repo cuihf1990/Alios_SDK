@@ -19,7 +19,7 @@
 
 /**@brief Fill in a memory buffer with random data
  *
- * @param inBuffer        : Point to a valid memory buffer, this function will fill 
+ * @param inBuffer        : Point to a valid memory buffer, this function will fill
                             in this memory with random numbers after executed
  * @param inByteCount     : Length of the memory buffer (bytes)
  *

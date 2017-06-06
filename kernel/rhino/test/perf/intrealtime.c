@@ -8,7 +8,8 @@
 extern ksem_t *SYNhandle;
 extern void WaitForNew_tick(void);
 extern double   Turn_to_Realtime(double counter);
-extern void show_times_detail(volatile double   *ft,  int nsamples,  char *title, uint32_t ignore_first);
+extern void show_times_detail(volatile double   *ft,  int nsamples,
+                              char *title, uint32_t ignore_first);
 
 extern void hobbit_timer0_stop(void);
 extern void hobbit_timer0_init(uint32_t hz);
@@ -90,7 +91,9 @@ void __attribute__((isr)) timer0_handler(void)
     InTimeBUFF[INT_NUM] = (double)(RELOAD - Endtime);
     INT_NUM ++;
 
-    if (INT_NUM < NUM)   { hobbit_timer0_start(); }
+    if (INT_NUM < NUM)   {
+        hobbit_timer0_start();
+    }
 }
 #else
 void timer0_handler(void)
@@ -101,7 +104,9 @@ void timer0_handler(void)
     InTimeBUFF[INT_NUM] = (double)(RELOAD - Endtime);
     INT_NUM ++;
 
-    if (INT_NUM < NUM)   { hobbit_timer0_start(); }
+    if (INT_NUM < NUM)   {
+        hobbit_timer0_start();
+    }
 }
 #endif
 

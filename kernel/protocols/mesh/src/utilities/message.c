@@ -90,7 +90,8 @@ ur_error_t message_copy_to(const message_t *src, uint16_t src_offset,
         return UR_ERROR_FAIL;
     }
 
-    length = pbuf_copy_partial((struct pbuf *)src->data, dest, dest_length, src_offset);
+    length = pbuf_copy_partial((struct pbuf *)src->data, dest, dest_length,
+                               src_offset);
 
     if (length != dest_length) {
         return UR_ERROR_FAIL;
@@ -193,8 +194,9 @@ ur_error_t message_concatenate(const message_t *dest, message_t *message,
 
 message_t *message_queue_get_head(message_queue_t *queue)
 {
-    if (dlist_empty(queue))
+    if (dlist_empty(queue)) {
         return NULL;
+    }
     return dlist_first_entry(queue, message_t, next);
 }
 

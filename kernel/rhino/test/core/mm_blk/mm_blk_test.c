@@ -39,12 +39,13 @@ static const test_case_t mm_blk_case_runner[] = {
 void mm_blk_test(void)
 {
     if (test_case_register((test_case_t *)mm_blk_case_runner) == 0) {
-       test_case_run();
-       test_case_unregister();
+        test_case_run();
+        test_case_unregister();
     }
 }
 
-void task_mm_blk_entry_register(const char *name, test_func_t *runner, uint8_t casenum)
+void task_mm_blk_entry_register(const char *name, test_func_t *runner,
+                                uint8_t casenum)
 {
     module_runner  = runner;
     module_name    = name;

@@ -91,7 +91,8 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
 kstat_t yunos_timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
                            tick_t first, tick_t round, void *arg, uint8_t auto_run)
 {
-    return timer_create(timer, name, cb, first, round, arg, auto_run, K_OBJ_STATIC_ALLOC);
+    return timer_create(timer, name, cb, first, round, arg, auto_run,
+                        K_OBJ_STATIC_ALLOC);
 }
 
 kstat_t yunos_timer_del(ktimer_t *timer)
@@ -124,7 +125,8 @@ kstat_t yunos_timer_del(ktimer_t *timer)
 }
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_timer_dyn_create(ktimer_t **timer, const name_t *name, timer_cb_t cb,
+kstat_t yunos_timer_dyn_create(ktimer_t **timer, const name_t *name,
+                               timer_cb_t cb,
                                tick_t first, tick_t round, void *arg, uint8_t auto_run)
 {
     kstat_t   ret;
@@ -137,7 +139,8 @@ kstat_t yunos_timer_dyn_create(ktimer_t **timer, const name_t *name, timer_cb_t 
         return YUNOS_NO_MEM;
     }
 
-    ret = timer_create(timer_obj, name, cb, first, round, arg, auto_run, K_OBJ_DYN_ALLOC);
+    ret = timer_create(timer_obj, name, cb, first, round, arg, auto_run,
+                       K_OBJ_DYN_ALLOC);
     if (ret != YUNOS_SUCCESS) {
         yunos_mm_free(timer_obj);
 

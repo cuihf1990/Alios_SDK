@@ -25,7 +25,7 @@ void ur_log_set_level(ur_log_level_t lvl)
 }
 
 void __attribute__((weak)) ur_log(ur_log_level_t level, ur_log_region_t region,
-            const char *format, ...)
+                                  const char *format, ...)
 {
     va_list args;
     char *buffer = (char *)ur_mem_alloc(MAX_LOG_SIZE);
@@ -46,8 +46,9 @@ void __attribute__((weak)) ur_log(ur_log_level_t level, ur_log_region_t region,
 #ifdef CONFIG_YOS_DDA
     dda_log(buffer);
 #endif
-    if (!g_cli_silent)
+    if (!g_cli_silent) {
         csp_printf("%s", buffer);
+    }
 
     ur_mem_free(buffer, MAX_LOG_SIZE);
 }
@@ -57,8 +58,9 @@ ur_error_t ur_cli_output(const char *buf, uint16_t length)
 #ifdef CONFIG_YOS_DDA
     dda_cli_log((char *)buf);
 #endif
-    if (!g_cli_silent)
+    if (!g_cli_silent) {
         csp_printf("%s", buf);
+    }
 
     return UR_ERROR_NONE;
 }

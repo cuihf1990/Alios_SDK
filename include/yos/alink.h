@@ -136,7 +136,7 @@ int alink_end(void);
  */
 int alink_factory_reset(void);
 
-/** @} */ //end of entry 
+/** @} */ //end of entry
 
 /** @defgroup wifi_report report status
  *  @{

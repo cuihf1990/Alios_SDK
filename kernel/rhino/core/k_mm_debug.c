@@ -49,7 +49,7 @@ uint32_t yunos_mm_leak_region_init(void *start, void *end)
     return i;
 }
 
-static uint32_t check_non_active_task_stack(ktask_t *task, void ** p)
+static uint32_t check_non_active_task_stack(ktask_t *task, void **p)
 {
     uint32_t offset = 0;
     kstat_t  rst    = YUNOS_SUCCESS;
@@ -69,7 +69,7 @@ static uint32_t check_non_active_task_stack(ktask_t *task, void ** p)
     return 1;
 }
 
-static uint32_t check_active_task_stack(void ** p)
+static uint32_t check_active_task_stack(void **p)
 {
     uint32_t offset = 0;
     kstat_t  rst    = YUNOS_SUCCESS;
@@ -147,16 +147,17 @@ static uint32_t check_malloc_region(void *adress)
 
     region_list_head = &g_mm_region_list_head;
 
-    for(region_list_cur = region_list_head->next; region_list_cur != region_list_head;region_list_cur = region_list_cur->next){
-        cur_region = yunos_list_entry(region_list_cur,k_mm_region_head_t,regionlist);
+    for (region_list_cur = region_list_head->next;
+         region_list_cur != region_list_head; region_list_cur = region_list_cur->next) {
+        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
         head = &cur_region->alloced;
         end = head;
 
         for (cur = head->next; cur != end; cur = cur->next) {
             tmp = yunos_list_entry(cur, k_mm_region_list_t, list);
-            start  = (void*)((uint32_t)tmp + sizeof(k_mm_region_list_t));
+            start  = (void *)((uint32_t)tmp + sizeof(k_mm_region_list_t));
             if (0 == g_recheck_flag && YUNOS_MM_REGION_ALLOCED == tmp->type) {
-                rst = scan_region(start, (void*)((uint32_t)start + tmp->len), adress);
+                rst = scan_region(start, (void *)((uint32_t)start + tmp->len), adress);
                 if (1 == rst) {
                     return check_if_in_stack(g_leak_match);
                 }
@@ -183,7 +184,8 @@ uint32_t check_mm_leak(uint8_t *adress)
             continue;
         }
 
-        if (1 == scan_region(g_mm_scan_region[i].start, g_mm_scan_region[i].end, adress)) {
+        if (1 == scan_region(g_mm_scan_region[i].start, g_mm_scan_region[i].end,
+                             adress)) {
             return 1;
         }
     }
@@ -205,25 +207,26 @@ uint32_t if_adress_is_valid(void *adress)
     klist_t            *cur;
     klist_t            *region_list_cur;
     klist_t            *region_list_head;
-    k_mm_region_head_t * cur_region;
+    k_mm_region_head_t *cur_region;
 
     NULL_PARA_CHK(g_mm_region_list_head.next);
     NULL_PARA_CHK(g_mm_region_list_head.prev);
 
     region_list_head =  &g_mm_region_list_head;
 
-    for(region_list_cur = region_list_head->next; region_list_cur != region_list_head;region_list_cur = region_list_cur->next){
-        cur_region = yunos_list_entry(region_list_cur,k_mm_region_head_t,regionlist);
+    for (region_list_cur = region_list_head->next;
+         region_list_cur != region_list_head; region_list_cur = region_list_cur->next) {
+        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
         head = &cur_region->alloced;
         end = head;
 
         for (cur = head->next; cur != end; cur = cur->next) {
             tmp = yunos_list_entry(cur, k_mm_region_list_t, list);
-            start  = (void*)((uint32_t)tmp + sizeof(k_mm_region_list_t));
+            start  = (void *)((uint32_t)tmp + sizeof(k_mm_region_list_t));
             if ((uint32_t)adress >= (uint32_t)start &&
                 (uint32_t)adress < (uint32_t)start + tmp->len) {
                 return 1;
-           }
+            }
         }
     }
     return 0;
@@ -231,8 +234,8 @@ uint32_t if_adress_is_valid(void *adress)
 
 static uint32_t recheck(k_mm_region_list_t *node)
 {
-    void *start = (void*)(node + 1);
-    void *end   = (void*)((uint32_t)start + node->len);
+    void *start = (void *)(node + 1);
+    void *end   = (void *)((uint32_t)start + node->len);
     void **p    = (void **)((uint32_t)start & ~(sizeof(size_t) - 1));
 
     g_recheck_flag = 1;
@@ -272,10 +275,11 @@ uint32_t dump_mmleak()
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(region_list_head, sizeof(k_mm_region_head_t)));
 
-    for(region_list_cur = region_list_head->next; region_list_cur != region_list_head;){
-        cur_region = yunos_list_entry(region_list_cur,k_mm_region_head_t,regionlist);
+    for (region_list_cur = region_list_head->next;
+         region_list_cur != region_list_head;) {
+        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region,sizeof(k_mm_region_head_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region, sizeof(k_mm_region_head_t)));
 
         head = &cur_region->alloced;
         end = head;
@@ -288,25 +292,26 @@ uint32_t dump_mmleak()
         for (cur = head->next; cur != end;) {
             min = yunos_list_entry(cur, k_mm_region_list_t, list);
 
-            VGF(VALGRIND_MAKE_MEM_DEFINED(min,sizeof(k_mm_region_list_t)));
+            VGF(VALGRIND_MAKE_MEM_DEFINED(min, sizeof(k_mm_region_list_t)));
 
-            if (YUNOS_MM_REGION_ALLOCED ==  min->type && 0 == check_mm_leak((uint8_t *)(min + 1)) && 0 == recheck(min)) {
+            if (YUNOS_MM_REGION_ALLOCED ==  min->type &&
+                0 == check_mm_leak((uint8_t *)(min + 1)) && 0 == recheck(min)) {
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
                 printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s\r\n", i,
-                           (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "leak");
+                       (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "leak");
 #else
                 printf("[%-4d]:adress:0x%0x  len:%-5d type:%s\r\n", i,
-                            (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "leak");
+                       (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "leak");
 #endif
             }
             i++;
             cur = cur->next;
-            VGF(VALGRIND_MAKE_MEM_NOACCESS(min,sizeof(k_mm_region_list_t)));
+            VGF(VALGRIND_MAKE_MEM_NOACCESS(min, sizeof(k_mm_region_list_t)));
 
         }
 
         region_list_cur = region_list_cur->next;
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region,sizeof(k_mm_region_head_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region, sizeof(k_mm_region_head_t)));
 
     }
     yunos_sched_enable();
@@ -325,8 +330,8 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     klist_t *head = NULL;
     klist_t *end  = NULL;
     klist_t *cur  = NULL;
-    klist_t * region_list_cur = NULL , *region_list_head = NULL;
-    k_mm_region_head_t * cur_region;
+    klist_t *region_list_cur = NULL , *region_list_head = NULL;
+    k_mm_region_head_t *cur_region;
 
     NULL_PARA_CHK(g_mm_region_list_head.next);
     NULL_PARA_CHK(g_mm_region_list_head.prev);
@@ -335,13 +340,15 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(region_list_head, sizeof(k_mm_region_head_t)));
 
-    for(region_list_cur = region_list_head->next; region_list_cur != region_list_head;){
-        cur_region = yunos_list_entry(region_list_cur,k_mm_region_head_t,regionlist);
+    for (region_list_cur = region_list_head->next;
+         region_list_cur != region_list_head;) {
+        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region,sizeof(k_mm_region_head_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region, sizeof(k_mm_region_head_t)));
 
         printf("----------------------------------------------------------------------\r\n");
-        printf("region info frag number:%d free size:%d\r\n", cur_region->frag_num, cur_region->freesize);
+        printf("region info frag number:%d free size:%d\r\n", cur_region->frag_num,
+               cur_region->freesize);
 
         head = &cur_region->probe;
         end = head;
@@ -356,52 +363,55 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
         for (cur = head->next; cur != end; ) {
             min = yunos_list_entry(cur, k_mm_region_list_t, list);
 
-            VGF(VALGRIND_MAKE_MEM_DEFINED(min,sizeof(k_mm_region_list_t)));
+            VGF(VALGRIND_MAKE_MEM_DEFINED(min, sizeof(k_mm_region_list_t)));
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
-            printf("[%-4d]:adress:0x%0x                  len:%-5d type:%s  flag:0x%0x\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "free", min->dye);
+            printf("[%-4d]:adress:0x%0x                  len:%-5d type:%s  flag:0x%0x\r\n",
+                   i,
+                   (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "free", min->dye);
 #else
             printf("[%-4d]:adress:0x%0x                  len:%-5d type:%s\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "free");
+                   (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "free");
 #endif
             i++;
             cur = cur->next;
 
-            VGF(VALGRIND_MAKE_MEM_NOACCESS(min,sizeof(k_mm_region_list_t)));
+            VGF(VALGRIND_MAKE_MEM_NOACCESS(min, sizeof(k_mm_region_list_t)));
 
         }
-        i=0;
+        i = 0;
         head = &cur_region->alloced;
         end = head;
         printf("alloced list: \r\n");
         for (cur = head->next; cur != end;) {
             min = yunos_list_entry(cur, k_mm_region_list_t, list);
 
-            VGF(VALGRIND_MAKE_MEM_DEFINED(min,sizeof(k_mm_region_list_t)));
+            VGF(VALGRIND_MAKE_MEM_DEFINED(min, sizeof(k_mm_region_list_t)));
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
             if ((YUNOS_MM_REGION_CORRUPT_DYE & min->dye) != YUNOS_MM_REGION_CORRUPT_DYE) {
                 printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s flag:0x%0x\r\n", i,
-                           (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "corrupt", min->dye);
+                       (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "corrupt",
+                       min->dye);
             }
             printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s flag:0x%0x\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "taken", min->dye);
+                   (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "taken",
+                   min->dye);
 #else
             printf("[%-4d]:adress:0x%0x len:%-5d type:%s\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "taken");
+                   (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "taken");
 
 #endif
             i++;
             cur = cur->next;
 
-            VGF(VALGRIND_MAKE_MEM_NOACCESS(min,sizeof(k_mm_region_list_t)));
+            VGF(VALGRIND_MAKE_MEM_NOACCESS(min, sizeof(k_mm_region_list_t)));
 
         }
 
         region_list_cur = region_list_cur->next;
 
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region,sizeof(k_mm_region_head_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region, sizeof(k_mm_region_head_t)));
 
     }
     return YUNOS_SUCCESS;

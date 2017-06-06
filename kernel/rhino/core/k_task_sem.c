@@ -17,7 +17,8 @@
 #include <k_api.h>
 
 #if (YUNOS_CONFIG_TASK_SEM > 0)
-kstat_t yunos_task_sem_create(ktask_t *task, ksem_t *sem, const name_t *name, size_t count)
+kstat_t yunos_task_sem_create(ktask_t *task, ksem_t *sem, const name_t *name,
+                              size_t count)
 {
     kstat_t ret;
 

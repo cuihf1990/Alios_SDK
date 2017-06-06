@@ -125,8 +125,8 @@ typedef struct mesh_mgmt_netinfo_tv_s {
     mm_tv_t  base;
     uint8_t  stable_version;
     uint8_t  version;
-    uint16_t size:13;
-    uint16_t subnet_size_1:3;
+    uint16_t size: 13;
+    uint16_t subnet_size_1: 3;
     uint8_t subnet_size_2;
 } __attribute__((packed)) mm_netinfo_tv_t;
 

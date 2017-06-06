@@ -29,7 +29,8 @@ static const test_case_t workqueue_case_runner[] = {
     NULL
 };
 
-void task_workqueue_entry_register(const char *name, test_func_t *runner, uint8_t casenum)
+void task_workqueue_entry_register(const char *name, test_func_t *runner,
+                                   uint8_t casenum)
 {
     module_runner  = runner;
     module_name    = name;
@@ -75,9 +76,9 @@ void task_workqueue_entry(void *arg)
 
 void workqueue_test(void)
 {
-   if (test_case_register((test_case_t *)workqueue_case_runner) == 0) {
-       test_case_run();
-       test_case_unregister();
-   }
+    if (test_case_register((test_case_t *)workqueue_case_runner) == 0) {
+        test_case_run();
+        test_case_unregister();
+    }
 }
 

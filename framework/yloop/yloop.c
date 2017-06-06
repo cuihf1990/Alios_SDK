@@ -117,16 +117,17 @@ yos_loop_t yos_loop_init(void)
 {
     yloop_ctx_t *ctx = _get_context();
 
-    if (!g_main_ctx)
+    if (!g_main_ctx) {
         yos_task_key_create(&g_loop_key);
-    else if (ctx && g_main_ctx != ctx) {
+    } else if (ctx && g_main_ctx != ctx) {
         LOGE(TAG, "yloop already inited");
         return ctx;
     }
 
     ctx = calloc(1, sizeof(*g_main_ctx));
-    if (!g_main_ctx)
+    if (!g_main_ctx) {
         g_main_ctx = ctx;
+    }
 
     dlist_init(&ctx->timeouts);
     ctx->eventfd = -1;
@@ -205,8 +206,9 @@ void yos_cancel_poll_read_fd(int sock, yos_poll_call_t action, void *param)
 
 int yos_post_delayed_action(int ms, yos_call_t action, void *param)
 {
-    if (action == NULL)
+    if (action == NULL) {
         return -1;
+    }
 
     yloop_ctx_t *ctx = get_context();
     yloop_timeout_t *timeout = malloc(sizeof(*timeout));
@@ -230,7 +232,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
     yloop_timeout_t *tmp;
 
     dlist_for_each_entry(&ctx->timeouts, tmp, yloop_timeout_t, next) {
-        if (timercmp(&timeout->time, &tmp->time, <)) {
+        if (timercmp(&timeout->time, &tmp->time, < )) {
             break;
         }
     }
@@ -246,14 +248,17 @@ void yos_cancel_delayed_action(int ms, yos_call_t cb, void *private_data)
     yloop_timeout_t *tmp;
 
     dlist_for_each_entry(&ctx->timeouts, tmp, yloop_timeout_t, next) {
-        if (ms != -1 && tmp->ms != ms)
+        if (ms != -1 && tmp->ms != ms) {
             continue;
+        }
 
-        if (tmp->cb != cb)
+        if (tmp->cb != cb) {
             continue;
+        }
 
-        if (tmp->private_data != private_data)
+        if (tmp->private_data != private_data) {
             continue;
+        }
 
         dlist_del(&tmp->next);
         free(tmp);
@@ -276,7 +281,7 @@ void yos_loop_run(void)
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
             gettimeofday(&now, NULL);
 
-            if (timercmp(&now, &tmo->time, <)) {
+            if (timercmp(&now, &tmo->time, < )) {
                 timersub(&tmo->time, &now, &tv);
             } else {
                 tv.tv_sec = tv.tv_usec = 0;
@@ -302,7 +307,7 @@ void yos_loop_run(void)
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
             gettimeofday(&now, NULL);
 
-            if (!timercmp(&now, &tmo->time, <)) {
+            if (!timercmp(&now, &tmo->time, < )) {
                 dlist_del(&tmo->next);
                 tmo->cb(tmo->private_data);
                 free(tmo);
@@ -335,13 +340,15 @@ void yos_loop_destroy(void)
 {
     yloop_ctx_t *ctx = _get_context();
 
-    if (ctx == NULL)
+    if (ctx == NULL) {
         return;
+    }
 
     yos_event_service_deinit(ctx->eventfd);
 
     while (!dlist_empty(&ctx->timeouts)) {
-        yloop_timeout_t *timeout = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
+        yloop_timeout_t *timeout = dlist_first_entry(&ctx->timeouts, yloop_timeout_t,
+                                                     next);
         dlist_del(&timeout->next);
         free(timeout);
     }
@@ -350,7 +357,8 @@ void yos_loop_destroy(void)
     free(ctx->pollfds);
 
     _set_context(NULL);
-    if (ctx == g_main_ctx)
+    if (ctx == g_main_ctx) {
         g_main_ctx = NULL;
+    }
     free(ctx);
 }

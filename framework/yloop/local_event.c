@@ -62,8 +62,9 @@ void handle_events(input_event_t *event)
     event_list_node_t *event_node = NULL;
     dlist_for_each_entry(&g_local_event_list, event_node, event_list_node_t, node) {
         if (event_node->type_filter != EV_ALL
-            && event_node->type_filter != event->type)
+            && event_node->type_filter != event->type) {
             continue;
+        }
         (event_node->cb)(event, event_node->priv);
     }
 }
@@ -74,10 +75,11 @@ static int input_add_event(int fd, input_event_t *event)
     event->type &= ~EV_FLAG_URGENT;
     int cmd;
 
-    if (urgent)
+    if (urgent) {
         cmd = MK_CMD(IOCTL_WRITE_URGENT, sizeof(*event));
-    else
+    } else {
         cmd = MK_CMD(IOCTL_WRITE_NORMAL, sizeof(*event));
+    }
 
     return yos_ioctl(fd, cmd, (unsigned long)event);
 }
@@ -95,8 +97,9 @@ int yos_event_service_init(void)
 {
     int fd = yos_open("/dev/event", 0);
 
-    if (local_event.fd < 0)
+    if (local_event.fd < 0) {
         local_event.fd = fd;
+    }
     yos_poll_read_fd(fd, event_read_cb, NULL);
     yos_loop_set_eventfd(fd);
 
@@ -122,10 +125,11 @@ int yos_post_event(uint16_t type, uint16_t code, unsigned long value)
 
 int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 {
-    if (cb == NULL)
+    if (cb == NULL) {
         return -1;
+    }
 
-    event_list_node_t* event_node = malloc(sizeof(event_list_node_t));
+    event_list_node_t *event_node = malloc(sizeof(event_list_node_t));
     if (NULL == event_node) {
         return -1;
     }
@@ -141,16 +145,19 @@ int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 
 int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 {
-    event_list_node_t* event_node = NULL;
+    event_list_node_t *event_node = NULL;
     dlist_for_each_entry(&g_local_event_list, event_node, event_list_node_t, node) {
-        if (event_node->type_filter != type)
+        if (event_node->type_filter != type) {
             continue;
+        }
 
-        if (event_node->cb != cb)
+        if (event_node->cb != cb) {
             continue;
+        }
 
-        if (event_node->priv != priv)
+        if (event_node->priv != priv) {
             continue;
+        }
 
         dlist_del(&event_node->node);
         free(event_node);
@@ -163,10 +170,12 @@ int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 /*
  * schedule a callback in yos loop main thread
  */
-static int _schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg, bool urgent)
+static int _schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg,
+                          bool urgent)
 {
-    if (fun == NULL)
+    if (fun == NULL) {
         return -1;
+    }
 
     input_event_t event = {
         .type = EV_RPC,
@@ -174,11 +183,13 @@ static int _schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg, bool urge
         .extra = (unsigned long)arg,
     };
     int fd = yos_loop_get_eventfd(loop);
-    if (fd < 0)
+    if (fd < 0) {
         fd = local_event.fd;
+    }
 
-    if (urgent)
+    if (urgent) {
         event.type |= EV_FLAG_URGENT;
+    }
     return input_add_event(fd, &event);
 }
 
@@ -219,8 +230,9 @@ static void run_my_work(void *arg)
 
     wpar->action(wpar->arg1);
 
-    if (wpar->fini_cb)
+    if (wpar->fini_cb) {
         yos_loop_schedule_call(wpar->loop, wpar->fini_cb, wpar->arg2);
+    }
 
     free_wpar(wpar);
 }
@@ -229,34 +241,41 @@ void yos_cancel_work(void *w, yos_call_t action, void *arg1)
 {
     work_par_t *wpar = w;
 
-    if (wpar == NULL)
+    if (wpar == NULL) {
         return;
+    }
 
-    if (wpar->action != action)
+    if (wpar->action != action) {
         return;
+    }
 
-    if (wpar->arg1 != arg1)
+    if (wpar->arg1 != arg1) {
         return;
+    }
 
     int ret = yos_work_cancel(wpar->work);
-    if (ret != 0)
+    if (ret != 0) {
         return;
+    }
 
     free_wpar(wpar);
 }
 
-void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_cb, void *arg2)
+void *yos_schedule_work(int ms, yos_call_t action, void *arg1,
+                        yos_call_t fini_cb, void *arg2)
 {
     int ret;
 
-    if (action == NULL)
+    if (action == NULL) {
         return NULL;
+    }
 
     yos_work_t *work = yos_malloc(sizeof(*work));
     work_par_t *wpar = yos_malloc(sizeof(*wpar));
 
-    if (!work || !wpar)
+    if (!work || !wpar) {
         goto err_out;
+    }
 
     wpar->work = work;
     wpar->loop = yos_current_loop();
@@ -266,11 +285,13 @@ void *yos_schedule_work(int ms, yos_call_t action, void *arg1, yos_call_t fini_c
     wpar->arg2 = arg2;
 
     ret = yos_work_init(work, run_my_work, wpar, ms);
-    if (ret != 0)
+    if (ret != 0) {
         goto err_out;
+    }
     ret = yos_work_sched(work);
-    if (ret != 0)
+    if (ret != 0) {
         goto err_out;
+    }
 
     return wpar;
 err_out:

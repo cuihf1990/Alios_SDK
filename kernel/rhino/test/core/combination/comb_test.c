@@ -31,9 +31,9 @@ static const test_case_t comb_case_runner[] = {
 
 void comb_test(void)
 {
-   if (test_case_register((test_case_t *)comb_case_runner) == 0) {
-       test_case_run();
-       test_case_unregister();
-   }
+    if (test_case_register((test_case_t *)comb_case_runner) == 0) {
+        test_case_run();
+        test_case_unregister();
+    }
 }
 

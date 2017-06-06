@@ -68,7 +68,8 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue);
  * @param[in]  dly     the ticks to delay before run
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg, tick_t dly);
+kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
+                        tick_t dly);
 
 /**
  * This function will run a work on a workqueue

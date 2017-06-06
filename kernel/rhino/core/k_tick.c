@@ -25,7 +25,7 @@ void tick_list_init(void)
     }
 
 #if (YUNOS_CONFIG_DYNTICKLESS > 0)
-    g_next_intrpt_ticks = (tick_t)-1;
+    g_next_intrpt_ticks = (tick_t) - 1;
 #endif
 }
 
@@ -170,7 +170,7 @@ void tick_list_update(void)
         p_tcb = yunos_list_entry(tick_head_ptr->next, ktask_t, tick_list);
         g_next_intrpt_ticks = p_tcb->tick_match - g_tick_count;
     } else {
-        g_next_intrpt_ticks = (tick_t)-1;
+        g_next_intrpt_ticks = (tick_t) - 1;
     }
 
     soc_tick_interrupt_set(g_next_intrpt_ticks, 0);

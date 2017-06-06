@@ -24,20 +24,20 @@ ktask_t   *task_mm_region_co;
 
 static uint8_t data[MM_REGION_TOTAL_SIZE] = {0};
 
-k_mm_region_t regions[]={
+k_mm_region_t regions[] = {
     {data,      MM_REGION_0_SIZE},
-    {data+16,   MM_REGION_1_SIZE},
-    {data+500,  MM_REGION_2_SIZE},
+    {data + 16,   MM_REGION_1_SIZE},
+    {data + 500,  MM_REGION_2_SIZE},
 };
 
-k_mm_region_t regions1[]={
-    {data+1024,  MM_REGION_TOTAL_SIZE - 1024},
+k_mm_region_t regions1[] = {
+    {data + 1024,  MM_REGION_TOTAL_SIZE - 1024},
 };
 
-k_mm_region_t regions2[]={
+k_mm_region_t regions2[] = {
     {data,      MM_REGION_0_SIZE},
-    {data+32,   MM_REGION_1_SIZE},
-    {data+512,  MM_REGION_2_SIZE},
+    {data + 32,   MM_REGION_1_SIZE},
+    {data + 512,  MM_REGION_2_SIZE},
 };
 
 static test_func_t *module_runner;
@@ -57,7 +57,8 @@ void mm_region_test(void)
     }
 }
 
-void task_mm_region_entry_register(const char *name, test_func_t *runner, uint8_t casenum)
+void task_mm_region_entry_register(const char *name, test_func_t *runner,
+                                   uint8_t casenum)
 {
     module_runner  = runner;
     module_name    = name;

@@ -3,14 +3,14 @@
  * Copyright (C) 2016 YunOS Project. All rights reserved.
  ****************************************************************************/
 
- /**
- * @file
- * @brief      dynamic loader
- * @details
- * @author     xzf
- * @date       2016-12-20
- * @version    0.1
- */
+/**
+* @file
+* @brief      dynamic loader
+* @details
+* @author     xzf
+* @date       2016-12-20
+* @version    0.1
+*/
 
 #ifndef DLOAD_DEFALT_CONFIG_H_
 #define DLOAD_DEFALT_CONFIG_H_

@@ -42,7 +42,8 @@ ur_error_t set_master_key(const uint8_t *key, uint8_t length)
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        hal_ur_mesh_set_key(hal->module, MASTER_KEY_INDEX, g_group_key, sizeof(g_group_key));
+        hal_ur_mesh_set_key(hal->module, MASTER_KEY_INDEX, g_group_key,
+                            sizeof(g_group_key));
     }
 
     return UR_ERROR_NONE;
@@ -65,7 +66,8 @@ ur_error_t set_group_key(uint8_t *payload, uint8_t length)
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        hal_ur_mesh_set_key(hal->module, GROUP_KEY1_INDEX, g_group_key, sizeof(g_group_key));
+        hal_ur_mesh_set_key(hal->module, GROUP_KEY1_INDEX, g_group_key,
+                            sizeof(g_group_key));
     }
 
     return error;

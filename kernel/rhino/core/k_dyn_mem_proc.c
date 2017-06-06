@@ -38,7 +38,8 @@ void dyn_mem_proc_task_start(void)
 {
     ktask_t *dyn_mem_task;
 
-    yunos_task_dyn_create(&dyn_mem_task, "dyn_mem_proc_task", 0, YUNOS_CONFIG_K_DYN_MEM_TASK_PRI,
+    yunos_task_dyn_create(&dyn_mem_task, "dyn_mem_proc_task", 0,
+                          YUNOS_CONFIG_K_DYN_MEM_TASK_PRI,
                           0, YUNOS_CONFIG_K_DYN_TASK_STACK, dyn_mem_proc_task, 1);
 
 }

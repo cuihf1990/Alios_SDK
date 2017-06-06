@@ -29,7 +29,7 @@ typedef struct {
     void *end;
 } mm_scan_region_t;
 
-uint32_t yunos_mm_leak_region_init(void *start, void*end);
+uint32_t yunos_mm_leak_region_init(void *start, void *end);
 
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len);
 

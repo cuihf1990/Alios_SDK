@@ -40,7 +40,8 @@ void ringbuf_test(void)
     }
 }
 
-void task_ringbuf_entry_register(const char *name, test_func_t *runner, uint8_t casenum)
+void task_ringbuf_entry_register(const char *name, test_func_t *runner,
+                                 uint8_t casenum)
 {
     module_runner  = runner;
     module_name    = name;

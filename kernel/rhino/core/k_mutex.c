@@ -211,7 +211,8 @@ uint8_t mutex_pri_limit(ktask_t *task, uint8_t pri)
 
     high_pri = pri;
 
-    for (mutex_tmp = task->mutex_list; mutex_tmp != NULL; mutex_tmp = mutex_tmp->mutex_list) {
+    for (mutex_tmp = task->mutex_list; mutex_tmp != NULL;
+         mutex_tmp = mutex_tmp->mutex_list) {
         blk_list_head = &mutex_tmp->blk_obj.blk_list;
 
         if (!is_klist_empty(blk_list_head)) {
@@ -307,7 +308,7 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
 
     /* if the same task get the same mutex again, it causes mutex owner nested */
     if (g_active_task == mutex->mutex_task) {
-        if (mutex->owner_nested == (mutex_nested_t)-1) {
+        if (mutex->owner_nested == (mutex_nested_t) - 1) {
             /* fatal error here, system must be stoped here */
             k_err_proc(YUNOS_MUTEX_NESTED_OVF);
             YUNOS_CRITICAL_EXIT();

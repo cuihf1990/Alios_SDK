@@ -48,7 +48,8 @@ static void task_mutex_opr_entry(void *arg)
     ret = yunos_mutex_dyn_create(&mutex_comb, "mutexcomb");
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
-    ret = yunos_queue_create(&queue, "queue", (void **)&queue_msg_buff, TEST_MSG_SIZE);
+    ret = yunos_queue_create(&queue, "queue", (void **)&queue_msg_buff,
+                             TEST_MSG_SIZE);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
     ret = yunos_mutex_lock(mutex_comb, YUNOS_WAIT_FOREVER);
@@ -69,7 +70,7 @@ static void task_mutex_opr_entry(void *arg)
 
     next_test_case_notify();
     ret = yunos_mutex_dyn_del(mutex_comb);
-    if(ret != YUNOS_SUCCESS) {
+    if (ret != YUNOS_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -124,7 +125,8 @@ void mutex_queue_coopr_test(void)
                                 0, TASK_TEST_STACK_SIZE, task_queue_opr_entry, 1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
-    ret = yunos_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0, TASK_COMB_PRI + 2,
+    ret = yunos_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0,
+                                TASK_COMB_PRI + 2,
                                 0, TASK_TEST_STACK_SIZE, task_queue_trigger_entry, 1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 }

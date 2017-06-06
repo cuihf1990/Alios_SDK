@@ -19,11 +19,11 @@
 
 /** @brief     PlatformMFiAuthInitialize
  *
- *  @abstract Performs any platform-specific initialization needed. 
+ *  @abstract Performs any platform-specific initialization needed.
  *            Example: Bring up I2C interface for communication with
  *            the Apple Authentication Coprocessor.
  *
- *  @param   i2c            :  mico_i2c_t context    
+ *  @param   i2c            :  mico_i2c_t context
  *
  *  @return    kNoErr        : on success.
  *  @return    kGeneralErr   : if an error occurred with any step
@@ -33,11 +33,11 @@ int32_t hal_mfi_auth_init(uint8_t i2c);
 
 /** @brief    PlatformMFiAuthFinalize
  *
- *  @abstract Performs any platform-specific cleanup needed. 
+ *  @abstract Performs any platform-specific cleanup needed.
  *            Example: Bringing down the I2C interface for communication with
  *            the Apple Authentication Coprocessor.
  *
- *  @param    i2c            :  mico_i2c_t context    
+ *  @param    i2c            :  mico_i2c_t context
  *
  *  @return   none
  */
@@ -47,21 +47,21 @@ void hal_mfi_auth_finalize(void);
 
 /** @brief    PlatformMFiAuthCreateSignature
  *
- *  @abstract Create an RSA signature from the specified SHA-1 digest 
+ *  @abstract Create an RSA signature from the specified SHA-1 digest
  *            using the Apple Authentication Coprocessor.
  *
  *  @param    inDigestPtr     :    Pointer to 20-byte SHA-1 digest.
  *  @param    inDigestLen     :    Number of bytes in the digest. Must be 20.
  *  @param    outSignaturePtr :    Receives malloc()'d ptr to RSA signature. Caller must free() on success.
- *  @param    outSignatureLen :    Receives number of bytes in RSA signature.  
+ *  @param    outSignatureLen :    Receives number of bytes in RSA signature.
  *
  *  @return    kNoErr         :    on success.
  *  @return    kGeneralErr    :    if an error occurred with any step
  */
 int hal_mfi_auth_create_signature(const void *in_digest_ptr,
-                                       size_t      in_digest_len,
-                                       uint8_t   **out_signature_ptr,
-                                       size_t     *out_signature_len);
+                                  size_t      in_digest_len,
+                                  uint8_t   **out_signature_ptr,
+                                  size_t     *out_signature_len);
 
 
 
@@ -71,7 +71,7 @@ int hal_mfi_auth_create_signature(const void *in_digest_ptr,
  *
  *  @param    outCertificatePtr:   Receives malloc()'d ptr to a DER-encoded PKCS#7 message containing the certificate.
                                     Caller must free() on success.
- *  @param    outCertificateLen:   Number of bytes in the DER-encoded certificate. 
+ *  @param    outCertificateLen:   Number of bytes in the DER-encoded certificate.
  *
  *  @return    kNoErr         :    on success.
  *  @return    kGeneralErr    :    if an error occurred with any step

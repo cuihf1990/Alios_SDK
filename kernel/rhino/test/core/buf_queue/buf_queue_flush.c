@@ -62,16 +62,19 @@ static void task_queue0_entry(void *arg)
         /* check yunos_buf_queue_flush param */
         buf_queue_flush_param_test();
 
-        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
+                                   TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
-        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
+                                   TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_BUF_QUEUE_FULL);
 
         ret = yunos_buf_queue_flush(&g_test_bufqueue0);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
-        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
+                                   TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         ret = yunos_buf_queue_del(&g_test_bufqueue0);

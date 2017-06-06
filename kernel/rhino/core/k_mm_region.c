@@ -18,7 +18,8 @@
 #include <assert.h>
 
 
-kstat_t yunos_mm_region_init(k_mm_region_head_t * region_head, k_mm_region_t *regions, size_t size)
+kstat_t yunos_mm_region_init(k_mm_region_head_t *region_head,
+                             k_mm_region_t *regions, size_t size)
 {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
@@ -71,16 +72,16 @@ kstat_t yunos_mm_region_init(k_mm_region_head_t * region_head, k_mm_region_t *re
 #if defined(__VALGRIND_MAJOR__) && defined(__VALGRIND_MINOR__)   \
                     && (__VALGRIND_MAJOR__ > 3                                   \
                         || (__VALGRIND_MAJOR__ == 3 && __VALGRIND_MINOR__ >= 12))
-                    /*valgrind support VALGRIND_CREATE_MEMPOOL_EXT from 3.12.0*/
-                VGF(VALGRIND_CREATE_MEMPOOL_EXT(start_adr, 0, 0,
-                                                VALGRIND_MEMPOOL_METAPOOL | VALGRIND_MEMPOOL_AUTO_FREE));
+        /*valgrind support VALGRIND_CREATE_MEMPOOL_EXT from 3.12.0*/
+        VGF(VALGRIND_CREATE_MEMPOOL_EXT(start_adr, 0, 0,
+                                        VALGRIND_MEMPOOL_METAPOOL | VALGRIND_MEMPOOL_AUTO_FREE));
 #else
-                VGF(VALGRIND_CREATE_MEMPOOL((uint8_t*)start_adr, 0, 0));
+        VGF(VALGRIND_CREATE_MEMPOOL((uint8_t *)start_adr, 0, 0));
 #endif
 
         pcur = (k_mm_region_list_t *)start_adr;
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED((uint8_t*)pcur,sizeof(k_mm_region_list_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED((uint8_t *)pcur, sizeof(k_mm_region_list_t)));
 
         pcur->len  = region_len - sizeof(k_mm_region_list_t);
         pcur->type = YUNOS_MM_REGION_FREE;
@@ -101,13 +102,13 @@ kstat_t yunos_mm_region_init(k_mm_region_head_t * region_head, k_mm_region_t *re
         region_head->frag_num++;
         region_head->freesize += pcur->len;
 
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(start_adr,sizeof(k_mm_region_list_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(start_adr, sizeof(k_mm_region_list_t)));
         VGF(VALGRIND_MAKE_MEM_DEFINED(region_head, sizeof(k_mm_region_head_t)));
 
     }
 
     /* first time */
-    if(g_mm_region_list_head.next ==  NULL || g_mm_region_list_head.prev == NULL){
+    if (g_mm_region_list_head.next ==  NULL || g_mm_region_list_head.prev == NULL) {
         klist_init(&g_mm_region_list_head);
 #if (YUNOS_CONFIG_MM_REGION_MUTEX > 0)
         yunos_mutex_create(&g_mm_region_mutex, "g_mm_region_mutex");
@@ -116,7 +117,7 @@ kstat_t yunos_mm_region_init(k_mm_region_head_t * region_head, k_mm_region_t *re
 #if (YUNOS_CONFIG_MM_REGION_MUTEX > 0)
     yunos_mutex_lock(&g_mm_region_mutex, YUNOS_WAIT_FOREVER);
 #endif
-    klist_add(&g_mm_region_list_head,&(region_head->regionlist));
+    klist_add(&g_mm_region_list_head, &(region_head->regionlist));
 #if (YUNOS_CONFIG_MM_REGION_MUTEX > 0)
     yunos_mutex_unlock(&g_mm_region_mutex);
 #endif
@@ -133,7 +134,8 @@ kstat_t yunos_mm_region_init(k_mm_region_head_t * region_head, k_mm_region_t *re
 }
 
 
-kstat_t yunos_mm_region_insert2freelist(k_mm_region_head_t * region_head,klist_t* node)
+kstat_t yunos_mm_region_insert2freelist(k_mm_region_head_t *region_head,
+                                        klist_t *node)
 {
     klist_t            *head = NULL;
     klist_t            *end  = NULL;
@@ -148,23 +150,22 @@ kstat_t yunos_mm_region_insert2freelist(k_mm_region_head_t * region_head,klist_t
     VGF(VALGRIND_MAKE_MEM_DEFINED(region_head, sizeof(k_mm_region_head_t)));
 
     for (tmp = head->next; tmp != end; tmp = tmp->next) {
-        VGF(VALGRIND_MAKE_MEM_DEFINED(tmp,sizeof(klist_t)));
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(tmp->prev,sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(tmp, sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(tmp->prev, sizeof(klist_t)));
         if (tmp > node) {
             break;
         }
     }
-    if(tmp != end){
-        VGF(VALGRIND_MAKE_MEM_DEFINED(tmp->prev,sizeof(klist_t)));
-        klist_insert(tmp,node);
+    if (tmp != end) {
+        VGF(VALGRIND_MAKE_MEM_DEFINED(tmp->prev, sizeof(klist_t)));
+        klist_insert(tmp, node);
         /*node->prev is old tmp->prev*/
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(node->prev,sizeof(klist_t)));
-    }
-    else{
-        VGF(VALGRIND_MAKE_MEM_DEFINED(tmp->next,sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(node->prev, sizeof(klist_t)));
+    } else {
+        VGF(VALGRIND_MAKE_MEM_DEFINED(tmp->next, sizeof(klist_t)));
         klist_add(tmp, node);
         /*node->prev is old tmp->prev*/
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(node->next,sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(node->next, sizeof(klist_t)));
     }
 
     VGF(VALGRIND_MAKE_MEM_NOACCESS(tmp, sizeof(klist_t)));
@@ -177,7 +178,7 @@ kstat_t yunos_mm_region_insert2freelist(k_mm_region_head_t * region_head,klist_t
 
 
 
-size_t yunos_mm_region_get_free_size(k_mm_region_head_t * region_head)
+size_t yunos_mm_region_get_free_size(k_mm_region_head_t *region_head)
 {
 
     size_t size;
@@ -186,7 +187,7 @@ size_t yunos_mm_region_get_free_size(k_mm_region_head_t * region_head)
     CPSR_ALLOC();
 #endif
 
-    if(region_head == NULL){
+    if (region_head == NULL) {
         return 0;
     }
 
@@ -227,21 +228,22 @@ kstat_t check_mm_info_func()
     VGF(VALGRIND_MAKE_MEM_DEFINED(region_list_head, sizeof(k_mm_region_head_t)));
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
-        CPSR_ALLOC();
+    CPSR_ALLOC();
 #endif
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
-        YUNOS_CRITICAL_ENTER();
+    YUNOS_CRITICAL_ENTER();
 #endif
-    for(region_list_cur = region_list_head->next; region_list_cur != region_list_head;){
-        cur_region = yunos_list_entry(region_list_cur,k_mm_region_head_t,regionlist);
+    for (region_list_cur = region_list_head->next;
+         region_list_cur != region_list_head;) {
+        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region,sizeof(k_mm_region_head_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region, sizeof(k_mm_region_head_t)));
 
         head = &cur_region->probe;
         end = head;
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED(head,sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(head, sizeof(klist_t)));
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX > 0)
         yunos_mutex_lock(&(cur_region->mm_region_mutex), YUNOS_WAIT_FOREVER);
@@ -249,30 +251,30 @@ kstat_t check_mm_info_func()
         for (cur = head->next; cur != end; ) {
             min = yunos_list_entry(cur, k_mm_region_list_t, list);
 
-            VGF(VALGRIND_MAKE_MEM_DEFINED(min,sizeof(k_mm_region_list_t)));
+            VGF(VALGRIND_MAKE_MEM_DEFINED(min, sizeof(k_mm_region_list_t)));
 
             if ((YUNOS_MM_REGION_CORRUPT_DYE & min->dye) != YUNOS_MM_REGION_CORRUPT_DYE) {
-                VGF(VALGRIND_MAKE_MEM_NOACCESS(min,sizeof(k_mm_region_list_t)));
-                VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region,sizeof(k_mm_region_head_t)));
+                VGF(VALGRIND_MAKE_MEM_NOACCESS(min, sizeof(k_mm_region_list_t)));
+                VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region, sizeof(k_mm_region_head_t)));
                 k_err_proc(YUNOS_MM_CORRUPT_ERR);
                 return YUNOS_MM_CORRUPT_ERR;
             }
 
             cur  = cur->next;
-            VGF(VALGRIND_MAKE_MEM_NOACCESS(min,sizeof(k_mm_region_list_t)));
+            VGF(VALGRIND_MAKE_MEM_NOACCESS(min, sizeof(k_mm_region_list_t)));
 
         }
 
         region_list_cur = region_list_cur->next;
 
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region,sizeof(k_mm_region_head_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region, sizeof(k_mm_region_head_t)));
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX > 0)
         yunos_mutex_unlock(&(cur_region->mm_region_mutex));
 #endif
     }
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
-        YUNOS_CRITICAL_EXIT();
+    YUNOS_CRITICAL_EXIT();
 #endif
     return YUNOS_SUCCESS;
 }
@@ -281,7 +283,8 @@ kstat_t check_mm_info_func()
 
 #if (YUNOS_CONFIG_MM_BESTFIT > 0)
 
-kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t size, size_t allocator)
+kstat_t yunos_mm_bf_alloc(k_mm_region_head_t *region_head, void **mem,
+                          size_t size, size_t allocator)
 {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
@@ -338,7 +341,7 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
 
         pcur = yunos_list_entry(tmp, k_mm_region_list_t, list);
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED(pcur,sizeof(k_mm_region_list_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(pcur, sizeof(k_mm_region_list_t)));
 
         if (pcur->len >= size) {
 
@@ -352,7 +355,7 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
             }
         }
         tmp = tmp->next;
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(pcur,sizeof(k_mm_region_list_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(pcur, sizeof(k_mm_region_list_t)));
 
     }
 
@@ -366,17 +369,17 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
         return YUNOS_NO_MEM;
     }
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(find,sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(find, sizeof(k_mm_region_list_t)));
 
     next = find->list.next;
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(find->list.prev,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(find->list.prev, sizeof(klist_t)));
 
     klist_rm(&(find->list));
 
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.prev,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.prev, sizeof(klist_t)));
 
     if (find->len < size + sizeof(k_mm_region_list_t) + sizeof(void *)) {
         find->type  = YUNOS_MM_REGION_ALLOCED;
@@ -387,13 +390,13 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
 
         region_head->freesize -= find->len;
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced,sizeof(klist_t)));
-        VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next,sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced, sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next, sizeof(klist_t)));
 
         klist_add(&region_head->alloced, &(find->list));
 
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next,sizeof(klist_t)));
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(find,sizeof(k_mm_region_list_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next, sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(find, sizeof(k_mm_region_list_t)));
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
         YUNOS_CRITICAL_EXIT();
@@ -401,17 +404,18 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
         yunos_mutex_unlock(&region_head->mm_region_mutex);
 #endif
         *mem = (void *)((size_t)find + sizeof(k_mm_region_list_t));
-        VGF(VALGRIND_MAKE_MEM_DEFINED(*mem,size));
-        VGF(VALGRIND_MALLOCLIKE_BLOCK(*mem, size,0,0));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(*mem, size));
+        VGF(VALGRIND_MALLOCLIKE_BLOCK(*mem, size, 0, 0));
 
         return YUNOS_SUCCESS;
     }
 
-    pregion = (k_mm_region_list_t *)((size_t)find + sizeof(k_mm_region_list_t) + size);
+    pregion = (k_mm_region_list_t *)((size_t)find + sizeof(k_mm_region_list_t) +
+                                     size);
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(pregion,sizeof(k_mm_region_list_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(next->prev,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pregion, sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next->prev, sizeof(klist_t)));
 
     pregion->type  = YUNOS_MM_REGION_FREE;
     pregion->len   = find->len - sizeof(k_mm_region_list_t) - size;
@@ -427,15 +431,15 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
     find->owner  = allocator;
 #endif
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next, sizeof(klist_t)));
 
     klist_add(&region_head->alloced, &(find->list));
 
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(pregion,sizeof(k_mm_region_list_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(find,sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(pregion, sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find, sizeof(k_mm_region_list_t)));
 
     region_head->frag_num++;
     region_head->freesize -= (size + sizeof(k_mm_region_list_t));
@@ -449,7 +453,7 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
 #endif
 
     *mem = (void *)((size_t)find + sizeof(k_mm_region_list_t));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(*mem,size));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(*mem, size));
     VGF(VALGRIND_MALLOCLIKE_BLOCK(*mem, size, 0, 0));
 
     return YUNOS_SUCCESS;
@@ -458,7 +462,8 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
 
 #if (YUNOS_CONFIG_MM_FIRSTFIT > 0)
 
-kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t size, size_t allocator)
+kstat_t yunos_mm_ff_alloc(k_mm_region_head_t *region_head, void **mem,
+                          size_t size, size_t allocator)
 {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
@@ -508,14 +513,14 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
     for (tmp = head->next; tmp != end; ) {
         pcur = yunos_list_entry(tmp, k_mm_region_list_t, list);
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED(pcur,sizeof(k_mm_region_list_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(pcur, sizeof(k_mm_region_list_t)));
 
         if (pcur->len >= size) {
             find = pcur;
             break;
         }
         tmp = tmp->next;
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(pcur,sizeof(k_mm_region_list_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(pcur, sizeof(k_mm_region_list_t)));
     }
 
     if (NULL == find) {
@@ -528,17 +533,17 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
         return YUNOS_NO_MEM;
     }
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(find,sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(find, sizeof(k_mm_region_list_t)));
 
     next = find->list.next;
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(find->list.prev,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(find->list.prev, sizeof(klist_t)));
 
     klist_rm(&(find->list));
 
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.prev,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.prev, sizeof(klist_t)));
 
     if (find->len < size + sizeof(k_mm_region_list_t) + sizeof(void *)) {
         find->type  = YUNOS_MM_REGION_ALLOCED;
@@ -549,13 +554,13 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
 
         region_head->freesize -= find->len;
 
-        VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced,sizeof(klist_t)));
-        VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next,sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced, sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next, sizeof(klist_t)));
 
         klist_add(&region_head->alloced, &(find->list));
 
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next,sizeof(klist_t)));
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(find,sizeof(k_mm_region_list_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next, sizeof(klist_t)));
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(find, sizeof(k_mm_region_list_t)));
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
         YUNOS_CRITICAL_EXIT();
@@ -563,17 +568,18 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
         yunos_mutex_unlock(&region_head->mm_region_mutex);
 #endif
         *mem = (void *)((size_t)find + sizeof(k_mm_region_list_t));
-        VGF(VALGRIND_MAKE_MEM_DEFINED(*mem,size));
-        VGF(VALGRIND_MALLOCLIKE_BLOCK(*mem, size,0,0));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(*mem, size));
+        VGF(VALGRIND_MALLOCLIKE_BLOCK(*mem, size, 0, 0));
 
         return YUNOS_SUCCESS;
     }
 
-    pregion = (k_mm_region_list_t *)((size_t)find + sizeof(k_mm_region_list_t) + size);
+    pregion = (k_mm_region_list_t *)((size_t)find + sizeof(k_mm_region_list_t) +
+                                     size);
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(pregion,sizeof(k_mm_region_list_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(next->prev,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pregion, sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(next->prev, sizeof(klist_t)));
 
     pregion->type  = YUNOS_MM_REGION_FREE;
     pregion->len   = find->len - sizeof(k_mm_region_list_t) - size;
@@ -589,15 +595,15 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
     find->owner  = allocator;
 #endif
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(&region_head->alloced, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(region_head->alloced.next, sizeof(klist_t)));
 
     klist_add(&region_head->alloced, &(find->list));
 
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(pregion,sizeof(k_mm_region_list_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(find,sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(pregion, sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find->list.next, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(find, sizeof(k_mm_region_list_t)));
 
     region_head->frag_num++;
     region_head->freesize -= (size + sizeof(k_mm_region_list_t));
@@ -611,7 +617,7 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
 #endif
 
     *mem = (void *)((size_t)find + sizeof(k_mm_region_list_t));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(*mem,size));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(*mem, size));
     VGF(VALGRIND_MALLOCLIKE_BLOCK(*mem, size, 0, 0));
 
     return YUNOS_SUCCESS;
@@ -619,7 +625,7 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
 #endif /* YUNOS_CONFIG_MM_FIRSTFIT */
 
 #if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
-kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem)
+kstat_t yunos_mm_xf_free(k_mm_region_head_t *region_head, void *mem)
 {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
@@ -643,7 +649,7 @@ kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem)
 
     pcur = (k_mm_region_list_t *)((size_t)mem - sizeof(k_mm_region_list_t));
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur,sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur, sizeof(k_mm_region_list_t)));
 
     if (NULL == pcur) {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
@@ -655,14 +661,14 @@ kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem)
         return YUNOS_MM_FREE_ADDR_ERR;
     }
     /*before rm pcur->list, we need make pcur->list.prev and pcur->list.next as accessable*/
-    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur->list.prev,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur->list.next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur->list.prev, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur->list.next, sizeof(klist_t)));
 
     klist_rm(&(pcur->list));
 
     /*after rm pcur, we need protect prev and next again*/
-    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur->list.prev,sizeof(klist_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur->list.next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur->list.prev, sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pcur->list.next, sizeof(klist_t)));
 
     size        = pcur->len;
     pcur->type  = YUNOS_MM_REGION_FREE;
@@ -670,14 +676,14 @@ kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem)
     pcur->owner = 0u;
 #endif
 
-    yunos_mm_region_insert2freelist(region_head,&(pcur->list));
+    yunos_mm_region_insert2freelist(region_head, &(pcur->list));
 
     pnext = yunos_list_entry(pcur->list.next, k_mm_region_list_t, list);
     prev  = yunos_list_entry(pcur->list.prev, k_mm_region_list_t, list);
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(pnext, sizeof(k_mm_region_list_t)));
     VGF(VALGRIND_MAKE_MEM_DEFINED(prev, sizeof(k_mm_region_list_t)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(pnext->list.next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pnext->list.next, sizeof(klist_t)));
 
     if (pnext->type == YUNOS_MM_REGION_FREE
         && (size_t)pcur + sizeof(k_mm_region_list_t) + pcur->len == (size_t)pnext) {
@@ -695,10 +701,10 @@ kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem)
         region_head->freesize += sizeof(k_mm_region_list_t);
     }
 
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(pnext->list.next,sizeof(klist_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(pnext->list.next, sizeof(klist_t)));
     VGF(VALGRIND_MAKE_MEM_NOACCESS(pnext, sizeof(k_mm_region_list_t)));
     VGF(VALGRIND_MAKE_MEM_NOACCESS(prev, sizeof(k_mm_region_list_t)));
-    VGF(VALGRIND_MAKE_MEM_NOACCESS(pcur,sizeof(k_mm_region_list_t)));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(pcur, sizeof(k_mm_region_list_t)));
 
     region_head->freesize += size;
 
@@ -745,11 +751,11 @@ void *yunos_mm_alloc(size_t size)
 
 }
 
-void yunos_mm_free(void * ptr)
+void yunos_mm_free(void *ptr)
 {
     kstat_t ret;
 
-    ret = yunos_mm_xf_free(&g_kmm_region_head,ptr);
+    ret = yunos_mm_xf_free(&g_kmm_region_head, ptr);
 
     /*halt when free failed?*/
     assert(ret == YUNOS_SUCCESS);

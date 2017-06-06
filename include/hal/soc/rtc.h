@@ -17,11 +17,10 @@
 #ifndef YOS_RTC_H
 #define YOS_RTC_H
 
- /**
-  * RTC time
-  */
- typedef struct
- {
+/**
+ * RTC time
+ */
+typedef struct {
     uint8_t sec;
     uint8_t min;
     uint8_t hr;
@@ -29,7 +28,7 @@
     uint8_t date;
     uint8_t month;
     uint8_t year;
- } hal_rtc_time_t;
+} hal_rtc_time_t;
 
 
 /**@brief This function will initialize the on board CPU real time clock

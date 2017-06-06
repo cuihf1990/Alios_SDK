@@ -54,7 +54,7 @@ int yos_kv_init();
  * @param[in] none.
  *
  * @note: all the KV in RAM will be released.
- * @retval none. 
+ * @retval none.
  */
 void yos_kv_deinit();
 

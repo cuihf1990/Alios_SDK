@@ -20,8 +20,7 @@
 /**
  * I2C address width
  */
-typedef enum
-{
+typedef enum {
     I2C_ADDRESS_WIDTH_7BIT,
     I2C_ADDRESS_WIDTH_10BIT,
     I2C_ADDRESS_WIDTH_16BIT,
@@ -31,8 +30,7 @@ typedef enum
 /**
  * I2C speed mode
  */
-typedef enum
-{
+typedef enum {
     I2C_LOW_SPEED_MODE,         /* 10Khz devices */
     I2C_STANDARD_SPEED_MODE,    /* 100Khz devices */
     I2C_HIGH_SPEED_MODE         /* 400Khz devices */
@@ -42,26 +40,28 @@ typedef enum
 /**
  * I2C message
  */
-typedef struct
-{
+typedef struct {
     const void *tx_buffer;
-    void*       rx_buffer;
+    void       *rx_buffer;
     uint16_t    tx_length;
     uint16_t    rx_length;
     uint16_t    retries;    /* Number of times to retry the message */
     int8_t      combined;   /**< If set, this message is used for both tx and rx. */
-    uint8_t     flags;      /* MESSAGE_DISABLE_DMA : if set, this flag disables use of DMA for the message */
+    uint8_t
+    flags;      /* MESSAGE_DISABLE_DMA : if set, this flag disables use of DMA for the message */
 } hal_i2c_msg_t;
 
 
 
 
-typedef struct
-{
-   uint8_t                     port;           /**< Platform I2C port that is connected to the target I2C device, - e.g. MICO_I2C_1 */
-   uint16_t                    address;        /**< The address of the device on the I2C bus */
-   hal_i2c_bus_address_width_t address_width;  /**< I2C device's address length */
-   hal_i2c_speed_mode_t        speed_mode;     /**< Speed mode the device operates in */
+typedef struct {
+    uint8_t
+    port;           /**< Platform I2C port that is connected to the target I2C device, - e.g. MICO_I2C_1 */
+    uint16_t
+    address;        /**< The address of the device on the I2C bus */
+    hal_i2c_bus_address_width_t address_width;  /**< I2C device's address length */
+    hal_i2c_speed_mode_t
+    speed_mode;     /**< Speed mode the device operates in */
 } hal_i2c_device_t;
 
 
@@ -110,7 +110,8 @@ int8_t hal_i2c_probe_device(hal_i2c_device_t *device, int32_t retries);
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-int32_t hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf, uint16_t tx_buf_len, uint16_t retries);
+int32_t hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf,
+                             uint16_t tx_buf_len, uint16_t retries);
 
 /**@brief Initialize the mico_i2c_message_t structure for i2c rx transaction
  *
@@ -122,7 +123,8 @@ int32_t hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf, uint16_t tx
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-int32_t hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void *rx_buf, uint16_t rx_buf_len, uint16_t retries);
+int32_t hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void *rx_buf,
+                             uint16_t rx_buf_len, uint16_t retries);
 
 
 /**@brief Initialize the mico_i2c_message_t structure for i2c combined transaction
@@ -137,7 +139,8 @@ int32_t hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void *rx_buf, uint16_t rx_buf_l
  * @return    kNoErr    : message structure was initialised properly.
  * @return    kParamErr : one of the arguments is given incorrectly
  */
-int32_t hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf, void *rx_buf, uint16_t tx_buf_len, uint16_t rx_buf_len, uint16_t retries);
+int32_t hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf,
+                                   void *rx_buf, uint16_t tx_buf_len, uint16_t rx_buf_len, uint16_t retries);
 
 
 /**@brief Transmits and/or receives data over an I2C interface
@@ -149,7 +152,8 @@ int32_t hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf, void 
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during message transfer
  */
-int32_t hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg, uint16_t num);
+int32_t hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg,
+                         uint16_t num);
 
 
 /**@brief Deinitialises an I2C device

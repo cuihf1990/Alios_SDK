@@ -28,14 +28,14 @@ extern "C" {
 #endif
 
 typedef enum ur_error_s {
-   UR_ERROR_NONE          = 0,
-   UR_ERROR_FAIL          = 1,
-   UR_ERROR_BUSY          = 2,
-   UR_ERROR_DROP          = 3,
-   UR_ERROR_MEM           = 4,
-   UR_ERROR_ROUTE         = 5,
-   UR_ERROR_PARSE         = 6,
-   UR_ERROR_ADDRESS_QUERY = 7,
+    UR_ERROR_NONE          = 0,
+    UR_ERROR_FAIL          = 1,
+    UR_ERROR_BUSY          = 2,
+    UR_ERROR_DROP          = 3,
+    UR_ERROR_MEM           = 4,
+    UR_ERROR_ROUTE         = 5,
+    UR_ERROR_PARSE         = 6,
+    UR_ERROR_ADDRESS_QUERY = 7,
 } ur_error_t;
 
 typedef enum media_type_s {

@@ -33,7 +33,8 @@ extern kmutex_t  test_mutex_co2;
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_mutex_entry_register(const char *name, test_func_t *runner, uint8_t casnum);
+void task_mutex_entry_register(const char *name, test_func_t *runner,
+                               uint8_t casnum);
 void task_mutex_entry(void *arg);
 void mutex_test(void);
 void mutex_param_test(void);

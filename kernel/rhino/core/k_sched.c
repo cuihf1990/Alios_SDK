@@ -126,13 +126,14 @@ void core_sched(void)
     TRACE_TASK_SWITCH(g_active_task, g_preferred_ready_task);
 
 #if (YUNOS_CONFIG_USER_HOOK > 0)
-    yunos_task_switch_hook(g_active_task,g_preferred_ready_task);
+    yunos_task_switch_hook(g_active_task, g_preferred_ready_task);
 #endif
 
     cpu_task_switch();
 
 #if (YUNOS_CONFIG_STACK_OVF_CHECK_HW != 0)
-    cpu_task_stack_protect(g_preferred_ready_task->task_stack_base, g_preferred_ready_task->stack_size);
+    cpu_task_stack_protect(g_preferred_ready_task->task_stack_base,
+                           g_preferred_ready_task->stack_size);
 #endif
 
     YUNOS_CPU_INTRPT_ENABLE();

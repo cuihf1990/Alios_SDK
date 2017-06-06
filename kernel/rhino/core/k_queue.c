@@ -46,7 +46,7 @@ static kstat_t queue_create(kqueue_t *queue, const name_t *name, void **start,
     queue->msg_q.queue_start  = start;
 
     ringbuf_init(&queue->ringbuf, (void *)start, msg_num * sizeof(void *),
-                       RINGBUF_TYPE_FIX, sizeof(void *));
+                 RINGBUF_TYPE_FIX, sizeof(void *));
 
     queue->msg_q.size         = msg_num;
     queue->msg_q.cur_num      = 0u;
@@ -62,7 +62,8 @@ static kstat_t queue_create(kqueue_t *queue, const name_t *name, void **start,
     return YUNOS_SUCCESS;
 }
 
-kstat_t yunos_queue_create(kqueue_t *queue, const name_t *name, void **start, size_t msg_num)
+kstat_t yunos_queue_create(kqueue_t *queue, const name_t *name, void **start,
+                           size_t msg_num)
 {
     return queue_create(queue, name, start, msg_num, K_OBJ_STATIC_ALLOC);
 }
@@ -110,7 +111,8 @@ kstat_t yunos_queue_del(kqueue_t *queue)
 }
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_queue_dyn_create(kqueue_t **queue, const name_t *name, size_t msg_num)
+kstat_t yunos_queue_dyn_create(kqueue_t **queue, const name_t *name,
+                               size_t msg_num)
 {
     kstat_t   stat;
     kqueue_t *queue_obj;
@@ -129,7 +131,8 @@ kstat_t yunos_queue_dyn_create(kqueue_t **queue, const name_t *name, size_t msg_
         return YUNOS_NO_MEM;
     }
 
-    stat = queue_create(queue_obj, name, (void **)msg_start, msg_num, K_OBJ_DYN_ALLOC);
+    stat = queue_create(queue_obj, name, (void **)msg_start, msg_num,
+                        K_OBJ_DYN_ALLOC);
     if (stat != YUNOS_SUCCESS) {
         yunos_mm_free(msg_start);
         yunos_mm_free(queue_obj);
@@ -187,7 +190,8 @@ kstat_t yunos_queue_dyn_del(kqueue_t *queue)
 }
 #endif
 
-static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method, uint8_t opt_wake_all)
+static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method,
+                        uint8_t opt_wake_all)
 {
     CPSR_ALLOC();
 
@@ -233,7 +237,7 @@ static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method, ui
 
 #if (YUNOS_CONFIG_KOBJ_SET > 0)
         if (p_q->blk_obj.handle != NULL) {
-            p_q->blk_obj.handle->notify((blk_obj_t*)p_q,p_q->blk_obj.handle);
+            p_q->blk_obj.handle->notify((blk_obj_t *)p_q, p_q->blk_obj.handle);
         }
 #endif
         return YUNOS_SUCCESS;
@@ -242,10 +246,12 @@ static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method, ui
     /* wake all the task blocked on this queue */
     if (opt_wake_all) {
         while (!is_klist_empty(blk_list_head)) {
-            task_msg_recv(yunos_list_entry(blk_list_head->next, ktask_t, task_list), p_void);
+            task_msg_recv(yunos_list_entry(blk_list_head->next, ktask_t, task_list),
+                          p_void);
         }
     } else {
-        task_msg_recv(yunos_list_entry(blk_list_head->next, ktask_t, task_list), p_void);
+        task_msg_recv(yunos_list_entry(blk_list_head->next, ktask_t, task_list),
+                      p_void);
     }
 
     YUNOS_CRITICAL_EXIT_SCHED();

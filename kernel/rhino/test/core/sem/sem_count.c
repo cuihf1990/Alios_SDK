@@ -68,10 +68,11 @@ void sem_count_test(void)
 {
     kstat_t ret;
 
-    task_sem_entry_register(MODULE_NAME, (test_func_t *)sem_func_runner, sizeof(sem_func_runner)/sizeof(test_case_t));
+    task_sem_entry_register(MODULE_NAME, (test_func_t *)sem_func_runner,
+                            sizeof(sem_func_runner) / sizeof(test_case_t));
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

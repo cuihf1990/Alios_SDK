@@ -54,7 +54,8 @@ YUNOS_INLINE kstat_t rhino_init(void)
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
     /* init memory region */
-    yunos_mm_region_init(&g_kmm_region_head,&g_mm_region,sizeof(g_mm_region)/sizeof(k_mm_region_t));
+    yunos_mm_region_init(&g_kmm_region_head, &g_mm_region,
+                         sizeof(g_mm_region) / sizeof(k_mm_region_t));
 
     yunos_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                        YUNOS_CONFIG_K_DYN_QUEUE_MSG);
@@ -207,7 +208,8 @@ void yunos_intrpt_exit(void)
     cpu_intrpt_switch();
 
 #if (YUNOS_CONFIG_STACK_OVF_CHECK_HW != 0)
-    cpu_task_stack_protect(g_preferred_ready_task->task_stack_base, g_preferred_ready_task->stack_size);
+    cpu_task_stack_protect(g_preferred_ready_task->task_stack_base,
+                           g_preferred_ready_task->stack_size);
 #endif
 
     YUNOS_CPU_INTRPT_ENABLE();
@@ -218,15 +220,16 @@ size_t yunos_global_space_get(void)
     size_t mem;
 
     mem = sizeof(g_sys_stat) + sizeof(g_idle_task_spawned) + sizeof(g_ready_queue)
-                 + sizeof(g_sched_lock) + sizeof(g_intrpt_nested_level) + sizeof(g_preferred_ready_task)
-                 + sizeof(g_active_task) + sizeof(g_idle_task) + sizeof(g_idle_task_stack)
-                 + sizeof(g_tick_head) + sizeof(g_idle_count) + sizeof(g_sys_time_tick);
+          + sizeof(g_sched_lock) + sizeof(g_intrpt_nested_level) + sizeof(
+              g_preferred_ready_task)
+          + sizeof(g_active_task) + sizeof(g_idle_task) + sizeof(g_idle_task_stack)
+          + sizeof(g_tick_head) + sizeof(g_idle_count) + sizeof(g_sys_time_tick);
 
 
 #if (YUNOS_CONFIG_TIMER > 0)
     mem += sizeof(g_timer_head) + sizeof(g_timer_count) + sizeof(g_timer_ctrl)
-                  + sizeof(g_timer_task) + sizeof(g_timer_task_stack) + sizeof(g_timer_sem)
-                  + sizeof(g_timer_mutex);
+           + sizeof(g_timer_task) + sizeof(g_timer_task_stack) + sizeof(g_timer_sem)
+           + sizeof(g_timer_mutex);
 #endif
 
 #if (YUNOS_CONFIG_TICK_TASK > 0)

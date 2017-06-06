@@ -56,10 +56,11 @@ void event_reinit_test(void)
 {
     kstat_t ret;
 
-    task_event_entry_register(MODULE_NAME, (test_func_t *)event_func_runner, sizeof(event_func_runner)/sizeof(test_func_t));
+    task_event_entry_register(MODULE_NAME, (test_func_t *)event_func_runner,
+                              sizeof(event_func_runner) / sizeof(test_func_t));
 
     ret = yunos_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_EVENT_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

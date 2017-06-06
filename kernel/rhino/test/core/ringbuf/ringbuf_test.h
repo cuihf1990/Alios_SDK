@@ -27,7 +27,8 @@ extern ktask_t *task_ringbuf_co;
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_ringbuf_entry_register(const char *name, test_func_t *runner, uint8_t casenum);
+void task_ringbuf_entry_register(const char *name, test_func_t *runner,
+                                 uint8_t casenum);
 void task_ringbuf_entry(void *arg);
 void ringbuf_test(void);
 void ringbuf_break_test(void);

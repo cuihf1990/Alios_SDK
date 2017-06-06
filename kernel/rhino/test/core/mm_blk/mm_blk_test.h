@@ -31,7 +31,8 @@ extern char mblk_pool[MBLK_POOL_SIZE];
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_mm_blk_entry_register(const char *name, test_func_t *runner, uint8_t casenum);
+void task_mm_blk_entry_register(const char *name, test_func_t *runner,
+                                uint8_t casenum);
 void task_mm_blk_entry(void *arg);
 void mm_blk_test(void);
 void mm_blk_param_test(void);

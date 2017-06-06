@@ -55,11 +55,13 @@ static void buf_queue_recv_param_test(void)
     ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER, NULL, &size);
     BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER, &g_test_recv_msg0, NULL);
+    ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER,
+                               &g_test_recv_msg0, NULL);
     BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
     yunos_sem_create(& sem, "test_sem ", 0);
-    ret = yunos_buf_queue_recv((kbuf_queue_t *)&sem, YUNOS_WAIT_FOREVER, &g_test_recv_msg0, &size);
+    ret = yunos_buf_queue_recv((kbuf_queue_t *)&sem, YUNOS_WAIT_FOREVER,
+                               &g_test_recv_msg0, &size);
     BUFQUEUE_VAL_CHK(ret == YUNOS_KOBJ_TYPE_ERR);
     yunos_sem_del(&sem);
 }
@@ -78,7 +80,8 @@ static void buf_queue_send_param_test(void)
     ret = yunos_buf_queue_send(NULL, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX + 1);
+    ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
+                               TEST_BUFQUEUE_MSG_MAX + 1);
     BUFQUEUE_VAL_CHK(ret == YUNOS_BUF_QUEUE_MSG_SIZE_OVERFLOW);
 
 
@@ -86,7 +89,8 @@ static void buf_queue_send_param_test(void)
     BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
     g_test_bufqueue0.blk_obj.obj_type = YUNOS_OBJ_TYPE_NONE;
-    ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
+    ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
+                               TEST_BUFQUEUE_MSG_MAX);
     g_test_bufqueue0.blk_obj.obj_type = YUNOS_BUF_QUEUE_OBJ_TYPE;
     BUFQUEUE_VAL_CHK(ret == YUNOS_KOBJ_TYPE_ERR);
 
@@ -103,16 +107,19 @@ static void task_queue1_entry(void *arg)
 
     while (1) {
         memset(g_test_send_msg0, 'y', TEST_BUFQUEUE_MSG_MAX);
-        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
+                                   TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         memset(g_test_send_msg0, 'o', TEST_BUFQUEUE_MSG_MAX);
-        ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg0,
+                                         TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
 
         memset(g_test_send_msg0, 's', TEST_BUFQUEUE_MSG_MAX);
-        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
+                                   TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         yunos_buf_queue_info_get(&g_test_bufqueue0, &info);
@@ -132,24 +139,28 @@ static void task_queue2_entry(void *arg)
     while (1) {
 
         memset(g_test_send_msg1, 's', TEST_BUFQUEUE_MSG_MAX);
-        ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1,
+                                         TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
         count++;
 
         memset(g_test_send_msg1, 'o', TEST_BUFQUEUE_MSG_MAX);
-        ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1,
+                                         TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
         count++;
 
 
         memset(g_test_send_msg1, 'y', TEST_BUFQUEUE_MSG_MAX);
-        ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1,
+                                         TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
         count++;
 
 
         memset(g_test_send_msg1, 'w', TEST_BUFQUEUE_MSG_MAX);
-        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg1, TEST_BUFQUEUE_MSG_MAX);
+        ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg1,
+                                   TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_BUF_QUEUE_FULL);
 
         yunos_buf_queue_info_get(&g_test_bufqueue0, &info);
@@ -184,24 +195,28 @@ static void task_queue0_entry(void *arg)
     buf_queue_send_param_test();
 
     /* check YUNOS_NO_WAIT */
-    ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_NO_WAIT, &g_test_recv_msg0, &size);
+    ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_NO_WAIT, &g_test_recv_msg0,
+                               &size);
     BUFQUEUE_VAL_CHK(ret == YUNOS_NO_PEND_WAIT);
 
     /* check sched disalbe */
     ret = yunos_sched_disable();
     BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
-    ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER, &g_test_recv_msg0, &size);
+    ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER,
+                               &g_test_recv_msg0, &size);
     BUFQUEUE_VAL_CHK(ret == YUNOS_SCHED_DISABLE);
     ret = yunos_sched_enable();
     BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
-    ret = yunos_task_dyn_create(&task_1_test, "task_bufqueue1_test", 0, TEST_BUFQUEUE_SND_TASK_LOW_RPI,
+    ret = yunos_task_dyn_create(&task_1_test, "task_bufqueue1_test", 0,
+                                TEST_BUFQUEUE_SND_TASK_LOW_RPI,
                                 0, TASK_TEST_STACK_SIZE, task_queue1_entry, 1);
 
     BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
     do {
-        ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER, g_test_recv_msg0, &size);
+        ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER,
+                                   g_test_recv_msg0, &size);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         memset(g_test_send_msg0, send_char[count], TEST_BUFQUEUE_MSG_MAX);
@@ -212,7 +227,8 @@ static void task_queue0_entry(void *arg)
     } while (count <  TEST_BUFQUEUE_MSG_NUM);
 
 
-    ret = yunos_task_dyn_create(&task_2_test, "task_bufqueue2_test", 0, TEST_BUFQUEUE_SND_TASK_HIGH_RPI,
+    ret = yunos_task_dyn_create(&task_2_test, "task_bufqueue2_test", 0,
+                                TEST_BUFQUEUE_SND_TASK_HIGH_RPI,
                                 0, TASK_TEST_STACK_SIZE, task_queue2_entry, 1);
 
     BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
@@ -220,7 +236,8 @@ static void task_queue0_entry(void *arg)
     count = 0;
 
     do {
-        ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER, g_test_recv_msg0, &size);
+        ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER,
+                                   g_test_recv_msg0, &size);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         memset(g_test_send_msg1, send_char[count], TEST_BUFQUEUE_MSG_MAX);
@@ -248,7 +265,8 @@ kstat_t task_buf_queue_recv_test(void)
 {
     kstat_t ret;
     test_case_check_err = 0;
-    ret = yunos_task_dyn_create(&task_0_test, "task_bufqueue0_test", 0, TEST_BUFQUEUE_RCV_TASK_RPI,
+    ret = yunos_task_dyn_create(&task_0_test, "task_bufqueue0_test", 0,
+                                TEST_BUFQUEUE_RCV_TASK_RPI,
                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
     BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 

@@ -109,7 +109,8 @@ void ysh_cmd_test(void)
 {
     kstat_t ret;
     test_case_check_err = 0;
-    ret = yunos_task_dyn_create(&task_0_test, "ysh_cmd_daemon", 0, TEST_YSH_CMD_DAEMON_RPI,
+    ret = yunos_task_dyn_create(&task_0_test, "ysh_cmd_daemon", 0,
+                                TEST_YSH_CMD_DAEMON_RPI,
                                 0, TASK_TEST_STACK_SIZE, task_ysh0_entry, 1);
 
     YSH_VAL_CHK(ret == YUNOS_SUCCESS);

@@ -10,7 +10,8 @@
 extern ksem_t *SYNhandle;
 extern void WaitForNew_tick(void);
 extern double Turn_to_Realtime(double counter);
-extern void show_times_detail(volatile double   *ft,  int nsamples,  char *title, uint32_t ignore_first);
+extern void show_times_detail(volatile double   *ft,  int nsamples,
+                              char *title, uint32_t ignore_first);
 
 extern void hobbit_timer0_stop(void);
 extern void hobbit_timer0_init(uint32_t hz);
@@ -31,7 +32,9 @@ static void Preemption0(void *arg)
         Starttime = hobbit_timer0_get_curval();
         yunos_task_resume(PreeTaskHandle[1]);
 
-        if (PreeCount >= PreeTime) { yunos_sem_give(PreeSynhandle); }
+        if (PreeCount >= PreeTime) {
+            yunos_sem_give(PreeSynhandle);
+        }
     }
 
 }
@@ -46,7 +49,9 @@ static void Preemption1(void *arg)
 
         PreeBUFF[PreeCount++] = (double)Runtime;
 
-        if (PreeCount >= PreeTime) { yunos_sem_give(PreeSynhandle); }
+        if (PreeCount >= PreeTime) {
+            yunos_sem_give(PreeSynhandle);
+        }
 
         Starttime =  hobbit_timer0_get_curval();
         yunos_task_resume(PreeTaskHandle[2]);
@@ -63,7 +68,9 @@ static void Preemption2(void *arg)
         Runtime = Starttime - Endtime;
         PreeBUFF[PreeCount++] = (double)Runtime;
 
-        if (PreeCount >= PreeTime) { yunos_sem_give(PreeSynhandle); }
+        if (PreeCount >= PreeTime) {
+            yunos_sem_give(PreeSynhandle);
+        }
 
         Starttime =  hobbit_timer0_get_curval();
         yunos_task_resume(PreeTaskHandle[3]);
@@ -81,7 +88,9 @@ static void Preemption3(void *arg)
 
         PreeBUFF[PreeCount++] = (double)Runtime;
 
-        if (PreeCount >= PreeTime) { yunos_sem_give(PreeSynhandle); }
+        if (PreeCount >= PreeTime) {
+            yunos_sem_give(PreeSynhandle);
+        }
 
         yunos_task_suspend(g_active_task);
     }

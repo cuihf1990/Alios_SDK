@@ -45,12 +45,14 @@ static void handle_link_request_timer(void *args)
     } else {
         interval = hal->link_request_interval;
     }
-    hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer, hal);
+    hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
+                                             hal);
 
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
-        if (network->hal != hal)
+        if (network->hal != hal) {
             continue;
+        }
 
         attach_node = mm_get_attach_node(network);
         if (attach_node == NULL) {
@@ -80,8 +82,9 @@ static ur_error_t update_link_cost(link_nbr_stats_t *stats)
         stats->link_cost = new;
     } else {
         old = stats->link_cost;
-        stats->link_cost = ((uint32_t)((LINK_ESTIMATE_COEF - LINK_ESTIMATE_UPDATE_ALPHA) * old) +
-                           ((uint32_t)(LINK_ESTIMATE_UPDATE_ALPHA * new))) / LINK_ESTIMATE_COEF;
+        stats->link_cost = ((uint32_t)((LINK_ESTIMATE_COEF - LINK_ESTIMATE_UPDATE_ALPHA)
+                                       * old) +
+                            ((uint32_t)(LINK_ESTIMATE_UPDATE_ALPHA * new))) / LINK_ESTIMATE_COEF;
         if ((stats->link_cost == old) && (!stats->link_accept)) {
             stats->link_cost += LINK_ESTIMATE_COEF;
         }
@@ -98,15 +101,17 @@ static void handle_link_quality_update_timer(void *args)
     slist_t *networks;
     network_context_t *network;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link quality update timer\r\n");
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
+           "handle link quality update timer\r\n");
 
     hal->link_quality_update_timer = ur_start_timer(
-                                 hal->link_request_interval * LINK_ESTIMATE_TIMES,
-                                 handle_link_quality_update_timer, hal);
+                                         hal->link_request_interval * LINK_ESTIMATE_TIMES,
+                                         handle_link_quality_update_timer, hal);
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
-        if (network->hal != hal)
+        if (network->hal != hal) {
             continue;
+        }
 
         attach_node = mm_get_attach_node(network);
         if (attach_node == NULL) {
@@ -127,8 +132,9 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
     neighbor_t *nbr;
 
     slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-        if (nbr->state == STATE_INVALID)
+        if (nbr->state == STATE_INVALID) {
             goto get_nbr;
+        }
     }
 
     if (hal->neighbors_num < MAX_NEIGHBORS_NUM) {
@@ -143,18 +149,21 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
         goto get_nbr;
     }
 
-    if (!is_attach)
+    if (!is_attach) {
         return NULL;
+    }
 
     slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-        if (nbr->state == STATE_PARENT)
+        if (nbr->state == STATE_PARENT) {
             continue;
-        if (nbr->state == STATE_CHILD)
+        }
+        if (nbr->state == STATE_CHILD) {
             continue;
+        }
 
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-              "sid %04x ueid " EXT_ADDR_FMT " is replaced\n",
-              nbr->addr.addr.short_addr, EXT_ADDR_DATA(nbr->ueid));
+               "sid %04x ueid " EXT_ADDR_FMT " is replaced\n",
+               nbr->addr.addr.short_addr, EXT_ADDR_DATA(nbr->ueid));
         goto get_nbr;
     }
     return NULL;
@@ -605,7 +614,8 @@ ur_error_t handle_link_request(message_t *message)
     network = info->network;
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    tlvs_request = (mm_tlv_request_tlv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TLV_REQUEST);
+    tlvs_request = (mm_tlv_request_tlv_t *)mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_TLV_REQUEST);
 
     if (tlvs_request) {
         tlvs = (uint8_t *)tlvs_request + sizeof(mm_tlv_t);
@@ -628,7 +638,8 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     message_info_t *info;
     network_context_t *network;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link accept and resquest\r\n");
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
+           "handle link accept and resquest\r\n");
 
     info = message->info;
     network = info->network;
@@ -647,7 +658,8 @@ ur_error_t handle_link_accept_and_request(message_t *message)
         memcpy(node->ueid, ueid->ueid, sizeof(node->ueid));
     }
 
-    tlvs_request = (mm_tlv_request_tlv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TLV_REQUEST);
+    tlvs_request = (mm_tlv_request_tlv_t *)mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_TLV_REQUEST);
     if (tlvs_request) {
         tlvs = (uint8_t *)tlvs_request + sizeof(mm_tlv_t);
         tlvs_length = tlvs_request->base.length;
@@ -707,7 +719,8 @@ void start_neighbor_updater(void)
         } else {
             interval = hal->link_request_interval;
         }
-        hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer, hal);
+        hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
+                                                 hal);
         hal->link_quality_update_timer = ur_start_timer(interval * LINK_ESTIMATE_TIMES,
                                                         handle_link_quality_update_timer, hal);
     }

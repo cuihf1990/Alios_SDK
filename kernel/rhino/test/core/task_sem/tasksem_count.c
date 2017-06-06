@@ -38,7 +38,7 @@ static uint8_t tasksem_count_case1(void)
     ret = yunos_task_sem_count_set(NULL, 3);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_task_sem_count_set(task_tasksem, (sem_count_t)-1);
+    ret = yunos_task_sem_count_set(task_tasksem, (sem_count_t) - 1);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_task_sem_del(task_tasksem);
@@ -56,10 +56,11 @@ void tasksem_count_test(void)
 {
     kstat_t ret;
 
-    task_tasksem_entry_register(MODULE_NAME, (test_func_t *)tasksem_func_runner, sizeof(tasksem_func_runner)/sizeof(test_case_t));
+    task_tasksem_entry_register(MODULE_NAME, (test_func_t *)tasksem_func_runner,
+                                sizeof(tasksem_func_runner) / sizeof(test_case_t));
 
     ret = yunos_task_dyn_create(&task_tasksem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_tasksem_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

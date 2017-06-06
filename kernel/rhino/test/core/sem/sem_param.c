@@ -30,7 +30,7 @@ static uint8_t sem_param_case1(void)
     ret = yunos_sem_dyn_create(&test_sem, NULL, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, (sem_count_t)-1);
+    ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, (sem_count_t) - 1);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, 0);
@@ -148,7 +148,7 @@ static uint8_t sem_param_case4(void)
     ret = yunos_sem_count_set(NULL, 2);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_sem_count_set(test_sem, (sem_count_t)-1);
+    ret = yunos_sem_count_set(test_sem, (sem_count_t) - 1);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_sem_dyn_del(test_sem);
@@ -169,10 +169,11 @@ void sem_param_test(void)
 {
     kstat_t ret;
 
-    task_sem_entry_register(MODULE_NAME, (test_func_t *)sem_func_runner, sizeof(sem_func_runner)/sizeof(test_case_t));
+    task_sem_entry_register(MODULE_NAME, (test_func_t *)sem_func_runner,
+                            sizeof(sem_func_runner) / sizeof(test_case_t));
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

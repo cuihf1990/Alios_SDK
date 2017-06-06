@@ -167,7 +167,8 @@ neighbor_t          *mm_get_attach_candidate(network_context_t *network);
 uint8_t             *mm_get_local_ueid(void);
 mm_device_state_t   mm_get_device_state(void);
 attach_state_t      mm_get_attach_state(void);
-void                mm_set_meshnetid(network_context_t *network, uint16_t meshnetid);
+void                mm_set_meshnetid(network_context_t *network,
+                                     uint16_t meshnetid);
 uint16_t            mm_get_meshnetid(network_context_t *network);
 uint16_t            mm_get_meshnetsize(void);
 const mac_address_t *mm_get_mac_address(void);
@@ -175,7 +176,8 @@ node_mode_t         mm_get_mode(void);
 uint16_t            mm_get_path_cost(void);
 ur_error_t          mm_set_mode(node_mode_t mode);
 uint16_t            mm_get_channel(network_context_t *network);
-void                mm_set_channel(network_context_t *network, uint16_t channel);
+void                mm_set_channel(network_context_t *network,
+                                   uint16_t channel);
 ur_error_t          mm_set_seclevel(int8_t level);
 int8_t              mm_get_seclevel(void);
 

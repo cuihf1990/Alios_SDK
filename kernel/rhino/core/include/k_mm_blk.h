@@ -38,7 +38,8 @@ typedef struct {
  * @param[in]  pool_size   size of the pool
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name, void *pool_start,
+kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
+                             void *pool_start,
                              size_t blk_size, size_t pool_size);
 
 /**

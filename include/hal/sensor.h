@@ -29,14 +29,12 @@ typedef struct hal_sensor_module_s hal_sensor_module_t;
 
 typedef int sensor_type;
 
-typedef struct
-{
+typedef struct {
     sensor_type type;
-    const char * sensor_name;
+    const char *sensor_name;
 } sensor_node_t;
 
-struct hal_sensor_module_s
-{
+struct hal_sensor_module_s {
     hal_module_base_t base;
 
     /* Link to HW */
@@ -69,7 +67,8 @@ int  hal_sensor_init(void);
  * @return
  *    return num ot sensor, negative value indicates an error
  */
-int  hal_sensor_get_sensor_list(hal_sensor_module_t *m, sensor_node_t const **list);
+int  hal_sensor_get_sensor_list(hal_sensor_module_t *m,
+                                sensor_node_t const **list);
 
 /**
  * @brief enable sensor with type
@@ -103,7 +102,8 @@ int  hal_sensor_disable(hal_sensor_module_t *m, sensor_type type);
  * @return
  *     return 0 if read ok, negative value indicates an error
  */
-int  hal_sensor_read(hal_sensor_module_t *m, sensor_type type, char *buf, int buf_size);
+int  hal_sensor_read(hal_sensor_module_t *m, sensor_type type, char *buf,
+                     int buf_size);
 
 /**
  * @brief Get the default sensor module

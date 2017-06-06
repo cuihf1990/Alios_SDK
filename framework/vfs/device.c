@@ -47,8 +47,8 @@ typedef struct {
 
 static int event_open(inode_t *node, file_t *file)
 {
-    event_dev_t *pdev = (event_dev_t *)yos_malloc(sizeof *pdev);
-    bzero(pdev, sizeof *pdev);
+    event_dev_t *pdev = (event_dev_t *)yos_malloc(sizeof * pdev);
+    bzero(pdev, sizeof * pdev);
     yos_mutex_new(&pdev->mutex);
     dlist_init(&pdev->bufs);
     dlist_init(&pdev->buf_cache);
@@ -68,7 +68,7 @@ static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
         dlist_del(&evt->node);
         pdev->cache_count --;
     } else {
-        evt = (dev_event_t*)yos_malloc(sizeof(*evt) + len);
+        evt = (dev_event_t *)yos_malloc(sizeof(*evt) + len);
     }
 
     if (evt == NULL) {
@@ -80,10 +80,11 @@ static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
 
     evt->len = len;
     memcpy(evt->buf, buf, len);
-    if (urgent)
+    if (urgent) {
         dlist_add(&evt->node, &pdev->bufs);
-    else
+    } else {
         dlist_add_tail(&evt->node, &pdev->bufs);
+    }
 
     if (pdev->poll_cb != NULL) {
         pdev->fd->revents |= POLLIN;
@@ -105,10 +106,10 @@ static int event_ioctl(file_t *f, int cmd, unsigned long arg)
     void *buf = (void *)arg;
     cmd = _GET_CMD(cmd);
     switch (cmd) {
-    case IOCTL_WRITE_NORMAL:
-        return _event_write(f, buf, len, false);
-    case IOCTL_WRITE_URGENT:
-        return _event_write(f, buf, len, true);
+        case IOCTL_WRITE_NORMAL:
+            return _event_write(f, buf, len, false);
+        case IOCTL_WRITE_URGENT:
+            return _event_write(f, buf, len, true);
     }
 
     return -1;
@@ -144,7 +145,8 @@ static ssize_t event_read(file_t *f, void *buf, size_t len)
     return cnt;
 }
 
-static int event_poll(file_t *f, bool setup, poll_notify_t notify, struct pollfd *fd, void *opa)
+static int event_poll(file_t *f, bool setup, poll_notify_t notify,
+                      struct pollfd *fd, void *opa)
 {
     event_dev_t *pdev = f->f_arg;
     if (!setup) {

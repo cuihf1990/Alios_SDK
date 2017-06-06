@@ -81,7 +81,7 @@ ur_error_t process_mcast_header(network_context_t *network, uint8_t *message)
                 error = UR_ERROR_DROP;
             }
             break;
-       }
+        }
     }
 
     if (entry == NULL) {

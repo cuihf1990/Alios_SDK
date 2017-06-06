@@ -181,11 +181,12 @@ void intrpt_disable_measure_stop(void);
 void dyn_mem_proc_task_start(void);
 void cpu_usage_stats_start(void);
 
-kstat_t ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len, size_t type, size_t block_size);
+kstat_t ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len, size_t type,
+                     size_t block_size);
 kstat_t ringbuf_reset(k_ringbuf_t *p_ringbuf);
-kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data,size_t len);
-kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void * data,size_t len);
-kstat_t ringbuf_pop(k_ringbuf_t *p_ringbuf, void * pdata, size_t * plen);
+kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
+kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
+kstat_t ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen);
 uint8_t ringbuf_is_full(k_ringbuf_t *p_ringbuf);
 uint8_t ringbuf_is_empty(k_ringbuf_t *p_ringbuf);
 

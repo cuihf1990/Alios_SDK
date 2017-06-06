@@ -26,7 +26,8 @@ extern ktask_t *task_time;
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_time_entry_register(const char *name, test_func_t *runner, uint8_t casenum);
+void task_time_entry_register(const char *name, test_func_t *runner,
+                              uint8_t casenum);
 void task_time_entry(void *arg);
 void time_test(void);
 void time_opr_test(void);

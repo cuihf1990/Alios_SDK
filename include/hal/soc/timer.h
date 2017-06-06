@@ -37,7 +37,8 @@ typedef struct {
  * @note  period   auto   auto   auto
  *         *-------|--------|--------|--------|
  */
-void hal_timer_init(hal_timer_t *tmr, unsigned int period, unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg);
+void hal_timer_init(hal_timer_t *tmr, unsigned int period,
+                    unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg);
 
 /**
  * @brief init a hardware timer

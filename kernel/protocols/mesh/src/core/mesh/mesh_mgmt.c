@@ -107,8 +107,10 @@ static void set_default_network_data(void)
     stable_network_data.meshnetid = nd_get_stable_meshnetid();
     stable_network_data.mcast_addr[0].m8[0] = 0xff;
     stable_network_data.mcast_addr[0].m8[1] = 0x08;
-    stable_network_data.mcast_addr[0].m8[6] = (uint8_t)(stable_network_data.meshnetid >> 8);
-    stable_network_data.mcast_addr[0].m8[7] = (uint8_t)stable_network_data.meshnetid;
+    stable_network_data.mcast_addr[0].m8[6] = (uint8_t)(
+                                                  stable_network_data.meshnetid >> 8);
+    stable_network_data.mcast_addr[0].m8[7] = (uint8_t)
+                                              stable_network_data.meshnetid;
     stable_network_data.mcast_addr[0].m8[15] = 0xfc;
     nd_set(NULL, &network_data);
     nd_stable_set(&stable_network_data);
@@ -136,7 +138,8 @@ static void handle_device_alive_timer(void *args)
     network = get_default_network_context();
     send_address_notification(network, NULL);
 
-    g_mm_state.device.alive_timer = ur_start_timer(network->notification_interval, handle_device_alive_timer, NULL);
+    g_mm_state.device.alive_timer = ur_start_timer(network->notification_interval,
+                                                   handle_device_alive_timer, NULL);
 }
 
 static void start_keep_alive_timer(network_context_t *network)
@@ -158,8 +161,9 @@ static void start_advertisement_timer(network_context_t *network)
 {
     send_advertisement(network);
     if (network->advertisement_timer == NULL) {
-        network->advertisement_timer = ur_start_timer(network->hal->advertisement_interval,
-                                                      handle_advertisement_timer, network);
+        network->advertisement_timer = ur_start_timer(
+                                           network->hal->advertisement_interval,
+                                           handle_advertisement_timer, network);
     }
 }
 
@@ -251,7 +255,8 @@ void become_leader(void)
            "become leader\r\n");
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "interface %d, type %d, netid %x\r\n",
+        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
+               "interface %d, type %d, netid %x\r\n",
                network->index, network->hal->module->type, network->meshnetid);
     }
 }
@@ -478,13 +483,15 @@ static void handle_attach_timer(void *args)
         network->attach_state = ATTACH_IDLE;
         network->candidate_meshnetid = BCAST_NETID;
         network->attach_candidate = NULL;
-        if (g_mm_state.device.state < DEVICE_STATE_LEAF || network->change_sid == true) {
+        if (g_mm_state.device.state < DEVICE_STATE_LEAF ||
+            network->change_sid == true) {
             network->leader_times++;
             if (network->leader_times < BECOME_LEADER_TIMEOUT) {
                 attach_start(NULL);
             } else {
                 network->leader_times = 0;
-                if ((g_mm_state.device.mode & MODE_SUPER || g_mm_state.device.mode & MODE_RX_ON) &&
+                if ((g_mm_state.device.mode & MODE_SUPER ||
+                     g_mm_state.device.mode & MODE_RX_ON) &&
                     ((g_mm_state.device.mode & MODE_MOBILE) == 0)) {
                     become_leader();
                 } else {
@@ -507,8 +514,9 @@ static void handle_advertisement_timer(void *args)
     if (send_advertisement(network) == UR_ERROR_FAIL) {
         return;
     }
-    network->advertisement_timer = ur_start_timer(network->hal->advertisement_interval,
-                                                  handle_advertisement_timer, args);
+    network->advertisement_timer = ur_start_timer(
+                                       network->hal->advertisement_interval,
+                                       handle_advertisement_timer, args);
 }
 
 static void handle_migrate_wait_timer(void *args)
@@ -611,8 +619,9 @@ ur_error_t send_advertisement(network_context_t *network)
 
     netinfo = (mm_netinfo_tv_t *)data;
     mm_init_tv_base((mm_tv_t *)netinfo, TYPE_NETWORK_INFO);
-    netinfo->stable_version = (nd_get_stable_main_version() << STABLE_MAIN_VERSION_OFFSET) |
-                               nd_get_stable_minor_version();
+    netinfo->stable_version = (nd_get_stable_main_version() <<
+                               STABLE_MAIN_VERSION_OFFSET) |
+                              nd_get_stable_minor_version();
     netinfo->version        = nd_get_version(NULL);
     netinfo->size           = nd_get_meshnetsize(NULL);
     set_subnetsize_to_netinfo(netinfo, nd_get_meshnetsize(network));
@@ -802,7 +811,8 @@ static ur_error_t handle_attach_request(message_t *message)
 
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    if ((version = (mm_version_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_VERSION)) == NULL) {
+    if ((version = (mm_version_tv_t *)mm_get_tv(tlvs, tlvs_length,
+                                                TYPE_VERSION)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -810,7 +820,8 @@ static ur_error_t handle_attach_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    if ((ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_SRC_UEID)) == NULL) {
+    if ((ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length,
+                                          TYPE_SRC_UEID)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -820,7 +831,8 @@ static ur_error_t handle_attach_request(message_t *message)
 
     node = get_neighbor_by_ueid(ueid->ueid);
     if (node && node == network->attach_node) {
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "ignore attach point's attach request\r\n");
+        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
+               "ignore attach point's attach request\r\n");
         return UR_ERROR_FAIL;
     }
 
@@ -844,7 +856,8 @@ static ur_error_t handle_attach_request(message_t *message)
     send_attach_response(network, &info->src_mac);
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-           "attach response to " EXT_ADDR_FMT "\r\n", EXT_ADDR_DATA(info->src_mac.addr.addr));
+           "attach response to " EXT_ADDR_FMT "\r\n",
+           EXT_ADDR_DATA(info->src_mac.addr.addr));
     return error;
 }
 
@@ -879,7 +892,7 @@ static ur_error_t handle_attach_response(message_t *message)
 
     path_cost = (mm_cost_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_PATH_COST);
     if (path_cost == NULL) {
-         return UR_ERROR_NONE;
+        return UR_ERROR_NONE;
     }
 
     group_key = (mm_group_key_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_GROUP_KEY);
@@ -923,8 +936,9 @@ static ur_error_t handle_attach_response(message_t *message)
         network->attach_candidate = NULL;
         send_address_notification(network, NULL);
         if (network->advertisement_timer == NULL) {
-            network->advertisement_timer = ur_start_timer(network->hal->advertisement_interval,
-                                                          handle_advertisement_timer, network);
+            network->advertisement_timer = ur_start_timer(
+                                               network->hal->advertisement_interval,
+                                               handle_advertisement_timer, network);
         }
         g_mm_state.callback->interface_up();
         start_keep_alive_timer(network);
@@ -1062,8 +1076,9 @@ static ur_error_t send_sid_response(network_context_t *network,
 
     netinfo = (mm_netinfo_tv_t *)data;
     mm_init_tv_base((mm_tv_t *)netinfo, TYPE_NETWORK_INFO);
-    netinfo->stable_version = (nd_get_stable_main_version() << STABLE_MAIN_VERSION_OFFSET) |
-                               nd_get_stable_minor_version();
+    netinfo->stable_version = (nd_get_stable_main_version() <<
+                               STABLE_MAIN_VERSION_OFFSET) |
+                              nd_get_stable_minor_version();
     netinfo->version = nd_get_version(NULL);
     netinfo->size = nd_get_meshnetsize(NULL);
     netinfo->subnet_size_1  = (uint8_t)((nd_get_meshnetsize(network) >> 8) & 0x7);
@@ -1113,10 +1128,11 @@ static ur_error_t handle_sid_request(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     attach_node_id = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_ATTACH_NODE_ID);
+                                                  TYPE_ATTACH_NODE_ID);
     src_sid = (mm_sid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_SRC_SID);
 
-    if ((ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_SRC_UEID)) == NULL) {
+    if ((ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length,
+                                          TYPE_SRC_UEID)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -1258,14 +1274,16 @@ ur_error_t handle_raw_data(message_t *message)
 
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
 
-    if ((ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, sizeof(mm_ueid_tv_t), TYPE_SRC_UEID)) == NULL) {
+    if ((ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, sizeof(mm_ueid_tv_t),
+                                          TYPE_SRC_UEID)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
     src.addr.len = EXT_ADDR_SIZE;
     memcpy(&src.addr.addr, ueid, sizeof(src.addr.addr));
     payload = tlvs + sizeof(mm_ueid_tv_t);
-    length = message_get_msglen(message) - sizeof(mm_header_t) - sizeof(mm_ueid_tv_t);
+    length = message_get_msglen(message) - sizeof(mm_header_t) - sizeof(
+                 mm_ueid_tv_t);
     error = g_mm_state.raw_data_receiver(&src, payload, length);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle raw data\r\n");
@@ -1321,8 +1339,10 @@ static ur_error_t handle_sid_response(message_t *message)
         return UR_ERROR_FAIL;
     }
     stable_network_data.main_version =
-                (netinfo->stable_version & STABLE_MAIN_VERSION_MASK) >> STABLE_MAIN_VERSION_OFFSET;
-    stable_network_data.minor_version = netinfo->version & STABLE_MINOR_VERSION_MASK;
+        (netinfo->stable_version & STABLE_MAIN_VERSION_MASK) >>
+        STABLE_MAIN_VERSION_OFFSET;
+    stable_network_data.minor_version = netinfo->version &
+                                        STABLE_MINOR_VERSION_MASK;
     stable_network_data.meshnetid = get_main_netid(info->src.netid);
     memcpy(stable_network_data.mcast_addr, &mcast->mcast, sizeof(mcast->mcast));
     nd_stable_set(&stable_network_data);
@@ -1347,7 +1367,7 @@ static ur_error_t handle_sid_response(message_t *message)
     network->attach_state = ATTACH_DONE;
     network->attach_node = network->attach_candidate;
     network->attach_candidate->flags &=
-                      (~(NBR_SID_CHANGED | NBR_DISCOVERY_REQUEST | NBR_NETID_CHANGED));
+        (~(NBR_SID_CHANGED | NBR_DISCOVERY_REQUEST | NBR_NETID_CHANGED));
     network->attach_candidate = NULL;
     network->candidate_meshnetid = BCAST_NETID;
     network->attach_node->stats.link_cost = 256;
@@ -1377,8 +1397,8 @@ static ur_error_t handle_sid_response(message_t *message)
     ur_stop_timer(&network->migrate_wait_timer, network);
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-             "allocate sid 0x%04x, become %s in net %04x\r\n",
-              network->sid, state2str(g_mm_state.device.state), network->meshnetid);
+           "allocate sid 0x%04x, become %s in net %04x\r\n",
+           network->sid, state2str(g_mm_state.device.state), network->meshnetid);
 
     if (g_mm_state.device.state == DEVICE_STATE_SUPER_ROUTER ||
         g_mm_state.device.state == DEVICE_STATE_LEADER) {
@@ -1442,7 +1462,8 @@ ur_error_t attach_start(neighbor_t *nbr)
 
     network = get_default_network_context();
     if (network->attach_candidate ||
-        (network->attach_state != ATTACH_IDLE && network->attach_state != ATTACH_DONE)) {
+        (network->attach_state != ATTACH_IDLE &&
+         network->attach_state != ATTACH_DONE)) {
         return UR_ERROR_BUSY;
     }
 
@@ -1476,9 +1497,10 @@ ur_error_t attach_start(neighbor_t *nbr)
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "%s node, attach start, from %04x:%04x to %04x:%x\r\n",
-           state2str(g_mm_state.device.state), network->attach_node?
-           network->attach_node->addr.addr.short_addr: 0,
-           network->meshnetid, nbr?nbr->addr.addr.short_addr:0, network->candidate_meshnetid);
+           state2str(g_mm_state.device.state), network->attach_node ?
+           network->attach_node->addr.addr.short_addr : 0,
+           network->meshnetid, nbr ? nbr->addr.addr.short_addr : 0,
+           network->candidate_meshnetid);
 
     return error;
 }
@@ -1547,7 +1569,8 @@ static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
         return;
     }
 
-    if (network->router->sid_type == STRUCTURED_SID && nbr->ssid_info.free_slots < 1) {
+    if (network->router->sid_type == STRUCTURED_SID &&
+        nbr->ssid_info.free_slots < 1) {
         nbr = NULL;
     }
     if (nbr == NULL && g_mm_state.device.state > DEVICE_STATE_ATTACHED) {
@@ -1634,7 +1657,8 @@ static ur_error_t handle_advertisement(message_t *message)
             if (is_subnet(info->src.netid) == 0) {
                 return UR_ERROR_NONE;
             }
-        } else if ((mode->mode & MODE_SUPER) == 0 && (g_mm_state.device.mode & MODE_SUPER)) {
+        } else if ((mode->mode & MODE_SUPER) == 0 &&
+                   (g_mm_state.device.mode & MODE_SUPER)) {
             return UR_ERROR_NONE;
         }
     }
@@ -1845,7 +1869,8 @@ ur_error_t mm_init(void)
 
     g_mm_state.device.seclevel = SEC_LEVEL_1;
 
-    memset(&g_mm_state.network_data_updater, 0 , sizeof(g_mm_state.network_data_updater));
+    memset(&g_mm_state.network_data_updater, 0 ,
+           sizeof(g_mm_state.network_data_updater));
     g_mm_state.network_data_updater.handler = network_data_update_handler;
     nd_register_update_handler(&g_mm_state.network_data_updater);
 
@@ -1919,7 +1944,8 @@ uint16_t mm_get_meshnetid(network_context_t *network)
         return meshnetid;
     }
 
-    if (network->attach_state == ATTACH_IDLE || network->attach_state == ATTACH_DONE) {
+    if (network->attach_state == ATTACH_IDLE ||
+        network->attach_state == ATTACH_DONE) {
         meshnetid = network->meshnetid;
     } else if (network->attach_candidate) {
         meshnetid = network->attach_candidate->addr.netid;
@@ -1942,7 +1968,8 @@ uint16_t mm_get_local_sid(void)
         return sid;
     }
 
-    if (network->attach_state == ATTACH_IDLE || network->attach_state == ATTACH_DONE) {
+    if (network->attach_state == ATTACH_IDLE ||
+        network->attach_state == ATTACH_DONE) {
         sid = network->sid;
     } else {
         sid = BCAST_SID;
@@ -2052,8 +2079,9 @@ attach_state_t mm_get_attach_state(void)
 neighbor_t *mm_get_attach_node(network_context_t *network)
 {
     network = network ? : get_default_network_context();
-    if (!network)
+    if (!network) {
         return NULL;
+    }
 
     return network->attach_node;
 }
@@ -2061,8 +2089,9 @@ neighbor_t *mm_get_attach_node(network_context_t *network)
 neighbor_t *mm_get_attach_candidate(network_context_t *network)
 {
     network = network ? : get_default_network_context();
-    if (!network)
+    if (!network) {
         return NULL;
+    }
 
     return network->attach_candidate;
 }

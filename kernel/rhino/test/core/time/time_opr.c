@@ -34,7 +34,8 @@ void gettaskinfo(void)
     printf("---------------------------------------------\n");
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
         task = yunos_list_entry(tmp, ktask_t, task_stats_item);
-        printf("%s\t\t %d\t\t\%d\n", task->task_name, (int)task->task_state, (int)task->stack_size);
+        printf("%s\t\t %d\t\t\%d\n", task->task_name, (int)task->task_state,
+               (int)task->stack_size);
     }
     printf("---------------------------------------------\n");
 }
@@ -76,10 +77,11 @@ void time_opr_test(void)
 {
     kstat_t ret;
 
-    task_time_entry_register(MODULE_NAME, (test_func_t *)time_func_runner, sizeof(time_func_runner) / sizeof(test_func_t));
+    task_time_entry_register(MODULE_NAME, (test_func_t *)time_func_runner,
+                             sizeof(time_func_runner) / sizeof(test_func_t));
 
     ret = yunos_task_dyn_create(&task_time, MODULE_NAME, 0, TASK_TIME_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_time_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_time_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

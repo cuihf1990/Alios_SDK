@@ -69,7 +69,7 @@ static void handle_discovery_timer(void *args)
         mm_set_channel(network, hal->channel_list.channels[hal->discovery_channel]);
         send_discovery_request(network);
         hal->discovery_timer = ur_start_timer(discovery_interval,
-                handle_discovery_timer, network);
+                                              handle_discovery_timer, network);
         hal->discovery_channel++;
         return;
     } else if (hal->discovery_result.meshnetid != BCAST_NETID) {
@@ -159,8 +159,9 @@ static ur_error_t send_discovery_response(network_context_t *network,
 
     netinfo = (mm_netinfo_tv_t *)data;
     mm_init_tv_base((mm_tv_t *)netinfo, TYPE_NETWORK_INFO);
-    netinfo->stable_version = (nd_get_stable_main_version() << STABLE_MAIN_VERSION_OFFSET) |
-                               nd_get_stable_minor_version();
+    netinfo->stable_version = (nd_get_stable_main_version() <<
+                               STABLE_MAIN_VERSION_OFFSET) |
+                              nd_get_stable_minor_version();
     netinfo->size = mm_get_meshnetsize();
     data += sizeof(mm_netinfo_tv_t);
 
@@ -199,7 +200,8 @@ ur_error_t handle_discovery_request(message_t *message)
     network = info->network;
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    if ((version = (mm_version_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_VERSION)) == NULL) {
+    if ((version = (mm_version_tv_t *)mm_get_tv(tlvs, tlvs_length,
+                                                TYPE_VERSION)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -248,7 +250,8 @@ ur_error_t handle_discovery_response(message_t *message)
         nbr->flags &= (~NBR_DISCOVERY_REQUEST);
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle discovery response from %x\r\n",
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
+           "handle discovery response from %x\r\n",
            info->src.netid);
 
     if (is_bcast_netid(info->src.netid)) {

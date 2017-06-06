@@ -1,16 +1,16 @@
- /****************************************************************************
-  *
-  * Copyright (C) 2016 YunOS Project. All rights reserved.
-  ****************************************************************************/
+/****************************************************************************
+ *
+ * Copyright (C) 2016 YunOS Project. All rights reserved.
+ ****************************************************************************/
 
- /**
- * @file
- * @brief     dynamic module header
- * @details
- * @author    xzf
- * @date      2016-11-16
- * @version   0.1
- */
+/**
+* @file
+* @brief     dynamic module header
+* @details
+* @author    xzf
+* @date      2016-11-16
+* @version   0.1
+*/
 #ifndef YMOD_H_
 #define YMOD_H_
 

@@ -154,10 +154,11 @@ void mutex_param_test(void)
 {
     kstat_t ret;
 
-    task_mutex_entry_register(MODULE_NAME, (test_func_t *)mutex_func_runner, sizeof(mutex_func_runner)/sizeof(test_case_t));
+    task_mutex_entry_register(MODULE_NAME, (test_func_t *)mutex_func_runner,
+                              sizeof(mutex_func_runner) / sizeof(test_case_t));
 
     ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_MUTEX_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_mutex_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_mutex_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

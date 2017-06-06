@@ -79,7 +79,8 @@ static void task_queue0_entry(void *arg)
     while (1) {
         yunos_queue_dyn_create_param_test();
 
-        ret = yunos_queue_dyn_create(&g_test_queue0, "test_queue0", TEST_QUEUE_MSG0_SIZE);
+        ret = yunos_queue_dyn_create(&g_test_queue0, "test_queue0",
+                                     TEST_QUEUE_MSG0_SIZE);
         QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         /* check yunos_queue_back_send param */

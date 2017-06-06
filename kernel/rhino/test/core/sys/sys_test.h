@@ -26,7 +26,8 @@ extern ktask_t *task_sys;
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_sys_entry_register(const char *name, test_func_t *runner, uint8_t casenum);
+void task_sys_entry_register(const char *name, test_func_t *runner,
+                             uint8_t casenum);
 void task_sys_entry(void *arg);
 void sys_test(void);
 void sys_opr_test(void);

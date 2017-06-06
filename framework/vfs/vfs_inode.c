@@ -69,10 +69,12 @@ inode_t *inode_open(const char *path)
 
     for (; e < YUNOS_CONFIG_VFS_DEV_NODES; e++) {
         node = &g_vfs_dev_nodes[e];
-        if (node == NULL)
+        if (node == NULL) {
             continue;
-        if (node->i_name == NULL)
+        }
+        if (node->i_name == NULL) {
             continue;
+        }
         if (strcmp(node->i_name, path) == 0) {
             return node;
         }

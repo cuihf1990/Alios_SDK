@@ -32,7 +32,8 @@ extern ksem_t   test_tasksem_co2;
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_tasksem_entry_register(const char *name, test_func_t *runner, uint8_t casnum);
+void task_tasksem_entry_register(const char *name, test_func_t *runner,
+                                 uint8_t casnum);
 void task_tasksem_entry(void *arg);
 void tasksem_test(void);
 void tasksem_param_test(void);

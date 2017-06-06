@@ -110,10 +110,11 @@ void sys_opr_test(void)
 {
     kstat_t ret;
 
-    task_sys_entry_register(MODULE_NAME, (test_func_t *)sys_func_runner, sizeof(sys_func_runner) / sizeof(test_func_t));
+    task_sys_entry_register(MODULE_NAME, (test_func_t *)sys_func_runner,
+                            sizeof(sys_func_runner) / sizeof(test_func_t));
 
     ret = yunos_task_dyn_create(&task_sys, MODULE_NAME, 0, TASK_SYS_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_sys_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_sys_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
