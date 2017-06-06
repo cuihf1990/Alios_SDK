@@ -76,6 +76,24 @@ static void set_full_rssi(int start, int end)
     set_full_rssi_ext(IF_BLE, start, end);
 }
 
+static void clear_full_rssi_ext(int if_idx, int start, int end)
+{
+    int i,j;
+    for (i=start;i<end;i++) {
+        for(j=start;j<=end;j++) {
+            if (i == j)
+                continue;
+            set_rssi_ext(if_idx, i, j, 0, 0);
+        }
+    }
+}
+
+static void clear_full_rssi(int start, int end)
+{
+    clear_full_rssi_ext(IF_WIFI, start, end);
+    clear_full_rssi_ext(IF_BLE, start, end);
+}
+
 static void start_node(int id)
 {
     char cmd[32];
@@ -117,6 +135,7 @@ inline static void __dummy__(void)
     start_node(0);
     start_node_ext(0, -1, -1, -1);
     stop_node(0);
+    clear_full_rssi(0, 0);
 }
 
 typedef void (*dda_p2p_cb)(const char *, int, void *);
