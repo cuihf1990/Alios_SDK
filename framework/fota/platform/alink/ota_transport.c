@@ -72,11 +72,12 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
             goto parse_failed;
         }
 
-        strncpy(response_parmas->md5, md5->valuestring,
-                sizeof response_parmas->md5);
+        memset(response_parmas->md5, 0, sizeof response_parmas->md5);
+        strncpy(response_parmas->md5, md5->valuestring, sizeof response_parmas->md5);
 
+        OTA_LOG_E("md5 %s", response_parmas->md5);
         cJSON *size = cJSON_GetObjectItem(root, "size");
-        if (!md5) {
+        if (!size) {
             OTA_LOG_E("size back.");
             goto parse_failed;
         }
@@ -84,8 +85,8 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
         response_parmas->frimware_size = size->valueint;
 
         cJSON *version = cJSON_GetObjectItem(root, "version");
-        if (!resourceUrl) {
-            OTA_LOG_E("resourceUrl back.");
+        if (!version) {
+            OTA_LOG_E("version back.");
             goto parse_failed;
         }
         strncpy(response_parmas->primary_version, version->valuestring,

@@ -52,10 +52,13 @@ int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *req
 write_flash_cb_t g_write_func;
 ota_finish_cb_t g_finish_cb;
 char url[OTA_URL_MAX_LEN];
+char md5[33];
+
+extern int  check_md5(const char *buffer, const int32_t len);
 
 void ota_download_start(void * buf)
 {
-    OTA_LOG_E("task update start");
+    OTA_LOG_I("task update start");
     ota_set_status(E_OTA_IDLE);
     int ret = http_download(url, g_write_func); 
     if(ret < 0 ) {
@@ -63,15 +66,21 @@ void ota_download_start(void * buf)
        ota_set_status(E_OTA_DOWNLOAD_FAIL);
        return;
     }
+    ret = check_md5(md5,sizeof md5);    
+    if(ret < 0 ) {
+       OTA_LOG_E("ota check md5 error");
+       ota_set_status(E_OTA_DOWNLOAD_FAIL);
+       return;
+    }
     memset(url, 0, sizeof url);
-    OTA_LOG_I(" ota status %d",ota_get_status());
+    OTA_LOG_I("ota status %d",ota_get_status());
     ota_set_status(E_OTA_DOWNLOAD_SUC);
     if(NULL != g_finish_cb) {
         g_finish_cb(0,"");
     }
  
     ota_set_status(E_OTA_END);
-    OTA_LOG_E("task update over");
+    OTA_LOG_I("task update over");
     free_global_topic();
 }
 
@@ -87,8 +96,10 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
 
     g_write_func = func;
     g_finish_cb = fcb;
-    strncpy(url, response_parmas->download_url,sizeof url);
-    ret = yos_task_new("ota", ota_download_start, NULL, 8196);
+    memset(md5, 0 , sizeof md5);
+    strncpy(md5, response_parmas->md5, sizeof md5);
+    strncpy(url,  response_parmas->download_url,sizeof url);
+    ret = yos_task_new("ota", ota_download_start, 0 , 8196);
 
     return ret;
 }

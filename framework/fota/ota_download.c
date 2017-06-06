@@ -21,10 +21,10 @@
 #include "ota_constants.h"
 #include "ota_util.h"
 #include "ota_log.h"
-
+#include "md5.h"
 #include "ota_update_manifest.h"
 
-#define BUFFER_MAX_SIZE 1024
+#define BUFFER_MAX_SIZE 512
 
 
 
@@ -145,6 +145,25 @@ err_out:
     return -1;
 }
 
+static MD5_CTX            g_ctx;
+
+int check_md5(const char *buffer, const int32_t len)
+{
+    unsigned char digest[16] = {0};
+    MD5Final((unsigned char*)digest, &g_ctx);
+    char digest_str[33] = {0}; 
+    int i= 0;
+    char *p = digest_str;
+    for(; i< 16 ;i++) {
+        snprintf(digest_str + i*2, 2+1, "%2X", digest[i]);
+    }
+    //OTA_LOG_D("digestMD5=%s",digest_str);
+    if (strncmp(digest_str, buffer, 32)) {
+        OTA_LOG_E("Download update_packet FAIL!");
+        return 0;
+    }
+    return 1;
+}
 
 
 int http_download(char *url, write_flash_cb_t func) {
@@ -153,18 +172,15 @@ int http_download(char *url, write_flash_cb_t func) {
         return -1;
     }
     int sockfd = 0;
-    char buffer[BUFFER_MAX_SIZE] = {0};
+    char http_buffer[BUFFER_MAX_SIZE] = {0};
     int port = 0;
     int nbytes = 0;
     char host_file[128] = {0};
     char host_addr[256] = {0};
-    char request[BUFFER_MAX_SIZE] = {0};
     int send = 0;
     int totalsend = 0;
     int i = 0;
-    //char *pt = NULL;
-    char psave[BUFFER_MAX_SIZE] = {0};;
-    size_t index = 0;
+  
 
     OTA_LOG_I("parameter.1 is: %s\n ", url);
     http_gethost_info(url, host_addr, host_file, &port);
@@ -175,20 +191,20 @@ int http_download(char *url, write_flash_cb_t func) {
         OTA_LOG_E("http_socket_init error\n ");
         return -1;
     }
-    sprintf(request,
+    sprintf(http_buffer,
             "GET   /%s   HTTP/1.1\r\nAccept:   */*\r\nAccept-Language:   zh-cn\r\n"
                     "User-Agent:   Mozilla/4.0   (compatible;   MSIE   5.01;   Windows   NT   5.0)\r\n"
                     "Host:   %s:%d\r\nConnection:   Close\r\n\r\n ", host_file,
             host_addr, port);
-    OTA_LOG_I("%s\n", request);
+    OTA_LOG_I("%s\n", http_buffer);
     send = 0;
     totalsend = 0;
-    nbytes = strlen(request);
+    nbytes = strlen(http_buffer);
     while (totalsend < nbytes) {
-        send = write(sockfd, request + totalsend, nbytes - totalsend);
+        send = write(sockfd, http_buffer + totalsend, nbytes - totalsend);
         if (send == -1) {
             OTA_LOG_E("send error!%s\n ", strerror(errno));
-            exit(0);
+            return -1;
         }
         totalsend += send;
         OTA_LOG_I("%d bytes send OK!\n ", totalsend);
@@ -196,32 +212,32 @@ int http_download(char *url, write_flash_cb_t func) {
 
     i = 0;
     /*连接成功了，接收http响应,每次处理1024个字节*/
-    memset(psave, 0, BUFFER_MAX_SIZE);
-    while ((nbytes = read(sockfd, buffer, 1)) == 1) {
+    int size = 0; 
+    MD5Init(&g_ctx);
+    int buffer_size = 1;
+    memset(http_buffer, 0, sizeof http_buffer);
+    while ((nbytes = read(sockfd, http_buffer, buffer_size))) {
         if (i < 4) {
             /* process head packet*/
-            if (buffer[0] == '\r' || buffer[0] == '\n') {
+            if (http_buffer[0] == '\r' || http_buffer[0] == '\n') {
                 i++;
+                if(i == 4) {
+                    buffer_size = BUFFER_MAX_SIZE;
+                }
             } else {
                 i = 0;
             }
-            OTA_LOG_I("%c", buffer[0]);
         } else /*if buffer not ended with \r\n\r\n，request packet content*/
         {
-            psave[index++] = buffer[0];
-            if (index > BUFFER_MAX_SIZE) {
-                func(BUFFER_MAX_SIZE, (uint8_t *)psave, BUFFER_MAX_SIZE, 0);
-                memset(psave, 0, BUFFER_MAX_SIZE);
-                index = 0;
-            }
+            size +=nbytes;
+	    //OTA_LOG_E("size %d, %d", size,count);
+	    MD5Update(&g_ctx, (unsigned char*)http_buffer, nbytes);
+	    func(BUFFER_MAX_SIZE, (uint8_t *)http_buffer, nbytes, 0);
+	    memset(http_buffer, 0, BUFFER_MAX_SIZE);
         }
     }
-    /*write remaining bytes*/
-    if (index <= BUFFER_MAX_SIZE) {
-        func(BUFFER_MAX_SIZE, (uint8_t*)psave, index, 0);
-    }
+    
     close(sockfd);
-
     return 0;
 }
 
