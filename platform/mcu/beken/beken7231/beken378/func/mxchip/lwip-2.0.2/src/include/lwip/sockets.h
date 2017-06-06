@@ -437,10 +437,10 @@ typedef struct fd_set
 #endif
 
 #if LWIP_TIMEVAL_PRIVATE
-struct timeval {
-  long    tv_sec;         /* seconds */
-  long    tv_usec;        /* and microseconds */
-};
+// struct timeval {
+//   long    tv_sec;         /* seconds */
+//   long    tv_usec;        /* and microseconds */
+// };
 #endif /* LWIP_TIMEVAL_PRIVATE */
 
 #define lwip_socket_init() /* Compatibility define, no init needed. */

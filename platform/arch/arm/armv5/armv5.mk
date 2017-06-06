@@ -1,0 +1,3 @@
+NAME := armv5
+
+GLOBAL_INCLUDES += .

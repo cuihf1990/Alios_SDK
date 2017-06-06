@@ -7,7 +7,7 @@
 #  permission of MXCHIP Corporation.
 #
 
-ARM_GNU_ARCH_LIST :=
+ARM_GNU_ARCH_LIST := ARM968E-S
 
 THUMB_GNU_ARCH_LIST := Cortex-M0 \
                        Cortex-M3 \
@@ -130,7 +130,7 @@ COMPILER_SPECIFIC_RELEASE_LDFLAGS  := -Wl,--gc-sections -Wl,$(COMPILER_SPECIFIC_
 COMPILER_SPECIFIC_DEPS_FLAG        := -MD
 COMPILER_SPECIFIC_COMP_ONLY_FLAG   := -c
 COMPILER_SPECIFIC_LINK_MAP         =  -Wl,-Map,$(1)
-COMPILER_SPECIFIC_LINK_FILES       =  -Wl,--start-group -Wl,--whole-archive $(1) -Wl,--end-group
+COMPILER_SPECIFIC_LINK_FILES       =  -Wl,--start-group $(1) -Wl,--end-group
 COMPILER_SPECIFIC_LINK_SCRIPT_DEFINE_OPTION = -Wl$(COMMA)-T
 COMPILER_SPECIFIC_LINK_SCRIPT      =  $(addprefix -Wl$(COMMA)-T ,$(1))
 LINKER                             := $(CC) --static -Wl,-static -Wl,--warn-common
@@ -186,6 +186,13 @@ CPU_ASMFLAGS       := $(CPU_BASE_FLAGS)
 CPU_LDFLAGS        := -mthumb $(CPU_BASE_FLAGS) -Wl,-A,thumb -Wl,-z,max-page-size=0x10 -Wl,-z,common-page-size=0x10
 endif
 
+ifeq ($(HOST_ARCH),ARM968E-S)
+CPU_BASE_FLAGS     := -mcpu=arm968e-s -march=armv5te -marm -mlittle-endian
+CPU_CFLAGS         := $(CPU_BASE_FLAGS)
+CPU_CXXFLAGS       := $(CPU_BASE_FLAGS)
+CPU_ASMFLAGS       := $(CPU_BASE_FLAGS)
+CPU_LDFLAGS        := $(CPU_BASE_FLAGS)
+endif
 
 # $(1) is map file, $(2) is CSV output file
 COMPILER_SPECIFIC_MAPFILE_TO_CSV = $(PYTHON) $(MAPFILE_PARSER) $(1) > $(2)

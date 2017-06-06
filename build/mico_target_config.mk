@@ -233,7 +233,7 @@ MAIN_COMPONENT_PROCESSING :=1
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
 CC :=
 
-ifneq ($(filter $(HOST_ARCH),Cortex-M3 Cortex-M4 Cortex-M4F Cortex-R4),)
+ifneq ($(filter $(HOST_ARCH),Cortex-M3 Cortex-M4 Cortex-M4F Cortex-R4 ARM968E-S),)
 
 include $(MAKEFILES_PATH)/micoder_toolchain_arm-none-eabi.mk
 
