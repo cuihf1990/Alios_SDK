@@ -1,0 +1,236 @@
+#include "yunit.h"
+
+#include "yos/framework.h"
+#include "yos/kernel.h"
+
+#include "umesh.h"
+#include "core/link_mgmt.h"
+#include "core/sid_allocator.h"
+#include "core/router_mgr.h"
+#include "utilities/logging.h"
+#include "utilities/encoding.h"
+#include "tools/cli.h"
+
+#include "dda_util.h"
+
+/* topology:
+ *                     11(super)
+ *                 ----------
+ *                 |   |    |
+ *     ____________|   |    |_________ 
+ *    |                |              |
+ *    2(super)---------1(leader)----- 4 (super)
+ *    |                |              |
+ *    ------           |              |
+ *    |     |          |              |
+ *    |     |          |              |
+ *    5     8          9              10
+ *    |
+ *    |
+ *    6
+ *    |
+ *    |
+ *    7
+ *    |
+ *    |
+ *    3
+ */
+
+static void build_topo_wifi(void)
+{
+    clear_full_rssi(1, 11);
+
+    set_rssi_ext(IF_WIFI, 11, 2, 1, 1);
+    set_rssi_ext(IF_WIFI, 11, 1, 1, 1);
+    set_rssi_ext(IF_WIFI, 11, 4, 1, 1);
+    set_rssi_ext(IF_WIFI, 2, 1, 1, 1);
+    set_rssi_ext(IF_WIFI, 1, 4, 1, 1);
+    set_rssi_ext(IF_WIFI, 2, 5, 1, 1);
+    set_rssi_ext(IF_WIFI, 2, 8, 1, 1);
+    set_rssi_ext(IF_WIFI, 5, 6, 1, 1);
+    set_rssi_ext(IF_WIFI, 6, 7, 1, 1);
+    set_rssi_ext(IF_WIFI, 7, 3, 1, 1);
+    set_rssi_ext(IF_WIFI, 1, 9, 1, 1);
+    set_rssi_ext(IF_WIFI, 4, 10, 1, 1);
+}
+
+static void build_topo_wifi_ble(void)
+{
+    clear_full_rssi(1, 11);
+
+    set_rssi_ext(IF_WIFI, 11, 2, 1, 1);
+    set_rssi_ext(IF_WIFI, 11, 1, 1, 1);
+    set_rssi_ext(IF_WIFI, 11, 4, 1, 1);
+    set_rssi_ext(IF_WIFI, 2, 1, 1, 1);
+    set_rssi_ext(IF_WIFI, 1, 4, 1, 1);
+    set_rssi_ext(IF_BLE, 2, 5, 1, 1);
+    set_rssi_ext(IF_BLE, 2, 8, 1, 1);
+    set_rssi_ext(IF_BLE, 5, 6, 1, 1);
+    set_rssi_ext(IF_BLE, 6, 7, 1, 1);
+    set_rssi_ext(IF_BLE, 7, 3, 1, 1);
+    set_rssi_ext(IF_BLE, 1, 9, 1, 1);
+    set_rssi_ext(IF_BLE, 4, 10, 1, 1);
+}
+
+static void subnet_is_wifi_case(void)
+{
+    char autotest_cmd[64];
+    const ur_netif_ip6_address_t *addr;
+    uint8_t index;
+
+    build_topo_wifi();
+
+    cmd_to_agent("stop");
+
+    start_node_ext(1, MODE_SUPER, -1, 1);
+    check_p2p_str_wait("leader", 1, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 1, "testcmd router", 2);
+
+    ur_mesh_set_mode(MODE_SUPER);
+    cmd_to_agent("start");
+    check_cond_wait((DEVICE_STATE_SUPER_ROUTER == mm_get_device_state()), 15);
+    YUNIT_ASSERT(ur_router_get_default_router() == VECTOR_ROUTER);
+
+    start_node_ext(2, MODE_SUPER, -1, 1);
+    check_p2p_str_wait("super_router", 2, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 2, "testcmd router", 2);
+
+    start_node_ext(4, MODE_SUPER, -1, 1);
+    check_p2p_str_wait("super_router", 4, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 4, "testcmd router", 2);
+
+    yos_msleep(4 * 1000);
+
+    start_node_ext(5, MODE_RX_ON, -1, 1);
+    check_p2p_str_wait("router", 5, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 5, "testcmd router", 2);
+
+    start_node_ext(6, MODE_RX_ON, -1, 1);
+    check_p2p_str_wait("router", 6, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 6, "testcmd router", 2);
+
+    start_node_ext(7, MODE_RX_ON, -1, 1);
+    check_p2p_str_wait("router", 7, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 7, "testcmd router", 2);
+
+    start_node_ext(3, MODE_RX_ON, -1, 1);
+    check_p2p_str_wait("leaf", 3, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 3, "testcmd router", 2);
+
+    start_node_ext(8, MODE_RX_ON, -1, 1);
+    check_p2p_str_wait("router", 8, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 8, "testcmd router", 2);
+
+    start_node_ext(9, MODE_RX_ON, -1, 1);
+    check_p2p_str_wait("router", 9, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 9, "testcmd router", 2);
+
+    start_node_ext(10, MODE_MOBILE, -1, 1);
+    check_p2p_str_wait("leaf", 10, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 10, "testcmd router", 2);
+
+    yos_msleep(2 * 1000);
+
+    addr = ur_mesh_get_mcast_addr();
+
+    for (index = 1; index < 12; index++) {
+        snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT,
+                 index, IP6_ADDR_DATA(addr->addr));
+        cmd_to_master(autotest_cmd);
+        check_p2p_str_wait("10", index, "testcmd autotest_acked", 10);
+    }
+
+    for (index = 1; index < 12; index++) {
+        snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT " 1 1000",
+                 index, IP6_ADDR_DATA(addr->addr));
+        cmd_to_master(autotest_cmd);
+        check_p2p_str_wait("10", index, "testcmd autotest_acked", 10);
+    }
+
+    for (index = 1; index < 11; index++) {
+        stop_node(index);
+    }
+    cmd_to_agent("stop");
+    yos_msleep(3 * 1000);
+}
+
+static void subnet_is_ble_case(void)
+{
+    char autotest_cmd[64];
+    const ur_netif_ip6_address_t *addr;
+    uint8_t index;
+
+    build_topo_wifi_ble();
+
+    cmd_to_agent("stop");
+
+    start_node_ext(1, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("leader", 1, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 1, "testcmd router", 2);
+
+    ur_mesh_set_mode(MODE_SUPER);
+    cmd_to_agent("start");
+    check_cond_wait((DEVICE_STATE_SUPER_ROUTER == mm_get_device_state()), 15);
+    YUNIT_ASSERT(ur_router_get_default_router() == VECTOR_ROUTER);
+
+    start_node_ext(2, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("super_router", 2, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 2, "testcmd router", 2);
+
+    start_node_ext(4, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("super_router", 4, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 4, "testcmd router", 2);
+
+    yos_msleep(4 * 1000);
+
+    start_node_ext(5, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 5, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 5, "testcmd router", 2);
+
+    start_node_ext(6, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 6, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 6, "testcmd router", 2);
+
+    start_node_ext(7, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 7, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 7, "testcmd router", 2);
+
+    start_node_ext(3, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("leaf", 3, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 3, "testcmd router", 2);
+
+    start_node_ext(8, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 8, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 8, "testcmd router", 2);
+
+    start_node_ext(9, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 9, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 9, "testcmd router", 2);
+
+    start_node_ext(10, MODE_MOBILE, -1, 2);
+    check_p2p_str_wait("leaf", 10, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 10, "testcmd router", 2);
+
+    yos_msleep(2 * 1000);
+
+    addr = ur_mesh_get_mcast_addr();
+
+    for (index = 1; index < 12; index++) {
+        snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT,
+                 index, IP6_ADDR_DATA(addr->addr));
+        cmd_to_master(autotest_cmd);
+        check_p2p_str_wait("10", index, "testcmd autotest_acked", 10);
+    }
+
+    for (index = 1; index < 11; index++) {
+        stop_node(index);
+    }
+    cmd_to_agent("stop");
+    yos_msleep(3 * 1000);
+}
+
+void test_umesh_4super_7nodes_case(void)
+{
+    run_times(subnet_is_wifi_case(), 1);
+    run_times(subnet_is_ble_case(), 1);
+}
