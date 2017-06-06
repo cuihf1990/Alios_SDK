@@ -9,3 +9,8 @@ out
 copy_bootloader_output_for_eclipse
 copy_output_for_eclipse
 *.sw*
+platform/mcu/beken/beken7231/.gdbinit
+platform/mcu/beken/beken7231/.settings/language.settings.xml
+platform/mcu/beken/beken7231/.settings/org.eclipse.cdt.managedbuilder.core.prefs
+platform/mcu/beken/beken7231/Debug
+platform/mcu/beken/beken7231/si
