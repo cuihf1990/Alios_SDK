@@ -153,7 +153,6 @@ int check_md5(const char *buffer, const int32_t len)
     MD5Final((unsigned char*)digest, &g_ctx);
     char digest_str[33] = {0}; 
     int i= 0;
-    char *p = digest_str;
     for(; i< 16 ;i++) {
         snprintf(digest_str + i*2, 2+1, "%2X", digest[i]);
     }
