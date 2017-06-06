@@ -57,6 +57,10 @@
 	//Push R0 as we are going to use the register.
 	STMDB	SP!, {R0}	
 	
+	MRS R0, cpsr
+	ORR R0, R0, #0xc0
+	MSR cpsr_c, R0
+	
 	MRS R0, spsr
 	AND R0, R0, #0x1F
 	CMP R0, #0x1F
@@ -92,28 +96,30 @@
 	STMDB	LR!, {R0}
 
 	//Store the new top of stack for the task.
+	LDR 	R0, =pxNestChangedCurrentTCB
+	LDR 	R2, [R0]
+	CMP     R2, #0
+	BEQ     12f
+
+	STR		LR, [R2]
+			
+	B       11f
+	
+12:	
 	LDR		R0, =pxCurrentTCB
 	LDR		R0, [R0]
 	STR		LR, [R0]
-	
+		
 	B       11f
 	
-10:		
+10:	
 	LDMIA  SP!, {R0}
+	SUB    lr,lr,#4 	  
+	STMFD  sp!,{r0-r12,lr} 	
 	
-	STMDB	r13!, {r0-r12,r14}
-	NOP
-	NOP	
-	
-	LDR		R0, =ulCriticalNesting 
+	LDR		R0, =pxCurrentTCB
 	LDR		R0, [R0]
-	STMDB	r13!, {R0}
-	
-	LDR		R0, =pxCurrentTCB 
-	LDR		R0, [R0]
-	STMDB	r13!, {R0}
-		
-	SUB r13, r13, #8
+	STMDB	SP!, {R0}
 	
 11:
 	MOV R0, R0
@@ -122,12 +128,20 @@
 /* ========================================================================*/
 	.macro   portRESTORE_CONTEXT 
 		
+	MRS R0, cpsr
+	ORR R0, R0, #0xc0
+	MSR cpsr_c, R0
+	
 	MRS R0, spsr
 	AND R0, R0, #0x1F
 	CMP R0, #0x1F
 	BNE 20f
-			
+		
 	//Set the LR to the task stack.	
+	LDR 	R0, =pxNestChangedCurrentTCB
+	MOV	    R1, #0
+	STR		R1, [R0]
+	
 	LDR		R0, =pxCurrentTCB
 	LDR		R0, [R0]
 	LDR		LR, [R0]
@@ -140,6 +154,7 @@
 
 	//Get the SPSR from the stack.
 	LDMFD	LR!, {R0}
+	bic r0, r0, #0xc0
 	MSR		SPSR_cxsf, R0
 		
 	//Restore all system mode registers for the task.
@@ -155,25 +170,21 @@
 	SUBS	PC, LR, #4
 	
 20:		
-	ADD r13,r13,#0x8
+	LDMFD   sp!, {R0}
+	LDR		R1, =pxCurrentTCB
+	LDR		R1, [R1]
+	CMP     R0, R1
+	BEQ     21f
 	
-	LDR		R0, =pxCurrentTCB
-	LDMFD	r13!, {R1}
-	STR		R1, [R0]
-		
-	LDR		R0, =ulCriticalNesting
-	LDMFD	r13!, {R1}
-	STR		R1, [R0]
-		
-	LDMIA	r13!, {r0-r12,r14}
-	NOP
-	NOP	
-		
-	SUBS    pc, r14, #0x4
+	LDR 	R2, =pxNestChangedCurrentTCB
+	STR		R0, [R2]
+	
+21:	
+	LDMFD   sp!,{r0-r12,pc}^
 	.endm
-
+	
 /* ========================================================================*/
-.macro	 firstRESTORE_CONTEXT 			
+	.macro	 firstRESTORE_CONTEXT 			
 	//Set the LR to the task stack.
 	LDR 	R0, =pxCurrentTCB
 	LDR 	R0, [R0]
@@ -380,21 +391,80 @@ boot_dabort:
 boot_reserved:
     B boot_reserved
     
-		.align	5 
-irq_handler:	
-	portSAVE_CONTEXT
-	LDR R0, =intc_irq
-	MOV LR, PC
-	BX R0
-	portRESTORE_CONTEXT
 	
-		.align	5    
-fiq_handler:	
-	portSAVE_CONTEXT
-	LDR R0, =intc_fiq
-	MOV LR, PC
-	BX R0
-	portRESTORE_CONTEXT 
+    .align  5 
+irq_handler:
+    STMFD   SP!, {R1-R3}           @We will use R1-R3 as temporary registers
+
+    MOV     R1, SP
+    ADD     SP, SP, #12            @Adjust IRQ stack pointer
+    SUB     R2, LR, #4             @Adjust PC for return address to task
+
+    MRS     R3, SPSR               @Copy SPSR (Task CPSR)
+
+    MSR     CPSR_c, #0xd3          @Change to SVC mode with interrupt disabled
+
+    /* SAVE TASK'S CONTEXT ONTO OLD TASK'S STACK */
+    STMFD   SP!, {R2}              @Push task''s PC      
+    STMFD   SP!, {R4-R12, LR}       
+    LDMFD   R1!, {R4-R6}           @Load Task''s R1-R3 from IRQ stack
+    STMFD   SP!, {R4-R6}           @Push Task''s R1-R3 to SVC stack
+    STMFD   SP!, {R0}              @Push Task''s R0 to SVC stack
+
+    STMFD   SP!, {R3}              @Push task''s CPSR
+
+    LDR     R4,=g_active_task            
+    LDR     R5,[R4]
+    STR     SP,[R5] 
+
+    BL      yunos_intrpt_enter  
+
+    MSR     CPSR_c,#0xd2           @Change to IRQ mode to use IRQ stack to handle interrupt with interrupt disbaled  
+ 
+    BL      intc_irq
+    MSR     CPSR_c,#0xd3           @Change to SVC mode with interrupt disabled   
+    BL      yunos_intrpt_exit
+    LDMFD   SP!,{R4}               @POP the task''s CPSR             
+    MSR     SPSR_cxsf,R4
+    LDMFD   SP!,{R0-R12,LR,PC}^    @POP new Task''s context
+
+
+    .align  5    
+fiq_handler:    
+    STMFD   SP!, {R1-R3}           @We will use R1-R3 as temporary registers
+
+    MOV     R1, SP
+    ADD     SP, SP, #12            @Adjust IRQ stack pointer
+    SUB     R2, LR, #4             @Adjust PC for return address to task
+
+    MRS     R3, SPSR               @Copy SPSR (Task CPSR)
+
+    MSR     CPSR_c, #0xd3          @Change to SVC mode with interrupt disabled
+
+    /* SAVE TASK'S CONTEXT ONTO OLD TASK'S STACK */
+    STMFD   SP!, {R2}              @Push task''s PC      
+    STMFD   SP!, {R4-R12, LR}       
+    LDMFD   R1!, {R4-R6}           @Load Task''s R1-R3 from IRQ stack
+    STMFD   SP!, {R4-R6}           @Push Task''s R1-R3 to SVC stack
+    STMFD   SP!, {R0}              @Push Task''s R0 to SVC stack
+
+    STMFD   SP!, {R3}              @Push task''s CPSR
+
+    LDR     R4,=g_active_task            
+    LDR     R5,[R4]
+    STR     SP,[R5] 
+
+    BL      yunos_intrpt_enter  
+
+    MSR     CPSR_c,#0xd2           @Change to IRQ mode to use IRQ stack to handle interrupt with interrupt disbaled  
+ 
+    BL      intc_fiq
+    MSR     CPSR_c,#0xd3           @Change to SVC mode with interrupt disabled   
+    BL      yunos_intrpt_exit
+    LDMFD   SP!,{R4}               @POP the task''s CPSR             
+    MSR     SPSR_cxsf,R4
+    LDMFD   SP!,{R0-R12,LR,PC}^    @POP new Task''s context
+
 	
 /*Starting the first task is just a matter of restoring the context that*/
 /*was created by pxPortInitialiseStack().*/

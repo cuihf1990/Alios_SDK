@@ -8,6 +8,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "ll.h"
+#include "k_api.h"
 
 #if CFG_BK7221_MDM_WATCHDOG_PATCH
 void rc_reset_patch(void);
@@ -19,14 +20,23 @@ static UINT32 second_countdown = FCLK_SECOND;
 
 void fclk_hdl(UINT8 param)
 {
-	GLOBAL_INT_DECLARATION();
+	//GLOBAL_INT_DECLARATION();
 
-	current_clock ++;
+    current_clock ++;
 
     #if CFG_BK7221_MDM_WATCHDOG_PATCH
     rc_reset_patch();
     #endif
+
+    if (--second_countdown == 0)
+    {
+	current_seconds ++;
+	second_countdown = FCLK_SECOND;
+    }
+
+    yunos_tick_proc();
     
+    #if 0
 	/* Increment the tick counter. */
 	GLOBAL_INT_DISABLE();
 	if( xTaskIncrementTick() != pdFALSE )
@@ -35,17 +45,12 @@ void fclk_hdl(UINT8 param)
 		vTaskSwitchContext();
 	}
 	GLOBAL_INT_RESTORE();
-    
-	if (--second_countdown == 0) 
-	{
-		current_seconds ++;
-		second_countdown = FCLK_SECOND;
-	}
+    #endif
 }
 
 UINT32 fclk_get_tick(void)
 {
-	return current_clock;
+    return current_clock;
 }
 
 UINT32 fclk_get_second(void)
@@ -74,7 +79,7 @@ UINT32 fclk_cal_endvalue(UINT32 mode)
 	}
 	else if(PWM_CLK_26M == mode)
 	{	/*26m clock*/
-		value = FCLK_DURATION_MS * 26000;
+		value = 26000000 / YUNOS_CONFIG_TICKS_PER_SECOND;
 	}
 
 	return value;
