@@ -42,6 +42,9 @@ int application_start(int argc, char **argv)
         ddm_run(argc, argv);
 #endif
     }
+    else {
+        yos_loop_run();
+    }
 
     return 0;
 }

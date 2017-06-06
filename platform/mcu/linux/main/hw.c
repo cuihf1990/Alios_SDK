@@ -128,8 +128,12 @@ int csp_printf(const char *fmt, ...)
 
 extern hal_wifi_module_t sim_yos_wifi_linux;
 extern struct hal_ota_module_s linuxhost_ota_module;
+void linux_wifi_register(void);
 void hw_start_hal(void)
 {
     hal_wifi_register_module(&sim_yos_wifi_linux);
     hal_ota_register_module(&linuxhost_ota_module);
+#ifdef LINUX_MESH_80211
+    linux_wifi_register();
+#endif
 }

@@ -44,7 +44,15 @@ $(NAME)_SOURCES     += soc/trace_impl.c
 $(NAME)_SOURCES     += soc/trace_hal.c
 $(NAME)_SOURCES     += soc/fifo.c
 
-$(info $(COMPONENTS))
+ifeq ($(linux80211),1)
+$(NAME)_SOURCES     += csp/wifi/common.c
+$(NAME)_SOURCES     += csp/wifi/linux.c
+$(NAME)_SOURCES     += csp/wifi/osdep.c
+$(NAME)_SOURCES     += csp/wifi/mesh.c
+$(NAME)_SOURCES     += csp/wifi/radiotap/radiotap.c
+$(NAME)_DEFINES     += LINUX_MESH_80211
+endif
+
 ifneq (,$(filter protocols.net,$(COMPONENTS)))
 $(NAME)_SOURCES     += \
     csp/lwip/netif/delif.c \
