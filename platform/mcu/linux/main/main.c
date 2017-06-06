@@ -27,6 +27,7 @@
 #include <vfs.h>
 #include <vflash.h>
 #include <kvmgr.h>
+#include <k_api.h>
 
 #define TAG "main"
 
@@ -157,7 +158,7 @@ int main(int argc, char **argv)
     tfs_emulate_id2_index = options.id2_index;
 #endif
 
-    csp_os_init();
+    yunos_init();
 
     yos_features_init();
 
@@ -177,7 +178,7 @@ int main(int argc, char **argv)
 
     start_app(argc, argv);
 
-    csp_os_start();
+    yunos_start();
 
     return ret;
 }

@@ -19,8 +19,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <k_api.h>
 #include <yos/log.h>
 #include <hal/soc/soc.h>
+#include <hal/soc/timer.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
 #include <hal/ota.h>
@@ -71,6 +73,57 @@ int hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_
     close(flash_fd);
 
     return ret < 0 ? ret : 0;
+}
+
+#define us2tick(us) \
+    ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
+
+static void _timer_cb(void *timer, void *arg)
+{
+    hal_timer_t *tmr = arg;
+    tmr->cb(tmr->arg);
+}
+
+void hal_timer_init(hal_timer_t *tmr, unsigned int period, unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg)
+{
+    (void)ch;
+    bzero(tmr, sizeof(*tmr));
+    tmr->cb = cb;
+    tmr->arg = arg;
+    if (auto_reload > 0u) {
+        yunos_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
+                                us2tick(period), us2tick(period), tmr, 0);
+    }
+    else {
+        yunos_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
+                                us2tick(period), 0, tmr, 0);
+    }
+}
+
+int hal_timer_start(hal_timer_t *tmr)
+{
+    return yunos_timer_start(tmr->priv);
+}
+
+void hal_timer_stop(hal_timer_t *tmr)
+{
+    yunos_timer_stop(tmr->priv);
+    yunos_timer_dyn_del(tmr->priv);
+    tmr->priv = NULL;
+}
+
+int csp_printf(const char *fmt, ...)
+{
+    va_list args;
+    int ret;
+
+    va_start(args, fmt);
+    ret = vprintf(fmt, args);
+    va_end(args);
+
+    fflush(stdout);
+
+    return ret;
 }
 
 extern hal_wifi_module_t sim_yos_wifi_linux;

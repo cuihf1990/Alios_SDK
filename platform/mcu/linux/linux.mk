@@ -37,7 +37,6 @@ $(NAME)_SOURCES     += main/hw.c
 $(NAME)_SOURCES     += main/wifi_port.c
 $(NAME)_SOURCES     += main/ota_port.c
 $(NAME)_SOURCES     += main/trace_task.c
-$(NAME)_SOURCES     += csp/csp_rhino.c
 $(NAME)_SOURCES     += soc/soc_impl.c
 $(NAME)_SOURCES     += soc/hook_impl.c
 $(NAME)_SOURCES     += soc/ysh_impl.c
