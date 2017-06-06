@@ -82,7 +82,10 @@ static void linuxhost_mesh_recv(frame_t *frm, frame_info_t *fino, void *cb_data)
 static void pass_to_urmesh(const void* arg)
 {
     compound_msg_t *cmsg = (compound_msg_t *)arg;
+
     linuxhost_mesh_recv(&cmsg->frm, &cmsg->fino, cmsg->priv);
+
+    cpu_event_free(cmsg);
 }
 
 static int filter_packet(mesh_hal_priv_t *priv, unsigned char *pkt)
