@@ -23,7 +23,7 @@ int32_t hal_aes128_cbc_enc(const uint8_t *key,
 #if defined(TFS_TEE)
     return tee_aes_cbc_encrypt(key, iv, input_len, input, output);
 #else
-	return -1;
+    return -1;
 #endif
 }
 
@@ -37,7 +37,7 @@ int32_t hal_aes128_cbc_dec(const uint8_t *key,
 #if defined(TFS_TEE)
     return tee_aes_cbc_decrypt(key, iv, input_len, input, output);
 #else
-	return -1;
+    return -1;
 #endif
 }
 

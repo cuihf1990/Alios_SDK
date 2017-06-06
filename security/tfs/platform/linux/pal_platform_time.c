@@ -1,3 +1,7 @@
+/*
+ *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ */
+
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/time.h>
