@@ -96,7 +96,7 @@ static void p_addr(unsigned char *pkt)
 	printf(":%02x %02x %02x %02x %02x %02x", pkt[0] , pkt[1] , pkt[2] , pkt[3] , pkt[4] , pkt[5]);
 }
 
-static void dump_packet(unsigned char *pkt, int count)
+static inline void dump_packet(unsigned char *pkt, int count)
 {
 	printf("%s(%d) %02x %02x", __func__, count, pkt[0], pkt[1]);
 	p_addr(pkt+OFF_DST);
@@ -105,6 +105,7 @@ static void dump_packet(unsigned char *pkt, int count)
 	printf("\n");
 }
 
+#define MESH_DATA_OFF 32
 static void *wifi_recv_entry(void *arg)
 {
     mesh_hal_priv_t *priv = arg;
@@ -132,17 +133,15 @@ static void *wifi_recv_entry(void *arg)
         if (filter_packet(priv, pkt))
             continue;
 
-        dump_packet(pkt, count);
-
         compound_msg_t *pf;
-        pf = cpu_event_malloc(sizeof(*pf) + count - 24);
-        pf->frm.len = count - 24;
+        pf = cpu_event_malloc(sizeof(*pf) + count - MESH_DATA_OFF);
+        pf->frm.len = count - MESH_DATA_OFF;
         pf->frm.data = (void *)(pf + 1);
         pf->fino.channel = ri.ri_channel;
         memcpy(pf->fino.peer.addr, pkt + OFF_SRC, 6);
         pf->fino.peer.len = 8;
         pf->priv = priv;
-        memcpy(pf->frm.data, pkt + 24, pf->frm.len);
+        memcpy(pf->frm.data, pkt + MESH_DATA_OFF, pf->frm.len);
         cpu_call_handler(pass_to_urmesh, pf);
     }
 
@@ -166,7 +165,7 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     unsigned char *pkt;
-    int count = frame->len + 24;
+    int count = frame->len + MESH_DATA_OFF;
 
     pkt = yos_malloc(count);
     bzero(pkt, 24);
@@ -174,6 +173,8 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
     memcpy(pkt + OFF_DST, dest->addr, 6);
     memcpy(pkt + OFF_SRC, priv->macaddr, 6);
     memcpy(pkt + OFF_BSS, priv->bssid, 6);
+
+    memcpy(pkt + MESH_DATA_OFF, frame->data, frame->len);
 
     wi_write(priv->wif, pkt, count, NULL);
 
