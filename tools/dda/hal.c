@@ -203,9 +203,16 @@ static int linuxhost_ur_is_sec_enabled(struct ur_mesh_hal_module_s *module)
 static int linuxhost_ur_hal_set_channel(ur_mesh_hal_module_t *module, uint8_t channel)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
-    dda_mesh_send_data(TYPE_MESH, CMD_MESH_SET_CHN, channel, 0, NULL, 0);
+
     /* channel will appended to each data packet sent */
     priv->channel = channel;
+    cmd_priv_t cmd_priv = {
+        .mesh = {
+            .channel = priv->channel,
+            .media_type = priv->media_type,
+        },
+    };
+    dda_mesh_send_data(TYPE_MESH, CMD_MESH_SET_CHN, cmd_priv.opaque, 0, NULL, 0);
     return 0;
 }
 
