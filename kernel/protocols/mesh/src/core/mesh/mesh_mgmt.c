@@ -516,6 +516,7 @@ static void handle_migrate_wait_timer(void *args)
     network_context_t *network = (network_context_t *)args;
 
     network->migrate_wait_timer = NULL;
+    network->prev_netid = BCAST_NETID;
     network->candidate_meshnetid = BCAST_NETID;
 }
 
@@ -1742,10 +1743,10 @@ static ur_error_t handle_advertisement(message_t *message)
             net_size = netinfo->size;
             new_metric = compute_network_metric(net_size, 0);
             cur_metric = compute_network_metric(nd_get_meshnetsize(NULL), 0);
-            if ((g_mm_state.device.mode & MODE_SUPER) ||
-                (is_subnet(network->meshnetid) && is_subnet(info->src.netid))) {
+            if ((is_subnet(network->meshnetid) && is_subnet(info->src.netid)) ||
+                (is_subnet(network->meshnetid) == 0 && is_subnet(info->src.netid) == 0)) {
                 if ((new_metric < cur_metric) ||
-                    (new_metric == cur_metric && info->src.netid < network->meshnetid)) {
+                    (new_metric == cur_metric && info->src.netid <= network->meshnetid)) {
                     return UR_ERROR_NONE;
                 }
             }
