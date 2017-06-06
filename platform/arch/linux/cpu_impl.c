@@ -408,20 +408,4 @@ void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
     yunos_intrpt_exit();
     leave_signal(signo);
 }
-#ifdef CONFIG_YOS_LPM
-extern uint32_t lpm_sleep_time;
-void cpu_lpm_wait(void)
-{
-    yos_msleep(lpm_sleep_time);
-}
 
-void cpu_lpm_doze(void)
-{
-
-}
-
-void cpu_lpm_stop(void)
-{
-
-}
-#endif

@@ -66,10 +66,6 @@ void yos_features_init(void)
         yunos_lwip_init(options.lwip.tapif);
     }
 #endif
-
-#ifdef CONFIG_YOS_LPM
-    lpm_init();
-#endif
 }
 
 void signal_handler(int signo)
