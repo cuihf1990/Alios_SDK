@@ -1367,6 +1367,7 @@ static ur_error_t handle_sid_response(message_t *message)
     start_advertisement_timer(network);
     network->state = INTERFACE_UP;
     ur_router_sid_updated(network, network->sid);
+    stop_addr_cache();
 
     g_mm_state.callback->interface_up();
     start_keep_alive_timer(network);
@@ -1593,7 +1594,7 @@ static ur_error_t handle_advertisement(message_t *message)
     bool              from_same_net = false;
     bool              from_same_core = false;
     bool              leader_reboot = false;
-    uint16_t          subnet_size = 0;
+    uint16_t          net_size = 0;
     uint8_t           tlv_type;
     message_info_t    *info;
 
@@ -1619,8 +1620,12 @@ static ur_error_t handle_advertisement(message_t *message)
     }
 
     if (network->meshnetid != BCAST_NETID && network->meshnetid != INVALID_NETID) {
-        if ((is_subnet(network->meshnetid) && is_subnet(info->src.netid) == 0) ||
-            (is_subnet(network->meshnetid) == 0 && is_subnet(info->src.netid))) {
+        if (g_mm_state.device.mode & MODE_SUPER) {
+            if ((is_subnet(network->meshnetid) && is_subnet(info->src.netid) == 0) ||
+                (is_subnet(network->meshnetid) == 0 && is_subnet(info->src.netid))) {
+                return UR_ERROR_NONE;
+            }
+        } else if (is_subnet(network->meshnetid) && is_subnet(info->src.netid) == 0) {
             return UR_ERROR_NONE;
         }
     } else {
@@ -1649,12 +1654,20 @@ static ur_error_t handle_advertisement(message_t *message)
         send_link_request(network, &nbr->addr, &tlv_type, 1);
     }
 
-    // mode super should be leader
-    if ((mode->mode & MODE_SUPER) && (g_mm_state.device.mode & MODE_SUPER) == 0 &&
-         g_mm_state.device.state == DEVICE_STATE_LEADER) {
-        become_detached();
-        update_migrate_times(network, nbr);
-        return UR_ERROR_NONE;
+    if (mode->mode & MODE_SUPER) {
+        // mode super should be leader
+        if ((g_mm_state.device.mode & MODE_SUPER) == 0 &&
+            g_mm_state.device.state == DEVICE_STATE_LEADER) {
+            become_detached();
+            update_migrate_times(network, nbr);
+            return UR_ERROR_NONE;
+        }
+
+        if (attach_node && (attach_node->mode & MODE_SUPER) == 0) {
+            become_detached();
+            update_migrate_times(network, nbr);
+            return UR_ERROR_NONE;
+        }
     }
 
     // detached node try to migrate
@@ -1718,17 +1731,23 @@ static ur_error_t handle_advertisement(message_t *message)
             (network->prev_path_cost < nbr->path_cost)) {
             return UR_ERROR_NONE;
         }
-        subnet_size = (netinfo->subnet_size_1 << 8) | netinfo->subnet_size_2;
-        new_metric = compute_network_metric(subnet_size, 0);
-        cur_metric = compute_network_metric(nd_get_meshnetsize(network), 0);
         if (from_same_core) {
+            net_size = (netinfo->subnet_size_1 << 8) | netinfo->subnet_size_2;
+            new_metric = compute_network_metric(net_size, 0);
+            cur_metric = compute_network_metric(nd_get_meshnetsize(network), 0);
             if (cur_metric < (new_metric + 5)) {
                 return UR_ERROR_NONE;
             }
         } else {
-            if ((new_metric < cur_metric) ||
-                (new_metric == cur_metric && info->src.netid <= network->meshnetid)) {
-                return UR_ERROR_NONE;
+            net_size = netinfo->size;
+            new_metric = compute_network_metric(net_size, 0);
+            cur_metric = compute_network_metric(nd_get_meshnetsize(NULL), 0);
+            if ((g_mm_state.device.mode & MODE_SUPER) ||
+                (is_subnet(network->meshnetid) && is_subnet(info->src.netid))) {
+                if ((new_metric < cur_metric) ||
+                    (new_metric == cur_metric && info->src.netid < network->meshnetid)) {
+                    return UR_ERROR_NONE;
+                }
             }
         }
     }
