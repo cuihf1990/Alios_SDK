@@ -25,7 +25,7 @@ typedef struct {
 } ota_request_params;
 
 #define MAX_URL_LEN 256
-#define MAX_MD5_LEN 128
+#define MAX_MD5_LEN 34
 #define MAX_VERSION_LEN 64
 #define MAX_ID_LEN 64
 
