@@ -31,49 +31,6 @@ size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
 k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start,SYS_DYN_POOL_SIZE}};
 #endif
 
-#ifdef CONFIG_YOS_LPM
-uint32_t        lpm_sleep_time;
-static uint64_t lpm_time_before_sleep;
-
-int yoc_lpm_wakeup_source_get(void *wakeup_src)
-{
-    return 0;
-}
-
-int yoc_lpm_wakeup_source_set(uint32_t wakeup_src)
-{
-    return 0;
-}
-
-int yoc_lpm_rtc_time_get(void *time)
-{
-    lpm_time_before_sleep = hal_time_get() * 1000; /* ms */
-    return 0;
-}
-
-int yoc_lpm_rtc_time_set(uint32_t time)
-{
-    lpm_sleep_time = time;
-    return 0;
-}
-
-uint32_t yoc_lpm_rtc_elapse_get(void *tm_start)
-{
-    return (hal_time_get() * 1000 - lpm_time_before_sleep);
-}
-
-void yoc_lpm_systick_update(uint32_t ticks)
-{
-    CPSR_ALLOC();
-
-    YUNOS_CPU_INTRPT_DISABLE();
-
-    g_sys_time_tick  += ticks;
-
-    YUNOS_CPU_INTRPT_ENABLE();
-}
-#endif
-
 void soc_apps_entry(void)
 {
 }
