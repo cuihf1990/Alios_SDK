@@ -34,6 +34,7 @@ static void one_super_router_case(void)
      */
 
     set_full_rssi(11, 15);
+    cmd_to_agent("stop");
 
     start_node_ext(12, MODE_SUPER, -1, 3);
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
@@ -92,6 +93,7 @@ static void two_super_router_case(void)
      */
 
     set_full_rssi(11, 16);
+    cmd_to_agent("stop");
 
     start_node_ext(12, MODE_SUPER, -1, 3);
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
