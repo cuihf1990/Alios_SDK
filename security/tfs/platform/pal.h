@@ -23,9 +23,6 @@ int pal_network_close(int fd);
 void pal_base64_encode(const unsigned char *src, int len,
                              unsigned char *dst, int *out_len);
 
-void pal_base64_decode(const unsigned char *src, int len,
-                             unsigned char *dst, int *out_len);
-
 // md5
 void pal_md5_sum(const uint8_t *addr, const int len, uint8_t *mac);
 

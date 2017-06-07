@@ -26,6 +26,7 @@ int emu_3DES_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint8_t md5_buf[MD5_SIZE];
     uint32_t len;
 
+    LOGD(TAG_EMU_3DES, "[%s]: enter.\n", __func__);
     pal_md5_sum(in, in_len, md5_buf);
 
     emu_3DES_encrypt(ID, md5_buf, MD5_SIZE, sign_out_buf, &len, mode);
@@ -45,6 +46,7 @@ int emu_3DES_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint32_t len;
     int ret;
 
+    LOGD(TAG_EMU_3DES, "[%s]: enter.\n", __func__);
     ret = emu_3DES_sign(ID, in, in_len, sign_out_buf, &len, mode);
     if (ret != 0) {
         LOGE(TAG_EMU_3DES, "[%s]: emu_3DES_sign error!\n", __func__);
@@ -61,6 +63,8 @@ int emu_3DES_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint32_t len;
     uint32_t padding;
     uint8_t *_in;
+
+    LOGD(TAG_EMU_3DES, "[%s]: enter.\n", __func__);
 #if defined(TFS_OPENSSL)
     int i = 0;
     DES_key_schedule ks1, ks2, ks3;
@@ -117,6 +121,8 @@ int emu_3DES_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
 {
     uint8_t *_out;
     uint32_t len;
+
+    LOGD(TAG_EMU_3DES, "[%s]: enter.\n", __func__);
 #if defined(TFS_OPENSSL)
     int i = 0;
     DES_key_schedule ks1, ks2, ks3;

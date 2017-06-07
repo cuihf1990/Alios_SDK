@@ -36,7 +36,7 @@ int tfs_get_ID2(uint8_t *id2, uint32_t *len);
  * @brief sign data with ID2 key
  *
  * @param[in] in: input data.
- * @param[in] in_len: the length of intput data, which must <= 512 bytes.
+ * @param[in] in_len: the length of intput data, which must <= 4096 bytes.
  * @param[out] sign: signature for input data.
  * @param[inout] sign_len: the length of signature.
  * @return: 0~OK, other~ERROR
@@ -49,7 +49,7 @@ int tfs_id2_sign(const uint8_t *in, uint32_t in_len,
  * @brief decrypt cipher text with ID2 key
  *
  * @param[in] in: input data.
- * @param[in] in_len: the length of intput data, which mush <= 128 bytes.
+ * @param[in] in_len: the length of intput data, which must <= 4096 bytes.
  * @param[out] out: decrypted data.
  * @param[inout] out_len: the length of decrypted data.
  * @return: 0~OK, other~ERROR
@@ -100,7 +100,7 @@ int tfs_id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth
  *
  * @param[in]  timestamp: timestamp from caller, the number of milliseconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
  * @param[in]  digest: data digest
- * @param[in]  digest_len: data digest length
+ * @param[in]  digest_len: data digest length, which must <= 256 bytes
  * @param[out] auth_code: model~timestamp~signature.
  * @param[out] auth_len: auth code length.
  * @return: 0~OK, other~ERROR.

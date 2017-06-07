@@ -4,7 +4,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <yos/kernel.h>
 #include "cJSON.h"
 #include "log.h"
 
@@ -21,11 +20,11 @@ static const char *ep;
 static const unsigned char firstByteMark[7] =
   { 0x00, 0x00, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc };
 
-static void *(*cJSON_malloc)(size_t sz) = yos_malloc;
-static void (*cJSON_free)(void *ptr)    = yos_free;
+static void *(*cJSON_malloc)(size_t sz) = malloc;
+static void (*cJSON_free)(void *ptr)    = free;
 
-#define cJSON_malloc(n) yos_malloc(n)
-#define cJSON_free(p) yos_free(p)
+#define cJSON_malloc(n) malloc(n)
+#define cJSON_free(p) free(p)
 
 
 /****************************************************************************

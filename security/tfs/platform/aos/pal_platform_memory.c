@@ -1,3 +1,7 @@
+/*
+ *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ */
+
 #include <stdio.h>
 #include "yos/kernel.h"
 

@@ -298,6 +298,7 @@ static int test_tfs_id2_decrypt(void)
     return 0;
 }
 
+#ifdef CREATE_ID2_SIGN
 static int create_id2_sign(void) {
     int ret = 0;
     uint32_t id2_len = TFS_ID2_LEN + 1;
@@ -306,7 +307,7 @@ static int create_id2_sign(void) {
     uint32_t id2_sign_len = 0;
     uint8_t id2_sign_base64[BUF_MAX];
     uint32_t id2_sign_base64_len;
-    uint8_t *encrypted_data_base64 = "JKSX1+AIE7EE1VWP5sQRlw==";
+    const char *encrypted_data_base64 = "JKSX1+AIE7EE1VWP5sQRlw==";
     uint8_t encrypted_data[BUF_MAX];
     uint32_t encrypted_data_len;
     uint32_t i = 0;
@@ -331,10 +332,10 @@ static int create_id2_sign(void) {
 
     LOGI(TAG_TFS_TEST, "id2 is %s.\n", id2);
 
-    pal_base64_encode(id2_sign, id2_sign_len, id2_sign_base64, &id2_sign_base64_len);
+    pal_base64_encode(id2_sign, id2_sign_len, id2_sign_base64, (int *)&id2_sign_base64_len);
     LOGI(TAG_TFS_TEST, "id2_sign_base64 is %s.\n", id2_sign_base64);
 
-    pal_base64_decode(encrypted_data_base64, strlen(encrypted_data_base64), encrypted_data, &encrypted_data_len);
+    pal_base64_decode((const unsigned char *)encrypted_data_base64, strlen(encrypted_data_base64), encrypted_data, (int *)&encrypted_data_len);
     LOGI(TAG_TFS_TEST, "encrypted_data_base64 is %s.\n", encrypted_data_base64);
 
     for (i = 0;i < encrypted_data_len; i ++) {
@@ -343,7 +344,10 @@ static int create_id2_sign(void) {
         }
         LOG("0x%02X,", encrypted_data[i]);
     }
+
+    return 0;
 }
+#endif
 
 #ifndef TFS_ONLINE
 int test_tfs_id2_decrypt_daily(void) {
@@ -399,16 +403,24 @@ static int test_tfs_get_auth_code(void)
 static int test_tfs_activate_device(void) {
     int ret = -1;
 
+    ret = tfs_is_device_activated();
+
+    LOGI(TAG_TFS_TEST,"tfs_is_device_activated: ret = %d.\n\n", ret);
+
     ret = tfs_activate_device();
 
     LOGI(TAG_TFS_TEST,"tfs_activate_device: ret = %d.\n\n", ret);
+
+    ret = tfs_is_device_activated();
+
+    LOGI(TAG_TFS_TEST,"tfs_is_device_activated: ret = %d.\n\n", ret);
     return 0;
 }
 
 static int test_tfs_id2_get_auth_code(void)
 {
     int ret = -1;
-    int len = BUF_MAX;
+    uint32_t len = BUF_MAX;
     uint64_t timestamp = 0; // in ms
 
     start = pal_get_current_time();
@@ -425,13 +437,13 @@ static int test_tfs_id2_get_digest_auth_code(void)
     int ret = -1;
     uint32_t len = BUF_MAX;
     uint64_t timestamp = 0; // in ms
-    uint8_t *digest = "abcd";
+    char *digest = "abcd";
 
     start = pal_get_current_time();
     timestamp = start / 1000;
 
     memset(out_data, 0, BUF_MAX);
-    ret = tfs_id2_get_digest_auth_code(timestamp, digest, strlen(digest), out_data, &len);
+    ret = tfs_id2_get_digest_auth_code(timestamp, (uint8_t *)digest, strlen(digest), out_data, &len);
     LOGI(TAG_TFS_TEST,"tfs_id2_get_digest_auth_code: ret = %d, the auth_code(%d): %s\n\n", ret, len, out_data);
     return 0;
 }

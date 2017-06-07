@@ -1,3 +1,7 @@
+/*
+ *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ */
+
 #include <string.h>
 #include <errno.h>
 #include <sys/socket.h>
@@ -18,7 +22,7 @@ int pal_network_send(int sockfd, const char *buf, int len)
     do {
         ret = send(sockfd, buf + ret, len,0);
         if (ret < 0 || ret == 0) {
-            LOGE(TAG_PAL_NETWORK, "[%s]: write EINTR errno=%d %s ret = %d\n", __func__, errno, strerror(errno), ret);
+            LOGD(TAG_PAL_NETWORK, "[%s]: write EINTR errno=%d %s ret = %d\n", __func__, errno, strerror(errno), ret);
             if (errno == EINTR) {
                 continue;
             }
@@ -66,6 +70,7 @@ int _http_check_conn(int sockfd) {
     int ret = 0;
     socklen_t len = 0;
 
+    LOGD(TAG_PAL_NETWORK, "[%s]: enter.\n", __func__);
     while (poll(&fd, 1, -1) == -1) {
         if (errno != EINTR ){
              LOGE(TAG_PAL_NETWORK, "[%s]: poll EINTR\n", __func__);

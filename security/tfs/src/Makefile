@@ -32,6 +32,8 @@ ifeq ($(PLATFORM), linux)
     INCLUDES += -I./emulator/include/
     CFLAGS += -DTFS_OPENSSL
 #    INCLUDES += -I../external/lib/openssl/include
+    SRCS += ../demo/tfs_test.c
+    INCLUDES += -I../include
 else
     SRCS += ./hal/src/cmd.c
     SRCS += ./hal/src/hal_id2.c
@@ -60,6 +62,14 @@ OBJS := $(patsubst %.c,%.o,$(SRCS))
 CFLAGS += -DTFS_DEBUG
 ifeq ($(HW), tee)
     CFLAGS += -DTFS_TEE
+endif
+
+ifeq ($(HW), tee-mobile)
+    CFLAGS += -DTFS_TEE_MOBILE
+endif
+
+ifeq ($(HW), sw)
+    CFLAGS += -DTFS_SW
 endif
 
 ifeq ($(CRYPTO), 3des)
