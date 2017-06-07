@@ -430,7 +430,17 @@ irq_handler:
 
 
     .align  5    
-fiq_handler:    
+fiq_handler:
+    MRS R8, spsr
+    AND R8, R8, #0x12
+    CMP R8, #0x12
+    BNE 88f
+    STMFD   SP!, {R0-R12, LR}
+    BL      intc_fiq
+    LDMFD   SP!,{R0-R12,LR}
+    SUBS PC, LR,#4
+
+    88:
     STMFD   SP!, {R1-R3}           @We will use R1-R3 as temporary registers
 
     MOV     R1, SP
@@ -456,7 +466,7 @@ fiq_handler:
 
     BL      yunos_intrpt_enter  
 
-    MSR     CPSR_c,#0xd2           @Change to IRQ mode to use IRQ stack to handle interrupt with interrupt disbaled  
+    MSR     CPSR_c,#0xd1           @Change to FIRQ mode to use IRQ stack to handle interrupt with interrupt disbaled
  
     BL      intc_fiq
     MSR     CPSR_c,#0xd3           @Change to SVC mode with interrupt disabled   
