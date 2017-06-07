@@ -60,7 +60,8 @@ kstat_t yunos_event_del(kevent_t *event);
  * @param[in]   flags  flags to be init
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name, uint32_t flags);
+kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
+                               uint32_t flags);
 
 /**
  * This function will delete a dyn created event

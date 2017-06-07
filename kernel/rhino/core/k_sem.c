@@ -17,7 +17,8 @@
 #include <k_api.h>
 
 #if (YUNOS_CONFIG_SEM > 0)
-static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count, uint8_t mm_alloc_flag)
+static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count,
+                          uint8_t mm_alloc_flag)
 {
     NULL_PARA_CHK(sem);
     NULL_PARA_CHK(name);
@@ -92,7 +93,8 @@ kstat_t yunos_sem_del(ksem_t *sem)
 }
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_sem_dyn_create(ksem_t **sem, const name_t *name, sem_count_t count)
+kstat_t yunos_sem_dyn_create(ksem_t **sem, const name_t *name,
+                             sem_count_t count)
 {
     kstat_t stat;
     ksem_t  *sem_obj;
@@ -182,7 +184,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
     blk_list_head = &sem->blk_obj.blk_list;
 
     if (is_klist_empty(blk_list_head)) {
-        if (sem->count == (sem_count_t)-1) {
+        if (sem->count == (sem_count_t) - 1) {
 
             TRACE_SEM_OVERFLOW(g_active_task, sem);
             YUNOS_CRITICAL_EXIT();
@@ -202,7 +204,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
 
 #if (YUNOS_CONFIG_KOBJ_SET > 0)
         if (sem->blk_obj.handle != NULL) {
-            sem->blk_obj.handle->notify((blk_obj_t *)sem,sem->blk_obj.handle);
+            sem->blk_obj.handle->notify((blk_obj_t *)sem, sem->blk_obj.handle);
         }
 #endif
         return YUNOS_SUCCESS;
@@ -211,14 +213,16 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
     /* wake all the task blocked on this semaphore */
     if (opt_wake_all) {
         while (!is_klist_empty(blk_list_head)) {
-            TRACE_SEM_TASK_WAKE(g_active_task, yunos_list_entry(blk_list_head->next, ktask_t, task_list),
+            TRACE_SEM_TASK_WAKE(g_active_task, yunos_list_entry(blk_list_head->next,
+                                                                ktask_t, task_list),
                                 sem, opt_wake_all);
 
             pend_task_wakeup(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
         }
 
     } else {
-        TRACE_SEM_TASK_WAKE(g_active_task, yunos_list_entry(blk_list_head->next, ktask_t, task_list),
+        TRACE_SEM_TASK_WAKE(g_active_task, yunos_list_entry(blk_list_head->next,
+                                                            ktask_t, task_list),
                             sem, opt_wake_all);
 
         /* wake up the highest prio task block on the semaphore */

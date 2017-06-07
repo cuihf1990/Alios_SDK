@@ -52,7 +52,8 @@ typedef struct queue_s {
  * @param[in]  msg_num  num of the msg
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_queue_create(kqueue_t *queue, const name_t *name, void **start, size_t msg_num);
+kstat_t yunos_queue_create(kqueue_t *queue, const name_t *name, void **start,
+                           size_t msg_num);
 
 /**
  * This function will delete a queue
@@ -69,7 +70,8 @@ kstat_t yunos_queue_del(kqueue_t *queue);
  * @param[in]  msg_num  num of the msg
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_queue_dyn_create(kqueue_t **queue, const name_t *name, size_t msg_num);
+kstat_t yunos_queue_dyn_create(kqueue_t **queue, const name_t *name,
+                               size_t msg_num);
 
 /**
  * This function will delete a dyn created queue

@@ -47,7 +47,8 @@ const char *yos_strerror(int errnum)
     return NULL;
 }
 
-int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size)
+int yos_task_new(const char *name, void (*fn)(void *), void *arg,
+                 int stack_size)
 {
     pthread_t tid;
 
@@ -55,7 +56,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size
 }
 
 int yos_task_new_ext(const char *name, void (*fn)(void *), void *arg,
-		             int stack_size, int prio)
+                     int stack_size, int prio)
 {
     pthread_t tid;
 
@@ -171,7 +172,7 @@ int yos_sem_wait(yos_sem_t sem, int timeout)
 
 void yos_sem_signal(yos_sem_t sem)
 {
-	sem_post(sem.hdl);
+    sem_post(sem.hdl);
 }
 
 int yos_queue_new(yos_queue_t *queue, void **start, intt msg_num)

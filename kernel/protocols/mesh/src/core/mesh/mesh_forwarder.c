@@ -60,7 +60,8 @@ enum {
 
 static void send_datagram(void *args);
 static void handle_datagram(void *message);
-static neighbor_t *get_next_node(network_context_t *network, message_info_t *info);
+static neighbor_t *get_next_node(network_context_t *network,
+                                 message_info_t *info);
 static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
                                 mac_address_t *addr);
 
@@ -183,7 +184,8 @@ static void resolve_message_info(received_frame_t *frame)
     info->hal_type = frame->hal->module->type;
     info->channel = frame->frame_info.channel;
     info->key_index = frame->frame_info.key_index;
-    memcpy(&info->src_mac.addr, &frame->frame_info.peer, sizeof(info->src_mac.addr));
+    memcpy(&info->src_mac.addr, &frame->frame_info.peer,
+           sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;
     buf = message_get_payload(message);
     control = (mesh_header_control_t *)buf;
@@ -192,9 +194,12 @@ static void resolve_message_info(received_frame_t *frame)
     info->src.netid = netid->netid;
     offset += sizeof(mesh_netid_t);
 
-    info->type = (control->control[0] & MESH_FRAME_TYPE_MASK) >> MESH_FRAME_TYPE_OFFSET;
-    info->hops = (control->control[0] & MESH_HOPS_LEFT_MASK) >> MESH_HOPS_LEFT_OFFSET;
-    switch ((control->control[0] & MESH_HEADER_SRC_MASK) >> MESH_HEADER_SRC_OFFSET) {
+    info->type = (control->control[0] & MESH_FRAME_TYPE_MASK) >>
+                 MESH_FRAME_TYPE_OFFSET;
+    info->hops = (control->control[0] & MESH_HOPS_LEFT_MASK) >>
+                 MESH_HOPS_LEFT_OFFSET;
+    switch ((control->control[0] & MESH_HEADER_SRC_MASK) >>
+            MESH_HEADER_SRC_OFFSET) {
         case SHORT_ADDR_MODE:
             short_addr = (mesh_short_addr_t *)(buf + offset);
             info->src.addr.len = SHORT_ADDR_SIZE;
@@ -206,7 +211,8 @@ static void resolve_message_info(received_frame_t *frame)
             break;
     }
 
-    switch ((control->control[1] & MESH_HEADER_DESTNETID_MASK) >> MESH_HEADER_DESTNETID_OFFSET) {
+    switch ((control->control[1] & MESH_HEADER_DESTNETID_MASK) >>
+            MESH_HEADER_DESTNETID_OFFSET) {
         case NO_DEST_NETID:
             info->dest.netid = netid->netid;
             break;
@@ -227,7 +233,8 @@ static void resolve_message_info(received_frame_t *frame)
             break;
     }
 
-    switch ((control->control[1] & MESH_HEADER_DEST_MASK) >> MESH_HEADER_DEST_OFFSET) {
+    switch ((control->control[1] & MESH_HEADER_DEST_MASK) >>
+            MESH_HEADER_DEST_OFFSET) {
         case NO_ADDR_MODE:
             info->dest.addr.len = 0;
             break;
@@ -251,9 +258,11 @@ static void resolve_message_info(received_frame_t *frame)
             break;
     }
 
-    info->dir = (control->control[1] & MESH_HEADER_DIR_MASK) >> MESH_HEADER_DIR_OFFSET;
+    info->dir = (control->control[1] & MESH_HEADER_DIR_MASK) >>
+                MESH_HEADER_DIR_OFFSET;
 
-    switch ((control->control[1] & MESH_HEADER_DEST2_MASK) >> MESH_HEADER_DEST2_OFFSET) {
+    switch ((control->control[1] & MESH_HEADER_DEST2_MASK) >>
+            MESH_HEADER_DEST2_OFFSET) {
         case NO_ADDR_MODE:
             break;
         case SHORT_ADDR_MODE:
@@ -490,7 +499,8 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     }
 
     if (next_node) {
-        error = hal_ur_mesh_send_ucast_request(hal->module, &hal->frame, &next_node->mac,
+        error = hal_ur_mesh_send_ucast_request(hal->module, &hal->frame,
+                                               &next_node->mac,
                                                handle_sent, hal);
     } else {
         error = hal_ur_mesh_send_bcast_request(network->hal->module, &hal->frame,
@@ -504,7 +514,8 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     return error;
 }
 
-static neighbor_t *get_next_node(network_context_t *network, message_info_t *info)
+static neighbor_t *get_next_node(network_context_t *network,
+                                 message_info_t *info)
 {
     uint16_t   local_sid;
     uint16_t   next_hop;
@@ -530,7 +541,8 @@ static neighbor_t *get_next_node(network_context_t *network, message_info_t *inf
 
     if (mm_get_meshnetid(network) == info->dest.netid) {
         same_subnet = true;
-    } else if (is_same_mainnet(info->dest.netid, mm_get_meshnetid(network)) == false) {
+    } else if (is_same_mainnet(info->dest.netid,
+                               mm_get_meshnetid(network)) == false) {
         same_net = false;
     }
 
@@ -545,7 +557,8 @@ static neighbor_t *get_next_node(network_context_t *network, message_info_t *inf
             next = mm_get_attach_node(network);
         } else {
             next_hop = ur_router_get_next_hop(network, get_leader_sid(info->dest.netid));
-            next = get_neighbor_by_sid(network->hal, next_hop, get_main_netid(info->dest.netid));
+            next = get_neighbor_by_sid(network->hal, next_hop,
+                                       get_main_netid(info->dest.netid));
         }
     } else {
         next = mm_get_attach_candidate(network);
@@ -586,7 +599,8 @@ static void set_src_info(message_info_t *info)
     info->flags |= INSERT_LOWPAN_FLAG;
 }
 
-static void address_resolved_handler(network_context_t *network, address_cache_t *target,
+static void address_resolved_handler(network_context_t *network,
+                                     address_cache_t *target,
                                      ur_error_t error)
 {
     message_t      *message;
@@ -741,8 +755,10 @@ ur_error_t mf_send_message(message_t *message)
             info->dest.netid = nbr->addr.netid;
         }
     }
-    if ((info->dest.addr.len != SHORT_ADDR_SIZE && info->dest.addr.len != EXT_ADDR_SIZE) ||
-        (info->dest.addr.len == EXT_ADDR_SIZE && nbr == NULL && need_resolve == false)) {
+    if ((info->dest.addr.len != SHORT_ADDR_SIZE &&
+         info->dest.addr.len != EXT_ADDR_SIZE) ||
+        (info->dest.addr.len == EXT_ADDR_SIZE && nbr == NULL &&
+         need_resolve == false)) {
         message_free(message);
         return UR_ERROR_DROP;
     }
@@ -824,7 +840,8 @@ static bool proxy_check(message_t *message)
         }
 
         if (info->dest.netid != BCAST_NETID &&
-            (info->dest2.addr.len != SHORT_ADDR_SIZE || is_bcast_sid(&info->dest2)) == false) {
+            (info->dest2.addr.len != SHORT_ADDR_SIZE ||
+             is_bcast_sid(&info->dest2)) == false) {
             return false;
         }
 
@@ -865,7 +882,8 @@ static void message_handler(void *args)
         return;
     }
 
-    if (memcmp(&info->dest.addr, mm_get_mac_address(), sizeof(info->dest.addr)) == 0) {
+    if (memcmp(&info->dest.addr, mm_get_mac_address(),
+               sizeof(info->dest.addr)) == 0) {
         recv = true;
     } else if (info->dest.addr.len == SHORT_ADDR_SIZE) {
         if (info->dest.netid != BCAST_NETID &&
@@ -877,7 +895,8 @@ static void message_handler(void *args)
             } else {
                 forward = true;
             }
-        } else if (info->type == MESH_FRAME_TYPE_CMD && info->dest.netid == BCAST_NETID) {
+        } else if (info->type == MESH_FRAME_TYPE_CMD &&
+                   info->dest.netid == BCAST_NETID) {
             recv = true;
         }
     }
@@ -1161,12 +1180,13 @@ static void handle_datagram(void *args)
     }
 }
 
-const ur_link_stats_t *mf_get_stats(hal_context_t *hal) {
+const ur_link_stats_t *mf_get_stats(hal_context_t *hal)
+{
     if (hal == NULL) {
         return NULL;
     }
 
-    hal->link_stats.sending = hal->send_message? true: false;
+    hal->link_stats.sending = hal->send_message ? true : false;
     return &hal->link_stats;
 }
 

@@ -265,7 +265,7 @@ kstat_t task_suspend(ktask_t *task)
         case K_SUSPENDED:
         case K_SLEEP_SUSPENDED:
         case K_PEND_SUSPENDED:
-            if (task->suspend_count == (suspend_nested_t)-1) {
+            if (task->suspend_count == (suspend_nested_t) - 1) {
                 YUNOS_CRITICAL_EXIT();
                 return YUNOS_SUSPENDED_COUNT_OVF;
             }
@@ -395,8 +395,9 @@ kstat_t yunos_task_stack_cur_free(ktask_t *task, size_t *free)
 
     if (task == NULL || task == g_active_task) {
         task = g_active_task;
-        if (soc_get_cur_sp)
-        { sp = soc_get_cur_sp(); }
+        if (soc_get_cur_sp) {
+            sp = soc_get_cur_sp();
+        }
     } else {
         sp = (size_t)task->task_stack;
     }
@@ -407,13 +408,14 @@ kstat_t yunos_task_stack_cur_free(ktask_t *task, size_t *free)
         return YUNOS_SYS_SP_ERR;
     }
 
-    if((size_t)(task->task_stack_base + task->stack_size)< sp){
+    if ((size_t)(task->task_stack_base + task->stack_size) < sp) {
         YUNOS_CRITICAL_EXIT();
         k_err_proc(YUNOS_TASK_STACK_OVF);
         return YUNOS_TASK_STACK_OVF;
     }
 
-    *free = ((size_t)(task->task_stack_base + task->stack_size) - sp)/sizeof(cpu_stack_t);
+    *free = ((size_t)(task->task_stack_base + task->stack_size) - sp) / sizeof(
+                cpu_stack_t);
 
     YUNOS_CRITICAL_EXIT();
     return YUNOS_SUCCESS;
@@ -884,7 +886,7 @@ kstat_t yunos_task_info_set(ktask_t *task, size_t idx, void *info)
     task->user_info[idx] = info;
     YUNOS_CPU_INTRPT_ENABLE();
 
-     return YUNOS_SUCCESS;
+    return YUNOS_SUCCESS;
 }
 
 kstat_t yunos_task_info_get(ktask_t *task, size_t idx, void **info)
@@ -898,7 +900,7 @@ kstat_t yunos_task_info_get(ktask_t *task, size_t idx, void **info)
 
     *info = task->user_info[idx];
 
-     return YUNOS_SUCCESS;
+    return YUNOS_SUCCESS;
 }
 
 void  yunos_task_deathbed(void)

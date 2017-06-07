@@ -34,13 +34,16 @@ static void queue_dyn_create_param_test(void)
 {
     kstat_t ret;
 
-    ret = yunos_buf_queue_dyn_create(NULL, "test_bufqueue0", 0, TEST_BUFQUEUE_MSG_MAX);
+    ret = yunos_buf_queue_dyn_create(NULL, "test_bufqueue0", 0,
+                                     TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, NULL, 4, TEST_BUFQUEUE_MSG_MAX);
+    ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, NULL, 4,
+                                     TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, NULL, 0, TEST_BUFQUEUE_MSG_MAX);
+    ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, NULL, 0,
+                                     TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == YUNOS_BUF_QUEUE_SIZE_ZERO);
 }
 

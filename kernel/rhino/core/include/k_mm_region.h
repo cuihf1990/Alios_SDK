@@ -52,7 +52,8 @@ typedef struct {
 #endif
     klist_t  list;
     size_t   type: 1;
-    size_t   len:    (8 * sizeof(unsigned int) - 1);
+size_t   len:
+    (8 * sizeof(unsigned int) - 1);
 } k_mm_region_list_t;
 
 typedef struct {
@@ -75,7 +76,8 @@ typedef struct {
  * @param[in]  blk_total blk_pool total size for small size malloc
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_mm_region_init(k_mm_region_head_t * region_head, k_mm_region_t *regions, size_t size);
+kstat_t yunos_mm_region_init(k_mm_region_head_t *region_head,
+                             k_mm_region_t *regions, size_t size);
 /**
  * This function will insert the momory to free list.
  * @param[in]  regions   pointer to mem regions
@@ -83,13 +85,14 @@ kstat_t yunos_mm_region_init(k_mm_region_head_t * region_head, k_mm_region_t *re
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
 
-kstat_t yunos_mm_region_insert2freelist(k_mm_region_head_t * region_head,klist_t* node);
+kstat_t yunos_mm_region_insert2freelist(k_mm_region_head_t *region_head,
+                                        klist_t *node);
 
 /**
  * This function will get the free size of mem
  * @return  the free size of the mem
  */
-size_t yunos_mm_region_get_free_size(k_mm_region_head_t * region_head);
+size_t yunos_mm_region_get_free_size(k_mm_region_head_t *region_head);
 
 /**
  * This function will check if the mem has been corrupted.
@@ -106,7 +109,8 @@ kstat_t check_mm_info_func();
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
 #if (YUNOS_CONFIG_MM_BESTFIT > 0)
-kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t size, size_t allocator);
+kstat_t yunos_mm_bf_alloc(k_mm_region_head_t *region_head, void **mem,
+                          size_t size, size_t allocator);
 #endif
 /**
  * This function will alloc a mem from a region with first fit algorithm
@@ -117,7 +121,8 @@ kstat_t yunos_mm_bf_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
 #if (YUNOS_CONFIG_MM_FIRSTFIT > 0)
-kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t size, size_t allocator);
+kstat_t yunos_mm_ff_alloc(k_mm_region_head_t *region_head, void **mem,
+                          size_t size, size_t allocator);
 #endif
 
 /**
@@ -127,7 +132,7 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t * region_head, void **mem,size_t si
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
 #if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
-kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem);
+kstat_t yunos_mm_xf_free(k_mm_region_head_t *region_head, void *mem);
 #endif
 
 /**
@@ -135,14 +140,14 @@ kstat_t yunos_mm_xf_free(k_mm_region_head_t * region_head, void *mem);
  * @param[in]       size        size of the mem to malloc
  * @return  the operation status, NULL is error, others is memory address
  */
-void * yunos_mm_alloc(size_t size);
+void *yunos_mm_alloc(size_t size);
 
 /**
  * This function is wrapper of mm free
  * @param[in]       ptr        address point of the mem
  */
 
-void   yunos_mm_free(void * ptr);
+void   yunos_mm_free(void *ptr);
 
 #endif /* K_MM_REGION_H */
 

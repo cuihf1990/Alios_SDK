@@ -3,14 +3,14 @@
  * Copyright (C) 2016 YunOS Project. All rights reserved.
  ****************************************************************************/
 
- /**
- * @file
- * @brief      dynamic loader porting example,implement interfaces of dload_port.h
- * @details    this file must not used directly, only a example for reference
- * @author     zhifang Xiu
- * @date       2016-12-14
- * @version    0.1
- */
+/**
+* @file
+* @brief      dynamic loader porting example,implement interfaces of dload_port.h
+* @details    this file must not used directly, only a example for reference
+* @author     zhifang Xiu
+* @date       2016-12-14
+* @version    0.1
+*/
 
 #include <stdint.h>
 #include "dload.h"
@@ -59,21 +59,23 @@ static unsigned short crc16_byte(unsigned short crc, const unsigned char data)
     return (crc >> 8) ^ crc16_table[(crc ^ data) & 0xff];
 }
 
-static unsigned short _crc16(unsigned short crc, unsigned char const *buffer, uint32_t len)
+static unsigned short _crc16(unsigned short crc, unsigned char const *buffer,
+                             uint32_t len)
 {
-    while (len--)
+    while (len--) {
         crc = crc16_byte(crc, *buffer++);
+    }
     return crc;
 }
 
 unsigned short crc16(unsigned char const *buffer, uint32_t len)
 {
-    return _crc16(0, buffer,len);
+    return _crc16(0, buffer, len);
 }
 
 /* ram management interfaces stub */
 
-void* dload_allocate_ram(uint32_t nbytes)
+void *dload_allocate_ram(uint32_t nbytes)
 {
     return malloc(nbytes);
 }
@@ -90,16 +92,17 @@ int dload_free_ram(void *base, uint32_t nbytes)
 #define FLASH_ADDR_END   0x10040000
 uint32_t nsfs_get_image_base (int32_t image_fd)
 {
-    if(image_fd < FLASH_ADDR_START || image_fd >= FLASH_ADDR_END){
+    if (image_fd < FLASH_ADDR_START || image_fd >= FLASH_ADDR_END) {
         return 0xFFFFFFFFu;
-    }else{
+    } else {
         return (uint32_t)image_fd;
     }
 }
 
 /* cMMU interfaces */
-extern int  ckcmmu_entry_config(uint8_t entry,uint32_t virt_addr,uint32_t phy_addr,uint32_t len);
-extern int  ckcmmu_entry_enable(uint8_t entry,uint8_t en);
+extern int  ckcmmu_entry_config(uint8_t entry, uint32_t virt_addr,
+                                uint32_t phy_addr, uint32_t len);
+extern int  ckcmmu_entry_enable(uint8_t entry, uint8_t en);
 extern void ckcmmu_enable(uint8_t en);
 extern int  ckcmmu_get_entry(uint8_t *entry);
 
@@ -109,32 +112,32 @@ int cmmu_enable(uint8_t en)
     return 0;
 }
 
-int cmmu_map(uint32_t virt_addr,uint32_t phy_addr,uint32_t len)
+int cmmu_map(uint32_t virt_addr, uint32_t phy_addr, uint32_t len)
 {
     int ret;
     uint8_t cmmu_entry;
     ret = ckcmmu_get_entry(&cmmu_entry);
-    if(ret < 0) {
+    if (ret < 0) {
         LOG_E("no cmmu");
         ret = -E_DLD_CMMU;
     }
-    ckcmmu_entry_config(cmmu_entry,virt_addr,phy_addr,len);
-    ckcmmu_entry_enable(cmmu_entry,1);
+    ckcmmu_entry_config(cmmu_entry, virt_addr, phy_addr, len);
+    ckcmmu_entry_enable(cmmu_entry, 1);
 
-    LOG_D("virt_addr-%x,phy_addr-%x",virt_addr,phy_addr);
+    LOG_D("virt_addr-%x,phy_addr-%x", virt_addr, phy_addr);
     LOG_D("cMMU reg[%x]:%x-%x-%x-%x",
-            cmmu_entry,
-            *((uint32_t*)(0xE0100000+cmmu_entry*0x10)),
-            *((uint32_t*)(0xE0100010+cmmu_entry*0x10)),
-            *((uint32_t*)(0xE0100014+cmmu_entry*0x10)),
-            *((uint32_t*)(0xE0100018+cmmu_entry*0x10)) );
+          cmmu_entry,
+          *((uint32_t *)(0xE0100000 + cmmu_entry * 0x10)),
+          *((uint32_t *)(0xE0100010 + cmmu_entry * 0x10)),
+          *((uint32_t *)(0xE0100014 + cmmu_entry * 0x10)),
+          *((uint32_t *)(0xE0100018 + cmmu_entry * 0x10)) );
 
     return cmmu_entry;
 }
 
 int cmmu_unmap(int inst)
 {
-    return ckcmmu_entry_enable(inst,0);
+    return ckcmmu_entry_enable(inst, 0);
 }
 
 #endif /*YUNOS_CONFIG_DLOAD_SUPPORT*/

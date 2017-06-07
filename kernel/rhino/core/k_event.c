@@ -92,7 +92,8 @@ kstat_t yunos_event_del(kevent_t *event)
 }
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name, uint32_t flags)
+kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
+                               uint32_t flags)
 {
     kstat_t   stat;
     kevent_t *event_obj;

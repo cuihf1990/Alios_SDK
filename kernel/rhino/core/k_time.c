@@ -92,7 +92,8 @@ sys_time_t yunos_sys_tick_get(void)
 
 sys_time_t yunos_sys_time_get(void)
 {
-    return (sys_time_t)(yunos_sys_tick_get() * 1000 / YUNOS_CONFIG_TICKS_PER_SECOND);
+    return (sys_time_t)(yunos_sys_tick_get() * 1000 /
+                        YUNOS_CONFIG_TICKS_PER_SECOND);
 }
 
 tick_t     yunos_ms_to_ticks(sys_time_t ms)

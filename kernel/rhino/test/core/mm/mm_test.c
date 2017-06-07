@@ -47,7 +47,8 @@ void mm_test(void)
     }
 }
 
-void task_mm_entry_register(const char *name, test_func_t *runner, uint8_t casenum)
+void task_mm_entry_register(const char *name, test_func_t *runner,
+                            uint8_t casenum)
 {
     module_runner  = runner;
     module_name    = name;

@@ -36,8 +36,8 @@ enum {
 };
 
 typedef struct stable_network_data_s {
-    uint8_t          main_version:3;
-    uint8_t          minor_version:5;
+    uint8_t          main_version: 3;
+    uint8_t          minor_version: 5;
     uint16_t         meshnetid;
     uint8_t          channel;
     ur_ip6_addr_t    mcast_addr[MCAST_NUM];

@@ -46,7 +46,8 @@ static void buf_queue_create_param_test(void)
                                  TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_buf_queue_create(&g_test_bufqueue0, "test_bufqueue0", g_test_bufqueue_buf0,
+    ret = yunos_buf_queue_create(&g_test_bufqueue0, "test_bufqueue0",
+                                 g_test_bufqueue_buf0,
                                  0, TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == YUNOS_BUF_QUEUE_SIZE_ZERO);
 }
@@ -90,7 +91,8 @@ static void task_queue0_entry(void *arg)
         /* check yunos_buf_queue_del param */
         buf_queue_del_param_test();
 
-        ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER, &g_test_recv_msg0, &size);
+        ret = yunos_buf_queue_recv(&g_test_bufqueue0, YUNOS_WAIT_FOREVER,
+                                   &g_test_recv_msg0, &size);
         BUFQUEUE_VAL_CHK(ret == YUNOS_BLK_DEL);
 
         yunos_task_dyn_del(task_0_test);

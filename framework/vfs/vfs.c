@@ -118,11 +118,13 @@ static inline file_t *get_file(int fd)
 
     fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
 
-    if (fd < 0)
-    { return NULL; }
+    if (fd < 0) {
+        return NULL;
+    }
 
-    if (fd >= MAX_FILE_NUM)
-    { return NULL; }
+    if (fd >= MAX_FILE_NUM) {
+        return NULL;
+    }
 
     f = &files[fd];
     return f->node ? f : NULL;
@@ -136,8 +138,9 @@ static file_t *new_file(inode_t *node)
     for (idx = 0; idx < MAX_FILE_NUM; idx++) {
         f = &files[idx];
 
-        if (f->node == NULL)
-        { goto got_file; }
+        if (f->node == NULL) {
+            goto got_file;
+        }
     }
 
     return NULL;
@@ -275,8 +278,9 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
     file_t  *f;
     inode_t *node;
 
-    if (fd < 0)
-    { return E_VFS_FD_ILLEGAL; }
+    if (fd < 0) {
+        return E_VFS_FD_ILLEGAL;
+    }
 
     f = get_file(fd);
 
@@ -350,8 +354,9 @@ static int post_poll(struct pollfd *fds, int nfds)
         file_t  *f;
         struct pollfd *pfd = &fds[j];
 
-        if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET)
-        { continue; }
+        if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+            continue;
+        }
 
 
         f = get_file(pfd->fd);
@@ -409,8 +414,9 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout)
         for (i = 0; i < nfds; i++) {
             struct pollfd *pfd = fds + i;
 
-            if (FD_ISSET(pfd->fd, &rfds))
-            { pfd->revents |= POLLIN; }
+            if (FD_ISSET(pfd->fd, &rfds)) {
+                pfd->revents |= POLLIN;
+            }
         }
 
         nset += ret;
@@ -431,8 +437,9 @@ int yos_fcntl(int fd, int cmd, int val)
         return E_VFS_ERR_PARAM;
     }
 
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET)
-    { return trap_fcntl(fd, cmd, val); }
+    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+        return trap_fcntl(fd, cmd, val);
+    }
 
     return 0;
 }
@@ -442,7 +449,8 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
     int      err;
     int      fd;
 
-    for (fd = YUNOS_CONFIG_VFS_FD_OFFSET; fd < YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES; fd++) {
+    for (fd = YUNOS_CONFIG_VFS_FD_OFFSET;
+         fd < YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES; fd++) {
         file_t  *f;
         inode_t *node;
 

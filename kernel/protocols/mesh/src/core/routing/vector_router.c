@@ -135,7 +135,7 @@ static ur_error_t delete_vertex_by_ueid(uint8_t *ueid)
     slist_del(&vertex->next, &g_vr_state.vertex_list);
     g_vr_state.vertex_num--;
 
-     /* delete all edges targeting this vertex */
+    /* delete all edges targeting this vertex */
     vertex_t *cur_vertex;
     for_each_vertex(cur_vertex) {
         edge_t *edge = cur_vertex->edges, *prev_edge = NULL;
@@ -192,7 +192,7 @@ static ur_error_t add_vertex_by_ueid(uint8_t *ueid, uint16_t sid)
 
 static ur_error_t update_vertex(uint8_t cmd, uint8_t *ueid, uint16_t sid)
 {
-    switch(cmd) {
+    switch (cmd) {
         case COMMAND_VERTEX_UPDATE:
             return add_vertex_by_ueid(ueid, sid);
         case COMMAND_VERTEX_DELETE:
@@ -305,7 +305,7 @@ static void print_routing_table(void)
         if (vertex->edges != NULL) {
             printf("edges");
             edge_t *edge = vertex->edges;
-            while(edge != NULL) {
+            while (edge != NULL) {
                 printf("-(%04x,%d)", edge->dst->sid, edge->cost);
                 edge = edge->next;
             }
@@ -358,7 +358,7 @@ static void figure_out_routing_info(void)
 
 static void dijkstra(void)
 {
-    vertex_t * vertex;
+    vertex_t *vertex;
     for_each_vertex(vertex) {
         vertex->dist = INFINITY_PATH_COST;
         vertex->flag.visit = UNVISITED;
@@ -393,7 +393,8 @@ static void stop_topology_sync_timer()
 static void restart_topology_sync_timer()
 {
     stop_topology_sync_timer();
-    g_vr_state.sync_timer = ur_start_timer(TOPOLOGY_SYNC_TIMEOUT, handle_topology_sync_timer, NULL);
+    g_vr_state.sync_timer = ur_start_timer(TOPOLOGY_SYNC_TIMEOUT,
+                                           handle_topology_sync_timer, NULL);
 }
 
 static ur_error_t resend_last_command()
@@ -402,10 +403,11 @@ static ur_error_t resend_last_command()
     if (g_vr_state.retry_times < MAX_RETRY_TIMES) {
         ur_router_send_message(&g_vr_state.router, g_vr_state.sync_state->cmd_dst,
                                g_vr_state.sync_state->cmd_data, g_vr_state.sync_state->cmd_len);
-        g_vr_state.sync_timer = ur_start_timer(TOPOLOGY_SYNC_TIMEOUT, handle_topology_sync_timer, NULL);
+        g_vr_state.sync_timer = ur_start_timer(TOPOLOGY_SYNC_TIMEOUT,
+                                               handle_topology_sync_timer, NULL);
         ur_log(VECTOR_ROUTER_DEBUG_LEVEL, UR_LOG_REGION_ROUTE,
-           "vector router: timeout resend to %04x, len = %d\n",
-           g_vr_state.sync_state->cmd_dst, g_vr_state.sync_state->cmd_len);
+               "vector router: timeout resend to %04x, len = %d\n",
+               g_vr_state.sync_state->cmd_dst, g_vr_state.sync_state->cmd_len);
         return UR_ERROR_NONE;
     }
     return UR_ERROR_FAIL;
@@ -535,7 +537,8 @@ static void send_topology_sync_data()
     ur_log(VECTOR_ROUTER_DEBUG_LEVEL, UR_LOG_REGION_ROUTE,
            "vector router: send topology data to %04x, seq = %d, len = %d\n",
            g_vr_state.sync_state->peer_sid, vertex_me->seq, len);
-    ur_router_send_message(&g_vr_state.router, g_vr_state.sync_state->peer_sid, data, len);
+    ur_router_send_message(&g_vr_state.router, g_vr_state.sync_state->peer_sid,
+                           data, len);
     restart_topology_sync_timer();
 }
 
@@ -562,7 +565,8 @@ static void send_vertex_update(uint8_t *ueid, uint16_t sid, uint16_t to)
     ur_mem_free(data, len);
 }
 
-static void send_edge_update(uint16_t src, uint16_t dst, uint16_t cost, uint16_t to)
+static void send_edge_update(uint16_t src, uint16_t dst, uint16_t cost,
+                             uint16_t to)
 {
     uint8_t *data, len;
     router_command_t *cmd;
@@ -642,7 +646,8 @@ static ur_error_t handle_topology_sync_ack(const uint8_t *data, uint16_t length)
 
     ack = (router_command_t *)data;
     ur_log(VECTOR_ROUTER_DEBUG_LEVEL, UR_LOG_REGION_ROUTE,
-           "vector router: received topology sync ack from %04x, seq = %d\n", ack->sid, ack->seq);
+           "vector router: received topology sync ack from %04x, seq = %d\n", ack->sid,
+           ack->seq);
 
     if (ack->seq != vertex_me->seq) {
         return UR_ERROR_FAIL;
@@ -667,7 +672,8 @@ static ur_error_t handle_topology_sync_ack(const uint8_t *data, uint16_t length)
     return UR_ERROR_NONE;
 }
 
-static ur_error_t handle_topology_sync_select(const uint8_t *data, uint16_t length)
+static ur_error_t handle_topology_sync_select(const uint8_t *data,
+                                              uint16_t length)
 {
     router_command_t *cmd = (router_command_t *)data;
 
@@ -692,14 +698,16 @@ static ur_error_t handle_topology_sync_select(const uint8_t *data, uint16_t leng
     return UR_ERROR_NONE;
 }
 
-static ur_error_t handle_topology_sync_data(const uint8_t *data, uint16_t length)
+static ur_error_t handle_topology_sync_data(const uint8_t *data,
+                                            uint16_t length)
 {
     router_command_t *cmd;
     uint16_t         len;
 
     cmd = (router_command_t *)data;
     ur_log(VECTOR_ROUTER_DEBUG_LEVEL, UR_LOG_REGION_ROUTE,
-           "vector router: received topology sync data from %04x, len = %d\n", cmd->sid, length);
+           "vector router: received topology sync data from %04x, len = %d\n", cmd->sid,
+           length);
 
     if (g_vr_state.sync_status == TOPOLOGY_SYNC_IDLE) {
         router_command_t ack;
@@ -707,8 +715,10 @@ static ur_error_t handle_topology_sync_data(const uint8_t *data, uint16_t length
         ack.seq = cmd->seq;
         ack.sid = vertex_me->sid;
         ur_log(VECTOR_ROUTER_DEBUG_LEVEL, UR_LOG_REGION_ROUTE,
-                "vector router: send topology sync ack to %04x, len = %d\n", cmd->sid, sizeof(ack));
-        ur_router_send_message(&g_vr_state.router, cmd->sid, (uint8_t *)&ack, sizeof(ack));
+               "vector router: send topology sync ack to %04x, len = %d\n", cmd->sid,
+               sizeof(ack));
+        ur_router_send_message(&g_vr_state.router, cmd->sid, (uint8_t *)&ack,
+                               sizeof(ack));
         stop_topology_sync_timer();
     }
 
@@ -722,7 +732,7 @@ static ur_error_t handle_topology_sync_data(const uint8_t *data, uint16_t length
         uint8_t type = *(data + len);
         vertex_tv_t *vertex_tv;
         edge_tv_t   *edge_tv;
-        switch(type) {
+        switch (type) {
             case TYPE_VERTEX:
                 vertex_tv = (vertex_tv_t *)(data + len);
                 if (memcmp(vertex_tv->ueid, vertex_me->ueid, sizeof(vertex_tv->ueid)) != 0) {
@@ -817,7 +827,8 @@ static ur_error_t handle_edge_update(const uint8_t *data, uint16_t length)
     return error;
 }
 
-static ur_error_t handle_heartbeat_message(const uint8_t *data, uint16_t length, uint8_t *newinfo)
+static ur_error_t handle_heartbeat_message(const uint8_t *data, uint16_t length,
+                                           uint8_t *newinfo)
 {
     uint16_t len = 0;
     int8_t  diff;
@@ -858,7 +869,8 @@ static ur_error_t handle_heartbeat_message(const uint8_t *data, uint16_t length,
     }
 
     ur_log(VECTOR_ROUTER_DEBUG_LEVEL, UR_LOG_REGION_ROUTE,
-           "vector router: received heartbeat message from %04x, len = %d\n", cmd->sid, length);
+           "vector router: received heartbeat message from %04x, len = %d\n", cmd->sid,
+           length);
 
 
     vertex->seq = cmd->seq;
@@ -902,7 +914,8 @@ static ur_error_t handle_heartbeat_message(const uint8_t *data, uint16_t length,
     len = sizeof(router_command_t) + sizeof(vertex_tv_t);
     while (len < length) {
         edge_tuple = (edge_tuple_t *)(data + len);
-        if(update_edge(vertex_tv->sid, edge_tuple->dst, edge_tuple->cost) == UR_ERROR_NONE) {
+        if (update_edge(vertex_tv->sid, edge_tuple->dst,
+                        edge_tuple->cost) == UR_ERROR_NONE) {
             (*newinfo)++;
         }
         len += sizeof(edge_tuple_t);
@@ -914,7 +927,7 @@ static ur_error_t handle_heartbeat_message(const uint8_t *data, uint16_t length,
 static void handle_topology_sync_timer(void *args)
 {
     g_vr_state.sync_timer = NULL;
-    switch(g_vr_state.sync_status) {
+    switch (g_vr_state.sync_status) {
         case TOPOLOGY_SYNC_CLIENT_RECEIVING_DATA:
         case TOPOLOGY_SYNC_SERVER_SENDING_VERTEX:
         case TOPOLOGY_SYNC_SERVER_SENDING_EDGE:
@@ -932,8 +945,9 @@ static void vertex_timeout_check()
     vertex_t *vertex;
     uint8_t  newinfo = 0;
     for_each_vertex(vertex) {
-        if (vertex == vertex_me)
+        if (vertex == vertex_me) {
             continue;
+        }
 
         vertex->flag.timeout++;
     }
@@ -948,7 +962,7 @@ static void vertex_timeout_check()
         }
 
         break;
-    next_loop:
+next_loop:
         (void)vertex;
     }
 
@@ -959,7 +973,8 @@ static void vertex_timeout_check()
 
 static void handle_heartbeat_timer(void *args)
 {
-    g_vr_state.heartbeat_timer = ur_start_timer(HEARTBEAT_TIMEOUT, handle_heartbeat_timer, NULL);
+    g_vr_state.heartbeat_timer = ur_start_timer(HEARTBEAT_TIMEOUT,
+                                                handle_heartbeat_timer, NULL);
 
     if (g_vr_state.status == STATUS_UP) {
         g_vr_state.heartbeat_count ++;
@@ -973,8 +988,10 @@ static void handle_heartbeat_timer(void *args)
             send_heartbeat_message();
             g_vr_state.heartbeat_count = 0;
             g_vr_state.heartbeat_message_interval <<= 1;
-            if (g_vr_state.heartbeat_message_interval > MAX_HEARTBEAT_MESSAGE_INTERVAL / HEARTBEAT_TIMEOUT) {
-                g_vr_state.heartbeat_message_interval = MAX_HEARTBEAT_MESSAGE_INTERVAL / HEARTBEAT_TIMEOUT;
+            if (g_vr_state.heartbeat_message_interval > MAX_HEARTBEAT_MESSAGE_INTERVAL /
+                HEARTBEAT_TIMEOUT) {
+                g_vr_state.heartbeat_message_interval = MAX_HEARTBEAT_MESSAGE_INTERVAL /
+                                                        HEARTBEAT_TIMEOUT;
             }
         }
     } else if (g_vr_state.status == STATUS_SYNC_TOPOLOGY) {
@@ -1035,7 +1052,7 @@ ur_error_t vector_router_deinit(void)
     g_vr_state.status = STATUS_DOWN;
     g_vr_state.sync_status = TOPOLOGY_SYNC_IDLE;
 
-    while(!slist_empty(&g_vr_state.vertex_list)) {
+    while (!slist_empty(&g_vr_state.vertex_list)) {
         vertex = slist_first_entry(&g_vr_state.vertex_list, vertex_t, next);
         slist_del(&vertex->next, &g_vr_state.vertex_list);
         vertex_free(vertex);
@@ -1075,7 +1092,7 @@ ur_error_t vector_router_neighbor_updated(neighbor_t *neighbor)
         cost = (uint8_t)INFINITY_PATH_COST;
     }
 
-    if(update_edge(src, dst, cost) == UR_ERROR_FAIL) {
+    if (update_edge(src, dst, cost) == UR_ERROR_FAIL) {
         return UR_ERROR_FAIL;
     }
 
@@ -1093,19 +1110,19 @@ ur_error_t vector_router_message_received(const uint8_t *data, uint16_t length)
     ur_error_t error;
     uint8_t cmd = data[0];
 
-    switch(cmd) {
+    switch (cmd) {
         case COMMAND_VERTEX_UPDATE:
         case COMMAND_VERTEX_DELETE:
             error = handle_vertex_update(data, length);
             if (error != UR_ERROR_FAIL) {
-                ur_router_send_message(&g_vr_state.router, BCAST_SID, (uint8_t*)data, length);
+                ur_router_send_message(&g_vr_state.router, BCAST_SID, (uint8_t *)data, length);
                 newinfo++;
             }
             break;
         case COMMAND_EDGE_UPDATE:
             error = handle_edge_update(data, length);
             if (error != UR_ERROR_FAIL) {
-                ur_router_send_message(&g_vr_state.router, BCAST_SID, (uint8_t*)data, length);
+                ur_router_send_message(&g_vr_state.router, BCAST_SID, (uint8_t *)data, length);
                 newinfo++;
             }
             break;
@@ -1121,7 +1138,7 @@ ur_error_t vector_router_message_received(const uint8_t *data, uint16_t length)
         case COMMAND_HEARTBEAT:
             error = handle_heartbeat_message(data, length, &newinfo);
             if (error != UR_ERROR_FAIL) {
-                ur_router_send_message(&g_vr_state.router, BCAST_SID, (uint8_t*)data, length);
+                ur_router_send_message(&g_vr_state.router, BCAST_SID, (uint8_t *)data, length);
             }
             break;
         default:
@@ -1136,7 +1153,8 @@ ur_error_t vector_router_message_received(const uint8_t *data, uint16_t length)
     return UR_ERROR_NONE;
 }
 
-ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data, uint8_t len)
+ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data,
+                                         uint8_t len)
 {
     if (event == EVENT_SID_UPDATED && data != NULL && len == sizeof(netids_t)) {
         netids_t *netids = (netids_t *)data;
@@ -1145,7 +1163,7 @@ ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data, uint8_t l
             return UR_ERROR_NONE;
         }
 
-        if(g_vr_state.meshnetid == netids->meshnetid) {
+        if (g_vr_state.meshnetid == netids->meshnetid) {
             if (vertex_me->sid == netids->sid) {
                 return UR_ERROR_NONE;
             }
@@ -1166,7 +1184,8 @@ ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data, uint8_t l
                 g_vr_state.status = STATUS_SYNC_TOPOLOGY;
             }
             g_vr_state.sync_status = TOPOLOGY_SYNC_IDLE;
-            g_vr_state.heartbeat_timer = ur_start_timer(STARTUP_TIMEOUT, handle_heartbeat_timer, NULL);
+            g_vr_state.heartbeat_timer = ur_start_timer(STARTUP_TIMEOUT,
+                                                        handle_heartbeat_timer, NULL);
         }
 
     }
@@ -1199,7 +1218,7 @@ ur_error_t vector_router_add_vertex(uint16_t sid)
         }
     }
     vertex = vertex_alloc();
-    if(vertex == NULL) {
+    if (vertex == NULL) {
         return UR_ERROR_MEM;
     }
     g_vr_state.vertex_num++;

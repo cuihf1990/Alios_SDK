@@ -73,7 +73,8 @@ kstat_t yunos_timer_del(ktimer_t *timer);
  * @param[in]  auto_run  auto run or not when the timer is created
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_timer_dyn_create(ktimer_t **timer, const name_t *name, timer_cb_t cb,
+kstat_t yunos_timer_dyn_create(ktimer_t **timer, const name_t *name,
+                               timer_cb_t cb,
                                tick_t first, tick_t round, void *arg, uint8_t auto_run);
 /**
  * This function will delete a dyn-timer

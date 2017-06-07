@@ -60,10 +60,11 @@ ur_error_t nd_init(void)
         memset(&network->network_data, 0, sizeof(network->network_data));
     }
     memset(&g_nd_state.network_data, 0, sizeof(g_nd_state.network_data));
-    memset(&g_nd_state.stable_network_data, 0, sizeof(g_nd_state.stable_network_data));
+    memset(&g_nd_state.stable_network_data, 0,
+           sizeof(g_nd_state.stable_network_data));
     g_nd_state.stable_network_data.meshnetid = INVALID_NETID;
     if (mm_get_mode() & MODE_MOBILE) {
-       g_nd_state.stable_network_data.meshnetid = INVALID_NETID;
+        g_nd_state.stable_network_data.meshnetid = INVALID_NETID;
     } else {
         g_nd_state.stable_network_data.meshnetid = generate_meshnetid();
     }
@@ -95,7 +96,8 @@ ur_error_t nd_stable_set(stable_network_data_t *network_data)
     int8_t       diff;
     nd_updater_t *updater;
 
-    diff = network_data->minor_version - g_nd_state.stable_network_data.minor_version;
+    diff = network_data->minor_version -
+           g_nd_state.stable_network_data.minor_version;
     if (diff >= 0 || g_nd_state.stable_network_data.minor_version == 0) {
         memcpy(&g_nd_state.stable_network_data, network_data,
                sizeof(g_nd_state.stable_network_data));
@@ -171,7 +173,8 @@ ur_error_t nd_set_subscribed_mcast(const ur_ip6_addr_t *addr)
     }
 
     memcpy(&network_data, &g_nd_state.stable_network_data, sizeof(network_data));
-    if (memcmp(network_data.mcast_addr, addr, sizeof(network_data.mcast_addr[0])) != 0) {
+    if (memcmp(network_data.mcast_addr, addr,
+               sizeof(network_data.mcast_addr[0])) != 0) {
         network_data.minor_version++;
         memcpy(network_data.mcast_addr, addr, sizeof(network_data.mcast_addr));
         error = nd_stable_set(&network_data);
@@ -181,7 +184,8 @@ ur_error_t nd_set_subscribed_mcast(const ur_ip6_addr_t *addr)
 
 bool nd_is_subscribed_mcast(const ur_ip6_addr_t *addr)
 {
-    return !memcmp(addr, g_nd_state.stable_network_data.mcast_addr, sizeof(ur_ip6_addr_t));
+    return !memcmp(addr, g_nd_state.stable_network_data.mcast_addr,
+                   sizeof(ur_ip6_addr_t));
 }
 
 ur_error_t nd_get_ip6_prefix(ur_ip6_prefix_t *prefix)

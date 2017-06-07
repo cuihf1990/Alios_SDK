@@ -26,7 +26,7 @@ void task_suspend_entry(void *arg)
 {
     while (1) {
         yunos_task_suspend(g_active_task);
-        
+
         test_case_success++;
         PRINT_RESULT("task_suspend", PASS);
 
@@ -46,12 +46,12 @@ void task_resume_entry(void *arg)
 void task_suspend_test(void)
 {
     yunos_task_dyn_create(&task_1_test, "task_suspend_test_1", 0, 10,
-                           0, TASK_TEST_STACK_SIZE,
-                           task_suspend_entry, 1);
+                          0, TASK_TEST_STACK_SIZE,
+                          task_suspend_entry, 1);
 
     yunos_task_dyn_create(&task_2_test, "task_suspend_test_2", 0, 11,
-                           0, TASK_TEST_STACK_SIZE,
-                           task_resume_entry, 1);
+                          0, TASK_TEST_STACK_SIZE,
+                          task_resume_entry, 1);
 
 }
 

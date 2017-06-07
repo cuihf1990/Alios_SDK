@@ -39,7 +39,8 @@ extern k_mm_region_t regions2[];
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_mm_region_entry_register(const char *name, test_func_t *runner, uint8_t casenum);
+void task_mm_region_entry_register(const char *name, test_func_t *runner,
+                                   uint8_t casenum);
 void task_mm_region_entry(void *arg);
 void mm_region_test(void);
 void mm_region_break_test(void);

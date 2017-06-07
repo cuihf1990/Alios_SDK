@@ -3,14 +3,14 @@
  * Copyright (C) 2016 YunOS Project. All rights reserved.
  ****************************************************************************/
 
- /**
- * @file
- * @brief      dynamic loader test
- * @details
- * @author     xzf
- * @date       2016-12-14
- * @version    0.1
- */
+/**
+* @file
+* @brief      dynamic loader test
+* @details
+* @author     xzf
+* @date       2016-12-14
+* @version    0.1
+*/
 
 #include <stdint.h>
 #include "dload.h"
@@ -44,7 +44,7 @@ void dload_test(void)
     *result = 0x01020304;
 #endif
 
-    LOG_D("===================dload_test:%s===================",__TIME__);
+    LOG_D("===================dload_test:%s===================", __TIME__);
 
 #if (CONFIG_DLOAD_MODULE_SET_RESULT > 0)
     yunos_sched_disable();
@@ -55,24 +55,24 @@ void dload_test(void)
     ymod_load(TEST_IMAGE_FD);
 
 #if (CONFIG_DLOAD_MODULE_SET_RESULT > 0)
-    if(*result == RESULT_SUCCESS){
+    if (*result == RESULT_SUCCESS) {
         LOG_D("load test success");
-    }else{
-        LOG_E("load test error:%x",*result);
+    } else {
+        LOG_E("load test error:%x", *result);
     }
 #endif
 
     ymod_show_status();
 
     ret = ymod_unload(TEST_IMAGE_FD);
-    if(ret != 0){
-        LOG_E("unload test error:%x",ret);
-    }else {
+    if (ret != 0) {
+        LOG_E("unload test error:%x", ret);
+    } else {
 #if (CONFIG_DLOAD_MODULE_SET_RESULT > 0)
-        if(*result == 0x9ABCDEF0u){
+        if (*result == 0x9ABCDEF0u) {
             LOG_D("unload test success");
-        }else{
-            LOG_E("unload test error:%x",*result);
+        } else {
+            LOG_E("unload test error:%x", *result);
         }
 #endif
     }

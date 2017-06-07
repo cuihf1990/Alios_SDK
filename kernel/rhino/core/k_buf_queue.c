@@ -18,7 +18,8 @@
 
 #if (YUNOS_CONFIG_BUF_QUEUE > 0)
 
-static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name, void *buf,
+static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
+                                void *buf,
                                 size_t size, size_t max_msg, uint8_t mm_alloc_flag)
 {
     size_t  buf_size;
@@ -62,7 +63,8 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name, void *b
     return YUNOS_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_create(kbuf_queue_t *queue, const name_t *name, void *buf,
+kstat_t yunos_buf_queue_create(kbuf_queue_t *queue, const name_t *name,
+                               void *buf,
                                size_t size, size_t max_msg)
 {
     return buf_queue_create(queue, name, buf, size, max_msg, K_OBJ_STATIC_ALLOC);
@@ -135,7 +137,8 @@ kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
         return YUNOS_NO_MEM;
     }
 
-    stat = buf_queue_create(queue_obj, name, queue_obj->buf, size, max_msg, K_OBJ_DYN_ALLOC);
+    stat = buf_queue_create(queue_obj, name, queue_obj->buf, size, max_msg,
+                            K_OBJ_DYN_ALLOC);
 
     if (stat != YUNOS_SUCCESS) {
         yunos_mm_free(queue_obj->buf);
@@ -189,7 +192,8 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
 }
 #endif
 
-static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size, int front)
+static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
+                              int front)
 {
     CPSR_ALLOC();
 
@@ -230,7 +234,7 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size, i
 
         if (err != YUNOS_SUCCESS) {
             YUNOS_CRITICAL_EXIT();
-            if(err ==  YUNOS_RINGBUF_FULL) {
+            if (err ==  YUNOS_RINGBUF_FULL) {
                 err = YUNOS_BUF_QUEUE_FULL;
             }
             return err;
@@ -289,7 +293,8 @@ kstat_t yunos_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
     return buf_queue_send(queue, msg, size, YUNOS_TRUE);
 }
 
-kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg, size_t *size)
+kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
+                             size_t *size)
 {
     CPSR_ALLOC();
 

@@ -32,7 +32,7 @@
 static k_ringbuf_t  g_fix_ringbuf;
 static k_ringbuf_t  g_dyn_ringbuf;
 
-static char * push_data[]={
+static char *push_data[] = {
     "1111",
     "2222",
     "3333",
@@ -44,7 +44,7 @@ uint8_t ringbuf_small_buf[RINGBUF_SIZE_SMALL];
 uint8_t ringbuf_middle_buf[RINGBUF_SIZE_MIDDLE];
 uint8_t dyn_data_big_buf[RINGBUF_SIZE_BIG];
 
-uint8_t dyn_data_small[RINGBUF_SIZE_SMALL/2-2];
+uint8_t dyn_data_small[RINGBUF_SIZE_SMALL / 2 - 2];
 uint8_t dyn_data_middle[RINGBUF_SIZE_MIDDLE];
 uint8_t dyn_data_big_rev[RINGBUF_SIZE_BIG];
 uint8_t dyn_data_big[RINGBUF_SIZE_BIG];
@@ -57,127 +57,131 @@ static uint8_t ringbuf_break_case_fix(void)
     kstat_t  ret;
     uint8_t  rev[RINGBUF_FIX_LEN];
     size_t   len;
-    size_t   i =0;
+    size_t   i = 0;
 
-    ret = yunos_ringbuf_init(NULL,NULL,0,0,0);
+    ret = yunos_ringbuf_init(NULL, NULL, 0, 0, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
     ret = yunos_ringbuf_init(&g_fix_ringbuf, NULL, 0, RINGBUF_TYPE_FIX, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_ringbuf_init(&g_fix_ringbuf, (void*)ringbuf_small_buf, 0, RINGBUF_TYPE_FIX, 0);
+    ret = yunos_ringbuf_init(&g_fix_ringbuf, (void *)ringbuf_small_buf, 0,
+                             RINGBUF_TYPE_FIX, 0);
     MYASSERT(ret == YUNOS_INV_PARAM);
 
-    ret = yunos_ringbuf_init(&g_fix_ringbuf, (void*)ringbuf_small_buf, sizeof(ringbuf_small_buf), 3, 0);
+    ret = yunos_ringbuf_init(&g_fix_ringbuf, (void *)ringbuf_small_buf,
+                             sizeof(ringbuf_small_buf), 3, 0);
     MYASSERT(ret == YUNOS_INV_PARAM);
 
-    ret = yunos_ringbuf_init(&g_fix_ringbuf, (void*)ringbuf_small_buf, sizeof(ringbuf_small_buf), RINGBUF_TYPE_FIX, 0);
+    ret = yunos_ringbuf_init(&g_fix_ringbuf, (void *)ringbuf_small_buf,
+                             sizeof(ringbuf_small_buf), RINGBUF_TYPE_FIX, 0);
     MYASSERT(ret == YUNOS_INV_PARAM);
 
-    ret = yunos_ringbuf_init(&g_fix_ringbuf, (void*)ringbuf_small_buf, sizeof(ringbuf_small_buf), RINGBUF_TYPE_FIX, RINGBUF_FIX_LEN);
+    ret = yunos_ringbuf_init(&g_fix_ringbuf, (void *)ringbuf_small_buf,
+                             sizeof(ringbuf_small_buf), RINGBUF_TYPE_FIX, RINGBUF_FIX_LEN);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_push(NULL,NULL,0);
+    ret = yunos_ringbuf_push(NULL, NULL, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,NULL,0);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, NULL, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
 
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,(void *)push_data[0],1);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[0], 1);
     MYASSERT(ret == YUNOS_INV_PARAM);
 
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,(void *)push_data[0],4);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[0], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_pop(NULL,NULL,0);
+    ret = yunos_ringbuf_pop(NULL, NULL, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_ringbuf_pop(&g_fix_ringbuf,NULL,0);
+    ret = yunos_ringbuf_pop(&g_fix_ringbuf, NULL, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_ringbuf_pop(&g_fix_ringbuf,(void*)&rev[0],0);
+    ret = yunos_ringbuf_pop(&g_fix_ringbuf, (void *)&rev[0], 0);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = memcmp(rev,push_data[0],4);
+    ret = memcmp(rev, push_data[0], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
 
-    ret = yunos_ringbuf_head_push(NULL,NULL,0);
+    ret = yunos_ringbuf_head_push(NULL, NULL, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_ringbuf_head_push(&g_fix_ringbuf,NULL,0);
+    ret = yunos_ringbuf_head_push(&g_fix_ringbuf, NULL, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
 
-    ret = yunos_ringbuf_head_push(&g_fix_ringbuf,(void*)push_data[0],1);
+    ret = yunos_ringbuf_head_push(&g_fix_ringbuf, (void *)push_data[0], 1);
     MYASSERT(ret == YUNOS_INV_PARAM);
 
-    ret = yunos_ringbuf_head_push(&g_fix_ringbuf,(void*)push_data[0],4);
+    ret = yunos_ringbuf_head_push(&g_fix_ringbuf, (void *)push_data[0], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_pop(&g_fix_ringbuf,(void*)&rev[0],NULL);
+    ret = yunos_ringbuf_pop(&g_fix_ringbuf, (void *)&rev[0], NULL);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = memcmp(rev,push_data[0],4);
+    ret = memcmp(rev, push_data[0], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_pop(&g_fix_ringbuf,(void*)&rev[0],0);
+    ret = yunos_ringbuf_pop(&g_fix_ringbuf, (void *)&rev[0], 0);
     MYASSERT(ret == YUNOS_RINGBUF_EMPTY);
 
     /*empty now,push full */
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,(void*)push_data[1],4);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[1], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,(void*)push_data[2],4);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[2], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,(void*)push_data[3],4);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[3], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_head_push(&g_fix_ringbuf,(void*)push_data[0],4);
+    ret = yunos_ringbuf_head_push(&g_fix_ringbuf, (void *)push_data[0], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     /* test ringbuf full */
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,(void*)push_data[4],4);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[4], 4);
     MYASSERT(ret == YUNOS_RINGBUF_FULL);
 
-    ret = yunos_ringbuf_head_push(&g_fix_ringbuf,(void*)push_data[4],4);
+    ret = yunos_ringbuf_head_push(&g_fix_ringbuf, (void *)push_data[4], 4);
     MYASSERT(ret == YUNOS_RINGBUF_FULL);
 
     ret = yunos_ringbuf_is_full(&g_fix_ringbuf);
     MYASSERT(ret == true);
 
-    ret = yunos_ringbuf_pop(&g_fix_ringbuf,(void*)&rev[0],NULL);
+    ret = yunos_ringbuf_pop(&g_fix_ringbuf, (void *)&rev[0], NULL);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = memcmp(rev,(uint8_t*)push_data[0],4);
+    ret = memcmp(rev, (uint8_t *)push_data[0], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,(void*)push_data[4],4);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[4], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_pop(&g_fix_ringbuf,(void*)&rev[0],&len);
+    ret = yunos_ringbuf_pop(&g_fix_ringbuf, (void *)&rev[0], &len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = memcmp(rev,(uint8_t*)push_data[1],4);
+    ret = memcmp(rev, (uint8_t *)push_data[1], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     /* test tail==end */
-    ret = yunos_ringbuf_push(&g_fix_ringbuf,(void*)push_data[5],4);
+    ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[5], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_pop(&g_fix_ringbuf,(void*)&rev[0],&len);
+    ret = yunos_ringbuf_pop(&g_fix_ringbuf, (void *)&rev[0], &len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = memcmp(rev,(uint8_t*)push_data[2],4);
+    ret = memcmp(rev, (uint8_t *)push_data[2], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    for(i=0; i< 4; ++i) {
-        ret = yunos_ringbuf_push(&g_fix_ringbuf,(void*)push_data[0],4);
+    for (i = 0; i < 4; ++i) {
+        ret = yunos_ringbuf_push(&g_fix_ringbuf, (void *)push_data[0], 4);
         MYASSERT(ret == YUNOS_SUCCESS);
 
-        ret = yunos_ringbuf_pop(&g_fix_ringbuf,(void*)&rev[0],&len);
+        ret = yunos_ringbuf_pop(&g_fix_ringbuf, (void *)&rev[0], &len);
         MYASSERT(ret == YUNOS_SUCCESS);
     }
 
@@ -188,7 +192,7 @@ static uint8_t ringbuf_break_case_fix(void)
     MYASSERT(ret == true);
 
     /*test head==buf when head push*/
-    ret = yunos_ringbuf_head_push(&g_fix_ringbuf,(void*)push_data[0],4);
+    ret = yunos_ringbuf_head_push(&g_fix_ringbuf, (void *)push_data[0], 4);
     MYASSERT(ret == YUNOS_SUCCESS);
 #endif
     return 0;
@@ -201,8 +205,8 @@ static uint8_t ringbuf_break_case_dyn(void)
     size_t  len;
     size_t  i = 0;
 
-    memset(dyn_data_small,'1',sizeof(dyn_data_small));
-    memset(dyn_data_middle,'2',sizeof(dyn_data_middle));
+    memset(dyn_data_small, '1', sizeof(dyn_data_small));
+    memset(dyn_data_middle, '2', sizeof(dyn_data_middle));
 
     ret = yunos_ringbuf_init(NULL, NULL, 0, 0, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
@@ -211,16 +215,20 @@ static uint8_t ringbuf_break_case_dyn(void)
     ret = yunos_ringbuf_init(&g_dyn_ringbuf, NULL, 0, RINGBUF_TYPE_DYN, 0);
     MYASSERT(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, 0, RINGBUF_TYPE_DYN, 0);
+    ret = yunos_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, 0, RINGBUF_TYPE_DYN,
+                             0);
     MYASSERT(ret == YUNOS_INV_PARAM);
 
-    ret = yunos_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, RINGBUF_SIZE_SMALL, 3, 0);
+    ret = yunos_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, RINGBUF_SIZE_SMALL,
+                             3, 0);
     MYASSERT(ret == YUNOS_INV_PARAM);
 
-    ret = yunos_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, RINGBUF_SIZE_SMALL, RINGBUF_TYPE_DYN, 0);
+    ret = yunos_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, RINGBUF_SIZE_SMALL,
+                             RINGBUF_TYPE_DYN, 0);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_small,sizeof(dyn_data_small));
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_small,
+                             sizeof(dyn_data_small));
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, NULL, NULL);
@@ -236,20 +244,24 @@ static uint8_t ringbuf_break_case_dyn(void)
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_RINGBUF_EMPTY);
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_small,sizeof(dyn_data_small));
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_small,
+                             sizeof(dyn_data_small));
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_head_push(&g_dyn_ringbuf,dyn_data_small,sizeof(dyn_data_small));
+    ret = yunos_ringbuf_head_push(&g_dyn_ringbuf, dyn_data_small,
+                                  sizeof(dyn_data_small));
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_small,sizeof(dyn_data_small));
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_small,
+                             sizeof(dyn_data_small));
     MYASSERT(ret == YUNOS_RINGBUF_FULL);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(len == sizeof(dyn_data_small));
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_small,sizeof(dyn_data_small));
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_small,
+                             sizeof(dyn_data_small));
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
@@ -257,12 +269,13 @@ static uint8_t ringbuf_break_case_dyn(void)
     MYASSERT(len == sizeof(dyn_data_small));
 
     /* middle buffer */
-    ret = yunos_ringbuf_init(&g_dyn_ringbuf, ringbuf_middle_buf, RINGBUF_SIZE_MIDDLE, RINGBUF_TYPE_DYN, 0);
+    ret = yunos_ringbuf_init(&g_dyn_ringbuf, ringbuf_middle_buf,
+                             RINGBUF_SIZE_MIDDLE, RINGBUF_TYPE_DYN, 0);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    data_len = sizeof(dyn_data_middle)-2;
+    data_len = sizeof(dyn_data_middle) - 2;
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_middle,data_len);
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_is_full(&g_dyn_ringbuf);
@@ -272,137 +285,138 @@ static uint8_t ringbuf_break_case_dyn(void)
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(len == data_len);
-    ret = memcmp(dyn_data_big_rev,dyn_data_middle,data_len);
+    ret = memcmp(dyn_data_big_rev, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    data_len = sizeof(dyn_data_middle)/2-4;
+    data_len = sizeof(dyn_data_middle) / 2 - 4;
 
-    memset(dyn_data_middle,'3',sizeof(dyn_data_middle));
+    memset(dyn_data_middle, '3', sizeof(dyn_data_middle));
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_middle,data_len);
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(len == data_len);
-    ret = memcmp(dyn_data_big_rev,dyn_data_middle,data_len);
+    ret = memcmp(dyn_data_big_rev, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_RINGBUF_EMPTY);
-    ret = memcmp(dyn_data_big_rev,dyn_data_middle,data_len);
+    ret = memcmp(dyn_data_big_rev, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    memset(dyn_data_middle,'4',sizeof(dyn_data_middle));
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_middle,data_len);
+    memset(dyn_data_middle, '4', sizeof(dyn_data_middle));
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    memset(dyn_data_middle,'5',sizeof(dyn_data_middle));
-    ret = yunos_ringbuf_head_push(&g_dyn_ringbuf,dyn_data_middle,data_len);
+    memset(dyn_data_middle, '5', sizeof(dyn_data_middle));
+    ret = yunos_ringbuf_head_push(&g_dyn_ringbuf, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_middle,data_len);
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_RINGBUF_FULL);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(len == data_len);
-    ret = memcmp(dyn_data_big_rev,dyn_data_middle,data_len);
+    ret = memcmp(dyn_data_big_rev, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    memset(dyn_data_middle,'6',sizeof(dyn_data_middle));
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,(void *)dyn_data_middle,data_len);
+    memset(dyn_data_middle, '6', sizeof(dyn_data_middle));
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, (void *)dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    memset(dyn_data_middle,'4',sizeof(dyn_data_middle));
+    memset(dyn_data_middle, '4', sizeof(dyn_data_middle));
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(len == data_len);
-    ret = memcmp(dyn_data_big_rev,dyn_data_middle,data_len);
+    ret = memcmp(dyn_data_big_rev, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    memset(dyn_data_middle,'6',sizeof(dyn_data_middle));
+    memset(dyn_data_middle, '6', sizeof(dyn_data_middle));
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(len == data_len);
-    ret = memcmp(dyn_data_big_rev,dyn_data_middle,data_len);
+    ret = memcmp(dyn_data_big_rev, dyn_data_middle, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_reset(&g_dyn_ringbuf);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     /* random test */
-    for (i=0; i< 5; ++i) {
-        data_len = sizeof(dyn_data_middle)/2-i;
-        memset(dyn_data_middle,i,sizeof(dyn_data_middle));
+    for (i = 0; i < 5; ++i) {
+        data_len = sizeof(dyn_data_middle) / 2 - i;
+        memset(dyn_data_middle, i, sizeof(dyn_data_middle));
 
-        ret = yunos_ringbuf_head_push(&g_dyn_ringbuf,dyn_data_middle,data_len);
-        MYASSERT(ret == YUNOS_SUCCESS);
-
-        ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
-        MYASSERT(ret == YUNOS_SUCCESS);
-        MYASSERT(len == data_len);
-        ret = memcmp(dyn_data_big_rev,dyn_data_middle,data_len);
-        MYASSERT(ret == YUNOS_SUCCESS);
-
-        ret = yunos_ringbuf_push(&g_dyn_ringbuf,dyn_data_middle,data_len);
+        ret = yunos_ringbuf_head_push(&g_dyn_ringbuf, dyn_data_middle, data_len);
         MYASSERT(ret == YUNOS_SUCCESS);
 
         ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
         MYASSERT(ret == YUNOS_SUCCESS);
         MYASSERT(len == data_len);
-        ret = memcmp(dyn_data_big_rev,dyn_data_middle,data_len);
+        ret = memcmp(dyn_data_big_rev, dyn_data_middle, data_len);
+        MYASSERT(ret == YUNOS_SUCCESS);
+
+        ret = yunos_ringbuf_push(&g_dyn_ringbuf, dyn_data_middle, data_len);
+        MYASSERT(ret == YUNOS_SUCCESS);
+
+        ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
+        MYASSERT(ret == YUNOS_SUCCESS);
+        MYASSERT(len == data_len);
+        ret = memcmp(dyn_data_big_rev, dyn_data_middle, data_len);
         MYASSERT(ret == YUNOS_SUCCESS);
 
     }
 
     /* big data test */
 
-    memset(dyn_data_big,'3',RINGBUF_SIZE_BIG);
+    memset(dyn_data_big, '3', RINGBUF_SIZE_BIG);
 
 
-    ret = yunos_ringbuf_init(&g_dyn_ringbuf, dyn_data_big_buf, RINGBUF_SIZE_BIG, RINGBUF_TYPE_DYN, 0);
+    ret = yunos_ringbuf_init(&g_dyn_ringbuf, dyn_data_big_buf, RINGBUF_SIZE_BIG,
+                             RINGBUF_TYPE_DYN, 0);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    data_len = sizeof(dyn_data_big_buf)-4;
+    data_len = sizeof(dyn_data_big_buf) - 4;
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,(void *)dyn_data_big,data_len);
-    MYASSERT(ret == YUNOS_SUCCESS);
-
-    ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
-    MYASSERT(ret == YUNOS_SUCCESS);
-    MYASSERT(len == data_len);
-    ret = memcmp(dyn_data_big_rev,dyn_data_big,data_len);
-    MYASSERT(ret == YUNOS_SUCCESS);
-
-    data_len = sizeof(dyn_data_big_buf)/2 - 4;
-
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,(void *)dyn_data_big, data_len);
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, (void *)dyn_data_big, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(len == data_len);
-    ret = memcmp(dyn_data_big_rev,dyn_data_big,data_len);
+    ret = memcmp(dyn_data_big_rev, dyn_data_big, data_len);
+    MYASSERT(ret == YUNOS_SUCCESS);
+
+    data_len = sizeof(dyn_data_big_buf) / 2 - 4;
+
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, (void *)dyn_data_big, data_len);
+    MYASSERT(ret == YUNOS_SUCCESS);
+
+    ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
+    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(len == data_len);
+    ret = memcmp(dyn_data_big_rev, dyn_data_big, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_RINGBUF_EMPTY);
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,(void *)dyn_data_big,data_len);
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, (void *)dyn_data_big, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_head_push(&g_dyn_ringbuf,(void *)dyn_data_big,data_len);
+    ret = yunos_ringbuf_head_push(&g_dyn_ringbuf, (void *)dyn_data_big, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,(void *)dyn_data_big,data_len);
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, (void *)dyn_data_big, data_len);
     MYASSERT(ret == YUNOS_RINGBUF_FULL);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(len == data_len);
 
-    ret = yunos_ringbuf_push(&g_dyn_ringbuf,(void *)dyn_data_big,data_len);
+    ret = yunos_ringbuf_push(&g_dyn_ringbuf, (void *)dyn_data_big, data_len);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
@@ -424,7 +438,8 @@ void ringbuf_break_test(void)
 {
     kstat_t ret;
 
-    task_ringbuf_entry_register(MODULE_NAME, (test_func_t *)ringbuf_func_runner, sizeof(ringbuf_func_runner) / sizeof(test_func_t));
+    task_ringbuf_entry_register(MODULE_NAME, (test_func_t *)ringbuf_func_runner,
+                                sizeof(ringbuf_func_runner) / sizeof(test_func_t));
 
     ret = yunos_task_dyn_create(&task_ringbuf, MODULE_NAME, 0, TASK_RINGBUF_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_ringbuf_entry, 1);

@@ -53,7 +53,8 @@ static void task_ksem_trigger_opr_entry(void *arg)
     kstat_t  ret;
     uint32_t flag;
 
-    ret = yunos_event_get(&event_sem, 0x1, YUNOS_AND_CLEAR, &flag, YUNOS_WAIT_FOREVER);
+    ret = yunos_event_get(&event_sem, 0x1, YUNOS_AND_CLEAR, &flag,
+                          YUNOS_WAIT_FOREVER);
     if ((ret == YUNOS_SUCCESS) && (flag == 0x3)) {
         yunos_sem_give(sem_comb);
         yunos_event_del(&event_sem);
@@ -76,21 +77,23 @@ void sem_event_coopr_test(void)
     kstat_t ret;
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_COMB_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_ksem_trigger, MODULE_NAME, 0, TASK_COMB_PRI+1,
-                                 0, TASK_TEST_STACK_SIZE, task_ksem_trigger_opr_entry, 1);
+    ret = yunos_task_dyn_create(&task_ksem_trigger, MODULE_NAME, 0,
+                                TASK_COMB_PRI + 1,
+                                0, TASK_TEST_STACK_SIZE, task_ksem_trigger_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_event_trigger, MODULE_NAME, 0, TASK_COMB_PRI+2,
-                                 0, TASK_TEST_STACK_SIZE, task_event_trigger_opr_entry, 1);
+    ret = yunos_task_dyn_create(&task_event_trigger, MODULE_NAME, 0,
+                                TASK_COMB_PRI + 2,
+                                0, TASK_TEST_STACK_SIZE, task_event_trigger_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

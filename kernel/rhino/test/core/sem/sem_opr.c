@@ -63,7 +63,8 @@ void sem_opr_test(void)
 {
     kstat_t ret;
 
-    task_sem_entry_register(MODULE_NAME, (test_func_t *)sem_func_runner, sizeof(sem_func_runner) / sizeof(test_case_t));
+    task_sem_entry_register(MODULE_NAME, (test_func_t *)sem_func_runner,
+                            sizeof(sem_func_runner) / sizeof(test_case_t));
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
@@ -80,7 +81,7 @@ static void task_sem_coopr1_co1_entry(void *arg)
     uint8_t cnt = 0;
 
     ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, 3);
-    if(ret != YUNOS_SUCCESS) {
+    if (ret != YUNOS_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO1, FAIL);
         return;

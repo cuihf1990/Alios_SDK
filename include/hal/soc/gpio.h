@@ -21,8 +21,7 @@
 /**
  * Pin configuration
  */
-typedef enum
-{
+typedef enum {
     INPUT_PULL_UP,             /* Input with an internal pull-up resistor - use with devices that actively drive the signal low - e.g. button connected to ground */
     INPUT_PULL_DOWN,           /* Input with an internal pull-down resistor - use with devices that actively drive the signal high - e.g. button connected to a power rail */
     INPUT_HIGH_IMPEDANCE,      /* Input - must always be driven, either actively or by an external pullup resistor */
@@ -35,23 +34,22 @@ typedef enum
 /**
  * GPIO interrupt trigger
  */
-typedef enum
-{
+typedef enum {
     IRQ_TRIGGER_RISING_EDGE  = 0x1, /* Interrupt triggered at input signal's rising edge  */
     IRQ_TRIGGER_FALLING_EDGE = 0x2, /* Interrupt triggered at input signal's falling edge */
     IRQ_TRIGGER_BOTH_EDGES   = IRQ_TRIGGER_RISING_EDGE | IRQ_TRIGGER_FALLING_EDGE,
 } hal_gpio_irq_trigger_t;
 
 
- /**
-  * GPIO interrupt callback handler
-  */
- typedef void (*hal_gpio_irq_handler_t)(void* arg);
+/**
+ * GPIO interrupt callback handler
+ */
+typedef void (*hal_gpio_irq_handler_t)(void *arg);
 
 
- /******************************************************
- *                 Function Declarations
- ******************************************************/
+/******************************************************
+*                 Function Declarations
+******************************************************/
 
 
 /**@brief Initialises a GPIO pin
@@ -103,7 +101,7 @@ int32_t hal_gpio_output_high(uint8_t gpio);
  */
 int32_t hal_gpio_output_low(uint8_t gpio);
 
-/** Trigger an output GPIO pin 
+/** Trigger an output GPIO pin
  *
  * Trigger an output GPIO pin's output. Using this function on a
  * gpio pin which is set to input mode is undefined.
@@ -145,7 +143,8 @@ int8_t hal_gpio_inputget(uint8_t gpio);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_gpio_enable_irq(uint8_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpio_irq_handler_t handler, void *arg);
+int32_t hal_gpio_enable_irq(uint8_t gpio, hal_gpio_irq_trigger_t trigger,
+                            hal_gpio_irq_handler_t handler, void *arg);
 
 
 /**@brief Disables an interrupt trigger for an input GPIO pin

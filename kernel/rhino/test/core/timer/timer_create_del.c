@@ -52,7 +52,8 @@ static void timer_create_param_test(void)
                              TIMER0_ROUND, (void *)TIMER0_MAGIC, 0);
     TIMER_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_timer_create(&timer_0_test, "timer_0_test", (timer_cb_t)timer_0_func,
+    ret = yunos_timer_create(&timer_0_test, "timer_0_test",
+                             (timer_cb_t)timer_0_func,
                              0, TIMER0_ROUND, (void *)TIMER0_MAGIC, 0);
     TIMER_VAL_CHK(ret == YUNOS_INV_PARAM);
 }
@@ -94,14 +95,16 @@ static void task_timer0_entry(void *arg)
         ret = yunos_sem_create(&sem_0_test, "sem_0_test", 0);
         TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
 
-        ret = yunos_timer_create(&timer_0_test, "timer_0_test", (timer_cb_t)timer_0_func,
+        ret = yunos_timer_create(&timer_0_test, "timer_0_test",
+                                 (timer_cb_t)timer_0_func,
                                  TIMER0_ROUND, TIMER0_ROUND, (void *)TIMER0_MAGIC, 0);
         TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
 
         ret = yunos_timer_del(&timer_0_test);
         TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
 
-        ret = yunos_timer_create(&timer_0_test, "timer_0_test", (timer_cb_t)timer_0_func,
+        ret = yunos_timer_create(&timer_0_test, "timer_0_test",
+                                 (timer_cb_t)timer_0_func,
                                  TIMER0_ROUND, TIMER0_ROUND, (void *)TIMER0_MAGIC, 1);
         TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
 

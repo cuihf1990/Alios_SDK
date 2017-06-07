@@ -57,7 +57,7 @@ static void queue_info_get_param_test(void)
     QUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
     yunos_sem_create(&sem, "test_sem ", 0);
-    ret = yunos_queue_info_get((kqueue_t *)&sem,&info0);
+    ret = yunos_queue_info_get((kqueue_t *)&sem, &info0);
     QUEUE_VAL_CHK(ret == YUNOS_KOBJ_TYPE_ERR);
     yunos_sem_del(&sem);
 }
@@ -72,7 +72,8 @@ static void task_queue0_entry(void *arg)
         ret = yunos_queue_info_get(&g_test_queue0, &info0);
         QUEUE_VAL_CHK(ret == YUNOS_KOBJ_TYPE_ERR);
 
-        ret = yunos_queue_create(&g_test_queue0, "test_queue0", (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
+        ret = yunos_queue_create(&g_test_queue0, "test_queue0",
+                                 (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
         QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         /* check yunos_info_get param */

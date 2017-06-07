@@ -24,7 +24,7 @@
 
 static uint8_t mm_break_case1(void)
 {
-    void   *ptr,*newptr;
+    void   *ptr, *newptr;
     kstat_t ret;
     char   *ptrarray[10];
     int     i;
@@ -47,52 +47,56 @@ static uint8_t mm_break_case1(void)
     k_mm_free(pmmhead, ptr);
 
     oldsize = pmmhead->used_size;
-    ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE+1);
+    ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE + 1);
     MYASSERT(ptr != NULL);
-    MYASSERT((pmmhead->used_size - oldsize ) == (DEF_FIX_BLK_SIZE + 4 + MMLIST_HEAD_SIZE));
+    MYASSERT((pmmhead->used_size - oldsize ) == (DEF_FIX_BLK_SIZE + 4 +
+                                                 MMLIST_HEAD_SIZE));
     k_mm_free(pmmhead, ptr);
 #endif
 
-    ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE+1);
+    ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE + 1);
     MYASSERT(ptr != NULL);
 
-    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE+2);
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE + 2);
     MYASSERT(newptr == ptr);
 
-    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE*4);
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE * 4);
     MYASSERT(newptr != NULL);
 
     ptr = newptr;
-    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE*3);
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE * 3);
     MYASSERT(newptr == ptr);
 
     newptr = k_mm_realloc(pmmhead, ptr, 0);
     MYASSERT(newptr == NULL);
 
-    ptr =  k_mm_realloc(pmmhead, NULL, DEF_FIX_BLK_SIZE*3);
+    ptr =  k_mm_realloc(pmmhead, NULL, DEF_FIX_BLK_SIZE * 3);
     MYASSERT(ptr != NULL);
 
-    k_mm_free(pmmhead,ptr);
+    k_mm_free(pmmhead, ptr);
 
-    for(i=0;i<10; i++){
-        ptrarray[i] =  k_mm_alloc(pmmhead,(i+1)*32);
+    for (i = 0; i < 10; i++) {
+        ptrarray[i] =  k_mm_alloc(pmmhead, (i + 1) * 32);
         MYASSERT(ptrarray[i]);
     }
 
-    for(i=0;i<10;i++){
-        if(i%2==0)
-        k_mm_free(pmmhead,ptrarray[i]);
+    for (i = 0; i < 10; i++) {
+        if (i % 2 == 0) {
+            k_mm_free(pmmhead, ptrarray[i]);
+        }
     }
 
-    for(i=0;i<10;i++){
-        if(i%2!=0)
-        k_mm_realloc(pmmhead,ptrarray[i],(i+1)*96);
+    for (i = 0; i < 10; i++) {
+        if (i % 2 != 0) {
+            k_mm_realloc(pmmhead, ptrarray[i], (i + 1) * 96);
+        }
         MYASSERT(ptrarray[i]);
     }
 
-    for(i=0;i<10;i++){
-        if(i%2!=0)
-        k_mm_free(pmmhead,ptrarray[i]);
+    for (i = 0; i < 10; i++) {
+        if (i % 2 != 0) {
+            k_mm_free(pmmhead, ptrarray[i]);
+        }
     }
 
     return 0;
@@ -107,10 +111,11 @@ void mm_break_test(void)
 {
     kstat_t ret;
 
-    task_mm_entry_register(MODULE_NAME, (test_func_t *)mm_func_runner, sizeof(mm_func_runner) / sizeof(test_func_t));
+    task_mm_entry_register(MODULE_NAME, (test_func_t *)mm_func_runner,
+                           sizeof(mm_func_runner) / sizeof(test_func_t));
 
     ret = yunos_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_mm_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_mm_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

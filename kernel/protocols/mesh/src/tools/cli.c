@@ -198,17 +198,18 @@ void response_append(const char *format, ...)
     uint16_t len;
 
     va_start(list, format);
-    len = vsnprintf(res_buf, sizeof(res_buf)-1, format, list);
+    len = vsnprintf(res_buf, sizeof(res_buf) - 1, format, list);
     va_end(list);
     if (len >= sizeof(res_buf)) {
         len = sizeof(res_buf) - 1;
         res_buf[len] = 0;
     }
 
-    if (g_cur_cmd_cb)
+    if (g_cur_cmd_cb) {
         g_cur_cmd_cb(res_buf, len, g_cur_cmd_priv);
-    else
+    } else {
         ur_cli_output((const uint8_t *)res_buf, len);
+    }
 }
 
 static void handle_autotest_print_timer(void *args)
@@ -217,8 +218,9 @@ static void handle_autotest_print_timer(void *args)
     uint8_t          num = 0;
 
     g_cl_state.autotest_print_timer = NULL;
-    while(!slist_empty(&g_cl_state.autotest_acked_list)) {
-        acked = slist_first_entry(&g_cl_state.autotest_acked_list, autotest_acked_t, next);
+    while (!slist_empty(&g_cl_state.autotest_acked_list)) {
+        acked = slist_first_entry(&g_cl_state.autotest_acked_list, autotest_acked_t,
+                                  next);
         response_append("%04x:%d\%, ",
                         ur_swap16(acked->sid), (acked->acked * 100) / g_cl_state.autotest_seq);
         slist_del(&acked->next, &g_cl_state.autotest_acked_list);
@@ -249,10 +251,11 @@ static void handle_autotest_timer(void *args)
         g_cl_state.autotest_times--;
     }
     if (g_cl_state.autotest_times) {
-        g_cl_state.autotest_timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL, handle_autotest_timer, NULL);
+        g_cl_state.autotest_timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL,
+                                                   handle_autotest_timer, NULL);
     } else if (g_cl_state.autotest_print_timer == NULL) {
         g_cl_state.autotest_print_timer = ur_start_timer(AUTOTEST_PRINT_WAIT_TIME,
-                                                handle_autotest_print_timer, NULL);
+                                                         handle_autotest_print_timer, NULL);
     }
 }
 
@@ -275,13 +278,15 @@ void process_autotest(int argc, char *argv[])
 
     if (argc == 0 || g_cl_state.autotest_timer || g_cl_state.autotest_print_timer) {
         for_each_acked(acked) {
-            response_append("%04x: %d, %d\r\n", ur_swap16(acked->sid), acked->seq, acked->acked);
+            response_append("%04x: %d, %d\r\n", ur_swap16(acked->sid), acked->seq,
+                            acked->acked);
         }
         return;
     }
 
-    while(!slist_empty(&g_cl_state.autotest_acked_list)) {
-        acked = slist_first_entry(&g_cl_state.autotest_acked_list, autotest_acked_t, next);
+    while (!slist_empty(&g_cl_state.autotest_acked_list)) {
+        acked = slist_first_entry(&g_cl_state.autotest_acked_list, autotest_acked_t,
+                                  next);
         slist_del(&acked->next, &g_cl_state.autotest_acked_list);
         ur_mem_free(acked, sizeof(autotest_acked_t));
     }
@@ -296,12 +301,15 @@ void process_autotest(int argc, char *argv[])
         }
     }
 
-    g_cl_state.autotest_length = AUTOTEST_CMD_SIZE + sizeof(ur_udp_header_t) + sizeof(ur_ip6_addr_t);
+    g_cl_state.autotest_length = AUTOTEST_CMD_SIZE + sizeof(
+                                     ur_udp_header_t) + sizeof(ur_ip6_addr_t);
     if (argc > 2) {
         g_cl_state.autotest_length = (uint16_t)strtol(argv[2], &end, 0);
         if (g_cl_state.autotest_length == 0 ||
-            g_cl_state.autotest_length < (AUTOTEST_CMD_SIZE + sizeof(ur_udp_header_t) + sizeof(ur_ip6_addr_t))) {
-            g_cl_state.autotest_length = AUTOTEST_CMD_SIZE + sizeof(ur_udp_header_t) + sizeof(ur_ip6_addr_t);
+            g_cl_state.autotest_length < (AUTOTEST_CMD_SIZE + sizeof(
+                                              ur_udp_header_t) + sizeof(ur_ip6_addr_t))) {
+            g_cl_state.autotest_length = AUTOTEST_CMD_SIZE + sizeof(
+                                             ur_udp_header_t) + sizeof(ur_ip6_addr_t);
         } else {
             g_cl_state.autotest_length += sizeof(ur_udp_header_t);
         }
@@ -321,7 +329,8 @@ void process_autotest(int argc, char *argv[])
     seq = (uint16_t *)&payload[sizeof(ur_udp_header_t) + 1];
     *seq = ur_swap16(g_cl_state.autotest_seq++);
     src = ur_mesh_get_ucast_addr();
-    memcpy(payload + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE, (uint8_t *)src->addr.m8,
+    memcpy(payload + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE,
+           (uint8_t *)src->addr.m8,
            sizeof(ur_ip6_addr_t));
     ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
                &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
@@ -329,7 +338,8 @@ void process_autotest(int argc, char *argv[])
     ur_mem_free(payload, g_cl_state.autotest_length);
     g_cl_state.autotest_times--;
     if (g_cl_state.autotest_times) {
-        g_cl_state.autotest_timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL, handle_autotest_timer, NULL);
+        g_cl_state.autotest_timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL,
+                                                   handle_autotest_timer, NULL);
     }
 }
 
@@ -436,7 +446,7 @@ void process_networks(int argc, char *argv[])
     slist_for_each_entry(networks, network, network_context_t, next) {
         response_append("index %d\r\n", network->index);
         response_append("  hal %d\r\n", network->hal->module->type);
-        response_append("  state %s\r\n", network->state == 0? "up": "down");
+        response_append("  state %s\r\n", network->state == 0 ? "up" : "down");
         response_append("  meshnetid %x\r\n", network->meshnetid);
         response_append("  sid %x\r\n", network->sid);
         response_append("  sid type %d\r\n", network->router->sid_type);
@@ -611,7 +621,8 @@ void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
     }
 }
 
-static bool update_autotest_acked_info(uint16_t subnetid, uint16_t sid, uint16_t seq)
+static bool update_autotest_acked_info(uint16_t subnetid, uint16_t sid,
+                                       uint16_t seq)
 {
     bool             exist = false;
     autotest_acked_t *acked = NULL;
@@ -657,7 +668,8 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
     cmd = payload + sizeof(ur_udp_header_t);
     memcpy(&dest, cmd + AUTOTEST_CMD_SIZE, sizeof(ur_ip6_addr_t));
     if (*cmd == AUTOTEST_REQUEST) {
-        response_append("%d bytes autotest echo request from " IP6_ADDR_FMT ", seq %d\r\n",
+        response_append("%d bytes autotest echo request from " IP6_ADDR_FMT
+                        ", seq %d\r\n",
                         length - sizeof(ur_udp_header_t),
                         IP6_ADDR_DATA(dest),
                         ur_swap16(*(uint16_t *)(cmd + 1)));
@@ -669,9 +681,11 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         data[sizeof(ur_udp_header_t)] = AUTOTEST_REPLY;
         memcpy(data + sizeof(ur_udp_header_t) + 1, cmd + 1, 2);
         src = ur_mesh_get_ucast_addr();
-        memcpy(data + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE, (uint8_t *)src->addr.m8,
+        memcpy(data + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE,
+               (uint8_t *)src->addr.m8,
                sizeof(ur_ip6_addr_t));
-        ip6_sendto(g_cl_state.autotest_udp_socket, data, length, &dest, AUTOTEST_UDP_PORT);
+        ip6_sendto(g_cl_state.autotest_udp_socket, data, length, &dest,
+                   AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
     } else if (*cmd == AUTOTEST_REPLY) {
         g_cl_state.autotest_acked ++;
@@ -679,7 +693,8 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
                                        ur_swap16(*(uint16_t *)(cmd + 1))) == false) {
             return;
         }
-        response_append("%d bytes autotest echo reply from " IP6_ADDR_FMT ", seq %d\r\n",
+        response_append("%d bytes autotest echo reply from " IP6_ADDR_FMT
+                        ", seq %d\r\n",
                         length - sizeof(ur_udp_header_t),
                         IP6_ADDR_DATA(dest), ur_swap16(*(uint16_t *)(cmd + 1)));
     }
@@ -839,7 +854,8 @@ static void process_status(int argc, char *argv[])
     response_append("state\t%s\r\n", state2str(ur_mesh_get_device_state()));
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
-        response_append("<<network %s %d>>\r\n", mediatype2str(network->hal->module->type), network->index);
+        response_append("<<network %s %d>>\r\n",
+                        mediatype2str(network->hal->module->type), network->index);
         response_append("\tnetid\t0x%x\r\n", mm_get_meshnetid(network));
         response_append("\tmac\t" EXT_ADDR_FMT "\r\n",
                         EXT_ADDR_DATA(network->hal->mac_addr.addr));
@@ -882,8 +898,9 @@ void process_sids(int argc, char *argv[])
     hals = ur_mesh_get_hals();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-            if (node->state != STATE_CHILD)
+            if (node->state != STATE_CHILD) {
                 continue;
+            }
             response_append(EXT_ADDR_FMT ", %04x\r\n",
                             EXT_ADDR_DATA(node->ueid), node->addr.addr.short_addr);
         }
@@ -912,44 +929,38 @@ void process_testcmd(int argc, char *argv[])
     hal_context_t *hal;
     const char *cmd;
 
-    if (argc < 1)
+    if (argc < 1) {
         return;
+    }
 
     cmd = argv[0];
     if (strcmp(cmd, "sid") == 0) {
         response_append("%04x", ur_mesh_get_sid());
-    }
-    else if (strcmp(cmd, "state") == 0) {
+    } else if (strcmp(cmd, "state") == 0) {
         response_append("%s", state2str(ur_mesh_get_device_state()));
-    }
-    else if (strcmp(cmd, "parent") == 0) {
+    } else if (strcmp(cmd, "parent") == 0) {
         neighbor_t *nbr;
         hals = ur_mesh_get_hals();
         slist_for_each_entry(hals, hal, hal_context_t, next) {
             slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-                if (nbr->state != STATE_PARENT)
+                if (nbr->state != STATE_PARENT) {
                     continue;
+                }
                 response_append(EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac.addr));
                 return;
             }
         }
-    }
-    else if (strcmp(cmd, "netsize") == 0) {
+    } else if (strcmp(cmd, "netsize") == 0) {
         response_append("%d", mm_get_meshnetsize());
-    }
-    else if (strcmp(cmd, "netid") == 0) {
+    } else if (strcmp(cmd, "netid") == 0) {
         response_append("%04x", ur_mesh_get_meshnetid());
-    }
-    else if (strcmp(cmd, "icmp_acked") == 0) {
+    } else if (strcmp(cmd, "icmp_acked") == 0) {
         response_append("%d", g_cl_state.icmp_acked);
-    }
-    else if (strcmp(cmd, "autotest_acked") == 0) {
+    } else if (strcmp(cmd, "autotest_acked") == 0) {
         response_append("%d", g_cl_state.autotest_acked);
-    }
-    else if (strcmp(cmd, "ipaddr") == 0) {
+    } else if (strcmp(cmd, "ipaddr") == 0) {
         response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(ur_mesh_get_ucast_addr()->addr));
-    }
-    else if (strcmp(cmd, "router") == 0) {
+    } else if (strcmp(cmd, "router") == 0) {
         show_router(ur_router_get_default_router());
     }
 }
@@ -1092,6 +1103,7 @@ ur_error_t cli_init(void)
 {
     slist_init(&g_cl_state.autotest_acked_list);
     g_cl_state.icmp_socket = echo_socket(&cli_handle_echo_response);
-    g_cl_state.autotest_udp_socket = autotest_udp_socket(&handle_udp_autotest, AUTOTEST_UDP_PORT);
+    g_cl_state.autotest_udp_socket = autotest_udp_socket(&handle_udp_autotest,
+                                                         AUTOTEST_UDP_PORT);
     return UR_ERROR_NONE;
 }

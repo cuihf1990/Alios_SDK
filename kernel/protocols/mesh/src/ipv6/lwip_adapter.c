@@ -43,7 +43,8 @@ ur_error_t ur_adapter_input(void *message)
     err_t       error = ERR_ARG;
     struct pbuf *buffer;
 
-    buffer = pbuf_alloc(PBUF_RAW, message_get_msglen((message_t *)message), PBUF_POOL);
+    buffer = pbuf_alloc(PBUF_RAW, message_get_msglen((message_t *)message),
+                        PBUF_POOL);
     if (buffer == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -59,7 +60,8 @@ ur_error_t ur_adapter_input(void *message)
     return UR_ERROR_NONE;
 }
 
-static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p, const ip6_addr_t *ip6addr)
+static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
+                                    const ip6_addr_t *ip6addr)
 {
     ur_error_t error;
     message_t  message;
@@ -119,7 +121,7 @@ static void update_interface_ipaddr(void)
     while (ip6_addr) {
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
         IP6_ADDR(&addr6, ip6_addr->addr.m32[0], ip6_addr->addr.m32[1],
-                         ip6_addr->addr.m32[2], ip6_addr->addr.m32[3]);
+                 ip6_addr->addr.m32[2], ip6_addr->addr.m32[3]);
         ip6_addr_copy(*(ip_2_ip6(&g_la_state.adpif.ip6_addr[index])), addr6);
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_VALID);
         ip6_addr = ip6_addr->next;
@@ -130,7 +132,7 @@ static void update_interface_ipaddr(void)
     while (ip6_addr) {
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
         IP6_ADDR(&addr6, ip6_addr->addr.m32[0], ip6_addr->addr.m32[1],
-                         ip6_addr->addr.m32[2], ip6_addr->addr.m32[3]);
+                 ip6_addr->addr.m32[2], ip6_addr->addr.m32[3]);
         ip6_addr_copy(*(ip_2_ip6(&g_la_state.adpif.ip6_addr[index])), addr6);
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_VALID);
         ip6_addr = ip6_addr->next;
@@ -151,7 +153,8 @@ ur_error_t ur_adapter_interface_up(void)
         memcpy(g_la_state.adpif.hwaddr, mac_addr->addr, 6);
         g_la_state.adpif.ip6_autoconfig_enabled = 1;
 
-        netif_add(&g_la_state.adpif, NULL, NULL, NULL, NULL, ur_adapter_if_init, tcpip_input);
+        netif_add(&g_la_state.adpif, NULL, NULL, NULL, NULL, ur_adapter_if_init,
+                  tcpip_input);
         update_interface_ipaddr();
         interface = &g_la_state.adpif;
     }
@@ -180,7 +183,8 @@ ur_error_t ur_adapter_interface_update(void)
     return UR_ERROR_NONE;
 }
 
-struct netif *ur_adapter_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)
+struct netif *ur_adapter_ip6_route(const ip6_addr_t *src,
+                                   const ip6_addr_t *dest)
 {
     return &g_la_state.adpif;
 }

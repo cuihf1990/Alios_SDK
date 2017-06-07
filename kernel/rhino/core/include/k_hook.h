@@ -49,7 +49,7 @@ void yunos_task_abort_hook(ktask_t *task);
 /**
  * This function will provide task switch hook
  */
-void yunos_task_switch_hook(ktask_t *orgin,ktask_t *dest);
+void yunos_task_switch_hook(ktask_t *orgin, ktask_t *dest);
 
 /**
  * This function will provide system tick hook

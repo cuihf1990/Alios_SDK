@@ -27,7 +27,7 @@ static uint8_t mm_blk_fragment_case1(void)
     uint8_t blkavail;
 
     ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
-                               MBLK_POOL_SIZE>>2, MBLK_POOL_SIZE);
+                               MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     /* check malloc save pointer number is enough or not */
@@ -40,7 +40,7 @@ static uint8_t mm_blk_fragment_case1(void)
         if (ret == YUNOS_SUCCESS) {
             blkavail++;
         }
-    } while(ret == YUNOS_SUCCESS);
+    } while (ret == YUNOS_SUCCESS);
 
     MYASSERT(mblk_pool_test.blk_avail == 0);
     MYASSERT(blkavail == mblk_pool_test.blk_whole);
@@ -69,10 +69,11 @@ void mm_blk_fragment_test(void)
 {
     kstat_t ret;
 
-    task_mm_blk_entry_register(MODULE_NAME, (test_func_t *)mm_blk_func_runner, sizeof(mm_blk_func_runner)/sizeof(test_func_t));
+    task_mm_blk_entry_register(MODULE_NAME, (test_func_t *)mm_blk_func_runner,
+                               sizeof(mm_blk_func_runner) / sizeof(test_func_t));
 
     ret = yunos_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

@@ -94,24 +94,26 @@ uint16_t rsid_get_allocated_number(network_context_t *network);
 static inline int find_first_free_bit(uint32_t *bits, int len)
 {
     int i;
-    for (i=0;i<len;i++) {
-        if (!(bits[i/32] & (1 << (i%32))))
+    for (i = 0; i < len; i++) {
+        if (!(bits[i / 32] & (1 << (i % 32)))) {
             continue;
+        }
 
-        bits[i/32] &= ~(1 << (i%32));
+        bits[i / 32] &= ~(1 << (i % 32));
         return i;
     }
 
     return -1;
 }
 
-static inline ur_error_t grab_free_bit(uint32_t *bits, uint32_t len, uint16_t index)
+static inline ur_error_t grab_free_bit(uint32_t *bits, uint32_t len,
+                                       uint16_t index)
 {
     if (index >= len) {
         return UR_ERROR_FAIL;
     }
-    if (bits[index/32] & (1 << (index%32))) {
-        bits[index/32] &= ~(1 << (index%32));
+    if (bits[index / 32] & (1 << (index % 32))) {
+        bits[index / 32] &= ~(1 << (index % 32));
         return UR_ERROR_NONE;
     }
     return UR_ERROR_FAIL;
@@ -119,11 +121,13 @@ static inline ur_error_t grab_free_bit(uint32_t *bits, uint32_t len, uint16_t in
 
 static inline bool release_bit(uint32_t *bits, int len, int i)
 {
-    if (i >= len)
+    if (i >= len) {
         return false;
-    if (bits[i/32] & (1 << (i%32)))
+    }
+    if (bits[i / 32] & (1 << (i % 32))) {
         return false;
-    bits[i/32] |= 1 << (i%32);
+    }
+    bits[i / 32] |= 1 << (i % 32);
     return true;
 }
 

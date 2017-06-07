@@ -3,14 +3,14 @@
  * Copyright (C) 2016 YunOS Project. All rights reserved.
  ****************************************************************************/
 
- /**
- * @file
- * @brief      dynamic loader porting interfaces
- * @details
- * @author     zhifang Xiu
- * @date       2016-12-14
- * @version    0.1
- */
+/**
+* @file
+* @brief      dynamic loader porting interfaces
+* @details
+* @author     zhifang Xiu
+* @date       2016-12-14
+* @version    0.1
+*/
 #ifndef DLOAD_PORT_H_
 #define DLOAD_PORT_H_
 
@@ -45,16 +45,20 @@ extern int printf(const char *format, ...);
 extern uint16_t crc16(const uint8_t *src, uint32_t len);
 
 /* ram management interfaces */
-extern void* dload_allocate_ram(uint32_t nbytes);
+extern void *dload_allocate_ram(uint32_t nbytes);
 extern int   dload_free_ram(void *base, uint32_t nbytes);
 
 /* norflash simple fs interfaces */
-extern uint32_t nsfs_get_image_base (int32_t image_fd);  //get image base from image file descriptor
+extern uint32_t nsfs_get_image_base (int32_t
+                                     image_fd);  //get image base from image file descriptor
 
 /* cmmu interface */
-extern int cmmu_enable(uint8_t en);                                      //enable cmmu functionality
-extern int cmmu_map(uint32_t virt_addr,uint32_t phy_addr,uint32_t len);  //config cmmu mapping ,return cmmu mapping instance
-extern int cmmu_unmap(int inst);                                         //cmmu unmapping
+extern int cmmu_enable(uint8_t
+                       en);                                      //enable cmmu functionality
+extern int cmmu_map(uint32_t virt_addr, uint32_t phy_addr,
+                    uint32_t len); //config cmmu mapping ,return cmmu mapping instance
+extern int cmmu_unmap(int
+                      inst);                                         //cmmu unmapping
 
 
 #endif /* DLOAD_PORT_H_ */

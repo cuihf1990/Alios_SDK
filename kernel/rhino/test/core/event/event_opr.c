@@ -59,23 +59,27 @@ static uint8_t event_opr_case1(void)
     YUNOS_CRITICAL_ENTER();
     test_event.blk_obj.obj_type = YUNOS_SEM_OBJ_TYPE;
     YUNOS_CRITICAL_EXIT();
-    ret = yunos_event_get(&test_event, CHK_AND_ALL_FLAG, YUNOS_AND, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ALL_FLAG, YUNOS_AND, &actl_flags,
+                          YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_KOBJ_TYPE_ERR);
 
     YUNOS_CRITICAL_ENTER();
     test_event.blk_obj.obj_type = YUNOS_EVENT_OBJ_TYPE;
     YUNOS_CRITICAL_EXIT();
-    ret = yunos_event_get(&test_event, CHK_AND_ALL_FLAG, YUNOS_AND, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ALL_FLAG, YUNOS_AND, &actl_flags,
+                          YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
 
-    ret = yunos_event_get(&test_event, CHK_AND_ONE_FLAG, YUNOS_AND, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ONE_FLAG, YUNOS_AND, &actl_flags,
+                          YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
 
-    ret = yunos_event_get(&test_event, CHK_AND_ZERO_FLAG, YUNOS_AND, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ZERO_FLAG, YUNOS_AND, &actl_flags,
+                          YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
@@ -146,17 +150,20 @@ static uint8_t event_opr_case3(void)
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(test_event.flags == TEST_FLAG);
 
-    ret = yunos_event_get(&test_event, CHK_AND_ALL_FLAG, YUNOS_OR, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ALL_FLAG, YUNOS_OR, &actl_flags,
+                          YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
 
-    ret = yunos_event_get(&test_event, CHK_AND_ONE_FLAG, YUNOS_OR, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ONE_FLAG, YUNOS_OR, &actl_flags,
+                          YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
 
-    ret = yunos_event_get(&test_event, CHK_AND_ZERO_FLAG, YUNOS_OR, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ZERO_FLAG, YUNOS_OR, &actl_flags,
+                          YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_NO_PEND_WAIT);
 
     ret = yunos_event_del(&test_event);
@@ -179,7 +186,8 @@ static uint8_t event_opr_case4(void)
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(test_event.flags == TEST_FLAG);
 
-    ret = yunos_event_get(&test_event, CHK_AND_ALL_FLAG, YUNOS_OR_CLEAR, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ALL_FLAG, YUNOS_OR_CLEAR,
+                          &actl_flags, YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == (TEST_FLAG & (~CHK_AND_ALL_FLAG)));
@@ -188,7 +196,8 @@ static uint8_t event_opr_case4(void)
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(test_event.flags == TEST_FLAG);
 
-    ret = yunos_event_get(&test_event, CHK_AND_ONE_FLAG, YUNOS_OR_CLEAR, &actl_flags, YUNOS_NO_WAIT);
+    ret = yunos_event_get(&test_event, CHK_AND_ONE_FLAG, YUNOS_OR_CLEAR,
+                          &actl_flags, YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == (TEST_FLAG & (~CHK_AND_ONE_FLAG)));
@@ -219,7 +228,8 @@ static uint8_t event_opr_case5(void)
 
     yunos_sched_disable();
 
-    ret = yunos_event_get(&test_event, CHK_AND_PEND_FLAG, YUNOS_AND, &actl_flags, YUNOS_WAIT_FOREVER);
+    ret = yunos_event_get(&test_event, CHK_AND_PEND_FLAG, YUNOS_AND, &actl_flags,
+                          YUNOS_WAIT_FOREVER);
     MYASSERT(ret == YUNOS_SCHED_DISABLE);
 
     yunos_sched_enable();
@@ -243,10 +253,11 @@ void event_opr_test(void)
 {
     kstat_t ret;
 
-    task_event_entry_register(MODULE_NAME, (test_func_t *)event_func_runner, sizeof(event_func_runner)/sizeof(test_func_t));
+    task_event_entry_register(MODULE_NAME, (test_func_t *)event_func_runner,
+                              sizeof(event_func_runner) / sizeof(test_func_t));
 
     ret = yunos_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_EVENT_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
@@ -259,7 +270,7 @@ static void task_event_co1_entry(void *arg)
     uint32_t actl_flags;
 
     ret = yunos_event_create(&test_event, MODULE_NAME, TEST_FLAG);
-    if(ret != YUNOS_SUCCESS && test_event.flags != TEST_FLAG) {
+    if (ret != YUNOS_SUCCESS && test_event.flags != TEST_FLAG) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
         return;
@@ -307,14 +318,14 @@ void event_coopr_test(void)
     kstat_t ret;
 
     ret = yunos_task_dyn_create(&task_event_co1, MODULE_NAME, 0, TASK_EVENT_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_event_co1_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_event_co1_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_event_co2, MODULE_NAME, 0, TASK_EVENT_PRI+1,
-                                 0, TASK_TEST_STACK_SIZE, task_event_co2_entry, 1);
+    ret = yunos_task_dyn_create(&task_event_co2, MODULE_NAME, 0, TASK_EVENT_PRI + 1,
+                                0, TASK_TEST_STACK_SIZE, task_event_co2_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

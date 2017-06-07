@@ -75,7 +75,8 @@ const char *yos_strerror(int errnum);
  *
  * @return: task code
  */
-int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size);
+int yos_task_new(const char *name, void (*fn)(void *), void *arg,
+                 int stack_size);
 
 /**
  * Create a task([thread--Rhino&other-kernel][MainLoop--noRTOS])
@@ -179,7 +180,8 @@ void yos_sem_signal(yos_sem_t *sem);
  * @param[in]  max_msg  the max size of the msg
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg);
+int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size,
+                  int max_msg);
 
 /**
  * This function will delete a queue
@@ -205,7 +207,8 @@ int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size);
  * @param[out]  size   size of the msg
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg, unsigned int *size);
+int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
+                   unsigned int *size);
 
 /**
  * This function will create a timer
@@ -216,7 +219,8 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg, unsigned int 
  * @param[in]  repeat  repeat or not when the timer is created
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms, int repeat);
+int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms,
+                  int repeat);
 
 /**
  * This function will delete a timer

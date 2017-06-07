@@ -81,7 +81,7 @@ static inline void INIT_YOS_DLIST_HEAD(dlist_t *list)
 
 static inline int dlist_empty(const dlist_t *head)
 {
-        return head->next == head;
+    return head->next == head;
 }
 
 /* initialize list head staticly */

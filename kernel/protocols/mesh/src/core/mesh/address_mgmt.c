@@ -80,7 +80,8 @@ static void timer_handler(void *args)
     }
 
     if (continue_timer) {
-        g_ar_state.timer = ur_start_timer(ADDRESS_QUERY_STATE_UPDATE_PERIOD, timer_handler, NULL);
+        g_ar_state.timer = ur_start_timer(ADDRESS_QUERY_STATE_UPDATE_PERIOD,
+                                          timer_handler, NULL);
     }
 }
 
@@ -102,7 +103,7 @@ ur_error_t address_resolve(uint8_t query_type, ur_node_id_t *target,
                 break;
             } else if (query_type == TARGET_QUERY &&
                        memcmp(target->ueid, g_ar_state.cache[index].ueid,
-                       sizeof(g_ar_state.cache[index].ueid)) == 0) {
+                              sizeof(g_ar_state.cache[index].ueid)) == 0) {
                 cache = &g_ar_state.cache[index];
                 break;
             }
@@ -210,7 +211,8 @@ static ur_error_t send_address_query(network_context_t *network,
     }
 
     if (g_ar_state.timer == NULL) {
-        g_ar_state.timer = ur_start_timer(ADDRESS_QUERY_STATE_UPDATE_PERIOD, timer_handler, NULL);
+        g_ar_state.timer = ur_start_timer(ADDRESS_QUERY_STATE_UPDATE_PERIOD,
+                                          timer_handler, NULL);
     }
 
     info = message->info;
@@ -248,7 +250,8 @@ ur_error_t handle_address_query(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    addr_query = (mm_addr_query_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_ADDR_QUERY);
+    addr_query = (mm_addr_query_tv_t *)mm_get_tv(tlvs, tlvs_length,
+                                                 TYPE_ADDR_QUERY);
     target_id = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
     ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
 
@@ -381,7 +384,8 @@ ur_error_t handle_address_query_response(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    attach_id = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_ATTACH_NODE_ID);
+    attach_id = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length,
+                                             TYPE_ATTACH_NODE_ID);
     target_id = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
     target_ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
 
@@ -389,7 +393,8 @@ ur_error_t handle_address_query_response(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    if (attach_id && (attach_id->sid == INVALID_SID || attach_id->meshnetid == INVALID_NETID)) {
+    if (attach_id && (attach_id->sid == INVALID_SID ||
+                      attach_id->meshnetid == INVALID_NETID)) {
         return UR_ERROR_DROP;
     }
 
@@ -401,12 +406,14 @@ ur_error_t handle_address_query_response(message_t *message)
                 g_ar_state.cache[index].attach_sid = attach_id->sid;
                 g_ar_state.cache[index].attach_netid = attach_id->meshnetid;
                 g_ar_state.cache[index].timeout = 0;
-                memcpy(g_ar_state.cache[index].ueid, target_ueid->ueid, sizeof(g_ar_state.cache[index].ueid));
+                memcpy(g_ar_state.cache[index].ueid, target_ueid->ueid,
+                       sizeof(g_ar_state.cache[index].ueid));
                 g_ar_state.handler(network, &g_ar_state.cache[index], error);
             }
             break;
-        } else if (target_ueid && memcmp(target_ueid->ueid, g_ar_state.cache[index].ueid,
-                                         sizeof(target_ueid->ueid)) == 0) {
+        } else if (target_ueid &&
+                   memcmp(target_ueid->ueid, g_ar_state.cache[index].ueid,
+                          sizeof(target_ueid->ueid)) == 0) {
             if (g_ar_state.cache[index].state != AQ_STATE_CACHED) {
                 g_ar_state.cache[index].state = AQ_STATE_CACHED;
                 g_ar_state.cache[index].sid = target_id->sid;
@@ -424,7 +431,8 @@ ur_error_t handle_address_query_response(message_t *message)
             break;
         }
     }
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address query response\r\n");
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
+           "handle address query response\r\n");
     return UR_ERROR_NONE;
 }
 
@@ -519,7 +527,8 @@ ur_error_t handle_address_notification(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    attach_node = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_ATTACH_NODE_ID);
+    attach_node = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length,
+                                               TYPE_ATTACH_NODE_ID);
     target_node = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
     target_ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
     hal_type = (mm_hal_type_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_DEF_HAL_TYPE);
@@ -579,7 +588,8 @@ static void handle_addr_cache_timer(void *args)
             if (is_partial_function_sid(node->node_id.sid)) {
                 network = get_default_network_context();
                 update_sid_mapping(network, &node->node_id, false);
-            } else if ((network = get_network_context_by_meshnetid(node->node_id.meshnetid)) != NULL) {
+            } else if ((network = get_network_context_by_meshnetid(node->node_id.meshnetid))
+                       != NULL) {
                 if (network->router->sid_type == SHORT_RANDOM_SID ||
                     network->router->sid_type == RANDOM_SID) {
                     rsid_free_sid(network, &node->node_id);
@@ -641,7 +651,8 @@ void get_attach_by_nodeid(ur_node_id_t *attach, ur_node_id_t *target)
     attach->sid = INVALID_SID;
     attach->meshnetid = INVALID_NETID;
     slist_for_each_entry(&g_ac_state.cache_list, node, sid_node_t, next) {
-        if (node->node_id.sid == target->sid && node->node_id.meshnetid == target->meshnetid) {
+        if (node->node_id.sid == target->sid &&
+            node->node_id.meshnetid == target->meshnetid) {
             memcpy(target->ueid, node->node_id.ueid, sizeof(target->ueid));
             break;
         }

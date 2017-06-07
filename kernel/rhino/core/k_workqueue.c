@@ -34,7 +34,7 @@ static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
         }
 
         wq = yunos_list_entry(wq->workqueue_node.next, kworkqueue_t, workqueue_node);
-    } while(wq != g_workqueue_head);
+    } while (wq != g_workqueue_head);
 
     return YUNOS_WORKQUEUE_NOT_EXIST;
 }
@@ -229,7 +229,8 @@ static void work_timer_cb(void *timer, void *arg)
     }
 }
 
-kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg, tick_t dly)
+kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
+                        tick_t dly)
 {
     kstat_t ret;
 
@@ -333,7 +334,7 @@ kstat_t yunos_work_cancel(kwork_t *work)
         work->running = 0;
         work->wq      = NULL;
         yunos_mutex_unlock(&(wq->work_mutex));
-    } else if (work->running == 2){
+    } else if (work->running == 2) {
         yunos_mutex_unlock(&(wq->work_mutex));
         return YUNOS_WORKQUEUE_WORK_RUNNING;
     }

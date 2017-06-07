@@ -31,7 +31,8 @@ extern char mm_pool[MM_POOL_SIZE * 4];
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_mm_entry_register(const char *name, test_func_t *runner, uint8_t casenum);
+void task_mm_entry_register(const char *name, test_func_t *runner,
+                            uint8_t casenum);
 void task_mm_entry(void *arg);
 void mm_test(void);
 void mm_param_test(void);

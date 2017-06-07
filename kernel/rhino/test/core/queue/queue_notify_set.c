@@ -78,10 +78,12 @@ static void task_queue0_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_queue_create(&g_queue0, "test_queue0", (void **)&g_queue0_msg_pool, QUEUE_MAX_MSG);
+    ret = yunos_queue_create(&g_queue0, "test_queue0", (void **)&g_queue0_msg_pool,
+                             QUEUE_MAX_MSG);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
-    ret = yunos_buf_queue_create(&g_buf_queue0, "test_buf_queue0", (void *)g_buf_queue0_msg_pool, BUF_QUEUE_SIZE, BUF_QUEUE_MAX_MSG);
+    ret = yunos_buf_queue_create(&g_buf_queue0, "test_buf_queue0",
+                                 (void *)g_buf_queue0_msg_pool, BUF_QUEUE_SIZE, BUF_QUEUE_MAX_MSG);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
     ret = yunos_kobj_set_dyn_create(&handle, OBJ_SET_NAME, OBJ_SET_SIZE);
@@ -98,7 +100,8 @@ static void task_queue0_entry(void *arg)
     yunos_kobj_select(handle, &blk_obj, YUNOS_WAIT_FOREVER);
     TEST_FW_VAL_CHK(MODULE_NAME, (size_t)blk_obj == (size_t)&g_queue0);
 
-    ret = yunos_buf_queue_send(&g_buf_queue0, (void *)g_buf_queue0_msg0, strlen(g_buf_queue0_msg0));
+    ret = yunos_buf_queue_send(&g_buf_queue0, (void *)g_buf_queue0_msg0,
+                               strlen(g_buf_queue0_msg0));
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
     ret = yunos_kobj_set_insert((blk_obj_t *)&g_buf_queue0, handle);
@@ -118,10 +121,10 @@ static void task_queue0_entry(void *arg)
 
     if (test_case_check_err == 0) {
         test_case_success++;
-        PRINT_RESULT(MODULE_NAME,PASS);
+        PRINT_RESULT(MODULE_NAME, PASS);
     } else {
         test_case_fail++;
-        PRINT_RESULT(MODULE_NAME,FAIL);
+        PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     next_test_case_notify();

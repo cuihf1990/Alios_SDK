@@ -40,8 +40,7 @@
  *                    Structures
  ******************************************************/
 
-typedef struct
-{
+typedef struct {
     uint8_t  port;
     uint8_t  chip_select;
     uint32_t speed;
@@ -53,9 +52,8 @@ typedef struct
 /**
  * SPI message segment
  */
-typedef struct
-{
-    const void* tx_buffer;
+typedef struct {
+    const void *tx_buffer;
     void       *rx_buffer;
     uint32_t    length;
 } hal_spi_msg_segment_t;
@@ -82,7 +80,8 @@ int32_t hal_spi_init(const hal_spi_device_t *spi);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred
  */
-int32_t hal_spi_transfer(const hal_spi_device_t *spi, const hal_spi_msg_segment_t *segments, uint16_t num);
+int32_t hal_spi_transfer(const hal_spi_device_t *spi,
+                         const hal_spi_msg_segment_t *segments, uint16_t num);
 
 
 /**@brief De-initialises a SPI interface

@@ -28,7 +28,8 @@ void yunos_kobj_set_notify(blk_obj_t *obj, kobj_set_t *handle)
 }
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name, size_t msg_num)
+kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
+                                  size_t msg_num)
 {
     kstat_t     stat;
     kobj_set_t *kobj_set;
@@ -81,7 +82,8 @@ kstat_t yunos_kobj_set_dyn_del(kobj_set_t *handle)
 }
 #endif
 
-kstat_t yunos_kobj_set_create(kobj_set_t *handle, const name_t *name, void **start, size_t msg_num)
+kstat_t yunos_kobj_set_create(kobj_set_t *handle, const name_t *name,
+                              void **start, size_t msg_num)
 {
     kstat_t     stat;
 

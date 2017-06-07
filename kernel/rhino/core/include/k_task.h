@@ -145,7 +145,8 @@ kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
  * @param[in]  autorun  the autorunning flag of task
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg, uint8_t pri,
+kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
+                              uint8_t pri,
                               tick_t ticks, size_t stack,
                               task_entry_t entry, uint8_t autorun);
 #endif

@@ -31,16 +31,20 @@ static void queue_create_param_test(void)
 {
     kstat_t ret;
 
-    ret = yunos_queue_create(NULL, "test_queue0", (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
+    ret = yunos_queue_create(NULL, "test_queue0", (void **)&g_test_queue_msg0,
+                             TEST_QUEUE_MSG0_SIZE);
     QUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_queue_create(&g_test_queue0, NULL, (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
+    ret = yunos_queue_create(&g_test_queue0, NULL, (void **)&g_test_queue_msg0,
+                             TEST_QUEUE_MSG0_SIZE);
     QUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_queue_create(&g_test_queue0, "test_queue0", NULL, TEST_QUEUE_MSG0_SIZE);
+    ret = yunos_queue_create(&g_test_queue0, "test_queue0", NULL,
+                             TEST_QUEUE_MSG0_SIZE);
     QUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
 
-    ret = yunos_queue_create(&g_test_queue0, "test_queue0", (void **)&g_test_queue_msg0, 0);
+    ret = yunos_queue_create(&g_test_queue0, "test_queue0",
+                             (void **)&g_test_queue_msg0, 0);
     QUEUE_VAL_CHK(ret == YUNOS_INV_PARAM);
 }
 
@@ -71,7 +75,8 @@ static void task_queue0_entry(void *arg)
     kstat_t ret;
 
     while (1) {
-        ret = yunos_queue_create(&g_test_queue0, "test_queue0", (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
+        ret = yunos_queue_create(&g_test_queue0, "test_queue0",
+                                 (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
         QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         /* check yunos_queue_create param */

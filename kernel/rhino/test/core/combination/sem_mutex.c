@@ -72,14 +72,14 @@ void sem_mutex_coopr_test(void)
     kstat_t ret;
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_COMB_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI+1,
-                                 0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
+    ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI + 1,
+                                0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

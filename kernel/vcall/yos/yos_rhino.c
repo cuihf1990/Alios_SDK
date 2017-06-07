@@ -37,7 +37,7 @@ int yos_get_hz(void)
 
 const char *yos_version_get(void)
 {
-	return yunos_version_get();
+    return yunos_version_get();
 }
 
 const char *yos_strerror(int errnum)
@@ -46,7 +46,8 @@ const char *yos_strerror(int errnum)
     return NULL;
 }
 
-int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size)
+int yos_task_new(const char *name, void (*fn)(void *), void *arg,
+                 int stack_size)
 {
     ktask_t *task_handle = NULL;
 
@@ -55,7 +56,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size
 }
 
 int yos_task_new_ext(const char *name, void (*fn)(void *), void *arg,
-		             int stack_size, int prio)
+                     int stack_size, int prio)
 {
     ktask_t *task_handle = NULL;
 
@@ -302,7 +303,8 @@ int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size)
     return yunos_buf_queue_send(queue->hdl, msg, size);
 }
 
-int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg, unsigned int *size)
+int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
+                   unsigned int *size)
 {
     if (queue == NULL) {
         return YUNOS_NULL_PTR;
@@ -311,7 +313,8 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg, unsigned int 
     return yunos_buf_queue_recv(queue->hdl, MS2TICK(ms), msg, size);
 }
 
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms, int repeat)
+int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms,
+                  int repeat)
 {
     kstat_t   ret;
     ktimer_t *t;
@@ -328,7 +331,8 @@ int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms, int
     if (repeat == 0) {
         ret = yunos_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
     } else {
-        ret = yunos_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms), arg, 1);
+        ret = yunos_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
+                                 arg, 1);
     }
 
     if (ret != YUNOS_SUCCESS) {
@@ -407,7 +411,8 @@ int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
         return YUNOS_NO_MEM;
     }
 
-    ret = yunos_workqueue_create(wq, "YOS", pri, stk, stack_size / sizeof(cpu_stack_t));
+    ret = yunos_workqueue_create(wq, "YOS", pri, stk,
+                                 stack_size / sizeof(cpu_stack_t));
     if (ret != YUNOS_SUCCESS) {
         yos_free(wq);
         yos_free(stk);

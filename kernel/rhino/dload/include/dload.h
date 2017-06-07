@@ -3,14 +3,14 @@
  * Copyright (C) 2016 YunOS Project. All rights reserved.
  ****************************************************************************/
 
- /**
- * @file
- * @brief      dynamic loader interfaces
- * @details
- * @author     xzf
- * @date       2016-11-16
- * @version    0.1
- */
+/**
+* @file
+* @brief      dynamic loader interfaces
+* @details
+* @author     xzf
+* @date       2016-11-16
+* @version    0.1
+*/
 
 #ifndef DLOAD_H_
 #define DLOAD_H_

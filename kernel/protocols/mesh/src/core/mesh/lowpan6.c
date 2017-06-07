@@ -40,11 +40,13 @@ typedef struct lowpan_reass_s {
 
 static lowpan_reass_t *g_reass_list = NULL;
 
-static bool is_mcast_addr(ur_ip6_addr_t *ip6_addr) {
+static bool is_mcast_addr(ur_ip6_addr_t *ip6_addr)
+{
     return (ip6_addr->m8[0] == 0xff);
 }
 
-static uint8_t ucast_addr_compress(ur_ip6_addr_t *ip6_addr, uint8_t *buffer, uint8_t *len)
+static uint8_t ucast_addr_compress(ur_ip6_addr_t *ip6_addr, uint8_t *buffer,
+                                   uint8_t *len)
 {
     ur_ip6_prefix_t prefix;
 
@@ -75,10 +77,11 @@ static uint8_t ucast_addr_compress(ur_ip6_addr_t *ip6_addr, uint8_t *buffer, uin
     return UCAST_ADDR_64BIT;
 }
 
-static uint8_t ucast_addr_decompress(uint8_t mode, ur_ip6_prefix_t *prefix, uint8_t *iphc_buffer,
+static uint8_t ucast_addr_decompress(uint8_t mode, ur_ip6_prefix_t *prefix,
+                                     uint8_t *iphc_buffer,
                                      ur_ip6_addr_t *ip6_addr, uint16_t shortid)
 {
-    switch(mode) {
+    switch (mode) {
         case UCAST_ADDR_ELIDED:
             memcpy(&ip6_addr->m8[0], prefix->prefix.m8, 14);
             ip6_addr->m8[14] = (shortid >> 8) & 0xff;
@@ -145,7 +148,7 @@ static uint8_t mcast_addr_decompress(uint8_t mode, uint8_t *iphc_buffer,
 {
     memset(ip6_addr->m8, 0x00, 16);
     ip6_addr->m8[0] = 0xff;
-    switch(mode) {
+    switch (mode) {
         case MCAST_ADDR_8BIT:
             ip6_addr->m8[1] = 0x02;
             memcpy(&ip6_addr->m8[15], &iphc_buffer[0], 1);
@@ -169,7 +172,8 @@ static uint8_t mcast_addr_decompress(uint8_t mode, uint8_t *iphc_buffer,
     return 0;
 }
 
-static uint8_t ipv6_header_compress(ur_ip6_header_t *ip6_header, uint8_t *buffer)
+static uint8_t ipv6_header_compress(ur_ip6_header_t *ip6_header,
+                                    uint8_t *buffer)
 {
     uint8_t         iphc_len = 0;
     iphc_header_t   *iphc_header;
@@ -230,18 +234,21 @@ static uint8_t ipv6_header_compress(ur_ip6_header_t *ip6_header, uint8_t *buffer
     iphc_header->DAC = STATELESS_COMPRESS;
 
     /* Compress source address */
-    iphc_header->SAM = ucast_addr_compress(&ip6_header->src, &buffer[iphc_len], &iphc_len);
+    iphc_header->SAM = ucast_addr_compress(&ip6_header->src, &buffer[iphc_len],
+                                           &iphc_len);
 
     /* Compress destination address */
     if (is_mcast_addr(&ip6_header->dest) == true) {
         iphc_header->M = MULTICAST_DESTINATION;
-        iphc_header->DAM = mcast_addr_compress(&ip6_header->dest, &buffer[iphc_len], &iphc_len);
+        iphc_header->DAM = mcast_addr_compress(&ip6_header->dest, &buffer[iphc_len],
+                                               &iphc_len);
     } else {
         iphc_header->M = UNICAST_DESTINATION;
-        iphc_header->DAM = ucast_addr_compress(&ip6_header->dest, &buffer[iphc_len], &iphc_len);
+        iphc_header->DAM = ucast_addr_compress(&ip6_header->dest, &buffer[iphc_len],
+                                               &iphc_len);
     }
 
-    *(uint16_t*)iphc_header = ur_swap16(*(uint16_t*)iphc_header);
+    *(uint16_t *)iphc_header = ur_swap16(*(uint16_t *)iphc_header);
     return iphc_len;
 }
 
@@ -311,7 +318,7 @@ ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
     /* Compress UDP header? */
     if (ip6_header->next_header == UR_IPPROTO_UDP) {
         ur_udp_header_t *udp_header;
-        udp_header = (ur_udp_header_t*)(header + UR_IP6_HLEN);
+        udp_header = (ur_udp_header_t *)(header + UR_IP6_HLEN);
         nhc_len = udp_header_compress(udp_header, buffer + iphc_len);
         ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
                "lowpan6: compressed 8 bytes UDP header to"
@@ -323,7 +330,8 @@ ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
     return UR_ERROR_NONE;
 }
 
-static ur_error_t ipv6_header_decompress(message_info_t *info, iphc_header_t *iphc_header,
+static ur_error_t ipv6_header_decompress(message_info_t *info,
+                                         iphc_header_t *iphc_header,
                                          uint8_t *buffer, uint8_t *hc_len)
 {
     uint8_t *iphc_data = (uint8_t *)iphc_header;
@@ -387,7 +395,8 @@ static ur_error_t ipv6_header_decompress(message_info_t *info, iphc_header_t *ip
 
     /* Destination address decoding. */
     if (iphc_header->M == MULTICAST_DESTINATION) {
-        offset += mcast_addr_decompress(iphc_header->DAM, &iphc_data[offset], &ip6_header->dest);
+        offset += mcast_addr_decompress(iphc_header->DAM, &iphc_data[offset],
+                                        &ip6_header->dest);
     } else {
         offset += ucast_addr_decompress(iphc_header->DAM, &prefix, &iphc_data[offset],
                                         &ip6_header->dest, info->dest.addr.short_addr);
@@ -398,7 +407,8 @@ static ur_error_t ipv6_header_decompress(message_info_t *info, iphc_header_t *ip
     return UR_ERROR_NONE;
 }
 
-static ur_error_t next_header_decompress(nhc_header_t *nhc_header, uint8_t *buffer,
+static ur_error_t next_header_decompress(nhc_header_t *nhc_header,
+                                         uint8_t *buffer,
                                          uint8_t *hc_len)
 {
 
@@ -448,7 +458,7 @@ static ur_error_t next_header_decompress(nhc_header_t *nhc_header, uint8_t *buff
     }
 }
 
-message_t* lp_header_decompress(message_t *message)
+message_t *lp_header_decompress(message_t *message)
 {
     ur_error_t error;
     iphc_header_t *iphc_header = (iphc_header_t *)message_get_payload(message);
@@ -516,7 +526,7 @@ message_t* lp_header_decompress(message_t *message)
 
     message_set_payload_offset(message, -hc_len);
     dec_message = message_alloc(dec_header_len);
-    if(dec_message == NULL) {
+    if (dec_message == NULL) {
         message_free(message);
         ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
         return NULL;
@@ -564,7 +574,7 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
     info = p->info;
     *reass_p = NULL;
     frag_header = (frag_header_t *)message_get_payload(p);
-    *((uint16_t *)frag_header) = ur_swap16(*(uint16_t*)frag_header);
+    *((uint16_t *)frag_header) = ur_swap16(*(uint16_t *)frag_header);
     datagram_size = frag_header->size;
     datagram_tag = ur_swap16(frag_header->tag);
     /* Check dispatch. */
@@ -575,7 +585,8 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
         while (lrh != NULL) {
             if (lrh->sender_addr == info->src.addr.short_addr) {
                 /* address match with packet in reassembly. */
-                if ((datagram_tag == lrh->datagram_tag) && (datagram_size == lrh->datagram_size)) {
+                if ((datagram_tag == lrh->datagram_tag) &&
+                    (datagram_size == lrh->datagram_size)) {
                     /* duplicate fragment. */
                     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
                            "lowpan6: received duplicated FRAG_1 from"
@@ -642,14 +653,16 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
             ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
                    "lowpan6: received duplicated FRAG_N from"
                    " %04hx, tag=%u len=%u offset=%u, drop it\r\n",
-                   info->src.addr.short_addr, datagram_tag, message_get_msglen(p), datagram_offset);
+                   info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
+                   datagram_offset);
             return UR_ERROR_FAIL;
         } else if (message_get_msglen(lrh->message) < datagram_offset) {
             /* We have missed a fragment. Delete whole reassembly. */
             ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
                    "lowpan6: received disordered FRAG_N from %04hx,"
                    " tag=%u len=%u offset=%u, drop the whole fragment packets\r\n",
-                   info->src.addr.short_addr, datagram_tag, message_get_msglen(p),datagram_offset);
+                   info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
+                   datagram_offset);
             dequeue_list_element(lrh);
             message_free(lrh->message);
             ur_mem_free(lrh, sizeof(lowpan_reass_t));
@@ -658,7 +671,8 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
 
         ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
                "lowpan6: received FRAG_N from %04hx, tag=%u len=%u offset=%u\r\n",
-               info->src.addr.short_addr, datagram_tag, message_get_msglen(p),datagram_offset);
+               info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
+               datagram_offset);
         message_concatenate(lrh->message, p, false);
         p = NULL;
 

@@ -65,8 +65,9 @@ void allocator_init(network_context_t *network)
     for (index = 0; index < SID_LEN; index += SID_MASK_LEN) {
         uint16_t mask = (1 << SID_MASK_LEN) - 1;
         mask <<= index;
-        if (sid & mask)
+        if (sid & mask) {
             break;
+        }
     }
 
     allocator->sid_shift = index - SID_MASK_LEN;
@@ -132,7 +133,8 @@ ur_error_t update_sid_mapping(network_context_t *network,
 
     allocator = (ssid_allocator_t *)network->sid_base;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, node_id->ueid, sizeof(node->node_id.ueid)) == 0) {
+        if (memcmp(node->node_id.ueid, node_id->ueid,
+                   sizeof(node->node_id.ueid)) == 0) {
             new_node = node;
             break;
         }
@@ -152,8 +154,9 @@ ur_error_t update_sid_mapping(network_context_t *network,
         }
     } else {
         new_node = (sid_node_t *)ur_mem_alloc(sizeof(sid_node_t));
-        if (!new_node)
+        if (!new_node) {
             return UR_ERROR_MEM;
+        }
         slist_add(&new_node->next, &allocator->base.node_list);
     }
 
@@ -216,7 +219,8 @@ static ur_error_t allocate_expected_sid(network_context_t *network,
         if (index > PF_NODE_NUM) {
             return UR_ERROR_FAIL;
         }
-        if (grab_free_bit(allocator->mobile_free_bits, PF_NODE_NUM, index) == UR_ERROR_FAIL) {
+        if (grab_free_bit(allocator->mobile_free_bits, PF_NODE_NUM,
+                          index) == UR_ERROR_FAIL) {
             return UR_ERROR_FAIL;
         }
         if (update_sid_mapping(network, node_id, true) != UR_ERROR_NONE) {
@@ -277,7 +281,8 @@ new_sid:
         } else {
             newsid = find_first_free_bit(&allocator->attach_free_bits, 16);
         }
-        node_id->sid = allocator->sid_prefix | (((uint16_t)newsid) << allocator->sid_shift);
+        node_id->sid = allocator->sid_prefix | (((uint16_t)newsid) <<
+                                                allocator->sid_shift);
         node_id->type = allocator->sid_shift == 0 ? LEAF_NODE : ROUTER_NODE;
     }
 
@@ -285,7 +290,7 @@ new_sid:
         return UR_ERROR_MEM;
     }
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-            "allocate 0x%04x\r\n", node_id->sid);
+           "allocate 0x%04x\r\n", node_id->sid);
 
     if (!(node_id->mode & MODE_MOBILE)) {
         allocator->base.node_num++;
@@ -317,8 +322,9 @@ uint32_t get_allocated_bitmap(network_context_t *network)
     ssid_allocator_t *allocator;
 
     allocator = (ssid_allocator_t *)network->sid_base;
-    if (allocator->sid_prefix == LEADER_SID)
+    if (allocator->sid_prefix == LEADER_SID) {
         return LEADER_DEF_BITMAP & ~allocator->attach_free_bits;
+    }
     return ROUTER_DEF_BITMAP & ~allocator->attach_free_bits;
 }
 
@@ -335,9 +341,10 @@ uint16_t get_free_number(network_context_t *network)
 {
     ssid_allocator_t *allocator;
 
-   allocator = (ssid_allocator_t *)network->sid_base;
-    if (allocator->sid_prefix == LEADER_SID)
+    allocator = (ssid_allocator_t *)network->sid_base;
+    if (allocator->sid_prefix == LEADER_SID) {
         return 11 - allocator->base.node_num;
+    }
     return 15 - allocator->base.node_num;
 }
 

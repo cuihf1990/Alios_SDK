@@ -17,7 +17,8 @@
 #include <k_api.h>
 
 #if (YUNOS_CONFIG_MM_BLK > 0)
-kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name, void *pool_start,
+kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
+                             void *pool_start,
                              size_t blk_size, size_t pool_size)
 {
     uint32_t blks;            /* max blocks mem pool offers */

@@ -70,8 +70,8 @@ static void task_timer0_entry(void *arg)
                                  TIMER0_ROUND, TIMER0_ROUND, (void *)TIMER0_MAGIC, 1);
         TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
 
-	ret = yunos_sem_take(&sem_0_test, YUNOS_WAIT_FOREVER);
-	TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
+        ret = yunos_sem_take(&sem_0_test, YUNOS_WAIT_FOREVER);
+        TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
 
         ret = yunos_timer_stop(&timer_0_test);
         TIMER_VAL_CHK(ret == YUNOS_SUCCESS);

@@ -123,7 +123,8 @@ void sem_queue_coopr_test(void)
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
-    ret = yunos_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0, TASK_COMB_PRI + 1,
+    ret = yunos_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0,
+                                TASK_COMB_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_queue_trigger_entry, 1);
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);

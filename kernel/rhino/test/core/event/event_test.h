@@ -30,7 +30,8 @@ extern kevent_t *test_event_ext;
 
 typedef uint8_t (*test_func_t)(void);
 
-void task_event_entry_register(const char *name, test_func_t *runner, uint8_t casenum);
+void task_event_entry_register(const char *name, test_func_t *runner,
+                               uint8_t casenum);
 void task_event_entry(void *arg);
 void event_test(void);
 void event_param_test(void);

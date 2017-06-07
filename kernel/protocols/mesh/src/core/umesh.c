@@ -64,7 +64,8 @@ static void update_ipaddr(void)
     network_context_t *network;
 
     network = get_default_network_context();
-    memset(g_um_state.ucast_address[0].addr.m8, 0, sizeof(g_um_state.ucast_address[0].addr.m8));
+    memset(g_um_state.ucast_address[0].addr.m8, 0,
+           sizeof(g_um_state.ucast_address[0].addr.m8));
     g_um_state.ucast_address[0].addr.m32[0] = ur_swap32(0xfc000000);
     g_um_state.ucast_address[0].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
     addr = (get_sub_netid(network->meshnetid) << 16) | mm_get_local_sid();
@@ -72,14 +73,16 @@ static void update_ipaddr(void)
     g_um_state.ucast_address[0].prefix_length = 64;
 
     g_um_state.ucast_address[0].next = &g_um_state.ucast_address[1];
-    memset(g_um_state.ucast_address[1].addr.m8, 0, sizeof(g_um_state.ucast_address[1].addr.m8));
+    memset(g_um_state.ucast_address[1].addr.m8, 0,
+           sizeof(g_um_state.ucast_address[1].addr.m8));
     g_um_state.ucast_address[1].addr.m32[0] = ur_swap32(0xfc000000);
     g_um_state.ucast_address[1].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
     memcpy(&g_um_state.ucast_address[1].addr.m8[8], mm_get_local_ueid(), 8);
     g_um_state.ucast_address[1].prefix_length = 64;
 
     mcast = nd_get_subscribed_mcast();
-    memcpy(&g_um_state.mcast_address[0].addr, mcast, sizeof(g_um_state.mcast_address[0].addr));
+    memcpy(&g_um_state.mcast_address[0].addr, mcast,
+           sizeof(g_um_state.mcast_address[0].addr));
     g_um_state.mcast_address[0].prefix_length = 64;
 }
 
@@ -142,7 +145,8 @@ static void output_message_handler(void *args)
         } else {
             info->dest.addr.len = SHORT_ADDR_SIZE;
             info->dest.addr.short_addr = ur_swap16(frame->dest.m16[7]);
-            info->dest.netid = ur_swap16(frame->dest.m16[3]) | ur_swap16(frame->dest.m16[6]);
+            info->dest.netid = ur_swap16(frame->dest.m16[3]) | ur_swap16(
+                                   frame->dest.m16[6]);
         }
     } else {
         message_free(frame->message);
@@ -171,7 +175,8 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
         return UR_ERROR_FAIL;
     }
     append_length = sizeof(mcast_header_t) + 2;
-    frame->message = message_alloc(((message_t *)message)->data->tot_len + append_length);
+    frame->message = message_alloc(((message_t *)message)->data->tot_len +
+                                   append_length);
     if (frame->message == NULL) {
         ur_mem_free(frame, sizeof(transmit_frame_t));
         return UR_ERROR_FAIL;
@@ -235,21 +240,21 @@ static void parse_args(void)
     int i, argc;
     const char **argv;
     argc = csp_get_args(&argv);
-    for (i=0;i<argc;i++) {
+    for (i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-s") == 0) {
             g_cli_silent = 1;
             continue;
         }
 
         if (strcmp(argv[i], "--mesh-log") == 0) {
-            ur_log_set_level(str2lvl(argv[i+1]));
+            ur_log_set_level(str2lvl(argv[i + 1]));
 
             i += 1;
             continue;
         }
 
         if (strcmp(argv[i], "--mesh-mode") == 0) {
-            int mode = atoi(argv[i+1]);
+            int mode = atoi(argv[i + 1]);
             mm_set_mode(mode);
 
             i += 1;
@@ -257,7 +262,7 @@ static void parse_args(void)
         }
 
         if (strcmp(argv[i], "--mesh-router") == 0) {
-            int id = atoi(argv[i+1]);
+            int id = atoi(argv[i + 1]);
             ur_router_set_default_router(id);
 
             i += 1;
@@ -454,7 +459,7 @@ ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi)
     return UR_ERROR_NONE;
 }
 
-void ur_mesh_remove_whitelist(const mac_address_t*address)
+void ur_mesh_remove_whitelist(const mac_address_t *address)
 {
     whitelist_remove(address);
 }
@@ -472,8 +477,10 @@ void ur_mesh_get_channel(channel_t *channel)
         channel->wifi_channel = 1;
         channel->channel = channel->wifi_channel;
         ur_wifi_hal = hal_ur_mesh_get_default_module();
-        channel->hal_ucast_channel = (uint16_t)hal_ur_mesh_get_ucast_channel(ur_wifi_hal);
-        channel->hal_bcast_channel = (uint16_t)hal_ur_mesh_get_bcast_channel(ur_wifi_hal);
+        channel->hal_ucast_channel = (uint16_t)hal_ur_mesh_get_ucast_channel(
+                                         ur_wifi_hal);
+        channel->hal_bcast_channel = (uint16_t)hal_ur_mesh_get_bcast_channel(
+                                         ur_wifi_hal);
     }
 }
 
@@ -507,10 +514,12 @@ const ur_mem_stats_t *ur_mesh_get_mem_stats(void)
     return ur_mem_get_stats();
 }
 
-slist_t *ur_mesh_get_hals(void) {
+slist_t *ur_mesh_get_hals(void)
+{
     return get_hal_contexts();
 }
 
-slist_t *ur_mesh_get_networks(void) {
+slist_t *ur_mesh_get_networks(void)
+{
     return get_network_contexts();
 }

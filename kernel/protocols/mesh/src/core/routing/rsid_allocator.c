@@ -71,7 +71,8 @@ ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id)
 
     allocator = (rsid_allocator_t *)network->sid_base;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, node_id->ueid, sizeof(node->node_id.ueid)) == 0) {
+        if (memcmp(node->node_id.ueid, node_id->ueid,
+                   sizeof(node->node_id.ueid)) == 0) {
             new_node = node;
             break;
         }
@@ -86,9 +87,9 @@ ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id)
         slist_add(&new_node->next, &allocator->base.node_list);
     }
     if (network->router->sid_type == SHORT_RANDOM_SID) {
-        len = (1 << 8) -1;
+        len = (1 << 8) - 1;
     } else {
-        len = (1 << 16) -1;
+        len = (1 << 16) - 1;
     }
     if (len > RSID_NUM) {
         len = RSID_NUM;
@@ -129,7 +130,8 @@ ur_error_t rsid_free_sid(network_context_t *network, ur_node_id_t *node_id)
 
     allocator = (rsid_allocator_t *)network->sid_base;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, node_id->ueid, sizeof(node->node_id.ueid)) == 0) {
+        if (memcmp(node->node_id.ueid, node_id->ueid,
+                   sizeof(node->node_id.ueid)) == 0) {
             break;
         }
     }
@@ -137,9 +139,9 @@ ur_error_t rsid_free_sid(network_context_t *network, ur_node_id_t *node_id)
         return UR_ERROR_NONE;
     }
     if (network->router->sid_type == SHORT_RANDOM_SID) {
-        len = (1 << 8) -1;
+        len = (1 << 8) - 1;
     } else {
-        len = (1 << 16) -1;
+        len = (1 << 16) - 1;
     }
     if (len > RSID_NUM) {
         len = RSID_NUM;

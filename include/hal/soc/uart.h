@@ -17,60 +17,56 @@
 #ifndef YOS_UART_H
 #define YOS_UART_H
 
- /**
-  * UART data width
-  */
- typedef enum
- {
-     DATA_WIDTH_5BIT,
-     DATA_WIDTH_6BIT,
-     DATA_WIDTH_7BIT,
-     DATA_WIDTH_8BIT,
-     DATA_WIDTH_9BIT
- } hal_uart_data_width_t;
- 
- /**
-  * UART stop bits
-  */
- typedef enum
- {
-     STOP_BITS_1,
-     STOP_BITS_2,
- } hal_uart_stop_bits_t;
- 
- /**
-  * UART flow control
-  */
- typedef enum
- {
-     FLOW_CONTROL_DISABLED,
-     FLOW_CONTROL_CTS,
-     FLOW_CONTROL_RTS,
-     FLOW_CONTROL_CTS_RTS
- } hal_uart_flow_control_t;
- 
- /**
-  * UART parity
-  */
- typedef enum
- {
-     NO_PARITY,
-     ODD_PARITY,
-     EVEN_PARITY,
- } hal_uart_parity_t;
+/**
+ * UART data width
+ */
+typedef enum {
+    DATA_WIDTH_5BIT,
+    DATA_WIDTH_6BIT,
+    DATA_WIDTH_7BIT,
+    DATA_WIDTH_8BIT,
+    DATA_WIDTH_9BIT
+} hal_uart_data_width_t;
 
- /**
-  * UART configuration
-  */
- typedef struct
- {
-     uint32_t                baud_rate;
-     hal_uart_data_width_t   data_width;
-     hal_uart_parity_t       parity;
-     hal_uart_stop_bits_t    stop_bits;
-     hal_uart_flow_control_t flow_control;
-     uint8_t                 flags; /**< if set, UART can wake up MCU from stop mode, reference: @ref UART_WAKEUP_DISABLE and @ref UART_WAKEUP_ENABLE*/
- } hal_uart_config_t;
+/**
+ * UART stop bits
+ */
+typedef enum {
+    STOP_BITS_1,
+    STOP_BITS_2,
+} hal_uart_stop_bits_t;
+
+/**
+ * UART flow control
+ */
+typedef enum {
+    FLOW_CONTROL_DISABLED,
+    FLOW_CONTROL_CTS,
+    FLOW_CONTROL_RTS,
+    FLOW_CONTROL_CTS_RTS
+} hal_uart_flow_control_t;
+
+/**
+ * UART parity
+ */
+typedef enum {
+    NO_PARITY,
+    ODD_PARITY,
+    EVEN_PARITY,
+} hal_uart_parity_t;
+
+/**
+ * UART configuration
+ */
+typedef struct {
+    uint32_t                baud_rate;
+    hal_uart_data_width_t   data_width;
+    hal_uart_parity_t       parity;
+    hal_uart_stop_bits_t    stop_bits;
+    hal_uart_flow_control_t flow_control;
+    uint8_t
+    flags; /**< if set, UART can wake up MCU from stop mode, reference: @ref UART_WAKEUP_DISABLE and @ref UART_WAKEUP_ENABLE*/
+} hal_uart_config_t;
 
 
 /**@brief Initialises a UART interface
@@ -132,7 +128,8 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t size, uint32_t timeout);
+int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t size,
+                      uint32_t timeout);
 
 /**@brief Read the length of the data that is already recived by uart driver and stored in buffer
  *
@@ -140,7 +137,7 @@ int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t size, uint32_t timeout)
  *
  * @return    Data length
  */
-uint32_t hal_uart_get_len_in_buf(int uart); 
+uint32_t hal_uart_get_len_in_buf(int uart);
 
 /** @} */
 /** @} */

@@ -18,7 +18,8 @@ typedef struct kobj_set {
  * @param[in]  msg_num  num of the kobj_set's contained notify msg
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name, size_t msg_num);
+kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
+                                  size_t msg_num);
 
 /**
  * This function will del a kobj_set
@@ -36,7 +37,8 @@ kstat_t yunos_kobj_set_dyn_del(kobj_set_t *handle);
  * @param[in]  msg_num  num of the kobj_set's contained notify msg
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_set_create(kobj_set_t *handle, const name_t *name, void **start, size_t msg_num);
+kstat_t yunos_kobj_set_create(kobj_set_t *handle, const name_t *name,
+                              void **start, size_t msg_num);
 
 /**
  * This function will del a kobj_set

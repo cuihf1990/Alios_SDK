@@ -203,7 +203,8 @@ void yunos_cpu_usage_stats_init(void)
 
     yunos_sched_disable();
 
-    for (stats_item = taskhead->next; stats_item != taskhead; stats_item = stats_item->next) {
+    for (stats_item = taskhead->next; stats_item != taskhead;
+         stats_item = stats_item->next) {
         task = yunos_list_entry(stats_item, ktask_t, task_stats_item);
 
         if (
@@ -228,7 +229,8 @@ void yunos_cpu_usage_stats_init(void)
 
     yunos_sched_disable();
 
-    for (stats_item = taskhead->next; stats_item != taskhead; stats_item = stats_item->next) {
+    for (stats_item = taskhead->next; stats_item != taskhead;
+         stats_item = stats_item->next) {
         task = yunos_list_entry(stats_item, ktask_t, task_stats_item);
 
         if (
@@ -278,8 +280,10 @@ static void cpu_usage_task_entry(void *arg)
 void cpu_usage_stats_start(void)
 {
     /* create a statistic task to calculate cpu usage */
-    yunos_task_create(&g_cpu_usage_task, "cpu_stats", 0, YUNOS_CONFIG_CPU_USAGE_TASK_PRI,
-                      0, g_cpu_task_stack, YUNOS_CONFIG_CPU_USAGE_TASK_STACK, cpu_usage_task_entry, 1);
+    yunos_task_create(&g_cpu_usage_task, "cpu_stats", 0,
+                      YUNOS_CONFIG_CPU_USAGE_TASK_PRI,
+                      0, g_cpu_task_stack, YUNOS_CONFIG_CPU_USAGE_TASK_STACK, cpu_usage_task_entry,
+                      1);
 }
 #endif /* YUNOS_CONFIG_CPU_USAGE_STATS */
 

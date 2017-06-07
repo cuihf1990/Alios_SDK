@@ -21,19 +21,23 @@
 
 #define YOS_MM_ALLOC_DEPTH  3
 
-YUNOS_INLINE k_mm_list_t* init_mm_region(void * regionaddr, size_t len)
+YUNOS_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
 {
     k_mm_list_t        *curblk, *lastblk, *firstblk;
     k_mm_region_info_t *region;
 
     /*mmblk for region info*/
     firstblk = (k_mm_list_t *) regionaddr;
-    firstblk->size = MM_ALIGN_UP(sizeof(k_mm_region_info_t))|YUNOS_MM_ALLOCED|YUNOS_MM_PREVALLOCED;
+    firstblk->size = MM_ALIGN_UP(sizeof(k_mm_region_info_t)) | YUNOS_MM_ALLOCED |
+                     YUNOS_MM_PREVALLOCED;
 
-    curblk = (k_mm_list_t *) ((char*)firstblk->mbinfo.buffer + (firstblk->size & YUNOS_MM_BLKSIZE_MASK));
-    curblk->size = MM_ALIGN_DOWN(len - MMREGION_USED_SIZE) | YUNOS_MM_ALLOCED | YUNOS_MM_PREVALLOCED;
+    curblk = (k_mm_list_t *) ((char *)firstblk->mbinfo.buffer +
+                              (firstblk->size & YUNOS_MM_BLKSIZE_MASK));
+    curblk->size = MM_ALIGN_DOWN(len - MMREGION_USED_SIZE) | YUNOS_MM_ALLOCED |
+                   YUNOS_MM_PREVALLOCED;
     curblk->mbinfo.free_ptr.prev = curblk->mbinfo.free_ptr.next = 0;
-    lastblk = NEXT_MM_BLK(curblk->mbinfo.buffer, curblk->size & YUNOS_MM_BLKSIZE_MASK);
+    lastblk = NEXT_MM_BLK(curblk->mbinfo.buffer,
+                          curblk->size & YUNOS_MM_BLKSIZE_MASK);
     lastblk->prev = curblk;
     lastblk->size = 0 | YUNOS_MM_ALLOCED | YUNOS_MM_PREVFREE;
     region = (k_mm_region_info_t *) firstblk->mbinfo.buffer;
@@ -50,7 +54,7 @@ static size_t sizetoindex(size_t size)
     size_t tmp_size = size;
 
     tmp_size >>= 2;
-    while(tmp_size > 0){
+    while (tmp_size > 0) {
         cnt++;
         tmp_size >>= 1;
     }
@@ -61,12 +65,12 @@ static void addsize(k_mm_head *mmhead, size_t size)
     size_t index ;
 
     mmhead->used_size += size;
-    if(mmhead->used_size > mmhead->maxused_size){
+    if (mmhead->used_size > mmhead->maxused_size) {
         mmhead->maxused_size = mmhead->used_size;
     }
 
     index = sizetoindex(size);
-    if(index > MAX_MM_BIT){
+    if (index > MAX_MM_BIT) {
         index = MAX_MM_BIT;
     }
     mmhead->mm_size_stats[index]++;
@@ -85,7 +89,7 @@ static void removesize(k_mm_head *mmhead, size_t size)
 #define stats_removesize(mmhead,size) do{}while(0)
 #endif
 
-kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void * addr, size_t len )
+kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 {
     k_mm_list_t *nextblk, *curblk, *firstblk;
     k_mm_head   *pmmhead;
@@ -99,7 +103,7 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void * addr, size_t len )
       1.  the length at least need DEF_TOTAL_FIXEDBLK_SIZE for fixed size memory block
       2.  and also ast least have 1k for user alloced
     */
-    if(((unsigned long) addr & MM_ALIGN_MASK) || (len != MM_ALIGN_DOWN(len))){
+    if (((unsigned long) addr & MM_ALIGN_MASK) || (len != MM_ALIGN_DOWN(len))) {
         return YUNOS_INV_ALIGN;
     }
 
@@ -122,26 +126,31 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void * addr, size_t len )
     yunos_mutex_lock(&(pmmhead->mm_mutex), YUNOS_WAIT_FOREVER);
 #endif
 
-    firstblk = init_mm_region(addr + MM_ALIGN_UP(sizeof(k_mm_head)), MM_ALIGN_DOWN(len- sizeof(k_mm_head)));
+    firstblk = init_mm_region(addr + MM_ALIGN_UP(sizeof(k_mm_head)),
+                              MM_ALIGN_DOWN(len - sizeof(k_mm_head)));
     pmmhead->regioninfo = (k_mm_region_info_t *) firstblk->mbinfo.buffer;
 
-    nextblk = NEXT_MM_BLK(firstblk->mbinfo.buffer, firstblk->size & YUNOS_MM_BLKSIZE_MASK);
+    nextblk = NEXT_MM_BLK(firstblk->mbinfo.buffer,
+                          firstblk->size & YUNOS_MM_BLKSIZE_MASK);
 
 #if 0
     /*create fixed length blk pool */
-    tmpsize = (curblk->size & YUNOS_MM_BLKSIZE_MASK) - DEF_TOTAL_FIXEDBLK_SIZE - MM_ALIGN_UP(sizeof(mblk_pool_t));
-    if(tmpsize >= sizeof(k_mm_list_t)) {
+    tmpsize = (curblk->size & YUNOS_MM_BLKSIZE_MASK) - DEF_TOTAL_FIXEDBLK_SIZE -
+              MM_ALIGN_UP(sizeof(mblk_pool_t));
+    if (tmpsize >= sizeof(k_mm_list_t)) {
         tmpsize -= MMLIST_HEAD_SIZE;
-        nextblk = (k_mm_list_t*)((char*)curblk->mbinfo.buffer + DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
+        nextblk = (k_mm_list_t *)((char *)curblk->mbinfo.buffer +
+                                  DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
         nextblk->size = tmpsize | YUNOS_MM_ALLOCED | YUNOS_MM_PREVALLOCED;
         curblk->size = DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t));
     }
     pmmhead->fixedmblk = curblk;
-    mmblk_pool = (mblk_pool_t*)pmmhead->fixedmblk->mbinfo.buffer;
+    mmblk_pool = (mblk_pool_t *)pmmhead->fixedmblk->mbinfo.buffer;
 
-    yunos_mblk_pool_init(mmblk_pool, "fixed_mm_blk", curblk->mbinfo.buffer + MM_ALIGN_UP(sizeof(mblk_pool_t)),
-                            DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
-    #endif
+    yunos_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
+                         curblk->mbinfo.buffer + MM_ALIGN_UP(sizeof(mblk_pool_t)),
+                         DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
+#endif
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     YUNOS_CRITICAL_EXIT();
 #else
@@ -158,28 +167,30 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void * addr, size_t len )
     pmmhead->maxused_size = pmmhead->used_size;
 #endif
 
-    mmblk_pool = k_mm_alloc(pmmhead, DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
-    if(mmblk_pool){
+    mmblk_pool = k_mm_alloc(pmmhead,
+                            DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
+    if (mmblk_pool) {
         curblk = (k_mm_list_t *) ((char *) mmblk_pool - MMLIST_HEAD_SIZE);
-        stat = yunos_mblk_pool_init(mmblk_pool, "fixed_mm_blk", (void*)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t)),
-                                DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
-        if(stat == YUNOS_SUCCESS){
+        stat = yunos_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
+                                    (void *)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t)),
+                                    DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
+        if (stat == YUNOS_SUCCESS) {
             pmmhead->fixedmblk = curblk;
-        }
-        else{
+        } else {
             k_mm_free(pmmhead, mmblk_pool);
         }
 
     }
 #if (K_MM_STATISTIC > 0)
-    pmmhead->used_size += DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)) + MMLIST_HEAD_SIZE ;
+    pmmhead->used_size += DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(
+                                                                    mblk_pool_t)) + MMLIST_HEAD_SIZE ;
     pmmhead->maxused_size = pmmhead->used_size;
 #endif
     return YUNOS_SUCCESS;
 }
 
 
-kstat_t yunos_add_mm_region(k_mm_head *mmhead, void * addr, size_t len)
+kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
 {
     k_mm_region_info_t *ptr, *ptr_prev, *ai;
     k_mm_list_t        *ib0, *b0, *lb0, *ib1, *b1, *lb1, *next_b;
@@ -187,7 +198,7 @@ kstat_t yunos_add_mm_region(k_mm_head *mmhead, void * addr, size_t len)
     NULL_PARA_CHK(mmhead);
     NULL_PARA_CHK(addr);
 
-    if(((unsigned long) addr & MM_ALIGN_MASK) || (len != MM_ALIGN_DOWN(len))){
+    if (((unsigned long) addr & MM_ALIGN_MASK) || (len != MM_ALIGN_DOWN(len))) {
         return YUNOS_INV_ALIGN;
     }
 
@@ -228,8 +239,9 @@ kstat_t yunos_add_mm_region(k_mm_head *mmhead, void * addr, size_t len)
                 ptr = ptr->next;
             }
 
-            b0->size =MM_ALIGN_DOWN((b0->size & YUNOS_MM_BLKSIZE_MASK) +(ib1->size & YUNOS_MM_BLKSIZE_MASK)
-                                + 2 * MMLIST_HEAD_SIZE) | YUNOS_MM_ALLOCED | YUNOS_MM_PREVALLOCED;
+            b0->size = MM_ALIGN_DOWN((b0->size & YUNOS_MM_BLKSIZE_MASK) +
+                                     (ib1->size & YUNOS_MM_BLKSIZE_MASK)
+                                     + 2 * MMLIST_HEAD_SIZE) | YUNOS_MM_ALLOCED | YUNOS_MM_PREVALLOCED;
 
             b1->prev = b0;
             lb0 = lb1;
@@ -248,8 +260,10 @@ kstat_t yunos_add_mm_region(k_mm_head *mmhead, void * addr, size_t len)
                 ptr = ptr->next;
             }
 
-            lb1->size = MM_ALIGN_DOWN((b0->size & YUNOS_MM_BLKSIZE_MASK) + (ib0->size & YUNOS_MM_BLKSIZE_MASK)
-                               + 2 * MMLIST_HEAD_SIZE) | YUNOS_MM_ALLOCED | (lb1->size & YUNOS_MM_PRESTAT_MASK);
+            lb1->size = MM_ALIGN_DOWN((b0->size & YUNOS_MM_BLKSIZE_MASK) +
+                                      (ib0->size & YUNOS_MM_BLKSIZE_MASK)
+                                      + 2 * MMLIST_HEAD_SIZE) | YUNOS_MM_ALLOCED | (lb1->size &
+                                                                                    YUNOS_MM_PRESTAT_MASK);
             next_b = NEXT_MM_BLK(lb1->mbinfo.buffer, lb1->size & YUNOS_MM_BLKSIZE_MASK);
             next_b->prev = lb1;
             b0 = lb1;
@@ -275,18 +289,18 @@ kstat_t yunos_add_mm_region(k_mm_head *mmhead, void * addr, size_t len)
     return YUNOS_SUCCESS;
 }
 
-static void * k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
+static void *k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
 {
     kstat_t sta;
     void   *tmp;
 
     (void)size;
-    if(!mmhead){
+    if (!mmhead) {
         return NULL;
     }
 
-    sta = yunos_mblk_alloc((mblk_pool_t*)mmhead->fixedmblk->mbinfo.buffer, &tmp);
-    if(sta != YUNOS_SUCCESS){
+    sta = yunos_mblk_alloc((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, &tmp);
+    if (sta != YUNOS_SUCCESS) {
         return NULL;
     }
     return tmp;
@@ -295,12 +309,12 @@ static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
 {
     kstat_t sta;
 
-    if(!mmhead || !ptr){
+    if (!mmhead || !ptr) {
         return;
     }
 
-    sta = yunos_mblk_free((mblk_pool_t*)mmhead->fixedmblk->mbinfo.buffer, ptr);
-    if(sta != YUNOS_SUCCESS){
+    sta = yunos_mblk_free((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, ptr);
+    if (sta != YUNOS_SUCCESS) {
         assert(0);
     }
 }
@@ -317,7 +331,7 @@ static void bitmap_search(size_t size , size_t *flt, size_t *slt)
         *flt = 0;
         tmp_size = size;
         tmp_size >>= MIN_FLT_BIT;
-        while(tmp_size > 0) {
+        while (tmp_size > 0) {
             (*flt)++;
             tmp_size >>= 1;
         }
@@ -329,16 +343,16 @@ static void bitmap_search(size_t size , size_t *flt, size_t *slt)
 
 static size_t find_last_bit(int bitmap)
 {
-    size_t x,lsbit;
+    size_t x, lsbit;
 
-    if(bitmap == 0){
+    if (bitmap == 0) {
         return 0;
     }
 
     x = bitmap & -bitmap;
     lsbit = (size_t)yunos_find_first_bit(&x);
     /*yunos find fist bit return value is left->right as 0-31, but we need left->right as 31 -0*/
-    return 31-lsbit;
+    return 31 - lsbit;
 }
 
 #define INSERT_BLOCK(b, mmhead, flt, slt) do {                          \
@@ -368,7 +382,7 @@ static size_t find_last_bit(int bitmap)
             b -> mbinfo.free_ptr.next = NULL;                                               \
     } while(0)
 
-static k_mm_list_t * findblk_byidx(k_mm_head * mmhead, size_t *flt, size_t *slt)
+static k_mm_list_t *findblk_byidx(k_mm_head *mmhead, size_t *flt, size_t *slt)
 {
     uint32_t     tmp  = mmhead->sl_bitmap[*flt] & (~0 << *slt);
     k_mm_list_t *find = NULL;
@@ -388,7 +402,7 @@ static k_mm_list_t * findblk_byidx(k_mm_head * mmhead, size_t *flt, size_t *slt)
 }
 
 
-void* k_mm_alloc(k_mm_head *mmhead, size_t size)
+void *k_mm_alloc(k_mm_head *mmhead, size_t size)
 {
     void        *retptr;
     k_mm_list_t *b, *b2, *next_b;
@@ -399,11 +413,11 @@ void* k_mm_alloc(k_mm_head *mmhead, size_t size)
     size_t       allocator = 0;
 #endif
 
-    if(!mmhead){
+    if (!mmhead) {
         return NULL;
     }
 
-    if(size == 0) {
+    if (size == 0) {
         return NULL;
     }
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
@@ -413,15 +427,15 @@ void* k_mm_alloc(k_mm_head *mmhead, size_t size)
     yunos_mutex_lock(&(mmhead->mm_mutex), YUNOS_WAIT_FOREVER);
 #endif
 
-    if(size <= DEF_FIX_BLK_SIZE) {
+    if (size <= DEF_FIX_BLK_SIZE) {
         retptr =  k_mm_smallblk_alloc(mmhead, size);
-        if (retptr){
+        if (retptr) {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
             YUNOS_CRITICAL_EXIT();
 #else
             yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
-            stats_addsize(mmhead,DEF_FIX_BLK_SIZE);
+            stats_addsize(mmhead, DEF_FIX_BLK_SIZE);
 
             return retptr;
         }
@@ -436,16 +450,18 @@ void* k_mm_alloc(k_mm_head *mmhead, size_t size)
     /* Searching a free block, recall that this function changes the values of fl and sl,
        so they are not longer valid when the function fails */
     b = findblk_byidx(mmhead, &fl, &sl);
-    if (!b)
-        return NULL;            /* Not found */
+    if (!b) {
+        return NULL;    /* Not found */
+    }
 
     mmhead->mm_tbl[fl][sl] = b->mbinfo.free_ptr.next;
-    if (mmhead->mm_tbl[fl][sl])
+    if (mmhead->mm_tbl[fl][sl]) {
         mmhead->mm_tbl[fl][sl]->mbinfo.free_ptr.prev = NULL;
-    else {
+    } else {
         yunos_bitmap_clear(&mmhead->sl_bitmap[fl], 31 - sl) ;
-        if (!mmhead->sl_bitmap[fl])
+        if (!mmhead->sl_bitmap[fl]) {
             yunos_bitmap_clear (&mmhead->fl_bitmap, 31 - fl);
+        }
     }
     b->mbinfo.free_ptr.prev =  NULL;
     b->mbinfo.free_ptr.next =  NULL;
@@ -470,10 +486,10 @@ void* k_mm_alloc(k_mm_head *mmhead, size_t size)
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
 #if (YUNOS_CONFIG_GCC_RETADDR > 0u)
-        allocator = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
+    allocator = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
 #endif
-        b->dye   = YUNOS_MM_CORRUPT_DYE;
-        b->owner = allocator;
+    b->dye   = YUNOS_MM_CORRUPT_DYE;
+    b->owner = allocator;
 #endif
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
@@ -481,7 +497,7 @@ void* k_mm_alloc(k_mm_head *mmhead, size_t size)
 #else
     yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
-    stats_addsize(mmhead,((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
+    stats_addsize(mmhead, ((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
 
     return (void *) b->mbinfo.buffer;
 
@@ -501,11 +517,11 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 #else
     yunos_mutex_lock(&(mmhead->mm_mutex), YUNOS_WAIT_FOREVER);
 #endif
-    if(mmhead->fixedmblk && (ptr > (void*)mmhead->fixedmblk->mbinfo.buffer)
-        && (ptr < (void*)mmhead->fixedmblk->mbinfo.buffer + mmhead->fixedmblk->size)){
+    if (mmhead->fixedmblk && (ptr > (void *)mmhead->fixedmblk->mbinfo.buffer)
+        && (ptr < (void *)mmhead->fixedmblk->mbinfo.buffer + mmhead->fixedmblk->size)) {
         /*it's fixed size memory block*/
-        k_mm_smallblk_free(mmhead,ptr);
-        stats_removesize(mmhead,DEF_FIX_BLK_SIZE);
+        k_mm_smallblk_free(mmhead, ptr);
+        stats_removesize(mmhead, DEF_FIX_BLK_SIZE);
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
         YUNOS_CRITICAL_EXIT();
@@ -517,7 +533,8 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
     b = (k_mm_list_t *) ((char *) ptr - MMLIST_HEAD_SIZE);
     b->size |= YUNOS_MM_FREE;
 
-    stats_removesize(mmhead,((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
+    stats_removesize(mmhead,
+                     ((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
 
     b->mbinfo.free_ptr.prev = NULL;
     b->mbinfo.free_ptr.next = NULL;
@@ -550,7 +567,7 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 
 
 
-void* k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
+void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 {
     void        *ptr_aux = NULL;
     unsigned int cpsize;
@@ -563,11 +580,13 @@ void* k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 #endif
 
     if (!oldmem) {
-        if (new_size)
+        if (new_size) {
             return (void *) k_mm_alloc(mmhead, new_size);
+        }
 
-        if (!new_size)
+        if (!new_size) {
             return NULL;
+        }
     } else if (!new_size) {
         k_mm_free(mmhead, oldmem);
         return NULL;
@@ -582,16 +601,19 @@ void* k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 
     b        = (k_mm_list_t *) ((char *) oldmem - MMLIST_HEAD_SIZE);
     next_b   = NEXT_MM_BLK(b->mbinfo.buffer, b->size & YUNOS_MM_BLKSIZE_MASK);
-    new_size = (new_size < sizeof(k_mm_list_t)) ? sizeof(k_mm_list_t) : MM_ALIGN_UP(new_size);
+    new_size = (new_size < sizeof(k_mm_list_t)) ? sizeof(k_mm_list_t) : MM_ALIGN_UP(
+                   new_size);
     tmp_size = (b->size & YUNOS_MM_BLKSIZE_MASK);
 
     if (new_size <= tmp_size) {
-        stats_removesize(mmhead,((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
+        stats_removesize(mmhead,
+                         ((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
         if (next_b->size & YUNOS_MM_FREE) {
             bitmap_search(next_b->size & YUNOS_MM_BLKSIZE_MASK, &fl, &sl);
             GET_BLOCK(next_b, mmhead, fl, sl);
             tmp_size += (next_b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE;
-            next_b = NEXT_MM_BLK(next_b->mbinfo.buffer, next_b->size & YUNOS_MM_BLKSIZE_MASK);
+            next_b = NEXT_MM_BLK(next_b->mbinfo.buffer,
+                                 next_b->size & YUNOS_MM_BLKSIZE_MASK);
             /* We allways reenter this free block because tmp_size will
                be greater then sizeof (bhdr_t) */
         }
@@ -606,13 +628,14 @@ void* k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
             INSERT_BLOCK(tmp_b, mmhead, fl, sl);
             b->size = new_size | (b->size & YUNOS_MM_PRESTAT_MASK);
         }
-        stats_addsize(mmhead,((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
+        stats_addsize(mmhead, ((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
         ptr_aux = (void *) b->mbinfo.buffer;
     }
     if ((next_b->size & YUNOS_MM_FREE)) {
         if (new_size <= (tmp_size + (next_b->size & YUNOS_MM_BLKSIZE_MASK))) {
 
-            stats_removesize(mmhead,((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
+            stats_removesize(mmhead,
+                             ((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
             bitmap_search(next_b->size & YUNOS_MM_BLKSIZE_MASK, &fl, &sl);
             GET_BLOCK(next_b, mmhead, fl, sl);
             b->size += (next_b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE;
@@ -630,34 +653,35 @@ void* k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
                 INSERT_BLOCK(tmp_b, mmhead, fl, sl);
                 b->size = new_size | (b->size & YUNOS_MM_PRESTAT_MASK);
             }
-            stats_addsize(mmhead,((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
+            stats_addsize(mmhead, ((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
             ptr_aux = (void *) b->mbinfo.buffer;
         }
     }
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
 #if (YUNOS_CONFIG_GCC_RETADDR > 0u)
-                    allocator = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
+    allocator = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
 #endif
-                    b->dye   = YUNOS_MM_CORRUPT_DYE;
-                    b->owner = allocator;
+    b->dye   = YUNOS_MM_CORRUPT_DYE;
+    b->owner = allocator;
 #endif
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
-            YUNOS_CRITICAL_EXIT();
+    YUNOS_CRITICAL_EXIT();
 #else
-            yunos_mutex_unlock(&mmhead->mm_mutex);
+    yunos_mutex_unlock(&mmhead->mm_mutex);
 #endif
 
-    if(ptr_aux){
+    if (ptr_aux) {
         return ptr_aux;
     }
 
-    if (!(ptr_aux = k_mm_alloc(mmhead, new_size))){
+    if (!(ptr_aux = k_mm_alloc(mmhead, new_size))) {
         return NULL;
     }
 
-    cpsize = ((b->size & YUNOS_MM_BLKSIZE_MASK) > new_size) ? new_size : (b->size & YUNOS_MM_BLKSIZE_MASK);
+    cpsize = ((b->size & YUNOS_MM_BLKSIZE_MASK) > new_size) ? new_size :
+             (b->size & YUNOS_MM_BLKSIZE_MASK);
 
     memcpy(ptr_aux, oldmem, cpsize);
 

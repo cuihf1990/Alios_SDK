@@ -27,7 +27,8 @@
 YOS_SLIST_HEAD(g_networks_list);
 YOS_SLIST_HEAD(g_hals_list);
 
-static network_context_t *new_network_context(hal_context_t *hal, uint8_t index, int router_id)
+static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
+                                              int router_id)
 {
     network_context_t *network;
 
@@ -44,8 +45,9 @@ static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
     memset(network->mcast_entry, 0, sizeof(network->mcast_entry));
     network->router = ur_get_router_by_id(router_id);
     network->router->network = network;
-    if (index == 0)
+    if (index == 0) {
         ur_router_set_default_router(router_id);
+    }
 
     slist_add_tail(&network->next, &g_networks_list);
 
@@ -65,8 +67,9 @@ static hal_context_t *new_hal_context(ur_mesh_hal_module_t *module)
     hal->module = module;
     slist_add_tail(&hal->next, &g_hals_list);
 
-    for (i=0;i<QUEUE_SIZE;i++)
+    for (i = 0; i < QUEUE_SIZE; i++) {
         dlist_init(&hal->send_queue[i]);
+    }
 
     return hal;
 }
@@ -82,8 +85,8 @@ void interface_init(void)
         if (module->type <= MEDIA_TYPE_15_4) {
             hal_context = new_hal_context(module);
             hal_context->channel_list.num =
-                                      hal_ur_mesh_get_bcast_chnlist(module,
-                                      &hal_context->channel_list.channels);
+                hal_ur_mesh_get_bcast_chnlist(module,
+                                              &hal_context->channel_list.channels);
             memcpy(&hal_context->mac_addr, hal_ur_mesh_get_mac_address(module),
                    sizeof(hal_context->mac_addr));
 
@@ -191,8 +194,9 @@ static void cleanup_one_queue(message_queue_t *queue)
 static void cleanup_queues(hal_context_t *hal)
 {
     int i;
-    for (i=0;i<QUEUE_SIZE;i++)
+    for (i = 0; i < QUEUE_SIZE; i++) {
         cleanup_one_queue(&hal->send_queue[i]);
+    }
 }
 
 void interface_stop(void)

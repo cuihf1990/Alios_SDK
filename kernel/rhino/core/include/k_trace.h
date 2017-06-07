@@ -36,32 +36,41 @@ void _trace_sem_overflow(ktask_t *task, ksem_t *sem);
 void _trace_sem_del(ktask_t *task, ksem_t *sem);
 void _trace_sem_get_success(ktask_t *task, ksem_t *sem);
 void _trace_sem_get_blk(ktask_t *task, ksem_t *sem, tick_t wait_option);
-void _trace_sem_task_wake(ktask_t *task, ktask_t *task_waked_up, ksem_t *sem, uint8_t opt_wake_all);
+void _trace_sem_task_wake(ktask_t *task, ktask_t *task_waked_up, ksem_t *sem,
+                          uint8_t opt_wake_all);
 void _trace_sem_cnt_increase(ktask_t *task, ksem_t *sem);
 
 /* mutex trace function */
 void _trace_mutex_create(ktask_t *task, kmutex_t *mutex, const name_t *name);
-void _trace_mutex_release(ktask_t *task, ktask_t *task_release, uint8_t new_pri);
+void _trace_mutex_release(ktask_t *task, ktask_t *task_release,
+                          uint8_t new_pri);
 void _trace_mutex_get(ktask_t *task, kmutex_t *mutex, tick_t wait_option);
 void _trace_task_pri_inv(ktask_t *task, ktask_t *mtxtsk);
 void _trace_mutex_get_blk(ktask_t *task, kmutex_t *mutex, tick_t wait_option);
 void _trace_mutex_release_success(ktask_t *task, kmutex_t *mutex);
-void _trace_mutex_task_wake(ktask_t *task, ktask_t *task_waked_up, kmutex_t *mutex);
+void _trace_mutex_task_wake(ktask_t *task, ktask_t *task_waked_up,
+                            kmutex_t *mutex);
 void _trace_mutex_del(ktask_t *task, kmutex_t *mutex);
 
 /* event trace function */
-void _trace_event_create(ktask_t *task, kevent_t *event, const name_t *name, uint32_t flags_init);
+void _trace_event_create(ktask_t *task, kevent_t *event, const name_t *name,
+                         uint32_t flags_init);
 void _trace_event_get(ktask_t *task, kevent_t *event);
 void _trace_event_get_blk(ktask_t *task, kevent_t *event, tick_t wait_option);
-void _trace_event_task_wake(ktask_t *task, ktask_t *task_waked_up, kevent_t *event);
+void _trace_event_task_wake(ktask_t *task, ktask_t *task_waked_up,
+                            kevent_t *event);
 void _trace_event_del(ktask_t *task, kevent_t *event);
 
 /* buf_queue trace function */
 void _trace_buf_queue_create(ktask_t *task, kbuf_queue_t *buf_queue);
-void _trace_buf_max(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_t msg_size);
-void _trace_buf_post(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_t msg_size);
-void _trace_buf_queue_task_wake(ktask_t *task, ktask_t *task_waked_up, kbuf_queue_t *buf_queue);
-void _trace_buf_queue_get_blk(ktask_t *task, kbuf_queue_t *buf_queue, tick_t wait_option);
+void _trace_buf_max(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void,
+                    size_t msg_size);
+void _trace_buf_post(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void,
+                     size_t msg_size);
+void _trace_buf_queue_task_wake(ktask_t *task, ktask_t *task_waked_up,
+                                kbuf_queue_t *buf_queue);
+void _trace_buf_queue_get_blk(ktask_t *task, kbuf_queue_t *buf_queue,
+                              tick_t wait_option);
 
 /* timer trace function */
 void _trace_timer_create(ktask_t *task, ktimer_t *timer);

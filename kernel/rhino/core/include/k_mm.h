@@ -74,7 +74,7 @@ typedef struct free_ptr_struct {
     struct k_mm_list_struct *next;
 } free_ptr_t;
 
-typedef struct k_mm_list_struct{
+typedef struct k_mm_list_struct {
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
     size_t       dye;
     size_t       owner;
@@ -89,10 +89,10 @@ typedef struct k_mm_list_struct{
     } mbinfo;
 } k_mm_list_t;
 
-typedef struct k_mm_region_info_struct{
+typedef struct k_mm_region_info_struct {
     k_mm_list_t                    *end;
     struct k_mm_region_info_struct *next;
-}k_mm_region_info_t;
+} k_mm_region_info_t;
 
 
 typedef struct {
@@ -114,14 +114,14 @@ typedef struct {
 } k_mm_head;
 
 
-kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void * addr, size_t len );
+kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len );
 
-kstat_t yunos_add_mm_region(k_mm_head *mmhead, void * addr, size_t len);
+kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len);
 
 
-void* k_mm_alloc(k_mm_head *mmhead, size_t size);
+void *k_mm_alloc(k_mm_head *mmhead, size_t size);
 void  k_mm_free(k_mm_head *mmhead, void *ptr);
-void* k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size);
+void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size);
 
 #endif
 

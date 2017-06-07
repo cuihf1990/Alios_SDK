@@ -46,7 +46,7 @@ typedef enum {
 struct kobj_set;
 #endif
 
-typedef struct blk_obj{
+typedef struct blk_obj {
     klist_t          blk_list;
     const name_t    *name;
     blk_policy_t     blk_policy;

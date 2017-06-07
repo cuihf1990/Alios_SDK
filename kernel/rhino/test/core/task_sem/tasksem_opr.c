@@ -52,10 +52,11 @@ void tasksem_opr_test(void)
 {
     kstat_t ret;
 
-    task_tasksem_entry_register(MODULE_NAME, (test_func_t *)tasksem_func_runner, sizeof(tasksem_func_runner)/sizeof(test_case_t));
+    task_tasksem_entry_register(MODULE_NAME, (test_func_t *)tasksem_func_runner,
+                                sizeof(tasksem_func_runner) / sizeof(test_case_t));
 
     ret = yunos_task_dyn_create(&task_tasksem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_tasksem_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
@@ -131,14 +132,14 @@ void tasksem_coopr1_test(void)
     kstat_t ret;
 
     ret = yunos_task_dyn_create(&task_tasksem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co1_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_tasksem_co1_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO1, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_tasksem_co2, MODULE_NAME, 0, TASK_SEM_PRI+1,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co2_entry, 1);
+    ret = yunos_task_dyn_create(&task_tasksem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 1,
+                                0, TASK_TEST_STACK_SIZE, task_tasksem_co2_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO1, FAIL);
@@ -206,14 +207,14 @@ void tasksem_coopr2_test(void)
     kstat_t ret;
 
     ret = yunos_task_dyn_create(&task_tasksem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co3_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_tasksem_co3_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO2, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_tasksem_co2, MODULE_NAME, 0, TASK_SEM_PRI+1,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co4_entry, 1);
+    ret = yunos_task_dyn_create(&task_tasksem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 1,
+                                0, TASK_TEST_STACK_SIZE, task_tasksem_co4_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO2, FAIL);

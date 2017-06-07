@@ -89,31 +89,31 @@ typedef struct ur_mesh_hal_module_s {
 
     /* register call back when received packet */
     int (*ur_mesh_hal_register_receiver)(struct ur_mesh_hal_module_s *module,
-                                    ur_mesh_handle_received_frame_t received, void *context);
+                                         ur_mesh_handle_received_frame_t received, void *context);
 
     /* request low layer to transmit beacons intervally*/
     int (*ur_mesh_hal_start_beacons)(struct ur_mesh_hal_module_s *module,
-                                frame_t *data, mac_address_t *dest,
-                                uint16_t max_interval);
+                                     frame_t *data, mac_address_t *dest,
+                                     uint16_t max_interval);
     int (*ur_mesh_hal_stop_beacons)(struct ur_mesh_hal_module_s *module);
 
     int (*ur_mesh_hal_set_bcast_mtu)(struct ur_mesh_hal_module_s *module,
-                                uint16_t mtu);
+                                     uint16_t mtu);
     int (*ur_mesh_hal_get_bcast_mtu)(struct ur_mesh_hal_module_s *module);
     int (*ur_mesh_hal_set_ucast_mtu)(struct ur_mesh_hal_module_s *module,
-                                uint16_t mtu);
+                                     uint16_t mtu);
     int (*ur_mesh_hal_get_ucast_mtu)(struct ur_mesh_hal_module_s *module);
 
     int (*ur_mesh_hal_set_bcast_channel)(struct ur_mesh_hal_module_s *module,
                                          uint8_t channel);
     int (*ur_mesh_hal_get_bcast_channel)(struct ur_mesh_hal_module_s *module);
     int (*ur_mesh_hal_get_bcast_chnlist)(struct ur_mesh_hal_module_s *module,
-                                    const uint8_t **chnlist);
+                                         const uint8_t **chnlist);
     int (*ur_mesh_hal_set_ucast_channel)(struct ur_mesh_hal_module_s *module,
-                                    uint8_t channel);
+                                         uint8_t channel);
     int (*ur_mesh_hal_get_ucast_channel)(struct ur_mesh_hal_module_s *module);
     int (*ur_mesh_hal_get_ucast_chnlist)(struct ur_mesh_hal_module_s *module,
-                                    const uint8_t **chnlist);
+                                         const uint8_t **chnlist);
 
     int (*ur_mesh_hal_set_txpower)(struct ur_mesh_hal_module_s *module,
                                    int8_t txpower);
@@ -122,11 +122,11 @@ typedef struct ur_mesh_hal_module_s {
     int (*ur_mesh_hal_set_meshnetid)(struct ur_mesh_hal_module_s *module,
                                      const meshnetid_t *meshnetid);
     const meshnetid_t *(*ur_mesh_hal_get_meshnetid)(
-                                      struct ur_mesh_hal_module_s *module);
+        struct ur_mesh_hal_module_s *module);
     int (*ur_mesh_hal_set_mac_address)(struct ur_mesh_hal_module_s *module,
                                        const mac_address_t *addr);
     const mac_address_t *(*ur_mesh_hal_get_mac_address)(
-                                    struct ur_mesh_hal_module_s *module);
+        struct ur_mesh_hal_module_s *module);
 
     int (*ur_mesh_hal_set_key)(struct ur_mesh_hal_module_s *module,
                                uint8_t index, uint8_t *key, uint8_t length);
@@ -134,7 +134,8 @@ typedef struct ur_mesh_hal_module_s {
                                     uint8_t index);
     int (*ur_mesh_hal_is_sec_enabled)(struct ur_mesh_hal_module_s *module);
 
-    const frame_stats_t *(*ur_mesh_hal_get_stats)(struct ur_mesh_hal_module_s *module);
+    const frame_stats_t *(*ur_mesh_hal_get_stats)(struct ur_mesh_hal_module_s
+                                                  *module);
 } ur_mesh_hal_module_t;
 
 /**
@@ -220,8 +221,8 @@ int hal_ur_mesh_send_ucast_request(ur_mesh_hal_module_t *module,
  *     Send frame request result, 0 if success, -1 if fail
  */
 int hal_ur_mesh_send_bcast_request(ur_mesh_hal_module_t *module,
-                              frame_t *frame,
-                              ur_mesh_handle_sent_bcast_t sent, void *context);
+                                   frame_t *frame,
+                                   ur_mesh_handle_sent_bcast_t sent, void *context);
 
 /**
  * Register data frame receiver callback function
@@ -234,7 +235,7 @@ int hal_ur_mesh_send_bcast_request(ur_mesh_hal_module_t *module,
  *     Register receiver result, 0 if success, -1 if fail
  */
 int hal_ur_mesh_register_receiver(ur_mesh_hal_module_t *module,
-                             ur_mesh_handle_received_frame_t received, void *context);
+                                  ur_mesh_handle_received_frame_t received, void *context);
 
 /**
  * Request HAL to send beacons
@@ -248,8 +249,8 @@ int hal_ur_mesh_register_receiver(ur_mesh_hal_module_t *module,
  *     The result, 0 if success, -1 if fail
  */
 int hal_ur_mesh_start_beacons(ur_mesh_hal_module_t *module,
-                         frame_t *frame, mac_address_t *dest,
-                         uint16_t max_interval);
+                              frame_t *frame, mac_address_t *dest,
+                              uint16_t max_interval);
 
 /**
  * Stop HAL to send beacons
@@ -312,7 +313,8 @@ int hal_ur_mesh_get_ucast_mtu(ur_mesh_hal_module_t *module);
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_bcast_channel(ur_mesh_hal_module_t *module, uint8_t channel);
+int hal_ur_mesh_set_bcast_channel(ur_mesh_hal_module_t *module,
+                                  uint8_t channel);
 
 /**
  * Get broadcast channel
@@ -334,7 +336,7 @@ int hal_ur_mesh_get_bcast_channel(ur_mesh_hal_module_t *module);
  *     The number of broadcast channels, -1 if fail
  */
 int hal_ur_mesh_get_bcast_chnlist(ur_mesh_hal_module_t *module,
-                             const uint8_t **chnlist);
+                                  const uint8_t **chnlist);
 /**
  * Set unicast channel
  *
@@ -344,7 +346,8 @@ int hal_ur_mesh_get_bcast_chnlist(ur_mesh_hal_module_t *module,
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_ucast_channel(ur_mesh_hal_module_t *module, uint8_t channel);
+int hal_ur_mesh_set_ucast_channel(ur_mesh_hal_module_t *module,
+                                  uint8_t channel);
 
 /**
  * Get unicast channel
@@ -366,7 +369,7 @@ int hal_ur_mesh_get_ucast_channel(ur_mesh_hal_module_t *module);
  *     The number of unicast channels, -1 if fail
  */
 int hal_ur_mesh_get_ucast_chnlist(ur_mesh_hal_module_t *module,
-                             const uint8_t **chnlist);
+                                  const uint8_t **chnlist);
 
 /**
  * Set transmit power
@@ -399,7 +402,7 @@ int hal_ur_mesh_get_txpower(ur_mesh_hal_module_t *module);
  *     Set media configuration result, 0 if success, -1 if fail
  */
 int hal_ur_mesh_set_meshnetid(ur_mesh_hal_module_t *module,
-                         const meshnetid_t *meshnetid);
+                              const meshnetid_t *meshnetid);
 
 /**
  * Get meshnetid
@@ -420,7 +423,8 @@ const meshnetid_t *hal_ur_mesh_get_meshnetid(ur_mesh_hal_module_t *module);
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_mac_address(ur_mesh_hal_module_t *module, const mac_address_t *addr);
+int hal_ur_mesh_set_mac_address(ur_mesh_hal_module_t *module,
+                                const mac_address_t *addr);
 
 /**
  * Get HAL mac address.

@@ -8,7 +8,8 @@ void show_times_hdr(void)
 {
     printf("\r\nFreeRTOS Function RealTime Test\r\n");
     printf("\r\nTesting Parameters:\r\n");
-    printf("   TICK_RATE_HZ :         %dHZ\r\n", (unsigned long) YUNOS_CONFIG_TICKS_PER_SECOND);
+    printf("   TICK_RATE_HZ :         %dHZ\r\n",
+           (unsigned long) YUNOS_CONFIG_TICKS_PER_SECOND);
     printf("   CLOCK_SAMPLE :         %dHZ\r\n", (unsigned long) APB_DEFAULT_FREQ);
 
     printf("                                                             Confidence\r\n");
@@ -22,11 +23,13 @@ void show_time_in_us(unsigned long  result)                 //ns to us
     printf("%03d.%03dus\t", (int)(result / 1000), (int)(result % 1000));
 }
 
-void show_times_detail(volatile double   *ft,  int nsamples,  char *title, uint32_t ignore_first)
+void show_times_detail(volatile double   *ft,  int nsamples,  char *title,
+                       uint32_t ignore_first)
 {
     int i;
     double  delta = 0.0, min = 0.0, max = 0.0, ave_dev = 0.0 , ave = 0.0 ;
-    unsigned int start_sample = 0, total_samples = 0, con_ave = 0, con_min = 0, error = 0;
+    unsigned int start_sample = 0, total_samples = 0, con_ave = 0, con_min = 0,
+                 error = 0;
     double   total = 0.0;
 
     if (ignore_first) {
@@ -60,9 +63,13 @@ void show_times_detail(volatile double   *ft,  int nsamples,  char *title, uint3
         delta = ft[i];
 
         if (delta != 0) {
-            if (delta < min) { min = delta; }
+            if (delta < min) {
+                min = delta;
+            }
 
-            if (delta > max) { max = delta; }
+            if (delta > max) {
+                max = delta;
+            }
         }
 
         total += delta;
@@ -79,7 +86,9 @@ void show_times_detail(volatile double   *ft,  int nsamples,  char *title, uint3
         if (delta != 0) {
             delta = delta - ave;
 
-            if (delta < 0) { delta = -delta; }
+            if (delta < 0) {
+                delta = -delta;
+            }
 
             ave_dev += delta;
         }
@@ -97,9 +106,13 @@ void show_times_detail(volatile double   *ft,  int nsamples,  char *title, uint3
         delta  = ft[i];
 
         if (delta != 0) {
-            if ((delta <= (ave + ave_dev)) && (delta >= (ave - ave_dev))) { con_ave++; }
+            if ((delta <= (ave + ave_dev)) && (delta >= (ave - ave_dev))) {
+                con_ave++;
+            }
 
-            if ((delta <= (min + ave_dev)) && (delta >= (min - ave_dev))) { con_min++; }
+            if ((delta <= (min + ave_dev)) && (delta >= (min - ave_dev))) {
+                con_min++;
+            }
         }
     }
 
@@ -116,7 +129,8 @@ void show_times_detail(volatile double   *ft,  int nsamples,  char *title, uint3
 }
 
 
-void show_times_detail_2(volatile  unsigned long  ft[], int nsamples, char *title, uint32_t  ignore_first)
+void show_times_detail_2(volatile  unsigned long  ft[], int nsamples,
+                         char *title, uint32_t  ignore_first)
 {
     int i;
 
@@ -141,9 +155,13 @@ void show_times_detail_2(volatile  unsigned long  ft[], int nsamples, char *titl
         delta *= 1000;
         total += delta;
 
-        if (delta < min) { min = delta; }
+        if (delta < min) {
+            min = delta;
+        }
 
-        if (delta > max) { max = delta; }
+        if (delta > max) {
+            max = delta;
+        }
     }
 
     ave = total / total_samples;
@@ -155,7 +173,9 @@ void show_times_detail_2(volatile  unsigned long  ft[], int nsamples, char *titl
         delta *= 1000;
         delta = delta - ave;
 
-        if (delta < 0) { delta = -delta; }
+        if (delta < 0) {
+            delta = -delta;
+        }
 
         ave_dev += delta;
     }
@@ -168,9 +188,13 @@ void show_times_detail_2(volatile  unsigned long  ft[], int nsamples, char *titl
         delta = ft[i];
         delta *= 1000;
 
-        if ((delta <= (ave + ave_dev)) && (delta >= (ave - ave_dev))) { con_ave++; }
+        if ((delta <= (ave + ave_dev)) && (delta >= (ave - ave_dev))) {
+            con_ave++;
+        }
 
-        if ((delta <= (min + ave_dev)) && (delta >= (min - ave_dev))) { con_min++; }
+        if ((delta <= (min + ave_dev)) && (delta >= (min - ave_dev))) {
+            con_min++;
+        }
     }
 
     con_ave = (con_ave * 100) / total_samples;

@@ -3,15 +3,15 @@
  * Copyright (C) 2016 YunOS Project. All rights reserved.
  ****************************************************************************/
 
- /**
- * @file
- * @brief     system api table
- * @details
- * @author    xzf
- * @date      2016-11-16
- * @version   0.1
- * @note
- */
+/**
+* @file
+* @brief     system api table
+* @details
+* @author    xzf
+* @date      2016-11-16
+* @version   0.1
+* @note
+*/
 
 #include <stdint.h>
 //#include <k_api.h>
@@ -26,8 +26,7 @@ extern int printf(const char *format, ...);
  * Pre-processor Definitions
  ****************************************************************************/
 
-struct api_table_s
-{
+struct api_table_s {
     int32_t (*yunos_printk)(const char *fmt, ...);
     int     (*yunos_clock_gettime)(uint8_t clockid, struct timespec *tp);
 #if 0
@@ -47,7 +46,8 @@ struct api_table_s
     int32_t (*yunos_ioctl)(int32_t fd, int32_t req, uint32_t arg);
 
     /*================== drivers :  ==================*/
-    int32_t (*yunos_register_driver)(const char *path, file_ops_t *fops, void *priv);
+    int32_t (*yunos_register_driver)(const char *path, file_ops_t *fops,
+                                     void *priv);
     int32_t (*yunos_unregister_driver)(const char *path);
 
     /*================== semaphore Interfaces : semaphore.h==================*/

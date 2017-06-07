@@ -103,8 +103,8 @@ ur_error_t string_to_ip6_addr(const char *buf, ur_ip6_addr_t *target)
             }
         } else if (is_valid_digit(*s) || is_valid_lower(*s) || is_valid_upper(*s)) {
             current_block_value = (current_block_value << 4) +
-            (is_valid_digit(*s) ? *s - '0' :
-            10 + (is_valid_lower(*s) ? *s - 'a' : *s - 'A'));
+                                  (is_valid_digit(*s) ? *s - '0' :
+                                   10 + (is_valid_lower(*s) ? *s - 'a' : *s - 'A'));
         } else {
             break;
         }

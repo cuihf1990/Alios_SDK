@@ -59,9 +59,8 @@ ur_error_t ur_router_start(network_context_t *network)
 {
     if (network && network->router) {
         network->router->cb.start();
-    }
-    else if (g_rm_state.default_router != NULL) {
-       g_rm_state.default_router->cb.start();
+    } else if (g_rm_state.default_router != NULL) {
+        g_rm_state.default_router->cb.start();
     }
     return UR_ERROR_NONE;
 }
@@ -88,7 +87,8 @@ uint16_t ur_router_get_next_hop(network_context_t *network, uint16_t dest_sid)
         return INVALID_SID;
     }
 
-    if (get_neighbor_by_sid(network->hal, dest_sid, mm_get_meshnetid(network)) != NULL) {
+    if (get_neighbor_by_sid(network->hal, dest_sid,
+                            mm_get_meshnetid(network)) != NULL) {
         return dest_sid;
     }
 
@@ -116,17 +116,19 @@ void ur_router_sid_updated(network_context_t *network, uint16_t sid)
             }
         }
 
-        if(call > 0 && router->cb.handle_subscribe_event != NULL) {
+        if (call > 0 && router->cb.handle_subscribe_event != NULL) {
             netids.meshnetid = network->meshnetid;
             netids.sid = sid;
-            router->cb.handle_subscribe_event(EVENT_SID_UPDATED, (uint8_t *)&netids, sizeof(netids_t));
+            router->cb.handle_subscribe_event(EVENT_SID_UPDATED, (uint8_t *)&netids,
+                                              sizeof(netids_t));
         }
     }
 }
 
 void ur_router_neighbor_updated(neighbor_t *neighbor)
 {
-    if (g_rm_state.default_router != NULL && g_rm_state.default_router->cb.handle_neighbor_updated != NULL) {
+    if (g_rm_state.default_router != NULL &&
+        g_rm_state.default_router->cb.handle_neighbor_updated != NULL) {
         g_rm_state.default_router->cb.handle_neighbor_updated(neighbor);
     }
 }
@@ -262,7 +264,7 @@ ur_error_t handle_router_message_received(message_t *message)
 
 ur_error_t register_router(router_t *router)
 {
-    if(router == NULL || ur_get_router_by_id(router->id) != NULL) {
+    if (router == NULL || ur_get_router_by_id(router->id) != NULL) {
         return UR_ERROR_FAIL;
     }
 

@@ -18,10 +18,10 @@
 #define UR_LOGGING_H
 
 typedef enum {
-  UR_LOG_LEVEL_CRIT,
-  UR_LOG_LEVEL_WARN,
-  UR_LOG_LEVEL_INFO,
-  UR_LOG_LEVEL_DEBUG,
+    UR_LOG_LEVEL_CRIT,
+    UR_LOG_LEVEL_WARN,
+    UR_LOG_LEVEL_INFO,
+    UR_LOG_LEVEL_DEBUG,
 } ur_log_level_t;
 
 #define lvl2str(l) ({ \
@@ -44,14 +44,14 @@ typedef enum {
     _l; })
 
 typedef enum {
-  UR_LOG_REGION_API,
-  UR_LOG_REGION_ROUTE,
-  UR_LOG_REGION_MM,
-  UR_LOG_REGION_ARP,
-  UR_LOG_REGION_6LOWPAN,
-  UR_LOG_REGION_IP6,
-  UR_LOG_REGION_HAL,
-  UR_LOG_REGION_CLI,
+    UR_LOG_REGION_API,
+    UR_LOG_REGION_ROUTE,
+    UR_LOG_REGION_MM,
+    UR_LOG_REGION_ARP,
+    UR_LOG_REGION_6LOWPAN,
+    UR_LOG_REGION_IP6,
+    UR_LOG_REGION_HAL,
+    UR_LOG_REGION_CLI,
 } ur_log_region_t;
 
 void ur_log(ur_log_level_t level, ur_log_region_t region,

@@ -42,13 +42,14 @@
 #endif
 
 typedef struct {
-    uint8_t * buf;
-    uint8_t * end;
-    uint8_t * head;
-    uint8_t * tail;
+    uint8_t *buf;
+    uint8_t *end;
+    uint8_t *head;
+    uint8_t *tail;
     size_t    freesize;
     size_t    type:         1;
-    size_t    blk_size:     (8 * sizeof(size_t) -1);
+size_t    blk_size:
+    (8 * sizeof(size_t) - 1);
 } k_ringbuf_t;
 
 #define COMPRESS_LEN(x) ((x) <= RINGBUF_LEN_1BYTE_MAXVALUE ? 1: (x) <= RINGBUF_LEN_2BYTES_MAXVALUE ? 2: \
@@ -65,7 +66,8 @@ typedef struct {
  * @param[in]  block_size  block size of fix length ringbuf, if dynamic ringbuffer, ignore this parameter
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_ringbuf_init   (k_ringbuf_t *p_ringbuf, void *buf, size_t len, size_t type, size_t block_size);
+kstat_t yunos_ringbuf_init   (k_ringbuf_t *p_ringbuf, void *buf, size_t len,
+                              size_t type, size_t block_size);
 
 /**
  * This function will clean all data in mm ring buffer.
@@ -90,7 +92,7 @@ kstat_t yunos_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
  * @param[in]  len         length of data
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void * data, size_t len);
+kstat_t yunos_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
 
 /**
  * This function will pop the data from ring buffer head.
@@ -99,7 +101,7 @@ kstat_t yunos_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void * data, size_t len)
  * @param[out]      plen         length of data
  * @return  the operation status, YUNOS_SUCCESS is OK, others is error
  */
-kstat_t yunos_ringbuf_pop(k_ringbuf_t *p_ringbuf, void * pdata, size_t * plen);
+kstat_t yunos_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen);
 
 
 /**
