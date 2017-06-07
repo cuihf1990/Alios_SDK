@@ -34,6 +34,11 @@ ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 $(NAME)_SOURCES    += alicrypto/alicrypto_test.c
 endif
 
+ifeq ($(findstring armhflinux, $(BUILD_STRING)), armhflinux)
+# only for for linux host now
+$(NAME)_SOURCES    += alicrypto/alicrypto_test.c
+endif
+
 $(NAME)_COMPONENTS  := yunit cjson
 
 $(NAME)_COMPONENTS  += mbedtls
