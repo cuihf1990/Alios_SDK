@@ -1,3 +1,7 @@
+/*
+ *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ */
+
 #include "base64.h"
 
 void pal_base64_encode(const unsigned char *src, int len,

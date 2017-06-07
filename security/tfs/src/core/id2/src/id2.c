@@ -50,9 +50,20 @@
 
 #define TAG_ID2 "ID2"
 
-#define RSA_MAX_SIZE_DEC_IN      4096
+#if defined(TFS_TEE) || defined(TFS_TEE_MOBILE) || defined(TFS_SW)
+#define MAX_SIGN_LEN             4096
+#define MAX_ENCRYPT_LEN          4096
+#else
+#define MAX_SIGN_LEN             512
+#define MAX_ENCRYPT_LEN          512
+#endif
+
 #define RSA_KEY_SIZE             128
 #define RSA_MAX_SIZE_PER_SECTION (RSA_KEY_SIZE - 11)
+
+#define MAX_DIGEST_LEN 256
+#define ACTIVATE_DEVICE_INFO_LEN 512
+#define ACTIVATE_DEVICE_ARGU_LEN 1024
 
 int g_sign_algo = -1;
 
@@ -63,7 +74,7 @@ int _replace_spec_char(char *in, char *out);
 static int _get_ID2(uint8_t *id2, uint32_t *len);
 static int _get_crypt_algo(void);
 static int _get_seed(const char *id2, const char *random,
-                     const char *sign, char *seed);
+                     const char *sign, uint32_t sign_len, char *seed);
 
 int get_ID2(uint8_t *id2, uint32_t *len)
 {
@@ -86,6 +97,11 @@ int id2_sign(const uint8_t *in, uint32_t in_len,
     LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (in == NULL || in_len == 0 || sign == NULL || sign_len == NULL) {
         LOGE(TAG_ID2, "[%s]: para wrong.\n", __func__);
+        return -1;
+    }
+
+    if (in_len > MAX_SIGN_LEN) {
+        LOGE(TAG_ID2, "[%s]: in_len must not larger than %d.\n", __func__, MAX_SIGN_LEN);
         return -1;
     }
 
@@ -126,6 +142,11 @@ int id2_verify(const uint8_t *in, uint32_t in_len,
         return -1;
     }
 
+    if (in_len > MAX_SIGN_LEN) {
+        LOGE(TAG_ID2, "[%s]: in_len must not larger than %d.\n", __func__, MAX_SIGN_LEN);
+        return -1;
+    }
+
     _get_crypt_algo();
 
     switch (g_sign_algo) {
@@ -163,6 +184,11 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
         return -1;
     }
 
+    if (in_len > MAX_ENCRYPT_LEN) {
+        LOGE(TAG_ID2, "[%s]: input data len must not larger than %d.\n", __func__, MAX_ENCRYPT_LEN);
+        return -1;
+    }
+
     _get_crypt_algo();
 
 #ifdef TFS_ID2_RSA
@@ -178,11 +204,6 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
     switch (g_sign_algo) {
         case SIGN_ALGO_RSA:
 #ifdef TFS_ID2_RSA
-            if (in_len > RSA_MAX_SIZE_DEC_IN) {
-                LOGE(TAG_ID2, "[%s]: RSA: in_len must not larger than %d!\n", __func__, RSA_MAX_SIZE_DEC_IN);
-                return -1;
-            }
-
             sections = in_len / RSA_MAX_SIZE_PER_SECTION;
             last_section = in_len % RSA_MAX_SIZE_PER_SECTION;
             section_len = RSA_MAX_SIZE_PER_SECTION;
@@ -240,6 +261,11 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
         return -1;
     }
 
+    if (in_len > MAX_ENCRYPT_LEN) {
+        LOGE(TAG_ID2, "[%s]: input data len must not larger than %d.\n", __func__, MAX_ENCRYPT_LEN);
+        return -1;
+    }
+
     _get_crypt_algo();
 
 #ifdef TFS_ID2_RSA
@@ -253,11 +279,6 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
     switch (g_sign_algo) {
         case SIGN_ALGO_RSA:
 #ifdef TFS_ID2_RSA
-            if (in_len > RSA_MAX_SIZE_DEC_IN) {
-                LOGE(TAG_ID2, "[%s]: RSA: in_len must not larger than %d!\n", __func__, RSA_MAX_SIZE_DEC_IN);
-                return -1;
-            }
-
             sections = in_len / RSA_KEY_SIZE;
 
             for (i = 0; i < sections; i ++) {
@@ -342,7 +363,7 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
         goto error_exit;
     }
 
-    ret = _get_seed(id2, random, random_id2_signed, seed);
+    ret = _get_seed(id2, random, random_id2_signed, s_len, seed);
     if (ret < 0) {
         LOGE(TAG_ID2, "[%s]: get seed error!\n", __func__);
         goto error_exit;
@@ -361,12 +382,7 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
         goto error_exit;
     }
 
-#ifdef TFS_ID2_RSA
-    pal_base64_encode((const uint8_t *)code_signed, SIGN_LEN_RSA, (uint8_t *)code_signed_base64, &size);
-#endif
-#ifdef TFS_ID2_3DES
-    pal_base64_encode((const uint8_t *)code_signed, SIGN_LEN_3DES, (uint8_t *)code_signed_base64, &size);
-#endif
+    pal_base64_encode((const uint8_t *)code_signed, s_len, (uint8_t *)code_signed_base64, &size);
 
     LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
@@ -374,7 +390,7 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
     *len = strlen((const char *)auth_code);
 
     LOGD(TAG_ID2, "[%s]: authcode = %s,%d\n", __func__, auth_code, *len);
-    goto normal_exit;
+    ret = 0;
 
 error_exit:
     pal_memory_free(id2);
@@ -384,16 +400,7 @@ error_exit:
     pal_memory_free(random_id2_signed);
     pal_memory_free(code_signed);
     pal_memory_free(code_signed_base64);
-    return -1;
-normal_exit:
-    pal_memory_free(id2);
-    pal_memory_free(random);
-    pal_memory_free(seed);
-    pal_memory_free(random_id2);
-    pal_memory_free(random_id2_signed);
-    pal_memory_free(code_signed);
-    pal_memory_free(code_signed_base64);
-    return 0;
+    return ret;
 }
 
 int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len)
@@ -447,12 +454,7 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
     strcat((char *)auth_code + 7, timestamp_str);
     strcat((char *)auth_code + 7 + strlen(timestamp_str), "~");
 
-#ifdef TFS_ID2_RSA
-    pal_base64_encode((const uint8_t *)random_id2_timestamp_signed, SIGN_LEN_RSA, (uint8_t *)random_id2_timestamp_signed_base64, &size);
-#endif
-#ifdef TFS_ID2_3DES
-    pal_base64_encode((const uint8_t *)random_id2_timestamp_signed, SIGN_LEN_3DES, (uint8_t *)random_id2_timestamp_signed_base64, &size);
-#endif
+    pal_base64_encode((const uint8_t *)random_id2_timestamp_signed, s_len, (uint8_t *)random_id2_timestamp_signed_base64, &size);
 
     LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
@@ -460,7 +462,7 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
     *auth_len = strlen((const char *)auth_code);
 
     LOGD(TAG_ID2, "[%s]: authcode = %s,%d\n", __func__, auth_code, *auth_len);
-    goto normal_exit;
+    ret = 0;
 
 error_exit:
     pal_memory_free(id2);
@@ -469,15 +471,7 @@ error_exit:
     pal_memory_free(random_id2_timestamp);
     pal_memory_free(random_id2_timestamp_signed);
     pal_memory_free(random_id2_timestamp_signed_base64);
-    return -1;
-normal_exit:
-    pal_memory_free(id2);
-    pal_memory_free(random);
-    pal_memory_free(timestamp_str);
-    pal_memory_free(random_id2_timestamp);
-    pal_memory_free(random_id2_timestamp_signed);
-    pal_memory_free(random_id2_timestamp_signed_base64);
-    return 0;
+    return ret;
 }
 
 int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len)
@@ -488,19 +482,24 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
         return -1;
     }
 
+    if (digest_len > MAX_DIGEST_LEN) {
+        LOGE(TAG_ID2, "[%s]: digest len must not larger than %d.\n", __func__, MAX_DIGEST_LEN);
+        return -1;
+    }
+
     int ret = -1;
     uint32_t id2_len = ID2_LEN + 1;
     int size = 0;
     uint32_t s_len = SIGN_LEN_MAX;
     char *id2 = (char*)pal_memory_malloc(ID2_LEN + 1);
     char *timestamp_str = (char *)pal_memory_malloc(15);
-    char *id2_digest_timestamp = (char*)pal_memory_malloc(17 + 15 + 512); // ID2^digest^timestamp
+    char *id2_digest_timestamp = (char*)pal_memory_malloc(ID2_LEN + 15 + MAX_DIGEST_LEN); // ID2^digest^timestamp
     char *id2_digest_timestamp_signed = (char*)pal_memory_malloc(SIGN_LEN_MAX); // signed data of id2^digest^timestamp
     char *id2_digest_timestamp_signed_base64 = (char*)pal_memory_malloc(SIGN_LEN_MAX * 2);
 
     memset(id2, 0, ID2_LEN + 1);
     memset(timestamp_str, 0, 15);
-    memset(id2_digest_timestamp, 0, 17 + 15 + 512);
+    memset(id2_digest_timestamp, 0, ID2_LEN + 15 + MAX_DIGEST_LEN);
     memset(id2_digest_timestamp_signed, 0, SIGN_LEN_MAX);
     memset(id2_digest_timestamp_signed_base64, 0, SIGN_LEN_MAX * 2);
 
@@ -521,12 +520,7 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
         goto error_exit;
     }
 
-#ifdef TFS_ID2_RSA
-    pal_base64_encode((const uint8_t *)id2_digest_timestamp_signed, SIGN_LEN_RSA, (uint8_t *)id2_digest_timestamp_signed_base64, &size);
-#endif
-#ifdef TFS_ID2_3DES
-    pal_base64_encode((const uint8_t *)id2_digest_timestamp_signed, SIGN_LEN_3DES, (uint8_t *)id2_digest_timestamp_signed_base64, &size);
-#endif
+    pal_base64_encode((const uint8_t *)id2_digest_timestamp_signed, s_len, (uint8_t *)id2_digest_timestamp_signed_base64, &size);
 
     LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
@@ -538,7 +532,7 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
     *auth_len = strlen((const char *)auth_code);
 
     LOGD(TAG_ID2, "[%s]: authcode = %s,%d\n", __func__, auth_code, *auth_len);
-    goto normal_exit;
+    ret = 0;
 
 error_exit:
     pal_memory_free(id2);
@@ -546,14 +540,7 @@ error_exit:
     pal_memory_free(id2_digest_timestamp);
     pal_memory_free(id2_digest_timestamp_signed);
     pal_memory_free(id2_digest_timestamp_signed_base64);
-    return -1;
-normal_exit:
-    pal_memory_free(id2);
-    pal_memory_free(timestamp_str);
-    pal_memory_free(id2_digest_timestamp);
-    pal_memory_free(id2_digest_timestamp_signed);
-    pal_memory_free(id2_digest_timestamp_signed_base64);
-    return 0;
+    return ret;
 }
 
 int _replace_spec_char(char *in, char *out)
@@ -660,7 +647,7 @@ static int _get_crypt_algo(void)
 }
 
 static int _get_seed(const char *id2, const char *random,
-                     const char *sign, char *seed)
+                     const char *sign, uint32_t sign_len, char *seed)
 {
     int ret = -1;
     int size = 0;
@@ -673,12 +660,8 @@ static int _get_seed(const char *id2, const char *random,
     memset(argu_str,0,300);
     memset(_sign_base64,0,256);
     memset(sign_base64,0,256);
-#ifdef TFS_ID2_RSA
-    pal_base64_encode((const uint8_t *)sign, SIGN_LEN_RSA, (uint8_t *)_sign_base64, &size);
-#endif
-#ifdef TFS_ID2_3DES
-    pal_base64_encode((const uint8_t *)sign,SIGN_LEN_3DES, (uint8_t *)_sign_base64, &size);
-#endif
+
+    pal_base64_encode((const uint8_t *)sign, sign_len, (uint8_t *)_sign_base64, &size);
     _replace_spec_char(_sign_base64, sign_base64);
 
     sprintf(argu_str, "&id2=%s&sid=%s&sign=%s&model=%d",
@@ -720,21 +703,212 @@ int is_id2_activated()
     return 0;
 }
 
+// flag == 0, for activate info
+// flag == 1, for activate argu
+static int get_device_info_len(struct device_info dev_info, int flag) {
+    int len = 0;
+    int info_num = 0;
+    if (dev_info.bt_mac) {
+        len += strlen("btMac") + strlen(dev_info.bt_mac);
+        info_num ++;
+    }
+
+    if (dev_info.build_time) {
+        len += strlen("buildTime") + strlen(dev_info.build_time);
+        info_num ++;
+    }
+
+    if (dev_info.camera_resolution) {
+        len += strlen("cameraResolution") + strlen(dev_info.camera_resolution);
+        info_num ++;
+    }
+
+    if (dev_info.cup_info) {
+        len += strlen("cpuInfo") + strlen(dev_info.cup_info);
+        info_num ++;
+    }
+
+    if (dev_info.dm_dpi) {
+        len += strlen("dmDpi") + strlen(dev_info.dm_dpi);
+        info_num ++;
+    }
+
+    if (dev_info.dm_pixels) {
+        len += strlen("dmPixels") + strlen(dev_info.dm_pixels);
+        info_num ++;
+    }
+
+    if (dev_info.hardware_id) {
+        len += strlen("hardwareId") + strlen(dev_info.hardware_id);
+        info_num ++;
+    }
+
+    if (dev_info.imei) {
+        len += strlen("imei") + strlen(dev_info.imei);
+        info_num ++;
+    }
+
+    if (dev_info.mac) {
+        len += strlen("mac") + strlen(dev_info.mac);
+        info_num ++;
+    }
+
+    if (dev_info.os_version) {
+        len += strlen("osVersion") + strlen(dev_info.os_version);
+        info_num ++;
+    }
+
+    if (dev_info.product_name) {
+        len += strlen("productName") + strlen(dev_info.product_name);
+        info_num ++;
+    }
+
+    if (dev_info.storage_total) {
+        len += strlen("storageTotal") + strlen(dev_info.storage_total);
+        info_num ++;
+    }
+
+    if (flag == 1) {
+        len += 2 * info_num;
+    }
+
+    return len;
+}
+
+static int package_activate_info(char *info, char *argu) {
+    struct device_info dev_info;
+    int device_info_len = 0;
+    char id2[ID2_LEN + 1] = {0};
+    uint32_t id2_len = ID2_LEN + 1;
+    int id2_info_len = 0;
+    int model_info_len = 0;
+    int version_info_len = 0;
+    char id2_info[32];
+    char model_info[32];
+    char version_info[32];
+    int ret = -1;
+
+    // get id2
+    ret = _get_ID2((uint8_t *)id2, &id2_len);
+    if (ret < 0) {
+        LOGE(TAG_ID2, "[%s]: get ID2 error!\n", __func__);
+        return -1;
+    }
+    LOGD(TAG_ID2, "[%s]: ID2 is %s\n", __func__, id2);
+    sprintf(id2_info, "id2%s", id2);
+    id2_info_len = strlen(id2_info);
+
+    sprintf(model_info, "model%s", ACTIVATE_SIGN_MODEL);
+    model_info_len = strlen(model_info);
+
+    sprintf(version_info, "version%s", ACTIVATE_VERSION);
+    version_info_len = strlen(version_info);
+
+    // get device info
+    ret = pal_collect_device_info(&dev_info);
+    if (ret < 0) {
+        LOGE(TAG_ID2, "[%s]: get device info error!\n", __func__);
+        return -1;
+    }
+
+    device_info_len = get_device_info_len(dev_info, 0);
+    // check if info len is enough to contain all info
+    if (id2_info_len + model_info_len + version_info_len + device_info_len > ACTIVATE_DEVICE_INFO_LEN) {
+        LOGE(TAG_ID2, "[%s]: info buffer too short.\n", __func__);
+        return -1;
+    }
+
+    device_info_len = get_device_info_len(dev_info, 1);
+    // check if argu len is enough to contain all info
+    if (id2_info_len + model_info_len + version_info_len + device_info_len + 6 > ACTIVATE_DEVICE_ARGU_LEN) {
+        LOGE(TAG_ID2, "[%s]: argu buffer too short.\n", __func__);
+        return -1;
+    }
+
+    if (dev_info.bt_mac) {
+        sprintf(info, "btMac%s", dev_info.bt_mac);
+        sprintf(argu, "&btMac=%s", dev_info.bt_mac);
+    }
+
+    if (dev_info.build_time) {
+        sprintf(info + strlen(info), "buildTime%s", dev_info.build_time);
+        sprintf(argu+ strlen(argu), "&buildTime=%s", dev_info.build_time);
+    }
+
+    if (dev_info.camera_resolution) {
+        sprintf(info + strlen(info), "cameraResolution%s", dev_info.camera_resolution);
+        sprintf(argu + strlen(argu), "&cameraResolution=%s", dev_info.camera_resolution);
+    }
+
+    if (dev_info.cup_info) {
+        sprintf(info + strlen(info), "cpuInfo%s", dev_info.cup_info);
+        sprintf(argu + strlen(argu), "&cpuInfo=%s", dev_info.cup_info);
+    }
+
+    if (dev_info.dm_dpi) {
+        sprintf(info + strlen(info), "dmDpi%s", dev_info.dm_dpi);
+        sprintf(argu + strlen(argu), "&dmDpi=%s", dev_info.dm_dpi);
+    }
+
+    if (dev_info.dm_pixels) {
+        sprintf(info + strlen(info), "dmPixels%s", dev_info.dm_pixels);
+        sprintf(argu + strlen(argu), "&dmPixels=%s", dev_info.dm_pixels);
+    }
+
+    if (dev_info.hardware_id) {
+        sprintf(info + strlen(info), "hardwareId%s", dev_info.hardware_id);
+        sprintf(argu + strlen(argu), "&hardwareId=%s", dev_info.hardware_id);
+    }
+
+    strcat(info + strlen(info), id2_info);
+    sprintf(argu + strlen(argu), "&id2=%s", id2);
+
+    if (dev_info.imei) {
+        sprintf(info + strlen(info), "imei%s", dev_info.imei);
+        sprintf(argu + strlen(argu), "&imei=%s", dev_info.imei);
+    }
+
+    if (dev_info.mac) {
+        sprintf(info + strlen(info), "mac%s", dev_info.mac);
+        sprintf(argu + strlen(argu), "&mac=%s", dev_info.mac);
+    }
+
+    strcat(info + strlen(info), model_info);
+    sprintf(argu + strlen(argu), "&model=%s", ACTIVATE_SIGN_MODEL);
+
+    if (dev_info.os_version) {
+        sprintf(info + strlen(info), "osVersion%s", dev_info.os_version);
+        sprintf(argu + strlen(argu), "&osVersion=%s", dev_info.os_version);
+    }
+
+    if (dev_info.product_name) {
+        sprintf(info + strlen(info), "productName%s", dev_info.product_name);
+        sprintf(argu + strlen(argu), "&productName=%s", dev_info.product_name);
+    }
+
+    if (dev_info.storage_total) {
+        sprintf(info + strlen(info), "storageTotal%s", dev_info.storage_total);
+        sprintf(argu + strlen(argu), "&storageTotal=%s", dev_info.storage_total);
+    }
+
+    strcat(info + strlen(info), version_info);
+    sprintf(argu + strlen(argu), "&version=%s", ACTIVATE_VERSION);
+
+    return 0;
+}
+
 int activate_device(void)
 {
     LOGD(TAG_ID2, "[%s] enter.\n", __func__);
 
     int ret = -1;
-    struct device_info dev_info;
-    char id2[ID2_LEN + 1] = {0};
-    uint32_t id2_len = ID2_LEN + 1;
-    char info[512] = {0};
+    char info[ACTIVATE_DEVICE_INFO_LEN] = {0};
     char info_signed[SIGN_LEN_MAX] = {0};
     int info_signed_len = -1;
     char _info_signed_base64[SIGN_LEN_MAX * 2] = {0};
-    int size = 0;
+    int _info_signed_base64_len = 0;
     char info_signed_base64[SIGN_LEN_MAX * 2] = {0};
-    char argu_str[1024] = {0};
+    char argu_str[ACTIVATE_DEVICE_INFO_LEN] = {0};
 
     if (is_id2_activated() == 0) {
         LOGD(TAG_ID2, "[%s]: the device has already been activated!\n", __func__);
@@ -742,177 +916,12 @@ int activate_device(void)
     }
 
     do {
-        // get id2
-        ret = _get_ID2((uint8_t *)id2, &id2_len);
-        if (ret < 0) {
-            LOGE(TAG_ID2, "[%s]: get ID2 error!\n", __func__);
+        ret = package_activate_info(info, argu_str);
+
+        if (ret != 0) {
+            LOGE(TAG_ID2, "[%s]: package info or argu error.\n", __func__);
             break;
         }
-        LOGD(TAG_ID2, "[%s]: ID2 is %s\n", __func__, id2);
-
-        // get device info
-        ret = pal_collect_device_info(&dev_info);
-        if (ret < 0) {
-            LOGE(TAG_ID2, "[%s]: get device info error!\n", __func__);
-            break;
-        }
-
-        sprintf(argu_str, "&id2=%s", id2);
-        sprintf(argu_str + strlen(argu_str), "&model=%s", ACTIVATE_SIGN_MODEL);
-        sprintf(argu_str + strlen(argu_str), "&version=%s", ACTIVATE_VERSION);
-
-        if (dev_info.bt_mac) {
-            if (strlen(argu_str) + strlen("&btMac=") + strlen(dev_info.bt_mac) > sizeof(argu_str)
-                || strlen(info) + strlen("btMac") + strlen(dev_info.bt_mac) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: bt_mac too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&btMac=%s", dev_info.bt_mac);
-            strcat(info + strlen(info), "btMac");
-            strcat(info + strlen(info), dev_info.bt_mac);
-        }
-
-        if (dev_info.build_time) {
-            if (strlen(argu_str) + strlen("&buildTime=") + strlen(dev_info.build_time) > sizeof(argu_str)
-                || strlen(info) + strlen("buildTime") + strlen(dev_info.build_time) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: build_time too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&buildTime=%s", dev_info.build_time);
-            strcat(info + strlen(info), "buildTime");
-            strcat(info + strlen(info), dev_info.build_time);
-        }
-
-        if (dev_info.camera_resolution) {
-            if (strlen(argu_str) + strlen("&cameraResolution=") + strlen(dev_info.camera_resolution) > sizeof(argu_str)
-                || strlen(info) + strlen("cameraResolution") + strlen(dev_info.camera_resolution) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: camera_resolution too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&cameraResolution=%s", dev_info.camera_resolution);
-            strcat(info + strlen(info), "cameraResolution");
-            strcat(info + strlen(info), dev_info.camera_resolution);
-        }
-
-        if (dev_info.cup_info) {
-            if (strlen(argu_str) + strlen("&cpuInfo=") + strlen(dev_info.cup_info) > sizeof(argu_str)
-                || strlen(info) + strlen("cpuInfo") + strlen(dev_info.cup_info) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: cup_info too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&cpuInfo=%s", dev_info.cup_info);
-            strcat(info + strlen(info), "cpuInfo");
-            strcat(info + strlen(info), dev_info.cup_info);
-        }
-
-        if (dev_info.dm_dpi) {
-            if (strlen(argu_str) + strlen("&dmDpi=") + strlen(dev_info.dm_dpi) > sizeof(argu_str)
-                || strlen(info) + strlen("dmDpi") + strlen(dev_info.dm_dpi) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: dm_dpi too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&dmDpi=%s", dev_info.dm_dpi);
-            strcat(info + strlen(info), "dmDpi");
-            strcat(info + strlen(info), dev_info.dm_dpi);
-        }
-
-        if (dev_info.dm_pixels) {
-            if (strlen(argu_str) + strlen("&dmPixels=") + strlen(dev_info.dm_pixels) > sizeof(argu_str)
-                || strlen(info) + strlen("dmPixels") + strlen(dev_info.dm_pixels) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: dm_pixels too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&dmPixels=%s", dev_info.dm_pixels);
-            strcat(info + strlen(info), "dmPixels");
-            strcat(info + strlen(info), dev_info.dm_pixels);
-        }
-
-        if (dev_info.hardware_id) {
-            if (strlen(argu_str) + strlen("&hardwareId=") + strlen(dev_info.hardware_id) > sizeof(argu_str)
-                || strlen(info) + strlen("hardwareId") + strlen(dev_info.hardware_id) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: hardware_id too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&hardwareId=%s", dev_info.hardware_id);
-            strcat(info + strlen(info), "hardwareId");
-            strcat(info + strlen(info), dev_info.hardware_id);
-        }
-
-        strcat(info + strlen(info), "id2");
-        strcat(info + strlen(info), id2);
-
-        if (dev_info.imei) {
-            if (strlen(argu_str) + strlen("&imei=") + strlen(dev_info.imei) > sizeof(argu_str)
-                || strlen(info) + strlen("imei") + strlen(dev_info.imei) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: imei too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&imei=%s", dev_info.imei);
-            strcat(info + strlen(info), "imei");
-            strcat(info + strlen(info), dev_info.imei);
-        }
-
-        if (dev_info.mac) {
-            if (strlen(argu_str) + strlen("&mac=") + strlen(dev_info.mac) > sizeof(argu_str)
-                || strlen(info) + strlen("mac") + strlen(dev_info.mac) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: mac too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&mac=%s", dev_info.mac);
-            strcat(info + strlen(info), "mac");
-            strcat(info + strlen(info), dev_info.mac);
-        }
-
-        strcat(info + strlen(info), "model");
-        strcat(info + strlen(info), ACTIVATE_SIGN_MODEL);
-
-        if (dev_info.os_version) {
-            if (strlen(argu_str) + strlen("&osVersion=") + strlen(dev_info.os_version) > sizeof(argu_str)
-                || strlen(info) + strlen("osVersion") + strlen(dev_info.os_version) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: os_version too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&osVersion=%s", dev_info.os_version);
-            strcat(info + strlen(info), "osVersion");
-            strcat(info + strlen(info), dev_info.os_version);
-        }
-
-        if (dev_info.product_name) {
-            if (strlen(argu_str) + strlen("&productName=") + strlen(dev_info.product_name) > sizeof(argu_str)
-                || strlen(info) + strlen("productName") + strlen(dev_info.product_name) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: product_name too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&productName=%s", dev_info.product_name);
-            strcat(info + strlen(info), "productName");
-            strcat(info + strlen(info), dev_info.product_name);
-        }
-
-        if (dev_info.storage_total) {
-            if (strlen(argu_str) + strlen("&storageTotal=") + strlen(dev_info.storage_total) > sizeof(argu_str)
-                || strlen(info) + strlen("storageTotal") + strlen(dev_info.storage_total) > sizeof(info)) {
-                ret = -1;
-                LOGE(TAG_ID2, "[%s]: storage_total too long\n", __func__);
-                break;
-            }
-            sprintf(argu_str + strlen(argu_str), "&storageTotal=%s", dev_info.storage_total);
-            strcat(info + strlen(info), "storageTotal");
-            strcat(info + strlen(info), dev_info.storage_total);
-        }
-
-        strcat(info + strlen(info), "version");
-        strcat(info + strlen(info), ACTIVATE_VERSION);
 
         LOGD(TAG_ID2, "[%s]: info : %s\n", __func__, info);
         LOGD(TAG_ID2, "[%s]: argu_str : %s\n", __func__, argu_str);
@@ -927,12 +936,7 @@ int activate_device(void)
         LOGD(TAG_ID2, "[%s]: info_signed max len 128, actual len is %d!\n", __func__, info_signed_len);
 
         // base 64
-#ifdef TFS_ID2_RSA
-        pal_base64_encode((const uint8_t *)info_signed, SIGN_LEN_RSA, (uint8_t *)_info_signed_base64, &size);
-#endif
-#ifdef TFS_ID2_3DES
-        pal_base64_encode((const uint8_t *)info_signed, SIGN_LEN_3DES, (uint8_t *)_info_signed_base64, &size);
-#endif
+        pal_base64_encode((const uint8_t *)info_signed, info_signed_len, (uint8_t *)_info_signed_base64, &_info_signed_base64_len);
 
         LOGD(TAG_ID2, "[%s]: _info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(_info_signed_base64));
 
@@ -940,6 +944,11 @@ int activate_device(void)
         LOGD(TAG_ID2, "[%s]: _info_signed_base64 is %s!\n", __func__, _info_signed_base64);
         LOGD(TAG_ID2, "[%s]: info_signed_base64 is %s!\n", __func__, info_signed_base64);
         LOGD(TAG_ID2, "[%s]: info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(info_signed_base64));
+
+        if (strlen(argu_str) + strlen(info_signed_base64) > ACTIVATE_DEVICE_ARGU_LEN) {
+            LOGE(TAG_ID2, "[%s]: argu buffer too short to contain activate info.\n", __func__);
+            break;
+        }
 
         sprintf(argu_str + strlen(argu_str), "&sign=%s", info_signed_base64);
         LOGD(TAG_ID2, "[%s]: argu_str max len is %d, actual len is %d!\n", __func__, (int)sizeof(argu_str), (int)strlen(argu_str));

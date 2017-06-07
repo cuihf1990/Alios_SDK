@@ -1,3 +1,7 @@
+/*
+ *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -13,6 +17,8 @@ int pal_save_info(const char *key, char *value) {
     FILE *fp = NULL;
     int fd = -1;
     int writed = -1;
+
+    LOGD(TAG_PAL_STORAGE, "[%s]: enter.\n", __func__);
     if (key == NULL || value == NULL) {
         LOGE(TAG_PAL_STORAGE, "[%s]: para error\n", __func__);
         return -1;
@@ -29,7 +35,7 @@ int pal_save_info(const char *key, char *value) {
 
     fp = fdopen(fd, "wb");
     if (fp == NULL) {
-        LOGE(TAG_PAL_STORAGE, "[%s]: can not find %s\n", __func__,  key);
+        LOGE(TAG_PAL_STORAGE, "[%s]: can not find %s\n", __func__, key);
         return -1;
     }
 
@@ -51,6 +57,8 @@ int pal_get_info(const char *key, char *value) {
     FILE *fp = NULL;
     int file_len = -1;
     int readed = -1;
+
+    LOGD(TAG_PAL_STORAGE, "[%s]: enter.\n", __func__);
     if (key == NULL || value == NULL) {
         LOGE(TAG_PAL_STORAGE, "[%s]: para error\n", __func__);
         return -1;

@@ -79,7 +79,7 @@ int _http_check_conn(int sockfd) {
         return -1;
     }
     if (ret != 0) {
-        LOGE(TAG_PAL_NETWORK, "[%s]: socket %d connect failed: %s\n",__func__, sockfd, strerror(ret));
+        LOGE(TAG_PAL_NETWORK, "[%s]: socket %d connect failed: %s\n", __func__, sockfd, strerror(ret));
         return -1;
     }
 
