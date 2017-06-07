@@ -87,6 +87,9 @@ ifeq ($(CONFIG_TFS_SW), y)
     ifeq ($(HOST_ARCH), linux)
 	    PLATFORM := linuxhost
     endif
+    ifeq ($(HOST_ARCH), armhflinux)
+	    PLATFORM := armhflinux
+    endif
     $(NAME)_PREBUILT_LIBRARY += ../libid2/lib/$(PLATFORM)/libid2.a
     $(NAME)_PREBUILT_LIBRARY += ../libkm/lib/$(PLATFORM)/libkm.a
 endif

@@ -5,7 +5,7 @@ MODULE              := 1062
 HOST_ARCH           := armhflinux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  := yloop vfs hal log vcall fota ysh alicrypto modules.kv netmgr
+$(NAME)_COMPONENTS  := yloop vfs hal log fota vcall ysh modules.kv tfs netmgr
 
 GLOBAL_CFLAGS += -I$(SOURCE_ROOT)/board/armhflinux/include
 GLOBAL_LDFLAGS += -L$(SOURCE_ROOT)/board/armhflinux/lib
@@ -25,3 +25,5 @@ CONFIG_TFS_SE_LIB := libtfshal.a
 CONFIG_TFS_TEE := n
 CONFIG_TFS_SW := y
 CONFIG_TFS_TEST := n
+
+GLOBAL_CFLAGS += -std=gnu99
