@@ -41,7 +41,7 @@ UINT32 func_init(void)
     FUNC_PRT("[FUNC]calibration_main\r\n");
 
     #ifndef KEIL_SIMULATOR
-    calibration_main();
+    //calibration_main();
     #endif
 #endif
 
