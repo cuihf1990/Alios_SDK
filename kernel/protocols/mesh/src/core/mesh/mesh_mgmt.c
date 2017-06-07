@@ -2009,6 +2009,23 @@ uint16_t mm_get_path_cost(void)
 
 ur_error_t mm_set_mode(node_mode_t mode)
 {
+    uint8_t       num;
+    hal_context_t *wifi_hal;
+
+    if (mode == MODE_NONE) {
+        return UR_ERROR_FAIL;
+    }
+
+    num = get_hal_contexts_num();
+    wifi_hal = get_hal_context(MEDIA_TYPE_WIFI);
+    if (mode & MODE_SUPER) {
+        if ((wifi_hal == NULL && num <= 1) ||
+            (mode & MODE_MOBILE)) {
+            return UR_ERROR_FAIL;
+        }
+    } else if (num > 1) {
+        return UR_ERROR_FAIL;
+    }
     g_mm_state.device.mode = mode;
     return UR_ERROR_NONE;
 }

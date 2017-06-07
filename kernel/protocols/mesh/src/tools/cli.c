@@ -489,6 +489,7 @@ void process_meshnetsize(int argc, char *argv[])
 void process_mode(int argc, char *argv[])
 {
     uint8_t mode, index;
+    ur_error_t error;
 
     mode = ur_mesh_get_mode();
 
@@ -530,9 +531,9 @@ void process_mode(int argc, char *argv[])
         /* or specify number */
         mode = atoi(argv[index]);
     }
-    ur_mesh_set_mode(mode);
+    error = ur_mesh_set_mode(mode);
 
-    if (mode == 0) {
+    if (mode == 0 || error != UR_ERROR_NONE) {
         response_append("none\r\n");
         return;
     }
