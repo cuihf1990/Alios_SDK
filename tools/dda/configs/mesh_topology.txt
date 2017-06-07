@@ -1,52 +1,13 @@
 nodes: 200
 
-interface: wifi 0-109
+interface: wifi 0-99
 
-# rssi-tree: [layer1-node-num] [layer2-node-num] [...]
+# rssi-tree: [interface-start-index] [layer1-node-num] [layer2-node-num] [...]
 # all nodes in same layer or neighbor layer are full-connected
-rssi-tree: 2 3 5 100
-
-# rssi-pair: [node1] [node2] [rssi-value,optional]
-# both direction of node1 and node2 will be set
-rssi-pair: 0 1 2
-
-rssi-pairs:
-start
-# [node1] [node2] [rssi-value,optional]
-# only node1->node2 rssi will be set
-0 1 2
-1 2 2
-end
+rssi-tree: 0 100
 
 interface: ble 100-199
 
-rssi-tree: 100 2 3 5 90
+rssi-tree: 100 100
 
 finish
-
-device-macs:
-start
-# [node id] [mac addr in hex]
-19 665544332211
-18 0xdd2e00c40a24
-17 0xdc2e00c40a24
-end
-
-# lines after 'finish' will be ignored
-
-rssi-metrics:
-start
-# rssi for each device pair
-# 0 means unreachable
-1 0 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-1 1 1 1 1 1 1 1 1 1
-end
-
