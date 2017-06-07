@@ -5,10 +5,11 @@ MODULE              := 1062
 HOST_ARCH           := armhflinux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  := yloop vfs hal log vcall ysh alicrypto modules.kv netmgr
+$(NAME)_COMPONENTS  := yloop vfs hal log vcall fota ysh alicrypto modules.kv netmgr
 
 GLOBAL_CFLAGS += -I$(SOURCE_ROOT)/board/armhflinux/include
 GLOBAL_LDFLAGS += -L$(SOURCE_ROOT)/board/armhflinux/lib
+GLOBAL_DEFINES += LINUX_WIFI_MESH_IF_NAME=\"wlan0\"
 
 CONFIG_LIB_TFS := y
 CONFIG_TFS_ID2_RSA := y

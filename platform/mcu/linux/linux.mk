@@ -51,6 +51,7 @@ $(NAME)_SOURCES     += csp/wifi/osdep.c
 $(NAME)_SOURCES     += csp/wifi/mesh.c
 $(NAME)_SOURCES     += csp/wifi/radiotap/radiotap.c
 $(NAME)_DEFINES     += LINUX_MESH_80211
+$(NAME)_CFLAGS      += -Wno-unused-but-set-variable
 endif
 
 ifneq (,$(filter protocols.net,$(COMPONENTS)))

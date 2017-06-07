@@ -180,6 +180,9 @@ int check_crc_buf_osdep( unsigned char *buf, int len )
 //Check if the driver is ndiswrapper */
 static int is_ndiswrapper(const char * iface, const char * path)
 {
+#if 1
+    return 0;
+#else
     int n, pid, unused;
     if (!path || !iface)
 	return 0;
@@ -192,6 +195,7 @@ static int is_ndiswrapper(const char * iface, const char * path)
 
     waitpid( pid, &n, 0 );
     return ( ( WIFEXITED(n) && WEXITSTATUS(n) == 0 ));
+#endif
 }
 
 /* Search a file recursively */
@@ -610,7 +614,7 @@ static int linux_read(struct wif *wi, unsigned char *buf, int count,
 
     if( ( caplen = read( dev->fd_in, tmpbuf, count ) ) < 0 )
     {
-        if( errno == EAGAIN )
+        if( errno == EAGAIN || errno == EINTR )
             return( 0 );
 
         perror( "read failed" );
@@ -900,7 +904,7 @@ static int linux_write(struct wif *wi, unsigned char *buf, int count,
     if( ret < 0 )
     {
         if( errno == EAGAIN || errno == EWOULDBLOCK ||
-            errno == ENOBUFS || errno == ENOMEM )
+            errno == ENOBUFS || errno == ENOMEM || errno == EINTR )
         {
             usleep( 10000 );
             return( 0 );
@@ -917,7 +921,7 @@ static int linux_write(struct wif *wi, unsigned char *buf, int count,
     if( ret < 0 )
     {
         if( errno == EAGAIN || errno == EWOULDBLOCK ||
-            errno == ENOBUFS || errno == ENOMEM )
+            errno == ENOBUFS || errno == ENOMEM || errno == EINTR )
         {
             usleep( 10000 );
             return( 0 );
