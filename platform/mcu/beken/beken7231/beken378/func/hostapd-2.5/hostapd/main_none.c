@@ -676,7 +676,7 @@ static void hostapd_thread_main( void *arg )
 
 	while(1)
 	{
-		ret = rtos_get_semaphore(&hostapd_sema, BEKEN_WAIT_FOREVER);
+		ret = mico_rtos_get_semaphore(&hostapd_sema, BEKEN_WAIT_FOREVER);
 		ASSERT(kNoErr == ret);            
 		
 		if (hostapd_global_run(&g_hapd_interfaces, daemonize, pid_file)) {
@@ -689,10 +689,10 @@ static void hostapd_thread_start(void)
 {  
     OSStatus ret;
     
-    ret = rtos_init_semaphore(&hostapd_sema, 1);
+    ret = mico_rtos_init_semaphore(&hostapd_sema, 1);
     ASSERT(kNoErr == ret);
 	
-    ret = rtos_create_thread(&hostapd_thread_handle, 
+    ret = mico_rtos_create_thread(&hostapd_thread_handle, 
             THD_HOSTAPD_PRIORITY,
             "hostapd_thread", 
             (beken_thread_function_t)hostapd_thread_main, 
@@ -705,10 +705,10 @@ static void hostapd_thread_stop(void)
 {  
     OSStatus ret;
 	
-    ret = rtos_delete_thread(&hostapd_thread_handle);
+    ret = mico_rtos_delete_thread(&hostapd_thread_handle);
     ASSERT(kNoErr == ret);
     
-    ret = rtos_deinit_semaphore(&hostapd_sema);
+    ret = mico_rtos_deinit_semaphore(&hostapd_sema);
     ASSERT(kNoErr == ret);
 }
 
@@ -718,7 +718,7 @@ void hostapd_poll(void *param)
 	
 	if(hostapd_sema)
 	{
-    	ret = rtos_set_semaphore(&hostapd_sema);
+    	ret = mico_rtos_set_semaphore(&hostapd_sema);
 	}
 }
 

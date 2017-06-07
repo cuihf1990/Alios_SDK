@@ -83,7 +83,7 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 
             case 'l':
 #if CFG_RX_SENSITIVITY_TEST
-                err = rtos_stop_timer(&rx_sens_tmr);
+                err = mico_rtos_stop_timer(&rx_sens_tmr);
 	            ASSERT(kNoErr == err);
                 return 0;
 #endif
@@ -140,12 +140,12 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 
     t_ms = fclk_from_sec_to_tick(duration);
 
-	err = rtos_init_timer(&rx_sens_tmr, 
+	err = mico_rtos_init_timer(&rx_sens_tmr, 
 							t_ms, 
 							rxsens_ct_hdl, 
 							(void *)0);
     ASSERT(kNoErr == err);
-	err = rtos_start_timer(&rx_sens_tmr);
+	err = mico_rtos_start_timer(&rx_sens_tmr);
 	ASSERT(kNoErr == err);
     
 #endif // CFG_RX_SENSITIVITY_TEST

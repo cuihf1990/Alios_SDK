@@ -163,7 +163,7 @@ static void wpas_thread_main( void *arg )
 
     while(1)
     {
-        ret = rtos_get_semaphore(&wpas_sema, BEKEN_WAIT_FOREVER);
+        ret = mico_rtos_get_semaphore(&wpas_sema, BEKEN_WAIT_FOREVER);
         ASSERT(kNoErr == ret);
 
         if(wpa_supplicant_run(wpa_global_ptr) < 0)
@@ -179,13 +179,13 @@ void wpas_thread_start(void)
 
     if(NULL == wpas_sema)
     {
-	    ret = rtos_init_semaphore(&wpas_sema, 1);
+	    ret = mico_rtos_init_semaphore(&wpas_sema, 1);
 	    ASSERT(kNoErr == ret);
 	}
 
     if(NULL == wpas_thread_handle)
     {
-	    ret = rtos_create_thread(&wpas_thread_handle,
+	    ret = mico_rtos_create_thread(&wpas_thread_handle,
 	                             THD_WPAS_PRIORITY,
 	                             "wpas_thread",
 	                             (beken_thread_function_t)wpas_thread_main,
@@ -201,14 +201,14 @@ void wpas_thread_stop(void)
 
     if(wpas_thread_handle)
     {
-        ret = rtos_delete_thread(&wpas_thread_handle);
+        ret = mico_rtos_delete_thread(&wpas_thread_handle);
         ASSERT(kNoErr == ret);
 		wpas_thread_handle = NULL;
     }
 
     if(wpas_sema)
     {
-        ret = rtos_deinit_semaphore(&wpas_sema);
+        ret = mico_rtos_deinit_semaphore(&wpas_sema);
         ASSERT(kNoErr == ret);
 		wpas_sema = NULL;
     }
@@ -220,7 +220,7 @@ void wpa_supplicant_poll(void *param)
 
 	if(wpas_sema)
 	{
-    	ret = rtos_set_semaphore(&wpas_sema);
+    	ret = mico_rtos_set_semaphore(&wpas_sema);
 	}
 }
 
