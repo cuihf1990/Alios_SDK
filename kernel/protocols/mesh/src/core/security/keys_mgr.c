@@ -51,6 +51,11 @@ ur_error_t set_master_key(const uint8_t *key, uint8_t length)
 
 const uint8_t *get_master_key(uint8_t *length)
 {
+    if (length == NULL) {
+        return NULL;
+    }
+
+    *length = sizeof(g_master_key);
     return g_master_key;
 }
 

@@ -30,6 +30,7 @@
 #include "core/address_mgmt.h"
 #include "core/link_mgmt.h"
 #include "core/network_mgmt.h"
+#include "core/master_key.h"
 #include "utilities/logging.h"
 #include "utilities/timer.h"
 #include "utilities/memory.h"
@@ -54,6 +55,7 @@ typedef struct mesh_mgmt_state_s {
 
 static mesh_mgmt_state_t g_mm_state;
 
+static ur_error_t attach_start(neighbor_t *nbr);
 static void handle_attach_timer(void *args);
 static void handle_advertisement_timer(void *args);
 static void handle_migrate_wait_timer(void *args);
@@ -73,6 +75,21 @@ static void read_prev_netinfo(void);
 
 static void network_data_update_handler(bool stable)
 {
+}
+
+static void master_key_updated_handler(ur_error_t result)
+{
+    neighbor_t *nbr;
+    hal_context_t *hal;
+
+    if (result == UR_ERROR_NONE) {
+        hal = get_default_hal_context();
+        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+        attach_start(nbr);
+    } else {
+        become_detached();
+        nm_start_discovery();
+    }
 }
 
 static void neighbor_updated_handler(neighbor_t *nbr)
@@ -1455,7 +1472,7 @@ void become_detached(void)
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "become detached\r\n");
 }
 
-ur_error_t attach_start(neighbor_t *nbr)
+static ur_error_t attach_start(neighbor_t *nbr)
 {
     ur_error_t        error = UR_ERROR_NONE;
     network_context_t *network = NULL;
@@ -1884,12 +1901,15 @@ ur_error_t mm_init(void)
     if (get_hal_contexts_num() > 1) {
         g_mm_state.device.mode |= MODE_SUPER;
     }
+
+    master_key_init(master_key_updated_handler);
     return error;
 }
 
 ur_error_t mm_deinit(void)
 {
     nd_unregister_update_handler(&g_mm_state.network_data_updater);
+    master_key_deinit();
     return UR_ERROR_NONE;
 }
 
