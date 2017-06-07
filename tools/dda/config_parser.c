@@ -100,6 +100,8 @@ static void gen_metrics_from_rssi_tree(struct config_status *pstatus, char **lay
 {
     int idx = 0;
     int prev_node_num = 0;
+
+    idx = atoi(*layers++);
     while (*layers) {
         int i,j;
         int node_num = atoi(*layers++);
