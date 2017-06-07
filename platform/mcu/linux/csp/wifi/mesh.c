@@ -138,6 +138,7 @@ static void *wifi_recv_entry(void *arg)
 
         compound_msg_t *pf;
         pf = cpu_event_malloc(sizeof(*pf) + count - MESH_DATA_OFF);
+        bzero(pf, sizeof(*pf));
         pf->frm.len = count - MESH_DATA_OFF;
         pf->frm.data = (void *)(pf + 1);
         pf->fino.channel = ri.ri_channel;
