@@ -20,7 +20,8 @@
 #include "platform.h"
 #include "mbedtls/mbedtls_ssl.h"
 
-void *platform_ssl_connect(_IN_ void *tcp_fd, _IN_ const char *server_cert, _IN_ int server_cert_len)
+void *platform_ssl_connect(_IN_ void *tcp_fd, _IN_ const char *server_cert,
+                           _IN_ int server_cert_len)
 {
     return mbedtls_ssl_connect(tcp_fd, server_cert, server_cert_len);;
 }

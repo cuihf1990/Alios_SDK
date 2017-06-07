@@ -68,10 +68,11 @@ void ht_unlock(void *ht);
  *            key: the key of the item you want to find.
  *            key_len: the length of @key, if @key is string, @key_len must be strlen(key)+1.
  * @param[out]val: the memory to store the found val.
- *            size_val: the size of returned val 
+ *            size_val: the size of returned val
  * @retval  the pointer to value on success, otherwise NULL will be returned
  */
-void *ht_find_lockless(void *ht, const void  *key, unsigned int key_len, void *val, int *size_val);
+void *ht_find_lockless(void *ht, const void  *key, unsigned int key_len,
+                       void *val, int *size_val);
 
 /**
  * @brief find the item in the @ht whose key is @key .
@@ -83,7 +84,8 @@ void *ht_find_lockless(void *ht, const void  *key, unsigned int key_len, void *v
  *            size_val: the size of returned val
  * @retval  the pointer to @ht_item_t on success, otherwise NULL will be returned
  */
-void *ht_find(void *ht, const void  *key, unsigned int key_len, void *val, int *size_val);
+void *ht_find(void *ht, const void  *key, unsigned int key_len, void *val,
+              int *size_val);
 
 /**
  * @brief add the item in the @ht whose key is @key and value is @val in lockless
@@ -97,7 +99,8 @@ void *ht_find(void *ht, const void  *key, unsigned int key_len, void *val, int *
  * @note: the @key and @val will be re-malloced and stored in the hashtable.
  * @retval  0 on success, otherwise -1 will be returned
  */
-int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void *val, unsigned int size_val);
+int ht_add_lockless(void *ht, const void *key, unsigned int len_key,
+                    const void *val, unsigned int size_val);
 
 /**
  * @brief add the item in the @ht whose key is @key and value is @val.
@@ -110,7 +113,8 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
  * @note: the @key and @val will be re-malloced and stored in the hashtable.
  * @retval  0 on success, otherwise -1 will be returned
  */
-int ht_add(void *ht, const void *key, unsigned int len_key, const void *val, unsigned int size_val);
+int ht_add(void *ht, const void *key, unsigned int len_key, const void *val,
+           unsigned int size_val);
 
 /**
  * @brief delete the items in the @ht whose key is @key in lockless mode.

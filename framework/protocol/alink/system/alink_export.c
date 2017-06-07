@@ -66,7 +66,7 @@ int alink_enable_daily_mode(const char *server_ip, int port)
 
     if (!server_ip || !port) {
         server = default_daily_server_with_port;
-        LOGI(MODULE_NAME,"use default daily server & port: %s", server);
+        LOGI(MODULE_NAME, "use default daily server & port: %s", server);
     } else {
         /* server string formt: wsf.smart.aliyun-inc.com:9999 */
         memset(server_buf, 0, sizeof(server_buf));
@@ -93,8 +93,8 @@ int alink_start(void)
 {
     int ret = SERVICE_RESULT_OK;
 
-    LOGI(MODULE_NAME,"Build Time: %s", ALINK_AGENT_BUILD_DATE);
-    LOGI(MODULE_NAME,"Git Version: %s", ALINK_AGENT_GIT_VERSION);
+    LOGI(MODULE_NAME, "Build Time: %s", ALINK_AGENT_BUILD_DATE);
+    LOGI(MODULE_NAME, "Git Version: %s", ALINK_AGENT_GIT_VERSION);
 
     os_init();
 
@@ -110,7 +110,7 @@ int alink_start(void)
     //sm_get_service("alcs")->start();//alcs_start
     sm_get_service("accs")->prepare();//accs_prepare
     sm_get_service("accs")->start();//accs_start
-    
+
 #ifdef GATEWAY_SDK
     init_kv();
 
@@ -152,14 +152,16 @@ int alink_wait_connect(int timeout_ms)
 
     while (1) {
         ready = cloud_is_connected();
-        if (ready)
-            break; /* ready to go */
+        if (ready) {
+            break;    /* ready to go */
+        }
 
         if (timeout_ms == ALINK_WAIT_FOREVER ||
-                os_get_time_ms() < expires)
-            os_sleep(100*1000);
-        else
-            break; /* timeout */
+            os_get_time_ms() < expires) {
+            os_sleep(100 * 1000);
+        } else {
+            break;    /* timeout */
+        }
     };
 
     return ready ? 0 : -1;
@@ -224,14 +226,15 @@ int alink_factory_reset(void)
 #endif
     if (cloud_is_connected()) {
         ret = alink_unregister();
-        if (ret == ALINK_CODE_SUCCESS)
+        if (ret == ALINK_CODE_SUCCESS) {
             unregister_flag = 0;
+        }
     }
 
     config_reset(unregister_flag);
 
     os_sys_reboot();
-    LOGI(MODULE_NAME,"waiting sys reboot ...");
+    LOGI(MODULE_NAME, "waiting sys reboot ...");
 
     //while (1);
 
@@ -248,8 +251,8 @@ int alink_factory_reset(void)
  * @retval 0 on success, otherwise -1 will return
  */
 int alink_register_attribute(const char *name,
-        ALINK_ATTR_GET_CB get_cb,
-        ALINK_ATTR_SET_CB set_cb)
+                             ALINK_ATTR_GET_CB get_cb,
+                             ALINK_ATTR_SET_CB set_cb)
 {
     return msdp_register_attr_cb(DEV_TYPE_GATEWAY, name, get_cb, set_cb);
 }
@@ -304,7 +307,7 @@ int alink_report_attrs(const char *attr_name[])
  * @note when joined zigbee network, invoke this function to register sub device
  */
 int alink_zigbee_register_device(unsigned char ieee_addr[IEEE_ADDR_BYTES],
-        unsigned int model_id, const char rand[SUBDEV_RAND_BYTES], const char *sign)
+                                 unsigned int model_id, const char rand[SUBDEV_RAND_BYTES], const char *sign)
 {
     return devmgr_join_zigbee_device(ieee_addr, model_id, rand, sign);
 }
@@ -332,7 +335,8 @@ int alink_zigbee_unregister_device(unsigned char ieee_addr[IEEE_ADDR_BYTES])
  * @see None.
  * @note alink sdk will keep syncing subdev status with aliyun server
  */
-int alink_zigbee_update_online_status(unsigned char ieee_addr[IEEE_ADDR_BYTES], char online_or_not)
+int alink_zigbee_update_online_status(unsigned char ieee_addr[IEEE_ADDR_BYTES],
+                                      char online_or_not)
 {
     return devmgr_update_zigbee_device_online_status(ieee_addr, online_or_not);
 }
@@ -351,8 +355,9 @@ int alink_zigbee_update_online_status(unsigned char ieee_addr[IEEE_ADDR_BYTES], 
  * @note when connection with server is unstable, this func will block
  *      until got response from server or timeout.
  */
-int alink_zigbee_report_attrs(unsigned char ieee_addr[IEEE_ADDR_BYTES], unsigned char endpoint_id,
-        const char *attr_name[], const char *attr_value[])
+int alink_zigbee_report_attrs(unsigned char ieee_addr[IEEE_ADDR_BYTES],
+                              unsigned char endpoint_id,
+                              const char *attr_name[], const char *attr_value[])
 {
     return stdd_zbnet_report_attrs(ieee_addr, endpoint_id, attr_name, attr_value);
 }
@@ -369,8 +374,9 @@ int alink_zigbee_report_attrs(unsigned char ieee_addr[IEEE_ADDR_BYTES], unsigned
  * @note when connection with server is unstable, this func will block
  *      until got response from server or timeout.
  */
-int alink_zigbee_report_event(unsigned char ieee_addr[IEEE_ADDR_BYTES], unsigned char endpoint_id,
-        const char *event_name, const char *event_args)
+int alink_zigbee_report_event(unsigned char ieee_addr[IEEE_ADDR_BYTES],
+                              unsigned char endpoint_id,
+                              const char *event_name, const char *event_args)
 {
     return stdd_zbnet_report_event(ieee_addr, endpoint_id, event_name, event_args);
 }
@@ -395,23 +401,26 @@ int alink_report(const char *method, const char *json_buffer)
     service_t *service = sm_get_service("accs");
     int ret;
 
-    if (!method || !json_buffer || !service)
+    if (!method || !json_buffer || !service) {
         return -1;
+    }
 
-    ret = service->put((void*)&data, sizeof(data));//accs_put
+    ret = service->put((void *)&data, sizeof(data)); //accs_put
 
     return ret;
 }
 
-int alink_report_async(const char *method, const char *json_buffer,void *(*cb)(void *),void *arg)
+int alink_report_async(const char *method, const char *json_buffer,
+                       void * (*cb)(void *), void *arg)
 {
     alink_data_t data = {(char *)method, (char *)json_buffer};
     service_t *service = sm_get_service("accs");
     int ret;
 
-    if (!method || !json_buffer || !service)
+    if (!method || !json_buffer || !service) {
         return -1;
-    ret = service->put_async((void*)&data, sizeof(data),cb,arg);//accs_put
+    }
+    ret = service->put_async((void *)&data, sizeof(data), cb, arg); //accs_put
 
     return ret;
 }
@@ -434,18 +443,21 @@ int alink_report_async(const char *method, const char *json_buffer,void *(*cb)(v
  *      until got response from server or timeout.
  */
 int alink_query(const char *method, const char *json_buffer,
-        char *result_buf, int *buf_len)
+                char *result_buf, int *buf_len)
 {
     alink_data_t data = {(char *)method, (char *)json_buffer};
     service_t *service = sm_get_service("accs");
     int ret;
 
-    if (!method || !json_buffer || !result_buf || !buf_len || !*buf_len)
+    if (!method || !json_buffer || !result_buf || !buf_len || !*buf_len) {
         return -1;
+    }
 
-    ret = service->get((void*)&data, sizeof(data), result_buf, *buf_len);//accs_get
-    if (!ret)
+    ret = service->get((void *)&data, sizeof(data), result_buf,
+                       *buf_len); //accs_get
+    if (!ret) {
         *buf_len = strlen(result_buf);
+    }
 
     return ret;
 }
@@ -473,9 +485,9 @@ int alink_register_callback(unsigned char cb_type, void *cb_func)
 }
 
 #ifdef ASR_SDK
-int alink_asr_send_buf(const void *buf,int len,asr_msg_type_t type)
+int alink_asr_send_buf(const void *buf, int len, asr_msg_type_t type)
 {
-	return asr_send_buf(buf,len,type);
+    return asr_send_buf(buf, len, type);
 }
 #endif
 

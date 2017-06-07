@@ -17,8 +17,8 @@
 #ifndef __NET_WORK__
 #define __NET_WORK__
 
-#define _SOCKET_MAXNUMS			(10)
-#define _WAIT_INFINITE			(~0)
+#define _SOCKET_MAXNUMS         (10)
+#define _WAIT_INFINITE          (~0)
 #define _INVALID_FD             ((void *)-1)
 
 #define YOS_WAIT_INFINITE          (~0)
@@ -30,10 +30,9 @@
 /**
  * @brief this is a network address structure, including host(ip or host name) and port.
  */
-typedef struct
-{
-	char *host; /**< host ip(dotted-decimal notation) or host name(string) */
-	uint16_t port; /**< udp port or tcp port */
+typedef struct {
+    char *host; /**< host ip(dotted-decimal notation) or host name(string) */
+    uint16_t port; /**< udp port or tcp port */
 }  netaddr_t, *p_netaddr_t;
 
 #define PLATFORM_SOCKET_MAXNUMS         (10)
@@ -51,7 +50,7 @@ typedef struct
  * @see None.
  * @note It is recommended to add handle value by 1, if 0(NULL) is a valid handle value in your platform.
  */
-void * yos_udp_server_create( uint16_t port);
+void *yos_udp_server_create( uint16_t port);
 
 
 
@@ -67,7 +66,7 @@ void * yos_udp_server_create( uint16_t port);
  * @see None.
  * @note None.
  */
-void * udp_client_create(void);
+void *udp_client_create(void);
 
 
 
@@ -84,7 +83,7 @@ void * udp_client_create(void);
  * @note None.
  *
  */
-void * yos_udp_multicast_server_create( netaddr_t *netaddr);
+void *yos_udp_multicast_server_create( netaddr_t *netaddr);
 
 /**
  * @brief Closes an existing udp connection.
@@ -115,10 +114,10 @@ void  yos_udp_close(void *handle);
  * @note blocking API.
  */
 int  yos_udp_sendto(
-		 void *handle,
-		 const char *buffer,
-		 uint32_t length,
-		  netaddr_t *netaddr);
+    void *handle,
+    const char *buffer,
+    uint32_t length,
+    netaddr_t *netaddr);
 
 
 /**
@@ -138,10 +137,10 @@ int  yos_udp_sendto(
  * @note blocking API.
  */
 int  yos_udp_recvfrom(
-		 void *handle,
-		 char *buffer,
-		 uint32_t length,
-		netaddr_t *netaddr);
+    void *handle,
+    char *buffer,
+    uint32_t length,
+    netaddr_t *netaddr);
 
 
 
@@ -157,7 +156,7 @@ int  yos_udp_recvfrom(
  * @see None.
  * @note None.
  */
-void * yos_tcp_server_create( uint16_t port);
+void *yos_tcp_server_create( uint16_t port);
 
 
 
@@ -169,7 +168,7 @@ void * yos_tcp_server_create( uint16_t port);
  * @see None.
  * @note None.
  */
-void * yos_tcp_server_accept( void *server);
+void *yos_tcp_server_accept( void *server);
 
 
 
@@ -185,7 +184,7 @@ void * yos_tcp_server_accept( void *server);
  * @see None.
  * @note the func will block until tcp connect success or fail.
  */
-void * yos_tcp_client_connect(  netaddr_t *netaddr);
+void *yos_tcp_client_connect(  netaddr_t *netaddr);
 
 
 
@@ -268,9 +267,9 @@ void  yos_tcp_close( void *handle);
  * @note None.
  */
 int  yos_select(
-		 void *read_fds[PLATFORM_SOCKET_MAXNUMS],
-		 void *write_fds[PLATFORM_SOCKET_MAXNUMS],
-		 int timeout_ms);
+    void *read_fds[PLATFORM_SOCKET_MAXNUMS],
+    void *write_fds[PLATFORM_SOCKET_MAXNUMS],
+    int timeout_ms);
 
 #endif
 

@@ -34,7 +34,8 @@
  * @see None.
  * @note None.
  */
-void *yos__ssl_connect( void *tcp_fd,  const char *server_cert,  int server_cert_len);
+void *yos__ssl_connect( void *tcp_fd,  const char *server_cert,
+                        int server_cert_len);
 
 
 

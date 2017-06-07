@@ -24,14 +24,14 @@ extern "C" {
 
 int sm_init(void);
 int sm_exit(void);
-int sm_add_service(service_t*);
-int sm_del_service(service_t*);
-int sm_get_service_state(service_t*);
+int sm_add_service(service_t *);
+int sm_del_service(service_t *);
+int sm_get_service_state(service_t *);
 int sm_query_service(void);
-service_t* sm_get_service(char*);
-int sm_attach_service(char*, service_cb);
-int sm_detach_service(char*, service_cb);
-const char* sm_code2string(int);
+service_t *sm_get_service(char *);
+int sm_attach_service(char *, service_cb);
+int sm_detach_service(char *, service_cb);
+const char *sm_code2string(int);
 #ifdef __cplusplus
 }
 #endif

@@ -55,9 +55,10 @@ unsigned char *base64_encode(const unsigned char *input, int input_len,
 {
     int i, j;
     int o_len = 4 * ((input_len + 2) / 3);
-    
-    if(!input || !output || !output_len)
+
+    if (!input || !output || !output_len) {
         return NULL;
+    }
 
     if (output_len) {
         *output_len = o_len;
@@ -88,9 +89,10 @@ unsigned char *base64_decode(const unsigned char *input, int input_len,
 {
     int i, j;
     int o_len = input_len / 4 * 3;
- 
-    if(!input || !output || !output_len)
+
+    if (!input || !output || !output_len) {
         return NULL;
+    }
 
     if (input[input_len - 1] == '=') {
         o_len--;

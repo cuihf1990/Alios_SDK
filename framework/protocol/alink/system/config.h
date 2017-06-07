@@ -30,38 +30,38 @@ extern "C"
 
 
 typedef struct device_flag {
-    union{
+    union {
         struct {
-            uint8_t  fatal:1;
-            uint8_t  error:1;
-            uint8_t  warn:1;
-            uint8_t  debug:1;
-            uint8_t  info:1;
-            uint8_t  trace:1;
-        }lb;
+            uint8_t  fatal: 1;
+            uint8_t  error: 1;
+            uint8_t  warn: 1;
+            uint8_t  debug: 1;
+            uint8_t  info: 1;
+            uint8_t  trace: 1;
+        } lb;
         uint8_t log;
-    }ulog;
+    } ulog;
     union {
         struct {
-            uint8_t  memused:1;
-            uint8_t  disconcounter:1;
-            uint8_t  disapcounter:1;
-            uint8_t  malformedpackets:1;
-            uint8_t  latestrtt:1;
-            uint8_t  averagertt:1;
-            uint8_t  wifistrength:1;
-        }sb;
+            uint8_t  memused: 1;
+            uint8_t  disconcounter: 1;
+            uint8_t  disapcounter: 1;
+            uint8_t  malformedpackets: 1;
+            uint8_t  latestrtt: 1;
+            uint8_t  averagertt: 1;
+            uint8_t  wifistrength: 1;
+        } sb;
         uint8_t stats;
-    }ustats;
+    } ustats;
     union {
         struct {
-            uint8_t  factoryreset:1;
-            uint8_t  otareboot:1;
-        }fb;
+            uint8_t  factoryreset: 1;
+            uint8_t  otareboot: 1;
+        } fb;
         uint8_t flag;
-    }uflag;
+    } uflag;
     uint8_t resv;
-}device_flag_t;
+} device_flag_t;
 
 #define TOKEN_LEN       64
 #define SERVER_LEN      64
@@ -85,10 +85,10 @@ typedef struct device_config {
     char magic[8];
     uint16_t version;
     device_flag_t df;
-    char token[TOKEN_LEN+4];
-    char uuid[UUID_LEN+4];
-    char alinkserver[SERVER_LEN+4];
-    char attrsfilter[ATTRS_LEN+4];
+    char token[TOKEN_LEN + 4];
+    char uuid[UUID_LEN + 4];
+    char alinkserver[SERVER_LEN + 4];
+    char attrsfilter[ATTRS_LEN + 4];
     char dev_version[STR_SHORT_LEN];//FIXME:
     char ota_version[STR_SHORT_LEN];
     uint8_t heartbeat_interval;

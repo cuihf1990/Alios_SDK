@@ -41,7 +41,8 @@ typedef enum {
     YOS_LL_WARN,  /**< fatal + warn + error log will output(default level) */
     YOS_LL_INFO,  /**< info + warn + error log will output */
     YOS_LL_DEBUG, /**< debug + info + warn + error + fatal log will output */
-} yos_log_level_t;
+}
+yos_log_level_t;
 
 /**
  * @brief log level control

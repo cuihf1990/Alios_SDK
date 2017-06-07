@@ -23,32 +23,31 @@
 
 extern wsf_list_node_t *wsf_list_pop_front(wsf_list_t *list);
 
-void wsf_msg_queue_init(wsf_request_queue_t **req_queue) {
+void wsf_msg_queue_init(wsf_request_queue_t **req_queue)
+{
     wsf_request_queue_t *pqueue;
 
-    if (req_queue)
+    if (req_queue) {
         *req_queue = NULL;
+    }
 
     pqueue = (wsf_request_queue_t *)os_malloc(sizeof(wsf_request_queue_t));
-    if ( NULL == pqueue )
-    {
-        LOGW(MODULE_NAME,"memory allocate fail.");
+    if ( NULL == pqueue ) {
+        LOGW(MODULE_NAME, "memory allocate fail.");
         return;
     }
 
     memset(pqueue, 0, sizeof(wsf_request_queue_t));
 
     pqueue->mutex = os_mutex_init();
-    if ( NULL == pqueue->mutex )
-    {
-        LOGW(MODULE_NAME,"create mutex fail.");
+    if ( NULL == pqueue->mutex ) {
+        LOGW(MODULE_NAME, "create mutex fail.");
         goto do_error;
     }
 
     pqueue->psem = os_semaphore_init();
-    if ( NULL == pqueue->psem )
-    {
-        LOGW(MODULE_NAME,"create semaphore fail.");
+    if ( NULL == pqueue->psem ) {
+        LOGW(MODULE_NAME, "create semaphore fail.");
         goto do_error;
     }
 
@@ -56,8 +55,9 @@ void wsf_msg_queue_init(wsf_request_queue_t **req_queue) {
     pqueue->length = 0;
 
 
-    if (req_queue)
+    if (req_queue) {
         *req_queue = pqueue;
+    }
 
     return ;
 
@@ -79,18 +79,22 @@ void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
 
     wsf_request_node_t *node, *next;
     dlist_t *tmp = NULL;
-    dlist_for_each_entry_safe(list, tmp,node,wsf_request_node_t,list_head) {
+    dlist_for_each_entry_safe(list, tmp, node, wsf_request_node_t, list_head) {
         if (node) {
             wsf_msg_session_t session = node->session;
             //LOG("--->session: %p, req: %p, res: %p\n",node,session.request,session.response);
-            if(session.cb)
-                session.cb(NULL,session.extra);
-            if(session.psem)    
+            if (session.cb) {
+                session.cb(NULL, session.extra);
+            }
+            if (session.psem) {
                 os_semaphore_destroy(session.psem);
-            if(session.request) 
+            }
+            if (session.request) {
                 os_free(session.request);
-            if(session.response) 
+            }
+            if (session.response) {
                 os_free(session.response);
+            }
             os_free(node);
         }
     }
@@ -101,18 +105,19 @@ void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
     os_free(req_queue);
 }
 
-static void wsf_del_first_msg(wsf_request_queue_t * req_queue)
+static void wsf_del_first_msg(wsf_request_queue_t *req_queue)
 {
     dlist_t *node = NULL;
-    wsf_request_node_t * req_node = NULL;
+    wsf_request_node_t *req_node = NULL;
 
-    if(!req_queue)
+    if (!req_queue) {
         return;
+    }
 
     os_mutex_lock(req_queue->mutex);
-    
+
     node = req_queue->list.prev;
-    if(!node){
+    if (!node) {
         os_mutex_unlock(req_queue->mutex);
         return;
     }
@@ -127,19 +132,21 @@ static void wsf_del_first_msg(wsf_request_queue_t * req_queue)
 }
 
 //FIXME: delete the msg.
-int wsf_request_queue_push(wsf_request_queue_t * req_queue, wsf_request_node_t * req_node)
+int wsf_request_queue_push(wsf_request_queue_t *req_queue,
+                           wsf_request_node_t *req_node)
 {
     if (!req_node || !req_queue) {
-        LOGE(MODULE_NAME,"!!!wsf_request_queue_push err\n");
+        LOGE(MODULE_NAME, "!!!wsf_request_queue_push err\n");
         return -1;
     }
 
-    if(req_queue->length >= wsf_get_config()->max_msg_queue_length){
-        if(req_node->session.cb){
-            LOGI(MODULE_NAME,"wsf msg queue is full , drop the last msg.\n");    
+    if (req_queue->length >= wsf_get_config()->max_msg_queue_length) {
+        if (req_node->session.cb) {
+            LOGI(MODULE_NAME, "wsf msg queue is full , drop the last msg.\n");
             wsf_del_first_msg(req_queue);
-        }else
-            return -1;        
+        } else {
+            return -1;
+        }
     }
 
     os_mutex_lock(req_queue->mutex);
@@ -150,10 +157,11 @@ int wsf_request_queue_push(wsf_request_queue_t * req_queue, wsf_request_node_t *
     return 0;
 }
 
-int wsf_request_queue_pop(wsf_request_queue_t * req_queue, wsf_request_node_t * req_node)
+int wsf_request_queue_pop(wsf_request_queue_t *req_queue,
+                          wsf_request_node_t *req_node)
 {
     if (!req_node || !req_queue || !req_queue->length) {
-        LOGE(MODULE_NAME,"!!!wsf_request_queue_pop err, length=%d", req_queue->length);
+        LOGE(MODULE_NAME, "!!!wsf_request_queue_pop err, length=%d", req_queue->length);
         return -1;
     }
 
@@ -165,13 +173,14 @@ int wsf_request_queue_pop(wsf_request_queue_t * req_queue, wsf_request_node_t * 
     return 0;
 }
 
-wsf_request_node_t *wsf_request_queue_trigger(wsf_request_queue_t * req_queue, wsf_msg_t * rsp)
+wsf_request_node_t *wsf_request_queue_trigger(wsf_request_queue_t *req_queue,
+                                              wsf_msg_t *rsp)
 {
     wsf_request_node_t *ret = NULL;
     uint32_t msg_id = 0;
 
     if (!req_queue || !rsp) {
-        LOGE(MODULE_NAME,"!!!wsf_request_queue_trigger error");
+        LOGE(MODULE_NAME, "!!!wsf_request_queue_trigger error");
         return ret;
     }
     memcpy(&msg_id, &rsp->header.msg_id, sizeof(uint32_t));

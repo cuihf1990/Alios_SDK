@@ -45,7 +45,8 @@ wsf_code wsf_open_connection(wsf_config_t *config);
 wsf_code wsf_send_msg(wsf_connection_t *conn, const char *data, int length);
 wsf_code wsf_destroy_connections();
 wsf_code wsf_reset_connection(wsf_connection_t *conn, int clear_session);
-wsf_code wsf_recvbuff_append(wsf_connection_t *conn, const char *buf, size_t length);
+wsf_code wsf_recvbuff_append(wsf_connection_t *conn, const char *buf,
+                             size_t length);
 wsf_code wsf_recvbuff_clear();
 char *wsf_session_id_get();
 void wsf_session_id_set(const char *session_id);
@@ -57,22 +58,25 @@ wsf_code wsf_recvbuff_check(wsf_connection_t *conn);
 
 static inline void wsf_reset_heartbeat_counter(wsf_connection_t *conn)
 {
-    if (conn)
+    if (conn) {
         conn->heartbeat_unack_counter = WSF_MAX_UNACK_HEARTBEART;
+    }
 }
 
 static inline int wsf_is_heartbeat_timeout(wsf_connection_t *conn)
 {
-    if (conn)
+    if (conn) {
         return !conn->heartbeat_unack_counter;
-    else
+    } else {
         return 0;
+    }
 }
 
 static inline void wsf_dec_heartbeat_counter(wsf_connection_t *conn)
 {
-    if (conn)
+    if (conn) {
         conn->heartbeat_unack_counter--;
+    }
 }
 
 #endif

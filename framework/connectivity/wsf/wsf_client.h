@@ -22,7 +22,7 @@
 /**
  *
  */
-typedef wsf_response_t* (*wsf_push_callback)(void *arg, int length);
+typedef wsf_response_t *(*wsf_push_callback)(void *arg, int length);
 
 typedef void (*wsf_error_callback)(wsf_code error_code);
 
@@ -35,7 +35,8 @@ wsf_code wsf_shutdown();
 /**
  * return NULL if wsf client not initialized or already shutdown
  */
-wsf_response_t *wsf_invoke(const char *service_name, wsf_list_t *parameters, int timeout);
+wsf_response_t *wsf_invoke(const char *service_name, wsf_list_t *parameters,
+                           int timeout);
 
 wsf_code wsf_register_push_callback(wsf_push_callback callback);
 
