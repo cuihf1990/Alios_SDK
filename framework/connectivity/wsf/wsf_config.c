@@ -37,7 +37,7 @@ static const unsigned short default_version = 1;
  *          period = 0;
  *
  * 2) wsf收到业务login时，为每个连接创建心跳timer, timer周期=2.5个心跳包，
- *    也就是2.5个心跳间隔会去check下连接是否正常。假如心跳为12S, 2.5个心跳为30S, 
+ *    也就是2.5个心跳间隔会去check下连接是否正常。假如心跳为12S, 2.5个心跳为30S,
  *    也就是wsf server 每隔30S会去check下心跳状态
  *
  * 3) wsf server 后台有一个专门的线程，每隔40S check下所有连接(每台PC 2~3条连接?)看是否有连接超时
@@ -51,11 +51,13 @@ static const ssl_version default_ssl_version = TLSV1;
 
 extern char *default_ca_str;
 #define MODULE_NAME "wsf_msg"
-wsf_config_t *wsf_get_config() {
+wsf_config_t *wsf_get_config()
+{
     return &wsf_global_config;
 }
 
-wsf_code wsf_config(config_opt opt, void *value) {
+wsf_code wsf_config(config_opt opt, void *value)
+{
     if (!value) {
         return WSF_FAIL;
     }
@@ -64,73 +66,74 @@ wsf_code wsf_config(config_opt opt, void *value) {
 
     switch (opt) {
 
-    case SERVER_NAME_STRING:
-        if (wsf_global_config.server_name) {
-            os_free(wsf_global_config.server_name);
-        }
-        char *str = (char *)value;
-        wsf_global_config.server_name = (char *)os_malloc(strlen(str) + 1);
-        if (wsf_global_config.server_name) {
-            strcpy(wsf_global_config.server_name, str);
-        } else {
-            ret = WSF_FAIL;
-            LOGE(MODULE_NAME,"out of memory");
-        }
+        case SERVER_NAME_STRING:
+            if (wsf_global_config.server_name) {
+                os_free(wsf_global_config.server_name);
+            }
+            char *str = (char *)value;
+            wsf_global_config.server_name = (char *)os_malloc(strlen(str) + 1);
+            if (wsf_global_config.server_name) {
+                strcpy(wsf_global_config.server_name, str);
+            } else {
+                ret = WSF_FAIL;
+                LOGE(MODULE_NAME, "out of memory");
+            }
 
-        break;
-    case SERVER_PORT_INT :
-        wsf_global_config.server_port = *((unsigned short *)value);
-        break;
+            break;
+        case SERVER_PORT_INT :
+            wsf_global_config.server_port = *((unsigned short *)value);
+            break;
 
-    case HEARTBEAT_INTERVAL_INT:
-        wsf_global_config.heartbeat_interval = *((int *)value);
-        break;
+        case HEARTBEAT_INTERVAL_INT:
+            wsf_global_config.heartbeat_interval = *((int *)value);
+            break;
 
-    case VERSION_SHORT:
-        wsf_global_config.version = *((unsigned short *)value);
-        break;
+        case VERSION_SHORT:
+            wsf_global_config.version = *((unsigned short *)value);
+            break;
 
-    case REQUEST_TIMEOUT_INT:
-        wsf_global_config.request_timeout = *((int *)value);
-        break;
+        case REQUEST_TIMEOUT_INT:
+            wsf_global_config.request_timeout = *((int *)value);
+            break;
 
-    case MSG_QUEUE_LENGTH_INT:
-        wsf_global_config.max_msg_queue_length = *((int *)value);
-        break;
-    case MAX_MSG_RECV_LENGTH_INT:
-        wsf_global_config.max_msg_recv_length = *((int *)value);
-        break;
-    case ENABLE_SSL_INT:
-        wsf_global_config.enable_ssl = *((int *)value);
-        break;
-    case CERTIFICATE_INT:
-        wsf_global_config.global_ca_str = ((const char *)value);
-        //FIXME: value can be a pointer to a binary ca
-        wsf_global_config.ca_str_len = strlen((const char *)value);
-        break;
-    case SSL_VERSION_INT:
-        wsf_global_config.ssl_version = *((int *)value);
-        break;
-    case USER_HEARTBEAT_INTERVAL_INT:
-        wsf_global_config.user_heartbeat_interval = *((int *)value);
-        break;
-    default:
-        LOGE(MODULE_NAME,"unknown config option: %d", opt);
-        ret = WSF_UNKNOWN_OPTION;
-        break;
+        case MSG_QUEUE_LENGTH_INT:
+            wsf_global_config.max_msg_queue_length = *((int *)value);
+            break;
+        case MAX_MSG_RECV_LENGTH_INT:
+            wsf_global_config.max_msg_recv_length = *((int *)value);
+            break;
+        case ENABLE_SSL_INT:
+            wsf_global_config.enable_ssl = *((int *)value);
+            break;
+        case CERTIFICATE_INT:
+            wsf_global_config.global_ca_str = ((const char *)value);
+            //FIXME: value can be a pointer to a binary ca
+            wsf_global_config.ca_str_len = strlen((const char *)value);
+            break;
+        case SSL_VERSION_INT:
+            wsf_global_config.ssl_version = *((int *)value);
+            break;
+        case USER_HEARTBEAT_INTERVAL_INT:
+            wsf_global_config.user_heartbeat_interval = *((int *)value);
+            break;
+        default:
+            LOGE(MODULE_NAME, "unknown config option: %d", opt);
+            ret = WSF_UNKNOWN_OPTION;
+            break;
     }
 
     return ret;
 }
 
-wsf_code wsf_init_config() {
+wsf_code wsf_init_config()
+{
     if (!wsf_global_config.server_name) {
         size_t len = strlen(default_server_name);
         wsf_global_config.server_name = (char *)os_malloc(len + 1);
         if (wsf_global_config.server_name) {
             strcpy(wsf_global_config.server_name, default_server_name) ;
         } else {
-            LOGE(MODULE_NAME,"out of memory");
+            LOGE(MODULE_NAME, "out of memory");
             return WSF_FAIL;
         }
 
@@ -171,7 +174,8 @@ wsf_code wsf_init_config() {
     return WSF_SUCCESS;
 }
 
-wsf_code wsf_destroy_config() {
+wsf_code wsf_destroy_config()
+{
     if (wsf_global_config.server_name) {
         os_free(wsf_global_config.server_name);
         wsf_global_config.server_name = NULL;

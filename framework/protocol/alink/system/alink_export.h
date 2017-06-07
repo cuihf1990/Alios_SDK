@@ -101,7 +101,7 @@ int alink_end(void);
  */
 int alink_factory_reset(void);
 
-/** @} */ //end of entry 
+/** @} */ //end of entry
 
 /** @defgroup wifi_report report status
  *  @{
@@ -123,7 +123,8 @@ int alink_factory_reset(void);
  */
 int alink_report(const char *method, const char *json_buffer);
 
-int alink_report_async(const char *method, const char *json_buffer,void *(*cb)(void *),void *arg);
+int alink_report_async(const char *method, const char *json_buffer,
+                       void * (*cb)(void *), void *arg);
 /**
  * @brief query alink cloud service, like getAlinkTime...
  *
@@ -141,7 +142,7 @@ int alink_report_async(const char *method, const char *json_buffer,void *(*cb)(v
  *      until got response from server or timeout.
  */
 int alink_query(const char *method, const char *json_buffer,
-        char *result_buf, int *buf_len);
+                char *result_buf, int *buf_len);
 
 /** @} */ //end of report
 

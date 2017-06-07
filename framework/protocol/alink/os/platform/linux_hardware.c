@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <net/if.h>	      // struct ifreq
+#include <net/if.h>       // struct ifreq
 //inet_ntoa
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -43,9 +43,9 @@
 /*
 route table format:
 #cat /proc/net/route
-Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT
-eth0	00000000	010AA8C0	0003	0	0	0	00000000	0	0	0
-eth1	0000FEA9	00000000	0001	0	0	1000	0000FFFF	0	0	0
+Iface   Destination Gateway     Flags   RefCnt  Use Metric  Mask        MTU Window  IRTT
+eth0    00000000    010AA8C0    0003    0   0   0   00000000    0   0   0
+eth1    0000FEA9    00000000    0001    0   0   1000    0000FFFF    0   0   0
 */
 char *platform_get_multicast_ifname(char *ifname, int ifname_size)
 {
@@ -60,55 +60,56 @@ char *platform_get_multicast_ifname(char *ifname, int ifname_size)
     unsigned int refCnt, use, metric, mtu, window, irtt;
 
     fp = fopen(ROUTER_INFO_PATH, "r");
-    if (fp == NULL){
+    if (fp == NULL) {
         perror("fopen");
         return result;
     }
 
     char *buff = fgets(line, sizeof(line), fp);
-    if (buff == NULL){
+    if (buff == NULL) {
         perror("fgets");
         goto out;
-	}
+    }
 
-	inet_pton(AF_INET, IP_MULTICAST_NET_ADDR, &multicast_net);
-	inet_pton(AF_INET, IP_MULTICAST_NET_MASK, &multicast_mask);
-	while (fgets(line, sizeof(line), fp)) {
-		if (11 !=
-		    sscanf(line, "%s %08x %08x %x %d %d %d %08x %d %d %d",
-			   iface, &destination, &gateway, &flags, &refCnt, &use,
-			   &metric, &mask, &mtu, &window, &irtt)) {
-			perror("sscanf");
-			continue;
-		}
+    inet_pton(AF_INET, IP_MULTICAST_NET_ADDR, &multicast_net);
+    inet_pton(AF_INET, IP_MULTICAST_NET_MASK, &multicast_mask);
+    while (fgets(line, sizeof(line), fp)) {
+        if (11 !=
+            sscanf(line, "%s %08x %08x %x %d %d %d %08x %d %d %d",
+                   iface, &destination, &gateway, &flags, &refCnt, &use,
+                   &metric, &mask, &mtu, &window, &irtt)) {
+            perror("sscanf");
+            continue;
+        }
 
-		/*default route */
-		if ((destination == 0) && (mask == 0)
-		    && (best_route_iface[0] == '\0')) {
-			best_route_mask = mask;
-			strncpy(best_route_iface, iface,
-				sizeof(best_route_iface) - 1);
-			continue;
-		}
+        /*default route */
+        if ((destination == 0) && (mask == 0)
+            && (best_route_iface[0] == '\0')) {
+            best_route_mask = mask;
+            strncpy(best_route_iface, iface,
+                    sizeof(best_route_iface) - 1);
+            continue;
+        }
 
-		/*default route & multicast route */
-		if ((multicast_net & mask) == (destination & mask) &&
-		    best_route_mask < mask) {
-			best_route_mask = mask;
-			strncpy(best_route_iface, iface,
-				sizeof(best_route_iface) - 1);
-		}
-	}
+        /*default route & multicast route */
+        if ((multicast_net & mask) == (destination & mask) &&
+            best_route_mask < mask) {
+            best_route_mask = mask;
+            strncpy(best_route_iface, iface,
+                    sizeof(best_route_iface) - 1);
+        }
+    }
 
-    if (best_route_iface[0] != '\0'){
+    if (best_route_iface[0] != '\0') {
         strncpy(ifname, best_route_iface, ifname_size - 1);
         result = ifname;
     }
 
 out:
-    if(fp)
+    if (fp) {
         fclose(fp);
-	return result;
+    }
+    return result;
 }
 
 char *platform_wifi_get_mac(char mac_str[PLATFORM_MAC_LEN])
@@ -128,12 +129,12 @@ char *platform_wifi_get_mac(char mac_str[PLATFORM_MAC_LEN])
     }
 
     snprintf(mac_str, PLATFORM_MAC_LEN, "%02X:%02X:%02X:%02X:%02X:%02X",
-            (unsigned char)ifreq.ifr_hwaddr.sa_data[0],
-            (unsigned char)ifreq.ifr_hwaddr.sa_data[1],
-            (unsigned char)ifreq.ifr_hwaddr.sa_data[2],
-            (unsigned char)ifreq.ifr_hwaddr.sa_data[3],
-            (unsigned char)ifreq.ifr_hwaddr.sa_data[4],
-            (unsigned char)ifreq.ifr_hwaddr.sa_data[5]);
+             (unsigned char)ifreq.ifr_hwaddr.sa_data[0],
+             (unsigned char)ifreq.ifr_hwaddr.sa_data[1],
+             (unsigned char)ifreq.ifr_hwaddr.sa_data[2],
+             (unsigned char)ifreq.ifr_hwaddr.sa_data[3],
+             (unsigned char)ifreq.ifr_hwaddr.sa_data[4],
+             (unsigned char)ifreq.ifr_hwaddr.sa_data[5]);
 
     return mac_str;
 }
@@ -149,7 +150,7 @@ uint32_t platform_wifi_get_ip(char ip_str[PLATFORM_IP_LEN])
     int sock;
     char ifname[IFNAMSIZ] = {0};
 
-    if(NULL == platform_get_multicast_ifname(ifname, sizeof(ifname))) {
+    if (NULL == platform_get_multicast_ifname(ifname, sizeof(ifname))) {
         perror("get multicast ifname");
         return -1;
     }
@@ -165,15 +166,15 @@ uint32_t platform_wifi_get_ip(char ip_str[PLATFORM_IP_LEN])
     if (ioctl(sock, SIOCGIFADDR, &ifreq) < 0) {
         perror("ioctl");
         return -1;
-	}
+    }
 
-	close(sock);
+    close(sock);
 
-	strncpy(ip_str,
-		inet_ntoa(((struct sockaddr_in *)&ifreq.ifr_addr)->sin_addr),
-		PLATFORM_IP_LEN);
+    strncpy(ip_str,
+            inet_ntoa(((struct sockaddr_in *)&ifreq.ifr_addr)->sin_addr),
+            PLATFORM_IP_LEN);
 
-	return ((struct sockaddr_in *)&ifreq.ifr_addr)->sin_addr.s_addr;
+    return ((struct sockaddr_in *)&ifreq.ifr_addr)->sin_addr.s_addr;
 }
 
 char *platform_get_chipid(char chipid[PLATFORM_CID_LEN])
@@ -195,8 +196,9 @@ char *platform_get_os_version(char os_ver[STR_SHORT_LEN])
         fclose(fp);
     }
 
-    if (!count)
+    if (!count) {
         strncpy(os_ver, "unknown version", STR_SHORT_LEN);
+    }
 
     os_ver[STR_SHORT_LEN - 1] = '\0';
 
@@ -209,21 +211,23 @@ int platform_config_write(const char *buffer, int length)
     size_t written_len;
     char filepath[128] = {0};
 
-    if (!buffer || length <= 0)
-		return -1;
+    if (!buffer || length <= 0) {
+        return -1;
+    }
 
-	snprintf(filepath, sizeof(filepath),
-		 "%s%s", platform_get_storage_directory(),
-		 ALINK_CONFIG_FILE_NAME);
-	fp = fopen(filepath, "w");
-	if (!fp)
-		return -1;
+    snprintf(filepath, sizeof(filepath),
+             "%s%s", platform_get_storage_directory(),
+             ALINK_CONFIG_FILE_NAME);
+    fp = fopen(filepath, "w");
+    if (!fp) {
+        return -1;
+    }
 
-	written_len = fwrite(buffer, 1, length, fp);
+    written_len = fwrite(buffer, 1, length, fp);
 
     fclose(fp);
 
-    return ((written_len != length) ? -1: 0);
+    return ((written_len != length) ? -1 : 0);
 }
 
 int platform_config_read(char *buffer, int length)
@@ -232,19 +236,21 @@ int platform_config_read(char *buffer, int length)
     size_t read_len;
     char filepath[128] = {0};
 
-    if (!buffer || length <= 0)
+    if (!buffer || length <= 0) {
         return -1;
+    }
 
     snprintf(filepath, sizeof(filepath), "%s%s",
-            platform_get_storage_directory(), ALINK_CONFIG_FILE_NAME);
+             platform_get_storage_directory(), ALINK_CONFIG_FILE_NAME);
     fp = fopen(filepath, "r");
-    if (!fp)
+    if (!fp) {
         return -1;
+    }
 
     read_len = fread(buffer, 1, length, fp);
     fclose(fp);
 
-    return ((read_len != length)? -1: 0);
+    return ((read_len != length) ? -1 : 0);
 }
 
 int platform_sys_net_is_ready(void)
@@ -262,7 +268,7 @@ void platform_sys_reboot(void)
 char *platform_get_module_name(char name_str[STR_SHORT_LEN])
 {
     strncpy(name_str, MODULE_NAME, STR_SHORT_LEN);
-    name_str[STR_SHORT_LEN - 1] ='\0';
+    name_str[STR_SHORT_LEN - 1] = '\0';
     return name_str;
 }
 

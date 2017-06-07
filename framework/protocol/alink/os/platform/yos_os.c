@@ -38,13 +38,13 @@ typedef struct {
 
 void platform_printf(const char *fmt, ...)
 {
-	va_list args;
+    va_list args;
 
-	va_start(args, fmt);
-	vprintf(fmt, args);
-	va_end(args);
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
 
-	fflush(stdout);
+    fflush(stdout);
 }
 
 
@@ -192,7 +192,7 @@ int platform_thread_get_stack_size(_IN_ const char *thread_name)
 int platform_thread_create(
     _OUT_ void **thread,
     _IN_ const char *name,
-    _IN_ void *(*start_routine)(void *),
+    _IN_ void * (*start_routine)(void *),
     _IN_ void *arg,
     _IN_ void *stack,
     _IN_ uint32_t stack_size,
@@ -202,7 +202,8 @@ int platform_thread_create(
     *stack_used = 0;
     (void)stack;
 
-    ret = yos_task_new_ext(name, (thread_entry_t)start_routine, arg, stack_size, DEFAULT_THREAD_PRI);
+    ret = yos_task_new_ext(name, (thread_entry_t)start_routine, arg, stack_size,
+                           DEFAULT_THREAD_PRI);
 
     *thread = start_routine;
 

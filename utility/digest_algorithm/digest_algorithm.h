@@ -35,11 +35,11 @@ extern "C"
  * @enum Type of digest.
  */
 enum digest_type {
-	DIGEST_TYPE_MD5,				/**< MD5 */
-	//CHF_SHA1,
-	DIGEST_TYPE_SHA256,				/**< SHA-256 */
-	DIGEST_TYPE_SHA384,				/**< SHA-384 */
-	DIGEST_TYPE_SHA512,				/**< SHA-512 */
+    DIGEST_TYPE_MD5,                /**< MD5 */
+    //CHF_SHA1,
+    DIGEST_TYPE_SHA256,             /**< SHA-256 */
+    DIGEST_TYPE_SHA384,             /**< SHA-384 */
+    DIGEST_TYPE_SHA512,             /**< SHA-512 */
 };
 
 /** @defgroup group_crypto_hash group_crypto_hash
@@ -263,7 +263,7 @@ int digest_sha384_final(void *sha384, unsigned char *digest);
  */
 int digest_sha384(const void *data, uint32_t length, unsigned char *digest);
 
-									 /** @} */// end of group_crypt_hash_sha384
+/** @} */// end of group_crypt_hash_sha384
 
 /** @defgroup group_crypto_hash_sha512 group_crypto_hash_sha512
  *  @{
@@ -331,7 +331,7 @@ int digest_sha512_final(void *sha512, unsigned char *digest);
  */
 int digest_sha512(const void *data, uint32_t length, unsigned char *digest);
 
-									 /** @} */// end of group_crypt_hash_sha512
+/** @} */// end of group_crypt_hash_sha512
 
 /** @defgroup group_crypto_hash_hmac group_crypto_hash_hmac
  *  @{
@@ -356,9 +356,9 @@ int digest_sha512(const void *data, uint32_t length, unsigned char *digest);
  * @note It is the caller that allocate memory space for digest.
  */
 int digest_hmac(enum digest_type type,
-        const unsigned char *msg, uint32_t msg_len,
-        const unsigned char *key, uint32_t key_len,
-        unsigned char *digest);
+                const unsigned char *msg, uint32_t msg_len,
+                const unsigned char *key, uint32_t key_len,
+                unsigned char *digest);
 
 /** @} */// end of group_crypt_hash_hmac
 

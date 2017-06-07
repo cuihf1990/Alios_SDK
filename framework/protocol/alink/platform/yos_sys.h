@@ -25,11 +25,11 @@
 //reverse byte order
 static inline uint32_t __reverse_32bit(uint32_t data)
 {
-	data = (data >> 16) | (data << 16);
-	return ((data & 0xff00ff00UL) >> 8) | ((data & 0x00ff00ffUL) << 8);
+    data = (data >> 16) | (data << 16);
+    return ((data & 0xff00ff00UL) >> 8) | ((data & 0x00ff00ffUL) << 8);
 }
 
-static inline int __is_big_endian(void) 
+static inline int __is_big_endian(void)
 {
     uint32_t data = 0xFF000000;
     return (0xFF == *(uint8_t *) & data);
@@ -38,9 +38,10 @@ static inline int __is_big_endian(void)
 //host byte order to big endian
 static inline uint32_t yos_htobe32(uint32_t data)
 {
-	if (__is_big_endian()) 
-		return data;
-	return __reverse_32bit(data);
+    if (__is_big_endian()) {
+        return data;
+    }
+    return __reverse_32bit(data);
 }
 
 #define yos_WAIT_INFINITE          (~0)

@@ -31,7 +31,8 @@ typedef enum {
     WSF_SEND_ERROR,
     WSF_CONNECTION_DEREGISTERED,
     WSF_CODE_END
-} wsf_code;
+}
+wsf_code;
 
 typedef enum {
     INVOKE_RIGHT = 0,

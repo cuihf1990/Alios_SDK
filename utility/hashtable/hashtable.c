@@ -104,7 +104,8 @@ void ht_unlock(void *ht)
     }
 }
 
-static ht_item_t *_ht_find_lockless(void *ht, const void *key, unsigned int key_len)
+static ht_item_t *_ht_find_lockless(void *ht, const void *key,
+                                    unsigned int key_len)
 {
     unsigned int pos = 0;
     ht_t *pt = (ht_t *)ht;
@@ -129,7 +130,8 @@ static ht_item_t *_ht_find_lockless(void *ht, const void *key, unsigned int key_
  *            size_val: the  size of returned val
  * @retval  the pointer to value on success, otherwise NULL will be returned
  */
-void *ht_find_lockless(void *ht, const void *key, unsigned int key_len, void *val, int *size_val)
+void *ht_find_lockless(void *ht, const void *key, unsigned int key_len,
+                       void *val, int *size_val)
 {
     ht_item_t *p = _ht_find_lockless(ht, key, key_len);
     void *ret = NULL;
@@ -160,7 +162,8 @@ void *ht_find_lockless(void *ht, const void *key, unsigned int key_len, void *va
  *            size_val: the size of returned val
  * @retval  the pointer to @ht_item_t on success, otherwise NULL will be returned
  */
-void *ht_find(void *ht, const void *key, unsigned int key_len, void *val, int *size_val)
+void *ht_find(void *ht, const void *key, unsigned int key_len, void *val,
+              int *size_val)
 {
     void *ret = NULL;
 
@@ -181,7 +184,8 @@ void *ht_find(void *ht, const void *key, unsigned int key_len, void *val, int *s
  * @note: the @key and @val will be re-malloced and stored in the hashtable.
  * @retval  0 on success, otherwise -1 will be returned
  */
-int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void *val, unsigned int size_val)
+int ht_add_lockless(void *ht, const void *key, unsigned int len_key,
+                    const void *val, unsigned int size_val)
 {
     ht_item_t *p_item = NULL;
     ht_item_t *p_tmp = NULL;
@@ -221,7 +225,7 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
             p_tmp->val = yos_malloc(size_val);
             if (!p_item->val) {
                 yos_free(p_tmp);
-                LOGE(MODULE,"failed to yos_malloc new value.\n");
+                LOGE(MODULE, "failed to yos_malloc new value.\n");
                 return -1;
             }
             p_item->size_val = size_val;
@@ -268,7 +272,8 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key, const void 
  * @note: the @key and @val will be re-malloced and stored in the hashtable.
  * @retval  0 on success, otherwise -1 will be returned
  */
-int ht_add(void *ht, const void *key, unsigned int len_key, const void *val, unsigned int size_val)
+int ht_add(void *ht, const void *key, unsigned int len_key, const void *val,
+           unsigned int size_val)
 {
     int ret = 0;
     ht_lock(ht);
@@ -293,11 +298,11 @@ static int _ht_del_node(void *ht_item, const void *key, unsigned int len_key)
     parent = (ht_item_t *)ht_item;
     while (parent) {
         if (parent->key && parent->val &&
-                (!key || !memcmp(parent->key, key, len_key))) {
+            (!key || !memcmp(parent->key, key, len_key))) {
             next = parent->next;//store its next item befroe yos_free.
 
             //LOGD(MODULE,"del  key: <yos_free>%p, val: <yos_free>%p,node: %p ,<%s>current: %p, next: %p\n",
-                   // parent->key, parent->val,!flag ? NULL : parent, !flag ? "" : "yos_free", parent, next);
+            // parent->key, parent->val,!flag ? NULL : parent, !flag ? "" : "yos_free", parent, next);
             yos_free(parent->key);
             parent->key = NULL;
             yos_free(parent->val);
@@ -378,8 +383,9 @@ void ht_iterator_lockless(void *ht, iter_func func, void *extra)
         item = pt->item + i;
 
         while (item) {
-            if(item->key && item->val)
+            if (item->key && item->val) {
                 func(item->key, item->val, extra);
+            }
 
             item = item->next;
         }

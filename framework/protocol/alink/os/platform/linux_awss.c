@@ -45,7 +45,7 @@ int platform_awss_get_channelscan_interval_ms(void)
 
 //wifi信道切换，信道1-13
 void platform_awss_switch_channel(char primary_channel,
-		char secondary_channel, uint8_t bssid[ETH_ALEN])
+                                  char secondary_channel, uint8_t bssid[ETH_ALEN])
 {
     hal_wifi_module_t *module;
 
@@ -99,13 +99,13 @@ void platform_awss_close_monitor(void)
 }
 
 int platform_awss_connect_ap(
-        _IN_ uint32_t connection_timeout_ms,
-        _IN_ char ssid[PLATFORM_MAX_SSID_LEN],
-        _IN_ char passwd[PLATFORM_MAX_PASSWD_LEN],
-        _IN_OPT_ enum AWSS_AUTH_TYPE auth,
-        _IN_OPT_ enum AWSS_ENC_TYPE encry,
-        _IN_OPT_ uint8_t bssid[ETH_ALEN],
-        _IN_OPT_ uint8_t channel)
+    _IN_ uint32_t connection_timeout_ms,
+    _IN_ char ssid[PLATFORM_MAX_SSID_LEN],
+    _IN_ char passwd[PLATFORM_MAX_PASSWD_LEN],
+    _IN_OPT_ enum AWSS_AUTH_TYPE auth,
+    _IN_OPT_ enum AWSS_ENC_TYPE encry,
+    _IN_OPT_ uint8_t bssid[ETH_ALEN],
+    _IN_OPT_ uint8_t channel)
 {
     int ret;
     netmgr_ap_config_t config;
@@ -120,21 +120,21 @@ int platform_awss_connect_ap(
 
 int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)
 {
-	return 0;
+    return 0;
 }
 
 p_aes128_t platform_aes128_init(
-    const uint8_t* key,
-    const uint8_t* iv,
+    const uint8_t *key,
+    const uint8_t *iv,
     AES_DIR_t dir)
 {
-	return 0;
+    return 0;
 }
 
 int platform_aes128_destroy(
     p_aes128_t aes)
 {
-	return 0;
+    return 0;
 }
 
 int platform_aes128_cbc_encrypt(
@@ -143,7 +143,7 @@ int platform_aes128_cbc_encrypt(
     size_t blockNum,
     void *dst )
 {
-	return 0;
+    return 0;
 }
 
 int platform_aes128_cbc_decrypt(
@@ -152,7 +152,7 @@ int platform_aes128_cbc_decrypt(
     size_t blockNum,
     void *dst )
 {
-	return 0;
+    return 0;
 }
 
 int platform_wifi_get_ap_info(
@@ -160,7 +160,7 @@ int platform_wifi_get_ap_info(
     char passwd[PLATFORM_MAX_PASSWD_LEN],
     uint8_t bssid[ETH_ALEN])
 {
-	return 0;
+    return 0;
 }
 
 
@@ -174,15 +174,15 @@ int platform_wifi_low_power(int timeout_ms)
 }
 
 int platform_wifi_enable_mgnt_frame_filter(
-            _IN_ uint32_t filter_mask,
-            _IN_OPT_ uint8_t vendor_oui[3],
-            _IN_ platform_wifi_mgnt_frame_cb_t callback)
+    _IN_ uint32_t filter_mask,
+    _IN_OPT_ uint8_t vendor_oui[3],
+    _IN_ platform_wifi_mgnt_frame_cb_t callback)
 {
     return -2;
 }
 
 int platform_wifi_send_80211_raw_frame(_IN_ enum platform_awss_frame_type type,
-        _IN_ uint8_t *buffer, _IN_ int len)
+                                       _IN_ uint8_t *buffer, _IN_ int len)
 {
     return -2;
 }

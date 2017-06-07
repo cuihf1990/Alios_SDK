@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef WSF_LIST_H 
+#ifndef WSF_LIST_H
 #define WSF_LIST_H
 #include "wsf_defines.h"
 #include <stdlib.h>
@@ -30,7 +30,7 @@ typedef struct wsf_list_t {
     wsf_list_node_t *tail;
 } wsf_list_t;
 
-void wsf_list_init(wsf_list_t *list); 
+void wsf_list_init(wsf_list_t *list);
 /**
  * append the data to the list, the data size is 'length'
  *

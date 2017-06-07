@@ -41,8 +41,10 @@
 static int disconnectcounter = 0;
 
 static void collect_stats(void *work);
-static int cota_conn_listener(int type, void *data, int dlen, void *result, int *rlen);
-static int cota_service_listener(int type, void *data, int dlen, void *result, int *rlen);
+static int cota_conn_listener(int type, void *data, int dlen, void *result,
+                              int *rlen);
+static int cota_service_listener(int type, void *data, int dlen, void *result,
+                                 int *rlen);
 static int get_dev_stats(STATISTYPE es, char *dev_stats);
 static int alink_set_config(char *param);
 static int alink_get_config(char *param, char *result);
@@ -61,22 +63,24 @@ int cota_exit(void)
     return cm_release_conn("wsf", &cota_conn_listener);
 }
 
-static int cota_conn_listener(int type, void *data, int dlen, void *result, int *rlen)
+static int cota_conn_listener(int type, void *data, int dlen, void *result,
+                              int *rlen)
 {
     if (type == CONNECT_EVENT) {
         int st = *((int *)data);
 
         if (st == CONNECT_STATE_READY) {
-            yos_schedule_work(0,collect_stats,NULL,NULL,NULL);
+            yos_schedule_work(0, collect_stats, NULL, NULL, NULL);
         } else if (st == CONNECT_STATE_CLOSE) {
-            yos_schedule_work(0,collect_stats,NULL,NULL,NULL);
+            yos_schedule_work(0, collect_stats, NULL, NULL, NULL);
             disconnectcounter++;
         }
     }
     return 0;
 }
 
-static int cota_service_listener(int type, void *data, int dlen, void *result, int *rlen)
+static int cota_service_listener(int type, void *data, int dlen, void *result,
+                                 int *rlen)
 {
     if (type == SERVICE_DATA) {
         alink_data_t *p = (alink_data_t *) data;
@@ -84,14 +88,15 @@ static int cota_service_listener(int type, void *data, int dlen, void *result, i
 
         if (!strcmp(p->method, "getDebugConfig")) {
             alink_get_config(p->data, (char *)result);
-            LOGW(MODULE_NAME_COTA,"result %s", result);
+            LOGW(MODULE_NAME_COTA, "result %s", result);
         } else if (!strcmp(p->method, "setDebugConfig")) {
             alink_set_config(p->data);
         } else {
             return EVENT_IGNORE;
         }
-        if (result != NULL)
+        if (result != NULL) {
             *rlen = strlen(result);
+        }
         return EVENT_CONSUMED;
     }
     return EVENT_IGNORE;
@@ -104,30 +109,35 @@ static int alink_set_config(char *param)
     int value_len = 0;
     int test_reboot = 0;
 
-    pvalue = json_get_value_by_name(param, strlen(param), "rebootDevice", &value_len, 0);
+    pvalue = json_get_value_by_name(param, strlen(param), "rebootDevice",
+                                    &value_len, 0);
     if (pvalue != NULL) {
         test_reboot = 1;
     }
-    pvalue = json_get_value_by_name(param, strlen(param), "testMode", &value_len, 0);
+    pvalue = json_get_value_by_name(param, strlen(param), "testMode", &value_len,
+                                    0);
     if (pvalue != NULL) {
         ret = config_set_test_mode(pvalue, value_len);
     }
-    pvalue = json_get_value_by_name(param, strlen(param), "debugSwitch", &value_len, 0);
+    pvalue = json_get_value_by_name(param, strlen(param), "debugSwitch", &value_len,
+                                    0);
     if (pvalue != NULL) {
         ret = config_set_device_flag(atoi(pvalue));
     }
 
     char *alinkserver = config_get_alinkserver();
-    pvalue = json_get_value_by_name(param, strlen(param), "alinkServer", &value_len, 0);
+    pvalue = json_get_value_by_name(param, strlen(param), "alinkServer", &value_len,
+                                    0);
     if (pvalue != NULL) {
         value_len = (value_len < SERVER_LEN) ? value_len : SERVER_LEN;
         memset(alinkserver, 0x00, SERVER_LEN);
         strncpy(alinkserver, pvalue, value_len);
-        yos_schedule_work(3000,os_sys_reboot,NULL,NULL,NULL);
+        yos_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }
 
     char *attrsfilter = config_get_attrsfilter();
-    pvalue = json_get_value_by_name(param, strlen(param), "attrsFilter", &value_len, 0);
+    pvalue = json_get_value_by_name(param, strlen(param), "attrsFilter", &value_len,
+                                    0);
     if (pvalue != NULL) {
         value_len = (value_len < ATTRS_LEN) ? value_len : ATTRS_LEN;
         memset(attrsfilter, 0x00, ATTRS_LEN);
@@ -138,13 +148,13 @@ static int alink_set_config(char *param)
 
     ret = config_update();
     if (0 != ret) {
-        LOGW(MODULE_NAME_COTA,"Write config failed");
+        LOGW(MODULE_NAME_COTA, "Write config failed");
         ret = SERVICE_RESULT_ERR;
     }
 
     if (test_reboot) {
-        LOGW(MODULE_NAME_COTA,"RebootDevice, device will reboot 3 seconds later!");
-        yos_schedule_work(3000,os_sys_reboot,NULL,NULL,NULL);
+        LOGW(MODULE_NAME_COTA, "RebootDevice, device will reboot 3 seconds later!");
+        yos_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }
 
     return ret;
@@ -160,15 +170,15 @@ static int alink_get_config(char *param, char *result)
     memset(data, 0x00, CONFIG_DATA_LEN);
 
     snprintf(data, CONFIG_DATA_LEN, ConfigInfoFormat, config_get_device_flag(),
-            config_get_alinkserver(), config_get_attrsfilter(), config_get_test_mode());
+             config_get_alinkserver(), config_get_attrsfilter(), config_get_test_mode());
     if (result) {
         snprintf(result, strlen(AlinkResponseWithDataFormat) + CONFIG_DATA_LEN,
-                AlinkResponseWithDataFormat, "success", 1000, data);
+                 AlinkResponseWithDataFormat, "success", 1000, data);
     } else {
         os_free(data);
         return ret;
     }
-    LOGW(MODULE_NAME_COTA,"config info %s", result);
+    LOGW(MODULE_NAME_COTA, "config info %s", result);
     os_free(data);
     ret = SERVICE_RESULT_ERR;
 
@@ -202,16 +212,19 @@ static int collect_dev_stats(char *devstats)
     do {
         memset(stats, 0x00, sizeof(stats));
         if ((*(device_flag_t *) & df).ustats.stats & (0x1 << es)
-                && get_dev_stats(es, stats) == 0) {
-            if ((len + strlen(statsStr[es]) + strlen(stats) + 16) > STATS_DATA_LEN)
+            && get_dev_stats(es, stats) == 0) {
+            if ((len + strlen(statsStr[es]) + strlen(stats) + 16) > STATS_DATA_LEN) {
                 break;
-            snprintf(devstats + len, STATS_DATA_LEN - len, "\"%s\":\"%s\",", statsStr[es], stats);
+            }
+            snprintf(devstats + len, STATS_DATA_LEN - len, "\"%s\":\"%s\",", statsStr[es],
+                     stats);
             len = strlen(devstats);
         }
         es++;
     } while (es < MAX_STATIS);
 
-    snprintf(devstats + len, STATS_DATA_LEN - len, "\"time\":\"%d\"}", os_get_time_ms() / 1000);
+    snprintf(devstats + len, STATS_DATA_LEN - len, "\"time\":\"%d\"}",
+             os_get_time_ms() / 1000);
     sprintf(devstats + strlen(devstats), "}");
 
     return SERVICE_RESULT_OK;
@@ -239,7 +252,7 @@ static void collect_stats(void *work)
         config_set_stats_flag(0);
         sm_get_service("accs")->put((void *)&data, sizeof(data));
     } else {
-        LOGW(MODULE_NAME_COTA,"save stats data to flash");
+        LOGW(MODULE_NAME_COTA, "save stats data to flash");
         device_statisticsdata_save(devstats, strlen(devstats));
         config_set_stats_flag(1);
     }
@@ -249,7 +262,7 @@ static void collect_stats(void *work)
 }
 
 static int replace_attr_withspace(char *p_cName, int iNameLen, char *p_cValue,
-        int iValueLen, int iValueType, void *p_Result)
+                                  int iValueLen, int iValueType, void *p_Result)
 {
     int ret = SERVICE_RESULT_OK;
     char *p_cAttr = NULL, cLastChar;
@@ -257,14 +270,17 @@ static int replace_attr_withspace(char *p_cName, int iNameLen, char *p_cValue,
     cLastChar = p_cName[iNameLen];
     p_cName[iNameLen] = '\0';
     p_cAttr = strstr((char *)p_Result, p_cName);
-    if (p_cAttr != NULL && (p_cAttr[iNameLen] == ',' || p_cAttr[iNameLen] == '\0')) {
-        memset(p_cName - 1, ' ', p_cValue + iValueLen - p_cName + ((iValueType == JSTRING) ? 2 : 1));
+    if (p_cAttr != NULL && (p_cAttr[iNameLen] == ',' ||
+                            p_cAttr[iNameLen] == '\0')) {
+        memset(p_cName - 1, ' ',
+               p_cValue + iValueLen - p_cName + ((iValueType == JSTRING) ? 2 : 1));
         p_cAttr = p_cValue + iValueLen;
         while (*p_cAttr == ' ') {
             p_cAttr++;
         }
-        if (*p_cAttr == ',')
+        if (*p_cAttr == ',') {
             *p_cAttr = ' ';
+        }
     } else {
         p_cName[iNameLen] = cLastChar;
     }
@@ -276,10 +292,11 @@ void alink_attrfilter(char *cJsonStr)
     char *attrsfilter = config_get_attrsfilter();
 
     if (attrsfilter[0] == '\0') {
-        LOGW(MODULE_NAME_COTA,"No attrs to filter");
+        LOGW(MODULE_NAME_COTA, "No attrs to filter");
         return;
     }
-    json_parse_name_value(cJsonStr, strlen(cJsonStr), replace_attr_withspace, attrsfilter);
+    json_parse_name_value(cJsonStr, strlen(cJsonStr), replace_attr_withspace,
+                          attrsfilter);
 }
 
 //TODO

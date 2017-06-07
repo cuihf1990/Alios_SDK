@@ -52,7 +52,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
 {
     pthread_t tid;
 
-    return pthread_create(&tid, NULL, (void *(*)(void *))fn, arg);
+    return pthread_create(&tid, NULL, (void * ( *)(void *))fn, arg);
 }
 
 int yos_task_new_ext(const char *name, void (*fn)(void *), void *arg,
@@ -60,7 +60,7 @@ int yos_task_new_ext(const char *name, void (*fn)(void *), void *arg,
 {
     pthread_t tid;
 
-    return pthread_create(&tid, NULL, (void *(*)(void *))fn, arg);
+    return pthread_create(&tid, NULL, (void * ( *)(void *))fn, arg);
 }
 
 void yos_task_exit(int code)

@@ -31,18 +31,18 @@ extern "C" {
  */
 
 #define OS_SOCKET_MAXNUMS       PLATFORM_SOCKET_MAXNUMS
-#define OS_WAIT_INFINITE		PLATFORM_WAIT_INFINITE
-#define OS_INVALID_FD			PLATFORM_INVALID_FD
+#define OS_WAIT_INFINITE        PLATFORM_WAIT_INFINITE
+#define OS_INVALID_FD           PLATFORM_INVALID_FD
 #define OS_MAX_SSID_LEN         PLATFORM_MAX_SSID_LEN
 #define OS_MAX_PASSWD_LEN       PLATFORM_MAX_PASSWD_LEN
 
 
-#define OS_CONFIG_SIZE			PLATFORM_CONFIG_SIZE
-#define OS_MAC_LEN 			    PLATFORM_MAC_LEN
+#define OS_CONFIG_SIZE          PLATFORM_CONFIG_SIZE
+#define OS_MAC_LEN              PLATFORM_MAC_LEN
 #define OS_IP_LEN               PLATFORM_IP_LEN
-#define OS_CID_LEN 			    PLATFORM_CID_LEN
-#define OS_ETH_ALEN		ETH_ALEN
-#define OS_VERSION_LEN 	        STR_SHORT_LEN
+#define OS_CID_LEN              PLATFORM_CID_LEN
+#define OS_ETH_ALEN     ETH_ALEN
+#define OS_VERSION_LEN          STR_SHORT_LEN
 #define OS_MODULE_NAME_LEN      STR_SHORT_LEN
 
 #define OS_PRODUCT_NAME_LEN     PRODUCT_NAME_LEN
@@ -88,15 +88,16 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	static inline int os_is_big_endian(void) {
-		uint32_t data = 0xFF000000;
+static inline int os_is_big_endian(void)
+{
+    uint32_t data = 0xFF000000;
 
-		if (0xFF == *(uint8_t *) & data) {
-			return 1;									//big endian
-		}
+    if (0xFF == *(uint8_t *) & data) {
+        return 1;                                   //big endian
+    }
 
-		return 0;										//little endian
-	}
+    return 0;                                       //little endian
+}
 
 /**
  * @brief Remove the specific value(char) in the buffer.
@@ -108,7 +109,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	void os_squeeze(uint8_t buf[], int c, int length);
+void os_squeeze(uint8_t buf[], int c, int length);
 
 /**
  * @brief Convert the data from byte order of current CPU(the "host") to big-endian.
@@ -119,7 +120,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint16_t os_htobe16(uint16_t data);
+uint16_t os_htobe16(uint16_t data);
 
 /**
  * @brief Convert the data from host to little-endian.
@@ -130,7 +131,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint16_t os_htole16(uint16_t data);
+uint16_t os_htole16(uint16_t data);
 
 /**
  * @brief Convert the data from big-endian to host.
@@ -141,7 +142,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint16_t os_be16toh(uint16_t data);
+uint16_t os_be16toh(uint16_t data);
 
 /**
  * @brief Convert the data from little-endian to host.
@@ -152,7 +153,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint16_t os_le16toh(uint16_t data);
+uint16_t os_le16toh(uint16_t data);
 
 /**
  * @brief Convert the data from host to big-endian.
@@ -163,7 +164,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint32_t os_htobe32(uint32_t data);
+uint32_t os_htobe32(uint32_t data);
 
 /**
  * @brief Convert the data from host to little-endian.
@@ -174,7 +175,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint32_t os_htole32(uint32_t data);
+uint32_t os_htole32(uint32_t data);
 
 /**
  * @brief Convert the data from big endian to host.
@@ -185,7 +186,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint32_t os_be32toh(uint32_t data);
+uint32_t os_be32toh(uint32_t data);
 
 /**
  * @brief Convert the data from little-endian to host.
@@ -196,7 +197,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint32_t os_le32toh(uint32_t data);
+uint32_t os_le32toh(uint32_t data);
 
 /**
  * @brief Convert the data from host to big-endian.
@@ -207,7 +208,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint64_t os_htobe64(uint64_t data);
+uint64_t os_htobe64(uint64_t data);
 
 /**
  * @brief Convert the data from host to little-endian.
@@ -218,7 +219,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint64_t os_htole64(uint64_t data);
+uint64_t os_htole64(uint64_t data);
 
 /**
  * @brief Convert the data from big-endian to host.
@@ -229,7 +230,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint64_t os_be64toh(uint64_t data);
+uint64_t os_be64toh(uint64_t data);
 
 /**
  * @brief Convert the data from little-endian to host.
@@ -240,7 +241,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint64_t os_le64toh(uint64_t data);
+uint64_t os_le64toh(uint64_t data);
 
 /**
  * @brief Get unaligned 16 bits data which is big-endian and convert to host byte order.
@@ -250,7 +251,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint16_t os_get_unaligned_be16(uint8_t * ptr);
+uint16_t os_get_unaligned_be16(uint8_t *ptr);
 
 /**
  * @brief Get unaligned 16 bits data which is little-endian and convert to host byte order.
@@ -260,7 +261,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint16_t os_get_unaligned_le16(uint8_t * ptr);
+uint16_t os_get_unaligned_le16(uint8_t *ptr);
 
 /**
  * @brief Get unaligned 32 bits data which is big-endian and convert to host byte order.
@@ -270,7 +271,7 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint32_t os_get_unaligned_be32(uint8_t * ptr);
+uint32_t os_get_unaligned_be32(uint8_t *ptr);
 
 /**
  * @brief Get unaligned 32 bits data which is little-endian and convert to host byte order.
@@ -280,9 +281,9 @@ void os_exit(void);
  * @see None.
  * @note None.
  */
-	uint32_t os_get_unaligned_le32(uint8_t * ptr);
+uint32_t os_get_unaligned_le32(uint8_t *ptr);
 
-	/** @} *///end of os_misc
+/** @} *///end of os_misc
 
 /***************************************** Debug Interface *****************************************/
 
@@ -341,7 +342,7 @@ do{ \
  * @note None.
  */
 #define OS_ASSERT(expr, fmt, args...) \
-	ASSERT(expr, fmt, ## args)
+    ASSERT(expr, fmt, ## args)
 
 #define OS_CHECK_PARAMS(expr) \
     ASSERT(expr, "invalid params")
@@ -359,9 +360,9 @@ do{ \
  * @note None.
  */
 #define OS_TRACE(fmt, args...) \
-	TRACE(fmt, ## args)
+    TRACE(fmt, ## args)
 
-	/** @} *///end of os_debug
+/** @} *///end of os_debug
 
 /***************************************** thread Interface *****************************************/
 
@@ -374,14 +375,15 @@ do{ \
  *
  * @param[in] name @n thread name.
  * @param[in] start_addr @n A pointer to the application-defined function to be executed by the thread.
-		This pointer represents the starting address of the thread.
+        This pointer represents the starting address of the thread.
  * @param[in] arg @n A pointer to a variable to be passed to the thread.
  * @return @n thread handle
  * @see None.
  * @note None.
  * @warning Must use as a pair with os_thread_exit, otherwise will occur fatal error.
  */
-	void *os_thread_create(_IN_ const char *thread_name, _IN_ void *thread_func, _IN_ void *arg);
+void *os_thread_create(_IN_ const char *thread_name, _IN_ void *thread_func,
+                       _IN_ void *arg);
 
 /**
  * @brief exit itself
@@ -401,7 +403,7 @@ do{ \
    @endverbatim
  *
  */
-	void os_thread_exit(_IN_ void *thread_info);
+void os_thread_exit(_IN_ void *thread_info);
 
 /**
  * @brief check whether the specific thread exist or not.
@@ -415,7 +417,7 @@ do{ \
  * @see none.
  * @note none.
  */
-	int os_thread_is_existence(_IN_ void *thread_info);
+int os_thread_is_existence(_IN_ void *thread_info);
 
 /**
  * @brief wait the specific thread to exit and then free the related resource.
@@ -429,7 +431,7 @@ do{ \
  * @see none.
  * @note none.
  */
-	int os_thread_join(_IN_ void *thread_info);
+int os_thread_join(_IN_ void *thread_info);
 
 //int os_thread_post_msg(void *thread_info, void *msg);
 
@@ -443,9 +445,10 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline void os_msleep(_IN_ uint32_t ms) {
-		platform_msleep(ms);
-	}
+static inline void os_msleep(_IN_ uint32_t ms)
+{
+    platform_msleep(ms);
+}
 
 /**
  * @brief sleep thread itself.
@@ -455,11 +458,12 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline void os_sleep(_IN_ uint32_t sec) {
-		platform_msleep(sec * 1000);
-	}
+static inline void os_sleep(_IN_ uint32_t sec)
+{
+    platform_msleep(sec * 1000);
+}
 
-	/** @} */// end of os_thread
+/** @} */// end of os_thread
 
 /***************************************** mutex Interface *****************************************/
 
@@ -474,9 +478,10 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline void *os_mutex_init(void) {
-		return platform_mutex_init();
-	}
+static inline void *os_mutex_init(void)
+{
+    return platform_mutex_init();
+}
 
 /**
  * @brief Destroy the specified mutex object, it will free related resource.
@@ -486,9 +491,10 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline void os_mutex_destroy(_IN_ void *mutex) {
-		platform_mutex_destroy(mutex);
-	}
+static inline void os_mutex_destroy(_IN_ void *mutex)
+{
+    platform_mutex_destroy(mutex);
+}
 
 /**
  * @brief Waits until the specified mutex is in the signaled state.
@@ -498,9 +504,10 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline void os_mutex_lock(_IN_ void *mutex) {
-		platform_mutex_lock(mutex);
-	}
+static inline void os_mutex_lock(_IN_ void *mutex)
+{
+    platform_mutex_lock(mutex);
+}
 
 /**
  * @brief Releases ownership of the specified mutex object..
@@ -510,11 +517,12 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline void os_mutex_unlock(_IN_ void *mutex) {
-		platform_mutex_unlock(mutex);
-	}
+static inline void os_mutex_unlock(_IN_ void *mutex)
+{
+    platform_mutex_unlock(mutex);
+}
 
-	/** @} */// end of os_mutex
+/** @} */// end of os_mutex
 
 /*************************************** semaphore Interface ***************************************/
 
@@ -529,9 +537,10 @@ do{ \
  * @see None.
  * @note The recommended value of maximum count of the semaphore is 255.
  */
-	static inline void *os_semaphore_init(void) {
-		return platform_semaphore_init();
-	}
+static inline void *os_semaphore_init(void)
+{
+    return platform_semaphore_init();
+}
 
 /**
  * @brief Destroy the specified semaphore object, it will free related resource.
@@ -541,9 +550,10 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline void os_semaphore_destroy(_IN_ void *sem) {
-		platform_semaphore_destroy(sem);
-	}
+static inline void os_semaphore_destroy(_IN_ void *sem)
+{
+    platform_semaphore_destroy(sem);
+}
 
 /**
  * @brief Wait until the specified mutex is in the signaled state or the time-out interval elapses.
@@ -559,9 +569,10 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline int os_semaphore_wait(_IN_ void *sem, _IN_ uint32_t timeout_ms) {
-		return platform_semaphore_wait(sem, timeout_ms);
-	}
+static inline int os_semaphore_wait(_IN_ void *sem, _IN_ uint32_t timeout_ms)
+{
+    return platform_semaphore_wait(sem, timeout_ms);
+}
 
 /**
  * @brief Increases the count of the specified semaphore object by 1.
@@ -571,11 +582,12 @@ do{ \
  * @see None.
  * @note None.
  */
-	static inline void os_semaphore_post(_IN_ void *sem) {
-		platform_semaphore_post(sem);
-	}
+static inline void os_semaphore_post(_IN_ void *sem)
+{
+    platform_semaphore_post(sem);
+}
 
-	/** @} */// end of os_semaphore
+/** @} */// end of os_semaphore
 
 /**************************************** memory Interface ****************************************/
 
@@ -591,13 +603,14 @@ do{ \
  * @see None.
  * @note Block value is indeterminate.
  */
-    extern void *__os_malloc_debug(const char *func, uint32_t size);
+extern void *__os_malloc_debug(const char *func, uint32_t size);
 #ifdef DEBUG
 #define os_malloc(size)     __os_malloc_debug(__func__, size)
 #else
-    static inline void *os_malloc(_IN_ uint32_t size) {
-        return platform_malloc(size);
-    }
+static inline void *os_malloc(_IN_ uint32_t size)
+{
+    return platform_malloc(size);
+}
 #endif
 
 
@@ -609,13 +622,14 @@ do{ \
  * @see None.
  * @note None.
  */
-    extern void __os_free_debug(const char *func, void *ptr);
+extern void __os_free_debug(const char *func, void *ptr);
 #ifdef DEBUG
 #define os_free(ptr)    __os_free_debug(__func__, ptr);
 #else
-    static inline void os_free(_IN_ void *ptr) {
-        return platform_free(ptr);
-    }
+static inline void os_free(_IN_ void *ptr)
+{
+    return platform_free(ptr);
+}
 #endif
 
 /**
@@ -627,7 +641,8 @@ do{ \
  * @see None.
  * @note Block value is indeterminate.
  */
-static inline void *os_zalloc(uint32_t size) {
+static inline void *os_zalloc(uint32_t size)
+{
     void *ptr = os_malloc(size);
     if (ptr != NULL) {
         memset(ptr, 0, size);
@@ -644,7 +659,7 @@ static inline void *os_zalloc(uint32_t size) {
  *  @{
  */
 
-	typedef platform_netaddr_t os_netaddr_t, *pos_netaddr_t;
+typedef platform_netaddr_t os_netaddr_t, *pos_netaddr_t;
 
 /**
  * @brief Converts a uint32_t from host to TCP/IP network byte order(which is big-endian).
@@ -654,7 +669,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note.
  */
-	uint32_t os_htonl(uint32_t n);
+uint32_t os_htonl(uint32_t n);
 
 /**
  * @brief Converts a uint32_t from TCP/IP network byte order(which is big-endian) to host byte order.
@@ -664,7 +679,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note.
  */
-	uint32_t os_ntohl(uint32_t n);
+uint32_t os_ntohl(uint32_t n);
 
 /**
  * @brief Converts a uint16_t from host to TCP/IP network byte order(which is big-endian).
@@ -674,7 +689,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note.
  */
-	uint16_t os_htons(uint16_t n);
+uint16_t os_htons(uint16_t n);
 
 /**
  * @brief Converts a uint16_t from TCP/IP network byte order(which is big-endian) to host byte order.
@@ -684,7 +699,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note.
  */
-	uint16_t os_ntohs(uint16_t n);
+uint16_t os_ntohs(uint16_t n);
 
 /**
  * @brief Convert numeric IP address (in network order) into decimal dotted ASCII representation.
@@ -695,7 +710,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note.
  */
-	char *os_ntoa(const uint32_t ip, char buf[OS_IP_LEN]);
+char *os_ntoa(const uint32_t ip, char buf[OS_IP_LEN]);
 
 /**
  * @brief Check whether ip_str is a valid ASCII representation of an Internet address and convert to a binary address.
@@ -709,7 +724,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note.
  */
-	uint32_t os_aton(const char *ip_str);
+uint32_t os_aton(const char *ip_str);
 
 /**
  * @brief Create a udp server with the specified port.
@@ -722,9 +737,10 @@ static inline void *os_zalloc(uint32_t size) {
    @endverbatim
  * @see None.
  */
-	static inline void *os_udp_server_create(_IN_ uint16_t port) {
-		return platform_udp_server_create(port);
-	}
+static inline void *os_udp_server_create(_IN_ uint16_t port)
+{
+    return platform_udp_server_create(port);
+}
 
 /**
  * @brief Create a udp client.
@@ -738,9 +754,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void *os_udp_client_create(void) {
-		return platform_udp_client_create();
-	}
+static inline void *os_udp_client_create(void)
+{
+    return platform_udp_client_create();
+}
 
 /**
  * @brief Add this host to the specified udp multicast group.
@@ -755,9 +772,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void *os_udp_multicast_server_create(pos_netaddr_t netaddr) {
-		return platform_udp_multicast_server_create((pplatform_netaddr_t) netaddr);
-	}
+static inline void *os_udp_multicast_server_create(pos_netaddr_t netaddr)
+{
+    return platform_udp_multicast_server_create((pplatform_netaddr_t) netaddr);
+}
 
 /**
  * @brief Closes an existing udp connection.
@@ -767,9 +785,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void os_udp_close(void *handle) {
-		platform_udp_close(handle);
-	}
+static inline void os_udp_close(void *handle)
+{
+    platform_udp_close(handle);
+}
 
 /**
  * @brief Sends data to a specific destination.
@@ -787,9 +806,11 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note blocking API.
  */
-	static inline int os_udp_sendto(_IN_ void *handle, _IN_ const char *buffer, _IN_ uint32_t length, _IN_ pplatform_netaddr_t netaddr) {
-		return platform_udp_sendto(handle, buffer, length, netaddr);
-	}
+static inline int os_udp_sendto(_IN_ void *handle, _IN_ const char *buffer,
+                                _IN_ uint32_t length, _IN_ pplatform_netaddr_t netaddr)
+{
+    return platform_udp_sendto(handle, buffer, length, netaddr);
+}
 
 /**
  * @brief Receives data from a udp connection.
@@ -807,9 +828,11 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note blocking API.
  */
-	static inline int os_udp_recvfrom(_IN_ void *handle, _OUT_ char *buffer, _IN_ uint32_t length, _OUT_OPT_ pplatform_netaddr_t netaddr) {
-		return platform_udp_recvfrom(handle, buffer, length, netaddr);
-	}
+static inline int os_udp_recvfrom(_IN_ void *handle, _OUT_ char *buffer,
+                                  _IN_ uint32_t length, _OUT_OPT_ pplatform_netaddr_t netaddr)
+{
+    return platform_udp_recvfrom(handle, buffer, length, netaddr);
+}
 
 /**
  * @brief Create a tcp server with the specified port.
@@ -823,9 +846,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void *os_tcp_server_create(_IN_ uint16_t port) {
-		return platform_tcp_server_create(port);
-	}
+static inline void *os_tcp_server_create(_IN_ uint16_t port)
+{
+    return platform_tcp_server_create(port);
+}
 
 /**
  * @brief Permits an incoming connection attempt on a tcp server.
@@ -839,9 +863,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void *os_tcp_server_accept(_IN_ void *server) {
-		return platform_tcp_server_accept(server);
-	}
+static inline void *os_tcp_server_accept(_IN_ void *server)
+{
+    return platform_tcp_server_accept(server);
+}
 
 /**
  * @brief Establish a connection.
@@ -855,9 +880,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void *os_tcp_client_connect(_IN_ pplatform_netaddr_t netaddr) {
-		return platform_tcp_client_connect(netaddr);
-	}
+static inline void *os_tcp_client_connect(_IN_ pplatform_netaddr_t netaddr)
+{
+    return platform_tcp_client_connect(netaddr);
+}
 
 /**
  * @brief Sends data on a connection.
@@ -873,9 +899,11 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note Blocking API.
  */
-	static inline int os_tcp_send(_IN_ void *handle, _IN_ const char *buffer, _IN_ uint32_t length) {
-		return platform_tcp_send(handle, buffer, length);
-	}
+static inline int os_tcp_send(_IN_ void *handle, _IN_ const char *buffer,
+                              _IN_ uint32_t length)
+{
+    return platform_tcp_send(handle, buffer, length);
+}
 
 /**
  * @brief Receives data from a tcp connection.
@@ -892,9 +920,11 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note Blocking API.
  */
-	static inline int os_tcp_recv(_IN_ void *handle, _OUT_ char *buffer, _IN_ uint32_t length) {
-		return platform_tcp_recv(handle, buffer, length);
-	}
+static inline int os_tcp_recv(_IN_ void *handle, _OUT_ char *buffer,
+                              _IN_ uint32_t length)
+{
+    return platform_tcp_recv(handle, buffer, length);
+}
 
 /**
  * @brief Closes an existing tcp connection.
@@ -904,9 +934,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void os_tcp_close(_IN_ void *handle) {
-		platform_tcp_close(handle);
-	}
+static inline void os_tcp_close(_IN_ void *handle)
+{
+    platform_tcp_close(handle);
+}
 
 /**
  * @brief Determines the status of one or more connection, waiting if necessary, to perform synchronous I/O.
@@ -935,11 +966,13 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline int os_select(_INOUT_OPT_ void *read_fds[OS_SOCKET_MAXNUMS], _INOUT_OPT_ void *write_fds[OS_SOCKET_MAXNUMS], _IN_ int timeout_ms) {
-		return platform_select(read_fds, write_fds, timeout_ms);
-	}
+static inline int os_select(_INOUT_OPT_ void *read_fds[OS_SOCKET_MAXNUMS],
+                            _INOUT_OPT_ void *write_fds[OS_SOCKET_MAXNUMS], _IN_ int timeout_ms)
+{
+    return platform_select(read_fds, write_fds, timeout_ms);
+}
 
-	/** @} */// end of os_network
+/** @} */// end of os_network
 
 /****************************************** SSL Interface ******************************************/
 
@@ -957,9 +990,11 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void *os_ssl_connect(_IN_ void *tcp_fd, _IN_ const char *server_cert, _IN_ int server_cert_len) {
-		return platform_ssl_connect(tcp_fd, server_cert, server_cert_len);
-	}
+static inline void *os_ssl_connect(_IN_ void *tcp_fd,
+                                   _IN_ const char *server_cert, _IN_ int server_cert_len)
+{
+    return platform_ssl_connect(tcp_fd, server_cert, server_cert_len);
+}
 
 /**
  * @brief Sends data on a ssl connection.
@@ -975,9 +1010,11 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note Blocking API.
  */
-	static inline int os_ssl_send(_IN_ void *ssl, _IN_ const char *buffer, _IN_ int length) {
-		return platform_ssl_send(ssl, buffer, length);
-	}
+static inline int os_ssl_send(_IN_ void *ssl, _IN_ const char *buffer,
+                              _IN_ int length)
+{
+    return platform_ssl_send(ssl, buffer, length);
+}
 
 /**
  * @brief Receives data from a ssl connection.
@@ -994,9 +1031,11 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note blocking API.
  */
-	static inline int os_ssl_recv(_IN_ void *ssl, _IN_ char *buffer, _IN_ int length) {
-		return platform_ssl_recv(ssl, buffer, length);
-	}
+static inline int os_ssl_recv(_IN_ void *ssl, _IN_ char *buffer,
+                              _IN_ int length)
+{
+    return platform_ssl_recv(ssl, buffer, length);
+}
 
 /**
  * @brief Closes an existing ssl connection.
@@ -1006,11 +1045,12 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void os_ssl_close(_IN_ void *ssl) {
-		platform_ssl_close(ssl);
-	}
+static inline void os_ssl_close(_IN_ void *ssl)
+{
+    platform_ssl_close(ssl);
+}
 
-	/** @} */// end of os_ssl
+/** @} */// end of os_ssl
 
 /**************************************** system Interface ****************************************/
 
@@ -1026,9 +1066,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline int os_sys_net_is_ready(void) {
-		return platform_sys_net_is_ready();
-	}
+static inline int os_sys_net_is_ready(void)
+{
+    return platform_sys_net_is_ready();
+}
 
 /**
  * @brief wait until system network is ready(get ip address).
@@ -1038,11 +1079,12 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void os_sys_net_wait_ready(void) {
-		while (0 == platform_sys_net_is_ready()) {
-			os_msleep(500);
-		}
-	}
+static inline void os_sys_net_wait_ready(void)
+{
+    while (0 == platform_sys_net_is_ready()) {
+        os_msleep(500);
+    }
+}
 
 /**
  * @brief reboot system immediately.
@@ -1052,9 +1094,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void os_sys_reboot(void) {
-		platform_sys_reboot();
-	}
+static inline void os_sys_reboot(void)
+{
+    platform_sys_reboot();
+}
 
 /**
  * @brief Retrieves the number of milliseconds that have elapsed since the system was boot.
@@ -1064,20 +1107,24 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline uint32_t os_get_time_ms(void) {
-		return platform_get_time_ms();
-	}
+static inline uint32_t os_get_time_ms(void)
+{
+    return platform_get_time_ms();
+}
 
 //os_get_utc_time() returns the time since the Epoch (00:00:00 UTC, January 1, 1970), measured in seconds.
-	static inline uint64_t os_get_utc_time(_INOUT_ uint64_t * p_utc) {
-		return platform_get_utc_time(p_utc);
-	}
+static inline uint64_t os_get_utc_time(_INOUT_ uint64_t *p_utc)
+{
+    return platform_get_utc_time(p_utc);
+}
 
-	static inline os_time_struct *os_local_time_r(const _IN_ uint64_t * p_utc, _OUT_ os_time_struct * p_result) {
-		return platform_local_time_r(p_utc, p_result);
-	}
+static inline os_time_struct *os_local_time_r(const _IN_ uint64_t *p_utc,
+                                              _OUT_ os_time_struct *p_result)
+{
+    return platform_local_time_r(p_utc, p_result);
+}
 
-	/** @} */// end of os_system
+/** @} */// end of os_system
 
 /*********************************** firmware upgrade Interface ***********************************/
 
@@ -1093,9 +1140,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline void os_firmware_start(void) {
-		platform_flash_program_start();
-	}
+static inline void os_firmware_start(void)
+{
+    platform_flash_program_start();
+}
 
 /**
  * @brief save firmware upgrade data to flash.
@@ -1106,9 +1154,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline int os_firmware_write(_IN_ char *buffer, _IN_ uint32_t length) {
-		return platform_flash_program_write_block(buffer, length);
-	}
+static inline int os_firmware_write(_IN_ char *buffer, _IN_ uint32_t length)
+{
+    return platform_flash_program_write_block(buffer, length);
+}
 
 /**
  * @brief indicate firmware upgrade data complete, and trigger data integrity checking,
@@ -1119,11 +1168,12 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline int os_firmware_upgrade(void) {
-		return platform_flash_program_stop();
-	}
+static inline int os_firmware_upgrade(void)
+{
+    return platform_flash_program_stop();
+}
 
-	/** @} */// end of os_firmware_upgrade
+/** @} */// end of os_firmware_upgrade
 
 /****************************************** io Interface ******************************************/
 
@@ -1142,9 +1192,9 @@ static inline void *os_zalloc(uint32_t size) {
  * @note None.
  */
 #define os_printf(fmt, args ...) \
-	platform_printf(fmt, ## args)
+    platform_printf(fmt, ## args)
 
-	/** @} */// end of os_io
+/** @} */// end of os_io
 
 /*************************************** wifi module Interface ***************************************/
 
@@ -1160,9 +1210,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline int os_wifi_get_rssi_dbm(void) {
-		return platform_wifi_get_rssi_dbm();
-	}
+static inline int os_wifi_get_rssi_dbm(void)
+{
+    return platform_wifi_get_rssi_dbm();
+}
 
 /**
  * @brief Get WIFI MAC string with format like: XX:XX:XX:XX:XX:XX.
@@ -1172,7 +1223,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note this func will format mac address string uppercase
  */
-	char *os_wifi_get_mac_str(char mac_str[OS_MAC_LEN]);
+char *os_wifi_get_mac_str(char mac_str[OS_MAC_LEN]);
 
 /**
  * @brief Get WIFI MAC address(digital form)
@@ -1182,7 +1233,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	uint8_t *os_wifi_get_mac(uint8_t mac[OS_ETH_ALEN]);
+uint8_t *os_wifi_get_mac(uint8_t mac[OS_ETH_ALEN]);
 
 /**
  * @brief Get WIFI IP string with format like: xx:xx:xx:xx:xx:xx,
@@ -1193,9 +1244,10 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-	static inline uint32_t os_wifi_get_ip(char ip_str[OS_IP_LEN]) {
-		return platform_wifi_get_ip(ip_str);
-	}
+static inline uint32_t os_wifi_get_ip(char ip_str[OS_IP_LEN])
+{
+    return platform_wifi_get_ip(ip_str);
+}
 
 /**
  * @brief wifi module enter power saving mode for a period
@@ -1206,7 +1258,8 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-static inline int os_wifi_low_power(int timeout_ms) {
+static inline int os_wifi_low_power(int timeout_ms)
+{
     return platform_wifi_low_power(timeout_ms);
 }
 
@@ -1218,9 +1271,10 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None.
  */
-	static inline char *os_get_chipid(char cid_str[OS_CID_LEN]) {
-		return platform_get_chipid(cid_str);
-	}
+static inline char *os_get_chipid(char cid_str[OS_CID_LEN])
+{
+    return platform_get_chipid(cid_str);
+}
 
 /**
  * @brief Get the os version of wifi module firmware.
@@ -1230,9 +1284,10 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None.
  */
-	static inline char *os_get_version(char version_str[OS_VERSION_LEN]) {
-		return platform_get_os_version(version_str);
-	}
+static inline char *os_get_version(char version_str[OS_VERSION_LEN])
+{
+    return platform_get_os_version(version_str);
+}
 
 /**
  * @brief Get wifi module name.
@@ -1242,11 +1297,12 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None.
  */
-	static inline char *os_get_module_name(char name_str[OS_MODULE_NAME_LEN]) {
-		return platform_get_module_name(name_str);
-	}
+static inline char *os_get_module_name(char name_str[OS_MODULE_NAME_LEN])
+{
+    return platform_get_module_name(name_str);
+}
 
-	/** @} */// end of os_wifi_module
+/** @} */// end of os_wifi_module
 
 /**************************************** config interface ****************************************/
 
@@ -1256,16 +1312,17 @@ static inline int os_wifi_low_power(int timeout_ms) {
 
 /**
  * @brief Get flash(R/W) storage directory path.
- * 	alink SDK use this path to store data profile
+ *  alink SDK use this path to store data profile
  *
  * @param None.
  * @return return storage path.
  * @see None.
  * @note None.
  */
-	static inline const char *os_get_storage_directory(void) {
-		return platform_get_storage_directory();
-	}
+static inline const char *os_get_storage_directory(void)
+{
+    return platform_get_storage_directory();
+}
 
 /**
  * @brief Read configure data from the start of configure zone.
@@ -1280,9 +1337,10 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None.
  */
-	static inline int os_config_read(char *buffer, int length) {
-		return platform_config_read(buffer, length);
-	}
+static inline int os_config_read(char *buffer, int length)
+{
+    return platform_config_read(buffer, length);
+}
 
 /**
  * @brief Write configure data from the start of configure zone.
@@ -1297,11 +1355,12 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None.
  */
-	static inline int os_config_write(const char *buffer, int length) {
-		return platform_config_write(buffer, length);
-	}
+static inline int os_config_write(const char *buffer, int length)
+{
+    return platform_config_write(buffer, length);
+}
 
-	/** @} */// end of os_config
+/** @} */// end of os_config
 
 /*************************************** awss interface ***************************************/
 
@@ -1317,9 +1376,10 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note The recommended value is 60,000ms.
  */
-	static inline int os_awss_get_timeout_interval_ms(void) {
-		return platform_awss_get_timeout_interval_ms();
-	}
+static inline int os_awss_get_timeout_interval_ms(void)
+{
+    return platform_awss_get_timeout_interval_ms();
+}
 
 /**
  * @brief Get timeout interval in millisecond to connect the default SSID if awss timeout happens.
@@ -1329,10 +1389,10 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note The recommended value is 0ms, which mean forever.
  */
-	static inline int os_awss_get_connect_default_ssid_timeout_interval_ms( void )
-	{
-		return platform_awss_get_connect_default_ssid_timeout_interval_ms();
-	}
+static inline int os_awss_get_connect_default_ssid_timeout_interval_ms( void )
+{
+    return platform_awss_get_connect_default_ssid_timeout_interval_ms();
+}
 
 /**
  * @brief Get time length, in millisecond, of per channel scan.
@@ -1342,11 +1402,12 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None. The recommended value is between 200ms and 400ms.
  */
-	static inline int os_awss_get_channelscan_interval_ms(void) {
-		return platform_awss_get_channelscan_interval_ms();
-	}
+static inline int os_awss_get_channelscan_interval_ms(void)
+{
+    return platform_awss_get_channelscan_interval_ms();
+}
 
-	typedef platform_awss_recv_80211_frame_cb_t os_awss_recv_80211_frame_cb_t;
+typedef platform_awss_recv_80211_frame_cb_t os_awss_recv_80211_frame_cb_t;
 /**
  * @brief Set wifi running at monitor mode,
    and register a callback function which will be called when wifi receive a frame.
@@ -1356,9 +1417,10 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None.
  */
-	static inline void os_awss_open_monitor(os_awss_recv_80211_frame_cb_t cb) {
-		platform_awss_open_monitor(cb);
-	}
+static inline void os_awss_open_monitor(os_awss_recv_80211_frame_cb_t cb)
+{
+    platform_awss_open_monitor(cb);
+}
 
 /**
  * @brief Close wifi monitor mode, and set running at station mode.
@@ -1368,9 +1430,10 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None.
  */
-	static inline void os_awss_close_monitor(void) {
-		platform_awss_close_monitor();
-	}
+static inline void os_awss_close_monitor(void)
+{
+    platform_awss_close_monitor();
+}
 
 /**
  * @brief Switch to specific wifi channel.
@@ -1382,9 +1445,11 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @see None.
  * @note None.
  */
-	static inline void os_awss_switch_channel(char primary_channel, char secondary_channel, uint8_t bssid[OS_ETH_ALEN]) {
-		platform_awss_switch_channel(primary_channel, secondary_channel, bssid);
-	}
+static inline void os_awss_switch_channel(char primary_channel,
+                                          char secondary_channel, uint8_t bssid[OS_ETH_ALEN])
+{
+    platform_awss_switch_channel(primary_channel, secondary_channel, bssid);
+}
 
 /**
  * @brief Wifi AP connect function
@@ -1405,15 +1470,16 @@ static inline int os_wifi_low_power(int timeout_ms) {
  * @note None.
  */
 static inline int os_awss_connect_ap(
-        _IN_ uint32_t connection_timeout_ms,
-        _IN_ char ssid[OS_MAX_SSID_LEN],
-        _IN_ char passwd[OS_MAX_PASSWD_LEN],
-        _IN_OPT_ enum AWSS_AUTH_TYPE auth,
-        _IN_OPT_ enum AWSS_ENC_TYPE encry,
-        _IN_OPT_ uint8_t bssid[ETH_ALEN],
-        _IN_OPT_ uint8_t channel) {
+    _IN_ uint32_t connection_timeout_ms,
+    _IN_ char ssid[OS_MAX_SSID_LEN],
+    _IN_ char passwd[OS_MAX_PASSWD_LEN],
+    _IN_OPT_ enum AWSS_AUTH_TYPE auth,
+    _IN_OPT_ enum AWSS_ENC_TYPE encry,
+    _IN_OPT_ uint8_t bssid[ETH_ALEN],
+    _IN_OPT_ uint8_t channel)
+{
     return platform_awss_connect_ap(connection_timeout_ms, ssid, passwd,
-            auth, encry, bssid, channel);
+                                    auth, encry, bssid, channel);
 }
 
 #define os_wifi_scan_result_cb_t    platform_wifi_scan_result_cb_t
@@ -1434,8 +1500,10 @@ static inline int os_awss_connect_ap(
  * @see None.
  * @note awss use this API send raw frame in wifi monitor mode & station mode
  */
-static inline int os_wifi_send_80211_raw_frame(_IN_ enum platform_awss_frame_type type,
-        _IN_ uint8_t *buffer, _IN_ int len) {
+static inline int os_wifi_send_80211_raw_frame(_IN_ enum
+                                               platform_awss_frame_type type,
+                                               _IN_ uint8_t *buffer, _IN_ int len)
+{
     return platform_wifi_send_80211_raw_frame(type, buffer, len);
 }
 
@@ -1471,10 +1539,12 @@ static inline int os_wifi_send_80211_raw_frame(_IN_ enum platform_awss_frame_typ
  * @note awss use this API to filter specific mgnt frame in wifi station mode
  */
 static inline int os_wifi_enable_mgnt_frame_filter(
-            _IN_ uint32_t filter_mask,
-            _IN_OPT_ uint8_t vendor_oui[3],
-            _IN_ platform_wifi_mgnt_frame_cb_t callback) {
-    return platform_wifi_enable_mgnt_frame_filter(filter_mask, vendor_oui, callback);
+    _IN_ uint32_t filter_mask,
+    _IN_OPT_ uint8_t vendor_oui[3],
+    _IN_ platform_wifi_mgnt_frame_cb_t callback)
+{
+    return platform_wifi_enable_mgnt_frame_filter(filter_mask, vendor_oui,
+                                                  callback);
 }
 
 /**
@@ -1512,8 +1582,8 @@ static inline int os_wifi_scan(_IN_ platform_wifi_scan_result_cb_t cb)
  * @note None.
  */
 static inline p_aes128_t os_aes128_init(
-    _IN_ const uint8_t* key,
-    _IN_ const uint8_t* iv,
+    _IN_ const uint8_t *key,
+    _IN_ const uint8_t *iv,
     _IN_ AES_DIR_t dir)
 {
     return platform_aes128_init(key, iv, dir);
@@ -1607,7 +1677,7 @@ static inline int os_wifi_get_ap_info(
     return platform_wifi_get_ap_info(ssid, passwd, bssid);
 }
 
-	/** @} */// end of os_awss
+/** @} */// end of os_awss
 
 /** @defgroup group_os_product product
  *  @{
@@ -1621,9 +1691,10 @@ static inline int os_wifi_get_ap_info(
  * @see None.
  * @note None
  */
-	static inline char *os_product_get_name(char name_str[OS_PRODUCT_NAME_LEN]) {
-		return product_get_name(name_str);
-	}
+static inline char *os_product_get_name(char name_str[OS_PRODUCT_NAME_LEN])
+{
+    return product_get_name(name_str);
+}
 
 /**
  * @brief Get the product version string.
@@ -1633,9 +1704,11 @@ static inline int os_wifi_get_ap_info(
  * @see None.
  * @note
  */
-	static inline char *os_product_get_version(char version_str[OS_PRODUCT_VERSION_LEN]) {
-		return product_get_version(version_str);
-	}
+static inline char *os_product_get_version(char
+                                           version_str[OS_PRODUCT_VERSION_LEN])
+{
+    return product_get_version(version_str);
+}
 
 /**
  * @brief Get product SN string.
@@ -1645,9 +1718,10 @@ static inline int os_wifi_get_ap_info(
  * @see None.
  * @note None.
  */
-	static inline char *os_product_get_sn(char sn_str[OS_PRODUCT_SN_LEN]) {
-		return product_get_sn(sn_str);
-	}
+static inline char *os_product_get_sn(char sn_str[OS_PRODUCT_SN_LEN])
+{
+    return product_get_sn(sn_str);
+}
 
 /**
  * @brief Get product model string.
@@ -1657,9 +1731,10 @@ static inline int os_wifi_get_ap_info(
  * @see None.
  * @note None.
  */
-	static inline char *os_product_get_model(char model_str[OS_PRODUCT_MODEL_LEN]) {
-		return product_get_model(model_str);
-	}
+static inline char *os_product_get_model(char model_str[OS_PRODUCT_MODEL_LEN])
+{
+    return product_get_model(model_str);
+}
 
 /**
  * @brief Get product key string.
@@ -1669,9 +1744,10 @@ static inline int os_wifi_get_ap_info(
  * @see None.
  * @note None.
  */
-	static inline char *os_product_get_key(char key_str[OS_PRODUCT_KEY_LEN]) {
-		return product_get_key(key_str);
-	}
+static inline char *os_product_get_key(char key_str[OS_PRODUCT_KEY_LEN])
+{
+    return product_get_key(key_str);
+}
 
 /**
  * @brief Get product secret string.
@@ -1681,9 +1757,11 @@ static inline int os_wifi_get_ap_info(
  * @see None.
  * @note None.
  */
-	static inline char *os_product_get_secret(char secret_str[OS_PRODUCT_SECRET_LEN]) {
-		return product_get_secret(secret_str);
-	}
+static inline char *os_product_get_secret(char
+                                          secret_str[OS_PRODUCT_SECRET_LEN])
+{
+    return product_get_secret(secret_str);
+}
 
 /**
  * @brief Get product debug key string.
@@ -1693,9 +1771,10 @@ static inline int os_wifi_get_ap_info(
  * @see None.
  * @note None.
  */
-	static inline char *os_product_get_debug_key(char key_str[OS_PRODUCT_KEY_LEN]) {
-		return product_get_debug_key(key_str);
-	}
+static inline char *os_product_get_debug_key(char key_str[OS_PRODUCT_KEY_LEN])
+{
+    return product_get_debug_key(key_str);
+}
 
 /**
  * @brief Get product debug secret string.
@@ -1705,28 +1784,36 @@ static inline int os_wifi_get_ap_info(
  * @see None.
  * @note None.
  */
-	static inline char *os_product_get_debug_secret(char secret_str[OS_PRODUCT_SECRET_LEN]) {
-		return product_get_debug_secret(secret_str);
-	}
+static inline char *os_product_get_debug_secret(char
+                                                secret_str[OS_PRODUCT_SECRET_LEN])
+{
+    return product_get_debug_secret(secret_str);
+}
 
-    static inline char *os_product_asr_get_appkey(char app_key[PRODUCT_ASR_APP_KEY_LEN]){
-        return product_asr_get_appkey(app_key);
-    }
-    static inline char *os_product_asr_get_secret(char app_secret[PRODUCT_SECRET_LEN]){
-        return product_asr_get_secret(app_secret);
-    }
+static inline char *os_product_asr_get_appkey(char
+                                              app_key[PRODUCT_ASR_APP_KEY_LEN])
+{
+    return product_asr_get_appkey(app_key);
+}
+static inline char *os_product_asr_get_secret(char
+                                              app_secret[PRODUCT_SECRET_LEN])
+{
+    return product_asr_get_secret(app_secret);
+}
 
-    static inline audio_format_t os_product_asr_get_audio_format(){
-        return product_asr_get_audio_format();
-    }
-    
-    static inline char *os_product_get_asr_ca(void){
-        return product_asr_get_ca();
-    }
-	/** @} */// end of group_product
+static inline audio_format_t os_product_asr_get_audio_format()
+{
+    return product_asr_get_audio_format();
+}
+
+static inline char *os_product_get_asr_ca(void)
+{
+    return product_asr_get_ca();
+}
+/** @} */// end of group_product
 
 
-	/** @} */// end of group_os
+/** @} */// end of group_os
 
 #ifdef __cplusplus
 }

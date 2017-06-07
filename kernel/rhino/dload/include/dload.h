@@ -33,7 +33,8 @@ typedef enum {
     E_DLD_CMMU,
     E_DLD_NOT_EXIST,
     E_DLD_ALREADY_LOADED
-} dload_err_t;
+}
+dload_err_t;
 
 /**
  *  dynamic loader initialization

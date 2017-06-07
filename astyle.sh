@@ -8,8 +8,13 @@ DIRS=(include
       kernel/rhino
       kernel/vcall/yos
       framework/vfs
+      framework/protocol
+      framework/connectivity
       framework/yloop
-     )
+      utility/hashtable
+      utility/digest_algorithm
+      utility/base64
+      )
 
 for DIR in ${DIRS[*]}
 do

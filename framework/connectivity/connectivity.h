@@ -46,7 +46,7 @@ enum {
     EVENT_IGNORE /* event will broadcast to next listener */
 };
 
-typedef int (*connectivity_cb)(int, void*, int, void*, int*);
+typedef int (*connectivity_cb)(int, void *, int, void *, int *);
 
 typedef struct connectivity_rsp {
     int result;
@@ -59,11 +59,12 @@ typedef struct connectivity {
     char name[NAME_LENGTH];
     int state;
     int (*_init)(void);
-    void (*init_buff)(uint8_t**, uint8_t**);
+    void (*init_buff)(uint8_t **, uint8_t **);
     int (*connect)(void);
     int (*disconnect)(void);
-    connectivity_rsp_t* (*send)(void *, int);
-    int (*send_async)(void*, int,void *(*p)(connectivity_rsp_t* rsp,void *),void *);
+    connectivity_rsp_t *(*send)(void *, int);
+    int (*send_async)(void *, int, void * (*p)(connectivity_rsp_t *rsp, void *),
+                      void *);
     int (*add_listener)(connectivity_cb);
     int (*del_listener)(connectivity_cb);
 } connectivity_t;

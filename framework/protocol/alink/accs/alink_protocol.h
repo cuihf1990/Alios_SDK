@@ -95,38 +95,38 @@ enum ALINK_CODE {
     ALINK_CODE_ERROR_AUTHTOKEN_STATE = 3609,
 };
 
-typedef struct AlinkResponse{
-   int code;
-   int msgLen;
-   int dataLen;
-   char* p_cMsg;
-   char* p_cData;
+typedef struct AlinkResponse {
+    int code;
+    int msgLen;
+    int dataLen;
+    char *p_cMsg;
+    char *p_cData;
 } AlinkResponse;
 
-typedef struct AlinkRequest{
-   int idLen;
-   int timeLen;
-   int accountLen;
-   int methodLen;
-   int paramsLen;
-   int paramsType;
-   char* p_cId;
-   char* p_cTime;
-   char* p_cAccount;
-   char* p_cMethod;
-   char* p_cParams;
+typedef struct AlinkRequest {
+    int idLen;
+    int timeLen;
+    int accountLen;
+    int methodLen;
+    int paramsLen;
+    int paramsType;
+    char *p_cId;
+    char *p_cTime;
+    char *p_cAccount;
+    char *p_cMethod;
+    char *p_cParams;
 } AlinkRequest;
 
 typedef struct alink_data {
     char *method;
     char *data;
-}alink_data_t;
+} alink_data_t;
 
 typedef struct AlinkRequestState {
     uint32_t state;
     uint32_t id;
     char account[32];
-}AlinkRequestState;
+} AlinkRequestState;
 
 extern AlinkRequestState last_state;
 
@@ -146,7 +146,9 @@ int32_t alink_unregister(void);
 
 int32_t alink_response_get_data(char *in, char *data, int len);
 int32_t alink_response_get_x(char *in, char *out, int outLen, char *key);
-int32_t alink_parse_request(char *p_cJsonStr, int iStrLen, AlinkRequest *p_stReq);
-int32_t alink_parse_response(char *p_cJsonStr, int iStrLen, AlinkResponse *p_stRsp);
+int32_t alink_parse_request(char *p_cJsonStr, int iStrLen,
+                            AlinkRequest *p_stReq);
+int32_t alink_parse_response(char *p_cJsonStr, int iStrLen,
+                             AlinkResponse *p_stRsp);
 void alink_attrfilter(char *cJsonStr);
 #endif

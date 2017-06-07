@@ -20,11 +20,11 @@
 #include "product.h"
 
 typedef enum {
-	AUDIO_FORMAT_PCM = 0,
-	AUDIO_FORMAT_OPUS = 1,
-	AUDIO_FORMAT_OGG = 2,
-	AUDIO_FORMAT_DEFAULT = 0xff
-}audio_format_t;
+    AUDIO_FORMAT_PCM = 0,
+    AUDIO_FORMAT_OPUS = 1,
+    AUDIO_FORMAT_OGG = 2,
+    AUDIO_FORMAT_DEFAULT = 0xff
+} audio_format_t;
 
 #define PRODUCT_ASR_APP_KEY_LEN (64 + 1)
 
@@ -59,15 +59,15 @@ char *product_asr_get_secret(char secret_str[PRODUCT_SECRET_LEN]);
 audio_format_t product_asr_get_audio_format(void);
 
 /**
- * @brief get alink asr CA (certification authority) addr , if the 
- * board supports file system, you should return the file name, 
- * otherwise the content of file should be returned. 
+ * @brief get alink asr CA (certification authority) addr , if the
+ * board supports file system, you should return the file name,
+ * otherwise the content of file should be returned.
  * @param none.
  * @return see brief..
  * @see None.
  * @note None.
  */
-    char *product_asr_get_ca(void);
+char *product_asr_get_ca(void);
 
 #endif
 

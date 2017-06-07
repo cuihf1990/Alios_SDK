@@ -71,15 +71,15 @@ typedef struct device {
 void device_init(void);
 void device_exit(void);
 const device_t *get_main_dev(void);
-void device_get_config(void* config);
+void device_get_config(void *config);
 char *devinfo_get_secret(void);
 char *devinfo_get_key(void);
 char *devinfo_get_version(void);
 
 //TODO: remove these header
-void get_wifi_rssi_dbm(char* dev_stats, int length);
-void get_disconncounter(char* dev_stats, int lenght);
-void get_last_rtt(char* dev_stats, int len);
-void get_average_rtt(char* dev_stats, int len);
+void get_wifi_rssi_dbm(char *dev_stats, int length);
+void get_disconncounter(char *dev_stats, int lenght);
+void get_last_rtt(char *dev_stats, int len);
+void get_average_rtt(char *dev_stats, int len);
 #endif
 

@@ -34,8 +34,9 @@ int platform_flash_program_write_block(_IN_ char *buffer, _IN_ uint32_t length)
     unsigned int written_len = 0;
     written_len = fwrite(buffer, 1, length, fp);
 
-    if (written_len != length)
+    if (written_len != length) {
         return -1;
+    }
     return 0;
 }
 

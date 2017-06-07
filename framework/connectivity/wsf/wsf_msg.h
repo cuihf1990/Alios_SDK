@@ -44,8 +44,8 @@ typedef struct wsf_msg_t {
     uint8_t payload[0];
 } wsf_msg_t;
 
-//the 1st para maybe: wsf_msg_t/wsf_response_t 
-typedef void *(*wsf_async_cb_t)(void *,void *);
+//the 1st para maybe: wsf_msg_t/wsf_response_t
+typedef void *(*wsf_async_cb_t)(void *, void *);
 typedef struct wsf_msg_session_t {
     void            *psem;
     wsf_async_cb_t  cb;
@@ -71,12 +71,12 @@ extern void wsf_msg_session_signal(wsf_msg_session_t *session);
 extern void wsf_msg_session_destroy(wsf_msg_session_t *session);
 
 extern wsf_msg_t *wsf_msg_request_create(const char *servcie_name,
-                                  wsf_list_t *param_list);
+                                         wsf_list_t *param_list);
 
 extern wsf_msg_t *wsf_msg_response_create(int msg_id, invoke_result_code result,
-                                   const char *data, int length);
+                                          const char *data, int length);
 
-extern void wsf_msg_heartbeat_request_init(wsf_msg_t * hb_req);
+extern void wsf_msg_heartbeat_request_init(wsf_msg_t *hb_req);
 
 /**
  * return 1 if it is a wsf msg, else 0

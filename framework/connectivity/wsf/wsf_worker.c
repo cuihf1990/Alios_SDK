@@ -56,52 +56,55 @@ static void wsf_keep_connection(wsf_config_t *config);
 static void __copy_session(wsf_msg_t *p_rsp);
 void request_msg_handle(void *arg);
 
-static msg_handler msg_handlers[MSG_TYPE_END] =
-    { process_msg_request,                    //0
-      process_msg_response,                   //1
-      NULL,                                   //2
-      process_heartbeat_response,             //3
-      NULL,                                   //4
-      process_register_response,              //5
-      process_deregister_connection,          //6
-     };
+static msg_handler msg_handlers[MSG_TYPE_END] = {
+    process_msg_request,                    //0
+    process_msg_response,                   //1
+    NULL,                                   //2
+    process_heartbeat_response,             //3
+    NULL,                                   //4
+    process_register_response,              //5
+    process_deregister_connection,          //6
+};
 
 
-static int __cb_wsf_recv(int fd,void *arg);
-static void __cb_wsf_close(int fd,void *arg);
+static int __cb_wsf_recv(int fd, void *arg);
+static void __cb_wsf_close(int fd, void *arg);
 static void __cb_wsf_timeout(void *arg);
 
-typedef int (*cb_wsf_recv_t)(int ,void *);
+typedef int (*cb_wsf_recv_t)(int , void *);
 typedef struct {
     int             sock;
-    int             timeout;//ms  
-    cb_wsf_recv_t   cb_recv; 
+    int             timeout;//ms
+    cb_wsf_recv_t   cb_recv;
     yos_call_t      cb_timeout;
     yos_poll_call_t cb_close;
     void            *extra;
-}cb_network;
+} cb_network;
 
 static cb_network g_wsf_cb;
 
-static void cb_recv(int fd,void *arg)
+static void cb_recv(int fd, void *arg)
 {
     cb_network *cb = (cb_network *)arg;
-    if(!cb)
+    if (!cb) {
         return;
-    //the connection is closed. 
-    if(0 == cb->cb_recv(fd,cb))
-        cb->cb_close(fd,cb);
+    }
+    //the connection is closed.
+    if (0 == cb->cb_recv(fd, cb)) {
+        cb->cb_close(fd, cb);
+    }
 
-    yos_cancel_delayed_action(cb->timeout,cb->cb_timeout,cb);
-    yos_post_delayed_action(cb->timeout,cb->cb_timeout,cb);
+    yos_cancel_delayed_action(cb->timeout, cb->cb_timeout, cb);
+    yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
 static void start_network(cb_network *cb)
 {
-    if(!cb)
+    if (!cb) {
         return;
-    yos_poll_read_fd(cb->sock,cb_recv,cb);
-    yos_post_delayed_action(cb->timeout,cb->cb_timeout,cb);
+    }
+    yos_poll_read_fd(cb->sock, cb_recv, cb);
+    yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
 static void _receive_worker(void *arg)
@@ -115,8 +118,9 @@ static void _receive_worker(void *arg)
     uint32_t timeout;
     void *fd_read[OS_SOCKET_MAXNUMS];
 
-    for (i = 0; i < OS_SOCKET_MAXNUMS; i++)
+    for (i = 0; i < OS_SOCKET_MAXNUMS; i++) {
         fd_read[i] = OS_INVALID_FD;
+    }
 
     wsf_msg_heartbeat_request_init(&hb_req);
     memcpy(&msg_len, hb_req.header.msg_length, sizeof(uint32_t));
@@ -146,10 +150,10 @@ static void _receive_worker(void *arg)
                 //close the connection
                 printf("wsf: heartbeat timeout, reconnect");
 
-               wsf_reset_connection(wsf_conn, 0);
+                wsf_reset_connection(wsf_conn, 0);
             }
 
-           if (wsf_conn && wsf_conn->ssl) {
+            if (wsf_conn && wsf_conn->ssl) {
                 wsf_send_msg(wsf_conn, (const char *)&hb_req, msg_len);
                 printf("send heartbeat");
                 wsf_dec_heartbeat_counter(wsf_conn);
@@ -167,14 +171,16 @@ static void _receive_worker(void *arg)
                     count = os_tcp_recv(wsf_conn->tcp, buf, len);
                 }
                 if (count <= 0) {
-                    if (!len)
+                    if (!len) {
                         printf("wsf recv buffer full!");
-                    else
+                    } else {
                         printf("closing socket for tcp/ssl read error.");
+                    }
                     wsf_reset_connection(wsf_conn, 0);
                     continue;
-                } else
+                } else {
                     wsf_conn->recv_buf_pos += count;
+                }
                 process_received_buf(wsf_conn);
             }
         }
@@ -186,35 +192,36 @@ static void _receive_worker(void *arg)
 static void receive_worker(void *arg)
 {
     wsf_config_t *config = (wsf_config_t *)arg;
-    if(!config)
+    if (!config) {
         return;
-    
-    memset(&g_wsf_cb,0,sizeof(cb_network));
-    if(wsf_conn && wsf_conn->ssl){
+    }
+
+    memset(&g_wsf_cb, 0, sizeof(cb_network));
+    if (wsf_conn && wsf_conn->ssl) {
         g_wsf_cb.sock = (long)wsf_conn->tcp;
     }
-    g_wsf_cb.timeout = 1000*config->heartbeat_interval;
+    g_wsf_cb.timeout = 1000 * config->heartbeat_interval;
     g_wsf_cb.cb_recv = __cb_wsf_recv;
     g_wsf_cb.cb_close = __cb_wsf_close;
     g_wsf_cb.cb_timeout = __cb_wsf_timeout;
-    g_wsf_cb.extra = arg; 
+    g_wsf_cb.extra = arg;
     start_network(&g_wsf_cb);
 }
 
 static void stop_receive_worker()
 {
-    yos_cancel_poll_read_fd(g_wsf_cb.sock,cb_recv,&g_wsf_cb);
-    yos_cancel_delayed_action(g_wsf_cb.timeout,g_wsf_cb.cb_timeout,&g_wsf_cb);
+    yos_cancel_poll_read_fd(g_wsf_cb.sock, cb_recv, &g_wsf_cb);
+    yos_cancel_delayed_action(g_wsf_cb.timeout, g_wsf_cb.cb_timeout, &g_wsf_cb);
 }
 
 
-static void __cb_wsf_close(int fd,void *arg)
+static void __cb_wsf_close(int fd, void *arg)
 {
-    LOGE(MODULE_NAME,"wsf: select ret -1, reconnect");
+    LOGE(MODULE_NAME, "wsf: select ret -1, reconnect");
     wsf_reset_connection(wsf_conn, 0);
 }
 
-static int  __cb_wsf_recv(int fd,void *arg)
+static int  __cb_wsf_recv(int fd, void *arg)
 {
     int count = 0;
 
@@ -226,17 +233,18 @@ static int  __cb_wsf_recv(int fd,void *arg)
         } else {
             count = os_tcp_recv(wsf_conn->tcp, buf, len);
         }
-        LOGD(MODULE_NAME,"wsf recv : %s,len: %d\n",buf,count);
+        LOGD(MODULE_NAME, "wsf recv : %s,len: %d\n", buf, count);
         if (count <= 0) {
-            if (!len)
-                LOGE(MODULE_NAME,"wsf recv buffer full!");
-            else{
-                LOGE(MODULE_NAME,"closing socket for tcp/ssl read error.");
-                exit(0); 
+            if (!len) {
+                LOGE(MODULE_NAME, "wsf recv buffer full!");
+            } else {
+                LOGE(MODULE_NAME, "closing socket for tcp/ssl read error.");
+                exit(0);
             }
             return 0;
-        } else
+        } else {
             wsf_conn->recv_buf_pos += count;
+        }
         process_received_buf(wsf_conn);
     }
     return 1;
@@ -247,21 +255,22 @@ static void __cb_wsf_timeout(void *arg)
     static wsf_msg_t hb_req;
     static uint32_t len = 0;
     cb_network *cb = (cb_network *)arg;
-    wsf_config_t *config = NULL; 
-    if(!cb)
+    wsf_config_t *config = NULL;
+    if (!cb) {
         return;
+    }
     config = (wsf_config_t *)cb->extra;
-    
-    if(cb->sock != (long)wsf_conn->tcp && 
-            wsf_conn && wsf_conn->ssl){
+
+    if (cb->sock != (long)wsf_conn->tcp &&
+        wsf_conn && wsf_conn->ssl) {
         cb->sock = (long)wsf_conn->tcp;
         wsf_keep_connection(config);
         start_network(cb);
-        LOGW(MODULE_NAME,"re-start wsf network register.\n");
-        return; 
+        LOGW(MODULE_NAME, "re-start wsf network register.\n");
+        return;
     }
 
-    if(hb_req.header.msg_type_version == 0){
+    if (hb_req.header.msg_type_version == 0) {
         wsf_msg_heartbeat_request_init(&hb_req);
         memcpy(&len, hb_req.header.msg_length, sizeof(uint32_t));
         wsf_msg_header_encode((char *)&hb_req, len);
@@ -270,19 +279,19 @@ static void __cb_wsf_timeout(void *arg)
     //TIMEOUT to send heartbeat when connection ready
     if (wsf_is_heartbeat_timeout(wsf_conn)) {
         //close the connection
-        LOGE(MODULE_NAME,"wsf: heartbeat timeout, reconnect");
+        LOGE(MODULE_NAME, "wsf: heartbeat timeout, reconnect");
         wsf_reset_connection(wsf_conn, 0);
     }
 
     if (wsf_conn && wsf_conn->ssl) {
         wsf_send_msg(wsf_conn, (const char *)&hb_req, len);
-        LOGW(MODULE_NAME,"send heartbeat");
+        LOGW(MODULE_NAME, "send heartbeat");
         wsf_dec_heartbeat_counter(wsf_conn);
     }
 
     wsf_keep_connection(config);
     /* NOTE: wsf_reset_connection() only called in this thread */
-    yos_post_delayed_action(cb->timeout,cb->cb_timeout,cb);
+    yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
 static void process_msg_response(wsf_msg_t *msg, int length)
@@ -296,20 +305,20 @@ static void process_msg_response(wsf_msg_t *msg, int length)
         if (node) {
             //LOGW(MODULE_NAME,"process_msg_response, send signal");
             __copy_session(rsp);
-            if(node->session.cb)
-            {
-                node->session.cb(rsp,node->session.extra);
+            if (node->session.cb) {
+                node->session.cb(rsp, node->session.extra);
                 wsf_request_queue_pop(global_request_queue, node);
                 wsf_msg_session_destroy(&node->session);
-                os_free(node); 
-            }else
+                os_free(node);
+            } else {
                 wsf_msg_session_signal(&node->session);
+            }
         } else {
-            LOGW(MODULE_NAME,"unknown response msg");
+            LOGW(MODULE_NAME, "unknown response msg");
             os_free(rsp);
         }
     } else {
-        LOGE(MODULE_NAME,"failed to os_malloc memory");
+        LOGE(MODULE_NAME, "failed to os_malloc memory");
     }
 }
 
@@ -322,11 +331,12 @@ static void process_msg_request(wsf_msg_t *msg, int length)
     struct request_msg_node *node;
 
     if (total_req_nodes >= CONFIG_REQMSG_LENGTH) {
-        LOGW(MODULE_NAME,"request queue has too nodes to handle");
+        LOGW(MODULE_NAME, "request queue has too nodes to handle");
         return;
     }
 
-    node = (struct request_msg_node *)os_malloc(sizeof(struct request_msg_node) + length);
+    node = (struct request_msg_node *)os_malloc(sizeof(struct request_msg_node) +
+                                                length);
     OS_CHECK_MALLOC(node);
 
     memcpy(node->msg, (uint8_t *)msg, length);
@@ -336,7 +346,7 @@ static void process_msg_request(wsf_msg_t *msg, int length)
     total_req_nodes ++;
     os_mutex_unlock(g_req_mutex);
 
-    yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
+    yos_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
 }
 
 void init_req_glist(void)
@@ -350,11 +360,12 @@ void deinit_req_glist(void)
 {
     struct request_msg_node *node;
     dlist_t *tmp = NULL;
-    //FIXME: add delete interface. 
+    //FIXME: add delete interface.
     //stop_request_work();
 
     os_mutex_lock(g_req_mutex);
-    dlist_for_each_entry_safe(&g_list,tmp, node, struct request_msg_node, list_head) {
+    dlist_for_each_entry_safe(&g_list, tmp, node, struct request_msg_node,
+                              list_head) {
         dlist_del(&(node->list_head));
         os_free(node);
     }
@@ -371,9 +382,10 @@ void request_msg_handle(void *arg)
 {
     struct request_msg_node *node, *n;
     dlist_t *tmp = NULL;
-    LOGI(MODULE_NAME,"request_msg_handle");
+    LOGI(MODULE_NAME, "request_msg_handle");
     os_mutex_lock(g_req_mutex);
-    dlist_for_each_entry_safe(&g_list,tmp, node, struct request_msg_node, list_head) {
+    dlist_for_each_entry_safe(&g_list, tmp, node, struct request_msg_node,
+                              list_head) {
         os_mutex_unlock(g_req_mutex);
 
         __process_msg_request((wsf_msg_t *)node->msg, node->length);
@@ -386,8 +398,9 @@ void request_msg_handle(void *arg)
     }
     os_mutex_unlock(g_req_mutex);
 
-    if (!dlist_empty(&g_list))
-        yos_schedule_work(0,request_msg_handle,NULL,NULL,NULL);
+    if (!dlist_empty(&g_list)) {
+        yos_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
+    }
 }
 
 static void __process_msg_request(wsf_msg_t *msg, int length)
@@ -409,7 +422,7 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
         if (param_count > 0) {
             uint32_t param1_len = os_get_unaligned_be32(++pp);
             pp += 4; //param1 value
-            LOGW(MODULE_NAME,"start push cmd to device, %d\n",time(NULL));
+            LOGW(MODULE_NAME, "start push cmd to device, %d\n", time(NULL));
             callback_rsp = push_callback(pp, param1_len);
         } else {
             callback_rsp = push_callback(NULL, 0);
@@ -419,17 +432,18 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
     if (!callback_rsp) {
         rsp = wsf_msg_response_create(msg_id, INVOKE_RIGHT, NULL, 0);
     } else {
-        rsp = wsf_msg_response_create(msg_id, callback_rsp->result, callback_rsp->data, callback_rsp->length);
+        rsp = wsf_msg_response_create(msg_id, callback_rsp->result, callback_rsp->data,
+                                      callback_rsp->length);
     }
 
     if (!rsp) {
-        LOGE(MODULE_NAME,"create response failed");
+        LOGE(MODULE_NAME, "create response failed");
         return;
     }
 
     end_time = os_get_time_ms();
     if ((end_time - start_time) > wsf_get_config()->request_timeout * 1000) {
-        LOGE(MODULE_NAME,"user callback block %d ms !!!", (end_time - start_time));
+        LOGE(MODULE_NAME, "user callback block %d ms !!!", (end_time - start_time));
     }
 
     uint32_t msg_len;
@@ -438,7 +452,7 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
     wsf_msg_header_encode((char *)rsp, msg_len);
 
     wsf_send_msg(wsf_conn, (const char *)rsp, msg_len);
-    LOGW(MODULE_NAME,"send response to service");
+    LOGW(MODULE_NAME, "send response to service");
 
     if (callback_rsp) {
         wsf_response_destroy(callback_rsp, 0);
@@ -449,15 +463,17 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
     return;
 }
 
-static void process_heartbeat_response(wsf_msg_t *msg, int length) {
+static void process_heartbeat_response(wsf_msg_t *msg, int length)
+{
     //reset the counter
     wsf_reset_heartbeat_counter(wsf_conn);
 }
 
-static void process_register_response(wsf_msg_t *msg, int length) {
+static void process_register_response(wsf_msg_t *msg, int length)
+{
     uint8_t *pp = msg->payload;
     invoke_result_code result_code = (invoke_result_code)(*pp); //result code
-    //LOGW(MODULE_NAME,"result: %d\n",result_code); 
+    //LOGW(MODULE_NAME,"result: %d\n",result_code);
     if (result_code == INVOKE_RIGHT) {
         pp++;
         int8_t len = *pp; //device id len
@@ -471,27 +487,28 @@ static void process_register_response(wsf_msg_t *msg, int length) {
             wsf_device_id_set(device_id);
             os_free(device_id);
         }
-        //LOGW(MODULE_NAME,"len: %d\n",len); 
+        //LOGW(MODULE_NAME,"len: %d\n",len);
         wsf_conn->conn_state = CONN_READY;
         wsf_set_state(CONNECT_STATE_READY);
     } else if (result_code == INVOKE_SESSION_EXPIRE_ERROR) {
-        LOGE(MODULE_NAME,"wsf register: INVOKE_SESSION_EXPIRE_ERROR");
+        LOGE(MODULE_NAME, "wsf register: INVOKE_SESSION_EXPIRE_ERROR");
         wsf_reset_connection(wsf_conn, 1);
     } else {
-        LOGE(MODULE_NAME,"wsf register: other error");
+        LOGE(MODULE_NAME, "wsf register: other error");
         wsf_reset_connection(wsf_conn, 0);
     }
 
 }
 
-static void process_deregister_connection(wsf_msg_t *msg, int length) {
+static void process_deregister_connection(wsf_msg_t *msg, int length)
+{
 
     if (wsf_conn && wsf_conn->ssl) {
-       //close the connection
+        //close the connection
         wsf_reset_connection(wsf_conn, 1);
     }
 
-    LOGE(MODULE_NAME,"connection deregister received");
+    LOGE(MODULE_NAME, "connection deregister received");
 
     if (error_callback) {
         error_callback(WSF_CONNECTION_DEREGISTERED);
@@ -503,7 +520,8 @@ static void process_deregister_connection(wsf_msg_t *msg, int length) {
  * clear the whole wsf message, but remain the next wsf message if exist.
  * return: 1, more pkg; 0, no more pkg.
  */
-static int wsf_recvbuff_clear_first_msg() {
+static int wsf_recvbuff_clear_first_msg()
+{
     wsf_msg_header_t *msg_header = (wsf_msg_header_t *)wsf_conn->recv_buf;
     int buf_len = wsf_conn->recv_buf_pos;
     int pkg_len = 0;
@@ -511,11 +529,11 @@ static int wsf_recvbuff_clear_first_msg() {
     /* after wsf_msg_header_decode(), no need to ntohl trans */
     memcpy(&pkg_len, msg_header->msg_length, sizeof(int));
 
-    if (buf_len == pkg_len)
+    if (buf_len == pkg_len) {
         wsf_conn->recv_buf_pos = 0;
-    else if (buf_len > pkg_len) {
-        LOGE(MODULE_NAME,"ssl recv more than 1 pkg! buf_len:%d, pkg_len:%d",
-                buf_len, pkg_len);
+    } else if (buf_len > pkg_len) {
+        LOGE(MODULE_NAME, "ssl recv more than 1 pkg! buf_len:%d, pkg_len:%d",
+             buf_len, pkg_len);
         memmove(wsf_conn->recv_buf, wsf_conn->recv_buf + pkg_len,
                 wsf_conn->recv_buf_pos - pkg_len);
         wsf_conn->recv_buf_pos = wsf_conn->recv_buf_pos - pkg_len;
@@ -525,34 +543,36 @@ static int wsf_recvbuff_clear_first_msg() {
          * after deregister, wsf_reset_connection was called,
          * and wsf_conn->recv_buf_pos clear to 0.
          */
-        if (buf_len)
+        if (buf_len) {
             OS_ASSERT(0, "should never reach here! %d < %d", buf_len, pkg_len);
+        }
         wsf_conn->recv_buf_pos = 0;
     }
 
     return 0;
 }
 
-static void process_received_buf(wsf_connection_t *conn) {
+static void process_received_buf(wsf_connection_t *conn)
+{
     wsf_code ret = wsf_recvbuff_check(conn);
 
     if (ret != WSF_SUCCESS) {
         wsf_recvbuff_clear(conn);
-        LOGE(MODULE_NAME,"recv buffer error, drop the msg");
+        LOGE(MODULE_NAME, "recv buffer error, drop the msg");
         return;
     }
 
 reprocess:
     if (!wsf_msg_accept(conn->recv_buf, conn->recv_buf_pos)) {
         wsf_recvbuff_clear(conn);
-        LOGE(MODULE_NAME,"unknown message received");
+        LOGE(MODULE_NAME, "unknown message received");
         return;
     }
 
     if (wsf_msg_complete(conn->recv_buf, conn->recv_buf_pos)) {
 
         wsf_msg_header_t *msg_header = wsf_msg_header_decode(conn->recv_buf,
-                conn->recv_buf_pos);
+                                                             conn->recv_buf_pos);
 
         msg_type mtype = get_msg_type(msg_header);
         //LOG("-->type: %d\n",mtype);
@@ -565,20 +585,23 @@ reprocess:
             }
         }
 
-        if (wsf_recvbuff_clear_first_msg(conn))
-            goto reprocess; //more package in conn->recv_buf, so process again.
+        if (wsf_recvbuff_clear_first_msg(conn)) {
+            goto reprocess;    //more package in conn->recv_buf, so process again.
+        }
     }
 }
 
-static wsf_request_node_t *__send_msg(wsf_msg_t * req,wsf_async_cb_t cb,void *arg)
+static wsf_request_node_t *__send_msg(wsf_msg_t *req, wsf_async_cb_t cb,
+                                      void *arg)
 {
     uint32_t msg_id, msg_length;
-    if(!req || !wsf_running)
+    if (!req || !wsf_running) {
         return NULL;
+    }
 
-    if (!wsf_conn || !wsf_conn->ssl || 
-            wsf_conn->conn_state != CONN_READY) {
-        LOGE(MODULE_NAME,"wsf connect not ready");
+    if (!wsf_conn || !wsf_conn->ssl ||
+        wsf_conn->conn_state != CONN_READY) {
+        LOGE(MODULE_NAME, "wsf connect not ready");
         return NULL;
     }
     memcpy(&msg_id, req->header.msg_id, sizeof(uint32_t));
@@ -586,25 +609,27 @@ static wsf_request_node_t *__send_msg(wsf_msg_t * req,wsf_async_cb_t cb,void *ar
 
     wsf_msg_header_encode((char *)req, msg_length);
 
-    wsf_request_node_t *node = (wsf_request_node_t *) os_malloc(sizeof(wsf_request_node_t));
-    if(!node)
+    wsf_request_node_t *node = (wsf_request_node_t *) os_malloc(sizeof(
+                                                                    wsf_request_node_t));
+    if (!node) {
         return NULL;
+    }
     //we should destroy the session after the response arrived.
-    wsf_msg_session_init(&node->session); 
+    wsf_msg_session_init(&node->session);
     node->session.id = msg_id;
-    if(cb && arg){
+    if (cb && arg) {
         node->session.cb = cb;
         node->session.extra = arg;
     }
 
     if (!wsf_request_queue_push(global_request_queue, node)) {
-        wsf_code ret = wsf_send_msg(wsf_conn, 
-                            (const char *)req, msg_length);
+        wsf_code ret = wsf_send_msg(wsf_conn,
+                                    (const char *)req, msg_length);
         if (ret == WSF_SUCCESS) {
-            LOGW(MODULE_NAME,"wsf msg send succeed.id=%d", msg_id);
-            return node; 
+            LOGW(MODULE_NAME, "wsf msg send succeed.id=%d", msg_id);
+            return node;
         }
-    }else{
+    } else {
         wsf_msg_session_destroy(&node->session);
         os_free(node);
     }
@@ -613,8 +638,9 @@ static wsf_request_node_t *__send_msg(wsf_msg_t * req,wsf_async_cb_t cb,void *ar
 
 static void __copy_session(wsf_msg_t *p_rsp)
 {
-    if(!p_rsp)
+    if (!p_rsp) {
         return;
+    }
 
     char *pp = (char *)p_rsp + sizeof(wsf_msg_header_t);
     //skip result code
@@ -653,21 +679,22 @@ static void __copy_session(wsf_msg_t *p_rsp)
     }
 }
 
-wsf_msg_t *__wsf_invoke_sync(wsf_msg_t * req)
+wsf_msg_t *__wsf_invoke_sync(wsf_msg_t *req)
 {
     wsf_msg_t *p_rsp = NULL;
-    wsf_request_node_t *node = __send_msg(req,NULL,NULL);
+    wsf_request_node_t *node = __send_msg(req, NULL, NULL);
 
-    if(!node)
-        return NULL; 
+    if (!node) {
+        return NULL;
+    }
 
     if (!wsf_msg_session_timewait(&node->session,
-                wsf_get_config()->request_timeout)) {
-        LOGW(MODULE_NAME,"get reponse, id=%d", node->session.id);
+                                  wsf_get_config()->request_timeout)) {
+        LOGW(MODULE_NAME, "get reponse, id=%d", node->session.id);
         p_rsp = node->session.response;
     } else {
-        LOGW(MODULE_NAME,"waiting response id=%d timeout", 
-                                            node->session.id);
+        LOGW(MODULE_NAME, "waiting response id=%d timeout",
+             node->session.id);
     }
 
     wsf_request_queue_pop(global_request_queue, node);
@@ -675,13 +702,13 @@ wsf_msg_t *__wsf_invoke_sync(wsf_msg_t * req)
     os_free(node);
     return p_rsp;
 }
-    
-    
-int __wsf_invoke_async(wsf_msg_t * req,wsf_async_cb_t cb,void *arg)
+
+
+int __wsf_invoke_async(wsf_msg_t *req, wsf_async_cb_t cb, void *arg)
 {
     wsf_msg_t *p_rsp = NULL;
-    wsf_request_node_t *node = __send_msg(req,cb,arg);
-       
+    wsf_request_node_t *node = __send_msg(req, cb, arg);
+
     return (NULL == node);
 }
 
@@ -689,21 +716,24 @@ wsf_code wsf_start_worker(wsf_config_t *config)
 {
     wsf_running = 1;
     receive_worker(config);
-     
+
     return WSF_SUCCESS;
 }
 
-void wsf_wait_worker(void) {
+void wsf_wait_worker(void)
+{
     stop_receive_worker();
 }
 
-void wsf_stop_worker(void) {
+void wsf_stop_worker(void)
+{
     wsf_running = 0;
 
     wsf_wait_worker();
 }
 
-static void wsf_keep_connection(wsf_config_t *config) {
+static void wsf_keep_connection(wsf_config_t *config)
+{
     if (!wsf_conn) {
         return;
     }
@@ -711,11 +741,11 @@ static void wsf_keep_connection(wsf_config_t *config) {
     os_sys_net_wait_ready();
 
     if ((!wsf_conn->ssl || wsf_conn->conn_state != CONN_READY)
-            && network_up) {
-        LOGI(MODULE_NAME,"try to reconnect");
+        && network_up) {
+        LOGI(MODULE_NAME, "try to reconnect");
         wsf_code result = wsf_open_connection(config);
         if (result != WSF_SUCCESS) {
-            LOGE(MODULE_NAME,"failed to setup the link");
+            LOGE(MODULE_NAME, "failed to setup the link");
         }
         return;
     }
