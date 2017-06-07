@@ -149,10 +149,12 @@ static int event_poll(file_t *f, bool setup, poll_notify_t notify,
                       struct pollfd *fd, void *opa)
 {
     event_dev_t *pdev = f->f_arg;
+
+    yos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
     if (!setup) {
         pdev->poll_cb = NULL;
         pdev->poll_data = NULL;
-        return 0;
+        goto out;
     }
 
     pdev->poll_cb = notify;
@@ -163,6 +165,8 @@ static int event_poll(file_t *f, bool setup, poll_notify_t notify,
         pdev->fd->revents |= POLLIN;
         (*notify)(fd, opa);
     }
+out:
+    yos_mutex_unlock(&pdev->mutex);
 
     return 0;
 }
