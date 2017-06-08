@@ -366,9 +366,9 @@ uint8_t ur_mesh_get_mode(void)
     return (uint8_t)mm_get_mode();
 }
 
-void ur_mesh_set_mode(uint8_t mode)
+ur_error_t ur_mesh_set_mode(uint8_t mode)
 {
-    mm_set_mode(mode);
+    return mm_set_mode(mode);
 }
 
 int8_t ur_mesh_get_seclevel(void)
