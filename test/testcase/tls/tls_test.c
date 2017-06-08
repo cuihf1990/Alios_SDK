@@ -320,11 +320,9 @@ static void teardown(void)
 
 static yunit_test_case_t yunos_tls_testcases[] = {
     { "tls_ssl_connect", test_tls_ssl_connect},
-#if 1
     { "tls_ssl_send", test_tls_ssl_send},
     { "tls_ssl_recv", test_tls_ssl_recv},
     { "tls_ssl_close", test_tls_ssl_close},
-#endif
     YUNIT_TEST_CASE_NULL
 };
 
