@@ -393,19 +393,6 @@ int hal_ur_mesh_set_key(struct ur_mesh_hal_module_s *m,
     return -1;
 }
 
-int hal_ur_mesh_activate_key(struct ur_mesh_hal_module_s *m, uint8_t index)
-{
-    if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_activate_key != NULL)) {
-        return m->ur_mesh_hal_activate_key(m, index);
-    }
-
-    return -1;
-}
-
 const frame_stats_t *hal_ur_mesh_get_stats(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
@@ -418,4 +405,3 @@ const frame_stats_t *hal_ur_mesh_get_stats(ur_mesh_hal_module_t *m)
 
     return NULL;
 }
-

@@ -387,12 +387,6 @@ static int linux_80211_mesh_set_key(struct ur_mesh_hal_module_s *module,
     return 0;
 }
 
-static int linux_80211_mesh_activate_key(struct ur_mesh_hal_module_s *module,
-                                     uint8_t index)
-{
-    return 0;
-}
-
 static int linux_80211_mesh_is_sec_enabled(struct ur_mesh_hal_module_s *module)
 {
     return 0;
@@ -456,7 +450,6 @@ static ur_mesh_hal_module_t linux_80211_mesh_wifi_module = {
     .ur_mesh_hal_get_bcast_chnlist = linux_80211_mesh_get_channel_list,
     .ur_mesh_hal_get_ucast_chnlist = linux_80211_mesh_get_channel_list,
     .ur_mesh_hal_set_key = linux_80211_mesh_set_key,
-    .ur_mesh_hal_activate_key = linux_80211_mesh_activate_key,
     .ur_mesh_hal_is_sec_enabled = linux_80211_mesh_is_sec_enabled,
     .ur_mesh_hal_get_stats = linux_80211_mesh_get_stats,
 };
