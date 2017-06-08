@@ -6,8 +6,13 @@ interface: wifi 0-99
 # all nodes in same layer or neighbor layer are full-connected
 rssi-tree: 0 100
 
-interface: ble 100-199
+interface: ble 100-149
 
-rssi-tree: 100 100
+rssi-tree: 100 50
+
+interface wifi 150-199
+rssi-tree: 150 50
+interface ble 150-199
+rssi-tree: 150 50
 
 finish

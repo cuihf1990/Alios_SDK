@@ -24,7 +24,7 @@
  *    ------           |              |
  *    |     |          |              |
  *    |     |          |              |
- *    5     8          9              10
+ *    5     8          9              10 (mobile)
  *    |
  *    |
  *    6
@@ -54,22 +54,45 @@ static void build_topo_wifi(void)
     set_rssi_ext(IF_WIFI, 4, 10, 1, 1);
 }
 
+/* topology:
+ *                     151(super)
+ *                 ----------
+ *                 |   |    |
+ *     ____________|   |    |_________ 
+ *    |                |              |
+ *   152(super)------153(leader)------154 (super)
+ *    |                |              |
+ *    ------           |              |
+ *    |     |          |              |
+ *    |     |          |              |
+ *   155   156        157            158 (mobile)
+ *    |
+ *    |
+ *   159
+ *    |
+ *    |
+ *   160
+ *    |
+ *    |
+ *   161
+ */
+
 static void build_topo_wifi_ble(void)
 {
-    clear_full_rssi(1, 11);
+    clear_full_rssi(151, 161);
 
-    set_rssi_ext(IF_WIFI, 11, 2, 1, 1);
-    set_rssi_ext(IF_WIFI, 11, 1, 1, 1);
-    set_rssi_ext(IF_WIFI, 11, 4, 1, 1);
-    set_rssi_ext(IF_WIFI, 2, 1, 1, 1);
-    set_rssi_ext(IF_WIFI, 1, 4, 1, 1);
-    set_rssi_ext(IF_BLE, 2, 5, 1, 1);
-    set_rssi_ext(IF_BLE, 2, 8, 1, 1);
-    set_rssi_ext(IF_BLE, 5, 6, 1, 1);
-    set_rssi_ext(IF_BLE, 6, 7, 1, 1);
-    set_rssi_ext(IF_BLE, 7, 3, 1, 1);
-    set_rssi_ext(IF_BLE, 1, 9, 1, 1);
-    set_rssi_ext(IF_BLE, 4, 10, 1, 1);
+    set_rssi_ext(IF_WIFI, 151, 152, 1, 1);
+    set_rssi_ext(IF_WIFI, 151, 153, 1, 1);
+    set_rssi_ext(IF_WIFI, 151, 154, 1, 1);
+    set_rssi_ext(IF_WIFI, 152, 153, 1, 1);
+    set_rssi_ext(IF_WIFI, 153, 154, 1, 1);
+    set_rssi_ext(IF_BLE, 152, 155, 1, 1);
+    set_rssi_ext(IF_BLE, 152, 156, 1, 1);
+    set_rssi_ext(IF_BLE, 155, 159, 1, 1);
+    set_rssi_ext(IF_BLE, 159, 160, 1, 1);
+    set_rssi_ext(IF_BLE, 160, 161, 1, 1);
+    set_rssi_ext(IF_BLE, 153, 157, 1, 1);
+    set_rssi_ext(IF_BLE, 154, 158, 1, 1);
 }
 
 static void subnet_is_wifi_case(void)
@@ -81,6 +104,7 @@ static void subnet_is_wifi_case(void)
     build_topo_wifi();
 
     cmd_to_agent("stop");
+    yos_msleep(3 * 1000);
 
     start_node_ext(1, MODE_SUPER, -1, 1);
     check_p2p_str_wait("leader", 1, "testcmd state", 10);
@@ -99,7 +123,7 @@ static void subnet_is_wifi_case(void)
     check_p2p_str_wait("super_router", 4, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 4, "testcmd router", 2);
 
-    yos_msleep(4 * 1000);
+    yos_msleep(20 * 1000);
 
     start_node_ext(5, MODE_RX_ON, -1, 1);
     check_p2p_str_wait("router", 5, "testcmd state", 10);
@@ -129,7 +153,7 @@ static void subnet_is_wifi_case(void)
     check_p2p_str_wait("leaf", 10, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 10, "testcmd router", 2);
 
-    yos_msleep(2 * 1000);
+    yos_msleep(20 * 1000);
 
     addr = ur_mesh_get_mcast_addr();
 
@@ -141,7 +165,7 @@ static void subnet_is_wifi_case(void)
     }
 
     for (index = 1; index < 12; index++) {
-        snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT " 1 1000",
+        snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT " 1 500",
                  index, IP6_ADDR_DATA(addr->addr));
         cmd_to_master(autotest_cmd);
         check_p2p_str_wait("10", index, "testcmd autotest_acked", 10);
@@ -157,75 +181,78 @@ static void subnet_is_wifi_case(void)
 static void subnet_is_ble_case(void)
 {
     char autotest_cmd[64];
-    const ur_netif_ip6_address_t *addr;
     uint8_t index;
+    uint8_t counter;
 
     build_topo_wifi_ble();
 
     cmd_to_agent("stop");
+    yos_msleep(3 * 1000);
 
-    start_node_ext(1, MODE_SUPER, -1, 3);
-    check_p2p_str_wait("leader", 1, "testcmd state", 10);
-    check_p2p_str_wait("VECTOR_ROUTER", 1, "testcmd router", 2);
+    start_node_ext(153, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("leader", 153, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 153, "testcmd router", 2);
 
-    ur_mesh_set_mode(MODE_SUPER);
-    cmd_to_agent("start");
-    check_cond_wait((DEVICE_STATE_SUPER_ROUTER == mm_get_device_state()), 15);
-    YUNIT_ASSERT(ur_router_get_default_router() == VECTOR_ROUTER);
+    start_node_ext(151, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("super_router", 151, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 151, "testcmd router", 2);
 
-    start_node_ext(2, MODE_SUPER, -1, 3);
-    check_p2p_str_wait("super_router", 2, "testcmd state", 10);
-    check_p2p_str_wait("VECTOR_ROUTER", 2, "testcmd router", 2);
+    start_node_ext(152, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("super_router", 152, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 152, "testcmd router", 2);
 
-    start_node_ext(4, MODE_SUPER, -1, 3);
-    check_p2p_str_wait("super_router", 4, "testcmd state", 10);
-    check_p2p_str_wait("VECTOR_ROUTER", 4, "testcmd router", 2);
+    start_node_ext(154, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("super_router", 154, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 154, "testcmd router", 2);
 
     yos_msleep(4 * 1000);
 
-    start_node_ext(5, MODE_RX_ON, -1, 2);
-    check_p2p_str_wait("router", 5, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 5, "testcmd router", 2);
+    start_node_ext(155, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 155, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 155, "testcmd router", 2);
 
-    start_node_ext(6, MODE_RX_ON, -1, 2);
-    check_p2p_str_wait("router", 6, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 6, "testcmd router", 2);
+    start_node_ext(159, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 159, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 159, "testcmd router", 2);
 
-    start_node_ext(7, MODE_RX_ON, -1, 2);
-    check_p2p_str_wait("router", 7, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 7, "testcmd router", 2);
+    start_node_ext(160, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 160, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 160, "testcmd router", 2);
 
-    start_node_ext(3, MODE_RX_ON, -1, 2);
-    check_p2p_str_wait("leaf", 3, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 3, "testcmd router", 2);
+    start_node_ext(161, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("leaf", 161, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 161, "testcmd router", 2);
 
-    start_node_ext(8, MODE_RX_ON, -1, 2);
-    check_p2p_str_wait("router", 8, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 8, "testcmd router", 2);
+    start_node_ext(156, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 156, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 156, "testcmd router", 2);
 
-    start_node_ext(9, MODE_RX_ON, -1, 2);
-    check_p2p_str_wait("router", 9, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 9, "testcmd router", 2);
+    start_node_ext(157, MODE_RX_ON, -1, 2);
+    check_p2p_str_wait("router", 157, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 157, "testcmd router", 2);
 
-    start_node_ext(10, MODE_MOBILE, -1, 2);
-    check_p2p_str_wait("leaf", 10, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 10, "testcmd router", 2);
+    start_node_ext(158, MODE_MOBILE, -1, 2);
+    check_p2p_str_wait("leaf", 158, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 158, "testcmd router", 2);
 
     yos_msleep(2 * 1000);
 
-    addr = ur_mesh_get_mcast_addr();
-
-    for (index = 1; index < 12; index++) {
-        snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT,
-                 index, IP6_ADDR_DATA(addr->addr));
+    char *ipaddr = dda_p2p_req_and_wait(154, "testcmd ipaddr", 5);
+    YUNIT_ASSERT(ipaddr != NULL);
+    for (index = 151; index < 161; index++) {
+        if (index == 154) {
+            continue;
+        }
+        snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest %s",
+                 index, ipaddr);
         cmd_to_master(autotest_cmd);
-        check_p2p_str_wait("10", index, "testcmd autotest_acked", 10);
+        check_p2p_str_wait("1", index, "testcmd autotest_acked", 10);
     }
+    yos_free(ipaddr);
 
-    for (index = 1; index < 11; index++) {
+    for (index = 151; index < 162; index++) {
         stop_node(index);
     }
-    cmd_to_agent("stop");
     yos_msleep(3 * 1000);
 }
 

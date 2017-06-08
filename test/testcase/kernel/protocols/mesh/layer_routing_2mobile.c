@@ -24,6 +24,7 @@ static void topology_line_case(void)
      *   11 <------> 12  <===>  13 <---> 14
      */
     set_line_rssi(11, 14);
+    cmd_to_agent("stop");
 
     start_node_ext(13, MODE_SUPER, -1, -1);
     check_p2p_str_wait("leader", 13, "testcmd state", 10);
@@ -59,40 +60,41 @@ static void dual_if_topology_line_case(void)
 
     /* topology:
      *   ble       wifi/ble  wifi/ble  ble
-     *   12 <------> 13  <===>  14 <---> 15
+     *   151 <------> 152  <===>  153 <---> 154
      */
-    set_line_rssi(12, 15);
+    set_line_rssi(151, 154);
+    cmd_to_agent("stop");
 
-    start_node_ext(13, MODE_SUPER, -1, 3);
-    check_p2p_str_wait("leader", 13, "testcmd state", 10);
-    check_p2p_str_wait("VECTOR_ROUTER", 13, "testcmd router", 2);
+    start_node_ext(152, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("leader", 152, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 152, "testcmd router", 2);
 
-    start_node_ext(14, MODE_SUPER, -1, 3);
-    check_p2p_str_wait("super_router", 14, "testcmd state", 10);
-    check_p2p_str_wait("VECTOR_ROUTER", 14, "testcmd router", 2);
+    start_node_ext(153, MODE_SUPER, -1, 3);
+    check_p2p_str_wait("super_router", 153, "testcmd state", 10);
+    check_p2p_str_wait("VECTOR_ROUTER", 153, "testcmd router", 2);
 
-    start_node_ext(15, MODE_MOBILE, -1, 2);
-    check_p2p_str_wait("leaf", 15, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 15, "testcmd router", 2);
+    start_node_ext(151, MODE_MOBILE, -1, 2);
+    check_p2p_str_wait("leaf", 151, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 151, "testcmd router", 2);
 
-    start_node_ext(12, MODE_MOBILE, -1, 2);
-    check_p2p_str_wait("leaf", 12, "testcmd state", 10);
-    check_p2p_str_wait("SID_ROUTER", 12, "testcmd router", 2);
+    start_node_ext(154, MODE_MOBILE, -1, 2);
+    check_p2p_str_wait("leaf", 154, "testcmd state", 10);
+    check_p2p_str_wait("SID_ROUTER", 154, "testcmd router", 2);
 
-    char *ipaddr = dda_p2p_req_and_wait(15, "testcmd ipaddr", 5);
+    char *ipaddr = dda_p2p_req_and_wait(154, "testcmd ipaddr", 5);
     YUNIT_ASSERT(ipaddr != NULL);
     if (ipaddr) {
-        snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping %s", ipaddr);
+        snprintf(ping_cmd, sizeof ping_cmd, "send 151 ping %s", ipaddr);
         yos_free(ipaddr);
 
         cmd_to_master(ping_cmd);
-        check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);
+        check_p2p_str_wait("1", 151, "testcmd icmp_acked", 5);
     }
 
-    stop_node(12);
-    stop_node(13);
-    stop_node(14);
-    stop_node(15);
+    stop_node(151);
+    stop_node(152);
+    stop_node(153);
+    stop_node(154);
     cmd_to_agent("stop");
 }
 
