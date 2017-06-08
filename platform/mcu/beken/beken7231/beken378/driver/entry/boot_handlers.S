@@ -21,6 +21,8 @@
 	.globl irq_handler
 	.globl fiq_handler
 	.globl vPortStartFirstTask
+	.globl fiq_pre_proc
+	.globl fiq_end_proc
 
 /* ========================================================================
  *                                Macros
@@ -436,7 +438,11 @@ fiq_handler:
     CMP R8, #0x12
     BNE 88f
     STMFD   SP!, {R0-R12, LR}
+
+    BL      fiq_pre_proc
     BL      intc_fiq
+    BL      fiq_end_proc
+
     LDMFD   SP!,{R0-R12,LR}
     SUBS PC, LR,#4
 
