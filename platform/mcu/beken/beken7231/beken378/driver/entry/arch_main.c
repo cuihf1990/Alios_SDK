@@ -86,9 +86,6 @@ _ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
 
 void task_test2(void *arg)
 {
-    /* step 1: driver layer initialization*/
-    driver_init();
-
     /* step 2: function layer initialization*/
     func_init();
 
@@ -127,6 +124,9 @@ void entry_main(void)
 
     /* step 0: system basic component initialization*/
     os_mem_init();
+
+    /* step 1: driver layer initialization*/
+    driver_init();
 
     yunos_task_dyn_create(&task_test_obj, "task_test", 0, 10, 0, 512, task_test2, 1);
 
