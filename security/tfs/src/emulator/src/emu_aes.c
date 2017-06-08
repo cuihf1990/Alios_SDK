@@ -27,13 +27,13 @@ int32_t emu_aes128_cbc_enc(const uint8_t *key,
 
     memcpy(key128, key, 16);
 
-    if (AES_set_encrypt_key((unsigned char*)key128, 128, &aeskey) < 0) {
+    if (AES_set_encrypt_key((unsigned char *)key128, 128, &aeskey) < 0) {
         LOGE(TAG_EMU_AES, "[%s]: aes128_set key failed\n", __func__);
         return -1;
     }
 
     LOGD(TAG_EMU_AES, "[%s]: aes128_cbc enc\n", __func__);
-    AES_cbc_encrypt((unsigned char*)input, (unsigned char*)output,
+    AES_cbc_encrypt((unsigned char *)input, (unsigned char *)output,
                     input_len, &aeskey, (unsigned char *)iv, AES_ENCRYPT);
 
     return 0;
@@ -56,7 +56,7 @@ int32_t emu_aes128_cbc_dec(const uint8_t *key,
 
     memcpy(key128, key, 16);
 
-    if (AES_set_decrypt_key((unsigned char*)key128, 128, &aeskey) < 0) {
+    if (AES_set_decrypt_key((unsigned char *)key128, 128, &aeskey) < 0) {
         LOGE(TAG_EMU_AES, "[%s]: aes128_set key failed\n", __func__);
         return -1;
     }

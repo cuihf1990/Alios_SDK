@@ -3,18 +3,18 @@
 NAME := tfs
 
 $(NAME)_SOURCES := src/core/aes/src/aes128.c \
-				   src/core/id2/src/id2.c \
-				   src/core/tfs_aes.c \
-				   src/core/tfs_id2.c \
-				   src/network/src/http.c
+                   src/core/id2/src/id2.c \
+                   src/core/tfs_aes.c \
+                   src/core/tfs_id2.c \
+                   src/network/src/http.c
 
 $(NAME)_INCLUDES := src/core/id2/include/ \
-					src/core/aes/include/ \
-					src/common/include/ \
-					src/network/include/ \
-					platform
+                    src/core/aes/include/ \
+                    src/common/include/ \
+                    src/network/include/ \
+                    platform
 
-$(NAME)_COMPONENTS := cjson alicrypto base64
+$(NAME)_COMPONENTS := cjson alicrypto base64 digest_algorithm
 
 GLOBAL_INCLUDES += include/
 
@@ -25,32 +25,36 @@ endif
 
 ifeq ($(CONFIG_TFS_EMULATE), y)
     $(NAME)_DEFINES += TFS_EMULATE
-	$(NAME)_SOURCES += \
-				   src/emulator/src/emu_id2.c \
-				   src/emulator/src/emu_aes.c
+    $(NAME)_SOURCES += \
+                      src/emulator/src/emu_id2.c \
+                      src/emulator/src/emu_aes.c
 
     $(NAME)_INCLUDES += src/emulator/include/
 else
     $(NAME)_SOURCES += src/hal/src/hal_id2.c \
-					   src/hal/src/hal_aes.c
+                       src/hal/src/hal_aes.c
 
     $(NAME)_INCLUDES += src/hal/include/
 endif
 
 ifeq ($(CONFIG_TFS_ON_LINE), y)
-	$(NAME)_DEFINES += TFS_ONLINE
+    $(NAME)_DEFINES += TFS_ONLINE
 endif
 
 #$(NAME)_CFLAGS += -g -Wall -O0
 
 ifeq ($(CONFIG_TFS_OPENSSL), y)
-	$(NAME)_DEFINES += TFS_OPENSSL
+    $(NAME)_DEFINES += TFS_OPENSSL
     GLOBAL_LDFLAGS += -lcrypto
 endif
 
 ifeq ($(CONFIG_TFS_MBEDTLS), y)
-	$(NAME)_DEFINES += TFS_MBEDTLS
+    $(NAME)_DEFINES += TFS_MBEDTLS
     GLOBAL_LDFLAGS += -lmbedcrypto
+endif
+
+ifeq ($(CONFIG_TFS_ALICRYPTO), y)
+    $(NAME)_DEFINES += TFS_ALICRYPTO
 endif
 
 ifeq ($(CONFIG_TFS_ID2_3DES), y)
@@ -85,20 +89,21 @@ ifeq ($(CONFIG_TFS_SW), y)
     $(NAME)_DEFINES += TFS_SW
     $(NAME)_INCLUDES += ../libid2/include/
     ifeq ($(HOST_ARCH), linux)
-	    PLATFORM := linuxhost
+        PLATFORM := linuxhost
     endif
     ifeq ($(HOST_ARCH), armhflinux)
-	    PLATFORM := armhflinux
+        PLATFORM := armhflinux
     endif
     $(NAME)_PREBUILT_LIBRARY += ../libid2/lib/$(PLATFORM)/libid2.a
     $(NAME)_PREBUILT_LIBRARY += ../libkm/lib/$(PLATFORM)/libkm.a
 endif
 
 $(NAME)_SOURCES += \
-				   platform/aos/pal_platform_base64.c \
-				   platform/aos/pal_platform_json.c \
-				   platform/aos/pal_platform_memory.c \
-				   platform/aos/pal_platform_network.c \
-				   platform/aos/pal_platform_device.c \
-				   platform/aos/pal_platform_random.c \
-				   platform/aos/pal_platform_storage.c
+                   platform/aos/pal_platform_base64.c \
+                   platform/aos/pal_platform_md5.c \
+                   platform/aos/pal_platform_json.c \
+                   platform/aos/pal_platform_memory.c \
+                   platform/aos/pal_platform_network.c \
+                   platform/aos/pal_platform_device.c \
+                   platform/aos/pal_platform_random.c \
+                   platform/aos/pal_platform_storage.c

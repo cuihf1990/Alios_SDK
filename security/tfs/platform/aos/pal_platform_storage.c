@@ -11,7 +11,8 @@
 
 #define MAX_BUF_LEN 64
 
-int pal_save_info(const char *key, char *value) {
+int pal_save_info(const char *key, char *value)
+{
     LOGD(TAG_PAL_STORAGE, "[%s]: enter.\n", __func__);
     if (key == NULL || value == NULL) {
         LOGE(TAG_PAL_STORAGE, "[%s]: para error.\n", __func__);
@@ -21,10 +22,11 @@ int pal_save_info(const char *key, char *value) {
     return yos_kv_set(key, value, strlen(value), 1);
 }
 
-int pal_get_info(const char *key, char *value) {
+int pal_get_info(const char *key, char *value)
+{
     int ret;
-    char buf[MAX_BUF_LEN+1] = {0};
-    int buf_len = MAX_BUF_LEN+1;
+    char buf[MAX_BUF_LEN + 1] = {0};
+    int buf_len = MAX_BUF_LEN + 1;
 
     LOGD(TAG_PAL_STORAGE, "[%s]: enter.\n", __func__);
 
@@ -35,8 +37,8 @@ int pal_get_info(const char *key, char *value) {
 
     ret = yos_kv_get(key, buf, &buf_len);
 
-    if(!ret) {
-        strcpy(value,(const char *) buf);
+    if (!ret) {
+        strcpy(value, (const char *) buf);
     }
 
     LOGD(TAG_PAL_STORAGE, "[%s]: exit.\n", __func__);

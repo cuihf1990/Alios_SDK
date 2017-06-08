@@ -48,8 +48,10 @@
  * ------------------------------------------------------------------
  */
 
-int fill_package(uint8_t *package, uint32_t cmd, uint8_t *arg, uint32_t arg_len);
+int fill_package(uint8_t *package, uint32_t cmd, uint8_t *arg,
+                 uint32_t arg_len);
 
-int hal_cmd(uint32_t cmd, void *in, uint32_t in_len, void *out, uint32_t *out_len);
+int hal_cmd(uint32_t cmd, void *in, uint32_t in_len, void *out,
+            uint32_t *out_len);
 
 #endif /* _CMD_H */

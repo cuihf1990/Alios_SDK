@@ -115,7 +115,8 @@ int tfs_activate_device(void);
  * @note None.
 */
 
-int tfs_id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len);
+int tfs_id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code,
+                          uint32_t *auth_len);
 
 
 /*
@@ -129,7 +130,8 @@ int tfs_id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth
  * @return: 0~OK, other~ERROR.
  * @note None.
 */
-int tfs_id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len);
+int tfs_id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest,
+                                 uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len);
 
 
 #ifdef __cplusplus

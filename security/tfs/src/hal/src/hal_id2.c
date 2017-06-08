@@ -22,7 +22,7 @@ int hal_get_ID2(uint8_t *id2, uint32_t *len)
 
     LOGD(TAG_HAL_ID2, "[%s]: enter.\n", __func__);
 #if defined(TFS_TEE)
-   ret = tee_get_ID2(id2, len);
+    ret = tee_get_ID2(id2, len);
     if (ret != 0) {
         LOGE(TAG_HAL_ID2, "[%s]:tee env error!\n", __func__);
         return -1;

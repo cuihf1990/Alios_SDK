@@ -101,7 +101,8 @@ int id2_sign(const uint8_t *in, uint32_t in_len,
     }
 
     if (in_len > MAX_SIGN_LEN) {
-        LOGE(TAG_ID2, "[%s]: in_len must not larger than %d.\n", __func__, MAX_SIGN_LEN);
+        LOGE(TAG_ID2, "[%s]: in_len must not larger than %d.\n", __func__,
+             MAX_SIGN_LEN);
         return -1;
     }
 
@@ -110,21 +111,21 @@ int id2_sign(const uint8_t *in, uint32_t in_len,
     switch (g_sign_algo) {
         case SIGN_ALGO_RSA:
 #ifdef TFS_ID2_RSA
-    #ifdef TFS_EMULATE
+#ifdef TFS_EMULATE
             return emu_RSA_sign(KEY_ID_0, in, in_len, sign, sign_len, TFS_MD5);
-    #else
+#else
             return hal_RSA_sign(KEY_ID_0, in, in_len, sign, sign_len, TFS_MD5);
-    #endif
+#endif
 #else
             return -1;
 #endif
         case SIGN_ALGO_3DES:
 #ifdef TFS_ID2_3DES
-    #ifdef TFS_EMULATE
+#ifdef TFS_EMULATE
             return emu_3DES_sign(KEY_ID_18, in, in_len, sign, sign_len, TFS_3DES_ECB);
-    #else
+#else
             return hal_3DES_sign(KEY_ID_18, in, in_len, sign, sign_len, TFS_3DES_ECB);
-    #endif
+#endif
 #else
             return -1;
 #endif
@@ -143,7 +144,8 @@ int id2_verify(const uint8_t *in, uint32_t in_len,
     }
 
     if (in_len > MAX_SIGN_LEN) {
-        LOGE(TAG_ID2, "[%s]: in_len must not larger than %d.\n", __func__, MAX_SIGN_LEN);
+        LOGE(TAG_ID2, "[%s]: in_len must not larger than %d.\n", __func__,
+             MAX_SIGN_LEN);
         return -1;
     }
 
@@ -152,21 +154,21 @@ int id2_verify(const uint8_t *in, uint32_t in_len,
     switch (g_sign_algo) {
         case SIGN_ALGO_RSA:
 #ifdef TFS_ID2_RSA
-    #ifdef TFS_EMULATE
+#ifdef TFS_EMULATE
             return emu_RSA_verify(KEY_ID_0, in, in_len, sign, sign_len, TFS_MD5);
-    #else
+#else
             return hal_RSA_verify(KEY_ID_0, in, in_len, sign, sign_len, TFS_MD5);
-    #endif
+#endif
 #else
             return -1;
 #endif
         case SIGN_ALGO_3DES:
 #ifdef TFS_ID2_3DES
-    #ifdef TFS_EMULATE
+#ifdef TFS_EMULATE
             return emu_3DES_verify(KEY_ID_18, in, in_len, sign, sign_len, TFS_3DES_ECB);
-    #else
+#else
             return hal_3DES_verify(KEY_ID_18, in, in_len, sign, sign_len, TFS_3DES_ECB);
-    #endif
+#endif
 #else
             return -1;
 #endif
@@ -185,7 +187,8 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
     }
 
     if (in_len > MAX_ENCRYPT_LEN) {
-        LOGE(TAG_ID2, "[%s]: input data len must not larger than %d.\n", __func__, MAX_ENCRYPT_LEN);
+        LOGE(TAG_ID2, "[%s]: input data len must not larger than %d.\n", __func__,
+             MAX_ENCRYPT_LEN);
         return -1;
     }
 
@@ -207,13 +210,15 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
             sections = in_len / RSA_MAX_SIZE_PER_SECTION;
             last_section = in_len % RSA_MAX_SIZE_PER_SECTION;
             section_len = RSA_MAX_SIZE_PER_SECTION;
-            if (last_section != 0)
+            if (last_section != 0) {
                 sections += 1;
+            }
 
             for (i = 0; i < sections; i ++) {
                 if (i == sections - 1) {
-                    if (last_section != 0)
+                    if (last_section != 0) {
                         section_len = last_section;
+                    }
                 }
 
                 len = RSA_KEY_SIZE;
@@ -239,11 +244,11 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
 #endif
         case SIGN_ALGO_3DES:
 #ifdef TFS_ID2_3DES
-    #ifdef TFS_EMULATE
+#ifdef TFS_EMULATE
             return emu_3DES_encrypt(KEY_ID_18, in, in_len, out, out_len, TFS_3DES_ECB);
-    #else
+#else
             return hal_3DES_encrypt(KEY_ID_18, in, in_len, out, out_len, TFS_3DES_ECB);
-    #endif
+#endif
 #else
             return -1;
 #endif
@@ -262,7 +267,8 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
     }
 
     if (in_len > MAX_ENCRYPT_LEN) {
-        LOGE(TAG_ID2, "[%s]: input data len must not larger than %d.\n", __func__, MAX_ENCRYPT_LEN);
+        LOGE(TAG_ID2, "[%s]: input data len must not larger than %d.\n", __func__,
+             MAX_ENCRYPT_LEN);
         return -1;
     }
 
@@ -285,10 +291,10 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
                 len = RSA_KEY_SIZE;
 #ifdef TFS_EMULATE
                 ret = emu_RSA_private_decrypt(KEY_ID_0, in + i * RSA_KEY_SIZE,
-                                               RSA_KEY_SIZE, out + len_sum, &len, TFS_PKCS1_PADDING);
+                                              RSA_KEY_SIZE, out + len_sum, &len, TFS_PKCS1_PADDING);
 #else
                 ret = hal_RSA_private_decrypt(KEY_ID_0, in + i * RSA_KEY_SIZE,
-                                               RSA_KEY_SIZE, out + len_sum, &len, TFS_PKCS1_PADDING);
+                                              RSA_KEY_SIZE, out + len_sum, &len, TFS_PKCS1_PADDING);
 #endif
                 if (ret != 0) {
                     LOGE(TAG_ID2, "[%s]: RSA: decrypt error!\n", __func__);
@@ -305,11 +311,11 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
 #endif
         case SIGN_ALGO_3DES:
 #ifdef TFS_ID2_3DES
-    #ifdef TFS_EMULATE
+#ifdef TFS_EMULATE
             return emu_3DES_decrypt(KEY_ID_18, in, in_len, out, out_len, TFS_3DES_ECB);
-    #else
+#else
             return hal_3DES_decrypt(KEY_ID_18, in, in_len, out, out_len, TFS_3DES_ECB);
-    #endif
+#endif
 #else
             return -1;
 #endif
@@ -330,13 +336,14 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
     uint32_t id2_len = ID2_LEN + 1;
     int size = 0;
     uint32_t s_len = SIGN_LEN_MAX;
-    char *random = (char*)pal_memory_malloc(5);
-    char *seed = (char*)pal_memory_malloc(7);
-    char *id2 = (char*)pal_memory_malloc(ID2_LEN + 1);
-    char *random_id2 = (char*)pal_memory_malloc(23); // random^ID2
-    char *random_id2_signed = (char*)pal_memory_malloc(SIGN_LEN_MAX); // signed data of ramdom^id2
-    char *code_signed = (char*)pal_memory_malloc(SIGN_LEN_MAX);
-    char *code_signed_base64 = (char*)pal_memory_malloc(SIGN_LEN_MAX * 2);
+    char *random = (char *)pal_memory_malloc(5);
+    char *seed = (char *)pal_memory_malloc(7);
+    char *id2 = (char *)pal_memory_malloc(ID2_LEN + 1);
+    char *random_id2 = (char *)pal_memory_malloc(23); // random^ID2
+    char *random_id2_signed = (char *)pal_memory_malloc(
+                                  SIGN_LEN_MAX); // signed data of ramdom^id2
+    char *code_signed = (char *)pal_memory_malloc(SIGN_LEN_MAX);
+    char *code_signed_base64 = (char *)pal_memory_malloc(SIGN_LEN_MAX * 2);
 
     memset(id2, 0, ID2_LEN + 1);
     memset(random, 0, 5);
@@ -382,7 +389,8 @@ int get_auth_code(uint8_t *auth_code, uint32_t *len)
         goto error_exit;
     }
 
-    pal_base64_encode((const uint8_t *)code_signed, s_len, (uint8_t *)code_signed_base64, &size);
+    pal_base64_encode((const uint8_t *)code_signed, s_len,
+                      (uint8_t *)code_signed_base64, &size);
 
     LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
@@ -403,7 +411,8 @@ error_exit:
     return ret;
 }
 
-int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len)
+int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code,
+                      uint32_t *auth_len)
 {
     LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
     if (auth_code == NULL || auth_len == NULL) {
@@ -415,12 +424,15 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
     uint32_t id2_len = ID2_LEN + 1;
     int size = 0;
     uint32_t s_len = SIGN_LEN_MAX;
-    char *random = (char*)pal_memory_malloc(5);
-    char *id2 = (char*)pal_memory_malloc(ID2_LEN + 1);
+    char *random = (char *)pal_memory_malloc(5);
+    char *id2 = (char *)pal_memory_malloc(ID2_LEN + 1);
     char *timestamp_str = (char *)pal_memory_malloc(15);
-    char *random_id2_timestamp = (char*)pal_memory_malloc(38); // ID2^random^timestamp
-    char *random_id2_timestamp_signed = (char*)pal_memory_malloc(SIGN_LEN_MAX); // signed data of ramdom^id2
-    char *random_id2_timestamp_signed_base64 = (char*)pal_memory_malloc(SIGN_LEN_MAX * 2);
+    char *random_id2_timestamp = (char *)pal_memory_malloc(
+                                     38); // ID2^random^timestamp
+    char *random_id2_timestamp_signed = (char *)pal_memory_malloc(
+                                            SIGN_LEN_MAX); // signed data of ramdom^id2
+    char *random_id2_timestamp_signed_base64 = (char *)pal_memory_malloc(
+                                                   SIGN_LEN_MAX * 2);
 
     memset(id2, 0, ID2_LEN + 1);
     memset(random, 0, 5);
@@ -441,7 +453,8 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
     strcat(random_id2_timestamp + ID2_LEN, random);
     strcat(random_id2_timestamp + ID2_LEN + strlen(random), timestamp_str);
 
-    ret = id2_sign((uint8_t *)random_id2_timestamp, strlen(random_id2_timestamp), (uint8_t *)random_id2_timestamp_signed, &s_len);
+    ret = id2_sign((uint8_t *)random_id2_timestamp, strlen(random_id2_timestamp),
+                   (uint8_t *)random_id2_timestamp_signed, &s_len);
     if (ret < 0) {
         LOGE(TAG_ID2, "[%s]: sign data error.\n", __func__);
         goto error_exit;
@@ -454,11 +467,13 @@ int id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len
     strcat((char *)auth_code + 7, timestamp_str);
     strcat((char *)auth_code + 7 + strlen(timestamp_str), "~");
 
-    pal_base64_encode((const uint8_t *)random_id2_timestamp_signed, s_len, (uint8_t *)random_id2_timestamp_signed_base64, &size);
+    pal_base64_encode((const uint8_t *)random_id2_timestamp_signed, s_len,
+                      (uint8_t *)random_id2_timestamp_signed_base64, &size);
 
     LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
-    memcpy(auth_code + 8 + strlen(timestamp_str), random_id2_timestamp_signed_base64, strlen(random_id2_timestamp_signed_base64));
+    memcpy(auth_code + 8 + strlen(timestamp_str),
+           random_id2_timestamp_signed_base64, strlen(random_id2_timestamp_signed_base64));
     *auth_len = strlen((const char *)auth_code);
 
     LOGD(TAG_ID2, "[%s]: authcode = %s,%d\n", __func__, auth_code, *auth_len);
@@ -474,16 +489,19 @@ error_exit:
     return ret;
 }
 
-int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len)
+int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest,
+                             uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len)
 {
     LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
-    if (digest == NULL || digest_len == 0 || auth_code == NULL || auth_len == NULL) {
+    if (digest == NULL || digest_len == 0 || auth_code == NULL ||
+        auth_len == NULL) {
         LOGE(TAG_ID2, "[%s]: para error.\n", __func__);
         return -1;
     }
 
     if (digest_len > MAX_DIGEST_LEN) {
-        LOGE(TAG_ID2, "[%s]: digest len must not larger than %d.\n", __func__, MAX_DIGEST_LEN);
+        LOGE(TAG_ID2, "[%s]: digest len must not larger than %d.\n", __func__,
+             MAX_DIGEST_LEN);
         return -1;
     }
 
@@ -491,11 +509,14 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
     uint32_t id2_len = ID2_LEN + 1;
     int size = 0;
     uint32_t s_len = SIGN_LEN_MAX;
-    char *id2 = (char*)pal_memory_malloc(ID2_LEN + 1);
+    char *id2 = (char *)pal_memory_malloc(ID2_LEN + 1);
     char *timestamp_str = (char *)pal_memory_malloc(15);
-    char *id2_digest_timestamp = (char*)pal_memory_malloc(ID2_LEN + 15 + MAX_DIGEST_LEN); // ID2^digest^timestamp
-    char *id2_digest_timestamp_signed = (char*)pal_memory_malloc(SIGN_LEN_MAX); // signed data of id2^digest^timestamp
-    char *id2_digest_timestamp_signed_base64 = (char*)pal_memory_malloc(SIGN_LEN_MAX * 2);
+    char *id2_digest_timestamp = (char *)pal_memory_malloc(ID2_LEN + 15 +
+                                                           MAX_DIGEST_LEN); // ID2^digest^timestamp
+    char *id2_digest_timestamp_signed = (char *)pal_memory_malloc(
+                                            SIGN_LEN_MAX); // signed data of id2^digest^timestamp
+    char *id2_digest_timestamp_signed_base64 = (char *)pal_memory_malloc(
+                                                   SIGN_LEN_MAX * 2);
 
     memset(id2, 0, ID2_LEN + 1);
     memset(timestamp_str, 0, 15);
@@ -514,13 +535,15 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
     strcat(id2_digest_timestamp + ID2_LEN, (char *)digest);
     strcat(id2_digest_timestamp + ID2_LEN + strlen((char *)digest), timestamp_str);
 
-    ret = id2_sign((uint8_t *)id2_digest_timestamp, strlen(id2_digest_timestamp), (uint8_t *)id2_digest_timestamp_signed, &s_len);
+    ret = id2_sign((uint8_t *)id2_digest_timestamp, strlen(id2_digest_timestamp),
+                   (uint8_t *)id2_digest_timestamp_signed, &s_len);
     if (ret != 0) {
         LOGE(TAG_ID2, "[%s]: sign data error.\n", __func__);
         goto error_exit;
     }
 
-    pal_base64_encode((const uint8_t *)id2_digest_timestamp_signed, s_len, (uint8_t *)id2_digest_timestamp_signed_base64, &size);
+    pal_base64_encode((const uint8_t *)id2_digest_timestamp_signed, s_len,
+                      (uint8_t *)id2_digest_timestamp_signed_base64, &size);
 
     LOGD(TAG_ID2, "[%s]: code_signed_out size: %d\n", __func__, size);
 
@@ -528,7 +551,8 @@ int id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t diges
     strcat((char *)auth_code + 1, "~");
     strcat((char *)auth_code + 2, timestamp_str);
     strcat((char *)auth_code + strlen(timestamp_str) + 2, "~");
-    strcat((char *)auth_code + strlen(timestamp_str) + 3, id2_digest_timestamp_signed_base64);
+    strcat((char *)auth_code + strlen(timestamp_str) + 3,
+           id2_digest_timestamp_signed_base64);
     *auth_len = strlen((const char *)auth_code);
 
     LOGD(TAG_ID2, "[%s]: authcode = %s,%d\n", __func__, auth_code, *auth_len);
@@ -614,8 +638,9 @@ static int _get_crypt_algo(void)
     int ret;
 
     LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
-    if (g_sign_algo != -1)
-    { return g_sign_algo; }
+    if (g_sign_algo != -1) {
+        return g_sign_algo;
+    }
 
     if (_g_cached_flag != 1) {
         ret = _get_ID2(NULL, NULL);
@@ -652,16 +677,17 @@ static int _get_seed(const char *id2, const char *random,
     int ret = -1;
     int size = 0;
 
-    char* argu_str = (char*)pal_memory_malloc(300);
-    char* _sign_base64 = (char*)pal_memory_malloc(256);
-    char* sign_base64 = (char*) pal_memory_malloc(256);
+    char *argu_str = (char *)pal_memory_malloc(300);
+    char *_sign_base64 = (char *)pal_memory_malloc(256);
+    char *sign_base64 = (char *) pal_memory_malloc(256);
 
     LOGD(TAG_ID2, "[%s]: enter.\n", __func__);
-    memset(argu_str,0,300);
-    memset(_sign_base64,0,256);
-    memset(sign_base64,0,256);
+    memset(argu_str, 0, 300);
+    memset(_sign_base64, 0, 256);
+    memset(sign_base64, 0, 256);
 
-    pal_base64_encode((const uint8_t *)sign, sign_len, (uint8_t *)_sign_base64, &size);
+    pal_base64_encode((const uint8_t *)sign, sign_len, (uint8_t *)_sign_base64,
+                      &size);
     _replace_spec_char(_sign_base64, sign_base64);
 
     sprintf(argu_str, "&id2=%s&sid=%s&sign=%s&model=%d",
@@ -695,7 +721,8 @@ int is_id2_activated()
         return -1;
     }
 
-    if ((strlen(activate_buf) < ACTIVATE_LEN - 1) || (strncmp(activate_buf, ACTIVATE_SUCCESS_MSG, ACTIVATE_LEN) != 0)) {
+    if ((strlen(activate_buf) < ACTIVATE_LEN - 1) ||
+        (strncmp(activate_buf, ACTIVATE_SUCCESS_MSG, ACTIVATE_LEN) != 0)) {
         LOGE(TAG_ID2, "[%s]: compare activated msg error!\n", __func__);
         return -1;
     }
@@ -705,7 +732,8 @@ int is_id2_activated()
 
 // flag == 0, for activate info
 // flag == 1, for activate argu
-static int get_device_info_len(struct device_info dev_info, int flag) {
+static int get_device_info_len(struct device_info dev_info, int flag)
+{
     int len = 0;
     int info_num = 0;
     if (dev_info.bt_mac) {
@@ -775,7 +803,8 @@ static int get_device_info_len(struct device_info dev_info, int flag) {
     return len;
 }
 
-static int package_activate_info(char *info, char *argu) {
+static int package_activate_info(char *info, char *argu)
+{
     struct device_info dev_info;
     int device_info_len = 0;
     char id2[ID2_LEN + 1] = {0};
@@ -813,14 +842,16 @@ static int package_activate_info(char *info, char *argu) {
 
     device_info_len = get_device_info_len(dev_info, 0);
     // check if info len is enough to contain all info
-    if (id2_info_len + model_info_len + version_info_len + device_info_len > ACTIVATE_DEVICE_INFO_LEN) {
+    if (id2_info_len + model_info_len + version_info_len + device_info_len >
+        ACTIVATE_DEVICE_INFO_LEN) {
         LOGE(TAG_ID2, "[%s]: info buffer too short.\n", __func__);
         return -1;
     }
 
     device_info_len = get_device_info_len(dev_info, 1);
     // check if argu len is enough to contain all info
-    if (id2_info_len + model_info_len + version_info_len + device_info_len + 6 > ACTIVATE_DEVICE_ARGU_LEN) {
+    if (id2_info_len + model_info_len + version_info_len + device_info_len + 6 >
+        ACTIVATE_DEVICE_ARGU_LEN) {
         LOGE(TAG_ID2, "[%s]: argu buffer too short.\n", __func__);
         return -1;
     }
@@ -832,12 +863,13 @@ static int package_activate_info(char *info, char *argu) {
 
     if (dev_info.build_time) {
         sprintf(info + strlen(info), "buildTime%s", dev_info.build_time);
-        sprintf(argu+ strlen(argu), "&buildTime=%s", dev_info.build_time);
+        sprintf(argu + strlen(argu), "&buildTime=%s", dev_info.build_time);
     }
 
     if (dev_info.camera_resolution) {
         sprintf(info + strlen(info), "cameraResolution%s", dev_info.camera_resolution);
-        sprintf(argu + strlen(argu), "&cameraResolution=%s", dev_info.camera_resolution);
+        sprintf(argu + strlen(argu), "&cameraResolution=%s",
+                dev_info.camera_resolution);
     }
 
     if (dev_info.cup_info) {
@@ -925,33 +957,43 @@ int activate_device(void)
 
         LOGD(TAG_ID2, "[%s]: info : %s\n", __func__, info);
         LOGD(TAG_ID2, "[%s]: argu_str : %s\n", __func__, argu_str);
-        LOGD(TAG_ID2, "[%s]: info max len 1024, actual len is %d!\n", __func__, (int)strlen(info));
+        LOGD(TAG_ID2, "[%s]: info max len 1024, actual len is %d!\n", __func__,
+             (int)strlen(info));
 
         // sign device info
-        ret = id2_sign((uint8_t *)info, strlen(info), (uint8_t *)info_signed, (uint32_t *)&info_signed_len);
+        ret = id2_sign((uint8_t *)info, strlen(info), (uint8_t *)info_signed,
+                       (uint32_t *)&info_signed_len);
         if (ret < 0) {
             LOGE(TAG_ID2, "[%s]: sign error!\n", __func__);
             break;
         }
-        LOGD(TAG_ID2, "[%s]: info_signed max len 128, actual len is %d!\n", __func__, info_signed_len);
+        LOGD(TAG_ID2, "[%s]: info_signed max len 128, actual len is %d!\n", __func__,
+             info_signed_len);
 
         // base 64
-        pal_base64_encode((const uint8_t *)info_signed, info_signed_len, (uint8_t *)_info_signed_base64, &_info_signed_base64_len);
+        pal_base64_encode((const uint8_t *)info_signed, info_signed_len,
+                          (uint8_t *)_info_signed_base64, &_info_signed_base64_len);
 
-        LOGD(TAG_ID2, "[%s]: _info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(_info_signed_base64));
+        LOGD(TAG_ID2, "[%s]: _info_signed_base64 max len 256, actual len is %d!\n",
+             __func__, (int)strlen(_info_signed_base64));
 
         _replace_spec_char(_info_signed_base64, info_signed_base64);
-        LOGD(TAG_ID2, "[%s]: _info_signed_base64 is %s!\n", __func__, _info_signed_base64);
-        LOGD(TAG_ID2, "[%s]: info_signed_base64 is %s!\n", __func__, info_signed_base64);
-        LOGD(TAG_ID2, "[%s]: info_signed_base64 max len 256, actual len is %d!\n", __func__, (int)strlen(info_signed_base64));
+        LOGD(TAG_ID2, "[%s]: _info_signed_base64 is %s!\n", __func__,
+             _info_signed_base64);
+        LOGD(TAG_ID2, "[%s]: info_signed_base64 is %s!\n", __func__,
+             info_signed_base64);
+        LOGD(TAG_ID2, "[%s]: info_signed_base64 max len 256, actual len is %d!\n",
+             __func__, (int)strlen(info_signed_base64));
 
         if (strlen(argu_str) + strlen(info_signed_base64) > ACTIVATE_DEVICE_ARGU_LEN) {
-            LOGE(TAG_ID2, "[%s]: argu buffer too short to contain activate info.\n", __func__);
+            LOGE(TAG_ID2, "[%s]: argu buffer too short to contain activate info.\n",
+                 __func__);
             break;
         }
 
         sprintf(argu_str + strlen(argu_str), "&sign=%s", info_signed_base64);
-        LOGD(TAG_ID2, "[%s]: argu_str max len is %d, actual len is %d!\n", __func__, (int)sizeof(argu_str), (int)strlen(argu_str));
+        LOGD(TAG_ID2, "[%s]: argu_str max len is %d, actual len is %d!\n", __func__,
+             (int)sizeof(argu_str), (int)strlen(argu_str));
 
         ret = http_activate_dev(ID2_ACTIVATE_DEV, argu_str);
 
@@ -965,12 +1007,11 @@ int activate_device(void)
             LOGE(TAG_ID2, "[%s]: save activate msg error!\n", __func__);
             break;
         }
-    }while (0);
+    } while (0);
 
     if (ret != 0) {
         LOGE(TAG_ID2, "[%s]: activate fail!\n", __func__);
-    }
-    else {
+    } else {
         LOGD(TAG_ID2, "[%s]: id2 device activate success!\n", __func__);
     }
 
