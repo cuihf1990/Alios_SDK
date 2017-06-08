@@ -39,9 +39,9 @@ OSStatus mico_rtos_create_thread( mico_thread_t* thread, uint8_t priority, const
     ktask_t *task_tmp;
 
     if (thread == NULL) {
-        ret = yunos_task_dyn_create(&task_tmp, name, (void *)arg, priority, 0, stack_size, (task_entry_t)function, 1);
+        ret = yunos_task_dyn_create(&task_tmp, name, (void *)arg, priority, 0, stack_size / sizeof(cpu_stack_t), (task_entry_t)function, 1);
     } else {
-        ret = yunos_task_dyn_create((ktask_t **)thread, name, (void *)arg, priority, 0, stack_size, (task_entry_t)function, 1);
+        ret = yunos_task_dyn_create((ktask_t **)thread, name, (void *)arg, priority, 0, stack_size / sizeof(cpu_stack_t), (task_entry_t)function, 1);
     }
 
     if (ret == YUNOS_SUCCESS) {

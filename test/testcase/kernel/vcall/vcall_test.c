@@ -86,9 +86,9 @@ static void test_vcall_case(void)
     mico_rtos_enter_critical();
     mico_rtos_exit_critical();
 
-    mico_rtos_create_thread(&task1, 10, NULL, task1_entry, 1024, 0);
-    mico_rtos_create_thread(&task1, 30, "test", task1_entry, 1024, 0);
-    mico_rtos_create_thread(NULL, 40, "test2", task2_entry, 1024, 0);
+    mico_rtos_create_thread(&task1, 10, NULL, task1_entry, 4096, 0);
+    mico_rtos_create_thread(&task1, 30, "test", task1_entry, 4096, 0);
+    mico_rtos_create_thread(NULL, 40, "test2", task2_entry, 4096, 0);
 
     mico_rtos_suspend_all_thread();
     mico_rtos_resume_all_thread();
