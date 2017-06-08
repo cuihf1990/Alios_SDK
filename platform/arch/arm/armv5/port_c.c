@@ -29,3 +29,13 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
 	 return stk;
 }
 
+void fiq_pre_proc(void)
+{
+    g_intrpt_nested_level++;
+}
+
+void fiq_end_proc(void)
+{
+    g_intrpt_nested_level--;
+}
+
