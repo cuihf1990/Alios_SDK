@@ -734,6 +734,9 @@ ur_error_t mf_send_message(message_t *message)
 
     info->flags |= INSERT_MESH_HEADER;
     set_dest_encrypt_flag(info);
+    if(info->type == MESH_FRAME_TYPE_DATA) {
+        info->flags |= ENABLE_COMPRESS_FLAG;
+    }
 
     nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
     if (info->dest.addr.len == SHORT_ADDR_SIZE) {
@@ -913,7 +916,9 @@ static void message_handler(void *args)
         info->dest2.addr.len = 0;
         message_set_payload_offset(frame->message, -info->payload_offset);
         info->flags |= INSERT_MESH_HEADER;
-        set_src_info(info);
+        if (info->type != MESH_FRAME_TYPE_DATA) {
+            set_src_info(info);
+        }
         forward = true;
     }
 
@@ -1065,16 +1070,17 @@ static void send_datagram(void *args)
                 hal->link_stats.out_errors++;
                 return;
             }
+            message_set_payload_offset(message, -1);
             if (message_get_msglen(message) >= (UR_IP6_HLEN + UR_UDP_HLEN)) {
-                message_copy_to(message, 1, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN);
+                message_copy_to(message, 0, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN);
             } else if (message_get_msglen(message) >= UR_IP6_HLEN) {
-                message_copy_to(message, 1, ip_payload, UR_IP6_HLEN);
+                message_copy_to(message, 0, ip_payload, UR_IP6_HLEN);
             }
             lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
             lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
-            offset = ip_hdr_len - lowpan_hdr_len;
 
             *(--lowpan_payload) = LOWPAN_IPHC_DISPATCH;
+            offset = ip_hdr_len - lowpan_hdr_len - 1;
             message_set_payload_offset(message, -offset);
             message_copy_from(message, lowpan_payload, ip_hdr_len - offset);
             ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);

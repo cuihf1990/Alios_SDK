@@ -100,7 +100,7 @@ static uint8_t ucast_addr_decompress(uint8_t mode, ur_ip6_prefix_t *prefix,
             return 8;
             break;
         case UCAST_ADDR_128BIT:
-            memcpy(&ip6_addr->m8[0], iphc_buffer, 0);
+            memcpy(&ip6_addr->m8[0], iphc_buffer, 16);
             return 16;
             break;
         default:
