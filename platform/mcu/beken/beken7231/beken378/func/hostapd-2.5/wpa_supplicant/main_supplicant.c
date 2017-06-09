@@ -23,9 +23,9 @@
 #include "uart_pub.h"
 
 static struct wpa_global *wpa_global_ptr;
-static xTaskHandle wpas_thread_handle;
+static mico_thread_t wpas_thread_handle;
 uint32_t wpas_stack_size = 4000;
-beken_semaphore_t wpas_sema = NULL;
+mico_semaphore_t wpas_sema = NULL;
 struct wpa_ssid_value *wpas_connect_ssid = 0;
 struct wpa_interface *wpas_ifaces = 0;
 
@@ -163,7 +163,7 @@ static void wpas_thread_main( void *arg )
 
     while(1)
     {
-        ret = mico_rtos_get_semaphore(&wpas_sema, BEKEN_WAIT_FOREVER);
+        ret = mico_rtos_get_semaphore(&wpas_sema, MICO_WAIT_FOREVER);
         ASSERT(kNoErr == ret);
 
         if(wpa_supplicant_run(wpa_global_ptr) < 0)
@@ -179,7 +179,7 @@ void wpas_thread_start(void)
 
     if(NULL == wpas_sema)
     {
-	    ret = mico_rtos_init_semaphore(&wpas_sema, 1);
+	    ret = mico_rtos_init_semaphore(&wpas_sema, 0);
 	    ASSERT(kNoErr == ret);
 	}
 
@@ -188,9 +188,9 @@ void wpas_thread_start(void)
 	    ret = mico_rtos_create_thread(&wpas_thread_handle,
 	                             THD_WPAS_PRIORITY,
 	                             "wpas_thread",
-	                             (beken_thread_function_t)wpas_thread_main,
+	                             (mico_thread_function_t)wpas_thread_main,
 	                             (unsigned short)wpas_stack_size,
-	                             (beken_thread_arg_t)NULLPTR);
+	                             (mico_thread_arg_t)NULLPTR);
 	    ASSERT(kNoErr == ret);
 	}
 }

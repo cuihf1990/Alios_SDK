@@ -59,7 +59,7 @@ int l2_packet_send(struct l2_packet_data *l2, const u8 *dst_addr, u16 proto,
 	eth->h_proto = host_to_be16(proto);
 	os_memcpy(eth+1, buf, len);
 	
-	send(l2->fd, data_buf, data_len, HOSTAPD_DATA);
+	bk_send(l2->fd, data_buf, data_len, HOSTAPD_DATA);
 
 send_exit:	
 	if(data_buf){
@@ -81,7 +81,7 @@ static void l2_packet_receive(int sock, void *eloop_ctx, void *sock_ctx)
 	buf = os_malloc(TMP_BUF_LEN);
 	ASSERT(buf);
 	
-	len = recv(sock, buf, TMP_BUF_LEN, 0);
+	len = bk_recv(sock, buf, TMP_BUF_LEN, 0);
 	if (len < 0) {
 		wpa_printf(MSG_ERROR, "recv: %s", strerror(errno));
 		goto recv_exit;
@@ -123,7 +123,7 @@ struct l2_packet_data * l2_packet_init(
 	/*
 	 * TODO: open connection for receiving frames
 	 */
-	l2->fd = socket(PF_PACKET, SOCK_RAW, protocol);
+	l2->fd = bk_socket(PF_PACKET, SOCK_RAW, protocol);
 	if (l2->fd >= 0)
 		eloop_register_read_sock(l2->fd, l2_packet_receive, l2, NULL);
 

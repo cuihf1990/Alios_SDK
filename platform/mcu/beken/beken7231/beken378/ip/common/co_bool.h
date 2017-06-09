@@ -15,8 +15,9 @@
 
 #ifndef _CO_BOOL_H_
 #define _CO_BOOL_H_
+#include <stdbool.h>
 
-
+#if 0
 typedef unsigned char bool;
 
 #ifndef true
@@ -34,6 +35,6 @@ typedef unsigned char bool;
 #ifndef FALSE
 	#define FALSE    0
 #endif
-
+#endif
 /// @} CO_BOOL
 #endif // _CO_BOOL_H_

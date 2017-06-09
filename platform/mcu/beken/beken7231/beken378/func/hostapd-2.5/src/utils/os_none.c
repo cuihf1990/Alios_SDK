@@ -34,8 +34,10 @@ int os_get_time(struct os_time *t)
 
 int os_get_reltime(struct os_reltime *t)
 {
-	t->sec = fclk_get_second();
-	t->usec = (fclk_get_tick() * FCLK_DURATION_MS * 1000) % 1000000;
+	uint32_t ms = mico_rtos_get_time();
+	
+	t->sec = ms/1000;
+	t->usec = (ms%1000)*1000;
 	
 	return 0;
 }

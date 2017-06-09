@@ -224,7 +224,7 @@ static void handle_read(int sock, void *eloop_ctx, void *sock_ctx)
     buf = os_malloc(TMP_BUF_LEN);
     ASSERT(buf);
 
-    len = recv(sock, buf, TMP_BUF_LEN, 0);
+    len = bk_recv(sock, buf, TMP_BUF_LEN, 0);
     if (len < 0)
     {
         wpa_printf(MSG_ERROR, "recv: %s", strerror(errno));
@@ -255,7 +255,7 @@ int hostap_get_ifhwaddr(int sock, const char *ifname, u8 *addr)
 
 static int hostap_init_sockets(struct hostap_driver_data *drv, u8 *own_addr)
 {
-    drv->sock = socket(PF_PACKET, SOCK_RAW, ETH_P_ALL);
+    drv->sock = bk_socket(PF_PACKET, SOCK_RAW, ETH_P_ALL);
     drv->sock_xmit = l2_packet_init(drv->iface, drv->own_addr, ETH_P_EAPOL,
                                     handle_eapol, drv, 0);
 
@@ -283,7 +283,7 @@ static int hostap_send_mlme(void *priv, const u8 *msg, size_t len, int noack,
 
     /* Request TX callback */
     hdr->frame_control |= host_to_le16(BIT(1));
-    res = send(drv->sock, msg, len, 0);
+    res = bk_send(drv->sock, msg, len, 0);
     hdr->frame_control &= ~host_to_le16(BIT(1));
 
     return res;
@@ -975,14 +975,14 @@ static void *hostap_init(struct hostapd_data *hapd,
 	
     wifi_get_mac_address(drv->own_addr);
 
-    drv->ioctl_sock = socket(PF_INET, SOCK_DGRAM, 0);
+    drv->ioctl_sock = bk_socket(PF_INET, SOCK_DGRAM, 0);
 
     if (hostap_ioctl_prism2param(drv, PRISM2_PARAM_HOSTAPD, 1))
     {
         wpa_printf(MSG_ERROR,
                    "Could not enable hostapd mode for interface %s",
                    drv->iface);
-        close(drv->ioctl_sock);
+        bk_close(drv->ioctl_sock);
         os_free(drv);
         return NULL;
     }
@@ -990,7 +990,7 @@ static void *hostap_init(struct hostapd_data *hapd,
     if (hostap_init_sockets(drv, params->own_addr) ||
             hostap_wireless_event_init(drv))
     {
-        close(drv->ioctl_sock);
+        bk_close(drv->ioctl_sock);
         os_free(drv);
         return NULL;
     }
@@ -1012,10 +1012,10 @@ static void hostap_driver_deinit(void *priv)
     (void) hostap_ioctl_prism2param(drv, PRISM2_PARAM_HOSTAPD_STA, 0);
 
     if (drv->ioctl_sock >= 0)
-        close(drv->ioctl_sock);
+        bk_close(drv->ioctl_sock);
 
     if (drv->sock >= 0)
-        close(drv->sock);
+        bk_close(drv->sock);
 
     os_free(drv->generic_ie);
     os_free(drv->wps_ie);
@@ -1254,7 +1254,7 @@ static void *wpa_driver_init(void *ctx, const char *ifname)
     }
 
     drv->wpa_s = ctx;
-    drv->ioctl_sock = socket(PF_INET, SOCK_DGRAM, 0);
+    drv->ioctl_sock = bk_socket(PF_INET, SOCK_DGRAM, 0);
     os_memcpy(drv->iface, ifname, sizeof(drv->iface));
 
 	wifi_get_mac_address(drv->own_addr);
@@ -1271,10 +1271,10 @@ static void wpa_driver_deinit(void *priv)
     (void) hostap_ioctl_prism2param(drv, PRISM2_PARAM_HOSTAPD_STA, 0);
 
     if (drv->ioctl_sock >= 0)
-        close(drv->ioctl_sock);
+        bk_close(drv->ioctl_sock);
 
     if (drv->sock >= 0)
-        close(drv->sock);
+        bk_close(drv->sock);
 
     os_free(drv->generic_ie);
     os_free(drv->wps_ie);
@@ -1298,6 +1298,7 @@ int wpa_driver_scan2(void *priv, struct wpa_driver_scan_params *params)
     size_t blen;
     int ret = 0, i;
 
+	printf("%s\r\n", __FUNCTION__);
     blen = sizeof(*param);
     buf = os_zalloc(blen);
     if(buf == NULL)
@@ -1373,6 +1374,7 @@ struct wpa_scan_results *wpa_driver_get_scan_results2(void *priv)
 
     if(!ret)
     {
+    	os_free(buf);
         return results;
     }
 
@@ -1617,8 +1619,7 @@ void wpa_dbg(void *ctx, int level, const char *fmt, ...)
 
 	buf = os_malloc(buflen);
 	if (buf == NULL) {
-		bk_printf("wpa_msg: Failed to allocate message "
-			   "buffer");
+		bk_printf("wpa_msg: Failed to allocate message buffer");
 		return;
 	}
 	va_start(ap, fmt);
@@ -1626,7 +1627,7 @@ void wpa_dbg(void *ctx, int level, const char *fmt, ...)
 	len = vsnprintf(buf, buflen, fmt, ap);
 	va_end(ap);
 	bk_send_string(buf);
-	free(buf);
+	os_free(buf);
 	bk_printf("\r\n");
 }
 

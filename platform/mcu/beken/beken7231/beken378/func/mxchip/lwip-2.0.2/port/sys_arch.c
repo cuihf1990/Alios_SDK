@@ -36,10 +36,8 @@
 #include "lwip/sys.h"
 #include "lwip/mem.h"
 #include "lwip/stats.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
 #include "lwip/timeouts.h"
+#include "mico_rtos.h"
 
 
 
@@ -48,12 +46,10 @@
 //  Creates an empty mailbox.
 err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 {
-	(void ) size;
-	
-	if (size > 0)
-		*mbox = xQueueCreate( size, sizeof( void * ) );
-	else
-		*mbox = xQueueCreate( archMESG_QUEUE_LENGTH, sizeof( void * ) );
+	if (size <= 0)
+		size = archMESG_QUEUE_LENGTH;
+
+	mico_rtos_init_queue(mbox, "mbox", sizeof(void*), size);
 
 #if SYS_STATS
       ++lwip_stats.sys.mbox.used;
@@ -75,18 +71,8 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 */
 void sys_mbox_free(sys_mbox_t *mbox)
 {
-	if( uxQueueMessagesWaiting( *mbox ) )
-	{
-		/* Line for breakpoint.  Should never break here! */
-		portNOP();
-#if SYS_STATS
-	    lwip_stats.sys.mbox.err++;
-#endif /* SYS_STATS */
-			
-		// TODO notify the user of failure.
-	}
 
-	vQueueDelete( *mbox );
+	mico_rtos_deinit_queue( mbox );
 
 #if SYS_STATS
      --lwip_stats.sys.mbox.used;
@@ -97,7 +83,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
 //   Posts the "msg" to the mailbox.
 void sys_mbox_post(sys_mbox_t *mbox, void *data)
 {
-	while ( xQueueSendToBack(*mbox, &data, portMAX_DELAY ) != pdTRUE ){}
+	mico_rtos_push_to_queue(mbox, &data, MICO_WAIT_FOREVER);
 }
 
 
@@ -107,7 +93,7 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 {
 err_t result;
 
-   if ( xQueueSend( *mbox, &msg, 0 ) == pdPASS )
+   if ( mico_rtos_push_to_queue(mbox, &msg, 0) == kNoErr )
    {
       result = ERR_OK;
    }
@@ -143,9 +129,9 @@ err_t result;
 u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 {
 void *dummyptr;
-portTickType StartTime, EndTime, Elapsed;
+uint32_t StartTime, EndTime, Elapsed;
 
-	StartTime = xTaskGetTickCount();
+	StartTime = mico_rtos_get_time();
 
 	if ( msg == NULL )
 	{
@@ -154,10 +140,10 @@ portTickType StartTime, EndTime, Elapsed;
 		
 	if ( timeout != 0 )
 	{
-		if ( pdTRUE == xQueueReceive( *mbox, &(*msg), timeout / portTICK_RATE_MS ) )
+		if ( kNoErr == mico_rtos_pop_from_queue(mbox, &(*msg), timeout) )
 		{
-			EndTime = xTaskGetTickCount();
-			Elapsed = (EndTime - StartTime) * portTICK_RATE_MS;
+			EndTime = mico_rtos_get_time();
+			Elapsed = (EndTime - StartTime) ;
 			
 			return ( Elapsed );
 		}
@@ -170,9 +156,9 @@ portTickType StartTime, EndTime, Elapsed;
 	}
 	else // block forever for a message.
 	{
-		while( pdTRUE != xQueueReceive( *mbox, &(*msg), portMAX_DELAY ) ){} // time is arbitrary
-		EndTime = xTaskGetTickCount();
-		Elapsed = (EndTime - StartTime) * portTICK_RATE_MS;
+		mico_rtos_pop_from_queue(mbox, &(*msg), MICO_WAIT_FOREVER);
+		EndTime = mico_rtos_get_time();
+		Elapsed = (EndTime - StartTime) ;
 		
 		return ( Elapsed ); // return time blocked TODO test	
 	}
@@ -192,7 +178,7 @@ void *dummyptr;
 		msg = &dummyptr;
 	}
 
-   if ( pdTRUE == xQueueReceive( *mbox, &(*msg), 0 ) )
+   if ( kNoErr == mico_rtos_pop_from_queue(mbox, &(*msg), 0) )
    {
       return ERR_OK;
    }
@@ -220,7 +206,7 @@ void sys_mbox_set_invalid(sys_mbox_t *mbox)
 //  the initial state of the semaphore.
 err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 {
-	vSemaphoreCreateBinary(*sem );
+	mico_rtos_init_semaphore(sem, count);
 	if(*sem == NULL)
 	{
 		
@@ -229,11 +215,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 #endif /* SYS_STATS */	
 		return ERR_MEM;
 	}
-	
-	if(count == 0)	// Means it can't be taken
-	{
-		xSemaphoreTake(*sem,1);
-	}
+
 
 #if SYS_STATS
 	++lwip_stats.sys.sem.used;
@@ -263,16 +245,16 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 */
 u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 {
-portTickType StartTime, EndTime, Elapsed;
+uint32_t StartTime, EndTime, Elapsed;
 
-	StartTime = xTaskGetTickCount();
+	StartTime = mico_rtos_get_time();
 
 	if(	timeout != 0)
 	{
-		if( xSemaphoreTake( *sem, timeout / portTICK_RATE_MS ) == pdTRUE )
+		if( mico_rtos_get_semaphore(sem, timeout) == kNoErr )
 		{
-			EndTime = xTaskGetTickCount();
-			Elapsed = (EndTime - StartTime) * portTICK_RATE_MS;
+			EndTime = mico_rtos_get_time();
+			Elapsed = (EndTime - StartTime) ;
 			
 			return (Elapsed); // return time blocked TODO test	
 		}
@@ -283,9 +265,9 @@ portTickType StartTime, EndTime, Elapsed;
 	}
 	else // must block without a timeout
 	{
-		while( xSemaphoreTake(*sem, portMAX_DELAY) != pdTRUE){}
-		EndTime = xTaskGetTickCount();
-		Elapsed = (EndTime - StartTime) * portTICK_RATE_MS;
+		mico_rtos_get_semaphore(sem, MICO_WAIT_FOREVER);
+		EndTime = mico_rtos_get_time();
+		Elapsed = (EndTime - StartTime) ;
 
 		return ( Elapsed ); // return time blocked	
 		
@@ -296,7 +278,7 @@ portTickType StartTime, EndTime, Elapsed;
 // Signals a semaphore
 void sys_sem_signal(sys_sem_t *sem)
 {
-	xSemaphoreGive(*sem);
+	mico_rtos_set_semaphore(sem);
 }
 
 /*-----------------------------------------------------------------------------------*/
@@ -307,7 +289,7 @@ void sys_sem_free(sys_sem_t *sem)
       --lwip_stats.sys.sem.used;
 #endif /* SYS_STATS */
 			
-	vQueueDelete(*sem);
+	mico_rtos_deinit_semaphore(sem);
 }
 /*-----------------------------------------------------------------------------------*/
 int sys_sem_valid(sys_sem_t *sem)                                               
@@ -339,7 +321,7 @@ void sys_init(void)
 /* Create a new mutex*/
 err_t sys_mutex_new(sys_mutex_t *mutex) {
 
-  *mutex = xSemaphoreCreateMutex();
+  mico_rtos_init_mutex(mutex);
 		if(*mutex == NULL)
 	{
 #if SYS_STATS
@@ -364,20 +346,20 @@ void sys_mutex_free(sys_mutex_t *mutex)
       --lwip_stats.sys.mutex.used;
 #endif /* SYS_STATS */
 			
-	vQueueDelete(*mutex);
+	mico_rtos_deinit_mutex(mutex);
 }
 /*-----------------------------------------------------------------------------------*/
 /* Lock a mutex*/
 void sys_mutex_lock(sys_mutex_t *mutex)
 {
-	sys_arch_sem_wait(*mutex, 0);
+	mico_rtos_lock_mutex(mutex);
 }
 
 /*-----------------------------------------------------------------------------------*/
 /* Unlock a mutex*/
 void sys_mutex_unlock(sys_mutex_t *mutex)
 {
-	xSemaphoreGive(*mutex);
+	mico_rtos_unlock_mutex(mutex);
 }
 #endif /*LWIP_COMPAT_MUTEX*/
 
@@ -393,16 +375,12 @@ void sys_mutex_unlock(sys_mutex_t *mutex)
 */
 sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread , void *arg, int stacksize, int prio)
 {
-xTaskHandle CreatedTask;
+sys_thread_t CreatedTask;
 int result;
 
-   
-	   vPortEnterCritical();
-       result = xTaskCreate( thread, ( signed portCHAR * ) name, stacksize, arg, prio, &CreatedTask );
+   	   result = mico_rtos_create_thread(&CreatedTask, prio, name, thread, stacksize*4, arg);
 
-       vPortExitCritical();
-	   
-	   if(result == pdPASS)
+	   if(result == kNoErr)
 	   {
 		   return CreatedTask;
 	   }
@@ -413,22 +391,14 @@ int result;
 
 }
 
-int sys_thread_delete(xTaskHandle pid)
+int sys_thread_delete(sys_thread_t pid)
 {
+	if (pid == NULL)
+		mico_rtos_delete_thread(NULL);
+	else
+		mico_rtos_delete_thread(&pid);
 
-	pid = (( pid == NULL)?(xTaskHandle) vTaskGetCurrentTCB() : pid);
-
-
-		vPortEnterCritical();
-
-
-			vTaskDelete( pid);
-
-		vPortExitCritical();
-	   
-		return pdPASS;
-
-
+	return 1;
 }
 
 /*
@@ -446,7 +416,7 @@ int sys_thread_delete(xTaskHandle pid)
 */
 sys_prot_t sys_arch_protect(void)
 {
-	vPortEnterCritical();
+	mico_rtos_enter_critical();
 	return 1;
 }
 
@@ -459,7 +429,7 @@ sys_prot_t sys_arch_protect(void)
 void sys_arch_unprotect(sys_prot_t pval)
 {
 	( void ) pval;
-	vPortExitCritical();
+	mico_rtos_exit_critical();
 }
 
 /*
@@ -472,19 +442,19 @@ void sys_assert( const char *msg )
 	printf(msg);
 	printf("\n\r");
 	*/
-    vPortEnterCritical(  );
+    mico_rtos_enter_critical(  );
     for(;;)
     ;
 }
 
 u32_t sys_now(void)
 {
-	return xTaskGetTickCount();
+	return mico_rtos_get_time();
 }
 
 u32_t sys_jiffies(void)
 {
-	return xTaskGetTickCount();
+	return mico_rtos_get_time();
 }
 
 

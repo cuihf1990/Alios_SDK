@@ -15,7 +15,7 @@ UINT32 channel = RXSENS_DEFUALT_CHANNEL;
 
 
 #if CFG_RX_SENSITIVITY_TEST
-beken2_timer_t rx_sens_tmr = {0};
+mico_timer_t rx_sens_tmr = {0};
 UINT32 g_rxsens_start = 0;
 #endif
 

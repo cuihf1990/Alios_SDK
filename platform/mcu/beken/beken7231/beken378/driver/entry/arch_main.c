@@ -86,14 +86,12 @@ _ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
 
 void task_test2(void *arg)
 {
-    /* step 1: driver layer initialization*/
-    driver_init();
-
     /* step 2: function layer initialization*/
     func_init();
 
     fclk_init();
 
+	app_start();
     return;
 
     test_case_task_start();
@@ -110,11 +108,14 @@ void task_test2(void *arg)
 
 void task_test3(void *arg)
 {
+	mico_semaphore_t sem;
+
+	mico_rtos_init_semaphore(&sem, 0);
     while (1) {
 
-       printf("test_cnt$$$aaaa8888 is %d\r\n", test_cnt++);
-
-        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+       printf("test_cnt is %d, state %d\r\n", test_cnt++, ke_state_get(0));
+		mico_rtos_get_semaphore(&sem, 1000);
+        //yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
 
     }
 }
@@ -124,14 +125,15 @@ void task_test3(void *arg)
 void entry_main(void)
 {
     yunos_init();
-
+	/* step 1: driver layer initialization*/
+    driver_init();
     /* step 0: system basic component initialization*/
     os_mem_init();
 
     yunos_task_dyn_create(&task_test_obj, "task_test", 0, 10, 0, 512, task_test2, 1);
 
     yunos_task_dyn_create(&task_test_obj2, "task_test2", 0, 20, 0, 512, task_test3, 1);
-
+	//app_start();
     yunos_start();
 }
 // eof

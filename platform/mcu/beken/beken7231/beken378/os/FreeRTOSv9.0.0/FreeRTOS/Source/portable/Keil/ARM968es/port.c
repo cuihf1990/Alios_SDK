@@ -525,7 +525,7 @@ void platform_enable_intc_at_restore_context(void)
 
 void rtos_stack_overflow(char *taskname)
 {
-    os_printf("of--%s\r\n", taskname);
+    os_printf("task overflow --%s\r\n", taskname);
 	while(1);
 }
 //eof

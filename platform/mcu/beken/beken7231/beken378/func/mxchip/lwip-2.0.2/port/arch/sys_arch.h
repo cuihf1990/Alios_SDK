@@ -32,23 +32,22 @@
 #ifndef __SYS_RTXC_H__
 #define __SYS_RTXC_H__
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "semphr.h"
+#include "mico_rtos.h"
 
-#define SYS_MBOX_NULL (xQueueHandle)0
-#define SYS_SEM_NULL  (xSemaphoreHandle)0
+#define SYS_MBOX_NULL (mico_mutex_t)0
+#define SYS_SEM_NULL  (mico_semaphore_t)0
 #define SYS_DEFAULT_THREAD_STACK_DEPTH	configMINIMAL_STACK_SIZE
 
-typedef xSemaphoreHandle sys_sem_t;
-typedef xQueueHandle sys_mbox_t;
-typedef xTaskHandle sys_thread_t;
+typedef mico_semaphore_t sys_sem_t;
+typedef mico_queue_t sys_mbox_t;
+typedef mico_thread_t sys_thread_t;
+typedef mico_mutex_t sys_mutex_t;
+typedef u32_t sys_prot_t;
 
 typedef struct _sys_arch_state_t
 {
 	// Task creation data.
-	char cTaskName[configMAX_TASK_NAME_LEN];
+	char cTaskName[16];
 	unsigned short nStackDepth;
 	unsigned short nTaskCount;
 } sys_arch_state_t;

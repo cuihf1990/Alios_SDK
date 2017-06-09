@@ -568,7 +568,7 @@ void socket_show_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, cha
 
 void memory_show_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-	cmd_printf("free memory %d\r\n", xPortGetFreeHeapSize());
+	dumpsys_mm_info_func(NULL, 0);
 }
 
 void memory_dump_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -1068,7 +1068,7 @@ int cli_init(void)
         return kNoMemoryErr;
 
     os_memset((void *)pCli, 0, sizeof(struct cli_st));
-    mico_rtos_init_semaphore(&log_rx_interrupt_sema, 10);
+    mico_rtos_init_semaphore(&log_rx_interrupt_sema, 0);
 
     /* add our built-in commands */
     if (cli_register_commands(&built_ins[0],

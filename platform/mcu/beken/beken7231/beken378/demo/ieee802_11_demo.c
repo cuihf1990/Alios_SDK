@@ -69,7 +69,7 @@ void test_scan_app_init(void)
 	    micoWlanStartScan();
 		while(0 == scan_over_flag)
 		{
-			vTaskDelay(200);
+			mico_rtos_delay_milliseconds(200);
 		}
 		scan_over_flag = 0;
 	}
@@ -82,7 +82,7 @@ void test_scan_app_init(void)
 extern struct scanu_rst_upload *scan_rstup_ptr;
 void test_sta_app_init(char *oob_ssid,char *connect_key)
 {
-#if 1
+#if 0
 	network_InitTypeDef_adv_st	wNetConfigAdv;
 
 	os_memset( &wNetConfigAdv, 0x0, sizeof(wNetConfigAdv) );

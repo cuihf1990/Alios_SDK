@@ -136,7 +136,7 @@ void tcp_server_thread( mico_thread_arg_t arg )
 int application_start( void )
 {
     OSStatus err = kNoErr;
-
+	return 0;
 
     /* Start TCP server listener thread*/
     err = mico_rtos_create_thread( NULL, MICO_APPLICATION_PRIORITY, "TCP_server", tcp_server_thread,

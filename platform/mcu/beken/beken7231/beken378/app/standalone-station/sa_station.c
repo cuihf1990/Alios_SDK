@@ -34,8 +34,6 @@
 #include "param_config.h"
 #endif
 
-#include "FreeRTOS.h"
-#include "task.h"
 #include "rtos_pub.h"
 #include "error.h"
 
@@ -247,7 +245,7 @@ void sa_station_send_and_wait_rsp(UINT16 tx_cmd, void *param, UINT16 rx_rsp)
     {
         if(rx_rsp != sa_sta_rsp_word)
         {
-        	vTaskDelay(10);
+        	mico_rtos_delay_milliseconds(10);
         }
 		else
 		{
@@ -280,7 +278,7 @@ static void sa_station_cfg80211_init(void)
 
 #ifndef DISABLE_RECONNECT
 
-xTaskHandle  reconnect_thread_handle = NULL;
+mico_thread_t  reconnect_thread_handle = NULL;
 uint32_t  reconnect_stack_size = 2000;
 
 void sa_reconnect_main(void *arg)
@@ -301,9 +299,9 @@ void sa_reconnect_init(void)
 	    ret = mico_rtos_create_thread(&reconnect_thread_handle, 
 	            THD_RECONNECT_PRIORITY,
 	            "reconnect_thread", 
-	            (beken_thread_function_t)sa_reconnect_main, 
+	            sa_reconnect_main, 
 	            (unsigned short)reconnect_stack_size, 
-	            (beken_thread_arg_t)0);
+	            0);
 	    ASSERT(kNoErr == ret);
 	}
 	else

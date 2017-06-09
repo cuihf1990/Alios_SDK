@@ -109,7 +109,7 @@ struct eloop_sock_table {
 
 struct eloop_ind{
 	struct dl_list list;
-	beken2_timer_t bk_tmr;	
+	mico_timer_t bk_tmr;	
 };
 
 struct eloop_data {

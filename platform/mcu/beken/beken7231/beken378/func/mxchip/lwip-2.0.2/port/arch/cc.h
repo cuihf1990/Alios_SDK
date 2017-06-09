@@ -55,7 +55,6 @@ typedef signed     long    s32_t;     /* Signed   32 bit quantity        */
 //typedef unsigned   long    mem_ptr_t; /* Unsigned 32 bit quantity        */
 typedef int			       intptr_t;
 typedef unsigned int       uintptr_t;
-typedef int sys_prot_t;
 
 
 

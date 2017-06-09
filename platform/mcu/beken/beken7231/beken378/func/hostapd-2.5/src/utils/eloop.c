@@ -188,7 +188,7 @@ void eloop_release_ind(struct eloop_ind *ind)
 	
 	dl_list_del(&ind->list);
 	
-    ret = rtos_deinit_oneshot_timer(&(ind->bk_tmr));
+    ret = mico_rtos_deinit_timer(&(ind->bk_tmr));
 	ASSERT(kNoErr == ret);
 
 	os_free(ind);
@@ -212,9 +212,7 @@ void eloop_ind_handler( void* Larg, void* Rarg)
 	ind = (struct eloop_ind *)Larg;
 
 	eloop_free_indications();
-
 	dl_list_add_tail(&eloop.free_indication, &ind->list);
-		
 	wpa_supplicant_poll(0);
 	hostapd_poll(0);
 }
@@ -228,14 +226,14 @@ int eloop_timeout_indication_start(uint32_t clk_time)
 	ind = os_zalloc(sizeof(struct eloop_ind));
 	ASSERT(ind);
 
-	ret = rtos_init_oneshot_timer(&(ind->bk_tmr), 
+	ret = mico_rtos_init_oneshot_timer(&(ind->bk_tmr), 
 									clk_time, 
 									eloop_ind_handler, 
 									(void *)ind, 
 									(void *)0);
 	ASSERT(kNoErr == ret);
 	
-	ret = rtos_start_oneshot_timer(&(ind->bk_tmr));
+	ret = mico_rtos_start_timer(&(ind->bk_tmr));
 	ASSERT(kNoErr == ret);
 	
 	return 0;
@@ -266,7 +264,7 @@ int eloop_register_timeout(unsigned int secs,
 	if (os_get_reltime(&timeout->time) < 0) 
 	{
 		os_free(timeout);
-		os_printf("------------os_get_reltimeErr\r\n");
+		os_printf("???? os_get_reltimeErr\r\n");
 		return -1;
 	}
 	
@@ -472,7 +470,7 @@ void eloop_handle_signal(int sig)
 		/* Use SIGALRM to break out from potential busy loops that
 		 * would not allow the program to be killed. */
 		eloop.pending_terminate = 1;
-		signal(SIGALRM, eloop_handle_alarm);
+		signal_bk(SIGALRM, eloop_handle_alarm);
 		alarm(2);
 	}
 #endif /* CONFIG_NATIVE_WINDOWS */
@@ -484,6 +482,8 @@ void eloop_handle_signal(int sig)
 			break;
 		}
 	}
+	wpa_supplicant_poll(0);
+	hostapd_poll(0);
 }
 
 int eloop_signal_is_registered(int sig)
@@ -549,8 +549,9 @@ int eloop_register_signal(int sig, eloop_signal_handler handler,
 	
 	eloop.signal_count++;
 	eloop.signals = tmp;
+
 	
-	signal(sig, eloop_handle_signal);
+	signal_bk(sig, eloop_handle_signal);
 
 	return 0;
 }

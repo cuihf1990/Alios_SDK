@@ -167,7 +167,7 @@ static u8_t dhcp_discover_request_options[] = {
 static u32_t xid;
 static u8_t xid_initialised;
 #endif /* DHCP_GLOBAL_XID */
-static beken2_timer_t dhcp_tmr = {0};
+static mico_timer_t dhcp_tmr = {0};
 
 #define dhcp_option_given(dhcp, idx)          (dhcp_rx_options_given[idx] != 0)
 #define dhcp_got_option(dhcp, idx)            (dhcp_rx_options_given[idx] = 1)
@@ -729,15 +729,15 @@ void dhcp_stop_timeout_check(void)
 {
     OSStatus ret = kNoErr;
 	
-	if(rtos_is_oneshot_timer_init(&dhcp_tmr))
+	if(mico_rtos_is_timer_init(&dhcp_tmr))
 	{
-	    if (rtos_is_oneshot_timer_running(&dhcp_tmr)) 
+	    if (mico_rtos_is_timer_running(&dhcp_tmr)) 
 		{
-	        ret = rtos_stop_oneshot_timer(&dhcp_tmr);
+	        ret = mico_rtos_stop_timer(&dhcp_tmr);
 			ASSERT(kNoErr == ret);
 	    }
 
-	    ret = rtos_deinit_oneshot_timer(&dhcp_tmr);
+	    ret = mico_rtos_deinit_timer(&dhcp_tmr);
 		ASSERT(kNoErr == ret);
 	}
 }
@@ -749,21 +749,21 @@ void dhcp_start_timeout_check(u32_t secs, u32_t usecs)
 
 	clk_time = (secs * 1000 + usecs / 1000 ) / FCLK_DURATION_MS;
 
-	if(rtos_is_oneshot_timer_init(&dhcp_tmr))
+	if(mico_rtos_is_timer_init(&dhcp_tmr))
 	{
 		os_printf("dhcp_check_status_reload_timer\r\n\r\n");
-		rtos_oneshot_reload_timer(&dhcp_tmr);
+		mico_rtos_reload_timer(&dhcp_tmr);
 	}
 	else
 	{
 		os_printf("dhcp_check_status_init_timer\r\n\r\n");
-		err = rtos_init_oneshot_timer(&dhcp_tmr, 
+		err = mico_rtos_init_oneshot_timer(&dhcp_tmr, 
 										clk_time, 
-										(timer_2handler_t)dhcp_check_status, 
+										dhcp_check_status, 
 										NULL, 
 										NULL);
 		ASSERT(kNoErr == err);
-		err = rtos_start_oneshot_timer(&dhcp_tmr);
+		err = mico_rtos_start_timer(&dhcp_tmr);
 		ASSERT(kNoErr == err);
 	}		
 

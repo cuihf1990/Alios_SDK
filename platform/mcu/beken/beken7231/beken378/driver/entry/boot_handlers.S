@@ -55,165 +55,7 @@
  * ======================================================================== */
 	
 /* ========================================================================*/
-	.macro   portSAVE_CONTEXT 
-	//Push R0 as we are going to use the register.
-	STMDB	SP!, {R0}	
-	
-	MRS R0, cpsr
-	ORR R0, R0, #0xc0
-	MSR cpsr_c, R0
-	
-	MRS R0, spsr
-	AND R0, R0, #0x1F
-	CMP R0, #0x1F
-	BNE 10f		
-	
-	//Set R0 to point to the task stack pointer.
-	STMDB	SP, {SP}^
-	NOP
-	SUB		SP, SP, #4
-	LDMIA	SP!, {R0}
 
-	//Push the return address onto the stack.
-	STMDB	R0!, {LR}
-
-	//Now we have saved LR we can use it instead of R0.
-	MOV		LR, R0
-
-	//Pop R0 so we can save it onto the system mode stack.
-	LDMIA	SP!, {R0}
-
-	//Push all the system mode registers onto the task stack.
-	STMDB	LR, {R0-R14}^
-	NOP
-	NOP
-	SUB		LR, LR, #60
-
-	//Push the SPSR onto the task stack.
-	MRS		R0, SPSR
-	STMDB	LR!, {R0}
-
-	LDR		R0, =ulCriticalNesting 
-	LDR		R0, [R0]
-	STMDB	LR!, {R0}
-
-	//Store the new top of stack for the task.
-	LDR 	R0, =pxNestChangedCurrentTCB
-	LDR 	R2, [R0]
-	CMP     R2, #0
-	BEQ     12f
-
-	STR		LR, [R2]
-			
-	B       11f
-	
-12:	
-	LDR		R0, =pxCurrentTCB
-	LDR		R0, [R0]
-	STR		LR, [R0]
-		
-	B       11f
-	
-10:	
-	LDMIA  SP!, {R0}
-	SUB    lr,lr,#4 	  
-	STMFD  sp!,{r0-r12,lr} 	
-	
-	LDR		R0, =pxCurrentTCB
-	LDR		R0, [R0]
-	STMDB	SP!, {R0}
-	
-11:
-	MOV R0, R0
-	.endm
-		
-/* ========================================================================*/
-	.macro   portRESTORE_CONTEXT 
-		
-	MRS R0, cpsr
-	ORR R0, R0, #0xc0
-	MSR cpsr_c, R0
-	
-	MRS R0, spsr
-	AND R0, R0, #0x1F
-	CMP R0, #0x1F
-	BNE 20f
-		
-	//Set the LR to the task stack.	
-	LDR 	R0, =pxNestChangedCurrentTCB
-	MOV	    R1, #0
-	STR		R1, [R0]
-	
-	LDR		R0, =pxCurrentTCB
-	LDR		R0, [R0]
-	LDR		LR, [R0]
-			
-	//The critical nesting depth is the first item on the stack.
-	//Load it into the ulCriticalNesting variable.
-	LDR		R0, =ulCriticalNesting
-	LDMFD	LR!, {R1}
-	STR		R1, [R0]
-
-	//Get the SPSR from the stack.
-	LDMFD	LR!, {R0}
-	bic r0, r0, #0xc0
-	MSR		SPSR_cxsf, R0
-		
-	//Restore all system mode registers for the task.
-	LDMFD	LR, {R0-R14}^
-	NOP
-	NOP
-
-	//Restore the return address.
-	LDR		LR, [LR, #+60]
-
-	//And return - correcting the offset in the LR to obtain the
-	//correct address.
-	SUBS	PC, LR, #4
-	
-20:		
-	LDMFD   sp!, {R0}
-	LDR		R1, =pxCurrentTCB
-	LDR		R1, [R1]
-	CMP     R0, R1
-	BEQ     21f
-	
-	LDR 	R2, =pxNestChangedCurrentTCB
-	STR		R0, [R2]
-	
-21:	
-	LDMFD   sp!,{r0-r12,pc}^
-	.endm
-	
-/* ========================================================================*/
-	.macro	 firstRESTORE_CONTEXT 			
-	//Set the LR to the task stack.
-	LDR 	R0, =pxCurrentTCB
-	LDR 	R0, [R0]
-	LDR 	LR, [R0]
-
-	//The critical nesting depth is the first item on the stack.
-	//Load it into the ulCriticalNesting variable.
-	LDR 	R0, =ulCriticalNesting
-	LDMFD	LR!, {R1}
-	STR 	R1, [R0]
-
-	//Get the SPSR from the stack.
-	LDMFD	LR!, {R0}
-	MSR 	SPSR_cxsf, R0
-
-	//Restore all system mode registers for the task.
-	LDMFD	LR, {R0-R14}^
-	NOP
-	NOP
-
-	//Restore the return address.
-	LDR 	LR, [LR, #+60]
-
-	//And return - correcting the offset in the LR to obtain the
-	//correct address.
-	SUBS	PC, LR, #4
-	.endm
 
 /* ========================================================================
 /**
@@ -379,7 +221,7 @@ boot_undefined:
 
 		.align	5 
 boot_swi:
-    B vPortYieldProcessor
+    B boot_undefined
 		
 		.align	5 
 boot_pabort:
@@ -482,24 +324,6 @@ fiq_handler:
     LDMFD   SP!,{R0-R12,LR,PC}^    @POP new Task''s context
 
 	
-/*Starting the first task is just a matter of restoring the context that*/
-/*was created by pxPortInitialiseStack().*/
-vPortStartFirstTask:
-	firstRESTORE_CONTEXT
 
-/*Manual context switch function.  This is the SWI hander.*/
-vPortYieldProcessor:
-	ADD		LR, LR, #4			//Add 4 to the LR to make the LR appear exactly
-								//as if the context was saved during and IRQ
-								//handler.
-								
-	portSAVE_CONTEXT			//Save the context of the current task...
-	
-	LDR R0, =vTaskSwitchContext
-	MOV LR, PC
-	BX R0
-	
-	portRESTORE_CONTEXT			//Restore the context of the selected task.
-	
 /*EOF*/
 

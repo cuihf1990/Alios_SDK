@@ -28,9 +28,9 @@
 #include "rtos_pub.h"
 #include "error.h"
 
-static xTaskHandle  hostapd_thread_handle;
+static mico_thread_t  hostapd_thread_handle;
 uint32_t  hostapd_stack_size = 4000;
-beken_semaphore_t hostapd_sema = NULL;
+mico_semaphore_t hostapd_sema = NULL;
 static struct hapd_global s_hapd_global;
 struct hapd_interfaces g_hapd_interfaces;
 
@@ -676,7 +676,7 @@ static void hostapd_thread_main( void *arg )
 
 	while(1)
 	{
-		ret = mico_rtos_get_semaphore(&hostapd_sema, BEKEN_WAIT_FOREVER);
+		ret = mico_rtos_get_semaphore(&hostapd_sema, MICO_WAIT_FOREVER);
 		ASSERT(kNoErr == ret);            
 		
 		if (hostapd_global_run(&g_hapd_interfaces, daemonize, pid_file)) {
@@ -689,15 +689,15 @@ static void hostapd_thread_start(void)
 {  
     OSStatus ret;
     
-    ret = mico_rtos_init_semaphore(&hostapd_sema, 1);
+    ret = mico_rtos_init_semaphore(&hostapd_sema, 0);
     ASSERT(kNoErr == ret);
 	
     ret = mico_rtos_create_thread(&hostapd_thread_handle, 
             THD_HOSTAPD_PRIORITY,
             "hostapd_thread", 
-            (beken_thread_function_t)hostapd_thread_main, 
+            (mico_thread_function_t)hostapd_thread_main, 
             (unsigned short)hostapd_stack_size, 
-            (beken_thread_arg_t)NULLPTR);
+            (mico_thread_arg_t)NULLPTR);
     ASSERT(kNoErr == ret);
 }
 

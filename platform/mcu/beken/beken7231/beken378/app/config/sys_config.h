@@ -33,7 +33,7 @@
 /*section 1-----OS macro config-----*/
 #define CFG_FREERTOS                               1
 #if CFG_FREERTOS
-#define THD_APPLICATION_PRIORITY                   3
+#define THD_APPLICATION_PRIORITY                   20
 #define THD_CORE_PRIORITY                          2
 #define THD_LWIP_PRIORITY                          4
 #define THD_INIT_PRIORITY                          4

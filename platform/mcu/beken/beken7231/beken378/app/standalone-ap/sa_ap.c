@@ -46,7 +46,7 @@ void sa_ap_send_and_wait_rsp(UINT16 tx_cmd, void *param, UINT16 rx_rsp)
     {
         if(rx_rsp != sa_ap_rsp_word)
         {
-        	vTaskDelay(10);
+        	mico_rtos_delay_milliseconds(10);
         }
 		else
 		{
