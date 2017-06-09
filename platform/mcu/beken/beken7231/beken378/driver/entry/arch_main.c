@@ -91,6 +91,8 @@ void task_test2(void *arg)
 
     fclk_init();
 
+    application_start();
+
     return;
 
     test_case_task_start();
