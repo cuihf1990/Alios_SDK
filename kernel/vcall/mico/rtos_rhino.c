@@ -252,7 +252,7 @@ OSStatus mico_rtos_unlock_mutex( mico_mutex_t* mutex )
 {
     kstat_t ret;
 
-    ret = yunos_mutex_lock(*((kmutex_t **)mutex), YUNOS_WAIT_FOREVER);
+    ret = yunos_mutex_unlock(*((kmutex_t **)mutex), YUNOS_WAIT_FOREVER);
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
