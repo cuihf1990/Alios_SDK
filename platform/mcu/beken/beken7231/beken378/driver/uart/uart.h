@@ -169,7 +169,7 @@ typedef struct _uart_
 #define UART_RX_FIFO_DOUT_POSI                 (8)
 
 #define REG_UART_INTR_ENABLE                 (UART_BASE_ADDR + 4 * 4)
-#define RX_FIFO_NEED_WRITE_EN                  (1 << 0)
+#define TX_FIFO_NEED_WRITE_EN                  (1 << 0)
 #define RX_FIFO_NEED_READ_EN                   (1 << 1)
 #define RX_FIFO_OVER_FLOW_EN                   (1 << 2)
 #define UART_RX_PARITY_ERR_EN                  (1 << 3)
@@ -179,7 +179,7 @@ typedef struct _uart_
 #define UART_RXD_WAKEUP_EN                     (1 << 7)
 
 #define REG_UART_INTR_STATUS                 (UART_BASE_ADDR + 4 * 5)
-#define RX_FIFO_NEED_WRITE_STA                  (1 << 0)
+#define TX_FIFO_NEED_WRITE_STA                  (1 << 0)
 #define RX_FIFO_NEED_READ_STA                   (1 << 1)
 #define RX_FIFO_OVER_FLOW_STA                   (1 << 2)
 #define UART_RX_PARITY_ERR_STA                  (1 << 3)

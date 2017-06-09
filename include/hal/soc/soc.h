@@ -18,6 +18,7 @@
 #define YOS_SOC_H
 
 #include <stdint.h>
+#include <stddef.h>
 #include "gpio.h"
 #include "spi.h"
 #include "adc.h"

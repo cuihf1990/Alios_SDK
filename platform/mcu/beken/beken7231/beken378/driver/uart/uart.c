@@ -97,6 +97,9 @@ struct __FILE
 FILE __stdout;
 FILE __stdin;
 
+extern void uart_rx_cb(void);
+extern void uart_tx_cb(void);
+
 void uart_send_byte(UINT8 data)
 {
     while(!UART_TX_WRITE_READY);
@@ -136,15 +139,17 @@ void bk_send_string(char *string)
         bk_send_byte(*string++);
     }
 }
+
+static char output_buf[128];
+
 void bk_printf(const char *fmt, ...)
 {
     va_list ap;
-    char string[128];
 
     va_start(ap, fmt);
-    vsprintf(string, fmt, ap);
-    string[127] = 0;
-    bk_send_string(string);
+    vsnprintf(output_buf, 128, fmt, ap);
+    output_buf[127] = 0;
+    bk_send_string(output_buf);
     va_end(ap);
 }
 
@@ -283,10 +288,9 @@ void uart_isr(void)
 
     if(status & (RX_FIFO_NEED_READ_STA | UART_RX_STOP_END_STA))
     {
-        uart_read_fifo_frame(uart.rx);
-        cli_set_sema();
+        uart_rx_cb();
     }
-    else if(status & RX_FIFO_NEED_WRITE_STA)
+    else if(status & TX_FIFO_NEED_WRITE_STA)
     {
     }
     else if(status & RX_FIFO_OVER_FLOW_STA)
@@ -301,6 +305,7 @@ void uart_isr(void)
     }
     else if(status & UART_TX_STOP_END_STA)
     {
+        uart_tx_cb();
     }
     else if(status & UART_RXD_WAKEUP_STA)
     {
@@ -602,6 +607,58 @@ UINT32 uart_ctrl(UINT32 cmd, void *parm)
 INT32 os_null_printf(const char *fmt, ...)
 {
     return 0;
+}
+
+INT32 uart_read_byte( UINT8 *byte )
+{
+    UINT32 val;
+
+    if(REG_READ(REG_UART_FIFO_STATUS) & FIFO_RD_READY)
+    {
+        UART_READ_BYTE(val);
+        *byte = (UINT8)val;
+        return 0;
+    }
+
+    return -1;
+}
+
+VOID uart_write_byte( UINT8 byte )
+{
+    UART_WRITE_BYTE(byte);
+}
+
+UINT8 uart_get_tx_fifo_cnt(VOID)
+{
+    return REG_READ(REG_UART_FIFO_STATUS) >> TX_FIFO_COUNT_POSI & TX_FIFO_COUNT_MASK;
+}
+
+UINT8 uart_is_tx_fifo_empty(VOID)
+{
+    return (REG_READ(REG_UART_FIFO_STATUS) & TX_FIFO_EMPTY) != 0 ? 1 : 0;
+}
+
+UINT8 uart_is_tx_fifo_full(VOID)
+{
+    return (REG_READ(REG_UART_FIFO_STATUS) & TX_FIFO_FULL) != 0 ? 1 : 0;
+}
+
+VOID uart_set_tx_stop_end_int(UINT8 set)
+{
+    UINT32 reg;
+
+    reg = REG_READ(REG_UART_INTR_ENABLE);
+    
+    if(set == 1)
+    {
+        reg |= UART_TX_STOP_END_EN;
+    }
+    else
+    {
+        reg &= ~UART_TX_STOP_END_EN;
+    }
+    
+    REG_WRITE(REG_UART_INTR_ENABLE, reg);
 }
 
 // EOF

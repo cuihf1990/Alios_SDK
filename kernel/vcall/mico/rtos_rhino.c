@@ -192,13 +192,13 @@ OSStatus mico_rtos_set_semaphore( mico_semaphore_t* semaphore )
 OSStatus mico_rtos_get_semaphore( mico_semaphore_t* semaphore, uint32_t timeout_ms )
 {
     kstat_t ret;
-	uint32_t ticks;
+    tick_t ticks;
 
     if (timeout_ms == MICO_NEVER_TIMEOUT) {
         ret =  yunos_sem_take(*((ksem_t **)semaphore), YUNOS_WAIT_FOREVER);
     }
     else {
-		ticks = yunos_ms_to_ticks(timeout_ms);
+        ticks = yunos_ms_to_ticks(timeout_ms);
         ret =  yunos_sem_take(*((ksem_t **)semaphore), ticks);
     }
 
@@ -253,6 +253,7 @@ OSStatus mico_rtos_unlock_mutex( mico_mutex_t* mutex )
     kstat_t ret;
 	
     ret = yunos_mutex_unlock(*((kmutex_t **)mutex));
+
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
     }
@@ -435,7 +436,7 @@ OSStatus mico_rtos_start_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    ret = yunos_timer_start((ktimer_t *)timer->handle);
+    ret = yunos_timer_start((ktimer_t *)(timer->handle));
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -448,7 +449,8 @@ OSStatus mico_rtos_stop_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    ret = yunos_timer_stop((ktimer_t *)timer->handle);
+    ret = yunos_timer_stop((ktimer_t *)(timer->handle));
+
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -462,9 +464,10 @@ OSStatus mico_rtos_reload_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    yunos_timer_stop((ktimer_t *)timer->handle);
 
-    ret = yunos_timer_start((ktimer_t *)timer->handle);
+    yunos_timer_stop((ktimer_t *)(timer->handle));
+
+    ret = yunos_timer_start((ktimer_t *)(timer->handle));
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -477,8 +480,10 @@ OSStatus mico_rtos_deinit_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    yunos_timer_stop((ktimer_t *)timer->handle);
-    ret = yunos_timer_dyn_del((ktimer_t *)timer->handle);
+
+    yunos_timer_stop((ktimer_t *)(timer->handle));
+    ret = yunos_timer_dyn_del((ktimer_t *)(timer->handle));
+
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
     }

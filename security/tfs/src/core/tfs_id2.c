@@ -48,13 +48,16 @@ int tfs_activate_device(void)
     return activate_device();
 }
 
-int tfs_id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code, uint32_t *auth_len)
+int tfs_id2_get_auth_code(uint64_t timestamp, uint8_t *auth_code,
+                          uint32_t *auth_len)
 {
     return id2_get_auth_code(timestamp, auth_code, auth_len);
 }
 
-int tfs_id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest, uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len)
+int tfs_id2_get_digest_auth_code(uint64_t timestamp, uint8_t *digest,
+                                 uint32_t digest_len, uint8_t *auth_code, uint32_t *auth_len)
 {
-    return id2_get_digest_auth_code(timestamp, digest, digest_len, auth_code, auth_len);
+    return id2_get_digest_auth_code(timestamp, digest, digest_len, auth_code,
+                                    auth_len);
 }
 

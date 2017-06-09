@@ -35,13 +35,13 @@ int tee_get_ID2(uint8_t *id2, uint32_t *len);
 int tee_RSA_generate_key(uint8_t ID, uint8_t type);
 int tee_RSA_get_pub_key(uint8_t ID, uint8_t *pub, uint32_t *len);
 int tee_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
-                uint8_t *sign, uint32_t *sign_len, uint8_t type);
+                 uint8_t *sign, uint32_t *sign_len, uint8_t type);
 int tee_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
-                uint8_t *sign, uint32_t sign_len, uint8_t type);
+                   uint8_t *sign, uint32_t sign_len, uint8_t type);
 int tee_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
-                uint8_t *out, uint32_t *out_len, uint8_t padding);
+                           uint8_t *out, uint32_t *out_len, uint8_t padding);
 int tee_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
-                uint8_t *out, uint32_t *out_len, uint8_t padding);
+                            uint8_t *out, uint32_t *out_len, uint8_t padding);
 
 #ifdef __cplusplus
 }

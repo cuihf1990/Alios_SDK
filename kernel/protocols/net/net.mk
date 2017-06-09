@@ -1,7 +1,7 @@
 NAME := net
 
 include kernel/protocols/net/Filelists.mk
-GLOBAL_INCLUDES += include
+GLOBAL_INCLUDES += include port/include
 GLOBAL_DEFINES += WITH_LWIP
 
 $(NAME)_INCLUDES += port/include

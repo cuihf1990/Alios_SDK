@@ -7,8 +7,6 @@
  *  permission of MXCHIP Corporation.
  *
  */
-#include "FreeRTOS.h"
-#include "task.h"
 #include "rtos_pub.h"
 #include "error.h"
 
@@ -19,12 +17,12 @@
 #include "mem_pub.h"
 #include "str_pub.h"
 #include "uart_pub.h"
-#include "MiCODriverFlash.h"
 #include "mico_rtos.h"
 #include "mico_wlan.h"
 
+#include "hal/soc/soc.h"
+
 #define MICO_CLI_ENABLE
-#define CONFIG_PLATFORM_BEKEN
 #define DEBUG 1
 
 #ifdef MICO_CLI_ENABLE
@@ -32,24 +30,10 @@
 static void task_Command( char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv );
 #endif
 
-#ifdef CONFIG_PLATFORM_BEKEN
-#define LOG_SERVICE_BUFLEN 100
-
-char log_buf[LOG_SERVICE_BUFLEN];
 static struct cli_st *pCli = NULL;
-mico_semaphore_t log_rx_interrupt_sema;
-#endif
 
-#include "MiCODriverUart.h"
 int cli_putstr(const char *msg);
-static void bkreg_cmd_handle_input(char *inbuf, int len);
 
-#if CFG_SUPPORT_BKREG
-#define BKREG_MAGIC_WORD0                 (0x01)
-#define BKREG_MAGIC_WORD1                 (0xE0)
-#define BKREG_MAGIC_WORD2                 (0xFC)
-#define BKREG_MIN_LEN                     3
-#endif
 
 /* Find the command 'name' in the cli commands table.
 * If len is 0 then full match will be performed else upto len bytes.
@@ -352,17 +336,6 @@ static void cli_main( uint32_t data )
         int ret;
         char *msg = NULL;
 
-        mico_rtos_get_semaphore(&log_rx_interrupt_sema, MICO_NEVER_TIMEOUT);
-        #if CFG_SUPPORT_BKREG
-        {
-            int len = cli_get_all_chars_len();
-            if(len >= BKREG_MIN_LEN) {
-                cli_getchars_prefetch(pCli->inbuf, len); 
-                msg = pCli->inbuf;
-                bkreg_cmd_handle_input(msg, len);
-            }
-        }
-        #endif
         if(get_input(pCli->inbuf, &pCli->bp))
         {
         	msg = pCli->inbuf;
@@ -400,19 +373,7 @@ static void tftp_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, cha
 
 static void partShow_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    mico_partition_t i;
-    mico_logic_partition_t *partition;
-
-    for( i = MICO_PARTITION_BOOTLOADER; i <= MICO_PARTITION_MAX; i++ )
-    {
-        partition = MicoFlashGetInfo( i );
-        if (partition == NULL)
-            continue;
-            
-        os_printf( "%4d | %11s |  Dev:%d  | 0x%08lx | 0x%08lx |\r\n", i,
-                    partition->partition_description, partition->partition_owner,
-                    partition->partition_start_addr, partition->partition_length);
-    };
+    
 
 }
 
@@ -702,52 +663,7 @@ example:	    FLASH  R  0x00100
 */
 static void flash_command_test(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    char cmd = 0;
-    uint32_t len = 0;
-    uint32_t par[4], i;
-    uint32_t offset = 0;
-    if(argc == 3)
-    {
-        cmd = argv[1][0];
-        for(i = 0; i < 4; i++)
-            par[i] = argv[2][i + 2];
-        len = ((par[0] - 0x30) << 12 ) + ((par[1] - 0x30) << 8 ) + ((par[2] - 0x30) << 4 ) + par[3] - 0x30;
-
-        switch(cmd)
-        {
-        case 'E':
-        {
-            os_printf("E: %x\r\n", len);
-            MicoFlashErase(BK_PARTITION_RF_FIRMWARE, offset, len);
-            break;
-        }
-        case 'R':
-        {
-            uint8_t rdbuf[256], i, j;
-            MicoFlashRead(BK_PARTITION_RF_FIRMWARE, &offset, rdbuf, 0x100);
-            for(i = 0; i < 16; i++)
-            {
-                for(j = 0; j < 16; j++)
-                    os_printf("%x ", rdbuf[i * 16 + j]);
-                os_printf("\r\n");
-            }
-            break;
-        }
-        case 'W':
-        {
-            uint8_t wrbuf[256], i, j;
-            for(i = 0; i < 16; i++)
-            {
-                for(j = 0; j < 16; j++)
-                    wrbuf[i * 16 + j] = i * 16 + j;
-            }
-            MicoFlashWrite(BK_PARTITION_RF_FIRMWARE, &offset, wrbuf, 0x100);
-            break;
-        }
-        default:
-            break;
-        }
-    }
+    
 }
 
 /*UART  I  index
@@ -755,23 +671,7 @@ example:   UART I 0
 */
 static void Uart_command_test(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    uint32_t ret, id, mode, i;
-    char cmd0 = 0;
-    char cmd1 = 0;
-    char cmd;
-    uint8_t index = 0;
-    if(argc == 3)
-    {
-        cmd = argv[1][0];
-        index = argv[2][0] - 0x30;
-
-        if(cmd == 'I')
-        {
-            MicoUartInitialize_test(0 , index, NULL);
-        }
-    }
-    else
-        os_printf("cmd param error\r\n");
+    
 
 }
 static void tx_evm_cmd_test(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -790,19 +690,6 @@ static void rx_sens_cmd_test(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     }
 }
 
-#if CFG_SUPPORT_BKREG
-static void bkreg_cmd_handle_input(char *inbuf, int len)
-{     
-    if(((char)BKREG_MAGIC_WORD0 == inbuf[0])
-            && ((char)BKREG_MAGIC_WORD1 == inbuf[1])
-            && ((char)BKREG_MAGIC_WORD2 == inbuf[2]))
-    {
-        if(cli_getchars(inbuf, len)) {
-            bkreg_run_command(inbuf, len);
-        }
-    }
-}
-#endif
 static const struct cli_command built_ins[] =
 {
     {"help", NULL, help_command},
@@ -1054,10 +941,15 @@ static const struct cli_command user_clis[] =
 };
 #endif
 
-void cli_set_sema(void)
+const hal_uart_config_t config = 
 {
-    mico_rtos_set_semaphore(&log_rx_interrupt_sema);
-}
+    .baud_rate = 115200,
+    .data_width = DATA_WIDTH_8BIT,
+    .parity = NO_PARITY,
+    .stop_bits = STOP_BITS_1,
+    .flow_control = FLOW_CONTROL_DISABLED,
+    .rx_buf_size = 256,
+};
 
 int cli_init(void)
 {
@@ -1068,7 +960,7 @@ int cli_init(void)
         return kNoMemoryErr;
 
     os_memset((void *)pCli, 0, sizeof(struct cli_st));
-    mico_rtos_init_semaphore(&log_rx_interrupt_sema, 0);
+	hal_uart_init(CLI_UART, &config);
 
     /* add our built-in commands */
     if (cli_register_commands(&built_ins[0],
@@ -1136,38 +1028,19 @@ int cli_printf(const char *msg, ...)
 int cli_putstr(const char *msg)
 {
     if (msg[0] != 0)
-        MicoUartSend( CLI_UART, (const char *)msg, os_strlen(msg) );
+        hal_uart_send( CLI_UART, (const char *)msg, os_strlen(msg) );
 
     return 0;
 }
 
 int cli_getchar(char *inbuf)
 {
-    if (MicoUartRecv(CLI_UART, inbuf, 1, MICO_WAIT_FOREVER) == 0)
+	uint32_t size = 1;
+	
+    if (hal_uart_recv(CLI_UART, inbuf, &size, MICO_WAIT_FOREVER) == 0)
         return 1;
     else
         return 0;
-}
-
-int cli_getchars(char *inbuf, int len)
-{
-    if(MicoUartRecv(CLI_UART, inbuf, len, MICO_WAIT_FOREVER) == 0)
-        return 1;
-    else
-        return 0;
-}
-
-int cli_getchars_prefetch(char *inbuf, int len)
-{
-    if(MicoUartRecvPrefetch(CLI_UART, inbuf, len, MICO_WAIT_FOREVER) == 0)
-        return 1;
-    else
-        return 0;
-}
-
-int cli_get_all_chars_len(void)
-{
-    return MicoUartGetLengthInBuffer(CLI_UART);
 }
 
 #endif

@@ -14,7 +14,8 @@
 #define PRODUCT_NAME "dic_id2_test"
 #endif
 
-int pal_collect_device_info(struct device_info *pInfo) {
+int pal_collect_device_info(struct device_info *pInfo)
+{
     LOGD(TAG_PAL_DEVICE, "[%s]: enter.\n", __func__);
 
     if (pInfo == NULL) {
@@ -25,7 +26,8 @@ int pal_collect_device_info(struct device_info *pInfo) {
     memset(pInfo, 0, sizeof(struct device_info));
 
     pInfo->product_name = PRODUCT_NAME;
-    LOGD(TAG_PAL_DEVICE, "[%s]: product_name = %s\n", __func__, pInfo->product_name);
+    LOGD(TAG_PAL_DEVICE, "[%s]: product_name = %s\n", __func__,
+         pInfo->product_name);
 
     pInfo->imei = "123456789012345";
     LOGD(TAG_PAL_DEVICE, "[%s]: imei = %s\n", __func__, pInfo->imei);
@@ -55,10 +57,12 @@ int pal_collect_device_info(struct device_info *pInfo) {
     LOGD(TAG_PAL_DEVICE, "[%s]: cup_info = %s\n", __func__, pInfo->cup_info);
 
     pInfo->storage_total = "256G";
-    LOGD(TAG_PAL_DEVICE, "[%s]: storage_total = %s\n", __func__, pInfo->storage_total);
+    LOGD(TAG_PAL_DEVICE, "[%s]: storage_total = %s\n", __func__,
+         pInfo->storage_total);
 
     pInfo->camera_resolution = "4096*4096";
-    LOGD(TAG_PAL_DEVICE, "[%s]: camera_resolution = %s\n", __func__, pInfo->camera_resolution);
+    LOGD(TAG_PAL_DEVICE, "[%s]: camera_resolution = %s\n", __func__,
+         pInfo->camera_resolution);
 
     return 0;
 }

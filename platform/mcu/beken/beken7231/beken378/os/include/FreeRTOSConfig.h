@@ -102,7 +102,7 @@
 #define configUSE_MALLOC_FAILED_HOOK                ( 1 )
 
 /* Memory */
-#define configTOTAL_HEAP_SIZE		             ( ( size_t ) ( 100 * 1024 ) )
+#define configTOTAL_HEAP_SIZE		             ( ( size_t ) ( 100 ) )
 
 /* Queue & Semaphore & Mutex */
 #define configQUEUE_REGISTRY_SIZE		          0

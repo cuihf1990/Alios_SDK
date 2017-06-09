@@ -51,7 +51,7 @@ ur_error_t ur_mesh_register_callback(ur_adapter_callback_t *callback);
 /* per device API */
 uint8_t ur_mesh_get_device_state(void);
 uint8_t ur_mesh_get_mode(void);
-void ur_mesh_set_mode(uint8_t mode);
+ur_error_t ur_mesh_set_mode(uint8_t mode);
 int8_t ur_mesh_get_seclevel(void);
 ur_error_t ur_mesh_set_seclevel(int8_t level);
 

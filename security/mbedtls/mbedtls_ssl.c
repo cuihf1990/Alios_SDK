@@ -69,6 +69,11 @@ void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
         return NULL;
     }
 
+    if ((int)tcp_fd < 0) {
+        printf("ssl_connect: invalid tcp fd - %d\n", (int)tcp_fd);
+        return NULL;
+    }
+
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(SSL_DEBUG_LEVEL);
 #endif
@@ -98,6 +103,11 @@ void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
      * Initialize the connection
      */
     ssl_param->net.fd = (int)tcp_fd;
+    ret = mbedtls_net_set_block(&ssl_param->net);
+    if (ret != 0) {
+        printf("ssl_connect: set block failed- 0x%x\n", -ret);
+        goto _err;
+    }
 
     /* 
      * Initialize certificates
@@ -208,6 +218,7 @@ _err:
 int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
 {
     int ret;
+    int total_len = 0;
     ssl_param_t *ssl_param;
 
     if (ssl == NULL || buffer == NULL || length <= 0) {
@@ -225,12 +236,37 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
         return -1;
     }
 
-    ret = mbedtls_ssl_write(&ssl_param->ssl,
-              (const unsigned char *)buffer, (size_t)length);
-    if (ret < 0) {
-        printf("ssl_send: mbedtls_ssl_write failed - %d\n", ret);
-        return -1;
-    }
+    do {
+        ret = mbedtls_ssl_write(&ssl_param->ssl,
+                  (const unsigned char *)buffer, (size_t)(length - total_len));
+        if (ret > 0) {
+            total_len += ret;
+            buffer += ret;
+        } else if (ret == 0) {
+            /* EOF */
+            break;
+        } else {
+            if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
+                if (total_len > 0) {
+                    break;
+                } else {
+                    continue;
+                }
+            }
+
+            if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+                /*
+                 * indicate that write already complete,
+                 * if call read again, it will return 0(EOF))
+                 */
+                break;
+            }
+
+            printf("ssl_recv: mbedtls_ssl_write failed - 0x%x\n", -ret);
+
+            return -1;
+        }
+    } while(total_len < length);
 
 #if defined(CONFIG_SSL_DEBUG)
     printf("%d bytes sent\n", ret);
@@ -281,9 +317,16 @@ int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
             /* EOF */
             break;
         } else {
-            if (ret == MBEDTLS_ERR_SSL_WANT_READ ||
-                ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-                /* 
+            if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
+                if (total_len > 0) {
+                    break;
+                } else {
+                    continue;
+                }
+            }
+
+            if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+                /*
                  * indicate that read already complete,
                  * if call read again, it will return 0(EOF))
                  */
@@ -294,7 +337,7 @@ int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
 
             return -1;
         }
-    } while(1);
+    } while(total_len < length);
 
 #if defined(CONFIG_SSL_DEBUG)
     printf("%d bytes read\n", total_len);

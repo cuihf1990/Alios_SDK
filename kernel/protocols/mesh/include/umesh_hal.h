@@ -130,8 +130,6 @@ typedef struct ur_mesh_hal_module_s {
 
     int (*ur_mesh_hal_set_key)(struct ur_mesh_hal_module_s *module,
                                uint8_t index, uint8_t *key, uint8_t length);
-    int (*ur_mesh_hal_activate_key)(struct ur_mesh_hal_module_s *module,
-                                    uint8_t index);
     int (*ur_mesh_hal_is_sec_enabled)(struct ur_mesh_hal_module_s *module);
 
     const frame_stats_t *(*ur_mesh_hal_get_stats)(struct ur_mesh_hal_module_s
@@ -449,18 +447,6 @@ const mac_address_t *hal_ur_mesh_get_mac_address(ur_mesh_hal_module_t *module);
  */
 int hal_ur_mesh_set_key(struct ur_mesh_hal_module_s *module,
                         uint8_t index, uint8_t *key, uint8_t length);
-
-/**
- * Activate the specified encryption key of HAL.
- *
- * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
- * @param[in] index  The key index
- *
- * @return
- *     Activate result, 0 if success, -1 if fail
- */
-int hal_ur_mesh_activate_key(struct ur_mesh_hal_module_s *module,
-                             uint8_t index);
 
 /**
  * Check whether security is enabled or not by the specified HAL.

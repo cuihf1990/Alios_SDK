@@ -64,13 +64,15 @@ int hal_3DES_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
         return -1;
     }
 
-    if (dec_len != MD5_SIZE)
+    if (dec_len != MD5_SIZE) {
         return -1;
+    }
 
     return memcmp(md5_buf, dec_buf, dec_len);
 }
 
-static int hal_3DES_cmd(uint32_t cmd, uint8_t ID, const uint8_t *in, uint32_t in_len,
+static int hal_3DES_cmd(uint32_t cmd, uint8_t ID, const uint8_t *in,
+                        uint32_t in_len,
                         uint8_t *out, uint32_t *out_len, uint8_t mode)
 {
     int ret = 0;

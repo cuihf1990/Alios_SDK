@@ -13,10 +13,9 @@
 #define __MICO_CLI_H__
 
 #include "include.h"
-#include "BkDriverUart.h"
 #include "mico_rtos.h"
 
-#define CLI_UART     BK_UART_1
+#define CLI_UART     0
 
 #define RX_WAIT         MICO_WAIT_FOREVER
 #define SEND_WAIT       MICO_WAIT_FOREVER
