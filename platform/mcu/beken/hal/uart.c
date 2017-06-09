@@ -111,18 +111,19 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size)
     return 0;
 }
 
-int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t *size, uint32_t timeout)
+int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
 {
-    uint32_t read_size, tmp;
+    uint32_t read_size, actual_size, tmp;
     uint32_t ringbuf_size;
-    uint32_t expect_size = *size;
     uint32_t start_time, expired_time;
     _uart_drv_t *pdrv = &_uart_drv[uart];
+
+    recv_size = recv_size == NULL ? &actual_size : recv_size;
 
     start_time = mico_rtos_get_time();
     expired_time = 0;
 
-    *size = 0;
+    *recv_size = 0;
     ringbuf_size = ring_buffer_total_size(&pdrv->rx_ringbuf);
 
     for(;;)
@@ -136,6 +137,9 @@ int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t *size, uint32_t timeout
             if ( mico_rtos_get_semaphore( &pdrv->rx_semphr, timeout - expired_time) != kNoErr )
             {
                 pdrv->rx_size = 0;
+                read_size = ring_buffer_used_space( &pdrv->rx_ringbuf );
+                ring_buffer_read(&pdrv->rx_ringbuf, data, read_size, &tmp);
+                *recv_size += read_size;
                 return -1;
             }
         }
@@ -143,7 +147,7 @@ int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t *size, uint32_t timeout
         ring_buffer_read(&pdrv->rx_ringbuf, data, read_size, &tmp);
 
         data += read_size;
-        *size += read_size;
+        *recv_size += read_size;
         expect_size -= read_size;
 
         if(expect_size == 0)

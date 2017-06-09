@@ -55,6 +55,7 @@ typedef enum {
     HAL_FLASH_SPI,
     HAL_FLASH_QSPI,
     HAL_FLASH_MAX,
+    HAL_FLASH_NONE,
 } hal_flash_t;
 
 typedef struct {
