@@ -103,7 +103,38 @@ OTA_END:
     free_global_topic();
 }
 
+int8_t ota_post_version_msg()
+{
+    int ret = -1, ota_success = 0;
+    OTA_LOG_I("ota_post_version_msg  [%s][%s] [%s]", ota_get_system_version(), ota_get_version(), ota_get_dev_version());
+    if(strlen(ota_get_version()) > 0) {
+	ota_success = !strncmp((char *)ota_get_system_version(),
+             (char *)ota_get_version(), strlen(ota_get_system_version()));
+        if(ota_success) {
+            ota_set_status(OTA_REBOOT_SUCCESS);
+            ret = ota_status_post(100);          
+        }else {
+            ota_set_status(OTA_INIT);
+            ret = ota_status_post(0);
+        }
 
+	if(ret == 0) {
+	    OTA_LOG_I("OTA finished, clear ota version in config");
+            ota_set_version("");
+	}
+    }
+
+    if(strncmp((char*)ota_get_system_version(), (char *)ota_get_dev_version(), strlen(ota_get_system_version()))) {
+        ret = ota_result_post();
+        if(ret == 0) {
+            OTA_LOG_I("Save dev version to config");
+	    ota_set_dev_version(ota_get_system_version());
+	}
+    }
+
+
+    return 0;
+}
 
 int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_params *request_parmas,
                                write_flash_cb_t func, ota_finish_cb_t fcb)
@@ -113,7 +144,7 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
     ret = ota_if_need(response_parmas,request_parmas);
     if(1 != ret) return ret;
 
-    set_ota_version(response_parmas->primary_version);
+    ota_set_version(response_parmas->primary_version);
     g_write_func = func;
     g_finish_cb = fcb;
     memset(md5, 0 , sizeof md5);
