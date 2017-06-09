@@ -28,6 +28,10 @@
 #include "uart_pub.h"
 #include "ll.h"
 
+extern void do_irq( void );
+extern void do_fiq( void );
+extern void do_swi( void );
+
 ISR_T _isrs[INTC_MAX_COUNT] = {0,};
 STATIC UINT32 isrs_mask = 0;
 STATIC ISR_LIST_T isr_hdr = {{&isr_hdr.isr, &isr_hdr.isr},};
@@ -148,9 +152,57 @@ void intc_disable(int index)
     sddev_control(ICU_DEV_NAME, CMD_ICU_INT_DISABLE, &param);
 }
 
+
+void intc_irq(void)
+{
+    UINT32 irq_status;
+
+    irq_status = sddev_control(ICU_DEV_NAME, CMD_GET_INTR_STATUS, 0);
+    irq_status = irq_status & 0xFFFF;
+    if(0 == irq_status)
+    {
+        os_printf("irq:dead\r\n");
+    }
+
+    sddev_control(ICU_DEV_NAME, CMD_CLR_INTR_STATUS, &irq_status);
+
+    intc_hdl_entry(irq_status);
+
+    ASSERT(!platform_is_in_irq_enable());
+}
+
+void intc_fiq(void)
+{
+    UINT32 fiq_status;
+
+    ASSERT(platform_is_in_fiq_context());
+
+    fiq_status = sddev_control(ICU_DEV_NAME, CMD_GET_INTR_STATUS, 0);
+    fiq_status = fiq_status & 0xFFFF0000;
+    sddev_control(ICU_DEV_NAME, CMD_CLR_INTR_STATUS, &fiq_status);
+
+    intc_hdl_entry(fiq_status);
+
+    ASSERT(!platform_is_in_fiq_enable());
+}
+
+void deafult_swi(void)
+{
+    while(1);
+}
+
+
 void intc_init(void)
 {
     UINT32 param;
+
+    *((volatile uint32_t *)0x400000) = &do_irq;
+    *((volatile uint32_t *)0x400004) = &do_fiq;
+#ifdef NO_MICO_RTOS
+    *((volatile uint32_t *)0x400008) = &do_swi;
+#else
+    *((volatile uint32_t *)0x400008) = &do_swi;
+#endif
 
     intc_enable(FIQ_MAC_GENERAL);
     intc_enable(FIQ_MAC_PROT_TRIGGER);
@@ -167,37 +219,19 @@ void intc_init(void)
     return;
 }
 
-void intc_irq(void)
+void intc_deinit(void)
 {
-    UINT32 irq_status;
-	
-    irq_status = sddev_control(ICU_DEV_NAME, CMD_GET_INTR_STATUS, 0);
-    irq_status = irq_status & 0xFFFF;
-	if(0 == irq_status)
-	{
-		os_printf("irq:dead\r\n");
-	}
-	
-    sddev_control(ICU_DEV_NAME, CMD_CLR_INTR_STATUS, &irq_status);
+    UINT32 param;
 
-    intc_hdl_entry(irq_status);
-	
-	ASSERT(!platform_is_in_irq_enable());
-}
+    for( int i = 0; i<=FIQ_DPLL_UNLOCK; i++)
+    {
+        intc_disable(i);
+    }
 
-void intc_fiq(void)
-{
-    UINT32 fiq_status;
-	
-	ASSERT(platform_is_in_fiq_context());
-	
-    fiq_status = sddev_control(ICU_DEV_NAME, CMD_GET_INTR_STATUS, 0);
-    fiq_status = fiq_status & 0xFFFF0000;
-    sddev_control(ICU_DEV_NAME, CMD_CLR_INTR_STATUS, &fiq_status);
+    param = GINTR_FIQ_BIT | GINTR_IRQ_BIT;
+    sddev_control(ICU_DEV_NAME, CMD_ICU_GLOBAL_INT_DISABLE, &param);
 
-    intc_hdl_entry(fiq_status);
-
-	ASSERT(!platform_is_in_fiq_enable());
+    return;
 }
 
 

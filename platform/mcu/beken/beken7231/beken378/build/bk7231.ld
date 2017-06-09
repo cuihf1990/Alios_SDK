@@ -4,7 +4,13 @@
  *
  * In this case vectors are at location 0 (reset @ 0x08)
  *
- * +------------+  0x00400000
+ *
+ *
+ * +------------+  0x0040000
+ * Vect redirect   32
+ * +------------+  
+ *
+ * +------------+  0x00400020
  * data         |
  * end
  * |(heap)      |
@@ -15,14 +21,32 @@
  * |- - - - - - |
  * stack bottom    256k
  * +------------+  
- *
+ * 
+ * 
  * +------------+  0x0000000
+ * |Bootloader  |
+ * |            |  64k 
+ * +------------+  0x0010000
+ * |   Para 1   |   4k
+ * +------------+ 
+ * |   Para 2   |   4k
+ * +------------+  0x0012000
  * |vectors     |
  * |            |
  * |------------+
  * |text        |  
- * |data        |
- * |            |  1024k
+ * |data        |  632k
+ * |            |  
+ * +------------+ 
+ *
+ *
+ * +------------+  0x0080000
+ * |            |
+ * |            |
+ * |  OTA TEMP  |
+ * |            |  
+ * |            |
+ * |            |  320
  * +------------+
  */
 
@@ -30,19 +54,19 @@
 /* Split memory into area for vectors and ram */
 MEMORY
 {
-	flash  (rx) : ORIGIN = 0x00000000, LENGTH = 2M
-	ram   (rw!x): ORIGIN = 0x00400000, LENGTH = 256k
+	flash  (rx) : ORIGIN = 0x0012000, LENGTH = 1M - 64K - 4K - 4K - 320K
+	ram   (rwx): ORIGIN = 0x00400020, LENGTH = 256k - 32
 }
 
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_vector_start);
-_vector_start = 0x00000000;
+_vector_start = 0x0012000;
 
 SECTIONS
 {
 /* vectors go to vectors region */
-	. = 0x00000000;
+	. = 0x0012000;
 	.vectors : 
 	{ 
       KEEP(*(*.vectors))
@@ -78,6 +102,7 @@ SECTIONS
 	} > flash
 	
 /* globals.for example: int ram_data[3]={4,5,6}; */		/* VMA in RAM, but keep LMA in flash */
+	. = ALIGN(0x8);
 	_begin_data = .;
 	.data : AT ( _begin_data )
 	{
