@@ -12,17 +12,21 @@ extern void cpu_en_interpt(void);
 
 void mico_rtos_enter_critical( void )
 {
+    #ifndef CSP_LINUXHOST
     cpu_dis_interpt();
 	critical_nest++;
+    #endif
 }
 
 void mico_rtos_exit_critical( void )
 {
+    #ifndef CSP_LINUXHOST
     critical_nest--;
 
 	if (critical_nest == 0) {
 		cpu_en_interpt();
 	}
+    #endif
 }
 
 OSStatus mico_rtos_create_thread( mico_thread_t* thread, uint8_t priority, const char* name, mico_thread_function_t function, uint32_t stack_size, mico_thread_arg_t arg )
