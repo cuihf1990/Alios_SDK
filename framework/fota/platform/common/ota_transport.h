@@ -15,6 +15,7 @@
  */
 #ifndef OTA_TRANSPORT_H_
 #define OTA_TRANSPORT_H_
+#include <stdint.h>
 
 typedef struct {
     const char *primary_version;
@@ -25,7 +26,7 @@ typedef struct {
 } ota_request_params;
 
 #define MAX_URL_LEN 256
-#define MAX_MD5_LEN 128
+#define MAX_MD5_LEN 34
 #define MAX_VERSION_LEN 64
 #define MAX_ID_LEN 64
 
@@ -40,17 +41,48 @@ typedef struct {
 
 typedef void message_arrived(const char *msg);
 
-int8_t parse_ota_requset(const char* request, int *buf_len, ota_request_params * request_parmas);
+inline int8_t parse_ota_requset(const char* request, int *buf_len, ota_request_params * request_parmas)
+{
+    return 0;
+}
 
-int8_t parse_ota_response(const char* buf, int buf_len, ota_response_params * response_parmas);
+inline int8_t parse_ota_response(const char* buf, int buf_len, ota_response_params * response_parmas)
+{
+    return 0;
+}
 
-int8_t ota_sub_upgrade(message_arrived *msgCallback);
+inline int8_t parse_ota_cancel_response(const char* response, int buf_len, ota_response_params * response_parmas) 
+{
+    return 0;
+}
 
-int8_t ota_pub_request(ota_request_params *request_parmas);
+inline int8_t ota_cancel_upgrade(message_arrived *msgCallback) 
+{
+    return 0;
+}
 
-int8_t ota_sub_request_reply(message_arrived *msgCallback);
+int8_t platform_ota_status_post(int status, int percent);
 
-void free_global_topic();
 
-char *ota_get_id();
+inline int8_t ota_sub_upgrade(message_arrived *msgCallback)
+{
+    return 0;
+}
+
+inline int8_t ota_pub_request(ota_request_params *request_parmas)
+{
+    return 0;
+}
+
+inline int8_t ota_sub_request_reply(message_arrived *msgCallback)
+{
+    return 0;
+}
+
+inline void free_global_topic(){};
+
+inline char *ota_get_id()
+{
+    return 0;
+}
 #endif /* OTA_TRANSPORT_H_ */

@@ -18,7 +18,7 @@
 #include <string.h>
 #include <poll.h>
 #include <yos/network.h>
-#include "ota_constants.h"
+
 #include "ota_util.h"
 #include "ota_log.h"
 #include "md5.h"
@@ -150,26 +150,30 @@ static MD5_CTX            g_ctx;
 int check_md5(const char *buffer, const int32_t len)
 {
     unsigned char digest[16] = {0};
-    MD5Final((unsigned char*)digest, &g_ctx);
     char digest_str[33] = {0}; 
     int i= 0;
+    OTA_LOG_D("digest=%s",buffer);
+    MD5Final((unsigned char*)digest, &g_ctx);
+    
     for(; i< 16 ;i++) {
-        snprintf(digest_str + i*2, 2+1, "%2X", digest[i]);
+        snprintf(digest_str + i*2, 2+1, "%02X", digest[i]);
     }
-    //OTA_LOG_D("digestMD5=%s",digest_str);
+
+    OTA_LOG_D("digestMD5=%s",digest_str);
     if (strncmp(digest_str, buffer, 32)) {
-        OTA_LOG_E("Download update_packet FAIL!");
-        return 0;
+        OTA_LOG_E("update_packet md5 check FAIL!");
+        return -1;
     }
-    return 1;
+    return 0;
 }
 
 
 int http_download(char *url, write_flash_cb_t func) {
     if(!url || strlen(url) == 0 || func == NULL) {
-        OTA_LOG_E("http_download error!\n");
-        return -1;
+        OTA_LOG_E("http_download url or func  error!\n");
+        return OTA_DOWNLOAD_URL_FAIL;
     }
+    int ret = 0;
     int sockfd = 0;
     char http_buffer[BUFFER_MAX_SIZE] = {0};
     int port = 0;
@@ -181,21 +185,22 @@ int http_download(char *url, write_flash_cb_t func) {
     int i = 0;
   
 
-    OTA_LOG_I("parameter.1 is: %s\n ", url);
+    OTA_LOG_I("parameter is: %s\n ", url);
     http_gethost_info(url, host_addr, host_file, &port);
 
     sockfd = http_socket_init(port, host_addr);
     if(sockfd < 0 )
     {
         OTA_LOG_E("http_socket_init error\n ");
-        return -1;
+        ret = OTA_DOWNLOAD_SOCKET_FAIL;
+        return ret;
     }
     sprintf(http_buffer,
             "GET   /%s   HTTP/1.1\r\nAccept:   */*\r\nAccept-Language:   zh-cn\r\n"
                     "User-Agent:   Mozilla/4.0   (compatible;   MSIE   5.01;   Windows   NT   5.0)\r\n"
                     "Host:   %s:%d\r\nConnection:   Close\r\n\r\n ", host_file,
             host_addr, port);
-    OTA_LOG_I("%s\n", http_buffer);
+    //OTA_LOG_I("%s\n", http_buffer);
     send = 0;
     totalsend = 0;
     nbytes = strlen(http_buffer);
@@ -203,7 +208,8 @@ int http_download(char *url, write_flash_cb_t func) {
         send = write(sockfd, http_buffer + totalsend, nbytes - totalsend);
         if (send == -1) {
             OTA_LOG_E("send error!%s\n ", strerror(errno));
-            return -1;
+            ret = OTA_DOWNLOAD_SEND_FAIL;
+            goto DOWNLOAD_END;
         }
         totalsend += send;
         OTA_LOG_I("%d bytes send OK!\n ", totalsend);
@@ -216,6 +222,16 @@ int http_download(char *url, write_flash_cb_t func) {
     int buffer_size = 1;
     memset(http_buffer, 0, sizeof http_buffer);
     while ((nbytes = read(sockfd, http_buffer, buffer_size))) {
+        if(nbytes < 0) {
+            if (errno != EINTR)
+                break;
+            if (_ota_socket_check_conn(sockfd) < 0) {
+                OTA_LOG_E("download system error %s" , strerror(errno));
+                break;
+            } else continue;
+            
+        }  
+
         if (i < 4) {
             /* process head packet*/
             if (http_buffer[0] == '\r' || http_buffer[0] == '\n') {
@@ -229,14 +245,27 @@ int http_download(char *url, write_flash_cb_t func) {
         } else /*if buffer not ended with \r\n\r\n，request packet content*/
         {
             size +=nbytes;
-	    //OTA_LOG_E("size %d, %d", size,count);
+	    //OTA_LOG_E("size nbytes %d, %d", size, nbytes);
 	    MD5Update(&g_ctx, (unsigned char*)http_buffer, nbytes);
 	    func(BUFFER_MAX_SIZE, (uint8_t *)http_buffer, nbytes, 0);
 	    memset(http_buffer, 0, BUFFER_MAX_SIZE);
         }
+         
+        if(ota_get_status() == OTA_CANCEL) 
+            break;
     }
-    
+
+    if(nbytes < 0) {
+        OTA_LOG_E("download read error %s" , strerror(errno));
+        ret = OTA_DOWNLOAD_FAILED;
+    } else if(nbytes == 0) {
+        ret = OTA_DOWNLOAD_FINISH;
+    } else {
+        ret = OTA_DOWNLOAD_CANCEL;
+    }
+
+DOWNLOAD_END:
     close(sockfd);
-    return 0;
+    return ret;
 }
 

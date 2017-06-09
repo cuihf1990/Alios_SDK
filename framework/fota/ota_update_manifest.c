@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <yos/kernel.h>
+
 #include "ota_update_manifest.h"
 #include "ota_log.h"
 #include "ota_transport.h"
@@ -59,27 +60,45 @@ extern int  check_md5(const char *buffer, const int32_t len);
 void ota_download_start(void * buf)
 {
     OTA_LOG_I("task update start");
-    ota_set_status(E_OTA_IDLE);
+    ota_status_init();
+    ota_set_status(OTA_INIT);
+    ota_status_post(100);
+
+    ota_set_status(OTA_DOWNLOAD);
     int ret = http_download(url, g_write_func); 
-    if(ret < 0 ) {
-       OTA_LOG_E("ota download error");
-       ota_set_status(E_OTA_DOWNLOAD_FAIL);
-       return;
+    if(ret <= 0) {
+        OTA_LOG_E("ota download error");
+        ota_set_status(OTA_DOWNLOAD_FAILED);
+        goto OTA_END;
     }
+    
+    if(ret == OTA_DOWNLOAD_CANCEL) {
+        OTA_LOG_E("ota download cancel");
+        ota_set_status(OTA_CANCEL);
+        goto OTA_END;
+    }
+   
+    ota_status_post(100);
+    ota_set_status(OTA_CHECK);
     ret = check_md5(md5,sizeof md5);    
     if(ret < 0 ) {
        OTA_LOG_E("ota check md5 error");
-       ota_set_status(E_OTA_DOWNLOAD_FAIL);
-       return;
+       ota_set_status(OTA_CHECK_FAILED);
+       goto OTA_END;
     }
+    ota_status_post(100);
     memset(url, 0, sizeof url);
+    
     OTA_LOG_I("ota status %d",ota_get_status());
-    ota_set_status(E_OTA_DOWNLOAD_SUC);
+    ota_set_status(OTA_UPGRADE);
     if(NULL != g_finish_cb) {
         g_finish_cb(0,"");
     }
- 
-    ota_set_status(E_OTA_END);
+    ota_status_post(100);
+    ota_set_status(OTA_REBOOT);
+
+OTA_END:
+    ota_status_post(100);    
     OTA_LOG_I("task update over");
     free_global_topic();
 }
@@ -94,6 +113,7 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
     ret = ota_if_need(response_parmas,request_parmas);
     if(1 != ret) return ret;
 
+    set_ota_version(response_parmas->primary_version);
     g_write_func = func;
     g_finish_cb = fcb;
     memset(md5, 0 , sizeof md5);
@@ -104,7 +124,23 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
     return ret;
 }
 
+static int8_t ota_if_cancel(ota_response_params *response_parmas)
+{
+    if(strncmp(response_parmas->device_uuid , ota_get_id(), sizeof response_parmas->device_uuid) > 0 )
+        return 1;
+    return 0;
+}
 
+int8_t ota_cancel_update_packet(ota_response_params *response_parmas)
+{
+    int ret = 0;
+    
+    ret = ota_if_cancel(response_parmas);
+    if(ret) {
+        ota_set_status(OTA_CANCEL);
+    }
+    return ret;
+}
 
 
 
