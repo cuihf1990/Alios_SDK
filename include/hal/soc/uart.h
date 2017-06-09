@@ -129,7 +129,7 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t *size,
+int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size, uint32_t *recv_size,
                       uint32_t timeout);
 
 /**@brief Read the length of the data that is already recived by uart driver and stored in buffer

@@ -1035,9 +1035,7 @@ int cli_putstr(const char *msg)
 
 int cli_getchar(char *inbuf)
 {
-	uint32_t size = 1;
-	
-    if (hal_uart_recv(CLI_UART, inbuf, &size, MICO_WAIT_FOREVER) == 0)
+    if (hal_uart_recv(CLI_UART, inbuf, 1, NULL, MICO_WAIT_FOREVER) == 0)
         return 1;
     else
         return 0;
