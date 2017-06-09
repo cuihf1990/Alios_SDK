@@ -5,18 +5,10 @@
 #include "mico_rtos_common.h"
 #include "common.h"
 
-
 static int32_t critical_nest;
 
-void __attribute__ ((weak)) cpu_dis_interpt(void)
-{
-
-}
-
-void __attribute__ ((weak)) cpu_en_interpt( void )
-{
-
-}
+extern void cpu_dis_interpt(void);
+extern void cpu_en_interpt(void);
 
 void mico_rtos_enter_critical( void )
 {
