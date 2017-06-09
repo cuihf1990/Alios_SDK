@@ -337,9 +337,19 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
 {
     struct timeval tv = { 0 };
     int ret;
+    fd_set saved_fds = *rfds;
+
+    /* check if already data available */
+    ret = select(maxfd + 1, rfds, NULL, NULL, &tv);
+    if (ret > 0)
+        return ret;
 
     timeout = timeout >= 0 ? MS2TICK(timeout) : YUNOS_WAIT_FOREVER;
-    yunos_sem_take(&parg->sem, timeout);
+    ret = yunos_sem_take(&parg->sem, timeout);
+    if (ret != YUNOS_SUCCESS)
+        return 0;
+
+    *rfds = saved_fds;
     ret = select(maxfd + 1, rfds, NULL, NULL, &tv);
     return ret;
 }
