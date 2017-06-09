@@ -243,6 +243,9 @@ void task_proc(void)
 
     LOG("Task '%-20s' running\n", tcb_ext->tcb->task_name);
 
+    /* signals blocked before makecontext, unblock here */
+    sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+
     (tcb_ext->entry)(tcb_ext->arg);
 
     LOG("Task %-20s end\n", tcb_ext->tcb->task_name);
