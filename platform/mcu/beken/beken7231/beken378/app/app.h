@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "FreeRTOS.h"
-#include "task.h"
 #include "rtos_pub.h"
 
 //#define APP_DEBUG
@@ -31,7 +29,7 @@ typedef struct bus_message
 	uint32_t type;
 	uint32_t arg;
 	uint32_t len;
-	beken_semaphore_t sema;
+	mico_semaphore_t sema;
 }BUS_MSG_T;
 
 #define CORE_QITEM_COUNT          (64)
@@ -40,9 +38,9 @@ typedef struct bus_message
 typedef struct _wifi_core_
 {
 	uint32_t queue_item_count;
-	beken_queue_t io_queue;
+	mico_queue_t io_queue;
 	
-	xTaskHandle handle;
+	mico_thread_t handle;
 	uint32_t stack_size;
 }WIFI_CORE_T;
 

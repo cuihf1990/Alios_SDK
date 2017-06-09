@@ -3,7 +3,9 @@
 
 #include "include.h"
 #include "typedef.h"
+#include "mico_rtos.h"
 
+#if 0
 #pragma once
 
 #define RTOS_SUCCESS                       (1)
@@ -34,7 +36,7 @@ typedef int             OSStatus;
 typedef void (*timer_handler_t)( void*);
 typedef OSStatus (*event_handler_t)( void* arg );
 
-#if CFG_MXCHIP
+#if 0
 #include "mico_rtos.h"
 
 typedef mico_thread_arg_t           beken_thread_arg_t;
@@ -53,7 +55,7 @@ typedef mico_timer_t                   beken_timer_t;
 typedef mico_worker_thread_t           beken_worker_thread_t;           
 typedef mico_timed_event_t             beken_timed_event_t;
 
-#else
+
 typedef void *          beken_thread_arg_t;
 typedef uint8_t         beken_bool_t;
 typedef uint32_t        beken_time_t;        /**< Time value in milliseconds */
@@ -694,4 +696,4 @@ int rtos_deinit_event_fd(int fd);
 
 #endif // __RTOS_PUB__
 // EOF
-
+#endif

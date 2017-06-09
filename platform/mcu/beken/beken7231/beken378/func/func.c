@@ -38,7 +38,7 @@ UINT32 func_init(void)
     temp_detect_init();
 #endif
 #if CFG_SUPPORT_CALIBRATION
-    FUNC_PRT("[FUNC]calibration_main\r\n");
+    
 
     #ifndef KEIL_SIMULATOR
     calibration_main();

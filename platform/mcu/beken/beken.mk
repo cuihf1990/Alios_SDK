@@ -32,6 +32,7 @@ GLOBAL_LDFLAGS += -mcpu=arm968e-s \
 
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231.ld
 
+GLOBAL_LDFLAGS += -Wl,-wrap,_malloc_r -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,_free_r -Wl,-wrap,_realloc_r 
 $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/func/rf_test \
                     beken7231/mico_api \
@@ -453,15 +454,6 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     beken7231/beken378/ip/umac/src/sm/sm.c \
                     beken7231/beken378/ip/umac/src/sm/sm_task.c \
                     beken7231/beken378/ip/umac/src/txu/txu_cntrl.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/croutine.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/event_groups.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/list.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es/port.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/MemMang/heap_4.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/queue.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/tasks.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/timers.c \
-                    beken7231/beken378/os/FreeRTOSv9.0.0/rtos_pub.c \
                     beken7231/beken378/os/mem_arch.c \
                     beken7231/beken378/os/str_arch.c \
                     beken7231/mico_api/MiCODrivers/MiCODriverFlash.c \
@@ -472,6 +464,7 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/mico_cli.c \
                     beken7231/mico_api/mico_wlan.c \
                     beken7231/mico_api/mxchipWNet.c \
+                    beken7231/mico_api/platform_stub.c \
                     ../../arch/arm/armv5/port_c.c \
                     ../../arch/arm/armv5/port_s.S \
                     ../../arch/arm/armv5/soc_impl.c \

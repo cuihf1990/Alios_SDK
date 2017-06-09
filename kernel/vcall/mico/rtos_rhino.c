@@ -39,9 +39,9 @@ OSStatus mico_rtos_create_thread( mico_thread_t* thread, uint8_t priority, const
     ktask_t *task_tmp;
 
     if (thread == NULL) {
-        ret = yunos_task_dyn_create(&task_tmp, name, (void *)arg, priority, 0, stack_size / sizeof(cpu_stack_t), (task_entry_t)function, 1);
+        ret = yunos_task_dyn_create(&task_tmp, name, (void *)arg, priority, 0, stack_size/4, (task_entry_t)function, 1);
     } else {
-        ret = yunos_task_dyn_create((ktask_t **)thread, name, (void *)arg, priority, 0, stack_size / sizeof(cpu_stack_t), (task_entry_t)function, 1);
+        ret = yunos_task_dyn_create((ktask_t **)thread, name, (void *)arg, priority, 0, stack_size/4, (task_entry_t)function, 1);
     }
 
     if (ret == YUNOS_SUCCESS) {
@@ -251,7 +251,7 @@ OSStatus mico_rtos_lock_mutex( mico_mutex_t* mutex )
 OSStatus mico_rtos_unlock_mutex( mico_mutex_t* mutex )
 {
     kstat_t ret;
-
+	
     ret = yunos_mutex_unlock(*((kmutex_t **)mutex));
 
     if (ret == YUNOS_SUCCESS) {
@@ -414,6 +414,23 @@ OSStatus mico_rtos_init_timer( mico_timer_t* timer, uint32_t time_ms, timer_hand
     return kGeneralErr;
 }
 
+OSStatus mico_rtos_init_oneshot_timer( mico_timer_t* timer, uint32_t time_ms, timer_handler_t function, void* arg )
+{
+    kstat_t ret;
+
+    timer->function = function;
+    timer->arg      = arg;
+
+    ret = yunos_timer_dyn_create((ktimer_t **)(&timer->handle),"timer", timmer_wrapper, 
+                                  yunos_ms_to_ticks(time_ms), 0, timer, 0);
+
+    if (ret == YUNOS_SUCCESS) {
+        return kNoErr;
+    }
+
+    return kGeneralErr;
+}
+
 
 OSStatus mico_rtos_start_timer( mico_timer_t* timer )
 {
@@ -434,6 +451,7 @@ OSStatus mico_rtos_stop_timer( mico_timer_t* timer )
 
     ret = yunos_timer_stop((ktimer_t *)(timer->handle));
 
+
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
     }
@@ -445,6 +463,7 @@ OSStatus mico_rtos_stop_timer( mico_timer_t* timer )
 OSStatus mico_rtos_reload_timer( mico_timer_t* timer )
 {
     kstat_t ret;
+
 
     yunos_timer_stop((ktimer_t *)(timer->handle));
 
@@ -460,6 +479,7 @@ OSStatus mico_rtos_reload_timer( mico_timer_t* timer )
 OSStatus mico_rtos_deinit_timer( mico_timer_t* timer )
 {
     kstat_t ret;
+
 
     yunos_timer_stop((ktimer_t *)(timer->handle));
     ret = yunos_timer_dyn_del((ktimer_t *)(timer->handle));
@@ -483,5 +503,15 @@ bool mico_rtos_is_timer_running( mico_timer_t* timer )
     }
 
     return false;
+}
+
+bool mico_rtos_is_timer_init( mico_timer_t* timer )
+{
+	if (timer == NULL)
+		return false;
+	if (timer->handle == NULL)
+		return false;
+
+    return true;
 }
 

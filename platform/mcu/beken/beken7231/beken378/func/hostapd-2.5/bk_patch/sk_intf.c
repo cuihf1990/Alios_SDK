@@ -63,7 +63,8 @@ int ke_l2_packet_tx(unsigned char *buf, int len, int flag)
 {
 	int ret;
 	SOCKET sk = data_get_socket_num();
-	
+
+	printf("%s %d, sk %d\r\n", __FUNCTION__, __LINE__, sk);
 	ret = ke_sk_send(sk, buf, len, flag);
 
 #if CFG_WIFI_AP_MODE

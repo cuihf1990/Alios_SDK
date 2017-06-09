@@ -141,7 +141,9 @@ int ke_sk_send_peek_next_payload_size(SOCKET sk)
 	GLOBAL_INT_DISABLE();
 	dl_list_for_each_safe(sk_msg, tmp, &element->sk_rx_msg, SOCKET_MSG, data)
 	{
+		
 		ret = sk_msg->len;
+		printf("SK: got msg %d\r\n", ret);
 		break;
 	}
 
@@ -169,7 +171,7 @@ BK_SOCKET *sk_get_sk_element(SOCKET sk)
 	return 0;
 }
 
-SOCKET socket(int af, int type, int protocol)
+SOCKET bk_socket(int af, int type, int protocol)
 {
 	SOCKET sk;
 	BK_SOCKET *sk_ptr;
@@ -198,7 +200,7 @@ SOCKET socket(int af, int type, int protocol)
 	return sk;
 }
 
-int send(SOCKET sk, const unsigned char *buf, int len, int flag)
+int bk_send(SOCKET sk, const unsigned char *buf, int len, int flag)
 {
 	int ret = 0;
 	unsigned char *data_buf;
@@ -245,7 +247,7 @@ tx_exit:
 	return ret;
 }
 
-int recv(SOCKET sk, const unsigned char *buf, int len, int flag)
+int bk_recv(SOCKET sk, const unsigned char *buf, int len, int flag)
 {
 	int count;
 	int ret = 0;
@@ -295,7 +297,7 @@ rx_exit:
 	return 0;
 }
 
-void close(SOCKET sk)
+void bk_close(SOCKET sk)
 {
 	BK_SOCKET *element;
 	SOCKET_MSG *sk_msg, *tmp;

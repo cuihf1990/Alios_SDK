@@ -31,12 +31,12 @@
 #include "rxl_cntrl.h"
 #include "lwip/pbuf.h"
 
-xTaskHandle  init_thread_handle;
-xTaskHandle  app_thread_handle;
+mico_thread_t  init_thread_handle;
+mico_thread_t  app_thread_handle;
 uint32_t  init_stack_size = 2000;
 uint32_t  app_stack_size = 4000;
 
-beken_semaphore_t app_sema = NULL;
+static mico_semaphore_t app_sema = NULL;
 WIFI_CORE_T g_wifi_core = {0};
 volatile int32_t bmsg_rx_count = 0;
 
@@ -92,8 +92,7 @@ void app_init(void)
 
 void app_set_sema(void)
 {
-	OSStatus ret;
-	ret = mico_rtos_set_semaphore(&app_sema);
+	mico_rtos_set_semaphore(&app_sema);
 }
 
 static void kmsg_bk_thread_main( void *arg )
@@ -102,9 +101,8 @@ static void kmsg_bk_thread_main( void *arg )
 
 	while(1)
 	{
-		ret = mico_rtos_get_semaphore(&app_sema, BEKEN_WAIT_FOREVER);
-		ASSERT(kNoErr == ret);        
-		
+		ret = mico_rtos_get_semaphore(&app_sema, 1000);
+		//ASSERT(kNoErr == ret);        
 		mr_kmsg_background_handle();
 		ke_evt_none_core_scheduler();
 	}
@@ -164,7 +162,7 @@ void bmsg_skt_tx_sender(void *arg)
 	msg.len = 0;
 	msg.sema = NULL;
 	
-	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, BEKEN_NO_WAIT);
+	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, MICO_NO_WAIT);
 	if(kNoErr != ret)
 	{
 		os_printf("bmsg_rx_sender_failed\r\n");
@@ -186,7 +184,7 @@ void bmsg_null_sender(void)
 		return;
 	}
 	
-	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, BEKEN_NO_WAIT);
+	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, MICO_NO_WAIT);
 	if(kNoErr != ret)
 	{
 		os_printf("bmsg_null_sender_failed\r\n");
@@ -208,7 +206,7 @@ void bmsg_rx_sender(void *arg)
 	}
 	
 	bmsg_rx_count += 1;
-	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, BEKEN_NO_WAIT);
+	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, MICO_NO_WAIT);
 	if(kNoErr != ret)
 	{
 		APP_PRT("bmsg_rx_sender_failed\r\n");
@@ -242,10 +240,10 @@ void bmsg_ioctl_sender(void *arg)
 	msg.arg = (uint32_t)arg;
 	msg.len = 0;
 	
-    ret = mico_rtos_init_semaphore(&msg.sema, 1);
+    ret = mico_rtos_init_semaphore(&msg.sema, 0);
     ASSERT(kNoErr == ret);
 	
-	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, BEKEN_NO_WAIT);
+	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, MICO_NO_WAIT);
 	if(kNoErr != ret)
 	{
 		APP_PRT("bmsg_ioctl_sender_failed\r\n");
@@ -253,7 +251,7 @@ void bmsg_ioctl_sender(void *arg)
 	else 
 	{
 		APP_PRT("bmsg_ioctl_sender\r\n");
-		ret = mico_rtos_get_semaphore(&msg.sema, BEKEN_WAIT_FOREVER);
+		ret = mico_rtos_get_semaphore(&msg.sema, MICO_WAIT_FOREVER);
 		ASSERT(kNoErr == ret);     
 	}
 
@@ -268,7 +266,7 @@ static void core_thread_main( void *arg )
 
     while(1)
     {	
-        ret = mico_rtos_pop_from_queue(&g_wifi_core.io_queue, &msg, BEKEN_WAIT_FOREVER);
+        ret = mico_rtos_pop_from_queue(&g_wifi_core.io_queue, &msg, MICO_WAIT_FOREVER);
         if(kNoErr == ret)
         {
         	switch(msg.type)
@@ -326,9 +324,9 @@ void core_thread_init(void)
     ret = mico_rtos_create_thread(&g_wifi_core.handle, 
             THD_CORE_PRIORITY,
             "core_thread", 
-            (beken_thread_function_t)core_thread_main, 
+            core_thread_main, 
             (unsigned short)g_wifi_core.stack_size, 
-            (beken_thread_arg_t)0);
+            0);
 	if (kNoErr != ret) 
 	{
 		os_printf("Create core thread failed\r\n");
@@ -371,23 +369,24 @@ void app_start(void)
 {
     OSStatus ret; 
     
-    ret = mico_rtos_init_semaphore(&app_sema, 1);
+    ret = mico_rtos_init_semaphore(&app_sema, 0);
     ASSERT(kNoErr == ret);
+
 	
     ret = mico_rtos_create_thread(&app_thread_handle, 
             THD_APPLICATION_PRIORITY,
             "kmsgbk", 
-            (beken_thread_function_t)kmsg_bk_thread_main, 
+            kmsg_bk_thread_main, 
             (unsigned short)app_stack_size, 
-            (beken_thread_arg_t)0);
+            0);
     ASSERT(kNoErr == ret);
     
     ret = mico_rtos_create_thread(&init_thread_handle, 
             THD_INIT_PRIORITY,
             "init_thread", 
-            (beken_thread_function_t)init_thread_main, 
+            init_thread_main, 
             (unsigned short)init_stack_size, 
-            (beken_thread_arg_t)0);
+            0);
     ASSERT(kNoErr == ret);
 	
 	core_thread_init();
@@ -396,9 +395,9 @@ void app_start(void)
 	ret = mico_rtos_create_thread(NULL, 
             THD_INIT_PRIORITY,
             "app", 
-            (beken_thread_function_t)init_app_thread, 
+            init_app_thread, 
             (unsigned short)1024, 
-            (beken_thread_arg_t)0);
+            0);
 }
 
 
