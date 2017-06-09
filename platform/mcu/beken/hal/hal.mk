@@ -1,6 +1,7 @@
 NAME := hal
 
-$(NAME)_SOURCES	 := uart.c \
+$(NAME)_SOURCES	 := flash.c \
+					uart.c \
 					ringbuf.c
 
 $(NAME)_INCLUDES := . \
