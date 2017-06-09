@@ -192,12 +192,14 @@ OSStatus mico_rtos_set_semaphore( mico_semaphore_t* semaphore )
 OSStatus mico_rtos_get_semaphore( mico_semaphore_t* semaphore, uint32_t timeout_ms )
 {
     kstat_t ret;
+    tick_t ticks;
 
     if (timeout_ms == MICO_NEVER_TIMEOUT) {
         ret =  yunos_sem_take(*((ksem_t **)semaphore), YUNOS_WAIT_FOREVER);
     }
     else {
-        ret =  yunos_sem_take(*((ksem_t **)semaphore), timeout_ms / YUNOS_CONFIG_TICKS_PER_SECOND);
+        ticks = yunos_ms_to_ticks(timeout_ms);
+        ret =  yunos_sem_take(*((ksem_t **)semaphore), ticks);
     }
 
     if (ret == YUNOS_SUCCESS) {
@@ -417,7 +419,7 @@ OSStatus mico_rtos_start_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    ret = yunos_timer_start(*((ktimer_t **)(timer->handle)));
+    ret = yunos_timer_start((ktimer_t *)(timer->handle));
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -430,7 +432,7 @@ OSStatus mico_rtos_stop_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    ret = yunos_timer_stop(*((ktimer_t **)timer));
+    ret = yunos_timer_stop((ktimer_t *)(timer->handle));
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -444,9 +446,9 @@ OSStatus mico_rtos_reload_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    yunos_timer_stop(*((ktimer_t **)timer));
+    yunos_timer_stop((ktimer_t *)(timer->handle));
 
-    ret = yunos_timer_start(*((ktimer_t **)timer));
+    ret = yunos_timer_start((ktimer_t *)(timer->handle));
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -459,8 +461,8 @@ OSStatus mico_rtos_deinit_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    yunos_timer_stop(*((ktimer_t **)timer));
-    ret = yunos_timer_dyn_del(*((ktimer_t **)timer));
+    yunos_timer_stop((ktimer_t *)(timer->handle));
+    ret = yunos_timer_dyn_del((ktimer_t *)(timer->handle));
 
     if (ret == YUNOS_SUCCESS) {
         return kNoErr;
@@ -473,7 +475,7 @@ bool mico_rtos_is_timer_running( mico_timer_t* timer )
 {
     ktimer_t *t;
 
-    t = *((ktimer_t **)timer);
+    t = (ktimer_t *)timer->handle;
 
     if (t->timer_state == TIMER_ACTIVE) {
 
