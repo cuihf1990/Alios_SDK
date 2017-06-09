@@ -16,6 +16,9 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/rsa.h>
+#elif defined(TFS_ALICRYPTO)
+#include "ali_crypto.h"
+#define RSA_KEY_LEN       (128)
 #endif // TFS_OPENSSL
 
 #define MD5_MAX 16
@@ -99,7 +102,8 @@ int emu_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     }
 
     pal_md5_sum(in, in_len, hash);
-    ret = mbedtls_rsa_pkcs1_sign(&rsa, NULL, NULL, MBEDTLS_RSA_PRIVATE, MBEDTLS_MD_MD5, 16, hash, sign);
+    ret = mbedtls_rsa_pkcs1_sign(&rsa, NULL, NULL, MBEDTLS_RSA_PRIVATE,
+                                 MBEDTLS_MD_MD5, 16, hash, sign);
     if (ret != 0) {
         LOGE(TAG_EMU_RSA, "[%s]: mbedtls sign error!\n", __func__);
         return -1;
@@ -109,6 +113,65 @@ int emu_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     mbedtls_rsa_free(&rsa);
 
     LOGD(TAG_EMU_RSA, "[%s]: OK!\n", __func__);
+    return ret;
+#elif defined(TFS_ALICRYPTO)
+    ali_crypto_result ali_crypto_ret;
+    uint32_t n_size = RSA_KEY_LEN;
+    uint32_t e_size = RSA_KEY_LEN;
+    uint32_t d_size = RSA_KEY_LEN;
+    uint8_t *key_pair = NULL;
+    size_t key_pair_len;
+    rsa_padding_t rsa_padding;
+    uint8_t md5[MD5_MAX];
+
+    ali_crypto_ret = ali_rsa_get_keypair_size(RSA_KEY_LEN << 3, &key_pair_len);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: get keypair size fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        return -1;
+    }
+
+    key_pair = (uint8_t *)pal_memory_malloc(key_pair_len);
+    if (key_pair == NULL) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: malloc(%d) fail\n", __func__,
+             (int)key_pair_len);
+        goto error_exit;
+    }
+
+    memset(key_pair, 0, key_pair_len);
+    ali_crypto_ret = ali_rsa_init_keypair(RSA_KEY_LEN << 3,
+                                          RSA_1024_N, n_size, RSA_1024_E, 3, RSA_1024_D, d_size,
+                                          NULL , 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, (rsa_keypair_t *)key_pair);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: init keypair fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        goto error_exit;
+    }
+
+    rsa_padding.type = RSASSA_PKCS1_V1_5;
+    if (type == EMU_TYPE_MD5) {
+        rsa_padding.pad.rsassa_v1_5.type = MD5;
+    } else {
+        LOGE(TAG_EMU_RSA, "[%s]: to do support...\n", __func__);
+        goto error_exit;
+    }
+
+    pal_md5_sum(in, in_len, md5);
+
+    *sign_len = RSA_KEY_LEN;
+    ali_crypto_ret = ali_rsa_sign((rsa_keypair_t *)key_pair, md5, MD5_MAX, sign,
+                                  (size_t *)sign_len, rsa_padding);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: rsa_v1_5: sign fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        goto error_exit;
+    }
+
+    ret = 0;
+error_exit:
+    if (key_pair) {
+        pal_memory_free(key_pair);
+    }
     return ret;
 #else
     LOGD(TAG_EMU_RSA, "[%s]: no implement!\n", __func__);
@@ -172,7 +235,8 @@ int emu_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
     rsa.len = (mbedtls_mpi_bitlen(&rsa.N) + 7) >> 3;
 
     pal_md5_sum(in, in_len, hash);
-    ret = mbedtls_rsa_pkcs1_verify(&rsa, NULL, NULL, MBEDTLS_RSA_PUBLIC, MBEDTLS_MD_MD5, 16, hash, sign);
+    ret = mbedtls_rsa_pkcs1_verify(&rsa, NULL, NULL, MBEDTLS_RSA_PUBLIC,
+                                   MBEDTLS_MD_MD5, 16, hash, sign);
     if (ret != 0) {
         LOGE(TAG_EMU_RSA, "[%s]: mbedtls verify error!\n", __func__);
         return -1;
@@ -182,11 +246,74 @@ int emu_RSA_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     LOGD(TAG_EMU_RSA, "[%s]: OK!\n", __func__);
     return ret;
+#elif defined(TFS_ALICRYPTO)
+    bool result;
+    ali_crypto_result ali_crypto_ret;
+    uint32_t n_size = RSA_KEY_LEN;
+    uint32_t e_size = RSA_KEY_LEN;
+    uint32_t d_size = RSA_KEY_LEN;
+    uint8_t *pub_key = NULL;
+    size_t pub_key_len;
+    rsa_padding_t rsa_padding;
+    uint8_t md5[MD5_MAX];
+
+    ali_crypto_ret = ali_rsa_get_pubkey_size(RSA_KEY_LEN << 3, &pub_key_len);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: get pubkey size fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        return -1;
+    }
+
+    pub_key = (uint8_t *)pal_memory_malloc(pub_key_len);
+    if (pub_key == NULL) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: malloc(%d) fail\n", __func__,
+             (int)pub_key_len);
+        return -1;
+    }
+
+    memset(pub_key, 0, pub_key_len);
+    ali_crypto_ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
+                                         RSA_1024_N, n_size, RSA_1024_E, 3, (rsa_pubkey_t *)pub_key);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: init pub_key fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        goto error_exit;
+    }
+
+    rsa_padding.type = RSASSA_PKCS1_V1_5;
+    if (type == EMU_TYPE_MD5) {
+        rsa_padding.pad.rsassa_v1_5.type = MD5;
+    } else {
+        LOGE(TAG_EMU_RSA, "[%s]: to do support...\n", __func__);
+        goto error_exit;
+    }
+
+    pal_md5_sum(in, in_len, md5);
+
+    ali_crypto_ret = ali_rsa_verify((rsa_pubkey_t *)pub_key, md5, MD5_MAX,
+                                    sign, sign_len, rsa_padding, &result);
+    if (ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: rsa_v1_5: verify fail(%08x)\n", __func__, ret);
+        goto error_exit;
+    }
+
+    if (result == true) {
+        ret = 0;
+    } else {
+        ret = -1;
+    }
+
+error_exit:
+    if (pub_key) {
+        pal_memory_free(pub_key);
+    }
+    return ret;
 #else
     LOGD(TAG_EMU_RSA, "[%s]: no implement!\n", __func__);
     return -1;
 #endif
 }
+
 int emu_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
                            uint8_t *out, uint32_t *out_len, uint8_t padding)
 {
@@ -260,18 +387,68 @@ int emu_RSA_public_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
     ret = mbedtls_rsa_pkcs1_encrypt(&rsa, NULL, NULL,
                                     MBEDTLS_RSA_PUBLIC, in_len, in, out);
     if (ret != 0) {
-        LOGE(TAG_EMU_RSA, "[%s]: mbedtls priv-encrypt error, ret = %d\n", __func__, ret);
-//        mbedtls_ctr_drbg_DEBUG_FREE(&ctr_drbg);
-//        mbedtls_entropy_DEBUG_FREE(&entropy);
+        LOGE(TAG_EMU_RSA, "[%s]: mbedtls priv-encrypt error, ret = %d\n", __func__,
+             ret);
+        //        mbedtls_ctr_drbg_DEBUG_FREE(&ctr_drbg);
+        //        mbedtls_entropy_DEBUG_FREE(&entropy);
         return -1;
     }
 
-//    mbedtls_ctr_drbg_DEBUG_FREE( &ctr_drbg );
-//    mbedtls_entropy_DEBUG_FREE( &entropy );
+    //    mbedtls_ctr_drbg_DEBUG_FREE( &ctr_drbg );
+    //    mbedtls_entropy_DEBUG_FREE( &entropy );
 
     *out_len = rsa.len;
 
     LOGD(TAG_EMU_RSA, "[%s]: OK!\n", __func__);
+    return ret;
+#elif defined(TFS_ALICRYPTO)
+    ali_crypto_result ali_crypto_ret;
+    uint32_t n_size = RSA_KEY_LEN;
+    uint32_t e_size = RSA_KEY_LEN;
+    uint32_t d_size = RSA_KEY_LEN;
+    uint8_t *pub_key = NULL;
+    size_t pub_key_len;
+    rsa_padding_t rsa_padding;
+
+    ali_crypto_ret = ali_rsa_get_pubkey_size(RSA_KEY_LEN << 3, &pub_key_len);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: get pubkey size fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        return -1;
+    }
+
+    pub_key = (uint8_t *)pal_memory_malloc(pub_key_len);
+    if (pub_key == NULL) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: malloc(%d) fail\n", __func__,
+             (int)pub_key_len);
+        return -1;
+    }
+
+    memset(pub_key, 0, pub_key_len);
+    ali_crypto_ret = ali_rsa_init_pubkey(RSA_KEY_LEN << 3,
+                                         RSA_1024_N, n_size, RSA_1024_E, 3, (rsa_pubkey_t *)pub_key);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: init pub_key fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        goto error_exit;
+    }
+
+    memset(&rsa_padding, 0, sizeof(rsa_padding_t));
+    rsa_padding.type = RSAES_PKCS1_V1_5;
+
+    ali_crypto_ret = ali_rsa_public_encrypt((rsa_pubkey_t *)pub_key, in, in_len,
+                                            out, (size_t *)out_len, rsa_padding);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: rsa_v1_5: public encrypt fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        goto error_exit;
+    }
+
+    ret = 0;
+error_exit:
+    if (pub_key) {
+        pal_memory_free(pub_key);
+    }
     return ret;
 #else
     LOGD(TAG_EMU_RSA, "[%s]: no implement!\n", __func__);
@@ -364,16 +541,66 @@ int emu_RSA_private_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
     ret = mbedtls_rsa_pkcs1_decrypt(&rsa, NULL, NULL,
                                     MBEDTLS_RSA_PRIVATE, (size_t *)out_len, in, out, 1024);
     if (ret != 0) {
-        LOGE(TAG_EMU_RSA, "[%s]: mbedtls priv-decrypt error, ret = %d\n", __func__, ret);
-//        mbedtls_ctr_drbg_DEBUG_FREE(&ctr_drbg);
-//        mbedtls_entropy_DEBUG_FREE(&entropy);
+        LOGE(TAG_EMU_RSA, "[%s]: mbedtls priv-decrypt error, ret = %d\n", __func__,
+             ret);
+        //        mbedtls_ctr_drbg_DEBUG_FREE(&ctr_drbg);
+        //        mbedtls_entropy_DEBUG_FREE(&entropy);
         return -1;
     }
 
-//    mbedtls_ctr_drbg_DEBUG_FREE( &ctr_drbg );
-//    mbedtls_entropy_DEBUG_FREE( &entropy );
+    //    mbedtls_ctr_drbg_DEBUG_FREE( &ctr_drbg );
+    //    mbedtls_entropy_DEBUG_FREE( &entropy );
 
     LOGD(TAG_EMU_RSA, "[%s]: OK!\n", __func__);
+    return ret;
+#elif defined(TFS_ALICRYPTO)
+    ali_crypto_result ali_crypto_ret;
+    uint32_t n_size = RSA_KEY_LEN;
+    uint32_t e_size = RSA_KEY_LEN;
+    uint32_t d_size = RSA_KEY_LEN;
+    uint8_t *key_pair = NULL;
+    size_t key_pair_len;
+    rsa_padding_t rsa_padding;
+    uint8_t md5[MD5_MAX];
+
+    ali_crypto_ret = ali_rsa_get_keypair_size(RSA_KEY_LEN << 3, &key_pair_len);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: get keypair size fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        return -1;
+    }
+
+    key_pair = (uint8_t *)pal_memory_malloc(key_pair_len);
+    if (key_pair == NULL) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: malloc(%d) fail\n", __func__,
+             (int)key_pair_len);
+        goto error_exit;
+    }
+
+    memset(key_pair, 0, key_pair_len);
+    ali_crypto_ret = ali_rsa_init_keypair(RSA_KEY_LEN << 3,
+                                          RSA_1024_N, n_size, RSA_1024_E, 3, RSA_1024_D, d_size,
+                                          NULL , 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, (rsa_keypair_t *)key_pair);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: init_key: init keypair fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        goto error_exit;
+    }
+
+    rsa_padding.type = RSAES_PKCS1_V1_5;
+    ali_crypto_ret = ali_rsa_private_decrypt((rsa_keypair_t *)key_pair, in, in_len,
+                                             out, (size_t *)out_len, rsa_padding);
+    if (ali_crypto_ret != ALI_CRYPTO_SUCCESS) {
+        LOGE(TAG_EMU_RSA, "[%s]: rsa_v1_5: public decrypt fail(%08x)\n", __func__,
+             ali_crypto_ret);
+        goto error_exit;
+    }
+
+    ret = 0;
+error_exit:
+    if (key_pair) {
+        pal_memory_free(key_pair);
+    }
     return ret;
 #else
     LOGD(TAG_EMU_RSA, "[%s]: no implement!\n", __func__);

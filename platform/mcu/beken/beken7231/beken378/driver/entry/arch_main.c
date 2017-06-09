@@ -130,9 +130,9 @@ void entry_main(void)
     /* step 1: driver layer initialization*/
     driver_init();
 
-    yunos_task_dyn_create(&task_test_obj, "task_test", 0, 10, 0, 4096, task_test2, 1);
+    yunos_task_dyn_create(&task_test_obj, "task_test", 0, 10, 0, 512, task_test2, 1);
 
-    // yunos_task_dyn_create(&task_test_obj2, "task_test2", 0, 20, 0, 512, task_test3, 1);
+    yunos_task_dyn_create(&task_test_obj2, "task_test2", 0, 20, 0, 512, task_test3, 1);
 
     yunos_start();
 }

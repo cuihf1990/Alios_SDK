@@ -30,33 +30,38 @@ int aes128_cbc_enc(const uint8_t *key,
     int ret = 0;
     LOGD(TAG_AES128, "[%s]: enter.\n", __func__);
 
-    if (key == NULL || iv == NULL || input_len <= 0 || input == NULL || output_len == NULL || output == NULL) {
+    if (key == NULL || iv == NULL || input_len <= 0 || input == NULL ||
+        output_len == NULL || output == NULL) {
         LOGE(TAG_AES128, "[%s]: input param error!\n", __func__);
         return -1;
     }
 
-    if (padding != AES_PKCS7_PADDING && padding != AES_ZERO_PADDING && padding != AES_NO_PADDING) {
+    if (padding != AES_PKCS7_PADDING && padding != AES_ZERO_PADDING &&
+        padding != AES_NO_PADDING) {
         LOGE(TAG_AES128, "[%s]: not supported padding!\n", __func__);
         return -1;
     }
 
     if (padding == AES_NO_PADDING && input_len % 16 != 0) {
-        LOGE(TAG_AES128, "[%s]: input_len should be multiple of 16 when padding type is nopadding.\n", __func__);
+        LOGE(TAG_AES128,
+             "[%s]: input_len should be multiple of 16 when padding type is nopadding.\n",
+             __func__);
         return -1;
     }
 
-    if (padding == AES_NO_PADDING || (padding == AES_ZERO_PADDING && input_len % 16 == 0)) {
+    if (padding == AES_NO_PADDING || (padding == AES_ZERO_PADDING &&
+                                      input_len % 16 == 0)) {
 #ifdef TFS_EMULATE
         ret = emu_aes128_cbc_enc(key, iv, input_len, input, output);
 #else
         ret = hal_aes128_cbc_enc(key, iv, input_len, input, output);
 #endif
         if (ret != 0) {
-            LOGE(TAG_AES128,"[%s]: encrypt error!\n", __func__);
+            LOGE(TAG_AES128, "[%s]: encrypt error!\n", __func__);
             return -1;
         }
         *output_len = input_len;
-    }else {
+    } else {
         memset(last_section, 0, 16);
         last_section_len = input_len % 16;
 
@@ -66,7 +71,7 @@ int aes128_cbc_enc(const uint8_t *key,
 
         if (padding == AES_PKCS7_PADDING) {
             padding_char = (unsigned char)(16 - last_section_len);
-        } else if(padding == AES_ZERO_PADDING) {
+        } else if (padding == AES_ZERO_PADDING) {
             padding_char = 0x00;
         }
         memset(last_section + last_section_len, padding_char, 16 - last_section_len);
@@ -77,18 +82,20 @@ int aes128_cbc_enc(const uint8_t *key,
         ret = hal_aes128_cbc_enc(key, iv, input_len - last_section_len, input, output);
 #endif
         if (ret != 0) {
-            LOGE(TAG_AES128,"[%s]: encrypt1 error!\n", __func__);
+            LOGE(TAG_AES128, "[%s]: encrypt1 error!\n", __func__);
             return -1;
         }
 
 #ifdef TFS_EMULATE
-        ret = emu_aes128_cbc_enc(key, iv, 16, last_section, output + input_len - last_section_len);
+        ret = emu_aes128_cbc_enc(key, iv, 16, last_section,
+                                 output + input_len - last_section_len);
 #else
-        ret = hal_aes128_cbc_enc(key, iv, 16, last_section, output + input_len - last_section_len);
+        ret = hal_aes128_cbc_enc(key, iv, 16, last_section,
+                                 output + input_len - last_section_len);
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_AES128,"[%s]: encrypt2 error!\n", __func__);
+            LOGE(TAG_AES128, "[%s]: encrypt2 error!\n", __func__);
             return -1;
         }
         *output_len = input_len - last_section_len + 16;
@@ -109,12 +116,14 @@ int aes128_cbc_dec(const uint8_t *key,
     uint8_t last_section[16];
     LOGD(TAG_AES128, "[%s]: enter.\n", __func__);
 
-    if (key == NULL || iv == NULL || input_len <= 0 || input == NULL || output_len == NULL || output == NULL) {
+    if (key == NULL || iv == NULL || input_len <= 0 || input == NULL ||
+        output_len == NULL || output == NULL) {
         LOGE(TAG_AES128, "[%s]: input param error!\n", __func__);
         return -1;
     }
 
-    if (padding != AES_PKCS7_PADDING && padding != AES_ZERO_PADDING && padding != AES_NO_PADDING) {
+    if (padding != AES_PKCS7_PADDING && padding != AES_ZERO_PADDING &&
+        padding != AES_NO_PADDING) {
         LOGE(TAG_AES128, "[%s]: not supported padding!\n", __func__);
         return -1;
     }
@@ -132,7 +141,7 @@ int aes128_cbc_dec(const uint8_t *key,
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_AES128,"[%s]: decrypt error!\n", __func__);
+            LOGE(TAG_AES128, "[%s]: decrypt error!\n", __func__);
             return -1;
         }
 
@@ -145,7 +154,7 @@ int aes128_cbc_dec(const uint8_t *key,
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_AES128,"[%s]: decrypt error1!\n", __func__);
+            LOGE(TAG_AES128, "[%s]: decrypt error1!\n", __func__);
             return -1;
         }
 
@@ -156,12 +165,12 @@ int aes128_cbc_dec(const uint8_t *key,
 #endif
 
         if (ret != 0) {
-            LOGE(TAG_AES128,"[%s]: decrypt error2!\n", __func__);
+            LOGE(TAG_AES128, "[%s]: decrypt error2!\n", __func__);
             return -1;
         }
 
         if ((unsigned char)last_section[15] > 16) {
-            LOGE(TAG_AES128,"[%s]: decrypted data error1!\n", __func__);
+            LOGE(TAG_AES128, "[%s]: decrypted data error1!\n", __func__);
             return -1;
         }
 
@@ -171,7 +180,7 @@ int aes128_cbc_dec(const uint8_t *key,
             }
         }
         if (i != 16) {
-            LOGE(TAG_AES128,"[%s]: decrypted data error2!\n", __func__);
+            LOGE(TAG_AES128, "[%s]: decrypted data error2!\n", __func__);
             return -1;
         }
 

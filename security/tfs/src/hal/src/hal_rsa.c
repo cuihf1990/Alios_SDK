@@ -54,7 +54,7 @@ int hal_RSA_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
     uint32_t _in_len = 0;
     uint8_t *_in = NULL;
     uint32_t out_len = 0;
-    uint8_t *out = (uint8_t*)pal_memory_malloc(SIGN_OUT_MAX + 11);
+    uint8_t *out = (uint8_t *)pal_memory_malloc(SIGN_OUT_MAX + 11);
     uint8_t *arg = NULL;
     memset(out, 0, SIGN_OUT_MAX + 11);
 

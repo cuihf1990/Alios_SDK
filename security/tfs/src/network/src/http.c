@@ -163,7 +163,7 @@ int http_activate_dev(const char *func, const char *arg)
     }
 
     if (code != 200 && code != 12) {
-	ret = -1;
+        ret = -1;
         LOGE(TAG_HTTP, "[%s]: return: %d error\n", __func__, code);
         goto error_exit;
     }

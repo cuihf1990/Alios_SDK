@@ -31,8 +31,9 @@ int emu_3DES_sign(uint8_t ID, const uint8_t *in, uint32_t in_len,
 
     emu_3DES_encrypt(ID, md5_buf, MD5_SIZE, sign_out_buf, &len, mode);
 
-    if (len > SIGN_OUT_MAX)
+    if (len > SIGN_OUT_MAX) {
         return -1;
+    }
     memcpy(sign, sign_out_buf, len);
     *sign_len = len;
 
@@ -52,8 +53,9 @@ int emu_3DES_verify(uint8_t ID, const uint8_t *in, uint32_t in_len,
         LOGE(TAG_EMU_3DES, "[%s]: emu_3DES_sign error!\n", __func__);
         return -1;
     }
-    if (len != sign_len)
+    if (len != sign_len) {
         return -1;
+    }
     return memcmp(sign, sign_out_buf, sign_len);
 }
 
@@ -99,13 +101,15 @@ int emu_3DES_encrypt(uint8_t ID, const uint8_t *in, uint32_t in_len,
 #if defined(TFS_OPENSSL)
     for (i = 0; i < len; i += 8) {
         if (mode == TFS_3DES_ECB) {
-            DES_ecb3_encrypt((C_Block *)(_in + i), (C_Block *)(out + i), &ks1, &ks2, &ks3, DES_ENCRYPT);
+            DES_ecb3_encrypt((C_Block *)(_in + i), (C_Block *)(out + i), &ks1, &ks2, &ks3,
+                             DES_ENCRYPT);
         } else if (mode == TFS_3DES_CBC) {
             DES_ede3_cbc_encrypt(_in + i, out + i, 8, &ks1, &ks2, &ks3, &ivec, DES_ENCRYPT);
         }
     }
 #else
-    ret = des3_en((unsigned char *)g_3des_key, DES3_KEY_SIZE, mode - 1, _in, len, out, 0);
+    ret = des3_en((unsigned char *)g_3des_key, DES3_KEY_SIZE, mode - 1, _in, len,
+                  out, 0);
 #endif
     pal_memory_free(_in);
 
@@ -152,13 +156,15 @@ int emu_3DES_decrypt(uint8_t ID, uint8_t *in, uint32_t in_len,
 #if defined(TFS_OPENSSL)
     for (i = 0; i < in_len; i += 8) {
         if (mode == TFS_3DES_ECB) {
-            DES_ecb3_encrypt((C_Block *)(in + i), (C_Block *)(_out + i), &ks1, &ks2, &ks3, DES_DECRYPT);
+            DES_ecb3_encrypt((C_Block *)(in + i), (C_Block *)(_out + i), &ks1, &ks2, &ks3,
+                             DES_DECRYPT);
         } else if (mode == TFS_3DES_CBC) {
             DES_ede3_cbc_encrypt(in + i, _out + i, 8, &ks1, &ks2, &ks3, &ivec, DES_DECRYPT);
         }
     }
 #else
-    ret = des3_de((unsigned char *)g_3des_key, DES3_KEY_SIZE, mode - 1, in, in_len, _out, 0);
+    ret = des3_de((unsigned char *)g_3des_key, DES3_KEY_SIZE, mode - 1, in, in_len,
+                  _out, 0);
 #endif
 
     len = in_len - _out[in_len - 1];

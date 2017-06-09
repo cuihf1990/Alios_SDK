@@ -57,7 +57,8 @@ int fill_package(uint8_t *package, uint32_t cmd, uint8_t *arg, uint32_t arg_len)
     return pack_len;
 }
 
-int hal_cmd(uint32_t cmd, void *in, uint32_t in_len, void *out, uint32_t *out_len)
+int hal_cmd(uint32_t cmd, void *in, uint32_t in_len, void *out,
+            uint32_t *out_len)
 {
     int ret = 0;
     void *handle = NULL;
@@ -109,7 +110,8 @@ static int _verify_package(uint32_t cmd, uint8_t *package, uint32_t len)
         sum += *(package + i);
     }
 
-    if ((((sum >> 8) & 0XFF) == *(package + i)) && ((sum & 0XFF) == *(package + i + 1))) {
+    if ((((sum >> 8) & 0XFF) == *(package + i)) &&
+        ((sum & 0XFF) == *(package + i + 1))) {
         return 0;
     } else {
         LOGE(TAG_CMD, "[%s]: sum verify error!\n", __func__);

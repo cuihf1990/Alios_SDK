@@ -21,7 +21,7 @@ int pal_network_close(int fd);
 
 // base64
 void pal_base64_encode(const unsigned char *src, int len,
-                             unsigned char *dst, int *out_len);
+                       unsigned char *dst, int *out_len);
 
 // md5
 void pal_md5_sum(const uint8_t *addr, const int len, uint8_t *mac);
@@ -48,12 +48,13 @@ void pal_md5_sum(const uint8_t *addr, const int len, uint8_t *mac);
  * pal_json_get_string_value(json, tokens, 2, value);
  * @return: 0~OK, -1~ERROR
  */
-int pal_json_get_string_value(char *json_str, const char **tokens, int tokens_size, char *value);
-int pal_json_get_number_value(char *json_str, const char **tokens, int tokens_size, int *value);
+int pal_json_get_string_value(char *json_str, const char **tokens,
+                              int tokens_size, char *value);
+int pal_json_get_number_value(char *json_str, const char **tokens,
+                              int tokens_size, int *value);
 
 // device info
-struct device_info
-{
+struct device_info {
     const char *product_name;
     const char *imei;
     const char *hardware_id;

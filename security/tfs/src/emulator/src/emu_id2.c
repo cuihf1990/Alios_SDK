@@ -16,10 +16,12 @@
 
 #ifdef TFS_ONLINE
 static const char *tfs_id2[] = { "Y00F340010A3BDE05",
-                                 "Y00F300016247B17C"};
+                                 "Y00F300016247B17C"
+                               };
 #else /* offline */
 static const char *tfs_id2[] = { "Y007A401104D230A4",
-                                 "Y009B0011BF09F4F3"};
+                                 "Y009B0011BF09F4F3"
+                               };
 #endif /* end offline */
 
 int tfs_emulate_id2_index = TFS_EMULATE_ID2_INDEX;

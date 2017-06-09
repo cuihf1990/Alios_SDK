@@ -14,6 +14,7 @@ DIRS=(include
       utility/hashtable
       utility/digest_algorithm
       utility/base64
+      security/tfs
       )
 
 for DIR in ${DIRS[*]}
