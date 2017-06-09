@@ -22,7 +22,8 @@
 #include "ota_transport.h"
 #include "ota_log.h"
 
-
+#define POST_OTA_STATUS_METHOD "ota/postDeviceUpgradeStatus"
+#define POST_OTA_STATUS_DATA "{\"version\":\"%s\",\"step\":\"%d\",\"stepPercent\":\"%d\"}"
 /*
  *  "md5":"6B21342306D0F619AF97006B7025D18A",
     "resourceUrl":"http://otalink.alicdn.com/ALINKTEST_LIVING_LIGHT_ALINK_TEST/v2.0.0.1/uthash-master.zip",
@@ -49,7 +50,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
 
         cJSON *uuid = cJSON_GetObjectItem(root, "uuid");
         if (!uuid) {
-            OTA_LOG_E("resourceUrl back.");
+            OTA_LOG_E("resourceUrl get error.");
             goto parse_failed;
         }
         strncpy(response_parmas->device_uuid, uuid->valuestring,
@@ -58,7 +59,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
 
         cJSON *resourceUrl = cJSON_GetObjectItem(root, "resourceUrl");
         if (!resourceUrl) {
-            OTA_LOG_E("resourceUrl back.");
+            OTA_LOG_E("resourceUrl get error.");
             goto parse_failed;
         }
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
@@ -68,7 +69,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
 
         cJSON *md5 = cJSON_GetObjectItem(root, "md5");
         if (!md5) {
-            OTA_LOG_E("md5 back.");
+            OTA_LOG_E("md5 get error.");
             goto parse_failed;
         }
 
@@ -78,7 +79,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
         OTA_LOG_E("md5 %s", response_parmas->md5);
         cJSON *size = cJSON_GetObjectItem(root, "size");
         if (!size) {
-            OTA_LOG_E("size back.");
+            OTA_LOG_E("size get error.");
             goto parse_failed;
         }
 
@@ -86,7 +87,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
 
         cJSON *version = cJSON_GetObjectItem(root, "version");
         if (!version) {
-            OTA_LOG_E("version back.");
+            OTA_LOG_E("version get error.");
             goto parse_failed;
         }
         strncpy(response_parmas->primary_version, version->valuestring,
@@ -107,6 +108,59 @@ parse_success: if (root) {
         cJSON_Delete(root);
     }
     return 0;
+}
+
+
+int8_t parse_ota_cancel_response(const char* response, int buf_len, ota_response_params * response_parmas)
+{
+    cJSON *root = cJSON_Parse(response);
+    if (!root) {
+        OTA_LOG_E("Error before: [%s]\n", cJSON_GetErrorPtr());
+        goto parse_failed;
+    } else {
+        char* info = cJSON_Print(root);
+        OTA_LOG_D("root is %s", info);
+        cJSON_free(info);
+
+        cJSON *uuid = cJSON_GetObjectItem(root, "uuid");
+        if (!uuid) {
+            OTA_LOG_E("uuid get error.");
+            goto parse_failed;
+        }
+       
+        strncpy(response_parmas->device_uuid, uuid->valuestring,
+                       sizeof response_parmas->device_uuid);
+        OTA_LOG_D(" response_parmas->device_uuid %s", response_parmas->device_uuid);
+    }
+    OTA_LOG_D("parse_json success");
+    goto parse_success;
+
+parse_failed: if (root) {
+        cJSON_Delete(root);
+    }
+    return -1;
+parse_success: if (root) {
+        cJSON_Delete(root);
+    }
+    return 0;
+}
+
+
+int8_t platform_ota_status_post(int status, int percent)
+{
+    int ret = -1;
+    char buff[256];
+    memset(&buff, 0x00, sizeof(buff));
+    if (percent < 0 || percent > 100) {
+        OTA_LOG_E("percent error !(status = %d, percent = %d)\n", status, percent);
+        percent = 0;
+    }
+    const char *ota_version = (const char *)get_ota_version();
+    snprintf(buff, sizeof(buff), POST_OTA_STATUS_DATA, ota_version, status, percent);
+    //OTA_LOG_D("%s",buff);
+    ret = alink_report_async(POST_OTA_STATUS_METHOD, buff, NULL, NULL);
+    OTA_LOG_D("alink_ota_status_post: %s, ret=%d", buff, ret);
+    return ret;
 }
 
 int8_t ota_pub_request(ota_request_params *request_parmas)
@@ -133,7 +187,7 @@ int8_t ota_cancel_upgrade(message_arrived *msgCallback)
 extern char *config_get_main_uuid(void);
 
 char* ota_get_id(void) {
-   return config_get_main_uuid();
+    return config_get_main_uuid();
 }
 
 void free_global_topic()
