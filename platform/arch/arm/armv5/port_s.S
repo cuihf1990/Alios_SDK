@@ -43,10 +43,9 @@ cpu_dis_interpt:
 
 cpu_en_interpt:
     MRS R0,CPSR
-    AND R1,R0,#0x3F
+    bic	R1, R0, #0xC0
     MSR CPSR_c,R1
     BX  LR
-
 
 cpu_first_task_start:
     LDR R0, =g_active_task
