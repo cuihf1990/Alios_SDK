@@ -10,8 +10,9 @@
  ****************************************************************************************
  */	
 	.globl entry_main
-	.globl intc_irq
-	.globl intc_fiq
+	.globl do_irq
+	.globl do_fiq
+	.globl do_swi
 	.globl boot_reset
 	.globl boot_swi
 	.globl boot_undefined
@@ -221,7 +222,10 @@ boot_undefined:
 
 		.align	5 
 boot_swi:
-    B boot_undefined
+	STMFD  sp!,{r0-r1}
+	LDR    R1, =0x400008
+	LDR    r0, [R1]
+	BX     r0
 		
 		.align	5 
 boot_pabort:
@@ -236,8 +240,26 @@ boot_reserved:
     B boot_reserved
     
 	
-    .align  5 
+		.align	5
 irq_handler:
+	STMFD  sp!,{r0-r1}
+	LDR    R1, =0x400000
+	LDR    r0, [R1]
+	BX     r0
+
+
+		.align	5
+fiq_handler:
+	STMFD  sp!,{r0-r1}
+	LDR    R1, =0x400004
+	LDR    r0, [R1]
+	BX     r0
+
+do_swi:
+	B do_swi
+
+do_irq:
+    LDMFD   SP!, {R0-R1}^
     STMFD   SP!, {R1-R3}           @We will use R1-R3 as temporary registers
 
     MOV     R1, SP
@@ -273,12 +295,12 @@ irq_handler:
     LDMFD   SP!,{R0-R12,LR,PC}^    @POP new Task''s context
 
 
-    .align  5    
-fiq_handler:
-    MRS R8, spsr
-    AND R8, R8, #0x12
-    CMP R8, #0x12
-    BNE 88f
+do_fiq:
+    LDMFD   SP!, {R0-R1}^
+    MRS     R8, spsr
+    AND     R8, R8, #0x12
+    CMP     R8, #0x12
+    BNE     88f
     STMFD   SP!, {R0-R12, LR}
 
     BL      fiq_pre_proc
