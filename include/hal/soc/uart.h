@@ -66,6 +66,7 @@ typedef struct {
     hal_uart_flow_control_t flow_control;
     uint8_t
     flags; /**< if set, UART can wake up MCU from stop mode, reference: @ref UART_WAKEUP_DISABLE and @ref UART_WAKEUP_ENABLE*/
+    uint32_t                rx_buf_size;
 } hal_uart_config_t;
 
 
@@ -128,7 +129,7 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t size,
+int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t *size,
                       uint32_t timeout);
 
 /**@brief Read the length of the data that is already recived by uart driver and stored in buffer
