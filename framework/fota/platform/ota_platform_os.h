@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OTA_TRANSPORT_H_
-#define OTA_TRANSPORT_H_
+#ifndef OTA_PLATFORM_OS_H_
+#define OTA_PLATFORM_OS_H_
 #include<stdint.h>
 
 void *ota_malloc(uint32_t size);

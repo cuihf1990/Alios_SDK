@@ -18,8 +18,8 @@
 #include <string.h>
 #include <yos_version.h>
 
-#include "ota_platform_os.h"
 #include "ota_transport.h"
+#include "ota_platform_os.h"
 #include "ota_util.h"
 #include "ota_log.h"
 
@@ -49,42 +49,65 @@ void ota_set_status(OTA_STATUS_T status)
     ota_mutex_unlock(g_ota_info_storage.mutex);
 }
 
-extern int8_t platform_ota_status_post(int status, int percent);
+//extern int8_t platform_ota_status_post(int status, int percent);
 
-void ota_status_post(int percent)
+int8_t ota_status_post(int percent)
 {
-    platform_ota_status_post(g_ota_info->status,percent);
+    return platform_ota_status_post(g_ota_info->status, percent);
 }
 
-static char g_ota_version[64];
-
-const char *get_ota_version()
+int8_t ota_result_post()
 {
-    return g_ota_version;
+    return platform_ota_result_post();
 }
 
-void set_ota_version(const char *ota_version)
+const char *ota_get_version()
+{
+    ota_mutex_lock(g_ota_info_storage.mutex);
+    if(strlen(g_ota_info->ota_version) > 0)
+        return g_ota_info->ota_version;
+    strncpy(g_ota_info->ota_version, 
+        (char *)platform_ota_get_version(), sizeof g_ota_info->ota_version);
+    ota_mutex_unlock(g_ota_info_storage.mutex);
+    return g_ota_info->ota_version;
+}
+
+void ota_set_version(const char *ota_version)
 {
     if(!ota_version)
     {
         return;
-    
     }
-    strncpy(g_ota_version, ota_version , sizeof g_ota_version); 
+
+    ota_mutex_lock(g_ota_info_storage.mutex);
+    strncpy(g_ota_info->ota_version, ota_version, sizeof g_ota_info->ota_version);
+    platform_ota_set_version((char *)ota_version);
+    ota_mutex_unlock(g_ota_info_storage.mutex);
 }
 
 const char *ota_get_product_type(void)
 {
-    return (char *)get_yos_product_model();
+    return NULL;
+}
+
+
+void ota_set_dev_version(const char *dev_version)
+{
+    platform_set_dev_version(dev_version);
+}
+
+const char *ota_get_dev_version(void)
+{
+    return (const char *)platform_get_dev_version();
 }
 
 const char *ota_get_system_version(void)
 {
-    return (char *)get_yos_os_version();
+    return (const char *)platform_get_main_version();
 }
 
 const char *ota_get_product_internal_type(void)
 {
-    return (char *)get_yos_product_internal_type();
+    return NULL;
 }
 
