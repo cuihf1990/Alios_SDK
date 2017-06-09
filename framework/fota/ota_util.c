@@ -16,33 +16,75 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <yos_version.h>
 
+#include "ota_platform_os.h"
+#include "ota_transport.h"
 #include "ota_util.h"
 #include "ota_log.h"
 
-#define PACKET_VER_SIZE 64
-
-typedef struct {
-	OTA_STATUS_T status;
-	OTA_ENUM_UPDATE_WAY update_way;
-	char packet_ver[PACKET_VER_SIZE];
-    void* cb_para;
-} ota_info_t;
-
 static ota_info_t g_ota_info_storage = {
-        .status = E_OTA_IDLE,
-        .update_way = E_OTA_SILENT,
+        .update_way = OTA_SILENT,
 };
 static ota_info_t *g_ota_info = &g_ota_info_storage;
 
-OTA_STATUS_T ota_get_status(void)
+void ota_status_init()
 {
-    return g_ota_info->status;
+    g_ota_info->mutex = ota_mutex_init();
+}
+
+OTA_STATUS_T ota_get_status(void)
+{ 
+    OTA_STATUS_T status;
+    ota_mutex_lock(g_ota_info_storage.mutex);
+    status = g_ota_info->status;
+    ota_mutex_unlock(g_ota_info_storage.mutex);
+    return status;
 }
 
 void ota_set_status(OTA_STATUS_T status)
 {
-    g_ota_info->status = status;
+    ota_mutex_lock(g_ota_info_storage.mutex);
+    g_ota_info->status = status; 
+    ota_mutex_unlock(g_ota_info_storage.mutex);
 }
 
+extern int8_t platform_ota_status_post(int status, int percent);
+
+void ota_status_post(int percent)
+{
+    platform_ota_status_post(g_ota_info->status,percent);
+}
+
+static char g_ota_version[64];
+
+const char *get_ota_version()
+{
+    return g_ota_version;
+}
+
+void set_ota_version(const char *ota_version)
+{
+    if(!ota_version)
+    {
+        return;
+    
+    }
+    strncpy(g_ota_version, ota_version , sizeof g_ota_version); 
+}
+
+const char *ota_get_product_type(void)
+{
+    return (char *)get_yos_product_model();
+}
+
+const char *ota_get_system_version(void)
+{
+    return (char *)get_yos_os_version();
+}
+
+const char *ota_get_product_internal_type(void)
+{
+    return (char *)get_yos_product_internal_type();
+}
 

@@ -31,7 +31,4 @@ $(NAME)_COMPONENTS += fota.platform
 $(NAME)_INCLUDES := \
     ./ \
     ../../include/hal \
-    ./md5 \
-    ./platform/alink/
-
-
+    ./md5 

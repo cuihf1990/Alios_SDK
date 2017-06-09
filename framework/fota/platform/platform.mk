@@ -16,6 +16,9 @@
 
 NAME := fota_platform
 
+$(NAME)_SOURCES := ota_platform_os.c
+GLOBAL_INCLUDES += ./
+
 ifneq (,$(filter protocol.alink,$(COMPONENTS)))   
 $(NAME)_COMPONENTS += fota.platform.alink 
 else

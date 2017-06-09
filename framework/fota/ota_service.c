@@ -17,36 +17,14 @@
 #include <hal/ota.h>
 #include <yos/framework.h>
 #include <yos/log.h>
-#include <yos_version.h>
 
 #include "ota_transport.h"
 #include "ota_update_manifest.h"
 #include "ota_util.h"
 #define TAG "ota"
 
-
-
-static inline const char *ota_get_product_type(void);
-static inline const char *ota_get_system_version(void);
-static inline const char *ota_get_product_internal_type(void);
-
 static write_flash_cb_t ota_write_flash_callback;
 static ota_finish_cb_t  ota_finish_callbak;
-
-static const char *ota_get_product_type(void)
-{
-    return (char *)get_yos_product_model();
-}
-
-static const char *ota_get_system_version(void)
-{
-    return (char *)get_yos_os_version();
-}
-
-static const char *ota_get_product_internal_type(void)
-{
-    return (char *)get_yos_product_internal_type();
-}
 
 static void ota_set_callbacks(write_flash_cb_t flash_cb,
                               ota_finish_cb_t finish_cb)
@@ -63,12 +41,10 @@ static int ota_write_ota_cb(int32_t writed_size, uint8_t *buf, int32_t buf_len, 
 
 static int ota_finish_cb(int32_t finished_result, const char* updated_version)
 {
-    //yos_register_event_filter(EV_OTA, CODE_OTA_ON_RESULT, finished_result);
     return hal_ota_set_boot(hal_ota_get_default_module(), (void *)updated_version);
 }
 
 ota_request_params ota_request_parmas;
-
 /*
 const char *ota_info = "{\"md5\":\"6B21342306D0F619AF97006B7025D18A\","
         "\"resourceUrl\":\"http:\/\/otalink.alicdn.com\/ALINKTEST_LIVING_LIGHT_ALINK_TEST\/v2.0.0.1\/uthash-master.zip\","
@@ -88,7 +64,6 @@ void do_update(const char *buf)
     ota_request_parmas.product_internal_type = ota_get_product_internal_type();
     ota_request_parmas.device_uuid = ota_get_id();
 
-
     ota_response_params response_parmas;
 
     ota_set_callbacks(ota_write_ota_cb, ota_finish_cb);
@@ -97,6 +72,18 @@ void do_update(const char *buf)
             ota_finish_callbak);
 }
 
+void cancel_update(const char *buf)
+{
+    LOGD(TAG, "begin cancel update %s" , (char *)buf);
+    if(!buf) {
+        LOGE(TAG, "cancel update buf is null");
+        return;
+    }
+
+    ota_response_params response_parmas;
+    parse_ota_cancel_response(buf, strlen((char *)buf), &response_parmas);
+    ota_cancel_update_packet(&response_parmas);
+}
 
 void ota_check_update(const char *buf, int len)
 {
@@ -119,6 +106,7 @@ void ota_service_event(input_event_t *event, void *priv_data) {
         ota_request_parmas.product_internal_type = ota_get_product_internal_type();
         ota_request_parmas.device_uuid = ota_get_id();
         ota_sub_upgrade(do_update);
+        ota_cancel_upgrade(cancel_update);
     }
 }
 
