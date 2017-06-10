@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <yos/log.h>
 
 unsigned int yos_log_level = YOS_LL_V_DEBUG | YOS_LL_V_INFO | YOS_LL_V_WARN | YOS_LL_V_ERROR | YOS_LL_V_FATAL;
+
+__attribute__((weak)) int csp_printf(const char *fmt, ...)
+{
+    va_list args;
+    int ret;
+
+    va_start(args, fmt);
+    ret = vprintf(fmt, args);
+    va_end(args);
+
+    fflush(stdout);
+
+    return ret;
+}
 
 void yos_set_log_level(yos_log_level_t log_level)
 {
