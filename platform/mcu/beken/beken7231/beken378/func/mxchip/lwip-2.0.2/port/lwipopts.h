@@ -232,9 +232,7 @@
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
  */
 #define LWIP_RAW                        1
-#ifdef CONFIG_IPV6
 #define LWIP_IPV6                        1
-#endif
 
 /* Enable IPv4 Auto IP	*/
 #ifdef CONFIG_AUTOIP
