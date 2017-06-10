@@ -112,6 +112,10 @@ uint32_t ota_get_time_ms(void)
     return time_ms;
 }
 
+void ota_reboot(void)
+{
+    yos_reboot();
+}
 
 void ota_thread_exit(void *thread)
 {

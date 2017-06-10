@@ -44,4 +44,5 @@ int8_t ota_thread_create(const char *name,
 
 void ota_thread_exit(void *thread);
 
+void ota_reboot(void);
 #endif 

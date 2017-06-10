@@ -30,6 +30,7 @@ static ota_info_t *g_ota_info = &g_ota_info_storage;
 
 void ota_status_init()
 {
+    g_ota_info->status = OTA_INIT;
     g_ota_info->mutex = ota_mutex_init();
 }
 
