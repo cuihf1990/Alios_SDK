@@ -109,7 +109,7 @@ enum eth_type {
   /** Internet protocol v4 */
   ETHTYPE_IP        = 0x0800U,
   /** Address resolution protocol */
-  ETHTYPE_ARP       = 0x0806U, 
+  ETHTYPE_ARP       = 0x0806U,
   /** Wake on lan */
   ETHTYPE_WOL       = 0x0842U,
   /** RARP */
@@ -124,6 +124,7 @@ enum eth_type {
   ETHTYPE_PPPOE     = 0x8864U,
   /** Jumbo Frames */
   ETHTYPE_JUMBO     = 0x8870U,
+  ETHTYPE_EAPOL     = 0x888EU,
   /** Process field network */
   ETHTYPE_PROFINET  = 0x8892U,
   /** Ethernet for control automation technology */

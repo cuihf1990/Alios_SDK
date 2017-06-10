@@ -28,7 +28,7 @@
 #include "rtos_pub.h"
 
 struct ipv4_config sta_ip_settings;
-struct ipv4_config uap_ip_settings; 
+struct ipv4_config uap_ip_settings;
 void *net_get_sta_handle(void);
 void *net_get_uap_handle(void);
 static int up_iface;
@@ -53,9 +53,9 @@ uint32_t sta_ip_start_flag = 0;
 
 struct interface {
 	struct netif netif;
-	ip_addr_t ipaddr;
-	ip_addr_t nmask;
-	ip_addr_t gw;
+	ip4_addr_t ipaddr;
+	ip4_addr_t nmask;
+	ip4_addr_t gw;
 };
 
 static struct interface g_mlan;
@@ -112,7 +112,7 @@ void net_ipv4stack_init()
 	static bool tcpip_init_done = 0;
 	if (tcpip_init_done)
 		return;
-	
+
 	net_d("Initializing TCP/IP stack\r\n");
 	tcpip_init(NULL, NULL);
 	tcpip_init_done = true;
@@ -166,8 +166,8 @@ void net_wlan_init(void)
 	if (!wlan_init_done) {
 		net_ipv4stack_init();
 		g_mlan.ipaddr.addr = INADDR_ANY;
-		ret = netifapi_netif_add(&g_mlan.netif, &g_mlan.ipaddr,
-					 &g_mlan.ipaddr, &g_mlan.ipaddr, NULL,
+		ret = netifapi_netif_add(&g_mlan.netif,
+                     &g_mlan.ipaddr, &g_mlan.ipaddr, &g_mlan.ipaddr, NULL,
 					 lwip_netif_init, tcpip_input);
 		if (ret) {
 			/*FIXME: Handle the error case cleanly */
@@ -194,10 +194,10 @@ static void wm_netif_status_callback(struct netif *n)
 {
 	if (n->flags & NETIF_FLAG_UP){
 		struct dhcp *dhcp = netif_dhcp_data(n);
-		if(dhcp != NULL){ 
+		if(dhcp != NULL){
 			if (dhcp->state == DHCP_STATE_BOUND) {
 				// dhcp success
-				os_printf("IP up: %x\r\n", n->ip_addr.addr);
+				os_printf("IP up: %x\r\n", n->ip_addr.u_addr.ip4.addr);
 			} else {
 				// dhcp fail
 			}
@@ -308,9 +308,9 @@ void sta_ip_down(void)
 	if(sta_ip_start_flag)
 	{
 		os_printf("sta_ip_down\r\n");
-		
+
 		sta_ip_start_flag = 0;
-		
+
 		netifapi_netif_set_down(&g_mlan.netif);
 		netif_set_status_callback(&g_mlan.netif, NULL);
 		netifapi_dhcp_stop(&g_mlan.netif);
@@ -341,7 +341,7 @@ void ip_address_set(int iface, int dhcp, char *ip, char *mask, char*gw, char*dns
 {
 	uint32_t tmp;
 	struct ipv4_config addr;
-	
+
 	memset(&addr, 0, sizeof(struct ipv4_config));
 	if (dhcp == 1) {
 		addr.addr_type = ADDR_TYPE_DHCP;
@@ -423,7 +423,7 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 	}
 	/* Finally this should send the following event. */
 	if (if_handle == &g_mlan) {
-		// static IP up; 
+		// static IP up;
 
 		/* XXX For DHCP, the above event will only indicate that the
 		 * DHCP address obtaining process has started. Once the DHCP
@@ -442,12 +442,12 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 
 int net_get_if_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 {
-	const ip_addr_t *tmp;
+	const ip4_addr_t *tmp;
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	addr->ipv4.address = if_handle->netif.ip_addr.addr;
-	addr->ipv4.netmask = if_handle->netif.netmask.addr;
-	addr->ipv4.gw = if_handle->netif.gw.addr;
+	addr->ipv4.address = if_handle->netif.ip_addr.u_addr.ip4.addr;
+	addr->ipv4.netmask = if_handle->netif.netmask.u_addr.ip4.addr;
+	addr->ipv4.gw = if_handle->netif.gw.u_addr.ip4.addr;
 
 	tmp = dns_getserver(0);
 	addr->ipv4.dns1 = tmp->addr;
@@ -491,7 +491,7 @@ int net_get_if_ip_addr(uint32_t *ip, void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	*ip = if_handle->netif.ip_addr.addr;
+	*ip = if_handle->netif.ip_addr.u_addr.ip4.addr;
 	return 0;
 }
 
@@ -499,16 +499,16 @@ int net_get_if_ip_mask(uint32_t *nm, void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	*nm = if_handle->netif.netmask.addr;
+	*nm = if_handle->netif.netmask.u_addr.ip4.addr;
 	return 0;
 }
 
 void net_configure_dns(struct wlan_ip_config *ip)
 {
-	ip_addr_t tmp;
+	ip4_addr_t tmp;
 
 	if (ip->ipv4.addr_type == ADDR_TYPE_STATIC) {
-		
+
 		if (ip->ipv4.dns1 == 0)
 			ip->ipv4.dns1 = ip->ipv4.gw;
 		if (ip->ipv4.dns2 == 0)

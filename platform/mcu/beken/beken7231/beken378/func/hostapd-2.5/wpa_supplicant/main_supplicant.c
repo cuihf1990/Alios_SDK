@@ -45,7 +45,7 @@ int supplicant_main_exit(void)
 		os_free(wpas_ifaces);
 		wpas_ifaces = 0;
 	}
-	
+
 	if(wpas_connect_ssid)
 	{
 		os_free(wpas_connect_ssid);
@@ -67,11 +67,11 @@ int supplicant_main_entry(char *oob_ssid)
 
 	if(0 == wpas_ifaces)
 	{
-		wpas_ifaces = os_zalloc(sizeof(struct wpa_interface));		
+		wpas_ifaces = os_zalloc(sizeof(struct wpa_interface));
 	    if (wpas_ifaces == NULL)
 	        return -1;
 	}
-	
+
     iface = wpas_ifaces;
     iface_count = 1;
     iface->ifname = bss_iface;
@@ -94,13 +94,13 @@ int supplicant_main_entry(char *oob_ssid)
         if (wpas_ifaces[i].ctrl_interface == NULL &&
                 wpas_ifaces[i].ifname == NULL)
         {
-            if (iface_count == 1 
-				&& (params.ctrl_interface 
+            if (iface_count == 1
+				&& (params.ctrl_interface
 					|| params.dbus_ctrl_interface))
             {
                 break;
             }
-			
+
             exitcode = -1;
             break;
         }
@@ -111,8 +111,8 @@ int supplicant_main_entry(char *oob_ssid)
             exitcode = -1;
             break;
         }
-		
-		
+
+
         if(oob_ssid)
         {
             int len;
@@ -145,7 +145,7 @@ int supplicant_main_entry(char *oob_ssid)
     }
     else
 	{
-		dhcp_stop_timeout_check();
+		/* dhcp_stop_timeout_check(); */
     	wpas_thread_start();
 		return 0;
 	}
