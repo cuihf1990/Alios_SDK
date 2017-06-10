@@ -5,7 +5,9 @@
 #include "mico_rtos_common.h"
 #include "common.h"
 
+#ifndef CSP_LINUXHOST
 static int32_t critical_nest;
+#endif
 
 extern void cpu_dis_interpt(void);
 extern void cpu_en_interpt(void);
