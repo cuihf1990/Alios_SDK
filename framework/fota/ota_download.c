@@ -149,12 +149,11 @@ static MD5_CTX            g_ctx;
 
 int check_md5(const char *buffer, const int32_t len)
 {
-    unsigned char digest[16] = {0};
+    uint8_t digest[16] = {0};
     char digest_str[33] = {0}; 
     int i= 0;
     OTA_LOG_D("digest=%s",buffer);
-    MD5Final((unsigned char*)digest, &g_ctx);
-    
+    MD5_Final((uint8_t*)digest, &g_ctx);    
     for(; i< 16 ;i++) {
         snprintf(digest_str + i*2, 2+1, "%02X", digest[i]);
     }
@@ -218,7 +217,7 @@ int http_download(char *url, write_flash_cb_t func) {
     i = 0;
     /*连接成功了，接收http响应,每次处理1024个字节*/
     int size = 0; 
-    MD5Init(&g_ctx);
+    MD5_Init(&g_ctx);
     int buffer_size = 1;
     memset(http_buffer, 0, sizeof http_buffer);
     while ((nbytes = read(sockfd, http_buffer, buffer_size))) {
@@ -246,7 +245,7 @@ int http_download(char *url, write_flash_cb_t func) {
         {
             size +=nbytes;
 	    //OTA_LOG_E("size nbytes %d, %d", size, nbytes);
-	    MD5Update(&g_ctx, (unsigned char*)http_buffer, nbytes);
+	    MD5_Update(&g_ctx, (const uint8_t *)http_buffer, nbytes);
 	    func(BUFFER_MAX_SIZE, (uint8_t *)http_buffer, nbytes, 0);
 	    memset(http_buffer, 0, BUFFER_MAX_SIZE);
         }

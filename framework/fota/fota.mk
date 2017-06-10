@@ -25,10 +25,9 @@ $(NAME)_SOURCES += \
     ota_service.c \
     ota_download.c
     
-$(NAME)_COMPONENTS += fota.md5
+#$(NAME)_COMPONENTS += fota.md5
 $(NAME)_COMPONENTS += fota.platform 
 
 $(NAME)_INCLUDES := \
     ./ \
     ../../include/hal \
-    ./md5 
