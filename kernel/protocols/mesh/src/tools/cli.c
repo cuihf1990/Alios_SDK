@@ -483,7 +483,7 @@ void process_meshnetid(int argc, char *argv[])
 
 void process_meshnetsize(int argc, char *argv[])
 {
-    response_append("%d\r\n", mm_get_meshnetsize());
+    response_append("%d\r\n", umesh_mm_get_meshnetsize());
 }
 
 void process_mode(int argc, char *argv[])
@@ -857,12 +857,12 @@ static void process_status(int argc, char *argv[])
     slist_for_each_entry(networks, network, network_context_t, next) {
         response_append("<<network %s %d>>\r\n",
                         mediatype2str(network->hal->module->type), network->index);
-        response_append("\tnetid\t0x%x\r\n", mm_get_meshnetid(network));
+        response_append("\tnetid\t0x%x\r\n", umesh_mm_get_meshnetid(network));
         response_append("\tmac\t" EXT_ADDR_FMT "\r\n",
                         EXT_ADDR_DATA(network->hal->mac_addr.addr));
         response_append("\tattach\t%s\r\n", attachstate2str(network->attach_state));
-        response_append("\tsid\t%04x\r\n", mm_get_local_sid());
-        response_append("\tnetsize\t%d\r\n", mm_get_meshnetsize());
+        response_append("\tsid\t%04x\r\n", umesh_mm_get_local_sid());
+        response_append("\tnetsize\t%d\r\n", umesh_mm_get_meshnetsize());
         response_append("\tipaddr");
         show_ipaddr(network);
         response_append("\trouter\t");
@@ -952,7 +952,7 @@ void process_testcmd(int argc, char *argv[])
             }
         }
     } else if (strcmp(cmd, "netsize") == 0) {
-        response_append("%d", mm_get_meshnetsize());
+        response_append("%d", umesh_mm_get_meshnetsize());
     } else if (strcmp(cmd, "netid") == 0) {
         response_append("%04x", ur_mesh_get_meshnetid());
     } else if (strcmp(cmd, "icmp_acked") == 0) {
@@ -1100,7 +1100,7 @@ void ur_cli_input(char *buf, uint16_t length)
 }
 
 int g_cli_silent;
-ur_error_t cli_init(void)
+ur_error_t mesh_cli_init(void)
 {
     slist_init(&g_cl_state.autotest_acked_list);
     g_cl_state.icmp_socket = echo_socket(&cli_handle_echo_response);

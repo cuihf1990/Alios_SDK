@@ -187,21 +187,21 @@ static ur_error_t send_address_query(network_context_t *network,
     data += sizeof(mm_header_t);
 
     addr_query = (mm_addr_query_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)addr_query, TYPE_ADDR_QUERY);
+    umesh_mm_init_tv_base((mm_tv_t *)addr_query, TYPE_ADDR_QUERY);
     addr_query->query_type = query_type;
     data += sizeof(mm_addr_query_tv_t);
 
     switch (query_type) {
         case PF_ATTACH_QUERY:
             target_id = (mm_node_id_tv_t *)data;
-            mm_init_tv_base((mm_tv_t *)target_id, TYPE_NODE_ID);
+            umesh_mm_init_tv_base((mm_tv_t *)target_id, TYPE_NODE_ID);
             target_id->sid = target->sid;
             target_id->meshnetid = target->meshnetid;
             data += sizeof(mm_node_id_tv_t);
             break;
         case TARGET_QUERY:
             target_ueid = (mm_ueid_tv_t *)data;
-            mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
+            umesh_mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
             memcpy(target_ueid->ueid, target->ueid, sizeof(target_ueid->ueid));
             data += sizeof(mm_ueid_tv_t);
             break;
@@ -241,7 +241,7 @@ ur_error_t handle_address_query(message_t *message)
     network_context_t *network;
     message_info_t *info;
 
-    if (mm_get_device_state() < DEVICE_STATE_LEADER) {
+    if (umesh_mm_get_device_state() < DEVICE_STATE_LEADER) {
         return UR_ERROR_NONE;
     }
 
@@ -250,10 +250,10 @@ ur_error_t handle_address_query(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    addr_query = (mm_addr_query_tv_t *)mm_get_tv(tlvs, tlvs_length,
+    addr_query = (mm_addr_query_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                  TYPE_ADDR_QUERY);
-    target_id = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
-    ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+    target_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
+    ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
 
     attach_node.sid = INVALID_SID;
     attach_node.meshnetid = INVALID_NETID;
@@ -335,20 +335,20 @@ static ur_error_t send_address_query_response(network_context_t *network,
     data += sizeof(mm_header_t);
 
     target_id = (mm_node_id_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)target_id, TYPE_NODE_ID);
+    umesh_mm_init_tv_base((mm_tv_t *)target_id, TYPE_NODE_ID);
     target_id->sid = target_node->sid;
     target_id->meshnetid = target_node->meshnetid;
     data += sizeof(mm_node_id_tv_t);
 
     target_ueid = (mm_ueid_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
+    umesh_mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
     memcpy(target_ueid->ueid, target_node->ueid, sizeof(target_ueid->ueid));
     data += sizeof(mm_ueid_tv_t);
 
     if (attach_node->sid != INVALID_SID &&
         attach_node->meshnetid != INVALID_NETID) {
         attach_id = (mm_node_id_tv_t *)data;
-        mm_init_tv_base((mm_tv_t *)attach_id, TYPE_ATTACH_NODE_ID);
+        umesh_mm_init_tv_base((mm_tv_t *)attach_id, TYPE_ATTACH_NODE_ID);
         attach_id->sid = attach_node->sid;
         attach_id->meshnetid = attach_node->meshnetid;
         data += sizeof(mm_node_id_tv_t);
@@ -384,10 +384,10 @@ ur_error_t handle_address_query_response(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    attach_id = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length,
+    attach_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                              TYPE_ATTACH_NODE_ID);
-    target_id = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
-    target_ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+    target_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
+    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
 
     if (target_id == NULL || target_ueid == NULL) {
         return UR_ERROR_FAIL;
@@ -466,25 +466,25 @@ ur_error_t send_address_notification(network_context_t *network,
     data += sizeof(mm_header_t);
 
     target_ueid = (mm_ueid_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
-    memcpy(target_ueid->ueid, mm_get_local_ueid(), sizeof(target_ueid->ueid));
+    umesh_mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
+    memcpy(target_ueid->ueid, umesh_mm_get_local_ueid(), sizeof(target_ueid->ueid));
     data += sizeof(mm_ueid_tv_t);
 
     target_node = (mm_node_id_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)target_node, TYPE_NODE_ID);
-    target_node->sid = mm_get_local_sid();
-    target_node->meshnetid = mm_get_meshnetid(network);
+    umesh_mm_init_tv_base((mm_tv_t *)target_node, TYPE_NODE_ID);
+    target_node->sid = umesh_mm_get_local_sid();
+    target_node->meshnetid = umesh_mm_get_meshnetid(network);
     data += sizeof(mm_node_id_tv_t);
 
     hal_type = (mm_hal_type_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)hal_type, TYPE_DEF_HAL_TYPE);
+    umesh_mm_init_tv_base((mm_tv_t *)hal_type, TYPE_DEF_HAL_TYPE);
     hal = get_default_hal_context();
     hal_type->type = hal->module->type;
     data += sizeof(mm_hal_type_tv_t);
 
     if (network->attach_node) {
         attach_node = (mm_node_id_tv_t *)data;
-        mm_init_tv_base((mm_tv_t *)attach_node, TYPE_ATTACH_NODE_ID);
+        umesh_mm_init_tv_base((mm_tv_t *)attach_node, TYPE_ATTACH_NODE_ID);
         attach_node->sid = network->attach_node->addr.addr.short_addr;
         attach_node->meshnetid = network->attach_node->addr.netid;
         data += sizeof(mm_node_id_tv_t);
@@ -519,19 +519,19 @@ ur_error_t handle_address_notification(message_t *message)
     ur_node_id_t target;
     ur_node_id_t attach;
 
-    if (mm_get_device_state() != DEVICE_STATE_LEADER &&
-        mm_get_device_state() != DEVICE_STATE_SUPER_ROUTER) {
+    if (umesh_mm_get_device_state() != DEVICE_STATE_LEADER &&
+        umesh_mm_get_device_state() != DEVICE_STATE_SUPER_ROUTER) {
         return UR_ERROR_NONE;
     }
 
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    attach_node = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length,
+    attach_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                TYPE_ATTACH_NODE_ID);
-    target_node = (mm_node_id_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
-    target_ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
-    hal_type = (mm_hal_type_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_DEF_HAL_TYPE);
+    target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
+    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+    hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_DEF_HAL_TYPE);
 
     if (target_node == NULL || target_ueid == NULL || hal_type == NULL) {
         return UR_ERROR_FAIL;
@@ -668,11 +668,11 @@ void get_target_by_ueid(ur_node_id_t *node_id, uint8_t *ueid)
     sid_node_t *node;
     network_context_t *network;
 
-    if (memcmp(ueid, mm_get_local_ueid(), 8) == 0) {
-        node_id->sid = mm_get_local_sid();
+    if (memcmp(ueid, umesh_mm_get_local_ueid(), 8) == 0) {
+        node_id->sid = umesh_mm_get_local_sid();
         network = get_default_network_context();
-        node_id->meshnetid = mm_get_meshnetid(network);
-        memcpy(node_id->ueid, mm_get_local_ueid(), sizeof(node_id->ueid));
+        node_id->meshnetid = umesh_mm_get_meshnetid(network);
+        memcpy(node_id->ueid, umesh_mm_get_local_ueid(), sizeof(node_id->ueid));
         return;
     }
 

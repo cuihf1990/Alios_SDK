@@ -19,7 +19,7 @@ void topo_test_function(uint16_t first_node, uint16_t num, uint32_t timeout)
         start_node(index + first_node);
     }
     cmd_to_agent("start");
-    check_cond_wait(num == mm_get_meshnetsize(), timeout);
+    check_cond_wait(num == umesh_mm_get_meshnetsize(), timeout);
 
     ur_ut_send_cmd_to_ddm("sendall sids");
     yos_msleep(2 * 1000);

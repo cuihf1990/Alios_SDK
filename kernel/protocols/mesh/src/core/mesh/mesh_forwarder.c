@@ -103,12 +103,12 @@ static inline bool is_local_ucast_address(message_info_t *info)
             if (network == NULL) {
                 return matched;
             }
-            if (addr->short_addr == mm_get_local_sid()) {
+            if (addr->short_addr == umesh_mm_get_local_sid()) {
                 matched = true;
             }
             break;
         case EXT_ADDR_SIZE:
-            if (memcmp(addr->addr, mm_get_local_ueid(), sizeof(addr->addr)) == 0) {
+            if (memcmp(addr->addr, umesh_mm_get_local_ueid(), sizeof(addr->addr)) == 0) {
                 matched = true;
             }
             break;
@@ -322,7 +322,7 @@ static uint8_t insert_mesh_header(network_context_t *network,
                           (hops << MESH_HOPS_LEFT_OFFSET);
 
     netid = (mesh_netid_t *)(hal->frame.data + length);
-    netid->netid = mm_get_meshnetid(network);
+    netid->netid = umesh_mm_get_meshnetid(network);
     length += sizeof(mesh_netid_t);
 
     switch (info->src.addr.len) {
@@ -523,26 +523,26 @@ static neighbor_t *get_next_node(network_context_t *network,
     bool       same_subnet = false;
     bool       same_net = true;
 
-    local_sid = mm_get_local_sid();
+    local_sid = umesh_mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
         next = get_neighbor_by_mac_addr(&(info->dest.addr));
         return next;
     }
 
     if (local_sid == BCAST_SID) {
-        next = mm_get_attach_candidate(network);
+        next = umesh_mm_get_attach_candidate(network);
         return next;
     }
 
     if (is_partial_function_sid(local_sid)) {
-        next = mm_get_attach_node(network);
+        next = umesh_mm_get_attach_node(network);
         return next;
     }
 
-    if (mm_get_meshnetid(network) == info->dest.netid) {
+    if (umesh_mm_get_meshnetid(network) == info->dest.netid) {
         same_subnet = true;
     } else if (is_same_mainnet(info->dest.netid,
-                               mm_get_meshnetid(network)) == false) {
+                               umesh_mm_get_meshnetid(network)) == false) {
         same_net = false;
     }
 
@@ -554,14 +554,14 @@ static neighbor_t *get_next_node(network_context_t *network,
             }
             next = get_neighbor_by_sid(network->hal, next_hop, info->dest.netid);
         } else if (is_subnet(network->meshnetid)) {
-            next = mm_get_attach_node(network);
+            next = umesh_mm_get_attach_node(network);
         } else {
             next_hop = ur_router_get_next_hop(network, get_leader_sid(info->dest.netid));
             next = get_neighbor_by_sid(network->hal, next_hop,
                                        get_main_netid(info->dest.netid));
         }
     } else {
-        next = mm_get_attach_candidate(network);
+        next = umesh_mm_get_attach_candidate(network);
     }
 
     return next;
@@ -593,9 +593,9 @@ static void set_src_info(message_info_t *info)
         }
         info->network = network;
     }
-    info->src.netid = mm_get_meshnetid(info->network);
+    info->src.netid = umesh_mm_get_meshnetid(info->network);
     info->src.addr.len = SHORT_ADDR_SIZE;
-    info->src.addr.short_addr = mm_get_local_sid();
+    info->src.addr.short_addr = umesh_mm_get_local_sid();
     info->flags |= INSERT_LOWPAN_FLAG;
 }
 
@@ -652,7 +652,7 @@ ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
 
 static void set_dest_encrypt_flag(message_info_t *info)
 {
-    if (mm_get_seclevel() < SEC_LEVEL_1) {
+    if (umesh_mm_get_seclevel() < SEC_LEVEL_1) {
         return;
     }
 
@@ -725,9 +725,9 @@ ur_error_t mf_send_message(message_t *message)
     info = message->info;
     if (is_local_ucast_address(info)) {
         network = get_default_network_context();
-        info->src.netid = mm_get_meshnetid(network);
+        info->src.netid = umesh_mm_get_meshnetid(network);
         info->src.addr.len = SHORT_ADDR_SIZE;
-        info->src.addr.short_addr = mm_get_local_sid();
+        info->src.addr.short_addr = umesh_mm_get_local_sid();
         yos_schedule_call(handle_datagram, message);
         return UR_ERROR_NONE;
     }
@@ -830,15 +830,15 @@ static bool proxy_check(message_t *message)
     network = get_default_network_context();
 
     if (is_bcast_sid(&info->src) ||
-        is_same_mainnet(info->src.netid, mm_get_meshnetid(network)) == false ||
-        (mm_get_seclevel() > SEC_LEVEL_0 && (info->flags & ENCRYPT_ENABLE_FLAG) == 0)) {
+        is_same_mainnet(info->src.netid, umesh_mm_get_meshnetid(network)) == false ||
+        (umesh_mm_get_seclevel() > SEC_LEVEL_0 && (info->flags & ENCRYPT_ENABLE_FLAG) == 0)) {
         if (info->type == MESH_FRAME_TYPE_DATA) {
             return false;
         }
 
         network = get_network_context_by_meshnetid(info->dest.netid);
         if (info->dest.netid != BCAST_NETID &&
-            (network == NULL || info->dest.addr.short_addr != mm_get_local_sid())) {
+            (network == NULL || info->dest.addr.short_addr != umesh_mm_get_local_sid())) {
             return false;
         }
 
@@ -853,7 +853,7 @@ static bool proxy_check(message_t *message)
             info->dest2.addr.len = 0;
         } else {
             info->dest2.addr.short_addr = LEADER_SID;
-            info->dest2.netid = get_main_netid(mm_get_meshnetid(network));
+            info->dest2.netid = get_main_netid(umesh_mm_get_meshnetid(network));
         }
     }
 
@@ -885,7 +885,7 @@ static void message_handler(void *args)
         return;
     }
 
-    if (memcmp(&info->dest.addr, mm_get_mac_address(),
+    if (memcmp(&info->dest.addr, umesh_mm_get_mac_address(),
                sizeof(info->dest.addr)) == 0) {
         recv = true;
     } else if (info->dest.addr.len == SHORT_ADDR_SIZE) {
@@ -893,7 +893,7 @@ static void message_handler(void *args)
             is_same_mainnet(info->dest.netid, mm_get_main_netid(network))) {
             network = get_network_context_by_meshnetid(info->dest.netid);
             if (info->dest.addr.short_addr == BCAST_SID ||
-                (network && info->dest.addr.short_addr == mm_get_local_sid())) {
+                (network && info->dest.addr.short_addr == umesh_mm_get_local_sid())) {
                 recv = true;
             } else {
                 forward = true;
@@ -998,7 +998,7 @@ static void handle_received_frame(void *context, frame_t *frame,
     hal_context_t *hal = (hal_context_t *)context;
 
     hal->link_stats.in_frames++;
-    if (mm_get_device_state() == DEVICE_STATE_DISABLED) {
+    if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
         hal->link_stats.in_drops++;
         return;
     }
@@ -1181,7 +1181,7 @@ static void handle_datagram(void *args)
         }
         ur_mesh_input((umessage_t *)message);
     } else {
-        mm_handle_frame_received(message);
+        umesh_mm_handle_frame_received(message);
         message_free(message);
     }
 }

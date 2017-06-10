@@ -18,7 +18,7 @@ void test_uradar_urmesh_case(void)
     YUNIT_ASSERT(INVALID_SID == ur_mesh_get_sid());
     YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_start());
     yos_msleep(5000); /* wait till node become leader */
-    if (mm_get_device_state() == DEVICE_STATE_LEADER) {
+    if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
         ur_mesh_set_meshnetid(0x1000);
         YUNIT_ASSERT(0x1000 == ur_mesh_get_meshnetid());
     }

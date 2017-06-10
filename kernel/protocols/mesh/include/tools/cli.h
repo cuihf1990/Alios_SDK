@@ -29,6 +29,6 @@ typedef struct command_s {
 } cli_command_t;
 
 extern int g_cli_silent;
-ur_error_t cli_init(void);
+ur_error_t mesh_cli_init(void);
 
 #endif  /* UR_CLI_H */

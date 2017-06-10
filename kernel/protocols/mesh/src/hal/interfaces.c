@@ -164,7 +164,7 @@ void interface_start(void)
         bool is_wifi = hal->module->type == MEDIA_TYPE_WIFI;
 
         if (is_wifi) {
-            if (mm_get_mode() & MODE_SUPER) {
+            if (umesh_mm_get_mode() & MODE_SUPER) {
                 network = new_network_context(hal, index++, VECTOR_ROUTER);
                 set_network_configs(network);
 

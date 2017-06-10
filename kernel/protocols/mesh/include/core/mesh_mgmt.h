@@ -150,41 +150,36 @@ typedef struct mm_cb_s {
     interface_down_t interface_down;
 } mm_cb_t;
 
-ur_error_t mm_init(void);
-ur_error_t mm_deinit(void);
-ur_error_t mm_start(mm_cb_t *cb);
-ur_error_t mm_stop(void);
+ur_error_t umesh_mm_init(void);
+ur_error_t umesh_mm_deinit(void);
+ur_error_t umesh_mm_start(mm_cb_t *cb);
+ur_error_t umesh_mm_stop(void);
 
-mm_device_state_t mm_get_device_state(void);
+uint16_t            umesh_mm_get_local_sid(void);
+ur_error_t          umesh_mm_set_local_sid(uint16_t sid);
+neighbor_t          *umesh_mm_get_attach_node(network_context_t *network);
+neighbor_t          *umesh_mm_get_attach_candidate(network_context_t *network);
+uint8_t             *umesh_mm_get_local_ueid(void);
+mm_device_state_t   umesh_mm_get_device_state(void);
+attach_state_t      umesh_mm_get_attach_state(void);
+void                umesh_mm_set_meshnetid(network_context_t *network,
+                                           uint16_t meshnetid);
+uint16_t            umesh_mm_get_meshnetid(network_context_t *network);
+uint16_t            umesh_mm_get_meshnetsize(void);
+const mac_address_t *umesh_mm_get_mac_address(void);
+node_mode_t         umesh_mm_get_mode(void);
+ur_error_t          umesh_mm_set_mode(node_mode_t mode);
+uint16_t            umesh_mm_get_path_cost(void);
+uint16_t            umesh_mm_get_channel(network_context_t *network);
+void                umesh_mm_set_channel(network_context_t *network,
+                                         uint16_t channel);
+ur_error_t          umesh_mm_set_seclevel(int8_t level);
+int8_t              umesh_mm_get_seclevel(void);
 
-ur_error_t            mm_set_mesh_prefix(ur_ip6_prefix_t *prefix);
-const ur_ip6_prefix_t *mm_get_mesh_prefix(void);
-
-uint16_t            mm_get_local_sid(void);
-ur_error_t          mm_set_local_sid(uint16_t sid);
-neighbor_t          *mm_get_attach_node(network_context_t *network);
-neighbor_t          *mm_get_attach_candidate(network_context_t *network);
-uint8_t             *mm_get_local_ueid(void);
-mm_device_state_t   mm_get_device_state(void);
-attach_state_t      mm_get_attach_state(void);
-void                mm_set_meshnetid(network_context_t *network,
-                                     uint16_t meshnetid);
-uint16_t            mm_get_meshnetid(network_context_t *network);
-uint16_t            mm_get_meshnetsize(void);
-const mac_address_t *mm_get_mac_address(void);
-node_mode_t         mm_get_mode(void);
-uint16_t            mm_get_path_cost(void);
-ur_error_t          mm_set_mode(node_mode_t mode);
-uint16_t            mm_get_channel(network_context_t *network);
-void                mm_set_channel(network_context_t *network,
-                                   uint16_t channel);
-ur_error_t          mm_set_seclevel(int8_t level);
-int8_t              mm_get_seclevel(void);
-
-void       mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length);
-void       mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
-mm_tv_t    *mm_get_tv(const uint8_t *data, const uint16_t length, uint8_t type);
-ur_error_t mm_handle_frame_received(message_t *message);
+void       umesh_mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length);
+void       umesh_mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
+mm_tv_t    *umesh_mm_get_tv(const uint8_t *data, const uint16_t length, uint8_t type);
+ur_error_t umesh_mm_handle_frame_received(message_t *message);
 
 void become_leader(void);
 void become_detached(void);
@@ -203,12 +198,12 @@ void get_leader_addr(ur_addr_t *addr);
 
 static inline uint16_t mm_get_main_netid(network_context_t *network)
 {
-    return get_main_netid(mm_get_meshnetid(network));
+    return get_main_netid(umesh_mm_get_meshnetid(network));
 }
 
 static inline uint16_t mm_get_sub_netid(network_context_t *network)
 {
-    return get_sub_netid(mm_get_meshnetid(network));
+    return get_sub_netid(umesh_mm_get_meshnetid(network));
 }
 
 static inline bool is_bcast_sid(ur_addr_t *addr)

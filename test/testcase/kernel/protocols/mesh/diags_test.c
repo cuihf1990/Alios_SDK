@@ -34,8 +34,8 @@ void test_diags_case(void)
     uint16_t length;
 
     network = get_default_network_context();
-    dest.netid = mm_get_meshnetid(network);
-    dest.addr.short_addr = mm_get_local_sid();
+    dest.netid = umesh_mm_get_meshnetid(network);
+    dest.addr.short_addr = umesh_mm_get_local_sid();
     send_trace_route_request(network, &dest);
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
@@ -49,7 +49,7 @@ void test_diags_case(void)
     data += sizeof(mm_header_t);
 
     timestamp = (mm_timestamp_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
+    umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = 10;
     data += sizeof(mm_timestamp_tv_t);
 
@@ -72,7 +72,7 @@ void test_diags_case(void)
     data += sizeof(mm_header_t);
 
     timestamp = (mm_timestamp_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
+    umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = ur_get_now();
     data += sizeof(mm_timestamp_tv_t);
 

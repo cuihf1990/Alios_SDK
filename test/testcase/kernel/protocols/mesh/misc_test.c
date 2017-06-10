@@ -26,7 +26,7 @@ void test_uradar_misc_case(void)
     extern ur_error_t nd_set_stable_meshnetid(uint16_t meshnetid);
     extern uint16_t nd_get_stable_meshnetid(void);
     extern uint8_t nd_get_version(network_context_t *network);
-    if (mm_get_device_state() == DEVICE_STATE_LEADER) {
+    if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
         YUNIT_ASSERT(UR_ERROR_NONE == nd_set_stable_meshnetid(0x1000));
         YUNIT_ASSERT(0x1000 == nd_get_stable_meshnetid());
         YUNIT_ASSERT(0 != nd_get_version(NULL));

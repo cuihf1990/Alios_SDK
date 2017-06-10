@@ -112,7 +112,7 @@ static void subnet_is_wifi_case(void)
 
     ur_mesh_set_mode(MODE_SUPER);
     cmd_to_agent("start");
-    check_cond_wait((DEVICE_STATE_SUPER_ROUTER == mm_get_device_state()), 15);
+    check_cond_wait((DEVICE_STATE_SUPER_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == VECTOR_ROUTER);
 
     start_node_ext(2, MODE_SUPER, -1, 1);

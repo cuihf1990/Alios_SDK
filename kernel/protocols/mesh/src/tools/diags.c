@@ -33,7 +33,7 @@ static ur_error_t handle_trace_route_request(message_t *message)
     message_info_t *info;
     network_context_t *network;
 
-    if (mm_get_device_state() < DEVICE_STATE_DETACHED) {
+    if (umesh_mm_get_device_state() < DEVICE_STATE_DETACHED) {
         return UR_ERROR_NONE;
     }
 
@@ -45,7 +45,7 @@ static ur_error_t handle_trace_route_request(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t) -
                   info->payload_offset;
 
-    timestamp = (mm_timestamp_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TIMESTAMP);
+    timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TIMESTAMP);
     network = get_network_context_by_meshnetid(info->src.netid);
     if (network == NULL) {
         network = get_default_network_context();
@@ -63,7 +63,7 @@ static ur_error_t handle_trace_route_response(message_t *message)
     uint32_t time;
     message_info_t *info;
 
-    if (mm_get_device_state() < DEVICE_STATE_DETACHED) {
+    if (umesh_mm_get_device_state() < DEVICE_STATE_DETACHED) {
         return UR_ERROR_NONE;
     }
 
@@ -75,7 +75,7 @@ static ur_error_t handle_trace_route_response(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t) -
                   info->payload_offset;
 
-    timestamp = (mm_timestamp_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TIMESTAMP);
+    timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TIMESTAMP);
     time = ur_get_now() - timestamp->timestamp;
     info = message->info;
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "%04x:%04x, time %d ms\r\n",
@@ -105,7 +105,7 @@ ur_error_t send_trace_route_request(network_context_t *network,
     data += sizeof(mm_header_t);
 
     timestamp = (mm_timestamp_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
+    umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = ur_get_now();
     data += sizeof(mm_timestamp_tv_t);
 
@@ -144,7 +144,7 @@ static ur_error_t send_trace_route_response(network_context_t *network,
     data += sizeof(mm_header_t);
 
     timestamp = (mm_timestamp_tv_t *)data;
-    mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
+    umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = src_timestamp;
     data += sizeof(mm_timestamp_tv_t);
 

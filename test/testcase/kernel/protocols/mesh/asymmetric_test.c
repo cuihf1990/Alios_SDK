@@ -26,7 +26,7 @@ static void two_nodes_case(void)
 
     ur_mesh_set_mode(MODE_RX_ON);
     cmd_to_agent("start");
-    check_cond_wait((DEVICE_STATE_LEADER == mm_get_device_state()), 15);
+    check_cond_wait((DEVICE_STATE_LEADER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
 
     start_node_ext(12, MODE_RX_ON, -1, -1);
@@ -71,7 +71,7 @@ static void three_nodes_case(void)
 
     ur_mesh_set_mode(MODE_RX_ON);
     cmd_to_agent("start");
-    check_cond_wait((DEVICE_STATE_ROUTER == mm_get_device_state()), 15);
+    check_cond_wait((DEVICE_STATE_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
 
     myaddr = ur_mesh_get_ucast_addr();
