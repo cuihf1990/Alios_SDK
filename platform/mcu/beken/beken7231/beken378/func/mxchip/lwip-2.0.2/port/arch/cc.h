@@ -1,6 +1,6 @@
 /*
  * cc.h       - Architecture environment, some compiler specific, some
- *             environment specific (probably should move env stuff 
+ *             environment specific (probably should move env stuff
  *             to sys_arch.h.)
  *
  * Typedefs for the types used by lwip -
@@ -30,7 +30,7 @@
  * the standard *nix error codes, or it should #define LWIP_PROVIDE_ERRNO
  * to make lwip/arch.h define the codes which are used throughout.
  */
- 
+
 #ifndef __CC_H__
 #define __CC_H__
 
@@ -56,7 +56,9 @@ typedef signed     long    s32_t;     /* Signed   32 bit quantity        */
 typedef int			       intptr_t;
 typedef unsigned int       uintptr_t;
 
-
+#define LWIP_MAILBOX_QUEUE  1
+#define LWIP_TIMEVAL_PRIVATE 0
+#define LWIP_NO_INTTYPES_H  1
 
 #if defined(__GNUC__)
  #define PACK_STRUCT_BEGIN
@@ -72,6 +74,18 @@ typedef unsigned int       uintptr_t;
  #define PACK_STRUCT_FIELD(x) x
 #endif
 
+
+#if LWIP_NO_INTTYPES_H
+#define U8_F  "2d"
+#define X8_F  "2x"
+#define U16_F "4d"
+#define S16_F "4d"
+#define X16_F "4x"
+#define U32_F "8ld"
+#define S32_F "8ld"
+#define X32_F "8lx"
+#define SZT_F U32_F
+#endif
 
 /*
  *  Platform specific diagnostic output -
@@ -89,21 +103,15 @@ typedef unsigned int       uintptr_t;
 
 #ifndef LWIP_PLATFORM_DIAG
 #define LWIP_PLATFORM_DIAG(x) do {fatal_prf x ;} while(0)
-#endif 
- 
-#define U16_F "4d"
-#define S16_F "4d"
-#define X16_F "4x"
-#define U32_F "8ld"
-#define S32_F "8ld"
-#define X32_F "8lx"
+#endif
+
 
 
 
 /*
  * unknow defination
  */
-// cup byte order 
+// cup byte order
 #ifndef BYTE_ORDER
 #define BYTE_ORDER          LITTLE_ENDIAN
 #endif

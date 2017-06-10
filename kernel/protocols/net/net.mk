@@ -19,3 +19,7 @@ endif
 ifneq (,$(filter armhflinux,$(COMPONENTS)))
 $(NAME)_SOURCES += port/sys_arch.c
 endif
+
+ifneq (,$(filter mk108,$(COMPONENTS)))
+$(NAME)_SOURCES += port/sys_arch.c
+endif

@@ -169,11 +169,12 @@
 
 /**
  * MEMP_NUM_TCPIP_MSG_INPKT: the number of struct tcpip_msg, which are used
- * for incoming packets. 
+ * for incoming packets.
  * (only needed if you use tcpip.c)
  */
 
 #define MEMP_NUM_TCPIP_MSG_INPKT        16
+#define TCPIP_MBOX_SIZE                 16
 
 /**
  * MEMP_NUM_SYS_TIMEOUT: the number of simulateously active timeouts.
@@ -301,7 +302,7 @@
 #define DNS_TABLE_SIZE                 2  // number of table entries, default 4
 //#define DNS_MAX_NAME_LENGTH            64  // max. name length, default 256
 #define DNS_MAX_SERVERS                2  // number of DNS servers, default 2
-#define DNS_DOES_NAME_CHECK            1  // compare received name with given,def 0 
+#define DNS_DOES_NAME_CHECK            1  // compare received name with given,def 0
 #define DNS_MSG_SIZE                   512
 #define MDNS_MSG_SIZE                   512
 
@@ -341,7 +342,7 @@
  */
 #define TCP_LISTEN_BACKLOG		1
 
-#define LWIP_PROVIDE_ERRNO		1 
+#define LWIP_PROVIDE_ERRNO		1
 #include <errno.h>
 #define ERRNO				1
 
