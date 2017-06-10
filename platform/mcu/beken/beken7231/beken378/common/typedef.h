@@ -2,6 +2,7 @@
 #define _TYPEDEF_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef unsigned char  		  UINT8;          /* Unsigned  8 bit quantity        */
 typedef signed   char  		  INT8;           /* Signed    8 bit quantity        */
@@ -13,10 +14,9 @@ typedef unsigned long long    UINT64;			/* Unsigned 32 bit quantity        */
 typedef signed   long long    INT64;			/* Signed   32 bit quantity        */
 typedef float         		  FP32;			/* Single precision floating point */
 typedef double         		  FP64;			/* Double precision floating point */
-typedef unsigned int          size_t;
 typedef unsigned char         BOOLEAN;
 typedef unsigned char         BOOL;
-typedef unsigned char         bool;
+typedef unsigned int          size_t;
 
 #define LPVOID              void *
 #define DWORD               UINT32
