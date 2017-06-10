@@ -100,7 +100,7 @@ void ota_download_start(void * buf)
 OTA_END:
     ota_status_post(100);    
     OTA_LOG_I("task update over");
-    free_global_topic();
+    ota_reboot();
 }
 
 int8_t ota_post_version_msg()

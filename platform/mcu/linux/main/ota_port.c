@@ -49,6 +49,7 @@ static int linuxhost_ota_set_boot(hal_ota_module_t *m, void *something)
    if(ota_fd != NULL) { 
       fflush(ota_fd);
       fclose(ota_fd);
+      ota_fd = NULL;
    }
    char cmd1[256] = {0};
    sprintf(cmd1, "mv %s ./%s", OTA_IMAGE_TMP_FILE, OTA_IMAGE_FILE);
