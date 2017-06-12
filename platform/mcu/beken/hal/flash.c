@@ -113,7 +113,6 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
 
     partition_info = hal_flash_get_info( in_partition );
 
-#if 1
     start_addr = (partition_info->partition_start_addr + off_set) & (~0xFFF);
     end_addr = (partition_info->partition_start_addr + off_set + size - 1) & (~0xFFF);
 
@@ -125,12 +124,6 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
     }
     
     return 0;
-#else
-    start_addr = partition_info->partition_start_addr + off_set;
-    end_addr = partition_info->partition_start_addr + off_set + size - 1;
-
-    return bk_flash_erase(start_addr, end_addr);
-#endif
 }
                         
 int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set, const void *in_buf , uint32_t in_buf_len)
@@ -144,7 +137,6 @@ int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set, const v
 
     start_addr = partition_info->partition_start_addr + *off_set;
 
-#if 1
     GLOBAL_INT_DISABLE();
     flash_write(in_buf, in_buf_len, start_addr);
     GLOBAL_INT_RESTORE();
@@ -152,9 +144,6 @@ int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set, const v
     *off_set += in_buf_len;
 
     return 0;
-#else
-    return bk_flash_write( start_addr, in_buf, in_buf_len);
-#endif
 }
 
 int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set, void *out_buf, uint32_t out_buf_len)
@@ -168,7 +157,6 @@ int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set, void *ou
 
     start_addr = partition_info->partition_start_addr + *off_set;
 
-#if 1
     GLOBAL_INT_DISABLE();
     flash_read(out_buf, out_buf_len, start_addr);
     GLOBAL_INT_RESTORE();
@@ -176,9 +164,6 @@ int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set, void *ou
     *off_set += out_buf_len;
 
     return 0;
-#else
-    return bk_flash_read( start_addr, out_buf, out_buf_len);
-#endif
 }
 
 int32_t hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set, uint32_t size)
