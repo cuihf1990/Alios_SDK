@@ -78,6 +78,7 @@ void http_gethost_info(char* src, char* web, char* file, int* port) {
 }
 
 static int _ota_socket_check_conn(int sock) {
+#ifndef WITH_LWIP
     struct pollfd fd = { .fd = sock, .events = POLLOUT };
     int ret = 0;
     socklen_t len = 0;
@@ -93,6 +94,7 @@ static int _ota_socket_check_conn(int sock) {
         ret != 0) {
         return -1;
     }
+#endif
     return 0;
 }
 
