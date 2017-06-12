@@ -578,7 +578,7 @@ bootloader=None
 application=None
 driver=None
 bootloader_baudrate=921600
-application_baudrate=115200
+application_baudrate=921600
 
 i = 2
 update = 0
@@ -636,6 +636,8 @@ port.write("help\r\n")
 if assert_response(["MICO bootloader"], 1) == False:
     port.baudrate = application_baudrate
     port.flushInput()
+    port.write("\r\n")
+    time.sleep(0.1)
     port.write("reboot\r\n")
     if assert_response(["reboot"] , 1) == False:
         sys.stderr.write("error: target does not response, please make sure your port and baudrate settings are correct\n")
