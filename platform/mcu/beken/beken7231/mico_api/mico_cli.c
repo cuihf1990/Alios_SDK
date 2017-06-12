@@ -943,7 +943,7 @@ static const struct cli_command user_clis[] =
 
 const hal_uart_config_t config = 
 {
-    .baud_rate = 115200,
+    .baud_rate = 921600,
     .data_width = DATA_WIDTH_8BIT,
     .parity = NO_PARITY,
     .stop_bits = STOP_BITS_1,
