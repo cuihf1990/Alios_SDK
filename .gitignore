@@ -19,3 +19,4 @@ build/OpenOCD
 si
 .cproject
 .project
+.vscode
