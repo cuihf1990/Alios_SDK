@@ -7,8 +7,8 @@
 #include "dns.h"
 #include "dhcp-priv.h"
 
-#define os_mem_alloc malloc
-#define os_mem_free  free  
+#define os_mem_alloc os_malloc
+#define os_mem_free  os_free  
 #define SEND_RESPONSE(w,x,y,z)	send_response(w,x,y,z)
 
 #define DEFAULT_DHCP_ADDRESS_TIMEOUT	(60U*60U*1U) /* 1 hour */
@@ -677,8 +677,8 @@ static int send_gratuitous_arp(uint32_t ip)
 
 	memset(pkt.targ_hw_addr, 0xff, ETH_HW_ADDR_LEN);
 	memset(pkt.rcpt_hw_addr, 0xff, ETH_HW_ADDR_LEN);
-	wifi_get_mac_address(pkt.sndr_hw_addr);
-	wifi_get_mac_address(pkt.src_hw_addr);
+	wifi_get_mac_address((char *)pkt.sndr_hw_addr);
+	wifi_get_mac_address((char *)pkt.src_hw_addr);
 	sock = lwip_socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock < 0) {
 		dhcp_e("Could not open socket to send Gratuitous ARP");

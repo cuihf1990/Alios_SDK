@@ -116,16 +116,14 @@
 /* Value of TCP_SND_BUF_COUNT denotes the number of buffers and is set by
  * CONFIG option available in the SDK
  */
-#define TCP_SND_BUF (TCP_SND_BUF_COUNT * TCP_MSS)
-
 /* Buffer size needed for TCP: Max. number of TCP sockets * Size of pbuf *
  * Max. number of TCP sender buffers per socket
  *
  * Listening sockets for TCP servers do not require the same amount buffer
  * space. Hence do not consider these sockets for memory computation
  */
-#define TCP_MEM_SIZE (MAX_SOCKETS_TCP * \
-		PBUF_POOL_BUFSIZE * (TCP_SND_BUF/TCP_MSS))
+#define TCP_MEM_SIZE     (MAX_SOCKETS_TCP * \
+							PBUF_POOL_BUFSIZE * (TCP_SND_BUF/TCP_MSS))
 
 /* Buffer size needed for UDP: Max. number of UDP sockets * Size of pbuf
  */
@@ -414,7 +412,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define TCP_SND_QUEUELEN        (20)
 
 /* ARP before DHCP causes multi-second delay  - turn it off */
-#define DHCP_DOES_ARP_CHECK            (1)
+#define DHCP_DOES_ARP_CHECK            (0)
 
 #define TCP_MAX_ACCEPT_CONN 5
 #define MEMP_NUM_TCP_SEG               (TCP_SND_QUEUELEN*2)

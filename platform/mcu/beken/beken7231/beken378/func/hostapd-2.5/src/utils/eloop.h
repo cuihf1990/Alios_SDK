@@ -24,6 +24,16 @@
 
 #define assert ASSERT
 
+//#define ELOOP_DEBUG
+
+#ifdef ELOOP_DEBUG
+#define ELOOP_PRT       os_printf
+#define ELOOP_WPRT      warning_prf
+#else
+#define ELOOP_PRT       os_null_printf
+#define ELOOP_WPRT      warning_prf
+#endif
+
 
 #define eloop_trace_sock_add_ref(table) do { } while (0)
 #define eloop_trace_sock_remove_ref(table) do { } while (0)
@@ -84,6 +94,11 @@ struct eloop_sock {
 	eloop_sock_handler handler;
 };
 
+struct eloop_ind{
+	struct dl_list free_hdr;
+	mico_timer_t bk_tmr;	
+};
+
 struct eloop_timeout {
 	struct dl_list list;
 	struct os_reltime time;
@@ -107,9 +122,9 @@ struct eloop_sock_table {
 	int changed;
 };
 
-struct eloop_ind{
-	struct dl_list list;
-	mico_timer_t bk_tmr;	
+struct ind_entity{
+	uint32_t flag;
+	struct dl_list pending_free_ind_tmr;
 };
 
 struct eloop_data {
@@ -117,8 +132,7 @@ struct eloop_data {
 
 	int count; /* sum of all table counts */
 	
-	struct dl_list timeout;
-	struct dl_list free_indication;
+	struct dl_list timeout;	
 
 	struct eloop_sock_table readers;
 	struct eloop_sock_table writers;

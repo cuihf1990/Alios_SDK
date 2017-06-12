@@ -790,7 +790,7 @@ static struct hostapd_data * get_hapd_bssid(struct hostapd_iface *iface,
 	    bssid[3] == 0xff && bssid[4] == 0xff && bssid[5] == 0xff)
 		return HAPD_BROADCAST;
 	
-	wifi_get_mac_address(iface->bss[0]->own_addr);
+	wifi_get_mac_address((char *)iface->bss[0]->own_addr);
 	for (i = 0; i < iface->num_bss; i++) {
 		if (os_memcmp(bssid, iface->bss[i]->own_addr, ETH_ALEN) == 0)
 			return iface->bss[i];

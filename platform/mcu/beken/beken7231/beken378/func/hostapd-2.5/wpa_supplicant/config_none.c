@@ -61,6 +61,9 @@ static char *str_format(char *buf, char *str, int len)
 }
 #endif
 
+/* yhb changed, set ssid directly */
+#if 0
+
 int wpa_config_set_none(struct wpa_ssid *ssid)
 {
 	int ret = 0;
@@ -83,15 +86,15 @@ int wpa_config_set_wep(struct wpa_ssid *ssid)
 	int ret = 0;
 	char buf[20];
 	
-	if(g_sta_param_ptr->key.length == 5 ||
-		g_sta_param_ptr->key.length == 13){
+	if(g_sta_param_ptr->key_len == 5 ||
+		g_sta_param_ptr->key_len == 13){
 		if(wpa_config_set(ssid, "wep_key0", 
-			str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), 0) < 0){
+			str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), 0) < 0){
 			ret++;
 		}
-	}else if(g_sta_param_ptr->key.length == 10 ||
-				g_sta_param_ptr->key.length == 26){
-		if(wpa_config_set(ssid, "wep_key0", (char *)g_sta_param_ptr->key.array, 0) < 0){
+	}else if(g_sta_param_ptr->key_len == 10 ||
+				g_sta_param_ptr->key_len == 26){
+		if(wpa_config_set(ssid, "wep_key0", (char *)g_sta_param_ptr->key, 0) < 0){
 			ret++;
 		}
 	}else{
@@ -127,7 +130,7 @@ int wpa_config_set_tkip(struct wpa_ssid *ssid)
 	char buf[20];
 	
 	if(wpa_config_set(ssid, "psk", 
-		str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), 0) < 0){
+		str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), 0) < 0){
 		ret++;
 	}
 	if(wpa_config_set(ssid, "key_mgmt", "WPA-PSK", 0) < 0){
@@ -161,7 +164,7 @@ int wpa_config_set_ccmp(struct wpa_ssid *ssid)
 	char buf[20];
 
 	if(wpa_config_set(ssid, "psk", 
-		str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), 0) < 0){
+		str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), 0) < 0){
 		ret++;
 	}
 	if(wpa_config_set(ssid, "key_mgmt", "WPA-PSK", 0) < 0){
@@ -195,7 +198,7 @@ int wpa_config_set_wpa2mixed(struct wpa_ssid *ssid)
 	char buf[20];
 
 	if(wpa_config_set(ssid, "psk", 
-		str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), 0) < 0){
+		str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), 0) < 0){
 		ret++;
 	}
 	if(wpa_config_set(ssid, "key_mgmt", "WPA-PSK", 0) < 0){
@@ -280,7 +283,185 @@ static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 
 	return ssid;
 }
+#else
 
+
+static int set_wpa_psk(struct wpa_ssid *ssid)
+{
+	int errors = 0;
+	
+	if (g_sta_param_ptr->key_len < 8 || g_sta_param_ptr->key_len > 64) {
+		wpa_printf(MSG_ERROR, "Invalid passphrase "
+		   "length %lu (expected: 8..63) '%s'.",
+		   (unsigned long) g_sta_param_ptr->key_len, (char *)g_sta_param_ptr->key);
+		errors++;
+	} else if (g_sta_param_ptr->key_len == 64) {
+		wpa_printf(MSG_ERROR, "use PSK");
+		if (hexstr2bin(g_sta_param_ptr->key, ssid->psk, 32) ||
+		    g_sta_param_ptr->key[64] != '\0') {
+			wpa_printf(MSG_ERROR, "Invalid PSK '%s'.",
+				    g_sta_param_ptr->key);
+			errors++;
+		}
+		ssid->passphrase = NULL;
+		ssid->psk_set = 1;
+	} else {
+		ssid->passphrase = dup_binstr(g_sta_param_ptr->key, g_sta_param_ptr->key_len);
+		ssid->psk_set = 0;
+	}
+	ssid->key_mgmt |= WPA_KEY_MGMT_PSK;
+	ssid->mem_only_psk = 0;
+	
+	return errors;
+}
+
+static int set_wep_key(struct wpa_ssid*ssid)
+{
+	int errors;
+	
+	ssid->wep_tx_keyidx = 0;
+	ssid->auth_alg = WPA_AUTH_ALG_OPEN|WPA_AUTH_ALG_SHARED;
+	if(g_sta_param_ptr->key_len == 5 ||
+		g_sta_param_ptr->key_len == 13){
+		os_memcpy(ssid->wep_key[0], (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len);
+		ssid->wep_key_len[0] = g_sta_param_ptr->key_len;
+	}else if(g_sta_param_ptr->key_len == 10 ||
+				g_sta_param_ptr->key_len == 26){
+		ssid->wep_key_len[0] = g_sta_param_ptr->key_len / 2;
+		hexstr2bin(g_sta_param_ptr->key, ssid->wep_key[0],ssid->wep_key_len[0] ); 
+	}else{
+		errors++;
+	}
+	ssid->mem_only_psk = 0;
+	return errors;
+}
+
+int wpa_config_set_none(struct wpa_ssid *ssid)
+{
+	ssid->key_mgmt = WPA_KEY_MGMT_NONE;
+	ssid->mem_only_psk = 0;
+	g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_OPEN;
+
+	return 0;
+}
+
+int wpa_config_set_wep(struct wpa_ssid *ssid)
+{
+	int ret;
+	
+	ret = set_wep_key(ssid);
+
+	if(!ret) {
+		g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_WEP;
+	}
+	
+	return 0;
+}
+
+int wpa_config_set_tkip(struct wpa_ssid *ssid)
+{
+	int ret = 0;
+	
+	ret = set_wpa_psk(ssid);
+	ssid->proto = WPA_PROTO_WPA;
+	ssid->pairwise_cipher = WPA_CIPHER_TKIP;
+	ssid->group_cipher = WPA_CIPHER_TKIP;
+	if(!ret){
+		g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_TKIP;
+		if (ssid->passphrase && (ssid->psk_set == 0)) {
+			wpa_config_update_psk(ssid);
+		}
+	}
+
+	return ret;
+}
+
+int wpa_config_set_ccmp(struct wpa_ssid *ssid)
+{
+	int ret = 0;
+	
+	ret = set_wpa_psk(ssid);
+	ssid->proto = WPA_PROTO_RSN;
+	ssid->pairwise_cipher = WPA_CIPHER_CCMP;
+	ssid->group_cipher = WPA_CIPHER_CCMP;
+	if(!ret){
+		g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_CCMP;
+		if (ssid->passphrase && (ssid->psk_set == 0)) {
+			wpa_config_update_psk(ssid);
+		}
+	}
+
+	return ret;
+}
+
+int wpa_config_set_wpa2mixed(struct wpa_ssid *ssid)
+{
+	int ret = 0;
+	
+	ret = set_wpa_psk(ssid);
+	ssid->proto = WPA_PROTO_WPA|WPA_PROTO_RSN;
+	ssid->pairwise_cipher = WPA_CIPHER_TKIP|WPA_CIPHER_CCMP;
+	ssid->group_cipher = WPA_CIPHER_TKIP;
+
+	if(!ret){
+		g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_MIXED;
+		if (ssid->passphrase && (ssid->psk_set == 0)) {
+			wpa_config_update_psk(ssid);
+		}
+	}
+	
+	return ret;
+}
+
+static struct wpa_ssid * wpa_config_read_network(int *line, int id)
+{
+	struct wpa_ssid *ssid;
+	int errors = 0;
+	char buf[20];
+
+	ssid = os_zalloc(sizeof(*ssid));
+	if (ssid == NULL)
+		return NULL;
+	
+	dl_list_init(&ssid->psk_list);
+	ssid->id = id;
+
+	wpa_config_set_network_defaults(ssid);
+
+	ssid->ssid = dup_binstr(g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length);
+	ssid->ssid_len = g_sta_param_ptr->ssid.length;
+	ssid->key_mgmt = 0;
+
+	if ((g_sta_param_ptr->fast_connect_set) && (g_sta_param_ptr->cipher_suite != CONFIG_CIPHER_AUTO)){
+		os_memcpy(ssid->bssid, g_sta_param_ptr->fast_connect.bssid, 6);
+		bk_printf("bssid %02x-%02x-%02x-%02x-%02x-%02x\r\n",
+			ssid->bssid[0],ssid->bssid[1],ssid->bssid[2],
+			ssid->bssid[3],ssid->bssid[4],ssid->bssid[5]);
+		ssid->bssid_set = 1;
+		if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_WEP){
+			errors += wpa_config_set_wep(ssid);			
+		}else if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_TKIP){
+			errors += wpa_config_set_tkip(ssid);
+		}else if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_CCMP){
+			errors += wpa_config_set_ccmp(ssid);
+		}else if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_MIXED){
+			errors += wpa_config_set_wpa2mixed(ssid);
+		} 
+	} else {
+		ssid->mem_only_psk = 1;
+	}
+	
+	errors += wpa_config_validate_network(ssid, *line);
+
+	if(errors){
+		wpa_config_free_ssid(ssid);
+		ssid = NULL;
+	}
+
+	return ssid;
+}
+
+#endif
 #if 0
 static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 {
@@ -317,13 +498,13 @@ static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 		if(wpa_config_set(ssid, "key_mgmt", "NONE", *line) < 0){
 			errors++;
 		}
-		if(g_sta_param_ptr->key.length == 26){
-			if(wpa_config_set(ssid, "wep_key0", (char *)g_sta_param_ptr->key.array, *line) < 0){
+		if(g_sta_param_ptr->key_len == 26){
+			if(wpa_config_set(ssid, "wep_key0", (char *)g_sta_param_ptr->key, *line) < 0){
 				errors++;
 			}
 		}else{
 			if(wpa_config_set(ssid, "wep_key0", 
-				str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), *line) < 0){
+				str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), *line) < 0){
 				errors++;
 			}
 		}
@@ -338,7 +519,7 @@ static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 			errors++;
 		}
 		if(wpa_config_set(ssid, "psk", 
-			str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), *line) < 0){
+			str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), *line) < 0){
 			errors++;
 		}
 		if(wpa_config_set(ssid, "proto", "WPA RSN", *line) < 0){
@@ -355,13 +536,13 @@ static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 			errors++;
 		}
 
-		if(g_sta_param_ptr->key.length == 13){
+		if(g_sta_param_ptr->key_len == 13){
 			if(wpa_config_set(ssid, "wep_key0", 
-				str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), *line) < 0){
+				str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), *line) < 0){
 				errors++;
 			}
 		}else{
-			if(wpa_config_set(ssid, "wep_key0", (char *)g_sta_param_ptr->key.array, *line) < 0){
+			if(wpa_config_set(ssid, "wep_key0", (char *)g_sta_param_ptr->key, *line) < 0){
 				errors++;
 			}
 		}
@@ -373,7 +554,7 @@ static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 		}
 		
 		if(wpa_config_set(ssid, "psk", 
-			str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), *line) < 0){
+			str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), *line) < 0){
 			errors++;
 		}
 		if(wpa_config_set(ssid, "proto", "WPA RSN", *line) < 0){
@@ -394,7 +575,7 @@ static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 		}
 	}else{
 		if(wpa_config_set(ssid, "psk", 
-			str_format(buf, (char *)g_sta_param_ptr->key.array, g_sta_param_ptr->key.length), *line) < 0){
+			str_format(buf, (char *)g_sta_param_ptr->key, g_sta_param_ptr->key_len), *line) < 0){
 			errors++;
 		}
 		if(wpa_config_set(ssid, "key_mgmt", "WPA-PSK", *line) < 0){
@@ -403,7 +584,7 @@ static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 	}
 	
 	if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_WEP){
-		if(wpa_config_set(ssid, "wep_key0", (char *)g_sta_param_ptr->key.array, *line) < 0){
+		if(wpa_config_set(ssid, "wep_key0", (char *)g_sta_param_ptr->key, *line) < 0){
 			errors++;
 		}
 		if(wpa_config_set(ssid, "wep_tx_keyidx", "0", *line) < 0){

@@ -226,10 +226,10 @@ struct hostapd_config * hostapd_config_read(const char *fname)
 		bss->ssid.wep.key[0] = (u8 *)os_malloc(bss->ssid.wep.len[0]);
 		if(bss->ssid.wep.key[0]){
 			int wkey;
-			const char *wep_key = (char *)g_ap_param_ptr->key.array;
-			if(g_ap_param_ptr->key.length == 5){
-				os_memcpy(bss->ssid.wep.key[0], wep_key, g_ap_param_ptr->key.length);
-			}else if(g_ap_param_ptr->key.length == 10){
+			const char *wep_key = (char *)g_ap_param_ptr->key;
+			if(g_ap_param_ptr->key_len == 5){
+				os_memcpy(bss->ssid.wep.key[0], wep_key, g_ap_param_ptr->key_len);
+			}else if(g_ap_param_ptr->key_len == 10){
 				for(i = 0; i < bss->ssid.wep.len[0]; i ++){
 					wkey = hex2byte(&wep_key[2 * i]);
 					ASSERT(-1 != wkey);
@@ -248,7 +248,7 @@ struct hostapd_config * hostapd_config_read(const char *fname)
 		bss->wpa_pairwise = WPA_CIPHER_CCMP;
 	}
 	if(g_ap_param_ptr->cipher_suite > CONFIG_CIPHER_WEP){
-		const char *wpa_key = (char *)g_ap_param_ptr->key.array;
+		const char *wpa_key = (char *)g_ap_param_ptr->key;
 		os_free(bss->ssid.wpa_passphrase);
 		bss->ssid.wpa_passphrase = os_strdup(wpa_key);
 		if (bss->ssid.wpa_passphrase) {
@@ -372,7 +372,7 @@ static int hostapd_driver_init(struct hostapd_iface *iface)
 			params.bridge[i] = bss->conf->bridge;
 	}
 	
-	wifi_get_mac_address(hapd->own_addr);
+	wifi_get_mac_address((char *)hapd->own_addr);
 	params.own_addr = hapd->own_addr;
 
 	hapd->drv_priv = hapd->driver->hapd_init(hapd, &params);

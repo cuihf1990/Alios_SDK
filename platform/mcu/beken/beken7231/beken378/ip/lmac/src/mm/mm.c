@@ -694,7 +694,10 @@ void mm_tbtt_evt(int dummy)
 
     // Sanity check - Primary and secondary TBTT events should not be active
     // at the same time
-    ASSERT_ERR(evt != MM_TBTT_EVT_MASK);
+    if(evt == MM_TBTT_EVT_MASK)
+    {
+    	os_printf("tt1\r\n");
+    }
 
     // Clear the event
     ke_evt_clear(evt);
@@ -732,7 +735,10 @@ void mm_tbtt_evt(int dummy)
 
     // Sanity check - Primary and secondary TBTT events should not be active
     // at the same time
-    ASSERT_ERR(evt != MM_TBTT_EVT_MASK);
+    if(evt == MM_TBTT_EVT_MASK)
+    {
+    	os_printf("tt2\r\n");
+    }
 
     // Clear the event
     ke_evt_clear(evt);
@@ -747,7 +753,10 @@ void mm_tbtt_evt(int dummy)
 
     // Sanity check - Primary and secondary TBTT events should not be active
     // at the same time
-    ASSERT_ERR(evt != MM_TBTT_EVT_MASK);
+    if(evt == MM_TBTT_EVT_MASK)
+    {
+    	os_printf("tt3\r\n");
+    }
 
     // Clear the event
     ke_evt_clear(evt);

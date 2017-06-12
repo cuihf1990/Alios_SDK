@@ -124,13 +124,13 @@ int rxl_data_get_len_from_rx_rector(struct rx_hd *hd)
 		case FMOD_HT_GF:			
 		case FMOD_VHT:
 			ht_flag = 1;
-			os_printf("ht:%d\r\n", (rxv_1b->bits.format_mod));
+			RXL_CNTRL_PRT("ht:%d\r\n", (rxv_1b->bits.format_mod));
 			break;
 			
 		case FMOD_NON_HT:
 		case FMOD_NON_HT_DUP_OFDM:
 		default:
-			os_printf("legacy:%d\r\n", (rxv_1b->bits.format_mod));
+			RXL_CNTRL_PRT("legacy:%d\r\n", (rxv_1b->bits.format_mod));
 			break;
 	}
 	
@@ -149,7 +149,7 @@ int rxl_data_get_len_from_rx_rector(struct rx_hd *hd)
 	if(rxv_1b->bits.is_agg)
 	{
 		data_count -= 4;
-		os_printf("is_agg\r\n");
+		RXL_CNTRL_PRT("is_agg\r\n");
 	}
 
 	return data_count;
@@ -278,7 +278,7 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 	    dma_hdrdesc->pattern = DMA_HD_RXPATTERN;
 	    dma_desc->next = CPU2HW(&dma_hdrdesc->dma_desc);
 	    dma_desc = &dma_hdrdesc->dma_desc;
-	    dma_desc->dest = rx_header;
+	    dma_desc->dest = (uint32_t)rx_header;
 	    dma_desc->ctrl = 0;
 	}
 	
@@ -286,9 +286,19 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 	{	 
 		if(du_ptr)
 		{
-			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
+			uint32_t len_from_vector;
 			
-			rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);		
+			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
+			len_from_vector = rxl_data_get_len_from_rx_rector(&dma_hdrdesc->hd);
+			if(len_from_vector != du_len)
+			{
+				RXL_CNTRL_PRT("len_from_vector:%d:%d\r\n", len_from_vector, du_len);
+				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), len_from_vector);
+			}
+			else
+			{
+				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
+			}		
 			
 			os_free(du_ptr);
 		}

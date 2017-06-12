@@ -95,7 +95,8 @@ typedef struct ap_param
     struct mac_ssid ssid;
     uint8_t chann;
     uint8_t cipher_suite;
-    struct mac_sec_key key;
+    uint8_t key[65];
+	uint8_t key_len;
 } ap_param_t;
 
 typedef struct sta_param
@@ -103,7 +104,8 @@ typedef struct sta_param
     struct mac_addr own_mac;
     struct mac_ssid ssid;
     uint8_t cipher_suite;
-    struct mac_sec_key key;
+    uint8_t key[65];
+	uint8_t key_len;
 	uint8_t fast_connect_set;
 	fast_connect_param_t fast_connect;
 } sta_param_t;

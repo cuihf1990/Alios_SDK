@@ -30,7 +30,6 @@ int eloop_init(void)
 	os_memset(&eloop, 0, sizeof(eloop));
 	
 	dl_list_init(&eloop.timeout);
-	eloop_ind_init();
 
 	return 0;
 }
@@ -176,70 +175,6 @@ void eloop_unregister_sock(int sock, eloop_event_type type)
 	eloop_sock_table_remove_sock(table, sock);
 }
 
-#if 1
-void eloop_ind_init(void)
-{
-	dl_list_init(&eloop.free_indication);
-}
-
-void eloop_release_ind(struct eloop_ind *ind)
-{
-    OSStatus ret = kNoErr;
-	
-	dl_list_del(&ind->list);
-	
-    ret = mico_rtos_deinit_timer(&(ind->bk_tmr));
-	ASSERT(kNoErr == ret);
-
-	os_free(ind);
-}
-
-void eloop_free_indications(void)
-{
-	struct eloop_ind *timeout;	
-	struct eloop_ind *pre;
-
-	dl_list_for_each_safe(timeout, pre, &eloop.free_indication, struct eloop_ind, list)
-	{
-		eloop_release_ind(timeout);
-	}
-}
-
-void eloop_ind_handler( void* Larg, void* Rarg)
-{
-	struct eloop_ind *ind;
-
-	ind = (struct eloop_ind *)Larg;
-
-	eloop_free_indications();
-	dl_list_add_tail(&eloop.free_indication, &ind->list);
-	wpa_supplicant_poll(0);
-	hostapd_poll(0);
-}
-
-int eloop_timeout_indication_start(uint32_t clk_time)
-{
-    OSStatus ret = kNoErr;
-	uint32_t ind_time = clk_time + 1;
-	struct eloop_ind *ind;
-
-	ind = os_zalloc(sizeof(struct eloop_ind));
-	ASSERT(ind);
-
-	ret = mico_rtos_init_oneshot_timer(&(ind->bk_tmr), 
-									clk_time, 
-									eloop_ind_handler, 
-									(void *)ind, 
-									(void *)0);
-	ASSERT(kNoErr == ret);
-	
-	ret = mico_rtos_start_timer(&(ind->bk_tmr));
-	ASSERT(kNoErr == ret);
-	
-	return 0;
-}
-#endif
-
 int eloop_register_timeout(unsigned int secs, 
 			unsigned int usecs,
 			eloop_timeout_handler handler,
@@ -250,7 +185,6 @@ int eloop_register_timeout(unsigned int secs,
 	uint32_t clk_time;
     OSStatus err = kNoErr;
 	struct eloop_timeout *timeout, *tmp;
-	GLOBAL_INT_DECLARATION();
 
 	ASSERT(handler);
 	
@@ -289,26 +223,13 @@ int eloop_register_timeout(unsigned int secs,
 	timeout->user_data = user_data;
 	timeout->handler = handler;
 
-	/* ORDER: Maintain timeouts in order of increasing time */
-	GLOBAL_INT_DISABLE();
 	dl_list_for_each(tmp, &eloop.timeout, struct eloop_timeout, list) {
 		if (os_reltime_before(&timeout->time, &tmp->time)) {
 			dl_list_add(tmp->list.prev, &timeout->list);
-			goto exit_reg_to;
+			return 0;
 		}
 	}
 	dl_list_add_tail(&eloop.timeout, &timeout->list);
-	
-exit_reg_to:	
-	GLOBAL_INT_RESTORE();
-	
-	clk_time = (secs * 1000 + usecs / 1000 ) / FCLK_DURATION_MS;
-	if(0 == clk_time)
-	{	
-		clk_time = 2;
-	}
-	
-	eloop_timeout_indication_start(clk_time);
 	
 	return 0;
 }
@@ -464,6 +385,7 @@ static void eloop_handle_alarm(int sig)
 void eloop_handle_signal(int sig)
 {
 	int i;
+	GLOBAL_INT_DECLARATION();
 
 #ifndef CONFIG_NATIVE_WINDOWS
 	if ((sig == SIGINT || sig == SIGTERM) && !eloop.pending_terminate) {
@@ -475,6 +397,7 @@ void eloop_handle_signal(int sig)
 	}
 #endif /* CONFIG_NATIVE_WINDOWS */
 
+	GLOBAL_INT_DISABLE();
 	eloop.signaled++;
 	for (i = 0; i < eloop.signal_count; i++) {
 		if (eloop.signals[i].sig == sig) {
@@ -482,32 +405,44 @@ void eloop_handle_signal(int sig)
 			break;
 		}
 	}
-	wpa_supplicant_poll(0);
-	hostapd_poll(0);
+
+	GLOBAL_INT_RESTORE();
 }
 
 int eloop_signal_is_registered(int sig)
 {
 	int i;
-	int hit_flag = 0;
+	int hit_flag = 0;	
+	GLOBAL_INT_DECLARATION();
 
+	GLOBAL_INT_DISABLE();
 	for (i = 0; i < eloop.signal_count; i++) {
 		if (sig == eloop.signals[i].sig) {
 			hit_flag = 1;
 			break;
 		}
 	}
+	GLOBAL_INT_RESTORE();
 
 	return hit_flag;
 }
 
 static void eloop_process_pending_signals(void)
 {
-	int i;
+	int i,sig;
+	int sig_count;
+	void *user_data;
+	eloop_signal_handler handler;
+	GLOBAL_INT_DECLARATION();
 
+	GLOBAL_INT_DISABLE();
 	if (eloop.signaled == 0)
+	{
+		GLOBAL_INT_RESTORE();
 		return;
+	}
 	eloop.signaled = 0;
+	sig_count = eloop.signal_count;
 
 	if (eloop.pending_terminate) {
 #ifndef CONFIG_NATIVE_WINDOWS
@@ -515,13 +450,23 @@ static void eloop_process_pending_signals(void)
 #endif /* CONFIG_NATIVE_WINDOWS */
 		eloop.pending_terminate = 0;
 	}
-
-	for (i = 0; i < eloop.signal_count; i++) {
+	GLOBAL_INT_RESTORE();
+	
+	for (i = 0; i < sig_count; i++) {	
+		GLOBAL_INT_DISABLE();
 		if (eloop.signals[i].signaled) {
 			eloop.signals[i].signaled = 0;
-			eloop.signals[i].handler(eloop.signals[i].sig,
-						 eloop.signals[i].user_data);
-		}
+			
+			handler = eloop.signals[i].handler;
+			sig = eloop.signals[i].sig;
+			user_data = eloop.signals[i].user_data;
+			ASSERT(handler);
+			GLOBAL_INT_RESTORE();
+			
+			handler(sig,user_data);
+		}else{
+			GLOBAL_INT_RESTORE();
+		}		
 	}
 }
 
@@ -529,16 +474,19 @@ int eloop_register_signal(int sig, eloop_signal_handler handler,
 			  void *user_data)
 {
 	struct eloop_signal *tmp;
+	GLOBAL_INT_DECLARATION();
 
 	if(eloop_signal_is_registered(sig))
 	{
 		return 0;
 	}
-	
+
+	GLOBAL_INT_DISABLE();
 	tmp = os_realloc_array(eloop.signals, eloop.signal_count + 1,
 			       sizeof(struct eloop_signal));
 	if (tmp == NULL)
 	{
+		GLOBAL_INT_RESTORE();
 		return -1;
 	}
 
@@ -549,9 +497,10 @@ int eloop_register_signal(int sig, eloop_signal_handler handler,
 	
 	eloop.signal_count++;
 	eloop.signals = tmp;
-
 	
 	signal_bk(sig, eloop_handle_signal);
+
+	GLOBAL_INT_RESTORE();
 
 	return 0;
 }
@@ -639,11 +588,15 @@ void eloop_timeout_run(void)
 void eloop_run(void)
 {
 	int type;
-
-	while(!eloop.terminate && ((eloop.readers.count > 0)
-					&& (ws_mgmt_peek_rxed_next_payload_size()
-					|| ws_data_peek_rxed_next_payload_size())))
+	struct os_reltime tv, now;
+	int timeout_ms = MICO_WAIT_FOREVER;
+	
+	while(!eloop.terminate &&
+	       (!dl_list_empty(&eloop.timeout) || eloop.readers.count > 0 ||
+		eloop.writers.count > 0 || eloop.exceptions.count > 0))
 	{
+		struct eloop_timeout *timeout;
+		
 		if (eloop.pending_terminate) {
 			/*
 			 * This may happen in some corner cases where a signal
@@ -657,35 +610,49 @@ void eloop_run(void)
 				break;
 		}
 
-		eloop.readers.changed = 0;
-		eloop.writers.changed = 0;
-		eloop.exceptions.changed = 0;
-		
-		if (eloop.readers.changed ||
-		    eloop.writers.changed ||
-		    eloop.exceptions.changed) {
-			 /*
-			  * Sockets may have been closed and reopened with the
-			  * same FD in the signal or timeout handlers, so we
-			  * must skip the previous results and check again
-			  * whether any of the currently registered sockets have
-			  * events.
-			  */
-			continue;
+		timeout = dl_list_first(&eloop.timeout, struct eloop_timeout,
+					list);
+		if (timeout) {
+			os_get_reltime(&now);
+			if (os_reltime_before(&now, &timeout->time))
+				os_reltime_sub(&timeout->time, &now, &tv);
+			else
+				tv.sec = tv.usec = 0;
+			timeout_ms = tv.sec * 1000 + tv.usec / 1000;
 		}
+
+		wpa_sem_wait(timeout_ms);
+
+		eloop_process_pending_signals();
+
+		/* check if some registered timeouts have occurred */
+		timeout = dl_list_first(&eloop.timeout, struct eloop_timeout,
+					list);
+		if (timeout) {
+			os_get_reltime(&now);
+			if (!os_reltime_before(&now, &timeout->time)) {
+				void *eloop_data = timeout->eloop_data;
+				void *user_data = timeout->user_data;
+				eloop_timeout_handler handler =
+					timeout->handler;
+				eloop_remove_timeout(timeout);
+				handler(eloop_data, user_data);
+			}
+
+		}
+
 		if(ws_mgmt_peek_rxed_next_payload_size()){
-			type = HOSTAPD_MGMT;
-		}else{
-			type = HOSTAPD_DATA;
+			eloop_reader_dispatch(HOSTAPD_MGMT);
 		}
-		eloop_reader_dispatch(type); 
+
+		if (ws_data_peek_rxed_next_payload_size()){
+			eloop_reader_dispatch(HOSTAPD_DATA);
+		}
+		
 	}
 
 	eloop.terminate = 0;
-	
-	eloop_process_pending_signals();
 
-	eloop_timeout_run();
 	
 	return;
 }

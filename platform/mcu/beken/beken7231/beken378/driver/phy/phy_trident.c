@@ -1146,7 +1146,6 @@ void phy_pre_agc_init(void)
     clk_ctrl_reg = mdm_memclkctrl0_get();
     clk_ctrl_reg |= MDM_AGCMEMCLKCTRL_BIT;
     mdm_memclkctrl0_set(clk_ctrl_reg);
-
 }
 
 /**

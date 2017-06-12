@@ -264,7 +264,7 @@ int wpa_get_scan_rst(struct prism2_hostapd_param *param, int len)
 
         os_memcpy(r->bssid, scan_rst_ptr->bssid, ETH_ALEN);
         r->level = scan_rst_ptr->level;
-        r->freq = scan_rst_ptr->freq;
+        r->freq = rw_ieee80211_get_centre_frequency(scan_rst_ptr->channel);
         r->beacon_int = scan_rst_ptr->beacon_int;
         r->caps = scan_rst_ptr->caps;
         r->tsf = WPA_GET_BE64(scan_rst_ptr->tsf);

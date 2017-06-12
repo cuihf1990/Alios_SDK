@@ -249,8 +249,8 @@ int cfg_get_ap_params(void)
         return -1;
     }
     ddev_read(flash_handle, (char *)&head, sizeof(head_param_t), addr);
-    g_ap_param_ptr->key.length = head.len;
-    ddev_read(flash_handle, (char *)g_ap_param_ptr->key.array, head.len, addr + sizeof(head_param_t));
+    g_ap_param_ptr->key_len = head.len;
+    ddev_read(flash_handle, (char *)g_ap_param_ptr->key, head.len, addr + sizeof(head_param_t));
 
     return 0;
 }
@@ -310,8 +310,8 @@ int cfg_get_sta_params(void)
         return -1;
     }
     ddev_read(flash_handle, (char *)&head, sizeof(head_param_t), addr);
-    g_sta_param_ptr->key.length = head.len;
-    ddev_read(flash_handle, (char *)g_sta_param_ptr->key.array, head.len, addr + sizeof(head_param_t));
+    g_sta_param_ptr->key_len = head.len;
+    ddev_read(flash_handle, (char *)g_sta_param_ptr->key, head.len, addr + sizeof(head_param_t));
 
     ddev_close(flash_handle);
 

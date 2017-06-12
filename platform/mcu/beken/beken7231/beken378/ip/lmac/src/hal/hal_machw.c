@@ -39,7 +39,7 @@
 #include "include.h"
 #include "arm_arch.h"
 #include "intc_pub.h"
-
+#include "mem_pub.h"
 #include "uart_pub.h"
 
 /// FSMs and FIFOs that have to be reset by the error recovery mechanism
@@ -104,6 +104,10 @@ const uint8_t rxv2macrate[] = {
     5                           /* 15 */
 };
 #endif
+
+uint32_t    pKey[4] = {0xabc47fd0, 0x57498892, 
+						0x11320490, 0x10815562};
+static uint16_t g_entry_id = 0;
 
 /*
  * FUNCTION DEFINITIONS
@@ -370,9 +374,6 @@ uint8_t hal_machw_search_addr(struct mac_addr *addr)
     return (sta_idx);
 }
 
-#define MONITOR_TEMP_SOLUTION     1
-
-#if MONITOR_TEMP_SOLUTION
 void hal_program_cipher_key
 (
     uint8_t   useDefaultKey,   // Use Default Key
@@ -402,40 +403,48 @@ void hal_program_cipher_key
    
 }
  
-uint32_t    pKey[4] = {0xabc47fd0, 0x57498892, 0x11320490, 0x10815562};// key
-
 uint16_t hal_get_secret_key_entry_id(void)
-{
-	#define KEY_ENTRY_MIN_ID         24
-	#define KEY_ENTRY_MAX_ID         63
-	
-	static uint16_t id = 0;
+{	
 	uint16_t entry_id;
 
-	entry_id = KEY_ENTRY_MIN_ID + id;
+	entry_id = KEY_ENTRY_MIN_ID + g_entry_id;
 	if(KEY_ENTRY_MAX_ID == entry_id)
 	{
-		id = 0;
+		g_entry_id = 0;
 	}
 	else
 	{
-		id += 1;
+		g_entry_id += 1;
 	}	
 
-	os_printf("entry_id:%d\r\n", entry_id);
 	return entry_id;
 }
 
 void hal_update_secret_key(uint64_t macAddress,
 	uint8_t cipherType)
-{
+{	
+	uint16_t key_index;
+	
+	key_index = hal_get_secret_key_entry_id();
+
 	hal_program_cipher_key(1,	          // useDefaultKey
+					pKey,
+					0, 		               // macAddress
+					1,					   // cipherLen
+					0,					   // sppRAM
+					cipherType,		 	   // vlanIDRAM
+					key_index,             // keyIndexRAM
+					cipherType,		       // cipherType
+					1,					   // newWrite
+					0); 				   // newRead
+
+	hal_program_cipher_key(1,	           // useDefaultKey
 					pKey,
 					macAddress, 		   // macAddress
 					1,					   // cipherLen
 					0,					   // sppRAM
 					cipherType,		 	   // vlanIDRAM
-					hal_get_secret_key_entry_id(),// keyIndexRAM
+					key_index,             // keyIndexRAM
 					cipherType,		       // cipherType
 					1,					   // newWrite
 					0); 				   // newRead
@@ -499,12 +508,11 @@ void hal_init_cipher_keys(void)
 	hal_init_vlan_cipher(0,2,2); // tkip
 	hal_init_vlan_cipher(0,3,3); // ccmp
 }
-#endif //MONITOR_TEMP_SOLUTION
 
 void hal_machw_enter_monitor_mode(void)
 {	
     os_printf("hal_machw_enter_monitor_mode\r\n");
-	
+
     nxmac_enable_imp_pri_tbtt_setf(0); // 0xC0008074
     nxmac_enable_imp_sec_tbtt_setf(0);
 
@@ -515,13 +523,8 @@ void hal_machw_enter_monitor_mode(void)
 						    | NXMAC_DISABLE_BA_RESP_BIT);
 
     // Enable reception of all frames (i.e. monitor mode)
-    mm_rx_filter_umac_set(0xFFFFFFFF & ~(NXMAC_EXC_UNENCRYPTED_BIT
-    									| NXMAC_ACCEPT_BAR_BIT 
-                                        | NXMAC_ACCEPT_BA_BIT 
-                                        | NXMAC_ACCEPT_CTS_BIT
-                                        | NXMAC_ACCEPT_RTS_BIT
-                                        | NXMAC_ACCEPT_ACK_BIT
-                                        | NXMAC_ACCEPT_PS_POLL_BIT));
+    mm_rx_filter_umac_set(0xFFFFFFFF & ~(NXMAC_EXC_UNENCRYPTED_BIT));
+                                        //| NXMAC_ACCEPT_ERROR_FRAMES_BIT
     
 	// set default mode of operation
     nxmac_abgn_mode_setf(MODE_802_11G);// MODE_802_11N_5
@@ -536,7 +539,7 @@ void hal_machw_enter_monitor_mode(void)
 void hal_machw_exit_monitor_mode(void)
 {
     os_printf("hal_machw_exit_monitor_mode\r\n");
-	
+		
 	nxmac_beacon_int_setf(2000);
     nxmac_enable_imp_pri_tbtt_setf(1);
     nxmac_enable_imp_sec_tbtt_setf(1);
@@ -772,6 +775,8 @@ void hal_machw_gen_handler(void)
     {
         fatal_prf("rx_payload_dma_dead\r\n");
     }
+	HAL_FATAL_ERROR_RECOVER(!(genirq_pending & NXMAC_RX_HEADER_DMA_DEAD_BIT));
+	HAL_FATAL_ERROR_RECOVER(!(genirq_pending & NXMAC_RX_FIFO_OVER_FLOW_BIT));
 }
 
 /// @}  // end of group HAL_MACHW

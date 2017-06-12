@@ -301,7 +301,7 @@ uint32_t MGC_MhdrcStartRx(MGC_Port *pPort, MGC_EndpointResource *pEnd,
 #ifdef MUSB_DMA
     MUSB_DmaController *pDmaController;
     MUSB_DmaChannel *pDmaChannel;
-    uint8_t bDmaOk;
+    uint8_t bDmaOk = 0;
 #endif
     uint16_t wCsr, wRxCount, wIntrRxE;
     MGC_BsrItem qItem;

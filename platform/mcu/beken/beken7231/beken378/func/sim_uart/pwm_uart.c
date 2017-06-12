@@ -191,7 +191,7 @@ void uart_io_sim_pwm_timer_init_for_tx(void)
 	param.duty_cycle      = 0;
 	param.end_value       = UART_IO_SIM_CLK_DIVID_SET_TX;
 	
-	ret = pwm_ctrl( CMD_PWM_INIT_PARAM, &param);
+	ret = sddev_control(PWM_DEV_NAME, CMD_PWM_INIT_PARAM, &param);
 	ASSERT(PWM_SUCCESS == ret);    
 }
 #endif
@@ -207,7 +207,7 @@ static void UARTCALL init_pwm_param_2(pwm_param_t *pwm_param)
     *((volatile UINT32 *)(REG_GPIO_FUNC_CFG))= *((volatile UINT32 *)(REG_GPIO_FUNC_CFG)) | BIT(PWM2_GPIO_PIN);
 
     value = REG_READ(PWM_CTL);
-    value = value & ~(0x0F << (0x04 *  pwm_param->channel))
+    value = (value & ~(0x0F << (0x04 *  pwm_param->channel)))
             | ((pwm_param->cfg.val & 0x0F) << (0x04 * pwm_param->channel));
     REG_WRITE(PWM_CTL, value);
 
@@ -229,7 +229,7 @@ static void UARTCALL init_pwm_param_5(pwm_param_t *pwm_param)
     *((volatile UINT32 *)(REG_GPIO_FUNC_CFG))= *((volatile UINT32 *)(REG_GPIO_FUNC_CFG)) | BIT(PWM5_GPIO_PIN);
 
     value = REG_READ(PWM_CTL);
-    value = value & ~(0x0F << (0x04 *  pwm_param->channel))
+    value = (value & ~(0x0F << (0x04 *  pwm_param->channel)))
             | ((pwm_param->cfg.val & 0x0F) << (0x04 * pwm_param->channel));
     REG_WRITE(PWM_CTL, value);
 
@@ -369,16 +369,16 @@ void uart_io_sim_disable(void)
 	UINT32 ret;
 
     param = UART_IO_SIM_PWM_CAP_NEG_RX_CHN;
-	ret = pwm_ctrl( CMD_PWM_UINT_DISABLE, &param);
+	ret = sddev_control(PWM_DEV_NAME, CMD_PWM_UINT_DISABLE, &param);
 	ASSERT(PWM_SUCCESS == ret);
     
     param = UART_IO_SIM_PWM_TIMER_TX_CHN; 
-	ret = pwm_ctrl( CMD_PWM_UINT_DISABLE, &param);
+	ret = sddev_control(PWM_DEV_NAME, CMD_PWM_UINT_DISABLE, &param);
     ASSERT(PWM_SUCCESS == ret);        
     p_uart_io_sim_tx_buf = NULL;
     
     param = UART_IO_SIM_PWM_TIMER_RX_CHN;
-	ret = pwm_ctrl( CMD_PWM_UINT_DISABLE, &param);
+	ret = sddev_control(PWM_DEV_NAME, CMD_PWM_UINT_DISABLE, &param);
 	ASSERT(PWM_SUCCESS == ret); 
     uart_io_start = 0;  
     

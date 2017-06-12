@@ -557,11 +557,6 @@ uint32_t rxu_cntrl_patch_get_special_packet(uint8_t *p_frame)
     struct mac_hdr *machdr_ptr = (struct mac_hdr *)p_frame;
 	
     frame_cntl = co_read16(p_frame);
-
-	if(0x4208 == frame_cntl)
-	{
-		os_printf("got it\r\n");
-	}
 	
 	if((0x4208 == frame_cntl)
 		&& (MAC_ADDR_IS_BSCT(&machdr_ptr->addr1)))
@@ -608,7 +603,7 @@ void rxu_cntrl_patch_keyram_at_monitor_mode(
 		{
 			cipherType = CTYPERAM_CCMP;
 		}
-		else if(encrypt_param[1] == ((encrypt_param[0] | 0x20) & 0x7f))
+		if(encrypt_param[1] == ((encrypt_param[0] | 0x20) & 0x7f))
 		{
 			cipherType = CTYPERAM_TKIP;
 		}
@@ -1983,7 +1978,7 @@ static bool rxu_mgt_route(uint16_t framectrl,
             // Handle a received beacon if sent by a peer AP
             if (sta_idx != INVALID_STA_IDX)
             {
-                if (vif_entry->active)
+                if (vif_entry && vif_entry->active)
                 {
                     me_beacon_check(*vif_idx, length, CPU2HW(payload));
                 }
@@ -2374,9 +2369,9 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
         	if(bk_wlan_is_monitor_mode())
         	{
 				monitor_failed = rxu_cntrl_patch_get_special_packet(frame);
+				rxu_cntrl_patch_keyram_at_monitor_mode(frame, monitor_failed);
         	}
 			
-			rxu_cntrl_patch_keyram_at_monitor_mode(frame, monitor_failed);
             break;
         }
 

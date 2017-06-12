@@ -1230,7 +1230,7 @@ mode_t modebits;
 		return (-1);
 	fd = open(path, modebits, S_IRUSR | S_IWUSR);
 	err = errno;
-	free(path);
+	os_free(path);
 	errno = err;
 	return (fd);
 }
@@ -1242,7 +1242,7 @@ remove_pn_file()
 
 	if ((path = name_of_pn_file()) != NULL) {
 		(void) unlink(path);
-		(void) free(path);
+		(void) os_free(path);
 	}
 }
 

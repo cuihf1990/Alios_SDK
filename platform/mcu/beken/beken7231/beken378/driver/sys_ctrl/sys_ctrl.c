@@ -139,7 +139,9 @@ void sctrl_init(void)
     intc_service_register(FIQ_DPLL_UNLOCK, PRI_FIQ_DPLL_UNLOCK, sctrl_dpll_isr);
 
     sctrl_sub_reset();
-    REG_WRITE(SCTRL_CLK_GATING, 0x3f);
+
+	/*sys ctrl clk gating, for rx dma dead*/
+	REG_WRITE(SCTRL_CLK_GATING, 0x3f);
 }
 
 void sctrl_exit(void)

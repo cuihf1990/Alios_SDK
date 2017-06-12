@@ -134,7 +134,7 @@ struct scanu_rst_upload *sa_station_send_scan_cmd(SCAN_PARAM_T *scan_param)
                         break;
                     }
                     os_memcpy(r->bssid, probe_rsp_ieee80211_ptr->bssid, ETH_ALEN);
-                    r->freq = scanu_ret_ptr->center_freq;
+                    r->channel = rw_ieee80211_get_chan_id(scanu_ret_ptr->center_freq);
                     r->beacon_int = probe_rsp_ieee80211_ptr->rsp.beacon_int;
                     r->caps = probe_rsp_ieee80211_ptr->rsp.capab_info;
                     r->level = scanu_ret_ptr->rssi;
@@ -208,7 +208,7 @@ int sa_station_send_associate_cmd(CONNECT_PARAM_T *connect_param)
 		connect_param->chan.freq = rw_ieee80211_get_centre_frequency(g_sta_param_ptr->fast_connect.chann);
 		connect_param->chan.band = 0;
 		connect_param->chan.flags = 0;
-		connect_param->chan.tx_power = 0;
+		connect_param->chan.tx_power = 10;
 	}
 	else
 	{
@@ -293,7 +293,7 @@ void sa_reconnect_main(void *arg)
 void sa_reconnect_init(void)
 {
     OSStatus ret; 
-
+return; // try it;
 	if(NULL == reconnect_thread_handle)
 	{
 	    ret = mico_rtos_create_thread(&reconnect_thread_handle, 
