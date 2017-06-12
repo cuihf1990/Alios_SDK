@@ -61,10 +61,14 @@ typedef enum {
     OTA_UPDATE_WAY_END
 } OTA_ENUM_UPDATE_WAY;
 
+#define MAX_VERSION_LEN 64
+
 typedef struct {
         OTA_STATUS_T status;
         OTA_ENUM_UPDATE_WAY update_way;
         void *mutex;
+        char ota_version[MAX_VERSION_LEN];
+        char firmware_version[MAX_VERSION_LEN];
 } ota_info_t;
 
 
@@ -74,11 +78,17 @@ void ota_set_status(OTA_STATUS_T status);
 
 OTA_STATUS_T ota_get_status(void);
 
-void ota_status_post(int percent);
+int8_t ota_status_post(int percent);
 
-const char *get_ota_version();
+int8_t ota_result_post(void);
 
-void set_ota_version(const char *ota_version);
+const char *ota_get_dev_version(void);
+
+const char *ota_get_version();
+
+void ota_set_version(const char *ota_version);
+
+void ota_set_dev_version(const char *dev_version);
 
 const char *ota_get_product_type(void);
 

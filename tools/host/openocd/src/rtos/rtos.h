@@ -51,6 +51,7 @@ struct rtos {
 	/*  add a context variable instead of global variable */
 	int64_t current_threadid;
 	threadid_t current_thread;
+    int        sys_stat;
 	struct thread_detail *thread_details;
 	int thread_count;
 	int (*gdb_thread_packet)(struct connection *connection, char const *packet, int packet_size);

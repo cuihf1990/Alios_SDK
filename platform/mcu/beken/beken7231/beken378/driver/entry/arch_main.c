@@ -118,7 +118,7 @@ void entry_main(void)
 
     yunos_task_dyn_create(&syst_init_obj, "system_init", 0, 10, 0, 512, system_init, 1);
 
-    yunos_task_dyn_create(&task_test_obj2, "task_test2", 0, 20, 0, 512, task_test3, 1);
+    /* yunos_task_dyn_create(&task_test_obj2, "task_test2", 0, 20, 0, 512, task_test3, 1); */
 	//app_start();
     yunos_start();
 }

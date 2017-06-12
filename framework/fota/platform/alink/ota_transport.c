@@ -19,11 +19,14 @@
 #include <cJSON.h>
 
 #include "alink_export.h"
+#include "device.h"
 #include "ota_transport.h"
 #include "ota_log.h"
 
 #define POST_OTA_STATUS_METHOD "ota/postDeviceUpgradeStatus"
+#define POST_OTA_RESULT_METHOD "device.updateVersion"
 #define POST_OTA_STATUS_DATA "{\"version\":\"%s\",\"step\":\"%d\",\"stepPercent\":\"%d\"}"
+#define POST_OTA_RESULT_DATA "{\"uuid\" :\"%s\",\"version\":\"%s;APP2.0;OTA1.0\",\"description\":\"%s\"}"
 /*
  *  "md5":"6B21342306D0F619AF97006B7025D18A",
     "resourceUrl":"http://otalink.alicdn.com/ALINKTEST_LIVING_LIGHT_ALINK_TEST/v2.0.0.1/uthash-master.zip",
@@ -155,7 +158,7 @@ int8_t platform_ota_status_post(int status, int percent)
         OTA_LOG_E("percent error !(status = %d, percent = %d)\n", status, percent);
         percent = 0;
     }
-    const char *ota_version = (const char *)get_ota_version();
+    const char *ota_version = (const char *)platform_ota_get_version();
     snprintf(buff, sizeof(buff), POST_OTA_STATUS_DATA, ota_version, status, percent);
     //OTA_LOG_D("%s",buff);
     ret = alink_report_async(POST_OTA_STATUS_METHOD, buff, NULL, NULL);
@@ -163,9 +166,53 @@ int8_t platform_ota_status_post(int status, int percent)
     return ret;
 }
 
+
+int8_t platform_ota_result_post(void)
+{
+    int ret = -1;
+    char buff[256] = {0};
+    char *alink_version = NULL;
+
+    alink_version = (char *)malloc(64);
+    //assert(alink_version, NULL);
+    memset(alink_version, 0, 64);
+    alink_get_sdk_version(alink_version,64);
+
+    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char*)ota_get_id(), platform_ota_get_version(), alink_version);
+    free(alink_version);
+    ret = alink_report_async(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
+    OTA_LOG_D("alink_ota_status_post: %s, ret=%d\n", buff, ret);
+    return ret;
+}
+
+void platform_ota_set_version(char *version)
+{
+    config_set_ota_version(version);
+}
+
+const char *platform_ota_get_version()
+{
+    return config_get_ota_version();
+}
+
+const char *platform_get_main_version()
+{
+    return devinfo_get_version();
+}
+
+const char *platform_get_dev_version()
+{
+    return config_get_dev_version();
+}
+   
+void platform_set_dev_version(const char *dev_version)
+{
+    config_set_dev_version((char *)dev_version);
+}
+
 int8_t ota_pub_request(ota_request_params *request_parmas)
 {
-   return 0;
+    return 0;
 }
 
 int8_t ota_sub_request_reply(message_arrived *msgCallback)

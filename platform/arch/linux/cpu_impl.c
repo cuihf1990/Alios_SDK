@@ -23,6 +23,7 @@
 #include <pthread.h>
 
 #include <yos/kernel.h>
+#include <yos/list.h>
 
 #include <cpu_event.h>
 #include <k_api.h>
@@ -67,7 +68,14 @@ static ktask_t g_intr_task;
 static ksem_t  g_intr_sem;
 static klist_t g_event_list = { &g_event_list, &g_event_list };
 static klist_t g_recycle_list = { &g_recycle_list, &g_recycle_list };
+static dlist_t g_io_list = YOS_DLIST_INIT(g_io_list);
 static int cpu_event_inited;
+
+typedef struct {
+    dlist_t node;
+    void (*cb)(int, void *);
+    void *arg;
+} cpu_io_cb_t;
 
 /*
  * this is tricky
@@ -365,11 +373,15 @@ void cpu_init_hook(void)
 {
     int              ret;
     struct sigaction tick_sig_action = {
-        .sa_flags = SA_ONSTACK,
+        .sa_flags = SA_ONSTACK | SA_SIGINFO,
         .sa_sigaction = cpu_sig_handler,
     };
     struct sigaction event_sig_action = {
-        .sa_flags = SA_ONSTACK,
+        .sa_flags = SA_ONSTACK | SA_SIGINFO,
+        .sa_sigaction = cpu_sig_handler,
+    };
+    struct sigaction event_io_action = {
+        .sa_flags = SA_ONSTACK | SA_SIGINFO,
         .sa_sigaction = cpu_sig_handler,
     };
 
@@ -377,13 +389,16 @@ void cpu_init_hook(void)
 
     sigemptyset(&cpu_sig_set);
     sigaddset(&cpu_sig_set, SIGALRM);
+    sigaddset(&cpu_sig_set, SIGIO);
     sigaddset(&cpu_sig_set, SIGUSR2);
 
     tick_sig_action.sa_mask = cpu_sig_set;
     event_sig_action.sa_mask = cpu_sig_set;
+    event_io_action.sa_mask = cpu_sig_set;
 
     ret = sigaction(SIGALRM, &tick_sig_action, NULL);
     ret |= sigaction(SIGUSR2, &event_sig_action, NULL);
+    ret |= sigaction(SIGIO, &event_io_action, NULL);
     if (ret != 0u) {
         raise(SIGABRT);
     }
@@ -392,6 +407,42 @@ void cpu_init_hook(void)
 void cpu_start_hook(void)
 {
     create_intr_task();
+}
+
+void cpu_io_register(void (*f)(int, void *), void *arg)
+{
+    cpu_io_cb_t *pcb = yos_malloc(sizeof(*pcb));
+    pcb->cb = f;
+    pcb->arg = arg;
+
+    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
+    dlist_add_tail(&pcb->node, &g_io_list);
+    sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+}
+
+void cpu_io_unregister(void (*f)(int, void *), void *arg)
+{
+    cpu_io_cb_t *pcb;
+    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
+    dlist_for_each_entry(&g_io_list, pcb, cpu_io_cb_t, node) {
+        if (pcb->cb != f)
+            continue;
+        if (pcb->arg != arg)
+            continue;
+        dlist_del(&pcb->node);
+        yos_free(pcb);
+        sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+        return;
+    }
+    sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+}
+
+static void trigger_io_cb(int fd)
+{
+    cpu_io_cb_t *pcb;
+    dlist_for_each_entry(&g_io_list, pcb, cpu_io_cb_t, node) {
+        pcb->cb(fd, pcb->arg);
+    }
 }
 
 void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
@@ -407,6 +458,9 @@ void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
         yunos_tick_proc();
     else if (signo == SIGUSR2)
         yunos_sem_give(&g_intr_sem);
+    else if (signo == SIGIO) {
+        trigger_io_cb(si->si_fd);
+    }
 
     yunos_intrpt_exit();
     leave_signal(signo);

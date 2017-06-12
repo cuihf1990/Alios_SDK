@@ -30,4 +30,6 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
 
 int8_t ota_cancel_update_packet(ota_response_params *response_parmas);
 
+int8_t ota_post_version_msg(void);
+
 #endif /* OTA_UPDATE_MANIFEST_H_ */

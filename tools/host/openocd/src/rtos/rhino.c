@@ -42,6 +42,15 @@ typedef enum {
     K_DELETED,
 } task_stat_t;
 
+typedef enum {
+    YUNOS_SUCCESS                      = 0u,
+    YUNOS_SYS_FATAL_ERR,
+    YUNOS_SYS_SP_ERR,
+    YUNOS_RUNNING,
+    YUNOS_STOPPED
+}kstat_t;
+
+
 static int rhino_detect_rtos(struct target *target);
 static int rhino_create(struct target *target);
 static int rhino_update_threads(struct rtos *rtos);
@@ -191,14 +200,16 @@ static const struct rhino_params rhino_params_list[] = {
 #define ECOS_NUM_PARAMS ((int)(sizeof(rhino_params_list)/sizeof(struct rhino_params)))
 
 enum rhino_symbol_values {
-	rhino_VAL_current_thread_ptr = 0,
-    rhino_VAL_thread_list        = 1
+    rhino_VAL_current_thread_ptr = 0,
+    rhino_VAL_thread_list        = 1,
+    rhino_VAL_sys_stat           = 2,
 };
 
 static const char * const rhino_symbol_list[] = {
-	"g_active_task",
-	"g_kobj_list",
-	NULL
+    "g_active_task",
+    "g_kobj_list",
+    "g_sys_stat",
+    NULL
 };
 
 const struct rtos_type rhino_rtos = {
@@ -323,6 +334,20 @@ static int rhino_update_threads(struct rtos *rtos)
 	/* wipe out previous thread details if any */
 	rtos_free_threadlist(rtos);
 
+	/* read current system status */
+	rtos->sys_stat = 0;
+	retval = target_read_buffer(rtos->target,
+			rtos->symbols[rhino_VAL_sys_stat].address,
+			4,
+			(uint8_t *)&rtos->sys_stat);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Could not read rhino current thread from target");
+		return retval;
+	}
+    //if system is not runing, no thread information
+    if(rtos->sys_stat != YUNOS_RUNNING){
+        return ERROR_OK;
+    }
 
 	/* determine the number of current threads */
 	uint32_t thread_list_head = rtos->symbols[rhino_VAL_thread_list].address;
@@ -367,7 +392,7 @@ static int rhino_update_threads(struct rtos *rtos)
 		rtos->thread_details->thread_name_str = malloc(sizeof(tmp_str));
 		strcpy(rtos->thread_details->thread_name_str, tmp_str);
 
-		if (thread_list_size == 0) {
+		if (thread_list_size == 1) {
 			rtos->thread_count = 1;
 			return ERROR_OK;
 		}
@@ -565,6 +590,7 @@ static int rhino_create(struct target *target)
 
 	target->rtos->rtos_specific_params = (void *) &rhino_params_list[i];
 	target->rtos->current_thread = 0;
+    target->rtos->sys_stat       = YUNOS_STOPPED;
 	target->rtos->thread_details = NULL;
 	return 0;
 }

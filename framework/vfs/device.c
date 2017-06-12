@@ -56,6 +56,26 @@ static int event_open(inode_t *node, file_t *file)
     return 0;
 }
 
+static int event_close(file_t *file)
+{
+    event_dev_t *pdev = file->f_arg;
+    yos_mutex_free(&pdev->mutex);
+
+    while (!dlist_empty(&pdev->bufs)) {
+        dlist_t *n = pdev->bufs.next;
+        dlist_del(n);
+        yos_free(n);
+    }
+
+    while (!dlist_empty(&pdev->buf_cache)) {
+        dlist_t *n = pdev->buf_cache.next;
+        dlist_del(n);
+        yos_free(n);
+    }
+
+    yos_free(pdev);
+}
+
 static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
 {
     event_dev_t *pdev = f->f_arg;
@@ -175,6 +195,7 @@ static file_ops_t event_fops = {
     .open = event_open,
     .read = event_read,
     .write = event_write,
+    .close = event_close,
     .poll = event_poll,
     .ioctl = event_ioctl,
 };

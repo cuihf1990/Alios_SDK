@@ -176,7 +176,7 @@ extern "C" {
 
 #ifndef errno
 //TODO should be extern int errno.but this cause compile error
-int errno;
+extern int errno;
 #endif
 
 #else /* LWIP_PROVIDE_ERRNO */

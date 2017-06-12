@@ -22,6 +22,7 @@
 #include "ota_log.h"
 #include "ota_transport.h"
 #include "ota_util.h"
+#include "ota_platform_os.h"
 
 #define OTA_URL_MAX_LEN 512
 
@@ -100,10 +101,41 @@ void ota_download_start(void * buf)
 OTA_END:
     ota_status_post(100);    
     OTA_LOG_I("task update over");
-    free_global_topic();
+    ota_reboot();
 }
 
+int8_t ota_post_version_msg()
+{
+    int ret = -1, ota_success = 0;
+    OTA_LOG_I("ota_post_version_msg  [%s][%s] [%s]", ota_get_system_version(), ota_get_version(), ota_get_dev_version());
+    if(strlen(ota_get_version()) > 0) {
+	ota_success = !strncmp((char *)ota_get_system_version(),
+             (char *)ota_get_version(), strlen(ota_get_system_version()));
+        if(ota_success) {
+            ota_set_status(OTA_REBOOT_SUCCESS);
+            ret = ota_status_post(100);          
+        }else {
+            ota_set_status(OTA_INIT);
+            ret = ota_status_post(0);
+        }
 
+	if(ret == 0) {
+	    OTA_LOG_I("OTA finished, clear ota version in config");
+            ota_set_version("");
+	}
+    }
+
+    if(strncmp((char*)ota_get_system_version(), (char *)ota_get_dev_version(), strlen(ota_get_system_version()))) {
+        ret = ota_result_post();
+        if(ret == 0) {
+            OTA_LOG_I("Save dev version to config");
+	    ota_set_dev_version(ota_get_system_version());
+	}
+    }
+
+
+    return 0;
+}
 
 int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_params *request_parmas,
                                write_flash_cb_t func, ota_finish_cb_t fcb)
@@ -113,22 +145,36 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas,ota_request_par
     ret = ota_if_need(response_parmas,request_parmas);
     if(1 != ret) return ret;
 
-    set_ota_version(response_parmas->primary_version);
+    ota_set_version(response_parmas->primary_version);
     g_write_func = func;
     g_finish_cb = fcb;
-    memset(md5, 0 , sizeof md5);
+
+    memset(md5, 0, sizeof md5);
     strncpy(md5, response_parmas->md5, sizeof md5);
-    strncpy(url,  response_parmas->download_url,sizeof url);
-    ret = yos_task_new("ota", ota_download_start, 0 , 8196);
+
+    memset(url, 0, sizeof url);
+    strncpy(url, response_parmas->download_url, sizeof url);
+    ret = yos_task_new("ota", ota_download_start, 0, 8196);
 
     return ret;
 }
 
+static int8_t ota_is_cancelable()
+{
+    return ota_get_status() != OTA_INIT && ota_get_status() < OTA_UPGRADE;
+}
+
 static int8_t ota_if_cancel(ota_response_params *response_parmas)
 {
-    if(strncmp(response_parmas->device_uuid , ota_get_id(), sizeof response_parmas->device_uuid) > 0 )
-        return 1;
-    return 0;
+    if(!response_parmas)
+        return 0;
+
+    if(!strncmp(response_parmas->device_uuid , ota_get_id(), sizeof response_parmas->device_uuid))
+        return 0;
+
+    if(!ota_is_cancelable())
+        return 0;
+    return 1;
 }
 
 int8_t ota_cancel_update_packet(ota_response_params *response_parmas)

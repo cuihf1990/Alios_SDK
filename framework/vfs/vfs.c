@@ -298,8 +298,90 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
 }
 
 #if (YUNOS_CONFIG_VFS_POLL_SUPPORT>0)
+
+#ifndef WITH_LWIP
+#define NEED_WAIT_IO
+#endif
+
 #include <yos/network.h>
 
+#ifdef NEED_WAIT_IO
+
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
+
+#include <k_api.h>
+#define MS2TICK(ms) ((ms * YUNOS_CONFIG_TICKS_PER_SECOND + 999) / 1000)
+
+struct poll_arg {
+    ksem_t sem;
+};
+
+static void setup_fd(int fd)
+{
+    int f = fcntl(fd, F_GETFL) | O_ASYNC;
+    if (fcntl(fd, F_SETFL, f) < 0)
+       perror("fcntl setup");
+    if (fcntl(fd, F_SETOWN, gettid()) < 0)
+       perror("fcntl setown");
+}
+
+static void teardown_fd(int fd)
+{
+    int f = fcntl(fd, F_GETFL) & ~O_ASYNC;
+    if (fcntl(fd, F_SETFL, f) < 0)
+       perror("fcntl teardown");
+}
+
+static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
+{
+    struct timeval tv = { 0 };
+    int ret;
+    fd_set saved_fds = *rfds;
+
+    /* check if already data available */
+    ret = select(maxfd + 1, rfds, NULL, NULL, &tv);
+    if (ret > 0)
+        return ret;
+
+    timeout = timeout >= 0 ? MS2TICK(timeout) : YUNOS_WAIT_FOREVER;
+    ret = yunos_sem_take(&parg->sem, timeout);
+    if (ret != YUNOS_SUCCESS)
+        return 0;
+
+    *rfds = saved_fds;
+    ret = select(maxfd + 1, rfds, NULL, NULL, &tv);
+    return ret;
+}
+
+static void vfs_poll_notify(struct pollfd *fd, void *arg)
+{
+    struct poll_arg *parg = arg;
+    yunos_sem_give(&parg->sem);
+}
+
+static void vfs_io_cb(int fd, void *arg)
+{
+    struct poll_arg *parg = arg;
+    yunos_sem_give(&parg->sem);
+}
+
+void cpu_io_register(void (*f)(int, void *), void *arg);
+void cpu_io_unregister(void (*f)(int, void *), void *arg);
+static int init_parg(struct poll_arg *parg)
+{
+    cpu_io_register(vfs_io_cb, parg);
+    yunos_sem_create(&parg->sem, "io", 0);
+    return 0;
+}
+
+static void deinit_parg(struct poll_arg *parg)
+{
+    yunos_sem_del(&parg->sem);
+    cpu_io_unregister(vfs_io_cb, parg);
+}
+
+#else
 struct poll_arg {
     int efd;
 };
@@ -310,6 +392,46 @@ static void vfs_poll_notify(struct pollfd *fd, void *arg)
     uint64_t val = 1;
     write(parg->efd, &val, sizeof val);
 }
+
+static void setup_fd(int fd)
+{
+}
+
+static void teardown_fd(int fd)
+{
+}
+
+static int init_parg(struct poll_arg *parg)
+{
+    int efd;
+    efd = eventfd(0, 0);
+
+    if (efd < 0) {
+        return -1;
+    }
+
+    parg->efd = efd;
+
+    return 0;
+}
+
+static void deinit_parg(struct poll_arg *parg)
+{
+    close(parg->efd);
+}
+
+static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
+{
+    struct timeval tv = {
+        .tv_sec  = timeout / 1024,
+        .tv_usec = (timeout % 1024) * 1024,
+    };
+
+    FD_SET(parg->efd, rfds);
+    maxfd = parg->efd > maxfd ? parg->efd : maxfd;
+    return select(maxfd + 1, rfds, NULL, NULL, timeout >= 0 ? &tv : NULL);
+}
+#endif
 
 static int pre_poll(struct pollfd *fds, int nfds, fd_set *rfds, void *parg)
 {
@@ -327,6 +449,7 @@ static int pre_poll(struct pollfd *fds, int nfds, fd_set *rfds, void *parg)
         struct pollfd *pfd = &fds[i];
 
         if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+            setup_fd(pfd->fd);
             FD_SET(pfd->fd, rfds);
             maxfd = pfd->fd > maxfd ? pfd->fd : maxfd;
             continue;
@@ -355,6 +478,7 @@ static int post_poll(struct pollfd *fds, int nfds)
         struct pollfd *pfd = &fds[j];
 
         if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+            teardown_fd(pfd->fd);
             continue;
         }
 
@@ -377,36 +501,23 @@ static int post_poll(struct pollfd *fds, int nfds)
 
 int yos_poll(struct pollfd *fds, int nfds, int timeout)
 {
-    struct timeval tv = {
-        .tv_sec  = timeout / 1024,
-        .tv_usec = (timeout % 1024) * 1024,
-    };
-
     fd_set rfds;
 
     int ret = VFS_SUCCESS;
     int nset = 0;
-    int maxfd = 0;
-    int efd;
     struct poll_arg parg;
 
-    efd = eventfd(0, 0);
-
-    if (efd < 0) {
+    if (init_parg(&parg) < 0)
         return -1;
-    }
 
-    parg.efd = efd;
     FD_ZERO(&rfds);
-    FD_SET(efd, &rfds);
     ret = pre_poll(fds, nfds, &rfds, &parg);
 
     if (ret < 0) {
         goto check_poll;
     }
 
-    maxfd = ret > efd ? ret : efd;
-    ret = select(maxfd + 1, &rfds, NULL, NULL, timeout >= 0 ? &tv : NULL);
+    ret = wait_io(ret, &rfds, &parg, timeout);
 
     if (ret >= 0) {
         int i;
@@ -425,7 +536,7 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout)
 check_poll:
     nset += post_poll(fds, nfds);
 
-    close(efd);
+    deinit_parg(&parg);
 
     return ret < 0 ? 0 : nset;
 }

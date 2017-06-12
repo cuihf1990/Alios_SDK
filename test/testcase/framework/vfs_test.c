@@ -19,6 +19,7 @@
 
 #include <yos/kernel.h>
 #include <yos/framework.h>
+#include <yos/network.h>
 
 #include "vfs.h"
 #include "vfs_inode.h"
@@ -84,8 +85,117 @@ static void test_yos_vfs_case(void)
     }
 }
 
+static int create_socket(int port)
+{
+    struct sockaddr_in my_addr;
+    int ret = -1;
+    int sockfd;
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0)
+        goto out;
+
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
+    setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &(int){1}, sizeof(int));
+
+    bzero(&my_addr, sizeof(my_addr));
+    my_addr.sin_family = AF_INET;
+    my_addr.sin_addr.s_addr = INADDR_ANY;
+    my_addr.sin_port = htons(port);
+    ret = bind(sockfd, (struct sockaddr *)&my_addr, sizeof(my_addr));
+    if (ret < 0)
+        goto out1;
+
+    return sockfd;
+out1:
+    close(sockfd);
+out:
+    return -1;
+}
+
+static int do_poll(int fd_recv, int timeout)
+{
+    int ret;
+    struct pollfd pfd;
+    char buf2[256];
+
+    pfd.fd = fd_recv;
+    pfd.events = POLLIN;
+    ret = yos_poll(&pfd, 1, timeout);
+
+    if (ret > 0)
+        ret = recv(fd_recv, buf2, sizeof buf2, 0);
+
+    return ret;
+}
+
+#define MAXCNT 100
+static void *send_seq_data(void *arg)
+{
+    int fd = *(int *)arg;
+    struct sockaddr_in addr;
+    char buf[MAXCNT];
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");//htonl(INADDR_BROADCAST);
+    addr.sin_port = htons(12346);
+
+    int i;
+    for (i=1;i<MAXCNT;i++) {
+        int ret = sendto(fd, buf, i, 0, (struct sockaddr *)&addr, sizeof addr);
+        usleep(random() % 10000);
+    }
+
+    return 0;
+}
+
+static void test_yos_poll_case(void)
+{
+    int fd_send = create_socket(12345);
+    int fd_recv = create_socket(12346);
+    struct sockaddr_in addr;
+    char buf[128], buf2[256];
+    int ret;
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1"); //htonl(INADDR_BROADCAST);
+    addr.sin_port = htons(12346);
+
+    memset(buf, 0x5a, sizeof buf);
+
+    ret = sendto(fd_send, buf, sizeof buf, 0, (struct sockaddr *)&addr, sizeof addr);
+    YUNIT_ASSERT(ret == sizeof(buf));
+
+    ret = recv(fd_recv, buf2, sizeof buf2, 0);
+    YUNIT_ASSERT(ret == sizeof(buf));
+
+    ret = sendto(fd_send, buf, sizeof buf, 0, (struct sockaddr *)&addr, sizeof addr);
+    YUNIT_ASSERT(ret == sizeof(buf));
+
+    ret = do_poll(fd_recv, 0);
+    YUNIT_ASSERT(ret == sizeof(buf));
+
+    ret = do_poll(fd_recv, 0);
+    YUNIT_ASSERT(ret == 0);
+
+    pthread_t th;
+    pthread_create(&th, NULL, send_seq_data, &fd_send);
+
+    int i;
+    for (i=1;i<MAXCNT;i++) {
+        ret = do_poll(fd_recv, 5000);
+        YUNIT_ASSERT(ret == i);
+    }
+
+    pthread_join(th, NULL);
+
+    close(fd_send);
+    close(fd_recv);
+}
+
 static yunit_test_case_t yos_vfs_testcases[] = {
-    { "Testing: yos_register add/del", test_yos_vfs_case },
+    { "register", test_yos_vfs_case },
+    { "poll", test_yos_poll_case },
     YUNIT_TEST_CASE_NULL
 };
 

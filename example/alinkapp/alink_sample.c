@@ -73,6 +73,7 @@ void helper_api_test(void);
 int activate_button_pressed(void);
 void cloud_connected(void) { 
     do_report();
+    yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);    
     printf("alink cloud connected!\n"); 
 }
 void cloud_disconnected(void) { printf("alink cloud disconnected!\n"); }
@@ -443,7 +444,6 @@ int application_start(int argc, char *argv[])
     alink_register_callback(ALINK_GET_DEVICE_STATUS, &cloud_get_device_status);
     alink_register_callback(ALINK_SET_DEVICE_STATUS, &cloud_set_device_status);
 #endif
-    yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
     //alink_register_callback(ALINK_UPGRADE_DEVICE,&callback_upgrade_device);
     //alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,&callback_cancel_upgrade_device);
     alink_start();

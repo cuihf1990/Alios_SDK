@@ -33,6 +33,7 @@
  */
 #include <stdint.h>
 #include <string.h>
+#include "md5.h"
 #ifndef STDCALL
 #define STDCALL
 #endif
@@ -60,16 +61,6 @@
 #define S44 21
 
 #define MD5_SIZE    16
-
-typedef struct {
-    uint32_t state[4];                  /* state (ABCD) */
-    uint32_t count[2];                  /* number of bits, modulo 2^64 (lsb first) */
-    uint8_t buffer[64];                 /* input buffer */
-} MD5_CTX;
-
-static void MD5_Init(MD5_CTX *ctx);
-static void MD5_Update(MD5_CTX *ctx, const uint8_t *msg, int len);
-static void MD5_Final(uint8_t *digest, MD5_CTX *ctx);
 
 /* ----- static functions ----- */
 static void MD5Transform(uint32_t state[4], const uint8_t block[64]);
@@ -118,7 +109,7 @@ static const uint8_t PADDING[64] = {
 /**
  * MD5 initialization - begins an MD5 operation, writing a new ctx.
  */
-static EXP_FUNC void STDCALL MD5_Init(MD5_CTX *ctx)
+EXP_FUNC void STDCALL MD5_Init(MD5_CTX *ctx)
 {
     ctx->count[0] = ctx->count[1] = 0;
 
@@ -133,7 +124,7 @@ static EXP_FUNC void STDCALL MD5_Init(MD5_CTX *ctx)
 /**
  * Accepts an array of octets as the next portion of the message.
  */
-static EXP_FUNC void STDCALL MD5_Update(MD5_CTX *ctx, const uint8_t *msg,
+EXP_FUNC void STDCALL MD5_Update(MD5_CTX *ctx, const uint8_t *msg,
                                         int len)
 {
     uint32_t x;
@@ -171,7 +162,7 @@ static EXP_FUNC void STDCALL MD5_Update(MD5_CTX *ctx, const uint8_t *msg,
 /**
  * Return the 128-bit message digest into the user's array
  */
-static EXP_FUNC void STDCALL MD5_Final(uint8_t *digest, MD5_CTX *ctx)
+EXP_FUNC void STDCALL MD5_Final(uint8_t *digest, MD5_CTX *ctx)
 {
     uint8_t bits[8];
     uint32_t x, padLen;
