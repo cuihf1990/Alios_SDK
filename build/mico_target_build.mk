@@ -229,7 +229,7 @@ build_done: $(EXTRA_PRE_BUILD_TARGETS) $(BIN_OUTPUT_FILE) $(HEX_OUTPUT_FILE) dis
 
 $(EXTRA_POST_BUILD_TARGETS): build_done
 
-$(BUILD_STRING): $(EXTRA_POST_BUILD_TARGETS)
+$(BUILD_STRING): $(if $(EXTRA_POST_BUILD_TARGETS),$(EXTRA_POST_BUILD_TARGETS),build_done)
 
 # Stack usage target - Currently not working outputs a CSV file showing function stack usage
 $(OUTPUT_DIR)/stack_usage.csv: $(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(LINK_OUTPUT_SUFFIX)

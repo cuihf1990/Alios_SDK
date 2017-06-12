@@ -195,7 +195,7 @@ void uart_hw_init(void)
     UINT32 reg;
     UINT32 baud_div;
 
-    baud_div = UART_CLOCK / UART_BAUD_RATE;
+    baud_div = UART_CLOCK / UART_BAUDRATE_921600;
     baud_div = baud_div - 1;
 
     reg = UART_TX_ENABLE
