@@ -99,8 +99,8 @@ typedef struct {
 } hal_wifi_ip_stat_t;
 
 typedef enum {
-    Soft_AP,  /**< Act as an access point, and other station can connect, 4 stations Max*/
-    Station   /**< Act as a station which can connect to an access point*/
+    SOFT_AP,  /**< Act as an access point, and other station can connect, 4 stations Max*/
+    STATION   /**< Act as a station which can connect to an access point*/
 } hal_wifi_type_t;
 
 

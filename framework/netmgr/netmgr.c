@@ -162,7 +162,7 @@ static void reconnect_wifi(void *arg)
 
     module = hal_wifi_get_default_module();
 
-    type.wifi_mode = Station;
+    type.wifi_mode = STATION;
     memcpy(type.wifi_ssid, ap_config->ssid, sizeof(type.wifi_ssid));
     memcpy(type.wifi_key, ap_config->pwd, sizeof(type.wifi_key));
     hal_wifi_start(module, &type);
