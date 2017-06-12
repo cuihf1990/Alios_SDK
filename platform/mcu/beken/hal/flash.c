@@ -1,5 +1,4 @@
 #include "hal/soc/soc.h"
-#include "ringbuf.h"
 #include "mico_rtos.h"
 
 typedef unsigned char  		  UINT8;          /* Unsigned  8 bit quantity        */

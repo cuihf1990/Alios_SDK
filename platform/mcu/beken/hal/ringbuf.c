@@ -31,7 +31,7 @@
 
 #include "ringbuf.h"
 
-OSStatus ring_buffer_init( ring_buffer_t* ring_buffer, uint8_t* buffer, uint32_t size )
+int ring_buffer_init( ring_buffer_t* ring_buffer, uint8_t* buffer, uint32_t size )
 {
   if (ring_buffer)
   {
@@ -39,16 +39,16 @@ OSStatus ring_buffer_init( ring_buffer_t* ring_buffer, uint8_t* buffer, uint32_t
     ring_buffer->size   = size;
     ring_buffer->head   = 0;
     ring_buffer->tail   = 0;
-    return kNoErr;
+    return 0;
   }
   else
-    return kParamErr;
+    return -1;
 }
 
-OSStatus ring_buffer_deinit( ring_buffer_t* ring_buffer )
+int ring_buffer_deinit( ring_buffer_t* ring_buffer )
 {
   UNUSED_PARAMETER(ring_buffer);
-  return kNoErr;
+  return 0;
 }
 
 uint32_t ring_buffer_free_space( ring_buffer_t* ring_buffer )
@@ -63,20 +63,20 @@ uint32_t ring_buffer_used_space( ring_buffer_t* ring_buffer )
   return ((head_to_end + ring_buffer->tail) % ring_buffer->size);
 }
 
-OSStatus ring_buffer_get_data( ring_buffer_t* ring_buffer, uint8_t** data, uint32_t* contiguous_bytes )
+int ring_buffer_get_data( ring_buffer_t* ring_buffer, uint8_t** data, uint32_t* contiguous_bytes )
 {
   uint32_t head_to_end = ring_buffer->size - ring_buffer->head;
   
   *data = &ring_buffer->buffer[ring_buffer->head];
   *contiguous_bytes = MIN(head_to_end, (head_to_end + ring_buffer->tail) % ring_buffer->size);
   
-  return kNoErr;
+  return 0;
 }
 
-OSStatus ring_buffer_consume( ring_buffer_t* ring_buffer, uint32_t bytes_consumed )
+int ring_buffer_consume( ring_buffer_t* ring_buffer, uint32_t bytes_consumed )
 {
   ring_buffer->head = (ring_buffer->head + bytes_consumed) % ring_buffer->size;
-  return kNoErr;
+  return 0;
 }
 
 uint32_t ring_buffer_write( ring_buffer_t* ring_buffer, const uint8_t* data, uint32_t data_length )
@@ -104,7 +104,7 @@ uint32_t ring_buffer_write( ring_buffer_t* ring_buffer, const uint8_t* data, uin
   return amount_to_copy;
 }
 
-OSStatus ring_buffer_read( ring_buffer_t* ring_buffer, uint8_t* data, uint32_t data_length, uint32_t* number_of_bytes_read )
+int ring_buffer_read( ring_buffer_t* ring_buffer, uint8_t* data, uint32_t data_length, uint32_t* number_of_bytes_read )
 {
   uint32_t max_bytes_to_read;
   uint32_t i;
@@ -126,7 +126,7 @@ OSStatus ring_buffer_read( ring_buffer_t* ring_buffer, uint8_t* data, uint32_t d
   
   *number_of_bytes_read = max_bytes_to_read;
   
-  return kNoErr;
+  return 0;
 }
 
 uint8_t ring_buffer_is_full(ring_buffer_t *ring_buffer)

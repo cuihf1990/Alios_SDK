@@ -12,8 +12,6 @@ NAME := beken
 HOST_OPENOCD := beken
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
-$(NAME)_COMPONENTS += platform/mcu/beken/hal
-$(NAME)_COMPONENTS += platform/mcu/beken/port
 $(NAME)_COMPONENTS += framework
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
@@ -400,6 +398,11 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     ../../arch/arm/armv5/port_c.c \
                     ../../arch/arm/armv5/port_s.S \
                     ../../arch/arm/armv5/soc_impl.c \
+
+$(NAME)_SOURCES	 += hal/flash.c \
+					hal/uart.c \
+					hal/ringbuf.c \
+                    port/ota_port.c
 
 ifneq ($(mico_lwip), 1)
 $(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \
