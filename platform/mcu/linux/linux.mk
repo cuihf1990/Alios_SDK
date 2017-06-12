@@ -5,7 +5,7 @@ ARCH_LINUX := ../../arch/linux/
 
 GLOBAL_INCLUDES += . $(ARCH_LINUX)
 
-$(NAME)_COMPONENTS  := vflash
+$(NAME)_COMPONENTS  := hal vflash netmgr framework
 
 ifeq ($(openssl),1)
 GLOBAL_LDFLAGS += -lssl -lcrypto

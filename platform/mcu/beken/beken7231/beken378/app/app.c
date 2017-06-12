@@ -360,8 +360,10 @@ void core_thread_uninit(void)
 }
 #endif
 
+extern int yos_framework_init(void);
 static void init_app_thread( void *arg )
 {
+    yos_framework_init();
 	application_start();
 }
 
@@ -391,7 +393,6 @@ void app_start(void)
 	
 	core_thread_init();
 
-	cli_init();
 	ret = mico_rtos_create_thread(NULL, 
             THD_INIT_PRIORITY,
             "app", 
