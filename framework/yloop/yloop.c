@@ -29,25 +29,6 @@
 
 #define TAG "yloop"
 
-#ifndef timercmp
-#define timercmp(a, b, op) ({ \
-        unsigned long long _v1 = (a)->tv_sec * 1000000ULL + (a)->tv_usec; \
-        unsigned long long _v2 = (b)->tv_sec * 1000000ULL + (b)->tv_usec; \
-        _v1 op _v2; \
-    })
-
-void timersub(struct timeval *a, struct timeval *b, struct timeval *res)
-{
-    res->tv_usec = a->tv_usec - b->tv_usec;
-    res->tv_sec = a->tv_sec - b->tv_sec;
-
-    if (res->tv_usec < 0) {
-        res->tv_usec += 1000000;
-        res->tv_sec -= 1;
-    }
-}
-#endif
-
 typedef struct {
     int              sock;
     void            *private_data;
@@ -56,7 +37,7 @@ typedef struct {
 
 typedef struct yloop_timeout_s {
     dlist_t          next;
-    struct timeval   time;
+    long long        timeout_ms;
     void            *private_data;
     yos_call_t       cb;
     int              ms;
@@ -216,15 +197,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
         return -1;
     }
 
-    gettimeofday(&timeout->time, NULL);
-    timeout->time.tv_sec += ms / 1000;
-    timeout->time.tv_usec += (ms % 1000) * 1000;
-
-    while (timeout->time.tv_usec >= 1000000) {
-        timeout->time.tv_sec++;
-        timeout->time.tv_usec -= 1000000;
-    }
-
+    timeout->timeout_ms = yos_now() / 1000 / 1000 + ms;
     timeout->private_data = param;
     timeout->cb = action;
     timeout->ms = ms;
@@ -232,7 +205,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
     yloop_timeout_t *tmp;
 
     dlist_for_each_entry(&ctx->timeouts, tmp, yloop_timeout_t, next) {
-        if (timercmp(&timeout->time, &tmp->time, < )) {
+        if (timeout->timeout_ms < tmp->timeout_ms) {
             break;
         }
     }
@@ -269,7 +242,6 @@ void yos_cancel_delayed_action(int ms, yos_call_t cb, void *private_data)
 void yos_loop_run(void)
 {
     yloop_ctx_t *ctx = get_context();
-    struct timeval tv, now;
 
     while (!ctx->terminate &&
            (!dlist_empty(&ctx->timeouts) || ctx->reader_count > 0)) {
@@ -279,15 +251,13 @@ void yos_loop_run(void)
 
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            gettimeofday(&now, NULL);
+            long long now = yos_now() / 1000 / 1000;
 
-            if (timercmp(&now, &tmo->time, < )) {
-                timersub(&tmo->time, &now, &tv);
+            if (now < tmo->timeout_ms) {
+                delayed_ms = tmo->timeout_ms - now;
             } else {
-                tv.tv_sec = tv.tv_usec = 0;
+                delayed_ms = 0;
             }
-
-            delayed_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
         }
 
         for (i = 0; i < readers; i++) {
@@ -305,9 +275,9 @@ void yos_loop_run(void)
         /* check if some registered timeouts have occurred */
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            gettimeofday(&now, NULL);
+            long long now = yos_now() / 1000 / 1000;
 
-            if (!timercmp(&now, &tmo->time, < )) {
+            if (now >= tmo->timeout_ms) {
                 dlist_del(&tmo->next);
                 tmo->cb(tmo->private_data);
                 free(tmo);

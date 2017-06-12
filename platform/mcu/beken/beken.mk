@@ -14,6 +14,7 @@ HOST_OPENOCD := beken
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
 $(NAME)_COMPONENTS += platform/mcu/beken/port
+$(NAME)_COMPONENTS += framework
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \

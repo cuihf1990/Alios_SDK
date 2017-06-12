@@ -3,7 +3,6 @@
 #include <yos/framework.h>
 #include <yos/network.h>
 #include <ysh.h>
-#include <k_api.h>
 
 extern void netmgr_start(void);
 
@@ -15,7 +14,7 @@ static void app_delayed_action(void *arg)
 {
     struct cookie *cookie = arg;
     struct hostent *hent = gethostbyname("www.taobao.com");
-    printf("%s - %s\n", __func__, g_active_task->task_name);
+    printf("%s - %s\n", __func__, yos_task_name());
     if(hent) {
         printf("%s - %s\n", __func__, hent->h_name);
     }
