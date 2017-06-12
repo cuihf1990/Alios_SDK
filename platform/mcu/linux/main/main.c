@@ -20,14 +20,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <yos/kernel.h>
-#include <yos/framework.h>
+
+#include <k_api.h>
 #include <yos/log.h>
-#include <arg_options.h>
-#include <vfs.h>
+#include <yos/kernel.h>
 #include <vflash.h>
 #include <kvmgr.h>
-#include <k_api.h>
+
+#include <arg_options.h>
 
 #define TAG "main"
 
@@ -35,29 +35,45 @@
 extern int tfs_emulate_id2_index;
 #endif
 
-extern void csp_os_init(void);
-extern void csp_os_start(void);
 extern void yunos_lwip_init(int enable_tapif);
 /* check in gcc sources gcc/gcov-io.h for the prototype */
 extern void __gcov_flush(void);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
-extern void lpm_init(void);
 extern void hw_start_hal(void);
-extern void netmgr_init(void);
 extern void trace_start(int flag);
+extern void netmgr_init(void);
 extern void ota_service_init(void);
+extern int yos_framework_init(void);
 
 static options_t options = { 0 };
 
 static void yos_features_init(void);
 static void signal_handler(int signo);
 static int  setrlimit_for_vfs(void);
+extern int application_start(int argc, char **argv);
+
+static void app_entry(void *arg)
+{
+    application_start(options.argc, options.argv);
+}
+
+static void start_app()
+{
+    yos_task_new("app", app_entry, NULL, 8192);
+}
 
 int csp_get_args(const char ***pargv)
 {
     *pargv = (const char **)options.argv;
     return options.argc;
+}
+
+static void register_devices(void)
+{
+    int i;
+    for (i=0;i<10;i++)
+        vflash_register_partition(i);
 }
 
 void yos_features_init(void)
@@ -105,25 +121,6 @@ int setrlimit_for_vfs(void)
     return 0;
 }
 
-extern int application_start(int argc, char **argv);
-
-static void app_entry(void *arg)
-{
-    application_start(options.argc, options.argv);
-}
-
-static void start_app()
-{
-    yos_task_new("app", app_entry, NULL, 8192);
-}
-
-static void register_devices(void)
-{
-    int i;
-    for (i=0;i<10;i++)
-        vflash_register_partition(i);
-}
-
 int main(int argc, char **argv)
 {
     int ret;
@@ -162,19 +159,19 @@ int main(int argc, char **argv)
 
     yos_features_init();
 
-    vfs_init();
-    vfs_device_init();
+    trace_start(options.trace_flag);
+
+    hw_start_hal();
+
     register_devices();
 
     yos_kv_init();
 
-    hw_start_hal();
+    yos_framework_init();
+
     netmgr_init();
 
     ota_service_init();
-    yos_loop_init();
-    
-    trace_start(options.trace_flag);
 
     start_app(argc, argv);
 

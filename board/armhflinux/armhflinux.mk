@@ -5,7 +5,7 @@ MODULE              := 1062
 HOST_ARCH           := armhflinux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  := yloop vfs hal log fota vcall ysh modules.kv tfs netmgr
+$(NAME)_COMPONENTS  := ysh tfs
 
 GLOBAL_CFLAGS += -I$(SOURCE_ROOT)/board/armhflinux/include
 GLOBAL_LDFLAGS += -L$(SOURCE_ROOT)/board/armhflinux/lib

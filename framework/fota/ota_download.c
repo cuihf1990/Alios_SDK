@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <poll.h>
+#include <yos/framework.h>
 #include <yos/network.h>
 
 #include "ota_util.h"
