@@ -46,23 +46,3 @@ void yunos_lwip_init(int enable_tapif)
         tcpip_init_done_callback(NULL);
     printf("TCP/IP initialized.\n");
 }
-
-struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)
-{
-#ifdef CONFIG_YOS_MESH
-    extern struct netif *ur_adapter_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest);
-    return ur_adapter_ip6_route(src, dest);
-#endif
-
-    return NULL;
-}
-
-bool lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest)
-{
-#ifdef CONFIG_YOS_MESH
-    extern bool ur_adapter_is_mcast_subscribed(const ip6_addr_t *addr);
-    return ur_adapter_is_mcast_subscribed(dest);
-#endif
-
-    return false;
-}
