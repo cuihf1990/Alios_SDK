@@ -163,11 +163,11 @@ int main(int argc, char **argv)
 
     hw_start_hal();
 
+    yos_framework_init();
+
     register_devices();
 
     yos_kv_init();
-
-    yos_framework_init();
 
     netmgr_init();
 
