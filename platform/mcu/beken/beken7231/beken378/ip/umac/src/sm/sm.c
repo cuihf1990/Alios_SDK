@@ -162,7 +162,7 @@ static void sm_delete_resources(struct vif_info_tag *vif)
     vif->bss_info.valid_flags = 0;
 }
 
-void sm_init(void)
+void platform_sm_init(void)
 {
     //Default reset reason is zero
     sm_env.reset_reason   = 0;

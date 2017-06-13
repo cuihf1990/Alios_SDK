@@ -49,10 +49,6 @@ static inline uint32_t yos_htobe32(uint32_t data)
 uint32_t yos_get_time_ms(void);
 pthread_mutex_t *yos_mutex_init();
 void yos_mutex_destroy(pthread_mutex_t *mutex);
-void *yos_semaphore_init(void);
-int yos_semaphore_wait(sem_t *sem,  uint32_t timeout_ms);
-void yos_semaphore_destroy(sem_t *sem);
-void yos_semaphore_post(sem_t *sem);
 
 #endif
 

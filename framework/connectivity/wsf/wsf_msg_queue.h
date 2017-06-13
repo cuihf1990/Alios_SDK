@@ -18,14 +18,14 @@
 #define WSF_MSG_QUEUE_H
 
 #include "wsf_list.h"
+#include "yos/kernel.h"
 #include "yos/list.h"
 #include "wsf_msg.h"
-#include <semaphore.h>
 
 typedef struct wsf_request_queue_t {
     dlist_t list;
     void *mutex;
-    sem_t *psem;
+    yos_sem_t *psem;
     int length;
 } wsf_request_queue_t;
 

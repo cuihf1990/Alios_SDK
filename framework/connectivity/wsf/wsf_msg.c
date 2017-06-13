@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <yos/network.h>
+
 #include "os.h"
 #include "wsf_defines.h"
 #include "wsf_msg.h"
