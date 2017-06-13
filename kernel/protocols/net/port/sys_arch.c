@@ -644,6 +644,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 */
 sys_prot_t sys_arch_protect(void)
 {
+    yunos_sched_disable();
     return 0;
 }
 
@@ -655,6 +656,7 @@ sys_prot_t sys_arch_protect(void)
 */
 void sys_arch_unprotect(sys_prot_t pval)
 {
+    yunos_sched_enable();
 }
 
 #endif
