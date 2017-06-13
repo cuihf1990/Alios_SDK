@@ -418,7 +418,6 @@ void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
 
 OSStatus bk_wlan_start_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
 {
-	os_printf("free memory %d\r\n", xPortGetFreeHeapSize());
     supplicant_main_exit();
     sta_ip_down();
     ip_address_set(Station, inNetworkInitParaAdv->dhcpMode,
