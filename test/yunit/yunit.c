@@ -18,9 +18,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <yos/kernel.h>
 #include <yos/log.h>
-
 #include "yunit.h"
 
 #define TAG "yunit"
@@ -99,7 +98,7 @@ void *yunit_add_test_suite(
                    yunit_test_case_setup setup,
                    yunit_test_case_teardown teardown)
 {
-    yunit_test_suite_node_t *node = malloc(sizeof(yunit_test_suite_node_t));
+    yunit_test_suite_node_t *node = yos_malloc(sizeof(yunit_test_suite_node_t));
     if (node == NULL) {
         printf("%s\n", "out of memory");
         return NULL;
@@ -132,7 +131,7 @@ int yunit_add_test_case(void *test_suite, const char *name, yunit_test_case_proc
         prev = prev->next;
     }
 
-    yunit_test_case_node_t *node = malloc(sizeof(yunit_test_case_node_t));
+    yunit_test_case_node_t *node = yos_malloc(sizeof(yunit_test_case_node_t));
     memset(node,0,sizeof(yunit_test_case_node_t));
 
     if (node == NULL) {
@@ -328,7 +327,7 @@ void yunit_add_test_case_result(int type, const char *file, size_t line, const c
     } else {
     }
 
-    yunit_test_case_result_t *result = malloc(sizeof(yunit_test_case_result_t));
+    yunit_test_case_result_t *result = yos_malloc(sizeof(yunit_test_case_result_t));
     if (result == NULL) {
         printf("%s\n", "out of memory");
         return;
