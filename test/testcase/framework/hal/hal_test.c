@@ -189,7 +189,7 @@ static void test_wifi_case(void)
     hal_wifi_get_mac_addr(&sim_yos_wifi_module, mac);
     hal_wifi_start(&sim_yos_wifi_module, NULL);
     hal_wifi_start_adv(&sim_yos_wifi_module, NULL);
-    hal_wifi_get_ip_stat(&sim_yos_wifi_module, NULL, Soft_AP);
+    hal_wifi_get_ip_stat(&sim_yos_wifi_module, NULL, SOFT_AP);
     hal_wifi_get_link_stat(&sim_yos_wifi_module, NULL);
     hal_wifi_start_scan(&sim_yos_wifi_module);
     hal_wifi_start_scan_adv(&sim_yos_wifi_module);

@@ -404,6 +404,10 @@ $(NAME)_SOURCES	 += hal/flash.c \
 					hal/ringbuf.c \
                     port/ota_port.c
 
+ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
+$(NAME)_SOURCES +=  beken7231/mesh_wifi_hal.c
+endif
+
 ifneq ($(mico_lwip), 1)
 $(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \
                     ../../../kernel/protocols/net/include/netif
