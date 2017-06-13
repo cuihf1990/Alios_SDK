@@ -34,6 +34,7 @@
 
 void mico_wlan_get_mac_address( uint8_t *mac )
 {
+	wifi_get_mac_address(mac);
 }
 
 OSStatus micoWlanStart(network_InitTypeDef_st* inNetworkInitPara)

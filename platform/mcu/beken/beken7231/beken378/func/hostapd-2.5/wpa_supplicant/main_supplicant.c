@@ -28,7 +28,7 @@ static struct wpa_global *wpa_global_ptr;
 static mico_thread_t wpas_thread_handle;
 
 uint32_t wpas_stack_size = 4000;
-mico_semaphore_t wpas_sema = NULL;
+static mico_semaphore_t wpas_sema = NULL;
 struct wpa_ssid_value *wpas_connect_ssid = 0;
 struct wpa_interface *wpas_ifaces = 0;
 
@@ -169,8 +169,7 @@ static void wpas_thread_main( void *arg )
 
 
 	wpas_thread_handle = NULL;
-	mico_rtos_deinit_semaphore(&wpas_sema);
-	wpas_sema = NULL;
+	
 	mico_rtos_delete_thread(NULL);
 }
 
@@ -218,6 +217,8 @@ void wpa_supplicant_poll(void *param)
 
 int wpa_sem_wait(uint32_t ms)
 {
+	if(wpas_sema == NULL)
+		return;
 	return mico_rtos_get_semaphore(&wpas_sema, ms);
 }
 

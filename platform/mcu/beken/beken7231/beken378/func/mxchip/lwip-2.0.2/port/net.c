@@ -225,16 +225,13 @@ static void wifi_station_changed(int connected)
 	
 	last_state = connected;
 	if (connected) {
-#if 0		
 		apinfo_adv_t ap_info;
+		uint8_t *key;
+		int key_len;
 
-		memset(&ap_info, 0, sizeof(ap_info));
-		memcpy(ap_info.ssid,assoc_ap.ssid, assoc_ap.ssid_len);
-		memcpy(ap_info.bssid, assoc_ap.bssid, 6);
-		ap_info.channel = assoc_ap.chann;
-		ap_info.security = assoc_ap.security;
-		connected_ap_info(&ap_info);
-#endif		
+		wpa_get_ap_security(&ap_info, &key, &key_len);
+		connected_ap_info(&ap_info, key, key_len);
+	
 		WifiStatusHandler(1);
 	} else
 		WifiStatusHandler(2);
