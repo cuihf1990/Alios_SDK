@@ -436,5 +436,11 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define LWIP_COMPAT_MUTEX_ALLOWED       (1)
 //#endif
 
+#define TCPIP_MBOX_SIZE                 16
+#define DEFAULT_ACCEPTMBOX_SIZE         8
+#define DEFAULT_RAW_RECVMBOX_SIZE       4
+#define DEFAULT_UDP_RECVMBOX_SIZE       8
+#define DEFAULT_TCP_RECVMBOX_SIZE       8
+
 #endif /* __LWIPOPTS_H__ */
 
