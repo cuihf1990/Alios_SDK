@@ -21,14 +21,24 @@
 #ifdef CONFIG_YOS_DDA
 #include <dda.h>
 #endif
-#include <ysh.h>
+#include "umesh.h"
+#include "umesh_hal.h"
+
+static void app_delayed_action(void *arg)
+{
+    ur_mesh_init(NULL);
+    ur_mesh_start();
+}
+
+static void app_main_entry(void *arg)
+{
+    yos_post_delayed_action(1000, app_delayed_action, arg);
+    yos_loop_run();
+}
 
 int application_start(int argc, char **argv)
 {
     const char *mode = argc > 1 ? argv[1] : "";
-
-    ysh_init();
-    ysh_task_start();
 
     if (strcmp(mode, "--mesh-node") == 0) {
 #ifdef CONFIG_YOS_DDA
@@ -43,7 +53,7 @@ int application_start(int argc, char **argv)
 #endif
     }
     else {
-        yos_loop_run();
+        yos_task_new("meshappmain", app_main_entry, NULL, 8192);
     }
 
     return 0;

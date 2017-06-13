@@ -26,6 +26,7 @@ enum {
 
 ur_error_t ur_configs_read(ur_configs_t *config)
 {
+#ifdef CONFIG_YOS_DDA
     int ret = -1;
     int len = sizeof(*config);
 
@@ -42,12 +43,14 @@ ur_error_t ur_configs_read(ur_configs_t *config)
         return UR_ERROR_NONE;
     }
     memset(config, 0xff, sizeof(ur_configs_t));
+#endif
     return UR_ERROR_FAIL;
 }
 
 ur_error_t ur_configs_write(ur_configs_t *config)
 {
-    int ret;
+#ifdef CONFIG_YOS_DDA
+    int ret = -1;
 
     if (config == NULL) {
         return UR_ERROR_FAIL;
@@ -61,5 +64,6 @@ ur_error_t ur_configs_write(ur_configs_t *config)
         return UR_ERROR_FAIL;
     }
 
+#endif
     return UR_ERROR_NONE;
 }
