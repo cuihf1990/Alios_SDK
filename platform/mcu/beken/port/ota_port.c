@@ -4,9 +4,10 @@
 #include <unistd.h> 
 
 #include <errno.h>
-#include "hal/ota.h"
-#include "yos/log.h"
-#include "hal/soc/soc.h"
+#include <hal/ota.h>
+#include <yos/log.h>
+#include <hal/soc/soc.h>
+#include <CheckSumUtils.h>
 
 typedef struct
 {
@@ -23,6 +24,8 @@ typedef struct  _boot_table_t {
   uint16_t crc;
   uint8_t reserved[4];
 }boot_table_t;
+
+static ota_reboot_info_t ota_info;
 
 int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
 {
@@ -60,6 +63,8 @@ int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
     return 0;
 }
 
+static  CRC16_Context contex;
+
 static int moc108_ota_init(hal_ota_module_t *m, void *something)
 {
 #if 0
@@ -68,13 +73,16 @@ static int moc108_ota_init(hal_ota_module_t *m, void *something)
     partition_info = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
     hal_flash_erase(HAL_PARTITION_OTA_TEMP, 0 ,partition_info.partition_size);
 #endif
-    
+    CRC16_Init( &contex );
     return 0;
 }
 
+
 static int moc108_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
 {
+    CRC16_Update( &contex, in_buf, in_buf_len );
     hal_flash_write(HAL_PARTITION_OTA_TEMP, off_set, in_buf, in_buf_len);
+    ota_info.ota_len += in_buf_len;
     return 0;
 }
 
@@ -86,8 +94,9 @@ static int moc108_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, uin
 
 static int moc108_ota_set_boot(hal_ota_module_t *m, void *something)
 {
-    ota_reboot_info_t *p_info = (ota_reboot_info_t *)something;
-    hal_ota_switch_to_new_fw(p_info->ota_len, p_info->ota_crc);
+    CRC16_Final( &contex, &ota_info.ota_crc );
+    hal_ota_switch_to_new_fw(ota_info.ota_len, ota_info.ota_crc);
+    memset(&ota_info, 0 , sizeof ota_info);
     return 0;
 }
 
