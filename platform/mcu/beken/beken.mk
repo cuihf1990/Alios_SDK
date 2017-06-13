@@ -12,7 +12,8 @@ NAME := beken
 HOST_OPENOCD := beken
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
-$(NAME)_COMPONENTS += framework
+$(NAME)_COMPONENTS += platform/mcu/beken/hal
+$(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
@@ -20,6 +21,9 @@ GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -mlittle-endian
 
 GLOBAL_CFLAGS += -w
+
+GLOBAL_INCLUDES += ../../arch/arm/armv5
+
 GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/common \
                    beken7231/beken378/driver/include \

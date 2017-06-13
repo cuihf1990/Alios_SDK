@@ -94,7 +94,7 @@ void me_init(void)
 #if CFG_MODE_SWITCH
 	if(g_wlan_general_param->role == CONFIG_ROLE_STA)
 #endif
-    sm_init();
+    platform_sm_init();
 #endif
 
     // Reset the Block ACK manager
