@@ -40,7 +40,7 @@ static void handle_link_request_timer(void *args)
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link update timer\r\n");
 
-    if (mm_get_mode() & MODE_MOBILE) {
+    if (umesh_mm_get_mode() & MODE_MOBILE) {
         interval = hal->link_request_mobile_interval;
     } else {
         interval = hal->link_request_interval;
@@ -54,7 +54,7 @@ static void handle_link_request_timer(void *args)
             continue;
         }
 
-        attach_node = mm_get_attach_node(network);
+        attach_node = umesh_mm_get_attach_node(network);
         if (attach_node == NULL) {
             continue;
         }
@@ -113,7 +113,7 @@ static void handle_link_quality_update_timer(void *args)
             continue;
         }
 
-        attach_node = mm_get_attach_node(network);
+        attach_node = umesh_mm_get_attach_node(network);
         if (attach_node == NULL) {
             continue;
         }
@@ -210,7 +210,7 @@ static void handle_update_nbr_timer(void *args)
 {
     neighbor_t    *node;
     hal_context_t *hal = (hal_context_t *)args;
-    uint16_t sid = mm_get_local_sid();
+    uint16_t sid = umesh_mm_get_local_sid();
     network_context_t *network = NULL;
 
     hal->update_nbr_timer = NULL;
@@ -273,10 +273,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
-    path_cost = (mm_cost_tv_t *)mm_get_tv(tlvs, length, TYPE_PATH_COST);
-    src_ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, length, TYPE_SRC_UEID);
-    ssid_info = (mm_ssid_info_tv_t *)mm_get_tv(tlvs, length, TYPE_SSID_INFO);
-    mode = (mm_mode_tv_t *)mm_get_tv(tlvs, length, TYPE_MODE);
+    path_cost = (mm_cost_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_PATH_COST);
+    src_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SRC_UEID);
+    ssid_info = (mm_ssid_info_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SSID_INFO);
+    mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_MODE);
 
     hal = get_hal_context(info->hal_type);
     nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
@@ -469,7 +469,7 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
 
     if (tlvs_length) {
         request_tlvs = (mm_tlv_request_tlv_t *)data;
-        mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST, tlvs_length);
+        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST, tlvs_length);
         data += sizeof(mm_tlv_request_tlv_t);
         memcpy(data, tlvs, tlvs_length);
         data += tlvs_length;
@@ -534,7 +534,7 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
 
     if (tlv_types_length) {
         request_tlvs = (mm_tlv_request_tlv_t *)data;
-        mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST, tlv_types_length);
+        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST, tlv_types_length);
         data += sizeof(mm_tlv_request_tlv_t);
         data[0] = TYPE_TARGET_UEID;
         data += tlv_types_length;
@@ -614,7 +614,7 @@ ur_error_t handle_link_request(message_t *message)
     network = info->network;
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    tlvs_request = (mm_tlv_request_tlv_t *)mm_get_tv(tlvs, tlvs_length,
+    tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                      TYPE_TLV_REQUEST);
 
     if (tlvs_request) {
@@ -653,12 +653,12 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+    ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
     if (ueid) {
         memcpy(node->ueid, ueid->ueid, sizeof(node->ueid));
     }
 
-    tlvs_request = (mm_tlv_request_tlv_t *)mm_get_tv(tlvs, tlvs_length,
+    tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                      TYPE_TLV_REQUEST);
     if (tlvs_request) {
         tlvs = (uint8_t *)tlvs_request + sizeof(mm_tlv_t);
@@ -692,7 +692,7 @@ ur_error_t handle_link_accept(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    ueid = (mm_ueid_tv_t *)mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+    ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
     if (ueid) {
         memcpy(node->ueid, ueid->ueid, sizeof(node->ueid));
     }
@@ -714,7 +714,7 @@ void start_neighbor_updater(void)
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        if (mm_get_mode() & MODE_MOBILE) {
+        if (umesh_mm_get_mode() & MODE_MOBILE) {
             interval = hal->link_request_mobile_interval;
         } else {
             interval = hal->link_request_interval;

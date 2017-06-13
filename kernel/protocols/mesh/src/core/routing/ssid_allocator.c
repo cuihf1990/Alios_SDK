@@ -48,8 +48,8 @@ void allocator_init(network_context_t *network)
     allocator->base.node_num = 0;
     allocator->pf_node_num = 0;
 
-    sid = mm_get_local_sid();
-    if (mm_get_device_state() == DEVICE_STATE_SUPER_ROUTER) {
+    sid = umesh_mm_get_local_sid();
+    if (umesh_mm_get_device_state() == DEVICE_STATE_SUPER_ROUTER) {
         sid = SUPER_ROUTER_SID;
     }
 

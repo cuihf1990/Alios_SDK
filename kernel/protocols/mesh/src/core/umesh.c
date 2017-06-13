@@ -69,7 +69,7 @@ static void update_ipaddr(void)
            sizeof(g_um_state.ucast_address[0].addr.m8));
     g_um_state.ucast_address[0].addr.m32[0] = ur_swap32(0xfc000000);
     g_um_state.ucast_address[0].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
-    addr = (get_sub_netid(network->meshnetid) << 16) | mm_get_local_sid();
+    addr = (get_sub_netid(network->meshnetid) << 16) | umesh_mm_get_local_sid();
     g_um_state.ucast_address[0].addr.m32[3] = ur_swap32(addr);
     g_um_state.ucast_address[0].prefix_length = 64;
 
@@ -78,7 +78,7 @@ static void update_ipaddr(void)
            sizeof(g_um_state.ucast_address[1].addr.m8));
     g_um_state.ucast_address[1].addr.m32[0] = ur_swap32(0xfc000000);
     g_um_state.ucast_address[1].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
-    memcpy(&g_um_state.ucast_address[1].addr.m8[8], mm_get_local_ueid(), 8);
+    memcpy(&g_um_state.ucast_address[1].addr.m8[8], umesh_mm_get_local_ueid(), 8);
     g_um_state.ucast_address[1].prefix_length = 64;
 
     mcast = nd_get_subscribed_mcast();
@@ -167,7 +167,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     uint8_t          append_length;
     uint8_t          *payload;
 
-    if (mm_get_device_state() < DEVICE_STATE_LEAF) {
+    if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
         return UR_ERROR_FAIL;
     }
 
@@ -256,7 +256,7 @@ static void parse_args(void)
 
         if (strcmp(argv[i], "--mesh-mode") == 0) {
             int mode = atoi(argv[i + 1]);
-            mm_set_mode(mode);
+            umesh_mm_set_mode(mode);
 
             i += 1;
             continue;
@@ -284,9 +284,9 @@ ur_error_t ur_mesh_init(void *config)
     ur_adapter_interface_init();
     ur_router_register_module();
     interface_init();
-    mm_init();
+    umesh_mm_init();
     neighbors_init();
-    cli_init();
+    mesh_cli_init();
     mf_init();
     nd_init();
     lp_init();
@@ -317,7 +317,7 @@ ur_error_t ur_mesh_start()
         hal_ur_mesh_enable(wifi_hal);
     }
     interface_start();
-    mm_start(&g_um_state.mm_cb);
+    umesh_mm_start(&g_um_state.mm_cb);
 
     g_um_state.network_data_updater.handler = network_data_update_handler;
     nd_register_update_handler(&g_um_state.network_data_updater);
@@ -344,7 +344,7 @@ ur_error_t ur_mesh_stop(void)
     nd_unregister_update_handler(&g_um_state.network_data_updater);
 
     ur_mesh_interface_down();
-    mm_stop();
+    umesh_mm_stop();
     interface_stop();
     return UR_ERROR_NONE;
 }
@@ -352,7 +352,7 @@ ur_error_t ur_mesh_stop(void)
 /* per device APIs */
 uint8_t ur_mesh_get_device_state(void)
 {
-    return (uint8_t)mm_get_device_state();
+    return (uint8_t)umesh_mm_get_device_state();
 }
 
 ur_error_t ur_mesh_register_callback(ur_adapter_callback_t *callback)
@@ -363,48 +363,48 @@ ur_error_t ur_mesh_register_callback(ur_adapter_callback_t *callback)
 
 uint8_t ur_mesh_get_mode(void)
 {
-    return (uint8_t)mm_get_mode();
+    return (uint8_t)umesh_mm_get_mode();
 }
 
 ur_error_t ur_mesh_set_mode(uint8_t mode)
 {
-    return mm_set_mode(mode);
+    return umesh_mm_set_mode(mode);
 }
 
 int8_t ur_mesh_get_seclevel(void)
 {
-    return mm_get_seclevel();
+    return umesh_mm_get_seclevel();
 }
 
 ur_error_t ur_mesh_set_seclevel(int8_t level)
 {
-    return mm_set_seclevel(level);
+    return umesh_mm_set_seclevel(level);
 }
 
 /* per network APIs */
 const mac_address_t *ur_mesh_net_get_mac_address(ur_mesh_net_index_t nettype)
 {
-    return mm_get_mac_address();
+    return umesh_mm_get_mac_address();
 }
 
 uint16_t ur_mesh_net_get_meshnetid(ur_mesh_net_index_t nettype)
 {
-    return mm_get_meshnetid(NULL);
+    return umesh_mm_get_meshnetid(NULL);
 }
 
 void ur_mesh_net_set_meshnetid(ur_mesh_net_index_t nettype, uint16_t meshnetid)
 {
-    mm_set_meshnetid(NULL, meshnetid);
+    umesh_mm_set_meshnetid(NULL, meshnetid);
 }
 
 uint16_t ur_mesh_net_get_meshnetsize(ur_mesh_net_index_t nettype)
 {
-    return mm_get_meshnetsize();
+    return umesh_mm_get_meshnetsize();
 }
 
 uint16_t ur_mesh_net_get_sid(ur_mesh_net_index_t nettype)
 {
-    return mm_get_local_sid();
+    return umesh_mm_get_local_sid();
 }
 
 bool ur_mesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)

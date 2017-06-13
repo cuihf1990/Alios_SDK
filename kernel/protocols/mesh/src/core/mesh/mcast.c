@@ -42,7 +42,7 @@ ur_error_t insert_mcast_header(network_context_t *network, uint8_t *message)
 
     header->control = 0;
     header->subnetid = mm_get_sub_netid(network);
-    header->sid = mm_get_local_sid();
+    header->sid = umesh_mm_get_local_sid();
     header->sequence = network->mcast_sequence++;
     return UR_ERROR_NONE;
 }
@@ -66,7 +66,7 @@ ur_error_t process_mcast_header(network_context_t *network, uint8_t *message)
         }
     }
     network = get_default_network_context();
-    if (header->sid == mm_get_local_sid() && from_local_net) {
+    if (header->sid == umesh_mm_get_local_sid() && from_local_net) {
         return UR_ERROR_DROP;
     }
 

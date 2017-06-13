@@ -88,7 +88,7 @@ uint16_t ur_router_get_next_hop(network_context_t *network, uint16_t dest_sid)
     }
 
     if (get_neighbor_by_sid(network->hal, dest_sid,
-                            mm_get_meshnetid(network)) != NULL) {
+                            umesh_mm_get_meshnetid(network)) != NULL) {
         return dest_sid;
     }
 
@@ -229,7 +229,7 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
     // dest
     info->dest.addr.len = SHORT_ADDR_SIZE;
     info->dest.addr.short_addr = dst;
-    info->dest.netid = mm_get_meshnetid(NULL);
+    info->dest.netid = umesh_mm_get_meshnetid(NULL);
 
     set_command_type(info, mm_header->command);
     ur_mem_free(data, msg_length);

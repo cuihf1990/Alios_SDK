@@ -275,7 +275,7 @@ static uint16_t scan_new_edges()
 
     newedges = 0;
     for_each_vertex(vertex) {
-        neighbor = get_neighbor_by_sid(NULL, vertex->sid, mm_get_meshnetid(NULL));
+        neighbor = get_neighbor_by_sid(NULL, vertex->sid, umesh_mm_get_meshnetid(NULL));
         if (neighbor != NULL) {
             uint16_t src, dst;
             uint8_t  cost;
@@ -996,7 +996,7 @@ static void handle_heartbeat_timer(void *args)
         }
     } else if (g_vr_state.status == STATUS_SYNC_TOPOLOGY) {
         if (g_vr_state.sync_status == TOPOLOGY_SYNC_IDLE) {
-            neighbor_t *node = mm_get_attach_node(NULL);
+            neighbor_t *node = umesh_mm_get_attach_node(NULL);
             if (node == NULL) {
                 return;
             }
@@ -1177,7 +1177,7 @@ ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data,
 
             g_vr_state.meshnetid = netids->meshnetid;
             vertex_me->sid = netids->sid;
-            memcpy(vertex_me->ueid, mm_get_local_ueid(), sizeof(vertex_me->ueid));
+            memcpy(vertex_me->ueid, umesh_mm_get_local_ueid(), sizeof(vertex_me->ueid));
             if (netids->sid == LEADER_SID) {
                 g_vr_state.status = STATUS_UP;
             } else {

@@ -38,7 +38,7 @@ static uint16_t generate_meshnetid(void)
     uint8_t *ueid;
 
     /* TODO: replace XOR with hash function */
-    ueid = mm_get_local_ueid();
+    ueid = umesh_mm_get_local_ueid();
     meshnetid ^= ((uint16_t)ueid[0]) << 8;
     meshnetid ^= ((uint16_t)ueid[1]) << 8;
     meshnetid ^= ((uint16_t)ueid[2]) << 8;
@@ -63,7 +63,7 @@ ur_error_t nd_init(void)
     memset(&g_nd_state.stable_network_data, 0,
            sizeof(g_nd_state.stable_network_data));
     g_nd_state.stable_network_data.meshnetid = INVALID_NETID;
-    if (mm_get_mode() & MODE_MOBILE) {
+    if (umesh_mm_get_mode() & MODE_MOBILE) {
         g_nd_state.stable_network_data.meshnetid = INVALID_NETID;
     } else {
         g_nd_state.stable_network_data.meshnetid = generate_meshnetid();
@@ -143,7 +143,7 @@ ur_error_t nd_set_stable_meshnetid(uint16_t meshnetid)
     ur_error_t     error = UR_ERROR_NONE;
     stable_network_data_t network_data;
 
-    if (mm_get_device_state() != DEVICE_STATE_LEADER) {
+    if (umesh_mm_get_device_state() != DEVICE_STATE_LEADER) {
         return UR_ERROR_FAIL;
     }
 
@@ -168,7 +168,7 @@ ur_error_t nd_set_subscribed_mcast(const ur_ip6_addr_t *addr)
     ur_error_t            error = UR_ERROR_NONE;
     stable_network_data_t network_data;
 
-    if (mm_get_device_state() != DEVICE_STATE_LEADER) {
+    if (umesh_mm_get_device_state() != DEVICE_STATE_LEADER) {
         return UR_ERROR_FAIL;
     }
 
@@ -257,8 +257,8 @@ ur_error_t nd_set_meshnetsize(network_context_t *network, uint32_t size)
     network_data_t network_data;
     network_data_t *local_network_data;
 
-    if (mm_get_device_state() != DEVICE_STATE_LEADER &&
-        mm_get_device_state() != DEVICE_STATE_SUPER_ROUTER) {
+    if (umesh_mm_get_device_state() != DEVICE_STATE_LEADER &&
+        umesh_mm_get_device_state() != DEVICE_STATE_SUPER_ROUTER) {
         return UR_ERROR_FAIL;
     }
 
