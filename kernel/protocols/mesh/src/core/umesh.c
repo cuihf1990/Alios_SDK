@@ -235,6 +235,7 @@ ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver)
     return UR_ERROR_NONE;
 }
 
+#ifdef CONFIG_YOS_DDA
 int csp_get_args(const char ***pargv);
 static void parse_args(void)
 {
@@ -271,6 +272,7 @@ static void parse_args(void)
         }
     }
 }
+#endif
 
 ur_error_t ur_mesh_init(void *config)
 {
@@ -294,7 +296,9 @@ ur_error_t ur_mesh_init(void *config)
     g_um_state.initialized = true;
     register_raw_data_receiver(umesh_raw_data_receiver);
 
+#ifdef CONFIG_YOS_DDA
     parse_args();
+#endif
     return UR_ERROR_NONE;
 }
 
