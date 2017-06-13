@@ -126,7 +126,7 @@ static void low_level_init(struct netif *netif)
 {
     u8_t wireless_mac[NETIF_MAX_HWADDR_LEN];
 
-	wifi_get_mac_address(wireless_mac);
+	wifi_get_mac_address((char *)wireless_mac);
     /* set MAC hardware address length */
     ETH_INTF_PRT("enter low level!\r\n");
     ETH_INTF_PRT("mac %2x:%2x:%2x:%2x:%2x:%2x\r\n", wireless_mac[0],

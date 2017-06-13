@@ -29,12 +29,12 @@ void rxsens_ct_hdl(void *param)
 
 int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
-    OSStatus err;
     char cmd0 = 0;
     char cmd1 = 0;
     UINT8 fail = 0;
 
 #if CFG_RX_SENSITIVITY_TEST
+    OSStatus err;
     UINT8 ret;
 #endif
 

@@ -128,11 +128,6 @@ static SPIDMA_ELEM_PTR spidma_intfer_elem_input(void)
     elem = (SPIDMA_ELEM_PTR)co_list_pick(&spidma_pool.free);
     if(!elem)
     {
-        //process_poll(&app_rx_mailbox_process);
-        //SPIDMA_INTF_PRT("srxf\r\n");
-        
-        //REG_WRITE((0x00802800 + (8 * 4)), 0x02);
-        //REG_WRITE((0x00802800 + (8 * 4)), 0x00);
         return NULL;
     }
     co_list_pop_front(&spidma_pool.free);

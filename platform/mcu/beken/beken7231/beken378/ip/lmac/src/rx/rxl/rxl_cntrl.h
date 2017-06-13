@@ -39,16 +39,20 @@
  * INCLUDE FILES
  ****************************************************************************************
  */
-// standard includes
 #include "co_int.h"
-
-// for co_list
 #include "co_list.h"
-
-// for co_ring
 #include "co_ring.h"
-
 #include "dma.h"
+
+//#define RXL_CNTRL_DEBUG
+
+#ifdef RXL_CNTRL_DEBUG
+#define RXL_CNTRL_PRT       os_printf
+#define RXL_CNTRL_WPRT      warning_prf
+#else
+#define RXL_CNTRL_PRT       os_null_printf
+#define RXL_CNTRL_WPRT      warning_prf
+#endif
 
 /*
  * MACROS
@@ -222,9 +226,6 @@ void rxl_current_desc_get(struct rx_hd **rhd, struct rx_pbd **rbd);
  ****************************************************************************************
  */
 void rxl_mpdu_transfer(struct rx_swdesc *swdesc);
-
-static void rxl_thread_func( void *arg );
-
 #endif // _RXL_CNTRL_H_
 // eof
 

@@ -43,6 +43,11 @@
  * DEFINES
  ****************************************************************************************
  */
+#define KEY_ENTRY_MIN_ID		 24
+#define KEY_ENTRY_MAX_ID		 63
+
+#define MONITOR_FAILURE         ((UINT32)-1)
+#define MONITOR_SUCCESS         (0)
 
 /// Duration between AP TBTT and Beacon Transmission (in us, should be a multiple of 128us)
 #define HAL_MACHW_BCN_TX_DELAY_US       (2048)
@@ -376,6 +381,8 @@ bool hal_machw_sleep_check(void);
  ****************************************************************************************
  */
 void hal_machw_gen_handler(void);
+
+extern void hal_init_cipher_keys(void);
 
 /**
  ****************************************************************************************

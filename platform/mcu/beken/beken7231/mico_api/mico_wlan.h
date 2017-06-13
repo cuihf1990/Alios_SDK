@@ -36,6 +36,8 @@
 extern "C" {
 #endif
 
+typedef int         OSStatus;
+
 #define WiFi_Interface  wlanInterfaceTypedef
 #define net_para_st     IPStatusTypedef
 

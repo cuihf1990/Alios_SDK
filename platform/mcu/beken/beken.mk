@@ -406,6 +406,7 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
 $(NAME)_SOURCES	 += hal/flash.c \
 					hal/uart.c \
 					hal/ringbuf.c \
+					hal/wifi_port.c \
                     port/ota_port.c
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))

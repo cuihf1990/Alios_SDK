@@ -242,6 +242,7 @@ void mhdr_connect_ind(void *msg, UINT32 len)
 	{
 		os_printf("---------SM_CONNECT_IND_fail\r\n");
 		connect_flag = 0;
+		
 		sa_reconnect_init();
 
 		if(deassoc_evt_cb.cb)
@@ -260,9 +261,10 @@ UINT32 mhdr_scanu_start_cfm(SCAN_RST_UPLOAD_T *ap_list)
 		os_printf("\r\n got %d AP\r\n", ap_list->scanu_num);
 		for(i = 0; i < ap_list->scanu_num; i++)
 		{
-			os_printf("ap%d: name = %s	| strenth=%d\r\n",
+			os_printf("ap%d: name = %s	| strenth=%d | channel=%d\r\n",
 					  i, ap_list->res[i]->ssid, 
-					  ap_list->res[i]->power);
+					  ap_list->res[i]->level,
+					  ap_list->res[i]->channel);
 		}
 		
 		wpa_buffer_scan_results();
@@ -288,9 +290,14 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
     SCAN_RST_UPLOAD_PTR result_ptr;
     SCAN_IND_PTR scanu_ret_ptr;
     IEEE802_11_PROBE_RSP_PTR probe_rsp_ieee80211_ptr;
-
+	char on_channel;
+	int replace_index = -1;
+	
 	ret = RW_SUCCESS;
 	result_ptr = scan_rst;
+
+	if (result_ptr->scanu_num >= MAX_BSS_LIST)
+		goto scan_rst_exit;
 	
 	msg_ptr = (struct ke_msg *)msg;	
 	scanu_ret_ptr = (SCAN_IND_PTR)msg_ptr->param;
@@ -298,21 +305,20 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
 	vies_len = scanu_ret_ptr->length - MAC_BEACON_VARIABLE_PART_OFT;
 	var_part_addr = probe_rsp_ieee80211_ptr->rsp.variable;
 
-	#ifdef SCAN_DS_FILTER
-    elmt_addr = (UINT8 *)mac_ie_find((UINT32)var_part_addr, (UINT16)vies_len, MAC_ELTID_DS);
-    if(elmt_addr)
-    {
-        chann = *(elmt_addr + MAC_DS_CHANNEL_OFT);
-        if(rw_ieee80211_get_chan_id(scanu_ret_ptr->center_freq) != chann)
-        {
-			ret = RW_FAILURE;
-            goto scan_rst_exit;
-        }
-    }
-	#endif // SCAN_DS_FILTER
+	elmt_addr = (UINT8 *)mac_ie_find((UINT32)var_part_addr, (UINT16)vies_len, MAC_ELTID_DS);
+	if(elmt_addr) // adjust channel
+	{
+		chann = *(elmt_addr + MAC_DS_CHANNEL_OFT);
+		if (chann == rw_ieee80211_get_chan_id(scanu_ret_ptr->center_freq))
+			on_channel = 1;
+		else
+			on_channel = 0;
+	} else {
+		chann = rw_ieee80211_get_chan_id(scanu_ret_ptr->center_freq);
+		on_channel = 0;
+	}
 
-	#define SCAN_SAME_MAC_ADDR_FILTER
-	#ifdef SCAN_SAME_MAC_ADDR_FILTER
+	/* check the duplicate bssid*/
 	do
 	{
 		int i, count;
@@ -321,53 +327,54 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
 		{
 			if(!os_memcmp(probe_rsp_ieee80211_ptr->bssid, result_ptr->res[i]->bssid, ETH_ALEN))
 			{
-				ret = RW_FAILURE;
-	            goto scan_rst_exit;
+				if ((result_ptr->res[i]->on_channel == 1) || (on_channel == 0)) {
+					goto scan_rst_exit;
+				} else {
+					replace_index = i; // should replace it.
+				}
 			}
 		}
 	}while(0);
-	#endif // SCAN_SAME_MAC_ADDR_FILTER
 	
  	item = (SCAN_RST_ITEM_PTR)sr_malloc_result_item(vies_len);
-	if((item) && (result_ptr->scanu_num < MAX_BSS_LIST))
-	{	
-        elmt_addr = (UINT8 *)mac_ie_find((UINT32)var_part_addr, 
-											(UINT16)vies_len, 
-											MAC_ELTID_SSID);
-        if(elmt_addr)
-        {
-            UINT8 ssid_len = *(elmt_addr + MAC_SSID_LEN_OFT);
+	if (item == NULL)
+		goto scan_rst_exit;
+	
+    elmt_addr = (UINT8 *)mac_ie_find((UINT32)var_part_addr, 
+										(UINT16)vies_len, 
+										MAC_ELTID_SSID);
+    if(elmt_addr)
+    {
+        UINT8 ssid_len = *(elmt_addr + MAC_SSID_LEN_OFT);
 
-            if (ssid_len >= MAC_SSID_LEN)
-                ssid_len = MAC_SSID_LEN - 1;
+        if (ssid_len >= MAC_SSID_LEN)
+            ssid_len = MAC_SSID_LEN - 1;
 
-            os_memcpy(item->ssid, elmt_addr + MAC_SSID_SSID_OFT, ssid_len);
-            item->ssid[ssid_len] = '\0';
-        }
-		else
-		{
-			os_printf("NoSSid\r\n");
-		}
-		
-		os_memcpy(item->bssid, probe_rsp_ieee80211_ptr->bssid, ETH_ALEN);
-		item->freq = scanu_ret_ptr->center_freq;
-		item->beacon_int = probe_rsp_ieee80211_ptr->rsp.beacon_int;
-		item->caps = probe_rsp_ieee80211_ptr->rsp.capab_info;
-		item->level = scanu_ret_ptr->rssi;
-		item->power = scanu_ret_ptr->rssi + 100;
-		
-		os_memcpy(item->tsf, probe_rsp_ieee80211_ptr->rsp.timestamp, 8);
-		
-		item->ie_len = vies_len;
-		os_memcpy(item + 1, var_part_addr, vies_len);
-
-		result_ptr->res[result_ptr->scanu_num] = item;
-
-		result_ptr->scanu_num ++;
-	}
+        os_memcpy(item->ssid, elmt_addr + MAC_SSID_SSID_OFT, ssid_len);
+        item->ssid[ssid_len] = '\0';
+    }
 	else
 	{
-		sr_free_result_item((UINT8 *)item);
+		os_printf("NoSSid\r\n");
+	}
+	os_memcpy(item->bssid, probe_rsp_ieee80211_ptr->bssid, ETH_ALEN);
+	item->channel = chann;
+	item->beacon_int = probe_rsp_ieee80211_ptr->rsp.beacon_int;
+	item->caps = probe_rsp_ieee80211_ptr->rsp.capab_info;
+	item->level = scanu_ret_ptr->rssi;
+	item->on_channel = on_channel;
+	
+	os_memcpy(item->tsf, probe_rsp_ieee80211_ptr->rsp.timestamp, 8);
+	
+	item->ie_len = vies_len;
+	os_memcpy(item + 1, var_part_addr, vies_len);
+
+	if (replace_index >= 0) {
+		sr_free_result_item((UINT8 *)result_ptr->res[replace_index]);
+		result_ptr->res[replace_index] = item;
+	} else {
+		result_ptr->res[result_ptr->scanu_num] = item;
+		result_ptr->scanu_num ++;
 	}
 	
 scan_rst_exit:

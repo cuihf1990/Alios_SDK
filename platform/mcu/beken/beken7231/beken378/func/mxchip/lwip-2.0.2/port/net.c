@@ -26,6 +26,7 @@
 
 #include "mxchip_netif_address.h"
 #include "rtos_pub.h"
+#include "mico_wlan.h"
 
 struct ipv4_config sta_ip_settings;
 struct ipv4_config uap_ip_settings;
@@ -190,26 +191,82 @@ void net_wlan_init(void)
 	return;
 }
 
-static void wm_netif_status_callback(struct netif *n)
+static void dhcp_up(ip_addr_t ip, ip_addr_t netmask, 
+					ip_addr_t gateway, ip_addr_t dnsServer)
 {
-	if (n->flags & NETIF_FLAG_UP){
+    net_para_st netpara;
+    net_para_st *pnetpara = &netpara;
+    unsigned char mac[6];
+	char macstr[14];
+	
+	memset(pnetpara, 0, sizeof(net_para_st));
+	mico_wlan_get_mac_address(mac);
+
+	sprintf(macstr, "%02x%02x%02x%02x%02x%02x", mac[0],
+			mac[1], mac[2], mac[3], mac[4], mac[5]);
+	memcpy(pnetpara->mac, macstr, 12);
+
+	strcpy(pnetpara->ip, inet_ntoa(ip));
+	os_printf("IP up: %s\r\n", pnetpara->ip);
+	strcpy(pnetpara->mask, inet_ntoa(netmask));
+	strcpy(pnetpara->gate, inet_ntoa(gateway));
+	strcpy(pnetpara->dns, inet_ntoa(dnsServer));
+    pnetpara->dhcp = 1;
+    sprintf(pnetpara->broadcastip, "255.255.255.255");
+    NetCallback(pnetpara);
+}
+
+static void wifi_station_changed(int connected)
+{
+	static int last_state = 0;
+
+	if (connected == last_state)
+		return;
+	
+	last_state = connected;
+	if (connected) {
+#if 0		
+		apinfo_adv_t ap_info;
+
+		memset(&ap_info, 0, sizeof(ap_info));
+		memcpy(ap_info.ssid,assoc_ap.ssid, assoc_ap.ssid_len);
+		memcpy(ap_info.bssid, assoc_ap.bssid, 6);
+		ap_info.channel = assoc_ap.chann;
+		ap_info.security = assoc_ap.security;
+		connected_ap_info(&ap_info);
+#endif		
+		WifiStatusHandler(1);
+	} else
+		WifiStatusHandler(2);
+}
+
+const ip_addr_t* dns_getserver(u8_t numdns);
+
+static void netif_status_callback(struct netif *n)
+{
+	ip_addr_t *dns_server;
+	
+	if (n->flags & NETIF_FLAG_UP) {
 		struct dhcp *dhcp = netif_dhcp_data(n);
-		if(dhcp != NULL){
+		if(dhcp != NULL){ 
 			if (dhcp->state == DHCP_STATE_BOUND) {
 				// dhcp success
-				os_printf("IP up: %x\r\n", n->ip_addr.u_addr.ip4.addr);
+				dns_server = dns_getserver(0);
+				dhcp_up(n->ip_addr, n->netmask, n->gw, *dns_server);
+				wifi_station_changed(1);
 			} else {
 				// dhcp fail
 			}
 		} else {
-
+			wifi_station_changed(1);
 			// static IP success;
 		}
-
+		
 	} else {
 		// dhcp fail;
 	}
 }
+
 
 static int check_iface_mask(void *handle, uint32_t ipaddr)
 {
@@ -413,7 +470,7 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 				&if_handle->nmask, &if_handle->gw);
 
 		netif_set_status_callback(&if_handle->netif,
-					wm_netif_status_callback);
+					netif_status_callback);
 		netifapi_netif_set_up(&if_handle->netif);
 		netifapi_dhcp_start(&if_handle->netif);
 		break;

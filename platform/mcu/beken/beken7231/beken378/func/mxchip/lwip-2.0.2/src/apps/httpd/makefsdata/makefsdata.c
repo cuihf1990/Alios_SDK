@@ -363,7 +363,7 @@ int main(int argc, char *argv[])
   while (first_file != NULL) {
      struct file_entry* fe = first_file;
      first_file = fe->next;
-     free(fe);
+     os_free(fe);
   }
 
   return 0;
@@ -406,7 +406,7 @@ static void copy_file(const char *filename_in, FILE *fout)
   while ((len = fread(buf, 1, COPY_BUFSIZE, fin)) > 0) {
     fwrite(buf, 1, len, fout);
   }
-  free(buf);
+  os_free(buf);
   fclose(fin);
 }
 
@@ -551,7 +551,7 @@ u8_t* get_file_data(const char* filename, int* file_size, int can_be_compressed,
             LWIP_ASSERT("decompressed memcmp failed", !memcmp(s_checkbuf, buf, fsize));
           }
           /* free original buffer, use compressed data + size */
-          free(buf);
+          os_free(buf);
           buf = ret_buf;
           *file_size = out_bytes;
           printf(" - deflate: %d bytes -> %d bytes (%.02f%%)" NEWLINE, (int)fsize, (int)out_bytes, (float)((out_bytes*100.0)/fsize));
@@ -682,7 +682,7 @@ static void fix_filename_for_c(char* qualifiedName, size_t max_len)
       exit(-1);
    }
    strcpy(qualifiedName, new_name);
-   free(new_name);
+   os_free(new_name);
 }
 
 static void register_filename(const char* qualifiedName)
@@ -798,7 +798,7 @@ int process_file(FILE *data_file, FILE *struct_file, const char *filename)
   fprintf(data_file, NEWLINE "/* raw file data (%d bytes) */" NEWLINE, file_size);
   process_file_data(data_file, file_data, file_size);
   fprintf(data_file, "};" NEWLINE NEWLINE);
-  free(file_data);
+  os_free(file_data);
   return 0;
 }
 

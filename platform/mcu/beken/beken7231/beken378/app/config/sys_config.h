@@ -26,7 +26,7 @@
 
 /* macro of ap mode*/
 #define CFG_SSID_AP                    "beken7231"
-#define CFG_CHANNEL_AP                            1
+#define CFG_CHANNEL_AP                            11
 
 #define CFG_OOB_CONNECT_SSID           "flashtest"
 

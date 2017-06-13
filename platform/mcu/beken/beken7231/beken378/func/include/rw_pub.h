@@ -28,8 +28,8 @@ typedef struct sta_scan_res
 {
     UINT8 bssid[6];
     char ssid[32];  /**< The SSID of an access point. */
-    char power;   /**< Signal strength, min:0, max:100. */
-    int freq;
+    char on_channel; // 1: ds IE channel=center_freq, 0: !=   
+    char channel;
     UINT16 beacon_int;
     UINT16 caps;
     int level;

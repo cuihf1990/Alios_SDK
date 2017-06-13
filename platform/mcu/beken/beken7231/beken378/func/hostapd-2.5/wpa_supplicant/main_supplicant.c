@@ -21,9 +21,12 @@
 #include "rtos_pub.h"
 #include "error.h"
 #include "uart_pub.h"
+#include "signal.h"
+
 
 static struct wpa_global *wpa_global_ptr;
 static mico_thread_t wpas_thread_handle;
+
 uint32_t wpas_stack_size = 4000;
 mico_semaphore_t wpas_sema = NULL;
 struct wpa_ssid_value *wpas_connect_ssid = 0;
@@ -33,8 +36,11 @@ extern void wpas_thread_start(void);
 
 int supplicant_main_exit(void)
 {
-    //wpas_thread_stop();
-
+	if (wpa_global_ptr == NULL)
+		return 0;
+	
+    wpas_thread_stop();
+	
     if(wpa_global_ptr)
     {
         wpa_supplicant_deinit(wpa_global_ptr);
@@ -159,18 +165,13 @@ out:
 
 static void wpas_thread_main( void *arg )
 {
-    OSStatus ret;
+    wpa_supplicant_run(wpa_global_ptr); // wpa main loop
 
-    while(1)
-    {
-        ret = mico_rtos_get_semaphore(&wpas_sema, MICO_WAIT_FOREVER);
-        ASSERT(kNoErr == ret);
 
-        if(wpa_supplicant_run(wpa_global_ptr) < 0)
-        {
-            os_printf("Failed to start eloop\r\n");
-        }
-    }
+	wpas_thread_handle = NULL;
+	mico_rtos_deinit_semaphore(&wpas_sema);
+	wpas_sema = NULL;
+	mico_rtos_delete_thread(NULL);
 }
 
 void wpas_thread_start(void)
@@ -197,21 +198,12 @@ void wpas_thread_start(void)
 
 void wpas_thread_stop(void)
 {
-    OSStatus ret;
+    wpa_handler_signal(SIGTERM);
 
-    if(wpas_thread_handle)
-    {
-        ret = mico_rtos_delete_thread(&wpas_thread_handle);
-        ASSERT(kNoErr == ret);
-		wpas_thread_handle = NULL;
-    }
+    while(wpas_thread_handle != NULL) {
+		mico_rtos_delay_milliseconds(10);
+	}
 
-    if(wpas_sema)
-    {
-        ret = mico_rtos_deinit_semaphore(&wpas_sema);
-        ASSERT(kNoErr == ret);
-		wpas_sema = NULL;
-    }
 }
 
 void wpa_supplicant_poll(void *param)
@@ -222,6 +214,11 @@ void wpa_supplicant_poll(void *param)
 	{
     	ret = mico_rtos_set_semaphore(&wpas_sema);
 	}
+}
+
+int wpa_sem_wait(uint32_t ms)
+{
+	return mico_rtos_get_semaphore(&wpas_sema, ms);
 }
 
 // eof

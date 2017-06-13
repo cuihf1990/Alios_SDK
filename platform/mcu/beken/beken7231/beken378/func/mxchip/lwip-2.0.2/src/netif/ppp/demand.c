@@ -154,8 +154,8 @@ demand_discard()
 
     /* discard all saved packets */
     for (pkt = pend_q; pkt != NULL; pkt = nextpkt) {
-	nextpkt = pkt->next;
-	free(pkt);
+		nextpkt = pkt->next;
+		os_free(pkt);
     }
     pend_q = NULL;
     framelen = 0;
@@ -412,7 +412,7 @@ demand_rexmit(proto, newip)
                 }
             }
 	    output(pcb, pkt->data, pkt->length);
-	    free(pkt);
+	    os_free(pkt);
 	} else {
 	    if (prev == NULL)
 		pend_q = pkt;

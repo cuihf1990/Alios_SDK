@@ -224,9 +224,9 @@ mp_join_bundle()
 			    || !process_exists(pppd_pid)
 			    || !owns_unit(pid, unit))
 				unit = -1;
-			free(rec.dptr);
+			os_free(rec.dptr);
 		}
-		free(pid.dptr);
+		os_free(pid.dptr);
 	}
 
 	if (unit >= 0) {
@@ -330,7 +330,7 @@ static void make_bundle_links(int append)
 			warn("bundle link list not found");
 		}
 		if (rec.dptr != NULL)
-			free(rec.dptr);
+			os_free(rec.dptr);
 	}
 	rec.dptr = p;
 	rec.dsize = strlen(p) + 1;
@@ -338,7 +338,7 @@ static void make_bundle_links(int append)
 		error("couldn't %s bundle link list",
 		      append? "update": "create");
 	if (p != entry)
-		free(p);
+		os_free(p);
 }
 
 static void remove_bundle_link()
@@ -355,7 +355,7 @@ static void remove_bundle_link()
 	rec = tdb_fetch(pppdb, key);
 	if (rec.dptr == NULL || rec.dsize <= 0) {
 		if (rec.dptr != NULL)
-			free(rec.dptr);
+			os_free(rec.dptr);
 		return;
 	}
 	rec.dptr[rec.dsize-1] = 0;
@@ -368,7 +368,7 @@ static void remove_bundle_link()
 		if (tdb_store(pppdb, key, rec, TDB_REPLACE))
 			error("couldn't update bundle link list (removal)");
 	}
-	free(rec.dptr);
+	os_free(rec.dptr);
 }
 
 static void iterate_bundle_links(void (*func)(char *))
@@ -382,7 +382,7 @@ static void iterate_bundle_links(void (*func)(char *))
 	if (rec.dptr == NULL || rec.dsize <= 0) {
 		error("bundle link list not found (iterating list)");
 		if (rec.dptr != NULL)
-			free(rec.dptr);
+			os_free(rec.dptr);
 		return;
 	}
 	p = rec.dptr;
@@ -397,10 +397,10 @@ static void iterate_bundle_links(void (*func)(char *))
 			func(pp.dptr);
 		}
 		if (pp.dptr != NULL)
-			free(pp.dptr);
+			os_free(pp.dptr);
 		p = q + 1;
 	}
-	free(rec.dptr);
+	os_free(rec.dptr);
 }
 
 static int
@@ -443,7 +443,7 @@ owns_unit(key, unit)
 	if (vd.dptr != NULL) {
 		ret = vd.dsize == key.dsize
 			&& memcmp(vd.dptr, key.dptr, vd.dsize) == 0;
-		free(vd.dptr);
+		os_free(vd.dptr);
 	}
 	return ret;
 }
