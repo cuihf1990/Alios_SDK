@@ -13,8 +13,7 @@ HOST_OPENOCD := beken
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
-$(NAME)_COMPONENTS += platform/mcu/beken/port
-$(NAME)_COMPONENTS += framework
+$(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
@@ -22,6 +21,9 @@ GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -mlittle-endian
 
 GLOBAL_CFLAGS += -w
+
+GLOBAL_INCLUDES += ../../arch/arm/armv5
+
 GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/common \
                    beken7231/beken378/driver/include \
@@ -400,6 +402,15 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     ../../arch/arm/armv5/port_c.c \
                     ../../arch/arm/armv5/port_s.S \
                     ../../arch/arm/armv5/soc_impl.c \
+
+$(NAME)_SOURCES	 += hal/flash.c \
+					hal/uart.c \
+					hal/ringbuf.c \
+                    port/ota_port.c
+
+ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
+$(NAME)_SOURCES +=  beken7231/mesh_wifi_hal.c
+endif
 
 ifneq ($(mico_lwip), 1)
 $(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \

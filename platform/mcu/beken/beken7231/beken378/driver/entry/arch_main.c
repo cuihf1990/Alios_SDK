@@ -74,6 +74,8 @@ _ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
     if (fd == 1) {
         for (i = 0; i < len; i++) {
 
+            if (t[i] == '\n')
+                bk_send_byte('\r');
             bk_send_byte(*(t + i));
         }
 

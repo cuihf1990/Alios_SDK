@@ -35,6 +35,7 @@ extern "C"
 #include <arpa/inet.h>
 #include <sys/eventfd.h>
 #else
+#include <lwip/def.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #endif

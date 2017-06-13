@@ -27,7 +27,7 @@ extern "C" {
 /*mem 1000 byte*/
 #define    YUNOS_CONFIG_VFS_DEV_MEM      2000
 #define    YUNOS_CONFIG_VFS_POLL_SUPPORT 1
-#define    YUNOS_CONFIG_VFS_FD_OFFSET    32
+#define    YUNOS_CONFIG_VFS_FD_OFFSET    64
 
 #ifdef __cplusplus
 }
