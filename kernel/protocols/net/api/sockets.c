@@ -1403,6 +1403,7 @@ int lwip_eventfd(unsigned int initval, int flags)
       events[i].reads = 0;
       events[i].writes = 0;
       events[i].psem = NULL;
+      SYS_ARCH_UNPROTECT(lev);
       return i + LWIP_EVENT_OFFSET;
     }
     SYS_ARCH_UNPROTECT(lev);
