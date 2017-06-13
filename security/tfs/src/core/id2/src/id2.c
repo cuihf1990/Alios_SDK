@@ -106,6 +106,11 @@ int id2_sign(const uint8_t *in, uint32_t in_len,
         return -1;
     }
 
+    if ((sign >= in && sign < in + in_len) || (in >= sign && in < sign + *sign_len)) {
+        LOGE(TAG_ID2, "[%s]: sign buffer should not overlap with in buffer.\n", __func__);
+        return -1;
+    }
+
     _get_crypt_algo();
 
     switch (g_sign_algo) {
@@ -192,6 +197,11 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
         return -1;
     }
 
+    if ((out >= in && out < in + in_len) || (in >= out && in < out + *out_len)) {
+        LOGE(TAG_ID2, "[%s]: out buffer should not overlap with in buffer.\n", __func__);
+        return -1;
+    }
+
     _get_crypt_algo();
 
 #ifdef TFS_ID2_RSA
@@ -269,6 +279,11 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
     if (in_len > MAX_ENCRYPT_LEN) {
         LOGE(TAG_ID2, "[%s]: input data len must not larger than %d.\n", __func__,
              MAX_ENCRYPT_LEN);
+        return -1;
+    }
+
+    if ((out >= in && out < in + in_len) || (in >= out && in < out + *out_len)) {
+        LOGE(TAG_ID2, "[%s]: out buffer should not overlap with in buffer.\n", __func__);
         return -1;
     }
 
