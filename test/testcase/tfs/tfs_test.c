@@ -97,6 +97,24 @@ static void test_tfs_id2_sign(void)
     ret = tfs_id2_sign(NULL, 0, NULL, NULL);
     YUNIT_ASSERT(ret != 0);
 
+    ret = tfs_id2_sign(sign_in_data, in_len, sign_in_data, &len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_sign(sign_in_data, in_len, sign_in_data + 10, &len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_sign(sign_in_data, in_len, sign_in_data + in_len - 1, &len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_sign(sign_out_data, in_len, sign_out_data, &len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_sign(sign_out_data + 10, in_len, sign_out_data, &len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_sign(sign_out_data + len - 1, in_len, sign_out_data, &len);
+    YUNIT_ASSERT(ret != 0);
+
     ret = tfs_id2_sign((const uint8_t *)sign_in_data, in_len, sign_out_data, &len);
     YUNIT_ASSERT(ret == 0);
 
@@ -138,6 +156,24 @@ static void test_tfs_id2_decrypt(void)
     YUNIT_ASSERT(ret != 0);
 
     ret = tfs_id2_decrypt(NULL, 0, NULL, NULL);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_decrypt(enc_out_data, enc_len, enc_out_data, &dec_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_decrypt(enc_out_data, enc_len, enc_out_data + 10, &dec_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_decrypt(enc_out_data, enc_len, enc_out_data + enc_len - 1, &dec_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_decrypt(dec_out_data, enc_len, dec_out_data, &dec_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_decrypt(dec_out_data + 10, enc_len, dec_out_data, &dec_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_decrypt(dec_out_data + dec_len - 1, enc_len, dec_out_data, &dec_len);
     YUNIT_ASSERT(ret != 0);
 
     ret = tfs_id2_decrypt(enc_out_data, enc_len, dec_out_data, &dec_len);
@@ -418,6 +454,24 @@ static void test_tfs_id2_encrypt(void) {
     ret = tfs_id2_encrypt(enc_in_data, in_len, enc_out_data, NULL);
     YUNIT_ASSERT(ret != 0);
     ret = tfs_id2_encrypt(NULL, 0, NULL, NULL);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_encrypt(enc_in_data, in_len, enc_in_data, &enc_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_encrypt(enc_in_data, in_len, enc_in_data + 10, &enc_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_encrypt(enc_in_data, in_len, enc_in_data + in_len - 1, &enc_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_encrypt(enc_out_data, in_len, enc_out_data, &enc_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_encrypt(enc_out_data + 10, in_len, enc_out_data, &enc_len);
+    YUNIT_ASSERT(ret != 0);
+
+    ret = tfs_id2_encrypt(enc_out_data + enc_len - 1, in_len, enc_out_data, &enc_len);
     YUNIT_ASSERT(ret != 0);
 
     prepare_decrypt_test_data(ENCRYPT_OUT_DATA_SIZE + 1);
