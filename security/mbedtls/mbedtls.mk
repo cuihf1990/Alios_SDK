@@ -22,6 +22,10 @@ else ifeq ($(findstring armhflinux, $(BUILD_STRING)), armhflinux)
 
 $(NAME)_PREBUILT_LIBRARY := lib/armhflinux/libmbedtls.a
 
+else ifeq ($(findstring mk108, $(BUILD_STRING)), mk108)
+
+$(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
+
 else
 
 $(error "not find correct platform!")
