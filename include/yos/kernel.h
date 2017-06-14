@@ -327,6 +327,12 @@ void yos_free(void *mem);
 long long yos_now(void);
 
 /**
+ * get current time in mini seconds
+ * @return elapsed time in mini seconds from system starting
+ */
+long long yos_now_ms(void);
+
+/**
  * msleep
  * @param[in] ms sleep time in milliseconds
  */

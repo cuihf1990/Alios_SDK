@@ -109,7 +109,7 @@ void sys_sem_signal(sys_sem_t *sem)
 */
 u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 {
-    tick_t ticks = timeout * YUNOS_CONFIG_TICKS_PER_SECOND / 1000;
+    tick_t ticks = yunos_ms_to_ticks(timeout);
     u32_t begin_ms, end_ms, elapsed_ms;
     u32_t ret;
 
@@ -119,7 +119,8 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
     begin_ms = sys_now();
 
     if( timeout != 0UL ) {
-        if(yunos_sem_take(sem, ticks) == YUNOS_SUCCESS) {
+        ret = yunos_sem_take(sem, ticks);
+        if(ret == YUNOS_SUCCESS) {
             end_ms = sys_now();
 
             elapsed_ms = end_ms - begin_ms;
@@ -460,7 +461,7 @@ err_t sys_mbox_trypost(sys_mbox_t *mb, void *msg)
 */
 u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
 {
-    tick_t ticks = timeout * YUNOS_CONFIG_TICKS_PER_SECOND / 1000;
+    tick_t ticks = yunos_ms_to_ticks(timeout);
     u32_t begin_ms, end_ms, elapsed_ms;
     u32_t ret;
 
