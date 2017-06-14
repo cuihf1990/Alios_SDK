@@ -175,3 +175,8 @@ int main(int argc, char **argv)
     return ret;
 }
 
+int board_cli_init(void)
+{
+    return 0;
+}
+

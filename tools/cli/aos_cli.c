@@ -571,6 +571,11 @@ const hal_uart_config_t config = {
     .rx_buf_size = 256,
 };
 
+__attribute__ ((weak)) int board_cli_init(void)
+{
+    return 0;
+}
+
 int cli_init(void)
 {
     int ret;
@@ -599,6 +604,9 @@ int cli_init(void)
 
     pCli->initialized = 1;
     pCli->echo_disabled = 0;
+
+    board_cli_init();
+
     return YUNOS_SUCCESS;
 
 init_general_err:

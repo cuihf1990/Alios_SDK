@@ -39,7 +39,6 @@ int application_start(void)
     bzero(cookie, sizeof(*cookie));
 
     cli_init();
-    //board_cli_init();
 
     netmgr_init();
 

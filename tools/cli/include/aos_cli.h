@@ -148,8 +148,6 @@ int cli_printf(const char *buff, ...);
 
 // library CLI APIs
 int cli_init(void);
-int board_cli_init();
-
 
 void memory_show_Command(CLI_ARGS);
 void memory_dump_Command(CLI_ARGS);
