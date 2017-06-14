@@ -31,13 +31,13 @@
 #include "utilities/encoding.h"
 #include "utilities/memory.h"
 #include "utilities/logging.h"
+#include "utilities/task.h"
 #include "ipv6/ip6.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 #include "tools/diags.h"
 #include "tools/cli_serial.h"
 
-extern int yos_schedule_call(void (*action)(void *), void *arg);
 extern mm_device_state_t mm_get_local_device_state(void);
 
 static void process_help(int argc, char *argv[]);
@@ -1091,7 +1091,7 @@ void ur_cli_cmd(char *buf, uint16_t length, cmd_cb_t cb, void *priv)
     input_cli->priv = priv;
     memcpy(input_cli->data, (uint8_t *)buf, length);
     input_cli->data[length] = '\0';
-    yos_schedule_call(do_cli, input_cli);
+    umesh_task_schedule_call(do_cli, input_cli);
 }
 
 void ur_cli_input(char *buf, uint16_t length)
