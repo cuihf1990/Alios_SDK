@@ -31,6 +31,8 @@
 #include "rxl_cntrl.h"
 #include "lwip/pbuf.h"
 
+#include <hal/wifi.h>
+
 mico_thread_t  init_thread_handle;
 mico_thread_t  app_thread_handle;
 uint32_t  init_stack_size = 2000;
@@ -360,17 +362,12 @@ void core_thread_uninit(void)
 }
 #endif
 
-extern int yos_framework_init(void);
 extern void hw_start_hal(void);
 static void init_app_thread( void *arg )
 {
     cli_init();
     hw_start_hal();
     yos_framework_init();
-#ifdef CONFIG_YOS_MESH
-    extern void beken_wifi_mesh_register(void);
-    beken_wifi_mesh_register();
-#endif
     application_start();
 }
 
@@ -404,7 +401,7 @@ void app_start(void)
             THD_INIT_PRIORITY,
             "app", 
             init_app_thread, 
-            (unsigned short)1024, 
+            (unsigned short)4096, 
             0);
 }
 

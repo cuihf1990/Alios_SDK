@@ -24,8 +24,8 @@
 
 #define TAG "netmgr"
 
-#define DEMO_AP_SSID "yos"
-#define DEMO_AP_PASSWORD "yos__yos"
+#define DEMO_AP_SSID "cisco-15A7"
+#define DEMO_AP_PASSWORD "12345678"
 
 #define MAX_RETRY_CONNECT 120
 #define RETRY_INTERVAL_MS 500
@@ -137,13 +137,6 @@ static void netmgr_fatal_err_event(hal_wifi_module_t *m, void* arg)
 {
 }
 
-static void netmgr_monitor_data(uint8_t *buf, int len)
-{
-    if (g_netmgr_cxt.monitor_dt_cb!= NULL) {
-        g_netmgr_cxt.monitor_dt_cb(buf, len);
-    }
-}
-
 static const hal_wifi_event_cb_t g_wifi_hal_event = {
     .connect_fail        = netmgr_connect_fail_event,
     .ip_got              = netmgr_ip_got_event,
@@ -162,7 +155,9 @@ static void reconnect_wifi(void *arg)
 
     module = hal_wifi_get_default_module();
 
+    bzero(&type, sizeof(type));
     type.wifi_mode = STATION;
+    type.dhcp_mode = DHCP_CLIENT;
     memcpy(type.wifi_ssid, ap_config->ssid, sizeof(type.wifi_ssid));
     memcpy(type.wifi_key, ap_config->pwd, sizeof(type.wifi_key));
     hal_wifi_start(module, &type);
@@ -284,8 +279,6 @@ static void netmgr_wifi_config_start(void)
     if (valid_plugin != NULL) {
         valid_plugin->autoconfig_start();
         g_netmgr_cxt.autoconfig_chain = valid_plugin;
-        module = hal_wifi_get_default_module();
-        hal_wifi_register_monitor_cb(module, netmgr_monitor_data);
     } else {
         LOGW(TAG, "net mgr none config policy");
     }

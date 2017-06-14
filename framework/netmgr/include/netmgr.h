@@ -47,7 +47,6 @@ typedef struct autoconfig_plugin_s {
    void (*config_result_cb)(int result, uint32_t ip);
 } autoconfig_plugin_t;
 
-void wifi_set_monitor_data_handler(monitor_data_cb_t cb);
 void wifi_get_ip(char ips[16]);
 int  netmgr_set_ap_config(netmgr_ap_config_t *config);
 void netmgr_set_smart_config(autoconfig_plugin_t *plugin);

@@ -18,7 +18,7 @@
 #define HAL_WIFI_H
 
 #include <stdint.h>
-
+#include <hal/base.h>
 
 /** @defgroup yos_hal_wifi WiFi HAL API
  *  @{
@@ -103,6 +103,11 @@ typedef enum {
     STATION   /**< Act as a station which can connect to an access point*/
 } hal_wifi_type_t;
 
+enum {
+    DHCP_DISABLE = 0,
+    DHCP_CLIENT,
+    DHCP_SERVER,
+};
 
 typedef struct {
     int     is_connected;  /**< The link to wlan is established or not, 0: disconnected, 1: connected. */
