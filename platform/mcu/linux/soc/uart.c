@@ -116,10 +116,10 @@ int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size, uint32_t *
     //sigaddset(&sigset, SIGALRM);
     //ret = pthread_sigmask(SIG_BLOCK, &sigset, NULL);
 
-    if(ret != 0) {
-        perror("sigmask failed");
-        return NULL;
-    }
+    //if(ret != 0) {
+    //    perror("sigmask failed");
+    //    return NULL;
+    //}
 
 
     /* watch stdin (fd 0) to see when it has input. */
