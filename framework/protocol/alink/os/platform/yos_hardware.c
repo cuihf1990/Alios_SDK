@@ -73,11 +73,15 @@ uint32_t platform_wifi_get_ip(char ip_str[PLATFORM_IP_LEN])
 
 char *platform_get_chipid(char chipid[PLATFORM_CID_LEN])
 {
+    strncpy(chipid, "emw3006", PLATFORM_CID_LEN);
+    chipid[PLATFORM_CID_LEN - 1] = '\0';
     return chipid;
 }
 
 char *platform_get_os_version(char os_ver[STR_SHORT_LEN])
 {
+    strncpy(os_ver, "yos", STR_SHORT_LEN);
+    os_ver[STR_SHORT_LEN - 1] = '\0';
     return os_ver;
 }
 
