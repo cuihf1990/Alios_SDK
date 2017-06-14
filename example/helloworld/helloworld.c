@@ -11,7 +11,6 @@ static void app_delayed_action(void *arg)
 
 void application_start(void)
 {
-    cli_init();
     yos_post_delayed_action(1000, app_delayed_action, NULL);
     yos_loop_run();
 }
