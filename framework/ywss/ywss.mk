@@ -4,3 +4,4 @@ $(NAME)_SOURCES += zconfig_ut_test.c registrar.c zconfig_protocol.c zconfig_vend
 $(NAME)_INCLUDES := ../protocol/alink/os/ ../protocol/alink/ ../../utility/base64/ ../protocol/alink/accs/
 $(NAME)_INCLUDES += ../protocol/alink/json/ ../connectivity/wsf/ ../../utility/digest_algorithm/
 
+GLOBAL_DEFINES += CONFIG_YWSS

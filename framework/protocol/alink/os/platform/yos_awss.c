@@ -23,7 +23,7 @@
 #include "platform_config.h"
 
 platform_awss_recv_80211_frame_cb_t g_ieee80211_handler;
-static autoconfig_plugin_t g_alink_smartconfig;
+autoconfig_plugin_t g_alink_smartconfig;
 
 //一键配置超时时间, 建议超时时间1-3min, APP侧一键配置1min超时
 int platform_awss_get_timeout_interval_ms(void)
@@ -79,7 +79,6 @@ void platform_awss_open_monitor(platform_awss_recv_80211_frame_cb_t cb)
 
     g_ieee80211_handler = cb;
     hal_wifi_register_monitor_cb(module, monitor_data_handler);
-    netmgr_set_smart_config(&g_alink_smartconfig);
     hal_wifi_start_wifi_monitor(module);
     platform_awss_switch_channel(6, 0, NULL);
 }
@@ -203,7 +202,7 @@ static void smart_config_result_cb(int result, uint32_t ip)
     yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0u);
 }
 
-static autoconfig_plugin_t g_alink_smartconfig = {
+autoconfig_plugin_t g_alink_smartconfig = {
     .description = "alink_smartconfig",
     .autoconfig_start = smart_config_start,
     .autoconfig_stop = smart_config_stop,
