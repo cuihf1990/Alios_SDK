@@ -21,6 +21,7 @@
 #include "md5.h"
 #include "sha2.c"
 #include "hmac.c"
+#include "yos/framework.h"
 
 void *digest_md5_init(void)
 {
@@ -62,35 +63,37 @@ int digest_md5(const void *data, uint32_t length, unsigned char *digest)
 
 int digest_md5_file(const char *path, unsigned char *md5)
 {
-    FILE *fp = fopen(path, "rb");
     int bytes;
     unsigned char data[512];
     unsigned char digest[16];
-    int i;
+    int i,fd;
+
+    fd = yos_open(path, O_RDONLY);
+    if (fd < 0) {
+	return -1;
+    }
 
     MD5_CTX *ctx = (MD5_CTX *) yos_malloc(sizeof(MD5_CTX));
     if (NULL == ctx) {
         return -1;
     }
-
-    if (fp == NULL) {
-        yos_free(ctx);
-        return -1;
-    }
-
+    
     MD5_Init(ctx);
-
-    while ((bytes = fread(data, 1, 512, fp)) != 0) {
-        MD5_Update(ctx, data, bytes);
-    }
+    
+    do {
+	bytes = yos_read(fd, data, sizeof(data));
+	if (bytes > 0) {
+    		MD5_Update(ctx, data, bytes);
+    	}
+    } while (bytes == sizeof(data));
 
     MD5_Final(digest, ctx);
-
+	
     for (i = 0; i < 16; i++) {
         sprintf((char *)&md5[i * 2], "%02x", digest[i]);
     }
 
-    fclose(fp);
+    yos_close(fd);
     yos_free(ctx);
     return 0;
 }
