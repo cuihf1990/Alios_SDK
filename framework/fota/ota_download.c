@@ -27,7 +27,6 @@
 #define BUFFER_MAX_SIZE 512
 
 
-
 /**
  * @brief http_gethost_info
  *
@@ -168,6 +167,13 @@ int check_md5(const char *buffer, const int32_t len)
     return 0;
 }
 
+#define HTTP_HEADER  "GET /%s HTTP/1.1\r\nAccept:*/*\r\n\
+Accept-Language:zh-cn\r\n\
+User-Agent:Mozilla/5.0\r\n\
+Cache-Control: no-cache\r\n\
+Content-Type: application/x-www-form-urlencoded\r\n\
+Connection: close\r\n\
+Host:%s:%d\r\n\r\n"
 
 int http_download(char *url, write_flash_cb_t func) {
     if(!url || strlen(url) == 0 || func == NULL) {
@@ -196,12 +202,8 @@ int http_download(char *url, write_flash_cb_t func) {
         ret = OTA_DOWNLOAD_SOCKET_FAIL;
         return ret;
     }
-    sprintf(http_buffer,
-            "GET   /%s   HTTP/1.1\r\nAccept:   */*\r\nAccept-Language:   zh-cn\r\n"
-                    "User-Agent:   Mozilla/4.0   (compatible;   MSIE   5.01;   Windows   NT   5.0)\r\n"
-                    "Host:   %s:%d\r\nConnection:   Close\r\n\r\n ", host_file,
-            host_addr, port);
-    //OTA_LOG_I("%s\n", http_buffer);
+    sprintf(http_buffer, HTTP_HEADER, host_file, host_addr, port);
+    OTA_LOG_I("%s\n", http_buffer);
     send = 0;
     totalsend = 0;
     nbytes = strlen(http_buffer);
@@ -220,9 +222,15 @@ int http_download(char *url, write_flash_cb_t func) {
     /*连接成功了，接收http响应,每次处理1024个字节*/
     int size = 0; 
     MD5_Init(&g_ctx);
-    int buffer_size = 1;
     memset(http_buffer, 0, sizeof http_buffer);
-    while ((nbytes = read(sockfd, http_buffer, buffer_size))) {
+    char headbuf[BUFFER_MAX_SIZE + 1] = {0};
+    int header_found = 0;
+    char *pos = 0;
+    char file_length[64] = {0};
+    int file_size = 0;
+
+    while ((nbytes = read(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
+
         if(nbytes < 0) {
             if (errno != EINTR)
                 break;
@@ -231,30 +239,54 @@ int http_download(char *url, write_flash_cb_t func) {
                 break;
             } else continue;
             
-        }  
+        }
 
-        if (i < 4) {
-            /* process head packet*/
-            if (http_buffer[0] == '\r' || http_buffer[0] == '\n') {
-                i++;
-                if(i == 4) {
-                    buffer_size = BUFFER_MAX_SIZE;
+        if(!header_found){
+            if(strlen(file_length) == 0) {
+                char *ptr = strstr(http_buffer,"Content-Length:");
+                if (ptr) {
+                    sscanf(ptr, "%*[^ ]%s", file_length);
+                    file_size = atoi(file_length);
+                    OTA_LOG_I("file_length %s, %d", file_length, file_size);
                 }
-            } else {
-                i = 0;
             }
-        } else /*if buffer not ended with \r\n\r\n，request packet content*/
-        {
-            size +=nbytes;
-	    //OTA_LOG_E("size nbytes %d, %d", size, nbytes);
-	    MD5_Update(&g_ctx, (const uint8_t *)http_buffer, nbytes);
-	    func(BUFFER_MAX_SIZE, (uint8_t *)http_buffer, nbytes, 0);
-	    memset(http_buffer, 0, BUFFER_MAX_SIZE);
+
+            pos = strstr(http_buffer, "\r\n\r\n");
+
+            if (!pos) {
+                //header pos
+                memcpy(headbuf, http_buffer, BUFFER_MAX_SIZE);
+            } else {
+                int len = pos - http_buffer;
+                header_found = 1;
+                pos += 4;
+                size = nbytes - len - 4;
+                memcpy(headbuf, http_buffer, len);
+                MD5_Update(&g_ctx, (const uint8_t *)pos, size);
+                func(BUFFER_MAX_SIZE, (uint8_t *)pos, size, 0);
+            }
+
+            OTA_LOG_I("headbuf %s", headbuf);
+            memset(headbuf, 0, sizeof headbuf);
+            continue;
+        }
+
+        size += nbytes;
+        OTA_LOG_E("size nbytes %d, %d", size, nbytes);
+        MD5_Update(&g_ctx, (const uint8_t *) http_buffer, nbytes);
+        func(BUFFER_MAX_SIZE, (uint8_t *) http_buffer, nbytes, 0);
+        memset(http_buffer, 0, BUFFER_MAX_SIZE);
+
+        if(size == file_size) {
+            nbytes = 0;
+            break;
         }
          
         if(ota_get_status() == OTA_CANCEL) 
             break;
     }
+
+    OTA_LOG_E("size nbytes %d, %d", size, nbytes);
 
     if(nbytes < 0) {
         OTA_LOG_E("download read error %s" , strerror(errno));
