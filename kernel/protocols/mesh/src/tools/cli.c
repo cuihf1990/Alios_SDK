@@ -1099,6 +1099,31 @@ void ur_cli_input(char *buf, uint16_t length)
     ur_cli_cmd(buf, length, NULL, NULL);
 }
 
+void ur_cli_input_args(char **argv, uint16_t argc)
+{
+    uint8_t index;
+    char **options = NULL;
+
+    if (argc < 2) {
+         return;
+    }
+
+    if (ur_mesh_is_initialized() == false && strcmp(argv[1], "init") != 0) {
+        return;
+    }
+
+    for (index = 0; index < sizeof(g_commands) / sizeof(g_commands[0]); index++) {
+        if (strcmp(argv[1], g_commands[index].name) == 0) {
+            if (argc > 2) {
+                options = &argv[2];
+            }
+            argc -= 2;
+            g_commands[index].function(argc, options);
+            break;
+        }
+    }
+}
+
 int g_cli_silent;
 ur_error_t mesh_cli_init(void)
 {

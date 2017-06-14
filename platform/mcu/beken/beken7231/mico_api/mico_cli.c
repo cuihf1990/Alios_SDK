@@ -382,6 +382,14 @@ static void uptime_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, c
     os_printf("UP time %ldms\r\n", mico_rtos_get_time());
 }
 
+#ifdef CONFIG_YOS_MESH
+extern void ur_cli_input_args(char **argv, uint16_t argc);
+static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+{
+    ur_cli_input_args(argv, argc);
+}
+#endif
+
 //extern void tftp_ota( void );
 void tftp_ota_thread( mico_thread_arg_t arg )
 {
@@ -736,6 +744,9 @@ static const struct cli_command built_ins[] =
     
     {"txevm", "txevm [-m] [-c] [-l] [-r] [-w]", tx_evm_cmd_test},
     {"rxsens", "rxsens [-m] [-d] [-c] [-l]", rx_sens_cmd_test},    
+#ifdef CONFIG_YOS_MESH
+    {"umesh", "umesh <cmd> <args>", umesh_command},
+#endif
 };
 
 /* Built-in "help" command: prints all registered commands and their help

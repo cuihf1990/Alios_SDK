@@ -364,6 +364,7 @@ extern int yos_framework_init(void);
 extern void beken_wifi_mesh_register(void);
 static void init_app_thread( void *arg )
 {
+    cli_init();
     yos_framework_init();
     beken_wifi_mesh_register();
     application_start();
