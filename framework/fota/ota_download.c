@@ -189,8 +189,6 @@ int http_download(char *url, write_flash_cb_t func) {
     char host_addr[256] = {0};
     int send = 0;
     int totalsend = 0;
-    int i = 0;
-  
 
     OTA_LOG_I("parameter is: %s\n ", url);
     http_gethost_info(url, host_addr, host_file, &port);
@@ -218,7 +216,6 @@ int http_download(char *url, write_flash_cb_t func) {
         OTA_LOG_I("%d bytes send OK!\n ", totalsend);
     }
 
-    i = 0;
     /*连接成功了，接收http响应,每次处理1024个字节*/
     int size = 0; 
     MD5_Init(&g_ctx);

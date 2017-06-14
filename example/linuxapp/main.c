@@ -2,9 +2,9 @@
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/network.h>
+#include <strings.h>
+#include <netmgr.h>
 #include "aos_cli.h"
-
-extern void netmgr_start(void);
 
 struct cookie {
     int flag;
