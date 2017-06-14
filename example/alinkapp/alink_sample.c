@@ -10,6 +10,7 @@
 #include "json_parser.h"
 #include "yos/framework.h"
 #include "kvmgr.h"
+#include <netmgr.h>
 
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
@@ -412,6 +413,19 @@ void parse_opt(int argc, char *argv[])
             env_str[env], work_time, log_level);
 }
 extern char *g_sn;
+
+static void alink_service_event(input_event_t *event, void *priv_data) {
+    if (event->type != EV_WIFI) {
+        return;
+    }
+
+    if (event->code != CODE_WIFI_ON_GOT_IP) {
+        return;
+    }
+
+    alink_start();
+}
+
 int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
@@ -444,10 +458,12 @@ int application_start(int argc, char *argv[])
     alink_register_callback(ALINK_GET_DEVICE_STATUS, &cloud_get_device_status);
     alink_register_callback(ALINK_SET_DEVICE_STATUS, &cloud_set_device_status);
 #endif
-    //alink_register_callback(ALINK_UPGRADE_DEVICE,&callback_upgrade_device);
-    //alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,&callback_cancel_upgrade_device);
-    alink_start();
    
+    yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
+
+    netmgr_init();
+    netmgr_start();
+
     yos_loop_run();
 
     printf("alink end.\n");
