@@ -193,3 +193,13 @@ bool ur_adapter_is_mcast_subscribed(const ip6_addr_t *addr)
 {
     return ur_mesh_is_mcast_subscribed((const ur_ip6_addr_t *)addr);
 }
+
+struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)
+{
+    return ur_adapter_ip6_route(src, dest);
+}
+
+bool lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest)
+{
+    return ur_adapter_is_mcast_subscribed(dest);
+}

@@ -230,7 +230,7 @@
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
  */
 #define LWIP_RAW                        1
-#define LWIP_IPV6                        1
+#define LWIP_IPV6                       1
 
 /* Enable IPv4 Auto IP	*/
 #ifdef CONFIG_AUTOIP
@@ -439,6 +439,14 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define DEFAULT_RAW_RECVMBOX_SIZE       4
 #define DEFAULT_UDP_RECVMBOX_SIZE       8
 #define DEFAULT_TCP_RECVMBOX_SIZE       8
+
+#ifdef CONFIG_YOS_MESH
+#define LWIP_DECLARE_HOOK \
+    struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest); \
+    int lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest);
+#define LWIP_HOOK_IP6_ROUTE(src, dest)           lwip_hook_ip6_route(src, dest)
+#define LWIP_HOOK_MESH_IS_MCAST_SUBSCRIBED(dest) lwip_hook_mesh_is_mcast_subscribed(dest)
+#endif
 
 #endif /* __LWIPOPTS_H__ */
 
