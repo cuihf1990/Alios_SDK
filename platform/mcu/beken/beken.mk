@@ -404,6 +404,7 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     ../../arch/arm/armv5/soc_impl.c \
 
 $(NAME)_SOURCES	 += hal/wdg.c \
+                    hal/hw.c \
                     hal/flash.c \
 					hal/uart.c \
 					hal/ringbuf.c \
