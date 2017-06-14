@@ -4,18 +4,17 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
-#include "list.h"
+#include "yos/list.h"
 #include "msdp.h"
-#include "mpool.h"
 #include "json_parser.h"
 #include "service.h"
 
 typedef int (*status_array_cb)(char *entry, int entry_len, int entry_type, const char *method_name);
-typedef int (*get_status_cb)(char *entry, int entry_len, int entry_type, const char *params, list_head_t *head, void *exec_cb);
+typedef int (*get_status_cb)(char *entry, int entry_len, int entry_type, const char *params, dlist_t *head, void *exec_cb);
 typedef int (*set_status_cb)(char *entry, int entry_len, int entry_type, const char *params, void *exec_cb);
 
 typedef struct st_attribute_info{
-    struct list_head list_node;
+    dlist_t list_node;
     char *attr_name;
     char *attr_value;
 }attribute_info;
@@ -113,7 +112,7 @@ out:
 
 
 int msdp_get_attr_each_cb(const char *attr_name, int name_len, int type, char *params,
-    struct list_head *head, get_dev_attr_cb exec_cb)// va_list *ap)
+    dlist_t *head, get_dev_attr_cb exec_cb)// va_list *ap)
 {
     int str_len, ret = SERVICE_RESULT_ERR;
     attribute_info *pnode = NULL;
@@ -218,8 +217,9 @@ int msdp_get_device_status_handler(char *params, void *cb, void *exec_cb, char *
     int uuid_len = 0;
     char *str_pos = NULL;
     char *report_params = NULL;
-    attribute_info *pnode, *pnode_next = NULL;
-    LIST_HEAD(head);
+    attribute_info *pnode;
+    dlist_t *pnode_next = NULL;
+    YOS_DLIST_HEAD(head);
     char uuid[MAX_UUID_LEN] = {0};
     char *entry, *pos;
     int entry_len, type;
@@ -269,7 +269,7 @@ int msdp_get_device_status_handler(char *params, void *cb, void *exec_cb, char *
 
     /*{"uuid":"%s"}*/
     unsigned int params_length = strlen(uuid) + strlen(JSON_KEY_UUID) + 20;
-    list_for_each_entry_t(pnode, &head, list_node, attribute_info)
+    dlist_for_each_entry(&head, pnode, attribute_info, list_node)
     {
         /*计算单个属性字符串长度:"attr_name":{"value":%s,"when":""}*/
         params_length += strlen(pnode->attr_name) + strlen(pnode->attr_value) + 30;
@@ -280,7 +280,7 @@ int msdp_get_device_status_handler(char *params, void *cb, void *exec_cb, char *
     memset(report_params, 0, params_length);
 
     int len = snprintf(report_params, params_length, "{\"uuid\":\"%s\"", uuid);
-    list_for_each_entry_safe_t(pnode, pnode_next, &head, list_node, attribute_info)
+    dlist_for_each_entry_safe(&head, pnode_next, pnode, attribute_info, list_node)
     {
         if(pnode->attr_value[0] != '{' && pnode->attr_value[0] != '[')
             len += snprintf(report_params+len, params_length - len, ",\"%s\":{\"value\":\"%s\"}",
@@ -317,7 +317,7 @@ int msdp_get_device_status_handler(char *params, void *cb, void *exec_cb, char *
     log_trace("json_out = %s", json_out?*json_out:"NULL");
 
 out:
-    list_for_each_entry_safe_t(pnode, pnode_next, &head, list_node, attribute_info)
+    dlist_for_each_entry_safe(&head, pnode_next, pnode, attribute_info, list_node)
     {
         list_del(&pnode->list_node);
         msdp_free_buff(pnode->attr_name);

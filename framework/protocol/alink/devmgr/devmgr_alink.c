@@ -6,19 +6,18 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <time.h>
-#include "list.h"
+#include "yos/list.h"
+#include "yos/framework.h"
+#include "yos/log.h"
 #include "json_parser.h"
-#include "msdp.h"
 #include "devmgr.h"
 #include "devmgr_alink.h"
 #include "devmgr_cache.h"
-#include "stdd_datatype.h"
-#include "alink_export_zigbee.h"
 #include "service_manager.h"
 #include "connectivity_manager.h"
 #include "digest_algorithm.h"
-#include "work_queue.h"
-#include "stdd.h"
+#include "alink_protocol.h"
+#include "alink_export_internal.h"
 
 #define DEVMGR_SERVICE_AUTHORISE_DEVICE_LIST    "AuthoriseDeviceList"
 #define DEVMGR_SERVICE_REMOVE_DEVICE            "RemoveDevice"
@@ -35,6 +34,23 @@
 #define DEVMGR_JSON_KEY_SHORT_MODEL     "shortModel"
 #define DEVMGR_JSON_KEY_ENABLE          "enable"
 
+/* imported from other files to pass compile */
+#define JSON_KEY_UUID                   "uuid"
+#define CALL_FUCTION_FAILED             "Call function \"%s\" failed\n"
+#define JSON_KEY_ATTRSET                "attrSet"
+#define JSON_KEY_VALUE                  "value"
+#define MAX_ATTR_NAME_LEN               80
+typedef int32_t (*zigbee_permit_join_cb_t)(uint8_t duration);
+#define POST_ATTR_VALUE_STRING_FMT      "{\"uuid\":\"%s\",\"%s\":{\"value\":\"%s\",\"when\":\"%s\"}}"
+#define POST_ATTR_OBJECT_STRING_FMT     "{\"uuid\":\"%s\",\"%s\":{\"value\":%s,\"when\":\"%s\"}}"
+#define RET_GOTO(Ret,gotoTag,strError, args...)         \
+    {\
+        if ( RET_FAILED(Ret) )    \
+        {\
+            log_trace(strError, ##args); \
+            goto gotoTag; \
+        }\
+    }
 
 typedef struct {
     bool enable;
@@ -45,58 +61,19 @@ typedef struct {
 
 /*defined in devmgr.c*/
 extern void *devlist_lock;
-extern struct list_head dev_head;
-extern struct list_head unknown_dev_head;
-void __work_func(struct work_struct *work);
+extern dlist_t dev_head;
+extern dlist_t unknown_dev_head;
 
 static permitjoin_t g_permitjoin_config;
 
-static struct work_struct disablejoin_work =
-    {{&disablejoin_work.entry, &disablejoin_work.entry}, (work_func_t)(__work_func), NULL,
-        0, 0, "disable_join"};
+static void *disablejoin_work = NULL;
 
-void __work_func(struct work_struct *work)
+void __work_func(void *work)
 {
     log_trace("disable device join");
     g_permitjoin_config.enable = false;
     devmgr_free_unknown_devlist();
 }
-
-
-static const char *__get_device_signature(uint32_t short_model, const char rand[SUBDEV_RAND_BYTES],
-        char *sign_buff, uint32_t buff_size)
-{
-    int i = 0;
-    char buff[128] = {0};
-    unsigned char md5_ret[16]= {0};
-    char secret[41] = {0};
-    char rand_hexstr[SUBDEV_RAND_BYTES*2 + 1] = {0};
-    int ret = SERVICE_RESULT_ERR;
-
-    if(buff_size <= STR_SIGN_LEN){
-        log_error("buffer size is too small");
-        return NULL;
-    }
-
-    if(stdd_get_subdev_secret(short_model, secret, sizeof(secret)) == NULL){
-        log_warn("get subdevice secret fail, short_model: 0x%08x", short_model);
-        return NULL;
-    }
-
-    int len = SUBDEV_RAND_BYTES;
-    memcpy(buff, rand, len);
-    len += snprintf(buff + len, sizeof(buff), "%s", secret);
-    digest_md5(buff, len, md5_ret);
-    for (i = 0; i < STR_SIGN_LEN/2; i++) {
-        sprintf(sign_buff + i * 2, "%02x", md5_ret[i]);
-    }
-
-    bytes_2_hexstr(rand, SUBDEV_RAND_BYTES, rand_hexstr, sizeof(rand_hexstr));
-    log_trace("rand hexstr:%s, secret:%s, sign:%s\n", rand_hexstr, secret, sign_buff);
-
-    return sign_buff;
-}
-
 
 static int devmgr_listener(int type, void *data, int dlen, void *result, int *rlen) {
     //log_trace("DEVMGR recv %s", sm_code2string(type));
@@ -114,32 +91,7 @@ static int devmgr_listener(int type, void *data, int dlen, void *result, int *rl
     return EVENT_IGNORE;
 }
 
-static int devmgr_register_remote_service(dev_info_t *devinfo)
-{
-	int ret = SERVICE_RESULT_ERR;
-	uint8_t service[256] = {0};
-
-	if(NULL == devinfo)
-	{
-		log_info("parameter invalid");
-		return SERVICE_RESULT_ERR;
-	}
-	ret = stdd_get_device_service(devinfo, service, sizeof(service));
-
-	if(SERVICE_RESULT_OK != ret || 0 == json_get_array_size(service, strlen(service)))
-	{
-		log_info("The device %s no service to register\r\n", devinfo->dev_base.uuid);
-		return SERVICE_RESULT_OK;
-	}
-	else
-	{
-		log_trace("The device %s service is %s\r\n", devinfo->dev_base.uuid, service);
-		return msdp_register_remote_service(devinfo->dev_base.uuid, service);
-	}
-
-}
-
-static int devmgr_login_device(dev_info_t *devinfo)
+int devmgr_login_device(dev_info_t *devinfo)
 {
     int len, ret;
     uint8_t tx_buff[128] = {0};
@@ -173,7 +125,7 @@ static int devmgr_login_device(dev_info_t *devinfo)
 }
 
 
-static int devmgr_logout_device(dev_info_t *devinfo)
+int devmgr_logout_device(dev_info_t *devinfo)
 {
     int ret;
     char tx_buff[64] = {0};
@@ -195,7 +147,7 @@ static int devmgr_logout_device(dev_info_t *devinfo)
 }
 
 
-static int devmgr_register_device(dev_info_t *devinfo)
+int devmgr_register_device(dev_info_t *devinfo)
 {
     int ret;
     char tx_buff[512] = {0};
@@ -210,13 +162,7 @@ static int devmgr_register_device(dev_info_t *devinfo)
         FEATURE_DEVICE_LOGIN_SUB_FMT, PROTOCL_ZIGBEE, "1"))
         return SERVICE_RESULT_ERR;
 
-    /*线下环境网关代理计算子设备sign,仅用于线下测试*/
     char *sign = devinfo->dev_base.sign;
-    if(strcmp(get_main_dev()->config->alinkserver, default_online_server_with_port) != 0 &&
-        NULL != __get_device_signature(devinfo->dev_base.model_id,
-            devinfo->dev_base.rand, sign_buff, sizeof(sign_buff)))
-        sign = sign_buff;
-
     bytes_2_hexstr(devinfo->dev_base.rand, sizeof(devinfo->dev_base.rand), rand_hexstr, sizeof(rand_hexstr));
     if(sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff), PARAMS_DEVICE_REGISTER_SUB_FMT,
         devinfo->dev_base.model_id, rand_hexstr, sign,
@@ -249,7 +195,7 @@ static int devmgr_register_device(dev_info_t *devinfo)
 }
 
 
-static int devmgr_unregister_device(dev_info_t *devinfo)
+int devmgr_unregister_device(dev_info_t *devinfo)
 {
     int len, ret;
     uint8_t digest[16] = {0};
@@ -306,7 +252,7 @@ static int devmgr_get_joined_devlist_attribute_cb(char *buf, unsigned int buf_le
 
     len += snprintf(buf, buf_len - len - 1, "[");
     os_mutex_lock(devlist_lock);
-    list_for_each_entry_t(pos, &unknown_dev_head, list_node, dev_info_t)
+    dlist_for_each_entry(&unknown_dev_head, pos, dev_info_t, list_node)
     {
         get_ieeeaddr_string_by_extaddr(pos->dev_base.u.ieee_addr, ieeeAddr, sizeof(ieeeAddr));
 
@@ -407,11 +353,11 @@ static int devmgr_permitjoin_service_cb(char *args, char *buf, unsigned int buf_
         log_error("permit_device callback is NULL");
 
     //设置定时器
-    cancel_work(&disablejoin_work);
+    yos_cancel_work(disablejoin_work, __work_func, NULL);
     if(g_permitjoin_config.enable == true &&
         g_permitjoin_config.duration > 0){
         log_trace("delay disable device join, duration:%d", g_permitjoin_config.duration);
-        queue_delayed_work(&disablejoin_work, g_permitjoin_config.duration*1000);
+        disablejoin_work = yos_schedule_work(g_permitjoin_config.duration * 1000, __work_func, NULL, NULL, NULL);
     }
 
     return ret;
@@ -473,8 +419,8 @@ void devmgr_delay_disable_join(int duration)
     log_trace("permit device join, duration:%d", duration);
     g_permitjoin_config.short_model = DEVMGR_PERMITJOIN_ANY_MODEL;
     g_permitjoin_config.enable = true;
-    cancel_work(&disablejoin_work);
-    queue_delayed_work(&disablejoin_work, duration*1000);
+    yos_cancel_work(disablejoin_work, __work_func, NULL);
+    disablejoin_work = yos_schedule_work(duration * 1000, __work_func, NULL, NULL, NULL);
 
     return;
 }
@@ -640,8 +586,6 @@ int devmgr_link_state_event_handler(dev_info_t *devinfo, link_state_t state)
     return ret;
 }
 
-
-
 int devmgr_network_event_cb(network_event_t event)
 {
     //遍历设备，逐个注册、attatch
@@ -649,7 +593,7 @@ int devmgr_network_event_cb(network_event_t event)
     dev_info_t *pos, *next = NULL;
 
     os_mutex_lock(devlist_lock);
-    list_for_each_entry_safe_t(pos, next, &dev_head, list_node, dev_info_t)
+    dlist_for_each_entry(&unknown_dev_head, pos, dev_info_t, list_node)
     {
         //add by wukong 2017-4-17
         if(pos->dev_base.dev_type != DEV_TYPE_ZIGBEE)
@@ -697,7 +641,7 @@ void devmgr_alink_exit()
 {
     sm_detach_service("accs", &devmgr_listener);
 
-    cancel_work(&disablejoin_work);
+    yos_cancel_work(disablejoin_work, __work_func, NULL);
     alink_unregister_service(DEVMGR_SERVICE_AUTHORISE_DEVICE_LIST);
     alink_unregister_service(DEVMGR_SERVICE_REMOVE_DEVICE);
     alink_unregister_service(DEVMGR_SERVICE_PERMITJOIN_DEVICE);

@@ -34,7 +34,7 @@
 extern "C" {
 #endif
 
-void __dump_attr_cache(list_head_t *attr_head);
+void __dump_attr_cache(dlist_t *attr_head);
 
 int devmgr_get_attr_cache(const char *devid_or_uuid, const char *attr_name, char *attr_value_buff, int buff_size);
 int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name, char **attr_value);

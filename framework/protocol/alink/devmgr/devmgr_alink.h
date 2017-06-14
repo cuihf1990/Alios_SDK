@@ -66,6 +66,10 @@ uint32_t devmgr_get_permitjoin_short_model();
 /*
 --> {"uuid":"42E6E69DAEF6483FBBA412A28AF7CD76","attrSet":["OnOff"],"OnOff":{"value":"1","when":"1404443369"}}
 */
+int devmgr_login_device(dev_info_t *devinfo);
+int devmgr_logout_device(dev_info_t *devinfo);
+int devmgr_register_device(dev_info_t *devinfo);
+int devmgr_unregister_device(dev_info_t *devinfo);
 int devmgr_annunciate_device_status(const char *devid, char *params);
 int devmgr_link_state_event_handler(dev_info_t *devinfo, link_state_t state);
 int devmgr_network_leave_event_handler(dev_info_t *devinfo);

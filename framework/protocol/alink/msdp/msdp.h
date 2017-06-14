@@ -6,8 +6,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include "list.h"
-#include "log.h"
+#include "yos/list.h"
+#include "yos/log.h"
 #include "alink_export_internal.h"
 #include "alink_protocol.h"
 #include "json_parser.h"
@@ -61,6 +61,87 @@ extern "C"
 #define METHOD_REQUEST_REMOTE_SERVICE   "requestRemoteService"
 #define METHOD_POST_REMOTE_SERVICE_RSP  "postRemoteServieRsp"
 
+#define CALL_FUCTION_FAILED         "Call function \"%s\" failed\n"
+#define RET_FAILED(ret)  (ret != SERVICE_RESULT_OK)
+
+#define RET_GOTO(Ret,gotoTag,strError, args...)         \
+      {\
+        if ( RET_FAILED(Ret) )    \
+        {   \
+            log_trace(strError, ##args); \
+            goto gotoTag; \
+        }\
+      }
+
+#define RET_FALSE(Ret,strError,args...)         \
+    {\
+        if ( RET_FAILED(Ret) )    \
+        {   \
+            log_trace(strError, ##args); \
+            return false; \
+        }\
+     }
+
+#define RET_RETURN(Ret,strError,args...)         \
+    {\
+        if ( RET_FAILED(Ret) )    \
+        {   \
+            log_trace(strError, ##args); \
+            return Ret; \
+        }\
+    }
+#define RET_LOG(Ret,strError,args...)         \
+    {\
+        if ( RET_FAILED(Ret) )    \
+        {   \
+            log_error(strError, ##args); \
+        }\
+    }
+
+#define PTR_RETURN(Pointer,Ret,strError,args...)         \
+    {\
+        if ( !Pointer)    \
+        {   \
+            log_trace(strError, ##args); \
+            return Ret; \
+        }\
+     }
+
+#define PTR_FALSE(Pointer,strError,args...)         \
+    {\
+        if ( !Pointer)    \
+        {   \
+            log_trace(strError, ##args); \
+            return FALSE; \
+        }\
+    }
+#define PTR_LOG(Pointer,strError,args...)         \
+    {\
+        if ( !Pointer)    \
+        {   \
+            log_error(strError, ##args); \
+        }\
+    }
+
+
+#define PTR_GOTO(Pointer, gotoTag, strError, args...)         \
+    {\
+        if ( !Pointer)    \
+        {   \
+            log_trace(strError, ##args); \
+            goto gotoTag; \
+        }\
+     }
+
+#define POINTER_RETURN(Pointer,strError,args...)         \
+    {\
+        if ( !Pointer)    \
+        {   \
+            log_trace(strError, ##args); \
+            return Pointer; \
+        }\
+     }
+
 /******************************************/
 
 typedef int (*dev_option_cb)(char *params);
@@ -84,14 +165,14 @@ enum ALINK_COMMAND {
 };
 
 typedef struct{
-    struct list_head list_node;             //链表节点
+    dlist_t list_node;             //链表节点
     char name[MAX_SERVICE_NAME_LEN];        //service方法名称
     ALINK_SERVICE_EXECUTE_CB service_cb;    //设置属性回调函数
 }service_handler_t, *service_handler_ptr;
 
 
 typedef struct{
-    struct list_head list_node;             //当前属性handler链接节点
+    dlist_t list_node;             //当前属性handler链接节点
     char name[MAX_ATTR_NAME_LEN];           //属性名称
     void *get_cb;                           //获取属性回调函数
     void *set_cb;                           //设置属性回调函数
@@ -100,15 +181,15 @@ typedef struct{
 
 typedef struct{
     uint8_t dev_type;                       //设备model
-    struct list_head list_node;             //设备model链表节点(只对subdevice有意义)
-    struct list_head attr_head;             //属性链表头
-    struct list_head srv_head;              //服务链表头
+    dlist_t list_node;             //设备model链表节点(只对subdevice有意义)
+    dlist_t attr_head;             //属性链表头
+    dlist_t srv_head;              //服务链表头
     void *mutex_lock;                       //service和attribute链表读写操作锁
     dev_option_cb option_callback[MAX_CALLBACK_NUM];//alink method处理接口
 }device_helper_t, *device_helper_ptr;
 
 typedef struct post_node {
-    list_head_t list_node; /* post_list */
+    dlist_t list_node; /* post_list */
     char *params;
 } post_node_t;
 

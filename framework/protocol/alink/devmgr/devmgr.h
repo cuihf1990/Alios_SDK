@@ -30,8 +30,8 @@
 
 #include <stdint.h>
 #include <unistd.h>
-#include "list.h"
-#include "log.h"
+#include "yos/list.h"
+#include "yos/log.h"
 #include "service.h"
 #include "devmgr_common.h"
 
@@ -53,7 +53,9 @@ extern "C"
 
 // add by wukong 2017-4-17
 #define STR_MODEL_LEN	(80 + 1)
+#ifndef STR_NAME_LEN
 #define STR_NAME_LEN	(32 + 1)
+#endif
 // add by wukong end 2017-4-17
 
 /*
@@ -126,12 +128,12 @@ typedef struct dev_base_s{
 
 
 typedef struct dev_info_s{
-    struct list_head list_node;
-    struct list_head attr_head;
+    dlist_t list_node;
+    dlist_t attr_head;
     dev_base_t dev_base;
     // add by wukong 2017-4-17
     router_base_t router_base;
-    // add by wukong end 2017-4-17    
+    // add by wukong end 2017-4-17
     uint8_t device_idx; //0xff为无效值
     uint8_t cloud_state;
     uint8_t link_state;

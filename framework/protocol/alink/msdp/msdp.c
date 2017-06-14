@@ -2,11 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "list.h"
-#include "work_queue.h"
+#include "yos/list.h"
+#include "yos/framework.h"
 #include "msdp.h"
-#include "mpool.h"
-#include "log.h"
+#include "yos/log.h"
 #include "service.h"
 #include "alink_export_internal.h"
 #include "devmgr.h"
@@ -14,20 +13,14 @@
 #include "connectivity_manager.h"
 
 static int module_inited = 0;
-static LIST_HEAD(g_helper_head);
-static mpool_t *msdp_mpool = NULL;
-static LIST_HEAD(g_task_head);
+static dlist_t g_helper_head;
+static dlist_t g_task_head;
 static void *g_task_mutex = NULL;
 
 int register_remote_service(char *uuid, const char *service[]);
-static void msdp_post_work_handler(struct work_struct *work);
+static void msdp_post_work_handler(void *work);
 
-static struct work_struct post_device_status_work = {
-    .func = (work_func_t) & msdp_post_work_handler,
-    .prio = DEFAULT_WORK_PRIO,
-    .name = "post device status work",
-};
-
+static void *post_device_status_work = NULL;
 
 static int __convert_cmd_name2id(const char *cmd_name, uint8_t *cmd_id)
 {
@@ -87,14 +80,14 @@ static void __dump_device_callback(const device_helper_ptr helper)
     }
 
     os_printf("\tattr_handler:\n");
-    list_for_each_entry_t(attr_handler, &(helper->attr_head), list_node, attr_hanler_t){
+    dlist_for_each_entry(&(helper->attr_head), attr_handler, attr_hanler_t, list_node){
         os_printf("\t\tname:%-16s, get_cb:\"0x%08x\", set_cb:\"0x%08x\"\n",
             attr_handler->name,
             (unsigned long)attr_handler->get_cb, (unsigned long)attr_handler->set_cb);
     }
 
     os_printf("\tservice_handler:\n");
-    list_for_each_entry_t(service_handler, &(helper->srv_head), list_node, service_handler_t){
+    dlist_for_each_entry(&(helper->srv_head), service_handler, service_handler_t, list_node){
         os_printf("\t\tname:%-16s, service_cb:\"0x%08x\"\n",
             service_handler->name, (unsigned long)service_handler->service_cb);
     }
@@ -104,18 +97,20 @@ static void __dump_device_callback(const device_helper_ptr helper)
 /*设备属性和服务节点释放*/
 static void __release_device_helper(const device_helper_ptr helper)
 {
-    attr_hanler_ptr attr, attr_next = NULL;
-    service_handler_ptr service, service_next = NULL;
+    attr_hanler_ptr attr;
+    dlist_t *attr_next = NULL;
+    service_handler_ptr service;
+    dlist_t *service_next = NULL;
 
-    list_for_each_entry_safe_t(attr, attr_next, &(helper->attr_head), list_node, attr_hanler_t)
+    dlist_for_each_entry_safe(&(helper->attr_head), attr_next, attr, attr_hanler_t, list_node)
     {
-        list_del(&attr->list_node);
+        dlist_del(&attr->list_node);
         msdp_free_buff((void *)attr);
     }
 
-    list_for_each_entry_safe_t(service, service_next, &(helper->srv_head), list_node, service_handler_t)
+    dlist_for_each_entry_safe(&(helper->srv_head), service_next, service, service_handler_t, list_node)
     {
-        list_del(&service->list_node);
+        dlist_del(&service->list_node);
         msdp_free_buff((void *)service);
     }
 
@@ -125,10 +120,11 @@ static void __release_device_helper(const device_helper_ptr helper)
 
 static void __dump_all_type_handler()
 {
-    if(!list_empty(&g_helper_head))
+    if(!dlist_empty(&g_helper_head))
     {
         device_helper_ptr helper;
-        list_for_each_entry_t(helper, &g_helper_head, list_node, device_helper_t){
+        dlist_for_each_entry(&g_helper_head, helper, device_helper_t, list_node)
+        {
             __dump_device_callback(helper);
         }
     }
@@ -149,15 +145,16 @@ static int __module_init_check()
 static void __free_helper_list()
 {
     /*设备model链表释放*/
-    if(!list_empty(&g_helper_head))
+    if(!dlist_empty(&g_helper_head))
     {
-        device_helper_ptr helper, helper_next;
+        device_helper_ptr helper;
+        dlist_t *helper_next;
 
         /*设备属性和服务链表释放*/
-        list_for_each_entry_safe_t(helper, helper_next, &g_helper_head, list_node, device_helper_t)
+        dlist_for_each_entry_safe(&g_helper_head, helper_next, helper, device_helper_t, list_node)
 	    {
             __release_device_helper(helper);
-            list_del(&helper->list_node);
+            dlist_del(&helper->list_node);
             msdp_free_buff((void *)helper);
 	    }
     }
@@ -166,11 +163,13 @@ static void __free_helper_list()
 
 static void __free_task_list(void)
 {
-    post_node_t *node, *next;
+    post_node_t *node;
+    dlist_t *next;
 
     os_mutex_lock(g_task_mutex);
-    list_for_each_entry_safe_t(node, next, &g_task_head, list_node, post_node_t) {
-        list_del(&node->list_node);
+    dlist_for_each_entry_safe(&g_task_head, next, node, post_node_t, list_node)
+    {
+        dlist_del(&node->list_node);
         if (node->params)
             msdp_free_buff(node->params);
         msdp_free_buff(node);
@@ -180,13 +179,15 @@ static void __free_task_list(void)
     return;
 }
 
-static void msdp_post_work_handler(struct work_struct *work)
+static void msdp_post_work_handler(void *work)
 {
     int ret = SERVICE_RESULT_ERR;
-    post_node_t *node, *next;
+    post_node_t *node;
+    dlist_t *next;
 
     os_mutex_lock(g_task_mutex);
-    list_for_each_entry_safe_t(node, next, &g_task_head, list_node, post_node_t) {
+    dlist_for_each_entry_safe(&g_task_head, next, node, post_node_t, list_node)
+    {
         os_mutex_unlock(g_task_mutex);
         if(node->params){
             ret = msdp_post_device_data_array(node->params);
@@ -195,7 +196,7 @@ static void msdp_post_work_handler(struct work_struct *work)
 
         os_mutex_lock(g_task_mutex);
 
-        list_del(&node->list_node);
+        dlist_del(&node->list_node);
         if(node->params)
             msdp_free_buff(node->params);
         msdp_free_buff(node);
@@ -214,28 +215,18 @@ int msdp_add_asyncpost_task(char *params)
 
     node->params = params;
     os_mutex_lock(g_task_mutex);
-    list_add_tail(&node->list_node, &g_task_head);
+    dlist_add_tail(&node->list_node, &g_task_head);
     os_mutex_unlock(g_task_mutex);
 
-    queue_work(&post_device_status_work);
+    post_device_status_work = yos_schedule_work(0, msdp_post_work_handler, NULL, NULL, NULL);
 
     return SERVICE_RESULT_OK;
 }
 
 
-void *msdp_dup_string(const char *src)
-{
-    return pstrdup(msdp_mpool, src);
-}
-
-void *msdp_dup_buff(const void *buff, unsigned buff_size)
-{
-    return pbufdup(msdp_mpool, buff, buff_size);
-}
-
 void *msdp_new_buff(unsigned int buff_size)
 {
-    void *buff = pmalloc(msdp_mpool, buff_size);
+    void *buff = os_malloc(buff_size);
     if(NULL != buff)
         memset(buff, 0, buff_size);
 
@@ -245,7 +236,7 @@ void *msdp_new_buff(unsigned int buff_size)
 void msdp_free_buff(void *buff)
 {
     if(buff)
-        pfree(msdp_mpool, buff);
+        os_free(buff);
 }
 
 
@@ -317,7 +308,7 @@ static int msdp_add_attr_cb(device_helper_ptr helper,
     phandler->get_cb = pf_get;
     phandler->set_cb = pf_set;
 
-    list_add_tail(&phandler->list_node, &(helper->attr_head));
+    dlist_add_tail(&phandler->list_node, &(helper->attr_head));
 
 unlock_end:
     os_mutex_unlock(helper->mutex_lock);
@@ -334,7 +325,7 @@ static void msdp_delete_attr_cb(device_helper_ptr helper,
     os_mutex_lock(helper->mutex_lock);
     phandler = msdp_get_attr_handler(helper, name);
     if(phandler){
-        list_del(&phandler->list_node);
+        dlist_del(&phandler->list_node);
         msdp_free_buff((void *)phandler);
     }
     os_mutex_unlock(helper->mutex_lock);
@@ -365,7 +356,7 @@ static int msdp_add_service_cb(device_helper_ptr helper,
     strncpy(phandler->name, name, sizeof(phandler->name) - 1);
     phandler->service_cb = pf_exec;
 
-    list_add_tail(&phandler->list_node, &(helper->srv_head));
+    dlist_add_tail(&phandler->list_node, &(helper->srv_head));
 
 unlock_end:
     os_mutex_unlock(helper->mutex_lock);
@@ -381,7 +372,7 @@ static void msdp_delete_service_cb(device_helper_ptr helper, const char *name)
 
     phandler = msdp_get_service_handler(helper, name);
     if(phandler){
-        list_del(&phandler->list_node);
+        dlist_del(&phandler->list_node);
         msdp_free_buff((void *)phandler);
     }
     else {
@@ -398,7 +389,8 @@ static device_helper_ptr msdp_get_helper_by_devtype(uint8_t dev_type)
     if(!list_empty(&g_helper_head)){
         device_helper_ptr helper;
 
-        list_for_each_entry_t(helper, &g_helper_head, list_node, device_helper_t){
+        dlist_for_each_entry(&g_helper_head, helper, device_helper_t, list_node)
+        {
             if(helper->dev_type == dev_type)
                 return helper;
         }
@@ -412,7 +404,8 @@ attr_hanler_ptr msdp_get_attr_handler(const device_helper_ptr helper,
     const char *name)
 {
     attr_hanler_ptr phandler = NULL;
-    list_for_each_entry_t(phandler, &(helper->attr_head), list_node, attr_hanler_t){
+    dlist_for_each_entry(&(helper->attr_head), phandler, attr_hanler_t, list_node)
+    {
         if(strcmp(name , phandler->name) == 0){
             return phandler;
         }
@@ -427,7 +420,8 @@ service_handler_ptr msdp_get_service_handler(const device_helper_ptr helper,
 {
     service_handler_ptr phandler = NULL;
 
-    list_for_each_entry_t(phandler, &(helper->srv_head), list_node, service_handler_t){
+    dlist_for_each_entry(&(helper->srv_head), phandler, service_handler_t, list_node)
+    {
         if(strcmp(name , phandler->name) == 0){
             return phandler;
         }
@@ -522,7 +516,8 @@ int msdp_get_all_attrname(const char *uuid, char *attrset, int buff_size)
     helper = msdp_get_helper(uuid);
     if(helper){
         os_mutex_lock(helper->mutex_lock);
-        list_for_each_entry_t(phandler, &(helper->attr_head), list_node, attr_hanler_t){
+        dlist_for_each_entry(&(helper->attr_head), phandler, attr_hanler_t, list_node)
+        {
             if(count++ != 0)
                 attrset[len++] = ',';
             len += snprintf(attrset + len, buff_size - len, "\"%s\"", phandler->name);
@@ -548,7 +543,8 @@ int msdp_get_all_rpcname(uint8_t dev_type, char *name_array[], int array_size)
     PTR_RETURN(helper, num, "no exist device helper, type = %d", dev_type);
 
     os_mutex_lock(helper->mutex_lock);
-    list_for_each_entry_t(phandler, &(helper->srv_head), list_node, service_handler_t){
+    dlist_for_each_entry(&(helper->srv_head), phandler, service_handler_t, list_node)
+    {
         name_array[num++] = phandler->name;
         if(num == array_size)
             break;
@@ -574,11 +570,10 @@ int msdp_register_remote_service(char *uuid, const char *service)
     log_debug("send:%s", req_str);
     ret = ((service_t*)sm_get_service("accs"))->put((void*)&data, sizeof(data));//accs_put
 
-    out:
-        if(req_str)
-            os_free(req_str);
+    if(req_str)
+        os_free(req_str);
 
-        return ret;
+    return ret;
 
 }
 
@@ -661,7 +656,7 @@ int msdp_register_device_helper(uint8_t dev_type, dev_option_cb callback[MAX_CAL
     for(i = 0; i < MAX_CALLBACK_NUM; i++)
         helper->option_callback[i] = callback[i];
 
-    list_add_tail(&helper->list_node, &g_helper_head);
+    dlist_add_tail(&helper->list_node, &g_helper_head);
 
     return SERVICE_RESULT_OK;
 }
@@ -675,7 +670,7 @@ void msdp_unregister_device_helper(uint8_t dev_type)
     if(helper){
         __release_device_helper(helper);
 
-        list_del(&helper->list_node);
+        dlist_del(&helper->list_node);
         msdp_free_buff((void *)helper);
     }
 
@@ -690,7 +685,8 @@ void msdp_dump_helper()
         device_helper_ptr sub_dev = NULL;
 
         /*子设备属性和服务节点*/
-        list_for_each_entry_t(sub_dev, &g_helper_head, list_node, device_helper_t){
+        dlist_for_each_entry(&g_helper_head, sub_dev, device_helper_t, list_node)
+        {
             os_mutex_lock((sub_dev->mutex_lock));
             __dump_device_callback(sub_dev);
             os_mutex_unlock((sub_dev->mutex_lock));
@@ -936,14 +932,11 @@ int msdp_init()
     if(module_inited)
         return SERVICE_RESULT_OK;
 
-    list_init_head(&g_helper_head);
-    list_init_head(&g_task_head);
+    dlist_init(&g_helper_head);
+    dlist_init(&g_task_head);
 
     g_task_mutex = os_mutex_init();
     PTR_RETURN(g_task_mutex, ret, "task mutex init fail");
-
-    msdp_mpool = mpool_create("msdp", 2);
-    PTR_RETURN(msdp_mpool, ret, "create msdp mpool fail");
 
     /*网关设备事件回调初始化*/
     ret = msdp_gw_init();
@@ -963,10 +956,6 @@ int msdp_init()
 err:
     __free_helper_list();
 
-    if(msdp_mpool)
-        mpool_destroy(msdp_mpool);
-    msdp_mpool = NULL;
-
     log_trace("msdp exit");
     return ret;
 }
@@ -977,7 +966,7 @@ void msdp_exit()
     if(!module_inited)
         return;
 
-    cancel_work(&post_device_status_work);
+    yos_cancel_work(post_device_status_work, msdp_post_work_handler, NULL);
     __free_task_list();
     os_mutex_destroy(g_task_mutex);
     g_task_mutex = NULL;
@@ -986,9 +975,6 @@ void msdp_exit()
 
     /*设备model链表释放*/
     __free_helper_list();
-
-    mpool_destroy(msdp_mpool);
-    msdp_mpool = NULL;
 
     module_inited = 0;
 }

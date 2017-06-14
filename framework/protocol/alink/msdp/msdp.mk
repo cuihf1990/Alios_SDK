@@ -1,7 +1,10 @@
-NAME := msdp 
+NAME := msdp
 
-$(NAME)_SOURCES := msdp.c	msdp_common.c  msdp_gateway.c  msdp_ut.c  msdp_zigbee.c 
-$(NAME)_INCLUDES := ../ ../system/ ../digest_algorithm/ ../json/ ../../../../framework/connectivity/
-$(NAME)_INCLUDES += ../../../../framework/connectivity/wsf/ ../ ../../../ywss/ ../os/ ../../../ywss/ 
-$(NAME)_INCLUDES += ../../../../utility/digest_algorithm/ 
+GLOBAL_INCLUDES += ./
+
+$(NAME)_SOURCES := msdp.c msdp_common.c
+$(NAME)_INCLUDES := ../ ../system/ ../json/ ../os/ ../accs/ ../devmgr/
+$(NAME)_INCLUDES +=  ../../../../framework/connectivity/ ../../../../framework/connectivity/wsf/ ../../../ywss/
+$(NAME)_INCLUDES += ../../../../utility/digest_algorithm/
+$(NAME)_CFLAGS += -DGATEWAY_SDK
 
