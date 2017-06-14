@@ -2,6 +2,7 @@
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/network.h>
+#include "aos_cli.h"
 
 extern void netmgr_start(void);
 
@@ -13,9 +14,9 @@ static void app_delayed_action(void *arg)
 {
     struct cookie *cookie = arg;
     struct hostent *hent = gethostbyname("www.taobao.com");
-    printf("%s - %s\n", __func__, yos_task_name());
+    printf("%s - %s\r\n", __func__, yos_task_name());
     if(hent) {
-        printf("%s - %s\n", __func__, hent->h_name);
+        printf("%s - %s\r\n", __func__, hent->h_name);
     }
     if (cookie->flag != 0) {
         yos_post_delayed_action(3000, app_delayed_action, arg);
@@ -36,6 +37,9 @@ int application_start(void)
 {
     struct cookie *cookie = yos_malloc(sizeof(*cookie));
     bzero(cookie, sizeof(*cookie));
+
+    cli_init();
+    //board_cli_init();
 
     netmgr_init();
 

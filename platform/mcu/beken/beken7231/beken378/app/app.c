@@ -365,7 +365,6 @@ void core_thread_uninit(void)
 extern void hw_start_hal(void);
 static void init_app_thread( void *arg )
 {
-    cli_init();
     hw_start_hal();
     yos_framework_init();
     application_start(0, NULL);

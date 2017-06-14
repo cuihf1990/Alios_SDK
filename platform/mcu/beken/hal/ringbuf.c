@@ -47,7 +47,7 @@ int ring_buffer_init( ring_buffer_t* ring_buffer, uint8_t* buffer, uint32_t size
 
 int ring_buffer_deinit( ring_buffer_t* ring_buffer )
 {
-  UNUSED_PARAMETER(ring_buffer);
+  //UNUSED_PARAMETER(ring_buffer);
   return 0;
 }
 
