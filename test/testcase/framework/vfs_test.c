@@ -130,23 +130,21 @@ static int do_poll(int fd_recv, int timeout)
 }
 
 #define MAXCNT 100
-static void *send_seq_data(void *arg)
+static void send_seq_data(void *arg)
 {
     int fd = *(int *)arg;
     struct sockaddr_in addr;
     char buf[MAXCNT];
 
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");//htonl(INADDR_BROADCAST);
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     addr.sin_port = htons(12346);
 
     int i;
     for (i=1;i<MAXCNT;i++) {
         int ret = sendto(fd, buf, i, 0, (struct sockaddr *)&addr, sizeof addr);
-        usleep(random() % 10000);
+        yos_msleep((random() % 100) + 1);
     }
-
-    return 0;
 }
 
 static void test_yos_poll_case(void)
@@ -158,7 +156,7 @@ static void test_yos_poll_case(void)
     int ret;
 
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1"); //htonl(INADDR_BROADCAST);
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     addr.sin_port = htons(12346);
 
     memset(buf, 0x5a, sizeof buf);
@@ -178,16 +176,13 @@ static void test_yos_poll_case(void)
     ret = do_poll(fd_recv, 0);
     YUNIT_ASSERT(ret == 0);
 
-    pthread_t th;
-    pthread_create(&th, NULL, send_seq_data, &fd_send);
+    yos_task_new("sender", send_seq_data, &fd_send, 4096);
 
     int i;
     for (i=1;i<MAXCNT;i++) {
         ret = do_poll(fd_recv, 5000);
         YUNIT_ASSERT(ret == i);
     }
-
-    pthread_join(th, NULL);
 
     close(fd_send);
     close(fd_recv);

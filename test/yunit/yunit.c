@@ -74,19 +74,19 @@ void yunit_test_deinit(void)
         yunit_test_case_node_t *test_case_node = test_suite_node->test_case_list_header.next;
         while (test_case_node != NULL) {
             yunit_test_case_node_t *test_case_node_next = test_case_node->next;
-            free(test_case_node);
+            yos_free(test_case_node);
             test_case_node = test_case_node_next;
         }
 
         yunit_test_suite_node_t *test_suite_node_next = test_suite_node->next;
-        free(test_suite_node);
+        yos_free(test_suite_node);
         test_suite_node = test_suite_node_next;
     }
 
     yunit_test_case_result_t *test_case_result = g_test_context.failed_test_case_result.next;
     while (test_case_result != NULL) {
         yunit_test_case_result_t *test_case_result_next = test_case_result->next;
-        free(test_case_result);
+        yos_free(test_case_result);
         test_case_result = test_case_result_next;
     }
 }
