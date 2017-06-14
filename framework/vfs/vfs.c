@@ -30,12 +30,12 @@ yos_mutex_t g_vfs_mutex;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-static int trap_open(const char *path)
+static int trap_open(const char *path, int flags)
 {
 #ifdef WITH_LWIP
     return E_VFS_K_ERR;
 #else
-    return open(path, O_RDWR | O_CREAT, 0644);
+    return open(path, flags);
 #endif
 }
 
@@ -60,7 +60,7 @@ static int trap_fcntl(int fd, int cmd, int val)
 }
 
 #else
-static int trap_open(const char *path)
+static int trap_open(const char *path, int flags)
 {
     return E_VFS_K_ERR;
 }
@@ -177,7 +177,7 @@ int yos_open(const char *path, int flags)
 
     if (node == NULL) {
         yos_mutex_unlock(&g_vfs_mutex);
-        return trap_open(path);
+        return trap_open(path, flags);
     }
 
     node->i_flags = flags;
