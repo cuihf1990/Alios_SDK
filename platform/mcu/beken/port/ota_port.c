@@ -58,7 +58,7 @@ int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
     }
 
     /* reboot */
-    ((void(*)(void))0)();
+    hal_wdg_init(1);
 
     return 0;
 }

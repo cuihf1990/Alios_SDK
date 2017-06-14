@@ -567,11 +567,7 @@ void get_version(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
 
 void reboot(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    FUNCPTR reboot = 0;
-
-    os_printf("reboot\r\n");
-
-    (*reboot)();
+    hal_wdg_init(1);
 }
 
 static void echo_cmd_handler(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)

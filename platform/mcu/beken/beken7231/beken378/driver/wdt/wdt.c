@@ -45,10 +45,13 @@ UINT32 wdt_ctrl(UINT32 cmd, void *param)
 
 		case WCMD_SET_PERIOD:		
 			ASSERT(param);
-			reg = REG_READ(WDT_CTRL_REG);
-			reg &= ~(WDT_PERIOD_MASK << WDT_PERIOD_POSI);
-			reg |= ((*(UINT32 *)param) & WDT_PERIOD_MASK) << WDT_KEY_POSI;
+			reg = WDT_1ST_KEY << WDT_KEY_POSI;
+			reg |= (*(UINT32 *)param & WDT_PERIOD_MASK) << WDT_PERIOD_POSI;
 			REG_WRITE(WDT_CTRL_REG, reg);
+
+			reg = WDT_2ND_KEY << WDT_KEY_POSI;
+			reg |= (*(UINT32 *)param & WDT_PERIOD_MASK) << WDT_PERIOD_POSI;
+			REG_WRITE(WDT_CTRL_REG, reg);	
 			break;
 			
 		default:

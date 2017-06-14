@@ -403,7 +403,8 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     ../../arch/arm/armv5/port_s.S \
                     ../../arch/arm/armv5/soc_impl.c \
 
-$(NAME)_SOURCES	 += hal/flash.c \
+$(NAME)_SOURCES	 += hal/wdg.c \
+                    hal/flash.c \
 					hal/uart.c \
 					hal/ringbuf.c \
 					hal/wifi_port.c \
