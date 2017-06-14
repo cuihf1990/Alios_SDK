@@ -274,7 +274,6 @@ void wifi_set_monitor_data_handler(monitor_data_cb_t cb)
 static void netmgr_wifi_config_start(void)
 {
     autoconfig_plugin_t * valid_plugin = get_autoconfig_plugin();
-    hal_wifi_module_t *module;
 
     if (valid_plugin != NULL) {
         valid_plugin->autoconfig_start();
