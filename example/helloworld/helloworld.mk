@@ -11,3 +11,5 @@ NAME := helloworld
 
 $(NAME)_SOURCES := helloworld.c
 
+$(NAME)_COMPONENTS += cli
+
