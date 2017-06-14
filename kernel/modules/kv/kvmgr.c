@@ -24,7 +24,7 @@
 #include "k_api.h"
 
 
-#define KV_BUFFER_SIZE  (16 * 1024)
+#define KV_BUFFER_SIZE  (8 * 1024)
 #define INT2BYTE(p,value) \
     *p ++ = value & 0xff, \
 *p ++ = (value >> 8) & 0xff, \

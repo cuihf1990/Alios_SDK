@@ -134,7 +134,7 @@
  * a lot of data that needs to be copied, this should be set high.
  */
 
-#define MEM_SIZE (64*1024)
+#define MEM_SIZE (32*1024)
 
 
 

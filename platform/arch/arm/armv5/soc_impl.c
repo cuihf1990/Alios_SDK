@@ -64,7 +64,7 @@ tick_t soc_elapsed_ticks_get(void)
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
 
-#define       SYS_DYN_POOL_SIZE (100 * 1024)
+#define       SYS_DYN_POOL_SIZE (132 * 1024)
 size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
 k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start, SYS_DYN_POOL_SIZE}};
 
