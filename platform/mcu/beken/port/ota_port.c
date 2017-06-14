@@ -65,6 +65,7 @@ int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
 
 static  CRC16_Context contex;
 
+unsigned int _off_set = 0;
 static int moc108_ota_init(hal_ota_module_t *m, void *something)
 {
 #if 0
@@ -73,6 +74,7 @@ static int moc108_ota_init(hal_ota_module_t *m, void *something)
     partition_info = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
     hal_flash_erase(HAL_PARTITION_OTA_TEMP, 0 ,partition_info.partition_size);
 #endif
+    int _off_set = 0;
     CRC16_Init( &contex );
     return 0;
 }
@@ -80,10 +82,17 @@ static int moc108_ota_init(hal_ota_module_t *m, void *something)
 
 static int moc108_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
 {
-    CRC16_Update( &contex, in_buf, in_buf_len );
-    hal_flash_write(HAL_PARTITION_OTA_TEMP, off_set, in_buf, in_buf_len);
+    if(ota_info.ota_len == 0) {
+        _off_set = 0;
+        CRC16_Init( &contex );
+        memset(&ota_info, 0 , sizeof ota_info);
+    }
+    printf("set write len---------------%d\n", in_buf_len);
+    CRC16_Update( &contex, in_buf, in_buf_len);
+    int ret = hal_flash_write(HAL_PARTITION_OTA_TEMP, &_off_set, in_buf, in_buf_len);
     ota_info.ota_len += in_buf_len;
-    return 0;
+    printf(" ret :%d, size :%d\n", ret, ota_info.ota_len);
+    return ret;
 }
 
 static int moc108_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, uint8_t* out_buf, uint32_t out_buf_len)
@@ -95,6 +104,7 @@ static int moc108_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, uin
 static int moc108_ota_set_boot(hal_ota_module_t *m, void *something)
 {
     CRC16_Final( &contex, &ota_info.ota_crc );
+    printf("set boot---------------\n");
     hal_ota_switch_to_new_fw(ota_info.ota_len, ota_info.ota_crc);
     memset(&ota_info, 0 , sizeof ota_info);
     return 0;

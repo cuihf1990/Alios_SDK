@@ -361,9 +361,11 @@ void core_thread_uninit(void)
 #endif
 
 extern int yos_framework_init(void);
+extern void hw_start_hal(void);
 static void init_app_thread( void *arg )
 {
     cli_init();
+    hw_start_hal();
     yos_framework_init();
 #ifdef CONFIG_YOS_MESH
     extern void beken_wifi_mesh_register(void);
