@@ -17,6 +17,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <hal/wifi.h>
+
 #include "platform.h"
 #include "platform_config.h"
 
@@ -26,15 +28,46 @@ char *platform_get_multicast_ifname(char *ifname, int ifname_size)
 
 char *platform_wifi_get_mac(char mac_str[PLATFORM_MAC_LEN])
 {
+    uint8_t mac[6];
+
+    hal_wifi_get_mac_addr(NULL, mac);
+
+    snprintf(mac_str, PLATFORM_MAC_LEN, "%02x:%02x:%02x:%02x:%02x:%02x",
+             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    return mac_str;
 }
 
 int platform_wifi_get_rssi_dbm(void)
 {
-    return 0;
+    int ret;
+
+    hal_wifi_link_stat_t stat;
+
+    ret = hal_wifi_get_link_stat(NULL, &stat);
+    if (ret != 0) {
+        return -1;
+    }
+
+    return stat.wifi_strength;
 }
 
 uint32_t platform_wifi_get_ip(char ip_str[PLATFORM_IP_LEN])
 {
+    int i;
+    int ret;
+
+    hal_wifi_ip_stat_t ip_stat;
+
+    ret = hal_wifi_get_ip_stat(NULL, &ip_stat, STATION);
+    if (ret != 0) {
+        return 1;
+    }
+
+    for (i = 0; i < PLATFORM_IP_LEN; i++) {
+        ip_str[i] = ip_stat.ip[i];
+    }
+
     return 0;
 }
 
@@ -50,17 +83,34 @@ char *platform_get_os_version(char os_ver[STR_SHORT_LEN])
 
 int platform_config_write(const char *buffer, int length)
 {
-    return 0;
+    if (!buffer || length <= 0) {
+        return -1;
+    }
+
+    return yos_kv_set("alink", buffer, length, 1);
 }
 
 int platform_config_read(char *buffer, int length)
 {
-    return 0;
+    if (!buffer || length <= 0) {
+        return -1;
+    }
+
+    return yos_kv_get("alink" , buffer, length);
 }
 
 int platform_sys_net_is_ready(void)
 {
-    return 1;
+    int ret;
+
+    hal_wifi_link_stat_t link_stat;
+
+    ret = hal_wifi_get_link_stat(NULL, &link_stat);
+    if (ret != 0) {
+        return 1;
+    }
+
+    return ((link_stat.is_connected == 1) ? 0 : 1);
 }
 
 void platform_sys_reboot(void)

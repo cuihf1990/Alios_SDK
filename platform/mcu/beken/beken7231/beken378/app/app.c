@@ -42,7 +42,7 @@ static mico_semaphore_t app_sema = NULL;
 WIFI_CORE_T g_wifi_core = {0};
 volatile int32_t bmsg_rx_count = 0;
 
-extern int application_start( void );
+extern int application_start(int , char** );
 
 #if (0 == CFG_MICO_DEMO)
 void app_init(void)
@@ -368,7 +368,7 @@ static void init_app_thread( void *arg )
     cli_init();
     hw_start_hal();
     yos_framework_init();
-    application_start();
+    application_start(0, NULL);
 }
 
 void app_start(void)
@@ -401,7 +401,7 @@ void app_start(void)
             THD_INIT_PRIORITY,
             "app", 
             init_app_thread, 
-            (unsigned short)4096, 
+            (unsigned short)16384,
             0);
 }
 
