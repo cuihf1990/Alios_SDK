@@ -525,6 +525,11 @@ long long yos_now(void)
     return yunos_sys_time_get() * 1000 * 1000;
 }
 
+long long yos_now_ms(void)
+{
+    return yunos_sys_time_get();
+}
+
 void yos_msleep(int ms)
 {
     yunos_task_sleep(MS2TICK(ms));

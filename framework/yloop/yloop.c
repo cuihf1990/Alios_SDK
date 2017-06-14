@@ -197,7 +197,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
         return -1;
     }
 
-    timeout->timeout_ms = yos_now() / 1000 / 1000 + ms;
+    timeout->timeout_ms = yos_now_ms() + ms;
     timeout->private_data = param;
     timeout->cb = action;
     timeout->ms = ms;
@@ -251,7 +251,7 @@ void yos_loop_run(void)
 
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            long long now = yos_now() / 1000 / 1000;
+            long long now = yos_now_ms();
 
             if (now < tmo->timeout_ms) {
                 delayed_ms = tmo->timeout_ms - now;
@@ -275,7 +275,7 @@ void yos_loop_run(void)
         /* check if some registered timeouts have occurred */
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            long long now = yos_now() / 1000 / 1000;
+            long long now = yos_now_ms();
 
             if (now >= tmo->timeout_ms) {
                 dlist_del(&tmo->next);
