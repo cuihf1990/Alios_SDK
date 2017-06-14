@@ -46,6 +46,8 @@ typedef struct {
     bool                       auto_start_smartconfig;
 } netmgr_cxt_t;
 
+extern autoconfig_plugin_t g_alink_smartconfig;
+
 static netmgr_cxt_t        g_netmgr_cxt;
 static autoconfig_plugin_t g_def_smartconfig;
 
@@ -353,7 +355,11 @@ int netmgr_init(void)
     module = hal_wifi_get_default_module();
     memset(&g_netmgr_cxt, 0, sizeof(g_netmgr_cxt));
     g_netmgr_cxt.wifi_hal_mod = module;
+#ifdef CONFIG_YWSS
+    add_autoconfig_plugin(&g_alink_smartconfig);
+#else
     add_autoconfig_plugin(&g_def_smartconfig);
+#endif
     hal_wifi_install_event(g_netmgr_cxt.wifi_hal_mod, &g_wifi_hal_event);
     g_netmgr_cxt.auto_start_smartconfig = true;
     read_persistent_conf();
