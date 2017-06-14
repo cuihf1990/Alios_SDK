@@ -25,7 +25,6 @@
 #include <yos/log.h>
 #include <yos/kernel.h>
 #include <vflash.h>
-#include <kvmgr.h>
 
 #include <arg_options.h>
 
@@ -166,10 +165,6 @@ int main(int argc, char **argv)
     yos_framework_init();
 
     register_devices();
-
-    yos_kv_init();
-
-    netmgr_init();
 
     ota_service_init();
 

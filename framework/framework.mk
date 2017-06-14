@@ -2,5 +2,5 @@ NAME := framework
 
 $(NAME)_SOURCES     := init/main.c
 
-$(NAME)_COMPONENTS  := yloop vfs log fota
+$(NAME)_COMPONENTS  := yloop vfs log fota modules.kv
 
