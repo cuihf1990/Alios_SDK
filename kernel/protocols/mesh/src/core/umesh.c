@@ -35,11 +35,9 @@
 #include "utilities/message.h"
 #include "utilities/encoding.h"
 #include "utilities/mac_whitelist.h"
+#include "utilities/task.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
-
-typedef void (*yos_call_t)(void *);
-extern int yos_schedule_call(yos_call_t f, void *arg);
 
 typedef struct transmit_frame_s {
     message_t     *message;
@@ -190,7 +188,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     *payload = UNCOMPRESSED_DISPATCH;
 
     memcpy(&frame->dest, dest, sizeof(frame->dest));
-    yos_schedule_call(output_message_handler, frame);
+    umesh_task_schedule_call(output_message_handler, frame);
     return UR_ERROR_NONE;
 }
 
@@ -206,7 +204,7 @@ static void input_message_handler(void *args)
 ur_error_t ur_mesh_input(umessage_t *message)
 {
     if (g_um_state.adapter_callback) {
-        yos_schedule_call(input_message_handler, message);
+        umesh_task_schedule_call(input_message_handler, message);
     } else {
         message_free((message_t *)message);
     }

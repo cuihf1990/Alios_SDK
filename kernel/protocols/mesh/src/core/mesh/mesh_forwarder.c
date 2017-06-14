@@ -35,13 +35,11 @@
 #include "utilities/encoding.h"
 #include "utilities/mac_whitelist.h"
 #include "utilities/timer.h"
+#include "utilities/task.h"
 #include "ipv6/ip6.h"
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
 #include "tools/diags.h"
-
-typedef void (*yos_call_t)(void *);
-extern int yos_schedule_call(yos_call_t f, void *arg);
 
 typedef struct received_frame_s {
     hal_context_t *hal;
@@ -159,7 +157,7 @@ static void handle_sent(void *context, frame_t *frame, int error)
         hal->link_stats.out_errors++;
     }
     hal->last_sent = error;
-    yos_schedule_call(message_sent_task, hal);
+    umesh_task_schedule_call(message_sent_task, hal);
 }
 
 static message_t *handle_lowpan_iphc(message_t *message)
@@ -631,7 +629,7 @@ static void address_resolved_handler(network_context_t *network,
             set_src_info(info);
             network = info->network;
             message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE], message);
-            yos_schedule_call(send_datagram, network->hal);
+            umesh_task_schedule_call(send_datagram, network->hal);
         } else {
             message_free(message);
         }
@@ -728,7 +726,7 @@ ur_error_t mf_send_message(message_t *message)
         info->src.netid = umesh_mm_get_meshnetid(network);
         info->src.addr.len = SHORT_ADDR_SIZE;
         info->src.addr.short_addr = umesh_mm_get_local_sid();
-        yos_schedule_call(handle_datagram, message);
+        umesh_task_schedule_call(handle_datagram, message);
         return UR_ERROR_NONE;
     }
 
@@ -795,7 +793,7 @@ ur_error_t mf_send_message(message_t *message)
     tx_hal = network->hal;
     if (info->type == MESH_FRAME_TYPE_DATA) {
         message_queue_enqueue(&tx_hal->send_queue[DATA_QUEUE], message);
-        yos_schedule_call(send_datagram, tx_hal);
+        umesh_task_schedule_call(send_datagram, tx_hal);
         if (is_mcast) {
             hals = get_hal_contexts();
             slist_for_each_entry(hals, hal, hal_context_t, next) {
@@ -811,12 +809,12 @@ ur_error_t mf_send_message(message_t *message)
                 message_copy(mcast_message, message);
                 mcast_message->info->network = (void *)get_hal_default_network_context(hal);
                 message_queue_enqueue(&hal->send_queue[DATA_QUEUE], mcast_message);
-                yos_schedule_call(send_datagram, hal);
+                umesh_task_schedule_call(send_datagram, hal);
             }
         }
     } else {
         message_queue_enqueue(&tx_hal->send_queue[CMD_QUEUE], message);
-        yos_schedule_call(send_datagram, tx_hal);
+        umesh_task_schedule_call(send_datagram, tx_hal);
     }
     return error;
 }
@@ -959,7 +957,7 @@ static void message_handler(void *args)
             message_queue_enqueue(&hal->send_queue[CMD_QUEUE], frame->message);
         }
         ur_mem_free(frame, sizeof(received_frame_t));
-        yos_schedule_call(send_datagram, network->hal);
+        umesh_task_schedule_call(send_datagram, network->hal);
         return;
     }
 
@@ -984,7 +982,7 @@ static void message_handler(void *args)
         }
     }
 
-    yos_schedule_call(handle_datagram, frame->message);
+    umesh_task_schedule_call(handle_datagram, frame->message);
     ur_mem_free(frame, sizeof(received_frame_t));
 }
 
@@ -1032,7 +1030,7 @@ static void handle_received_frame(void *context, frame_t *frame,
     rx_frame->hal = hal;
     memcpy(&rx_frame->frame_info, frame_info, sizeof(rx_frame->frame_info));
     resolve_message_info(rx_frame);
-    yos_schedule_call(message_handler, rx_frame);
+    umesh_task_schedule_call(message_handler, rx_frame);
 }
 
 static void send_datagram(void *args)
@@ -1103,7 +1101,7 @@ static void send_datagram(void *args)
                                             handle_sending_timer, hal);
     } else if (error == UR_ERROR_DROP) {
         hal->last_sent = SENT_FAIL;
-        yos_schedule_call(message_sent_task, hal);
+        umesh_task_schedule_call(message_sent_task, hal);
     }
 }
 
@@ -1163,7 +1161,7 @@ static void handle_datagram(void *args)
                     message_copy(relay_message, message);
                     relay_message->info->network = (void *)get_hal_default_network_context(hal);
                     message_queue_enqueue(&hal->send_queue[DATA_QUEUE], relay_message);
-                    yos_schedule_call(send_datagram, hal);
+                    umesh_task_schedule_call(send_datagram, hal);
                 }
             }
             offset = sizeof(mcast_header_t) + 1;

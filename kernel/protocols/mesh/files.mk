@@ -26,6 +26,7 @@ umesh_srcs := src/core/umesh.c \
               src/utilities/mac_whitelist.c \
               src/utilities/memory.c \
               src/utilities/configs.c \
+              src/utilities/task.c \
               src/tools/diags.c \
               src/tools/cli.c
 
