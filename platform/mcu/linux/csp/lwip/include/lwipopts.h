@@ -168,7 +168,10 @@
 /*
    ---------- LOOPIF options ----------
 */
-#define LWIP_HAVE_LOOPIF                0
+#define LWIP_NETIF_LOOPBACK             1
+#define LWIP_HAVE_LOOPIF                1
+#define LWIP_NETIF_LOOPBACK_MULTITHREADING       1
+#define LWIP_LOOPBACK_MAX_PBUFS         8
 
 /*
    ---------- Thread options ----------

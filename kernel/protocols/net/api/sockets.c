@@ -1545,8 +1545,10 @@ lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
           (writeset && FD_ISSET(i, writeset)) ||
           (exceptset && FD_ISSET(i, exceptset))) {
         struct lwip_sock *sock;
+        struct lwip_event *event;
         SYS_ARCH_PROTECT(lev);
         sock = tryget_socket(i);
+        event = tryget_event(i);
         if (sock != NULL) {
           /* @todo: what if this is a new socket (reallocated?) in this case,
              select_waiting-- would be wrong (a global 'sockalloc' counter,
@@ -1555,7 +1557,7 @@ lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
           if (sock->select_waiting > 0) {
             sock->select_waiting--;
           }
-        } else {
+        } else if (event == NULL) {
           /* Not a valid socket */
           nready = -1;
         }
