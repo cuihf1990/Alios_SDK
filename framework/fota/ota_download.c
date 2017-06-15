@@ -223,7 +223,6 @@ int http_download(char *url, write_flash_cb_t func) {
     char headbuf[BUFFER_MAX_SIZE + 1] = {0};
     int header_found = 0;
     char *pos = 0;
-    char file_length[64] = {0};
     int file_size = 0;
 
     while ((nbytes = read(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
@@ -239,12 +238,13 @@ int http_download(char *url, write_flash_cb_t func) {
         }
 
         if(!header_found){
-            if(strlen(file_length) == 0) {
+            if(!file_size) {
                 char *ptr = strstr(http_buffer,"Content-Length:");
                 if (ptr) {
-                    sscanf(ptr, "%*[^ ]%s", file_length);
-                    file_size = atoi(file_length);
-                    OTA_LOG_I("file_length %s, %d", file_length, file_size);
+                    //sscanf(ptr, "%*[^ ]%s", file_length);
+                    //file_size = atoi(file_length);
+                    sscanf(ptr, "%*[^ ]%d", &file_size);
+                    OTA_LOG_I("file_length %d", file_size);
                 }
             }
 
