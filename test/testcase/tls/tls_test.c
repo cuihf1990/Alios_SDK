@@ -75,13 +75,13 @@ static void *network_socket_create(const char *net_addr, int port)
 
     tcp_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_fd < 0) {
-        printf("creat socket fail\n");
+        printf("creat socket fail - errno: %d\n", errno);
         return NULL;
     }
 
     host = gethostbyname(net_addr);
     if (host == NULL) {
-        printf("get host by name fail\n");
+        printf("get host by name fail - errno: %d\n", errno);
         goto _err;
     }
 
@@ -127,12 +127,12 @@ static void test_tls_ssl_connect(void)
     void *ssl = NULL;
 
     sock_fd = network_socket_create(server_name, server_port);
-    YUNIT_ASSERT(sock_fd != NULL);
+    YUNIT_ASSERT((int)sock_fd >= 0);
 
     /*
      * testcase #1
      */
-    ssl = mbedtls_ssl_connect(NULL,
+    ssl = mbedtls_ssl_connect((void *)-1,
               mbedtls_real_ca_pem, strlen(mbedtls_real_ca_pem));
     YUNIT_ASSERT(ssl == NULL);
 
@@ -162,7 +162,7 @@ static void test_tls_ssl_connect(void)
      * testcase #5
      */
     sock_fd = network_socket_create(server_name, server_port);
-    YUNIT_ASSERT(sock_fd != NULL);
+    YUNIT_ASSERT((int)sock_fd >= 0);
 
     ssl = mbedtls_ssl_connect(sock_fd,
               mbedtls_real_ca_pem, strlen(mbedtls_real_ca_pem));
@@ -183,7 +183,7 @@ static void test_tls_ssl_send(void)
     void *ssl = NULL;
 
     sock_fd = network_socket_create(server_name, server_port);
-    YUNIT_ASSERT(sock_fd != NULL);
+    YUNIT_ASSERT((int)sock_fd >= 0);
 
     ssl = mbedtls_ssl_connect(sock_fd,
               mbedtls_real_ca_pem, strlen(mbedtls_real_ca_pem));
@@ -230,7 +230,7 @@ static void test_tls_ssl_recv(void)
     char buf[128];
 
     sock_fd = network_socket_create(server_name, server_port);
-    YUNIT_ASSERT(sock_fd != NULL);
+    YUNIT_ASSERT((int)sock_fd >= 0);
     ssl = mbedtls_ssl_connect(sock_fd,
               mbedtls_real_ca_pem, strlen(mbedtls_real_ca_pem));
     YUNIT_ASSERT(ssl != NULL);
@@ -276,7 +276,7 @@ static void test_tls_ssl_close(void)
     int ret = 0;
 
     sock_fd = network_socket_create(server_name, server_port);
-    YUNIT_ASSERT(sock_fd != NULL);
+    YUNIT_ASSERT((int)sock_fd >= 0);
     ssl = mbedtls_ssl_connect(sock_fd,
               mbedtls_real_ca_pem, strlen(mbedtls_real_ca_pem));
     YUNIT_ASSERT(ssl != NULL);
