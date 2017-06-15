@@ -1,12 +1,3 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
 TOOLS_ROOT ?= $(SOURCE_ROOT)build
 
 OPENOCD_PATH      := $(TOOLS_ROOT)/OpenOCD/
@@ -23,7 +14,7 @@ ifeq ($(HOST_OS),Win32)
 COMMON_TOOLS_PATH := $(TOOLS_ROOT)/cmd/win32/
 export SHELL       = cmd.exe
 EXECUTABLE_SUFFIX  := .exe
-OPENOCD_FULL_NAME := $(OPENOCD_PATH)Win32/openocd_mico.exe
+OPENOCD_FULL_NAME := $(OPENOCD_PATH)Win32/openocd.exe
 
 # Python
 ifneq ($(wildcard C:\Python34\python.exe),)
@@ -83,7 +74,7 @@ ifeq ($(HOST_OS),Linux32)
 COMMON_TOOLS_PATH := $(TOOLS_ROOT)/cmd/linux32/
 export SHELL       = $(COMMON_TOOLS_PATH)dash
 EXECUTABLE_SUFFIX  :=
-OPENOCD_FULL_NAME := "$(OPENOCD_PATH)Linux32/openocd_mico"
+OPENOCD_FULL_NAME := "$(OPENOCD_PATH)Linux32/openocd"
 SLASH_QUOTE_START :=\"
 SLASH_QUOTE_END   :=\"
 ESC_QUOTE         :=\"
@@ -126,7 +117,7 @@ ifeq ($(HOST_OS),Linux64)
 COMMON_TOOLS_PATH := $(TOOLS_ROOT)/cmd/linux64/
 export SHELL       = $(COMMON_TOOLS_PATH)dash
 EXECUTABLE_SUFFIX  :=
-OPENOCD_FULL_NAME := "$(OPENOCD_PATH)Linux64/openocd_mico"
+OPENOCD_FULL_NAME := "$(OPENOCD_PATH)Linux64/openocd"
 SLASH_QUOTE_START :=\"
 SLASH_QUOTE_END   :=\"
 ESC_QUOTE         :=\"
@@ -175,7 +166,7 @@ ifeq ($(HOST_OS),OSX)
 COMMON_TOOLS_PATH := $(TOOLS_ROOT)/cmd/osx/
 export SHELL       = $(COMMON_TOOLS_PATH)dash
 EXECUTABLE_SUFFIX  :=
-OPENOCD_FULL_NAME := "$(OPENOCD_PATH)OSX/openocd_mico"
+OPENOCD_FULL_NAME := "$(OPENOCD_PATH)OSX/openocd"
 SLASH_QUOTE_START :=\"
 SLASH_QUOTE_END   :=\"
 ESC_QUOTE         :=\"
@@ -348,7 +339,7 @@ ${EXPANDED_PLATFORMS}
 endef
 
 ##########
-# Recurse directories to find valid MiCO components.
+# Recurse directories to find valid YOS components.
 # $(1) = starting directory
 # $(2) = name of variable to which to add components that are found
 define RECURSE_DIR_COMPONENT_SEARCH

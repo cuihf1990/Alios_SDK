@@ -1,19 +1,11 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-include $(MAKEFILES_PATH)/micoder_host_cmd.mk
+include $(MAKEFILES_PATH)/yos_host_cmd.mk
 
 CONFIG_FILE := out/$(CLEANED_BUILD_STRING)/config.mk
 
 include $(CONFIG_FILE)
 
 # Include all toolchain makefiles - one of them will handle the architecture
-include $(MAKEFILES_PATH)/micoder_toolchain_$(TOOLCHAIN_NAME).mk
+include $(MAKEFILES_PATH)/yos_toolchain_$(TOOLCHAIN_NAME).mk
 
 .PHONY: display_map_summary build_done
 
@@ -21,13 +13,13 @@ include $(MAKEFILES_PATH)/micoder_toolchain_$(TOOLCHAIN_NAME).mk
 # Filenames
 ##################################
 
-LINK_OUTPUT_FILE          :=$(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(LINK_OUTPUT_SUFFIX)        	# out/helloworld-MiCOKit_3165/binary/helloworld-MiCOKit_3165.elf
-STRIPPED_LINK_OUTPUT_FILE :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.stripped$(LINK_OUTPUT_SUFFIX)) 	# out/helloworld-MiCOKit_3165/binary/helloworld-MiCOKit_3165.stripped.elf
-BIN_OUTPUT_FILE        	  :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(BIN_OUTPUT_SUFFIX))         		# out/helloworld-MiCOKit_3165/binary/helloworld-MiCOKit_3165.bin
-HEX_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(HEX_OUTPUT_SUFFIX))         		# out/helloworld-MiCOKit_3165/binary/helloworld-MiCOKit_3165.bin
+LINK_OUTPUT_FILE          :=$(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(LINK_OUTPUT_SUFFIX)        	# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.elf
+STRIPPED_LINK_OUTPUT_FILE :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.stripped$(LINK_OUTPUT_SUFFIX)) 	# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.stripped.elf
+BIN_OUTPUT_FILE        	  :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(BIN_OUTPUT_SUFFIX))         		# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.bin
+HEX_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(HEX_OUTPUT_SUFFIX))         		# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.bin
 
-MAP_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.map)     							# out/helloworld-MiCOKit_3165/binary/helloworld-MiCOKit_3165.map
-MAP_CSV_OUTPUT_FILE       :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=_map.csv) 							# out/helloworld-MiCOKit_3165/binary/helloworld-MiCOKit_3165_map.csv
+MAP_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.map)     							# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.map
+MAP_CSV_OUTPUT_FILE       :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=_map.csv) 							# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165_map.csv
 
 
 OPENOCD_LOG_FILE          ?= $(OUTPUT_DIR)/openocd_log.txt
@@ -45,7 +37,7 @@ endif
 endif
 
 
-include $(MAKEFILES_PATH)/mico_resources.mk
+include $(MAKEFILES_PATH)/yos_resources.mk
 include $(MAKEFILES_PATH)/images_download.mk
 
 ##################################
@@ -80,7 +72,7 @@ $(eval $(1)_CHECK_HEADER_LIST+=$(OUTPUT_DIR)/Modules/$(strip $($(1)_LOCATION))$(
 .PHONY: $(OUTPUT_DIR)/Modules/$(strip $($(1)_LOCATION))$(2:.h=.chk)
 $(OUTPUT_DIR)/Modules/$(strip $($(1)_LOCATION))$(2:.h=.chk): $(strip $($(1)_LOCATION))$(2) $(CONFIG_FILE) $$(dir $(OUTPUT_DIR)/Modules/$(call GET_BARE_LOCATION,$(1))$(2)).d
 	$(QUIET)$(ECHO) Checking header  $(2)
-	$(QUIET)$(CC) -c $(MiCO_SDK_CFLAGS) $(filter-out -pedantic -Werror, $($(1)_CFLAGS) $(C_BUILD_OPTIONS) ) $($(1)_INCLUDES) $($(1)_DEFINES) $(MiCO_SDK_INCLUDES) $(MiCO_SDK_DEFINES) -o $$@ $$<
+	$(QUIET)$(CC) -c $(YOS_SDK_CFLAGS) $(filter-out -pedantic -Werror, $($(1)_CFLAGS) $(C_BUILD_OPTIONS) ) $($(1)_INCLUDES) $($(1)_DEFINES) $(YOS_SDK_INCLUDES) $(YOS_SDK_DEFINES) -o $$@ $$<
 endef
 
 ###############################################################################
@@ -124,10 +116,10 @@ $(eval $(1)_LIB_OBJS := $(addprefix $(strip $(OUTPUT_DIR)/Modules/$(call GET_BAR
 
 
 $(LIBS_DIR)/$(1).c_opts: $($(1)_PRE_BUILD_TARGETS) $(CONFIG_FILE) | $(LIBS_DIR)
-	$(QUIET)$$(call WRITE_FILE_CREATE, $$@, $(subst $(COMMA),$$(COMMA), $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(MiCO_SDK_INCLUDES) $(MiCO_SDK_DEFINES)))
+	$(QUIET)$$(call WRITE_FILE_CREATE, $$@, $(subst $(COMMA),$$(COMMA), $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(YOS_SDK_INCLUDES) $(YOS_SDK_DEFINES)))
 
 $(LIBS_DIR)/$(1).cpp_opts: $($(1)_PRE_BUILD_TARGETS) $(CONFIG_FILE) | $(LIBS_DIR)
-	 $(QUIET)$$(call WRITE_FILE_CREATE, $$@ ,$(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CXXFLAGS)  $($(1)_INCLUDES) $($(1)_DEFINES) $(MiCO_SDK_INCLUDES) $(MiCO_SDK_DEFINES))
+	 $(QUIET)$$(call WRITE_FILE_CREATE, $$@ ,$(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CXXFLAGS)  $($(1)_INCLUDES) $($(1)_DEFINES) $(YOS_SDK_INCLUDES) $(YOS_SDK_DEFINES))
 
 #$(LIBS_DIR)/$(1).as_opts: $(CONFIG_FILE) | $(LIBS_DIR)
 #	$(QUIET)$$(call WRITE_FILE_CREATE, $$@ ,$($(1)_ASMFLAGS))
@@ -139,10 +131,10 @@ $(LIBS_DIR)/$(1).ar_opts: $(CONFIG_FILE) | $(LIBS_DIR)
 $(foreach src, $(if $(findstring 1,$(CHECK_HEADERS)), $(filter %.h, $($(1)_CHECK_HEADERS)), ),$(eval $(call CHECK_HEADER_RULE,$(1),$(src))))
 
 # Target for build-from-source
-#$(OUTPUT_DIR)/libraries/$(1).a: $$($(1)_LIB_OBJS) $($(1)_CHECK_HEADER_LIST) $(OUTPUT_DIR)/libraries/$(1).ar_opts $$(if $(MiCO_BUILT_WITH_ROM_SYMBOLS),$(ROMOBJCOPY_OPTS_FILE))
+#$(OUTPUT_DIR)/libraries/$(1).a: $$($(1)_LIB_OBJS) $($(1)_CHECK_HEADER_LIST) $(OUTPUT_DIR)/libraries/$(1).ar_opts $$(if $(YOS_BUILT_WITH_ROM_SYMBOLS),$(ROMOBJCOPY_OPTS_FILE))
 $(LIBS_DIR)/$(1).a: $$($(1)_LIB_OBJS) $($(1)_CHECK_HEADER_LIST) $(OUTPUT_DIR)/libraries/$(1).ar_opts
 	$(ECHO) Making $$@
-	$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_CREATE) $$@ $(OPTIONS_IN_FILE_OPTION)$(OUTPUT_DIR)/libraries/$(1).ar_opts
+	$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_CREATE) $$@ $(OPTIONS_IN_FILE_OPTION)$(OUTPUT_DIR)/libraries/$(1).ar_opts
 
 # Create targets to built the component's source files into object files
 $(foreach src, $(filter %.c, $($(1)_SOURCES)),$(eval $(call BUILD_C_RULE,$(1),$(src))))
@@ -150,7 +142,7 @@ $(foreach src, $(filter %.cpp, $($(1)_SOURCES)) $(filter %.cc, $($(1)_SOURCES)),
 $(foreach src, $(filter %.s %.S, $($(1)_SOURCES)),$(eval $(call BUILD_S_RULE,$(1),$(src))))
 
 
-$(eval $(1)_LINT_FLAGS +=  $(filter -D% -I%, $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(MiCO_SDK_INCLUDES) $(MiCO_SDK_DEFINES) ) )
+$(eval $(1)_LINT_FLAGS +=  $(filter -D% -I%, $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(YOS_SDK_INCLUDES) $(YOS_SDK_DEFINES) ) )
 $(eval LINT_FLAGS +=  $($(1)_LINT_FLAGS) )
 $(eval LINT_FILES +=  $(addprefix $(strip $($(1)_LOCATION)), $(filter %.c, $($(1)_SOURCES))) )
 endef
@@ -169,7 +161,7 @@ LINK_LIBS += $(RESOURCES_LIBRARY)
 $(foreach comp,$(COMPONENTS),$(eval $(call BUILD_COMPONENT_RULES,$(comp))))
 
 # Add pre-built libraries
-LINK_LIBS += $(MiCO_SDK_PREBUILT_LIBRARIES)
+LINK_LIBS += $(YOS_SDK_PREBUILT_LIBRARIES)
 
 ##################################
 # Build rules
@@ -185,13 +177,13 @@ $(LIBS_DIR):
 	
 $(LINK_OPTS_FILE): out/$(CLEANED_BUILD_STRING)/config.mk
 #$(COMPILER_SPECIFIC_LINK_MAP) $(MAP_OUTPUT_FILE) $(LINK_OPTS_FILE)
-	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(MiCO_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(MiCO_SDK_LINK_FILES) $(filter %.a,$^) $(LINK_LIBS)) $(MiCO_SDK_LDFLAGS) )
+	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(YOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(YOS_SDK_LINK_FILES) $(filter %.a,$^) $(LINK_LIBS)) $(YOS_SDK_LDFLAGS) )
 	
 $(LINT_OPTS_FILE): $(LINK_LIBS)
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ , )
 	$(QUIET)$(foreach opt,$(sort $(subst \",",$(LINT_FLAGS))) $(sort $(LINT_FILES)),$(call WRITE_FILE_APPEND, $@ ,$(opt)))
 	
-$(LINK_OUTPUT_FILE): $(LINK_LIBS) $(MiCO_SDK_LINK_SCRIPT) $(LINK_OPTS_FILE) $(LINT_DEPENDENCY) | $(EXTRA_PRE_LINK_TARGETS)
+$(LINK_OUTPUT_FILE): $(LINK_LIBS) $(YOS_SDK_LINK_SCRIPT) $(LINK_OPTS_FILE) $(LINT_DEPENDENCY) | $(EXTRA_PRE_LINK_TARGETS)
 	$(QUIET)$(ECHO) Making $(notdir $@)
 	$(QUIET)$(LINKER) -o  $@ $(OPTIONS_IN_FILE_OPTION)$(LINK_OPTS_FILE) $(COMPILER_SPECIFIC_STDOUT_REDIRECT)
 	$(QUIET)$(ECHO_BLANK_LINE)
@@ -211,15 +203,15 @@ $(HEX_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(OBJCOPY) -O ihex -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes $< $@
 # Linker output target - This links all component & resource libraries and objects into an output executable
 # CXX is used for compatibility with C++
-#$(MiCO_SDK_CONVERTER_OUTPUT_FILE): $(LINK_OUTPUT_FILE)
+#$(YOS_SDK_CONVERTER_OUTPUT_FILE): $(LINK_OUTPUT_FILE)
 #	$(QUIET)$(ECHO) Making $(notdir $@)
 #	$(QUIET)$(CONVERTER) "--ihex" "--verbose" $(LINK_OUTPUT_FILE) $@
 
-#$(MiCO_SDK_FINAL_OUTPUT_FILE): $(MiCO_SDK_CONVERTER_OUTPUT_FILE)
-#	$(QUIET)$(ECHO) Making $(PYTHON_FULL_NAME) $(MiCO_SDK_CHIP_SPECIFIC_SCRIPT) -i $(MiCO_SDK_CONVERTER_OUTPUT_FILE) -o $(MiCO_SDK_FINAL_OUTPUT_FILE)
-#	$(QUIET)$(PYTHON_FULL_NAME) $(MiCO_SDK_CHIP_SPECIFIC_SCRIPT) -i $(MiCO_SDK_CONVERTER_OUTPUT_FILE) -o $(MiCO_SDK_FINAL_OUTPUT_FILE)
+#$(YOS_SDK_FINAL_OUTPUT_FILE): $(YOS_SDK_CONVERTER_OUTPUT_FILE)
+#	$(QUIET)$(ECHO) Making $(PYTHON_FULL_NAME) $(YOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(YOS_SDK_CONVERTER_OUTPUT_FILE) -o $(YOS_SDK_FINAL_OUTPUT_FILE)
+#	$(QUIET)$(PYTHON_FULL_NAME) $(YOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(YOS_SDK_CONVERTER_OUTPUT_FILE) -o $(YOS_SDK_FINAL_OUTPUT_FILE)
 
-display_map_summary: $(LINK_OUTPUT_FILE) $(MiCO_SDK_CONVERTER_OUTPUT_FILE) $(MiCO_SDK_FINAL_OUTPUT_FILE)
+display_map_summary: $(LINK_OUTPUT_FILE) $(YOS_SDK_CONVERTER_OUTPUT_FILE) $(YOS_SDK_FINAL_OUTPUT_FILE)
 	$(QUIET) $(call COMPILER_SPECIFIC_MAPFILE_DISPLAY_SUMMARY,$(MAP_OUTPUT_FILE))
 
 # Main Target - Ensures the required parts get built
