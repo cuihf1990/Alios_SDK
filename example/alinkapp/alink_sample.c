@@ -254,6 +254,7 @@ static uint32_t work_time = 60*60*10*1000; //default work time 1ms
 static void do_report(void)
 {
     //TODO: async
+    yos_schedule_work(1000,activate_button_pressed,NULL,NULL,NULL);
     //activate_button_pressed();
     //helper_api_test();
 #ifdef RAW_DATA_DEVICE
@@ -329,15 +330,14 @@ char active_data_tx_buffer[128];
 #define ActivateDataFormat    "{\"ErrorCode\": { \"value\": \"%d\" }}"
 int activate_button_pressed(void)
 {
-    int errorcode = 0;
-    if (0 == errorcode){
-         errorcode = 1;
-     }else {
-         errorcode = 0;
-     }
-    sprintf(active_data_tx_buffer, ActivateDataFormat, errorcode);
+    sprintf(active_data_tx_buffer, ActivateDataFormat, 1);
+    printf("active send:%s", active_data_tx_buffer);
+    alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
+
+    sprintf(active_data_tx_buffer, ActivateDataFormat, 0);
     printf("send:%s", active_data_tx_buffer);
-    return alink_report(Method_PostData, (char *)active_data_tx_buffer);
+    alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
+    return 0;
 }
 
 
