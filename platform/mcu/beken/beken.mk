@@ -13,7 +13,7 @@ HOST_OPENOCD := beken
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
-$(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson
+$(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \

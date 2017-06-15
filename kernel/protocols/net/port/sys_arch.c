@@ -574,22 +574,14 @@ u32_t sys_jiffies(void)
 }
 
 #if 1
-#define      NET_TASK_NUME 10
-#define      NET_TASK_STACK_SIZE (1024/sizeof(cpu_stack_t))
-
-ktask_t       g_net_task[NET_TASK_NUME];
-cpu_stack_t  g_net_task_stack[NET_TASK_NUME][NET_TASK_STACK_SIZE];
 sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio)
 {
-    int i ;
+    ktask_t *task_handle = NULL;
 
-    for(i = 0; i < NET_TASK_NUME; i++) {
-        if( g_net_task[i].task_name ==  NULL )
-            return (sys_thread_t)yunos_task_create(&g_net_task[i], name, arg, prio, 0,
-                                                   g_net_task_stack[i], NET_TASK_STACK_SIZE, thread, 1);
-    }
+    yunos_task_dyn_create(&task_handle, name, arg, prio, 0,
+                                          stacksize / sizeof(cpu_stack_t), thread, 1u);
 
-    return 0;
+    return (sys_thread_t)task_handle;
 }
 #else
 /*-----------------------------------------------------------------------------------*/
