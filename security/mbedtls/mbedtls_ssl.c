@@ -63,8 +63,7 @@ void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
     unsigned int result;
     ssl_param_t *ssl_param = NULL;
 
-    if (tcp_fd == NULL ||
-        ca_cert == NULL || ca_cert_len <= 0) {
+    if (ca_cert == NULL || ca_cert_len <= 0) {
         printf("ssl_connect: invalid input args!\n");
         return NULL;
     }
@@ -262,7 +261,7 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
                 break;
             }
 
-            printf("ssl_recv: mbedtls_ssl_write failed - 0x%x\n", -ret);
+            printf("ssl_send: mbedtls_ssl_write failed - 0x%x\n", -ret);
 
             return -1;
         }
@@ -309,20 +308,16 @@ int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
 
     do {
         ret = mbedtls_ssl_read(&ssl_param->ssl,
-                  (unsigned char *)buffer, (size_t)(length - total_len));
+                  (unsigned char *)buffer, (size_t)length);
         if (ret > 0) {
-            total_len += ret;
-            buffer += ret;
+            total_len = ret;
+            break;
         } else if (ret == 0) {
             /* EOF */
             break;
         } else {
             if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
-                if (total_len > 0) {
-                    break;
-                } else {
-                    continue;
-                }
+                break;
             }
 
             if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {

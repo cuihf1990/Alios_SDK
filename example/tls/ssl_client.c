@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <yos/network.h>
 
 #include "mbedtls/mbedtls_ssl.h"
@@ -66,15 +67,16 @@ void *network_socket_create(const char *net_addr, int port)
     struct sockaddr_in saddr;
     int opt_val = 1;
 
+    errno = 0;
     tcp_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_fd < 0) {
-        printf("creat socket fail\n");
+        printf("creat socket fail - errno: %d\n", errno);
         return NULL;
     }
 
     host = gethostbyname(net_addr);
     if (host == NULL) {
-        printf("get host by name fail\n");
+        printf("get host by name fail - errno: %d\n", errno);
         goto _err;
     }
 
@@ -85,11 +87,14 @@ void *network_socket_create(const char *net_addr, int port)
 
     setsockopt(tcp_fd, SOL_SOCKET, SO_RCVTIMEO, &opt_val, sizeof(opt_val));
 
-    ret = connect(tcp_fd, (struct sockaddr*)&saddr, sizeof(saddr));
-    if (ret < 0) {
-        printf("socket connect fail\n");
-        goto _err;
-    }
+    do {
+        errno = 0;
+        ret = connect(tcp_fd, (struct sockaddr*)&saddr, sizeof(saddr));
+        if (ret < 0 && errno != EINTR) {
+            printf("socket connect fail - errno: %d\n", errno);
+            goto _err;
+        }
+    } while (ret < 0);
 
     return (void *)tcp_fd;
 
@@ -118,7 +123,7 @@ int application_start(int argc, char **argv)
     void *ssl = NULL;
 
     tcp_fd = network_socket_create(server_name, server_port);
-    if (tcp_fd == NULL) {
+    if ((int)tcp_fd < 0) {
         printf("http client connect fail\n");
         return -1;
     } else {
