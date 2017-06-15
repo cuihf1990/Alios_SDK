@@ -108,8 +108,19 @@ extern const uint8_t iv[32];
 void awss_init_enrollee_info(void);
 void awss_broadcast_enrollee_info(void);
 void awss_destroy_enrollee_info(void);
+#ifdef CONFIG_YWSS
 char *awss_get_enrollee_token(void);
 void awss_clear_enrollee_token(void);
+#else
+static inline char *awss_get_enrollee_token(void)
+{
+    return NULL;
+}
+
+static inline void awss_clear_enrollee_token(void)
+{
+}
+#endif
 int awss_set_enrollee_token(char* token, int tokenLen);
 
 /* registrar API */
