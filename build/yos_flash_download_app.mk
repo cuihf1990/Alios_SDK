@@ -1,12 +1,3 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
 SFLASH_LOG_FILE      ?= $(BUILD_DIR)/sflash_writer.log
 SFLASH_REDIRECT	= > $(SFLASH_LOG_FILE)
 
@@ -20,7 +11,7 @@ clean:
 # If Downloading is required, then the Serial Flash app need to be built
 $(SFLASH_PREBUILD_APP):
 	$(QUIET)$(ECHO) Building Flash Loader App...
-	$(QUIET)$(MAKE) -r -f $(SOURCE_ROOT)Makefile $(SFLASH_APP_TARGET)  SFLASH= EXTERNAL_MiCO_GLOBAL_DEFINES=$(EXTERNAL_MiCO_GLOBAL_DEFINES) SUB_BUILD=sflash_app $(SFLASH_REDIRECT)
+	$(QUIET)$(MAKE) -r -f $(SOURCE_ROOT)Makefile $(SFLASH_APP_TARGET)  SFLASH= EXTERNAL_YOS_GLOBAL_DEFINES=$(EXTERNAL_YOS_GLOBAL_DEFINES) SUB_BUILD=sflash_app $(SFLASH_REDIRECT)
 	$(QUIET)$(CP) -f $(BUILD_DIR)/$(SFLASH_APP_TARGET)/binary/$(SFLASH_APP_TARGET).elf   $(SFLASH_PREBUILD_APP)
 	$(QUIET)$(ECHO) Finished Building Flash Loader App
 	$(QUIET)$(ECHO_BLANK_LINE)

@@ -14,13 +14,6 @@ COMPONENT_DIRECTORIES := . \
                          test      \
                          devices   \
                          security
-#                        demos \
-                         YOS \
-                         YOS/net \
-                         YOS/RTOS \
-                         YOS/security/TLS \
-                         libraries \
-                         .
 
 YOS_SDK_VERSION ?= $(YOS_SDK_VERSION_MAJOR).$(YOS_SDK_VERSION_MINOR).$(YOS_SDK_VERSION_REVISION)
 
@@ -138,27 +131,13 @@ endef
 # Separate the build string into components
 COMPONENTS := $(subst @, ,$(MAKECMDGOALS))
 
-BUS_LIST        := SPI \
-                   SDIO
-                   
-MOC_LIST        := MOC \
-                   moc
-
 BUILD_TYPE_LIST := debug \
                    release_log \
                    release
 
-IMAGE_TYPE_LIST := rom \
-                   ram
-                   
-
-# Extract out: the bus option, the debug/release option, OTA option, and the lint option
-BUS                 := $(if $(filter $(BUS_LIST),$(COMPONENTS)),$(firstword $(filter $(BUS_LIST),$(COMPONENTS))))
+# Extract out: the debug/release option, OTA option, and the lint option
 BUILD_TYPE          := $(if $(filter $(BUILD_TYPE_LIST),$(COMPONENTS)),$(firstword $(filter $(BUILD_TYPE_LIST),$(COMPONENTS))),release_log)
-IMAGE_TYPE          := $(if $(filter $(IMAGE_TYPE_LIST),$(COMPONENTS)),$(firstword $(filter $(IMAGE_TYPE_LIST),$(COMPONENTS))),ram)
-RUN_LINT            := $(filter lint,$(COMPONENTS))
-MOC                 := $(filter $(MOC_LIST),$(COMPONENTS))
-COMPONENTS          := $(filter-out $(MOC_LIST) $(BUS_LIST) $(BUILD_TYPE_LIST) $(IMAGE_TYPE_LIST) $(TOTAL_BUILD), $(COMPONENTS))
+COMPONENTS          := $(filter-out $(BUILD_TYPE_LIST), $(COMPONENTS))
 
 # Set debug/release specific options
 ifeq ($(BUILD_TYPE),release)
@@ -167,50 +146,23 @@ else
 YOS_SDK_LDFLAGS  += $(COMPILER_SPECIFIC_DEBUG_LDFLAGS)
 endif
 
-# MOC define mocOS and mocIP
-ifneq ($(MOC),)
-RTOS_FULL := $(SOURCE_ROOT)kernel/rhino
-NET_FULL  := $(SOURCE_ROOT)YOS/net/mocIP
-TLS_FULL  := $(SOURCE_ROOT)YOS/security/TLS/mocSSL
-endif
-
 # Check if there are any unknown components; output error if so.
 $(foreach comp, $(COMPONENTS), $(if $(wildcard $(foreach dir, $(addprefix $(SOURCE_ROOT),$(COMPONENT_DIRECTORIES)), $(dir)/$(subst .,/,$(comp)) ) ),,$(error Unknown component: $(comp))))
 
-# Find the matching network, platform, RTOS and application from the build string components
-NET_FULL	    ?=$(strip $(foreach comp,$(subst .,/,$(COMPONENTS)),$(if $(wildcard $(SOURCE_ROOT)YOS/net/$(comp)),$(comp),)))
-RTOS_FULL       ?=$(strip $(foreach comp,$(subst .,/,$(COMPONENTS)),$(if $(wildcard $(SOURCE_ROOT)kernel/$(comp)),$(comp),)))
-TLS_FULL       ?=$(strip $(foreach comp,$(subst .,/,$(COMPONENTS)),$(if $(wildcard $(SOURCE_ROOT)YOS/Security/TLS/$(comp)),$(comp),)))
+# Find the matching platform and application from the build string components
 PLATFORM_FULL   :=$(strip $(foreach comp,$(subst .,/,$(COMPONENTS)),$(if $(wildcard $(SOURCE_ROOT)board/$(comp)),$(comp),)))
 APP_FULL        :=$(strip $(foreach comp,$(subst .,/,$(COMPONENTS)),$(if $(wildcard $(SOURCE_ROOT)example/$(comp) $(SOURCE_ROOT)$(comp)),$(comp),)))
 
-NET			:=$(notdir $(NET_FULL))
-RTOS        :=$(notdir $(RTOS_FULL))
-TLS         :=$(notdir $(TLS_FULL))
 PLATFORM    :=$(notdir $(PLATFORM_FULL))
 APP         :=$(notdir $(APP_FULL))
 
 PLATFORM_DIRECTORY := $(PLATFORM_FULL)
 
-# Define default RTOS and TCPIP stack
-ifndef RTOS
-RTOS := rhino
-endif
-
-ifndef NET
-#NET := LwIP
-endif
-
-ifndef TLS
-#TLS := wolfSSL
-endif
-
-COMPONENTS += $(RTOS) $(NET) $(TLS)
+COMPONENTS += rhino
 
 EXTRA_CFLAGS :=    -DYOS_SDK_VERSION_MAJOR=$(YOS_SDK_VERSION_MAJOR) \
                    -DYOS_SDK_VERSION_MINOR=$(YOS_SDK_VERSION_MINOR) \
                    -DYOS_SDK_VERSION_REVISION=$(YOS_SDK_VERSION_REVISION) \
-                   -DBUS=$(SLASH_QUOTE_START)$$(BUS)$(SLASH_QUOTE_END) \
                    -I$(OUTPUT_DIR)/resources/  \
                    -DPLATFORM=$(SLASH_QUOTE_START)$$(PLATFORM)$(SLASH_QUOTE_END)
 
@@ -224,19 +176,7 @@ MAIN_COMPONENT_PROCESSING :=1
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
 CC :=
 
-ifneq ($(filter $(HOST_ARCH),Cortex-M3 Cortex-M4 Cortex-M4F Cortex-R4 ARM968E-S),)
-
-include $(MAKEFILES_PATH)/yos_toolchain_arm-none-eabi.mk
-
-else # ifneq ($(filter $(HOST_ARCH),Cortex-M3 Cortex-M4 Cortex-R4),)
-ifneq ($(filter $(HOST_ARCH),linux),)
-include $(MAKEFILES_PATH)/yos_toolchain_HOSTGCC.mk
-else # ifneq ($(filter $(HOST_ARCH),linux),)
-ifneq ($(filter $(HOST_ARCH),armhflinux),)
-include $(MAKEFILES_PATH)/yos_toolchain_ARMHFGCC.mk
-endif # ifneq ($(filter $(HOST_ARCH),armhflinux),)
-endif # ifneq ($(filter $(HOST_ARCH),linux),)
-endif # ifneq ($(filter $(HOST_ARCH),Cortex-M3 Cortex-M4 Cortex-R4),)
+include $(MAKEFILES_PATH)/yos_toolchain_gcc.mk
 
 ifndef CC
 $(error No matching toolchain found for architecture $(HOST_ARCH))
@@ -256,11 +196,8 @@ YOS_SDK_DEFINES += $(EXTERNAL_YOS_GLOBAL_DEFINES)
 ALL_RESOURCES := $(sort $(foreach comp,$(PROCESSED_COMPONENTS),$($(comp)_RESOURCES_EXPANDED)))
 
 # Make sure the user has specified a component from each category
-$(if $(RTOS),,$(error No RTOS specified. Options are: $(notdir $(wildcard kernel/*))))
 $(if $(PLATFORM),,$(error No platform specified. Options are: $(notdir $(wildcard board/*))))
 $(if $(APP),,$(error No application specified. Options are: $(notdir $(wildcard example/*))))
-
-#$(if $(BUS),,$(error No bus specified. Options are: SDIO SPI))
 
 # Make sure a WLAN_CHIP, WLAN_CHIP_REVISION, WLAN_CHIP_FAMILY and HOST_OPENOCD have been defined
 #$(if $(WLAN_CHIP),,$(error No WLAN_CHIP has been defined))
@@ -274,10 +211,7 @@ $(eval INVALID_PLATFORMS := $(call EXPAND_WILDCARD_PLATFORMS,$(INVALID_PLATFORMS
 # Check for valid platform, OSNS combination, build type, image type and bus
 $(eval $(if $(VALID_PLATFORMS), $(if $(filter $(VALID_PLATFORMS),$(PLATFORM)),,$(error $(APP) application does not support $(PLATFORM) platform)),))
 $(eval $(if $(INVALID_PLATFORMS), $(if $(filter $(INVALID_PLATFORMS),$(PLATFORM)),$(error $(APP) application does not support $(PLATFORM) platform)),))
-$(eval $(if $(VALID_OSNS_COMBOS), $(if $(filter $(VALID_OSNS_COMBOS),$(RTOS) $(RTOS)-$(NET)),,$(error $(APP) application does not support $(RTOS)-$(NET) combination)),))
 $(eval $(if $(VALID_BUILD_TYPES), $(if $(filter $(VALID_BUILD_TYPES),$(BUILD_TYPE)),,$(error $(APP) application does not support $(BUILD_TYPE) build)),))
-$(eval $(if $(VALID_BUSES), $(if $(filter $(VALID_BUSES),$(BUS)),,$(error $(PLATFORM) platform does not support $(BUS) bus type)),))
-$(eval $(if $(VALID_IMAGE_TYPES), $(if $(filter $(VALID_IMAGE_TYPES),$(IMAGE_TYPE)),,$(error $(APP) application does not support $(IMAGE_TYPE) build)),))
 
 REMOVE_FIRST = $(wordlist 2,$(words $(1)),$(1))
 
@@ -327,17 +261,10 @@ $(CONFIG_FILE): $(YOS_SDK_MAKEFILES) | $(CONFIG_FILE_DIR)
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_SDK_INCLUDES           	 	+= $(call unique,$(YOS_SDK_INCLUDES)))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_SDK_DEFINES             		+= $(call unique,$(strip $(addprefix -D,$(YOS_SDK_DEFINES)))))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,COMPONENTS                		:= $(PROCESSED_COMPONENTS))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,BUS                       		:= $(BUS))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,IMAGE_TYPE                		:= $(IMAGE_TYPE))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,NETWORK_FULL              		:= $(NETWORK_FULL))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,RTOS_FULL                 		:= $(RTOS_FULL))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,PLATFORM_DIRECTORY        		:= $(PLATFORM_DIRECTORY))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,APP_FULL                  		:= $(APP_FULL))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,NETWORK                   		:= $(NETWORK))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,RTOS                      		:= $(RTOS))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,PLATFORM                  		:= $(PLATFORM))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,HOST_MCU_FAMILY                  	:= $(HOST_MCU_FAMILY))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,USB                       		:= $(USB))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,APP                       		:= $(APP))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,HOST_OPENOCD              		:= $(HOST_OPENOCD))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,JTAG              		        := $(JTAG))
@@ -374,11 +301,3 @@ $(CONFIG_FILE): $(YOS_SDK_MAKEFILES) | $(CONFIG_FILE_DIR)
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_SDK_CONVERTER_OUTPUT_FILE	:= $(YOS_SDK_CONVERTER_OUTPUT_FILE))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_SDK_FINAL_OUTPUT_FILE 		:= $(YOS_SDK_FINAL_OUTPUT_FILE))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_RAM_STUB_LIST_FILE 			:= $(YOS_RAM_STUB_LIST_FILE))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,MOC_KERNEL_BIN_FILE 				:= $(MOC_KERNEL_BIN_FILE))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,MOC_APP_OFFSET 				:= $(MOC_APP_OFFSET))
-	
-	
-
-	
-
-

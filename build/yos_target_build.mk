@@ -5,7 +5,7 @@ CONFIG_FILE := out/$(CLEANED_BUILD_STRING)/config.mk
 include $(CONFIG_FILE)
 
 # Include all toolchain makefiles - one of them will handle the architecture
-include $(MAKEFILES_PATH)/yos_toolchain_$(TOOLCHAIN_NAME).mk
+include $(MAKEFILES_PATH)/yos_toolchain_gcc.mk
 
 .PHONY: display_map_summary build_done
 
@@ -13,13 +13,13 @@ include $(MAKEFILES_PATH)/yos_toolchain_$(TOOLCHAIN_NAME).mk
 # Filenames
 ##################################
 
-LINK_OUTPUT_FILE          :=$(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(LINK_OUTPUT_SUFFIX)        	# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.elf
-STRIPPED_LINK_OUTPUT_FILE :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.stripped$(LINK_OUTPUT_SUFFIX)) 	# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.stripped.elf
-BIN_OUTPUT_FILE        	  :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(BIN_OUTPUT_SUFFIX))         		# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.bin
-HEX_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(HEX_OUTPUT_SUFFIX))         		# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.bin
+LINK_OUTPUT_FILE          :=$(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(LINK_OUTPUT_SUFFIX)        	# out/helloworld@mk108/binary/helloworld@mk108.elf
+STRIPPED_LINK_OUTPUT_FILE :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.stripped$(LINK_OUTPUT_SUFFIX)) 	# out/helloworld@mk108/binary/helloworld@mk108.stripped.elf
+BIN_OUTPUT_FILE        	  :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(BIN_OUTPUT_SUFFIX))         		# out/helloworld@mk108/binary/helloworld@mk108.bin
+HEX_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(HEX_OUTPUT_SUFFIX))         		# out/helloworld@mk108/binary/helloworld@mk108.bin
 
-MAP_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.map)     							# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165.map
-MAP_CSV_OUTPUT_FILE       :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=_map.csv) 							# out/helloworld-YOSKit_3165/binary/helloworld-YOSKit_3165_map.csv
+MAP_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.map)     							# out/helloworld@mk108/binary/helloworld@mk108.map
+MAP_CSV_OUTPUT_FILE       :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=_map.csv) 							# out/helloworld@mk108/binary/helloworld@mk108_map.csv
 
 
 OPENOCD_LOG_FILE          ?= $(OUTPUT_DIR)/openocd_log.txt
@@ -38,7 +38,7 @@ endif
 
 
 include $(MAKEFILES_PATH)/yos_resources.mk
-include $(MAKEFILES_PATH)/images_download.mk
+include $(MAKEFILES_PATH)/yos_images_download.mk
 
 ##################################
 # Macros
@@ -222,14 +222,3 @@ build_done: $(EXTRA_PRE_BUILD_TARGETS) $(BIN_OUTPUT_FILE) $(HEX_OUTPUT_FILE) dis
 $(EXTRA_POST_BUILD_TARGETS): build_done
 
 $(BUILD_STRING): $(if $(EXTRA_POST_BUILD_TARGETS),$(EXTRA_POST_BUILD_TARGETS),build_done)
-
-# Stack usage target - Currently not working outputs a CSV file showing function stack usage
-$(OUTPUT_DIR)/stack_usage.csv: $(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(LINK_OUTPUT_SUFFIX)
-	$(QUIET)$(ECHO) Extracting call tree
-	$(QUIET)cd $(OUTPUT_DIR); find -name *.optimized | xargs cat > call_tree.txt
-	$(QUIET)$(ECHO) Extracting individual stack usage
-	$(QUIET)cd $(OUTPUT_DIR); find -name *.su | xargs cat > stack_usage.txt
-	$(QUIET)$(ECHO) Processing stack data
-	$(QUIET)cd $(OUTPUT_DIR); $(QUIET)$(PERL) $(TOOLS_ROOT)/stack_usage/stack_usage/stack_usage.pl > $@
-
-

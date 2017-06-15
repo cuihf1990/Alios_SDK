@@ -66,7 +66,7 @@ with open(map_file, 'r') as f:
 
         map_lines.append('| %-40s | %-8d  | %-8d |'%(re.sub('\.[ao]','',module)[:40],rom_size,ram_size))
 
-print '\n                        MICO MEMORY MAP                            '	
+print '\n                        YOS MEMORY MAP                            '	
 print '|=================================================================|'	
 print '| %-40s | %-8s  | %-8s |'%('MODULE','ROM','RAM')
 print '|=================================================================|'	

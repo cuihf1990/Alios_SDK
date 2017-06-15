@@ -112,8 +112,6 @@ download: download_app $(if $(findstring total,$(MAKECMDGOALS)), EXT_IMAGE_DOWNL
 kill_openocd:
 	$(KILL_OPENOCD)
 
-$(if $(RTOS),,$(error No RTOS specified. Options are: $(notdir $(wildcard kernel/*))))
-
 run: $(SHOULD_I_WAIT_FOR_DOWNLOAD)
 	$(QUIET)$(ECHO) Resetting target
 	$(QUIET)$(call CONV_SLASHES,$(OPENOCD_FULL_NAME)) -c "log_output $(OPENOCD_LOG_FILE)" -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c resume -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Target running

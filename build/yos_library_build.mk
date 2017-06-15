@@ -1,21 +1,3 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
-
-# Some possible inputs into this file
-#RTOS        : FreeRTOS, ThreadX
-#NETWORK     : LwIP, NetX_Duo, NetX
-#HOST_ARCH   : ARM_CM3, ARM_CM4
-#NAME        : BESL, Gedday, uSSL, ThreadX, NetX_Duo
-#SOURCE_ROOT : ../../../    (needs trailing slash)
-#DEBUG       : 1
-
 all: stripped_lib
 
 $(info $(filter wipe_source_for_test,$(MAKECMDGOALS)))
@@ -41,8 +23,8 @@ LIBRARY_NAME:=$(LIBRARY_NAME).$(HOST_ARCH)
 
 CC :=
 
-include $(SOURCE_ROOT)build/micoder_host_cmd.mk
-include $(SOURCE_ROOT)build/micoder_toolchain_GCC.mk
+include $(SOURCE_ROOT)build/yos_host_cmd.mk
+include $(SOURCE_ROOT)build/yos_toolchain_GCC.mk
 
 ifndef CC
 $(error No matching toolchain found for architecture $(HOST_ARCH))
@@ -85,8 +67,8 @@ $(SOURCE_ROOT)out/$(NAME)/%.o: %.S Makefile
 # Standard library defines
 CFLAGS += -c -MD -ggdb $(CPU_CFLAGS) $(ENDIAN_CFLAGS_LITTLE) -Wall -fsigned-char -ffunction-sections -Werror -fdata-sections -fno-common -std=gnu11 
 
-# MICO pre-built library defines
-CFLAGS += -DMiCO_PREBUILT_LIBS
+# YOS pre-built library defines
+CFLAGS += -DYOS_PREBUILT_LIBS
 
 ifdef DEBUG
 CFLAGS += -DDEBUG
@@ -109,7 +91,7 @@ CFLAGS += -I$(SOURCE_ROOT)platform \
           -I$(SOURCE_ROOT)platform/$(HOST_ARCH)
           
           
-CFLAGS += -DMICO_PREBUILT_LIBS 
+CFLAGS += -DYOS_PREBUILT_LIBS 
 
 OBJS := $(addprefix $(SOURCE_ROOT)out/$(NAME)/,$(filter %.o,$(SOURCES:.cpp=.o) $(SOURCES:.c=.o) $(SOURCES:.S=.o)))
 
