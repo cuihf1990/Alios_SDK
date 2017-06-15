@@ -1,6 +1,6 @@
 NAME := cli
 
-$(NAME)_SOURCES     := aos_cli.c
+$(NAME)_SOURCES     := yos_cli.c
 $(NAME)_SOURCES     += dumpsys.c
 
 GLOBAL_INCLUDES     += include
