@@ -9,6 +9,7 @@
 #include "alink_export.h"
 #include "json_parser.h"
 #include "yos/framework.h"
+#include "yos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
 
@@ -423,6 +424,7 @@ static void alink_service_event(input_event_t *event, void *priv_data) {
         return;
     }
 
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     alink_start();
 }
 

@@ -11,6 +11,10 @@ int yos_framework_init(void)
 
     yos_loop_init();
 
+#ifdef CONFIG_YOS_CLI
+    cli_init();
+#endif
+
     return 0;
 }
 

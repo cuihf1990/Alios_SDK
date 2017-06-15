@@ -4,7 +4,6 @@
 #include <yos/network.h>
 #include <strings.h>
 #include <netmgr.h>
-#include "aos_cli.h"
 
 struct cookie {
     int flag;
@@ -37,8 +36,6 @@ int application_start(void)
 {
     struct cookie *cookie = yos_malloc(sizeof(*cookie));
     bzero(cookie, sizeof(*cookie));
-
-    cli_init();
 
     netmgr_init();
 

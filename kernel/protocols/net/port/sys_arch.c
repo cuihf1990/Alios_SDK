@@ -573,7 +573,6 @@ u32_t sys_jiffies(void)
     return yunos_sys_time_get() * 1000000L;
 }
 
-#if 1
 sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio)
 {
     ktask_t *task_handle = NULL;
@@ -583,43 +582,6 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 
     return (sys_thread_t)task_handle;
 }
-#else
-/*-----------------------------------------------------------------------------------*/
-/*
-  Starts a new thread with priority "prio" that will begin its execution in the
-  function "thread()". The "arg" argument will be passed as an argument to the
-  thread() function. The id of the new thread is returned. Both the id and
-  the priority are system dependent.
-*/
-sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio)
-{
-    ktask_t *task;
-
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-    yunos_task_dyn_create(&task, name, arg, prio, 0, stacksize/sizeof(cpu_stack_t), (task_entry_t)thread, 1);
-#else
-    cpu_stack_t *stack_buf;
-
-    stack_buf = (cpu_stack_t *)malloc(stacksize);
-    if(stack_buf == NULL) {
-        return NULL;
-    }
-    printf("stack_buf=0x%p\n", stack_buf);
-    memset(stack_buf, 0, stacksize);
-
-    task = (ktask_t *)malloc(sizeof(ktask_t));
-    if(task == NULL) {
-        return NULL;
-    }
-    printf("task=0x%p\n", task);
-    memset(task, 0, sizeof(ktask_t));
-
-    yunos_task_create(task, name, arg, prio, 0, stack_buf, stacksize/sizeof(cpu_stack_t), (task_entry_t)thread, 1);
-#endif
-
-    return task;
-}
-#endif
 
 #if SYS_LIGHTWEIGHT_PROT
 /*
