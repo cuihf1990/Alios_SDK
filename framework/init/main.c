@@ -3,6 +3,10 @@
 #include <vfs.h>
 #include <kvmgr.h>
 
+#ifdef CONFIG_YOS_CLI
+#include "yos_cli.h"
+#endif
+
 int yos_framework_init(void)
 {
     vfs_init();
@@ -12,7 +16,7 @@ int yos_framework_init(void)
     yos_loop_init();
 
 #ifdef CONFIG_YOS_CLI
-    cli_init();
+    yos_cli_init();
 #endif
 
     return 0;

@@ -147,12 +147,7 @@ int cli_printf(const char *buff, ...);
 
 
 // library CLI APIs
-int cli_init(void);
-
-void memory_show_Command(CLI_ARGS);
-void memory_dump_Command(CLI_ARGS);
-void memory_set_Command(CLI_ARGS);
-void memp_dump_Command(CLI_ARGS);
+int yos_cli_init(void);
 
 
 #endif
