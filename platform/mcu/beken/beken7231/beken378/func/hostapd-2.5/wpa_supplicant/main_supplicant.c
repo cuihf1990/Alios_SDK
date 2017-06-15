@@ -29,7 +29,6 @@ static mico_thread_t wpas_thread_handle;
 
 uint32_t wpas_stack_size = 4000;
 mico_semaphore_t eloop_sema = NULL;
-struct wpa_ssid_value *wpas_connect_ssid = 0;
 struct wpa_interface *wpas_ifaces = 0;
 
 extern void wpas_thread_start(void);
@@ -52,7 +51,8 @@ int supplicant_main_entry(char *oob_ssid)
     struct wpa_params params;
     struct wpa_supplicant *wpa_s;
     struct wpa_interface *iface;
-
+	struct wpa_ssid_value *wpas_connect_ssid;
+	
 	os_memset(&params, 0, sizeof(params));
 	params.wpa_debug_level = MSG_INFO;
 
@@ -112,11 +112,8 @@ int supplicant_main_entry(char *oob_ssid)
             ASSERT(0 == wpa_s->ssids_from_scan_req);
             oob_ssid_len = os_strlen(oob_ssid);
 
-			if(0 == wpas_connect_ssid)
-			{
-	            wpas_connect_ssid = (struct wpa_ssid_value *)os_malloc(sizeof(struct wpa_ssid_value));
-	            ASSERT(wpas_connect_ssid);
-			}
+			wpas_connect_ssid = (struct wpa_ssid_value *)os_malloc(sizeof(struct wpa_ssid_value));
+	        ASSERT(wpas_connect_ssid);
 
             len = MIN(SSID_MAX_LEN, oob_ssid_len);
 
@@ -158,9 +155,6 @@ static void wpas_thread_main( void *arg )
 
 	os_free(wpas_ifaces);
 	wpas_ifaces = NULL;
-
-	os_free(wpas_connect_ssid);
-	wpas_connect_ssid = NULL;
 
 	wpas_thread_handle = NULL;
 	mico_rtos_delete_thread(NULL);
