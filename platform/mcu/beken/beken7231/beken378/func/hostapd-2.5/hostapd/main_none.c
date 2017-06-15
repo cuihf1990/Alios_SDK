@@ -23,16 +23,15 @@
 #include "param_config.h"
 #endif
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "rtos_pub.h"
+#include "mico_rtos.h"
 #include "error.h"
+#include "signal.h"
 
 static mico_thread_t  hostapd_thread_handle;
 uint32_t  hostapd_stack_size = 4000;
-mico_semaphore_t hostapd_sema = NULL;
 static struct hapd_global s_hapd_global;
 struct hapd_interfaces g_hapd_interfaces;
+extern mico_semaphore_t eloop_sema;
 
 char *bss_iface = "wlan0";
 
@@ -364,8 +363,9 @@ static int hostapd_driver_init(struct hostapd_iface *iface)
 
 	params.num_bridge = hapd->iface->num_bss;
 	params.bridge = os_calloc(hapd->iface->num_bss, sizeof(char *));
-	if (params.bridge == NULL)
+	if (params.bridge == NULL) {
 		return -1;
+	}
 	for (i = 0; i < hapd->iface->num_bss; i++) {
 		struct hostapd_data *bss = hapd->iface->bss[i];
 		if (bss->conf->bridge[0])
@@ -514,6 +514,32 @@ static void hostapd_periodic(void *eloop_ctx, void *timeout_ctx)
 {
 }
 
+static void hostapd_stop(void)
+{
+	int i;
+	/* Deinitialize all g_hapd_interfaces */
+    fatal_prf("hostapd deinit\r\n");
+	for (i = 0; i < g_hapd_interfaces.count; i++) {
+		if (!g_hapd_interfaces.iface[i])
+			continue;
+		
+		g_hapd_interfaces.iface[i]->driver_ap_teardown =
+			!!(g_hapd_interfaces.iface[i]->drv_flags &
+			   WPA_DRIVER_FLAGS_AP_TEARDOWN_SUPPORT);
+		
+		hostapd_interface_deinit_free(g_hapd_interfaces.iface[i]);
+	}
+	os_free(g_hapd_interfaces.iface);
+
+	eloop_cancel_timeout(hostapd_periodic, &g_hapd_interfaces, NULL);
+	hostapd_global_deinit(NULL);
+
+	wpa_debug_close_linux_tracing();
+
+	fst_global_deinit();
+
+	os_program_deinit();
+}
 int wpa_main_entry(int argc, char *argv[])
 {
 	int ret = 1;
@@ -591,8 +617,9 @@ int wpa_main_entry(int argc, char *argv[])
 		*fname++ = '\0';
 		iface = hostapd_interface_init_bss(&g_hapd_interfaces, bss_config[i],
 						   fname, debug);
-		if (iface == NULL)
+		if (iface == NULL) {
 			goto out;
+		}
 		for (j = 0; j < g_hapd_interfaces.count; j++) {
 			if (g_hapd_interfaces.iface[j] == iface)
 				break;
@@ -622,16 +649,15 @@ int wpa_main_entry(int argc, char *argv[])
 	g_hapd_interfaces.terminate_on_error = g_hapd_interfaces.count;
 	for (i = 0; i < g_hapd_interfaces.count; i++) {
 		if (hostapd_driver_init(g_hapd_interfaces.iface[i]) ||
-		    hostapd_setup_interface(g_hapd_interfaces.iface[i]))
+		    hostapd_setup_interface(g_hapd_interfaces.iface[i])) {
 			goto out;
 	}
+	}
 	
-	//os_printf("hostapd_add_iface\r\n");
 	hostapd_add_iface(&g_hapd_interfaces, ap_iface_buf);
 	
 	ret = 0;
 	
-	//os_printf("hostapd_thread_start\r\n");
     hostapd_thread_start();
 
 	os_free(ap_iface_buf);
@@ -639,33 +665,15 @@ int wpa_main_entry(int argc, char *argv[])
 	return ret;
 
  out:
-	/* Deinitialize all g_hapd_interfaces */
-    fatal_prf("hostapd_main_init_failed\r\n");
-	for (i = 0; i < g_hapd_interfaces.count; i++) {
-		if (!g_hapd_interfaces.iface[i])
-			continue;
 		
-		g_hapd_interfaces.iface[i]->driver_ap_teardown =
-			!!(g_hapd_interfaces.iface[i]->drv_flags &
-			   WPA_DRIVER_FLAGS_AP_TEARDOWN_SUPPORT);
-		
-		hostapd_interface_deinit_free(g_hapd_interfaces.iface[i]);
-	}
-	os_free(g_hapd_interfaces.iface);
-
-	eloop_cancel_timeout(hostapd_periodic, &g_hapd_interfaces, NULL);
-	hostapd_global_deinit(pid_file);
-	os_free(pid_file);
-
-	if (log_file)
-		wpa_debug_close_file();
-	wpa_debug_close_linux_tracing();
-
-	fst_global_deinit();
-
-	os_program_deinit();
-
+	hostapd_stop();
 	return ret;
+	}
+
+
+static void hostapd_terminate_proc(int sig, void *signal_ctx)
+{
+	eloop_terminate();
 }
 
 static void hostapd_thread_main( void *arg )
@@ -674,23 +682,24 @@ static void hostapd_thread_main( void *arg )
 	int daemonize = 0;
 	char *pid_file = NULL;
 
-	while(1)
-	{
-		ret = mico_rtos_get_semaphore(&hostapd_sema, MICO_WAIT_FOREVER);
-		ASSERT(kNoErr == ret);            
+	eloop_register_signal_terminate(hostapd_terminate_proc, NULL);
+	
+	hostapd_global_run(&g_hapd_interfaces, daemonize, pid_file);
 		
-		if (hostapd_global_run(&g_hapd_interfaces, daemonize, pid_file)) {
-			wpa_printf(MSG_ERROR, "Failed to start eloop");
-		}
-	}
+	// eloop terminated.
+	hostapd_stop();
+	hostapd_thread_handle = NULL;
+	mico_rtos_delete_thread(NULL);
 }
 
 static void hostapd_thread_start(void)
 {  
     OSStatus ret;
-    
-    ret = mico_rtos_init_semaphore(&hostapd_sema, 0);
-    ASSERT(kNoErr == ret);
+
+	if (eloop_sema == NULL) {
+    	ret = mico_rtos_init_semaphore(&eloop_sema, 0);
+    	ASSERT(kNoErr == ret);
+	}
 	
     ret = mico_rtos_create_thread(&hostapd_thread_handle, 
             THD_HOSTAPD_PRIORITY,
@@ -701,25 +710,25 @@ static void hostapd_thread_start(void)
     ASSERT(kNoErr == ret);
 }
 
-static void hostapd_thread_stop(void)
+void hostapd_thread_stop(void)
 {  
-    OSStatus ret;
+	if (hostapd_thread_handle == NULL)
+		return;
 	
-    ret = mico_rtos_delete_thread(&hostapd_thread_handle);
-    ASSERT(kNoErr == ret);
+    wpa_handler_signal(SIGTERM);
     
-    ret = mico_rtos_deinit_semaphore(&hostapd_sema);
-    ASSERT(kNoErr == ret);
+	while(hostapd_thread_handle != NULL) {
+		mico_rtos_delay_milliseconds(10);
+	}
 }
 
 void hostapd_poll(void *param)
 {
-	OSStatus ret;	
-	
-	if(hostapd_sema)
+	if(eloop_sema)
 	{
-    	ret = mico_rtos_set_semaphore(&hostapd_sema);
+		mico_rtos_set_semaphore(&eloop_sema);
 	}
+
 }
 
 // eof

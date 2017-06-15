@@ -514,6 +514,7 @@ void dhcp_server(uint32_t data)
 			}
 		}
 
+		if (dhcp_nack_dns_server_handler) {
 		if (FD_ISSET(dhcps.dnssock, &rfds)) {
 			len = lwip_recvfrom(dhcps.dnssock, dhcps.msg,
 				       SERVER_BUFFER_SIZE,
@@ -524,6 +525,7 @@ void dhcp_server(uint32_t data)
 							     &caddr);
 			}
 		}
+	}
 	}
 
 done:

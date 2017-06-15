@@ -31,6 +31,7 @@
 #include "include.h"
 #include "rtos_pub.h"
 #include "wlan_ui_pub.h"
+#include "rw_pub.h"
 
 void mico_wlan_get_mac_address( uint8_t *mac )
 {
@@ -57,13 +58,81 @@ OSStatus micoWlanGetLinkStatus(LinkStatusTypeDef *outStatus)
 	return bk_wlan_get_link_status(outStatus);
 }
 
+static void scan_cb(void *ctxt, void *user)
+{
+	struct scanu_rst_upload *scan_rst;
+	ScanResult apList;
+	int i, j;
+
+	apList.ApList = NULL;
+	scan_rst = sr_get_scan_results();
+	if (scan_rst == NULL) {
+		apList.ApNum = 0;
+	} else {
+		apList.ApNum = scan_rst->scanu_num;
+	}
+	if (apList.ApNum > 0) {
+		apList.ApList = os_malloc(sizeof(*apList.ApList)*apList.ApNum);
+		for(i=0; i<scan_rst->scanu_num; i++) {
+			os_memcpy(apList.ApList[i].ssid, scan_rst->res[i]->ssid, 32);
+			apList.ApList[i].ApPower = scan_rst->res[i]->level;
+		}
+	}
+	if (apList.ApList == NULL) {
+		apList.ApNum = 0;
+	}
+	ApListCallback(&apList);
+	if (apList.ApList != NULL) {
+        os_free(apList.ApList);
+		apList.ApList = NULL;
+	}
+	sr_release_scan_results(scan_rst);
+}
+
 void micoWlanStartScan(void)
 {
+	mhdr_scanu_reg_cb(scan_cb, 0);
 	bk_wlan_start_scan();
+}
+
+static void scan_adv_cb(void *ctxt, void *user)
+{
+	struct scanu_rst_upload *scan_rst;
+	ScanResult_adv apList;
+	int i, j;
+
+	apList.ApList = NULL;
+	scan_rst = sr_get_scan_results();
+	if (scan_rst == NULL) {
+		apList.ApNum = 0;
+	} else {
+		apList.ApNum = scan_rst->scanu_num;
+	}
+	if (apList.ApNum > 0) {
+		apList.ApList = os_malloc(sizeof(*apList.ApList)*apList.ApNum);
+		for(i=0; i<scan_rst->scanu_num; i++) {
+			os_memcpy(apList.ApList[i].ssid, scan_rst->res[i]->ssid, 32);
+			apList.ApList[i].ApPower = scan_rst->res[i]->level;
+			os_memcpy(apList.ApList[i].bssid, scan_rst->res[i]->bssid, 6);
+			apList.ApList[i].channel = scan_rst->res[i]->channel;
+			apList.ApList[i].security = scan_rst->res[i]->security;
+		}
+	}
+	if (apList.ApList == NULL) {
+		apList.ApNum = 0;
+	}
+	ApListAdvCallback(&apList);
+	if (apList.ApList != NULL) {
+        os_free(apList.ApList);
+		apList.ApList = NULL;
+	}
+	sr_release_scan_results(scan_rst);
 }
 
 void micoWlanStartScanAdv(void)
 {
+    mhdr_scanu_reg_cb(scan_adv_cb, 0);
+	bk_wlan_start_scan();
 }
 
 OSStatus micoWlanPowerOff(void)

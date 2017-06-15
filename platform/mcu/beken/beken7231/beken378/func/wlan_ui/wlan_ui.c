@@ -314,6 +314,8 @@ OSStatus bk_wlan_start(network_InitTypeDef_st *inNetworkInitPara)
 {
     if(inNetworkInitPara->wifi_mode == Soft_AP)
     {
+    	hostapd_thread_stop();
+		supplicant_main_exit();
         bk_wlan_ap_init(inNetworkInitPara);
 
         os_printf("lwip_intf_initial\r\n");
@@ -321,15 +323,17 @@ OSStatus bk_wlan_start(network_InitTypeDef_st *inNetworkInitPara)
                        inNetworkInitPara->net_mask,
                        inNetworkInitPara->gateway_ip_addr,
                        inNetworkInitPara->dnsServer_ip_addr);
-        uap_ip_start();
+        
 
         os_printf("wpa_main_entry\r\n");
         wpa_main_entry(2, 0);
 
         sm_build_broadcast_deauthenticate();
+		uap_ip_start();
     }
     else if(inNetworkInitPara->wifi_mode == Station)
     {
+    	hostapd_thread_stop();
         supplicant_main_exit();
         sta_ip_down();
         ip_address_set(Station, inNetworkInitPara->dhcpMode, inNetworkInitPara->local_ip_addr,
@@ -342,11 +346,15 @@ OSStatus bk_wlan_start(network_InitTypeDef_st *inNetworkInitPara)
     return 0;
 }
 
+extern int sa_ap_inited();
+extern int sa_sta_inited();
+
 void bk_wlan_start_scan(void)
 {
     SCAN_PARAM_T scan_param = {0};
 
-    bk_wlan_sta_init(0);
+	if ((sa_ap_inited() == 0) && (sa_sta_inited() == 0))
+    	bk_wlan_sta_init(0);
 
     os_memset(&scan_param.bssid, 0xff, ETH_ALEN);
     mt_msg_dispatch(SCANU_START_REQ, &scan_param);
@@ -354,6 +362,8 @@ void bk_wlan_start_scan(void)
 
 void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
 {
+	int valid_ap = 1;
+	
     if(!g_sta_param_ptr)
     {
         g_sta_param_ptr = (sta_param_t *)os_malloc(sizeof(sta_param_t));
@@ -365,6 +375,15 @@ void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
         wifi_get_mac_address((char *)&g_sta_param_ptr->own_mac);
     }
 
+	if (MAC_ADDR_NULL(inNetworkInitParaAdv->ap_info.bssid)) {
+		valid_ap = 0;
+	}
+
+	if (((inNetworkInitParaAdv->ap_info.channel <= 0)) || 
+		 (inNetworkInitParaAdv->ap_info.channel > 13)) {
+		valid_ap = 0;
+	}
+	
     g_sta_param_ptr->ssid.length = os_strlen(inNetworkInitParaAdv->ap_info.ssid);
     os_memcpy(g_sta_param_ptr->ssid.array, inNetworkInitParaAdv->ap_info.ssid, g_sta_param_ptr->ssid.length);
 
@@ -388,12 +407,15 @@ void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
         g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_MIXED;
         break;
     default:
+		valid_ap = 0;
         break;
     }
 
+	if (valid_ap) {
     g_sta_param_ptr->fast_connect_set = 1;
     g_sta_param_ptr->fast_connect.chann = inNetworkInitParaAdv->ap_info.channel;
     os_memcpy(g_sta_param_ptr->fast_connect.bssid, inNetworkInitParaAdv->ap_info.bssid, ETH_ALEN);
+	}
     g_sta_param_ptr->key_len = inNetworkInitParaAdv->key_len;
     os_memcpy((uint8_t *)g_sta_param_ptr->key, inNetworkInitParaAdv->key, inNetworkInitParaAdv->key_len);
 
@@ -418,6 +440,7 @@ void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
 
 OSStatus bk_wlan_start_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
 {
+    hostapd_thread_stop();
     supplicant_main_exit();
     sta_ip_down();
     ip_address_set(Station, inNetworkInitParaAdv->dhcpMode,
@@ -434,6 +457,8 @@ OSStatus bk_wlan_start_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
 
 OSStatus bk_wlan_get_ip_status(IPStatusTypedef *outNetpara, WiFi_Interface inInterface)
 {
+    uint8_t mac[6];
+	
     if(g_wlan_general_param->dhcp_enable)
     {
         outNetpara->dhcp = DHCP_Server;
@@ -446,14 +471,9 @@ OSStatus bk_wlan_get_ip_status(IPStatusTypedef *outNetpara, WiFi_Interface inInt
     ip_ntoa(g_wlan_general_param->ip_gw, outNetpara->gate, 16);
     ip_ntoa(g_wlan_general_param->ip_mask, outNetpara->mask, 16);
 
-    if(inInterface == Soft_AP)
-    {
-        os_memcpy(outNetpara->mac, (UINT8 *)&g_ap_param_ptr->bssid, 6);
-    }
-    else if(inInterface == Station)
-    {
-        os_memcpy(outNetpara->mac, (UINT8 *)&g_sta_param_ptr->own_mac, 6);
-    }
+    mico_wlan_get_mac_address(mac);
+	sprintf(outNetpara->mac, "%02x%02x%02x%02x%02x%02x", mac[0],
+			mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     return 0;
 }

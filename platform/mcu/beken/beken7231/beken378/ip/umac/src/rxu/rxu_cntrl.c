@@ -147,6 +147,8 @@ static const struct llc_snap_short rxu_cntrl_bridge_tunnel_hdr = {
                                                                     0xF800, // Prot1 and 2
                                                                  };
 
+extern void hal_update_secret_key(uint64_t, uint8_t);
+
 /*
  * PRIVATE FUNCTION DEFINITIONS
  ****************************************************************************************
@@ -2094,12 +2096,12 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 		dest_id = TASK_API;
         upload = true;
 	}
-	#if 0
 	else if((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_PROBEREQ)
 	{
 		RXU_PRT("-------MAC_FCTRL_PROBEREQ:0x%x\r\n", length);
 		dest_id = TASK_API;
 	}
+	#if 0
 	else if((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_REASSOCREQ)
 	{
 		RXU_PRT("-------MAC_FCTRL_REASSOCREQ:0x%x\r\n", length);

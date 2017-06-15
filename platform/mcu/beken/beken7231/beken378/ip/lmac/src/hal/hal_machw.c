@@ -23,10 +23,7 @@
  ****************************************************************************************
  */
 #include "arch.h"
-
 #include "co_endian.h"
-
-// for power save mode
 #include "mac_defs.h"
 #include "mm.h"
 #include "ke_event.h"
@@ -105,8 +102,6 @@ const uint8_t rxv2macrate[] = {
 };
 #endif
 
-uint32_t    pKey[4] = {0xabc47fd0, 0x57498892, 
-						0x11320490, 0x10815562};
 static uint16_t g_entry_id = 0;
 
 /*
@@ -424,6 +419,8 @@ void hal_update_secret_key(uint64_t macAddress,
 	uint8_t cipherType)
 {	
 	uint16_t key_index;
+	uint32_t    pKey[4] = {0xabc47fd0, 0x57498892, 
+							0x11320490, 0x10815562};
 	
 	key_index = hal_get_secret_key_entry_id();
 
@@ -455,6 +452,8 @@ void hal_init_vlan_cipher(uint8_t useDefaultKey,
 	uint8_t vlanIDRAM,
 	uint8_t cipherType)
 {
+	uint32_t    pKey[4] = {0xabc47fd0, 0x57498892, 
+							0x11320490, 0x10815562};
 	hal_program_cipher_key(useDefaultKey,	// useDefaultKey
 					pKey,
 					0xFFFFFFFFFFFF, 		// macAddress
@@ -523,11 +522,22 @@ void hal_machw_enter_monitor_mode(void)
 						    | NXMAC_DISABLE_BA_RESP_BIT);
 
     // Enable reception of all frames (i.e. monitor mode)
-    mm_rx_filter_umac_set(0xFFFFFFFF & ~(NXMAC_EXC_UNENCRYPTED_BIT));
+    mm_rx_filter_umac_set(0xFFFFFFFF & ~(NXMAC_EXC_UNENCRYPTED_BIT
+    									| NXMAC_ACCEPT_BAR_BIT 
                                         //| NXMAC_ACCEPT_ERROR_FRAMES_BIT
+                                        | NXMAC_ACCEPT_BA_BIT 
+                                        | NXMAC_ACCEPT_CTS_BIT
+                                        | NXMAC_ACCEPT_RTS_BIT
+                                        | NXMAC_ACCEPT_ACK_BIT
+                                        | NXMAC_ACCEPT_PS_POLL_BIT
+                                        | NXMAC_ACCEPT_QO_S_NULL_BIT
+                                        | NXMAC_ACCEPT_QO_S_NULL_BIT
+                                        | NXMAC_ACCEPT_CF_END_BIT
+                                        | NXMAC_ACCEPT_UNKNOWN_BIT
+                                        | NXMAC_ACCEPT_CFWO_DATA_BIT));
     
 	// set default mode of operation
-    nxmac_abgn_mode_setf(MODE_802_11G);// MODE_802_11N_5
+    nxmac_abgn_mode_setf(MODE_802_11N_2_4);// MODE_802_11N_5
 
     // reset Key storage RAM
     nxmac_key_sto_ram_reset_setf(1);    

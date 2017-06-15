@@ -233,10 +233,10 @@ struct sockaddr {
 
 #define SO_RXQ_OVFL             40
 
-extern SOCKET socket(int af, int type, int protocol);
-extern int send(SOCKET sk, const unsigned char *buf, int len, int flag);
-extern int recv(SOCKET sk, const unsigned char *buf, int len, int flag);
-extern void close(SOCKET sk);
+extern SOCKET bk_socket(int af, int type, int protocol);
+extern int bk_send(SOCKET sk, const unsigned char *buf, int len, int flag);
+extern int bk_recv(SOCKET sk, const unsigned char *buf, int len, int flag);
+extern void bk_close(SOCKET sk);
 extern int ke_sk_send(SOCKET sk, const unsigned char *buf, int len, int flag);
 extern int ke_sk_recv(SOCKET sk, const unsigned char *buf, int len, int flag);
 extern BK_SOCKET *sk_get_sk_element(SOCKET sk);

@@ -3,7 +3,7 @@
 #include "ff.h"			/* Declarations of API */
 #if CFG_USE_SDCARD_HOST
 
-#if _FATFS != 7231	/* Revision ID */
+#if _FATFS != 108	/* Revision ID */
 #error Wrong include file (ff.h).
 #endif
 

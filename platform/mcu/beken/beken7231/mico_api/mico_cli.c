@@ -41,8 +41,7 @@ static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
 */
 void wifiscan_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-	os_printf("wifiscan_Command\r\n");
-	test_scan_app_init();
+	micoWlanStartScan();
 }
 
 void softap_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)

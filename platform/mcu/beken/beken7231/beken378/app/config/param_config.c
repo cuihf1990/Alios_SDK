@@ -119,70 +119,10 @@ UINT32 cfg_search_by_type(UINT32 type, UINT32 start_addr)
 
 int cfg_get_general_params(void)
 {
-    UINT32 status, addr, addr_start;
-    DD_HANDLE flash_handle;
-    head_param_t head;
-
     if(!g_wlan_general_param)
     {
         g_wlan_general_param = (general_param_t *)os_malloc(sizeof(general_param_t));
     }
-
-    addr_start = cfg_search_by_type(PARAM_CFG_GENERAL, CONFIG_ADDR_START);
-    if(!addr_start)
-    {
-        PARAM_CFG_PRT("[GENERAL]SEARCH GENERAL CLASS FAIL\r\n");
-        return -1;
-    }
-
-    flash_handle = ddev_open(FLASH_DEV_NAME, &status, 0);
-
-    addr = cfg_search_by_type(GENERAL_TYPE_ROLE, addr_start);
-    if(!addr)
-    {
-        PARAM_CFG_PRT("[GENERAL]SEARCH ROLE FAIL\r\n");
-        return -1;
-    }
-    ddev_read(flash_handle, (char *)&head, sizeof(head_param_t), addr);
-    ddev_read(flash_handle, (char *)&g_wlan_general_param->role, head.len, addr + sizeof(head_param_t));
-
-    addr = cfg_search_by_type(GENERAL_TYPE_DHCP, addr_start);
-    if(!addr)
-    {
-        PARAM_CFG_PRT("[GENERAL]SEARCH DHCP FAIL\r\n");
-        return -1;
-    }
-    ddev_read(flash_handle, (char *)&head, sizeof(head_param_t), addr);
-    ddev_read(flash_handle, (char *)&g_wlan_general_param->dhcp_enable, head.len, addr + sizeof(head_param_t));
-
-    addr = cfg_search_by_type(GENERAL_TYPE_IP, addr_start);
-    if(!addr)
-    {
-        PARAM_CFG_PRT("[GENERAL]SEARCH IP FAIL\r\n");
-        return -1;
-    }
-    ddev_read(flash_handle, (char *)&head, sizeof(head_param_t), addr);
-    ddev_read(flash_handle, (char *)&g_wlan_general_param->ip_addr, head.len, addr + sizeof(head_param_t));
-
-    addr = cfg_search_by_type(GENERAL_TYPE_MASK, addr_start);
-    if(!addr)
-    {
-        PARAM_CFG_PRT("[GENERAL]SEARCH MASK FAIL\r\n");
-        return -1;
-    }
-    ddev_read(flash_handle, (char *)&head, sizeof(head_param_t), addr);
-    ddev_read(flash_handle, (char *)&g_wlan_general_param->ip_mask, head.len, addr + sizeof(head_param_t));
-
-    addr = cfg_search_by_type(GENERAL_TYPE_GW, addr_start);
-    if(!addr)
-    {
-        PARAM_CFG_PRT("[GENERAL]SEARCH GW FAIL\r\n");
-        return -1;
-    }
-    ddev_read(flash_handle, (char *)&head, sizeof(head_param_t), addr);
-    ddev_read(flash_handle, (char *)&g_wlan_general_param->ip_gw, head.len, addr + sizeof(head_param_t));
-
-    ddev_close(flash_handle);
     return 0;
 }
 

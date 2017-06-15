@@ -1,5 +1,5 @@
 #ifndef _FATFS
-#define _FATFS	7231	/* Revision ID */
+#define _FATFS	108	/* Revision ID */
 
 #ifdef __cplusplus
 extern "C" {

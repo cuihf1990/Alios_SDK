@@ -24,11 +24,11 @@
 #include "signal.h"
 
 
-static struct wpa_global *wpa_global_ptr;
+static struct wpa_global *wpa_global_ptr = NULL;
 static mico_thread_t wpas_thread_handle;
 
 uint32_t wpas_stack_size = 4000;
-static mico_semaphore_t wpas_sema = NULL;
+mico_semaphore_t eloop_sema = NULL;
 struct wpa_ssid_value *wpas_connect_ssid = 0;
 struct wpa_interface *wpas_ifaces = 0;
 
@@ -41,22 +41,7 @@ int supplicant_main_exit(void)
 	
     wpas_thread_stop();
 	
-    if(wpa_global_ptr)
-    {
-        wpa_supplicant_deinit(wpa_global_ptr);
-    }
-
-	if(wpas_ifaces)
-	{
-		os_free(wpas_ifaces);
-		wpas_ifaces = 0;
-	}
-
-	if(wpas_connect_ssid)
-	{
-		os_free(wpas_connect_ssid);
-		wpas_connect_ssid = 0;
-	}
+    
 	return 0;
 }
 
@@ -151,7 +136,7 @@ int supplicant_main_entry(char *oob_ssid)
     }
     else
 	{
-		/* dhcp_stop_timeout_check(); */
+		//dhcp_stop_timeout_check();
     	wpas_thread_start();
 		return 0;
 	}
@@ -167,9 +152,17 @@ static void wpas_thread_main( void *arg )
 {
     wpa_supplicant_run(wpa_global_ptr); // wpa main loop
 
+	/// main thread exited. do resource clean
+	wpa_supplicant_deinit(wpa_global_ptr);
+	wpa_global_ptr = NULL;
+
+	os_free(wpas_ifaces);
+	wpas_ifaces = NULL;
+
+	os_free(wpas_connect_ssid);
+	wpas_connect_ssid = NULL;
 
 	wpas_thread_handle = NULL;
-	
 	mico_rtos_delete_thread(NULL);
 }
 
@@ -177,9 +170,9 @@ void wpas_thread_start(void)
 {
     OSStatus ret;
 
-    if(NULL == wpas_sema)
+    if(NULL == eloop_sema)
     {
-	    ret = mico_rtos_init_semaphore(&wpas_sema, 0);
+	    ret = mico_rtos_init_semaphore(&eloop_sema, 0);
 	    ASSERT(kNoErr == ret);
 	}
 
@@ -209,17 +202,17 @@ void wpa_supplicant_poll(void *param)
 {
     OSStatus ret;
 
-	if(wpas_sema)
+	if(eloop_sema)
 	{
-    	ret = mico_rtos_set_semaphore(&wpas_sema);
+    	ret = mico_rtos_set_semaphore(&eloop_sema);
 	}
 }
 
 int wpa_sem_wait(uint32_t ms)
 {
-	if(wpas_sema == NULL)
+	if(eloop_sema == NULL)
 		return;
-	return mico_rtos_get_semaphore(&wpas_sema, ms);
+	return mico_rtos_get_semaphore(&eloop_sema, ms);
 }
 
 // eof
