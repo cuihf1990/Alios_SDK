@@ -27,6 +27,8 @@
 #include "app_led.h"
 #endif
 
+static int ap_inited = 0;
+
 uint32_t sa_ap_rsp_word = 0;
 void sa_ap_clear_rsp_word(void)
 {
@@ -77,6 +79,13 @@ void sa_ap_init(void)
 
     SAAP_PRT("[saap]APM_START_REQ\r\n");
     sa_ap_send_and_wait_rsp(APM_START_REQ, 0, APM_START_CFM);
+
+	ap_inited = 1;
+}
+
+int sa_ap_inited()
+{
+	return ap_inited;
 }
 
 void sa_ap_uninit(void)

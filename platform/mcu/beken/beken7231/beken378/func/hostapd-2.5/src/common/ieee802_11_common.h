@@ -9,6 +9,11 @@
 #ifndef IEEE802_11_COMMON_H
 #define IEEE802_11_COMMON_H
 
+/* yhb added, enum hostapd_hw_mode as some function return value, it should be defined before function declare.
+ * otherwise, gcc may typedef this enum as int if it's not defined at function declare.
+ */
+#include "common/defs.h"
+
 #define MAX_NOF_MB_IES_SUPPORTED 5
 
 struct mb_ies_info {

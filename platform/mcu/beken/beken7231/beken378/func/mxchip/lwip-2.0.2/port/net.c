@@ -255,7 +255,7 @@ static void netif_status_callback(struct netif *n)
 				// dhcp fail
 			}
 		} else {
-			wifi_station_changed(1);
+			
 			// static IP success;
 		}
 		
@@ -362,7 +362,7 @@ void sta_ip_down(void)
 	if(sta_ip_start_flag)
 	{
 		os_printf("sta_ip_down\r\n");
-
+		wifi_station_changed(0);
 		sta_ip_start_flag = 0;
 
 		netifapi_netif_set_down(&g_mlan.netif);
@@ -421,6 +421,9 @@ void ip_address_set(int iface, int dhcp, char *ip, char *mask, char*gw, char*dns
 
 int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 {
+	ip_addr_t dns;
+	int i=0;
+	
 	if (!intrfc_handle)
 		return -1;
 
@@ -456,13 +459,24 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 		netifapi_netif_set_addr(&if_handle->netif, &if_handle->ipaddr,
 					&if_handle->nmask, &if_handle->gw);
 		netifapi_netif_set_up(&if_handle->netif);
+		if (addr->dns1 != 0) {
+			dns.u_addr.ip4.addr = addr->dns1;
+			dns.type = IPADDR_TYPE_V4;
+			dns_setserver(i++, &dns);
+		}
+		if (addr->dns2 != 0) {
+			dns.u_addr.ip4.addr = addr->dns2;
+			dns.type = IPADDR_TYPE_V4;
+			dns_setserver(i, &dns);
+		}
+		wifi_station_changed(1);
 		break;
 
 	case ADDR_TYPE_DHCP:
 		/* Reset the address since we might be transitioning from static to DHCP */
-		memset(&if_handle->ipaddr, 0, sizeof(ip_addr_t));
-		memset(&if_handle->nmask, 0, sizeof(ip_addr_t));
-		memset(&if_handle->gw, 0, sizeof(ip_addr_t));
+		memset(&if_handle->ipaddr, 0, sizeof(ip4_addr_t));
+		memset(&if_handle->nmask, 0, sizeof(ip4_addr_t));
+		memset(&if_handle->gw, 0, sizeof(ip4_addr_t));
 		netifapi_netif_set_addr(&if_handle->netif, &if_handle->ipaddr,
 				&if_handle->nmask, &if_handle->gw);
 
@@ -496,7 +510,7 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 
 int net_get_if_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 {
-	const ip4_addr_t *tmp;
+	const ip_addr_t *tmp;
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
 	addr->ipv4.address = if_handle->netif.ip_addr.u_addr.ip4.addr;
@@ -504,9 +518,9 @@ int net_get_if_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 	addr->ipv4.gw = if_handle->netif.gw.u_addr.ip4.addr;
 
 	tmp = dns_getserver(0);
-	addr->ipv4.dns1 = tmp->addr;
+	addr->ipv4.dns1 = tmp->u_addr.ip4.addr;
 	tmp = dns_getserver(1);
-	addr->ipv4.dns2 = tmp->addr;
+	addr->ipv4.dns2 = tmp->u_addr.ip4.addr;
 
 	return 0;
 }

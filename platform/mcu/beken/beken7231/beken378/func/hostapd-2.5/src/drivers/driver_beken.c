@@ -969,11 +969,10 @@ static void *hostap_init(struct hostapd_data *hapd,
     }
 
     drv->hapd = hapd;
-    drv->ioctl_sock = 0;
     drv->sock = 0;
     os_memcpy(drv->iface, params->ifname, sizeof(drv->iface));
 	
-    wifi_get_mac_address(drv->own_addr);
+    wifi_get_mac_address((char *)drv->own_addr);
 
     drv->ioctl_sock = bk_socket(PF_INET, SOCK_DGRAM, 0);
 
@@ -1016,6 +1015,9 @@ static void hostap_driver_deinit(void *priv)
 
     if (drv->sock >= 0)
         bk_close(drv->sock);
+
+	if (drv->sock_xmit != NULL);
+		l2_packet_deinit(drv->sock_xmit);
 
     os_free(drv->generic_ie);
     os_free(drv->wps_ie);
@@ -1257,7 +1259,7 @@ static void *wpa_driver_init(void *ctx, const char *ifname)
     drv->ioctl_sock = bk_socket(PF_INET, SOCK_DGRAM, 0);
     os_memcpy(drv->iface, ifname, sizeof(drv->iface));
 
-	wifi_get_mac_address(drv->own_addr);
+	wifi_get_mac_address((char *)drv->own_addr);
 
     return drv;
 }
@@ -1298,7 +1300,6 @@ int wpa_driver_scan2(void *priv, struct wpa_driver_scan_params *params)
     size_t blen;
     int ret = 0, i;
 
-	printf("%s\r\n", __FUNCTION__);
     blen = sizeof(*param);
     buf = os_zalloc(blen);
     if(buf == NULL)
@@ -1619,7 +1620,8 @@ void wpa_dbg(void *ctx, int level, const char *fmt, ...)
 
 	buf = os_malloc(buflen);
 	if (buf == NULL) {
-		bk_printf("wpa_msg: Failed to allocate message buffer");
+		bk_printf("wpa_msg: Failed to allocate message "
+			   "buffer");
 		return;
 	}
 	va_start(ap, fmt);
@@ -1628,6 +1630,7 @@ void wpa_dbg(void *ctx, int level, const char *fmt, ...)
 	va_end(ap);
 	bk_send_string(buf);
 	os_free(buf);
+	
 	bk_printf("\r\n");
 }
 

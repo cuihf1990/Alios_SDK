@@ -60,7 +60,7 @@
 #include "uart_pub.h" 
 #include "sdio_intf_pub.h" 
 #include "intc_pub.h"
-
+#include "mem_pub.h"
 #include "lwip/pbuf.h"
 
 /*
@@ -88,6 +88,9 @@ struct rxl_cntrl_env_tag rxl_cntrl_env;
 #endif
 
 static uint8_t rx_header[RXL_HEADER_INFO_LEN+2];
+
+extern void bmsg_rx_sender(void *arg);
+
 int rxl_data_monitor(uint8_t *payload,
                               uint16_t length)
 {
@@ -286,6 +289,7 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 	{	 
 		if(du_ptr)
 		{
+			#define MONITOR_PKT_FCS_LEN           4
 			uint32_t len_from_vector;
 			
 			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
@@ -293,7 +297,19 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 			if(len_from_vector != du_len)
 			{
 				RXL_CNTRL_PRT("len_from_vector:%d:%d\r\n", len_from_vector, du_len);
+
+				do
+				{
+					if((du_len > len_from_vector)
+						|| (len_from_vector > 2000)
+						|| ((len_from_vector > du_len) 
+							&& ((len_from_vector - du_len) > MONITOR_PKT_FCS_LEN)))
+					{
+						break;
+					}					
+					
 				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), len_from_vector);
+				}while(0);
 			}
 			else
 			{

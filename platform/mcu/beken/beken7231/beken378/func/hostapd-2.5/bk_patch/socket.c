@@ -141,9 +141,7 @@ int ke_sk_send_peek_next_payload_size(SOCKET sk)
 	GLOBAL_INT_DISABLE();
 	dl_list_for_each_safe(sk_msg, tmp, &element->sk_rx_msg, SOCKET_MSG, data)
 	{
-		
 		ret = sk_msg->len;
-		printf("SK: got msg %d\r\n", ret);
 		break;
 	}
 

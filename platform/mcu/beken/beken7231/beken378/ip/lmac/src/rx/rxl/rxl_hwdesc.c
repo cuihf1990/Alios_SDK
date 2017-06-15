@@ -69,6 +69,7 @@ void rxl_hwdesc_init(void)
 
         // clear the frame length
         rx_dma_hdrdesc[i].hd.frmlen = 0;
+        rx_dma_hdrdesc[i].hd.ampdu_stat_info = 0;
 
         // Prepare DMA descriptor for the RX vectors DMA transfer
         rx_dma_hdrdesc[i].dma_desc.src = CPU2HW(&rx_dma_hdrdesc[i].hd.frmlen);
@@ -165,6 +166,7 @@ void rxl_hd_append(struct rx_dmadesc *desc)
 
     // reset the frame length field
     free_desc->hd.frmlen = 0;
+    free_desc->hd.ampdu_stat_info = 0;
 
     // Link the RHD to the current list and trigger a newTail
     rxl_cntrl_env.last->hd.next = CPU2HW(&(free_desc->hd));

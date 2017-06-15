@@ -252,12 +252,33 @@ void mhdr_connect_ind(void *msg, UINT32 len)
 	}
 }
 
+static void sort_scan_result(SCAN_RST_UPLOAD_T *ap_list)
+{
+	int i, j;
+	struct sta_scan_res *tmp;
+	
+	if (ap_list->scanu_num == 0)
+		return;
+	
+	for(i=0; i < (ap_list->scanu_num-1); i++) {
+		for(j=i+1; j < ap_list->scanu_num; j++) {
+			if (ap_list->res[j]->level > ap_list->res[i]->level) {
+				tmp = ap_list->res[j];
+				ap_list->res[j] = ap_list->res[i];
+				ap_list->res[i] = tmp;
+			}
+		}
+	}
+}
+
 UINT32 mhdr_scanu_start_cfm(SCAN_RST_UPLOAD_T *ap_list)
 {
 	UINT32 i;
 
 	if(ap_list)
 	{
+		sort_scan_result(ap_list);
+#if 0
 		os_printf("\r\n got %d AP\r\n", ap_list->scanu_num);
 		for(i = 0; i < ap_list->scanu_num; i++)
 		{
@@ -266,7 +287,7 @@ UINT32 mhdr_scanu_start_cfm(SCAN_RST_UPLOAD_T *ap_list)
 					  ap_list->res[i]->level,
 					  ap_list->res[i]->channel);
 		}
-		
+#endif
 		wpa_buffer_scan_results();
 	}
 
@@ -292,7 +313,7 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
     IEEE802_11_PROBE_RSP_PTR probe_rsp_ieee80211_ptr;
 	char on_channel;
 	int replace_index = -1;
-	
+
 	ret = RW_SUCCESS;
 	result_ptr = scan_rst;
 
@@ -357,6 +378,7 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
 	{
 		os_printf("NoSSid\r\n");
 	}
+
 	os_memcpy(item->bssid, probe_rsp_ieee80211_ptr->bssid, ETH_ALEN);
 	item->channel = chann;
 	item->beacon_int = probe_rsp_ieee80211_ptr->rsp.beacon_int;
@@ -369,6 +391,8 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
 	item->ie_len = vies_len;
 	os_memcpy(item + 1, var_part_addr, vies_len);
 
+	item->security = get_security_type_from_ie((u8 *)var_part_addr, vies_len, item->caps);
+	
 	if (replace_index >= 0) {
 		sr_free_result_item((UINT8 *)result_ptr->res[replace_index]);
 		result_ptr->res[replace_index] = item;

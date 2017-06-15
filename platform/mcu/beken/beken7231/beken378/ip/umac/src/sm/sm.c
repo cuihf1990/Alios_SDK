@@ -109,7 +109,7 @@ static void sm_bss_config_push(void *param)
 
 static void sm_deauth_cfm(void *env, uint32_t status)
 {
-    sm_disconnect_process(env, 0);
+    //sm_disconnect_process(env, 0);
 }
 
 static void sm_delete_resources(struct vif_info_tag *vif)

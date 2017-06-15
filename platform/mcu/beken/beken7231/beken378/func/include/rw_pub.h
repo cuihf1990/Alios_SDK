@@ -33,6 +33,7 @@ typedef struct sta_scan_res
     UINT16 beacon_int;
     UINT16 caps;
     int level;
+	int security; // security type
     UINT8 tsf[8];
     UINT32 ie_len;
     /* Followed by ie_len of IE data */

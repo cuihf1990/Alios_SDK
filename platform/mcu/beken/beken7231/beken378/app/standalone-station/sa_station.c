@@ -40,6 +40,13 @@
 extern struct mac_scan_result *scanu_search_by_ssid(struct mac_ssid const *ssid);
 
 static uint32_t sa_sta_rsp_word = 0;
+static int sta_inited = 0;
+
+int sa_sta_inited()
+{
+	return sta_inited;
+}
+
 void sa_sta_clear_rsp_word(void)
 {
 	sa_sta_rsp_word = 0;
@@ -314,6 +321,7 @@ return; // try it;
 void sa_station_init(void)
 {
     sa_station_cfg80211_init();
+	sta_inited = 1;
 }
 
 void sa_station_uninit(void)

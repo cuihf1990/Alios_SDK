@@ -718,6 +718,7 @@ struct assoc_ap_info{
 	u8 bssid[ETH_ALEN];
 	u8 chann;
 	int level;
+	int security;
 };
 
 #define HOSTAP_CRYPT_FLAG_SET_TX_KEY BIT(0)

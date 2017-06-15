@@ -168,6 +168,33 @@ void WifiStatusHandler(int status)
 	sim_yos_wifi_beken.ev_cb->stat_chg(&sim_yos_wifi_beken, status, NULL);
 }
 
+void ApListCallback(ScanResult *pApList)
+{
+	int i;
+	
+	printf("AP %d: \r\n", pApList->ApNum);
+	for(i=0; i<pApList->ApNum; i++) {
+		printf("\t %s rssi %d\r\n", pApList->ApList[i].ssid, pApList->ApList[i].ApPower);
+	}
+	if (sim_yos_wifi_beken.ev_cb == NULL)
+		return;
+	if (sim_yos_wifi_beken.ev_cb->scan_compeleted == NULL)
+		return;
+
+	sim_yos_wifi_beken.ev_cb->scan_compeleted(&sim_yos_wifi_beken, 
+		(hal_wifi_scan_result_t*)pApList, NULL);
+}
+
+void ApListAdvCallback(ScanResult_adv *pApAdvList)
+{
+	if (sim_yos_wifi_beken.ev_cb == NULL)
+		return;
+	if (sim_yos_wifi_beken.ev_cb->scan_adv_compeleted == NULL)
+		return;
+
+	sim_yos_wifi_beken.ev_cb->scan_adv_compeleted(&sim_yos_wifi_beken, 
+		(hal_wifi_ap_info_adv_t*)pApAdvList, NULL);
+}
 
 hal_wifi_module_t sim_yos_wifi_beken = {
     .base.name           = "sim_yos_wifi_beken",

@@ -447,6 +447,74 @@ int wpa_supplicant_scard_init(struct wpa_supplicant *wpa_s,
 
 #ifndef CONFIG_NO_SCAN_PROCESSING
 
+static const u8 * get_ie(u8 *ie_start, int len, u8 ie)
+{
+	const u8 *end, *pos;
+
+	pos = (const u8 *) ie_start;
+	end = pos + len;
+
+	while (pos + 1 < end) {
+		if (pos + 2 + pos[1] > end)
+			break;
+		if (pos[0] == ie)
+			return pos;
+		pos += 2 + pos[1];
+	}
+
+	return NULL;
+}
+
+const u8 * get_vendor_ie(u8 *ie_start, int len, u32 vendor_type)
+{
+	const u8 *end, *pos;
+
+	pos = (const u8 *) (ie_start);
+	end = pos + len;
+
+	while (pos + 1 < end) {
+		if (pos + 2 + pos[1] > end)
+			break;
+		if (pos[0] == WLAN_EID_VENDOR_SPECIFIC && pos[1] >= 4 &&
+		    vendor_type == WPA_GET_BE32(&pos[2]))
+			return pos;
+		pos += 2 + pos[1];
+	}
+
+	return NULL;
+}
+
+/* yhb added */
+int get_security_type_from_ie(u8 *ie_start, int len, u16 caps)
+{
+	const u8 *rsn_ie, *wpa_ie;
+	struct wpa_ie_data ie;
+
+	if ((caps & IEEE80211_CAP_PRIVACY) == 0)
+		return SECURITY_TYPE_NONE;
+
+	rsn_ie = get_ie(ie_start, len, WLAN_EID_RSN);
+	if (rsn_ie) {
+		if (wpa_parse_wpa_ie(rsn_ie, 2 + rsn_ie[1], &ie) == 0) {
+			if(ie.pairwise_cipher == (WPA_CIPHER_CCMP|WPA_CIPHER_TKIP))
+				return SECURITY_TYPE_WPA2_MIXED;
+			if(ie.pairwise_cipher == WPA_CIPHER_CCMP)
+				return SECURITY_TYPE_WPA2_AES;
+			if(ie.pairwise_cipher == WPA_CIPHER_TKIP)
+				return SECURITY_TYPE_WPA2_TKIP;
+		}
+	}
+	wpa_ie = get_vendor_ie(ie_start, len, WPA_IE_VENDOR_TYPE);
+	if (wpa_ie) {
+		if(ie.pairwise_cipher == WPA_CIPHER_CCMP)
+			return SECURITY_TYPE_WPA_AES;
+		if(ie.pairwise_cipher == WPA_CIPHER_TKIP)
+			return SECURITY_TYPE_WPA_TKIP;
+	}
+	
+	return SECURITY_TYPE_WEP;
+}
+
 static int has_wep_key(struct wpa_ssid *ssid)
 {
 	int i;
