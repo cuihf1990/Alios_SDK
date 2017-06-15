@@ -406,7 +406,7 @@ void app_start(void)
             THD_INIT_PRIORITY,
             "app", 
             init_app_thread, 
-            (unsigned short)0x1000,
+            (unsigned short)0x2000,
             0);
 }
 

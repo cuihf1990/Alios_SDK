@@ -424,7 +424,6 @@ static void alink_service_event(input_event_t *event, void *priv_data) {
         return;
     }
 
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     alink_start();
 }
 
