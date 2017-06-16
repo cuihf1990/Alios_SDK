@@ -24,7 +24,7 @@ LIBRARY_NAME:=$(LIBRARY_NAME).$(HOST_ARCH)
 CC :=
 
 include $(SOURCE_ROOT)build/yos_host_cmd.mk
-include $(SOURCE_ROOT)build/yos_toolchain_GCC.mk
+include $(SOURCE_ROOT)build/yos_toolchain_gcc.mk
 
 ifndef CC
 $(error No matching toolchain found for architecture $(HOST_ARCH))

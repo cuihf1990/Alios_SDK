@@ -95,7 +95,7 @@ ifneq ($(BUILD_STRING),)
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
  include $(MAKEFILES_PATH)/yos_toolchain_gcc.mk
 
-out/$(CLEANED_BUILD_STRING)/config.mk: $(SOURCE_ROOT)Makefile $(MAKEFILES_PATH)/yos_target_config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk $(MAKEFILES_PATH)/yos_toolchain_GCC.mk $(YOS_SDK_MAKEFILES)
+out/$(CLEANED_BUILD_STRING)/config.mk: $(SOURCE_ROOT)Makefile $(MAKEFILES_PATH)/yos_target_config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk $(MAKEFILES_PATH)/yos_toolchain_gcc.mk $(YOS_SDK_MAKEFILES)
 	$(QUIET)$(ECHO) $(if $(YOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
 	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/yos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
