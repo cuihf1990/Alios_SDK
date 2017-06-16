@@ -56,7 +56,7 @@ static void load_mac(void)
 	
 	if (system_mac[0] == 0xFF) 
 	{
-		memcpy(system_mac, DEFAULT_MAC_ADDR, 6);
+		os_memcpy(system_mac, DEFAULT_MAC_ADDR, 6);
 	}
 }
 

@@ -87,7 +87,7 @@ struct rxl_cntrl_env_tag rxl_cntrl_env;
 #include "lwip_intf.h"
 #endif
 
-static uint8_t rx_header[RXL_HEADER_INFO_LEN+2];
+static uint8_t rx_header[RXL_HEADER_INFO_LEN + 2];
 
 extern void bmsg_rx_sender(void *arg);
 
@@ -106,6 +106,15 @@ int rxl_data_monitor(uint8_t *payload,
 	}
 
 	return monitor_flag;
+}
+
+int rxl_data_is_agg(struct rx_hd *hd)
+{
+	struct rx_hd *hd_ptr = hd;
+	union rx_vector_1b *rxv_1b = (union rx_vector_1b *)&hd_ptr->recvec1b;
+
+	ASSERT(rxv_1b);
+	return rxv_1b->bits.is_agg;
 }
 
 int rxl_data_get_len_from_rx_rector(struct rx_hd *hd)
@@ -290,30 +299,41 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 		if(du_ptr)
 		{
 			#define MONITOR_PKT_FCS_LEN           4
+			uint32_t statinfo;
 			uint32_t len_from_vector;
 			
 			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
 			len_from_vector = rxl_data_get_len_from_rx_rector(&dma_hdrdesc->hd);
 			if(len_from_vector != du_len)
 			{
-				RXL_CNTRL_PRT("len_from_vector:%d:%d\r\n", len_from_vector, du_len);
-
 				do
 				{
+					statinfo = dma_hdrdesc->hd.statinfo;
 					if((du_len > len_from_vector)
-						|| (len_from_vector > 2000)
-						|| ((len_from_vector > du_len) 
-							&& ((len_from_vector - du_len) > MONITOR_PKT_FCS_LEN)))
+						|| (!(statinfo & RX_HD_GA_FRAME)))
 					{
 						break;
-					}					
+					}				
+
 					
-				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), len_from_vector);
+					if((len_from_vector > du_len) 
+								&& ((len_from_vector - du_len) > MONITOR_PKT_FCS_LEN))
+					{
+						//rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
+					}
+					else
+					{
+						rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), len_from_vector);
+					}
 				}while(0);
+
 			}
 			else
 			{
-				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
+				if(du_len >= 36)
+				{
+					rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
+				}
 			}		
 			
 			os_free(du_ptr);

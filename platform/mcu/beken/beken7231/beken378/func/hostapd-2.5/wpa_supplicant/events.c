@@ -589,7 +589,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 		 (ssid->key_mgmt & WPA_KEY_MGMT_IEEE8021X_NO_WPA));
 
 	rsn_ie = wpa_bss_get_ie(bss, WLAN_EID_RSN);
-	while ((ssid->proto & WPA_PROTO_RSN) && rsn_ie) {
+	while (rsn_ie) {
 		proto_match++;
 
 		if (wpa_parse_wpa_ie(rsn_ie, 2 + rsn_ie[1], &ie)) {
@@ -651,7 +651,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 	}
 
 	wpa_ie = wpa_bss_get_vendor_ie(bss, WPA_IE_VENDOR_TYPE);
-	while ((ssid->proto & WPA_PROTO_WPA) && wpa_ie) {
+	while (wpa_ie) {
 		proto_match++;
 
 		if (wpa_parse_wpa_ie(wpa_ie, 2 + wpa_ie[1], &ie)) {
