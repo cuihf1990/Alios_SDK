@@ -72,7 +72,7 @@ char *device_attr[] = {
 };
 
 void helper_api_test(void);
-int activate_button_pressed(void);
+void activate_button_pressed(void* arg);
 void cloud_connected(void) { 
     do_report();
     yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);    
@@ -254,7 +254,7 @@ static uint32_t work_time = 60*60*10*1000; //default work time 1ms
 static void do_report(void)
 {
     //TODO: async
-    yos_schedule_work(1000, (void *)activate_button_pressed,NULL,NULL,NULL);
+    yos_schedule_work(1000, activate_button_pressed, NULL, NULL, NULL);
     //activate_button_pressed();
     //helper_api_test();
 #ifdef RAW_DATA_DEVICE
@@ -328,7 +328,7 @@ void awss_demo(void)
 /* activate sample */
 char active_data_tx_buffer[128];
 #define ActivateDataFormat    "{\"ErrorCode\": { \"value\": \"%d\" }}"
-int activate_button_pressed(void)
+void activate_button_pressed(void* arg)
 {
     sprintf(active_data_tx_buffer, ActivateDataFormat, 1);
     printf("active send:%s", active_data_tx_buffer);
@@ -337,7 +337,6 @@ int activate_button_pressed(void)
     sprintf(active_data_tx_buffer, ActivateDataFormat, 0);
     printf("send:%s", active_data_tx_buffer);
     alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
-    return 0;
 }
 
 
