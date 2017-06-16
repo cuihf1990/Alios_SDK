@@ -19,6 +19,9 @@
 
 #include "yunit.h"
 #include "test_fw.h"
+#include <k_api.h>
+
+#define RHINO_TEST_TASK_PRI 9
 
 static int init(void)
 {
@@ -51,8 +54,12 @@ void rhino_ytest_fn(void)
 
 void test_rhino(void)
 {
+    uint8_t old_pri;
+    void *suite;
 
-    void* suite = yunit_add_test_suite("rhino", init, cleanup, setup, teardown);
+    yunos_task_pri_change(g_active_task, RHINO_TEST_TASK_PRI, &old_pri);
+
+    suite = yunit_add_test_suite("rhino", init, cleanup, setup, teardown);
 
     for (item = 0;; item++) {
         if ((test_fw_map[item].name == NULL) || (test_fw_map[item].fn == NULL)) {
