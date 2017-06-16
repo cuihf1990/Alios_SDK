@@ -49,7 +49,6 @@ typedef struct {
     ucontext_t  uctx;
     void        *real_stack;
     void        *real_stack_end;
-    void        *signal_stack;
     int          in_signals;
     int          int_lvl;
 #if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
@@ -200,9 +199,6 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tcb_ext->vid = VALGRIND_STACK_REGISTER(tcb_ext->real_stack, (char *)(tcb_ext->real_stack) + real_size);
 #endif
 
-    tcb_ext->signal_stack = yos_malloc(4096);
-    bzero(tcb_ext->signal_stack, 4096);
-
     YUNOS_CPU_INTRPT_DISABLE();
 
     int ret = getcontext(&tcb_ext->uctx);
@@ -238,7 +234,6 @@ void cpu_task_del_hook(ktask_t *tcb)
 #endif
     g_sched_lock++;
     yunos_queue_back_send(&g_dyn_queue, tcb_ext->real_stack);
-    yunos_queue_back_send(&g_dyn_queue, tcb_ext->signal_stack);
     g_sched_lock--;
 
 }
@@ -285,10 +280,6 @@ static void _cpu_task_switch(void)
 
     to_tcb = g_preferred_ready_task;
     to_tcb_ext = (task_ext_t *)to_tcb->task_stack;
-    stack_t stack = {
-        .ss_sp = to_tcb_ext->signal_stack,
-    };
-    sigaltstack(&stack, NULL);
     LOG("TASK SWITCH, '%-20s' (%d) -> '%-20s' (%d)\n",
         from_tcb->task_name, from_tcb->task_state,
         to_tcb->task_name, to_tcb->task_state);
@@ -373,15 +364,15 @@ void cpu_init_hook(void)
 {
     int              ret;
     struct sigaction tick_sig_action = {
-        .sa_flags = SA_ONSTACK | SA_SIGINFO,
+        .sa_flags = SA_SIGINFO,
         .sa_sigaction = cpu_sig_handler,
     };
     struct sigaction event_sig_action = {
-        .sa_flags = SA_ONSTACK | SA_SIGINFO,
+        .sa_flags = SA_SIGINFO,
         .sa_sigaction = cpu_sig_handler,
     };
     struct sigaction event_io_action = {
-        .sa_flags = SA_ONSTACK | SA_SIGINFO,
+        .sa_flags = SA_SIGINFO,
         .sa_sigaction = cpu_sig_handler,
     };
 
