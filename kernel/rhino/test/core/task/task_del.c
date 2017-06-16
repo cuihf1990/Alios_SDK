@@ -47,7 +47,11 @@ static void task_del_entry_2(void *arg)
 
 void task_del_test()
 {
+    uint8_t old_pri;
+
     test_case_check_err = 0;
+
+    yunos_task_pri_change(g_active_task, 9, &old_pri);
 
     if (yunos_task_dyn_create(&task_del_test_0, "task_del_test0", NULL, 7,
                               0, TASK_TEST_STACK_SIZE,
