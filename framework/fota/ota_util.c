@@ -16,7 +16,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <yos_version.h>
 
 #include "ota_transport.h"
 #include "ota_platform_os.h"
