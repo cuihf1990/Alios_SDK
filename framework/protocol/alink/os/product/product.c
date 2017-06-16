@@ -34,7 +34,7 @@ char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 
 char *product_get_version(char ver_str[PRODUCT_VERSION_LEN])
 {
-    return strncpy(ver_str, get_yos_os_version(), PRODUCT_VERSION_LEN);
+    return strncpy(ver_str, (const char *)get_yos_os_version(), PRODUCT_VERSION_LEN);
 }
 
 char *product_get_model(char model_str[PRODUCT_MODEL_LEN])
