@@ -362,19 +362,6 @@ void core_thread_uninit(void)
 }
 #endif
 
-extern void hw_start_hal(void);
-static void init_app_thread( void *arg )
-{
-    hw_start_hal();
-    yos_framework_init();
-
-#ifdef CONFIG_YOS_CLI
-    board_cli_init();
-#endif
-
-    application_start(0, NULL);
-}
-
 void app_start(void)
 {
     OSStatus ret; 
@@ -400,13 +387,6 @@ void app_start(void)
     ASSERT(kNoErr == ret);
 	
 	core_thread_init();
-
-	ret = mico_rtos_create_thread(NULL, 
-            THD_INIT_PRIORITY,
-            "app", 
-            init_app_thread, 
-            (unsigned short)0x2000,
-            0);
 }
 
 

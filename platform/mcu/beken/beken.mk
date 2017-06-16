@@ -138,7 +138,10 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/include \
                     beken7231/beken378/os/FreeRTOSv9.0.0
 
-$(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
+$(NAME)_SOURCES :=  yos/yos.c
+$(NAME)_INCLUDES += yos
+
+$(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/app/config/param_config.c \
                     beken7231/beken378/app/ftp/ftpd.c \
                     beken7231/beken378/app/ftp/vfs.c \
