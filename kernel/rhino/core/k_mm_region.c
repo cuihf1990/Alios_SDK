@@ -729,7 +729,10 @@ void *yunos_mm_alloc(size_t size)
     kstat_t err      = YUNOS_SUCCESS;
 
     size_t  alloctor = 0;
-
+    if(size == 0){
+        printf("WARNING, malloc size = 0\r\n");
+        return NULL;
+    }
 #if(YUNOS_CONFIG_GCC_RETADDR > 0)
     alloctor = (size_t)__builtin_return_address(3);
 #endif
