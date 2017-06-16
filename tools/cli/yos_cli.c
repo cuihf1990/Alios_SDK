@@ -17,9 +17,13 @@
 #include <k_api.h>
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
-#include "yos_cli.h"
+#include <yos/cli.h>
 
-#define MICO_CLI_ENABLE
+#define RET_CHAR        '\n'
+#define END_CHAR        '\r'
+#define PROMPT          "\r\n# "
+#define EXIT_MSG        "exit"
+
 #define DEBUG 1
 
 static void task_Command( char *pcWriteBuffer, int xWriteBufferLen, int argc,
@@ -475,7 +479,7 @@ void help_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     uint32_t build_in_count = sizeof(built_ins) / sizeof(struct cli_command);
 
 #if (DEBUG)
-    build_in_count++; //For command: micodebug
+    build_in_count++;
 #endif
 
     cli_printf( "====Build-in Commands====\r\n" );

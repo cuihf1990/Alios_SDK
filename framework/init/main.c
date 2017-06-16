@@ -3,9 +3,7 @@
 #include <vfs.h>
 #include <kvmgr.h>
 
-#ifdef CONFIG_YOS_CLI
-#include "yos_cli.h"
-#endif
+#include "yos/cli.h"
 
 int yos_framework_init(void)
 {
@@ -15,9 +13,7 @@ int yos_framework_init(void)
 
     yos_loop_init();
 
-#ifdef CONFIG_YOS_CLI
     yos_cli_init();
-#endif
 
     return 0;
 }

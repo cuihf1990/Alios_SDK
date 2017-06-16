@@ -1,28 +1,24 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
  *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-
-#ifndef __MICO_CLI_H__
-#define __MICO_CLI_H__
+#ifndef __YOS_CLI_H__
+#define __YOS_CLI_H__
 
 
 #define CLI_UART     0
-
-#define RX_WAIT         MICO_WAIT_FOREVER
-#define SEND_WAIT       MICO_WAIT_FOREVER
-
-#define RET_CHAR        '\n'
-#define END_CHAR        '\r'
-#define PROMPT          "\r\n# "
-#define EXIT_MSG        "exit"
-#define NUM_BUFFERS     1
 #define MAX_COMMANDS    64
 #define INBUF_SIZE      128
 #define OUTBUF_SIZE     2048
@@ -54,17 +50,19 @@ struct cli_st {
     char outbuf[OUTBUF_SIZE];
 } ;
 
-
-#define cmd_printf(...) do{\
-                                if (xWriteBufferLen > 0) {\
-                                    snprintf(pcWriteBuffer, xWriteBufferLen, __VA_ARGS__);\
-                                    xWriteBufferLen-= os_strlen(pcWriteBuffer);\
-                                    pcWriteBuffer+= os_strlen(pcWriteBuffer);\
-                                }\
-                             }while(0)
-
-
 #define CLI_ARGS char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
+
+#ifdef CONFIG_YOS_CLI
+
+#define cmd_printf(...) \
+    do {\
+        if (xWriteBufferLen > 0) {\
+            snprintf(pcWriteBuffer, xWriteBufferLen, __VA_ARGS__);\
+            xWriteBufferLen-= os_strlen(pcWriteBuffer);\
+            pcWriteBuffer+= os_strlen(pcWriteBuffer);\
+        }\
+    } while(0)
+
 
 /** Register a CLI command
  *
@@ -86,15 +84,13 @@ int cli_register_command(const struct cli_command *command);
  */
 int cli_unregister_command(const struct cli_command *command);
 
-
-
 /** Stop the CLI thread and carry out the cleanup
  *
  * \return kNoErr on success
  * \return error code otherwise.
  *
  */
-int cli_stop(void);
+int yos_cli_stop(void);
 
 /** Register a batch of CLI commands
  *
@@ -132,10 +128,6 @@ int cli_getchars(char *inbuf, int len);
 int cli_get_all_chars_len(void);
 int cli_getchars_prefetch(char *inbuf, int len);
 
-#ifdef CONFIG_PLATFORM_8195A
-#define cli_putstr printf
-#define cli_printf printf
-#else
 /* Send CLI output msg
  *
  * \param buff Pointer to a char * buffer.
@@ -143,11 +135,45 @@ int cli_getchars_prefetch(char *inbuf, int len);
  * \return error code otherwise.
  */
 int cli_printf(const char *buff, ...);
-#endif
 
-
-// library CLI APIs
+/* library CLI APIs
+ */
 int yos_cli_init(void);
+
+#else /* CONFIG_YOS_CLI */
+
+#define cmd_printf(...) do {} while(0)
+
+static inline int cli_register_command(const struct cli_command *command)
+{
+    return 0;
+}
+
+static inline int cli_unregister_command(const struct cli_command *command)
+{
+    return 0;
+}
+
+static inline int cli_register_commands(const struct cli_command *commands, int num_commands)
+{
+    return 0;
+}
+
+static inline int cli_unregister_commands(const struct cli_command *commands, int num_commands)
+{
+    return 0;
+}
+
+static inline int yos_cli_init(void)
+{
+    return 0;
+}
+
+static inline int yos_cli_stop(void)
+{
+    return 0;
+}
+#endif
 
 
 #endif
