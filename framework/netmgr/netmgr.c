@@ -19,6 +19,8 @@
 #include <stdbool.h>
 #include <yos/framework.h>
 #include <yos/log.h>
+#include <hal/wifi.h>
+#include <yos/cli.h>
 
 #include "netmgr.h"
 
@@ -348,14 +350,28 @@ static void read_persistent_conf(void)
     get_wifi_ssid();
 }
 
+static void handle_netmgr_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    netmgr_start(true);
+}
+
+static struct cli_command ncmd = {
+    .name = "netmgr",
+    .help = "netmgr [start]",
+    .function = handle_netmgr_cmd,
+};
+
 int netmgr_init(void)
 {
     hal_wifi_module_t *module;
 
+    yos_register_event_filter(EV_WIFI, netmgr_events_executor, NULL);
+    cli_register_command(&ncmd);
+
     module = hal_wifi_get_default_module();
     memset(&g_netmgr_cxt, 0, sizeof(g_netmgr_cxt));
     g_netmgr_cxt.wifi_hal_mod = module;
-#ifdef CONFIG_YWSS
+#if defined(CONFIG_YWSS) && !defined(CSP_LINUXHOST)
     add_autoconfig_plugin(&g_alink_smartconfig);
 #else
     add_autoconfig_plugin(&g_def_smartconfig);
@@ -370,16 +386,23 @@ void netmgr_deinit(void)
 {
 }
 
-int netmgr_start(void)
+int netmgr_start(bool autoconfig)
 {
-    yos_register_event_filter(EV_WIFI, netmgr_events_executor, NULL);
-
     if (has_valid_ap() == 1) {
         yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
-    } else {
-        netmgr_wifi_config_start();
+        return 0;
     }
-    return 0;
+
+#if !defined(CSP_LINUXHOST)
+    if (autoconfig) {
+#else
+    if (true) {
+#endif
+        netmgr_wifi_config_start();
+        return 0;
+    }
+
+    return -1;
 }
 
 static int def_smart_config_start(void)

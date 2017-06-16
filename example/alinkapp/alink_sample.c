@@ -462,7 +462,7 @@ int application_start(int argc, char *argv[])
     yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
 
     netmgr_init();
-    netmgr_start();
+    netmgr_start(false);
 
     yos_loop_run();
 

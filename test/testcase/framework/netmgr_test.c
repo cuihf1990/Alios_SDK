@@ -69,7 +69,7 @@ static void smart_config_test(void *arg)
     yos_unregister_event_filter(EV_WIFI, saved_config_event_executor, NULL);
     yos_register_event_filter(EV_WIFI, smart_config_event_executor, NULL);
     netmgr_init();
-    netmgr_start();
+    netmgr_start(true);
 }
 
 static void saved_config_test(void *arg)
@@ -77,7 +77,7 @@ static void saved_config_test(void *arg)
     yos_unregister_event_filter(EV_WIFI, smart_config_event_executor, NULL);
     yos_register_event_filter(EV_WIFI, saved_config_event_executor, NULL);
     netmgr_init();
-    netmgr_start();
+    netmgr_start(true);
 }
 
 static void test_netmgr_cases(void *arg)

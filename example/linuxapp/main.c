@@ -39,7 +39,7 @@ int application_start(void)
 
     netmgr_init();
 
-    netmgr_start();
+    netmgr_start(true);
 
     yos_task_new("appmain", app_main_entry, cookie, 8192);
     return 0;

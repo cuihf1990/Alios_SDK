@@ -18,9 +18,7 @@
 #define NETMGR_H
 
 #include <stdint.h>
-#include <hal/base.h>
-#include <hal/wifi.h>
-#include <yos/list.h>
+#include <stdbool.h>
 
 #if defined(__cplusplus)
 extern "C"
@@ -53,7 +51,7 @@ void netmgr_set_smart_config(autoconfig_plugin_t *plugin);
 
 int netmgr_init(void);
 void netmgr_deinit(void);
-int netmgr_start(void);
+int netmgr_start(bool autoconfig);
 
 #if defined(__cplusplus)
 }
