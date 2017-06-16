@@ -74,6 +74,8 @@ static int event_close(file_t *file)
     }
 
     yos_free(pdev);
+
+    return 0;
 }
 
 static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
