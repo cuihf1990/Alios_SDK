@@ -86,6 +86,8 @@ static void test_vcall_case(void)
     mico_rtos_enter_critical();
     mico_rtos_exit_critical();
 
+    mico_rtos_init_queue(&queue1, NULL, MSG_SIZE, 2);
+
     mico_rtos_create_thread(&task1, 10, NULL, task1_entry, 4096, 0);
     mico_rtos_create_thread(&task1, 30, "test", task1_entry, 4096, 0);
     mico_rtos_create_thread(NULL, 40, "test2", task2_entry, 4096, 0);
@@ -106,7 +108,6 @@ static void test_vcall_case(void)
     mico_rtos_unlock_mutex(&mutex1);
     mico_rtos_deinit_mutex(&mutex1);
 
-    mico_rtos_init_queue(&queue1, NULL, MSG_SIZE, 2);
     mico_rtos_pop_from_queue(&queue1, msg, 10000);
 
     YUNIT_ASSERT((msg[0] == 0x11) && (msg[MSG_SIZE -1] == 0x33));
