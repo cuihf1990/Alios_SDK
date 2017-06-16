@@ -152,7 +152,8 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
 #else
     plen += sprintf(buf + plen, "Max intrpt disable time :%-10d\r\n", 0);
 #endif
-    plen += sprintf(buf + plen, "---------------------------------------------\r\n");
+    plen += sprintf(buf + plen,
+                    "---------------------------------------------\r\n");
 
     return YUNOS_SUCCESS;
 }

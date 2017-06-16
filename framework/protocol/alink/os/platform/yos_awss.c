@@ -186,6 +186,7 @@ int platform_wifi_send_80211_raw_frame(_IN_ enum platform_awss_frame_type type,
     return -2;
 }
 
+#ifdef CONFIG_YWSS
 static int smart_config_start(void)
 {
     awss_start();
@@ -208,3 +209,4 @@ autoconfig_plugin_t g_alink_smartconfig = {
     .autoconfig_stop = smart_config_stop,
     .config_result_cb = smart_config_result_cb
 };
+#endif

@@ -10,7 +10,7 @@
 #include "rtos_pub.h"
 #include "error.h"
 
-#include "aos_cli.h"
+#include "yos_cli.h"
 #include "stdarg.h"
 
 #include "include.h"

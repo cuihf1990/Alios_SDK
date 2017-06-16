@@ -9,14 +9,15 @@
  */
 
 
+#include <stdlib.h>
+#include <stdio.h>
 #include "stdarg.h"
-
 #include <k_err.h>
 #include <yos/kernel.h>
 #include <k_api.h>
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
-#include "aos_cli.h"
+#include "yos_cli.h"
 
 #define MICO_CLI_ENABLE
 #define DEBUG 1
@@ -284,7 +285,7 @@ static void print_bad_command(char *cmd_string)
         char *c = cmd_string;
         cli_printf("command '");
         while (*c != '\0') {
-            if ((*c)>= 0x20 && (*c) <= 0x7f) {
+            if ((*c) >= 0x20 && (*c) <= 0x7f) {
                 cli_printf("%c", *c);
             } else {
                 cli_printf("\\0x%x", *c);
@@ -303,7 +304,7 @@ static void print_bad_command(char *cmd_string)
 * Input collectors handle their own lexical analysis and must pass complete
 * command lines to CLI.
 */
-static void cli_main( void * data )
+static void cli_main( void *data )
 {
     while (!cliexit) {
         int ret;
@@ -353,7 +354,7 @@ static void uptime_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 }
 
 //extern void tftp_ota( void );
-void tftp_ota_thread( void * arg )
+void tftp_ota_thread( void *arg )
 {
     //tftp_ota( );
     yos_task_exit(0);
@@ -576,7 +577,7 @@ __attribute__ ((weak)) int board_cli_init(void)
     return 0;
 }
 
-int cli_init(void)
+int yos_cli_init(void)
 {
     int ret;
 
@@ -595,7 +596,7 @@ int cli_init(void)
         goto init_general_err;
     }
 
-    ret = yos_task_new_ext("cli", cli_main, 0, 4096,YUNOS_CONFIG_USER_PRI_MAX);
+    ret = yos_task_new_ext("cli", cli_main, 0, 4096, YUNOS_CONFIG_USER_PRI_MAX);
     if (ret != YUNOS_SUCCESS) {
         cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);

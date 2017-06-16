@@ -312,10 +312,17 @@ void *platform_tcp_client_connect(_IN_ pplatform_netaddr_t netaddr)
         return PLATFORM_INVALID_FD;
     }
 
-    if (-1 == connect(sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in))) {
+    do {
+        int ret = connect(sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
+        if (ret == 0)
+            break;
+
+        if (errno == EINTR)
+            continue;
+
         platform_tcp_close((void *)sock);
         return PLATFORM_INVALID_FD;
-    }
+    } while(1);
 
     return (void *)sock;
 }
