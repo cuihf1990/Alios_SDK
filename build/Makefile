@@ -4,7 +4,7 @@ export YOS_SDK_VERSION_MAJOR    :=  3
 export YOS_SDK_VERSION_MINOR    :=  2
 export YOS_SDK_VERSION_REVISION :=  3
 
-export SOURCE_ROOT:=$(dir $(word $(words $(MAKEFILE_LIST)), $(MAKEFILE_LIST)))
+export SOURCE_ROOT ?= ./
 
 export MAKEFILES_PATH := $(SOURCE_ROOT)/build
 export SCRIPTS_PATH := $(SOURCE_ROOT)/build/scripts
@@ -95,7 +95,7 @@ ifneq ($(BUILD_STRING),)
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
  include $(MAKEFILES_PATH)/yos_toolchain_gcc.mk
 
-out/$(CLEANED_BUILD_STRING)/config.mk: $(SOURCE_ROOT)Makefile $(MAKEFILES_PATH)/yos_target_config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk $(MAKEFILES_PATH)/yos_toolchain_gcc.mk $(YOS_SDK_MAKEFILES)
+out/$(CLEANED_BUILD_STRING)/config.mk: $(MAKEFILES_PATH)/yos_target_config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk $(MAKEFILES_PATH)/yos_toolchain_gcc.mk $(YOS_SDK_MAKEFILES)
 	$(QUIET)$(ECHO) $(if $(YOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
 	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/yos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
