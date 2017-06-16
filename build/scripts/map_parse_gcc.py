@@ -19,8 +19,12 @@ with open(map_file, 'r') as f:
     rom_config = []
     for rom in rom_config_text:
         rom_config += [{'start':int(rom[0], 16), 'end':int(rom[0], 16) + int(rom[1], 16)}]
+
     # find the RAM configuration
     ram_config_text = re.findall('\w+\s+(0x\w+)\s+(0x\w+)\s+xrw\n',mem_config_text)
+    if (len(ram_config_text)+len(rom_config_text)) == 0:
+      ram_config_text = re.findall('\*default\*\s+(0x\w+)\s+(0x\w+)\n',mem_config_text)
+      print ('no definite address hint,using default mem configuration')
     # get every RAM configuration's  start - end address
     ram_config = []
     for ram in ram_config_text:
