@@ -21,6 +21,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <errno.h>
 
 #include <yos/kernel.h>
 #include <yos/list.h>
@@ -51,6 +52,7 @@ typedef struct {
     void        *real_stack_end;
     int          in_signals;
     int          int_lvl;
+    int          saved_errno;
 #if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
     int          vid;
 #endif
@@ -284,7 +286,11 @@ static void _cpu_task_switch(void)
         from_tcb->task_name, from_tcb->task_state,
         to_tcb->task_name, to_tcb->task_state);
 
+    /* save errno */
+    from_tcb_ext->saved_errno = errno;
     swapcontext(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
+    /* restore errno */
+    errno = from_tcb_ext->saved_errno;
 }
 
 void cpu_idle_hook(void)
