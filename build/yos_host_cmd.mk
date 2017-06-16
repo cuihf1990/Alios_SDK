@@ -1,12 +1,3 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
 TOOLS_ROOT ?= $(SOURCE_ROOT)build
 
 OPENOCD_PATH      := $(TOOLS_ROOT)/OpenOCD/
@@ -23,7 +14,7 @@ ifeq ($(HOST_OS),Win32)
 COMMON_TOOLS_PATH := $(TOOLS_ROOT)/cmd/win32/
 export SHELL       = cmd.exe
 EXECUTABLE_SUFFIX  := .exe
-OPENOCD_FULL_NAME := $(OPENOCD_PATH)Win32/openocd_mico.exe
+OPENOCD_FULL_NAME := $(OPENOCD_PATH)Win32/openocd.exe
 
 # Python
 ifneq ($(wildcard C:\Python34\python.exe),)
@@ -33,13 +24,8 @@ ifneq ($(wildcard C:\Python27\python.exe),)
 PYTHON_FULL_NAME := C:\Python27\python.exe
 endif
 
-ifneq ($(IAR),1)
 SLASH_QUOTE_START :=\"
 SLASH_QUOTE_END :=\"
-else
-SLASH_QUOTE_START :="\"
-SLASH_QUOTE_END :=\""
-endif
 
 ESC_QUOTE:="
 ESC_SPACE:=$(SPACE)
@@ -83,7 +69,7 @@ ifeq ($(HOST_OS),Linux32)
 COMMON_TOOLS_PATH := $(TOOLS_ROOT)/cmd/linux32/
 export SHELL       = $(COMMON_TOOLS_PATH)dash
 EXECUTABLE_SUFFIX  :=
-OPENOCD_FULL_NAME := "$(OPENOCD_PATH)Linux32/openocd_mico"
+OPENOCD_FULL_NAME := "$(OPENOCD_PATH)Linux32/openocd"
 SLASH_QUOTE_START :=\"
 SLASH_QUOTE_END   :=\"
 ESC_QUOTE         :=\"
@@ -126,7 +112,7 @@ ifeq ($(HOST_OS),Linux64)
 COMMON_TOOLS_PATH := $(TOOLS_ROOT)/cmd/linux64/
 export SHELL       = $(COMMON_TOOLS_PATH)dash
 EXECUTABLE_SUFFIX  :=
-OPENOCD_FULL_NAME := "$(OPENOCD_PATH)Linux64/openocd_mico"
+OPENOCD_FULL_NAME := "$(OPENOCD_PATH)Linux64/openocd"
 SLASH_QUOTE_START :=\"
 SLASH_QUOTE_END   :=\"
 ESC_QUOTE         :=\"
@@ -175,7 +161,7 @@ ifeq ($(HOST_OS),OSX)
 COMMON_TOOLS_PATH := $(TOOLS_ROOT)/cmd/osx/
 export SHELL       = $(COMMON_TOOLS_PATH)dash
 EXECUTABLE_SUFFIX  :=
-OPENOCD_FULL_NAME := "$(OPENOCD_PATH)OSX/openocd_mico"
+OPENOCD_FULL_NAME := "$(OPENOCD_PATH)OSX/openocd"
 SLASH_QUOTE_START :=\"
 SLASH_QUOTE_END   :=\"
 ESC_QUOTE         :=\"
@@ -225,8 +211,8 @@ MAKE    := "$(COMMON_TOOLS_PATH)make$(EXECUTABLE_SUFFIX)"
 BIN2C   := "$(COMMON_TOOLS_PATH)bin2c$(EXECUTABLE_SUFFIX)"
 
 
-SHOULD_I_WAIT_FOR_DOWNLOAD := $(filter download download_apps ota2_download ota2_factory_download, $(MAKECMDGOALS))
-BUILD_STRING ?= $(strip $(filter-out $(MAKEFILE_TARGETS) debug download download_apps download_only run terminal total, $(MAKECMDGOALS)))
+SHOULD_I_WAIT_FOR_DOWNLOAD := $(filter download, $(MAKECMDGOALS))
+BUILD_STRING ?= $(strip $(filter-out $(MAKEFILE_TARGETS) download run total, $(MAKECMDGOALS)))
 BUILD_STRING_TO_DIR = $(subst .,/,$(1))
 DIR_TO_BUILD_STRING = $(subst /,.,$(1))
 CLEANED_BUILD_STRING := $(BUILD_STRING)
@@ -264,74 +250,6 @@ SPACE +=
 # $(1) is a string to be escaped
 ESCAPE_BACKSLASHES =$(subst \,\\,$(1))
 
-
-# MXCHIP internal only - Add gerrit hook for changeid
-ifneq ($(wildcard $(TOOLS_ROOT)/style/gerrit_commit-msg),)
-ifneq ($(wildcard $(SOURCE_ROOT).git),)
-
-MXCHIP_INTERNAL :=NO
-
-TOOLCHAIN_HOOK_TARGETS += $(SOURCE_ROOT).git/hooks/commit-msg
-
-$(SOURCE_ROOT).git/hooks/commit-msg:  $(TOOLS_ROOT)/style/gerrit_commit-msg
-	$(QUIET)$(ECHO) Adding gerrit git hook
-	$(QUIET)$(CP) $(TOOLS_ROOT)/style/gerrit_commit-msg $(SOURCE_ROOT).git/hooks/commit-msg
-
-
-endif
-endif
-
-# MXCHIP internal only - Add git commit hook for style checker
-ifneq ($(wildcard $(TOOLS_ROOT)/style/git_style_checker.pl),)
-ifneq ($(wildcard $(TOOLS_ROOT)/style/pre-commit),)
-ifneq ($(wildcard $(SOURCE_ROOT).git),)
-
-TOOLCHAIN_HOOK_TARGETS += $(SOURCE_ROOT).git/hooks/pre-commit
-
-$(SOURCE_ROOT).git/hooks/pre-commit: $(TOOLS_ROOT)/style/pre-commit
-	$(QUIET)$(ECHO) Adding style checker git hook
-	$(QUIET)$(CP) $(TOOLS_ROOT)/style/pre-commit $(SOURCE_ROOT).git/hooks/pre-commit
-
-endif
-endif
-endif
-
-# MXCHIP internal only - Add git push hook for commit checker
-ifneq ($(wildcard $(TOOLS_ROOT)/style/git_commit_checker.pl),)
-ifneq ($(wildcard $(TOOLS_ROOT)/style/pre-push),)
-ifneq ($(wildcard $(SOURCE_ROOT).git),)
-
-TOOLCHAIN_HOOK_TARGETS += $(SOURCE_ROOT).git/hooks/pre-push
-
-$(SOURCE_ROOT).git/hooks/pre-push: $(TOOLS_ROOT)/style/pre-push
-	$(QUIET)$(ECHO) Adding commit checker git hook
-	$(QUIET)$(CP) $(TOOLS_ROOT)/style/pre-push $(SOURCE_ROOT).git/hooks/pre-push
-
-endif
-endif
-endif
-
-# MXCHIP internal only - Copy Eclipse .project file if it doesn't exist
-ifeq ($(wildcard $(SOURCE_ROOT)/.project),)
-ifneq ($(wildcard $(TOOLS_ROOT)/eclipse_project/$(HOST_OS)/.project),)
-
-$(info Copying Eclipse .project file to source tree root)
-
-$(shell $(CP) $(TOOLS_ROOT)/eclipse_project/$(HOST_OS)/.project $(SOURCE_ROOT) )
-
-endif
-endif
-# MXCHIP internal only - Copy Eclipse .cproject file if it doesn't exist
-ifeq ($(wildcard $(SOURCE_ROOT)/.cproject),)
-ifneq ($(wildcard $(TOOLS_ROOT)/eclipse_project/$(HOST_OS)/.cproject),)
-
-$(info Copying Eclipse .cproject file to source tree root)
-
-$(shell $(CP) $(TOOLS_ROOT)/eclipse_project/$(HOST_OS)/.cproject $(SOURCE_ROOT) )
-
-endif
-endif
-
 #########
 # Expand wildcard platform names.
 # Consider all platforms in platforms/* and platform/*/*
@@ -348,7 +266,7 @@ ${EXPANDED_PLATFORMS}
 endef
 
 ##########
-# Recurse directories to find valid MiCO components.
+# Recurse directories to find valid YOS components.
 # $(1) = starting directory
 # $(2) = name of variable to which to add components that are found
 define RECURSE_DIR_COMPONENT_SEARCH
@@ -371,6 +289,3 @@ endef
 # Strip duplicate items in list without sorting
 # $(1) = List of items to de-duplicate
 unique = $(eval seen :=)$(foreach _,$1,$(if $(filter $_,${seen}),,$(eval seen += $_)))${seen}
-
-
-CURRENT_MAKEFILE = $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))

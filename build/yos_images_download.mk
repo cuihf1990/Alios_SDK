@@ -1,13 +1,5 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-include $(MAKEFILES_PATH)/mico_partition.mk
-include $(MAKEFILES_PATH)/mico_flash_download_app.mk
+include $(MAKEFILES_PATH)/yos_partition.mk
+include $(MAKEFILES_PATH)/yos_flash_download_app.mk
 
 SFLASH_LOG_FILE      ?= $(BUILD_DIR)/sflash_writer.log
 SFLASH_REDIRECT	= > $(SFLASH_LOG_FILE)

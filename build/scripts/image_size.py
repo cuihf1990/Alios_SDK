@@ -1,10 +1,4 @@
 #! /usr/bin/env python
-# Copyright (C) 2015 Marvell International Ltd.
-# All Rights Reserved.
-
-# Load application to ram helper script
-# Note: sys.stdout.flush() and sys.stderr.flush() are required for proper
-# console output in eclipse
 
 import os, sys, getopt
 

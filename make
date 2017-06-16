@@ -1,12 +1,4 @@
 #!/bin/bash
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
 
 scriptname=${0##*/}
 scriptdir=${0%*$scriptname}
@@ -65,7 +57,5 @@ elif [ "${win32unamestr}" == "MinGW" ]; then
 
 else
 echo Unknown host! 
-echo Make sure you have extract the correct MiCoder tools under MiCO SDK
-echo For example, under macOS. You should extract MiCoder.OSX.tar.gz to "<MiCO_SDK>"/MiCoder
 fi
 

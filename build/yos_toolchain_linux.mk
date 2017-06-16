@@ -1,3 +1,5 @@
+ifneq ($(filter $(HOST_ARCH), linux),)
+
 PATH    := $(PATH):/bin:/usr/bin:/usr/local/bin
 CC      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gcc
 CXX     := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)g++
@@ -43,7 +45,7 @@ COMPILER_SPECIFIC_LINK_SCRIPT_DEFINE_OPTION =
 COMPILER_SPECIFIC_LINK_SCRIPT      =
 LINKER                             := $(CC)
 LINK_SCRIPT_SUFFIX                 := .ld
-TOOLCHAIN_NAME := HOSTGCC
+TOOLCHAIN_NAME := GCC
 OPTIONS_IN_FILE_OPTION    := @
 
 ENDIAN_CFLAGS_LITTLE   := -mlittle-endian
@@ -82,3 +84,5 @@ NM      := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)nm$(EXECUTABLE_SUFFIX)"
 LINK_OUTPUT_SUFFIX  :=.elf
 BIN_OUTPUT_SUFFIX :=.bin
 HEX_OUTPUT_SUFFIX :=.hex
+
+endif

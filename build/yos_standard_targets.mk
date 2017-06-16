@@ -1,12 +1,3 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
 .PHONY: bootloader download_bootloader total download_dct download kill_openocd
 
 EXTRA_PRE_BUILD_TARGETS  += bootloader
@@ -52,7 +43,7 @@ endif #$(findstring bootloader, $(BUILD_STRING))
 ifeq ($(BOOTLOADER_SUB_BUILD),1)
 bootloader:
 	$(QUIET)$(ECHO) Building Bootloader...
-	$(QUIET)$(MAKE) -r -f $(SOURCE_ROOT)Makefile $(BOOTLOADER_TARGET) -I$(OUTPUT_DIR)  SFLASH= EXTERNAL_MiCO_GLOBAL_DEFINES=$(EXTERNAL_MiCO_GLOBAL_DEFINES) SUB_BUILD=bootloader $(BOOTLOADER_REDIRECT)
+	$(QUIET)$(MAKE) -r -f $(SOURCE_ROOT)Makefile $(BOOTLOADER_TARGET) -I$(OUTPUT_DIR)  SFLASH= EXTERNAL_YOS_GLOBAL_DEFINES=$(EXTERNAL_YOS_GLOBAL_DEFINES) SUB_BUILD=bootloader $(BOOTLOADER_REDIRECT)
 	$(QUIET)$(ECHO) Finished Building Bootloader
 	$(QUIET)$(ECHO_BLANK_LINE)
 
@@ -118,8 +109,6 @@ download: download_app $(if $(findstring total,$(MAKECMDGOALS)), EXT_IMAGE_DOWNL
 
 kill_openocd:
 	$(KILL_OPENOCD)
-
-$(if $(RTOS),,$(error No RTOS specified. Options are: $(notdir $(wildcard kernel/*))))
 
 run: $(SHOULD_I_WAIT_FOR_DOWNLOAD)
 	$(QUIET)$(ECHO) Resetting target

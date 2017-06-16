@@ -1,26 +1,17 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
 default: Help
 
-export MiCO_SDK_VERSION_MAJOR    :=  3
-export MiCO_SDK_VERSION_MINOR    :=  2
-export MiCO_SDK_VERSION_REVISION :=  3
+export YOS_SDK_VERSION_MAJOR    :=  3
+export YOS_SDK_VERSION_MINOR    :=  2
+export YOS_SDK_VERSION_REVISION :=  3
 
 export SOURCE_ROOT:=$(dir $(word $(words $(MAKEFILE_LIST)), $(MAKEFILE_LIST)))
 
 export MAKEFILES_PATH := $(SOURCE_ROOT)/build
 export SCRIPTS_PATH := $(SOURCE_ROOT)/build/scripts
-MAKEFILE_TARGETS := clean release  # targets used by makefile 
+MAKEFILE_TARGETS := clean  # targets used by makefile 
 
-#define BUILD_STRING, MiCO toolchain commands on different hosts
-include $(MAKEFILES_PATH)/micoder_host_cmd.mk
+#define BUILD_STRING, YOS toolchain commands on different hosts
+include $(MAKEFILES_PATH)/yos_host_cmd.mk
 
 define USAGE_TEXT
 Aborting due to invalid targets
@@ -30,10 +21,8 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1]
 
   <target>
     One each of the following mandatory [and optional] components separated by '@'
-      * Application (apps in sub-directories are referenced by subdir.appname)
+      * Application (apps in example)
       * Board ($(filter-out common  include README.txt,$(notdir $(wildcard board/*))))
-      * [RTOS] ($(notdir $(wildcard MiCO/RTOS/*)))
-      * [Network Stack] ($(notdir $(wildcard MiCO/net/*)))
       * [debug | release] Building for debug or release configurations
 
   [download]
@@ -41,9 +30,6 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1]
 
   [run]
     Reset and run an application on the target hardware
-
-  [debug]
-    Connect to the target platform and run the debugger
 
   [total]
     Build all targets related to this application and board
@@ -57,23 +43,19 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1]
 
   Notes
     * Component names are case sensitive
-    * 'MiCO', 'FreeRTOS', 'Lwip' and 'debug' are reserved component names
+    * 'rhino' and 'debug' are reserved component names
     * Component names MUST NOT include space or '@' characters
     * Building for debug is assumed unless '@release' is appended to the target
 
   Example Usage
     Build for Debug
-      $> make application.wifi_uart@MK3165
-      $> make bootloader@MK3165@NoRTOS
+      $> make helloworld@mk108
 
     Build, Download and Run using the default USB-JTAG programming interface
-      $> make helloworld@MK3165 download run
+      $> make helloworld@mk108 download run
 
     Build for Release
-      $> make helloworld@MK3165@release
-
-    Build, Download and Debug using command line GDB
-      $> make helloworld@MK3165 download debug
+      $> make helloworld@mk108@release
 
     Reset and run an application on the target hardware
       $> make run
@@ -87,7 +69,7 @@ endef
 #                CHECK_HEADERS=1 : builds header files to test for their completeness
 ############################
 
-OPENOCD_LOG_FILE ?= out/openocd_log.txt
+OPENOCD_LOG_FILE ?= out/openocd.log
 DOWNLOAD_LOG := >> $(OPENOCD_LOG_FILE)
 
 BOOTLOADER_LOG_FILE ?= out/bootloader.log
@@ -96,7 +78,7 @@ export VERBOSE
 export SUB_BUILD
 export OPENOCD_LOG_FILE
 
-.PHONY: $(BUILD_STRING) main_app bootloader clean Help download total release download_dct copy_elf_for_eclipse run debug download_bootloader sflash_image .gdbinit factory_reset_dct sflash
+.PHONY: $(BUILD_STRING) main_app bootloader clean Help download total run download_bootloader .gdbinit
 
 Help: 
 	$(TOOLCHAIN_HOOK_TARGETS)
@@ -108,20 +90,14 @@ clean:
 	$(QUIET)$(RM) -rf .gdbinit
 	$(QUIET)$(ECHO) Done
 
-ifneq (,$(filter release,$(MAKECMDGOALS)))
-BUILD_STRING :=
-release:
-	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/release/release.mk $(filter-out release,$(MAKECMDGOALS))
-endif
-
 ifneq ($(BUILD_STRING),)
 -include out/$(CLEANED_BUILD_STRING)/config.mk
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
- include $(MAKEFILES_PATH)/micoder_toolchain_GCC.mk
+ include $(MAKEFILES_PATH)/yos_toolchain_gcc.mk
 
-out/$(CLEANED_BUILD_STRING)/config.mk: $(SOURCE_ROOT)Makefile $(MAKEFILES_PATH)/mico_target_config.mk $(MAKEFILES_PATH)/micoder_host_cmd.mk $(MAKEFILES_PATH)/micoder_toolchain_GCC.mk $(MiCO_SDK_MAKEFILES)
-	$(QUIET)$(ECHO) $(if $(MiCO_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
-	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/mico_target_config.mk $(CLEANED_BUILD_STRING)
+out/$(CLEANED_BUILD_STRING)/config.mk: $(SOURCE_ROOT)Makefile $(MAKEFILES_PATH)/yos_target_config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk $(MAKEFILES_PATH)/yos_toolchain_gcc.mk $(YOS_SDK_MAKEFILES)
+	$(QUIET)$(ECHO) $(if $(YOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
+	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/yos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
 
 
@@ -135,39 +111,16 @@ PASSDOWN_TARGETS := $(strip $(filter-out $(MAKEFILE_TARGETS) $(BUILD_STRING),$(M
 $(PASSDOWN_TARGETS):
 	@:
 
-$(BUILD_STRING): main_app $(if $(SFLASH),sflash_image) copy_elf_for_eclipse  $(if $(SUB_BUILD),,.gdbinit .openocd_cfg)
+$(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit)
 
-main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(MiCO_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/mico_target_build.mk
+main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/yos_target_build.mk
 	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
-	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/mico_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
+	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/yos_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
 	$(QUIET)$(ECHO) Build complete
 
 ifeq ($(SUB_BUILD),)
-.gdbinit: out/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/micoder_host_cmd.mk main_app
+.gdbinit: out/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk main_app
 	$(QUIET)$(ECHO) Making $@
 	$(QUIET)$(ECHO) set remotetimeout 20 > $@
 	$(QUIET)$(ECHO) $(GDBINIT_STRING) >> $@
-	
-.openocd_cfg: .gdbinit
-	$(QUIET)$(ECHO) Making $@
-	$(QUIET)$(ECHO) source [find $(OPENOCD_PATH)$(JTAG).cfg] > $@
-	$(QUIET)$(ECHO) source [find $(OPENOCD_PATH)$(HOST_OPENOCD).cfg] >> $@
-	$(QUIET)$(ECHO) source [find $(OPENOCD_PATH)$(HOST_OPENOCD)_gdb_jtag.cfg] >> $@
-	
 endif
-
-ifneq ($(SFLASH),)
-sflash_image: main_app
-	$(QUIET)$(ECHO) Building Serial Flash Image
-	$(QUIET)$(MAKE) $(SILENT) -f $(MAKEFILES_PATH)/mfg_image.mk $(SFLASH) FRAPP=$(CLEANED_BUILD_STRING) SFLASH=
-endif
-
-
-sflash: main_app
-	$(QUIET)$(ECHO) Building Serial Flash Image $@
-	$(QUIET)$(MAKE) $(SILENT) -f $(MAKEFILES_PATH)/mico_sflash.mk FRAPP=$(CLEANED_BUILD_STRING) $@
-
-sflash_download: main_app sflash
-	$(QUIET)$(ECHO) Downloading Serial Flash Image $@
-	$(QUIET)$(MAKE) $(SILENT) -f $(MAKEFILES_PATH)/mico_sflash.mk FRAPP=$(CLEANED_BUILD_STRING) $@
-

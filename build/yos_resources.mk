@@ -1,12 +1,3 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
 # filters for resources
 TEXT_FILTERS   := %.html %.htm %.txt %.eml %.js %.css %.dat %.cer %.pem %.json %.xml %.py %.key
 BINARY_FILTERS := %.jpg %.jpeg %.png %.ico %.gif %.bin %.flac
@@ -47,9 +38,9 @@ $(call RESOURCE_FILENAME, $(1)): $(1) $(STAGING_DIR).d | $(EXTRA_PRE_BUILD_TARGE
 
 $(patsubst %.c,%.o,$(call RESOURCE_FILENAME, $(1))): $(call RESOURCE_FILENAME, $(1))
 ifeq (IAR,$(TOOLCHAIN_NAME))
-	$(QUIET)$(CC) $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $(RESOURCE_CFLAGS) $(call ADD_COMPILER_SPECIFIC_STANDARD_CFLAGS, ) $($(1)_CFLAGS) -I$(SOURCE_ROOT)include/ -I$(SOURCE_ROOT)MiCO/WWD/include -o $$@ $$< >> $$(IAR_BUILD_RESULTS_FILE)
+	$(QUIET)$(CC) $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $(RESOURCE_CFLAGS) $(call ADD_COMPILER_SPECIFIC_STANDARD_CFLAGS, ) $($(1)_CFLAGS) -I$(SOURCE_ROOT)include/ -I$(SOURCE_ROOT)YOS/WWD/include -o $$@ $$< >> $$(IAR_BUILD_RESULTS_FILE)
 else
-	$(QUIET)$(CC) $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $(RESOURCE_CFLAGS) $(call ADD_COMPILER_SPECIFIC_STANDARD_CFLAGS, ) $($(1)_CFLAGS) -I$(SOURCE_ROOT)include/ -I$(SOURCE_ROOT)MiCO/WWD/include -o $$@ $$<
+	$(QUIET)$(CC) $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $(RESOURCE_CFLAGS) $(call ADD_COMPILER_SPECIFIC_STANDARD_CFLAGS, ) $($(1)_CFLAGS) -I$(SOURCE_ROOT)include/ -I$(SOURCE_ROOT)YOS/WWD/include -o $$@ $$<
 endif
 
 $(eval RESOURCE_OBJS += $(patsubst %.c,%.o,$(call RESOURCE_FILENAME, $(1))))
@@ -74,22 +65,22 @@ $(STAGING_DIR).d:
 # The repeated lines avoid line-too-long errors in windows
 $(OUTPUT_DIR)/libraries/resources.a: $$(RESOURCE_OBJS)
 	$(QUIET)$(RM) $$@
-	$$(if $$(wordlist 1,50,     $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_CREATE) $$@ $$(wordlist 1,50,     $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 51,100,   $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 51,100,   $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 101,150,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 101,150,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 151,200,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 151,200,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 201,250,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 201,250,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 251,300,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 251,300,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 301,350,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 301,350,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 351,400,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 351,400,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 401,450,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 401,450,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 451,500,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 451,500,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 501,550,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 501,550,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 551,600,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 551,600,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 601,650,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 601,650,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 651,700,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 651,700,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 701,750,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 701,750,  $$(RESOURCE_OBJS)))
-	$$(if $$(wordlist 751,1000, $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(MiCO_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 751,1000, $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 1,50,     $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_CREATE) $$@ $$(wordlist 1,50,     $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 51,100,   $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 51,100,   $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 101,150,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 101,150,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 151,200,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 151,200,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 201,250,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 201,250,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 251,300,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 251,300,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 301,350,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 301,350,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 351,400,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 351,400,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 401,450,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 401,450,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 451,500,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 451,500,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 501,550,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 501,550,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 551,600,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 551,600,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 601,650,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 601,650,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 651,700,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 651,700,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 701,750,  $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 701,750,  $$(RESOURCE_OBJS)))
+	$$(if $$(wordlist 751,1000, $$(RESOURCE_OBJS)),$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_ADD) $$@ $$(wordlist 751,1000, $$(RESOURCE_OBJS)))
 
 
 RESOURCE_HEADER_TARGET_CREATED := 1
@@ -125,7 +116,7 @@ download_all_resources: $(RESOURCES_DEPENDENCY) $(RESOURCE_DOWNLOADER_TARGET)
 	 $(OPENOCD_FULL_NAME) -f $(OPENOCD_PATH)$(JTAG).cfg -f $(OPENOCD_PATH)$(HOST_OPENOCD).cfg -f $($(SOURCE_ROOT)apps/waf/sflash_write/sflash_write.tcl -c "sflash_write_file $(FS_IMAGE) 0x0 $(PLATFORM)-$(BUS) 1 0" -c shutdown
 
 $(FS_IMAGE): $(RESOURCES_DEPENDENCY)
-	$(COMMON_TOOLS_PATH)mk_micofs32 $(FS_IMAGE) $(STAGING_DIR)
+	$(COMMON_TOOLS_PATH)mk_yosfs32 $(FS_IMAGE) $(STAGING_DIR)
 
 
 

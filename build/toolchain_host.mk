@@ -1,2 +1,0 @@
-CC      := gcc
-TOOLCHAIN_NAME := HOSTGCC

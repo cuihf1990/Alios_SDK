@@ -1,14 +1,4 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
-
-# Add MiCO image download script define
+# Add YOS image download script define
 BOOTLOADER_FIRMWARE_PARTITION_TCL          	:= 1
 APPLICATION_FIRMWARE_PARTITION_TCL        	:= 2
 ATE_FIRMWARE_PARTITION_TCL                 	:= 3
