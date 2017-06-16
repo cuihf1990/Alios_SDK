@@ -254,7 +254,7 @@ static uint32_t work_time = 60*60*10*1000; //default work time 1ms
 static void do_report(void)
 {
     //TODO: async
-    yos_schedule_work(1000,activate_button_pressed,NULL,NULL,NULL);
+    yos_schedule_work(1000, (void *)activate_button_pressed,NULL,NULL,NULL);
     //activate_button_pressed();
     //helper_api_test();
 #ifdef RAW_DATA_DEVICE
