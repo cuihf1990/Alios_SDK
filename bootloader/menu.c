@@ -34,20 +34,20 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "mico.h"
-#include "ymodem.h"
-#include "platform_config.h"
-#include "platform_internal.h"
-#include "StringUtils.h"
-#include "bootloader.h"
-#include <ctype.h>                    
+#include <stdio.h>
+#include "stdbool.h"
+#include "hal/soc/soc.h"
+#include "yos/debug.h"
+#include "yos/kernel.h"
+#include "board.h"    
+#include "ymodem.h"  
+#include "bootloader.h"            
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define CMD_STRING_SIZE       128
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-extern platform_flash_t platform_flash_peripherals[];
 
 uint8_t tab_1024[1024] =
 {
@@ -62,8 +62,8 @@ extern void getline (char *line, int n);          /* input line               */
 extern void startApplication( uint32_t app_addr );
 
 /* Private function prototypes -----------------------------------------------*/
-void SerialDownload(mico_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize);
-void SerialUpload(mico_flash_t flash, uint32_t flashdestination, char * fileName, int32_t maxRecvSize);
+void SerialDownload(hal_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize);
+void SerialUpload(hal_flash_t flash, uint32_t flashdestination, char * fileName, int32_t maxRecvSize);
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -123,7 +123,7 @@ exit:
 * @param  None
 * @retval None
 */
-void SerialDownload(mico_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize)
+void SerialDownload(hal_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize)
 {
   char Number[10] = "          ";
   int32_t Size = 0;
@@ -160,13 +160,13 @@ void SerialDownload(mico_flash_t flash, uint32_t flashdestination, int32_t maxRe
 * @param  None
 * @retval None
 */
-void SerialUpload(mico_flash_t flash, uint32_t flashdestination, char * fileName, int32_t maxRecvSize)
+void SerialUpload(hal_flash_t flash, uint32_t flashdestination, char * fileName, int32_t maxRecvSize)
 {
   uint8_t status = 0;
   uint8_t key;
   
   printf("Select Receive File\n\r");
-  MicoUartRecv( STDIO_UART, &key, 1, MICO_NEVER_TIMEOUT );
+  hal_uart_recv( STDIO_UART, &key, 1, NULL, YOS_WAIT_FOREVER );
   
   if (key == CRC16)
   {
@@ -189,16 +189,16 @@ void SerialUpload(mico_flash_t flash, uint32_t flashdestination, char * fileName
 * @param  None
 * @retval None
 */
-void Main_Menu(void)
+void menu_loop(void)
 {
   char cmdbuf [CMD_STRING_SIZE] = {0}, cmdname[15] = {0};     /* command input buffer        */
   int i, j;                                       /* index for command buffer    */
   char idStr[4], startAddressStr[10], endAddressStr[10], flash_dev_str[4];
   int32_t id, startAddress, endAddress;
   bool inputFlashArea = false;
-  mico_logic_partition_t *partition;
-  mico_flash_t flash_dev;
-  OSStatus err = kNoErr;
+  hal_logic_partition_t *partition;
+  hal_flash_t flash_dev;
+  int err = 0;
   
   while (1)  {                                    /* loop forever                */
     printf ("\n\rMXCHIP> ");
@@ -220,36 +220,36 @@ void Main_Menu(void)
     
     /***************** Command "0" or "BOOTUPDATE": Update the application  *************************/
     if(strcmp(cmdname, "BOOTUPDATE") == 0 || strcmp(cmdname, "0") == 0) {
-      partition = MicoFlashGetInfo( MICO_PARTITION_BOOTLOADER );
+      partition = hal_flash_get_info( HAL_PARTITION_BOOTLOADER );
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
         printf ("\n\rRead Bootloader...\n\r");
         SerialUpload( partition->partition_owner, partition->partition_start_addr, "BootLoaderImage.bin", partition->partition_length );
         continue;
       }
       printf ("\n\rUpdating Bootloader...\n\r");
-      err = MicoFlashDisableSecurity( MICO_PARTITION_BOOTLOADER, 0x0, partition->partition_length );
+      err = hal_flash_dis_secure( HAL_PARTITION_BOOTLOADER, 0x0, partition->partition_length );
       require_noerr( err, exit);
 
       SerialDownload( partition->partition_owner, partition->partition_start_addr, partition->partition_length );
     }
     
-    /***************** Command "1" or "FWUPDATE": Update the MICO application  *************************/
+    /***************** Command "1" or "FWUPDATE": Update the YOS application  *************************/
     else if(strcmp(cmdname, "FWUPDATE") == 0 || strcmp(cmdname, "1") == 0)	{
-      partition = MicoFlashGetInfo( MICO_PARTITION_APPLICATION );
+      partition = hal_flash_get_info( HAL_PARTITION_APPLICATION );
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
         printf ("\n\rRead application...\n\r");
         SerialUpload( partition->partition_owner, partition->partition_start_addr, "ApplicationImage.bin", partition->partition_length );
         continue;
       }
       printf ("\n\rUpdating application...\n\r");
-      err = MicoFlashDisableSecurity( MICO_PARTITION_APPLICATION, 0x0, partition->partition_length );
+      err = hal_flash_dis_secure( HAL_PARTITION_APPLICATION, 0x0, partition->partition_length );
       require_noerr( err, exit);
       SerialDownload( partition->partition_owner, partition->partition_start_addr, partition->partition_length ); 							   	
     }
     
     /***************** Command "2" or "DRIVERUPDATE": Update the RF driver  *************************/
     else if(strcmp(cmdname, "DRIVERUPDATE") == 0 || strcmp(cmdname, "2") == 0) {
-      partition = MicoFlashGetInfo( MICO_PARTITION_RF_FIRMWARE );
+      partition = hal_flash_get_info( HAL_PARTITION_RF_FIRMWARE );
       if( partition == NULL ){
         printf ("\n\rNo flash memory for RF firmware, exiting...\n\r");
         continue;
@@ -261,7 +261,7 @@ void Main_Menu(void)
         continue;
       }
       printf ("\n\rUpdating RF driver...\n\r");
-      err = MicoFlashDisableSecurity( MICO_PARTITION_RF_FIRMWARE, 0x0, partition->partition_length );
+      err = hal_flash_dis_secure( HAL_PARTITION_RF_FIRMWARE, 0x0, partition->partition_length );
       require_noerr( err, exit);
       SerialDownload( partition->partition_owner, partition->partition_start_addr, partition->partition_length );    
     }
@@ -269,22 +269,22 @@ void Main_Menu(void)
     /***************** Command "3" or "PARAUPDATE": Update the application  *************************/
     else if(strcmp(cmdname, "PARUPDATE") == 0 || strcmp(cmdname, "3") == 0)  {
       if (findCommandPara(cmdbuf, "id", idStr, 0) != -1){
-        if(Str2Int((uint8_t *)idStr, &id)==0 && id > 0 && id < MICO_PARTITION_MAX ){ //Found Flash start address
+        if(Str2Int((uint8_t *)idStr, &id)==0 && id > 0 && id < HAL_PARTITION_MAX ){ //Found Flash start address
           printf ("\n\rIllegal start address.\n\r");
           continue;
         }
-        partition = MicoFlashGetInfo( (mico_partition_t)id );
+        partition = hal_flash_get_info( (hal_partition_t)id );
       }else{
-        printf ("\n\rPlease input correct MiCO partition id.\n\r");
+        printf ("\n\rPlease input correct partition id.\n\r");
         continue;
       }
 
       if( findCommandPara(cmdbuf, "e", NULL, 0) != -1 ){
         printf( "\n\rErasing %s...\n\r", partition->partition_description );
 
-        err = MicoFlashDisableSecurity( (mico_partition_t)id, 0x0, partition->partition_length );
+        err = hal_flash_dis_secure( (hal_partition_t)id, 0x0, partition->partition_length );
         require_noerr( err, exit);
-        MicoFlashErase( (mico_partition_t)id, 0x0, partition->partition_length );
+        hal_flash_erase( (hal_partition_t)id, 0x0, partition->partition_length );
         continue;
       }
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
@@ -293,11 +293,11 @@ void Main_Menu(void)
         continue;
       }
       printf ("\n\rUpdating %s...\n\r", partition->partition_description );
-      err = MicoFlashDisableSecurity( (mico_partition_t)id, 0x0, partition->partition_length );
+      err = hal_flash_dis_secure( (hal_partition_t)id, 0x0, partition->partition_length );
       require_noerr( err, exit);
       SerialDownload( partition->partition_owner, partition->partition_start_addr, partition->partition_length );                        
     }
-    
+    #if 0
     /***************** Command "4" or "FLASHUPDATE": : Update the Flash  *************************/
     else if(strcmp(cmdname, "FLASHUPDATE") == 0 || strcmp(cmdname, "4") == 0) {
       if (findCommandPara(cmdbuf, "dev", flash_dev_str, 1) == -1  ){
@@ -309,7 +309,7 @@ void Main_Menu(void)
         printf ("\n\rDevice Number Err! Exiting...\n\r");
         continue;
       }
-      if( flash_dev >= MICO_FLASH_MAX ){
+      if( flash_dev >= HAL_FLASH_MAX ){
         printf ("\n\rDevice Err! Exiting...\n\r");
         continue;
       }
@@ -364,14 +364,14 @@ void Main_Menu(void)
       platform_flash_disable_protect( &platform_flash_peripherals[ flash_dev ], startAddress, endAddress );
       SerialDownload(flash_dev, startAddress, endAddress-startAddress+1);                           
     }
-    
+    #endif
     
     /***************** Command: MEMORYMAP *************************/
     else if(strcmp(cmdname, "MEMORYMAP") == 0 || strcmp(cmdname, "5") == 0)  {
       printf("\r");
-      for( i = 0; i <= MICO_PARTITION_MAX - 1; i++ ){
-        partition = MicoFlashGetInfo( (mico_partition_t)i );
-        if (partition->partition_owner == MICO_FLASH_NONE || partition->partition_description == NULL )
+      for( i = 0; i <= HAL_PARTITION_MAX - 1; i++ ){
+        partition = hal_flash_get_info( (hal_partition_t)i );
+        if (partition->partition_owner == HAL_FLASH_NONE || partition->partition_description == NULL )
             continue;
         printf( "|ID:%d| %11s |  Dev:%d  | 0x%08lx | 0x%08lx |\r\n", i, partition->partition_description, partition->partition_owner,
                partition->partition_start_addr, partition->partition_length);
@@ -380,7 +380,7 @@ void Main_Menu(void)
     /***************** Command: Excute the application *************************/
     else if(strcmp(cmdname, "BOOT") == 0 || strcmp(cmdname, "6") == 0)	{
       printf ("\n\rBooting.......\n\r");
-      partition = MicoFlashGetInfo( MICO_PARTITION_APPLICATION );
+      partition = hal_flash_get_info( HAL_PARTITION_APPLICATION );
       bootloader_start_app( partition->partition_start_addr );
     }
     
@@ -408,3 +408,10 @@ exit:
     continue;
   }
 }
+
+#if 1
+int32_t Ymodem_Receive (uint8_t *buf, hal_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize) { return 0; }
+void MicoSystemReboot(void) {}
+uint8_t Ymodem_Transmit (hal_flash_t flash, uint32_t flashdestination, const uint8_t* sendFileName, uint32_t sizeFile) { return 0; }
+void bootloader_start_app( uint32_t app_addr ) { }
+#endif

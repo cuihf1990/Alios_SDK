@@ -31,11 +31,14 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "mico.h"
+#include <stdio.h>
+#include "stdbool.h"
+#include "hal/soc/soc.h"
+#include "yos/debug.h"
+#include "yos/kernel.h"
+#include "board.h"    
 #include "ymodem.h"
-#include "string.h"
-#include "StringUtils.h"
-#include "CheckSumUtils.h"
+#include "bootloader.h" 
 
 extern const platform_flash_t platform_flash_peripherals[];
 

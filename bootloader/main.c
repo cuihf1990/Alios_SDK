@@ -29,33 +29,20 @@
  ******************************************************************************
  */
 
-
-#include "mico.h"
-#include "platform.h"
-#include "platform_internal.h"
-#include "platform_config.h"
+#include <ctype.h>
+#include "hal/soc/soc.h"
+#include "board.h"
 #include "bootloader.h"
 
-#define boot_log(M, ...) custom_log("BOOT", M, ##__VA_ARGS__)
-#define boot_log_trace() custom_log_trace("BOOT")
+extern void set_boot_ver(void);
+extern int update(void);
+#if STDIO_BREAK_TO_MENU
+extern int stdio_break_in(void);
+#endif
+extern void boot(void);
+extern void menu_loop(void);
 
-extern void Main_Menu(void);
-extern OSStatus update(void);
-
-#ifdef SIZE_OPTIMIZE
-char menu[] =
-"\r\n"
-"MICO bootloader for %s, %s, HARDWARE_REVISION: %s\r\n"
-"0:BOOTUPDATE,"
-"1:FWUPDATE,"
-"2:DRIVERUPDAT,"
-"3:PARAUPDATE,"
-"4:FLASHUPDATE,"
-"5:MEMORYMAP,"
-"6:BOOT,"
-"7:REBOOT";
-#else
-char menu[] =
+const char menu[] =
 "\r\n"
 "MICO bootloader for %s, %s, HARDWARE_REVISION: %s\r\n"
 "+ command -------------------------+ function ------------+\r\n"
@@ -68,9 +55,6 @@ char menu[] =
 "| 5:MEMORYMAP                      | List flash memory map|\r\n"
 "| 6:BOOT                           | Excute application   |\r\n"
 "| 7:REBOOT                         | Reboot               |\r\n"
-#ifdef MICO_USE_BT_PARTITION
-"| 8:BT DRIVERUPDATE  <-r>          | Update BT driver     |\r\n"
-#endif
 "+----------------------------------+----------------------+\r\n"
 "|    (C) COPYRIGHT 2015 MXCHIP Corporation  By William Xu |\r\n"
 " Notes:\r\n"
@@ -78,85 +62,29 @@ char menu[] =
 "  -start flash start address -end flash start address\r\n"
 " Example: Input \"4 -dev 0 -start 0x400 -end 0x800\": Update \r\n"
 "          flash device 0 from 0x400 to 0x800\r\n";
-#endif
-
-#ifdef MICO_ENABLE_STDIO_TO_BOOT
-extern int stdio_break_in(void);
-#endif
-
-static void enable_protection( void )
-{
-  mico_partition_t i;
-  mico_logic_partition_t *partition;
-
-  for( i = MICO_PARTITION_BOOTLOADER; i < MICO_PARTITION_MAX; i++ ){
-    partition = MicoFlashGetInfo( i );
-    if( PAR_OPT_WRITE_DIS == ( partition->partition_options & PAR_OPT_WRITE_MASK )  )
-      MicoFlashEnableSecurity( i, 0x0, MicoFlashGetInfo(i)->partition_length );
-  }
-}
-
-WEAK bool MicoShouldEnterBootloader( void )
-{
-  return false;
-}
-
-WEAK bool MicoShouldEnterMFGMode( void )
-{
-  return false;
-}
-
-WEAK bool MicoShouldEnterATEMode( void )
-{
-  return false;
-}
-
-void bootloader_start_app( uint32_t app_addr )
-{
-  enable_protection( );
-  startApplication( app_addr );
-}
-
 
 int main(void)
 {
-  mico_logic_partition_t *partition;
-  
-  init_clocks();
-  init_memory();
-  init_architecture();
-  init_platform_bootloader();
+  // set_boot_ver();
 
-  mico_set_bootload_ver();
-  
-  update();
+  // update();
 
-  enable_protection();
-
-#ifdef MICO_ENABLE_STDIO_TO_BOOT
-  if (stdio_break_in() == 1)
-    goto BOOT;
+#if STDIO_BREAK_TO_MENU
+  if (stdio_break_in())
+    goto MENU;
 #endif
-  
-  if( MicoShouldEnterBootloader() == false )
-    bootloader_start_app( (MicoFlashGetInfo(MICO_PARTITION_APPLICATION))->partition_start_addr );
-  else if( MicoShouldEnterMFGMode() == true )
-    bootloader_start_app( (MicoFlashGetInfo(MICO_PARTITION_APPLICATION))->partition_start_addr );
-  else if( MicoShouldEnterATEMode() ){
-    partition = MicoFlashGetInfo( MICO_PARTITION_ATE );
-    if (partition->partition_owner != MICO_FLASH_NONE) {
-      bootloader_start_app( partition->partition_start_addr );
-    }
-  }
 
-#ifdef MICO_ENABLE_STDIO_TO_BOOT
-BOOT:
+    // boot();
+
+#if STDIO_BREAK_TO_MENU
+  MENU:
 #endif
-  
+
   printf ( menu, MODEL, Bootloader_REVISION, HARDWARE_REVISION );
 
-  while(1){                             
-    Main_Menu ();
+  for(;;)
+  {                             
+    menu_loop();
   }
 }
 

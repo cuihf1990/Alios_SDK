@@ -29,7 +29,9 @@ MODULE               := MOC108
 HOST_ARCH            := ARM968E-S
 HOST_MCU_FAMILY      := beken
 
-$(NAME)_SOURCES := mk108.c
+$(NAME)_SOURCES := board.c
+
+GLOBAL_INCLUDES += .
 
 # Extra build target in mico_standard_targets.mk, include bootloader, and copy output file to eclipse debug file (copy_output_for_eclipse)
 EXTRA_TARGET_MAKEFILES +=  $(MAKEFILES_PATH)/yos_standard_targets.mk

@@ -28,21 +28,26 @@
 
 UINT32 func_init(void)
 {
+#ifndef YOS_NO_WIFI
 	cfg_param_init();
 	
     FUNC_PRT("[FUNC]rwnxl_init\r\n");
     rwnxl_init();
+#endif
 
 #if CFG_USE_TEMPERATURE_DETECT
     FUNC_PRT("[FUNC]temp_detect_init\r\n");
     temp_detect_init();
 #endif
+
+#ifndef YOS_NO_WIFI
 #if CFG_SUPPORT_CALIBRATION
     
 
     #ifndef KEIL_SIMULATOR
     calibration_main();
     #endif
+#endif
 #endif
 
 #if CFG_UART_DEBUG 

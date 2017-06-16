@@ -408,8 +408,10 @@ $(NAME)_SOURCES	 += hal/wdg.c \
                     hal/flash.c \
 					hal/uart.c \
 					hal/ringbuf.c \
+                    hal/StringUtils.c \
 					hal/wifi_port.c \
-                    port/ota_port.c
+                    port/ota_port.c \
+                    platform_init.c
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_SOURCES +=  beken7231/mesh_wifi_hal.c

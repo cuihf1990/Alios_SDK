@@ -25,17 +25,17 @@ NAME := APP_bootloader
 
 GLOBAL_INCLUDES := .
 
-$(NAME)_SOURCES := BootloaderEntrance.c \
-                   Getline.c \
-                   menu.c \
-                   Update_for_OTA.c \
-                   ymodem.c
+$(NAME)_SOURCES :=  main.c \
+                    menu.c \
+                    getline.c 
 
-$(NAME)_CFLAGS   += -Wno-char-subscripts
+# $(NAME)_SOURCES := BootloaderEntrance.c \
+#                    Getline.c \
+#                    menu.c \
+#                    Update_for_OTA.c \
+#                    ymodem.c
 
-GLOBAL_DEFINES := MICO_NO_WIFI
-
-NoRTOS_START_STACK  := 4000
+GLOBAL_DEFINES := YOS_NO_WIFI
 
 GLOBAL_LDFLAGS   += $$(CLIB_LDFLAGS_NANO)
 
