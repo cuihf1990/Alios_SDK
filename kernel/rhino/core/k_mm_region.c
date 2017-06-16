@@ -16,7 +16,7 @@
 
 #include <k_api.h>
 #include <assert.h>
-
+#include <stdio.h>
 
 kstat_t yunos_mm_region_init(k_mm_region_head_t *region_head,
                              k_mm_region_t *regions, size_t size)
