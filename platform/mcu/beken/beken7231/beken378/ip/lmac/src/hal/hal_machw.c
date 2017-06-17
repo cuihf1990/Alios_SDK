@@ -524,7 +524,7 @@ void hal_machw_enter_monitor_mode(void)
     // Enable reception of all frames (i.e. monitor mode)
     mm_rx_filter_umac_set(0xFFFFFFFF & ~(NXMAC_EXC_UNENCRYPTED_BIT
     									| NXMAC_ACCEPT_BAR_BIT 
-                                        //| NXMAC_ACCEPT_ERROR_FRAMES_BIT
+                                        | NXMAC_ACCEPT_ERROR_FRAMES_BIT
                                         | NXMAC_ACCEPT_BA_BIT 
                                         | NXMAC_ACCEPT_CTS_BIT
                                         | NXMAC_ACCEPT_RTS_BIT

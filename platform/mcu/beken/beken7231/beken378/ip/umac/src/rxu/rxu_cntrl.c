@@ -469,13 +469,16 @@ static void rxu_msdu_upload_and_indicate(struct rx_swdesc *p_rx_swdesc,
                           (rx_stat->dst_idx << RX_FLAGS_DST_INDEX_OFT);
     
     // Translate the MAC frame to an Ethernet frame
+#ifdef CONFIG_YOS_MESH
+    rxl_mpdu_transfer_mesh(p_rx_swdesc);
+#else
     if(!bk_wlan_is_monitor_mode())
 	{
 	    rxu_cntrl_mac2eth_update(p_rx_swdesc);
 	}
-    
     // Program the DMA transfer of the MPDU
-	rxl_mpdu_transfer(p_rx_swdesc);
+    rxl_mpdu_transfer(p_rx_swdesc);
+#endif
 }
 
 /**
@@ -507,7 +510,11 @@ static void rxu_mpdu_upload_and_indicate(struct rx_swdesc *p_rx_swdesc, uint8_t 
     	rxu_cntrl_remove_sec_hdr_mgmt_frame(p_rx_swdesc, rx_stat);
 	}
 
+#ifdef CONFIG_YOS_MESH
+    rxl_mpdu_transfer_mesh(p_rx_swdesc);
+#else
     rxl_mpdu_transfer(p_rx_swdesc);
+#endif
 }
 
 static void rxu_cntrl_get_da_sa(struct mac_hdr_long *machdr_ptr)
@@ -2018,8 +2025,20 @@ int rxu_mgt_monitor(uint16_t framectrl,
 	if(MAC_FCTRL_DATA_T != (framectrl & MAC_FCTRL_TYPE_MASK))
 	{
 		//os_printf("\r\n cmgt \r\n");
-		fn = bk_wlan_get_monitor_cb();		
-		(*fn)((uint8_t *)payload, length);
+#ifdef CONFIG_YOS_MESH
+                fn = bk_wlan_get_monitor_cb();
+                if (fn) {
+                    (*fn)((uint8_t *)payload, length);
+                }
+                fn = wlan_get_mesh_monitor_cb();
+                if (fn) {
+                    (*fn)((uint8_t *)payload, length);
+                }
+#else
+                fn = bk_wlan_get_monitor_cb();
+                (*fn)((uint8_t *)payload, length);
+
+#endif
 	}
 	else
 	{
