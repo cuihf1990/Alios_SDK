@@ -37,7 +37,7 @@ GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es
 
 ifneq ($(mico_lwip), 1)
-$(NAME)_COMPONENTS += kernel.protocols.net
+$(NAME)_COMPONENTS += protocols.net
 else
 GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/src/include
 endif

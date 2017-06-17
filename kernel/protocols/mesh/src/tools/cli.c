@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <yos/cli.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"
@@ -1124,6 +1125,17 @@ void ur_cli_input_args(char **argv, uint16_t argc)
     }
 }
 
+static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+{
+    ur_cli_input_args(argv, argc);
+}
+
+static struct cli_command ncmd = {
+    .name = "umesh",
+    .help = "umesh [cmd]",
+    .function = umesh_command,
+};
+
 int g_cli_silent;
 ur_error_t mesh_cli_init(void)
 {
@@ -1131,5 +1143,7 @@ ur_error_t mesh_cli_init(void)
     g_cl_state.icmp_socket = echo_socket(&cli_handle_echo_response);
     g_cl_state.autotest_udp_socket = autotest_udp_socket(&handle_udp_autotest,
                                                          AUTOTEST_UDP_PORT);
+
+    cli_register_command(&ncmd);
     return UR_ERROR_NONE;
 }
