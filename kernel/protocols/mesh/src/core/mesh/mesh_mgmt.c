@@ -1697,9 +1697,10 @@ static ur_error_t handle_advertisement(message_t *message)
     }
 
     if (mode->mode & MODE_SUPER) {
-        // mode super should be leader
-        if ((g_mm_state.device.mode & MODE_SUPER) == 0 &&
-            g_mm_state.device.state == DEVICE_STATE_LEADER) {
+        // mode leader or super should be leader
+        if (((g_mm_state.device.mode & MODE_SUPER) == 0 ||
+             (g_mm_state.device.mode & MODE_LEADER) == 0) &&
+             g_mm_state.device.state == DEVICE_STATE_LEADER) {
             become_detached();
             update_migrate_times(network, nbr);
             return UR_ERROR_NONE;
@@ -1793,6 +1794,12 @@ static ur_error_t handle_advertisement(message_t *message)
             }
         }
     }
+
+    if (g_mm_state.device.state == DEVICE_STATE_LEADER &&
+        (g_mm_state.device.mode & MODE_LEADER)) {
+        return UR_ERROR_NONE;
+    }
+
     update_migrate_times(network, nbr);
 
     return UR_ERROR_NONE;
@@ -1873,7 +1880,7 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
     return error;
 }
 
-ur_error_t umesh_mm_init(void)
+ur_error_t umesh_mm_init(node_mode_t mode)
 {
     ur_error_t error = UR_ERROR_NONE;
     ur_configs_t configs;
@@ -1897,7 +1904,7 @@ ur_error_t umesh_mm_init(void)
     ur_configs_read(&configs);
     nd_set_stable_main_version(configs.main_version);
 
-    g_mm_state.device.mode = MODE_RX_ON;
+    g_mm_state.device.mode = mode;
     if (get_hal_contexts_num() > 1) {
         g_mm_state.device.mode |= MODE_SUPER;
     }
@@ -1915,6 +1922,8 @@ ur_error_t umesh_mm_deinit(void)
 
 ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
 {
+    ur_error_t error = UR_ERROR_NONE;
+
     assert(mm_cb);
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "ur started\r\n");
@@ -1924,7 +1933,13 @@ ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
     g_mm_state.device.state = DEVICE_STATE_DETACHED;
     g_mm_state.callback = mm_cb;
     g_mm_state.device.alive_timer = NULL;
-    return nm_start_discovery();
+
+    if (g_mm_state.device.mode & MODE_LEADER) {
+        become_leader();
+    } else {
+        error = nm_start_discovery();
+    }
+    return error;
 }
 
 ur_error_t umesh_mm_stop(void)
@@ -2095,9 +2110,11 @@ uint16_t umesh_mm_get_channel(network_context_t *network)
 
 void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
 {
-    network = network ? : get_default_network_context();
-    hal_ur_mesh_set_bcast_channel(network->hal->module, channel);
-    network->channel = channel;
+    if ((g_mm_state.device.mode & MODE_LEADER) == 0) {
+        network = network ? : get_default_network_context();
+        hal_ur_mesh_set_bcast_channel(network->hal->module, channel);
+        network->channel = channel;
+    }
 }
 
 mm_device_state_t umesh_mm_get_device_state(void)

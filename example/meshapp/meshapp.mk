@@ -3,7 +3,7 @@ no_with_lwip := 0
 
 $(NAME)_SOURCES     := main.c
 
-$(NAME)_COMPONENTS  += protocols.net protocols.mesh
+$(NAME)_COMPONENTS  += protocols.net protocols.mesh cli
 GLOBAL_DEFINES      += TAPIF_DEFAULT_OFF
 
 ifneq (,$(filter linuxhost,$(COMPONENTS)))
