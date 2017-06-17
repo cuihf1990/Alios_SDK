@@ -53,6 +53,16 @@ extern int application_start(int argc, char **argv);
 
 static void app_entry(void *arg)
 {
+    yos_features_init();
+
+    trace_start(options.trace_flag);
+
+    hw_start_hal();
+
+    yos_framework_init();
+
+    ota_service_init();
+
     application_start(options.argc, options.argv);
 }
 
@@ -147,16 +157,6 @@ int main(int argc, char **argv)
 #endif
 
     yunos_init();
-
-    yos_features_init();
-
-    trace_start(options.trace_flag);
-
-    hw_start_hal();
-
-    yos_framework_init();
-
-    ota_service_init();
 
     start_app(argc, argv);
 
