@@ -24,7 +24,6 @@
 #include <k_api.h>
 #include <yos/log.h>
 #include <yos/kernel.h>
-#include <vflash.h>
 
 #include <arg_options.h>
 
@@ -66,13 +65,6 @@ int csp_get_args(const char ***pargv)
 {
     *pargv = (const char **)options.argv;
     return options.argc;
-}
-
-static void register_devices(void)
-{
-    int i;
-    for (i=0;i<10;i++)
-        vflash_register_partition(i);
 }
 
 void yos_features_init(void)
@@ -163,8 +155,6 @@ int main(int argc, char **argv)
     hw_start_hal();
 
     yos_framework_init();
-
-    register_devices();
 
     ota_service_init();
 
