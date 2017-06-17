@@ -59,7 +59,6 @@ static autoconfig_plugin_t g_def_smartconfig;
 
 static void netmgr_wifi_config_start(void);
 static void add_autoconfig_plugin(autoconfig_plugin_t *plugin);
-static void del_first_autoconfig_plugin(void);
 static int32_t has_valid_ap(void);
 
 static void format_ip(uint32_t ip, char *buf)
@@ -294,11 +293,6 @@ static void add_autoconfig_plugin(autoconfig_plugin_t *plugin)
 {
     plugin->next = g_netmgr_cxt.autoconfig_chain;
     g_netmgr_cxt.autoconfig_chain = plugin;
-}
-
-static void del_first_autoconfig_plugin(void)
-{
-    g_netmgr_cxt.autoconfig_chain = g_netmgr_cxt.autoconfig_chain->next;
 }
 
 int  netmgr_get_ap_config(netmgr_ap_config_t *config)

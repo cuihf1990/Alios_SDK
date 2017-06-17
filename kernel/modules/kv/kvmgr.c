@@ -138,7 +138,7 @@ static int load_kvfile(const char *file, char *buffer, int buffer_len)
 {
     int fsize = 0;
     uint32_t header_size = 0, kvdata_size = 0;
-    int fd;
+    int fd = -1;
     uint32_t crc32_value;
     char *kv_header, *p;
 
@@ -383,7 +383,6 @@ static int load_key_value(const char *file)
 {
     char *key, *value, *p, *kv_buffer;
     int fsize, len;
-    uint32_t crc32_value;
     int ret = -1;
 
     kv_buffer = (char *)yos_malloc(KV_BUFFER_SIZE);

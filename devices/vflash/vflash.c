@@ -2,6 +2,7 @@
 #include <string.h>
 #include <vfs_driver.h>
 #include <hal/soc/flash.h>
+#include <yos/kernel.h>
 
 static int flash_open(inode_t *node, file_t *file)
 {
