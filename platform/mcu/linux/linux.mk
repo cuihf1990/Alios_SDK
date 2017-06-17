@@ -2,6 +2,7 @@ HOST_OPENOCD := linux
 
 NAME := linuximpl
 ARCH_LINUX := ../../arch/linux/
+no_with_lwip ?= 1
 
 GLOBAL_INCLUDES += . $(ARCH_LINUX)
 

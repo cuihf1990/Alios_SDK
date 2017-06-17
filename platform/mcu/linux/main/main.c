@@ -79,7 +79,7 @@ int csp_get_args(const char ***pargv)
 
 void yos_features_init(void)
 {
-#ifdef WITH_LWIP
+#ifdef CONFIG_NET_LWIP
     if (options.lwip.enable) {
         yunos_lwip_init(options.lwip.tapif);
     }
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     options.argc        = argc;
     options.argv        = argv;
     options.lwip.enable = true;
-#ifdef TAPIF_DEFAULT_OFF
+#if defined(TAPIF_DEFAULT_OFF) || !defined(WITH_LWIP)
     options.lwip.tapif  = false;
 #else
     options.lwip.tapif  = true;
