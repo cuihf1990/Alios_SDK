@@ -47,7 +47,7 @@ static int open_flash(int pno, bool w)
     return flash_fd;
 }
 
-int hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,uint32_t buf_size)
+int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,uint32_t buf_size)
 {
     int flash_fd = open_flash(pno, true);
     if (flash_fd < 0)
@@ -63,7 +63,7 @@ int hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,uint32
     return ret < 0 ? ret : 0;
 }
 
-int hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_size)
+int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_size)
 {
     int flash_fd = open_flash(pno, false);
     if (flash_fd < 0)
@@ -77,6 +77,12 @@ int hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_
     close(flash_fd);
 
     return ret < 0 ? ret : 0;
+}
+
+int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set,
+                        uint32_t size)
+{
+    return 0;
 }
 
 #define us2tick(us) \
