@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <vfs_driver.h>
 #include <hal/soc/flash.h>
 
