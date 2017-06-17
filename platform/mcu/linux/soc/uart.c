@@ -55,6 +55,11 @@ static void uartsigHandler(int sig)
     raise(sig);
 }
 
+static void exit_cleanup(void)
+{
+    tcsetattr(0, TCSANOW, &term_orig);
+}
+
 int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
 {
     _uart_drv_t *pdrv = &_uart_drv[0];
@@ -70,6 +75,7 @@ int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
         tcsetattr(0, TCSANOW, &term_vi);
         signal(SIGTERM, uartsigHandler);
         signal(SIGINT,  uartsigHandler);
+        atexit(exit_cleanup);
     }
     return 0;
 }
