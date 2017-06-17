@@ -111,10 +111,10 @@ int platform_sys_net_is_ready(void)
 
     ret = hal_wifi_get_link_stat(NULL, &link_stat);
     if (ret != 0) {
-        return 1;
+        return 0;
     }
 
-    return ((link_stat.is_connected == 1) ? 0 : 1);
+    return !!link_stat.is_connected;
 }
 
 void platform_sys_reboot(void)
