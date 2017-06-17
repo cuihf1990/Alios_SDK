@@ -68,12 +68,22 @@
 
 /// RX filter for active mode (i.e. not monitoring)
 #if CFG_MODE_SWITCH
+#ifdef CONFIG_YOS_MESH
+#define MM_RX_FILTER_ACTIVE (NXMAC_ACCEPT_MULTICAST_BIT | NXMAC_ACCEPT_BROADCAST_BIT | \
+                             NXMAC_ACCEPT_MY_UNICAST_BIT | \
+                             NXMAC_ACCEPT_BEACON_BIT | NXMAC_ACCEPT_OTHER_MGMT_FRAMES_BIT | \
+                             NXMAC_ACCEPT_BAR_BIT | NXMAC_ACCEPT_BA_BIT |                \
+                             NXMAC_ACCEPT_DATA_BIT | NXMAC_ACCEPT_Q_DATA_BIT |           \
+                             NXMAC_ACCEPT_QO_S_NULL_BIT | NXMAC_ACCEPT_OTHER_DATA_FRAMES_BIT| \
+                             NXMAC_ACCEPT_OTHER_BSSID_BIT)
+#else
 #define MM_RX_FILTER_ACTIVE (NXMAC_ACCEPT_MULTICAST_BIT | NXMAC_ACCEPT_BROADCAST_BIT | \
                              NXMAC_ACCEPT_MY_UNICAST_BIT | \
                              NXMAC_ACCEPT_BEACON_BIT | NXMAC_ACCEPT_OTHER_MGMT_FRAMES_BIT | \
                              NXMAC_ACCEPT_BAR_BIT | NXMAC_ACCEPT_BA_BIT |                \
                              NXMAC_ACCEPT_DATA_BIT | NXMAC_ACCEPT_Q_DATA_BIT |           \
                              NXMAC_ACCEPT_QO_S_NULL_BIT | NXMAC_ACCEPT_OTHER_DATA_FRAMES_BIT)                             
+#endif
 #else
 #if CFG_WIFI_AP_MODE
 #define MM_RX_FILTER_ACTIVE (NXMAC_ACCEPT_MULTICAST_BIT | NXMAC_ACCEPT_BROADCAST_BIT | \

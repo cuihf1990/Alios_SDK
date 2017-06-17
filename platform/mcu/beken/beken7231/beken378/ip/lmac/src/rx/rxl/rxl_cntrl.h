@@ -226,6 +226,11 @@ void rxl_current_desc_get(struct rx_hd **rhd, struct rx_pbd **rbd);
  ****************************************************************************************
  */
 void rxl_mpdu_transfer(struct rx_swdesc *swdesc);
+
+#ifdef CONFIG_YOS_MESH
+void rxl_mpdu_transfer_mesh(struct rx_swdesc *swdesc);
+#endif
+
 #endif // _RXL_CNTRL_H_
 // eof
 
