@@ -15,6 +15,10 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
 $(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
 
+GLOBAL_DEFINES += CONFIG_YOS_KVFILE=\"/dev/flash6\"
+GLOBAL_DEFINES += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash7\"
+GLOBAL_DEFINES += CONFIG_YOS_KV_BUFFER_SIZE=4096
+
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
                  -marm \
