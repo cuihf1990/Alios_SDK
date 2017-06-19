@@ -64,28 +64,6 @@ extern void test_mtbf_task_start(void);
 
 static int test_cnt;
 
-extern void bk_send_byte(UINT8 data);
-
-_ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
-{
-    int i;
-    UINT8 *t;
-    t = buf;
-
-    if (fd == 1) {
-        for (i = 0; i < len; i++) {
-
-            if (t[i] == '\n')
-                bk_send_byte('\r');
-            bk_send_byte(*(t + i));
-        }
-
-        return len;
-    }
-
-    return 0;
-}
-
 void task_test3(void *arg)
 {
 	mico_semaphore_t sem;
@@ -117,12 +95,16 @@ void soc_system_init(void)
 
     fclk_init();
 
+    hal_init();
+
+#ifndef YOS_NO_WIFI
     app_start();
 
     hw_start_hal();
 
 #ifdef CONFIG_YOS_CLI
     board_cli_init();
+#endif
 #endif
 }
 

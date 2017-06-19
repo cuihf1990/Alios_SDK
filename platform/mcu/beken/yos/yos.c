@@ -28,9 +28,13 @@ static void yos_init(void)
 {
     soc_system_init();
 
+#ifdef BOOTLOADER
+    main();
+#else
     yos_framework_init();
 
     application_start(0, NULL);
+#endif
 }
 
 void yos_start(void)

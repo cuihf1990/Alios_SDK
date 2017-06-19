@@ -29,10 +29,9 @@
  ******************************************************************************
  */
 
-#include <stdio.h>
-#include "common.h"                     /* global project definition file   */
-#include "mico.h"
-#include "platform_config.h"
+#include "hal/soc/soc.h"
+#include "yos/kernel.h"
+#include "board.h"
 
 #define CNTLQ      0x11
 #define CNTLS      0x13
@@ -40,10 +39,11 @@
 #define BACKSPACE  0x08
 #define CR         0x0D
 #define LF         0x0A
+#define SPACE      0x20
 
 static void uart_putchar( int c )
 {
-  MicoUartSend( STDIO_UART, &c, 1 );
+  hal_uart_send( STDIO_UART, &c, 1 );
 }
 
 /***************/
@@ -54,7 +54,7 @@ void getline (char *line, int n)  {
   char c;
 
   do  {
-    MicoUartRecv( STDIO_UART, &c, 1, MICO_NEVER_TIMEOUT );
+    hal_uart_recv( STDIO_UART, &c, 1, NULL, YOS_WAIT_FOREVER);
     if (c == CR)  c = LF;     /* read character                 */
     if (c == BACKSPACE  ||  c == DEL)  {    /* process backspace              */
       if (cnt != 0)  {
@@ -74,21 +74,24 @@ void getline (char *line, int n)  {
   *(line - 1) = 0;                          /* mark end of string             */
 }
 
-#ifdef MICO_ENABLE_STDIO_TO_BOOT
+#ifdef STDIO_BREAK_TO_MENU
 int stdio_break_in(void)
 {
     uint8_t c;
     int i, j;
     
-    for(i=0, j=0;i<10;i++) {
-      if (kNoErr != MicoUartRecv( STDIO_UART, &c, 1, 10)) 
+    for(i=0, j=0; i<10; i++)
+    {
+      if (0 != hal_uart_recv( STDIO_UART, &c, 1, NULL, 100)) 
         continue;
 
-      if (c == 0x20) {
-        j++;
-        if (j > 3)
+      if (c == SPACE) 
+      {
+        if (j++ > 3)
           return 1; 
-      } else {
+      } 
+      else 
+      {
         j = 0;
       }
     }

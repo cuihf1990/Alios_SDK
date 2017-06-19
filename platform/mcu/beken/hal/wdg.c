@@ -20,7 +20,7 @@ void hal_wdg_reload(void)
 
 int32_t hal_wdg_finalize(void)
 {
-	uint32_t para;
+    uint32_t para;
 
     para = PWD_ARM_WATCHDOG_CLK_BIT;
     icu_ctrl(CMD_CLK_PWR_DOWN, &para);

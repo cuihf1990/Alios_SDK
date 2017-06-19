@@ -415,7 +415,7 @@ void reboot(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 
     cli_printf("reboot\r\n");
 
-    (*reboot)();
+    hal_reboot();
 }
 
 static void echo_cmd_handler(char *pcWriteBuffer, int xWriteBufferLen, int argc,

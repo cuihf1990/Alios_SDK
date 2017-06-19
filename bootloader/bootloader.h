@@ -36,6 +36,8 @@
 extern "C" {
 #endif
 
+#define STDIO_BREAK_TO_MENU 0
+
 #define Bootloader_REVISION "v3.0"
   
 void bootloader_start_app( uint32_t app_addr );

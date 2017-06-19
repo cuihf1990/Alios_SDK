@@ -117,10 +117,12 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
 
     for(addr = start_addr; addr <= end_addr; addr += SECTOR_SIZE)
     {
+        hal_wdg_reload();
         GLOBAL_INT_DISABLE();
         flash_ctrl(CMD_FLASH_ERASE_SECTOR, &addr);
         GLOBAL_INT_RESTORE();
     }
+    hal_wdg_reload();
     
     return 0;
 }
@@ -136,9 +138,11 @@ int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set, const v
 
     start_addr = partition_info->partition_start_addr + *off_set;
 
+    hal_wdg_reload();
     GLOBAL_INT_DISABLE();
     flash_write(in_buf, in_buf_len, start_addr);
     GLOBAL_INT_RESTORE();
+    hal_wdg_reload();
 
     *off_set += in_buf_len;
 
@@ -156,9 +160,11 @@ int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set, void *ou
 
     start_addr = partition_info->partition_start_addr + *off_set;
 
+    hal_wdg_reload();
     GLOBAL_INT_DISABLE();
     flash_read(out_buf, out_buf_len, start_addr);
     GLOBAL_INT_RESTORE();
+    hal_wdg_reload();
 
     *off_set += out_buf_len;
 

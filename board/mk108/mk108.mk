@@ -29,7 +29,9 @@ MODULE               := MOC108
 HOST_ARCH            := ARM968E-S
 HOST_MCU_FAMILY      := beken
 
-$(NAME)_SOURCES := mk108.c
+$(NAME)_SOURCES := board.c
+
+GLOBAL_INCLUDES += .
 
 CURRENT_TIME = $(shell date +%Y%m%d.%H%M)
 define get-os-version

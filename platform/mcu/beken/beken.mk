@@ -15,6 +15,7 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
 $(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
 
+GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_YOS_KVFILE=\"/dev/flash6\"
 GLOBAL_DEFINES += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash7\"
 GLOBAL_DEFINES += CONFIG_YOS_KV_BUFFER_SIZE=4096
@@ -49,7 +50,11 @@ GLOBAL_LDFLAGS += -mcpu=arm968e-s \
                  --specs=nosys.specs \
                  -nostartfiles
 
+ifeq ($(APP),bootloader)
+GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_boot.ld
+else
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231.ld
+endif
 
 GLOBAL_LDFLAGS += -Wl,-wrap,_malloc_r -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,_free_r -Wl,-wrap,_realloc_r 
 $(NAME)_INCLUDES := beken7231/beken378/ip/common \
@@ -414,8 +419,10 @@ $(NAME)_SOURCES	 += hal/wdg.c \
                     hal/flash.c \
 					hal/uart.c \
 					hal/ringbuf.c \
+                    hal/StringUtils.c \
 					hal/wifi_port.c \
-                    port/ota_port.c
+                    port/ota_port.c \
+                    platform_init.c
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_SOURCES +=  beken7231/mesh_wifi_hal.c

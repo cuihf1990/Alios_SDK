@@ -35,8 +35,6 @@
 #define __YMODEM_H_
 
 /* Includes ------------------------------------------------------------------*/
-#include "platform.h"
-#include "common.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -67,8 +65,8 @@
 #define MAX_ERRORS              (20)
 
 /* Exported functions ------------------------------------------------------- */
-int32_t Ymodem_Receive (uint8_t *buf, mico_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize);
-uint8_t Ymodem_Transmit (mico_flash_t, uint32_t, const  uint8_t* , uint32_t );
+int32_t Ymodem_Receive (uint8_t *buf, hal_partition_t partition);
+uint8_t Ymodem_Transmit (hal_partition_t partition, const uint8_t* sendFileName);
 
 #endif  /* __YMODEM_H_ */
 

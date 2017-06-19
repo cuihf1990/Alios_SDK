@@ -52,3 +52,9 @@ const hal_logic_partition_t hal_partitions[] =
         .partition_options          = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
     },
 };
+
+void boot(void)
+{
+    if(0)
+        hal_boot(HAL_PARTITION_APPLICATION);
+}
