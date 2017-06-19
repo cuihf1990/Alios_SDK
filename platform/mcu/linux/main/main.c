@@ -41,7 +41,6 @@ extern void rl_cleanup_after_signal(void);
 extern void hw_start_hal(void);
 extern void trace_start(int flag);
 extern void netmgr_init(void);
-extern void ota_service_init(void);
 extern int yos_framework_init(void);
 
 static options_t options = { 0 };
@@ -60,8 +59,6 @@ static void app_entry(void *arg)
     hw_start_hal();
 
     yos_framework_init();
-
-    ota_service_init();
 
     application_start(options.argc, options.argv);
 }
