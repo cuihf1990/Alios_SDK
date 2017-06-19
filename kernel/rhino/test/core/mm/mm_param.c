@@ -37,10 +37,10 @@ static uint8_t mm_param_case1(void)
     MYASSERT(ret == YUNOS_MM_POOL_SIZE_ERR);
 
     ret = yunos_init_mm_head(&pmmhead, (void *)(mm_pool + 1), MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_INV_ALIGN);
+    MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE - 1);
-    MYASSERT(ret == YUNOS_INV_ALIGN);
+    MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);

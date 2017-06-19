@@ -69,11 +69,14 @@ static void addsize(k_mm_head *mmhead, size_t size, size_t req_size)
         mmhead->maxused_size = mmhead->used_size;
     }
 
-    index = sizetoindex(req_size);
+    index = sizetoindex(req_size-1);
     if (index > MAX_MM_BIT) {
         index = MAX_MM_BIT;
     }
-    mmhead->mm_size_stats[index]++;
+    if (index < 1) {
+        index = 1;
+    }
+    mmhead->mm_size_stats[index - 1]++;
 }
 
 static void removesize(k_mm_head *mmhead, size_t size)
