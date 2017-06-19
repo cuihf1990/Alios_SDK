@@ -42,7 +42,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message,
                                const ur_ip6_addr_t *ip6addr);
 ur_error_t ur_mesh_input(umessage_t *p);
 
-ur_error_t ur_mesh_init(void *config);
+ur_error_t ur_mesh_init(node_mode_t mode);
 ur_error_t ur_mesh_start(void);
 bool       ur_mesh_is_initialized(void);
 ur_error_t ur_mesh_stop(void);

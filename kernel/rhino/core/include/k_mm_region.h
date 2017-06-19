@@ -135,19 +135,5 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t *region_head, void **mem,
 kstat_t yunos_mm_xf_free(k_mm_region_head_t *region_head, void *mem);
 #endif
 
-/**
- * This function is wrapper of mm allocation
- * @param[in]       size        size of the mem to malloc
- * @return  the operation status, NULL is error, others is memory address
- */
-void *yunos_mm_alloc(size_t size);
-
-/**
- * This function is wrapper of mm free
- * @param[in]       ptr        address point of the mem
- */
-
-void   yunos_mm_free(void *ptr);
-
 #endif /* K_MM_REGION_H */
 

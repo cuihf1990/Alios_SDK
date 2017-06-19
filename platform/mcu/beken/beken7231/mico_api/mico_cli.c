@@ -18,7 +18,9 @@
 #include "str_pub.h"
 #include "uart_pub.h"
 #include "mico_rtos.h"
-#include "mico_wlan.h"
+#include <hal/base.h>
+#include <hal/wifi.h>
+
 
 #include "hal/soc/soc.h"
 
@@ -27,21 +29,12 @@
 
 #ifdef MICO_CLI_ENABLE
 
-#ifdef CONFIG_YOS_MESH
-extern void ur_cli_input_args(char **argv, uint16_t argc);
-static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
-{
-    ur_cli_input_args(argv, argc);
-}
-#endif
-
-
 /*
 *  Command buffer API
 */
 void wifiscan_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-	micoWlanStartScan();
+	bk_wlan_start_scan();
 }
 
 void softap_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -93,13 +86,13 @@ void mtr_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
 
 	if(99 == channel_num)
 	{
-	    mico_wlan_stop_monitor();
+	    bk_wlan_stop_monitor();
 	}
 	else
 	{
-	    mico_wlan_start_monitor();
-	    mico_wlan_register_monitor_cb(cli_monitor_cb);
-	    mico_wlan_set_channel(channel_num);
+	    bk_wlan_start_monitor();
+	    bk_wlan_register_monitor_cb(cli_monitor_cb);
+	    bk_wlan_set_channel(channel_num);
 	}
 }
 
@@ -306,9 +299,6 @@ static const struct cli_command built_ins[] =
 
     {"txevm", "txevm [-m] [-c] [-l] [-r] [-w]", tx_evm_cmd_test},
     {"rxsens", "rxsens [-m] [-d] [-c] [-l]", rx_sens_cmd_test},
-#ifdef CONFIG_YOS_MESH
-    {"umesh", "umesh <cmd> <args>", umesh_command},
-#endif
     {"rxsens", "rxsens [-m] [-d] [-c] [-l]", rx_sens_cmd_test},
 };
 
@@ -357,15 +347,15 @@ static void monitor_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
     if (!os_strcasecmp(argv[1], "on"))
     {
         cmd_printf("start monitor\r\n");
-		mico_wlan_register_monitor_cb(monitor);
-        mico_wlan_start_monitor();
+		bk_wlan_register_monitor_cb(monitor);
+        bk_wlan_start_monitor();
     }
     else if (!os_strcasecmp(argv[1], "off"))
     {
         cmd_printf("stop monitor\r\n");
         mico_debug_enabled = 0;
-		mico_wlan_register_monitor_cb(NULL);
-		mico_wlan_stop_monitor();
+		bk_wlan_register_monitor_cb(NULL);
+		bk_wlan_stop_monitor();
     }
 }
 
@@ -381,7 +371,7 @@ static void channel_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
 
     channel = atoi(argv[1]);
 	cmd_printf("set to channel %d\r\n", channel);
-	mico_wlan_set_channel(channel);
+	bk_wlan_set_channel(channel);
 }
 static void mac_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {

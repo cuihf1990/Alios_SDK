@@ -62,13 +62,6 @@ enum {
     NBR_NETID_CHANGED     = 1 << 2,
 };
 
-typedef enum node_mode_s {
-    MODE_NONE   = 0x0,  // this is for testing that not joining net
-    MODE_SUPER  = 0x1,
-    MODE_RX_ON  = 0x2,
-    MODE_MOBILE = 0x4,
-} node_mode_t;
-
 typedef enum node_type_s {
     LEAF_NODE      = 0x01,
     ROUTER_NODE    = 0x02,

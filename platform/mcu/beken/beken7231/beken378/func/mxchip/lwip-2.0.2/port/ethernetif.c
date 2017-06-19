@@ -203,7 +203,7 @@ ethernetif_input(int iface, struct pbuf *p)
 		return; 
 	}   
 
-	netif = net_get_netif_handle();
+	netif = (struct netif *)net_get_netif_handle();
     /* points to packet payload, which starts with an Ethernet header */
     ethhdr = p->payload;
 

@@ -116,6 +116,10 @@ extern kmutex_t           g_mm_region_mutex;
 #endif
 #endif
 
+#if (YUNOS_CONFIG_MM_TLF > 0)
+extern k_mm_head         *g_kmm_head;
+#endif
+
 #define K_OBJ_STATIC_ALLOC 1u
 #define K_OBJ_DYN_ALLOC    2u
 

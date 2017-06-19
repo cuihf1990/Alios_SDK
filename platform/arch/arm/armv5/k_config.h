@@ -29,13 +29,14 @@
 #define YUNOS_CONFIG_TIMER                   1
 #define YUNOS_CONFIG_BUF_QUEUE               1
 #define YUNOS_CONFIG_MM_BLK                  1
-#define YUNOS_CONFIG_MM_FIRSTFIT             1
-#define YUNOS_CONFIG_MM_BESTFIT              1
+#define YUNOS_CONFIG_MM_FIRSTFIT             0
+#define YUNOS_CONFIG_MM_BESTFIT              0
 #define YUNOS_CONFIG_MM_DEBUG                1
-#define YUNOS_CONFIG_MM_TLF                  0
+#define YUNOS_CONFIG_MM_TLF                  1
+#define K_MM_STATISTIC                       1
+#define YUNOS_CONFIG_MM_MAXMSIZEBIT          19
 #define YUNOS_CONFIG_GCC_RETADDR             0
 #define YUNOS_CONFIG_MM_LEAKCHECK            0
-#define K_MM_STATISTIC                       0
 #define YUNOS_CONFIG_RINGBUF_VENDOR          0
 
 #define YUNOS_CONFIG_KOBJ_SET                1

@@ -20,36 +20,29 @@ static SDD_OPERATIONS sctrl_op =
 };
 
 /**********************************************************************/
-void sctrl_cali_dpll(void)
-{
-    UINT32 param;
-    param = REG_READ(SCTRL_ANALOG_CTRL0);
-    param &= ~(SPI_TRIG_BIT);
-    REG_WRITE(SCTRL_ANALOG_CTRL0, param);
-    param |= (SPI_TRIG_BIT);
-    REG_WRITE(SCTRL_ANALOG_CTRL0, param);
-}
-
-#define DPLL_DELAY_EN       1
 #if DPLL_DELAY_EN
 void sctrl_dpll_delay10us(void)
 {
-    #define DPLL_DELAY_TIME_10US     120
-    UINT32 i = 0;
-    for(i=0; i<DPLL_DELAY_TIME_10US; i++)
+    volatile UINT32 i = 0;
+	
+    for(i = 0; i < DPLL_DELAY_TIME_10US; i ++)
+    {
         ;
+    }
 }
 
 void sctrl_dpll_delay200us(void)
 {
-    #define DPLL_DELAY_TIME_200US     3400
-    UINT32 i = 0;
-    for(i=0; i<DPLL_DELAY_TIME_200US; i++)
+    volatile UINT32 i = 0;
+	
+    for(i = 0; i < DPLL_DELAY_TIME_200US; i ++)
+    {
         ;
+    }
 }
 #endif
 
-void sctrl_dpll_isr(void)
+void sctrl_cali_dpll(void)
 {
     UINT32 param;
    
@@ -59,10 +52,6 @@ void sctrl_dpll_isr(void)
     
     #if DPLL_DELAY_EN
     sctrl_dpll_delay10us();
-    sctrl_dpll_delay10us();
-    sctrl_dpll_delay10us();
-    sctrl_dpll_delay10us();
-    sctrl_dpll_delay10us();
     #endif
     
     param |= (SPI_TRIG_BIT);
@@ -70,9 +59,13 @@ void sctrl_dpll_isr(void)
 
     #if DPLL_DELAY_EN
     sctrl_dpll_delay200us();
-    sctrl_dpll_delay200us();
     #endif
+}
 
+void sctrl_dpll_isr(void)
+{
+	sctrl_cali_dpll();
+	
     sddev_control(GPIO_DEV_NAME, CMD_GPIO_CLR_DPLL_UNLOOK_INT, NULL);
 
     SCTRL_PRT("DPLL Unlock\r\n");
@@ -149,9 +142,9 @@ void sctrl_exit(void)
     sddev_unregister_dev(SCTRL_DEV_NAME);
 }
 
-void modem_core_reset(void)
+void sctrl_modem_core_reset(void)
 {
-    os_printf("modem_core_reset\r\n");
+    os_printf("sctrl_modem_core_reset\r\n");
     sctrl_ctrl(CMD_SCTRL_MODEM_CORE_RESET, 0);
 }
 

@@ -258,7 +258,7 @@ static void parse_one_line(struct config_status *pstatus, char *line)
     }
     goto out;
 err_out:
-    printf("unknow keyword - %s\n", fields[0]);
+    printf("unknow keyword - %s %s\n", fields[0], line);
 out:
     free(fields);
     return;

@@ -12,6 +12,7 @@
 #include "yos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
+#include <yos/cli.h>
 
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
@@ -254,8 +255,7 @@ static uint32_t work_time = 60*60*10*1000; //default work time 1ms
 static void do_report(void)
 {
     //TODO: async
-    yos_schedule_work(1000, activate_button_pressed, NULL, NULL, NULL);
-    //activate_button_pressed();
+    //yos_schedule_work(1000, activate_button_pressed, NULL, NULL, NULL);
     //helper_api_test();
 #ifdef RAW_DATA_DEVICE
     /*
@@ -339,6 +339,16 @@ void activate_button_pressed(void* arg)
     alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
 }
 
+static void handle_active_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    activate_button_pressed(NULL);
+}
+
+static struct cli_command ncmd = {
+    .name = "active_alink",
+    .help = "active_alink [start]",
+    .function = handle_active_cmd
+};
 
 enum SERVER_ENV {
     DAILY = 0,
@@ -464,6 +474,7 @@ int application_start(int argc, char *argv[])
     netmgr_init();
     netmgr_start(false);
 
+    cli_register_command(&ncmd);
     yos_loop_run();
 
     printf("alink end.\n");

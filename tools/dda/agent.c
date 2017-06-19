@@ -292,7 +292,7 @@ static int connect_master(agent_info_t *agent)
 
 static void yos_loop(void *arg)
 {
-    ur_mesh_init(NULL);
+    ur_mesh_init(MODE_RX_ON);
     ur_mesh_start();
     yos_loop_run();
     yos_task_exit(0);

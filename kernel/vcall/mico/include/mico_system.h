@@ -550,7 +550,7 @@ typedef struct _mdns_init_t
   * @param  time_to_live: The TTL of a mDNS record.
   * @retval kNoErr is returned on success, otherwise, kXXXErr is returned.
   */
-OSStatus mdns_add_record( mdns_init_t record, WiFi_Interface interface, uint32_t time_to_live );
+OSStatus mdns_add_record( mdns_init_t record, hal_wifi_type_t interface, uint32_t time_to_live );
 
 /**
   * @brief  Suspend a mDNS record, announce the TTL of this record equal to zero, and do not respond mDNS request
@@ -559,7 +559,7 @@ OSStatus mdns_add_record( mdns_init_t record, WiFi_Interface interface, uint32_t
   * @param  will_remove: Destory record info from memory after announced.
   * @retval None.
   */
-void mdns_suspend_record( char *service_name, WiFi_Interface interface, bool will_remove );
+void mdns_suspend_record( char *service_name, hal_wifi_type_t interface, bool will_remove );
 
 /**
   * @brief  Resume a suspended mDNS record, announce the TTL of this record to orginal value, and respond to following mDNS request
@@ -567,7 +567,7 @@ void mdns_suspend_record( char *service_name, WiFi_Interface interface, bool wil
   * @param  interface: Which network interface, the IP info will be read from when response a nDNS request.
   * @retval None.
   */
-void mdns_resume_record( char *service_name, WiFi_Interface interface );
+void mdns_resume_record( char *service_name, hal_wifi_type_t interface );
 
 /**
   * @brief  Update txt record with a new value
@@ -577,7 +577,7 @@ void mdns_resume_record( char *service_name, WiFi_Interface interface );
   *         replaced by "/.", example: "record/.1=1.record/.2=2/.3" = "record.1=1" and "record.2=2.3"
   * @retval None.
   */
-void mdns_update_txt_record( char *service_name, WiFi_Interface interface, char *txt_record );
+void mdns_update_txt_record( char *service_name, hal_wifi_type_t interface, char *txt_record );
 
 /**
   * @brief  Get mdns service status
@@ -585,7 +585,7 @@ void mdns_update_txt_record( char *service_name, WiFi_Interface interface, char 
   * @param  interface: network interface, the mdns service is bonded
   * @retval @ref mdns_record_state_t.
   */
-mdns_record_state_t mdns_get_record_status( char *service_name, WiFi_Interface interface);
+mdns_record_state_t mdns_get_record_status( char *service_name, hal_wifi_type_t interface);
 
 /** @} */
 

@@ -16,6 +16,8 @@
 #include "param_config.h"
 #endif
 
+void ethernetif_input(int iface, struct pbuf *p);
+
 LIST_HEAD_DEFINE(msdu_tx_list);
 LIST_HEAD_DEFINE(msdu_rx_list);
 

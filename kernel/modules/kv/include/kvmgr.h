@@ -23,7 +23,7 @@ extern "C"
 #endif
 
 #define HASH_TABLE_MAX_SIZE 1024
-#define MAX_KV_LEN 256
+#define MAX_KV_LEN 512
 
 #ifndef CONFIG_YOS_KVFILE
 #define KVFILE_NAME "/tmp/KVfile"
@@ -35,6 +35,12 @@ extern "C"
 #define KVFILE_NAME_BACKUP "/tmp/KVfile_backup"
 #else
 #define KVFILE_NAME_BACKUP CONFIG_YOS_KVFILE_BACKUP
+#endif
+
+#ifndef CONFIG_YOS_KV_BUFFER_SIZE
+#define KV_BUFFER_SIZE  (8 * 1024)
+#else
+#define KV_BUFFER_SIZE CONFIG_YOS_KV_BUFFER_SIZE
 #endif
 
 /**

@@ -19,6 +19,7 @@
  *      get_yos_chip_version
 */
 #include <string.h>
+#include <yos/log.h>
 
 #ifndef YOS_EXPORT
 #define YOS_EXPORT
@@ -28,11 +29,7 @@
 #define YOS_WEAK __attribute__((weak))
 #endif
 
-#define SYSINFO_PRODUCT_MODEL ""
-#define SYSINFO_PRODUCT_INTERNAL_TYPE ""
-#define SYSINFO_OS_VERSION ""
-#define SYSINFO_OS_INNERVERSION ""
- 
+#define TAG "YOS_VERSION"
 
 YOS_EXPORT YOS_WEAK const char   *get_yos_product_model(void)
 {
@@ -41,16 +38,23 @@ YOS_EXPORT YOS_WEAK const char   *get_yos_product_model(void)
 }
 
 
-YOS_EXPORT YOS_WEAK const char   *get_yos_product_internal_type(void)
+YOS_EXPORT YOS_WEAK const char   *get_yos_device_name(void)
 {
-    char *ret = SYSINFO_PRODUCT_INTERNAL_TYPE;
+    char *ret = SYSINFO_DEVICE_NAME;
     return (const char *)ret;
 }
 
 YOS_EXPORT YOS_WEAK const char   *get_yos_os_version(void)
 {
-    char *ret = "v2.0.0.0";
+    char *ret = SYSINFO_OS_VERSION;
     return (const char *)ret;
+}
+
+YOS_EXPORT YOS_WEAK void dump_sys_info(void)
+{
+    LOGI(TAG, "os_version: %s", get_yos_os_version());
+    LOGI(TAG, "product_model: %s", get_yos_product_model());
+    LOGI(TAG, "device_name: %s", get_yos_device_name());
 }
 
 

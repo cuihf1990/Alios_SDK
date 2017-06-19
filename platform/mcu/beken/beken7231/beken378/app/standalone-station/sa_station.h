@@ -63,7 +63,6 @@ void sa_station_uninit(void);
 void sa_station_set_reconnect_timer(void);
 void sa_station_send_and_wait_rsp(UINT16 tx_cmd, void *param, UINT16 rx_rsp);
 
-struct scanu_rst_upload *sa_station_send_scan_cmd(SCAN_PARAM_T *scan_param);
 int sa_station_send_associate_cmd(CONNECT_PARAM_T *connect_param);
 int sa_station_send_disassociate_cmd(DISCONNECT_PARAM_T *disconnect_param);
 

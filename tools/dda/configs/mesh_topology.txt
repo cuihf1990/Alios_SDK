@@ -10,9 +10,9 @@ interface: ble 100-149
 
 rssi-tree: 100 50
 
-interface wifi 150-199
+interface: wifi 150-199
 rssi-tree: 150 50
-interface ble 150-199
+interface: ble 150-199
 rssi-tree: 150 50
 
 finish

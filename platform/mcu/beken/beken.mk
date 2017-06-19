@@ -16,6 +16,9 @@ $(NAME)_COMPONENTS += platform/mcu/beken/hal
 $(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
 
 GLOBAL_DEFINES += CONFIG_MX108
+GLOBAL_DEFINES += CONFIG_YOS_KVFILE=\"/dev/flash6\"
+GLOBAL_DEFINES += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash7\"
+GLOBAL_DEFINES += CONFIG_YOS_KV_BUFFER_SIZE=4096
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
@@ -35,7 +38,7 @@ GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es
 
 ifneq ($(mico_lwip), 1)
-$(NAME)_COMPONENTS += kernel.protocols.net
+$(NAME)_COMPONENTS += protocols.net
 else
 GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/src/include
 endif
@@ -144,7 +147,10 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/include \
                     beken7231/beken378/os/FreeRTOSv9.0.0
 
-$(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
+$(NAME)_SOURCES :=  yos/yos.c
+$(NAME)_INCLUDES += yos
+
+$(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/app/config/param_config.c \
                     beken7231/beken378/app/ftp/ftpd.c \
                     beken7231/beken378/app/ftp/vfs.c \
@@ -402,7 +408,6 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/MiCODrivers/MiCODriverUart.c \
                     beken7231/mico_api/MiCODrivers/MiCODriverWdg.c \
                     beken7231/mico_api/mico_cli.c \
-                    beken7231/mico_api/mico_wlan.c \
                     beken7231/mico_api/mxchipWNet.c \
                     beken7231/mico_api/platform_stub.c \
                     ../../arch/arm/armv5/port_c.c \

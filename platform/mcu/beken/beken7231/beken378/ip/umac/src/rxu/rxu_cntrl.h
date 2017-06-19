@@ -54,6 +54,15 @@
  * DEFINES
  ****************************************************************************************
  */
+	
+enum
+{
+	CIPHER_OPEN_SYSTEM = 0,
+	CIPHER_WEP,
+	CIPHER_TKIP,
+	CIPHER_CCMP,
+	CIPHER_TKIP_COMPATIBILITY
+};
 
 /// Size of the pool containing Reassembly structure
 #define RX_CNTRL_DEFRAG_POOL_SIZE       (3)

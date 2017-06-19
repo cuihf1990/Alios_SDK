@@ -272,7 +272,7 @@ static void parse_args(void)
 }
 #endif
 
-ur_error_t ur_mesh_init(void *config)
+ur_error_t ur_mesh_init(node_mode_t mode)
 {
     if (g_um_state.initialized) {
         return UR_ERROR_NONE;
@@ -284,7 +284,8 @@ ur_error_t ur_mesh_init(void *config)
     ur_adapter_interface_init();
     ur_router_register_module();
     interface_init();
-    umesh_mm_init();
+
+    umesh_mm_init(mode);
     neighbors_init();
     mesh_cli_init();
     mf_init();

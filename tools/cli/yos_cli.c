@@ -415,7 +415,7 @@ void reboot(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 
     cli_printf("reboot\r\n");
 
-    (*reboot)();
+    hal_reboot();
 }
 
 static void echo_cmd_handler(char *pcWriteBuffer, int xWriteBufferLen, int argc,
@@ -578,6 +578,13 @@ const hal_uart_config_t config = {
 
 __attribute__ ((weak)) int board_cli_init(void)
 {
+    return 0;
+}
+
+int yos_cli_stop(void)
+{
+    hal_uart_finalize(CLI_UART);
+    cliexit = 1;
     return 0;
 }
 

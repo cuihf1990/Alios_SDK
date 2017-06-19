@@ -104,6 +104,8 @@
  */
 #define MAC_FCTRL_LEN                   2
 
+#define MAC_FRAME_CTRL_BEACON           0x0080
+
 #define MAC_FCTRL_PROTOCOLVERSION_MASK  0x0003
 #define MAC_FCTRL_TYPE_MASK             0x000C
 #define MAC_FCTRL_MGT_T                 0x0000
@@ -229,15 +231,15 @@
 #define MAC_SEQCTRL_FRAG_MSK            0x000F
 
 // SECURITY
-#define MAC_HDR_TSC_LEN          6
-#define MAC_TKIP_TSC1_OFT        0
-#define MAC_TKIP_TSC0_OFT        2
-#define MAC_TKIP_KEYID_OFT       3
-#define MAC_CCMP_PN0_OFT         0
-#define MAC_CCMP_PN1_OFT         1
-#define MAC_CCMP_RSV_OFT         2
-#define MAC_CCMP_PN2BIT_OFT      8
-#define MAC_IV_EXTIV             0x20000000
+#define MAC_HDR_TSC_LEN                 6
+#define MAC_TKIP_TSC1_OFT               0
+#define MAC_TKIP_TSC0_OFT               2
+#define MAC_TKIP_KEYID_OFT              3
+#define MAC_CCMP_PN0_OFT                0
+#define MAC_CCMP_PN1_OFT                1
+#define MAC_CCMP_RSV_OFT                2
+#define MAC_CCMP_PN2BIT_OFT             8
+#define MAC_IV_EXTIV                    0x20000000
 
 /// QOS CONTROL FIELD
 #define MAC_QOSCTRL_LEN                 2
@@ -258,10 +260,8 @@
 #define MAC_QOSCTRL_MESH_POWER_SAVE_LVL CO_BIT(9)
 #define MAC_QOSCTRL_MESH_RSPI           CO_BIT(10)
 
-
 /// HT CONTROL FIELD
 #define MAC_HTCTRL_LEN                  4
-
 
 // SUPPORTED RATES MAXIMUM LENGTH
 #define MAC_SUPPORTED_RATES_LEN   8
@@ -595,6 +595,13 @@ enum mac_ht_oper_prot_val
 #define MAC_BEACON_INTERVAL_OFT          (MAC_SHORT_MAC_HDR_LEN + 8)   // Order 2
 #define MAC_BEACON_CAPA_OFT              (MAC_SHORT_MAC_HDR_LEN + 10)   // Order 3
 #define MAC_BEACON_VARIABLE_PART_OFT     (MAC_SHORT_MAC_HDR_LEN + 12)   // Order 4
+
+#define BEACON_CAP_ESS	    0x0001
+#define BEACON_CAP_IBSS	    0x0002
+#define BEACON_CAP_PRIVACY	0x0010
+#define BEACON_CAP_RRM	    0x1000
+
+
 /*
  * Probe Request Frame offset
  */

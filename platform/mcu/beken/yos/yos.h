@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef YOC_SYS_VERSION
-#define YOC_SYS_VERSION
+#ifndef YOS_H
+#define YOS_H
 
-const char *get_yos_product_model(void);
-const char *get_yos_os_version (void);
-const char *get_yos_product_internal_type(void);
+void soc_driver_init(void);
 
-#endif /* YOC_SYS_VERSION */
+void soc_system_init(void);
+
+void yos_start(void);
+
+#endif /* YOS_H */
 

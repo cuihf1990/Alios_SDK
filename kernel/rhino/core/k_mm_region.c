@@ -16,7 +16,9 @@
 
 #include <k_api.h>
 #include <assert.h>
+#include <stdio.h>
 
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
 
 kstat_t yunos_mm_region_init(k_mm_region_head_t *region_head,
                              k_mm_region_t *regions, size_t size)
@@ -624,7 +626,6 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t *region_head, void **mem,
 }
 #endif /* YUNOS_CONFIG_MM_FIRSTFIT */
 
-#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
 kstat_t yunos_mm_xf_free(k_mm_region_head_t *region_head, void *mem)
 {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
@@ -720,8 +721,6 @@ kstat_t yunos_mm_xf_free(k_mm_region_head_t *region_head, void *mem)
     return YUNOS_SUCCESS;
 }
 
-#endif
-
 
 void *yunos_mm_alloc(size_t size)
 {
@@ -763,4 +762,20 @@ void yunos_mm_free(void *ptr)
     /*halt when free failed?*/
     assert(ret == YUNOS_SUCCESS);
 }
+
+void *yunos_mm_realloc(void *ptr, size_t size)
+{
+    void *pvReturn;
+
+    pvReturn = yunos_mm_alloc(size);
+    if (ptr) {
+        memcpy(pvReturn, ptr, size);
+        yunos_mm_free(ptr);
+    }
+    return pvReturn;
+}
+
+
+#endif
+
 

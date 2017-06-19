@@ -11,6 +11,4 @@ extern char wireless_gw[4];
 extern int hwaddr_aton(const char *txt, u8 *addr);
 #endif 
 
-PROCESS_NAME(ethernet_intf_process);
-
 #endif

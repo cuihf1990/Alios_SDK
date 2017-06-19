@@ -64,6 +64,11 @@
 #if CFG_WIFI_AP_MODE
 #include "sk_intf.h"
 #endif
+
+#include "defs.h"
+#include "ieee802_11_defs.h"
+#include "wpa_common.h"
+
 /*
  * DEFINES
  ****************************************************************************************
@@ -469,13 +474,16 @@ static void rxu_msdu_upload_and_indicate(struct rx_swdesc *p_rx_swdesc,
                           (rx_stat->dst_idx << RX_FLAGS_DST_INDEX_OFT);
     
     // Translate the MAC frame to an Ethernet frame
+#ifdef CONFIG_YOS_MESH
+    rxl_mpdu_transfer_mesh(p_rx_swdesc);
+#else
     if(!bk_wlan_is_monitor_mode())
 	{
 	    rxu_cntrl_mac2eth_update(p_rx_swdesc);
 	}
-    
     // Program the DMA transfer of the MPDU
-	rxl_mpdu_transfer(p_rx_swdesc);
+    rxl_mpdu_transfer(p_rx_swdesc);
+#endif
 }
 
 /**
@@ -507,7 +515,11 @@ static void rxu_mpdu_upload_and_indicate(struct rx_swdesc *p_rx_swdesc, uint8_t 
     	rxu_cntrl_remove_sec_hdr_mgmt_frame(p_rx_swdesc, rx_stat);
 	}
 
+#ifdef CONFIG_YOS_MESH
+    rxl_mpdu_transfer_mesh(p_rx_swdesc);
+#else
     rxl_mpdu_transfer(p_rx_swdesc);
+#endif
 }
 
 static void rxu_cntrl_get_da_sa(struct mac_hdr_long *machdr_ptr)
@@ -550,6 +562,182 @@ static void rxu_cntrl_get_da_sa(struct mac_hdr_long *machdr_ptr)
     {
         MAC_ADDR_CPY(&rxu_cntrl_env.rx_status.sa, &machdr_ptr->addr2);
     }
+}
+
+#if 1
+uint32_t rxu_cntrl_is_protected_packet(uint8_t *p_frame)
+{
+	uint32_t hit_flag = 0;
+	uint16_t frame_cntl;
+    struct mac_hdr *machdr_ptr = (struct mac_hdr *)p_frame;
+	
+    frame_cntl = co_read16(p_frame);
+	
+	if(frame_cntl & 0x4000)
+	{
+		hit_flag = 1;
+	}
+
+	return hit_flag;
+}
+
+uint32_t rxu_cntrl_get_group_cipher_type(uint32_t cipher_type)
+{
+	uint32_t type = CTYPERAM_NULL_KEY;
+
+	switch(cipher_type)
+	{
+		case CIPHER_WEP:
+			type = CTYPERAM_WEP;
+			break;
+			
+		case CIPHER_TKIP:			
+		case CIPHER_TKIP_COMPATIBILITY:
+			type = CTYPERAM_TKIP;
+			break;
+			
+		case CIPHER_CCMP:
+			type = CTYPERAM_CCMP;
+			break;
+			
+		case CIPHER_OPEN_SYSTEM:
+		default:
+			break;
+	}
+	
+	return type;
+}
+
+uint32_t rxu_cntrl_be32(const uint8_t *a)
+{
+	return ((uint32_t) a[0] << 24) | (a[1] << 16) | (a[2] << 8) | a[3];
+}
+const u8 * rxu_cntrl_get_ie(uint8_t *p_frame,
+	uint32_t len, uint8_t ie)
+{
+	const u8 *end, *pos;
+
+	pos = (const u8 *) p_frame;
+	end = pos + len;
+
+	while (pos + 1 < end) 
+	{
+		if (pos + 2 + pos[1] > end)
+			break;
+		
+		if (pos[0] == ie)
+			return pos;
+		
+		pos += 2 + pos[1];
+	}
+
+	return NULL;
+}
+
+const uint8_t * rxu_cntrl_get_vendor_ie(uint8_t *p_frame,
+	uint32_t len, uint32_t vendor_type)
+{
+	const uint8_t *end, *pos;
+
+	pos = (const uint8_t *) p_frame;
+	end = pos + len;
+
+	while (pos + 1 < end) 
+	{
+		if (pos + 2 + pos[1] > end)
+			break;
+		
+		if (pos[0] == WLAN_EID_VENDOR_SPECIFIC 
+			&& pos[1] >= 4 
+			&& vendor_type == rxu_cntrl_be32(&pos[2]))
+		{
+			return pos;
+		}
+		
+		pos += 2 + pos[1];
+	}
+
+	return NULL;
+}
+
+
+uint32_t rxu_cntrl_get_cipher_type_using_beacon(uint8_t *p_frame,
+	uint32_t len)
+{	
+	int wpa;
+	uint8_t *addr;	
+	struct wpa_ie_data ie = {0};
+	const u8 *rsn_ie, *wpa_ie;
+	uint32_t support_privacy_flag = 0;
+	uint16_t cap_info, cap_offset;
+	uint32_t wpa_ie_len, rsn_ie_len;
+	uint32_t cipher_type = CIPHER_OPEN_SYSTEM;
+	uint32_t group_cipher_type;
+
+	wpa_ie = (uint8_t *)rxu_cntrl_get_vendor_ie(p_frame, len, WPA_IE_VENDOR_TYPE);
+	wpa_ie_len = wpa_ie ? wpa_ie[1] : 0;
+
+	rsn_ie = (uint8_t *)rxu_cntrl_get_ie(p_frame, len, WLAN_EID_RSN);
+	rsn_ie_len = rsn_ie ? rsn_ie[1] : 0;
+
+	wpa = (wpa_ie_len > 0) || (rsn_ie_len > 0);
+	cap_offset = MAC_BEACON_CAPA_OFT;
+	cap_info = p_frame[cap_offset] + (p_frame[cap_offset + 1] << 8);
+	support_privacy_flag = cap_info & BEACON_CAP_PRIVACY;
+
+	if(wpa)
+	{
+		if(rsn_ie)
+		{
+			wpa_parse_wpa_ie(rsn_ie, 2 + rsn_ie[1], &ie);
+			if(ie.pairwise_cipher == (WPA_CIPHER_CCMP|WPA_CIPHER_TKIP))
+			{
+				cipher_type = CIPHER_TKIP_COMPATIBILITY;
+			}
+			else if(ie.pairwise_cipher == WPA_CIPHER_CCMP)
+			{
+				cipher_type = CIPHER_CCMP;
+			}
+		}
+		
+		if(wpa_ie)
+		{
+			cipher_type = CIPHER_TKIP;
+		}
+	}
+	else if(support_privacy_flag)
+	{
+		cipher_type = CIPHER_WEP;
+	}
+
+	group_cipher_type = rxu_cntrl_get_group_cipher_type(cipher_type);
+		
+	return group_cipher_type;
+}
+
+uint32_t rxu_cntrl_monitor_patch_using_beacon(uint8_t *p_frame,
+	uint32_t len)
+{
+	uint8_t *addr;
+	uint16_t frame_cntl;
+	uint32_t cipherType;		
+	uint64_t macAddress = 0;
+    struct mac_hdr *machdr_ptr = (struct mac_hdr *)p_frame;
+	
+    frame_cntl = co_read16(p_frame);	
+	if(MAC_FRAME_CTRL_BEACON != frame_cntl)
+	{
+		return 0;
+	}
+
+	cipherType = rxu_cntrl_get_cipher_type_using_beacon(p_frame, len);
+	
+	addr = (uint8_t *)&machdr_ptr->addr2;
+	os_memcpy(&macAddress,addr,sizeof(machdr_ptr->addr2));
+
+	hal_update_secret_key(macAddress, cipherType);
+	
+	return 0;
 }
 
 uint32_t rxu_cntrl_patch_get_special_packet(uint8_t *p_frame)
@@ -624,6 +812,7 @@ void rxu_cntrl_patch_keyram_at_monitor_mode(
 		hal_update_secret_key(macAddress, cipherType);
 	}
 }
+#endif
 
 /**
  * Extract needed information from the MAC Header
@@ -2012,14 +2201,27 @@ int rxu_mgt_monitor(uint16_t framectrl,
                               uint32_t *payload,
                               uint16_t length)
 {
-	monitor_cb_t fn;
+	monitor_data_cb_t fn;
 	int upload = 0;
 	
 	if(MAC_FCTRL_DATA_T != (framectrl & MAC_FCTRL_TYPE_MASK))
 	{
-		//os_printf("\r\n cmgt \r\n");
-		fn = bk_wlan_get_monitor_cb();		
-		(*fn)((uint8_t *)payload, length);
+		rxu_cntrl_monitor_patch_using_beacon((uint8_t *)payload, length);
+		
+#ifdef CONFIG_YOS_MESH
+                fn = bk_wlan_get_monitor_cb();
+                if (fn) {
+                    (*fn)((uint8_t *)payload, length);
+                }
+                fn = wlan_get_mesh_monitor_cb();
+                if (fn) {
+                    (*fn)((uint8_t *)payload, length);
+                }
+#else
+                fn = bk_wlan_get_monitor_cb();
+                (*fn)((uint8_t *)payload, length);
+
+#endif
 	}
 	else
 	{
@@ -2096,12 +2298,14 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 		dest_id = TASK_API;
         upload = true;
 	}
+
+	#if 0
 	else if((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_PROBEREQ)
 	{
 		RXU_PRT("-------MAC_FCTRL_PROBEREQ:0x%x\r\n", length);
 		dest_id = TASK_API;
 	}
-	#if 0
+	
 	else if((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_REASSOCREQ)
 	{
 		RXU_PRT("-------MAC_FCTRL_REASSOCREQ:0x%x\r\n", length);
@@ -2368,14 +2572,19 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
     {
         if (!(statinfo & RX_HD_SUCCESS))
         {
-        	if(bk_wlan_is_monitor_mode())
-        	{
-				monitor_failed = rxu_cntrl_patch_get_special_packet(frame);
-				rxu_cntrl_patch_keyram_at_monitor_mode(frame, monitor_failed);
-        	}
-			
             break;
         }
+		else
+		{			
+        	if(bk_wlan_is_monitor_mode() 
+				&& (MAC_FCTRL_DATA_T == (frame_cntl & MAC_FCTRL_TYPE_MASK)))
+        	{
+        		if(!(statinfo & RX_HD_GA_FRAME))
+        		{   //(!(statinfo & RX_HD_RXVEC2V))
+        			break;
+        		}
+        	}
+		}		
 
         frame_cntl = co_read16(frame);
         dma_hdrdesc->flags = 0;
@@ -2418,7 +2627,9 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 
         // Check if the STA is registered
         if (!sta_mgmt_is_valid(sta_idx))
+        {
             break;
+        }
 
         rx_status->sta_idx = sta_idx;
         rx_status->vif_idx = sta_info_tab[sta_idx].inst_nbr;
@@ -2492,7 +2703,9 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 
                 // Check if the received frame is a NULL frame
                 if (frame_cntl & MAC_NODATA_ST_BIT)
+                {
                     break;
+                }
 
                 qos = ((frame_cntl & MAC_QOS_ST_BIT) != 0);
 

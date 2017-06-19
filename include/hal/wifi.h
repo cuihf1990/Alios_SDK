@@ -26,6 +26,16 @@
 
 typedef struct hal_wifi_module_s       hal_wifi_module_t;
 
+enum wlan_sec_type_e{
+   SECURITY_TYPE_NONE,        /**< Open system. */
+   SECURITY_TYPE_WEP,         /**< Wired Equivalent Privacy. WEP security. */
+   SECURITY_TYPE_WPA_TKIP,    /**< WPA /w TKIP */
+   SECURITY_TYPE_WPA_AES,     /**< WPA /w AES */
+   SECURITY_TYPE_WPA2_TKIP,   /**< WPA2 /w TKIP */
+   SECURITY_TYPE_WPA2_AES,    /**< WPA2 /w AES */
+   SECURITY_TYPE_WPA2_MIXED,  /**< WPA2 /w AES or TKIP */
+   SECURITY_TYPE_AUTO,        /**< It is used when calling @ref micoWlanStartAdv, MICO read security type from scan result. */
+};
 
 /**
  *  @brief  Scan result using normal scan.
@@ -38,6 +48,17 @@ typedef  struct {
     } *ap_list;
 } hal_wifi_scan_result_t;
 
+typedef  struct  {
+    char ap_num;       /**< The number of access points found in scanning.*/
+    struct
+    {
+        char ssid[32];  /**< The SSID of an access point.*/
+        char ap_power;   /**< Signal strength, min:0, max:100*/
+        char bssid[6];  /**< The BSSID of an access point.*/
+        char channel;   /**< The RF frequency, 1-13*/
+        uint8_t security;   /**< Security type, @ref wlan_sec_type_t*/
+    } *ap_list;
+    } hal_wifi_scan_result_adv_t;
 
 typedef enum {
     NOTIFY_STATION_UP = 1,
@@ -131,7 +152,7 @@ typedef struct {
     void (*scan_compeleted)(hal_wifi_module_t *m, hal_wifi_scan_result_t *result,
                             void *arg);
     void (*scan_adv_compeleted)(hal_wifi_module_t *m,
-                                hal_wifi_scan_result_t *result, void *arg);
+                                hal_wifi_scan_result_adv_t *result, void *arg);
     void (*para_chg)(hal_wifi_module_t *m, hal_wifi_ap_info_adv_t *ap_info,
                      char *key, int key_len, void *arg);
     void (*fatal_err)(hal_wifi_module_t *m, void *arg);

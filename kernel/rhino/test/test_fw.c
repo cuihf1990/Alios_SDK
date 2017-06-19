@@ -52,7 +52,9 @@ test_case_map_t test_fw_map[] = {
     {"mm_test",   mm_test},
 #endif
     {"mm_blk_test", mm_blk_test},
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
     {"mm_region_test", mm_region_test},
+#endif
     {"time_test", time_test},
     {"sys_test", sys_test},
     {"event_test", event_test},

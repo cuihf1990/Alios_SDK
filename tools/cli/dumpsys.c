@@ -237,13 +237,10 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 
         return ret;
     }
-
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
     else if (argc == 2 && 0 == strcmp(argv[1], "info")) {
         ret = dumpsys_info_func(pcWriteBuffer, xWriteBufferLen);
         return ret;
     }
-#endif
 
 #if (YUNOS_CONFIG_MM_DEBUG> 0)
     else if (argc == 2 && 0 == strcmp(argv[1], "mm_info")) {
