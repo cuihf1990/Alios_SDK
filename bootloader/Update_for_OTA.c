@@ -58,9 +58,6 @@ static uint8_t data[SizePerRW];
 static uint8_t newData[SizePerRW];
 uint8_t paraSaveInRam[16*1024];
 
-// #define update_log(M, ...)
-#define update_log(M, ...) printf(M,"\r\n", ##__VA_ARGS__)
-
 static int32_t checkcrc(uint16_t crc_in, int partition_type, int total_len)
 {
     uint16_t crc = 0;
@@ -97,7 +94,7 @@ static int32_t checkcrc(uint16_t crc_in, int partition_type, int total_len)
     if (crc != crc_in)
         err = -1;
 exit:
-    update_log("CRC check return %d, got crc %x, calcuated crc %x", err, crc_in, crc);
+    printf("CRC check return %d, got crc %x, calcuated crc %x\r\n", err, crc_in, crc);
     return err;
 }
 
@@ -184,7 +181,7 @@ int32_t check_ota(void)
       
       for(j=0; j<SizePerRW; j++){
         if(data[j] != 0xFF){
-          update_log("Update data need to be erased");
+          printf("Update data need to be erased\r\n");
           err = hal_flash_dis_secure( HAL_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
           require_noerr(err, exit);
           err = hal_flash_erase( HAL_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
@@ -199,7 +196,7 @@ int32_t check_ota(void)
   dest_partition_info = hal_flash_get_info( dest_partition );
   require_action( dest_partition_info->partition_owner != HAL_FLASH_NONE, exit, err = -1 );
   
-  update_log("Write OTA data to partition: %s, length %ld",
+  printf("Write OTA data to partition: %s, length %ld\r\n",
     dest_partition_info->partition_description, updateLog.length);
   
   #ifdef CONFIG_MX108
@@ -235,7 +232,7 @@ int32_t check_ota(void)
     require_noerr_action(err, exit, err = -1); 
  }
 
-  update_log("Update start to clear data...");
+  printf("Update start to clear data...\r\n");
     
   para_offset = 0x0;
   err = hal_flash_dis_secure( HAL_PARTITION_PARAMETER_1, 0x0, para_partition_info->partition_length );
@@ -254,10 +251,10 @@ int32_t check_ota(void)
   require_noerr(err, exit);  
   err = hal_flash_erase( HAL_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
   require_noerr(err, exit);
-  update_log("Update success");
+  printf("Update success\r\n");
   
 exit:
-  if(err != 0) update_log("Update exit with err = %d", err);
+  if(err != 0) printf("Update exit with err = %d\r\n", err);
   return err;
 }
 
