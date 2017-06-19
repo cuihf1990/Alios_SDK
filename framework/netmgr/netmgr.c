@@ -162,7 +162,7 @@ static void netmgr_scan_completed_event(hal_wifi_module_t *m,
 }
 
 static void netmgr_scan_adv_completed_event(hal_wifi_module_t *m,
-                                             hal_wifi_scan_result_t *result,
+                                             hal_wifi_scan_result_adv_t *result,
                                              void *arg)
 {
 }
