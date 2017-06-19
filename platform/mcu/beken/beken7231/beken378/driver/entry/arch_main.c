@@ -70,7 +70,7 @@ void system_init(void *arg)
 
     fclk_init();
 
-    platform_init();
+    hal_init();
 
 #ifdef YOS_NO_WIFI
     main();

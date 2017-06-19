@@ -198,12 +198,9 @@ void intc_init(void)
 
     *((volatile uint32_t *)0x400000) = &do_irq;
     *((volatile uint32_t *)0x400004) = &do_fiq;
-#ifdef NO_MICO_RTOS
     *((volatile uint32_t *)0x400008) = &do_swi;
-#else
-    *((volatile uint32_t *)0x400008) = &do_swi;
-#endif
 
+#ifndef YOS_NO_WIFI
     intc_enable(FIQ_MAC_GENERAL);
     intc_enable(FIQ_MAC_PROT_TRIGGER);
 
@@ -214,6 +211,10 @@ void intc_init(void)
     intc_enable(FIQ_MAC_TX_RX_TIMER);
 
     param = GINTR_FIQ_BIT | GINTR_IRQ_BIT;
+#else
+    param = GINTR_IRQ_BIT;
+#endif
+
     sddev_control(ICU_DEV_NAME, CMD_ICU_GLOBAL_INT_ENABLE, &param);
 
     return;

@@ -39,8 +39,7 @@
 #include "board.h"    
 #include "ymodem.h"
 #include "bootloader.h" 
-
-extern const platform_flash_t platform_flash_peripherals[];
+#include "CheckSumUtils.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -60,7 +59,7 @@ extern uint8_t FileName[];
   */
 static int32_t Receive_Byte (uint8_t *c, uint32_t timeout)
 {
-  if (MicoUartRecv( STDIO_UART, c, 1, timeout )!=kNoErr)
+  if (hal_uart_recv( STDIO_UART, c, 1, NULL, timeout )!=0)
     return -1;
   else
     return 0;
@@ -73,7 +72,7 @@ static int32_t Receive_Byte (uint8_t *c, uint32_t timeout)
   */
 static uint32_t Send_Byte (uint8_t c)
 {
-  MicoUartSend( STDIO_UART, &c, 1 );
+  hal_uart_send( STDIO_UART, &c, 1 );
   return 0;
 }
 
@@ -145,12 +144,21 @@ static int32_t Receive_Packet (uint8_t *data, int32_t *length, uint32_t timeout)
   * @param  buf: Address of the first byte.
   * @retval The size of the file.
   */
-int32_t Ymodem_Receive (uint8_t *buf, mico_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize)
+int32_t Ymodem_Receive (uint8_t *buf, hal_partition_t partition)
 {
   uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD], file_size[FILE_SIZE_LENGTH], *file_ptr, *buf_ptr;
   int32_t i, packet_length, session_done, file_done, packets_received, errors, session_begin, remain_size=0, size = 0;
   uint32_t  ramsource;
-  platform_flash_init( &platform_flash_peripherals[flash] );
+  uint32_t maxRecvSize;
+  uint32_t flashdestination;
+
+#ifdef CONFIG_MX108
+  flashdestination = hal_flash_get_info(partition)->partition_start_addr / 16;
+#else
+  flashdestination = 0;
+#endif
+
+  maxRecvSize = hal_flash_get_info(partition)->partition_length;
 
   for (session_done = 0, errors = 0, session_begin = 0; ;)
   {
@@ -210,7 +218,7 @@ int32_t Ymodem_Receive (uint8_t *buf, mico_flash_t flash, uint32_t flashdestinat
                       return -1;
                     }
                     /* erase user application area */
-                    platform_flash_erase(&platform_flash_peripherals[flash], flashdestination, flashdestination + maxRecvSize - 1);
+                    hal_flash_erase(partition, 0, hal_flash_get_info(partition)->partition_length);
                     Send_Byte(ACK);
                     Send_Byte(CRC16);
                   }
@@ -235,7 +243,7 @@ int32_t Ymodem_Receive (uint8_t *buf, mico_flash_t flash, uint32_t flashdestinat
                   remain_size -= packet_length;
 
                   /* Write received data in Flash */
-                  if (platform_flash_write(&platform_flash_peripherals[flash], &flashdestination, (uint8_t*) ramsource, (uint32_t) packet_length)  == 0)
+                  if(hal_flash_write(partition, &flashdestination, ramsource, packet_length) == 0)
                   {
                     Send_Byte(ACK);
                   }
@@ -335,7 +343,7 @@ void Ymodem_PrepareIntialPacket(uint8_t *data, const uint8_t* fileName, uint32_t
   *     0: end of transmission
   * @retval None
   */
-void Ymodem_PreparePacket(mico_flash_t flash, uint32_t flashdestination, uint8_t *data, uint8_t pktNo, uint32_t sizeBlk)
+void Ymodem_PreparePacket(hal_partition_t partition, uint32_t flashdestination, uint8_t *data, uint8_t pktNo, uint32_t sizeBlk)
 {
   uint16_t i, size, packetSize;
   
@@ -353,7 +361,7 @@ void Ymodem_PreparePacket(mico_flash_t flash, uint32_t flashdestination, uint8_t
   data[1] = pktNo;
   data[2] = (~pktNo);
 
-  platform_flash_read( &platform_flash_peripherals[flash], &flashdestination, data + PACKET_HEADER, size );
+  hal_flash_read( partition, &flashdestination, data + PACKET_HEADER, size );
 
   if ( size  <= packetSize)
   {
@@ -420,7 +428,7 @@ void Ymodem_SendPacket(uint8_t *data, uint16_t length)
   * @param  buf: Address of the first byte
   * @retval The size of the file
   */
-uint8_t Ymodem_Transmit (mico_flash_t flash, uint32_t flashdestination, const uint8_t* sendFileName, uint32_t sizeFile)
+uint8_t Ymodem_Transmit (hal_partition_t partition, const uint8_t* sendFileName)
 {
   uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
   uint8_t filename[FILE_NAME_LENGTH];
@@ -430,6 +438,18 @@ uint8_t Ymodem_Transmit (mico_flash_t flash, uint32_t flashdestination, const ui
   uint16_t blkNumber;
   uint8_t receivedC[2], CRC16_F = 0, i;
   uint32_t errors, ackReceived, size = 0, pktSize;
+  uint32_t flashdestination;
+  uint32_t sizeFile;
+
+#ifdef CONFIG_MX108
+  flashdestination = hal_flash_get_info(partition)->partition_start_addr / 16;
+  sizeFile = hal_flash_get_info(partition)->partition_length / 16 * 15;
+#else
+  flashdestination = 0;
+  sizeFile = hal_flash_get_info(partition)->partition_length;
+#endif
+
+  
 
   errors = 0;
   ackReceived = 0;
@@ -490,7 +510,7 @@ uint8_t Ymodem_Transmit (mico_flash_t flash, uint32_t flashdestination, const ui
   {
     /* Prepare next packet */
     //Ymodem_PreparePacket(buf_ptr, &packet_data[0], blkNumber, size);
-    Ymodem_PreparePacket(flash, buf_ptr, &packet_data[0], blkNumber, size);
+    Ymodem_PreparePacket(partition, buf_ptr, &packet_data[0], blkNumber, size);
     ackReceived = 0;
     receivedC[0]= 0;
     errors = 0;

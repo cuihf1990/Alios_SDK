@@ -15,6 +15,8 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
 $(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
 
+GLOBAL_DEFINES += CONFIG_MX108
+
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
                  -marm \
@@ -45,7 +47,11 @@ GLOBAL_LDFLAGS += -mcpu=arm968e-s \
                  --specs=nosys.specs \
                  -nostartfiles
 
+ifeq ($(APP),bootloader)
+GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_boot.ld
+else
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231.ld
+endif
 
 GLOBAL_LDFLAGS += -Wl,-wrap,_malloc_r -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,_free_r -Wl,-wrap,_realloc_r 
 $(NAME)_INCLUDES := beken7231/beken378/ip/common \

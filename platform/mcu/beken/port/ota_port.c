@@ -15,16 +15,6 @@ typedef struct
     uint32_t ota_crc;
 } ota_reboot_info_t;
 
-typedef struct  _boot_table_t {
-  uint32_t start_address; // the address of the bin saved on flash.
-  uint32_t length; // file real length
-  uint8_t version[8];
-  uint8_t type; // B:bootloader, P:boot_table, A:application, D: 8782 driver
-  uint8_t upgrade_type; //u:upgrade, 
-  uint16_t crc;
-  uint8_t reserved[4];
-}boot_table_t;
-
 static ota_reboot_info_t ota_info;
 
 int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )

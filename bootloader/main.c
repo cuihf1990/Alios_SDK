@@ -34,17 +34,16 @@
 #include "board.h"
 #include "bootloader.h"
 
-extern void set_boot_ver(void);
-extern int update(void);
+extern int check_ota(void);
+extern void boot(void);
 #if STDIO_BREAK_TO_MENU
 extern int stdio_break_in(void);
 #endif
-extern void boot(void);
 extern void menu_loop(void);
 
 const char menu[] =
 "\r\n"
-"MICO bootloader for %s, %s, HARDWARE_REVISION: %s\r\n"
+"YOS bootloader for %s, %s, HARDWARE_REVISION: %s\r\n"
 "+ command -------------------------+ function ------------+\r\n"
 "| 0:BOOTUPDATE    <-r>             | Update bootloader    |\r\n"
 "| 1:FWUPDATE      <-r>             | Update application   |\r\n"
@@ -55,26 +54,18 @@ const char menu[] =
 "| 5:MEMORYMAP                      | List flash memory map|\r\n"
 "| 6:BOOT                           | Excute application   |\r\n"
 "| 7:REBOOT                         | Reboot               |\r\n"
-"+----------------------------------+----------------------+\r\n"
-"|    (C) COPYRIGHT 2015 MXCHIP Corporation  By William Xu |\r\n"
-" Notes:\r\n"
-" -e Erase only  -r Read from flash -dev flash device number\r\n"
-"  -start flash start address -end flash start address\r\n"
-" Example: Input \"4 -dev 0 -start 0x400 -end 0x800\": Update \r\n"
-"          flash device 0 from 0x400 to 0x800\r\n";
+"+----------------------------------+----------------------+\r\n";
 
 int main(void)
 {
-  // set_boot_ver();
-
-  // update();
+  check_ota();
 
 #if STDIO_BREAK_TO_MENU
   if (stdio_break_in())
     goto MENU;
 #endif
 
-    // boot();
+  boot();
 
 #if STDIO_BREAK_TO_MENU
   MENU:

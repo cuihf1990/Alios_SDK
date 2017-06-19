@@ -13,7 +13,7 @@ const hal_uart_config_t uart_cfg = {
     .rx_buf_size = 256,
 };
 
-void platform_init(void)
+void hal_init(void)
 {
     hal_uart_init(0, &uart_cfg);
 
@@ -22,6 +22,21 @@ void platform_init(void)
 #else
     /* init for application */
 #endif
+}
+
+void hal_boot(hal_partition_t partition)
+{
+    uint32_t addr;
+
+    intc_deinit();
+
+    addr = hal_flash_get_info(partition)->partition_start_addr;
+    __asm volatile ("BX %0" : : "r" (addr) );
+}
+
+void hal_reboot(void)
+{
+    hal_wdg_init(1);
 }
 
 int _write( int file, char *ptr, int len )

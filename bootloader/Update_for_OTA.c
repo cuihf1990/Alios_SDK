@@ -30,10 +30,16 @@
  ******************************************************************************
  */
 
-#include "mico.h"
-#include "platform.h"
-#include "platform_config.h"
-#include "CheckSumUtils.h"
+#include <stdio.h>
+#include "stdbool.h"
+#include "hal/soc/soc.h"
+#include "yos/debug.h"
+#include "yos/kernel.h"
+#include "board.h"    
+#include "ymodem.h"
+#include "bootloader.h" 
+#include "CheckSumUtils.h" 
+#include <hal/ota.h>
 
 typedef int Log_Status;					
 #define Log_NotExist		        (1)
@@ -52,15 +58,14 @@ static uint8_t data[SizePerRW];
 static uint8_t newData[SizePerRW];
 uint8_t paraSaveInRam[16*1024];
 
-#define update_log(M, ...) custom_log("UPDATE", M, ##__VA_ARGS__)
-#define update_log_trace() custom_log_trace("UPDATE")
+#define update_log(M, ...) printf("UPDATE", M, ##__VA_ARGS__)
 
-static OSStatus checkcrc(uint16_t crc_in, int partition_type, int total_len)
+static int32_t checkcrc(uint16_t crc_in, int partition_type, int total_len)
 {
     uint16_t crc = 0;
-    mico_logic_partition_t* part;
+    hal_logic_partition_t* part;
     int len;
-    OSStatus err = kNoErr;
+    int32_t err = 0;
     uint32_t update_data_offset = 0x0;
     CRC16_Context contex;
 
@@ -69,7 +74,7 @@ static OSStatus checkcrc(uint16_t crc_in, int partition_type, int total_len)
     if (crc_in == 0xFFFF)
         goto exit;
 
-    part = MicoFlashGetInfo((mico_partition_t)partition_type);
+    part = hal_flash_get_info((hal_partition_t)partition_type);
     if (part == NULL)
         goto exit;
 
@@ -79,7 +84,7 @@ static OSStatus checkcrc(uint16_t crc_in, int partition_type, int total_len)
       } else {
         len = total_len;
       }
-      err = MicoFlashRead( MICO_PARTITION_OTA_TEMP, &update_data_offset, data , len);
+      err = hal_flash_read( HAL_PARTITION_OTA_TEMP, &update_data_offset, data , len);
       require_noerr(err, exit);
 
       total_len -= len;
@@ -89,13 +94,13 @@ static OSStatus checkcrc(uint16_t crc_in, int partition_type, int total_len)
 
   CRC16_Final( &contex, &crc );
     if (crc == crc_in)
-        err = kNoErr;
+        err = 0;
 exit:
     update_log("CRC check return %d, got crc %x, calcuated crc %x", err, crc_in, crc);
     return err;
 }
 
-Log_Status updateLogCheck( boot_table_t *updateLog, mico_partition_t *dest_partition_type )
+Log_Status updateLogCheck( boot_table_t *updateLog, hal_partition_t *dest_partition_type )
 {
     uint32_t i;
 
@@ -111,29 +116,29 @@ Log_Status updateLogCheck( boot_table_t *updateLog, mico_partition_t *dest_parti
         return Log_UpdateTagNotExist;
 
     if ( updateLog->start_address
-        != MicoFlashGetInfo( MICO_PARTITION_OTA_TEMP )->partition_start_addr )
+        != hal_flash_get_info( HAL_PARTITION_OTA_TEMP )->partition_start_addr )
         return Log_StartAddressERROR;
 
     if ( updateLog->type == 'B' )
-        *dest_partition_type = MICO_PARTITION_BOOTLOADER;
+        *dest_partition_type = HAL_PARTITION_BOOTLOADER;
     else if ( updateLog->type == 'A' )
-        *dest_partition_type = MICO_PARTITION_APPLICATION;
+        *dest_partition_type = HAL_PARTITION_APPLICATION;
     else if ( updateLog->type == 'D' )
-        *dest_partition_type = MICO_PARTITION_RF_FIRMWARE;
+        *dest_partition_type = HAL_PARTITION_RF_FIRMWARE;
     else
         return Log_contentTypeNotExist;
 
-    if ( updateLog->length > MicoFlashGetInfo( *dest_partition_type )->partition_length )
+    if ( updateLog->length > hal_flash_get_info( *dest_partition_type )->partition_length )
         return Log_dataLengthOverFlow;
 
-    if ( checkcrc( updateLog->crc, *dest_partition_type, updateLog->length ) != kNoErr )
+    if ( checkcrc( updateLog->crc, *dest_partition_type, updateLog->length ) != 0 )
         return Log_CRCERROR;
 
     return Log_NeedUpdate;
 }
 
 
-OSStatus update(void)
+int32_t check_ota(void)
 {
   boot_table_t updateLog;
   uint32_t i, j, size;
@@ -143,15 +148,15 @@ OSStatus update(void)
   uint32_t para_offset = 0x0;
   uint32_t copyLength;
   //uint8_t *paraSaveInRam = NULL;
-  mico_logic_partition_t *ota_partition_info, *dest_partition_info, *para_partition_info;
-  mico_partition_t dest_partition;
-  OSStatus err = kNoErr;
+  hal_logic_partition_t *ota_partition_info, *dest_partition_info, *para_partition_info;
+  hal_partition_t dest_partition;
+  int32_t err = 0;
 
-  ota_partition_info = MicoFlashGetInfo(MICO_PARTITION_OTA_TEMP);
-  require_action( ota_partition_info->partition_owner != MICO_FLASH_NONE, exit, err = kUnsupportedErr );
+  ota_partition_info = hal_flash_get_info(HAL_PARTITION_OTA_TEMP);
+  require_action( ota_partition_info->partition_owner != HAL_FLASH_NONE, exit, err = -1 );
   
-  para_partition_info = MicoFlashGetInfo(MICO_PARTITION_PARAMETER_1);
-  require_action( para_partition_info->partition_owner != MICO_FLASH_NONE, exit, err = kUnsupportedErr );
+  para_partition_info = hal_flash_get_info(HAL_PARTITION_PARAMETER_1);
+  require_action( para_partition_info->partition_owner != HAL_FLASH_NONE, exit, err = -1 );
   
   memset(data, 0xFF, SizePerRW);
   memset(newData, 0xFF, SizePerRW);
@@ -160,7 +165,7 @@ OSStatus update(void)
   //require_action( paraSaveInRam, exit, err = kNoMemoryErr );
   memset(paraSaveInRam, 0xFF, para_partition_info->partition_length);
     
-  err = MicoFlashRead( MICO_PARTITION_PARAMETER_1, &boot_table_offset, (uint8_t *)&updateLog, sizeof(boot_table_t));
+  err = hal_flash_read( HAL_PARTITION_PARAMETER_1, &boot_table_offset, (uint8_t *)&updateLog, sizeof(boot_table_t));
   require_noerr(err, exit);
 
   /*Not a correct record*/
@@ -168,20 +173,20 @@ OSStatus update(void)
     size = ( ota_partition_info->partition_length )/SizePerRW;
     for(i = 0; i <= size; i++){
       if( i==size ){
-        err = MicoFlashRead( MICO_PARTITION_OTA_TEMP , &update_data_offset, data , ( ota_partition_info->partition_length )%SizePerRW );
+        err = hal_flash_read( HAL_PARTITION_OTA_TEMP , &update_data_offset, data , ( ota_partition_info->partition_length )%SizePerRW );
         require_noerr(err, exit);
       }
       else{
-        err = MicoFlashRead( MICO_PARTITION_OTA_TEMP, &update_data_offset, data , SizePerRW);
+        err = hal_flash_read( HAL_PARTITION_OTA_TEMP, &update_data_offset, data , SizePerRW);
         require_noerr(err, exit);
       }
       
       for(j=0; j<SizePerRW; j++){
         if(data[j] != 0xFF){
           update_log("Update data need to be erased");
-          err = MicoFlashDisableSecurity( MICO_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
+          err = hal_flash_dis_secure( HAL_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
           require_noerr(err, exit);
-          err = MicoFlashErase( MICO_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
+          err = hal_flash_erase( HAL_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
           require_noerr(err, exit);
           goto exit;
         }
@@ -190,18 +195,22 @@ OSStatus update(void)
     goto exit;
   }
 
-  dest_partition_info = MicoFlashGetInfo( dest_partition );
-  require_action( dest_partition_info->partition_owner != MICO_FLASH_NONE, exit, err = kUnsupportedErr );
+  dest_partition_info = hal_flash_get_info( dest_partition );
+  require_action( dest_partition_info->partition_owner != HAL_FLASH_NONE, exit, err = -1 );
   
   update_log("Write OTA data to partition: %s, length %ld",
     dest_partition_info->partition_description, updateLog.length);
   
+  #ifdef CONFIG_MX108
+  dest_offset = dest_partition_info->partition_start_addr / 16;
+  #else
   dest_offset = 0x0;
+  #endif
   update_data_offset = 0x0;
   
-  err = MicoFlashDisableSecurity( dest_partition, 0x0, dest_partition_info->partition_length );
+  err = hal_flash_dis_secure( dest_partition, 0x0, dest_partition_info->partition_length );
   require_noerr(err, exit);
-  err = MicoFlashErase( dest_partition, 0x0, dest_partition_info->partition_length );
+  err = hal_flash_erase( dest_partition, 0x0, dest_partition_info->partition_length );
   require_noerr(err, exit);
   size = (updateLog.length)/SizePerRW;
   
@@ -214,40 +223,40 @@ OSStatus update(void)
     }else{
       copyLength = SizePerRW;
     }
-    err = MicoFlashRead( MICO_PARTITION_OTA_TEMP, &update_data_offset, data , copyLength);
+    err = hal_flash_read( HAL_PARTITION_OTA_TEMP, &update_data_offset, data , copyLength);
     require_noerr(err, exit);
-    err = MicoFlashWrite( dest_partition, &dest_offset, data, copyLength);
+    err = hal_flash_write( dest_partition, &dest_offset, data, copyLength);
     require_noerr(err, exit);
     dest_offset -= copyLength;
-    err = MicoFlashRead( dest_partition, &dest_offset, newData , copyLength);
+    err = hal_flash_read( dest_partition, &dest_offset, newData , copyLength);
     require_noerr(err, exit);
     err = memcmp(data, newData, copyLength);
-    require_noerr_action(err, exit, err = kWriteErr); 
+    require_noerr_action(err, exit, err = -1); 
  }
 
   update_log("Update start to clear data...");
     
   para_offset = 0x0;
-  err = MicoFlashDisableSecurity( MICO_PARTITION_PARAMETER_1, 0x0, para_partition_info->partition_length );
+  err = hal_flash_dis_secure( HAL_PARTITION_PARAMETER_1, 0x0, para_partition_info->partition_length );
   require_noerr(err, exit);
-  err = MicoFlashRead( MICO_PARTITION_PARAMETER_1, &para_offset, paraSaveInRam, para_partition_info->partition_length );
+  err = hal_flash_read( HAL_PARTITION_PARAMETER_1, &para_offset, paraSaveInRam, para_partition_info->partition_length );
   require_noerr(err, exit);
   memset(paraSaveInRam, 0xff, sizeof(boot_table_t));
-  err = MicoFlashErase( MICO_PARTITION_PARAMETER_1, 0x0, para_partition_info->partition_length );
+  err = hal_flash_erase( HAL_PARTITION_PARAMETER_1, 0x0, para_partition_info->partition_length );
   require_noerr(err, exit);
   para_offset = 0x0;
-  err = MicoFlashWrite( MICO_PARTITION_PARAMETER_1, &para_offset, paraSaveInRam, para_partition_info->partition_length );
+  err = hal_flash_write( HAL_PARTITION_PARAMETER_1, &para_offset, paraSaveInRam, para_partition_info->partition_length );
   require_noerr(err, exit);
   
 
-  err = MicoFlashDisableSecurity( MICO_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
+  err = hal_flash_dis_secure( HAL_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
   require_noerr(err, exit);  
-  err = MicoFlashErase( MICO_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
+  err = hal_flash_erase( HAL_PARTITION_OTA_TEMP, 0x0, ota_partition_info->partition_length );
   require_noerr(err, exit);
   update_log("Update success");
   
 exit:
-  if(err != kNoErr) update_log("Update exit with err = %d", err);
+  if(err != 0) update_log("Update exit with err = %d", err);
   return err;
 }
 

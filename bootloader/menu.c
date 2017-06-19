@@ -62,8 +62,8 @@ extern void getline (char *line, int n);          /* input line               */
 extern void startApplication( uint32_t app_addr );
 
 /* Private function prototypes -----------------------------------------------*/
-void SerialDownload(hal_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize);
-void SerialUpload(hal_flash_t flash, uint32_t flashdestination, char * fileName, int32_t maxRecvSize);
+void SerialDownload(hal_partition_t partition);
+void SerialUpload(hal_partition_t partition, char * fileName);
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -123,13 +123,13 @@ exit:
 * @param  None
 * @retval None
 */
-void SerialDownload(hal_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize)
+void SerialDownload(hal_partition_t partition)
 {
   char Number[10] = "          ";
   int32_t Size = 0;
   
   printf("Waiting for the file to be sent ... (press 'a' to abort)\r\n");
-  Size = Ymodem_Receive( &tab_1024[0], flash, flashdestination, maxRecvSize );
+  Size = Ymodem_Receive( &tab_1024[0], partition );
   if (Size > 0)
   {
     printf("\n\n\r Successfully!\n\r\r\n Name: %s", FileName);
@@ -160,7 +160,7 @@ void SerialDownload(hal_flash_t flash, uint32_t flashdestination, int32_t maxRec
 * @param  None
 * @retval None
 */
-void SerialUpload(hal_flash_t flash, uint32_t flashdestination, char * fileName, int32_t maxRecvSize)
+void SerialUpload(hal_partition_t partition, char * fileName)
 {
   uint8_t status = 0;
   uint8_t key;
@@ -171,7 +171,7 @@ void SerialUpload(hal_flash_t flash, uint32_t flashdestination, char * fileName,
   if (key == CRC16)
   {
     /* Transmit the flash image through ymodem protocol */
-    status = Ymodem_Transmit(flash, flashdestination, (uint8_t *)fileName, maxRecvSize);
+    status = Ymodem_Transmit(partition, (uint8_t *)fileName);
     
     if (status != 0)
     {
@@ -220,36 +220,33 @@ void menu_loop(void)
     
     /***************** Command "0" or "BOOTUPDATE": Update the application  *************************/
     if(strcmp(cmdname, "BOOTUPDATE") == 0 || strcmp(cmdname, "0") == 0) {
-      partition = hal_flash_get_info( HAL_PARTITION_BOOTLOADER );
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
         printf ("\n\rRead Bootloader...\n\r");
-        SerialUpload( partition->partition_owner, partition->partition_start_addr, "BootLoaderImage.bin", partition->partition_length );
+        SerialUpload( HAL_PARTITION_BOOTLOADER, "BootLoaderImage.bin");
         continue;
       }
       printf ("\n\rUpdating Bootloader...\n\r");
       err = hal_flash_dis_secure( HAL_PARTITION_BOOTLOADER, 0x0, partition->partition_length );
       require_noerr( err, exit);
 
-      SerialDownload( partition->partition_owner, partition->partition_start_addr, partition->partition_length );
+      SerialDownload( HAL_PARTITION_BOOTLOADER );
     }
     
     /***************** Command "1" or "FWUPDATE": Update the YOS application  *************************/
     else if(strcmp(cmdname, "FWUPDATE") == 0 || strcmp(cmdname, "1") == 0)	{
-      partition = hal_flash_get_info( HAL_PARTITION_APPLICATION );
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
         printf ("\n\rRead application...\n\r");
-        SerialUpload( partition->partition_owner, partition->partition_start_addr, "ApplicationImage.bin", partition->partition_length );
+        SerialUpload( HAL_PARTITION_APPLICATION, "ApplicationImage.bin");
         continue;
       }
       printf ("\n\rUpdating application...\n\r");
       err = hal_flash_dis_secure( HAL_PARTITION_APPLICATION, 0x0, partition->partition_length );
       require_noerr( err, exit);
-      SerialDownload( partition->partition_owner, partition->partition_start_addr, partition->partition_length ); 							   	
+      SerialDownload( HAL_PARTITION_APPLICATION ); 							   	
     }
     
     /***************** Command "2" or "DRIVERUPDATE": Update the RF driver  *************************/
     else if(strcmp(cmdname, "DRIVERUPDATE") == 0 || strcmp(cmdname, "2") == 0) {
-      partition = hal_flash_get_info( HAL_PARTITION_RF_FIRMWARE );
       if( partition == NULL ){
         printf ("\n\rNo flash memory for RF firmware, exiting...\n\r");
         continue;
@@ -257,13 +254,13 @@ void menu_loop(void)
       
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
         printf ("\n\rRead RF firmware...\n\r");
-        SerialUpload( partition->partition_owner, partition->partition_start_addr, "DriverImage.bin", partition->partition_length );
+        SerialUpload( HAL_PARTITION_RF_FIRMWARE, "DriverImage.bin" );
         continue;
       }
       printf ("\n\rUpdating RF driver...\n\r");
       err = hal_flash_dis_secure( HAL_PARTITION_RF_FIRMWARE, 0x0, partition->partition_length );
       require_noerr( err, exit);
-      SerialDownload( partition->partition_owner, partition->partition_start_addr, partition->partition_length );    
+      SerialDownload( HAL_PARTITION_RF_FIRMWARE );    
     }
     
     /***************** Command "3" or "PARAUPDATE": Update the application  *************************/
@@ -273,7 +270,6 @@ void menu_loop(void)
           printf ("\n\rIllegal start address.\n\r");
           continue;
         }
-        partition = hal_flash_get_info( (hal_partition_t)id );
       }else{
         printf ("\n\rPlease input correct partition id.\n\r");
         continue;
@@ -289,13 +285,13 @@ void menu_loop(void)
       }
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
         printf ( "\n\rRead %s...\n\r", partition->partition_description );
-        SerialUpload( partition->partition_owner, partition->partition_start_addr, "Image.bin", partition->partition_length );
+        SerialUpload( (hal_partition_t)id, "Image.bin" );
         continue;
       }
       printf ("\n\rUpdating %s...\n\r", partition->partition_description );
       err = hal_flash_dis_secure( (hal_partition_t)id, 0x0, partition->partition_length );
       require_noerr( err, exit);
-      SerialDownload( partition->partition_owner, partition->partition_start_addr, partition->partition_length );                        
+      SerialDownload( (hal_partition_t)id );                        
     }
     #if 0
     /***************** Command "4" or "FLASHUPDATE": : Update the Flash  *************************/
@@ -380,14 +376,13 @@ void menu_loop(void)
     /***************** Command: Excute the application *************************/
     else if(strcmp(cmdname, "BOOT") == 0 || strcmp(cmdname, "6") == 0)	{
       printf ("\n\rBooting.......\n\r");
-      partition = hal_flash_get_info( HAL_PARTITION_APPLICATION );
-      bootloader_start_app( partition->partition_start_addr );
+      hal_boot( HAL_PARTITION_APPLICATION );
     }
     
     /***************** Command: Reboot *************************/
     else if(strcmp(cmdname, "REBOOT") == 0 || strcmp(cmdname, "7") == 0)  {
       printf ("\n\rReBooting.......\n\r");
-      MicoSystemReboot();
+      hal_reboot();
       break;                              
     }
     
@@ -408,10 +403,3 @@ exit:
     continue;
   }
 }
-
-#if 1
-int32_t Ymodem_Receive (uint8_t *buf, hal_flash_t flash, uint32_t flashdestination, int32_t maxRecvSize) { return 0; }
-void MicoSystemReboot(void) {}
-uint8_t Ymodem_Transmit (hal_flash_t flash, uint32_t flashdestination, const uint8_t* sendFileName, uint32_t sizeFile) { return 0; }
-void bootloader_start_app( uint32_t app_addr ) { }
-#endif

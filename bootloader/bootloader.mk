@@ -27,7 +27,9 @@ GLOBAL_INCLUDES := .
 
 $(NAME)_SOURCES :=  main.c \
                     menu.c \
-                    getline.c 
+                    getline.c \
+                    Update_for_OTA.c \
+                    ymodem.c
 
 # $(NAME)_SOURCES := BootloaderEntrance.c \
 #                    Getline.c \

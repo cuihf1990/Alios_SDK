@@ -25,6 +25,17 @@ extern "C" {
 
 #include <stdint.h>
 #include "base.h"
+
+typedef struct{
+  uint32_t start_address; // the address of the bin saved on flash.
+  uint32_t length; // file real length
+  uint8_t version[8];
+  uint8_t type; // B:bootloader, P:boot_table, A:application, D: 8782 driver
+  uint8_t upgrade_type; //u:upgrade, 
+  uint16_t crc;
+  uint8_t reserved[4];
+}boot_table_t;
+
 typedef struct hal_ota_module_s hal_ota_module_t;
 
 typedef int hal_stat_t;
