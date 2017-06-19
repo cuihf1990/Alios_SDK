@@ -13,6 +13,8 @@ static void register_devices()
         vflash_register_partition(i);
 }
 
+extern void ota_service_init(void);
+
 int yos_framework_init(void)
 {
     vfs_init();
@@ -24,6 +26,8 @@ int yos_framework_init(void)
     yos_loop_init();
 
     yos_cli_init();
+
+    ota_service_init();
 
     return 0;
 }
