@@ -418,7 +418,7 @@ $(NAME)_SOURCES	 += hal/wdg.c \
                     port/ota_port.c
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
-$(NAME)_SOURCES +=  beken7231/mesh_wifi_hal.c
+$(NAME)_SOURCES +=  hal/mesh_wifi_hal.c
 endif
 
 ifneq ($(mico_lwip), 1)
