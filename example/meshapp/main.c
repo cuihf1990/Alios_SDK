@@ -21,13 +21,14 @@
 #ifdef CONFIG_YOS_DDA
 #include <dda.h>
 #endif
+#include "netmgr.h"
 #include "umesh.h"
 #include "umesh_hal.h"
 
 static void app_delayed_action(void *arg)
 {
-    ur_mesh_init(NULL);
-    ur_mesh_start();
+    netmgr_init();
+    netmgr_start(false);
 }
 
 static void app_main_entry(void *arg)

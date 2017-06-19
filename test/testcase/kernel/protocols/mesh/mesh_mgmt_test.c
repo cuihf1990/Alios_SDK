@@ -30,7 +30,7 @@ void test_uradar_mesh_mgmt_case(void)
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_stop());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_deinit());
     YUNIT_ASSERT(DEVICE_STATE_DISABLED == umesh_mm_get_device_state());
-    YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_init());
+    YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_init(MODE_RX_ON));
     YUNIT_ASSERT(BCAST_SID == umesh_mm_get_local_sid());
     uint8_t *ueid;
     YUNIT_ASSERT_PTR_NOT_NULL((ueid = umesh_mm_get_local_ueid()));

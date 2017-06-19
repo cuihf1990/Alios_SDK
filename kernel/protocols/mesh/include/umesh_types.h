@@ -175,6 +175,14 @@ typedef struct ur_mem_stats_s {
     uint32_t num;
 } ur_mem_stats_t;
 
+typedef enum node_mode_s {
+    MODE_NONE   = 0x0,  // this is for testing that not joining net
+    MODE_SUPER  = 0x1,
+    MODE_RX_ON  = 0x2,
+    MODE_MOBILE = 0x4,
+    MODE_LEADER = 0x8,
+} node_mode_t;
+
 #ifdef __cplusplus
 }
 #endif

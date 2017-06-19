@@ -24,6 +24,10 @@
 
 #include "netmgr.h"
 
+#ifdef CONFIG_YOS_MESH
+#include "umesh.h"
+#endif
+
 #define TAG "netmgr"
 
 #ifndef WIFI_SSID
@@ -79,6 +83,35 @@ static void netmgr_connect_fail_event(hal_wifi_module_t *m, int err, void* arg)
 
 }
 
+#ifdef CONFIG_YOS_MESH
+static void mesh_delayed_action(void *arg)
+{
+    ur_mesh_init((node_mode_t)arg);
+    ur_mesh_set_mode(MODE_LEADER);
+    ur_mesh_start();
+}
+#endif
+
+static void start_mesh(bool is_leader)
+{
+#ifdef CONFIG_YOS_MESH
+    node_mode_t mode = MODE_RX_ON;
+
+    if (is_leader) {
+        mode = MODE_LEADER;
+    }
+
+    yos_post_delayed_action(1000, mesh_delayed_action, (void *)(long)mode);
+#endif
+}
+
+static void stop_mesh(void)
+{
+#ifdef CONFIG_YOS_MESH
+    ur_mesh_stop();
+#endif
+}
+
 static void netmgr_ip_got_event(hal_wifi_module_t *m,
                                 hal_wifi_ip_stat_t *pnet, void *arg)
 {
@@ -99,6 +132,7 @@ static void netmgr_ip_got_event(hal_wifi_module_t *m,
     }
     g_netmgr_cxt.ipv4_owned = ip;
     yos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
+    start_mesh(true);
 }
 
 static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
@@ -275,6 +309,7 @@ static void netmgr_wifi_config_start(void)
         valid_plugin->autoconfig_start();
     } else {
         LOGW(TAG, "net mgr none config policy");
+        start_mesh(false);
     }
 }
 
@@ -394,10 +429,13 @@ int netmgr_init(void)
 
 void netmgr_deinit(void)
 {
+    memset(&g_netmgr_cxt, 0, sizeof(g_netmgr_cxt));
 }
 
 int netmgr_start(bool autoconfig)
 {
+    stop_mesh();
+
     if (has_valid_ap() == 1) {
         yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
         return 0;
@@ -408,6 +446,7 @@ int netmgr_start(bool autoconfig)
         return 0;
     }
 
+    start_mesh(false);
     return -1;
 }
 

@@ -358,7 +358,7 @@ void process_channel(int argc, char *argv[])
 
 void process_init(int argc, char *argv[])
 {
-    ur_mesh_init(NULL);
+    ur_mesh_init(MODE_RX_ON);
     response_append("done\r\n");
 }
 
