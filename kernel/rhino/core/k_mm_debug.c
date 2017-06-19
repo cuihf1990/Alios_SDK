@@ -508,15 +508,15 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
         return;
     }
 #if (K_MM_STATISTIC > 0)
-    printf("    free         used             maxused\r\n");
-    printf("    %d      %d         %d\r\n", mmhead->free_size, mmhead->used_size,
+    printf("     free     |     used     |     maxused\r\n");
+    printf("  %10d  |  %10d  |  %10d\r\n", mmhead->free_size, mmhead->used_size,
            mmhead->maxused_size);
-    printf("-----------------alloc size statistic:-----------------\r\n ");
-    for (i = 0; i < MAX_MM_BIT; i++) {
-        if (i % 4 == 0) {
+    printf("\r\n-----------------alloc size statistic:-----------------\r\n");
+    for (i = 0; i < MAX_MM_BIT - 1; i++) {
+        if (i % 4 == 0 && i!=0) {
             printf("\r\n");
         }
-        printf("2^%02d bytes: %5d   |", i, mmhead->mm_size_stats[i]);
+        printf("[2^%02d - 2^%02d] bytes: %5d   |", i>0 ? (i+1) : 0, (i + 2), mmhead->mm_size_stats[i]);
     }
     printf("\r\n");
 #endif
