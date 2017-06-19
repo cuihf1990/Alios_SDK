@@ -85,6 +85,11 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set,
     return 0;
 }
 
+void hal_reboot(void)
+{
+
+}
+
 #define us2tick(us) \
     ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
 
