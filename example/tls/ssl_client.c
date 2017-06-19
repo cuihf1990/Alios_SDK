@@ -25,14 +25,8 @@
 #include <string.h>
 #include <errno.h>
 #include <yos/network.h>
-#include <yos/framework.h>
-#include <netmgr.h>
 
 #include "mbedtls/mbedtls_ssl.h"
-
-struct cookie {
-    int flag;
-};
 
 const char *mbedtls_test_ca_pem = "-----BEGIN CERTIFICATE-----\n"   \
 "MIIDtzCCAp+gAwIBAgIJAOxbLdldR1+SMA0GCSqGSIb3DQEBBQUAMHIxCzAJBgNV\n"\
@@ -107,7 +101,7 @@ void *network_socket_create(const char *net_addr, int port)
 _err:
     close(tcp_fd);
 
-    return (void *)-1;
+    return NULL;
 }
 
 void network_socket_destroy(void *tcp_fd)
@@ -121,7 +115,7 @@ void network_socket_destroy(void *tcp_fd)
     return;
 }
 
-static void app_delayed_action(void *arg)
+int application_start(int argc, char **argv)
 {
     int ret = 0;
     char buf[128];
@@ -131,7 +125,7 @@ static void app_delayed_action(void *arg)
     tcp_fd = network_socket_create(server_name, server_port);
     if ((int)tcp_fd < 0) {
         printf("http client connect fail\n");
-        return;
+        return -1;
     } else {
         printf("network socket create ok\n");
     }
@@ -140,6 +134,7 @@ static void app_delayed_action(void *arg)
               mbedtls_test_ca_pem, strlen(mbedtls_test_ca_pem));
     if (ssl == NULL) {
         printf("ssl connect fail\n");
+        ret = -1;
         goto _out;
     } else {
         printf("mbedtls ssl connect ok\n");
@@ -162,6 +157,8 @@ static void app_delayed_action(void *arg)
         printf("mbedtls ssl recv ok\n");
     }
 
+    ret = 0;
+
 _out:
     if (ssl != NULL) {
         mbedtls_ssl_close(ssl);
@@ -171,35 +168,6 @@ _out:
         network_socket_destroy(tcp_fd);
     }
 
-    return;
-}
-
-static void handle_event(input_event_t *event, void *arg)
-{
-    if (event->type != EV_WIFI) {
-        return;
-    }
-
-    if (event->code != CODE_WIFI_ON_GOT_IP) {
-        return;
-    }
-
-    yos_post_delayed_action(1000, app_delayed_action, arg);
-}
-
-int application_start(void)
-{
-    struct cookie *cookie = yos_malloc(sizeof(*cookie));
-    bzero(cookie, sizeof(*cookie));
-
-    yos_register_event_filter(EV_WIFI, handle_event, cookie);
-
-    netmgr_init();
-    netmgr_start(true);
-
-    yos_loop_run();
-    /* never return */
-
-    return 0;
+    return ret;
 }
 
