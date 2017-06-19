@@ -103,6 +103,7 @@ const uint8_t rxv2macrate[] = {
 #endif
 
 static uint16_t g_entry_id = 0;
+uint64_t *g_monitor_mac_addr = 0;
 
 /*
  * FUNCTION DEFINITIONS
@@ -369,6 +370,100 @@ uint8_t hal_machw_search_addr(struct mac_addr *addr)
     return (sta_idx);
 }
 
+void hal_init_monitor_buf(void)
+{
+	uint32_t count;
+	
+	if(g_monitor_mac_addr)
+	{
+		return;
+	}
+
+	count = sizeof(uint64_t) * (KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1);
+	g_monitor_mac_addr = (uint64_t *)os_zalloc(count);
+	ASSERT(g_monitor_mac_addr);
+}
+
+void hal_uninit_monitor_buf(void)
+{
+	if(g_monitor_mac_addr)
+	{
+		os_free(g_monitor_mac_addr);
+		g_monitor_mac_addr = 0;
+	}
+}
+
+uint32_t hal_monitor_printf_buffering_mac_address(void)
+{
+	uint64_t *mac_address;
+	uint32_t addr_count, i;
+
+	if(0 == g_monitor_mac_addr)
+	{
+		return MONITOR_FAILURE;
+	}
+
+	mac_address = g_monitor_mac_addr;
+	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
+	for(i = 0; i < addr_count; i ++)
+	{
+		os_printf("macAddr:%d:%llx\r\n", i, mac_address[i]);
+	}
+	
+	return MONITOR_SUCCESS;
+}
+
+uint32_t hal_monitor_buffer_mac_address(uint64_t address
+	, uint32_t index)
+{
+	uint32_t id;
+	uint64_t *mac_address;
+	
+	if(0 == g_monitor_mac_addr)
+	{
+		return MONITOR_FAILURE;
+	}
+	
+	id = index;
+	
+	mac_address = g_monitor_mac_addr;
+	mac_address[id] = address;
+	os_printf("id:%d;addr:%llx ", id, address);
+
+	if((KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID) == id)
+	{
+		hal_monitor_printf_buffering_mac_address();
+	}
+
+	return MONITOR_SUCCESS;
+}
+
+uint32_t hal_monitor_is_including_mac_address(uint64_t address)
+{
+	uint64_t *mac_address;
+	uint32_t addr_count, i;
+	uint32_t hit_flag = 0;
+
+	if(0 == g_monitor_mac_addr)
+	{
+		goto check_out;
+	}
+
+	mac_address = g_monitor_mac_addr;
+	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
+	for(i = 0; i < addr_count; i ++)
+	{
+		if(address == mac_address[i])
+		{
+			hit_flag = 1;
+			break;
+		}
+	}
+	
+check_out:
+	return hit_flag;
+}
+
 void hal_program_cipher_key
 (
     uint8_t   useDefaultKey,   // Use Default Key
@@ -418,11 +513,19 @@ uint16_t hal_get_secret_key_entry_id(void)
 void hal_update_secret_key(uint64_t macAddress,
 	uint8_t cipherType)
 {	
-	uint16_t key_index;
+	uint16_t key_index;	
 	uint32_t    pKey[4] = {0xabc47fd0, 0x57498892, 
 							0x11320490, 0x10815562};
+
+	if(hal_monitor_is_including_mac_address(macAddress))
+	{
+		return;
+	}
 	
 	key_index = hal_get_secret_key_entry_id();
+	hal_monitor_buffer_mac_address(macAddress, key_index - KEY_ENTRY_MIN_ID);
+
+	os_printf("t:%d\r\n", cipherType);
 
 	hal_program_cipher_key(1,	          // useDefaultKey
 					pKey,
@@ -511,7 +614,9 @@ void hal_init_cipher_keys(void)
 void hal_machw_enter_monitor_mode(void)
 {	
     os_printf("hal_machw_enter_monitor_mode\r\n");
-
+	g_entry_id = 0;
+	hal_init_monitor_buf();
+	
     nxmac_enable_imp_pri_tbtt_setf(0); // 0xC0008074
     nxmac_enable_imp_sec_tbtt_setf(0);
 
@@ -524,7 +629,7 @@ void hal_machw_enter_monitor_mode(void)
     // Enable reception of all frames (i.e. monitor mode)
     mm_rx_filter_umac_set(0xFFFFFFFF & ~(NXMAC_EXC_UNENCRYPTED_BIT
     									| NXMAC_ACCEPT_BAR_BIT 
-                                        | NXMAC_ACCEPT_ERROR_FRAMES_BIT
+    									| NXMAC_ACCEPT_ERROR_FRAMES_BIT
                                         | NXMAC_ACCEPT_BA_BIT 
                                         | NXMAC_ACCEPT_CTS_BIT
                                         | NXMAC_ACCEPT_RTS_BIT
@@ -562,6 +667,8 @@ void hal_machw_exit_monitor_mode(void)
 
     // Enable reception of some frames (i.e. active mode)
     mm_rx_filter_umac_set(MM_RX_FILTER_ACTIVE);
+	
+	hal_uninit_monitor_buf();
 }
 
 bool hal_machw_sleep_check(void)

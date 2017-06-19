@@ -400,7 +400,6 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/MiCODrivers/MiCODriverUart.c \
                     beken7231/mico_api/MiCODrivers/MiCODriverWdg.c \
                     beken7231/mico_api/mico_cli.c \
-                    beken7231/mico_api/mico_wlan.c \
                     beken7231/mico_api/mxchipWNet.c \
                     beken7231/mico_api/platform_stub.c \
                     ../../arch/arm/armv5/port_c.c \

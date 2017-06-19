@@ -26,7 +26,9 @@
 
 #include "mxchip_netif_address.h"
 #include "rtos_pub.h"
-#include "mico_wlan.h"
+#include <hal/base.h>
+#include <hal/wifi.h>
+
 
 struct ipv4_config sta_ip_settings;
 struct ipv4_config uap_ip_settings;
@@ -194,13 +196,13 @@ void net_wlan_init(void)
 static void dhcp_up(ip_addr_t ip, ip_addr_t netmask, 
 					ip_addr_t gateway, ip_addr_t dnsServer)
 {
-    net_para_st netpara;
-    net_para_st *pnetpara = &netpara;
+    hal_wifi_ip_stat_t netpara;
+    hal_wifi_ip_stat_t *pnetpara = &netpara;
     unsigned char mac[6];
 	char macstr[14];
 	
-	memset(pnetpara, 0, sizeof(net_para_st));
-	mico_wlan_get_mac_address(mac);
+	memset(pnetpara, 0, sizeof(hal_wifi_ip_stat_t));
+	wifi_get_mac_address(mac);
 
 	sprintf(macstr, "%02x%02x%02x%02x%02x%02x", mac[0],
 			mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -225,7 +227,7 @@ static void wifi_station_changed(int connected)
 	
 	last_state = connected;
 	if (connected) {
-		apinfo_adv_t ap_info;
+		hal_wifi_ap_info_adv_t ap_info;
 		uint8_t *key;
 		int key_len;
 

@@ -705,7 +705,9 @@ struct tx_hd
     uint32_t             nextmpdudesc_ptr;
 	
     /// First payload buffer descriptor/Secondary user 1 THD address
-		#pragma anon_unions
+		/*#pragma anon_unions :GCC allows you to define a structure or 
+		union that contains, as fields, structures and unions without 
+		names*/ 
     union {
         /// First payload buffer descriptor
         uint32_t             first_pbd_ptr;

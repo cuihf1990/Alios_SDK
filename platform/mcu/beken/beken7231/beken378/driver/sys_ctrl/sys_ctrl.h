@@ -9,6 +9,11 @@
 #define SCTRL_PRT      os_null_printf
 #endif
 
+#define DPLL_DELAY_EN                         1
+
+#define DPLL_DELAY_TIME_10US	              120
+#define DPLL_DELAY_TIME_200US	              3400
+
 #define SCTRL_BASE                            (0x00800000)
 
 #define SCTRL_CHIP_ID                         (SCTRL_BASE + 00 * 4)

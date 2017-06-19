@@ -20,7 +20,6 @@
 #include <hal/base.h>
 #include <hal/wifi.h>
 #include "common.h"
-#include "mico_wlan.h"
 
 hal_wifi_module_t sim_yos_wifi_beken;
 
@@ -33,17 +32,15 @@ static int wifi_init(hal_wifi_module_t *m)
 
 static void wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)
 {
-	mico_wlan_get_mac_address(mac);
+	wifi_get_mac_address(mac);
 };
 
 
 static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
 {
     int ret;
-	network_InitTypeDef_st cfg;
-	
-	memcpy(&cfg, init_para, sizeof(cfg));
-	ret = micoWlanStart(&cfg);
+
+	ret = bk_wlan_start(init_para);
 
     return ret;
 }
@@ -51,10 +48,8 @@ static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
 static int wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_para_adv)
 {
     int ret;
-	network_InitTypeDef_adv_st cfg;
 
-	memcpy(&cfg, init_para_adv, sizeof(cfg));
- 	ret = micoWlanStartAdv(&cfg);
+ 	ret = bk_wlan_start_adv(init_para_adv);
 	
     return ret;
 }
@@ -62,83 +57,78 @@ static int wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_p
 static int get_ip_stat(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type)
 {
     int ret;
-	IPStatusTypedef state;
-	WiFi_Interface iface = (WiFi_Interface)wifi_type;
-	
-	ret = micoWlanGetIPStatus(&state, iface);
 
-	memcpy(out_net_para, &state, sizeof(state));
+	ret = bk_wlan_get_ip_status(out_net_para, wifi_type);
+
     return ret;
 }
 
 static int get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)
 {
-	LinkStatusTypeDef linkstate;
 	int ret;
 	
-    ret = micoWlanGetLinkStatus(&linkstate);
-	memcpy(out_stat, &linkstate, sizeof(linkstate));
+    ret = bk_wlan_get_link_status(out_stat);
 
 	return ret;
 }
 
 static void start_scan(hal_wifi_module_t *m)
 {
-    micoWlanStartScan();
+    bk_wlan_start_scan();
 }
 
 static void start_scan_adv(hal_wifi_module_t *m)
 {
-	micoWlanStartScanAdv();
+	bk_wlan_start_adv_scan();
 }
 
 static int power_off(hal_wifi_module_t *m)
 {
-    return micoWlanPowerOff();
+    return bk_wlan_power_off();
 }
 
 static int power_on(hal_wifi_module_t *m)
 {
-    return micoWlanPowerOn();
+    return bk_wlan_power_on();
 }
 
 static int suspend(hal_wifi_module_t *m)
 {
-    return micoWlanSuspend();
+    return bk_wlan_suspend();
 }
 
 static int suspend_station(hal_wifi_module_t *m)
 {
-    return micoWlanSuspendStation();
+    return bk_wlan_suspend_station();
 }
 
 static int suspend_soft_ap(hal_wifi_module_t *m)
 {
 
-    return micoWlanSuspendSoftAP();
+    return bk_wlan_suspend_softap();
 }
 
 static int set_channel(hal_wifi_module_t *m, int ch)
 {
-    return mico_wlan_set_channel(ch);
+    return bk_wlan_set_channel(ch);
 }
 
 static void start_monitor(hal_wifi_module_t *m)
 {
-	mico_wlan_start_monitor();
+	bk_wlan_start_monitor();
 }
 
 static void stop_monitor(hal_wifi_module_t *m)
 {
-	mico_wlan_stop_monitor();
+	bk_wlan_stop_monitor();
 }
 
 static void register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 {
-	mico_wlan_register_monitor_cb((monitor_cb_t)fn);
+	bk_wlan_register_monitor_cb(fn);
 }
 
-void NetCallback(net_para_st *pnet)
+void NetCallback(hal_wifi_ip_stat_t *pnet)
 {
 	if (sim_yos_wifi_beken.ev_cb == NULL)
 		return;
@@ -148,7 +138,7 @@ void NetCallback(net_para_st *pnet)
 	sim_yos_wifi_beken.ev_cb->ip_got(&sim_yos_wifi_beken, pnet, NULL);
 }
 
-void connected_ap_info(apinfo_adv_t *ap_info, char *key, int key_len)
+void connected_ap_info(hal_wifi_ap_info_adv_t *ap_info, char *key, int key_len)
 {
 	if (sim_yos_wifi_beken.ev_cb == NULL)
 		return;
@@ -168,13 +158,13 @@ void WifiStatusHandler(int status)
 	sim_yos_wifi_beken.ev_cb->stat_chg(&sim_yos_wifi_beken, status, NULL);
 }
 
-void ApListCallback(ScanResult *pApList)
+void ApListCallback(hal_wifi_scan_result_t *pApList)
 {
 	int i;
 	
-	printf("AP %d: \r\n", pApList->ApNum);
-	for(i=0; i<pApList->ApNum; i++) {
-		printf("\t %s rssi %d\r\n", pApList->ApList[i].ssid, pApList->ApList[i].ApPower);
+	printf("AP %d: \r\n", pApList->ap_num);
+	for(i=0; i<pApList->ap_num; i++) {
+		printf("\t %s rssi %d\r\n", pApList->ap_list[i].ssid, pApList->ap_list[i].ap_power);
 	}
 	if (sim_yos_wifi_beken.ev_cb == NULL)
 		return;
@@ -185,7 +175,7 @@ void ApListCallback(ScanResult *pApList)
 		(hal_wifi_scan_result_t*)pApList, NULL);
 }
 
-void ApListAdvCallback(ScanResult_adv *pApAdvList)
+void ApListAdvCallback(hal_wifi_scan_result_adv_t *pApAdvList)
 {
 	if (sim_yos_wifi_beken.ev_cb == NULL)
 		return;
@@ -193,7 +183,7 @@ void ApListAdvCallback(ScanResult_adv *pApAdvList)
 		return;
 
 	sim_yos_wifi_beken.ev_cb->scan_adv_compeleted(&sim_yos_wifi_beken, 
-		(hal_wifi_ap_info_adv_t*)pApAdvList, NULL);
+		pApAdvList, NULL);
 }
 
 hal_wifi_module_t sim_yos_wifi_beken = {
