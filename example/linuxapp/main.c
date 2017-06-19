@@ -51,6 +51,11 @@ int application_start(void)
 
     netmgr_init();
     netmgr_start(true);
+	
+#ifdef CONFIG_CMD_BENCHMARKS
+    extern void benchmark_cli_init();
+    benchmark_cli_init();
+#endif
 
     yos_loop_run();
     /* never return */

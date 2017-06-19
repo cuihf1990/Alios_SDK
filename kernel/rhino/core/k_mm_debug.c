@@ -23,9 +23,13 @@
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
 
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
+
 extern klist_t g_mm_region_list_head;
 
 #if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
+
+
 static mm_scan_region_t g_mm_scan_region[YOS_MM_SCAN_REGION_MAX];
 static void           **g_leak_match;
 static uint32_t         g_recheck_flag = 0;
@@ -320,7 +324,6 @@ uint32_t dump_mmleak()
 }
 #endif
 
-
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 {
     (void)buf;
@@ -416,7 +419,123 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     }
     return YUNOS_SUCCESS;
 }
+#endif
 
+
+#if (YUNOS_CONFIG_MM_TLF > 0)
+
+void print_block(k_mm_list_t *b)
+{
+    if (!b) {
+        return;
+    }
+    printf(">> [%p] (", b);
+    if ((b->size & YUNOS_MM_BLKSIZE_MASK)) {
+        printf("%lu bytes, ", (unsigned long) (b->size & YUNOS_MM_BLKSIZE_MASK));
+    } else {
+        printf("sentinel, ");
+    }
+    if (b->size & YUNOS_MM_FREE) {
+        printf("free [%p, %p], ", b->mbinfo.free_ptr.prev, b->mbinfo.free_ptr.next);
+    } else {
+        printf("used, ");
+    }
+    if (b->size & YUNOS_MM_PREVFREE) {
+        printf("prev. free [%p])\r\n", b->prev);
+    } else {
+        printf("prev used)\r\n");
+    }
+}
+
+void dump_kmm_free_map(k_mm_head *mmhead)
+{
+    k_mm_list_t *next;
+    int         i, j;
+
+    if(!mmhead) {
+        return;
+    }
+
+    printf("FL bitmap: 0x%x\r\n", (unsigned) mmhead->fl_bitmap);
+
+    for (i = 0; i < FLT_SIZE; i++) {
+        if (mmhead->sl_bitmap[i]) {
+            printf("SL bitmap 0x%x\r\n", (unsigned) mmhead->sl_bitmap[i]);
+        }
+        for (j = 0; j < SLT_SIZE; j++) {
+            next = mmhead->mm_tbl[i][j];
+            if (next) {
+                printf("-> [%d][%d]\r\n", i, j);
+            }
+            while (next) {
+                print_block(next);
+                next = next->mbinfo.free_ptr.next;
+            }
+        }
+    }
+}
+
+void dump_kmm_map(k_mm_head *mmhead)
+{
+    k_mm_region_info_t *reginfo;
+    k_mm_list_t *next;
+
+    if(!mmhead) {
+        return;
+    }
+
+    printf("ALL BLOCKS\r\n");
+    reginfo = mmhead->regioninfo;
+    while (reginfo) {
+        next = (k_mm_list_t *) ((char *) reginfo - MMLIST_HEAD_SIZE);
+        while (next) {
+            print_block(next);
+            if ((next->size & YUNOS_MM_BLKSIZE_MASK)) {
+                next = NEXT_MM_BLK(next->mbinfo.buffer, next->size & YUNOS_MM_BLKSIZE_MASK);
+            } else {
+                next = NULL;
+            }
+        }
+        reginfo = reginfo->next;
+    }
+}
+
+void dump_kmm_statistic_info(k_mm_head *mmhead)
+{
+    int i = 0;
+
+    if(!mmhead) {
+        return;
+    }
+#if (K_MM_STATISTIC > 0)
+    printf("    free         used             maxused\r\n");
+    printf("    %d      %d         %d\r\n", mmhead->free_size, mmhead->used_size,
+           mmhead->maxused_size);
+    printf("-----------------alloc size statistic:-----------------\r\n ");
+    for (i = 0; i < MAX_MM_BIT; i++) {
+        if (i % 4 == 0) {
+            printf("\r\n");
+        }
+        printf("2^%02d bytes: %5d   |", i, mmhead->mm_size_stats[i]);
+    }
+    printf("\r\n");
+#endif
+}
+
+uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
+{
+    printf("\r\n------------------------------- all memory blocks --------------------------------- \r\n");
+    dump_kmm_map(g_kmm_head);
+    printf("\r\n----------------------------- all free memory blocks ------------------------------- \r\n");
+    dump_kmm_free_map(g_kmm_head);
+    printf("\r\n--------------------------- memory allocat statistic -------------------------------- \r\n");
+    dump_kmm_statistic_info(g_kmm_head);
+
+    return YUNOS_SUCCESS;
+}
+
+
+#endif
 
 
 #endif

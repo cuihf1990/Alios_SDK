@@ -54,9 +54,12 @@ YUNOS_INLINE kstat_t rhino_init(void)
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
     /* init memory region */
+#if(YUNOS_CONFIG_MM_TLF > 0)
+    yunos_init_mm_head(&g_kmm_head,g_mm_region.start,g_mm_region.len);
+#elif (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
     yunos_mm_region_init(&g_kmm_region_head, &g_mm_region,
                          sizeof(g_mm_region) / sizeof(k_mm_region_t));
-
+#endif
     yunos_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                        YUNOS_CONFIG_K_DYN_QUEUE_MSG);
     dyn_mem_proc_task_start();

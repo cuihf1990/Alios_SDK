@@ -130,7 +130,6 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     return YUNOS_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
 static uint32_t dumpsys_info_func(char *buf, uint32_t len)
 {
     int16_t plen = 0;
@@ -158,7 +157,6 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
 
     return YUNOS_SUCCESS;
 }
-#endif
 
 #if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
 
@@ -239,13 +237,10 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 
         return ret;
     }
-
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
     else if (argc == 2 && 0 == strcmp(argv[1], "info")) {
         ret = dumpsys_info_func(pcWriteBuffer, xWriteBufferLen);
         return ret;
     }
-#endif
 
 #if (YUNOS_CONFIG_MM_DEBUG> 0)
     else if (argc == 2 && 0 == strcmp(argv[1], "mm_info")) {
