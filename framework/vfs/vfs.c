@@ -35,7 +35,10 @@ static int trap_open(const char *path, int flags)
 #ifdef WITH_LWIP
     return E_VFS_K_ERR;
 #else
-    return open(path, flags);
+    int fd = open(path, flags);
+    if (fd < 0)
+        fd = open(path, O_RDWR | O_CREAT, 0644);
+    return fd;
 #endif
 }
 
