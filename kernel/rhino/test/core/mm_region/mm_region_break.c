@@ -17,6 +17,9 @@
 #include <k_api.h>
 #include <k_mm_region.h>
 #include <test_fw.h>
+
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
+
 #include "mm_region_test.h"
 
 #define MODULE_NAME "mm_region_break"
@@ -306,4 +309,6 @@ void mm_region_break_test(void)
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 }
+
+#endif
 
