@@ -19,6 +19,7 @@
 #include "app.h"
 #include "ke_event.h"
 #include "k_api.h"
+#include "yos.h"
 
 #if 1
 #define RECORD_COUNT 128
@@ -85,19 +86,6 @@ _ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
     return 0;
 }
 
-
-void system_init(void *arg)
-{
-    /* step 2: function layer initialization*/
-    func_init();
-
-    fclk_init();
-
-	app_start();
-
-    return;
-}
-
 void task_test3(void *arg)
 {
 	mico_semaphore_t sem;
@@ -113,16 +101,30 @@ void task_test3(void *arg)
 
 void entry_main(void)
 {
-    yunos_init();
-
-    /* step 1: driver layer initialization*/
-    driver_init();
-
-    yunos_task_dyn_create(&syst_init_obj, "system_init", 0, 10, 0, 512, system_init, 1);
-
-    /* yunos_task_dyn_create(&task_test_obj2, "task_test2", 0, 20, 0, 512, task_test3, 1); */
-	//app_start();
-    yunos_start();
+    yos_start();
 }
+
+extern void hw_start_hal(void);
+
+void soc_driver_init(void)
+{
+    driver_init();
+}
+
+void soc_system_init(void)
+{
+    func_init();
+
+    fclk_init();
+
+    app_start();
+
+    hw_start_hal();
+
+#ifdef CONFIG_YOS_CLI
+    board_cli_init();
+#endif
+}
+
 // eof
 
