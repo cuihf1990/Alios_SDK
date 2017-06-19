@@ -111,8 +111,9 @@ int platform_awss_connect_ap(
 
     strcpy(config.ssid, ssid);
     strcpy(config.pwd, passwd);
-    yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0u);
     ret = netmgr_set_ap_config(&config);
+
+    yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0u);
 
     return ret;
 }

@@ -27,15 +27,6 @@
 
 #ifdef MICO_CLI_ENABLE
 
-#ifdef CONFIG_YOS_MESH
-extern void ur_cli_input_args(char **argv, uint16_t argc);
-static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
-{
-    ur_cli_input_args(argv, argc);
-}
-#endif
-
-
 /*
 *  Command buffer API
 */
@@ -306,9 +297,6 @@ static const struct cli_command built_ins[] =
 
     {"txevm", "txevm [-m] [-c] [-l] [-r] [-w]", tx_evm_cmd_test},
     {"rxsens", "rxsens [-m] [-d] [-c] [-l]", rx_sens_cmd_test},
-#ifdef CONFIG_YOS_MESH
-    {"umesh", "umesh <cmd> <args>", umesh_command},
-#endif
     {"rxsens", "rxsens [-m] [-d] [-c] [-l]", rx_sens_cmd_test},
 };
 

@@ -18,6 +18,9 @@
 #include "hal_machw.h"
 
 monitor_cb_t g_monitor_cb = 0;
+#ifdef CONFIG_YOS_MESH
+monitor_cb_t g_mesh_monitor_cb = 0;
+#endif
 
 extern int connect_flag;
 extern struct assoc_ap_info assoc_ap;
@@ -589,9 +592,28 @@ monitor_cb_t bk_wlan_get_monitor_cb(void)
     return g_monitor_cb;
 }
 
+#ifdef CONFIG_YOS_MESH
+void wlan_register_mesh_monitor_cb(monitor_cb_t fn)
+{
+    g_mesh_monitor_cb = fn;
+}
+
+monitor_cb_t wlan_get_mesh_monitor_cb(void)
+{
+    return g_mesh_monitor_cb;
+}
+#endif
+
 int bk_wlan_is_monitor_mode(void)
 {
+#ifdef CONFIG_YOS_MESH
+    if (g_monitor_cb || g_mesh_monitor_cb) {
+        return TRUE;
+    }
+    return FALSE;
+#else
     return (0 == g_monitor_cb) ? FALSE : TRUE;
+#endif
 }
 // eof
 

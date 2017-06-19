@@ -67,7 +67,7 @@ enum log_level_bit {
     do { \
         if (CON) { \
             long long ms = yos_now_ms();; \
-            csp_printf(COLOR" [%d.%03d]<%s> %s [%s#%d] : ", (int)(ms/1000), (int)(ms%1000), LVL, MOD, __FUNCTION__, __LINE__); \
+            csp_printf(COLOR" [%4d.%03d]<%s> %s [%s#%d] : ", (int)(ms/1000), (int)(ms%1000), LVL, MOD, __FUNCTION__, __LINE__); \
             csp_printf(FMT COL_DEF"\r\n", ##__VA_ARGS__); \
         } \
     } while (0)
@@ -77,7 +77,7 @@ enum log_level_bit {
     do { \
         if (CON) { \
             long long ms = yos_now_ms();; \
-            csp_printf(" [%d.%03d]<%s> "FMT"\n", (int)(ms/1000), (int)(ms%1000), LVL, ##__VA_ARGS__); \
+            csp_printf(" [%4d.%03d]<%s> "FMT"\n", (int)(ms/1000), (int)(ms%1000), LVL, ##__VA_ARGS__); \
         } \
     } while (0)
 

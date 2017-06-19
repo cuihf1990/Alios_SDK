@@ -15,6 +15,10 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
 $(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
 
+GLOBAL_DEFINES += CONFIG_YOS_KVFILE=\"/dev/flash6\"
+GLOBAL_DEFINES += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash7\"
+GLOBAL_DEFINES += CONFIG_YOS_KV_BUFFER_SIZE=4096
+
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
                  -marm \
@@ -33,7 +37,7 @@ GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es
 
 ifneq ($(mico_lwip), 1)
-$(NAME)_COMPONENTS += kernel.protocols.net
+$(NAME)_COMPONENTS += protocols.net
 else
 GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/src/include
 endif

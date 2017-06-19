@@ -101,8 +101,19 @@ int rxl_data_monitor(uint8_t *payload,
 	{
 		monitor_flag = 1;
 
-		fn = bk_wlan_get_monitor_cb();		
-		(*fn)((uint8_t *)payload, length);
+#ifdef CONFIG_YOS_MESH
+                fn = bk_wlan_get_monitor_cb();
+                if (fn) {
+                    (*fn)((uint8_t *)payload, length);
+                }
+                fn = wlan_get_mesh_monitor_cb();
+                if (fn) {
+                    (*fn)((uint8_t *)payload, length);
+                }
+#else
+                fn = bk_wlan_get_monitor_cb();
+                (*fn)((uint8_t *)payload, length);
+#endif
 	}
 
 	return monitor_flag;
@@ -1087,4 +1098,313 @@ void rxl_reset(void)
     co_list_init(&rxl_cntrl_env.ready);
 }
 
+#ifdef CONFIG_YOS_MESH
+#include "mac.h"
+#include "llc.h"
+
+static const struct llc_snap_short rxu_cntrl_rfc1042_hdr = {
+                                                             0xAAAA, // DSAP LSAP
+                                                             0x0003, // Control/Prot0
+                                                             0x0000, // Prot1 and 2
+                                                           };
+
+static const struct llc_snap_short rxu_cntrl_bridge_tunnel_hdr = {
+                                                                    0xAAAA, // DSAP LSAP
+                                                                    0x0003, // Control/Prot0
+                                                                    0xF800, // Prot1 and 2
+                                                                 };
+#define RX_ETH_PROT_ID_IPX          (0x8137)
+#define RXL_CNTRL_IS_QOS_DATA(frame_cntrl)                                               \
+           ((frame_cntrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_QOS_DATA)
+
+static uint8_t *machdr2ethhdr(uint8_t *payload, uint16_t *length)
+{
+    struct mac_hdr *machdr = (struct mac_hdr *)payload;
+    struct llc_snap *llc_snap;
+    struct ethernet_hdr *eth_hdr;
+    uint16_t machdr_len = rxu_cntrl_env.rx_status.machdr_len;
+    uint8_t payl_offset = machdr_len - sizeof_b(struct ethernet_hdr);
+    struct mac_addr sa;
+    struct mac_addr da;
+    struct mac_hdr_long *machdr_ptr = (struct mac_hdr_long *)payload;
+
+    if (machdr_ptr->fctl & MAC_FCTRL_TODS) {
+        MAC_ADDR_CPY(&da, &machdr_ptr->addr3);
+    } else {
+        MAC_ADDR_CPY(&da, &machdr_ptr->addr1);
+    }
+    if (machdr_ptr->fctl & MAC_FCTRL_FROMDS) {
+        if (machdr_ptr->fctl & MAC_FCTRL_TODS) {
+            MAC_ADDR_CPY(&sa, &machdr_ptr->addr4);
+        } else {
+            MAC_ADDR_CPY(&sa, &machdr_ptr->addr3);
+        }
+    } else {
+       MAC_ADDR_CPY(&sa, &machdr_ptr->addr2);
+    }
+
+    do {
+        if (RXL_CNTRL_IS_QOS_DATA(machdr->fctl)) {
+           uint16_t qos;
+            if ((machdr->fctl & MAC_FCTRL_TODS_FROMDS) == MAC_FCTRL_TODS_FROMDS) {
+                struct mac_hdr_long_qos *qos_hdr;
+                qos_hdr = (struct mac_hdr_long_qos *)machdr;
+                qos = qos_hdr->qos;
+           } else {
+                struct mac_hdr_qos *qos_hdr;
+                qos_hdr = (struct mac_hdr_qos *)machdr;
+                qos = qos_hdr->qos;
+            }
+
+           if (qos & MAC_QOSCTRL_AMSDU_PRESENT) {
+                payl_offset += sizeof_b(struct ethernet_hdr);
+                break;
+            }
+        }
+
+       llc_snap = (struct llc_snap *)((uint16_t *)machdr + (machdr_len >> 1));
+        if ((!memcmp(llc_snap, &rxu_cntrl_rfc1042_hdr, sizeof(rxu_cntrl_rfc1042_hdr))
+             && (llc_snap->proto_id != RX_ETH_PROT_ID_IPX))
+            || (!memcmp(llc_snap, &rxu_cntrl_bridge_tunnel_hdr, sizeof(rxu_cntrl_bridge_tunnel_hdr)))) {
+            eth_hdr = (struct ethernet_hdr *)((uint16_t *)&(llc_snap->proto_id) - 6);
+            payl_offset += 8;
+        } else {
+            eth_hdr = (struct ethernet_hdr *)((uint16_t *)llc_snap - 7);
+            eth_hdr->len = *length - machdr_len;
+        }
+
+        // Set DA and SA in the Ethernet Header
+        MAC_ADDR_CPY(&eth_hdr->da, &da);
+        MAC_ADDR_CPY(&eth_hdr->sa, &sa);
+    } while(0);
+
+    *length -= payl_offset;
+    payload += payl_offset;
+    return payload;
+}
+
+static bool filter_frame(struct pbuf *frame)
+{
+    struct ethernet_hdr *eth_hdr;
+    struct mac_addr local;
+
+    eth_hdr = (struct ethernet_hdr *)(frame->payload);
+    hal_wifi_get_mac_addr(NULL, (uint8_t *)&local);
+    if (memcmp(&(eth_hdr->da), &local, sizeof(local)) == 0 ||
+        (memcmp(&(eth_hdr->da), &mac_addr_bcst, sizeof(mac_addr_bcst))) == 0) {
+        return false;
+    }
+    return true;
+}
+
+void rxl_mpdu_transfer_mesh(struct rx_swdesc *swdesc)
+{
+    struct rx_cntrl_rx_status *rx_status = &rxu_cntrl_env.rx_status;
+    uint8_t payl_offset = rx_status->payl_offset;
+    uint32_t hostbuf, hostbuf_start;
+    uint16_t dma_len;
+    uint16_t mpdu_len;
+    struct dma_desc *dma_desc;
+    struct rx_payloaddesc *pd;
+    struct rx_payloaddesc *prev_pd = NULL;
+    struct dma_desc *first_dma_desc;
+    struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+    struct pbuf *pbuf = NULL;
+    uint32_t du_len;
+    uint8_t *du_ptr;
+
+    uint32_t mesh_hostbuf, mesh_hostbuf_start;
+    uint16_t mesh_mpdu_len;
+    bool dma_pushed = false;
+
+    // Cache the pointers for faster access
+    pd = (struct rx_payloaddesc *)HW2CPU(dma_hdrdesc->hd.first_pbd_ptr);
+
+    // Get the MPDU body length
+    mpdu_len = dma_hdrdesc->hd.frmlen;
+    mesh_mpdu_len = dma_hdrdesc->hd.frmlen;
+
+    if(bk_wlan_is_monitor_mode()) {
+        du_len = mpdu_len;
+        du_ptr = (uint8_t *)os_malloc(du_len);
+        mesh_hostbuf_start = (uint32_t)du_ptr;
+     }
+     if(g_rwnx_connector.rx_alloc_func) {
+         du_len = mpdu_len;
+         (*g_rwnx_connector.rx_alloc_func)(&pbuf, du_len);
+        hostbuf_start = (uint32_t)pbuf->payload;
+     }
+
+    rxu_cntrl_env.rx_ipcdesc_stat.host_id = hostbuf_start;
+
+    // Copy at the beginning of the host buffer + PHY VECT + 2 offset
+    hostbuf = hostbuf_start;
+
+    // Sanity check - The frame length cannot be NULL...
+    ASSERT_REC(mpdu_len != 0);
+    // as well as not greater than the max allowed length
+    ASSERT_REC(mpdu_len <= RWNX_MAX_AMSDU_RX);
+
+    // Get the information on the current channel from the PHY driver
+    phy_get_channel(&dma_hdrdesc->phy_info, PHY_PRIM);
+
+    // Get the IPC DMA descriptor of the MAC header
+    dma_desc = &pd->dma_desc;
+    // Save the pointer to the first desc, as it will be passed to the DMA driver later
+    first_dma_desc = dma_desc;
+
+    // Loop as long as the MPDU still has data to copy
+    while (1)
+    {
+        // Fill the destination address of the DMA descriptor
+        dma_desc->dest = hostbuf;
+        dma_desc->src = pd->pbd.datastartptr + payl_offset;
+
+        // Check if we have reached the last payload buffer containing the MPDU
+        if ((mpdu_len + payl_offset) <= NX_RX_PAYLOAD_LEN)
+        {
+            // DMA only the remaining bytes of the payload
+            dma_len = mpdu_len;
+        }
+        else
+        {
+            // The complete payload buffer has to be DMA'ed
+            dma_len = NX_RX_PAYLOAD_LEN - payl_offset;
+        }
+
+        // Reset the offset
+        payl_offset = 0;
+
+        // Fill the DMA length in the IPC DMA descriptor
+        dma_desc->length = dma_len;
+
+        // By default no DMA IRQ on this intermediate transfer
+        dma_desc->ctrl = 0;
+
+        // Move the pointer in the host buffer
+        hostbuf += dma_len;
+
+        // Compute remaining length to be DMA'ed to host
+        mpdu_len -= dma_len;
+
+        // Check if we have finished to program the payload transfer
+        if (mpdu_len == 0)
+        {
+            break;
+        }
+        else
+        {
+            // Move to the next RBD
+            prev_pd = pd;
+            pd = (struct rx_payloaddesc *)HW2CPU(pd->pbd.next);
+
+            // Sanity check - There shall be a payload descriptor available
+            ASSERT_REC(pd != NULL);
+        }
+
+        // Link the new descriptor with the previous one
+        dma_desc->next = CPU2HW(&pd->dma_desc);
+
+        // Retrieve the new DMA descriptor from the payload descriptor
+        dma_desc = &pd->dma_desc;
+    }
+
+    // Save position of next fragment upload
+    rx_status->host_buf_addr = hostbuf;
+
+        if (dma_desc->length <= RXL_HEADER_INFO_LEN+2)
+        {// yhb added, recv header: struct rx_hd->frmlen
+            // Now elaborate the final DMA sending for the PHY Vectors and status
+            // "Stamp" it as the final DMA of this MPDU transfer: insert a pattern for the upper
+            // layer to be able to know that this hostbuf has been filled
+            dma_hdrdesc->pattern = DMA_HD_RXPATTERN;
+            dma_desc->next = CPU2HW(&dma_hdrdesc->dma_desc);
+            dma_desc = &dma_hdrdesc->dma_desc;
+            dma_desc->dest = (uint32_t)rx_header;
+            dma_desc->ctrl = 0;
+        }
+
+        if(bk_wlan_is_monitor_mode())
+        {
+                if(du_ptr)
+                {
+                        #define MONITOR_PKT_FCS_LEN           4
+                        uint32_t len_from_vector;
+
+                        dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
+                        dma_pushed = true;
+                        memcpy(mesh_hostbuf_start, hostbuf_start, mesh_mpdu_len);
+                        len_from_vector = rxl_data_get_len_from_rx_rector(&dma_hdrdesc->hd);
+                        if(len_from_vector != du_len)
+                        {
+                                RXL_CNTRL_PRT("len_from_vector:%d:%d\r\n", len_from_vector, du_len);
+
+                                do
+                                {
+                                        if((du_len > len_from_vector)
+                                                || (len_from_vector > 2000)
+                                                || ((len_from_vector > du_len)
+                                                        && ((len_from_vector - du_len) > MONITOR_PKT_FCS_LEN)))
+                                        {
+                                                break;
+                                        }
+
+                                rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), len_from_vector);
+                                }while(0);
+                        }
+                        else
+                        {
+                                rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
+                        }
+
+                        os_free(du_ptr);
+                }
+        }
+        if (pbuf) {
+            uint8_t *payload = pbuf->payload;
+            uint16_t length = pbuf->tot_len;
+            int16_t offset;
+
+            if (dma_pushed == false) {
+                dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
+            }
+
+            machdr2ethhdr(payload, &length);
+            offset = pbuf->tot_len - length;
+            pbuf_header(pbuf, -offset);
+            du_len = length;
+
+            if(g_rwnx_connector.data_outbound_func && filter_frame(pbuf) == false) {
+                (*g_rwnx_connector.data_outbound_func)(pbuf, du_len);
+            } else {
+                pbuf_free(pbuf);
+            }
+        }
+
+    // Now go through the additional RBD if any (e.g. for FCS, ICV)
+    while (pd)
+    {
+        uint32_t statinfo = pd->pbd.bufstatinfo;
+
+        // If this is the last RBD, exit the loop
+        if (statinfo & RX_PD_LASTBUF)
+            break;
+
+        // Otherwise move to the next one
+        prev_pd = pd;
+        pd = (struct rx_payloaddesc *)HW2CPU(pd->pbd.next);
+
+        // Sanity check - There shall be a payload descriptor available
+        ASSERT_REC(pd != NULL);
+    };
+
+    // Store the pointer to the last RBD consumed by the HW. It will be used when freeing the frame
+    swdesc->last_pbd = &prev_pd->pbd;
+    swdesc->spare_pbd = &pd->pbd;
+
+    // Store the pointer to the next available RBD (for debug and error logs only)
+    rx_hwdesc_env.first = HW2CPU(swdesc->spare_pbd->next);
+}
+
+#endif
 /// @}

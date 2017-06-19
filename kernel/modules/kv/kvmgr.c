@@ -23,8 +23,14 @@
 #include "yos/kernel.h"
 #include "k_api.h"
 
+/* KV header include fsize part(4bytes) and crc part (4bytes)
+   |       KV Header       |
+   |  kv_fize  |    crc    | ---> kv_file: 4 bytes; crc: 4 bytes
+*/
+#define KV_CRC_LENGTH   4
+#define KV_FSIZE_LENGTH 4
+#define KV_HEADER_SIZE (KV_FSIZE_LENGTH + KV_CRC_LENGTH)
 
-#define KV_BUFFER_SIZE  (8 * 1024)
 #define INT2BYTE(p,value) \
     *p ++ = value & 0xff, \
 *p ++ = (value >> 8) & 0xff, \
@@ -131,7 +137,15 @@ static int hash_table_insert(const char *skey, const char *cvalue, int nlength,
 static int load_kvfile(const char *file, char *buffer, int buffer_len)
 {
     int fsize = 0;
-    int fd;
+    uint32_t header_size = 0, kvdata_size = 0;
+    int fd = -1;
+    uint32_t crc32_value;
+    char *kv_header, *p;
+
+    kv_header = (char *)yos_malloc(KV_HEADER_SIZE);
+    if(!kv_header) {
+        goto exit;
+    }
 
     fd = yos_open(file, O_RDONLY);
     if (fd < 0) {
@@ -139,17 +153,43 @@ static int load_kvfile(const char *file, char *buffer, int buffer_len)
         goto exit;
     }
 
-    if (!(fsize = yos_read(fd, buffer, buffer_len))) {
+    if (!(header_size = yos_read(fd, kv_header, KV_HEADER_SIZE))) {
+        LOGI(MODULE_NAME_KV, "read KVheader failed");
+        goto exit;
+    }
+
+    p = kv_header;
+    BYTE2INT(p, kvdata_size);
+    if (!kvdata_size || (kvdata_size > KV_BUFFER_SIZE - KV_HEADER_SIZE)) {
+        LOGI(MODULE_NAME_KV, "KV file is empty or KV header is broken, fsize is %d", kvdata_size);
+        goto exit;
+    }
+    BYTE2INT(p, crc32_value);
+
+    /* reopen the kvfile to clear the offset in file struct */
+    yos_close(fd);
+    fd = yos_open(file, O_RDONLY);
+
+    if (!(fsize = yos_read(fd, buffer, kvdata_size + KV_HEADER_SIZE))) {
         LOGI(MODULE_NAME_KV, "read KVfile failed");
         goto exit;
     }
-    LOGI(MODULE_NAME_KV, "file size %d", fsize);
+
+    p = buffer + KV_HEADER_SIZE;
+    if (crc32_value != utils_crc32((uint8_t *)p, kvdata_size)) {
+        fsize = 0;
+        goto exit;
+    }
+
+    LOGD(MODULE_NAME_KV, "load %s KV success, file size %d", file, fsize);
 
 exit:
     if (fd >= 0) {
         yos_close(fd);
     }
-
+    if (kv_header) {
+        yos_free(kv_header);
+    }
     return fsize;
 }
 
@@ -227,17 +267,29 @@ exit:
 static int check_file_same(const char *src_file, const char *dst_file)
 {
     char md5_src[33], md5_dst[33];
-    int ret = -1;
+    int ret = -1, fsize = 0;
+    char *kv_buffer;
 
     memset(md5_src, 0, sizeof(md5_src));
     memset(md5_dst, 0, sizeof(md5_dst));
-    if (digest_md5_file(src_file, (uint8_t *)md5_src) != 0) {
-        LOGI(MODULE_NAME_KV, "getting the MD5 of file %s is failed", src_file);
+
+    kv_buffer = (char *)yos_malloc(KV_BUFFER_SIZE);
+    if (!kv_buffer) {
         goto exit;
     }
 
-    if (digest_md5_file(dst_file, (uint8_t *)md5_dst) != 0) {
-        LOGI(MODULE_NAME_KV, "getting the MD5 of file %s is failed", dst_file);
+    fsize = load_kvfile(src_file, kv_buffer, KV_BUFFER_SIZE);
+
+    if (digest_md5(kv_buffer, fsize, (uint8_t *)md5_src) != 0) {
+        LOGI(MODULE_NAME_KV, "getting the MD5 of %s is failed", src_file);
+        goto exit;
+    }
+
+    memset(kv_buffer, 0, KV_BUFFER_SIZE);
+    fsize = load_kvfile(dst_file, kv_buffer, KV_BUFFER_SIZE);
+
+    if (digest_md5(kv_buffer, fsize, (uint8_t *)md5_dst) != 0) {
+        LOGI(MODULE_NAME_KV, "getting the MD5 of %s is failed", dst_file);
         goto exit;
     }
 
@@ -247,6 +299,9 @@ static int check_file_same(const char *src_file, const char *dst_file)
     }
 
 exit:
+    if (kv_buffer) {
+        yos_free(kv_buffer);
+    }
     return ret;
 }
 
@@ -292,6 +347,7 @@ static int save_key_value()
 {
     char *kv_buffer, *p;
     kv_storeage_t store;
+    uint32_t fsize = 0;
 
     store.p = (char *)yos_malloc(KV_BUFFER_SIZE);
     if (!store.p) {
@@ -300,15 +356,21 @@ static int save_key_value()
 
     kv_buffer = store.p;
     store.len = 0;
-    store.p += 4;
+    store.p += KV_HEADER_SIZE;
     store.ret = 0;
     ht_iterator_lockless(g_ht, __get_kv_inflash_cb, &store);
 
-    p = kv_buffer + 4;
+    fsize = store.len;
+    p = kv_buffer + KV_HEADER_SIZE;
+
     uint32_t crc32_value = utils_crc32((uint8_t *)p, store.len);
-    p -= 4;
+    p -= KV_CRC_LENGTH;
     INT2BYTE(p, crc32_value);
-    store.len += 4;
+    store.len += KV_CRC_LENGTH;
+
+    p -= KV_HEADER_SIZE;
+    INT2BYTE(p, fsize);
+    store.len += KV_FSIZE_LENGTH;
 
     if (!update_kvfile(KVFILE_NAME, kv_buffer, store.len)) {
         update_kvfile(KVFILE_NAME_BACKUP, kv_buffer, store.len);
@@ -321,7 +383,6 @@ static int load_key_value(const char *file)
 {
     char *key, *value, *p, *kv_buffer;
     int fsize, len;
-    uint32_t crc32_value;
     int ret = -1;
 
     kv_buffer = (char *)yos_malloc(KV_BUFFER_SIZE);
@@ -347,13 +408,8 @@ static int load_key_value(const char *file)
         goto exit;
     }
 
-    p = kv_buffer;
-    BYTE2INT(p, crc32_value);
-    fsize -= 4;
-    if (crc32_value != utils_crc32((uint8_t *)p, fsize)) {
-        LOGI(MODULE_NAME_KV, "KV file is not complete");
-        goto exit;
-    }
+    p = kv_buffer + KV_HEADER_SIZE;
+    fsize -= KV_HEADER_SIZE;
 
     ht_lock(g_ht);
     while (fsize) {

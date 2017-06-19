@@ -738,7 +738,10 @@ static void wsf_keep_connection(wsf_config_t *config)
         return;
     }
 
+#if 0
+    /* if not ready, just retry next turn */
     os_sys_net_wait_ready();
+#endif
 
     if ((!wsf_conn->ssl || wsf_conn->conn_state != CONN_READY)
         && network_up) {

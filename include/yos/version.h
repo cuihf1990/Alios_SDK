@@ -14,29 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef YOS_TYPES_API_H
-#define YOS_TYPES_API_H
+#ifndef YOC_SYS_VERSION
+#define YOC_SYS_VERSION
 
-#include <stdint.h>
-#include <stddef.h>
-#include <unistd.h>
-#include <fcntl.h>
+const char *get_yos_product_model(void);
+const char *get_yos_os_version (void);
+const char *get_yos_device_name(void);
+void dump_sys_info(void);
 
-#ifdef WITH_LWIP
-#define POLLIN  0x1
-#define POLLOUT 0x2
-#define POLLERR 0x4
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-#else
-#include <poll.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#endif
-
-#endif /* YOS_TYPES_API_H */
+#endif /* YOC_SYS_VERSION */
 

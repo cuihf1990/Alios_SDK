@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <yos/cli.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"
@@ -1124,6 +1125,79 @@ void ur_cli_input_args(char **argv, uint16_t argc)
     }
 }
 
+static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+{
+    ur_cli_input_args(argv, argc);
+}
+
+static struct cli_command ncmd = {
+    .name = "umesh",
+    .help = "umesh [cmd]",
+    .function = umesh_command,
+};
+
+#ifndef WITH_LWIP
+struct cb_arg {
+    raw_data_handler_t handler;
+    uint8_t *buffer;
+    int length;
+};
+
+static void do_read_cb(void *priv)
+{
+    struct cb_arg *arg = priv;
+    arg->handler(arg->buffer, arg->length);
+
+    ur_mem_free(arg->buffer, UR_IP6_MTU + UR_IP6_HLEN);
+    ur_mem_free(arg, sizeof(*arg));
+}
+
+static void ur_read_sock(int fd, raw_data_handler_t handler)
+{
+    int     length = 0;
+    uint8_t *buffer;
+
+    buffer = ur_mem_alloc(UR_IP6_MTU + UR_IP6_HLEN);
+    if (buffer == NULL) {
+        return;
+    }
+
+    length = lwip_recv(fd, buffer, UR_IP6_MTU + UR_IP6_HLEN, 0);
+    if (length > 0) {
+        struct cb_arg *arg = ur_mem_alloc(sizeof(*arg));
+        arg->handler = handler;
+        arg->buffer = buffer;
+        arg->length = length;
+        yos_schedule_call(do_read_cb, arg);
+        return;
+    }
+
+    ur_mem_free(buffer, UR_IP6_MTU + UR_IP6_HLEN);
+}
+
+static void mesh_worker(void *arg)
+{
+    int maxfd = g_cl_state.autotest_udp_socket;
+
+    if (g_cl_state.icmp_socket > maxfd)
+        maxfd = g_cl_state.icmp_socket;
+
+    while (1) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(g_cl_state.icmp_socket, &rfds);
+        FD_SET(g_cl_state.autotest_udp_socket, &rfds);
+
+        lwip_select(maxfd + 1, &rfds, NULL, NULL, NULL);
+
+        if (FD_ISSET(g_cl_state.icmp_socket, &rfds))
+            ur_read_sock(g_cl_state.icmp_socket, cli_handle_echo_response);
+        if (FD_ISSET(g_cl_state.autotest_udp_socket, &rfds))
+            ur_read_sock(g_cl_state.autotest_udp_socket, handle_udp_autotest);
+    }
+}
+#endif
+
 int g_cli_silent;
 ur_error_t mesh_cli_init(void)
 {
@@ -1131,5 +1205,10 @@ ur_error_t mesh_cli_init(void)
     g_cl_state.icmp_socket = echo_socket(&cli_handle_echo_response);
     g_cl_state.autotest_udp_socket = autotest_udp_socket(&handle_udp_autotest,
                                                          AUTOTEST_UDP_PORT);
+
+#ifndef WITH_LWIP
+    yos_task_new("meshworker", mesh_worker, NULL, 8192);
+#endif
+    cli_register_command(&ncmd);
     return UR_ERROR_NONE;
 }

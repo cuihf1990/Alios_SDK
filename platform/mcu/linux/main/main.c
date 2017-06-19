@@ -24,7 +24,6 @@
 #include <k_api.h>
 #include <yos/log.h>
 #include <yos/kernel.h>
-#include <vflash.h>
 
 #include <arg_options.h>
 
@@ -54,6 +53,16 @@ extern int application_start(int argc, char **argv);
 
 static void app_entry(void *arg)
 {
+    yos_features_init();
+
+    trace_start(options.trace_flag);
+
+    hw_start_hal();
+
+    yos_framework_init();
+
+    ota_service_init();
+
     application_start(options.argc, options.argv);
 }
 
@@ -68,16 +77,9 @@ int csp_get_args(const char ***pargv)
     return options.argc;
 }
 
-static void register_devices(void)
-{
-    int i;
-    for (i=0;i<10;i++)
-        vflash_register_partition(i);
-}
-
 void yos_features_init(void)
 {
-#ifdef WITH_LWIP
+#ifdef CONFIG_NET_LWIP
     if (options.lwip.enable) {
         yunos_lwip_init(options.lwip.tapif);
     }
@@ -129,7 +131,7 @@ int main(int argc, char **argv)
     options.argc        = argc;
     options.argv        = argv;
     options.lwip.enable = true;
-#ifdef TAPIF_DEFAULT_OFF
+#if defined(TAPIF_DEFAULT_OFF) || !defined(WITH_LWIP)
     options.lwip.tapif  = false;
 #else
     options.lwip.tapif  = true;
@@ -155,18 +157,6 @@ int main(int argc, char **argv)
 #endif
 
     yunos_init();
-
-    yos_features_init();
-
-    trace_start(options.trace_flag);
-
-    hw_start_hal();
-
-    yos_framework_init();
-
-    register_devices();
-
-    ota_service_init();
 
     start_app(argc, argv);
 

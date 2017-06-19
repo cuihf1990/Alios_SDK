@@ -18,9 +18,7 @@
 #define NETMGR_H
 
 #include <stdint.h>
-#include <hal/base.h>
-#include <hal/wifi.h>
-#include <yos/list.h>
+#include <stdbool.h>
 
 #if defined(__cplusplus)
 extern "C"
@@ -49,11 +47,13 @@ typedef struct autoconfig_plugin_s {
 
 void wifi_get_ip(char ips[16]);
 int  netmgr_set_ap_config(netmgr_ap_config_t *config);
+int  netmgr_get_ap_config(netmgr_ap_config_t *config);
+void netmgr_clear_ap_config(void);
 void netmgr_set_smart_config(autoconfig_plugin_t *plugin);
 
 int netmgr_init(void);
 void netmgr_deinit(void);
-int netmgr_start(void);
+int netmgr_start(bool autoconfig);
 
 #if defined(__cplusplus)
 }

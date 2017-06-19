@@ -227,11 +227,13 @@
    ---------- Hook options ---------------
 */
 
+#ifdef CONFIG_YOS_MESH
 #define LWIP_DECLARE_HOOK \
     struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest); \
     int lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest);
 #define LWIP_HOOK_IP6_ROUTE(src, dest)           lwip_hook_ip6_route(src, dest)
 #define LWIP_HOOK_MESH_IS_MCAST_SUBSCRIBED(dest) lwip_hook_mesh_is_mcast_subscribed(dest)
+#endif
 
 /*
    ---------- Debugging options ----------

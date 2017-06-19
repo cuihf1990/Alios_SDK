@@ -1,4 +1,5 @@
 NAME := meshapp
+no_with_lwip := 0
 
 $(NAME)_SOURCES     := main.c
 
