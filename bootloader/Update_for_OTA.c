@@ -58,7 +58,8 @@ static uint8_t data[SizePerRW];
 static uint8_t newData[SizePerRW];
 uint8_t paraSaveInRam[16*1024];
 
-#define update_log(M, ...) printf("UPDATE", M, ##__VA_ARGS__)
+// #define update_log(M, ...)
+#define update_log(M, ...) printf(M,"\r\n", ##__VA_ARGS__)
 
 static int32_t checkcrc(uint16_t crc_in, int partition_type, int total_len)
 {
@@ -93,8 +94,8 @@ static int32_t checkcrc(uint16_t crc_in, int partition_type, int total_len)
     }
 
   CRC16_Final( &contex, &crc );
-    if (crc == crc_in)
-        err = 0;
+    if (crc != crc_in)
+        err = -1;
 exit:
     update_log("CRC check return %d, got crc %x, calcuated crc %x", err, crc_in, crc);
     return err;

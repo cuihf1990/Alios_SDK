@@ -153,10 +153,15 @@ int32_t Ymodem_Receive (uint8_t *buf, hal_partition_t partition)
   uint32_t flashdestination;
 
 #ifdef CONFIG_MX108
-  flashdestination = hal_flash_get_info(partition)->partition_start_addr / 16;
-#else
-  flashdestination = 0;
+  if(partition == HAL_PARTITION_APPLICATION)
+  {
+    flashdestination = hal_flash_get_info(partition)->partition_start_addr / 16;
+  }
+  else
 #endif
+  {
+    flashdestination = 0;
+  }
 
   maxRecvSize = hal_flash_get_info(partition)->partition_length;
 
@@ -442,12 +447,17 @@ uint8_t Ymodem_Transmit (hal_partition_t partition, const uint8_t* sendFileName)
   uint32_t sizeFile;
 
 #ifdef CONFIG_MX108
-  flashdestination = hal_flash_get_info(partition)->partition_start_addr / 16;
-  sizeFile = hal_flash_get_info(partition)->partition_length / 16 * 15;
-#else
-  flashdestination = 0;
-  sizeFile = hal_flash_get_info(partition)->partition_length;
+  if(partition == HAL_PARTITION_APPLICATION)
+  {
+    flashdestination = hal_flash_get_info(partition)->partition_start_addr / 16;
+    sizeFile = hal_flash_get_info(partition)->partition_length / 16 * 15;
+  }
+  else
 #endif
+  {
+    flashdestination = 0;
+    sizeFile = hal_flash_get_info(partition)->partition_length;
+  }
 
   
 

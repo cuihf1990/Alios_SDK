@@ -194,7 +194,8 @@ void menu_loop(void)
   char cmdbuf [CMD_STRING_SIZE] = {0}, cmdname[15] = {0};     /* command input buffer        */
   int i, j;                                       /* index for command buffer    */
   char idStr[4], startAddressStr[10], endAddressStr[10], flash_dev_str[4];
-  int32_t id, startAddress, endAddress;
+  uint32_t id;
+  int32_t startAddress, endAddress;
   bool inputFlashArea = false;
   hal_logic_partition_t *partition;
   hal_flash_t flash_dev;
@@ -276,22 +277,22 @@ void menu_loop(void)
       }
 
       if( findCommandPara(cmdbuf, "e", NULL, 0) != -1 ){
-        printf( "\n\rErasing %s...\n\r", partition->partition_description );
+        printf( "\n\rErasing %s...\n\r", hal_flash_get_info(id)->partition_description );
 
-        err = hal_flash_dis_secure( (hal_partition_t)id, 0x0, partition->partition_length );
+        err = hal_flash_dis_secure( id, 0x0, hal_flash_get_info(id)->partition_length );
         require_noerr( err, exit);
-        hal_flash_erase( (hal_partition_t)id, 0x0, partition->partition_length );
+        hal_flash_erase( id, 0x0, hal_flash_get_info(id)->partition_length );
         continue;
       }
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
-        printf ( "\n\rRead %s...\n\r", partition->partition_description );
-        SerialUpload( (hal_partition_t)id, "Image.bin" );
+        printf ( "\n\rRead %s...\n\r", hal_flash_get_info(id)->partition_description );
+        SerialUpload( id, "Image.bin" );
         continue;
       }
-      printf ("\n\rUpdating %s...\n\r", partition->partition_description );
-      err = hal_flash_dis_secure( (hal_partition_t)id, 0x0, partition->partition_length );
+      printf ("\n\rUpdating %s...\n\r", hal_flash_get_info(id)->partition_description );
+      err = hal_flash_dis_secure( id, 0x0, hal_flash_get_info(id)->partition_length );
       require_noerr( err, exit);
-      SerialDownload( (hal_partition_t)id );                        
+      SerialDownload( id );                        
     }
     #if 0
     /***************** Command "4" or "FLASHUPDATE": : Update the Flash  *************************/
