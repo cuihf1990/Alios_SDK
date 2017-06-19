@@ -1,9 +1,14 @@
 #include <errno.h>
 #include <execinfo.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <sys/select.h>
 #include <termios.h>
 #include <unistd.h>
+#include <semaphore.h>
+#include <cpu_event.h>
+#include <pthread.h>
+#include <signal.h>
 
 #include <k_api.h>
 #include "hal/soc/soc.h"
@@ -22,8 +27,10 @@ typedef int32_t
 INT32;          /* Signed   32 bit quantity        */
 
 static struct termios term_orig;
+static sigset_t sigset;
 
-#define MAX_UART_NUM 1
+#define MAX_UART_NUM         1
+#define CLI_BUFQUE_NUM       2
 
 enum _uart_status_e {
     _UART_STATUS_CLOSED = 0,
@@ -34,9 +41,9 @@ enum _uart_status_e {
 typedef struct {
     uint8_t             uart;
     uint8_t             status;
-    uint8_t             *rx_buf;
-    uint32_t            rx_size;
+    kbuf_queue_t       *bufque;
     kmutex_t            tx_mutex;
+    pthread_t           threaid;
 } _uart_drv_t;
 
 static _uart_drv_t _uart_drv[MAX_UART_NUM];
@@ -47,23 +54,68 @@ extern uint8_t uart_is_tx_fifo_empty( void );
 extern uint8_t uart_is_tx_fifo_full( void );
 extern void uart_set_tx_stop_end_int( uint8_t set );
 
-/*restore terminal settings when exit*/
-static void uartsigHandler(int sig)
-{
-    tcsetattr(0, TCSANOW, &term_orig);
-    signal(sig, SIG_DFL);
-    raise(sig);
-}
-
 static void exit_cleanup(void)
 {
     tcsetattr(0, TCSANOW, &term_orig);
 }
 
+static void cli_input_handler(char *nbuf)
+{
+    _uart_drv_t    *pdrv = &_uart_drv[0];
+
+    yunos_buf_queue_send(pdrv->bufque, nbuf, 1);
+    cpu_event_free(nbuf);
+    return;
+}
+
+static void * clirev_thread(void * arg)
+{
+    fd_set fdset;
+    int ret;
+
+
+    sigaddset(&sigset, SIGALRM);
+    ret = pthread_sigmask(SIG_BLOCK, &sigset, NULL);
+
+    if(ret != 0) {
+        perror("sigmask failed");
+        return NULL;
+    }
+
+    while(1) {
+        FD_ZERO(&fdset);
+        FD_SET(0, &fdset);
+
+        /* Wait for a packet to arrive. */
+        ret = select(1, &fdset, NULL, NULL, NULL);
+        if(ret == 1) {
+            char *nbuf = cpu_event_malloc(1);
+
+            /* Obtain the size of the packet and put it into the "len"
+             variable. */
+            int readlen = read(0, nbuf, 1);
+            if (readlen < 0) {
+                perror("cli read eror");
+                continue;
+            }
+
+            /* Handle incoming packet. */
+            cpu_call_handler((cpu_event_handler)cli_input_handler, nbuf);
+        } else if(ret == -1) {
+            perror("cli_thread: select");
+        }
+    }
+
+    return NULL;
+}
+
+
+
 int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
 {
-    _uart_drv_t *pdrv = &_uart_drv[0];
+    _uart_drv_t    *pdrv = &_uart_drv[0];
     struct termios  term_vi;
+    kstat_t         stat;
 
     if (pdrv->status == _UART_STATUS_CLOSED) {
         yunos_mutex_create( &pdrv->tx_mutex, "TX_MUTEX" );
@@ -73,9 +125,14 @@ int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
         term_vi.c_lflag &= (~ICANON & ~ECHO);   // leave ISIG ON- allow intr's
         term_vi.c_iflag &= (~IXON & ~ICRNL);
         tcsetattr(0, TCSANOW, &term_vi);
-        signal(SIGTERM, uartsigHandler);
-        signal(SIGINT,  uartsigHandler);
         atexit(exit_cleanup);
+        stat = yunos_buf_queue_dyn_create(&pdrv->bufque, "cli", config->rx_buf_size , CLI_BUFQUE_NUM);
+        if(stat != YUNOS_SUCCESS) {
+            return stat;
+        }
+
+        /* it has to be pthread, as it needs to access linux functions */
+        pthread_create(&pdrv->threaid, NULL, clirev_thread, NULL);
     }
     return 0;
 }
@@ -93,6 +150,7 @@ int32_t hal_uart_finalize(uint8_t uart)
     yunos_mutex_del(&pdrv->tx_mutex);
     pdrv->status = _UART_STATUS_CLOSED;
     tcsetattr(0, TCSANOW, &term_orig);
+    yunos_buf_queue_dyn_del(pdrv->bufque);
     return 0;
 }
 
@@ -115,55 +173,27 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size)
 int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size,
                       uint32_t *recv_size, uint32_t timeout)
 {
-    int            in = 0;
-    uint32_t       plen = 0;
-    char          *pin = data;
-    fd_set         rfds;
-    struct timeval tv;
-    int            retval;
+    uint32_t       readlen  = 0;
+    uint32_t       totallen = 0;
+    kstat_t        retval;
+    _uart_drv_t   *pdrv = &_uart_drv[uart];
 
-    /* watch stdin (fd 0) to see when it has input. */
-    do {
-        FD_ZERO(&rfds);
-        FD_SET(0, &rfds);
-
-        /* no wait */
-        tv.tv_sec  = 0;
-        tv.tv_usec = YUNOS_CONFIG_TIME_SLICE_DEFAULT;
-
-        retval = select(1, &rfds, NULL, NULL, &tv);
-
-        if (retval < 0) {
-            if (errno == EINTR) {
-                continue;
+    while(1) {
+        retval = yunos_buf_queue_recv(pdrv->bufque, YUNOS_WAIT_FOREVER, data, &readlen);
+        if(retval != YUNOS_SUCCESS) {
+            if(*recv_size) {
+                *recv_size = totallen;
             }
             return -1;
         }
-
-        if (retval == 0) {
-            yunos_task_sleep(10);
-            continue;
-        }
-
-        /* not block for select tells */
-        read(0, &in, 1);
-        if (in < 0 && errno != EINTR) {
-            return -1;
-        }
-        if (in == '\n') {
-            in = '\r';
-        }
-        *pin = in;
-        pin++;
-        plen++;
-        if (plen >= expect_size) {
-            if (recv_size) {
-                *recv_size = plen;
-            }
+        totallen += readlen;
+        if(totallen >=  expect_size) {
             break;
         }
-    } while (1);
-
+    }
+    if(recv_size) {
+        *recv_size = totallen;
+    }
     return 0;
 
 }
