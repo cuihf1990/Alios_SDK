@@ -18,6 +18,7 @@
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/network.h>
+#include <yos/cli.h>
 #ifdef CONFIG_YOS_DDA
 #include <dda.h>
 #endif
@@ -49,6 +50,7 @@ int application_start(int argc, char **argv)
 #endif
     }
     else if (strcmp(mode, "--mesh-master") == 0) {
+        yos_cli_stop();
 #ifdef CONFIG_YOS_DDM
         ddm_run(argc, argv);
 #endif

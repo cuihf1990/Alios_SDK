@@ -581,6 +581,13 @@ __attribute__ ((weak)) int board_cli_init(void)
     return 0;
 }
 
+int yos_cli_stop(void)
+{
+    hal_uart_finalize(CLI_UART);
+    cliexit = 1;
+    return 0;
+}
+
 int yos_cli_init(void)
 {
     int ret;
