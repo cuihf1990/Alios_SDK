@@ -2201,7 +2201,7 @@ int rxu_mgt_monitor(uint16_t framectrl,
                               uint32_t *payload,
                               uint16_t length)
 {
-	monitor_cb_t fn;
+	monitor_data_cb_t fn;
 	int upload = 0;
 	
 	if(MAC_FCTRL_DATA_T != (framectrl & MAC_FCTRL_TYPE_MASK))

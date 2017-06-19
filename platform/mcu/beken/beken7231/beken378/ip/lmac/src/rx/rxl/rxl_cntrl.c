@@ -94,7 +94,7 @@ extern void bmsg_rx_sender(void *arg);
 int rxl_data_monitor(uint8_t *payload,
                               uint16_t length)
 {
-	monitor_cb_t fn;
+	monitor_data_cb_t fn;
 	int monitor_flag = 0;
 	
 	if(bk_wlan_is_monitor_mode())

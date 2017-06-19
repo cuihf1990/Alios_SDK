@@ -15,7 +15,9 @@
 #include "mac.h"
 #include "param_config.h"
 #include "uart_pub.h"
-#include "mico_wlan.h"
+#include <hal/base.h>
+#include <hal/wifi.h>
+
 
 general_param_t *g_wlan_general_param = NULL;
 ap_param_t *g_ap_param_ptr = NULL;
@@ -259,7 +261,7 @@ int cfg_get_sta_params(void)
     return 0;
 }
 
-int wpa_get_ap_security(apinfo_adv_t *ap, uint8_t **key, int *key_len)
+int wpa_get_ap_security(hal_wifi_ap_info_adv_t *ap, uint8_t **key, int *key_len)
 {
 	if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_WEP){
 		ap->security = SECURITY_TYPE_WEP;			

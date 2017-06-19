@@ -6,43 +6,10 @@
 #include "include.h"
 #include "rtos_pub.h"
 
-#if CFG_MXCHIP
-#include "mico_wlan.h"
+#include <hal/base.h>
+#include <hal/wifi.h>
 
-#else
-#define WiFi_Interface  wlanInterfaceTypedef
-
-#define DHCP_Disable  (0)   /**< Disable DHCP service. */
-#define DHCP_Client   (1)   /**< Enable DHCP client which get IP address from DHCP server automatically,  
-								reset Wi-Fi connection if failed. */
-#define DHCP_Server   (2)   /**< Enable DHCP server, needs assign a static address as local address. */
-
-/**
- *  @brief  wlan network interface enumeration definition.
- */
-typedef enum
-{
-    Soft_AP,  /**< Act as an access point, and other station can connect, 4 stations Max*/
-    Station   /**< Act as a station which can connect to an access point*/
-} wlanInterfaceTypedef;
-
-/**
- *  @brief  Wi-Fi security type enumeration definition.
- */
-enum wlan_sec_type_e
-{
-    SECURITY_TYPE_NONE,        /**< Open system. */
-    SECURITY_TYPE_WEP,         /**< Wired Equivalent Privacy. WEP security. */
-    SECURITY_TYPE_WPA_TKIP,    /**< WPA /w TKIP */
-    SECURITY_TYPE_WPA_AES,     /**< WPA /w AES */
-    SECURITY_TYPE_WPA2_TKIP,   /**< WPA2 /w TKIP */
-    SECURITY_TYPE_WPA2_AES,    /**< WPA2 /w AES */
-    SECURITY_TYPE_WPA2_MIXED,  /**< WPA2 /w AES or TKIP */
-    SECURITY_TYPE_AUTO,        /**< It is used when calling @ref bkWlanStartAdv, MICO read security type from scan result. */
-};
-
-enum
-{
+enum {
     WLAN_RX_BEACON,    /* receive beacon packet */
     WLAN_RX_PROBE_REQ, /* receive probe request packet */
     WLAN_RX_PROBE_RES, /* receive probe response packet */
@@ -53,106 +20,6 @@ enum
 
     WLAN_RX_ALL,       /* receive ALL 802.11 packet */
 };
-
-typedef uint8_t wlan_sec_type_t;
-
-/**
- *  @brief  wlan local IP information structure definition.
- */
-typedef struct
-{
-	uint8_t dhcp;       /**< DHCP mode: @ref DHCP_Disable, @ref DHCP_Client, @ref DHCP_Server.*/
-	char    ip[16];     /**< Local IP address on the target wlan interface: @ref wlanInterfaceTypedef.*/
-    char    gate[16];   /**< Router IP address on the target wlan interface: @ref wlanInterfaceTypedef.*/
-    char    mask[16];   /**< Netmask on the target wlan interface: @ref wlanInterfaceTypedef.*/
-    char    dns[16];    /**< DNS server IP address.*/
-    char    mac[16];    /**< MAC address, example: "C89346112233".*/
-    char    broadcastip[16];
-} IPStatusTypedef;
-
-/**
- *  @brief  Scan result using normal scan.
- */
-typedef  struct  _ScanResult
-{
-    char ApNum;       /**< The number of access points found in scanning. */
-    struct
-    {
-        char ssid[32];  /**< The SSID of an access point. */
-        char ApPower;   /**< Signal strength, min:0, max:100. */
-    } *ApList;
-} ScanResult;
-
-/**
- *  @brief  Input network paras, used in bk_wlan_start function.
- */
-typedef struct _network_InitTypeDef_st
-{
-    char wifi_mode;               /**< DHCP mode: @ref wlanInterfaceTypedef.*/
-    char wifi_ssid[32];           /**< SSID of the wlan needs to be connected.*/
-    char wifi_key[64];            /**< Security key of the wlan needs to be connected, ignored in an open system.*/
-    char local_ip_addr[16];       /**< Static IP configuration, Local IP address. */
-    char net_mask[16];            /**< Static IP configuration, Netmask. */
-    char gateway_ip_addr[16];     /**< Static IP configuration, Router IP address. */
-    char dnsServer_ip_addr[16];   /**< Static IP configuration, DNS server IP address. */
-    char dhcpMode;                /**< DHCP mode, @ref DHCP_Disable, @ref DHCP_Client and @ref DHCP_Server. */
-    char reserved[32];
-    int  wifi_retry_interval;     /**< Retry interval if an error is occured when connecting an access point,
-                                     time unit is millisecond. */
-} network_InitTypeDef_st;
-
-/**
- *  @brief  Advanced precise wlan parameters, used in @ref network_InitTypeDef_adv_st.
- */
-typedef struct
-{
-    char    ssid[32];    /**< SSID of the wlan that needs to be connected. Example: "SSID String". */
-    char    bssid[6];    /**< BSSID of the wlan needs to be connected. Example: {0xC8 0x93 0x46 0x11 0x22 0x33}. */
-    uint8_t channel;     /**< Wlan's RF frequency, channel 0-13. 1-13 means a fixed channel
-                            that can speed up a connection procedure, 0 is not a fixed input
-                            means all channels are possible*/
-    wlan_sec_type_t security;
-}   apinfo_adv_t;
-
-/**
- *  @brief  Input network precise paras in bkWlanStartAdv function.
- */
-typedef struct _network_InitTypeDef_adv_st
-{
-    apinfo_adv_t ap_info;         /**< @ref apinfo_adv_t. */
-    char  key[64];                /**< Security key or PMK of the wlan. */
-    int   key_len;                /**< The length of the key. */
-    char  local_ip_addr[16];      /**< Static IP configuration, Local IP address. */
-    char  net_mask[16];           /**< Static IP configuration, Netmask. */
-    char  gateway_ip_addr[16];    /**< Static IP configuration, Router IP address. */
-    char  dnsServer_ip_addr[16];  /**< Static IP configuration, DNS server IP address. */
-    char  dhcpMode;               /**< DHCP mode, @ref DHCP_Disable, @ref DHCP_Client and @ref DHCP_Server. */
-    char  reserved[32];
-    int   wifi_retry_interval;    /**< Retry interval if an error is occured when connecting an access point,
-                                  time unit is millisecond. */
-} network_InitTypeDef_adv_st;
-
-/**
- *  @brief  Current link status in station mode.
- */
-typedef struct _linkStatus_t
-{
-    int is_connected;       /**< The link to wlan is established or not, 0: disconnected, 1: connected. */
-    int wifi_strength;      /**< Signal strength of the current connected AP */
-    uint8_t  ssid[32];      /**< SSID of the current connected wlan */
-    uint8_t  bssid[6];      /**< BSSID of the current connected wlan */
-    int      channel;       /**< Channel of the current connected wlan */
-} LinkStatusTypeDef;
-
-/*WiFi Monitor */
-/* @brief define the monitor callback function.
-  * @param data: the 802.11 packet
-  * @param len: the length of this packet, include FCS
-  * @param rssi: the rssi of the received packet.
-  */
-typedef void (*monitor_cb_t)(uint8_t*data, int len);
-
-#endif // CFG_MXCHIP
 
 /** @brief  Connect or establish a Wi-Fi network in normal mode (station or soft ap mode).
  * 
@@ -172,7 +39,7 @@ typedef void (*monitor_cb_t)(uint8_t*data, int len);
  *  @return In station mode, allways retrurn kWlanNoErr.
  *          In soft ap mode, return kWlanXXXErr
  */
-OSStatus bk_wlan_start(network_InitTypeDef_st* inNetworkInitPara);
+OSStatus bk_wlan_start(hal_wifi_init_type_t* inNetworkInitPara);
 
 /** @brief  Connect to a Wi-Fi network with advantage settings (station mode only)
  * 
@@ -192,7 +59,7 @@ OSStatus bk_wlan_start(network_InitTypeDef_st* inNetworkInitPara);
  *  @retrun Allways return kWlanNoErr although error occurs in first fast try 
  *          kWlanTimeoutErr: DHCP client timeout
  */
-OSStatus bk_wlan_start_adv(network_InitTypeDef_adv_st* inNetworkInitParaAdv);
+OSStatus bk_wlan_start_adv(hal_wifi_init_type_adv_t* inNetworkInitParaAdv);
 
 /** @brief  Read current IP status on a network interface.
  * 
@@ -204,7 +71,7 @@ OSStatus bk_wlan_start_adv(network_InitTypeDef_adv_st* inNetworkInitParaAdv);
  *  @return   kNoErr        : on success.
  *  @return   kGeneralErr   : if an error occurred
  */
-OSStatus bk_wlan_get_ip_status(IPStatusTypedef *outNetpara, WiFi_Interface inInterface);
+OSStatus bk_wlan_get_ip_status(hal_wifi_ip_stat_t *outNetpara, hal_wifi_type_t inInterface);
 
 /** @brief  Read current wireless link status on station interface.
  * 
@@ -213,7 +80,7 @@ OSStatus bk_wlan_get_ip_status(IPStatusTypedef *outNetpara, WiFi_Interface inInt
  *  @return   kNoErr        : on success.
  *  @return   kGeneralErr   : if an error occurred
  */
-OSStatus bk_wlan_get_link_status(LinkStatusTypeDef *outStatus);
+OSStatus bk_wlan_get_link_status(hal_wifi_link_stat_t *outStatus);
 
 /** @brief  Start a wlan scanning in 2.4GHz in MICO backfround.
  *  
@@ -252,8 +119,8 @@ int bk_wlan_set_channel(int channel);
 /** @brief  Register the monitor callback function
  *        Once received a 802.11 packet call the registered function to return the packet.
  */
-void bk_wlan_register_monitor_cb(monitor_cb_t fn);
-monitor_cb_t bk_wlan_get_monitor_cb(void);
+void bk_wlan_register_monitor_cb(monitor_data_cb_t fn);
+monitor_data_cb_t bk_wlan_get_monitor_cb(void);
 int bk_wlan_is_monitor_mode(void);
 uint32_t bk_wlan_is_ap(void);
 uint32_t bk_wlan_is_sta(void);
@@ -261,8 +128,8 @@ uint32_t bk_sta_cipher_is_open(void);
 uint32_t bk_sta_cipher_is_wep(void);
 
 #ifdef CONFIG_YOS_MESH
-void wlan_register_mesh_monitor_cb(monitor_cb_t fn);
-monitor_cb_t wlan_get_mesh_monitor_cb(void);
+void wlan_register_mesh_monitor_cb(monitor_data_cb_t fn);
+monitor_data_cb_t wlan_get_mesh_monitor_cb(void);
 #endif
 
 #endif// _WLAN_UI_PUB_
