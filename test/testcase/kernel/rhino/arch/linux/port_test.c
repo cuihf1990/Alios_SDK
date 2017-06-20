@@ -108,11 +108,6 @@ static void test_cpu_event_pthread_case(void)
 
     YUNIT_ASSERT(ret == 0);
 
-    sigset_t sigblocked;
-    sigprocmask(SIG_BLOCK, NULL, &sigblocked);
-    YUNIT_ASSERT(0 == sigismember(&sigblocked, SIGUSR2));
-    YUNIT_ASSERT(0 == sigismember(&sigblocked, SIGALRM));
-
     while (!test_done) {
         yunos_task_sleep(10);
     }
