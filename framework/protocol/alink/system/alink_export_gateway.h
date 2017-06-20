@@ -11,7 +11,6 @@ extern "C"
  *  @{
  */
 
-
 /** @defgroup gateway_debug debug
  *  @{
  */
@@ -100,9 +99,9 @@ int alink_wait_connect(int timeout_ms);
  */
 int alink_end(void);
 
-/** @} */ //end of entry 
+/** @} */ //end of entry
 
-/** @defgroup gateway_feature register attr & service 
+/** @defgroup gateway_feature register attr & service
  *  @{
  */
 
