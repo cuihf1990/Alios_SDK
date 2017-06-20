@@ -2346,16 +2346,12 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 	}
 	#endif
 	#endif // CFG_WIFI_AP_MODE
-	
-#ifdef CONFIG_YOS_MESH
-	if(bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode())
-#else
+
 	if(bk_wlan_is_monitor_mode())
-#endif
 	{
 		return rxu_mgt_monitor(framectrl, payload, length);
 	}
-	
+
     // Check if the message has to be forwarded or not
     if (dest_id != TASK_NONE)
     {
