@@ -51,12 +51,11 @@ int _write( int file, char *ptr, int len )
             return -1;
     }
 
-    while (len > 0) {
+    for (int i = 0; i < len; i++) {
         if (*ptr == '\n')
-            hal_uart_send( 0, (const void*)'\r', 1 );
+            hal_uart_send( 0, (const void*)"\r", 1 );
         hal_uart_send( 0, (const void*)ptr, 1 );
         ptr ++;
-        len --;
     }
 
     return len;
