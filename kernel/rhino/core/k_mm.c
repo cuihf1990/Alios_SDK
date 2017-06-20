@@ -16,6 +16,7 @@
 
 #include <k_api.h>
 #include <assert.h>
+#include <stdio.h>
 
 #if (YUNOS_CONFIG_MM_TLF > 0)
 
@@ -735,6 +736,12 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 void *yunos_mm_alloc(size_t size)
 {
     void *tmp;
+
+    if(size == 0){
+        printf("WARNING, malloc size = 0\r\n");
+        return NULL;
+    }
+
     tmp = k_mm_alloc(g_kmm_head, size);
     if (tmp == NULL) {
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
