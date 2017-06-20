@@ -2347,7 +2347,11 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 	#endif
 	#endif // CFG_WIFI_AP_MODE
 	
+#ifdef CONFIG_YOS_MESH
 	if(bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode())
+#else
+	if(bk_wlan_is_monitor_mode())
+#endif
 	{
 		return rxu_mgt_monitor(framectrl, payload, length);
 	}
@@ -2591,7 +2595,11 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
             rxu_cntrl_pm_mon_check(frame, statinfo);
 
             // When the sender is unknown, only management frames are handled here
+#ifdef CONFIG_YOS_MESH
             if(!(bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode()))
+#else
+            if(!bk_wlan_is_monitor_mode())
+#endif
             {
 	            if ((frame_cntl & MAC_FCTRL_TYPE_MASK) != MAC_FCTRL_MGT_T)
 	                break;
