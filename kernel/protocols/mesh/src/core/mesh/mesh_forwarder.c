@@ -733,7 +733,7 @@ ur_error_t mf_send_message(message_t *message)
     info->flags |= INSERT_MESH_HEADER;
     set_dest_encrypt_flag(info);
     if(info->type == MESH_FRAME_TYPE_DATA) {
-        info->flags |= ENABLE_COMPRESS_FLAG;
+        //info->flags |= ENABLE_COMPRESS_FLAG;
     }
 
     nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
