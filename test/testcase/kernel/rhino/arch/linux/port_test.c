@@ -163,7 +163,7 @@ static yunit_test_case_t rhino_port_testcases[] = {
 };
 
 static yunit_test_suite_t suites[] = {
-    { "rhion_port", init, cleanup, setup, teardown, rhino_port_testcases },
+    { "rhino_port", init, cleanup, setup, teardown, rhino_port_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
