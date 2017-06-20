@@ -1628,7 +1628,7 @@ void wpa_dbg(void *ctx, int level, const char *fmt, ...)
 
 	len = vsnprintf(buf, buflen, fmt, ap);
 	va_end(ap);
-	bk_send_string(buf);
+	bk_printf("%s", buf);
 	os_free(buf);
 	
 	bk_printf("\r\n");

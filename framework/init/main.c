@@ -25,7 +25,7 @@ int yos_framework_init(void)
 
     yos_loop_init();
 
-    yos_cli_init();
+    // yos_cli_init();
 
     ota_service_init();
 

@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-#define STDIO_BREAK_TO_MENU 0
+#define STDIO_BREAK_TO_MENU 1
 
 #define Bootloader_REVISION "v3.0"
   

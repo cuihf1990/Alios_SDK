@@ -18,7 +18,7 @@
 #define __YOS_CLI_H__
 
 
-#define CLI_UART     0
+#define CLI_UART     1
 #define MAX_COMMANDS    64
 #define INBUF_SIZE      128
 #define OUTBUF_SIZE     2048

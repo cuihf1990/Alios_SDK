@@ -32,6 +32,7 @@
 #include "hal/soc/soc.h"
 #include "yos/kernel.h"
 #include "board.h"
+#include "bootloader.h"
 
 #define CNTLQ      0x11
 #define CNTLS      0x13

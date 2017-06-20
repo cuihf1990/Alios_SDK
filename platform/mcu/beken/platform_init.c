@@ -2,10 +2,18 @@
 #include <sys/errno.h>
 #include "hal/soc/soc.h"
 
+#ifdef BOOTLOADER
+#define STDIO_UART 0
+#define STDIO_UART_BUADRATE 921600
+#else
+#define STDIO_UART 0
+#define STDIO_UART_BUADRATE 921600
+#endif
+
 extern int errno;
 
 const hal_uart_config_t uart_cfg = {
-    .baud_rate = 921600,
+    .baud_rate = STDIO_UART_BUADRATE,
     .data_width = DATA_WIDTH_8BIT,
     .parity = NO_PARITY,
     .stop_bits = STOP_BITS_1,
@@ -15,7 +23,7 @@ const hal_uart_config_t uart_cfg = {
 
 void hal_init(void)
 {
-    hal_uart_init(0, &uart_cfg);
+    hal_uart_init(STDIO_UART, &uart_cfg);
 
 #ifdef BOOTLOADER
     /* init for bootloader */
@@ -51,7 +59,7 @@ int _write( int file, char *ptr, int len )
             return -1;
     }
 
-    hal_uart_send( 0, (const void*)ptr, len );
+    hal_uart_send( STDIO_UART, (const void*)ptr, len );
 
     return len;
 }
