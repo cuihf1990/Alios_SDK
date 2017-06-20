@@ -227,7 +227,7 @@ static void __free_cmd_profile(void *profile)
 }
 
 
-static void __free_name_mapping(list_head_t *mapping_head)
+static void __free_name_mapping(dlist_t *mapping_head)
 {
     name_mapping_t *pos, *next;
     list_for_each_entry_safe_t(pos, next, mapping_head, list_node, name_mapping_t){
@@ -245,7 +245,7 @@ static void __free_endpoint_profile(endpoint_profile_t *profile)
 }
 
 
-static void __free_endpoint_profile_list(list_head_t *endpoint_head)
+static void __free_endpoint_profile_list(dlist_t *endpoint_head)
 {
     endpoint_profile_t *pos, *next;
     list_for_each_entry_safe_t(pos, next, endpoint_head, list_node, endpoint_profile_t){
@@ -293,7 +293,7 @@ void __dump_attr_profile(attr_profile_t *profile)
 }
 
 
-void __dump_attr_profile_list(list_head_t *head)
+void __dump_attr_profile_list(dlist_t *head)
 {
     data_list_t *pos;
     //attr_profile_t *profile = NULL;
@@ -333,7 +333,7 @@ void __dump_cmd_profile(cmd_profile_t *profile)
         __dump_cmd_argument(profile->args, "\t");
 }
 
-void __dump_cmd_profile_list(list_head_t *head)
+void __dump_cmd_profile_list(dlist_t *head)
 {
     data_list_t *pos;
     os_printf("cmd profile:\n");
@@ -364,7 +364,7 @@ void __dump_endpoint_profile(endpoint_profile_t *profile)
 }
 
 
-void __dump_endpoint_profile_list(list_head_t *head)
+void __dump_endpoint_profile_list(dlist_t *head)
 {
     endpoint_profile_t *profile = NULL;
     list_for_each_entry_t(profile, head, list_node, endpoint_profile_t){
@@ -384,7 +384,7 @@ void __dump_device_profile(dev_profile_t *profile)
 }
 
 
-static int stdd_parse_element_cb(char *element_str, int str_len, int str_type, list_head_t *head);
+static int stdd_parse_element_cb(char *element_str, int str_len, int str_type, dlist_t *head);
 static attr_element_t *stdd_parse_complix_type(char *element_str, int str_len, int value_type)
 {
     int type, len, ret = SERVICE_RESULT_ERR;
@@ -420,7 +420,7 @@ end:
 }
 
 
-static int stdd_parse_element_cb(char *element_str, int str_len, int str_type, list_head_t *element_head)//list_head_t *head
+static int stdd_parse_element_cb(char *element_str, int str_len, int str_type, dlist_t *element_head)//dlist_t *head
 {
     int len, ret = SERVICE_RESULT_ERR;
     char *element_name, *sub_element, *data_type = NULL;
@@ -479,7 +479,7 @@ err:
 }
 
 
-static int stdd_parse_attr_cb(char *attr_str, int str_len, int str_type, list_head_t *profile_head, char *cluster_id)//list_head_t *head, cluster_id
+static int stdd_parse_attr_cb(char *attr_str, int str_len, int str_type, dlist_t *profile_head, char *cluster_id)//dlist_t *head, cluster_id
 {
     int len, ret = SERVICE_RESULT_ERR;
     char *attr_id, *attr_name, *data_type = NULL;
@@ -549,7 +549,7 @@ err:
 }
 
 
-static int stdd_parse_cluster_attr_cb(char *cluster_str, int str_len, int str_type, list_head_t *profile_head)//list_head_t *head
+static int stdd_parse_cluster_attr_cb(char *cluster_str, int str_len, int str_type, dlist_t *profile_head)//dlist_t *head
 {
     int ret = SERVICE_RESULT_OK;
     char *str_pos, *attr_set = NULL;
@@ -585,7 +585,7 @@ static int stdd_parse_cluster_attr_cb(char *cluster_str, int str_len, int str_ty
 }
 
 
-static int stdd_parse_cmd_args_cb(char *cmd_arg_str, int str_len, int str_type, list_head_t *arg_head);
+static int stdd_parse_cmd_args_cb(char *cmd_arg_str, int str_len, int str_type, dlist_t *arg_head);
 static cmd_argument_t *stdd_parser_cmd_args(char *arg_list, int str_len)
 {
     int ret = SERVICE_RESULT_ERR;
@@ -621,7 +621,7 @@ err:
     return NULL;
 }
 
-static int stdd_parse_cmd_args_cb(char *cmd_arg_str, int str_len, int str_type, list_head_t *arg_head)//list_head_t *cmd_arg_head
+static int stdd_parse_cmd_args_cb(char *cmd_arg_str, int str_len, int str_type, dlist_t *arg_head)//dlist_t *cmd_arg_head
 {
     int len, ret = SERVICE_RESULT_ERR;
     char *arg_name, *data_type = NULL;
@@ -676,7 +676,7 @@ err:
 
 
 
-static int stdd_parse_cmd_cb(char *cmd_str, int str_len, int str_type, list_head_t *profile_head, char *cluster_id)//list_head_t *profile_head, cluster_id
+static int stdd_parse_cmd_cb(char *cmd_str, int str_len, int str_type, dlist_t *profile_head, char *cluster_id)//dlist_t *profile_head, cluster_id
 {
     int len, ret = SERVICE_RESULT_ERR;
     char *cmd_id, *cmd_name = NULL;
@@ -733,7 +733,7 @@ err:
 }
 
 
-static int stdd_parse_cluster_cmd_cb(char *cluster_cmd_str, int str_len, int str_type, list_head_t *profile_head)//list_head_t *profile_head
+static int stdd_parse_cluster_cmd_cb(char *cluster_cmd_str, int str_len, int str_type, dlist_t *profile_head)//dlist_t *profile_head
 {
     int ret = SERVICE_RESULT_OK;
     char *str_pos, *cmd_set = NULL;
@@ -766,7 +766,7 @@ static int stdd_parse_cluster_cmd_cb(char *cluster_cmd_str, int str_len, int str
 }
 
 
-static int stdd_parse_str_cb(char *str, int str_len, int str_type, list_head_t *str_head)
+static int stdd_parse_str_cb(char *str, int str_len, int str_type, dlist_t *str_head)
 {
     int ret = SERVICE_RESULT_ERR;
 
@@ -781,7 +781,7 @@ static int stdd_parse_str_cb(char *str, int str_len, int str_type, list_head_t *
 }
 
 
-static int stdd_parse_name_mapping_cb(char *mapping_str, int str_len, int str_type, list_head_t *mapping_head)//list_head
+static int stdd_parse_name_mapping_cb(char *mapping_str, int str_len, int str_type, dlist_t *mapping_head)//list_head
 {
     int len, ret = SERVICE_RESULT_ERR;
     char *user_name, *std_name = NULL;
@@ -814,7 +814,7 @@ err:
 }
 
 
-static int stdd_parse_endpoint_cb(char *endpoint_str, int str_len, int str_type, list_head_t *mapping_head)//endpoin_id, list_head_t
+static int stdd_parse_endpoint_cb(char *endpoint_str, int str_len, int str_type, dlist_t *mapping_head)//endpoin_id, dlist_t
 {
     int ret = SERVICE_RESULT_ERR;
     char *endpoint_id, *mapping_set = NULL;
@@ -881,7 +881,7 @@ err:
 }
 
 
-int stdd_parse_attr_profile(char *profile_str, list_head_t *profile_head)
+int stdd_parse_attr_profile(char *profile_str, dlist_t *profile_head)
 {
     int ret = SERVICE_RESULT_OK;
 
@@ -896,7 +896,7 @@ int stdd_parse_attr_profile(char *profile_str, list_head_t *profile_head)
 }
 
 
-int stdd_parse_cmd_profile(char *profile_str, list_head_t *profile_head)
+int stdd_parse_cmd_profile(char *profile_str, dlist_t *profile_head)
 {
     int ret = SERVICE_RESULT_OK;
 
@@ -911,7 +911,7 @@ int stdd_parse_cmd_profile(char *profile_str, list_head_t *profile_head)
 }
 
 
-int stdd_parse_str_set(char *str_set, list_head_t *strset_head)
+int stdd_parse_str_set(char *str_set, dlist_t *strset_head)
 {
     int ret = SERVICE_RESULT_OK;
 
@@ -926,7 +926,7 @@ int stdd_parse_str_set(char *str_set, list_head_t *strset_head)
 }
 
 
-int stdd_parse_endpoint_profile(char *profile_str, list_head_t *profile_head)
+int stdd_parse_endpoint_profile(char *profile_str, dlist_t *profile_head)
 {
     int ret = SERVICE_RESULT_OK;
 
@@ -955,19 +955,19 @@ void stdd_free_device_profile(dev_profile_t *profile)
 }
 
 
-void stdd_free_attr_profile(list_head_t *data_list_head)
+void stdd_free_attr_profile(dlist_t *data_list_head)
 {
     __free_data_list(data_list_head, list_node, data_list_t, &__free_attr_profile);
 }
 
 
-void stdd_free_cmd_profile(list_head_t *data_list_head)
+void stdd_free_cmd_profile(dlist_t *data_list_head)
 {
     __free_data_list(data_list_head, list_node, data_list_t, &__free_cmd_profile);
 }
 
 
-void stdd_free_device_profile_list(list_head_t *head)
+void stdd_free_device_profile_list(dlist_t *head)
 {
     dev_profile_t *pos, *next;
     list_for_each_entry_safe_t(pos, next, head, list_node, dev_profile_t){
