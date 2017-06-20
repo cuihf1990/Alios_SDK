@@ -16,11 +16,17 @@
 
 NAME := gateway
 
+GLOBAL_INCLUDES += ./
+GLOBAL_CFLAGS += -DMESH_GATEWAY_SERVICE
+
 $(NAME)_CFLAGS += -Wall -Werror
 
 $(NAME)_SOURCES += \
     gateway_service.c
 
-$(NAME)_COMPONENTS += cjson
+$(NAME)_COMPONENTS += cjson protocols.net protocols.mesh protocol.alink
 
-$(NAME)_INCLUDES := ./
+$(NAME)_INCLUDES := ./ ../protocol/alink/ ../protocol/alink/accs/ ../protocol/alink/json/
+$(NAME)_INCLUDES += ../protocol/alink/os/ ../protocol/alink/system/ ../protocol/alink/devmgr
+$(NAME)_INCLUDES += ../protocol/alink/msdp/
+$(NAME)_CFLAGS += -DGATEWAY_SDK

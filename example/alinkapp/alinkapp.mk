@@ -1,7 +1,7 @@
 NAME := alinkapp
 
 $(NAME)_SOURCES := alink_sample.c
-$(NAME)_COMPONENTS  := base64 hashtable log connectivity protocol.alink ywss modules.kv cli
+$(NAME)_COMPONENTS  := base64 hashtable log connectivity protocol.alink ywss modules.kv cli gateway
 $(NAME)_INCLUDES := ../../framework/protocol/alink/system/ ../../framework/protocol/alink/json/
 $(NAME)_INCLUDES += ../../kernel/modules/kv/include  
 GLOBAL_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration
