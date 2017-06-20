@@ -228,6 +228,10 @@ static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
 
 static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
 {
+    if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0) {
+        bk_wlan_start_monitor();
+        hal_machw_exit_monitor_mode();
+    }
     wlan_register_mesh_monitor_cb(wifi_monitor_cb);
     return 0;
 }
