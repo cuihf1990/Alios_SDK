@@ -11,6 +11,9 @@
 #include "devmgr.h"
 #include "service_manager.h"
 #include "connectivity_manager.h"
+#include "msdp.h"
+
+#define MODULE_NAME MODULE_NAME_MSDP
 
 static int module_inited = 0;
 static dlist_t g_helper_head;
@@ -223,6 +226,45 @@ int msdp_add_asyncpost_task(char *params)
     return SERVICE_RESULT_OK;
 }
 
+void *msdp_dup_string(const char *src)
+{
+    char *dst;
+    int n ;
+
+    if(!src) {
+        return NULL;
+    }
+
+    n = strlen(src);
+    dst = (char *)os_malloc(n + 1);
+    if(!dst) {
+        return NULL;
+    }
+
+    memcpy(dst, src, n);
+    dst[n] = '\0';
+
+    return dst;
+}
+
+void *msdp_dup_buff(const void *buff, unsigned buff_size)
+{
+    char *dst;
+    int n ;
+
+    if(!buff) {
+        return NULL;
+    }
+
+    dst = (char *)os_malloc(buff_size);
+    if(!dst) {
+        return NULL;
+    }
+
+    memcpy(dst, buff, buff_size);
+
+    return dst;
+}
 
 void *msdp_new_buff(unsigned int buff_size)
 {
@@ -386,7 +428,7 @@ static void msdp_delete_service_cb(device_helper_ptr helper, const char *name)
 
 static device_helper_ptr msdp_get_helper_by_devtype(uint8_t dev_type)
 {
-    if(!list_empty(&g_helper_head)){
+    if(!dlist_empty(&g_helper_head)){
         device_helper_ptr helper;
 
         dlist_for_each_entry(&g_helper_head, helper, device_helper_t, list_node)
@@ -502,6 +544,7 @@ int msdp_post_device_data_array(char *params)
 
 
 /*获取指定设备所有属性*/
+#define GATEWAY_ATTR_SET "[\"NetworkInformation\",\"ArmMode\",\"ArmEntryDelay\",\"ArmExitDelay\",\"DeviceWhiteList\"]"
 int msdp_get_all_attrname(const char *uuid, char *attrset, int buff_size)
 {
     int count = 0;
@@ -528,6 +571,7 @@ int msdp_get_all_attrname(const char *uuid, char *attrset, int buff_size)
 
     if(count == 0 || len == buff_size)
         return SERVICE_RESULT_ERR;
+    strncpy(attrset, GATEWAY_ATTR_SET, buff_size);
 
     return SERVICE_RESULT_OK;
 }
@@ -649,8 +693,8 @@ int msdp_register_device_helper(uint8_t dev_type, dev_option_cb callback[MAX_CAL
 
     memset(helper, 0, sizeof(device_helper_t));
     helper->mutex_lock= os_mutex_init();
-    INIT_LIST_HEAD(&(helper->attr_head));
-    INIT_LIST_HEAD(&(helper->srv_head));
+    dlist_init(&(helper->attr_head));
+    dlist_init(&(helper->srv_head));
     helper->dev_type = dev_type;
 
     for(i = 0; i < MAX_CALLBACK_NUM; i++)
@@ -681,7 +725,7 @@ void msdp_unregister_device_helper(uint8_t dev_type)
 
 void msdp_dump_helper()
 {
-    if(!list_empty(&g_helper_head)){
+    if(!dlist_empty(&g_helper_head)){
         device_helper_ptr sub_dev = NULL;
 
         /*子设备属性和服务节点*/
@@ -902,7 +946,6 @@ int msdp_register_service_cb(uint8_t dev_type,
 
     return SERVICE_RESULT_OK;
 }
-
 
 void msdp_unregister_service_cb(uint8_t dev_type, const char *name)
 {

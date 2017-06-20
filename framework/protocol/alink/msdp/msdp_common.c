@@ -5,9 +5,11 @@
 #include <errno.h>
 #include <time.h>
 #include "yos/list.h"
-#include "msdp.h"
 #include "json_parser.h"
 #include "service.h"
+#include "msdp.h"
+
+#define MODULE_NAME MODULE_NAME_MSDP
 
 typedef int (*status_array_cb)(char *entry, int entry_len, int entry_type, const char *method_name);
 typedef int (*get_status_cb)(char *entry, int entry_len, int entry_type, const char *params, dlist_t *head, void *exec_cb);
@@ -46,7 +48,7 @@ static int msdp_set_attr_array_each_cb(char *params, int str_len, const char *me
 
     /*method转换为setDeviceStatus*/
     ret = msdp_dispatch_event(uuid, method_name, params_buff);
-    RET_LOG(ret, CALL_FUCTION_FAILED, "msdp_dispatch_event, params:%s", params_buff);
+    RET_LOG(ret, "msdp_dispatch_event, params:%s", params_buff);
     msdp_free_buff(params_buff);
 
     return ret;
@@ -145,7 +147,7 @@ int msdp_get_attr_each_cb(const char *attr_name, int name_len, int type, char *p
         pnode->attr_value= msdp_dup_string(buff);
         PTR_GOTO(pnode->attr_value, err, "pstrdup failed");
 
-        list_add_tail(&pnode->list_node, head);
+        dlist_add_tail(&pnode->list_node, head);
     }
 
     if(buff)
@@ -254,7 +256,7 @@ int msdp_get_device_status_handler(char *params, void *cb, void *exec_cb, char *
     msdp_free_buff(attr_set_dup);
     attr_set_dup = NULL;
 
-    if(list_empty(&head))
+    if(dlist_empty(&head))
     {
         log_warn("attribute value list is empty, nothing todo");
         //输出串为空也返回OK，避免未注册get_callback的属性设置失败
@@ -295,7 +297,7 @@ int msdp_get_device_status_handler(char *params, void *cb, void *exec_cb, char *
         }
 
         /*移除节点*/
-        list_del(&pnode->list_node);
+        dlist_del(&pnode->list_node);
         msdp_free_buff(pnode->attr_name);
         msdp_free_buff(pnode->attr_value);
         msdp_free_buff((void *)pnode);
@@ -319,7 +321,7 @@ int msdp_get_device_status_handler(char *params, void *cb, void *exec_cb, char *
 out:
     dlist_for_each_entry_safe(&head, pnode_next, pnode, attribute_info, list_node)
     {
-        list_del(&pnode->list_node);
+        dlist_del(&pnode->list_node);
         msdp_free_buff(pnode->attr_name);
         msdp_free_buff(pnode->attr_value);
         msdp_free_buff((void *)pnode);

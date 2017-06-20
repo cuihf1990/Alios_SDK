@@ -22,6 +22,7 @@ extern "C"
 #endif
 
 /******************************************/
+#define MODULE_NAME_MSDP "msdp"
 
 #define MAX_PARAMS_LEN                  3600
 #define MAX_VENDOR_CB_REMALLOC_COUNT    5
@@ -60,87 +61,6 @@ extern "C"
 #define METHOD_POST_DEVICE_DATA_ARRAY   "postDeviceDataArray"
 #define METHOD_REQUEST_REMOTE_SERVICE   "requestRemoteService"
 #define METHOD_POST_REMOTE_SERVICE_RSP  "postRemoteServieRsp"
-
-#define CALL_FUCTION_FAILED         "Call function \"%s\" failed\n"
-#define RET_FAILED(ret)  (ret != SERVICE_RESULT_OK)
-
-#define RET_GOTO(Ret,gotoTag,strError, args...)         \
-      {\
-        if ( RET_FAILED(Ret) )    \
-        {   \
-            log_trace(strError, ##args); \
-            goto gotoTag; \
-        }\
-      }
-
-#define RET_FALSE(Ret,strError,args...)         \
-    {\
-        if ( RET_FAILED(Ret) )    \
-        {   \
-            log_trace(strError, ##args); \
-            return false; \
-        }\
-     }
-
-#define RET_RETURN(Ret,strError,args...)         \
-    {\
-        if ( RET_FAILED(Ret) )    \
-        {   \
-            log_trace(strError, ##args); \
-            return Ret; \
-        }\
-    }
-#define RET_LOG(Ret,strError,args...)         \
-    {\
-        if ( RET_FAILED(Ret) )    \
-        {   \
-            log_error(strError, ##args); \
-        }\
-    }
-
-#define PTR_RETURN(Pointer,Ret,strError,args...)         \
-    {\
-        if ( !Pointer)    \
-        {   \
-            log_trace(strError, ##args); \
-            return Ret; \
-        }\
-     }
-
-#define PTR_FALSE(Pointer,strError,args...)         \
-    {\
-        if ( !Pointer)    \
-        {   \
-            log_trace(strError, ##args); \
-            return FALSE; \
-        }\
-    }
-#define PTR_LOG(Pointer,strError,args...)         \
-    {\
-        if ( !Pointer)    \
-        {   \
-            log_error(strError, ##args); \
-        }\
-    }
-
-
-#define PTR_GOTO(Pointer, gotoTag, strError, args...)         \
-    {\
-        if ( !Pointer)    \
-        {   \
-            log_trace(strError, ##args); \
-            goto gotoTag; \
-        }\
-     }
-
-#define POINTER_RETURN(Pointer,strError,args...)         \
-    {\
-        if ( !Pointer)    \
-        {   \
-            log_trace(strError, ##args); \
-            return Pointer; \
-        }\
-     }
 
 /******************************************/
 

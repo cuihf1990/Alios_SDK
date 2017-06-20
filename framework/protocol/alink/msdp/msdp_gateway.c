@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "list.h"
-#include "msdp.h"
-#include "mpool.h"
+#include "yos/list.h"
 #include "msdp_common.h"
 #include "json_parser.h"
 #include "service.h"
 #include "devmgr.h"
+#include "msdp.h"
+
+#define MODULE_NAME MODULE_NAME_MSDP
 
 static int __get_attribute(const char *uuid, const char *attr_name, char **ppbuf)
 {
@@ -193,7 +194,7 @@ static int msdp_get_status(char *params)
 
         char attrset[512] = {0};
         ret = msdp_get_all_attrname(uuid, attrset, sizeof(attrset));
-        RET_RETURN(ret, "get all attribute anme fail, uuid:%s", uuid);
+        RET_RETURN(ret, "get all attribute name fail, uuid:%s", uuid);
         log_trace("attrset = %s\n", attrset);
 
         snprintf(params_in, sizeof(params_in) - 1, GET_DEVICE_ATTR_STRING_FMT, uuid, attrset);
