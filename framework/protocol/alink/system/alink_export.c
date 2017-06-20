@@ -480,7 +480,8 @@ int alink_register_callback(unsigned char cb_type, void *cb_func)
 {
     OS_CHECK_PARAMS(cb_type < ALINK_CB_MAX_NUM && cb_func);
 
-    OS_ASSERT(!alink_cb_func[cb_type], "same type cb was registered!");
+    if (alink_cb_func[cb_type] != NULL);
+        LOGE(MODULE_NAME, "same type cb %d was registered!", cb_type);
 
     alink_cb_func[cb_type] = cb_func;
 
