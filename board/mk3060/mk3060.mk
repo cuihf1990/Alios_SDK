@@ -21,11 +21,11 @@
 #  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ############################################################################### 
 
-NAME := board_mk108
+NAME := board_mk3060
 
 JTAG := jlink
 
-MODULE               := MOC108
+MODULE               := EMW3060
 HOST_ARCH            := ARM968E-S
 HOST_MCU_FAMILY      := beken
 
@@ -39,14 +39,14 @@ define get-os-version
 endef
 
 CONFIG_SYSINFO_OS_VERSION := $(call get-os-version)
-CONFIG_SYSINFO_PRODUCT_MODEL := ALI_YOS_MK108
-CONFIG_SYSINFO_DEVICE_NAME := MK108
+CONFIG_SYSINFO_PRODUCT_MODEL := ALI_YOS_MK3060
+CONFIG_SYSINFO_DEVICE_NAME := MK3060
 
 GLOBAL_CFLAGS += -DSYSINFO_OS_VERSION=\"$(CONFIG_SYSINFO_OS_VERSION)\"
 GLOBAL_CFLAGS += -DSYSINFO_PRODUCT_MODEL=\"$(CONFIG_SYSINFO_PRODUCT_MODEL)\"
 GLOBAL_CFLAGS += -DSYSINFO_DEVICE_NAME=\"$(CONFIG_SYSINFO_DEVICE_NAME)\"
 
-GLOBAL_LDFLAGS  += -L $(SOURCE_ROOT)/board/mk108
+GLOBAL_LDFLAGS  += -L $(SOURCE_ROOT)/board/mk3060
 
 # Extra build target in mico_standard_targets.mk, include bootloader, and copy output file to eclipse debug file (copy_output_for_eclipse)
 EXTRA_TARGET_MAKEFILES +=  $(MAKEFILES_PATH)/yos_standard_targets.mk
