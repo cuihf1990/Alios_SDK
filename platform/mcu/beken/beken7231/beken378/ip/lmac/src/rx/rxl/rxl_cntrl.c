@@ -101,20 +101,15 @@ int rxl_data_monitor(uint8_t *payload,
 	{
 		monitor_flag = 1;
 
-#ifdef CONFIG_YOS_MESH
-                fn = bk_wlan_get_monitor_cb();
-                if (fn) {
-                    (*fn)((uint8_t *)payload, length);
-                }
-                fn = wlan_get_mesh_monitor_cb();
-                if (fn) {
-                    (*fn)((uint8_t *)payload, length);
-                }
-#else
                 fn = bk_wlan_get_monitor_cb();
                 (*fn)((uint8_t *)payload, length);
-#endif
 	}
+#ifdef CONFIG_YOS_MESH
+        if (wlan_is_mesh_monitor_mode()) {
+            fn = wlan_get_mesh_monitor_cb();
+            (*fn)((uint8_t *)payload, length);
+        }
+#endif
 
 	return monitor_flag;
 }
@@ -1224,7 +1219,7 @@ void rxl_mpdu_transfer_mesh(struct rx_swdesc *swdesc)
     mpdu_len = dma_hdrdesc->hd.frmlen;
     mesh_mpdu_len = dma_hdrdesc->hd.frmlen;
 
-    if(bk_wlan_is_monitor_mode()) {
+    if(bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode()) {
         du_len = mpdu_len;
         du_ptr = (uint8_t *)os_malloc(du_len);
         mesh_hostbuf_start = (uint32_t)du_ptr;
@@ -1324,7 +1319,7 @@ void rxl_mpdu_transfer_mesh(struct rx_swdesc *swdesc)
             dma_desc->ctrl = 0;
         }
 
-        if(bk_wlan_is_monitor_mode())
+        if(bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode())
         {
                 if(du_ptr)
                 {

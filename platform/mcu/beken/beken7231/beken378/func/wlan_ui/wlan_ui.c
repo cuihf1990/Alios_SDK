@@ -681,18 +681,19 @@ monitor_data_cb_t wlan_get_mesh_monitor_cb(void)
 {
     return g_mesh_monitor_cb;
 }
+
+int wlan_is_mesh_monitor_mode(void)
+{
+    if (g_mesh_monitor_cb) {
+        return TRUE;
+    }
+    return FALSE;
+}
 #endif
 
 int bk_wlan_is_monitor_mode(void)
 {
-#ifdef CONFIG_YOS_MESH
-    if (g_monitor_cb || g_mesh_monitor_cb) {
-        return TRUE;
-    }
-    return FALSE;
-#else
     return (0 == g_monitor_cb) ? FALSE : TRUE;
-#endif
 }
 
 int bk_wlan_power_off(void)

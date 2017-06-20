@@ -130,6 +130,7 @@ uint32_t bk_sta_cipher_is_wep(void);
 #ifdef CONFIG_YOS_MESH
 void wlan_register_mesh_monitor_cb(monitor_data_cb_t fn);
 monitor_data_cb_t wlan_get_mesh_monitor_cb(void);
+int wlan_is_mesh_monitor_mode(void);
 #endif
 
 #endif// _WLAN_UI_PUB_

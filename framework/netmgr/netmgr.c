@@ -87,7 +87,7 @@ static void netmgr_connect_fail_event(hal_wifi_module_t *m, int err, void* arg)
 static void mesh_delayed_action(void *arg)
 {
     ur_mesh_init((node_mode_t)arg);
-    ur_mesh_set_mode(MODE_LEADER);
+    ur_mesh_set_mode((node_mode_t)arg);
     ur_mesh_start();
 }
 #endif

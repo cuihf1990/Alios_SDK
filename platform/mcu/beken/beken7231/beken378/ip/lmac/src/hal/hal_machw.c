@@ -525,7 +525,7 @@ void hal_update_secret_key(uint64_t macAddress,
 	key_index = hal_get_secret_key_entry_id();
 	hal_monitor_buffer_mac_address(macAddress, key_index - KEY_ENTRY_MIN_ID);
 
-	os_printf("t:%d\r\n", cipherType);
+	//os_printf("t:%d\r\n", cipherType);
 
 	hal_program_cipher_key(1,	          // useDefaultKey
 					pKey,
