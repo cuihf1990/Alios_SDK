@@ -10,6 +10,7 @@
 #include "yos/framework.h"
 #include "yos/log.h"
 #include "json_parser.h"
+#include "msdp.h"
 #include "devmgr.h"
 #include "devmgr_alink.h"
 #include "devmgr_cache.h"
@@ -18,6 +19,8 @@
 #include "digest_algorithm.h"
 #include "alink_protocol.h"
 #include "alink_export_internal.h"
+
+#define MODULE_NAME MODULE_NAME_DEVMGR
 
 #define DEVMGR_SERVICE_AUTHORISE_DEVICE_LIST    "AuthoriseDeviceList"
 #define DEVMGR_SERVICE_REMOVE_DEVICE            "RemoveDevice"
@@ -35,22 +38,7 @@
 #define DEVMGR_JSON_KEY_ENABLE          "enable"
 
 /* imported from other files to pass compile */
-#define JSON_KEY_UUID                   "uuid"
-#define CALL_FUCTION_FAILED             "Call function \"%s\" failed\n"
-#define JSON_KEY_ATTRSET                "attrSet"
-#define JSON_KEY_VALUE                  "value"
-#define MAX_ATTR_NAME_LEN               80
 typedef int32_t (*zigbee_permit_join_cb_t)(uint8_t duration);
-#define POST_ATTR_VALUE_STRING_FMT      "{\"uuid\":\"%s\",\"%s\":{\"value\":\"%s\",\"when\":\"%s\"}}"
-#define POST_ATTR_OBJECT_STRING_FMT     "{\"uuid\":\"%s\",\"%s\":{\"value\":%s,\"when\":\"%s\"}}"
-#define RET_GOTO(Ret,gotoTag,strError, args...)         \
-    {\
-        if ( RET_FAILED(Ret) )    \
-        {\
-            log_trace(strError, ##args); \
-            goto gotoTag; \
-        }\
-    }
 
 typedef struct {
     bool enable;
@@ -75,6 +63,37 @@ void __work_func(void *work)
     devmgr_free_unknown_devlist();
 }
 
+
+const char *devmgr_get_device_signature(uint32_t short_model, const char rand[SUBDEV_RAND_BYTES], char *sign_buff, uint32_t buff_size)
+{
+    int i = 0;
+    char buff[128] = {0};
+    unsigned char md5_ret[16]= {0};
+    char secret[41] = {0};
+    char rand_hexstr[SUBDEV_RAND_BYTES*2 + 1] = {0};
+    int ret = SERVICE_RESULT_ERR;
+
+    if(buff_size <= STR_SIGN_LEN){
+        log_error("buffer size is too small");
+        return NULL;
+    }
+
+    memcpy(secret, "ISsi2JtDctJf0qW0HUjF7JtJjiiJLMbcZE8wxu4E", sizeof(secret));
+
+    int len = SUBDEV_RAND_BYTES;
+    memcpy(buff, rand, len);
+    len += snprintf(buff + len, sizeof(buff) - len, "%s", secret);
+    digest_md5(buff, len, md5_ret);
+    for (i = 0; i < STR_SIGN_LEN/2; i++) {
+        sprintf(sign_buff + i * 2, "%02x", md5_ret[i]);
+    }
+
+    bytes_2_hexstr(rand, SUBDEV_RAND_BYTES, rand_hexstr, sizeof(rand_hexstr));
+    log_trace("rand hexstr:%s, secret:%s, sign:%s\n", rand_hexstr, secret, sign_buff);
+
+    return sign_buff;
+}
+
 static int devmgr_listener(int type, void *data, int dlen, void *result, int *rlen) {
     //log_trace("DEVMGR recv %s", sm_code2string(type));
     if(type == SERVICE_EVENT) {
@@ -89,6 +108,32 @@ static int devmgr_listener(int type, void *data, int dlen, void *result, int *rl
     }
 
     return EVENT_IGNORE;
+}
+
+int stdd_get_device_service(dev_info_t *devinfo, char *service_buff, int buff_size) {return 0;}
+static int devmgr_register_remote_service(dev_info_t *devinfo)
+{
+	int ret = SERVICE_RESULT_ERR;
+	uint8_t service[256] = {0};
+
+	if(NULL == devinfo)
+	{
+		log_info("parameter invalid");
+		return SERVICE_RESULT_ERR;
+	}
+	ret = stdd_get_device_service(devinfo, service, sizeof(service));
+
+	if(SERVICE_RESULT_OK != ret || 0 == json_get_array_size(service, strlen(service)))
+	{
+		log_info("The device %s no service to register\r\n", devinfo->dev_base.uuid);
+		return SERVICE_RESULT_OK;
+	}
+	else
+	{
+		log_trace("The device %s service is %s\r\n", devinfo->dev_base.uuid, service);
+		return msdp_register_remote_service(devinfo->dev_base.uuid, service);
+	}
+
 }
 
 int devmgr_login_device(dev_info_t *devinfo)
@@ -163,6 +208,11 @@ int devmgr_register_device(dev_info_t *devinfo)
         return SERVICE_RESULT_ERR;
 
     char *sign = devinfo->dev_base.sign;
+    if(strcmp(get_main_dev()->config->alinkserver, default_online_server_with_port) != 0 &&
+        NULL != devmgr_get_device_signature(devinfo->dev_base.model_id,
+            devinfo->dev_base.rand, sign_buff, sizeof(sign_buff)))
+        sign = sign_buff;
+
     bytes_2_hexstr(devinfo->dev_base.rand, sizeof(devinfo->dev_base.rand), rand_hexstr, sizeof(rand_hexstr));
     if(sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff), PARAMS_DEVICE_REGISTER_SUB_FMT,
         devinfo->dev_base.model_id, rand_hexstr, sign,
@@ -595,11 +645,6 @@ int devmgr_network_event_cb(network_event_t event)
     os_mutex_lock(devlist_lock);
     dlist_for_each_entry(&unknown_dev_head, pos, dev_info_t, list_node)
     {
-        //add by wukong 2017-4-17
-        if(pos->dev_base.dev_type != DEV_TYPE_ZIGBEE)
-            continue;
-        //add by wukong end 2017-4-17
-
         switch(event)
         {
             case NETWORK_EVENT_DOWN: //network disconnected

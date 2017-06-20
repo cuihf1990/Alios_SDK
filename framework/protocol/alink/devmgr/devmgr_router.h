@@ -12,12 +12,12 @@ extern "C" {
 #define METHOD_DEVICE_ATTACH_SUB_WIFI        "attachSubDevice"
 #define METHOD_DEVICE_DETACH_SUB_WIFI        "detachSubDevice"
 
-#define PARAMS_DEVICE_REGISTER_SUB_WIFI_FMT  ("{\"name\":\"%s\","\ 
+#define PARAMS_DEVICE_REGISTER_SUB_WIFI_FMT  ("{\"name\":\"%s\","\
                                                "\"model\":\"%s\","\
-                                               "\"type\":\"%s\","\ 
+                                               "\"type\":\"%s\","\
                                                "\"category\":\"%s\","\
                                                "\"sn\":\"\","\
-                                               "\"mac\":\"%s\","\ 
+                                               "\"mac\":\"%s\","\
                                                "\"manufacturer\":\"%s\","\
                                                "\"version\":\"\"}")
 

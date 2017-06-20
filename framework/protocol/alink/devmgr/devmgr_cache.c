@@ -2,43 +2,61 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "list.h"
-#include "mpool.h"
+#include "yos/list.h"
+#include "yos/log.h"
+#include "os.h"
 #include "devmgr.h"
 #include "devmgr_cache.h"
 
-#define ATTR_MPOOL_SIZE     2
+#define MODULE_NAME MODULE_NAME_DEVMGR
 
 typedef struct attr_cache_s{
-    struct list_head list_node;
+    dlist_t list_node;
     char *attr_name;
     char *attr_value;
 }attr_cache_t;
 
-static mpool_t *cache_mpool = NULL;
+
 static void *__cache_dup_string(const char *src)
 {
-    return pstrdup(cache_mpool, src);
+    char *dst;
+    int n ;
+
+    if(!src) {
+        return NULL;
+    }
+
+    n = strlen(src);
+    dst = (char *)os_malloc(n + 1);
+    if(!dst) {
+        return NULL;
+    }
+
+    memcpy(dst, src, n);
+    dst[n] = '\0';
+
+    return dst;
 }
 
 static void *__cache_new_buff(unsigned int buff_size)
 {
-    void *buff = pmalloc(cache_mpool, buff_size);
+    void *buff = os_malloc(buff_size);
     if(NULL != buff)
         memset(buff, 0, buff_size);
 
     return buff;
 }
 
-static void *__cache_renew_buff(char *src, uint32_t new_size)
-{
-    return premalloc(cache_mpool, src, new_size);
-}
-
 static void __cache_free_buff(void *buff)
 {
     if(buff)
-        pfree(cache_mpool, buff);
+        os_free(buff);
+}
+
+static void *__cache_renew_buff(char *src, uint32_t new_size)
+{
+    __cache_free_buff(src);
+    return __cache_new_buff(new_size);
 }
 
 static attr_cache_t *__new_attr_node(const char *attr_name, const char *attr_value)
@@ -84,12 +102,12 @@ static void __free_attr_node(attr_cache_t *cache)
 }
 
 
-static int __get_attr_cache(struct list_head *attr_head, const char *attr_name, char *attr_value_buff, int buff_size)
+static int __get_attr_cache(dlist_t *attr_head, const char *attr_name, char *attr_value_buff, int buff_size)
 {
     attr_cache_t *attr_node = NULL;
     char *buff = NULL;
 
-    list_for_each_entry_t(attr_node, attr_head, list_node, attr_cache_t){
+    dlist_for_each_entry(attr_head, attr_node, attr_cache_t, list_node) {
         if(strcmp(attr_node->attr_name, attr_name) == 0){
             if(buff_size <= strlen(attr_node->attr_value))
                 return SERVICE_BUFFER_INSUFFICENT;
@@ -103,12 +121,12 @@ static int __get_attr_cache(struct list_head *attr_head, const char *attr_name, 
 }
 
 
-static int __read_attr_cache(struct list_head *attr_head, const char *attr_name, char **attr_value)
+static int __read_attr_cache(dlist_t *attr_head, const char *attr_name, char **attr_value)
 {
     attr_cache_t *attr_node = NULL;
     char *buff = NULL;
 
-    list_for_each_entry_t(attr_node, attr_head, list_node, attr_cache_t){
+    dlist_for_each_entry(attr_head, attr_node, attr_cache_t, list_node) {
         if(strcmp(attr_node->attr_name, attr_name) == 0){
             buff = os_malloc(strlen(attr_node->attr_value) + 1);
             PTR_RETURN(buff, SERVICE_RESULT_ERR, "pmalloc failed");
@@ -124,17 +142,14 @@ static int __read_attr_cache(struct list_head *attr_head, const char *attr_name,
 }
 
 
-static int __update_attr_cache(struct list_head *attr_head, const char *attr_name, const char *attr_value)
+static int __update_attr_cache(dlist_t *attr_head, const char *attr_name, const char *attr_value)
 {
     attr_cache_t *attr_node = NULL;
     char *buff = NULL;
 
-    list_for_each_entry_t(attr_node, attr_head, list_node, attr_cache_t){
+    dlist_for_each_entry(attr_head, attr_node, attr_cache_t, list_node) {
         if(strcmp(attr_node->attr_name, attr_name) == 0){
-            uint32_t buff_size = pbuff_size(attr_node->attr_value);
-            if(buff_size < strlen(attr_value) + 1)
-                attr_node->attr_value = __cache_renew_buff(attr_node->attr_value, strlen(attr_value) + 1);
-
+            attr_node->attr_value = __cache_renew_buff(attr_node->attr_value, strlen(attr_value) + 1);
             strncpy(attr_node->attr_value, attr_value, strlen(attr_value) + 1);
 
             return SERVICE_RESULT_OK;
@@ -144,26 +159,27 @@ static int __update_attr_cache(struct list_head *attr_head, const char *attr_nam
     attr_node = __new_attr_node(attr_name, attr_value);
     PTR_RETURN(attr_node, SERVICE_RESULT_ERR, CALL_FUCTION_FAILED, "__new_attr_node")
 
-    list_add_tail(&attr_node->list_node, attr_head);
+    dlist_add_tail(&attr_node->list_node, attr_head);
 
     return SERVICE_RESULT_OK;
 }
 
 
-static void __free_attr_cache_list(struct list_head *cache_head)
+static void __free_attr_cache_list(dlist_t *cache_head)
 {
-    attr_cache_t *cache, *next;
-    list_for_each_entry_safe_t(cache, next, cache_head, list_node, attr_cache_t) {
+    attr_cache_t *cache;
+    dlist_t *next;
+    dlist_for_each_entry_safe(cache_head, next, cache, attr_cache_t, list_node) {
         __free_attr_node(cache);
     }
 }
 
 
-void __dump_attr_cache(list_head_t *attr_head)
+void __dump_attr_cache(dlist_t *attr_head)
 {
     os_printf("\tattr cache:\n");
     attr_cache_t *cache;
-    list_for_each_entry_t(cache, attr_head, list_node, attr_cache_t){
+    dlist_for_each_entry(attr_head, cache, attr_cache_t, list_node) {
         os_printf("\t\t%s: %s\n", cache->attr_name, cache->attr_value);
     }
 }
@@ -228,20 +244,12 @@ void devmgr_free_device_cache(dev_info_t *devinfo)
 
 int devmgr_cache_init()
 {
-    cache_mpool = mpool_create("attr", ATTR_MPOOL_SIZE);
-    if(NULL == cache_mpool)
-        return SERVICE_RESULT_ERR;
-
     return SERVICE_RESULT_OK;
 }
 
 
 void devmgr_cache_exit()
 {
-    if(cache_mpool){
-        mpool_destroy(cache_mpool);
-        cache_mpool = NULL;
-    }
     return;
 }
 

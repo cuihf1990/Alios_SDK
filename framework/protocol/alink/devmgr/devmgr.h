@@ -31,9 +31,9 @@
 #include <stdint.h>
 #include <unistd.h>
 #include "yos/list.h"
-#include "yos/log.h"
 #include "service.h"
 #include "devmgr_common.h"
+#include "alink_export_internal.h"
 
 //#define __DEVMGR_UT__   1
 #ifdef __DEVMGR_UT__
@@ -57,6 +57,8 @@ extern "C"
 #define STR_NAME_LEN	(32 + 1)
 #endif
 // add by wukong end 2017-4-17
+
+#define MODULE_NAME_DEVMGR "devmgr"
 
 /*
 * 设备类型定义
