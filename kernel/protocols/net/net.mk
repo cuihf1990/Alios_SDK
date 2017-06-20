@@ -23,7 +23,7 @@ ifneq (,$(filter armhflinux,$(COMPONENTS)))
 $(NAME)_SOURCES += port/sys_arch.c
 endif
 
-ifneq (,$(filter mk108,$(COMPONENTS)))
+ifneq (,$(filter mk108 mk3060,$(COMPONENTS)))
 ifneq ($(mico_lwip), 1)
 $(NAME)_SOURCES += port/sys_arch.c
 endif

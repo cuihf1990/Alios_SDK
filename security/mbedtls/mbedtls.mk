@@ -26,6 +26,10 @@ else ifeq ($(findstring mk108, $(BUILD_STRING)), mk108)
 
 $(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
 
+else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+
+$(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
+
 else
 
 $(error "not find correct platform!")
