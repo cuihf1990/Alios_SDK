@@ -61,8 +61,7 @@ enum {
 enum {
     SHORT_ADDR_SIZE = 2,
     EXT_ADDR_SIZE   = 8,
-
-    MESHNETID_SIZE  = 6,
+    EXT_NETID_SIZE = 6,
 };
 
 typedef struct ur_ip6_addr_s {
@@ -103,10 +102,10 @@ typedef struct ur_addr_s {
     uint16_t netid;
 } ur_addr_t;
 
-typedef struct meshnetid_s {
-    uint8_t meshnetid[MESHNETID_SIZE];
+typedef struct umesh_extnetid_s {
+    uint8_t netid[EXT_NETID_SIZE];
     uint8_t len;
-} meshnetid_t;
+} umesh_extnetid_t;
 
 enum {
     MAX_KEY_SIZE      = 16,  // bytes

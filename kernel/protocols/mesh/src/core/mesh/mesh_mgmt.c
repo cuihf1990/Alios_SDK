@@ -2085,6 +2085,31 @@ int8_t umesh_mm_get_seclevel(void)
     return g_mm_state.device.seclevel;
 }
 
+void umesh_mm_get_extnetid(umesh_extnetid_t *extnetid)
+{
+    network_context_t *network;
+
+    network = get_default_network_context();
+    if (network == NULL) {
+        return NULL;
+    }
+
+    return hal_umesh_get_extnetid(network->hal->module, extnetid);
+}
+
+ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid)
+{
+    slist_t *networks;
+    network_context_t *network;
+
+    networks = get_network_contexts();
+    slist_for_each_entry(networks, network, network_context_t, next) {
+        hal_umesh_set_extnetid(network->hal->module, extnetid);
+    }
+
+    return UR_ERROR_NONE;
+}
+
 const mac_address_t *umesh_mm_get_mac_address(void)
 {
     hal_context_t *hal;

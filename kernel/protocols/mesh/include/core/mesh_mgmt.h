@@ -176,6 +176,9 @@ void                umesh_mm_set_channel(network_context_t *network,
 ur_error_t          umesh_mm_set_seclevel(int8_t level);
 int8_t              umesh_mm_get_seclevel(void);
 
+void umesh_mm_get_extnetid(umesh_extnetid_t *extnetid);
+ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid);
+
 void       umesh_mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length);
 void       umesh_mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
 mm_tv_t    *umesh_mm_get_tv(const uint8_t *data, const uint16_t length, uint8_t type);

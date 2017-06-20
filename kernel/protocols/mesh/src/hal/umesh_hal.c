@@ -325,28 +325,29 @@ int hal_ur_mesh_get_txpower(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_ur_mesh_set_meshnetid(ur_mesh_hal_module_t *m,
-                              const meshnetid_t *meshnetid)
+int hal_umesh_set_extnetid(ur_mesh_hal_module_t *m,
+                           const umesh_extnetid_t *extnetid)
 {
     if (m == NULL) {
         m = hal_ur_mesh_get_default_module();
     }
 
-    if ((m != NULL) && (m->ur_mesh_hal_set_meshnetid != NULL)) {
-        return m->ur_mesh_hal_set_meshnetid(m, meshnetid);
+    if ((m != NULL) && (m->umesh_hal_set_extnetid != NULL)) {
+        return m->umesh_hal_set_extnetid(m, extnetid);
     }
 
     return -1;
 }
 
-const meshnetid_t *hal_ur_mesh_get_meshnetid(ur_mesh_hal_module_t *m)
+void hal_umesh_get_extnetid(ur_mesh_hal_module_t *m,
+                            umesh_extnetid_t *extnetid)
 {
     if (m == NULL) {
         m = hal_ur_mesh_get_default_module();
     }
 
-    if ((m != NULL) && (m->ur_mesh_hal_get_meshnetid != NULL)) {
-        return m->ur_mesh_hal_get_meshnetid(m);
+    if ((m != NULL) && (m->umesh_hal_get_extnetid != NULL)) {
+        return m->umesh_hal_get_extnetid(m, extnetid);
     }
 
     return NULL;
