@@ -713,7 +713,7 @@ int devmgr_get_all_device_modelid(uint32_t model_id[], int *num)
     return SERVICE_RESULT_OK;
 }
 
-int32_t devmgr_relogin_device(const char *devid)
+int devmgr_relogin_device(const char *devid)
 {
     int ret = SERVICE_RESULT_OK;
 
@@ -733,7 +733,7 @@ int32_t devmgr_relogin_device(const char *devid)
     return ret;
 }
 
-int32_t devmgr_update_device_online_status(const char *devid, link_state_t state)
+int devmgr_update_device_online_status(const char *devid, link_state_t state)
 {
     int ret = SERVICE_RESULT_OK;
 

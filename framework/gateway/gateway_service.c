@@ -11,7 +11,6 @@
 #include <yos/list.h>
 #include <lwip/sockets.h>
 #include <yos/cloud.h>
-#include <tfs.h>
 #include "umesh.h"
 #include "cJSON.h"
 #include "core/mesh_mgmt.h"
