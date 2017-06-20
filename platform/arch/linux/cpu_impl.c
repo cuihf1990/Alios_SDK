@@ -430,30 +430,32 @@ void cpu_start_hook(void)
 
 void cpu_io_register(void (*f)(int, void *), void *arg)
 {
+    sigset_t cpsr;
     cpu_io_cb_t *pcb = yos_malloc(sizeof(*pcb));
     pcb->cb = f;
     pcb->arg = arg;
 
-    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
+    cpsr = cpu_intrpt_save();
     dlist_add_tail(&pcb->node, &g_io_list);
-    sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+    cpu_intrpt_restore(cpsr);
 }
 
 void cpu_io_unregister(void (*f)(int, void *), void *arg)
 {
+    sigset_t cpsr;
     cpu_io_cb_t *pcb;
-    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
+    cpsr = cpu_intrpt_save();
     dlist_for_each_entry(&g_io_list, pcb, cpu_io_cb_t, node) {
         if (pcb->cb != f)
             continue;
         if (pcb->arg != arg)
             continue;
         dlist_del(&pcb->node);
+        cpu_intrpt_restore(cpsr);
         yos_free(pcb);
-        sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
         return;
     }
-    sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+    cpu_intrpt_restore(cpsr);
 }
 
 static void trigger_io_cb(int fd)
