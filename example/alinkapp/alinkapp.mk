@@ -1,8 +1,27 @@
 NAME := alinkapp
 
-no_with_lwip := 1
 $(NAME)_SOURCES := alink_sample.c
-$(NAME)_COMPONENTS := base64 hashtable log connectivity protocol.alink ywss modules.kv cli gateway
+$(NAME)_COMPONENTS := base64 hashtable log connectivity protocol.alink ywss modules.kv cli
+
+ifneq (,$(filter linuxhost,$(COMPONENTS)))
+gateway ?= 0
+else
+gateway ?= 1
+endif
+
+ifeq ($(gateway),1)
+
+$(NAME)_COMPONENTS += gateway
+ifneq (,$(filter linuxhost,$(COMPONENTS)))
+DDA ?= 1
+endif
+
+ifneq (,$(filter armhflinux,$(COMPONENTS)))
+DDA ?= 1
+endif
+
+endif
+
 $(NAME)_INCLUDES := ../../framework/protocol/alink/system/ ../../framework/protocol/alink/json/
 $(NAME)_INCLUDES += ../../kernel/modules/kv/include
 $(NAME)_INCLUDES += ../../framework/gateway/
