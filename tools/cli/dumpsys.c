@@ -28,6 +28,14 @@ extern uint32_t dump_mmleak(void);
 
 ktimer_t g_mm_leak_check_timer;
 
+#define safesprintf(buf,totallen,offset,string) do {\
+    if((totallen - offset) < strlen(string)) { \
+        buf = yos_realloc(buf,totallen+2048); \
+    } \
+    sprintf(buf+offset,"%s",string); \
+    offset += strlen(string); \
+    } while(0)
+
 uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 {
     kstat_t    rst;
@@ -49,20 +57,32 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     size_t n_frame = 0;
     int depth = YUNOS_BACKTRACE_DEPTH;
 
+    char *printbuf = NULL;
+    char  tmpbuf[256] ={0};
+    int   offset   = 0;
+    int   totallen = 2048;
+
+    printbuf = yos_malloc(totallen);
+    if(printbuf ==  NULL) {
+        return YUNOS_NO_MEM;
+    }
+    memset(printbuf, 0, totallen);
+
     yunos_sched_disable();
     preferred_ready_task_get(&g_ready_queue);
     candidate = g_preferred_ready_task;
 
-
-    csp_printf("---------------------------------------------------------------------\r\n");
+    safesprintf(printbuf, totallen, offset, "---------------------------------------------------------------------\r\n");
 
 #if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
-    csp_printf("CPU usage :%-10d   MAX:%-10d                 \n",
+    snprintf(tmpbuf, 255, "CPU usage :%-10d   MAX:%-10d                 \n");
                g_cpu_usage / 100, g_cpu_usage_max / 100);
-    csp_printf("---------------------------------------------------------------------\r\n");
+    safesprintf(printbuf, totallen, offset,tmpbuf);
+    safesprintf(printbuf, totallen, offset, "---------------------------------------------------------------------\r\n",255);
+
 #endif
-    csp_printf("Name               State    Prio StackSize Freesize Runtime Candidate\r\n");
-    csp_printf("---------------------------------------------------------------------\r\n");
+    safesprintf(printbuf, totallen, offset, "Name               State    Prio StackSize Freesize Runtime Candidate\r\n");
+    safesprintf(printbuf, totallen, offset, "---------------------------------------------------------------------\r\n");
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
         task       = yunos_list_entry(tmp, ktask_t, task_stats_item);
@@ -89,11 +109,10 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
         }
 
 #ifndef HAVE_NOT_ADVANCED_FORMATE
-        csp_printf("%-19.18s%-9s%-5d%-10d%-9zu%-9llu%-11c\r\n",
+        snprintf(tmpbuf, 255, "%-19.18s%-9s%-5d%-10d%-9zu%-9llu%-11c\r\n",
                    task_name, cpu_stat[task->task_state - K_RDY], task->prio,
                    task->stack_size, free_size, (unsigned long long)time_total, yes);
 #else
-
         /* if not support %-N.Ms,cut it manually*/
         if (strlen(task_name) > 18) {
             char name_cut[19];
@@ -102,31 +121,37 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
             task_name = name_cut;
         }
 
-        csp_printf("%-19s%-9s%-5d%-10d%-9u%-9u%-11c\r\n",
+        snprintf(tmpbuf,255,"%-19s%-9s%-5d%-10d%-9u%-9u%-11c\r\n",
                    task_name, cpu_stat[task->task_state - K_RDY], task->prio,
                    task->stack_size, (unsigned long)free_size, (unsigned long)time_total, yes);
 #endif
+        safesprintf(printbuf, totallen, offset,tmpbuf);
 
         /* for chip not support stack frame interface,do nothing*/
         if (detail == true && task != g_active_task && soc_get_first_frame_info &&
             soc_get_subs_frame_info) {
             depth = YUNOS_BACKTRACE_DEPTH;
-            csp_printf("Task %s Call Stack Dump:\r\n", task_name);
+            snprintf(tmpbuf, 255, "Task %s Call Stack Dump:\r\n", task_name);
+            safesprintf(printbuf, totallen, offset,tmpbuf);
             c_frame = (size_t)task->task_stack;
             soc_get_first_frame_info(c_frame, &n_frame, &pc);
 
             for (; (n_frame != 0) && (pc != 0) && (depth >= 0); --depth) {
 
-                csp_printf("PC:0x%-12xSP:0x%-12x\r\n", c_frame, pc);
+                snprintf(tmpbuf, 255, "PC:0x%-12xSP:0x%-12x\r\n", c_frame, pc);
+                safesprintf(printbuf, totallen, offset,tmpbuf);
                 c_frame = n_frame;
                 soc_get_subs_frame_info(c_frame, &n_frame, &pc);
             }
         }
     }
 
-    csp_printf("----------------------------------------------------------\r\n");
+
+    safesprintf(printbuf, totallen, offset,"----------------------------------------------------------\r\n");
     yunos_sched_enable();
 
+    printf("%s",printbuf);
+    yos_free(printbuf);
     return YUNOS_SUCCESS;
 }
 

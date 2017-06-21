@@ -307,6 +307,14 @@ int yos_work_sched(yos_work_t *work);
 int yos_work_cancel(yos_work_t *work);
 
 /**
+ * realloc memory
+ * @param[in] mem, current memory address point
+ * @param[in] size  new size of the mem to remalloc
+ * @return  the operation status, NULL is error, others is memory address
+ */
+void *yos_realloc(void *mem, unsigned int size);
+
+/**
  * alloc memory
  * @param[in] size size of the mem to malloc
  * @return  the operation status, NULL is error, others is memory address
