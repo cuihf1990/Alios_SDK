@@ -18,7 +18,10 @@
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
 #include <yos/cli.h>
-#include "board.h"
+
+#ifndef STDIO_UART
+#define STDIO_UART 0
+#endif
 
 #define RET_CHAR        '\n'
 #define END_CHAR        '\r'
@@ -648,7 +651,7 @@ int cli_printf(const char *msg, ...)
 int cli_putstr(const char *msg)
 {
     if (msg[0] != 0) {
-        hal_uart_send( STDIO_UART, (const char *)msg, strlen(msg) );
+        hal_uart_send(STDIO_UART, (const char *)msg, strlen(msg) );
     }
 
     return 0;
