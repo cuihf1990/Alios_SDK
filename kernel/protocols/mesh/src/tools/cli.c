@@ -44,6 +44,7 @@ extern mm_device_state_t mm_get_local_device_state(void);
 static void process_help(int argc, char *argv[]);
 static void process_autotest(int argc, char *argv[]);
 static void process_channel(int argc, char *argv[]);
+static void process_extnetid(int argc, char *argv[]);
 static void process_init(int argc, char *argv[]);
 static void process_ipaddr(int argc, char *argv[]);
 static void process_loglevel(int argc, char *argv[]);
@@ -72,6 +73,7 @@ const cli_command_t g_commands[] = {
     { "help", &process_help },
     { "autotest", &process_autotest },
     { "channel", &process_channel },
+    { "extnetid", &process_extnetid },
     { "init", &process_init },
     { "ipaddr", &process_ipaddr },
     { "loglevel", &process_loglevel },
@@ -350,6 +352,33 @@ void process_channel(int argc, char *argv[])
     response_append("wifi %d\r\n", channel.wifi_channel);
     response_append("hal ucast %d\r\n", channel.hal_ucast_channel);
     response_append("hal bcast %d\r\n", channel.hal_bcast_channel);
+    response_append("done\r\n");
+}
+
+void process_extnetid(int argc, char *argv[])
+{
+    umesh_extnetid_t extnetid;
+    uint8_t length;
+
+uint8_t index;
+
+    if (argc > 0) {
+        length = hex2bin(argv[0], extnetid.netid, 6);
+        if (length != 6) {
+            return;
+        }
+        extnetid.len = length;
+        umesh_set_extnetid(&extnetid);
+    }
+
+    memset(&extnetid, 0, sizeof(extnetid));
+    umesh_get_extnetid(&extnetid);
+    for (length = 0; length < extnetid.len; length++) {
+        response_append("%02x:", extnetid.netid[length]);
+    }
+    if (extnetid.len > 0) {
+        response_append("\r\n");
+    }
     response_append("done\r\n");
 }
 

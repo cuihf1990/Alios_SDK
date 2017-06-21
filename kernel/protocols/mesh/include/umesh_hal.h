@@ -119,10 +119,10 @@ typedef struct ur_mesh_hal_module_s {
                                    int8_t txpower);
     int (*ur_mesh_hal_get_txpower)(struct ur_mesh_hal_module_s *module);
 
-    int (*ur_mesh_hal_set_meshnetid)(struct ur_mesh_hal_module_s *module,
-                                     const meshnetid_t *meshnetid);
-    const meshnetid_t *(*ur_mesh_hal_get_meshnetid)(
-        struct ur_mesh_hal_module_s *module);
+    int (*umesh_hal_set_extnetid)(struct ur_mesh_hal_module_s *module,
+                                  const umesh_extnetid_t *extnetid);
+    void (*umesh_hal_get_extnetid)(struct ur_mesh_hal_module_s *module,
+                                   umesh_extnetid_t *extnetid);
     int (*ur_mesh_hal_set_mac_address)(struct ur_mesh_hal_module_s *module,
                                        const mac_address_t *addr);
     const mac_address_t *(*ur_mesh_hal_get_mac_address)(
@@ -391,26 +391,26 @@ int hal_ur_mesh_set_txpower(ur_mesh_hal_module_t *module, int8_t txpower);
 int hal_ur_mesh_get_txpower(ur_mesh_hal_module_t *module);
 
 /**
- * Set meshnetid
+ * Set extension meshnetid
  *
- * @param[in] module    The HAL module to be operated; if NULL, the default module will be operated
- * @param[in] meshnetid The meshnetid to be set
+ * @param[in] module   The HAL module to be operated; if NULL, the default module will be operated
+ * @param[in] extnetid The extension meshnetid to be set
  *
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_meshnetid(ur_mesh_hal_module_t *module,
-                              const meshnetid_t *meshnetid);
+int hal_umesh_set_extnetid(ur_mesh_hal_module_t *module,
+                           const umesh_extnetid_t *extnetid);
 
 /**
- * Get meshnetid
+ * Get extension meshnetid
  *
- * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
+ * @param[in] module   The HAL module to be operated; if NULL, the default module will be operated
+ * @param[in] extnetid The extension meshnetid to be get
  *
- * @return
- *     The meshnetid, NULL if fail
  */
-const meshnetid_t *hal_ur_mesh_get_meshnetid(ur_mesh_hal_module_t *module);
+void hal_umesh_get_extnetid(ur_mesh_hal_module_t *module,
+                            umesh_extnetid_t *extnetid);
 
 /**
  * Set HAL mac address.

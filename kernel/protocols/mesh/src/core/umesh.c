@@ -489,6 +489,23 @@ void ur_mesh_get_channel(channel_t *channel)
     }
 }
 
+void umesh_get_extnetid(umesh_extnetid_t *extnetid)
+{
+    if (extnetid == NULL) {
+        return;
+    }
+    return umesh_mm_get_extnetid(extnetid);
+}
+
+ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid)
+{
+    if (extnetid == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    return umesh_mm_set_extnetid(extnetid);
+}
+
 const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type)
 {
     hal_context_t *hal;
