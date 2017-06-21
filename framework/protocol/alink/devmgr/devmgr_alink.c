@@ -665,10 +665,10 @@ int devmgr_network_event_cb(network_event_t event)
 
 int devmgr_alink_init()
 {
-    int ret = SERVICE_RESULT_ERR;
+    int ret = SERVICE_RESULT_OK;
 
     memset(&g_permitjoin_config, 0, sizeof(g_permitjoin_config));
-
+#if 0
     //ÊôÐÔ×¢²á
     ret = alink_register_attribute(DEVMGR_ATTRIBUTE_JOINED_DEVICE_LIST, devmgr_get_joined_devlist_attribute_cb, NULL);
 
@@ -676,7 +676,7 @@ int devmgr_alink_init()
     ret = alink_register_service(DEVMGR_SERVICE_AUTHORISE_DEVICE_LIST, devmgr_authorise_devlist_service_cb);
     ret = alink_register_service(DEVMGR_SERVICE_REMOVE_DEVICE, devmgr_remove_device_service_cb);
     ret = alink_register_service(DEVMGR_SERVICE_PERMITJOIN_DEVICE, devmgr_permitjoin_service_cb);
-
+#endif
     sm_attach_service("accs", &devmgr_listener);
 
     return ret;
