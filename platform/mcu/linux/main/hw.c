@@ -155,7 +155,9 @@ extern struct hal_ota_module_s linuxhost_ota_module;
 void linux_wifi_register(void);
 void hw_start_hal(void)
 {
+#ifdef CONFIG_YOS_CLI
     hal_uart_init(0, &config);
+#endif
 
     hal_wifi_register_module(&sim_yos_wifi_linux);
     hal_ota_register_module(&linuxhost_ota_module);
