@@ -1886,7 +1886,7 @@ ur_error_t umesh_mm_init(node_mode_t mode)
 
     // init device
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
-    memcpy(g_mm_state.device.ueid, hal_ur_mesh_get_mac_address(NULL),
+    memcpy(g_mm_state.device.ueid, hal_umesh_get_mac_address(NULL),
            sizeof(g_mm_state.device.ueid));
     g_mm_state.device.reboot_flag = true;
 
@@ -2136,7 +2136,7 @@ void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
 {
     if ((g_mm_state.device.mode & MODE_LEADER) == 0) {
         network = network ? : get_default_network_context();
-        hal_ur_mesh_set_bcast_channel(network->hal->module, channel);
+        hal_umesh_set_bcast_channel(network->hal->module, channel);
         network->channel = channel;
     }
 }

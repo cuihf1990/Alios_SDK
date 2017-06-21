@@ -80,23 +80,23 @@ void interface_init(void)
     hal_context_t        *hal_context;
     int16_t              mtu;
 
-    module = hal_ur_mesh_get_default_module();
+    module = hal_umesh_get_default_module();
     while (module) {
         if (module->type <= MEDIA_TYPE_15_4) {
             hal_context = new_hal_context(module);
             hal_context->channel_list.num =
-                hal_ur_mesh_get_bcast_chnlist(module,
+                hal_umesh_get_bcast_chnlist(module,
                                               &hal_context->channel_list.channels);
-            memcpy(&hal_context->mac_addr, hal_ur_mesh_get_mac_address(module),
+            memcpy(&hal_context->mac_addr, hal_umesh_get_mac_address(module),
                    sizeof(hal_context->mac_addr));
 
             // mesh forwarder
-            mtu = hal_ur_mesh_get_bcast_mtu(module);
+            mtu = hal_umesh_get_bcast_mtu(module);
             if (mtu < 0) {
                 mtu = 127;
             }
-            if (hal_ur_mesh_get_ucast_mtu(module) > mtu) {
-                mtu = hal_ur_mesh_get_ucast_mtu(module);
+            if (hal_umesh_get_ucast_mtu(module) > mtu) {
+                mtu = hal_umesh_get_ucast_mtu(module);
             }
             hal_context->frame.data = (uint8_t *)ur_mem_alloc(mtu);
             memset(hal_context->frame.data, 0 , mtu);
@@ -129,7 +129,7 @@ void interface_init(void)
             }
         }
 
-        module = hal_ur_mesh_get_next_module(module);
+        module = hal_umesh_get_next_module(module);
     }
 }
 
@@ -224,12 +224,12 @@ void interface_deinit(void)
         hal = slist_first_entry(&g_hals_list, hal_context_t, next);
         slist_del(&hal->next, &g_hals_list);
 
-        mtu = hal_ur_mesh_get_bcast_mtu(hal->module);
+        mtu = hal_umesh_get_bcast_mtu(hal->module);
         if (mtu < 0) {
             mtu = 127;
         }
-        if (hal_ur_mesh_get_ucast_mtu(hal->module) > mtu) {
-            mtu = hal_ur_mesh_get_ucast_mtu(hal->module);
+        if (hal_umesh_get_ucast_mtu(hal->module) > mtu) {
+            mtu = hal_umesh_get_ucast_mtu(hal->module);
         }
         ur_mem_free(hal->frame.data, mtu);
         hal->frame.data = NULL;

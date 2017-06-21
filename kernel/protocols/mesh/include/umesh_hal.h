@@ -142,7 +142,7 @@ typedef struct ur_mesh_hal_module_s {
  * @return
  *     Initalization result, 0 if success, nonzero if fail
  */
-int hal_ur_mesh_init(void);
+int hal_umesh_init(void);
 
 /**
  * Get the defaut uRadar mesh HAL
@@ -152,7 +152,7 @@ int hal_ur_mesh_init(void);
  * @return
  *     Instance pointer or NULL
  */
-ur_mesh_hal_module_t *hal_ur_mesh_get_default_module(void);
+ur_mesh_hal_module_t *hal_umesh_get_default_module(void);
 
 /**
  * Get the next uRadar mesh HAL
@@ -162,14 +162,14 @@ ur_mesh_hal_module_t *hal_ur_mesh_get_default_module(void);
  * @return
  *     Instance pointer or NULL
  */
-ur_mesh_hal_module_t *hal_ur_mesh_get_next_module(ur_mesh_hal_module_t *cur);
+ur_mesh_hal_module_t *hal_umesh_get_next_module(ur_mesh_hal_module_t *cur);
 
 /**
  * Register one or more mesh instances to HAL.
  *
  * @param[in] module The HAL module to be registered
  */
-void hal_ur_mesh_register_module(ur_mesh_hal_module_t *module);
+void hal_umesh_register_module(ur_mesh_hal_module_t *module);
 
 /**
  * Enable a uRadar HAL module, which usually powers on its hardware
@@ -179,7 +179,7 @@ void hal_ur_mesh_register_module(ur_mesh_hal_module_t *module);
  * @return
  *     Enable result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_enable(ur_mesh_hal_module_t *module);
+int hal_umesh_enable(ur_mesh_hal_module_t *module);
 
 /**
  * Disable a uRadar HAL module, which usually power off its hardware
@@ -189,7 +189,7 @@ int hal_ur_mesh_enable(ur_mesh_hal_module_t *module);
  * @return
  *     Disable result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_disable(ur_mesh_hal_module_t *module);
+int hal_umesh_disable(ur_mesh_hal_module_t *module);
 
 /**
  * Send HAL ucast frame request
@@ -203,7 +203,7 @@ int hal_ur_mesh_disable(ur_mesh_hal_module_t *module);
  * @return
  *     Send frame request result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_send_ucast_request(ur_mesh_hal_module_t *module,
+int hal_umesh_send_ucast_request(ur_mesh_hal_module_t *module,
                                    frame_t *frame, mac_address_t *dest,
                                    ur_mesh_handle_sent_ucast_t sent, void *context);
 
@@ -218,7 +218,7 @@ int hal_ur_mesh_send_ucast_request(ur_mesh_hal_module_t *module,
  * @return
  *     Send frame request result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_send_bcast_request(ur_mesh_hal_module_t *module,
+int hal_umesh_send_bcast_request(ur_mesh_hal_module_t *module,
                                    frame_t *frame,
                                    ur_mesh_handle_sent_bcast_t sent, void *context);
 
@@ -232,7 +232,7 @@ int hal_ur_mesh_send_bcast_request(ur_mesh_hal_module_t *module,
  * @return
  *     Register receiver result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_register_receiver(ur_mesh_hal_module_t *module,
+int hal_umesh_register_receiver(ur_mesh_hal_module_t *module,
                                   ur_mesh_handle_received_frame_t received, void *context);
 
 /**
@@ -246,7 +246,7 @@ int hal_ur_mesh_register_receiver(ur_mesh_hal_module_t *module,
  * @return
  *     The result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_start_beacons(ur_mesh_hal_module_t *module,
+int hal_umesh_start_beacons(ur_mesh_hal_module_t *module,
                               frame_t *frame, mac_address_t *dest,
                               uint16_t max_interval);
 
@@ -258,7 +258,7 @@ int hal_ur_mesh_start_beacons(ur_mesh_hal_module_t *module,
  * @return
  *     The result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_stop_beacons(ur_mesh_hal_module_t *module);
+int hal_umesh_stop_beacons(ur_mesh_hal_module_t *module);
 
 /**
  * Set HAL broadcast MTU, MTU is normally decided by HAL.
@@ -269,7 +269,7 @@ int hal_ur_mesh_stop_beacons(ur_mesh_hal_module_t *module);
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_bcast_mtu(ur_mesh_hal_module_t *module, uint16_t mtu);
+int hal_umesh_set_bcast_mtu(ur_mesh_hal_module_t *module, uint16_t mtu);
 
 /**
  * Get HAL broadcast MTU
@@ -279,7 +279,7 @@ int hal_ur_mesh_set_bcast_mtu(ur_mesh_hal_module_t *module, uint16_t mtu);
  * @return
  *     The MTU, -1 if fail
  */
-int hal_ur_mesh_get_bcast_mtu(ur_mesh_hal_module_t *module);
+int hal_umesh_get_bcast_mtu(ur_mesh_hal_module_t *module);
 
 /**
  * Set HAL unicast MTU, MTU is normally decided by HAL.
@@ -290,7 +290,7 @@ int hal_ur_mesh_get_bcast_mtu(ur_mesh_hal_module_t *module);
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_ucast_mtu(ur_mesh_hal_module_t *module, uint16_t mtu);
+int hal_umesh_set_ucast_mtu(ur_mesh_hal_module_t *module, uint16_t mtu);
 
 /**
  * Get HAL unicast MTU
@@ -300,7 +300,7 @@ int hal_ur_mesh_set_ucast_mtu(ur_mesh_hal_module_t *module, uint16_t mtu);
  * @return
  *     The MTU, -1 if fail
  */
-int hal_ur_mesh_get_ucast_mtu(ur_mesh_hal_module_t *module);
+int hal_umesh_get_ucast_mtu(ur_mesh_hal_module_t *module);
 
 /**
  * Set broadcast channel
@@ -311,7 +311,7 @@ int hal_ur_mesh_get_ucast_mtu(ur_mesh_hal_module_t *module);
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_bcast_channel(ur_mesh_hal_module_t *module,
+int hal_umesh_set_bcast_channel(ur_mesh_hal_module_t *module,
                                   uint8_t channel);
 
 /**
@@ -322,7 +322,7 @@ int hal_ur_mesh_set_bcast_channel(ur_mesh_hal_module_t *module,
  * @return
  *     The channel, -1 if fail
  */
-int hal_ur_mesh_get_bcast_channel(ur_mesh_hal_module_t *module);
+int hal_umesh_get_bcast_channel(ur_mesh_hal_module_t *module);
 
 /**
  * Get broadcast channel list
@@ -333,7 +333,7 @@ int hal_ur_mesh_get_bcast_channel(ur_mesh_hal_module_t *module);
  * @return
  *     The number of broadcast channels, -1 if fail
  */
-int hal_ur_mesh_get_bcast_chnlist(ur_mesh_hal_module_t *module,
+int hal_umesh_get_bcast_chnlist(ur_mesh_hal_module_t *module,
                                   const uint8_t **chnlist);
 /**
  * Set unicast channel
@@ -344,7 +344,7 @@ int hal_ur_mesh_get_bcast_chnlist(ur_mesh_hal_module_t *module,
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_ucast_channel(ur_mesh_hal_module_t *module,
+int hal_umesh_set_ucast_channel(ur_mesh_hal_module_t *module,
                                   uint8_t channel);
 
 /**
@@ -355,7 +355,7 @@ int hal_ur_mesh_set_ucast_channel(ur_mesh_hal_module_t *module,
  * @return
  *     The channel, -1 if fail
  */
-int hal_ur_mesh_get_ucast_channel(ur_mesh_hal_module_t *module);
+int hal_umesh_get_ucast_channel(ur_mesh_hal_module_t *module);
 
 /**
  * Get unicast channel list
@@ -366,7 +366,7 @@ int hal_ur_mesh_get_ucast_channel(ur_mesh_hal_module_t *module);
  * @return
  *     The number of unicast channels, -1 if fail
  */
-int hal_ur_mesh_get_ucast_chnlist(ur_mesh_hal_module_t *module,
+int hal_umesh_get_ucast_chnlist(ur_mesh_hal_module_t *module,
                                   const uint8_t **chnlist);
 
 /**
@@ -378,7 +378,7 @@ int hal_ur_mesh_get_ucast_chnlist(ur_mesh_hal_module_t *module,
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_txpower(ur_mesh_hal_module_t *module, int8_t txpower);
+int hal_umesh_set_txpower(ur_mesh_hal_module_t *module, int8_t txpower);
 
 /**
  * Get transmit power
@@ -388,7 +388,7 @@ int hal_ur_mesh_set_txpower(ur_mesh_hal_module_t *module, int8_t txpower);
  * @return
  *     The transmit power, -1 if fail
  */
-int hal_ur_mesh_get_txpower(ur_mesh_hal_module_t *module);
+int hal_umesh_get_txpower(ur_mesh_hal_module_t *module);
 
 /**
  * Set extension meshnetid
@@ -421,7 +421,7 @@ void hal_umesh_get_extnetid(ur_mesh_hal_module_t *module,
  * @return
  *     Set media configuration result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_mac_address(ur_mesh_hal_module_t *module,
+int hal_umesh_set_mac_address(ur_mesh_hal_module_t *module,
                                 const mac_address_t *addr);
 
 /**
@@ -432,7 +432,7 @@ int hal_ur_mesh_set_mac_address(ur_mesh_hal_module_t *module,
  * @return
  *     The mac address, NULL if fail
  */
-const mac_address_t *hal_ur_mesh_get_mac_address(ur_mesh_hal_module_t *module);
+const mac_address_t *hal_umesh_get_mac_address(ur_mesh_hal_module_t *module);
 
 /**
  * Set HAL encryption key.
@@ -445,7 +445,7 @@ const mac_address_t *hal_ur_mesh_get_mac_address(ur_mesh_hal_module_t *module);
  * @return
  *     Set result, 0 if success, -1 if fail
  */
-int hal_ur_mesh_set_key(struct ur_mesh_hal_module_s *module,
+int hal_umesh_set_key(struct ur_mesh_hal_module_s *module,
                         uint8_t index, uint8_t *key, uint8_t length);
 
 /**
@@ -456,7 +456,7 @@ int hal_ur_mesh_set_key(struct ur_mesh_hal_module_s *module,
  * @return
  *     Security state, 0 if disabled, 1 if enabled
  */
-int hal_ur_mesh_is_sec_enabled(struct ur_mesh_hal_module_s *module);
+int hal_umesh_is_sec_enabled(struct ur_mesh_hal_module_s *module);
 
 /**
  * Read uRadar mesh HAL frame stats.
@@ -466,7 +466,7 @@ int hal_ur_mesh_is_sec_enabled(struct ur_mesh_hal_module_s *module);
  * @return
  *     The HAL frame stats, NULL if fail
  */
-const frame_stats_t *hal_ur_mesh_get_stats(ur_mesh_hal_module_t *module);
+const frame_stats_t *hal_umesh_get_stats(ur_mesh_hal_module_t *module);
 
 #ifdef __cplusplus
 }

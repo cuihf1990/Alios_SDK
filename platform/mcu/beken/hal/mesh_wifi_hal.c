@@ -104,8 +104,8 @@ static inline void dump_packet(bool rx, uint8_t *data, int len)
     } else {
         printf("tx: ");
     }
-    module = hal_ur_mesh_get_default_module();
-    channel = hal_ur_mesh_get_ucast_channel(module);
+    module = hal_umesh_get_default_module();
+    channel = hal_umesh_get_ucast_channel(module);
     printf("on channel %d, seq %d, size %d, ctrl %02x:%02x\r\n", channel, seqno, len, data[0], data[1]);
     printf("  to");
     for (index = WIFI_DST_OFFSET; index < WIFI_DST_OFFSET + 6; index++) {
@@ -209,8 +209,8 @@ static void wifi_monitor_cb(uint8_t *data, int len)
     memcpy(pf->fino.peer.addr, data + WIFI_SRC_OFFSET, WIFI_MAC_ADDR_SIZE);
     pf->fino.peer.len = 8;
 
-    module = hal_ur_mesh_get_default_module();
-    pf->fino.channel = hal_ur_mesh_get_ucast_channel(module);
+    module = hal_umesh_get_default_module();
+    pf->fino.channel = hal_umesh_get_ucast_channel(module);
 
     pf->priv = priv;
     memcpy(pf->frm.data, data + WIFI_MESH_OFFSET, pf->frm.len);
@@ -469,5 +469,5 @@ static ur_mesh_hal_module_t beken_wifi_mesh_module = {
 
 void beken_wifi_mesh_register(void)
 {
-    hal_ur_mesh_register_module(&beken_wifi_mesh_module);
+    hal_umesh_register_module(&beken_wifi_mesh_module);
 }

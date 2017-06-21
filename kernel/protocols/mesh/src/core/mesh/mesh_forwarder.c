@@ -430,9 +430,9 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     hal = network->hal;
     info = message->info;
     if (info->dest.addr.short_addr == BCAST_SID) {
-        mtu = hal_ur_mesh_get_bcast_mtu(network->hal->module);
+        mtu = hal_umesh_get_bcast_mtu(network->hal->module);
     } else {
-        mtu = hal_ur_mesh_get_ucast_mtu(network->hal->module);
+        mtu = hal_umesh_get_ucast_mtu(network->hal->module);
     }
 
     if (info->dest.addr.len == EXT_ADDR_SIZE ||
@@ -497,11 +497,11 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     }
 
     if (next_node) {
-        error = hal_ur_mesh_send_ucast_request(hal->module, &hal->frame,
+        error = hal_umesh_send_ucast_request(hal->module, &hal->frame,
                                                &next_node->mac,
                                                handle_sent, hal);
     } else {
-        error = hal_ur_mesh_send_bcast_request(network->hal->module, &hal->frame,
+        error = hal_umesh_send_bcast_request(network->hal->module, &hal->frame,
                                                handle_sent, hal);
     }
 
@@ -1203,7 +1203,7 @@ ur_error_t mf_init(void)
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        hal_ur_mesh_register_receiver(hal->module, handle_received_frame, hal);
+        hal_umesh_register_receiver(hal->module, handle_received_frame, hal);
         ur_stop_timer(&hal->sending_timer, hal);
         hal->frag_info.tag = 0;
         hal->frag_info.offset = 0;

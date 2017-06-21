@@ -279,7 +279,7 @@ ur_error_t ur_mesh_init(node_mode_t mode)
         return UR_ERROR_NONE;
     }
 
-    hal_ur_mesh_init();
+    hal_umesh_init();
     g_um_state.mm_cb.interface_up = ur_mesh_interface_up;
     g_um_state.mm_cb.interface_down = ur_mesh_interface_down;
     ur_adapter_interface_init();
@@ -316,9 +316,9 @@ ur_error_t ur_mesh_start()
     }
 
     g_um_state.started = true;
-    wifi_hal = hal_ur_mesh_get_default_module();
+    wifi_hal = hal_umesh_get_default_module();
     if (wifi_hal) {
-        hal_ur_mesh_enable(wifi_hal);
+        hal_umesh_enable(wifi_hal);
     }
     interface_start();
     umesh_mm_start(&g_um_state.mm_cb);
@@ -340,9 +340,9 @@ ur_error_t ur_mesh_stop(void)
     }
 
     g_um_state.started = false;
-    wifi_hal = hal_ur_mesh_get_default_module();
+    wifi_hal = hal_umesh_get_default_module();
     if (wifi_hal) {
-        hal_ur_mesh_disable(wifi_hal);
+        hal_umesh_disable(wifi_hal);
     }
 
     nd_unregister_update_handler(&g_um_state.network_data_updater);
@@ -481,10 +481,10 @@ void ur_mesh_get_channel(channel_t *channel)
     if (channel) {
         channel->wifi_channel = 1;
         channel->channel = channel->wifi_channel;
-        ur_wifi_hal = hal_ur_mesh_get_default_module();
-        channel->hal_ucast_channel = (uint16_t)hal_ur_mesh_get_ucast_channel(
+        ur_wifi_hal = hal_umesh_get_default_module();
+        channel->hal_ucast_channel = (uint16_t)hal_umesh_get_ucast_channel(
                                          ur_wifi_hal);
-        channel->hal_bcast_channel = (uint16_t)hal_ur_mesh_get_bcast_channel(
+        channel->hal_bcast_channel = (uint16_t)hal_umesh_get_bcast_channel(
                                          ur_wifi_hal);
     }
 }
@@ -523,7 +523,7 @@ const frame_stats_t *ur_mesh_get_hal_stats(media_type_t type)
         return NULL;
     }
 
-    return hal_ur_mesh_get_stats(hal->module);
+    return hal_umesh_get_stats(hal->module);
 }
 
 const ur_message_stats_t *ur_mesh_get_message_stats(void)

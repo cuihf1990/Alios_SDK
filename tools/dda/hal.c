@@ -299,13 +299,13 @@ void linuxhost_hal_urmesh_register(void)
 
         int bitmap = atoi(argv[i+1]);
         if (bitmap & (1 << IF_WIFI))
-            hal_ur_mesh_register_module(&linuxhost_ur_wifi_module);
+            hal_umesh_register_module(&linuxhost_ur_wifi_module);
         if (bitmap & (1 << IF_BLE))
-            hal_ur_mesh_register_module(&linuxhost_ur_ble_module);
+            hal_umesh_register_module(&linuxhost_ur_ble_module);
 
         return;
     }
 
-    hal_ur_mesh_register_module(&linuxhost_ur_wifi_module);
+    hal_umesh_register_module(&linuxhost_ur_wifi_module);
 
 }

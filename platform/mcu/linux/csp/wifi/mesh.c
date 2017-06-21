@@ -456,5 +456,5 @@ static ur_mesh_hal_module_t linux_80211_mesh_wifi_module = {
 
 void linux_wifi_register(void)
 {
-    hal_ur_mesh_register_module(&linux_80211_mesh_wifi_module);
+    hal_umesh_register_module(&linux_80211_mesh_wifi_module);
 }

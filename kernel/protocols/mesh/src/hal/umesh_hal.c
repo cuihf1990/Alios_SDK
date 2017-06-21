@@ -20,7 +20,7 @@
 
 static YOS_DLIST_HEAD(g_mesh_module);
 
-int hal_ur_mesh_init(void)
+int hal_umesh_init(void)
 {
     int ret = 0;
     dlist_t *t;
@@ -40,12 +40,12 @@ int hal_ur_mesh_init(void)
     return ret;
 }
 
-void hal_ur_mesh_register_module(ur_mesh_hal_module_t *m)
+void hal_umesh_register_module(ur_mesh_hal_module_t *m)
 {
     dlist_add_tail(&m->base.list, &g_mesh_module);
 }
 
-ur_mesh_hal_module_t *hal_ur_mesh_get_default_module(void)
+ur_mesh_hal_module_t *hal_umesh_get_default_module(void)
 {
     ur_mesh_hal_module_t *m = NULL;
 
@@ -57,7 +57,7 @@ ur_mesh_hal_module_t *hal_ur_mesh_get_default_module(void)
     return m;
 }
 
-ur_mesh_hal_module_t *hal_ur_mesh_get_next_module(ur_mesh_hal_module_t *cur)
+ur_mesh_hal_module_t *hal_umesh_get_next_module(ur_mesh_hal_module_t *cur)
 {
     ur_mesh_hal_module_t *m = NULL;
 
@@ -69,10 +69,10 @@ ur_mesh_hal_module_t *hal_ur_mesh_get_next_module(ur_mesh_hal_module_t *cur)
     return m;
 }
 
-int hal_ur_mesh_enable(ur_mesh_hal_module_t *m)
+int hal_umesh_enable(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_enable != NULL)) {
@@ -82,10 +82,10 @@ int hal_ur_mesh_enable(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_ur_mesh_disable(ur_mesh_hal_module_t *m)
+int hal_umesh_disable(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_disable != NULL)) {
@@ -95,12 +95,12 @@ int hal_ur_mesh_disable(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_ur_mesh_send_ucast_request(ur_mesh_hal_module_t *m,
+int hal_umesh_send_ucast_request(ur_mesh_hal_module_t *m,
                                    frame_t *frame, mac_address_t *dest,
                                    ur_mesh_handle_sent_ucast_t sent, void *context)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_send_ucast_request != NULL)) {
@@ -110,12 +110,12 @@ int hal_ur_mesh_send_ucast_request(ur_mesh_hal_module_t *m,
     return -1;
 }
 
-int hal_ur_mesh_send_bcast_request(ur_mesh_hal_module_t *m,
+int hal_umesh_send_bcast_request(ur_mesh_hal_module_t *m,
                                    frame_t *frame,
                                    ur_mesh_handle_sent_bcast_t sent, void *context)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_send_bcast_request != NULL)) {
@@ -125,11 +125,11 @@ int hal_ur_mesh_send_bcast_request(ur_mesh_hal_module_t *m,
     return -1;
 }
 
-int hal_ur_mesh_register_receiver(ur_mesh_hal_module_t *m,
+int hal_umesh_register_receiver(ur_mesh_hal_module_t *m,
                                   ur_mesh_handle_received_frame_t received, void *context)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_register_receiver != NULL)) {
@@ -139,12 +139,12 @@ int hal_ur_mesh_register_receiver(ur_mesh_hal_module_t *m,
     return -1;
 }
 
-int hal_ur_mesh_start_beacons(ur_mesh_hal_module_t *m,
+int hal_umesh_start_beacons(ur_mesh_hal_module_t *m,
                               frame_t *data, mac_address_t *dest,
                               uint16_t max_interval)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_start_beacons != NULL)) {
@@ -154,10 +154,10 @@ int hal_ur_mesh_start_beacons(ur_mesh_hal_module_t *m,
     return -1;
 }
 
-int hal_ur_mesh_stop_beacons(ur_mesh_hal_module_t *m)
+int hal_umesh_stop_beacons(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_stop_beacons != NULL)) {
@@ -167,10 +167,10 @@ int hal_ur_mesh_stop_beacons(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_ur_mesh_set_bcast_mtu(ur_mesh_hal_module_t *m, uint16_t mtu)
+int hal_umesh_set_bcast_mtu(ur_mesh_hal_module_t *m, uint16_t mtu)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_set_bcast_mtu != NULL)) {
@@ -180,10 +180,10 @@ int hal_ur_mesh_set_bcast_mtu(ur_mesh_hal_module_t *m, uint16_t mtu)
     return -1;
 }
 
-int hal_ur_mesh_get_bcast_mtu(ur_mesh_hal_module_t *m)
+int hal_umesh_get_bcast_mtu(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_bcast_mtu != NULL)) {
@@ -193,10 +193,10 @@ int hal_ur_mesh_get_bcast_mtu(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_ur_mesh_set_ucast_mtu(ur_mesh_hal_module_t *m, uint16_t mtu)
+int hal_umesh_set_ucast_mtu(ur_mesh_hal_module_t *m, uint16_t mtu)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_set_ucast_mtu != NULL)) {
@@ -206,10 +206,10 @@ int hal_ur_mesh_set_ucast_mtu(ur_mesh_hal_module_t *m, uint16_t mtu)
     return -1;
 }
 
-int hal_ur_mesh_get_ucast_mtu(ur_mesh_hal_module_t *m)
+int hal_umesh_get_ucast_mtu(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_ucast_mtu != NULL)) {
@@ -219,10 +219,10 @@ int hal_ur_mesh_get_ucast_mtu(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_ur_mesh_set_bcast_channel(ur_mesh_hal_module_t *m, uint8_t channel)
+int hal_umesh_set_bcast_channel(ur_mesh_hal_module_t *m, uint8_t channel)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_set_bcast_channel != NULL)) {
@@ -232,10 +232,10 @@ int hal_ur_mesh_set_bcast_channel(ur_mesh_hal_module_t *m, uint8_t channel)
     return -1;
 }
 
-int hal_ur_mesh_get_bcast_channel(ur_mesh_hal_module_t *m)
+int hal_umesh_get_bcast_channel(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_bcast_channel != NULL)) {
@@ -245,11 +245,11 @@ int hal_ur_mesh_get_bcast_channel(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_ur_mesh_get_bcast_chnlist(ur_mesh_hal_module_t *m,
+int hal_umesh_get_bcast_chnlist(ur_mesh_hal_module_t *m,
                                   const uint8_t **chnlist)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_bcast_chnlist != NULL)) {
@@ -259,10 +259,10 @@ int hal_ur_mesh_get_bcast_chnlist(ur_mesh_hal_module_t *m,
     return -1;
 }
 
-int hal_ur_mesh_set_ucast_channel(ur_mesh_hal_module_t *m, uint8_t channel)
+int hal_umesh_set_ucast_channel(ur_mesh_hal_module_t *m, uint8_t channel)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_set_ucast_channel != NULL)) {
@@ -272,10 +272,10 @@ int hal_ur_mesh_set_ucast_channel(ur_mesh_hal_module_t *m, uint8_t channel)
     return -1;
 }
 
-int hal_ur_mesh_get_ucast_channel(ur_mesh_hal_module_t *m)
+int hal_umesh_get_ucast_channel(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_ucast_channel != NULL)) {
@@ -285,11 +285,11 @@ int hal_ur_mesh_get_ucast_channel(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_ur_mesh_get_ucast_chnlist(ur_mesh_hal_module_t *m,
+int hal_umesh_get_ucast_chnlist(ur_mesh_hal_module_t *m,
                                   const uint8_t **chnlist)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_ucast_chnlist != NULL)) {
@@ -299,10 +299,10 @@ int hal_ur_mesh_get_ucast_chnlist(ur_mesh_hal_module_t *m,
     return -1;
 }
 
-int hal_ur_mesh_set_txpower(ur_mesh_hal_module_t *m, int8_t txpower)
+int hal_umesh_set_txpower(ur_mesh_hal_module_t *m, int8_t txpower)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_set_txpower != NULL)) {
@@ -312,10 +312,10 @@ int hal_ur_mesh_set_txpower(ur_mesh_hal_module_t *m, int8_t txpower)
     return -1;
 }
 
-int hal_ur_mesh_get_txpower(ur_mesh_hal_module_t *m)
+int hal_umesh_get_txpower(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_txpower != NULL)) {
@@ -329,7 +329,7 @@ int hal_umesh_set_extnetid(ur_mesh_hal_module_t *m,
                            const umesh_extnetid_t *extnetid)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->umesh_hal_set_extnetid != NULL)) {
@@ -343,7 +343,7 @@ void hal_umesh_get_extnetid(ur_mesh_hal_module_t *m,
                             umesh_extnetid_t *extnetid)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->umesh_hal_get_extnetid != NULL)) {
@@ -351,11 +351,11 @@ void hal_umesh_get_extnetid(ur_mesh_hal_module_t *m,
     }
 }
 
-int hal_ur_mesh_set_mac_address(ur_mesh_hal_module_t *m,
+int hal_umesh_set_mac_address(ur_mesh_hal_module_t *m,
                                 const mac_address_t *addr)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_set_mac_address != NULL)) {
@@ -365,10 +365,10 @@ int hal_ur_mesh_set_mac_address(ur_mesh_hal_module_t *m,
     return -1;
 }
 
-const mac_address_t *hal_ur_mesh_get_mac_address(ur_mesh_hal_module_t *m)
+const mac_address_t *hal_umesh_get_mac_address(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_mac_address != NULL)) {
@@ -378,11 +378,11 @@ const mac_address_t *hal_ur_mesh_get_mac_address(ur_mesh_hal_module_t *m)
     return NULL;
 }
 
-int hal_ur_mesh_set_key(struct ur_mesh_hal_module_s *m,
+int hal_umesh_set_key(struct ur_mesh_hal_module_s *m,
                         uint8_t index, uint8_t *key, uint8_t length)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_set_key != NULL)) {
@@ -392,10 +392,10 @@ int hal_ur_mesh_set_key(struct ur_mesh_hal_module_s *m,
     return -1;
 }
 
-const frame_stats_t *hal_ur_mesh_get_stats(ur_mesh_hal_module_t *m)
+const frame_stats_t *hal_umesh_get_stats(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
-        m = hal_ur_mesh_get_default_module();
+        m = hal_umesh_get_default_module();
     }
 
     if ((m != NULL) && (m->ur_mesh_hal_get_stats != NULL)) {
