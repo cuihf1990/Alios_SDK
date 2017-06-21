@@ -22,7 +22,7 @@ extern "C"
 {
 #endif
 
-#define HASH_TABLE_MAX_SIZE 1024
+#define HASH_TABLE_MAX_SIZE 32
 #define MAX_KV_LEN 512
 
 #ifndef CONFIG_YOS_KVFILE

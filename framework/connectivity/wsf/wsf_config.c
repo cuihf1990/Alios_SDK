@@ -45,7 +45,7 @@ static const unsigned short default_version = 1;
 static const int default_heartbeat_interval = 12;
 static const int default_request_timeout = 10;
 static const int default_msg_queue_length = 20;
-static const int default_msg_recv_length = 4096;
+static const int default_msg_recv_length = 2048;
 static const int default_enable_ssl = 1;
 static const ssl_version default_ssl_version = TLSV1;
 

@@ -467,7 +467,7 @@ static int init_socket(void)
 
     pstate->sockfd = sockfd;
 #ifdef GATEWAY_WORKER_THREAD
-    yos_task_new("gatewayworker", gateway_worker, NULL, 8192);
+    yos_task_new("gatewayworker", gateway_worker, NULL, 4096);
 #else
     yos_poll_read_fd(sockfd, gateway_sock_read_cb, pstate);
 #endif
