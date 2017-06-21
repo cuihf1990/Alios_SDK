@@ -39,7 +39,7 @@ static DD_INIT_S dd_init_tbl[] =
     {GPIO_DEV_NAME,         gpio_init,                  gpio_exit},
     
 #ifndef KEIL_SIMULATOR    
-    {UART_DEV_NAME,         uart_init,                  uart_exit},
+    // {UART_DEV_NAME,         uart_init,                  uart_exit},
 #endif    
     
     {FLASH_DEV_NAME,        flash_init,                 flash_exit},

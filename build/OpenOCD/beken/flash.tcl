@@ -172,10 +172,14 @@ proc flash_erase_sector { addr } {
 }
 
 proc flash_erase { addr size } {
-    while { $size } {
-        flash_erase_sector $addr
-        set addr [expr $addr + 0x1000]
-        set size [expr $size - 0x1000]
+    if { [expr $addr % 0x1000] || [expr $size % 0x1000] } {
+         error "erase address $addr or size $size not aligned to 4K bytes"
+    } else {
+        while { $size } {
+            flash_erase_sector $addr
+            set addr [expr $addr + 0x1000]
+            set size [expr $size - 0x1000]
+        }
     }
 }
 

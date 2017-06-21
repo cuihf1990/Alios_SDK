@@ -14,6 +14,7 @@ HOST_OPENOCD := beken
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
 $(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
+$(NAME)_COMPONENTS += platform/mcu/beken/hal_init
 
 GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_YOS_KVFILE=\"/dev/flash6\"
@@ -421,8 +422,7 @@ $(NAME)_SOURCES	 += hal/wdg.c \
 					hal/ringbuf.c \
                     hal/StringUtils.c \
 					hal/wifi_port.c \
-                    port/ota_port.c \
-                    platform_init.c
+                    port/ota_port.c
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_SOURCES +=  hal/mesh_wifi_hal.c

@@ -32,6 +32,7 @@
 #include "hal/soc/soc.h"
 #include "yos/kernel.h"
 #include "board.h"
+#include "bootloader.h"
 
 #define CNTLQ      0x11
 #define CNTLS      0x13
@@ -80,7 +81,7 @@ int stdio_break_in(void)
     uint8_t c;
     int i, j;
     
-    for(i=0, j=0; i<10; i++)
+    for(i=0, j=0; i<5; i++)
     {
       if (0 != hal_uart_recv( STDIO_UART, &c, 1, NULL, 100)) 
         continue;

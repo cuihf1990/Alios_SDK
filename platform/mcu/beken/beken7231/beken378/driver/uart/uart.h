@@ -16,28 +16,14 @@
 #define STATIC                   static
 #endif
 
-#define UART_INDEX_1              (1)
-#define UART_INDEX_2              (2)
+#define UART_PORT_1 (0)
+#define UART_PORT_2 (1)
 
-#if (CFG_RUNNING_PLATFORM == FPGA_PLATFORM)
-#define UART_SELECT_CFG            UART_INDEX_1
-#else
-#define UART_SELECT_CFG            UART_INDEX_2
-#endif
-
-#if (UART_SELECT_CFG == UART_INDEX_1)
-#define IRQ_UART                   IRQ_UART1
-#define PRI_IRQ_UART               PRI_IRQ_UART1
-#define PWD_UART_CLK_BIT           PWD_UART1_CLK_BIT
-#define GFUNC_MODE_UART            GFUNC_MODE_UART1
-#define IRQ_UART_BIT               IRQ_UART1_BIT
-#else  /* UART_INDEX_2 */
-#define IRQ_UART                   IRQ_UART2
-#define PRI_IRQ_UART               PRI_IRQ_UART2
-#define PWD_UART_CLK_BIT           PWD_UART2_CLK_BIT
-#define GFUNC_MODE_UART            GFUNC_MODE_UART2
-#define IRQ_UART_BIT               IRQ_UART2_BIT
-#endif
+#define IRQ_UART(n)                   (n == UART_PORT_1 ? IRQ_UART1 : IRQ_UART2)
+#define PRI_IRQ_UART(n)               (n == UART_PORT_1 ? PRI_IRQ_UART1 : PRI_IRQ_UART2)
+#define PWD_UART_CLK_BIT(n)           (n == UART_PORT_1 ? PWD_UART1_CLK_BIT : PWD_UART2_CLK_BIT)
+#define GFUNC_MODE_UART(n)            (n == UART_PORT_1 ? GFUNC_MODE_UART1 : GFUNC_MODE_UART2)
+#define IRQ_UART_BIT(n)               (n == UART_PORT_1 ? IRQ_UART1_BIT : IRQ_UART2_BIT)
 
 #define DEBUG_PRT_MAX_CNT          (16)
 
@@ -120,13 +106,9 @@ typedef struct _uart_
                          }while(0)
 #endif
 
-#if (UART_SELECT_CFG == UART_INDEX_1)
-#define UART_BASE_ADDR                       (0x0802100)
-#else
-#define UART_BASE_ADDR                       (0x0802200)
-#endif
+#define UART_BASE_ADDR(n)                      (n == UART_PORT_1 ? 0x0802100 : 0x0802200)
 
-#define REG_UART_CONFIG                      (UART_BASE_ADDR + 4 * 0)
+#define REG_UART_CONFIG(n)                     (UART_BASE_ADDR(n) + 4 * 0)
 #define UART_TX_ENABLE                         (1 << 0)
 #define UART_RX_ENABLE                         (1 << 1)
 #define UART_IRDA                              (1 << 2)
@@ -138,7 +120,7 @@ typedef struct _uart_
 #define UART_CLK_DIVID_POSI                    (8)
 #define UART_CLK_DIVID_MASK                    (0x1FFF)
 
-#define REG_UART_FIFO_CONFIG                 (UART_BASE_ADDR + 4 * 1)
+#define REG_UART_FIFO_CONFIG(n)                 (UART_BASE_ADDR(n) + 4 * 1)
 #define TX_FIFO_THRESHOLD_MASK                 (0xFF)
 #define TX_FIFO_THRESHOLD_POSI                 (0)
 #define RX_FIFO_THRESHOLD_MASK                 (0xFF)
@@ -150,7 +132,7 @@ typedef struct _uart_
 #define RX_STOP_DETECT_TIME128                 (2)
 #define RX_STOP_DETECT_TIME256                 (3)
 
-#define REG_UART_FIFO_STATUS                 (UART_BASE_ADDR + 4 * 2)
+#define REG_UART_FIFO_STATUS(n)                 (UART_BASE_ADDR(n) + 4 * 2)
 #define TX_FIFO_COUNT_MASK                     (0xFF)
 #define TX_FIFO_COUNT_POSI                     (0)
 #define RX_FIFO_COUNT_MASK                     (0xFF)
@@ -162,13 +144,13 @@ typedef struct _uart_
 #define FIFO_WR_READY                          (1 << 20)
 #define FIFO_RD_READY                          (1 << 21)
 
-#define REG_UART_FIFO_PORT                   (UART_BASE_ADDR + 4 * 3)
+#define REG_UART_FIFO_PORT(n)                   (UART_BASE_ADDR(n) + 4 * 3)
 #define UART_TX_FIFO_DIN_MASK                  (0xFF)
 #define UART_TX_FIFO_DIN_POSI                  (0)
 #define UART_RX_FIFO_DOUT_MASK                 (0xFF)
 #define UART_RX_FIFO_DOUT_POSI                 (8)
 
-#define REG_UART_INTR_ENABLE                 (UART_BASE_ADDR + 4 * 4)
+#define REG_UART_INTR_ENABLE(n)                 (UART_BASE_ADDR(n) + 4 * 4)
 #define TX_FIFO_NEED_WRITE_EN                  (1 << 0)
 #define RX_FIFO_NEED_READ_EN                   (1 << 1)
 #define RX_FIFO_OVER_FLOW_EN                   (1 << 2)
@@ -178,7 +160,7 @@ typedef struct _uart_
 #define UART_RX_STOP_END_EN                    (1 << 6)
 #define UART_RXD_WAKEUP_EN                     (1 << 7)
 
-#define REG_UART_INTR_STATUS                 (UART_BASE_ADDR + 4 * 5)
+#define REG_UART_INTR_STATUS(n)                 (UART_BASE_ADDR(n) + 4 * 5)
 #define TX_FIFO_NEED_WRITE_STA                  (1 << 0)
 #define RX_FIFO_NEED_READ_STA                   (1 << 1)
 #define RX_FIFO_OVER_FLOW_STA                   (1 << 2)
@@ -188,14 +170,14 @@ typedef struct _uart_
 #define UART_RX_STOP_END_STA                    (1 << 6)
 #define UART_RXD_WAKEUP_STA                     (1 << 7)
 
-#define REG_UART_FLOW_CONFIG                 (UART_BASE_ADDR + 4 * 6)
+#define REG_UART_FLOW_CONFIG(n)                 (UART_BASE_ADDR(n) + 4 * 6)
 #define FLOW_CTRL_LOW_CNT_MASK                   (0xFF)
 #define FLOW_CTRL_LOW_CNT_POSI                   (0)
 #define FLOW_CTRL_HIGH_CNT_MASK                  (0xFF)
 #define FLOW_CTRL_HIGH_CNT_POSI                  (8)
 #define FLOW_CONTROL_EN                          (1 << 16)
 
-#define REG_UART_WAKE_CONFIG                 (UART_BASE_ADDR + 4 * 7)
+#define REG_UART_WAKE_CONFIG(n)                 (UART_BASE_ADDR(n) + 4 * 7)
 #define UART_WAKE_COUNT_MASK                   (0x3FF)
 #define UART_WAKE_COUNT_POSI                   (0)
 #define UART_TXD_WAIT_CNT_MASK                 (0x3FF)
@@ -204,47 +186,28 @@ typedef struct _uart_
 #define UART_TXD_WAKE_EN                       (1 << 21)
 #define RXD_NEGEDGE_WAKE_EN                    (1 << 22)
 
-#define UART_TX_WRITE_READY             (REG_READ(REG_UART_FIFO_STATUS) & FIFO_WR_READY)
+#define UART_TX_WRITE_READY(n)             (REG_READ(REG_UART_FIFO_STATUS(n)) & FIFO_WR_READY)
 
-#define UART_WRITE_BYTE(v)               do                                   \
+#define UART_WRITE_BYTE(n,v)               do                                   \
 										{                                     \
 											v = (v & UART_TX_FIFO_DIN_MASK)   \
 													<< UART_TX_FIFO_DIN_POSI; \
-											REG_WRITE(REG_UART_FIFO_PORT, v); \
+											REG_WRITE(REG_UART_FIFO_PORT(n), v); \
 										}while(0)
-#define UART_READ_BYTE(v)               do                                    \
+#define UART_READ_BYTE(n,v)               do                                    \
 										{                                     \
-											v = (REG_READ(REG_UART_FIFO_PORT) \
+											v = (REG_READ(REG_UART_FIFO_PORT(n)) \
 													>> UART_RX_FIFO_DOUT_POSI) \
 													& UART_RX_FIFO_DOUT_MASK;\
 										}while(0)
 
-#define UART_READ_BYTE_DISCARD()       do                                    \
+#define UART_READ_BYTE_DISCARD(n)       do                                    \
 										{                                     \
-											REG_READ(REG_UART_FIFO_PORT);\
+											REG_READ(REG_UART_FIFO_PORT(n));\
 										}while(0)
 
 /*******************************************************************************
 * Function Declarations
 *******************************************************************************/
-#if (0 == CFG_UART_DEBUG_COMMAND_LINE)
-#else
-extern UINT32 uart_sw_init(void);
-extern UINT32 uart_sw_uninit(void);
-extern void uart_fifo_flush(void);
-extern void uart_hw_uninit(void);
-extern void uart_reset(void);
-
-extern UINT32 uart_write_fifo_frame(KFIFO_PTR tx_ptr, UINT32 count);
-extern UINT32 uart_read_fifo_frame(KFIFO_PTR rx_ptr);
-
-extern void uart_send_backgroud(void);
-extern UINT32 uart_open(UINT32 op_flag);
-extern UINT32 uart_close(void);
-extern UINT32 uart_read(char *user_buf, UINT32 count, UINT32 op_flag);
-extern UINT32 uart_write(char *user_buf, UINT32 count, UINT32 op_flag);
-extern UINT32 uart_ctrl(UINT32 cmd, void *parm);
-#endif
-
 
 #endif // _UART_H_

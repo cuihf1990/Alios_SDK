@@ -1,11 +1,12 @@
 #include <sys/unistd.h>
 #include <sys/errno.h>
 #include "hal/soc/soc.h"
+#include "board.h"
 
 extern int errno;
 
 const hal_uart_config_t uart_cfg = {
-    .baud_rate = 921600,
+    .baud_rate = STDIO_UART_BUADRATE,
     .data_width = DATA_WIDTH_8BIT,
     .parity = NO_PARITY,
     .stop_bits = STOP_BITS_1,
@@ -15,7 +16,7 @@ const hal_uart_config_t uart_cfg = {
 
 void hal_init(void)
 {
-    hal_uart_init(0, &uart_cfg);
+    hal_uart_init(STDIO_UART, &uart_cfg);
 
 #ifdef BOOTLOADER
     /* init for bootloader */
@@ -53,8 +54,8 @@ int _write( int file, char *ptr, int len )
 
     for (int i = 0; i < len; i++) {
         if (*ptr == '\n')
-            hal_uart_send( 0, (const void*)"\r", 1 );
-        hal_uart_send( 0, (const void*)ptr, 1 );
+            hal_uart_send( STDIO_UART, (const void*)"\r", 1 );
+        hal_uart_send( STDIO_UART, (const void*)ptr, 1 );
         ptr ++;
     }
 

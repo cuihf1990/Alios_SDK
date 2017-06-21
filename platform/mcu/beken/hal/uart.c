@@ -11,7 +11,7 @@ typedef int32_t   		      INT32;          /* Signed   32 bit quantity        */
 
 #include "uart_pub.h"
 
-#define MAX_UART_NUM 1
+#define MAX_UART_NUM 2
 
 enum _uart_status_e
 {
@@ -33,11 +33,11 @@ typedef struct
 
 static _uart_drv_t _uart_drv[MAX_UART_NUM];
 
-extern int32_t uart_read_byte( uint8_t *rx_byte );
-extern void uart_write_byte( uint8_t byte );
-extern uint8_t uart_is_tx_fifo_empty( void );
-extern uint8_t uart_is_tx_fifo_full( void );
-extern void uart_set_tx_stop_end_int( uint8_t set );
+extern int32_t uart_read_byte( uint8_t port, uint8_t *rx_byte );
+extern void uart_write_byte( uint8_t port, uint8_t byte );
+extern uint8_t uart_is_tx_fifo_empty( uint8_t port );
+extern uint8_t uart_is_tx_fifo_full( uint8_t port );
+extern void uart_set_tx_stop_end_int( uint8_t port, uint8_t set );
 
 int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
 {
@@ -51,12 +51,14 @@ int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
         mico_rtos_init_semaphore( &pdrv->tx_semphr, 0 );
         mico_rtos_init_semaphore( &pdrv->rx_semphr, 0 );
         mico_rtos_init_mutex( &pdrv->tx_mutex );
+
+        uart_open(uart);
+
+        pdrv->status = _UART_STATUS_OPENED;
     }
 
-    while(!uart_is_tx_fifo_empty());
-
-    uart_open(0);
-    uart_ctrl(CMD_UART_INIT, config);
+    while(!uart_is_tx_fifo_empty(uart));
+    uart_config(uart, config);
 
     return 0;
 }
@@ -70,10 +72,9 @@ int32_t hal_uart_finalize(uint8_t uart)
 {
     _uart_drv_t *pdrv = &_uart_drv[uart];
 
-    while(!uart_is_tx_fifo_empty());
+    while(!uart_is_tx_fifo_empty(uart));
 
-    uart_ctrl(CMD_UART_RESET, NULL);
-    uart_close();
+    uart_close(uart);
 
     ring_buffer_deinit(&pdrv->rx_ringbuf);
     free(pdrv->rx_buf);
@@ -81,6 +82,8 @@ int32_t hal_uart_finalize(uint8_t uart)
     mico_rtos_deinit_semaphore(&pdrv->rx_semphr);
     mico_rtos_deinit_semaphore(&pdrv->tx_semphr);
     mico_rtos_deinit_mutex(&pdrv->tx_mutex);
+
+    pdrv->status = _UART_STATUS_CLOSED;
 }
 
 int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size)
@@ -92,18 +95,18 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size)
 
     for( i = 0; i < size; i++ )
     {
-        if( uart_is_tx_fifo_full() )
+        if( uart_is_tx_fifo_full(uart) )
         {
-            uart_set_tx_stop_end_int( 1 );
+            uart_set_tx_stop_end_int( uart, 1 );
             /* The data in Tx FIFO may have been sent out before enable TX_STOP_END interrupt */
             /* So double check the FIFO status */
-            if( !uart_is_tx_fifo_empty() )
+            if( !uart_is_tx_fifo_empty(uart) )
                 mico_rtos_get_semaphore( &pdrv->tx_semphr, MICO_WAIT_FOREVER );
 
-            uart_set_tx_stop_end_int( 0 );
+            uart_set_tx_stop_end_int( uart, 0 );
         }
 
-        uart_write_byte( ((uint8_t *)data)[i] );
+        uart_write_byte( uart, ((uint8_t *)data)[i] );
     }
 
     mico_rtos_unlock_mutex( &pdrv->tx_mutex );
@@ -170,13 +173,12 @@ uint32_t hal_uart_get_len_in_buf(int uart)
 
 }
 
-void uart_rx_cb(void)
+void uart_rx_cb(uint8_t port)
 {
     uint8_t rx_byte;
-    uint8_t uart = 0;
-    _uart_drv_t *pdrv = &_uart_drv[uart];
+    _uart_drv_t *pdrv = &_uart_drv[port];
 
-    while(uart_read_byte(&rx_byte) == 0)
+    while(uart_read_byte(port, &rx_byte) == 0)
     {
         ring_buffer_write( &pdrv->rx_ringbuf, &rx_byte,1 );
     }
@@ -189,10 +191,9 @@ void uart_rx_cb(void)
     }  
 }
 
-void uart_tx_cb(void)
+void uart_tx_cb(uint8_t port)
 {
-    uint8_t uart = 0;
-    _uart_drv_t *pdrv = &_uart_drv[uart];
+    _uart_drv_t *pdrv = &_uart_drv[port];
 
     mico_rtos_set_semaphore( &pdrv->tx_semphr );
 }
