@@ -347,10 +347,8 @@ void hal_umesh_get_extnetid(ur_mesh_hal_module_t *m,
     }
 
     if ((m != NULL) && (m->umesh_hal_get_extnetid != NULL)) {
-        return m->umesh_hal_get_extnetid(m, extnetid);
+        m->umesh_hal_get_extnetid(m, extnetid);
     }
-
-    return NULL;
 }
 
 int hal_ur_mesh_set_mac_address(ur_mesh_hal_module_t *m,

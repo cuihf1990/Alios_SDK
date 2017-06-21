@@ -360,8 +360,6 @@ void process_extnetid(int argc, char *argv[])
     umesh_extnetid_t extnetid;
     uint8_t length;
 
-uint8_t index;
-
     if (argc > 0) {
         length = hex2bin(argv[0], extnetid.netid, 6);
         if (length != 6) {
