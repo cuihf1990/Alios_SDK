@@ -25,7 +25,6 @@
 #define product_secret          "ngthgTlZ65bX5LpViKIWNsDPhOf2As9ChnoL9gQb"
 #define product_debug_key       "dpZZEpm9eBfqzK7yVeLq"
 #define product_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
-char *g_sn = "1923450656869";
 #else
 #define product_model           "ALINKTEST_SECURITY_GATEWAY_QUANWU_001"
 #define product_key             "V2hpRG0k7Pbr1bmxDCat"
@@ -33,7 +32,6 @@ char *g_sn = "1923450656869";
 #define product_debug_key       "dpZZEpm9eBfqzK7yVeLq"
 #define product_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
 #define PRODUCT_ASR_APP_KEY     "box2015product01"
-char *g_sn = "1923450122798";
 #endif
 
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
@@ -73,5 +71,6 @@ char *product_get_debug_secret(char secret_str[PRODUCT_SECRET_LEN])
 
 char *product_get_sn(char sn_str[PRODUCT_SN_LEN])
 {
-    return strncpy(sn_str, g_sn, PRODUCT_SN_LEN);
+    os_wifi_get_mac_str(sn_str);
+    return sn_str;
 }
