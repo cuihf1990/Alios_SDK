@@ -181,7 +181,7 @@ int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size,
     while(1) {
         retval = yunos_buf_queue_recv(pdrv->bufque, YUNOS_WAIT_FOREVER, data, &readlen);
         if(retval != YUNOS_SUCCESS) {
-            if(*recv_size) {
+            if(recv_size) {
                 *recv_size = totallen;
             }
             return -1;

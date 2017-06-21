@@ -141,11 +141,22 @@ int csp_printf(const char *fmt, ...)
     return ret;
 }
 
+const hal_uart_config_t config = {
+    .baud_rate = 921600,
+    .data_width = DATA_WIDTH_8BIT,
+    .parity = NO_PARITY,
+    .stop_bits = STOP_BITS_1,
+    .flow_control = FLOW_CONTROL_DISABLED,
+    .rx_buf_size = 256,
+};
+
 extern hal_wifi_module_t sim_yos_wifi_linux;
 extern struct hal_ota_module_s linuxhost_ota_module;
 void linux_wifi_register(void);
 void hw_start_hal(void)
 {
+    hal_uart_init(0, &config);
+
     hal_wifi_register_module(&sim_yos_wifi_linux);
     hal_ota_register_module(&linuxhost_ota_module);
 #ifdef LINUX_MESH_80211
