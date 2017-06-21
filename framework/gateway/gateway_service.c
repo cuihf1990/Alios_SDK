@@ -129,8 +129,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     memcpy(reginfo->model_id, &model_id, sizeof(model_id));
     mac_addr = ur_mesh_net_get_mac_address(UR_MESH_NET_DFL);
     memcpy(reginfo->ieee_addr, mac_addr->addr, IEEE_ADDR_BYTES);
-    for(int i = 0; i < SUBDEV_RAND_BYTES; i++)
-        reginfo->rand[i] = rand();
+    memcpy(reginfo->rand,"randrandrandrand", sizeof(reginfo->rand));
     devmgr_get_device_signature(model_id, reginfo->rand, reginfo->sign, sizeof(reginfo->sign));
 
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
@@ -454,6 +453,7 @@ static int init_socket(void)
 
     int val = 1;
     setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof(val));
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
@@ -510,6 +510,8 @@ int gateway_service_start(void)
 
 void gateway_service_stop(void) {
     close(gateway_state.sockfd);
+    gateway_state.sockfd = -1;
+    gateway_state.mqtt_connected = false;
 }
 
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
