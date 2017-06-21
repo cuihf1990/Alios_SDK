@@ -1698,8 +1698,7 @@ static ur_error_t handle_advertisement(message_t *message)
 
     if (mode->mode & MODE_SUPER) {
         // mode leader or super should be leader
-        if (((g_mm_state.device.mode & MODE_SUPER) == 0 ||
-             (g_mm_state.device.mode & MODE_LEADER) == 0) &&
+        if ((g_mm_state.device.mode & MODE_SUPER) == 0 &&
              g_mm_state.device.state == DEVICE_STATE_LEADER) {
             become_detached();
             update_migrate_times(network, nbr);

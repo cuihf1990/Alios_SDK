@@ -205,7 +205,7 @@ static void subnet_is_ble_case(void)
     check_p2p_str_wait("super_router", 154, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 154, "testcmd router", 2);
 
-    yos_msleep(4 * 1000);
+    yos_msleep(20 * 1000);
 
     start_node_ext(155, MODE_RX_ON, -1, 2);
     check_p2p_str_wait("router", 155, "testcmd state", 10);
