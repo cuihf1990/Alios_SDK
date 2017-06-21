@@ -604,11 +604,6 @@ UINT32 uart_ctrl(UINT32 cmd, void *parm)
 
 #endif // KEIL_SIMULATOR
 
-INT32 os_null_printf(const char *fmt, ...)
-{
-    return 0;
-}
-
 INT32 uart_read_byte( UINT8 *byte )
 {
     UINT32 val;
