@@ -155,6 +155,7 @@ static ur_error_t send_discovery_response(network_context_t *network,
                                STABLE_MAIN_VERSION_OFFSET) |
                               nd_get_stable_minor_version();
     netinfo->size = umesh_mm_get_meshnetsize();
+    netinfo->leader_mode = umesh_mm_get_leader_mode();
     data += sizeof(mm_netinfo_tv_t);
 
     info = message->info;
@@ -231,6 +232,8 @@ ur_error_t handle_discovery_response(message_t *message)
     scan_result_t     *res;
     network_context_t *network;
     message_info_t    *info;
+    mm_netinfo_tv_t   *netinfo;
+    int8_t            cmp_mode = 0;
 
     if (umesh_mm_get_device_state() != DEVICE_STATE_DETACHED) {
         return UR_ERROR_NONE;
@@ -244,11 +247,21 @@ ur_error_t handle_discovery_response(message_t *message)
         nbr->flags &= (~NBR_DISCOVERY_REQUEST);
     }
 
+    netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NETWORK_INFO);
+    if (netinfo == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
            "handle discovery response from %x\r\n",
            info->src.netid);
 
     if (is_bcast_netid(info->src.netid)) {
+        return UR_ERROR_NONE;
+    }
+
+    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode(), netinfo->leader_mode);
+    if (cmp_mode > 0) {
         return UR_ERROR_NONE;
     }
 

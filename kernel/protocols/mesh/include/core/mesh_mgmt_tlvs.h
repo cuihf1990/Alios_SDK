@@ -128,6 +128,7 @@ typedef struct mesh_mgmt_netinfo_tv_s {
     uint16_t size: 13;
     uint16_t subnet_size_1: 3;
     uint8_t subnet_size_2;
+    uint8_t leader_mode;
 } __attribute__((packed)) mm_netinfo_tv_t;
 
 typedef struct mesh_mgmt_ssid_info_tv_s {

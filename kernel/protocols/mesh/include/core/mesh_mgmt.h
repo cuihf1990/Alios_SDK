@@ -168,6 +168,7 @@ uint16_t            umesh_mm_get_meshnetid(network_context_t *network);
 uint16_t            umesh_mm_get_meshnetsize(void);
 const mac_address_t *umesh_mm_get_mac_address(void);
 node_mode_t         umesh_mm_get_mode(void);
+int8_t              umesh_mm_compare_mode(node_mode_t local, node_mode_t other);
 ur_error_t          umesh_mm_set_mode(node_mode_t mode);
 uint16_t            umesh_mm_get_path_cost(void);
 uint16_t            umesh_mm_get_channel(network_context_t *network);
@@ -178,6 +179,8 @@ int8_t              umesh_mm_get_seclevel(void);
 
 void umesh_mm_get_extnetid(umesh_extnetid_t *extnetid);
 ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid);
+
+uint8_t umesh_mm_get_leader_mode();
 
 void       umesh_mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length);
 void       umesh_mm_init_tv_base(mm_tv_t *tlv, uint8_t type);

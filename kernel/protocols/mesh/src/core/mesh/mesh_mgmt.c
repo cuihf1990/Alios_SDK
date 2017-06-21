@@ -48,6 +48,7 @@ typedef struct mm_device_s {
 
 typedef struct mesh_mgmt_state_s {
     mm_device_t             device;
+    node_mode_t             leader_mode;
     mm_cb_t                 *callback;
     nd_updater_t            network_data_updater;
     umesh_raw_data_received raw_data_receiver;
@@ -226,6 +227,7 @@ void become_leader(void)
     uint8_t           index = 0;
 
     g_mm_state.device.state = DEVICE_STATE_LEADER;
+    g_mm_state.leader_mode = g_mm_state.device.mode;
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         hal_context_t *hal = network->hal;
@@ -643,6 +645,7 @@ ur_error_t send_advertisement(network_context_t *network)
     netinfo->version        = nd_get_version(NULL);
     netinfo->size           = nd_get_meshnetsize(NULL);
     set_subnetsize_to_netinfo(netinfo, nd_get_meshnetsize(network));
+    netinfo->leader_mode = g_mm_state.leader_mode;
     data += sizeof(mm_netinfo_tv_t);
 
     if (network->router->sid_type == STRUCTURED_SID) {
@@ -1105,6 +1108,7 @@ static ur_error_t send_sid_response(network_context_t *network,
     netinfo->size = nd_get_meshnetsize(NULL);
     netinfo->subnet_size_1  = (uint8_t)((nd_get_meshnetsize(network) >> 8) & 0x7);
     netinfo->subnet_size_2  = (uint8_t)(nd_get_meshnetsize(network) & 0xff);
+    netinfo->leader_mode = g_mm_state.leader_mode;
     data += sizeof(mm_netinfo_tv_t);
 
     mcast = (mm_mcast_addr_tv_t *)data;
@@ -1419,6 +1423,8 @@ static ur_error_t handle_sid_response(message_t *message)
     start_keep_alive_timer(network);
     send_address_notification(network, NULL);
 
+    g_mm_state.leader_mode = netinfo->leader_mode;
+
     ur_stop_timer(&network->migrate_wait_timer, network);
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
@@ -1461,6 +1467,10 @@ void become_detached(void)
 {
     slist_t *networks;
     network_context_t *network;
+
+    if (g_mm_state.device.state == DEVICE_STATE_DETACHED) {
+        return;
+    }
 
     write_prev_netinfo();
     g_mm_state.device.state = DEVICE_STATE_DETACHED;
@@ -1645,6 +1655,7 @@ static ur_error_t handle_advertisement(message_t *message)
     bool              leader_reboot = false;
     uint16_t          net_size = 0;
     uint8_t           tlv_type;
+    int8_t            cmp_mode = 0;
     message_info_t    *info;
 
     if (g_mm_state.device.state < DEVICE_STATE_DETACHED) {
@@ -1669,6 +1680,7 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_FAIL;
     }
 
+    // filter the unexpected advs
     if (network->meshnetid != BCAST_NETID && network->meshnetid != INVALID_NETID) {
         if (g_mm_state.device.mode & MODE_SUPER) {
             if ((is_subnet(network->meshnetid) && is_subnet(info->src.netid) == 0) ||
@@ -1705,20 +1717,18 @@ static ur_error_t handle_advertisement(message_t *message)
         send_link_request(network, &nbr->addr, &tlv_type, 1);
     }
 
-    if (mode->mode & MODE_SUPER) {
-        // mode leader or super should be leader
-        if ((g_mm_state.device.mode & MODE_SUPER) == 0 &&
-            g_mm_state.device.state == DEVICE_STATE_LEADER) {
-            become_detached();
-            update_migrate_times(network, nbr);
-            return UR_ERROR_NONE;
-        }
+    // migration logics
+    // not try to migrate to pf node, and mode leader would not migrate
+    if ((mode->mode & MODE_MOBILE) ||
+        (g_mm_state.device.mode & MODE_LEADER)) {
+        return UR_ERROR_NONE;
+    }
 
-        if (attach_node && (attach_node->mode & MODE_SUPER) == 0) {
-            become_detached();
-            update_migrate_times(network, nbr);
-            return UR_ERROR_NONE;
-        }
+    cmp_mode = umesh_mm_compare_mode(g_mm_state.leader_mode, netinfo->leader_mode);
+    if (cmp_mode < 0) {
+        become_detached();
+        update_migrate_times(network, nbr);
+        return UR_ERROR_NONE;
     }
 
     // detached node try to migrate
@@ -1727,10 +1737,6 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    // not try to migrate to pf node
-    if (mode->mode & MODE_MOBILE) {
-        return UR_ERROR_NONE;
-    }
     // leader not try to migrate to the same net
     if (network->meshnetid == info->src.netid) {
         from_same_net = true;
@@ -1801,11 +1807,6 @@ static ur_error_t handle_advertisement(message_t *message)
                 }
             }
         }
-    }
-
-    if (g_mm_state.device.state == DEVICE_STATE_LEADER &&
-        (g_mm_state.device.mode & MODE_LEADER)) {
-        return UR_ERROR_NONE;
     }
 
     update_migrate_times(network, nbr);
@@ -2078,6 +2079,26 @@ node_mode_t umesh_mm_get_mode(void)
     return g_mm_state.device.mode;
 }
 
+int8_t umesh_mm_compare_mode(node_mode_t local, node_mode_t other)
+{
+    if ((local & MODE_HI_MASK) == (other & MODE_HI_MASK)) {
+        if ((local & MODE_LOW_MASK) == (other & MODE_LOW_MASK) ||
+            ((local & MODE_LOW_MASK) != 0 && (other & MODE_LOW_MASK) != 0)) {
+            return 0;
+        } else if ((local & MODE_LOW_MASK) == 0) {
+            return 1;
+        } else {
+            return -1;
+        }
+    }
+
+    if ((local & MODE_HI_MASK) > (other & MODE_HI_MASK)) {
+        return 1;
+    }
+
+    return -1;
+}
+
 ur_error_t umesh_mm_set_seclevel(int8_t level)
 {
     if (level >= SEC_LEVEL_0 && level <= SEC_LEVEL_1) {
@@ -2182,3 +2203,9 @@ neighbor_t *umesh_mm_get_attach_candidate(network_context_t *network)
 
     return network->attach_candidate;
 }
+
+uint8_t umesh_mm_get_leader_mode(void)
+{
+    return g_mm_state.leader_mode;
+}
+

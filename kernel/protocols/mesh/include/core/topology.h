@@ -90,7 +90,7 @@ typedef struct neighbor_s {
     ur_addr_t addr;
     uint16_t path_cost;
     neighbor_state_t state: 4;
-    node_mode_t mode: 4;
+    node_mode_t mode;
     link_nbr_stats_t stats;
     uint8_t flags;
     uint8_t attach_candidate_timeout;
