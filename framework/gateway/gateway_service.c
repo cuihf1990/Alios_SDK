@@ -129,8 +129,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     memcpy(reginfo->model_id, &model_id, sizeof(model_id));
     mac_addr = ur_mesh_net_get_mac_address(UR_MESH_NET_DFL);
     memcpy(reginfo->ieee_addr, mac_addr->addr, IEEE_ADDR_BYTES);
-    for(int i = 0; i < SUBDEV_RAND_BYTES; i++)
-        reginfo->rand[i] = rand();
+    memcpy(reginfo->rand,"randrandrandrand", sizeof(reginfo->rand));
     devmgr_get_device_signature(model_id, reginfo->rand, reginfo->sign, sizeof(reginfo->sign));
 
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
