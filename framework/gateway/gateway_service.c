@@ -453,6 +453,7 @@ static int init_socket(void)
 
     int val = 1;
     setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof(val));
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
@@ -509,6 +510,8 @@ int gateway_service_start(void)
 
 void gateway_service_stop(void) {
     close(gateway_state.sockfd);
+    gateway_state.sockfd = -1;
+    gateway_state.mqtt_connected = false;
 }
 
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
