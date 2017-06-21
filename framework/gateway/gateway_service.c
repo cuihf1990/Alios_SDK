@@ -407,7 +407,8 @@ void gateway_service_deinit(void)
     yos_unregister_event_filter(EV_MESH, gateway_service_event, NULL);
 }
 
-#ifndef WITH_LWIP
+#define GATEWAY_WORKER_THREAD
+#ifdef GATEWAY_WORKER_THREAD
 static void gateway_worker(void *arg)
 {
     int maxfd = gateway_state.sockfd;
@@ -445,7 +446,7 @@ static int init_socket(void)
     }
 
     if (pstate->sockfd >= 0) {
-#ifdef WITH_LWIP
+#ifndef GATEWAY_WORKER_THREAD
         yos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
 #endif
         close(pstate->sockfd);
@@ -465,7 +466,7 @@ static int init_socket(void)
     }
 
     pstate->sockfd = sockfd;
-#ifndef WITH_LWIP
+#ifdef GATEWAY_WORKER_THREAD
     yos_task_new("gatewayworker", gateway_worker, NULL, 8192);
 #else
     yos_poll_read_fd(sockfd, gateway_sock_read_cb, pstate);
@@ -500,9 +501,7 @@ int gateway_service_start(void)
         yos_cloud_register_callback(GET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
         yos_cloud_register_callback(SET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
 
-#ifdef WITH_LWIP
         yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
-#endif
         yos_post_delayed_action(5 * 1000, gateway_advertise, &gateway_state);
     }
 
