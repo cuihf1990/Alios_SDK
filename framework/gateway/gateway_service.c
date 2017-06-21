@@ -474,15 +474,6 @@ static int init_socket(void)
     return 0;
 }
 
-int gateway_service_start(void)
-{
-    return 0;
-}
-
-void gateway_service_stop(void) {
-    close(gateway_state.sockfd);
-}
-
 #include "json_parser.h"
 #define MAX_UUID_LEN        33
 #define JSON_KEY_UUID       "uuid"
@@ -501,20 +492,8 @@ static void gateway_handle_sub_status(int event, const char *json_buffer)
         yos_cloud_set_attr(uuid, json_buffer, "");
 }
 
-static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
+int gateway_service_start(void)
 {
-    if (eventinfo->type == EV_YUNIO && eventinfo->code == CODE_YUNIO_ON_CONNECTED)
-        gateway_state.yunio_connected = true;
-
-    if (eventinfo->type == EV_MESH && eventinfo->code == CODE_MESH_CONNECTED)
-        gateway_state.mesh_connected = true;
-
-    if (ur_mesh_get_device_state() == DEVICE_STATE_LEADER && gateway_state.yunio_connected == true)
-        gateway_state.gateway_mode = true;
-
-    if (gateway_state.mesh_connected == false)
-        return;
-
     init_socket();
 
     if (gateway_state.gateway_mode) {
@@ -526,5 +505,38 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
 #endif
         yos_post_delayed_action(5 * 1000, gateway_advertise, &gateway_state);
     }
+
+    return 0;
+}
+
+void gateway_service_stop(void) {
+    close(gateway_state.sockfd);
+}
+
+static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
+{
+    if (eventinfo->type == EV_YUNIO) {
+        if(eventinfo->code == CODE_YUNIO_ON_CONNECTED)
+            gateway_state.yunio_connected = true;
+        else
+            return;
+    }
+
+    if (eventinfo->type == EV_MESH) {
+        if (eventinfo->code == CODE_MESH_CONNECTED)
+            gateway_state.mesh_connected = true;
+        else if (eventinfo->code == CODE_MESH_DISCONNECTED)
+            gateway_state.mesh_connected = false;
+        else
+            return;
+    }
+
+    if (ur_mesh_get_device_state() == DEVICE_STATE_LEADER && gateway_state.yunio_connected == true)
+        gateway_state.gateway_mode = true;
+
+    if (gateway_state.mesh_connected == true)
+        gateway_service_start();
+    else
+        gateway_service_stop();
 }
 

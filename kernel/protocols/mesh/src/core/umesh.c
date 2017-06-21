@@ -107,6 +107,7 @@ static ur_error_t ur_mesh_interface_down(void)
     if (g_um_state.adapter_callback) {
         g_um_state.adapter_callback->interface_down();
     }
+    yos_post_event(EV_MESH, CODE_MESH_DISCONNECTED, 0);
     return UR_ERROR_NONE;
 }
 
