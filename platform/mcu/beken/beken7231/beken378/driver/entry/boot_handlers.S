@@ -220,21 +220,33 @@ _sysboot_zi_init:
 		.align	5 
 boot_undefined:
     MOV R0, LR
+    MSR     CPSR_c, #0xd3
+    MOV R1, LR
+    MOV R2, SP
     B print_exception_addr
 
 		.align	5 
 boot_swi:
 	MOV R0, LR
+    MSR     CPSR_c, #0xd3
+    MOV R1, LR
+    MOV R2, SP
     B print_exception_addr
 
 		.align	5 
 boot_pabort:
     MOV R0, LR
+    MSR     CPSR_c, #0xd3
+    MOV R1, LR
+    MOV R2, SP
     B print_exception_addr
 
 		.align	5 
 boot_dabort:
     MOV R0, LR
+    MSR     CPSR_c, #0xd3
+    MOV R1, LR
+    MOV R2, SP
     B print_exception_addr
 
 		.align	5 
