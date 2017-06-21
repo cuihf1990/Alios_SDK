@@ -24,6 +24,7 @@
 	.globl vPortStartFirstTask
 	.globl fiq_pre_proc
 	.globl fiq_end_proc
+	.globl print_exception_addr
 
 /* ========================================================================
  *                                Macros
@@ -143,10 +144,10 @@ boot_reset:
 	BOOT_SET_STACK   boot_stack_base_SYS boot_stack_len_SYS BOOT_COLOR_SYS
 
 	BOOT_CHANGE_MODE BOOT_MODE_ABT BOOT_MODE_MASK
-	BOOT_SET_STACK   boot_stack_base_UNUSED boot_stack_len_UNUSED BOOT_COLOR_UNUSED
+	BOOT_SET_STACK   boot_stack_base_SVC boot_stack_len_SVC BOOT_COLOR_SVC
 
 	BOOT_CHANGE_MODE BOOT_MODE_UND BOOT_MODE_MASK
-	BOOT_SET_STACK   boot_stack_base_UNUSED boot_stack_len_UNUSED BOOT_COLOR_UNUSED
+	BOOT_SET_STACK   boot_stack_base_SVC boot_stack_len_SVC BOOT_COLOR_SVC
 
 	BOOT_CHANGE_MODE BOOT_MODE_IRQ BOOT_MODE_MASK
 	BOOT_SET_STACK   boot_stack_base_IRQ boot_stack_len_IRQ BOOT_COLOR_IRQ
@@ -218,28 +219,29 @@ _sysboot_zi_init:
 
 		.align	5 
 boot_undefined:
-    B boot_undefined
+    MOV R0, LR
+    B print_exception_addr
 
 		.align	5 
 boot_swi:
-	STMFD  sp!,{r0-r1}
-	LDR    R1, =0x400008
-	LDR    r0, [R1]
-	BX     r0
-		
+	MOV R0, LR
+    B print_exception_addr
+
 		.align	5 
 boot_pabort:
-    B boot_pabort
-		
+    MOV R0, LR
+    B print_exception_addr
+
 		.align	5 
 boot_dabort:
-    B boot_dabort
-		
+    MOV R0, LR
+    B print_exception_addr
+
 		.align	5 
 boot_reserved:
     B boot_reserved
-    
-	
+
+
 		.align	5
 irq_handler:
 	STMFD  sp!,{r0-r1}
