@@ -20,6 +20,7 @@
 monitor_data_cb_t g_monitor_cb = 0;
 #ifdef CONFIG_YOS_MESH
 monitor_data_cb_t g_mesh_monitor_cb = 0;
+uint8_t g_mesh_bssid[6];
 #endif
 
 extern int connect_flag;
@@ -688,6 +689,20 @@ int wlan_is_mesh_monitor_mode(void)
         return TRUE;
     }
     return FALSE;
+}
+
+int wlan_set_mesh_bssid(uint8_t *bssid)
+{
+    if (bssid == NULL) {
+        return -1;
+    }
+    memcpy(g_mesh_bssid, bssid, 6);
+    return 0;
+}
+
+uint8_t *wlan_get_mesh_bssid(void)
+{
+    return g_mesh_bssid;
 }
 #endif
 

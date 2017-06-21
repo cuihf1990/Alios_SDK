@@ -228,11 +228,15 @@ static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
 
 static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
 {
+    mesh_hal_priv_t *priv = module->base.priv_dev;
+
     if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0) {
         bk_wlan_start_monitor();
         hal_machw_exit_monitor_mode();
     }
+
     wlan_register_mesh_monitor_cb(wifi_monitor_cb);
+    wlan_set_mesh_bssid(priv->bssid);
     return 0;
 }
 
@@ -246,19 +250,21 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
 {
     static unsigned long nb_pkt_sent;
     mesh_hal_priv_t *priv = module->base.priv_dev;
-    unsigned char *pkt;
+    uint8_t *pkt;
     int len = frame->len + WIFI_MESH_OFFSET;
     struct txl_frame_desc_tag *tx_frame;
     int txtype = TX_DEFAULT_24G;
+    struct mac_hdr *hdr;
 
     tx_frame = txl_frame_get(txtype, len);
     if (tx_frame == NULL) {
         return 1;
     }
 
-    pkt = (struct preq_frame *)tx_frame->txdesc.lmac.buffer->payload;
+    pkt = (uint8_t *)tx_frame->txdesc.lmac.buffer->payload;
     bzero(pkt, WIFI_MESH_OFFSET);
-    pkt[0] = 0x08;
+    hdr = (struct mac_hdr *)pkt;
+    hdr->fctl = MAC_FCTRL_DATA_T;
 
     memcpy(pkt + WIFI_DST_OFFSET, dest->addr, WIFI_MAC_ADDR_SIZE);
     memcpy(pkt + WIFI_SRC_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE);
@@ -407,6 +413,7 @@ int beken_wifi_mesh_set_extnetid(ur_mesh_hal_module_t *module,
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
     memcpy(priv->bssid, extnetid->netid, WIFI_MAC_ADDR_SIZE);
+    wlan_set_mesh_bssid(priv->bssid);
     return 0;
 }
 
