@@ -511,6 +511,11 @@ void *yos_malloc(unsigned int size)
     return yunos_mm_alloc(size);
 }
 
+void *yos_realloc(void *mem, unsigned int size)
+{
+    return yunos_mm_realloc(mem, size);
+}
+
 void yos_free(void *mem)
 {
     if (mem == NULL) {
