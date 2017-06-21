@@ -105,7 +105,6 @@ void ota_service_event(input_event_t *event, void *priv_data) {
         ota_request_parmas.product_type = ota_get_product_type();
         ota_request_parmas.product_internal_type = ota_get_product_internal_type();
         ota_request_parmas.device_uuid = ota_get_id();
-        ota_post_version_msg();
         ota_sub_upgrade(do_update);
         ota_cancel_upgrade(cancel_update);
     }

@@ -464,8 +464,11 @@ static int alink_cloud_report(const char *method, const char *json_buffer)
     return alink_report_async(method, json_buffer, NULL, NULL);
 }
 
+extern void ota_post_version_msg();
+
 static void alink_cloud_connected(void) {
-    yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+    ota_post_version_msg();
+    //yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
     yos_post_event(EV_YUNIO, CODE_YUNIO_ON_CONNECTED, 0);
     printf("alink cloud connected!\n");
 
