@@ -25,12 +25,12 @@ int yos_framework_init(void)
     vfs_device_init();
 
     register_devices();
-    yos_kv_init();
 
     yos_loop_init();
 
     yos_cli_init();
 
+    yos_kv_init();
 #ifdef MESH_GATEWAY_SERVICE
     gateway_service_init();
 #endif
