@@ -55,6 +55,6 @@ const hal_logic_partition_t hal_partitions[] =
 
 void boot(void)
 {
-    if(1)
+    if(0)
         hal_boot(HAL_PARTITION_APPLICATION);
 }
