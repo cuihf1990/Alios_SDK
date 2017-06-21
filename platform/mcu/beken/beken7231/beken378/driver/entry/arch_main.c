@@ -21,6 +21,13 @@
 #include "k_api.h"
 #include "yos.h"
 
+void print_exception_addr(unsigned int addr)
+{
+    cpu_intrpt_save();
+    printf("exception_addr is %x\n", addr);
+    while (1);
+}
+
 #if 1
 #define RECORD_COUNT 128
 int rec_id = 0;
@@ -51,12 +58,6 @@ static void init_app_thread( void *arg )
 	mico_rtos_init_mutex( &stdio_tx_mutex );
 	application_start();
 }
-
-ktask_t task_test22;
-cpu_stack_t task_stk[512];
-
-ktask_t *syst_init_obj;
-ktask_t *task_test_obj2;
 
 extern void fclk_init(void);
 extern void test_case_task_start(void);
