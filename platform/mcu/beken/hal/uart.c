@@ -11,7 +11,7 @@ typedef int32_t   		      INT32;          /* Signed   32 bit quantity        */
 
 #include "uart_pub.h"
 
-#define MAX_UART_NUM 1
+#define MAX_UART_NUM 2
 
 enum _uart_status_e
 {
@@ -52,12 +52,12 @@ int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
         mico_rtos_init_semaphore( &pdrv->rx_semphr, 0 );
         mico_rtos_init_mutex( &pdrv->tx_mutex );
 
-        while(!uart_is_tx_fifo_empty(uart));
         uart_open(uart);
 
         pdrv->status = _UART_STATUS_OPENED;
     }
 
+    while(!uart_is_tx_fifo_empty(uart));
     uart_config(uart, config);
 
     return 0;

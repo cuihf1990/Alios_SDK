@@ -192,6 +192,7 @@ void uart_open(UINT8 port)
 {
     UINT32 param;
     UINT32 reg;
+    UINT32 intr_status;
 
     intc_service_register(IRQ_UART(port), PRI_IRQ_UART(port), port == UART_PORT_1 ? uart1_isr : uart2_isr);
 
@@ -201,10 +202,9 @@ void uart_open(UINT8 port)
     param = GFUNC_MODE_UART(port);
     sddev_control(GPIO_DEV_NAME, CMD_GPIO_ENABLE_SECOND, &param);
 
-    /* enable rtx*/
-    reg = REG_READ(REG_UART_CONFIG(port));
-    reg = reg | ((UART_TX_ENABLE | UART_RX_ENABLE));
-    REG_WRITE(REG_UART_CONFIG(port), reg);
+    /*irq enable, Be careful: it is best that irq enable at open routine*/
+    intr_status = REG_READ(REG_UART_INTR_STATUS(port));
+    REG_WRITE(REG_UART_INTR_STATUS(port), intr_status);
 
     param = IRQ_UART_BIT(port);
     sddev_control(ICU_DEV_NAME, CMD_ICU_INT_ENABLE, &param);
