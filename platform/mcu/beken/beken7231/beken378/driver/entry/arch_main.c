@@ -21,10 +21,10 @@
 #include "k_api.h"
 #include "yos.h"
 
-void print_exception_addr(unsigned int addr)
+void print_exception_addr(unsigned int pc, unsigned int lr, unsigned int sp)
 {
     cpu_intrpt_save();
-    printf("exception_addr is %x\n", addr);
+    printf("pc is %x, lr is %x, sp is %x\n", pc, lr, sp);
     while (1);
 }
 
