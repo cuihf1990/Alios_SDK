@@ -81,7 +81,7 @@ int stdio_break_in(void)
     uint8_t c;
     int i, j;
     
-    for(i=0, j=0; i<10; i++)
+    for(i=0, j=0; i<5; i++)
     {
       if (0 != hal_uart_recv( STDIO_UART, &c, 1, NULL, 100)) 
         continue;
