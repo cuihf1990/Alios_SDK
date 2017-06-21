@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#define os_null_printf(fmt, ...)
+
 #if CFG_RELEASE_FIRMWARE
 #define os_printf                       os_null_printf
 #else
@@ -54,7 +56,6 @@ typedef struct _peek_rx_
 extern void uart_init(void);
 extern void uart_exit(void);
 extern void uart_isr(void);
-extern INT32 os_null_printf(const char *fmt, ...);
 extern void fatal_print(const char *fmt, ...);
 extern INT32 uart_printf(const char *fmt, ...);
 extern void bk_printf(const char *fmt, ...);
