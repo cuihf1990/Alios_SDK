@@ -2091,10 +2091,10 @@ void umesh_mm_get_extnetid(umesh_extnetid_t *extnetid)
 
     network = get_default_network_context();
     if (network == NULL) {
-        return NULL;
+        return;
     }
 
-    return hal_umesh_get_extnetid(network->hal->module, extnetid);
+    hal_umesh_get_extnetid(network->hal->module, extnetid);
 }
 
 ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid)

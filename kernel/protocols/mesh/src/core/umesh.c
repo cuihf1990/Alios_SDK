@@ -494,7 +494,7 @@ void umesh_get_extnetid(umesh_extnetid_t *extnetid)
     if (extnetid == NULL) {
         return;
     }
-    return umesh_mm_get_extnetid(extnetid);
+    umesh_mm_get_extnetid(extnetid);
 }
 
 ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid)
