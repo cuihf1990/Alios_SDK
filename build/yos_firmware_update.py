@@ -560,7 +560,7 @@ def assert_response(patterns, timeout):
             return False
 
 def print_usage():
-    print "Usage: {0} port [-a app.bin] [-b bootloader.bin] [-d driver.bin] [--bootloader-baudrate 921600] [--application-baudrate 115200]\n".format(sys.argv[0])
+    print "Usage: {0} port [-a app.bin] [-b bootloader.bin] [-d driver.bin] [--bootloader-baudrate 921600] [--application-baudrate 115200] [--noboot]\n".format(sys.argv[0])
     print "  examples: python {0} /dev/ttyUSB0 -a app.bin, to update app only".format(sys.argv[0])
     print "          : python {0} /dev/ttyUSB1 -b bootloader.bin -a app.bin, to update bootloader and app".format(sys.argv[0])
     print "          : python {0} /dev/ttyUSB0 -a app.bin -d driver.bin, to update app and driver".format(sys.argv[0])
@@ -579,6 +579,7 @@ application=None
 driver=None
 bootloader_baudrate=921600
 application_baudrate=921600
+bootapp = True
 
 i = 2
 update = 0
@@ -618,6 +619,8 @@ while i < len(sys.argv):
             sys.stderr.write("error: invalid bootload baudrate value {0}\n".format(sys.argv[i+1]))
             exit(1)
         i += 1
+    elif sys.argv[i] == "--noboot":
+        bootapp = False
     i += 1
 
 if update <= 0:
@@ -663,8 +666,9 @@ for i in range(len(updates)):
         else:
             print "updating {0} with {1} ... failed".format(device, updates[i])
 
-port.write("boot\n")
-assert_response(["Booting......"], 1)
+if bootapp:
+    port.write("boot\n")
+    assert_response(["Booting......"], 1)
 port.close()
 sys.exit(0)
 

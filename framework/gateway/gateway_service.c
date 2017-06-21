@@ -39,6 +39,7 @@ typedef struct {
     int sockfd;
     bool gateway_mode;
     bool yunio_connected;
+    bool mesh_connected;
     bool mqtt_connected;
     struct sockaddr_in6 gw_addr;
     struct sockaddr_in6 src_addr;
@@ -140,6 +141,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
 
 static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
 {
+    LOGD(ME, "handle_adv");
     if (pstate->gateway_mode) {
         return;
     }
@@ -379,6 +381,7 @@ static void gateway_advertise(void *arg)
 
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)&addr, sizeof(addr));
+    LOGD(ME, "gateway_advertise");
 
     free(buf);
 }
@@ -388,6 +391,9 @@ int gateway_service_init(void)
     gateway_state_t *pstate = &gateway_state;
 
     pstate->gateway_mode = false;
+    pstate->yunio_connected = false;
+    pstate->mesh_connected = false;
+    pstate->mqtt_connected = false;
     pstate->sockfd = -1;
     dlist_init(&gateway_state.clients);
     yos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
@@ -497,22 +503,17 @@ static void gateway_handle_sub_status(int event, const char *json_buffer)
 
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
 {
-    if (eventinfo->type == EV_YUNIO) {
-        if (eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
-            gateway_state.yunio_connected = true;
-        }
-    }
+    if (eventinfo->type == EV_YUNIO && eventinfo->code == CODE_YUNIO_ON_CONNECTED)
+        gateway_state.yunio_connected = true;
 
-    if (eventinfo->type != EV_MESH)
-        return;
+    if (eventinfo->type == EV_MESH && eventinfo->code == CODE_MESH_CONNECTED)
+        gateway_state.mesh_connected = true;
 
-    if (eventinfo->code != CODE_MESH_CONNECTED)
-        return;
-
-    if (ur_mesh_get_device_state() == DEVICE_STATE_LEADER &&
-            gateway_state.yunio_connected == true) {
+    if (ur_mesh_get_device_state() == DEVICE_STATE_LEADER && gateway_state.yunio_connected == true)
         gateway_state.gateway_mode = true;
-    }
+
+    if (gateway_state.mesh_connected == false)
+        return;
 
     init_socket();
 
