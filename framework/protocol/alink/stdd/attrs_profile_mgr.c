@@ -57,12 +57,12 @@ static int attrs_profile_download(struct work_struct *work);
 
 static int load_default_attrs_profile(void);
 
-static int32_t alink_get_attrs_profile(list_head_t * info_head);
+static int32_t alink_get_attrs_profile(dlist_t * info_head);
 static int attrs_profile_listener(int type, void *data, int dlen, void *result, int *rlen);
 static int attrs_profile_sync(struct work_struct *work);
 int set_attrs_profile(char *request);
 
-static list_head_t g_list;
+static dlist_t g_list;
 static void *g_attrs_mutex = NULL;
 
 #define DOWNLOAD_WORK_POLLING_CYCLE    (10 * 1000)
@@ -764,7 +764,7 @@ int set_attrs_profile(char *request)
     return SERVICE_RESULT_OK;
 }
 
-static int32_t alink_get_attrs_profile(list_head_t *info_head)
+static int32_t alink_get_attrs_profile(dlist_t *info_head)
 {
     int ret = SERVICE_RESULT_ERR;
     char *params = NULL;

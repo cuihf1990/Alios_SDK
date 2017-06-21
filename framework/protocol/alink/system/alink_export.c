@@ -27,12 +27,12 @@
 #include "cota.h"
 #include "os.h"
 #ifdef GATEWAY_SDK
-#include "kvmgr.h"
+/* #include "kvmgr.h" */
 #include "msdp.h"
 #include "devmgr.h"
-#include "stdd.h"
-#include "stdd_zigbee.h"
-#include "ifttt_main.h"
+/* #include "stdd.h" */
+/* #include "stdd_zigbee.h" */
+/* #include "ifttt_main.h" */
 #endif
 
 
@@ -112,7 +112,7 @@ int alink_start(void)
     sm_get_service("accs")->start();//accs_start
 
 #ifdef GATEWAY_SDK
-    init_kv();
+    /* init_kv(); */
 
     ret = devmgr_init();
     OS_ASSERT(!ret, "devmgr init fail");
@@ -120,12 +120,12 @@ int alink_start(void)
     ret = msdp_init();
     OS_ASSERT(!ret, "msdp init fail");
 
-    ifttt_init();
+    /* ifttt_init(); */
 
-    ret = stdd_init();
-    OS_ASSERT(!ret, "stdd init fail");
+    /* ret = stdd_init(); */
+    /* OS_ASSERT(!ret, "stdd init fail"); */
 
-    application_init();
+    /* application_init(); */
 #endif
 
 #ifdef ASR_SDK
@@ -180,13 +180,13 @@ int alink_end(void)
 {
 
 #ifdef GATEWAY_SDK
-    application_exit();
+    /* application_exit(); */
 
-    stdd_exit();
+    /* stdd_exit(); */
     devmgr_exit();
-    ifttt_destroy();
+    /* ifttt_destroy(); */
     msdp_exit();
-    deinit_kv();
+    /* deinit_kv(); */
 #endif
 
 #ifdef ASR_SDK
@@ -359,8 +359,10 @@ int alink_zigbee_report_attrs(unsigned char ieee_addr[IEEE_ADDR_BYTES],
                               unsigned char endpoint_id,
                               const char *attr_name[], const char *attr_value[])
 {
-    return stdd_zbnet_report_attrs(ieee_addr, endpoint_id, attr_name, attr_value);
+    /* return stdd_zbnet_report_attrs(ieee_addr, endpoint_id, attr_name, attr_value); */
+    return 0;
 }
+
 /**
  * @brief report zigbee device command of device to coo
  *
@@ -378,7 +380,8 @@ int alink_zigbee_report_event(unsigned char ieee_addr[IEEE_ADDR_BYTES],
                               unsigned char endpoint_id,
                               const char *event_name, const char *event_args)
 {
-    return stdd_zbnet_report_event(ieee_addr, endpoint_id, event_name, event_args);
+    /* return stdd_zbnet_report_event(ieee_addr, endpoint_id, event_name, event_args); */
+    return 0;
 }
 
 #endif
@@ -477,7 +480,8 @@ int alink_register_callback(unsigned char cb_type, void *cb_func)
 {
     OS_CHECK_PARAMS(cb_type < ALINK_CB_MAX_NUM && cb_func);
 
-    OS_ASSERT(!alink_cb_func[cb_type], "same type cb was registered!");
+    if (alink_cb_func[cb_type] != NULL);
+        LOGE(MODULE_NAME, "same type cb %d was registered!", cb_type);
 
     alink_cb_func[cb_type] = cb_func;
 

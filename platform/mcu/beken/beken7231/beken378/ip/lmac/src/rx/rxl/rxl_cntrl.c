@@ -1219,11 +1219,7 @@ void rxl_mpdu_transfer_mesh(struct rx_swdesc *swdesc)
     mpdu_len = dma_hdrdesc->hd.frmlen;
     mesh_mpdu_len = dma_hdrdesc->hd.frmlen;
 
-#ifdef CONFIG_YOS_MESH
-    if(bk_wlan_is_monitor_mode()) {
-#else
     if (bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode()) {
-#endif
         du_len = mpdu_len;
         du_ptr = (uint8_t *)os_malloc(du_len);
         mesh_hostbuf_start = (uint32_t)du_ptr;
@@ -1323,11 +1319,7 @@ void rxl_mpdu_transfer_mesh(struct rx_swdesc *swdesc)
             dma_desc->ctrl = 0;
         }
 
-#ifdef CONFIG_YOS_MESH
         if(bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode())
-#else
-        if(bk_wlan_is_monitor_mode())
-#endif
         {
                 if(du_ptr)
                 {

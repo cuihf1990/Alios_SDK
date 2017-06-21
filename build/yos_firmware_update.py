@@ -560,7 +560,7 @@ def assert_response(patterns, timeout):
             return False
 
 def print_usage():
-    print "Usage: {0} port [-a app.bin] [-b bootloader.bin] [-d driver.bin] [--bootloader-baudrate 921600] [--application-baudrate 115200]\n".format(sys.argv[0])
+    print "Usage: {0} port [-a app.bin] [-b bootloader.bin] [-d driver.bin] [--bootloader-baudrate 921600] [--application-baudrate 115200] [--noboot]\n".format(sys.argv[0])
     print "  examples: python {0} /dev/ttyUSB0 -a app.bin, to update app only".format(sys.argv[0])
     print "          : python {0} /dev/ttyUSB1 -b bootloader.bin -a app.bin, to update bootloader and app".format(sys.argv[0])
     print "          : python {0} /dev/ttyUSB0 -a app.bin -d driver.bin, to update app and driver".format(sys.argv[0])
@@ -570,15 +570,16 @@ if len(sys.argv) < 4:
     exit(1)
 
 if os.path.exists(sys.argv[1]) == False:
-    sys.stderr.write("error: port {0} does not exist\n".format(sys.agv[1]))
+    sys.stderr.write("error: port {0} does not exist\n".format(sys.argv[1]))
     exit(1)
-port = sys.argv[1]
+device = sys.argv[1]
 
 bootloader=None
 application=None
 driver=None
 bootloader_baudrate=921600
 application_baudrate=921600
+bootapp = True
 
 i = 2
 update = 0
@@ -618,22 +619,23 @@ while i < len(sys.argv):
             sys.stderr.write("error: invalid bootload baudrate value {0}\n".format(sys.argv[i+1]))
             exit(1)
         i += 1
+    elif sys.argv[i] == "--noboot":
+        bootapp = False
     i += 1
 
 if update <= 0:
-    port.close()
     sys.exit(0)
 
 try:
-    port = serial.Serial(port, bootloader_baudrate, timeout = 0.05)
+    port = serial.Serial(device, bootloader_baudrate, timeout = 0.05)
 except:
-    sys.stderr.write("error: unable to open {0}\n".format(port))
+    sys.stderr.write("error: unable to open {0}\n".format(device))
     exit(1)
 
 port.write("a\r\n")
 port.flushInput()
 port.write("help\r\n")
-if assert_response(["MICO bootloader"], 1) == False:
+if assert_response(["YOS bootloader", "MICO bootloader"], 1) == False:
     port.baudrate = application_baudrate
     port.flushInput()
     port.write("\r\n")
@@ -653,20 +655,20 @@ port.flushInput()
 updates = [bootloader, application, driver]
 for i in range(len(updates)):
     if updates[i] != None:
-        print "updating {0} ...".format(updates[i])
+        print "updating {0} with {1} ...".format(device, updates[i])
         port.write("{0}\n".format(i))
         if assert_response(["Waiting for the file to be sent"], 1) == False:
             sys.stderr.write("error: waiting for target to enter into YMODEM recived mode failed\n")
             sys.exit(1)
         result = send_file(updates[i])
         if result == True:
-            result = "succeed"
+            print "updating {0} with {1} ... succeed".format(device, updates[i])
         else:
-            result = "failed"
-        print result
+            print "updating {0} with {1} ... failed".format(device, updates[i])
 
-port.write("boot\n")
-assert_response(["Booting......"], 1)
+if bootapp:
+    port.write("boot\n")
+    assert_response(["Booting......"], 1)
 port.close()
 sys.exit(0)
 

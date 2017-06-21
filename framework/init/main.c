@@ -6,6 +6,10 @@
 
 #include "yos/cli.h"
 
+#ifdef MESH_GATEWAY_SERVICE
+#include "gateway_service.h"
+#endif
+
 static void register_devices()
 {
     int i;
@@ -21,11 +25,15 @@ int yos_framework_init(void)
     vfs_device_init();
 
     register_devices();
-    yos_kv_init();
 
     yos_loop_init();
 
     yos_cli_init();
+
+    yos_kv_init();
+#ifdef MESH_GATEWAY_SERVICE
+    gateway_service_init();
+#endif
 
     ota_service_init();
 

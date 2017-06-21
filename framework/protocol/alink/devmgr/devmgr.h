@@ -31,9 +31,9 @@
 #include <stdint.h>
 #include <unistd.h>
 #include "yos/list.h"
-#include "yos/log.h"
 #include "service.h"
 #include "devmgr_common.h"
+#include "alink_export_internal.h"
 
 //#define __DEVMGR_UT__   1
 #ifdef __DEVMGR_UT__
@@ -57,6 +57,8 @@ extern "C"
 #define STR_NAME_LEN	(32 + 1)
 #endif
 // add by wukong end 2017-4-17
+
+#define MODULE_NAME_DEVMGR "devmgr"
 
 /*
 * 设备类型定义
@@ -160,11 +162,11 @@ int devmgr_get_all_device_modelid(uint32_t model_id[], int *num);
 /*释放devinfo对象引用计数*/
 void devmgr_put_devinfo_ref(dev_info_t *devinfo);
 
-int32_t devmgr_update_device_online_status(const char *devid, link_state_t state);
+int devmgr_update_device_online_status(const char *devid, link_state_t state);
 
-int32_t devmgr_update_zigbee_device_online_status(uint8_t ieee_addr[IEEE_ADDR_BYTES], uint8_t online);
+int devmgr_update_zigbee_device_online_status(uint8_t ieee_addr[IEEE_ADDR_BYTES], uint8_t online);
 
-int32_t devmgr_relogin_device(const char *devid);
+int devmgr_relogin_device(const char *devid);
 
 int devmgr_join_zigbee_device(unsigned char ieee_addr[IEEE_ADDR_BYTES],
     uint32_t model_id, const char rand[SUBDEV_RAND_BYTES], const char *sign);

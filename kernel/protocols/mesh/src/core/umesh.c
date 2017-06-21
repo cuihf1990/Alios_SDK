@@ -107,6 +107,7 @@ static ur_error_t ur_mesh_interface_down(void)
     if (g_um_state.adapter_callback) {
         g_um_state.adapter_callback->interface_down();
     }
+    yos_post_event(EV_MESH, CODE_MESH_DISCONNECTED, 0);
     return UR_ERROR_NONE;
 }
 
@@ -486,6 +487,23 @@ void ur_mesh_get_channel(channel_t *channel)
         channel->hal_bcast_channel = (uint16_t)hal_ur_mesh_get_bcast_channel(
                                          ur_wifi_hal);
     }
+}
+
+void umesh_get_extnetid(umesh_extnetid_t *extnetid)
+{
+    if (extnetid == NULL) {
+        return;
+    }
+    umesh_mm_get_extnetid(extnetid);
+}
+
+ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid)
+{
+    if (extnetid == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    return umesh_mm_set_extnetid(extnetid);
 }
 
 const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type)

@@ -8,6 +8,7 @@
 #include "utilities/memory.h"
 #include "tools/cli.h"
 
+#ifdef DEBUG
 #define MAX_LOG_SIZE 256
 
 extern int dda_log(char *str);
@@ -52,6 +53,7 @@ void __attribute__((weak)) ur_log(ur_log_level_t level, ur_log_region_t region,
 
     ur_mem_free(buffer, MAX_LOG_SIZE);
 }
+#endif
 
 ur_error_t ur_cli_output(const char *buf, uint16_t length)
 {
@@ -64,3 +66,4 @@ ur_error_t ur_cli_output(const char *buf, uint16_t length)
 
     return UR_ERROR_NONE;
 }
+

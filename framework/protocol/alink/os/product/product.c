@@ -19,13 +19,22 @@
 #include "product.h"
 
 //TODO: update these product info
+#ifndef MESH_GATEWAY_SERVICE
 #define product_model           "ALINKTEST_LIVING_LIGHT_ALINK_TEST"
 #define product_key             "5gPFl8G4GyFZ1fPWk20m"
 #define product_secret          "ngthgTlZ65bX5LpViKIWNsDPhOf2As9ChnoL9gQb"
 #define product_debug_key       "dpZZEpm9eBfqzK7yVeLq"
 #define product_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
-
 char *g_sn = "1923450656869";
+#else
+#define product_model           "ALINKTEST_SECURITY_GATEWAY_QUANWU_001"
+#define product_key             "V2hpRG0k7Pbr1bmxDCat"
+#define product_secret          "O71DlsrrTkImG0NxowxaA5oFFjyxTj1n8FwWzOJv"
+#define product_debug_key       "dpZZEpm9eBfqzK7yVeLq"
+#define product_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
+#define PRODUCT_ASR_APP_KEY     "box2015product01"
+char *g_sn = "1923450122798";
+#endif
 
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 {

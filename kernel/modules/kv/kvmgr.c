@@ -22,6 +22,7 @@
 #include "hashtable.h"
 #include "yos/kernel.h"
 #include "k_api.h"
+#include "yos/cli.h"
 
 /* KV header include fsize part(4bytes) and crc part (4bytes)
    |       KV Header       |
@@ -55,6 +56,48 @@ typedef struct {
 
 
 #define MODULE_NAME_KV "kv"
+
+static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    const char *rtype = argc > 1 ? argv[1] : "";
+    int ret = 0;
+    if (strcmp(rtype, "set") == 0) {
+        if (argc != 4)
+            return ;
+        ret = yos_kv_set(argv[2], argv[3], strlen(argv[3]), 1);
+        if (ret != 0)
+            LOGW(MODULE_NAME_KV, "cli set kv failed");
+        else
+            LOGD(MODULE_NAME_KV, "cli set kv success");
+    } else if (strcmp(rtype, "get") == 0) {
+        if (argc != 3)
+            return ;
+        char buf[KV_BUFFER_SIZE] = {0};
+        int len = sizeof(buf);
+        ret = yos_kv_get(argv[2], buf, &len);
+        if (ret != 0)
+            LOGW(MODULE_NAME_KV, "cli get kv failed");
+        else
+            LOGD(MODULE_NAME_KV, "value is %s", buf);
+    } else if (strcmp(rtype, "del") == 0) {
+        if (argc != 3)
+            return;
+        ret = yos_kv_del(argv[2]);
+        if (ret != 0)
+            LOGD(MODULE_NAME_KV, "cli kv del failed");
+        else
+            LOGW(MODULE_NAME_KV, "cli kv del success");
+    }
+    return;
+}
+
+
+static struct cli_command ncmd = {
+    .name = "kv",
+    .help = "kv [set key value | get key | del key]",
+    .function = handle_kv_cmd,
+};
+
 
 static kv_item_t *new_kv_item(const char *skey, const char *cvalue, int nlength,
                               int sync)
@@ -160,10 +203,15 @@ static int load_kvfile(const char *file, char *buffer, int buffer_len)
 
     p = kv_header;
     BYTE2INT(p, kvdata_size);
-    if (!kvdata_size || (kvdata_size > KV_BUFFER_SIZE - KV_HEADER_SIZE)) {
-        LOGI(MODULE_NAME_KV, "KV file is empty or KV header is broken, fsize is %d", kvdata_size);
+
+    if (!kvdata_size) {
+        LOGI(MODULE_NAME_KV, "KV file is empty");
+        goto exit;
+    } else if (kvdata_size > KV_BUFFER_SIZE - KV_HEADER_SIZE) {
+        LOGI(MODULE_NAME_KV, "KV header is invalid");
         goto exit;
     }
+
     BYTE2INT(p, crc32_value);
 
     /* reopen the kvfile to clear the offset in file struct */
@@ -390,6 +438,7 @@ static int load_key_value(const char *file)
         return -1;
     }
 
+
     key = (char *)yos_malloc(MAX_KV_LEN);
     if (!key) {
         yos_free(kv_buffer);
@@ -446,6 +495,7 @@ int yos_kv_init()
         return 0;
     }
 
+    cli_register_command(&ncmd);
     g_ht = ht_init(HASH_TABLE_MAX_SIZE);
 
     if ((ret = load_key_value(KVFILE_NAME)) != 0) {

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "yos/log.h"
 #include "os.h"
 #include "crc.h"
 #include "alink_protocol.h"
@@ -21,6 +22,7 @@
 #include "stdd.h"
 #endif
 
+#define MODULE_NAME             MODULE_NAME_DEVMGR
 #define DEVMGR_MAX_SUBDEVICE    128
 #define IEEE_ADDR_STRING_FMT    "%02x%02x%02x%02x%02x%02x%02x%02x"
 #define DEVICE_KEY_PREFIX       "device_%02x"
@@ -29,14 +31,13 @@
 /*子设备序号bit map*/
 static uint8_t devidx_bit_map[DEVMGR_MAX_SUBDEVICE/8 + 1] = {0};
 /*待删除设备链表*/
-static LIST_HEAD(delele_dev_head);
+static YOS_DLIST_HEAD(delele_dev_head);
 /*有效设备链表*/
-LIST_HEAD(dev_head);
+YOS_DLIST_HEAD(dev_head);
 /*未知设备链表*/
-LIST_HEAD(unknown_dev_head);
+YOS_DLIST_HEAD(unknown_dev_head);
 
 void *devlist_lock = NULL;
-
 
 #if (defined(GATEWAY_SDK) || defined (ROUTER_SDK))  //public functions for router and gateway
 static void __hold_devinfo_ref(dev_info_t *devinfo)
@@ -46,15 +47,15 @@ static void __hold_devinfo_ref(dev_info_t *devinfo)
 
 static void __free_devinfo(dev_info_t *devinfo)
 {
-    log_trace("__free_devinfo, devid:%s", devinfo->dev_base.dev_id);
+    LOGW(MODULE_NAME_DEVMGR, "__free_devinfo, devid:%s", devinfo->dev_base.dev_id);
 
 #ifdef GATEWAY_SDK
     //释放属性缓存链表
     devmgr_free_device_cache(devinfo);  //for gateway only
 #endif
     //从delete_dev_head链表中删除设备节点
-    if(!list_empty(&devinfo->list_node))
-        list_del(&devinfo->list_node);
+    if(!dlist_empty(&devinfo->list_node))
+        dlist_del(&devinfo->list_node);
 
     if(devinfo->dev_mutex){
         os_mutex_destroy(devinfo->dev_mutex);
@@ -84,7 +85,7 @@ static dev_info_t *__get_devinfo(const char *devid_or_uuid_or_mac)
 {
     dev_info_t *pos, *devinfo = NULL;
 
-    list_for_each_entry_t(pos, &dev_head, list_node, dev_info_t)
+    dlist_for_each_entry(&dev_head, pos, dev_info_t, list_node)
     {
         if(strcmp(pos->dev_base.dev_id, devid_or_uuid_or_mac) == 0 ||
                 strcmp(pos->dev_base.uuid, devid_or_uuid_or_mac) == 0 ||
@@ -111,8 +112,8 @@ static dev_info_t *devmgr_new_devinfo()
     memset(devinfo, 0, sizeof(dev_info_t));
 
     //链表节点初始化，锁初始化
-    list_init_head(&devinfo->attr_head);
-    list_init_head(&devinfo->list_node);
+    dlist_init(&devinfo->attr_head);
+    dlist_init(&devinfo->list_node);
     devinfo->device_idx = 0xff;
     devinfo->cloud_state = DEVICE_STATE_INITIAL;
     devinfo->link_state = LINK_STATE_OFFLINE;
@@ -255,7 +256,7 @@ void __dump_devinfo(dev_info_t *devinfo)
 void __dump_device_list()
 {
     dev_info_t *pos;
-    list_for_each_entry_t(pos, &dev_head, list_node, dev_info_t)
+    dlist_for_each_entry(&dev_head, pos, dev_info_t, list_node)
     {
         __dump_devinfo(pos);
     }
@@ -268,12 +269,13 @@ static void __get_devkey_name(uint8_t dev_index, char *key_buf, int buf_len)
 
 static void __remove_devinfo(dev_info_t *devinfo)
 {
-    log_trace("__clean device, devid:%s, devidx:%02x, ref:%d", devinfo->dev_base.dev_id,
+    LOGW(MODULE_NAME_DEVMGR, "__clean device, devid:%s, devidx:%02x, ref:%d", devinfo->dev_base.dev_id,
               devinfo->device_idx, devinfo->ref_cnt);
 
     devinfo->device_idx = 0xff;
     //5.释放节点
-    list_move(&devinfo->list_node, &delele_dev_head);
+    dlist_del(&devinfo->list_node);
+    dlist_add(&devinfo->list_node, &delele_dev_head);
     devinfo->ref_cnt--;
 
     /*引用计数为0，释放节点*/
@@ -290,7 +292,7 @@ static void __delete_devinfo(dev_info_t *devinfo)
     if(devinfo->device_idx != 0xff)
     {
         __get_devkey_name(devinfo->device_idx, key, sizeof(key));
-        remove_kv(key);
+        /* remove_kv(key); */
         __release_devidx(devinfo->device_idx);
     }
 
@@ -301,7 +303,7 @@ static dev_info_t *__get_devinfo_by_ieeeaddr(char ieee_addr[8])
 {
     dev_info_t *pos, *devinfo = NULL;
 
-    list_for_each_entry_t(pos, &dev_head, list_node, dev_info_t)
+    dlist_for_each_entry(&dev_head, pos, dev_info_t, list_node)
     {
         //add by wukong 2017-4-17
         if(pos->dev_base.dev_type != DEV_TYPE_ZIGBEE)
@@ -322,7 +324,7 @@ static dev_info_t *__get_unknown_devinfo(const char *devid_or_uuid)
 {
     dev_info_t *pos, *devinfo = NULL;
 
-    list_for_each_entry_t(pos, &unknown_dev_head, list_node, dev_info_t)
+    dlist_for_each_entry(&unknown_dev_head, pos, dev_info_t, list_node)
     {
         if(strcmp(pos->dev_base.dev_id, devid_or_uuid) == 0 ||
                 strcmp(pos->dev_base.uuid, devid_or_uuid) == 0)
@@ -343,16 +345,16 @@ static int devmgr_read_devbase(uint8_t dexidx, dev_base_t *dev_base)
     uint16_t crc = 0;
 
     __get_devkey_name(dexidx, key, sizeof(key));
-    ret = get_kv(key, (char *)dev_base, &len);
-    if(ret != SERVICE_RESULT_OK){
-        //log_trace("read devbase fail, key:%s", key);
-        return ret;
-    }
+    //ret = get_kv(key, (char *)dev_base, &len);
+    //if(ret != SERVICE_RESULT_OK){
+    //    //LOGW(MODULE_NAME_DEVMGR, "read devbase fail, key:%s", key);
+    //    return ret;
+    //}
 
     //crc校验
     crc = utils_crc16((uint8_t *)dev_base, DEVBASE_LEN);
     if(crc != dev_base->crc){
-        log_error("check crc fail, key:%s, crc:%04x, new_crc:%04x", key, dev_base->crc, crc);
+        LOGE(MODULE_NAME_DEVMGR, "check crc fail, key:%s, crc:%04x, new_crc:%04x", key, dev_base->crc, crc);
         return SERVICE_RESULT_ERR;
     }
 
@@ -365,7 +367,7 @@ static int devmgr_save_devinfo(dev_info_t *devinfo)
     char key[16] = {0};
 
     if(devinfo->device_idx == 0xff){
-        log_error("invalid device index:0x%02x", devinfo->device_idx);
+        LOGE(MODULE_NAME_DEVMGR, "invalid device index:0x%02x", devinfo->device_idx);
         return SERVICE_RESULT_ERR;
     }
 
@@ -373,16 +375,17 @@ static int devmgr_save_devinfo(dev_info_t *devinfo)
 
     //计算crc值
     devinfo->dev_base.crc = utils_crc16((uint8_t *)(&devinfo->dev_base), DEVBASE_LEN);
-    int ret = set_kv_in_flash(key, &devinfo->dev_base, sizeof(devinfo->dev_base), 1);
-    if(ret != SERVICE_RESULT_OK)
-        log_error("save devbase fail, key:%s, crc:%04x", key, devinfo->dev_base.crc);
+    int ret = 0;
+    //ret = set_kv_in_flash(key, &devinfo->dev_base, sizeof(devinfo->dev_base), 1);
+    //if(ret != SERVICE_RESULT_OK)
+    //    LOGE(MODULE_NAME_DEVMGR, "save devbase fail, key:%s, crc:%04x", key, devinfo->dev_base.crc);
 
     return ret;
 }
 
 static void devmgr_delete_devinfo(dev_info_t *devinfo)
 {
-    log_trace("delete device, devid:%s", devinfo->dev_base.dev_id);
+    LOGW(MODULE_NAME_DEVMGR, "delete device, devid:%s", devinfo->dev_base.dev_id);
     os_mutex_lock(devlist_lock);
     __delete_devinfo(devinfo);
     os_mutex_unlock(devlist_lock);
@@ -430,7 +433,7 @@ static int devmgr_load_devinfo()
         devinfo->device_idx = devidx;
 
         os_mutex_lock(devlist_lock);
-        list_add_tail(&devinfo->list_node, &dev_head);
+        dlist_add_tail(&devinfo->list_node, &dev_head);
         os_mutex_unlock(devlist_lock);
     }
 
@@ -459,19 +462,20 @@ void devmgr_remove_device(char ieee_addr[8])
         ret = ((zigbee_remove_device_cb_t)alink_cb_func[_ALINK_ZIGBEE_REMOVE_DEVICE])(ieee_addr);
         RET_LOG(ret, "zigbee remove fail");
     }else
-        log_error("remove_device callback is NULL");
+        LOGE(MODULE_NAME_DEVMGR, "remove_device callback is NULL");
 
     return ;
 }
 
 void devmgr_free_unknown_devlist()
 {
-    dev_info_t *pos, *next = NULL;
+    dev_info_t *pos;
+    dlist_t *next = NULL;
 
-    log_info("free unknown devices");
+    LOGI(MODULE_NAME_DEVMGR, "free unknown devices");
 
     os_mutex_lock(devlist_lock);
-    list_for_each_entry_safe_t(pos, next, &unknown_dev_head, list_node, dev_info_t)
+    dlist_for_each_entry_safe(&unknown_dev_head, next, pos, dev_info_t, list_node)
     {
         //从zigbee协议栈中移除设备
         devmgr_remove_device(pos->dev_base.u.ieee_addr);
@@ -485,7 +489,7 @@ int devmgr_delete_device(const char *devid)
 {
     int ret = SERVICE_RESULT_ERR;
 
-    log_info("remove device, devid:%s", devid);
+    LOGI(MODULE_NAME_DEVMGR, "remove device, devid:%s", devid);
 
     //查找未知设备列表
     dev_info_t *devinfo = devmgr_get_unknown_devinfo(devid);
@@ -522,7 +526,7 @@ int devmgr_delete_device_by_devinfo(dev_info_t *devinfo)
     int ret = SERVICE_RESULT_ERR;
 
     if(NULL == devinfo){
-        log_error("Invalid parameter!");
+        LOGE(MODULE_NAME_DEVMGR, "Invalid parameter!");
         return SERVICE_RESULT_ERR;
     }
     /*remove the device from zigbee protocol*/
@@ -559,7 +563,7 @@ int devmgr_authorise_device(char *devid)
     //devmgr_network_up_event_handler 只会返回SERVICE_RESULT_OK 或者SERVICE_RESULT_ERR
     if(SERVICE_RESULT_OK != ret)
     {
-        log_error("register subdevice error!");
+        LOGE(MODULE_NAME_DEVMGR, "register subdevice error!");
         goto err;
     }
 
@@ -568,7 +572,8 @@ int devmgr_authorise_device(char *devid)
         goto err;
 
     os_mutex_lock(devlist_lock);
-    list_move_tail(&devinfo->list_node, &dev_head);
+    dlist_del(&devinfo->list_node);
+    dlist_add_tail(&devinfo->list_node, &dev_head);
     os_mutex_unlock(devlist_lock);
 
     //保存设备信息到flash
@@ -577,7 +582,7 @@ int devmgr_authorise_device(char *devid)
     //获取device profile
     ret = devmgr_sync_device_profile(DEV_TYPE_ZIGBEE, devinfo->dev_base.model_id);
     if(SERVICE_RESULT_OK != ret)
-        log_warn("sync device profile fail, model id:0x%08x", (unsigned int)devinfo->dev_base.model_id);
+        LOGW(MODULE_NAME_DEVMGR, "sync device profile fail, model id:0x%08x", (unsigned int)devinfo->dev_base.model_id);
 
     //释放引用计数
     devmgr_put_devinfo_ref(devinfo);
@@ -597,7 +602,7 @@ int devmgr_add_authorise_device(const char *devid, uint16_t model_id, uint8_t de
 {
     int ret = SERVICE_RESULT_ERR;
 
-    log_info("authorise device, devid:%s, model_id:%d", devid, model_id);
+    LOGI(MODULE_NAME_DEVMGR, "authorise device, devid:%s, model_id:%d", devid, model_id);
 
     //查找设备是否已经存在
     dev_info_t *devinfo = devmgr_get_devinfo(devid);
@@ -625,7 +630,7 @@ int devmgr_add_authorise_device(const char *devid, uint16_t model_id, uint8_t de
 
     //添加到设备链表
     os_mutex_lock(devlist_lock);
-    list_add_tail(&devinfo->list_node, &dev_head);
+    dlist_add_tail(&devinfo->list_node, &dev_head);
     os_mutex_unlock(devlist_lock);
 
     devmgr_save_devinfo(devinfo);
@@ -635,12 +640,13 @@ int devmgr_add_authorise_device(const char *devid, uint16_t model_id, uint8_t de
 
 static void devmgr_free_authorise_devlist()
 {
-    dev_info_t *pos, *next = NULL;
+    dev_info_t *pos;
+    dlist_t *next = NULL;
 
-    log_info("free authorise devices");
+    LOGI(MODULE_NAME_DEVMGR, "free authorise devices");
 
     os_mutex_lock(devlist_lock);
-    list_for_each_entry_safe_t(pos, next, &dev_head, list_node, dev_info_t)
+    dlist_for_each_entry_safe(&dev_head, next, pos, dev_info_t, list_node)
     {
         __remove_devinfo(pos);
     }
@@ -649,12 +655,13 @@ static void devmgr_free_authorise_devlist()
 
 static void devmgr_delete_authorise_devlist()
 {
-    dev_info_t *pos, *next = NULL;
+    dev_info_t *pos;
+    dlist_t *next = NULL;
 
-    log_info("delete authorise devices");
+    LOGI(MODULE_NAME_DEVMGR, "delete authorise devices");
 
     os_mutex_lock(devlist_lock);
-    list_for_each_entry_safe_t(pos, next, &dev_head, list_node, dev_info_t)
+    dlist_for_each_entry_safe(&dev_head, next, pos, dev_info_t, list_node)
     {
         //从zigbee协议栈中移除设备
         devmgr_remove_device(pos->dev_base.u.ieee_addr);
@@ -675,7 +682,7 @@ int devmgr_get_all_device_modelid(uint32_t model_id[], int *num)
     int index = 0;
 
     os_mutex_lock(devlist_lock);
-    list_for_each_entry_t(pos, &dev_head, list_node, dev_info_t)
+    dlist_for_each_entry(&dev_head, pos, dev_info_t, list_node)
     {
         /*只关注zigbee设备*/
         if(pos->dev_base.dev_type != DEV_TYPE_ZIGBEE)
@@ -706,11 +713,11 @@ int devmgr_get_all_device_modelid(uint32_t model_id[], int *num)
     return SERVICE_RESULT_OK;
 }
 
-int32_t devmgr_relogin_device(const char *devid)
+int devmgr_relogin_device(const char *devid)
 {
     int ret = SERVICE_RESULT_OK;
 
-    log_info("relogin device, devid:%s", devid);
+    LOGI(MODULE_NAME_DEVMGR, "relogin device, devid:%s", devid);
 
     dev_info_t *devinfo = devmgr_get_devinfo(devid);
     PTR_RETURN(devinfo, SERVICE_RESULT_ERR, "device not found, devid:%s", devid);
@@ -726,11 +733,11 @@ int32_t devmgr_relogin_device(const char *devid)
     return ret;
 }
 
-int32_t devmgr_update_device_online_status(const char *devid, link_state_t state)
+int devmgr_update_device_online_status(const char *devid, link_state_t state)
 {
     int ret = SERVICE_RESULT_OK;
 
-    log_info("update device online status, devid:%s, state:%d", devid, state);
+    LOGI(MODULE_NAME_DEVMGR, "update device online status, devid:%s, state:%d", devid, state);
 
     dev_info_t *devinfo = devmgr_get_devinfo(devid);
     PTR_RETURN(devinfo, SERVICE_RESULT_ERR, "device not found, devid:%s", devid);
@@ -778,10 +785,10 @@ int devmgr_sync_device_profile(uint8_t dev_type, unsigned int model_id)
     int ret = SERVICE_RESULT_OK;
     char file[128] = {0};
 
-    log_trace("devtype:%d, model id:0x%08x", dev_type, (unsigned int)model_id);
-    ret = get_device_profile_file(dev_type, model_id, file, sizeof(file));
-    if(ret == SERVICE_RESULT_OK && strlen(file))
-        ret = stdd_add_device_profile(dev_type, model_id, file);
+    LOGW(MODULE_NAME_DEVMGR, "devtype:%d, model id:0x%08x", dev_type, (unsigned int)model_id);
+    //ret = get_device_profile_file(dev_type, model_id, file, sizeof(file));
+    //if(ret == SERVICE_RESULT_OK && strlen(file))
+    //    ret = stdd_add_device_profile(dev_type, model_id, file);
 
     return ret;
 }
@@ -799,7 +806,7 @@ int devmgr_join_zigbee_device(unsigned char ieee_addr[IEEE_ADDR_BYTES],
 
     if(permitjoin_model_id != DEVMGR_PERMITJOIN_ANY_MODEL &&
             permitjoin_model_id != model_id){
-        log_error("unkown model_id:0x%08x, permitjoin model_id:0x%08x", (unsigned int)model_id, (unsigned int)permitjoin_model_id);
+        LOGE(MODULE_NAME_DEVMGR, "unkown model_id:0x%08x, permitjoin model_id:0x%08x", (unsigned int)model_id, (unsigned int)permitjoin_model_id);
 
         return SERVICE_RESULT_ERR;
     }
@@ -810,7 +817,7 @@ int devmgr_join_zigbee_device(unsigned char ieee_addr[IEEE_ADDR_BYTES],
 
     char addr[20] = {0};
     get_ieeeaddr_string_by_extaddr(ieee_addr, addr, sizeof(addr));
-    log_trace("join device, ieee addr:%s, model id:0x%08x", addr, model_id);
+    LOGW(MODULE_NAME_DEVMGR, "join device, ieee addr:%s, model id:0x%08x", addr, model_id);
 
     //1.判断设备是否已经存在
     dev_info_t *devinfo = devmgr_get_devinfo_by_ieeeaddr(ieee_addr);
@@ -853,11 +860,11 @@ int devmgr_join_zigbee_device(unsigned char ieee_addr[IEEE_ADDR_BYTES],
         ret = __new_devidx(&devinfo->device_idx);
         if(ret < 0){//设备列表达到上限, 不允许添加设备
             devmgr_put_devinfo_ref(devinfo);
-            log_error("new device index fail, devid:%s", devinfo->dev_base.dev_id);
+            LOGE(MODULE_NAME_DEVMGR, "new device index fail, devid:%s", devinfo->dev_base.dev_id);
             return ret;
         }
 
-        log_info("authorise device, devid:%s", devinfo->dev_base.dev_id);
+        LOGI(MODULE_NAME_DEVMGR, "authorise device, devid:%s", devinfo->dev_base.dev_id);
         devinfo->cloud_state = DEVICE_STATE_AUTHORISED;
         ret = devmgr_network_up_event_handler(devinfo);
         RET_LOG(ret, CALL_FUCTION_FAILED, "devmgr_network_up_event_handler");
@@ -871,12 +878,12 @@ int devmgr_join_zigbee_device(unsigned char ieee_addr[IEEE_ADDR_BYTES],
         //同步设备profile
         ret = devmgr_sync_device_profile(DEV_TYPE_ZIGBEE, model_id);
         if(SERVICE_RESULT_OK != ret){
-            log_warn("sync device profile fail, model id:0x%08x", (unsigned int)model_id);
+            LOGW(MODULE_NAME_DEVMGR, "sync device profile fail, model id:0x%08x", (unsigned int)model_id);
         }
 
         //添加确认设备列表
         os_mutex_lock(devlist_lock);
-        list_add_tail(&devinfo->list_node, &dev_head);
+        dlist_add_tail(&devinfo->list_node, &dev_head);
         os_mutex_unlock(devlist_lock);
 
         //4.保存设备信息到flash
@@ -884,10 +891,10 @@ int devmgr_join_zigbee_device(unsigned char ieee_addr[IEEE_ADDR_BYTES],
     }
     else
     {
-        log_info("unknonw device, devid:%s", devinfo->dev_base.dev_id);
+        LOGI(MODULE_NAME_DEVMGR, "unknonw device, devid:%s", devinfo->dev_base.dev_id);
         //添加到未知设备列表
         os_mutex_lock(devlist_lock);
-        list_add_tail(&devinfo->list_node, &unknown_dev_head);
+        dlist_add_tail(&devinfo->list_node, &unknown_dev_head);
         os_mutex_unlock(devlist_lock);
     }
 
@@ -904,13 +911,13 @@ int devmgr_leave_zigbee_device(unsigned char ieee_addr[IEEE_ADDR_BYTES])
 
     addr_ptr = get_ieeeaddr_string_by_extaddr(ieee_addr, addr_buff, sizeof(addr_buff));
     PTR_RETURN(addr_ptr, SERVICE_RESULT_ERR, "invalid ieee address");
-    log_info("leave device, devid:%s", addr_buff);
+    LOGI(MODULE_NAME_DEVMGR, "leave device, devid:%s", addr_buff);
 
     //查找未知设备列表
     dev_info_t *devinfo = devmgr_get_unknown_devinfo(addr_ptr);
     if(devinfo)
     {
-        log_info("exist unknonw device, devid:%s", devinfo->dev_base.dev_id);
+        LOGI(MODULE_NAME_DEVMGR, "exist unknonw device, devid:%s", devinfo->dev_base.dev_id);
         devmgr_delete_devinfo(devinfo);
         devmgr_put_devinfo_ref(devinfo);
     }
@@ -919,7 +926,7 @@ int devmgr_leave_zigbee_device(unsigned char ieee_addr[IEEE_ADDR_BYTES])
     devinfo = devmgr_get_devinfo(addr_ptr);
     if(devinfo)
     {
-        log_info("exist authorise device, devid:%s", devinfo->dev_base.dev_id);
+        LOGI(MODULE_NAME_DEVMGR, "exist authorise device, devid:%s", devinfo->dev_base.dev_id);
         //设备解绑
         ret = devmgr_network_leave_event_handler(devinfo);
         RET_LOG(ret, CALL_FUCTION_FAILED, "devmgr_network_leave_event_handler");
@@ -992,7 +999,7 @@ int devmgr_attach_sub_device(const char *name,
     ret = __new_devidx(&devinfo->device_idx);
     if(ret < 0){//设备列表达到上限, 不允许添加设备
         devmgr_put_devinfo_ref(devinfo);
-        log_error("new device index fail, mac:%s", devinfo->dev_base.u.ether_mac);
+        LOGE(MODULE_NAME_DEVMGR, "new device index fail, mac:%s", devinfo->dev_base.u.ether_mac);
         return ret;
     }
 
@@ -1012,7 +1019,7 @@ int devmgr_attach_sub_device(const char *name,
 
     //添加到未知设备列表
     os_mutex_lock(devlist_lock);
-    list_add_tail(&devinfo->list_node, &dev_head);
+    dlist_add_tail(&devinfo->list_node, &dev_head);
     os_mutex_unlock(devlist_lock);
 
     return ret;
@@ -1022,7 +1029,7 @@ int32_t devmgr_detach_sub_device(const char *mac)
 {
     int ret = SERVICE_RESULT_OK;
 
-    log_info("detach sub device, mac:%s", mac);
+    LOGI(MODULE_NAME_DEVMGR, "detach sub device, mac:%s", mac);
 
     dev_info_t *devinfo = devmgr_get_devinfo(mac);
     PTR_RETURN(devinfo, SERVICE_RESULT_ERR, "device not found, mac:%s", mac);
@@ -1048,13 +1055,13 @@ int devmgr_init()
 
 #ifdef GATEWAY_SDK
     //device attr cache init
-    ret = devmgr_cache_init();
-    RET_RETURN(ret, "devmgr attribute cache init fail");
+    /* ret = devmgr_cache_init(); */
+    /* RET_RETURN(ret, "devmgr attribute cache init fail"); */
 
     //load devicelist
-    ret = devmgr_load_devinfo();
-    RET_LOG(ret, "devmgr load device info fail");
-    __dump_device_list();
+    /* ret = devmgr_load_devinfo(); */
+    /* RET_LOG(ret, "devmgr load device info fail"); */
+    /* __dump_device_list(); */
 
     //网络ready情况下，全部设备上线
     //if(network_up == NETWORK_EVENT_UP)
@@ -1069,7 +1076,7 @@ int devmgr_init()
     devmgr_router_init();
 #endif
 
-    log_trace("devmgr init success");
+    LOGW(MODULE_NAME_DEVMGR, "devmgr init success");
     return ret;
 }
 
@@ -1088,7 +1095,7 @@ void devmgr_exit()
 
     os_mutex_destroy(devlist_lock);
     devlist_lock = NULL;
-    log_trace("devmgr exit");
+    LOGW(MODULE_NAME_DEVMGR, "devmgr exit");
 }
 
 

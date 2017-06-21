@@ -48,8 +48,8 @@ typedef struct name_mapping_s{
 typedef struct endpoint_profile_s{
     struct list_head list_node;
     uint8_t endpoint_id;
-    list_head_t attr_head;
-    list_head_t cmd_head;
+    dlist_t attr_head;
+    dlist_t cmd_head;
 }endpoint_profile_t;
 
 
@@ -68,27 +68,27 @@ typedef struct data_list_s{
     void *data;
 }data_list_t;
 
-int stdd_parse_attr_profile(char *profile_str, list_head_t *profile_head);
+int stdd_parse_attr_profile(char *profile_str, dlist_t *profile_head);
 
-int stdd_parse_cmd_profile(char *profile_str, list_head_t *profile_head);
+int stdd_parse_cmd_profile(char *profile_str, dlist_t *profile_head);
 
-int stdd_parse_str_set(char *str_set, list_head_t *strset_head);
+int stdd_parse_str_set(char *str_set, dlist_t *strset_head);
 
-int stdd_parse_endpoint_profile(char *profile_str, list_head_t *profile_head);
+int stdd_parse_endpoint_profile(char *profile_str, dlist_t *profile_head);
 
 void stdd_free_device_profile(dev_profile_t *profile);
 
-void stdd_free_attr_profile(list_head_t *data_list_head);
+void stdd_free_attr_profile(dlist_t *data_list_head);
 
-void stdd_free_cmd_profile(list_head_t *data_list_head);
+void stdd_free_cmd_profile(dlist_t *data_list_head);
 
-void stdd_free_device_profile_list(list_head_t *head);
+void stdd_free_device_profile_list(dlist_t *head);
 
-void __dump_attr_profile_list(list_head_t *head);
+void __dump_attr_profile_list(dlist_t *head);
 
-void __dump_cmd_profile_list(list_head_t *head);
+void __dump_cmd_profile_list(dlist_t *head);
 
-void __dump_endpoint_profile_list(list_head_t *head);
+void __dump_endpoint_profile_list(dlist_t *head);
 
 void __dump_device_profile(dev_profile_t *profile);
 

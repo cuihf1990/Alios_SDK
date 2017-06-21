@@ -52,7 +52,12 @@ int _write( int file, char *ptr, int len )
             return -1;
     }
 
-    hal_uart_send( STDIO_UART, (const void*)ptr, len );
+    for (int i = 0; i < len; i++) {
+        if (*ptr == '\n')
+            hal_uart_send( STDIO_UART, (const void*)"\r", 1 );
+        hal_uart_send( STDIO_UART, (const void*)ptr, 1 );
+        ptr ++;
+    }
 
     return len;
 }

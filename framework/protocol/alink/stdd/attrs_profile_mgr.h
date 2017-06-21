@@ -45,8 +45,8 @@ typedef struct profile_info {
 }profile_info_t;
 
 typedef struct pfnode {
-    list_head_t url_node; /* url_list */
-    list_head_t list_node; /* g_list */
+    dlist_t url_node; /* url_list */
+    dlist_t list_node; /* g_list */
     struct profile_info info;
     char *url;
 } pfnode_t;

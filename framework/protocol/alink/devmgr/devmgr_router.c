@@ -8,18 +8,18 @@
 #include <time.h>
 #include "devmgr.h"
 #include "devmgr_router.h"
-#include "list.h"
+#include "yos/list.h"
 #include "json_parser.h"
 #include "msdp.h"
-#include "alink_export_router.h"
 #include "service_manager.h"
 #include "connectivity_manager.h"
 #include "digest_algorithm.h"
-#include "work_queue.h"
 #include "config.h"
 
+#define MODULE_NAME MODULE_NAME_DEVMGR
+
 extern void *devlist_lock;
-extern struct list_head dev_head;
+extern dlist_t dev_head;
 
 static int router_register_device(dev_info_t *devinfo)
 {
@@ -28,7 +28,7 @@ static int router_register_device(dev_info_t *devinfo)
     char result[128] = {0};
 
     alink_data_t data = {METHOD_DEVICE_REGISTER_SUB_WIFI, tx_buff};
-    
+
     if(sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff), PARAMS_DEVICE_REGISTER_SUB_WIFI_FMT,
         devinfo->router_base.name,
         devinfo->router_base.model,
@@ -53,11 +53,11 @@ static int router_register_device(dev_info_t *devinfo)
         strncpy(devinfo->dev_base.uuid, json_str, sizeof(devinfo->dev_base.uuid) > len?len:sizeof(devinfo->dev_base.uuid));
 
         log_info("register device success, uuid:%s", devinfo->dev_base.uuid);
-        
+
     }
-    
-    return ret;   
-    
+
+    return ret;
+
 }
 
 static int router_login_device(dev_info_t *devinfo)
@@ -70,7 +70,7 @@ static int router_login_device(dev_info_t *devinfo)
 
     if(devinfo->dev_base.uuid[0] == '\0')
         return SERVICE_RESULT_ERR;
-    
+
     if(sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff), PARAMS_DEVICE_ATTACH_SUB_WIFI_FMT,
         config_get_main_uuid(),
         devinfo->dev_base.uuid)){
@@ -90,8 +90,8 @@ static int router_login_device(dev_info_t *devinfo)
 
         log_info("attach wifi device result, code:%s", json_str);
     }
-    
-    return ret;      
+
+    return ret;
 
 }
 
@@ -105,7 +105,7 @@ static int router_logout_device(dev_info_t *devinfo)
 
     if(devinfo->dev_base.uuid[0] == '\0')
         return SERVICE_RESULT_ERR;
-    
+
     if(sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff), PARAMS_DEVICE_DETACH_SUB_WIFI_FMT,
         config_get_main_uuid(),
         devinfo->dev_base.uuid)){
@@ -125,8 +125,8 @@ static int router_logout_device(dev_info_t *devinfo)
 
         log_info("deattach wifi device result, code:%s", json_str);
     }
-    
-    return ret;  
+
+    return ret;
 
 }
 
@@ -212,14 +212,15 @@ static int router_network_event_cb(network_event_t event)
 {
     //遍历设备，逐个注册、attatch
     int ret = SERVICE_RESULT_OK;
-    dev_info_t *pos, *next = NULL;
+    dev_info_t *pos;
+    dlist_t *next = NULL;
 
     os_mutex_lock(devlist_lock);
-    list_for_each_entry_safe_t(pos, next, &dev_head, list_node, dev_info_t)
+    dlist_for_each_entry_safe(&dev_head, next, pos, dev_info_t, list_node)
     {
         if(pos->dev_base.dev_type != DEV_TYPE_WIFI)
             continue;
-        
+
         switch(event)
         {
             case NETWORK_EVENT_DOWN: //network disconnected

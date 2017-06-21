@@ -83,6 +83,9 @@ ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest,
                                 ur_addr_t *dest_addr);
 void ur_mesh_get_channel(channel_t *channel);
 
+void umesh_get_extnetid(umesh_extnetid_t *extnetid);
+ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid);
+
 slist_t *ur_mesh_get_hals(void);
 slist_t *ur_mesh_get_networks(void);
 

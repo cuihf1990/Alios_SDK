@@ -2,15 +2,40 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "list.h"
-#include "msdp.h"
-#include "mpool.h"
-#include "stdd.h"
+#include "yos/list.h"
+#include "yos/cloud.h"
+#include "alink_export_internal.h"
 #include "json_parser.h"
-#include "msdp_common.h"
-#include "stdd_zigbee.h"
 #include "service.h"
 #include "devmgr_cache.h"
+#include "msdp_common.h"
+
+#define MODULE_NAME MODULE_NAME_MSDP
+
+static int stdd_zbnet_get_attr(const char *devid_or_uuid, const char *attr_name)
+{
+    log_info("zbnet_get_attr, uuid:%s attr_name:%s\n", devid_or_uuid, attr_name);
+    return 0;
+}
+
+static int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name, const char *attr_value)
+{
+    log_info("zbnet_set_attr, uuid:%s attr_name:%s attr_value:%s\n", devid_or_uuid, attr_name, attr_value);
+    return 0;
+}
+
+#define DEV_ATTR_SET "[\"BackLightMode\",\"BatteryPercentage\",\"Rssi\",\"Switch\"]"
+static int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff, int buff_size)
+{
+    strncpy(attrset_buff, DEV_ATTR_SET, buff_size);
+    log_info("zbnet get device attrset, uuid:%s\n", devid_or_uuid);
+    return 0;
+}
+
+static int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name, const char *rpc_args)
+{
+    return 0;
+}
 
 static int __get_attribute(const char *uuid, const char *attr_name, char **attr_value)
 {
@@ -18,15 +43,6 @@ static int __get_attribute(const char *uuid, const char *attr_name, char **attr_
     char *attr_cache = NULL;
 
     log_trace("uuid:%s, attr_name:%s", uuid, attr_name);
-    ret = devmgr_read_attr_cache(uuid, attr_name, &attr_cache);
-    if(SERVICE_RESULT_OK != ret){
-        log_warn("read attribute cache fail, attr_name:%s", attr_name);
-    }
-    if(SERVICE_RESULT_OK == ret && NULL != attr_cache){
-        *attr_value = msdp_dup_string(attr_cache);
-        os_free(attr_cache);
-        return SERVICE_RESULT_OK;
-    }
 
     ret = stdd_zbnet_get_attr(uuid, attr_name);
     RET_LOG(ret, "get attribute fail, attrname:%s", attr_name);
@@ -64,6 +80,7 @@ static int __get_all_attrname(const char *uuid, char *attr_set, int buff_size)
 */
 static int msdp_get_status(char *params)
 {
+#if 0
     int ret = SERVICE_RESULT_ERR;
     char *str_pos, *params_ptr = params;
     int str_len = 0;
@@ -110,6 +127,10 @@ static int msdp_get_status(char *params)
     }
 
     return ret;
+#else
+    yos_cloud_trigger(GET_SUB_DEVICE_STATUS, params);
+    return SERVICE_RESULT_OK;
+#endif
 }
 
 
@@ -118,6 +139,7 @@ static int msdp_get_status(char *params)
 */
 static int msdp_set_status(char *params)
 {
+#if 0
     int ret = SERVICE_RESULT_ERR;
     //log_trace("params:%s\n", params);
 
@@ -126,6 +148,10 @@ static int msdp_set_status(char *params)
     RET_RETURN(ret, CALL_FUCTION_FAILED, "msdp_set_attr_each_cb");
 
     return ret;
+#else
+    yos_cloud_trigger(SET_SUB_DEVICE_STATUS, params);
+    return SERVICE_RESULT_OK;
+#endif
 }
 
 

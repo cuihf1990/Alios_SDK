@@ -29,8 +29,7 @@
 #define STDD_PROFILE_H
 #include <stdint.h>
 #include <unistd.h>
-#include "list.h"
-#include "log.h"
+#include "yos/list.h"
 #include "service.h"
 #include "stdd_datatype.h"
 #include "devmgr.h"
