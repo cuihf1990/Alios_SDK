@@ -46,7 +46,7 @@
 #define YUNOS_CONFIG_TASK_INFO               1
 #define YUNOS_CONFIG_TASK_DEL                1
 #define YUNOS_CONFIG_TASK_WAIT_ABORT         1
-#define YUNOS_CONFIG_TASK_STACK_OVF_CHECK    0
+#define YUNOS_CONFIG_TASK_STACK_OVF_CHECK    1
 #define YUNOS_CONFIG_SCHED_RR                1
 #define YUNOS_CONFIG_TIME_SLICE_DEFAULT      50
 #define YUNOS_CONFIG_PRI_MAX                 62
