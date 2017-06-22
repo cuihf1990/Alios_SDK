@@ -19,7 +19,7 @@
 #include "product.h"
 
 //TODO: update these product info
-#ifndef MESH_GATEWAY_SERVICE
+#if 1
 #define product_model           "ALINKTEST_LIVING_LIGHT_ALINK_TEST"
 #define product_key             "5gPFl8G4GyFZ1fPWk20m"
 #define product_secret          "ngthgTlZ65bX5LpViKIWNsDPhOf2As9ChnoL9gQb"
