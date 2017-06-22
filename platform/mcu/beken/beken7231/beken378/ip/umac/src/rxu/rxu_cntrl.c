@@ -458,6 +458,34 @@ static void rxu_cntrl_mac2eth_update(struct rx_swdesc *rx_swdesc_ptr)
     rxu_cntrl_env.rx_status.payl_offset = payl_offset;
 }
 
+#ifdef CONFIG_YOS_MESH
+bool rxu_mesh_monitor(struct rx_swdesc *swdesc)
+{
+    struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+    struct rx_hd *rhd = &dma_hdrdesc->hd;
+    struct rx_payloaddesc *payl_d = HW2CPU(rhd->first_pbd_ptr);
+    struct rx_cntrl_rx_status *rx_status = &rxu_cntrl_env.rx_status;
+    uint32_t *frame = payl_d->buffer;
+    struct mac_hdr *hdr = (struct mac_hdr *)frame;
+    uint8_t *local_bssid;
+    uint8_t *bssid;
+
+    if (wlan_is_mesh_monitor_mode() == FALSE) {
+        return false;
+    }
+
+    if(MAC_FCTRL_DATA_T == (hdr->fctl & MAC_FCTRL_TYPE_MASK)) {
+        local_bssid = wlan_get_mesh_bssid();
+        bssid = (uint8_t *)hdr->addr3.array;
+        if (memcmp(local_bssid, bssid, 6) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+#endif
+
 /**
  * @return True if a free descriptor has been used, else False
  */
@@ -472,18 +500,19 @@ static void rxu_msdu_upload_and_indicate(struct rx_swdesc *p_rx_swdesc,
     dma_hdrdesc->flags |= (rx_stat->sta_idx << RX_FLAGS_STA_INDEX_OFT) |
                           (rx_stat->vif_idx << RX_FLAGS_VIF_INDEX_OFT) |
                           (rx_stat->dst_idx << RX_FLAGS_DST_INDEX_OFT);
-    
-    // Translate the MAC frame to an Ethernet frame
+
 #ifdef CONFIG_YOS_MESH
-    rxl_mpdu_transfer_mesh(p_rx_swdesc);
-#else
+    if (rxu_mesh_monitor(p_rx_swdesc) == false)
+#endif
+    // Translate the MAC frame to an Ethernet frame
+    {
     if(!bk_wlan_is_monitor_mode())
 	{
 	    rxu_cntrl_mac2eth_update(p_rx_swdesc);
 	}
+    }
     // Program the DMA transfer of the MPDU
     rxl_mpdu_transfer(p_rx_swdesc);
-#endif
 }
 
 /**
@@ -515,11 +544,7 @@ static void rxu_mpdu_upload_and_indicate(struct rx_swdesc *p_rx_swdesc, uint8_t 
     	rxu_cntrl_remove_sec_hdr_mgmt_frame(p_rx_swdesc, rx_stat);
 	}
 
-#ifdef CONFIG_YOS_MESH
-    rxl_mpdu_transfer_mesh(p_rx_swdesc);
-#else
     rxl_mpdu_transfer(p_rx_swdesc);
-#endif
 }
 
 static void rxu_cntrl_get_da_sa(struct mac_hdr_long *machdr_ptr)
@@ -2347,22 +2372,10 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 	#endif
 	#endif // CFG_WIFI_AP_MODE
 
-#ifdef CONFIG_YOS_MESH
-        if (bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode()) {
-            if (bk_wlan_is_monitor_mode()) {
-                upload = rxu_mgt_monitor(framectrl, payload, length);
-            }
-            if (wlan_is_mesh_monitor_mode()) {
-                upload = true;
-            }
-            return upload;
-        }
-#else
 	if(bk_wlan_is_monitor_mode())
 	{
 		return rxu_mgt_monitor(framectrl, payload, length);
 	}
-#endif
 
     // Check if the message has to be forwarded or not
     if (dest_id != TASK_NONE)
@@ -2486,6 +2499,11 @@ static bool rxu_mgt_frame_check(struct rx_swdesc* swdesc, uint8_t sta_idx)
         #if NX_MFP
         if (!mfp_ignore_mgmt_frame(rx_status, frame, rhd->frmlen, &upload))
         #endif
+
+#ifdef CONFIG_YOS_MESH
+        if (rxu_mesh_monitor(swdesc) == false)
+#endif
+        {
             upload = rxu_mgt_frame_ind(hdr->fctl, 
                                         rhd->frmlen, 
                                         sta_idx, 
@@ -2498,6 +2516,7 @@ static bool rxu_mgt_frame_check(struct rx_swdesc* swdesc, uint8_t sta_idx)
 			break;
 		}
 		
+         }
     	rxu_mpdu_upload_and_indicate(swdesc, RX_STAT_FORWARD | RX_STAT_ALLOC);
     } while (0);
 
@@ -2604,10 +2623,10 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 
             // When the sender is unknown, only management frames are handled here
 #ifdef CONFIG_YOS_MESH
-            if(!(bk_wlan_is_monitor_mode() || wlan_is_mesh_monitor_mode()))
-#else
-            if(!bk_wlan_is_monitor_mode())
+            if(rxu_mesh_monitor(swdesc) == false)
 #endif
+            {
+            if(!bk_wlan_is_monitor_mode())
             {
 	            if ((frame_cntl & MAC_FCTRL_TYPE_MASK) != MAC_FCTRL_MGT_T)
 	                break;
@@ -2620,6 +2639,7 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 	                (((statinfo & RX_HD_DECRSTATUS) != RX_HD_DECR_WEPSUCCESS) ||
 	                 !rxu_cntrl_protected_handle(frame, statinfo)))
 	                break;
+            }
             }
 
             upload = rxu_mgt_frame_check(swdesc, INVALID_STA_IDX);
