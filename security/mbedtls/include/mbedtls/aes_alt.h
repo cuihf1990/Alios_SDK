@@ -14,11 +14,9 @@
 extern "C" {
 #endif
 
-enum {
-    AES_STATUS_NONE    = 0,
-    AES_STATUS_INIT    = 1,
-    AES_STATUS_PROCESS = 2,
-} aes_status_t;
+#define AES_STATUS_NONE     0
+#define AES_STATUS_INIT     1
+#define AES_STATUS_PROCESS  2
 
 typedef struct
 {
