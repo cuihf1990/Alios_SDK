@@ -640,9 +640,6 @@ void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
                             length - UR_IP6_HLEN - sizeof(ur_icmp6_header_t),
                             IP6_ADDR_DATA(ip6_header->src),
                             icmp6_header->data, g_cl_state.icmp_acked);
-        } else if (icmp6_header->type != UR_ICMP6_TYPE_EREQ) {
-            response_append("icmp type %x from " IP6_ADDR_FMT "\r\n",
-                            icmp6_header->type, IP6_ADDR_DATA(ip6_header->src));
         }
     }
 }
