@@ -150,8 +150,8 @@ int rxl_data_monitor(uint8_t *payload,
 	{
 		monitor_flag = 1;
 
-                fn = bk_wlan_get_monitor_cb();
-                (*fn)((uint8_t *)payload, length);
+		fn = bk_wlan_get_monitor_cb();		
+		(*fn)((uint8_t *)payload, length);
 	}
 #ifdef CONFIG_YOS_MESH
         else if (wlan_is_mesh_monitor_mode()) {
@@ -161,65 +161,6 @@ int rxl_data_monitor(uint8_t *payload,
 #endif
 
 	return monitor_flag;
-}
-
-int rxl_data_is_agg(struct rx_hd *hd)
-{
-	struct rx_hd *hd_ptr = hd;
-	union rx_vector_1b *rxv_1b = (union rx_vector_1b *)&hd_ptr->recvec1b;
-
-	ASSERT(rxv_1b);
-	return rxv_1b->bits.is_agg;
-}
-
-int rxl_data_get_len_from_rx_rector(struct rx_hd *hd)
-{
-	struct rx_hd *hd_ptr = hd;
-	union rx_vector_1a *rxv_1a = (union rx_vector_1a *)&hd_ptr->recvec1a;
-	union rx_vector_1b *rxv_1b = (union rx_vector_1b *)&hd_ptr->recvec1b;
-	uint32_t ht_flag = 0;
-	uint32_t data_count;
-	uint32_t mod;
-
-	ASSERT(rxv_1a);
-	ASSERT(rxv_1b);
-
-	mod = rxv_1b->bits.format_mod;
-	switch(mod)
-	{			
-		case FMOD_HT_MF:
-		case FMOD_HT_GF:			
-		case FMOD_VHT:
-			ht_flag = 1;
-			RXL_CNTRL_PRT("ht:%d\r\n", (rxv_1b->bits.format_mod));
-			break;
-			
-		case FMOD_NON_HT:
-		case FMOD_NON_HT_DUP_OFDM:
-		default:
-			RXL_CNTRL_PRT("legacy:%d\r\n", (rxv_1b->bits.format_mod));
-			break;
-	}
-	
-	if(ht_flag)
-	{
-		data_count = rxv_1a->bits.ht_len1 
-						+ (rxv_1b->bits.ht_len2 << 16);
-	}
-	else
-	{
-		data_count = rxv_1a->bits.legacy_len;
-	}
-
-	data_count -= 4;
-
-	if(rxv_1b->bits.is_agg)
-	{
-		data_count -= 4;
-		RXL_CNTRL_PRT("is_agg\r\n");
-	}
-
-	return data_count;
 }
 
 void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
@@ -365,43 +306,14 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 	{	 
 		if(du_ptr)
 		{
-			#define MONITOR_PKT_FCS_LEN           4
 			uint32_t statinfo;
-			uint32_t len_from_vector;
 			
 			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
-			len_from_vector = rxl_data_get_len_from_rx_rector(&dma_hdrdesc->hd);
-			if(len_from_vector != du_len)
+			
+			if(du_len >= 36)
 			{
-				do
-				{
-					statinfo = dma_hdrdesc->hd.statinfo;
-					if((du_len > len_from_vector)
-						|| (!(statinfo & RX_HD_GA_FRAME)))
-					{
-						break;
-					}				
-
-					
-					if((len_from_vector > du_len) 
-								&& ((len_from_vector - du_len) > MONITOR_PKT_FCS_LEN))
-					{
-						//rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
-					}
-					else
-					{
-						rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), len_from_vector);
-					}
-				}while(0);
-
+				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
 			}
-			else
-			{
-				if(du_len >= 36)
-				{
-					rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
-				}
-			}		
 			
 			os_free(du_ptr);
 		}
@@ -459,6 +371,15 @@ static bool rxl_rxcntrl_frame(struct rx_swdesc* swdesc)
     bool handled = true;
     bool release = true;
     struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+
+#if CFG_RX_SENSITIVITY_TEST
+    extern UINT32 g_rxsens_start;
+    if(g_rxsens_start) 
+    {
+        rxl_mpdu_free(swdesc);
+        return (handled);
+    }
+#endif
 
     // Check if we received a NDP frame
     if (dma_hdrdesc->hd.frmlen != 0)
@@ -924,15 +845,6 @@ void rxl_cntrl_evt(int dummy)
             #if (NX_RX_FRAME_HANDLING)
             bool dont_free = false;
 
-            #if CFG_RX_SENSITIVITY_TEST
-            extern UINT32 g_rxsens_start;
-            if(g_rxsens_start) 
-			{
-                rxl_mpdu_free(swdesc);
-                break;
-            }
-            #endif
-
             // Check if the packet is of interest for the LMAC
             upload = rxl_frame_handle(swdesc, &dont_free);
             if (!upload)
@@ -974,7 +886,6 @@ void rxl_timer_int_handler(void)
         if ((rxl_cntrl_env.first == NULL) ||
             (!RX_HD_DONE_GET(rxl_cntrl_env.first->hd.statinfo)))
         {
-        	//os_printf("rxl_int break\r\n");
             break;
         }
 
@@ -997,7 +908,7 @@ void rxl_timer_int_handler(void)
 
     // Check if frames are ready
     if (!co_list_is_empty(&rxl_cntrl_env.ready))
-    {   
+    {		
         bmsg_rx_sender(0);
     }
 }
