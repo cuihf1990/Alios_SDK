@@ -33,12 +33,15 @@ $(NAME)_SOURCES := board.c
 
 GLOBAL_INCLUDES += .
 
-CURRENT_TIME = $(shell date +%Y%m%d.%H%M)
+CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 define get-os-version
 "YOS-R"-$(CURRENT_TIME)
 endef
 
 CONFIG_SYSINFO_OS_VERSION := $(call get-os-version)
+
+$(warning $(CONFIG_SYSINFO_OS_VERSION))
+
 CONFIG_SYSINFO_PRODUCT_MODEL := ALI_YOS_MK3060
 CONFIG_SYSINFO_DEVICE_NAME := MK3060
 
