@@ -57,10 +57,26 @@ typedef struct {
 
 #define MODULE_NAME_KV "kv"
 
+static void *__print_kv_inflash_cb(void *key, void *val, void *extra)
+{
+    kv_item_t *item = NULL;
+    int len = 0;
+    char *p = NULL;
+
+    item = *((kv_item_t **)val);
+    p = item->val;
+    *(p + item->len_val) = '\0';
+    LOGI(MODULE_NAME_KV, "%s = %s",item->key, item->val);
+    return NULL;
+}
+
+
 static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     const char *rtype = argc > 1 ? argv[1] : "";
     int ret = 0;
+    char *buffer = NULL;
+
     if (strcmp(rtype, "set") == 0) {
         if (argc != 4)
             return ;
@@ -72,13 +88,23 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
     } else if (strcmp(rtype, "get") == 0) {
         if (argc != 3)
             return ;
-        char buf[KV_BUFFER_SIZE] = {0};
-        int len = sizeof(buf);
-        ret = yos_kv_get(argv[2], buf, &len);
-        if (ret != 0)
+        buffer = yos_malloc(KV_BUFFER_SIZE);
+        if (!buffer) {
             LOGW(MODULE_NAME_KV, "cli get kv failed");
+            return;
+        }
+
+        memset(buffer, 0, KV_BUFFER_SIZE);
+        int len = KV_BUFFER_SIZE;
+
+        ret = yos_kv_get(argv[2], buffer, &len);
+        if (ret != 0)
+            LOGI(MODULE_NAME_KV, "cli: no paired kv");
         else
-            LOGD(MODULE_NAME_KV, "value is %s", buf);
+            LOGD(MODULE_NAME_KV, "value is %s", buffer);
+
+        if (buffer)
+            yos_free(buffer);
     } else if (strcmp(rtype, "del") == 0) {
         if (argc != 3)
             return;
@@ -87,6 +113,8 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
             LOGD(MODULE_NAME_KV, "cli kv del failed");
         else
             LOGW(MODULE_NAME_KV, "cli kv del success");
+    } else if (strcmp(rtype, "list") == 0) {
+        ht_iterator_lockless(g_ht,__print_kv_inflash_cb, NULL);
     }
     return;
 }
@@ -94,7 +122,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 
 static struct cli_command ncmd = {
     .name = "kv",
-    .help = "kv [set key value | get key | del key]",
+    .help = "kv [set key value | get key | del key | list]",
     .function = handle_kv_cmd,
 };
 
