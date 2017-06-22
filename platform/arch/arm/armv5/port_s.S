@@ -63,12 +63,12 @@ cpu_task_switch:
     MRS   R0,CPSR
     STMFD SP!,{R0}                 @push current cpsr
 
-    BL yunos_stack_ovf_check
-
     /* g_active_task->task_stack = SP */
     LDR R0, =g_active_task
     LDR R0, [R0]
     STR SP, [R0]
+
+    BL yunos_stack_ovf_check
 
 cpu_intrpt_switch:
     LDR     R0, =g_preferred_ready_task
