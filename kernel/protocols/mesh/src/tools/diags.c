@@ -45,7 +45,8 @@ static ur_error_t handle_trace_route_request(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t) -
                   info->payload_offset;
 
-    timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TIMESTAMP);
+    timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_TIMESTAMP);
     network = get_network_context_by_meshnetid(info->src.netid);
     if (network == NULL) {
         network = get_default_network_context();
@@ -75,7 +76,8 @@ static ur_error_t handle_trace_route_response(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t) -
                   info->payload_offset;
 
-    timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TIMESTAMP);
+    timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_TIMESTAMP);
     time = ur_get_now() - timestamp->timestamp;
     info = message->info;
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "%04x:%04x, time %d ms\r\n",

@@ -424,7 +424,8 @@ int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length)
     return length;
 }
 
-mm_tv_t *umesh_mm_get_tv(const uint8_t *data, const uint16_t length, uint8_t type)
+mm_tv_t *umesh_mm_get_tv(const uint8_t *data, const uint16_t length,
+                         uint8_t type)
 {
     uint16_t offset = 0;
     mm_tv_t  *tv = NULL;
@@ -829,7 +830,7 @@ static ur_error_t handle_attach_request(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
     if ((version = (mm_version_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                TYPE_VERSION)) == NULL) {
+                                                      TYPE_VERSION)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -838,11 +839,12 @@ static ur_error_t handle_attach_request(message_t *message)
     }
 
     if ((ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                          TYPE_SRC_UEID)) == NULL) {
+                                                TYPE_SRC_UEID)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
-    if ((mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MODE)) == NULL) {
+    if ((mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                TYPE_MODE)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -862,11 +864,13 @@ static ur_error_t handle_attach_request(message_t *message)
         if (network != get_default_network_context()) {
             return UR_ERROR_NONE;
         }
-    } else if ((umesh_mm_get_mode() & MODE_SUPER) && (mode->mode & MODE_SUPER) == 0) {
+    } else if ((umesh_mm_get_mode() & MODE_SUPER) &&
+               (mode->mode & MODE_SUPER) == 0) {
         if (network == get_default_network_context()) {
             return UR_ERROR_NONE;
         }
-    } else if ((umesh_mm_get_mode() & MODE_SUPER) == 0 && (mode->mode & MODE_SUPER)) {
+    } else if ((umesh_mm_get_mode() & MODE_SUPER) == 0 &&
+               (mode->mode & MODE_SUPER)) {
         return UR_ERROR_NONE;
     }
 
@@ -912,7 +916,8 @@ static ur_error_t handle_attach_response(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    group_key = (mm_group_key_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_GROUP_KEY);
+    group_key = (mm_group_key_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_GROUP_KEY);
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         if (group_key == NULL) {
             return UR_ERROR_NONE;
@@ -1145,15 +1150,16 @@ static ur_error_t handle_sid_request(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     attach_node_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                  TYPE_ATTACH_NODE_ID);
+                                                        TYPE_ATTACH_NODE_ID);
     src_sid = (mm_sid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_SID);
 
     if ((ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                          TYPE_SRC_UEID)) == NULL) {
+                                                TYPE_SRC_UEID)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
-    if ((mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MODE)) == NULL) {
+    if ((mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                TYPE_MODE)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -1292,7 +1298,7 @@ ur_error_t handle_raw_data(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
 
     if ((ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, sizeof(mm_ueid_tv_t),
-                                          TYPE_SRC_UEID)) == NULL) {
+                                                TYPE_SRC_UEID)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -1335,23 +1341,25 @@ static ur_error_t handle_sid_response(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     allocated_sid = (mm_sid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                             TYPE_ALLOCATE_SID);
+                                                   TYPE_ALLOCATE_SID);
     if (allocated_sid == NULL) {
         return UR_ERROR_FAIL;
     }
 
     allocated_node_type = (mm_node_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                         TYPE_NODE_TYPE);
+                                                               TYPE_NODE_TYPE);
     if (allocated_node_type == NULL) {
         return UR_ERROR_FAIL;
     }
 
-    netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NETWORK_INFO);
+    netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                 TYPE_NETWORK_INFO);
     if (netinfo == NULL) {
         return UR_ERROR_FAIL;
     }
 
-    mcast = (mm_mcast_addr_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MCAST_ADDR);
+    mcast = (mm_mcast_addr_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                  TYPE_MCAST_ADDR);
     if (mcast == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -1652,7 +1660,8 @@ static ur_error_t handle_advertisement(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
-    netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NETWORK_INFO);
+    netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                 TYPE_NETWORK_INFO);
     path_cost = (mm_cost_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_PATH_COST);
     mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MODE);
     if (netinfo == NULL || info->src.netid == BCAST_NETID ||
@@ -1699,7 +1708,7 @@ static ur_error_t handle_advertisement(message_t *message)
     if (mode->mode & MODE_SUPER) {
         // mode leader or super should be leader
         if ((g_mm_state.device.mode & MODE_SUPER) == 0 &&
-             g_mm_state.device.state == DEVICE_STATE_LEADER) {
+            g_mm_state.device.state == DEVICE_STATE_LEADER) {
             become_detached();
             update_migrate_times(network, nbr);
             return UR_ERROR_NONE;

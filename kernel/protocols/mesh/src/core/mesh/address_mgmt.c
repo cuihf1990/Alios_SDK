@@ -251,7 +251,7 @@ ur_error_t handle_address_query(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     addr_query = (mm_addr_query_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_ADDR_QUERY);
+                                                       TYPE_ADDR_QUERY);
     target_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
     ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
 
@@ -385,9 +385,10 @@ ur_error_t handle_address_query_response(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     attach_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                             TYPE_ATTACH_NODE_ID);
+                                                   TYPE_ATTACH_NODE_ID);
     target_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
-    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                  TYPE_TARGET_UEID);
 
     if (target_id == NULL || target_ueid == NULL) {
         return UR_ERROR_FAIL;
@@ -528,10 +529,13 @@ ur_error_t handle_address_notification(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     attach_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                               TYPE_ATTACH_NODE_ID);
-    target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
-    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
-    hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_DEF_HAL_TYPE);
+                                                     TYPE_ATTACH_NODE_ID);
+    target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_NODE_ID);
+    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                  TYPE_TARGET_UEID);
+    hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                   TYPE_DEF_HAL_TYPE);
 
     if (target_node == NULL || target_ueid == NULL || hal_type == NULL) {
         return UR_ERROR_FAIL;

@@ -86,7 +86,7 @@ void interface_init(void)
             hal_context = new_hal_context(module);
             hal_context->channel_list.num =
                 hal_umesh_get_bcast_chnlist(module,
-                                              &hal_context->channel_list.channels);
+                                            &hal_context->channel_list.channels);
             memcpy(&hal_context->mac_addr, hal_umesh_get_mac_address(module),
                    sizeof(hal_context->mac_addr));
 

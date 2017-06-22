@@ -139,7 +139,7 @@ typedef int32_t (*zigbee_update_cmd_profile_cb_t)(cmd_profile_t *profile[]);
  * @retc:    ZBNET_SUCCESS/ZBNET_FAILURE
  */
 typedef int32_t (*zigbee_get_attr_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES], \
-                                    uint8_t endpoint_id, const char *attr_set);
+                                        uint8_t endpoint_id, const char *attr_set);
 
 
 /***
@@ -150,8 +150,9 @@ typedef int32_t (*zigbee_get_attr_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES], \
  *           attr_value: 字符串属性值
  * @retc:    ZBNET_SUCCESS/ZBNET_FAILURE
  */
-typedef int32_t (*zigbee_set_attr_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES], uint8_t endpoint_id, \
-                                    const char *attr_name, const char *attr_value);
+typedef int32_t (*zigbee_set_attr_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES],
+                                        uint8_t endpoint_id, \
+                                        const char *attr_name, const char *attr_value);
 
 
 /***
@@ -162,8 +163,9 @@ typedef int32_t (*zigbee_set_attr_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES], uint
  *           cmd_args: json字符串格式命令参数
  * @retc:    ZBNET_SUCCESS/ZBNET_FAILURE
  */
-typedef int32_t (*zigbee_exec_cmd_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES], uint8_t endpoint_id, \
-                                    const char *cmd_name, const char *cmd_args);
+typedef int32_t (*zigbee_exec_cmd_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES],
+                                        uint8_t endpoint_id, \
+                                        const char *cmd_name, const char *cmd_args);
 
 
 /***
@@ -171,7 +173,8 @@ typedef int32_t (*zigbee_exec_cmd_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES], uint
  * @para:    ieee_addr: 设备8Byte ieee地址
  * @retc:    ZBNET_SUCCESS/ZBNET_FAILURE
  */
-typedef int32_t (*zigbee_remove_device_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES]);
+typedef int32_t (*zigbee_remove_device_cb_t)(uint8_t
+                                             ieee_addr[IEEE_ADDR_BYTES]);
 
 
 /***
@@ -185,12 +188,12 @@ typedef int32_t (*zigbee_permit_join_cb_t)(uint8_t duration);
 /*
 *属性数据类型结构体
 */
-typedef struct data_type_s{
+typedef struct data_type_s {
     uint8_t type_class;
     int8_t length;//0xff表示为变长
     char *name;
     uint8_t id;
-}data_type_t;
+} data_type_t;
 
 
 data_type_t *stdd_get_datatype_by_name(const char *name, int name_len);

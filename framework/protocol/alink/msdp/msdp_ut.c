@@ -23,16 +23,18 @@ int stdd_zbnet_supervision_interval_cb(uint8_t ieee_addr[8], uint8_t interval)
     return 0;
 }
 
-int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name, char **attr_value)
+int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name,
+                           char **attr_value)
 {
     log_trace("read attr cache, devid:%s, attr_name:%s", devid_or_uuid, attr_name);
     char *value_str = NULL;
-    if(strcmp(attr_name, ATTR1_NAME) == 0)
+    if (strcmp(attr_name, ATTR1_NAME) == 0) {
         value_str = (char *)attr1_value;
-    else if(strcmp(attr_name, ATTR2_NAME) == 0)
+    } else if (strcmp(attr_name, ATTR2_NAME) == 0) {
         value_str = (char *)attr2_value;
-    else
+    } else {
         return -1;
+    }
 
     *attr_value = malloc(strlen(value_str) + 1);
     memset(*attr_value, 0, strlen(value_str) + 1);
@@ -59,26 +61,31 @@ int stdd_zbnet_get_attr(const char *devid_or_uuid, const char *attr_name)
     return 0;
 }
 
-int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name, const char *attr_value)
+int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name,
+                        const char *attr_value)
 {
-    log_trace("set attribute, uuid:%s, attrname:%s, attrvalue:%s", devid_or_uuid, attr_name, attr_value);
-    if(strcmp(attr_name, ATTR1_NAME) == 0)
+    log_trace("set attribute, uuid:%s, attrname:%s, attrvalue:%s", devid_or_uuid,
+              attr_name, attr_value);
+    if (strcmp(attr_name, ATTR1_NAME) == 0) {
         strcpy(attr1_value, attr_value);
-    else if(strcmp(attr_name, ATTR2_NAME) == 0)
+    } else if (strcmp(attr_name, ATTR2_NAME) == 0) {
         strcpy(attr2_value, attr_value);
-    else
+    } else {
         return -1;
+    }
 
     return 0;
 }
 
-int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name, const char *rpc_args)
+int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name,
+                        const char *rpc_args)
 {
     log_trace("exec_rpc success, uuid:%s", devid_or_uuid);
     return 0;
 }
 
-int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff, int buff_size)
+int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff,
+                            int buff_size)
 {
     log_trace("get device attrset, uuid:%s", devid_or_uuid);
     snprintf(attrset_buff, buff_size, "[\"attr1\",\"attr2\"]");
@@ -129,8 +136,10 @@ int gw_rpc_reboot_cb(char *args, char *rpc_result, int buff_size)
 
 void dev_attr_init()
 {
-    msdp_register_attr_cb(DEV_TYPE_GATEWAY, ATTR1_NAME, gw_get_attr1_cb, gw_set_attr1_cb);
-    msdp_register_attr_cb(DEV_TYPE_GATEWAY, ATTR2_NAME, gw_get_attr2_cb, gw_set_attr2_cb);
+    msdp_register_attr_cb(DEV_TYPE_GATEWAY, ATTR1_NAME, gw_get_attr1_cb,
+                          gw_set_attr1_cb);
+    msdp_register_attr_cb(DEV_TYPE_GATEWAY, ATTR2_NAME, gw_get_attr2_cb,
+                          gw_set_attr2_cb);
     msdp_register_service_cb(DEV_TYPE_GATEWAY, "reboot", gw_rpc_reboot_cb);
 }
 
@@ -157,7 +166,7 @@ int set_attr_ut()
     char params[1024] = {0};
 
     sprintf(params, SET_DEVICE_ATTR_STRING_FMT, GW_UUID, "[\"attr1\",\"attr2\"]",
-        "\"attr1\":{\"value\":[\"element1\",\"element2\"]},\"attr2\":{\"value\":{\"element\":\"elementvalue\"}}");
+            "\"attr1\":{\"value\":[\"element1\",\"element2\"]},\"attr2\":{\"value\":{\"element\":\"elementvalue\"}}");
 
     log_trace("params:%s", params);
 

@@ -51,7 +51,7 @@ extern "C" {
 
 
 typedef int (*ALINK_SERVICE_EXECUTE_CB)(const char *args,
-        char *json_out_buf, unsigned int buf_sz);
+                                        char *json_out_buf, unsigned int buf_sz);
 
 #define log_print(fmt, args...) \
     do {  \
@@ -175,7 +175,7 @@ enum SERVICE_CODE {
 /*
 * 设备类型定义
 */
-typedef enum{
+typedef enum {
     DEV_TYPE_GATEWAY        = 0,
     DEV_TYPE_WIFI           = 1,
     DEV_TYPE_ZIGBEE         = 2,
@@ -186,23 +186,23 @@ typedef enum{
 
 
 
-typedef struct dev_base_s{
+typedef struct dev_base_s {
     uint8_t dev_type;
     uint32_t model_id;
-    union{
+    union {
         char ether_mac[6];
         char ieee_addr[8];
-    }u;
+    } u;
     char rand[16];
     char sign[17];
     char dev_id[18];
     char uuid[33];
     char token[7];
     uint16_t crc;
-}dev_base_t;
+} dev_base_t;
 
 
-typedef struct dev_info_s{
+typedef struct dev_info_s {
     struct list_head list_node;
     struct list_head attr_head;
     dev_base_t dev_base;
@@ -212,24 +212,28 @@ typedef struct dev_info_s{
     uint8_t link_state;
     void *dev_mutex;
     uint8_t ref_cnt;
-}dev_info_t;
+} dev_info_t;
 
 extern void *alink_cb_func[ALINK_CB_MAX_NUM];
 
 int devmgr_get_dev_type(const char *devid_or_uuid, uint8_t *dev_type);
 int32_t alink_post(const char *method, char *buff);
-int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name, char **attr_value);
+int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name,
+                           char **attr_value);
 dev_info_t *devmgr_get_devinfo(const char *devid_or_uuid);
 dev_info_t *devmgr_get_devinfo_by_ieeeaddr(char ieee_addr[8]);
-int devmgr_update_attr_cache(const char *devid_or_uuid, const char *attr_name, const char *attr_value);
+int devmgr_update_attr_cache(const char *devid_or_uuid, const char *attr_name,
+                             const char *attr_value);
 
-int msdp_report_device_status(const char *uuid, const char *attr_name, const char *attr_value);
+int msdp_report_device_status(const char *uuid, const char *attr_name,
+                              const char *attr_value);
 void devmgr_put_devinfo_ref(dev_info_t *devinfo);
 
 
 const char *config_get_main_uuid(void);
 
-int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff, int buff_size);
+int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff,
+                            int buff_size);
 
 /*
 int stdd_lua_get_global_variable(void *lua_fd, const char *global_name, char **result);
@@ -245,7 +249,8 @@ void stdd_lua_close(void *lua_fd);
 
 int devmgr_get_all_device_modelid(uint32_t model_id[], int *num);
 
-int get_device_profile_file(uint8_t dev_type, uint32_t model_id, char file_name[], int max_name_length);
+int get_device_profile_file(uint8_t dev_type, uint32_t model_id,
+                            char file_name[], int max_name_length);
 
 
 #ifdef __cplusplus

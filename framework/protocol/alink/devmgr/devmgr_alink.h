@@ -66,7 +66,8 @@ uint32_t devmgr_get_permitjoin_short_model();
 /*
 --> {"uuid":"42E6E69DAEF6483FBBA412A28AF7CD76","attrSet":["OnOff"],"OnOff":{"value":"1","when":"1404443369"}}
 */
-const char *devmgr_get_device_signature(uint32_t short_model, const char rand[SUBDEV_RAND_BYTES], char *sign_buff, uint32_t buff_size);
+const char *devmgr_get_device_signature(uint32_t short_model,
+                                        const char rand[SUBDEV_RAND_BYTES], char *sign_buff, uint32_t buff_size);
 int devmgr_login_device(dev_info_t *devinfo);
 int devmgr_logout_device(dev_info_t *devinfo);
 int devmgr_register_device(dev_info_t *devinfo);

@@ -152,12 +152,14 @@ static inline int cli_unregister_command(const struct cli_command *command)
     return 0;
 }
 
-static inline int cli_register_commands(const struct cli_command *commands, int num_commands)
+static inline int cli_register_commands(const struct cli_command *commands,
+                                        int num_commands)
 {
     return 0;
 }
 
-static inline int cli_unregister_commands(const struct cli_command *commands, int num_commands)
+static inline int cli_unregister_commands(const struct cli_command *commands,
+                                          int num_commands)
 {
     return 0;
 }

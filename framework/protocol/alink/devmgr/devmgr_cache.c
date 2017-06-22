@@ -10,11 +10,11 @@
 
 #define MODULE_NAME MODULE_NAME_DEVMGR
 
-typedef struct attr_cache_s{
+typedef struct attr_cache_s {
     dlist_t list_node;
     char *attr_name;
     char *attr_value;
-}attr_cache_t;
+} attr_cache_t;
 
 
 static void *__cache_dup_string(const char *src)
@@ -22,13 +22,13 @@ static void *__cache_dup_string(const char *src)
     char *dst;
     int n ;
 
-    if(!src) {
+    if (!src) {
         return NULL;
     }
 
     n = strlen(src);
     dst = (char *)os_malloc(n + 1);
-    if(!dst) {
+    if (!dst) {
         return NULL;
     }
 
@@ -41,16 +41,18 @@ static void *__cache_dup_string(const char *src)
 static void *__cache_new_buff(unsigned int buff_size)
 {
     void *buff = os_malloc(buff_size);
-    if(NULL != buff)
+    if (NULL != buff) {
         memset(buff, 0, buff_size);
+    }
 
     return buff;
 }
 
 static void __cache_free_buff(void *buff)
 {
-    if(buff)
+    if (buff) {
         os_free(buff);
+    }
 }
 
 static void *__cache_renew_buff(char *src, uint32_t new_size)
@@ -59,7 +61,8 @@ static void *__cache_renew_buff(char *src, uint32_t new_size)
     return __cache_new_buff(new_size);
 }
 
-static attr_cache_t *__new_attr_node(const char *attr_name, const char *attr_value)
+static attr_cache_t *__new_attr_node(const char *attr_name,
+                                     const char *attr_value)
 {
     attr_cache_t *attr_node = __cache_new_buff(sizeof(attr_cache_t));
     PTR_GOTO(attr_node, err, "pstrdup error");
@@ -74,12 +77,14 @@ static attr_cache_t *__new_attr_node(const char *attr_name, const char *attr_val
     return attr_node;
 
 err:
-    if(attr_node != NULL){
-        if(attr_node->attr_name)
+    if (attr_node != NULL) {
+        if (attr_node->attr_name) {
             __cache_free_buff(attr_node->attr_name);
+        }
 
-        if(attr_node->attr_value)
+        if (attr_node->attr_value) {
             __cache_free_buff(attr_node->attr_value);
+        }
 
         __cache_free_buff((char *)attr_node);
     }
@@ -90,27 +95,31 @@ err:
 
 static void __free_attr_node(attr_cache_t *cache)
 {
-    if(cache != NULL){
-        if(cache->attr_name)
+    if (cache != NULL) {
+        if (cache->attr_name) {
             __cache_free_buff(cache->attr_name);
+        }
 
-        if(cache->attr_value)
+        if (cache->attr_value) {
             __cache_free_buff(cache->attr_value);
+        }
 
         __cache_free_buff((char *)cache);
     }
 }
 
 
-static int __get_attr_cache(dlist_t *attr_head, const char *attr_name, char *attr_value_buff, int buff_size)
+static int __get_attr_cache(dlist_t *attr_head, const char *attr_name,
+                            char *attr_value_buff, int buff_size)
 {
     attr_cache_t *attr_node = NULL;
     char *buff = NULL;
 
     dlist_for_each_entry(attr_head, attr_node, attr_cache_t, list_node) {
-        if(strcmp(attr_node->attr_name, attr_name) == 0){
-            if(buff_size <= strlen(attr_node->attr_value))
+        if (strcmp(attr_node->attr_name, attr_name) == 0) {
+            if (buff_size <= strlen(attr_node->attr_value)) {
                 return SERVICE_BUFFER_INSUFFICENT;
+            }
 
             strncpy(attr_value_buff, attr_node->attr_value, buff_size);
             return SERVICE_RESULT_OK;
@@ -121,13 +130,14 @@ static int __get_attr_cache(dlist_t *attr_head, const char *attr_name, char *att
 }
 
 
-static int __read_attr_cache(dlist_t *attr_head, const char *attr_name, char **attr_value)
+static int __read_attr_cache(dlist_t *attr_head, const char *attr_name,
+                             char **attr_value)
 {
     attr_cache_t *attr_node = NULL;
     char *buff = NULL;
 
     dlist_for_each_entry(attr_head, attr_node, attr_cache_t, list_node) {
-        if(strcmp(attr_node->attr_name, attr_name) == 0){
+        if (strcmp(attr_node->attr_name, attr_name) == 0) {
             buff = os_malloc(strlen(attr_node->attr_value) + 1);
             PTR_RETURN(buff, SERVICE_RESULT_ERR, "pmalloc failed");
 
@@ -142,14 +152,16 @@ static int __read_attr_cache(dlist_t *attr_head, const char *attr_name, char **a
 }
 
 
-static int __update_attr_cache(dlist_t *attr_head, const char *attr_name, const char *attr_value)
+static int __update_attr_cache(dlist_t *attr_head, const char *attr_name,
+                               const char *attr_value)
 {
     attr_cache_t *attr_node = NULL;
     char *buff = NULL;
 
     dlist_for_each_entry(attr_head, attr_node, attr_cache_t, list_node) {
-        if(strcmp(attr_node->attr_name, attr_name) == 0){
-            attr_node->attr_value = __cache_renew_buff(attr_node->attr_value, strlen(attr_value) + 1);
+        if (strcmp(attr_node->attr_name, attr_name) == 0) {
+            attr_node->attr_value = __cache_renew_buff(attr_node->attr_value,
+                                                       strlen(attr_value) + 1);
             strncpy(attr_node->attr_value, attr_value, strlen(attr_value) + 1);
 
             return SERVICE_RESULT_OK;
@@ -157,7 +169,8 @@ static int __update_attr_cache(dlist_t *attr_head, const char *attr_name, const 
     }
 
     attr_node = __new_attr_node(attr_name, attr_value);
-    PTR_RETURN(attr_node, SERVICE_RESULT_ERR, CALL_FUCTION_FAILED, "__new_attr_node")
+    PTR_RETURN(attr_node, SERVICE_RESULT_ERR, CALL_FUCTION_FAILED,
+               "__new_attr_node")
 
     dlist_add_tail(&attr_node->list_node, attr_head);
 
@@ -185,15 +198,18 @@ void __dump_attr_cache(dlist_t *attr_head)
 }
 
 /*读取子设备属性缓存*/
-int devmgr_get_attr_cache(const char *devid_or_uuid, const char *attr_name, char *attr_value_buff, int buff_size)
+int devmgr_get_attr_cache(const char *devid_or_uuid, const char *attr_name,
+                          char *attr_value_buff, int buff_size)
 {
     int ret = SERVICE_RESULT_ERR;
 
     dev_info_t *devinfo = devmgr_get_devinfo(devid_or_uuid);
-    PTR_RETURN(devinfo, SERVICE_RESULT_ERR, CALL_FUCTION_FAILED, "devmgr_get_devinfo");
+    PTR_RETURN(devinfo, SERVICE_RESULT_ERR, CALL_FUCTION_FAILED,
+               "devmgr_get_devinfo");
 
     os_mutex_lock(devinfo->dev_mutex);
-    ret = __get_attr_cache(&devinfo->attr_head, attr_name, attr_value_buff, buff_size);
+    ret = __get_attr_cache(&devinfo->attr_head, attr_name, attr_value_buff,
+                           buff_size);
     os_mutex_unlock(devinfo->dev_mutex);
     devmgr_put_devinfo_ref(devinfo);
 
@@ -202,12 +218,14 @@ int devmgr_get_attr_cache(const char *devid_or_uuid, const char *attr_name, char
 
 
 /*读取子设备属性缓存*/
-int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name, char **attr_value)
+int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name,
+                           char **attr_value)
 {
     int ret = SERVICE_RESULT_ERR;
 
     dev_info_t *devinfo = devmgr_get_devinfo(devid_or_uuid);
-    PTR_RETURN(devinfo, SERVICE_RESULT_ERR, CALL_FUCTION_FAILED, "devmgr_get_devinfo");
+    PTR_RETURN(devinfo, SERVICE_RESULT_ERR, CALL_FUCTION_FAILED,
+               "devmgr_get_devinfo");
 
     os_mutex_lock(devinfo->dev_mutex);
     ret = __read_attr_cache(&devinfo->attr_head, attr_name, attr_value);
@@ -219,7 +237,8 @@ int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name, cha
 
 
 /*更新子设备属性缓存*/
-int devmgr_update_attr_cache(const char *devid_or_uuid, const char *attr_name, const char *attr_value)
+int devmgr_update_attr_cache(const char *devid_or_uuid, const char *attr_name,
+                             const char *attr_value)
 {
     int ret = SERVICE_RESULT_ERR;
 

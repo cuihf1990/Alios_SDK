@@ -70,7 +70,7 @@ static void addsize(k_mm_head *mmhead, size_t size, size_t req_size)
         mmhead->maxused_size = mmhead->used_size;
     }
 
-    index = sizetoindex(req_size-1);
+    index = sizetoindex(req_size - 1);
     if (index > MAX_MM_BIT) {
         index = MAX_MM_BIT;
     }
@@ -110,7 +110,7 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
       2.  and also ast least have 1k for user alloced
     */
     orig_addr = addr;
-    addr = (void*) MM_ALIGN_UP((size_t)addr);
+    addr = (void *) MM_ALIGN_UP((size_t)addr);
     len -= (addr - orig_addr);
     len = MM_ALIGN_DOWN(len);
 
@@ -119,7 +119,7 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     }
 
     if ( !len || len < MIN_FREE_MEMORY_SIZE + DEF_TOTAL_FIXEDBLK_SIZE
-        || len > MAX_MM_SIZE) {
+         || len > MAX_MM_SIZE) {
         return YUNOS_MM_POOL_SIZE_ERR;
     }
 
@@ -737,7 +737,7 @@ void *yunos_mm_alloc(size_t size)
 {
     void *tmp;
 
-    if(size == 0){
+    if (size == 0) {
         printf("WARNING, malloc size = 0\r\n");
         return NULL;
     }

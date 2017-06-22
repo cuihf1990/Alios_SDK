@@ -314,15 +314,17 @@ void *platform_tcp_client_connect(_IN_ pplatform_netaddr_t netaddr)
 
     do {
         int ret = connect(sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
-        if (ret == 0)
+        if (ret == 0) {
             break;
+        }
 
-        if (errno == EINTR)
+        if (errno == EINTR) {
             continue;
+        }
 
         platform_tcp_close((void *)sock);
         return PLATFORM_INVALID_FD;
-    } while(1);
+    } while (1);
 
     return (void *)sock;
 }

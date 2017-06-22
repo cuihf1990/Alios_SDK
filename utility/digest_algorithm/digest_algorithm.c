@@ -66,29 +66,29 @@ int digest_md5_file(const char *path, unsigned char *md5)
     int bytes;
     unsigned char data[512];
     unsigned char digest[16];
-    int i,fd;
+    int i, fd;
 
     fd = yos_open(path, O_RDONLY);
     if (fd < 0) {
-	return -1;
+        return -1;
     }
 
     MD5_CTX *ctx = (MD5_CTX *) yos_malloc(sizeof(MD5_CTX));
     if (NULL == ctx) {
         return -1;
     }
-    
+
     MD5_Init(ctx);
-    
+
     do {
-	bytes = yos_read(fd, data, sizeof(data));
-	if (bytes > 0) {
-    		MD5_Update(ctx, data, bytes);
-    	}
+        bytes = yos_read(fd, data, sizeof(data));
+        if (bytes > 0) {
+            MD5_Update(ctx, data, bytes);
+        }
     } while (bytes == sizeof(data));
 
     MD5_Final(digest, ctx);
-	
+
     for (i = 0; i < 16; i++) {
         sprintf((char *)&md5[i * 2], "%02x", digest[i]);
     }

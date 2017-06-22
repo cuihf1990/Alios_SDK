@@ -185,21 +185,23 @@ enum SERVICE_CODE {
 typedef struct alink_data {
     char *method;
     char *data;
-}alink_data_t;
+} alink_data_t;
 #define ALINK_CODE_ERROR_SIGN   (3074)
 
 extern void *alink_cb_func[ALINK_CB_MAX_NUM];
 
 int alink_unregister_service(const char *name);
 
-int get_device_profile_file(uint8_t dev_type, uint32_t model_id, char file_name[], int max_name_length);
+int get_device_profile_file(uint8_t dev_type, uint32_t model_id,
+                            char file_name[], int max_name_length);
 int fmgr_get_global_profile(char file_name[], int max_name_length);
 int get_kv(const char *key, void *value_buf, *int buf_len);
-int set_kv_in_flash(const char *key, const void *value_buf, int buf_len, int flag);
+int set_kv_in_flash(const char *key, const void *value_buf, int buf_len,
+                    int flag);
 int remove_kv(const char *key);
 int alink_register_attribute(const char *name,
-        void *get_cb,
-        void *set_cb);
+                             void *get_cb,
+                             void *set_cb);
 int alink_register_service(const char *name, void *exec_cb);
 #ifdef __cplusplus
 }

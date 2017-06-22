@@ -534,7 +534,8 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
 
     if (tlv_types_length) {
         request_tlvs = (mm_tlv_request_tlv_t *)data;
-        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST, tlv_types_length);
+        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST,
+                               tlv_types_length);
         data += sizeof(mm_tlv_request_tlv_t);
         data[0] = TYPE_TARGET_UEID;
         data += tlv_types_length;
@@ -615,7 +616,7 @@ ur_error_t handle_link_request(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
     tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_TLV_REQUEST);
+                                                           TYPE_TLV_REQUEST);
 
     if (tlvs_request) {
         tlvs = (uint8_t *)tlvs_request + sizeof(mm_tlv_t);
@@ -659,7 +660,7 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     }
 
     tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_TLV_REQUEST);
+                                                           TYPE_TLV_REQUEST);
     if (tlvs_request) {
         tlvs = (uint8_t *)tlvs_request + sizeof(mm_tlv_t);
         tlvs_length = tlvs_request->base.length;

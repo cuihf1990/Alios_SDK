@@ -128,8 +128,8 @@ typedef int (*ALINK_ATTR_SET_CB)(char *json_in);
  * @retval 0 on success, otherwise -1 will return
  */
 int alink_register_attribute(const char *name,
-        ALINK_ATTR_GET_CB get_cb,
-        ALINK_ATTR_SET_CB set_cb);
+                             ALINK_ATTR_GET_CB get_cb,
+                             ALINK_ATTR_SET_CB set_cb);
 /***
  * @brief device service execute callback function type definition
  * @param[in] json_in: input parameters, end by '\0'
@@ -138,7 +138,7 @@ int alink_register_attribute(const char *name,
  * @retval 0 on success, otherwise -1 will return
  */
 typedef int (*ALINK_SERVICE_EXECUTE_CB)(char *json_in,
-        char *json_out_buf, unsigned int buf_sz);
+                                        char *json_out_buf, unsigned int buf_sz);
 
 /***
  * @brief register device's service

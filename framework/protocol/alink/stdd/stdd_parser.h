@@ -38,35 +38,35 @@ extern "C"
 {
 #endif
 
-typedef struct name_mapping_s{
+typedef struct name_mapping_s {
     struct list_head list_node;
     char user_name[32];
     char std_name[32];
-}name_mapping_t;
+} name_mapping_t;
 
 
-typedef struct endpoint_profile_s{
+typedef struct endpoint_profile_s {
     struct list_head list_node;
     uint8_t endpoint_id;
     dlist_t attr_head;
     dlist_t cmd_head;
-}endpoint_profile_t;
+} endpoint_profile_t;
 
 
-typedef struct dev_profile_s{
+typedef struct dev_profile_s {
     struct list_head list_node;
     uint32_t model_id;
     char *profile_name;//profile文件名称
     char *attr_set; //全部属性名称，格式: ["OnOff","MaxPower"]
     char *cmd_set;  //全部命令名称，格式: ["moveHue"]
     struct list_head endpoint_head;
-}dev_profile_t;
+} dev_profile_t;
 
 
-typedef struct data_list_s{
+typedef struct data_list_s {
     struct list_head list_node;
     void *data;
-}data_list_t;
+} data_list_t;
 
 int stdd_parse_attr_profile(char *profile_str, dlist_t *profile_head);
 

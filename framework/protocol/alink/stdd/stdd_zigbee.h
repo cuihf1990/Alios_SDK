@@ -33,17 +33,21 @@ extern "C"
 {
 #endif
 
-int stdd_zbnet_report_attrs(unsigned char ieee_addr[8], unsigned char endpoint_id,
-    const char *attr_name[], const char *attr_value[]);
+int stdd_zbnet_report_attrs(unsigned char ieee_addr[8],
+                            unsigned char endpoint_id,
+                            const char *attr_name[], const char *attr_value[]);
 
 int stdd_zbnet_get_attr(const char *devid_or_uuid, const char *attr_name);
 
-int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name, const char *attr_value);
+int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name,
+                        const char *attr_value);
 
-int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name, const char *rpc_args);
+int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name,
+                        const char *rpc_args);
 
-int stdd_zbnet_report_event(unsigned char ieee_addr[8], unsigned char endpoint_id,
-        const char *event_name, const char *event_args);
+int stdd_zbnet_report_event(unsigned char ieee_addr[8],
+                            unsigned char endpoint_id,
+                            const char *event_name, const char *event_args);
 
 #if defined(__cplusplus) /* If this is a C++ compiler, use C linkage */
 }

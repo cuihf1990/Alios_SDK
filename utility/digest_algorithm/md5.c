@@ -125,7 +125,7 @@ EXP_FUNC void STDCALL MD5_Init(MD5_CTX *ctx)
  * Accepts an array of octets as the next portion of the message.
  */
 EXP_FUNC void STDCALL MD5_Update(MD5_CTX *ctx, const uint8_t *msg,
-                                        int len)
+                                 int len)
 {
     uint32_t x;
     int i, partLen;

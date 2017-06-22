@@ -181,7 +181,8 @@ ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid);
 
 void       umesh_mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length);
 void       umesh_mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
-mm_tv_t    *umesh_mm_get_tv(const uint8_t *data, const uint16_t length, uint8_t type);
+mm_tv_t    *umesh_mm_get_tv(const uint8_t *data, const uint16_t length,
+                            uint8_t type);
 ur_error_t umesh_mm_handle_frame_received(message_t *message);
 
 void become_leader(void);

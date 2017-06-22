@@ -36,8 +36,9 @@ static int trap_open(const char *path, int flags)
     return E_VFS_K_ERR;
 #else
     int fd = open(path, flags);
-    if (fd < 0)
+    if (fd < 0) {
         fd = open(path, O_RDWR | O_CREAT, 0644);
+    }
     return fd;
 #endif
 }
@@ -323,17 +324,20 @@ struct poll_arg {
 static void setup_fd(int fd)
 {
     int f = fcntl(fd, F_GETFL) | O_ASYNC;
-    if (fcntl(fd, F_SETFL, f) < 0)
-       perror("fcntl setup");
-    if (fcntl(fd, F_SETOWN, gettid()) < 0)
-       perror("fcntl setown");
+    if (fcntl(fd, F_SETFL, f) < 0) {
+        perror("fcntl setup");
+    }
+    if (fcntl(fd, F_SETOWN, gettid()) < 0) {
+        perror("fcntl setown");
+    }
 }
 
 static void teardown_fd(int fd)
 {
     int f = fcntl(fd, F_GETFL) & ~O_ASYNC;
-    if (fcntl(fd, F_SETFL, f) < 0)
-       perror("fcntl teardown");
+    if (fcntl(fd, F_SETFL, f) < 0) {
+        perror("fcntl teardown");
+    }
 }
 
 static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
@@ -344,13 +348,15 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
 
     /* check if already data available */
     ret = select(maxfd + 1, rfds, NULL, NULL, &tv);
-    if (ret > 0)
+    if (ret > 0) {
         return ret;
+    }
 
     timeout = timeout >= 0 ? MS2TICK(timeout) : YUNOS_WAIT_FOREVER;
     ret = yunos_sem_take(&parg->sem, timeout);
-    if (ret != YUNOS_SUCCESS)
+    if (ret != YUNOS_SUCCESS) {
         return 0;
+    }
 
     *rfds = saved_fds;
     ret = select(maxfd + 1, rfds, NULL, NULL, &tv);
@@ -510,8 +516,9 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout)
     int nset = 0;
     struct poll_arg parg;
 
-    if (init_parg(&parg) < 0)
+    if (init_parg(&parg) < 0) {
         return -1;
+    }
 
     FD_ZERO(&rfds);
     ret = pre_poll(fds, nfds, &rfds, &parg);

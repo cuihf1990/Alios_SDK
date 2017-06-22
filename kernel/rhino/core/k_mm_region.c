@@ -728,7 +728,7 @@ void *yunos_mm_alloc(size_t size)
     kstat_t err      = YUNOS_SUCCESS;
 
     size_t  alloctor = 0;
-    if(size == 0){
+    if (size == 0) {
         printf("WARNING, malloc size = 0\r\n");
         return NULL;
     }

@@ -27,9 +27,8 @@
 
 *******************************************************************************/
 
-typedef struct
-{
-  uint8_t crc;
+typedef struct {
+    uint8_t crc;
 } CRC8_Context;
 
 /**
@@ -82,7 +81,7 @@ void CRC8_Final( CRC8_Context *inContext, uint8_t *outResult );
   */
 
 /**
- * @brief             caculate the CRC16 result for each byte 
+ * @brief             caculate the CRC16 result for each byte
  *
  * @param crcIn       The context to save CRC16 result.
  * @param byte        each byte of input data.
@@ -91,9 +90,8 @@ void CRC8_Final( CRC8_Context *inContext, uint8_t *outResult );
  */
 
 
-typedef struct
-{
-  uint16_t crc;
+typedef struct {
+    uint16_t crc;
 } CRC16_Context;
 
 /**
@@ -126,7 +124,7 @@ void CRC16_Update( CRC16_Context *inContext, const void *inSrc, size_t inLen );
  *
  * @retval            none
  */
-void CRC16_Final( CRC16_Context*inContext, uint16_t *outResult );
+void CRC16_Final( CRC16_Context *inContext, uint16_t *outResult );
 
 /**
   * @}

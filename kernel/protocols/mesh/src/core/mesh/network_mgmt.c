@@ -58,7 +58,8 @@ static void handle_discovery_timer(void *args)
     }
 
     if (hal->discovery_times < DISCOVERY_RETRY_TIMES) {
-        umesh_mm_set_channel(network, hal->channel_list.channels[hal->discovery_channel]);
+        umesh_mm_set_channel(network,
+                             hal->channel_list.channels[hal->discovery_channel]);
         send_discovery_request(network);
         hal->discovery_timer = ur_start_timer(discovery_interval,
                                               handle_discovery_timer, network);
@@ -192,7 +193,7 @@ ur_error_t handle_discovery_request(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
     if ((version = (mm_version_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                TYPE_VERSION)) == NULL) {
+                                                      TYPE_VERSION)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -200,7 +201,8 @@ ur_error_t handle_discovery_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    if ((mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MODE)) == NULL) {
+    if ((mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                TYPE_MODE)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -211,7 +213,8 @@ ur_error_t handle_discovery_request(message_t *message)
     if (((umesh_mm_get_mode() & MODE_SUPER) && (mode->mode & MODE_SUPER)) ||
         ((umesh_mm_get_mode() & MODE_SUPER) == 0 && (mode->mode & MODE_SUPER) == 0)) {
         network = get_default_network_context();
-    } else if ((umesh_mm_get_mode() & MODE_SUPER) && (mode->mode & MODE_SUPER) == 0) {
+    } else if ((umesh_mm_get_mode() & MODE_SUPER) &&
+               (mode->mode & MODE_SUPER) == 0) {
         network = get_sub_network_context(network->hal);
     }
 

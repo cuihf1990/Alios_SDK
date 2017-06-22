@@ -106,8 +106,10 @@ int id2_sign(const uint8_t *in, uint32_t in_len,
         return -1;
     }
 
-    if ((sign >= in && sign < in + in_len) || (in >= sign && in < sign + *sign_len)) {
-        LOGE(TAG_ID2, "[%s]: sign buffer should not overlap with in buffer.\n", __func__);
+    if ((sign >= in && sign < in + in_len) || (in >= sign &&
+                                               in < sign + *sign_len)) {
+        LOGE(TAG_ID2, "[%s]: sign buffer should not overlap with in buffer.\n",
+             __func__);
         return -1;
     }
 
@@ -198,7 +200,8 @@ int id2_encrypt(uint8_t *in, uint32_t in_len,
     }
 
     if ((out >= in && out < in + in_len) || (in >= out && in < out + *out_len)) {
-        LOGE(TAG_ID2, "[%s]: out buffer should not overlap with in buffer.\n", __func__);
+        LOGE(TAG_ID2, "[%s]: out buffer should not overlap with in buffer.\n",
+             __func__);
         return -1;
     }
 
@@ -283,7 +286,8 @@ int id2_decrypt(uint8_t *in, uint32_t in_len,
     }
 
     if ((out >= in && out < in + in_len) || (in >= out && in < out + *out_len)) {
-        LOGE(TAG_ID2, "[%s]: out buffer should not overlap with in buffer.\n", __func__);
+        LOGE(TAG_ID2, "[%s]: out buffer should not overlap with in buffer.\n",
+             __func__);
         return -1;
     }
 

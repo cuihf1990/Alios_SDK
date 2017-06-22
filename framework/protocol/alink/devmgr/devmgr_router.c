@@ -29,28 +29,32 @@ static int router_register_device(dev_info_t *devinfo)
 
     alink_data_t data = {METHOD_DEVICE_REGISTER_SUB_WIFI, tx_buff};
 
-    if(sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff), PARAMS_DEVICE_REGISTER_SUB_WIFI_FMT,
-        devinfo->router_base.name,
-        devinfo->router_base.model,
-        devinfo->router_base.ostype,
-        devinfo->router_base.category,
-        devinfo->dev_base.u.ether_mac,
-        devinfo->router_base.manufacturer)){
+    if (sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff),
+                                    PARAMS_DEVICE_REGISTER_SUB_WIFI_FMT,
+                                    devinfo->router_base.name,
+                                    devinfo->router_base.model,
+                                    devinfo->router_base.ostype,
+                                    devinfo->router_base.category,
+                                    devinfo->dev_base.u.ether_mac,
+                                    devinfo->router_base.manufacturer)) {
         return SERVICE_RESULT_ERR;
     }
 
     log_debug("send:%s", tx_buff);
 
-    ret = ((service_t*)sm_get_service("accs"))->get((void*)&data, sizeof(data), result, sizeof(result));
-    if(SERVICE_RESULT_OK == ret){
+    ret = ((service_t *)sm_get_service("accs"))->get((void *)&data, sizeof(data),
+                                                     result, sizeof(result));
+    if (SERVICE_RESULT_OK == ret) {
         int len = 0;
-        char *json_str = json_get_value_by_name(result, strlen(result), JSON_KEY_UUID, &len, NULL);
-        if(NULL == json_str){
+        char *json_str = json_get_value_by_name(result, strlen(result), JSON_KEY_UUID,
+                                                &len, NULL);
+        if (NULL == json_str) {
             log_error("get uuid fail, result data = %s", result);
             return SERVICE_RESULT_ERR;
         }
 
-        strncpy(devinfo->dev_base.uuid, json_str, sizeof(devinfo->dev_base.uuid) > len?len:sizeof(devinfo->dev_base.uuid));
+        strncpy(devinfo->dev_base.uuid, json_str,
+                sizeof(devinfo->dev_base.uuid) > len ? len : sizeof(devinfo->dev_base.uuid));
 
         log_info("register device success, uuid:%s", devinfo->dev_base.uuid);
 
@@ -68,22 +72,26 @@ static int router_login_device(dev_info_t *devinfo)
 
     alink_data_t data = {METHOD_DEVICE_ATTACH_SUB_WIFI, tx_buff};
 
-    if(devinfo->dev_base.uuid[0] == '\0')
+    if (devinfo->dev_base.uuid[0] == '\0') {
         return SERVICE_RESULT_ERR;
+    }
 
-    if(sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff), PARAMS_DEVICE_ATTACH_SUB_WIFI_FMT,
-        config_get_main_uuid(),
-        devinfo->dev_base.uuid)){
+    if (sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff),
+                                    PARAMS_DEVICE_ATTACH_SUB_WIFI_FMT,
+                                    config_get_main_uuid(),
+                                    devinfo->dev_base.uuid)) {
         return SERVICE_RESULT_ERR;
     }
 
     log_debug("send:%s", tx_buff);
 
-    ret = ((service_t*)sm_get_service("accs"))->get((void*)&data, sizeof(data), result, sizeof(result));
-    if(SERVICE_RESULT_OK == ret){
+    ret = ((service_t *)sm_get_service("accs"))->get((void *)&data, sizeof(data),
+                                                     result, sizeof(result));
+    if (SERVICE_RESULT_OK == ret) {
         int len = 0;
-        char *json_str = json_get_value_by_name(result, strlen(result), JSON_KEY_CODE, &len, NULL);
-        if(NULL == json_str){
+        char *json_str = json_get_value_by_name(result, strlen(result), JSON_KEY_CODE,
+                                                &len, NULL);
+        if (NULL == json_str) {
             log_error("get rsp code fail, result data = %s", result);
             return SERVICE_RESULT_ERR;
         }
@@ -103,22 +111,26 @@ static int router_logout_device(dev_info_t *devinfo)
 
     alink_data_t data = {METHOD_DEVICE_DETACH_SUB_WIFI, tx_buff};
 
-    if(devinfo->dev_base.uuid[0] == '\0')
+    if (devinfo->dev_base.uuid[0] == '\0') {
         return SERVICE_RESULT_ERR;
+    }
 
-    if(sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff), PARAMS_DEVICE_DETACH_SUB_WIFI_FMT,
-        config_get_main_uuid(),
-        devinfo->dev_base.uuid)){
+    if (sizeof(tx_buff) == snprintf(tx_buff, sizeof(tx_buff),
+                                    PARAMS_DEVICE_DETACH_SUB_WIFI_FMT,
+                                    config_get_main_uuid(),
+                                    devinfo->dev_base.uuid)) {
         return SERVICE_RESULT_ERR;
     }
 
     log_debug("send:%s", tx_buff);
 
-    ret = ((service_t*)sm_get_service("accs"))->get((void*)&data, sizeof(data), result, sizeof(result));
-    if(SERVICE_RESULT_OK == ret){
+    ret = ((service_t *)sm_get_service("accs"))->get((void *)&data, sizeof(data),
+                                                     result, sizeof(result));
+    if (SERVICE_RESULT_OK == ret) {
         int len = 0;
-        char *json_str = json_get_value_by_name(result, strlen(result), JSON_KEY_CODE, &len, NULL);
-        if(NULL == json_str){
+        char *json_str = json_get_value_by_name(result, strlen(result), JSON_KEY_CODE,
+                                                &len, NULL);
+        if (NULL == json_str) {
             log_error("get rsp code fail, result data = %s", result);
             return SERVICE_RESULT_ERR;
         }
@@ -134,16 +146,16 @@ int router_network_down_event_handler(dev_info_t *devinfo)
 {
     int ret = SERVICE_RESULT_OK;
 
-    switch(devinfo->cloud_state)
-    {
+    switch (devinfo->cloud_state) {
         case DEVICE_STATE_LOGOUTED:
             //nothing todo
             break;
         case DEVICE_STATE_REGISTERED:
         case DEVICE_STATE_LOGINED:
             ret = router_logout_device(devinfo);
-            if(ret != SERVICE_RESULT_OK)
+            if (ret != SERVICE_RESULT_OK) {
                 break;
+            }
             devinfo->cloud_state = DEVICE_STATE_LOGOUTED;
 
             break;
@@ -159,20 +171,21 @@ int router_network_up_event_handler(dev_info_t *devinfo)
 {
     int ret = SERVICE_RESULT_OK;
 
-    switch(devinfo->cloud_state)
-    {
+    switch (devinfo->cloud_state) {
         case DEVICE_STATE_LOGOUTED:
         case DEVICE_STATE_INITIAL:
             ret = router_register_device(devinfo);
-            if(ret != SERVICE_RESULT_OK)
+            if (ret != SERVICE_RESULT_OK) {
                 goto ERR;
+            }
             devinfo->cloud_state = DEVICE_STATE_REGISTERED;
 
         case DEVICE_STATE_REGISTERED:
 
             ret = router_login_device(devinfo);
-            if(ret != SERVICE_RESULT_OK)
+            if (ret != SERVICE_RESULT_OK) {
                 goto ERR;
+            }
             devinfo->cloud_state = DEVICE_STATE_LOGINED;
 
             break;
@@ -192,18 +205,15 @@ int router_link_state_event_handler(dev_info_t *devinfo, link_state_t state)
     int ret = SERVICE_RESULT_ERR;
 
     devinfo->link_state = state;
-    if(LINK_STATE_ONLINE == state)
-    {
+    if (LINK_STATE_ONLINE == state) {
         ret = router_network_up_event_handler(devinfo);
         RET_LOG(ret, CALL_FUCTION_FAILED, "devmgr_network_up_event_handler");
-    }
-    else if(LINK_STATE_OFFLINE == state)
-    {
+    } else if (LINK_STATE_OFFLINE == state) {
         ret = router_network_down_event_handler(devinfo);
         RET_LOG(ret, CALL_FUCTION_FAILED, "devmgr_network_down_event_handler");
-    }
-    else
+    } else {
         log_error("unknown link state, state:%d", state);
+    }
 
     return ret;
 }
@@ -216,13 +226,12 @@ static int router_network_event_cb(network_event_t event)
     dlist_t *next = NULL;
 
     os_mutex_lock(devlist_lock);
-    dlist_for_each_entry_safe(&dev_head, next, pos, dev_info_t, list_node)
-    {
-        if(pos->dev_base.dev_type != DEV_TYPE_WIFI)
+    dlist_for_each_entry_safe(&dev_head, next, pos, dev_info_t, list_node) {
+        if (pos->dev_base.dev_type != DEV_TYPE_WIFI) {
             continue;
+        }
 
-        switch(event)
-        {
+        switch (event) {
             case NETWORK_EVENT_DOWN: //network disconnected
                 ret = router_network_down_event_handler(pos);
                 break;
@@ -238,14 +247,15 @@ static int router_network_event_cb(network_event_t event)
     return ret;
 }
 
-static int devmgr_listener(int type, void *data, int dlen, void *result, int *rlen) {
-    if(type == SERVICE_EVENT) {
-        int st = *((int*)data);
+static int devmgr_listener(int type, void *data, int dlen, void *result,
+                           int *rlen)
+{
+    if (type == SERVICE_EVENT) {
+        int st = *((int *)data);
         log_trace("DEVMGR recv %s, %s", sm_code2string(type), sm_code2string(st));
         if (st == SERVICE_STATE_READY) {
             router_network_event_cb(NETWORK_EVENT_UP);
-        }
-        else if(st == SERVICE_STATE_STOP || st == SERVICE_STATE_INIT){
+        } else if (st == SERVICE_STATE_STOP || st == SERVICE_STATE_INIT) {
             router_network_event_cb(NETWORK_EVENT_DOWN);
         }
     }

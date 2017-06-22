@@ -48,7 +48,8 @@ ur_error_t master_key_deinit(void)
 {
     master_key_method_t *method;
 
-    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t, next) {
+    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t,
+                         next) {
         slist_del(&method->next, g_master_key_context.methods);
     }
 
@@ -61,7 +62,8 @@ ur_error_t master_key_request_start(void)
     uint8_t index = PINCODE_METHOD;
     master_key_method_t *method = NULL;
 
-    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t, next) {
+    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t,
+                         next) {
         if (index == g_master_key_context.method_index) {
             break;
         }
@@ -81,7 +83,8 @@ ur_error_t master_key_request_stop(void)
     uint8_t index = PINCODE_METHOD;
     master_key_method_t *method = NULL;
 
-    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t, next) {
+    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t,
+                         next) {
         if (index == g_master_key_context.method_index) {
             break;
         }

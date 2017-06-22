@@ -42,7 +42,7 @@ typedef struct profile_info {
     uint32_t model_id;
     char filename[STR_LONG_LEN];
     char md5[MD5_LEN];
-}profile_info_t;
+} profile_info_t;
 
 typedef struct pfnode {
     dlist_t url_node; /* url_list */
@@ -52,7 +52,7 @@ typedef struct pfnode {
 } pfnode_t;
 
 int get_device_profile_file(uint8_t dev_type, uint32_t model_id,
-        char *file_name, int max_name_length);
+                            char *file_name, int max_name_length);
 int get_global_profile(char *file_name, int max_name_length);
 
 int attrs_profile_init(void);

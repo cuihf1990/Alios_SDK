@@ -331,7 +331,8 @@ void process_autotest(int argc, char *argv[])
     cmd->type = AUTOTEST_REQUEST;
     cmd->seq = ur_swap16(g_cl_state.autotest_seq++);
     src = ur_mesh_get_ucast_addr();
-    memcpy(payload + sizeof(autotest_cmd_t), (uint8_t *)src->addr.m8, sizeof(ur_ip6_addr_t));
+    memcpy(payload + sizeof(autotest_cmd_t), (uint8_t *)src->addr.m8,
+           sizeof(ur_ip6_addr_t));
     ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
                &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
 
@@ -1125,7 +1126,7 @@ void ur_cli_input_args(char **argv, uint16_t argc)
     char **options = NULL;
 
     if (argc < 2) {
-         return;
+        return;
     }
 
     if (ur_mesh_is_initialized() == false && strcmp(argv[1], "init") != 0) {
@@ -1144,7 +1145,8 @@ void ur_cli_input_args(char **argv, uint16_t argc)
     }
 }
 
-static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                          char **argv)
 {
     ur_cli_input_args(argv, argc);
 }
@@ -1198,8 +1200,9 @@ static void mesh_worker(void *arg)
 {
     int maxfd = g_cl_state.autotest_udp_socket;
 
-    if (g_cl_state.icmp_socket > maxfd)
+    if (g_cl_state.icmp_socket > maxfd) {
         maxfd = g_cl_state.icmp_socket;
+    }
 
     while (1) {
         fd_set rfds;
@@ -1209,10 +1212,12 @@ static void mesh_worker(void *arg)
 
         lwip_select(maxfd + 1, &rfds, NULL, NULL, NULL);
 
-        if (FD_ISSET(g_cl_state.icmp_socket, &rfds))
+        if (FD_ISSET(g_cl_state.icmp_socket, &rfds)) {
             ur_read_sock(g_cl_state.icmp_socket, cli_handle_echo_response);
-        if (FD_ISSET(g_cl_state.autotest_udp_socket, &rfds))
+        }
+        if (FD_ISSET(g_cl_state.autotest_udp_socket, &rfds)) {
             ur_read_sock(g_cl_state.autotest_udp_socket, handle_udp_autotest);
+        }
     }
 }
 #endif

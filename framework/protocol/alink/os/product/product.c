@@ -41,7 +41,8 @@ char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 
 char *product_get_version(char ver_str[PRODUCT_VERSION_LEN])
 {
-    return strncpy(ver_str, (const char *)get_yos_os_version(), PRODUCT_VERSION_LEN);
+    return strncpy(ver_str, (const char *)get_yos_os_version(),
+                   PRODUCT_VERSION_LEN);
 }
 
 char *product_get_model(char model_str[PRODUCT_MODEL_LEN])
@@ -76,8 +77,11 @@ char *product_get_sn(char sn_str[PRODUCT_SN_LEN])
 
     os_wifi_get_mac_str(sn_str);
     while (*p != '\0' && i < (PRODUCT_SN_LEN - 1)) {
-        if (*p == ':') *p = '0';
-        p++; i++;
+        if (*p == ':') {
+            *p = '0';
+        }
+        p++;
+        i++;
     }
 
     return sn_str;

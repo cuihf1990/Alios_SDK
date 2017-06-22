@@ -39,5 +39,6 @@ int yos_cloud_report(const char *method,
                      void *arg);
 
 void yos_cloud_trigger(int cb_type, const char *json_buffer);
-void yos_cloud_register_backend(int (*report)(const char *method, const char *json_buffer));
+void yos_cloud_register_backend(int (*report)(const char *method,
+                                              const char *json_buffer));
 #endif

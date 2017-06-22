@@ -498,11 +498,11 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
     if (next_node) {
         error = hal_umesh_send_ucast_request(hal->module, &hal->frame,
-                                               &next_node->mac,
-                                               handle_sent, hal);
+                                             &next_node->mac,
+                                             handle_sent, hal);
     } else {
         error = hal_umesh_send_bcast_request(network->hal->module, &hal->frame,
-                                               handle_sent, hal);
+                                             handle_sent, hal);
     }
 
     if (error != UR_ERROR_NONE) {
@@ -732,7 +732,7 @@ ur_error_t mf_send_message(message_t *message)
 
     info->flags |= INSERT_MESH_HEADER;
     set_dest_encrypt_flag(info);
-    if(info->type == MESH_FRAME_TYPE_DATA) {
+    if (info->type == MESH_FRAME_TYPE_DATA) {
         //info->flags |= ENABLE_COMPRESS_FLAG;
     }
 
@@ -829,7 +829,8 @@ static bool proxy_check(message_t *message)
 
     if (is_bcast_sid(&info->src) ||
         is_same_mainnet(info->src.netid, umesh_mm_get_meshnetid(network)) == false ||
-        (umesh_mm_get_seclevel() > SEC_LEVEL_0 && (info->flags & ENCRYPT_ENABLE_FLAG) == 0)) {
+        (umesh_mm_get_seclevel() > SEC_LEVEL_0 &&
+         (info->flags & ENCRYPT_ENABLE_FLAG) == 0)) {
         if (info->type == MESH_FRAME_TYPE_DATA) {
             return false;
         }

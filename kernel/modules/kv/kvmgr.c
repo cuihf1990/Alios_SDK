@@ -66,7 +66,7 @@ static void *__print_kv_inflash_cb(void *key, void *val, void *extra)
     item = *((kv_item_t **)val);
     p = item->val;
     *(p + item->len_val) = '\0';
-    LOGI(MODULE_NAME_KV, "%s = %s",item->key, item->val);
+    LOGI(MODULE_NAME_KV, "%s = %s", item->key, item->val);
     return NULL;
 }
 
@@ -78,16 +78,19 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
     char *buffer = NULL;
 
     if (strcmp(rtype, "set") == 0) {
-        if (argc != 4)
+        if (argc != 4) {
             return ;
+        }
         ret = yos_kv_set(argv[2], argv[3], strlen(argv[3]), 1);
-        if (ret != 0)
+        if (ret != 0) {
             LOGW(MODULE_NAME_KV, "cli set kv failed");
-        else
+        } else {
             LOGD(MODULE_NAME_KV, "cli set kv success");
+        }
     } else if (strcmp(rtype, "get") == 0) {
-        if (argc != 3)
+        if (argc != 3) {
             return ;
+        }
         buffer = yos_malloc(KV_BUFFER_SIZE);
         if (!buffer) {
             LOGW(MODULE_NAME_KV, "cli get kv failed");
@@ -98,23 +101,27 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         int len = KV_BUFFER_SIZE;
 
         ret = yos_kv_get(argv[2], buffer, &len);
-        if (ret != 0)
+        if (ret != 0) {
             LOGI(MODULE_NAME_KV, "cli: no paired kv");
-        else
+        } else {
             LOGD(MODULE_NAME_KV, "value is %s", buffer);
+        }
 
-        if (buffer)
+        if (buffer) {
             yos_free(buffer);
+        }
     } else if (strcmp(rtype, "del") == 0) {
-        if (argc != 3)
+        if (argc != 3) {
             return;
+        }
         ret = yos_kv_del(argv[2]);
-        if (ret != 0)
+        if (ret != 0) {
             LOGD(MODULE_NAME_KV, "cli kv del failed");
-        else
+        } else {
             LOGW(MODULE_NAME_KV, "cli kv del success");
+        }
     } else if (strcmp(rtype, "list") == 0) {
-        ht_iterator_lockless(g_ht,__print_kv_inflash_cb, NULL);
+        ht_iterator_lockless(g_ht, __print_kv_inflash_cb, NULL);
     }
     return;
 }
@@ -214,7 +221,7 @@ static int load_kvfile(const char *file, char *buffer, int buffer_len)
     char *kv_header, *p;
 
     kv_header = (char *)yos_malloc(KV_HEADER_SIZE);
-    if(!kv_header) {
+    if (!kv_header) {
         goto exit;
     }
 

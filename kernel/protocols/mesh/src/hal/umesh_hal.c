@@ -96,8 +96,8 @@ int hal_umesh_disable(ur_mesh_hal_module_t *m)
 }
 
 int hal_umesh_send_ucast_request(ur_mesh_hal_module_t *m,
-                                   frame_t *frame, mac_address_t *dest,
-                                   ur_mesh_handle_sent_ucast_t sent, void *context)
+                                 frame_t *frame, mac_address_t *dest,
+                                 ur_mesh_handle_sent_ucast_t sent, void *context)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
@@ -111,8 +111,8 @@ int hal_umesh_send_ucast_request(ur_mesh_hal_module_t *m,
 }
 
 int hal_umesh_send_bcast_request(ur_mesh_hal_module_t *m,
-                                   frame_t *frame,
-                                   ur_mesh_handle_sent_bcast_t sent, void *context)
+                                 frame_t *frame,
+                                 ur_mesh_handle_sent_bcast_t sent, void *context)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
@@ -126,7 +126,7 @@ int hal_umesh_send_bcast_request(ur_mesh_hal_module_t *m,
 }
 
 int hal_umesh_register_receiver(ur_mesh_hal_module_t *m,
-                                  ur_mesh_handle_received_frame_t received, void *context)
+                                ur_mesh_handle_received_frame_t received, void *context)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
@@ -140,8 +140,8 @@ int hal_umesh_register_receiver(ur_mesh_hal_module_t *m,
 }
 
 int hal_umesh_start_beacons(ur_mesh_hal_module_t *m,
-                              frame_t *data, mac_address_t *dest,
-                              uint16_t max_interval)
+                            frame_t *data, mac_address_t *dest,
+                            uint16_t max_interval)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
@@ -246,7 +246,7 @@ int hal_umesh_get_bcast_channel(ur_mesh_hal_module_t *m)
 }
 
 int hal_umesh_get_bcast_chnlist(ur_mesh_hal_module_t *m,
-                                  const uint8_t **chnlist)
+                                const uint8_t **chnlist)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
@@ -286,7 +286,7 @@ int hal_umesh_get_ucast_channel(ur_mesh_hal_module_t *m)
 }
 
 int hal_umesh_get_ucast_chnlist(ur_mesh_hal_module_t *m,
-                                  const uint8_t **chnlist)
+                                const uint8_t **chnlist)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
@@ -352,7 +352,7 @@ void hal_umesh_get_extnetid(ur_mesh_hal_module_t *m,
 }
 
 int hal_umesh_set_mac_address(ur_mesh_hal_module_t *m,
-                                const mac_address_t *addr)
+                              const mac_address_t *addr)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
@@ -379,7 +379,7 @@ const mac_address_t *hal_umesh_get_mac_address(ur_mesh_hal_module_t *m)
 }
 
 int hal_umesh_set_key(struct ur_mesh_hal_module_s *m,
-                        uint8_t index, uint8_t *key, uint8_t length)
+                      uint8_t index, uint8_t *key, uint8_t length)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();

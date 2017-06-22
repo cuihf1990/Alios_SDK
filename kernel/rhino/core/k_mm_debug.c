@@ -452,7 +452,7 @@ void dump_kmm_free_map(k_mm_head *mmhead)
     k_mm_list_t *next;
     int         i, j;
 
-    if(!mmhead) {
+    if (!mmhead) {
         return;
     }
 
@@ -480,7 +480,7 @@ void dump_kmm_map(k_mm_head *mmhead)
     k_mm_region_info_t *reginfo;
     k_mm_list_t *next;
 
-    if(!mmhead) {
+    if (!mmhead) {
         return;
     }
 
@@ -504,7 +504,7 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
 {
     int i = 0;
 
-    if(!mmhead) {
+    if (!mmhead) {
         return;
     }
 #if (K_MM_STATISTIC > 0)
@@ -513,10 +513,11 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
            mmhead->maxused_size);
     printf("\r\n-----------------alloc size statistic:-----------------\r\n");
     for (i = 0; i < MAX_MM_BIT - 1; i++) {
-        if (i % 4 == 0 && i!=0) {
+        if (i % 4 == 0 && i != 0) {
             printf("\r\n");
         }
-        printf("[2^%02d - 2^%02d] bytes: %5d   |", i>0 ? (i+1) : 0, (i + 2), mmhead->mm_size_stats[i]);
+        printf("[2^%02d - 2^%02d] bytes: %5d   |", i > 0 ? (i + 1) : 0, (i + 2),
+               mmhead->mm_size_stats[i]);
     }
     printf("\r\n");
 #endif

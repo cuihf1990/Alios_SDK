@@ -204,8 +204,8 @@ int hal_umesh_disable(ur_mesh_hal_module_t *module);
  *     Send frame request result, 0 if success, -1 if fail
  */
 int hal_umesh_send_ucast_request(ur_mesh_hal_module_t *module,
-                                   frame_t *frame, mac_address_t *dest,
-                                   ur_mesh_handle_sent_ucast_t sent, void *context);
+                                 frame_t *frame, mac_address_t *dest,
+                                 ur_mesh_handle_sent_ucast_t sent, void *context);
 
 /**
  * Send HAL bcast frame request
@@ -219,8 +219,8 @@ int hal_umesh_send_ucast_request(ur_mesh_hal_module_t *module,
  *     Send frame request result, 0 if success, -1 if fail
  */
 int hal_umesh_send_bcast_request(ur_mesh_hal_module_t *module,
-                                   frame_t *frame,
-                                   ur_mesh_handle_sent_bcast_t sent, void *context);
+                                 frame_t *frame,
+                                 ur_mesh_handle_sent_bcast_t sent, void *context);
 
 /**
  * Register data frame receiver callback function
@@ -233,7 +233,7 @@ int hal_umesh_send_bcast_request(ur_mesh_hal_module_t *module,
  *     Register receiver result, 0 if success, -1 if fail
  */
 int hal_umesh_register_receiver(ur_mesh_hal_module_t *module,
-                                  ur_mesh_handle_received_frame_t received, void *context);
+                                ur_mesh_handle_received_frame_t received, void *context);
 
 /**
  * Request HAL to send beacons
@@ -247,8 +247,8 @@ int hal_umesh_register_receiver(ur_mesh_hal_module_t *module,
  *     The result, 0 if success, -1 if fail
  */
 int hal_umesh_start_beacons(ur_mesh_hal_module_t *module,
-                              frame_t *frame, mac_address_t *dest,
-                              uint16_t max_interval);
+                            frame_t *frame, mac_address_t *dest,
+                            uint16_t max_interval);
 
 /**
  * Stop HAL to send beacons
@@ -312,7 +312,7 @@ int hal_umesh_get_ucast_mtu(ur_mesh_hal_module_t *module);
  *     Set media configuration result, 0 if success, -1 if fail
  */
 int hal_umesh_set_bcast_channel(ur_mesh_hal_module_t *module,
-                                  uint8_t channel);
+                                uint8_t channel);
 
 /**
  * Get broadcast channel
@@ -334,7 +334,7 @@ int hal_umesh_get_bcast_channel(ur_mesh_hal_module_t *module);
  *     The number of broadcast channels, -1 if fail
  */
 int hal_umesh_get_bcast_chnlist(ur_mesh_hal_module_t *module,
-                                  const uint8_t **chnlist);
+                                const uint8_t **chnlist);
 /**
  * Set unicast channel
  *
@@ -345,7 +345,7 @@ int hal_umesh_get_bcast_chnlist(ur_mesh_hal_module_t *module,
  *     Set media configuration result, 0 if success, -1 if fail
  */
 int hal_umesh_set_ucast_channel(ur_mesh_hal_module_t *module,
-                                  uint8_t channel);
+                                uint8_t channel);
 
 /**
  * Get unicast channel
@@ -367,7 +367,7 @@ int hal_umesh_get_ucast_channel(ur_mesh_hal_module_t *module);
  *     The number of unicast channels, -1 if fail
  */
 int hal_umesh_get_ucast_chnlist(ur_mesh_hal_module_t *module,
-                                  const uint8_t **chnlist);
+                                const uint8_t **chnlist);
 
 /**
  * Set transmit power
@@ -422,7 +422,7 @@ void hal_umesh_get_extnetid(ur_mesh_hal_module_t *module,
  *     Set media configuration result, 0 if success, -1 if fail
  */
 int hal_umesh_set_mac_address(ur_mesh_hal_module_t *module,
-                                const mac_address_t *addr);
+                              const mac_address_t *addr);
 
 /**
  * Get HAL mac address.
@@ -446,7 +446,7 @@ const mac_address_t *hal_umesh_get_mac_address(ur_mesh_hal_module_t *module);
  *     Set result, 0 if success, -1 if fail
  */
 int hal_umesh_set_key(struct ur_mesh_hal_module_s *module,
-                        uint8_t index, uint8_t *key, uint8_t length);
+                      uint8_t index, uint8_t *key, uint8_t length);
 
 /**
  * Check whether security is enabled or not by the specified HAL.
