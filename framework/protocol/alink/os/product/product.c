@@ -34,6 +34,8 @@
 #define PRODUCT_ASR_APP_KEY     "box2015product01"
 #endif
 
+char *g_sn = "1923450656860";
+
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 {
     return strncpy(name_str, "alink_product", PRODUCT_NAME_LEN);
@@ -71,6 +73,5 @@ char *product_get_debug_secret(char secret_str[PRODUCT_SECRET_LEN])
 
 char *product_get_sn(char sn_str[PRODUCT_SN_LEN])
 {
-    os_wifi_get_mac_str(sn_str);
-    return sn_str;
+    return strncpy(sn_str, g_sn, PRODUCT_SN_LEN);
 }
