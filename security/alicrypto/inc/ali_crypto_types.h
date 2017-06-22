@@ -7,8 +7,11 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
+#if 0
 typedef unsigned char       bool;
+#endif
 
 #ifndef false
 #define false   (0)
