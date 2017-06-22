@@ -15,6 +15,7 @@
  */
 
 #include <k_api.h>
+#include <assert.h>
 
 #if (YUNOS_CONFIG_HW_COUNT > 0)
 void soc_hw_timer_init(void)
@@ -73,6 +74,7 @@ k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start, SYS_DYN_POOL_SIZE}};
 void soc_err_proc(kstat_t err)
 {
     (void)err;
+    assert(0);
 }
 
 yunos_err_proc_t g_err_proc = soc_err_proc;
