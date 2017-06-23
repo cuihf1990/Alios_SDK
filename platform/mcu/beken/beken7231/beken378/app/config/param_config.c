@@ -44,7 +44,7 @@ uint32_t cfg_param_init(void)
 }
 
 #if 1
-#define SYSTEM_DATA_ADDR 0xFE000
+#define SYSTEM_DATA_ADDR 0xF000
 #define DEFAULT_MAC_ADDR "\xC8\x93\x48\x22\x22\x01"
 static uint8_t system_mac[6] = DEFAULT_MAC_ADDR;
 
