@@ -101,12 +101,25 @@ int csp_printf(const char *fmt, ...);
 #define LOG_IMPL(fmt, ...) \
             log_print(1, "YoC", COL_DEF, "V", fmt, ##__VA_ARGS__)
 
+#ifdef NDEBUG
+#define CONFIG_LOGMACRO_SILENT
+#endif
+
+#ifdef DEBUG
+#define LOGD_IMPL(mod, fmt, ...) \
+            log_print(YOS_LOG_LEVEL & YOS_LL_V_DEBUG, mod, COL_WHE, "D", fmt, ##__VA_ARGS__)
+#define LOGI_IMPL(mod, fmt, ...) \
+            log_print(YOS_LOG_LEVEL & YOS_LL_V_INFO, mod, COL_GRE, "I", fmt, ##__VA_ARGS__)
+#else
+#define LOGD_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
+#define LOGI_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
+#endif
+
 #ifdef CONFIG_LOGMACRO_SILENT
 #define LOGF_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #define LOGE_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #define LOGW_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #define LOGI_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
-#define LOGD_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 
 #else
 
@@ -114,19 +127,8 @@ int csp_printf(const char *fmt, ...);
             log_print(YOS_LOG_LEVEL & YOS_LL_V_FATAL, mod, COL_RED, "F", fmt, ##__VA_ARGS__)
 #define LOGE_IMPL(mod, fmt, ...) \
             log_print(YOS_LOG_LEVEL & YOS_LL_V_ERROR, mod, COL_YEL, "E", fmt, ##__VA_ARGS__)
-
-#ifdef DEBUG
 #define LOGW_IMPL(mod, fmt, ...) \
             log_print(YOS_LOG_LEVEL & YOS_LL_V_WARN, mod, COL_BLU, "W", fmt, ##__VA_ARGS__)
-#define LOGI_IMPL(mod, fmt, ...) \
-            log_print(YOS_LOG_LEVEL & YOS_LL_V_INFO, mod, COL_GRE, "I", fmt, ##__VA_ARGS__)
-#define LOGD_IMPL(mod, fmt, ...) \
-            log_print(YOS_LOG_LEVEL & YOS_LL_V_DEBUG, mod, COL_WHE, "D", fmt, ##__VA_ARGS__)
-#else
-#define LOGW_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
-#define LOGI_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
-#define LOGD_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
-#endif
 
 #endif /* CONFIG_LOGMACRO_SILENT */
 
