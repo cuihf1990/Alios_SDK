@@ -516,8 +516,7 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
         if (i % 4 == 0 && i != 0) {
             printf("\r\n");
         }
-        printf("[2^%02d - 2^%02d] bytes: %5d   |", i > 0 ? (i + 1) : 0, (i + 2),
-               mmhead->mm_size_stats[i]);
+        printf("[2^%02d] bytes: %5d   |", (i + 2), mmhead->mm_size_stats[i]);
     }
     printf("\r\n");
 #endif
@@ -526,6 +525,8 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 {
     printf("\r\n------------------------------- all memory blocks --------------------------------- \r\n");
+    printf("g_kmm_head = %08ux\r\n",(unsigned int)g_kmm_head);
+
     dump_kmm_map(g_kmm_head);
     printf("\r\n----------------------------- all free memory blocks ------------------------------- \r\n");
     dump_kmm_free_map(g_kmm_head);

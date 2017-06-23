@@ -54,7 +54,7 @@
 
 /* kernel workqueue conf */
 #define YUNOS_CONFIG_WORKQUEUE               1
-#define YUNOS_CONFIG_WORKQUEUE_STACK_SIZE    1024
+#define YUNOS_CONFIG_WORKQUEUE_STACK_SIZE    768
 
 /* kernel mm_region conf */
 #define YUNOS_CONFIG_MM_REGION_MUTEX         0
