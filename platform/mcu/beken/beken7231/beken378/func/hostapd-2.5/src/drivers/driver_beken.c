@@ -1490,6 +1490,11 @@ int wpa_driver_get_ssid(void *priv, u8 *ssid)
     return assoc_ap.ssid_len;
 }
 
+int wpa_driver_get_bssid_channel(void *priv)
+{
+    return assoc_ap.chann;
+}
+
 const u8 *wpa_driver_get_mac(void *priv)
 {
     struct hostap_driver_data *drv = priv;

@@ -538,6 +538,7 @@ static void hostapd_stop(void)
 
 	fst_global_deinit();
 
+	uap_ip_down();
 	os_program_deinit();
 }
 int wpa_main_entry(int argc, char *argv[])

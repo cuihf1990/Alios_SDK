@@ -22,10 +22,6 @@
 #include "fusb_pub.h"
 #endif
 
-#if CFG_USE_TEMPERATURE_DETECT
-#include "temp_detect_pub.h"
-#endif
-
 UINT32 func_init(void)
 {
 #ifndef YOS_NO_WIFI
@@ -33,19 +29,14 @@ UINT32 func_init(void)
 	
     FUNC_PRT("[FUNC]rwnxl_init\r\n");
     rwnxl_init();
-#endif
 
-#if CFG_USE_TEMPERATURE_DETECT
-    FUNC_PRT("[FUNC]temp_detect_init\r\n");
-    temp_detect_init();
-#endif
-
-#ifndef YOS_NO_WIFI
 #if CFG_SUPPORT_CALIBRATION
-    
 
     #ifndef KEIL_SIMULATOR
     calibration_main();
+    #if CFG_SUPPORT_MANUAL_CALI
+    manual_cal_load_txpwr_tab_flash();
+    #endif
     #endif
 #endif
 #endif

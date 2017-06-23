@@ -42,8 +42,7 @@ int hmac_md5_vector(const u8 *key, size_t key_len, size_t num_elem,
 
         /* if key is longer than 64 bytes reset it to key = MD5(key) */
         if (key_len > 64) {
-		if (md5_vector(1, &key, &key_len, tk))
-			return -1;
+		md5_vector(1, &key, &key_len, tk);
 		key = tk;
 		key_len = 16;
         }
@@ -72,8 +71,7 @@ int hmac_md5_vector(const u8 *key, size_t key_len, size_t num_elem,
 		_addr[i + 1] = addr[i];
 		_len[i + 1] = len[i];
 	}
-	if (md5_vector(1 + num_elem, _addr, _len, mac))
-		return -1;
+	md5_vector(1 + num_elem, _addr, _len, mac);
 
 	os_memset(k_pad, 0, sizeof(k_pad));
 	os_memcpy(k_pad, key, key_len);
@@ -86,10 +84,10 @@ int hmac_md5_vector(const u8 *key, size_t key_len, size_t num_elem,
 	_len[0] = 64;
 	_addr[1] = mac;
 	_len[1] = MD5_MAC_LEN;
-	res = md5_vector(2, _addr, _len, mac);
+	md5_vector(2, _addr, _len, mac);
 	os_memset(k_pad, 0, sizeof(k_pad));
 	os_memset(tk, 0, sizeof(tk));
-	return res;
+	return 0;
 }
 
 

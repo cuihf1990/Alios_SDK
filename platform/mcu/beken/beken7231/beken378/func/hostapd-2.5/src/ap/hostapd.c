@@ -1918,7 +1918,6 @@ int hostapd_add_iface(struct hapd_interfaces *interfaces, char *buf)
 	if (os_strncmp(buf, "bss_config=", 11) == 0) {
 		char *pos;
 		phy_name = buf + 11;
-		//os_printf("os_strchr0\r\n");
 		pos = os_strchr(phy_name, ':');
 		if (!pos)
 			return -1;
@@ -1927,7 +1926,6 @@ int hostapd_add_iface(struct hapd_interfaces *interfaces, char *buf)
 		if (!os_strlen(conf_file))
 			return -1;
 
-		//os_printf("hostapd_interface_init_bss\r\n");
 		hapd_iface = hostapd_interface_init_bss(interfaces, phy_name,
 							conf_file, 0);
 		if (!hapd_iface)
@@ -1987,13 +1985,11 @@ int hostapd_add_iface(struct hapd_interfaces *interfaces, char *buf)
 		return 0;
 	}
 
-	//os_printf("os_strchr\r\n");
 	ptr = os_strchr(buf, ' ');
 	if (ptr == NULL)
 		return -1;
 	*ptr++ = '\0';
 	
-	//os_printf("os_strncmp\r\n");
 	if (os_strncmp(ptr, "config=", 7) == 0)
 		conf_file = ptr + 7;
 
@@ -2006,7 +2002,6 @@ int hostapd_add_iface(struct hapd_interfaces *interfaces, char *buf)
 		}
 	}
 
-	//os_printf("hostapd_iface_alloc\r\n");
 	hapd_iface = hostapd_iface_alloc(interfaces);
 	if (hapd_iface == NULL) {
 		wpa_printf(MSG_ERROR, "%s: Failed to allocate memory "
@@ -2015,7 +2010,6 @@ int hostapd_add_iface(struct hapd_interfaces *interfaces, char *buf)
 	}
 	new_iface = hapd_iface;
 
-	//os_printf("hostapd_iface_alloc1\r\n");
 	if (conf_file && interfaces->config_read_cb) {
 		conf = interfaces->config_read_cb(conf_file);
 		if (conf && conf->bss)
@@ -2035,7 +2029,6 @@ int hostapd_add_iface(struct hapd_interfaces *interfaces, char *buf)
 		goto fail;
 	}
 
-	//os_printf("hostapd_data_alloc\r\n");
 	if (hostapd_data_alloc(hapd_iface, conf) < 0) {
 		wpa_printf(MSG_ERROR, "%s: Failed to allocate memory "
 			   "for hostapd", __func__);
@@ -2043,7 +2036,6 @@ int hostapd_add_iface(struct hapd_interfaces *interfaces, char *buf)
 	}
 	conf = NULL;
 
-	//os_printf("start_ctrl_iface\r\n");
 	if (start_ctrl_iface(hapd_iface) < 0)
 		goto fail;
 

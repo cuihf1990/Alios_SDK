@@ -1123,3 +1123,17 @@ int is_ctrl_char(char c)
 {
 	return c > 0 && c < 32;
 }
+
+void bin2hexstr(uint8_t *src, char *dest, unsigned int src_len,
+	     unsigned int dest_len)
+{
+	int i;
+	for (i = 0; i < src_len; i++) {
+		if (snprintf(dest, dest_len, "%02x", src[i]) >= dest_len) {
+			return;
+		}
+		dest_len -= 2;
+		dest += 2;
+	}
+}
+

@@ -5,12 +5,16 @@
 #include "mac_phy_bypass.h"
 
 #include "drv_model_pub.h"
+#include "uart_pub.h"
 
 UINT32 reg_134 = 0x00;
 UINT32 reg_135 = 0xc4;
 UINT32 reg_138 = 0x00;
 UINT32 reg_139 = 0x10;
 UINT32 reg_140 = 0x00;
+UINT32 reg_129 = 0x00;
+UINT32 reg_132 = 0x80;
+UINT32 reg_133 = 0x00;
 
 #if CFG_MAC_PHY_BAPASS
 struct MPB_TypeDef mpb_regs =
@@ -61,11 +65,11 @@ void mpb_tx_mode(void)
 {
     mpb_regs.r0->value   = 0x00;
     mpb_regs.r128->value = 0x34;
-    mpb_regs.r129->value = 0x00;
+    mpb_regs.r129->value = reg_129;
     mpb_regs.r130->value = 0x00;
     mpb_regs.r131->value = 0x00;
-    mpb_regs.r132->value = 0x81;
-    mpb_regs.r133->value = 0x00;
+    mpb_regs.r132->value = reg_132;
+    mpb_regs.r133->value = reg_133;
     mpb_regs.r134->value = reg_134;
     mpb_regs.r135->value = reg_135;
     mpb_regs.r136->value = 0x00;
@@ -78,7 +82,7 @@ void mpb_tx_mode(void)
     mpb_regs.r143->value = 0xff;
     mpb_regs.r3->value   = 0x177;
     mpb_regs.r2->value   = 0x10;
-    mpb_regs.r0->value   = 0x01;
+    //mpb_regs.r0->value   = 0x01;
 }
 
 void mpb_rx_mode(void)
@@ -86,6 +90,17 @@ void mpb_rx_mode(void)
 	mpb_regs.r0->value = 0x00;
 	mpb_regs.r1->value = 0x05;
 	mpb_regs.r0->value = 0x21;
+}
+
+void mpb_stop_trx(void)
+{
+	mpb_regs.r0->value &= (~0x01);
+}
+
+void mpb_start_trx(void)
+{
+	mpb_regs.r0->value |= 0x01;
+    REG_WRITE((0x0802800 + (18 * 4)), 0x02);
 }
 
 static UINT32 mpb_select_tx_rate(UINT32 rate)
@@ -106,9 +121,17 @@ static UINT32 mpb_select_tx_rate(UINT32 rate)
         case 36:	param = 0xd;	break;	// 36Mbps
         case 48:	param = 0x8;	break;	// 48Mbps
         case 54:	param = 0xc;	break;	// 54Mbps
-        default:    param = 0xc;    break;	// 54Mbps
+        default: {
+            if(rate >= 128)
+                rate -= 128;
+            else {
+                os_printf("mpb_select_tx_rate wrong rate:%d\r\n", rate);
+                param = rate;
+            }
+        }
     }  
 
+    os_printf("mpb_select_tx_rate rate:%d\r\n", rate);
     return param;
 }
 
@@ -119,13 +142,6 @@ UINT32 mpb_ctrl(UINT32 cmd, void *param)
 	
 	switch(cmd)
 	{
-		case MCMD_TX_BYPASS_MAC_RATE:
-            len = mpb_select_tx_rate((*(UINT32*)param));
-            reg = reg_135 & (~(PPDU_RATE_MASK << PPDU_RATE_POSI));
-			reg |= (len  & PPDU_RATE_MASK) << PPDU_RATE_POSI;
-			reg_135 = reg;
-			break;
-
 		case MCMD_TX_LEGACY_SET_LEN:
 			len = (*(UINT32*)param);
             reg_134 &= ~(0xff);
@@ -139,9 +155,9 @@ UINT32 mpb_ctrl(UINT32 cmd, void *param)
             reg_138 &= ~(0xff);
             reg_139 &= ~(0xff);
             reg_140 &= ~(0xf);
-			reg_138 = len & 0xff;
-			reg_139 = (len >> 8) & 0xff;
-			reg_140 = (len >> 16) & 0xf;
+			reg_138 |= len & 0xff;
+			reg_139 |= (len >> 8) & 0xff;
+			reg_140 |= (len >> 16) & 0xf;
 			break;
 			
 		case MCMD_TX_MODE_BYPASS_MAC:
@@ -151,6 +167,47 @@ UINT32 mpb_ctrl(UINT32 cmd, void *param)
 		case MCMD_RX_MODE_BYPASS_MAC:
 			mpb_rx_mode();
 			break;
+			
+        case MCMD_STOP_BYPASS_MAC:
+            mpb_stop_trx();
+            break;
+
+        case MCMD_START_BYPASS_MAC:
+            mpb_start_trx();
+            break;
+
+        case MCMD_SET_BANDWIDTH:
+            reg_129 &= (~(PPDU_BANDWIDTH_MASK << PPDU_BANDWIDTH_POSI));
+            reg_129 |= (((*(UINT32*)param)&&PPDU_BANDWIDTH_MASK)<< PPDU_BANDWIDTH_POSI);  
+            break; 
+
+        case MCMD_SET_GI:  //0x0: 800ns;  0x1: 400ns
+            reg_140 &= (~(0x1 << 6));
+            reg_140 |= (((*(UINT32*)param)&&0x1)<< 6);
+            break;
+
+        // for modulate format: 0x0: Non-HT; 0x1:Non-HT-DUP; 0x2: HT-MM;  0x3: HT-GF    
+        // for rate:  0-11: b to g,  mcs 0-7:  MCS0 =128, MCS1=129 to CS7=135.
+ 		case MCMD_BYPASS_TX_SET_RATE_MFORMAT: {
+            MBPS_TXS_MFR_ST st =(*(MBPS_TXS_MFR_PTR)param);
+
+            st.rate =  mpb_select_tx_rate(st.rate);
+
+            reg_132 &= ~(0xff);
+            reg_132 |= (0x80 | st.rate);
+
+            reg_135 &= ~(0xff);
+            if(st.mod_format >= 0x2) {
+                reg_135 |= 0xb4;
+            }
+            else {
+                reg_135 |= 0x04;
+			    reg_135 |= (st.rate & PPDU_RATE_MASK) << PPDU_RATE_POSI;
+            }
+
+            reg_133 = st.mod_format;
+			break; 
+ 		    }
 			
 		default:
 			break;

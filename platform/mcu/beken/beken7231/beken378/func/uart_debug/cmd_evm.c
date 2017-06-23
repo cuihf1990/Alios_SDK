@@ -13,6 +13,13 @@
 #include "bk7011_cal_pub.h"
 #endif
 
+typedef enum {
+    TXEVM_E_STOP     = 0,
+    TXEVM_E_REBOOT,
+    TXEVM_E_DOFITTING,  
+    TXEVM_E_MAX
+} TXEVM_E_TYPE;
+
 #if CFG_TX_EVM_TEST
 static UINT32 evm_translate_tx_rate(UINT32 rate)
 {
@@ -68,6 +75,7 @@ static UINT32 evm_translate_tx_rate(UINT32 rate)
 /*txevm [-m mode] [-c channel] [-l packet-length] [-r physical-rate]*/
 int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
+#if CFG_TX_EVM_TEST
     char cmd0 = 0;
     char cmd1 = 0;
     UINT8 fail = 0;
@@ -75,6 +83,11 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
     UINT32 channel = EVM_DEFUALT_CHANNEL;
     UINT32 mode = EVM_DEFUALT_MODE;
     UINT32 rate = EVM_DEFUALT_RATE;
+    UINT32 bandwidth = EVM_DEFUALT_BW;
+    UINT32 pwr_mod = EVM_DEFUALT_PWR_MOD;
+    UINT32 pwr_pa = EVM_DEFUALT_PWR_PA; 
+    UINT32 modul_format = EVM_DEFUALT_MODUL_FORMAT;
+    UINT32 guard_i_tpye = EVM_DEFUALT_GI_TYPE;
     UINT32 arg_id = 1;
     UINT32 arg_cnt = argc;
 
@@ -114,9 +127,68 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
                 packet_len = os_strtoul(argv[arg_id + 1], NULL, 10);
                 break;
 
-            case 'r':
+            case 'r': // mcs 0-7:  MCS0 =128, MCS1=129 t0 CS7=135.
                 rate = os_strtoul(argv[arg_id + 1], NULL, 10);
                 break;
+
+            case 'b':
+                bandwidth = os_strtoul(argv[arg_id + 1], NULL, 10);
+                break;
+
+            case 'f':  // 0x0: Non-HT; 0x1:Non-HT-DUP; 0x2: HT-MM;  0x3: HT-GF 
+                modul_format = os_strtoul(argv[arg_id + 1], NULL, 10);
+                break;
+
+            case 'i':  //GI Type. 0x0: 800ns;  0x1: 400ns
+                guard_i_tpye = os_strtoul(argv[arg_id + 1], NULL, 10);
+                break;    
+
+            case 'p': {  // power: mod, pa
+                pwr_mod = (os_strtoul(argv[arg_id + 1], NULL, 10))&0xf;
+                pwr_pa = (os_strtoul(argv[arg_id + 2], NULL, 10))&0xf;
+                arg_cnt -= 1;
+                arg_id += 1;
+                os_printf("mod:%d, pa:%d\r\n", pwr_mod, pwr_pa);
+                rwnx_cal_set_txpwr(pwr_mod, pwr_pa);
+                return 0;
+                }
+#if CFG_SUPPORT_MANUAL_CALI
+            case 's': { // save txpwr: rate:b or g? channel mod pa
+                rate = os_strtoul(argv[arg_id + 1], NULL, 10);
+                channel = os_strtoul(argv[arg_id + 2], NULL, 10);
+                pwr_mod = (os_strtoul(argv[arg_id + 3], NULL, 10))&0xf;
+                pwr_pa = (os_strtoul(argv[arg_id + 4], NULL, 10))&0xf;
+                arg_cnt -= 3;
+                arg_id += 3;
+                os_printf("save pwr: rate:%d ch:%d, mod:%d, pa:%d\r\n", 
+                    rate, channel, pwr_mod, pwr_pa);
+                manual_cal_save_txpwr(rate, channel, pwr_mod, pwr_pa);
+                return 0;
+                }
+#endif
+            
+            case 'e': { // 0: exit TXEVM,  1: reboot  -enter  2: do fitting
+                UINT32 op = os_strtoul(argv[arg_id + 1], NULL, 10);
+                if(op < TXEVM_E_MAX) {
+                    if(op == TXEVM_E_STOP){
+                        evm_stop_bypass_mac();
+                    } 
+                    #if CFG_SUPPORT_MANUAL_CALI
+                    else if(op == TXEVM_E_DOFITTING) {
+                        manual_cal_fitting_txpwr_tab();
+                        manual_cal_save_txpwr_tab_flash();
+                    } 
+                    #endif
+                    else {
+                        FUNCPTR reboot = 0;
+                        os_printf("reboot\r\n");
+                        (*reboot)();
+                    }
+                    return 0;
+                } else {
+                    return -1;
+                }              
+            }           
 
             default:
                 fail = 1;
@@ -141,8 +213,12 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
     /*step1, parameter check*/
     if(!(((1 == mode)
             || (0 == mode))
-            && ((2412 <= channel)
-                && (2484 >= channel))
+            && ((1 == bandwidth)
+                || (0 == bandwidth))
+            && (modul_format <= 3)
+            && (guard_i_tpye <= 1)
+            && ((1 <= channel)
+                && (14 >= channel))
             && ((0 < packet_len)
                 && (4095 >= packet_len))
             && ((1 == rate)
@@ -156,30 +232,39 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
                 || (24 == rate)
                 || (36 == rate)
                 || (48 == rate)
-                || (54 == rate))))
+                || (54 == rate)
+                || (128 == rate)      // MCS0
+                || (129 == rate)
+                || (130 == rate)
+                || (131 == rate)      // MCS3 
+                || (132 == rate)
+                || (133 == rate)
+                || (134 == rate)
+                || (135 == rate))))  // MCS7
     {
         return 1;
     }
 
     /*step2, handle*/
-#if CFG_TX_EVM_TEST
     if(mode)
     {
-        evm_bypass_mac_set_tx_data_length(1, packet_len);
-        evm_bypass_mac_set_rate(rate);
+        evm_bypass_mac_set_tx_data_length(modul_format, packet_len);
+        evm_bypass_mac_set_rate_mformat(rate, modul_format);
         evm_bypass_mac_set_channel(channel);
+        evm_set_bandwidth(bandwidth);
+        evm_bypass_mac_set_guard_i_type(guard_i_tpye);
 
         evm_bypass_mac_test();
 
 #if CFG_SUPPORT_CALIBRATION
         rwnx_cal_set_txpwr_by_rate(evm_translate_tx_rate(rate));
 #endif
-
-        UD_PRT("control c can exit the evm test\r\n");
+        evm_start_bypass_mac();
     }
     else
     {
         evm_via_mac_set_rate((HW_RATE_E)rate, 1);
+        evm_set_bandwidth(bandwidth);
         evm_via_mac_set_channel(channel);
 
         evm_via_mac_begin();
@@ -188,7 +273,6 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 
     return 0;
 }
-
 
 // eof
 

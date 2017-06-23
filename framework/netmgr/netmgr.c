@@ -112,25 +112,14 @@ static void stop_mesh(void)
 #endif
 }
 
+extern uint32_t ipv4_addr_aton(char *ipstr);
+
 static void netmgr_ip_got_event(hal_wifi_module_t *m,
                                 hal_wifi_ip_stat_t *pnet, void *arg)
 {
-    char got_ip[16] = { 0 };
-    char gw_ip[16] = { 0 };
-    char mask_ip[16] = { 0 };
-    int32_t ip = 0;
-    uint8_t index;
+    LOGI(TAG, "Got ip : %s, gw : %s, mask : %s", pnet->ip, pnet->gate, pnet->mask);
 
-    sprintf(got_ip, "%d.%d.%d.%d", pnet->ip[3], pnet->ip[2], pnet->ip[1], pnet->ip[0]);
-    sprintf(gw_ip, "%d.%d.%d.%d", pnet->gate[3], pnet->gate[2], pnet->gate[1], pnet->gate[0]);
-    sprintf(mask_ip, "%d.%d.%d.%d", pnet->mask[3], pnet->mask[2], pnet->mask[1], pnet->mask[0]);
-
-    LOGI(TAG, "Got ip : %s, gw : %s, mask : %s", got_ip, gw_ip, mask_ip);
-
-    for (index = 0; index < 4; index++) {
-        ip |= (pnet->ip[index] << (index * 8));
-    }
-    g_netmgr_cxt.ipv4_owned = ip;
+    g_netmgr_cxt.ipv4_owned = (int32_t)ipv4_addr_aton(pnet->ip);
     yos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
     start_mesh(true);
 }

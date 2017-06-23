@@ -37,8 +37,11 @@ UINT32 g_fcserror;
 UINT32 g_phyerror;
 UINT32 g_rxflowc; 
 
+UINT32 g_s_rxbw20;
+UINT32 g_s_rxbw40;
 
-UINT16 rs_freq_2_4_G[RS_2_4_G_CHANNEL_NUM] = {
+
+const UINT16 rs_freq_2_4_G[RS_2_4_G_CHANNEL_NUM] = {
 						2412,
 						2417,
 						2422,
@@ -62,7 +65,7 @@ void rs_set_trx_regs_extern(void)
 {
     UINT32 reg;
 
-    REG_WRITE((0x01050080+0x12*4), 0xD0640461);
+    REG_WRITE((0x01050080+0x12*4), 0xD0640561);
 
     reg = REG_READ((0x01050080+0x0d*4));
     REG_WRITE((0x01050080+0x0d*4),(reg|0x4)); 
@@ -85,9 +88,9 @@ void rs_set_trx_regs_extern(void)
 
 void rs_init(UINT32 channel, UINT32 mode)
 {
-	BOOL p2p = 0;
-	UINT8 vif_idx;
-	UINT8 vif_type = 2;
+	//BOOL p2p = 0;
+	//UINT8 vif_idx;
+	//UINT8 vif_type = 2;
 	struct phy_cfg_tag cfg;
 	
 	/*reset mm*/
@@ -116,8 +119,8 @@ void rs_init(UINT32 channel, UINT32 mode)
         rs_set_trx_regs_extern();
 	
 	/*add mm interface*/
-	RS_PRT("[RS]add_mm_interface\r\n");
-	vif_mgmt_register(&rs_mac_addr, vif_type, p2p, &vif_idx);
+	//RS_PRT("[RS]add_mm_interface\r\n");
+	//vif_mgmt_register(&rs_mac_addr, vif_type, p2p, &vif_idx);
 
 	/* Put the HW in active state*/
 	mm_active();
@@ -127,7 +130,7 @@ void rs_rx_monitor(void)
 {
 	hal_machw_enter_monitor_mode();
 	
-	RS_PRT("[EVM]rs_rx_monitor\r\n");
+	RS_PRT("[RS]rs_rx_monitor\r\n");
 }
 
 UINT32 rs_set_channel(UINT32 channel_id)
@@ -185,6 +188,27 @@ void rx_get_rx_result_begin(void)
 	REG_WRITE(0xc0000298, 0x0);
 	REG_WRITE(0xc0000040, 0x00011881);
 }
+
+void rx_clean_rx_statistic_result(void)
+{
+    RS_PRT("[RS]RXSENS_RTYPTE_CLEAN\r\n");
+    g_s_rxbw20 = g_s_rxbw40 = 0;
+
+    rx_get_rx_result_begin();
+}
+
+UINT32 rx_get_rx20M_statistic_result(void)
+{
+    RS_PRT("[RS]RXSENS_RTYPTE_20M :%d\r\n", g_s_rxbw20);
+    return g_s_rxbw20;
+}
+
+UINT32 rx_get_rx40M_statistic_result(void)
+{
+    RS_PRT("[RS]RXSENS_RTYPTE_40M :%d\r\n", g_s_rxbw40);
+    return g_s_rxbw40;
+}
+
 
 void rx_get_rx_result_end(void)
 {	
@@ -291,7 +315,10 @@ void rx_get_rx_result_end(void)
 	RS_PRT("ampdu throughput : %0.1f mbps\r\n", ((float)8*txoctectinampducur/1000000));
 
 	rxbw20cur =  (rxbw20new - g_rxbw20);
+    g_s_rxbw20 = rxbw20cur;
 	rxbw40cur =  (rxbw40new - g_rxbw40);
+    g_s_rxbw40 = rxbw40cur;
+    
 	rxbw80cur =  (rxbw80new - g_rxbw80);
 	rxbw160cur =  (rxbw160new - g_rxbw160);
 

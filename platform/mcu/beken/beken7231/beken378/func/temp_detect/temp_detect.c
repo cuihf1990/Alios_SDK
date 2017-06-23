@@ -16,6 +16,7 @@ DD_HANDLE tmp_detect_hdl;
 saradc_desc_t tmp_detect_desc;
 UINT16 tmp_detect_buff[ADC_TEMP_DETECT_BUFFER_SIZE];
 TEMP_DETECT_CONFIG_ST g_temp_detect_config;
+mico_semaphore_t g_temp_detct_rx_sema;
 
 #if CFG_SUPPORT_CALIBRATION
 extern int calibration_main(void);
@@ -24,11 +25,8 @@ extern INT32 rwnx_cal_save_trx_rcbekn_reg_val(void);
 extern void do_calibration_in_temp_dect(void);
 #endif
 
-void temp_detect_handler(void);
-
-/*---------------------------------------------------------------------------*/
-PROCESS(temp_detect_process, "temp_detect_process");
-/*---------------------------------------------------------------------------*/
+static void temp_detect_handler(void);
+static void temp_detect_main(UINT32 data);
 
 static void temp_detect_desc_init(void)
 {
@@ -63,8 +61,28 @@ static void temp_detect_disable_config_sysctrl(void)
 
 UINT32 temp_detect_init(void)
 {    
-    process_start(&temp_detect_process, NULL);
-    return 0;
+    int ret;
+
+    mico_rtos_init_semaphore(&g_temp_detct_rx_sema, 10);
+
+    ret = mico_rtos_create_thread(NULL,
+                                  MICO_DEFAULT_WORKER_PRIORITY,
+                                  "cli",
+                                  temp_detect_main,
+                                  4096,
+                                  0);
+    if (ret != kNoErr)
+    {
+        os_printf("Error: Failed to create temp_detect: %d\r\n",
+                  ret);
+        goto init_general_err;
+    }
+
+    return kNoErr;
+
+init_general_err:
+    return kGeneralErr;
+
 }
 
 UINT32 temp_detect_uninit(void)
@@ -156,39 +174,46 @@ void temp_detect_do_calibration_temp(void)
 
 static void temp_detect_timer_handler(void *data)
 {
-    struct etimer *timer = (struct etimer *)data;
+    OSStatus err;
 
-    if(timer == &g_temp_detect_config.detect_timer)
-    {
-        if(etimer_expired(&g_temp_detect_config.detect_timer))
+   // stop detect time
+    err = mico_rtos_stop_timer(&g_temp_detect_config.detect_timer);
+    ASSERT(kNoErr == err);
+    TMP_DETECT_PRT("stop detect timer, start ADC\r\n");  
+
             temp_detect_enable();
     }
-    else if(timer == &g_temp_detect_config.calibration_timer)
-    {
-        if(etimer_expired(&g_temp_detect_config.calibration_timer))
+
+static void temp_calibration_timer_handler(void *data)
         {
+
             if(temp_detect_get_wifi_traffic_idle())
             {
-                //temp_detect_do_calibration();
-                temp_detect_do_calibration_temp();
+        OSStatus err;
+        // stop calibration time
+        err = mico_rtos_stop_timer(&g_temp_detect_config.calibration_timer);
+        ASSERT(kNoErr == err);
+        TMP_DETECT_PRT("stop calibration timer, do temp calib\r\n"); 
 
-                PROCESS_CONTEXT_BEGIN(&temp_detect_process);
-                etimer_restart(&g_temp_detect_config.detect_timer);
-                PROCESS_CONTEXT_END(&temp_detect_process);
+        ////temp_detect_do_calibration();
+        TMP_DETECT_PRT("do temp calib\r\n"); 
+        //temp_detect_do_calibration_temp();
+
+        // restart dectect timer
+        TMP_DETECT_PRT("after temp calib, restart detect timer\r\n");
+        err = mico_rtos_reload_timer(&g_temp_detect_config.detect_timer);
+        ASSERT(kNoErr == err);
             }
             else
             {
-                PROCESS_CONTEXT_BEGIN(&temp_detect_process);
-                etimer_restart(&g_temp_detect_config.calibration_timer);
-                PROCESS_CONTEXT_END(&temp_detect_process);
-            }
-        }
+        // continue calibration timer
+        TMP_DETECT_PRT("continue calibration\r\n");
     }
 }
 
 static void temp_detect_polling_handler(void)
 {
-    {
+    OSStatus err;
         UINT32 dist, cur_val, last_val;
 
         cur_val = tmp_detect_desc.pData[ADC_TEMP_DETECT_BUFFER_SIZE-1];
@@ -201,77 +226,68 @@ static void temp_detect_polling_handler(void)
                         cur_val,
                         g_temp_detect_config.detect_thre);
 
-    if(g_temp_detect_config.last_detect_val == 0)
-    {
-        g_temp_detect_config.detect_intval = ADC_TMEP_DETECT_INTVAL;
-
-        PROCESS_CONTEXT_BEGIN(&temp_detect_process);
-        etimer_set(&g_temp_detect_config.detect_timer, ADC_TMEP_DETECT_INTVAL * CLOCK_CONF_SECOND);
-        PROCESS_CONTEXT_END(&temp_detect_process);
+    if(g_temp_detect_config.last_detect_val == 0){
+        // change to normal detect intval
+        temp_detect_change_configuration(ADC_TMEP_DETECT_INTVAL, 0);
     }
 	
         if(dist > g_temp_detect_config.detect_thre)
         {
             g_temp_detect_config.last_detect_val = cur_val;
 
-            PROCESS_CONTEXT_BEGIN(&temp_detect_process);
-            etimer_set(&g_temp_detect_config.calibration_timer, CLOCK_CONF_SECOND);
-            PROCESS_CONTEXT_END(&temp_detect_process);
+        // start or restart the calib timer
+        TMP_DETECT_PRT("start calibration timer\r\n");  
 
-            return;
+        if(g_temp_detect_config.calibration_timer.function) { 
+            err = mico_rtos_reload_timer(&g_temp_detect_config.calibration_timer);
+    	    ASSERT(kNoErr == err); 
+        } else {
+        	err = mico_rtos_init_timer(&g_temp_detect_config.calibration_timer, 
+						fclk_from_sec_to_tick(ADC_TMEP_CALIB_INTVAL),  
+						temp_calibration_timer_handler, 
+						(void *)0);
+            ASSERT(kNoErr == err);
+        	err = mico_rtos_start_timer(&g_temp_detect_config.calibration_timer);
+        	ASSERT(kNoErr == err);   
         }
+    } else {
+        // no need to do tmp calib, restart detect timer
+        // restart dectect timer
+        TMP_DETECT_PRT("no need restart cali timer, restart detect timer\r\n");
+        err = mico_rtos_reload_timer(&g_temp_detect_config.detect_timer);
+        ASSERT(kNoErr == err);
     }
-
-    PROCESS_CONTEXT_BEGIN(&temp_detect_process);
-    etimer_restart(&g_temp_detect_config.detect_timer);
-    PROCESS_CONTEXT_END(&temp_detect_process);
 }
 
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(temp_detect_process, ev, data)
+static void temp_detect_main(UINT32 data)
 {
-    PROCESS_BEGIN();
-
     {
-        clock_time_t interval;
+        OSStatus err;
         g_temp_detect_config.last_detect_val = 0;
         g_temp_detect_config.detect_thre = ADC_TMEP_DO_CALIBRATION_TXOUTPOWR_THRE;
-        g_temp_detect_config.detect_intval = 2;//ADC_TMEP_DETECT_INTVAL;
+        g_temp_detect_config.detect_intval = ADC_TMEP_FIRST_DETECT_INTVAL;
         g_temp_detect_config.do_cali_flag = 0;
 
-        interval = g_temp_detect_config.detect_intval * CLOCK_CONF_SECOND;
-        etimer_set(&g_temp_detect_config.detect_timer, interval);
+    	err = mico_rtos_init_timer(&g_temp_detect_config.detect_timer, 
+    							fclk_from_sec_to_tick(g_temp_detect_config.detect_intval), 
+    							temp_detect_timer_handler, 
+    							(void *)0);
+        ASSERT(kNoErr == err);
+    	err = mico_rtos_start_timer(&g_temp_detect_config.detect_timer);
+    	ASSERT(kNoErr == err);
     }
 
     while(1)
     {
-        PROCESS_YIELD();
-        if(ev == PROCESS_EVENT_POLL)
-        {
+        mico_rtos_get_semaphore(&g_temp_detct_rx_sema, MICO_NEVER_TIMEOUT);
             temp_detect_polling_handler();
         }
-        else if(ev == PROCESS_EVENT_TIMER)
-        {
-            temp_detect_timer_handler(data);
-        }
-        else if(ev == PROCESS_EVENT_EXIT)
-        {
-            TMP_DETECT_PRT("temp_detect_process exit process\r\n");
+
             temp_detect_disable();
-        }
-        else if(ev == PROCESS_EVENT_EXITED)
-        {
-            struct process *exit_p = (struct process *)data;
-            TMP_DETECT_PRT("%s exit in temp_detect_process\r\n",
-                           PROCESS_NAME_STRING(exit_p));
-        }
+    mico_rtos_delete_thread(NULL);
     }
 
-    PROCESS_END();
-}
-
-/*---------------------------------------------------------------------------*/
-void temp_detect_handler(void)
+static void temp_detect_handler(void)
 {
     if(tmp_detect_desc.current_sample_data_cnt >= tmp_detect_desc.data_buff_size)
     {
@@ -279,18 +295,16 @@ void temp_detect_handler(void)
                        tmp_detect_desc.pData[0], tmp_detect_desc.pData[1],
                        tmp_detect_desc.pData[2], tmp_detect_desc.pData[3], 
                        tmp_detect_desc.pData[4]);
-
         temp_detect_disable();
-        if(process_is_running(&temp_detect_process))
-        {
-            process_poll(&temp_detect_process);
-        }
+        mico_rtos_set_semaphore(&g_temp_detct_rx_sema);
     }
 }
 
+
 void temp_detect_change_configuration(UINT32 intval, UINT32 thre)
 {
-    clock_time_t interval;
+    UINT32 interval, is_running = 0;
+    OSStatus err;
 
     if(intval == 0)
         intval = ADC_TMEP_DETECT_INTVAL;
@@ -301,11 +315,27 @@ void temp_detect_change_configuration(UINT32 intval, UINT32 thre)
 
     g_temp_detect_config.detect_thre = thre;
     g_temp_detect_config.detect_intval = intval;
-    interval = g_temp_detect_config.detect_intval * CLOCK_CONF_SECOND;
 
-    PROCESS_CONTEXT_BEGIN(&temp_detect_process);
-    etimer_set(&g_temp_detect_config.detect_timer, interval);
-    PROCESS_CONTEXT_END(&temp_detect_process);
+    if(mico_rtos_is_timer_running(&g_temp_detect_config.detect_timer))
+        is_running = 1;
+    
+    if(g_temp_detect_config.detect_timer.function) {
+        err = mico_rtos_deinit_timer(&g_temp_detect_config.detect_timer); 
+        ASSERT(kNoErr == err); 
+    } 
+    
+
+	err = mico_rtos_init_timer(&g_temp_detect_config.detect_timer, 
+							fclk_from_sec_to_tick(g_temp_detect_config.detect_intval), 
+							temp_detect_timer_handler, 
+							(void *)0);
+    ASSERT(kNoErr == err);
+
+    if(is_running) {
+	    err = mico_rtos_start_timer(&g_temp_detect_config.detect_timer);
+	    ASSERT(kNoErr == err); 
+    }
+
 }
 
 UINT8 temp_detct_get_cali_flag(void)
@@ -314,6 +344,9 @@ UINT8 temp_detct_get_cali_flag(void)
 }
 
 #endif  // CFG_USE_TEMPERATURE_DETECT
+
+
+
 
 //EOF
 

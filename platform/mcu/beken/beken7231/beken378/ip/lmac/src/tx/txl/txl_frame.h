@@ -153,10 +153,8 @@ extern struct txl_buffer_control txl_buffer_control_ndpa_brp;
 extern struct txl_buffer_control txl_buffer_control_ndp;
 #endif //(RW_BFMER_EN)
 
-#if CFG_TX_EVM_TEST
-extern struct tx_policy_tbl evm_frame_pol_24G ;
-extern struct tx_policy_tbl evm_frame_pol_5G ;
-#endif 
+extern struct tx_policy_tbl txl_frame_pol_24G ;
+extern struct tx_policy_tbl txl_frame_pol_5G ;
 
 extern struct txl_buffer_control txl_frame_buf_ctrl[NX_TXFRAME_CNT];
 

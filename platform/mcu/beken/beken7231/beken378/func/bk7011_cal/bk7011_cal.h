@@ -1,15 +1,22 @@
 #ifndef _BK7011_CAL_H_
 #define _BK7011_CAL_H_
 
+#include "uart_pub.h"
+
 #define CAL_DEBUG          0
+
 #if CAL_DEBUG
 #define CAL_PRT      null_prf
-#define CAL_WARN     null_prf
+#define CAL_WARN     null_prf// warning_prf
 #define CAL_FATAL    fatal_prf
+#define CAL_TIM_PRT os_printf
+#define CAL_FLASH_PRT os_printf
 #else
 #define CAL_PRT      null_prf
 #define CAL_WARN     null_prf
 #define CAL_FATAL    null_prf
+#define CAL_TIM_PRT null_prf
+#define CAL_FLASH_PRT null_prf
 #endif
 
 #define REGTRXV2A
@@ -26,36 +33,19 @@ void delay05us(INT32 num);
 #define UNSIGNEDOFFSET10		    512
 #define I_Q_CAP_DIF					32
 #define CONSTANT_RCIQ				117
-#define SUMNUMBERS					2
+#define SUMNUMBERS					4
 #define MINOFFSET			    	16
-
-#define DPDCALILEN				  256
 
 #define cpu_delay(val)            delay(MAX(1, val/100))
 #define DELAY1US				  100
-//#define DELAY05US				  1
 
 #define cal_delay(val)            delay05us(MAX(1, val))	// 8us
-//#define CAL_DELAY1US			  2
-#define CAL_DELAY05US			  20 //20160804  1:0.5us 2:1us
+#define CAL_DELAY05US			  2		// 20170503 2:1.5us
 #define CAL_TX_NUM                50
 #define CAL_RX_NUM                5
 
 #define cal_delay_100us(val)      delay100us(MAX(1, val))	// 200us
-#define CAL_DELAY100US			  2  //20160804  1:100us 2:200us
-
-
-#define BK7011TRXREG0xD 		  0xFDFF0338
-#define BK7011TRXREG0xC		      0x01A147EE//0x01A183FD
-
-#define DGAINPA20 				  3
-#define DGAINBUF20				  3
-#define GCTRLPGA40				  0xf
-#define GCTRLMOD30        		  0x04
-#define TSSI_DELTA				 (2)  // 10
-#define TSSI_IS_VALID(val)	  (((val)  0xf0 ) && ((val) > 0x20))?1:0)
-#define TSSI_IS_TOO_LOW(val)  (((val)<(0x00 * SUMNUMBERS))?1:0)  //0x37
-#define TSSI_IS_TOO_HIGH(val) (((val)> (0xff * SUMNUMBERS))?1:0) //0xe0
+#define CAL_DELAY100US			  1  //20160804  1:100us 2:200us		// 20170503 1:150us 2:300us
 
 #define st_TRXREG00			(1<<0)
 #define st_TRXREG01			(1<<1)
@@ -1121,212 +1111,6 @@ struct BK7011TRxV2A_TypeDef
     volatile BK7011_TRxV2A_REG0x1C_TypeDef *REG0x1C;
 };
 #endif
-
-#if 0
-#ifndef __BK7011ADDA_H__
-#define __BK7011ADDA_H__
-
-/// REG0x0
-typedef union
-{
-    struct
-    {
-        volatile unsigned int pwdpll       : 1; /**< pwdpll */
-        volatile unsigned int cp20         : 3; /**< cp curent control 0to 350uA 50uA step */
-        volatile unsigned int spideten     : 1; /**< unlock detect enable fron spi 1:enable */
-        volatile unsigned int hvref10      : 2; /**< high vth control for unlock detect 00:0.85V;01:0.9V;10:0.95V;11:1.05V */
-        volatile unsigned int lvref10      : 2; /**< low vth control for unlock detect 00:0.2V;01:0.3V;10:0.35V;11:0.4V */
-        volatile unsigned int Rzctrl26M    : 1; /**< Rz ctrl in 26M mode:1:normal;0:add 14K */
-        volatile unsigned int LoopRzctrl30 : 4; /**< Rz ctrl:2K to 17K,1K step */
-        volatile unsigned int rpc10        : 2; /**< second pole Rp ctrl:00:30K;01:10K;10:22K;11:2K */
-        volatile unsigned int nsyn         : 1; /**< N divider rst */
-        volatile unsigned int cksel10      : 2; /**< 0:26M;1:40M;2:24M;3:19.2M */
-        volatile unsigned int spitrig      : 1; /**< band selection trigger signal */
-        volatile unsigned int band40       : 5; /**< band manual value */
-        volatile unsigned int bandmanual   : 1; /**< 1:band manual;0:band auto */
-        volatile unsigned int dsptrig      : 1; /**< band selection trigger signal */
-        volatile unsigned int xtalIctrl    : 1; /**< 0:large current;1:small current */
-        volatile unsigned int NCxamp30     : 4; /**< Reserved */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ADDA_REG0x0_TypeDef;
-
-/// REG0x1
-typedef union
-{
-    struct
-    {
-        volatile unsigned int acoef80       : 9; /**< 数字滤波器积分支路的系数 */
-        volatile unsigned int bcoef20       : 3; /**< 数字滤波器propotional支路的系数 */
-        volatile unsigned int bckphoffset50 : 6; /**< 在PD的输入端调整div时钟的延迟 */
-        volatile unsigned int rckphoffset50 : 6; /**< 在PD的输入端调整ref时钟的延迟 */
-        volatile unsigned int bypass52M     : 1; /**< bypass 52M的时钟，输出26M的时钟 */
-        volatile unsigned int tst2xpden     : 1; /**< 选择测试要输出的信号，1为PD的输出，0为52M的时钟 */
-        volatile unsigned int tst2xen       : 1; /**< 使能测试输出 */
-        volatile unsigned int calspitrig    : 1; /**< 通过寄存器触发频率的校准，触发的时候，先写为0，再写为1 */
-        volatile unsigned int bypassdmsb    : 1; /**< 数字滤波器工作的时候，bypass掉Dmsb支路 */
-        volatile unsigned int manual        : 1; /**< 对Dmsb和Dlsb改为手动 */
-        volatile unsigned int frecalbypass  : 1; /**< bypass 掉频率的自动校准功能，改用手动 */
-        volatile unsigned int rstnspi       : 1; /**< 通过寄存器reset */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ADDA_REG0x1_TypeDef;
-
-/// REG0x2
-typedef union
-{
-    struct
-    {
-        volatile unsigned int arbpden        : 1;  /**< 通过寄存器使能arbiter BBPD */
-        volatile unsigned int endoubler      : 1;  /**< 通过寄存器使能doubler */
-        volatile unsigned int trackenspi     : 1;  /**< 通过寄存器使能开环算法 */
-        volatile unsigned int Dcal80         : 9;  /**< 通过寄存器手动控制振荡器的Dcal */
-        volatile unsigned int Dmsbspi20      : 3;  /**< 通过寄存器手动控制振荡器的Dmsb */
-        volatile unsigned int Dlsbspi40      : 5;  /**< 通过寄存器手动控制振荡器的Dlsb */
-        volatile unsigned int updatecycle110 : 12; /**< 采用开环算法的时候数据调整的时间周期 */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ADDA_REG0x2_TypeDef;
-
-/// REG0x3
-typedef union
-{
-    struct
-    {
-        volatile unsigned int numdn110       : 12; /**< 控制相位滞后的次数 */
-        volatile unsigned int numup110       : 12; /**< 控制相位超前的次数 */
-        volatile unsigned int arbpddelay30   : 4;  /**< arbiter BBPD中的delay 控制 */
-        volatile unsigned int hysen          : 1;  /**< 使能相位的迟滞功能 */
-        volatile unsigned int phacalbypass   : 1;  /**< 启用数字滤波器的时候，校准完成后可以不使能相位的tracking,从而测试校准的结果是否正确 */
-        volatile unsigned int f2xldovsel3v10 : 2;  /**< 控制LDO的输出电压，两个LDO共享一组控制位，该控制位已经经过level shift的转换，00：1.2V；01 10：1.3V；11：1.4V */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ADDA_REG0x3_TypeDef;
-
-/// REG0x4
-typedef union
-{
-    struct
-    {
-        volatile unsigned int bufEn     : 1; /**< Active high to enable clock output buffer; */
-        volatile unsigned int NC        : 3; /**< Reserved */
-        volatile unsigned int cksel210  : 2; /**< Second clock path selection control; 11:80MHz/10:52MHz/others fxtal */
-        volatile unsigned int cksel110  : 2; /**< First clock path selection control; 11: 160MHz/10:80MHz/others fxtal */
-        volatile unsigned int NC_       : 7; /**< Reserved */
-        volatile unsigned int xtalIctrl : 1; /**< Crystal oscillator core start-up current programming bit */
-        volatile unsigned int pwdDPLL   : 1; /**< Active high to power-down digital PLL */
-        volatile unsigned int enDPLL    : 1; /**< Active high to enable bias module in digital PLL */
-        volatile unsigned int NC__      : 1; /**< Reserved */
-        volatile unsigned int ckten     : 1; /**< Active high to enable fxtal/4 output */
-        volatile unsigned int vbias40   : 5; /**< PLL regulator reference voltage programming word */
-        volatile unsigned int ldodpll10 : 2; /**< Digital PLL regulator output programming word */
-        volatile unsigned int en2x      : 1; /**< Active high to enable frequency doubler */
-        volatile unsigned int xamp20    : 4; /**< Crystal oscillator amplitude control word */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ADDA_REG0x4_TypeDef;
-
-/// REG0x5
-typedef union
-{
-    struct
-    {
-        volatile unsigned int adcislec20 : 3;  /**< ADC core bias current programming word; norminal setting 101; */
-        volatile unsigned int adciselr20 : 3;  /**< ADC reference buffer bias current programming word; norminal setting 101; */
-        volatile unsigned int adcbws     : 1;  /**< ADC bandwidth selection: 0 for 40Mbps mode; 1 for 80Mbps mode; */
-        volatile unsigned int adcvsel10  : 2;  /**< No description */
-        volatile unsigned int adcreg10   : 2;  /**< ADC internal buffer regulator output programming word */
-        volatile unsigned int adcten     : 1;  /**< Active high to enable ADC test mode (to enable single channel operation) */
-        volatile unsigned int NC         : 13; /**< Reserved */
-        volatile unsigned int dacreg10   : 2;  /**< DAC/ADC main regulator output programming word */
-        volatile unsigned int vc40       : 5;  /**< Regulator reference voltage programming word */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ADDA_REG0x5_TypeDef;
-
-/// BK7011ADDA
-struct BK7011ADDA_TypeDef
-{
-    volatile BK7011_ADDA_REG0x0_TypeDef *REG0x0;
-    volatile BK7011_ADDA_REG0x1_TypeDef *REG0x1;
-    volatile BK7011_ADDA_REG0x2_TypeDef *REG0x2;
-    volatile BK7011_ADDA_REG0x3_TypeDef *REG0x3;
-    volatile BK7011_ADDA_REG0x4_TypeDef *REG0x4;
-    volatile BK7011_ADDA_REG0x5_TypeDef *REG0x5;
-};
-#endif
-
-#ifndef __BK7011ICU_H__
-#define __BK7011ICU_H__
-
-/// REG0x0
-typedef union
-{
-    struct
-    {
-        volatile unsigned int irqen    : 1;  /**< enable of IRQ */
-        volatile unsigned int Reserved : 31; /**< NC */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ICU_REG0x0_TypeDef;
-
-/// REG0x1
-typedef union
-{
-    struct
-    {
-        volatile unsigned int txon        : 1; /**< Tx on */
-        volatile unsigned int Reserved    : 7; /**< NC */
-        volatile unsigned int txpower     : 7; /**< Tx Power */
-        volatile unsigned int Reserved_   : 1; /**< NC */
-        volatile unsigned int rxon        : 1; /**< Rx On */
-        volatile unsigned int rxhpbypass  : 1; /**< hpf byapss of Rx */
-        volatile unsigned int Reserved__  : 6; /**< Reserved */
-        volatile unsigned int agcgain     : 7; /**< AGC Gain */
-        volatile unsigned int Reserved___ : 1; /**< NC */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ICU_REG0x1_TypeDef;
-
-/// REG0x2
-typedef union
-{
-    struct
-    {
-        volatile unsigned int agcgainupdate : 1;  /**< AGC Gain Updata Request */
-        volatile unsigned int Reserved      : 31; /**< NC */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ICU_REG0x2_TypeDef;
-
-/// REG0x3
-typedef union
-{
-    struct
-    {
-        volatile unsigned int txdrvmux    : 1;  /**< Tx Driver Mux */
-        volatile unsigned int txdacgain   : 3;  /**< Tx DAC Gain. 1~4 is valid */
-        volatile unsigned int rxsmpen     : 1;  /**< Rx Sample Enable */
-        volatile unsigned int rxsmpmux    : 1;  /**< Rx Sample data select.;0x0: 12bit ADC data; 0x1: 9bit ADC Data */
-        volatile unsigned int Reserved    : 2;  /**< NC */
-        volatile unsigned int txdaciqswap : 1;  /**< Tx DAC IQ Swap. Just valid when tx_drv_mux =1 */
-        volatile unsigned int Reserved_   : 7;  /**< NC */
-        volatile unsigned int addaclkinv  : 2;  /**< [1]: clk_adc output invert phase. [0]: clk_dac output invert phase */
-        volatile unsigned int Reserved__  : 14; /**< NC */
-    } bits;
-    volatile unsigned int value;
-} BK7011_ICU_REG0x3_TypeDef;
-
-/// BK7011ICU
-struct BK7011ICU_TypeDef
-{
-    volatile BK7011_ICU_REG0x0_TypeDef *REG0x0;
-    volatile BK7011_ICU_REG0x1_TypeDef *REG0x1;
-    volatile BK7011_ICU_REG0x2_TypeDef *REG0x2;
-    volatile BK7011_ICU_REG0x3_TypeDef *REG0x3;
-};
-#endif
-#endif // #if 0
 
 /*******************************************************************************
 * Function Declarations

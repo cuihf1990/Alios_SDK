@@ -16,11 +16,15 @@ extern void evm_via_mac_evt(INT32 dummy);
 extern void evm_via_mac_begin(void);
 extern void evm_via_mac_continue(void);
 extern UINT32 evm_bypass_mac_set_tx_data_length(UINT32 is_legacy_mode, UINT32 len);
-extern UINT32 evm_bypass_mac_set_rate(UINT32 ppdu_rate);
+extern UINT32 evm_bypass_mac_set_rate_mformat(UINT32 ppdu_rate, UINT32 m_format);
 extern void evm_bypass_mac_set_channel(UINT32 channel);
 extern void evm_via_mac_set_channel(UINT32 channel);
 extern void evm_bypass_mac_test(void);
 extern void evm_via_mac_set_rate(HW_RATE_E rate, uint32_t is_2_4G);
+extern void evm_set_bandwidth(UINT32 bandwidth);
+extern void evm_stop_bypass_mac(void);
+extern void evm_bypass_mac_set_guard_i_type(UINT32 gi_tpye);
+extern void evm_start_bypass_mac(void);
 
 #endif //_TX_EVM_PUB_H_
 // eof

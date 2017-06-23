@@ -296,13 +296,6 @@ static UINT32 spidma_close(void)
 
 static void spidma_rx_callback(UINT16 used_data_len)
 {
-#if 0
-    UINT32 cur_posi = spidma_config_get_rxbuf_readptr();
-    cur_posi += used_data_len;
-    cur_posi &= (p_spidma_desc->rxbuf_len - 1);
-    //os_printf("%d\r\n", cur_posi);
-    spidma_config_set_rxbuf_readptr(cur_posi);
-#endif
 }
 
 UINT32 gcur_posi = 0;
