@@ -225,7 +225,7 @@ int msdp_set_device_status_handler(char *params, void *cb, void *exec_cb)
 
     json_array_for_each_entry(attr_set_dup, pos, entry, entry_len, type) {
         ret = ((set_status_cb)cb)(entry, entry_len, type, params, exec_cb);
-        RET_RETURN(ret, CALL_FUCTION_FAILED, "json_array_for_each_entry");
+        RET_LOG(ret, CALL_FUCTION_FAILED, "json_array_for_each_entry");
     }
     msdp_free_buff(attr_set_dup);
 
