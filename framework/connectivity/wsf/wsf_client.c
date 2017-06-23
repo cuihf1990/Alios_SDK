@@ -224,7 +224,13 @@ int wsf_invoke_async(const char *service_name, wsf_list_t *parameters,
         _cb->extra = arg;
         _cb->req = request;
     }
-    return __wsf_invoke_async(request, __analy_resp, _cb);
+    int ret =__wsf_invoke_async(request, __analy_resp, _cb);
+    if (ret != 0) {
+        os_free(request);
+        os_free(_cb);
+    }
+
+    return ret;
 }
 
 wsf_response_t *wsf_invoke(const char *service_name, wsf_list_t *parameters,
