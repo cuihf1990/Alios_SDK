@@ -239,7 +239,6 @@ static int  __cb_wsf_recv(int fd, void *arg)
                 LOGE(MODULE_NAME, "wsf recv buffer full!");
             } else {
                 LOGE(MODULE_NAME, "closing socket for tcp/ssl read error.");
-                exit(0);
             }
             return 0;
         } else {
