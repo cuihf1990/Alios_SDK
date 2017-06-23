@@ -228,11 +228,11 @@ void txl_evm_set_hw_rate(HW_RATE_E rate, uint32_t is_2_4G)
 {
 	if(is_2_4G)
 	{
-		evm_frame_pol_24G.ratecntrlinfo[0] = (rate << MCS_INDEX_TX_RCX_OFT) | PRE_TYPE_TX_RCX_MASK; 
+		txl_frame_pol_24G.ratecntrlinfo[0] = (rate << MCS_INDEX_TX_RCX_OFT) | PRE_TYPE_TX_RCX_MASK; 
 	}
 	else
 	{
-		evm_frame_pol_5G.ratecntrlinfo[0] = rate << MCS_INDEX_TX_RCX_OFT;
+		txl_frame_pol_5G.ratecntrlinfo[0] = rate << MCS_INDEX_TX_RCX_OFT;
 	}
 }
 #endif
@@ -278,14 +278,6 @@ struct txl_frame_desc_tag *txl_frame_get(int type, int len)
         switch (type)
         {
             case TX_DEFAULT_24G:
-				#if CFG_TX_EVM_TEST
-				if(evm_via_mac_is_start())
-				{
-					os_printf("evm\r\n");
-					pol = &evm_frame_pol_24G;
-				}
-				else
-				#endif			
                 pol = &txl_buffer_control_24G.policy_tbl;	
                 break;
                 
@@ -427,12 +419,10 @@ void txl_frame_evt(int dummy)
             {
                 // Reset the status
                 frame->keep_desc = false;
-
                 continue;
             }
         }
 
-        
         // Check if we need to the free the descriptor or not
         if (frame->type == TX_INT)
         {

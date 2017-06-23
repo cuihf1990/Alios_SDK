@@ -407,6 +407,7 @@ int run_command(const char *cmd, int flag)
 }
 
 #if CFG_SUPPORT_BKREG
+#include "bk7011_cal_pub.h"
 int bkreg_run_command(const char *content, int cnt)
 {
     char tx_buf[64];
@@ -458,7 +459,9 @@ int bkreg_run_command(const char *content, int cnt)
 
     case BEKEN_TEMP_CMD:
     {
+        rwnx_cal_save_trx_rcbekn_reg_val();
         do_calibration_in_temp_dect();
+        rwnx_cal_load_trx_rcbekn_reg_val(); 
     }
     break;
 
@@ -471,24 +474,26 @@ int bkreg_run_command(const char *content, int cnt)
 
     case BEKEN_TEST_UDP:
     {
-#if CFG_USE_SDCARD_HOST
-        //extern UINT32 sdcard_intf_test(void);
-        //sdcard_intf_test();
-        extern UINT32 Media_Fs_Init(UINT8 type);
-        Media_Fs_Init(0);
+        #if CFG_SUPPORT_MANUAL_CALI
+        manual_cal_show_txpwr_tab();
 #endif
     }
     break;
 
     case BEKEN_SD_CLOSE:
     {
-#if CFG_USE_SDCARD_HOST
-        extern void sdcard_intf_close(void);
-        sdcard_intf_close();
+        #if CFG_SUPPORT_MANUAL_CALI
+        manual_cal_fitting_txpwr_tab();
 #endif
     }
     break;
 
+    case LOOP_MODE_CMD:
+    {
+        bk7011_micopwr_tssi_read();
+        bk7011_micopwr_tssi_show();
+    }
+    break;
 
     default:
         pHCItxBuf->total = 1;

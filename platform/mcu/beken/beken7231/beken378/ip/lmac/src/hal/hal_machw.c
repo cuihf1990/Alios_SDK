@@ -102,8 +102,9 @@ const uint8_t rxv2macrate[] = {
 };
 #endif
 
-static uint16_t g_entry_id = 0;
+static uint32_t g_entry_id = 0;
 uint64_t *g_monitor_mac_addr = 0;
+uint32_t *g_monitor_counts = 0;
 
 /*
  * FUNCTION DEFINITIONS
@@ -372,16 +373,22 @@ uint8_t hal_machw_search_addr(struct mac_addr *addr)
 
 void hal_init_monitor_buf(void)
 {
-	uint32_t count;
+	uint8_t *buf;
+	uint32_t size;
 	
 	if(g_monitor_mac_addr)
 	{
 		return;
 	}
 
-	count = sizeof(uint64_t) * (KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1);
-	g_monitor_mac_addr = (uint64_t *)os_zalloc(count);
-	ASSERT(g_monitor_mac_addr);
+	size = (sizeof(uint64_t) + sizeof(uint32_t))
+				* (KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1);
+	buf = (uint8_t *)os_zalloc(size);
+	ASSERT(buf);
+
+	g_monitor_mac_addr = (uint64_t *)buf;
+	g_monitor_counts = (uint32_t *)((uint32_t)buf + sizeof(uint64_t)
+							* (KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1));
 }
 
 void hal_uninit_monitor_buf(void)
@@ -389,13 +396,81 @@ void hal_uninit_monitor_buf(void)
 	if(g_monitor_mac_addr)
 	{
 		os_free(g_monitor_mac_addr);
+		
 		g_monitor_mac_addr = 0;
+		g_monitor_counts = 0;
 	}
+}
+
+uint32_t hal_monitor_get_id(uint64_t address)
+{
+	uint64_t *mac_address;
+	uint32_t addr_count, i;
+	uint32_t index = 0;
+
+	mac_address = g_monitor_mac_addr;
+	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
+	for(i = 0; i < addr_count; i ++)
+	{
+		if(address == mac_address[i])
+		{
+			index = i + 1;
+			break;
+		}
+	}
+	
+	return index;
+}
+
+uint32_t hal_monitor_record_count(struct mac_hdr *machdr)
+{
+	uint8_t *addr = 0;
+	uint32_t index;
+	uint32_t ds_status;
+	uint64_t mac_address = 0;
+
+	ds_status = (machdr->fctl >> 8) & 0x03;	
+	switch(ds_status)
+	{
+		case 0:/*ToDS FromDS:0 0 ibss*/
+			addr = (uint8_t *)&machdr->addr3;
+			break;
+			
+		case 1:/*ToDS FromDS:1 0 infra*/
+			addr = (uint8_t *)&machdr->addr1;
+			break;
+			
+		case 2:/*ToDS FromDS:0 1 infra*/
+			addr = (uint8_t *)&machdr->addr2;
+			break;
+			
+		case 3:/*ToDS FromDS:1 1 wds*/
+		default:
+			break;
+	}
+	
+	if(0 == addr)
+	{
+		return 0;
+	}
+	os_memcpy(&mac_address, addr, sizeof(machdr->addr2));
+
+	index = hal_monitor_get_id(mac_address);
+	if(index)
+	{
+		g_monitor_counts[index - 1] += 1; 
+	}
+	else
+	{
+	}
+
+	return g_monitor_counts[index - 1];
 }
 
 uint32_t hal_monitor_printf_buffering_mac_address(void)
 {
 	uint64_t *mac_address;
+	uint32_t *cnt_of_ap;
 	uint32_t addr_count, i;
 
 	if(0 == g_monitor_mac_addr)
@@ -404,36 +479,33 @@ uint32_t hal_monitor_printf_buffering_mac_address(void)
 	}
 
 	mac_address = g_monitor_mac_addr;
+	cnt_of_ap = g_monitor_counts;
 	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
 	for(i = 0; i < addr_count; i ++)
 	{
-		os_printf("macAddr:%d:%llx\r\n", i, mac_address[i]);
+		os_printf("macAddr:%d:%llx:%d\r\n", i, mac_address[i], cnt_of_ap[i]);
 	}
 	
 	return MONITOR_SUCCESS;
 }
 
-uint32_t hal_monitor_buffer_mac_address(uint64_t address
-	, uint32_t index)
+uint32_t hal_monitor_buffer_mac_address(uint64_t address,
+	uint32_t index)
 {
-	uint32_t id;
 	uint64_t *mac_address;
+	uint32_t *count_of_one_ap;
 	
 	if(0 == g_monitor_mac_addr)
 	{
 		return MONITOR_FAILURE;
 	}
 	
-	id = index;
-	
 	mac_address = g_monitor_mac_addr;
-	mac_address[id] = address;
-	os_printf("id:%d;addr:%llx ", id, address);
+	mac_address[index] = address;
+	
+	count_of_one_ap = g_monitor_counts;
+	count_of_one_ap[index] = 1;	
 
-	if((KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID) == id)
-	{
-		hal_monitor_printf_buffering_mac_address();
-	}
 
 	return MONITOR_SUCCESS;
 }
@@ -495,16 +567,26 @@ void hal_program_cipher_key
  
 uint16_t hal_get_secret_key_entry_id(void)
 {	
-	uint16_t entry_id;
+	uint16_t entry_id = 0;
+	uint32_t i, num, minv;
+	uint32_t *count_array;
 
-	entry_id = KEY_ENTRY_MIN_ID + g_entry_id;
-	if(KEY_ENTRY_MAX_ID == entry_id)
+	count_array = g_monitor_counts;
+	minv = count_array[0];
+	num = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
+
+	for(i = 0; i < num; i ++)
 	{
-		g_entry_id = 0;
+		if(0 == count_array[i])
+		{
+			entry_id = i;
+			break;
 	}
-	else
+		else if(count_array[i] < minv)
 	{
-		g_entry_id += 1;
+			minv = count_array[i];
+			entry_id = i;
+		}
 	}	
 
 	return entry_id;
@@ -514,18 +596,14 @@ void hal_update_secret_key(uint64_t macAddress,
 	uint8_t cipherType)
 {	
 	uint16_t key_index;	
+	uint16_t entry_id;	
 	uint32_t    pKey[4] = {0xabc47fd0, 0x57498892, 
 							0x11320490, 0x10815562};
 
-	if(hal_monitor_is_including_mac_address(macAddress))
-	{
-		return;
-	}
-	
 	key_index = hal_get_secret_key_entry_id();
-	hal_monitor_buffer_mac_address(macAddress, key_index - KEY_ENTRY_MIN_ID);
+	entry_id = key_index + KEY_ENTRY_MIN_ID;
 
-	//os_printf("t:%d\r\n", cipherType);
+	hal_monitor_buffer_mac_address(macAddress, key_index);
 
 	hal_program_cipher_key(1,	          // useDefaultKey
 					pKey,
@@ -533,7 +611,7 @@ void hal_update_secret_key(uint64_t macAddress,
 					1,					   // cipherLen
 					0,					   // sppRAM
 					cipherType,		 	   // vlanIDRAM
-					key_index,             // keyIndexRAM
+					entry_id,              // keyIndexRAM
 					cipherType,		       // cipherType
 					1,					   // newWrite
 					0); 				   // newRead
@@ -544,7 +622,7 @@ void hal_update_secret_key(uint64_t macAddress,
 					1,					   // cipherLen
 					0,					   // sppRAM
 					cipherType,		 	   // vlanIDRAM
-					key_index,             // keyIndexRAM
+					entry_id,			   // keyIndexRAM
 					cipherType,		       // cipherType
 					1,					   // newWrite
 					0); 				   // newRead
@@ -605,6 +683,10 @@ void hal_init_vlan_cipher(uint8_t useDefaultKey,
 
 void hal_init_cipher_keys(void)
 {
+    // reset Key storage RAM
+    nxmac_key_sto_ram_reset_setf(1);  
+	g_entry_id = 0;
+
 	hal_init_vlan_cipher(0,0,0); // null key
 	hal_init_vlan_cipher(0,1,1); // wep
 	hal_init_vlan_cipher(0,2,2); // tkip
@@ -643,9 +725,6 @@ void hal_machw_enter_monitor_mode(void)
     
 	// set default mode of operation
     nxmac_abgn_mode_setf(MODE_802_11N_2_4);// MODE_802_11N_5
-
-    // reset Key storage RAM
-    nxmac_key_sto_ram_reset_setf(1);    
 
 	hal_init_cipher_keys();
 }
@@ -706,8 +785,6 @@ void hal_assert_rec(void)
     GLOBAL_INT_DISABLE();
 
     // Display a trace message showing the error
-    //os_printf("ASSERT (%s) at %s:%d\n", condition, file, line);
-
     // Check if a recovery is already pending
     if (!(ke_evt_get() & KE_EVT_RESET_BIT))
     {

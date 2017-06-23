@@ -124,6 +124,7 @@
 
 #define SCTRL_ANALOG_CTRL0                    (SCTRL_BASE + 22 * 4)
 #define SPI_TRIG_BIT                             (1 << 19)
+#define SPI_DET_EN                               (1 << 4)
 #define SCTRL_ANALOG_CTRL1                    (SCTRL_BASE + 23 * 4)
 #define SPI_RST_BIT                              (1 << 25)
 #define DCO_CNTI_POSI                            (16)

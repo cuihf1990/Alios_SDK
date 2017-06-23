@@ -179,6 +179,7 @@ void net_wlan_init(void)
 #ifdef CONFIG_IPV6
 		net_ipv6stack_init(&g_mlan.netif);
 #endif /* CONFIG_IPV6 */
+		netifapi_netif_set_default(&g_mlan.netif);
 
 		ret = netifapi_netif_add(&g_uap.netif, &g_uap.ipaddr,
 					 &g_uap.ipaddr, &g_uap.ipaddr, NULL,
@@ -187,6 +188,7 @@ void net_wlan_init(void)
 			/*FIXME: Handle the error case cleanly */
 			net_e("UAP interface add failed");
 		}
+
 		wlan_init_done = 1;
 	}
 
@@ -237,6 +239,20 @@ static void wifi_station_changed(int connected)
 		WifiStatusHandler(1);
 	} else
 		WifiStatusHandler(2);
+}
+
+void wifi_uap_changed(int connected)
+{
+	static int last_state = 0;
+
+	if (connected == last_state)
+		return;
+	
+	last_state = connected;
+	if (connected) {
+		WifiStatusHandler(3);
+	} else
+		WifiStatusHandler(4);
 }
 
 const ip_addr_t* dns_getserver(u8_t numdns);
@@ -390,6 +406,14 @@ void uap_ip_start(void)
 	net_configure_address(&uap_ip_settings, net_get_uap_handle());
 }
 
+void uap_ip_down(void)
+{
+	wifi_uap_changed(0);
+	
+	netifapi_netif_set_down(&g_uap.netif);
+	netif_set_status_callback(&g_uap.netif, NULL);
+}
+
 #define DEF_UAP_IP	0xc0a80a01UL /* 192.168.10.1 */
 static unsigned int uap_ip =  DEF_UAP_IP;
 
@@ -471,7 +495,11 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 			dns.type = IPADDR_TYPE_V4;
 			dns_setserver(i, &dns);
 		}
-		wifi_station_changed(1);
+		if (if_handle == &g_mlan) {
+			wifi_station_changed(1);
+		} else {
+			wifi_uap_changed(1);
+		}
 		break;
 
 	case ADDR_TYPE_DHCP:
@@ -595,4 +623,18 @@ void net_configure_dns(struct wlan_ip_config *ip)
 }
 
 
+uint32_t ipv4_addr_aton(char *ipstr)
+{
+	ip4_addr_t ip;
+	uint32_t ret;
+	
+	ret = ip4addr_aton(ipstr, &ip);
+
+	if (ret == 0) // fail
+		return 0;
+	else
+		ret = ip.addr;
+
+	return ret;
+}
 

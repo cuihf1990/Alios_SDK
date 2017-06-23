@@ -207,13 +207,13 @@ uint32_t bk_wlan_is_sta(void)
 uint32_t bk_sta_cipher_is_open(void)
 {
     ASSERT(g_sta_param_ptr);
-    return (CONFIG_CIPHER_OPEN == g_sta_param_ptr->cipher_suite);
+    return (SECURITY_TYPE_NONE == g_sta_param_ptr->security);
 }
 
 uint32_t bk_sta_cipher_is_wep(void)
 {
     ASSERT(g_sta_param_ptr);
-    return (CONFIG_CIPHER_WEP == g_sta_param_ptr->cipher_suite);
+    return (SECURITY_TYPE_WEP == g_sta_param_ptr->security);
 }
 
 void bk_wlan_ap_init(hal_wifi_init_type_t *inNetworkInitPara)
@@ -470,28 +470,11 @@ void bk_wlan_sta_init_adv(hal_wifi_init_type_adv_t *inNetworkInitParaAdv)
     g_sta_param_ptr->ssid.length = os_strlen(inNetworkInitParaAdv->ap_info.ssid);
     os_memcpy(g_sta_param_ptr->ssid.array, inNetworkInitParaAdv->ap_info.ssid, g_sta_param_ptr->ssid.length);
 
-    switch(inNetworkInitParaAdv->ap_info.security)
-    {
-    case SECURITY_TYPE_NONE:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_OPEN;
-        break;
-    case SECURITY_TYPE_WEP:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_WEP;
-        break;
-    case SECURITY_TYPE_WPA_TKIP:
-    case SECURITY_TYPE_WPA2_TKIP:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_TKIP;
-        break;
-    case SECURITY_TYPE_WPA_AES:
-    case SECURITY_TYPE_WPA2_AES:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_CCMP;
-        break;
-    case SECURITY_TYPE_WPA2_MIXED:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_MIXED;
-        break;
-    default:
+    g_sta_param_ptr->security = inNetworkInitParaAdv->ap_info.security;
+    if ((SECURITY_TYPE_AUTO < inNetworkInitParaAdv->ap_info.security) ||
+		(SECURITY_TYPE_NONE > inNetworkInitParaAdv->ap_info.security)) {
+		bk_printf("security %d\r\n", inNetworkInitParaAdv->ap_info.security);
 		valid_ap = 0;
-        break;
     }
 
 	if (valid_ap) {

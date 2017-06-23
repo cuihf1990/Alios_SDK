@@ -592,7 +592,7 @@ static void rxu_cntrl_get_da_sa(struct mac_hdr_long *machdr_ptr)
 #if 1
 uint32_t rxu_mtr_record_count(struct mac_hdr *machdr)
 {
-	//hal_monitor_record_count(machdr);
+	hal_monitor_record_count(machdr);
 }
 
 uint32_t rxu_cntrl_get_group_cipher_type(uint32_t cipher_type)
@@ -2551,15 +2551,15 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 	            if ((frame_cntl & MAC_FCTRL_TYPE_MASK) != MAC_FCTRL_MGT_T)
 	                break;
 
-	            if (!rxu_cntrl_duplicate_nsta_check(frame))
-	                break;
-
 	            // Authentication can be encrypted (when using SHARED-KEY)
 	            if (RXL_CNTRL_IS_PROTECTED(rx_status->frame_cntl) &&
 	                (((statinfo & RX_HD_DECRSTATUS) != RX_HD_DECR_WEPSUCCESS) ||
 	                 !rxu_cntrl_protected_handle(frame, statinfo)))
 	                break;
             }
+			
+            if (!rxu_cntrl_duplicate_nsta_check(frame))
+                break;
             }
 
             upload = rxu_mgt_frame_check(swdesc, INVALID_STA_IDX);

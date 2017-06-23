@@ -225,6 +225,7 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/driver/usb/usb.c \
                     beken7231/beken378/driver/wdt/wdt.c \
                     beken7231/beken378/func/bk7011_cal/bk7011_cal.c \
+                    beken7231/beken378/func/bk7011_cal/manual_cal.c \
                     beken7231/beken378/func/fs_fat/disk_io.c \
                     beken7231/beken378/func/fs_fat/ff.c \
                     beken7231/beken378/func/fs_fat/playmode.c \

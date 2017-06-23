@@ -57,9 +57,16 @@ void sctrl_cali_dpll(void)
     param |= (SPI_TRIG_BIT);
     REG_WRITE(SCTRL_ANALOG_CTRL0, param);   
 
+    param = REG_READ(SCTRL_ANALOG_CTRL0);
+    param &= ~(SPI_DET_EN);
+    REG_WRITE(SCTRL_ANALOG_CTRL0, param);
+
     #if DPLL_DELAY_EN
     sctrl_dpll_delay200us();
     #endif
+    param = REG_READ(SCTRL_ANALOG_CTRL0);
+    param |= (SPI_DET_EN);
+    REG_WRITE(SCTRL_ANALOG_CTRL0, param);
 }
 
 void sctrl_dpll_isr(void)
@@ -112,7 +119,9 @@ void sctrl_init(void)
     sctrl_ctrl(CMD_SCTRL_MODEM_POWERUP, NULL);
 
     /*sys_ctrl <0x16>, trig spi */
-    param = 0x819A55B;//170209,from 0x819A54B to 0x819A55B for auto detect dpll unlock
+    //170209,from 0x819A54B to 0x819A55B for auto detect dpll unlock
+    //170614 from 0x819A55B to 0x819A59B for more easy to trigger
+    param = 0x819A59B;
     REG_WRITE(SCTRL_ANALOG_CTRL0, param);
 
     sctrl_cali_dpll();

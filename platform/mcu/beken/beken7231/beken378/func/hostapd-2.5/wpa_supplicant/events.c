@@ -598,11 +598,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 			break;
 		}
 		
-		if(ie.pairwise_cipher == (WPA_CIPHER_CCMP|WPA_CIPHER_TKIP)){
-			wpa_config_set_wpa2mixed(ssid);
-		}else if(ie.pairwise_cipher == WPA_CIPHER_CCMP){
-			wpa_config_set_ccmp(ssid);
-		}
+		wpa_config_set_wpa(ssid, &ie);
 
 		if (wep_ok &&
 		    (ie.group_cipher & (WPA_CIPHER_WEP40 | WPA_CIPHER_WEP104)))
@@ -612,39 +608,6 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 			return 1;
 		}
 
-		if (!(ie.proto & ssid->proto)) {
-			os_printf("   skip RSN IE - proto "
-				"mismatch\r\n");
-			break;
-		}
-
-		if (!(ie.pairwise_cipher & ssid->pairwise_cipher)) {
-			os_printf("   skip RSN IE - PTK "
-				"cipher mismatch\r\n");
-			break;
-		}
-
-		if (!(ie.group_cipher & ssid->group_cipher)) {
-			os_printf("   skip RSN IE - GTK "
-				"cipher mismatch\r\n");
-			break;
-		}
-
-		if (!(ie.key_mgmt & ssid->key_mgmt)) {
-			os_printf("   skip RSN IE - key mgmt "
-				"mismatch\r\n");
-			break;
-		}
-
-#ifdef CONFIG_IEEE80211W
-		if (!(ie.capabilities & WPA_CAPABILITY_MFPC) &&
-		    wpas_get_ssid_pmf(wpa_s, ssid) ==
-		    MGMT_FRAME_PROTECTION_REQUIRED) {
-			wpa_dbg(wpa_s, MSG_DEBUG, "   skip RSN IE - no mgmt "
-				"frame protection");
-			break;
-		}
-#endif /* CONFIG_IEEE80211W */
 
 		wpa_dbg(wpa_s, MSG_DEBUG, "   selected based on RSN IE");
 		return 1;
@@ -660,8 +623,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 			break;
 		}
 
-		wpa_config_set_tkip(ssid);
-		
+		wpa_config_set_wpa(ssid, &ie);
 		if (wep_ok &&
 		    (ie.group_cipher & (WPA_CIPHER_WEP40 | WPA_CIPHER_WEP104)))
 		{
@@ -670,29 +632,6 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 			return 1;
 		}
 
-		if (!(ie.proto & ssid->proto)) {
-			wpa_dbg(wpa_s, MSG_DEBUG, "   skip WPA IE - proto "
-				"mismatch");
-			break;
-		}
-
-		if (!(ie.pairwise_cipher & ssid->pairwise_cipher)) {
-			wpa_dbg(wpa_s, MSG_DEBUG, "   skip WPA IE - PTK "
-				"cipher mismatch");
-			break;
-		}
-
-		if (!(ie.group_cipher & ssid->group_cipher)) {
-			wpa_dbg(wpa_s, MSG_DEBUG, "   skip WPA IE - GTK "
-				"cipher mismatch");
-			break;
-		}
-
-		if (!(ie.key_mgmt & ssid->key_mgmt)) {
-			wpa_dbg(wpa_s, MSG_DEBUG, "   skip WPA IE - key mgmt "
-				"mismatch");
-			break;
-		}
 
 		wpa_dbg(wpa_s, MSG_DEBUG, "   selected based on WPA IE");
 		return 1;
@@ -1619,7 +1558,6 @@ static int wpas_select_network_from_last_scan(struct wpa_supplicant *wpa_s,
 	struct wpa_ssid *ssid = NULL;
 	int time_to_reenable = wpas_reenabled_network_time(wpa_s);
 
-	//os_printf("wpas_select_network_from_last_scan\r\n");
 	if (time_to_reenable > 0) {
 		os_printf("Postpone network selection by %d seconds since all networks are disabled\r\n",
 			time_to_reenable);
@@ -1632,7 +1570,6 @@ static int wpas_select_network_from_last_scan(struct wpa_supplicant *wpa_s,
 	if (wpa_s->p2p_mgmt)
 		return 0; /* no normal connection on p2p_mgmt interface */
 
-	//os_printf("wpa_supplicant_pick_network\r\n");
 	selected = wpa_supplicant_pick_network(wpa_s, &ssid);
 	if (selected) {
 		int skip;
@@ -1759,7 +1696,6 @@ static int wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
 		 * interface, do not notify other interfaces to avoid concurrent
 		 * operations during a connection attempt.
 		 */
-		//os_printf("no scan results\r\n"); 
 		return 0;
 	}
 

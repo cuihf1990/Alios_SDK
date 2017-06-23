@@ -69,24 +69,73 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
             arg_cnt -= 1;
             switch(cmd1)
             {
-            case 'm':
+            case 'b':  // bandwidth 0:20M, 1:40M
                 mode = os_strtoul(argv[arg_id + 1], NULL, 10);
                 break;
 
-            case 'd':
+            case 'd':  // timer intval
                 duration = os_strtoul(argv[arg_id + 1], NULL, 10);
                 break;
 
-            case 'c':
+            case 'c':  // channel
                 channel = os_strtoul(argv[arg_id + 1], NULL, 10);
                 break;
 
-            case 'l':
+            case 'e': { //  0: exit, 1: enter, 2: stop last rx
 #if CFG_RX_SENSITIVITY_TEST
-                err = mico_rtos_stop_timer(&rx_sens_tmr);
+                UINT32 op = os_strtoul(argv[arg_id + 1], NULL, 10);
+                if(op < RXSENS_G_MAX) {
+                    if(op == RXSENS_G_STOP_TIME)
+                    {
+                        err = mico_rtos_stop_timer(&rx_sens_tmr);
 	            ASSERT(kNoErr == err);
+                    } else if (op == RXSENS_G_STOP_LASTRX) {
+                        g_rxsens_start = 0;
+    	            } else {
+                        FUNCPTR reboot = 0;
+                        os_printf("reboot\r\n");
+                        (*reboot)();
+                    }
                 return 0;
+                } else {
+                    return -1;
+                }
 #endif
+            }
+
+            case 's': {  // start / stop
+#if CFG_RX_SENSITIVITY_TEST            
+                UINT32 sta = os_strtoul(argv[arg_id + 1], NULL, 10);
+                if(sta) { 
+                    rx_clean_rx_statistic_result();
+                    rx_get_rx_result_begin();
+                }
+                else {
+                    rx_get_rx_result_end();
+                }
+#endif
+                return 0;
+            }
+
+            case 'g': {  // get statistic  0: clean, 1:20M, 2:40M
+ #if CFG_RX_SENSITIVITY_TEST            
+                UINT32 g_type = os_strtoul(argv[arg_id + 1], NULL, 10);
+                if(g_type < RXSENS_RTYPTE_MAX ) 
+                {
+                    if(g_type == RXSENS_RTYPTE_CLEAN) { 
+                        rx_clean_rx_statistic_result();
+                    }
+                    else if(g_type == RXSENS_RTYPTE_20M) { 
+                        rx_get_rx20M_statistic_result();
+                    }
+                    else {
+                        rx_get_rx40M_statistic_result();
+                    }
+                    return 0;
+                } else 
+                    return -1;
+#endif
+            }            
 
             default:
                 fail = 1;
@@ -134,19 +183,28 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
         return 1;
     }
 
-    g_rxsens_start = 1;
     rs_test();
+    g_rxsens_start = 1;
+
+    if(duration) {
     rx_get_rx_result_begin();
 
     t_ms = fclk_from_sec_to_tick(duration);
 
-	err = mico_rtos_init_timer(&rx_sens_tmr, 
+        if(rx_sens_tmr.function) {
+            err = mico_rtos_deinit_timer(&rx_sens_tmr); 
+            ASSERT(kNoErr == err); 
+        } 
+        
+    	err = mico_rtos_init_timer(&rx_sens_tmr, 
 							t_ms, 
 							rxsens_ct_hdl, 
 							(void *)0);
     ASSERT(kNoErr == err);
-	err = mico_rtos_start_timer(&rx_sens_tmr);
+    	err = mico_rtos_start_timer(&rx_sens_tmr);
 	ASSERT(kNoErr == err);
+    
+    }
     
 #endif // CFG_RX_SENSITIVITY_TEST
 
