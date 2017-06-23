@@ -112,6 +112,9 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
 
     partition_info = hal_flash_get_info( in_partition );
 
+    if(off_set % 0x1000 || size % 0x1000 || size + off_set > partition_info->partition_length)
+        return -1;
+
     start_addr = (partition_info->partition_start_addr + off_set) & (~0xFFF);
     end_addr = (partition_info->partition_start_addr + off_set + size - 1) & (~0xFFF);
 
@@ -136,6 +139,9 @@ int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set, const v
 
     partition_info = hal_flash_get_info( in_partition );
 
+    if(off_set == NULL || in_buf == NULL || *off_set + in_buf_len > partition_info->partition_length)
+        return -1;
+
     start_addr = partition_info->partition_start_addr + *off_set;
 
     hal_wdg_reload();
@@ -157,6 +163,9 @@ int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set, void *ou
     GLOBAL_INT_DECLARATION();
 
     partition_info = hal_flash_get_info( in_partition );
+
+    if(off_set == NULL || out_buf == NULL || *off_set + out_buf_len > partition_info->partition_length)
+        return -1;
 
     start_addr = partition_info->partition_start_addr + *off_set;
 
