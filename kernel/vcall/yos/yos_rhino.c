@@ -25,9 +25,10 @@
 
 static unsigned int used_bitmap;
 
+extern void hal_reboot(void);
 void yos_reboot(void)
 {
-
+    hal_reboot();
 }
 
 int yos_get_hz(void)
