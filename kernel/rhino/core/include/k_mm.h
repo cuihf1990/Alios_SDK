@@ -17,6 +17,22 @@
 #ifndef K_MM_H
 #define K_MM_H
 
+#ifdef HAVE_VALGRIND_H
+#include <valgrind.h>
+#include <memcheck.h>
+#define VGF(X) X
+#undef VALGRIND_MAKE_MEM_NOACCESS
+#define VALGRIND_MAKE_MEM_NOACCESS(x,y)
+#elif defined(HAVE_VALGRIND_VALGRIND_H)
+#include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
+#define VGF(X) X
+#undef VALGRIND_MAKE_MEM_NOACCESS
+#define VALGRIND_MAKE_MEM_NOACCESS(x,y)
+#else
+#define VGF(X)
+#endif
+
 
 /*use two level bit map to find free memory block*/
 
