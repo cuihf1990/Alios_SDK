@@ -138,6 +138,16 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     yunos_mutex_lock(&(pmmhead->mm_mutex), YUNOS_WAIT_FOREVER);
 #endif
 
+#if defined(__VALGRIND_MAJOR__) && defined(__VALGRIND_MINOR__)   \
+                        && (__VALGRIND_MAJOR__ > 3                                   \
+                            || (__VALGRIND_MAJOR__ == 3 && __VALGRIND_MINOR__ >= 12))
+            /*valgrind support VALGRIND_CREATE_MEMPOOL_EXT from 3.12.0*/
+            VGF(VALGRIND_CREATE_MEMPOOL_EXT(addr, 0, 0,
+                                            VALGRIND_MEMPOOL_METAPOOL | VALGRIND_MEMPOOL_AUTO_FREE));
+#else
+            VGF(VALGRIND_CREATE_MEMPOOL((uint8_t *)addr, 0, 0));
+#endif
+
     firstblk = init_mm_region(addr + MM_ALIGN_UP(sizeof(k_mm_head)),
                               MM_ALIGN_DOWN(len - sizeof(k_mm_head)));
     pmmhead->regioninfo = (k_mm_region_info_t *) firstblk->mbinfo.buffer;
@@ -163,15 +173,15 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
                          curblk->mbinfo.buffer + MM_ALIGN_UP(sizeof(mblk_pool_t)),
                          DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
 #endif
-#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
-    YUNOS_CRITICAL_EXIT();
-#else
-    yunos_mutex_unlock(&(pmmhead->mm_mutex));
-#endif
+
 
     *ppmmhead = pmmhead;
 
     /*mark it as free and set it to bitmap*/
+
+    VGF(VALGRIND_MALLOCLIKE_BLOCK(nextblk->mbinfo.buffer, nextblk->size & YUNOS_MM_BLKSIZE_MASK,0 , 0));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(nextblk->mbinfo.buffer, nextblk->size & YUNOS_MM_BLKSIZE_MASK));
+
     k_mm_free(pmmhead, nextblk->mbinfo.buffer);
 
 #if (K_MM_STATISTIC > 0)
@@ -184,6 +194,10 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
                             DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
     if (mmblk_pool) {
         curblk = (k_mm_list_t *) ((char *) mmblk_pool - MMLIST_HEAD_SIZE);
+
+        VGF(VALGRIND_FREELIKE_BLOCK(mmblk_pool, 0));
+        VGF(VALGRIND_MAKE_MEM_DEFINED(mmblk_pool, curblk->size & YUNOS_MM_BLKSIZE_MASK));
+
         stat = yunos_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
                                     (void *)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t)),
                                     DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
@@ -195,10 +209,16 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 
     }
 #if (K_MM_STATISTIC > 0)
-    pmmhead->used_size += MM_ALIGN_UP(sizeof(mblk_pool_t)) + MMLIST_HEAD_SIZE ;
-    pmmhead->free_size -= MM_ALIGN_UP(sizeof(mblk_pool_t)) + MMLIST_HEAD_SIZE ;
-    pmmhead->maxused_size = pmmhead->used_size;
+
+    stats_removesize(pmmhead, DEF_TOTAL_FIXEDBLK_SIZE);
+
 #endif
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+        YUNOS_CRITICAL_EXIT();
+#else
+        yunos_mutex_unlock(&(mmhead->mm_mutex));
+#endif
+
     return YUNOS_SUCCESS;
 }
 
@@ -318,6 +338,10 @@ static void *k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
     if (sta != YUNOS_SUCCESS) {
         return NULL;
     }
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(tmp, size));
+    VGF(VALGRIND_MALLOCLIKE_BLOCK(tmp, size, 0, 0));
+
     stats_addsize(mmhead, DEF_FIX_BLK_SIZE, size);
     return tmp;
 }
@@ -328,6 +352,9 @@ static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
     if (!mmhead || !ptr) {
         return;
     }
+
+    VGF(VALGRIND_FREELIKE_BLOCK(ptr, 0));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(ptr, DEF_FIX_BLK_SIZE));
 
     sta = yunos_mblk_free((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, ptr);
     if (sta != YUNOS_SUCCESS) {
@@ -353,7 +380,7 @@ static kstat_t bitmap_search(size_t size , size_t *flt, size_t *slt,
         if (action == ACTION_GET) {
             padding_size = (1 << (firstbit - MAX_LOG2_SLT)) - 1;
             tmp_size = size + padding_size;
-            firstbit = 31 - (size_t)yunos_find_first_bit(&size);
+            firstbit = 31 - (size_t)yunos_find_first_bit(&tmp_size);
         }
         *flt = firstbit - MIN_FLT_BIT + 1;
         tmp_size = tmp_size - (1 << firstbit);
@@ -426,7 +453,7 @@ static k_mm_list_t *findblk_byidx(k_mm_head *mmhead, size_t *flt, size_t *slt)
         find = mmhead->mm_tbl[*flt][*slt];
     } else {
         *flt = find_last_bit(mmhead->fl_bitmap & (~0 << (*flt + 1)));
-        if (flt > 0) {         /* likely */
+        if (*flt > 0) {         /* likely */
             *slt = find_last_bit(mmhead->sl_bitmap[*flt]);
             find = mmhead->mm_tbl[*flt][*slt];
         }
@@ -455,7 +482,6 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     if (size == 0) {
         return NULL;
     }
-
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
     YUNOS_CRITICAL_ENTER();
@@ -464,15 +490,14 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
 #endif
     mm_pool = (mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer;
     if (size <= DEF_FIX_BLK_SIZE && mm_pool->blk_avail > 0) {
-
         retptr =  k_mm_smallblk_alloc(mmhead, size);
         if (retptr) {
+
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
             YUNOS_CRITICAL_EXIT();
 #else
             yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
-
             return retptr;
         }
     }
@@ -482,14 +507,16 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
 
     /* Rounding up the requested size and calculating fl and sl */
     if (bitmap_search(size, &fl, &sl, ACTION_GET) != YUNOS_SUCCESS) {
-        return NULL;
+        retptr = NULL;
+        goto ALLOCEXIT;
     }
 
     /* Searching a free block, recall that this function changes the values of fl and sl,
        so they are not longer valid when the function fails */
     b = findblk_byidx(mmhead, &fl, &sl);
     if (!b || size > (b->size & YUNOS_MM_BLKSIZE_MASK )) {
-        return NULL;    /* Not found */
+        retptr = NULL;
+        goto ALLOCEXIT;
     }
 
     mmhead->mm_tbl[fl][sl] = b->mbinfo.free_ptr.next;
@@ -522,6 +549,9 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
         b->size &= (~YUNOS_MM_FREE);       /* Now it's used */
     }
 
+    VGF(VALGRIND_MAKE_MEM_DEFINED(b->mbinfo.buffer, size));
+    VGF(VALGRIND_MALLOCLIKE_BLOCK(b->mbinfo.buffer, size, 0, 0));
+
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
 #if (YUNOS_CONFIG_GCC_RETADDR > 0u)
     allocator = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
@@ -529,16 +559,21 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     b->dye   = YUNOS_MM_CORRUPT_DYE;
     b->owner = allocator;
 #endif
+    retptr = (void *) b->mbinfo.buffer;
+    if(retptr != NULL) {
+        stats_addsize(mmhead, ((b->size & YUNOS_MM_BLKSIZE_MASK)
+                           + MMLIST_HEAD_SIZE), req_size);
+    }
+
+    ALLOCEXIT:
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     YUNOS_CRITICAL_EXIT();
 #else
     yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
-    stats_addsize(mmhead, ((b->size & YUNOS_MM_BLKSIZE_MASK)
-                           + MMLIST_HEAD_SIZE), req_size);
 
-    return (void *) b->mbinfo.buffer;
+    return retptr ;
 
 }
 
@@ -558,18 +593,22 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 #endif
     if (mmhead->fixedmblk && (ptr > (void *)mmhead->fixedmblk->mbinfo.buffer)
         && (ptr < (void *)mmhead->fixedmblk->mbinfo.buffer + mmhead->fixedmblk->size)) {
+
         /*it's fixed size memory block*/
         k_mm_smallblk_free(mmhead, ptr);
-
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
         YUNOS_CRITICAL_EXIT();
 #else
         yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
+
         return;
     }
     b = (k_mm_list_t *) ((char *) ptr - MMLIST_HEAD_SIZE);
     b->size |= YUNOS_MM_FREE;
+
+    VGF(VALGRIND_FREELIKE_BLOCK(ptr, 0));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(ptr, b->size & YUNOS_MM_BLKSIZE_MASK));
 
     stats_removesize(mmhead,
                      ((b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE));
@@ -641,6 +680,11 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 #endif
 
     b        = (k_mm_list_t *) ((char *) oldmem - MMLIST_HEAD_SIZE);
+
+    VGF(VALGRIND_FREELIKE_BLOCK(oldmem, 0));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(oldmem, b->size & YUNOS_MM_BLKSIZE_MASK));
+
+
     next_b   = NEXT_MM_BLK(b->mbinfo.buffer, b->size & YUNOS_MM_BLKSIZE_MASK);
     new_size = (new_size < sizeof(k_mm_list_t)) ? sizeof(k_mm_list_t) : MM_ALIGN_UP(
                    new_size);
@@ -701,6 +745,9 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
         }
     }
 
+    VGF(VALGRIND_MAKE_MEM_DEFINED(b->mbinfo.buffer, new_size));
+    VGF(VALGRIND_MALLOCLIKE_BLOCK(b->mbinfo.buffer, new_size, 0, 0));
+
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
 #if (YUNOS_CONFIG_GCC_RETADDR > 0u)
     allocator = (size_t)__builtin_return_address(YOS_MM_ALLOC_DEPTH);
@@ -709,27 +756,37 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     b->owner = allocator;
 #endif
 
-#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
-    YUNOS_CRITICAL_EXIT();
-#else
-    yunos_mutex_unlock(&mmhead->mm_mutex);
-#endif
 
     if (ptr_aux) {
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+        YUNOS_CRITICAL_EXIT();
+#else
+        yunos_mutex_unlock(&mmhead->mm_mutex);
+#endif
         return ptr_aux;
     }
 
     if (!(ptr_aux = k_mm_alloc(mmhead, new_size))) {
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+        YUNOS_CRITICAL_EXIT();
+#else
+        yunos_mutex_unlock(&mmhead->mm_mutex);
+#endif
         return NULL;
     }
-
     cpsize = ((b->size & YUNOS_MM_BLKSIZE_MASK) > new_size) ? new_size :
              (b->size & YUNOS_MM_BLKSIZE_MASK);
 
     memcpy(ptr_aux, oldmem, cpsize);
 
     k_mm_free(mmhead, oldmem);
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+    YUNOS_CRITICAL_EXIT();
+#else
+    yunos_mutex_unlock(&mmhead->mm_mutex);
+#endif
     return ptr_aux;
+
 }
 
 

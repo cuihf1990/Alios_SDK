@@ -89,7 +89,7 @@ static void * clirev_thread(void * arg)
         /* Wait for a packet to arrive. */
         ret = select(1, &fdset, NULL, NULL, NULL);
         if(ret == 1) {
-            char *nbuf = cpu_event_malloc(1);
+            char *nbuf = cpu_event_malloc(8);
 
             /* Obtain the size of the packet and put it into the "len"
              variable. */
