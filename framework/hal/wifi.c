@@ -172,7 +172,7 @@ int hal_wifi_set_channel(hal_wifi_module_t *m, int ch)
         m = hal_wifi_get_default_module();
     }
 
-    return m->suspend_soft_ap(m);
+    return m->set_channel(m, ch);
 }
 
 void hal_wifi_start_wifi_monitor(hal_wifi_module_t *m)

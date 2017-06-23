@@ -723,16 +723,22 @@ int bk_wlan_power_on(void)
 
 int bk_wlan_suspend(void)
 {
+	supplicant_main_exit();
+	hostapd_thread_stop();
 	return 0;
 }
 
 int bk_wlan_suspend_station(void)
 {
+    supplicant_main_exit();
+
 	return 0;
 }
 
 int bk_wlan_suspend_softap(void)
 {
+	hostapd_thread_stop();
+
 	return 0;
 }
 
