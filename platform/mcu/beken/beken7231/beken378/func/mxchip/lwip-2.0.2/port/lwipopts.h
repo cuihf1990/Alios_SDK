@@ -446,6 +446,11 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
     int lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest);
 #define LWIP_HOOK_IP6_ROUTE(src, dest)           lwip_hook_ip6_route(src, dest)
 #define LWIP_HOOK_MESH_IS_MCAST_SUBSCRIBED(dest) lwip_hook_mesh_is_mcast_subscribed(dest)
+
+#define LWIP_ICMP6                      1
+#define CHECKSUM_CHECK_ICMP6            0
+#define LWIP_MULTICAST_PING             1
+
 #endif
 
 #endif /* __LWIPOPTS_H__ */
