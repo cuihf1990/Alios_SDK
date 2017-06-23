@@ -628,10 +628,12 @@ static wsf_request_node_t *__send_msg(wsf_msg_t *req, wsf_async_cb_t cb,
             LOGW(MODULE_NAME, "wsf msg send succeed.id=%d", msg_id);
             return node;
         }
-    } else {
-        wsf_msg_session_destroy(&node->session);
-        os_free(node);
+
+        wsf_request_queue_pop(global_request_queue, node);
     }
+
+    wsf_msg_session_destroy(&node->session);
+    os_free(node);
     return NULL;
 }
 
