@@ -526,12 +526,13 @@ class XMODEM(object):
         return crc & 0xffff
 
 port = 0
-debug = False
+prcss_debug = False
+modem_debug = False
 
 def getc(size, timeout=1):
     port.timeout = timeout
     ret = port.read(size)
-    if debug:
+    if modem_debug:
         print "read:",
         print ret,
         print ", {0} bytes".format(len(ret))
@@ -540,7 +541,7 @@ def getc(size, timeout=1):
 def putc(data, timeout=1):
     port.timeout = timeout
     len = port.write(data)
-    if debug:
+    if modem_debug:
         print "{0} bytes writen".format(len)
     return len
 
@@ -553,6 +554,8 @@ def assert_response(patterns, timeout):
     timeout_tick = time.time() + timeout
     while True:
         line = port.readline()
+        if prcss_debug and len(line):
+            print line
         for pattern in patterns:
             if pattern in line:
                 return True
@@ -632,22 +635,24 @@ except:
     sys.stderr.write("error: unable to open {0}\n".format(device))
     exit(1)
 
-port.write("a\r\n")
+port.write("a\r\n") #abort potential ongoing YMODEM transfer
 port.flushInput()
 port.write("help\r\n")
 if assert_response(["YOS bootloader", "MICO bootloader"], 1) == False:
-    port.baudrate = application_baudrate
-    port.flushInput()
-    port.write("\r\n")
-    time.sleep(0.1)
+    if application_baudrate != bootloader_baudrate:
+        port.baudrate = application_baudrate
+        port.flushInput()
+        port.write("dummycmd_for_flushing_purpose\r\n")
+        time.sleep(0.1)
     port.write("reboot\r\n")
     if assert_response(["reboot"] , 1) == False:
-        sys.stderr.write("error: target does not response, please make sure your port and baudrate settings are correct\n")
+        sys.stderr.write("error: failed to reboot your board, it did not respond to \"reboot\" command\n")
         sys.exit(1)
-    port.baudrate = bootloader_baudrate
-    time.sleep(0.05)
+    if application_baudrate != bootloader_baudrate:
+        port.baudrate = bootloader_baudrate
+    time.sleep(0.02)
     port.write("         \n")
-    if assert_response(["MICO bootloader"], 1) == False:
+    if assert_response(["YOS bootloader", "MICO bootloader"], 1) == False:
         sys.stderr.write("error: target does not seam to have a working bootloader\n")
         sys.exit(1)
 port.flushInput()
