@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <yos/framework.h>
+#include <yos/network.h>
 #include <yos/log.h>
 #include <hal/wifi.h>
 #include <yos/cli.h>
@@ -112,14 +113,12 @@ static void stop_mesh(void)
 #endif
 }
 
-extern uint32_t ipv4_addr_aton(char *ipstr);
-
 static void netmgr_ip_got_event(hal_wifi_module_t *m,
                                 hal_wifi_ip_stat_t *pnet, void *arg)
 {
     LOGI(TAG, "Got ip : %s, gw : %s, mask : %s", pnet->ip, pnet->gate, pnet->mask);
 
-    g_netmgr_cxt.ipv4_owned = (int32_t)ipv4_addr_aton(pnet->ip);
+    g_netmgr_cxt.ipv4_owned = (int32_t)inet_addr(pnet->ip);
     yos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
     start_mesh(true);
 }
