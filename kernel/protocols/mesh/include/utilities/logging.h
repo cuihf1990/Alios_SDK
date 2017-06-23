@@ -76,7 +76,7 @@ typedef enum {
 #ifndef DEBUG
 static inline void ur_log(ur_log_level_t level, ur_log_region_t region,
                           const char *format, ...) {}
-static inline ur_log_level_t ur_log_get_level(void) {}
+static inline ur_log_level_t ur_log_get_level(void) {return -1;}
 static inline void ur_log_set_level(ur_log_level_t lvl) {}
 #else
 void ur_log(ur_log_level_t level, ur_log_region_t region,
