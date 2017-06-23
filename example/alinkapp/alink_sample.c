@@ -468,7 +468,7 @@ extern void ota_post_version_msg();
 
 static void alink_cloud_connected(void) {
     ota_post_version_msg();
-    //yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+    yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
     yos_post_event(EV_YUNIO, CODE_YUNIO_ON_CONNECTED, 0);
     printf("alink cloud connected!\n");
 
