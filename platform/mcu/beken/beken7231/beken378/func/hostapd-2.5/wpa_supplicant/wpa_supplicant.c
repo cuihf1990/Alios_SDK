@@ -741,7 +741,7 @@ void wpa_supplicant_set_state(struct wpa_supplicant *wpa_s,
 		/* Reinitialize normal_scan counter */
 		wpa_s->normal_scans = 0;
 		sta_ip_start();
-	}else{
+	} else if (state == WPA_DISCONNECTED) { 
 		sta_ip_down();
 	}
 

@@ -1020,8 +1020,6 @@ void rwnx_cal_set_txpwr_by_rate(INT32 rate)
     txpwr_val_B = (tx_pwr_rate[rate][1] & (~(0xf << 12))) | (dcorMod << 12);
     txpwr_val_C = (tx_pwr_rate[rate][2] & (~(0xf << 12))) | (dcorPA << 12);
 
-    os_printf("rate:%d, mod:%d, pa:%d\r\n", rate, dcorMod, dcorPA);
-
     BK7011TRX.REG0xA->value = txpwr_val_A;
     CAL_WR_TRXREGS(0xA);
     BK7011TRX.REG0xB->value = txpwr_val_B;
