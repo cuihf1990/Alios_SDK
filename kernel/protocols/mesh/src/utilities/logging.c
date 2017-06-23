@@ -8,11 +8,11 @@
 #include "utilities/memory.h"
 #include "tools/cli.h"
 
-#ifdef DEBUG
-#define MAX_LOG_SIZE 256
-
 extern int dda_log(char *str);
 extern int dda_cli_log(char *str);
+
+#ifdef DEBUG
+#define MAX_LOG_SIZE 256
 
 static ur_log_level_t g_log_level = UR_LOG_LEVEL_INFO;
 ur_log_level_t ur_log_get_level(void)
