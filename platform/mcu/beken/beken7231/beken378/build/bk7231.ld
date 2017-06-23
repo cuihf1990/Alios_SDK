@@ -99,6 +99,8 @@ SECTIONS
 	PROVIDE(_stack_irq         = 0x440000 - 0x3F0 - 0x7F0 - 0xFF0); /* 0xFF0*/
 	PROVIDE(_stack_fiq         = 0x440000 - 0x3F0 - 0x7F0); /* 0x7F0*/
 	PROVIDE(_stack_sys         = 0x440000 - 0x3F0); /* 0x3F0*/
+
+	ASSERT ((_stack_unused > end), "Error: No room left for the stack")
 }
  GROUP(
    libgcc.a
