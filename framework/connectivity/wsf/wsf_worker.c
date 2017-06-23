@@ -310,7 +310,6 @@ static void process_msg_response(wsf_msg_t *msg, int length)
                 wsf_msg_session_destroy(&node->session);
                 os_free(node);
             } else {
-                os_free(node);
                 wsf_msg_session_signal(&node->session);
             }
         } else {
@@ -631,8 +630,6 @@ static wsf_request_node_t *__send_msg(wsf_msg_t *req, wsf_async_cb_t cb,
         }
     } else {
         wsf_msg_session_destroy(&node->session);
-        os_free(req);
-        os_free(arg);
         os_free(node);
     }
     return NULL;
