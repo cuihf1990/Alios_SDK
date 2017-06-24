@@ -157,14 +157,16 @@ static int filter_packet(mesh_hal_priv_t *priv, uint8_t *data, int len)
     uint16_t seqno = calc_seqctrl(data) << 4;
     mac_entry_t *ent;
     uint32_t now;
-    uint8_t index;
+    uint8_t bcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
     if (len < WIFI_MESH_OFFSET) {
         return 1;
     }
 
     if (memcmp(data + WIFI_BSSID_OFFSET, priv->bssid, WIFI_MAC_ADDR_SIZE) ||
-        memcmp(data + WIFI_SRC_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE) == 0) {
+        memcmp(data + WIFI_SRC_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE) == 0 ||
+        (memcmp(data + WIFI_DST_OFFSET, bcast, WIFI_MAC_ADDR_SIZE) &&
+         memcmp(data + WIFI_DST_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE))) {
         return 1;
     }
 
