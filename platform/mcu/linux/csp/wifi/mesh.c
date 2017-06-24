@@ -148,10 +148,14 @@ static int filter_packet(mesh_hal_priv_t *priv, unsigned char *pkt, struct rx_in
 {
     uint16_t seqno = calc_seqctrl(pkt) << 4;
     mac_entry_t *ent;
+    uint8_t bcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
     if (memcmp(pkt+OFF_BSS, priv->bssid, 6) ||
-            memcmp(pkt+OFF_SRC, priv->macaddr, 6) == 0)
+        memcmp(pkt+OFF_SRC, priv->macaddr, 6) == 0 ||
+        (memcmp(pkt+OFF_DST, bcast, 6) &&
+         memcmp(pkt+OFF_DST, priv->macaddr, 6))) {
         return 1;
+    }
 
     priv->stats.in_frames ++;
     ent = find_mac_entry(pkt+OFF_SRC);
