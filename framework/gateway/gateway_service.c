@@ -19,7 +19,7 @@
 #include "mqtt_sn.h"
 #include "gateway_service.h"
 
-#define ME "gateway"
+#define MODULE_NAME "gateway"
 
 typedef struct reg_info_s {
     char model_id[sizeof(uint32_t) + 1];
@@ -123,7 +123,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     const mac_address_t *mac_addr;
     uint32_t model_id = 0x0050099a;
 
-    LOGD(ME, "connect to new gateway");
+    LOGD(MODULE_NAME, "connect to new gateway");
     reginfo = (reg_info_t *)msn_alloc(CONNECT, sizeof(reg_info_t), &buf, &len);
     memset(reginfo, 0, sizeof(reg_info_t));
     memcpy(reginfo->model_id, &model_id, sizeof(model_id));
@@ -140,7 +140,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
 
 static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
 {
-    LOGD(ME, "handle_adv");
+    LOGD(MODULE_NAME, "handle_adv");
     if (pstate->gateway_mode) {
         return;
     }
@@ -167,13 +167,13 @@ static void handle_publish(gateway_state_t *pstate, void *pmsg, int len)
     const char *attr_value = attr_name + strlen(attr_name) + 1;
     if (strcmp(op_code, "rpt") == 0) {
         if (!pstate->gateway_mode) {
-            LOGE(ME, "error: cloud report data received at non-gateway node");
+            LOGE(MODULE_NAME, "error: cloud report data received at non-gateway node");
             return;
         }
 
         const char *uuid = get_uuid_by_ip6addr(&pstate->src_addr);
         if (uuid == NULL) {
-            LOGE(ME, "error: cloud report data from unconnected node");
+            LOGE(MODULE_NAME, "error: cloud report data from unconnected node");
             return;
         }
 
@@ -190,14 +190,14 @@ static void handle_publish(gateway_state_t *pstate, void *pmsg, int len)
     }
 
     if (strcmp(op_code, "get") == 0) {
-        LOGD(ME, "recv %s - %s", op_code, attr_name);
+        LOGD(MODULE_NAME, "recv %s - %s", op_code, attr_name);
         yos_cloud_trigger(GET_DEVICE_STATUS, attr_name);
     } else if (strcmp(op_code, "set") == 0) {
-        LOGD(ME, "recv %s - %s - %s", op_code, attr_name, attr_value);
+        LOGD(MODULE_NAME, "recv %s - %s - %s", op_code, attr_name, attr_value);
         yos_cloud_trigger(SET_DEVICE_STATUS, attr_name);
     } else {
         const char *payload = (const char *)(pub_msg+1);
-        LOGD(ME, "recv unkown %s", payload);
+        LOGD(MODULE_NAME, "recv unkown %s", payload);
     }
 }
 
@@ -206,7 +206,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     client_t *client = NULL;
     dlist_for_each_entry(&pstate->clients, client, client_t, next) {
         if (memcmp(reginfo->ieee_addr, client->devinfo->dev_base.u.ieee_addr, IEEE_ADDR_BYTES) == 0) {
-            LOGD(ME, "existing client %s", client->devinfo->dev_base.u.ieee_addr);
+            LOGD(MODULE_NAME, "existing client %s", client->devinfo->dev_base.u.ieee_addr);
             return client;
         }
     }
@@ -221,7 +221,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     memcpy(&model_id, reginfo->model_id, sizeof(model_id));
     int ret = devmgr_join_zigbee_device(reginfo->ieee_addr, model_id, reginfo->rand, reginfo->sign);
     if (ret ==  SERVICE_RESULT_ERR) {
-        LOGD(ME, "register device:%s to alink server failed", reginfo->ieee_addr);
+        LOGD(MODULE_NAME, "register device:%s to alink server failed", reginfo->ieee_addr);
         free(client->reginfo);
         free(client);
         return NULL;
@@ -230,7 +230,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     free(client->reginfo);
     dlist_add_tail(&client->next, &pstate->clients);
 
-    LOGD(ME, "new client %s", client->reginfo->ieee_addr);
+    LOGD(MODULE_NAME, "new client %s", client->reginfo->ieee_addr);
 
     return client;
 }
@@ -239,7 +239,7 @@ static void handle_connect(gateway_state_t *pstate, void *pmsg, int len)
 {
     client_t *client = NULL;
     if (!pstate->gateway_mode) {
-        LOGE(ME, "error recv CONNECT cmd!");
+        LOGE(MODULE_NAME, "error recv CONNECT cmd!");
         return;
     }
 
@@ -262,12 +262,12 @@ static int gateway_cloud_report(const char *method, const char *json_buffer)
     gateway_state_t *pstate = &gateway_state;
 
     if (pstate->yunio_connected) {
-        LOGE(ME, "strange, yunio is ready!");
+        LOGE(MODULE_NAME, "strange, yunio is ready!");
         return 0;
     }
 
     if (!pstate->mqtt_connected) {
-        LOGE(ME, "mqtt not ready!");
+        LOGE(MODULE_NAME, "mqtt not ready!");
         return -1;
     }
 
@@ -290,13 +290,13 @@ static int gateway_cloud_report(const char *method, const char *json_buffer)
 static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
 {
     if (pstate->gateway_mode) {
-        LOGE(ME, "error recv CONNACK cmd!");
+        LOGE(MODULE_NAME, "error recv CONNACK cmd!");
         return;
     }
 
     conn_ack_t *conn_ack = pmsg;
     if (conn_ack->ReturnCode != 0) {
-        LOGE(ME, "connect fail %d!", conn_ack->ReturnCode);
+        LOGE(MODULE_NAME, "connect fail %d!", conn_ack->ReturnCode);
         return;
     }
 
@@ -305,7 +305,7 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
     yos_cloud_register_backend(&gateway_cloud_report);
     yos_cloud_trigger(CLOUD_CONNECTED, NULL);
 
-    LOGD(ME, "connack");
+    LOGD(MODULE_NAME, "connack");
 }
 
 static void handle_msg(gateway_state_t *pstate, uint8_t *pmsg, int len)
@@ -340,13 +340,13 @@ static void gateway_sock_read_cb(int fd, void *priv)
                    MSG_DONTWAIT,
                    (struct sockaddr *)&pstate->src_addr, &slen);
     if (len <= 2) {
-        LOGE(ME, "error read count %d", len);
+        LOGE(MODULE_NAME, "error read count %d", len);
         return;
     }
 
     len = msn_parse_header(buf, len, &pmsg);
     if (len < 0) {
-        LOGE(ME, "error parsing header %x", buf[0]);
+        LOGE(MODULE_NAME, "error parsing header %x", buf[0]);
         return;
     }
 
@@ -380,7 +380,7 @@ static void gateway_advertise(void *arg)
 
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)&addr, sizeof(addr));
-    LOGD(ME, "gateway_advertise");
+    LOGD(MODULE_NAME, "gateway_advertise");
 
     free(buf);
 }
@@ -420,14 +420,14 @@ static void gateway_worker(void *arg)
         int ret = lwip_select(maxfd+1, &rfds, NULL, NULL, NULL);
         if (ret < 0) {
             if (errno != EINTR) {
-                LOGE(ME, "select error %d, quit", errno);
+                LOGE(MODULE_NAME, "select error %d, quit", errno);
                 break;
             }
         }
         if (FD_ISSET(gateway_state.sockfd, &rfds))
             gateway_sock_read_cb(gateway_state.sockfd, &gateway_state);
     }
-    LOGE(ME, "return");
+    LOGE(MODULE_NAME, "return");
 }
 #endif
 
@@ -440,7 +440,7 @@ static int init_socket(void)
 
     sockfd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     if (sockfd < 0) {
-        LOGE(ME, "error open socket %d", errno);
+        LOGE(MODULE_NAME, "error open socket %d", errno);
         return -1;
     }
 
@@ -460,7 +460,7 @@ static int init_socket(void)
     addr.sin6_port = htons(MQTT_SN_PORT);
     ret = bind(sockfd, (const struct sockaddr *)&addr, sizeof(addr));
     if (ret < 0) {
-        LOGE(ME, "error bind socket %d", errno);
+        LOGE(MODULE_NAME, "error bind socket %d", errno);
         close(sockfd);
         return -1;
     }
