@@ -68,7 +68,7 @@ void yunos_task_abort_hook(ktask_t *task)
     (void)task;
 }
 
-yunos_mm_alloc_hook(void *mem, size_t size)
+void yunos_mm_alloc_hook(void *mem, size_t size)
 {
     (void)mem;
     (void)size;
