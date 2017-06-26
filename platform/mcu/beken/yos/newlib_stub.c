@@ -16,11 +16,10 @@
 
 #include <reent.h>
 #include <sys/errno.h>
-
 #include <k_api.h>
-
-extern k_mm_region_head_t  g_mm_region_head;
-#define YOC_MM_ALLOC_DEPTH 0
+#include <sys/unistd.h>
+#include <sys/errno.h>
+#include "hal/soc/soc.h"
 
 int _execve_r(struct _reent *ptr, const char *name, char *const *argv, char *const *env)
 {
@@ -103,11 +102,25 @@ _ssize_t _read_r(struct _reent *ptr, int fd, void *buf, size_t nbytes)
  */
 _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
 {
-    if (fd < 3) {
-        return hal_uart_send(**********);
-    } else {
-        return 0;
+    char *tmp = buf;
+
+    switch (fd) {
+        case STDOUT_FILENO: /*stdout*/
+        case STDERR_FILENO: /* stderr */
+            break;
+        default:
+            errno = EBADF;
+            return -1;
     }
+
+    for (int i = 0; i < nbytes; i++) {
+        if (*tmp == '\n')
+            hal_uart_send(0, (const void*)"\r", 1);
+        hal_uart_send(0, (const void*)tmp, 1);
+        tmp ++;
+    }
+
+    return nbytes;
 }
 
 int _fstat_r(struct _reent *ptr, int fd, struct stat *pstat)
@@ -152,40 +165,35 @@ int _wait_r(struct _reent *ptr, int *status)
     return -1;
 }
 
-int _gettimeofday_r(struct _reent *ptr, struct timeval *__tp, void *__tzp)
+int _gettimeofday_r(struct _reent *ptr, struct timeval *tv, void *__tzp)
 {
-    ptr->_errno = ENOTSUP;
-    return -1;
+     uint64_t t = yos_now_ms();
+     tv->tv_sec = t / 1000;
+     tv->tv_usec = ( t % 1000 ) * 1000;
+     return 0;
 }
 
 void *_malloc_r(struct _reent *ptr, size_t size)
 {
-    void    *tmp;
-    kstat_t  err      = YUNOS_SUCCESS;
-    size_t   alloctor = (size_t)__builtin_return_address(YOC_MM_ALLOC_DEPTH);
-    err = yunos_mm_bf_alloc(&g_mm_region_head, &tmp, size, alloctor);
-    if (err != YUNOS_SUCCESS) {
-        return NULL;
-    }
 
-    return tmp;
+    return 0;
 }
 
 void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
 {
-    ptr->_errno = ENOTSUP;
-    return NULL;
+
+    return 0;
 }
 
 void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
 {
-    ptr->_errno = ENOTSUP;
-    return NULL;
+    return 0;
 }
 
 void _free_r(struct _reent *ptr, void *addr)
 {
-    yunos_mm_bf_free(&g_mm_region_head, addr);
+
+
 }
 
 void _exit(int status)
