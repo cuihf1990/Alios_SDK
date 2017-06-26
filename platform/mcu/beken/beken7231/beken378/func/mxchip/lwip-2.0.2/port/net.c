@@ -391,6 +391,8 @@ void sta_ip_down(void)
 
 void sta_ip_start(void)
 {
+	if (sta_ip_start_flag == 1) // IP already started
+		return;
 	os_printf("sta_ip_start\r\n");
 	sta_ip_start_flag = 1;
 	net_configure_address(&sta_ip_settings, net_get_sta_handle());
