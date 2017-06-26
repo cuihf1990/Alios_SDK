@@ -58,6 +58,10 @@ static int rhino_get_thread_reg_list(struct rtos *rtos, int64_t thread_id, char 
 static int rhino_get_symbol_list_to_lookup(symbol_table_elem_t *symbol_list[]);
 static const struct rtos_register_stacking *get_stacking_info_arm966e(const struct rtos *rtos, int64_t stack_ptr);
 static const struct rtos_register_stacking *get_stacking_info_armM(const struct rtos *rtos, int64_t stack_ptr);
+static int64_t rhino_arm9_stack_calc(struct target *target,
+	const uint8_t *stack_data, const struct rtos_register_stacking *stacking,
+	int64_t stack_ptr);
+
 
 struct rhino_thread_state {
 	int value;
@@ -78,27 +82,46 @@ static const struct rhino_thread_state rhino_thread_states[] = {
 #define ECOS_NUM_STATES (sizeof(rhino_thread_states)/sizeof(struct rhino_thread_state))
 
 
-#define ARM966E_REGISTERS_SIZE_SOLICITED (11 * 4)
+#define ARM966E_REGISTERS_SIZE_SOLICITED (17 * 4)
 static const struct stack_register_offset rtos_rhnio_arm966e_stack_offsets_solicited[] = {
-	{ -1,   32 },		/* r0        */
-	{ -1,   32 },		/* r1        */
-	{ -1,   32 },		/* r2        */
-	{ -1,   32 },		/* r3        */
-	{ 0x08, 32 },		/* r4        */
-	{ 0x0C, 32 },		/* r5        */
-	{ 0x10, 32 },		/* r6        */
-	{ 0x14, 32 },		/* r7        */
-	{ 0x18, 32 },		/* r8        */
-	{ 0x1C, 32 },		/* r9        */
-	{ 0x20, 32 },		/* r10       */
-	{ 0x24, 32 },		/* r11       */
-	{ -1,   32 },		/* r12       */
+#if 1
+    { 0x04, 32 },		/* r0        */
+	{ 0x08, 32 },		/* r1        */
+	{ 0x0C, 32 },		/* r2        */
+	{ 0x10, 32 },		/* r3        */
+	{ 0x14, 32 },		/* r4        */
+	{ 0x18, 32 },		/* r5        */
+	{ 0x1C, 32 },		/* r6        */
+	{ 0x20, 32 },		/* r7        */
+	{ 0x24, 32 },		/* r8        */
+	{ 0x28, 32 },		/* r9        */
+	{ 0x2C, 32 },		/* r10       */
+	{ 0x30, 32 },		/* r11       */
+	{ 0x34, 32 },		/* r12       */
 	{ -2,   32 },		/* sp (r13)  */
-	{ 0x28, 32 },		/* lr (r14)  */
-	{ -1,   32 },		/* pc (r15)  */
-	/*{ -1,   32 },*/		/* lr (r14)  */
-	/*{ 0x28, 32 },*/		/* pc (r15)  */
+	{ 0x38, 32 },		/* lr (r14)  */
+	{ 0x3C, 32 },		/* pc (r15)  */
+	{ 0x00, 32 },		/* xPSR      */
+#else
+	{ 0x08, 32 },		/* r0        */
+	{ 0x0C, 32 },		/* r1        */
+	{ 0x10, 32 },		/* r2        */
+	{ 0x14, 32 },		/* r3        */
+	{ 0x18, 32 },		/* r4        */
+	{ 0x1C, 32 },		/* r5        */
+	{ 0x20, 32 },		/* r6        */
+	{ 0x24, 32 },		/* r7        */
+	{ 0x28, 32 },		/* r8        */
+	{ 0x2C, 32 },		/* r9        */
+	{ 0x30, 32 },		/* r10       */
+	{ 0x34, 32 },		/* r11       */
+	{ 0x38, 32 },		/* r12       */
+	{ -2,   32 },		/* sp (r13)  */
+	{ 0x3C, 32 },		/* lr (r14)  */
+	{ 0x40, 32 },		/* pc (r15)  */
 	{ 0x04, 32 },		/* xPSR      */
+
+#endif
 };
 #define ARM966E_REGISTERS_SIZE_INTERRUPT (17 * 4)
 static const struct stack_register_offset rtos_rhnio_arm966e_stack_offsets_interrupt[] = {
@@ -127,7 +150,7 @@ const struct rtos_register_stacking rtos_rhnio_arm966e_stacking_solicited=
     ARM966E_REGISTERS_SIZE_SOLICITED,   /* stack_registers_size */
     -1,                                 /* stack_growth_direction */
     17,                                 /* num_output_registers */
-    NULL,                               /* stack_alignment */
+    rhino_arm9_stack_calc,                               /* stack_alignment */
     rtos_rhnio_arm966e_stack_offsets_solicited  /* register_offsets */
 };
 
@@ -136,7 +159,7 @@ const struct rtos_register_stacking rtos_rhnio_arm966e_stacking_interrupt=
 	ARM966E_REGISTERS_SIZE_INTERRUPT,	/* stack_registers_size */
 	-1,									/* stack_growth_direction */
 	17,									/* num_output_registers */
-	NULL,								/* stack_alignment */
+	rhino_arm9_stack_calc,								/* stack_alignment */
 	rtos_rhnio_arm966e_stack_offsets_interrupt	/* register_offsets */
 };
 
@@ -237,8 +260,7 @@ static const struct rtos_register_stacking *get_stacking_info_arm966e(const stru
 		LOG_ERROR("Error reading stack data from rhino thread: stack_ptr=0x%" PRIx64, stack_ptr);
 		return NULL;
 	}
-
-	if (flag == 0) {
+	if ((flag & 0x13) == 0x13) {
 		LOG_DEBUG("  solicited stack");
 		return param->stacking_info[0];
 	} else {
@@ -304,6 +326,17 @@ static const struct rtos_register_stacking *get_stacking_info(const struct rtos 
 		return param->fn_get_stacking_info(rtos, stack_ptr);
 
 	return param->stacking_info[0];
+}
+
+static int64_t rhino_arm9_stack_calc(struct target *target,
+	const uint8_t *stack_data, const struct rtos_register_stacking *stacking,
+	int64_t stack_ptr)
+{
+	int64_t new_stack_ptr;
+
+	new_stack_ptr = stack_ptr - stacking->stack_growth_direction *
+		(stacking->stack_registers_size - 4);
+	return new_stack_ptr;
 }
 
 static int rhino_update_threads(struct rtos *rtos)
@@ -463,7 +496,7 @@ static int rhino_update_threads(struct rtos *rtos)
 		int64_t thread_status = 0;
 		retval = target_read_buffer(rtos->target,
 				thread_ptr + param->thread_state_offset,
-				4,
+				1,
 				(uint8_t *)&thread_status);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Error reading thread state from rhino target");
