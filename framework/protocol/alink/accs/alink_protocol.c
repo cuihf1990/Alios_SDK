@@ -282,7 +282,7 @@ static void *_alink_reg_cb(connectivity_rsp_t *rsp, void *cb)
 {
     int ret = 0;
     _alink_reg_t *reg = cb;
-    LOG("\n");
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, "");
     if (!rsp) {
         ret = ALINK_CODE_ERROR_TIMEOUT;
     } else {
@@ -516,7 +516,7 @@ static void *__alink_post_cb(connectivity_rsp_t *rsp, void *cb)
         ret = alink_response_get_x(rsp->data, NULL, 0, NULL);
     }
     alink_error_code_handler(ret);
-    LOG("get posted respon back , cb: %p. \n", _cb);
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, "get posted respon back , cb: %p. \n", _cb);
     if (_cb) {
         _cb->cb(_cb->arg);
         os_free(_cb);
@@ -1044,7 +1044,7 @@ static int _alink_handshake_cycle(int ret)
     if (--_g_handshake_cnt <= 0) {
         return 0;
     }
-    LOG("cnt: %d ,phase: %d\n", _g_handshake_cnt, alink_phase);
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, "cnt: %d ,phase: %d\n", _g_handshake_cnt, alink_phase);
     switch (alink_phase) {
         case PHASE_INIT:
             if (main_device->config->uuid[0] == 0) {
@@ -1098,7 +1098,7 @@ static int _alink_handshake_cycle(int ret)
 
 int alink_handshake_async()
 {
-    LOG(MODULE_NAME_ALINK_PROTOCOL);
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, MODULE_NAME_ALINK_PROTOCOL);
     OS_ASSERT(main_device, "invalid main device");
 
     _g_handshake_cnt = 9 + 4;
@@ -1111,7 +1111,7 @@ int alink_handshake(void)
 {
     int ret, loop = 9 + 4; /* 9 steps to login at most, +4 for redundancy */
 
-    LOG(MODULE_NAME_ALINK_PROTOCOL);
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, MODULE_NAME_ALINK_PROTOCOL);
     OS_ASSERT(main_device, "invalid main device");
 
     alink_phase = PHASE_INIT;

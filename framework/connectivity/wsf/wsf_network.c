@@ -179,7 +179,7 @@ wsf_code wsf_send_msg(wsf_connection_t *wsf_conn, const char *data, int length)
             LOGE(MODULE_NAME, "ssl send error, len:%d", length - count);
             return WSF_SEND_ERROR;
         }
-        printf("wsf send succeed->  %d\n", ret);
+        LOGD(MODULE_NAME, "wsf send succeed->  %d\n", ret);
         os_mutex_unlock(wsf_conn->mutex);
         return WSF_SUCCESS;
     }

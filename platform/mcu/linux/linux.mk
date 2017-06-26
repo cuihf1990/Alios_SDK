@@ -28,6 +28,7 @@ GLOBAL_DEFINES      += CONFIG_YOS_KVFILE=\"/dev/flash0\"
 GLOBAL_DEFINES      += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash1\"
 GLOBAL_CFLAGS       += -Wall -Wno-missing-field-initializers -Wno-strict-aliasing -Wno-address -Wno-unused-result
 GLOBAL_DEFINES      += CSP_LINUXHOST
+GLOBAL_DEFINES      += CONFIG_LOGMACRO_DETAILS
 
 # arch linux
 $(NAME)_SOURCES := $(ARCH_LINUX)/cpu_impl.c
