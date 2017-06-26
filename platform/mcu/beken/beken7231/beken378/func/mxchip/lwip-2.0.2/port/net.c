@@ -260,6 +260,12 @@ const ip_addr_t* dns_getserver(u8_t numdns);
 static void netif_status_callback(struct netif *n)
 {
 	ip_addr_t *dns_server;
+	uint32_t sed = (uint32_t)yos_now_ms();
+
+	/* use current system time to set the start tcp/udp port number RANDOMIZE */
+	srand(sed);
+	tcp_init();
+	udp_init();
 	
 	if (n->flags & NETIF_FLAG_UP) {
 		struct dhcp *dhcp = netif_dhcp_data(n);
