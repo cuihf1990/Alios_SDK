@@ -43,7 +43,7 @@ void yos_start(void)
 
     soc_driver_init();
 
-    yunos_task_dyn_create(&g_yos_init, "yos-init", 0, 10, 0, YOS_START_STACK, yos_init, 1);
+    yunos_task_dyn_create(&g_yos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, yos_init, 1);
 
     yunos_start();
 }

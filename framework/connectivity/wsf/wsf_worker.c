@@ -260,8 +260,8 @@ static void __cb_wsf_timeout(void *arg)
     }
     config = (wsf_config_t *)cb->extra;
 
-    if (cb->sock != (long)wsf_conn->tcp &&
-        wsf_conn && wsf_conn->ssl) {
+    if (wsf_conn && cb->sock != (long)wsf_conn->tcp &&
+         wsf_conn->ssl) {
         cb->sock = (long)wsf_conn->tcp;
         wsf_keep_connection(config);
         start_network(cb);

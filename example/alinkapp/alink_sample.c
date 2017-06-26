@@ -441,6 +441,8 @@ void parse_opt(int argc, char *argv[])
 }
 extern char *g_sn;
 
+static int is_alink_started = 0;
+
 static void alink_service_event(input_event_t *event, void *priv_data) {
     if (event->type != EV_WIFI) {
         return;
@@ -449,8 +451,10 @@ static void alink_service_event(input_event_t *event, void *priv_data) {
     if (event->code != CODE_WIFI_ON_GOT_IP) {
         return;
     }
-
-    alink_start();
+    if(is_alink_started == 0) {
+        is_alink_started = 1;
+        alink_start();
+    }
 }
 
 static void mesh_start(void *arg)

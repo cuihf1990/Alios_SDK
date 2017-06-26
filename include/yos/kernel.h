@@ -21,7 +21,8 @@
 extern "C" {
 #endif
 
-#define YOS_WAIT_FOREVER 0xffffffffu
+#define YOS_WAIT_FOREVER        0xffffffffu
+#define YOS_DEFAULT_APP_PRI    32
 
 typedef struct {
     void *hdl;
