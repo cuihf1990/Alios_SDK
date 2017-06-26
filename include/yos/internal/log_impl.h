@@ -116,7 +116,6 @@ int csp_printf(const char *fmt, ...);
 #define LOGE_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #define LOGW_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #define LOGI_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
-#define LOGI_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 
 #else
 
