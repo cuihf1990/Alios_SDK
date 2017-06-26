@@ -5,7 +5,7 @@ MODULE              := 1062
 HOST_ARCH           := linux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  := ysh tfs
+$(NAME)_COMPONENTS  :=  tfs
 
 CONFIG_LIB_TFS := y
 CONFIG_TFS_ID2_RSA := y
