@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 #include "trace_hal.h"
 
@@ -77,9 +79,7 @@ void trace_hal_deinit(void *handle)
 
 void *trace_hal_init(void)
 {
-    int fh1;
-
-    int sockfd, n,rec_len;
+    int sockfd;
 
     struct sockaddr_in servaddr;
 
