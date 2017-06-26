@@ -139,14 +139,17 @@ static void set_network_configs(network_context_t *network)
         case MEDIA_TYPE_WIFI:
             network->migrate_interval = WIFI_MIGRATE_WAIT_TIMEOUT;
             network->notification_interval = WIFI_NOTIFICATION_TIMEOUT;
+            network->net_scan_interval = WIFI_NET_SCAN_TIMEOUT;
             break;
         case MEDIA_TYPE_BLE:
             network->migrate_interval = BLE_MIGRATE_WAIT_TIMEOUT;
             network->notification_interval = BLE_NOTIFICATION_TIMEOUT;
+            network->net_scan_interval = BLE_NET_SCAN_TIMEOUT;
             break;
         case MEDIA_TYPE_15_4:
             network->migrate_interval = IEEE154_MIGRATE_WAIT_TIMEOUT;
             network->notification_interval = IEEE154_NOTIFICATION_TIMEOUT;
+            network->net_scan_interval = IEEE154_NET_SCAN_TIMEOUT;
             break;
         default:
             break;

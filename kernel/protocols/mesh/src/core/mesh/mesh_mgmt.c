@@ -43,7 +43,9 @@ typedef struct mm_device_s {
     uint8_t           ueid[8];
     bool              reboot_flag;
     ur_timer_t        alive_timer;
+    ur_timer_t        net_scan_timer;
     uint8_t           seclevel;
+    uint8_t           prev_channel;
 } mm_device_t;
 
 typedef struct mesh_mgmt_state_s {
@@ -60,6 +62,7 @@ static ur_error_t attach_start(neighbor_t *nbr);
 static void handle_attach_timer(void *args);
 static void handle_advertisement_timer(void *args);
 static void handle_migrate_wait_timer(void *args);
+static void handle_net_scan_timer(void *args);
 
 static ur_error_t send_attach_request(network_context_t *network,
                                       ur_addr_t *dest);
@@ -230,9 +233,6 @@ void become_leader(void)
     g_mm_state.leader_mode = g_mm_state.device.mode;
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
-        hal_context_t *hal = network->hal;
-        umesh_mm_set_channel(network, hal->channel_list.channels[0]);
-
         network->state = INTERFACE_UP;
         network->attach_state = ATTACH_DONE;
         network->attach_candidate = NULL;
@@ -254,6 +254,8 @@ void become_leader(void)
         sid_allocator_init(network);
         start_advertisement_timer(network);
     }
+
+    umesh_mm_start_net_scan_timer();
 
     set_default_network_data();
     memset(&configs, 0, sizeof(configs));
@@ -513,6 +515,8 @@ static void handle_attach_timer(void *args)
                 if ((g_mm_state.device.mode & MODE_SUPER ||
                      g_mm_state.device.mode & MODE_RX_ON) &&
                     ((g_mm_state.device.mode & MODE_MOBILE) == 0)) {
+                    umesh_mm_set_channel(network,
+                                         network->hal->channel_list.channels[0]);
                     become_leader();
                 } else {
                     become_detached();
@@ -521,6 +525,7 @@ static void handle_attach_timer(void *args)
             return;
         }
         if (g_mm_state.device.state > DEVICE_STATE_ATTACHED) {
+            umesh_mm_set_channel(network, g_mm_state.device.prev_channel);
             start_advertisement_timer(network);
         }
     }
@@ -546,6 +551,15 @@ static void handle_migrate_wait_timer(void *args)
     network->migrate_wait_timer = NULL;
     network->prev_netid = BCAST_NETID;
     network->candidate_meshnetid = BCAST_NETID;
+}
+
+static void handle_net_scan_timer(void *args)
+{
+    network_context_t *network;
+
+    nm_start_discovery();
+    network = get_default_network_context();
+    g_mm_state.device.prev_channel = network->channel;
 }
 
 static uint16_t calc_ssid_child_num(network_context_t *network)
@@ -1409,7 +1423,6 @@ static ur_error_t handle_sid_response(message_t *message)
     ur_stop_timer(&network->advertisement_timer, network);
 
     start_neighbor_updater();
-    nm_stop_discovery();
 
     network->meshnetid = network->attach_node->addr.netid;
     ur_router_sid_updated(network, network->sid);
@@ -1475,6 +1488,7 @@ void become_detached(void)
     write_prev_netinfo();
     g_mm_state.device.state = DEVICE_STATE_DETACHED;
     ur_stop_timer(&g_mm_state.device.alive_timer, NULL);
+    ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
     reset_network_context();
     nd_init();
     nm_stop_discovery();
@@ -1486,6 +1500,8 @@ void become_detached(void)
     slist_for_each_entry(networks, network, network_context_t, next) {
         sid_allocator_deinit(network);
     }
+
+    umesh_mm_start_net_scan_timer();
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "become detached\r\n");
 }
@@ -1584,13 +1600,14 @@ static void read_prev_netinfo(void)
     }
 }
 
-static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
+static bool update_migrate_times(network_context_t *network, neighbor_t *nbr)
 {
     uint16_t netid;
+    uint8_t timeout;
 
     netid = nbr->addr.netid;
     if (netid == BCAST_NETID) {
-        return;
+        return false;
     }
     if (network->migrate_wait_timer == NULL) {
         network->migrate_times = 0;
@@ -1600,8 +1617,13 @@ static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
     } else if (netid == network->candidate_meshnetid) {
         network->migrate_times++;
     }
-    if (network->migrate_times < MIGRATE_TIMEOUT) {
-        return;
+    if (g_mm_state.device.state == DEVICE_STATE_DETACHED) {
+        timeout = DETACHED_MIGRATE_TIMEOUT;
+    } else {
+        timeout = MIGRATE_TIMEOUT;
+    }
+    if (network->migrate_times < timeout) {
+        return false;
     }
 
     if (network->router->sid_type == STRUCTURED_SID &&
@@ -1609,11 +1631,11 @@ static void update_migrate_times(network_context_t *network, neighbor_t *nbr)
         nbr = NULL;
     }
     if (nbr == NULL && g_mm_state.device.state > DEVICE_STATE_ATTACHED) {
-        return;
+        return false;
     }
 
     ur_stop_timer(&network->migrate_wait_timer, network);
-    attach_start(nbr);
+    return true;
 }
 
 static void update_network_data(network_context_t *network,
@@ -1644,18 +1666,8 @@ static ur_error_t handle_advertisement(message_t *message)
     mm_netinfo_tv_t   *netinfo;
     mm_cost_tv_t      *path_cost;
     mm_mode_tv_t      *mode;
-    uint16_t          new_metric;
-    uint16_t          cur_metric;
-    uint8_t           main_version;
-    int8_t            diff;
     network_context_t *network;
-    neighbor_t        *attach_node;
-    bool              from_same_net = false;
-    bool              from_same_core = false;
-    bool              leader_reboot = false;
-    uint16_t          net_size = 0;
     uint8_t           tlv_type;
-    int8_t            cmp_mode = 0;
     message_info_t    *info;
 
     if (g_mm_state.device.state < DEVICE_STATE_DETACHED) {
@@ -1667,7 +1679,6 @@ static ur_error_t handle_advertisement(message_t *message)
     info = message->info;
     network = info->network;
 
-    attach_node = network->attach_node;
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
@@ -1717,99 +1728,10 @@ static ur_error_t handle_advertisement(message_t *message)
         send_link_request(network, &nbr->addr, &tlv_type, 1);
     }
 
-    // migration logics
-    // not try to migrate to pf node, and mode leader would not migrate
-    if ((mode->mode & MODE_MOBILE) ||
-        (g_mm_state.device.mode & MODE_LEADER)) {
-        return UR_ERROR_NONE;
+    if (umesh_mm_migration_check(network, nbr, netinfo)) {
+        nm_stop_discovery();
+        attach_start(nbr);
     }
-
-    cmp_mode = umesh_mm_compare_mode(g_mm_state.leader_mode, netinfo->leader_mode);
-    if (cmp_mode < 0) {
-        become_detached();
-        update_migrate_times(network, nbr);
-        return UR_ERROR_NONE;
-    }
-
-    // detached node try to migrate
-    if (g_mm_state.device.state == DEVICE_STATE_DETACHED) {
-        update_migrate_times(network, nbr);
-        return UR_ERROR_NONE;
-    }
-
-    // leader not try to migrate to the same net
-    if (network->meshnetid == info->src.netid) {
-        from_same_net = true;
-    } else if (is_same_mainnet(network->meshnetid, info->src.netid)) {
-        from_same_core = true;
-    }
-    if (from_same_net &&
-        (attach_node == NULL || g_mm_state.device.state == DEVICE_STATE_LEADER)) {
-        return UR_ERROR_NONE;
-    }
-
-    if (from_same_net) {
-        update_network_data(network, netinfo);
-        main_version = (netinfo->stable_version & STABLE_MAIN_VERSION_MASK) >>
-                       STABLE_MAIN_VERSION_OFFSET;
-        diff = (main_version + 8 - nd_get_stable_main_version()) % 8;
-        if (diff > 0 && diff < 4 &&
-            g_mm_state.device.state > DEVICE_STATE_ATTACHED &&
-            g_mm_state.device.state != DEVICE_STATE_LEADER) {
-            nd_set_stable_main_version(main_version);
-            if (g_mm_state.device.mode & MODE_MOBILE) {
-                leader_reboot = true;
-            }
-        }
-        if ((nbr == attach_node) &&
-            (attach_node->flags & NBR_DISCOVERY_REQUEST) &&
-            ((attach_node->flags & NBR_SID_CHANGED) == 0)) {
-            leader_reboot = true;
-            attach_node->flags &= (~NBR_DISCOVERY_REQUEST);
-        }
-        if (leader_reboot) {
-            network->attach_candidate = network->attach_node;
-            network->attach_state = ATTACH_SID_REQUEST;
-            ur_stop_timer(&network->attach_timer, network);
-            network->attach_timer = ur_start_timer(network->hal->sid_request_interval,
-                                                   handle_attach_timer, network);
-            send_sid_request(network);
-        }
-        if (attach_node == nbr) {
-            network->path_cost = nbr->path_cost + nbr->stats.link_cost;
-        }
-
-        if (network->path_cost <= (nbr->path_cost + PATH_COST_SWITCH_HYST) ||
-            attach_node == nbr) {
-            return UR_ERROR_NONE;
-        }
-    } else {
-        if ((nbr->addr.netid == network->prev_netid) &&
-            (network->prev_path_cost < nbr->path_cost)) {
-            return UR_ERROR_NONE;
-        }
-        if (from_same_core) {
-            net_size = (netinfo->subnet_size_1 << 8) | netinfo->subnet_size_2;
-            new_metric = compute_network_metric(net_size, 0);
-            cur_metric = compute_network_metric(nd_get_meshnetsize(network), 0);
-            if (cur_metric < (new_metric + 5)) {
-                return UR_ERROR_NONE;
-            }
-        } else {
-            net_size = netinfo->size;
-            new_metric = compute_network_metric(net_size, 0);
-            cur_metric = compute_network_metric(nd_get_meshnetsize(NULL), 0);
-            if ((is_subnet(network->meshnetid) && is_subnet(info->src.netid)) ||
-                (is_subnet(network->meshnetid) == 0 && is_subnet(info->src.netid) == 0)) {
-                if ((new_metric < cur_metric) ||
-                    (new_metric == cur_metric && info->src.netid <= network->meshnetid)) {
-                    return UR_ERROR_NONE;
-                }
-            }
-        }
-    }
-
-    update_migrate_times(network, nbr);
 
     return UR_ERROR_NONE;
 }
@@ -2209,3 +2131,129 @@ uint8_t umesh_mm_get_leader_mode(void)
     return g_mm_state.leader_mode;
 }
 
+bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
+                              mm_netinfo_tv_t *netinfo)
+{
+    int8_t cmp_mode = 0;
+    bool from_same_net = false;
+    bool from_same_core = false;
+    neighbor_t *attach_node;
+    bool leader_reboot = false;
+    int8_t diff;
+    uint16_t new_metric;
+    uint16_t cur_metric;
+    uint8_t main_version;
+    uint16_t net_size = 0;
+
+    // not try to migrate to pf node, and mode leader would not migrate
+    if ((nbr->mode & MODE_MOBILE) ||
+        (g_mm_state.device.mode & MODE_LEADER)) {
+        return false;
+    }
+
+    cmp_mode = umesh_mm_compare_mode(g_mm_state.leader_mode, netinfo->leader_mode);
+    if (cmp_mode < 0) {
+        become_detached();
+        return update_migrate_times(network, nbr);
+    }
+
+    // detached node try to migrate
+    if (g_mm_state.device.state == DEVICE_STATE_DETACHED) {
+        return update_migrate_times(network, nbr);
+    }
+
+    // leader not try to migrate to the same net
+    if (network->meshnetid == nbr->addr.netid) {
+        from_same_net = true;
+    } else if (is_same_mainnet(network->meshnetid, nbr->addr.netid)) {
+        from_same_core = true;
+    }
+    attach_node = network->attach_node;
+    if (from_same_net &&
+        (attach_node == NULL || g_mm_state.device.state == DEVICE_STATE_LEADER)) {
+        return false;
+    }
+
+    if (from_same_net) {
+        update_network_data(network, netinfo);
+        main_version = (netinfo->stable_version & STABLE_MAIN_VERSION_MASK) >>
+                       STABLE_MAIN_VERSION_OFFSET;
+        diff = (main_version + 8 - nd_get_stable_main_version()) % 8;
+        if (diff > 0 && diff < 4 &&
+            g_mm_state.device.state > DEVICE_STATE_ATTACHED &&
+            g_mm_state.device.state != DEVICE_STATE_LEADER) {
+            nd_set_stable_main_version(main_version);
+            if (g_mm_state.device.mode & MODE_MOBILE) {
+                leader_reboot = true;
+            }
+        }
+        if ((nbr == attach_node) &&
+            (attach_node->flags & NBR_DISCOVERY_REQUEST) &&
+            ((attach_node->flags & NBR_SID_CHANGED) == 0)) {
+            leader_reboot = true;
+            attach_node->flags &= (~NBR_DISCOVERY_REQUEST);
+        }
+        if (leader_reboot) {
+            network->attach_candidate = network->attach_node;
+            network->attach_state = ATTACH_SID_REQUEST;
+            ur_stop_timer(&network->attach_timer, network);
+            network->attach_timer = ur_start_timer(network->hal->sid_request_interval,
+                                                   handle_attach_timer, network);
+            send_sid_request(network);
+        }
+        if (attach_node == nbr) {
+            network->path_cost = nbr->path_cost + nbr->stats.link_cost;
+        }
+
+        if (network->path_cost <= (nbr->path_cost + PATH_COST_SWITCH_HYST) ||
+            attach_node == nbr) {
+            return false;
+        }
+    } else {
+        if ((nbr->addr.netid == network->prev_netid) &&
+            (network->prev_path_cost < nbr->path_cost)) {
+            return false;
+        }
+        if (from_same_core) {
+            net_size = (netinfo->subnet_size_1 << 8) | netinfo->subnet_size_2;
+            new_metric = compute_network_metric(net_size, 0);
+            cur_metric = compute_network_metric(nd_get_meshnetsize(network), 0);
+            if (cur_metric < (new_metric + 5)) {
+                return false;
+            }
+        } else {
+            net_size = netinfo->size;
+            new_metric = compute_network_metric(net_size, 0);
+            cur_metric = compute_network_metric(nd_get_meshnetsize(NULL), 0);
+            if ((is_subnet(network->meshnetid) && is_subnet(nbr->addr.netid)) ||
+                (is_subnet(network->meshnetid) == 0 && is_subnet(nbr->addr.netid) == 0)) {
+                if ((new_metric < cur_metric) ||
+                    (new_metric == cur_metric && nbr->addr.netid <= network->meshnetid)) {
+                    return false;
+                }
+            }
+        }
+    }
+
+   return update_migrate_times(network, nbr);
+}
+
+void umesh_mm_start_net_scan_timer(void)
+{
+    network_context_t *network;
+
+    if (g_mm_state.device.mode & MODE_LEADER) {
+        return;
+    }
+
+    if (g_mm_state.device.net_scan_timer == NULL) {
+        network = get_default_network_context();
+        g_mm_state.device.net_scan_timer = ur_start_timer(network->net_scan_interval,
+                                                          handle_net_scan_timer, NULL);
+    }
+}
+
+uint8_t umesh_mm_get_prev_channel(void)
+{
+    return g_mm_state.device.prev_channel;
+}

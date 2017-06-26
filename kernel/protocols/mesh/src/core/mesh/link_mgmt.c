@@ -318,6 +318,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (nbr->addr.netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
+    nbr->channel = info->src_channel;
     nbr->last_heard = ur_get_now();
 
     network = info->network;

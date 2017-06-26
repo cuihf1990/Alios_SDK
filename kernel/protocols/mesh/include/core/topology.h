@@ -95,6 +95,7 @@ typedef struct neighbor_s {
     uint8_t flags;
     uint8_t attach_candidate_timeout;
     ssid_info_t ssid_info;
+    uint8_t channel;
     uint32_t last_heard;
 } neighbor_t;
 

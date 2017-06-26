@@ -103,7 +103,8 @@ enum {
     ATTACH_REQUEST_RETRY_TIMES   = 2,
     ATTACH_SID_RETRY_TIMES       = 2,
     BECOME_LEADER_TIMEOUT        = 3,
-    MIGRATE_TIMEOUT              = 3,
+    MIGRATE_TIMEOUT              = 2,
+    DETACHED_MIGRATE_TIMEOUT     = 1,
 
 #ifndef CONFIG_YOS_DDA
     ATTACH_CANDIDATE_TIMEOUT     = 30,     /* 30 * ADVERTISEMENT_TIMEOUT */
@@ -154,6 +155,11 @@ ur_error_t umesh_mm_init(node_mode_t mode);
 ur_error_t umesh_mm_deinit(void);
 ur_error_t umesh_mm_start(mm_cb_t *cb);
 ur_error_t umesh_mm_stop(void);
+
+bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
+                              mm_netinfo_tv_t *netinfo);
+void umesh_mm_start_net_scan_timer(void);
+uint8_t umesh_mm_get_prev_channel(void);
 
 uint16_t            umesh_mm_get_local_sid(void);
 ur_error_t          umesh_mm_set_local_sid(uint16_t sid);

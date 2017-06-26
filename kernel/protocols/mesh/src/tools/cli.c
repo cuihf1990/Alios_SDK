@@ -456,6 +456,7 @@ void process_nbrs(int argc, char *argv[])
                     response_append(",invalid");
                     break;
             }
+            response_append(",%d", nbr->channel);
             response_append(",%d\r\n", nbr->last_heard);
             num ++;
         }
