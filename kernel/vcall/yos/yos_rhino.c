@@ -52,7 +52,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
 {
     ktask_t *task_handle = NULL;
 
-    return (int)yunos_task_dyn_create(&task_handle, name, arg, 32, 0,
+    return (int)yunos_task_dyn_create(&task_handle, name, arg, YOS_DEFAULT_APP_PRI, 0,
                                       stack_size / sizeof(cpu_stack_t), fn, 1u);
 }
 

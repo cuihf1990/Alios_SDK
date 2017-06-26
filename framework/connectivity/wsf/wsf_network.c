@@ -110,8 +110,9 @@ wsf_code wsf_reset_connection(wsf_connection_t *conn, int clear_session)
             os_ssl_close(conn->ssl);
             conn->ssl = NULL;
         }
-        if (conn->tcp) {
+        if (conn->tcp != OS_INVALID_FD) {
             os_tcp_close(conn->tcp);
+            yos_cancel_poll_read_fd(conn->tcp, NULL, NULL);
             conn->tcp = OS_INVALID_FD;
         }
 
