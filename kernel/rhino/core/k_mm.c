@@ -789,7 +789,6 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 
 }
 
-
 void *yunos_mm_alloc(size_t size)
 {
     void *tmp;
@@ -805,6 +804,11 @@ void *yunos_mm_alloc(size_t size)
         dumpsys_mm_info_func(NULL, 0);
 #endif
     }
+
+#if (YUNOS_CONFIG_USER_HOOK > 0)
+    yunos_mm_alloc_hook(tmp,size);
+#endif
+
     return tmp;
 
 }
