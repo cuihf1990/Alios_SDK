@@ -140,6 +140,16 @@ uint32_t platform_get_time_ms(void)
     return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
 
+/* libgcc gettimeofday call this function to get the system running time */
+int _gettimeofday( struct timeval *tv, void *tzvp )
+{
+    uint64_t t = yos_now_ms();  // get uptime in nanoseconds
+    tv->tv_sec = t / 1000;  // convert to seconds
+    tv->tv_usec = ( t % 1000 ) * 1000;  // get remaining microseconds
+    return 0;  // return non-zero for error
+} 
+
+
 uint64_t platform_get_utc_time(_INOUT_ uint64_t *p_utc)
 {
     return (uint64_t)time((time_t *)p_utc);
