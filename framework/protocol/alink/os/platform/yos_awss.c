@@ -59,8 +59,8 @@ void platform_awss_switch_channel(char primary_channel,
 
 static void monitor_data_handler(uint8_t *buf, int len)
 {
-    int with_fcs = 1;
-    int link_type = AWSS_LINK_TYPE_80211_RADIO;
+    int with_fcs = 0;
+    int link_type = AWSS_LINK_TYPE_NONE;
 
     (*g_ieee80211_handler)(buf, len, link_type, with_fcs);
 }
