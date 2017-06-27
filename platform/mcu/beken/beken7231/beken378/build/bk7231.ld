@@ -89,6 +89,7 @@ SECTIONS
 
 /* This symbol defines end of code/data sections. Heap starts here. */
 	PROVIDE(end    	  = .);
+	PROVIDE(heap_start    	  = .);
 	
 /* _stack symbol defines initial stack bottom addres. Stack grows to lower addresses.
    Typically you set this to be top of your RAM. Note: code never checks, if stack
@@ -101,6 +102,11 @@ SECTIONS
 	PROVIDE(_stack_sys         = 0x440000 - 0x3F0); /* 0x3F0*/
 
 	ASSERT ((_stack_unused > end), "Error: No room left for the stack")
+
+	PROVIDE(heap_end      = _stack_unused);
+	PROVIDE(heap_len      = heap_end -  heap_start);
+
+	ASSERT ((heap_len > 0x1E000 - 1 ), "Error: No room left for the heap") /*heap must bigger than 120k*/
 }
  GROUP(
    libgcc.a

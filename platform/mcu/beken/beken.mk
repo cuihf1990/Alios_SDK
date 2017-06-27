@@ -416,7 +416,7 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/platform_stub.c \
                     ../../arch/arm/armv5/port_c.c \
                     ../../arch/arm/armv5/port_s.S \
-                    ../../arch/arm/armv5/soc_impl.c \
+                    yos/soc_impl.c \
 
 $(NAME)_SOURCES	 += hal/wdg.c \
                     hal/hw.c \
