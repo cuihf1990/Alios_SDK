@@ -36,6 +36,7 @@
 #include "gateway_service.h"
 
 #define MODULE_NAME "gateway"
+#define ADV_INTERVAL (5 * 1000)
 
 typedef struct reg_info_s {
     char model_id[sizeof(uint32_t) + 1];
@@ -46,7 +47,6 @@ typedef struct reg_info_s {
 
 typedef struct {
     dlist_t next;
-    reg_info_t *reginfo;
     dev_info_t *devinfo;
     struct sockaddr_in6 addr;
 } client_t;
@@ -57,6 +57,7 @@ typedef struct {
     bool yunio_connected;
     bool mesh_connected;
     bool mqtt_connected;
+    bool mqtt_reconnect;
     struct sockaddr_in6 gw_addr;
     struct sockaddr_in6 src_addr;
     dlist_t clients;
@@ -131,6 +132,16 @@ static int yos_cloud_set_attr(const char *uuid, const char *attr_name, const cha
     return 0;
 }
 
+static void clear_connected_flag(void *arg)
+{
+    gateway_state.mqtt_connected = false;
+}
+
+static void set_reconnect_flag(void *arg)
+{
+    gateway_state.mqtt_reconnect = true;
+}
+
 static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *paddr)
 {
     void *buf;
@@ -139,7 +150,10 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     const mac_address_t *mac_addr;
     uint32_t model_id = 0x0050099a;
 
-    LOGD(MODULE_NAME, "connect to new gateway");
+    if (gateway_state.mqtt_connected == true)
+        LOGD(MODULE_NAME, "reconnect to gateway");
+    else
+        LOGD(MODULE_NAME, "connect to new gateway");
     reginfo = (reg_info_t *)msn_alloc(CONNECT, sizeof(reg_info_t), &buf, &len);
     memset(reginfo, 0, sizeof(reg_info_t));
     memcpy(reginfo->model_id, &model_id, sizeof(model_id));
@@ -156,18 +170,26 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
 
 static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
 {
-    LOGD(MODULE_NAME, "handle_adv");
     if (pstate->gateway_mode) {
         return;
     }
 
+    LOGD(MODULE_NAME, "handle_adv");
     adv_body_t *adv_msg = pmsg;
     struct sockaddr_in6 *gw_addr = &pstate->gw_addr;
 
     if (pstate->mqtt_connected &&
-        memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) == 0)
+        memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) == 0 &&
+        pstate->mqtt_reconnect == false) {
+        yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+        yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
         return;
+    }
 
+    if (memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) != 0)
+        pstate->mqtt_connected = false;
+
+    yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
     memcpy(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr));
     gw_addr->sin6_family = AF_INET6;
     gw_addr->sin6_port = htons(MQTT_SN_PORT);
@@ -230,23 +252,18 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     client = malloc(sizeof(*client));
     PTR_RETURN(client, NULL, "alloc memory failed");
     bzero(client, sizeof(*client));
-    client->reginfo = malloc(sizeof(reg_info_t));
-    PTR_RETURN(client->reginfo, NULL, "alloc memory failed");
-    memcpy(client->reginfo, reginfo, sizeof(reg_info_t));
     uint32_t model_id;
     memcpy(&model_id, reginfo->model_id, sizeof(model_id));
     int ret = devmgr_join_zigbee_device(reginfo->ieee_addr, model_id, reginfo->rand, reginfo->sign);
     if (ret ==  SERVICE_RESULT_ERR) {
         LOGD(MODULE_NAME, "register device:%s to alink server failed", reginfo->ieee_addr);
-        free(client->reginfo);
         free(client);
         return NULL;
     }
-    client->devinfo = devmgr_get_devinfo_by_ieeeaddr(client->reginfo->ieee_addr);
-    free(client->reginfo);
+    client->devinfo = devmgr_get_devinfo_by_ieeeaddr(reginfo->ieee_addr);
     dlist_add_tail(&client->next, &pstate->clients);
 
-    LOGD(MODULE_NAME, "new client %s", client->reginfo->ieee_addr);
+    LOGD(MODULE_NAME, "new client %s", reginfo->ieee_addr);
 
     return client;
 }
@@ -317,9 +334,15 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
     }
 
     pstate->mqtt_connected = true;
+    yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
 
     yos_cloud_register_backend(&gateway_cloud_report);
-    yos_cloud_trigger(CLOUD_CONNECTED, NULL);
+    if(pstate->mqtt_reconnect == false)
+        yos_cloud_trigger(CLOUD_CONNECTED, NULL);
+
+    pstate->mqtt_reconnect = false;
+    yos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
+    yos_post_delayed_action((16+(rand()&0xf)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
 
     LOGD(MODULE_NAME, "connack");
 }
@@ -409,6 +432,7 @@ int gateway_service_init(void)
     pstate->yunio_connected = false;
     pstate->mesh_connected = false;
     pstate->mqtt_connected = false;
+    pstate->mqtt_reconnect = false;
     pstate->sockfd = -1;
     dlist_init(&gateway_state.clients);
     yos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
@@ -436,6 +460,7 @@ static void gateway_worker(void *arg)
         int ret = lwip_select(maxfd+1, &rfds, NULL, NULL, NULL);
         if (ret < 0) {
             if (errno != EINTR) {
+                gateway_state.mqtt_connected = false;
                 LOGE(MODULE_NAME, "select error %d, quit", errno);
                 break;
             }
@@ -465,6 +490,7 @@ static int init_socket(void)
         yos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
 #endif
         close(pstate->sockfd);
+        pstate->sockfd = -1;
     }
 
     int val = 1;
@@ -518,16 +544,26 @@ int gateway_service_start(void)
         yos_cloud_register_callback(SET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
 
         yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
-        yos_post_delayed_action(5 * 1000, gateway_advertise, &gateway_state);
+        yos_post_delayed_action(ADV_INTERVAL, gateway_advertise, &gateway_state);
     }
 
     return 0;
 }
 
 void gateway_service_stop(void) {
+    client_t *client;
+    yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+    yos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
+    yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
     close(gateway_state.sockfd);
     gateway_state.sockfd = -1;
     gateway_state.mqtt_connected = false;
+    while(!dlist_empty(&gateway_state.clients)) {
+        client = dlist_first_entry(&gateway_state.clients, client_t, next);
+        dlist_del(&client->next);
+        devmgr_leave_zigbee_device(client->devinfo->dev_base.u.ieee_addr);
+        free(client);
+    }
 }
 
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
