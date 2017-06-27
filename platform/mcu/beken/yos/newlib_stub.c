@@ -20,6 +20,7 @@
 #include <sys/unistd.h>
 #include <sys/errno.h>
 #include "hal/soc/soc.h"
+#include "board.h"
 
 int _execve_r(struct _reent *ptr, const char *name, char *const *argv, char *const *env)
 {
@@ -115,8 +116,8 @@ _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
 
     for (int i = 0; i < nbytes; i++) {
         if (*tmp == '\n')
-            hal_uart_send(0, (const void*)"\r", 1);
-        hal_uart_send(0, (const void*)tmp, 1);
+            hal_uart_send(STDIO_UART, (const void*)"\r", 1);
+        hal_uart_send(STDIO_UART, (const void*)tmp, 1);
         tmp ++;
     }
 
