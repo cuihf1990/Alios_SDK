@@ -25,7 +25,8 @@
 #include "os.h"
 #include "enrollee.h"
 
-static void awss_notify(void *arg);
+
+static void awss_notify(void);
 
 #define MODULE_NAME "awss"
 static int delay_ms = 0;  /* start from 200ms */
@@ -56,6 +57,7 @@ int awss_start(void)
 
     aws_destroy();
 
+    int awssNotifyNeeded = 1;
     uint32_t startAwssConnectingTimestamp = yos_now() / 1000000;
     int tryCount = 0;
     do {
@@ -68,6 +70,7 @@ int awss_start(void)
                 (now - startAwssConnectingTimestamp > os_awss_get_connect_default_ssid_timeout_interval_ms())) {
                 break;
             }
+            awssNotifyNeeded = 0;
         }
 
         if (ssid[0]) {
@@ -87,11 +90,13 @@ int awss_start(void)
         } else {
             strncpy(ssid, DEFAULT_SSID, sizeof(ssid));
             strncpy(passwd, DEFAULT_PASSWD, sizeof(passwd));
+            awssNotifyNeeded = 0;
         }
 
         if (1 == tryCount){
             strncpy(ssid, DEFAULT_SSID, sizeof(ssid));
             strncpy(passwd, DEFAULT_PASSWD, sizeof(passwd));
+            awssNotifyNeeded = 0;
         }
     } while (1);
 
@@ -120,7 +125,7 @@ int awss_stop(void)
 extern int aws_notify_app_nonblock(void);
 
 #define AWSS_NOTIFY_TIMES   (50)
-static void awss_notify(void *arg)
+static void awss_notify(void)
 {
     int ret = aws_notify_app_nonblock();
 

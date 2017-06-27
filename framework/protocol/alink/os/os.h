@@ -1100,16 +1100,36 @@ static inline void os_sys_reboot(void)
 }
 
 /**
- * @brief Retrieves the number of milliseconds that have elapsed since the system was boot.
- *
- * @param None.
- * @return the number of milliseconds.
- * @see None.
- * @note None.
- */
+ *  * @brief Retrieves the number of milliseconds that have elapsed since the system was boot.
+ *   *
+ *    * @param None.
+ *     * @return the number of milliseconds.
+ *      * @see None.
+ *       * @note Add a big offset, for easier caught time overflow bug.
+ *        */
 static inline uint32_t os_get_time_ms(void)
 {
-    return platform_get_time_ms();
+	static uint32_t fixed_delta;
+
+	if (!fixed_delta)
+		fixed_delta = platform_get_time_ms() - 0xFFFF0000;
+
+	/* add a big offset, for easier caught time overflow bug */
+	return platform_get_time_ms() - fixed_delta;
+}
+
+/*
+ *  *  These inlines deal with timer wrapping correctly. You are
+ *   *  strongly encouraged to use them
+ *    *  1. Because people otherwise forget
+ *     *  2. Because if the timer wrap changes in future you won't have to
+ *      *     alter your code.
+ *       */
+static inline uint32_t time_elapsed_ms_since(uint32_t start_timestamp)
+{
+	uint32_t now = os_get_time_ms();
+
+	return now - start_timestamp;
 }
 
 //os_get_utc_time() returns the time since the Epoch (00:00:00 UTC, January 1, 1970), measured in seconds.
