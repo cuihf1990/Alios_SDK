@@ -25,6 +25,7 @@
 #include "os.h"
 #include "enrollee.h"
 
+#define SHUB_UDP_PORT 65128
 
 static void awss_notify(void);
 
@@ -33,7 +34,42 @@ static int delay_ms = 0;  /* start from 200ms */
 
 int stopAwssConnecting = 0;
 int awssFinished = 0;
+void *udpFd;
 
+extern int switchApDone;
+
+#define RECV_BUFFER_SIZE 512
+extern int wifimgrProcessRequest(
+        pplatform_netaddr_t sa, char *buf, unsigned int len);
+static int handleSocketPacket()
+{
+	char *buf;
+	int len, ret = 0;
+	char host[OS_IP_LEN];
+	platform_netaddr_t addr = {&host[0], 0};
+
+	buf = (char *)os_malloc(RECV_BUFFER_SIZE);
+	if (!buf)
+		return 0;
+	memset(buf, 0, RECV_BUFFER_SIZE);
+	len = os_udp_recvfrom(udpFd, buf, RECV_BUFFER_SIZE - 1, &addr);
+	if (len < 0) {
+		LOGE("[awss]", "shub socket recvfrom error\n");
+		ret = -1;
+		goto end;
+	}
+	buf[len] = '\0';
+	wifimgrProcessRequest(&addr, buf, len);
+
+	LOGD("[awss]", "recv msg len:%d, ip:%s, port:%d", len, addr.host, addr.port);
+
+end:
+	os_free(buf);
+
+	return ret;
+}
+
+#define HOTSPOT_TIMEOUT (2*60*3) // 3 mins
 int awss_start(void)
 {
     awss_set_enrollee_token("default", strlen("default"));
@@ -76,6 +112,26 @@ int awss_start(void)
         if (ssid[0]) {
             ret = os_awss_connect_ap(WLAN_CONNECTION_TIMEOUT_MS, ssid, passwd,
                     auth, encry, bssid, channel);
+
+            if (strcmp(ssid, DEFAULT_SSID) == 0) { // hotspot mode
+            	int hotspotCnt = 0;
+            	LOGI("[awss]", "hotspot mode deteched");
+                udpFd = os_udp_server_create(SHUB_UDP_PORT);
+                OS_ASSERT(udpFd >= 0, "shub create socket failed!\r\n");
+                while (1／*hotspotCnt < HOTSPOT_TIMEOUT*／) {
+                    handleSocketPacket(udpFd);
+                    if (switchApDone) {
+                    	LOGI("[awss]", "switchApDone");
+                    	os_udp_close(udpFd);
+                    	break;
+                    }
+                    yos_msleep(500);
+                    hotspotCnt++;
+                }
+                if (hotspotCnt >= HOTSPOT_TIMEOUT) ret = -1;
+                else ret = 0;
+            }
+
             if (tryCount < 9999) {
                 tryCount++;
             }
