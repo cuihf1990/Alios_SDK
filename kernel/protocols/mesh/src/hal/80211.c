@@ -7,6 +7,28 @@
 #include <umesh_80211.h>
 
 #undef USE_ACTION_FRAME
+#undef MDEBUG
+#define USE_MULTICAST_FRAME
+
+static inline uint16_t calc_seqctrl(unsigned char *pkt)
+{
+    return (pkt[23] << 4) | (pkt[22] >> 4);
+}
+
+static void p_addr(unsigned char *pkt)
+{
+	printf(":%02x %02x %02x %02x %02x %02x", pkt[0] , pkt[1] , pkt[2] , pkt[3] , pkt[4] , pkt[5]);
+}
+
+static inline void dump_packet(unsigned char *pkt, int count)
+{
+    int seqno = calc_seqctrl(pkt);
+	printf("%s(%d) %02x %02x %02x", __func__, count, pkt[0], pkt[1], seqno);
+	p_addr(pkt+OFF_DST);
+	p_addr(pkt+OFF_SRC);
+	p_addr(pkt+OFF_BSS);
+	printf("\n");
+}
 
 int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest, void *fpkt)
 {
@@ -25,6 +47,9 @@ int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_add
     pkt[0] = 0x08;
 #endif
     memcpy(pkt + OFF_DST, dest->addr, 6);
+#ifdef USE_MULTICAST_FRAME
+    pkt[OFF_DST] |= 1;
+#endif
     memcpy(pkt + OFF_SRC, mymac->addr, 6);
     memcpy(pkt + OFF_BSS, extnetid.netid, 6);
 
@@ -40,11 +65,6 @@ int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_add
     memcpy(pkt + MESH_DATA_OFF, frame->data, frame->len);
 
     return 0;
-}
-
-static inline uint16_t calc_seqctrl(unsigned char *pkt)
-{
-    return (pkt[23] << 4) | (pkt[22] >> 4);
 }
 
 typedef struct mac_entry_s {
@@ -78,21 +98,6 @@ static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
     return yent;
 }
 
-static void p_addr(unsigned char *pkt)
-{
-	printf(":%02x %02x %02x %02x %02x %02x", pkt[0] , pkt[1] , pkt[2] , pkt[3] , pkt[4] , pkt[5]);
-}
-
-static inline void dump_packet(unsigned char *pkt, int count)
-{
-    int seqno = calc_seqctrl(pkt);
-	printf("%s(%d) %02x %02x %02x", __func__, count, pkt[0], pkt[1], seqno);
-	p_addr(pkt+OFF_DST);
-	p_addr(pkt+OFF_SRC);
-	p_addr(pkt+OFF_BSS);
-	printf("\n");
-}
-
 bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int count)
 {
     const uint8_t bcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -105,13 +110,22 @@ bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int co
     mymac = hal_umesh_get_mac_address(module);
     hal_umesh_get_extnetid(module, &extnetid);
 
-    if (memcmp(pkt+OFF_BSS, extnetid.netid, 6) ||
-        memcmp(pkt+OFF_SRC, mymac->addr, 6) == 0 ||
-        (memcmp(pkt+OFF_DST, bcast, 6) &&
-         memcmp(pkt+OFF_DST, mymac->addr, 6))) {
+    if (memcmp(pkt+OFF_BSS, extnetid.netid, 6))
         return 1;
-    }
 
+    if (memcmp(pkt+OFF_SRC, mymac->addr, 6) == 0)
+        return 1;
+
+    if (memcmp(pkt+OFF_DST, bcast, 6) == 0)
+        goto next;
+
+#ifdef USE_MULTICAST_FRAME
+    pkt[OFF_DST] &= ~1;
+#endif
+    if (memcmp(pkt+OFF_DST, mymac->addr, 6))
+        return 1;
+
+next:
     ent = find_mac_entry(pkt+OFF_SRC);
     /* if longer than 100ms */
     if (mactime - ent->mactime > 100) {
