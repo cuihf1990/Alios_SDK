@@ -89,7 +89,7 @@ static void pass_to_umesh(const void* arg)
 
 static inline uint16_t calc_seqctrl(uint8_t *data)
 {
-    return (data[23] << 4) | (data[22] >> 4);
+    return data[23] | (data[22] << 8);
 }
 
 static inline void dump_packet(bool rx, uint8_t *data, int len)
@@ -154,7 +154,7 @@ static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
 
 static int filter_packet(mesh_hal_priv_t *priv, uint8_t *data, int len)
 {
-    uint16_t seqno = calc_seqctrl(data) << 4;
+    uint16_t seqno = calc_seqctrl(data);
     mac_entry_t *ent;
     uint32_t now;
     uint8_t bcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -172,19 +172,20 @@ static int filter_packet(mesh_hal_priv_t *priv, uint8_t *data, int len)
 
     priv->stats.in_frames++;
 
-    now = yos_now() / 1000000;
+    now = yos_now_ms();
     ent = find_mac_entry(data + WIFI_SRC_OFFSET);
-    if (now - ent->mactime > 100000) {
+
+    if (now - ent->mactime > 50000) {
         ent->mactime = now;
         ent->last_seq = seqno;
         return 0;
     }
-    ent->mactime = now;
 
     if ((int16_t)(seqno - ent->last_seq) <= 0) {
         return 1;
     }
 
+    ent->mactime = now;
     ent->last_seq = seqno;
     return 0;
 }
@@ -250,7 +251,7 @@ static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
 
 static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest)
 {
-    static unsigned long nb_pkt_sent;
+    static uint16_t nb_pkt_sent;
     mesh_hal_priv_t *priv = module->base.priv_dev;
     uint8_t *pkt;
     int len = frame->len + WIFI_MESH_OFFSET;
@@ -273,9 +274,10 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
     memcpy(pkt + WIFI_BSSID_OFFSET, priv->bssid, WIFI_MAC_ADDR_SIZE);
 
     /* sequence control */
-    pkt[22] = (nb_pkt_sent & 0x0000000F) << 4;
-    pkt[23] = (nb_pkt_sent & 0x00000FF0) >> 4;
     nb_pkt_sent++;
+    nb_pkt_sent &= 0x0fff;
+    pkt[22] = (nb_pkt_sent & 0x0f00) >> 8;
+    pkt[23] = (nb_pkt_sent & 0x00ff);
 
     pkt[24] = 0xaa;
     pkt[25] = 0xaa;
