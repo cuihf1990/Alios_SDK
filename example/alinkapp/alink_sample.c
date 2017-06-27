@@ -473,12 +473,6 @@ static void alink_service_event(input_event_t *event, void *priv_data) {
     }
 }
 
-static void mesh_start(void *arg)
-{
-    ur_mesh_init(NULL);
-    ur_mesh_start();
-}
-
 static int alink_cloud_report(const char *method, const char *json_buffer)
 {
     return alink_report_async(method, json_buffer, NULL, NULL);

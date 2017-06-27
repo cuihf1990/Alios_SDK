@@ -90,6 +90,7 @@ static void mesh_delayed_action(void *arg)
 {
     ur_mesh_init((node_mode_t)arg);
     ur_mesh_set_mode((node_mode_t)arg);
+    ur_mesh_stop();
     ur_mesh_start();
 }
 #endif
