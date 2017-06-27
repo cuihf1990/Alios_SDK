@@ -178,7 +178,7 @@ int8_t platform_ota_result_post(void)
     memset(alink_version, 0, 64);
     alink_get_sdk_version(alink_version,64);
 
-    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char*)ota_get_id(), platform_ota_get_version(), alink_version);
+    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char*)ota_get_id(), (const char *)platform_get_main_version(), alink_version);
     free(alink_version);
     ret = alink_report_async(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
     OTA_LOG_D("alink_ota_status_post: %s, ret=%d\n", buff, ret);
