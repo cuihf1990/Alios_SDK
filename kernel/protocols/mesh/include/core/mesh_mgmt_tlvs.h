@@ -57,6 +57,7 @@ typedef enum {
     TYPE_TIMESTAMP         = 0x9f,  /* timestamp */
     TYPE_GROUP_KEY         = 0xa0,  /* network wide group key */
     TYPE_SSID_INFO         = 0xa1,  /* structured sid info */
+    TYPE_STATE_FLAGS       = 0xa2,  /* node state flags */
     TYPE_MESH_PREFIX       = 0x0,   /* mesh prefix TLV */
     TYPE_TLV_REQUEST       = 0x1,   /* TLV requests TLV */
     TYPE_INVALID           = 255,
@@ -178,6 +179,11 @@ typedef struct mesh_mgmt_group_key_tv_s {
     mm_tv_t base;
     uint8_t group_key[16];
 } __attribute__((packed)) mm_group_key_tv_t;
+
+typedef struct mesh_mgmt_state_flags_tv_s {
+    mm_tv_t base;
+    uint8_t flags;
+} __attribute__((packed)) mm_state_flags_tv_t;
 
 typedef struct mesh_mgmt_prefix_tlv_s {
     mm_tlv_t        base;

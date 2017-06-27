@@ -201,7 +201,12 @@ static ur_error_t allocate_expected_sid(network_context_t *network,
     ssid_allocator_t *allocator;
     uint8_t          index;
     uint8_t          len;
+    neighbor_t       *node = NULL;
 
+    node = get_neighbor_by_ueid(node_id->ueid);
+    if (node && node->addr.addr.short_addr == node_id->sid) {
+        return UR_ERROR_NONE;
+    }
     allocator = (ssid_allocator_t *)network->sid_base;
     if (is_direct_child(network, node_id->sid)) {
         index = (node_id->sid - allocator->sid_prefix) >> allocator->sid_shift;
