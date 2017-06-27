@@ -64,10 +64,11 @@ tick_t soc_elapsed_ticks_get(void)
 #endif
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+extern void         *heap_start;
+extern void         *heap_end;
+extern void         *heap_len;
 
-#define       SYS_DYN_POOL_SIZE (130 * 1024)
-size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
-k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start, SYS_DYN_POOL_SIZE}};
+k_mm_region_t g_mm_region[] = {(uint8_t*)&heap_start,(size_t)&heap_len};
 
 #endif
 
