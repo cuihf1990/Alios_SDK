@@ -22,6 +22,7 @@
 #include "txl_frame.h"
 
 #include "umesh_hal.h"
+#include <umesh_80211.h>
 #include "hal/wifi.h"
 
 enum {
@@ -87,117 +88,13 @@ static void pass_to_umesh(const void* arg)
     yos_free(cmsg);
 }
 
-static inline uint16_t calc_seqctrl(uint8_t *data)
-{
-    return data[23] | (data[22] << 8);
-}
-
-static inline void dump_packet(bool rx, uint8_t *data, int len)
-{
-    ur_mesh_hal_module_t *module;
-    int seqno = calc_seqctrl(data);
-    uint8_t index;
-    uint8_t channel;
-
-    if (rx) {
-        printf("rx: ");
-    } else {
-        printf("tx: ");
-    }
-    module = hal_umesh_get_default_module();
-    channel = hal_umesh_get_ucast_channel(module);
-    printf("on channel %d, seq %d, size %d, ctrl %02x:%02x\r\n", channel, seqno, len, data[0], data[1]);
-    printf("  to");
-    for (index = WIFI_DST_OFFSET; index < WIFI_DST_OFFSET + 6; index++) {
-        printf(":%02x", data[index]);
-    }
-    printf("\r\n");
-    printf("  from");
-    for (index = WIFI_SRC_OFFSET; index < WIFI_SRC_OFFSET + 6; index++) {
-        printf(":%02x", data[index]);
-    }
-    printf("\r\n");
-    printf("  bssid");
-    for (index = WIFI_BSSID_OFFSET; index < WIFI_BSSID_OFFSET + 6; index++) {
-        printf(":%02x", data[index]);
-    }
-    printf("\r\n");
-
-    for (index = 0; index < len; index++) {
-        printf("%02x:", data[index]);
-    }
-    printf("\r\n");
-}
-
-static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
-{
-    mac_entry_t *ment, *yent = NULL;
-    uint64_t youngest = -1ULL;
-    int i;
-
-    for (i=0; i < ENT_NUM; i++) {
-        ment = entries + i;
-        if (memcmp(ment->macaddr, macaddr, 6) == 0)
-            return ment;
-
-        if (ment->mactime > youngest)
-            continue;
-
-        youngest = ment->mactime;
-        yent = ment;
-    }
-
-    bzero(yent, sizeof(*yent));
-    memcpy(yent->macaddr, macaddr, 6);
-    return yent;
-}
-
-static int filter_packet(mesh_hal_priv_t *priv, uint8_t *data, int len)
-{
-    uint16_t seqno = calc_seqctrl(data);
-    mac_entry_t *ent;
-    uint32_t now;
-    uint8_t bcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-    if (len < WIFI_MESH_OFFSET) {
-        return 1;
-    }
-
-    if (memcmp(data + WIFI_BSSID_OFFSET, priv->bssid, WIFI_MAC_ADDR_SIZE) ||
-        memcmp(data + WIFI_SRC_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE) == 0 ||
-        (memcmp(data + WIFI_DST_OFFSET, bcast, WIFI_MAC_ADDR_SIZE) &&
-         memcmp(data + WIFI_DST_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE))) {
-        return 1;
-    }
-
-    priv->stats.in_frames++;
-
-    now = yos_now_ms();
-    ent = find_mac_entry(data + WIFI_SRC_OFFSET);
-
-    if (now - ent->mactime > 50000) {
-        ent->mactime = now;
-        ent->last_seq = seqno;
-        return 0;
-    }
-
-    if ((int16_t)(seqno - ent->last_seq) <= 0) {
-        return 1;
-    }
-
-    ent->mactime = now;
-    ent->last_seq = seqno;
-    return 0;
-}
-
 static void wifi_monitor_cb(uint8_t *data, int len)
 {
     compound_msg_t *pf;
-    mesh_hal_priv_t *priv;
-    ur_mesh_hal_module_t *module;
+    mesh_hal_priv_t *priv = g_hal_priv;
+    ur_mesh_hal_module_t *module = priv->module;
 
-    priv = g_hal_priv;
-    if (filter_packet(priv, data, len)) {
+    if (umesh_80211_filter_frame(module, data, len)) {
         return;
     }
 
@@ -265,31 +162,11 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
     }
 
     pkt = (uint8_t *)tx_frame->txdesc.lmac.buffer->payload;
-    bzero(pkt, WIFI_MESH_OFFSET);
-    hdr = (struct mac_hdr *)pkt;
-    hdr->fctl = MAC_FCTRL_DATA_T;
 
-    memcpy(pkt + WIFI_DST_OFFSET, dest->addr, WIFI_MAC_ADDR_SIZE);
-    memcpy(pkt + WIFI_SRC_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE);
-    memcpy(pkt + WIFI_BSSID_OFFSET, priv->bssid, WIFI_MAC_ADDR_SIZE);
-
-    /* sequence control */
-    nb_pkt_sent++;
-    nb_pkt_sent &= 0x0fff;
-    pkt[22] = (nb_pkt_sent & 0x0f00) >> 8;
-    pkt[23] = (nb_pkt_sent & 0x00ff);
-
-    pkt[24] = 0xaa;
-    pkt[25] = 0xaa;
+    umesh_80211_make_frame(module, frame, dest, pkt);
 
     tx_frame->cfm.cfm_func = NULL;
     tx_frame->cfm.env = NULL;
-
-    memcpy(pkt + WIFI_MESH_OFFSET, frame->data, frame->len);
-
-#ifdef YOS_DEBUG_MESH
-    dump_packet(false, pkt, len);
-#endif
 
     txl_frame_push(tx_frame, AC_VO);
 
