@@ -460,6 +460,7 @@ static void gateway_worker(void *arg)
         int ret = lwip_select(maxfd+1, &rfds, NULL, NULL, NULL);
         if (ret < 0) {
             if (errno != EINTR) {
+                gateway_state.mqtt_connected = false;
                 LOGE(MODULE_NAME, "select error %d, quit", errno);
                 break;
             }
@@ -489,6 +490,7 @@ static int init_socket(void)
         yos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
 #endif
         close(pstate->sockfd);
+        pstate->sockfd = -1;
     }
 
     int val = 1;
