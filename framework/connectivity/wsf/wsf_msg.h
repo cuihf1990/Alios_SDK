@@ -60,6 +60,17 @@ typedef struct wsf_request_node_t {
     wsf_msg_session_t session;
 } wsf_request_node_t;
 
+typedef int (*cb_wsf_recv_t)(int , void *);
+typedef struct {
+    int             sock;
+    int             timeout;//ms
+    cb_wsf_recv_t   cb_recv;
+    yos_call_t      cb_timeout;
+    yos_poll_call_t cb_close;
+    void            *extra;
+} cb_network;
+
+
 extern void wsf_msg_session_init(wsf_msg_session_t *session);
 
 extern void wsf_msg_session_wait(wsf_msg_session_t *session);

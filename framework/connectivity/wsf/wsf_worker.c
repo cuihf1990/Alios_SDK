@@ -70,20 +70,9 @@ static msg_handler msg_handlers[MSG_TYPE_END] = {
 static int __cb_wsf_recv(int fd, void *arg);
 static void __cb_wsf_close(int fd, void *arg);
 static void __cb_wsf_timeout(void *arg);
+cb_network g_wsf_cb;
 
-typedef int (*cb_wsf_recv_t)(int , void *);
-typedef struct {
-    int             sock;
-    int             timeout;//ms
-    cb_wsf_recv_t   cb_recv;
-    yos_call_t      cb_timeout;
-    yos_poll_call_t cb_close;
-    void            *extra;
-} cb_network;
-
-static cb_network g_wsf_cb;
-
-static void cb_recv(int fd, void *arg)
+void cb_recv(int fd, void *arg)
 {
     cb_network *cb = (cb_network *)arg;
     if (!cb) {
@@ -95,18 +84,6 @@ static void cb_recv(int fd, void *arg)
     }
 
     yos_cancel_delayed_action(cb->timeout, cb->cb_timeout, cb);
-    yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
-}
-
-static void start_network(cb_network *cb)
-{
-    if (!cb) {
-        return;
-    }
-
-    if (cb->sock != OS_INVALID_FD) {
-        yos_poll_read_fd(cb->sock, cb_recv, cb);
-    }
     yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
@@ -208,7 +185,7 @@ static void receive_worker(void *arg)
     g_wsf_cb.cb_close = __cb_wsf_close;
     g_wsf_cb.cb_timeout = __cb_wsf_timeout;
     g_wsf_cb.extra = arg;
-    start_network(&g_wsf_cb);
+    yos_post_delayed_action(g_wsf_cb.timeout, g_wsf_cb.cb_timeout, &g_wsf_cb);
 }
 
 static void stop_receive_worker()
@@ -284,14 +261,6 @@ static void __cb_wsf_timeout(void *arg)
     }
 
     wsf_keep_connection(config);
-
-    //add new socket fd to poll list.
-    if (wsf_conn && cb->sock != (long)wsf_conn->tcp &&
-         wsf_conn->ssl) {
-        cb->sock = (long)wsf_conn->tcp;
-        yos_poll_read_fd(cb->sock, cb_recv, cb);
-        LOGW(MODULE_NAME, "add new tcp socket fd to poll list.\n");
-    }
 
     //kick the timer
     yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
