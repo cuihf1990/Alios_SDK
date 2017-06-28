@@ -363,6 +363,60 @@ static struct cli_command ncmd = {
     .function = handle_active_cmd
 };
 
+static void handle_model_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    #define MAX_MODEL_LENGTH 30
+    char model[MAX_MODEL_LENGTH] = "light";
+    int  model_len = sizeof(model);
+    yos_kv_get("model", model, &model_len);
+
+    if (argc == 1) {
+        printf("Usage: model light/gateway. Model is currently %s\r\n", model);
+        return;
+    }
+
+    if (strcmp(argv[1], "gateway") == 0) {
+        if (strcmp(model, argv[1])) {
+            yos_kv_del("alink");
+            yos_kv_set("model", "gateway", MAX_MODEL_LENGTH, 1);
+            printf("Swith model to gateway, please reboot\r\n");
+        } else {
+            printf("Current model is already gateway\r\n");
+        }
+    } else {
+        if (strcmp(model, argv[1])) {
+            yos_kv_del("alink");
+            yos_kv_set("model", "light", MAX_MODEL_LENGTH, 1);
+            printf("Swith model to light, please reboot\r\n");
+        } else {
+            printf("Current model is already light\r\n");
+        }
+    }
+}
+
+static struct cli_command modelcmd = {
+    .name = "model",
+    .help = "model light/gateway",
+    .function = handle_model_cmd
+};
+
+static void handle_uuid_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    extern int cloud_is_connected(void);
+    extern char *config_get_main_uuid(void);
+    if (cloud_is_connected) {
+        printf("uuid: %s\r\n", config_get_main_uuid());
+    } else {
+        printf("alink is not connected\r\n");
+    }
+}
+
+static struct cli_command uuidcmd = {
+    .name = "uuid",
+    .help = "uuid",
+    .function = handle_uuid_cmd
+};
+
 enum SERVER_ENV {
     DAILY = 0,
     SANDBOX,
@@ -467,6 +521,7 @@ static void alink_service_event(input_event_t *event, void *priv_data) {
     if (event->code != CODE_WIFI_ON_GOT_IP) {
         return;
     }
+
     if(is_alink_started == 0) {
         is_alink_started = 1;
         alink_start();
@@ -573,6 +628,8 @@ int application_start(int argc, char *argv[])
     netmgr_start(false);
 
     cli_register_command(&ncmd);
+    cli_register_command(&uuidcmd);
+    cli_register_command(&modelcmd);
 
 #ifdef CONFIG_YOS_DDA
     dda_enable(atoi(mesh_num));
