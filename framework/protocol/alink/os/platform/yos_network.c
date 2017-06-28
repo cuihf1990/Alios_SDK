@@ -78,10 +78,6 @@ static int network_create_socket( pplatform_netaddr_t netaddr, int type,
         }
     }
 
-    int tcp_nodelay = 0;
-    setsockopt(*psock, IPPROTO_TCP, TCP_NODELAY, (const void *) &tcp_nodelay,
-               sizeof(int));
-
     paddr->sin_addr.s_addr = ip;
     paddr->sin_family = AF_INET;
     paddr->sin_port = htons( netaddr->port );

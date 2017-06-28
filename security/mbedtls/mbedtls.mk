@@ -18,6 +18,11 @@ ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 
 $(NAME)_PREBUILT_LIBRARY := lib/linuxhost/libmbedtls.a
 
+ifeq (1,$(with_lwip))
+$(info using lwip version mbedtls)
+$(NAME)_PREBUILT_LIBRARY := lib/linuxhost/libmbedtls.a.lwip
+endif
+
 else ifeq ($(findstring armhflinux, $(BUILD_STRING)), armhflinux)
 
 $(NAME)_PREBUILT_LIBRARY := lib/armhflinux/libmbedtls.a
