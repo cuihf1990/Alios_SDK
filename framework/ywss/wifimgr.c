@@ -106,7 +106,7 @@ int getShubSecurityLevel(void)
     //int ret = 0;
     //if (os_aes_cbc_128_supported()) ret = 2;
     //if (os_aes_cbc_256_supported()) ret = 1;
-    return 2;
+    return 0;
 }
 
 #define WIFI_LIST_REQUEST_ID_LEN 16
@@ -185,6 +185,23 @@ int cbScan(const char ssid[PLATFORM_MAX_SSID_LEN],
     return 0;
 }
 
+void testSendWifiList(char *str, pplatform_netaddr_t sa)
+{
+	char *msgToSend;
+
+    msgToSend = os_malloc(500);
+    snprintf(msgToSend, 500, "{\"method\":\"getWifiListResult\", \"code\":\"0\", \"list\":[{\"ssid\":\"alibaba-guest\", \"rssi\":-70, \"auth\":\"4\"}],\"id\":\"%s", str);
+    LOGI("[wifimgr]", "sending message to app: %s", msgToSend);
+
+    if (0 > os_udp_sendto(udpFd, msgToSend, strlen(msgToSend), sa)) {
+    	LOGI("[wifimgr]", "sending failed.");
+    }
+
+    if (msgToSend) {
+        os_free(msgToSend);
+    }
+}
+
 /*
  * @desc: ????getWifiList??Ϣ
  *
@@ -194,6 +211,7 @@ static int wifimgrProcessGetWifiListRequest(
 {
     int strLen;
     char *str = json_get_value_by_name(msg, len, "id", &strLen, 0);
+    char *msgToSend;
     memset(wifiListRequestId, 0, WIFI_LIST_REQUEST_ID_LEN);
     if (str && (strLen < WIFI_LIST_REQUEST_ID_LEN)) {
         memcpy(wifiListRequestId, str, strLen);
@@ -203,11 +221,16 @@ static int wifimgrProcessGetWifiListRequest(
 
     os_wifi_get_ap_info(NULL, NULL, bssidConnected);
 
-    os_wifi_scan(&cbScan);
+    os_wifi_scan(&cbScan); // <TODO>
+
+    // test code <to remove>
+    //testSendWifiList(str, sa);
+    // <to remove> end
 
     return SHUB_OK;
 }
 
+extern void wifi_get_ip(char ips[16]);
 static int wifimgrProcessGetDeviceInfo(pplatform_netaddr_t sa)
 {
     char *buf;
@@ -219,7 +242,8 @@ static int wifimgrProcessGetDeviceInfo(pplatform_netaddr_t sa)
     }
 
     char sIP[PLATFORM_IP_LEN];
-    os_wifi_get_ip(sIP);
+    //os_wifi_get_ip(sIP);
+    wifi_get_ip(sIP);
 
     char *product_get_sn(char *);
     char *product_get_model(char *);

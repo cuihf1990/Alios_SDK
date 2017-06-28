@@ -56,6 +56,7 @@ typedef struct {
     int8_t                     disconnected_times;
     bool                       doing_smartconfig;
     bool                       ip_available;
+    platform_wifi_scan_result_cb_t cb;
 } netmgr_cxt_t;
 
 extern autoconfig_plugin_t g_alink_smartconfig;
@@ -145,10 +146,28 @@ static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
     }
 }
 
+static get_bssid(uint8_t *to_fill, int size)
+{
+    memset(to_fill, 0, size);
+}
+
 static void netmgr_scan_completed_event(hal_wifi_module_t *m,
                                          hal_wifi_scan_result_t *result,
                                          void *arg)
 {
+    platform_wifi_scan_result_cb_t cb = g_netmgr_cxt.cb;
+    int i, last_ap = 0;
+    uint8_t bssid[ETH_ALEN];
+
+    if (g_netmgr_cxt.cb) {
+	    for(i=0; i<(result->ap_num); i++) {
+	        LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
+	        if (i == (result->ap_num - 1)) last_ap = 1;
+	        get_bssid(bssid, ETH_ALEN);
+            cb(result->ap_list[i].ssid, bssid, AWSS_AUTH_TYPE_WPA2PSK,
+                AWSS_ENC_TYPE_NONE, 0, 0, last_ap);
+	    }
+    }
 }
 
 static void netmgr_scan_adv_completed_event(hal_wifi_module_t *m,
@@ -290,6 +309,11 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
 void wifi_get_ip(char ips[16])
 {
     format_ip(g_netmgr_cxt.ipv4_owned, ips);
+}
+
+void register_wifi_scan_result_callback(platform_wifi_scan_result_cb_t cb)
+{
+    g_netmgr_cxt.cb = cb;
 }
 
 static void netmgr_wifi_config_start(void)

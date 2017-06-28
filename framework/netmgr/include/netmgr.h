@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "platform.h"
+
 #if defined(__cplusplus)
 extern "C"
 {
@@ -50,6 +52,7 @@ int  netmgr_set_ap_config(netmgr_ap_config_t *config);
 int  netmgr_get_ap_config(netmgr_ap_config_t *config);
 void netmgr_clear_ap_config(void);
 void netmgr_set_smart_config(autoconfig_plugin_t *plugin);
+void register_wifi_scan_result_callback(platform_wifi_scan_result_cb_t cb);
 
 int netmgr_init(void);
 void netmgr_deinit(void);

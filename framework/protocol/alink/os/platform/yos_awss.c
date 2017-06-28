@@ -24,6 +24,8 @@
 
 #include "yos/log.h"
 
+#include "ali_crypto.h"
+
 platform_awss_recv_80211_frame_cb_t g_ieee80211_handler;
 autoconfig_plugin_t g_alink_smartconfig;
 
@@ -134,20 +136,52 @@ int platform_awss_connect_ap(
 
 int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)
 {
+    register_wifi_scan_result_callback(cb);
+    hal_wifi_start_scan(NULL);
     return 0;
 }
 
+#define KEY_LEN 16 // aes 128 cbc
 p_aes128_t platform_aes128_init(
     const uint8_t *key,
     const uint8_t *iv,
     AES_DIR_t dir)
 {
-    return 0;
+    ali_crypto_result result;
+    void *aes_ctx;
+    size_t aes_ctx_size;
+    bool en_dec = true; // encrypto by default
+
+    if (dir == PLATFORM_AES_DECRYPTION) en_dec = false;
+
+    result = ali_aes_get_ctx_size(AES_CBC, &aes_ctx_size);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        LOGE("yos_awss", "get ctx size fail(%08x)", result);
+        return NULL;
+    }
+
+    aes_ctx = os_malloc(aes_ctx_size);
+    if (aes_ctx == NULL) {
+        LOGE("yos_awss", "kmalloc(%d) fail", (int)aes_ctx_size);
+        return NULL;
+    }
+
+    result = ali_aes_init(AES_CBC, en_dec,
+                 key, NULL, KEY_LEN, iv, aes_ctx);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        LOGE("yos_awss", "ali_aes_init fail(%08x)", result);
+        return NULL;
+    }
+
+    return aes_ctx;
 }
 
 int platform_aes128_destroy(
     p_aes128_t aes)
 {
+    if (aes)
+        os_free(aes);
+
     return 0;
 }
 
@@ -166,6 +200,15 @@ int platform_aes128_cbc_decrypt(
     size_t blockNum,
     void *dst )
 {
+    ali_crypto_result result;
+
+    result = ali_aes_finish(src, blockNum << 4, dst,
+                 PLATFORM_MAX_PASSWD_LEN, SYM_NOPAD, aes);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        LOGE("yos_awss", "aes_cbc finish fail(%08x)", result);
+        return -1;
+    }
+
     return 0;
 }
 
