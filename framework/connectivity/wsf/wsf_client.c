@@ -114,16 +114,16 @@ wsf_code wsf_init()
 
         wsf_config_t *global_config = wsf_get_config();
 
-        result = wsf_open_connection(global_config);
-        if (result != WSF_SUCCESS) {
-            LOGE(MODULE_NAME, "failed to open wsf connection");
-            //return result;
-        }
-
         result = wsf_start_worker(global_config);
         if (result != WSF_SUCCESS) {
             LOGE(MODULE_NAME, "failed to start worker thread");
             return result;
+        }
+
+        result = wsf_open_connection(global_config);
+        if (result != WSF_SUCCESS) {
+            LOGE(MODULE_NAME, "failed to open wsf connection");
+            //return result;
         }
         initialized = 1;
     }
