@@ -55,6 +55,15 @@ typedef struct {
     frame_stats_t stats;
 } mesh_hal_priv_t;
 
+typedef struct send_ext_s {
+    void *context;
+    void *sent;
+    frame_t *frame;
+} send_cxt_t;
+
+static send_cxt_t g_send_ucast_cxt;
+static send_cxt_t g_send_bcast_cxt;
+
 typedef struct {
     frame_t frm;
     frame_info_t fino;
@@ -146,7 +155,25 @@ static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
     return 0;
 }
 
-static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest)
+static void confirmation_handler(void *args, uint32_t statinfo)
+{
+    int result = -1;
+    send_cxt_t *cxt;
+    ur_mesh_handle_sent_ucast_t sent;
+
+    if (statinfo & (FRAME_SUCCESSFUL_TX_BIT | DESC_DONE_TX_BIT)) {
+        result = 0;
+    }
+
+    cxt = (send_cxt_t *)args;
+    if (cxt) {
+        sent = cxt->sent;
+        (*sent)(cxt->context, cxt->frame, result);
+    }
+}
+
+static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
+                      mac_address_t *dest, send_cxt_t *cxt)
 {
     static uint16_t nb_pkt_sent;
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -165,8 +192,8 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
 
     umesh_80211_make_frame(module, frame, dest, pkt);
 
-    tx_frame->cfm.cfm_func = NULL;
-    tx_frame->cfm.env = NULL;
+    tx_frame->cfm.cfm_func = confirmation_handler;
+    tx_frame->cfm.env = cxt;
 
     txl_frame_push(tx_frame, AC_VO);
 
@@ -190,10 +217,10 @@ static int beken_wifi_mesh_send_ucast(ur_mesh_hal_module_t *module,
         return -2;
     }
 
-    error = send_frame(module, frame, dest);
-    if(sent) {
-        (*sent)(context, frame, error);
-    }
+    g_send_ucast_cxt.context = context;
+    g_send_ucast_cxt.sent = sent;
+    g_send_ucast_cxt.frame = frame;
+    error = send_frame(module, frame, dest, &g_send_ucast_cxt);
     return error;
 }
 
@@ -214,12 +241,13 @@ static int beken_wifi_mesh_send_bcast(ur_mesh_hal_module_t *module,
         return -2;
     }
 
+    g_send_bcast_cxt.context = context;
+    g_send_bcast_cxt.sent = sent;
+    g_send_bcast_cxt.frame = frame;
+
     dest.len = 8;
     memset(dest.addr, 0xff, sizeof(dest.addr));
-    error = send_frame(module, frame, &dest);
-    if(sent) {
-        (*sent)(context, frame, error);
-    }
+    error = send_frame(module, frame, &dest, &g_send_bcast_cxt);
     return error;
 }
 
