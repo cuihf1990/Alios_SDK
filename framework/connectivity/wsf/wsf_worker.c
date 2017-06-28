@@ -104,7 +104,7 @@ static void start_network(cb_network *cb)
         return;
     }
 
-    if (cb->sock != OS_INVALID_FD) {
+    if (cb->sock != (int)OS_INVALID_FD) {
         yos_poll_read_fd(cb->sock, cb_recv, cb);
     }
     yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
