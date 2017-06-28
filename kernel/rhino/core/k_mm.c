@@ -138,6 +138,7 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     yunos_mutex_lock(&(pmmhead->mm_mutex), YUNOS_WAIT_FOREVER);
 #endif
 
+    if ((VGF(VALGRIND_MEMPOOL_EXISTS(addr)) + 0) == 0) {
 #if defined(__VALGRIND_MAJOR__) && defined(__VALGRIND_MINOR__)   \
                         && (__VALGRIND_MAJOR__ > 3                                   \
                             || (__VALGRIND_MAJOR__ == 3 && __VALGRIND_MINOR__ >= 12))
@@ -147,6 +148,7 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 #else
             VGF(VALGRIND_CREATE_MEMPOOL((uint8_t *)addr, 0, 0));
 #endif
+    }
 
     firstblk = init_mm_region(addr + MM_ALIGN_UP(sizeof(k_mm_head)),
                               MM_ALIGN_DOWN(len - sizeof(k_mm_head)));
