@@ -103,7 +103,10 @@ static void start_network(cb_network *cb)
     if (!cb) {
         return;
     }
-    yos_poll_read_fd(cb->sock, cb_recv, cb);
+
+    if (cb->sock != OS_INVALID_FD) {
+        yos_poll_read_fd(cb->sock, cb_recv, cb);
+    }
     yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
@@ -251,8 +254,6 @@ static int  __cb_wsf_recv(int fd, void *arg)
 
 static void __cb_wsf_timeout(void *arg)
 {
-    static wsf_msg_t hb_req;
-    static uint32_t len = 0;
     cb_network *cb = (cb_network *)arg;
     wsf_config_t *config = NULL;
     if (!cb) {
@@ -260,19 +261,19 @@ static void __cb_wsf_timeout(void *arg)
     }
     config = (wsf_config_t *)cb->extra;
 
-    if (wsf_conn && cb->sock != (long)wsf_conn->tcp &&
-         wsf_conn->ssl) {
-        cb->sock = (long)wsf_conn->tcp;
-        wsf_keep_connection(config);
-        start_network(cb);
-        LOGW(MODULE_NAME, "re-start wsf network register.\n");
-        return;
-    }
-
-    if (hb_req.header.msg_type_version == 0) {
+    //side effect: send heartbeat before connection ready(before wsf session established)
+    if (wsf_conn && wsf_conn->ssl) {
+        wsf_msg_t hb_req;
+        uint32_t len = 0;
+        //construct heartbeat package
+        memset(&hb_req, 0, sizeof(hb_req));
         wsf_msg_heartbeat_request_init(&hb_req);
         memcpy(&len, hb_req.header.msg_length, sizeof(uint32_t));
         wsf_msg_header_encode((char *)&hb_req, len);
+
+        wsf_send_msg(wsf_conn, (const char *)&hb_req, len);
+        LOGW(MODULE_NAME, "send heartbeat");
+        wsf_dec_heartbeat_counter(wsf_conn);
     }
 
     //TIMEOUT to send heartbeat when connection ready
@@ -282,14 +283,17 @@ static void __cb_wsf_timeout(void *arg)
         wsf_reset_connection(wsf_conn, 0);
     }
 
-    if (wsf_conn && wsf_conn->ssl) {
-        wsf_send_msg(wsf_conn, (const char *)&hb_req, len);
-        LOGW(MODULE_NAME, "send heartbeat");
-        wsf_dec_heartbeat_counter(wsf_conn);
+    wsf_keep_connection(config);
+
+    //add new socket fd to poll list.
+    if (wsf_conn && cb->sock != (long)wsf_conn->tcp &&
+         wsf_conn->ssl) {
+        cb->sock = (long)wsf_conn->tcp;
+        yos_poll_read_fd(cb->sock, cb_recv, cb);
+        LOGW(MODULE_NAME, "add new tcp socket fd to poll list.\n");
     }
 
-    wsf_keep_connection(config);
-    /* NOTE: wsf_reset_connection() only called in this thread */
+    //kick the timer
     yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
@@ -744,8 +748,7 @@ static void wsf_keep_connection(wsf_config_t *config)
     os_sys_net_wait_ready();
 #endif
 
-    if ((!wsf_conn->ssl || wsf_conn->conn_state != CONN_READY)
-        && network_up) {
+    if (!wsf_conn->ssl && network_up) {
         LOGI(MODULE_NAME, "try to reconnect");
         wsf_code result = wsf_open_connection(config);
         if (result != WSF_SUCCESS) {
