@@ -20,7 +20,7 @@ CONFIG_TFS_TEE := n
 CONFIG_TFS_SW := y
 CONFIG_TFS_TEST := n
 
-CURRENT_TIME = $(shell date +%Y%m%d.%H%M)
+CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 define get-os-version
 "YOS-R"-$(CURRENT_TIME)
 endef
