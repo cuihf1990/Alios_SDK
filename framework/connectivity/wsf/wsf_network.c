@@ -117,7 +117,7 @@ wsf_code wsf_reset_connection(wsf_connection_t *conn, int clear_session)
         }
         if (conn->tcp != OS_INVALID_FD) {
             os_tcp_close(conn->tcp);
-            yos_cancel_poll_read_fd(conn->tcp, NULL, NULL);
+            yos_cancel_poll_read_fd((int)conn->tcp, NULL, NULL);
             conn->tcp = OS_INVALID_FD;
         }
 
