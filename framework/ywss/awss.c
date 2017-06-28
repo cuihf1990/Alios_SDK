@@ -118,7 +118,7 @@ int awss_start(void)
             	LOGI("[awss]", "hotspot mode deteched");
                 udpFd = os_udp_server_create(SHUB_UDP_PORT);
                 OS_ASSERT(udpFd >= 0, "shub create socket failed!\r\n");
-                while (1／*hotspotCnt < HOTSPOT_TIMEOUT*／) {
+                while (hotspotCnt < HOTSPOT_TIMEOUT) {
                     handleSocketPacket(udpFd);
                     if (switchApDone) {
                     	LOGI("[awss]", "switchApDone");
