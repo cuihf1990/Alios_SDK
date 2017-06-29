@@ -162,7 +162,7 @@ void rc_basic_init(struct sta_info_tag *sta_entry)
     }
 
     rate_info |= 1 << N_RETRY_RCX_OFT;
-    rc->r_idx = rc->r_idx_max;
+    rc->r_idx = HW_RATE_1MBPS;//rc->r_idx_max; yhb changed. set init data rate to 1Mbps, make eapol & dhcp work at 1Mbps.
     rc->fail_cnt = 0;
     rc->tx_cnt = 0;
     rc->buf_ctrl_idx = 0;

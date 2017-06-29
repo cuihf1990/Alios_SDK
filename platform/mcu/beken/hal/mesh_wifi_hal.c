@@ -22,6 +22,7 @@
 #include "txl_frame.h"
 
 #include "umesh_hal.h"
+#include <umesh_80211.h>
 #include "hal/wifi.h"
 
 enum {
@@ -53,6 +54,15 @@ typedef struct {
 
     frame_stats_t stats;
 } mesh_hal_priv_t;
+
+typedef struct send_ext_s {
+    void *context;
+    void *sent;
+    frame_t *frame;
+} send_cxt_t;
+
+static send_cxt_t g_send_ucast_cxt;
+static send_cxt_t g_send_bcast_cxt;
 
 typedef struct {
     frame_t frm;
@@ -87,116 +97,13 @@ static void pass_to_umesh(const void* arg)
     yos_free(cmsg);
 }
 
-static inline uint16_t calc_seqctrl(uint8_t *data)
-{
-    return (data[23] << 4) | (data[22] >> 4);
-}
-
-static inline void dump_packet(bool rx, uint8_t *data, int len)
-{
-    ur_mesh_hal_module_t *module;
-    int seqno = calc_seqctrl(data);
-    uint8_t index;
-    uint8_t channel;
-
-    if (rx) {
-        printf("rx: ");
-    } else {
-        printf("tx: ");
-    }
-    module = hal_umesh_get_default_module();
-    channel = hal_umesh_get_ucast_channel(module);
-    printf("on channel %d, seq %d, size %d, ctrl %02x:%02x\r\n", channel, seqno, len, data[0], data[1]);
-    printf("  to");
-    for (index = WIFI_DST_OFFSET; index < WIFI_DST_OFFSET + 6; index++) {
-        printf(":%02x", data[index]);
-    }
-    printf("\r\n");
-    printf("  from");
-    for (index = WIFI_SRC_OFFSET; index < WIFI_SRC_OFFSET + 6; index++) {
-        printf(":%02x", data[index]);
-    }
-    printf("\r\n");
-    printf("  bssid");
-    for (index = WIFI_BSSID_OFFSET; index < WIFI_BSSID_OFFSET + 6; index++) {
-        printf(":%02x", data[index]);
-    }
-    printf("\r\n");
-
-    for (index = 0; index < len; index++) {
-        printf("%02x:", data[index]);
-    }
-    printf("\r\n");
-}
-
-static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
-{
-    mac_entry_t *ment, *yent = NULL;
-    uint64_t youngest = -1ULL;
-    int i;
-
-    for (i=0; i < ENT_NUM; i++) {
-        ment = entries + i;
-        if (memcmp(ment->macaddr, macaddr, 6) == 0)
-            return ment;
-
-        if (ment->mactime > youngest)
-            continue;
-
-        youngest = ment->mactime;
-        yent = ment;
-    }
-
-    bzero(yent, sizeof(*yent));
-    memcpy(yent->macaddr, macaddr, 6);
-    return yent;
-}
-
-static int filter_packet(mesh_hal_priv_t *priv, uint8_t *data, int len)
-{
-    uint16_t seqno = calc_seqctrl(data) << 4;
-    mac_entry_t *ent;
-    uint32_t now;
-    uint8_t bcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-    if (len < WIFI_MESH_OFFSET) {
-        return 1;
-    }
-
-    if (memcmp(data + WIFI_BSSID_OFFSET, priv->bssid, WIFI_MAC_ADDR_SIZE) ||
-        memcmp(data + WIFI_SRC_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE) == 0 ||
-        (memcmp(data + WIFI_DST_OFFSET, bcast, WIFI_MAC_ADDR_SIZE) &&
-         memcmp(data + WIFI_DST_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE))) {
-        return 1;
-    }
-
-    priv->stats.in_frames++;
-
-    now = yos_now() / 1000000;
-    ent = find_mac_entry(data + WIFI_SRC_OFFSET);
-    if (now - ent->mactime > 100000) {
-        ent->mactime = now;
-        ent->last_seq = seqno;
-        return 0;
-    }
-    ent->mactime = now;
-
-    if ((int16_t)(seqno - ent->last_seq) <= 0) {
-        return 1;
-    }
-
-    ent->last_seq = seqno;
-    return 0;
-}
-
 static void wifi_monitor_cb(uint8_t *data, int len)
 {
     compound_msg_t *pf;
-    mesh_hal_priv_t *priv;
-    ur_mesh_hal_module_t *module;
+    mesh_hal_priv_t *priv = g_hal_priv;
+    ur_mesh_hal_module_t *module = priv->module;
 
-    priv = g_hal_priv;
-    if (filter_packet(priv, data, len)) {
+    if (umesh_80211_filter_frame(module, data, len)) {
         return;
     }
 
@@ -248,9 +155,27 @@ static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
     return 0;
 }
 
-static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest)
+static void confirmation_handler(void *args, uint32_t statinfo)
 {
-    static unsigned long nb_pkt_sent;
+    int result = -1;
+    send_cxt_t *cxt;
+    ur_mesh_handle_sent_ucast_t sent;
+
+    if (statinfo & (FRAME_SUCCESSFUL_TX_BIT | DESC_DONE_TX_BIT)) {
+        result = 0;
+    }
+
+    cxt = (send_cxt_t *)args;
+    if (cxt) {
+        sent = cxt->sent;
+        (*sent)(cxt->context, cxt->frame, result);
+    }
+}
+
+static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
+                      mac_address_t *dest, send_cxt_t *cxt)
+{
+    static uint16_t nb_pkt_sent;
     mesh_hal_priv_t *priv = module->base.priv_dev;
     uint8_t *pkt;
     int len = frame->len + WIFI_MESH_OFFSET;
@@ -264,30 +189,11 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
     }
 
     pkt = (uint8_t *)tx_frame->txdesc.lmac.buffer->payload;
-    bzero(pkt, WIFI_MESH_OFFSET);
-    hdr = (struct mac_hdr *)pkt;
-    hdr->fctl = MAC_FCTRL_DATA_T;
 
-    memcpy(pkt + WIFI_DST_OFFSET, dest->addr, WIFI_MAC_ADDR_SIZE);
-    memcpy(pkt + WIFI_SRC_OFFSET, priv->macaddr, WIFI_MAC_ADDR_SIZE);
-    memcpy(pkt + WIFI_BSSID_OFFSET, priv->bssid, WIFI_MAC_ADDR_SIZE);
+    umesh_80211_make_frame(module, frame, dest, pkt);
 
-    /* sequence control */
-    pkt[22] = (nb_pkt_sent & 0x0000000F) << 4;
-    pkt[23] = (nb_pkt_sent & 0x00000FF0) >> 4;
-    nb_pkt_sent++;
-
-    pkt[24] = 0xaa;
-    pkt[25] = 0xaa;
-
-    tx_frame->cfm.cfm_func = NULL;
-    tx_frame->cfm.env = NULL;
-
-    memcpy(pkt + WIFI_MESH_OFFSET, frame->data, frame->len);
-
-#ifdef YOS_DEBUG_MESH
-    dump_packet(false, pkt, len);
-#endif
+    tx_frame->cfm.cfm_func = confirmation_handler;
+    tx_frame->cfm.env = cxt;
 
     txl_frame_push(tx_frame, AC_VO);
 
@@ -311,10 +217,10 @@ static int beken_wifi_mesh_send_ucast(ur_mesh_hal_module_t *module,
         return -2;
     }
 
-    error = send_frame(module, frame, dest);
-    if(sent) {
-        (*sent)(context, frame, error);
-    }
+    g_send_ucast_cxt.context = context;
+    g_send_ucast_cxt.sent = sent;
+    g_send_ucast_cxt.frame = frame;
+    error = send_frame(module, frame, dest, &g_send_ucast_cxt);
     return error;
 }
 
@@ -335,12 +241,13 @@ static int beken_wifi_mesh_send_bcast(ur_mesh_hal_module_t *module,
         return -2;
     }
 
+    g_send_bcast_cxt.context = context;
+    g_send_bcast_cxt.sent = sent;
+    g_send_bcast_cxt.frame = frame;
+
     dest.len = 8;
     memset(dest.addr, 0xff, sizeof(dest.addr));
-    error = send_frame(module, frame, &dest);
-    if(sent) {
-        (*sent)(context, frame, error);
-    }
+    error = send_frame(module, frame, &dest, &g_send_bcast_cxt);
     return error;
 }
 

@@ -19,7 +19,6 @@
 
 #include <yts.h>
 #include <dda.h>
-#include <ysh.h>
 
 int application_start(int argc, char **argv)
 {

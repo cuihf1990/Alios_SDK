@@ -19,6 +19,7 @@ static void run_in_hop1(void)
 
     set_full_rssi(11, 13);
 
+    cmd_to_agent("stop");
     start_node(12);
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
     start_node(13);

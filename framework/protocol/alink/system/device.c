@@ -91,6 +91,7 @@ char *devinfo_get_version(void)
 
 static int devinfo_init(void)
 {
+    product_init();
     memset(&main_devinfo, 0, sizeof(main_devinfo));
 
     os_get_chipid(main_devinfo.cid);

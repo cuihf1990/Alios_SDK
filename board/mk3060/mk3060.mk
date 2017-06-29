@@ -32,6 +32,7 @@ HOST_MCU_FAMILY      := beken
 $(NAME)_SOURCES := board.c
 
 GLOBAL_INCLUDES += .
+GLOBAL_DEFINES += STDIO_UART=0
 
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 define get-os-version

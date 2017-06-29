@@ -180,7 +180,7 @@ static void resolve_message_info(received_frame_t *frame)
     message = frame->message;
     info = message->info;
     info->hal_type = frame->hal->module->type;
-    info->channel = frame->frame_info.channel;
+    info->src_channel = frame->frame_info.channel;
     info->key_index = frame->frame_info.key_index;
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));

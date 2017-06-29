@@ -60,6 +60,7 @@ enum {
     NBR_SID_CHANGED       = 1 << 0,
     NBR_DISCOVERY_REQUEST = 1 << 1,
     NBR_NETID_CHANGED     = 1 << 2,
+    NBR_REBOOT            = 1 << 3,
 };
 
 typedef enum node_type_s {
@@ -95,6 +96,7 @@ typedef struct neighbor_s {
     uint8_t flags;
     uint8_t attach_candidate_timeout;
     ssid_info_t ssid_info;
+    uint8_t channel;
     uint32_t last_heard;
 } neighbor_t;
 

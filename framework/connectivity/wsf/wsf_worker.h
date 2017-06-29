@@ -26,7 +26,7 @@ typedef struct request_msg_node {
 } request_msg_node_t;
 
 #ifndef CONFIG_REQMSG_LENGTH
-#define CONFIG_REQMSG_LENGTH (3)
+#define CONFIG_REQMSG_LENGTH (10)
 #endif
 
 void init_req_glist(void);

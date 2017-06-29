@@ -21,7 +21,7 @@
 #include "hal/interface_context.h"
 
 enum {
-    DISCOVERY_RETRY_TIMES = 2,
+    DISCOVERY_RETRY_TIMES = 4,
 };
 
 ur_error_t handle_discovery_request(message_t *message);

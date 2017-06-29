@@ -228,6 +228,8 @@ ethernetif_input(int iface, struct pbuf *p)
 		
     case ETHTYPE_EAPOL:
 	 	ke_l2_packet_tx(p->payload, p->len, 0);
+		pbuf_free(p);
+        p = NULL;
         break;
 		
     default:

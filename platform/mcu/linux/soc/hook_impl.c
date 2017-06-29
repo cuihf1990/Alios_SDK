@@ -53,7 +53,7 @@ void yunos_task_del_hook(ktask_t *task)
     cpu_task_del_hook(task);
 }
 
-void yunos_task_switch_hook(ktask_t *orgin,ktask_t *dest)
+void yunos_task_switch_hook(ktask_t *orgin, ktask_t *dest)
 {
     (void)orgin;
     (void)dest;
@@ -66,4 +66,10 @@ void yunos_tick_hook(void)
 void yunos_task_abort_hook(ktask_t *task)
 {
     (void)task;
+}
+
+void yunos_mm_alloc_hook(void *mem, size_t size)
+{
+    (void)mem;
+    (void)size;
 }

@@ -2420,7 +2420,10 @@ static bool rxu_mgt_frame_check(struct rx_swdesc* swdesc, uint8_t sta_idx)
         #endif
 
 #ifdef CONFIG_YOS_MESH
-        if (rxu_mesh_monitor(swdesc) == false)
+        if (rxu_mesh_monitor(swdesc) == true) {
+            upload = false;
+        }
+        else
 #endif
         {
             upload = rxu_mgt_frame_ind(hdr->fctl, 

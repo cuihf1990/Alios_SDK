@@ -22,6 +22,8 @@
 #include "platform.h"
 #include "platform_config.h"
 
+#include "yos/log.h"
+
 platform_awss_recv_80211_frame_cb_t g_ieee80211_handler;
 autoconfig_plugin_t g_alink_smartconfig;
 
@@ -106,16 +108,28 @@ int platform_awss_connect_ap(
     _IN_OPT_ uint8_t bssid[ETH_ALEN],
     _IN_OPT_ uint8_t channel)
 {
-    int ret;
+    int ret, ms_cnt = 0;
     netmgr_ap_config_t config;
 
     strcpy(config.ssid, ssid);
     strcpy(config.pwd, passwd);
     ret = netmgr_set_ap_config(&config);
 
+    hal_wifi_suspend_station(NULL);
     yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0u);
 
-    return ret;
+    while (ms_cnt < connection_timeout_ms) {
+        if (netmgr_get_ip_state() == false) {
+            LOGI("[waitConnAP]", "waiting for connecting AP");
+            yos_msleep(500);
+            ms_cnt += 500;
+        } else {
+            LOGI("[waitConnAP]", "AP connected");
+            return 0;
+        }
+    }
+
+    return -1;
 }
 
 int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)

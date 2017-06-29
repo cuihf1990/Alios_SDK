@@ -19,20 +19,43 @@
 #include "product.h"
 
 //TODO: update these product info
-#if 1
-#define product_model           "ALINKTEST_LIVING_LIGHT_ALINK_TEST"
-#define product_key             "5gPFl8G4GyFZ1fPWk20m"
-#define product_secret          "ngthgTlZ65bX5LpViKIWNsDPhOf2As9ChnoL9gQb"
-#define product_debug_key       "dpZZEpm9eBfqzK7yVeLq"
-#define product_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
-#else
-#define product_model           "ALINKTEST_SECURITY_GATEWAY_QUANWU_001"
-#define product_key             "V2hpRG0k7Pbr1bmxDCat"
-#define product_secret          "O71DlsrrTkImG0NxowxaA5oFFjyxTj1n8FwWzOJv"
-#define product_debug_key       "dpZZEpm9eBfqzK7yVeLq"
-#define product_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
-#define PRODUCT_ASR_APP_KEY     "box2015product01"
-#endif
+#define light_model           "ALINKTEST_LIVING_LIGHT_ALINK_TEST"
+#define light_key             "5gPFl8G4GyFZ1fPWk20m"
+#define light_secret          "ngthgTlZ65bX5LpViKIWNsDPhOf2As9ChnoL9gQb"
+#define light_debug_key       "dpZZEpm9eBfqzK7yVeLq"
+#define light_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
+
+#define gateway_model           "ALINKTEST_SECURITY_GATEWAY_QUANWU_001"
+#define gateway_key             "V2hpRG0k7Pbr1bmxDCat"
+#define gateway_secret          "O71DlsrrTkImG0NxowxaA5oFFjyxTj1n8FwWzOJv"
+#define gateway_debug_key       "dpZZEpm9eBfqzK7yVeLq"
+#define gateway_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
+
+static const char *product_model = light_model;
+static const char *product_key = light_key;
+static const char *product_secret = light_secret;
+static const char *product_debug_key = light_debug_key;
+static const char *product_debug_secret = light_debug_secret;
+
+void product_init(void)
+{
+    char model[PRODUCT_MODEL_LEN] = "light";
+    int  model_len = sizeof(model);
+    yos_kv_get("model", model, &model_len);
+    if (!strcmp(model, "gateway")) {
+        product_model = gateway_model;
+        product_key = gateway_key;
+        product_secret = gateway_secret;
+        product_debug_key = gateway_debug_key;
+        product_debug_secret = gateway_debug_secret;
+    } else {
+        product_model = light_model;
+        product_key = light_key;
+        product_secret = light_secret;
+        product_debug_key = light_debug_key;
+        product_debug_secret = light_debug_secret;
+    }
+}
 
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 {

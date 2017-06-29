@@ -149,6 +149,8 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/os/FreeRTOSv9.0.0
 
 $(NAME)_SOURCES :=  yos/yos.c
+$(NAME)_SOURCES +=  yos/newlib_stub.c
+$(NAME)_LINK_FILES := yos/newlib_stub.o
 $(NAME)_INCLUDES += yos
 
 $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
@@ -414,7 +416,7 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/platform_stub.c \
                     ../../arch/arm/armv5/port_c.c \
                     ../../arch/arm/armv5/port_s.S \
-                    ../../arch/arm/armv5/soc_impl.c \
+                    yos/soc_impl.c \
 
 $(NAME)_SOURCES	 += hal/wdg.c \
                     hal/hw.c \

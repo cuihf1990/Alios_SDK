@@ -55,6 +55,7 @@ typedef struct {
     int32_t                    ipv4_owned;
     int8_t                     disconnected_times;
     bool                       doing_smartconfig;
+    bool                       ip_available;
 } netmgr_cxt_t;
 
 extern autoconfig_plugin_t g_alink_smartconfig;
@@ -89,6 +90,7 @@ static void mesh_delayed_action(void *arg)
 {
     ur_mesh_init((node_mode_t)arg);
     ur_mesh_set_mode((node_mode_t)arg);
+    ur_mesh_stop();
     ur_mesh_start();
 }
 #endif
@@ -119,6 +121,7 @@ static void netmgr_ip_got_event(hal_wifi_module_t *m,
     LOGI(TAG, "Got ip : %s, gw : %s, mask : %s", pnet->ip, pnet->gate, pnet->mask);
 
     g_netmgr_cxt.ipv4_owned = (int32_t)inet_addr(pnet->ip);
+    g_netmgr_cxt.ip_available = true;
     yos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
     start_mesh(true);
 }
@@ -257,6 +260,7 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
             break;
         case CODE_WIFI_ON_DISCONNECT:
             handle_wifi_disconnect();
+            g_netmgr_cxt.ip_available = false;
             break;
         case CODE_WIFI_ON_PRE_GOT_IP:
             if (g_netmgr_cxt.doing_smartconfig) {
@@ -276,6 +280,7 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
             break;
         case CODE_WIFI_CMD_RECONNECT:
             g_netmgr_cxt.disconnected_times = 0;
+            g_netmgr_cxt.ip_available = false;
             reconnect_wifi(NULL);
             break;
         default :
@@ -404,6 +409,7 @@ int netmgr_init(void)
 
     module = hal_wifi_get_default_module();
     memset(&g_netmgr_cxt, 0, sizeof(g_netmgr_cxt));
+    g_netmgr_cxt.ip_available = false;
     g_netmgr_cxt.wifi_hal_mod = module;
 #if defined(CONFIG_YWSS) && !defined(CSP_LINUXHOST)
     add_autoconfig_plugin(&g_alink_smartconfig);
@@ -436,6 +442,11 @@ int netmgr_start(bool autoconfig)
 
     start_mesh(false);
     return -1;
+}
+
+bool netmgr_get_ip_state()
+{
+    return g_netmgr_cxt.ip_available;
 }
 
 static int def_smart_config_start(void)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 
 #include <k_api.h>
-#include <assert.h>
 
 #if (YUNOS_CONFIG_HW_COUNT > 0)
 void soc_hw_timer_init(void)
@@ -64,18 +63,38 @@ tick_t soc_elapsed_ticks_get(void)
 #endif
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+k_mm_region_t      g_mm_region;
+k_mm_region_head_t g_mm_region_head;
 
-#define       SYS_DYN_POOL_SIZE (130 * 1024)
-size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
-k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start, SYS_DYN_POOL_SIZE}};
+void soc_sys_mem_init(void)
+{
+    g_mm_region.start = **********
+    g_mm_region.len   = **********
 
+    yunos_mm_region_init(&g_mm_region_head, &g_mm_region, 1);
+}
+
+void *soc_mm_alloc(size_t size)
+{
+    kstat_t ret;
+    void   *mem;
+
+    ret = yunos_mm_bf_alloc(&g_mm_region_head, &mem, size);
+    if (ret != YUNOS_SUCCESS) {
+        return NULL;
+    }
+
+    return mem;
+}
+
+void soc_mm_free(void *mem)
+{
+    yunos_mm_bf_free(&g_mm_region_head, mem);
+}
 #endif
 
 void soc_err_proc(kstat_t err)
 {
-    (void)err;
-    assert(0);
 }
 
 yunos_err_proc_t g_err_proc = soc_err_proc;
-

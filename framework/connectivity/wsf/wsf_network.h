@@ -66,7 +66,7 @@ static inline void wsf_reset_heartbeat_counter(wsf_connection_t *conn)
 static inline int wsf_is_heartbeat_timeout(wsf_connection_t *conn)
 {
     if (conn) {
-        return !conn->heartbeat_unack_counter;
+        return conn->heartbeat_unack_counter < 0;
     } else {
         return 0;
     }
