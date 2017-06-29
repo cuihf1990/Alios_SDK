@@ -21,6 +21,7 @@
 #include "yos/log.h"
 #include "enrollee.h"
 
+#ifndef AWSS_DISABLE_ENROLLEE
 #define MODULE_NAME "enrollee"
 
 const uint8_t probe_req_frame[64] = {
@@ -48,7 +49,6 @@ static uint8_t *g_model; /* pointer to model_len start pos */
 static uint8_t *enrollee_frame;
 static int enrollee_frame_len;
 
-char enrollee_token[MAX_TOKEN_LEN + 1];
 
 uint32_t get_random_digital(void);
 static int decrypt_ssid_passwd(uint8_t *ie, uint8_t ie_len,
@@ -137,7 +137,7 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
     len += sizeof(uint32_t);
 
     memcpy(&enrollee_frame[len], sign, ENROLLEE_SIGN_SIZE);
-    len += sizeof(ENROLLEE_SIGN_SIZE);
+    len += ENROLLEE_SIGN_SIZE;
 
     memcpy(&enrollee_frame[len],
            &probe_req_frame[sizeof(probe_req_frame) - FCS_SIZE], FCS_SIZE);
@@ -300,7 +300,7 @@ static int decrypt_ssid_passwd(
     strcpy((char *)out_passwd, (char *)tmp_passwd);
     memcpy((char *)out_bssid, (char *)p_bssid, ETH_ALEN);
 
-    awss_set_enrollee_token(&p_token[1], p_token[0]);
+    awss_set_enrollee_token((char *)&p_token[1], p_token[0]);
 
     if (secret) {
         os_free(secret);
@@ -330,6 +330,8 @@ uint32_t get_random_digital(void)
     return result;
 }
 
+#endif
+char enrollee_token[MAX_TOKEN_LEN + 1];
 char *awss_get_enrollee_token(void)
 {
     char *token = enrollee_token;

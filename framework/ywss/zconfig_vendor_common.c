@@ -171,16 +171,15 @@ enum {
 
 ATTR int aws_is_chnscan_timeout(void)
 {
-	u32 now;
 	if (aws_stop == AWS_STOPPING) {
 		info("aws will stop...\r\n");
 		return CHNSCAN_TIMEOUT;
 	}
 
-	now = os_get_time_ms();
-	if (now - aws_chn_timestamp > os_awss_get_channelscan_interval_ms()) {
+	if (time_elapsed_ms_since(aws_chn_timestamp) > os_awss_get_channelscan_interval_ms()) {
 		if ((0 != os_awss_get_timeout_interval_ms()) &&
-		    (now - aws_start_timestamp > os_awss_get_timeout_interval_ms()))
+		    (time_elapsed_ms_since(aws_start_timestamp) > os_awss_get_timeout_interval_ms()))
+
 			return CHNSCAN_TIMEOUT;
 		else
 			return CHNSCAN_NEXT_CHN;
@@ -214,7 +213,7 @@ ATTR int aws_force_scanning(void)
 		return 0;
 
 	//channel scanning at most 2 round
-	if (os_get_time_ms() - aws_start_timestamp >= timeout) {
+	if (time_elapsed_ms_since(aws_start_timestamp) >= timeout) {
 		return 0;//timeout
 	} else {
 		/*
@@ -273,7 +272,7 @@ rescanning:
 
 	//channel lock
 	info("[channel scanning] %d ms\r\n",
-		os_get_time_ms() - aws_start_timestamp);
+		time_elapsed_ms_since(aws_start_timestamp));
 
 	/*
 	 * make sure switch to locked channel,
@@ -296,7 +295,7 @@ rescanning:
 	}
 
 	info("[channel recving] %d ms\r\n",
-		os_get_time_ms() - aws_start_timestamp);
+		time_elapsed_ms_since(aws_start_timestamp));
 
 	goto success;
 
@@ -471,19 +470,24 @@ void aws_notify_app(void)
 int aws_notify_app_nonblock(void)
 {
     static int times;
-
+    int result = 0;
     if (!times) {
         times++;
         aws_notify_app_prepare();
-        return aws_broadcast_notification(aws_notify_msg, 1);
+        result = aws_broadcast_notification(aws_notify_msg, 1);
     } else if (times < AWS_NOTIFY_APP_TIMES) {
         times++;
-        return aws_broadcast_notification(aws_notify_msg, 1);
+        result = aws_broadcast_notification(aws_notify_msg, 1);
     } else {
+        result = 1;
+    }
+
+    if (result) {
         aws_notify_app_unprepare();
         times = 0;
-        return 1;
     }
+
+    return result;
 }
 
 int aws_80211_frame_handler(char *buf, int length, enum AWSS_LINK_TYPE link_type, int with_fcs)
@@ -500,8 +504,7 @@ int aws_80211_frame_handler(char *buf, int length, enum AWSS_LINK_TYPE link_type
 			lock_start = os_get_time_ms();
 			break;
 		default:
-			if (os_get_time_ms() - lock_start > aws_channel_lock_timeout_ms)
-				/* set to rescanning */
+			if (time_elapsed_ms_since(lock_start) > aws_channel_lock_timeout_ms)				/* set to rescanning */
 				aws_state = AWS_SCANNING;
 			break;
 		}
