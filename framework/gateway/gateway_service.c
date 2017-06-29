@@ -37,6 +37,7 @@
 
 #define MODULE_NAME "gateway"
 #define ADV_INTERVAL (5 * 1000)
+#define GW_DEBUG(x, y, ...)     printf("GATEWAY: " y "\n", ##__VA_ARGS__)
 
 typedef struct reg_info_s {
     char model_id[sizeof(uint32_t) + 1];
@@ -246,7 +247,15 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
         if (client->devinfo == NULL)
             continue;
         if (memcmp(reginfo->ieee_addr, client->devinfo->dev_base.u.ieee_addr, IEEE_ADDR_BYTES) == 0) {
-            LOGD(MODULE_NAME, "existing client %s", client->devinfo->dev_base.u.ieee_addr);
+            GW_DEBUG(MODULE_NAME, "existing client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
             return client;
         }
     }
@@ -265,7 +274,15 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     client->devinfo = devmgr_get_devinfo_by_ieeeaddr(reginfo->ieee_addr);
     dlist_add_tail(&client->next, &pstate->clients);
 
-    LOGD(MODULE_NAME, "new client %s", reginfo->ieee_addr);
+    GW_DEBUG(MODULE_NAME, "new client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
 
     return client;
 }
@@ -571,17 +588,23 @@ void gateway_service_stop(void) {
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
 {
     if (eventinfo->type == EV_YUNIO) {
-        if(eventinfo->code == CODE_YUNIO_ON_CONNECTED)
+        if(eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
             gateway_state.yunio_connected = true;
+            GW_DEBUG(GATEWAY_MODULE, "yunio_connected");
+        }
         else
             return;
     }
 
     if (eventinfo->type == EV_MESH) {
-        if (eventinfo->code == CODE_MESH_CONNECTED)
+        if (eventinfo->code == CODE_MESH_CONNECTED) {
             gateway_state.mesh_connected = true;
-        else if (eventinfo->code == CODE_MESH_DISCONNECTED)
+            GW_DEBUG(GATEWAY_MODULE, "mesh_connected");
+        }
+        else if (eventinfo->code == CODE_MESH_DISCONNECTED) {
             gateway_state.mesh_connected = false;
+            GW_DEBUG(GATEWAY_MODULE, "mesh_disconnected");
+        }
         else
             return;
     }
