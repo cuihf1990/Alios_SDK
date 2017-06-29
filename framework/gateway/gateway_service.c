@@ -243,6 +243,8 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
 {
     client_t *client = NULL;
     dlist_for_each_entry(&pstate->clients, client, client_t, next) {
+        if (client->devinfo == NULL)
+            continue;
         if (memcmp(reginfo->ieee_addr, client->devinfo->dev_base.u.ieee_addr, IEEE_ADDR_BYTES) == 0) {
             LOGD(MODULE_NAME, "existing client %s", client->devinfo->dev_base.u.ieee_addr);
             return client;
