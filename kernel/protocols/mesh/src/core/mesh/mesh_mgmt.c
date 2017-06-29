@@ -45,7 +45,7 @@ typedef struct mm_device_s {
     ur_timer_t        alive_timer;
     ur_timer_t        net_scan_timer;
     uint8_t           seclevel;
-    uint8_t           prev_channel;
+    int8_t            prev_channel;
 } mm_device_t;
 
 typedef struct mesh_mgmt_state_s {
@@ -102,14 +102,14 @@ static void neighbor_updated_handler(neighbor_t *nbr)
 
     network = get_default_network_context();
     if (network->attach_node != nbr) {
-        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED)) ;
+        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT)) ;
         return;
     }
 
     if (nbr->state == STATE_INVALID || nbr->flags & NBR_SID_CHANGED ||
         nbr->flags & NBR_NETID_CHANGED) {
         become_detached();
-        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED)) ;
+        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT));
         attach_start(NULL);
     }
 }
@@ -307,6 +307,7 @@ static uint8_t get_tv_value_length(uint8_t type)
         case TYPE_SID_TYPE:
         case TYPE_ADDR_QUERY:
         case TYPE_DEF_HAL_TYPE:
+        case TYPE_STATE_FLAGS:
             length = 1;
             break;
         case TYPE_SRC_SID:
@@ -560,6 +561,7 @@ static void handle_net_scan_timer(void *args)
     nm_start_discovery();
     network = get_default_network_context();
     g_mm_state.device.prev_channel = network->channel;
+    g_mm_state.device.reboot_flag = false;
 }
 
 static uint16_t calc_ssid_child_num(network_context_t *network)
@@ -1347,6 +1349,7 @@ static ur_error_t handle_sid_response(message_t *message)
     uint8_t           index = 0;
     stable_network_data_t stable_network_data;
     message_info_t *info;
+    bool init_allocator = false;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle sid response\r\n");
 
@@ -1406,6 +1409,13 @@ static ur_error_t handle_sid_response(message_t *message)
             network->attach_state = ATTACH_IDLE;
             return UR_ERROR_FAIL;
     }
+
+    if (network->attach_node == NULL ||
+        network->meshnetid != network->attach_candidate->addr.netid ||
+        network->sid != allocated_sid->sid) {
+        init_allocator = true;
+    }
+
     network->sid = allocated_sid->sid;
     network->attach_state = ATTACH_DONE;
     network->attach_node = network->attach_candidate;
@@ -1418,18 +1428,20 @@ static ur_error_t handle_sid_response(message_t *message)
                          network->attach_node->stats.link_cost;
     network->attach_node->state = STATE_PARENT;
     network->change_sid = false;
+    network->meshnetid = network->attach_node->addr.netid;
     memset(&network->network_data, 0,  sizeof(network->network_data));
+    if (init_allocator) {
+        sid_allocator_init(network);
+    }
+
     ur_stop_timer(&network->attach_timer, network);
     ur_stop_timer(&network->advertisement_timer, network);
+    ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
 
-    start_neighbor_updater();
-
-    network->meshnetid = network->attach_node->addr.netid;
     ur_router_sid_updated(network, network->sid);
-    sid_allocator_init(network);
+    start_neighbor_updater();
     start_advertisement_timer(network);
     network->state = INTERFACE_UP;
-    ur_router_sid_updated(network, network->sid);
     stop_addr_cache();
 
     g_mm_state.callback->interface_up();
@@ -1468,7 +1480,9 @@ static ur_error_t handle_sid_response(message_t *message)
 
             ur_router_start(network);
             ur_router_sid_updated(network, LEADER_SID);
-            sid_allocator_init(network);
+            if (init_allocator) {
+                sid_allocator_init(network);
+            }
             start_advertisement_timer(network);
         }
     }
@@ -1823,6 +1837,7 @@ ur_error_t umesh_mm_init(node_mode_t mode)
     g_mm_state.device.reboot_flag = true;
 
     g_mm_state.device.seclevel = SEC_LEVEL_1;
+    g_mm_state.device.prev_channel = -1;
 
     memset(&g_mm_state.network_data_updater, 0 ,
            sizeof(g_mm_state.network_data_updater));
@@ -1882,6 +1897,7 @@ ur_error_t umesh_mm_stop(void)
     nm_stop_discovery();
     ur_router_stop();
     become_detached();
+    ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
     /* finally free all neighbor structures */
     neighbors_init();
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
@@ -2188,10 +2204,10 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             }
         }
         if ((nbr == attach_node) &&
-            (attach_node->flags & NBR_DISCOVERY_REQUEST) &&
+            (attach_node->flags & NBR_REBOOT) &&
             ((attach_node->flags & NBR_SID_CHANGED) == 0)) {
             leader_reboot = true;
-            attach_node->flags &= (~NBR_DISCOVERY_REQUEST);
+            attach_node->flags &= (~NBR_REBOOT);
         }
         if (leader_reboot) {
             network->attach_candidate = network->attach_node;
@@ -2256,4 +2272,9 @@ void umesh_mm_start_net_scan_timer(void)
 uint8_t umesh_mm_get_prev_channel(void)
 {
     return g_mm_state.device.prev_channel;
+}
+
+uint8_t umesh_mm_get_reboot_flag(void)
+{
+    return g_mm_state.device.reboot_flag;
 }
