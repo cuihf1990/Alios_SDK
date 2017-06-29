@@ -6,9 +6,11 @@
 #include <umesh_hal.h>
 #include <umesh_80211.h>
 
+#define MDEBUG
+
 #undef USE_ACTION_FRAME
-#undef MDEBUG
 #define USE_MULTICAST_FRAME
+#undef FILTER_DUPLICATE_FRAME
 
 static inline uint16_t calc_seqctrl(unsigned char *pkt)
 {
@@ -67,6 +69,7 @@ int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_add
     return 0;
 }
 
+#ifdef FILTER_DUPLICATE_FRAME
 typedef struct mac_entry_s {
     uint64_t mactime;
     uint16_t last_seq;
@@ -97,15 +100,13 @@ static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
     memcpy(yent->macaddr, macaddr, 6);
     return yent;
 }
+#endif
 
 bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int count)
 {
     const uint8_t bcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     umesh_extnetid_t extnetid;
     const mac_address_t *mymac;
-    uint16_t seqno = calc_seqctrl(pkt) << 4;
-    mac_entry_t *ent;
-    uint64_t mactime = yos_now_ms();
 
     mymac = hal_umesh_get_mac_address(module);
     hal_umesh_get_extnetid(module, &extnetid);
@@ -126,6 +127,11 @@ bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int co
         return 1;
 
 next:
+#ifdef FILTER_DUPLICATE_FRAME
+    uint16_t seqno = calc_seqctrl(pkt) << 4;
+    mac_entry_t *ent;
+    uint64_t mactime = yos_now_ms();
+
     ent = find_mac_entry(pkt+OFF_SRC);
     /* if longer than 100ms */
     if (mactime - ent->mactime > 100) {
@@ -144,6 +150,7 @@ next:
 no_filter:
     ent->mactime = mactime;
     ent->last_seq = seqno;
+#endif
 	return 0;
 }
 
