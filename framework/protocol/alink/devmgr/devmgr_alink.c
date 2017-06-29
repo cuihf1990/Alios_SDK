@@ -466,7 +466,7 @@ static int devmgr_permitjoin_service_cb(char *args, char *buf,
         g_permitjoin_config.duration > 0) {
         log_trace("delay disable device join, duration:%d",
                   g_permitjoin_config.duration);
-        disablejoin_work = yos_schedule_work(g_permitjoin_config.duration * 1000,
+        disablejoin_work = yos_loop_schedule_work(g_permitjoin_config.duration * 1000,
                                              __work_func, NULL, NULL, NULL);
     }
 
@@ -534,7 +534,7 @@ void devmgr_delay_disable_join(int duration)
     g_permitjoin_config.short_model = DEVMGR_PERMITJOIN_ANY_MODEL;
     g_permitjoin_config.enable = true;
     yos_cancel_work(disablejoin_work, __work_func, NULL);
-    disablejoin_work = yos_schedule_work(duration * 1000, __work_func, NULL, NULL,
+    disablejoin_work = yos_loop_schedule_work(duration * 1000, __work_func, NULL, NULL,
                                          NULL);
 
     return;

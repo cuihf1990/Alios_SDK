@@ -261,7 +261,7 @@ void yos_cancel_work(void *w, yos_call_t action, void *arg1)
     free_wpar(wpar);
 }
 
-void *yos_schedule_work(int ms, yos_call_t action, void *arg1,
+void *yos_loop_schedule_work(int ms, yos_call_t action, void *arg1,
                         yos_call_t fini_cb, void *arg2)
 {
     int ret;

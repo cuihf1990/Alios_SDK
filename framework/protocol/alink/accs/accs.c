@@ -60,9 +60,9 @@ SERVICE_DEFINE(accs);
 
 void start_accs_work(int delay)
 {
-    //yos_schedule_work(0,accs_handshake,NULL,NULL,NULL);
+    //yos_loop_schedule_work(0,accs_handshake,NULL,NULL,NULL);
 
-    yos_schedule_work(delay, accs_handshake_async, NULL, NULL, NULL);
+    yos_loop_schedule_work(delay, accs_handshake_async, NULL, NULL, NULL);
 }
 
 /*

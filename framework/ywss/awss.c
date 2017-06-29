@@ -138,7 +138,7 @@ int awss_start(void)
             if (!ret) {
                 LOGI(MODULE_NAME,"awss connect ssid:%s success", ssid);
                 delay_ms = 0;
-                yos_schedule_work(0,awss_notify,NULL,NULL,NULL);
+                yos_loop_schedule_work(0,awss_notify,NULL,NULL,NULL);
                 goto end;
             } else {
                 LOGW(MODULE_NAME,"awss connect ssid:%s passwd:%s fail", ssid, passwd);
@@ -188,5 +188,5 @@ static void awss_notify(void *arg)
     delay_ms += 100;
 
     if (!ret)
-        yos_schedule_work(delay_ms,awss_notify,NULL,NULL,NULL);
+        yos_loop_schedule_work(delay_ms,awss_notify,NULL,NULL,NULL);
 }

@@ -70,9 +70,9 @@ static int cota_conn_listener(int type, void *data, int dlen, void *result,
         int st = *((int *)data);
 
         if (st == CONNECT_STATE_READY) {
-            yos_schedule_work(0, collect_stats, NULL, NULL, NULL);
+            yos_loop_schedule_work(0, collect_stats, NULL, NULL, NULL);
         } else if (st == CONNECT_STATE_CLOSE) {
-            yos_schedule_work(0, collect_stats, NULL, NULL, NULL);
+            yos_loop_schedule_work(0, collect_stats, NULL, NULL, NULL);
             disconnectcounter++;
         }
     }
@@ -132,7 +132,7 @@ static int alink_set_config(char *param)
         value_len = (value_len < SERVER_LEN) ? value_len : SERVER_LEN;
         memset(alinkserver, 0x00, SERVER_LEN);
         strncpy(alinkserver, pvalue, value_len);
-        yos_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
+        yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }
 
     char *attrsfilter = config_get_attrsfilter();
@@ -154,7 +154,7 @@ static int alink_set_config(char *param)
 
     if (test_reboot) {
         LOGW(MODULE_NAME_COTA, "RebootDevice, device will reboot 3 seconds later!");
-        yos_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
+        yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }
 
     return ret;

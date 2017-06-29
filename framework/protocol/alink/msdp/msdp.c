@@ -243,7 +243,7 @@ int msdp_add_asyncpost_task(char *params)
     dlist_add_tail(&node->list_node, &g_task_head);
     os_mutex_unlock(g_task_mutex);
 
-    post_device_status_work = yos_schedule_work(0, msdp_post_work_handler, NULL,
+    post_device_status_work = yos_loop_schedule_work(0, msdp_post_work_handler, NULL,
                                                 NULL, NULL);
 
     return SERVICE_RESULT_OK;

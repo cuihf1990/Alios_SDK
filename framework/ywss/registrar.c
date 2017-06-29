@@ -302,7 +302,7 @@ static int enrollee_enable_somebody_checkin(int dev_type, char *token, char *key
                          ENR_CHECKIN_ENABLE);
                 enrollee_info[i].state = ENR_CHECKIN_ENABLE;
                 enrollee_info[i].checkin_priority = 1;//TODO: not implement yet
-                yos_schedule_work(0,enrollee_checkin,NULL,NULL,NULL);
+                yos_loop_schedule_work(0,enrollee_checkin,NULL,NULL,NULL);
                 return 1;/* match */
             }
         }
@@ -363,7 +363,7 @@ ongoing:
         enrollee_info[i].state = ENR_FREE;
         registrar_raw_frame_destroy();
     }
-    yos_schedule_work(REGISTRAR_SEND_PKT_INTERVAL,enrollee_checkin,NULL,NULL,NULL);
+    yos_loop_schedule_work(REGISTRAR_SEND_PKT_INTERVAL,enrollee_checkin,NULL,NULL,NULL);
 }
 
 unsigned int enrollee_report_period_ms = 30 * 1000;
@@ -585,7 +585,7 @@ int enrollee_put(struct enrollee_info *in)
     LOGI(MODULE_NAME_ENROLLEE,"new enrollee[%d] devid:%s time:%x",
              empty_slot, in->devid, enrollee_info[empty_slot].timestamp);
 
-    yos_schedule_work(0,enrollee_report,NULL,NULL,NULL);
+    yos_loop_schedule_work(0,enrollee_report,NULL,NULL,NULL);
 
     return 0;
 }

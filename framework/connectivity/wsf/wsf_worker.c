@@ -318,7 +318,7 @@ static void process_msg_request(wsf_msg_t *msg, int length)
     total_req_nodes ++;
     os_mutex_unlock(g_req_mutex);
 
-    yos_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
+    yos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
 }
 
 void init_req_glist(void)
@@ -371,7 +371,7 @@ void request_msg_handle(void *arg)
     os_mutex_unlock(g_req_mutex);
 
     if (!dlist_empty(&g_list)) {
-        yos_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
+        yos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
     }
 }
 
