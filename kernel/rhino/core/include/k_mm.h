@@ -55,7 +55,7 @@
 #define SLT_SIZE            (1<<MAX_LOG2_SLT)
 #define FLT_SIZE            (MAX_MM_BIT - MIN_FLT_BIT + 1)
 #define MM_ALIGIN_SIZE      (1<<(MIN_FLT_BIT - MAX_LOG2_SLT))
-#define MM_ALIGN_MASK       (2*sizeof(void*)-1)
+#define MM_ALIGN_MASK       (sizeof(void*)-1)
 
 #define MM_ALIGN_UP(a)   (((a) + MM_ALIGN_MASK) & ~MM_ALIGN_MASK)
 #define MM_ALIGN_DOWN(a) ((a) & ~MM_ALIGN_MASK)
