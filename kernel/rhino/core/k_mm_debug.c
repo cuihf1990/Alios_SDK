@@ -429,22 +429,46 @@ void print_block(k_mm_list_t *b)
     if (!b) {
         return;
     }
-    printf(">> [%p] (", b);
-    if ((b->size & YUNOS_MM_BLKSIZE_MASK)) {
-        printf("%lu bytes, ", (unsigned long) (b->size & YUNOS_MM_BLKSIZE_MASK));
-    } else {
-        printf("sentinel, ");
-    }
+    printf("%p ", b);
     if (b->size & YUNOS_MM_FREE) {
-        printf("free [%p, %p], ", b->mbinfo.free_ptr.prev, b->mbinfo.free_ptr.next);
+        if(b->dye != YUNOS_MM_FREE_DYE){
+            printf("!");
+        }
+        else{
+            printf(" ");
+        }
+
+        printf("free ");
     } else {
-        printf("used, ");
+        if(b->dye != YUNOS_MM_CORRUPT_DYE){
+            printf("!");
+        }
+        else{
+            printf(" ");
+        }
+        printf("used ");
     }
+    if ((b->size & YUNOS_MM_BLKSIZE_MASK)) {
+        printf(" %6lu ", (unsigned long) (b->size & YUNOS_MM_BLKSIZE_MASK));
+    } else {
+        printf(" sentinel ");
+    }
+
+    printf(" %8x ",b->dye);
+    printf(" %8x ",b->owner);
+
     if (b->size & YUNOS_MM_PREVFREE) {
-        printf("prev. free [%p])\r\n", b->prev);
-    } else {
-        printf("prev used)\r\n");
+        printf("pre-free [%8p];", b->prev);
     }
+    else {
+        printf("pre-used;");
+    }
+
+    if (b->size & YUNOS_MM_FREE) {
+        printf(" free[%8p,%8p] ", b->mbinfo.free_ptr.prev, b->mbinfo.free_ptr.next);
+    }
+    printf("\r\n");
+
 }
 
 void dump_kmm_free_map(k_mm_head *mmhead)
@@ -456,12 +480,15 @@ void dump_kmm_free_map(k_mm_head *mmhead)
         return;
     }
 
+    printf("address,  stat   size     dye     caller   pre-stat    point\r\n");
+
     printf("FL bitmap: 0x%x\r\n", (unsigned) mmhead->fl_bitmap);
 
     for (i = 0; i < FLT_SIZE; i++) {
         if (mmhead->sl_bitmap[i]) {
             printf("SL bitmap 0x%x\r\n", (unsigned) mmhead->sl_bitmap[i]);
         }
+
         for (j = 0; j < SLT_SIZE; j++) {
             next = mmhead->mm_tbl[i][j];
             if (next) {
@@ -485,6 +512,7 @@ void dump_kmm_map(k_mm_head *mmhead)
     }
 
     printf("ALL BLOCKS\r\n");
+    printf("address,  stat   size     dye     caller   pre-stat    point\r\n");
     reginfo = mmhead->regioninfo;
     while (reginfo) {
         next = (k_mm_list_t *) ((char *) reginfo - MMLIST_HEAD_SIZE);
@@ -525,7 +553,7 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 {
     printf("\r\n------------------------------- all memory blocks --------------------------------- \r\n");
-    printf("g_kmm_head = %08ux\r\n",(unsigned int)g_kmm_head);
+    printf("g_kmm_head = %8x\r\n",(unsigned int)g_kmm_head);
 
     dump_kmm_map(g_kmm_head);
     printf("\r\n----------------------------- all free memory blocks ------------------------------- \r\n");

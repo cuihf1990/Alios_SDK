@@ -20,7 +20,7 @@
 
 #if (YUNOS_CONFIG_MM_TLF > 0)
 
-#define YOS_MM_ALLOC_DEPTH  3
+#define YOS_MM_ALLOC_DEPTH  2
 
 typedef enum {
     ACTION_INSERT,
@@ -157,26 +157,6 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     nextblk = NEXT_MM_BLK(firstblk->mbinfo.buffer,
                           firstblk->size & YUNOS_MM_BLKSIZE_MASK);
 
-#if 0
-    /*create fixed length blk pool */
-    tmpsize = (curblk->size & YUNOS_MM_BLKSIZE_MASK) - DEF_TOTAL_FIXEDBLK_SIZE -
-              MM_ALIGN_UP(sizeof(mblk_pool_t));
-    if (tmpsize >= sizeof(k_mm_list_t)) {
-        tmpsize -= MMLIST_HEAD_SIZE;
-        nextblk = (k_mm_list_t *)((char *)curblk->mbinfo.buffer +
-                                  DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
-        nextblk->size = tmpsize | YUNOS_MM_ALLOCED | YUNOS_MM_PREVALLOCED;
-        curblk->size = DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t));
-    }
-    pmmhead->fixedmblk = curblk;
-    mmblk_pool = (mblk_pool_t *)pmmhead->fixedmblk->mbinfo.buffer;
-
-    yunos_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
-                         curblk->mbinfo.buffer + MM_ALIGN_UP(sizeof(mblk_pool_t)),
-                         DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
-#endif
-
-
     *ppmmhead = pmmhead;
 
     /*mark it as free and set it to bitmap*/
@@ -184,6 +164,7 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     VGF(VALGRIND_MALLOCLIKE_BLOCK(nextblk->mbinfo.buffer, nextblk->size & YUNOS_MM_BLKSIZE_MASK,0 , 0));
     VGF(VALGRIND_MAKE_MEM_DEFINED(nextblk->mbinfo.buffer, nextblk->size & YUNOS_MM_BLKSIZE_MASK));
 
+    nextblk->dye = YUNOS_MM_CORRUPT_DYE;
     k_mm_free(pmmhead, nextblk->mbinfo.buffer);
 
 #if (K_MM_STATISTIC > 0)
@@ -341,10 +322,9 @@ static void *k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
         return NULL;
     }
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(tmp, size));
     VGF(VALGRIND_MALLOCLIKE_BLOCK(tmp, size, 0, 0));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(tmp, size));
 
-    stats_addsize(mmhead, DEF_FIX_BLK_SIZE, size);
     return tmp;
 }
 static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
@@ -540,7 +520,8 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     if (tmp_size >= sizeof(k_mm_list_t)) {
         tmp_size -= MMLIST_HEAD_SIZE;
         b2 = NEXT_MM_BLK(b->mbinfo.buffer, size);
-        b2->size = tmp_size | YUNOS_MM_FREE | YUNOS_MM_ALLOCED;
+        b2->size = tmp_size | YUNOS_MM_FREE | YUNOS_MM_PREVALLOCED;
+        b2->dye  = YUNOS_MM_FREE_DYE;
         next_b->prev = b2;
         bitmap_search(tmp_size, &fl, &sl, ACTION_INSERT);
         insert_block(mmhead, b2, fl, sl);
@@ -551,8 +532,8 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
         b->size &= (~YUNOS_MM_FREE);       /* Now it's used */
     }
 
-    VGF(VALGRIND_MAKE_MEM_DEFINED(b->mbinfo.buffer, size));
     VGF(VALGRIND_MALLOCLIKE_BLOCK(b->mbinfo.buffer, size, 0, 0));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(b->mbinfo.buffer, size));
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
 #if (YUNOS_CONFIG_GCC_RETADDR > 0u)
@@ -607,6 +588,13 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
         return;
     }
     b = (k_mm_list_t *) ((char *) ptr - MMLIST_HEAD_SIZE);
+    if(b->dye == YUNOS_MM_FREE_DYE) {
+        printf("WARNING!! memory maybe double free!!\r\n");
+    }
+    if(b->dye != YUNOS_MM_CORRUPT_DYE) {
+        printf("WARNING,memory maybe corrupt!!\r\n");
+    }
+    b->dye = YUNOS_MM_FREE_DYE;
     b->size |= YUNOS_MM_FREE;
 
     VGF(VALGRIND_FREELIKE_BLOCK(ptr, 0));
@@ -709,6 +697,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
             tmp_size -= MMLIST_HEAD_SIZE;
             tmp_b = NEXT_MM_BLK(b->mbinfo.buffer, new_size);
             tmp_b->size = tmp_size | YUNOS_MM_FREE | YUNOS_MM_PREVALLOCED;
+            tmp_b->dye  = YUNOS_MM_FREE_DYE;
             next_b->prev = tmp_b;
             next_b->size |= YUNOS_MM_PREVFREE;
             bitmap_search(tmp_size, &fl, &sl, ACTION_INSERT);
@@ -735,6 +724,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
                 tmp_size -= MMLIST_HEAD_SIZE;
                 tmp_b = NEXT_MM_BLK(b->mbinfo.buffer, new_size);
                 tmp_b->size = tmp_size | YUNOS_MM_FREE | YUNOS_MM_PREVALLOCED;
+                tmp_b->dye  = YUNOS_MM_FREE_DYE;
                 next_b->prev = tmp_b;
                 next_b->size |= YUNOS_MM_PREVFREE;
                 bitmap_search(tmp_size, &fl, &sl, ACTION_INSERT);
@@ -804,6 +794,8 @@ void *yunos_mm_alloc(size_t size)
     if (tmp == NULL) {
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
         dumpsys_mm_info_func(NULL, 0);
+        printf("WARNING, malloc failed!!!!\r\n");
+
 #endif
     }
 
