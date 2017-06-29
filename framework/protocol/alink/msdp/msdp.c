@@ -1040,9 +1040,11 @@ int msdp_init()
     g_task_mutex = os_mutex_init();
     PTR_RETURN(g_task_mutex, ret, "task mutex init fail");
 
+#if 0
     /*网关设备事件回调初始化*/
     ret = msdp_gw_init();
     RET_GOTO(ret, err, CALL_FUCTION_FAILED, "msdp_gw_init");
+#endif
 
 #ifdef GATEWAY_SDK
     /*zigbee设备事件回调初始化*/
