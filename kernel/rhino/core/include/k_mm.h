@@ -38,7 +38,8 @@
 
 #if (YUNOS_CONFIG_MM_TLF > 0)
 
-#define YUNOS_MM_CORRUPT_DYE  0xfefe
+#define YUNOS_MM_CORRUPT_DYE  0xFEFEFEFE
+#define YUNOS_MM_FREE_DYE     0xABABABAB
 
 #ifndef YUNOS_CONFIG_MM_MAXMSIZEBIT
 #define MAX_MM_BIT          20 /*2^20=1M,will change it to k_config.h*/
@@ -54,7 +55,7 @@
 #define SLT_SIZE            (1<<MAX_LOG2_SLT)
 #define FLT_SIZE            (MAX_MM_BIT - MIN_FLT_BIT + 1)
 #define MM_ALIGIN_SIZE      (1<<(MIN_FLT_BIT - MAX_LOG2_SLT))
-#define MM_ALIGN_MASK       (MM_ALIGIN_SIZE-1)
+#define MM_ALIGN_MASK       (2*sizeof(void*)-1)
 
 #define MM_ALIGN_UP(a)   (((a) + MM_ALIGN_MASK) & ~MM_ALIGN_MASK)
 #define MM_ALIGN_DOWN(a) ((a) & ~MM_ALIGN_MASK)
