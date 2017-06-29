@@ -21,6 +21,7 @@
 
 #include "platform.h"
 #include "platform_config.h"
+#include "os.h"
 
 #include "yos/log.h"
 
@@ -137,7 +138,7 @@ int platform_awss_connect_ap(
 // This API needs to block before return
 int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)
 {
-    netmgr_register_wifi_scan_result_callback(cb);
+    netmgr_register_wifi_scan_result_callback((netmgr_wifi_scan_result_cb_t)cb);
     hal_wifi_start_scan(NULL);
     while (netmgr_get_scan_cb_finished() != true) { // block
         yos_msleep(500);
@@ -205,9 +206,10 @@ int platform_aes128_cbc_decrypt(
     void *dst )
 {
     ali_crypto_result result;
+    size_t dlen = PLATFORM_MAX_PASSWD_LEN;
 
     result = ali_aes_finish(src, blockNum << 4, dst,
-                 PLATFORM_MAX_PASSWD_LEN, SYM_NOPAD, aes);
+                 &dlen, SYM_NOPAD, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
         LOGE("yos_awss", "aes_cbc finish fail(%08x)", result);
         return -1;

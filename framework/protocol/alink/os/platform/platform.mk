@@ -11,4 +11,4 @@ $(NAME)_SOURCES += linux_ssl.c
 endif
 endif
 
-$(NAME)_INCLUDES := ../product/
+$(NAME)_INCLUDES := ../product/ ../

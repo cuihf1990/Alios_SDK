@@ -27,7 +27,7 @@
 
 #define SHUB_UDP_PORT 65128
 
-static void awss_notify(void);
+static void awss_notify(void *);
 
 #define MODULE_NAME "awss"
 static int delay_ms = 0;  /* start from 200ms */
@@ -181,7 +181,7 @@ int awss_stop(void)
 extern int aws_notify_app_nonblock(void);
 
 #define AWSS_NOTIFY_TIMES   (50)
-static void awss_notify(void)
+static void awss_notify(void *arg)
 {
     int ret = aws_notify_app_nonblock();
 

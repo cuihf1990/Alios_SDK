@@ -32,8 +32,8 @@ static void registrar_raw_frame_init(struct enrollee_info *enr);
 static void registrar_raw_frame_send(void);
 static void registrar_raw_frame_destroy(void);
 
-static void enrollee_report(void);
-static int enrollee_checkin(void);
+static void enrollee_report(void *);
+static void enrollee_checkin(void *);
 static int enrollee_enable_somebody_checkin(int dev_type, char *token, char *key, char *devid);
 
 #define REGISTRAR_SEND_PKT_INTERVAL     (160)
@@ -314,7 +314,7 @@ out:
 }
 
 /* 1 -- checkin onging, 0 -- idle */
-static int enrollee_checkin(void)
+static void enrollee_checkin(void *arg)
 {
     int i;
     int checkin_ongoing = -1, pri = 65536, checkin_new = -1;
@@ -337,7 +337,7 @@ static int enrollee_checkin(void)
     }
 
     if (checkin_ongoing == -1 && checkin_new == -1) {
-        return 0;
+        return;
     }
 
     //checkin_new:
@@ -430,7 +430,7 @@ int alink_report_enrollee(int dev_type, unsigned char *devid, int devid_len,
 }
 
 /* consumer */
-static void enrollee_report(void)
+static void enrollee_report(void *arg)
 {
     int i;
     char ssid[OS_MAX_SSID_LEN] = { 0 };
