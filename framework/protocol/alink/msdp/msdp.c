@@ -942,7 +942,7 @@ int msdp_dispatch_event(const char *devid_or_uuid, const char *method,
             log_error("cmd_callback is NULL, cmdtype = %d", cmd_type);
         }
     } else {
-        log_error("no exist model helper, uuid = %s", devid_or_uuid);
+        log_debug("no exist model helper, uuid = %s", devid_or_uuid);
     }
 
     return ret;
