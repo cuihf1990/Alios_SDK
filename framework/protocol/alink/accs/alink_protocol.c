@@ -1067,6 +1067,7 @@ static int _alink_handshake_cycle(int ret)
                 break;
             } else {
                 return alink_login_async(_alink_handshake_cycle);
+            }
             
         case PHASE_LOGIN_SUCCESS:
             if (!config_get_unregister_flag()) {
