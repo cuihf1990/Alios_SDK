@@ -455,7 +455,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     k_mm_list_t *b, *b2, *next_b;
     size_t       fl, sl;
     size_t       tmp_size;
-    size_t       req_size;
+    size_t       req_size = size;
     mblk_pool_t  *mm_pool;
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
@@ -494,7 +494,6 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
         }
     }
 
-    req_size = size;
     size = MM_ALIGN_UP(size);    
     size = (size < YOS_MM_TLF_ALLOC_MIN_LENGTH) ? YOS_MM_TLF_ALLOC_MIN_LENGTH:size;
 
