@@ -301,6 +301,7 @@ static void process_msg_response(wsf_msg_t *msg, int length)
 static void process_msg_request(wsf_msg_t *msg, int length)
 {
     struct request_msg_node *node;
+    int was_empty;
 
     if (total_req_nodes >= CONFIG_REQMSG_LENGTH) {
         LOGW(MODULE_NAME, "request queue has too nodes to handle");
@@ -314,9 +315,15 @@ static void process_msg_request(wsf_msg_t *msg, int length)
     memcpy(node->msg, (uint8_t *)msg, length);
     node->length = length;
     os_mutex_lock(g_req_mutex);
+    was_empty = dlist_empty(&g_list);
     dlist_add(&node->list_head, &g_list);
     total_req_nodes ++;
     os_mutex_unlock(g_req_mutex);
+
+    /* already process, no need to schedule again */
+    if (!was_empty) {
+        return;
+    }
 
     yos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
 }
@@ -358,14 +365,14 @@ void request_msg_handle(void *arg)
     os_mutex_lock(g_req_mutex);
     dlist_for_each_entry_safe(&g_list, tmp, node, struct request_msg_node,
                               list_head) {
+        total_req_nodes --;
+        dlist_del(&(node->list_head));
         os_mutex_unlock(g_req_mutex);
 
         __process_msg_request((wsf_msg_t *)node->msg, node->length);
 
         os_mutex_lock(g_req_mutex);
 
-        total_req_nodes --;
-        dlist_del(&(node->list_head));
         os_free(node);
     }
     os_mutex_unlock(g_req_mutex);
