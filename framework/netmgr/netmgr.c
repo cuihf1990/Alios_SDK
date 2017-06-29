@@ -56,7 +56,8 @@ typedef struct {
     int8_t                     disconnected_times;
     bool                       doing_smartconfig;
     bool                       ip_available;
-    platform_wifi_scan_result_cb_t cb;
+    netmgr_wifi_scan_result_cb_t cb;
+    bool                       wifi_scan_complete_cb_finished;
 } netmgr_cxt_t;
 
 extern autoconfig_plugin_t g_alink_smartconfig;
@@ -146,7 +147,7 @@ static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
     }
 }
 
-static get_bssid(uint8_t *to_fill, int size)
+static void get_bssid(uint8_t *to_fill, int size)
 {
     memset(to_fill, 0, size);
 }
@@ -155,7 +156,7 @@ static void netmgr_scan_completed_event(hal_wifi_module_t *m,
                                          hal_wifi_scan_result_t *result,
                                          void *arg)
 {
-    platform_wifi_scan_result_cb_t cb = g_netmgr_cxt.cb;
+    netmgr_wifi_scan_result_cb_t cb = g_netmgr_cxt.cb;
     int i, last_ap = 0;
     uint8_t bssid[ETH_ALEN];
 
@@ -164,9 +165,10 @@ static void netmgr_scan_completed_event(hal_wifi_module_t *m,
 	        LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
 	        if (i == (result->ap_num - 1)) last_ap = 1;
 	        get_bssid(bssid, ETH_ALEN);
-            cb(result->ap_list[i].ssid, bssid, AWSS_AUTH_TYPE_WPA2PSK,
-                AWSS_ENC_TYPE_NONE, 0, 0, last_ap);
+            cb(result->ap_list[i].ssid, bssid, NETMGR_AWSS_AUTH_TYPE_WPA2PSK,
+                NETMGR_AWSS_ENC_TYPE_NONE, 0, 0, last_ap);
 	    }
+	    g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
     }
 }
 
@@ -311,7 +313,7 @@ void wifi_get_ip(char ips[16])
     format_ip(g_netmgr_cxt.ipv4_owned, ips);
 }
 
-void register_wifi_scan_result_callback(platform_wifi_scan_result_cb_t cb)
+void netmgr_register_wifi_scan_result_callback(netmgr_wifi_scan_result_cb_t cb)
 {
     g_netmgr_cxt.cb = cb;
 }
@@ -433,6 +435,7 @@ int netmgr_init(void)
     module = hal_wifi_get_default_module();
     memset(&g_netmgr_cxt, 0, sizeof(g_netmgr_cxt));
     g_netmgr_cxt.ip_available = false;
+    g_netmgr_cxt.wifi_scan_complete_cb_finished = false;
     g_netmgr_cxt.wifi_hal_mod = module;
 #if defined(CONFIG_YWSS) && !defined(CSP_LINUXHOST)
     add_autoconfig_plugin(&g_alink_smartconfig);
@@ -470,6 +473,11 @@ int netmgr_start(bool autoconfig)
 bool netmgr_get_ip_state()
 {
     return g_netmgr_cxt.ip_available;
+}
+
+bool netmgr_get_scan_cb_finished()
+{
+    return g_netmgr_cxt.wifi_scan_complete_cb_finished;
 }
 
 static int def_smart_config_start(void)

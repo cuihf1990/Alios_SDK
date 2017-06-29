@@ -69,7 +69,7 @@ end:
 	return ret;
 }
 
-#define HOTSPOT_TIMEOUT (2*60*3) // 3 mins
+#define HOTSPOT_TIMEOUT (2*60*10) // 3 mins
 int awss_start(void)
 {
     awss_set_enrollee_token("default", strlen("default"));
@@ -113,7 +113,7 @@ int awss_start(void)
             ret = os_awss_connect_ap(WLAN_CONNECTION_TIMEOUT_MS, ssid, passwd,
                     auth, encry, bssid, channel);
 
-            if (strcmp(ssid, DEFAULT_SSID) == 0) { // hotspot mode
+            if (ret == 0 && strcmp(ssid, DEFAULT_SSID) == 0) { // hotspot mode
             	int hotspotCnt = 0;
             	LOGI("[awss]", "hotspot mode deteched");
                 udpFd = os_udp_server_create(SHUB_UDP_PORT);

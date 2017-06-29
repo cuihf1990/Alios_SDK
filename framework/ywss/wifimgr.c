@@ -169,7 +169,7 @@ int cbScan(const char ssid[PLATFORM_MAX_SSID_LEN],
             msglen--;    /* eating the last ',' */
         }
         msglen += snprintf(msgApList + msglen, WIFI_APINFO_LIST_LEN - msglen, "]}");
-        LOGI("[wifimgr]", "sending message to app: %s\n", msgApList);
+        LOGI("[wifimgr]", "sending message to app: %s", msgApList);
         if (0 > os_udp_sendto(udpFd, msgApList, strlen(msgApList), saApList)) {
             LOGI("[wifimgr]", "sending failed.");
         }
@@ -221,7 +221,7 @@ static int wifimgrProcessGetWifiListRequest(
 
     os_wifi_get_ap_info(NULL, NULL, bssidConnected);
 
-    os_wifi_scan(&cbScan); // <TODO>
+    os_wifi_scan(&cbScan);
 
     // test code <to remove>
     //testSendWifiList(str, sa);
@@ -465,6 +465,7 @@ int wifimgrProcessRequest(
             pplatform_netaddr_t sa, char *buf, unsigned int len)
 {
     alink_ap_setup_msg_t msg = { 0 };
+    LOGI("wifimgr", "in wifimgrProcessRequest, host addr: %s", sa->host);
 
     msg.methStr = json_get_value_by_name(buf, len, "method", &msg.methStrLen, 0);
 

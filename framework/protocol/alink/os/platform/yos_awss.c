@@ -134,10 +134,14 @@ int platform_awss_connect_ap(
     return -1;
 }
 
+// This API needs to block before return
 int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)
 {
-    register_wifi_scan_result_callback(cb);
+    netmgr_register_wifi_scan_result_callback(cb);
     hal_wifi_start_scan(NULL);
+    while (netmgr_get_scan_cb_finished() != true) { // block
+        yos_msleep(500);
+    }
     return 0;
 }
 
