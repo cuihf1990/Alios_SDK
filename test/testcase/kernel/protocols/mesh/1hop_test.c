@@ -38,7 +38,7 @@ static void me_as_leader(bool vector_router)
 
 static void me_as_router(bool vector_router)
 {
-    start_node(12);
+    start_node_ext(12, MODE_RX_ON, -1, -1);
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
 
     cmd_to_agent("mode FIXED");

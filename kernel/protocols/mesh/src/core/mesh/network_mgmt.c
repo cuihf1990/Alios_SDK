@@ -329,6 +329,8 @@ ur_error_t nm_start_discovery(void)
                                           handle_discovery_timer, network);
     memset(&hal->discovery_result, 0, sizeof(hal->discovery_result));
     hal->discovery_result.meshnetid = BCAST_NETID;
+
+    umesh_mm_set_prev_channel();
     return UR_ERROR_NONE;
 }
 

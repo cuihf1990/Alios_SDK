@@ -231,6 +231,7 @@ void become_leader(void)
 
     g_mm_state.device.state = DEVICE_STATE_LEADER;
     g_mm_state.leader_mode = g_mm_state.device.mode;
+    set_default_network_data();
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         network->state = INTERFACE_UP;
@@ -256,8 +257,8 @@ void become_leader(void)
     }
 
     umesh_mm_start_net_scan_timer();
+    umesh_mm_set_prev_channel();
 
-    set_default_network_data();
     memset(&configs, 0, sizeof(configs));
     ur_configs_read(&configs);
     if (g_mm_state.device.reboot_flag == true) {
@@ -556,11 +557,7 @@ static void handle_migrate_wait_timer(void *args)
 
 static void handle_net_scan_timer(void *args)
 {
-    network_context_t *network;
-
     nm_start_discovery();
-    network = get_default_network_context();
-    g_mm_state.device.prev_channel = network->channel;
     g_mm_state.device.reboot_flag = false;
 }
 
@@ -1451,6 +1448,7 @@ static ur_error_t handle_sid_response(message_t *message)
     g_mm_state.leader_mode = netinfo->leader_mode;
 
     ur_stop_timer(&network->migrate_wait_timer, network);
+    umesh_mm_set_prev_channel();
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "allocate sid 0x%04x, become %s in net %04x\r\n",
@@ -1890,7 +1888,6 @@ ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
 
 ur_error_t umesh_mm_stop(void)
 {
-    g_mm_state.device.mode = MODE_RX_ON;
     stop_neighbor_updater();
     mf_init();
     nd_init();
@@ -2226,8 +2223,10 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             return false;
         }
     } else {
-        if ((nbr->addr.netid == network->prev_netid) &&
-            (network->prev_path_cost < nbr->path_cost)) {
+        if (nbr->addr.netid == INVALID_NETID ||
+            nbr->addr.netid == BCAST_NETID ||
+            ((nbr->addr.netid == network->prev_netid) &&
+             (network->prev_path_cost < nbr->path_cost))) {
             return false;
         }
         if (from_same_core) {
@@ -2272,6 +2271,13 @@ void umesh_mm_start_net_scan_timer(void)
 uint8_t umesh_mm_get_prev_channel(void)
 {
     return g_mm_state.device.prev_channel;
+}
+
+void umesh_mm_set_prev_channel(void)
+{
+    network_context_t *network;
+    network = get_default_network_context();
+    g_mm_state.device.prev_channel = network->channel;
 }
 
 uint8_t umesh_mm_get_reboot_flag(void)
