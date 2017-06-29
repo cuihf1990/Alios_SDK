@@ -119,7 +119,11 @@ int platform_awss_connect_ap(
     ret = netmgr_set_ap_config(&config);
 
     hal_wifi_suspend_station(NULL);
-    yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0u);
+    netmgr_set_ip_state(false);
+    //yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0u);
+    //LOGD("[yos_awss]", "CODE_WIFI_CMD_RECONNECT event post in task %s", yos_task_name());
+    LOGD("yos_awss", "Will reconnect wifi: %s %s", ssid, passwd);
+    call_reconnect_wifi(NULL);
 
     while (ms_cnt < connection_timeout_ms) {
         if (netmgr_get_ip_state() == false) {

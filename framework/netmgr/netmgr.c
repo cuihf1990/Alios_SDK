@@ -215,6 +215,11 @@ static void reconnect_wifi(void *arg)
     hal_wifi_start(module, &type);
 }
 
+void call_reconnect_wifi(void *arg)
+{
+    reconnect_wifi(arg);
+}
+
 static void get_wifi_ssid(void)
 {
     memset(g_netmgr_cxt.ap_config.ssid, 0, sizeof(g_netmgr_cxt.ap_config.ssid));
@@ -302,6 +307,8 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
         case CODE_WIFI_CMD_RECONNECT:
             g_netmgr_cxt.disconnected_times = 0;
             g_netmgr_cxt.ip_available = false;
+            LOGD("netmgr", "reconnect wifi - %s, %s",
+                g_netmgr_cxt.ap_config.ssid, g_netmgr_cxt.ap_config.pwd);
             reconnect_wifi(NULL);
             break;
         default :
@@ -474,6 +481,11 @@ int netmgr_start(bool autoconfig)
 bool netmgr_get_ip_state()
 {
     return g_netmgr_cxt.ip_available;
+}
+
+void netmgr_set_ip_state(bool state)
+{
+    g_netmgr_cxt.ip_available = state;
 }
 
 bool netmgr_get_scan_cb_finished()
