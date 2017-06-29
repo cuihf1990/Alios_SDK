@@ -339,7 +339,6 @@ static void cli_main( void *data )
     cli_printf("CLI exited\r\n");
     yos_free(pCli);
     pCli = NULL;
-    exit(0);
 
     yos_task_exit(0);
 }
