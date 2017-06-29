@@ -100,6 +100,7 @@ static void *wifi_recv_entry(void *arg)
         int count = sizeof pkt;
         struct rx_info ri;
 
+        FD_ZERO( &rfds );
         FD_SET( fd, &rfds );
 
         ret = select(fd + 1, &rfds, NULL, NULL, NULL);
