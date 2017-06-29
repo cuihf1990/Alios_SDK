@@ -55,7 +55,7 @@
    ---------- Memory options ----------
 */
 #define MEM_ALIGNMENT                   4
-#define MEM_SIZE                        0x4000
+#define MEM_SIZE                        0x8000
 
 #define MEM_LIBC_MALLOC                 1
 #if MEM_LIBC_MALLOC

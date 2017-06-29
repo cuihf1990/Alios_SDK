@@ -430,6 +430,7 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
     memcpy(&msg_len, rsp->header.msg_length, sizeof(uint32_t));
     wsf_msg_header_encode((char *)rsp, msg_len);
 
+    LOGW(MODULE_NAME, "before send response to service");
     wsf_send_msg(wsf_conn, (const char *)rsp, msg_len);
     LOGW(MODULE_NAME, "send response to service");
 
