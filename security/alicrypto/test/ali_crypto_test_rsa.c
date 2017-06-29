@@ -48,14 +48,14 @@ static uint8_t RSA_1024_D[128] = {
 static int _rsa_test_gen_key(void)
 {
     int ret, result;
-    uint8_t rsa_n[RSA_KEY_LEN];
-    uint8_t rsa_e[RSA_KEY_LEN];
-    uint8_t rsa_d[RSA_KEY_LEN];
-    uint8_t rsa_p[RSA_KEY_LEN];
-    uint8_t rsa_q[RSA_KEY_LEN];
-    uint8_t rsa_dp[RSA_KEY_LEN];
-    uint8_t rsa_dq[RSA_KEY_LEN];
-    uint8_t rsa_qp[RSA_KEY_LEN];
+    uint8_t rsa_n[RSA_KEY_LEN]  = {0};
+    uint8_t rsa_e[RSA_KEY_LEN]  = {0};
+    uint8_t rsa_d[RSA_KEY_LEN]  = {0};
+    uint8_t rsa_p[RSA_KEY_LEN]  = {0};
+    uint8_t rsa_q[RSA_KEY_LEN]  = {0};
+    uint8_t rsa_dp[RSA_KEY_LEN] = {0};
+    uint8_t rsa_dq[RSA_KEY_LEN] = {0};
+    uint8_t rsa_qp[RSA_KEY_LEN] = {0};
     uint32_t n_size = RSA_KEY_LEN;
     uint32_t e_size = RSA_KEY_LEN;
     uint32_t d_size = RSA_KEY_LEN;
@@ -67,9 +67,9 @@ static int _rsa_test_gen_key(void)
     uint8_t *pub_key = NULL;
     uint8_t *key_pair = NULL;
     size_t pub_key_len, key_pair_len;
-    uint8_t src_data[RSA_KEY_LEN];
-    uint8_t ciphertext[RSA_KEY_LEN];
-    uint8_t plaintext[RSA_KEY_LEN];
+    uint8_t src_data[RSA_KEY_LEN] = {0};
+    uint8_t ciphertext[RSA_KEY_LEN] = {0};
+    uint8_t plaintext[RSA_KEY_LEN] = {0};
     size_t src_size, dst_size;
     rsa_padding_t rsa_padding;
 
@@ -305,9 +305,9 @@ static int _ali_crypto_init_key(
                rsa_keypair_t **keypair, rsa_pubkey_t **pubkey)
 {
     ali_crypto_result ret, result;
-    uint8_t rsa_n[RSA_KEY_LEN];
-    uint8_t rsa_e[RSA_KEY_LEN];
-    uint8_t rsa_d[RSA_KEY_LEN];
+    uint8_t rsa_n[RSA_KEY_LEN] = {0};
+    uint8_t rsa_e[RSA_KEY_LEN] = {0};
+    uint8_t rsa_d[RSA_KEY_LEN] = {0};
     uint32_t n_size = RSA_KEY_LEN;
     uint32_t e_size = RSA_KEY_LEN;
     uint32_t d_size = RSA_KEY_LEN;
@@ -466,9 +466,9 @@ static int _ali_crypto_encrypt_decrypt_v1_5(
                    rsa_pubkey_t *pubkey, rsa_keypair_t *keypair)
 {
     ali_crypto_result ret;
-    uint8_t src_data[RSA_KEY_LEN];
-    uint8_t plaintext[RSA_KEY_LEN];
-    uint8_t ciphertext[RSA_KEY_LEN];
+    uint8_t src_data[RSA_KEY_LEN] = {0};
+    uint8_t plaintext[RSA_KEY_LEN] = {0};
+    uint8_t ciphertext[RSA_KEY_LEN] = {0};
     size_t src_size, dst_size;
     rsa_padding_t rsa_padding;
 
@@ -518,9 +518,9 @@ static int _ali_crypto_encrypt_decrypt_oaep(
     ali_crypto_result ret;
     hash_type_t hash_type;
     rsa_padding_t rsa_padding;
-    uint8_t src_data[RSA_KEY_LEN];
-    uint8_t plaintext[RSA_KEY_LEN];
-    uint8_t ciphertext[RSA_KEY_LEN];
+    uint8_t src_data[RSA_KEY_LEN] = {0};
+    uint8_t plaintext[RSA_KEY_LEN] = {0};
+    uint8_t ciphertext[RSA_KEY_LEN] = {0};
     size_t src_size, dst_size;
     //uint8_t lparam[] = {0xe1, 0xe2, 0xe2, 0xe4, 0xe5};
 
@@ -598,8 +598,8 @@ static int _ali_crypto_sign_verify_v1_5(
     bool result1, result2;
     ali_crypto_result ret;
     hash_type_t hash_type;
-    uint8_t src_data[RSA_KEY_LEN];
-    uint8_t signature[RSA_KEY_LEN];
+    uint8_t src_data[RSA_KEY_LEN] = {0};
+    uint8_t signature[RSA_KEY_LEN] = {0};
     size_t src_size, dst_size;
     rsa_padding_t rsa_padding;
 
@@ -654,8 +654,8 @@ static int _ali_crypto_sign_verify_pss(
     bool result1, result2;
     ali_crypto_result ret;
     hash_type_t hash_type;
-    uint8_t src_data[RSA_KEY_LEN];
-    uint8_t signature[RSA_KEY_LEN];
+    uint8_t src_data[RSA_KEY_LEN] = {0};
+    uint8_t signature[RSA_KEY_LEN] = {0};
     size_t src_size, dst_size;
     rsa_padding_t rsa_padding;
 

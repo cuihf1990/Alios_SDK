@@ -7,10 +7,10 @@
 int ali_crypto_rand_test(void)
 {
     uint32_t i = 0;
-    uint8_t seed[16];
+    uint8_t seed[16] = {0};
     size_t seed_len = 16;
-    uint8_t tmp_buf[32];
-    uint8_t rand_buf[32];
+    uint8_t tmp_buf[32]  = {0};
+    uint8_t rand_buf[32] = {0};
     size_t rand_len = 32;
     ali_crypto_result result;
 
