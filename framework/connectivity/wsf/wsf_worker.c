@@ -361,10 +361,10 @@ void request_msg_handle(void *arg)
         os_mutex_unlock(g_req_mutex);
 
         __process_msg_request((wsf_msg_t *)node->msg, node->length);
-        total_req_nodes --;
 
         os_mutex_lock(g_req_mutex);
 
+        total_req_nodes --;
         dlist_del(&(node->list_head));
         os_free(node);
     }
