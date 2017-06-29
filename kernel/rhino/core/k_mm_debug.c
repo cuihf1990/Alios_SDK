@@ -431,21 +431,25 @@ void print_block(k_mm_list_t *b)
     }
     printf("%p ", b);
     if (b->size & YUNOS_MM_FREE) {
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
         if(b->dye != YUNOS_MM_FREE_DYE){
             printf("!");
         }
         else{
             printf(" ");
         }
-
+#endif
         printf("free ");
     } else {
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
         if(b->dye != YUNOS_MM_CORRUPT_DYE){
             printf("!");
         }
         else{
             printf(" ");
         }
+#endif
         printf("used ");
     }
     if ((b->size & YUNOS_MM_BLKSIZE_MASK)) {
@@ -454,8 +458,10 @@ void print_block(k_mm_list_t *b)
         printf(" sentinel ");
     }
 
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
     printf(" %8x ",b->dye);
     printf(" %8x ",b->owner);
+#endif
 
     if (b->size & YUNOS_MM_PREVFREE) {
         printf("pre-free [%8p];", b->prev);

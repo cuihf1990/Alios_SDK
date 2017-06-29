@@ -54,14 +54,27 @@ static uint8_t mm_break_case1(void)
     k_mm_free(pmmhead, ptr);
 #endif
 
-    ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE + 1);
+
+    ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE/2);
     MYASSERT(ptr != NULL);
 
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE/2 + 1 );
+    MYASSERT(newptr == ptr);
+
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE -1);
+    MYASSERT(newptr == ptr);
+
+    ptr = newptr;
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE +1);
+    MYASSERT(newptr != ptr);
+
+    ptr = newptr;
     newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE + 2);
     MYASSERT(newptr == ptr);
 
+    ptr = newptr;
     newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE * 4);
-    MYASSERT(newptr != NULL);
+    MYASSERT(newptr == ptr);
 
     ptr = newptr;
     newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE * 3);
@@ -88,7 +101,7 @@ static uint8_t mm_break_case1(void)
 
     for (i = 0; i < 10; i++) {
         if (i % 2 != 0) {
-            k_mm_realloc(pmmhead, ptrarray[i], (i + 1) * 96);
+            ptrarray[i] = k_mm_realloc(pmmhead, ptrarray[i], (i + 1) * 96);
         }
         MYASSERT(ptrarray[i]);
     }
