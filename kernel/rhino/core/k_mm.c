@@ -193,11 +193,11 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
         }
 
     }
+
 #if (K_MM_STATISTIC > 0)
-
     stats_removesize(pmmhead, DEF_TOTAL_FIXEDBLK_SIZE);
-
 #endif
+
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
         YUNOS_CRITICAL_EXIT();
 #else
@@ -298,15 +298,19 @@ kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
     ai->next = mmhead->regioninfo;
     ai->end = lb0;
     mmhead->regioninfo = ai;
+
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     YUNOS_CRITICAL_EXIT();
 #else
     yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
+
     k_mm_free(mmhead, b0->mbinfo.buffer);
+
 #if (K_MM_STATISTIC > 0)
     mmhead->free_size += b0->size & YUNOS_MM_BLKSIZE_MASK;
 #endif
+
     return YUNOS_SUCCESS;
 }
 
@@ -476,6 +480,10 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     if (size <= DEF_FIX_BLK_SIZE && mm_pool->blk_avail > 0) {
         retptr =  k_mm_smallblk_alloc(mmhead, size);
         if (retptr) {
+
+#if (K_MM_STATISTIC > 0)
+            stats_addsize(mmhead,DEF_FIX_BLK_SIZE, req_size);
+#endif
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
             YUNOS_CRITICAL_EXIT();
