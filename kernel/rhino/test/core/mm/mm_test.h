@@ -21,7 +21,7 @@
 #define TASK_TEST_STACK_SIZE 1024
 #define MM_POOL_SIZE         1024 * 10
 
-#define MYASSERT(value) do {if ((int)(value) == 0) { return 1; }} while (0)
+#define MYASSERT(value) do {if ((int)(value) == 0) { printf("%s:%d\n", __FUNCTION__, __LINE__); }} while (0)
 
 #if (YUNOS_CONFIG_MM_TLF > 0)
 extern ktask_t *task_mm;
