@@ -503,6 +503,18 @@ int yos_work_cancel(yos_work_t *work)
     return yunos_work_cancel(work->hdl);
 }
 
+void *yos_zalloc(unsigned int size)
+{
+    if (size == 0) {
+        return NULL;
+    }
+
+    void *p = yunos_mm_alloc(size);
+    if (p)
+        bzero(p, size);
+    return p;
+}
+
 void *yos_malloc(unsigned int size)
 {
     if (size == 0) {

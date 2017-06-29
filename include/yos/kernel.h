@@ -323,6 +323,13 @@ void *yos_realloc(void *mem, unsigned int size);
 void *yos_malloc(unsigned int size);
 
 /**
+ * alloc memory and clear to zero
+ * @param[in] size size of the mem to malloc
+ * @return  the operation status, NULL is error, others is memory address
+ */
+void *yos_zalloc(unsigned int size);
+
+/**
  * free memory
  * @param[in]  ptr address point of the mem
  */
