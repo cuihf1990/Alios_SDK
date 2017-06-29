@@ -113,7 +113,7 @@ int8_t ota_pub_request(ota_request_params *request_parmas)
     char *req_buf = NULL;
     int len = 0;
 
-    g_check_topic =  calloc(POST_METHOD_BUFFER_SIZE,1) ;
+    g_check_topic =  yos_zalloc(POST_METHOD_BUFFER_SIZE) ;
 
     parse_ota_requset(req_buf, &len, request_parmas);
 
@@ -123,7 +123,7 @@ int8_t ota_pub_request(ota_request_params *request_parmas)
 
 int8_t ota_sub_upgrade(message_arrived *msgCallback)
 {
-    g_upgrad_topic =  calloc(POST_METHOD_BUFFER_SIZE,1);
+    g_upgrad_topic =  yos_zalloc(POST_METHOD_BUFFER_SIZE);
 
     snprintf(g_upgrad_topic, POST_METHOD_BUFFER_SIZE, METHOD_UPGRADE, ota_get_iotId());
     return ota_sub_platform(g_upgrad_topic, 0, msgCallback);
@@ -131,7 +131,7 @@ int8_t ota_sub_upgrade(message_arrived *msgCallback)
 
 int8_t ota_sub_request_reply(message_arrived *msgCallback)
 {
-    g_reply_topic =  calloc(POST_METHOD_BUFFER_SIZE,1);
+    g_reply_topic =  yos_zalloc(POST_METHOD_BUFFER_SIZE);
 
     snprintf(g_reply_topic, POST_METHOD_BUFFER_SIZE, METHOD_CHECK_REPLY, ota_get_iotId());
     return ota_sub_platform(g_reply_topic, 0, msgCallback);

@@ -105,7 +105,7 @@ yos_loop_t yos_loop_init(void)
         return ctx;
     }
 
-    ctx = calloc(1, sizeof(*g_main_ctx));
+    ctx = yos_zalloc(sizeof(*g_main_ctx));
     if (!g_main_ctx) {
         g_main_ctx = ctx;
     }
@@ -130,8 +130,8 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
     struct pollfd *new_loop_pollfds;
     int cnt = ctx->reader_count + 1;
 
-    new_sock = realloc(ctx->readers, cnt * sizeof(yloop_sock_t));
-    new_loop_pollfds = realloc(ctx->pollfds, cnt * sizeof(struct pollfd));
+    new_sock = yos_realloc(ctx->readers, cnt * sizeof(yloop_sock_t));
+    new_loop_pollfds = yos_realloc(ctx->pollfds, cnt * sizeof(struct pollfd));
 
     if (new_sock == NULL || new_loop_pollfds == NULL) {
         LOGE(TAG, "out of memory");
