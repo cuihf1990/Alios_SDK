@@ -19,17 +19,18 @@ static inline uint16_t calc_seqctrl(unsigned char *pkt)
 
 static void p_addr(unsigned char *pkt)
 {
-	printf(":%02x %02x %02x %02x %02x %02x", pkt[0] , pkt[1] , pkt[2] , pkt[3] , pkt[4] , pkt[5]);
+    printf(":%02x %02x %02x %02x %02x %02x", pkt[0] , pkt[1] , pkt[2] , pkt[3] , pkt[4] , pkt[5]);
 }
 
 static inline void dump_packet(unsigned char *pkt, int count)
 {
     int seqno = calc_seqctrl(pkt);
-	printf("%s(%d) %02x %02x %02x", __func__, count, pkt[0], pkt[1], seqno);
-	p_addr(pkt+OFF_DST);
-	p_addr(pkt+OFF_SRC);
-	p_addr(pkt+OFF_BSS);
-	printf("\n");
+    mac80211_fctl_t *fctl = (mac80211_fctl_t *)pkt;
+    printf("%s(%d) type:%d retry:%d %02x %02x %02x", __func__, count, fctl->type, fctl->retry, pkt[0], pkt[1], seqno);
+    p_addr(pkt+OFF_DST);
+    p_addr(pkt+OFF_SRC);
+    p_addr(pkt+OFF_BSS);
+    printf("\n");
 }
 
 int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest, void *fpkt)
@@ -128,11 +129,18 @@ bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int co
 
 next:
 #ifdef FILTER_DUPLICATE_FRAME
+    (void)0;
+    mac80211_fctl_t *fctl = (mac80211_fctl_t *)pkt;
     uint16_t seqno = calc_seqctrl(pkt) << 4;
     mac_entry_t *ent;
     uint64_t mactime = yos_now_ms();
 
     ent = find_mac_entry(pkt+OFF_SRC);
+
+    if (!fctl->retry) {
+        goto no_filter;
+    }
+
     /* if longer than 100ms */
     if (mactime - ent->mactime > 100) {
         goto no_filter;
@@ -151,6 +159,6 @@ no_filter:
     ent->mactime = mactime;
     ent->last_seq = seqno;
 #endif
-	return 0;
+    return 0;
 }
 
