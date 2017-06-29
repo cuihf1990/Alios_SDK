@@ -22,7 +22,7 @@
 
 #define MBLK_POOL_SIZE       1024
 
-#define MYASSERT(value) do {if ((int)(value) == 0) { return 1; }} while (0)
+#define MYASSERT(value) do {if ((int)(value) == 0) { printf("%s:%d\n", __FUNCTION__, __LINE__);return 1; }} while (0)
 
 extern ktask_t *task_mm_blk;
 extern ktask_t *task_mm_blk_co;

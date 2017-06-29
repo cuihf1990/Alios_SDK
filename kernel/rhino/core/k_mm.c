@@ -22,6 +22,7 @@
 #if (YUNOS_CONFIG_MM_TLF > 0)
 
 #define YOS_MM_ALLOC_DEPTH  2
+#define YOS_MM_TLF_ALLOC_MIN_LENGTH  2*sizeof(void *)
 
 typedef enum {
     ACTION_INSERT,
@@ -444,7 +445,6 @@ static k_mm_list_t *findblk_byidx(k_mm_head *mmhead, size_t *flt, size_t *slt)
     return find;
 }
 
-
 void *k_mm_alloc(k_mm_head *mmhead, size_t size)
 {
     void        *retptr;
@@ -465,6 +465,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     if (size == 0) {
         return NULL;
     }
+
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
     YUNOS_CRITICAL_ENTER();
@@ -486,7 +487,8 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     }
 
     req_size = size;
-    size = MM_ALIGN_UP(size);
+    size = MM_ALIGN_UP(size);    
+    size = (size < YOS_MM_TLF_ALLOC_MIN_LENGTH) ? YOS_MM_TLF_ALLOC_MIN_LENGTH:size;
 
     /* Rounding up the requested size and calculating fl and sl */
     if (bitmap_search(size, &fl, &sl, ACTION_GET) != YUNOS_SUCCESS) {
