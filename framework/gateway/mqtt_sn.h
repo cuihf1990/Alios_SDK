@@ -149,7 +149,7 @@ static inline void *msn_alloc(uint8_t msg_type, int payload_len, void **pbuf, in
     uint8_t *buf;
 
     len = header_len + payload_len;
-    buf = malloc(len);
+    buf = yos_malloc(len);
     buf[0] = header_len + payload_len + 1;
     buf[1] = msg_type;
 

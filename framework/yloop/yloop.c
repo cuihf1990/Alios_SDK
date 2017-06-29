@@ -192,7 +192,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
     }
 
     yloop_ctx_t *ctx = get_context();
-    yloop_timeout_t *timeout = malloc(sizeof(*timeout));
+    yloop_timeout_t *timeout = yos_malloc(sizeof(*timeout));
     if (timeout == NULL) {
         return -1;
     }
@@ -234,7 +234,7 @@ void yos_cancel_delayed_action(int ms, yos_call_t cb, void *private_data)
         }
 
         dlist_del(&tmp->next);
-        free(tmp);
+        yos_free(tmp);
         return;
     }
 }
@@ -280,7 +280,7 @@ void yos_loop_run(void)
             if (now >= tmo->timeout_ms) {
                 dlist_del(&tmo->next);
                 tmo->cb(tmo->private_data);
-                free(tmo);
+                yos_free(tmo);
             }
         }
 
@@ -320,15 +320,15 @@ void yos_loop_destroy(void)
         yloop_timeout_t *timeout = dlist_first_entry(&ctx->timeouts, yloop_timeout_t,
                                                      next);
         dlist_del(&timeout->next);
-        free(timeout);
+        yos_free(timeout);
     }
 
-    free(ctx->readers);
-    free(ctx->pollfds);
+    yos_free(ctx->readers);
+    yos_free(ctx->pollfds);
 
     _set_context(NULL);
     if (ctx == g_main_ctx) {
         g_main_ctx = NULL;
     }
-    free(ctx);
+    yos_free(ctx);
 }

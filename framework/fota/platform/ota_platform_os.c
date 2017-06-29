@@ -25,24 +25,24 @@
 
 void *ota_malloc(uint32_t size)
 {
-    return malloc(size);
+    return yos_malloc(size);
 }
 
 void ota_free(void *ptr)
 {
-    free(ptr);
+    yos_free(ptr);
 }
 
 void *ota_mutex_init(void)
 {
-    yos_mutex_t *mutex = (yos_mutex_t *)malloc(sizeof(yos_mutex_t));
+    yos_mutex_t *mutex = (yos_mutex_t *)yos_malloc(sizeof(yos_mutex_t));
 
     if (NULL == mutex) {
         return NULL;
     }
 
     if (0 != yos_mutex_new(mutex)) {
-        free(mutex);
+        yos_free(mutex);
         return NULL;
     }
 
@@ -62,19 +62,19 @@ void ota_mutex_unlock(void *mutex)
 void ota_mutex_destroy(void *mutex)
 {
     yos_mutex_free((yos_mutex_t *)mutex);
-    free(mutex);
+    yos_free(mutex);
 }
 
 void *ota_semaphore_init(void)
 {
-    yos_sem_t *sem = (yos_sem_t *)malloc(sizeof(yos_sem_t));
+    yos_sem_t *sem = (yos_sem_t *)yos_malloc(sizeof(yos_sem_t));
 
     if (NULL == sem) {
         return NULL;
     }
 
     if (0 != yos_sem_new(sem, 0)) {
-        free(sem);
+        yos_free(sem);
         return NULL;
     }
 
@@ -98,7 +98,7 @@ void ota_semaphore_post(void *sem)
 void ota_semaphore_destroy(void *sem)
 {
     yos_sem_free((yos_sem_t *)sem);
-    free(sem);
+    yos_free(sem);
 }
 
 uint32_t ota_get_time_ms(void)

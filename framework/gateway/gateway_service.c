@@ -107,7 +107,7 @@ static int yos_cloud_get_attr(const char* uuid, const char *attr_name)
     sendto(gateway_state.sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)paddr, sizeof(*paddr));
 
-    free(buf);
+    yos_free(buf);
     return 0;
 }
 
@@ -128,7 +128,7 @@ static int yos_cloud_set_attr(const char *uuid, const char *attr_name, const cha
     sendto(gateway_state.sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)paddr, sizeof(*paddr));
 
-    free(buf);
+    yos_free(buf);
     return 0;
 }
 
@@ -165,7 +165,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)paddr, sizeof(*paddr));
 
-    free(buf);
+    yos_free(buf);
 }
 
 static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
@@ -249,7 +249,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
         }
     }
 
-    client = malloc(sizeof(*client));
+    client = yos_malloc(sizeof(*client));
     PTR_RETURN(client, NULL, "alloc memory failed");
     bzero(client, sizeof(*client));
     uint32_t model_id;
@@ -257,7 +257,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     int ret = devmgr_join_zigbee_device(reginfo->ieee_addr, model_id, reginfo->rand, reginfo->sign);
     if (ret ==  SERVICE_RESULT_ERR) {
         LOGD(MODULE_NAME, "register device:%s to alink server failed", reginfo->ieee_addr);
-        free(client);
+        yos_free(client);
         return NULL;
     }
     client->devinfo = devmgr_get_devinfo_by_ieeeaddr(reginfo->ieee_addr);
@@ -287,7 +287,7 @@ static void handle_connect(gateway_state_t *pstate, void *pmsg, int len)
     conn_ack->ReturnCode = (client == NULL) ? -1 : 0;
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)&pstate->src_addr, sizeof(pstate->src_addr));
-    free(buf);
+    yos_free(buf);
 }
 
 static int gateway_cloud_report(const char *method, const char *json_buffer)
@@ -317,7 +317,7 @@ static int gateway_cloud_report(const char *method, const char *json_buffer)
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)paddr, sizeof(*paddr));
 
-    free(buf);
+    yos_free(buf);
 }
 
 static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
@@ -421,7 +421,7 @@ static void gateway_advertise(void *arg)
            (struct sockaddr *)&addr, sizeof(addr));
     LOGD(MODULE_NAME, "gateway_advertise");
 
-    free(buf);
+    yos_free(buf);
 }
 
 int gateway_service_init(void)
@@ -562,7 +562,7 @@ void gateway_service_stop(void) {
         client = dlist_first_entry(&gateway_state.clients, client_t, next);
         dlist_del(&client->next);
         devmgr_leave_zigbee_device(client->devinfo->dev_base.u.ieee_addr);
-        free(client);
+        yos_free(client);
     }
 }
 

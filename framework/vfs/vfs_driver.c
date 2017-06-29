@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <malloc.h>
 #include <string.h>
 
 #include <yos/kernel.h>
@@ -58,7 +57,7 @@ int yunos_register_driver(const char *path, file_ops_t *ops, void *arg)
     node->ops    = ops;
     node->i_arg  = arg;
     len = strlen(path);
-    mem = malloc(len + 1);
+    mem = yos_malloc(len + 1);
 
     if (mem == NULL) {
         yos_mutex_unlock(&g_vfs_mutex);
