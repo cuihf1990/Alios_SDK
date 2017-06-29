@@ -48,6 +48,11 @@ YUNOS_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
                           curblk->size & YUNOS_MM_BLKSIZE_MASK);
     lastblk->prev = curblk;
     lastblk->size = 0 | YUNOS_MM_ALLOCED | YUNOS_MM_PREVFREE;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
+    lastblk->dye  = YUNOS_MM_CORRUPT_DYE;
+    firstblk->dye = YUNOS_MM_CORRUPT_DYE;
+#endif
     region = (k_mm_region_info_t *) firstblk->mbinfo.buffer;
     region->next = 0;
     region->end = lastblk;
@@ -191,12 +196,11 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
         } else {
             k_mm_free(pmmhead, mmblk_pool);
         }
-
+#if (K_MM_STATISTIC > 0)
+        stats_removesize(pmmhead, DEF_TOTAL_FIXEDBLK_SIZE);
+#endif
     }
 
-#if (K_MM_STATISTIC > 0)
-    stats_removesize(pmmhead, DEF_TOTAL_FIXEDBLK_SIZE);
-#endif
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
         YUNOS_CRITICAL_EXIT();
@@ -305,6 +309,9 @@ kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
     yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
 
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
+    b0->dye = YUNOS_MM_CORRUPT_DYE;
+#endif
     k_mm_free(mmhead, b0->mbinfo.buffer);
 
 #if (K_MM_STATISTIC > 0)
@@ -327,6 +334,10 @@ static void *k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
     if (sta != YUNOS_SUCCESS) {
         return NULL;
     }
+
+#if (K_MM_STATISTIC > 0)
+    stats_addsize(mmhead,DEF_FIX_BLK_SIZE, size);
+#endif
 
     VGF(VALGRIND_MALLOCLIKE_BLOCK(tmp, size, 0, 0));
     VGF(VALGRIND_MAKE_MEM_DEFINED(tmp, size));
@@ -493,7 +504,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
         }
     }
 
-    size = MM_ALIGN_UP(size);    
+    size = MM_ALIGN_UP(size);
     size = (size < YOS_MM_TLF_ALLOC_MIN_LENGTH) ? YOS_MM_TLF_ALLOC_MIN_LENGTH:size;
 
     /* Rounding up the requested size and calculating fl and sl */
@@ -530,7 +541,9 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
         tmp_size -= MMLIST_HEAD_SIZE;
         b2 = NEXT_MM_BLK(b->mbinfo.buffer, size);
         b2->size = tmp_size | YUNOS_MM_FREE | YUNOS_MM_PREVALLOCED;
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
         b2->dye  = YUNOS_MM_FREE_DYE;
+#endif
         next_b->prev = b2;
         bitmap_search(tmp_size, &fl, &sl, ACTION_INSERT);
         insert_block(mmhead, b2, fl, sl);
@@ -597,6 +610,8 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
         return;
     }
     b = (k_mm_list_t *) ((char *) ptr - MMLIST_HEAD_SIZE);
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
     if(b->dye == YUNOS_MM_FREE_DYE) {
         printf("WARNING!! memory maybe double free!!\r\n");
     }
@@ -604,6 +619,7 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
         printf("WARNING,memory maybe corrupt!!\r\n");
     }
     b->dye = YUNOS_MM_FREE_DYE;
+#endif
     b->size |= YUNOS_MM_FREE;
 
     VGF(VALGRIND_FREELIKE_BLOCK(ptr, 0));
@@ -678,6 +694,29 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     yunos_mutex_lock(&mmhead->mm_mutex, YUNOS_WAIT_FOREVER);
 #endif
 
+    if (mmhead->fixedmblk && (oldmem > (void *)mmhead->fixedmblk->mbinfo.buffer)
+        && (oldmem < (void *)mmhead->fixedmblk->mbinfo.buffer + mmhead->fixedmblk->size)) {
+
+        /*it's fixed size memory block*/
+        if(new_size <= DEF_FIX_BLK_SIZE) {
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+        YUNOS_CRITICAL_EXIT();
+#else
+        yunos_mutex_unlock(&(mmhead->mm_mutex));
+#endif
+            return oldmem;
+        }
+        else {
+            k_mm_smallblk_free(mmhead, oldmem);
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+            YUNOS_CRITICAL_EXIT();
+#else
+            yunos_mutex_unlock(&(mmhead->mm_mutex));
+#endif
+            return k_mm_alloc(mmhead, new_size);
+        }
+    }
+
     b        = (k_mm_list_t *) ((char *) oldmem - MMLIST_HEAD_SIZE);
 
     VGF(VALGRIND_FREELIKE_BLOCK(oldmem, 0));
@@ -706,7 +745,9 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
             tmp_size -= MMLIST_HEAD_SIZE;
             tmp_b = NEXT_MM_BLK(b->mbinfo.buffer, new_size);
             tmp_b->size = tmp_size | YUNOS_MM_FREE | YUNOS_MM_PREVALLOCED;
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
             tmp_b->dye  = YUNOS_MM_FREE_DYE;
+#endif
             next_b->prev = tmp_b;
             next_b->size |= YUNOS_MM_PREVFREE;
             bitmap_search(tmp_size, &fl, &sl, ACTION_INSERT);
@@ -733,7 +774,9 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
                 tmp_size -= MMLIST_HEAD_SIZE;
                 tmp_b = NEXT_MM_BLK(b->mbinfo.buffer, new_size);
                 tmp_b->size = tmp_size | YUNOS_MM_FREE | YUNOS_MM_PREVALLOCED;
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
                 tmp_b->dye  = YUNOS_MM_FREE_DYE;
+#endif
                 next_b->prev = tmp_b;
                 next_b->size |= YUNOS_MM_PREVFREE;
                 bitmap_search(tmp_size, &fl, &sl, ACTION_INSERT);
@@ -804,7 +847,7 @@ void *yunos_mm_alloc(size_t size)
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
         dumpsys_mm_info_func(NULL, 0);
         printf("WARNING, malloc failed!!!!\r\n");
-        exit(0);
+        //exit(0);
 #endif
     }
 

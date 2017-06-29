@@ -19,7 +19,7 @@
 
 #define TASK_MM_PRI          16
 #define TASK_TEST_STACK_SIZE 1024
-#define MM_POOL_SIZE         1024 * 10
+#define MM_POOL_SIZE         1024 * 20
 
 #define MYASSERT(value) do {if ((int)(value) == 0) { printf("%s:%d\n", __FUNCTION__, __LINE__);return 1; }} while (0)
 
