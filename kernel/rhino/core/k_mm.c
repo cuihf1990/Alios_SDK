@@ -331,6 +331,8 @@ static void *k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
     VGF(VALGRIND_MALLOCLIKE_BLOCK(tmp, size, 0, 0));
     VGF(VALGRIND_MAKE_MEM_DEFINED(tmp, size));
 
+    stats_addsize(mmhead,DEF_FIX_BLK_SIZE, req_size);
+
     return tmp;
 }
 static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
@@ -348,6 +350,7 @@ static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
     if (sta != YUNOS_SUCCESS) {
         assert(0);
     }
+
     stats_removesize(mmhead, DEF_FIX_BLK_SIZE);
 }
 
@@ -480,10 +483,6 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     if (size <= DEF_FIX_BLK_SIZE && mm_pool->blk_avail > 0) {
         retptr =  k_mm_smallblk_alloc(mmhead, size);
         if (retptr) {
-
-#if (K_MM_STATISTIC > 0)
-            stats_addsize(mmhead,DEF_FIX_BLK_SIZE, req_size);
-#endif
 
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
             YUNOS_CRITICAL_EXIT();
