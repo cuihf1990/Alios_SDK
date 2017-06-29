@@ -696,24 +696,33 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
         /*it's fixed size memory block*/
         if(new_size <= DEF_FIX_BLK_SIZE) {
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
-        YUNOS_CRITICAL_EXIT();
-#else
-        yunos_mutex_unlock(&(mmhead->mm_mutex));
-#endif
-            return oldmem;
-        }
-        else {
-            k_mm_smallblk_free(mmhead, oldmem);
-#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
             YUNOS_CRITICAL_EXIT();
 #else
             yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
-            return k_mm_alloc(mmhead, new_size);
+            return oldmem;
+        }
+        else {
+            tmp_size = DEF_FIX_BLK_SIZE;
         }
     }
+    else {
+        b        = (k_mm_list_t *) ((char *) oldmem - MMLIST_HEAD_SIZE);
+        tmp_size = (b->size & YUNOS_MM_BLKSIZE_MASK);
+    }
 
-    b        = (k_mm_list_t *) ((char *) oldmem - MMLIST_HEAD_SIZE);
+#if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
+    YUNOS_CRITICAL_EXIT();
+#else
+    yunos_mutex_unlock(&(mmhead->mm_mutex));
+#endif
+
+    ptr_aux  = k_mm_alloc(mmhead, new_size);
+    if (ptr_aux) {
+        memcpy(ptr_aux, oldmem, new_size > tmp_size ? tmp_size : new_size);
+        k_mm_free(mmhead, oldmem);
+    }
+    return ptr_aux;
 
     VGF(VALGRIND_FREELIKE_BLOCK(oldmem, 0));
     VGF(VALGRIND_MAKE_MEM_DEFINED(oldmem, b->size & YUNOS_MM_BLKSIZE_MASK));
@@ -722,7 +731,6 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     next_b   = NEXT_MM_BLK(b->mbinfo.buffer, b->size & YUNOS_MM_BLKSIZE_MASK);
     new_size = (new_size < sizeof(k_mm_list_t)) ? sizeof(k_mm_list_t) : MM_ALIGN_UP(
                    new_size);
-    tmp_size = (b->size & YUNOS_MM_BLKSIZE_MASK);
 
     if (new_size <= tmp_size) {
         stats_removesize(mmhead,
