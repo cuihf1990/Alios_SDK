@@ -60,70 +60,58 @@ void platform_free(void *ptr)
 
 void *platform_mutex_init(void)
 {
-    yos_mutex_t *mutex = (yos_mutex_t *)yos_malloc(sizeof(yos_mutex_t));
+    yos_mutex_t mutex;
 
-    if (NULL == mutex) {
+    if (0 != yos_mutex_new(&mutex)) {
         return NULL;
     }
 
-    if (0 != yos_mutex_new(mutex)) {
-        platform_free(mutex);
-        return NULL;
-    }
-
-    return mutex;
+    return mutex.hdl;
 }
 
 void platform_mutex_lock(void *mutex)
 {
-    yos_mutex_lock((yos_mutex_t *)mutex, YOS_WAIT_FOREVER);
+    yos_mutex_lock((yos_mutex_t *)&mutex, YOS_WAIT_FOREVER);
 }
 
 void platform_mutex_unlock(void *mutex)
 {
-    yos_mutex_unlock((yos_mutex_t *)mutex);
+    yos_mutex_unlock((yos_mutex_t *)&mutex);
 }
 
 void platform_mutex_destroy(void *mutex)
 {
-    yos_mutex_free((yos_mutex_t *)mutex);
-    platform_free(mutex);
+    yos_mutex_free((yos_mutex_t *)&mutex);
 }
 
 void *platform_semaphore_init(void)
 {
-    yos_sem_t *sem = (yos_sem_t *)platform_malloc(sizeof(yos_sem_t));
+    yos_sem_t sem;
 
-    if (NULL == sem) {
+    if (0 != yos_sem_new(&sem, 0)) {
         return NULL;
     }
 
-    if (0 != yos_sem_new(sem, 0)) {
-        platform_free(sem);
-        return NULL;
-    }
-
-    return sem;
+    return sem.hdl;
 }
 
 int platform_semaphore_wait(_IN_ void *sem, _IN_ uint32_t timeout_ms)
 {
     if (PLATFORM_WAIT_INFINITE == timeout_ms) {
-        return yos_sem_wait((yos_sem_t *)sem, YOS_WAIT_FOREVER);
+        return yos_sem_wait((yos_sem_t *)&sem, YOS_WAIT_FOREVER);
     } else {
-        return yos_sem_wait((yos_sem_t *)sem, timeout_ms);
+        return yos_sem_wait((yos_sem_t *)&sem, timeout_ms);
     }
 }
 
 void platform_semaphore_post(void *sem)
 {
-    yos_sem_signal((yos_sem_t *)sem);
+    yos_sem_signal((yos_sem_t *)&sem);
 }
 
 void platform_semaphore_destroy(void *sem)
 {
-    yos_sem_free((yos_sem_t *)sem);
-    platform_free(sem);
+    yos_sem_free((yos_sem_t *)&sem);
 }
 
 void platform_msleep(_IN_ uint32_t ms)
