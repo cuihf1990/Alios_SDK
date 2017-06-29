@@ -94,8 +94,7 @@ void netmgr_set_smart_config(autoconfig_plugin_t *plugin);
 void netmgr_register_wifi_scan_result_callback(netmgr_wifi_scan_result_cb_t cb);
 bool netmgr_get_scan_cb_finished();
 bool netmgr_get_ip_state();
-void netmgr_set_ip_state(bool state);
-void call_reconnect_wifi(void *arg);
+void netmgr_reconnect_wifi(void *arg);
 
 int netmgr_init(void);
 void netmgr_deinit(void);

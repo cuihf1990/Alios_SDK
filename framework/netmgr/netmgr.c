@@ -215,8 +215,9 @@ static void reconnect_wifi(void *arg)
     hal_wifi_start(module, &type);
 }
 
-void call_reconnect_wifi(void *arg)
+void netmgr_reconnect_wifi(void *arg)
 {
+    g_netmgr_cxt.ip_available = false;
     reconnect_wifi(arg);
 }
 
@@ -481,11 +482,6 @@ int netmgr_start(bool autoconfig)
 bool netmgr_get_ip_state()
 {
     return g_netmgr_cxt.ip_available;
-}
-
-void netmgr_set_ip_state(bool state)
-{
-    g_netmgr_cxt.ip_available = state;
 }
 
 bool netmgr_get_scan_cb_finished()
