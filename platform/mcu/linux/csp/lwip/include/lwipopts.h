@@ -55,9 +55,15 @@
    ---------- Memory options ----------
 */
 #define MEM_ALIGNMENT                   4
-#define MEM_SIZE                        0x100000
+#define MEM_SIZE                        0x4000
 
-#define MEM_LIBC_MALLOC                 0
+#define MEM_LIBC_MALLOC                 1
+#if MEM_LIBC_MALLOC
+#include <yos/kernel.h>
+#define mem_clib_malloc yos_malloc
+#define mem_clib_free yos_free
+#define mem_clib_calloc(n, m) yos_zalloc( (n) * (m) )
+#endif
 
 #define MEMP_MEM_MALLOC                 1
 #define MEMP_OVERFLOW_CHECK             1

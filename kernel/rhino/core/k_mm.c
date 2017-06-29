@@ -17,6 +17,7 @@
 #include <k_api.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #if (YUNOS_CONFIG_MM_TLF > 0)
 
@@ -795,7 +796,7 @@ void *yunos_mm_alloc(size_t size)
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
         dumpsys_mm_info_func(NULL, 0);
         printf("WARNING, malloc failed!!!!\r\n");
-
+        exit(0);
 #endif
     }
 

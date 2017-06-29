@@ -63,7 +63,7 @@
 
 #define YUNOS_MM_BLKSIZE_MASK (0xFFFFFFFF - MM_ALIGN_MASK)
 
-#define DEF_TOTAL_FIXEDBLK_SIZE     2048 /*by default, total 2k momory fo fix size block */
+#define DEF_TOTAL_FIXEDBLK_SIZE     8192 /*by default, total 2k momory fo fix size block */
 #define MIN_FREE_MEMORY_SIZE        1024 /*at least need 1k for user alloced*/
 
 

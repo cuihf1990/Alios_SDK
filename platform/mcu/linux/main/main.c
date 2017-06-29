@@ -135,7 +135,9 @@ int main(int argc, char **argv)
 #endif
     options.log_level   = YOS_LL_WARN;
 
+#if defined(CONFIG_YOS_DDA) || defined(ENABLE_GCOV)
     signal(SIGINT, signal_handler);
+#endif
 #ifdef CONFIG_YOS_UT
     signal(SIGPIPE, SIG_IGN);
 #endif

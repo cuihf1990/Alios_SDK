@@ -41,7 +41,7 @@
 
 #define LOG(format, ...) //printf(format, __VA_ARGS__)
 
-#define MIN_STACK_SIZE    8192
+#define MIN_STACK_SIZE    4096
 
 typedef struct {
     ktask_t     *tcb;
