@@ -331,7 +331,7 @@ static void *k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
     VGF(VALGRIND_MALLOCLIKE_BLOCK(tmp, size, 0, 0));
     VGF(VALGRIND_MAKE_MEM_DEFINED(tmp, size));
 
-    stats_addsize(mmhead,DEF_FIX_BLK_SIZE, req_size);
+    stats_addsize(mmhead,DEF_FIX_BLK_SIZE, size);
 
     return tmp;
 }
