@@ -94,39 +94,10 @@ proc flash_set_clk { conf } {
     write_reg $::REG_FLASH_CONF $value
 }
 
-proc set_flash_unprotect { } {
-    # unsigned int temp0;
-    # UINT8 bit_QE  = 0;
-    set bit_QE 0
-
-    # while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
-    while { [expr [read_reg $::REG_FLASH_OPERATE_SW] & $::BUSY_SW] } { }
-
-    # temp0 = REG_READ(REG_FLASH_CONF); //����WRSR Status data
-    set temp0 [read_reg $::REG_FLASH_CONF]
-    # temp0 &= 0xfffe0fff;  // set [BP4:BP0] = 0
-    set temp0 [expr $temp0 & 0xfffe0fff]
-    # *((volatile UINT32 *)(REG_FLASH_CONF)) = ((temp0 &  FLASH_CLK_CONF_MASK)| (bit_QE << 19)| (0x10000 << WRSR_DATA_POSI));  // unprotect all sectors
-    set temp0 [expr (($temp0 & $::FLASH_CLK_CONF_MASK) | ($bit_QE << 19) | (0x10000 << $::WRSR_DATA_POSI))]
-    write_reg $::REG_FLASH_CONF $temp0
-
-    # //Start WRSR
-    # temp0 = *((volatile UINT32 *)(REG_FLASH_OPERATE_SW));
-    set temp0 [read_reg $::REG_FLASH_OPERATE_SW]
-    # *((volatile UINT32 *)(REG_FLASH_OPERATE_SW)) = ((temp0 & ADDR_SW_REG_MASK)| (FLASH_OPCODE_WRSR2 << OP_TYPE_SW_POSI)| OP_SW| WP_VALUE); // make WP equal 1 not protect SRP
-    set temp0 [expr (($temp0 & $::ADDR_SW_REG_MASK) | ($::FLASH_OPCODE_WRSR2 << $::OP_TYPE_SW_POSI)| $::OP_SW | $::WP_VALUE)]
-    # while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
-    while { [expr [read_reg $::REG_FLASH_OPERATE_SW] & $::BUSY_SW] } { }
-}
-
 proc flash_write_enable { } {
     set value [read_reg $::REG_FLASH_CONF]
     set value [expr $value & (~$::CRC_EN)] 
     write_reg $::REG_FLASH_CONF $value    
-
-    set value [read_reg $::REG_FLASH_CONF]
-    set value [expr $value & (~($::WRSR_DATA_MASK<<$::WRSR_DATA_POSI))]  
-    write_reg $::REG_FLASH_CONF $value  
 
     set value [read_reg $::REG_FLASH_CONF]
     set value [expr $value | $::FWREN_FLASH_CPU] 
@@ -181,62 +152,4 @@ proc flash_erase { addr size } {
             set size [expr $size - 0x1000]
         }
     }
-}
-
-proc flash_init_x { } {
-    # Flash data to CPU CRC disable
-    puts ">>>>>>>> Flash data to CPU CRC disable"
-    mem2array tmp_arr 32 0x0080301c 1
-    set reg_val [expr ($tmp_arr(0))&(~(1<<26))]
-    mww 0x0080301c $reg_val
-
-    # Flash status register data to be written
-    puts ">>>>>>>> Flash status register data to be written"
-    mem2array tmp_arr 32 0x0080301c 1
-    set reg_val [expr ($tmp_arr(0))&(~(0xffff<<10))]
-    mww 0x0080301c $reg_val    
-
-    # CPU data writting enable
-    puts ">>>>>>>> CPU data writting enable"
-    mem2array tmp_arr 32 0x0080301c 1
-    set reg_val [expr ($tmp_arr(0))|(1<<9)]
-    mww 0x0080301c $reg_val
-
-    # Flash operation command : WRSR2
-    puts ">>>>>>>> Flash operation command : WRSR2"
-    mem2array tmp_arr 32 0x00803000 1
-    set reg_val $tmp_arr(0)
-    # clr op_type_sw
-    set reg_val [expr $reg_val&(~(0x1f<<24))]
-    # op_sw, wp_value
-    set reg_val [expr $reg_val|((0x07<<24)|(1<<29)|(1<<30))]
-    mww 0x00803000 $reg_val
-    sleep 1000
-    set ready 1
-    puts ">>>>>>>> Waitting for operation completed..."
-    while { $ready } {
-        mem2array tmp_arr 32 0x00803000 1
-        set reg_val $tmp_arr(0)
-        set ready [expr $reg_val&(0x01<<31)]
-    }
-    puts ">>>>>>>> Operation completed!"
-
-    # Flash operation command : CE
-    puts ">>>>>>>> Flash operation command : CE"
-    mem2array tmp_arr 32 0x00803000 1
-    set reg_val $tmp_arr(0)
-    # clr op_type_sw
-    set reg_val [expr $reg_val&(~(0x1f<<24))]
-    # op_sw, wp_value
-    set reg_val [expr $reg_val|((0x10<<24)|(1<<29)|(1<<30))]
-    mww 0x00803000 $reg_val
-    sleep 1000
-    set ready 1
-    puts ">>>>>>>> Waitting for operation completed..."
-    while { $ready } {
-        mem2array tmp_arr 32 0x00803000 1
-        set reg_val $tmp_arr(0)
-        set ready [expr $reg_val&(0x01<<31)]
-    }
-    puts ">>>>>>>> Operation completed!"
 }
