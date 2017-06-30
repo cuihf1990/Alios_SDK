@@ -849,8 +849,12 @@ void *yunos_mm_alloc(size_t size)
     tmp = k_mm_alloc(g_kmm_head, size);
     if (tmp == NULL) {
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
-        dumpsys_mm_info_func(NULL, 0);
+        static int dumped;
         printf("WARNING, malloc failed!!!!\r\n");
+        if (dumped)
+            return tmp;
+        dumped = 1;
+        dumpsys_mm_info_func(NULL, 0);
         //exit(0);
 #endif
     }
