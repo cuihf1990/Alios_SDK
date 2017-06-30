@@ -528,16 +528,23 @@ static void alink_service_event(input_event_t *event, void *priv_data) {
     }
 }
 
+static void alink_connect_event(input_event_t *event, void *priv_data)
+{
+    if (event->type != EV_SYS) {
+        return;
+    }
+
+    if (event->code == CODE_SYS_ON_ALINK_ONLINE ) {
+        yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+        return;
+    }
+}
 static int alink_cloud_report(const char *method, const char *json_buffer)
 {
     return alink_report_async(method, json_buffer, NULL, NULL);
 }
 
-extern void ota_post_version_msg();
-
 static void alink_cloud_connected(void) {
-    ota_post_version_msg();
-    yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
     yos_post_event(EV_YUNIO, CODE_YUNIO_ON_CONNECTED, 0);
     printf("alink cloud connected!\n");
 
@@ -623,6 +630,7 @@ int application_start(int argc, char *argv[])
     alink_cloud_init();
 
     yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
+    yos_register_event_filter(EV_SYS, alink_connect_event, NULL);
 
     netmgr_init();
     netmgr_start(false);
