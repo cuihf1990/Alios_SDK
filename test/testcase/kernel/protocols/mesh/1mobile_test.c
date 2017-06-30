@@ -20,16 +20,14 @@ static void run_in_hop1(void)
     set_full_rssi(11, 13);
 
     cmd_to_agent("stop");
-    start_node(12);
+    start_node_ext(12, MODE_RX_ON, -1, -1);
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
-    start_node(13);
+    start_node_ext(13, MODE_RX_ON, -1, -1);
     check_p2p_str_wait("router", 13, "testcmd state", 10);
 
     cmd_to_agent("mode MOBILE");
     cmd_to_agent("start");
-    yos_msleep(10000);
-
-    YUNIT_ASSERT(ur_mesh_get_sid() == 0xc001);
+    check_p2p_str_wait("leaf", 11, "testcmd state", 10);
 
     addr = ur_mesh_get_ucast_addr();
     snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr));
@@ -51,9 +49,9 @@ static void run_in_hop2(void)
 
     set_line_rssi(11, 13);
 
-    start_node(13);
+    start_node_ext(13, MODE_RX_ON, -1, -1);
     yos_msleep(5000);
-    start_node(12);
+    start_node_ext(12, MODE_RX_ON, -1, -1);
     yos_msleep(5000);
 
     cmd_to_agent("mode MOBILE");

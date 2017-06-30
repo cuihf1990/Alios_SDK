@@ -266,6 +266,7 @@ void reset_network_context(void)
         network->attach_candidate = NULL;
         network->candidate_meshnetid = BCAST_NETID;
         network->migrate_times = 0;
+        network->channel = -1;
     }
 }
 

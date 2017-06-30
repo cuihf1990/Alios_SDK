@@ -16,7 +16,7 @@ void topo_test_function(uint16_t first_node, uint16_t num, uint32_t timeout)
     set_full_rssi(first_node, first_node + num - 1);
 
     for (index = 1; index < num; index++) {
-        start_node(index + first_node);
+        start_node_ext(index + first_node, MODE_RX_ON, -1, -1);
     }
     cmd_to_agent("start");
     check_cond_wait(num == umesh_mm_get_meshnetsize(), timeout);

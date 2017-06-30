@@ -78,6 +78,8 @@ static void three_nodes_case(void)
     snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
 
     for (index = 0; index < 5; index++) {
+        check_cond_wait(umesh_mm_get_attach_state() == ATTACH_IDLE || \
+                        umesh_mm_get_attach_state() == ATTACH_DONE, 10);
         cmd_to_master(ping_cmd);
         snprintf(index_str, sizeof(index_str), "%d", index + 1);
         check_p2p_str_wait(index_str, 12, "testcmd icmp_acked", 5);
