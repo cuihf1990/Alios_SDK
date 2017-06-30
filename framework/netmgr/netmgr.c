@@ -177,6 +177,18 @@ static void netmgr_scan_adv_completed_event(hal_wifi_module_t *m,
                                              hal_wifi_scan_result_adv_t *result,
                                              void *arg)
 {
+    netmgr_wifi_scan_result_cb_t cb = g_netmgr_cxt.cb;
+    int i, last_ap = 0;
+
+    if (g_netmgr_cxt.cb) {
+	    for(i=0; i<(result->ap_num); i++) {
+	        LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
+	        if (i == (result->ap_num - 1)) last_ap = 1;
+            cb(result->ap_list[i].ssid, result->ap_list[i].bssid, result->ap_list[i].security,
+                NETMGR_AWSS_ENC_TYPE_NONE, result->ap_list[i].channel, 0, last_ap);
+	    }
+	    g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
+    }
 }
 
 static void netmgr_para_chg_event(hal_wifi_module_t *m,
