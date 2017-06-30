@@ -90,6 +90,7 @@ static int cota_service_listener(int type, void *data, int dlen, void *result,
             alink_get_config(p->data, (char *)result);
             LOGW(MODULE_NAME_COTA, "result %s", result);
         } else if (!strcmp(p->method, "setDebugConfig")) {
+            LOGW(MODULE_NAME_COTA, "==============> set debug config");
             alink_set_config(p->data);
         } else {
             return EVENT_IGNORE;
@@ -129,8 +130,13 @@ static int alink_set_config(char *param)
     pvalue = json_get_value_by_name(param, strlen(param), "alinkServer", &value_len,
                                     0);
     if (pvalue != NULL) {
+        LOGW(MODULE_NAME_COTA, "get alink server ----->  %s\n",pvalue);
         value_len = (value_len < SERVER_LEN) ? value_len : SERVER_LEN;
-        memset(alinkserver, 0x00, SERVER_LEN);
+	if(strstr(pvalue,alinkserver) == NULL){
+            LOGW(MODULE_NAME_COTA, "reset uuid --------\n");
+	    config_reset_main_uuid();
+	}	
+	memset(alinkserver, 0x00, SERVER_LEN);
         strncpy(alinkserver, pvalue, value_len);
         yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }

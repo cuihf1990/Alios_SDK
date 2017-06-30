@@ -136,6 +136,7 @@ char *config_get_ota_version(void);
 int device_statisticsdata_save(char *buff, int len);
 int device_statisticsdata_load(char *buff, int len);
 
+void config_reset_main_uuid();
 extern const char *default_online_server_with_port;
 extern const char *default_sandbox_server_with_port;
 extern const char *default_daily_server_with_port;
