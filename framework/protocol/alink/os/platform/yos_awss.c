@@ -140,7 +140,7 @@ int platform_awss_connect_ap(
 int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)
 {
     netmgr_register_wifi_scan_result_callback((netmgr_wifi_scan_result_cb_t)cb);
-    hal_wifi_start_scan(NULL);
+    hal_wifi_start_scan_adv(NULL);
     while (netmgr_get_scan_cb_finished() != true) { // block
         yos_msleep(500);
     }
