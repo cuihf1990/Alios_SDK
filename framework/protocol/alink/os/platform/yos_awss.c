@@ -120,7 +120,7 @@ int platform_awss_connect_ap(
 
     hal_wifi_suspend_station(NULL);
     LOGD("yos_awss", "Will reconnect wifi: %s %s", ssid, passwd);
-    netmgr_reconnect_wifi(NULL);
+    netmgr_reconnect_wifi();
 
     while (ms_cnt < connection_timeout_ms) {
         if (netmgr_get_ip_state() == false) {

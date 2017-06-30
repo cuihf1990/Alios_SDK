@@ -215,10 +215,10 @@ static void reconnect_wifi(void *arg)
     hal_wifi_start(module, &type);
 }
 
-void netmgr_reconnect_wifi(void *arg)
+void netmgr_reconnect_wifi()
 {
     g_netmgr_cxt.ip_available = false;
-    reconnect_wifi(arg);
+    reconnect_wifi(NULL);
 }
 
 static void get_wifi_ssid(void)
