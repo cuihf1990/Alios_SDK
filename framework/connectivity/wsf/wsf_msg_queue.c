@@ -67,8 +67,7 @@ do_error:
     return;
 }
 
-//destroy the queue
-void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
+void wsf_msg_queue_flush(wsf_request_queue_t *req_queue)
 {
     if (!req_queue) {
         return;
@@ -99,6 +98,16 @@ void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
         }
     }
     os_mutex_unlock(req_queue->mutex);
+}
+
+//destroy the queue
+void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
+{
+    if (!req_queue) {
+        return;
+    }
+
+    wsf_msg_queue_flush(req_queue);
     os_mutex_destroy(req_queue->mutex);
     os_semaphore_destroy(req_queue->psem);
 
@@ -125,6 +134,9 @@ static void wsf_del_first_msg(wsf_request_queue_t *req_queue)
     req_node = (wsf_request_node_t *)node;
     dlist_del(node);
     req_queue->length--;
+
+    if (req_node->session.cb)
+        req_node->session.cb(NULL, req_node->session.extra);
 
     wsf_msg_session_destroy(&req_node->session);
     os_free(req_node);

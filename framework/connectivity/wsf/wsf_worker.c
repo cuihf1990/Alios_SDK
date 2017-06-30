@@ -198,6 +198,7 @@ static void stop_receive_worker()
 static void __cb_wsf_close(int fd, void *arg)
 {
     LOGE(MODULE_NAME, "wsf: select ret -1, reconnect");
+    wsf_msg_queue_flush(global_request_queue);
     wsf_reset_connection(wsf_conn, 0);
 }
 

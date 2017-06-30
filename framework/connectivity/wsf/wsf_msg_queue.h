@@ -30,6 +30,7 @@ typedef struct wsf_request_queue_t {
 } wsf_request_queue_t;
 
 void wsf_msg_queue_init(wsf_request_queue_t **ppqueue);
+void wsf_msg_queue_flush(wsf_request_queue_t *req_queue);
 void wsf_msg_queue_destroy(wsf_request_queue_t *pqueue);
 void wsf_request_queue_init(wsf_request_queue_t *req_queue);
 int wsf_request_queue_push(wsf_request_queue_t *req_queue,
