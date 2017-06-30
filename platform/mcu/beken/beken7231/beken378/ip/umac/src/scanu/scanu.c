@@ -283,7 +283,7 @@ int scanu_frame_handler(struct rxu_mgt_ind const *frame)
     struct bcn_frame const *frm = (struct bcn_frame const *)frame->payload;
     int msg_status = KE_MSG_CONSUMED;
     struct vif_info_tag *vif = &vif_info_tab[param->vif_idx];
-
+	
     do
     {
         // Check if we are in a scanning process
@@ -333,17 +333,15 @@ int scanu_frame_handler(struct rxu_mgt_ind const *frame)
         {
             // first, get the SSID length
             uint8_t ssid_len = co_read8p(elmt_addr + MAC_SSID_LEN_OFT);
-            if (ssid_len > MAC_SSID_LEN)
-                ssid_len = MAC_SSID_LEN;
-            scan->ssid.length = ssid_len;
-            // copy the SSID length
-            co_unpack8p(scan->ssid.array, elmt_addr + MAC_SSID_SSID_OFT, ssid_len);
+			if (ssid_len > 0) { /* yhb added. For hidden ssid's AP, beacon's ssid len is 0, but probe response has ssid */
+	            if (ssid_len > MAC_SSID_LEN)
+	                ssid_len = MAC_SSID_LEN;
+	            scan->ssid.length = ssid_len;
+	            // copy the SSID length
+	            co_unpack8p(scan->ssid.array, elmt_addr + MAC_SSID_SSID_OFT, ssid_len);
+			}
         }
-        else
-        {
-            // SSID is not broadcasted
-            scan->ssid.length = 0;
-        }
+        
 
         #if (NX_P2P)
         if (scanu_env.p2p_scan)
@@ -633,6 +631,7 @@ void scanu_start(void)
         // reset the scan results before starting a new scan
         for (i = 0; i < MAX_BSS_LIST; i++)
         {
+        	scanu_env.scan_result[i].ssid.length = 0;
             scanu_env.scan_result[i].valid_flag = false;
             scanu_env.scan_result[i].rssi = 0x80;
         }

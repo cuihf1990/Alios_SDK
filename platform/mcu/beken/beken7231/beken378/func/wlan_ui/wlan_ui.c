@@ -243,8 +243,14 @@ void bk_wlan_ap_init(hal_wifi_init_type_t *inNetworkInitPara)
     if(inNetworkInitPara)
     {
         g_ap_param_ptr->ssid.length = os_strlen(inNetworkInitPara->wifi_ssid);
+		if (g_ap_param_ptr->ssid.length > 32)
+			g_ap_param_ptr->ssid.length = 32;
+		
         os_memcpy(g_ap_param_ptr->ssid.array, inNetworkInitPara->wifi_ssid, g_ap_param_ptr->ssid.length);
         g_ap_param_ptr->key_len = os_strlen(inNetworkInitPara->wifi_key);
+		if (g_ap_param_ptr->key_len >= 64)
+			g_ap_param_ptr->key_len = 0;
+		
         if(g_ap_param_ptr->key_len < 8)
         {
             g_ap_param_ptr->cipher_suite = CONFIG_CIPHER_OPEN;
@@ -290,12 +296,18 @@ void bk_wlan_sta_init(hal_wifi_init_type_t *inNetworkInitPara)
     if(inNetworkInitPara)
     {
         g_sta_param_ptr->ssid.length = os_strlen(inNetworkInitPara->wifi_ssid);
+		if (g_sta_param_ptr->ssid.length > 32)
+			g_sta_param_ptr->ssid.length = 32;
+		
         os_memcpy(g_sta_param_ptr->ssid.array,
                   inNetworkInitPara->wifi_ssid,
                   g_sta_param_ptr->ssid.length);
 
 
         g_sta_param_ptr->key_len = os_strlen(inNetworkInitPara->wifi_key);
+		if (g_sta_param_ptr->key_len > 64)
+			g_sta_param_ptr->key_len = 64;
+		
 		os_memcpy(g_sta_param_ptr->key, inNetworkInitPara->wifi_key, g_sta_param_ptr->key_len);
 
         if(inNetworkInitPara->dhcp_mode == DHCP_CLIENT)

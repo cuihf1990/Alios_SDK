@@ -60,6 +60,7 @@ void sa_sta_set_rsp_word(uint32_t val)
 /*---------------------------------------------------------------------------*/
 int sa_station_send_associate_cmd(CONNECT_PARAM_T *connect_param)
 {
+#if 0 /* yhb changed, connect directly. the wpa scan results has the channel infomation. */
     struct ke_msg *msg;
     struct sm_connect_indication *conn_ind_ptr;
     struct mac_scan_result *desired_ap_ptr;
@@ -85,7 +86,7 @@ int sa_station_send_associate_cmd(CONNECT_PARAM_T *connect_param)
 			connect_param->chan.tx_power = 10;
 		}
 	}
-
+#endif
     mt_msg_dispatch(SM_CONNECT_REQ, connect_param);
 
     return 0;
