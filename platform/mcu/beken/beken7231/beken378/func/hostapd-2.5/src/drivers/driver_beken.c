@@ -1437,12 +1437,13 @@ int wpa_driver_associate(void *priv, struct wpa_driver_associate_params *params)
     param->u.assoc_req.proto = params->wpa_proto;
     param->u.assoc_req.ie_len = params->wpa_ie_len;
     os_memcpy((u8 *)param->u.assoc_req.ie_buf, params->wpa_ie, param->u.assoc_req.ie_len);
-
+	param->u.assoc_req.chann = params->freq.channel;
+	
     assoc_ap.ssid_len = params->ssid_len;
     os_memcpy(assoc_ap.ssid, params->ssid, params->ssid_len);
     os_memcpy(assoc_ap.bssid, params->bssid, ETH_ALEN);
-    assoc_ap.chann = params->freq.channel;
-
+	assoc_ap.chann = params->freq.channel;
+	
     if(hostapd_ioctl(drv, param, blen))
     {
         ret = -1;

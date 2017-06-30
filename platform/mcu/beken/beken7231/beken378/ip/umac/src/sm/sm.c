@@ -187,30 +187,9 @@ void sm_get_bss_params(struct mac_addr const **bssid,
                        struct scan_chan_tag const **chan)
 {
     struct sm_connect_req const *param = sm_env.connect_param;
-    struct mac_scan_result *desired_ap_ptr;
 
-    *bssid = NULL;
-    *chan = NULL;
-
-    // In order to launch the join procedure we need the BSSID and the channel,
-    // otherwise we will need to get this information by doing a scan
-    if (MAC_ADDR_GROUP(&param->bssid))
-    {
-        desired_ap_ptr = scanu_search_by_ssid(&param->ssid);
-        if (desired_ap_ptr)
-            *bssid = &desired_ap_ptr->bssid;
-    }
-    else
-    {
-        *bssid = &param->bssid;
-        desired_ap_ptr = scanu_search_by_bssid(&param->bssid);
-    }
-
-    // Get channel
-    if (desired_ap_ptr)
-        *chan = desired_ap_ptr->chan;
-    else if (param->chan.freq != ((uint16_t)-1))
-        *chan = &param->chan;
+	*bssid = &param->bssid;
+    *chan = &param->chan;
 }
 
 void sm_scan_bss(struct mac_addr const *bssid,
