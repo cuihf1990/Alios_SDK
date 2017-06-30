@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <yos/cli.h>
+#include <yos/framework.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"
