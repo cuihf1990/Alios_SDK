@@ -162,14 +162,14 @@ static void netmgr_scan_completed_event(hal_wifi_module_t *m,
     uint8_t bssid[ETH_ALEN];
 
     if (g_netmgr_cxt.cb) {
-	    for(i=0; i<(result->ap_num); i++) {
-	        LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
-	        if (i == (result->ap_num - 1)) last_ap = 1;
-	        get_bssid(bssid, ETH_ALEN);
+        for(i=0; i<(result->ap_num); i++) {
+            LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
+            if (i == (result->ap_num - 1)) last_ap = 1;
+            get_bssid(bssid, ETH_ALEN);
             cb(result->ap_list[i].ssid, bssid, NETMGR_AWSS_AUTH_TYPE_WPA2PSK,
                 NETMGR_AWSS_ENC_TYPE_NONE, 0, 0, last_ap);
-	    }
-	    g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
+        }
+        g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
     }
 }
 
@@ -181,13 +181,14 @@ static void netmgr_scan_adv_completed_event(hal_wifi_module_t *m,
     int i, last_ap = 0;
 
     if (g_netmgr_cxt.cb) {
-	    for(i=0; i<(result->ap_num); i++) {
-	        LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
-	        if (i == (result->ap_num - 1)) last_ap = 1;
-            cb(result->ap_list[i].ssid, (const uint8_t *)result->ap_list[i].bssid, result->ap_list[i].security,
-                NETMGR_AWSS_ENC_TYPE_NONE, result->ap_list[i].channel, 0, last_ap);
-	    }
-	    g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
+        for(i=0; i<(result->ap_num); i++) {
+            LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
+            if (i == (result->ap_num - 1)) last_ap = 1;
+            cb(result->ap_list[i].ssid, (const uint8_t *)result->ap_list[i].bssid, 
+                result->ap_list[i].security, NETMGR_AWSS_ENC_TYPE_NONE, 
+                result->ap_list[i].channel, result->ap_list[i].ap_power, last_ap);
+        }
+        g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
     }
 }
 
@@ -279,12 +280,14 @@ static void handle_wifi_disconnect(void)
 {
     g_netmgr_cxt.disconnected_times++;
 
+#if 0 // low level handle disconnect
     if (has_valid_ap() == 1 && g_netmgr_cxt.disconnected_times < MAX_RETRY_CONNECT) {
         yos_post_delayed_action(RETRY_INTERVAL_MS, reconnect_wifi, NULL);
     } else {
         clear_wifi_ssid();
         netmgr_wifi_config_start();
     }
+#endif
 }
 
 static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
