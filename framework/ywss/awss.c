@@ -69,7 +69,7 @@ end:
 	return ret;
 }
 
-#define HOTSPOT_TIMEOUT (2*60*10) // 3 mins
+#define HOTSPOT_TIMEOUT (2*60*10) // 10 mins
 int awss_start(void)
 {
     awss_set_enrollee_token("default", strlen("default"));
@@ -122,7 +122,6 @@ int awss_start(void)
                     handleSocketPacket(udpFd);
                     if (switchApDone) {
                     	LOGI("[awss]", "switchApDone");
-                    	os_udp_close(udpFd);
                     	break;
                     }
                     yos_msleep(500);
@@ -130,6 +129,7 @@ int awss_start(void)
                 }
                 if (hotspotCnt >= HOTSPOT_TIMEOUT) ret = -1;
                 else ret = 0;
+                os_udp_close(udpFd);
             }
 
             if (tryCount < 9999) {
