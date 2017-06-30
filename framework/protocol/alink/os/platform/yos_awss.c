@@ -124,7 +124,7 @@ int platform_awss_connect_ap(
 
     while (ms_cnt < connection_timeout_ms) {
         if (netmgr_get_ip_state() == false) {
-            LOGI("[waitConnAP]", "waiting for connecting AP");
+            LOGD("[waitConnAP]", "waiting for connecting AP");
             yos_msleep(500);
             ms_cnt += 500;
         } else {
