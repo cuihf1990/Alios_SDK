@@ -310,19 +310,28 @@ bool ur_mesh_is_initialized(void)
 ur_error_t ur_mesh_start()
 {
     ur_mesh_hal_module_t *wifi_hal = NULL;
+    umesh_extnetid_t extnetid;
+    int extnetid_len = 6;
 
     if (g_um_state.started) {
         return UR_ERROR_NONE;
     }
 
     g_um_state.started = true;
+
+
+    interface_start();
+    umesh_mm_start(&g_um_state.mm_cb);
+
+    if (yos_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
+        extnetid.len = extnetid_len;
+        umesh_set_extnetid(&extnetid);
+    }
+
     wifi_hal = hal_umesh_get_default_module();
     if (wifi_hal) {
         hal_umesh_enable(wifi_hal);
     }
-    interface_start();
-    umesh_mm_start(&g_um_state.mm_cb);
-
     g_um_state.network_data_updater.handler = network_data_update_handler;
     nd_register_update_handler(&g_um_state.network_data_updater);
 
@@ -347,7 +356,6 @@ ur_error_t ur_mesh_stop(void)
 
     nd_unregister_update_handler(&g_um_state.network_data_updater);
 
-    ur_mesh_interface_down();
     umesh_mm_stop();
     interface_stop();
     return UR_ERROR_NONE;

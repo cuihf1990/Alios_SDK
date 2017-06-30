@@ -37,6 +37,7 @@
 
 #define MODULE_NAME "gateway"
 #define ADV_INTERVAL (5 * 1000)
+#define GW_DEBUG(x, y, ...)     printf("GATEWAY: " y "\n", ##__VA_ARGS__)
 
 typedef struct reg_info_s {
     char model_id[sizeof(uint32_t) + 1];
@@ -246,7 +247,15 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
         if (client->devinfo == NULL)
             continue;
         if (memcmp(reginfo->ieee_addr, client->devinfo->dev_base.u.ieee_addr, IEEE_ADDR_BYTES) == 0) {
-            LOGD(MODULE_NAME, "existing client %s", client->devinfo->dev_base.u.ieee_addr);
+            GW_DEBUG(MODULE_NAME, "existing client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
             return client;
         }
     }
@@ -265,7 +274,15 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     client->devinfo = devmgr_get_devinfo_by_ieeeaddr(reginfo->ieee_addr);
     dlist_add_tail(&client->next, &pstate->clients);
 
-    LOGD(MODULE_NAME, "new client %s", reginfo->ieee_addr);
+    GW_DEBUG(MODULE_NAME, "new client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
 
     return client;
 }
@@ -426,6 +443,47 @@ static void gateway_advertise(void *arg)
     yos_free(buf);
 }
 
+#define GATEWAY_WORKER_THREAD
+#ifdef GATEWAY_WORKER_THREAD
+static void gateway_worker(void *arg)
+{
+    int sockfd;
+    fd_set rfds;
+    struct timeval timeout;
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100000;
+    while(1) {
+        sockfd = gateway_state.sockfd;
+
+        if (sockfd < 0) {
+            yos_msleep(100);
+            continue;
+        }
+
+        FD_ZERO(&rfds);
+        FD_SET(gateway_state.sockfd, &rfds);
+
+        int ret = lwip_select(sockfd+1, &rfds, NULL, NULL, &timeout);
+        if (ret < 0) {
+            if (errno != EINTR) {
+                LOGE(MODULE_NAME, "select error %d", errno);
+                continue;
+            }
+        }
+        if (FD_ISSET(gateway_state.sockfd, &rfds))
+            gateway_sock_read_cb(gateway_state.sockfd, &gateway_state);
+
+        if (sockfd != gateway_state.sockfd) {
+            gateway_state.mqtt_connected = false;
+            close(sockfd);
+        }
+    }
+
+    LOGE(MODULE_NAME, "return");
+}
+#endif
+
 int gateway_service_init(void)
 {
     gateway_state_t *pstate = &gateway_state;
@@ -439,6 +497,9 @@ int gateway_service_init(void)
     dlist_init(&gateway_state.clients);
     yos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
     yos_register_event_filter(EV_MESH, gateway_service_event, NULL);
+#ifdef GATEWAY_WORKER_THREAD
+    yos_task_new("gatewayworker", gateway_worker, NULL, 4096);
+#endif
     return 0;
 }
 
@@ -448,31 +509,6 @@ void gateway_service_deinit(void)
     yos_unregister_event_filter(EV_MESH, gateway_service_event, NULL);
 }
 
-#define GATEWAY_WORKER_THREAD
-#ifdef GATEWAY_WORKER_THREAD
-static void gateway_worker(void *arg)
-{
-    int maxfd = gateway_state.sockfd;
-
-    while(1) {
-        fd_set rfds;
-        FD_ZERO(&rfds);
-        FD_SET(gateway_state.sockfd, &rfds);
-
-        int ret = lwip_select(maxfd+1, &rfds, NULL, NULL, NULL);
-        if (ret < 0) {
-            if (errno != EINTR) {
-                gateway_state.mqtt_connected = false;
-                LOGE(MODULE_NAME, "select error %d, quit", errno);
-                break;
-            }
-        }
-        if (FD_ISSET(gateway_state.sockfd, &rfds))
-            gateway_sock_read_cb(gateway_state.sockfd, &gateway_state);
-    }
-    LOGE(MODULE_NAME, "return");
-}
-#endif
 
 static int init_socket(void)
 {
@@ -490,8 +526,8 @@ static int init_socket(void)
     if (pstate->sockfd >= 0) {
 #ifndef GATEWAY_WORKER_THREAD
         yos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
-#endif
         close(pstate->sockfd);
+#endif
         pstate->sockfd = -1;
     }
 
@@ -510,9 +546,7 @@ static int init_socket(void)
     }
 
     pstate->sockfd = sockfd;
-#ifdef GATEWAY_WORKER_THREAD
-    yos_task_new("gatewayworker", gateway_worker, NULL, 4096);
-#else
+#ifndef GATEWAY_WORKER_THREAD
     yos_poll_read_fd(sockfd, gateway_sock_read_cb, pstate);
 #endif
 
@@ -557,7 +591,9 @@ void gateway_service_stop(void) {
     yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
     yos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
     yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
+#ifndef GATEWAY_WORKER_THREAD
     close(gateway_state.sockfd);
+#endif
     gateway_state.sockfd = -1;
     gateway_state.mqtt_connected = false;
     while(!dlist_empty(&gateway_state.clients)) {
@@ -571,17 +607,23 @@ void gateway_service_stop(void) {
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
 {
     if (eventinfo->type == EV_YUNIO) {
-        if(eventinfo->code == CODE_YUNIO_ON_CONNECTED)
+        if(eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
             gateway_state.yunio_connected = true;
+            GW_DEBUG(GATEWAY_MODULE, "yunio_connected");
+        }
         else
             return;
     }
 
     if (eventinfo->type == EV_MESH) {
-        if (eventinfo->code == CODE_MESH_CONNECTED)
+        if (eventinfo->code == CODE_MESH_CONNECTED) {
             gateway_state.mesh_connected = true;
-        else if (eventinfo->code == CODE_MESH_DISCONNECTED)
+            GW_DEBUG(GATEWAY_MODULE, "mesh_connected");
+        }
+        else if (eventinfo->code == CODE_MESH_DISCONNECTED) {
             gateway_state.mesh_connected = false;
+            GW_DEBUG(GATEWAY_MODULE, "mesh_disconnected");
+        }
         else
             return;
     }

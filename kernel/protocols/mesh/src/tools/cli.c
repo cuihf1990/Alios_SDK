@@ -368,6 +368,7 @@ void process_extnetid(int argc, char *argv[])
         }
         extnetid.len = length;
         umesh_set_extnetid(&extnetid);
+        yos_kv_set("extnetid", extnetid.netid, extnetid.len, 1);
     }
 
     memset(&extnetid, 0, sizeof(extnetid));

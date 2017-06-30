@@ -231,7 +231,17 @@ void become_leader(void)
 
     g_mm_state.device.state = DEVICE_STATE_LEADER;
     g_mm_state.leader_mode = g_mm_state.device.mode;
+
     set_default_network_data();
+    memset(&configs, 0, sizeof(configs));
+    ur_configs_read(&configs);
+    if (g_mm_state.device.reboot_flag == true) {
+        g_mm_state.device.reboot_flag = false;
+        configs.main_version++;
+        configs.main_version %= 7;
+    }
+    nd_set_stable_main_version(configs.main_version);
+
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         network->state = INTERFACE_UP;
@@ -259,14 +269,6 @@ void become_leader(void)
     umesh_mm_start_net_scan_timer();
     umesh_mm_set_prev_channel();
 
-    memset(&configs, 0, sizeof(configs));
-    ur_configs_read(&configs);
-    if (g_mm_state.device.reboot_flag == true) {
-        g_mm_state.device.reboot_flag = false;
-        configs.main_version++;
-        configs.main_version %= 7;
-    }
-    nd_set_stable_main_version(configs.main_version);
     g_mm_state.callback->interface_up();
     stop_addr_cache();
     start_addr_cache();
@@ -2198,6 +2200,11 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             nd_set_stable_main_version(main_version);
             if (g_mm_state.device.mode & MODE_MOBILE) {
                 leader_reboot = true;
+            }
+
+            if ((nbr->mode & MODE_LEADER) &&
+                memcmp(nbr->ueid, attach_node->ueid, sizeof(nbr->ueid)) == 0) {
+                return true;
             }
         }
         if ((nbr == attach_node) &&
