@@ -94,7 +94,9 @@ void wsf_msg_queue_flush(wsf_request_queue_t *req_queue)
             if (session.response) {
                 os_free(session.response);
             }
+            dlist_del(&node->list_head);
             os_free(node);
+            req_queue->length --;
         }
     }
     os_mutex_unlock(req_queue->mutex);
