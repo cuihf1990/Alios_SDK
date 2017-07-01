@@ -128,7 +128,7 @@ static void wsf_del_first_msg(wsf_request_queue_t *req_queue)
     os_mutex_lock(req_queue->mutex);
 
     node = req_queue->list.prev;
-    if (!node) {
+    if (dlist_empty(&req_queue->list)) {
         os_mutex_unlock(req_queue->mutex);
         return;
     }
