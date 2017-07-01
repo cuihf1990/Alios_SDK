@@ -314,10 +314,10 @@ int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
             break;
         } else if (ret == 0) {
             /* EOF */
-            break;
+            return 0;
         } else {
             if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
-                break;
+                return total_len > 0 ? total_len : -1;
             }
 
             if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {

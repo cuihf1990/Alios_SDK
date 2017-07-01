@@ -331,7 +331,7 @@ int platform_tcp_recv(_IN_ void *handle, _OUT_ char *buffer,
 
     bytes_received = recv((long)handle, buffer, length, 0);
 
-    return bytes_received > 0 ? bytes_received : -1;
+    return bytes_received >= 0 ? bytes_received : -1;
 }
 
 
