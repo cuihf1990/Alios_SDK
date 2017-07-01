@@ -99,14 +99,14 @@ static int alink_phase;
 
 static void get_protocol_buff(void)
 {
-    LOGE("accs", "------->>> lock <<<------- \n");
+    LOGD("accs", "------->>> lock <<<------- \n");
     os_semaphore_wait(link_buff_sem, OS_WAIT_INFINITE);
     memset(uplink_buff, 0, ALINK_BUF_SIZE);
 }
 
 static void put_protocol_buff(void)
 {
-    LOGE("accs", "------->>> unlock <<<--------\n");
+    LOGD("accs", "------->>> unlock <<<--------\n");
     os_semaphore_post(link_buff_sem);
 }
 
