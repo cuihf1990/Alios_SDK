@@ -316,15 +316,16 @@ static void process_msg_request(wsf_msg_t *msg, int length)
         return;
     }
 
+    /* attention: +1 for json parser need to append '\0' */
     node = (struct request_msg_node *)os_malloc(sizeof(struct request_msg_node) +
-                                                length);
+                                                length + 1);
     OS_CHECK_MALLOC(node);
 
     memcpy(node->msg, (uint8_t *)msg, length);
     node->length = length;
     os_mutex_lock(g_req_mutex);
     was_empty = dlist_empty(&g_list);
-    dlist_add(&node->list_head, &g_list);
+    dlist_add_tail(&node->list_head, &g_list);
     total_req_nodes ++;
     os_mutex_unlock(g_req_mutex);
 
@@ -367,12 +368,11 @@ void deinit_req_glist(void)
 
 void request_msg_handle(void *arg)
 {
-    struct request_msg_node *node, *n;
-    dlist_t *tmp = NULL;
-    LOGI(MODULE_NAME, "request_msg_handle");
+    struct request_msg_node *node;
+    LOGD(MODULE_NAME, "request_msg_handle");
     os_mutex_lock(g_req_mutex);
-    dlist_for_each_entry_safe(&g_list, tmp, node, struct request_msg_node,
-                              list_head) {
+    while (!dlist_empty(&g_list)) {
+        node = dlist_first_entry(&g_list, struct request_msg_node, list_head);
         total_req_nodes --;
         dlist_del(&(node->list_head));
         os_mutex_unlock(g_req_mutex);
@@ -380,7 +380,6 @@ void request_msg_handle(void *arg)
         __process_msg_request((wsf_msg_t *)node->msg, node->length);
 
         os_mutex_lock(g_req_mutex);
-
         os_free(node);
     }
     os_mutex_unlock(g_req_mutex);
@@ -409,7 +408,7 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
         if (param_count > 0) {
             uint32_t param1_len = os_get_unaligned_be32(++pp);
             pp += 4; //param1 value
-            LOGW(MODULE_NAME, "start push cmd to device, %d\n", time(NULL));
+            LOGD(MODULE_NAME, "start push cmd to device, %d\n", time(NULL));
             callback_rsp = push_callback(pp, param1_len);
         } else {
             callback_rsp = push_callback(NULL, 0);
@@ -438,9 +437,9 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
     memcpy(&msg_len, rsp->header.msg_length, sizeof(uint32_t));
     wsf_msg_header_encode((char *)rsp, msg_len);
 
-    LOGW(MODULE_NAME, "before send response to service");
+    LOGD(MODULE_NAME, "before send response to service");
     wsf_send_msg(wsf_conn, (const char *)rsp, msg_len);
-    LOGW(MODULE_NAME, "send response to service");
+    LOGD(MODULE_NAME, "send response to service");
 
     if (callback_rsp) {
         wsf_response_destroy(callback_rsp, 0);
@@ -614,7 +613,7 @@ static wsf_request_node_t *__send_msg(wsf_msg_t *req, wsf_async_cb_t cb,
         wsf_code ret = wsf_send_msg(wsf_conn,
                                     (const char *)req, msg_length);
         if (ret == WSF_SUCCESS) {
-            LOGW(MODULE_NAME, "wsf msg send succeed.id=%d", msg_id);
+            LOGD(MODULE_NAME, "wsf msg send succeed.id=%d", msg_id);
             return node;
         }
 
