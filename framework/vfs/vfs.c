@@ -16,6 +16,7 @@
 
 #include <yos/kernel.h>
 #include <yos/framework.h>
+#include <yos/network.h>
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
@@ -27,9 +28,6 @@ static uint8_t    g_vfs_init;
 yos_mutex_t g_vfs_mutex;
 
 #ifdef IO_NEED_TRAP
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 static int trap_open(const char *path, int flags)
 {
 #ifdef WITH_LWIP
