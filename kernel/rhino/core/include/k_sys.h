@@ -32,20 +32,16 @@ extern cpu_stack_t *g_intrpt_stack_top;
 #endif /* YUNOS_CONFIG_INTRPT_STACK_OVF_CHECK */
 
 /**
- * @deprecated
+ * This function will init yunos
+ * @return the operation status, YUNOS_SUCCESS is OK, others is error
  */
 kstat_t       yunos_init(void);
 
 /**
- * @deprecated
+ * This function will start yunos
+ * @return the operation status, YUNOS_SUCCESS is OK, others is error
  */
 kstat_t       yunos_start(void);
-
-/**
- * This function will start rhino-kernel
- * @return the operation status, if failed, return state.
- */
-kstat_t       kernel_start(void);
 
 /**
  * This function will enter interrupt
