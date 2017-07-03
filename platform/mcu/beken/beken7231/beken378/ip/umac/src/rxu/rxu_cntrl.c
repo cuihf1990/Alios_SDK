@@ -590,9 +590,91 @@ static void rxu_cntrl_get_da_sa(struct mac_hdr_long *machdr_ptr)
 }
 
 #if 1
+uint32_t rxu_mtr_is_mulicast_brdcast(struct mac_hdr *machdr)
+{
+	uint8_t *addr = 0;
+	uint32_t ds_status;
+	uint32_t cast_flag = 0;
+	uint64_t mac_address = 0;
+
+	ds_status = (machdr->fctl >> 8) & 0x03; 
+	switch(ds_status)
+	{
+		case 0:/*ToDS FromDS:0 0 ibss*/
+			break;
+			
+		case 1:/*ToDS FromDS:1 0 infra*/
+			addr = (uint8_t *)&machdr->addr3;
+			break;
+			
+		case 2:/*ToDS FromDS:0 1 infra*/
+			addr = (uint8_t *)&machdr->addr1;
+			break;
+			
+		case 3:/*ToDS FromDS:1 1 wds*/
+		default:
+			break;
+	}
+
+	if(addr)
+	{
+		cast_flag = (MAC_ADDR_IS_BSCT(addr) || MAC_ADDR_IS_MULTI(addr));
+	}
+	
+	return cast_flag;
+}
+
+uint32_t rxu_mtr_is_mulicast(struct mac_hdr *machdr)
+{
+	uint8_t *addr = 0;
+	uint32_t ds_status;
+	uint32_t multi_flag = 0;
+	uint64_t mac_address = 0;
+
+	ds_status = (machdr->fctl >> 8) & 0x03;	
+	switch(ds_status)
+	{
+		case 0:/*ToDS FromDS:0 0 ibss*/
+			break;
+			
+		case 1:/*ToDS FromDS:1 0 infra*/
+			addr = (uint8_t *)&machdr->addr3;
+			break;
+			
+		case 2:/*ToDS FromDS:0 1 infra*/
+			addr = (uint8_t *)&machdr->addr1;
+			break;
+			
+		case 3:/*ToDS FromDS:1 1 wds*/
+		default:
+			break;
+	}
+
+	if(addr)
+	{
+		multi_flag = MAC_ADDR_IS_MULTI(addr);
+	}
+	
+	return multi_flag;
+}
+
+uint32_t rxu_mtr_is_data_or_qosdata(struct mac_hdr *machdr)
+{
+	uint16_t frame_cntrl = machdr->fctl;
+
+	if((MAC_FCTRL_DATA_T == (frame_cntrl & MAC_FCTRL_TYPE_MASK))
+		&& ((0x0000 == ((frame_cntrl & MAC_FCTRL_SUBT_MASK) >> 4))
+			|| (frame_cntrl & 0x80)))
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 uint32_t rxu_mtr_record_count(struct mac_hdr *machdr)
 {
-	hal_monitor_record_count(machdr);
+	return hal_monitor_record_count(machdr);
 }
 
 uint32_t rxu_cntrl_get_group_cipher_type(uint32_t cipher_type)
@@ -689,10 +771,10 @@ uint32_t rxu_cntrl_get_cipher_type_using_beacon(uint8_t *p_frame,
 	uint32_t cipher_type = CIPHER_OPEN_SYSTEM;
 	uint32_t group_cipher_type;
 
-	wpa_ie = (uint8_t *)rxu_cntrl_get_vendor_ie(p_frame, len, WPA_IE_VENDOR_TYPE);
+	wpa_ie = (uint8_t *)rxu_cntrl_get_vendor_ie((uint8_t *)(p_frame + MAC_BEACON_VARIABLE_PART_OFT), len, WPA_IE_VENDOR_TYPE);
 	wpa_ie_len = wpa_ie ? wpa_ie[1] : 0;
 
-	rsn_ie = (uint8_t *)rxu_cntrl_get_ie(p_frame, len, WLAN_EID_RSN);
+	rsn_ie = (uint8_t *)rxu_cntrl_get_ie((uint8_t *)(p_frame + MAC_BEACON_VARIABLE_PART_OFT), len, WLAN_EID_RSN);
 	rsn_ie_len = rsn_ie ? rsn_ie[1] : 0;
 
 	wpa = (wpa_ie_len > 0) || (rsn_ie_len > 0);
@@ -1988,19 +2070,15 @@ static bool rxu_mgt_route(uint16_t framectrl,
     struct vif_info_tag *vif_entry = NULL;
     uint8_t mode = VIF_UNKNOWN;
 
-    #if CFG_WIFI_AP_MODE
-	#if CFG_MODE_SWITCH
 	if(g_wlan_general_param->role == CONFIG_ROLE_AP)
-	#endif
+	{
     upload = false;
-    #endif
+	}
 
-	#if CFG_WIFI_STATION_MODE
-	#if CFG_MODE_SWITCH
 	if(g_wlan_general_param->role == CONFIG_ROLE_STA)
-	#endif
+	{
     upload = true;
-    #endif
+	}
 
     // Get the VIF entry
     if (*vif_idx != INVALID_VIF_IDX)
@@ -2012,19 +2090,17 @@ static bool rxu_mgt_route(uint16_t framectrl,
     // Route the message depending on its type and subtype
     switch (framectrl & MAC_FCTRL_TYPESUBTYPE_MASK)
     {                  
-        #if CFG_WIFI_STATION_MODE
         // Message arrive to STA in ESS only
         case MAC_FCTRL_ASSOCRSP:
         case MAC_FCTRL_REASSOCRSP:
-			#if CFG_MODE_SWITCH
 			if(g_wlan_general_param->role == CONFIG_ROLE_STA)
-			#endif
+			{
             if (mode == VIF_STA)
             {
                 *task_id = TASK_SM;
             }
+			}
             break;
-        #endif //CFG_WIFI_STATION_MODE
 
         case MAC_FCTRL_PROBERSP:
             // Check if the ProbeRsp was for us
@@ -2153,7 +2229,7 @@ int rxu_mgt_monitor(uint16_t framectrl,
 	{
 		if(length < 36)
 		{
-			return 1;
+			goto mgt_exit;
 		}
 		
 		rxu_cntrl_monitor_patch_using_beacon((uint8_t *)payload, length);
@@ -2166,6 +2242,7 @@ int rxu_mgt_monitor(uint16_t framectrl,
 		upload = 1;
 	}
 
+mgt_exit:
 	return upload;
 }
 
@@ -2523,15 +2600,25 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 		{			
         	if(bk_wlan_is_monitor_mode()) 
         	{        		
-        		if((MAC_FCTRL_DATA_T == (frame_cntl & MAC_FCTRL_TYPE_MASK))
-					&& (!(statinfo & RX_HD_GA_FRAME)))
-        		{   //(!(statinfo & RX_HD_RXVEC2V))
-        			//break;
+        		if((MAC_FCTRL_CTRL_T == (frame_cntl & MAC_FCTRL_TYPE_MASK))
+					|| (MAC_FCTRL_RSV_T == (frame_cntl & MAC_FCTRL_TYPE_MASK)))
+        		{
+        			break;
+        		}
+				
+        		if(MAC_FCTRL_DATA_T == (frame_cntl & MAC_FCTRL_TYPE_MASK))
+        		{  
+					if(!(rxu_mtr_is_mulicast_brdcast((struct mac_hdr *)frame)
+					   && rxu_mtr_is_data_or_qosdata((struct mac_hdr *)frame)))
+					{
+						break;
+					}
         		}
 
 				rxu_mtr_record_count((struct mac_hdr *)frame);
         	}
 		}		
+		
         dma_hdrdesc->flags = 0;
         rx_status->sta_idx = INVALID_STA_IDX;
         rx_status->vif_idx = INVALID_VIF_IDX;

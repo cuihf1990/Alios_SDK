@@ -163,6 +163,80 @@ int rxl_data_monitor(uint8_t *payload,
 	return monitor_flag;
 }
 
+uint32_t rxu_cntrl_patch_get_compensation_len(
+	uint8_t *p_frame)
+{
+    struct mac_hdr *machdr_ptr = (struct mac_hdr *)p_frame;
+    struct mac_hdr_qos *machdr_qos_ptr = (struct mac_hdr_qos *)p_frame;
+	uint8_t *data = (uint8_t *)&machdr_ptr[1];
+	uint8_t key_id, ver;
+	uint8_t qos_flag = 0;
+	uint8_t *addr, *ra_addr;
+	uint8_t *encrypt_param;
+	uint32_t comp_len = 0;
+	
+	if(!bk_wlan_is_monitor_mode())
+	{
+		goto comp_exit;
+	}
+
+	ra_addr = (uint8_t *)&machdr_ptr->addr1;
+	if(!(ra_addr[0] & 0x01))
+	{
+		/* hardware issue */
+		goto comp_exit;
+	}
+	
+	if((0x02 == ((machdr_ptr->fctl >> 2) & 0x03))
+		&& (machdr_ptr->fctl & 0x80))
+	{
+		qos_flag = 1;
+	}
+	
+	if(0 == (machdr_ptr->fctl & 0x4000))
+	{
+		/*.1.. .... = Protected flag: Data is protected;
+		  .0.. .... = open system;*/ 
+		return comp_len;
+	}
+	
+	encrypt_param = (uint8_t *)&machdr_ptr[1];
+	if(qos_flag)
+	{
+		encrypt_param = (uint8_t *)&machdr_qos_ptr[1];
+		data = (uint8_t *)&machdr_qos_ptr[1];
+	}
+	key_id = (data[3] >> 6) & 0x03;
+	ver = (data[3] >> 5) & 0x01;
+
+	if(0 == ver)
+	{
+		/*cipherType: CTYPERAM_WEP;*/
+		comp_len = 4;
+	}
+	else
+	{		
+		if(encrypt_param[1] == ((encrypt_param[0] | 0x20) & 0x7f))
+		{
+			/*cipherType: CTYPERAM_TKIP;*/
+			comp_len = 4;
+		}
+		if(0 == encrypt_param[2])
+		{
+			/*cipherType: CTYPERAM_CCMP;*/
+			comp_len = 8;
+		}
+
+		if((0 == encrypt_param[2])
+			&& (encrypt_param[1] == ((encrypt_param[0] | 0x20) & 0x7f)))
+		{
+		}
+	}
+
+comp_exit:	
+	return comp_len;
+}
+
 void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 {    
     struct rx_cntrl_rx_status *rx_status = &rxu_cntrl_env.rx_status;
@@ -306,11 +380,9 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 	{	 
 		if(du_ptr)
 		{
-			uint32_t statinfo;
-			
 			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
-			
-			if(du_len >= 36)
+			du_len += rxu_cntrl_patch_get_compensation_len(du_ptr);
+			if(du_len >= 42)
 			{
 				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
 			}

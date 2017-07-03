@@ -5441,6 +5441,7 @@ void wpas_auth_failed(struct wpa_supplicant *wpa_s, char *reason)
 	}
 #endif /* CONFIG_P2P */
 
+#if 0
 	if (ssid->auth_failures > 50)
 		dur = 300;
 	else if (ssid->auth_failures > 10)
@@ -5456,9 +5457,13 @@ void wpas_auth_failed(struct wpa_supplicant *wpa_s, char *reason)
 	else
 		dur = 10;
 
+
 	if (ssid->auth_failures > 1 &&
 	    wpa_key_mgmt_wpa_ieee8021x(ssid->key_mgmt))
 		dur += os_random() % (ssid->auth_failures * 10);
+#else
+		dur = 1;// yhb changed, always delay 1 second.
+#endif
 
 	os_get_reltime(&now);
 	if (now.sec + dur <= ssid->disabled_until.sec)
