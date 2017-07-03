@@ -93,7 +93,7 @@ void helper_api_test(void);
 void activate_button_pressed(void *arg);
 
 static void cloud_connected(int cb_type, const char *json_buffer) {
-    do_report();
+    //do_report();
 }
 
 static void cloud_disconnected(int cb_type, const char *json_buffer) { printf("alink cloud disconnected!\n"); }
@@ -352,6 +352,17 @@ void activate_button_pressed(void* arg)
     alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
 }
 
+static void handle_reset_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    alink_factory_reset();    
+}
+
+static struct cli_command resetcmd = {
+    .name = "reset",
+    .help = "factory reset",
+    .function = handle_reset_cmd
+};
+
 static void handle_active_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     activate_button_pressed(NULL);
@@ -399,6 +410,7 @@ static struct cli_command modelcmd = {
     .help = "model light/gateway",
     .function = handle_model_cmd
 };
+
 
 static void handle_uuid_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
@@ -536,6 +548,7 @@ static void alink_connect_event(input_event_t *event, void *priv_data)
 
     if (event->code == CODE_SYS_ON_ALINK_ONLINE ) {
         yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+        do_report();
         return;
     }
 }
@@ -638,6 +651,7 @@ int application_start(int argc, char *argv[])
     cli_register_command(&ncmd);
     cli_register_command(&uuidcmd);
     cli_register_command(&modelcmd);
+    cli_register_command(&resetcmd);
 
 #ifdef CONFIG_YOS_DDA
     dda_enable(atoi(mesh_num));
