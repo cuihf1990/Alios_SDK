@@ -22,6 +22,11 @@ endif
 
 endif
 
+ifeq ($(LWIP),1)
+$(NAME)_COMPONENTS  += protocols.net
+no_with_lwip := 0
+endif
+
 $(NAME)_INCLUDES := ../../framework/protocol/alink/system/ ../../framework/protocol/alink/json/
 $(NAME)_INCLUDES += ../../kernel/modules/kv/include
 $(NAME)_INCLUDES += ../../framework/gateway/
