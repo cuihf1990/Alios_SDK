@@ -118,20 +118,6 @@ kstat_t yunos_start(void)
     return rhino_start();
 }
 
-kstat_t kernel_start(void)
-{
-    kstat_t ret;
-
-    ret = rhino_init();
-    if (ret != YUNOS_SUCCESS) {
-        return ret;
-    }
-
-    soc_apps_entry();
-
-    return rhino_start();
-}
-
 #if (YUNOS_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
 #if (YUNOS_CONFIG_CPU_STACK_DOWN > 0)
 void yunos_intrpt_stack_ovf_check(void)

@@ -31,10 +31,6 @@ size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
 k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start,SYS_DYN_POOL_SIZE}};
 #endif
 
-void soc_apps_entry(void)
-{
-}
-
 void soc_err_proc(kstat_t err)
 {
     /* assert */
