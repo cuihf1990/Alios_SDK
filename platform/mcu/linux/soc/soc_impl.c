@@ -26,14 +26,14 @@ hr_timer_t soc_hr_hw_cnt_get(void)
 #endif
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#ifdef GCOV_ENABLE
+#define       SYS_DYN_POOL_SIZE (1024 *1024)
+#else
 #define       SYS_DYN_POOL_SIZE (288 *1024)
+#endif /* GCOV_ENABLE */
 size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
 k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start,SYS_DYN_POOL_SIZE}};
 #endif
-
-void soc_apps_entry(void)
-{
-}
 
 void soc_err_proc(kstat_t err)
 {

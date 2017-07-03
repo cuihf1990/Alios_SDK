@@ -226,7 +226,7 @@ static int  __cb_wsf_recv(int fd, void *arg)
             if (!len) {
                 LOGE(MODULE_NAME, "wsf recv buffer full!");
             } else {
-                LOGE(MODULE_NAME, "closing socket for tcp/ssl read error.");
+                LOGE(MODULE_NAME, "closing socket for tcp/ssl read error %d.", errno);
             }
             return 0;
         } else {
@@ -257,7 +257,7 @@ static void __cb_wsf_timeout(void *arg)
         wsf_msg_header_encode((char *)&hb_req, len);
 
         wsf_send_msg(wsf_conn, (const char *)&hb_req, len);
-        LOGW(MODULE_NAME, "send heartbeat");
+        LOGI(MODULE_NAME, "send heartbeat");
         wsf_dec_heartbeat_counter(wsf_conn);
     }
 

@@ -63,7 +63,7 @@ static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
         }else{
             g_wsf_cb.sock = (long)wsf_conn->tcp;
             yos_poll_read_fd(g_wsf_cb.sock, cb_recv,&g_wsf_cb);
-            LOGW(MODULE_NAME, "add new tcp socket fd to poll list.\n");
+            LOGI(MODULE_NAME, "add new tcp socket fd to poll list.\n");
         }
     }
 

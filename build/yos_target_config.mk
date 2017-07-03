@@ -131,6 +131,12 @@ endef
 # Separate the build string into components
 COMPONENTS := $(subst @, ,$(MAKECMDGOALS))
 
+ifneq (,$(filter mk3060,$(COMPONENTS)))
+ifneq (,$(filter bootloader,$(COMPONENTS)))
+$(error mk3060 doesn't support bootlaoder option)
+endif
+endif
+
 BUILD_TYPE_LIST := debug \
                    release_log \
                    release

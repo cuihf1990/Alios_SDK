@@ -15,6 +15,7 @@ $(NAME)_COMPONENTS += mbedtls
 endif
 
 ifeq ($(gcov),1)
+GLOBAL_DEFINES += GCOV_ENABLE
 GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
 GLOBAL_LDFLAGS += --coverage
 endif

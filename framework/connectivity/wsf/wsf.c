@@ -103,7 +103,7 @@ static void *__analy_resp(wsf_response_t *wsf_rsp, __wsf_send_cb_t *cb)
         LOGE(MODULE_NAME, "wsf_invoke timeout!!!");
     }
 
-    LOG("conn_rsp cb done: %p\n", _cb->cb);
+    wsf_debug(MODULE_NAME, "conn_rsp cb done: %p", _cb->cb);
     if (_cb->cb) {
         _cb->cb(conn_rsp, _cb->arg);
         os_free(_cb);

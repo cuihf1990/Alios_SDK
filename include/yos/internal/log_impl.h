@@ -98,7 +98,7 @@ int csp_printf(const char *fmt, ...);
 #undef LOG
 
 #define LOG_IMPL(fmt, ...) \
-            log_print(1, "YoC", COL_DEF, "V", fmt, ##__VA_ARGS__)
+            log_print(1, "YOS", COL_DEF, "V", fmt, ##__VA_ARGS__)
 
 #ifdef NDEBUG
 #define CONFIG_LOGMACRO_SILENT

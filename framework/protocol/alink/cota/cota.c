@@ -258,7 +258,7 @@ static void collect_stats(void *work)
         config_set_stats_flag(0);
         sm_get_service("accs")->put((void *)&data, sizeof(data));
     } else {
-        LOGW(MODULE_NAME_COTA, "save stats data to flash");
+        LOGI(MODULE_NAME_COTA, "save stats data to flash");
         device_statisticsdata_save(devstats, strlen(devstats));
         config_set_stats_flag(1);
     }

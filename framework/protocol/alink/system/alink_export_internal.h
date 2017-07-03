@@ -123,7 +123,7 @@
 #define log_info(FMT, args...)   LOGI(MODULE_NAME, FMT, ##args)
 #define log_dump(FMT, args...)   LOGE(MODULE_NAME, FMT, ##args)
 #define log_debug(FMT, args...)  LOGD(MODULE_NAME, FMT, ##args)
-#define log_trace(FMT, args...)  LOGW(MODULE_NAME, FMT, ##args)
+#define log_trace(FMT, args...)  LOGD(MODULE_NAME, FMT, ##args)
 #define log_warn(FMT, args...)   LOGW(MODULE_NAME, FMT, ##args)
 
 /* Note: must consistent with alink_export_xxx.h */

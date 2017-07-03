@@ -1106,7 +1106,7 @@ int devmgr_init()
     devmgr_router_init();
 #endif
 
-    LOGW(MODULE_NAME_DEVMGR, "devmgr init success");
+    LOGD(MODULE_NAME_DEVMGR, "devmgr init success");
     return ret;
 }
 
