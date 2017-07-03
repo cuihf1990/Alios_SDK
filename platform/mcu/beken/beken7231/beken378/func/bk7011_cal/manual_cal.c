@@ -170,7 +170,7 @@ int manual_cal_get_txpwr(UINT32 rate, UINT32 channel, UINT32 *mod, UINT32 *pa)
 
     if((!gtxpwr_tab_b) && (!gtxpwr_tab_g))
     {
-        //MCAL_WARN("txpwr tab is null\r\n");
+        MCAL_WARN("txpwr tab is null\r\n");
         return 0;
     }
 
@@ -284,8 +284,9 @@ static void manual_cal_do_fitting(TXPWR_PTR dst, TXPWR_PTR srclow, TXPWR_PTR src
     UINT8 mod = 0;
     UINT8 pa = 0;
 
-    if((srclow->valid == TXPWR_ELEM_UNUSED) || 
-       (srchigh->valid == TXPWR_ELEM_UNUSED))
+    if((dst->valid == TXPWR_ELEM_INUSED)
+            || (srclow->valid == TXPWR_ELEM_UNUSED)
+            || (srchigh->valid == TXPWR_ELEM_UNUSED))
         return;
 
     mod = (srclow->mod + srchigh->mod) / 2;

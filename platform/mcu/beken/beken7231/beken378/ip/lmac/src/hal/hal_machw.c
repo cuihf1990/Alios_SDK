@@ -103,8 +103,7 @@ const uint8_t rxv2macrate[] = {
 #endif
 
 static uint32_t g_entry_id = 0;
-uint64_t *g_monitor_mac_addr = 0;
-uint32_t *g_monitor_counts = 0;
+MONITOR_PTH_T *g_monitor_pth = 0;
 
 /*
  * FUNCTION DEFINITIONS
@@ -373,46 +372,40 @@ uint8_t hal_machw_search_addr(struct mac_addr *addr)
 
 void hal_init_monitor_buf(void)
 {
-	uint8_t *buf;
 	uint32_t size;
 	
-	if(g_monitor_mac_addr)
+	if(g_monitor_pth)
 	{
 		return;
 	}
 
-	size = (sizeof(uint64_t) + sizeof(uint32_t))
+	size = sizeof(MONITOR_PTH_T)
 				* (KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1);
-	buf = (uint8_t *)os_zalloc(size);
-	ASSERT(buf);
-
-	g_monitor_mac_addr = (uint64_t *)buf;
-	g_monitor_counts = (uint32_t *)((uint32_t)buf + sizeof(uint64_t)
-							* (KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1));
+	g_monitor_pth = (MONITOR_PTH_T *)os_zalloc(size);
+	ASSERT(g_monitor_pth);
 }
 
 void hal_uninit_monitor_buf(void)
 {
-	if(g_monitor_mac_addr)
+	if(g_monitor_pth)
 	{
-		os_free(g_monitor_mac_addr);
+		os_free(g_monitor_pth);
 		
-		g_monitor_mac_addr = 0;
-		g_monitor_counts = 0;
+		g_monitor_pth = 0;
 	}
 }
 
 uint32_t hal_monitor_get_id(uint64_t address)
 {
-	uint64_t *mac_address;
+	MONITOR_PTH_T *l_pth;
 	uint32_t addr_count, i;
 	uint32_t index = 0;
 
-	mac_address = g_monitor_mac_addr;
+	l_pth = g_monitor_pth;
 	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
 	for(i = 0; i < addr_count; i ++)
 	{
-		if(address == mac_address[i])
+		if(address == l_pth[i].mac_addr)
 		{
 			index = i + 1;
 			break;
@@ -422,7 +415,7 @@ uint32_t hal_monitor_get_id(uint64_t address)
 	return index;
 }
 
-uint32_t hal_monitor_record_count(struct mac_hdr *machdr)
+uint32_t hal_monitor_get_pth_id(struct mac_hdr *machdr)
 {
 	uint8_t *addr = 0;
 	uint32_t index;
@@ -456,76 +449,97 @@ uint32_t hal_monitor_record_count(struct mac_hdr *machdr)
 	os_memcpy(&mac_address, addr, sizeof(machdr->addr2));
 
 	index = hal_monitor_get_id(mac_address);
+	
+	return index;
+}
+
+uint32_t hal_monitor_record_count(struct mac_hdr *machdr)
+{
+	uint32_t index;
+
+	index = hal_monitor_get_pth_id(machdr);
 	if(index)
 	{
-		g_monitor_counts[index - 1] += 1; 
+		g_monitor_pth[index - 1].count += 1; 
 	}
-	else
-	{
-	}
+	
+	return g_monitor_pth[index - 1].count;
+}
 
-	return g_monitor_counts[index - 1];
+uint32_t hal_monitor_get_iv_len(struct mac_hdr *machdr)
+{
+	uint32_t index;
+	uint32_t len = 0;
+	uint32_t cipher_type;
+
+	index = hal_monitor_get_pth_id(machdr);
+	if(index)
+	{
+		cipher_type = g_monitor_pth[index - 1].group_cipher_type; 
+		if((CTYPERAM_WEP == cipher_type)
+			|| (CTYPERAM_TKIP == cipher_type))
+	{
+			len = 4;
+	}
+		else if(CTYPERAM_CCMP == cipher_type)
+		{
+			len = 8;
+		}
+	}
+	return len;
 }
 
 uint32_t hal_monitor_printf_buffering_mac_address(void)
 {
-	uint64_t *mac_address;
+	MONITOR_PTH_T *l_pth;
 	uint32_t *cnt_of_ap;
 	uint32_t addr_count, i;
 
-	if(0 == g_monitor_mac_addr)
+	if(0 == g_monitor_pth)
 	{
 		return MONITOR_FAILURE;
 	}
 
-	mac_address = g_monitor_mac_addr;
-	cnt_of_ap = g_monitor_counts;
+	l_pth = g_monitor_pth;
 	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
-	for(i = 0; i < addr_count; i ++)
-	{
-		os_printf("macAddr:%d:%llx:%d\r\n", i, mac_address[i], cnt_of_ap[i]);
-	}
 	
 	return MONITOR_SUCCESS;
 }
 
-uint32_t hal_monitor_buffer_mac_address(uint64_t address,
-	uint32_t index)
+uint32_t hal_monitor_record_pth_info(uint64_t address,
+	uint32_t index, uint8_t grp_cipher_type)
 {
-	uint64_t *mac_address;
-	uint32_t *count_of_one_ap;
+	MONITOR_PTH_T *local_pth;
 	
-	if(0 == g_monitor_mac_addr)
+	if(0 == g_monitor_pth)
 	{
 		return MONITOR_FAILURE;
 	}
 	
-	mac_address = g_monitor_mac_addr;
-	mac_address[index] = address;
-	
-	count_of_one_ap = g_monitor_counts;
-	count_of_one_ap[index] = 1;	
-
+	local_pth = g_monitor_pth;
+	local_pth[index].mac_addr = address;
+	local_pth[index].count = 1;
+	local_pth[index].group_cipher_type = grp_cipher_type;
 
 	return MONITOR_SUCCESS;
 }
 
 uint32_t hal_monitor_is_including_mac_address(uint64_t address)
 {
-	uint64_t *mac_address;
 	uint32_t addr_count, i;
 	uint32_t hit_flag = 0;
+	MONITOR_PTH_T *local_pth;
 
-	if(0 == g_monitor_mac_addr)
+	if(0 == g_monitor_pth)
 	{
 		goto check_out;
 	}
 
-	mac_address = g_monitor_mac_addr;
+	local_pth = g_monitor_pth;
 	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
 	for(i = 0; i < addr_count; i ++)
 	{
-		if(address == mac_address[i])
+		if(address == local_pth[i].mac_addr)
 		{
 			hit_flag = 1;
 			break;
@@ -569,22 +583,22 @@ uint16_t hal_get_secret_key_entry_id(void)
 {	
 	uint16_t entry_id = 0;
 	uint32_t i, num, minv;
-	uint32_t *count_array;
+	MONITOR_PTH_T *local_pth;
 
-	count_array = g_monitor_counts;
-	minv = count_array[0];
+	local_pth = g_monitor_pth;
+	minv = local_pth[0].count;
 	num = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
 
 	for(i = 0; i < num; i ++)
 	{
-		if(0 == count_array[i])
+		if(0 == local_pth[i].count)
 		{
 			entry_id = i;
 			break;
 	}
-		else if(count_array[i] < minv)
+		else if(local_pth[i].count < minv)
 	{
-			minv = count_array[i];
+			minv = local_pth[i].count;
 			entry_id = i;
 		}
 	}	
@@ -603,7 +617,7 @@ void hal_update_secret_key(uint64_t macAddress,
 	key_index = hal_get_secret_key_entry_id();
 	entry_id = key_index + KEY_ENTRY_MIN_ID;
 
-	hal_monitor_buffer_mac_address(macAddress, key_index);
+	hal_monitor_record_pth_info(macAddress, key_index, cipherType);
 
 	hal_program_cipher_key(1,	          // useDefaultKey
 					pKey,
@@ -724,7 +738,7 @@ void hal_machw_enter_monitor_mode(void)
                                         | NXMAC_ACCEPT_CFWO_DATA_BIT));
     
 	// set default mode of operation
-    nxmac_abgn_mode_setf(MODE_802_11N_2_4);// MODE_802_11N_5
+    nxmac_abgn_mode_setf(MODE_802_11N_5);
 
 	hal_init_cipher_keys();
 }

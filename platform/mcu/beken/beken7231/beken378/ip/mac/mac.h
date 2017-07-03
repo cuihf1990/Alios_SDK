@@ -153,6 +153,11 @@ enum
 			 (*(((uint8_t*)(addr1_ptr)) + 4) == 0xFF) &&		  \
 			 (*(((uint8_t*)(addr1_ptr)) + 5) == 0xFF))
 
+#define MAC_ADDR_IS_MULTI(addr1_ptr)                        \
+				((*(((uint8_t*)(addr1_ptr)) + 0) == 0x01) &&		  \
+				 (*(((uint8_t*)(addr1_ptr)) + 1) == 0x00) &&		  \
+				 (*(((uint8_t*)(addr1_ptr)) + 2) == 0x5E))
+
 /**
  ****************************************************************************************
  * Compare two MAC addresses whose alignment is not known.

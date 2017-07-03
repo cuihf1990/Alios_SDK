@@ -172,6 +172,13 @@ enum
     HAL_KE_TIMER_BIT = CO_BIT(HAL_KE_TIMER),
 };
 
+typedef struct
+{
+	uint32_t  count;
+	uint32_t  group_cipher_type;
+	uint64_t  mac_addr;
+}MONITOR_PTH_T;
+
 /*
  * FUNCTION DECLARATIONS
  ****************************************************************************************

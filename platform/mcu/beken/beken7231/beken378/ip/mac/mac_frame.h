@@ -111,6 +111,7 @@
 #define MAC_FCTRL_MGT_T                 0x0000
 #define MAC_FCTRL_CTRL_T                0x0004
 #define MAC_FCTRL_DATA_T                0x0008
+#define MAC_FCTRL_RSV_T                 0x000c
 
 #define MAC_FCTRL_SUBT_MASK             0x00F0
 /// Management SubType
