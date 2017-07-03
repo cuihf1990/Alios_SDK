@@ -68,78 +68,19 @@ proc write_reg { addr val } {
     array2mem memar 32 $addr 1
 }
 
-proc flash_set_line_mode_2 { } {
-    #UINT32 value;
-    #value = REG_READ(REG_FLASH_CONF);
-    set value [read_reg $::REG_FLASH_CONF]
-    #value &= ~(MODEL_SEL_MASK << MODEL_SEL_POSI);
-    set value [expr $value & (~($::MODEL_SEL_MASK << $::MODEL_SEL_POSI))]
-    #REG_WRITE(REG_FLASH_CONF, value);
-    write_reg $::REG_FLASH_CONF $value
-
-    #value |= ((MODE_DUAL & MODEL_SEL_MASK) << MODEL_SEL_POSI);
-    set value [expr $value | (($::MODE_DUAL & $::MODEL_SEL_MASK) << $::MODEL_SEL_POSI)]
-    #REG_WRITE(REG_FLASH_CONF, value);
-    write_reg $::REG_FLASH_CONF $value
-}
-
-proc flash_set_clk { conf } {
-    #value = REG_READ(REG_FLASH_CONF);
-    set value [read_reg $::REG_FLASH_CONF]
-    #value &= ~(FLASH_CLK_CONF_MASK << FLASH_CLK_CONF_POSI);
-    set value [expr $value & (~($::FLASH_CLK_CONF_MASK << $::FLASH_CLK_CONF_POSI))]
-    #value |= (clk_conf << FLASH_CLK_CONF_POSI);
-    set value [expr $value | ($conf << $::FLASH_CLK_CONF_POSI)]
-    #REG_WRITE(REG_FLASH_CONF, value);    
-    write_reg $::REG_FLASH_CONF $value
-}
-
-proc flash_write_enable { } {
-    set value [read_reg $::REG_FLASH_CONF]
-    set value [expr $value & (~$::CRC_EN)] 
-    write_reg $::REG_FLASH_CONF $value    
-
-    set value [read_reg $::REG_FLASH_CONF]
-    set value [expr $value | $::FWREN_FLASH_CPU] 
-    write_reg $::REG_FLASH_CONF $value  
-
-    set value [read_reg $::REG_FLASH_OPERATE_SW]
-    set value [expr $value & (~($::OP_TYPE_SW_MASK<<$::OP_TYPE_SW_POSI))] 
-    set value [expr $value | (0x07<<$::OP_TYPE_SW_POSI)|$::OP_SW|$::WP_VALUE] 
-    write_reg $::REG_FLASH_OPERATE_SW $value  
-    while { [expr [read_reg $::REG_FLASH_OPERATE_SW] & $::BUSY_SW] } { }
-}
-
 proc flash_init { } {
-    #while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
     while { [expr [read_reg $::REG_FLASH_OPERATE_SW] & $::BUSY_SW] } { }
-    #flash_set_line_mode(2);
-    flash_set_line_mode_2
-    #flash_set_clk(5);  // 60M
-    flash_set_clk 5
 
-    flash_write_enable
+    write_reg $::REG_FLASH_CONF 0x00000215
 }
 
 proc flash_erase_sector { addr } {
-    #UINT32 value;
-    #while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
     while { [expr [read_reg $::REG_FLASH_OPERATE_SW] & $::BUSY_SW] } { }
 
-    #flash_set_line_mode(0);
-    #//set_flash_protect(0);
-    #set_flash_unprotect();
-    #while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
-    #value = REG_READ(REG_FLASH_OPERATE_SW);
     set value [read_reg $::REG_FLASH_OPERATE_SW]
-    #value = ((addr << ADDR_SW_REG_POSI)| (FLASH_OPCODE_SE << OP_TYPE_SW_POSI)| OP_SW | (value & WP_VALUE));
     set value [expr (($addr << $::ADDR_SW_REG_POSI)| ($::FLASH_OPCODE_SE << $::OP_TYPE_SW_POSI)| $::OP_SW | ($value & $::WP_VALUE))]
-    #REG_WRITE(REG_FLASH_OPERATE_SW, value);
     write_reg $::REG_FLASH_OPERATE_SW $value
-    # while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
     while { [expr [read_reg $::REG_FLASH_OPERATE_SW] & $::BUSY_SW] } { }
-    # set_flash_protect(1);
-    # flash_set_line_mode(2);    
 }
 
 proc flash_erase { addr size } {

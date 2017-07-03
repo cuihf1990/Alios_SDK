@@ -112,7 +112,7 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
 
     partition_info = hal_flash_get_info( in_partition );
 
-    if(off_set % 0x1000 || size % 0x1000 || size + off_set > partition_info->partition_length)
+    if(size + off_set > partition_info->partition_length)
         return -1;
 
     start_addr = (partition_info->partition_start_addr + off_set) & (~0xFFF);
