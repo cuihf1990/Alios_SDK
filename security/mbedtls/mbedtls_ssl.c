@@ -218,6 +218,7 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
 {
     int ret;
     int total_len = 0;
+    int retry = 0;
     ssl_param_t *ssl_param;
 
     if (ssl == NULL || buffer == NULL || length <= 0) {
@@ -246,11 +247,9 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
             break;
         } else {
             if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
-                if (total_len > 0) {
-                    break;
-                } else {
-                    continue;
-                }
+                retry ++;
+                yos_msleep(10);
+                continue;
             }
 
             if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
@@ -265,10 +264,10 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
 
             return -1;
         }
-    } while(total_len < length);
+    } while(total_len < length && retry < 10);
 
 #if defined(CONFIG_SSL_DEBUG)
-    printf("%d bytes sent\n", ret);
+    printf("%d bytes sent retry %d\n", ret, retry);
 #endif
 
 #if defined(CONFIG_SSL_DEBUG)
@@ -282,7 +281,7 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
     printf("\n");
 #endif
 
-    return ret;
+    return ret < 0 ? -1 : total_len;
 }
 
 int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
