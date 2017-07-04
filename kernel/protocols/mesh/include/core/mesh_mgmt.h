@@ -162,7 +162,6 @@ static inline bool is_bcast_sid(ur_addr_t *addr)
     return false;
 }
 
-uint8_t set_mm_header_type(message_info_t *info, uint8_t *data, uint8_t type);
 uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_ueid_tv(uint8_t *data, uint8_t type, uint8_t *ueid);

@@ -19,6 +19,7 @@ void test_diags_case(void)
     mm_timestamp_tv_t *timestamp;
     message_info_t *info;
     uint8_t *data;
+    uint8_t *data_orig;
     uint16_t length;
 
     interface_start();
@@ -29,43 +30,43 @@ void test_diags_case(void)
     YUNIT_ASSERT(UR_ERROR_NONE == send_trace_route_request(network, &dest));
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
-    message = message_alloc(length, UT_MSG);
-    if (message == NULL) {
-        return;
-    }
-    data = message_get_payload(message);
-    info = message->info;
-    data += set_mm_header_type(info, data, COMMAND_TRACE_ROUTE_RESPONSE);
+    data = (uint8_t *)ur_mem_alloc(length);
+    data_orig = data;
+    data += sizeof(mm_header_t);
 
     timestamp = (mm_timestamp_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = 10;
     data += sizeof(mm_timestamp_tv_t);
 
+    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_TRACE_ROUTE_RESPONSE,
+                               data_orig, length, UT_MSG);
+    info = message->info;
     info->network = network;
     memcpy(&info->dest, &dest, sizeof(info->dest));
 
     YUNIT_ASSERT(UR_ERROR_NONE == handle_diags_command(message, true));
     message_free(message);
+    ur_mem_free(data_orig, length);
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
-    message = message_alloc(length, UT_MSG);
-    if (message == NULL) {
-        return;
-    }
-    data = message_get_payload(message);
-    info = message->info;
-    data += set_mm_header_type(info, data, COMMAND_TRACE_ROUTE_REQUEST);
-
+    data = (uint8_t *)ur_mem_alloc(length);
+    data_orig = data;
+    data += sizeof(mm_header_t);
     timestamp = (mm_timestamp_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = ur_get_now();
     data += sizeof(mm_timestamp_tv_t);
 
+    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_TRACE_ROUTE_REQUEST,
+                               data_orig, length, UT_MSG);
+
+    info = message->info;
     info->network = network;
     memcpy(&info->dest, &dest, sizeof(info->dest));
 
     YUNIT_ASSERT(UR_ERROR_NONE == handle_diags_command(message, true));
     message_free(message);
+    ur_mem_free(data_orig, length);
     interface_stop();
 }

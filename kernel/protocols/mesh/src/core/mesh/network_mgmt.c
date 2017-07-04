@@ -75,31 +75,36 @@ static void handle_discovery_timer(void *args)
 
 static ur_error_t send_discovery_request(network_context_t *network)
 {
-    ur_error_t      error = UR_ERROR_NONE;
+    ur_error_t error = UR_ERROR_MEM;
     uint16_t        length;
     mm_state_flags_tv_t *flag;
     uint8_t         *data;
+    uint8_t *data_orig;
     message_t       *message = NULL;
     message_info_t  *info;
 
     length = sizeof(mm_header_t) + sizeof(mm_state_flags_tv_t);
-    message = message_alloc(length, NETWORK_MGMT_1);
-    if (message == NULL) {
+    data = ur_mem_alloc(length);
+    if (data == NULL) {
         return UR_ERROR_MEM;
     }
-    data = message_get_payload(message);
-    info = message->info;
-    data += set_mm_header_type(info, data, COMMAND_DISCOVERY_REQUEST);
+    data_orig = data;
+    data += sizeof(mm_header_t);
 
     flag = (mm_state_flags_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)flag, TYPE_STATE_FLAGS);
     flag->flags = umesh_mm_get_reboot_flag();
     data += sizeof(mm_state_flags_tv_t);
 
-    info->network = network;
-    // dest
-    set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
-    error = mf_send_message(message);
+    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_DISCOVERY_REQUEST,
+                               data_orig, length, NETWORK_MGMT_1);
+    if (message) {
+        info = message->info;
+        info->network = network;
+        set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
+        error = mf_send_message(message);
+    }
+    ur_mem_free(data_orig, length);
 
     MESH_LOG_DEBUG("send discovery request in channel %d, len %d",
                    umesh_mm_get_channel(network), length);
@@ -110,31 +115,34 @@ static ur_error_t send_discovery_request(network_context_t *network)
 static ur_error_t send_discovery_response(network_context_t *network,
                                           ur_addr_t *dest)
 {
-    ur_error_t      error = UR_ERROR_NONE;
+    ur_error_t error = UR_ERROR_MEM;
     message_t       *message;
     uint8_t         *data;
     uint16_t        length;
     message_info_t  *info;
+    uint8_t *data_orig;
 
     length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) + sizeof(mm_channel_tv_t);
-    message = message_alloc(length, NETWORK_MGMT_2);
-    if (message == NULL) {
+    data = ur_mem_alloc(length);
+    if (data == NULL) {
         return UR_ERROR_MEM;
     }
-    data = message_get_payload(message);
-    info = message->info;
-    data += set_mm_header_type(info, data, COMMAND_DISCOVERY_RESPONSE);
+    data_orig = data;
+    data += sizeof(mm_header_t);
     data += set_mm_netinfo_tv(network, data);
     data += set_mm_channel_tv(network, data);
 
-    info->network = network;
-    // dest
-    memcpy(&info->dest, dest, sizeof(info->dest));
-
-    error = mf_send_message(message);
+    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_DISCOVERY_RESPONSE,
+                               data_orig, length, NETWORK_MGMT_2);
+    if (message) {
+        info = message->info;
+        info->network = network;
+        memcpy(&info->dest, dest, sizeof(info->dest));
+        error = mf_send_message(message);
+    }
+    ur_mem_free(data_orig, length);
 
     MESH_LOG_DEBUG("send discovery response, len %d", length);
-
     return error;
 }
 
@@ -156,15 +164,19 @@ ur_error_t handle_discovery_request(message_t *message)
 
     info = message->info;
     network = info->network;
-    tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-
-    flag = (mm_state_flags_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_STATE_FLAGS);
+    tlvs = ur_mem_alloc(tlvs_length);
+    if (tlvs == NULL) {
+        return UR_ERROR_MEM;
+    }
+    message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
 
     if ((nbr = update_neighbor(info, tlvs, tlvs_length, true)) == NULL) {
+        ur_mem_free(tlvs, tlvs_length);
         return UR_ERROR_FAIL;
     }
 
+    flag = (mm_state_flags_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_STATE_FLAGS);
     if (flag && flag->flags) {
         nbr->flags |= NBR_REBOOT;
     } else {
@@ -172,6 +184,7 @@ ur_error_t handle_discovery_request(message_t *message)
     }
 
     send_discovery_response(network, &info->src_mac);
+    ur_mem_free(tlvs, tlvs_length);
     return error;
 }
 
@@ -192,17 +205,23 @@ ur_error_t handle_discovery_response(message_t *message)
 
     info = message->info;
     network = info->network;
-    tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
+    tlvs = ur_mem_alloc(tlvs_length);
+    if (tlvs == NULL) {
+        return UR_ERROR_MEM;
+    }
+    message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
 
     nbr = update_neighbor(info, tlvs, tlvs_length, true);
     if (nbr == NULL) {
+        ur_mem_free(tlvs, tlvs_length);
         return UR_ERROR_FAIL;
     }
     nbr->flags &= (~NBR_DISCOVERY_REQUEST);
 
     netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NETWORK_INFO);
     if (netinfo == NULL) {
+        ur_mem_free(tlvs, tlvs_length);
         return UR_ERROR_FAIL;
     }
 
@@ -210,6 +229,7 @@ ur_error_t handle_discovery_response(message_t *message)
                    info->src.netid);
 
     if (is_bcast_netid(info->src.netid)) {
+        ur_mem_free(tlvs, tlvs_length);
         return UR_ERROR_NONE;
     }
 
@@ -230,6 +250,7 @@ ur_error_t handle_discovery_response(message_t *message)
         res->net_size = netinfo->size;
     }
 
+    ur_mem_free(tlvs, tlvs_length);
     return UR_ERROR_NONE;
 }
 

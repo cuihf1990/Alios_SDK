@@ -172,6 +172,7 @@ static ur_error_t resolve_message_info(received_frame_t *frame,
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;
+
     offset = sizeof(mesh_header_control_t);
     netid = (mesh_netid_t *)(buf + offset);
     info->src.netid = netid->netid;
@@ -737,6 +738,30 @@ ur_error_t mf_send_message(message_t *message)
     return error;
 }
 
+message_t *mf_build_message(uint8_t type, uint8_t cmd_type, uint8_t *data,
+                            uint16_t len, uint8_t debug)
+{
+    message_t *message;
+    message_info_t *info;
+    mm_header_t *mm_header;
+
+    message = message_alloc(len, debug);
+    if (message == NULL) {
+        return NULL;
+    }
+
+    info = message->info;
+    if (type == MESH_FRAME_TYPE_CMD) {
+        mm_header = (mm_header_t *)data;
+        mm_header->command = cmd_type;
+        info->type = MESH_FRAME_TYPE_CMD;
+        info->command = cmd_type;
+    }
+
+    message_copy_from(message, data, len);
+    return message;
+}
+
 static bool proxy_check(message_t *message)
 {
     network_context_t *network;
@@ -1110,6 +1135,7 @@ static void handle_datagram(void *args)
     slist_t           *hals;
     hal_context_t     *hal;
     network_context_t *network = NULL;
+    uint8_t *payload;
 
     message = (message_t *)args;
     info = message->info;
@@ -1120,9 +1146,12 @@ static void handle_datagram(void *args)
         nexth = message_get_payload(message);
         if (is_mcast_header(*nexth)) {
             network = get_default_network_context();
-            error = process_mcast_header(network, message_get_payload(message) + 1);
+            payload = ur_mem_alloc(sizeof(mcast_header_t));
+            message_copy_to(message, 1, payload, sizeof(mcast_header_t));
+            error = process_mcast_header(network, payload);
             if (error != UR_ERROR_NONE) {
                 message_free(message);
+                ur_mem_free(payload, sizeof(mcast_header_t));
                 return;
             }
             if (info->flags & ENCRYPT_ENABLE_FLAG) {

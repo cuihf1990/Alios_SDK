@@ -111,7 +111,7 @@ ur_error_t message_copy_from(const message_t *dest,
 ur_error_t message_copy(message_t *dest, const message_t *src)
 {
     pbuf_copy(dest->data, (data_t *)src->data);
-    if (src->info) {
+    if (src->info && dest->info) {
         memcpy(dest->info, src->info, sizeof(message_info_t));
     }
     dest->frag_offset = src->frag_offset;
@@ -124,7 +124,9 @@ ur_error_t message_set_payload_offset(const message_t *message, int16_t size)
         return UR_ERROR_FAIL;
     }
 
-    pbuf_header((struct pbuf *)message->data, size);
+    if (pbuf_header((struct pbuf *)message->data, size)) {
+        return UR_ERROR_FAIL;
+    }
     return UR_ERROR_NONE;
 }
 
