@@ -186,6 +186,8 @@ struct hal_wifi_module_s {
     void (*start_monitor)(hal_wifi_module_t *m);
     void (*stop_monitor)(hal_wifi_module_t *m);
     void (*register_monitor_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
+    void (*register_wlan_mgnt_monitor_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
+    int (*wlan_send_80211_raw_frame)(hal_wifi_module_t *m, uint8_t *buf, int len);
 };
 
 /**
