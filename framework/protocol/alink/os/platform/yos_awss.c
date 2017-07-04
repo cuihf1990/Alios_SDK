@@ -253,9 +253,9 @@ int platform_wifi_enable_mgnt_frame_filter(
 {
 	monitor_cb = callback;
 	if (callback != NULL) {
-		bk_wlan_register_mgnt_monitor_cb(mgnt_rx_cb);
+		hal_wlan_register_mgnt_monitor_cb(mgnt_rx_cb);
 	} else {
-		bk_wlan_register_mgnt_monitor_cb(NULL);
+		hal_wlan_register_mgnt_monitor_cb(NULL);
 	}
     return 0;
 }
@@ -263,7 +263,7 @@ int platform_wifi_enable_mgnt_frame_filter(
 int platform_wifi_send_80211_raw_frame(_IN_ enum platform_awss_frame_type type,
                                        _IN_ uint8_t *buffer, _IN_ int len)
 {
-	return bk_wlan_send_80211_raw_frame(buffer, len - 4); // len-4=exclude FCS
+	return hal_wlan_send_80211_raw_frame(buffer, len - 4); // len-4=exclude FCS
 }
 
 #ifdef CONFIG_YWSS

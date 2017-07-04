@@ -213,7 +213,7 @@ void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t f
         m = hal_wifi_get_default_module();
     }
 
-    m->register_wlan_mgnt_monitor_cb(fn);
+    m->register_wlan_mgnt_monitor_cb(m, fn);
 }
 
 int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
@@ -222,5 +222,5 @@ int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
         m = hal_wifi_get_default_module();
     }
 
-    return m->wlan_send_80211_raw_frame(buf, len);
+    return m->wlan_send_80211_raw_frame(m, buf, len);
 }
