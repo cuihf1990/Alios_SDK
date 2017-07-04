@@ -20,6 +20,11 @@ GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
 GLOBAL_LDFLAGS += --coverage
 endif
 
+ifeq ($(gprof),1)
+GLOBAL_CFLAGS += -pg
+GLOBAL_LDFLAGS += -pg
+endif
+
 $(NAME)_INCLUDES    += .
 GLOBAL_INCLUDES     += include include/yos csp/lwip/include
 GLOBAL_LDFLAGS      += -lpthread -lm
