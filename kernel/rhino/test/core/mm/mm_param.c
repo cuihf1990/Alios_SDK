@@ -39,7 +39,13 @@ static uint8_t mm_param_case1(void)
     ret = yunos_init_mm_head(&pmmhead, (void *)(mm_pool + 1), MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
 
+    ret = yunos_deinit_mm_head(pmmhead);
+    MYASSERT(ret == YUNOS_SUCCESS);
+
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE - 1);
+    MYASSERT(ret == YUNOS_SUCCESS);
+
+    ret = yunos_deinit_mm_head(pmmhead);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
@@ -74,6 +80,9 @@ static uint8_t mm_param_case1(void)
                               MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
 
+    ret = yunos_deinit_mm_head(pmmhead);
+    MYASSERT(ret == YUNOS_SUCCESS);
+
     return 0;
 }
 
@@ -82,6 +91,8 @@ static uint8_t mm_param_case2(void)
     void   *ptr;
     void   *tmp;
 
+    yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+
     ptr = k_mm_alloc( NULL, 64);
     MYASSERT(ptr == NULL);
 
@@ -89,6 +100,7 @@ static uint8_t mm_param_case2(void)
     MYASSERT(ptr == NULL);
 
     ptr = k_mm_alloc(pmmhead, 64);
+
     MYASSERT((ptr > (void *)mm_pool && ptr < (void *)mm_pool + MM_POOL_SIZE)
              || (ptr > (void *)&mm_pool[MM_POOL_SIZE] &&
                  ptr < (void *)&mm_pool[MM_POOL_SIZE * 2] ));
@@ -96,11 +108,18 @@ static uint8_t mm_param_case2(void)
     k_mm_free(pmmhead, ptr);
 
     ptr = k_mm_alloc(pmmhead, 16);
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pmmhead, sizeof(k_mm_head)));
+    VGF(VALGRIND_MAKE_MEM_DEFINED(pmmhead->fixedmblk, MMLIST_HEAD_SIZE));
     tmp = pmmhead->fixedmblk->mbinfo.buffer;
     MYASSERT((ptr > (void *)pmmhead->fixedmblk->mbinfo.buffer) &&
              (ptr < ((void *)tmp + (pmmhead->fixedmblk->size & YUNOS_MM_BLKSIZE_MASK))));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(pmmhead->fixedmblk, MMLIST_HEAD_SIZE));
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(pmmhead, sizeof(k_mm_head)));
 
     k_mm_free(pmmhead, ptr);
+
+    yunos_deinit_mm_head(pmmhead);
 
     return 0;
 }

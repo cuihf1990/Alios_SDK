@@ -17,6 +17,13 @@
 #ifndef K_MM_REGION_H
 #define K_MM_REGION_H
 
+typedef struct {
+    uint8_t *start;
+    size_t   len;
+} k_mm_region_t;
+
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
+
 #ifdef HAVE_VALGRIND_H
 #include <valgrind.h>
 #include <memcheck.h>
@@ -40,10 +47,6 @@
 #define YUNOS_MM_REGION_CORRUPT_DYE  0xfefe
 #define YUNOS_MM_REGION_MAX_FRAGSIZE 0x0fffffff
 
-typedef struct {
-    uint8_t *start;
-    size_t   len;
-} k_mm_region_t;
 
 typedef struct {
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
@@ -133,6 +136,8 @@ kstat_t yunos_mm_ff_alloc(k_mm_region_head_t *region_head, void **mem,
  */
 #if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
 kstat_t yunos_mm_xf_free(k_mm_region_head_t *region_head, void *mem);
+#endif
+
 #endif
 
 #endif /* K_MM_REGION_H */
