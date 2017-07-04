@@ -23,6 +23,8 @@ monitor_data_cb_t g_mesh_monitor_cb = 0;
 uint8_t g_mesh_bssid[6];
 #endif
 
+static monitor_data_cb_t g_mgnt_cb = 0;
+
 extern int connect_flag;
 extern struct assoc_ap_info assoc_ap;
 
@@ -667,6 +669,31 @@ monitor_data_cb_t bk_wlan_get_monitor_cb(void)
     return g_monitor_cb;
 }
 
+#include "mm.h"
+
+static  uint32_t umac_rx_filter = 0;
+/** @brief  Register the monitor callback function
+ *        Once received a 802.11 packet call the registered function to return the packet.
+ */
+void bk_wlan_register_mgnt_monitor_cb(monitor_data_cb_t fn)
+{
+    g_mgnt_cb = fn;
+
+	if (fn != NULL) {
+		umac_rx_filter = mm_rx_filter_umac_get();
+		mm_rx_filter_umac_set(umac_rx_filter | NXMAC_ACCEPT_PROBE_REQ_BIT);
+	} else {
+		if (umac_rx_filter != 0) {
+			mm_rx_filter_umac_set(umac_rx_filter);
+		}
+	}
+}
+
+monitor_data_cb_t bk_wlan_get_mgnt_monitor_cb(void)
+{
+    return g_mgnt_cb;
+}
+
 #ifdef CONFIG_YOS_MESH
 void wlan_register_mesh_monitor_cb(monitor_data_cb_t fn)
 {
@@ -700,6 +727,24 @@ uint8_t *wlan_get_mesh_bssid(void)
     return g_mesh_bssid;
 }
 #endif
+
+int bk_wlan_send_80211_raw_frame(uint8_t *buffer, int len)
+{
+	struct txl_frame_desc_tag *tx_frame;
+	uint8_t *pkt;
+	int txtype = TX_DEFAULT_24G;
+	
+	tx_frame = txl_frame_get(txtype, len);
+    if (tx_frame == NULL) {
+        return 1;
+    }
+
+    pkt = (uint8_t *)tx_frame->txdesc.lmac.buffer->payload;
+	os_memcpy(pkt, buffer, len);
+
+    txl_frame_push(tx_frame, AC_VO);
+    return 0;
+}
 
 int bk_wlan_is_monitor_mode(void)
 {
