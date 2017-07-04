@@ -337,6 +337,11 @@ __INLINE void mm_rx_filter_umac_set(uint32_t filter)
     mm_rx_filter_set();
 }
 
+__INLINE uint32_t mm_rx_filter_umac_get(void)
+{
+    return mm_env.rx_filter_umac;
+}
+
 /**
  ****************************************************************************************
  * @brief This function enables some RX filter bits on the LMAC filter

@@ -2257,6 +2257,7 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
     ke_task_id_t dest_id = TASK_NONE;
     bool copy_mac_hdr = false;
     bool upload;
+	monitor_data_cb_t fn;
 	
     // Route the message to the correct task and/or handle it immediately
     upload = rxu_mgt_route(framectrl, 
@@ -2267,7 +2268,11 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 							payload,
 							&dest_id, 
 							&copy_mac_hdr);
-    
+
+	fn = bk_wlan_get_mgnt_monitor_cb();
+	if (fn) {
+		fn(payload, length);
+	}
     // Check if the message has to be forwarded or not
     if (((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_BEACON) 
             && (sta_idx != INVALID_STA_IDX))
