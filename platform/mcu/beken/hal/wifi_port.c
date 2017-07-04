@@ -128,6 +128,16 @@ static void register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 	bk_wlan_register_monitor_cb(fn);
 }
 
+static void register_wlan_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
+{
+    bk_wlan_register_mgnt_monitor_cb(m, fn);
+}
+
+static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
+{
+    return bk_wlan_send_80211_raw_frame(m, buf, len);
+}
+
 void NetCallback(hal_wifi_ip_stat_t *pnet)
 {
 	if (sim_yos_wifi_beken.ev_cb == NULL)
@@ -205,5 +215,7 @@ hal_wifi_module_t sim_yos_wifi_beken = {
     .start_monitor       =  start_monitor,
     .stop_monitor        =  stop_monitor,
     .register_monitor_cb =  register_monitor_cb,
+    .register_wlan_mgnt_monitor_cb = register_wlan_mgnt_monitor_cb,
+    .wlan_send_80211_raw_frame = wlan_send_80211_raw_frame
 };
 

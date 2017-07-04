@@ -206,3 +206,21 @@ void hal_wifi_install_event(hal_wifi_module_t *m, const hal_wifi_event_cb_t *cb)
 {
     m->ev_cb = cb;
 }
+
+void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    m->register_wlan_mgnt_monitor_cb(m, fn);
+}
+
+int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    return m->wlan_send_80211_raw_frame(m, buf, len);
+}
