@@ -48,8 +48,8 @@ ur_error_t master_key_deinit(void)
 {
     master_key_method_t *method;
 
-    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t,
-                         next) {
+    while(!slist_empty(g_master_key_context.methods)) {
+        method = slist_first_entry(g_master_key_context.methods, master_key_method_t, next);
         slist_del(&method->next, g_master_key_context.methods);
     }
 

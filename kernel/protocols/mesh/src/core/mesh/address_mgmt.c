@@ -569,9 +569,10 @@ static void handle_addr_cache_timer(void *args)
     sid_node_t        *node;
     uint8_t           timeout;
     network_context_t *network;
+    slist_t           *tmp;
 
     g_ac_state.timer = NULL;
-    slist_for_each_entry(&g_ac_state.cache_list, node, sid_node_t, next) {
+    slist_for_each_entry_safe(&g_ac_state.cache_list, tmp, node, sid_node_t, next) {
         switch (node->type) {
             case MEDIA_TYPE_WIFI:
                 timeout = WIFI_ADDR_CACHE_ALIVE_TIMEOUT;
