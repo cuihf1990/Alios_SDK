@@ -134,7 +134,7 @@ static void send_seq_data(void *arg)
 {
     int fd = *(int *)arg;
     struct sockaddr_in addr;
-    char buf[MAXCNT];
+    char buf[MAXCNT]={0};
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
