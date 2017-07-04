@@ -245,25 +245,24 @@ static void mgnt_rx_cb(uint8_t *data, int len)
 	}
 }
 
-
 int platform_wifi_enable_mgnt_frame_filter(
     _IN_ uint32_t filter_mask,
     _IN_OPT_ uint8_t vendor_oui[3],
     _IN_ platform_wifi_mgnt_frame_cb_t callback)
 {
-	monitor_cb = callback;
-	if (callback != NULL) {
-		hal_wlan_register_mgnt_monitor_cb(mgnt_rx_cb);
-	} else {
-		hal_wlan_register_mgnt_monitor_cb(NULL);
-	}
+    monitor_cb = callback;
+    if (callback != NULL) {
+        hal_wlan_register_mgnt_monitor_cb(NULL, mgnt_rx_cb);
+    } else {
+        hal_wlan_register_mgnt_monitor_cb(NULL, NULL);
+    }
     return 0;
 }
 
 int platform_wifi_send_80211_raw_frame(_IN_ enum platform_awss_frame_type type,
                                        _IN_ uint8_t *buffer, _IN_ int len)
 {
-	return hal_wlan_send_80211_raw_frame(buffer, len - 4); // len-4=exclude FCS
+    return hal_wlan_send_80211_raw_frame(NULL, buffer, len);
 }
 
 #ifdef CONFIG_YWSS
