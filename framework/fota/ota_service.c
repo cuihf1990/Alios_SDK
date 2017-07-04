@@ -33,13 +33,17 @@ static void ota_set_callbacks(write_flash_cb_t flash_cb,
     ota_finish_callbak = finish_cb;
 }
 
+int ota_hal_init()
+{
+    return hal_ota_init();
+}
 
-static int ota_write_ota_cb(int32_t writed_size, uint8_t *buf, int32_t buf_len, int type)
+static int ota_hal_write_cb(int32_t writed_size, uint8_t *buf, int32_t buf_len, int type)
 {
     return hal_ota_write(hal_ota_get_default_module(), NULL, buf, buf_len);
 }
 
-static int ota_finish_cb(int32_t finished_result, const char* updated_version)
+static int ota_hal_finish_cb(int32_t finished_result, const char* updated_version)
 {
     return hal_ota_set_boot(hal_ota_get_default_module(), (void *)updated_version);
 }
@@ -66,7 +70,7 @@ void do_update(const char *buf)
 
     ota_response_params response_parmas;
 
-    ota_set_callbacks(ota_write_ota_cb, ota_finish_cb);
+    ota_set_callbacks(ota_hal_write_cb, ota_hal_finish_cb);
     parse_ota_response(buf, strlen((char *)buf), &response_parmas);
     ota_do_update_packet(&response_parmas, &ota_request_parmas, ota_write_flash_callback,
             ota_finish_callbak);

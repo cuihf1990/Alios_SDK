@@ -61,7 +61,9 @@ extern int  check_md5(const char *buffer, const int32_t len);
 void ota_download_start(void * buf)
 {
     OTA_LOG_I("task update start");
+    ota_hal_init();
     ota_status_init();
+
     ota_set_status(OTA_INIT);
     ota_status_post(100);
 
