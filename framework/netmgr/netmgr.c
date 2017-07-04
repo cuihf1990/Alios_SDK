@@ -380,6 +380,7 @@ int  netmgr_get_ap_config(netmgr_ap_config_t *config)
 
     strncpy(config->ssid, g_netmgr_cxt.ap_config.ssid, MAX_SSID_SIZE);
     strncpy(config->pwd, g_netmgr_cxt.ap_config.pwd, MAX_PWD_SIZE);
+    strncpy(config->bssid, g_netmgr_cxt.ap_config.bssid, MAX_BSSID_SIZE);
     return 0;
 }
 

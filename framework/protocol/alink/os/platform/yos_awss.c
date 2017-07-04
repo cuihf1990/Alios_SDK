@@ -192,16 +192,7 @@ int platform_aes128_destroy(
     return 0;
 }
 
-int platform_aes128_cbc_encrypt(
-    p_aes128_t aes,
-    const void *src,
-    size_t blockNum,
-    void *dst )
-{
-    return 0;
-}
-
-int platform_aes128_cbc_decrypt(
+int platform_aes128_cbc_encrypt_decrypt(
     p_aes128_t aes,
     const void *src,
     size_t blockNum,
@@ -220,11 +211,36 @@ int platform_aes128_cbc_decrypt(
     return 0;
 }
 
+int platform_aes128_cbc_encrypt(
+    p_aes128_t aes,
+    const void *src,
+    size_t blockNum,
+    void *dst )
+{
+    return platform_aes128_cbc_encrypt_decrypt(aes, src, blockNum, dst);
+}
+
+int platform_aes128_cbc_decrypt(
+    p_aes128_t aes,
+    const void *src,
+    size_t blockNum,
+    void *dst )
+{
+    return platform_aes128_cbc_encrypt_decrypt(aes, src, blockNum, dst);
+}
+
 int platform_wifi_get_ap_info(
     char ssid[PLATFORM_MAX_SSID_LEN],
     char passwd[PLATFORM_MAX_PASSWD_LEN],
     uint8_t bssid[ETH_ALEN])
 {
+    netmgr_ap_config_t config;
+
+    netmgr_get_ap_config(&config);
+    strncpy(ssid, config.ssid, PLATFORM_MAX_SSID_LEN);
+    strncpy(passwd, config.pwd, PLATFORM_MAX_PASSWD_LEN);
+    strncpy(bssid, config.bssid, ETH_ALEN);
+
     return 0;
 }
 

@@ -50,7 +50,6 @@ void awss_registrar_init(void)
     os_wifi_enable_mgnt_frame_filter(
                 FRAME_BEACON_MASK | FRAME_PROBE_REQ_MASK,
                 (uint8_t *)alibaba_oui, awss_wifi_mgnt_frame_callback);
-    start_awss_work();
     sm_attach_service("accs", &registrar_event);
 }
 
@@ -61,8 +60,6 @@ void awss_registrar_exit(void)
                 (uint8_t *)alibaba_oui, NULL);
 
     sm_detach_service("accs", &registrar_event);
-
-    stop_awss_work();
 }
 
 #if 0
@@ -318,7 +315,7 @@ static void enrollee_checkin(void *arg)
 {
     int i;
     int checkin_ongoing = -1, pri = 65536, checkin_new = -1;
-    unsigned int timestamp = yos_get_time_ms();
+    unsigned int timestamp = os_get_time_ms();
 
     for (i = 0; i < MAX_ENROLLEE_NUM; i++) {
         switch (enrollee_info[i].state) {
@@ -412,6 +409,8 @@ int alink_report_enrollee(int dev_type, unsigned char *devid, int devid_len,
     data.method = "device.enrolleeFound";
     data.data = buf;
 
+    LOGD("registart", "To put data: %s", data.data);
+
     ret = sm_get_service("accs")->put((void *)&data, sizeof(data));//accs_put
     //TODO: parse the result: report period
     ret = 10;//report enrollee info duration
@@ -474,7 +473,7 @@ static void enrollee_report(void *arg)
                         enrollee_report_period_ms = report_period * 1000;
                     }
 
-                    LOGT(MODULE_NAME_ENROLLEE,"enrollee report result:%s, period:%dms\n",
+                    LOGI(MODULE_NAME_ENROLLEE,"enrollee report result:%s, period:%dms\n",
                               report_period > 0 ? "success" : "failed",
                               enrollee_report_period_ms);
 
@@ -553,7 +552,7 @@ int enrollee_put(struct enrollee_info *in)
         if (enrollee_info[i].state) {
             if (!memcmp(in, &enrollee_info[i], ENROLLEE_INFO_HDR_SIZE)) {
                 /* update timestamp */
-                enrollee_info[i].timestamp = yos_get_time_ms();
+                enrollee_info[i].timestamp = os_get_time_ms();
                 enrollee_info[i].rssi = (2 * enrollee_info[i].rssi + in->rssi) / 3;
                 /*
                  * under certain conditions(state was clear
@@ -580,7 +579,7 @@ int enrollee_put(struct enrollee_info *in)
     memset(&enrollee_info[empty_slot], 0, sizeof(struct enrollee_info));
     memcpy(&enrollee_info[empty_slot], in, ENROLLEE_INFO_HDR_SIZE);
     enrollee_info[empty_slot].rssi = in->rssi;
-    enrollee_info[empty_slot].timestamp = yos_get_time_ms();
+    enrollee_info[empty_slot].timestamp = os_get_time_ms();
     enrollee_info[empty_slot].state = ENR_IN_QUEUE;
     LOGI(MODULE_NAME_ENROLLEE,"new enrollee[%d] devid:%s time:%x",
              empty_slot, in->devid, enrollee_info[empty_slot].timestamp);
@@ -623,7 +622,7 @@ void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int b
 
     switch (type) {
         case MGMT_BEACON:
-            LOGT(MODULE_NAME_ENROLLEE,"beacon");
+            //LOGI(MODULE_NAME_ENROLLEE,"beacon");
             buffer += MGMT_HDR_LEN + 12;/* hdr(24) + 12(timestamp, beacon_interval, cap) */
             length -= MGMT_HDR_LEN + 12;
 
@@ -645,7 +644,7 @@ void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int b
             goto find_ie;
             break;
         case MGMT_PROBE_REQ:
-            LOGT(MODULE_NAME_ENROLLEE,"probe req\n");
+            //LOGI(MODULE_NAME_ENROLLEE,"probe req\n");
             buffer += MGMT_HDR_LEN;
             length -= MGMT_HDR_LEN;
 
@@ -659,10 +658,10 @@ ie_handler:
             }
             break;
         case MGMT_PROBE_RESP:
-            LOGT(MODULE_NAME_ENROLLEE,"probe resp");
+            LOGI(MODULE_NAME_ENROLLEE,"probe resp");
             break;
         default:
-            LOGT(MODULE_NAME_ENROLLEE,"frame (%d): %02x \n", length, type);
+            LOGI(MODULE_NAME_ENROLLEE,"frame (%d): %02x \n", length, type);
             break;
     }
 }
