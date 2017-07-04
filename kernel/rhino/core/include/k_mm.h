@@ -21,14 +21,10 @@
 #include <valgrind.h>
 #include <memcheck.h>
 #define VGF(X) X
-#undef VALGRIND_MAKE_MEM_NOACCESS
-#define VALGRIND_MAKE_MEM_NOACCESS(x,y)
 #elif defined(HAVE_VALGRIND_VALGRIND_H)
 #include <valgrind/valgrind.h>
 #include <valgrind/memcheck.h>
 #define VGF(X) X
-#undef VALGRIND_MAKE_MEM_NOACCESS
-#define VALGRIND_MAKE_MEM_NOACCESS(x,y)
 #else
 #define VGF(X)
 #endif
@@ -138,6 +134,7 @@ typedef struct {
 
 
 kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len );
+kstat_t yunos_deinit_mm_head(k_mm_head *mmhead);
 
 kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len);
 

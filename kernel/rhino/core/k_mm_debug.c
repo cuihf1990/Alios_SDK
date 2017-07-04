@@ -17,7 +17,12 @@
 #include <stdio.h>
 
 #include <k_api.h>
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
 #include "k_mm_region.h"
+#endif
+#if (YUNOS_CONFIG_MM_TLF > 0)
+#include "k_mm.h"
+#endif
 #include "k_mm_debug.h"
 #include "yos/log.h"
 
@@ -471,7 +476,9 @@ void print_block(k_mm_list_t *b)
     }
 
     if (b->size & YUNOS_MM_FREE) {
+        VGF(VALGRIND_MAKE_MEM_DEFINED(&b->mbinfo, sizeof(struct free_ptr_struct)));
         printf(" free[%8p,%8p] ", b->mbinfo.free_ptr.prev, b->mbinfo.free_ptr.next);
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(&b->mbinfo, sizeof(struct free_ptr_struct)));
     }
     printf("\r\n");
 
@@ -479,7 +486,7 @@ void print_block(k_mm_list_t *b)
 
 void dump_kmm_free_map(k_mm_head *mmhead)
 {
-    k_mm_list_t *next;
+    k_mm_list_t *next, *tmp;
     int         i, j;
 
     if (!mmhead) {
@@ -501,8 +508,13 @@ void dump_kmm_free_map(k_mm_head *mmhead)
                 printf("-> [%d][%d]\r\n", i, j);
             }
             while (next) {
+                VGF(VALGRIND_MAKE_MEM_DEFINED(next, MMLIST_HEAD_SIZE));
                 print_block(next);
-                next = next->mbinfo.free_ptr.next;
+                VGF(VALGRIND_MAKE_MEM_DEFINED(&next->mbinfo, sizeof(struct free_ptr_struct)));
+                tmp = next->mbinfo.free_ptr.next;
+                VGF(VALGRIND_MAKE_MEM_NOACCESS(&next->mbinfo, sizeof(struct free_ptr_struct)));
+                VGF(VALGRIND_MAKE_MEM_NOACCESS(next, MMLIST_HEAD_SIZE));
+                next = tmp;
             }
         }
     }
@@ -510,8 +522,8 @@ void dump_kmm_free_map(k_mm_head *mmhead)
 
 void dump_kmm_map(k_mm_head *mmhead)
 {
-    k_mm_region_info_t *reginfo;
-    k_mm_list_t *next;
+    k_mm_region_info_t *reginfo, *nextreg;
+    k_mm_list_t *next, *cur;
 
     if (!mmhead) {
         return;
@@ -521,16 +533,22 @@ void dump_kmm_map(k_mm_head *mmhead)
     printf("address,  stat   size     dye     caller   pre-stat    point\r\n");
     reginfo = mmhead->regioninfo;
     while (reginfo) {
-        next = (k_mm_list_t *) ((char *) reginfo - MMLIST_HEAD_SIZE);
-        while (next) {
-            print_block(next);
-            if ((next->size & YUNOS_MM_BLKSIZE_MASK)) {
-                next = NEXT_MM_BLK(next->mbinfo.buffer, next->size & YUNOS_MM_BLKSIZE_MASK);
+        VGF(VALGRIND_MAKE_MEM_DEFINED(reginfo, sizeof(k_mm_region_info_t)));
+        cur = (k_mm_list_t *) ((char *) reginfo - MMLIST_HEAD_SIZE);
+        while (cur) {
+            VGF(VALGRIND_MAKE_MEM_DEFINED(cur, MMLIST_HEAD_SIZE));
+            print_block(cur);
+            if ((cur->size & YUNOS_MM_BLKSIZE_MASK)) {
+                next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & YUNOS_MM_BLKSIZE_MASK);
             } else {
                 next = NULL;
             }
+            VGF(VALGRIND_MAKE_MEM_NOACCESS(cur, MMLIST_HEAD_SIZE));
+            cur = next;
         }
-        reginfo = reginfo->next;
+        nextreg = reginfo->next;
+        VGF(VALGRIND_MAKE_MEM_NOACCESS(reginfo, sizeof(k_mm_region_info_t)));
+        reginfo = nextreg;
     }
 }
 
@@ -558,6 +576,11 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
 
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 {
+    CPSR_ALLOC();
+
+    YUNOS_CRITICAL_ENTER();
+
+    VGF(VALGRIND_MAKE_MEM_DEFINED(g_kmm_head, sizeof(k_mm_head)));
     printf("\r\n------------------------------- all memory blocks --------------------------------- \r\n");
     printf("g_kmm_head = %8x\r\n",(unsigned int)g_kmm_head);
 
@@ -566,6 +589,9 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     dump_kmm_free_map(g_kmm_head);
     printf("\r\n--------------------------- memory allocat statistic -------------------------------- \r\n");
     dump_kmm_statistic_info(g_kmm_head);
+    VGF(VALGRIND_MAKE_MEM_NOACCESS(g_kmm_head, sizeof(k_mm_head)));
+
+    YUNOS_CRITICAL_EXIT();
 
     return YUNOS_SUCCESS;
 }
