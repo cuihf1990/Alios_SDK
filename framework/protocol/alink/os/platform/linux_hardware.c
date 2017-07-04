@@ -121,13 +121,31 @@ char *platform_wifi_get_mac(char mac_str[PLATFORM_MAC_LEN])
         perror("socket");
         return NULL;
     }
-    strcpy(ifreq.ifr_name, IFNAME);
 
-    if (ioctl(sock, SIOCGIFHWADDR, &ifreq) < 0) {
-        perror("ioctl");
-        return NULL;
+    strcpy(ifreq.ifr_name, IFNAME);
+    if (ioctl(sock, SIOCGIFHWADDR, &ifreq) == 0) {
+        goto get_mac;
     }
 
+    int i;
+    for (i=0;i<10;i++) {
+        ifreq.ifr_ifindex = i;
+        if (ioctl(sock, SIOCGIFNAME, &ifreq) < 0) {
+            continue;
+        }
+
+        if (strcmp(ifreq.ifr_name, "lo") == 0)
+            continue;
+
+        if (ioctl(sock, SIOCGIFHWADDR, &ifreq) < 0) {
+            continue;
+        }
+
+        goto get_mac;
+    }
+    return NULL;
+
+get_mac:
     snprintf(mac_str, PLATFORM_MAC_LEN, "%02X:%02X:%02X:%02X:%02X:%02X",
              (unsigned char)ifreq.ifr_hwaddr.sa_data[0],
              (unsigned char)ifreq.ifr_hwaddr.sa_data[1],
