@@ -237,9 +237,9 @@ int platform_wifi_get_ap_info(
     netmgr_ap_config_t config;
 
     netmgr_get_ap_config(&config);
-    strncpy(ssid, config.ssid, PLATFORM_MAX_SSID_LEN);
-    strncpy(passwd, config.pwd, PLATFORM_MAX_PASSWD_LEN);
-    strncpy(bssid, config.bssid, ETH_ALEN);
+    if (ssid) strncpy(ssid, config.ssid, PLATFORM_MAX_SSID_LEN);
+    if (passwd) strncpy(passwd, config.pwd, PLATFORM_MAX_PASSWD_LEN);
+    if (bssid) strncpy(bssid, config.bssid, ETH_ALEN);
 
     return 0;
 }
