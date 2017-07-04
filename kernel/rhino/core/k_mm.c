@@ -743,9 +743,11 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
     if(b->dye == YUNOS_MM_FREE_DYE) {
         printf("WARNING!! memory maybe double free!!\r\n");
+        k_err_proc(YUNOS_SYS_FATAL_ERR);
     }
     if(b->dye != YUNOS_MM_CORRUPT_DYE) {
         printf("WARNING,memory maybe corrupt!!\r\n");
+        k_err_proc(YUNOS_SYS_FATAL_ERR);
     }
     b->dye = YUNOS_MM_FREE_DYE;
     b->owner = 0;
