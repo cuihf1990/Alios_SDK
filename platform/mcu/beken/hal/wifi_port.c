@@ -130,12 +130,12 @@ static void register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 
 static void register_wlan_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 {
-    bk_wlan_register_mgnt_monitor_cb(m, fn);
+    bk_wlan_register_mgnt_monitor_cb(fn);
 }
 
 static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
 {
-    return bk_wlan_send_80211_raw_frame(m, buf, len);
+    return bk_wlan_send_80211_raw_frame(buf, len - 4); // len-4=exclude FCS
 }
 
 void NetCallback(hal_wifi_ip_stat_t *pnet)
