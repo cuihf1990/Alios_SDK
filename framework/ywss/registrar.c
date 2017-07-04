@@ -658,10 +658,10 @@ ie_handler:
             }
             break;
         case MGMT_PROBE_RESP:
-            LOGI(MODULE_NAME_ENROLLEE,"probe resp");
+            //LOGI(MODULE_NAME_ENROLLEE,"probe resp");
             break;
         default:
-            LOGI(MODULE_NAME_ENROLLEE,"frame (%d): %02x \n", length, type);
+            //LOGI(MODULE_NAME_ENROLLEE,"frame (%d): %02x \n", length, type);
             break;
     }
 }
