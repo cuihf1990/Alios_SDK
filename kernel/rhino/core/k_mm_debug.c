@@ -465,7 +465,7 @@ void print_block(k_mm_list_t *b)
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
     printf(" %8x ",b->dye);
-    printf(" %8x ",b->owner);
+    printf(" 0x%-8x ",b->owner);
 #endif
 
     if (b->size & YUNOS_MM_PREVFREE) {
@@ -587,7 +587,7 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     dump_kmm_map(g_kmm_head);
     printf("\r\n----------------------------- all free memory blocks ------------------------------- \r\n");
     dump_kmm_free_map(g_kmm_head);
-    printf("\r\n--------------------------- memory allocat statistic -------------------------------- \r\n");
+    printf("\r\n------------------------- memory allocation statistic ------------------------------ \r\n");
     dump_kmm_statistic_info(g_kmm_head);
     VGF(VALGRIND_MAKE_MEM_NOACCESS(g_kmm_head, sizeof(k_mm_head)));
 

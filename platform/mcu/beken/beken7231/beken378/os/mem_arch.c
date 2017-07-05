@@ -59,11 +59,10 @@ void os_free(void *ptr)
     }
 }
 
-#else
 
 void os_mem_init(void)
 {
- 
+
 }
 
 void *os_malloc(size_t size)
@@ -86,7 +85,6 @@ void *os_realloc(void *ptr, size_t size)
 {
 	return yunos_mm_realloc(ptr, size);
 }
-
 void os_free(void *ptr)
 {
     if(ptr)

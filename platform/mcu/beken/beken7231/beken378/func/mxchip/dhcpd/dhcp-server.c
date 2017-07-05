@@ -7,8 +7,8 @@
 #include "dns.h"
 #include "dhcp-priv.h"
 
-#define os_mem_alloc os_malloc
-#define os_mem_free  os_free  
+#define os_mem_alloc yos_malloc
+#define os_mem_free  yos_free
 #define SEND_RESPONSE(w,x,y,z)	send_response(w,x,y,z)
 
 #define DEFAULT_DHCP_ADDRESS_TIMEOUT	(60U*60U*1U) /* 1 hour */
@@ -250,7 +250,7 @@ static int send_response(int sock, struct sockaddr *addr, char *msg, int len)
 		nb = lwip_sendto(sock, msg + sent, len - sent, 0, addr,
 			    sizeof(struct sockaddr_in));
 		if (nb < 0) {
-			dhcp_e("failed to send response, addr %p:%d", 
+			dhcp_e("failed to send response, addr %p:%d",
 				((struct sockaddr_in *)addr)->sin_addr,
 				((struct sockaddr_in *)addr)->sin_port);
 			return -1;

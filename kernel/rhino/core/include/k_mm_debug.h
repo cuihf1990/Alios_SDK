@@ -29,6 +29,12 @@ typedef struct {
     void *end;
 } mm_scan_region_t;
 
+#if (YUNOS_CONFIG_GCC_RETADDR > 0u)
+#include <k_mm.h>
+#define YOS_UNSIGNED_INT_MSB (1 << (sizeof(unsigned int) * 8 - 1))
+void yunos_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator);
+#endif
+
 uint32_t yunos_mm_leak_region_init(void *start, void *end);
 
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len);
