@@ -144,9 +144,20 @@ void bmsg_tx_handler(BUS_MSG_T *msg)
 {
 	OSStatus ret;
 	struct pbuf *p = (struct pbuf *)msg->arg;
-
-	rwm_transfer(p->payload, p->len);
-	pbuf_free(p);
+	struct pbuf *q = p;
+    
+    if(p->next) {
+        q = pbuf_coalesce(p, PBUF_RAW);
+        if(q == p){
+            // must be outof memery in pbuf malloc
+            goto EXIT;  
+        }
+    }
+	
+	rwm_transfer(q->payload, q->len);
+EXIT:	
+	
+	pbuf_free(q);
 }
 
 void bmsg_ioctl_handler(BUS_MSG_T *msg)
@@ -215,7 +226,7 @@ void bmsg_rx_sender(void *arg)
 	}
 }
 
-void bmsg_tx_sender(struct pbuf *p)
+int bmsg_tx_sender(struct pbuf *p)
 {
 	OSStatus ret;
 	BUS_MSG_T msg;
@@ -225,13 +236,17 @@ void bmsg_tx_sender(struct pbuf *p)
 	msg.len = 0;
 	msg.sema = NULL;
 
+	pbuf_ref(p);
 	ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, 1*SECONDS);
 	if(kNoErr != ret)
 	{
 		APP_PRT("bmsg_tx_sender failed\r\n");
 		pbuf_free(p);
 	} 
+
+	return ret;
 }
+
 
 void bmsg_ioctl_sender(void *arg)
 {
