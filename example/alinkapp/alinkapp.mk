@@ -1,7 +1,11 @@
 NAME := alinkapp
 
 $(NAME)_SOURCES := alink_sample.c
-$(NAME)_COMPONENTS := base64 hashtable log connectivity protocol.alink ywss modules.kv cli
+$(NAME)_COMPONENTS := base64 hashtable log connectivity protocol.alink modules.kv cli
+
+ifneq ($(ywss),0)
+$(NAME)_COMPONENTS += ywss
+endif
 
 ifneq (,$(filter linuxhost,$(COMPONENTS)))
 gateway ?= 0
