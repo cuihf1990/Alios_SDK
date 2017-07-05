@@ -18,6 +18,7 @@ $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
 $(NAME)_SOURCES     += kernel/module/kv_test.c
 $(NAME)_SOURCES     += kernel/vcall/vcall_test.c
+$(NAME)_SOURCES     += devices/vflash/vflash_test.c
 
 $(NAME)_SOURCES    += aosapi/yos/kernel/test_kernel.c
 $(NAME)_SOURCES    += aosapi/yos/kernel/yos_sys_test.c
