@@ -135,7 +135,7 @@ static inline int msn_header_len(uint8_t msg_type)
     case CONNECT:
         return sizeof(conn_body_t);
     case CONNACK:
-        return sizeof(conn_body_t);
+        return sizeof(conn_ack_t);
     case ADVERTISE:
         return sizeof(adv_body_t);
     }
