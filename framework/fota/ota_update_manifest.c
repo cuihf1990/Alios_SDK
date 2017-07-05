@@ -106,6 +106,7 @@ void ota_download_start(void * buf)
 
 OTA_END:
     ota_status_post(100);
+    ota_status_deinit();
     OTA_LOG_I("reboot system after 3 second!");
     yos_msleep(3000);
     OTA_LOG_I("task update over");
