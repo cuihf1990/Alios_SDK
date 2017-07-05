@@ -583,6 +583,8 @@ int gateway_service_start(void)
 
         yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
         yos_post_delayed_action(ADV_INTERVAL, gateway_advertise, &gateway_state);
+    } else {
+        yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
     }
 
     return 0;
@@ -612,6 +614,9 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
         if(eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
             gateway_state.yunio_connected = true;
             GW_DEBUG(GATEWAY_MODULE, "yunio_connected");
+        } else if(eventinfo->code == CODE_YUNIO_ON_DISCONNECTED) {
+            gateway_state.yunio_connected = false;
+            GW_DEBUG(GATEWAY_MODULE, "yunio_disconnected");
         }
         else
             return;
@@ -632,6 +637,8 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
 
     if (ur_mesh_get_device_state() == DEVICE_STATE_LEADER && gateway_state.yunio_connected == true)
         gateway_state.gateway_mode = true;
+    else
+        gateway_state.gateway_mode = false;
 
     if (gateway_state.mesh_connected == true)
         gateway_service_start();

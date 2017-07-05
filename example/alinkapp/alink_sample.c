@@ -354,7 +354,7 @@ void activate_button_pressed(void* arg)
 
 static void handle_reset_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
-    alink_factory_reset();    
+    alink_factory_reset();
 }
 
 static struct cli_command resetcmd = {
@@ -566,6 +566,7 @@ static void alink_cloud_connected(void) {
 }
 
 static void alink_cloud_disconnected(void) {
+    yos_post_event(EV_YUNIO, CODE_YUNIO_ON_DISCONNECTED, 0);
     yos_cloud_trigger(CLOUD_DISCONNECTED, NULL);
 }
 
