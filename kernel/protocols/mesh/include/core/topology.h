@@ -61,6 +61,7 @@ enum {
     NBR_DISCOVERY_REQUEST = 1 << 1,
     NBR_NETID_CHANGED     = 1 << 2,
     NBR_REBOOT            = 1 << 3,
+    NBR_CHANNEL_CHANGED   = 1 << 4,
 };
 
 typedef enum node_type_s {

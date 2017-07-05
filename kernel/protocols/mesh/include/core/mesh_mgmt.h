@@ -204,7 +204,8 @@ ur_error_t send_raw_data(network_context_t *network,
                          uint8_t *payload, uint8_t payload_length);
 ur_error_t register_raw_data_receiver(umesh_raw_data_received receiver);
 
-uint16_t tlvs_set_value(uint8_t *buf, const uint8_t *tlvs,
+uint16_t tlvs_set_value(network_context_t *network,
+                        uint8_t *buf, const uint8_t *tlvs,
                         uint8_t tlvs_length);
 int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length);
 
