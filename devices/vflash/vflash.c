@@ -33,14 +33,18 @@ static ssize_t flash_write(file_t *f, const void *buf, size_t len)
     int pno = (int)(long)f->node->i_arg;
     uint32_t offset, sector_off;
     int ret;
-    size_t write_size = ((len >> SECTOR_SIZE_BITS) << SECTOR_SIZE_BITS) + (len & (SECTOR_SIZE - 1)) ? SECTOR_SIZE : 0;
+    size_t write_size;
+
+    sector_off = (((f->offset) >> SECTOR_SIZE_BITS) << SECTOR_SIZE_BITS);
+    write_size = (((f->offset - sector_off + len) >> SECTOR_SIZE_BITS) << SECTOR_SIZE_BITS) +
+                    (((f->offset - sector_off + len) & (SECTOR_SIZE - 1)) ? SECTOR_SIZE : 0);
     void *buffer = (void *)yos_malloc(write_size);
     if (!buffer) {
         return 0;
     }
     memset(buffer, 0, write_size);
 
-    offset = sector_off = (((f->offset) >> SECTOR_SIZE_BITS) << SECTOR_SIZE_BITS);
+    offset = sector_off;
     ret = hal_flash_read(pno, &offset, buffer, write_size);
     if (ret < 0)
         goto exit;

@@ -35,9 +35,9 @@ static int open_flash(int pno, bool w)
     int flash_fd;
     snprintf(fn, sizeof fn, "/tmp/yos_partition_%d.bin", pno);
     if(w)
-        flash_fd = open(fn, O_RDWR | O_TRUNC);
-    else
         flash_fd = open(fn, O_RDWR);
+    else
+        flash_fd = open(fn, O_RDONLY);
 
     if (flash_fd < 0) {
         umask(0111);

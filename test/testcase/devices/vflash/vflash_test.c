@@ -79,37 +79,71 @@ static void test_vflash_read_case()
     YUNIT_ASSERT(ret == 0);   
 }
 
+
+#define SECTOR_SIZE 4096
+
 static void test_vflash_overwrite_case()
 {
     int fd, ret;
-    char buf[10] = {0};
+    char *buffer = NULL;
+    char *cmp_buf = NULL;
 
     fd = yos_open(dev_name, O_RDWR);
     YUNIT_ASSERT(fd != 0);
 
-    ret = yos_read(fd, buf, strlen(t_string_1));
-    YUNIT_ASSERT(ret == strlen(t_string_1));
-    ret = memcmp(buf, t_string_1, strlen(t_string_1));
-    YUNIT_ASSERT(ret == 0);
+    buffer = (char *)yos_malloc(2 *SECTOR_SIZE);
+    if (!buffer)
+        return;
 
-    ret = yos_write(fd, t_string_3, strlen(t_string_3));
-    YUNIT_ASSERT(ret == strlen(t_string_3));
+    memset(buffer, 'a', 2000);
+    ret = yos_write(fd, buffer, 2000);
+    YUNIT_ASSERT(ret == 2000);
+
+    memset(buffer, 'b', 2256);
+    ret = yos_write(fd, buffer, 2256);
+    YUNIT_ASSERT(ret == 2256);
+
+    memset(buffer, 'c', 2 * SECTOR_SIZE);
+    ret = yos_write(fd, buffer, 2 * SECTOR_SIZE);
+    YUNIT_ASSERT(ret == (2 * SECTOR_SIZE));
 
     ret = yos_close(fd);
+    YUNIT_ASSERT(ret == 0);
 
+    cmp_buf = (char *)yos_malloc(2 * SECTOR_SIZE);
+    if (!cmp_buf) {
+        if (buffer)
+            yos_free(buffer);
+        return;
+    }
     fd = yos_open(dev_name, O_RDONLY);
     YUNIT_ASSERT(fd != 0);
 
-    memset(buf, 0, sizeof(buf));
-    ret = yos_read(fd, buf, strlen(t_string_1));
-
-    memset(buf, 0, sizeof(buf));
-    ret = yos_read(fd, buf, strlen(t_string_3));
-    YUNIT_ASSERT(ret == strlen(t_string_3));
-    ret = memcmp(buf, t_string_3, strlen(t_string_3));
+    memset(buffer, 0, 2 * SECTOR_SIZE);
+    ret = yos_read(fd, buffer, 2000);
+    YUNIT_ASSERT(ret == 2000);
+    memset(cmp_buf, 'a', 2000);
+    ret = memcmp(buffer, cmp_buf, 2000);
     YUNIT_ASSERT(ret == 0);
 
-    ret = yos_close(fd);
+    ret = yos_read(fd, buffer, 2256);
+    YUNIT_ASSERT(ret == 2256);
+    memset(cmp_buf, 'b', 2256);
+    ret = memcmp(buffer, cmp_buf, 2256);
+    YUNIT_ASSERT(ret == 0);
+
+    ret = yos_read(fd, buffer, 2 * SECTOR_SIZE);
+    YUNIT_ASSERT(ret == (2 * SECTOR_SIZE));
+    memset(cmp_buf, 'c', 2 * SECTOR_SIZE);
+    ret = memcmp(buffer, cmp_buf, 2 * SECTOR_SIZE);
+    YUNIT_ASSERT(ret == 0);
+
+    yos_close(fd);
+    if (buffer)
+        yos_free(buffer);
+
+    if (cmp_buf)
+        yos_free(cmp_buf);
 
 }
 
