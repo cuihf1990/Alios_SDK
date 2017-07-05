@@ -273,6 +273,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     mm_channel_tv_t   *channel;
     hal_context_t     *hal;
     network_context_t *network;
+    uint8_t channel_orig;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
@@ -322,11 +323,14 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (nbr->addr.netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
+    channel_orig = nbr->channel;
     if (channel) {
-        if (nbr->channel != channel->channel) {
-            nbr->flags |= NBR_CHANNEL_CHANGED;
-        }
         nbr->channel = channel->channel;
+    } else {
+        nbr->channel = info->src_channel;
+    }
+    if (channel_orig && nbr->channel != channel_orig) {
+        nbr->flags |= NBR_CHANNEL_CHANGED;
     }
     nbr->last_heard = ur_get_now();
 
