@@ -79,6 +79,40 @@ static void test_vflash_read_case()
     YUNIT_ASSERT(ret == 0);   
 }
 
+static void test_vflash_overwrite_case()
+{
+    int fd, ret;
+    char buf[10] = {0};
+
+    fd = yos_open(dev_name, O_RDWR);
+    YUNIT_ASSERT(fd != 0);
+
+    ret = yos_read(fd, buf, strlen(t_string_1));
+    YUNIT_ASSERT(ret == strlen(t_string_1));
+    ret = memcmp(buf, t_string_1, strlen(t_string_1));
+    YUNIT_ASSERT(ret == 0);
+
+    ret = yos_write(fd, t_string_3, strlen(t_string_3));
+    YUNIT_ASSERT(ret == strlen(t_string_3));
+
+    ret = yos_close(fd);
+
+    fd = yos_open(dev_name, O_RDONLY);
+    YUNIT_ASSERT(fd != 0);
+
+    memset(buf, 0, sizeof(buf));
+    ret = yos_read(fd, buf, strlen(t_string_1));
+
+    memset(buf, 0, sizeof(buf));
+    ret = yos_read(fd, buf, strlen(t_string_3));
+    YUNIT_ASSERT(ret == strlen(t_string_3));
+    ret = memcmp(buf, t_string_3, strlen(t_string_3));
+    YUNIT_ASSERT(ret == 0);
+
+    ret = yos_close(fd);
+
+}
+
 
 static int init(void)
 {
@@ -109,6 +143,7 @@ static void teardown(void)
 static yunit_test_case_t yos_vflash_testcases[] = {
     { "vflash_write", test_vflash_write_case },
     { "vflash_read", test_vflash_read_case },
+    { "vflash_overwrite", test_vflash_overwrite_case },
     YUNIT_TEST_CASE_NULL
 };
 
