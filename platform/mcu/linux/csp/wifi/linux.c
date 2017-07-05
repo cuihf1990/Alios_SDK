@@ -403,8 +403,10 @@ static int linux_get_channel(struct wif *wi)
     if(dev->drivertype == DT_IPW2200)
         fd = dev->fd_main;
 
-    if( ioctl( fd, SIOCGIWFREQ, &wrq ) < 0 )
+    if( ioctl( fd, SIOCGIWFREQ, &wrq ) < 0 ) {
+        perror("getting freq");
         return( -1 );
+    }
 
     frequency = wrq.u.freq.m;
     if (frequency > 100000000)

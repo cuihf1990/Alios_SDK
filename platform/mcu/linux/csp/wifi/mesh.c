@@ -289,10 +289,17 @@ static int linux_80211_mesh_is_sec_enabled(struct ur_mesh_hal_module_s *module)
     return 0;
 }
 
+static int linux_80211_mesh_hal_get_channel(ur_mesh_hal_module_t *module)
+{
+    mesh_hal_priv_t *priv = module->base.priv_dev;
+    int chan = wi_get_channel(priv->wif);
+    return chan < 0 ? priv->channel : chan;
+}
+
 static int linux_80211_mesh_hal_set_channel(ur_mesh_hal_module_t *module, uint8_t channel)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
-printf("setting channel to %d\n", channel);
+    printf("setting channel to %d\n", channel);
     wi_set_channel(priv->wif, channel);
     /* channel will appended to each data packet sent */
     priv->channel = channel;
@@ -363,6 +370,8 @@ static ur_mesh_hal_module_t linux_80211_mesh_wifi_module = {
     .ur_mesh_hal_set_bcast_mtu = linux_80211_mesh_set_mtu,
     .ur_mesh_hal_set_ucast_mtu = linux_80211_mesh_set_mtu,
     .ur_mesh_hal_get_mac_address = linux_80211_mesh_get_mac_address,
+    .ur_mesh_hal_get_ucast_channel = linux_80211_mesh_hal_get_channel,
+    .ur_mesh_hal_get_bcast_channel = linux_80211_mesh_hal_get_channel,
     .ur_mesh_hal_set_ucast_channel = linux_80211_mesh_hal_set_channel,
     .ur_mesh_hal_set_bcast_channel = linux_80211_mesh_hal_set_channel,
     .ur_mesh_hal_get_bcast_chnlist = linux_80211_mesh_get_channel_list,
