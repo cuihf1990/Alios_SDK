@@ -471,13 +471,15 @@ static void gateway_worker(void *arg)
                 continue;
             }
         }
-        if (FD_ISSET(gateway_state.sockfd, &rfds))
-            gateway_sock_read_cb(gateway_state.sockfd, &gateway_state);
 
         if (sockfd != gateway_state.sockfd) {
             gateway_state.mqtt_connected = false;
             close(sockfd);
+            continue;
         }
+
+        if (FD_ISSET(sockfd, &rfds))
+            gateway_sock_read_cb(sockfd, &gateway_state);
     }
 
     LOGE(MODULE_NAME, "return");
