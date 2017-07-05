@@ -35,7 +35,7 @@
 #define YUNOS_CONFIG_MM_TLF                  1
 #define K_MM_STATISTIC                       1
 #define YUNOS_CONFIG_MM_MAXMSIZEBIT          19
-#define YUNOS_CONFIG_GCC_RETADDR             0
+#define YUNOS_CONFIG_GCC_RETADDR             1
 #define YUNOS_CONFIG_MM_LEAKCHECK            0
 #define YUNOS_CONFIG_RINGBUF_VENDOR          0
 

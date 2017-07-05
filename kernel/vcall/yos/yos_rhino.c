@@ -505,28 +505,52 @@ int yos_work_cancel(yos_work_t *work)
 
 void *yos_zalloc(unsigned int size)
 {
+    void *tmp = NULL;
     if (size == 0) {
         return NULL;
     }
 
-    void *p = yunos_mm_alloc(size);
-    if (p)
-        bzero(p, size);
-    return p;
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+        tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+        tmp = yunos_mm_alloc(size);
+#endif
+    if (tmp)
+        bzero(tmp, size);
+    return tmp;
 }
 
 void *yos_malloc(unsigned int size)
 {
+    void *tmp = NULL;
+
     if (size == 0) {
         return NULL;
     }
 
-    return yunos_mm_alloc(size);
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+    tmp = yunos_mm_alloc(size);
+#endif
+
+    return tmp;
 }
 
 void *yos_realloc(void *mem, unsigned int size)
 {
-    return yunos_mm_realloc(mem, size);
+    void *tmp = NULL;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    tmp = yunos_mm_realloc(mem, size|YOS_UNSIGNED_INT_MSB);
+    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+    tmp = yunos_mm_realloc(mem, size);
+#endif
+
+    return tmp;
 }
 
 void yos_free(void *mem)
