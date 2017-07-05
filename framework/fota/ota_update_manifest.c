@@ -19,6 +19,7 @@
 #include <yos/kernel.h>
 
 #include "ota_update_manifest.h"
+
 #include "ota_log.h"
 #include "ota_transport.h"
 #include "ota_util.h"
@@ -57,6 +58,8 @@ char url[OTA_URL_MAX_LEN];
 char md5[33];
 
 extern int  check_md5(const char *buffer, const int32_t len);
+
+extern int ota_hal_init(void);
 
 void ota_download_start(void * buf)
 {
