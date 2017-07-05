@@ -37,6 +37,7 @@ static void handle_link_request_timer(void *args)
     slist_t *networks;
     network_context_t *network;
     uint32_t interval;
+    uint8_t tlv_type[1] = {TYPE_UCAST_CHANNEL};
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link update timer\r\n");
 
@@ -59,7 +60,8 @@ static void handle_link_request_timer(void *args)
             continue;
         }
 
-        send_link_request(network, &attach_node->addr, NULL, 0);
+        send_link_request(network, &attach_node->addr,
+                          tlv_type, sizeof(tlv_type));
     }
 }
 
@@ -268,6 +270,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     mm_ueid_tv_t      *src_ueid = NULL;
     mm_ssid_info_tv_t *ssid_info = NULL;
     mm_mode_tv_t      *mode;
+    mm_channel_tv_t   *channel;
     hal_context_t     *hal;
     network_context_t *network;
 
@@ -277,6 +280,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     src_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SRC_UEID);
     ssid_info = (mm_ssid_info_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SSID_INFO);
     mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_MODE);
+    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_UCAST_CHANNEL);
 
     hal = get_hal_context(info->hal_type);
     nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
@@ -318,7 +322,12 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (nbr->addr.netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
-    nbr->channel = info->src_channel;
+    if (channel) {
+        if (nbr->channel != channel->channel) {
+            nbr->flags |= NBR_CHANNEL_CHANGED;
+        }
+        nbr->channel = channel->channel;
+    }
     nbr->last_heard = ur_get_now();
 
     network = info->network;
@@ -531,7 +540,7 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
     mm_header = (mm_header_t *)data;
     mm_header->command = COMMAND_LINK_ACCEPT_AND_REQUEST;
     data += sizeof(mm_header_t);
-    data += tlvs_set_value(data, tlvs, tlvs_length);
+    data += tlvs_set_value(network, data, tlvs, tlvs_length);
 
     if (tlv_types_length) {
         request_tlvs = (mm_tlv_request_tlv_t *)data;
@@ -587,7 +596,7 @@ static ur_error_t send_link_accept(network_context_t *network,
     mm_header = (mm_header_t *)data;
     mm_header->command = COMMAND_LINK_ACCEPT;
     data += sizeof(mm_header_t);
-    data += tlvs_set_value(data, tlvs, tlvs_length);
+    data += tlvs_set_value(network, data, tlvs, tlvs_length);
 
     info = message->info;
     info->network = network;
@@ -636,9 +645,11 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     uint16_t   tlvs_length;
     mm_tlv_request_tlv_t *tlvs_request;
     mm_ueid_tv_t *ueid;
+    mm_channel_tv_t *channel;
     neighbor_t *node;
     message_info_t *info;
     network_context_t *network;
+    uint8_t local_channel;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
            "handle link accept and resquest\r\n");
@@ -658,6 +669,15 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
     if (ueid) {
         memcpy(node->ueid, ueid->ueid, sizeof(node->ueid));
+    }
+
+    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                 TYPE_UCAST_CHANNEL);
+    if (channel) {
+        local_channel = umesh_mm_get_channel(network);
+        if (local_channel != channel->channel) {
+            umesh_mm_set_channel(network, channel->channel);
+        }
     }
 
     tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,

@@ -149,12 +149,13 @@ static ur_error_t send_discovery_response(network_context_t *network,
     ur_error_t      error = UR_ERROR_NONE;
     mm_header_t     *mm_header;
     mm_netinfo_tv_t *netinfo;
+    mm_channel_tv_t *channel;
     message_t       *message;
     uint8_t         *data;
     uint16_t        length;
     message_info_t  *info;
 
-    length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) + sizeof(mm_channel_tv_t);
     message = message_alloc(length);
     if (message == NULL) {
         return UR_ERROR_MEM;
@@ -174,6 +175,11 @@ static ur_error_t send_discovery_response(network_context_t *network,
     set_subnetsize_to_netinfo(netinfo, nd_get_meshnetsize(network));
     netinfo->leader_mode = umesh_mm_get_leader_mode();
     data += sizeof(mm_netinfo_tv_t);
+
+    channel = (mm_channel_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)channel, TYPE_UCAST_CHANNEL);
+    channel->channel = umesh_mm_get_channel(network);
+    data += sizeof(mm_channel_tv_t);
 
     info = message->info;
     info->network = network;
@@ -264,6 +270,7 @@ ur_error_t handle_discovery_response(message_t *message)
     network_context_t *network;
     message_info_t    *info;
     mm_netinfo_tv_t   *netinfo;
+    mm_channel_tv_t   *channel;
     int8_t            cmp_mode = 0;
 
     if (umesh_mm_get_device_state() != DEVICE_STATE_DETACHED) {
@@ -297,6 +304,12 @@ ur_error_t handle_discovery_response(message_t *message)
     cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode(), netinfo->leader_mode);
     if (cmp_mode > 0) {
         return UR_ERROR_NONE;
+    }
+
+    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                 TYPE_UCAST_CHANNEL);
+    if (channel) {
+        info->src_channel = channel->channel;
     }
 
     res = &network->hal->discovery_result;

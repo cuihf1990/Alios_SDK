@@ -102,7 +102,7 @@ static void neighbor_updated_handler(neighbor_t *nbr)
 
     network = get_default_network_context();
     if (network->attach_node != nbr) {
-        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT)) ;
+        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT | NBR_CHANNEL_CHANGED)) ;
         return;
     }
 
@@ -111,6 +111,11 @@ static void neighbor_updated_handler(neighbor_t *nbr)
         become_detached();
         nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT));
         attach_start(NULL);
+    } else if (nbr->flags & NBR_CHANNEL_CHANGED) {
+        if (nbr->channel != umesh_mm_get_channel(network)) {
+            umesh_mm_set_prev_channel();
+            umesh_mm_set_channel(network, nbr->channel);
+        }
     }
 }
 
@@ -311,6 +316,8 @@ static uint8_t get_tv_value_length(uint8_t type)
         case TYPE_ADDR_QUERY:
         case TYPE_DEF_HAL_TYPE:
         case TYPE_STATE_FLAGS:
+        case TYPE_UCAST_CHANNEL:
+        case TYPE_BCAST_CHANNEL:
             length = 1;
             break;
         case TYPE_SRC_SID:
@@ -362,7 +369,8 @@ static uint8_t get_tlv_value_length(uint8_t type)
     return 0;
 }
 
-static uint8_t get_tv_value(uint8_t *data, uint8_t type)
+static uint8_t get_tv_value(network_context_t *network,
+                            uint8_t *data, uint8_t type)
 {
     uint8_t  length = 1;
 
@@ -382,6 +390,14 @@ static uint8_t get_tv_value(uint8_t *data, uint8_t type)
             memcpy(data, umesh_mm_get_local_ueid(), 8);
             length += 8;
             break;
+        case TYPE_UCAST_CHANNEL:
+            *data = hal_umesh_get_ucast_channel(network->hal->module);
+            length += 1;
+            break;
+        case TYPE_BCAST_CHANNEL:
+            *data = hal_umesh_get_bcast_channel(network->hal->module);
+            length += 1;
+            break;
         default:
             assert(0);
             break;
@@ -389,23 +405,25 @@ static uint8_t get_tv_value(uint8_t *data, uint8_t type)
     return length;
 }
 
-static uint8_t get_tlv_value(uint8_t *data, uint8_t type)
+static uint8_t get_tlv_value(network_context_t *network,
+                             uint8_t *data, uint8_t type)
 {
     /* this should not happen so far */
     assert(0);
     return 0;
 }
 
-uint16_t tlvs_set_value(uint8_t *buf, const uint8_t *tlvs, uint8_t tlvs_length)
+uint16_t tlvs_set_value(network_context_t *network,
+                        uint8_t *buf, const uint8_t *tlvs, uint8_t tlvs_length)
 {
     uint8_t index;
     uint8_t *base = buf;
 
     for (index = 0; index < tlvs_length; index++) {
         if (tlvs[index] & TYPE_LENGTH_FIXED_FLAG) {
-            buf += get_tv_value(buf, tlvs[index]);
+            buf += get_tv_value(network, buf, tlvs[index]);
         } else {
-            buf += get_tlv_value(buf, tlvs[index]);
+            buf += get_tlv_value(network, buf, tlvs[index]);
         }
     }
 
@@ -613,6 +631,7 @@ ur_error_t send_advertisement(network_context_t *network)
     mm_ssid_info_tv_t *ssid_info;
     mm_cost_tv_t      *path_cost;
     mm_mode_tv_t      *mode;
+    mm_channel_tv_t   *channel;
     message_info_t    *info;
     uint16_t          subnet_size = 0;
 
@@ -622,6 +641,9 @@ ur_error_t send_advertisement(network_context_t *network)
 
     length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) +
              sizeof(mm_cost_tv_t) + sizeof(mm_mode_tv_t);
+    if (network->hal->module->type == MEDIA_TYPE_WIFI) {
+        length += sizeof(mm_channel_tv_t);
+    }
     if (network->router->sid_type == STRUCTURED_SID) {
         length += sizeof(mm_ssid_info_tv_t);
     }
@@ -683,6 +705,13 @@ ur_error_t send_advertisement(network_context_t *network)
     umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
     mode->mode = (uint8_t)g_mm_state.device.mode;
     data += sizeof(mm_mode_tv_t);
+
+    if (network->hal->module->type == MEDIA_TYPE_WIFI) {
+        channel = (mm_channel_tv_t *)data;
+        umesh_mm_init_tv_base((mm_tv_t *)channel, TYPE_UCAST_CHANNEL);
+        channel->channel = umesh_mm_get_channel(network);
+        data += sizeof(mm_channel_tv_t);
+    }
 
     info = message->info;
     info->network = network;
@@ -1548,6 +1577,10 @@ static ur_error_t attach_start(neighbor_t *nbr)
     network->attach_state = ATTACH_REQUEST;
     network->attach_candidate = nbr;
     if (nbr) {
+        if (umesh_mm_get_channel(network) != nbr->channel) {
+            umesh_mm_set_prev_channel();
+            umesh_mm_set_channel(network, nbr->channel);
+        }
         network->candidate_meshnetid = nbr->addr.netid;
         send_attach_request(network, &nbr->addr);
     } else {
@@ -1856,6 +1889,7 @@ ur_error_t umesh_mm_init(node_mode_t mode)
     }
 
     master_key_init(master_key_updated_handler);
+
     return error;
 }
 
@@ -1869,6 +1903,9 @@ ur_error_t umesh_mm_deinit(void)
 ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
 {
     ur_error_t error = UR_ERROR_NONE;
+    slist_t *networks;
+    network_context_t *network;
+    uint8_t channel;
 
     assert(mm_cb);
 
@@ -1881,10 +1918,16 @@ ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
     g_mm_state.device.alive_timer = NULL;
 
     if (g_mm_state.device.mode & MODE_LEADER) {
+        networks = get_network_contexts();
+        slist_for_each_entry(networks, network, network_context_t, next) {
+            channel = hal_umesh_get_ucast_channel(network->hal->module);
+            umesh_mm_set_channel(network, channel);
+        }
         become_leader();
     } else {
         error = nm_start_discovery();
     }
+
     return error;
 }
 
@@ -2101,11 +2144,9 @@ uint16_t umesh_mm_get_channel(network_context_t *network)
 
 void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
 {
-    if ((g_mm_state.device.mode & MODE_LEADER) == 0) {
-        network = network ? : get_default_network_context();
-        hal_umesh_set_bcast_channel(network->hal->module, channel);
-        network->channel = channel;
-    }
+    network = network ? : get_default_network_context();
+    hal_umesh_set_bcast_channel(network->hal->module, channel);
+    network->channel = channel;
 }
 
 mm_device_state_t umesh_mm_get_device_state(void)
