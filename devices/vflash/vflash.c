@@ -25,8 +25,8 @@ static int flash_open(inode_t *node, file_t *file)
     return 0;
 }
 
-#define SECTOR_SIZE_BITS 12 /* 1 << 12, sector_size = 4K */
-#define SECTOR_SIZE (1 << SECTOR_SIZE_BITS)
+#define SECTOR_SIZE     0x1000      /* sector size: 4k */
+#define SECTOR_MASK     ~(SECTOR_SIZE - 1)
 
 static ssize_t flash_write(file_t *f, const void *buf, size_t len)
 {
@@ -35,9 +35,9 @@ static ssize_t flash_write(file_t *f, const void *buf, size_t len)
     int ret;
     size_t write_size;
 
-    sector_off = (((f->offset) >> SECTOR_SIZE_BITS) << SECTOR_SIZE_BITS);
-    write_size = (((f->offset - sector_off + len) >> SECTOR_SIZE_BITS) << SECTOR_SIZE_BITS) +
-                    (((f->offset - sector_off + len) & (SECTOR_SIZE - 1)) ? SECTOR_SIZE : 0);
+    sector_off = f->offset & SECTOR_MASK;
+    write_size = (f->offset - sector_off + len + (~SECTOR_MASK)) & SECTOR_MASK;
+
     void *buffer = (void *)yos_malloc(write_size);
     if (!buffer) {
         return 0;
