@@ -424,7 +424,8 @@ $(NAME)_SOURCES	 += beken7231/beken378/ip/common/co_dlist.c \
                     beken7231/beken378/ip/umac/src/txu/txu_cntrl.c 
 endif
 
-$(NAME)_SOURCES	 += hal/wdg.c \
+$(NAME)_SOURCES	 += hal/gpio.c \
+                    hal/wdg.c \
                     hal/hw.c \
                     hal/flash.c \
 					hal/uart.c \
