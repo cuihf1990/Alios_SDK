@@ -787,6 +787,13 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
     insert_block(mmhead, b, fl, sl);
 
     tmp_b = NEXT_MM_BLK(b->mbinfo.buffer, b->size & YUNOS_MM_BLKSIZE_MASK);
+#if (YUNOS_CONFIG_MM_DEBUG > 0u)
+    if (tmp_b->dye != YUNOS_MM_FREE_DYE && tmp_b->dye != YUNOS_MM_CORRUPT_DYE) {
+        printf("WARNING,memory overwritten!!\r\n");
+        k_err_proc(YUNOS_SYS_FATAL_ERR);
+    }
+#endif
+
     VGF(VALGRIND_MAKE_MEM_DEFINED(tmp_b, MMLIST_HEAD_SIZE));
     tmp_b->size |= YUNOS_MM_PREVFREE;
     tmp_b->prev = b;
@@ -932,7 +939,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
             bitmap_search(next_b->size & YUNOS_MM_BLKSIZE_MASK, &fl, &sl, ACTION_INSERT);
             get_block(mmhead, next_b, fl, sl);
             b->size += (next_b->size & YUNOS_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE;
-            //next_b = NEXT_MM_BLK(b->mbinfo.buffer, b->size & YUNOS_MM_BLKSIZE_MASK);
+            next_b = NEXT_MM_BLK(b->mbinfo.buffer, b->size & YUNOS_MM_BLKSIZE_MASK);
             VGF(VALGRIND_MAKE_MEM_DEFINED(next_b, sizeof(k_mm_list_t)));
             next_b->prev = b;
             next_b->size &= ~YUNOS_MM_PREVFREE;
