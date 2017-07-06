@@ -218,7 +218,7 @@ static int  __cb_wsf_recv(int fd, void *arg)
             count = os_tcp_recv(wsf_conn->tcp, buf, len);
         }
         LOGD(MODULE_NAME, "wsf recv : %s,cnt: %d, len: %d\n", buf, count,len);
-        if (count < 0 && errno == EAGAIN) {
+        if (count < 0 && (count == -EAGAIN || errno == EAGAIN)) {
             LOGD(MODULE_NAME, "wsf recv eagain");
             return 1;
         }

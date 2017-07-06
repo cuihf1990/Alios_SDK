@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <yos/kernel.h>
+#include <yos/network.h>
 
 #include "mbedtls/config.h"
 #include "mbedtls/debug.h"
@@ -316,7 +317,7 @@ int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
             return 0;
         } else {
             if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
-                return total_len > 0 ? total_len : -1;
+                return total_len > 0 ? total_len : -EAGAIN;
             }
 
             if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
