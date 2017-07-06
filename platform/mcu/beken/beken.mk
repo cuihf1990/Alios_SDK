@@ -152,7 +152,7 @@ $(NAME)_SOURCES :=  yos/yos.c
 $(NAME)_SOURCES +=  yos/newlib_stub.c
 $(NAME)_LINK_FILES := yos/newlib_stub.o
 $(NAME)_INCLUDES += yos
-
+                    
 $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/app/config/param_config.c \
                     beken7231/beken378/app/ftp/ftpd.c \
@@ -340,7 +340,25 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/func/user_driver/BkDriverUart.c \
                     beken7231/beken378/func/user_driver/BkDriverWdg.c \
                     beken7231/beken378/func/wlan_ui/wlan_ui.c \
-                    beken7231/beken378/ip/common/co_dlist.c \
+                    beken7231/beken378/os/mem_arch.c \
+                    beken7231/beken378/os/str_arch.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverFlash.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverGpio.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverPwm.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverUart.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverWdg.c \
+                    beken7231/mico_api/mico_cli.c \
+                    beken7231/mico_api/mxchipWNet.c \
+                    beken7231/mico_api/platform_stub.c \
+                    ../../arch/arm/armv5/port_c.c \
+                    ../../arch/arm/armv5/port_s.S \
+                    yos/soc_impl.c 
+
+
+ifneq ($(wildcard $(CURDIR)librwnx.a),)
+$(NAME)_PREBUILT_LIBRARY := librwnx.a
+else
+$(NAME)_SOURCES	 += beken7231/beken378/ip/common/co_dlist.c \
                     beken7231/beken378/ip/common/co_list.c \
                     beken7231/beken378/ip/common/co_math.c \
                     beken7231/beken378/ip/common/co_pool.c \
@@ -403,20 +421,8 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/ip/umac/src/scanu/scanu_task.c \
                     beken7231/beken378/ip/umac/src/sm/sm.c \
                     beken7231/beken378/ip/umac/src/sm/sm_task.c \
-                    beken7231/beken378/ip/umac/src/txu/txu_cntrl.c \
-                    beken7231/beken378/os/mem_arch.c \
-                    beken7231/beken378/os/str_arch.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverFlash.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverGpio.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverPwm.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverUart.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverWdg.c \
-                    beken7231/mico_api/mico_cli.c \
-                    beken7231/mico_api/mxchipWNet.c \
-                    beken7231/mico_api/platform_stub.c \
-                    ../../arch/arm/armv5/port_c.c \
-                    ../../arch/arm/armv5/port_s.S \
-                    yos/soc_impl.c \
+                    beken7231/beken378/ip/umac/src/txu/txu_cntrl.c 
+endif
 
 $(NAME)_SOURCES	 += hal/wdg.c \
                     hal/hw.c \
