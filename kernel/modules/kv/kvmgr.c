@@ -85,7 +85,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         if (ret != 0) {
             LOGW(MODULE_NAME_KV, "cli set kv failed");
         } else {
-            LOGD(MODULE_NAME_KV, "cli set kv success");
+            LOGI(MODULE_NAME_KV, "cli set kv success");
         }
     } else if (strcmp(rtype, "get") == 0) {
         if (argc != 3) {
@@ -102,9 +102,9 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 
         ret = yos_kv_get(argv[2], buffer, &len);
         if (ret != 0) {
-            LOGI(MODULE_NAME_KV, "cli: no paired kv");
+            LOGW(MODULE_NAME_KV, "cli: no paired kv");
         } else {
-            LOGD(MODULE_NAME_KV, "value is %s", buffer);
+            LOGI(MODULE_NAME_KV, "value is %s", buffer);
         }
 
         if (buffer) {
@@ -116,9 +116,9 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
         ret = yos_kv_del(argv[2]);
         if (ret != 0) {
-            LOGD(MODULE_NAME_KV, "cli kv del failed");
+            LOGW(MODULE_NAME_KV, "cli kv del failed");
         } else {
-            LOGW(MODULE_NAME_KV, "cli kv del success");
+            LOGI(MODULE_NAME_KV, "cli kv del success");
         }
     } else if (strcmp(rtype, "list") == 0) {
         ht_iterator_lockless(g_ht, __print_kv_inflash_cb, NULL);

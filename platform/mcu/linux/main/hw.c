@@ -35,9 +35,9 @@ static int open_flash(int pno, bool w)
     int flash_fd;
     snprintf(fn, sizeof fn, "/tmp/yos_partition_%d.bin", pno);
     if(w)
-        flash_fd = open(fn, O_RDWR | O_TRUNC);
-    else
         flash_fd = open(fn, O_RDWR);
+    else
+        flash_fd = open(fn, O_RDONLY);
 
     if (flash_fd < 0) {
         umask(0111);
@@ -53,7 +53,7 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
     if (flash_fd < 0)
         return -1;
 
-    int ret = pwrite(flash_fd, buf, buf_size, 0);
+    int ret = pwrite(flash_fd, buf, buf_size, *poff);
     if (ret < 0)
         perror("error writing flash:");
     else if (poff)
@@ -69,7 +69,7 @@ int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t 
     if (flash_fd < 0)
         return -1;
 
-    int ret = pread(flash_fd, buf, buf_size, 0);
+    int ret = pread(flash_fd, buf, buf_size, *poff);
     if (ret < 0)
         perror("error reading flash:");
     else if (poff)
