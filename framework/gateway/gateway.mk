@@ -28,5 +28,5 @@ $(NAME)_COMPONENTS += cjson protocols.net protocols.mesh protocol.alink
 
 $(NAME)_INCLUDES := ./ ../protocol/alink/ ../protocol/alink/accs/ ../protocol/alink/json/
 $(NAME)_INCLUDES += ../protocol/alink/os/ ../protocol/alink/system/ ../protocol/alink/devmgr
-$(NAME)_INCLUDES += ../protocol/alink/msdp/
+$(NAME)_INCLUDES += ../protocol/alink/msdp/ ../ywss/
 $(NAME)_CFLAGS += -DGATEWAY_SDK

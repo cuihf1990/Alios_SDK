@@ -35,6 +35,8 @@
 #include "mqtt_sn.h"
 #include "gateway_service.h"
 
+#include "enrollee.h"
+
 #define MODULE_NAME "gateway"
 #define ADV_INTERVAL (5 * 1000)
 #define GW_DEBUG(x, y, ...)     printf("GATEWAY: " y "\n", ##__VA_ARGS__)
@@ -44,6 +46,8 @@ typedef struct reg_info_s {
     unsigned char ieee_addr[IEEE_ADDR_BYTES + 1];
     char rand[SUBDEV_RAND_BYTES + 1];
     char sign[STR_SIGN_LEN + 1];
+    char model[OS_PRODUCT_MODEL_LEN];
+    char secret[OS_PRODUCT_SECRET_LEN];
 } reg_info_t;
 
 typedef struct {
@@ -160,6 +164,9 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     memcpy(reginfo->model_id, &model_id, sizeof(model_id));
     mac_addr = ur_mesh_net_get_mac_address(UR_MESH_NET_DFL);
     memcpy(reginfo->ieee_addr, mac_addr->addr, IEEE_ADDR_BYTES);
+    os_product_get_model(reginfo->model);
+    os_product_get_secret(reginfo->secret);
+    LOGD(MODULE_NAME, "model: %s, secret: %s", reginfo->model, reginfo->secret);
     memcpy(reginfo->rand,"randrandrandrand", sizeof(reginfo->rand));
     devmgr_get_device_signature(model_id, reginfo->rand, reginfo->sign, sizeof(reginfo->sign));
 
@@ -240,6 +247,98 @@ static void handle_publish(gateway_state_t *pstate, void *pmsg, int len)
     }
 }
 
+/* Example: 0x12345678 -> "78056034012" */
+static void mac_to_devid(unsigned char *mac, uint8_t *devid)
+{
+    int i;
+    char c;
+
+    if (!mac || !devid) {LOGE(MODULE_NAME, "%s error", __func__); return;}
+
+    for (i = 0; i < 6; i++) {
+        c = mac[i] >> 4;
+        if (c >= 0 && c <= 9) *devid++ = c + '0';
+        else if (c >= 0xa && c <= 0xf) *devid++ = c + 'A' - 0xa;
+        c = mac[i] & 0xf;
+        if (c >= 0 && c <= 9) *devid++ = c + '0';
+        else if (c >= 0xa && c <= 0xf) *devid++ = c + 'A' - 0xa;
+        *devid++ = '0';
+    }
+    *--devid = '\0'; // Eat the last '0'
+}
+
+static int add_mesh_enrollee(reg_info_t *reginfo)
+{
+    struct enrollee_info *mesh_enrollee;
+    uint8_t sign[ENROLLEE_SIGN_SIZE];
+    uint32_t rand;
+    char devid[MAX_DEVID_LEN], *model;
+
+    if (!reginfo) {
+        LOGE(MODULE_NAME, "Failed to add mesh enrollee - reginfo is NULL");
+        return -1;
+    }
+
+    mesh_enrollee = (struct enrollee_info *)os_malloc(sizeof(struct enrollee_info));
+    OS_CHECK_MALLOC(mesh_enrollee);
+
+    memset(mesh_enrollee, 0, sizeof(struct enrollee_info));
+    mesh_enrollee->dev_type_ver = DEVICE_TYPE_VERSION;
+
+    mac_to_devid(reginfo->ieee_addr, devid);
+    LOGD(MODULE_NAME, "mac(%02x%02x%02x%02x%02x%02x) -> devid (%s)",
+        reginfo->ieee_addr[0], reginfo->ieee_addr[1], reginfo->ieee_addr[2],
+        reginfo->ieee_addr[3], reginfo->ieee_addr[4], reginfo->ieee_addr[5], devid);
+    mesh_enrollee->devid_len = strlen(devid);
+    memcpy(mesh_enrollee->devid, devid, mesh_enrollee->devid_len);
+
+    mesh_enrollee->frame_type = ENROLLEE_FRAME_TYPE;
+
+    model = reginfo->model;
+    mesh_enrollee->model_len = strlen(model);
+    memcpy(mesh_enrollee->model, model, mesh_enrollee->model_len);
+
+    rand = get_random_digital();
+    snprintf(mesh_enrollee->random, sizeof(uint32_t), "%04d", rand);
+    LOGD(MODULE_NAME, "rand %d, devid: %s, model: %s", rand,
+         mesh_enrollee->devid, mesh_enrollee->model);
+
+    { // sign
+        char *text, *secret;
+        int text_len;
+
+        /* calc sign */
+        text_len = sizeof(uint32_t) + mesh_enrollee->devid_len + mesh_enrollee->model_len;
+        text = os_malloc(text_len + 1); /* +1 for string print */
+        OS_CHECK_MALLOC(text);
+        memset(text, 0, text_len + 1);
+
+        memcpy(text, mesh_enrollee->random, sizeof(uint32_t));
+        memcpy(text + sizeof(uint32_t), mesh_enrollee->devid,
+               mesh_enrollee->devid_len);
+        memcpy(text + sizeof(uint32_t) + mesh_enrollee->devid_len,
+               mesh_enrollee->model, mesh_enrollee->model_len);
+
+        secret =reginfo->secret;
+
+        digest_hmac(DIGEST_TYPE_MD5,
+                (const unsigned char *)text, text_len,
+                (const unsigned char *)secret, strlen(secret), sign);
+
+        LOGD(MODULE_NAME,"dump random(4)+devid(n)+model(n): %s", text);
+        os_free(text);
+    }
+    memcpy(mesh_enrollee->sign, sign, ENROLLEE_SIGN_SIZE);
+
+    mesh_enrollee->rssi = 0;
+
+    enrollee_put(mesh_enrollee);
+
+    os_free(mesh_enrollee);
+
+    return 0;
+}
+
 static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
 {
     client_t *client = NULL;
@@ -256,7 +355,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
-            return client;
+            goto add_enrollee;
         }
     }
 
@@ -284,12 +383,16 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
              (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
              (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
 
+add_enrollee:
+    add_mesh_enrollee(reginfo);
+
     return client;
 }
 
 static void handle_connect(gateway_state_t *pstate, void *pmsg, int len)
 {
     client_t *client = NULL;
+
     if (!pstate->gateway_mode) {
         LOGE(MODULE_NAME, "error recv CONNECT cmd!");
         return;
@@ -606,6 +709,11 @@ void gateway_service_stop(void) {
         devmgr_leave_zigbee_device(client->devinfo->dev_base.u.ieee_addr);
         yos_free(client);
     }
+}
+
+bool gateway_service_get_mesh_mqtt_state()
+{
+    return gateway_state.mqtt_connected;
 }
 
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
