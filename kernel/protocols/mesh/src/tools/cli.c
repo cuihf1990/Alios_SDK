@@ -482,6 +482,7 @@ void process_networks(int argc, char *argv[])
         response_append("  route id %d\r\n", network->router->id);
         response_append("  netdata version %d\r\n", network->network_data.version);
         response_append("  size %d\r\n", network->network_data.size);
+        response_append("  channel %d\r\n", network->channel);
     }
 }
 
