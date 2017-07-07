@@ -60,6 +60,9 @@ YUNOS_INLINE kstat_t rhino_init(void)
     yunos_mm_region_init(&g_kmm_region_head, &g_mm_region,
                          sizeof(g_mm_region) / sizeof(k_mm_region_t));
 #endif
+#if (YUNOS_CONFIG_MM_LEAKCHECK > 0 )
+    yos_mm_leak_region_init();
+#endif
     yunos_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                        YUNOS_CONFIG_K_DYN_QUEUE_MSG);
     dyn_mem_proc_task_start();

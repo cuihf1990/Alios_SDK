@@ -72,6 +72,26 @@ k_mm_region_t g_mm_region[] = {(uint8_t*)&heap_start,(size_t)&heap_len};
 
 #endif
 
+#if (YUNOS_CONFIG_MM_LEAKCHECK > 0 )
+
+extern int _bss_start, _bss_end, _data_ram_begin, _data_ram_end;
+
+void yos_mm_leak_region_init(void)
+{
+    yunos_mm_leak_region_init(&_bss_start, &_bss_end);
+    yunos_mm_leak_region_init(&_data_ram_begin, &_data_ram_end);
+}
+
+size_t soc_get_cur_sp()
+{
+    size_t sp = 0;
+    asm volatile(
+        "mov %0,sp\n"
+        :"=r"(sp));
+    return sp;
+}
+
+#endif
 void soc_err_proc(kstat_t err)
 {
     (void)err;
