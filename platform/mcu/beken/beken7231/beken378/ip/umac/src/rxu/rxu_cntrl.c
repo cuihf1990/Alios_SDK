@@ -458,34 +458,6 @@ static void rxu_cntrl_mac2eth_update(struct rx_swdesc *rx_swdesc_ptr)
     rxu_cntrl_env.rx_status.payl_offset = payl_offset;
 }
 
-#ifdef CONFIG_YOS_MESH
-bool rxu_mesh_monitor(struct rx_swdesc *swdesc)
-{
-    struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
-    struct rx_hd *rhd = &dma_hdrdesc->hd;
-    struct rx_payloaddesc *payl_d = HW2CPU(rhd->first_pbd_ptr);
-    struct rx_cntrl_rx_status *rx_status = &rxu_cntrl_env.rx_status;
-    uint32_t *frame = payl_d->buffer;
-    struct mac_hdr *hdr = (struct mac_hdr *)frame;
-    uint8_t *local_bssid;
-    uint8_t *bssid;
-
-    if (wlan_is_mesh_monitor_mode() == FALSE) {
-        return false;
-    }
-
-    if(MAC_FCTRL_DATA_T == (hdr->fctl & MAC_FCTRL_TYPE_MASK)) {
-        local_bssid = wlan_get_mesh_bssid();
-        bssid = (uint8_t *)hdr->addr3.array;
-        if (memcmp(local_bssid, bssid, 6) == 0) {
-            return true;
-        }
-    }
-
-    return false;
-}
-#endif
-
 /**
  * @return True if a free descriptor has been used, else False
  */

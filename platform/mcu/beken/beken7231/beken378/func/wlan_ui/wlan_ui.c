@@ -726,6 +726,48 @@ uint8_t *wlan_get_mesh_bssid(void)
 {
     return g_mesh_bssid;
 }
+
+bool rxu_mesh_monitor(struct rx_swdesc *swdesc)
+{
+    struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+    struct rx_hd *rhd = &dma_hdrdesc->hd;
+    struct rx_payloaddesc *payl_d = HW2CPU(rhd->first_pbd_ptr);
+    struct rx_cntrl_rx_status *rx_status = &rxu_cntrl_env.rx_status;
+    uint32_t *frame = payl_d->buffer;
+    struct mac_hdr *hdr = (struct mac_hdr *)frame;
+    uint8_t *local_bssid;
+    uint8_t *bssid;
+
+    if (wlan_is_mesh_monitor_mode() == FALSE) {
+        return false;
+    }
+
+    if(MAC_FCTRL_DATA_T == (hdr->fctl & MAC_FCTRL_TYPE_MASK)) {
+        local_bssid = wlan_get_mesh_bssid();
+        bssid = (uint8_t *)hdr->addr3.array;
+        if (memcmp(local_bssid, bssid, 6) == 0) {
+            return true;
+        }
+    } else if (MAC_FCTRL_ACK == (hdr->fctl & MAC_FCTRL_TYPESUBTYPE_MASK)) {
+        uint16_t local_addr[3];
+        uint16_t *addr;
+        uint32_t addr_low;
+        uint16_t addr_high;
+
+        addr = (uint16_t *)hdr->addr1.array;
+        addr_low = nxmac_mac_addr_low_get();
+        local_addr[0] = addr_low;
+        local_addr[1] = (addr_low & 0xffff0000) >> 16;
+        local_addr[2] = nxmac_mac_addr_high_getf();
+
+        if (memcmp(local_addr, addr, 6) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 #endif
 
 int bk_wlan_send_80211_raw_frame(uint8_t *buffer, int len)
@@ -781,7 +823,6 @@ int bk_wlan_suspend_softap(void)
 
 	return 0;
 }
-
 
 // eof
 

@@ -382,7 +382,11 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 		{
 			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
 			du_len += rxu_cntrl_patch_get_compensation_len(du_ptr);
+#ifdef CONFIG_YOS_MESH
+			if(du_len >= 42 || rxu_mesh_monitor(swdesc))
+#else
 			if(du_len >= 42)
+#endif
 			{
 				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
 			}
