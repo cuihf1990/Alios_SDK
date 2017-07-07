@@ -711,7 +711,7 @@ void gateway_service_stop(void) {
     }
 }
 
-bool get_mesh_mqtt_state()
+bool gateway_service_get_mesh_mqtt_state()
 {
     return gateway_state.mqtt_connected;
 }
