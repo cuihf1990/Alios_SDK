@@ -280,6 +280,8 @@ static void handle_wifi_disconnect(void)
 {
     g_netmgr_cxt.disconnected_times++;
 
+    stop_mesh();
+
 #if 0 // low level handle disconnect
     if (has_valid_ap() == 1 && g_netmgr_cxt.disconnected_times < MAX_RETRY_CONNECT) {
         yos_post_delayed_action(RETRY_INTERVAL_MS, reconnect_wifi, NULL);
