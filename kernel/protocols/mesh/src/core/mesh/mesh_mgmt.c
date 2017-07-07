@@ -2144,9 +2144,19 @@ uint16_t umesh_mm_get_channel(network_context_t *network)
 
 void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
 {
+    slist_t *networks;
+    hal_context_t *hal;
+
     network = network ? : get_default_network_context();
     hal_umesh_set_bcast_channel(network->hal->module, channel);
-    network->channel = channel;
+    hal = network->hal;
+    networks = get_network_contexts();
+    slist_for_each_entry(networks, network, network_context_t, next) {
+        if (network->hal != hal) {
+            continue;
+        }
+        network->channel = channel;
+    }
 }
 
 mm_device_state_t umesh_mm_get_device_state(void)
