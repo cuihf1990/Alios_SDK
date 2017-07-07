@@ -181,8 +181,11 @@ void awss_destroy_enrollee_info(void)
 
 void awss_broadcast_enrollee_info(void)
 {
-    os_wifi_send_80211_raw_frame(FRAME_PROBE_REQ, enrollee_frame,
-                                 enrollee_frame_len);
+    if (get_mesh_mqtt_state()) { // if mesh connected, use mesh; otherwise broadcast
+        LOGD(MODULE_NAME, "Broadcasting enrrolle msg");
+        os_wifi_send_80211_raw_frame(FRAME_PROBE_REQ, enrollee_frame,
+                                     enrollee_frame_len);
+    }
 
 #if 0   //TODO: send beacon frame, so android device will be able to discover it
     os_wifi_send_80211_raw_frame(FRAME_BEACON, beacon_frame,
