@@ -1080,6 +1080,9 @@ void *yunos_mm_alloc(size_t size)
             return tmp;
         dumped = 1;
         dumpsys_mm_info_func(NULL, 0);
+#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
+        dump_mmleak();
+#endif
         //exit(0);
 #endif
     }
