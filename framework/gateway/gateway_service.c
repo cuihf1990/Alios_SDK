@@ -272,7 +272,7 @@ static int add_mesh_enrollee(reg_info_t *reginfo)
     struct enrollee_info *mesh_enrollee;
     uint8_t sign[ENROLLEE_SIGN_SIZE];
     uint32_t rand;
-    char devid[MAX_DEVID_LEN], *model;
+    char devid[MAX_DEVID_LEN], *model, *secret;
 
     if (!reginfo) {
         LOGE(MODULE_NAME, "Failed to add mesh enrollee - reginfo is NULL");
@@ -299,35 +299,15 @@ static int add_mesh_enrollee(reg_info_t *reginfo)
     memcpy(mesh_enrollee->model, model, mesh_enrollee->model_len);
 
     rand = get_random_digital();
-    snprintf(mesh_enrollee->random, sizeof(uint32_t), "%04d", rand);
+    //snprintf(mesh_enrollee->random, sizeof(uint32_t), "%04d", rand);
+    memcpy(mesh_enrollee->random, (uint8_t *)&rand, sizeof(uint32_t));
     LOGD(MODULE_NAME, "rand %d, devid: %s, model: %s", rand,
          mesh_enrollee->devid, mesh_enrollee->model);
 
-    { // sign
-        char *text, *secret;
-        int text_len;
+    secret = reginfo->secret;
 
-        /* calc sign */
-        text_len = sizeof(uint32_t) + mesh_enrollee->devid_len + mesh_enrollee->model_len;
-        text = os_malloc(text_len + 1); /* +1 for string print */
-        OS_CHECK_MALLOC(text);
-        memset(text, 0, text_len + 1);
+    awss_calc_sign(rand, devid, model, secret, sign);
 
-        memcpy(text, mesh_enrollee->random, sizeof(uint32_t));
-        memcpy(text + sizeof(uint32_t), mesh_enrollee->devid,
-               mesh_enrollee->devid_len);
-        memcpy(text + sizeof(uint32_t) + mesh_enrollee->devid_len,
-               mesh_enrollee->model, mesh_enrollee->model_len);
-
-        secret =reginfo->secret;
-
-        digest_hmac(DIGEST_TYPE_MD5,
-                (const unsigned char *)text, text_len,
-                (const unsigned char *)secret, strlen(secret), sign);
-
-        LOGD(MODULE_NAME,"dump random(4)+devid(n)+model(n): %s", text);
-        os_free(text);
-    }
     memcpy(mesh_enrollee->sign, sign, ENROLLEE_SIGN_SIZE);
 
     mesh_enrollee->rssi = 0;
