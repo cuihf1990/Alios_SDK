@@ -220,8 +220,8 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
  * @param[in]  repeat  repeat or not when the timer is created
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms,
-                  int repeat);
+int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
+                  void *arg, int ms, int repeat);
 
 /**
  * This function will delete a timer
