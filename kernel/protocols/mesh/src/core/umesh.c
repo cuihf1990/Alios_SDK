@@ -291,7 +291,6 @@ ur_error_t ur_mesh_init(node_mode_t mode)
     mesh_cli_init();
     mf_init();
     nd_init();
-    lp_init();
     message_stats_reset();
     g_um_state.initialized = true;
     register_raw_data_receiver(umesh_raw_data_receiver);
@@ -322,6 +321,7 @@ ur_error_t ur_mesh_start()
 
     interface_start();
     umesh_mm_start(&g_um_state.mm_cb);
+    lp_start();
 
     if (yos_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
         extnetid.len = extnetid_len;
@@ -356,6 +356,7 @@ ur_error_t ur_mesh_stop(void)
 
     nd_unregister_update_handler(&g_um_state.network_data_updater);
 
+    lp_stop();
     umesh_mm_stop();
     interface_stop();
     return UR_ERROR_NONE;
