@@ -269,6 +269,7 @@ static void mac_to_devid(unsigned char *mac, uint8_t *devid)
 
 static int add_mesh_enrollee(reg_info_t *reginfo)
 {
+#ifdef CONFIG_YWSS
     struct enrollee_info *mesh_enrollee;
     uint8_t sign[ENROLLEE_SIGN_SIZE];
     uint32_t rand;
@@ -299,7 +300,6 @@ static int add_mesh_enrollee(reg_info_t *reginfo)
     memcpy(mesh_enrollee->model, model, mesh_enrollee->model_len);
 
     rand = get_random_digital();
-    //snprintf(mesh_enrollee->random, sizeof(uint32_t), "%04d", rand);
     memcpy(mesh_enrollee->random, (uint8_t *)&rand, sizeof(uint32_t));
     LOGD(MODULE_NAME, "rand %d, devid: %s, model: %s", rand,
          mesh_enrollee->devid, mesh_enrollee->model);
@@ -315,7 +315,7 @@ static int add_mesh_enrollee(reg_info_t *reginfo)
     enrollee_put(mesh_enrollee);
 
     os_free(mesh_enrollee);
-
+#endif
     return 0;
 }
 

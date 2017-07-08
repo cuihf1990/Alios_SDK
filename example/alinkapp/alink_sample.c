@@ -547,7 +547,9 @@ static void alink_connect_event(input_event_t *event, void *priv_data)
     }
 
     if (event->code == CODE_SYS_ON_ALINK_ONLINE ) {
+#ifdef CONFIG_YWSS
         awss_registrar_init();
+#endif
         yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
         do_report();
         return;
