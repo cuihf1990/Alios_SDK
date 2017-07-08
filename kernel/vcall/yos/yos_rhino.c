@@ -314,8 +314,8 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
     return yunos_buf_queue_recv(queue->hdl, MS2TICK(ms), msg, size);
 }
 
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms,
-                  int repeat)
+int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
+                  void *arg, int ms, int repeat)
 {
     kstat_t   ret;
     ktimer_t *t;
