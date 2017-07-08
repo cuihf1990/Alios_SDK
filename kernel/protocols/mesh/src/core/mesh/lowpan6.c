@@ -39,6 +39,7 @@ typedef struct lowpan_reass_s {
 } lowpan_reass_t;
 
 static lowpan_reass_t *g_reass_list = NULL;
+static ur_timer_t g_reass_timer;
 
 static bool is_mcast_addr(ur_ip6_addr_t *ip6_addr)
 {
@@ -705,7 +706,8 @@ static void handle_timer(void *args)
 {
     lowpan_reass_t *lrh, *lrh_temp;
 
-    ur_start_timer(REASSEMBLE_TICK_INTERVAL, handle_timer, NULL);
+    g_reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL,
+                                   handle_timer, NULL);
 
     lrh = g_reass_list;
     while (lrh != NULL) {
@@ -726,7 +728,24 @@ static void handle_timer(void *args)
 
 }
 
-void lp_init(void)
+void lp_start(void)
 {
-    ur_start_timer(REASSEMBLE_TICK_INTERVAL, handle_timer, NULL);
+    g_reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL,
+                                   handle_timer, NULL);
+}
+
+void lp_stop(void)
+{
+    lowpan_reass_t *lrh, *lrh_temp;
+
+    ur_stop_timer(&g_reass_timer, NULL);
+
+    lrh = g_reass_list;
+    while (lrh != NULL) {
+        lrh_temp = lrh->next;
+        dequeue_list_element(lrh);
+        message_free(lrh->message);
+        ur_mem_free(lrh, sizeof(lowpan_reass_t));
+        lrh = lrh_temp;
+    }
 }

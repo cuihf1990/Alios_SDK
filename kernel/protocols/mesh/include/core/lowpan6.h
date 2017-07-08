@@ -139,7 +139,8 @@ ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
                               uint8_t *ip_hdr_len, uint8_t *lowpan_hdr_len);
 message_t *lp_header_decompress(message_t *message);
 ur_error_t lp_reassemble(message_t *p, message_t **reass_p);
-void       lp_init(void);
+void       lp_start(void);
+void       lp_stop(void);
 #ifdef __cplusplus
 }
 #endif

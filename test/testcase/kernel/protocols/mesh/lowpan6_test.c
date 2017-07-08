@@ -21,7 +21,7 @@ void test_uradar_6lowpan_case(void)
     nhc_header_t  nhc_header;
     ur_ip6_prefix_t prefix;
 
-    lp_init();
+    lp_start();
     nd_get_ip6_prefix(&prefix);
 
     /*********test header compress and decompress functions*********/
@@ -359,4 +359,5 @@ void test_uradar_6lowpan_case(void)
 
     message_free(reass_pkt);
     yos_msleep(6000); /* wait timer_hanlder to clean up incomplete fragments */
+    lp_stop();
 }
