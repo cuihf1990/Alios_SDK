@@ -144,6 +144,11 @@ static inline void awss_clear_enrollee_token(void)
 }
 #endif
 int awss_set_enrollee_token(char* token, int tokenLen);
+void awss_calc_sign(uint32_t rand, 
+                    char devid[OS_PRODUCT_SN_LEN], 
+                    char model[OS_PRODUCT_MODEL_LEN], 
+                    char secret[OS_PRODUCT_SECRET_LEN], 
+                    char sign[ENROLLEE_SIGN_SIZE]);
 
 /* registrar API */
 #ifdef AWSS_DISABLE_REGISTRAR

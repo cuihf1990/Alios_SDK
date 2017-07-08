@@ -57,6 +57,43 @@ static int decrypt_ssid_passwd(uint8_t *ie, uint8_t ie_len,
                                uint8_t out_passwd[OS_MAX_PASSWD_LEN],
                                uint8_t out_bssid[ETH_ALEN]);
 
+void awss_calc_sign(uint32_t rand, 
+                    char devid[OS_PRODUCT_SN_LEN], 
+                    char model[OS_PRODUCT_MODEL_LEN], 
+                    char secret[OS_PRODUCT_SECRET_LEN], 
+                    char sign[ENROLLEE_SIGN_SIZE])
+{
+    char *text;
+    int text_len, devid_len, model_len, secret_len;
+
+    if (!devid || !model || !secret || !sign) return;
+
+    devid_len = strlen(devid);
+    model_len = strlen(model);
+    secret_len = strlen(secret);
+
+    LOGD(MODULE_NAME, 
+         "dump rand(%d)+devid(%d)+model(%d)+secret(%d): %d %s %s %s",
+         sizeof(uint32_t), devid_len, model_len, 
+         secret_len, rand, devid, model, secret);
+
+    /* calc sign */
+    text_len = sizeof(uint32_t) + devid_len + model_len;
+    text = os_malloc(text_len + 1); /* +1 for string print */
+    OS_CHECK_MALLOC(text);
+    memset(text, 0, text_len+1);
+
+    memcpy(text, &rand, sizeof(uint32_t));
+    memcpy(text + sizeof(uint32_t), devid, devid_len);
+    memcpy(text + sizeof(uint32_t) + devid_len, model, model_len);
+
+    digest_hmac(DIGEST_TYPE_MD5,
+            (const unsigned char *)text, text_len,
+            (const unsigned char *)secret, secret_len, sign);
+
+    os_free(text);
+}
+
 void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
 {
     uint8_t sign[ENROLLEE_SIGN_SIZE];
@@ -83,26 +120,7 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
     secret_len = strlen(secret);
     OS_ASSERT(model_len && devid_len && secret_len, "invalid len");
 
-    {
-        char *text;
-        int text_len;
-
-        /* calc sign */
-        text_len = sizeof(uint32_t) + devid_len + model_len;
-        text = os_malloc(text_len + 1); /* +1 for string print */
-        OS_CHECK_MALLOC(text);
-
-        memcpy(text, &rand, sizeof(uint32_t));
-        memcpy(text + sizeof(uint32_t), devid, devid_len);
-        memcpy(text + sizeof(uint32_t) + devid_len, model, model_len);
-
-        digest_hmac(DIGEST_TYPE_MD5,
-                (const unsigned char *)text, text_len,
-                (const unsigned char *)secret, secret_len, sign);
-
-        os_free(text);
-        LOGW(MODULE_NAME,"dump random(4)+devid(n)+model(n): %s", text);
-    }
+    awss_calc_sign(rand, devid, model, secret, sign);
 
     ie_len = model_len + devid_len + ENROLLEE_IE_FIX_LEN;
     enrollee_frame_len = sizeof(probe_req_frame) + ie_len;
