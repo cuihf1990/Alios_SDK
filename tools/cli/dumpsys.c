@@ -30,7 +30,8 @@ ktimer_t g_mm_leak_check_timer;
 
 #define safesprintf(buf,totallen,offset,string) do {\
     if((totallen - offset) < strlen(string)) { \
-        buf = yos_realloc(buf,totallen+2048); \
+        printf("%s",buf); \
+        offset = 0; \
     } \
     sprintf(buf+offset,"%s",string); \
     offset += strlen(string); \
@@ -244,6 +245,7 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     kstat_t ret;
     char *helpinfo = "dumpsys :\r\n"
                      "\tdumpsys task       : show the task info.\r\n"
+                     "\tdumpsys task_stack : show the task stack info.\r\n"
                      "\tdumpsys mm_info    : show the memory has alloced.\r\n"
 #if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
                      "\tdumpsys mm_leak    : show the memory maybe leak.\r\n"
@@ -253,11 +255,20 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                      "\tdumpsys info       : show the system info\r\n"
 #endif
                      ;
-    if (argc == 2  && 0 == strcmp(argv[1], "task")) {
-        if (argc == 2 && (0 == strcmp(argv[1], "detail"))) {
+    if (argc >= 2  && 0 == strcmp(argv[1], "task")) {
+        if (argc == 3 && (0 == strcmp(argv[2], "detail"))) {
             ret = dumpsys_task_func(pcWriteBuffer, xWriteBufferLen, true);
         } else {
             ret = dumpsys_task_func(pcWriteBuffer, xWriteBufferLen, false);
+        }
+
+        return ret;
+    }
+    else if (argc >= 2  && 0 == strcmp(argv[1], "task_stack")) {
+        if (argc == 3) {
+            ret = dump_task_stack_byname(argv[2]);
+        } else {
+            ret = dump_task_stack_byname(g_active_task->task_name);
         }
 
         return ret;
@@ -289,5 +300,80 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     }
 }
 
+
+int dump_task_stack(ktask_t *task)
+{
+    uint32_t offset = 0;
+    kstat_t  rst    = YUNOS_SUCCESS;
+    void    *cur, *end;
+    int      i=0;
+    int     *p;
+    char     tmp[256]={0};
+
+    char *printbuf = NULL;
+    char  tmpbuf[256] ={0};
+    int   bufoffset   = 0;
+    int   totallen = 2048;
+
+    printbuf = yos_malloc(totallen);
+    if(printbuf ==  NULL) {
+        return YUNOS_NO_MEM;
+    }
+    memset(printbuf, 0, totallen);
+    yunos_sched_disable();
+
+    end   = task->task_stack_base + task->stack_size;
+
+    rst =  yunos_task_stack_cur_free(task, &offset);
+    if (rst == YUNOS_SUCCESS) {
+        cur = task->task_stack_base + task->stack_size - offset;
+    } else {
+        k_err_proc(YUNOS_SYS_SP_ERR);
+        yos_free(printbuf);
+        yunos_sched_enable();
+        return 1;
+    }
+    p = (int*)cur;
+    while(p < (int*)end) {
+        if(i%4==0) {
+            sprintf(tmp, "\r\n%08x:",(uint32_t)p);
+            safesprintf(printbuf, totallen, bufoffset, tmp);
+        }
+        sprintf(tmp, "%08x ", *p);
+        safesprintf(printbuf, totallen, bufoffset, tmp);
+        i++;
+        p++;
+    }
+    safesprintf(printbuf, totallen, bufoffset,
+    "\r\n-----------------end----------------\r\n\r\n");
+    yunos_sched_enable();
+
+    printf("%s",printbuf);
+    yos_free(printbuf);
+    return 0;
+
+}
+int dump_task_stack_byname(char * taskname)
+{
+
+    klist_t *taskhead = &g_kobj_list.task_head;
+    klist_t *taskend  = taskhead;
+    klist_t *tmp;
+    ktask_t *task;
+    int      printall = 0;
+
+    if(strcmp(taskname,"all") == 0) {
+        printall = 1;
+    }
+    for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
+        task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+        if(printall == 1 || strcmp(taskname, task->task_name) == 0){
+            printf("------task %s stack -------",task->task_name);
+            dump_task_stack(task);
+        }
+    }
+
+    return 0;
+}
 
 
