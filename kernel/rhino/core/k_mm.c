@@ -1083,6 +1083,7 @@ void *yunos_mm_alloc(size_t size)
 #if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
         dump_mmleak();
 #endif
+        k_err_proc(YUNOS_SYS_FATAL_ERR);
         //exit(0);
 #endif
     }
@@ -1119,7 +1120,20 @@ void *yunos_mm_realloc(void *oldmem, size_t newsize)
         yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
     }
 #endif
-
+    if (tmp == NULL && newsize != 0) {
+#if (YUNOS_CONFIG_MM_DEBUG > 0)
+        static int reallocdumped;
+        printf("WARNING, realloc failed!!!!\r\n");
+        if (reallocdumped)
+            return tmp;
+        reallocdumped = 1;
+        dumpsys_mm_info_func(NULL, 0);
+#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
+        dump_mmleak();
+#endif
+        k_err_proc(YUNOS_SYS_FATAL_ERR);
+#endif
+    }
     return tmp;
 }
 

@@ -92,9 +92,33 @@ size_t soc_get_cur_sp()
 }
 
 #endif
+static void soc_print_stack()
+{
+
+    uint32_t offset = 0;
+    kstat_t  rst    = YUNOS_SUCCESS;
+    void    *cur, *end;
+    int      i=0;
+    int     *p;
+
+    end   = g_active_task->task_stack_base + g_active_task->stack_size;
+    cur = soc_get_cur_sp();
+    p = (int*)cur;
+    while(p < (int*)end) {
+        if(i%4==0) {
+            printf("\r\n%08x:",(uint32_t)p);
+        }
+        printf("%08x ", *p);
+        i++;
+        p++;
+    }
+    printf("\r\n");
+    return;
+}
 void soc_err_proc(kstat_t err)
 {
     (void)err;
+    soc_print_stack();
     assert(0);
 }
 
