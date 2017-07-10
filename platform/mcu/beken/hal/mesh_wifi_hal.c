@@ -30,6 +30,7 @@
 #include <hal/wifi.h>
 
 static yos_timer_t g_retransmit_timer;
+static yos_mutex_t g_info_mutex;
 
 enum {
     WIFI_MESH_OFFSET = MESH_DATA_OFF,
@@ -163,6 +164,7 @@ static void wifi_monitor_cb(uint8_t *data, int len)
             return;
         }
 
+        yos_mutex_lock(&g_info_mutex, YOS_WAIT_FOREVER);
         g_tx_frame_info.flags |= FRAME_ACKED;
         if ((g_tx_frame_info.flags & FRAME_ACKED) &&
             (g_tx_frame_info.flags & FRAME_CONFIRMED)) {
@@ -171,6 +173,7 @@ static void wifi_monitor_cb(uint8_t *data, int len)
                     g_tx_frame_info.cxt->frame, 0);
             g_tx_frame_info.cxt = NULL;
         }
+        yos_mutex_unlock(&g_info_mutex);
         return;
     }
 
@@ -224,6 +227,8 @@ static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
     yos_timer_new(&g_retransmit_timer, ack_timeout_handler,
                   NULL, RETRANSMIT_INTERVAL, 0);
     yos_timer_stop(&g_retransmit_timer);
+
+    yos_mutex_new(&g_info_mutex);
     return 0;
 }
 
@@ -232,6 +237,7 @@ static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
     wlan_register_mesh_monitor_cb(NULL);
     yos_timer_stop(&g_retransmit_timer);
     yos_timer_free(&g_retransmit_timer);
+    yos_mutex_free(&g_info_mutex);
     return 0;
 }
 
@@ -241,6 +247,7 @@ static void confirmation_handler(void *args, uint32_t statinfo)
     send_cxt_t *cxt = NULL;
     ur_mesh_handle_sent_ucast_t sent;
 
+    yos_mutex_lock(&g_info_mutex, YOS_WAIT_FOREVER);
     if ((statinfo & FRAME_SUCCESSFUL_TX_BIT) &&
         (statinfo & DESC_DONE_TX_BIT)) {
         result = 0;
@@ -260,6 +267,7 @@ static void confirmation_handler(void *args, uint32_t statinfo)
     } else {
         yos_timer_start(&g_retransmit_timer);
     }
+    yos_mutex_unlock(&g_info_mutex);
 }
 
 static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
