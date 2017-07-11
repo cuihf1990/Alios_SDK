@@ -63,7 +63,8 @@ void platform_awss_switch_channel(char primary_channel,
     hal_wifi_set_channel(module, (int)primary_channel);
 }
 
-static void monitor_data_handler(uint8_t *buf, int len)
+static void monitor_data_handler(uint8_t *buf, int len,
+                                 hal_wifi_link_info_t *info)
 {
     int with_fcs = 0;
     int link_type = AWSS_LINK_TYPE_NONE;

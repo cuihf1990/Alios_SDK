@@ -102,7 +102,8 @@ static void pass_to_umesh(const void* arg)
     yos_free(cmsg);
 }
 
-static void wifi_monitor_cb(uint8_t *data, int len)
+static void wifi_monitor_cb(uint8_t *data, int len,
+                            hal_wifi_link_info_t *info)
 {
     compound_msg_t *pf;
     mesh_hal_priv_t *priv = g_hal_priv;
@@ -125,6 +126,7 @@ static void wifi_monitor_cb(uint8_t *data, int len)
 
     module = hal_umesh_get_default_module();
     pf->fino.channel = hal_umesh_get_ucast_channel(module);
+    pf->fino.rssi = info->rssi;
 
     pf->priv = priv;
     memcpy(pf->frm.data, data + WIFI_MESH_OFFSET, pf->frm.len);
