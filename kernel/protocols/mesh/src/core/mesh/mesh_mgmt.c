@@ -233,6 +233,17 @@ void become_leader(void)
     slist_t           *networks;
     network_context_t *network;
     uint8_t           index = 0;
+    uint8_t channel;
+
+    networks = get_network_contexts();
+    slist_for_each_entry(networks, network, network_context_t, next) {
+        if (g_mm_state.device.mode & MODE_LEADER) {
+            channel = hal_umesh_get_ucast_channel(network->hal->module);
+        } else {
+            channel = network->hal->channel_list.channels[0];
+        }
+        umesh_mm_set_channel(network, channel);
+    }
 
     g_mm_state.device.state = DEVICE_STATE_LEADER;
     g_mm_state.leader_mode = g_mm_state.device.mode;
@@ -537,8 +548,6 @@ static void handle_attach_timer(void *args)
                 if ((g_mm_state.device.mode & MODE_SUPER ||
                      g_mm_state.device.mode & MODE_RX_ON) &&
                     ((g_mm_state.device.mode & MODE_MOBILE) == 0)) {
-                    umesh_mm_set_channel(network,
-                                         network->hal->channel_list.channels[0]);
                     become_leader();
                 } else {
                     become_detached();
@@ -1462,6 +1471,8 @@ static ur_error_t handle_sid_response(message_t *message)
         sid_allocator_init(network);
     }
 
+    g_mm_state.leader_mode = netinfo->leader_mode;
+
     ur_stop_timer(&network->attach_timer, network);
     ur_stop_timer(&network->advertisement_timer, network);
     ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
@@ -1475,8 +1486,6 @@ static ur_error_t handle_sid_response(message_t *message)
     g_mm_state.callback->interface_up();
     start_keep_alive_timer(network);
     send_address_notification(network, NULL);
-
-    g_mm_state.leader_mode = netinfo->leader_mode;
 
     ur_stop_timer(&network->migrate_wait_timer, network);
     umesh_mm_set_prev_channel();
@@ -1513,6 +1522,9 @@ static ur_error_t handle_sid_response(message_t *message)
                 sid_allocator_init(network);
             }
             start_advertisement_timer(network);
+
+            umesh_mm_set_channel(network,
+                                 network->hal->channel_list.channels[0]);
         }
     }
 
@@ -1903,9 +1915,6 @@ ur_error_t umesh_mm_deinit(void)
 ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
 {
     ur_error_t error = UR_ERROR_NONE;
-    slist_t *networks;
-    network_context_t *network;
-    uint8_t channel;
 
     assert(mm_cb);
 
@@ -1918,11 +1927,6 @@ ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
     g_mm_state.device.alive_timer = NULL;
 
     if (g_mm_state.device.mode & MODE_LEADER) {
-        networks = get_network_contexts();
-        slist_for_each_entry(networks, network, network_context_t, next) {
-            channel = hal_umesh_get_ucast_channel(network->hal->module);
-            umesh_mm_set_channel(network, channel);
-        }
         become_leader();
     } else {
         error = nm_start_discovery();
