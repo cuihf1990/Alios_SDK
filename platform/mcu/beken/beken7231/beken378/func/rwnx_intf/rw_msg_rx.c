@@ -26,12 +26,10 @@ int connect_flag = 0;
 extern void sa_ap_set_rsp_word(uint32_t val);
 extern void sa_sta_set_rsp_word(uint32_t val);
 
-#ifdef CONFIG_YOS_MESH
 int beken_get_sm_connect_flag(void)
 {
     return connect_flag;
 }
-#endif
 
 #if 1 /* scan result*/
 UINT8 *sr_malloc_result_item(UINT32 vies_len)

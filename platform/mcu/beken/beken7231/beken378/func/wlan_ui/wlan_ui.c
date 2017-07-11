@@ -694,7 +694,22 @@ monitor_data_cb_t bk_wlan_get_mgnt_monitor_cb(void)
     return g_mgnt_cb;
 }
 
-#ifdef CONFIG_YOS_MESH
+#ifndef CONFIG_YOS_MESH
+int wlan_is_mesh_monitor_mode(void)
+{
+    return FALSE;
+}
+
+bool rxu_mesh_monitor(struct rx_swdesc *swdesc)
+{
+    return false;
+}
+
+monitor_data_cb_t wlan_get_mesh_monitor_cb(void)
+{
+    return NULL;
+}
+#else
 void wlan_register_mesh_monitor_cb(monitor_data_cb_t fn)
 {
     g_mesh_monitor_cb = fn;
