@@ -222,8 +222,14 @@ static int linuxhost_ur_get_channel_list(ur_mesh_hal_module_t *module, const uin
     return priv->chn_num;
 }
 
+static int linuxhost_ur_get_channel(ur_mesh_hal_module_t *module)
+{
+    mesh_hal_priv_t *priv = module->base.priv_dev;
+    return priv->channel;
+}
+
 static ur_mesh_hal_module_t linuxhost_ur_wifi_module;
-static const uint8_t g_wifi_channels[] = {0, 1, 2, 3};
+static const uint8_t g_wifi_channels[] = {1, 2, 3};
 static mesh_hal_priv_t wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = DEFAULT_MTU_SIZE,
@@ -251,6 +257,8 @@ static ur_mesh_hal_module_t linuxhost_ur_wifi_module = {
     .ur_mesh_hal_set_bcast_channel = linuxhost_ur_hal_set_channel,
     .ur_mesh_hal_get_bcast_chnlist = linuxhost_ur_get_channel_list,
     .ur_mesh_hal_get_ucast_chnlist = linuxhost_ur_get_channel_list,
+    .ur_mesh_hal_get_ucast_channel = linuxhost_ur_get_channel,
+    .ur_mesh_hal_get_bcast_channel = linuxhost_ur_get_channel,
     .ur_mesh_hal_set_key = linuxhost_ur_set_key,
     .ur_mesh_hal_is_sec_enabled = linuxhost_ur_is_sec_enabled,
 };
@@ -284,6 +292,8 @@ static ur_mesh_hal_module_t linuxhost_ur_ble_module = {
     .ur_mesh_hal_set_bcast_channel = linuxhost_ur_hal_set_channel,
     .ur_mesh_hal_get_bcast_chnlist = linuxhost_ur_get_channel_list,
     .ur_mesh_hal_get_ucast_chnlist = linuxhost_ur_get_channel_list,
+    .ur_mesh_hal_get_ucast_channel = linuxhost_ur_get_channel,
+    .ur_mesh_hal_get_bcast_channel = linuxhost_ur_get_channel,
 };
 
 int csp_get_args(const char ***pargv);
