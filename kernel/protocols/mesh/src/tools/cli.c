@@ -151,6 +151,7 @@ enum {
 typedef struct autotest_cmd_s {
     uint16_t seq;
     uint8_t type;
+    ur_ip6_addr_t addr;
 }  __attribute__((packed)) autotest_cmd_t;
 
 typedef void (*cmd_cb_t)(void *buf, int len, void *priv);
@@ -247,12 +248,11 @@ static void handle_autotest_timer(void *args)
     g_cl_state.autotest_timer = NULL;
     payload = (uint8_t *)ur_mem_alloc(g_cl_state.autotest_length);
     if (payload) {
+        src = ur_mesh_get_ucast_addr();
         cmd = (autotest_cmd_t *)payload;
         cmd->type = AUTOTEST_REQUEST;
         cmd->seq = ur_swap16(g_cl_state.autotest_seq++);
-        src = ur_mesh_get_ucast_addr();
-        memcpy(payload + sizeof(autotest_cmd_t),
-               (uint8_t *)src->addr.m8, sizeof(ur_ip6_addr_t));
+        memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
                    &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cl_state.autotest_length);
@@ -279,18 +279,18 @@ void process_help(int argc, char *argv[])
 void process_autotest(int argc, char *argv[])
 {
     char                         *end;
-    uint8_t                      *payload;
-    const ur_netif_ip6_address_t *src;
     autotest_acked_t             *acked = NULL;
-    autotest_cmd_t               *cmd = NULL;
 
-    if (argc == 0 || g_cl_state.autotest_timer || g_cl_state.autotest_print_timer) {
+    if (argc == 0) {
         for_each_acked(acked) {
             response_append("%04x: %d, %d\r\n", ur_swap16(acked->sid), acked->seq,
                             acked->acked);
         }
         return;
     }
+
+    ur_stop_timer(&g_cl_state.autotest_timer, NULL);
+    ur_stop_timer(&g_cl_state.autotest_print_timer, NULL);
 
     while (!slist_empty(&g_cl_state.autotest_acked_list)) {
         acked = slist_first_entry(&g_cl_state.autotest_acked_list, autotest_acked_t,
@@ -309,40 +309,20 @@ void process_autotest(int argc, char *argv[])
         }
     }
 
-    g_cl_state.autotest_length = sizeof(autotest_cmd_t) + sizeof(ur_ip6_addr_t);
+    g_cl_state.autotest_length = sizeof(autotest_cmd_t);
     if (argc > 2) {
         g_cl_state.autotest_length = (uint16_t)strtol(argv[2], &end, 0);
-        if (g_cl_state.autotest_length == 0 ||
-            g_cl_state.autotest_length < (sizeof(autotest_cmd_t) + sizeof(ur_ip6_addr_t))) {
-            g_cl_state.autotest_length = sizeof(autotest_cmd_t) + sizeof(ur_ip6_addr_t);
+        if (g_cl_state.autotest_length < (sizeof(autotest_cmd_t))) {
+            g_cl_state.autotest_length = sizeof(autotest_cmd_t);
         }
     }
     if (g_cl_state.autotest_length > UR_IP6_MTU) {
         response_append("exceed uRadar mesh IP6 MTU %d\r\n", UR_IP6_MTU);
         return;
     }
-
-    payload = (uint8_t *)ur_mem_alloc(g_cl_state.autotest_length);
-    memset(payload, 0, g_cl_state.autotest_length);
-    if (payload == NULL) {
-        return;
-    }
     string_to_ip6_addr(argv[0], &g_cl_state.autotest_target);
-    cmd = (autotest_cmd_t *)payload;
-    cmd->type = AUTOTEST_REQUEST;
-    cmd->seq = ur_swap16(g_cl_state.autotest_seq++);
-    src = ur_mesh_get_ucast_addr();
-    memcpy(payload + sizeof(autotest_cmd_t), (uint8_t *)src->addr.m8,
-           sizeof(ur_ip6_addr_t));
-    ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
-               &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
 
-    ur_mem_free(payload, g_cl_state.autotest_length);
-    g_cl_state.autotest_times--;
-    if (g_cl_state.autotest_times) {
-        g_cl_state.autotest_timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL,
-                                                   handle_autotest_timer, NULL);
-    }
+    handle_autotest_timer(NULL);
 }
 
 void process_channel(int argc, char *argv[])
@@ -695,7 +675,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
     }
 
     cmd = (autotest_cmd_t *)payload;
-    memcpy(&dest, payload + sizeof(autotest_cmd_t), sizeof(ur_ip6_addr_t));
+    memcpy(&dest, &cmd->addr, sizeof(ur_ip6_addr_t));
     seq = ur_swap16(cmd->seq);
     if (cmd->type == AUTOTEST_REQUEST) {
         response_append("%d bytes autotest echo request from " IP6_ADDR_FMT
@@ -710,8 +690,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         cmd->type = AUTOTEST_REPLY;
         cmd->seq = ur_swap16(seq);
         src = ur_mesh_get_ucast_addr();
-        memcpy(data + sizeof(autotest_cmd_t), (uint8_t *)src->addr.m8,
-               sizeof(ur_ip6_addr_t));
+        memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cl_state.autotest_udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
