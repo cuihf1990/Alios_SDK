@@ -201,7 +201,7 @@ void awss_destroy_enrollee_info(void)
 void awss_broadcast_enrollee_info(void)
 {
 #ifdef MESH_GATEWAY_SERVICE
-    if (gateway_service_get_mesh_mqtt_state()) { // if mesh connected, use mesh; otherwise broadcast
+    if (!gateway_service_get_mesh_mqtt_state()) { // if mesh connected, use mesh; otherwise broadcast
 #else
     if (1) {
 #endif
