@@ -6,11 +6,8 @@
 #include <umesh_hal.h>
 #include <umesh_80211.h>
 
-#define MDEBUG
-
 #undef USE_ACTION_FRAME
-#define USE_MULTICAST_FRAME
-#undef FILTER_DUPLICATE_FRAME
+#define FILTER_DUPLICATE_FRAME
 
 static inline uint16_t calc_seqctrl(unsigned char *pkt)
 {
@@ -50,9 +47,6 @@ int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_add
     pkt[0] = 0x08;
 #endif
     memcpy(pkt + OFF_DST, dest->addr, 6);
-#ifdef USE_MULTICAST_FRAME
-    pkt[OFF_DST] |= 1;
-#endif
     memcpy(pkt + OFF_SRC, mymac->addr, 6);
     memcpy(pkt + OFF_BSS, extnetid.netid, 6);
 
@@ -121,9 +115,6 @@ bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int co
     if (memcmp(pkt+OFF_DST, bcast, 6) == 0)
         goto next;
 
-#ifdef USE_MULTICAST_FRAME
-    pkt[OFF_DST] &= ~1;
-#endif
     if (memcmp(pkt+OFF_DST, mymac->addr, 6))
         return 1;
 
