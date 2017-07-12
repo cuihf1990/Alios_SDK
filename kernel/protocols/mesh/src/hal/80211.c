@@ -6,8 +6,11 @@
 #include <umesh_hal.h>
 #include <umesh_80211.h>
 
+#define MDEBUG
+
 #undef USE_ACTION_FRAME
-#define FILTER_DUPLICATE_FRAME
+#define USE_MULTICAST_FRAME
+#undef FILTER_DUPLICATE_FRAME
 
 static inline uint16_t calc_seqctrl(unsigned char *pkt)
 {
@@ -30,8 +33,7 @@ static inline void dump_packet(unsigned char *pkt, int count)
     printf("\n");
 }
 
-int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame,
-                           mac_address_t *dest, void *fpkt, bool retry)
+int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest, void *fpkt)
 {
     static unsigned long nb_pkt_sent;
     umesh_extnetid_t extnetid;
@@ -47,20 +49,17 @@ int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame,
 #else
     pkt[0] = 0x08;
 #endif
-
-    if (retry) {
-        pkt[1] = 0x08;  // set retry bit
-    } else {
-        nb_pkt_sent++;
-    }
-
     memcpy(pkt + OFF_DST, dest->addr, 6);
+#ifdef USE_MULTICAST_FRAME
+    pkt[OFF_DST] |= 1;
+#endif
     memcpy(pkt + OFF_SRC, mymac->addr, 6);
     memcpy(pkt + OFF_BSS, extnetid.netid, 6);
 
     /* sequence control */
     pkt[22] = (nb_pkt_sent & 0x0000000F) << 4;
     pkt[23] = (nb_pkt_sent & 0x00000FF0) >> 4;
+    nb_pkt_sent++;
 
 #ifdef USE_ACTION_FRAME
     pkt[24] = 127;
@@ -73,7 +72,7 @@ int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame,
 
 #ifdef FILTER_DUPLICATE_FRAME
 typedef struct mac_entry_s {
-    long long mactime;
+    uint64_t mactime;
     uint16_t last_seq;
     uint8_t  macaddr[6];
 } mac_entry_t;
@@ -122,6 +121,9 @@ bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int co
     if (memcmp(pkt+OFF_DST, bcast, 6) == 0)
         goto next;
 
+#ifdef USE_MULTICAST_FRAME
+    pkt[OFF_DST] &= ~1;
+#endif
     if (memcmp(pkt+OFF_DST, mymac->addr, 6))
         return 1;
 
@@ -131,8 +133,7 @@ next:
     mac80211_fctl_t *fctl = (mac80211_fctl_t *)pkt;
     uint16_t seqno = calc_seqctrl(pkt) << 4;
     mac_entry_t *ent;
-    long long mactime = yos_now_ms();
-    long long offset;
+    uint64_t mactime = yos_now_ms();
 
     ent = find_mac_entry(pkt+OFF_SRC);
 
@@ -140,9 +141,8 @@ next:
         goto no_filter;
     }
 
-    /* if longer than 2 s */
-    offset = mactime - ent->mactime;
-    if (offset > 2000) {
+    /* if longer than 100ms */
+    if (mactime - ent->mactime > 100) {
         goto no_filter;
     }
 

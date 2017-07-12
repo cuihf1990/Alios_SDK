@@ -20,27 +20,26 @@
 
 #include "wlan_ui_pub.h"
 #include "txl_frame.h"
+#include "rw_msdu.h"
+#include "txu_cntrl.h"
 #include "mm.h"
+#include "reg_mdm_cfg.h"
 
-#include <yos/framework.h>
-#include <yos/kernel.h>
-
-#include <umesh_hal.h>
+#include "umesh_hal.h"
 #include <umesh_80211.h>
 #include <hal/wifi.h>
 
-static yos_timer_t g_retransmit_timer;
-static yos_mutex_t g_info_mutex;
-
 enum {
-    WIFI_MESH_OFFSET = MESH_DATA_OFF,
-    WIFI_SRC_OFFSET = OFF_SRC,
+    WIFI_MESH_OFFSET = 32,
+    WIFI_DST_OFFSET = 4,
+    WIFI_SRC_OFFSET = 10,
+    WIFI_BSSID_OFFSET = 16,
 
     WIFI_MAC_ADDR_SIZE = 6,
 };
 
 enum {
-    DEFAULT_MTU_SIZE = 256,
+    DEFAULT_MTU_SIZE = 1024,
 };
 
 typedef struct {
@@ -85,31 +84,9 @@ enum {
     ENT_NUM = 32,
 };
 
-enum {
-    RETRANSMIT_TIMES = 6,
-    ROLE_RETRANSMIT_TIMES = 1,
-    RETRANSMIT_INTERVAL = 20,  // 20 ms
-
-    FRAME_MCAST = 1 << 1,
-    FRAME_CONFIRMED = 1 << 2,
-    FRAME_ACKED = 1 << 3,
-};
-
-typedef struct tx_frame_info_s {
-    ur_mesh_hal_module_t *module;
-    send_cxt_t *cxt;
-    uint8_t retransmits;
-    mac_address_t dest;
-    uint8_t flags;
-} tx_frame_info_t;
-static tx_frame_info_t g_tx_frame_info;
-
 static mac_entry_t entries[ENT_NUM];
 
 static mesh_hal_priv_t *g_hal_priv;
-
-static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
-                      mac_address_t *dest, send_cxt_t *cxt, bool retry);
 
 static void pass_to_umesh(const void* arg)
 {
@@ -125,57 +102,12 @@ static void pass_to_umesh(const void* arg)
     yos_free(cmsg);
 }
 
-static void ack_timeout_handler(void *args)
-{
-    ur_mesh_handle_sent_ucast_t sent;
-    uint8_t times;
-
-    if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0) {
-        times = RETRANSMIT_TIMES;
-    } else {
-        times = ROLE_RETRANSMIT_TIMES;
-    }
-
-    g_tx_frame_info.retransmits++;
-    if (g_tx_frame_info.retransmits > times) {
-        sent = g_tx_frame_info.cxt->sent;
-        (*sent)(g_tx_frame_info.cxt->context, g_tx_frame_info.cxt->frame,
-                times == ROLE_RETRANSMIT_TIMES? 0: -1);
-        g_tx_frame_info.cxt = NULL;
-    } else {
-        g_tx_frame_info.flags = 0;
-        send_frame(g_tx_frame_info.module, g_tx_frame_info.cxt->frame,
-                   &g_tx_frame_info.dest, g_tx_frame_info.cxt, true);
-    }
-}
-
-static void wifi_monitor_cb(uint8_t *data, int len)
+static void wifi_monitor_cb(uint8_t *data, int len,
+                            hal_wifi_link_info_t *info)
 {
     compound_msg_t *pf;
     mesh_hal_priv_t *priv = g_hal_priv;
     ur_mesh_hal_module_t *module = priv->module;
-    struct mac_hdr *hdr;
-    ur_mesh_handle_sent_ucast_t sent;
-
-    hdr = (struct mac_hdr *)data;
-    if ((hdr->fctl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_ACK) {
-        yos_timer_stop(&g_retransmit_timer);
-        if (g_tx_frame_info.cxt == NULL) {
-            return;
-        }
-
-        yos_mutex_lock(&g_info_mutex, YOS_WAIT_FOREVER);
-        g_tx_frame_info.flags |= FRAME_ACKED;
-        if ((g_tx_frame_info.flags & FRAME_ACKED) &&
-            (g_tx_frame_info.flags & FRAME_CONFIRMED)) {
-            sent = g_tx_frame_info.cxt->sent;
-            (*sent)(g_tx_frame_info.cxt->context,
-                    g_tx_frame_info.cxt->frame, 0);
-            g_tx_frame_info.cxt = NULL;
-        }
-        yos_mutex_unlock(&g_info_mutex);
-        return;
-    }
 
     if (umesh_80211_filter_frame(module, data, len)) {
         return;
@@ -194,10 +126,12 @@ static void wifi_monitor_cb(uint8_t *data, int len)
 
     module = hal_umesh_get_default_module();
     pf->fino.channel = hal_umesh_get_ucast_channel(module);
+    pf->fino.rssi = info->rssi;
 
     pf->priv = priv;
     memcpy(pf->frm.data, data + WIFI_MESH_OFFSET, pf->frm.len);
     pass_to_umesh((const void *)pf);
+    priv->stats.in_frames++;
 }
 
 static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
@@ -206,9 +140,6 @@ static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
 
     g_hal_priv = priv;
     wifi_get_mac_address(priv->macaddr);
-    yos_mutex_new(&g_info_mutex);
-    yos_timer_new(&g_retransmit_timer, ack_timeout_handler,
-                  NULL, RETRANSMIT_INTERVAL, 0);
     return 0;
 }
 
@@ -219,99 +150,85 @@ static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
     if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0) {
         bk_wlan_start_monitor();
         hal_machw_exit_monitor_mode();
-        mm_rx_filter_umac_set(MM_RX_FILTER_ACTIVE | NXMAC_ACCEPT_ACK_BIT);
     }
 
     wlan_register_mesh_monitor_cb(wifi_monitor_cb);
     wlan_set_mesh_bssid(priv->bssid);
-
-    memset(&g_tx_frame_info, 0, sizeof(g_tx_frame_info));
-    yos_timer_stop(&g_retransmit_timer);
-
     return 0;
 }
 
 static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
 {
     wlan_register_mesh_monitor_cb(NULL);
-    yos_timer_stop(&g_retransmit_timer);
     return 0;
 }
 
-static void confirmation_handler(void *args, uint32_t statinfo)
+static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
+                      mac_address_t *dest, send_cxt_t *cxt)
 {
-    int result = -1;
-    send_cxt_t *cxt = NULL;
+    static uint16_t nb_pkt_sent;
+    mesh_hal_priv_t *priv = module->base.priv_dev;
+    uint8_t *pkt;
+    int len = frame->len + WIFI_MESH_OFFSET;
     ur_mesh_handle_sent_ucast_t sent;
+    MSDU_NODE_T *node;
+    UINT8 *content_ptr;
+    UINT32 queue_idx = AC_VI;
+    int result = 0;
+    struct txdesc *txdesc_new;
+    struct umacdesc *umac;
 
-    yos_mutex_lock(&g_info_mutex, YOS_WAIT_FOREVER);
-    if ((statinfo & FRAME_SUCCESSFUL_TX_BIT) &&
-        (statinfo & DESC_DONE_TX_BIT)) {
-        result = 0;
-        g_tx_frame_info.flags |= FRAME_CONFIRMED;
+    node = rwm_tx_node_alloc(len);
+    if (node == NULL) {
+        result = -1;
+        goto tx_exit;
     }
 
-    if (result != 0 || (g_tx_frame_info.flags & FRAME_MCAST) ||
-        ((g_tx_frame_info.flags & FRAME_CONFIRMED) &&
-         (g_tx_frame_info.flags & FRAME_ACKED))) {
-        cxt = g_tx_frame_info.cxt;
+    pkt = yos_malloc(len);
+    umesh_80211_make_frame(module, frame, dest, pkt);
+
+    rwm_tx_msdu_renew(pkt, len, node->msdu_ptr);
+    content_ptr = rwm_get_msdu_content_ptr(node);
+
+    txdesc_new = tx_txdesc_prepare(queue_idx);
+    if(txdesc_new == NULL || TXDESC_STA_USED == txdesc_new->status) {
+        result = -1;
+        goto tx_exit;
     }
+
+    txdesc_new->status = TXDESC_STA_USED;
+    txdesc_new->host.flags = TXU_CNTRL_MGMT;
+    txdesc_new->host.orig_addr = (UINT32)node->msdu_ptr;
+    txdesc_new->host.packet_addr = (UINT32)content_ptr;
+    txdesc_new->host.packet_len = len;
+    txdesc_new->host.status_desc_addr = (UINT32)content_ptr;
+    txdesc_new->host.tid = 0xff;
+
+    umac = &txdesc_new->umac;
+    umac->payl_len = len;
+    umac->head_len = 0;
+    umac->tail_len = 0;
+    umac->hdr_len_802_2 = 0;
+
+    umac->buf_control = &txl_buffer_control_24G;
+
+    txdesc_new->lmac.agg_desc = NULL;
+    txdesc_new->lmac.hw_desc->cfm.status = 0;
+
+    rwm_push_tx_list(node);
+    txl_cntrl_push(txdesc_new, queue_idx);
+    priv->stats.out_frames++;
+
+tx_exit:
+
+    yos_free(pkt);
 
     if (cxt) {
         sent = cxt->sent;
         (*sent)(cxt->context, cxt->frame, result);
-        g_tx_frame_info.cxt = NULL;
-    } else {
-        yos_timer_start(&g_retransmit_timer);
-    }
-    yos_mutex_unlock(&g_info_mutex);
-}
-
-static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
-                      mac_address_t *dest, send_cxt_t *cxt, bool retry)
-{
-    mesh_hal_priv_t *priv = module->base.priv_dev;
-    uint8_t *pkt;
-    int len = frame->len + WIFI_MESH_OFFSET;
-    struct txl_frame_desc_tag *tx_frame;
-    int txtype = TX_DEFAULT_24G;
-    struct mac_hdr *hdr;
-    struct tx_hd *thd;
-
-    tx_frame = txl_frame_get(txtype, len);
-    if (tx_frame == NULL) {
-        return -1;
     }
 
-    pkt = (uint8_t *)tx_frame->txdesc.lmac.buffer->payload;
-
-    umesh_80211_make_frame(module, frame, dest, pkt, retry);
-
-    tx_frame->cfm.cfm_func = confirmation_handler;
-    tx_frame->cfm.env = cxt;
-
-    thd = &tx_frame->txdesc.lmac.hw_desc->thd;
-    hdr = HW2CPU(thd->datastartptr);
-    thd->nextfrmexseq_ptr = 0;
-    thd->nextmpdudesc_ptr = 0;
-    thd->macctrlinfo2 &= ~(WHICHDESC_MSK | UNDER_BA_SETUP_BIT);
-
-    if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0) {
-        thd->macctrlinfo2 |= CO_BIT(29);  // don't touch FC
-    }
-
-    if (MAC_ADDR_GROUP(&hdr->addr1)) {
-        thd->macctrlinfo1 = EXPECTED_ACK_NO_ACK;
-    } else {
-        thd->macctrlinfo1 = WRITE_ACK;
-    }
-
-    thd->statinfo = 0;
-
-    txl_cntrl_push_int((struct txdesc *)tx_frame, AC_VO);
-
-    priv->stats.out_frames++;
-    return 0;
+    return result;
 }
 
 static int beken_wifi_mesh_send_ucast(ur_mesh_hal_module_t *module,
@@ -330,21 +247,10 @@ static int beken_wifi_mesh_send_ucast(ur_mesh_hal_module_t *module,
         return -2;
     }
 
-    if (g_tx_frame_info.cxt) {
-        return -3;
-    }
-
     g_send_ucast_cxt.context = context;
     g_send_ucast_cxt.sent = sent;
     g_send_ucast_cxt.frame = frame;
-
-    g_tx_frame_info.module = module;
-    g_tx_frame_info.retransmits = 0;
-    g_tx_frame_info.cxt = &g_send_ucast_cxt;
-    memcpy(&g_tx_frame_info.dest, dest, sizeof(g_tx_frame_info.dest));
-    g_tx_frame_info.flags = 0;
-
-    error = send_frame(module, frame, dest, &g_send_ucast_cxt, false);
+    error = send_frame(module, frame, dest, &g_send_ucast_cxt);
     return error;
 }
 
@@ -365,19 +271,13 @@ static int beken_wifi_mesh_send_bcast(ur_mesh_hal_module_t *module,
         return -2;
     }
 
-    if (g_tx_frame_info.cxt) {
-        return -3;
-    }
-
     g_send_bcast_cxt.context = context;
     g_send_bcast_cxt.sent = sent;
     g_send_bcast_cxt.frame = frame;
-    g_tx_frame_info.cxt = &g_send_bcast_cxt;
-    g_tx_frame_info.flags = FRAME_MCAST;
 
     dest.len = 8;
     memset(dest.addr, 0xff, sizeof(dest.addr));
-    error = send_frame(module, frame, &dest, &g_send_bcast_cxt, false);
+    error = send_frame(module, frame, &dest, &g_send_bcast_cxt);
     return error;
 }
 

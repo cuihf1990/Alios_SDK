@@ -332,6 +332,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (channel_orig && nbr->channel != channel_orig) {
         nbr->flags |= NBR_CHANNEL_CHANGED;
     }
+    nbr->rssi = info->rssi;
     nbr->last_heard = ur_get_now();
 
     network = info->network;

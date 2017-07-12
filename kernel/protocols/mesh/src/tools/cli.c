@@ -439,6 +439,7 @@ void process_nbrs(int argc, char *argv[])
                     break;
             }
             response_append(",%d", nbr->channel);
+            response_append(",%d", nbr->rssi);
             response_append(",%d\r\n", nbr->last_heard);
             num ++;
         }

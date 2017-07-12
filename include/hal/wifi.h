@@ -137,6 +137,9 @@ typedef struct {
     int     channel;       /**< Channel of the current connected wlan */
 } hal_wifi_link_stat_t;
 
+typedef struct hal_wifi_link_info_s {
+    int8_t rssi;           /**< rssi value of received packet */
+} hal_wifi_link_info_t;
 
 /**
  * @struct hal_wifi_event_cb_t
@@ -157,7 +160,7 @@ typedef struct {
     void (*fatal_err)(hal_wifi_module_t *m, void *arg);
 } hal_wifi_event_cb_t;
 
-typedef void (*monitor_data_cb_t)(uint8_t *data, int len);
+typedef void (*monitor_data_cb_t)(uint8_t *data, int len, hal_wifi_link_info_t *info);
 
 /**
  * @struct hal_wifi_module_t
