@@ -339,7 +339,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
         }
     }
 
-    client = yos_malloc(sizeof(*client));
+    client = yos_malloc(sizeof(client_t));
     PTR_RETURN(client, NULL, "alloc memory failed");
     bzero(client, sizeof(*client));
     uint32_t model_id;
@@ -351,6 +351,12 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
         return NULL;
     }
     client->devinfo = devmgr_get_devinfo_by_ieeeaddr(reginfo->ieee_addr);
+    if (client->devinfo == NULL) {
+        LOGD(MODULE_NAME, "register device:%s to alink server failed", reginfo->ieee_addr);
+        yos_free(client);
+        return NULL;
+    }
+    devmgr_put_devinfo_ref(client->devinfo);
     dlist_add_tail(&client->next, &pstate->clients);
 
     GW_DEBUG(MODULE_NAME, "new client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
