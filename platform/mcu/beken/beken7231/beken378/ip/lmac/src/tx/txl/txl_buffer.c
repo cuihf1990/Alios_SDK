@@ -436,7 +436,7 @@ struct txl_buffer_tag *txl_buffer_alloc(struct txdesc *txdesc,
         // Allocate the buffer
         ASSERT((packet_addr - txdesc->host.orig_addr) > dma_oft);
 
-        pad_size = sizeof(UINT32) - (packet_addr & (sizeof(UINT32) - 1));
+        pad_size = (sizeof(UINT32) - (packet_addr & (sizeof(UINT32) - 1))) % sizeof(UINT32);
         buf = (struct txl_buffer_tag *)(packet_addr - dma_oft - pad_size);
         buf->length = needed;
         buf->padding = pad_size;

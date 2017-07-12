@@ -140,23 +140,27 @@ static bool filter_frame(struct rx_swdesc *swdesc)
 }
 #endif
 
-int rxl_data_monitor(uint8_t *payload,
+int rxl_data_monitor(struct rx_swdesc *swdesc, uint8_t *payload,
                               uint16_t length)
 {
 	monitor_data_cb_t fn;
 	int monitor_flag = 0;
-	
+        struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+        struct rx_hd *rhd = &dma_hdrdesc->hd;
+        hal_wifi_link_info_t link_info;
+
+        link_info.rssi = (rhd->recvec1c >> 24) & 0xff;
 	if(bk_wlan_is_monitor_mode())
 	{
 		monitor_flag = 1;
 
 		fn = bk_wlan_get_monitor_cb();		
-		(*fn)((uint8_t *)payload, length);
+		(*fn)((uint8_t *)payload, length, &link_info);
 	}
 #ifdef CONFIG_YOS_MESH
         else if (wlan_is_mesh_monitor_mode()) {
             fn = wlan_get_mesh_monitor_cb();
-            (*fn)((uint8_t *)payload, length);
+            (*fn)((uint8_t *)payload, length, &link_info);
         }
 #endif
 
@@ -388,7 +392,7 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 			if(du_len >= 42)
 #endif
 			{
-				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
+				rxl_data_monitor(swdesc, (uint8_t *)((uint32_t)du_ptr), du_len);
 			}
 			
 			os_free(du_ptr);

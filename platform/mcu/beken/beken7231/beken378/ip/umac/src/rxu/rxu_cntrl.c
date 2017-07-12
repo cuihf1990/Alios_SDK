@@ -2207,7 +2207,7 @@ int rxu_mgt_monitor(uint16_t framectrl,
 		rxu_cntrl_monitor_patch_using_beacon((uint8_t *)payload, length);
 		
 		fn = bk_wlan_get_monitor_cb();		
-		(*fn)((uint8_t *)payload, length);
+		(*fn)((uint8_t *)payload, length, NULL);
 	}
 	else
 	{
@@ -2243,7 +2243,7 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 
 	fn = bk_wlan_get_mgnt_monitor_cb();
 	if (fn) {
-		fn(payload, length);
+		fn(payload, length, NULL);
 	}
     // Check if the message has to be forwarded or not
     if (((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_BEACON) 
