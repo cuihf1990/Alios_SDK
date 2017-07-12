@@ -206,6 +206,9 @@ static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
 
     g_hal_priv = priv;
     wifi_get_mac_address(priv->macaddr);
+    yos_mutex_new(&g_info_mutex);
+    yos_timer_new(&g_retransmit_timer, ack_timeout_handler,
+                  NULL, RETRANSMIT_INTERVAL, 0);
     return 0;
 }
 
@@ -223,12 +226,8 @@ static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
     wlan_set_mesh_bssid(priv->bssid);
 
     memset(&g_tx_frame_info, 0, sizeof(g_tx_frame_info));
-
-    yos_timer_new(&g_retransmit_timer, ack_timeout_handler,
-                  NULL, RETRANSMIT_INTERVAL, 0);
     yos_timer_stop(&g_retransmit_timer);
 
-    yos_mutex_new(&g_info_mutex);
     return 0;
 }
 
@@ -236,8 +235,6 @@ static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
 {
     wlan_register_mesh_monitor_cb(NULL);
     yos_timer_stop(&g_retransmit_timer);
-    yos_timer_free(&g_retransmit_timer);
-    yos_mutex_free(&g_info_mutex);
     return 0;
 }
 
