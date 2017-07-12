@@ -748,18 +748,12 @@ bool rxu_mesh_monitor(struct rx_swdesc *swdesc)
     struct rx_hd *rhd = &dma_hdrdesc->hd;
     struct rx_payloaddesc *payl_d = HW2CPU(rhd->first_pbd_ptr);
     struct rx_cntrl_rx_status *rx_status = &rxu_cntrl_env.rx_status;
-    uint16_t len = dma_hdrdesc->hd.frmlen;
     uint32_t *frame = payl_d->buffer;
     struct mac_hdr *hdr = (struct mac_hdr *)frame;
     uint8_t *local_bssid;
     uint8_t *bssid;
 
     if (wlan_is_mesh_monitor_mode() == FALSE) {
-        return false;
-    }
-
-    // 10 is ACK size and 32 is wif mesh header size
-    if (len != 10 && len < 32) {
         return false;
     }
 
