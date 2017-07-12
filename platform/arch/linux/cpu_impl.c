@@ -195,6 +195,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
 
     void *real_stack = yos_malloc(real_size);
     task_ext_t *tcb_ext = (task_ext_t *)base;
+    cpu_stack_t *tmp;
 
     bzero(real_stack, real_size);
 
@@ -204,6 +205,17 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     /* todo+ replace malloc with mmap */
     tcb_ext->real_stack = real_stack;
     tcb_ext->real_stack_end = real_stack + real_size;
+
+#if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
+#if (YUNOS_CONFIG_CPU_STACK_DOWN > 0)
+    tmp  = tcb_ext->real_stack;
+    *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
+#else
+    tmp  = (cpu_stack_t *)(tcb_ext->task_stack_base) + (real_size/sizeof(cpu_stack_t)) - 1u;
+    *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
+#endif
+#endif
+
 #if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
     tcb_ext->vid = VALGRIND_STACK_REGISTER(tcb_ext->real_stack, (char *)(tcb_ext->real_stack) + real_size);
 #endif
@@ -298,13 +310,11 @@ static void _cpu_task_switch(void)
 {
     ktask_t     *from_tcb;
     ktask_t     *to_tcb;
-    task_ext_t *from_tcb_ext;
-    task_ext_t *to_tcb_ext;
+    task_ext_t  *from_tcb_ext;
+    task_ext_t  *to_tcb_ext;
 
     from_tcb = g_active_task;
     from_tcb_ext = (task_ext_t *)from_tcb->task_stack;
-
-    g_active_task = g_preferred_ready_task;
 
     to_tcb = g_preferred_ready_task;
     to_tcb_ext = (task_ext_t *)to_tcb->task_stack;
@@ -314,7 +324,13 @@ static void _cpu_task_switch(void)
 
     /* save errno */
     from_tcb_ext->saved_errno = errno;
+#if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
+    yunos_stack_ovf_check();
+#endif
+    g_active_task = g_preferred_ready_task;
+
     swapcontext(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
+
     /* restore errno */
     errno = from_tcb_ext->saved_errno;
 }

@@ -17,6 +17,9 @@
 #include <k_api.h>
 #include <assert.h>
 #include <time.h>
+#include <stdio.h>
+
+#define _linux_backtrace_depth 10
 
 #if (YUNOS_CONFIG_HW_COUNT > 0)
 hr_timer_t soc_hr_hw_cnt_get(void)
@@ -35,9 +38,30 @@ size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
 k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start,SYS_DYN_POOL_SIZE}};
 #endif
 
+void _linux_backtrace()
+{
+   void   *array[_linux_backtrace_depth];
+   size_t size;
+   char **strings;
+   size_t e;
+
+   size = backtrace (array,_linux_backtrace_depth);
+   strings = (char **)backtrace_symbols (array, size);
+
+   fprintf(stderr, "Stack trace:\n");
+   for (e = 0; e < size; e++) {
+       fprintf(stderr, "%d %s \n",e,strings[e]);
+   }
+  
+   free (strings);
+}
+
 void soc_err_proc(kstat_t err)
 {
-    /* assert */
+    printf("kernel panic,err %d!\n",err);
+    _linux_backtrace();
+    assert(0);
 }
+
 yunos_err_proc_t g_err_proc = soc_err_proc;
 
