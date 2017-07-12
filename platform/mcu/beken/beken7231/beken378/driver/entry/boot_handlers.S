@@ -311,8 +311,9 @@ do_irq:
 
 do_fiq:
     LDMFD   SP!, {R0-R1}^
-    MRS     R8, spsr
-    AND     R8, R8, #0x12
+    MRS     R8, spsr               @R8 R9 is unique to fiq
+    MRS     R9, spsr               @save SPSR_fiq
+    AND     R8, R8, #0x1f
     CMP     R8, #0x12
     BNE     88f
     STMFD   SP!, {R0-R12, LR}
@@ -322,7 +323,9 @@ do_fiq:
     BL      fiq_end_proc
 
     LDMFD   SP!,{R0-R12,LR}
-    SUBS PC, LR,#4
+
+    MSR      SPSR_cxsf,R9         @restore SPSR_fiq
+    SUBS PC, LR,#4                @restore CPSR
 
     88:
     STMFD   SP!, {R1-R3}           @We will use R1-R3 as temporary registers
