@@ -102,8 +102,9 @@ static void start_mesh(bool is_leader)
 #ifdef CONFIG_YOS_MESH
     node_mode_t mode = MODE_RX_ON;
 
+    mode = ur_mesh_get_mode() & (~MODE_LEADER);
     if (is_leader) {
-        mode = MODE_LEADER;
+        mode |= MODE_LEADER;
     }
 
     yos_post_delayed_action(1000, mesh_delayed_action, (void *)(long)mode);

@@ -548,6 +548,9 @@ void process_mode(int argc, char *argv[])
         return;
     }
 
+    if (mode & MODE_LEADER) {
+        response_append("LEADER | ");
+    }
     if (mode & MODE_SUPER) {
         response_append("SUPER");
     } else {
