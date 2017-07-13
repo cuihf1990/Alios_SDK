@@ -68,6 +68,8 @@ static void worker_task(void *arg)
             yunos_mutex_unlock(&(wq->work_mutex));
 
             work->handle(work->arg);
+
+            work->running = 3;
         }
     }
 }
@@ -205,7 +207,7 @@ static void work_timer_cb(void *timer, void *arg)
 
     yunos_mutex_lock(&(wq->work_mutex), YUNOS_WAIT_FOREVER);
 
-    if (work->running > 0) {
+    if ((work->running == 1) || (work->running == 2)) {
         yunos_mutex_unlock(&(wq->work_mutex));
         /* YUNOS_WORKQUEUE_WORK_EXIST */
         return;
@@ -275,7 +277,7 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
     if (work->dly == 0) {
         yunos_mutex_lock(&(workqueue->work_mutex), YUNOS_WAIT_FOREVER);
 
-        if (work->running > 0) {
+        if ((work->running == 1) || (work->running == 2)) {
             yunos_mutex_unlock(&(workqueue->work_mutex));
             return YUNOS_WORKQUEUE_WORK_EXIST;
         }
