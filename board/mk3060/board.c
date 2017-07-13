@@ -67,7 +67,6 @@ const hal_logic_partition_t hal_partitions[] =
 #define KEY_ELINK  2
 #define KEY_BOOT   7
 static uint64_t elink_time = 0;
-static yos_work_t g_key_proc_work;
 static void key_poll_func(void *arg)
 {
     int8_t level;
@@ -100,12 +99,11 @@ static void handle_elink_key(void *arg)
 {
     if (elink_time == 0) {
         elink_time = yos_now_ms();
-        yos_work_sched(&g_key_proc_work);
+        yos_loop_schedule_work(0, key_proc_work, NULL, NULL, NULL);
     }
 }
 
 void board_init(void)
 {
-    yos_work_init(&g_key_proc_work, key_proc_work, NULL, 0);
     hal_gpio_enable_irq(KEY_BOOT, IRQ_TRIGGER_FALLING_EDGE, handle_elink_key, NULL);
 }
