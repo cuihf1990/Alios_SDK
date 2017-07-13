@@ -62,15 +62,6 @@ extern "C"
 #define  CODE_MESH_CONNECTED      4
 #define  CODE_MESH_DISCONNECTED   5
 
-/** Mesh event */
-#define  EV_KEY                 0x0004
-#define  CODE_STATUS_SHORT_PRESS   1
-#define  CODE_STATUS_LONG_PRESS    2
-#define  CODE_ELINK_SHORT_PRESS    3
-#define  CODE_ELINK_LONG_PRESS     4
-#define  CODE_BOOT_SHORT_PRESS     5
-#define  CODE_BOOT_LONG_PRESS      6
-
 /** user app start 0x1000 - 0x7fff */
 #define EV_USER     0x1000
 

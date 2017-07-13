@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define _linux_backtrace_depth 10
 

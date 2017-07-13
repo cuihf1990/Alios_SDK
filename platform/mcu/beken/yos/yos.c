@@ -23,6 +23,7 @@
 ktask_t *g_yos_init;
 
 extern int application_start(int argc, char **argv);
+extern void board_init(void);
 
 static void yos_init(void)
 {
@@ -32,6 +33,8 @@ static void yos_init(void)
     main();
 #else
     yos_framework_init();
+
+    board_init();
 
     application_start(0, NULL);
 #endif
