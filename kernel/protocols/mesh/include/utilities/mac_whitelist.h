@@ -19,13 +19,7 @@
 
 #include "umesh_hal.h"
 
-typedef struct whitelist_entry_s {
-    mac_address_t address;
-    int8_t        rssi;
-    bool          valid;
-    bool          constant_rssi;
-} whitelist_entry_t;
-
+bool whitelist_is_enabled(void);
 void whitelist_enable(void);
 void whitelist_disable(void);
 bool whitelist_is_enabled(void);

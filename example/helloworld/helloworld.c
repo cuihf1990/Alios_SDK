@@ -19,15 +19,20 @@
 #include "hal/soc/soc.h"
 #include "helloworld.h"
 
-static void app_delayed_action(void *arg)
+static void el_int_hdl(void *arg)
 {
-    printf("%s:%d %s\r\n", __func__, __LINE__, yos_task_name());
-    yos_post_delayed_action(5000, app_delayed_action, NULL);
+    printf("easylink interrupt handler\r\n");
 }
 
 void application_start(void)
 {
-    yos_post_delayed_action(1000, app_delayed_action, NULL);
-    yos_loop_run();
+    hal_gpio_enable_irq(2, IRQ_TRIGGER_FALLING_EDGE, el_int_hdl, NULL);
+
+    hal_gpio_init(12, OUTPUT_PUSH_PULL);
+    for(;;)
+    {
+        hal_gpio_output_trigger(12);
+        yos_msleep(1000);
+    }
 }
 

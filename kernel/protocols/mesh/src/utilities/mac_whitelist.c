@@ -19,10 +19,6 @@
 
 #include "utilities/mac_whitelist.h"
 
-enum {
-    WHITELIST_ENTRY_NUM = 16,
-};
-
 typedef struct mac_whitelist_state_s {
     bool              enabled;
     whitelist_entry_t entries[WHITELIST_ENTRY_NUM];
@@ -30,6 +26,10 @@ typedef struct mac_whitelist_state_s {
 
 static mac_whitelist_state_t g_mw_state = {.enabled = false};
 
+bool is_whitelist_enabled(void)
+{
+    return g_mw_state.enabled;
+}
 
 void whitelist_enable(void)
 {

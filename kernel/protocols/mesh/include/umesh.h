@@ -89,8 +89,10 @@ ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid);
 slist_t *ur_mesh_get_hals(void);
 slist_t *ur_mesh_get_networks(void);
 
+bool ur_mesh_is_whitelist_enabled(void);
 void ur_mesh_enable_whitelist(void);
 void ur_mesh_disable_whitelist(void);
+const whitelist_entry_t *ur_mesh_get_whitelist_entries(void);
 ur_error_t ur_mesh_add_whitelist(const mac_address_t *address);
 ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address,
                                       int8_t rssi);

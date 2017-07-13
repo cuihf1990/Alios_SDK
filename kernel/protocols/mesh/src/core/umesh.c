@@ -440,6 +440,11 @@ ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     return mf_resolve_dest(dest, dest_addr);
 }
 
+bool ur_mesh_is_whitelist_enabled(void)
+{
+    return is_whitelist_enabled();
+}
+
 void ur_mesh_enable_whitelist(void)
 {
     whitelist_enable();
@@ -448,6 +453,11 @@ void ur_mesh_enable_whitelist(void)
 void ur_mesh_disable_whitelist(void)
 {
     whitelist_disable();
+}
+
+const whitelist_entry_t *ur_mesh_get_whitelist_entries(void)
+{
+    return whitelist_get_entries();
 }
 
 ur_error_t ur_mesh_add_whitelist(const mac_address_t *address)
