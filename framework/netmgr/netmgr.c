@@ -343,6 +343,7 @@ void wifi_get_ip(char ips[16])
 void netmgr_register_wifi_scan_result_callback(netmgr_wifi_scan_result_cb_t cb)
 {
     g_netmgr_cxt.cb = cb;
+	g_netmgr_cxt.wifi_scan_complete_cb_finished = false;
 }
 
 static void netmgr_wifi_config_start(void)
