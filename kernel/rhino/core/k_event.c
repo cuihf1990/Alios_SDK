@@ -20,6 +20,8 @@
 static kstat_t event_create(kevent_t *event, const name_t *name, uint32_t flags,
                             uint8_t mm_alloc_flag)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(event);
     NULL_PARA_CHK(name);
 
@@ -34,7 +36,9 @@ static kstat_t event_create(kevent_t *event, const name_t *name, uint32_t flags,
     event->mm_alloc_flag      = mm_alloc_flag;
 
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+    YUNOS_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.event_head), &event->event_item);
+    YUNOS_CRITICAL_EXIT();
 #endif
 
     event->blk_obj.obj_type = YUNOS_EVENT_OBJ_TYPE;

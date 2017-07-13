@@ -21,6 +21,8 @@ kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
                              void *pool_start,
                              size_t blk_size, size_t pool_size)
 {
+    CPSR_ALLOC();
+
     uint32_t blks;            /* max blocks mem pool offers */
     uint8_t *blk_cur;         /* block pointer for traversing */
     uint8_t *blk_next;        /* next block pointe for traversing */
@@ -79,8 +81,9 @@ kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
     pool->obj_type   = YUNOS_MM_BLK_OBJ_TYPE;
 
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
-    klist_init(&(pool->mblkpool_stats_item));
+    YUNOS_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.mblkpool_head), &pool->mblkpool_stats_item);
+    YUNOS_CRITICAL_EXIT();
 #endif
 
     TRACE_MBLK_POOL_CREATE(g_active_task, pool);
