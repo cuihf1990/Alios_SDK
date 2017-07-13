@@ -1006,7 +1006,7 @@ void process_whitelist(int argc, char *argv[])
     if (arg_index >= argc) {
         int i = 0;
         bool enabled = ur_mesh_is_whitelist_enabled();
-        whitelist_entry_t *whitelist = ur_mesh_get_whitelist_entries();
+        const whitelist_entry_t *whitelist = ur_mesh_get_whitelist_entries();
         response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
         for(i = 0; i < WHITELIST_ENTRY_NUM; i++) {
             if (whitelist[i].valid == false) {
