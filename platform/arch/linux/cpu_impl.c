@@ -42,9 +42,9 @@
 #define LOG(format, ...) //printf(format, __VA_ARGS__)
 
 #ifdef GCOV_ENABLE
-#define MIN_STACK_SIZE    8192
+#define MIN_STACK_SIZE    8192*2
 #else
-#define MIN_STACK_SIZE    4096
+#define MIN_STACK_SIZE    4096*2
 #endif
 
 typedef struct {
@@ -211,7 +211,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tmp  = tcb_ext->real_stack;
     *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
 #else
-    tmp  = (cpu_stack_t *)(tcb_ext->task_stack_base) + (real_size/sizeof(cpu_stack_t)) - 1u;
+    tmp  = (cpu_stack_t *)(tcb_ext->real_stack) + (real_size/sizeof(cpu_stack_t)) - 1u;
     *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
 #endif
 #endif
@@ -324,9 +324,11 @@ static void _cpu_task_switch(void)
 
     /* save errno */
     from_tcb_ext->saved_errno = errno;
+
 #if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
-    yunos_stack_ovf_check();
+    assert(*(g_active_task->task_stack_base) == YUNOS_TASK_STACK_OVF_MAGIC);
 #endif
+
     g_active_task = g_preferred_ready_task;
 
     swapcontext(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
