@@ -157,7 +157,7 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
     if (pkt == NULL)
         return -1;
 
-    ret = umesh_80211_make_frame(module, frame, dest, pkt, false);
+    ret = umesh_80211_make_frame(module, frame, dest, pkt);
     if (ret < 0)
         goto out;
 
