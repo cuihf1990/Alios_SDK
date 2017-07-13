@@ -183,8 +183,8 @@ static int wifimgrProcessGetWifiListRequest(
     char *msgToSend;
     int msglen = 0;
     alink_ap_info_t *p, *q;
-    char *otherApinfo[64];
-    char *encodedSSID[OS_MAX_SSID_LEN * 2];
+    char otherApinfo[64];
+    char encodedSSID[OS_MAX_SSID_LEN * 2];
     uint8_t bssidConnected[ETH_ALEN];
     int apNumInMsg = 0;
     char wifiListRequestId[WIFI_LIST_REQUEST_ID_LEN+1];
