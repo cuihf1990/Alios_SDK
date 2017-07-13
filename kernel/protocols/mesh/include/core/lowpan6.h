@@ -126,8 +126,8 @@ typedef struct nhc_header_s {
 } __attribute__((packed)) nhc_header_t;
 
 typedef struct frag_header_s {
-    unsigned int size : 11;
-    unsigned int dispatch : 5;
+    uint16_t size : 11;
+    uint16_t dispatch : 5;
     uint16_t tag;
     uint8_t  offset;
 } __attribute__((packed)) frag_header_t;
