@@ -20,6 +20,8 @@
 #include "hal/interfaces.h"
 #include "tools/diags.h"
 
+extern void response_append(const char *format, ...);
+
 static ur_error_t send_trace_route_response(network_context_t *network,
                                             ur_addr_t *dest,
                                             uint32_t timestamp);
@@ -80,8 +82,8 @@ static ur_error_t handle_trace_route_response(message_t *message)
                                                      TYPE_TIMESTAMP);
     time = ur_get_now() - timestamp->timestamp;
     info = message->info;
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "%04x:%04x, time %d ms\r\n",
-           info->src.netid, info->src.addr.short_addr, time);
+    response_append("%04x:%04x, time %d ms\r\n",
+                    info->src.netid, info->src.addr.short_addr, time);
     return UR_ERROR_NONE;
 }
 
