@@ -1,4 +1,6 @@
 #include "hal/soc/soc.h"
+#include <yos/kernel.h>
+#include <yos/framework.h>
 
 /* Logic partition on flash devices */
 const hal_logic_partition_t hal_partitions[] = 
@@ -61,8 +63,49 @@ const hal_logic_partition_t hal_partitions[] =
     },
 };
 
-void boot(void)
+#define KEY_STATUS 1
+#define KEY_ELINK  2
+#define KEY_BOOT   7
+static uint64_t elink_time = 0;
+static yos_work_t g_key_proc_work;
+static void key_poll_func(void *arg)
 {
-    if(0)
-        hal_boot(HAL_PARTITION_APPLICATION);
+    int8_t level;
+    uint64_t diff;
+
+    level = hal_gpio_inputget(KEY_BOOT);
+
+    if (level == 0) {
+        yos_post_delayed_action(10, key_poll_func, NULL);
+    } else {
+        diff = yos_now_ms() - elink_time;
+        if (diff > 2000) { /* long press */
+            elink_time = 0;
+            yos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_LTCLICK);
+        } else if (diff > 40) { /* short press */
+            elink_time = 0;
+            yos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_CLICK);
+        } else {
+            yos_post_delayed_action(10, key_poll_func, NULL);
+        }
+    }
+}
+
+static void key_proc_work(void *arg)
+{
+    yos_schedule_call(key_poll_func, NULL);
+}
+
+static void handle_elink_key(void *arg)
+{
+    if (elink_time == 0) {
+        elink_time = yos_now_ms();
+        yos_work_sched(&g_key_proc_work);
+    }
+}
+
+void board_init(void)
+{
+    yos_work_init(&g_key_proc_work, key_proc_work, NULL, 0);
+    hal_gpio_enable_irq(KEY_BOOT, IRQ_TRIGGER_FALLING_EDGE, handle_elink_key, NULL);
 }

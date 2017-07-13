@@ -31,7 +31,6 @@
 #include <netmgr.h>
 #include <yos/cli.h>
 #include <yos/cloud.h>
-#include <hal/soc/soc.h>
 
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
@@ -359,13 +358,13 @@ void alink_key_process(input_event_t *eventinfo, void *priv_data)
     if (eventinfo->type != EV_KEY) {
         return;
     }
-    if (eventinfo->code == CODE_BOOT_SHORT_PRESS) {
+    if (eventinfo->code == CODE_BOOT && eventinfo->value == VALUE_KEY_CLICK) {
         if (cloud_is_connected() == false) {
             netmgr_start(true);
         } else {
             alink_activate(NULL);
         }
-    } else if(eventinfo->code == CODE_BOOT_LONG_PRESS) {
+    } else if(eventinfo->code == CODE_BOOT && eventinfo->value == VALUE_KEY_LTCLICK) {
         alink_factory_reset();
     }
 }
@@ -639,49 +638,6 @@ static void alink_cloud_init(void)
 #endif
 }
 
-
-#define KEY_STATUS 1
-#define KEY_ELINK  2
-#define KEY_BOOT   7
-uint64_t elink_time = 0;
-yos_work_t g_key_proc_work;
-static void key_poll_func(void *arg)
-{
-    int8_t level;
-    uint64_t diff;
-
-    level = hal_gpio_inputget(KEY_BOOT);
-
-    if (level == 0) {
-        yos_post_delayed_action(10, key_poll_func, NULL);
-    } else {
-        diff = yos_now_ms() - elink_time;
-        if (diff > 2000) { /* long press */
-            elink_time = 0;
-            yos_post_event(EV_KEY, CODE_BOOT_LONG_PRESS, 0);
-        } else if (diff > 40) { /* short press */
-            elink_time = 0;
-            yos_post_event(EV_KEY, CODE_BOOT_SHORT_PRESS, 0);
-        } else {
-            yos_post_delayed_action(10, key_poll_func, NULL);
-        }
-    }
-}
-
-static void key_proc_work(void *arg)
-{
-    yos_schedule_call(key_poll_func, NULL);
-    ((kwork_t*)(g_key_proc_work.hdl))->running = 0;
-}
-
-static void handle_elink_key(void *arg)
-{
-    if (elink_time == 0) {
-        elink_time = yos_now_ms();
-        yos_work_sched(&g_key_proc_work);
-    }
-}
-
 int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
@@ -709,10 +665,7 @@ int application_start(int argc, char *argv[])
 
     yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
     yos_register_event_filter(EV_SYS, alink_connect_event, NULL);
-
     yos_register_event_filter(EV_KEY, alink_key_process, NULL);
-    yos_work_init(&g_key_proc_work, key_proc_work, NULL, 0);
-    hal_gpio_enable_irq(KEY_BOOT, IRQ_TRIGGER_FALLING_EDGE, handle_elink_key, NULL);
 
     netmgr_init();
     netmgr_start(false);
