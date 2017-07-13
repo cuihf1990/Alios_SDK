@@ -20,6 +20,8 @@
 static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count,
                           uint8_t mm_alloc_flag)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(sem);
     NULL_PARA_CHK(name);
 
@@ -37,7 +39,9 @@ static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count,
     sem->mm_alloc_flag      = mm_alloc_flag;
 
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+    YUNOS_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.sem_head), &sem->sem_item);
+    YUNOS_CRITICAL_EXIT();
 #endif
 
     sem->blk_obj.obj_type = YUNOS_SEM_OBJ_TYPE;
