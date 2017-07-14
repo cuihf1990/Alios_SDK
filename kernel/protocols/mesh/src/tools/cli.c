@@ -510,6 +510,11 @@ void process_mode(int argc, char *argv[])
             break;
         }
 
+        if (strcmp(argv[index], "LEADER") == 0) {
+            mode |= MODE_LEADER;
+            continue;
+        }
+
         if (strcmp(argv[index], "SUPER") == 0) {
             mode |= MODE_SUPER;
             continue;
