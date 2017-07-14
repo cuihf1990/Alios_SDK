@@ -1083,8 +1083,7 @@ void *yunos_mm_alloc(size_t size)
 #if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
         dump_mmleak();
 #endif
-        k_err_proc(YUNOS_SYS_FATAL_ERR);
-        //exit(0);
+        k_err_proc(YUNOS_NO_MEM);
 #endif
     }
 

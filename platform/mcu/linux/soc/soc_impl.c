@@ -61,7 +61,9 @@ void soc_err_proc(kstat_t err)
 {
     printf("kernel panic,err %d!\n",err);
     _linux_backtrace();
-    assert(0);
+    if(err == YUNOS_TASK_STACK_OVF){
+        assert(0);
+    }
 }
 
 yunos_err_proc_t g_err_proc = soc_err_proc;
