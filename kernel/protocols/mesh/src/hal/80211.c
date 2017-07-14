@@ -66,7 +66,7 @@ int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_add
 
 #ifdef FILTER_DUPLICATE_FRAME
 typedef struct mac_entry_s {
-    uint64_t mactime;
+    long long mactime;
     uint16_t last_seq;
     uint8_t  macaddr[6];
 } mac_entry_t;
@@ -76,7 +76,7 @@ static mac_entry_t entries[ENT_NUM];
 static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
 {
     mac_entry_t *ment, *yent = NULL;
-    uint64_t youngest = -1ULL;
+    long long youngest = -1ULL;
     int i;
 
     for (i=0;i<ENT_NUM;i++) {
@@ -124,7 +124,7 @@ next:
     mac80211_fctl_t *fctl = (mac80211_fctl_t *)pkt;
     uint16_t seqno = calc_seqctrl(pkt) << 4;
     mac_entry_t *ent;
-    uint64_t mactime = yos_now_ms();
+    long long mactime = yos_now_ms();
 
     ent = find_mac_entry(pkt+OFF_SRC);
 
@@ -133,7 +133,7 @@ next:
     }
 
     /* if longer than 100ms */
-    if (mactime - ent->mactime > 100) {
+    if (mactime - ent->mactime > 2000) {
         goto no_filter;
     }
 
