@@ -432,9 +432,13 @@ static struct cli_command modelcmd = {
 static void handle_uuid_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     extern int cloud_is_connected(void);
-    extern char *config_get_main_uuid(void);
+    extern const char *config_get_main_uuid(void);
+    extern bool gateway_is_connected(void);
+    extern const char *gateway_get_uuid(void);
     if (cloud_is_connected()) {
         LOG("uuid: %s", config_get_main_uuid());
+    } else if (gateway_is_connected()) {
+        LOG("uuid: %s", gateway_get_uuid());
     } else {
         LOG("alink is not connected");
     }

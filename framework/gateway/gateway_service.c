@@ -65,8 +65,8 @@ typedef struct {
     bool mqtt_reconnect;
     struct sockaddr_in6 gw_addr;
     struct sockaddr_in6 src_addr;
+    char uuid[STR_UUID_LEN + 1];
     dlist_t clients;
-    dlist_t callbacks;
 } gateway_state_t;
 
 static gateway_state_t gateway_state;
@@ -391,8 +391,14 @@ static void handle_connect(gateway_state_t *pstate, void *pmsg, int len)
     }
 
     void *buf;
-    conn_ack_t *conn_ack = msn_alloc(CONNACK, 0, &buf, &len);
-    conn_ack->ReturnCode = (client == NULL) ? -1 : 0;
+    conn_ack_t *conn_ack = msn_alloc(CONNACK, STR_UUID_LEN + 1, &buf, &len);
+    if (client == NULL) {
+        conn_ack->ReturnCode = -1;
+        memset(conn_ack->payload, 0x00, STR_UUID_LEN + 1);
+    } else {
+        conn_ack->ReturnCode = 0;
+        memcpy(conn_ack->payload, client->devinfo->dev_base.uuid, STR_UUID_LEN + 1);
+    }
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)&pstate->src_addr, sizeof(pstate->src_addr));
     yos_free(buf);
@@ -441,6 +447,8 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
         return;
     }
 
+    memcpy(pstate->uuid, conn_ack->payload, sizeof(pstate->uuid));
+    pstate->uuid[STR_UUID_LEN] = '\x0';
     pstate->mqtt_connected = true;
     yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
 
@@ -600,6 +608,15 @@ void gateway_service_deinit(void)
     yos_unregister_event_filter(EV_MESH, gateway_service_event, NULL);
 }
 
+bool gateway_is_connected(void)
+{
+    return gateway_state.mqtt_connected;
+}
+
+const char *gateway_get_uuid(void)
+{
+    return gateway_state.uuid;
+}
 
 static int init_socket(void)
 {
