@@ -834,6 +834,7 @@ void process_stats(int argc, char *argv[])
             response_append("  out_command %d\r\n", link_stats->out_command);
             response_append("  out_data %d\r\n", link_stats->out_data);
             response_append("  out_errors %d\r\n", link_stats->out_errors);
+            response_append("  send_queue_size %d\r\n", link_stats->send_queue_size);
             response_append("  sending %s\r\n", link_stats->sending ? "true" : "false");
             response_append("  sending_timeouts %d\r\n", link_stats->sending_timeouts);
         }
@@ -851,7 +852,10 @@ void process_stats(int argc, char *argv[])
     if (message_stats) {
         response_append("message stats\r\n");
         response_append("  allocate nums %d\r\n", message_stats->num);
-        response_append("  allocate fails %d\r\n", message_stats->fails);
+        response_append("  allocate queue_fulls %d\r\n", message_stats->queue_fulls);
+        response_append("  allocate mem_fails %d\r\n", message_stats->mem_fails);
+        response_append("  allocate pbuf_fails %d\r\n", message_stats->pbuf_fails);
+        response_append("  allocate size %d\r\n", message_stats->size);
     }
 
     mem_stats = ur_mesh_get_mem_stats();
