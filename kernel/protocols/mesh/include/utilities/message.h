@@ -24,7 +24,7 @@
 #include "umesh_types.h"
 
 enum {
-    MESSAGE_BUF_SIZE = 64,
+    MESSAGE_BUF_SIZE = 16,
 };
 
 typedef struct pbuf data_t;
@@ -57,6 +57,7 @@ typedef struct message_s {
     data_t         *data;
     message_info_t *info;
     uint16_t       frag_offset;
+    uint16_t tot_len;
 } message_t;
 
 typedef dlist_t message_queue_t;
@@ -74,12 +75,13 @@ uint16_t   message_get_msglen(const message_t *message);
 ur_error_t message_set_msglen(const message_t *message, uint16_t length);
 uint16_t   message_get_buflen(const message_t *message);
 ur_error_t message_set_buflen(const message_t *message, uint16_t length);
-ur_error_t message_concatenate(const message_t *dest, message_t *message,
+ur_error_t message_concatenate(message_t *dest, message_t *message,
                                bool reference);
 
 message_t *message_queue_get_head(message_queue_t *queue);
 ur_error_t message_queue_enqueue(message_queue_t *queue, message_t *message);
 ur_error_t message_queue_dequeue(message_t *message);
+uint16_t message_get_queue_size(message_queue_t *queue);
 
 void message_stats_reset(void);
 const ur_message_stats_t *message_get_stats(void);

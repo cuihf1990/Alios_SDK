@@ -161,13 +161,18 @@ typedef struct ur_link_stats_s {
     uint32_t out_data;
     uint32_t out_errors;
 
+    uint16_t send_queue_size;
+
     bool     sending;
     uint16_t sending_timeouts;
 } ur_link_stats_t;
 
 typedef struct ur_message_stats_s {
     uint16_t num;
-    uint16_t fails;
+    uint16_t queue_fulls;
+    uint16_t mem_fails;
+    uint16_t pbuf_fails;
+    uint16_t size;
 } ur_message_stats_t;
 
 typedef struct ur_mem_stats_s {

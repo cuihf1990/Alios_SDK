@@ -1188,11 +1188,17 @@ static void handle_datagram(void *args)
 
 const ur_link_stats_t *mf_get_stats(hal_context_t *hal)
 {
+    uint8_t index;
+
     if (hal == NULL) {
         return NULL;
     }
 
     hal->link_stats.sending = hal->send_message ? true : false;
+    hal->link_stats.send_queue_size = 0;
+    for (index = CMD_QUEUE; index <= PENDING_QUEUE; index++) {
+        hal->link_stats.send_queue_size = message_queue_get_size(hal->send_queue[index]);
+    }
     return &hal->link_stats;
 }
 

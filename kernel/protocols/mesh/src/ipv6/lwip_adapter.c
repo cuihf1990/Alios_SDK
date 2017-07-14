@@ -46,6 +46,7 @@ ur_error_t ur_adapter_input(void *message)
     buffer = pbuf_alloc(PBUF_RAW, message_get_msglen((message_t *)message),
                         PBUF_POOL);
     if (buffer == NULL) {
+        message_free(message);
         return UR_ERROR_FAIL;
     }
     pbuf_copy(buffer, (struct pbuf *)((message_t *)message)->data);
@@ -53,6 +54,7 @@ ur_error_t ur_adapter_input(void *message)
         error = g_la_state.adpif.input(buffer, &g_la_state.adpif);
     }
     if (error != ERR_OK) {
+        message_free(message);
         pbuf_free(buffer);
         return UR_ERROR_FAIL;
     }
