@@ -1545,6 +1545,7 @@ void become_detached(void)
     ur_stop_timer(&g_mm_state.device.alive_timer, NULL);
     ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
     reset_network_context();
+    mf_init();
     nd_init();
     nm_stop_discovery();
     stop_neighbor_updater();
