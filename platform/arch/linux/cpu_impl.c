@@ -42,9 +42,9 @@
 #define LOG(format, ...) //printf(format, __VA_ARGS__)
 
 #ifdef GCOV_ENABLE
-#define MIN_STACK_SIZE    8192*2
+#define MIN_STACK_SIZE    8192
 #else
-#define MIN_STACK_SIZE    4096*2
+#define MIN_STACK_SIZE    4096
 #endif
 
 typedef struct {
