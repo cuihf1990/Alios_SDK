@@ -1004,8 +1004,23 @@ void process_whitelist(int argc, char *argv[])
     int8_t        rssi;
 
     if (arg_index >= argc) {
+        int i = 0;
+        bool enabled = ur_mesh_is_whitelist_enabled();
+        const whitelist_entry_t *whitelist = ur_mesh_get_whitelist_entries();
+        response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
+        for(i = 0; i < WHITELIST_ENTRY_NUM; i++) {
+            if (whitelist[i].valid == false) {
+                continue;
+            }
+            response_append("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n",
+                            whitelist[i].address.addr[0],whitelist[i].address.addr[1],
+                            whitelist[i].address.addr[2],whitelist[i].address.addr[3],
+                            whitelist[i].address.addr[4],whitelist[i].address.addr[5],
+                            whitelist[i].address.addr[6],whitelist[i].address.addr[7]);
+        }
         return;
     }
+
     if (strcmp(argv[arg_index], "add") == 0) {
         if (++arg_index >= argc) {
             return;

@@ -192,6 +192,7 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
 
     txdesc_new = tx_txdesc_prepare(queue_idx);
     if(txdesc_new == NULL || TXDESC_STA_USED == txdesc_new->status) {
+        rwm_node_free(node);
         result = -1;
         goto tx_exit;
     }
@@ -228,7 +229,7 @@ tx_exit:
         (*sent)(cxt->context, cxt->frame, result);
     }
 
-    return result;
+    return 0;
 }
 
 static int beken_wifi_mesh_send_ucast(ur_mesh_hal_module_t *module,

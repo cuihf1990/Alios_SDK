@@ -53,8 +53,6 @@ const hal_logic_partition_t hal_partitions[] =
     },
 };
 
-void boot(void)
+void board_init(void)
 {
-    if(0)
-        hal_boot(HAL_PARTITION_APPLICATION);
 }

@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <k_api.h>
 #include "yos/log.h"
 #include "alink_export.h"
 #include "json_parser.h"
@@ -341,7 +342,7 @@ void awss_demo(void)
 /* activate sample */
 char active_data_tx_buffer[128];
 #define ActivateDataFormat    "{\"ErrorCode\": { \"value\": \"%d\" }}"
-void activate_button_pressed(void* arg)
+void alink_activate(void* arg)
 {
     snprintf(active_data_tx_buffer, sizeof(active_data_tx_buffer)-1, ActivateDataFormat, 1);
     LOG("active send:%s", active_data_tx_buffer);
@@ -350,6 +351,22 @@ void activate_button_pressed(void* arg)
     snprintf(active_data_tx_buffer, sizeof(active_data_tx_buffer)-1, ActivateDataFormat, 0);
     LOG("send:%s", active_data_tx_buffer);
     alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
+}
+
+void alink_key_process(input_event_t *eventinfo, void *priv_data)
+{
+    if (eventinfo->type != EV_KEY) {
+        return;
+    }
+    if (eventinfo->code == CODE_BOOT && eventinfo->value == VALUE_KEY_CLICK) {
+        if (cloud_is_connected() == false) {
+            netmgr_start(true);
+        } else {
+            alink_activate(NULL);
+        }
+    } else if(eventinfo->code == CODE_BOOT && eventinfo->value == VALUE_KEY_LTCLICK) {
+        alink_factory_reset();
+    }
 }
 
 static void handle_reset_cmd(char *pwbuf, int blen, int argc, char **argv)
@@ -365,7 +382,7 @@ static struct cli_command resetcmd = {
 
 static void handle_active_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
-    activate_button_pressed(NULL);
+    alink_activate(NULL);
 }
 
 static struct cli_command ncmd = {
@@ -416,7 +433,7 @@ static void handle_uuid_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     extern int cloud_is_connected(void);
     extern char *config_get_main_uuid(void);
-    if (cloud_is_connected) {
+    if (cloud_is_connected()) {
         LOG("uuid: %s", config_get_main_uuid());
     } else {
         LOG("alink is not connected");
@@ -648,6 +665,7 @@ int application_start(int argc, char *argv[])
 
     yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
     yos_register_event_filter(EV_SYS, alink_connect_event, NULL);
+    yos_register_event_filter(EV_KEY, alink_key_process, NULL);
 
     netmgr_init();
     netmgr_start(false);

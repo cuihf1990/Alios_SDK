@@ -105,11 +105,11 @@
 #define REG_A6_CONFIG                        (GPIO_BASE_ADDR + 54*4)
 #define REG_A7_CONFIG                        (GPIO_BASE_ADDR + 55*4)
 
-static  UINT32 gpio_open(UINT32 op_flag);
-static  UINT32 gpio_close(void);
-static  UINT32 gpio_read(char *user_buf, UINT32 count, UINT32 op_flag);
-static  UINT32 gpio_write(char *user_buf, UINT32 count, UINT32 op_flag);
-static  UINT32 gpio_ctrl(UINT32 cmd, void *param);
+UINT32 gpio_open(UINT32 op_flag);
+UINT32 gpio_close(void);
+UINT32 gpio_read(char *user_buf, UINT32 count, UINT32 op_flag);
+UINT32 gpio_write(char *user_buf, UINT32 count, UINT32 op_flag);
+UINT32 gpio_ctrl(UINT32 cmd, void *param);
 
 void gpio_int_enable(UINT32 index, UINT32 mode, void (*p_Int_Handler)(unsigned char));
 void gpio_int_disable(UINT32 index);

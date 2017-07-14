@@ -90,7 +90,6 @@ static void netmgr_connect_fail_event(hal_wifi_module_t *m, int err, void* arg)
 #ifdef CONFIG_YOS_MESH
 static void mesh_delayed_action(void *arg)
 {
-    ur_mesh_init((node_mode_t)arg);
     ur_mesh_set_mode((node_mode_t)arg);
     ur_mesh_stop();
     ur_mesh_start();
@@ -100,7 +99,7 @@ static void mesh_delayed_action(void *arg)
 static void start_mesh(bool is_leader)
 {
 #ifdef CONFIG_YOS_MESH
-    node_mode_t mode = MODE_RX_ON;
+    node_mode_t mode;
 
     mode = ur_mesh_get_mode() & (~MODE_LEADER);
     if (is_leader) {
@@ -343,6 +342,7 @@ void wifi_get_ip(char ips[16])
 void netmgr_register_wifi_scan_result_callback(netmgr_wifi_scan_result_cb_t cb)
 {
     g_netmgr_cxt.cb = cb;
+    g_netmgr_cxt.wifi_scan_complete_cb_finished = false;
 }
 
 static void netmgr_wifi_config_start(void)
@@ -472,6 +472,11 @@ int netmgr_init(void)
 #endif
     hal_wifi_install_event(g_netmgr_cxt.wifi_hal_mod, &g_wifi_hal_event);
     read_persistent_conf();
+
+#ifdef CONFIG_YOS_MESH
+    ur_mesh_init(MODE_RX_ON);
+#endif
+
     return 0;
 }
 

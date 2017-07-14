@@ -67,7 +67,7 @@ filter_exit:
     return ret;
 }
 
-static void gpio_config(UINT32 index, UINT32 mode)
+void gpio_config(UINT32 index, UINT32 mode)
 {
     UINT32 val;
     UINT32 overstep = 0;

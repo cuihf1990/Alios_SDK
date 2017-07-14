@@ -174,6 +174,10 @@ typedef struct ur_mem_stats_s {
     uint32_t num;
 } ur_mem_stats_t;
 
+enum {
+    WHITELIST_ENTRY_NUM = 16,
+};
+
 typedef enum node_mode_s {
     MODE_NONE   = 0x00,  // this is for testing that not joining net
     MODE_MOBILE = 0x01,
@@ -183,6 +187,13 @@ typedef enum node_mode_s {
     MODE_LEADER = 0x40,
     MODE_HI_MASK = 0xf0,
 } node_mode_t;
+
+typedef struct whitelist_entry_s {
+    mac_address_t address;
+    int8_t        rssi;
+    bool          valid;
+    bool          constant_rssi;
+} whitelist_entry_t;
 
 #ifdef __cplusplus
 }

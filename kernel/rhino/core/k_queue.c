@@ -26,6 +26,8 @@ YUNOS_INLINE void task_msg_recv(ktask_t *task, void *msg)
 static kstat_t queue_create(kqueue_t *queue, const name_t *name, void **start,
                             size_t msg_num, uint8_t mm_alloc_flag)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(start);
     NULL_PARA_CHK(name);
@@ -54,7 +56,9 @@ static kstat_t queue_create(kqueue_t *queue, const name_t *name, void **start,
     queue->mm_alloc_flag      = mm_alloc_flag;
 
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+    YUNOS_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.queue_head), &queue->queue_item);
+    YUNOS_CRITICAL_EXIT();
 #endif
 
     queue->blk_obj.obj_type = YUNOS_QUEUE_OBJ_TYPE;
