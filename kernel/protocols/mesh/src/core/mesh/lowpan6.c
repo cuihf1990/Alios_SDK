@@ -564,9 +564,11 @@ static ur_error_t dequeue_list_element(lowpan_reass_t *lrh)
 ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
 {
     frag_header_t *frag_header;
+    frag_header_t frag_header_content;
     uint16_t datagram_size, datagram_tag, datagram_offset;
     lowpan_reass_t *lrh, *lrh_temp;
     message_info_t *info;
+    uint8_t *payload;
 
     if (p == NULL || reass_p == NULL) {
         return UR_ERROR_FAIL;
@@ -574,7 +576,10 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
 
     info = p->info;
     *reass_p = NULL;
-    frag_header = (frag_header_t *)message_get_payload(p);
+    payload = (uint8_t *)message_get_payload(p);
+    memcpy((uint8_t *)&frag_header_content, payload, sizeof(frag_header_t));
+    frag_header = &frag_header_content;
+
     *((uint16_t *)frag_header) = ur_swap16(*(uint16_t *)frag_header);
     datagram_size = frag_header->size;
     datagram_tag = ur_swap16(frag_header->tag);
