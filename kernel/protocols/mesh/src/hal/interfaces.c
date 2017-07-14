@@ -205,6 +205,9 @@ static void cleanup_queues(hal_context_t *hal)
 void interface_stop(void)
 {
     hal_context_t *hal;
+
+    reset_network_context();
+
     slist_for_each_entry(&g_hals_list, hal, hal_context_t, next) {
         cleanup_queues(hal);
         hal->send_message = NULL;
