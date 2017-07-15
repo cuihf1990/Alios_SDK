@@ -167,12 +167,42 @@ typedef struct ur_link_stats_s {
     uint16_t sending_timeouts;
 } ur_link_stats_t;
 
+enum {
+    UMESH_1 = 0,
+    MESH_FORWARDER_1 = 1,
+    MESH_FORWARDER_2 = 2,
+    MESH_FORWARDER_3 = 3,
+    MESH_MGMT_1 = 4,
+    MESH_MGMT_2 = 5,
+    MESH_MGMT_3 = 6,
+    MESH_MGMT_4 = 7,
+    MESH_MGMT_5 = 8,
+    MESH_MGMT_6 = 9,
+    ADDRESS_MGMT_1 = 10,
+    ADDRESS_MGMT_2 = 11,
+    ADDRESS_MGMT_3 = 12,
+    NETWORK_MGMT_1 = 13,
+    NETWORK_MGMT_2 = 14,
+    LOWPAN6_1 = 15,
+    LOWPAN6_2 = 16,
+    LINK_MGMT_1 = 17,
+    LINK_MGMT_2 = 18,
+    LINK_MGMT_3 = 19,
+    ROUTER_MGR_1 = 20,
+    DIAGS_1 = 21,
+    DIAGS_2 = 22,
+    UT_MSG = 23,
+    MSG_DEBUG_INFO_SIZE,
+};
+
 typedef struct ur_message_stats_s {
     uint16_t num;
     uint16_t queue_fulls;
     uint16_t mem_fails;
     uint16_t pbuf_fails;
     uint16_t size;
+
+    uint16_t debug_info[MSG_DEBUG_INFO_SIZE];
 } ur_message_stats_t;
 
 typedef struct ur_mem_stats_s {

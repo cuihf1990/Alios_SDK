@@ -656,7 +656,7 @@ ur_error_t send_advertisement(network_context_t *network)
     if (network->router->sid_type == STRUCTURED_SID) {
         length += sizeof(mm_ssid_info_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -752,7 +752,7 @@ static ur_error_t send_attach_request(network_context_t *network,
 
     length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
              sizeof(mm_ueid_tv_t) + sizeof(mm_mode_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -818,7 +818,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         length += sizeof(mm_group_key_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_3);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -1053,7 +1053,7 @@ static ur_error_t send_sid_request(network_context_t *network)
         network->attach_candidate->addr.netid == network->meshnetid) {
         length += sizeof(mm_sid_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_4);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -1133,7 +1133,7 @@ static ur_error_t send_sid_response(network_context_t *network,
     length = sizeof(mm_header_t) + sizeof(mm_sid_tv_t) +
              sizeof(mm_node_type_tv_t) + sizeof(mm_netinfo_tv_t) +
              sizeof(mm_mcast_addr_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_5);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -1288,7 +1288,7 @@ ur_error_t send_raw_data(network_context_t *network,
     }
 
     length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) + payload_length;
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_6);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }

@@ -177,7 +177,7 @@ static ur_error_t send_address_query(network_context_t *network,
     } else {
         return UR_ERROR_FAIL;
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -325,7 +325,7 @@ static ur_error_t send_address_query_response(network_context_t *network,
         attach_node->meshnetid != INVALID_NETID) {
         length += sizeof(mm_node_id_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -457,7 +457,7 @@ ur_error_t send_address_notification(network_context_t *network,
     if (network->attach_node) {
         length += sizeof(mm_node_id_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_3);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }

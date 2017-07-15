@@ -39,7 +39,7 @@ void test_diags_case(void)
     send_trace_route_request(network, &dest);
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, UT_MSG);
     if (message == NULL) {
         return;
     }
@@ -62,7 +62,7 @@ void test_diags_case(void)
     message_free(message);
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, UT_MSG);
     if (message == NULL) {
         return;
     }

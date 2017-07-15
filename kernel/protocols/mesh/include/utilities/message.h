@@ -58,11 +58,13 @@ typedef struct message_s {
     message_info_t *info;
     uint16_t       frag_offset;
     uint16_t tot_len;
+
+    uint16_t debug_info;
 } message_t;
 
 typedef dlist_t message_queue_t;
 
-message_t  *message_alloc(uint16_t length);
+message_t  *message_alloc(uint16_t length,uint16_t debug_info);
 ur_error_t message_free(message_t *message);
 ur_error_t message_copy_to(const message_t *src, uint16_t src_offset,
                            uint8_t *dest, uint16_t dest_length);
