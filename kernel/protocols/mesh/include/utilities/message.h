@@ -25,8 +25,6 @@
 
 enum {
     MESSAGE_BUF_SIZE = 16,
-
-    MESSAGE_RX_BUF_SIZE = 2,
 };
 
 typedef struct pbuf data_t;
@@ -63,32 +61,6 @@ typedef struct message_s {
 
     uint16_t debug_info;
 } message_t;
-
-enum {
-    UMESH_1 = 0,
-    MESH_FORWARDER_1 = 1,
-    MESH_FORWARDER_2 = 2,
-    MESH_FORWARDER_3 = 3,
-    MESH_MGMT_1 = 4,
-    MESH_MGMT_2 = 5,
-    MESH_MGMT_3 = 6,
-    MESH_MGMT_4 = 7,
-    MESH_MGMT_5 = 8,
-    MESH_MGMT_6 = 9,
-    ADDRESS_MGMT_1 = 10,
-    ADDRESS_MGMT_2 = 11,
-    ADDRESS_MGMT_3 = 12,
-    NETWORK_MGMT_1 = 13,
-    NETWORK_MGMT_2 = 14,
-    LOWPAN6_1 = 15,
-    LOWPAN6_2 = 16,
-    LINK_MGMT_1 = 17,
-    LINK_MGMT_2 = 18,
-    LINK_MGMT_3 = 19,
-    ROUTER_MGR_1 = 20,
-    DIAGS_1 = 21,
-    DIAGS_2 = 22,
-};
 
 typedef dlist_t message_queue_t;
 

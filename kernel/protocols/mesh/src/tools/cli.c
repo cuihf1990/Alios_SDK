@@ -859,7 +859,7 @@ void process_stats(int argc, char *argv[])
 
         uint8_t index;
         response_append("  msg debug info\r\n  ");
-        for (index = 0; index < 23; index++) {
+        for (index = 0; index < MSG_DEBUG_INFO_SIZE; index++) {
             response_append("%d:", message_stats->debug_info[index]);
         }
         response_append("\r\n");
