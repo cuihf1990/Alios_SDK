@@ -155,6 +155,7 @@ typedef struct hal_context_s {
 
     // queue
     message_queue_t      send_queue[QUEUE_SIZE];
+    message_queue_t      recv_queue;
     ur_timer_t           sending_timer;
     message_t            *send_message;
     frag_info_t          frag_info;

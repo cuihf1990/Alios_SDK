@@ -162,6 +162,7 @@ typedef struct ur_link_stats_s {
     uint32_t out_errors;
 
     uint16_t send_queue_size;
+    uint16_t recv_queue_size;
 
     bool     sending;
     uint16_t sending_timeouts;

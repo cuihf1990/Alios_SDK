@@ -71,6 +71,8 @@ static hal_context_t *new_hal_context(ur_mesh_hal_module_t *module)
         dlist_init(&hal->send_queue[i]);
     }
 
+    dlist_init(&hal->recv_queue);
+
     return hal;
 }
 
@@ -197,9 +199,12 @@ static void cleanup_one_queue(message_queue_t *queue)
 static void cleanup_queues(hal_context_t *hal)
 {
     int i;
+
     for (i = 0; i < QUEUE_SIZE; i++) {
         cleanup_one_queue(&hal->send_queue[i]);
     }
+
+    cleanup_one_queue(&hal->recv_queue);
 }
 
 void interface_stop(void)
