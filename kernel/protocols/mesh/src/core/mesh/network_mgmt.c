@@ -76,11 +76,10 @@ static void handle_discovery_timer(void *args)
         return;
     } else if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
         umesh_mm_set_channel(network, umesh_mm_get_prev_channel());
+    } else if ((umesh_mm_get_mode() & MODE_MOBILE) == 0) {
+        become_leader();
     } else {
-        umesh_mm_set_channel(network, hal->channel_list.channels[0]);
-        if ((umesh_mm_get_mode() & MODE_MOBILE) == 0) {
-            become_leader();
-        }
+        umesh_mm_set_default_channel(network);
     }
     if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER &&
         (umesh_mm_get_mode() & MODE_LEADER) == 0) {

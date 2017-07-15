@@ -239,10 +239,10 @@ void become_leader(void)
     slist_for_each_entry(networks, network, network_context_t, next) {
         if (g_mm_state.device.mode & MODE_LEADER) {
             channel = hal_umesh_get_ucast_channel(network->hal->module);
+            umesh_mm_set_channel(network, channel);
         } else {
-            channel = network->hal->channel_list.channels[0];
+            umesh_mm_set_default_channel(network);
         }
-        umesh_mm_set_channel(network, channel);
     }
 
     g_mm_state.device.state = DEVICE_STATE_LEADER;
@@ -1523,8 +1523,7 @@ static ur_error_t handle_sid_response(message_t *message)
             }
             start_advertisement_timer(network);
 
-            umesh_mm_set_channel(network,
-                                 network->hal->channel_list.channels[0]);
+            umesh_mm_set_default_channel(network);
         }
     }
 
@@ -2162,6 +2161,31 @@ void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
         }
         network->channel = channel;
     }
+}
+
+void umesh_mm_set_default_channel(network_context_t *network)
+{
+    hal_context_t *hal;
+    uint8_t channel;
+    uint32_t seed;
+
+    if (network == NULL) {
+        network = get_default_network_context();
+    }
+    hal = network->hal;
+    if (hal->module->type == MEDIA_TYPE_WIFI) {
+        if (g_mm_state.device.mode & MODE_MOBILE) {
+            channel = 6;
+        } else if (hal->default_channel >= 0) {
+            channel = hal->default_channel;
+        } else {
+            seed = ur_get_now();
+            channel = (seed % 11) + 1;
+        }
+    } else {
+        channel = hal->channel_list.channels[0];
+    }
+    umesh_mm_set_channel(network, channel);
 }
 
 mm_device_state_t umesh_mm_get_device_state(void)
