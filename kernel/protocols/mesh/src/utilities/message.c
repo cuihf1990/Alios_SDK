@@ -64,6 +64,9 @@ message_t *message_alloc(uint16_t length, uint16_t debug_info)
     message->frag_offset = 0;
     message->tot_len = length;
 
+    if (debug_info >= MSG_DEBUG_INFO_SIZE) {
+        debug_info = UT_MSG;
+    }
     message->debug_info = debug_info;
     g_message_stats.debug_info[debug_info]++;
 
