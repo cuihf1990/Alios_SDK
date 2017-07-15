@@ -176,7 +176,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     }
     append_length = sizeof(mcast_header_t) + 2;
     frame->message = message_alloc(((message_t *)message)->data->tot_len +
-                                   append_length);
+                                   append_length, UMESH_1);
     if (frame->message == NULL) {
         ur_mem_free(frame, sizeof(transmit_frame_t));
         return UR_ERROR_FAIL;

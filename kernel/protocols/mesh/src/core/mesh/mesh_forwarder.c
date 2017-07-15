@@ -802,7 +802,8 @@ ur_error_t mf_send_message(message_t *message)
                     continue;
                 }
                 append_length = sizeof(mcast_header_t) + 1;
-                mcast_message = message_alloc(message_get_msglen(message) + append_length);
+                mcast_message = message_alloc(message_get_msglen(message) + append_length,
+                                              MESH_FORWARDER_1);
                 if (mcast_message == NULL) {
                     break;
                 }
@@ -1016,7 +1017,7 @@ static void handle_received_frame(void *context, frame_t *frame,
         }
     }
 
-    message = message_alloc(frame->len);
+    message = message_alloc(frame->len, MESH_FORWARDER_2);
     if (message == NULL) {
         hal->link_stats.in_drops++;
         return;
@@ -1158,7 +1159,7 @@ static void handle_datagram(void *args)
             info->flags |= INSERT_MESH_HEADER;
             hals = get_hal_contexts();
             slist_for_each_entry(hals, hal, hal_context_t, next) {
-                relay_message = message_alloc(message_get_msglen(message));
+                relay_message = message_alloc(message_get_msglen(message), MESH_FORWARDER_3);
                 if (relay_message != NULL) {
                     message_copy(relay_message, message);
                     relay_message->info->network = (void *)get_hal_default_network_context(hal);

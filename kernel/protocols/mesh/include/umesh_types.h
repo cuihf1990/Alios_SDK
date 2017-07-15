@@ -173,6 +173,8 @@ typedef struct ur_message_stats_s {
     uint16_t mem_fails;
     uint16_t pbuf_fails;
     uint16_t size;
+
+    uint16_t debug_info[23];
 } ur_message_stats_t;
 
 typedef struct ur_mem_stats_s {

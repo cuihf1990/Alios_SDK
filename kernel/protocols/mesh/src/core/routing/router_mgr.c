@@ -216,7 +216,7 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
     memcpy((data + msg_length), payload, length);
     msg_length += length;
 
-    message = message_alloc(msg_length);
+    message = message_alloc(msg_length, ROUTER_MGR_1);
     if (message == NULL) {
         ur_mem_free(data, msg_length);
         return UR_ERROR_MEM;

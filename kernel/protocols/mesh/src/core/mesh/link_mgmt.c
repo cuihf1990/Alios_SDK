@@ -473,7 +473,7 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
     if (tlvs_length) {
         length += (tlvs_length + sizeof(mm_tlv_request_tlv_t));
     }
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -537,7 +537,7 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
         length += (sizeof(mm_tlv_request_tlv_t) + tlv_types_length);
     }
 
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -592,7 +592,7 @@ static ur_error_t send_link_accept(network_context_t *network,
         return UR_ERROR_FAIL;
     }
     length += sizeof(mm_header_t);
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_3);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }

@@ -526,7 +526,7 @@ message_t *lp_header_decompress(message_t *message)
     ip6_header->len = ur_swap16(ip_payload_len);
 
     message_set_payload_offset(message, -hc_len);
-    dec_message = message_alloc(dec_header_len);
+    dec_message = message_alloc(dec_header_len, LOWPAN6_1);
     if (dec_message == NULL) {
         message_free(message);
         ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
@@ -688,7 +688,7 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
             dequeue_list_element(lrh);
 
             /* get message */
-            *reass_p = message_alloc(message_get_msglen(lrh->message));
+            *reass_p = message_alloc(message_get_msglen(lrh->message), LOWPAN6_2);
             message_copy(*reass_p, lrh->message);
             message_free(lrh->message);
 

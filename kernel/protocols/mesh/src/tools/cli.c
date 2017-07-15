@@ -856,6 +856,13 @@ void process_stats(int argc, char *argv[])
         response_append("  allocate mem_fails %d\r\n", message_stats->mem_fails);
         response_append("  allocate pbuf_fails %d\r\n", message_stats->pbuf_fails);
         response_append("  allocate size %d\r\n", message_stats->size);
+
+        uint8_t index;
+        response_append("  msg debug info\r\n  ");
+        for (index = 0; index < 23; index++) {
+            response_append("%d:", message_stats->debug_info[index]);
+        }
+        response_append("\r\n");
     }
 
     mem_stats = ur_mesh_get_mem_stats();

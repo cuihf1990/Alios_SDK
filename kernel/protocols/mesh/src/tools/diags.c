@@ -99,7 +99,7 @@ ur_error_t send_trace_route_request(network_context_t *network,
     uint16_t          length;
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, DIAGS_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -138,7 +138,7 @@ static ur_error_t send_trace_route_response(network_context_t *network,
     uint16_t          length;
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, DIAGS_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }

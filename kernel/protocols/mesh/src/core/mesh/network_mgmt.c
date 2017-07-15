@@ -102,7 +102,7 @@ static ur_error_t send_discovery_request(network_context_t *network)
 
     length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) + sizeof(mm_mode_tv_t) +
              sizeof(mm_state_flags_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, NETWORK_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -156,7 +156,7 @@ static ur_error_t send_discovery_response(network_context_t *network,
     message_info_t  *info;
 
     length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) + sizeof(mm_channel_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, NETWORK_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
