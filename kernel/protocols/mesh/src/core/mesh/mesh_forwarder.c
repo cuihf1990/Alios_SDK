@@ -727,8 +727,11 @@ ur_error_t mf_send_message(message_t *message)
         info->src.netid = umesh_mm_get_meshnetid(network);
         info->src.addr.len = SHORT_ADDR_SIZE;
         info->src.addr.short_addr = umesh_mm_get_local_sid();
-        umesh_task_schedule_call(handle_datagram, message);
-        return UR_ERROR_NONE;
+        error = umesh_task_schedule_call(handle_datagram, message);
+        if (error != UR_ERROR_NONE) {
+            message_free(message);
+        }
+        return error;
     }
 
     info->flags |= INSERT_MESH_HEADER;
@@ -1021,12 +1024,6 @@ static void handle_received_frame(void *context, frame_t *frame,
             hal->link_stats.in_filterings++;
             return;
         }
-    }
-
-    if (message_queue_get_size(&hal->recv_queue) >= MESSAGE_RX_BUF_SIZE) {
-        umesh_task_schedule_call(message_handler, hal);
-        hal->link_stats.in_drops++;
-        return;
     }
 
     message = message_alloc(frame->len, MESH_FORWARDER_2);

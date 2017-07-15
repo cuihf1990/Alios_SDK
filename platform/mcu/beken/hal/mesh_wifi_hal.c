@@ -130,8 +130,12 @@ static void wifi_monitor_cb(uint8_t *data, int len,
 
     pf->priv = priv;
     memcpy(pf->frm.data, data + WIFI_MESH_OFFSET, pf->frm.len);
-    pass_to_umesh((const void *)pf);
-    priv->stats.in_frames++;
+
+    if (yos_schedule_call(pass_to_umesh, pf) < 0) {
+        yos_free(pf);
+    } else {
+        priv->stats.in_frames++;
+    }
 }
 
 static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)

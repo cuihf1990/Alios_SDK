@@ -80,9 +80,9 @@ ur_error_t message_free(message_t *message)
     if (message != NULL) {
         g_message_stats.num--;
         g_message_stats.size -= message->tot_len;
-        pbuf_free((struct pbuf *)message->data);
-
         g_message_stats.debug_info[message->debug_info]--;
+
+        pbuf_free((struct pbuf *)message->data);
 
         if (message->info) {
             ur_mem_free(message->info, sizeof(message_info_t));
