@@ -2168,6 +2168,7 @@ void umesh_mm_set_default_channel(network_context_t *network)
     hal_context_t *hal;
     uint8_t channel;
     uint32_t seed;
+    uint8_t index;
 
     if (network == NULL) {
         network = get_default_network_context();
@@ -2180,7 +2181,8 @@ void umesh_mm_set_default_channel(network_context_t *network)
             channel = hal->default_channel;
         } else {
             seed = ur_get_now();
-            channel = (seed % 11) + 1;
+            index = (seed % hal->channel_list.num);
+            channel = hal->channel_list.channels[index];
         }
     } else {
         channel = hal->channel_list.channels[0];
