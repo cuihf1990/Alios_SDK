@@ -165,6 +165,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     transmit_frame_t *frame;
     uint8_t          append_length;
     uint8_t          *payload;
+    ur_error_t error = UR_ERROR_NONE;
 
     if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
         return UR_ERROR_FAIL;
@@ -189,7 +190,12 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     *payload = UNCOMPRESSED_DISPATCH;
 
     memcpy(&frame->dest, dest, sizeof(frame->dest));
-    umesh_task_schedule_call(output_message_handler, frame);
+    error = umesh_task_schedule_call(output_message_handler, frame);
+    if (error != UR_ERROR_NONE) {
+        message_free(frame->message);
+        ur_mem_free(frame, sizeof(transmit_frame_t));
+    }
+
     return UR_ERROR_NONE;
 }
 
@@ -204,12 +210,17 @@ static void input_message_handler(void *args)
 
 ur_error_t ur_mesh_input(umessage_t *message)
 {
+    ur_error_t error = UR_ERROR_FAIL;
+
     if (g_um_state.adapter_callback) {
-        umesh_task_schedule_call(input_message_handler, message);
-    } else {
+        error = umesh_task_schedule_call(input_message_handler, message);
+    }
+
+    if (error != UR_ERROR_NONE) {
         message_free((message_t *)message);
     }
-    return UR_ERROR_NONE;
+
+    return error;
 }
 
 ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
