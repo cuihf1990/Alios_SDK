@@ -127,6 +127,7 @@ void message_sent_task(void *args)
     hal_context_t *hal = (hal_context_t *)args;
     message_t *message;
     uint16_t msg_length;
+    bool free_msg = false;
 
     ur_stop_timer(&hal->sending_timer, hal);
     if (hal->send_message == NULL) {
@@ -134,11 +135,26 @@ void message_sent_task(void *args)
     }
     message = hal->send_message;
     msg_length = message_get_msglen(message);
-    if (hal->frag_info.offset < msg_length) {
-        message->frag_offset = hal->frag_info.offset;
+
+    if (hal->frag_info.offset >= msg_length &&
+        hal->last_sent == SENT_SUCCESS) {
+        free_msg = true;
+    } else if (hal->last_sent != SENT_SUCCESS &&
+               message->retries >= MESSAGE_RETRIES) {
+        free_msg = true;
     }
-    if (hal->frag_info.offset >= msg_length ||
-        hal->last_sent != SENT_SUCCESS) {
+
+    if (free_msg == false) {
+        if (hal->last_sent == SENT_SUCCESS) {
+            message->frag_offset = hal->frag_info.offset;
+            message->retries = 0;
+        } else {
+            hal->frag_info.offset = message->frag_offset;
+            message->retries++;
+        }
+    }
+
+    if (free_msg) {
         message_queue_dequeue(message);
         message_free(message);
         hal->send_message = NULL;

@@ -25,6 +25,8 @@
 
 enum {
     MESSAGE_BUF_SIZE = 16,
+
+    MESSAGE_RETRIES = 3,
 };
 
 typedef struct pbuf data_t;
@@ -58,6 +60,7 @@ typedef struct message_s {
     message_info_t *info;
     uint16_t       frag_offset;
     uint16_t tot_len;
+    uint8_t retries;
 
     uint16_t debug_info;
 } message_t;

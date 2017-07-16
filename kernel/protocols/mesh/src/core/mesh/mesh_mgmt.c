@@ -282,6 +282,9 @@ void become_leader(void)
         start_advertisement_timer(network);
     }
 
+    if (g_mm_state.device.net_scan_timer) {
+        ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
+    }
     umesh_mm_start_net_scan_timer();
     umesh_mm_set_prev_channel();
 
@@ -586,6 +589,7 @@ static void handle_migrate_wait_timer(void *args)
 
 static void handle_net_scan_timer(void *args)
 {
+    g_mm_state.device.net_scan_timer = NULL;
     nm_start_discovery();
     g_mm_state.device.reboot_flag = false;
 }
