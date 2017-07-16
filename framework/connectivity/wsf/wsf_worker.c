@@ -232,6 +232,8 @@ static int  __cb_wsf_recv(int fd, void *arg)
         } else {
             wsf_conn->recv_buf_pos += count;
         }
+        /* receive packets, reset heartbeat counter */
+        wsf_reset_heartbeat_counter(wsf_conn);
         process_received_buf(wsf_conn);
     }
     return 1;
