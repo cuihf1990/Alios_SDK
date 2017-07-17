@@ -3,7 +3,7 @@
 #include <yos/framework.h>
 
 /* Logic partition on flash devices */
-const hal_logic_partition_t hal_partitions[] = 
+const hal_logic_partition_t hal_partitions[] =
 {
 	[HAL_PARTITION_BOOTLOADER] =
 	{
@@ -78,7 +78,10 @@ static void key_poll_func(void *arg)
         yos_post_delayed_action(10, key_poll_func, NULL);
     } else {
         diff = yos_now_ms() - elink_time;
-        if (diff > 2000) { /* long press */
+        if (diff > 6000) { /*long long press */
+            elink_time = 0;
+            yos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_LLTCLICK);
+        } else if (diff > 2000) { /* long press */
             elink_time = 0;
             yos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_LTCLICK);
         } else if (diff > 40) { /* short press */

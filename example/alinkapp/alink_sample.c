@@ -358,14 +358,21 @@ void alink_key_process(input_event_t *eventinfo, void *priv_data)
     if (eventinfo->type != EV_KEY) {
         return;
     }
-    if (eventinfo->code == CODE_BOOT && eventinfo->value == VALUE_KEY_CLICK) {
-        if (cloud_is_connected() == false) {
-            netmgr_start(true);
-        } else {
-            alink_activate(NULL);
+
+    if (eventinfo->code == CODE_BOOT) {
+        if (eventinfo->value == VALUE_KEY_CLICK) {
+            if (cloud_is_connected() == false) {
+                netmgr_start(true);
+            } else {
+                alink_activate(NULL);
+            }
+        } else if(eventinfo->value == VALUE_KEY_LTCLICK) {
+            netmgr_clear_ap_config();
+            yos_reboot();
+        } else if(eventinfo->value == VALUE_KEY_LLTCLICK) {
+            netmgr_clear_ap_config();
+            alink_factory_reset();
         }
-    } else if(eventinfo->code == CODE_BOOT && eventinfo->value == VALUE_KEY_LTCLICK) {
-        alink_factory_reset();
     }
 }
 
