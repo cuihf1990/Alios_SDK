@@ -40,7 +40,7 @@ enum {
 };
 
 enum {
-    DEFAULT_MTU_SIZE = 1024,
+    DEFAULT_MTU_SIZE = 512,
 };
 
 typedef struct {
