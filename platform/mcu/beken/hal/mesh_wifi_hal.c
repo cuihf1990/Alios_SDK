@@ -24,6 +24,7 @@
 #include "txu_cntrl.h"
 #include "mm.h"
 #include "reg_mdm_cfg.h"
+#include "phy_trident.h"
 
 #include "umesh_hal.h"
 #include <umesh_80211.h>
@@ -39,7 +40,7 @@ enum {
 };
 
 enum {
-    DEFAULT_MTU_SIZE = 1024,
+    DEFAULT_MTU_SIZE = 512,
 };
 
 typedef struct {
@@ -150,10 +151,16 @@ static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
 static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
+    struct tx_policy_tbl *pol;
 
     if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0) {
         bk_wlan_start_monitor();
         hal_machw_exit_monitor_mode();
+
+        tpc_update_tx_power(PHY_TRIDENT_LIMIT_PWR);
+        pol = &txl_buffer_control_24G.policy_tbl;
+        pol->powercntrlinfo[0] =
+              (nxmac_dsss_max_pwr_level_getf() << TX_PWR_LEVEL_PT_RCX_OFT);
     }
 
     wlan_register_mesh_monitor_cb(wifi_monitor_cb);
@@ -381,7 +388,7 @@ static const frame_stats_t *beken_wifi_mesh_get_stats(
 }
 
 static ur_mesh_hal_module_t beken_wifi_mesh_module;
-static const uint8_t g_wifi_channels[] = {1, 6, 11};
+static const uint8_t g_wifi_channels[] = {1, 4, 6, 9, 11};
 static mesh_hal_priv_t g_wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = DEFAULT_MTU_SIZE,

@@ -62,6 +62,7 @@ message_t *message_alloc(uint16_t length, uint16_t debug_info)
     }
     memset(message->info, 0, sizeof(message_info_t));
     message->frag_offset = 0;
+    message->retries = 0;
     message->tot_len = length;
 
     if (debug_info >= MSG_DEBUG_INFO_SIZE) {
