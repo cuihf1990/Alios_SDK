@@ -76,7 +76,7 @@ static mac_entry_t entries[ENT_NUM];
 static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
 {
     mac_entry_t *ment, *yent = NULL;
-    uint32_t youngest = -1ULL;
+    uint32_t youngest = -1u;
     int i;
 
     for (i=0;i<ENT_NUM;i++) {
@@ -124,8 +124,7 @@ next:
     mac80211_fctl_t *fctl = (mac80211_fctl_t *)pkt;
     uint16_t seqno = calc_seqctrl(pkt) << 4;
     mac_entry_t *ent;
-    long long now = yos_now();
-    uint32_t mactime = now / 1000000;
+    uint32_t mactime = yos_now_ms();
 
     ent = find_mac_entry(pkt+OFF_SRC);
 
