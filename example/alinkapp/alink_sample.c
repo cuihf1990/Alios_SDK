@@ -444,8 +444,10 @@ static void handle_uuid_cmd(char *pwbuf, int blen, int argc, char **argv)
     extern const char *gateway_get_uuid(void);
     if (cloud_is_connected()) {
         LOG("uuid: %s", config_get_main_uuid());
+#ifdef MESH_GATEWAY_SERVICE
     } else if (gateway_is_connected()) {
         LOG("uuid: %s", gateway_get_uuid());
+#endif
     } else {
         LOG("alink is not connected");
     }
