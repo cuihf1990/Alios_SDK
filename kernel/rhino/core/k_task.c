@@ -236,6 +236,12 @@ kstat_t yunos_task_yield(void)
     return YUNOS_SUCCESS;
 }
 
+ktask_t *yunos_cur_task_get(void)
+{
+    return g_active_task;
+}
+
+
 #if (YUNOS_CONFIG_TASK_SUSPEND > 0)
 kstat_t task_suspend(ktask_t *task)
 {

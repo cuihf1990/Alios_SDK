@@ -182,6 +182,13 @@ kstat_t yunos_task_sleep(tick_t dly);
  */
 kstat_t yunos_task_yield(void);
 
+/**
+ * This function will get the current task for this cpu
+ * @return the current task
+ */
+ktask_t *yunos_cur_task_get(void);
+
+
 #if (YUNOS_CONFIG_TASK_SUSPEND > 0)
 /**
  * This function will suspend a task

@@ -60,7 +60,7 @@ static void task_mutex_opr_entry(void *arg)
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_buf_queue_entry(void *arg)
@@ -76,7 +76,7 @@ static void task_buf_queue_entry(void *arg)
     if ((ret == YUNOS_SUCCESS) && (*(uint8_t *)buf_queue_recv == 0x5a)) {
         notify_flag = 0x5a;
         yunos_buf_queue_del(&test_buf_queue);
-        yunos_task_dyn_del(g_active_task);
+        yunos_task_dyn_del(yunos_cur_task_get());
     }
 }
 
@@ -85,7 +85,7 @@ static void task_buf_queue_trigger_entry(void *arg)
     *(uint8_t *)buf_queue_send = 0x5a;
 
     yunos_buf_queue_send(&test_buf_queue, (void *)buf_queue_send, 1);
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void mutex_buf_queue_coopr_test(void)

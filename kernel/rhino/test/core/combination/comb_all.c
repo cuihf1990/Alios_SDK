@@ -64,7 +64,7 @@ static void task_sem_opr_entry(void *arg)
     yunos_queue_del(&queue_comb_all);
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_mutex_opr_entry(void *arg)
@@ -97,7 +97,7 @@ static void task_mutex_opr_entry(void *arg)
     mutex_count = 66;
 
     yunos_sem_give(sem_comb_all);
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_event_opr_entry(void *arg)
@@ -109,7 +109,7 @@ static void task_event_opr_entry(void *arg)
     if ((*(uint8_t *)&queue1_trigger_msg == MSG_SIGNATURE) &&
         (ret == YUNOS_SUCCESS)) {
         yunos_event_set(&event_comb_all, 0x1, YUNOS_OR);
-        yunos_task_dyn_del(g_active_task);
+        yunos_task_dyn_del(yunos_cur_task_get());
     }
 }
 
@@ -117,7 +117,7 @@ static void task_queue_opr_entry(void *arg)
 {
     *((char *)&msg_word) = MSG_SIGNATURE;
     yunos_queue_back_send(&queue_comb_all, (void *)msg_word);
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void comb_all_coopr_test(void)

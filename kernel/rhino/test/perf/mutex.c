@@ -66,7 +66,7 @@ static void MutexShuf1(void *arg)
 
     while (1) {
         yunos_mutex_lock(&Shufhandle_0, YUNOS_WAIT_FOREVER);
-        OurPriority = task_pri_get(g_active_task);
+        OurPriority = task_pri_get(yunos_cur_task_get());
         yunos_task_pri_change(ShufTaskHandle[1], OurPriority - 1, &oldpri);
 
         Starttime = hobbit_timer0_get_curval();
@@ -104,7 +104,7 @@ static void MutexShuf2(void *arg)
         }
 
         Priority = task_pri_get(ShufTaskHandle[0]);
-        yunos_task_pri_change(g_active_task, Priority + 1, &oldpri);
+        yunos_task_pri_change(yunos_cur_task_get(), Priority + 1, &oldpri);
     }
 }
 

@@ -96,7 +96,7 @@ static void task_sem_opr_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_queue_trigger_entry(void *arg)
@@ -106,7 +106,7 @@ static void task_queue_trigger_entry(void *arg)
     yunos_queue_front_send(&queue1, (void *)msg_word_send);
     yunos_queue_back_send(&queue2, (void *)msg_word_send);
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 /*
