@@ -87,6 +87,6 @@ void task_event_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 

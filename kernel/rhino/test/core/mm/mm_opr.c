@@ -126,7 +126,7 @@ static void task_mm_co1_entry(void *arg)
         break;
     }
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_mm_co2_entry(void *arg)
@@ -151,7 +151,7 @@ static void task_mm_co2_entry(void *arg)
     PRINT_RESULT(MODULE_NAME_CO, PASS);
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 
     yunos_deinit_mm_head(pmmhead);
 }

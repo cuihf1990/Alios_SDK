@@ -86,7 +86,7 @@ static void task_mm_blk_co1_entry(void *arg)
         break;
     }
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_mm_blk_co2_entry(void *arg)
@@ -113,7 +113,7 @@ static void task_mm_blk_co2_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 

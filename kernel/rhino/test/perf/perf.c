@@ -119,7 +119,7 @@ void OS_test(void *arg)
     yunos_task_sleep(50);
 #endif
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 
 }
 

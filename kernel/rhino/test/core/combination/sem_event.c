@@ -45,7 +45,7 @@ static void task_sem_opr_entry(void *arg)
 
     next_test_case_notify();
     yunos_sem_dyn_del(sem_comb);
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_ksem_trigger_opr_entry(void *arg)
@@ -58,7 +58,7 @@ static void task_ksem_trigger_opr_entry(void *arg)
     if ((ret == YUNOS_SUCCESS) && (flag == 0x3)) {
         yunos_sem_give(sem_comb);
         yunos_event_del(&event_sem);
-        yunos_task_dyn_del(g_active_task);
+        yunos_task_dyn_del(yunos_cur_task_get());
     }
 }
 
@@ -68,7 +68,7 @@ static void task_event_trigger_opr_entry(void *arg)
 
     ret = yunos_event_set(&event_sem, 0x1, YUNOS_OR);
     if (ret == YUNOS_SUCCESS) {
-        yunos_task_dyn_del(g_active_task);
+        yunos_task_dyn_del(yunos_cur_task_get());
     }
 }
 

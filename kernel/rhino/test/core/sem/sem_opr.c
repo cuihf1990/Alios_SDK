@@ -106,7 +106,7 @@ static void task_sem_coopr1_co1_entry(void *arg)
             PRINT_RESULT(MODULE_NAME_CO1, FAIL);
 
             next_test_case_notify();
-            yunos_task_dyn_del(g_active_task);
+            yunos_task_dyn_del(yunos_cur_task_get());
 
             return;
         }
@@ -116,7 +116,7 @@ static void task_sem_coopr1_co1_entry(void *arg)
     PRINT_RESULT(MODULE_NAME_CO1, PASS);
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_sem_coopr1_co2_entry(void *arg)
@@ -140,7 +140,7 @@ static void task_sem_coopr1_co2_entry(void *arg)
 
     yunos_sem_dyn_del(test_sem);
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void sem_coopr1_test(void)
@@ -184,7 +184,7 @@ static void task_sem_coopr2_co1_entry(void *arg)
 
     yunos_sem_dyn_del(test_sem_co1);
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_sem_coopr2_co2_entry(void *arg)
@@ -205,7 +205,7 @@ static void task_sem_coopr2_co2_entry(void *arg)
     }
 
     yunos_sem_dyn_del(test_sem_co2);
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_sem_coopr2_co3_entry(void *arg)
@@ -220,7 +220,7 @@ static void task_sem_coopr2_co3_entry(void *arg)
         }
     }
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void sem_coopr2_test(void)
