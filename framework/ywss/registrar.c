@@ -634,11 +634,7 @@ void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int b
             }
 
             buffer += 2;
-            if (len) {
-                buffer[len] = '\0';
-                //LOGI(MODULE_NAME_ENROLLEE,"ssid:%s", buffer);
-            } /* else hidden ssid */
-
+            length -= 2;
             buffer += len;
             length -= len;
             goto find_ie;

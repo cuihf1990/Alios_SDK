@@ -986,8 +986,35 @@ static UINT32 rwnx_cal_translate_tx_rate(UINT32 rate)
         param = 54;
         break;	// 54Mbps
     default:
-        param = 54;
+        param = rate;
         break;	// 54Mbps
+    }
+
+    return param;
+}
+
+static UINT32 rwnx_cal_translate_tx_rate_for_n(UINT32 rate)
+{
+    UINT32 param;
+   
+    switch(rate)
+    {
+    case 128 :
+    case 129 :
+    case 130 :
+    case 131 :
+    case 132 :
+    case 133 :        
+        param = rate - 123;
+        break;	// MCS0-5 the same rate indx as 9M to 36M
+    case 134:
+    case 135:
+        param = 11;  // MCS6-7the same rate indx as to 54M
+        break;	
+    
+    default:
+        param = rate;
+        break;	
     }
 
     return param;
@@ -1000,13 +1027,11 @@ void rwnx_cal_set_txpwr_by_rate(INT32 rate)
     UINT32 txpwr_val_A, txpwr_val_B, txpwr_val_C, channel;
     UINT32 dcorMod, dcorPA;
 
-    if(rate >= 12)
-        return;
-
-#if CFG_SUPPORT_MANUAL_CALI
     channel = (BK7011TRXONLY.REG0x7->bits.chin60 - 7) / 5;
     if(channel > 14)
         channel = 14;
+
+#if CFG_SUPPORT_MANUAL_CALI   
     if(!manual_cal_get_txpwr(rwnx_cal_translate_tx_rate(rate), channel, &dcorMod, &dcorPA))
 #endif
     {
@@ -1014,13 +1039,14 @@ void rwnx_cal_set_txpwr_by_rate(INT32 rate)
         dcorMod = (UINT32)BK7011TRXONLY.REG0xB->bits.dcorMod30;
         dcorPA = (UINT32)BK7011TRXONLY.REG0xC->bits.dcorPA30;
     }
-    channel = channel;
+
+    rate = rwnx_cal_translate_tx_rate_for_n(rate);
 
     txpwr_val_A = tx_pwr_rate[rate][0];
     txpwr_val_B = (tx_pwr_rate[rate][1] & (~(0xf << 12))) | (dcorMod << 12);
     txpwr_val_C = (tx_pwr_rate[rate][2] & (~(0xf << 12))) | (dcorPA << 12);
 
-    os_printf("rate:%d, mod:%d, pa:%d\r\n", rate, dcorMod, dcorPA);
+    os_printf("rate:%d, mod:%d, pa:%d\r\n", rate, dcorMod, dcorPA);  
 
     BK7011TRX.REG0xA->value = txpwr_val_A;
     CAL_WR_TRXREGS(0xA);
@@ -1036,6 +1062,7 @@ void rwnx_cal_set_txpwr_by_rate(INT32 rate)
     //    cur_rate = rate;
 }
 
+#if CFG_SUPPORT_MANUAL_CALI
 void rwnx_cal_set_txpwr(UINT32 mod, UINT32 pa)
 {
     UINT32 txpwr_val_B, txpwr_val_C;
@@ -1054,6 +1081,7 @@ void rwnx_cal_set_txpwr(UINT32 mod, UINT32 pa)
     bk7011_trx_val[11] = BK7011TRXONLY.REG0xB->value ;
     bk7011_trx_val[12] = BK7011TRXONLY.REG0xC->value ;
 }
+#endif
 
 void rwnx_tx_cal_save_cal_result(void)
 {
@@ -1093,11 +1121,6 @@ void rwnx_rx_cal_save_cal_result(void)
 
     bk7011_rc_val[15] = (bk7011_rc_val[15] & (~(0x3ff << 16))) | (((0x3ff)&grx_amp_err_wr) << 16);
     bk7011_rc_val[15] = (bk7011_rc_val[15] & (~0x3ff)) | ((0x3ff)&grx_phase_err_wr);
-
-    //if(gstat_cal)
-    //bk7011_rc_val[16] = bk7011_rc_val[16] | (1 << 29);
-    //else
-    //bk7011_rc_val[16] = bk7011_rc_val[16] & (~(1 << 29));
 }
 
 /*******************************************************************************

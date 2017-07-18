@@ -96,7 +96,7 @@ static int set_wpa_psk(struct wpa_ssid *ssid)
 
 static int set_wep_key(struct wpa_ssid*ssid)
 {
-	int errors;
+	int errors = 0;
 	
 	ssid->wep_tx_keyidx = 0;
 	ssid->auth_alg = WPA_AUTH_ALG_OPEN|WPA_AUTH_ALG_SHARED;

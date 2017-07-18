@@ -1430,7 +1430,12 @@ int wpa_driver_associate(void *priv, struct wpa_driver_associate_params *params)
     os_printf("wpa_driver_associate\r\n");
     param = (struct prism2_hostapd_param *)buf;
     param->cmd = PRISM2_HOSTAPD_ASSOC_REQ;
-
+    
+    if(params->auth_alg & WPA_AUTH_ALG_OPEN){
+		param->u.assoc_req.auth_alg = HOSTAP_AUTH_OPEN;
+	}else{
+		param->u.assoc_req.auth_alg = HOSTAP_AUTH_SHARED;
+	}
     os_memcpy(param->u.assoc_req.bssid, params->bssid, ETH_ALEN);
     param->u.assoc_req.ssid_len = params->ssid_len;
     os_memcpy(param->u.assoc_req.ssid, params->ssid, param->u.assoc_req.ssid_len);
