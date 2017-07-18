@@ -181,7 +181,6 @@ uint16_t            umesh_mm_get_path_cost(void);
 uint16_t            umesh_mm_get_channel(network_context_t *network);
 void                umesh_mm_set_channel(network_context_t *network,
                                          uint16_t channel);
-void                umesh_mm_set_default_channel(network_context_t *network);
 ur_error_t          umesh_mm_set_seclevel(int8_t level);
 int8_t              umesh_mm_get_seclevel(void);
 

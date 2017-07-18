@@ -65,7 +65,6 @@ static hal_context_t *new_hal_context(ur_mesh_hal_module_t *module)
     }
     memset(hal, 0, sizeof(hal_context_t));
     hal->module = module;
-    hal->default_channel = -1;
     slist_add_tail(&hal->next, &g_hals_list);
 
     for (i = 0; i < QUEUE_SIZE; i++) {
@@ -168,7 +167,6 @@ void interface_start(void)
     index = 0;
     slist_for_each_entry(&g_hals_list, hal, hal_context_t, next) {
         bool is_wifi = hal->module->type == MEDIA_TYPE_WIFI;
-        hal->default_channel = -1;
 
         if (is_wifi) {
             if (umesh_mm_get_mode() & MODE_SUPER) {
@@ -218,7 +216,6 @@ void interface_stop(void)
     slist_for_each_entry(&g_hals_list, hal, hal_context_t, next) {
         cleanup_queues(hal);
         hal->send_message = NULL;
-        hal->default_channel = -1;
     }
 
     while (!slist_empty(&g_networks_list)) {

@@ -176,8 +176,6 @@ typedef struct hal_context_s {
     ur_timer_t            discovery_timer;
     scan_result_t         discovery_result;
 
-    int16_t               default_channel;
-
     // hal configurations
     uint32_t              discovery_interval;
     uint32_t              attach_request_interval;
