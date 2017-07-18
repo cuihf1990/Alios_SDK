@@ -59,5 +59,14 @@ YUNOS_INLINE void klist_rm(klist_t *element)
     element->next->prev = element->prev;
 }
 
+YUNOS_INLINE void klist_rm_init(klist_t *element)
+{
+    element->prev->next = element->next;
+    element->next->prev = element->prev;
+
+    element->next = element->prev = element;
+}
+
+
 #endif /* K_LIST_H */
 
