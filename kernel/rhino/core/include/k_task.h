@@ -114,6 +114,7 @@ typedef struct {
 } ktask_t;
 
 typedef void (*task_entry_t)(void *arg);
+extern  ktask_t *g_active_task;
 
 /**
  * This function will initialize a task
@@ -186,8 +187,10 @@ kstat_t yunos_task_yield(void);
  * This function will get the current task for this cpu
  * @return the current task
  */
-ktask_t *yunos_cur_task_get(void);
-
+YUNOS_INLINE ktask_t *yunos_cur_task_get(void)
+{
+    return g_active_task;
+}
 
 #if (YUNOS_CONFIG_TASK_SUSPEND > 0)
 /**
