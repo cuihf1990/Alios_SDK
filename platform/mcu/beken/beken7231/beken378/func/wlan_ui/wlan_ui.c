@@ -790,17 +790,24 @@ int bk_wlan_send_80211_raw_frame(uint8_t *buffer, int len)
 	struct txl_frame_desc_tag *tx_frame;
 	uint8_t *pkt;
 	int txtype = TX_DEFAULT_24G;
+    int ret = 0;
 	
+    yunos_sched_disable();
+
 	tx_frame = txl_frame_get(txtype, len);
     if (tx_frame == NULL) {
-        return 1;
+        ret = 1;
+        goto exit;
     }
 
     pkt = (uint8_t *)tx_frame->txdesc.lmac.buffer->payload;
 	os_memcpy(pkt, buffer, len);
 
     txl_frame_push(tx_frame, AC_VO);
-    return 0;
+
+exit:
+    yunos_sched_enable();
+    return ret;
 }
 
 int bk_wlan_is_monitor_mode(void)
