@@ -198,7 +198,8 @@ static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     }
 
     network = get_network_context_by_meshnetid(neighbor->addr.netid);
-    if (network && network->router->sid_type == STRUCTURED_SID) {
+    if (network && network->router->sid_type == STRUCTURED_SID &&
+        is_allocated_child(network, neighbor)) {
         free_sid(network, neighbor->addr.addr.short_addr);
     }
 
@@ -349,7 +350,8 @@ neighbor_t *update_neighbor(const message_info_t *info,
             nbr->state = STATE_NEIGHBOR;
         }
         network = get_network_context_by_meshnetid(info->src.netid);
-        if (is_direct_child(network, info->src.addr.short_addr)) {
+        if (is_direct_child(network, info->src.addr.short_addr) &&
+            is_allocated_child(network, nbr)) {
             nbr->state = STATE_CHILD;
         }
     }
