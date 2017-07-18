@@ -369,16 +369,8 @@ void mt_sm_connect(CONNECT_PARAM_T *sme)
     sm_connect_req_ptr->flags = sme->flags;
     sm_connect_req_ptr->ctrl_port_ethertype = PP_HTONS(ETH_P_PAE);
     sm_connect_req_ptr->ie_len = sme->ie_len;
+    sm_connect_req_ptr->auth_type = sme->auth_type;
     os_memcpy((UINT8 *)sm_connect_req_ptr->ie_buf, (UINT8 *)sme->ie_buf, sm_connect_req_ptr->ie_len);
-
-	if(bk_sta_cipher_is_wep())
-	{
-    	sm_connect_req_ptr->auth_type = MAC_AUTH_ALGO_SHARED;
-	}
-    else
-    {
-    	sm_connect_req_ptr->auth_type = MAC_AUTH_ALGO_OPEN;
-    }
 	
     mt_msg_send(sm_connect_req_ptr);
 }

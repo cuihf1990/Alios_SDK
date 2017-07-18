@@ -36,6 +36,7 @@ UINT32 func_init(void)
     calibration_main();
     #if CFG_SUPPORT_MANUAL_CALI
     manual_cal_load_txpwr_tab_flash();
+    manual_cal_load_default_txpwr_tab();
     #endif
     #endif
 #endif

@@ -196,12 +196,11 @@ UINT32 mpb_ctrl(UINT32 cmd, void *param)
             reg_132 &= ~(0xff);
             reg_132 |= (0x80 | st.rate);
 
-            reg_135 &= ~(0xff);
+            reg_135 &= ~(0xf0);
             if(st.mod_format >= 0x2) {
-                reg_135 |= 0xb4;
+                reg_135 |= 0xb0;
             }
             else {
-                reg_135 |= 0x04;
 			    reg_135 |= (st.rate & PPDU_RATE_MASK) << PPDU_RATE_POSI;
             }
 

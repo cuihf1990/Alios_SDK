@@ -300,7 +300,7 @@ int wpa_send_assoc_req(struct prism2_hostapd_param *param, int len)
 	connect_param.chan.band = 0;
 	connect_param.chan.flags = 0;
 	connect_param.chan.tx_power = 10;
-	
+	connect_param.auth_type = param->u.assoc_req.auth_alg;
     ret = sa_station_send_associate_cmd(&connect_param);
 
 	if(scan_rstup_ptr)
