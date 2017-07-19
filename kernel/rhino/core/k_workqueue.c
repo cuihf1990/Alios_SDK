@@ -24,23 +24,16 @@ static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
 {
     CPSR_ALLOC();
 
-    kworkqueue_t *wq = g_workqueue_head;
+    kworkqueue_t *current_queue = NULL;
 
     YUNOS_CRITICAL_ENTER();
 
-    if (g_workqueue_head == NULL) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_WORKQUEUE_NOT_EXIST;
-    }
-
-    do {
-        if (wq == workqueue) {
+    yos_list_for_each_entry(current_queue, &g_workqueue_list_head, workqueue_node) {
+        if (current_queue == workqueue) {
             YUNOS_CRITICAL_EXIT();
             return YUNOS_WORKQUEUE_EXIST;
         }
-
-        wq = yunos_list_entry(wq->workqueue_node.next, kworkqueue_t, workqueue_node);
-    } while (wq != g_workqueue_head);
+    }
 
     YUNOS_CRITICAL_EXIT();
     return YUNOS_WORKQUEUE_NOT_EXIST;
@@ -55,9 +48,12 @@ static void worker_task(void *arg)
     kworkqueue_t *queue = (kworkqueue_t *)arg;
 
     while (1) {
-        ret = yunos_sem_take(&(queue->sem), YUNOS_WAIT_FOREVER);
+        if (is_klist_empty(&(queue->work_list)))
+        {
+            ret = yunos_sem_take(&(queue->sem), YUNOS_WAIT_FOREVER);
             if (ret != YUNOS_SUCCESS) {
                 k_err_proc(ret);
+            }
         }
 
         YUNOS_CRITICAL_ENTER();
@@ -73,8 +69,8 @@ static void worker_task(void *arg)
             YUNOS_CRITICAL_ENTER();
             /* clean current work */
             queue->work_current = NULL;
-            YUNOS_CRITICAL_EXIT();
-        } else YUNOS_CRITICAL_EXIT();
+        }
+        YUNOS_CRITICAL_EXIT();
     }
 }
 
@@ -120,11 +116,7 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
     }
 
     YUNOS_CRITICAL_ENTER();
-    if (g_workqueue_head == NULL) {
-        g_workqueue_head = workqueue;
-    } else {
-        klist_insert(&(g_workqueue_head->workqueue_node), &(workqueue->workqueue_node));
-    }
+    klist_insert(&g_workqueue_list_head, &(workqueue->workqueue_node));
     YUNOS_CRITICAL_EXIT();
 
     ret = yunos_task_resume(&(workqueue->worker));
@@ -152,22 +144,19 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
 
     TRACE_WORKQUEUE_DEL(g_active_task, workqueue);
 
+    YUNOS_CRITICAL_ENTER();
     if (!is_klist_empty(&(workqueue->work_list))) {
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_WORKQUEUE_BUSY;
     }
 
-    YUNOS_CRITICAL_ENTER();
-    if (workqueue == g_workqueue_head) {
-        if (&(workqueue->workqueue_node) == workqueue->workqueue_node.next) {
-            g_workqueue_head = NULL;
-        } else {
-            g_workqueue_head = yunos_list_entry(workqueue->workqueue_node.next,
-                                                kworkqueue_t, workqueue_node);
-            klist_rm_init(&(workqueue->workqueue_node));
-        }
-    } else {
-        klist_rm_init(&(workqueue->workqueue_node));
+    if (workqueue->work_current != NULL) {
+        YUNOS_CRITICAL_EXIT();
+        return YUNOS_WORKQUEUE_BUSY;
     }
+
+    klist_rm_init(&(workqueue->workqueue_node));
+
     YUNOS_CRITICAL_EXIT();
 
     workqueue->name = NULL;
@@ -330,7 +319,7 @@ kstat_t yunos_work_cancel(kwork_t *work)
 
 void workqueue_init(void)
 {
-    g_workqueue_head = NULL;
+    klist_init(&g_workqueue_list_head);
 
     yunos_workqueue_create(&g_workqueue_default, "DEFAULT-WORKQUEUE",
                            YUNOS_CONFIG_WORKQUEUE_TASK_PRIO, g_workqueue_stack,
