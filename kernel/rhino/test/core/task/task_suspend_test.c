@@ -25,13 +25,13 @@ ktask_t *task_2_test;
 void task_suspend_entry(void *arg)
 {
     while (1) {
-        yunos_task_suspend(g_active_task);
+        yunos_task_suspend(yunos_cur_task_get());
 
         test_case_success++;
         PRINT_RESULT("task_suspend", PASS);
 
         next_test_case_notify();
-        yunos_task_dyn_del(g_active_task);
+        yunos_task_dyn_del(yunos_cur_task_get());
     }
 }
 
@@ -39,7 +39,7 @@ void task_resume_entry(void *arg)
 {
     while (1) {
         yunos_task_resume(task_1_test);
-        yunos_task_dyn_del(g_active_task);
+        yunos_task_dyn_del(yunos_cur_task_get());
     }
 }
 

@@ -82,6 +82,7 @@ uint16_t   get_allocated_pf_number(network_context_t *network);
 uint16_t   get_free_number(network_context_t *network);
 slist_t    *get_ssid_nodes_list(network_context_t *network);
 bool       is_direct_child(network_context_t *network, uint16_t sid);
+bool       is_allocated_child(network_context_t *network, neighbor_t *nbr);
 bool       is_partial_function_sid(uint16_t sid);
 
 // random sid

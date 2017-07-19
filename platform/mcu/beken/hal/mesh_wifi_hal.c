@@ -201,8 +201,11 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
     rwm_tx_msdu_renew(pkt, len, node->msdu_ptr);
     content_ptr = rwm_get_msdu_content_ptr(node);
 
+    yunos_sched_disable();
+
     txdesc_new = tx_txdesc_prepare(queue_idx);
     if(txdesc_new == NULL || TXDESC_STA_USED == txdesc_new->status) {
+        yunos_sched_enable();
         rwm_node_free(node);
         result = -1;
         goto tx_exit;
@@ -231,8 +234,9 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
     txl_cntrl_push(txdesc_new, queue_idx);
     priv->stats.out_frames++;
 
-tx_exit:
+    yunos_sched_enable();
 
+tx_exit:
     yos_free(pkt);
 
     if (cxt) {

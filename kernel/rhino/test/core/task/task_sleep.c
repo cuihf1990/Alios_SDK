@@ -34,7 +34,7 @@ void task_sleep_entry(void *arg)
             cnt = 0u;
             PRINT_RESULT("task_sleep", PASS);
             next_test_case_notify();
-            yunos_task_dyn_del(g_active_task);
+            yunos_task_dyn_del(yunos_cur_task_get());
         }
     }
 }

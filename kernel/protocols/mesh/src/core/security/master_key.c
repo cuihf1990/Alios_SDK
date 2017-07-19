@@ -17,9 +17,8 @@
 #include "core/master_key.h"
 #include "core/keys_mgr.h"
 
-YOS_SLIST_HEAD(g_methods_list);
 typedef struct master_key_context_s {
-    slist_t *methods;
+    slist_t methods;
     uint8_t method_index;
     master_key_updated_t updated;
 } master_key_context_t;
@@ -37,7 +36,7 @@ static void master_key_handler(ur_error_t result, const uint8_t *master_key,
 ur_error_t master_key_init(master_key_updated_t updated)
 {
     memset(&g_master_key_context, 0, sizeof(g_master_key_context));
-    g_master_key_context.methods = &g_methods_list;
+    slist_init(&g_master_key_context.methods);
     g_master_key_context.updated = updated;
     g_master_key_context.method_index = PINCODE_METHOD;
     master_key_set_method(&g_def_method);
@@ -48,9 +47,9 @@ ur_error_t master_key_deinit(void)
 {
     master_key_method_t *method;
 
-    while(!slist_empty(g_master_key_context.methods)) {
-        method = slist_first_entry(g_master_key_context.methods, master_key_method_t, next);
-        slist_del(&method->next, g_master_key_context.methods);
+    while(!slist_empty(&g_master_key_context.methods)) {
+        method = slist_first_entry(&g_master_key_context.methods, master_key_method_t, next);
+        slist_del(&method->next, &g_master_key_context.methods);
     }
 
     return UR_ERROR_NONE;
@@ -62,7 +61,7 @@ ur_error_t master_key_request_start(void)
     uint8_t index = PINCODE_METHOD;
     master_key_method_t *method = NULL;
 
-    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t,
+    slist_for_each_entry(&g_master_key_context.methods, method, master_key_method_t,
                          next) {
         if (index == g_master_key_context.method_index) {
             break;
@@ -83,7 +82,7 @@ ur_error_t master_key_request_stop(void)
     uint8_t index = PINCODE_METHOD;
     master_key_method_t *method = NULL;
 
-    slist_for_each_entry(g_master_key_context.methods, method, master_key_method_t,
+    slist_for_each_entry(&g_master_key_context.methods, method, master_key_method_t,
                          next) {
         if (index == g_master_key_context.method_index) {
             break;
@@ -114,7 +113,7 @@ ur_error_t master_key_set_method(master_key_method_t *method)
         return UR_ERROR_PARSE;
     }
 
-    slist_add(&method->next, g_master_key_context.methods);
+    slist_add(&method->next, &g_master_key_context.methods);
     return UR_ERROR_NONE;
 }
 
