@@ -17,34 +17,52 @@
 #ifndef K_MM_H
 #define K_MM_H
 
+#ifdef HAVE_VALGRIND_H
+#include <valgrind.h>
+#include <memcheck.h>
+#define VGF(X) X
+#elif defined(HAVE_VALGRIND_VALGRIND_H)
+#include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
+#define VGF(X) X
+#else
+#define VGF(X)
+#endif
+
 
 /*use two level bit map to find free memory block*/
 
 #if (YUNOS_CONFIG_MM_TLF > 0)
 
-#define YUNOS_MM_CORRUPT_DYE  0xfefe
+#define YUNOS_MM_CORRUPT_DYE  0xFEFEFEFE
+#define YUNOS_MM_FREE_DYE     0xABABABAB
 
+#ifndef YUNOS_CONFIG_MM_MAXMSIZEBIT
 #define MAX_MM_BIT          20 /*2^20=1M,will change it to k_config.h*/
+#else
+#define MAX_MM_BIT         YUNOS_CONFIG_MM_MAXMSIZEBIT
+#endif
+#define MAX_MM_SIZE         (1<<MAX_MM_BIT)
 #define FIX_BLK_BIT         5 /*32 bytes*/
-#define DEF_FIX_BLK_SIZE    (1<<FIX_BLK_BIT) /*32 bit*/
-#define MIN_FLT_BIT         9 /*<2^9 only need one level mapping */
+#define DEF_FIX_BLK_SIZE    (1<<FIX_BLK_BIT) /*32 bytes*/
+#define MIN_FLT_BIT         7 /*<2^7 only need one level mapping */
 #define MIN_FLT_SIZE        (1<<MIN_FLT_BIT)
 #define MAX_LOG2_SLT        5
 #define SLT_SIZE            (1<<MAX_LOG2_SLT)
 #define FLT_SIZE            (MAX_MM_BIT - MIN_FLT_BIT + 1)
+#define MM_ALIGIN_SIZE      (1<<(MIN_FLT_BIT - MAX_LOG2_SLT))
+#define MM_ALIGN_MASK       (sizeof(void*)-1)
 
-
-#define MM_ALIGN_MASK     (sizeof(void*) -1)
 #define MM_ALIGN_UP(a)   (((a) + MM_ALIGN_MASK) & ~MM_ALIGN_MASK)
 #define MM_ALIGN_DOWN(a) ((a) & ~MM_ALIGN_MASK)
+
+
 #define YUNOS_MM_BLKSIZE_MASK (0xFFFFFFFF - MM_ALIGN_MASK)
 
-#define DEF_TOTAL_FIXEDBLK_SIZE     2048 /*by default, total 2k momory fo fix size block */
+#define DEF_TOTAL_FIXEDBLK_SIZE     8192 /*by default, total 2k momory fo fix size block */
 #define MIN_FREE_MEMORY_SIZE        1024 /*at least need 1k for user alloced*/
 
-#define MM_ALIGN_MASK     (sizeof(void*) -1)
-#define MM_ALIGN_UP(a)   (((a) + MM_ALIGN_MASK) & ~MM_ALIGN_MASK)
-#define MM_ALIGN_DOWN(a) ((a) & ~MM_ALIGN_MASK)
+
 
 /*bit 0 and bit 1 mask*/
 #define YUNOS_MM_CURSTAT_MASK 0x1
@@ -105,6 +123,7 @@ typedef struct {
 #if (K_MM_STATISTIC > 0)
     size_t              used_size;
     size_t              maxused_size;
+    size_t              free_size;
     size_t              mm_size_stats[MAX_MM_BIT];
 #endif
 
@@ -115,15 +134,39 @@ typedef struct {
 
 
 kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len );
+kstat_t yunos_deinit_mm_head(k_mm_head *mmhead);
 
 kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len);
 
 
 void *k_mm_alloc(k_mm_head *mmhead, size_t size);
-void  k_mm_free(k_mm_head *mmhead, void *ptr);
+void  k_mm_free(k_mm_head       *mmhead, void *ptr);
 void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size);
-
 #endif
+
+/**
+ * This function is wrapper of mm allocation
+ * @param[in]       size        size of the mem to malloc
+ * @return  the operation status, NULL is error, others is memory address
+ */
+void *yunos_mm_alloc(size_t size);
+
+/**
+ * This function is wrapper of mm free
+ * @param[in]       ptr        address point of the mem
+ */
+
+void   yunos_mm_free(void *ptr);
+
+
+/**
+ * This function is wrapper of mm rallocation
+ * @param[in]       oldmem      oldmem address
+ * @param[in]       size        size of the mem to malloc
+ * @return  the operation status, NULL is error, others is realloced memory address
+ */
+void *yunos_mm_realloc(void *oldmem, size_t newsize);
+
 
 
 #endif /* K_MM_BESTFIT_H */

@@ -28,7 +28,8 @@ enum {
 };
 
 typedef void (*master_key_updated_t)(ur_error_t result);
-typedef void (*master_key_handler_t)(ur_error_t result, const uint8_t *master_key,
+typedef void (*master_key_handler_t)(ur_error_t result,
+                                     const uint8_t *master_key,
                                      uint8_t size);
 
 typedef struct master_key_method_s {

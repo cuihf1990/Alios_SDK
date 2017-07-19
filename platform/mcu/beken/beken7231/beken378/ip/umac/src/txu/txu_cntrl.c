@@ -721,7 +721,6 @@ bool txu_cntrl_push(struct txdesc *txdesc, uint8_t access_category)
     do
     {
         p_vif_entry = &vif_info_tab[txdesc->host.vif_idx];
-
         if (!p_vif_entry)
         {
         	warning_prf("---------------------port_filtering:%d:0x%x\r\n", txdesc->host.staid,  co_ntohs(txdesc->host.ethertype));

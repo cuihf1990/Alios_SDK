@@ -126,8 +126,8 @@ typedef struct nhc_header_s {
 } __attribute__((packed)) nhc_header_t;
 
 typedef struct frag_header_s {
-    unsigned int size : 11;
-    unsigned int dispatch : 5;
+    uint16_t size : 11;
+    uint16_t dispatch : 5;
     uint16_t tag;
     uint8_t  offset;
 } __attribute__((packed)) frag_header_t;
@@ -139,7 +139,8 @@ ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
                               uint8_t *ip_hdr_len, uint8_t *lowpan_hdr_len);
 message_t *lp_header_decompress(message_t *message);
 ur_error_t lp_reassemble(message_t *p, message_t **reass_p);
-void       lp_init(void);
+void       lp_start(void);
+void       lp_stop(void);
 #ifdef __cplusplus
 }
 #endif

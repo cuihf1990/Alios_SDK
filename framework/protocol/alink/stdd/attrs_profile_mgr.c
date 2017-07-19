@@ -57,12 +57,13 @@ static int attrs_profile_download(struct work_struct *work);
 
 static int load_default_attrs_profile(void);
 
-static int32_t alink_get_attrs_profile(list_head_t * info_head);
-static int attrs_profile_listener(int type, void *data, int dlen, void *result, int *rlen);
+static int32_t alink_get_attrs_profile(dlist_t *info_head);
+static int attrs_profile_listener(int type, void *data, int dlen, void *result,
+                                  int *rlen);
 static int attrs_profile_sync(struct work_struct *work);
 int set_attrs_profile(char *request);
 
-static list_head_t g_list;
+static dlist_t g_list;
 static void *g_attrs_mutex = NULL;
 
 #define DOWNLOAD_WORK_POLLING_CYCLE    (10 * 1000)
@@ -132,7 +133,8 @@ int attrs_profile_exit(void)
     }
 }
 
-static int attrs_profile_listener(int type, void *data, int dlen, void *result, int *rlen)
+static int attrs_profile_listener(int type, void *data, int dlen, void *result,
+                                  int *rlen)
 {
     if (type == SERVICE_EVENT) {
         int st = *((int *)data);
@@ -156,11 +158,13 @@ static int attrs_profile_listener(int type, void *data, int dlen, void *result, 
 
 static char *get_attrs_profile_path_prefix(char dir[STR_LONG_LEN])
 {
-    snprintf(dir, STR_LONG_LEN, "%s%s/", os_get_storage_directory(), PROFILE_DIR_NAME);
+    snprintf(dir, STR_LONG_LEN, "%s%s/", os_get_storage_directory(),
+             PROFILE_DIR_NAME);
     return dir;
 }
 
-static char *get_attrs_profile_path(char *file_name, char *file_path, unsigned max_path_len)
+static char *get_attrs_profile_path(char *file_name, char *file_path,
+                                    unsigned max_path_len)
 {
     char *path = NULL;
     file_path[0] = '\0';
@@ -260,7 +264,8 @@ static int attrs_profile_download(struct work_struct *work)
             os_mutex_lock(g_attrs_mutex);
             list_add(&node->url_node, &info_head);
             os_mutex_unlock(g_attrs_mutex);
-            log_info("model_id %08x md5 %s model %s", node->info.model_id, node->info.md5, node->info.model);
+            log_info("model_id %08x md5 %s model %s", node->info.model_id, node->info.md5,
+                     node->info.model);
         } else {
             ret = attrs_profile_download_each(node);
             if (!ret) {
@@ -308,9 +313,11 @@ static int load_subdev_attrs_profile_array_each(char *array_obj, int obj_len)
     memset((char *)&info, 0, sizeof(struct profile_info));
 
     pos = json_get_value_by_name(array_obj, obj_len, "file_name", &len, 0);
-    strncpy(filename, pos, (sizeof(filename) - 1 > len) ? len : (sizeof(filename) - 1));
+    strncpy(filename, pos, (sizeof(filename) - 1 > len) ? len : (sizeof(
+                                                                     filename) - 1));
 
-    char *short_model_set = json_get_value_by_name(array_obj, obj_len, "modelid_set", &len, 0);
+    char *short_model_set = json_get_value_by_name(array_obj, obj_len,
+                                                   "modelid_set", &len, 0);
     char *entry;
     int entry_len, type;
 
@@ -385,12 +392,14 @@ static int load_default_attrs_profile(void)
             if (!is_file_exist(info.filename)) {
                 get_attrs_profile_path(info.filename, file_path, STR_LONG_LEN);
                 digest_md5_file(file_path, info.md5);
-                ret = set_kv_in_flash(model_name, (char *)&info, sizeof(struct profile_info), 1);
+                ret = set_kv_in_flash(model_name, (char *)&info, sizeof(struct profile_info),
+                                      1);
             }
         }
     }
 
-    char *profile_set = json_get_value_by_name(value, strlen(value), "device_profile", &len, 0);
+    char *profile_set = json_get_value_by_name(value, strlen(value),
+                                               "device_profile", &len, 0);
     if (NULL != profile_set) {
         char *entry;
         int entry_len, type;
@@ -420,7 +429,8 @@ int add_node_to_list(pfnode_t *pfnode)
     os_mutex_lock(g_attrs_mutex);
     list_for_each_entry_safe_t(node, n, &g_list, list_node, struct pfnode) {
         if (node->info.model_id == pfnode->info.model_id ||
-            (pfnode->info.model[0] != '\0' && strcmp(pfnode->info.model, node->info.model) == 0)) {
+            (pfnode->info.model[0] != '\0' &&
+             strcmp(pfnode->info.model, node->info.model) == 0)) {
             exist = 1;
             break;
         }
@@ -440,7 +450,8 @@ int add_node_to_list(pfnode_t *pfnode)
 }
 
 
-static int get_attrs_profile_file_md5(char *file_name, char *md5_buff, unsigned buff_size)
+static int get_attrs_profile_file_md5(char *file_name, char *md5_buff,
+                                      unsigned buff_size)
 {
     int ret = SERVICE_RESULT_ERR;
     char md5_file[MD5_LEN] = { '\0' };
@@ -506,7 +517,8 @@ int get_global_profile(char *file_name, int max_name_length)
     return ret;
 }
 
-int get_device_profile_file(uint8_t dev_type, uint32_t model_id, char *file_name, int max_name_length)
+int get_device_profile_file(uint8_t dev_type, uint32_t model_id,
+                            char *file_name, int max_name_length)
 {
     int ret = SERVICE_RESULT_ERR;
     pfnode_t *node;
@@ -557,7 +569,8 @@ int sync_global_profile()
     os_product_get_model(model_name);
     strncpy(node->info.model, model_name, OS_PRODUCT_MODEL_LEN);
     if (get_kv(model_name, (char *)&node->info, &len) == SERVICE_RESULT_OK) {
-        get_attrs_profile_file_md5(node->info.filename, node->info.md5, sizeof(node->info.md5));
+        get_attrs_profile_file_md5(node->info.filename, node->info.md5,
+                                   sizeof(node->info.md5));
         node->info.model_id = 0;
     }
 
@@ -594,7 +607,8 @@ int sync_device_profile(uint8_t dev_type, uint32_t model_id)
     snprintf(shortmodel, sizeof(shortmodel), "%08x", model_id);
     if (get_kv(shortmodel, (char *)&node->info, &len) == SERVICE_RESULT_OK) {
         node->info.md5[0] = '\0';
-        get_attrs_profile_file_md5(node->info.filename, node->info.md5, sizeof(node->info.md5));
+        get_attrs_profile_file_md5(node->info.filename, node->info.md5,
+                                   sizeof(node->info.md5));
     }
 
     if (add_node_to_list(node) == SERVICE_RESULT_OK) {
@@ -743,7 +757,8 @@ int set_attrs_profile(char *request)
     int len, num;
 
     str_pos = json_get_value_by_name(request, strlen(request), "data", &len, NULL);
-    PTR_RETURN(str_pos, SERVICE_RESULT_ERR, "get filename fail, params:%s", request);
+    PTR_RETURN(str_pos, SERVICE_RESULT_ERR, "get filename fail, params:%s",
+               request);
 
     if (len == 0 || (data = os_malloc(strlen(request))) == NULL) {
         return SERVICE_RESULT_ERR;
@@ -764,7 +779,7 @@ int set_attrs_profile(char *request)
     return SERVICE_RESULT_OK;
 }
 
-static int32_t alink_get_attrs_profile(list_head_t *info_head)
+static int32_t alink_get_attrs_profile(dlist_t *info_head)
 {
     int ret = SERVICE_RESULT_ERR;
     char *params = NULL;
@@ -783,10 +798,12 @@ static int32_t alink_get_attrs_profile(list_head_t *info_head)
     len += snprintf(params + len, ALINK_PARAMS_SIZE - len, "[");
     list_for_each_entry_t(pos, info_head, url_node, pfnode_t) {
         if (pos->info.model_id == 0) {
-            len += snprintf(params + len, ALINK_PARAMS_SIZE - len, "{\"type\":\"zigbee_global\",\"model\":\"%s\",\"md5\":\"%s\"}",
+            len += snprintf(params + len, ALINK_PARAMS_SIZE - len,
+                            "{\"type\":\"zigbee_global\",\"model\":\"%s\",\"md5\":\"%s\"}",
                             pos->info.model, pos->info.md5);
         } else {
-            len += snprintf(params + len, ALINK_PARAMS_SIZE - len, "{\"type\":\"zigbee\",\"shortModel\":\"%08x\",\"md5\":\"%s\"}",
+            len += snprintf(params + len, ALINK_PARAMS_SIZE - len,
+                            "{\"type\":\"zigbee\",\"shortModel\":\"%08x\",\"md5\":\"%s\"}",
                             pos->info.model_id, pos->info.md5);
         }
 
@@ -804,7 +821,8 @@ static int32_t alink_get_attrs_profile(list_head_t *info_head)
     OS_CHECK_MALLOC(out);
     memset(out, 0, ALINK_PARAMS_SIZE);
     alink_data_t data = { "device.getProfileFiles", params };
-    ret = ((service_t *) sm_get_service("accs"))->get((void *)&data, strlen(params), out, ALINK_PARAMS_SIZE);
+    ret = ((service_t *) sm_get_service("accs"))->get((void *)&data, strlen(params),
+                                                      out, ALINK_PARAMS_SIZE);
     if (ret == SERVICE_RESULT_OK) {
         if (json_get_array_size(out, strlen(out)) > 0) {
             attrs_profile_download_request_hander(out);

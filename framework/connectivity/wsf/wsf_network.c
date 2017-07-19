@@ -31,11 +31,13 @@ static char *wsf_rx_buffer;
 static void wsf_regist_device();
 
 typedef void (*connection_callback)();
+extern void cb_recv(int fd, void *arg);
+
+extern cb_network g_wsf_cb;
 
 static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
                                      int port, int enable_ssl, connection_callback callback)
 {
-
     if (!conn) {
         return WSF_CONNECTION_ERROR;
     }
@@ -46,7 +48,7 @@ static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
 
     conn->tcp = os_tcp_client_connect(&netaddr);
     if (conn->tcp == OS_INVALID_FD) {
-        LOGE(MODULE_NAME, MODULE_NAME, "can't estatblish tcp connection.");
+        LOGE(MODULE_NAME, "can't estatblish tcp connection.");
         return WSF_CONNECTION_ERROR;
     }
 
@@ -58,6 +60,10 @@ static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
             wsf_reset_connection(conn, 0);
             LOGE(MODULE_NAME, "can't open ssl connection");
             return WSF_CONNECTION_ERROR;
+        }else{
+            g_wsf_cb.sock = (long)wsf_conn->tcp;
+            yos_poll_read_fd(g_wsf_cb.sock, cb_recv,&g_wsf_cb);
+            LOGI(MODULE_NAME, "add new tcp socket fd to poll list.\n");
         }
     }
 
@@ -66,7 +72,6 @@ static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
         callback();
     }
     return WSF_SUCCESS;
-
 }
 
 
@@ -110,8 +115,9 @@ wsf_code wsf_reset_connection(wsf_connection_t *conn, int clear_session)
             os_ssl_close(conn->ssl);
             conn->ssl = NULL;
         }
-        if (conn->tcp) {
+        if (conn->tcp != OS_INVALID_FD) {
             os_tcp_close(conn->tcp);
+            yos_cancel_poll_read_fd((int)conn->tcp, NULL, NULL);
             conn->tcp = OS_INVALID_FD;
         }
 
@@ -179,7 +185,7 @@ wsf_code wsf_send_msg(wsf_connection_t *wsf_conn, const char *data, int length)
             LOGE(MODULE_NAME, "ssl send error, len:%d", length - count);
             return WSF_SEND_ERROR;
         }
-        printf("wsf send succeed->  %d\n", ret);
+        LOGD(MODULE_NAME, "wsf send succeed->  %d\n", ret);
         os_mutex_unlock(wsf_conn->mutex);
         return WSF_SUCCESS;
     }

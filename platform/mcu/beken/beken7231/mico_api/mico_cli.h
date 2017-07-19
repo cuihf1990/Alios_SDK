@@ -15,8 +15,6 @@
 #include "include.h"
 #include "mico_rtos.h"
 
-#define CLI_UART     0
-
 #define RX_WAIT         MICO_WAIT_FOREVER
 #define SEND_WAIT       MICO_WAIT_FOREVER
 

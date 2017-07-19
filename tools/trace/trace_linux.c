@@ -1,7 +1,7 @@
-#include <fcntl.h>  
-#include <sys/types.h>  
-#include <sys/stat.h>  
-#include <stdio.h>  
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -10,6 +10,12 @@
 #include <assert.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <errno.h>
+
+#define DEFAULT_PORT    8000
+#define TIMEOUT_SECONDS 200
 
 #define ROUND_POINT(sz) (((sz) + (4 - 1)) & ~(4 - 1))
 
@@ -18,13 +24,12 @@ uint32_t trace_buf[1025];
 uint32_t len_remain;
 uint32_t flag_trace;
 
+uint32_t max_fifo_len;
 
 void task_trace_proc(void *buf , uint32_t len)
 {
 	uint32_t para1;
 	uint32_t para2;
-	//uint32_t para3;
-	//uint32_t para4;
 	char *s;
 	char *s2;
 	char *s3;
@@ -38,7 +43,7 @@ void task_trace_proc(void *buf , uint32_t len)
 	uint32_t str_len;
 	uint32_t str_len2;
 	uint32_t str_len3;
-	
+
 	if (len_remain > 0) {
 		uint32_t fun_code = *((uint32_t *)buf_proc);
 		switch (fun_code) {
@@ -51,7 +56,7 @@ void task_trace_proc(void *buf , uint32_t len)
 			case 0x102:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -159,11 +164,11 @@ void task_trace_proc(void *buf , uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 4), len - 12 - str_len3);
 				len_remain = len_remain - 12 - str_len3;
 				break;
-				
+
 			case 0x10a:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 				str_len = ROUND_POINT(str_len);
 				para2 = *((uint32_t *)(s + str_len));
@@ -183,7 +188,7 @@ void sema_trace_proc(void *buf , uint32_t len)
 {
 	uint32_t para1;
 	uint32_t para2;
-	
+
 	char *s;
 	char *s2;
 	char *s3;
@@ -198,7 +203,7 @@ void sema_trace_proc(void *buf , uint32_t len)
 	uint32_t str_len2;
 	uint32_t str_len3;
 	uint32_t str_len4;
-	
+
 	if (len_remain > 0) {
 		uint32_t fun_code = *((uint32_t *)buf_proc);
 		switch (fun_code) {
@@ -217,7 +222,7 @@ void sema_trace_proc(void *buf , uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 4), len - 12 - str_len3);
 				len_remain = len_remain - 12 - str_len3;
 				break;
-				
+
 			case 0x202:
 
 				s = (char *)buf + 8;
@@ -247,11 +252,11 @@ void sema_trace_proc(void *buf , uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 4), len - 12 - str_len3);
 				len_remain = len_remain - 12 - str_len3;
 				break;
-				
+
 			case 0x204:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -262,11 +267,11 @@ void sema_trace_proc(void *buf , uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 4), len - 12 - str_len3);
 				len_remain = len_remain - 12 - str_len3;
 				break;
-				
+
 			case 0x205:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -274,7 +279,7 @@ void sema_trace_proc(void *buf , uint32_t len)
 
 				str_len3 = ROUND_POINT((str_len + str_len2));
 				s4 = (uint32_t *)(s + str_len3);
-				
+
 				printf("task %s wait sem %s 0x%x ticks\n", s, s2, *s4);
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 8), len - 16 - str_len3);
 				len_remain = len_remain - 16 - str_len3;
@@ -303,7 +308,7 @@ void sema_trace_proc(void *buf , uint32_t len)
 			case 0x207:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -327,7 +332,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 {
 	uint32_t para1;
 	uint32_t para2;
-	
+
 	char *s;
 	char *s2;
 	char *s3;
@@ -365,7 +370,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 			case 0x302:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -373,7 +378,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 
 				str_len3 = ROUND_POINT((str_len + str_len2));
 				s4 = (uint32_t *)(s + str_len3);
-				
+
 				printf("task %s release mutex task %s 0x%x pri\n", s, s2, *s4);
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 8), len - 16 - str_len3);
 				len_remain = len_remain - 16 - str_len3;
@@ -382,7 +387,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 			case 0x303:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -390,7 +395,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 
 				str_len3 = ROUND_POINT((str_len + str_len2));
 				s4 = (uint32_t *)(s + str_len3);
-				
+
 				printf("task %s get mutex task %s wait 0x%x ticks\n", s, s2, *s4);
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 8), len - 16 - str_len3);
 				len_remain = len_remain - 16 - str_len3;
@@ -399,7 +404,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 			case 0x304:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -414,7 +419,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 			case 0x305:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -422,7 +427,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 
 				str_len3 = ROUND_POINT((str_len + str_len2));
 				s4 = (uint32_t *)(s + str_len3);
-				
+
 				printf("task %s get mutex %s wait 0x%x ticks\n", s, s2, *s4);
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 8), len - 16 - str_len3);
 				len_remain = len_remain - 16 - str_len3;
@@ -431,7 +436,7 @@ void mutex_trace_proc(void *buf , uint32_t len)
 			case 0x306:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -460,11 +465,11 @@ void mutex_trace_proc(void *buf , uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len4 + 4), len - 12 - str_len4);
 				len_remain = len_remain - 12 - str_len4;
 				break;
-				
+
 			case 0x308:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -488,7 +493,7 @@ void event_trace_proc(void *buf, uint32_t len)
 {
 	uint32_t para1;
 	uint32_t para2;
-	
+
 	char *s;
 	char *s2;
 	char *s3;
@@ -511,7 +516,7 @@ void event_trace_proc(void *buf, uint32_t len)
 			case 0x401:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -519,7 +524,7 @@ void event_trace_proc(void *buf, uint32_t len)
 
 				str_len3 = ROUND_POINT((str_len + str_len2));
 				s4 = (uint32_t *)(s + str_len3);
-				
+
 				printf("task %s create event %s flags_init 0x%x\n", s, s2, *s4);
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 8), len - 16 - str_len3);
 				len_remain = len_remain - 16 - str_len3;
@@ -528,7 +533,7 @@ void event_trace_proc(void *buf, uint32_t len)
 			case 0x402:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -543,7 +548,7 @@ void event_trace_proc(void *buf, uint32_t len)
 			case 0x403:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -551,7 +556,7 @@ void event_trace_proc(void *buf, uint32_t len)
 
 				str_len3 = ROUND_POINT((str_len + str_len2));
 				s4 = (uint32_t *)(s + str_len3);
-				
+
 				printf("task %s wait event %s 0x%x ticks\n", s, s2, *s4);
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 8), len - 16 - str_len3);
 				len_remain = len_remain - 16 - str_len3;
@@ -574,11 +579,11 @@ void event_trace_proc(void *buf, uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len4 + 4), len - 12 - str_len4);
 				len_remain = len_remain - 12 - str_len4;
 				break;
-				
+
 			case 0x405:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -589,7 +594,7 @@ void event_trace_proc(void *buf, uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 4), len - 12 - str_len3);
 				len_remain = len_remain - 12 - str_len3;
 				break;
-				
+
 			default:
 				break;
 		}
@@ -602,7 +607,7 @@ void buf_queue_trace_proc(void *buf, uint32_t len)
 {
 	uint32_t para1;
 	uint32_t para2;
-	
+
 	char *s;
 	char *s2;
 	char *s3;
@@ -640,7 +645,7 @@ void buf_queue_trace_proc(void *buf, uint32_t len)
 			case 0x502:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -648,7 +653,7 @@ void buf_queue_trace_proc(void *buf, uint32_t len)
 
 				str_len3 = ROUND_POINT((str_len + str_len2));
 				s4 = (uint32_t *)(s + str_len3);
-				
+
 				printf("task %s get mutex task %s wait 0x%x ticks\n", s, s2, *s4);
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 8), len - 16 - str_len3);
 				len_remain = len_remain - 16 - str_len3;
@@ -657,7 +662,7 @@ void buf_queue_trace_proc(void *buf, uint32_t len)
 			case 0x503:
 
 				s = (char *)buf + 8;
-				
+
 				str_len = strlen(s) + 1;
 
 				s2 = s +str_len;
@@ -665,7 +670,7 @@ void buf_queue_trace_proc(void *buf, uint32_t len)
 
 				str_len3 = ROUND_POINT((str_len + str_len2));
 				s4 = (uint32_t *)(s + str_len3);
-				
+
 				printf("task %s post msg to buf_queue %s size 0x%x\n", s, s2, *s4);
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 8), len - 16 - str_len3);
 				len_remain = len_remain - 16 - str_len3;
@@ -688,7 +693,7 @@ void buf_queue_trace_proc(void *buf, uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len4 + 4), len - 12 - str_len4);
 				len_remain = len_remain - 12 - str_len4;
 				break;
-				
+
 			case 0x505:
 
 				s = (char *)buf + 8;
@@ -718,7 +723,7 @@ void timer_trace_proc(void *buf, uint32_t len)
 {
 	uint32_t para1;
 	uint32_t para2;
-	
+
 	char *s;
 	char *s2;
 	char *s3;
@@ -752,7 +757,7 @@ void timer_trace_proc(void *buf, uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 4), len - 12 - str_len3);
 				len_remain = len_remain - 12 - str_len3;
 				break;
-				
+
 			case 0x602:
 
 				s = (char *)buf + 8;
@@ -779,7 +784,7 @@ void misc_trace_proc(void *buf, uint32_t len)
 {
 	uint32_t para1;
 	uint32_t para2;
-	
+
 	char *s;
 	char *s2;
 	char *s3;
@@ -858,7 +863,7 @@ void misc_trace_proc(void *buf, uint32_t len)
 				memmove(buf_proc, (buf_proc + 8 + str_len3 + 4), len - 12 - str_len3);
 				len_remain = len_remain - 12 - str_len3;
 				break;
-			
+
 			case 0xa02:
 
 				s = (char *)buf + 8;
@@ -896,6 +901,7 @@ void misc_trace_proc(void *buf, uint32_t len)
 	}
 }
 
+#if 0
 int main(int argc, char* argv[])
 {
 	int fh1;
@@ -904,7 +910,7 @@ int main(int argc, char* argv[])
    fh1 = open("trace_test", O_RDONLY);
 
    if( fh1 == -1 )   {
-      perror( "Open failed on input file" );  
+      perror( "Open failed on input file" );
     }
 
     while (1) {
@@ -946,4 +952,140 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+#else
+
+int main(int argc, char* argv[])
+{
+	int    len;
+    int    socket_fd;
+    int    connect_fd;
+    int    len_recv_total;
+    fd_set fdset;
+    int    ret;
+    int    on;
+
+    struct timeval tv;
+    struct sockaddr_in servaddr; 
+
+    if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1 ) {
+        printf("create socket error: %s(errno: %d)\n",strerror(errno),errno); 
+        exit(0); 
+    }
+
+    on = 1;
+    setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+ 
+    memset(&servaddr, 0, sizeof(servaddr)); 
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servaddr.sin_port = htons(DEFAULT_PORT);
+
+    if (bind(socket_fd, (struct sockaddr*)&servaddr, sizeof(servaddr)) == -1) {
+        printf("bind socket error: %s(errno: %d)\n",strerror(errno),errno); 
+        exit(0); 
+    }
+
+    if (listen(socket_fd, 10) == -1){
+        printf("listen socket error: %s(errno: %d)\n",strerror(errno),errno);
+        exit(0);
+    } 
+
+    printf("======waiting for client's request======\n");
+
+    if ((connect_fd = accept(socket_fd, (struct sockaddr*)NULL, NULL)) == -1) {
+        printf("accept socket error: %s(errno: %d)",strerror(errno),errno);
+        exit(0); 
+    }
+
+    while (1) {
+
+        len_recv_total = 0;
+
+        while (1) {
+            FD_ZERO(&fdset);
+            FD_SET(connect_fd, &fdset);
+
+            tv.tv_sec = TIMEOUT_SECONDS;
+            tv.tv_usec = 0;
+
+            ret = select(connect_fd + 1, &fdset, NULL, NULL, &tv);
+
+            if (ret == 0) {
+                goto finish;
+            }
+
+            len = recv(connect_fd, (trace_buf + len_recv_total), 4 - len_recv_total, 0);
+
+            if ((ret == 1) && (len == 0)) {
+                goto finish;
+            }
+
+            len_recv_total += len;
+
+            if (len_recv_total ==  4) {
+               break;
+            }
+        }
+
+		len_remain = trace_buf[0];
+
+        if (len_remain > max_fifo_len) {
+            max_fifo_len = len_remain;
+        }
+
+        len_recv_total = 0;
+
+        while (1) {
+            FD_ZERO(&fdset);
+            FD_SET(connect_fd, &fdset);
+
+            tv.tv_sec = TIMEOUT_SECONDS;
+            tv.tv_usec = 0;
+            ret = select(connect_fd + 1, &fdset, NULL, NULL, &tv);
+
+            if (ret == 0) {
+                goto finish;
+            }
+
+            len = recv(connect_fd, (trace_buf + len_recv_total), len_remain - len_recv_total, 0);
+
+            if ((ret == 1) && (len == 0)) {
+                goto finish;
+            }
+
+            len_recv_total += len;
+
+            if (len_recv_total ==  len_remain) {
+                break;
+            }
+        }
+
+		while (1)  {
+
+			if (len_remain > 0) {
+				task_trace_proc(trace_buf, len_remain);
+				sema_trace_proc(trace_buf, len_remain);
+				mutex_trace_proc(trace_buf, len_remain);
+				event_trace_proc(trace_buf, len_remain);
+				buf_queue_trace_proc(trace_buf, len_remain);
+				timer_trace_proc(trace_buf, len_remain);
+				misc_trace_proc(trace_buf, len_remain);
+			}
+			else {
+				break;
+			}
+
+		}
+    }
+
+finish:
+    close(connect_fd);
+    close(socket_fd);
+    printf("max_fifo_len is %d\n", max_fifo_len);
+    printf("trace analyse finsihed\n");
+
+	return 0;
+}
+
+#endif
 

@@ -17,17 +17,94 @@
 #include "target_util_pub.h"
 #include "ke_event.h"
 
+#include "arm_arch.h"
+
 #if CFG_TX_EVM_TEST
+#define TX_2_4_G_CHANNEL_NUM            (14)
+
 UINT32 evm_mac_pkt_count = 0;
 UINT32 evm_mac_pkt_max = 500000;
 UINT32 evm_channel = EVM_DEFAULT_CHANNEL;
+UINT32 evm_bandwidth = PHY_CHNL_BW_20;
 UINT32 evm_test_via_mac_flag = 0;
 	
 struct mac_addr const evm_mac_addr = {
 								    {0x7112, 0x7111, 0x7111}
 								 };
 
-void evm_init(UINT32 channel)
+const UINT16 tx_freq_2_4_G[TX_2_4_G_CHANNEL_NUM] = {
+						2412,
+						2417,
+						2422,
+						2427,
+						2432,
+						2437,
+						2442,
+						2447,
+						2452,
+						2457,
+						2462,
+						2467,
+						2472,
+						2484
+};
+
+static void evm_set_trx_regs_extern(void)
+{
+    UINT32 reg;
+
+    REG_WRITE((0x01050080+0x12*4), 0xD0640561);
+
+    reg = REG_READ((0x01050080+0x0d*4));
+    REG_WRITE((0x01050080+0x0d*4),(reg|0x4)); 
+    REG_WRITE((0x01050080+0x0d*4),(reg|0x2)); 
+
+    reg = REG_READ((0x01050080+0x0e*4));
+    REG_WRITE((0x01050080+0x0e*4),(reg|0x4)); 
+    REG_WRITE((0x01050080+0x0e*4),(reg|0x2));   
+
+    reg = REG_READ((0x01050080+0x10*4));
+    REG_WRITE((0x01050080+0x10*4),(reg|0x4)); 
+    REG_WRITE((0x01050080+0x10*4),(reg|0x2)); 
+
+    reg = REG_READ((0x01050080+0x0f*4));
+    REG_WRITE((0x01050080+0x0f*4),(reg|0x4)); 
+    REG_WRITE((0x01050080+0x0f*4),(reg|0x2));    
+
+    while(REG_READ((0x01050000+0x1*4))&(0xFFFFFFF));
+}
+
+void evm_bypass_mac_init(UINT32 channel, UINT32 bandwidth)
+{	
+	struct phy_cfg_tag cfg;
+	/*reset mm*/
+	EVM_PRT("[EVM]reset_mm\r\n");
+	hal_machw_stop();
+	phy_stop();
+	me_init();
+	mm_init();
+	ke_state_set(TASK_MM, MM_IDLE);
+		
+	/*start mm*/
+	EVM_PRT("[EVM]phy init\r\n");
+	cfg.parameters[0] = 1;
+	cfg.parameters[1] = 0;
+    phy_init(&cfg);
+
+    EVM_PRT("[EVM]set channel:%d\r\n", channel);
+    phy_set_channel(PHY_BAND_2G4, bandwidth, channel, channel, 0, PHY_PRIM);
+
+    if(bandwidth == PHY_CHNL_BW_40)
+       evm_set_trx_regs_extern();
+
+	/* Put the HW in active state*/
+	mm_active();
+
+	/*disable rx*/
+	nxmac_rx_cntrl_set(0);
+}
+
+void evm_init(UINT32 channel, UINT32 bandwidth)
 {
 	BOOL p2p = 0;
 	UINT8 vif_idx;
@@ -54,7 +131,10 @@ void evm_init(UINT32 channel)
 	cfg.parameters[1] = 0;
     phy_init(&cfg);
 	
-    phy_set_channel(PHY_BAND_2G4, PHY_CHNL_BW_20, channel, channel, 0, PHY_PRIM);
+    phy_set_channel(PHY_BAND_2G4, bandwidth, channel, channel, 0, PHY_PRIM);
+    //if(bandwidth == PHY_CHNL_BW_40)
+    //   rs_set_trx_regs_extern();
+    
 	
 	/*add mm interface*/
 	EVM_PRT("[EVM]add_mm_interface\r\n");
@@ -67,10 +147,13 @@ void evm_init(UINT32 channel)
 	nxmac_rx_cntrl_set(0);
 }
 
-UINT32 evm_bypass_mac_set_tx_data_length(UINT32 is_legacy_mode, UINT32 len)
+UINT32 evm_bypass_mac_set_tx_data_length(UINT32 modul_format, UINT32 len)
 {	
-	UINT32 ret;
+	UINT32 ret, is_legacy_mode = 1;
 	UINT32 param;
+
+    if(modul_format >= 0x02)  // 0x2: HT-MM;  0x3: HT-GF 
+        is_legacy_mode = 0;
 
 	if(is_legacy_mode)
 	{
@@ -83,28 +166,58 @@ UINT32 evm_bypass_mac_set_tx_data_length(UINT32 is_legacy_mode, UINT32 len)
 		ret = sddev_control(MPB_DEV_NAME, MCMD_TX_HT_VHT_SET_LEN, &param);
 	}
 	
-	EVM_PRT("[EVM]tx_mode_bypass_mac_set_length\r\n");
+	EVM_PRT("[EVM]tx_mode_bypass_mac_set_length:%d, %d\r\n", modul_format, len);
 
 	return ret;
 }
 	
-UINT32 evm_bypass_mac_set_rate(UINT32 ppdu_rate)
+UINT32 evm_bypass_mac_set_rate_mformat(UINT32 ppdu_rate, UINT32 m_format)
 {
 	UINT32 ret;
-	UINT32 param;
+    MBPS_TXS_MFR_ST param;
+    
+    param.mod_format = m_format;
+    param.rate = ppdu_rate;
 
-	param = ppdu_rate;
-	ret = sddev_control(MPB_DEV_NAME, MCMD_TX_BYPASS_MAC_RATE, &param);
+	ret = sddev_control(MPB_DEV_NAME, MCMD_BYPASS_TX_SET_RATE_MFORMAT, &param);
 	
-	EVM_PRT("[EVM]tx_mode_bypass_mac_set_rate\r\n");
+	EVM_PRT("[EVM]tx_mode_bypass_mac_set_rate:%d, modf:%d\r\n", ppdu_rate, m_format);
 
 	return ret;
 }
 
 void evm_bypass_mac_set_channel(UINT32 channel)
 {
+	channel = tx_freq_2_4_G[channel - 1];
+
 	evm_channel = channel;
 }
+
+void evm_set_bandwidth(UINT32 bandwidth)
+{
+    UINT32 ret;
+	UINT32 param;
+
+    if(bandwidth >= PHY_CHNL_BW_80)
+        return;
+
+	evm_bandwidth = bandwidth;
+	param = evm_bandwidth;
+	ret = sddev_control(MPB_DEV_NAME, MCMD_SET_BANDWIDTH, &param);
+}
+
+void evm_bypass_mac_set_guard_i_type(UINT32 gi_tpye)
+{
+    UINT32 ret;
+	UINT32 param;
+
+    if(gi_tpye > 2)
+        return;
+
+	param = gi_tpye;
+	ret = sddev_control(MPB_DEV_NAME, MCMD_SET_GI, &param);
+}
+
 
 void evm_bypass_mac(void)
 {
@@ -112,9 +225,21 @@ void evm_bypass_mac(void)
 	EVM_PRT("[EVM]tx_mode_bypass_mac\r\n");
 }
 
+void evm_stop_bypass_mac(void)
+{
+	sddev_control(MPB_DEV_NAME, MCMD_STOP_BYPASS_MAC, 0);
+	EVM_PRT("[EVM]tx_mode_stop_bypass_mac\r\n");
+}
+
+void evm_start_bypass_mac(void)
+{
+    //EVM_PRT("[EVM]tx_mode_stop_bypass_mac\r\n");
+    sddev_control(MPB_DEV_NAME, MCMD_START_BYPASS_MAC, 0);
+}
+
 void evm_bypass_mac_test(void)
 {
-	evm_init(evm_channel);
+    evm_bypass_mac_init(evm_channel, evm_bandwidth);
 	
 	evm_bypass_mac();
 	EVM_PRT("[EVM]test_bypass_mac\r\n");
@@ -133,7 +258,7 @@ uint32_t evm_via_mac_is_start(void)
 
 void evm_via_mac_begin(void)
 {
-	evm_init(evm_channel);
+	evm_init(evm_channel, evm_bandwidth);
 	
 	evm_test_via_mac_flag = 1;
 
@@ -164,7 +289,10 @@ void evm_via_mac_set_rate(HW_RATE_E rate, uint32_t is_2_4G)
 
 void evm_via_mac_set_channel(UINT32 channel)
 {
+    channel = tx_freq_2_4_G[channel - 1];
 	evm_channel = channel;
+
+	//evm_via_mac_begin();
 }
 #endif // CFG_TX_EVM_TEST
 // eof

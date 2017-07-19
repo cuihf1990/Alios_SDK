@@ -14,6 +14,12 @@ HOST_OPENOCD := beken
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += platform/mcu/beken/hal
 $(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
+$(NAME)_COMPONENTS += platform/mcu/beken/hal_init
+
+GLOBAL_DEFINES += CONFIG_MX108
+GLOBAL_DEFINES += CONFIG_YOS_KVFILE=\"/dev/flash6\"
+GLOBAL_DEFINES += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash7\"
+GLOBAL_DEFINES += CONFIG_YOS_KV_BUFFER_SIZE=4096
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
@@ -33,7 +39,7 @@ GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es
 
 ifneq ($(mico_lwip), 1)
-$(NAME)_COMPONENTS += kernel.protocols.net
+$(NAME)_COMPONENTS += protocols.net
 else
 GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/src/include
 endif
@@ -45,7 +51,11 @@ GLOBAL_LDFLAGS += -mcpu=arm968e-s \
                  --specs=nosys.specs \
                  -nostartfiles
 
+ifeq ($(APP),bootloader)
+GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_boot.ld
+else
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231.ld
+endif
 
 GLOBAL_LDFLAGS += -Wl,-wrap,_malloc_r -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,_free_r -Wl,-wrap,_realloc_r 
 $(NAME)_INCLUDES := beken7231/beken378/ip/common \
@@ -138,7 +148,12 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/include \
                     beken7231/beken378/os/FreeRTOSv9.0.0
 
-$(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
+$(NAME)_SOURCES :=  yos/yos.c
+$(NAME)_SOURCES +=  yos/newlib_stub.c
+$(NAME)_LINK_FILES := yos/newlib_stub.o
+$(NAME)_INCLUDES += yos
+                    
+$(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/app/config/param_config.c \
                     beken7231/beken378/app/ftp/ftpd.c \
                     beken7231/beken378/app/ftp/vfs.c \
@@ -212,6 +227,7 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     beken7231/beken378/driver/usb/usb.c \
                     beken7231/beken378/driver/wdt/wdt.c \
                     beken7231/beken378/func/bk7011_cal/bk7011_cal.c \
+                    beken7231/beken378/func/bk7011_cal/manual_cal.c \
                     beken7231/beken378/func/fs_fat/disk_io.c \
                     beken7231/beken378/func/fs_fat/ff.c \
                     beken7231/beken378/func/fs_fat/playmode.c \
@@ -324,7 +340,25 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     beken7231/beken378/func/user_driver/BkDriverUart.c \
                     beken7231/beken378/func/user_driver/BkDriverWdg.c \
                     beken7231/beken378/func/wlan_ui/wlan_ui.c \
-                    beken7231/beken378/ip/common/co_dlist.c \
+                    beken7231/beken378/os/mem_arch.c \
+                    beken7231/beken378/os/str_arch.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverFlash.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverGpio.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverPwm.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverUart.c \
+                    beken7231/mico_api/MiCODrivers/MiCODriverWdg.c \
+                    beken7231/mico_api/mico_cli.c \
+                    beken7231/mico_api/mxchipWNet.c \
+                    beken7231/mico_api/platform_stub.c \
+                    ../../arch/arm/armv5/port_c.c \
+                    ../../arch/arm/armv5/port_s.S \
+                    yos/soc_impl.c 
+
+
+ifneq ($(wildcard $(CURDIR)librwnx.a),)
+$(NAME)_PREBUILT_LIBRARY := librwnx.a
+else
+$(NAME)_SOURCES	 += beken7231/beken378/ip/common/co_dlist.c \
                     beken7231/beken378/ip/common/co_list.c \
                     beken7231/beken378/ip/common/co_math.c \
                     beken7231/beken378/ip/common/co_pool.c \
@@ -387,32 +421,21 @@ $(NAME)_SOURCES :=  beken7231/beken378/app/app.c \
                     beken7231/beken378/ip/umac/src/scanu/scanu_task.c \
                     beken7231/beken378/ip/umac/src/sm/sm.c \
                     beken7231/beken378/ip/umac/src/sm/sm_task.c \
-                    beken7231/beken378/ip/umac/src/txu/txu_cntrl.c \
-                    beken7231/beken378/os/mem_arch.c \
-                    beken7231/beken378/os/str_arch.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverFlash.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverGpio.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverPwm.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverUart.c \
-                    beken7231/mico_api/MiCODrivers/MiCODriverWdg.c \
-                    beken7231/mico_api/mico_cli.c \
-                    beken7231/mico_api/mico_wlan.c \
-                    beken7231/mico_api/mxchipWNet.c \
-                    beken7231/mico_api/platform_stub.c \
-                    ../../arch/arm/armv5/port_c.c \
-                    ../../arch/arm/armv5/port_s.S \
-                    ../../arch/arm/armv5/soc_impl.c \
+                    beken7231/beken378/ip/umac/src/txu/txu_cntrl.c 
+endif
 
-$(NAME)_SOURCES	 += hal/wdg.c \
+$(NAME)_SOURCES	 += hal/gpio.c \
+                    hal/wdg.c \
                     hal/hw.c \
                     hal/flash.c \
 					hal/uart.c \
 					hal/ringbuf.c \
+                    hal/StringUtils.c \
 					hal/wifi_port.c \
                     port/ota_port.c
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
-$(NAME)_SOURCES +=  beken7231/mesh_wifi_hal.c
+$(NAME)_SOURCES +=  hal/mesh_wifi_hal.c
 endif
 
 ifneq ($(mico_lwip), 1)

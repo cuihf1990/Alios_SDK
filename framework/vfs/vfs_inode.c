@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <malloc.h>
 #include <string.h>
 
 #include <vfs_conf.h>
@@ -50,7 +49,7 @@ int inode_del(inode_t *node)
 
     if (node->refs == 0) {
         if (node->i_name != NULL) {
-            free(node->i_name);
+            yos_free(node->i_name);
         }
 
         node->i_name = NULL;

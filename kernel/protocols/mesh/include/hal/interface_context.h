@@ -74,6 +74,8 @@ typedef struct scan_result_s {
     uint16_t      meshnetid;
     uint8_t       channel;
     int8_t        rssi;
+    node_mode_t   leader_mode;
+    uint16_t      net_size;
 } scan_result_t;
 
 typedef struct network_data_s {
@@ -153,6 +155,7 @@ typedef struct hal_context_s {
 
     // queue
     message_queue_t      send_queue[QUEUE_SIZE];
+    message_queue_t      recv_queue;
     ur_timer_t           sending_timer;
     message_t            *send_message;
     frag_info_t          frag_info;
@@ -212,6 +215,7 @@ typedef struct network_context_s {
     ur_timer_t        migrate_wait_timer;
     uint32_t          migrate_interval;
     uint32_t          notification_interval;
+    uint32_t          net_scan_interval;
     uint16_t          prev_netid;
     uint16_t          prev_path_cost;
 

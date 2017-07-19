@@ -19,6 +19,10 @@
 #include "dumpsys.h"
 #include <yos/cli.h>
 
+#ifndef STDIO_UART
+#define STDIO_UART 0
+#endif
+
 #define RET_CHAR        '\n'
 #define END_CHAR        '\r'
 #define PROMPT          "\r\n# "
@@ -335,7 +339,6 @@ static void cli_main( void *data )
     cli_printf("CLI exited\r\n");
     yos_free(pCli);
     pCli = NULL;
-    exit(0);
 
     yos_task_exit(0);
 }
@@ -415,7 +418,7 @@ void reboot(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 
     cli_printf("reboot\r\n");
 
-    (*reboot)();
+    hal_reboot();
 }
 
 static void echo_cmd_handler(char *pcWriteBuffer, int xWriteBufferLen, int argc,
@@ -440,7 +443,6 @@ static void cli_exit_handler(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                              char **argv)
 {
     // exit command not executed
-    hal_uart_finalize(CLI_UART);
     cliexit = 1;
     return;
 }
@@ -567,17 +569,14 @@ int cli_unregister_commands(const struct cli_command *commands,
     return 0;
 }
 
-const hal_uart_config_t config = {
-    .baud_rate = 921600,
-    .data_width = DATA_WIDTH_8BIT,
-    .parity = NO_PARITY,
-    .stop_bits = STOP_BITS_1,
-    .flow_control = FLOW_CONTROL_DISABLED,
-    .rx_buf_size = 256,
-};
-
 __attribute__ ((weak)) int board_cli_init(void)
 {
+    return 0;
+}
+
+int yos_cli_stop(void)
+{
+    cliexit = 1;
     return 0;
 }
 
@@ -591,7 +590,6 @@ int yos_cli_init(void)
     }
 
     memset((void *)pCli, 0, sizeof(struct cli_st));
-    hal_uart_init(CLI_UART, &config);
 
     /* add our built-in commands */
     if (cli_register_commands(&built_ins[0],
@@ -600,7 +598,7 @@ int yos_cli_init(void)
         goto init_general_err;
     }
 
-    ret = yos_task_new_ext("cli", cli_main, 0, 4096, YUNOS_CONFIG_USER_PRI_MAX);
+    ret = yos_task_new_ext("cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
     if (ret != YUNOS_SUCCESS) {
         cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);
@@ -652,7 +650,7 @@ int cli_printf(const char *msg, ...)
 int cli_putstr(const char *msg)
 {
     if (msg[0] != 0) {
-        hal_uart_send( CLI_UART, (const char *)msg, strlen(msg) );
+        hal_uart_send(STDIO_UART, (const char *)msg, strlen(msg) );
     }
 
     return 0;
@@ -660,7 +658,7 @@ int cli_putstr(const char *msg)
 
 int cli_getchar(char *inbuf)
 {
-    if (hal_uart_recv(CLI_UART, inbuf, 1, NULL, 0xFFFFFFFF) == 0) {
+    if (hal_uart_recv(STDIO_UART, inbuf, 1, NULL, 0xFFFFFFFF) == 0) {
         return 1;
     } else {
         return 0;

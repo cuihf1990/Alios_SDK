@@ -22,6 +22,8 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
                                 void *buf,
                                 size_t size, size_t max_msg, uint8_t mm_alloc_flag)
 {
+    CPSR_ALLOC();
+
     size_t  buf_size;
 
     NULL_PARA_CHK(queue);
@@ -52,8 +54,11 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
     queue->mm_alloc_flag      = mm_alloc_flag;
 
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+    YUNOS_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.buf_queue_head), &queue->buf_queue_item);
+    YUNOS_CRITICAL_EXIT();
 #endif
+
     queue->blk_obj.obj_type = YUNOS_BUF_QUEUE_OBJ_TYPE;
 
     ringbuf_init(&(queue->ringbuf), (uint8_t *)buf, size, RINGBUF_TYPE_DYN, 0);

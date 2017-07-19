@@ -54,9 +54,6 @@ typedef enum {
     UR_LOG_REGION_CLI,
 } ur_log_region_t;
 
-void ur_log(ur_log_level_t level, ur_log_region_t region,
-            const char *format, ...);
-
 #define EXT_ADDR_FMT "%02x%02x%02x%02x%02x%02x%02x%02x"
 #define EXT_ADDR_DATA(addr) \
                       addr[0],addr[1],addr[2],addr[3],\
@@ -76,6 +73,15 @@ void ur_log(ur_log_level_t level, ur_log_region_t region,
 #define format_ip6_str(ip6_addr, buf, len) \
     snprintf(buf, len, IP6_ADDR_FMT, IP6_ADDR_DATA(ip6_addr))
 
+#ifndef DEBUG
+static inline void ur_log(ur_log_level_t level, ur_log_region_t region,
+                          const char *format, ...) {}
+static inline ur_log_level_t ur_log_get_level(void) {return -1;}
+static inline void ur_log_set_level(ur_log_level_t lvl) {}
+#else
+void ur_log(ur_log_level_t level, ur_log_region_t region,
+            const char *format, ...);
 ur_log_level_t ur_log_get_level(void);
 void ur_log_set_level(ur_log_level_t);
+#endif
 #endif  /* UR_LOGGING_H */

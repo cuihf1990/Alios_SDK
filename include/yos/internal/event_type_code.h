@@ -64,12 +64,16 @@
 #define  CODE_NEXT             8
 #define  CODE_RECORD_PRE       9
 #define  CODE_RESET          0x1001
+#define  CODE_STATUS           11
+#define  CODE_ELINK            12
+#define  CODE_BOOT             13
 /** General key value */
 #define  VALUE_KEY_UP          0
 #define  VALUE_KEY_DOWN        1
 #define  VALUE_KEY_CLICK       2
 #define  VALUE_KEY_LTCLICK     3
-#define  VALUE_KEY_DBCLICK     4
+#define  VALUE_KEY_LLTCLICK    4
+#define  VALUE_KEY_DBCLICK     5
 /** General channel value */
 #define  VALUE_SYS_CHN_CONNECTED    0
 #define  VALUE_SYS_CHN_CONNECTING   1

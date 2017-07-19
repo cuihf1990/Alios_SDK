@@ -21,7 +21,8 @@
 extern "C" {
 #endif
 
-#define YOS_WAIT_FOREVER 0xffffffffu
+#define YOS_WAIT_FOREVER        0xffffffffu
+#define YOS_DEFAULT_APP_PRI    32
 
 typedef struct {
     void *hdl;
@@ -219,8 +220,8 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
  * @param[in]  repeat  repeat or not when the timer is created
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms,
-                  int repeat);
+int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
+                  void *arg, int ms, int repeat);
 
 /**
  * This function will delete a timer
@@ -307,11 +308,26 @@ int yos_work_sched(yos_work_t *work);
 int yos_work_cancel(yos_work_t *work);
 
 /**
+ * realloc memory
+ * @param[in] mem, current memory address point
+ * @param[in] size  new size of the mem to remalloc
+ * @return  the operation status, NULL is error, others is memory address
+ */
+void *yos_realloc(void *mem, unsigned int size);
+
+/**
  * alloc memory
  * @param[in] size size of the mem to malloc
  * @return  the operation status, NULL is error, others is memory address
  */
 void *yos_malloc(unsigned int size);
+
+/**
+ * alloc memory and clear to zero
+ * @param[in] size size of the mem to malloc
+ * @return  the operation status, NULL is error, others is memory address
+ */
+void *yos_zalloc(unsigned int size);
 
 /**
  * free memory

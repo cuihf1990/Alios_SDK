@@ -40,19 +40,17 @@ extern void comb_test(void);
 extern void workqueue_test(void);
 extern void ysh_cmd_test(void);
 extern void mm_region_test(void);
-extern void trace_test(void);
 extern void ringbuf_test(void);
 
 test_case_map_t test_fw_map[] = {
-#if (YUNOS_CONFIG_TRACE > 0)
-    {"trace_test", trace_test},
-#endif
     {"task_test", task_test},
 #if (YUNOS_CONFIG_MM_TLF > 0)
     {"mm_test",   mm_test},
 #endif
     {"mm_blk_test", mm_blk_test},
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
     {"mm_region_test", mm_region_test},
+#endif
     {"time_test", time_test},
     {"sys_test", sys_test},
     {"event_test", event_test},

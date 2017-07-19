@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <yos/kernel.h>
+#include <yos/network.h>
 
 #include "mbedtls/config.h"
 #include "mbedtls/debug.h"
@@ -218,6 +219,7 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
 {
     int ret;
     int total_len = 0;
+    int retry = 0;
     ssl_param_t *ssl_param;
 
     if (ssl == NULL || buffer == NULL || length <= 0) {
@@ -246,11 +248,9 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
             break;
         } else {
             if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
-                if (total_len > 0) {
-                    break;
-                } else {
-                    continue;
-                }
+                retry ++;
+                yos_msleep(10);
+                continue;
             }
 
             if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
@@ -265,10 +265,10 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
 
             return -1;
         }
-    } while(total_len < length);
+    } while(total_len < length && retry < 10);
 
 #if defined(CONFIG_SSL_DEBUG)
-    printf("%d bytes sent\n", ret);
+    printf("%d bytes sent retry %d\n", ret, retry);
 #endif
 
 #if defined(CONFIG_SSL_DEBUG)
@@ -282,7 +282,7 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
     printf("\n");
 #endif
 
-    return ret;
+    return ret < 0 ? -1 : total_len;
 }
 
 int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
@@ -314,10 +314,10 @@ int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
             break;
         } else if (ret == 0) {
             /* EOF */
-            break;
+            return 0;
         } else {
             if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
-                break;
+                return total_len > 0 ? total_len : -EAGAIN;
             }
 
             if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {

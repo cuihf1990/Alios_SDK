@@ -46,21 +46,21 @@ static void devinfo_dump(void)
     os_get_version(version);
     os_get_module_name(module_name);
 
-    LOGD(MODULE_NAME, "~~~~~dump device info~~~~~");
-    LOGD(MODULE_NAME, "sn: %s", main_devinfo.sn);
-    LOGD(MODULE_NAME, "cid: %s", main_devinfo.cid);
-    LOGD(MODULE_NAME, "mac: %s", main_devinfo.mac);
-    LOGD(MODULE_NAME, "model: %s", main_devinfo.model);
-    LOGD(MODULE_NAME, "os_version: %s", main_devinfo.os_version);
-    LOGD(MODULE_NAME, "alink_version: %s", main_devinfo.alink_version);
-    LOGD(MODULE_NAME, "firmware_version: %s", main_devinfo.firmware_version);
-    LOGD(MODULE_NAME, "key: %s", main_devinfo.key);
-    LOGD(MODULE_NAME, "secret: %s", main_devinfo.secret);
-    LOGD(MODULE_NAME, "debug_key: %s", main_devinfo.debug_key);
-    LOGD(MODULE_NAME, "debug_secret: %s", main_devinfo.debug_secret);
-    LOGD(MODULE_NAME, "A[%s|%s|%04x]OS[%s]T[%s.%s]", main_devinfo.alink_version,
+    LOGI(MODULE_NAME, "~~~~~dump device info~~~~~");
+    LOGI(MODULE_NAME, "sn: %s", main_devinfo.sn);
+    LOGI(MODULE_NAME, "cid: %s", main_devinfo.cid);
+    LOGI(MODULE_NAME, "mac: %s", main_devinfo.mac);
+    LOGI(MODULE_NAME, "model: %s", main_devinfo.model);
+    LOGI(MODULE_NAME, "os_version: %s", main_devinfo.os_version);
+    LOGI(MODULE_NAME, "alink_version: %s", main_devinfo.alink_version);
+    LOGI(MODULE_NAME, "firmware_version: %s", main_devinfo.firmware_version);
+    LOGI(MODULE_NAME, "key: %s", main_devinfo.key);
+    LOGI(MODULE_NAME, "secret: %s", main_devinfo.secret);
+    LOGI(MODULE_NAME, "debug_key: %s", main_devinfo.debug_key);
+    LOGI(MODULE_NAME, "debug_secret: %s", main_devinfo.debug_secret);
+    LOGI(MODULE_NAME, "A[%s|%s|%04x]OS[%s]T[%s.%s]", main_devinfo.alink_version,
          ALINK_AGENT_GIT_VERSION, 0x0000, version, module_name, ALINK_AGENT_BUILD_TIME);
-    LOGD(MODULE_NAME, "~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    LOGI(MODULE_NAME, "~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     os_free(version);
     os_free(module_name);
@@ -91,6 +91,7 @@ char *devinfo_get_version(void)
 
 static int devinfo_init(void)
 {
+    product_init();
     memset(&main_devinfo, 0, sizeof(main_devinfo));
 
     os_get_chipid(main_devinfo.cid);

@@ -741,7 +741,7 @@ void wpa_supplicant_set_state(struct wpa_supplicant *wpa_s,
 		/* Reinitialize normal_scan counter */
 		wpa_s->normal_scans = 0;
 		sta_ip_start();
-	}else{
+	} else if (state == WPA_DISCONNECTED) { 
 		sta_ip_down();
 	}
 
@@ -2276,6 +2276,7 @@ static void wpas_start_assoc_cb(struct wpa_radio_work *work, int deinit)
 				   ssid->bssid_set);
 			params.bssid = bss->bssid;
 			params.freq.freq = bss->freq;
+			ieee80211_freq_to_chan(bss->freq, &params.freq.channel);
 		}
 		params.bssid_hint = bss->bssid;
 		params.freq_hint = bss->freq;
@@ -3102,7 +3103,6 @@ void wpa_supplicant_rx_eapol(void *ctx, const u8 *src_addr,
 {
 	struct wpa_supplicant *wpa_s = ctx;
 
-	//os_printf("rE \r\n");
 	wpa_hexdump(MSG_MSGDUMP, "RX EAPOL", buf, len);
 
 #ifdef CONFIG_PEERKEY
@@ -3919,7 +3919,6 @@ static struct wpa_radio * radio_add_interface(struct wpa_supplicant *wpa_s,
 		iface = iface->next;
 	}
 
-	//os_printf("Add interface %s to a new radio %s\r\n",wpa_s->ifname, rn ? rn : "N/A");
 	radio = os_zalloc(sizeof(*radio));
 	if (radio == NULL)
 		return NULL;
@@ -3936,7 +3935,6 @@ static struct wpa_radio * radio_add_interface(struct wpa_supplicant *wpa_s,
 
 static void radio_work_free(struct wpa_radio_work *work)
 {
-	//os_printf("radio_work_free\r\n");
 	if (work->wpa_s->scan_work == work) {
 		/* This should not really happen. */
 		wpa_dbg(work->wpa_s, MSG_INFO, "Freeing radio work '%s'@%p (started=%d) that is marked as scan_work",
@@ -4006,8 +4004,6 @@ void radio_remove_works(struct wpa_supplicant *wpa_s,
 	struct wpa_radio_work *work, *tmp;
 	struct wpa_radio *radio = wpa_s->radio;
 
-	//os_printf("radio_remove_works\r\n");
-
 	dl_list_for_each_safe(work, tmp, &radio->work, struct wpa_radio_work,
 			      list) {
 		if (type && os_strcmp(type, work->type) != 0)
@@ -4035,7 +4031,6 @@ static void radio_remove_interface(struct wpa_supplicant *wpa_s)
 	if (!radio)
 		return;
 
-	//os_printf("radio_remove_interface\r\n");
 	dl_list_del(&wpa_s->radio_list);
 	radio_remove_works(wpa_s, NULL, 0);
 	wpa_s->radio = NULL;
@@ -4061,7 +4056,6 @@ void radio_work_check_next(struct wpa_supplicant *wpa_s)
 	}
 	eloop_cancel_timeout(radio_start_next_work, radio, NULL);
 	
-	//os_printf("radio_work_check_next\r\n");
 	eloop_register_timeout(0, 0, radio_start_next_work, radio, NULL);
 }
 
@@ -4103,8 +4097,6 @@ int radio_add_work(struct wpa_supplicant *wpa_s, unsigned int freq,
 	if (work == NULL)
 		return -1;
 	
-	//os_printf("radio_add_work\r\n");
-
 	os_get_reltime(&work->time);
 	work->freq = freq;
 	work->type = type;
@@ -4139,8 +4131,6 @@ void radio_work_done(struct wpa_radio_work *work)
 	struct os_reltime now, diff;
 	unsigned int started = work->started;
 
-	//os_printf("radio_work_done\r\n");
-
 	os_get_reltime(&now);
 	os_reltime_sub(&now, &work->time, &diff);
 	
@@ -4159,8 +4149,6 @@ radio_work_pending(struct wpa_supplicant *wpa_s, const char *type)
 {
 	struct wpa_radio_work *work;
 	struct wpa_radio *radio = wpa_s->radio;
-
-	//os_printf("radio_work_pending\r\n");
 
 	dl_list_for_each(work, &radio->work, struct wpa_radio_work, list) {
 		if (work->wpa_s == wpa_s && os_strcmp(work->type, type) == 0)
@@ -5453,6 +5441,7 @@ void wpas_auth_failed(struct wpa_supplicant *wpa_s, char *reason)
 	}
 #endif /* CONFIG_P2P */
 
+#if 0
 	if (ssid->auth_failures > 50)
 		dur = 300;
 	else if (ssid->auth_failures > 10)
@@ -5468,9 +5457,13 @@ void wpas_auth_failed(struct wpa_supplicant *wpa_s, char *reason)
 	else
 		dur = 10;
 
+
 	if (ssid->auth_failures > 1 &&
 	    wpa_key_mgmt_wpa_ieee8021x(ssid->key_mgmt))
 		dur += os_random() % (ssid->auth_failures * 10);
+#else
+		dur = 1;// yhb changed, always delay 1 second.
+#endif
 
 	os_get_reltime(&now);
 	if (now.sec + dur <= ssid->disabled_until.sec)

@@ -21,9 +21,15 @@
 
 #include "platform.h"
 #include "platform_config.h"
+#include "os.h"
+
+#include "yos/log.h"
+
+#include "ali_crypto.h"
 
 platform_awss_recv_80211_frame_cb_t g_ieee80211_handler;
 autoconfig_plugin_t g_alink_smartconfig;
+platform_wifi_mgnt_frame_cb_t monitor_cb;
 
 //一键配置超时时间, 建议超时时间1-3min, APP侧一键配置1min超时
 int platform_awss_get_timeout_interval_ms(void)
@@ -57,10 +63,11 @@ void platform_awss_switch_channel(char primary_channel,
     hal_wifi_set_channel(module, (int)primary_channel);
 }
 
-static void monitor_data_handler(uint8_t *buf, int len)
+static void monitor_data_handler(uint8_t *buf, int len,
+                                 hal_wifi_link_info_t *info)
 {
-    int with_fcs = 1;
-    int link_type = AWSS_LINK_TYPE_80211_RADIO;
+    int with_fcs = 0;
+    int link_type = AWSS_LINK_TYPE_NONE;
 
     (*g_ieee80211_handler)(buf, len, link_type, with_fcs);
 }
@@ -106,34 +113,102 @@ int platform_awss_connect_ap(
     _IN_OPT_ uint8_t bssid[ETH_ALEN],
     _IN_OPT_ uint8_t channel)
 {
-    int ret;
+    int ret, ms_cnt = 0;
     netmgr_ap_config_t config;
 
     strcpy(config.ssid, ssid);
     strcpy(config.pwd, passwd);
     ret = netmgr_set_ap_config(&config);
 
-    yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0u);
+    hal_wifi_suspend_station(NULL);
+    LOGD("yos_awss", "Will reconnect wifi: %s %s", ssid, passwd);
+    netmgr_reconnect_wifi();
 
-    return ret;
+    while (ms_cnt < connection_timeout_ms) {
+        if (netmgr_get_ip_state() == false) {
+            LOGD("[waitConnAP]", "waiting for connecting AP");
+            yos_msleep(500);
+            ms_cnt += 500;
+        } else {
+            LOGI("[waitConnAP]", "AP connected");
+            return 0;
+        }
+    }
+
+    return -1;
 }
 
+// This API needs to block before return
 int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)
 {
+    netmgr_register_wifi_scan_result_callback((netmgr_wifi_scan_result_cb_t)cb);
+    hal_wifi_start_scan_adv(NULL);
+    while (netmgr_get_scan_cb_finished() != true) { // block
+        yos_msleep(500);
+    }
     return 0;
 }
 
+#define KEY_LEN 16 // aes 128 cbc
 p_aes128_t platform_aes128_init(
     const uint8_t *key,
     const uint8_t *iv,
     AES_DIR_t dir)
 {
-    return 0;
+    ali_crypto_result result;
+    void *aes_ctx;
+    size_t aes_ctx_size;
+    bool en_dec = true; // encrypto by default
+
+    if (dir == PLATFORM_AES_DECRYPTION) en_dec = false;
+
+    result = ali_aes_get_ctx_size(AES_CBC, &aes_ctx_size);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        LOGE("yos_awss", "get ctx size fail(%08x)", result);
+        return NULL;
+    }
+
+    aes_ctx = os_malloc(aes_ctx_size);
+    if (aes_ctx == NULL) {
+        LOGE("yos_awss", "kmalloc(%d) fail", (int)aes_ctx_size);
+        return NULL;
+    }
+
+    result = ali_aes_init(AES_CBC, en_dec,
+                 key, NULL, KEY_LEN, iv, aes_ctx);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        LOGE("yos_awss", "ali_aes_init fail(%08x)", result);
+        return NULL;
+    }
+
+    return aes_ctx;
 }
 
 int platform_aes128_destroy(
     p_aes128_t aes)
 {
+    if (aes)
+        os_free(aes);
+
+    return 0;
+}
+
+int platform_aes128_cbc_encrypt_decrypt(
+    p_aes128_t aes,
+    const void *src,
+    size_t blockNum,
+    void *dst )
+{
+    ali_crypto_result result;
+    size_t dlen = PLATFORM_MAX_PASSWD_LEN;
+
+    result = ali_aes_finish(src, blockNum << 4, dst,
+                 &dlen, SYM_NOPAD, aes);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        LOGE("yos_awss", "aes_cbc finish fail(%08x)", result);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -143,7 +218,7 @@ int platform_aes128_cbc_encrypt(
     size_t blockNum,
     void *dst )
 {
-    return 0;
+    return platform_aes128_cbc_encrypt_decrypt(aes, src, blockNum, dst);
 }
 
 int platform_aes128_cbc_decrypt(
@@ -152,7 +227,7 @@ int platform_aes128_cbc_decrypt(
     size_t blockNum,
     void *dst )
 {
-    return 0;
+    return platform_aes128_cbc_encrypt_decrypt(aes, src, blockNum, dst);
 }
 
 int platform_wifi_get_ap_info(
@@ -160,6 +235,13 @@ int platform_wifi_get_ap_info(
     char passwd[PLATFORM_MAX_PASSWD_LEN],
     uint8_t bssid[ETH_ALEN])
 {
+    netmgr_ap_config_t config;
+
+    netmgr_get_ap_config(&config);
+    if (ssid) strncpy(ssid, config.ssid, PLATFORM_MAX_SSID_LEN);
+    if (passwd) strncpy(passwd, config.pwd, PLATFORM_MAX_PASSWD_LEN);
+    if (bssid) strncpy(bssid, config.bssid, ETH_ALEN);
+
     return 0;
 }
 
@@ -173,18 +255,31 @@ int platform_wifi_low_power(int timeout_ms)
     return 0;
 }
 
+static void mgnt_rx_cb(uint8_t *data, int len)
+{
+	if (monitor_cb) {
+		monitor_cb(data, len, 0, 0);
+	}
+}
+
 int platform_wifi_enable_mgnt_frame_filter(
     _IN_ uint32_t filter_mask,
     _IN_OPT_ uint8_t vendor_oui[3],
     _IN_ platform_wifi_mgnt_frame_cb_t callback)
 {
-    return -2;
+    monitor_cb = callback;
+    if (callback != NULL) {
+        hal_wlan_register_mgnt_monitor_cb(NULL, mgnt_rx_cb);
+    } else {
+        hal_wlan_register_mgnt_monitor_cb(NULL, NULL);
+    }
+    return 0;
 }
 
 int platform_wifi_send_80211_raw_frame(_IN_ enum platform_awss_frame_type type,
                                        _IN_ uint8_t *buffer, _IN_ int len)
 {
-    return -2;
+    return hal_wlan_send_80211_raw_frame(NULL, buffer, len);
 }
 
 #ifdef CONFIG_YWSS

@@ -114,16 +114,16 @@ wsf_code wsf_init()
 
         wsf_config_t *global_config = wsf_get_config();
 
-        result = wsf_open_connection(global_config);
-        if (result != WSF_SUCCESS) {
-            LOGE(MODULE_NAME, "failed to open wsf connection");
-            //return result;
-        }
-
         result = wsf_start_worker(global_config);
         if (result != WSF_SUCCESS) {
             LOGE(MODULE_NAME, "failed to start worker thread");
             return result;
+        }
+
+        result = wsf_open_connection(global_config);
+        if (result != WSF_SUCCESS) {
+            LOGE(MODULE_NAME, "failed to open wsf connection");
+            //return result;
         }
         initialized = 1;
     }
@@ -224,7 +224,16 @@ int wsf_invoke_async(const char *service_name, wsf_list_t *parameters,
         _cb->extra = arg;
         _cb->req = request;
     }
-    return __wsf_invoke_async(request, __analy_resp, _cb);
+    int ret =__wsf_invoke_async(request, __analy_resp, _cb);
+    if (ret == 0)
+        return ret;
+
+    if (cb)
+        cb(NULL, arg);
+    os_free(request);
+    os_free(_cb);
+
+    return ret;
 }
 
 wsf_response_t *wsf_invoke(const char *service_name, wsf_list_t *parameters,

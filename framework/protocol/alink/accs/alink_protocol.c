@@ -99,14 +99,14 @@ static int alink_phase;
 
 static void get_protocol_buff(void)
 {
-    LOGE("accs", "------->>> lock <<<------- \n");
+    LOGD("accs", "------->>> lock <<<------- \n");
     os_semaphore_wait(link_buff_sem, OS_WAIT_INFINITE);
     memset(uplink_buff, 0, ALINK_BUF_SIZE);
 }
 
 static void put_protocol_buff(void)
 {
-    LOGE("accs", "------->>> unlock <<<--------\n");
+    LOGD("accs", "------->>> unlock <<<--------\n");
     os_semaphore_post(link_buff_sem);
 }
 
@@ -282,7 +282,7 @@ static void *_alink_reg_cb(connectivity_rsp_t *rsp, void *cb)
 {
     int ret = 0;
     _alink_reg_t *reg = cb;
-    LOG("\n");
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, "");
     if (!rsp) {
         ret = ALINK_CODE_ERROR_TIMEOUT;
     } else {
@@ -516,7 +516,7 @@ static void *__alink_post_cb(connectivity_rsp_t *rsp, void *cb)
         ret = alink_response_get_x(rsp->data, NULL, 0, NULL);
     }
     alink_error_code_handler(ret);
-    LOG("get posted respon back , cb: %p. \n", _cb);
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, "get posted respon back , cb: %p. \n", _cb);
     if (_cb) {
         _cb->cb(_cb->arg);
         os_free(_cb);
@@ -1044,7 +1044,7 @@ static int _alink_handshake_cycle(int ret)
     if (--_g_handshake_cnt <= 0) {
         return 0;
     }
-    LOG("cnt: %d ,phase: %d\n", _g_handshake_cnt, alink_phase);
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, "cnt: %d ,phase: %d\n", _g_handshake_cnt, alink_phase);
     switch (alink_phase) {
         case PHASE_INIT:
             if (main_device->config->uuid[0] == 0) {
@@ -1068,6 +1068,7 @@ static int _alink_handshake_cycle(int ret)
             } else {
                 return alink_login_async(_alink_handshake_cycle);
             }
+            
         case PHASE_LOGIN_SUCCESS:
             if (!config_get_unregister_flag()) {
                 alink_phase = PHASE_READY;
@@ -1086,6 +1087,7 @@ static int _alink_handshake_cycle(int ret)
             break;
         case PHASE_READY:
             LOGI(MODULE_NAME_ALINK_PROTOCOL, "accs_handshake success");
+	    yos_post_event(EV_SYS,CODE_SYS_ON_ALINK_ONLINE,0);
             return SERVICE_RESULT_OK;
         case PHASE_WAIT:
             start_accs_work(2 * 1000);
@@ -1098,7 +1100,7 @@ static int _alink_handshake_cycle(int ret)
 
 int alink_handshake_async()
 {
-    LOG(MODULE_NAME_ALINK_PROTOCOL);
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, MODULE_NAME_ALINK_PROTOCOL);
     OS_ASSERT(main_device, "invalid main device");
 
     _g_handshake_cnt = 9 + 4;
@@ -1111,7 +1113,7 @@ int alink_handshake(void)
 {
     int ret, loop = 9 + 4; /* 9 steps to login at most, +4 for redundancy */
 
-    LOG(MODULE_NAME_ALINK_PROTOCOL);
+    LOGD(MODULE_NAME_ALINK_PROTOCOL, MODULE_NAME_ALINK_PROTOCOL);
     OS_ASSERT(main_device, "invalid main device");
 
     alink_phase = PHASE_INIT;

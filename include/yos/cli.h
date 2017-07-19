@@ -17,8 +17,6 @@
 #ifndef __YOS_CLI_H__
 #define __YOS_CLI_H__
 
-
-#define CLI_UART     0
 #define MAX_COMMANDS    64
 #define INBUF_SIZE      128
 #define OUTBUF_SIZE     2048
@@ -154,12 +152,14 @@ static inline int cli_unregister_command(const struct cli_command *command)
     return 0;
 }
 
-static inline int cli_register_commands(const struct cli_command *commands, int num_commands)
+static inline int cli_register_commands(const struct cli_command *commands,
+                                        int num_commands)
 {
     return 0;
 }
 
-static inline int cli_unregister_commands(const struct cli_command *commands, int num_commands)
+static inline int cli_unregister_commands(const struct cli_command *commands,
+                                          int num_commands)
 {
     return 0;
 }

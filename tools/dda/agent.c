@@ -269,12 +269,12 @@ static int send_data(agent_info_t *agent, int type, int cmd, int dst_id, void *b
 static int connect_master(agent_info_t *agent)
 {
     if (!agent->agent_id) {
-        ur_mesh_hal_module_t *m = hal_ur_mesh_get_default_module();
+        ur_mesh_hal_module_t *m = hal_umesh_get_default_module();
         if (!m)
             return 0;
 
         const mac_address_t *mac;
-        mac = hal_ur_mesh_get_mac_address(m);
+        mac = hal_umesh_get_mac_address(m);
         if (mac) {
             memcpy(&agent->mac_addr, mac->addr, 6);
         }
@@ -292,7 +292,7 @@ static int connect_master(agent_info_t *agent)
 
 static void yos_loop(void *arg)
 {
-    ur_mesh_init(NULL);
+    ur_mesh_init(MODE_RX_ON);
     ur_mesh_start();
     yos_loop_run();
     yos_task_exit(0);

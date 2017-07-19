@@ -124,6 +124,20 @@ bool is_direct_child(network_context_t *network, uint16_t sid)
     return true;
 }
 
+bool is_allocated_child(network_context_t *network, neighbor_t *nbr)
+{
+    ssid_allocator_t *allocator;
+    sid_node_t       *node;
+
+    allocator = (ssid_allocator_t *)network->sid_base;
+    slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
+        if (memcmp(node->node_id.ueid, nbr->ueid, sizeof(nbr->ueid)) == 0)
+            return true;
+    }
+
+    return false;
+}
+
 ur_error_t update_sid_mapping(network_context_t *network,
                               ur_node_id_t *node_id, bool to_add)
 {
@@ -213,6 +227,10 @@ static ur_error_t allocate_expected_sid(network_context_t *network,
             (grab_free_bit(&allocator->attach_free_bits, len, index) == UR_ERROR_FAIL)) {
             return UR_ERROR_FAIL;
         }
+        if (UR_ERROR_NONE != update_sid_mapping(network, node_id, true)) {
+            free_sid(network, node_id->sid);
+            return UR_ERROR_FAIL;
+        }
         allocator->base.node_num++;
     } else if (is_partial_function_sid(node_id->sid)) {
         index = node_id->sid - (MOBILE_PREFIX << PF_SID_PREFIX_OFFSET);
@@ -293,6 +311,10 @@ new_sid:
            "allocate 0x%04x\r\n", node_id->sid);
 
     if (!(node_id->mode & MODE_MOBILE)) {
+        if (UR_ERROR_NONE != update_sid_mapping(network, node_id, true)) {
+            free_sid(network, node_id->sid);
+            return UR_ERROR_FAIL;
+        }
         allocator->base.node_num++;
         goto out;
     }

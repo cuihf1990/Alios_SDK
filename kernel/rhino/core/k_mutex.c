@@ -18,6 +18,8 @@
 
 kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(mutex);
     NULL_PARA_CHK(name);
 
@@ -33,7 +35,9 @@ kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
     mutex->mm_alloc_flag      = mm_alloc_flag;
 
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+    YUNOS_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.mutex_head), &mutex->mutex_item);
+    YUNOS_CRITICAL_EXIT();
 #endif
 
     mutex->blk_obj.obj_type = YUNOS_MUTEX_OBJ_TYPE;

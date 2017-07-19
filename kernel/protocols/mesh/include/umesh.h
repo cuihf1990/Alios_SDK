@@ -42,7 +42,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message,
                                const ur_ip6_addr_t *ip6addr);
 ur_error_t ur_mesh_input(umessage_t *p);
 
-ur_error_t ur_mesh_init(void *config);
+ur_error_t ur_mesh_init(node_mode_t mode);
 ur_error_t ur_mesh_start(void);
 bool       ur_mesh_is_initialized(void);
 ur_error_t ur_mesh_stop(void);
@@ -83,11 +83,16 @@ ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest,
                                 ur_addr_t *dest_addr);
 void ur_mesh_get_channel(channel_t *channel);
 
+void umesh_get_extnetid(umesh_extnetid_t *extnetid);
+ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid);
+
 slist_t *ur_mesh_get_hals(void);
 slist_t *ur_mesh_get_networks(void);
 
+bool ur_mesh_is_whitelist_enabled(void);
 void ur_mesh_enable_whitelist(void);
 void ur_mesh_disable_whitelist(void);
+const whitelist_entry_t *ur_mesh_get_whitelist_entries(void);
 ur_error_t ur_mesh_add_whitelist(const mac_address_t *address);
 ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address,
                                       int8_t rssi);

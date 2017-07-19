@@ -162,25 +162,14 @@ static void low_level_init(struct netif *netif)
  */
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
-    struct pbuf *q = p;
-    
-    if(p->next) {
-        q = pbuf_coalesce(p, PBUF_RAW);
-        if(q == p){
-            // must be outof memery in pbuf malloc
-            ETH_INTF_WARN("low_level_output pbuf_coalesce failed!\r\n");    
-        }
-    }
-    
-    LWIP_ASSERT("tot_len != len err", q->tot_len == q->len);
+    int ret;
+	
+    ret = bmsg_tx_sender(p);
 
-    pbuf_ref(q);
-    bmsg_tx_sender(q);
-
-    if(p != q)
-        pbuf_free(q);
-
-    return ERR_OK;
+	if (ret == 0)
+    	return ERR_OK;
+	else
+		return  ERR_TIMEOUT;
 }
 
 /**
@@ -203,7 +192,7 @@ ethernetif_input(int iface, struct pbuf *p)
 		return; 
 	}   
 
-	netif = net_get_netif_handle();
+	netif = (struct netif *)net_get_netif_handle();
     /* points to packet payload, which starts with an Ethernet header */
     ethhdr = p->payload;
 
@@ -228,6 +217,8 @@ ethernetif_input(int iface, struct pbuf *p)
 		
     case ETHTYPE_EAPOL:
 	 	ke_l2_packet_tx(p->payload, p->len, 0);
+		pbuf_free(p);
+        p = NULL;
         break;
 		
     default:

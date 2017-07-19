@@ -236,76 +236,12 @@ static UINT32 flash_read_mid(void)
     return flash_id;
 }
 
-/* GD25Q80B_Rev2.0.pdf, page 5~6 table1,table2
- *   CMP=bit14
- *   BP4=bit6, BP3=bit5, BP2=bit4, BP1=bit3, BP0=bit2
- *   bit26 BK7231_Register_Address_Mapping (CRC_EN, flash data to CPU CRC enable)
- *   
- */
-void set_flash_protect(unsigned char all)
-{
-    unsigned int temp0;
-    UINT8 bit_QE  = 0;
-
-#ifdef ENABLE_4_LINE
-    bit_QE = 1;
-#endif
-
-    while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
-
-    temp0 = REG_READ(REG_FLASH_CONF); //≈‰÷√WRSR Status data
-    temp0 &= 0xfffe0fff;  // set [BP4:BP0] = 0
-    if(all == 1)
-        *((volatile UINT32 *)(REG_FLASH_CONF)) = (  (temp0 &  FLASH_CLK_CONF_MASK)
-                | (bit_QE << 19) //QE(Quad Enable)
-                | (0x14000 << WRSR_DATA_POSI));  // protect all sectors
-    else
-        *((volatile UINT32 *)(REG_FLASH_CONF)) = (  (temp0 &  FLASH_CLK_CONF_MASK)
-                | (0x14050 << WRSR_DATA_POSI)); // protect address :0x00000 - 0xf7fff
-
-    //Start WRSR
-    temp0 = *((volatile UINT32 *)(REG_FLASH_OPERATE_SW));
-    *((volatile UINT32 *)(REG_FLASH_OPERATE_SW)) = (  (temp0              &  ADDR_SW_REG_MASK)
-            | (FLASH_OPCODE_WRSR2 << OP_TYPE_SW_POSI)
-            | OP_SW
-            | WP_VALUE); // make WP equal 1 not protect SRP
-    while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
-}
-
-void set_flash_unprotect(void)
-{
-    unsigned int temp0;
-    UINT8 bit_QE  = 0;
-
-#ifdef ENABLE_4_LINE
-    bit_QE = 1;
-#endif
-
-    while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
-
-    temp0 = REG_READ(REG_FLASH_CONF); //≈‰÷√WRSR Status data
-    temp0 &= 0xfffe0fff;  // set [BP4:BP0] = 0
-    *((volatile UINT32 *)(REG_FLASH_CONF)) = (  (temp0 &  FLASH_CLK_CONF_MASK)
-                | (bit_QE << 19) //QE(Quad Enable)
-                | (0x10000 << WRSR_DATA_POSI));  // unprotect all sectors
-
-    //Start WRSR
-    temp0 = *((volatile UINT32 *)(REG_FLASH_OPERATE_SW));
-    *((volatile UINT32 *)(REG_FLASH_OPERATE_SW)) = (  (temp0              &  ADDR_SW_REG_MASK)
-            | (FLASH_OPCODE_WRSR2 << OP_TYPE_SW_POSI)
-            | OP_SW
-            | WP_VALUE); // make WP equal 1 not protect SRP
-    while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
-}
-
 static void flash_erase_sector(UINT32 address)
 {
     UINT32 value;
     while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
 
     flash_set_line_mode(0);
-    //set_flash_protect(0);
-    set_flash_unprotect();
     while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
     value = REG_READ(REG_FLASH_OPERATE_SW);
     value = ((address << ADDR_SW_REG_POSI)
@@ -314,7 +250,6 @@ static void flash_erase_sector(UINT32 address)
              | (value & WP_VALUE));
     REG_WRITE(REG_FLASH_OPERATE_SW, value);
     while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
-    set_flash_protect(1);
     flash_set_line_mode(2);
 }
 
@@ -393,8 +328,6 @@ static void flash_write_data(UINT8 *buffer, UINT32 address, UINT32 len)
     //	flash_write_sr( 2, 0x002c );
 
     flash_set_line_mode(1);
-    //set_flash_protect(0);
-    set_flash_unprotect();
     while(REG_READ(REG_FLASH_OPERATE_SW) & BUSY_SW);
     while(len)
     {
@@ -423,7 +356,6 @@ static void flash_write_data(UINT8 *buffer, UINT32 address, UINT32 len)
         memset(pb, 0xFF, 32);
     }
 
-    set_flash_protect(1);
     flash_set_line_mode(2);
 
     //	flash_write_sr( 2, 0x14 );
@@ -488,7 +420,6 @@ void flash_init(void)
     FLASH_PRT("[Flash]id:0x%x\r\n", id);
 
     //    flash_wp_xxxk(id);
-    set_flash_protect(1);
 
     //#define ENABLE_4_LINE // if u enable 4 line mode, jtag can not halt cpu, when lost current at development board.
 #define ENABLE_2_LINE

@@ -49,7 +49,7 @@ extern "C" {
 
 
 typedef int (*ALINK_SERVICE_EXECUTE_CB)(const char *args,
-        char *json_out_buf, unsigned int buf_sz);
+                                        char *json_out_buf, unsigned int buf_sz);
 
 #define log_print(fmt, args...) \
     do {  \
@@ -171,8 +171,8 @@ enum SERVICE_CODE {
  * command argument
  */
 typedef struct cmd_argument {
-	char arg_name[32];
-	unsigned char data_type;
+    char arg_name[32];
+    unsigned char data_type;
     struct cmd_argument *next_arg;
 } cmd_argument_t;
 
@@ -201,7 +201,7 @@ typedef struct attr_profile {
 /**
  * alink command profile description
  */
-typedef struct cmd_profile{
+typedef struct cmd_profile {
     char cmd_name[32];
     unsigned short cluster_id;
     unsigned char cmd_id;
@@ -213,7 +213,8 @@ typedef struct cmd_profile{
 
 int devmgr_get_dev_type(const char *devid_or_uuid, uint8_t *dev_type);
 int32_t alink_post(const char *method, char *buff);
-int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name, char **attr_value);
+int devmgr_read_attr_cache(const char *devid_or_uuid, const char *attr_name,
+                           char **attr_value);
 
 const char *config_get_main_uuid(void);
 
@@ -222,22 +223,25 @@ int stdd_zbnet_update_attr_profile_cb(attr_profile_t *profile[]);
 int stdd_zbnet_update_cmd_profile_cb(cmd_profile_t *profile[]);
 
 int stdd_zbnet_get_attr_cb(uint8_t ieee_addr[8], \
-                                    uint8_t endpoint_id, const char *attr_set[]);
+                           uint8_t endpoint_id, const char *attr_set[]);
 
 int stdd_zbnet_set_attr_cb(uint8_t ieee_addr[8], uint8_t endpoint_id, \
-                                    const char *attr_name, const char *attr_value);
+                           const char *attr_name, const char *attr_value);
 
 int stdd_zbnet_exec_cmd_cb(uint8_t ieee_addr[8], uint8_t endpoint_id, \
-                                    const char *cmd_name, const char *cmd_args);
+                           const char *cmd_name, const char *cmd_args);
 
 
 int stdd_zbnet_get_attr(const char *devid_or_uuid, const char *attr_name);
 
-int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name, const char *attr_value);
+int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name,
+                        const char *attr_value);
 
-int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name, const char *rpc_args);
+int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name,
+                        const char *rpc_args);
 
-int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff, int buff_size);
+int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff,
+                            int buff_size);
 
 #ifdef __cplusplus
 }

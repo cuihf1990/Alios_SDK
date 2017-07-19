@@ -41,7 +41,11 @@
 
 #define LOG(format, ...) //printf(format, __VA_ARGS__)
 
+#ifdef GCOV_ENABLE
 #define MIN_STACK_SIZE    8192
+#else
+#define MIN_STACK_SIZE    4096
+#endif
 
 typedef struct {
     ktask_t     *tcb;
@@ -50,6 +54,8 @@ typedef struct {
     ucontext_t  uctx;
     void        *real_stack;
     void        *real_stack_end;
+    void        *orig_stack;
+    int          orig_size;
     int          in_signals;
     int          int_lvl;
     int          saved_errno;
@@ -184,19 +190,32 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
 {
     CPSR_ALLOC();
 
-    size *= sizeof(cpu_stack_t);
     size_t real_size = size > MIN_STACK_SIZE ? size : MIN_STACK_SIZE;
-    task_ext_t   *tcb_ext = (task_ext_t *)base;
+    real_size *= sizeof(cpu_stack_t);
 
-    real_size *= sizeof(unsigned long);
+    void *real_stack = yos_malloc(real_size);
+    task_ext_t *tcb_ext = (task_ext_t *)base;
+    cpu_stack_t *tmp;
+
+    bzero(real_stack, real_size);
 
     tcb_ext->tcb   = NULL;
     tcb_ext->arg   = arg;
     tcb_ext->entry = entry;
     /* todo+ replace malloc with mmap */
-    tcb_ext->real_stack = yos_malloc(real_size);
-    tcb_ext->real_stack_end = tcb_ext->real_stack + real_size;
-    bzero(tcb_ext->real_stack, real_size);
+    tcb_ext->real_stack = real_stack;
+    tcb_ext->real_stack_end = real_stack + real_size;
+
+#if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
+#if (YUNOS_CONFIG_CPU_STACK_DOWN > 0)
+    tmp  = tcb_ext->real_stack;
+    *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
+#else
+    tmp  = (cpu_stack_t *)(tcb_ext->real_stack) + (real_size/sizeof(cpu_stack_t)) - 1u;
+    *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
+#endif
+#endif
+
 #if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
     tcb_ext->vid = VALGRIND_STACK_REGISTER(tcb_ext->real_stack, (char *)(tcb_ext->real_stack) + real_size);
 #endif
@@ -206,6 +225,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     int ret = getcontext(&tcb_ext->uctx);
     if (ret < 0) {
         YUNOS_CPU_INTRPT_ENABLE();
+        yos_free(real_stack);
         return NULL;
     }
 
@@ -215,7 +235,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
 
     YUNOS_CPU_INTRPT_ENABLE();
 
-    return base;
+    return tcb_ext;
 }
 
 void cpu_task_create_hook(ktask_t *tcb)
@@ -225,6 +245,12 @@ void cpu_task_create_hook(ktask_t *tcb)
     LOG("+++ Task '%-20s' [%3.1d] is created\n", tcb->task_name, tcb->prio);
 
     tcb_ext->tcb = tcb;
+    tcb_ext->orig_stack = tcb->task_stack_base;
+    tcb_ext->orig_size = tcb->stack_size;
+    /* hack: replace task_stack_base for stack checking */
+    tcb->task_stack_base = tcb_ext->real_stack;
+    tcb->stack_size = tcb_ext->real_stack_end - tcb_ext->real_stack;
+    tcb->stack_size /= sizeof(cpu_stack_t);
 }
 
 void cpu_task_del_hook(ktask_t *tcb)
@@ -235,7 +261,19 @@ void cpu_task_del_hook(ktask_t *tcb)
     VALGRIND_STACK_DEREGISTER(tcb_ext->vid);
 #endif
     g_sched_lock++;
-    yunos_queue_back_send(&g_dyn_queue, tcb_ext->real_stack);
+
+    /*
+     * ---- hack -----
+     * for DYN_ALLOC case,
+     * tcb->task_stack_base is replaced with real_stack in create_hook,
+     * and tcb->task_stack_base is freed in yunos_task_dyn_del,
+     * so we just need to free orig_stack
+     * for STATIC_ALLOC case, need to free real_stack by ourself
+     */
+    if (tcb->mm_alloc_flag == K_OBJ_DYN_ALLOC)
+        yunos_queue_back_send(&g_dyn_queue, tcb_ext->orig_stack);
+    else
+        yunos_queue_back_send(&g_dyn_queue, tcb_ext->real_stack);
     g_sched_lock--;
 
 }
@@ -272,13 +310,11 @@ static void _cpu_task_switch(void)
 {
     ktask_t     *from_tcb;
     ktask_t     *to_tcb;
-    task_ext_t *from_tcb_ext;
-    task_ext_t *to_tcb_ext;
+    task_ext_t  *from_tcb_ext;
+    task_ext_t  *to_tcb_ext;
 
     from_tcb = g_active_task;
     from_tcb_ext = (task_ext_t *)from_tcb->task_stack;
-
-    g_active_task = g_preferred_ready_task;
 
     to_tcb = g_preferred_ready_task;
     to_tcb_ext = (task_ext_t *)to_tcb->task_stack;
@@ -288,7 +324,15 @@ static void _cpu_task_switch(void)
 
     /* save errno */
     from_tcb_ext->saved_errno = errno;
+
+#if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
+    assert(*(g_active_task->task_stack_base) == YUNOS_TASK_STACK_OVF_MAGIC);
+#endif
+
+    g_active_task = g_preferred_ready_task;
+
     swapcontext(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
+
     /* restore errno */
     errno = from_tcb_ext->saved_errno;
 }
@@ -408,30 +452,32 @@ void cpu_start_hook(void)
 
 void cpu_io_register(void (*f)(int, void *), void *arg)
 {
+    sigset_t cpsr;
     cpu_io_cb_t *pcb = yos_malloc(sizeof(*pcb));
     pcb->cb = f;
     pcb->arg = arg;
 
-    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
+    cpsr = cpu_intrpt_save();
     dlist_add_tail(&pcb->node, &g_io_list);
-    sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+    cpu_intrpt_restore(cpsr);
 }
 
 void cpu_io_unregister(void (*f)(int, void *), void *arg)
 {
+    sigset_t cpsr;
     cpu_io_cb_t *pcb;
-    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
+    cpsr = cpu_intrpt_save();
     dlist_for_each_entry(&g_io_list, pcb, cpu_io_cb_t, node) {
         if (pcb->cb != f)
             continue;
         if (pcb->arg != arg)
             continue;
         dlist_del(&pcb->node);
+        cpu_intrpt_restore(cpsr);
         yos_free(pcb);
-        sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
         return;
     }
-    sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
+    cpu_intrpt_restore(cpsr);
 }
 
 static void trigger_io_cb(int fd)

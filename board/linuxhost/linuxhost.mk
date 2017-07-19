@@ -5,7 +5,7 @@ MODULE              := 1062
 HOST_ARCH           := linux
 HOST_MCU_FAMILY     := linux
 
-$(NAME)_COMPONENTS  := ysh tfs
+$(NAME)_COMPONENTS  :=  tfs
 
 CONFIG_LIB_TFS := y
 CONFIG_TFS_ID2_RSA := y
@@ -20,7 +20,7 @@ CONFIG_TFS_TEE := n
 CONFIG_TFS_SW := y
 CONFIG_TFS_TEST := n
 
-CURRENT_TIME = $(shell date +%Y%m%d.%H%M)
+CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 define get-os-version
 "YOS-R"-$(CURRENT_TIME)
 endef

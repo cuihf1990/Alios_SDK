@@ -26,7 +26,9 @@
 
 #include "mxchip_netif_address.h"
 #include "rtos_pub.h"
-#include "mico_wlan.h"
+#include <hal/base.h>
+#include <hal/wifi.h>
+
 
 struct ipv4_config sta_ip_settings;
 struct ipv4_config uap_ip_settings;
@@ -177,6 +179,7 @@ void net_wlan_init(void)
 #ifdef CONFIG_IPV6
 		net_ipv6stack_init(&g_mlan.netif);
 #endif /* CONFIG_IPV6 */
+		netifapi_netif_set_default(&g_mlan.netif);
 
 		ret = netifapi_netif_add(&g_uap.netif, &g_uap.ipaddr,
 					 &g_uap.ipaddr, &g_uap.ipaddr, NULL,
@@ -185,6 +188,7 @@ void net_wlan_init(void)
 			/*FIXME: Handle the error case cleanly */
 			net_e("UAP interface add failed");
 		}
+
 		wlan_init_done = 1;
 	}
 
@@ -194,13 +198,13 @@ void net_wlan_init(void)
 static void dhcp_up(ip_addr_t ip, ip_addr_t netmask, 
 					ip_addr_t gateway, ip_addr_t dnsServer)
 {
-    net_para_st netpara;
-    net_para_st *pnetpara = &netpara;
+    hal_wifi_ip_stat_t netpara;
+    hal_wifi_ip_stat_t *pnetpara = &netpara;
     unsigned char mac[6];
 	char macstr[14];
 	
-	memset(pnetpara, 0, sizeof(net_para_st));
-	mico_wlan_get_mac_address(mac);
+	memset(pnetpara, 0, sizeof(hal_wifi_ip_stat_t));
+	wifi_get_mac_address(mac);
 
 	sprintf(macstr, "%02x%02x%02x%02x%02x%02x", mac[0],
 			mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -225,7 +229,7 @@ static void wifi_station_changed(int connected)
 	
 	last_state = connected;
 	if (connected) {
-		apinfo_adv_t ap_info;
+		hal_wifi_ap_info_adv_t ap_info;
 		uint8_t *key;
 		int key_len;
 
@@ -237,11 +241,31 @@ static void wifi_station_changed(int connected)
 		WifiStatusHandler(2);
 }
 
+void wifi_uap_changed(int connected)
+{
+	static int last_state = 0;
+
+	if (connected == last_state)
+		return;
+	
+	last_state = connected;
+	if (connected) {
+		WifiStatusHandler(3);
+	} else
+		WifiStatusHandler(4);
+}
+
 const ip_addr_t* dns_getserver(u8_t numdns);
 
 static void netif_status_callback(struct netif *n)
 {
 	ip_addr_t *dns_server;
+	uint32_t sed = (uint32_t)yos_now_ms();
+
+	/* use current system time to set the start tcp/udp port number RANDOMIZE */
+	srand(sed);
+	tcp_init();
+	udp_init();
 	
 	if (n->flags & NETIF_FLAG_UP) {
 		struct dhcp *dhcp = netif_dhcp_data(n);
@@ -373,6 +397,8 @@ void sta_ip_down(void)
 
 void sta_ip_start(void)
 {
+	if (sta_ip_start_flag == 1) // IP already started
+		return;
 	os_printf("sta_ip_start\r\n");
 	sta_ip_start_flag = 1;
 	net_configure_address(&sta_ip_settings, net_get_sta_handle());
@@ -386,6 +412,14 @@ uint32_t sta_ip_is_start(void)
 void uap_ip_start(void)
 {
 	net_configure_address(&uap_ip_settings, net_get_uap_handle());
+}
+
+void uap_ip_down(void)
+{
+	wifi_uap_changed(0);
+	
+	netifapi_netif_set_down(&g_uap.netif);
+	netif_set_status_callback(&g_uap.netif, NULL);
 }
 
 #define DEF_UAP_IP	0xc0a80a01UL /* 192.168.10.1 */
@@ -469,7 +503,11 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 			dns.type = IPADDR_TYPE_V4;
 			dns_setserver(i, &dns);
 		}
-		wifi_station_changed(1);
+		if (if_handle == &g_mlan) {
+			wifi_station_changed(1);
+		} else {
+			wifi_uap_changed(1);
+		}
 		break;
 
 	case ADDR_TYPE_DHCP:
@@ -593,4 +631,18 @@ void net_configure_dns(struct wlan_ip_config *ip)
 }
 
 
+uint32_t ipv4_addr_aton(char *ipstr)
+{
+	ip4_addr_t ip;
+	uint32_t ret;
+	
+	ret = ip4addr_aton(ipstr, &ip);
+
+	if (ret == 0) // fail
+		return 0;
+	else
+		ret = ip.addr;
+
+	return ret;
+}
 

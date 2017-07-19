@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* header file for alink zigbee device */
 #ifndef _ALINK_EXPORT_ZIGBEE_H_
 #define _ALINK_EXPORT_ZIGBEE_H_
@@ -24,8 +40,8 @@ extern "C"
  * command argument
  */
 typedef struct cmd_argument {
-	char arg_name[STR_NAME_LEN];
-	unsigned char data_type;
+    char arg_name[STR_NAME_LEN];
+    unsigned char data_type;
     unsigned int mask_code; /*only used for argument of bitmap type*/
     struct cmd_argument *next_arg;
     struct cmd_argument *child_argument;/*only used for argument of bitmap type*/
@@ -57,7 +73,7 @@ typedef struct attr_profile {
 /**
  * alink command profile description
  */
-typedef struct cmd_profile{
+typedef struct cmd_profile {
     char cmd_name[STR_NAME_LEN];
     unsigned short cluster_id;
     unsigned char cmd_id;
@@ -83,7 +99,7 @@ typedef struct cmd_profile{
  * @note when joined zigbee network, invoke this function to register sub device
  */
 int alink_zigbee_register_device(unsigned char ieee_addr[IEEE_ADDR_BYTES],
-        unsigned int model_id, const char rand[SUBDEV_RAND_BYTES], const char *sign);
+                                 unsigned int model_id, const char rand[SUBDEV_RAND_BYTES], const char *sign);
 
 
 /**
@@ -106,7 +122,8 @@ int alink_zigbee_unregister_device(unsigned char ieee_addr[IEEE_ADDR_BYTES]);
  * @see None.
  * @note alink sdk will keep syncing subdev status with aliyun server
  */
-int alink_zigbee_update_online_status(unsigned char ieee_addr[IEEE_ADDR_BYTES], char online_or_not);
+int alink_zigbee_update_online_status(unsigned char ieee_addr[IEEE_ADDR_BYTES],
+                                      char online_or_not);
 
 /**
  * @brief report zigbee device attribute list to server, at least 1 attribute should be include
@@ -122,8 +139,9 @@ int alink_zigbee_update_online_status(unsigned char ieee_addr[IEEE_ADDR_BYTES], 
  * @note when connection with server is unstable, this func will block
  *      until got response from server or timeout.
  */
-int alink_zigbee_report_attrs(unsigned char ieee_addr[IEEE_ADDR_BYTES], unsigned char endpoint_id,
-        const char *attr_name[], const char *attr_value[]);
+int alink_zigbee_report_attrs(unsigned char ieee_addr[IEEE_ADDR_BYTES],
+                              unsigned char endpoint_id,
+                              const char *attr_name[], const char *attr_value[]);
 
 /**
  * @brief report zigbee device event of device to coo
@@ -138,8 +156,9 @@ int alink_zigbee_report_attrs(unsigned char ieee_addr[IEEE_ADDR_BYTES], unsigned
  * @note when connection with server is unstable, this func will block
  *      until got response from server or timeout.
  */
-int alink_zigbee_report_event(unsigned char ieee_addr[IEEE_ADDR_BYTES], unsigned char endpoint_id,
-        const char *event_name, const char *event_args);
+int alink_zigbee_report_event(unsigned char ieee_addr[IEEE_ADDR_BYTES],
+                              unsigned char endpoint_id,
+                              const char *event_name, const char *event_args);
 
 
 
@@ -213,12 +232,12 @@ enum ALINK_ZIGBEE_CALLBACK {
      */
     ALINK_ZIGBEE_REMOVE_DEVICE,
 
-	/**
+    /**
      * int callback_zigbee_permit_join(uint8_t duration);
      *
      * @brief remove zigbee sub device's from zigbee network
      * @param[in] duration: permit join duration time, unit: second
-	 * 					duration: 0, disable join; 255, enable join forever
+     *                  duration: 0, disable join; 255, enable join forever
      * @retval  0 on success, otherwise -1 will return
      * @see None.
      * @note None.

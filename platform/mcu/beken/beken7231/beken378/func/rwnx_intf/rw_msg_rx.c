@@ -26,6 +26,11 @@ int connect_flag = 0;
 extern void sa_ap_set_rsp_word(uint32_t val);
 extern void sa_sta_set_rsp_word(uint32_t val);
 
+int beken_get_sm_connect_flag(void)
+{
+    return connect_flag;
+}
+
 #if 1 /* scan result*/
 UINT8 *sr_malloc_result_item(UINT32 vies_len)
 {
@@ -307,13 +312,13 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
     UINT32 vies_len;
     UINT8 *var_part_addr;	
     struct ke_msg *msg_ptr;
-    SCAN_RST_ITEM_PTR item;
+    SCAN_RST_ITEM_PTR item = NULL;
     SCAN_RST_UPLOAD_PTR result_ptr;
     SCAN_IND_PTR scanu_ret_ptr;
     IEEE802_11_PROBE_RSP_PTR probe_rsp_ieee80211_ptr;
 	char on_channel;
-	int replace_index = -1;
-
+	UINT8 ssid_len = 0, *pssid;
+	
 	ret = RW_SUCCESS;
 	result_ptr = scan_rst;
 
@@ -339,6 +344,19 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
 		on_channel = 0;
 	}
 
+	elmt_addr = (UINT8 *)mac_ie_find((UINT32)var_part_addr, 
+										(UINT16)vies_len, 
+										MAC_ELTID_SSID);
+    if(elmt_addr)
+    {
+        ssid_len = *(elmt_addr + MAC_SSID_LEN_OFT);
+
+        if (ssid_len > MAC_SSID_LEN) { // invalid ssid length
+            goto scan_rst_exit;
+        }
+		pssid = elmt_addr + MAC_SSID_SSID_OFT;
+    }
+	
 	/* check the duplicate bssid*/
 	do
 	{
@@ -348,37 +366,30 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
 		{
 			if(!os_memcmp(probe_rsp_ieee80211_ptr->bssid, result_ptr->res[i]->bssid, ETH_ALEN))
 			{
+				if ((result_ptr->res[i]->ssid[0] == '\0') && 
+					(ssid_len > 0)){
+					os_memcpy(result_ptr->res[i]->ssid, pssid, ssid_len);
+				}
 				if ((result_ptr->res[i]->on_channel == 1) || (on_channel == 0)) {
 					goto scan_rst_exit;
 				} else {
-					replace_index = i; // should replace it.
+					item = result_ptr->res[i]; // should replace it.
+					item->level = scanu_ret_ptr->rssi;
+					item->channel = chann;
+					item->on_channel = 1;
+					goto scan_rst_exit;
 				}
 			}
 		}
 	}while(0);
-	
- 	item = (SCAN_RST_ITEM_PTR)sr_malloc_result_item(vies_len);
+
+	item = (SCAN_RST_ITEM_PTR)sr_malloc_result_item(vies_len);
 	if (item == NULL)
 		goto scan_rst_exit;
+
+	os_memset(item->ssid, 0, sizeof(item->ssid));
+	os_memcpy(item->ssid, pssid, ssid_len);
 	
-    elmt_addr = (UINT8 *)mac_ie_find((UINT32)var_part_addr, 
-										(UINT16)vies_len, 
-										MAC_ELTID_SSID);
-    if(elmt_addr)
-    {
-        UINT8 ssid_len = *(elmt_addr + MAC_SSID_LEN_OFT);
-
-        if (ssid_len >= MAC_SSID_LEN)
-            ssid_len = MAC_SSID_LEN - 1;
-
-        os_memcpy(item->ssid, elmt_addr + MAC_SSID_SSID_OFT, ssid_len);
-        item->ssid[ssid_len] = '\0';
-    }
-	else
-	{
-		os_printf("NoSSid\r\n");
-	}
-
 	os_memcpy(item->bssid, probe_rsp_ieee80211_ptr->bssid, ETH_ALEN);
 	item->channel = chann;
 	item->beacon_int = probe_rsp_ieee80211_ptr->rsp.beacon_int;
@@ -393,13 +404,8 @@ UINT32 mhdr_scanu_result_ind(SCAN_RST_UPLOAD_T *scan_rst, void *msg, UINT32 len)
 
 	item->security = get_security_type_from_ie((u8 *)var_part_addr, vies_len, item->caps);
 	
-	if (replace_index >= 0) {
-		sr_free_result_item((UINT8 *)result_ptr->res[replace_index]);
-		result_ptr->res[replace_index] = item;
-	} else {
-		result_ptr->res[result_ptr->scanu_num] = item;
-		result_ptr->scanu_num ++;
-	}
+	result_ptr->res[result_ptr->scanu_num] = item;
+	result_ptr->scanu_num ++;
 	
 scan_rst_exit:
 	return ret;

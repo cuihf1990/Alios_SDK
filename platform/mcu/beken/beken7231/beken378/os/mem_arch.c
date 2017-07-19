@@ -59,11 +59,10 @@ void os_free(void *ptr)
     }
 }
 
-#else
 
 void os_mem_init(void)
 {
- 
+
 }
 
 void *os_malloc(size_t size)
@@ -84,16 +83,8 @@ void * os_zalloc(size_t size)
 
 void *os_realloc(void *ptr, size_t size)
 {
-	void *pvReturn;
-
-	pvReturn = yunos_mm_alloc(size);
-	if (ptr) {
-		os_memcpy(pvReturn, ptr, size);
-		yunos_mm_free(ptr);
-	}
-    return pvReturn;
+	return yunos_mm_realloc(ptr, size);
 }
-
 void os_free(void *ptr)
 {
     if(ptr)

@@ -526,12 +526,13 @@ class XMODEM(object):
         return crc & 0xffff
 
 port = 0
-debug = False
+prcss_debug = False
+modem_debug = False
 
 def getc(size, timeout=1):
     port.timeout = timeout
     ret = port.read(size)
-    if debug:
+    if modem_debug:
         print "read:",
         print ret,
         print ", {0} bytes".format(len(ret))
@@ -540,7 +541,7 @@ def getc(size, timeout=1):
 def putc(data, timeout=1):
     port.timeout = timeout
     len = port.write(data)
-    if debug:
+    if modem_debug:
         print "{0} bytes writen".format(len)
     return len
 
@@ -553,6 +554,8 @@ def assert_response(patterns, timeout):
     timeout_tick = time.time() + timeout
     while True:
         line = port.readline()
+        if prcss_debug and len(line):
+            print line
         for pattern in patterns:
             if pattern in line:
                 return True
@@ -560,7 +563,7 @@ def assert_response(patterns, timeout):
             return False
 
 def print_usage():
-    print "Usage: {0} port [-a app.bin] [-b bootloader.bin] [-d driver.bin] [--bootloader-baudrate 921600] [--application-baudrate 115200]\n".format(sys.argv[0])
+    print "Usage: {0} port [-a app.bin] [-b bootloader.bin] [-d driver.bin] [--bootloader-baudrate 921600] [--application-baudrate 115200] [--noboot]\n".format(sys.argv[0])
     print "  examples: python {0} /dev/ttyUSB0 -a app.bin, to update app only".format(sys.argv[0])
     print "          : python {0} /dev/ttyUSB1 -b bootloader.bin -a app.bin, to update bootloader and app".format(sys.argv[0])
     print "          : python {0} /dev/ttyUSB0 -a app.bin -d driver.bin, to update app and driver".format(sys.argv[0])
@@ -570,15 +573,17 @@ if len(sys.argv) < 4:
     exit(1)
 
 if os.path.exists(sys.argv[1]) == False:
-    sys.stderr.write("error: port {0} does not exist\n".format(sys.agv[1]))
+    sys.stderr.write("error: port {0} does not exist\n".format(sys.argv[1]))
     exit(1)
-port = sys.argv[1]
+device = sys.argv[1]
 
 bootloader=None
 application=None
 driver=None
 bootloader_baudrate=921600
 application_baudrate=921600
+bootapp = True
+newboard = False
 
 i = 2
 update = 0
@@ -618,34 +623,43 @@ while i < len(sys.argv):
             sys.stderr.write("error: invalid bootload baudrate value {0}\n".format(sys.argv[i+1]))
             exit(1)
         i += 1
+    elif sys.argv[i] == "--noboot":
+        bootapp = False
+    elif sys.argv[i] == "--newboard":
+        newboard = True
     i += 1
 
 if update <= 0:
-    port.close()
     sys.exit(0)
 
 try:
-    port = serial.Serial(port, bootloader_baudrate, timeout = 0.05)
+    port = serial.Serial(device, bootloader_baudrate, timeout = 0.05)
 except:
-    sys.stderr.write("error: unable to open {0}\n".format(port))
+    sys.stderr.write("error: unable to open {0}\n".format(device))
     exit(1)
 
-port.write("a\r\n")
+port.write("a\r\n") #abort potential ongoing YMODEM transfer
 port.flushInput()
 port.write("help\r\n")
-if assert_response(["MICO bootloader"], 1) == False:
-    port.baudrate = application_baudrate
-    port.flushInput()
-    port.write("\r\n")
-    time.sleep(0.1)
-    port.write("reboot\r\n")
-    if assert_response(["reboot"] , 1) == False:
-        sys.stderr.write("error: target does not response, please make sure your port and baudrate settings are correct\n")
-        sys.exit(1)
-    port.baudrate = bootloader_baudrate
-    time.sleep(0.05)
-    port.write("         \n")
-    if assert_response(["MICO bootloader"], 1) == False:
+if assert_response(["YOS bootloader", "MICO bootloader", "read:"], 1) == False:
+    if application_baudrate != bootloader_baudrate:
+        port.baudrate = application_baudrate
+        port.flushInput()
+        port.write("dummycmd_for_flushing_purpose\r\n")
+        time.sleep(0.1)
+    if newboard == False:
+        port.write("reboot\r\n")
+        if assert_response(["reboot"] , 1) == False:
+            sys.stderr.write("error: failed to reboot your board, it did not respond to \"reboot\" command\n")
+            sys.exit(1)
+    if application_baudrate != bootloader_baudrate:
+        port.baudrate = bootloader_baudrate
+    time.sleep(0.02)
+    if newboard == False:
+        port.write("         \n")
+    elif newboard == True:
+        port.write("help\r\n")
+    if assert_response(["YOS bootloader", "MICO bootloader", "read:"], 1) == False:
         sys.stderr.write("error: target does not seam to have a working bootloader\n")
         sys.exit(1)
 port.flushInput()
@@ -653,20 +667,23 @@ port.flushInput()
 updates = [bootloader, application, driver]
 for i in range(len(updates)):
     if updates[i] != None:
-        print "updating {0} ...".format(updates[i])
-        port.write("{0}\n".format(i))
+        print "updating {0} with {1},newboard = {2} ...".format(device, updates[i],newboard)
+        if newboard == False:
+            port.write("{0}\n".format(i))
+        elif newboard == True:
+            port.write("write 0x13200\r\n")
         if assert_response(["Waiting for the file to be sent"], 1) == False:
             sys.stderr.write("error: waiting for target to enter into YMODEM recived mode failed\n")
             sys.exit(1)
         result = send_file(updates[i])
         if result == True:
-            result = "succeed"
+            print "updating {0} with {1} ... succeed".format(device, updates[i])
         else:
-            result = "failed"
-        print result
+            print "updating {0} with {1} ... failed".format(device, updates[i])
 
-port.write("boot\n")
-assert_response(["Booting......"], 1)
+if bootapp:
+    port.write("boot\n")
+    assert_response(["Booting......"], 1)
 port.close()
 sys.exit(0)
 

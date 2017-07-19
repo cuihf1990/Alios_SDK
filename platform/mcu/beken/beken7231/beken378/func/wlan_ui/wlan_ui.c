@@ -17,7 +17,13 @@
 #include "scan_task.h"
 #include "hal_machw.h"
 
-monitor_cb_t g_monitor_cb = 0;
+monitor_data_cb_t g_monitor_cb = 0;
+#ifdef CONFIG_YOS_MESH
+monitor_data_cb_t g_mesh_monitor_cb = 0;
+uint8_t g_mesh_bssid[6];
+#endif
+
+static monitor_data_cb_t g_mgnt_cb = 0;
 
 extern int connect_flag;
 extern struct assoc_ap_info assoc_ap;
@@ -203,16 +209,16 @@ uint32_t bk_wlan_is_sta(void)
 uint32_t bk_sta_cipher_is_open(void)
 {
     ASSERT(g_sta_param_ptr);
-    return (CONFIG_CIPHER_OPEN == g_sta_param_ptr->cipher_suite);
+    return (SECURITY_TYPE_NONE == g_sta_param_ptr->security);
 }
 
 uint32_t bk_sta_cipher_is_wep(void)
 {
     ASSERT(g_sta_param_ptr);
-    return (CONFIG_CIPHER_WEP == g_sta_param_ptr->cipher_suite);
+    return (SECURITY_TYPE_WEP == g_sta_param_ptr->security);
 }
 
-void bk_wlan_ap_init(network_InitTypeDef_st *inNetworkInitPara)
+void bk_wlan_ap_init(hal_wifi_init_type_t *inNetworkInitPara)
 {
     os_printf("Soft_AP_start\r\n");
 
@@ -239,8 +245,14 @@ void bk_wlan_ap_init(network_InitTypeDef_st *inNetworkInitPara)
     if(inNetworkInitPara)
     {
         g_ap_param_ptr->ssid.length = os_strlen(inNetworkInitPara->wifi_ssid);
+		if (g_ap_param_ptr->ssid.length > 32)
+			g_ap_param_ptr->ssid.length = 32;
+		
         os_memcpy(g_ap_param_ptr->ssid.array, inNetworkInitPara->wifi_ssid, g_ap_param_ptr->ssid.length);
         g_ap_param_ptr->key_len = os_strlen(inNetworkInitPara->wifi_key);
+		if (g_ap_param_ptr->key_len >= 64)
+			g_ap_param_ptr->key_len = 0;
+		
         if(g_ap_param_ptr->key_len < 8)
         {
             g_ap_param_ptr->cipher_suite = CONFIG_CIPHER_OPEN;
@@ -251,7 +263,7 @@ void bk_wlan_ap_init(network_InitTypeDef_st *inNetworkInitPara)
             os_memcpy(g_ap_param_ptr->key, inNetworkInitPara->wifi_key, g_ap_param_ptr->key_len);
         }
 
-        if(inNetworkInitPara->dhcpMode == DHCP_Server)
+        if(inNetworkInitPara->dhcp_mode == DHCP_SERVER)
         {
             g_wlan_general_param->dhcp_enable = 1;
         }
@@ -267,7 +279,7 @@ void bk_wlan_ap_init(network_InitTypeDef_st *inNetworkInitPara)
     sa_ap_init();
 }
 
-void bk_wlan_sta_init(network_InitTypeDef_st *inNetworkInitPara)
+void bk_wlan_sta_init(hal_wifi_init_type_t *inNetworkInitPara)
 {
     if(!g_sta_param_ptr)
     {
@@ -286,15 +298,21 @@ void bk_wlan_sta_init(network_InitTypeDef_st *inNetworkInitPara)
     if(inNetworkInitPara)
     {
         g_sta_param_ptr->ssid.length = os_strlen(inNetworkInitPara->wifi_ssid);
+		if (g_sta_param_ptr->ssid.length > 32)
+			g_sta_param_ptr->ssid.length = 32;
+		
         os_memcpy(g_sta_param_ptr->ssid.array,
                   inNetworkInitPara->wifi_ssid,
                   g_sta_param_ptr->ssid.length);
 
 
         g_sta_param_ptr->key_len = os_strlen(inNetworkInitPara->wifi_key);
+		if (g_sta_param_ptr->key_len > 64)
+			g_sta_param_ptr->key_len = 64;
+		
 		os_memcpy(g_sta_param_ptr->key, inNetworkInitPara->wifi_key, g_sta_param_ptr->key_len);
 
-        if(inNetworkInitPara->dhcpMode == DHCP_Client)
+        if(inNetworkInitPara->dhcp_mode == DHCP_CLIENT)
         {
             g_wlan_general_param->dhcp_enable = 1;
         }
@@ -310,19 +328,19 @@ void bk_wlan_sta_init(network_InitTypeDef_st *inNetworkInitPara)
     sa_station_init();
 }
 
-OSStatus bk_wlan_start(network_InitTypeDef_st *inNetworkInitPara)
+OSStatus bk_wlan_start(hal_wifi_init_type_t *inNetworkInitPara)
 {
-    if(inNetworkInitPara->wifi_mode == Soft_AP)
+    if(inNetworkInitPara->wifi_mode == SOFT_AP)
     {
     	hostapd_thread_stop();
 		supplicant_main_exit();
         bk_wlan_ap_init(inNetworkInitPara);
 
         os_printf("lwip_intf_initial\r\n");
-        ip_address_set(Soft_AP, 0, inNetworkInitPara->local_ip_addr,
+        ip_address_set(SOFT_AP, 0, inNetworkInitPara->local_ip_addr,
                        inNetworkInitPara->net_mask,
                        inNetworkInitPara->gateway_ip_addr,
-                       inNetworkInitPara->dnsServer_ip_addr);
+                       inNetworkInitPara->dns_server_ip_addr);
         
 
         os_printf("wpa_main_entry\r\n");
@@ -331,14 +349,14 @@ OSStatus bk_wlan_start(network_InitTypeDef_st *inNetworkInitPara)
         sm_build_broadcast_deauthenticate();
 		uap_ip_start();
     }
-    else if(inNetworkInitPara->wifi_mode == Station)
+    else if(inNetworkInitPara->wifi_mode == STATION)
     {
     	hostapd_thread_stop();
         supplicant_main_exit();
         sta_ip_down();
-        ip_address_set(Station, inNetworkInitPara->dhcpMode, inNetworkInitPara->local_ip_addr,
+        ip_address_set(STATION, inNetworkInitPara->dhcp_mode, inNetworkInitPara->local_ip_addr,
                        inNetworkInitPara->net_mask, inNetworkInitPara->gateway_ip_addr,
-                       inNetworkInitPara->dnsServer_ip_addr);
+                       inNetworkInitPara->dns_server_ip_addr);
         bk_wlan_sta_init(inNetworkInitPara);
         supplicant_main_entry(inNetworkInitPara->wifi_ssid);
     }
@@ -349,10 +367,77 @@ OSStatus bk_wlan_start(network_InitTypeDef_st *inNetworkInitPara)
 extern int sa_ap_inited();
 extern int sa_sta_inited();
 
+static void scan_cb(void *ctxt, void *user)
+{
+	struct scanu_rst_upload *scan_rst;
+	hal_wifi_scan_result_t apList;
+	int i, j;
+
+	apList.ap_list = NULL;
+	scan_rst = sr_get_scan_results();
+	if (scan_rst == NULL) {
+		apList.ap_num = 0;
+	} else {
+		apList.ap_num = scan_rst->scanu_num;
+	}
+	if (apList.ap_num > 0) {
+		apList.ap_list = os_malloc(sizeof(*apList.ap_list)*apList.ap_num);
+		for(i=0; i<scan_rst->scanu_num; i++) {
+			os_memcpy(apList.ap_list[i].ssid, scan_rst->res[i]->ssid, 32);
+			apList.ap_list[i].ap_power = scan_rst->res[i]->level;
+		}
+	}
+	if (apList.ap_list == NULL) {
+		apList.ap_num = 0;
+	}
+	ApListCallback(&apList);
+	if (apList.ap_list != NULL) {
+        os_free(apList.ap_list);
+		apList.ap_list = NULL;
+	}
+	sr_release_scan_results(scan_rst);
+}
+
+static void scan_adv_cb(void *ctxt, void *user)
+{
+	struct scanu_rst_upload *scan_rst;
+	hal_wifi_scan_result_adv_t apList;
+	int i, j;
+
+	apList.ap_list = NULL;
+	scan_rst = sr_get_scan_results();
+	if (scan_rst == NULL) {
+		apList.ap_num = 0;
+	} else {
+		apList.ap_num = scan_rst->scanu_num;
+	}
+	if (apList.ap_num > 0) {
+		apList.ap_list = os_malloc(sizeof(*apList.ap_list)*apList.ap_num);
+		for(i=0; i<scan_rst->scanu_num; i++) {
+			os_memcpy(apList.ap_list[i].ssid, scan_rst->res[i]->ssid, 32);
+			apList.ap_list[i].ap_power = scan_rst->res[i]->level;
+			os_memcpy(apList.ap_list[i].bssid, scan_rst->res[i]->bssid, 6);
+			apList.ap_list[i].channel = scan_rst->res[i]->channel;
+			apList.ap_list[i].security = scan_rst->res[i]->security;
+		}
+	}
+	if (apList.ap_list == NULL) {
+		apList.ap_num = 0;
+	}
+	ApListAdvCallback(&apList);
+	if (apList.ap_list != NULL) {
+        os_free(apList.ap_list);
+		apList.ap_list = NULL;
+	}
+	sr_release_scan_results(scan_rst);
+}
+
+
 void bk_wlan_start_scan(void)
 {
     SCAN_PARAM_T scan_param = {0};
 
+	mhdr_scanu_reg_cb(scan_cb, 0);
 	if ((sa_ap_inited() == 0) && (sa_sta_inited() == 0))
     	bk_wlan_sta_init(0);
 
@@ -360,7 +445,19 @@ void bk_wlan_start_scan(void)
     mt_msg_dispatch(SCANU_START_REQ, &scan_param);
 }
 
-void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
+void bk_wlan_start_adv_scan(void)
+{
+    SCAN_PARAM_T scan_param = {0};
+
+	mhdr_scanu_reg_cb(scan_adv_cb, 0);
+	if ((sa_ap_inited() == 0) && (sa_sta_inited() == 0))
+    	bk_wlan_sta_init(0);
+
+    os_memset(&scan_param.bssid, 0xff, ETH_ALEN);
+    mt_msg_dispatch(SCANU_START_REQ, &scan_param);
+}
+
+void bk_wlan_sta_init_adv(hal_wifi_init_type_adv_t *inNetworkInitParaAdv)
 {
 	int valid_ap = 1;
 	
@@ -387,28 +484,11 @@ void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
     g_sta_param_ptr->ssid.length = os_strlen(inNetworkInitParaAdv->ap_info.ssid);
     os_memcpy(g_sta_param_ptr->ssid.array, inNetworkInitParaAdv->ap_info.ssid, g_sta_param_ptr->ssid.length);
 
-    switch(inNetworkInitParaAdv->ap_info.security)
-    {
-    case SECURITY_TYPE_NONE:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_OPEN;
-        break;
-    case SECURITY_TYPE_WEP:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_WEP;
-        break;
-    case SECURITY_TYPE_WPA_TKIP:
-    case SECURITY_TYPE_WPA2_TKIP:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_TKIP;
-        break;
-    case SECURITY_TYPE_WPA_AES:
-    case SECURITY_TYPE_WPA2_AES:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_CCMP;
-        break;
-    case SECURITY_TYPE_WPA2_MIXED:
-        g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_MIXED;
-        break;
-    default:
+    g_sta_param_ptr->security = inNetworkInitParaAdv->ap_info.security;
+    if ((SECURITY_TYPE_AUTO < inNetworkInitParaAdv->ap_info.security) ||
+		(SECURITY_TYPE_NONE > inNetworkInitParaAdv->ap_info.security)) {
+		bk_printf("security %d\r\n", inNetworkInitParaAdv->ap_info.security);
 		valid_ap = 0;
-        break;
     }
 
 	if (valid_ap) {
@@ -424,7 +504,7 @@ void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
         g_wlan_general_param = (general_param_t *)os_malloc(sizeof(general_param_t));
     }
     g_wlan_general_param->role = CONFIG_ROLE_STA;
-    if(inNetworkInitParaAdv->dhcpMode == DHCP_Client)
+    if(inNetworkInitParaAdv->dhcp_mode == DHCP_CLIENT)
     {
         g_wlan_general_param->dhcp_enable = 1;
     }
@@ -438,16 +518,16 @@ void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
     sa_station_init();
 }
 
-OSStatus bk_wlan_start_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
+OSStatus bk_wlan_start_adv(hal_wifi_init_type_adv_t *inNetworkInitParaAdv)
 {
     hostapd_thread_stop();
     supplicant_main_exit();
     sta_ip_down();
-    ip_address_set(Station, inNetworkInitParaAdv->dhcpMode,
+    ip_address_set(STATION, inNetworkInitParaAdv->dhcp_mode,
                    inNetworkInitParaAdv->local_ip_addr,
                    inNetworkInitParaAdv->net_mask,
                    inNetworkInitParaAdv->gateway_ip_addr,
-                   inNetworkInitParaAdv->dnsServer_ip_addr);
+                   inNetworkInitParaAdv->dns_server_ip_addr);
 
     bk_wlan_sta_init_adv(inNetworkInitParaAdv);
     supplicant_main_entry(inNetworkInitParaAdv->ap_info.ssid);
@@ -455,30 +535,30 @@ OSStatus bk_wlan_start_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
     return 0;
 }
 
-OSStatus bk_wlan_get_ip_status(IPStatusTypedef *outNetpara, WiFi_Interface inInterface)
+OSStatus bk_wlan_get_ip_status(hal_wifi_ip_stat_t *outNetpara, hal_wifi_type_t inInterface)
 {
     uint8_t mac[6];
 	
     if(g_wlan_general_param->dhcp_enable)
     {
-        outNetpara->dhcp = DHCP_Server;
+        outNetpara->dhcp = DHCP_SERVER;
     }
     else
     {
-        outNetpara->dhcp = DHCP_Disable;
+        outNetpara->dhcp = DHCP_DISABLE;
     }
     ip_ntoa(g_wlan_general_param->ip_addr, outNetpara->ip, 16);
     ip_ntoa(g_wlan_general_param->ip_gw, outNetpara->gate, 16);
     ip_ntoa(g_wlan_general_param->ip_mask, outNetpara->mask, 16);
 
-    mico_wlan_get_mac_address(mac);
+    wifi_get_mac_address(mac);
 	sprintf(outNetpara->mac, "%02x%02x%02x%02x%02x%02x", mac[0],
 			mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     return 0;
 }
 
-OSStatus bk_wlan_get_link_status(LinkStatusTypeDef *outStatus)
+OSStatus bk_wlan_get_link_status(hal_wifi_link_stat_t *outStatus)
 {
     if(g_wlan_general_param->role == CONFIG_ROLE_AP)
     {
@@ -579,19 +659,192 @@ int bk_wlan_set_channel(int channel)
 /** @brief  Register the monitor callback function
  *        Once received a 802.11 packet call the registered function to return the packet.
  */
-void bk_wlan_register_monitor_cb(monitor_cb_t fn)
+void bk_wlan_register_monitor_cb(monitor_data_cb_t fn)
 {
     g_monitor_cb = fn;
 }
 
-monitor_cb_t bk_wlan_get_monitor_cb(void)
+monitor_data_cb_t bk_wlan_get_monitor_cb(void)
 {
     return g_monitor_cb;
+}
+
+#include "mm.h"
+
+static  uint32_t umac_rx_filter = 0;
+/** @brief  Register the monitor callback function
+ *        Once received a 802.11 packet call the registered function to return the packet.
+ */
+void bk_wlan_register_mgnt_monitor_cb(monitor_data_cb_t fn)
+{
+    g_mgnt_cb = fn;
+
+	if (fn != NULL) {
+		umac_rx_filter = mm_rx_filter_umac_get();
+		mm_rx_filter_umac_set(umac_rx_filter | NXMAC_ACCEPT_PROBE_REQ_BIT);
+	} else {
+		if (umac_rx_filter != 0) {
+			mm_rx_filter_umac_set(umac_rx_filter);
+		}
+	}
+}
+
+monitor_data_cb_t bk_wlan_get_mgnt_monitor_cb(void)
+{
+    return g_mgnt_cb;
+}
+
+#ifndef CONFIG_YOS_MESH
+int wlan_is_mesh_monitor_mode(void)
+{
+    return FALSE;
+}
+
+bool rxu_mesh_monitor(struct rx_swdesc *swdesc)
+{
+    return false;
+}
+
+monitor_data_cb_t wlan_get_mesh_monitor_cb(void)
+{
+    return NULL;
+}
+#else
+void wlan_register_mesh_monitor_cb(monitor_data_cb_t fn)
+{
+    g_mesh_monitor_cb = fn;
+}
+
+monitor_data_cb_t wlan_get_mesh_monitor_cb(void)
+{
+    return g_mesh_monitor_cb;
+}
+
+int wlan_is_mesh_monitor_mode(void)
+{
+    if (g_mesh_monitor_cb) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+int wlan_set_mesh_bssid(uint8_t *bssid)
+{
+    if (bssid == NULL) {
+        return -1;
+    }
+    memcpy(g_mesh_bssid, bssid, 6);
+    return 0;
+}
+
+uint8_t *wlan_get_mesh_bssid(void)
+{
+    return g_mesh_bssid;
+}
+
+bool rxu_mesh_monitor(struct rx_swdesc *swdesc)
+{
+    struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+    struct rx_hd *rhd = &dma_hdrdesc->hd;
+    struct rx_payloaddesc *payl_d = HW2CPU(rhd->first_pbd_ptr);
+    struct rx_cntrl_rx_status *rx_status = &rxu_cntrl_env.rx_status;
+    uint32_t *frame = payl_d->buffer;
+    struct mac_hdr *hdr = (struct mac_hdr *)frame;
+    uint8_t *local_bssid;
+    uint8_t *bssid;
+
+    if (wlan_is_mesh_monitor_mode() == FALSE) {
+        return false;
+    }
+
+    if(MAC_FCTRL_DATA_T == (hdr->fctl & MAC_FCTRL_TYPE_MASK)) {
+        local_bssid = wlan_get_mesh_bssid();
+        bssid = (uint8_t *)hdr->addr3.array;
+        if (memcmp(local_bssid, bssid, 6) == 0) {
+            return true;
+        }
+    } else if (MAC_FCTRL_ACK == (hdr->fctl & MAC_FCTRL_TYPESUBTYPE_MASK)) {
+        uint16_t local_addr[3];
+        uint16_t *addr;
+        uint32_t addr_low;
+        uint16_t addr_high;
+
+        addr = (uint16_t *)hdr->addr1.array;
+        addr_low = nxmac_mac_addr_low_get();
+        local_addr[0] = addr_low;
+        local_addr[1] = (addr_low & 0xffff0000) >> 16;
+        local_addr[2] = nxmac_mac_addr_high_getf();
+
+        if (memcmp(local_addr, addr, 6) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+#endif
+
+int bk_wlan_send_80211_raw_frame(uint8_t *buffer, int len)
+{
+	struct txl_frame_desc_tag *tx_frame;
+	uint8_t *pkt;
+	int txtype = TX_DEFAULT_24G;
+    int ret = 0;
+	
+    yunos_sched_disable();
+
+	tx_frame = txl_frame_get(txtype, len);
+    if (tx_frame == NULL) {
+        ret = 1;
+        goto exit;
+    }
+
+    pkt = (uint8_t *)tx_frame->txdesc.lmac.buffer->payload;
+	os_memcpy(pkt, buffer, len);
+
+    txl_frame_push(tx_frame, AC_VO);
+
+exit:
+    yunos_sched_enable();
+    return ret;
 }
 
 int bk_wlan_is_monitor_mode(void)
 {
     return (0 == g_monitor_cb) ? FALSE : TRUE;
 }
+
+int bk_wlan_power_off(void)
+{
+	return 0;
+}
+
+int bk_wlan_power_on(void)
+{
+	return 0;
+}
+
+int bk_wlan_suspend(void)
+{
+	supplicant_main_exit();
+	hostapd_thread_stop();
+	return 0;
+}
+
+int bk_wlan_suspend_station(void)
+{
+    supplicant_main_exit();
+
+	return 0;
+}
+
+int bk_wlan_suspend_softap(void)
+{
+	hostapd_thread_stop();
+
+	return 0;
+}
+
 // eof
 

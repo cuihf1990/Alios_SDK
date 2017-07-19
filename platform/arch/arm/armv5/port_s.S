@@ -17,6 +17,7 @@
 
 .global cpu_dis_interpt
 .global cpu_en_interpt
+.global yunos_stack_ovf_check
 
 .text
 
@@ -60,12 +61,14 @@ cpu_task_switch:
     STMFD SP!,{LR}             
     STMFD SP!,{R0-R12,LR}       
     MRS   R0,CPSR
-    STMFD SP!,{R0}                 @push current cpsr         
+    STMFD SP!,{R0}                 @push current cpsr
 
     /* g_active_task->task_stack = SP */
     LDR R0, =g_active_task
     LDR R0, [R0]
     STR SP, [R0]
+
+    BL yunos_stack_ovf_check
 
 cpu_intrpt_switch:
     LDR     R0, =g_preferred_ready_task

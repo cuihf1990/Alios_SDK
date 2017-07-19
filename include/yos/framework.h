@@ -43,6 +43,8 @@ extern "C"
 #define CODE_SYS_ON_START_FAILED     4
 #define CODE_SYS_ON_IDLE             3
 #define CODE_SYS_ON_START_FOTA       5
+#define CODE_SYS_ON_ALINK_ONLINE     6
+#define CODE_SYS_ON_ALINK_OFFLINE    7
 
 /** WiFi event */
 #define  EV_WIFI                0x0002
@@ -55,9 +57,10 @@ extern "C"
 /** Mesh event */
 #define  EV_MESH                0x0003
 #define  CODE_MESH_STARTED        1
-#define  CODE_MESH_CONNECTED      2
-#define  CODE_MESH_ATTACHED       3
-#define  CODE_MESH_DETACHED       4
+#define  CODE_MESH_ATTACHED       2
+#define  CODE_MESH_DETACHED       3
+#define  CODE_MESH_CONNECTED      4
+#define  CODE_MESH_DISCONNECTED   5
 
 /** user app start 0x1000 - 0x7fff */
 #define EV_USER     0x1000
@@ -231,7 +234,7 @@ int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
  * @retval !0 work handle
  * @note  this function can be called from non-yos-main-loop context.
  */
-void *yos_schedule_work(int ms, yos_call_t action, void *arg1,
+void *yos_loop_schedule_work(int ms, yos_call_t action, void *arg1,
                         yos_call_t fini_cb, void *arg2);
 
 /**

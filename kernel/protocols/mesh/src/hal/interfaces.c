@@ -71,6 +71,8 @@ static hal_context_t *new_hal_context(ur_mesh_hal_module_t *module)
         dlist_init(&hal->send_queue[i]);
     }
 
+    dlist_init(&hal->recv_queue);
+
     return hal;
 }
 
@@ -80,23 +82,23 @@ void interface_init(void)
     hal_context_t        *hal_context;
     int16_t              mtu;
 
-    module = hal_ur_mesh_get_default_module();
+    module = hal_umesh_get_default_module();
     while (module) {
         if (module->type <= MEDIA_TYPE_15_4) {
             hal_context = new_hal_context(module);
             hal_context->channel_list.num =
-                hal_ur_mesh_get_bcast_chnlist(module,
-                                              &hal_context->channel_list.channels);
-            memcpy(&hal_context->mac_addr, hal_ur_mesh_get_mac_address(module),
+                hal_umesh_get_bcast_chnlist(module,
+                                            &hal_context->channel_list.channels);
+            memcpy(&hal_context->mac_addr, hal_umesh_get_mac_address(module),
                    sizeof(hal_context->mac_addr));
 
             // mesh forwarder
-            mtu = hal_ur_mesh_get_bcast_mtu(module);
+            mtu = hal_umesh_get_bcast_mtu(module);
             if (mtu < 0) {
                 mtu = 127;
             }
-            if (hal_ur_mesh_get_ucast_mtu(module) > mtu) {
-                mtu = hal_ur_mesh_get_ucast_mtu(module);
+            if (hal_umesh_get_ucast_mtu(module) > mtu) {
+                mtu = hal_umesh_get_ucast_mtu(module);
             }
             hal_context->frame.data = (uint8_t *)ur_mem_alloc(mtu);
             memset(hal_context->frame.data, 0 , mtu);
@@ -129,7 +131,7 @@ void interface_init(void)
             }
         }
 
-        module = hal_ur_mesh_get_next_module(module);
+        module = hal_umesh_get_next_module(module);
     }
 }
 
@@ -139,14 +141,17 @@ static void set_network_configs(network_context_t *network)
         case MEDIA_TYPE_WIFI:
             network->migrate_interval = WIFI_MIGRATE_WAIT_TIMEOUT;
             network->notification_interval = WIFI_NOTIFICATION_TIMEOUT;
+            network->net_scan_interval = WIFI_NET_SCAN_TIMEOUT;
             break;
         case MEDIA_TYPE_BLE:
             network->migrate_interval = BLE_MIGRATE_WAIT_TIMEOUT;
             network->notification_interval = BLE_NOTIFICATION_TIMEOUT;
+            network->net_scan_interval = BLE_NET_SCAN_TIMEOUT;
             break;
         case MEDIA_TYPE_15_4:
             network->migrate_interval = IEEE154_MIGRATE_WAIT_TIMEOUT;
             network->notification_interval = IEEE154_NOTIFICATION_TIMEOUT;
+            network->net_scan_interval = IEEE154_NET_SCAN_TIMEOUT;
             break;
         default:
             break;
@@ -194,14 +199,20 @@ static void cleanup_one_queue(message_queue_t *queue)
 static void cleanup_queues(hal_context_t *hal)
 {
     int i;
+
     for (i = 0; i < QUEUE_SIZE; i++) {
         cleanup_one_queue(&hal->send_queue[i]);
     }
+
+    cleanup_one_queue(&hal->recv_queue);
 }
 
 void interface_stop(void)
 {
     hal_context_t *hal;
+
+    reset_network_context();
+
     slist_for_each_entry(&g_hals_list, hal, hal_context_t, next) {
         cleanup_queues(hal);
         hal->send_message = NULL;
@@ -224,12 +235,12 @@ void interface_deinit(void)
         hal = slist_first_entry(&g_hals_list, hal_context_t, next);
         slist_del(&hal->next, &g_hals_list);
 
-        mtu = hal_ur_mesh_get_bcast_mtu(hal->module);
+        mtu = hal_umesh_get_bcast_mtu(hal->module);
         if (mtu < 0) {
             mtu = 127;
         }
-        if (hal_ur_mesh_get_ucast_mtu(hal->module) > mtu) {
-            mtu = hal_ur_mesh_get_ucast_mtu(hal->module);
+        if (hal_umesh_get_ucast_mtu(hal->module) > mtu) {
+            mtu = hal_umesh_get_ucast_mtu(hal->module);
         }
         ur_mem_free(hal->frame.data, mtu);
         hal->frame.data = NULL;
@@ -263,6 +274,7 @@ void reset_network_context(void)
         network->attach_candidate = NULL;
         network->candidate_meshnetid = BCAST_NETID;
         network->migrate_times = 0;
+        network->channel = -1;
     }
 }
 

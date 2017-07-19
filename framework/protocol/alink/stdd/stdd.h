@@ -29,8 +29,7 @@
 #define STDD_PROFILE_H
 #include <stdint.h>
 #include <unistd.h>
-#include "list.h"
-#include "log.h"
+#include "yos/list.h"
 #include "service.h"
 #include "stdd_datatype.h"
 #include "devmgr.h"
@@ -53,48 +52,66 @@ extern "C"
 #define DEVICE_KEY_CONFIG_FILE_NAME "proxy_config.lua"
 #define DEVICE_KEY_CONFIG_NAME      "key_config"
 #define DEVICE_SECRET_NAME          "secret"
-const char *stdd_get_subdev_secret(uint32_t short_model, char *secret_buff, uint32_t buff_size);
+const char *stdd_get_subdev_secret(uint32_t short_model, char *secret_buff,
+                                   uint32_t buff_size);
 
 //load新的profile
 int32_t stdd_update_global_profile(const char *profile_path);
-int32_t stdd_update_device_profile(uint8_t dev_type, uint32_t model_id, const char *profile_path);
-int32_t stdd_add_device_profile(uint8_t dev_type, uint32_t model_id, const char *profile_path);
+int32_t stdd_update_device_profile(uint8_t dev_type, uint32_t model_id,
+                                   const char *profile_path);
+int32_t stdd_add_device_profile(uint8_t dev_type, uint32_t model_id,
+                                const char *profile_path);
 int32_t stdd_check_device_profile(uint8_t dev_type, uint32_t model_id);
-int32_t stdd_convert_attrname_cloud2terminal(uint32_t model_id, const char *src_attr,
-    uint8_t *endpoint_id, char *dest_attr, uint32_t max_attr_len);
-int32_t stdd_convert_attrname_terminal2cloud(uint32_t model_id, uint16_t endpoint_id,
-    const char *src_attr, char *dest_attr, uint32_t max_attr_len);
-int32_t stdd_convert_cmdname_terminal2cloud(uint32_t model_id, uint16_t endpoint_id,
-    const char *cmd_name, char *dest_attr, uint32_t max_attr_len);
-int32_t stdd_convert_rpcname_cloud2terminal(int32_t model_id, const char *user_rpc,
-    uint8_t *endpoint_id, char *cmd_name, unsigned max_cmd_len);
-int32_t stdd_get_attr_mapping_set(uint32_t short_model, const char *alink_attr, uint8_t *endpoint_id,
-    char *name_array[], int *array_size);
-int32_t stdd_get_cmd_mapping_name(uint32_t short_model, const char *cmd_name, uint8_t *endpoint_id,
-    char *target_cmd_name, uint32_t max_cmd_len);
-int32_t stdd_get_alink_attr_set(uint32_t short_model, uint16_t endpoint_id, const char *cmdname_or_attrname,
-    char *name_array[], int *array_size);
+int32_t stdd_convert_attrname_cloud2terminal(uint32_t model_id,
+                                             const char *src_attr,
+                                             uint8_t *endpoint_id, char *dest_attr, uint32_t max_attr_len);
+int32_t stdd_convert_attrname_terminal2cloud(uint32_t model_id,
+                                             uint16_t endpoint_id,
+                                             const char *src_attr, char *dest_attr, uint32_t max_attr_len);
+int32_t stdd_convert_cmdname_terminal2cloud(uint32_t model_id,
+                                            uint16_t endpoint_id,
+                                            const char *cmd_name, char *dest_attr, uint32_t max_attr_len);
+int32_t stdd_convert_rpcname_cloud2terminal(int32_t model_id,
+                                            const char *user_rpc,
+                                            uint8_t *endpoint_id, char *cmd_name, unsigned max_cmd_len);
+int32_t stdd_get_attr_mapping_set(uint32_t short_model, const char *alink_attr,
+                                  uint8_t *endpoint_id,
+                                  char *name_array[], int *array_size);
+int32_t stdd_get_cmd_mapping_name(uint32_t short_model, const char *cmd_name,
+                                  uint8_t *endpoint_id,
+                                  char *target_cmd_name, uint32_t max_cmd_len);
+int32_t stdd_get_alink_attr_set(uint32_t short_model, uint16_t endpoint_id,
+                                const char *cmdname_or_attrname,
+                                char *name_array[], int *array_size);
 
-int stdd_get_device_attr(const char *uuid, const char *attr_name, char *attr_value_buff, int buff_size);
+int stdd_get_device_attr(const char *uuid, const char *attr_name,
+                         char *attr_value_buff, int buff_size);
 
-int32_t stdd_get_custom_attr(const char *dev_id, uint32_t model_id, const char *attr_name);
-int32_t stdd_set_custom_attr(const char *dev_id, uint32_t model_id, const char *attr_name, const char *attr_value);
-int32_t stdd_exec_custom_cmd(const char *dev_id, uint32_t model_id, const char *cmd_name, const char *cmd_args);
-int32_t stdd_report_custom_event(const char *dev_id, uint32_t model_id, unsigned char endpoint_id,
-            const char *event_name, const char *event_args);
-int32_t stdd_report_custom_attr(const char *dev_id, uint32_t model_id, unsigned char endpoint_id,
-        const char *attr_name, const char *attr_value);
+int32_t stdd_get_custom_attr(const char *dev_id, uint32_t model_id,
+                             const char *attr_name);
+int32_t stdd_set_custom_attr(const char *dev_id, uint32_t model_id,
+                             const char *attr_name, const char *attr_value);
+int32_t stdd_exec_custom_cmd(const char *dev_id, uint32_t model_id,
+                             const char *cmd_name, const char *cmd_args);
+int32_t stdd_report_custom_event(const char *dev_id, uint32_t model_id,
+                                 unsigned char endpoint_id,
+                                 const char *event_name, const char *event_args);
+int32_t stdd_report_custom_attr(const char *dev_id, uint32_t model_id,
+                                unsigned char endpoint_id,
+                                const char *attr_name, const char *attr_value);
 int stdd_forward_device_status(dev_info_t *devinfo,
-        const char *attr_name, const char *attr_value);
+                               const char *attr_name, const char *attr_value);
 int stdd_forward_device_event(dev_info_t *devinfo,
-    const char *event_name, const char *event_value);
+                              const char *event_name, const char *event_value);
 
 
 /*json格式，属性名称数组*/
-int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff, int buff_size);
+int stdd_get_device_attrset(const char *devid_or_uuid, char *attrset_buff,
+                            int buff_size);
 
 /*json format, get sub-device RPCs*/
-int stdd_get_device_service(dev_info_t *devinfo, char *service_buff, int buff_size);
+int stdd_get_device_service(dev_info_t *devinfo, char *service_buff,
+                            int buff_size);
 
 /*获取所有设备信息回掉函数,Topic:  /getDeviceDataArray   APP  ---> GW Client */
 int stdd_get_all_device_state(char *out_buffer, int *buffer_len);
@@ -109,7 +126,8 @@ int stdd_get_device_data_array(const char *payload);
 //app -> gw, payload:{"uuid":"","attrSet":["attrName",...],"attrName":{"value":"","when":""},...}
 int stdd_set_device_status(const char *devid, const char *payload);
 
-int stdd_get_device_profile_name(uint8_t dev_type, uint32_t model_id, char *file_name, int max_name_length);
+int stdd_get_device_profile_name(uint8_t dev_type, uint32_t model_id,
+                                 char *file_name, int max_name_length);
 
 
 void *stdd_new_buff(unsigned int buff_size);

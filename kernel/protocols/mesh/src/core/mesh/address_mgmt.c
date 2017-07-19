@@ -177,7 +177,7 @@ static ur_error_t send_address_query(network_context_t *network,
     } else {
         return UR_ERROR_FAIL;
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -251,7 +251,7 @@ ur_error_t handle_address_query(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     addr_query = (mm_addr_query_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_ADDR_QUERY);
+                                                       TYPE_ADDR_QUERY);
     target_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
     ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
 
@@ -325,7 +325,7 @@ static ur_error_t send_address_query_response(network_context_t *network,
         attach_node->meshnetid != INVALID_NETID) {
         length += sizeof(mm_node_id_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -385,9 +385,10 @@ ur_error_t handle_address_query_response(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     attach_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                             TYPE_ATTACH_NODE_ID);
+                                                   TYPE_ATTACH_NODE_ID);
     target_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
-    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                  TYPE_TARGET_UEID);
 
     if (target_id == NULL || target_ueid == NULL) {
         return UR_ERROR_FAIL;
@@ -456,7 +457,7 @@ ur_error_t send_address_notification(network_context_t *network,
     if (network->attach_node) {
         length += sizeof(mm_node_id_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_3);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -528,10 +529,13 @@ ur_error_t handle_address_notification(message_t *message)
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     attach_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                               TYPE_ATTACH_NODE_ID);
-    target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
-    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
-    hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_DEF_HAL_TYPE);
+                                                     TYPE_ATTACH_NODE_ID);
+    target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_NODE_ID);
+    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                  TYPE_TARGET_UEID);
+    hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                   TYPE_DEF_HAL_TYPE);
 
     if (target_node == NULL || target_ueid == NULL || hal_type == NULL) {
         return UR_ERROR_FAIL;
@@ -565,9 +569,10 @@ static void handle_addr_cache_timer(void *args)
     sid_node_t        *node;
     uint8_t           timeout;
     network_context_t *network;
+    slist_t           *tmp;
 
     g_ac_state.timer = NULL;
-    slist_for_each_entry(&g_ac_state.cache_list, node, sid_node_t, next) {
+    slist_for_each_entry_safe(&g_ac_state.cache_list, tmp, node, sid_node_t, next) {
         switch (node->type) {
             case MEDIA_TYPE_WIFI:
                 timeout = WIFI_ADDR_CACHE_ALIVE_TIMEOUT;

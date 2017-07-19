@@ -9,6 +9,11 @@
 #define SCTRL_PRT      os_null_printf
 #endif
 
+#define DPLL_DELAY_EN                         1
+
+#define DPLL_DELAY_TIME_10US	              120
+#define DPLL_DELAY_TIME_200US	              3400
+
 #define SCTRL_BASE                            (0x00800000)
 
 #define SCTRL_CHIP_ID                         (SCTRL_BASE + 00 * 4)
@@ -119,6 +124,7 @@
 
 #define SCTRL_ANALOG_CTRL0                    (SCTRL_BASE + 22 * 4)
 #define SPI_TRIG_BIT                             (1 << 19)
+#define SPI_DET_EN                               (1 << 4)
 #define SCTRL_ANALOG_CTRL1                    (SCTRL_BASE + 23 * 4)
 #define SPI_RST_BIT                              (1 << 25)
 #define DCO_CNTI_POSI                            (16)

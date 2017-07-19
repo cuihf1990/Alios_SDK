@@ -98,24 +98,26 @@ void config_exit(void)
 
 static void config_dump(void)
 {
-    LOGD(MODULE_NAME, "~~~~~dump device config~~~~~");
-    LOGD(MODULE_NAME, "magic: %s", main_config.magic);
-    LOGD(MODULE_NAME, "version: %d", main_config.version);
-    LOGD(MODULE_NAME, "log: %d", main_config.df.ulog.log);
-    LOGD(MODULE_NAME, "uuid: %s", main_config.uuid);
-    LOGD(MODULE_NAME, "token: %s", main_config.token);
-    LOGD(MODULE_NAME, "alinkserver: %s", main_config.alinkserver);
-    LOGD(MODULE_NAME, "heartbeat: %d", main_config.heartbeat_interval);
-    LOGD(MODULE_NAME, "reqtimeout: %d", main_config.reqtimeout_interval);
-    LOGD(MODULE_NAME, "dev_version: %s", main_config.dev_version);
-    LOGD(MODULE_NAME, "ota_version: %s", main_config.ota_version);
-    LOGD(MODULE_NAME, "crc: %d", main_config.crc);
-    LOGD(MODULE_NAME, "~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    LOGI(MODULE_NAME, "~~~~~dump device config~~~~~");
+    LOGI(MODULE_NAME, "magic: %s", main_config.magic);
+    LOGI(MODULE_NAME, "version: %d", main_config.version);
+    LOGI(MODULE_NAME, "log: %d", main_config.df.ulog.log);
+    LOGI(MODULE_NAME, "uuid: %s", main_config.uuid);
+    LOGI(MODULE_NAME, "token: %s", main_config.token);
+    LOGI(MODULE_NAME, "alinkserver: %s", main_config.alinkserver);
+    LOGI(MODULE_NAME, "heartbeat: %d", main_config.heartbeat_interval);
+    LOGI(MODULE_NAME, "reqtimeout: %d", main_config.reqtimeout_interval);
+    LOGI(MODULE_NAME, "dev_version: %s", main_config.dev_version);
+    LOGI(MODULE_NAME, "ota_version: %s", main_config.ota_version);
+    LOGI(MODULE_NAME, "crc: %d", main_config.crc);
+    LOGI(MODULE_NAME, "~~~~~~~~~~~~~~~~~~~~~~~~~~");
 }
 
 int config_update(void)
 {
     main_config.crc = utils_crc16((uint8_t *) &main_config, CONFIG_LEN);
+
+    LOGI(MODULE_NAME, "we will update local config");
     return os_config_write((const char *)&main_config, sizeof(main_config));
 }
 
@@ -241,6 +243,14 @@ char *config_get_main_uuid(void)
         config_init();
     }
     return main_config.uuid;
+}
+
+void config_reset_main_uuid()
+{
+    if (!init) {
+        config_init();
+    }
+    memset(main_config.uuid,0,PRODUCT_UUID_LEN);
 }
 
 int config_set_main_uuid(char *uuid)

@@ -102,7 +102,8 @@ const uint8_t rxv2macrate[] = {
 };
 #endif
 
-static uint16_t g_entry_id = 0;
+static uint32_t g_entry_id = 0;
+MONITOR_PTH_T *g_monitor_pth = 0;
 
 /*
  * FUNCTION DEFINITIONS
@@ -369,6 +370,186 @@ uint8_t hal_machw_search_addr(struct mac_addr *addr)
     return (sta_idx);
 }
 
+void hal_init_monitor_buf(void)
+{
+	uint32_t size;
+	
+	if(g_monitor_pth)
+	{
+		return;
+	}
+
+	size = sizeof(MONITOR_PTH_T)
+				* (KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1);
+	g_monitor_pth = (MONITOR_PTH_T *)os_zalloc(size);
+	ASSERT(g_monitor_pth);
+}
+
+void hal_uninit_monitor_buf(void)
+{
+	if(g_monitor_pth)
+	{
+		os_free(g_monitor_pth);
+		
+		g_monitor_pth = 0;
+	}
+}
+
+uint32_t hal_monitor_get_id(uint64_t address)
+{
+	MONITOR_PTH_T *l_pth;
+	uint32_t addr_count, i;
+	uint32_t index = 0;
+
+	l_pth = g_monitor_pth;
+	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
+	for(i = 0; i < addr_count; i ++)
+	{
+		if(address == l_pth[i].mac_addr)
+		{
+			index = i + 1;
+			break;
+		}
+	}
+	
+	return index;
+}
+
+uint32_t hal_monitor_get_pth_id(struct mac_hdr *machdr)
+{
+	uint8_t *addr = 0;
+	uint32_t index;
+	uint32_t ds_status;
+	uint64_t mac_address = 0;
+
+	ds_status = (machdr->fctl >> 8) & 0x03;	
+	switch(ds_status)
+	{
+		case 0:/*ToDS FromDS:0 0 ibss*/
+			addr = (uint8_t *)&machdr->addr3;
+			break;
+			
+		case 1:/*ToDS FromDS:1 0 infra*/
+			addr = (uint8_t *)&machdr->addr1;
+			break;
+			
+		case 2:/*ToDS FromDS:0 1 infra*/
+			addr = (uint8_t *)&machdr->addr2;
+			break;
+			
+		case 3:/*ToDS FromDS:1 1 wds*/
+		default:
+			break;
+	}
+	
+	if(0 == addr)
+	{
+		return 0;
+	}
+	os_memcpy(&mac_address, addr, sizeof(machdr->addr2));
+
+	index = hal_monitor_get_id(mac_address);
+	
+	return index;
+}
+
+uint32_t hal_monitor_record_count(struct mac_hdr *machdr)
+{
+	uint32_t index;
+
+	index = hal_monitor_get_pth_id(machdr);
+	if(index)
+	{
+		g_monitor_pth[index - 1].count += 1; 
+	}
+	
+	return g_monitor_pth[index - 1].count;
+}
+
+uint32_t hal_monitor_get_iv_len(struct mac_hdr *machdr)
+{
+	uint32_t index;
+	uint32_t len = 0;
+	uint32_t cipher_type;
+
+	index = hal_monitor_get_pth_id(machdr);
+	if(index)
+	{
+		cipher_type = g_monitor_pth[index - 1].group_cipher_type; 
+		if((CTYPERAM_WEP == cipher_type)
+			|| (CTYPERAM_TKIP == cipher_type))
+	{
+			len = 4;
+	}
+		else if(CTYPERAM_CCMP == cipher_type)
+		{
+			len = 8;
+		}
+	}
+	return len;
+}
+
+uint32_t hal_monitor_printf_buffering_mac_address(void)
+{
+	MONITOR_PTH_T *l_pth;
+	uint32_t *cnt_of_ap;
+	uint32_t addr_count, i;
+
+	if(0 == g_monitor_pth)
+	{
+		return MONITOR_FAILURE;
+	}
+
+	l_pth = g_monitor_pth;
+	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
+	
+	return MONITOR_SUCCESS;
+}
+
+uint32_t hal_monitor_record_pth_info(uint64_t address,
+	uint32_t index, uint8_t grp_cipher_type)
+{
+	MONITOR_PTH_T *local_pth;
+	
+	if(0 == g_monitor_pth)
+	{
+		return MONITOR_FAILURE;
+	}
+	
+	local_pth = g_monitor_pth;
+	local_pth[index].mac_addr = address;
+	local_pth[index].count = 1;
+	local_pth[index].group_cipher_type = grp_cipher_type;
+
+	return MONITOR_SUCCESS;
+}
+
+uint32_t hal_monitor_is_including_mac_address(uint64_t address)
+{
+	uint32_t addr_count, i;
+	uint32_t hit_flag = 0;
+	MONITOR_PTH_T *local_pth;
+
+	if(0 == g_monitor_pth)
+	{
+		goto check_out;
+	}
+
+	local_pth = g_monitor_pth;
+	addr_count = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
+	for(i = 0; i < addr_count; i ++)
+	{
+		if(address == local_pth[i].mac_addr)
+		{
+			hit_flag = 1;
+			break;
+		}
+	}
+	
+check_out:
+	return hit_flag;
+}
+
 void hal_program_cipher_key
 (
     uint8_t   useDefaultKey,   // Use Default Key
@@ -400,16 +581,26 @@ void hal_program_cipher_key
  
 uint16_t hal_get_secret_key_entry_id(void)
 {	
-	uint16_t entry_id;
+	uint16_t entry_id = 0;
+	uint32_t i, num, minv;
+	MONITOR_PTH_T *local_pth;
 
-	entry_id = KEY_ENTRY_MIN_ID + g_entry_id;
-	if(KEY_ENTRY_MAX_ID == entry_id)
+	local_pth = g_monitor_pth;
+	minv = local_pth[0].count;
+	num = KEY_ENTRY_MAX_ID - KEY_ENTRY_MIN_ID + 1;
+
+	for(i = 0; i < num; i ++)
 	{
-		g_entry_id = 0;
+		if(0 == local_pth[i].count)
+		{
+			entry_id = i;
+			break;
 	}
-	else
+		else if(local_pth[i].count < minv)
 	{
-		g_entry_id += 1;
+			minv = local_pth[i].count;
+			entry_id = i;
+		}
 	}	
 
 	return entry_id;
@@ -418,11 +609,15 @@ uint16_t hal_get_secret_key_entry_id(void)
 void hal_update_secret_key(uint64_t macAddress,
 	uint8_t cipherType)
 {	
-	uint16_t key_index;
+	uint16_t key_index;	
+	uint16_t entry_id;	
 	uint32_t    pKey[4] = {0xabc47fd0, 0x57498892, 
 							0x11320490, 0x10815562};
-	
+
 	key_index = hal_get_secret_key_entry_id();
+	entry_id = key_index + KEY_ENTRY_MIN_ID;
+
+	hal_monitor_record_pth_info(macAddress, key_index, cipherType);
 
 	hal_program_cipher_key(1,	          // useDefaultKey
 					pKey,
@@ -430,7 +625,7 @@ void hal_update_secret_key(uint64_t macAddress,
 					1,					   // cipherLen
 					0,					   // sppRAM
 					cipherType,		 	   // vlanIDRAM
-					key_index,             // keyIndexRAM
+					entry_id,              // keyIndexRAM
 					cipherType,		       // cipherType
 					1,					   // newWrite
 					0); 				   // newRead
@@ -441,7 +636,7 @@ void hal_update_secret_key(uint64_t macAddress,
 					1,					   // cipherLen
 					0,					   // sppRAM
 					cipherType,		 	   // vlanIDRAM
-					key_index,             // keyIndexRAM
+					entry_id,			   // keyIndexRAM
 					cipherType,		       // cipherType
 					1,					   // newWrite
 					0); 				   // newRead
@@ -502,6 +697,10 @@ void hal_init_vlan_cipher(uint8_t useDefaultKey,
 
 void hal_init_cipher_keys(void)
 {
+    // reset Key storage RAM
+    nxmac_key_sto_ram_reset_setf(1);  
+	g_entry_id = 0;
+
 	hal_init_vlan_cipher(0,0,0); // null key
 	hal_init_vlan_cipher(0,1,1); // wep
 	hal_init_vlan_cipher(0,2,2); // tkip
@@ -511,7 +710,9 @@ void hal_init_cipher_keys(void)
 void hal_machw_enter_monitor_mode(void)
 {	
     os_printf("hal_machw_enter_monitor_mode\r\n");
-
+	g_entry_id = 0;
+	hal_init_monitor_buf();
+	
     nxmac_enable_imp_pri_tbtt_setf(0); // 0xC0008074
     nxmac_enable_imp_sec_tbtt_setf(0);
 
@@ -524,7 +725,7 @@ void hal_machw_enter_monitor_mode(void)
     // Enable reception of all frames (i.e. monitor mode)
     mm_rx_filter_umac_set(0xFFFFFFFF & ~(NXMAC_EXC_UNENCRYPTED_BIT
     									| NXMAC_ACCEPT_BAR_BIT 
-                                        //| NXMAC_ACCEPT_ERROR_FRAMES_BIT
+    									| NXMAC_ACCEPT_ERROR_FRAMES_BIT
                                         | NXMAC_ACCEPT_BA_BIT 
                                         | NXMAC_ACCEPT_CTS_BIT
                                         | NXMAC_ACCEPT_RTS_BIT
@@ -537,10 +738,7 @@ void hal_machw_enter_monitor_mode(void)
                                         | NXMAC_ACCEPT_CFWO_DATA_BIT));
     
 	// set default mode of operation
-    nxmac_abgn_mode_setf(MODE_802_11N_2_4);// MODE_802_11N_5
-
-    // reset Key storage RAM
-    nxmac_key_sto_ram_reset_setf(1);    
+    nxmac_abgn_mode_setf(MODE_802_11N_5);
 
 	hal_init_cipher_keys();
 }
@@ -562,6 +760,8 @@ void hal_machw_exit_monitor_mode(void)
 
     // Enable reception of some frames (i.e. active mode)
     mm_rx_filter_umac_set(MM_RX_FILTER_ACTIVE);
+	
+	hal_uninit_monitor_buf();
 }
 
 bool hal_machw_sleep_check(void)
@@ -599,8 +799,6 @@ void hal_assert_rec(void)
     GLOBAL_INT_DISABLE();
 
     // Display a trace message showing the error
-    //os_printf("ASSERT (%s) at %s:%d\n", condition, file, line);
-
     // Check if a recovery is already pending
     if (!(ke_evt_get() & KE_EVT_RESET_BIT))
     {

@@ -108,6 +108,7 @@ static void CASE_aosapi_kernel_queue_param()
 	ret = yos_queue_recv((yos_queue_t*)&tmp_sem, YUNOS_WAIT_FOREVER, &recv_msg, &recv_size);
 	YUNIT_ASSERT_MSG(ret==YUNOS_KOBJ_TYPE_ERR, "ret=%d", ret);
 	yos_sem_free(&tmp_sem);
+        yos_queue_free(&queue);
 
 	/* yos_queue_free invalid param test */
 #if 0

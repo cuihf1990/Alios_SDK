@@ -26,19 +26,26 @@ static void *co_ptr;
 
 static uint8_t mm_opr_case1(void)
 {
-    void   *ptr;
+    char   *ptr;
     kstat_t ret;
+    char    tmp;
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
 
     ptr = k_mm_alloc(pmmhead, 64);
     MYASSERT(ptr != NULL);
+    //for vagrind test
+    //ptr[64] = ptr[-1];
 
     k_mm_free(pmmhead, ptr);
 
+    yunos_deinit_mm_head(pmmhead);
+
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
     MYASSERT(ret == YUNOS_SUCCESS);
+
+    yunos_deinit_mm_head(pmmhead);
 
     return 0;
 }
@@ -61,11 +68,12 @@ static uint8_t mm_opr_case2(void)
         }
     }
 
-    cnt--;
     do {
         k_mm_free(pmmhead, r_ptr[--cnt]);
 
     } while (cnt > 0);
+
+    yunos_deinit_mm_head(pmmhead);
 
     return 0;
 }
@@ -118,7 +126,7 @@ static void task_mm_co1_entry(void *arg)
         break;
     }
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_mm_co2_entry(void *arg)
@@ -143,7 +151,9 @@ static void task_mm_co2_entry(void *arg)
     PRINT_RESULT(MODULE_NAME_CO, PASS);
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
+
+    yunos_deinit_mm_head(pmmhead);
 }
 
 void mm_coopr_test(void)

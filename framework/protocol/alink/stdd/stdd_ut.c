@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -17,7 +33,8 @@ static LIST_HEAD(endpoint_profile_head);
 void *alink_cb_func[ALINK_CB_MAX_NUM] = {NULL};
 
 //all
-char attr_profile[] = "[{\"cluster_id\":\"fe01\",\"attr_set\":[{\"attr_id\":\"0000\",\"attr_name\":\"NeighborTableSize\",\"data_type\":\"uint8\"},{\"attr_id\":\"0x0001\",\"attr_name\":\"NeighborTable\",\"data_type\":\"array\",\"element\":{\"data_type\":\"struct\",\"element\":[{\"element_name\":\"extAddr\",\"data_type\":\"uint8\"},{\"element_name\":\"rssi\",\"data_type\":\"int8\"}]}},{\"attr_id\":\"0x0002\",\"attr_name\":\"ChildTableSize\",\"data_type\":\"uint8\"},{\"attr_id\":\"0x0003\",\"attr_name\":\"ChildTable\",\"data_type\":\"array\",\"element\":{\"data_type\":\"struct\",\"element\":[{\"element_name\":\"extAddr\",\"data_type\":\"int8\"},{\"element_name\":\"childRssi\",\"data_type\":\"int8\"},{\"element_name\":\"parentRssi\",\"data_type\":\"int8\"}]}}]}]";
+char attr_profile[] =
+    "[{\"cluster_id\":\"fe01\",\"attr_set\":[{\"attr_id\":\"0000\",\"attr_name\":\"NeighborTableSize\",\"data_type\":\"uint8\"},{\"attr_id\":\"0x0001\",\"attr_name\":\"NeighborTable\",\"data_type\":\"array\",\"element\":{\"data_type\":\"struct\",\"element\":[{\"element_name\":\"extAddr\",\"data_type\":\"uint8\"},{\"element_name\":\"rssi\",\"data_type\":\"int8\"}]}},{\"attr_id\":\"0x0002\",\"attr_name\":\"ChildTableSize\",\"data_type\":\"uint8\"},{\"attr_id\":\"0x0003\",\"attr_name\":\"ChildTable\",\"data_type\":\"array\",\"element\":{\"data_type\":\"struct\",\"element\":[{\"element_name\":\"extAddr\",\"data_type\":\"int8\"},{\"element_name\":\"childRssi\",\"data_type\":\"int8\"},{\"element_name\":\"parentRssi\",\"data_type\":\"int8\"}]}}]}]";
 //“ªŒ¨∏¥‘”¿‡–Õ
 //char attr_profile[] = "[{\"cluster_id\":\"fe01\",\"attr_set\":[{\"attr_id\":\"0000\",\"attr_name\":\"NeighborTableSize\",\"data_type\":\"uint8\"},{\"attr_id\":\"0x0001\",\"attr_name\":\"NeighborTable\",\"data_type\":\"array\",\"element\":{\"data_type\":\"uint8\",}},{\"attr_id\":\"0x0002\",\"attr_name\":\"ChildTableSize\",\"data_type\":\"uint8\"},{\"attr_id\":\"0x0003\",\"attr_name\":\"ChildTable\",\"data_type\":\"struct\",\"element\":[{\"element_name\":\"extAddr\",\"data_type\":\"int8\"},{\"element_name\":\"childRssi\",\"data_type\":\"int8\"},{\"element_name\":\"parentRssi\",\"data_type\":\"int8\"}]}]}]";
 //only array
@@ -25,10 +42,13 @@ char attr_profile[] = "[{\"cluster_id\":\"fe01\",\"attr_set\":[{\"attr_id\":\"00
 //simple
 //char attr_profile[] = "[{\"cluster_id\":\"fe01\",\"attr_set\":[{\"attr_id\":\"0000\",\"attr_name\":\"NeighborTableSize\",\"data_type\":\"uint8\"},{\"attr_id\":\"0X0002\",\"attr_name\":\"ChildTableSize\",\"data_type\":\"uint8\"}]}]";
 
-char cmd_profile[] = "[{\"cluster_id\":\"0300\",\"cmd_set\":[{\"cmd_id\":\"01\",\"cmd_name\":\"MoveHue\",\"direction\":\"00\",\"arg_list\":[{\"arg_name\":\"Hue\",\"data_type\":\"uint8\"},{\"arg_name\":\"Direction\",\"data_type\":\"uint8\"},{\"arg_name\":\"TransitionTime\",\"data_type\":\"uint16\"}]}]}]";
-char endpoint_profile[] = "[{\"endpoint_id\":\"01\",\"cmd_mapping\":[],\"attr_mapping\":[{\"user_name\":\"OnOff_A\",\"std_name\":\"OnOff\"},{\"user_name\":\"MaxPower_A\",\"std_name\":\"MaxPower\"}]},{\"endpoint_id\":\"02\",\"cmd_mapping\":[],\"attr_mapping\":[{\"user_name\":\"OnOff_B\",\"std_name\":\"OnOff\"},{\"user_name\":\"MaxPower_B\",\"std_name\":\"MaxPower\"}]}]";
+char cmd_profile[] =
+    "[{\"cluster_id\":\"0300\",\"cmd_set\":[{\"cmd_id\":\"01\",\"cmd_name\":\"MoveHue\",\"direction\":\"00\",\"arg_list\":[{\"arg_name\":\"Hue\",\"data_type\":\"uint8\"},{\"arg_name\":\"Direction\",\"data_type\":\"uint8\"},{\"arg_name\":\"TransitionTime\",\"data_type\":\"uint16\"}]}]}]";
+char endpoint_profile[] =
+    "[{\"endpoint_id\":\"01\",\"cmd_mapping\":[],\"attr_mapping\":[{\"user_name\":\"OnOff_A\",\"std_name\":\"OnOff\"},{\"user_name\":\"MaxPower_A\",\"std_name\":\"MaxPower\"}]},{\"endpoint_id\":\"02\",\"cmd_mapping\":[],\"attr_mapping\":[{\"user_name\":\"OnOff_B\",\"std_name\":\"OnOff\"},{\"user_name\":\"MaxPower_B\",\"std_name\":\"MaxPower\"}]}]";
 
-char attr_set[] = "[\"NeighborTableSize\",\"NeighborTable\",\"ChildTableSize\",\"ChildTable\"]";
+char attr_set[] =
+    "[\"NeighborTableSize\",\"NeighborTable\",\"ChildTableSize\",\"ChildTable\"]";
 char cmd_set[] = "[\"MoveHue\"]";
 char private_attr_profile[] = "[]";
 char private_cmd_profile[] = "[]";
@@ -47,19 +67,19 @@ int stdd_zbnet_update_cmd_profile_cb(cmd_profile_t *profile[])
 }
 
 int stdd_zbnet_get_attr_cb(uint8_t ieee_addr[8], \
-                                    uint8_t endpoint_id, const char *attr_set[])
+                           uint8_t endpoint_id, const char *attr_set[])
 {
     return 0;
 }
 
 int stdd_zbnet_set_attr_cb(uint8_t ieee_addr[8], uint8_t endpoint_id, \
-                                    const char *attr_name, const char *attr_value)
+                           const char *attr_name, const char *attr_value)
 {
     return 0;
 }
 
 int stdd_zbnet_exec_cmd_cb(uint8_t ieee_addr[8], uint8_t endpoint_id, \
-                                    const char *cmd_name, const char *cmd_args)
+                           const char *cmd_name, const char *cmd_args)
 {
     return 0;
 }
@@ -70,12 +90,14 @@ int stdd_zbnet_get_attr(const char *devid_or_uuid, const char *attr_name)
     return 0;
 }
 
-int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name, const char *attr_value)
+int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name,
+                        const char *attr_value)
 {
     return 0;
 }
 
-int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name, const char *rpc_args)
+int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name,
+                        const char *rpc_args)
 {
     return 0;
 }
@@ -91,7 +113,8 @@ dev_info_t *devmgr_get_devinfo_by_ieeeaddr(char ieee_addr[8])
     return (dev_info_t *)0x01010101;
 }
 
-int devmgr_update_attr_cache(const char *devid_or_uuid, const char *attr_name, const char *attr_value)
+int devmgr_update_attr_cache(const char *devid_or_uuid, const char *attr_name,
+                             const char *attr_value)
 {
     return 0;
 }
@@ -100,7 +123,8 @@ void devmgr_put_devinfo_ref(dev_info_t *devinfo)
     return;
 }
 
-int msdp_report_device_status(const char *uuid, const char *attr_name, const char *attr_value)
+int msdp_report_device_status(const char *uuid, const char *attr_name,
+                              const char *attr_value)
 {
     return 0;
 }
@@ -168,7 +192,8 @@ int devmgr_get_all_device_modelid(uint32_t model_id[], int *num)
 }
 
 
-int get_device_profile_file(uint8_t dev_type, uint32_t model_id, char file_name[], int max_name_length)
+int get_device_profile_file(uint8_t dev_type, uint32_t model_id,
+                            char file_name[], int max_name_length)
 {
     strcpy(file_name, "./model_profile_sample.lua");
     return 0;

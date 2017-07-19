@@ -125,6 +125,17 @@ int http_socket_init(int port, char *host_addr) {
         OTA_LOG_E("Socket   Error:%s\a\n ", strerror(errno));
         return -1;
     }
+ 
+    struct timeval timeout;      
+    timeout.tv_sec = 10;
+    timeout.tv_usec = 0;
+
+    if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                sizeof(timeout)) < 0) {
+        OTA_LOG_E("setsockopt failed\n");
+        return -1;
+    }
+
     /*   客户程序填充服务端的资料   */
     bzero(&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;

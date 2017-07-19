@@ -1662,7 +1662,7 @@ static void phy_change_bw(uint8_t bw)
     switch(bw)
     {
     case PHY_CHNL_BW_20:
-        mdm_txstartdelay_setf(0x000003ff);
+        mdm_txstartdelay_setf(0x00000168);
         mdm_tbectrl0_set(0x0C0F0700);
 
 #if (NX_MDM_VER == 11)

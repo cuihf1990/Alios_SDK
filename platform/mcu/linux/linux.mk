@@ -2,6 +2,7 @@ HOST_OPENOCD := linux
 
 NAME := linuximpl
 ARCH_LINUX := ../../arch/linux/
+no_with_lwip ?= 1
 
 GLOBAL_INCLUDES += . $(ARCH_LINUX)
 
@@ -14,8 +15,14 @@ $(NAME)_COMPONENTS += mbedtls
 endif
 
 ifeq ($(gcov),1)
+GLOBAL_DEFINES += GCOV_ENABLE
 GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
 GLOBAL_LDFLAGS += --coverage
+endif
+
+ifeq ($(gprof),1)
+GLOBAL_CFLAGS += -pg
+GLOBAL_LDFLAGS += -pg
 endif
 
 $(NAME)_INCLUDES    += .
@@ -27,6 +34,7 @@ GLOBAL_DEFINES      += CONFIG_YOS_KVFILE=\"/dev/flash0\"
 GLOBAL_DEFINES      += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash1\"
 GLOBAL_CFLAGS       += -Wall -Wno-missing-field-initializers -Wno-strict-aliasing -Wno-address -Wno-unused-result
 GLOBAL_DEFINES      += CSP_LINUXHOST
+GLOBAL_DEFINES      += CONFIG_LOGMACRO_DETAILS
 
 # arch linux
 $(NAME)_SOURCES := $(ARCH_LINUX)/cpu_impl.c

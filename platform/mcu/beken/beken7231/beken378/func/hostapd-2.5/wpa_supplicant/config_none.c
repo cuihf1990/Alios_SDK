@@ -19,6 +19,8 @@
 #include "param_config.h"
 #endif
 #include "uart_pub.h"
+#include "wlan_ui_pub.h"
+#include "wpa_common.h"
 
 static int wpa_config_validate_network(struct wpa_ssid *ssid, int line)
 {
@@ -86,7 +88,7 @@ static int set_wpa_psk(struct wpa_ssid *ssid)
 		ssid->passphrase = dup_binstr(g_sta_param_ptr->key, g_sta_param_ptr->key_len);
 		ssid->psk_set = 0;
 	}
-	ssid->key_mgmt |= WPA_KEY_MGMT_PSK;
+	
 	ssid->mem_only_psk = 0;
 	
 	return errors;
@@ -94,7 +96,7 @@ static int set_wpa_psk(struct wpa_ssid *ssid)
 
 static int set_wep_key(struct wpa_ssid*ssid)
 {
-	int errors;
+	int errors = 0;
 	
 	ssid->wep_tx_keyidx = 0;
 	ssid->auth_alg = WPA_AUTH_ALG_OPEN|WPA_AUTH_ALG_SHARED;
@@ -117,7 +119,7 @@ int wpa_config_set_none(struct wpa_ssid *ssid)
 {
 	ssid->key_mgmt = WPA_KEY_MGMT_NONE;
 	ssid->mem_only_psk = 0;
-	g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_OPEN;
+	g_sta_param_ptr->security = SECURITY_TYPE_NONE;
 
 	return 0;
 }
@@ -127,72 +129,114 @@ int wpa_config_set_wep(struct wpa_ssid *ssid)
 	int ret;
 	
 	ret = set_wep_key(ssid);
-
-	if(!ret) {
-		g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_WEP;
-	}
-	
+	g_sta_param_ptr->security = SECURITY_TYPE_WEP;
 	return 0;
 }
 
-int wpa_config_set_tkip(struct wpa_ssid *ssid)
+static int cipher2security(struct wpa_ie_data *ie)
 {
-	int ret = 0;
-	
-	ret = set_wpa_psk(ssid);
-	ssid->proto = WPA_PROTO_WPA;
-	ssid->pairwise_cipher = WPA_CIPHER_TKIP;
-	ssid->group_cipher = WPA_CIPHER_TKIP;
-	if(!ret){
-		g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_TKIP;
-		if (ssid->passphrase && (ssid->psk_set == 0)) {
-			wpa_config_update_psk(ssid);
+	switch(ie->key_mgmt) {
+	case WPA_KEY_MGMT_PSK:
+		if (ie->proto == WPA_PROTO_WPA) {
+			if (ie->pairwise_cipher & WPA_CIPHER_CCMP)
+				return SECURITY_TYPE_WPA_AES;
+			else
+				return SECURITY_TYPE_WPA_TKIP;
+		} else if (ie->proto == (WPA_PROTO_WPA|WPA_PROTO_RSN)) {
+			return SECURITY_TYPE_WPA2_MIXED;
+		} else {
+			if (ie->pairwise_cipher & WPA_CIPHER_CCMP)
+				return SECURITY_TYPE_WPA2_AES;
+			else
+				return SECURITY_TYPE_WPA2_TKIP;
 		}
+		break;
+	case WPA_KEY_MGMT_NONE:
+		if (ie->pairwise_cipher == WPA_CIPHER_NONE)
+			return SECURITY_TYPE_NONE;
+		else
+			return SECURITY_TYPE_WEP;
+		break;
+	default:
+		return SECURITY_TYPE_AUTO;
 	}
-
-	return ret;
 }
 
-int wpa_config_set_ccmp(struct wpa_ssid *ssid)
+static int security2cipher(struct wpa_ie_data *ie, int security)
+{
+	memset(ie, 0, sizeof(*ie));
+	switch(security) {
+	case SECURITY_TYPE_NONE:
+		ie->key_mgmt = WPA_KEY_MGMT_NONE;
+		ie->pairwise_cipher = WPA_CIPHER_NONE;
+        break;
+    case SECURITY_TYPE_WEP:
+        ie->key_mgmt = WPA_KEY_MGMT_NONE;
+		ie->pairwise_cipher = WPA_CIPHER_WEP40 | WPA_CIPHER_WEP104;
+        break;
+    case SECURITY_TYPE_WPA_TKIP:
+		ie->key_mgmt = WPA_KEY_MGMT_PSK;
+		ie->pairwise_cipher = WPA_CIPHER_TKIP;
+		ie->group_cipher = WPA_CIPHER_TKIP;
+		ie->proto = WPA_PROTO_WPA;
+		break;
+	
+    case SECURITY_TYPE_WPA2_TKIP:
+        ie->key_mgmt = WPA_KEY_MGMT_PSK;
+		ie->pairwise_cipher = WPA_CIPHER_TKIP;
+		ie->group_cipher = WPA_CIPHER_TKIP;
+		ie->proto = WPA_PROTO_RSN;
+        break;
+    case SECURITY_TYPE_WPA_AES:
+		ie->key_mgmt = WPA_KEY_MGMT_PSK;
+		ie->pairwise_cipher = WPA_CIPHER_TKIP|WPA_CIPHER_CCMP;
+		ie->group_cipher = WPA_CIPHER_TKIP;
+		ie->proto = WPA_PROTO_WPA;
+		break;
+    case SECURITY_TYPE_WPA2_AES:
+        ie->key_mgmt = WPA_KEY_MGMT_PSK;
+		ie->pairwise_cipher = WPA_CIPHER_CCMP;
+		ie->group_cipher = WPA_CIPHER_CCMP;
+		ie->proto = WPA_PROTO_RSN;
+        break;
+    case SECURITY_TYPE_WPA2_MIXED:
+        ie->key_mgmt = WPA_KEY_MGMT_PSK;
+		ie->pairwise_cipher = WPA_CIPHER_TKIP|WPA_CIPHER_CCMP;
+		ie->group_cipher = WPA_CIPHER_TKIP;
+		ie->proto = WPA_PROTO_WPA|WPA_PROTO_RSN;
+        break;
+    default:
+		break;
+		}
+	}
+
+int wpa_config_set_wpa(struct wpa_ssid *ssid, struct wpa_ie_data *ie)
 {
 	int ret = 0;
 	
 	ret = set_wpa_psk(ssid);
-	ssid->proto = WPA_PROTO_RSN;
-	ssid->pairwise_cipher = WPA_CIPHER_CCMP;
-	ssid->group_cipher = WPA_CIPHER_CCMP;
+	ssid->group_cipher = ie->group_cipher;
+	ssid->pairwise_cipher = ie->pairwise_cipher;
+	ssid->key_mgmt = ie->key_mgmt;
+	ssid->proto = ie->proto;
+
 	if(!ret){
-		g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_CCMP;
 		if (ssid->passphrase && (ssid->psk_set == 0)) {
 			wpa_config_update_psk(ssid);
 		}
 	}
-
-	return ret;
-}
-
-int wpa_config_set_wpa2mixed(struct wpa_ssid *ssid)
-{
-	int ret = 0;
-	
-	ret = set_wpa_psk(ssid);
-	ssid->proto = WPA_PROTO_WPA|WPA_PROTO_RSN;
-	ssid->pairwise_cipher = WPA_CIPHER_TKIP|WPA_CIPHER_CCMP;
-	ssid->group_cipher = WPA_CIPHER_TKIP;
-
-	if(!ret){
-		g_sta_param_ptr->cipher_suite = CONFIG_CIPHER_MIXED;
-		if (ssid->passphrase && (ssid->psk_set == 0)) {
-			wpa_config_update_psk(ssid);
-		}
+	if (ssid->psk_set) {
+		bin2hexstr(ssid->psk, g_sta_param_ptr->psk, 32, 65);
+		g_sta_param_ptr->psk_set = 1;
 	}
-	
+	g_sta_param_ptr->security = cipher2security(ie);
 	return ret;
 }
 
 static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 {
 	struct wpa_ssid *ssid;
+	struct wpa_ie_data ie;
 	int errors = 0;
 	char buf[20];
 
@@ -209,20 +253,30 @@ static struct wpa_ssid * wpa_config_read_network(int *line, int id)
 	ssid->ssid_len = g_sta_param_ptr->ssid.length;
 	ssid->key_mgmt = 0;
 
-	if ((g_sta_param_ptr->fast_connect_set) && (g_sta_param_ptr->cipher_suite != CONFIG_CIPHER_AUTO)){
+	if ((g_sta_param_ptr->fast_connect_set) && (g_sta_param_ptr->security != SECURITY_TYPE_AUTO)){
 		os_memcpy(ssid->bssid, g_sta_param_ptr->fast_connect.bssid, 6);
-		bk_printf("bssid %02x-%02x-%02x-%02x-%02x-%02x\r\n",
+		bk_printf("bssid %02x-%02x-%02x-%02x-%02x-%02x, sec type %d\r\n",
 			ssid->bssid[0],ssid->bssid[1],ssid->bssid[2],
-			ssid->bssid[3],ssid->bssid[4],ssid->bssid[5]);
+			ssid->bssid[3],ssid->bssid[4],ssid->bssid[5], g_sta_param_ptr->security);
 		ssid->bssid_set = 1;
-		if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_WEP){
+
+		switch(g_sta_param_ptr->security) {
+			case SECURITY_TYPE_NONE:
+				break;
+		    case SECURITY_TYPE_WEP:
 			errors += wpa_config_set_wep(ssid);			
-		}else if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_TKIP){
-			errors += wpa_config_set_tkip(ssid);
-		}else if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_CCMP){
-			errors += wpa_config_set_ccmp(ssid);
-		}else if(g_sta_param_ptr->cipher_suite == CONFIG_CIPHER_MIXED){
-			errors += wpa_config_set_wpa2mixed(ssid);
+		        break;
+		    case SECURITY_TYPE_WPA_TKIP:
+		    case SECURITY_TYPE_WPA2_TKIP:
+		    case SECURITY_TYPE_WPA_AES:
+		    case SECURITY_TYPE_WPA2_AES:
+		    case SECURITY_TYPE_WPA2_MIXED:
+				security2cipher(&ie, g_sta_param_ptr->security);
+				wpa_config_set_wpa(ssid, &ie);
+				break;
+				
+		    default:
+				break;
 		} 
 	} else {
 		ssid->mem_only_psk = 1;

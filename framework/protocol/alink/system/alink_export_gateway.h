@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* header file for alink gateway device */
 #ifndef _ALINK_EXPORT_GATEWAY_H_
 #define _ALINK_EXPORT_GATEWAY_H_
@@ -10,7 +26,6 @@ extern "C"
 /** @defgroup gateway_device gateway API
  *  @{
  */
-
 
 /** @defgroup gateway_debug debug
  *  @{
@@ -100,9 +115,9 @@ int alink_wait_connect(int timeout_ms);
  */
 int alink_end(void);
 
-/** @} */ //end of entry 
+/** @} */ //end of entry
 
-/** @defgroup gateway_feature register attr & service 
+/** @defgroup gateway_feature register attr & service
  *  @{
  */
 
@@ -129,8 +144,8 @@ typedef int (*ALINK_ATTR_SET_CB)(char *json_in);
  * @retval 0 on success, otherwise -1 will return
  */
 int alink_register_attribute(const char *name,
-        ALINK_ATTR_GET_CB get_cb,
-        ALINK_ATTR_SET_CB set_cb);
+                             ALINK_ATTR_GET_CB get_cb,
+                             ALINK_ATTR_SET_CB set_cb);
 /***
  * @brief device service execute callback function type definition
  * @param[in] json_in: input parameters, end by '\0'
@@ -139,7 +154,7 @@ int alink_register_attribute(const char *name,
  * @retval 0 on success, otherwise -1 will return
  */
 typedef int (*ALINK_SERVICE_EXECUTE_CB)(char *json_in,
-        char *json_out_buf, unsigned int buf_sz);
+                                        char *json_out_buf, unsigned int buf_sz);
 
 /***
  * @brief register device's service

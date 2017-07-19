@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -5,6 +21,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <k_api.h>
 #include "yos/log.h"
 #include "alink_export.h"
 #include "json_parser.h"
@@ -12,6 +29,8 @@
 #include "yos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
+#include <yos/cli.h>
+#include <yos/cloud.h>
 
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
@@ -72,39 +91,39 @@ char *device_attr[] = {
 };
 
 void helper_api_test(void);
-void activate_button_pressed(void* arg);
-void cloud_connected(void) { 
-    do_report();
-    yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);    
-    printf("alink cloud connected!\n"); 
+void activate_button_pressed(void *arg);
+
+static void cloud_connected(int cb_type, const char *json_buffer) {
+    //do_report();
 }
-void cloud_disconnected(void) { printf("alink cloud disconnected!\n"); }
+
+static void cloud_disconnected(int cb_type, const char *json_buffer) { LOG("alink cloud disconnected!"); }
 
 int callback_upgrade_device(const char *params)
 {
-    printf("alink device start to upgrade. \n");
+    LOG("alink device start to upgrade.");
 }
 
 int callback_cancel_upgrade_device(const char *params)
 {
-    printf("alink device stop to upgrade. \n");
+    LOG("alink device stop to upgrade.");
 }
 
 #ifndef RAW_DATA_DEVICE
-void cloud_get_device_status(char *json_buffer) 
-{ 
+static void cloud_get_device_status(int cb_type, const char *json_buffer)
+{
     do_report();
-    printf("---> get device status :  %s\n",json_buffer);
+    LOG("---> get device status :  %s",json_buffer);
 }
 
-int cloud_set_device_status(char *json_buffer)
+static void cloud_set_device_status(int cb_type, const char *json_buffer)
 {
     int attr_len = 0, value_len = 0, value = 0, i;
     char *value_str = NULL, *attr_str = NULL;
 
-    printf("---> set device status :  %s\n",json_buffer);
+    LOG("---> set device status :  %s",json_buffer);
     for (i = 0; device_attr[i]; i++) {
-        attr_str = json_get_value_by_name(json_buffer, strlen(json_buffer),
+        attr_str = json_get_value_by_name((char *)json_buffer, strlen(json_buffer),
                 device_attr[i], &attr_len, NULL);
         value_str = json_get_value_by_name(attr_str, attr_len,
                 "value", &value_len, NULL);
@@ -118,7 +137,6 @@ int cloud_set_device_status(char *json_buffer)
         }
     }
     do_report();
-    return 0;
 }
 
 #else
@@ -203,19 +221,17 @@ int raw_data_unserialize(char *json_buffer, uint8_t *raw_data, int *raw_data_len
     return 0;
 }
 
-int cloud_get_device_raw_data(char *json_buffer)
+static void cloud_get_device_raw_data(int cb_type, const char *json_buffer)
 {
     int ret = 0, raw_data_len = RAW_DATA_SIZE;
     uint8_t raw_data[RAW_DATA_SIZE] = { 0 };
 
     ret = raw_data_unserialize(json_buffer, raw_data, &raw_data_len);
     if (!ret)
-        return uart_send(raw_data, raw_data_len);
-    else
-        return -1;
+        uart_send(raw_data, raw_data_len);
 }
 
-int cloud_set_device_raw_data(char *json_buffer)
+static void cloud_set_device_raw_data(int cb_type, const char *json_buffer)
 {
     int ret = 0, raw_data_len = RAW_DATA_SIZE;
     uint8_t raw_data[RAW_DATA_SIZE] = { 0 };
@@ -224,9 +240,8 @@ int cloud_set_device_raw_data(char *json_buffer)
     if (!ret) {
         /* update device state */
         memcpy(device_state_raw_data, raw_data, raw_data_len);
-        return uart_send(raw_data, raw_data_len);
-    } else
-        return -1;
+        uart_send(raw_data, raw_data_len);
+    }
 }
 
 int alink_post_raw_data(uint8_t *byte_stream, int len)
@@ -254,10 +269,7 @@ static uint32_t work_time = 60*60*10*1000; //default work time 1ms
 static void do_report(void)
 {
     //TODO: async
-    yos_schedule_work(1000, activate_button_pressed, NULL, NULL, NULL);
-    yos_schedule_work(5000, activate_button_pressed, NULL, NULL, NULL);
-    yos_schedule_work(20000, activate_button_pressed, NULL, NULL, NULL);
-    //activate_button_pressed();
+    //yos_loop_schedule_work(1000, activate_button_pressed, NULL, NULL, NULL);
     //helper_api_test();
 #ifdef RAW_DATA_DEVICE
     /*
@@ -276,8 +288,8 @@ static void do_report(void)
             device_state[ATTR_LUMINANCE_INDEX],
             device_state[ATTR_SWITCH_INDEX],
             device_state[ATTR_WORKMODE_INDEX]);
-    printf("start report async\n");
-    alink_report_async(Method_PostData, post_data_buffer, NULL, NULL);
+    LOG("start report async");
+    yos_cloud_report(Method_PostData, post_data_buffer, NULL, NULL);
 #endif
 }
 
@@ -305,7 +317,7 @@ void helper_api_test(void)
     int ret = alink_get_time(&time);
     assert(!ret);
 
-    printf("get alink utc time: %d\n", time);
+    LOG("get alink utc time: %d", time);
 }
 
 void awss_demo(void)
@@ -330,17 +342,122 @@ void awss_demo(void)
 /* activate sample */
 char active_data_tx_buffer[128];
 #define ActivateDataFormat    "{\"ErrorCode\": { \"value\": \"%d\" }}"
-void activate_button_pressed(void* arg)
+void alink_activate(void* arg)
 {
-    sprintf(active_data_tx_buffer, ActivateDataFormat, 1);
-    printf("active send:%s", active_data_tx_buffer);
+    snprintf(active_data_tx_buffer, sizeof(active_data_tx_buffer)-1, ActivateDataFormat, 1);
+    LOG("active send:%s", active_data_tx_buffer);
     alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
 
-    sprintf(active_data_tx_buffer, ActivateDataFormat, 0);
-    printf("send:%s", active_data_tx_buffer);
+    snprintf(active_data_tx_buffer, sizeof(active_data_tx_buffer)-1, ActivateDataFormat, 0);
+    LOG("send:%s", active_data_tx_buffer);
     alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
 }
 
+void alink_key_process(input_event_t *eventinfo, void *priv_data)
+{
+    if (eventinfo->type != EV_KEY) {
+        return;
+    }
+
+    if (eventinfo->code == CODE_BOOT) {
+        if (eventinfo->value == VALUE_KEY_CLICK) {
+            if (cloud_is_connected() == false) {
+                netmgr_start(true);
+            } else {
+                alink_activate(NULL);
+            }
+        } else if(eventinfo->value == VALUE_KEY_LTCLICK) {
+            netmgr_clear_ap_config();
+            yos_reboot();
+        } else if(eventinfo->value == VALUE_KEY_LLTCLICK) {
+            netmgr_clear_ap_config();
+            alink_factory_reset();
+        }
+    }
+}
+
+static void handle_reset_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    alink_factory_reset();
+}
+
+static struct cli_command resetcmd = {
+    .name = "reset",
+    .help = "factory reset",
+    .function = handle_reset_cmd
+};
+
+static void handle_active_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    alink_activate(NULL);
+}
+
+static struct cli_command ncmd = {
+    .name = "active_alink",
+    .help = "active_alink [start]",
+    .function = handle_active_cmd
+};
+
+static void handle_model_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    #define MAX_MODEL_LENGTH 30
+    char model[MAX_MODEL_LENGTH] = "light";
+    int  model_len = sizeof(model);
+    yos_kv_get("model", model, &model_len);
+
+    if (argc == 1) {
+        LOG("Usage: model light/gateway. Model is currently %s", model);
+        return;
+    }
+
+    if (strcmp(argv[1], "gateway") == 0) {
+        if (strcmp(model, argv[1])) {
+            yos_kv_del("alink");
+            yos_kv_set("model", "gateway", MAX_MODEL_LENGTH, 1);
+            LOG("Swith model to gateway, please reboot");
+        } else {
+            LOG("Current model is already gateway");
+        }
+    } else {
+        if (strcmp(model, argv[1])) {
+            yos_kv_del("alink");
+            yos_kv_set("model", "light", MAX_MODEL_LENGTH, 1);
+            LOG("Swith model to light, please reboot");
+        } else {
+            LOG("Current model is already light");
+        }
+    }
+}
+
+static struct cli_command modelcmd = {
+    .name = "model",
+    .help = "model light/gateway",
+    .function = handle_model_cmd
+};
+
+
+static void handle_uuid_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    extern int cloud_is_connected(void);
+    extern const char *config_get_main_uuid(void);
+    extern bool gateway_is_connected(void);
+    extern const char *gateway_get_uuid(void);
+    if (cloud_is_connected()) {
+        LOG("uuid: %s", config_get_main_uuid());
+#ifdef MESH_GATEWAY_SERVICE
+    } else if (gateway_is_connected()) {
+        LOG("uuid: %s", gateway_get_uuid());
+#endif
+    } else {
+        LOG("alink is not connected");
+    }
+}
+
+static struct cli_command uuidcmd = {
+    .name = "uuid",
+    .help = "uuid",
+    .function = handle_uuid_cmd
+};
 
 enum SERVER_ENV {
     DAILY = 0,
@@ -352,14 +469,20 @@ const char *env_str[] = {"daily", "sandbox", "online", "default"};
 
 void usage(void)
 {
-    printf("\nalink_sample -e enviroment -t work_time -l log_level\n");
-    printf("\t -e alink server environment, 'daily', 'sandbox' or 'online'(default)\n");
-    printf("\t -t work time, unit is s\n");
-    printf("\t -l log level, trace/debug/info/warn/error/fatal/none\n");
-    printf("\t -h show help text\n");
+    LOG("\nalink_sample -e enviroment -t work_time -l log_level");
+    LOG("\t -e alink server environment, 'daily', 'sandbox' or 'online'(default)");
+    LOG("\t -t work time, unit is s");
+    LOG("\t -l log level, trace/debug/info/warn/error/fatal/none");
+    LOG("\t -h show help text");
 }
+enum MESH_ROLE {
+    MESH_MASTER = 0,
+    MESH_NODE
+};
 
 static int env = DEFAULT;
+static int mesh_mode = MESH_NODE;
+static char *mesh_num = "1";
 static char log_level = 0;
 extern char *optarg;
 
@@ -367,7 +490,7 @@ void parse_opt(int argc, char *argv[])
 {
     char ch;
 
-    while (argc > 1 && (ch = getopt(argc, argv, "e:t:l:h")) != -1) {
+    while (argc > 1 && (ch = getopt(argc, argv, "e:t:l:m:n:h")) != -1) {
         switch (ch) {
         case 'e':
             if (!strcmp(optarg, "daily"))
@@ -378,7 +501,7 @@ void parse_opt(int argc, char *argv[])
                 env = ONLINE;
             else {
                 env = ONLINE;
-                printf("unknow opt %s, use default env\n", optarg);
+                LOG("unknow opt %s, use default env", optarg);
             }
             break;
         case 't':
@@ -404,17 +527,33 @@ void parse_opt(int argc, char *argv[])
                 log_level = ALINK_LL_INFO;
                 */
             break;
+        case 'm':
+            if (!strcmp(optarg, "master"))
+                mesh_mode = MESH_MASTER;
+            else if (!strcmp(optarg, "node"))
+                mesh_mode = MESH_NODE;
+            else {
+                mesh_mode = MESH_NODE;
+                LOG("unknow opt %s, default to MESH_NODE", optarg);
+            }
+            break;
+        case 'n':
+            mesh_num = optarg;
+            break;
         case 'h':
-        default:
             usage();
             exit(0);
+        default:
+            break;
         }
     }
 
-    printf("alink server: %s, work_time: %ds, log level: %d\n",
+    LOG("alink server: %s, work_time: %ds, log level: %d",
             env_str[env], work_time, log_level);
 }
 extern char *g_sn;
+
+static int is_alink_started = 0;
 
 static void alink_service_event(input_event_t *event, void *priv_data) {
     if (event->type != EV_WIFI) {
@@ -425,26 +564,76 @@ static void alink_service_event(input_event_t *event, void *priv_data) {
         return;
     }
 
-    alink_start();
+    if(is_alink_started == 0) {
+        is_alink_started = 1;
+        alink_start();
+    }
 }
 
-int application_start(int argc, char *argv[])
+static void alink_connect_event(input_event_t *event, void *priv_data)
 {
-    parse_opt(argc, argv);
-   
-    if(argc > 1 && strlen(argv[1]) <= 65){
-        printf("reset sn to : %s\n",argv[1]);
-        g_sn = argv[1]; 
+    if (event->type != EV_SYS) {
+        return;
     }
-    yos_set_log_level(YOS_LL_DEBUG);
-    //awss_demo();
-    if (env == SANDBOX)
-        alink_enable_sandbox_mode();
-    else if (env == DAILY)
-        alink_enable_daily_mode(NULL, 0);
 
-    alink_register_callback(ALINK_CLOUD_CONNECTED, &cloud_connected);
-    alink_register_callback(ALINK_CLOUD_DISCONNECTED, &cloud_disconnected);
+    if (event->code == CODE_SYS_ON_ALINK_ONLINE ) {
+#ifdef CONFIG_YWSS
+        awss_registrar_init();
+#endif
+        yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+        do_report();
+        return;
+    }
+}
+static int alink_cloud_report(const char *method, const char *json_buffer)
+{
+    return alink_report_async(method, json_buffer, NULL, NULL);
+}
+
+static void alink_cloud_connected(void) {
+    yos_post_event(EV_YUNIO, CODE_YUNIO_ON_CONNECTED, 0);
+    LOG("alink cloud connected!");
+
+    yos_cloud_register_backend(&alink_cloud_report);
+    yos_cloud_trigger(CLOUD_CONNECTED, NULL);
+}
+
+static void alink_cloud_disconnected(void) {
+    yos_post_event(EV_YUNIO, CODE_YUNIO_ON_DISCONNECTED, 0);
+    yos_cloud_trigger(CLOUD_DISCONNECTED, NULL);
+}
+
+static void alink_cloud_get_device_status(char *json_buffer)
+{
+    yos_cloud_trigger(GET_DEVICE_STATUS, json_buffer);
+}
+
+static void alink_cloud_set_device_status(char *json_buffer)
+{
+    yos_cloud_trigger(SET_DEVICE_STATUS, json_buffer);
+}
+
+static void alink_cloud_get_device_raw_data(char *json_buffer)
+{
+    yos_cloud_trigger(GET_DEVICE_RAWDATA, json_buffer);
+}
+
+static void alink_cloud_set_device_raw_data(char *json_buffer)
+{
+    yos_cloud_trigger(SET_DEVICE_RAWDATA, json_buffer);
+}
+
+static void alink_cloud_init(void)
+{
+    alink_register_callback(ALINK_CLOUD_CONNECTED, &alink_cloud_connected);
+    alink_register_callback(ALINK_CLOUD_DISCONNECTED, &alink_cloud_disconnected);
+    alink_register_callback(ALINK_GET_DEVICE_RAWDATA, &alink_cloud_get_device_raw_data);
+    alink_register_callback(ALINK_SET_DEVICE_RAWDATA, &alink_cloud_set_device_raw_data);
+    alink_register_callback(ALINK_GET_DEVICE_STATUS, &alink_cloud_get_device_status);
+    alink_register_callback(ALINK_SET_DEVICE_STATUS, &alink_cloud_set_device_status);
+
+    yos_cloud_register_callback(CLOUD_CONNECTED, &cloud_connected);
+    yos_cloud_register_callback(CLOUD_DISCONNECTED, &cloud_disconnected);
     /*
      * NOTE: register ALINK_GET/SET_DEVICE_STATUS or ALINK_GET/SET_DEVICE_RAWDATA
      */
@@ -454,22 +643,60 @@ int application_start(int argc, char *argv[])
      * submit product_model_xxx.lua script to ALINK cloud.
      * ALINKTEST_LIVING_LIGHT_SMARTLED_LUA is done with it.
      */
-    alink_register_callback(ALINK_GET_DEVICE_RAWDATA, &cloud_get_device_raw_data);
-    alink_register_callback(ALINK_SET_DEVICE_RAWDATA, &cloud_set_device_raw_data);
+    yos_cloud_register_callback(GET_DEVICE_RAWDATA, &cloud_get_device_raw_data);
+    yos_cloud_register_callback(SET_DEVICE_RAWDATA, &cloud_set_device_raw_data);
 #else
-    alink_register_callback(ALINK_GET_DEVICE_STATUS, &cloud_get_device_status);
-    alink_register_callback(ALINK_SET_DEVICE_STATUS, &cloud_set_device_status);
+    yos_cloud_register_callback(GET_DEVICE_STATUS, &cloud_get_device_status);
+    yos_cloud_register_callback(SET_DEVICE_STATUS, &cloud_set_device_status);
 #endif
-   
+}
+
+int application_start(int argc, char *argv[])
+{
+    parse_opt(argc, argv);
+
+    //if(argc > 1 && strlen(argv[1]) <= 65){
+    //    LOG("reset sn to : %s",argv[1]);
+    //    g_sn = argv[1];
+    //}
+    yos_set_log_level(YOS_LL_DEBUG);
+
+    if (mesh_mode == MESH_MASTER) {
+#ifdef CONFIG_YOS_DDM
+        ddm_run(argc, argv);
+#endif
+        return 0;
+    }
+
+    //awss_demo();
+    if (env == SANDBOX)
+        alink_enable_sandbox_mode();
+    else if (env == DAILY)
+        alink_enable_daily_mode(NULL, 0);
+
+    alink_cloud_init();
+
     yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
+    yos_register_event_filter(EV_SYS, alink_connect_event, NULL);
+    yos_register_event_filter(EV_KEY, alink_key_process, NULL);
 
     netmgr_init();
     netmgr_start(false);
 
-    yos_loop_run();
+    cli_register_command(&ncmd);
+    cli_register_command(&uuidcmd);
+    cli_register_command(&modelcmd);
+    cli_register_command(&resetcmd);
 
-    printf("alink end.\n");
+#ifdef CONFIG_YOS_DDA
+    dda_enable(atoi(mesh_num));
+    dda_service_init();
+    dda_service_start();
+#else
+    yos_loop_run();
+    LOG("alink end.");
     alink_end();
+#endif
 
     return 0;
 }

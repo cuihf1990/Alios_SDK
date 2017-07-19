@@ -33,7 +33,7 @@ void test_uradar_lwip_adapter_case(void)
     YUNIT_ASSERT(false == ur_adapter_is_mcast_subscribed(&ip6addr));
 
     message_t *message;
-    message = message_alloc(60);
+    message = message_alloc(60, UT_MSG);
     ur_ip6_header_t *ip6_header;
     ip6_header = (ur_ip6_header_t *)message_get_payload(message);
     memset(ip6_header, 0x00, UR_IP6_HLEN);

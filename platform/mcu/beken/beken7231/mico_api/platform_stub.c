@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/unistd.h>
-
+#include <k_api.h>
 
 #include "common.h"
 
@@ -34,37 +34,81 @@ extern int errno;
 /************** wrap C library functions **************/
 void * __wrap_malloc (size_t size)
 {
-	return os_malloc(size);
+    void *tmp = NULL;
+
+    if (size == 0) {
+        return NULL;
+    }
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+    tmp = yunos_mm_alloc(size);
+#endif
+
+    return tmp;
 }
+
 
 void * __wrap__malloc_r (void *p, size_t size)
 {
-	
-	return os_malloc(size);
+    void *tmp = NULL;
+
+    if (size == 0) {
+        return NULL;
+    }
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+    tmp = yunos_mm_alloc(size);
+#endif
+
+    return tmp;
 }
+
 
 void __wrap_free (void *pv)
 {
-	os_free(pv);
+    yunos_mm_free(pv);
 }
 
 void * __wrap_calloc (size_t a, size_t b)
 {
-	void *pvReturn;
-
-    pvReturn = os_malloc( a*b );
-    if (pvReturn)
-    {
-        os_memset(pvReturn, 0, a*b);
+    void *tmp = NULL;
+    size_t size = a * b;
+    if (size == 0) {
+        return NULL;
     }
 
-    return pvReturn;
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+        tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+        tmp = yunos_mm_alloc(size);
+#endif
+    if (tmp)
+        bzero(tmp, size);
+    return tmp;
 }
+
 
 void * __wrap_realloc (void* pv, size_t size)
 {
-	return os_realloc(pv, size);
+    void *tmp = NULL;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    tmp = yunos_mm_realloc(pv, size|YOS_UNSIGNED_INT_MSB);
+    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+    tmp = yunos_mm_realloc(pv, size);
+#endif
+
+    return tmp;
 }
+
 
 void __wrap__free_r (void *p, void *x)
 {
@@ -73,7 +117,17 @@ void __wrap__free_r (void *p, void *x)
 
 void* __wrap__realloc_r (void *p, void* x, size_t sz)
 {
-  return __wrap_realloc (x, sz);
+    void *tmp = NULL;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    tmp = yunos_mm_realloc(x, sz|YOS_UNSIGNED_INT_MSB);
+    yunos_owner_attach(g_kmm_head, x, (size_t)__builtin_return_address(0));
+#else
+    tmp = yunos_mm_realloc(x, sz);
+#endif
+
+    return tmp;
 }
+
 
 

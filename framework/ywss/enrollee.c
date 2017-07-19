@@ -1,10 +1,28 @@
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "aws_lib.h"
 #include <stdlib.h>
 #include "digest_algorithm.h"
 #include "os.h"
 #include "yos/log.h"
 #include "enrollee.h"
+#include "gateway_service.h"
 
+#ifndef AWSS_DISABLE_ENROLLEE
 #define MODULE_NAME "enrollee"
 
 const uint8_t probe_req_frame[64] = {
@@ -32,13 +50,49 @@ static uint8_t *g_model; /* pointer to model_len start pos */
 static uint8_t *enrollee_frame;
 static int enrollee_frame_len;
 
-char enrollee_token[MAX_TOKEN_LEN + 1];
 
 uint32_t get_random_digital(void);
 static int decrypt_ssid_passwd(uint8_t *ie, uint8_t ie_len,
                                uint8_t out_ssid[OS_MAX_SSID_LEN],
                                uint8_t out_passwd[OS_MAX_PASSWD_LEN],
                                uint8_t out_bssid[ETH_ALEN]);
+
+void awss_calc_sign(uint32_t rand, 
+                    char devid[OS_PRODUCT_SN_LEN], 
+                    char model[OS_PRODUCT_MODEL_LEN], 
+                    char secret[OS_PRODUCT_SECRET_LEN], 
+                    char sign[ENROLLEE_SIGN_SIZE])
+{
+    char *text;
+    int text_len, devid_len, model_len, secret_len;
+
+    if (!devid || !model || !secret || !sign) return;
+
+    devid_len = strlen(devid);
+    model_len = strlen(model);
+    secret_len = strlen(secret);
+
+    LOGD(MODULE_NAME, 
+         "dump rand(%d)+devid(%d)+model(%d)+secret(%d): %d %s %s %s",
+         sizeof(uint32_t), devid_len, model_len, 
+         secret_len, rand, devid, model, secret);
+
+    /* calc sign */
+    text_len = sizeof(uint32_t) + devid_len + model_len;
+    text = os_malloc(text_len + 1); /* +1 for string print */
+    OS_CHECK_MALLOC(text);
+    memset(text, 0, text_len+1);
+
+    memcpy(text, &rand, sizeof(uint32_t));
+    memcpy(text + sizeof(uint32_t), devid, devid_len);
+    memcpy(text + sizeof(uint32_t) + devid_len, model, model_len);
+
+    digest_hmac(DIGEST_TYPE_MD5,
+            (const unsigned char *)text, text_len,
+            (const unsigned char *)secret, secret_len, sign);
+
+    os_free(text);
+}
 
 void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
 {
@@ -66,26 +120,7 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
     secret_len = strlen(secret);
     OS_ASSERT(model_len && devid_len && secret_len, "invalid len");
 
-    {
-        char *text;
-        int text_len;
-
-        /* calc sign */
-        text_len = sizeof(uint32_t) + devid_len + model_len;
-        text = os_malloc(text_len + 1); /* +1 for string print */
-        OS_CHECK_MALLOC(text);
-
-        memcpy(text, &rand, sizeof(uint32_t));
-        memcpy(text + sizeof(uint32_t), devid, devid_len);
-        memcpy(text + sizeof(uint32_t) + devid_len, model, model_len);
-
-        digest_hmac(DIGEST_TYPE_MD5,
-                (const unsigned char *)text, text_len,
-                (const unsigned char *)secret, secret_len, sign);
-
-        os_free(text);
-        LOGW(MODULE_NAME,"dump random(4)+devid(n)+model(n): %s", text);
-    }
+    awss_calc_sign(rand, devid, model, secret, sign);
 
     ie_len = model_len + devid_len + ENROLLEE_IE_FIX_LEN;
     enrollee_frame_len = sizeof(probe_req_frame) + ie_len;
@@ -121,7 +156,7 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
     len += sizeof(uint32_t);
 
     memcpy(&enrollee_frame[len], sign, ENROLLEE_SIGN_SIZE);
-    len += sizeof(ENROLLEE_SIGN_SIZE);
+    len += ENROLLEE_SIGN_SIZE;
 
     memcpy(&enrollee_frame[len],
            &probe_req_frame[sizeof(probe_req_frame) - FCS_SIZE], FCS_SIZE);
@@ -165,8 +200,15 @@ void awss_destroy_enrollee_info(void)
 
 void awss_broadcast_enrollee_info(void)
 {
-    os_wifi_send_80211_raw_frame(FRAME_PROBE_REQ, enrollee_frame,
-                                 enrollee_frame_len);
+#ifdef MESH_GATEWAY_SERVICE
+    if (!gateway_service_get_mesh_mqtt_state()) { // if mesh connected, use mesh; otherwise broadcast
+#else
+    if (1) {
+#endif
+        LOGD(MODULE_NAME, "Broadcasting enrrolle msg");
+        os_wifi_send_80211_raw_frame(FRAME_PROBE_REQ, enrollee_frame,
+                                     enrollee_frame_len);
+    }
 
 #if 0   //TODO: send beacon frame, so android device will be able to discover it
     os_wifi_send_80211_raw_frame(FRAME_BEACON, beacon_frame,
@@ -284,7 +326,7 @@ static int decrypt_ssid_passwd(
     strcpy((char *)out_passwd, (char *)tmp_passwd);
     memcpy((char *)out_bssid, (char *)p_bssid, ETH_ALEN);
 
-    awss_set_enrollee_token(&p_token[1], p_token[0]);
+    awss_set_enrollee_token((char *)&p_token[1], p_token[0]);
 
     if (secret) {
         os_free(secret);
@@ -314,6 +356,8 @@ uint32_t get_random_digital(void)
     return result;
 }
 
+#endif
+char enrollee_token[MAX_TOKEN_LEN + 1];
 char *awss_get_enrollee_token(void)
 {
     char *token = enrollee_token;

@@ -1430,19 +1430,25 @@ int wpa_driver_associate(void *priv, struct wpa_driver_associate_params *params)
     os_printf("wpa_driver_associate\r\n");
     param = (struct prism2_hostapd_param *)buf;
     param->cmd = PRISM2_HOSTAPD_ASSOC_REQ;
-
+    
+    if(params->auth_alg & WPA_AUTH_ALG_OPEN){
+		param->u.assoc_req.auth_alg = HOSTAP_AUTH_OPEN;
+	}else{
+		param->u.assoc_req.auth_alg = HOSTAP_AUTH_SHARED;
+	}
     os_memcpy(param->u.assoc_req.bssid, params->bssid, ETH_ALEN);
     param->u.assoc_req.ssid_len = params->ssid_len;
     os_memcpy(param->u.assoc_req.ssid, params->ssid, param->u.assoc_req.ssid_len);
     param->u.assoc_req.proto = params->wpa_proto;
     param->u.assoc_req.ie_len = params->wpa_ie_len;
     os_memcpy((u8 *)param->u.assoc_req.ie_buf, params->wpa_ie, param->u.assoc_req.ie_len);
-
+	param->u.assoc_req.chann = params->freq.channel;
+	
     assoc_ap.ssid_len = params->ssid_len;
     os_memcpy(assoc_ap.ssid, params->ssid, params->ssid_len);
     os_memcpy(assoc_ap.bssid, params->bssid, ETH_ALEN);
-    assoc_ap.chann = params->freq.channel;
-
+	assoc_ap.chann = params->freq.channel;
+	
     if(hostapd_ioctl(drv, param, blen))
     {
         ret = -1;
@@ -1488,6 +1494,11 @@ int wpa_driver_get_ssid(void *priv, u8 *ssid)
 {
     os_memcpy(ssid, assoc_ap.ssid, assoc_ap.ssid_len);
     return assoc_ap.ssid_len;
+}
+
+int wpa_driver_get_bssid_channel(void *priv)
+{
+    return assoc_ap.chann;
 }
 
 const u8 *wpa_driver_get_mac(void *priv)
@@ -1628,7 +1639,7 @@ void wpa_dbg(void *ctx, int level, const char *fmt, ...)
 
 	len = vsnprintf(buf, buflen, fmt, ap);
 	va_end(ap);
-	bk_send_string(buf);
+	bk_printf("%s", buf);
 	os_free(buf);
 	
 	bk_printf("\r\n");

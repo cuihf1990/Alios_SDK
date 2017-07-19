@@ -57,7 +57,7 @@ void test_rhino(void)
     uint8_t old_pri;
     void *suite;
 
-    yunos_task_pri_change(g_active_task, RHINO_TEST_TASK_PRI, &old_pri);
+    yunos_task_pri_change(yunos_cur_task_get(), RHINO_TEST_TASK_PRI, &old_pri);
 
     suite = yunit_add_test_suite("rhino", init, cleanup, setup, teardown);
 

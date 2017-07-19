@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <yos/cli.h>
+#include <yos/framework.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"
@@ -43,6 +45,7 @@ extern mm_device_state_t mm_get_local_device_state(void);
 static void process_help(int argc, char *argv[]);
 static void process_autotest(int argc, char *argv[]);
 static void process_channel(int argc, char *argv[]);
+static void process_extnetid(int argc, char *argv[]);
 static void process_init(int argc, char *argv[]);
 static void process_ipaddr(int argc, char *argv[]);
 static void process_loglevel(int argc, char *argv[]);
@@ -71,6 +74,7 @@ const cli_command_t g_commands[] = {
     { "help", &process_help },
     { "autotest", &process_autotest },
     { "channel", &process_channel },
+    { "extnetid", &process_extnetid },
     { "init", &process_init },
     { "ipaddr", &process_ipaddr },
     { "loglevel", &process_loglevel },
@@ -139,11 +143,16 @@ static cli_state_t g_cl_state;
     slist_for_each_entry(&g_cl_state.autotest_acked_list, acked, autotest_acked_t, next)
 
 enum {
-    AUTOTEST_CMD_SIZE      = 3,
     AUTOTEST_REQUEST       = 1,
     AUTOTEST_REPLY         = 2,
     AUTOTEST_ECHO_INTERVAL = 1000,
 };
+
+typedef struct autotest_cmd_s {
+    uint16_t seq;
+    uint8_t type;
+    ur_ip6_addr_t addr;
+}  __attribute__((packed)) autotest_cmd_t;
 
 typedef void (*cmd_cb_t)(void *buf, int len, void *priv);
 typedef struct input_cli_s {
@@ -234,17 +243,16 @@ static void handle_autotest_timer(void *args)
 {
     uint8_t                      *payload;
     const ur_netif_ip6_address_t *src;
-    uint16_t                     *seq;
+    autotest_cmd_t               *cmd;
 
     g_cl_state.autotest_timer = NULL;
     payload = (uint8_t *)ur_mem_alloc(g_cl_state.autotest_length);
     if (payload) {
-        payload[sizeof(ur_udp_header_t)] = AUTOTEST_REQUEST;
-        seq = (uint16_t *)&payload[sizeof(ur_udp_header_t) + 1];
-        *seq = ur_swap16(g_cl_state.autotest_seq++);
         src = ur_mesh_get_ucast_addr();
-        memcpy(payload + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE,
-               (uint8_t *)src->addr.m8, sizeof(ur_ip6_addr_t));
+        cmd = (autotest_cmd_t *)payload;
+        cmd->type = AUTOTEST_REQUEST;
+        cmd->seq = ur_swap16(g_cl_state.autotest_seq++);
+        memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
                    &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cl_state.autotest_length);
@@ -271,18 +279,18 @@ void process_help(int argc, char *argv[])
 void process_autotest(int argc, char *argv[])
 {
     char                         *end;
-    uint8_t                      *payload;
-    const ur_netif_ip6_address_t *src;
     autotest_acked_t             *acked = NULL;
-    uint16_t                     *seq;
 
-    if (argc == 0 || g_cl_state.autotest_timer || g_cl_state.autotest_print_timer) {
+    if (argc == 0) {
         for_each_acked(acked) {
             response_append("%04x: %d, %d\r\n", ur_swap16(acked->sid), acked->seq,
                             acked->acked);
         }
         return;
     }
+
+    ur_stop_timer(&g_cl_state.autotest_timer, NULL);
+    ur_stop_timer(&g_cl_state.autotest_print_timer, NULL);
 
     while (!slist_empty(&g_cl_state.autotest_acked_list)) {
         acked = slist_first_entry(&g_cl_state.autotest_acked_list, autotest_acked_t,
@@ -301,46 +309,20 @@ void process_autotest(int argc, char *argv[])
         }
     }
 
-    g_cl_state.autotest_length = AUTOTEST_CMD_SIZE + sizeof(
-                                     ur_udp_header_t) + sizeof(ur_ip6_addr_t);
+    g_cl_state.autotest_length = sizeof(autotest_cmd_t);
     if (argc > 2) {
         g_cl_state.autotest_length = (uint16_t)strtol(argv[2], &end, 0);
-        if (g_cl_state.autotest_length == 0 ||
-            g_cl_state.autotest_length < (AUTOTEST_CMD_SIZE + sizeof(
-                                              ur_udp_header_t) + sizeof(ur_ip6_addr_t))) {
-            g_cl_state.autotest_length = AUTOTEST_CMD_SIZE + sizeof(
-                                             ur_udp_header_t) + sizeof(ur_ip6_addr_t);
-        } else {
-            g_cl_state.autotest_length += sizeof(ur_udp_header_t);
+        if (g_cl_state.autotest_length < (sizeof(autotest_cmd_t))) {
+            g_cl_state.autotest_length = sizeof(autotest_cmd_t);
         }
     }
     if (g_cl_state.autotest_length > UR_IP6_MTU) {
         response_append("exceed uRadar mesh IP6 MTU %d\r\n", UR_IP6_MTU);
         return;
     }
-
-    payload = (uint8_t *)ur_mem_alloc(g_cl_state.autotest_length);
-    memset(payload, 0, g_cl_state.autotest_length);
-    if (payload == NULL) {
-        return;
-    }
     string_to_ip6_addr(argv[0], &g_cl_state.autotest_target);
-    payload[sizeof(ur_udp_header_t)] = AUTOTEST_REQUEST;
-    seq = (uint16_t *)&payload[sizeof(ur_udp_header_t) + 1];
-    *seq = ur_swap16(g_cl_state.autotest_seq++);
-    src = ur_mesh_get_ucast_addr();
-    memcpy(payload + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE,
-           (uint8_t *)src->addr.m8,
-           sizeof(ur_ip6_addr_t));
-    ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
-               &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
 
-    ur_mem_free(payload, g_cl_state.autotest_length);
-    g_cl_state.autotest_times--;
-    if (g_cl_state.autotest_times) {
-        g_cl_state.autotest_timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL,
-                                                   handle_autotest_timer, NULL);
-    }
+    handle_autotest_timer(NULL);
 }
 
 void process_channel(int argc, char *argv[])
@@ -355,9 +337,35 @@ void process_channel(int argc, char *argv[])
     response_append("done\r\n");
 }
 
+void process_extnetid(int argc, char *argv[])
+{
+    umesh_extnetid_t extnetid;
+    uint8_t length;
+
+    if (argc > 0) {
+        length = hex2bin(argv[0], extnetid.netid, 6);
+        if (length != 6) {
+            return;
+        }
+        extnetid.len = length;
+        umesh_set_extnetid(&extnetid);
+        yos_kv_set("extnetid", extnetid.netid, extnetid.len, 1);
+    }
+
+    memset(&extnetid, 0, sizeof(extnetid));
+    umesh_get_extnetid(&extnetid);
+    for (length = 0; length < extnetid.len; length++) {
+        response_append("%02x:", extnetid.netid[length]);
+    }
+    if (extnetid.len > 0) {
+        response_append("\r\n");
+    }
+    response_append("done\r\n");
+}
+
 void process_init(int argc, char *argv[])
 {
-    ur_mesh_init(NULL);
+    ur_mesh_init(MODE_RX_ON);
     response_append("done\r\n");
 }
 
@@ -430,6 +438,8 @@ void process_nbrs(int argc, char *argv[])
                     response_append(",invalid");
                     break;
             }
+            response_append(",%d", nbr->channel);
+            response_append(",%d", nbr->rssi);
             response_append(",%d\r\n", nbr->last_heard);
             num ++;
         }
@@ -453,6 +463,7 @@ void process_networks(int argc, char *argv[])
         response_append("  route id %d\r\n", network->router->id);
         response_append("  netdata version %d\r\n", network->network_data.version);
         response_append("  size %d\r\n", network->network_data.size);
+        response_append("  channel %d\r\n", network->channel);
     }
 }
 
@@ -499,6 +510,11 @@ void process_mode(int argc, char *argv[])
             break;
         }
 
+        if (strcmp(argv[index], "LEADER") == 0) {
+            mode |= MODE_LEADER;
+            continue;
+        }
+
         if (strcmp(argv[index], "SUPER") == 0) {
             mode |= MODE_SUPER;
             continue;
@@ -538,6 +554,9 @@ void process_mode(int argc, char *argv[])
         return;
     }
 
+    if (mode & MODE_LEADER) {
+        response_append("LEADER | ");
+    }
     if (mode & MODE_SUPER) {
         response_append("SUPER");
     } else {
@@ -615,9 +634,6 @@ void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
                             length - UR_IP6_HLEN - sizeof(ur_icmp6_header_t),
                             IP6_ADDR_DATA(ip6_header->src),
                             icmp6_header->data, g_cl_state.icmp_acked);
-        } else if (icmp6_header->type != UR_ICMP6_TYPE_EREQ) {
-            response_append("icmp type %x from " IP6_ADDR_FMT "\r\n",
-                            icmp6_header->type, IP6_ADDR_DATA(ip6_header->src));
         }
     }
 }
@@ -657,47 +673,44 @@ static bool update_autotest_acked_info(uint16_t subnetid, uint16_t sid,
 
 static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
 {
-    const uint8_t                *cmd;
+    autotest_cmd_t               *cmd;
     uint8_t                      *data;
     ur_ip6_addr_t                dest;
     const ur_netif_ip6_address_t *src;
+    uint16_t                     seq;
 
     if (length == 0) {
         return;
     }
 
-    cmd = payload + sizeof(ur_udp_header_t);
-    memcpy(&dest, cmd + AUTOTEST_CMD_SIZE, sizeof(ur_ip6_addr_t));
-    if (*cmd == AUTOTEST_REQUEST) {
+    cmd = (autotest_cmd_t *)payload;
+    memcpy(&dest, &cmd->addr, sizeof(ur_ip6_addr_t));
+    seq = ur_swap16(cmd->seq);
+    if (cmd->type == AUTOTEST_REQUEST) {
         response_append("%d bytes autotest echo request from " IP6_ADDR_FMT
-                        ", seq %d\r\n",
-                        length - sizeof(ur_udp_header_t),
-                        IP6_ADDR_DATA(dest),
-                        ur_swap16(*(uint16_t *)(cmd + 1)));
+                        ", seq %d\r\n", length,
+                        IP6_ADDR_DATA(dest), seq);
         data = (uint8_t *)ur_mem_alloc(length);
         if (data == NULL) {
             return;
         }
         memset(data, 0, length);
-        data[sizeof(ur_udp_header_t)] = AUTOTEST_REPLY;
-        memcpy(data + sizeof(ur_udp_header_t) + 1, cmd + 1, 2);
+        cmd = (autotest_cmd_t *)data;
+        cmd->type = AUTOTEST_REPLY;
+        cmd->seq = ur_swap16(seq);
         src = ur_mesh_get_ucast_addr();
-        memcpy(data + sizeof(ur_udp_header_t) + AUTOTEST_CMD_SIZE,
-               (uint8_t *)src->addr.m8,
-               sizeof(ur_ip6_addr_t));
+        memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cl_state.autotest_udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
-    } else if (*cmd == AUTOTEST_REPLY) {
+    } else if (cmd->type == AUTOTEST_REPLY) {
         g_cl_state.autotest_acked ++;
-        if (update_autotest_acked_info(dest.m16[6], dest.m16[7],
-                                       ur_swap16(*(uint16_t *)(cmd + 1))) == false) {
+        if (update_autotest_acked_info(dest.m16[6], dest.m16[7], seq) == false) {
             return;
         }
         response_append("%d bytes autotest echo reply from " IP6_ADDR_FMT
-                        ", seq %d\r\n",
-                        length - sizeof(ur_udp_header_t),
-                        IP6_ADDR_DATA(dest), ur_swap16(*(uint16_t *)(cmd + 1)));
+                        ", seq %d\r\n", length,
+                        IP6_ADDR_DATA(dest), seq);
     }
 }
 
@@ -821,6 +834,8 @@ void process_stats(int argc, char *argv[])
             response_append("  out_command %d\r\n", link_stats->out_command);
             response_append("  out_data %d\r\n", link_stats->out_data);
             response_append("  out_errors %d\r\n", link_stats->out_errors);
+            response_append("  send_queue_size %d\r\n", link_stats->send_queue_size);
+            response_append("  recv_queue_size %d\r\n", link_stats->recv_queue_size);
             response_append("  sending %s\r\n", link_stats->sending ? "true" : "false");
             response_append("  sending_timeouts %d\r\n", link_stats->sending_timeouts);
         }
@@ -838,7 +853,17 @@ void process_stats(int argc, char *argv[])
     if (message_stats) {
         response_append("message stats\r\n");
         response_append("  allocate nums %d\r\n", message_stats->num);
-        response_append("  allocate fails %d\r\n", message_stats->fails);
+        response_append("  allocate queue_fulls %d\r\n", message_stats->queue_fulls);
+        response_append("  allocate mem_fails %d\r\n", message_stats->mem_fails);
+        response_append("  allocate pbuf_fails %d\r\n", message_stats->pbuf_fails);
+        response_append("  allocate size %d\r\n", message_stats->size);
+
+        uint8_t index;
+        response_append("  msg debug info\r\n  ");
+        for (index = 0; index < MSG_DEBUG_INFO_SIZE; index++) {
+            response_append("%d:", message_stats->debug_info[index]);
+        }
+        response_append("\r\n");
     }
 
     mem_stats = ur_mesh_get_mem_stats();
@@ -869,9 +894,9 @@ static void process_status(int argc, char *argv[])
         show_router(network->router->id);
         response_append("\r\n");
         response_append("\tbcast_mtu %d\r\n",
-                        hal_ur_mesh_get_bcast_mtu(network->hal->module));
+                        hal_umesh_get_bcast_mtu(network->hal->module));
         response_append("\tucast_mtu %d\r\n",
-                        hal_ur_mesh_get_ucast_mtu(network->hal->module));
+                        hal_umesh_get_ucast_mtu(network->hal->module));
     }
 
     process_nbrs(0, NULL);
@@ -996,8 +1021,23 @@ void process_whitelist(int argc, char *argv[])
     int8_t        rssi;
 
     if (arg_index >= argc) {
+        int i = 0;
+        bool enabled = ur_mesh_is_whitelist_enabled();
+        const whitelist_entry_t *whitelist = ur_mesh_get_whitelist_entries();
+        response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
+        for(i = 0; i < WHITELIST_ENTRY_NUM; i++) {
+            if (whitelist[i].valid == false) {
+                continue;
+            }
+            response_append("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n",
+                            whitelist[i].address.addr[0],whitelist[i].address.addr[1],
+                            whitelist[i].address.addr[2],whitelist[i].address.addr[3],
+                            whitelist[i].address.addr[4],whitelist[i].address.addr[5],
+                            whitelist[i].address.addr[6],whitelist[i].address.addr[7]);
+        }
         return;
     }
+
     if (strcmp(argv[arg_index], "add") == 0) {
         if (++arg_index >= argc) {
             return;
@@ -1105,7 +1145,7 @@ void ur_cli_input_args(char **argv, uint16_t argc)
     char **options = NULL;
 
     if (argc < 2) {
-         return;
+        return;
     }
 
     if (ur_mesh_is_initialized() == false && strcmp(argv[1], "init") != 0) {
@@ -1124,6 +1164,83 @@ void ur_cli_input_args(char **argv, uint16_t argc)
     }
 }
 
+static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                          char **argv)
+{
+    ur_cli_input_args(argv, argc);
+}
+
+static struct cli_command ncmd = {
+    .name = "umesh",
+    .help = "umesh [cmd]",
+    .function = umesh_command,
+};
+
+#ifndef WITH_LWIP
+struct cb_arg {
+    raw_data_handler_t handler;
+    uint8_t *buffer;
+    int length;
+};
+
+static void do_read_cb(void *priv)
+{
+    struct cb_arg *arg = priv;
+    arg->handler(arg->buffer, arg->length);
+
+    ur_mem_free(arg->buffer, UR_IP6_MTU + UR_IP6_HLEN);
+    ur_mem_free(arg, sizeof(*arg));
+}
+
+static void ur_read_sock(int fd, raw_data_handler_t handler)
+{
+    int     length = 0;
+    uint8_t *buffer;
+
+    buffer = ur_mem_alloc(UR_IP6_MTU + UR_IP6_HLEN);
+    if (buffer == NULL) {
+        return;
+    }
+
+    length = lwip_recv(fd, buffer, UR_IP6_MTU + UR_IP6_HLEN, 0);
+    if (length > 0) {
+        struct cb_arg *arg = ur_mem_alloc(sizeof(*arg));
+        arg->handler = handler;
+        arg->buffer = buffer;
+        arg->length = length;
+        yos_schedule_call(do_read_cb, arg);
+        return;
+    }
+
+    ur_mem_free(buffer, UR_IP6_MTU + UR_IP6_HLEN);
+}
+
+static void mesh_worker(void *arg)
+{
+    int maxfd = g_cl_state.autotest_udp_socket;
+
+    if (g_cl_state.icmp_socket > maxfd) {
+        maxfd = g_cl_state.icmp_socket;
+    }
+
+    while (1) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(g_cl_state.icmp_socket, &rfds);
+        FD_SET(g_cl_state.autotest_udp_socket, &rfds);
+
+        lwip_select(maxfd + 1, &rfds, NULL, NULL, NULL);
+
+        if (FD_ISSET(g_cl_state.icmp_socket, &rfds)) {
+            ur_read_sock(g_cl_state.icmp_socket, cli_handle_echo_response);
+        }
+        if (FD_ISSET(g_cl_state.autotest_udp_socket, &rfds)) {
+            ur_read_sock(g_cl_state.autotest_udp_socket, handle_udp_autotest);
+        }
+    }
+}
+#endif
+
 int g_cli_silent;
 ur_error_t mesh_cli_init(void)
 {
@@ -1131,5 +1248,10 @@ ur_error_t mesh_cli_init(void)
     g_cl_state.icmp_socket = echo_socket(&cli_handle_echo_response);
     g_cl_state.autotest_udp_socket = autotest_udp_socket(&handle_udp_autotest,
                                                          AUTOTEST_UDP_PORT);
+
+#ifndef WITH_LWIP
+    yos_task_new("meshworker", mesh_worker, NULL, 8192);
+#endif
+    cli_register_command(&ncmd);
     return UR_ERROR_NONE;
 }

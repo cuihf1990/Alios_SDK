@@ -1,32 +1,69 @@
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "list.h"
-#include "msdp.h"
-#include "mpool.h"
-#include "stdd.h"
+#include "yos/list.h"
+#include "yos/cloud.h"
+#include "alink_export_internal.h"
 #include "json_parser.h"
-#include "msdp_common.h"
-#include "stdd_zigbee.h"
 #include "service.h"
 #include "devmgr_cache.h"
+#include "msdp_common.h"
 
-static int __get_attribute(const char *uuid, const char *attr_name, char **attr_value)
+#define MODULE_NAME MODULE_NAME_MSDP
+
+static int stdd_zbnet_get_attr(const char *devid_or_uuid, const char *attr_name)
+{
+    log_info("zbnet_get_attr, uuid:%s attr_name:%s\n", devid_or_uuid, attr_name);
+    return 0;
+}
+
+static int stdd_zbnet_set_attr(const char *devid_or_uuid, const char *attr_name,
+                               const char *attr_value)
+{
+    log_info("zbnet_set_attr, uuid:%s attr_name:%s attr_value:%s\n", devid_or_uuid,
+             attr_name, attr_value);
+    return 0;
+}
+
+#define DEV_ATTR_SET "[\"BackLightMode\",\"BatteryPercentage\",\"Rssi\",\"Switch\"]"
+static int stdd_get_device_attrset(const char *devid_or_uuid,
+                                   char *attrset_buff, int buff_size)
+{
+    strncpy(attrset_buff, DEV_ATTR_SET, buff_size);
+    log_info("zbnet get device attrset, uuid:%s\n", devid_or_uuid);
+    return 0;
+}
+
+static int stdd_zbnet_exec_rpc(const char *devid_or_uuid, const char *rpc_name,
+                               const char *rpc_args)
+{
+    return 0;
+}
+
+static int __get_attribute(const char *uuid, const char *attr_name,
+                           char **attr_value)
 {
     int ret = SERVICE_RESULT_ERR;
     char *attr_cache = NULL;
 
     log_trace("uuid:%s, attr_name:%s", uuid, attr_name);
-    ret = devmgr_read_attr_cache(uuid, attr_name, &attr_cache);
-    if(SERVICE_RESULT_OK != ret){
-        log_warn("read attribute cache fail, attr_name:%s", attr_name);
-    }
-    if(SERVICE_RESULT_OK == ret && NULL != attr_cache){
-        *attr_value = msdp_dup_string(attr_cache);
-        os_free(attr_cache);
-        return SERVICE_RESULT_OK;
-    }
 
     ret = stdd_zbnet_get_attr(uuid, attr_name);
     RET_LOG(ret, "get attribute fail, attrname:%s", attr_name);
@@ -35,7 +72,8 @@ static int __get_attribute(const char *uuid, const char *attr_name, char **attr_
 }
 
 
-static int __set_attribute(const char *uuid, const char *attr_name, char *attr_value)
+static int __set_attribute(const char *uuid, const char *attr_name,
+                           char *attr_value)
 {
     int ret = SERVICE_RESULT_ERR;
 
@@ -64,23 +102,25 @@ static int __get_all_attrname(const char *uuid, char *attr_set, int buff_size)
 */
 static int msdp_get_status(char *params)
 {
+#if 0
     int ret = SERVICE_RESULT_ERR;
     char *str_pos, *params_ptr = params;
     int str_len = 0;
     char params_buff[512] = {0};
 
     int attrset_size = 0;
-    str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_ATTRSET, &str_len, NULL);
-    if(str_pos)
-    {
+    str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_ATTRSET,
+                                     &str_len, NULL);
+    if (str_pos) {
         log_trace("attrset:%s", str_pos);
         attrset_size = json_get_array_size(str_pos, str_len);
     }
 
-    if(NULL == str_pos || attrset_size == 0){
+    if (NULL == str_pos || attrset_size == 0) {
         //uuid
         char uuid[MAX_UUID_LEN] = {0};
-        str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_UUID, &str_len, NULL);
+        str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_UUID,
+                                         &str_len, NULL);
         PTR_RETURN(str_pos, SERVICE_RESULT_ERR, "get uuid fail, params:%s", params);
         strncpy(uuid, str_pos, str_len);
 
@@ -91,18 +131,19 @@ static int msdp_get_status(char *params)
         RET_RETURN(ret, "__get_all_attrname(%s)", uuid);
         log_trace("attrset:%s", all_attr);
 
-        snprintf(params_buff, sizeof(params_buff) - 1, GET_DEVICE_ATTR_STRING_FMT, uuid, all_attr);
+        snprintf(params_buff, sizeof(params_buff) - 1, GET_DEVICE_ATTR_STRING_FMT, uuid,
+                 all_attr);
         params_ptr = params_buff;
     }
 
     log_trace("params_ptr:%s", params_ptr);
     char *json_out = NULL;
-    ret = msdp_get_device_status_handler(params_ptr, msdp_get_attr_each_cb, __get_attribute, &json_out);
+    ret = msdp_get_device_status_handler(params_ptr, msdp_get_attr_each_cb,
+                                         __get_attribute, &json_out);
     RET_RETURN(ret, CALL_FUCTION_FAILED, "msdp_status_handler");
-    if(json_out)
-    {
+    if (json_out) {
         log_trace("post device data: params:%s", json_out);
-        if (SERVICE_RESULT_OK != msdp_add_asyncpost_task(json_out)){
+        if (SERVICE_RESULT_OK != msdp_add_asyncpost_task(json_out)) {
             log_error("add async post task fail, params:%s", json_out);
             msdp_free_buff(json_out);
         }
@@ -110,6 +151,10 @@ static int msdp_get_status(char *params)
     }
 
     return ret;
+#else
+    yos_cloud_trigger(GET_SUB_DEVICE_STATUS, params);
+    return SERVICE_RESULT_OK;
+#endif
 }
 
 
@@ -118,14 +163,20 @@ static int msdp_get_status(char *params)
 */
 static int msdp_set_status(char *params)
 {
+#if 0
     int ret = SERVICE_RESULT_ERR;
     //log_trace("params:%s\n", params);
 
     //±È¿˙attrset£¨…Ë÷√ Ù–‘
-    ret = msdp_set_device_status_handler(params, msdp_set_attr_each_cb, __set_attribute);
+    ret = msdp_set_device_status_handler(params, msdp_set_attr_each_cb,
+                                         __set_attribute);
     RET_RETURN(ret, CALL_FUCTION_FAILED, "msdp_set_attr_each_cb");
 
     return ret;
+#else
+    yos_cloud_trigger(SET_SUB_DEVICE_STATUS, params);
+    return SERVICE_RESULT_OK;
+#endif
 }
 
 
@@ -145,20 +196,24 @@ static int msdp_rpc(char *params)
 
     log_trace("params:%s", params);
 
-    str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_SERVICE, &str_len, NULL);
+    str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_SERVICE,
+                                     &str_len, NULL);
     PTR_RETURN(str_pos, ret, "get service name fail, params:%s", params);
     strncpy(rpc_name, str_pos, str_len);
 
-    str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_ARGS, &str_len, NULL);
+    str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_ARGS,
+                                     &str_len, NULL);
     PTR_RETURN(str_pos, ret, "get service args fail, params:%s", params);
     strncpy(rpc_args, str_pos, str_len);
 
-    str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_UUID, &str_len, NULL);
+    str_pos = json_get_value_by_name(params, strlen(params), JSON_KEY_UUID,
+                                     &str_len, NULL);
     PTR_RETURN(str_pos, ret, "get uuid fail, params:%s", params);
     strncpy(uuid, str_pos, str_len);
 
     ret = stdd_zbnet_exec_rpc(uuid, rpc_name, rpc_args);
-    RET_RETURN(ret, "exeute rpc fail, uuid:%s, rpc_name:%s, args:%s", uuid, rpc_name, rpc_args);
+    RET_RETURN(ret, "exeute rpc fail, uuid:%s, rpc_name:%s, args:%s", uuid,
+               rpc_name, rpc_args);
 
     return ret;
 }

@@ -19,6 +19,7 @@
 #include <yos/kernel.h>
 
 #include "ota_update_manifest.h"
+
 #include "ota_log.h"
 #include "ota_transport.h"
 #include "ota_util.h"
@@ -58,30 +59,35 @@ char md5[33];
 
 extern int  check_md5(const char *buffer, const int32_t len);
 
+extern int ota_hal_init(void);
+
 void ota_download_start(void * buf)
 {
     OTA_LOG_I("task update start");
+    ota_hal_init();
     ota_status_init();
+
     ota_set_status(OTA_INIT);
     ota_status_post(100);
 
     ota_set_status(OTA_DOWNLOAD);
-    int ret = http_download(url, g_write_func); 
+    ota_status_post(0);
+    int ret = http_download(url, g_write_func);
     if(ret <= 0) {
         OTA_LOG_E("ota download error");
         ota_set_status(OTA_DOWNLOAD_FAILED);
         goto OTA_END;
     }
-    
+
     if(ret == OTA_DOWNLOAD_CANCEL) {
         OTA_LOG_E("ota download cancel");
         ota_set_status(OTA_CANCEL);
         goto OTA_END;
     }
-   
+
     ota_status_post(100);
     ota_set_status(OTA_CHECK);
-    ret = check_md5(md5,sizeof md5);    
+    ret = check_md5(md5,sizeof md5);
     if(ret < 0 ) {
        OTA_LOG_E("ota check md5 error");
        ota_set_status(OTA_CHECK_FAILED);
@@ -89,7 +95,7 @@ void ota_download_start(void * buf)
     }
     ota_status_post(100);
     memset(url, 0, sizeof url);
-    
+
     OTA_LOG_I("ota status %d",ota_get_status());
     ota_set_status(OTA_UPGRADE);
     if(NULL != g_finish_cb) {
@@ -99,7 +105,10 @@ void ota_download_start(void * buf)
     ota_set_status(OTA_REBOOT);
 
 OTA_END:
-    ota_status_post(100);    
+    ota_status_post(100);
+    ota_status_deinit();
+    OTA_LOG_I("reboot system after 3 second!");
+    yos_msleep(3000);
     OTA_LOG_I("task update over");
     ota_reboot();
 }
@@ -113,7 +122,7 @@ int8_t ota_post_version_msg()
              (char *)ota_get_version(), strlen(ota_get_system_version()));
         if(ota_success) {
             ota_set_status(OTA_REBOOT_SUCCESS);
-            ret = ota_status_post(100);          
+            ret = ota_status_post(100);
         }else {
             ota_set_status(OTA_INIT);
             ret = ota_status_post(0);
@@ -180,7 +189,7 @@ static int8_t ota_if_cancel(ota_response_params *response_parmas)
 int8_t ota_cancel_update_packet(ota_response_params *response_parmas)
 {
     int ret = 0;
-    
+
     ret = ota_if_cancel(response_parmas);
     if(ret) {
         ota_set_status(OTA_CANCEL);

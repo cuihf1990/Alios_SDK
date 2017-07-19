@@ -127,6 +127,7 @@ void message_sent_task(void *args)
     hal_context_t *hal = (hal_context_t *)args;
     message_t *message;
     uint16_t msg_length;
+    bool free_msg = false;
 
     ur_stop_timer(&hal->sending_timer, hal);
     if (hal->send_message == NULL) {
@@ -134,11 +135,26 @@ void message_sent_task(void *args)
     }
     message = hal->send_message;
     msg_length = message_get_msglen(message);
-    if (hal->frag_info.offset < msg_length) {
-        message->frag_offset = hal->frag_info.offset;
+
+    if (hal->frag_info.offset >= msg_length &&
+        hal->last_sent == SENT_SUCCESS) {
+        free_msg = true;
+    } else if (hal->last_sent != SENT_SUCCESS &&
+               message->retries >= MESSAGE_RETRIES) {
+        free_msg = true;
     }
-    if (hal->frag_info.offset >= msg_length ||
-        hal->last_sent != SENT_SUCCESS) {
+
+    if (free_msg == false) {
+        if (hal->last_sent == SENT_SUCCESS) {
+            message->frag_offset = hal->frag_info.offset;
+            message->retries = 0;
+        } else {
+            hal->frag_info.offset = message->frag_offset;
+            message->retries++;
+        }
+    }
+
+    if (free_msg) {
         message_queue_dequeue(message);
         message_free(message);
         hal->send_message = NULL;
@@ -180,8 +196,9 @@ static void resolve_message_info(received_frame_t *frame)
     message = frame->message;
     info = message->info;
     info->hal_type = frame->hal->module->type;
-    info->channel = frame->frame_info.channel;
+    info->src_channel = frame->frame_info.channel;
     info->key_index = frame->frame_info.key_index;
+    info->rssi = frame->frame_info.rssi;
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;
@@ -430,9 +447,9 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     hal = network->hal;
     info = message->info;
     if (info->dest.addr.short_addr == BCAST_SID) {
-        mtu = hal_ur_mesh_get_bcast_mtu(network->hal->module);
+        mtu = hal_umesh_get_bcast_mtu(network->hal->module);
     } else {
-        mtu = hal_ur_mesh_get_ucast_mtu(network->hal->module);
+        mtu = hal_umesh_get_ucast_mtu(network->hal->module);
     }
 
     if (info->dest.addr.len == EXT_ADDR_SIZE ||
@@ -497,12 +514,12 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     }
 
     if (next_node) {
-        error = hal_ur_mesh_send_ucast_request(hal->module, &hal->frame,
-                                               &next_node->mac,
-                                               handle_sent, hal);
+        error = hal_umesh_send_ucast_request(hal->module, &hal->frame,
+                                             &next_node->mac,
+                                             handle_sent, hal);
     } else {
-        error = hal_ur_mesh_send_bcast_request(network->hal->module, &hal->frame,
-                                               handle_sent, hal);
+        error = hal_umesh_send_bcast_request(network->hal->module, &hal->frame,
+                                             handle_sent, hal);
     }
 
     if (error != UR_ERROR_NONE) {
@@ -726,14 +743,17 @@ ur_error_t mf_send_message(message_t *message)
         info->src.netid = umesh_mm_get_meshnetid(network);
         info->src.addr.len = SHORT_ADDR_SIZE;
         info->src.addr.short_addr = umesh_mm_get_local_sid();
-        umesh_task_schedule_call(handle_datagram, message);
-        return UR_ERROR_NONE;
+        error = umesh_task_schedule_call(handle_datagram, message);
+        if (error != UR_ERROR_NONE) {
+            message_free(message);
+        }
+        return error;
     }
 
     info->flags |= INSERT_MESH_HEADER;
     set_dest_encrypt_flag(info);
-    if(info->type == MESH_FRAME_TYPE_DATA) {
-        info->flags |= ENABLE_COMPRESS_FLAG;
+    if (info->type == MESH_FRAME_TYPE_DATA) {
+        //info->flags |= ENABLE_COMPRESS_FLAG;
     }
 
     nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
@@ -801,7 +821,8 @@ ur_error_t mf_send_message(message_t *message)
                     continue;
                 }
                 append_length = sizeof(mcast_header_t) + 1;
-                mcast_message = message_alloc(message_get_msglen(message) + append_length);
+                mcast_message = message_alloc(message_get_msglen(message) + append_length,
+                                              MESH_FORWARDER_1);
                 if (mcast_message == NULL) {
                     break;
                 }
@@ -829,7 +850,8 @@ static bool proxy_check(message_t *message)
 
     if (is_bcast_sid(&info->src) ||
         is_same_mainnet(info->src.netid, umesh_mm_get_meshnetid(network)) == false ||
-        (umesh_mm_get_seclevel() > SEC_LEVEL_0 && (info->flags & ENCRYPT_ENABLE_FLAG) == 0)) {
+        (umesh_mm_get_seclevel() > SEC_LEVEL_0 &&
+         (info->flags & ENCRYPT_ENABLE_FLAG) == 0)) {
         if (info->type == MESH_FRAME_TYPE_DATA) {
             return false;
         }
@@ -862,6 +884,7 @@ static void message_handler(void *args)
 {
     ur_error_t error = UR_ERROR_NONE;
     uint8_t *nexth;
+    message_t *message;
     message_t *assemble_message;
     network_context_t *network = NULL;
     hal_context_t *hal = NULL;
@@ -869,18 +892,21 @@ static void message_handler(void *args)
     bool recv = false;
     bool forward = false;
     neighbor_t *nbr = NULL;
-    received_frame_t *frame = NULL;
 
-    frame = (received_frame_t *)args;
-    hal = frame->hal;
-    info = frame->message->info;
+    hal = (hal_context_t *)args;
+    message = message_queue_get_head(&hal->recv_queue);
+    if (message == NULL) {
+        return;
+    }
+    message_queue_dequeue(message);
+
+    info = message->info;
     network = get_default_network_context();
 
-    if (proxy_check(frame->message) == false) {
-        message_free(frame->message);
-        ur_mem_free(frame, sizeof(received_frame_t));
+    if (proxy_check(message) == false) {
+        message_free(message);
         hal->link_stats.in_drops++;
-        return;
+        goto exit;
     }
 
     if (memcmp(&info->dest.addr, umesh_mm_get_mac_address(),
@@ -904,15 +930,14 @@ static void message_handler(void *args)
 
     if (recv != true && forward != true) {
         hal->link_stats.in_filterings++;
-        message_free(frame->message);
-        ur_mem_free(frame, sizeof(received_frame_t));
-        return;
+        message_free(message);
+        goto exit;
     }
 
     if (recv && info->dest2.addr.len != 0) {
         memcpy(&info->dest.addr, &info->dest2.addr, sizeof(info->dest.addr));
         info->dest2.addr.len = 0;
-        message_set_payload_offset(frame->message, -info->payload_offset);
+        message_set_payload_offset(message, -info->payload_offset);
         info->flags |= INSERT_MESH_HEADER;
         if (info->type != MESH_FRAME_TYPE_DATA) {
             set_src_info(info);
@@ -921,7 +946,7 @@ static void message_handler(void *args)
     }
 
     if (info->type == MESH_FRAME_TYPE_CMD) {
-        handle_diags_command(frame->message, recv);
+        handle_diags_command(message, recv);
     }
 
     if (forward == true) {
@@ -941,24 +966,23 @@ static void message_handler(void *args)
         }
         if (network == NULL) {
             hal->link_stats.in_drops++;
-            message_free(frame->message);
-            ur_mem_free(frame, sizeof(received_frame_t));
-            return;
+            message_free(message);
+            goto exit;
         }
         if (nbr) {
             memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
         }
         info->network = network;
         info->payload_offset = 0;
-        hal = network->hal;
         if (info->type == MESH_FRAME_TYPE_DATA) {
-            message_queue_enqueue(&hal->send_queue[DATA_QUEUE], frame->message);
+            message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE],
+                                  message);
         } else {
-            message_queue_enqueue(&hal->send_queue[CMD_QUEUE], frame->message);
+            message_queue_enqueue(&network->hal->send_queue[CMD_QUEUE],
+                                  message);
         }
-        ur_mem_free(frame, sizeof(received_frame_t));
         umesh_task_schedule_call(send_datagram, network->hal);
-        return;
+        goto exit;
     }
 
     if (info->type == MESH_FRAME_TYPE_DATA) {
@@ -967,23 +991,27 @@ static void message_handler(void *args)
         hal->link_stats.in_command++;
     }
 
-    message_set_payload_offset(frame->message, -info->payload_offset);
-    nexth = message_get_payload(frame->message);
+    message_set_payload_offset(message, -info->payload_offset);
+    nexth = message_get_payload(message);
     if (is_fragment_header(*nexth)) {
-        error = lp_reassemble(frame->message, &assemble_message);
+        error = lp_reassemble(message, &assemble_message);
         if (error == UR_ERROR_NONE && assemble_message) {
-            frame->message = assemble_message;
+            message = assemble_message;
         } else {
             if (error != UR_ERROR_NONE) {
-                message_free(frame->message);
+                message_free(message);
             }
-            ur_mem_free(frame, sizeof(received_frame_t));
-            return;
+            goto exit;
         }
     }
 
-    umesh_task_schedule_call(handle_datagram, frame->message);
-    ur_mem_free(frame, sizeof(received_frame_t));
+    umesh_task_schedule_call(handle_datagram, message);
+
+exit:
+    message = message_queue_get_head(&hal->recv_queue);
+    if (message) {
+        umesh_task_schedule_call(message_handler, hal);
+    }
 }
 
 static void handle_received_frame(void *context, frame_t *frame,
@@ -1014,7 +1042,7 @@ static void handle_received_frame(void *context, frame_t *frame,
         }
     }
 
-    message = message_alloc(frame->len);
+    message = message_alloc(frame->len, MESH_FORWARDER_2);
     if (message == NULL) {
         hal->link_stats.in_drops++;
         return;
@@ -1030,7 +1058,10 @@ static void handle_received_frame(void *context, frame_t *frame,
     rx_frame->hal = hal;
     memcpy(&rx_frame->frame_info, frame_info, sizeof(rx_frame->frame_info));
     resolve_message_info(rx_frame);
-    umesh_task_schedule_call(message_handler, rx_frame);
+
+    message_queue_enqueue(&hal->recv_queue, rx_frame->message);
+    umesh_task_schedule_call(message_handler, hal);
+    ur_mem_free(rx_frame, sizeof(received_frame_t));
 }
 
 static void send_datagram(void *args)
@@ -1156,7 +1187,7 @@ static void handle_datagram(void *args)
             info->flags |= INSERT_MESH_HEADER;
             hals = get_hal_contexts();
             slist_for_each_entry(hals, hal, hal_context_t, next) {
-                relay_message = message_alloc(message_get_msglen(message));
+                relay_message = message_alloc(message_get_msglen(message), MESH_FORWARDER_3);
                 if (relay_message != NULL) {
                     message_copy(relay_message, message);
                     relay_message->info->network = (void *)get_hal_default_network_context(hal);
@@ -1186,11 +1217,18 @@ static void handle_datagram(void *args)
 
 const ur_link_stats_t *mf_get_stats(hal_context_t *hal)
 {
+    uint8_t index;
+
     if (hal == NULL) {
         return NULL;
     }
 
     hal->link_stats.sending = hal->send_message ? true : false;
+    hal->link_stats.send_queue_size = 0;
+    for (index = CMD_QUEUE; index <= PENDING_QUEUE; index++) {
+        hal->link_stats.send_queue_size += message_queue_get_size(&hal->send_queue[index]);
+    }
+    hal->link_stats.recv_queue_size = message_queue_get_size(&hal->recv_queue);
     return &hal->link_stats;
 }
 
@@ -1203,7 +1241,7 @@ ur_error_t mf_init(void)
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        hal_ur_mesh_register_receiver(hal->module, handle_received_frame, hal);
+        hal_umesh_register_receiver(hal->module, handle_received_frame, hal);
         ur_stop_timer(&hal->sending_timer, hal);
         hal->frag_info.tag = 0;
         hal->frag_info.offset = 0;

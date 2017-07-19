@@ -423,7 +423,8 @@ uint16_t me_build_associate_req(uint32_t frame,
     mac_frame_len += me_add_ie_ssid(&frame, bss->ssid.length, (uint8_t *)&bss->ssid.array);
     // Add supported rates
     mac_frame_len += me_add_ie_supp_rates(&frame, &bss->rate_set);
-
+    mac_frame_len += me_add_ie_ext_supp_rates(&frame, &bss->rate_set);
+    
     if (capainfo & MAC_CAPA_SPECTRUM)
     {
         int8_t min, max;

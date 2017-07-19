@@ -46,6 +46,7 @@ ur_error_t ur_adapter_input(void *message)
     buffer = pbuf_alloc(PBUF_RAW, message_get_msglen((message_t *)message),
                         PBUF_POOL);
     if (buffer == NULL) {
+        message_free(message);
         return UR_ERROR_FAIL;
     }
     pbuf_copy(buffer, (struct pbuf *)((message_t *)message)->data);
@@ -53,6 +54,7 @@ ur_error_t ur_adapter_input(void *message)
         error = g_la_state.adpif.input(buffer, &g_la_state.adpif);
     }
     if (error != ERR_OK) {
+        message_free(message);
         pbuf_free(buffer);
         return UR_ERROR_FAIL;
     }
@@ -116,6 +118,7 @@ static void update_interface_ipaddr(void)
     ip6_addr_t                   addr6;
     const ur_netif_ip6_address_t *ip6_addr;
     uint8_t                      index = 0;
+    uint8_t                      addr_index;
 
     ip6_addr = ur_mesh_get_ucast_addr();
     while (ip6_addr) {
@@ -131,8 +134,10 @@ static void update_interface_ipaddr(void)
     ip6_addr = ur_mesh_get_mcast_addr();
     while (ip6_addr) {
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
-        IP6_ADDR(&addr6, ip6_addr->addr.m32[0], ip6_addr->addr.m32[1],
-                 ip6_addr->addr.m32[2], ip6_addr->addr.m32[3]);
+        memset(&addr6, 0, sizeof(addr6));
+        for (addr_index = 0; addr_index < ip6_addr->prefix_length / 32; addr_index++) {
+            addr6.addr[addr_index] = ip6_addr->addr.m32[addr_index];
+        }
         ip6_addr_copy(*(ip_2_ip6(&g_la_state.adpif.ip6_addr[index])), addr6);
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_VALID);
         ip6_addr = ip6_addr->next;

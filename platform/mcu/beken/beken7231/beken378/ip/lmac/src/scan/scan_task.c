@@ -157,6 +157,8 @@ mm_scan_channel_start_ind_handler(ke_msg_id_t const msgid,
 
     // Prepare and transmit the Probe Request(s)
     scan_probe_req_tx();
+	scan_probe_req_tx();
+	scan_probe_req_tx();
 
     // Change the state of the task
     ke_state_set(TASK_SCAN, SCAN_WAIT_BEACON_PROBE_RSP);

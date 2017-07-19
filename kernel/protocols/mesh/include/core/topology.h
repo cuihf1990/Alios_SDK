@@ -60,14 +60,9 @@ enum {
     NBR_SID_CHANGED       = 1 << 0,
     NBR_DISCOVERY_REQUEST = 1 << 1,
     NBR_NETID_CHANGED     = 1 << 2,
+    NBR_REBOOT            = 1 << 3,
+    NBR_CHANNEL_CHANGED   = 1 << 4,
 };
-
-typedef enum node_mode_s {
-    MODE_NONE   = 0x0,  // this is for testing that not joining net
-    MODE_SUPER  = 0x1,
-    MODE_RX_ON  = 0x2,
-    MODE_MOBILE = 0x4,
-} node_mode_t;
 
 typedef enum node_type_s {
     LEAF_NODE      = 0x01,
@@ -97,11 +92,13 @@ typedef struct neighbor_s {
     ur_addr_t addr;
     uint16_t path_cost;
     neighbor_state_t state: 4;
-    node_mode_t mode: 4;
+    node_mode_t mode;
     link_nbr_stats_t stats;
     uint8_t flags;
     uint8_t attach_candidate_timeout;
     ssid_info_t ssid_info;
+    uint8_t channel;
+    int8_t rssi;
     uint32_t last_heard;
 } neighbor_t;
 

@@ -35,6 +35,8 @@ extern "C" {
 #define PRODUCT_VERSION_LEN     (16 + 1)
 #define PRODUCT_NAME_LEN        (32 + 1)
 
+void product_init(void);
+
 /**
  * @brief Get the product version string.
  *

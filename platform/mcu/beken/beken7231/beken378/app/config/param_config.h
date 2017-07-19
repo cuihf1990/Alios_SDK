@@ -103,10 +103,12 @@ typedef struct sta_param
 {
     struct mac_addr own_mac;
     struct mac_ssid ssid;
-    uint8_t cipher_suite;
+    uint8_t security;
     uint8_t key[65];
 	uint8_t key_len;
 	uint8_t fast_connect_set;
+	uint8_t psk[65];
+	uint8_t psk_set;
 	fast_connect_param_t fast_connect;
 } sta_param_t;
 

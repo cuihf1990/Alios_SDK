@@ -19,6 +19,14 @@
 #include "app.h"
 #include "ke_event.h"
 #include "k_api.h"
+#include "yos.h"
+
+void print_exception_addr(unsigned int pc, unsigned int lr, unsigned int sp)
+{
+    cpu_intrpt_save();
+    printf("pc is %x, lr is %x, sp is %x\n", pc, lr, sp);
+    while (1);
+}
 
 #if 1
 #define RECORD_COUNT 128
@@ -51,52 +59,11 @@ static void init_app_thread( void *arg )
 	application_start();
 }
 
-ktask_t task_test22;
-cpu_stack_t task_stk[512];
-
-ktask_t *syst_init_obj;
-ktask_t *task_test_obj2;
-
 extern void fclk_init(void);
 extern void test_case_task_start(void);
 extern void test_mtbf_task_start(void);
 
 static int test_cnt;
-
-extern void bk_send_byte(UINT8 data);
-
-_ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
-{
-    int i;
-    UINT8 *t;
-    t = buf;
-
-    if (fd == 1) {
-        for (i = 0; i < len; i++) {
-
-            if (t[i] == '\n')
-                bk_send_byte('\r');
-            bk_send_byte(*(t + i));
-        }
-
-        return len;
-    }
-
-    return 0;
-}
-
-
-void system_init(void *arg)
-{
-    /* step 2: function layer initialization*/
-    func_init();
-
-    fclk_init();
-
-	app_start();
-
-    return;
-}
 
 void task_test3(void *arg)
 {
@@ -113,16 +80,34 @@ void task_test3(void *arg)
 
 void entry_main(void)
 {
-    yunos_init();
-
-    /* step 1: driver layer initialization*/
-    driver_init();
-
-    yunos_task_dyn_create(&syst_init_obj, "system_init", 0, 10, 0, 512, system_init, 1);
-
-    /* yunos_task_dyn_create(&task_test_obj2, "task_test2", 0, 20, 0, 512, task_test3, 1); */
-	//app_start();
-    yunos_start();
+    yos_start();
 }
+
+extern void hw_start_hal(void);
+
+void soc_driver_init(void)
+{
+    driver_init();
+}
+
+void soc_system_init(void)
+{
+    func_init();
+
+    fclk_init();
+
+    hal_init();
+
+#ifndef YOS_NO_WIFI
+    app_start();
+
+    hw_start_hal();
+
+#ifdef CONFIG_YOS_CLI
+    board_cli_init();
+#endif
+#endif
+}
+
 // eof
 

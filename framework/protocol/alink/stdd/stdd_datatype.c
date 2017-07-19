@@ -28,8 +28,7 @@
 #include "string.h"
 #include "stdd_datatype.h"
 
-static data_type_t g_datatype[] =
-{
+static data_type_t g_datatype[] = {
     {ALINK_DATATYPE_CLASS_NODATA, 0, "no_data", ALINK_DATATYPE_CLASS_NODATA},
     {ALINK_DATATYPE_CLASS_DATA, 1, "data8", ZCL_DATATYPE_DATA8},        //data类型用小写hex string表示
     {ALINK_DATATYPE_CLASS_DATA, 2, "data16", ZCL_DATATYPE_DATA16},
@@ -93,9 +92,8 @@ data_type_t *stdd_get_datatype_by_name(const char *name, int name_len)
     int i = 0;
     data_type_t *type = NULL;
 
-    for(i = 0; i < sizeof(g_datatype)/sizeof(g_datatype[0]); i++)
-    {
-        if(strncmp(g_datatype[i].name, name, name_len) == 0){
+    for (i = 0; i < sizeof(g_datatype) / sizeof(g_datatype[0]); i++) {
+        if (strncmp(g_datatype[i].name, name, name_len) == 0) {
             type = &g_datatype[i];
             break;
         }
@@ -111,9 +109,8 @@ data_type_t *stdd_get_datatype_by_id(uint8_t type_id)
     int i = 0;
     data_type_t *type = NULL;
 
-    for(i = 0; i < sizeof(g_datatype)/sizeof(g_datatype[0]); i++)
-    {
-        if(g_datatype[i].id == type_id){
+    for (i = 0; i < sizeof(g_datatype) / sizeof(g_datatype[0]); i++) {
+        if (g_datatype[i].id == type_id) {
             type = &g_datatype[i];
             break;
         }

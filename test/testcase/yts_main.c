@@ -31,7 +31,7 @@ extern void test_csp(void);
 extern void test_vfs(void);
 extern void test_crypto(void);
 extern void test_time(void);
-extern void test_flash(void);
+extern void test_vflash(void);
 extern void test_wifi(void);
 extern void test_audio(void);
 extern void test_mesh(void);
@@ -139,6 +139,8 @@ void add_test(void)
     test_tfs();
 
     test_vfs();
+
+    test_vflash();
 
     test_netmgr();
 

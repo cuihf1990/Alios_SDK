@@ -55,9 +55,15 @@
    ---------- Memory options ----------
 */
 #define MEM_ALIGNMENT                   4
-#define MEM_SIZE                        0x100000
+#define MEM_SIZE                        0x8000
 
-#define MEM_LIBC_MALLOC                 0
+#define MEM_LIBC_MALLOC                 1
+#if MEM_LIBC_MALLOC
+#include <yos/kernel.h>
+#define mem_clib_malloc yos_malloc
+#define mem_clib_free yos_free
+#define mem_clib_calloc(n, m) yos_zalloc( (n) * (m) )
+#endif
 
 #define MEMP_MEM_MALLOC                 1
 #define MEMP_OVERFLOW_CHECK             1
@@ -227,11 +233,13 @@
    ---------- Hook options ---------------
 */
 
+#ifdef CONFIG_YOS_MESH
 #define LWIP_DECLARE_HOOK \
     struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest); \
     int lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest);
 #define LWIP_HOOK_IP6_ROUTE(src, dest)           lwip_hook_ip6_route(src, dest)
 #define LWIP_HOOK_MESH_IS_MCAST_SUBSCRIBED(dest) lwip_hook_mesh_is_mcast_subscribed(dest)
+#endif
 
 /*
    ---------- Debugging options ----------

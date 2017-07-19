@@ -37,6 +37,7 @@ static void handle_link_request_timer(void *args)
     slist_t *networks;
     network_context_t *network;
     uint32_t interval;
+    uint8_t tlv_type[1] = {TYPE_UCAST_CHANNEL};
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link update timer\r\n");
 
@@ -59,7 +60,8 @@ static void handle_link_request_timer(void *args)
             continue;
         }
 
-        send_link_request(network, &attach_node->addr, NULL, 0);
+        send_link_request(network, &attach_node->addr,
+                          tlv_type, sizeof(tlv_type));
     }
 }
 
@@ -196,7 +198,8 @@ static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     }
 
     network = get_network_context_by_meshnetid(neighbor->addr.netid);
-    if (network && network->router->sid_type == STRUCTURED_SID) {
+    if (network && network->router->sid_type == STRUCTURED_SID &&
+        is_allocated_child(network, neighbor)) {
         free_sid(network, neighbor->addr.addr.short_addr);
     }
 
@@ -268,8 +271,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
     mm_ueid_tv_t      *src_ueid = NULL;
     mm_ssid_info_tv_t *ssid_info = NULL;
     mm_mode_tv_t      *mode;
+    mm_channel_tv_t   *channel;
     hal_context_t     *hal;
     network_context_t *network;
+    uint8_t channel_orig;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
@@ -277,6 +282,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     src_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SRC_UEID);
     ssid_info = (mm_ssid_info_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SSID_INFO);
     mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_MODE);
+    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_UCAST_CHANNEL);
 
     hal = get_hal_context(info->hal_type);
     nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
@@ -318,6 +324,16 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (nbr->addr.netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
+    channel_orig = nbr->channel;
+    if (channel) {
+        nbr->channel = channel->channel;
+    } else {
+        nbr->channel = info->src_channel;
+    }
+    if (channel_orig && nbr->channel != channel_orig) {
+        nbr->flags |= NBR_CHANNEL_CHANGED;
+    }
+    nbr->rssi = info->rssi;
     nbr->last_heard = ur_get_now();
 
     network = info->network;
@@ -334,7 +350,8 @@ neighbor_t *update_neighbor(const message_info_t *info,
             nbr->state = STATE_NEIGHBOR;
         }
         network = get_network_context_by_meshnetid(info->src.netid);
-        if (is_direct_child(network, info->src.addr.short_addr)) {
+        if (is_direct_child(network, info->src.addr.short_addr) &&
+            is_allocated_child(network, nbr)) {
             nbr->state = STATE_CHILD;
         }
     }
@@ -458,7 +475,7 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
     if (tlvs_length) {
         length += (tlvs_length + sizeof(mm_tlv_request_tlv_t));
     }
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -522,7 +539,7 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
         length += (sizeof(mm_tlv_request_tlv_t) + tlv_types_length);
     }
 
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -530,11 +547,12 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
     mm_header = (mm_header_t *)data;
     mm_header->command = COMMAND_LINK_ACCEPT_AND_REQUEST;
     data += sizeof(mm_header_t);
-    data += tlvs_set_value(data, tlvs, tlvs_length);
+    data += tlvs_set_value(network, data, tlvs, tlvs_length);
 
     if (tlv_types_length) {
         request_tlvs = (mm_tlv_request_tlv_t *)data;
-        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST, tlv_types_length);
+        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST,
+                               tlv_types_length);
         data += sizeof(mm_tlv_request_tlv_t);
         data[0] = TYPE_TARGET_UEID;
         data += tlv_types_length;
@@ -576,7 +594,7 @@ static ur_error_t send_link_accept(network_context_t *network,
         return UR_ERROR_FAIL;
     }
     length += sizeof(mm_header_t);
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_3);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -585,7 +603,7 @@ static ur_error_t send_link_accept(network_context_t *network,
     mm_header = (mm_header_t *)data;
     mm_header->command = COMMAND_LINK_ACCEPT;
     data += sizeof(mm_header_t);
-    data += tlvs_set_value(data, tlvs, tlvs_length);
+    data += tlvs_set_value(network, data, tlvs, tlvs_length);
 
     info = message->info;
     info->network = network;
@@ -615,7 +633,7 @@ ur_error_t handle_link_request(message_t *message)
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
     tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_TLV_REQUEST);
+                                                           TYPE_TLV_REQUEST);
 
     if (tlvs_request) {
         tlvs = (uint8_t *)tlvs_request + sizeof(mm_tlv_t);
@@ -634,9 +652,11 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     uint16_t   tlvs_length;
     mm_tlv_request_tlv_t *tlvs_request;
     mm_ueid_tv_t *ueid;
+    mm_channel_tv_t *channel;
     neighbor_t *node;
     message_info_t *info;
     network_context_t *network;
+    uint8_t local_channel;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
            "handle link accept and resquest\r\n");
@@ -658,8 +678,17 @@ ur_error_t handle_link_accept_and_request(message_t *message)
         memcpy(node->ueid, ueid->ueid, sizeof(node->ueid));
     }
 
+    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                 TYPE_UCAST_CHANNEL);
+    if (channel) {
+        local_channel = umesh_mm_get_channel(network);
+        if (local_channel != channel->channel) {
+            umesh_mm_set_channel(network, channel->channel);
+        }
+    }
+
     tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_TLV_REQUEST);
+                                                           TYPE_TLV_REQUEST);
     if (tlvs_request) {
         tlvs = (uint8_t *)tlvs_request + sizeof(mm_tlv_t);
         tlvs_length = tlvs_request->base.length;

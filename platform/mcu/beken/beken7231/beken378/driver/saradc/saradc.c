@@ -288,7 +288,7 @@ void saradc_isr(void)
 	UINT32 value;
 
 	value = REG_READ(SARADC_ADC_CONFIG);
-	if((value&SARADC_ADC_BUSY) == 0){
+    while((value & SARADC_ADC_FIFO_EMPTY) == 0) {
         UINT16 dac_val;
         if (saradc_desc->current_sample_data_cnt >= saradc_desc->data_buff_size){
             saradc_desc->current_sample_data_cnt = 0;
@@ -301,8 +301,8 @@ void saradc_isr(void)
         if(saradc_desc->p_Int_Handler != NULL){
             (void)saradc_desc->p_Int_Handler();
         }
+        value = REG_READ(SARADC_ADC_CONFIG);
     }
-
     saradc_int_clr();
 }
 

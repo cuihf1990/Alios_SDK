@@ -67,7 +67,7 @@ enum log_level_bit {
     do { \
         if (CON) { \
             long long ms = yos_now_ms();; \
-            csp_printf(COLOR" [%d.%03d]<%s> %s [%s#%d] : ", (int)(ms/1000), (int)(ms%1000), LVL, MOD, __FUNCTION__, __LINE__); \
+            csp_printf(COLOR" [%4d.%03d]<%s> %s [%s#%d] : ", (int)(ms/1000), (int)(ms%1000), LVL, MOD, __FUNCTION__, __LINE__); \
             csp_printf(FMT COL_DEF"\r\n", ##__VA_ARGS__); \
         } \
     } while (0)
@@ -76,8 +76,7 @@ enum log_level_bit {
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
     do { \
         if (CON) { \
-            long long ms = yos_now_ms();; \
-            csp_printf(" [%d.%03d]<%s> "FMT"\n", (int)(ms/1000), (int)(ms%1000), LVL, ##__VA_ARGS__); \
+            csp_printf("[%06d]<" LVL "> "FMT"\n", (unsigned)yos_now_ms(), ##__VA_ARGS__); \
         } \
     } while (0)
 
@@ -99,16 +98,27 @@ int csp_printf(const char *fmt, ...);
 #undef LOG
 
 #define LOG_IMPL(fmt, ...) \
-            log_print(1, "YoC", COL_DEF, "V", fmt, ##__VA_ARGS__)
+            log_print(1, "YOS", COL_DEF, "V", fmt, ##__VA_ARGS__)
+
+#ifdef NDEBUG
+#define CONFIG_LOGMACRO_SILENT
+#endif
+
+#ifdef DEBUG
+#define LOGD_IMPL(mod, fmt, ...) \
+            log_print(YOS_LOG_LEVEL & YOS_LL_V_DEBUG, mod, COL_WHE, "D", fmt, ##__VA_ARGS__)
+#else
+#define LOGD_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
+#endif
 
 #ifdef CONFIG_LOGMACRO_SILENT
 #define LOGF_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #define LOGE_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #define LOGW_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #define LOGI_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
-#define LOGD_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 
 #else
+
 #define LOGF_IMPL(mod, fmt, ...) \
             log_print(YOS_LOG_LEVEL & YOS_LL_V_FATAL, mod, COL_RED, "F", fmt, ##__VA_ARGS__)
 #define LOGE_IMPL(mod, fmt, ...) \
@@ -117,8 +127,6 @@ int csp_printf(const char *fmt, ...);
             log_print(YOS_LOG_LEVEL & YOS_LL_V_WARN, mod, COL_BLU, "W", fmt, ##__VA_ARGS__)
 #define LOGI_IMPL(mod, fmt, ...) \
             log_print(YOS_LOG_LEVEL & YOS_LL_V_INFO, mod, COL_GRE, "I", fmt, ##__VA_ARGS__)
-#define LOGD_IMPL(mod, fmt, ...) \
-            log_print(YOS_LOG_LEVEL & YOS_LL_V_DEBUG, mod, COL_WHE, "D", fmt, ##__VA_ARGS__)
 
 #endif /* CONFIG_LOGMACRO_SILENT */
 

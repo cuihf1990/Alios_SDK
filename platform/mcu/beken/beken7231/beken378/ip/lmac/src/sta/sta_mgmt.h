@@ -592,6 +592,8 @@ __INLINE bool sta_mgmt_is_in_ps(uint8_t sta_idx)
  */
 __INLINE bool sta_mgmt_is_valid(uint8_t sta_idx)
 {
+	if (sta_idx >= STA_MAX)
+		return false;
     return (sta_info_tab[sta_idx].valid);
 }
 

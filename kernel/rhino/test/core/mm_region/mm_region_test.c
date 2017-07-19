@@ -17,6 +17,9 @@
 #include <k_api.h>
 #include <k_mm_region.h>
 #include <test_fw.h>
+
+#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
+
 #include "mm_region_test.h"
 
 ktask_t   *task_mm_region;
@@ -100,6 +103,7 @@ void task_mm_region_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
+#endif

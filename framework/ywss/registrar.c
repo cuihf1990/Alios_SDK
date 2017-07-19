@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <stdlib.h>
 #include "service_manager.h"
 #include "alink_protocol.h"
@@ -15,20 +31,25 @@ static void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi
 static void registrar_raw_frame_init(struct enrollee_info *enr);
 static void registrar_raw_frame_send(void);
 static void registrar_raw_frame_destroy(void);
-static void enrollee_report(void *arg);
-static void enrollee_checkin(void *arg);
+
+static void enrollee_report(void *);
+static void enrollee_checkin(void *);
 static int enrollee_enable_somebody_checkin(int dev_type, char *token, char *key, char *devid);
 
 #define REGISTRAR_SEND_PKT_INTERVAL     (160)
 #define MODULE_NAME_ENROLLEE "awss.enrollee"
 
 static const uint8_t alibaba_oui[3] = { 0xD8, 0x96, 0xE0 };
+static int registrar_inited = 0;
 void awss_registrar_init(void)
 {
+    if (registrar_inited) {
+        return;
+    }
+    registrar_inited = 1;
     os_wifi_enable_mgnt_frame_filter(
                 FRAME_BEACON_MASK | FRAME_PROBE_REQ_MASK,
                 (uint8_t *)alibaba_oui, awss_wifi_mgnt_frame_callback);
-    start_awss_work();
     sm_attach_service("accs", &registrar_event);
 }
 
@@ -39,8 +60,6 @@ void awss_registrar_exit(void)
                 (uint8_t *)alibaba_oui, NULL);
 
     sm_detach_service("accs", &registrar_event);
-
-    stop_awss_work();
 }
 
 #if 0
@@ -63,6 +82,14 @@ int alink_enrollee_checkin(char *params)
     char *value;
     int attr_len, ret = -1;
 
+    token = yos_zalloc(MAX_TOKEN_LEN + 1);
+    devid = yos_zalloc(MAX_DEVID_LEN + 1);
+    key = yos_zalloc(MAX_KEY_LEN * 2 + 1);
+
+    if (!token || !devid || !key)
+        goto out;
+
+
     value = json_get_value_by_name(params, strlen(params),
                                    "deviceType", &attr_len, NULL);
     if (value) {
@@ -76,7 +103,7 @@ int alink_enrollee_checkin(char *params)
     value = json_get_value_by_name(params, strlen(params),
                                    "traceToken", &attr_len, NULL);
     if (value) {
-        token = value;
+        memcpy(token, value, attr_len);
     } else {
         goto out;
     }
@@ -84,7 +111,7 @@ int alink_enrollee_checkin(char *params)
     value = json_get_value_by_name(params, strlen(params),
                                    "deviceId", &attr_len, NULL);
     if (value) {
-        devid = value;
+        memcpy(devid, value, attr_len);
     } else {
         goto out;
     }
@@ -92,24 +119,38 @@ int alink_enrollee_checkin(char *params)
     value = json_get_value_by_name(params, strlen(params),
                                    "key", &attr_len, NULL);
     if (value) {
-        key = value;
+        memcpy(key, value, attr_len);
     } else {
         goto out;
     }
 
     value = json_get_value_by_name(params, strlen(params),
                                    "algorithm", &attr_len, NULL);
-    if (!value || strcmp(value, "aesh5")) {
+    if (!value || strncmp(value, "aesh5", strlen("aesh5"))) {
         goto out;    //algorithm not supported
     }
 
     ret = enrollee_enable_somebody_checkin(dev_type, token, key, devid);
 
-    return !ret;
 
 out:
-    LOGW(MODULE_NAME_ENROLLEE,"alink checkin failed");
-    return -1;
+    if (token) {
+        yos_free(token);
+    }
+    if (devid) {
+        yos_free(devid);
+    }
+    if (key) {
+        yos_free(key);
+    }
+
+    if (ret > 0) {
+        return 0;
+    } else {
+        LOGW(MODULE_NAME_ENROLLEE,"alink checkin failed");
+        return -1;
+    }
+   return -1;
 }
 
 int alink_clear_apinfo(char *params)
@@ -136,13 +177,13 @@ int alink_clear_apinfo(char *params)
 int alink_set_apinfo(char *params)
 {
     char *value;
-    char *ssid = NULL, *passwd = NULL;
+    char ssid[OS_MAX_SSID_LEN] = { 0 }, passwd[OS_MAX_PASSWD_LEN] = { 0 };
     int ret, attr_len;
 
     value = json_get_value_by_name(params, strlen(params),
                                    "ssid", &attr_len, NULL);
     if (value) {
-        ssid = value;
+        memcpy(ssid, value, attr_len);
     } else {
         goto out;
     }
@@ -150,7 +191,7 @@ int alink_set_apinfo(char *params)
     value = json_get_value_by_name(params, strlen(params),
                                    "passwd", &attr_len, NULL);
     if (value) {
-        passwd = value;
+        memcpy(passwd, value, attr_len);
     } else {
         goto out;
     }
@@ -239,21 +280,26 @@ static int enrollee_enable_somebody_checkin(int dev_type, char *token, char *key
                 && !memcmp(devid, enrollee_info[i].devid, enrollee_info[i].devid_len)) {
 
                 int key_byte_len = 0;
-                char *key_byte = alink_base64_decode_alloc(key, &key_byte_len);
-                if (!key_byte) {
-                    return 0;
-                }
+                uint8_t *key_byte = yos_malloc(MAX_KEY_LEN);
+               	if(!key_byte)
+			return 0;
+		memset(key_byte,0,MAX_KEY_LEN); 
+
+                key_byte_len = utils_str_to_hex(key, strlen(key), key_byte, MAX_KEY_LEN);
+                
+		if(key_byte_len != AES_KEY_LEN)
+			return 0;
 
                 memcpy((char *)&enrollee_info[i].key[0], key_byte, AES_KEY_LEN);
                 strcpy((char *)&enrollee_info[i].token[0], token);
 
-                alink_base64_release(key_byte);
+                yos_free(key_byte);
 
                 LOGI(MODULE_NAME_ENROLLEE,"enrollee[%d] state %d->%d", i, enrollee_info[i].state,
                          ENR_CHECKIN_ENABLE);
                 enrollee_info[i].state = ENR_CHECKIN_ENABLE;
                 enrollee_info[i].checkin_priority = 1;//TODO: not implement yet
-                yos_schedule_work(0,enrollee_checkin,NULL,NULL,NULL);
+                yos_loop_schedule_work(0,enrollee_checkin,NULL,NULL,NULL);
                 return 1;/* match */
             }
         }
@@ -269,7 +315,7 @@ static void enrollee_checkin(void *arg)
 {
     int i;
     int checkin_ongoing = -1, pri = 65536, checkin_new = -1;
-    unsigned int timestamp = yos_get_time_ms();
+    unsigned int timestamp = os_get_time_ms();
 
     for (i = 0; i < MAX_ENROLLEE_NUM; i++) {
         switch (enrollee_info[i].state) {
@@ -288,7 +334,7 @@ static void enrollee_checkin(void *arg)
     }
 
     if (checkin_ongoing == -1 && checkin_new == -1) {
-        return ;
+        return;
     }
 
     //checkin_new:
@@ -296,16 +342,16 @@ static void enrollee_checkin(void *arg)
         LOGI(MODULE_NAME_ENROLLEE,"enrollee[%d] state %d->%d", checkin_new,
                  enrollee_info[checkin_new].state, ENR_CHECKIN_ONGOING);
         enrollee_info[checkin_new].state = ENR_CHECKIN_ONGOING;
-        enrollee_info[checkin_new].checkin_deadline = timestamp
-                + ENROLLEE_CHECKIN_PERIOD_MS;
-        registrar_raw_frame_init(&enrollee_info[checkin_new]);
+
+        enrollee_info[checkin_new].checkin_timestamp = os_get_time_ms();
+       registrar_raw_frame_init(&enrollee_info[checkin_new]);
 
         i = checkin_new;
     }
 ongoing:
     registrar_raw_frame_send();
     LOGI(MODULE_NAME_ENROLLEE,"registrar_raw_frame_send");
-    if (timestamp > enrollee_info[i].checkin_deadline) {
+    if(time_elapsed_ms_since(enrollee_info[i].checkin_timestamp) > ENROLLEE_CHECKIN_PERIOD_MS){
         LOGI(MODULE_NAME_ENROLLEE,"enrollee[%d] state %d->%d", i,
                  enrollee_info[i].state, ENR_CHECKIN_END);
         enrollee_info[i].state = ENR_CHECKIN_END;//FIXME: remove this state?
@@ -314,7 +360,7 @@ ongoing:
         enrollee_info[i].state = ENR_FREE;
         registrar_raw_frame_destroy();
     }
-    yos_schedule_work(REGISTRAR_SEND_PKT_INTERVAL,enrollee_checkin,NULL,NULL,NULL);
+    yos_loop_schedule_work(REGISTRAR_SEND_PKT_INTERVAL,enrollee_checkin,NULL,NULL,NULL);
 }
 
 unsigned int enrollee_report_period_ms = 30 * 1000;
@@ -363,6 +409,8 @@ int alink_report_enrollee(int dev_type, unsigned char *devid, int devid_len,
     data.method = "device.enrolleeFound";
     data.data = buf;
 
+    LOGD("registart", "To put data: %s", data.data);
+
     ret = sm_get_service("accs")->put((void *)&data, sizeof(data));//accs_put
     //TODO: parse the result: report period
     ret = 10;//report enrollee info duration
@@ -384,22 +432,28 @@ int alink_report_enrollee(int dev_type, unsigned char *devid, int devid_len,
 static void enrollee_report(void *arg)
 {
     int i;
+    char ssid[OS_MAX_SSID_LEN] = { 0 };
+
+    os_wifi_get_ap_info(ssid, NULL, NULL);
+    if (!strcmp(ssid, DEFAULT_SSID)) {
+        return;/* ignore enrollee in 'aha' mode */
+    }
+
 
     /* evict timeout enrollee */
     for (i = 0; i < MAX_ENROLLEE_NUM; i++) {
         if (enrollee_info[i].state) {
-            uint32_t timestamp = yos_get_time_ms();
-            if (timestamp - enrollee_info[i].timestamp
+            if (time_elapsed_ms_since(enrollee_info[i].timestamp)
                 > ENROLLEE_EVICT_PERIOD_MS) {
                 LOGI(MODULE_NAME_ENROLLEE,"enrollee[%d](state %d) evict:%s, %x->%x", i,
                          enrollee_info[i].state,
                          enrollee_info[i].devid,
-                         enrollee_info[i].timestamp, timestamp);
+                         enrollee_info[i].timestamp, os_get_time_ms());
                 enrollee_info[i].state = ENR_FREE;
             } else {
                 struct enrollee_info *enrollee = &enrollee_info[i];
-                uint32_t timestamp = yos_get_time_ms();
-                if (timestamp - enrollee->report_timestamp > enrollee_report_period_ms) {
+               
+                if (time_elapsed_ms_since(enrollee->report_timestamp) > enrollee_report_period_ms) {
                     int payload_len = 1 + enrollee->model_len + sizeof(uint32_t) + ENROLLEE_SIGN_SIZE;
                     uint8_t *payload = os_malloc(payload_len);
                     if (!payload) {
@@ -419,11 +473,11 @@ static void enrollee_report(void *arg)
                         enrollee_report_period_ms = report_period * 1000;
                     }
 
-                    LOGT(MODULE_NAME_ENROLLEE,"enrollee report result:%s, period:%dms\n",
+                    LOGI(MODULE_NAME_ENROLLEE,"enrollee report result:%s, period:%dms\n",
                               report_period > 0 ? "success" : "failed",
                               enrollee_report_period_ms);
 
-                    enrollee->report_timestamp = timestamp;
+                    enrollee->report_timestamp = os_get_time_ms();
                     if (payload) {
                         os_free(payload);
                     }
@@ -498,7 +552,7 @@ int enrollee_put(struct enrollee_info *in)
         if (enrollee_info[i].state) {
             if (!memcmp(in, &enrollee_info[i], ENROLLEE_INFO_HDR_SIZE)) {
                 /* update timestamp */
-                enrollee_info[i].timestamp = yos_get_time_ms();
+                enrollee_info[i].timestamp = os_get_time_ms();
                 enrollee_info[i].rssi = (2 * enrollee_info[i].rssi + in->rssi) / 3;
                 /*
                  * under certain conditions(state was clear
@@ -525,12 +579,12 @@ int enrollee_put(struct enrollee_info *in)
     memset(&enrollee_info[empty_slot], 0, sizeof(struct enrollee_info));
     memcpy(&enrollee_info[empty_slot], in, ENROLLEE_INFO_HDR_SIZE);
     enrollee_info[empty_slot].rssi = in->rssi;
-    enrollee_info[empty_slot].timestamp = yos_get_time_ms();
+    enrollee_info[empty_slot].timestamp = os_get_time_ms();
     enrollee_info[empty_slot].state = ENR_IN_QUEUE;
     LOGI(MODULE_NAME_ENROLLEE,"new enrollee[%d] devid:%s time:%x",
              empty_slot, in->devid, enrollee_info[empty_slot].timestamp);
 
-    yos_schedule_work(0,enrollee_report,NULL,NULL,NULL);
+    yos_loop_schedule_work(0,enrollee_report,NULL,NULL,NULL);
 
     return 0;
 }
@@ -568,7 +622,7 @@ void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int b
 
     switch (type) {
         case MGMT_BEACON:
-            LOGT(MODULE_NAME_ENROLLEE,"beacon");
+            //LOGI(MODULE_NAME_ENROLLEE,"beacon");
             buffer += MGMT_HDR_LEN + 12;/* hdr(24) + 12(timestamp, beacon_interval, cap) */
             length -= MGMT_HDR_LEN + 12;
 
@@ -580,17 +634,13 @@ void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int b
             }
 
             buffer += 2;
-            if (len) {
-                buffer[len] = '\0';
-                //LOGI(MODULE_NAME_ENROLLEE,"ssid:%s", buffer);
-            } /* else hidden ssid */
-
+            length -= 2;
             buffer += len;
             length -= len;
             goto find_ie;
             break;
         case MGMT_PROBE_REQ:
-            LOGT(MODULE_NAME_ENROLLEE,"probe req\n");
+            //LOGI(MODULE_NAME_ENROLLEE,"probe req\n");
             buffer += MGMT_HDR_LEN;
             length -= MGMT_HDR_LEN;
 
@@ -604,10 +654,10 @@ ie_handler:
             }
             break;
         case MGMT_PROBE_RESP:
-            LOGT(MODULE_NAME_ENROLLEE,"probe resp");
+            //LOGI(MODULE_NAME_ENROLLEE,"probe resp");
             break;
         default:
-            LOGT(MODULE_NAME_ENROLLEE,"frame (%d): %02x \n", length, type);
+            //LOGI(MODULE_NAME_ENROLLEE,"frame (%d): %02x \n", length, type);
             break;
     }
 }
@@ -668,7 +718,7 @@ static void registrar_raw_frame_init(struct enrollee_info *enr)
     registrar_frame[len++] = passwd_len;
 
     {
-        p_aes128_t aes = os_aes128_init(&enr->key[0], iv, PLATFORM_AES_DECRYPTION);
+        p_aes128_t aes = os_aes128_init(&enr->key[0], iv, PLATFORM_AES_ENCRYPTION);
         //passwd was padding by 0
         os_aes128_cbc_encrypt(aes, (uint8_t *)passwd, passwd_len / AES_KEY_LEN,
                               (uint8_t *)&registrar_frame[len]);

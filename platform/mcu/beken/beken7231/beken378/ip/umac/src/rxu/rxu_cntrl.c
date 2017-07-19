@@ -64,6 +64,11 @@
 #if CFG_WIFI_AP_MODE
 #include "sk_intf.h"
 #endif
+
+#include "defs.h"
+#include "ieee802_11_defs.h"
+#include "wpa_common.h"
+
 /*
  * DEFINES
  ****************************************************************************************
@@ -467,15 +472,19 @@ static void rxu_msdu_upload_and_indicate(struct rx_swdesc *p_rx_swdesc,
     dma_hdrdesc->flags |= (rx_stat->sta_idx << RX_FLAGS_STA_INDEX_OFT) |
                           (rx_stat->vif_idx << RX_FLAGS_VIF_INDEX_OFT) |
                           (rx_stat->dst_idx << RX_FLAGS_DST_INDEX_OFT);
-    
+
+#ifdef CONFIG_YOS_MESH
+    if (rxu_mesh_monitor(p_rx_swdesc) == false)
+#endif
     // Translate the MAC frame to an Ethernet frame
+    {
     if(!bk_wlan_is_monitor_mode())
 	{
 	    rxu_cntrl_mac2eth_update(p_rx_swdesc);
 	}
-    
+    }
     // Program the DMA transfer of the MPDU
-	rxl_mpdu_transfer(p_rx_swdesc);
+    rxl_mpdu_transfer(p_rx_swdesc);
 }
 
 /**
@@ -552,78 +561,257 @@ static void rxu_cntrl_get_da_sa(struct mac_hdr_long *machdr_ptr)
     }
 }
 
-uint32_t rxu_cntrl_patch_get_special_packet(uint8_t *p_frame)
+#if 1
+uint32_t rxu_mtr_is_mulicast_brdcast(struct mac_hdr *machdr)
 {
-	uint32_t hit_flag = 0;
+	uint8_t *addr = 0;
+	uint32_t ds_status;
+	uint32_t cast_flag = 0;
+	uint64_t mac_address = 0;
+
+	ds_status = (machdr->fctl >> 8) & 0x03; 
+	switch(ds_status)
+	{
+		case 0:/*ToDS FromDS:0 0 ibss*/
+			break;
+			
+		case 1:/*ToDS FromDS:1 0 infra*/
+			addr = (uint8_t *)&machdr->addr3;
+			break;
+			
+		case 2:/*ToDS FromDS:0 1 infra*/
+			addr = (uint8_t *)&machdr->addr1;
+			break;
+			
+		case 3:/*ToDS FromDS:1 1 wds*/
+		default:
+			break;
+	}
+
+	if(addr)
+	{
+		cast_flag = (MAC_ADDR_IS_BSCT(addr) || MAC_ADDR_IS_MULTI(addr));
+	}
+	
+	return cast_flag;
+}
+
+uint32_t rxu_mtr_is_mulicast(struct mac_hdr *machdr)
+{
+	uint8_t *addr = 0;
+	uint32_t ds_status;
+	uint32_t multi_flag = 0;
+	uint64_t mac_address = 0;
+
+	ds_status = (machdr->fctl >> 8) & 0x03;	
+	switch(ds_status)
+	{
+		case 0:/*ToDS FromDS:0 0 ibss*/
+			break;
+			
+		case 1:/*ToDS FromDS:1 0 infra*/
+			addr = (uint8_t *)&machdr->addr3;
+			break;
+			
+		case 2:/*ToDS FromDS:0 1 infra*/
+			addr = (uint8_t *)&machdr->addr1;
+			break;
+			
+		case 3:/*ToDS FromDS:1 1 wds*/
+		default:
+			break;
+	}
+
+	if(addr)
+	{
+		multi_flag = MAC_ADDR_IS_MULTI(addr);
+	}
+	
+	return multi_flag;
+}
+
+uint32_t rxu_mtr_is_data_or_qosdata(struct mac_hdr *machdr)
+{
+	uint16_t frame_cntrl = machdr->fctl;
+
+	if((MAC_FCTRL_DATA_T == (frame_cntrl & MAC_FCTRL_TYPE_MASK))
+		&& ((0x0000 == ((frame_cntrl & MAC_FCTRL_SUBT_MASK) >> 4))
+			|| (frame_cntrl & 0x80)))
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+uint32_t rxu_mtr_record_count(struct mac_hdr *machdr)
+{
+	return hal_monitor_record_count(machdr);
+}
+
+uint32_t rxu_cntrl_get_group_cipher_type(uint32_t cipher_type)
+{
+	uint32_t type = CTYPERAM_NULL_KEY;
+
+	switch(cipher_type)
+	{
+		case CIPHER_WEP:
+			type = CTYPERAM_WEP;
+			break;
+			
+		case CIPHER_TKIP:			
+		case CIPHER_TKIP_COMPATIBILITY:
+			type = CTYPERAM_TKIP;
+			break;
+			
+		case CIPHER_CCMP:
+			type = CTYPERAM_CCMP;
+			break;
+			
+		case CIPHER_OPEN_SYSTEM:
+		default:
+			break;
+	}
+	
+	return type;
+}
+
+uint32_t rxu_cntrl_be32(const uint8_t *a)
+{
+	return ((uint32_t) a[0] << 24) | (a[1] << 16) | (a[2] << 8) | a[3];
+}
+
+const u8 * rxu_cntrl_get_ie(uint8_t *p_frame,
+	uint32_t len, uint8_t ie)
+{
+	const u8 *end, *pos;
+
+	pos = (const u8 *) p_frame;
+	end = pos + len;
+
+	while (pos + 1 < end) 
+	{
+		if (pos + 2 + pos[1] > end)
+			break;
+		
+		if (pos[0] == ie)
+			return pos;
+		
+		pos += 2 + pos[1];
+	}
+
+	return NULL;
+}
+
+const uint8_t * rxu_cntrl_get_vendor_ie(uint8_t *p_frame,
+	uint32_t len, uint32_t vendor_type)
+{
+	const uint8_t *end, *pos;
+
+	pos = (const uint8_t *) p_frame;
+	end = pos + len;
+
+	while (pos + 1 < end) 
+	{
+		if (pos + 2 + pos[1] > end)
+			break;
+		
+		if (pos[0] == WLAN_EID_VENDOR_SPECIFIC 
+			&& pos[1] >= 4 
+			&& vendor_type == rxu_cntrl_be32(&pos[2]))
+		{
+			return pos;
+		}
+		
+		pos += 2 + pos[1];
+	}
+
+	return NULL;
+}
+
+
+uint32_t rxu_cntrl_get_cipher_type_using_beacon(uint8_t *p_frame,
+	uint32_t len)
+{	
+	int wpa;
+	uint8_t *addr;	
+	struct wpa_ie_data ie = {0};
+	const u8 *rsn_ie, *wpa_ie;
+	uint32_t support_privacy_flag = 0;
+	uint16_t cap_info, cap_offset;
+	uint32_t wpa_ie_len, rsn_ie_len;
+	uint32_t cipher_type = CIPHER_OPEN_SYSTEM;
+	uint32_t group_cipher_type;
+
+	wpa_ie = (uint8_t *)rxu_cntrl_get_vendor_ie((uint8_t *)(p_frame + MAC_BEACON_VARIABLE_PART_OFT), len, WPA_IE_VENDOR_TYPE);
+	wpa_ie_len = wpa_ie ? wpa_ie[1] : 0;
+
+	rsn_ie = (uint8_t *)rxu_cntrl_get_ie((uint8_t *)(p_frame + MAC_BEACON_VARIABLE_PART_OFT), len, WLAN_EID_RSN);
+	rsn_ie_len = rsn_ie ? rsn_ie[1] : 0;
+
+	wpa = (wpa_ie_len > 0) || (rsn_ie_len > 0);
+	cap_offset = MAC_BEACON_CAPA_OFT;
+	cap_info = p_frame[cap_offset] + (p_frame[cap_offset + 1] << 8);
+	support_privacy_flag = cap_info & BEACON_CAP_PRIVACY;
+
+	if(wpa)
+	{
+		if(rsn_ie)
+		{
+			wpa_parse_wpa_ie(rsn_ie, 2 + rsn_ie[1], &ie);
+			if(ie.pairwise_cipher == (WPA_CIPHER_CCMP|WPA_CIPHER_TKIP))
+			{
+				cipher_type = CIPHER_TKIP_COMPATIBILITY;
+			}
+			else if(ie.pairwise_cipher == WPA_CIPHER_CCMP)
+			{
+				cipher_type = CIPHER_CCMP;
+			}
+		}
+		
+		if(wpa_ie)
+		{
+			cipher_type = CIPHER_TKIP;
+		}
+	}
+	else if(support_privacy_flag)
+	{
+		cipher_type = CIPHER_WEP;
+	}
+
+	group_cipher_type = rxu_cntrl_get_group_cipher_type(cipher_type);
+		
+	return group_cipher_type;
+}
+
+uint32_t rxu_cntrl_monitor_patch_using_beacon(uint8_t *p_frame,
+	uint32_t len)
+{
+	uint8_t *addr;
 	uint16_t frame_cntl;
-    struct mac_hdr *machdr_ptr = (struct mac_hdr *)p_frame;
-	
-    frame_cntl = co_read16(p_frame);
-	
-	if((0x4208 == frame_cntl)
-		&& (MAC_ADDR_IS_BSCT(&machdr_ptr->addr1)))
-	{
-		hit_flag = 1;
-	}
-
-	return hit_flag;
-}
-
-void rxu_cntrl_patch_keyram_at_monitor_mode(
-	uint8_t *p_frame, uint8_t flag_failed)
-{
-    struct mac_hdr *machdr_ptr = (struct mac_hdr *)p_frame;
-	uint8_t *data = (uint8_t *)&machdr_ptr[1];
-	uint8_t key_id = (data[3] >> 6) & 0x03;
-	uint8_t ver = (data[3] >> 5) & 0x01;
-	uint8_t cipherType = CTYPERAM_NULL_KEY;
-	uint8_t *addr, *encrypt_param;
+	uint32_t cipherType;		
 	uint64_t macAddress = 0;
+    struct mac_hdr *machdr_ptr = (struct mac_hdr *)p_frame;
+
+    frame_cntl = co_read16(p_frame);	
+	if(MAC_FRAME_CTRL_BEACON != frame_cntl)
+	{
+		return 0;
+	}
 	
-	if((0 == flag_failed)
-		|| (!bk_wlan_is_monitor_mode()))
+	addr = (uint8_t *)&machdr_ptr->addr3;
+	os_memcpy(&macAddress,addr,sizeof(machdr_ptr->addr3));	
+	if(hal_monitor_is_including_mac_address(macAddress))
 	{
-		return;
+		return 0;
 	}
-
-	if(0 == (machdr_ptr->fctl & 0x4000))
-	{
-		/*.1.. .... = Protected flag: Data is protected;
-		  .0.. .... = open system;*/ 
-		return;
-	}
-
-	if(0 == ver)
-	{
-		cipherType = CTYPERAM_WEP;
-	}
-	else
-	{
-		encrypt_param = (uint8_t *)&machdr_ptr[1];
-
-		if(0 == encrypt_param[2])
-		{
-			cipherType = CTYPERAM_CCMP;
-		}
-		if(encrypt_param[1] == ((encrypt_param[0] | 0x20) & 0x7f))
-		{
-			cipherType = CTYPERAM_TKIP;
-		}
-
-		if((0 == encrypt_param[2])
-			&& (encrypt_param[1] == ((encrypt_param[0] | 0x20) & 0x7f)))
-		{
-			os_printf("patch_keyram_crazy\r\n");
-		}
-	}
-
-	addr = (uint8_t *)&machdr_ptr->addr2;
-	os_memcpy(&macAddress,addr,sizeof(machdr_ptr->addr2));
-	if(MAC_ADDR_IS_BSCT(&machdr_ptr->addr1))
-	{
-		hal_update_secret_key(macAddress, cipherType);
-	}
+	
+	cipherType = rxu_cntrl_get_cipher_type_using_beacon(p_frame, len);
+	hal_update_secret_key(macAddress, cipherType);
+	
+	return 0;
 }
+#endif
 
 /**
  * Extract needed information from the MAC Header
@@ -1854,19 +2042,15 @@ static bool rxu_mgt_route(uint16_t framectrl,
     struct vif_info_tag *vif_entry = NULL;
     uint8_t mode = VIF_UNKNOWN;
 
-    #if CFG_WIFI_AP_MODE
-	#if CFG_MODE_SWITCH
 	if(g_wlan_general_param->role == CONFIG_ROLE_AP)
-	#endif
+	{
     upload = false;
-    #endif
+	}
 
-	#if CFG_WIFI_STATION_MODE
-	#if CFG_MODE_SWITCH
 	if(g_wlan_general_param->role == CONFIG_ROLE_STA)
-	#endif
+	{
     upload = true;
-    #endif
+	}
 
     // Get the VIF entry
     if (*vif_idx != INVALID_VIF_IDX)
@@ -1878,19 +2062,17 @@ static bool rxu_mgt_route(uint16_t framectrl,
     // Route the message depending on its type and subtype
     switch (framectrl & MAC_FCTRL_TYPESUBTYPE_MASK)
     {                  
-        #if CFG_WIFI_STATION_MODE
         // Message arrive to STA in ESS only
         case MAC_FCTRL_ASSOCRSP:
         case MAC_FCTRL_REASSOCRSP:
-			#if CFG_MODE_SWITCH
 			if(g_wlan_general_param->role == CONFIG_ROLE_STA)
-			#endif
+			{
             if (mode == VIF_STA)
             {
                 *task_id = TASK_SM;
             }
+			}
             break;
-        #endif //CFG_WIFI_STATION_MODE
 
         case MAC_FCTRL_PROBERSP:
             // Check if the ProbeRsp was for us
@@ -2012,20 +2194,27 @@ int rxu_mgt_monitor(uint16_t framectrl,
                               uint32_t *payload,
                               uint16_t length)
 {
-	monitor_cb_t fn;
+	monitor_data_cb_t fn;
 	int upload = 0;
 	
 	if(MAC_FCTRL_DATA_T != (framectrl & MAC_FCTRL_TYPE_MASK))
 	{
-		//os_printf("\r\n cmgt \r\n");
+		if(length < 36)
+		{
+			goto mgt_exit;
+		}
+		
+		rxu_cntrl_monitor_patch_using_beacon((uint8_t *)payload, length);
+		
 		fn = bk_wlan_get_monitor_cb();		
-		(*fn)((uint8_t *)payload, length);
+		(*fn)((uint8_t *)payload, length, NULL);
 	}
 	else
 	{
 		upload = 1;
 	}
 
+mgt_exit:
 	return upload;
 }
 
@@ -2040,6 +2229,7 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
     ke_task_id_t dest_id = TASK_NONE;
     bool copy_mac_hdr = false;
     bool upload;
+	monitor_data_cb_t fn;
 	
     // Route the message to the correct task and/or handle it immediately
     upload = rxu_mgt_route(framectrl, 
@@ -2050,7 +2240,11 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 							payload,
 							&dest_id, 
 							&copy_mac_hdr);
-    
+
+	fn = bk_wlan_get_mgnt_monitor_cb();
+	if (fn) {
+		fn(payload, length, NULL);
+	}
     // Check if the message has to be forwarded or not
     if (((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_BEACON) 
             && (sta_idx != INVALID_STA_IDX))
@@ -2096,12 +2290,12 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 		dest_id = TASK_API;
         upload = true;
 	}
+	#if 0
 	else if((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_PROBEREQ)
 	{
 		RXU_PRT("-------MAC_FCTRL_PROBEREQ:0x%x\r\n", length);
 		dest_id = TASK_API;
 	}
-	#if 0
 	else if((framectrl & MAC_FCTRL_TYPESUBTYPE_MASK) == MAC_FCTRL_REASSOCREQ)
 	{
 		RXU_PRT("-------MAC_FCTRL_REASSOCREQ:0x%x\r\n", length);
@@ -2178,7 +2372,6 @@ static bool rxu_mgt_frame_ind(uint16_t framectrl,
 	        struct rxu_mgt_ind *rx;
 	        struct phy_channel_info info;
 
-			//os_printf("RXU_MGT_IND\r\n");
 			rx = KE_MSG_ALLOC_VAR(RXU_MGT_IND, dest_id, TASK_RXU, rxu_mgt_ind, length);
 			
 	        // Get the information on the current channel from the PHY driver
@@ -2279,6 +2472,14 @@ static bool rxu_mgt_frame_check(struct rx_swdesc* swdesc, uint8_t sta_idx)
         #if NX_MFP
         if (!mfp_ignore_mgmt_frame(rx_status, frame, rhd->frmlen, &upload))
         #endif
+
+#ifdef CONFIG_YOS_MESH
+        if (rxu_mesh_monitor(swdesc) == true) {
+            upload = false;
+        }
+        else
+#endif
+        {
             upload = rxu_mgt_frame_ind(hdr->fctl, 
                                         rhd->frmlen, 
                                         sta_idx, 
@@ -2291,6 +2492,7 @@ static bool rxu_mgt_frame_check(struct rx_swdesc* swdesc, uint8_t sta_idx)
 			break;
 		}
 		
+         }
     	rxu_mpdu_upload_and_indicate(swdesc, RX_STAT_FORWARD | RX_STAT_ALLOC);
     } while (0);
 
@@ -2366,18 +2568,34 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 
     do
     {
+        frame_cntl = co_read16(frame);
         if (!(statinfo & RX_HD_SUCCESS))
         {
-        	if(bk_wlan_is_monitor_mode())
-        	{
-				monitor_failed = rxu_cntrl_patch_get_special_packet(frame);
-				rxu_cntrl_patch_keyram_at_monitor_mode(frame, monitor_failed);
-        	}
-			
             break;
         }
+		else
+		{			
+        	if(bk_wlan_is_monitor_mode()) 
+        	{        		
+        		if((MAC_FCTRL_CTRL_T == (frame_cntl & MAC_FCTRL_TYPE_MASK))
+					|| (MAC_FCTRL_RSV_T == (frame_cntl & MAC_FCTRL_TYPE_MASK)))
+        		{
+        			break;
+        		}
+				
+        		if(MAC_FCTRL_DATA_T == (frame_cntl & MAC_FCTRL_TYPE_MASK))
+        		{  
+					if(!(rxu_mtr_is_mulicast_brdcast((struct mac_hdr *)frame)
+					   && rxu_mtr_is_data_or_qosdata((struct mac_hdr *)frame)))
+					{
+						break;
+					}
+        		}
 
-        frame_cntl = co_read16(frame);
+				rxu_mtr_record_count((struct mac_hdr *)frame);
+        	}
+		}		
+		
         dma_hdrdesc->flags = 0;
         rx_status->sta_idx = INVALID_STA_IDX;
         rx_status->vif_idx = INVALID_VIF_IDX;
@@ -2391,12 +2609,13 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
             rxu_cntrl_pm_mon_check(frame, statinfo);
 
             // When the sender is unknown, only management frames are handled here
+#ifdef CONFIG_YOS_MESH
+            if(rxu_mesh_monitor(swdesc) == false)
+#endif
+            {
             if(!bk_wlan_is_monitor_mode())
             {
 	            if ((frame_cntl & MAC_FCTRL_TYPE_MASK) != MAC_FCTRL_MGT_T)
-	                break;
-
-	            if (!rxu_cntrl_duplicate_nsta_check(frame))
 	                break;
 
 	            // Authentication can be encrypted (when using SHARED-KEY)
@@ -2404,6 +2623,10 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 	                (((statinfo & RX_HD_DECRSTATUS) != RX_HD_DECR_WEPSUCCESS) ||
 	                 !rxu_cntrl_protected_handle(frame, statinfo)))
 	                break;
+            }
+			
+            if (!rxu_cntrl_duplicate_nsta_check(frame))
+                break;
             }
 
             upload = rxu_mgt_frame_check(swdesc, INVALID_STA_IDX);
@@ -2418,7 +2641,9 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 
         // Check if the STA is registered
         if (!sta_mgmt_is_valid(sta_idx))
+        {
             break;
+        }
 
         rx_status->sta_idx = sta_idx;
         rx_status->vif_idx = sta_info_tab[sta_idx].inst_nbr;
@@ -2492,7 +2717,9 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
 
                 // Check if the received frame is a NULL frame
                 if (frame_cntl & MAC_NODATA_ST_BIT)
+                {
                     break;
+                }
 
                 qos = ((frame_cntl & MAC_QOS_ST_BIT) != 0);
 

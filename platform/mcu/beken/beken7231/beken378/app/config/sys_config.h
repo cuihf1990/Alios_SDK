@@ -31,8 +31,7 @@
 #define CFG_OOB_CONNECT_SSID           "flashtest"
 
 /*section 1-----OS macro config-----*/
-#define CFG_FREERTOS                               1
-#if CFG_FREERTOS
+
 #define THD_APPLICATION_PRIORITY                   20
 #define THD_CORE_PRIORITY                          2
 #define THD_LWIP_PRIORITY                          4
@@ -40,11 +39,10 @@
 #define THD_RECONNECT_PRIORITY                     4
 #define THD_WPAS_PRIORITY                          6
 #define THD_HOSTAPD_PRIORITY                       6
-#endif // CFG_FREERTOS
 
 /*section 2-----function macro config-----*/
-#define CFG_TX_EVM_TEST                            0
-#define CFG_RX_SENSITIVITY_TEST                    0
+#define CFG_TX_EVM_TEST                            1
+#define CFG_RX_SENSITIVITY_TEST                    1
 
 
 /*section 3-----driver macro config-----*/
@@ -96,8 +94,10 @@
 /*section 7-----calibration*/
 #if (CFG_RUNNING_PLATFORM == FPGA_PLATFORM)
 #define CFG_SUPPORT_CALIBRATION                    0
+#define CFG_SUPPORT_MANUAL_CALI                    0
 #else
 #define CFG_SUPPORT_CALIBRATION                    1
+#define CFG_SUPPORT_MANUAL_CALI                    1
 #endif
 
 /*section 8-----for netstack*/

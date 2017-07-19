@@ -24,7 +24,6 @@
 #include <k_api.h>
 #include <yos/log.h>
 #include <yos/kernel.h>
-#include <vflash.h>
 
 #include <arg_options.h>
 
@@ -42,7 +41,6 @@ extern void rl_cleanup_after_signal(void);
 extern void hw_start_hal(void);
 extern void trace_start(int flag);
 extern void netmgr_init(void);
-extern void ota_service_init(void);
 extern int yos_framework_init(void);
 
 static options_t options = { 0 };
@@ -54,6 +52,14 @@ extern int application_start(int argc, char **argv);
 
 static void app_entry(void *arg)
 {
+    yos_features_init();
+
+    trace_start(options.trace_flag);
+
+    hw_start_hal();
+
+    yos_framework_init();
+
     application_start(options.argc, options.argv);
 }
 
@@ -68,16 +74,9 @@ int csp_get_args(const char ***pargv)
     return options.argc;
 }
 
-static void register_devices(void)
-{
-    int i;
-    for (i=0;i<10;i++)
-        vflash_register_partition(i);
-}
-
 void yos_features_init(void)
 {
-#ifdef WITH_LWIP
+#ifdef CONFIG_NET_LWIP
     if (options.lwip.enable) {
         yunos_lwip_init(options.lwip.tapif);
     }
@@ -129,14 +128,16 @@ int main(int argc, char **argv)
     options.argc        = argc;
     options.argv        = argv;
     options.lwip.enable = true;
-#ifdef TAPIF_DEFAULT_OFF
+#if defined(TAPIF_DEFAULT_OFF) || !defined(WITH_LWIP)
     options.lwip.tapif  = false;
 #else
     options.lwip.tapif  = true;
 #endif
     options.log_level   = YOS_LL_WARN;
 
+#if defined(CONFIG_YOS_DDA) || defined(ENABLE_GCOV)
     signal(SIGINT, signal_handler);
+#endif
 #ifdef CONFIG_YOS_UT
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -155,18 +156,6 @@ int main(int argc, char **argv)
 #endif
 
     yunos_init();
-
-    yos_features_init();
-
-    trace_start(options.trace_flag);
-
-    hw_start_hal();
-
-    yos_framework_init();
-
-    register_devices();
-
-    ota_service_init();
 
     start_app(argc, argv);
 

@@ -15,8 +15,6 @@
 #define SARADC_ADC_SAMPLE_RATE_MASK     (0x00FF)
 #define SARADC_ADC_DELAY_CLK_POSI       (6)
 #define SARADC_ADC_SETTING              (0x01UL << 6)
-#define SARADC_ADC_VALID_MODE_POSI      (11)
-#define SARADC_ADC_VALID_MODE_MASK      (0x03)
 #define SARADC_ADC_INT_CLR              (0x01UL << 7)
 #define SARADC_ADC_PRE_DIV_POSI        (8)
 #define SARADC_ADC_PRE_DIV_MASK        (0x00FF)

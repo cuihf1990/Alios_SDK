@@ -11,54 +11,52 @@
 
 typedef struct
 {
+    uint32_t addr;
+    uint32_t size;
+    uint16_t crc;
+} ota_hdl_t;
+
+typedef struct
+{
     uint32_t ota_len;
     uint32_t ota_crc;
 } ota_reboot_info_t;
-
-typedef struct  _boot_table_t {
-  uint32_t start_address; // the address of the bin saved on flash.
-  uint32_t length; // file real length
-  uint8_t version[8];
-  uint8_t type; // B:bootloader, P:boot_table, A:application, D: 8782 driver
-  uint8_t upgrade_type; //u:upgrade, 
-  uint16_t crc;
-  uint8_t reserved[4];
-}boot_table_t;
 
 static ota_reboot_info_t ota_info;
 
 int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
 {
     uint32_t offset;
-    boot_table_t boot_tbl,boot_tbl_rb;
+    ota_hdl_t ota_hdl,ota_hdl_rb;
     hal_logic_partition_t* ota_partition;
     
     ota_partition = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
 
-    memset( &boot_tbl, 0, sizeof(boot_table_t) );
-    boot_tbl.length = ota_data_len;
-    boot_tbl.start_address = ota_partition->partition_start_addr;
-    boot_tbl.type = 'A';
-    boot_tbl.upgrade_type = 'U';
-    boot_tbl.crc = ota_data_crc;
+    memset( &ota_hdl, 0, sizeof(ota_hdl_t) );
+    ota_hdl.size = ota_data_len;
+    ota_hdl.addr = ota_partition->partition_start_addr;
+    ota_hdl.crc = ota_data_crc;
+
+    printf("OTA address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", ota_hdl.addr, ota_hdl.size, ota_hdl.crc);
 
     offset = 0x00;
-    hal_flash_erase( HAL_PARTITION_PARAMETER_1, offset, sizeof(boot_table_t) );
+    hal_flash_erase( HAL_PARTITION_PARAMETER_1, offset, sizeof(ota_hdl_t) );
 
     offset = 0x00;
-    hal_flash_write( HAL_PARTITION_PARAMETER_1, &offset, (const void *)&boot_tbl, sizeof(boot_table_t));
+    hal_flash_write( HAL_PARTITION_PARAMETER_1, &offset, (const void *)&ota_hdl, sizeof(ota_hdl_t));
 
     offset = 0x00;
-    memset(&boot_tbl_rb, 0, sizeof(boot_table_t));
-    hal_flash_read( HAL_PARTITION_PARAMETER_1, &offset, &boot_tbl_rb, sizeof(boot_table_t));
+    memset(&ota_hdl_rb, 0, sizeof(ota_hdl_t));
+    hal_flash_read( HAL_PARTITION_PARAMETER_1, &offset, &ota_hdl_rb, sizeof(ota_hdl_t));
 
-    if(memcmp(&boot_tbl, &boot_tbl_rb, sizeof(boot_table_t)) != 0)
+    if(memcmp(&ota_hdl, &ota_hdl_rb, sizeof(ota_hdl_t)) != 0)
     {
+        printf("OTA header compare failed, OTA address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", ota_hdl_rb.addr, ota_hdl_rb.size, ota_hdl_rb.crc);
         return -1;
     }
 
     /* reboot */
-    hal_wdg_init(1);
+    hal_reboot();
 
     return 0;
 }
@@ -68,12 +66,13 @@ static  CRC16_Context contex;
 unsigned int _off_set = 0;
 static int moc108_ota_init(hal_ota_module_t *m, void *something)
 {
-#if 0
     hal_logic_partition_t *partition_info;
+
+    printf("set ota init---------------\n");
     
     partition_info = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
-    hal_flash_erase(HAL_PARTITION_OTA_TEMP, 0 ,partition_info.partition_size);
-#endif
+    hal_flash_erase(HAL_PARTITION_OTA_TEMP, 0 ,partition_info->partition_length);
+
     int _off_set = 0;
     CRC16_Init( &contex );
     return 0;

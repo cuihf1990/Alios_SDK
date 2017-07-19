@@ -19,6 +19,7 @@ umesh_srcs := src/core/umesh.c \
               src/ipv6/lwip_ip6.c \
               src/hal/interfaces.c \
               src/hal/umesh_hal.c \
+              src/hal/80211.c \
               src/utilities/encoding.c \
               src/utilities/message.c \
               src/utilities/timer.c \

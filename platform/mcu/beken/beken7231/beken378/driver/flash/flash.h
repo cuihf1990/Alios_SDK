@@ -1,7 +1,7 @@
 #ifndef _FLASH_H_
 #define _FLASH_H_
 
-#define FLASH_DEBUG
+// #define FLASH_DEBUG
 
 #ifdef FLASH_DEBUG
 #define FLASH_PRT      os_printf

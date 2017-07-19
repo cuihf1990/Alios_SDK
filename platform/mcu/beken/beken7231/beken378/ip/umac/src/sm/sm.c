@@ -109,7 +109,7 @@ static void sm_bss_config_push(void *param)
 
 static void sm_deauth_cfm(void *env, uint32_t status)
 {
-    //sm_disconnect_process(env, 0);
+    sm_disconnect_process(env, 0);
 }
 
 static void sm_delete_resources(struct vif_info_tag *vif)
@@ -187,30 +187,9 @@ void sm_get_bss_params(struct mac_addr const **bssid,
                        struct scan_chan_tag const **chan)
 {
     struct sm_connect_req const *param = sm_env.connect_param;
-    struct mac_scan_result *desired_ap_ptr;
 
-    *bssid = NULL;
-    *chan = NULL;
-
-    // In order to launch the join procedure we need the BSSID and the channel,
-    // otherwise we will need to get this information by doing a scan
-    if (MAC_ADDR_GROUP(&param->bssid))
-    {
-        desired_ap_ptr = scanu_search_by_ssid(&param->ssid);
-        if (desired_ap_ptr)
-            *bssid = &desired_ap_ptr->bssid;
-    }
-    else
-    {
-        *bssid = &param->bssid;
-        desired_ap_ptr = scanu_search_by_bssid(&param->bssid);
-    }
-
-    // Get channel
-    if (desired_ap_ptr)
-        *chan = desired_ap_ptr->chan;
-    else if (param->chan.freq != ((uint16_t)-1))
-        *chan = &param->chan;
+	*bssid = &param->bssid;
+    *chan = &param->chan;
 }
 
 void sm_scan_bss(struct mac_addr const *bssid,
@@ -453,7 +432,7 @@ void sm_disconnect(uint8_t vif_index, uint16_t reason_code)
         buf->seq = txl_get_seq_ctrl();
 
         // Fill-in the confirmation structure
-        frame->cfm.cfm_func = sm_deauth_cfm;
+        frame->cfm.cfm_func = NULL;//sm_deauth_cfm;
         frame->cfm.env = vif;
 
         // Set VIF and STA indexes
@@ -494,11 +473,10 @@ void sm_disconnect(uint8_t vif_index, uint16_t reason_code)
         thd->frmlen = length + MAC_FCS_LEN;
 
         // Push the frame for TX
-        if (!txl_frame_push(frame, AC_VO))
-        {
+		txl_frame_push(frame, AC_VO);
+		
             sm_deauth_cfm(frame->cfm.env, 0);
         }
-    }
     else
     {
         // No frame available, simply consider us as disconnected immediately
@@ -890,7 +868,6 @@ void sm_auth_handler(struct rxu_mgt_ind const *param)
             if (auth_type == MAC_AUTH_ALGO_OPEN)
             {
                 // Send AIR_ASSOC_REQ to the AIR
-                //os_printf("MAC_AUTH_ALGO_OPEN\r\n");
                 sm_assoc_req_send();
             }
             else if(auth_type == MAC_AUTH_ALGO_SHARED)

@@ -52,8 +52,6 @@ tick_t soc_elapsed_ticks_get(void);
 
 void soc_err_proc(kstat_t err);
 
-void soc_apps_entry(void);
-
 YUNOS_INLINE void soc_systick_handle(void)
 {
     yunos_intrpt_enter();

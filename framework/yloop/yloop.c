@@ -105,7 +105,7 @@ yos_loop_t yos_loop_init(void)
         return ctx;
     }
 
-    ctx = calloc(1, sizeof(*g_main_ctx));
+    ctx = yos_zalloc(sizeof(*g_main_ctx));
     if (!g_main_ctx) {
         g_main_ctx = ctx;
     }
@@ -130,8 +130,8 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
     struct pollfd *new_loop_pollfds;
     int cnt = ctx->reader_count + 1;
 
-    new_sock = realloc(ctx->readers, cnt * sizeof(yloop_sock_t));
-    new_loop_pollfds = realloc(ctx->pollfds, cnt * sizeof(struct pollfd));
+    new_sock = yos_malloc(cnt * sizeof(yloop_sock_t));
+    new_loop_pollfds = yos_malloc(cnt * sizeof(struct pollfd));
 
     if (new_sock == NULL || new_loop_pollfds == NULL) {
         LOGE(TAG, "out of memory");
@@ -142,7 +142,13 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
     yos_fcntl(sock, F_SETFL, status | O_NONBLOCK);
 
     ctx->reader_count++;
+
+    memcpy(new_sock, ctx->readers, (cnt-1) * sizeof(yloop_sock_t));
+    yos_free(ctx->readers);
     ctx->readers = new_sock;
+
+    memcpy(new_loop_pollfds, ctx->pollfds, (cnt-1) * sizeof(struct pollfd));
+    yos_free(ctx->pollfds);
     ctx->pollfds = new_loop_pollfds;
 
     new_sock += cnt - 1;
@@ -192,7 +198,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
     }
 
     yloop_ctx_t *ctx = get_context();
-    yloop_timeout_t *timeout = malloc(sizeof(*timeout));
+    yloop_timeout_t *timeout = yos_malloc(sizeof(*timeout));
     if (timeout == NULL) {
         return -1;
     }
@@ -234,7 +240,7 @@ void yos_cancel_delayed_action(int ms, yos_call_t cb, void *private_data)
         }
 
         dlist_del(&tmp->next);
-        free(tmp);
+        yos_free(tmp);
         return;
     }
 }
@@ -280,7 +286,7 @@ void yos_loop_run(void)
             if (now >= tmo->timeout_ms) {
                 dlist_del(&tmo->next);
                 tmo->cb(tmo->private_data);
-                free(tmo);
+                yos_free(tmo);
             }
         }
 
@@ -320,15 +326,15 @@ void yos_loop_destroy(void)
         yloop_timeout_t *timeout = dlist_first_entry(&ctx->timeouts, yloop_timeout_t,
                                                      next);
         dlist_del(&timeout->next);
-        free(timeout);
+        yos_free(timeout);
     }
 
-    free(ctx->readers);
-    free(ctx->pollfds);
+    yos_free(ctx->readers);
+    yos_free(ctx->pollfds);
 
     _set_context(NULL);
     if (ctx == g_main_ctx) {
         g_main_ctx = NULL;
     }
-    free(ctx);
+    yos_free(ctx);
 }

@@ -67,8 +67,7 @@ do_error:
     return;
 }
 
-//destroy the queue
-void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
+void wsf_msg_queue_flush(wsf_request_queue_t *req_queue)
 {
     if (!req_queue) {
         return;
@@ -95,10 +94,22 @@ void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
             if (session.response) {
                 os_free(session.response);
             }
+            dlist_del(&node->list_head);
             os_free(node);
+            req_queue->length --;
         }
     }
     os_mutex_unlock(req_queue->mutex);
+}
+
+//destroy the queue
+void wsf_msg_queue_destroy(wsf_request_queue_t *req_queue)
+{
+    if (!req_queue) {
+        return;
+    }
+
+    wsf_msg_queue_flush(req_queue);
     os_mutex_destroy(req_queue->mutex);
     os_semaphore_destroy(req_queue->psem);
 
@@ -117,7 +128,7 @@ static void wsf_del_first_msg(wsf_request_queue_t *req_queue)
     os_mutex_lock(req_queue->mutex);
 
     node = req_queue->list.prev;
-    if (!node) {
+    if (dlist_empty(&req_queue->list)) {
         os_mutex_unlock(req_queue->mutex);
         return;
     }
@@ -125,6 +136,9 @@ static void wsf_del_first_msg(wsf_request_queue_t *req_queue)
     req_node = (wsf_request_node_t *)node;
     dlist_del(node);
     req_queue->length--;
+
+    if (req_node->session.cb)
+        req_node->session.cb(NULL, req_node->session.extra);
 
     wsf_msg_session_destroy(&req_node->session);
     os_free(req_node);
@@ -160,14 +174,20 @@ int wsf_request_queue_push(wsf_request_queue_t *req_queue,
 int wsf_request_queue_pop(wsf_request_queue_t *req_queue,
                           wsf_request_node_t *req_node)
 {
+    if (dlist_empty(&req_node->list_head)) {
+        return 0;
+    }
+
     if (!req_node || !req_queue || !req_queue->length) {
         LOGE(MODULE_NAME, "!!!wsf_request_queue_pop err, length=%d", req_queue->length);
         return -1;
     }
 
     os_mutex_lock(req_queue->mutex);
-    dlist_del(&req_node->list_head);
-    req_queue->length--;
+    if (!dlist_empty(&req_node->list_head)) {
+        dlist_del(&req_node->list_head);
+        req_queue->length--;
+    }
     os_mutex_unlock(req_queue->mutex);
 
     return 0;
@@ -191,6 +211,9 @@ wsf_request_node_t *wsf_request_queue_trigger(wsf_request_queue_t *req_queue,
     dlist_for_each_entry(list, node, wsf_request_node_t, list_head) {
         wsf_msg_session_t *session = &node->session;
         if (session && session->id == msg_id) {
+            dlist_del(&node->list_head);
+            dlist_init(&node->list_head);
+            req_queue->length--;
             session->response = rsp;
             ret = node;
             break;

@@ -129,7 +129,7 @@ int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv)
         return -1;
     }
 
-    event_list_node_t *event_node = malloc(sizeof(event_list_node_t));
+    event_list_node_t *event_node = yos_malloc(sizeof(event_list_node_t));
     if (NULL == event_node) {
         return -1;
     }
@@ -160,7 +160,7 @@ int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv)
         }
 
         dlist_del(&event_node->node);
-        free(event_node);
+        yos_free(event_node);
         return 0;
     }
 
@@ -261,7 +261,7 @@ void yos_cancel_work(void *w, yos_call_t action, void *arg1)
     free_wpar(wpar);
 }
 
-void *yos_schedule_work(int ms, yos_call_t action, void *arg1,
+void *yos_loop_schedule_work(int ms, yos_call_t action, void *arg1,
                         yos_call_t fini_cb, void *arg2)
 {
     int ret;

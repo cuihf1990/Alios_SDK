@@ -33,6 +33,14 @@ void ota_status_init()
     g_ota_info->mutex = ota_mutex_init();
 }
 
+void ota_status_deinit()
+{
+    if (g_ota_info->mutex != NULL) {
+        ota_mutex_destroy(g_ota_info->mutex);
+        g_ota_info->mutex = NULL;
+    }
+}
+
 OTA_STATUS_T ota_get_status(void)
 { 
     OTA_STATUS_T status;

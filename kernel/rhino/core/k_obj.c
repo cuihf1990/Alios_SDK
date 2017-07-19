@@ -120,3 +120,9 @@ kmutex_t g_mm_region_mutex;
 #endif
 #endif
 
+#if (YUNOS_CONFIG_MM_TLF > 0)
+
+k_mm_head       *g_kmm_head;
+
+#endif
+

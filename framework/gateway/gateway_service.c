@@ -1,21 +1,58 @@
+/*
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include <lwip/def.h>
+#include <lwip/netdb.h>
+#include <lwip/sockets.h>
 
 #include <yos/framework.h>
 #include <yos/log.h>
 #include <yos/list.h>
-#include <yos/network.h>
-#include <tfs.h>
+#include <lwip/sockets.h>
+#include <yos/cloud.h>
 #include "umesh.h"
 #include "cJSON.h"
+#include "core/mesh_mgmt.h"
+#include "devmgr.h"
 
 #include "mqtt_sn.h"
+#include "gateway_service.h"
 
-#define ME "GW_SERVICE"
+#include "enrollee.h"
+
+#define MODULE_NAME "gateway"
+#define ADV_INTERVAL (5 * 1000)
+#define GW_DEBUG(x, y, ...)     printf("GATEWAY: " y "\n", ##__VA_ARGS__)
+
+typedef struct reg_info_s {
+    char model_id[sizeof(uint32_t) + 1];
+    unsigned char ieee_addr[IEEE_ADDR_BYTES + 1];
+    char rand[SUBDEV_RAND_BYTES + 1];
+    char sign[STR_SIGN_LEN + 1];
+    char model[OS_PRODUCT_MODEL_LEN];
+    char secret[OS_PRODUCT_SECRET_LEN];
+} reg_info_t;
 
 typedef struct {
     dlist_t next;
-    char id2[TFS_ID2_LEN + 1];
-    char idsu[16 + TFS_ID2_LEN + 1];
+    dev_info_t *devinfo;
     struct sockaddr_in6 addr;
 } client_t;
 
@@ -23,95 +60,120 @@ typedef struct {
     int sockfd;
     bool gateway_mode;
     bool yunio_connected;
+    bool mesh_connected;
     bool mqtt_connected;
+    bool mqtt_reconnect;
     struct sockaddr_in6 gw_addr;
     struct sockaddr_in6 src_addr;
+    char uuid[STR_UUID_LEN + 1];
     dlist_t clients;
 } gateway_state_t;
 
 static gateway_state_t gateway_state;
-int link_negotiate_protocol(void);
-int link_device_register(void);
-int link_push(cJSON *data);
-int link_execute(const char *idsu, int sid, cJSON *payload);
-typedef void (*yos_free_cb)(void *private_data);
-typedef int (*yos_link_cb)(const char *idsu, const char *payload, void *private_data);
 
-int link_subscribe(const char *idsu, yos_link_cb cb, yos_free_cb free_cb, void *private_data)
+char *config_get_main_uuid(void);
+static void gateway_service_event(input_event_t *eventinfo, void *priv_data);
+
+static char *get_uuid_by_ip6addr(struct sockaddr_in6 *addr)
 {
-    return -1;
-}
-
-int link_publish(const char *idsu, const char *paylaod)
-{
-    return -1;
-}
-
-int yos_cloud_subscribe(const char *idsu, yos_link_cb cb, yos_free_cb free_cb, void *private_data)
-{
-    return link_subscribe(idsu, cb, free_cb, private_data);
-}
-
-int yos_cloud_publish(const char *idsu, const char *payload)
-{
-    gateway_state_t *pstate = &gateway_state;
-
-    if (pstate->yunio_connected) {
-        return link_publish(idsu, payload);
+    client_t *client = NULL;
+    dlist_for_each_entry(&gateway_state.clients, client, client_t, next) {
+        if (memcmp(addr, &client->addr, sizeof(client->addr)) == 0) {
+            return client->devinfo->dev_base.uuid;
+        }
     }
+    return NULL;
+}
 
-    if (!pstate->mqtt_connected) {
-        LOGE(ME, "mqtt not ready!");
+static struct sockaddr_in6 *get_ip6addr_by_uuid(const char *uuid)
+{
+    client_t *client = NULL;
+    dlist_for_each_entry(&gateway_state.clients, client, client_t, next) {
+        if (memcmp(uuid, client->devinfo->dev_base.uuid, STR_UUID_LEN) == 0) {
+            return &client->addr;
+        }
+    }
+    return NULL;
+}
+
+static int yos_cloud_get_attr(const char* uuid, const char *attr_name)
+{
+    struct sockaddr_in6 *paddr = NULL;
+    paddr = get_ip6addr_by_uuid(uuid);
+    if (paddr == NULL)
         return -1;
-    }
 
     void *buf;
     int len;
-    struct sockaddr_in6 *paddr = &pstate->gw_addr;
-    pub_body_t *pub_body = msn_alloc(PUBLISH, strlen(idsu)+1+strlen(payload)+1, &buf, &len);
+    pub_body_t *pub_body = msn_alloc(PUBLISH, 4 + strlen(attr_name)+1, &buf, &len);
+    memcpy(pub_body->payload, "get", 4);
+    memcpy(pub_body->payload + 4, attr_name, strlen(attr_name) + 1);
 
-    memcpy(pub_body->payload, idsu, strlen(idsu) + 1);
-    memcpy(pub_body->payload + strlen(idsu) + 1, payload, strlen(payload) + 1);
-
-    sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
+    sendto(gateway_state.sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)paddr, sizeof(*paddr));
 
-    free(buf);
+    yos_free(buf);
     return 0;
 }
 
-static int client_msg_link_cb(const char *idsu, const char *payload, void *private_data)
+static int yos_cloud_set_attr(const char *uuid, const char *attr_name, const char *attr_value)
 {
+    struct sockaddr_in6 *paddr = NULL;
+    paddr = get_ip6addr_by_uuid(uuid);
+    if (paddr == NULL)
+        return -1;
+
     void *buf;
     int len;
-    client_t *client = private_data;
-    gateway_state_t *pstate = &gateway_state;
-    pub_body_t *pub_body = msn_alloc(PUBLISH, strlen(payload)+1, &buf, &len);
+    pub_body_t *pub_body = msn_alloc(PUBLISH, 4+strlen(attr_name)+1+strlen(attr_value)+1, &buf, &len);
+    memcpy(pub_body->payload, "set", 4);
+    memcpy(pub_body->payload + 4, attr_name, strlen(attr_name) + 1);
+    memcpy(pub_body->payload + 4 + strlen(attr_name) + 1, attr_value, strlen(attr_value) + 1);
 
-    memcpy(pub_body->payload, payload, strlen(payload) + 1);
+    sendto(gateway_state.sockfd, buf, len, MSG_DONTWAIT,
+           (struct sockaddr *)paddr, sizeof(*paddr));
 
-    sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
-           (struct sockaddr *)&client->addr, sizeof(client->addr));
-
-    free(buf);
+    yos_free(buf);
     return 0;
+}
+
+static void clear_connected_flag(void *arg)
+{
+    gateway_state.mqtt_connected = false;
+}
+
+static void set_reconnect_flag(void *arg)
+{
+    gateway_state.mqtt_reconnect = true;
 }
 
 static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *paddr)
 {
     void *buf;
     int len;
-    conn_body_t *conn_body;
+    reg_info_t *reginfo;
+    const mac_address_t *mac_addr;
+    uint32_t model_id = 0x0050099a;
 
-    LOGD(ME, "connect to new gateway");
-    conn_body = msn_alloc(CONNECT, TFS_ID2_LEN + 1, &buf, &len);
-    tfs_get_ID2((uint8_t *)conn_body->ClientId, NULL);
-    conn_body->ClientId[TFS_ID2_LEN] = 0;
+    if (gateway_state.mqtt_connected == true)
+        LOGD(MODULE_NAME, "reconnect to gateway");
+    else
+        LOGD(MODULE_NAME, "connect to new gateway");
+    reginfo = (reg_info_t *)msn_alloc(CONNECT, sizeof(reg_info_t), &buf, &len);
+    memset(reginfo, 0, sizeof(reg_info_t));
+    memcpy(reginfo->model_id, &model_id, sizeof(model_id));
+    mac_addr = ur_mesh_net_get_mac_address(UR_MESH_NET_DFL);
+    memcpy(reginfo->ieee_addr, mac_addr->addr, IEEE_ADDR_BYTES);
+    os_product_get_model(reginfo->model);
+    os_product_get_secret(reginfo->secret);
+    LOGD(MODULE_NAME, "model: %s, secret: %s", reginfo->model, reginfo->secret);
+    memcpy(reginfo->rand,"randrandrandrand", sizeof(reginfo->rand));
+    devmgr_get_device_signature(model_id, reginfo->rand, reginfo->sign, sizeof(reginfo->sign));
 
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)paddr, sizeof(*paddr));
 
-    free(buf);
+    yos_free(buf);
 }
 
 static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
@@ -120,99 +182,285 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
         return;
     }
 
+    LOGD(MODULE_NAME, "handle_adv");
     adv_body_t *adv_msg = pmsg;
     struct sockaddr_in6 *gw_addr = &pstate->gw_addr;
 
     if (pstate->mqtt_connected &&
-        memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) == 0)
+        memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) == 0 &&
+        pstate->mqtt_reconnect == false) {
+        yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+        yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
         return;
+    }
 
+    if (memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) != 0)
+        pstate->mqtt_connected = false;
+
+    yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
     memcpy(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr));
     gw_addr->sin6_family = AF_INET6;
     gw_addr->sin6_port = htons(MQTT_SN_PORT);
     connect_to_gateway(pstate, &pstate->gw_addr);
 }
 
+
 static void handle_publish(gateway_state_t *pstate, void *pmsg, int len)
 {
     pub_body_t *pub_msg = pmsg;
-    if (pstate->gateway_mode) {
-        const char *idsu = (const char *)(pub_msg+1);
-        const char *payload = idsu + strlen(idsu) + 1;
-        link_publish(idsu, payload);
+    const char *op_code = (const char *)(pub_msg + 1);
+    const char *attr_name = op_code + 4;
+    const char *attr_value = attr_name + strlen(attr_name) + 1;
+    if (strcmp(op_code, "rpt") == 0) {
+        if (!pstate->gateway_mode) {
+            LOGE(MODULE_NAME, "error: cloud report data received at non-gateway node");
+            return;
+        }
+
+        const char *uuid = get_uuid_by_ip6addr(&pstate->src_addr);
+        if (uuid == NULL) {
+            LOGE(MODULE_NAME, "error: cloud report data from unconnected node");
+            return;
+        }
+
+#define POST_ATTR_VALUE_STRING_FMT      "{\"uuid\":\"%s\",%s"
+        char *buf;
+        int sz = sizeof(POST_ATTR_VALUE_STRING_FMT) + strlen(uuid) + strlen(attr_value) + 16;
+
+        buf = yos_malloc(sz);
+        /* tricky : attr_value = {"key":"value"} -> {"uuid":"xx", "key":"value"} */
+        snprintf(buf, sz, POST_ATTR_VALUE_STRING_FMT, uuid, attr_value+1);
+        alink_report_async("postDeviceData", buf, NULL, NULL);
+        yos_free(buf);
         return;
     }
 
-    const char *payload = (const char *)(pub_msg+1);
-    LOGD(ME, "recv %s", payload);
-    cJSON *json = cJSON_Parse(payload);
-    cJSON *idsu = cJSON_GetObjectItem(json, "idsu");
-
-    link_execute(idsu ? idsu->valuestring : NULL, 0, json);
-
-    cJSON_Delete(json);
+    if (strcmp(op_code, "get") == 0) {
+        LOGD(MODULE_NAME, "recv %s - %s", op_code, attr_name);
+        yos_cloud_trigger(GET_DEVICE_STATUS, attr_name);
+    } else if (strcmp(op_code, "set") == 0) {
+        LOGD(MODULE_NAME, "recv %s - %s - %s", op_code, attr_name, attr_value);
+        yos_cloud_trigger(SET_DEVICE_STATUS, attr_name);
+    } else {
+        const char *payload = (const char *)(pub_msg+1);
+        LOGD(MODULE_NAME, "recv unkown %s", payload);
+    }
 }
 
-static client_t *new_client(gateway_state_t *pstate, const char *id2)
+/* Example: 0x12345678 -> "78056034012" */
+static void mac_to_devid(unsigned char *mac, uint8_t *devid)
 {
-    client_t *client;
+    int i;
+    char c;
+
+    if (!mac || !devid) {LOGE(MODULE_NAME, "%s error", __func__); return;}
+
+    for (i = 0; i < 6; i++) {
+        c = mac[i] >> 4;
+        if (c >= 0 && c <= 9) *devid++ = c + '0';
+        else if (c >= 0xa && c <= 0xf) *devid++ = c + 'A' - 0xa;
+        c = mac[i] & 0xf;
+        if (c >= 0 && c <= 9) *devid++ = c + '0';
+        else if (c >= 0xa && c <= 0xf) *devid++ = c + 'A' - 0xa;
+        *devid++ = '0';
+    }
+    *--devid = '\0'; // Eat the last '0'
+}
+
+static int add_mesh_enrollee(reg_info_t *reginfo)
+{
+#ifdef CONFIG_YWSS
+    struct enrollee_info *mesh_enrollee;
+    uint8_t sign[ENROLLEE_SIGN_SIZE];
+    uint32_t rand;
+    char devid[MAX_DEVID_LEN], *model, *secret;
+
+    if (!reginfo) {
+        LOGE(MODULE_NAME, "Failed to add mesh enrollee - reginfo is NULL");
+        return -1;
+    }
+
+    mesh_enrollee = (struct enrollee_info *)os_malloc(sizeof(struct enrollee_info));
+    OS_CHECK_MALLOC(mesh_enrollee);
+
+    memset(mesh_enrollee, 0, sizeof(struct enrollee_info));
+    mesh_enrollee->dev_type_ver = DEVICE_TYPE_VERSION;
+
+    mac_to_devid(reginfo->ieee_addr, devid);
+    LOGD(MODULE_NAME, "mac(%02x%02x%02x%02x%02x%02x) -> devid (%s)",
+        reginfo->ieee_addr[0], reginfo->ieee_addr[1], reginfo->ieee_addr[2],
+        reginfo->ieee_addr[3], reginfo->ieee_addr[4], reginfo->ieee_addr[5], devid);
+    mesh_enrollee->devid_len = strlen(devid);
+    memcpy(mesh_enrollee->devid, devid, mesh_enrollee->devid_len);
+
+    mesh_enrollee->frame_type = ENROLLEE_FRAME_TYPE;
+
+    model = reginfo->model;
+    mesh_enrollee->model_len = strlen(model);
+    memcpy(mesh_enrollee->model, model, mesh_enrollee->model_len);
+
+    rand = get_random_digital();
+    memcpy(mesh_enrollee->random, (uint8_t *)&rand, sizeof(uint32_t));
+    LOGD(MODULE_NAME, "rand %d, devid: %s, model: %s", rand,
+         mesh_enrollee->devid, mesh_enrollee->model);
+
+    secret = reginfo->secret;
+
+    awss_calc_sign(rand, devid, model, secret, sign);
+
+    memcpy(mesh_enrollee->sign, sign, ENROLLEE_SIGN_SIZE);
+
+    mesh_enrollee->rssi = 0;
+
+    enrollee_put(mesh_enrollee);
+
+    os_free(mesh_enrollee);
+#endif
+    return 0;
+}
+
+static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
+{
+    client_t *client = NULL;
     dlist_for_each_entry(&pstate->clients, client, client_t, next) {
-        if (strncmp(id2, client->id2, sizeof(client->id2)) == 0) {
-            LOGD(ME, "existing client %s - %s", client->id2, client->idsu);
-            return client;
+        if (client->devinfo == NULL)
+            continue;
+        if (memcmp(reginfo->ieee_addr, client->devinfo->dev_base.u.ieee_addr, IEEE_ADDR_BYTES) == 0) {
+            GW_DEBUG(MODULE_NAME, "existing client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
+                     (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
+            goto add_enrollee;
         }
     }
 
-    client = malloc(sizeof(*client));
+    client = yos_malloc(sizeof(client_t));
+    PTR_RETURN(client, NULL, "alloc memory failed");
     bzero(client, sizeof(*client));
-    strncpy(client->id2, id2, sizeof(client->id2) - 1);
-    snprintf(client->idsu, sizeof(client->idsu) - 1, "device.%s", client->id2);
+    uint32_t model_id;
+    memcpy(&model_id, reginfo->model_id, sizeof(model_id));
+    int ret = devmgr_join_zigbee_device(reginfo->ieee_addr, model_id, reginfo->rand, reginfo->sign);
+    if (ret ==  SERVICE_RESULT_ERR) {
+        LOGD(MODULE_NAME, "register device:%s to alink server failed", reginfo->ieee_addr);
+        yos_free(client);
+        return NULL;
+    }
+    client->devinfo = devmgr_get_devinfo_by_ieeeaddr(reginfo->ieee_addr);
+    if (client->devinfo == NULL) {
+        LOGD(MODULE_NAME, "register device:%s to alink server failed", reginfo->ieee_addr);
+        yos_free(client);
+        return NULL;
+    }
+    devmgr_put_devinfo_ref(client->devinfo);
     dlist_add_tail(&client->next, &pstate->clients);
 
-    link_subscribe(client->idsu, client_msg_link_cb, NULL, client);
+    GW_DEBUG(MODULE_NAME, "new client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
+             (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
 
-    LOGD(ME, "new client %s - %s", client->id2, client->idsu);
+add_enrollee:
+    add_mesh_enrollee(reginfo);
 
     return client;
 }
 
 static void handle_connect(gateway_state_t *pstate, void *pmsg, int len)
 {
+    client_t *client = NULL;
+
     if (!pstate->gateway_mode) {
-        LOGE(ME, "error recv CONNECT cmd!");
+        LOGE(MODULE_NAME, "error recv CONNECT cmd!");
         return;
     }
 
-    conn_body_t *conn_body = pmsg;
-
-    /* update ipaddr anyway */
-    client_t *client = new_client(pstate, conn_body->ClientId);
-    memcpy(&client->addr, &pstate->src_addr, sizeof(client->addr));
+    if (pstate->yunio_connected) {
+        client = new_client(pstate, (reg_info_t *)pmsg);
+        if (client != NULL)
+            memcpy(&client->addr, &pstate->src_addr, sizeof(client->addr));
+    }
 
     void *buf;
-    conn_ack_t *conn_ack = msn_alloc(CONNACK, 0, &buf, &len);
-    conn_ack->ReturnCode = 0;
+    conn_ack_t *conn_ack = msn_alloc(CONNACK, STR_UUID_LEN + 1, &buf, &len);
+    if (client == NULL) {
+        conn_ack->ReturnCode = -1;
+        memset(conn_ack->payload, 0x00, STR_UUID_LEN + 1);
+    } else {
+        conn_ack->ReturnCode = 0;
+        memcpy(conn_ack->payload, client->devinfo->dev_base.uuid, STR_UUID_LEN + 1);
+    }
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
-           (struct sockaddr *)&client->addr, sizeof(client->addr));
-    free(buf);
+           (struct sockaddr *)&pstate->src_addr, sizeof(pstate->src_addr));
+    yos_free(buf);
+}
+
+static int gateway_cloud_report(const char *method, const char *json_buffer)
+{
+    gateway_state_t *pstate = &gateway_state;
+
+    if (pstate->yunio_connected) {
+        LOGE(MODULE_NAME, "strange, yunio is ready!");
+        return 0;
+    }
+
+    if (!pstate->mqtt_connected) {
+        LOGE(MODULE_NAME, "mqtt not ready!");
+        return -1;
+    }
+
+    void *buf;
+    int len;
+    struct sockaddr_in6 *paddr = &pstate->gw_addr;
+    int sz = 4+strlen(method)+1+strlen(json_buffer)+1;
+    pub_body_t *pub_body = msn_alloc(PUBLISH, sz, &buf, &len);
+
+    memcpy(pub_body->payload, "rpt", 4);
+    memcpy(pub_body->payload + 4, method, strlen(method) + 1);
+    memcpy(pub_body->payload + 4 + strlen(method) + 1, json_buffer, strlen(json_buffer) + 1);
+
+    sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
+           (struct sockaddr *)paddr, sizeof(*paddr));
+
+    yos_free(buf);
 }
 
 static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
 {
     if (pstate->gateway_mode) {
-        LOGE(ME, "error recv CONNACK cmd!");
+        LOGE(MODULE_NAME, "error recv CONNACK cmd!");
         return;
     }
 
     conn_ack_t *conn_ack = pmsg;
     if (conn_ack->ReturnCode != 0) {
-        LOGE(ME, "connect fail %d!", conn_ack->ReturnCode);
+        LOGE(MODULE_NAME, "connect fail %d!", conn_ack->ReturnCode);
         return;
     }
 
+    memcpy(pstate->uuid, conn_ack->payload, sizeof(pstate->uuid));
+    pstate->uuid[STR_UUID_LEN] = '\x0';
     pstate->mqtt_connected = true;
+    yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
 
-    LOGD(ME, "connack");
+    yos_cloud_register_backend(&gateway_cloud_report);
+    if(pstate->mqtt_reconnect == false)
+        yos_cloud_trigger(CLOUD_CONNECTED, NULL);
+
+    pstate->mqtt_reconnect = false;
+    yos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
+    yos_post_delayed_action((16+(rand()&0xf)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
+
+    LOGD(MODULE_NAME, "connack");
 }
 
 static void handle_msg(gateway_state_t *pstate, uint8_t *pmsg, int len)
@@ -247,13 +495,13 @@ static void gateway_sock_read_cb(int fd, void *priv)
                    MSG_DONTWAIT,
                    (struct sockaddr *)&pstate->src_addr, &slen);
     if (len <= 2) {
-        LOGE(ME, "error read count %d", len);
+        LOGE(MODULE_NAME, "error read count %d", len);
         return;
     }
 
     len = msn_parse_header(buf, len, &pmsg);
     if (len < 0) {
-        LOGE(ME, "error parsing header %x", buf[0]);
+        LOGE(MODULE_NAME, "error parsing header %x", buf[0]);
         return;
     }
 
@@ -287,102 +535,225 @@ static void gateway_advertise(void *arg)
 
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)&addr, sizeof(addr));
+    LOGD(MODULE_NAME, "gateway_advertise");
 
-    free(buf);
+    yos_free(buf);
 }
 
-int csp_get_args(const char ***pargv);
-int gateway_service_init(void)
+#define GATEWAY_WORKER_THREAD
+#ifdef GATEWAY_WORKER_THREAD
+static void gateway_worker(void *arg)
 {
-    int i, argc;
-    const char **argv;
-    gateway_state_t *pstate = &gateway_state;
+    int sockfd;
+    fd_set rfds;
+    struct timeval timeout;
 
-    argc = csp_get_args(&argv);
-    for (i=0;i<argc;i++) {
-        if (strcmp(argv[i], "--cloud-gateway") == 0) {
-            pstate->gateway_mode = true;
-            break;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100000;
+    while(1) {
+        sockfd = gateway_state.sockfd;
+
+        if (sockfd < 0) {
+            yos_msleep(100);
+            continue;
         }
+
+        FD_ZERO(&rfds);
+        FD_SET(gateway_state.sockfd, &rfds);
+
+        int ret = lwip_select(sockfd+1, &rfds, NULL, NULL, &timeout);
+        if (ret < 0) {
+            if (errno != EINTR) {
+                LOGE(MODULE_NAME, "select error %d", errno);
+                continue;
+            }
+        }
+
+        if (sockfd != gateway_state.sockfd) {
+            gateway_state.mqtt_connected = false;
+            close(sockfd);
+            continue;
+        }
+
+        if (FD_ISSET(sockfd, &rfds))
+            gateway_sock_read_cb(sockfd, &gateway_state);
     }
 
+    LOGE(MODULE_NAME, "return");
+}
+#endif
+
+int gateway_service_init(void)
+{
+    gateway_state_t *pstate = &gateway_state;
+
+    pstate->gateway_mode = false;
+    pstate->yunio_connected = false;
+    pstate->mesh_connected = false;
+    pstate->mqtt_connected = false;
+    pstate->mqtt_reconnect = false;
     pstate->sockfd = -1;
     dlist_init(&gateway_state.clients);
+    yos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
+    yos_register_event_filter(EV_MESH, gateway_service_event, NULL);
+#ifdef GATEWAY_WORKER_THREAD
+    yos_task_new("gatewayworker", gateway_worker, NULL, 4096);
+#endif
     return 0;
 }
 
 void gateway_service_deinit(void)
 {
+    yos_unregister_event_filter(EV_YUNIO, gateway_service_event, NULL);
+    yos_unregister_event_filter(EV_MESH, gateway_service_event, NULL);
 }
 
-void gateway_service_clear(void)
+bool gateway_is_connected(void)
 {
+    return gateway_state.mqtt_connected;
+}
+
+const char *gateway_get_uuid(void)
+{
+    return gateway_state.uuid;
 }
 
 static int init_socket(void)
 {
     gateway_state_t *pstate = &gateway_state;
     struct sockaddr_in6 addr;
-    int sockfd = pstate->sockfd;
+    int sockfd;
     int ret;
-
-    if (sockfd >= 0) {
-        yos_cancel_poll_read_fd(sockfd, gateway_sock_read_cb, pstate);
-        close(sockfd);
-    }
 
     sockfd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
     if (sockfd < 0) {
-        LOGE(ME, "error open socket %d", errno);
+        LOGE(MODULE_NAME, "error open socket %d", errno);
         return -1;
+    }
+
+    if (pstate->sockfd >= 0) {
+#ifndef GATEWAY_WORKER_THREAD
+        yos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
+        close(pstate->sockfd);
+#endif
+        pstate->sockfd = -1;
     }
 
     int val = 1;
     setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof(val));
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
     addr.sin6_port = htons(MQTT_SN_PORT);
     ret = bind(sockfd, (const struct sockaddr *)&addr, sizeof(addr));
     if (ret < 0) {
-        LOGE(ME, "error bind socket %d", errno);
+        LOGE(MODULE_NAME, "error bind socket %d", errno);
         close(sockfd);
         return -1;
     }
 
-    yos_poll_read_fd(sockfd, gateway_sock_read_cb, pstate);
     pstate->sockfd = sockfd;
+#ifndef GATEWAY_WORKER_THREAD
+    yos_poll_read_fd(sockfd, gateway_sock_read_cb, pstate);
+#endif
 
     return 0;
+}
+
+#include "json_parser.h"
+#define MAX_UUID_LEN        33
+#define JSON_KEY_UUID       "uuid"
+static void gateway_handle_sub_status(int event, const char *json_buffer)
+{
+    char *str_pos = NULL;
+    int str_len = 0;
+    char uuid[MAX_UUID_LEN] = {0};
+
+    str_pos = json_get_value_by_name((char *)json_buffer, strlen(json_buffer), JSON_KEY_UUID, &str_len, NULL);
+    strncpy(uuid, str_pos, str_len);
+
+    if (event == GET_SUB_DEVICE_STATUS)
+        yos_cloud_get_attr(uuid, json_buffer);
+    else if (event == SET_SUB_DEVICE_STATUS)
+        yos_cloud_set_attr(uuid, json_buffer, "");
 }
 
 int gateway_service_start(void)
 {
+    init_socket();
+
+    if (gateway_state.gateway_mode) {
+        yos_cloud_register_callback(GET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
+        yos_cloud_register_callback(SET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
+
+        yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
+        yos_post_delayed_action(ADV_INTERVAL, gateway_advertise, &gateway_state);
+    } else {
+        yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
+    }
+
     return 0;
 }
 
 void gateway_service_stop(void) {
+    client_t *client;
+    yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+    yos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
+    yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
+#ifndef GATEWAY_WORKER_THREAD
     close(gateway_state.sockfd);
+#endif
+    gateway_state.sockfd = -1;
+    gateway_state.mqtt_connected = false;
+    while(!dlist_empty(&gateway_state.clients)) {
+        client = dlist_first_entry(&gateway_state.clients, client_t, next);
+        dlist_del(&client->next);
+        devmgr_leave_zigbee_device(client->devinfo->dev_base.u.ieee_addr);
+        yos_free(client);
+    }
 }
 
-void gateway_service_event(input_event_t *eventinfo) {
+bool gateway_service_get_mesh_mqtt_state()
+{
+    return gateway_state.mqtt_connected;
+}
+
+static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
+{
     if (eventinfo->type == EV_YUNIO) {
-        if (eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
+        if(eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
             gateway_state.yunio_connected = true;
+            GW_DEBUG(GATEWAY_MODULE, "yunio_connected");
+        } else if(eventinfo->code == CODE_YUNIO_ON_DISCONNECTED) {
+            gateway_state.yunio_connected = false;
+            GW_DEBUG(GATEWAY_MODULE, "yunio_disconnected");
         }
+        else
+            return;
     }
 
-    if (eventinfo->type != EV_MESH)
-        return;
-
-    if (eventinfo->code != CODE_MESH_CONNECTED)
-        return;
-
-    init_socket();
-
-    if (gateway_state.gateway_mode) {
-        yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
-        yos_post_delayed_action(5 * 1000, gateway_advertise, &gateway_state);
+    if (eventinfo->type == EV_MESH) {
+        if (eventinfo->code == CODE_MESH_CONNECTED) {
+            gateway_state.mesh_connected = true;
+            GW_DEBUG(GATEWAY_MODULE, "mesh_connected");
+        }
+        else if (eventinfo->code == CODE_MESH_DISCONNECTED) {
+            gateway_state.mesh_connected = false;
+            GW_DEBUG(GATEWAY_MODULE, "mesh_disconnected");
+        }
+        else
+            return;
     }
+
+    if (ur_mesh_get_device_state() == DEVICE_STATE_LEADER && gateway_state.yunio_connected == true)
+        gateway_state.gateway_mode = true;
+    else
+        gateway_state.gateway_mode = false;
+
+    if (gateway_state.mesh_connected == true)
+        gateway_service_start();
+    else
+        gateway_service_stop();
 }
 

@@ -107,6 +107,7 @@ static ur_error_t ur_mesh_interface_down(void)
     if (g_um_state.adapter_callback) {
         g_um_state.adapter_callback->interface_down();
     }
+    yos_post_event(EV_MESH, CODE_MESH_DISCONNECTED, 0);
     return UR_ERROR_NONE;
 }
 
@@ -164,6 +165,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     transmit_frame_t *frame;
     uint8_t          append_length;
     uint8_t          *payload;
+    ur_error_t error = UR_ERROR_NONE;
 
     if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
         return UR_ERROR_FAIL;
@@ -175,7 +177,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     }
     append_length = sizeof(mcast_header_t) + 2;
     frame->message = message_alloc(((message_t *)message)->data->tot_len +
-                                   append_length);
+                                   append_length, UMESH_1);
     if (frame->message == NULL) {
         ur_mem_free(frame, sizeof(transmit_frame_t));
         return UR_ERROR_FAIL;
@@ -188,7 +190,12 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     *payload = UNCOMPRESSED_DISPATCH;
 
     memcpy(&frame->dest, dest, sizeof(frame->dest));
-    umesh_task_schedule_call(output_message_handler, frame);
+    error = umesh_task_schedule_call(output_message_handler, frame);
+    if (error != UR_ERROR_NONE) {
+        message_free(frame->message);
+        ur_mem_free(frame, sizeof(transmit_frame_t));
+    }
+
     return UR_ERROR_NONE;
 }
 
@@ -203,12 +210,17 @@ static void input_message_handler(void *args)
 
 ur_error_t ur_mesh_input(umessage_t *message)
 {
+    ur_error_t error = UR_ERROR_FAIL;
+
     if (g_um_state.adapter_callback) {
-        umesh_task_schedule_call(input_message_handler, message);
-    } else {
+        error = umesh_task_schedule_call(input_message_handler, message);
+    }
+
+    if (error != UR_ERROR_NONE) {
         message_free((message_t *)message);
     }
-    return UR_ERROR_NONE;
+
+    return error;
 }
 
 ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
@@ -272,24 +284,24 @@ static void parse_args(void)
 }
 #endif
 
-ur_error_t ur_mesh_init(void *config)
+ur_error_t ur_mesh_init(node_mode_t mode)
 {
     if (g_um_state.initialized) {
         return UR_ERROR_NONE;
     }
 
-    hal_ur_mesh_init();
+    hal_umesh_init();
     g_um_state.mm_cb.interface_up = ur_mesh_interface_up;
     g_um_state.mm_cb.interface_down = ur_mesh_interface_down;
     ur_adapter_interface_init();
     ur_router_register_module();
     interface_init();
-    umesh_mm_init();
+
+    umesh_mm_init(mode);
     neighbors_init();
     mesh_cli_init();
     mf_init();
     nd_init();
-    lp_init();
     message_stats_reset();
     g_um_state.initialized = true;
     register_raw_data_receiver(umesh_raw_data_receiver);
@@ -308,19 +320,29 @@ bool ur_mesh_is_initialized(void)
 ur_error_t ur_mesh_start()
 {
     ur_mesh_hal_module_t *wifi_hal = NULL;
+    umesh_extnetid_t extnetid;
+    int extnetid_len = 6;
 
     if (g_um_state.started) {
         return UR_ERROR_NONE;
     }
 
     g_um_state.started = true;
-    wifi_hal = hal_ur_mesh_get_default_module();
-    if (wifi_hal) {
-        hal_ur_mesh_enable(wifi_hal);
-    }
+
+
     interface_start();
     umesh_mm_start(&g_um_state.mm_cb);
+    lp_start();
 
+    if (yos_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
+        extnetid.len = extnetid_len;
+        umesh_set_extnetid(&extnetid);
+    }
+
+    wifi_hal = hal_umesh_get_default_module();
+    if (wifi_hal) {
+        hal_umesh_enable(wifi_hal);
+    }
     g_um_state.network_data_updater.handler = network_data_update_handler;
     nd_register_update_handler(&g_um_state.network_data_updater);
 
@@ -338,14 +360,14 @@ ur_error_t ur_mesh_stop(void)
     }
 
     g_um_state.started = false;
-    wifi_hal = hal_ur_mesh_get_default_module();
+    wifi_hal = hal_umesh_get_default_module();
     if (wifi_hal) {
-        hal_ur_mesh_disable(wifi_hal);
+        hal_umesh_disable(wifi_hal);
     }
 
     nd_unregister_update_handler(&g_um_state.network_data_updater);
 
-    ur_mesh_interface_down();
+    lp_stop();
     umesh_mm_stop();
     interface_stop();
     return UR_ERROR_NONE;
@@ -429,6 +451,11 @@ ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     return mf_resolve_dest(dest, dest_addr);
 }
 
+bool ur_mesh_is_whitelist_enabled(void)
+{
+    return is_whitelist_enabled();
+}
+
 void ur_mesh_enable_whitelist(void)
 {
     whitelist_enable();
@@ -437,6 +464,11 @@ void ur_mesh_enable_whitelist(void)
 void ur_mesh_disable_whitelist(void)
 {
     whitelist_disable();
+}
+
+const whitelist_entry_t *ur_mesh_get_whitelist_entries(void)
+{
+    return whitelist_get_entries();
 }
 
 ur_error_t ur_mesh_add_whitelist(const mac_address_t *address)
@@ -477,14 +509,33 @@ void ur_mesh_get_channel(channel_t *channel)
     ur_mesh_hal_module_t   *ur_wifi_hal = NULL;
 
     if (channel) {
-        channel->wifi_channel = 1;
-        channel->channel = channel->wifi_channel;
-        ur_wifi_hal = hal_ur_mesh_get_default_module();
-        channel->hal_ucast_channel = (uint16_t)hal_ur_mesh_get_ucast_channel(
+        ur_wifi_hal = hal_umesh_get_default_module();
+
+        channel->wifi_channel = (uint16_t)hal_umesh_get_ucast_channel(
                                          ur_wifi_hal);
-        channel->hal_bcast_channel = (uint16_t)hal_ur_mesh_get_bcast_channel(
+        channel->channel = channel->wifi_channel;
+        channel->hal_ucast_channel = (uint16_t)hal_umesh_get_ucast_channel(
+                                         ur_wifi_hal);
+        channel->hal_bcast_channel = (uint16_t)hal_umesh_get_bcast_channel(
                                          ur_wifi_hal);
     }
+}
+
+void umesh_get_extnetid(umesh_extnetid_t *extnetid)
+{
+    if (extnetid == NULL) {
+        return;
+    }
+    umesh_mm_get_extnetid(extnetid);
+}
+
+ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid)
+{
+    if (extnetid == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    return umesh_mm_set_extnetid(extnetid);
 }
 
 const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type)
@@ -504,7 +555,7 @@ const frame_stats_t *ur_mesh_get_hal_stats(media_type_t type)
         return NULL;
     }
 
-    return hal_ur_mesh_get_stats(hal->module);
+    return hal_umesh_get_stats(hal->module);
 }
 
 const ur_message_stats_t *ur_mesh_get_message_stats(void)

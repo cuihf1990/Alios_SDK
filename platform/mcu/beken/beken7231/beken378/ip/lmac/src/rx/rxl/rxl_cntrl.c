@@ -87,75 +87,158 @@ struct rxl_cntrl_env_tag rxl_cntrl_env;
 #include "lwip_intf.h"
 #endif
 
-static uint8_t rx_header[RXL_HEADER_INFO_LEN+2];
+static uint8_t rx_header[RXL_HEADER_INFO_LEN + 2];
 
 extern void bmsg_rx_sender(void *arg);
 
-int rxl_data_monitor(uint8_t *payload,
+#ifdef CONFIG_YOS_MESH
+#include "reg_mac_core.h"
+
+extern int beken_get_sm_connect_flag(void);
+static bool filter_frame(struct rx_swdesc *swdesc)
+{
+    struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+    struct rx_hd *rhd = &dma_hdrdesc->hd;
+    struct rx_payloaddesc *payl_d = HW2CPU(rhd->first_pbd_ptr);
+    struct rx_cntrl_rx_status *rx_status = &rxu_cntrl_env.rx_status;
+    uint32_t *frame = payl_d->buffer;
+    struct mac_hdr *hdr = (struct mac_hdr *)frame;
+    struct scan_chan_tag const *chan = NULL;
+    struct mac_addr bssid;
+    uint32_t bssid_low;
+    struct mac_addr *org_bssid;
+
+    if (beken_get_sm_connect_flag() == 0) {
+        return false;
+    }
+
+    bssid_low = nxmac_bss_id_low_get();
+    bssid.array[0] = bssid_low;
+    bssid.array[1] = (bssid_low & 0xffff0000) >> 16;
+    bssid.array[2] = nxmac_bss_id_high_getf();
+
+    // check TODS bit
+    switch ((hdr->fctl >> 8) & 0x03) {
+        case 0:
+            org_bssid = (uint8_t *)hdr->addr3.array;
+            break;
+        case 1:
+            org_bssid = (uint8_t *)hdr->addr1.array;
+            break;
+        case 2:
+            org_bssid = (uint8_t *)hdr->addr2.array;
+            break;
+        default:
+            return false;
+    }
+
+    if (memcmp(&bssid, org_bssid, sizeof(bssid)) == 0) {
+        return false;
+    }
+
+    return true;
+}
+#endif
+
+int rxl_data_monitor(struct rx_swdesc *swdesc, uint8_t *payload,
                               uint16_t length)
 {
-	monitor_cb_t fn;
+	monitor_data_cb_t fn;
 	int monitor_flag = 0;
-	
+        struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+        struct rx_hd *rhd = &dma_hdrdesc->hd;
+        hal_wifi_link_info_t link_info;
+
+        link_info.rssi = (rhd->recvec1c >> 24) & 0xff;
 	if(bk_wlan_is_monitor_mode())
 	{
 		monitor_flag = 1;
 
 		fn = bk_wlan_get_monitor_cb();		
-		(*fn)((uint8_t *)payload, length);
+		(*fn)((uint8_t *)payload, length, &link_info);
 	}
+#ifdef CONFIG_YOS_MESH
+        else if (wlan_is_mesh_monitor_mode()) {
+            fn = wlan_get_mesh_monitor_cb();
+            (*fn)((uint8_t *)payload, length, &link_info);
+        }
+#endif
 
 	return monitor_flag;
 }
 
-int rxl_data_get_len_from_rx_rector(struct rx_hd *hd)
+uint32_t rxu_cntrl_patch_get_compensation_len(
+	uint8_t *p_frame)
 {
-	struct rx_hd *hd_ptr = hd;
-	union rx_vector_1a *rxv_1a = (union rx_vector_1a *)&hd_ptr->recvec1a;
-	union rx_vector_1b *rxv_1b = (union rx_vector_1b *)&hd_ptr->recvec1b;
-	uint32_t ht_flag = 0;
-	uint32_t data_count;
-	uint32_t mod;
+    struct mac_hdr *machdr_ptr = (struct mac_hdr *)p_frame;
+    struct mac_hdr_qos *machdr_qos_ptr = (struct mac_hdr_qos *)p_frame;
+	uint8_t *data = (uint8_t *)&machdr_ptr[1];
+	uint8_t key_id, ver;
+	uint8_t qos_flag = 0;
+	uint8_t *addr, *ra_addr;
+	uint8_t *encrypt_param;
+	uint32_t comp_len = 0;
+	
+	if(!bk_wlan_is_monitor_mode())
+	{
+		goto comp_exit;
+	}
 
-	ASSERT(rxv_1a);
-	ASSERT(rxv_1b);
-
-	mod = rxv_1b->bits.format_mod;
-	switch(mod)
-	{			
-		case FMOD_HT_MF:
-		case FMOD_HT_GF:			
-		case FMOD_VHT:
-			ht_flag = 1;
-			RXL_CNTRL_PRT("ht:%d\r\n", (rxv_1b->bits.format_mod));
-			break;
-			
-		case FMOD_NON_HT:
-		case FMOD_NON_HT_DUP_OFDM:
-		default:
-			RXL_CNTRL_PRT("legacy:%d\r\n", (rxv_1b->bits.format_mod));
-			break;
+	ra_addr = (uint8_t *)&machdr_ptr->addr1;
+	if(!(ra_addr[0] & 0x01))
+	{
+		/* hardware issue */
+		goto comp_exit;
 	}
 	
-	if(ht_flag)
+	if((0x02 == ((machdr_ptr->fctl >> 2) & 0x03))
+		&& (machdr_ptr->fctl & 0x80))
 	{
-		data_count = rxv_1a->bits.ht_len1 
-						+ (rxv_1b->bits.ht_len2 << 16);
+		qos_flag = 1;
+	}
+	
+	if(0 == (machdr_ptr->fctl & 0x4000))
+	{
+		/*.1.. .... = Protected flag: Data is protected;
+		  .0.. .... = open system;*/ 
+		return comp_len;
+	}
+	
+	encrypt_param = (uint8_t *)&machdr_ptr[1];
+	if(qos_flag)
+	{
+		encrypt_param = (uint8_t *)&machdr_qos_ptr[1];
+		data = (uint8_t *)&machdr_qos_ptr[1];
+	}
+	key_id = (data[3] >> 6) & 0x03;
+	ver = (data[3] >> 5) & 0x01;
+
+	if(0 == ver)
+	{
+		/*cipherType: CTYPERAM_WEP;*/
+		comp_len = 4;
 	}
 	else
-	{
-		data_count = rxv_1a->bits.legacy_len;
+	{		
+		if(encrypt_param[1] == ((encrypt_param[0] | 0x20) & 0x7f))
+		{
+			/*cipherType: CTYPERAM_TKIP;*/
+			comp_len = 4;
+		}
+		if(0 == encrypt_param[2])
+		{
+			/*cipherType: CTYPERAM_CCMP;*/
+			comp_len = 8;
+		}
+
+		if((0 == encrypt_param[2])
+			&& (encrypt_param[1] == ((encrypt_param[0] | 0x20) & 0x7f)))
+		{
+		}
 	}
 
-	data_count -= 4;
-
-	if(rxv_1b->bits.is_agg)
-	{
-		data_count -= 4;
-		RXL_CNTRL_PRT("is_agg\r\n");
-	}
-
-	return data_count;
+comp_exit:	
+	return comp_len;
 }
 
 void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
@@ -186,7 +269,15 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
     	du_ptr = (uint8_t *)os_malloc(du_len);	
 	    hostbuf_start = (uint32_t)du_ptr;	 
 	}
+#ifdef CONFIG_YOS_MESH
+    else if (rxu_mesh_monitor(swdesc)) {
+        du_len = mpdu_len;		
+        du_ptr = (uint8_t *)os_malloc(du_len);	
+        hostbuf_start = (uint32_t)du_ptr;	 
+    } else if (filter_frame(swdesc) == false)
+#else
 	else
+#endif
 	{		
 	    if(g_rwnx_connector.rx_alloc_func)
 	    {
@@ -284,37 +375,25 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 	    dma_desc->dest = (uint32_t)rx_header;
 	    dma_desc->ctrl = 0;
 	}
-	
+
+#ifdef CONFIG_YOS_MESH
+	if(bk_wlan_is_monitor_mode()  || rxu_mesh_monitor(swdesc))
+#else
 	if(bk_wlan_is_monitor_mode())
+#endif
 	{	 
 		if(du_ptr)
 		{
-			#define MONITOR_PKT_FCS_LEN           4
-			uint32_t len_from_vector;
-			
 			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
-			len_from_vector = rxl_data_get_len_from_rx_rector(&dma_hdrdesc->hd);
-			if(len_from_vector != du_len)
+			du_len += rxu_cntrl_patch_get_compensation_len(du_ptr);
+#ifdef CONFIG_YOS_MESH
+			if(du_len >= 42 || rxu_mesh_monitor(swdesc))
+#else
+			if(du_len >= 42)
+#endif
 			{
-				RXL_CNTRL_PRT("len_from_vector:%d:%d\r\n", len_from_vector, du_len);
-
-				do
-				{
-					if((du_len > len_from_vector)
-						|| (len_from_vector > 2000)
-						|| ((len_from_vector > du_len) 
-							&& ((len_from_vector - du_len) > MONITOR_PKT_FCS_LEN)))
-					{
-						break;
-					}					
-					
-				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), len_from_vector);
-				}while(0);
+				rxl_data_monitor(swdesc, (uint8_t *)((uint32_t)du_ptr), du_len);
 			}
-			else
-			{
-				rxl_data_monitor((uint8_t *)((uint32_t)du_ptr), du_len);
-			}		
 			
 			os_free(du_ptr);
 		}
@@ -332,7 +411,7 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 			pbuf_free(pbuf);
 		}
 	}	
- 
+
     // Now go through the additional RBD if any (e.g. for FCS, ICV)
     while (pd)
     {
@@ -372,6 +451,15 @@ static bool rxl_rxcntrl_frame(struct rx_swdesc* swdesc)
     bool handled = true;
     bool release = true;
     struct rx_dmadesc *dma_hdrdesc = swdesc->dma_hdrdesc;
+
+#if CFG_RX_SENSITIVITY_TEST
+    extern UINT32 g_rxsens_start;
+    if(g_rxsens_start) 
+    {
+        rxl_mpdu_free(swdesc);
+        return (handled);
+    }
+#endif
 
     // Check if we received a NDP frame
     if (dma_hdrdesc->hd.frmlen != 0)
@@ -837,15 +925,6 @@ void rxl_cntrl_evt(int dummy)
             #if (NX_RX_FRAME_HANDLING)
             bool dont_free = false;
 
-            #if CFG_RX_SENSITIVITY_TEST
-            extern UINT32 g_rxsens_start;
-            if(g_rxsens_start) 
-			{
-                rxl_mpdu_free(swdesc);
-                break;
-            }
-            #endif
-
             // Check if the packet is of interest for the LMAC
             upload = rxl_frame_handle(swdesc, &dont_free);
             if (!upload)
@@ -887,7 +966,6 @@ void rxl_timer_int_handler(void)
         if ((rxl_cntrl_env.first == NULL) ||
             (!RX_HD_DONE_GET(rxl_cntrl_env.first->hd.statinfo)))
         {
-        	//os_printf("rxl_int break\r\n");
             break;
         }
 
@@ -910,7 +988,7 @@ void rxl_timer_int_handler(void)
 
     // Check if frames are ready
     if (!co_list_is_empty(&rxl_cntrl_env.ready))
-    {   
+    {		
         bmsg_rx_sender(0);
     }
 }

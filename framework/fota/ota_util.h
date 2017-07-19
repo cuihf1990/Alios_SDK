@@ -74,6 +74,8 @@ typedef struct {
 
 void ota_status_init(void);
 
+void ota_status_deinit();
+
 void ota_set_status(OTA_STATUS_T status);
 
 OTA_STATUS_T ota_get_status(void);

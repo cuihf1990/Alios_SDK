@@ -77,11 +77,6 @@ struct txl_buffer_control txl_buffer_control_ndpa_brp;
 struct txl_buffer_control txl_buffer_control_ndp;
 #endif //(RW_BFMER_EN)
 
-#if CFG_TX_EVM_TEST
-struct tx_policy_tbl evm_frame_pol_24G ;
-struct tx_policy_tbl evm_frame_pol_5G ;
-#endif 
-
 struct tx_policy_tbl txl_frame_pol_24G ;
 struct tx_policy_tbl txl_frame_pol_5G ;
 struct txl_buffer_control txl_frame_buf_ctrl[NX_TXFRAME_CNT] ;

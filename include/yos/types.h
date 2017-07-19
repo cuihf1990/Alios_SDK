@@ -20,13 +20,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #ifdef WITH_LWIP
-#define O_RDONLY 0x01
-#define O_WRONLY 0x02
-#define O_RDWR   0x03
-#define O_CREAT  0x04
-
 #define POLLIN  0x1
 #define POLLOUT 0x2
 #define POLLERR 0x4

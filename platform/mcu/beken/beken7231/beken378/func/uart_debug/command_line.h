@@ -259,7 +259,7 @@ enum
     BEKEN_TEMP_CMD                              = 0XDD,
     BEKEN_TEMP_TCP                              = 0XEE,
     BEKEN_TEST_UDP                              = 0XDE,
-    BEKEN_SD_CLOSE                              = 0XDF,
+    BEKEN_SD_CLOSE                              = 0XDC,
 };
 
 

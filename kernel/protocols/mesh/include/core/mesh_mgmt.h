@@ -103,7 +103,8 @@ enum {
     ATTACH_REQUEST_RETRY_TIMES   = 2,
     ATTACH_SID_RETRY_TIMES       = 2,
     BECOME_LEADER_TIMEOUT        = 3,
-    MIGRATE_TIMEOUT              = 3,
+    MIGRATE_TIMEOUT              = 2,
+    DETACHED_MIGRATE_TIMEOUT     = 1,
 
 #ifndef CONFIG_YOS_DDA
     ATTACH_CANDIDATE_TIMEOUT     = 30,     /* 30 * ADVERTISEMENT_TIMEOUT */
@@ -150,10 +151,16 @@ typedef struct mm_cb_s {
     interface_down_t interface_down;
 } mm_cb_t;
 
-ur_error_t umesh_mm_init(void);
+ur_error_t umesh_mm_init(node_mode_t mode);
 ur_error_t umesh_mm_deinit(void);
 ur_error_t umesh_mm_start(mm_cb_t *cb);
 ur_error_t umesh_mm_stop(void);
+
+bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
+                              mm_netinfo_tv_t *netinfo);
+void umesh_mm_start_net_scan_timer(void);
+uint8_t umesh_mm_get_prev_channel(void);
+void umesh_mm_set_prev_channel(void);
 
 uint16_t            umesh_mm_get_local_sid(void);
 ur_error_t          umesh_mm_set_local_sid(uint16_t sid);
@@ -168,6 +175,7 @@ uint16_t            umesh_mm_get_meshnetid(network_context_t *network);
 uint16_t            umesh_mm_get_meshnetsize(void);
 const mac_address_t *umesh_mm_get_mac_address(void);
 node_mode_t         umesh_mm_get_mode(void);
+int8_t              umesh_mm_compare_mode(node_mode_t local, node_mode_t other);
 ur_error_t          umesh_mm_set_mode(node_mode_t mode);
 uint16_t            umesh_mm_get_path_cost(void);
 uint16_t            umesh_mm_get_channel(network_context_t *network);
@@ -176,9 +184,16 @@ void                umesh_mm_set_channel(network_context_t *network,
 ur_error_t          umesh_mm_set_seclevel(int8_t level);
 int8_t              umesh_mm_get_seclevel(void);
 
+void umesh_mm_get_extnetid(umesh_extnetid_t *extnetid);
+ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid);
+
+uint8_t umesh_mm_get_leader_mode(void);
+uint8_t umesh_mm_get_reboot_flag(void);
+
 void       umesh_mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length);
 void       umesh_mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
-mm_tv_t    *umesh_mm_get_tv(const uint8_t *data, const uint16_t length, uint8_t type);
+mm_tv_t    *umesh_mm_get_tv(const uint8_t *data, const uint16_t length,
+                            uint8_t type);
 ur_error_t umesh_mm_handle_frame_received(message_t *message);
 
 void become_leader(void);
@@ -189,7 +204,8 @@ ur_error_t send_raw_data(network_context_t *network,
                          uint8_t *payload, uint8_t payload_length);
 ur_error_t register_raw_data_receiver(umesh_raw_data_received receiver);
 
-uint16_t tlvs_set_value(uint8_t *buf, const uint8_t *tlvs,
+uint16_t tlvs_set_value(network_context_t *network,
+                        uint8_t *buf, const uint8_t *tlvs,
                         uint8_t tlvs_length);
 int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length);
 

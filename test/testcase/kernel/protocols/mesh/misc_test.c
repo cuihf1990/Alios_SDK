@@ -7,7 +7,7 @@
 void test_uradar_misc_case(void)
 {
     message_t *message;
-    message = message_alloc(100);
+    message = message_alloc(100, UT_MSG);
     YUNIT_ASSERT(UR_ERROR_FAIL == message_set_msglen(NULL, 100));
     YUNIT_ASSERT(UR_ERROR_NONE == message_set_msglen(message, 100));
     YUNIT_ASSERT(UR_ERROR_FAIL == message_set_buflen(NULL, 100));
@@ -16,8 +16,8 @@ void test_uradar_misc_case(void)
     YUNIT_ASSERT(100 == message_get_buflen(message));
 
     message_t *message2, *message3;
-    message2 = message_alloc(30);
-    message3 = message_alloc(30);
+    message2 = message_alloc(30, UT_MSG);
+    message3 = message_alloc(30, UT_MSG);
     YUNIT_ASSERT(UR_ERROR_FAIL == message_concatenate(NULL, message2, false));
     YUNIT_ASSERT(UR_ERROR_NONE == message_concatenate(message, message2, false));
     YUNIT_ASSERT(UR_ERROR_NONE == message_concatenate(message, message3, false));

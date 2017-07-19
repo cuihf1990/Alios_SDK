@@ -25,9 +25,10 @@
 
 static unsigned int used_bitmap;
 
+extern void hal_reboot(void);
 void yos_reboot(void)
 {
-
+    hal_reboot();
 }
 
 int yos_get_hz(void)
@@ -51,7 +52,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
 {
     ktask_t *task_handle = NULL;
 
-    return (int)yunos_task_dyn_create(&task_handle, name, arg, 32, 0,
+    return (int)yunos_task_dyn_create(&task_handle, name, arg, YOS_DEFAULT_APP_PRI, 0,
                                       stack_size / sizeof(cpu_stack_t), fn, 1u);
 }
 
@@ -313,8 +314,8 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
     return yunos_buf_queue_recv(queue->hdl, MS2TICK(ms), msg, size);
 }
 
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *), void *arg, int ms,
-                  int repeat)
+int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
+                  void *arg, int ms, int repeat)
 {
     kstat_t   ret;
     ktimer_t *t;
@@ -502,13 +503,54 @@ int yos_work_cancel(yos_work_t *work)
     return yunos_work_cancel(work->hdl);
 }
 
-void *yos_malloc(unsigned int size)
+void *yos_zalloc(unsigned int size)
 {
+    void *tmp = NULL;
     if (size == 0) {
         return NULL;
     }
 
-    return yunos_mm_alloc(size);
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+        tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+        tmp = yunos_mm_alloc(size);
+#endif
+    if (tmp)
+        bzero(tmp, size);
+    return tmp;
+}
+
+void *yos_malloc(unsigned int size)
+{
+    void *tmp = NULL;
+
+    if (size == 0) {
+        return NULL;
+    }
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+    tmp = yunos_mm_alloc(size);
+#endif
+
+    return tmp;
+}
+
+void *yos_realloc(void *mem, unsigned int size)
+{
+    void *tmp = NULL;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    tmp = yunos_mm_realloc(mem, size|YOS_UNSIGNED_INT_MSB);
+    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#else
+    tmp = yunos_mm_realloc(mem, size);
+#endif
+
+    return tmp;
 }
 
 void yos_free(void *mem)

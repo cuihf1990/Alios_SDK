@@ -33,22 +33,22 @@
 void test_softap_app_init(char *ap_ssid, char *ap_key)
 {
     OSStatus err = kNoErr;
-    network_InitTypeDef_st wNetConfig;
+    hal_wifi_init_type_t wNetConfig;
 
-    os_memset(&wNetConfig, 0x0, sizeof(network_InitTypeDef_st));
+    os_memset(&wNetConfig, 0x0, sizeof(hal_wifi_init_type_t));
 
     os_strcpy((char *)wNetConfig.wifi_ssid, ap_ssid);
     os_strcpy((char *)wNetConfig.wifi_key, ap_key);
 
-    wNetConfig.wifi_mode = Soft_AP;
-    wNetConfig.dhcpMode = DHCP_Server;
+    wNetConfig.wifi_mode = SOFT_AP;
+    wNetConfig.dhcp_mode = DHCP_SERVER;
     wNetConfig.wifi_retry_interval = 100;
     os_strcpy((char *)wNetConfig.local_ip_addr, "192.168.0.1");
     os_strcpy((char *)wNetConfig.net_mask, "255.255.255.0");
-    os_strcpy((char *)wNetConfig.dnsServer_ip_addr, "192.168.0.1");
+    os_strcpy((char *)wNetConfig.dns_server_ip_addr, "192.168.0.1");
 
     os_printf("ssid:%s  key:%s\r\n", wNetConfig.wifi_ssid, wNetConfig.wifi_key);
-    micoWlanStart(&wNetConfig);
+    bk_wlan_start(&wNetConfig);
 }
 #endif
 
@@ -83,7 +83,7 @@ extern struct scanu_rst_upload *scan_rstup_ptr;
 void test_sta_app_init(char *oob_ssid,char *connect_key)
 {
 #if 0
-	network_InitTypeDef_adv_st	wNetConfigAdv;
+	hal_wifi_init_type_adv_t	wNetConfigAdv;
 
 	os_memset( &wNetConfigAdv, 0x0, sizeof(wNetConfigAdv) );
 	
@@ -94,28 +94,28 @@ void test_sta_app_init(char *oob_ssid,char *connect_key)
 	
 	os_strcpy((char*)wNetConfigAdv.key, connect_key);				  /* wlan key string or hex data in WEP mode */
 	wNetConfigAdv.key_len = strlen(connect_key);			  /* wlan key length */
-	wNetConfigAdv.dhcpMode = DHCP_Client;						  /* Fetch Ip address from DHCP server */
+	wNetConfigAdv.dhcp_mode = DHCP_CLIENT;						  /* Fetch Ip address from DHCP server */
 	wNetConfigAdv.wifi_retry_interval = 100;					  /* Retry interval after a failure connection */
 
 	/* Connect Now! */
 	micoWlanStartAdv(&wNetConfigAdv);
 #else
-	network_InitTypeDef_st wNetConfig;
+	hal_wifi_init_type_t wNetConfig;
 
-	os_memset(&wNetConfig, 0x0, sizeof(network_InitTypeDef_st));
+	os_memset(&wNetConfig, 0x0, sizeof(hal_wifi_init_type_t));
 
 	os_strcpy((char *)wNetConfig.wifi_ssid, oob_ssid);
 	os_strcpy((char *)wNetConfig.wifi_key, connect_key);
 
-	wNetConfig.wifi_mode = Station;
-	wNetConfig.dhcpMode = DHCP_Client;
+	wNetConfig.wifi_mode = STATION;
+	wNetConfig.dhcp_mode = DHCP_CLIENT;
 	wNetConfig.wifi_retry_interval = 100;
 	os_strcpy((char *)wNetConfig.local_ip_addr, "192.168.0.1");
 	os_strcpy((char *)wNetConfig.net_mask, "255.255.255.0");
-	os_strcpy((char *)wNetConfig.dnsServer_ip_addr, "192.168.0.1");
+	os_strcpy((char *)wNetConfig.dns_server_ip_addr, "192.168.0.1");
 
 	os_printf("ssid:%s key:%s\r\n", wNetConfig.wifi_ssid, wNetConfig.wifi_key);
-	micoWlanStart(&wNetConfig);
+	bk_wlan_start(&wNetConfig);
 #endif
 }
 

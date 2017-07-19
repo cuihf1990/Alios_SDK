@@ -204,6 +204,8 @@ kstat_t yunos_task_sleep(tick_t ticks)
 
     ready_list_rm(&g_ready_queue, g_active_task);
 
+    TRACE_TASK_SLEEP(g_active_task, ticks);
+
     YUNOS_CRITICAL_EXIT_SCHED();
 
 #ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC

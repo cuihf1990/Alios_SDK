@@ -35,11 +35,11 @@ static int open_flash(int pno, bool w)
     int flash_fd;
     snprintf(fn, sizeof fn, "/tmp/yos_partition_%d.bin", pno);
     if(w)
-        flash_fd = open(fn, O_RDWR | O_TRUNC);
-    else
         flash_fd = open(fn, O_RDWR);
+    else
+        flash_fd = open(fn, O_RDONLY);
 
-    if (w && flash_fd < 0) {
+    if (flash_fd < 0) {
         umask(0111);
         close(creat(fn, S_IRWXU | S_IRWXG));
         flash_fd = open(fn, O_RDWR);
@@ -47,13 +47,13 @@ static int open_flash(int pno, bool w)
     return flash_fd;
 }
 
-int hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,uint32_t buf_size)
+int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,uint32_t buf_size)
 {
     int flash_fd = open_flash(pno, true);
     if (flash_fd < 0)
         return -1;
 
-    int ret = pwrite(flash_fd, buf, buf_size, 0);
+    int ret = pwrite(flash_fd, buf, buf_size, *poff);
     if (ret < 0)
         perror("error writing flash:");
     else if (poff)
@@ -63,13 +63,13 @@ int hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,uint32
     return ret < 0 ? ret : 0;
 }
 
-int hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_size)
+int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_size)
 {
     int flash_fd = open_flash(pno, false);
     if (flash_fd < 0)
         return -1;
 
-    int ret = pread(flash_fd, buf, buf_size, 0);
+    int ret = pread(flash_fd, buf, buf_size, *poff);
     if (ret < 0)
         perror("error reading flash:");
     else if (poff)
@@ -77,6 +77,17 @@ int hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_
     close(flash_fd);
 
     return ret < 0 ? ret : 0;
+}
+
+int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set,
+                        uint32_t size)
+{
+    return 0;
+}
+
+void hal_reboot(void)
+{
+
 }
 
 #define us2tick(us) \
@@ -130,11 +141,24 @@ int csp_printf(const char *fmt, ...)
     return ret;
 }
 
+const hal_uart_config_t config = {
+    .baud_rate = 921600,
+    .data_width = DATA_WIDTH_8BIT,
+    .parity = NO_PARITY,
+    .stop_bits = STOP_BITS_1,
+    .flow_control = FLOW_CONTROL_DISABLED,
+    .rx_buf_size = 256,
+};
+
 extern hal_wifi_module_t sim_yos_wifi_linux;
 extern struct hal_ota_module_s linuxhost_ota_module;
 void linux_wifi_register(void);
 void hw_start_hal(void)
 {
+#ifdef CONFIG_YOS_CLI
+    hal_uart_init(0, &config);
+#endif
+
     hal_wifi_register_module(&sim_yos_wifi_linux);
     hal_ota_register_module(&linuxhost_ota_module);
 #ifdef LINUX_MESH_80211

@@ -25,6 +25,7 @@
 #include "wsf.h"
 #include "yos/kernel.h"
 #include "yos/framework.h"
+#include "yos/network.h"
 #include "os.h"
 
 wsf_request_queue_t *global_request_queue;
@@ -70,20 +71,9 @@ static msg_handler msg_handlers[MSG_TYPE_END] = {
 static int __cb_wsf_recv(int fd, void *arg);
 static void __cb_wsf_close(int fd, void *arg);
 static void __cb_wsf_timeout(void *arg);
+cb_network g_wsf_cb;
 
-typedef int (*cb_wsf_recv_t)(int , void *);
-typedef struct {
-    int             sock;
-    int             timeout;//ms
-    cb_wsf_recv_t   cb_recv;
-    yos_call_t      cb_timeout;
-    yos_poll_call_t cb_close;
-    void            *extra;
-} cb_network;
-
-static cb_network g_wsf_cb;
-
-static void cb_recv(int fd, void *arg)
+void cb_recv(int fd, void *arg)
 {
     cb_network *cb = (cb_network *)arg;
     if (!cb) {
@@ -95,15 +85,6 @@ static void cb_recv(int fd, void *arg)
     }
 
     yos_cancel_delayed_action(cb->timeout, cb->cb_timeout, cb);
-    yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
-}
-
-static void start_network(cb_network *cb)
-{
-    if (!cb) {
-        return;
-    }
-    yos_poll_read_fd(cb->sock, cb_recv, cb);
     yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
@@ -205,7 +186,7 @@ static void receive_worker(void *arg)
     g_wsf_cb.cb_close = __cb_wsf_close;
     g_wsf_cb.cb_timeout = __cb_wsf_timeout;
     g_wsf_cb.extra = arg;
-    start_network(&g_wsf_cb);
+    yos_post_delayed_action(g_wsf_cb.timeout, g_wsf_cb.cb_timeout, &g_wsf_cb);
 }
 
 static void stop_receive_worker()
@@ -218,6 +199,7 @@ static void stop_receive_worker()
 static void __cb_wsf_close(int fd, void *arg)
 {
     LOGE(MODULE_NAME, "wsf: select ret -1, reconnect");
+    wsf_msg_queue_flush(global_request_queue);
     wsf_reset_connection(wsf_conn, 0);
 }
 
@@ -228,23 +210,30 @@ static int  __cb_wsf_recv(int fd, void *arg)
     if (wsf_conn && (-1 != fd)) {
         char *buf = wsf_conn->recv_buf + wsf_conn->recv_buf_pos;
         int len = wsf_conn->recv_buf_len - wsf_conn->recv_buf_pos;
+        if(len <= 0)
+            return 1;
         if (NULL != wsf_conn->ssl) {
             count = os_ssl_recv(wsf_conn->ssl, buf, len);
         } else {
             count = os_tcp_recv(wsf_conn->tcp, buf, len);
         }
-        LOGD(MODULE_NAME, "wsf recv : %s,len: %d\n", buf, count);
+        LOGD(MODULE_NAME, "wsf recv : %s,cnt: %d, len: %d\n", buf, count,len);
+        if (count < 0 && (count == -EAGAIN || errno == EAGAIN)) {
+            LOGD(MODULE_NAME, "wsf recv eagain");
+            return 1;
+        }
         if (count <= 0) {
             if (!len) {
                 LOGE(MODULE_NAME, "wsf recv buffer full!");
             } else {
-                LOGE(MODULE_NAME, "closing socket for tcp/ssl read error.");
-                exit(0);
+                LOGE(MODULE_NAME, "closing socket for tcp/ssl read error %d.", errno);
             }
             return 0;
         } else {
             wsf_conn->recv_buf_pos += count;
         }
+        /* receive packets, reset heartbeat counter */
+        wsf_reset_heartbeat_counter(wsf_conn);
         process_received_buf(wsf_conn);
     }
     return 1;
@@ -252,8 +241,6 @@ static int  __cb_wsf_recv(int fd, void *arg)
 
 static void __cb_wsf_timeout(void *arg)
 {
-    static wsf_msg_t hb_req;
-    static uint32_t len = 0;
     cb_network *cb = (cb_network *)arg;
     wsf_config_t *config = NULL;
     if (!cb) {
@@ -261,19 +248,19 @@ static void __cb_wsf_timeout(void *arg)
     }
     config = (wsf_config_t *)cb->extra;
 
-    if (cb->sock != (long)wsf_conn->tcp &&
-        wsf_conn && wsf_conn->ssl) {
-        cb->sock = (long)wsf_conn->tcp;
-        wsf_keep_connection(config);
-        start_network(cb);
-        LOGW(MODULE_NAME, "re-start wsf network register.\n");
-        return;
-    }
-
-    if (hb_req.header.msg_type_version == 0) {
+    //side effect: send heartbeat before connection ready(before wsf session established)
+    if (wsf_conn && wsf_conn->ssl) {
+        wsf_msg_t hb_req;
+        uint32_t len = 0;
+        //construct heartbeat package
+        memset(&hb_req, 0, sizeof(hb_req));
         wsf_msg_heartbeat_request_init(&hb_req);
         memcpy(&len, hb_req.header.msg_length, sizeof(uint32_t));
         wsf_msg_header_encode((char *)&hb_req, len);
+
+        wsf_send_msg(wsf_conn, (const char *)&hb_req, len);
+        LOGI(MODULE_NAME, "send heartbeat");
+        wsf_dec_heartbeat_counter(wsf_conn);
     }
 
     //TIMEOUT to send heartbeat when connection ready
@@ -283,14 +270,9 @@ static void __cb_wsf_timeout(void *arg)
         wsf_reset_connection(wsf_conn, 0);
     }
 
-    if (wsf_conn && wsf_conn->ssl) {
-        wsf_send_msg(wsf_conn, (const char *)&hb_req, len);
-        LOGW(MODULE_NAME, "send heartbeat");
-        wsf_dec_heartbeat_counter(wsf_conn);
-    }
-
     wsf_keep_connection(config);
-    /* NOTE: wsf_reset_connection() only called in this thread */
+
+    //kick the timer
     yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
@@ -329,24 +311,32 @@ static void process_msg_response(wsf_msg_t *msg, int length)
 static void process_msg_request(wsf_msg_t *msg, int length)
 {
     struct request_msg_node *node;
+    int was_empty;
 
     if (total_req_nodes >= CONFIG_REQMSG_LENGTH) {
         LOGW(MODULE_NAME, "request queue has too nodes to handle");
         return;
     }
 
+    /* attention: +1 for json parser need to append '\0' */
     node = (struct request_msg_node *)os_malloc(sizeof(struct request_msg_node) +
-                                                length);
+                                                length + 1);
     OS_CHECK_MALLOC(node);
 
     memcpy(node->msg, (uint8_t *)msg, length);
     node->length = length;
     os_mutex_lock(g_req_mutex);
-    dlist_add(&node->list_head, &g_list);
+    was_empty = dlist_empty(&g_list);
+    dlist_add_tail(&node->list_head, &g_list);
     total_req_nodes ++;
     os_mutex_unlock(g_req_mutex);
 
-    yos_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
+    /* already process, no need to schedule again */
+    if (!was_empty) {
+        return;
+    }
+
+    yos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
 }
 
 void init_req_glist(void)
@@ -380,26 +370,24 @@ void deinit_req_glist(void)
 
 void request_msg_handle(void *arg)
 {
-    struct request_msg_node *node, *n;
-    dlist_t *tmp = NULL;
-    LOGI(MODULE_NAME, "request_msg_handle");
+    struct request_msg_node *node;
+    LOGD(MODULE_NAME, "request_msg_handle");
     os_mutex_lock(g_req_mutex);
-    dlist_for_each_entry_safe(&g_list, tmp, node, struct request_msg_node,
-                              list_head) {
+    while (!dlist_empty(&g_list)) {
+        node = dlist_first_entry(&g_list, struct request_msg_node, list_head);
+        total_req_nodes --;
+        dlist_del(&(node->list_head));
         os_mutex_unlock(g_req_mutex);
 
         __process_msg_request((wsf_msg_t *)node->msg, node->length);
-        total_req_nodes --;
 
         os_mutex_lock(g_req_mutex);
-
-        dlist_del(&(node->list_head));
         os_free(node);
     }
     os_mutex_unlock(g_req_mutex);
 
     if (!dlist_empty(&g_list)) {
-        yos_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
+        yos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
     }
 }
 
@@ -422,7 +410,7 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
         if (param_count > 0) {
             uint32_t param1_len = os_get_unaligned_be32(++pp);
             pp += 4; //param1 value
-            LOGW(MODULE_NAME, "start push cmd to device, %d\n", time(NULL));
+            LOGD(MODULE_NAME, "start push cmd to device, %d\n", time(NULL));
             callback_rsp = push_callback(pp, param1_len);
         } else {
             callback_rsp = push_callback(NULL, 0);
@@ -451,8 +439,9 @@ static void __process_msg_request(wsf_msg_t *msg, int length)
     memcpy(&msg_len, rsp->header.msg_length, sizeof(uint32_t));
     wsf_msg_header_encode((char *)rsp, msg_len);
 
+    LOGD(MODULE_NAME, "before send response to service");
     wsf_send_msg(wsf_conn, (const char *)rsp, msg_len);
-    LOGW(MODULE_NAME, "send response to service");
+    LOGD(MODULE_NAME, "send response to service");
 
     if (callback_rsp) {
         wsf_response_destroy(callback_rsp, 0);
@@ -626,13 +615,15 @@ static wsf_request_node_t *__send_msg(wsf_msg_t *req, wsf_async_cb_t cb,
         wsf_code ret = wsf_send_msg(wsf_conn,
                                     (const char *)req, msg_length);
         if (ret == WSF_SUCCESS) {
-            LOGW(MODULE_NAME, "wsf msg send succeed.id=%d", msg_id);
+            LOGD(MODULE_NAME, "wsf msg send succeed.id=%d", msg_id);
             return node;
         }
-    } else {
-        wsf_msg_session_destroy(&node->session);
-        os_free(node);
+
+        wsf_request_queue_pop(global_request_queue, node);
     }
+
+    wsf_msg_session_destroy(&node->session);
+    os_free(node);
     return NULL;
 }
 
@@ -738,10 +729,12 @@ static void wsf_keep_connection(wsf_config_t *config)
         return;
     }
 
+#if 0
+    /* if not ready, just retry next turn */
     os_sys_net_wait_ready();
+#endif
 
-    if ((!wsf_conn->ssl || wsf_conn->conn_state != CONN_READY)
-        && network_up) {
+    if (!wsf_conn->ssl && network_up) {
         LOGI(MODULE_NAME, "try to reconnect");
         wsf_code result = wsf_open_connection(config);
         if (result != WSF_SUCCESS) {

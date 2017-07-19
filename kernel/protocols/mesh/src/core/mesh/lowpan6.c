@@ -39,6 +39,7 @@ typedef struct lowpan_reass_s {
 } lowpan_reass_t;
 
 static lowpan_reass_t *g_reass_list = NULL;
+static ur_timer_t g_reass_timer;
 
 static bool is_mcast_addr(ur_ip6_addr_t *ip6_addr)
 {
@@ -525,7 +526,7 @@ message_t *lp_header_decompress(message_t *message)
     ip6_header->len = ur_swap16(ip_payload_len);
 
     message_set_payload_offset(message, -hc_len);
-    dec_message = message_alloc(dec_header_len);
+    dec_message = message_alloc(dec_header_len, LOWPAN6_1);
     if (dec_message == NULL) {
         message_free(message);
         ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
@@ -563,9 +564,11 @@ static ur_error_t dequeue_list_element(lowpan_reass_t *lrh)
 ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
 {
     frag_header_t *frag_header;
+    frag_header_t frag_header_content;
     uint16_t datagram_size, datagram_tag, datagram_offset;
     lowpan_reass_t *lrh, *lrh_temp;
     message_info_t *info;
+    uint8_t *payload;
 
     if (p == NULL || reass_p == NULL) {
         return UR_ERROR_FAIL;
@@ -573,7 +576,10 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
 
     info = p->info;
     *reass_p = NULL;
-    frag_header = (frag_header_t *)message_get_payload(p);
+    payload = (uint8_t *)message_get_payload(p);
+    memcpy((uint8_t *)&frag_header_content, payload, sizeof(frag_header_t));
+    frag_header = &frag_header_content;
+
     *((uint16_t *)frag_header) = ur_swap16(*(uint16_t *)frag_header);
     datagram_size = frag_header->size;
     datagram_tag = ur_swap16(frag_header->tag);
@@ -682,7 +688,7 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
             dequeue_list_element(lrh);
 
             /* get message */
-            *reass_p = message_alloc(message_get_msglen(lrh->message));
+            *reass_p = message_alloc(message_get_msglen(lrh->message), LOWPAN6_2);
             message_copy(*reass_p, lrh->message);
             message_free(lrh->message);
 
@@ -705,7 +711,8 @@ static void handle_timer(void *args)
 {
     lowpan_reass_t *lrh, *lrh_temp;
 
-    ur_start_timer(REASSEMBLE_TICK_INTERVAL, handle_timer, NULL);
+    g_reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL,
+                                   handle_timer, NULL);
 
     lrh = g_reass_list;
     while (lrh != NULL) {
@@ -726,7 +733,24 @@ static void handle_timer(void *args)
 
 }
 
-void lp_init(void)
+void lp_start(void)
 {
-    ur_start_timer(REASSEMBLE_TICK_INTERVAL, handle_timer, NULL);
+    g_reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL,
+                                   handle_timer, NULL);
+}
+
+void lp_stop(void)
+{
+    lowpan_reass_t *lrh, *lrh_temp;
+
+    ur_stop_timer(&g_reass_timer, NULL);
+
+    lrh = g_reass_list;
+    while (lrh != NULL) {
+        lrh_temp = lrh->next;
+        dequeue_list_element(lrh);
+        message_free(lrh->message);
+        ur_mem_free(lrh, sizeof(lowpan_reass_t));
+        lrh = lrh_temp;
+    }
 }

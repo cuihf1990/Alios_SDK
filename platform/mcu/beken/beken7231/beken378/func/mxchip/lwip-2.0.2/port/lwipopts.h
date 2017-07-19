@@ -42,7 +42,7 @@
 #define LWIP_LOOPBACK_MAX_PBUFS         8
 
 #define TCPIP_THREAD_NAME               "tcp/ip"
-#define TCPIP_THREAD_STACKSIZE          2048
+#define TCPIP_THREAD_STACKSIZE          3072
 #define TCPIP_THREAD_PRIO               7
 
 #define DEFAULT_THREAD_STACKSIZE        200
@@ -446,7 +446,14 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
     int lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest);
 #define LWIP_HOOK_IP6_ROUTE(src, dest)           lwip_hook_ip6_route(src, dest)
 #define LWIP_HOOK_MESH_IS_MCAST_SUBSCRIBED(dest) lwip_hook_mesh_is_mcast_subscribed(dest)
+
+#define LWIP_ICMP6                      1
+#define CHECKSUM_CHECK_ICMP6            0
+#define LWIP_MULTICAST_PING             1
+
 #endif
+
+#define LWIP_RANDOMIZE_INITIAL_LOCAL_PORTS 1
 
 #endif /* __LWIPOPTS_H__ */
 

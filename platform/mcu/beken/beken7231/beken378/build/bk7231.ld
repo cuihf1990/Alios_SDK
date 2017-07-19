@@ -4,59 +4,10 @@
  *
  * In this case vectors are at location 0 (reset @ 0x08)
  *
- *
- *
- * +------------+  0x0040000
- * Vect redirect   32
- * +------------+  
- *
- * +------------+  0x00400020
- * data         |
- * end
- * |(heap)      |
- * .            .
- * .            .
- * |(heap limit)|
- *
- * |- - - - - - |
- * stack bottom    256k
- * +------------+  
- * 
- * 
- * +------------+  0x0000000
- * |Bootloader  |
- * |            |  64k 
- * +------------+  0x0010000
- * |   Para 1   |   4k
- * +------------+ 
- * |   Para 2   |   4k
- * +------------+  0x0012000
- * |vectors     |
- * |            |
- * |------------+
- * |text        |  
- * |data        |  632k
- * |            |  
- * +------------+ 
- *
- *
- * +------------+  0x0080000
- * |            |
- * |            |
- * |  OTA TEMP  |
- * |            |  
- * |            |
- * |            |  320
- * +------------+
  */
 
-
-/* Split memory into area for vectors and ram */
-MEMORY
-{
-	flash  (rx) : ORIGIN = 0x0012000, LENGTH = 1M - 64K - 4K - 4K - 120K
-	ram   (rwx): ORIGIN = 0x00400020, LENGTH = 256k - 32
-}
+/* Include memory map */
+INCLUDE memory.ld
 
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
@@ -138,6 +89,7 @@ SECTIONS
 
 /* This symbol defines end of code/data sections. Heap starts here. */
 	PROVIDE(end    	  = .);
+	PROVIDE(heap_start    	  = .);
 	
 /* _stack symbol defines initial stack bottom addres. Stack grows to lower addresses.
    Typically you set this to be top of your RAM. Note: code never checks, if stack
@@ -148,6 +100,13 @@ SECTIONS
 	PROVIDE(_stack_irq         = 0x440000 - 0x3F0 - 0x7F0 - 0xFF0); /* 0xFF0*/
 	PROVIDE(_stack_fiq         = 0x440000 - 0x3F0 - 0x7F0); /* 0x7F0*/
 	PROVIDE(_stack_sys         = 0x440000 - 0x3F0); /* 0x3F0*/
+
+	ASSERT ((_stack_unused > end), "Error: No room left for the stack")
+
+	PROVIDE(heap_end      = _stack_unused);
+	PROVIDE(heap_len      = heap_end -  heap_start);
+
+	ASSERT ((heap_len > 0x1E000 - 1 ), "Error: No room left for the heap") /*heap must bigger than 120k*/
 }
  GROUP(
    libgcc.a

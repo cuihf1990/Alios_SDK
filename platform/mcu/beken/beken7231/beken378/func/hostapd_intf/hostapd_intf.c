@@ -296,6 +296,11 @@ int wpa_send_assoc_req(struct prism2_hostapd_param *param, int len)
     connect_param.ie_len = param->u.assoc_req.ie_len;
     os_memcpy((UINT8 *)connect_param.ie_buf, (UINT8 *)param->u.assoc_req.ie_buf, connect_param.ie_len);
 
+	connect_param.chan.freq = rw_ieee80211_get_centre_frequency(param->u.assoc_req.chann);
+	connect_param.chan.band = 0;
+	connect_param.chan.flags = 0;
+	connect_param.chan.tx_power = 10;
+	connect_param.auth_type = param->u.assoc_req.auth_alg;
     ret = sa_station_send_associate_cmd(&connect_param);
 
 	if(scan_rstup_ptr)

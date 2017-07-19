@@ -152,6 +152,16 @@ static void register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 
 }
 
+static void register_wlan_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
+{
+
+}
+
+static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
+{
+    return 0;
+}
+
 hal_wifi_module_t sim_yos_wifi_linux = {
     .base.name           = "sim_yos_wifi_linux",
     .init                =  wifi_init,
@@ -171,5 +181,7 @@ hal_wifi_module_t sim_yos_wifi_linux = {
     .start_monitor       =  start_monitor,
     .stop_monitor        =  stop_monitor,
     .register_monitor_cb =  register_monitor_cb,
+    .register_wlan_mgnt_monitor_cb = register_wlan_mgnt_monitor_cb,
+    .wlan_send_80211_raw_frame = wlan_send_80211_raw_frame
 };
 

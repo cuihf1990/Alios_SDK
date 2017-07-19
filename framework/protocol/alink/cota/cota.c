@@ -70,9 +70,9 @@ static int cota_conn_listener(int type, void *data, int dlen, void *result,
         int st = *((int *)data);
 
         if (st == CONNECT_STATE_READY) {
-            yos_schedule_work(0, collect_stats, NULL, NULL, NULL);
+            yos_loop_schedule_work(0, collect_stats, NULL, NULL, NULL);
         } else if (st == CONNECT_STATE_CLOSE) {
-            yos_schedule_work(0, collect_stats, NULL, NULL, NULL);
+            yos_loop_schedule_work(0, collect_stats, NULL, NULL, NULL);
             disconnectcounter++;
         }
     }
@@ -90,6 +90,7 @@ static int cota_service_listener(int type, void *data, int dlen, void *result,
             alink_get_config(p->data, (char *)result);
             LOGW(MODULE_NAME_COTA, "result %s", result);
         } else if (!strcmp(p->method, "setDebugConfig")) {
+            LOGW(MODULE_NAME_COTA, "==============> set debug config");
             alink_set_config(p->data);
         } else {
             return EVENT_IGNORE;
@@ -129,10 +130,15 @@ static int alink_set_config(char *param)
     pvalue = json_get_value_by_name(param, strlen(param), "alinkServer", &value_len,
                                     0);
     if (pvalue != NULL) {
+        LOGW(MODULE_NAME_COTA, "get alink server ----->  %s\n",pvalue);
         value_len = (value_len < SERVER_LEN) ? value_len : SERVER_LEN;
-        memset(alinkserver, 0x00, SERVER_LEN);
+	if(strstr(pvalue,alinkserver) == NULL){
+            LOGW(MODULE_NAME_COTA, "reset uuid --------\n");
+	    config_reset_main_uuid();
+	}	
+	memset(alinkserver, 0x00, SERVER_LEN);
         strncpy(alinkserver, pvalue, value_len);
-        yos_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
+        yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }
 
     char *attrsfilter = config_get_attrsfilter();
@@ -154,7 +160,7 @@ static int alink_set_config(char *param)
 
     if (test_reboot) {
         LOGW(MODULE_NAME_COTA, "RebootDevice, device will reboot 3 seconds later!");
-        yos_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
+        yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }
 
     return ret;
@@ -252,7 +258,7 @@ static void collect_stats(void *work)
         config_set_stats_flag(0);
         sm_get_service("accs")->put((void *)&data, sizeof(data));
     } else {
-        LOGW(MODULE_NAME_COTA, "save stats data to flash");
+        LOGI(MODULE_NAME_COTA, "save stats data to flash");
         device_statisticsdata_save(devstats, strlen(devstats));
         config_set_stats_flag(1);
     }

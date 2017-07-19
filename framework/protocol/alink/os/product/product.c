@@ -19,13 +19,43 @@
 #include "product.h"
 
 //TODO: update these product info
-#define product_model           "ALINKTEST_LIVING_LIGHT_ALINK_TEST"
-#define product_key             "5gPFl8G4GyFZ1fPWk20m"
-#define product_secret          "ngthgTlZ65bX5LpViKIWNsDPhOf2As9ChnoL9gQb"
-#define product_debug_key       "dpZZEpm9eBfqzK7yVeLq"
-#define product_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
+#define light_model           "ALINKTEST_LIVING_LIGHT_ALINK_TEST"
+#define light_key             "5gPFl8G4GyFZ1fPWk20m"
+#define light_secret          "ngthgTlZ65bX5LpViKIWNsDPhOf2As9ChnoL9gQb"
+#define light_debug_key       "dpZZEpm9eBfqzK7yVeLq"
+#define light_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
 
-char *g_sn = "1923450656869";
+#define gateway_model           "ALINKTEST_SECURITY_GATEWAY_QUANWU_001"
+#define gateway_key             "V2hpRG0k7Pbr1bmxDCat"
+#define gateway_secret          "O71DlsrrTkImG0NxowxaA5oFFjyxTj1n8FwWzOJv"
+#define gateway_debug_key       "dpZZEpm9eBfqzK7yVeLq"
+#define gateway_debug_secret    "THnfRRsU5vu6g6m9X6uFyAjUWflgZ0iyGjdEneKm"
+
+static const char *product_model = light_model;
+static const char *product_key = light_key;
+static const char *product_secret = light_secret;
+static const char *product_debug_key = light_debug_key;
+static const char *product_debug_secret = light_debug_secret;
+
+void product_init(void)
+{
+    char model[PRODUCT_MODEL_LEN] = "light";
+    int  model_len = sizeof(model);
+    yos_kv_get("model", model, &model_len);
+    if (!strcmp(model, "gateway")) {
+        product_model = gateway_model;
+        product_key = gateway_key;
+        product_secret = gateway_secret;
+        product_debug_key = gateway_debug_key;
+        product_debug_secret = gateway_debug_secret;
+    } else {
+        product_model = light_model;
+        product_key = light_key;
+        product_secret = light_secret;
+        product_debug_key = light_debug_key;
+        product_debug_secret = light_debug_secret;
+    }
+}
 
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 {
@@ -34,7 +64,8 @@ char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 
 char *product_get_version(char ver_str[PRODUCT_VERSION_LEN])
 {
-    return strncpy(ver_str, get_yos_os_version(), PRODUCT_VERSION_LEN);
+    return strncpy(ver_str, (const char *)get_yos_os_version(),
+                   PRODUCT_VERSION_LEN);
 }
 
 char *product_get_model(char model_str[PRODUCT_MODEL_LEN])
@@ -64,5 +95,17 @@ char *product_get_debug_secret(char secret_str[PRODUCT_SECRET_LEN])
 
 char *product_get_sn(char sn_str[PRODUCT_SN_LEN])
 {
-    return strncpy(sn_str, g_sn, PRODUCT_SN_LEN);
+    char *p = sn_str;
+    int i = 0;
+
+    os_wifi_get_mac_str(sn_str);
+    while (*p != '\0' && i < (PRODUCT_SN_LEN - 1)) {
+        if (*p == ':') {
+            *p = '0';
+        }
+        p++;
+        i++;
+    }
+
+    return sn_str;
 }

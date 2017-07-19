@@ -17,6 +17,7 @@ typedef struct cfg80211_connect_params
 {
     uint32_t flags;
     uint32_t vif_idx;
+    uint8_t auth_type;
     struct mac_addr bssid;
     struct mac_ssid ssid;
     struct scan_chan_tag chan;

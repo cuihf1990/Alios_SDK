@@ -78,10 +78,6 @@ static int network_create_socket( pplatform_netaddr_t netaddr, int type,
         }
     }
 
-    int tcp_nodelay = 0;
-    setsockopt(*psock, IPPROTO_TCP, TCP_NODELAY, (const void *) &tcp_nodelay,
-               sizeof(int));
-
     paddr->sin_addr.s_addr = ip;
     paddr->sin_family = AF_INET;
     paddr->sin_port = htons( netaddr->port );
@@ -335,7 +331,7 @@ int platform_tcp_recv(_IN_ void *handle, _OUT_ char *buffer,
 
     bytes_received = recv((long)handle, buffer, length, 0);
 
-    return bytes_received > 0 ? bytes_received : -1;
+    return bytes_received >= 0 ? bytes_received : -1;
 }
 
 

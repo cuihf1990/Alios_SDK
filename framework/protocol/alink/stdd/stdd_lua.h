@@ -204,7 +204,8 @@ extern "C"
  */
 #define LUA_FUNC_REPORT_CUSTOM_ATTR     "lua_report_custom_attr"
 
-int stdd_lua_get_global_variable(void *lua_fd, const char *global_name, char **result);
+int stdd_lua_get_global_variable(void *lua_fd, const char *global_name,
+                                 char **result);
 int stdd_lua_get_global_function(void *lua_fd, const char *function_name);
 
 
@@ -212,7 +213,7 @@ int stdd_lua_get_global_function(void *lua_fd, const char *function_name);
  *arg类型全部为char *
 */
 int stdd_lua_call_function(void *lua_fd, const char *function_name,
-        char *result[], int result_num, int arg_num, ...);
+                           char *result[], int result_num, int arg_num, ...);
 int stdd_lua_load_file(void *lua_fd, const char *file_path);
 void *stdd_lua_open();
 void stdd_lua_close(void *lua_fd);

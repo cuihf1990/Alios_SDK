@@ -36,7 +36,7 @@ static uint8_t mutex_opr_case1(void)
     ret = yunos_mutex_lock(&test_mutex, YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_SUCCESS);
 
-    yunos_task_pri_change(g_active_task, TASK_MUTEX_PRI, &old_pri);
+    yunos_task_pri_change(yunos_cur_task_get(), TASK_MUTEX_PRI, &old_pri);
 
     ret = yunos_mutex_lock(&test_mutex, YUNOS_NO_WAIT);
     MYASSERT(ret == YUNOS_MUTEX_OWNER_NESTED);
@@ -120,7 +120,7 @@ void task_mutex_coopr1_co1_entry(void *arg)
         break;
     }
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void task_mutex_coopr1_co2_entry(void *arg)
@@ -134,14 +134,14 @@ void task_mutex_coopr1_co2_entry(void *arg)
         yunos_task_sleep(10);
 
         /* now, the task's priority is revert */
-        pri = task_pri_get(g_active_task);
+        pri = task_pri_get(yunos_cur_task_get());
         if (pri != TASK_MUTEX_PRI) {
             test_case_fail++;
             PRINT_RESULT(MODULE_NAME_CO1, FAIL);
             yunos_mutex_del(&test_mutex);
 
             next_test_case_notify();
-            yunos_task_dyn_del(g_active_task);
+            yunos_task_dyn_del(yunos_cur_task_get());
 
             return;
         } else {
@@ -157,7 +157,7 @@ void task_mutex_coopr1_co2_entry(void *arg)
     yunos_mutex_del(&test_mutex);
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 /* the case is to test a mutex task owner 's priority revert in case of another higher
@@ -199,7 +199,7 @@ static void task_mutex_coopr2_co1_entry(void *arg)
         break;
     }
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_mutex_coopr2_co2_entry(void *arg)
@@ -213,7 +213,7 @@ static void task_mutex_coopr2_co2_entry(void *arg)
         break;
     }
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_mutex_coopr2_co3_entry(void *arg)
@@ -228,15 +228,15 @@ static void task_mutex_coopr2_co3_entry(void *arg)
         yunos_mutex_lock(&test_mutex_co2, YUNOS_WAIT_FOREVER);
 
         yunos_task_sleep(20);
-        pri = task_pri_get(g_active_task);
+        pri = task_pri_get(yunos_cur_task_get());
         if (pri == TASK_MUTEX_PRI) {
             yunos_mutex_unlock(&test_mutex_co1);
 
-            pri = task_pri_get(g_active_task);
+            pri = task_pri_get(yunos_cur_task_get());
             if (pri == TASK_MUTEX_PRI + 1) {
                 yunos_mutex_unlock(&test_mutex_co2);
 
-                pri = task_pri_get(g_active_task);
+                pri = task_pri_get(yunos_cur_task_get());
                 if (pri == TASK_MUTEX_PRI + 2) {
                     break;
                 } else {
@@ -246,7 +246,7 @@ static void task_mutex_coopr2_co3_entry(void *arg)
                     yunos_mutex_del(&test_mutex);
 
                     next_test_case_notify();
-                    yunos_task_dyn_del(g_active_task);
+                    yunos_task_dyn_del(yunos_cur_task_get());
 
                     return;
                 }
@@ -257,7 +257,7 @@ static void task_mutex_coopr2_co3_entry(void *arg)
                 yunos_mutex_del(&test_mutex);
 
                 next_test_case_notify();
-                yunos_task_dyn_del(g_active_task);
+                yunos_task_dyn_del(yunos_cur_task_get());
 
                 return;
             }
@@ -268,7 +268,7 @@ static void task_mutex_coopr2_co3_entry(void *arg)
             yunos_mutex_del(&test_mutex);
 
             next_test_case_notify();
-            yunos_task_dyn_del(g_active_task);
+            yunos_task_dyn_del(yunos_cur_task_get());
 
             return;
         }
@@ -281,7 +281,7 @@ static void task_mutex_coopr2_co3_entry(void *arg)
     yunos_mutex_del(&test_mutex);
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 
