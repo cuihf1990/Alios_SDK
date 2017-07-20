@@ -177,68 +177,26 @@ static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
 static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
                       mac_address_t *dest, send_cxt_t *cxt)
 {
-    static uint16_t nb_pkt_sent;
     mesh_hal_priv_t *priv = module->base.priv_dev;
     uint8_t *pkt;
     int len = frame->len + WIFI_MESH_OFFSET;
     ur_mesh_handle_sent_ucast_t sent;
-    MSDU_NODE_T *node;
-    UINT8 *content_ptr;
-    UINT32 queue_idx = AC_VI;
     int result = 0;
-    struct txdesc *txdesc_new;
-    struct umacdesc *umac;
-
-    node = rwm_tx_node_alloc(len);
-    if (node == NULL) {
-        result = -1;
-        goto tx_exit;
-    }
 
     pkt = yos_malloc(len);
-    umesh_80211_make_frame(module, frame, dest, pkt);
-
-    rwm_tx_msdu_renew(pkt, len, node->msdu_ptr);
-    content_ptr = rwm_get_msdu_content_ptr(node);
-
-    yunos_sched_disable();
-
-    txdesc_new = tx_txdesc_prepare(queue_idx);
-    if(txdesc_new == NULL || TXDESC_STA_USED == txdesc_new->status) {
-        yunos_sched_enable();
-        rwm_node_free(node);
-        result = -1;
+    if (pkt == NULL) {
+        result = 1;
         goto tx_exit;
     }
+    umesh_80211_make_frame(module, frame, dest, pkt);
 
-    txdesc_new->status = TXDESC_STA_USED;
-    txdesc_new->host.flags = TXU_CNTRL_MGMT;
-    txdesc_new->host.orig_addr = (UINT32)node->msdu_ptr;
-    txdesc_new->host.packet_addr = (UINT32)content_ptr;
-    txdesc_new->host.packet_len = len;
-    txdesc_new->host.status_desc_addr = (UINT32)content_ptr;
-    txdesc_new->host.tid = 0xff;
-
-    umac = &txdesc_new->umac;
-    umac->payl_len = len;
-    umac->head_len = 0;
-    umac->tail_len = 0;
-    umac->hdr_len_802_2 = 0;
-
-    umac->buf_control = &txl_buffer_control_24G;
-
-    txdesc_new->lmac.agg_desc = NULL;
-    txdesc_new->lmac.hw_desc->cfm.status = 0;
-
-    rwm_push_tx_list(node);
-    txl_cntrl_push(txdesc_new, queue_idx);
-    priv->stats.out_frames++;
-
-    yunos_sched_enable();
+    if (bmsg_tx_raw_sender(pkt, len) != 0) {
+        result = 1;
+    } else {
+        priv->stats.out_frames++;
+    }
 
 tx_exit:
-    yos_free(pkt);
-
     if (cxt) {
         sent = cxt->sent;
         (*sent)(cxt->context, cxt->frame, result);
