@@ -30,6 +30,8 @@
 #include "param_config.h"
 #include "rxl_cntrl.h"
 #include "lwip/pbuf.h"
+#include "rw_msdu.h"
+#include "txu_cntrl.h"
 
 #include <hal/wifi.h>
 
@@ -160,6 +162,57 @@ EXIT:
 	pbuf_free(q);
 }
 
+void bmsg_tx_raw_handler(BUS_MSG_T *msg)
+{
+    OSStatus ret;
+    uint8_t *pkt = (uint8_t *)msg->arg;
+    uint16_t len = msg->len;
+    MSDU_NODE_T *node;
+    UINT8 *content_ptr;
+    UINT32 queue_idx = AC_VI;
+    struct txdesc *txdesc_new;
+    struct umacdesc *umac;
+
+    node = rwm_tx_node_alloc(len);
+    if (node == NULL) {
+        goto exit;
+    }
+
+    rwm_tx_msdu_renew(pkt, len, node->msdu_ptr);
+    content_ptr = rwm_get_msdu_content_ptr(node);
+
+    txdesc_new = tx_txdesc_prepare(queue_idx);
+    if(txdesc_new == NULL || TXDESC_STA_USED == txdesc_new->status) {
+        rwm_node_free(node);
+        goto exit;
+    }
+
+    txdesc_new->status = TXDESC_STA_USED;
+    txdesc_new->host.flags = TXU_CNTRL_MGMT;
+    txdesc_new->host.orig_addr = (UINT32)node->msdu_ptr;
+    txdesc_new->host.packet_addr = (UINT32)content_ptr;
+    txdesc_new->host.packet_len = len;
+    txdesc_new->host.status_desc_addr = (UINT32)content_ptr;
+    txdesc_new->host.tid = 0xff;
+
+    umac = &txdesc_new->umac;
+    umac->payl_len = len;
+    umac->head_len = 0;
+    umac->tail_len = 0;
+    umac->hdr_len_802_2 = 0;
+
+    umac->buf_control = &txl_buffer_control_24G;
+
+    txdesc_new->lmac.agg_desc = NULL;
+    txdesc_new->lmac.hw_desc->cfm.status = 0;
+
+    rwm_push_tx_list(node);
+    txl_cntrl_push(txdesc_new, queue_idx);
+
+exit:
+    yos_free(pkt);
+}
+
 void bmsg_ioctl_handler(BUS_MSG_T *msg)
 {
 	ke_msg_send(msg->arg);
@@ -247,6 +300,25 @@ int bmsg_tx_sender(struct pbuf *p)
 	return ret;
 }
 
+int bmsg_tx_raw_sender(uint8_t *payload, uint16_t length)
+{
+    OSStatus ret;
+    BUS_MSG_T msg;
+
+    msg.type = BMSG_TX_RAW_TYPE;
+    msg.arg = (uint32_t)payload;
+    msg.len = length;
+    msg.sema = NULL;
+
+    ret = mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, 1*SECONDS);
+
+    if(ret != kNoErr) {
+        APP_PRT("bmsg_tx_sender failed\r\n");
+        yos_free(payload);
+    }
+
+    return ret;
+}
 
 void bmsg_ioctl_sender(void *arg)
 {
@@ -308,6 +380,9 @@ static void core_thread_main( void *arg )
 					bmsg_ioctl_handler(&msg);
 					break;
 					
+                        case BMSG_TX_RAW_TYPE:
+                            bmsg_tx_raw_handler(&msg);
+                            break;
         		default:
 					APP_PRT("unknown_msg\r\n");
 					break;

@@ -787,26 +787,16 @@ bool rxu_mesh_monitor(struct rx_swdesc *swdesc)
 
 int bk_wlan_send_80211_raw_frame(uint8_t *buffer, int len)
 {
-	struct txl_frame_desc_tag *tx_frame;
-	uint8_t *pkt;
-	int txtype = TX_DEFAULT_24G;
-    int ret = 0;
-	
-    yunos_sched_disable();
+    uint8_t *pkt;
+    int ret;
 
-	tx_frame = txl_frame_get(txtype, len);
-    if (tx_frame == NULL) {
-        ret = 1;
-        goto exit;
+    pkt = yos_malloc(len);
+    if (pkt == NULL) {
+        return -1;
     }
 
-    pkt = (uint8_t *)tx_frame->txdesc.lmac.buffer->payload;
-	os_memcpy(pkt, buffer, len);
-
-    txl_frame_push(tx_frame, AC_VO);
-
-exit:
-    yunos_sched_enable();
+    memcpy(pkt, buffer, len);
+    ret = bmsg_tx_raw_sender(pkt, len);
     return ret;
 }
 
