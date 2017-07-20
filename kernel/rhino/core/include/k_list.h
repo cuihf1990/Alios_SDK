@@ -24,7 +24,7 @@ typedef struct klist_s {
 
 #define yunos_list_entry(node, type, member) ((type *)((uint8_t *)(node) - (size_t)(&((type *)0)->member)))
 
-#define yos_list_for_each_entry(pos, head, member)              \
+#define yunos_list_for_each_entry(pos, head, member)              \
     for (pos = yunos_list_entry((head)->next, typeof(*pos), member);  \
          &pos->member != (head);    \
          pos = yunos_list_entry(pos->member.next, typeof(*pos), member))

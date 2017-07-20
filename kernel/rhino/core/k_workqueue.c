@@ -28,7 +28,7 @@ static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
 
     YUNOS_CRITICAL_ENTER();
 
-    yos_list_for_each_entry(current_queue, &g_workqueue_list_head, workqueue_node) {
+    yunos_list_for_each_entry(current_queue, &g_workqueue_list_head, workqueue_node) {
         if (current_queue == workqueue) {
             YUNOS_CRITICAL_EXIT();
             return YUNOS_WORKQUEUE_EXIST;
