@@ -23,29 +23,29 @@
 #include "core/sid_allocator.h"
 #include "utilities/memory.h"
 
-void rsid_allocator_init(network_context_t *network)
+void *rsid_allocator_init(int sid_type)
 {
     rsid_allocator_t *allocator = NULL;
 
-    rsid_allocator_deinit(network);
     allocator = (rsid_allocator_t *)ur_mem_alloc(sizeof(rsid_allocator_t));
     if (allocator == NULL) {
-        return;
+        return NULL;
     }
-    network->sid_base = (sid_base_t *)allocator;
 
     slist_init(&allocator->base.node_list);
     allocator->base.node_num = 0;
     memset(allocator->free_bits, 0xff, sizeof(allocator->free_bits));
     allocator->free_bits[0] -= 1;
+    allocator->base.sid_type = sid_type;
+
+    return allocator;
 }
 
-void rsid_allocator_deinit(network_context_t *network)
+void rsid_allocator_deinit(void *hdl)
 {
-    rsid_allocator_t *allocator;
+    rsid_allocator_t *allocator = hdl;
     sid_node_t *node;
 
-    allocator = (rsid_allocator_t *)network->sid_base;
     if (allocator == NULL) {
         return;
     }
@@ -57,10 +57,9 @@ void rsid_allocator_deinit(network_context_t *network)
     }
     allocator->base.node_num = 0;
     ur_mem_free(allocator, sizeof(rsid_allocator_t));
-    network->sid_base = NULL;
 }
 
-ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id)
+ur_error_t rsid_allocate_sid(void *hdl, ur_node_id_t *node_id)
 {
     ur_error_t error = UR_ERROR_FAIL;
     sid_node_t *node;
@@ -69,7 +68,7 @@ ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id)
     int32_t new_sid;
     rsid_allocator_t *allocator;
 
-    allocator = (rsid_allocator_t *)network->sid_base;
+    allocator = hdl;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
         if (memcmp(node->node_id.ueid, node_id->ueid,
                    sizeof(node->node_id.ueid)) == 0) {
@@ -86,7 +85,8 @@ ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id)
         new_node->node_id.sid = INVALID_SID;
         slist_add(&new_node->next, &allocator->base.node_list);
     }
-    if (network->router->sid_type == SHORT_RANDOM_SID) {
+
+    if (allocator->base.sid_type == SHORT_RANDOM_SID) {
         len = (1 << 8) - 1;
     } else {
         len = (1 << 16) - 1;
@@ -94,6 +94,7 @@ ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id)
     if (len > RSID_NUM) {
         len = RSID_NUM;
     }
+
     if (node_id->sid != INVALID_SID) {
         if (node_id->sid == new_node->node_id.sid) {
             error = UR_ERROR_NONE;
@@ -122,13 +123,12 @@ ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id)
     return error;
 }
 
-ur_error_t rsid_free_sid(network_context_t *network, ur_node_id_t *node_id)
+ur_error_t rsid_free_sid(void *hdl, ur_node_id_t *node_id)
 {
     sid_node_t *node = NULL;
     uint16_t len;
-    rsid_allocator_t *allocator;
+    rsid_allocator_t *allocator = hdl;
 
-    allocator = (rsid_allocator_t *)network->sid_base;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
         if (memcmp(node->node_id.ueid, node_id->ueid,
                    sizeof(node->node_id.ueid)) == 0) {
@@ -138,7 +138,8 @@ ur_error_t rsid_free_sid(network_context_t *network, ur_node_id_t *node_id)
     if (node == NULL) {
         return UR_ERROR_NONE;
     }
-    if (network->router->sid_type == SHORT_RANDOM_SID) {
+
+    if (allocator->base.sid_type == SHORT_RANDOM_SID) {
         len = (1 << 8) - 1;
     } else {
         len = (1 << 16) - 1;
@@ -153,10 +154,8 @@ ur_error_t rsid_free_sid(network_context_t *network, ur_node_id_t *node_id)
     return UR_ERROR_NONE;
 }
 
-uint16_t rsid_get_allocated_number(network_context_t *network)
+uint16_t rsid_get_allocated_number(void *hdl)
 {
-    rsid_allocator_t *allocator;
-
-    allocator = (rsid_allocator_t *)network->sid_base;
+    rsid_allocator_t *allocator = hdl;
     return allocator->base.node_num;
 }

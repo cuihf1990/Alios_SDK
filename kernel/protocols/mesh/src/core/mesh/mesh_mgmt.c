@@ -195,19 +195,21 @@ static void start_advertisement_timer(network_context_t *network)
 
 static void sid_allocator_init(network_context_t *network)
 {
-    if (network->router->sid_type == STRUCTURED_SID) {
-        allocator_init(network);
+    int sid_type = network->router->sid_type;
+    if (sid_type == STRUCTURED_SID) {
+        uint16_t sid = umesh_mm_get_local_sid();
+        network->sid_base = allocator_init(sid, sid_type);
     } else {
-        rsid_allocator_init(network);
+        network->sid_base = rsid_allocator_init(sid_type);
     }
 }
 
 static void sid_allocator_deinit(network_context_t *network)
 {
     if (network->router->sid_type == STRUCTURED_SID) {
-        allocator_deinit(network);
+        allocator_deinit(network->sid_base);
     } else {
-        rsid_allocator_deinit(network);
+        rsid_allocator_deinit(network->sid_base);
     }
 }
 
@@ -1244,11 +1246,11 @@ static ur_error_t handle_sid_request(message_t *message)
                 node_id.attach_sid = attach_node_id->sid;
             }
             node_id.mode = mode->mode;
-            error = allocate_sid(network, &node_id);
+            error = allocate_sid(network->sid_base, &node_id);
             break;
         case SHORT_RANDOM_SID:
         case RANDOM_SID:
-            error = rsid_allocate_sid(network, &node_id);
+            error = rsid_allocate_sid(network->sid_base, &node_id);
             break;
         default:
             error = UR_ERROR_PARSE;
