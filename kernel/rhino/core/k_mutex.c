@@ -83,9 +83,9 @@ kstat_t yunos_mutex_del(kmutex_t *mutex)
 
     NULL_PARA_CHK(mutex);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -165,9 +165,9 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
 
     NULL_PARA_CHK(mutex);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -297,13 +297,13 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
 
     NULL_PARA_CHK(mutex);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     if (g_sys_stat == YUNOS_STOPPED) {
         return YUNOS_SUCCESS;
     }
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -391,13 +391,13 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
 
     NULL_PARA_CHK(mutex);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     if (g_sys_stat == YUNOS_STOPPED) {
         return YUNOS_SUCCESS;
     }
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();

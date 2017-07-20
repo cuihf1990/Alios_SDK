@@ -60,9 +60,10 @@ kstat_t yunos_event_del(kevent_t *event)
     klist_t *blk_list_head;
 
     NULL_PARA_CHK(event);
-    INTRPT_NESTED_LEVEL_CHK();
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (event->blk_obj.obj_type != YUNOS_EVENT_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -131,9 +132,10 @@ kstat_t yunos_event_dyn_del(kevent_t *event)
     klist_t *blk_list_head;
 
     NULL_PARA_CHK(event);
-    INTRPT_NESTED_LEVEL_CHK();
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (event->blk_obj.obj_type != YUNOS_EVENT_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -178,14 +180,14 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
     NULL_PARA_CHK(event);
     NULL_PARA_CHK(actl_flags);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     if ((opt != YUNOS_AND) && (opt != YUNOS_OR) && (opt != YUNOS_AND_CLEAR) &&
         (opt != YUNOS_OR_CLEAR)) {
         return YUNOS_NO_THIS_EVENT_OPT;
     }
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (event->blk_obj.obj_type != YUNOS_EVENT_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();

@@ -83,9 +83,9 @@ kstat_t yunos_buf_queue_del(kbuf_queue_t *queue)
 
     NULL_PARA_CHK(queue);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -163,9 +163,9 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
 
     NULL_PARA_CHK(queue);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -382,9 +382,10 @@ kstat_t yunos_buf_queue_flush(kbuf_queue_t *queue)
     CPSR_ALLOC();
 
     NULL_PARA_CHK(queue);
-    INTRPT_NESTED_LEVEL_CHK();
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
