@@ -22,6 +22,7 @@ enum
 	BMSG_TX_TYPE   = 2,
 	BMSG_IOCTL_TYPE = 3,
 	BMSG_SKT_TX_TYPE   = 4,
+        BMSG_TX_RAW_TYPE = 5,
 };
 
 typedef struct bus_message 

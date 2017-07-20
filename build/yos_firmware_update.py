@@ -583,7 +583,7 @@ driver=None
 bootloader_baudrate=921600
 application_baudrate=921600
 bootapp = True
-newboard = False
+newboard = True
 
 i = 2
 update = 0
@@ -625,8 +625,8 @@ while i < len(sys.argv):
         i += 1
     elif sys.argv[i] == "--noboot":
         bootapp = False
-    elif sys.argv[i] == "--newboard":
-        newboard = True
+    elif sys.argv[i] == "--oldboard":
+        newboard = False
     i += 1
 
 if update <= 0:
@@ -641,35 +641,31 @@ except:
 port.write("a\r\n") #abort potential ongoing YMODEM transfer
 port.flushInput()
 port.write("help\r\n")
-if assert_response(["YOS bootloader", "MICO bootloader", "read:"], 1) == False:
+if assert_response(["bootloader", "read: usage: read [address] [size]"], 1) == False:
     if application_baudrate != bootloader_baudrate:
         port.baudrate = application_baudrate
         port.flushInput()
         port.write("dummycmd_for_flushing_purpose\r\n")
         time.sleep(0.1)
-    if newboard == False:
-        port.write("reboot\r\n")
-        if assert_response(["reboot"] , 1) == False:
-            sys.stderr.write("error: failed to reboot your board, it did not respond to \"reboot\" command\n")
-            sys.exit(1)
+    port.write("reboot\r\n")
+    if assert_response(["reboot"] , 1) == False:
+        sys.stderr.write("error: failed to reboot the board, it did not respond to \"reboot\" command\n")
+        sys.exit(1)
     if application_baudrate != bootloader_baudrate:
         port.baudrate = bootloader_baudrate
-    time.sleep(0.02)
-    if newboard == False:
-        port.write("         \n")
-    elif newboard == True:
-        port.write("help\r\n")
-    if assert_response(["YOS bootloader", "MICO bootloader", "read:"], 1) == False:
-        sys.stderr.write("error: target does not seam to have a working bootloader\n")
+    time.sleep(0.12)
+    port.write("          \r\n");
+    if assert_response(["ootloader"], 1) == False:
+        sys.stderr.write("error: failed to enter bootloader\n")
         sys.exit(1)
 port.flushInput()
 
 updates = [bootloader, application, driver]
 for i in range(len(updates)):
     if updates[i] != None:
-        print "updating {0} with {1},newboard = {2} ...".format(device, updates[i],newboard)
+        print "updating {0} with {1} ...".format(device, updates[i])
         if newboard == False:
-            port.write("{0}\n".format(i))
+            port.write("{0}\r\n".format(i))
         elif newboard == True:
             port.write("write 0x13200\r\n")
         if assert_response(["Waiting for the file to be sent"], 1) == False:
@@ -682,7 +678,7 @@ for i in range(len(updates)):
             print "updating {0} with {1} ... failed".format(device, updates[i])
 
 if bootapp:
-    port.write("boot\n")
+    port.write("boot\r\n")
     assert_response(["Booting......"], 1)
 port.close()
 sys.exit(0)
