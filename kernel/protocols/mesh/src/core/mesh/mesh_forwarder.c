@@ -1172,6 +1172,8 @@ static void handle_datagram(void *args)
         return;
     }
 
+    update_neighbor(info, NULL, 0, false);
+
     if (info->type == MESH_FRAME_TYPE_DATA) {
         nexth = message_get_payload(message);
         if (is_mcast_header(*nexth)) {
