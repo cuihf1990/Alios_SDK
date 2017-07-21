@@ -64,9 +64,9 @@ kstat_t yunos_sem_del(ksem_t *sem)
 
     NULL_PARA_CHK(sem);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -131,9 +131,9 @@ kstat_t yunos_sem_dyn_del(ksem_t *sem)
 
     NULL_PARA_CHK(sem);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -260,9 +260,9 @@ kstat_t yunos_sem_take(ksem_t *sem, tick_t ticks)
 
     NULL_PARA_CHK(sem);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
@@ -316,11 +316,11 @@ kstat_t yunos_sem_count_set(ksem_t *sem, sem_count_t sem_count)
 
     NULL_PARA_CHK(sem);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     blk_list_head = &sem->blk_obj.blk_list;
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();

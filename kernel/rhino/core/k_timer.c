@@ -184,9 +184,13 @@ kstat_t yunos_timer_dyn_del(ktimer_t *timer)
 
 kstat_t yunos_timer_start(ktimer_t *timer)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(timer);
 
+    YUNOS_CRITICAL_ENTER();
     INTRPT_NESTED_LEVEL_CHK();
+    YUNOS_CRITICAL_EXIT();
 
     if (timer->obj_type != YUNOS_TIMER_OBJ_TYPE) {
         return YUNOS_KOBJ_TYPE_ERR;
@@ -214,9 +218,13 @@ kstat_t yunos_timer_start(ktimer_t *timer)
 
 kstat_t yunos_timer_stop(ktimer_t *timer)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(timer);
 
+    YUNOS_CRITICAL_ENTER();
     INTRPT_NESTED_LEVEL_CHK();
+    YUNOS_CRITICAL_EXIT();
 
     if (timer->obj_type != YUNOS_TIMER_OBJ_TYPE) {
         return YUNOS_KOBJ_TYPE_ERR;
@@ -238,9 +246,13 @@ kstat_t yunos_timer_stop(ktimer_t *timer)
 
 kstat_t yunos_timer_change(ktimer_t *timer, tick_t first, tick_t round)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(timer);
 
+    YUNOS_CRITICAL_ENTER();
     INTRPT_NESTED_LEVEL_CHK();
+    YUNOS_CRITICAL_EXIT();
 
     if (first == 0u) {
         return YUNOS_INV_PARAM;

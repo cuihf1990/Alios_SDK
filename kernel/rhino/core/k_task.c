@@ -38,9 +38,9 @@ static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,
         return YUNOS_BEYOND_MAX_PRI;
     }
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     /* idle task is only allowed to create once */
     if (prio == YUNOS_IDLE_PRI) {
@@ -179,13 +179,13 @@ kstat_t yunos_task_sleep(tick_t ticks)
 
     kstat_t ret;
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     if (ticks == 0u) {
         return YUNOS_INV_PARAM;
     }
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     /* system is locked so task can not be blocked just return immediately */
     if (g_sched_lock > 0u) {
@@ -506,8 +506,6 @@ kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
     NULL_PARA_CHK(task);
     NULL_PARA_CHK(old_pri);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     /* idle task is not allowed to change prio */
     if (task->prio >= YUNOS_IDLE_PRI) {
         return YUNOS_PRI_CHG_NOT_ALLOWED;
@@ -524,6 +522,8 @@ kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
     }
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     /* limit the prio change by mutex at task prio change */
     pri_limit = mutex_pri_limit(task, pri);
@@ -554,9 +554,9 @@ kstat_t yunos_task_wait_abort(ktask_t *task)
 
     NULL_PARA_CHK(task);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     switch (task->task_state) {
         case K_RDY:
@@ -642,8 +642,6 @@ kstat_t yunos_task_del(ktask_t *task)
 {
     CPSR_ALLOC();
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     if (task == NULL) {
         task = g_active_task;
     }
@@ -653,6 +651,8 @@ kstat_t yunos_task_del(ktask_t *task)
     }
 
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (task->mm_alloc_flag != K_OBJ_STATIC_ALLOC) {
         YUNOS_CRITICAL_EXIT();
@@ -717,17 +717,19 @@ kstat_t yunos_task_dyn_del(ktask_t *task)
 
     kstat_t ret;
 
+    YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
+
     if (task == NULL) {
         task = g_active_task;
     }
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     if (task->prio == YUNOS_IDLE_PRI) {
+        YUNOS_CRITICAL_EXIT();
+
         return YUNOS_TASK_DEL_NOT_ALLOWED;
     }
-
-    YUNOS_CRITICAL_ENTER();
 
     if (task->mm_alloc_flag != K_OBJ_DYN_ALLOC) {
         YUNOS_CRITICAL_EXIT();
@@ -817,9 +819,9 @@ kstat_t yunos_task_time_slice_set(ktask_t *task, size_t slice)
 
     NULL_PARA_CHK(task);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (slice > 0u) {
         /* assign the new time slice */
@@ -842,14 +844,14 @@ kstat_t yunos_sched_policy_set(ktask_t *task, uint8_t policy)
 
     NULL_PARA_CHK(task);
 
-    INTRPT_NESTED_LEVEL_CHK();
-
     if ((policy != KSCHED_FIFO) && (policy != KSCHED_RR)) {
         return YUNOS_INV_SCHED_WAY;
     }
 
-
     YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
+
     task->sched_policy = policy;
     YUNOS_CRITICAL_EXIT();
 
@@ -863,9 +865,10 @@ kstat_t yunos_sched_policy_get(ktask_t *task, uint8_t *policy)
     NULL_PARA_CHK(task);
     NULL_PARA_CHK(policy);
 
+    YUNOS_CRITICAL_ENTER();
+
     INTRPT_NESTED_LEVEL_CHK();
 
-    YUNOS_CRITICAL_ENTER();
     *policy = task->sched_policy;
     YUNOS_CRITICAL_EXIT();
 

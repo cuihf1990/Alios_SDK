@@ -133,6 +133,7 @@ extern k_mm_head         *g_kmm_head;
 #define INTRPT_NESTED_LEVEL_CHK()\
         do {                                       \
             if (g_intrpt_nested_level > 0u) {      \
+                YUNOS_CRITICAL_EXIT();             \
                 return YUNOS_NOT_CALLED_BY_INTRPT; \
             }                                      \
         } while (0)
