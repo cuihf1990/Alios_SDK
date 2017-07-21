@@ -104,7 +104,7 @@ extern ktask_t   g_dyn_mem_proc_task;
 #endif
 
 #if (YUNOS_CONFIG_WORKQUEUE > 0)
-extern kworkqueue_t *g_workqueue_head;
+extern klist_t       g_workqueue_list_head;
 extern kmutex_t      g_workqueue_mutex;
 #endif
 

@@ -22,59 +22,63 @@ extern cpu_stack_t  g_workqueue_stack[YUNOS_CONFIG_WORKQUEUE_STACK_SIZE];
 
 static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
 {
-    kworkqueue_t *wq = g_workqueue_head;
+    CPSR_ALLOC();
 
-    if (g_workqueue_head == NULL) {
-        return YUNOS_WORKQUEUE_NOT_EXIST;
-    }
+    kworkqueue_t *current_queue = NULL;
 
-    do {
-        if (wq == workqueue) {
+    YUNOS_CRITICAL_ENTER();
+
+    yunos_list_for_each_entry(current_queue, &g_workqueue_list_head, workqueue_node) {
+        if (current_queue == workqueue) {
+            YUNOS_CRITICAL_EXIT();
             return YUNOS_WORKQUEUE_EXIST;
         }
+    }
 
-        wq = yunos_list_entry(wq->workqueue_node.next, kworkqueue_t, workqueue_node);
-    } while (wq != g_workqueue_head);
-
+    YUNOS_CRITICAL_EXIT();
     return YUNOS_WORKQUEUE_NOT_EXIST;
 }
 
 static void worker_task(void *arg)
 {
+    CPSR_ALLOC();
+
     kstat_t       ret;
     kwork_t      *work = NULL;
-    kworkqueue_t *wq   = (kworkqueue_t *)arg;
+    kworkqueue_t *queue = (kworkqueue_t *)arg;
 
     while (1) {
-        ret = yunos_sem_take(&(wq->sem), YUNOS_WAIT_FOREVER);
-        if (ret != YUNOS_SUCCESS) {
-            return;
-        }
-
-        while (wq->work_head != NULL) {
-            work = wq->work_head;
-
-            yunos_mutex_lock(&(wq->work_mutex), YUNOS_WAIT_FOREVER);
-
-            if (work->work_node.next == &(work->work_node)) {
-                wq->work_head = NULL;
-            } else {
-                wq->work_head = yunos_list_entry(work->work_node.next, kwork_t, work_node);
-                klist_rm(&(work->work_node));
+        if (is_klist_empty(&(queue->work_list)))
+        {
+            ret = yunos_sem_take(&(queue->sem), YUNOS_WAIT_FOREVER);
+            if (ret != YUNOS_SUCCESS) {
+                k_err_proc(ret);
             }
-
-            work->running = 2;
-
-            yunos_mutex_unlock(&(wq->work_mutex));
-
-            work->handle(work->arg);
         }
+
+        YUNOS_CRITICAL_ENTER();
+        if (!is_klist_empty(&(queue->work_list))) {
+            /* have work to do. */
+            work = yunos_list_entry(queue->work_list.next, kwork_t, work_node);
+            klist_rm_init(&(work->work_node));
+            queue->work_current = work;
+            YUNOS_CRITICAL_EXIT();
+
+            /* do work */
+            work->handle(work->arg);
+            YUNOS_CRITICAL_ENTER();
+            /* clean current work */
+            queue->work_current = NULL;
+        }
+        YUNOS_CRITICAL_EXIT();
     }
 }
 
 kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
                                uint8_t pri, cpu_stack_t *stack_buf, size_t stack_size)
 {
+    CPSR_ALLOC();
+
     kstat_t ret;
 
     NULL_PARA_CHK(workqueue);
@@ -89,50 +93,36 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
         return YUNOS_TASK_INV_STACK_SIZE;
     }
 
-    yunos_mutex_lock(&g_workqueue_mutex, YUNOS_WAIT_FOREVER);
-
     ret = workqueue_is_exist(workqueue);
     if (ret == YUNOS_WORKQUEUE_EXIST) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
         return YUNOS_WORKQUEUE_EXIST;
     }
 
     klist_init(&(workqueue->workqueue_node));
-    workqueue->work_head = NULL;
+    klist_init(&(workqueue->work_list));
+    workqueue->work_current = NULL;
     workqueue->name      = name;
-
-    ret = yunos_mutex_create(&(workqueue->work_mutex), "WORK-MUTEX");
-    if (ret != YUNOS_SUCCESS) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
-        return ret;
-    }
 
     ret = yunos_sem_create(&(workqueue->sem), "WORKQUEUE-SEM", 0);
     if (ret != YUNOS_SUCCESS) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
         return ret;
     }
 
     ret = yunos_task_create(&(workqueue->worker), name, (void *)workqueue, pri,
                             0, stack_buf, stack_size, worker_task, 0);
     if (ret != YUNOS_SUCCESS) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
+        yunos_sem_del(&(workqueue->sem));
         return ret;
     }
 
-    if (g_workqueue_head == NULL) {
-        g_workqueue_head = workqueue;
-    } else {
-        klist_insert(&(g_workqueue_head->workqueue_node), &(workqueue->workqueue_node));
-    }
+    YUNOS_CRITICAL_ENTER();
+    klist_insert(&g_workqueue_list_head, &(workqueue->workqueue_node));
+    YUNOS_CRITICAL_EXIT();
 
     ret = yunos_task_resume(&(workqueue->worker));
     if (ret != YUNOS_SUCCESS) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
         return ret;
     }
-
-    yunos_mutex_unlock(&g_workqueue_mutex);
 
     TRACE_WORKQUEUE_CREATE(g_active_task, workqueue);
 
@@ -141,92 +131,77 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
 
 kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
 {
+    CPSR_ALLOC();
+
     kstat_t ret;
 
     NULL_PARA_CHK(workqueue);
 
-    yunos_mutex_lock(&g_workqueue_mutex, YUNOS_WAIT_FOREVER);
-
     ret = workqueue_is_exist(workqueue);
     if (ret == YUNOS_WORKQUEUE_NOT_EXIST) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
         return YUNOS_WORKQUEUE_NOT_EXIST;
     }
 
     TRACE_WORKQUEUE_DEL(g_active_task, workqueue);
 
-    if (workqueue->work_head != NULL) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
+    YUNOS_CRITICAL_ENTER();
+    if (!is_klist_empty(&(workqueue->work_list))) {
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_WORKQUEUE_BUSY;
     }
 
-    if (workqueue == g_workqueue_head) {
-        if (&(workqueue->workqueue_node) == workqueue->workqueue_node.next) {
-            g_workqueue_head = NULL;
-        } else {
-            g_workqueue_head = yunos_list_entry(workqueue->workqueue_node.next,
-                                                kworkqueue_t, workqueue_node);
-            klist_rm(&(workqueue->workqueue_node));
-        }
-    } else {
-        klist_rm(&(workqueue->workqueue_node));
+    if (workqueue->work_current != NULL) {
+        YUNOS_CRITICAL_EXIT();
+        return YUNOS_WORKQUEUE_BUSY;
     }
+
+    klist_rm_init(&(workqueue->workqueue_node));
+
+    YUNOS_CRITICAL_EXIT();
 
     workqueue->name = NULL;
 
-    ret = yunos_mutex_del(&(workqueue->work_mutex));
-    if (ret != YUNOS_SUCCESS) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
-        return ret;
-    }
-
     ret = yunos_task_del(&(workqueue->worker));
     if (ret != YUNOS_SUCCESS) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
         return ret;
     }
 
     ret = yunos_sem_del(&(workqueue->sem));
     if (ret != YUNOS_SUCCESS) {
-        yunos_mutex_unlock(&g_workqueue_mutex);
         return ret;
     }
-
-    yunos_mutex_unlock(&g_workqueue_mutex);
 
     return YUNOS_SUCCESS;
 }
 
 static void work_timer_cb(void *timer, void *arg)
 {
+    CPSR_ALLOC();
+
     kstat_t       ret;
     kwork_t      *work = yunos_list_entry(timer, kwork_t, timer);
     kworkqueue_t *wq   = (kworkqueue_t *)arg;
 
-    yunos_mutex_lock(&(wq->work_mutex), YUNOS_WAIT_FOREVER);
-
-    if (work->running > 0) {
-        yunos_mutex_unlock(&(wq->work_mutex));
-        /* YUNOS_WORKQUEUE_WORK_EXIST */
+    YUNOS_CRITICAL_ENTER();
+    if (wq->work_current == work)
+    {
+        YUNOS_CRITICAL_EXIT();
         return;
     }
 
-    if (wq->work_head == NULL) {
-        wq->work_head = work;
-    } else {
-        klist_insert(&(wq->work_head->work_node), &(work->work_node));
-    }
+    /* NOTE: the work MUST be initialized firstly */
+    klist_rm_init(&(work->work_node));
+    klist_insert(&(wq->work_list), &(work->work_node));
 
     work->wq = wq;
 
-    work->running = 1;
-
-    yunos_mutex_unlock(&(wq->work_mutex));
-
-    ret = yunos_sem_give(&(wq->sem));
-    if (ret != YUNOS_SUCCESS) {
-        return;
-    }
+    if (wq->work_current == NULL) {
+        YUNOS_CRITICAL_EXIT();
+        ret = yunos_sem_give(&(wq->sem));
+        if (ret != YUNOS_SUCCESS) {
+            return;
+        }
+    } else YUNOS_CRITICAL_EXIT();
 }
 
 kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
@@ -246,7 +221,6 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
     NULL_PARA_CHK(handle);
 
     klist_init(&(work->work_node));
-    work->running = 0;
     work->handle  = handle;
     work->arg     = arg;
     work->dly     = dly;
@@ -267,35 +241,34 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
 
 kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
 {
+    CPSR_ALLOC();
+
     kstat_t ret;
 
     NULL_PARA_CHK(workqueue);
     NULL_PARA_CHK(work);
 
     if (work->dly == 0) {
-        yunos_mutex_lock(&(workqueue->work_mutex), YUNOS_WAIT_FOREVER);
-
-        if (work->running > 0) {
-            yunos_mutex_unlock(&(workqueue->work_mutex));
-            return YUNOS_WORKQUEUE_WORK_EXIST;
+        YUNOS_CRITICAL_ENTER();
+        if (workqueue->work_current == work)
+        {
+            YUNOS_CRITICAL_EXIT();
+            return YUNOS_WORKQUEUE_WORK_RUNNING;
         }
 
-        if (workqueue->work_head == NULL) {
-            workqueue->work_head = work;
-        } else {
-            klist_insert(&(workqueue->work_head->work_node), &(work->work_node));
-        }
+        /* NOTE: the work MUST be initialized firstly */
+        klist_rm_init(&(work->work_node));
+        klist_insert(&(workqueue->work_list), &(work->work_node));
 
         work->wq = workqueue;
 
-        work->running = 1;
-
-        yunos_mutex_unlock(&(workqueue->work_mutex));
-
-        ret = yunos_sem_give(&(workqueue->sem));
-        if (ret != YUNOS_SUCCESS) {
-            return ret;
-        }
+        if (workqueue->work_current == NULL) {
+            YUNOS_CRITICAL_EXIT();
+            ret = yunos_sem_give(&(workqueue->sem));
+            if (ret != YUNOS_SUCCESS) {
+                return ret;
+            }
+        } else YUNOS_CRITICAL_EXIT();
     } else {
         yunos_timer_stop(&(work->timer));
         work->timer.timer_cb_arg = (void *)workqueue;
@@ -316,6 +289,10 @@ kstat_t yunos_work_sched(kwork_t *work)
 
 kstat_t yunos_work_cancel(kwork_t *work)
 {
+    CPSR_ALLOC();
+
+    NULL_PARA_CHK(work);
+
     kworkqueue_t *wq = (kworkqueue_t *)work->wq;
 
     if (wq == NULL) {
@@ -327,26 +304,22 @@ kstat_t yunos_work_cancel(kwork_t *work)
         return YUNOS_SUCCESS;
     }
 
-    yunos_mutex_lock(&(wq->work_mutex), YUNOS_WAIT_FOREVER);
-
-    if (work->running == 1) {
-        klist_rm(&(work->work_node));
-        work->running = 0;
-        work->wq      = NULL;
-        yunos_mutex_unlock(&(wq->work_mutex));
-    } else if (work->running == 2) {
-        yunos_mutex_unlock(&(wq->work_mutex));
+    YUNOS_CRITICAL_ENTER();
+    if (wq->work_current == work)
+    {
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_WORKQUEUE_WORK_RUNNING;
     }
+    klist_rm_init(&(work->work_node));
+    work->wq      = NULL;
+    YUNOS_CRITICAL_EXIT();
 
     return YUNOS_SUCCESS;
 }
 
 void workqueue_init(void)
 {
-    g_workqueue_head = NULL;
-
-    yunos_mutex_create(&g_workqueue_mutex, "WORKQUEUE-MUTEX");
+    klist_init(&g_workqueue_list_head);
 
     yunos_workqueue_create(&g_workqueue_default, "DEFAULT-WORKQUEUE",
                            YUNOS_CONFIG_WORKQUEUE_TASK_PRIO, g_workqueue_stack,
