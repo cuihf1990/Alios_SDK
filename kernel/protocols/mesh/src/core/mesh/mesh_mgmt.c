@@ -30,6 +30,7 @@
 #include "core/address_mgmt.h"
 #include "core/link_mgmt.h"
 #include "core/network_mgmt.h"
+#include "core/crypto.h"
 #include "core/master_key.h"
 #include "utilities/logging.h"
 #include "utilities/timer.h"
@@ -297,8 +298,6 @@ void become_leader(void)
     g_mm_state.callback->interface_up();
     stop_addr_cache();
     start_addr_cache();
-    set_master_key(NULL, 0);
-    set_group_key(NULL, 0);
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "become leader\r\n");

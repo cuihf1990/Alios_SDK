@@ -30,6 +30,7 @@
 #include "core/address_mgmt.h"
 #include "core/keys_mgr.h"
 #include "core/link_mgmt.h"
+#include "core/crypto.h"
 #include "utilities/logging.h"
 #include "utilities/message.h"
 #include "utilities/encoding.h"
@@ -181,20 +182,16 @@ static message_t *handle_lowpan_iphc(message_t *message)
     return lp_header_decompress(message);
 }
 
-static void resolve_message_info(received_frame_t *frame)
+static void resolve_message_info(received_frame_t *frame, message_info_t *info,
+                                 uint8_t *buf)
 {
-    message_t *message;
     mesh_header_control_t *control;
-    message_info_t *info;
     uint8_t offset;
-    uint8_t *buf;
     mesh_short_addr_t *short_addr;
     mesh_ext_addr_t *ext_addr;
     mesh_subnetid_t *subnetid;
     mesh_netid_t *netid;
 
-    message = frame->message;
-    info = message->info;
     info->hal_type = frame->hal->module->type;
     info->src_channel = frame->frame_info.channel;
     info->key_index = frame->frame_info.key_index;
@@ -202,7 +199,6 @@ static void resolve_message_info(received_frame_t *frame)
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;
-    buf = message_get_payload(message);
     control = (mesh_header_control_t *)buf;
     offset = sizeof(mesh_header_control_t);
     netid = (mesh_netid_t *)(buf + offset);
@@ -451,6 +447,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     } else {
         mtu = hal_umesh_get_ucast_mtu(network->hal->module);
     }
+    bzero(network->hal->frame.data, mtu);
 
     if (info->dest.addr.len == EXT_ADDR_SIZE ||
         info->dest.addr.short_addr != BCAST_SID) {
@@ -503,7 +500,16 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         memcpy(hal->frame.data + header_length, (uint8_t *)&frag_header, append_length);
     }
     payload = hal->frame.data + header_length + append_length;
+
     message_copy_to(message, message->frag_offset, payload, frag_length);
+
+    if ((info->flags & ENCRYPT_ENABLE_FLAG) &&
+        umesh_aes128_cbc_encrypt(hal->frame.data + info->payload_offset,
+                                 append_length + frag_length,
+                                 hal->frame.data + info->payload_offset) != UR_ERROR_NONE) {
+        return UR_ERROR_DROP;
+    }
+
     hal->frame.len = header_length + append_length + frag_length;
     hal->frame.key_index = info->key_index;
 
@@ -1022,6 +1028,9 @@ static void handle_received_frame(void *context, frame_t *frame,
     received_frame_t  *rx_frame = NULL;
     whitelist_entry_t *entry;
     hal_context_t *hal = (hal_context_t *)context;
+    mesh_header_control_t *control;
+    message_info_t info;
+    ur_error_t uerror = UR_ERROR_NONE;
 
     hal->link_stats.in_frames++;
     if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
@@ -1042,24 +1051,39 @@ static void handle_received_frame(void *context, frame_t *frame,
         }
     }
 
-    message = message_alloc(frame->len, MESH_FORWARDER_2);
-    if (message == NULL) {
-        hal->link_stats.in_drops++;
-        return;
-    }
     rx_frame = (received_frame_t *)ur_mem_alloc(sizeof(received_frame_t));
     if (rx_frame == NULL) {
         hal->link_stats.in_drops++;
-        message_free(message);
         return;
     }
-    message_copy_from(message, frame->data, frame->len);
-    rx_frame->message = message;
+
     rx_frame->hal = hal;
     memcpy(&rx_frame->frame_info, frame_info, sizeof(rx_frame->frame_info));
-    resolve_message_info(rx_frame);
+    bzero(&info, sizeof(info));
+    resolve_message_info(rx_frame, &info, frame->data);
+    control = (mesh_header_control_t *)frame->data;
+    if (control->control[1] & (ENABLE_SEC << MESH_HEADER_SEC_OFFSET)) {
+        uerror = umesh_aes128_cbc_decrypt(frame->data + info.payload_offset,
+                                          frame->len - info.payload_offset,
+                                          frame->data + info.payload_offset);
+    }
 
-    message_queue_enqueue(&hal->recv_queue, rx_frame->message);
+    if (uerror != UR_ERROR_NONE) {
+        ur_mem_free(rx_frame, sizeof(received_frame_t));
+        hal->link_stats.in_drops++;
+        return;
+    }
+
+    message = message_alloc(frame->len, MESH_FORWARDER_2);
+    if (message == NULL) {
+        ur_mem_free(rx_frame, sizeof(received_frame_t));
+        hal->link_stats.in_drops++;
+        return;
+    }
+
+    memcpy(message->info, &info, sizeof(info));
+    message_copy_from(message, frame->data, frame->len);
+    message_queue_enqueue(&hal->recv_queue, message);
     umesh_task_schedule_call(message_handler, hal);
     ur_mem_free(rx_frame, sizeof(received_frame_t));
 }

@@ -25,31 +25,13 @@ typedef struct {
     mesh_key_t keys[2];
 } mesh_hal_priv_t;
 
-static void payload_encrypt(mesh_hal_priv_t *priv, int8_t key_index, frame_t *frame)
-{
-    uint8_t index;
-
-    if (key_index < 0) {
-        return;
-    }
-
-    for (index = 0; (index < priv->keys[key_index].len) && (index < (frame->len -2)); index++) {
-        frame->data[index + 2] ^= priv->keys[key_index].key[index];
-    }
-}
-
 static void linuxhost_mesh_recv(frame_t *frm, frame_info_t *fino, void *cb_data)
 {
     mesh_hal_priv_t *priv = cb_data;
-    uint8_t control;
 
     if (!priv->rxcb)
         return;
 
-    control = frm->data[1];
-    if (control & 0x01) {
-        payload_encrypt(priv, fino->key_index, frm);
-    }
     priv->rxcb(priv->context, frm, fino, 0);
 }
 
@@ -95,7 +77,6 @@ static int linuxhost_ur_send_ucast(ur_mesh_hal_module_t *module, frame_t *frame,
         return -2;
     }
 
-    payload_encrypt(priv, frame->key_index, frame);
     error = send_frame(module, frame, dest);
     if(sent) {
         (*sent)(context, frame, error);
@@ -123,7 +104,6 @@ static int linuxhost_ur_send_bcast(ur_mesh_hal_module_t *module, frame_t *frame,
 
     dest.len = 8;
     memset(dest.addr, 0xff, sizeof(dest.addr));
-    payload_encrypt(priv, frame->key_index, frame);
     error = send_frame(module, frame, &dest);
     if(sent) {
         (*sent)(context, frame, error);

@@ -30,6 +30,7 @@
 #include "core/network_data.h"
 #include "core/mesh_forwarder.h"
 #include "core/master_key.h"
+#include "core/crypto.h"
 #include "ipv6/lwip_adapter.h"
 #include "utilities/logging.h"
 #include "utilities/message.h"
