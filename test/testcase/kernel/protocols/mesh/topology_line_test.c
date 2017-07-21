@@ -86,8 +86,8 @@ static void topology_line_case(bool vector_router)
 
     /* we become leader, check sids */
     network = get_default_network_context();
-    uint16_t num = get_allocated_number(network);
-    uint32_t sids_bitmap = get_allocated_bitmap(network);
+    uint16_t num = get_allocated_number(network->sid_base);
+    uint32_t sids_bitmap = get_allocated_bitmap(network->sid_base);
     neighbor_t *node = NULL;
     int found_12 = 0;
     YUNIT_ASSERT(num == 1);

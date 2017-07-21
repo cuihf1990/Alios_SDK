@@ -27,14 +27,14 @@
 #define LEADER_DEF_BITMAP 0x0ffe
 #define ROUTER_DEF_BITMAP 0xfffe
 
-void *allocator_init(uint16_t sid, int sid_type)
+allocator_t allocator_init(uint16_t sid, int sid_type)
 {
     ssid_allocator_t *allocator;
     uint16_t index;
 
     allocator = (ssid_allocator_t *)ur_mem_alloc(sizeof(ssid_allocator_t));
     if (allocator == NULL) {
-        return NULL;
+        return 0;
     }
     slist_init(&allocator->base.node_list);
 
@@ -62,15 +62,15 @@ void *allocator_init(uint16_t sid, int sid_type)
     allocator->sid_shift = index - SID_MASK_LEN;
     allocator->sid_prefix = sid;
 
-    return allocator;
+    return (allocator_t)allocator;
 }
 
-void allocator_deinit(void *hdl)
+void allocator_deinit(allocator_t hdl)
 {
     ssid_allocator_t *allocator;
     sid_node_t *node;
 
-    allocator = hdl;
+    allocator = (ssid_allocator_t *)hdl;
     if (allocator == NULL) {
         return;
     }
@@ -83,16 +83,16 @@ void allocator_deinit(void *hdl)
     ur_mem_free(allocator, sizeof(ssid_allocator_t));
 }
 
-bool is_direct_child(void *hdl, uint16_t sid)
+bool is_direct_child(allocator_t hdl, uint16_t sid)
 {
     ssid_allocator_t *allocator;
     uint16_t sidmask = 0;
     uint8_t  index;
 
-    if (hdl == NULL || sid == LEADER_SID || sid == INVALID_SID) {
+    if (sid == LEADER_SID || sid == INVALID_SID) {
         return false;
     }
-    allocator = hdl;
+    allocator = (ssid_allocator_t *)hdl;
     if (allocator == NULL) {
         return false;
     }
@@ -114,12 +114,12 @@ bool is_direct_child(void *hdl, uint16_t sid)
     return true;
 }
 
-bool is_allocated_child(void *hdl, neighbor_t *nbr)
+bool is_allocated_child(allocator_t hdl, neighbor_t *nbr)
 {
     ssid_allocator_t *allocator;
     sid_node_t       *node;
 
-    allocator = hdl;
+    allocator = (ssid_allocator_t *)hdl;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
         if (memcmp(node->node_id.ueid, nbr->ueid, sizeof(nbr->ueid)) == 0)
             return true;
@@ -128,14 +128,14 @@ bool is_allocated_child(void *hdl, neighbor_t *nbr)
     return false;
 }
 
-ur_error_t update_sid_mapping(void *hdl,
+ur_error_t update_sid_mapping(allocator_t hdl,
                               ur_node_id_t *node_id, bool to_add)
 {
     ssid_allocator_t *allocator;
     sid_node_t *node;
     sid_node_t *new_node = NULL;
 
-    allocator = hdl;
+    allocator = (ssid_allocator_t *)hdl;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
         if (memcmp(node->node_id.ueid, node_id->ueid,
                    sizeof(node->node_id.ueid)) == 0) {
@@ -171,12 +171,12 @@ ur_error_t update_sid_mapping(void *hdl,
     return UR_ERROR_NONE;
 }
 
-void free_sid(void *hdl, uint16_t sid)
+void free_sid(allocator_t hdl, uint16_t sid)
 {
     ssid_allocator_t *allocator;
     uint8_t len;
 
-    allocator = hdl;
+    allocator = (ssid_allocator_t *)hdl;
     if (is_partial_function_sid(sid)) {
         uint16_t idx = sid - (MOBILE_PREFIX << PF_SID_PREFIX_OFFSET);
         if (release_bit(allocator->mobile_free_bits, PF_NODE_NUM, idx)) {
@@ -199,14 +199,14 @@ void free_sid(void *hdl, uint16_t sid)
     }
 }
 
-static ur_error_t allocate_expected_sid(void *hdl,
+static ur_error_t allocate_expected_sid(allocator_t hdl,
                                         ur_node_id_t *node_id)
 {
     ssid_allocator_t *allocator;
     uint8_t          index;
     uint8_t          len;
 
-    allocator = hdl;
+    allocator = (ssid_allocator_t *)hdl;
     if (is_direct_child(hdl, node_id->sid)) {
         index = (node_id->sid - allocator->sid_prefix) >> allocator->sid_shift;
         len = 16;
@@ -242,13 +242,13 @@ static ur_error_t allocate_expected_sid(void *hdl,
     return UR_ERROR_NONE;
 }
 
-ur_error_t allocate_sid(void *hdl, ur_node_id_t *node_id)
+ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
 {
     ssid_allocator_t *allocator;
     sid_node_t       *sid_node = NULL;
     int               newsid = -1;
 
-    allocator = hdl;
+    allocator = (ssid_allocator_t *)hdl;
 
     if (node_id->sid != INVALID_SID &&
         allocate_expected_sid(hdl, node_id) == UR_ERROR_FAIL) {
@@ -316,15 +316,15 @@ out:
     return UR_ERROR_NONE;
 }
 
-uint16_t get_allocated_number(void *hdl)
+uint16_t get_allocated_number(allocator_t hdl)
 {
-    ssid_allocator_t *allocator = hdl;
+    ssid_allocator_t *allocator = (ssid_allocator_t *)hdl;
     return allocator->base.node_num;
 }
 
-uint32_t get_allocated_bitmap(void *hdl)
+uint32_t get_allocated_bitmap(allocator_t hdl)
 {
-    ssid_allocator_t *allocator = hdl;
+    ssid_allocator_t *allocator = (ssid_allocator_t *)hdl;
     if (allocator->sid_prefix == LEADER_SID) {
         return LEADER_DEF_BITMAP & ~allocator->attach_free_bits;
     }
@@ -332,24 +332,24 @@ uint32_t get_allocated_bitmap(void *hdl)
 }
 
 
-uint16_t get_allocated_pf_number(void *hdl)
+uint16_t get_allocated_pf_number(allocator_t hdl)
 {
-    ssid_allocator_t *allocator = hdl;
+    ssid_allocator_t *allocator = (ssid_allocator_t *)hdl;
     return allocator->pf_node_num;
 }
 
-uint16_t get_free_number(void *hdl)
+uint16_t get_free_number(allocator_t hdl)
 {
-    ssid_allocator_t *allocator = hdl;
+    ssid_allocator_t *allocator = (ssid_allocator_t *)hdl;
     if (allocator->sid_prefix == LEADER_SID) {
         return 11 - allocator->base.node_num;
     }
     return 15 - allocator->base.node_num;
 }
 
-slist_t *get_ssid_nodes_list(void *hdl)
+slist_t *get_ssid_nodes_list(allocator_t hdl)
 {
-    ssid_allocator_t *allocator = hdl;
+    ssid_allocator_t *allocator = (ssid_allocator_t *)hdl;
     return &allocator->base.node_list;
 }
 

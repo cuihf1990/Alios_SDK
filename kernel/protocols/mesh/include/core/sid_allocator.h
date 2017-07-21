@@ -17,9 +17,16 @@
 #ifndef UR_SID_ALLOCATOR_H
 #define UR_SID_ALLOCATOR_H
 
-#include "core/mesh_mgmt.h"
-#include "hal/interface_context.h"
-#include "core/router_mgr.h"
+#include <yos/list.h>
+
+#include "core/topology.h"
+
+enum {
+    SUPER_ROUTER_SID = 0,
+    LEADER_SID  = 0,
+    BCAST_SID   = 0xffff,
+    INVALID_SID = 0xfffe,
+};
 
 enum {
     STRUCTURED_SID = 0,
@@ -74,28 +81,30 @@ typedef struct rsid_allocator_s {
     uint32_t free_bits[(RSID_NUM + 31) / 32];
 } rsid_allocator_t;
 
-// structured sid
-void *allocator_init(uint16_t sid, int sid_type);
-void allocator_deinit(void *hdl);
-ur_error_t allocate_sid(void *, ur_node_id_t *node_id);
-void free_sid(void *hdl, uint16_t sid);
-ur_error_t update_sid_mapping(void *hdl, ur_node_id_t *node_id, bool to_add);
+typedef unsigned long allocator_t;
 
-uint16_t   get_allocated_number(void *hdl);
-uint32_t   get_allocated_bitmap(void *hdl);
-uint16_t   get_allocated_pf_number(void *hdl);
-uint16_t   get_free_number(void *hdl);
-slist_t    *get_ssid_nodes_list(void *hdl);
-bool       is_direct_child(void *hdl, uint16_t sid);
-bool       is_allocated_child(void *hdl, neighbor_t *nbr);
+// structured sid
+allocator_t allocator_init(uint16_t sid, int sid_type);
+void allocator_deinit(allocator_t);
+ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id);
+void free_sid(allocator_t, uint16_t sid);
+ur_error_t update_sid_mapping(allocator_t, ur_node_id_t *node_id, bool to_add);
+
+uint16_t   get_allocated_number(allocator_t);
+uint32_t   get_allocated_bitmap(allocator_t);
+uint16_t   get_allocated_pf_number(allocator_t);
+uint16_t   get_free_number(allocator_t);
+slist_t    *get_ssid_nodes_list(allocator_t);
+bool       is_direct_child(allocator_t, uint16_t sid);
+bool       is_allocated_child(allocator_t, neighbor_t *nbr);
 bool       is_partial_function_sid(uint16_t sid);
 
 // random sid
-void *rsid_allocator_init(int sid_type);
-void rsid_allocator_deinit(void *hdl);
-ur_error_t rsid_allocate_sid(void *hdl, ur_node_id_t *node_id);
-ur_error_t rsid_free_sid(void *hdl, ur_node_id_t *node_id);
-uint16_t rsid_get_allocated_number(void *hdl);
+allocator_t rsid_allocator_init(int sid_type);
+void rsid_allocator_deinit(allocator_t);
+ur_error_t rsid_allocate_sid(allocator_t, ur_node_id_t *node_id);
+ur_error_t rsid_free_sid(allocator_t, ur_node_id_t *node_id);
+uint16_t rsid_get_allocated_number(allocator_t);
 
 static inline int find_first_free_bit(uint32_t *bits, int len)
 {

@@ -11,7 +11,7 @@ void test_uradar_sid_allocator_case(void)
                             .sid = INVALID_SID,
                             .attach_sid = 0x0000};
     uint16_t index;
-    void *hdl = allocator_init(0x0000, STRUCTURED_SID);
+    allocator_t hdl = allocator_init(0x0000, STRUCTURED_SID);
 
     for(index = 1; index <= 11; index++) {
         node_id.ueid[0] += 1;

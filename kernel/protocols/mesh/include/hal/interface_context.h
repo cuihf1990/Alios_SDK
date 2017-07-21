@@ -20,6 +20,7 @@
 #include "umesh_hal.h"
 #include "umesh_types.h"
 #include "core/topology.h"
+#include "core/sid_allocator.h"
 #include "utilities/message.h"
 #include "utilities/timer.h"
 
@@ -218,7 +219,7 @@ typedef struct network_context_s {
     network_data_t    network_data;
 
     // sid
-    void              *sid_base;
+    allocator_t       sid_base;
 
     // mcast
     uint8_t           mcast_sequence;

@@ -10,7 +10,7 @@ void test_uradar_rsid_allocator_case(void)
                             .sid = INVALID_SID,
                             .attach_sid = 0x0000};
     uint16_t index;
-    void *hdl = rsid_allocator_init(SHORT_RANDOM_SID);
+    allocator_t hdl = rsid_allocator_init(SHORT_RANDOM_SID);
 
     for(index = 1; index <= 11; index++) {
         node_id.ueid[0] += 1;

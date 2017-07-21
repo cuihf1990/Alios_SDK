@@ -199,8 +199,8 @@ static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
 
     network = get_network_context_by_meshnetid(neighbor->addr.netid);
     if (network && network->router->sid_type == STRUCTURED_SID &&
-        is_allocated_child(network, neighbor)) {
-        free_sid(network, neighbor->addr.addr.short_addr);
+        is_allocated_child(network->sid_base, neighbor)) {
+        free_sid(network->sid_base, neighbor->addr.addr.short_addr);
     }
 
     slist_del(&neighbor->next, &hal->neighbors_list);
@@ -236,7 +236,7 @@ static void handle_update_nbr_timer(void *args)
         network = get_network_context_by_meshnetid(node->addr.netid);
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {
-            free_sid(network, node->addr.addr.short_addr);
+            free_sid(network->sid_base, node->addr.addr.short_addr);
         }
         node->state = STATE_INVALID;
         g_neighbor_updater_head(node);
@@ -346,12 +346,12 @@ neighbor_t *update_neighbor(const message_info_t *info,
         if (nbr->state == STATE_CHILD &&
             ((nbr->flags & NBR_NETID_CHANGED) ||
              (nbr->flags & NBR_SID_CHANGED))) {
-            free_sid(network, nbr->addr.addr.short_addr);
+            free_sid(network->sid_base, nbr->addr.addr.short_addr);
             nbr->state = STATE_NEIGHBOR;
         }
         network = get_network_context_by_meshnetid(info->src.netid);
-        if (is_direct_child(network, info->src.addr.short_addr) &&
-            is_allocated_child(network, nbr)) {
+        if (network && is_direct_child(network->sid_base, info->src.addr.short_addr) &&
+            is_allocated_child(network->sid_base, nbr)) {
             nbr->state = STATE_CHILD;
         }
     }
