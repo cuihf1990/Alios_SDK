@@ -190,7 +190,7 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
         memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) == 0 &&
         pstate->mqtt_reconnect == false) {
         yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
-        yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
+        yos_post_delayed_action(10 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
         return;
     }
 
@@ -450,7 +450,7 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
     memcpy(pstate->uuid, conn_ack->payload, sizeof(pstate->uuid));
     pstate->uuid[STR_UUID_LEN] = '\x0';
     pstate->mqtt_connected = true;
-    yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
+    yos_post_delayed_action(10 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
 
     yos_cloud_register_backend(&gateway_cloud_report);
     if(pstate->mqtt_reconnect == false)
