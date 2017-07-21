@@ -278,14 +278,18 @@ neighbor_t *update_neighbor(const message_info_t *info,
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
+    hal = get_hal_context(info->hal_type);
+    nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
+
+    if (length == 0) {
+        goto exit;
+    }
+
     path_cost = (mm_cost_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_PATH_COST);
     src_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SRC_UEID);
     ssid_info = (mm_ssid_info_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SSID_INFO);
     mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_MODE);
     channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_UCAST_CHANNEL);
-
-    hal = get_hal_context(info->hal_type);
-    nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
 
     // remove nbr, if mode changed
     if (nbr && mode && nbr->mode != 0 && nbr->mode != mode->mode) {
@@ -333,8 +337,6 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (channel_orig && nbr->channel != channel_orig) {
         nbr->flags |= NBR_CHANNEL_CHANGED;
     }
-    nbr->rssi = info->rssi;
-    nbr->last_heard = ur_get_now();
 
     network = info->network;
     if (network->router->sid_type == STRUCTURED_SID) {
@@ -364,6 +366,11 @@ neighbor_t *update_neighbor(const message_info_t *info,
                                                handle_update_nbr_timer, hal);
     }
 
+exit:
+    if (nbr) {
+        nbr->rssi = info->rssi;
+        nbr->last_heard = ur_get_now();
+    }
     return nbr;
 }
 
