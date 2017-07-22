@@ -214,6 +214,7 @@ static void sid_allocator_deinit(network_context_t *network)
     } else {
         rsid_allocator_deinit(network->sid_base);
     }
+    network->sid_base = 0;
 }
 
 void set_command_type(message_info_t *info, uint8_t command)
