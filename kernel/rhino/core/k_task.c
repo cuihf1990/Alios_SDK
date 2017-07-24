@@ -158,16 +158,16 @@ kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
         return YUNOS_NO_MEM;
     }
 
+    *task = task_obj;
+
     ret = task_create(task_obj, name, arg, pri, ticks, task_stack, stack, entry,
                       autorun, K_OBJ_DYN_ALLOC);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         yunos_mm_free(task_stack);
         yunos_mm_free(task_obj);
-
+       *task = NULL;
         return ret;
     }
-
-    *task = task_obj;
 
     return ret;
 }
