@@ -46,15 +46,14 @@ kstat_t yunos_sched_disable(void)
 {
     CPSR_ALLOC();
 
-    if (g_intrpt_nested_level > 0u) {
-        return YUNOS_NOT_CALLED_BY_INTRPT;
-    }
+    YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (g_sched_lock >= SCHED_MAX_LOCK_COUNT) {
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_SCHED_LOCK_COUNT_OVF;
     }
-
-    YUNOS_CRITICAL_ENTER();
 
 #if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
     sched_disable_measure_start();
@@ -71,15 +70,14 @@ kstat_t yunos_sched_enable(void)
 {
     CPSR_ALLOC();
 
-    if (g_intrpt_nested_level > 0u) {
-        return YUNOS_NOT_CALLED_BY_INTRPT;
-    }
+    YUNOS_CRITICAL_ENTER();
+
+    INTRPT_NESTED_LEVEL_CHK();
 
     if (g_sched_lock == 0u) {
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_SCHED_ALREADY_ENABLED;
     }
-
-    YUNOS_CRITICAL_ENTER();
 
     g_sched_lock--;
 

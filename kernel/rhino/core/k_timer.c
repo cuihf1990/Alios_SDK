@@ -53,6 +53,8 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
                             tick_t first, tick_t round, void *arg, uint8_t auto_run,
                             uint8_t mm_alloc_flag)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(timer);
     NULL_PARA_CHK(name);
     NULL_PARA_CHK(cb);
@@ -61,9 +63,9 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
         return YUNOS_INV_PARAM;
     }
 
-    if (g_intrpt_nested_level > 0u) {
-        return YUNOS_NOT_CALLED_BY_INTRPT;
-    }
+    YUNOS_CRITICAL_ENTER();
+    INTRPT_NESTED_LEVEL_CHK();
+    YUNOS_CRITICAL_EXIT();
 
     timer->name          = name;
     timer->cb            = cb;

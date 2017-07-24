@@ -287,11 +287,12 @@ kstat_t yunos_queue_recv(kqueue_t *queue, tick_t ticks, void **msg)
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
 
+    YUNOS_CRITICAL_ENTER();
+
     if ((g_intrpt_nested_level > 0u) && (ticks != YUNOS_NO_WAIT)) {
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_NOT_CALLED_BY_INTRPT;
     }
-
-    YUNOS_CRITICAL_ENTER();
 
     if (queue->blk_obj.obj_type != YUNOS_QUEUE_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();
