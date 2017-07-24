@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/unistd.h>
-
+#include <k_api.h>
 
 #include "common.h"
 

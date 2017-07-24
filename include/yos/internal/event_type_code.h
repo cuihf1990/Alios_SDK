@@ -72,7 +72,8 @@
 #define  VALUE_KEY_DOWN        1
 #define  VALUE_KEY_CLICK       2
 #define  VALUE_KEY_LTCLICK     3
-#define  VALUE_KEY_DBCLICK     4
+#define  VALUE_KEY_LLTCLICK    4
+#define  VALUE_KEY_DBCLICK     5
 /** General channel value */
 #define  VALUE_SYS_CHN_CONNECTED    0
 #define  VALUE_SYS_CHN_CONNECTING   1

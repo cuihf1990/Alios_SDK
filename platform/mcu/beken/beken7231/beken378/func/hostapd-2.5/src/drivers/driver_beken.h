@@ -635,6 +635,8 @@ enum {
 /* Maximum length for algorithm names (-1 for nul termination) used in ioctl()
  */
 #define HOSTAP_CRYPT_ALG_NAME_LEN 16
+#define HOSTAP_AUTH_OPEN    0
+#define HOSTAP_AUTH_SHARED  1
 
 
 struct prism2_hostapd_param {
@@ -703,6 +705,7 @@ struct prism2_hostapd_param {
 			u8 ssid_len;
 			u8 ssid[SSID_MAX_LEN];
 			u8 proto;
+            u8 auth_alg;
 			u8 chann;
 			u16 ie_len;
 			u32 ie_buf[64];

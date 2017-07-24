@@ -44,7 +44,7 @@ static void task_sem_opr_entry(void *arg)
     next_test_case_notify();
     yunos_sem_dyn_del(sem_comb);
     yunos_mutex_del(&mutex_comb);
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_mutex_opr_entry(void *arg)
@@ -64,7 +64,7 @@ static void task_mutex_opr_entry(void *arg)
     yunos_mutex_unlock(&mutex_comb);
 
     yunos_sem_give(sem_comb);
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void sem_mutex_coopr_test(void)

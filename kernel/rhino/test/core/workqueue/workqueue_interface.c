@@ -205,7 +205,7 @@ static uint8_t workqueue_interface_case1(void)
     }
 
     ret = yunos_work_run(&wq1, &work1);
-    if (ret != YUNOS_WORKQUEUE_WORK_EXIST) {
+    if (ret != YUNOS_SUCCESS) {
         MYASSERT(ret);
         yunos_sem_give(&g_wq_test_sem);
         return 1;

@@ -177,7 +177,7 @@ static ur_error_t send_address_query(network_context_t *network,
     } else {
         return UR_ERROR_FAIL;
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -325,7 +325,7 @@ static ur_error_t send_address_query_response(network_context_t *network,
         attach_node->meshnetid != INVALID_NETID) {
         length += sizeof(mm_node_id_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -457,7 +457,7 @@ ur_error_t send_address_notification(network_context_t *network,
     if (network->attach_node) {
         length += sizeof(mm_node_id_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, ADDRESS_MGMT_3);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -592,12 +592,12 @@ static void handle_addr_cache_timer(void *args)
         if (node->node_id.timeout > timeout) {
             if (is_partial_function_sid(node->node_id.sid)) {
                 network = get_default_network_context();
-                update_sid_mapping(network, &node->node_id, false);
+                update_sid_mapping(network->sid_base, &node->node_id, false);
             } else if ((network = get_network_context_by_meshnetid(node->node_id.meshnetid))
                        != NULL) {
                 if (network->router->sid_type == SHORT_RANDOM_SID ||
                     network->router->sid_type == RANDOM_SID) {
-                    rsid_free_sid(network, &node->node_id);
+                    rsid_free_sid(network->sid_base, &node->node_id);
                 }
             }
             slist_del(&node->next, &g_ac_state.cache_list);

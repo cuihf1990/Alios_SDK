@@ -24,7 +24,6 @@ typedef void (*work_handle_t)(void *arg);
 
 typedef struct {
     klist_t       work_node;
-    uint32_t      running;
     work_handle_t handle;
     void         *arg;
     tick_t        dly;
@@ -34,9 +33,9 @@ typedef struct {
 
 typedef struct {
     klist_t       workqueue_node;
-    kwork_t      *work_head;
+    klist_t       work_list;
+    kwork_t      *work_current; /* current work */
     const name_t *name;
-    kmutex_t      work_mutex;
     ktask_t       worker;
     ksem_t        sem;
 } kworkqueue_t;

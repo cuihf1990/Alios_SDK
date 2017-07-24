@@ -68,7 +68,7 @@ static void task_tasksem_co1_entry(void *arg)
     kstat_t  ret;
     uint8_t  cnt = 0;
 
-    ret = yunos_task_sem_create(g_active_task, &test_tasksem_co1, MODULE_NAME, 0);
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
     MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
@@ -84,9 +84,9 @@ static void task_tasksem_co1_entry(void *arg)
         }
     }
 
-    yunos_task_sem_del(g_active_task);
+    yunos_task_sem_del(yunos_cur_task_get());
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_tasksem_co2_entry(void *arg)
@@ -94,7 +94,7 @@ static void task_tasksem_co2_entry(void *arg)
     kstat_t ret;
     uint8_t cnt = 0;
 
-    ret = yunos_task_sem_create(g_active_task, &test_tasksem_co2, MODULE_NAME, 0);
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
     MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
@@ -121,10 +121,10 @@ static void task_tasksem_co2_entry(void *arg)
     test_case_success++;
     PRINT_RESULT(MODULE_NAME_CO1, PASS);
 
-    yunos_task_sem_del(g_active_task);
+    yunos_task_sem_del(yunos_cur_task_get());
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void tasksem_coopr1_test(void)
@@ -151,7 +151,7 @@ static void task_tasksem_co3_entry(void *arg)
     kstat_t ret;
     uint8_t cnt = 0;
 
-    ret = yunos_task_sem_create(g_active_task, &test_tasksem_co1, MODULE_NAME, 0);
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
     MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
@@ -166,9 +166,9 @@ static void task_tasksem_co3_entry(void *arg)
         }
     }
 
-    yunos_task_sem_del(g_active_task);
+    yunos_task_sem_del(yunos_cur_task_get());
 
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 static void task_tasksem_co4_entry(void *arg)
@@ -176,7 +176,7 @@ static void task_tasksem_co4_entry(void *arg)
     kstat_t ret;
     uint8_t cnt = 0;
 
-    ret = yunos_task_sem_create(g_active_task, &test_tasksem_co2, MODULE_NAME, 0);
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
     MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
@@ -196,10 +196,10 @@ static void task_tasksem_co4_entry(void *arg)
     test_case_success++;
     PRINT_RESULT(MODULE_NAME_CO2, PASS);
 
-    yunos_task_sem_del(g_active_task);
+    yunos_task_sem_del(yunos_cur_task_get());
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void tasksem_coopr2_test(void)

@@ -510,6 +510,11 @@ void process_mode(int argc, char *argv[])
             break;
         }
 
+        if (strcmp(argv[index], "LEADER") == 0) {
+            mode |= MODE_LEADER;
+            continue;
+        }
+
         if (strcmp(argv[index], "SUPER") == 0) {
             mode |= MODE_SUPER;
             continue;
@@ -829,6 +834,8 @@ void process_stats(int argc, char *argv[])
             response_append("  out_command %d\r\n", link_stats->out_command);
             response_append("  out_data %d\r\n", link_stats->out_data);
             response_append("  out_errors %d\r\n", link_stats->out_errors);
+            response_append("  send_queue_size %d\r\n", link_stats->send_queue_size);
+            response_append("  recv_queue_size %d\r\n", link_stats->recv_queue_size);
             response_append("  sending %s\r\n", link_stats->sending ? "true" : "false");
             response_append("  sending_timeouts %d\r\n", link_stats->sending_timeouts);
         }
@@ -846,7 +853,17 @@ void process_stats(int argc, char *argv[])
     if (message_stats) {
         response_append("message stats\r\n");
         response_append("  allocate nums %d\r\n", message_stats->num);
-        response_append("  allocate fails %d\r\n", message_stats->fails);
+        response_append("  allocate queue_fulls %d\r\n", message_stats->queue_fulls);
+        response_append("  allocate mem_fails %d\r\n", message_stats->mem_fails);
+        response_append("  allocate pbuf_fails %d\r\n", message_stats->pbuf_fails);
+        response_append("  allocate size %d\r\n", message_stats->size);
+
+        uint8_t index;
+        response_append("  msg debug info\r\n  ");
+        for (index = 0; index < MSG_DEBUG_INFO_SIZE; index++) {
+            response_append("%d:", message_stats->debug_info[index]);
+        }
+        response_append("\r\n");
     }
 
     mem_stats = ur_mesh_get_mem_stats();
@@ -918,7 +935,7 @@ void process_sids(int argc, char *argv[])
     response_append("mobile:\r\n");
     networks = ur_mesh_get_networks();
     slist_for_each_entry(networks, network, network_context_t, next) {
-        nodes_list = get_ssid_nodes_list(network);
+        nodes_list = get_ssid_nodes_list(network->sid_base);
         if (nodes_list == NULL) {
             continue;
         }

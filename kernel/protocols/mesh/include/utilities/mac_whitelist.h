@@ -32,5 +32,6 @@ void whitelist_clear_constant_rssi(whitelist_entry_t *entry);
 ur_error_t whitelist_get_constant_rssi(const whitelist_entry_t *entry,
                                        int8_t *rssi);
 void whitelist_set_constant_rssi(whitelist_entry_t *entry, int8_t rssi);
+bool is_whitelist_enabled(void);
 
 #endif  /* UR_MAC_WHITELIST_H */

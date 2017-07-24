@@ -24,6 +24,7 @@
 #include "txu_cntrl.h"
 #include "mm.h"
 #include "reg_mdm_cfg.h"
+#include "phy_trident.h"
 
 #include "umesh_hal.h"
 #include <umesh_80211.h>
@@ -39,7 +40,7 @@ enum {
 };
 
 enum {
-    DEFAULT_MTU_SIZE = 1024,
+    DEFAULT_MTU_SIZE = 512,
 };
 
 typedef struct {
@@ -130,8 +131,12 @@ static void wifi_monitor_cb(uint8_t *data, int len,
 
     pf->priv = priv;
     memcpy(pf->frm.data, data + WIFI_MESH_OFFSET, pf->frm.len);
-    pass_to_umesh((const void *)pf);
-    priv->stats.in_frames++;
+
+    if (yos_schedule_call(pass_to_umesh, pf) < 0) {
+        yos_free(pf);
+    } else {
+        priv->stats.in_frames++;
+    }
 }
 
 static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
@@ -146,10 +151,16 @@ static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
 static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
+    struct tx_policy_tbl *pol;
 
     if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0) {
         bk_wlan_start_monitor();
         hal_machw_exit_monitor_mode();
+
+        tpc_update_tx_power(PHY_TRIDENT_LIMIT_PWR);
+        pol = &txl_buffer_control_24G.policy_tbl;
+        pol->powercntrlinfo[0] =
+              (nxmac_dsss_max_pwr_level_getf() << TX_PWR_LEVEL_PT_RCX_OFT);
     }
 
     wlan_register_mesh_monitor_cb(wifi_monitor_cb);
@@ -166,64 +177,26 @@ static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
 static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
                       mac_address_t *dest, send_cxt_t *cxt)
 {
-    static uint16_t nb_pkt_sent;
     mesh_hal_priv_t *priv = module->base.priv_dev;
     uint8_t *pkt;
     int len = frame->len + WIFI_MESH_OFFSET;
     ur_mesh_handle_sent_ucast_t sent;
-    MSDU_NODE_T *node;
-    UINT8 *content_ptr;
-    UINT32 queue_idx = AC_VI;
     int result = 0;
-    struct txdesc *txdesc_new;
-    struct umacdesc *umac;
-
-    node = rwm_tx_node_alloc(len);
-    if (node == NULL) {
-        result = -1;
-        goto tx_exit;
-    }
 
     pkt = yos_malloc(len);
-    umesh_80211_make_frame(module, frame, dest, pkt);
-
-    rwm_tx_msdu_renew(pkt, len, node->msdu_ptr);
-    content_ptr = rwm_get_msdu_content_ptr(node);
-
-    txdesc_new = tx_txdesc_prepare(queue_idx);
-    if(txdesc_new == NULL || TXDESC_STA_USED == txdesc_new->status) {
-        rwm_node_free(node);
-        result = -1;
+    if (pkt == NULL) {
+        result = 1;
         goto tx_exit;
     }
+    umesh_80211_make_frame(module, frame, dest, pkt);
 
-    txdesc_new->status = TXDESC_STA_USED;
-    txdesc_new->host.flags = TXU_CNTRL_MGMT;
-    txdesc_new->host.orig_addr = (UINT32)node->msdu_ptr;
-    txdesc_new->host.packet_addr = (UINT32)content_ptr;
-    txdesc_new->host.packet_len = len;
-    txdesc_new->host.status_desc_addr = (UINT32)content_ptr;
-    txdesc_new->host.tid = 0xff;
-
-    umac = &txdesc_new->umac;
-    umac->payl_len = len;
-    umac->head_len = 0;
-    umac->tail_len = 0;
-    umac->hdr_len_802_2 = 0;
-
-    umac->buf_control = &txl_buffer_control_24G;
-
-    txdesc_new->lmac.agg_desc = NULL;
-    txdesc_new->lmac.hw_desc->cfm.status = 0;
-
-    rwm_push_tx_list(node);
-    txl_cntrl_push(txdesc_new, queue_idx);
-    priv->stats.out_frames++;
+    if (bmsg_tx_raw_sender(pkt, len) != 0) {
+        result = 1;
+    } else {
+        priv->stats.out_frames++;
+    }
 
 tx_exit:
-
-    yos_free(pkt);
-
     if (cxt) {
         sent = cxt->sent;
         (*sent)(cxt->context, cxt->frame, result);
@@ -377,7 +350,7 @@ static const frame_stats_t *beken_wifi_mesh_get_stats(
 }
 
 static ur_mesh_hal_module_t beken_wifi_mesh_module;
-static const uint8_t g_wifi_channels[] = {1, 6, 11};
+static const uint8_t g_wifi_channels[] = {1, 4, 6, 9, 11};
 static mesh_hal_priv_t g_wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = DEFAULT_MTU_SIZE,

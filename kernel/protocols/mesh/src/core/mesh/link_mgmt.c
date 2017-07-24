@@ -198,8 +198,9 @@ static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     }
 
     network = get_network_context_by_meshnetid(neighbor->addr.netid);
-    if (network && network->router->sid_type == STRUCTURED_SID) {
-        free_sid(network, neighbor->addr.addr.short_addr);
+    if (network && network->router->sid_type == STRUCTURED_SID &&
+        is_allocated_child(network->sid_base, neighbor)) {
+        free_sid(network->sid_base, neighbor->addr.addr.short_addr);
     }
 
     slist_del(&neighbor->next, &hal->neighbors_list);
@@ -235,7 +236,7 @@ static void handle_update_nbr_timer(void *args)
         network = get_network_context_by_meshnetid(node->addr.netid);
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {
-            free_sid(network, node->addr.addr.short_addr);
+            free_sid(network->sid_base, node->addr.addr.short_addr);
         }
         node->state = STATE_INVALID;
         g_neighbor_updater_head(node);
@@ -277,14 +278,18 @@ neighbor_t *update_neighbor(const message_info_t *info,
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
+    hal = get_hal_context(info->hal_type);
+    nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
+
+    if (length == 0) {
+        goto exit;
+    }
+
     path_cost = (mm_cost_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_PATH_COST);
     src_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SRC_UEID);
     ssid_info = (mm_ssid_info_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SSID_INFO);
     mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_MODE);
     channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_UCAST_CHANNEL);
-
-    hal = get_hal_context(info->hal_type);
-    nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
 
     // remove nbr, if mode changed
     if (nbr && mode && nbr->mode != 0 && nbr->mode != mode->mode) {
@@ -332,8 +337,6 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (channel_orig && nbr->channel != channel_orig) {
         nbr->flags |= NBR_CHANNEL_CHANGED;
     }
-    nbr->rssi = info->rssi;
-    nbr->last_heard = ur_get_now();
 
     network = info->network;
     if (network->router->sid_type == STRUCTURED_SID) {
@@ -345,11 +348,12 @@ neighbor_t *update_neighbor(const message_info_t *info,
         if (nbr->state == STATE_CHILD &&
             ((nbr->flags & NBR_NETID_CHANGED) ||
              (nbr->flags & NBR_SID_CHANGED))) {
-            free_sid(network, nbr->addr.addr.short_addr);
+            free_sid(network->sid_base, nbr->addr.addr.short_addr);
             nbr->state = STATE_NEIGHBOR;
         }
         network = get_network_context_by_meshnetid(info->src.netid);
-        if (is_direct_child(network, info->src.addr.short_addr)) {
+        if (network && is_direct_child(network->sid_base, info->src.addr.short_addr) &&
+            is_allocated_child(network->sid_base, nbr)) {
             nbr->state = STATE_CHILD;
         }
     }
@@ -362,6 +366,11 @@ neighbor_t *update_neighbor(const message_info_t *info,
                                                handle_update_nbr_timer, hal);
     }
 
+exit:
+    if (nbr) {
+        nbr->rssi = info->rssi;
+        nbr->last_heard = ur_get_now();
+    }
     return nbr;
 }
 
@@ -473,7 +482,7 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
     if (tlvs_length) {
         length += (tlvs_length + sizeof(mm_tlv_request_tlv_t));
     }
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -537,7 +546,7 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
         length += (sizeof(mm_tlv_request_tlv_t) + tlv_types_length);
     }
 
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -592,7 +601,7 @@ static ur_error_t send_link_accept(network_context_t *network,
         return UR_ERROR_FAIL;
     }
     length += sizeof(mm_header_t);
-    message = message_alloc(length);
+    message = message_alloc(length, LINK_MGMT_3);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }

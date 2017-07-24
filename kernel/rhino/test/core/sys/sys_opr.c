@@ -36,22 +36,6 @@ static uint8_t sys_opr_case1(void)
         return 1;
     }
 
-    /* sched disable (in intrpt) */
-    ret = yunos_intrpt_enter();
-    if (ret != YUNOS_SUCCESS) {
-        MYASSERT(ret);
-        return 1;
-    }
-
-    ret = yunos_sched_disable();
-    if (ret != YUNOS_NOT_CALLED_BY_INTRPT) {
-        yunos_intrpt_exit();
-        MYASSERT(ret);
-        return 1;
-    }
-
-    yunos_intrpt_exit();
-
     ret = yunos_sched_disable();
     if (ret != YUNOS_SUCCESS) {
         MYASSERT(ret);
@@ -64,21 +48,6 @@ static uint8_t sys_opr_case1(void)
         MYASSERT(ret);
         return 1;
     }
-
-    ret = yunos_intrpt_enter();
-    if (ret != YUNOS_SUCCESS) {
-        MYASSERT(ret);
-        return 1;
-    }
-
-    ret = yunos_sched_enable();
-    if (ret != YUNOS_NOT_CALLED_BY_INTRPT) {
-        yunos_intrpt_exit();
-        MYASSERT(ret);
-        return 1;
-    }
-
-    yunos_intrpt_exit();
 
     ret = yunos_sched_enable();
     if (ret != YUNOS_SCHED_DISABLE) {

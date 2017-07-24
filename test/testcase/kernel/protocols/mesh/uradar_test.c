@@ -11,6 +11,7 @@
 
 #include "yos/framework.h"
 #include "yts.h"
+#include "umesh.h"
 
 extern int dda_enable(int agent_id);
 extern int dda_service_init(void);
@@ -97,6 +98,8 @@ static int init(void)
     while (!dda_connected && cnt++ < 100) {
         yos_msleep(100);
     }
+
+    YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_stop());
 
     yos_msleep(1000);
 

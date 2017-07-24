@@ -112,7 +112,7 @@ void task_misc_entry(void *arg)
     yunos_task_del(task_misc3);
 
     yunos_sched_disable();
-    yunos_task_suspend(g_active_task);
+    yunos_task_suspend(yunos_cur_task_get());
     yunos_sched_enable();
 
     yunos_task_suspend(NULL);
@@ -573,7 +573,7 @@ void task_misc_entry(void *arg)
         test_case_fail++;
     }
 
-    ret = yunos_task_wait_abort(g_active_task);
+    ret = yunos_task_wait_abort(yunos_cur_task_get());
 
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
@@ -609,7 +609,7 @@ void task_misc_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(g_active_task);
+    yunos_task_dyn_del(yunos_cur_task_get());
 }
 
 void task_misc_test(void)

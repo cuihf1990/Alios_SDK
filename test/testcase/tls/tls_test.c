@@ -261,7 +261,7 @@ static void test_tls_ssl_recv(void)
      * testcase #4
      */
     ret = mbedtls_ssl_recv(ssl, buf, 128);
-    YUNIT_ASSERT(ret >= 0);
+    YUNIT_ASSERT(ret >= 0 || ret == -EAGAIN);
 
     ret = mbedtls_ssl_close(ssl);
     YUNIT_ASSERT(ret == 0);

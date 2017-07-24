@@ -96,7 +96,7 @@ static int set_wpa_psk(struct wpa_ssid *ssid)
 
 static int set_wep_key(struct wpa_ssid*ssid)
 {
-	int errors;
+	int errors = 0;
 	
 	ssid->wep_tx_keyidx = 0;
 	ssid->auth_alg = WPA_AUTH_ALG_OPEN|WPA_AUTH_ALG_SHARED;
@@ -212,14 +212,19 @@ static int security2cipher(struct wpa_ie_data *ie, int security)
 
 int wpa_config_set_wpa(struct wpa_ssid *ssid, struct wpa_ie_data *ie)
 {
-	int ret = 0;
+	int ret;
 	
-	ret = set_wpa_psk(ssid);
 	ssid->group_cipher = ie->group_cipher;
 	ssid->pairwise_cipher = ie->pairwise_cipher;
 	ssid->key_mgmt = ie->key_mgmt;
 	ssid->proto = ie->proto;
+    g_sta_param_ptr->security = cipher2security(ie);
 
+    if ((ssid->psk_set) || (ssid->passphrase!=NULL)) {
+        return 0;
+    }
+    
+    ret = set_wpa_psk(ssid);
 	if(!ret){
 		if (ssid->passphrase && (ssid->psk_set == 0)) {
 			wpa_config_update_psk(ssid);
@@ -229,7 +234,7 @@ int wpa_config_set_wpa(struct wpa_ssid *ssid, struct wpa_ie_data *ie)
 		bin2hexstr(ssid->psk, g_sta_param_ptr->psk, 32, 65);
 		g_sta_param_ptr->psk_set = 1;
 	}
-	g_sta_param_ptr->security = cipher2security(ie);
+	
 	return ret;
 }
 

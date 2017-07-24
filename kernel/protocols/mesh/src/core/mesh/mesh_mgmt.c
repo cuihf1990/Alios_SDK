@@ -195,20 +195,26 @@ static void start_advertisement_timer(network_context_t *network)
 
 static void sid_allocator_init(network_context_t *network)
 {
-    if (network->router->sid_type == STRUCTURED_SID) {
-        allocator_init(network);
+    int sid_type = network->router->sid_type;
+    if (sid_type == STRUCTURED_SID) {
+        uint16_t sid = umesh_mm_get_local_sid();
+        if (umesh_mm_get_device_state() == DEVICE_STATE_SUPER_ROUTER) {
+            sid = SUPER_ROUTER_SID;
+        }
+        network->sid_base = allocator_init(sid, sid_type);
     } else {
-        rsid_allocator_init(network);
+        network->sid_base = rsid_allocator_init(sid_type);
     }
 }
 
 static void sid_allocator_deinit(network_context_t *network)
 {
     if (network->router->sid_type == STRUCTURED_SID) {
-        allocator_deinit(network);
+        allocator_deinit(network->sid_base);
     } else {
-        rsid_allocator_deinit(network);
+        rsid_allocator_deinit(network->sid_base);
     }
+    network->sid_base = 0;
 }
 
 void set_command_type(message_info_t *info, uint8_t command)
@@ -282,6 +288,9 @@ void become_leader(void)
         start_advertisement_timer(network);
     }
 
+    if (g_mm_state.device.net_scan_timer) {
+        ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
+    }
     umesh_mm_start_net_scan_timer();
     umesh_mm_set_prev_channel();
 
@@ -586,6 +595,7 @@ static void handle_migrate_wait_timer(void *args)
 
 static void handle_net_scan_timer(void *args)
 {
+    g_mm_state.device.net_scan_timer = NULL;
     nm_start_discovery();
     g_mm_state.device.reboot_flag = false;
 }
@@ -620,7 +630,7 @@ static uint16_t calc_ssid_child_num(network_context_t *network)
     }
 
     if (g_mm_state.device.state == DEVICE_STATE_LEADER) {
-        num += get_allocated_pf_number(network);
+        num += get_allocated_pf_number(network->sid_base);
     }
 
     /* including myelf */
@@ -656,7 +666,7 @@ ur_error_t send_advertisement(network_context_t *network)
     if (network->router->sid_type == STRUCTURED_SID) {
         length += sizeof(mm_ssid_info_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -672,7 +682,7 @@ ur_error_t send_advertisement(network_context_t *network)
         case DEVICE_STATE_LEADER:
             if (network->router->sid_type == SHORT_RANDOM_SID ||
                 network->router->sid_type == RANDOM_SID) {
-                nd_set_meshnetsize(network, rsid_get_allocated_number(network) + 1);
+                nd_set_meshnetsize(network, rsid_get_allocated_number(network->sid_base) + 1);
             }
         case DEVICE_STATE_SUPER_ROUTER:
             if (network->router->sid_type == STRUCTURED_SID) {
@@ -698,7 +708,7 @@ ur_error_t send_advertisement(network_context_t *network)
         ssid_info = (mm_ssid_info_tv_t *)data;
         umesh_mm_init_tv_base((mm_tv_t *)ssid_info, TYPE_SSID_INFO);
         ssid_info->child_num = subnet_size;
-        ssid_info->free_slots = get_free_number(network);
+        ssid_info->free_slots = get_free_number(network->sid_base);
         data += sizeof(mm_ssid_info_tv_t);
     }
 
@@ -752,7 +762,7 @@ static ur_error_t send_attach_request(network_context_t *network,
 
     length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
              sizeof(mm_ueid_tv_t) + sizeof(mm_mode_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -818,7 +828,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         length += sizeof(mm_group_key_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_3);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -1053,7 +1063,7 @@ static ur_error_t send_sid_request(network_context_t *network)
         network->attach_candidate->addr.netid == network->meshnetid) {
         length += sizeof(mm_sid_tv_t);
     }
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_4);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -1133,7 +1143,7 @@ static ur_error_t send_sid_response(network_context_t *network,
     length = sizeof(mm_header_t) + sizeof(mm_sid_tv_t) +
              sizeof(mm_node_type_tv_t) + sizeof(mm_netinfo_tv_t) +
              sizeof(mm_mcast_addr_tv_t);
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_5);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -1232,6 +1242,12 @@ static ur_error_t handle_sid_request(message_t *message)
         network = get_sub_network_context(network->hal);
     }
     memcpy(node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
+
+    neighbor_t *node = get_neighbor_by_ueid(node_id.ueid);
+    if (node == NULL) {
+        node_id.sid = INVALID_SID;
+    }
+
     switch (network->router->sid_type) {
         case STRUCTURED_SID:
             if (attach_node_id->mode & MODE_SUPER) {
@@ -1240,11 +1256,11 @@ static ur_error_t handle_sid_request(message_t *message)
                 node_id.attach_sid = attach_node_id->sid;
             }
             node_id.mode = mode->mode;
-            error = allocate_sid(network, &node_id);
+            error = allocate_sid(network->sid_base, &node_id);
             break;
         case SHORT_RANDOM_SID:
         case RANDOM_SID:
-            error = rsid_allocate_sid(network, &node_id);
+            error = rsid_allocate_sid(network->sid_base, &node_id);
             break;
         default:
             error = UR_ERROR_PARSE;
@@ -1288,7 +1304,7 @@ ur_error_t send_raw_data(network_context_t *network,
     }
 
     length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) + payload_length;
-    message = message_alloc(length);
+    message = message_alloc(length, MESH_MGMT_6);
     if (message == NULL) {
         return UR_ERROR_MEM;
     }
@@ -1531,6 +1547,60 @@ static ur_error_t handle_sid_response(message_t *message)
     return error;
 }
 
+ur_error_t send_address_error(network_context_t *network, ur_addr_t *dest)
+{
+    ur_error_t  error = UR_ERROR_NONE;
+    mm_header_t *mm_header;
+    message_t   *message;
+    uint8_t     *data;
+    uint16_t    length;
+    message_info_t *info;
+
+    length = sizeof(mm_header_t);
+    message = message_alloc(length, MESH_MGMT_7);
+    if (message == NULL) {
+        return UR_ERROR_MEM;
+    }
+    data = message_get_payload(message);
+    mm_header = (mm_header_t *)data;
+    mm_header->command = COMMAND_ADDRESS_ERROR;
+    data += sizeof(mm_header_t);
+
+    info = message->info;
+    info->network = network;
+    memcpy(&info->dest, dest, sizeof(info->dest));
+
+    set_command_type(info, mm_header->command);
+    error = mf_send_message(message);
+
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
+           "send address error, len %d\r\n", length);
+    return error;
+}
+
+ur_error_t handle_address_error(message_t *message)
+{
+    ur_error_t error = UR_ERROR_NONE;
+    message_info_t *info;
+    network_context_t *network;
+
+    info = message->info;
+    network = message->info->network;
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address error\r\n");
+
+    if (network->attach_node == NULL)
+        return error;
+
+    if (memcmp(info->src_mac.addr.addr, network->attach_node->mac.addr, EXT_ADDR_SIZE) != 0)
+        return error;
+
+    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "parent notify address error, try reattach\r\n");
+    attach_start(network->attach_node);
+
+    return error;
+
+}
+
 void become_detached(void)
 {
     slist_t *networks;
@@ -1545,6 +1615,7 @@ void become_detached(void)
     ur_stop_timer(&g_mm_state.device.alive_timer, NULL);
     ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
     reset_network_context();
+    mf_init();
     nd_init();
     nm_stop_discovery();
     stop_neighbor_updater();
@@ -1781,6 +1852,15 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_NONE;
     }
 
+    if (network->router->sid_type == STRUCTURED_SID && network->meshnetid == nbr->addr.netid &&
+        is_direct_child(network->sid_base, info->src.addr.short_addr) && !is_allocated_child(network->sid_base, nbr)) {
+        ur_addr_t dest;
+        dest.netid = nbr->addr.netid;
+        dest.addr.len = EXT_ADDR_SIZE;
+        memcpy(dest.addr.addr, nbr->mac.addr, EXT_ADDR_SIZE);
+        send_address_error(network, &dest);
+    }
+
     if (g_mm_state.device.state > DEVICE_STATE_ATTACHED &&
         memcmp(nbr->ueid, INVALID_UEID, sizeof(nbr->ueid)) == 0) {
         tlv_type = TYPE_TARGET_UEID;
@@ -1855,6 +1935,7 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
         case COMMAND_DEST_UNREACHABLE:
             break;
         case COMMAND_ADDRESS_ERROR:
+            error = handle_address_error(message);
             break;
         case COMMAND_ROUTING_INFO_UPDATE:
             error = handle_router_message_received(message);
@@ -2255,11 +2336,6 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             nd_set_stable_main_version(main_version);
             if (g_mm_state.device.mode & MODE_MOBILE) {
                 leader_reboot = true;
-            }
-
-            if ((nbr->mode & MODE_LEADER) &&
-                memcmp(nbr->ueid, attach_node->ueid, sizeof(nbr->ueid)) == 0) {
-                return true;
             }
         }
         if ((nbr == attach_node) &&

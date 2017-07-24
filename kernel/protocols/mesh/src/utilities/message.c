@@ -23,25 +23,25 @@
 
 static ur_message_stats_t g_message_stats;
 
-message_t *message_alloc(uint16_t length)
+message_t *message_alloc(uint16_t length, uint16_t debug_info)
 {
     message_t *message;
     uint16_t  offset = 0;
     data_t    *data;
 
     if (g_message_stats.num >= MESSAGE_BUF_SIZE) {
-        g_message_stats.fails++;
+        g_message_stats.queue_fulls++;
         return NULL;
     }
     message = ur_mem_alloc(sizeof(message_t));
     if (message == NULL) {
-        g_message_stats.fails++;
+        g_message_stats.mem_fails++;
         return NULL;
     }
     message->data = (data_t *)pbuf_alloc(PBUF_RAW, length, PBUF_POOL);
     if (message->data == NULL) {
         ur_mem_free(message, sizeof(message_t));
-        g_message_stats.fails++;
+        g_message_stats.pbuf_fails++;
         return NULL;
     }
     data = message->data;
@@ -57,22 +57,34 @@ message_t *message_alloc(uint16_t length)
     if (message->info == NULL) {
         pbuf_free((struct pbuf *)message->data);
         ur_mem_free(message, sizeof(message_t));
-        g_message_stats.fails++;
+        g_message_stats.mem_fails++;
         return NULL;
     }
     memset(message->info, 0, sizeof(message_info_t));
     message->frag_offset = 0;
+    message->retries = 0;
+    message->tot_len = length;
+
+    if (debug_info >= MSG_DEBUG_INFO_SIZE) {
+        debug_info = UT_MSG;
+    }
+    message->debug_info = debug_info;
+    g_message_stats.debug_info[debug_info]++;
+
     g_message_stats.num++;
+    g_message_stats.size += length;
     return message;
 }
 
 ur_error_t message_free(message_t *message)
 {
     if (message != NULL) {
-        if (g_message_stats.num > 0) {
-            g_message_stats.num--;
-        }
+        g_message_stats.num--;
+        g_message_stats.size -= message->tot_len;
+        g_message_stats.debug_info[message->debug_info]--;
+
         pbuf_free((struct pbuf *)message->data);
+
         if (message->info) {
             ur_mem_free(message->info, sizeof(message_info_t));
         }
@@ -174,7 +186,7 @@ ur_error_t message_set_buflen(const message_t *message, uint16_t length)
     return UR_ERROR_NONE;
 }
 
-ur_error_t message_concatenate(const message_t *dest, message_t *message,
+ur_error_t message_concatenate(message_t *dest, message_t *message,
                                bool reference)
 {
     if (dest == NULL || message == NULL) {
@@ -186,6 +198,10 @@ ur_error_t message_concatenate(const message_t *dest, message_t *message,
     if (reference) {
         pbuf_ref(message->data);
     }
+    dest->tot_len += message->tot_len;
+
+    g_message_stats.debug_info[message->debug_info]--;
+
     ur_mem_free(message->info, sizeof(message_info_t));
     ur_mem_free(message, sizeof(message_t));
     g_message_stats.num--;
@@ -210,6 +226,10 @@ ur_error_t message_queue_dequeue(message_t *message)
 {
     dlist_del(&message->next);
     return UR_ERROR_NONE;
+}
+
+uint16_t message_queue_get_size(message_queue_t *queue) {
+    return dlist_entry_number(queue);
 }
 
 void message_stats_reset(void)

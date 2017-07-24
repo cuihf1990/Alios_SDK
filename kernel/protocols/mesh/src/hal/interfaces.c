@@ -19,6 +19,7 @@
 
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
+#include "core/mesh_mgmt.h"
 #include "utilities/memory.h"
 #include "hal/interfaces.h"
 #include "hal/interface_context.h"
@@ -70,6 +71,8 @@ static hal_context_t *new_hal_context(ur_mesh_hal_module_t *module)
     for (i = 0; i < QUEUE_SIZE; i++) {
         dlist_init(&hal->send_queue[i]);
     }
+
+    dlist_init(&hal->recv_queue);
 
     return hal;
 }
@@ -197,14 +200,20 @@ static void cleanup_one_queue(message_queue_t *queue)
 static void cleanup_queues(hal_context_t *hal)
 {
     int i;
+
     for (i = 0; i < QUEUE_SIZE; i++) {
         cleanup_one_queue(&hal->send_queue[i]);
     }
+
+    cleanup_one_queue(&hal->recv_queue);
 }
 
 void interface_stop(void)
 {
     hal_context_t *hal;
+
+    reset_network_context();
+
     slist_for_each_entry(&g_hals_list, hal, hal_context_t, next) {
         cleanup_queues(hal);
         hal->send_message = NULL;

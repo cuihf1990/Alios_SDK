@@ -72,7 +72,7 @@ static void Preemption1(void *arg)
         Starttime =  hobbit_timer0_get_curval();
         yunos_task_resume(PreeTaskHandle[2]);
 
-        yunos_task_suspend(g_active_task);
+        yunos_task_suspend(yunos_cur_task_get());
     }
 }
 
@@ -91,7 +91,7 @@ static void Preemption2(void *arg)
         Starttime =  hobbit_timer0_get_curval();
         yunos_task_resume(PreeTaskHandle[3]);
 
-        yunos_task_suspend(g_active_task);
+        yunos_task_suspend(yunos_cur_task_get());
     }
 }
 
@@ -108,7 +108,7 @@ static void Preemption3(void *arg)
             yunos_sem_give(PreeSynhandle);
         }
 
-        yunos_task_suspend(g_active_task);
+        yunos_task_suspend(yunos_cur_task_get());
     }
 }
 

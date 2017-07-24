@@ -244,7 +244,7 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     YUNOS_CRITICAL_EXIT();
 #else
-    yunos_mutex_unlock(&(*pmmhead->mm_mutex));
+    yunos_mutex_unlock(&(pmmhead->mm_mutex));
 #endif
 
 
@@ -258,7 +258,7 @@ kstat_t yunos_deinit_mm_head(k_mm_head *mmhead)
         CPSR_ALLOC();
         YUNOS_CRITICAL_ENTER();
 #else
-        yunos_mutex_lock(&(pmmhead->mm_mutex), YUNOS_WAIT_FOREVER);
+        yunos_mutex_lock(&(mmhead->mm_mutex), YUNOS_WAIT_FOREVER);
 #endif
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
     memset(mmhead, 0, sizeof(k_mm_head));
@@ -267,7 +267,7 @@ kstat_t yunos_deinit_mm_head(k_mm_head *mmhead)
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
             YUNOS_CRITICAL_EXIT();
 #else
-            yunos_mutex_unlock(&(*pmmhead->mm_mutex));
+            yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
     return YUNOS_SUCCESS;
 
