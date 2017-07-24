@@ -93,7 +93,7 @@ static int send_sock(int fd, void *buf, int len, struct sockaddr_in6 *paddr)
 {
     ali_crypto_result result;
     void *aes_ctx;
-    int ret;
+    int ret = -1;
     size_t dlen = len;
 
     aes_ctx = yos_malloc(aes_ctx_size);
