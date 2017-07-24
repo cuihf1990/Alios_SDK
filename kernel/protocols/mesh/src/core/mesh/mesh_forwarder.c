@@ -466,9 +466,14 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         if (header_length == 0) {
             return UR_ERROR_DROP;
         }
+        header_length = info->payload_offset;
+    } else {
+        header_length = info->payload_offset;
+        message_copy_to(message, message->frag_offset,
+                        hal->frame.data, header_length);
+        message_set_payload_offset(message, -header_length);
     }
 
-    header_length = info->payload_offset;
     msg_length = message_get_msglen(message);
     memset(&frag_header, 0, sizeof(frag_header));
 
@@ -979,7 +984,6 @@ static void message_handler(void *args)
             memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
         }
         info->network = network;
-        info->payload_offset = 0;
         if (info->type == MESH_FRAME_TYPE_DATA) {
             message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE],
                                   message);
