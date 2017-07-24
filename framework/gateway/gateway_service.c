@@ -77,6 +77,82 @@ static gateway_state_t gateway_state;
 char *config_get_main_uuid(void);
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data);
 
+#include <ali_crypto.h>
+
+#define KEY_SIZE 16
+static uint8_t g_iv[KEY_SIZE];
+static uint8_t g_key[KEY_SIZE] = {
+    0x11, 0x11, 0x11, 0x11,
+    0x22, 0x22, 0x22, 0x22,
+    0x13, 0x13, 0x14, 0x14,
+    0xf1, 0xf1, 0xe1, 0xe1
+};
+static uint32_t aes_ctx_size;
+
+static int send_sock(int fd, void *buf, int len, struct sockaddr_in6 *paddr)
+{
+    ali_crypto_result result;
+    void *aes_ctx;
+    int ret;
+    size_t dlen = len;
+
+    aes_ctx = yos_malloc(aes_ctx_size);
+    if (aes_ctx == NULL)
+        return -1;
+
+    result = ali_aes_init(AES_CTR, true, g_key, NULL, KEY_SIZE, g_iv, aes_ctx);
+    if (result != ALI_CRYPTO_SUCCESS)
+        goto out;
+
+    result = ali_aes_finish(buf, len, buf, &dlen, SYM_NOPAD, aes_ctx);
+    if (result != ALI_CRYPTO_SUCCESS)
+        goto out;
+
+    ret = sendto(fd, buf, len, MSG_DONTWAIT,
+           (struct sockaddr *)paddr, sizeof(*paddr));
+
+out:
+    if (result != ALI_CRYPTO_SUCCESS)
+        GW_DEBUG(MODULE_NAME, "error encrypting %d", result);
+
+    yos_free(aes_ctx);
+
+    return ret;
+}
+
+static int recv_sock(int fd, void *buf, int len, struct sockaddr_in6 *paddr)
+{
+    size_t slen = sizeof(*paddr);
+
+    len = recvfrom(fd, buf, len, MSG_DONTWAIT,
+                   (struct sockaddr *)paddr, &slen);
+    if (len <= 0)
+        return len;
+
+    ali_crypto_result result;
+    void *aes_ctx;
+    int ret;
+    size_t dlen = len;
+
+    aes_ctx = yos_malloc(aes_ctx_size);
+    if (aes_ctx == NULL)
+        return -1;
+
+    result = ali_aes_init(AES_CTR, false, g_key, NULL, KEY_SIZE, g_iv, aes_ctx);
+    if (result != ALI_CRYPTO_SUCCESS)
+        goto out;
+
+    result = ali_aes_finish(buf, len, buf, &dlen, SYM_NOPAD, aes_ctx);
+    if (result != ALI_CRYPTO_SUCCESS)
+        goto out;
+
+out:
+    if (result != ALI_CRYPTO_SUCCESS)
+        GW_DEBUG(MODULE_NAME, "error encrypting %d", result);
+    yos_free(aes_ctx);
+    return result != ALI_CRYPTO_SUCCESS ? -1 : len;
+}
+
 static char *get_uuid_by_ip6addr(struct sockaddr_in6 *addr)
 {
     client_t *client = NULL;
@@ -112,8 +188,7 @@ static int yos_cloud_get_attr(const char* uuid, const char *attr_name)
     memcpy(pub_body->payload, "get", 4);
     memcpy(pub_body->payload + 4, attr_name, strlen(attr_name) + 1);
 
-    sendto(gateway_state.sockfd, buf, len, MSG_DONTWAIT,
-           (struct sockaddr *)paddr, sizeof(*paddr));
+    send_sock(gateway_state.sockfd, buf, len, paddr);
 
     yos_free(buf);
     return 0;
@@ -133,8 +208,7 @@ static int yos_cloud_set_attr(const char *uuid, const char *attr_name, const cha
     memcpy(pub_body->payload + 4, attr_name, strlen(attr_name) + 1);
     memcpy(pub_body->payload + 4 + strlen(attr_name) + 1, attr_value, strlen(attr_value) + 1);
 
-    sendto(gateway_state.sockfd, buf, len, MSG_DONTWAIT,
-           (struct sockaddr *)paddr, sizeof(*paddr));
+    send_sock(gateway_state.sockfd, buf, len, paddr);
 
     yos_free(buf);
     return 0;
@@ -174,8 +248,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     devmgr_get_device_signature(model_id, reginfo->rand, reginfo->sign, sizeof(reginfo->sign));
     reginfo->login = pstate->login;
 
-    sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
-           (struct sockaddr *)paddr, sizeof(*paddr));
+    send_sock(pstate->sockfd, buf, len, paddr);
 
     yos_free(buf);
 }
@@ -407,8 +480,7 @@ static void handle_connect(gateway_state_t *pstate, void *pmsg, int len)
         conn_ack->ReturnCode = 0;
         memcpy(conn_ack->payload, client->devinfo->dev_base.uuid, STR_UUID_LEN + 1);
     }
-    sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
-           (struct sockaddr *)&pstate->src_addr, sizeof(pstate->src_addr));
+    send_sock(pstate->sockfd, buf, len, &pstate->src_addr);
     yos_free(buf);
 }
 
@@ -436,8 +508,7 @@ static int gateway_cloud_report(const char *method, const char *json_buffer)
     memcpy(pub_body->payload + 4, method, strlen(method) + 1);
     memcpy(pub_body->payload + 4 + strlen(method) + 1, json_buffer, strlen(json_buffer) + 1);
 
-    sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
-           (struct sockaddr *)paddr, sizeof(*paddr));
+    send_sock(pstate->sockfd, buf, len, paddr);
 
     yos_free(buf);
 }
@@ -499,9 +570,7 @@ static void gateway_sock_read_cb(int fd, void *priv)
     int len;
     socklen_t slen = sizeof(pstate->src_addr);
 
-    len = recvfrom(pstate->sockfd, buf, BUF_LEN,
-                   MSG_DONTWAIT,
-                   (struct sockaddr *)&pstate->src_addr, &slen);
+    len = recv_sock(pstate->sockfd, buf, BUF_LEN, &pstate->src_addr);
     if (len <= 2) {
         LOGE(MODULE_NAME, "error read count %d", len);
         return;
@@ -541,8 +610,7 @@ static void gateway_advertise(void *arg)
     addr.sin6_port = htons(MQTT_SN_PORT);
     memcpy(&addr.sin6_addr, mcast_addr, sizeof(addr.sin6_addr));
 
-    sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
-           (struct sockaddr *)&addr, sizeof(addr));
+    send_sock(pstate->sockfd, buf, len, &addr);
     LOGD(MODULE_NAME, "gateway_advertise");
 
     yos_free(buf);
@@ -618,6 +686,8 @@ static struct cli_command gatewaycmd = {
 int gateway_service_init(void)
 {
     gateway_state_t *pstate = &gateway_state;
+
+    ali_aes_get_ctx_size(AES_CTR, &aes_ctx_size);
 
     pstate->gateway_mode = false;
     pstate->yunio_connected = false;
