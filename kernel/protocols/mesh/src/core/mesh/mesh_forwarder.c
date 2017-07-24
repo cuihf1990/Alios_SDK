@@ -1020,6 +1020,17 @@ exit:
     }
 }
 
+static void enqueue_msg(void *arg)
+{
+    received_frame_t  *rx_frame = arg;
+    hal_context_t *hal = rx_frame->hal;
+
+    message_queue_enqueue(&hal->recv_queue, rx_frame->message);
+    message_handler(hal);
+
+    ur_mem_free(rx_frame, sizeof(received_frame_t));
+}
+
 static void handle_received_frame(void *context, frame_t *frame,
                                   frame_info_t *frame_info,
                                   int error)
@@ -1083,9 +1094,13 @@ static void handle_received_frame(void *context, frame_t *frame,
 
     memcpy(message->info, &info, sizeof(info));
     message_copy_from(message, frame->data, frame->len);
-    message_queue_enqueue(&hal->recv_queue, message);
-    umesh_task_schedule_call(message_handler, hal);
-    ur_mem_free(rx_frame, sizeof(received_frame_t));
+    rx_frame->message = message;
+
+    if (umesh_task_schedule_call(enqueue_msg, rx_frame) != UR_ERROR_NONE) {
+        hal->link_stats.in_drops++;
+        message_free(message);
+        ur_mem_free(rx_frame, sizeof(received_frame_t));
+    }
 }
 
 static void send_datagram(void *args)
