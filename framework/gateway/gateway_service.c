@@ -25,8 +25,9 @@
 #include <yos/framework.h>
 #include <yos/log.h>
 #include <yos/list.h>
-#include <lwip/sockets.h>
+#include "yos/cli.h"
 #include <yos/cloud.h>
+#include <lwip/sockets.h>
 #include "umesh.h"
 #include "cJSON.h"
 #include "core/mesh_mgmt.h"
@@ -48,6 +49,7 @@ typedef struct reg_info_s {
     char sign[STR_SIGN_LEN + 1];
     char model[OS_PRODUCT_MODEL_LEN];
     char secret[OS_PRODUCT_SECRET_LEN];
+    bool login;
 } reg_info_t;
 
 typedef struct {
@@ -66,6 +68,7 @@ typedef struct {
     struct sockaddr_in6 gw_addr;
     struct sockaddr_in6 src_addr;
     char uuid[STR_UUID_LEN + 1];
+    bool login;
     dlist_t clients;
 } gateway_state_t;
 
@@ -169,6 +172,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     LOGD(MODULE_NAME, "model: %s, secret: %s", reginfo->model, reginfo->secret);
     memcpy(reginfo->rand,"randrandrandrand", sizeof(reginfo->rand));
     devmgr_get_device_signature(model_id, reginfo->rand, reginfo->sign, sizeof(reginfo->sign));
+    reginfo->login = pstate->login;
 
     sendto(pstate->sockfd, buf, len, MSG_DONTWAIT,
            (struct sockaddr *)paddr, sizeof(*paddr));
@@ -370,6 +374,10 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
              (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
 
 add_enrollee:
+    if (reginfo->login == true)
+        devmgr_login_device(client->devinfo);
+    else
+        devmgr_logout_device(client->devinfo);
     add_mesh_enrollee(reginfo);
 
     return client;
@@ -583,6 +591,30 @@ static void gateway_worker(void *arg)
 }
 #endif
 
+static void handle_gateway_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    if (argc == 1) {
+        LOG("Usage: gateway login/logout. Currently %s", gateway_state.login? "login" : "logout");
+        return;
+    }
+
+    if (strcmp(argv[1], "login") == 0) {
+        gateway_state.login = true;
+    } else if (strcmp(argv[1], "logout") == 0) {
+        gateway_state.login = false;
+    }
+
+    if (gateway_state.mqtt_connected) {
+        connect_to_gateway(&gateway_state, &gateway_state.gw_addr);
+    }
+}
+
+static struct cli_command gatewaycmd = {
+    .name = "gateway",
+    .help = "gateway login/logout",
+    .function = handle_gateway_cmd
+};
+
 int gateway_service_init(void)
 {
     gateway_state_t *pstate = &gateway_state;
@@ -593,7 +625,9 @@ int gateway_service_init(void)
     pstate->mqtt_connected = false;
     pstate->mqtt_reconnect = false;
     pstate->sockfd = -1;
+    pstate->login = false;
     dlist_init(&gateway_state.clients);
+    cli_register_command(&gatewaycmd);
     yos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
     yos_register_event_filter(EV_MESH, gateway_service_event, NULL);
 #ifdef GATEWAY_WORKER_THREAD
