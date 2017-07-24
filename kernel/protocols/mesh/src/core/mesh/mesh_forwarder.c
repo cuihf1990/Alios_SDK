@@ -764,7 +764,7 @@ ur_error_t mf_send_message(message_t *message)
     info->flags |= INSERT_MESH_HEADER;
     set_dest_encrypt_flag(info);
     if (info->type == MESH_FRAME_TYPE_DATA) {
-        //info->flags |= ENABLE_COMPRESS_FLAG;
+        info->flags |= ENABLE_COMPRESS_FLAG;
     }
 
     nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
@@ -1151,8 +1151,7 @@ static void send_datagram(void *args)
             lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
             lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
 
-            *(--lowpan_payload) = LOWPAN_IPHC_DISPATCH;
-            offset = ip_hdr_len - lowpan_hdr_len - 1;
+            offset = ip_hdr_len - lowpan_hdr_len;
             message_set_payload_offset(message, -offset);
             message_copy_from(message, lowpan_payload, ip_hdr_len - offset);
             ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
@@ -1247,7 +1246,6 @@ static void handle_datagram(void *args)
         if (is_uncompressed(*nexth)) {
             message_set_payload_offset(message, -1);
         } else if (is_lowpan_iphc(*nexth)) {
-            message_set_payload_offset(message, -1);
             message = handle_lowpan_iphc(message);
         } else {
             message_free(message);
