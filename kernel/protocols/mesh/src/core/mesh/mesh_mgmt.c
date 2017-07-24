@@ -195,20 +195,26 @@ static void start_advertisement_timer(network_context_t *network)
 
 static void sid_allocator_init(network_context_t *network)
 {
-    if (network->router->sid_type == STRUCTURED_SID) {
-        allocator_init(network);
+    int sid_type = network->router->sid_type;
+    if (sid_type == STRUCTURED_SID) {
+        uint16_t sid = umesh_mm_get_local_sid();
+        if (umesh_mm_get_device_state() == DEVICE_STATE_SUPER_ROUTER) {
+            sid = SUPER_ROUTER_SID;
+        }
+        network->sid_base = allocator_init(sid, sid_type);
     } else {
-        rsid_allocator_init(network);
+        network->sid_base = rsid_allocator_init(sid_type);
     }
 }
 
 static void sid_allocator_deinit(network_context_t *network)
 {
     if (network->router->sid_type == STRUCTURED_SID) {
-        allocator_deinit(network);
+        allocator_deinit(network->sid_base);
     } else {
-        rsid_allocator_deinit(network);
+        rsid_allocator_deinit(network->sid_base);
     }
+    network->sid_base = 0;
 }
 
 void set_command_type(message_info_t *info, uint8_t command)
@@ -624,7 +630,7 @@ static uint16_t calc_ssid_child_num(network_context_t *network)
     }
 
     if (g_mm_state.device.state == DEVICE_STATE_LEADER) {
-        num += get_allocated_pf_number(network);
+        num += get_allocated_pf_number(network->sid_base);
     }
 
     /* including myelf */
@@ -676,7 +682,7 @@ ur_error_t send_advertisement(network_context_t *network)
         case DEVICE_STATE_LEADER:
             if (network->router->sid_type == SHORT_RANDOM_SID ||
                 network->router->sid_type == RANDOM_SID) {
-                nd_set_meshnetsize(network, rsid_get_allocated_number(network) + 1);
+                nd_set_meshnetsize(network, rsid_get_allocated_number(network->sid_base) + 1);
             }
         case DEVICE_STATE_SUPER_ROUTER:
             if (network->router->sid_type == STRUCTURED_SID) {
@@ -702,7 +708,7 @@ ur_error_t send_advertisement(network_context_t *network)
         ssid_info = (mm_ssid_info_tv_t *)data;
         umesh_mm_init_tv_base((mm_tv_t *)ssid_info, TYPE_SSID_INFO);
         ssid_info->child_num = subnet_size;
-        ssid_info->free_slots = get_free_number(network);
+        ssid_info->free_slots = get_free_number(network->sid_base);
         data += sizeof(mm_ssid_info_tv_t);
     }
 
@@ -1236,6 +1242,12 @@ static ur_error_t handle_sid_request(message_t *message)
         network = get_sub_network_context(network->hal);
     }
     memcpy(node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
+
+    neighbor_t *node = get_neighbor_by_ueid(node_id.ueid);
+    if (node == NULL) {
+        node_id.sid = INVALID_SID;
+    }
+
     switch (network->router->sid_type) {
         case STRUCTURED_SID:
             if (attach_node_id->mode & MODE_SUPER) {
@@ -1244,11 +1256,11 @@ static ur_error_t handle_sid_request(message_t *message)
                 node_id.attach_sid = attach_node_id->sid;
             }
             node_id.mode = mode->mode;
-            error = allocate_sid(network, &node_id);
+            error = allocate_sid(network->sid_base, &node_id);
             break;
         case SHORT_RANDOM_SID:
         case RANDOM_SID:
-            error = rsid_allocate_sid(network, &node_id);
+            error = rsid_allocate_sid(network->sid_base, &node_id);
             break;
         default:
             error = UR_ERROR_PARSE;
@@ -1841,7 +1853,7 @@ static ur_error_t handle_advertisement(message_t *message)
     }
 
     if (network->router->sid_type == STRUCTURED_SID && network->meshnetid == nbr->addr.netid &&
-        is_direct_child(network, info->src.addr.short_addr) && !is_allocated_child(network, nbr)) {
+        is_direct_child(network->sid_base, info->src.addr.short_addr) && !is_allocated_child(network->sid_base, nbr)) {
         ur_addr_t dest;
         dest.netid = nbr->addr.netid;
         dest.addr.len = EXT_ADDR_SIZE;

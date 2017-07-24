@@ -114,13 +114,6 @@ enum {
 };
 
 enum {
-    SUPER_ROUTER_SID = 0,
-    LEADER_SID  = 0,
-    BCAST_SID   = 0xffff,
-    INVALID_SID = 0xfffe,
-};
-
-enum {
     PATH_COST_WEIGHT       = 256,
     SIZE_WEIGHT            = 1,
     PATH_COST_SWITCH_HYST = 384,

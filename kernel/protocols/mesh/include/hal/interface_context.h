@@ -20,6 +20,7 @@
 #include "umesh_hal.h"
 #include "umesh_types.h"
 #include "core/topology.h"
+#include "core/sid_allocator.h"
 #include "utilities/message.h"
 #include "utilities/timer.h"
 
@@ -137,11 +138,6 @@ typedef struct router_s {
     struct network_context_s *network;
 } router_t;
 
-typedef struct sid_base_s {
-    slist_t node_list;
-    uint16_t node_num;
-} sid_base_t;
-
 typedef struct frag_info_s {
     uint16_t tag;
     uint16_t offset;
@@ -223,7 +219,7 @@ typedef struct network_context_s {
     network_data_t    network_data;
 
     // sid
-    sid_base_t        *sid_base;
+    allocator_t       sid_base;
 
     // mcast
     uint8_t           mcast_sequence;

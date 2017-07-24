@@ -7,23 +7,21 @@
 #include "hal/interfaces.h"
 #include "hal/interface_context.h"
 
+#include "dda_util.h"
+
 void test_uradar_urmesh_case(void)
 {
     ur_ip6_addr_t ip6addr;
 
-    interface_deinit();
-    interface_init();
-    interface_start();
-    YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_init(MODE_RX_ON));
     YUNIT_ASSERT(INVALID_SID == ur_mesh_get_sid());
     YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_start());
-    yos_msleep(5000); /* wait till node become leader */
+    check_cond_wait(ur_mesh_get_device_state() == DEVICE_STATE_LEADER, 5);
     if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
         ur_mesh_set_meshnetid(0x1000);
         YUNIT_ASSERT(0x1000 == ur_mesh_get_meshnetid());
     }
 
-    ur_mesh_set_mode(MODE_MOBILE);
+    YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_set_mode(MODE_MOBILE));
     YUNIT_ASSERT(MODE_MOBILE == ur_mesh_get_mode());
     YUNIT_ASSERT(NULL != ur_mesh_get_mac_address());
     ur_mesh_set_mode(MODE_RX_ON);

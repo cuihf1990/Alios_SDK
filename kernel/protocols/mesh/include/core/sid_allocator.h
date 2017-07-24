@@ -17,9 +17,16 @@
 #ifndef UR_SID_ALLOCATOR_H
 #define UR_SID_ALLOCATOR_H
 
-#include "core/mesh_mgmt.h"
-#include "hal/interface_context.h"
-#include "core/router_mgr.h"
+#include <yos/list.h>
+
+#include "core/topology.h"
+
+enum {
+    SUPER_ROUTER_SID = 0,
+    LEADER_SID  = 0,
+    BCAST_SID   = 0xffff,
+    INVALID_SID = 0xfffe,
+};
 
 enum {
     STRUCTURED_SID = 0,
@@ -54,6 +61,12 @@ typedef struct sid_node_s {
     media_type_t type;
 } sid_node_t;
 
+typedef struct sid_base_s {
+    slist_t node_list;
+    int sid_type;
+    uint16_t node_num;
+} sid_base_t;
+
 typedef struct ssid_allocator_s {
     sid_base_t base;
     uint16_t sid_shift;
@@ -68,29 +81,30 @@ typedef struct rsid_allocator_s {
     uint32_t free_bits[(RSID_NUM + 31) / 32];
 } rsid_allocator_t;
 
-// structured sid
-void allocator_init(network_context_t *network);
-void allocator_deinit(network_context_t *network);
-ur_error_t allocate_sid(network_context_t *network, ur_node_id_t *node_id);
-void free_sid(network_context_t *network, uint16_t sid);
-ur_error_t update_sid_mapping(network_context_t *network,
-                              ur_node_id_t *node_id, bool to_add);
+typedef unsigned long allocator_t;
 
-uint16_t   get_allocated_number(network_context_t *network);
-uint32_t   get_allocated_bitmap(network_context_t *network);
-uint16_t   get_allocated_pf_number(network_context_t *network);
-uint16_t   get_free_number(network_context_t *network);
-slist_t    *get_ssid_nodes_list(network_context_t *network);
-bool       is_direct_child(network_context_t *network, uint16_t sid);
-bool       is_allocated_child(network_context_t *network, neighbor_t *nbr);
+// structured sid
+allocator_t allocator_init(uint16_t sid, int sid_type);
+void allocator_deinit(allocator_t);
+ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id);
+void free_sid(allocator_t, uint16_t sid);
+ur_error_t update_sid_mapping(allocator_t, ur_node_id_t *node_id, bool to_add);
+
+uint16_t   get_allocated_number(allocator_t);
+uint32_t   get_allocated_bitmap(allocator_t);
+uint16_t   get_allocated_pf_number(allocator_t);
+uint16_t   get_free_number(allocator_t);
+slist_t    *get_ssid_nodes_list(allocator_t);
+bool       is_direct_child(allocator_t, uint16_t sid);
+bool       is_allocated_child(allocator_t, neighbor_t *nbr);
 bool       is_partial_function_sid(uint16_t sid);
 
 // random sid
-void rsid_allocator_init(network_context_t *network);
-void rsid_allocator_deinit(network_context_t *network);
-ur_error_t rsid_allocate_sid(network_context_t *network, ur_node_id_t *node_id);
-ur_error_t rsid_free_sid(network_context_t *network, ur_node_id_t *node_id);
-uint16_t rsid_get_allocated_number(network_context_t *network);
+allocator_t rsid_allocator_init(int sid_type);
+void rsid_allocator_deinit(allocator_t);
+ur_error_t rsid_allocate_sid(allocator_t, ur_node_id_t *node_id);
+ur_error_t rsid_free_sid(allocator_t, ur_node_id_t *node_id);
+uint16_t rsid_get_allocated_number(allocator_t);
 
 static inline int find_first_free_bit(uint32_t *bits, int len)
 {

@@ -935,7 +935,7 @@ void process_sids(int argc, char *argv[])
     response_append("mobile:\r\n");
     networks = ur_mesh_get_networks();
     slist_for_each_entry(networks, network, network_context_t, next) {
-        nodes_list = get_ssid_nodes_list(network);
+        nodes_list = get_ssid_nodes_list(network->sid_base);
         if (nodes_list == NULL) {
             continue;
         }
