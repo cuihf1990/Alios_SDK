@@ -169,31 +169,32 @@ typedef struct ur_link_stats_s {
 } ur_link_stats_t;
 
 enum {
-    UMESH_1 = 0,
-    MESH_FORWARDER_1 = 1,
-    MESH_FORWARDER_2 = 2,
-    MESH_FORWARDER_3 = 3,
-    MESH_MGMT_1 = 4,
-    MESH_MGMT_2 = 5,
-    MESH_MGMT_3 = 6,
-    MESH_MGMT_4 = 7,
-    MESH_MGMT_5 = 8,
-    MESH_MGMT_6 = 9,
-    MESH_MGMT_7 = 10,
-    ADDRESS_MGMT_1 = 11,
-    ADDRESS_MGMT_2 = 12,
-    ADDRESS_MGMT_3 = 13,
-    NETWORK_MGMT_1 = 14,
-    NETWORK_MGMT_2 = 15,
-    LOWPAN6_1 = 16,
-    LOWPAN6_2 = 17,
-    LINK_MGMT_1 = 18,
-    LINK_MGMT_2 = 19,
-    LINK_MGMT_3 = 20,
-    ROUTER_MGR_1 = 21,
-    DIAGS_1 = 22,
-    DIAGS_2 = 23,
-    UT_MSG = 24,
+    UMESH_1 = 0,  // 0
+    MESH_FORWARDER_1,  // 1
+    MESH_FORWARDER_2,  // 2
+    MESH_FORWARDER_3,  // 3
+    MESH_MGMT_1,  // 4
+    MESH_MGMT_2,  // 5
+    MESH_MGMT_3,  // 6
+    MESH_MGMT_4,  // 7
+    MESH_MGMT_5,  // 8
+    MESH_MGMT_6,  // 9
+    MESH_MGMT_7,  // 10
+    ADDRESS_MGMT_1,  // 11
+    ADDRESS_MGMT_2,  // 12
+    ADDRESS_MGMT_3,  // 13
+    ADDRESS_MGMT_4,  // 14
+    NETWORK_MGMT_1,  // 15
+    NETWORK_MGMT_2,  // 16
+    LOWPAN6_1,  // 17
+    LOWPAN6_2,  // 18
+    LINK_MGMT_1,  // 19
+    LINK_MGMT_2,  // 20
+    LINK_MGMT_3,  // 21
+    ROUTER_MGR_1,  // 22
+    DIAGS_1,  // 23
+    DIAGS_2,  // 24
+    UT_MSG,  // 25
     MSG_DEBUG_INFO_SIZE,
 };
 

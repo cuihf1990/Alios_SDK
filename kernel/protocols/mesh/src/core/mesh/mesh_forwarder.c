@@ -55,6 +55,7 @@ enum {
 enum {
     SENT_SUCCESS = 0,
     SENT_FAIL = -1,
+    SENT_DROP = -2,
 };
 
 static void send_datagram(void *args);
@@ -140,8 +141,10 @@ void message_sent_task(void *args)
     if (hal->frag_info.offset >= msg_length &&
         hal->last_sent == SENT_SUCCESS) {
         free_msg = true;
-    } else if (hal->last_sent != SENT_SUCCESS &&
+    } else if (hal->last_sent == SENT_FAIL &&
                message->retries >= MESSAGE_RETRIES) {
+        free_msg = true;
+    } else if (hal->last_sent == SENT_DROP) {
         free_msg = true;
     }
 
@@ -453,6 +456,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         info->dest.addr.short_addr != BCAST_SID) {
         next_node = get_next_node(network, info);
         if (next_node == NULL) {
+            send_address_unreachable(network, &info->src, &info->dest);
             return UR_ERROR_DROP;
         }
     }
@@ -534,7 +538,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     }
 
     if (error != UR_ERROR_NONE) {
-        error = UR_ERROR_FAIL;
+        error = UR_ERROR_FAIL;  // wait for handle_sent
     }
     hal->frag_info.offset += frag_length;
     return error;
@@ -552,6 +556,13 @@ static neighbor_t *get_next_node(network_context_t *network,
     local_sid = umesh_mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
         next = get_neighbor_by_mac_addr(&(info->dest.addr));
+        return next;
+    }
+
+    if (info->dest.addr.len == SHORT_ADDR_SIZE &&
+        is_partial_function_sid(info->dest.addr.short_addr)) {
+        next = get_neighbor_by_sid(network->hal, info->dest.addr.short_addr,
+                                   info->dest.netid);
         return next;
     }
 
@@ -1174,7 +1185,7 @@ static void send_datagram(void *args)
         hal->sending_timer = ur_start_timer(SENDING_TIMEOUT,
                                             handle_sending_timer, hal);
     } else if (error == UR_ERROR_DROP) {
-        hal->last_sent = SENT_FAIL;
+        hal->last_sent = SENT_DROP;
         umesh_task_schedule_call(message_sent_task, hal);
     }
 }

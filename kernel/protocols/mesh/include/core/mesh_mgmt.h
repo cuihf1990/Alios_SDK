@@ -88,7 +88,7 @@ typedef enum mm_command_s {
     COMMAND_LINK_ACCEPT             = 0x11,
     COMMAND_LINK_ACCEPT_AND_REQUEST = 0x12,
     COMMAND_LINK_REJECT             = 0x13,
-    COMMAND_DEST_UNREACHABLE        = 0x14,
+    COMMAND_ADDRESS_UNREACHABLE     = 0x14,
     COMMAND_ADDRESS_ERROR           = 0x15,
     COMMAND_ROUTING_INFO_UPDATE     = 0x16,
 

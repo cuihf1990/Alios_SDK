@@ -1931,7 +1931,8 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
         case COMMAND_LINK_REJECT:
             error = handle_link_reject(message);
             break;
-        case COMMAND_DEST_UNREACHABLE:
+        case COMMAND_ADDRESS_UNREACHABLE:
+            error = handle_address_unreachable(message);
             break;
         case COMMAND_ADDRESS_ERROR:
             error = handle_address_error(message);
