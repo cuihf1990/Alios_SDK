@@ -20,7 +20,7 @@
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
 #include "core/mesh_mgmt.h"
-#include "utilities/memory.h"
+#include "umesh_utils.h"
 #include "hal/interfaces.h"
 #include "hal/interface_context.h"
 #include "hal/hals.h"

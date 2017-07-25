@@ -24,11 +24,8 @@
 #include "core/link_mgmt.h"
 #include "core/master_key.h"
 #include "core/keys_mgr.h"
-#include "utilities/logging.h"
-#include "utilities/message.h"
-#include "utilities/timer.h"
-#include "utilities/memory.h"
 #include "hal/interfaces.h"
+#include "umesh_utils.h"
 
 static void handle_discovery_timer(void *args);
 static ur_error_t send_discovery_request(network_context_t *netowrk);

@@ -16,7 +16,7 @@
 
 #include <stdint.h>
 
-#include "utilities/encoding.h"
+#include "umesh_utils.h"
 
 inline uint16_t ur_swap16(uint16_t value)
 {

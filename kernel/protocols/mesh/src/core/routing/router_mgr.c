@@ -18,8 +18,7 @@
 
 #include "core/mesh_mgmt.h"
 #include "core/router_mgr.h"
-#include "utilities/memory.h"
-#include "utilities/logging.h"
+#include "umesh_utils.h"
 
 #ifndef DEFAULT_ROUTER
 #define DEFAULT_ROUTER SID_ROUTER

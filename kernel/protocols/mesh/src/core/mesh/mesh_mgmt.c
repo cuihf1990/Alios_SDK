@@ -20,6 +20,7 @@
 
 #include "umesh.h"
 #include "umesh_hal.h"
+#include "umesh_utils.h"
 #include "core/mesh_forwarder.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_mgmt_tlvs.h"
@@ -32,9 +33,6 @@
 #include "core/network_mgmt.h"
 #include "core/crypto.h"
 #include "core/master_key.h"
-#include "utilities/logging.h"
-#include "utilities/timer.h"
-#include "utilities/memory.h"
 #include "hal/interfaces.h"
 #include "hal/hals.h"
 

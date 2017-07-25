@@ -21,8 +21,7 @@
 #include <stdlib.h>
 
 #include "core/sid_allocator.h"
-#include "utilities/logging.h"
-#include "utilities/memory.h"
+#include "umesh_utils.h"
 
 #define LEADER_DEF_BITMAP 0x0ffe
 #define ROUTER_DEF_BITMAP 0xfffe

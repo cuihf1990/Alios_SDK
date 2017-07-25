@@ -18,16 +18,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "core/mesh_forwarder.h"
-#include "core/mesh_mgmt.h"
+#include "umesh_utils.h"
 #include "core/lowpan6.h"
 #include "core/network_data.h"
 #include "ipv6/ip6.h"
-#include "utilities/logging.h"
-#include "utilities/encoding.h"
-#include "utilities/message.h"
-#include "utilities/timer.h"
-#include "utilities/memory.h"
 
 typedef struct lowpan_reass_s {
     struct lowpan_reass_s *next;

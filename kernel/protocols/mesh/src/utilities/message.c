@@ -18,8 +18,7 @@
 
 #include "lwip/pbuf.h"
 
-#include "utilities/memory.h"
-#include "utilities/message.h"
+#include "umesh_utils.h"
 
 static ur_message_stats_t g_message_stats;
 

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+#include "umesh_utils.h"
 #include "core/mesh_mgmt_tlvs.h"
 #include "core/mesh_mgmt.h"
-#include "utilities/logging.h"
 #include "hal/interfaces.h"
 #include "tools/diags.h"
 

@@ -23,10 +23,9 @@
 #include "core/sid_allocator.h"
 #include "core/network_data.h"
 #include "core/link_mgmt.h"
-#include "utilities/timer.h"
-#include "utilities/logging.h"
 #include "hal/hals.h"
 #include "hal/interfaces.h"
+#include "umesh_utils.h"
 
 typedef struct address_resolver_state_s {
     address_cache_t            cache[UR_MESH_ADDRESS_CACHE_SIZE];

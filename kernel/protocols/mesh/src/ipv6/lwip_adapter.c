@@ -26,7 +26,7 @@
 
 #include "umesh.h"
 #include "umesh_hal.h"
-#include "utilities/message.h"
+#include "umesh_utils.h"
 #include "ipv6/lwip_adapter.h"
 
 typedef struct lwip_adapter_state_s {

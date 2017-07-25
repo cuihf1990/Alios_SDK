@@ -23,9 +23,7 @@
 #include "core/sid_allocator.h"
 #include "core/address_mgmt.h"
 #include "core/mesh_mgmt_tlvs.h"
-#include "utilities/logging.h"
-#include "utilities/timer.h"
-#include "utilities/memory.h"
+#include "umesh_utils.h"
 #include "hal/interfaces.h"
 
 static neighbor_updated_t g_neighbor_updater_head;
