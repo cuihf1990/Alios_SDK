@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/mfi_auth.h
+ * @brief MFI UATH HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_MFI_AUTH_H
 #define YOS_MFI_AUTH_H
 

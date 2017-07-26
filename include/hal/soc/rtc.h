@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/rtc.h
+ * @brief RTC HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_RTC_H
 #define YOS_RTC_H
 

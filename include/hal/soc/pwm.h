@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/pwm.h
+ * @brief PWM HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_PWM_H
 #define YOS_PWM_H
 

@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/flash.h
+ * @brief PWM HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_FLASH_H
 #define YOS_FLASH_H
 

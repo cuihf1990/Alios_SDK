@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/wdg.h
+ * @brief WDG HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_WDG_H
 #define YOS_WDG_H
 

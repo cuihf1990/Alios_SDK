@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/timer.h
+ * @brief PWM HAL
+ * @version since 5.5.0
+ */
+
 #ifndef HAL_TIMER_H
 #define HAL_TIMER_H
 

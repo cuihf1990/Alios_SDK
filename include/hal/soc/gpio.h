@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/gpio.h
+ * @brief GPIO HAL
+ * @version since 5.5.0
+ */
 
 #ifndef YOS_GPIO_H
 #define YOS_GPIO_H
