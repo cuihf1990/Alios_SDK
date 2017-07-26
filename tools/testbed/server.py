@@ -1,8 +1,9 @@
 import os, sys, time, socket
-import subprocess, thread
+import subprocess, thread, pdb
 import TBframe
 
 MAX_MSG_LENTH      = 2000
+DEBUG = True
 
 class Server:
     def __init__(self):
@@ -14,8 +15,12 @@ class Server:
 
     def construct_dev_list(self):
         l = []
-        for c in self.client_list:
-            l.append(','.join([c['addr'][0], str(c['addr'][1])] + list(c['devices'])))
+        for client in self.client_list:
+            devices = client['addr'][0]
+            devices += ','+ str(client['addr'][1])
+            for port in client['devices']:
+                devices += ',' + port + '|' + str(client['devices'][port]['using'])
+            l.append(devices)
         data = ':'.join(l)
         return data
 
@@ -56,7 +61,7 @@ class Server:
                         for port in new_devices:
                             if port != "" and port not in client['devices']:
                                 print "device {0} added to client {1}".format(port, client['addr'])
-                                client['devices'][port] = []
+                                client['devices'][port] = {'using':0, 'subscribe':[]}
                         for port in list(client['devices']):
                             if port not in new_devices:
                                 print "device {0} removed from client {1}".format(port, client['addr'])
@@ -80,11 +85,11 @@ class Server:
                         if port not in file:
                             continue
                         file[port].write(value[len(port) + 1:])
-                        if client['devices'][port] != []:
+                        if client['devices'][port]['subscribe'] != []:
                             log = client['addr'][0] + ',' + str(client['addr'][1]) + ',' + port
                             log += value[len(port):]
                             data = TBframe.construct(TBframe.DEVICE_LOG, log)
-                            for s in client['devices'][port]:
+                            for s in client['devices'][port]['subscribe']:
                                 try:
                                     s.send(data)
                                 except:
@@ -107,6 +112,8 @@ class Server:
             except socket.timeout:
                 continue
             except:
+                if DEBUG:
+                    raise
                 break
         client['socket'].close()
         print "client ", client['addr'], "disconnected"
@@ -155,8 +162,16 @@ class Server:
             break
         return ret
 
+    def increase_device_refer(self, client, port, using_list):
+        if [client, port] not in using_list:
+            if port in list(client['devices']):
+                client['devices'][port]['using'] += 1
+                using_list.append([client, port])
+                self.send_device_list_to_all();
+
     def terminal_serve_thread(self, terminal):
         self.send_device_list_to_terminal(terminal)
+        using_list = []
         terminal['socket'].settimeout(1)
         heartbeat_timeout = time.time() + 30
         msg = ''
@@ -215,6 +230,7 @@ class Server:
                             content += ',' + dst[2]
                             data = TBframe.construct(TBframe.DEVICE_ERASE, content)
                             client['socket'].send(data)
+                            self.increase_device_refer(client, dst[2], using_list)
                     elif type == TBframe.DEVICE_PROGRAM:
                         dst = value.split(',')
                         addr = (dst[0], int(dst[1]))
@@ -230,6 +246,7 @@ class Server:
                             content += ',' + filename[7:]
                             data = TBframe.construct(TBframe.DEVICE_PROGRAM, content)
                             client['socket'].send(data)
+                            self.increase_device_refer(client, dst[2], using_list)
                     elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
                         dst = (value.split(':')[0]).split(',')
                         addr = (dst[0], int(dst[1]))
@@ -237,6 +254,7 @@ class Server:
                         if client != None:
                             data = TBframe.construct(type, value)
                             client['socket'].send(data)
+                            self.increase_device_refer(client, dst[2], using_list)
                     elif type == TBframe.DEVICE_CMD:
                         dst = (value.split(':')[0]).split(',')
                         addr = (dst[0], int(dst[1]))
@@ -244,6 +262,7 @@ class Server:
                         if client != None:
                             data = TBframe.construct(TBframe.DEVICE_CMD, value)
                             client['socket'].send(data)
+                            self.increase_device_refer(client, dst[2], using_list)
                     elif type == TBframe.LOG_SUB:
                         values = value.split(',')
                         if len(values) != 3:
@@ -255,9 +274,9 @@ class Server:
                             continue
                         if port not in list(client['devices']):
                             continue
-                        if terminal['socket'] in client['devices'][port]:
+                        if terminal['socket'] in client['devices'][port]['subscribe']:
                             continue
-                        client['devices'][port].append(terminal['socket'])
+                        client['devices'][port]['subscribe'].append(terminal['socket'])
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "subscribed log of device {0}:{1}".format(values[0], port)
                     elif type == TBframe.LOG_UNSUB:
@@ -271,9 +290,9 @@ class Server:
                             continue
                         if port not in list(client['devices']):
                             continue
-                        if terminal['socket'] not in client['devices'][port]:
+                        if terminal['socket'] not in client['devices'][port]['subscribe']:
                             continue
-                        client['devices'][port].remove(terminal['socket'])
+                        client['devices'][port]['subscribe'].remove(terminal['socket'])
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "unsubscribed log of device {0}:{1}".format(values[0], port)
                     elif type == TBframe.LOG_DOWNLOAD:
@@ -305,11 +324,17 @@ class Server:
                 break
         for client in self.client_list:
             for port in list(client['devices']):
-                if terminal['socket'] in client['devices'][port]:
-                    client['devices'][port].remove(terminal['socket'])
+                if terminal['socket'] in client['devices'][port]['subscribe']:
+                    client['devices'][port]['subscribe'].remove(terminal['socket'])
+        for device in using_list:
+            client = device[0]
+            port = device[1]
+            if client in self.client_list and port in list(client['devices']):
+                client['devices'][port]['using'] -= 1
         terminal['socket'].close()
         print "terminal ", terminal['addr'], "disconnected"
         self.terminal_list.remove(terminal)
+        self.send_device_list_to_all()
 
     def client_listen_thread(self):
         self.client_socket.listen(5)
