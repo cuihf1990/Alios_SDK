@@ -3,7 +3,7 @@ import subprocess, thread, pdb
 import TBframe
 
 MAX_MSG_LENTH      = 2000
-DEBUG = True
+DEBUG = False
 
 class Server:
     def __init__(self):

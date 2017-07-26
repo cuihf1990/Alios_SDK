@@ -7,10 +7,10 @@ import TBframe
 
 MAX_MSG_LENTH = 2000
 CMD_WINDOW_HEIGHT = 2
-DEV_WINDOW_WIDTH  = 32
+DEV_WINDOW_WIDTH  = 36
 LOG_WINDOW_HEIGHT = 30
 LOG_WINDOW_WIDTH  = 80
-DEBUG = True
+DEBUG = False
 
 class Terminal:
     def __init__(self):
@@ -192,11 +192,13 @@ class Terminal:
         clean = (' ' * (DEV_WINDOW_WIDTH-1) + '\n') * (LOG_WINDOW_HEIGHT - 2)
         clean += ' ' * (DEV_WINDOW_WIDTH-1)
         self.dev_window.addstr(clean)
+        devices = list(self.device_list)
+        devices.sort()
         if len(self.device_list) > 0:
-            caddr = list(self.device_list)[0].split(',')[0:2]
+            caddr = devices[0].split(',')[0:2]
         linenum = 1
-        for i in range(len(self.device_list)):
-            devfull = list(self.device_list)[i]
+        for i in range(len(devices)):
+            devfull = devices[i]
             dev = devfull.split(',')
             if dev[0:2] != caddr:
                 caddr = dev[0:2]
@@ -247,6 +249,16 @@ class Terminal:
                     heartbeat_timeout += 10
                 except:
                     continue
+
+    def get_devstr_by_index(self, index):
+        devices = list(self.device_list)
+        devices.sort()
+        return devices[index]
+
+    def get_index_by_devstr(self, devstr):
+        devices = list(self.device_list)
+        devices.sort()
+        return devices.index(devstr)
 
     def server_interaction(self):
         msg = ''
@@ -309,7 +321,7 @@ class Terminal:
                             continue
                         if dev not in list(self.device_list):
                             continue
-                        index = list(self.device_list).index(dev)
+                        index = self.get_index_by_devstr(dev)
                         if dev in self.log_subscribed:
                             log =  str(index) + log
                             self.log_display(logtime, log)
@@ -363,9 +375,9 @@ class Terminal:
         return True
 
     def copy_file_to_client(self, index):
-        status_str = 'coping file to {0}...'.format(list(self.device_list)[index].split(',')[0:2])
+        status_str = 'coping file to {0}...'.format(self.get_devstr_by_index(index).split(',')[0:2])
         self.cmdrun_status_display(status_str)
-        content = list(self.device_list)[index]
+        content = self.get_devstr_by_index(index)
         data = TBframe.construct(TBframe.FILE_COPY, content);
         self.service_socket.send(data)
         self.wait_cmd_excute_done(300)
@@ -385,9 +397,9 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
             status_str = 'erasing {0}.{1}...'. \
-                    format(index, list(self.device_list)[index])
+                    format(index, self.get_devstr_by_index(index))
             self.cmdrun_status_display(status_str)
-            content = list(self.device_list)[index]
+            content = self.get_devstr_by_index(index)
             data = TBframe.construct(TBframe.DEVICE_ERASE, content);
             self.service_socket.send(data)
             self.wait_cmd_excute_done(10)
@@ -429,7 +441,7 @@ class Terminal:
             if index == -1:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
-            device = list(self.device_list)[index].split(',')
+            device = self.get_devstr_by_index(index).split(',')
             if device[0:2] not in file_exist_at:
                 if self.copy_file_to_client(index) == False:
                     continue
@@ -467,7 +479,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            content = list(self.device_list)[index]
+            content = self.get_devstr_by_index(index)
             data = TBframe.construct(TBframe.DEVICE_RESET, content)
             self.service_socket.send(data)
 
@@ -482,7 +494,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            content = list(self.device_list)[index]
+            content = self.get_devstr_by_index(index)
             data = TBframe.construct(TBframe.DEVICE_START, content)
             self.service_socket.send(data)
 
@@ -497,7 +509,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            content = list(self.device_list)[index]
+            content = self.get_devstr_by_index(index)
             data = TBframe.construct(TBframe.DEVICE_STOP, content)
             self.service_socket.send(data)
 
@@ -519,7 +531,7 @@ class Terminal:
             if index == -1:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
-            device = list(self.device_list)[index]
+            device = self.get_devstr_by_index(index)
             if (type == TBframe.LOG_SUB) and (device not in self.log_subscribed):
                 data = TBframe.construct(type, device)
                 self.service_socket.send(data)
@@ -540,7 +552,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            device = list(self.device_list)[index].split(',')
+            device = self.get_devstr_by_index(index).split(',')
             status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[2])
             self.cmdrun_status_display(status_str)
             content = ','.join(device)
@@ -562,7 +574,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(args[0]))
                 return False
             args = args[1:]
-            self.last_runcmd_dev = list(self.device_list)[index]
+            self.last_runcmd_dev = self.get_devstr_by_index(index)
         else:
             if self.last_runcmd_dev == []:
                 self.cmdrun_status_display('Error: you have not excute any remote command with runcmd yet, no target remembered')
@@ -575,9 +587,9 @@ class Terminal:
             if self.last_runcmd_dev not in list(self.device_list):
                 self.cmdrun_status_display("Error: remembered target no longer exists")
                 return False
-            index = list(self.device_list).index(self.last_runcmd_dev)
+            index = self.get_index_by_devstr(self.last_runcmd_dev)
 
-        content = list(self.device_list)[index]
+        content = self.get_devstr_by_index(index)
         content += ':' + '|'.join(args)
         data = TBframe.construct(TBframe.DEVICE_CMD, content)
         self.service_socket.send(data)
