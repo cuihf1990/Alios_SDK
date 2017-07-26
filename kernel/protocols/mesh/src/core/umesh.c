@@ -32,6 +32,7 @@
 #include "core/mesh_forwarder.h"
 #include "core/master_key.h"
 #include "core/crypto.h"
+#include "core/address_mgmt.h"
 #include "ipv6/lwip_adapter.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
@@ -125,6 +126,7 @@ static inline bool is_sid_address(const uint8_t *addr)
 
 static void output_message_handler(void *args)
 {
+    ur_error_t error = UR_ERROR_NONE;
     message_info_t *info;
     transmit_frame_t *frame = (transmit_frame_t *)args;
     network_context_t *network;
@@ -146,14 +148,22 @@ static void output_message_handler(void *args)
                                    frame->dest.m16[6]);
         }
     } else {
-        message_free(frame->message);
-        ur_mem_free(frame, sizeof(transmit_frame_t));
-        return;
+        error = UR_ERROR_DROP;
+        goto exit;
     }
 
     info->type = MESH_FRAME_TYPE_DATA;
     info->flags = 0;
-    mf_send_message(frame->message);
+
+    error = address_resolve(frame->message);
+    if (error == UR_ERROR_NONE) {
+        mf_send_message(frame->message);
+    }
+
+exit:
+    if (error == UR_ERROR_DROP) {
+        message_free(frame->message);
+    }
     ur_mem_free(frame, sizeof(transmit_frame_t));
 }
 

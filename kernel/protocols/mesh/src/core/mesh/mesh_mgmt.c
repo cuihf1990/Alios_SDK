@@ -296,6 +296,7 @@ void become_leader(void)
     g_mm_state.callback->interface_up();
     stop_addr_cache();
     start_addr_cache();
+    address_resolver_init();
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "become leader\r\n");
@@ -1495,6 +1496,7 @@ static ur_error_t handle_sid_response(message_t *message)
     start_advertisement_timer(network);
     network->state = INTERFACE_UP;
     stop_addr_cache();
+    address_resolver_init();
 
     g_mm_state.callback->interface_up();
     start_keep_alive_timer(network);
@@ -1617,6 +1619,7 @@ void become_detached(void)
     nm_stop_discovery();
     stop_neighbor_updater();
     stop_addr_cache();
+    address_resolver_init();
     g_mm_state.callback->interface_down();
 
     networks = get_network_contexts();
