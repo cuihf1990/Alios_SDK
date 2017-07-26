@@ -508,6 +508,49 @@ ur_error_t send_address_notification(network_context_t *network,
     return error;
 }
 
+ur_error_t send_address_unreachable(network_context_t *network,
+                                    ur_addr_t *dest, ur_addr_t *target)
+{
+    ur_error_t error = UR_ERROR_NONE;
+    mm_header_t *mm_header;
+    mm_node_id_tv_t *target_node;
+    message_t *message;
+    uint8_t *data;
+    uint16_t length;
+    message_info_t *info;
+
+    if (target == NULL || target->addr.len != SHORT_ADDR_SIZE) {
+        return UR_ERROR_FAIL;
+    }
+
+    length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t);
+    message = message_alloc(length, ADDRESS_MGMT_4);
+    if (message == NULL) {
+        return UR_ERROR_MEM;
+    }
+    data = message_get_payload(message);
+    mm_header = (mm_header_t *)data;
+    mm_header->command = COMMAND_ADDRESS_UNREACHABLE;
+    data += sizeof(mm_header_t);
+
+    target_node = (mm_node_id_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)target_node, TYPE_NODE_ID);
+    target_node->sid = target->addr.short_addr;
+    target_node->meshnetid = target->netid;
+    data += sizeof(mm_node_id_tv_t);
+
+    info = message->info;
+    info->network = network;
+    memcpy(&info->dest, dest, sizeof(info->dest));
+
+    set_command_type(info, mm_header->command);
+    error = mf_send_message(message);
+
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
+           "send address unreachable, len %d\r\n", length);
+    return error;
+}
+
 ur_error_t handle_address_notification(message_t *message)
 {
     ur_error_t   error = UR_ERROR_NONE;
@@ -554,6 +597,43 @@ ur_error_t handle_address_notification(message_t *message)
     error = update_address_cache(hal_type->type, &target, &attach);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address notification\r\n");
+
+    return error;
+}
+
+ur_error_t handle_address_unreachable(message_t *message)
+{
+    ur_error_t error = UR_ERROR_NONE;
+    mm_node_id_tv_t *target_node;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
+    uint8_t index;
+    message_info_t *info;
+
+    info = message->info;
+
+    tlvs = message_get_payload(message) + sizeof(mm_header_t);
+    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
+
+    target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_NODE_ID);
+
+    if (target_node == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    for (index = 0; index < UR_MESH_ADDRESS_CACHE_SIZE; index++) {
+        if (g_ar_state.cache[index].state == AQ_STATE_CACHED &&
+            g_ar_state.cache[index].sid == target_node->sid &&
+            g_ar_state.cache[index].meshnetid == target_node->meshnetid &&
+            g_ar_state.cache[index].attach_sid == info->src.addr.short_addr &&
+            g_ar_state.cache[index].attach_netid == info->src.netid) {
+            g_ar_state.cache[index].state = AQ_STATE_INVALID;
+            break;
+        }
+    }
+
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address unreachable\r\n");
 
     return error;
 }
