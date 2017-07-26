@@ -243,7 +243,7 @@ void become_leader(void)
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         if (g_mm_state.device.mode & MODE_LEADER) {
-            channel = hal_umesh_get_ucast_channel(network->hal->module);
+            channel = hal_umesh_get_channel(network->hal->module);
         } else {
             channel = network->hal->channel_list.channels[0];
         }
@@ -408,11 +408,8 @@ static uint8_t get_tv_value(network_context_t *network,
             length += 8;
             break;
         case TYPE_UCAST_CHANNEL:
-            *data = hal_umesh_get_ucast_channel(network->hal->module);
-            length += 1;
-            break;
         case TYPE_BCAST_CHANNEL:
-            *data = hal_umesh_get_bcast_channel(network->hal->module);
+            *data = hal_umesh_get_channel(network->hal->module);
             length += 1;
             break;
         default:
@@ -2231,7 +2228,7 @@ void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
     hal_context_t *hal;
 
     network = network ? : get_default_network_context();
-    hal_umesh_set_bcast_channel(network->hal->module, channel);
+    hal_umesh_set_channel(network->hal->module, channel);
     hal = network->hal;
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {

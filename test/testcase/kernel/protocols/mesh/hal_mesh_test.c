@@ -22,14 +22,10 @@
 
 void test_hal_mesh_case(void)
 {
-    hal_umesh_start_beacons(NULL, NULL, NULL, 10);
-    hal_umesh_stop_beacons(NULL);
     hal_umesh_get_bcast_mtu(NULL);
     hal_umesh_get_ucast_mtu(NULL);
-    hal_umesh_get_bcast_channel(NULL);
-    hal_umesh_get_bcast_chnlist(NULL, NULL);
-    hal_umesh_get_ucast_channel(NULL);
-    hal_umesh_get_ucast_chnlist(NULL, NULL);
+    hal_umesh_get_channel(NULL);
+    hal_umesh_get_chnlist(NULL, NULL);
     hal_umesh_set_txpower(NULL, 2);
     hal_umesh_get_txpower(NULL);
     hal_umesh_get_extnetid(NULL, NULL);

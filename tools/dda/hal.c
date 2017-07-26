@@ -111,11 +111,6 @@ static int linuxhost_ur_send_bcast(ur_mesh_hal_module_t *module, frame_t *frame,
     return error;
 }
 
-static int linuxhost_ur_set_mtu(ur_mesh_hal_module_t *module, uint16_t mtu)
-{
-    return -1;
-}
-
 static int linuxhost_ur_get_u_mtu(ur_mesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -230,15 +225,10 @@ static ur_mesh_hal_module_t linuxhost_ur_wifi_module = {
     .ur_mesh_hal_register_receiver = linuxhost_ur_set_rxcb,
     .ur_mesh_hal_get_bcast_mtu = linuxhost_ur_get_b_mtu,
     .ur_mesh_hal_get_ucast_mtu = linuxhost_ur_get_u_mtu,
-    .ur_mesh_hal_set_bcast_mtu = linuxhost_ur_set_mtu,
-    .ur_mesh_hal_set_ucast_mtu = linuxhost_ur_set_mtu,
     .ur_mesh_hal_get_mac_address = linuxhost_ur_get_mac_address,
-    .ur_mesh_hal_set_ucast_channel = linuxhost_ur_hal_set_channel,
-    .ur_mesh_hal_set_bcast_channel = linuxhost_ur_hal_set_channel,
-    .ur_mesh_hal_get_bcast_chnlist = linuxhost_ur_get_channel_list,
-    .ur_mesh_hal_get_ucast_chnlist = linuxhost_ur_get_channel_list,
-    .ur_mesh_hal_get_ucast_channel = linuxhost_ur_get_channel,
-    .ur_mesh_hal_get_bcast_channel = linuxhost_ur_get_channel,
+    .ur_mesh_hal_set_channel = linuxhost_ur_hal_set_channel,
+    .ur_mesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
+    .ur_mesh_hal_get_channel = linuxhost_ur_get_channel,
     .ur_mesh_hal_set_key = linuxhost_ur_set_key,
     .ur_mesh_hal_is_sec_enabled = linuxhost_ur_is_sec_enabled,
 };
@@ -265,15 +255,10 @@ static ur_mesh_hal_module_t linuxhost_ur_ble_module = {
     .ur_mesh_hal_register_receiver = linuxhost_ur_set_rxcb,
     .ur_mesh_hal_get_bcast_mtu = linuxhost_ur_get_b_mtu,
     .ur_mesh_hal_get_ucast_mtu = linuxhost_ur_get_u_mtu,
-    .ur_mesh_hal_set_bcast_mtu = linuxhost_ur_set_mtu,
-    .ur_mesh_hal_set_ucast_mtu = linuxhost_ur_set_mtu,
     .ur_mesh_hal_get_mac_address = linuxhost_ur_get_mac_address,
-    .ur_mesh_hal_set_ucast_channel = linuxhost_ur_hal_set_channel,
-    .ur_mesh_hal_set_bcast_channel = linuxhost_ur_hal_set_channel,
-    .ur_mesh_hal_get_bcast_chnlist = linuxhost_ur_get_channel_list,
-    .ur_mesh_hal_get_ucast_chnlist = linuxhost_ur_get_channel_list,
-    .ur_mesh_hal_get_ucast_channel = linuxhost_ur_get_channel,
-    .ur_mesh_hal_get_bcast_channel = linuxhost_ur_get_channel,
+    .ur_mesh_hal_set_channel = linuxhost_ur_hal_set_channel,
+    .ur_mesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
+    .ur_mesh_hal_get_channel = linuxhost_ur_get_channel,
 };
 
 int csp_get_args(const char ***pargv);
