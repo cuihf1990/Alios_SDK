@@ -37,7 +37,7 @@ enum {
 };
 
 enum {
-    IPHC_DISPATCH    = 0b110,
+    IPHC_DISPATCH    = 0b011,
     NHC_UDP_DISPATCH = 0b11110,
 };
 
