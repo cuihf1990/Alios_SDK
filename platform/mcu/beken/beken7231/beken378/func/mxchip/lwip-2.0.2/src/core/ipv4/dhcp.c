@@ -78,7 +78,6 @@
 
 #include <string.h>
 
-#include "error.h"
 #include "fake_clock_pub.h"
 #include "rtos_pub.h"
 #include "wlan_ui_pub.h"

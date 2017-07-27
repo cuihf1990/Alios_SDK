@@ -1,7 +1,6 @@
 /** dhcp-server.c: The DHCP Server
  */
 #include <string.h>
-#include "rtos_pub.h"
 #include "mico_rtos.h"
 #include "dhcp-bootp.h"
 #include "dns.h"

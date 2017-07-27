@@ -23,10 +23,7 @@
 #include "sm.h"
 #include "uart_pub.h"
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "rtos_pub.h"
-#include "error.h"
+#include "mico_rtos.h"
 #include "param_config.h"
 #include "rxl_cntrl.h"
 #include "lwip/pbuf.h"

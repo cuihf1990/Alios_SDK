@@ -24,7 +24,6 @@
 #endif
 
 #include "mico_rtos.h"
-#include "error.h"
 #include "signal.h"
 
 static mico_thread_t  hostapd_thread_handle;

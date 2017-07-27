@@ -4,7 +4,7 @@
 #pragma once
 
 #include "include.h"
-#include "rtos_pub.h"
+#include "mico_rtos.h"
 
 #include <hal/base.h>
 #include <hal/wifi.h>
