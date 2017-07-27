@@ -28,10 +28,10 @@
 #include "core/network_data.h"
 #include "core/mcast.h"
 #include "core/sid_allocator.h"
-#include "core/address_mgmt.h"
 #include "core/keys_mgr.h"
 #include "core/link_mgmt.h"
 #include "core/crypto.h"
+#include "core/address_mgmt.h"
 #include "ipv6/ip6.h"
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
@@ -57,8 +57,6 @@ static void send_datagram(void *args);
 static void handle_datagram(void *message);
 static neighbor_t *get_next_node(network_context_t *network,
                                  message_info_t *info);
-static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
-                                mac_address_t *addr);
 
 static inline bool is_lowpan_iphc(uint8_t control)
 {
@@ -599,21 +597,6 @@ static neighbor_t *get_next_node(network_context_t *network,
     return next;
 }
 
-static void set_dest_info(message_info_t *info, address_cache_t *target)
-{
-    info->dest.netid = target->meshnetid;
-    if (is_partial_function_sid(target->sid)) {
-        info->dest2.addr.len = SHORT_ADDR_SIZE;
-        info->dest2.addr.short_addr = target->sid;
-        info->dir = DIR_UP;
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = target->attach_sid;
-    } else {
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = target->sid;
-    }
-}
-
 static void set_src_info(message_info_t *info)
 {
     network_context_t *network;
@@ -629,45 +612,6 @@ static void set_src_info(message_info_t *info)
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = umesh_mm_get_local_sid();
     info->flags |= INSERT_LOWPAN_FLAG;
-}
-
-static void address_resolved_handler(network_context_t *network,
-                                     address_cache_t *target,
-                                     ur_error_t error)
-{
-    message_t      *message;
-    message_info_t *info;
-    hal_context_t  *hal;
-    bool           matched = false;
-
-    hal = network->hal;
-    for_each_message(message, &hal->send_queue[PENDING_QUEUE]) {
-        info = message->info;
-        if (info->dest.addr.len == SHORT_ADDR_SIZE) {
-            if (info->dest.addr.short_addr == target->sid &&
-                info->dest.netid == target->meshnetid) {
-                matched = true;
-            }
-        } else if (info->dest.addr.len == EXT_ADDR_SIZE) {
-            if (memcmp(target->ueid, info->dest.addr.addr, sizeof(target->ueid)) == 0) {
-                matched = true;
-            }
-        }
-
-        if (matched == false) {
-            continue;
-        }
-        message_queue_dequeue(message);
-        if (error == UR_ERROR_NONE) {
-            set_dest_info(info, target);
-            set_src_info(info);
-            network = info->network;
-            message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE], message);
-            umesh_task_schedule_call(send_datagram, network->hal);
-        } else {
-            message_free(message);
-        }
-    }
 }
 
 ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
@@ -711,8 +655,8 @@ static void set_dest_encrypt_flag(message_info_t *info)
     }
 }
 
-static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
-                                mac_address_t *addr)
+neighbor_t *mf_get_neighbor(uint8_t type, uint16_t meshnetid,
+                            mac_address_t *addr)
 {
     network_context_t *network;
     neighbor_t *nbr = NULL;
@@ -739,20 +683,14 @@ static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
 
 ur_error_t mf_send_message(message_t *message)
 {
-    ur_error_t        error = UR_ERROR_NONE;
-    message_info_t    *info;
-    ur_node_id_t      target;
-    ur_node_id_t      attach;
-    network_context_t *network = NULL;
-    uint8_t           query_type = PF_ATTACH_QUERY;
-    neighbor_t        *nbr = NULL;
-    bool              is_mcast = false;
-    bool              need_resolve = false;
-    slist_t           *hals;
-    hal_context_t     *hal;
-    hal_context_t     *tx_hal;
-    message_t         *mcast_message;
-    uint8_t           append_length;
+    ur_error_t error = UR_ERROR_NONE;
+    message_info_t *info;
+    slist_t *hals;
+    hal_context_t *hal;
+    hal_context_t *tx_hal;
+    message_t *mcast_message;
+    uint8_t append_length;
+    network_context_t *network;
 
     info = message->info;
     if (is_local_ucast_address(info)) {
@@ -773,65 +711,13 @@ ur_error_t mf_send_message(message_t *message)
         info->flags |= ENABLE_COMPRESS_FLAG;
     }
 
-    nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
-    if (info->dest.addr.len == SHORT_ADDR_SIZE) {
-        if (nbr == NULL && is_partial_function_sid(info->dest.addr.short_addr)) {
-            need_resolve = true;
-            target.sid = info->dest.addr.short_addr;
-            target.meshnetid = info->dest.netid;
-            query_type = PF_ATTACH_QUERY;
-        } else if (info->dest.addr.short_addr == BCAST_SID) {
-            is_mcast = true;
-        }
-    } else if (info->dest.addr.len == EXT_ADDR_SIZE &&
-               info->type == MESH_FRAME_TYPE_DATA) {
-        if (nbr == NULL) {
-            need_resolve = true;
-            memcpy(target.ueid, &info->dest.addr.addr, sizeof(target.ueid));
-            query_type = TARGET_QUERY;
-        } else {
-            info->dest.netid = nbr->addr.netid;
-        }
-    }
-    if ((info->dest.addr.len != SHORT_ADDR_SIZE &&
-         info->dest.addr.len != EXT_ADDR_SIZE) ||
-        (info->dest.addr.len == EXT_ADDR_SIZE && nbr == NULL &&
-         need_resolve == false)) {
-        message_free(message);
-        return UR_ERROR_DROP;
-    }
-
-    if (need_resolve) {
-        error = address_resolve(query_type, &target, &attach);
-        if (error == UR_ERROR_ADDRESS_QUERY) {
-            hal = get_default_hal_context();
-            message_queue_enqueue(&hal->send_queue[PENDING_QUEUE], message);
-            return error;
-        } else if (error == UR_ERROR_NONE) {
-            address_cache_t target_cache;
-            target_cache.attach_sid = attach.sid;
-            target_cache.sid = target.sid;
-            target_cache.meshnetid = target.meshnetid;
-            set_dest_info(info, &target_cache);
-        } else {
-            message_free(message);
-            return error;
-        }
-    } else if (is_mcast && info->type == MESH_FRAME_TYPE_DATA) {
-        info->flags |= INSERT_MCAST_FLAG;
-    }
-
-    if (nbr && is_mcast == false) {
-        memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
-    }
-
     set_src_info(info);
     network = info->network;
     tx_hal = network->hal;
     if (info->type == MESH_FRAME_TYPE_DATA) {
         message_queue_enqueue(&tx_hal->send_queue[DATA_QUEUE], message);
         umesh_task_schedule_call(send_datagram, tx_hal);
-        if (is_mcast) {
+        if (info->flags & INSERT_MCAST_FLAG) {
             hals = get_hal_contexts();
             slist_for_each_entry(hals, hal, hal_context_t, next) {
                 if (hal == tx_hal) {
@@ -968,7 +854,7 @@ static void message_handler(void *args)
 
     if (forward == true) {
         network = NULL;
-        nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
+        nbr = mf_get_neighbor(info->type, info->dest.netid, &info->dest.addr);
         if (info->dest.addr.len == EXT_ADDR_SIZE) {
             info->dest.netid = BCAST_NETID;
             if (nbr) {
@@ -1285,8 +1171,6 @@ ur_error_t mf_init(void)
 {
     slist_t *hals;
     hal_context_t *hal;
-
-    address_resolver_init(address_resolved_handler);
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {

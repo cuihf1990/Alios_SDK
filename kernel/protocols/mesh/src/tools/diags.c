@@ -17,6 +17,7 @@
 #include "umesh_utils.h"
 #include "core/mesh_mgmt_tlvs.h"
 #include "core/mesh_mgmt.h"
+#include "core/address_mgmt.h"
 #include "hal/interfaces.h"
 #include "tools/diags.h"
 
@@ -118,7 +119,12 @@ ur_error_t send_trace_route_request(network_context_t *network,
     memcpy(&info->dest, dest, sizeof(info->dest));
 
     set_command_type(info, mm_header->command);
-    error = mf_send_message(message);
+    error = address_resolve(message);
+    if (error == UR_ERROR_NONE) {
+        error = mf_send_message(message);
+    } else {
+        message_free(message);
+    }
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
            "send trace route request, len %d\r\n", length);
@@ -157,7 +163,12 @@ static ur_error_t send_trace_route_response(network_context_t *network,
     memcpy(&info->dest, dest, sizeof(info->dest));
 
     set_command_type(info, mm_header->command);
-    error = mf_send_message(message);
+    error = address_resolve(message);
+    if (error == UR_ERROR_NONE) {
+        error = mf_send_message(message);
+    } else {
+        message_free(message);
+    }
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
            "send trace route response, len %d\r\n", length);
