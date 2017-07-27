@@ -126,7 +126,7 @@ static void wifi_monitor_cb(uint8_t *data, int len,
     pf->fino.peer.len = 8;
 
     module = hal_umesh_get_default_module();
-    pf->fino.channel = hal_umesh_get_ucast_channel(module);
+    pf->fino.channel = hal_umesh_get_channel(module);
     pf->fino.rssi = info->rssi;
 
     pf->priv = priv;
@@ -368,20 +368,15 @@ static ur_mesh_hal_module_t beken_wifi_mesh_module = {
     .ur_mesh_hal_send_ucast_request = beken_wifi_mesh_send_ucast,
     .ur_mesh_hal_send_bcast_request = beken_wifi_mesh_send_bcast,
     .ur_mesh_hal_register_receiver = beken_wifi_mesh_register_receiver,
-    .ur_mesh_hal_set_bcast_mtu = 0,
     .ur_mesh_hal_get_bcast_mtu = beken_wifi_mesh_get_mtu,
     .ur_mesh_hal_get_ucast_mtu = beken_wifi_mesh_get_mtu,
-    .ur_mesh_hal_set_mac_address = 0,
     .ur_mesh_hal_get_mac_address = beken_wifi_mesh_get_mac_address,
-    .ur_mesh_hal_get_ucast_channel = beken_wifi_mesh_get_channel,
-    .ur_mesh_hal_get_bcast_channel = beken_wifi_mesh_get_channel,
-    .ur_mesh_hal_set_ucast_channel = beken_wifi_mesh_set_channel,
-    .ur_mesh_hal_set_bcast_channel = beken_wifi_mesh_set_channel,
+    .ur_mesh_hal_get_channel = beken_wifi_mesh_get_channel,
+    .ur_mesh_hal_set_channel = beken_wifi_mesh_set_channel,
     .umesh_hal_set_extnetid = beken_wifi_mesh_set_extnetid,
     .umesh_hal_get_extnetid = beken_wifi_mesh_get_extnetid,
     .ur_mesh_hal_get_stats = beken_wifi_mesh_get_stats,
-    .ur_mesh_hal_get_bcast_chnlist = beken_wifi_mesh_get_channel_list,
-    .ur_mesh_hal_get_ucast_chnlist = beken_wifi_mesh_get_channel_list,
+    .ur_mesh_hal_get_chnlist = beken_wifi_mesh_get_channel_list,
 };
 
 void beken_wifi_mesh_register(void)

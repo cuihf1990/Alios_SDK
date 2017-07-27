@@ -508,13 +508,10 @@ void ur_mesh_get_channel(channel_t *channel)
     if (channel) {
         ur_wifi_hal = hal_umesh_get_default_module();
 
-        channel->wifi_channel = (uint16_t)hal_umesh_get_ucast_channel(
-                                         ur_wifi_hal);
+        channel->wifi_channel = (uint16_t)hal_umesh_get_channel( ur_wifi_hal);
         channel->channel = channel->wifi_channel;
-        channel->hal_ucast_channel = (uint16_t)hal_umesh_get_ucast_channel(
-                                         ur_wifi_hal);
-        channel->hal_bcast_channel = (uint16_t)hal_umesh_get_bcast_channel(
-                                         ur_wifi_hal);
+        channel->hal_ucast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
+        channel->hal_bcast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
     }
 }
 
