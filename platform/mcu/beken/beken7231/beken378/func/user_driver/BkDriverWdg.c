@@ -33,7 +33,6 @@
 #include "BkDriverWdg.h"
 #include "drv_model_pub.h"
 #include "ll.h"
-#include "error.h"
 #include "wdt_pub.h"
 
 OSStatus bk_wdg_initialize( uint32_t timeout )

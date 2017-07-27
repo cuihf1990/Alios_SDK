@@ -8,7 +8,6 @@
  *
  */
 #include "rtos_pub.h"
-#include "error.h"
 
 #include "yos/cli.h"
 #include "stdarg.h"

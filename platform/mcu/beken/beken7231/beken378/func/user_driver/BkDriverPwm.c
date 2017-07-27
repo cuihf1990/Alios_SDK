@@ -30,7 +30,6 @@
 #include "BkDriverPwm.h"
 #include "drv_model_pub.h"
 #include "ll.h"
-#include "error.h"
 #include "pwm_pub.h"
 
 OSStatus bk_pwm_initialize(bk_pwm_t pwm, uint32_t frequency, float duty_cycle)

@@ -34,8 +34,7 @@
 #include "param_config.h"
 #endif
 
-#include "rtos_pub.h"
-#include "error.h"
+#include "mico_rtos.h"
 
 extern struct mac_scan_result *scanu_search_by_ssid(struct mac_ssid const *ssid);
 

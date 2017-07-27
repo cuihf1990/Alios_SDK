@@ -16,10 +16,7 @@
 #include "param_config.h"
 #endif
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "rtos_pub.h"
-#include "error.h"
+#include "mico_rtos.h"
 
 #include "wlan_ui_pub.h"
 #include "uart_pub.h"

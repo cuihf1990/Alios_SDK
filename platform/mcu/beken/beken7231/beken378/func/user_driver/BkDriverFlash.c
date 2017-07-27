@@ -31,7 +31,6 @@
 #include "flash_pub.h"
 #include "drv_model_pub.h"
 #include "ll.h"
-#include "error.h"
 
 /* Logic partition on flash devices */
 const bk_logic_partition_t bk7231_partitions[] =

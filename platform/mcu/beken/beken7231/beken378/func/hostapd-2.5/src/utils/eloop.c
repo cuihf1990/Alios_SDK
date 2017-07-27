@@ -19,8 +19,7 @@
 #include "main_none.h"
 #include "mac.h"
 
-#include "error.h"
-#include "rtos_pub.h"
+#include "mico_rtos.h"
 
 
 static struct eloop_data eloop;

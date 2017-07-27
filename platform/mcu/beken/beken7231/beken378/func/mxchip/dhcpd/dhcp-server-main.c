@@ -6,7 +6,6 @@
 /** dhcp-server-main.c: CLI based APIs for the DHCP Server
  */
 #include <string.h>
-#include "rtos_pub.h"
 
 #include "mico_rtos.h"
 

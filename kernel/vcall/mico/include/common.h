@@ -108,13 +108,6 @@ typedef uint8_t         mico_bool_t;
     #define INT_MAX     2147483647
 #endif
 
-#ifndef ssize_t
-#define ssize_t int
-#endif
-
-#ifndef size_t
-#define size_t unsigned int
-#endif
 
 // ==== MiCO Timer Typedef ====
 #define NANOSECONDS  1000000UL
