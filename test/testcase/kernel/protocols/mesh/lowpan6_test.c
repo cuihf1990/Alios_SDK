@@ -6,7 +6,6 @@
 #include "core/lowpan6.h"
 #include "core/network_data.h"
 #include "ipv6/ip6.h"
-#include "utilities/encoding.h"
 #include "utilities/message.h"
 
 void test_uradar_6lowpan_case(void)

@@ -3,7 +3,6 @@
 #include "umesh.h"
 #include "core/link_mgmt.h"
 #include "utilities/logging.h"
-#include "utilities/encoding.h"
 #include "utilities/message.h"
 #include "tools/cli.h"
 

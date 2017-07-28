@@ -61,14 +61,14 @@ typedef enum {
 
 #define IP6_ADDR_FMT "%x:%x:%x:%x:%x:%x:%x:%x"
 #define IP6_ADDR_DATA(dest) \
-                        ur_swap16(dest.m16[0]), \
-                        ur_swap16(dest.m16[1]), \
-                        ur_swap16(dest.m16[2]), \
-                        ur_swap16(dest.m16[3]), \
-                        ur_swap16(dest.m16[4]), \
-                        ur_swap16(dest.m16[5]), \
-                        ur_swap16(dest.m16[6]), \
-                        ur_swap16(dest.m16[7])
+                        ntohs(dest.m16[0]), \
+                        ntohs(dest.m16[1]), \
+                        ntohs(dest.m16[2]), \
+                        ntohs(dest.m16[3]), \
+                        ntohs(dest.m16[4]), \
+                        ntohs(dest.m16[5]), \
+                        ntohs(dest.m16[6]), \
+                        ntohs(dest.m16[7])
 
 #define format_ip6_str(ip6_addr, buf, len) \
     snprintf(buf, len, IP6_ADDR_FMT, IP6_ADDR_DATA(ip6_addr))

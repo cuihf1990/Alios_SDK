@@ -7,7 +7,6 @@
 #include "core/link_mgmt.h"
 #include "core/sid_allocator.h"
 #include "utilities/logging.h"
-#include "utilities/encoding.h"
 #include "tools/cli.h"
 
 #include "dda_util.h"

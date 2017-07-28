@@ -21,7 +21,6 @@ umesh_srcs := src/core/umesh.c \
               src/hal/interfaces.c \
               src/hal/umesh_hal.c \
               src/hal/80211.c \
-              src/utilities/encoding.c \
               src/utilities/message.c \
               src/utilities/timer.c \
               src/utilities/logging.c \
