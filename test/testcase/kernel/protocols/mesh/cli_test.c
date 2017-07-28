@@ -8,7 +8,6 @@
 
 #include "umesh.h"
 #include "utilities/logging.h"
-#include "utilities/encoding.h"
 #include "core/mesh_mgmt.h"
 #include "tools/cli.h"
 

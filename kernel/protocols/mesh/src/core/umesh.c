@@ -63,17 +63,17 @@ static void update_ipaddr(void)
     network = get_default_network_context();
     memset(g_um_state.ucast_address[0].addr.m8, 0,
            sizeof(g_um_state.ucast_address[0].addr.m8));
-    g_um_state.ucast_address[0].addr.m32[0] = ur_swap32(0xfc000000);
-    g_um_state.ucast_address[0].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
+    g_um_state.ucast_address[0].addr.m32[0] = htonl(0xfc000000);
+    g_um_state.ucast_address[0].addr.m32[1] = htonl(nd_get_stable_meshnetid());
     addr = (get_sub_netid(network->meshnetid) << 16) | umesh_mm_get_local_sid();
-    g_um_state.ucast_address[0].addr.m32[3] = ur_swap32(addr);
+    g_um_state.ucast_address[0].addr.m32[3] = htonl(addr);
     g_um_state.ucast_address[0].prefix_length = 64;
 
     g_um_state.ucast_address[0].next = &g_um_state.ucast_address[1];
     memset(g_um_state.ucast_address[1].addr.m8, 0,
            sizeof(g_um_state.ucast_address[1].addr.m8));
-    g_um_state.ucast_address[1].addr.m32[0] = ur_swap32(0xfc000000);
-    g_um_state.ucast_address[1].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
+    g_um_state.ucast_address[1].addr.m32[0] = htonl(0xfc000000);
+    g_um_state.ucast_address[1].addr.m32[1] = htonl(nd_get_stable_meshnetid());
     memcpy(&g_um_state.ucast_address[1].addr.m8[8], umesh_mm_get_local_ueid(), 8);
     g_um_state.ucast_address[1].prefix_length = 64;
 
@@ -143,9 +143,8 @@ static void output_message_handler(void *args)
             memcpy(info->dest.addr.addr, &frame->dest.m8[8], sizeof(info->dest.addr.addr));
         } else {
             info->dest.addr.len = SHORT_ADDR_SIZE;
-            info->dest.addr.short_addr = ur_swap16(frame->dest.m16[7]);
-            info->dest.netid = ur_swap16(frame->dest.m16[3]) | ur_swap16(
-                                   frame->dest.m16[6]);
+            info->dest.addr.short_addr = ntohs(frame->dest.m16[7]);
+            info->dest.netid = ntohs(frame->dest.m16[3]) | ntohs(frame->dest.m16[6]);
         }
     } else {
         error = UR_ERROR_DROP;

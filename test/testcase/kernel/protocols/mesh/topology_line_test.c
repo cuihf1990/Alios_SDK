@@ -7,7 +7,6 @@
 #include "core/link_mgmt.h"
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
-#include "utilities/encoding.h"
 #include "utilities/logging.h"
 #include "hal/hals.h"
 #include "hal/interface_context.h"

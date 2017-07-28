@@ -8,7 +8,6 @@
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
 #include "utilities/logging.h"
-#include "utilities/encoding.h"
 #include "hal/hals.h"
 #include "tools/cli.h"
 

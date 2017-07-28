@@ -479,18 +479,18 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         if (frag_length > (mtu - header_length)) {
             frag_header.dispatch = FRAG_1_DISPATCH;
             frag_header.size     = msg_length;
-            *((uint16_t *)&frag_header) = ur_swap16(*((uint16_t *)&frag_header));
+            *((uint16_t *)&frag_header) = htons(*((uint16_t *)&frag_header));
             hal->frag_info.tag++;
-            frag_header.tag = ur_swap16(hal->frag_info.tag);
+            frag_header.tag = htons(hal->frag_info.tag);
             frag_length = (mtu + 1 - sizeof(frag_header_t) - header_length) & 0xff8;
             append_length = sizeof(frag_header) - 1;
         }
     } else {
         frag_header.dispatch = FRAG_N_DISPATCH;
         frag_header.size     = msg_length;
-        *((uint16_t *)&frag_header) = ur_swap16(*((uint16_t *)&frag_header));
+        *((uint16_t *)&frag_header) = htons(*((uint16_t *)&frag_header));
         frag_header.offset = (uint8_t)(message->frag_offset >> 3);
-        frag_header.tag = ur_swap16(hal->frag_info.tag);
+        frag_header.tag = htons(hal->frag_info.tag);
         frag_length = (mtu - sizeof(frag_header_t) - header_length) & 0xff8;
         if (frag_length > (msg_length - message->frag_offset)) {
             frag_length = msg_length - message->frag_offset;
@@ -621,8 +621,8 @@ ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     }
 
     dest_addr->addr.len = SHORT_ADDR_SIZE;
-    dest_addr->addr.short_addr = ur_swap16(dest->m16[7]);
-    dest_addr->netid = ur_swap16(dest->m16[3]) | ur_swap16(dest->m16[6]);
+    dest_addr->addr.short_addr = ntohs(dest->m16[7]);
+    dest_addr->netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
     return UR_ERROR_NONE;
 }
 

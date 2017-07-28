@@ -8,7 +8,6 @@
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
 #include "utilities/logging.h"
-#include "utilities/encoding.h"
 #include "tools/cli.h"
 
 #include "dda_util.h"
@@ -17,7 +16,7 @@
  *                     11(super)
  *                 ----------
  *                 |   |    |
- *     ____________|   |    |_________ 
+ *     ____________|   |    |_________
  *    |                |              |
  *    2(super)---------1(leader)----- 4 (super)
  *    |                |              |
@@ -58,7 +57,7 @@ static void build_topo_wifi(void)
  *                     151(super)
  *                 ----------
  *                 |   |    |
- *     ____________|   |    |_________ 
+ *     ____________|   |    |_________
  *    |                |              |
  *   152(super)------153(leader)------154 (super)
  *    |                |              |
