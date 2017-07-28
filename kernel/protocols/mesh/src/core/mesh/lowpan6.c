@@ -179,26 +179,27 @@ static uint8_t ipv6_header_compress(ur_ip6_header_t *ip6_header,
     iphc_header->DP = IPHC_DISPATCH;
 
     /* Determine TF field: Traffic Class, Flow Label */
-    if ((ip6_header->v_tc_fl & FLOW_LABEL_MASK) == 0) {
-        if ((ip6_header->v_tc_fl & TRAFFIC_CLASS_MASK) == 0) {
+    uint32_t v_tc_fl = ntohl(ip6_header->v_tc_fl);
+    if ((v_tc_fl & FLOW_LABEL_MASK) == 0) {
+        if ((v_tc_fl & TRAFFIC_CLASS_MASK) == 0) {
             iphc_header->TF = TC_FL_BOTH_ELIDED;
         } else {
             iphc_header->TF = TC_APENDED_FL_ELIDED;
-            buffer[iphc_len++] = (ip6_header->v_tc_fl) >> 20;
+            buffer[iphc_len++] = (v_tc_fl) >> 20;
         }
     } else {
-        if ((ip6_header->v_tc_fl & TC_DSCP_MASK) == 0) {
+        if ((v_tc_fl & TC_DSCP_MASK) == 0) {
             iphc_header->TF = DCSP_ELEDED_ECN_FL_APPENDED;
-            buffer[iphc_len] = (ip6_header->v_tc_fl >> 20) & 0xc0;
-            buffer[iphc_len++] |= (ip6_header->v_tc_fl >> 16) & 0x0f;
-            buffer[iphc_len++] = (ip6_header->v_tc_fl >> 8) & 0xff;
-            buffer[iphc_len++] = ip6_header->v_tc_fl & 0xff;
+            buffer[iphc_len] = (v_tc_fl >> 20) & 0xc0;
+            buffer[iphc_len++] |= (v_tc_fl >> 16) & 0x0f;
+            buffer[iphc_len++] = (v_tc_fl >> 8) & 0xff;
+            buffer[iphc_len++] = v_tc_fl & 0xff;
         } else {
             iphc_header->TF = TC_FL_BOTH_APEENDED;
-            buffer[iphc_len++] = (ip6_header->v_tc_fl >> 20) & 0xff;
-            buffer[iphc_len++] = (ip6_header->v_tc_fl >> 16) & 0x0f;
-            buffer[iphc_len++] = (ip6_header->v_tc_fl >> 8) & 0xff;
-            buffer[iphc_len++] = ip6_header->v_tc_fl & 0xff;
+            buffer[iphc_len++] = (v_tc_fl >> 20) & 0xff;
+            buffer[iphc_len++] = (v_tc_fl >> 16) & 0x0f;
+            buffer[iphc_len++] = (v_tc_fl >> 8) & 0xff;
+            buffer[iphc_len++] = v_tc_fl & 0xff;
         }
     }
 
@@ -243,7 +244,7 @@ static uint8_t ipv6_header_compress(ur_ip6_header_t *ip6_header,
                                                &iphc_len);
     }
 
-    *(uint16_t *)iphc_header = ur_swap16(*(uint16_t *)iphc_header);
+    *(uint16_t *)iphc_header = htons(*(uint16_t *)iphc_header);
     return iphc_len;
 }
 
@@ -258,35 +259,35 @@ uint8_t udp_header_compress(ur_udp_header_t *udp_header, uint8_t *buffer)
     /* TODO: support optional checksum compression */
     nhc_header->C = 0b0;
 
-    udp_header->src_port = ur_swap16(udp_header->src_port);
-    udp_header->dst_port = ur_swap16(udp_header->dst_port);
-    udp_header->chksum = ur_swap16(udp_header->chksum);
+    uint16_t src_port = ntohs(udp_header->src_port);
+    uint16_t dst_port = ntohs(udp_header->dst_port);
+    uint16_t chksum = ntohs(udp_header->chksum);
     /* port compression */
-    if ((udp_header->src_port & 0xfff0) == 0xf0b0 &&
-        (udp_header->dst_port & 0xfff0) == 0xf0b0) {
+    if ((src_port & 0xfff0) == 0xf0b0 &&
+        (dst_port & 0xfff0) == 0xf0b0) {
         nhc_header->P = BOTH_PORT_COMPRESSED;
-        buffer[nhc_len] = (udp_header->src_port << 4) & 0xf0;
-        buffer[nhc_len++] |= udp_header->dst_port & 0x0f;
-    } else if ((udp_header->src_port & 0xff00) == 0xf000) {
+        buffer[nhc_len] = (src_port << 4) & 0xf0;
+        buffer[nhc_len++] |= dst_port & 0x0f;
+    } else if ((src_port & 0xff00) == 0xf000) {
         nhc_header->P = SRC_PORT_COMPRESSED;
-        buffer[nhc_len++] = udp_header->src_port;
-        buffer[nhc_len++] = udp_header->dst_port >> 8;
-        buffer[nhc_len++] = udp_header->dst_port;
-    } else if ((udp_header->dst_port & 0xff00) == 0xf000) {
+        buffer[nhc_len++] = src_port;
+        buffer[nhc_len++] = dst_port >> 8;
+        buffer[nhc_len++] = dst_port;
+    } else if ((dst_port & 0xff00) == 0xf000) {
         nhc_header->P = DST_PORT_COMPRESSED;
-        buffer[nhc_len++] = udp_header->src_port >> 8;
-        buffer[nhc_len++] = udp_header->src_port;
-        buffer[nhc_len++] = udp_header->dst_port;
+        buffer[nhc_len++] = src_port >> 8;
+        buffer[nhc_len++] = src_port;
+        buffer[nhc_len++] = dst_port;
     } else {
         nhc_header->P = NO_PORT_COMPRESSED;
-        buffer[nhc_len++] = udp_header->src_port >> 8;
-        buffer[nhc_len++] = udp_header->src_port;
-        buffer[nhc_len++] = udp_header->dst_port >> 8;
-        buffer[nhc_len++] = udp_header->dst_port;
+        buffer[nhc_len++] = src_port >> 8;
+        buffer[nhc_len++] = src_port;
+        buffer[nhc_len++] = dst_port >> 8;
+        buffer[nhc_len++] = dst_port;
     }
 
-    buffer[nhc_len++] = udp_header->chksum >> 8;
-    buffer[nhc_len++] = udp_header->chksum;
+    buffer[nhc_len++] = chksum >> 8;
+    buffer[nhc_len++] = chksum;
 
     return nhc_len;
 }
@@ -297,8 +298,8 @@ ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
     uint8_t iphc_len, nhc_len;
     ur_ip6_header_t *ip6_header = (ur_ip6_header_t *)header;
 
-    ip6_header->v_tc_fl = ur_swap32(ip6_header->v_tc_fl);
-    if ((ip6_header->v_tc_fl & VERSION_MASK) != IP_VERSION_6) {
+    uint32_t v_tc_fl = ntohl(ip6_header->v_tc_fl);
+    if ((v_tc_fl & VERSION_MASK) != IP_VERSION_6) {
         return UR_ERROR_FAIL;
     }
 
@@ -358,7 +359,7 @@ static ur_error_t ipv6_header_decompress(message_info_t *info, const uint8_t *ip
     } else if (iphc_header->TF == TC_FL_BOTH_ELIDED) {
         ip6_header->v_tc_fl |= 0;
     }
-    ip6_header->v_tc_fl = ur_swap32(ip6_header->v_tc_fl);
+    ip6_header->v_tc_fl = htonl(ip6_header->v_tc_fl);
 
     /* Set Next Header */
     if (iphc_header->NH == NEXT_HEADER_APPENDED) {
@@ -434,13 +435,13 @@ static ur_error_t next_header_decompress(const uint8_t *nhc_data,
             udp_header->dst_port = 0xf0b0 | (nhc_data[offset] & 0x0F);
             offset += 1;
         }
-        udp_header->src_port = ur_swap16(udp_header->src_port);
-        udp_header->dst_port = ur_swap16(udp_header->dst_port);
+        udp_header->src_port = htons(udp_header->src_port);
+        udp_header->dst_port = htons(udp_header->dst_port);
 
         /* fill in udp header CHECKSUM field */
         udp_header->chksum = (uint16_t)nhc_data[offset++] << 8;
         udp_header->chksum |= (uint16_t)nhc_data[offset++];
-        udp_header->chksum = ur_swap16(udp_header->chksum);
+        udp_header->chksum = htons(udp_header->chksum);
         *hc_len = offset;
 
         return UR_ERROR_NONE;
@@ -512,11 +513,11 @@ message_t *lp_header_decompress(message_t *message)
         hc_len += nhc_len;
         dec_header_len = UR_IP6_HLEN + UR_UDP_HLEN;
         ip_payload_len = pkt_len - hc_len + 8;
-        udp_header->length = ur_swap16(ip_payload_len);
+        udp_header->length = htons(ip_payload_len);
         ip6_header->next_header = UR_IPPROTO_UDP;
     }
 
-    ip6_header->len = ur_swap16(ip_payload_len);
+    ip6_header->len = htons(ip_payload_len);
 
     message_set_payload_offset(message, -hc_len);
     dec_message = message_alloc(dec_header_len, LOWPAN6_1);
@@ -573,9 +574,9 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
     memcpy((uint8_t *)&frag_header_content, payload, sizeof(frag_header_t));
     frag_header = &frag_header_content;
 
-    *((uint16_t *)frag_header) = ur_swap16(*(uint16_t *)frag_header);
+    *((uint16_t *)frag_header) = ntohs(*(uint16_t *)frag_header);
     datagram_size = frag_header->size;
-    datagram_tag = ur_swap16(frag_header->tag);
+    datagram_tag = ntohs(frag_header->tag);
     /* Check dispatch. */
     if (frag_header->dispatch == FRAG_1_DISPATCH) {
         /* check for duplicate */
