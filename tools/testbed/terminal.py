@@ -1,15 +1,16 @@
 #!/usr/bin/python
 
-import os, sys, time, curses, socket
+import os, sys, time, curses, socket, pdb
 import subprocess, thread, threading, pickle
 from operator import itemgetter
 import TBframe
 
 MAX_MSG_LENTH = 2000
 CMD_WINDOW_HEIGHT = 2
-DEV_WINDOW_WIDTH  = 32
+DEV_WINDOW_WIDTH  = 36
 LOG_WINDOW_HEIGHT = 30
 LOG_WINDOW_WIDTH  = 80
+DEBUG = False
 
 class Terminal:
     def __init__(self):
@@ -18,7 +19,7 @@ class Terminal:
         self.dev_window = 0
         self.cmd_window = 0
         self.keep_running = True
-        self.device_list= []
+        self.device_list= {}
         self.service_socket = 0
         self.cmd_excute_state = 'idle'
         self.log_content = []
@@ -116,6 +117,7 @@ class Terminal:
         self.log_window.move(1, 0)
         self.log_window.refresh()
         self.dev_window.addstr(0, 0, "Devices", curses.A_BOLD)
+        self.dev_window.addstr(0, DEV_WINDOW_WIDTH-4, "USE")
         self.dev_window.move(1, 0)
         self.dev_window.refresh()
         self.cmd_window.addstr(0, 0, "Command:", curses.A_BOLD)
@@ -190,17 +192,27 @@ class Terminal:
         clean = (' ' * (DEV_WINDOW_WIDTH-1) + '\n') * (LOG_WINDOW_HEIGHT - 2)
         clean += ' ' * (DEV_WINDOW_WIDTH-1)
         self.dev_window.addstr(clean)
+        devices = list(self.device_list)
+        devices.sort()
         if len(self.device_list) > 0:
-            caddr = self.device_list[0][0:2]
+            caddr = devices[0].split(',')[0:2]
         linenum = 1
-        for i in range(len(self.device_list)):
-            if self.device_list[i][0:2] != caddr:
-                caddr = self.device_list[i][0:2]
+        for i in range(len(devices)):
+            devfull = devices[i]
+            dev = devfull.split(',')
+            if dev[0:2] != caddr:
+                caddr = dev[0:2]
                 linenum += 1
-            if self.device_list[i][0] in self.alias_tuples:
-                dev_str = str(i) + '.' + self.alias_tuples[self.device_list[i][0]] + ':' + self.device_list[i][2][5:]
+            if dev[0] in self.alias_tuples:
+                dev_str = str(i) + '.' + self.alias_tuples[dev[0]] + ':'
             else:
-                dev_str = str(i) + '.' + self.device_list[i][0] + ':' + self.device_list[i][2][5:]
+                dev_str = str(i) + '.' + dev[0] + ':'
+            mid_len = DEV_WINDOW_WIDTH - len(dev_str) - 5
+            if mid_len >= len(dev[2][5:]):
+                dev_str += dev[2][5:] + ' '*(mid_len - len(dev[2][5:]))
+            else:
+                dev_str += dev[2][5:5 + mid_len]
+            dev_str += '  ' + self.device_list[devfull]
             self.dev_window.addstr(linenum, 0, dev_str)
             linenum += 1
             if linenum >= LOG_WINDOW_HEIGHT:
@@ -238,6 +250,16 @@ class Terminal:
                 except:
                     continue
 
+    def get_devstr_by_index(self, index):
+        devices = list(self.device_list)
+        devices.sort()
+        return devices[index]
+
+    def get_index_by_devstr(self, devstr):
+        devices = list(self.device_list)
+        devices.sort()
+        return devices.index(devstr)
+
     def server_interaction(self):
         msg = ''
         while self.keep_running:
@@ -265,7 +287,7 @@ class Terminal:
                         if 'file' in locals():
                             file.close()
                     if type == TBframe.ALL_DEV:
-                        new_list = []
+                        new_list = {}
                         clients = value.split(':')
                         for c in clients:
                             if c == '':
@@ -277,17 +299,17 @@ class Terminal:
                             for d in devs:
                                 if d == '':
                                     continue
-                                new_list.append([ip, port, d])
+                                [dev, using] = d.split('|')
+                                new_list[ip+','+port+','+dev] = using
 
-                        for dev in new_list:
-                            if dev not in self.device_list:
-                                self.device_list.append(dev)
+                        for dev in list(new_list):
+                            self.device_list[dev] = new_list[dev]
+
                         for dev in list(self.device_list):
-                            if dev not in new_list:
-                                self.device_list.remove(dev)
+                            if dev not in list(new_list):
+                                self.device_list.pop(dev)
                                 if dev in self.log_subscribed:
                                     self.log_subscribed.remove(dev)
-                        self.device_list.sort()
                         self.device_list_display()
                     if type == TBframe.DEVICE_LOG:
                         dev = value.split(':')[0]
@@ -297,10 +319,9 @@ class Terminal:
                             logtime = float(logtime)
                         except:
                             continue
-                        dev = dev.split(',')
-                        if dev not in self.device_list:
+                        if dev not in list(self.device_list):
                             continue
-                        index = self.device_list.index(dev)
+                        index = self.get_index_by_devstr(dev)
                         if dev in self.log_subscribed:
                             log =  str(index) + log
                             self.log_display(logtime, log)
@@ -309,6 +330,8 @@ class Terminal:
                     if type == TBframe.CMD_ERROR:
                         self.cmd_excute_state = 'error'
             except:
+                if DEBUG:
+                    raise
                 break
         self.keep_running = False;
 
@@ -352,12 +375,14 @@ class Terminal:
         return True
 
     def copy_file_to_client(self, index):
-        self.cmdrun_status_display('coping file to {0}...'.format(self.device_list[index][0:2]))
-        content = ','.join(self.device_list[index])
+        status_str = 'coping file to {0}...'.format(self.get_devstr_by_index(index).split(',')[0:2])
+        self.cmdrun_status_display(status_str)
+        content = self.get_devstr_by_index(index)
         data = TBframe.construct(TBframe.FILE_COPY, content);
         self.service_socket.send(data)
         self.wait_cmd_excute_done(300)
-        self.cmdrun_status_display('coping file to {0}...'.format(self.device_list[index][0:2]) + self.cmd_excute_state)
+        status_str += self.cmd_excute_state
+        self.cmdrun_status_display(status_str)
         self.cmd_excute_state = 'idle'
 
     def erase_devices(self, args):
@@ -371,10 +396,10 @@ class Terminal:
             if index == -1:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
-            status_str = 'erasing {0}.{1}:{2}...'. \
-                    format(index, self.device_list[index][0], self.device_list[index][2])
+            status_str = 'erasing {0}.{1}...'. \
+                    format(index, self.get_devstr_by_index(index))
             self.cmdrun_status_display(status_str)
-            content = ','.join(self.device_list[index])
+            content = self.get_devstr_by_index(index)
             data = TBframe.construct(TBframe.DEVICE_ERASE, content);
             self.service_socket.send(data)
             self.wait_cmd_excute_done(10)
@@ -416,14 +441,14 @@ class Terminal:
             if index == -1:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
-            if self.device_list[index][0:2] not in file_exist_at:
+            device = self.get_devstr_by_index(index).split(',')
+            if device[0:2] not in file_exist_at:
                 if self.copy_file_to_client(index) == False:
                     continue
-                file_exist_at.append(self.device_list[index][0:2])
-            status_str = 'programming {0} to {1}.{2}:{3}...'. \
-                    format(filename, index, self.device_list[index][0], self.device_list[index][2])
+                file_exist_at.append(device[0:2])
+            status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, device[0], device[2])
             self.cmdrun_status_display(status_str)
-            content = ','.join(self.device_list[index]) + ',' + address
+            content = ','.join(device) + ',' + address
             data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
             self.service_socket.send(data)
             self.wait_cmd_excute_done(90)
@@ -454,7 +479,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            content = ','.join(self.device_list[index])
+            content = self.get_devstr_by_index(index)
             data = TBframe.construct(TBframe.DEVICE_RESET, content)
             self.service_socket.send(data)
 
@@ -469,7 +494,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            content = ','.join(self.device_list[index])
+            content = self.get_devstr_by_index(index)
             data = TBframe.construct(TBframe.DEVICE_START, content)
             self.service_socket.send(data)
 
@@ -484,7 +509,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            content = ','.join(self.device_list[index])
+            content = self.get_devstr_by_index(index)
             data = TBframe.construct(TBframe.DEVICE_STOP, content)
             self.service_socket.send(data)
 
@@ -506,14 +531,15 @@ class Terminal:
             if index == -1:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
-            if (type == TBframe.LOG_SUB) and (self.device_list[index] not in self.log_subscribed):
-                data = TBframe.construct(type, ','.join(self.device_list[index]))
+            device = self.get_devstr_by_index(index)
+            if (type == TBframe.LOG_SUB) and (device not in self.log_subscribed):
+                data = TBframe.construct(type, device)
                 self.service_socket.send(data)
-                self.log_subscribed.append(self.device_list[index])
-            elif (type == TBframe.LOG_UNSUB) and (self.device_list[index] in self.log_subscribed):
-                data = TBframe.construct(type, ','.join(self.device_list[index]))
+                self.log_subscribed.append(device)
+            elif (type == TBframe.LOG_UNSUB) and (device in self.log_subscribed):
+                data = TBframe.construct(type, device)
                 self.service_socket.send(data)
-                self.log_subscribed.remove(self.device_list[index])
+                self.log_subscribed.remove(device)
 
     def log_download(self, args):
         if len(args) < 1:
@@ -526,14 +552,15 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            self.cmdrun_status_display('downloading log file for {0}.{1}:{2}...'. \
-                    format(index, self.device_list[index][0], self.device_list[index][2]))
-            content = ','.join(self.device_list[index])
+            device = self.get_devstr_by_index(index).split(',')
+            status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[2])
+            self.cmdrun_status_display(status_str)
+            content = ','.join(device)
             data = TBframe.construct(TBframe.LOG_DOWNLOAD, content)
             self.service_socket.send(data)
             self.wait_cmd_excute_done(300)
-            self.cmdrun_status_display('downloading log file for {0}.{1}:{2}...'. \
-                    format(index, self.device_list[index][0], self.device_list[index][2]) + self.cmd_excute_state)
+            status_str += self.cmd_excute_state
+            self.cmdrun_status_display(status_str)
             self.cmd_excute_state = 'idle'
 
     def run_command(self, args, uselast = False):
@@ -547,7 +574,7 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(args[0]))
                 return False
             args = args[1:]
-            self.last_runcmd_dev = self.device_list[index]
+            self.last_runcmd_dev = self.get_devstr_by_index(index)
         else:
             if self.last_runcmd_dev == []:
                 self.cmdrun_status_display('Error: you have not excute any remote command with runcmd yet, no target remembered')
@@ -557,12 +584,12 @@ class Terminal:
                 self.cmdrun_status_display("Usage error, usage: !cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]")
                 return False
 
-            if self.last_runcmd_dev not in self.device_list:
+            if self.last_runcmd_dev not in list(self.device_list):
                 self.cmdrun_status_display("Error: remembered target no longer exists")
                 return False
-            index = self.device_list.index(self.last_runcmd_dev)
+            index = self.get_index_by_devstr(self.last_runcmd_dev)
 
-        content = ','.join(self.device_list[index])
+        content = self.get_devstr_by_index(index)
         content += ':' + '|'.join(args)
         data = TBframe.construct(TBframe.DEVICE_CMD, content)
         self.service_socket.send(data)
@@ -707,6 +734,8 @@ class Terminal:
             try:
                 self.user_interaction()
             except:
+                if DEBUG:
+                    raise
                 self.keep_running = False
                 time.sleep(0.2)
 

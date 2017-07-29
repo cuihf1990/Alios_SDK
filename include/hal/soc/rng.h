@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/rng.h
+ * @brief RNG HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_RNG_H
 #define YOS_RNG_H
 

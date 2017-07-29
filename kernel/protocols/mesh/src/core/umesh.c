@@ -20,6 +20,7 @@
 #include "hal/base.h"
 #include "umesh.h"
 #include "umesh_hal.h"
+#include "umesh_utils.h"
 #include "core/mcast.h"
 #include "core/link_mgmt.h"
 #include "core/lowpan6.h"
@@ -30,12 +31,9 @@
 #include "core/network_data.h"
 #include "core/mesh_forwarder.h"
 #include "core/master_key.h"
+#include "core/crypto.h"
+#include "core/address_mgmt.h"
 #include "ipv6/lwip_adapter.h"
-#include "utilities/logging.h"
-#include "utilities/message.h"
-#include "utilities/encoding.h"
-#include "utilities/mac_whitelist.h"
-#include "utilities/task.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 
@@ -65,17 +63,17 @@ static void update_ipaddr(void)
     network = get_default_network_context();
     memset(g_um_state.ucast_address[0].addr.m8, 0,
            sizeof(g_um_state.ucast_address[0].addr.m8));
-    g_um_state.ucast_address[0].addr.m32[0] = ur_swap32(0xfc000000);
-    g_um_state.ucast_address[0].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
+    g_um_state.ucast_address[0].addr.m32[0] = htonl(0xfc000000);
+    g_um_state.ucast_address[0].addr.m32[1] = htonl(nd_get_stable_meshnetid());
     addr = (get_sub_netid(network->meshnetid) << 16) | umesh_mm_get_local_sid();
-    g_um_state.ucast_address[0].addr.m32[3] = ur_swap32(addr);
+    g_um_state.ucast_address[0].addr.m32[3] = htonl(addr);
     g_um_state.ucast_address[0].prefix_length = 64;
 
     g_um_state.ucast_address[0].next = &g_um_state.ucast_address[1];
     memset(g_um_state.ucast_address[1].addr.m8, 0,
            sizeof(g_um_state.ucast_address[1].addr.m8));
-    g_um_state.ucast_address[1].addr.m32[0] = ur_swap32(0xfc000000);
-    g_um_state.ucast_address[1].addr.m32[1] = ur_swap32(nd_get_stable_meshnetid());
+    g_um_state.ucast_address[1].addr.m32[0] = htonl(0xfc000000);
+    g_um_state.ucast_address[1].addr.m32[1] = htonl(nd_get_stable_meshnetid());
     memcpy(&g_um_state.ucast_address[1].addr.m8[8], umesh_mm_get_local_ueid(), 8);
     g_um_state.ucast_address[1].prefix_length = 64;
 
@@ -128,6 +126,7 @@ static inline bool is_sid_address(const uint8_t *addr)
 
 static void output_message_handler(void *args)
 {
+    ur_error_t error = UR_ERROR_NONE;
     message_info_t *info;
     transmit_frame_t *frame = (transmit_frame_t *)args;
     network_context_t *network;
@@ -144,19 +143,26 @@ static void output_message_handler(void *args)
             memcpy(info->dest.addr.addr, &frame->dest.m8[8], sizeof(info->dest.addr.addr));
         } else {
             info->dest.addr.len = SHORT_ADDR_SIZE;
-            info->dest.addr.short_addr = ur_swap16(frame->dest.m16[7]);
-            info->dest.netid = ur_swap16(frame->dest.m16[3]) | ur_swap16(
-                                   frame->dest.m16[6]);
+            info->dest.addr.short_addr = ntohs(frame->dest.m16[7]);
+            info->dest.netid = ntohs(frame->dest.m16[3]) | ntohs(frame->dest.m16[6]);
         }
     } else {
-        message_free(frame->message);
-        ur_mem_free(frame, sizeof(transmit_frame_t));
-        return;
+        error = UR_ERROR_DROP;
+        goto exit;
     }
 
     info->type = MESH_FRAME_TYPE_DATA;
     info->flags = 0;
-    mf_send_message(frame->message);
+
+    error = address_resolve(frame->message);
+    if (error == UR_ERROR_NONE) {
+        mf_send_message(frame->message);
+    }
+
+exit:
+    if (error == UR_ERROR_DROP) {
+        message_free(frame->message);
+    }
     ur_mem_free(frame, sizeof(transmit_frame_t));
 }
 
@@ -511,13 +517,10 @@ void ur_mesh_get_channel(channel_t *channel)
     if (channel) {
         ur_wifi_hal = hal_umesh_get_default_module();
 
-        channel->wifi_channel = (uint16_t)hal_umesh_get_ucast_channel(
-                                         ur_wifi_hal);
+        channel->wifi_channel = (uint16_t)hal_umesh_get_channel( ur_wifi_hal);
         channel->channel = channel->wifi_channel;
-        channel->hal_ucast_channel = (uint16_t)hal_umesh_get_ucast_channel(
-                                         ur_wifi_hal);
-        channel->hal_bcast_channel = (uint16_t)hal_umesh_get_bcast_channel(
-                                         ur_wifi_hal);
+        channel->hal_ucast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
+        channel->hal_bcast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
     }
 }
 

@@ -25,15 +25,11 @@
 
 #include "umesh.h"
 #include "umesh_hal.h"
+#include "umesh_utils.h"
 #include "core/mesh_mgmt.h"
 #include "core/sid_allocator.h"
 #include "core/link_mgmt.h"
 #include "core/router_mgr.h"
-#include "utilities/timer.h"
-#include "utilities/encoding.h"
-#include "utilities/memory.h"
-#include "utilities/logging.h"
-#include "utilities/task.h"
 #include "ipv6/ip6.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
@@ -231,7 +227,7 @@ static void handle_autotest_print_timer(void *args)
         acked = slist_first_entry(&g_cl_state.autotest_acked_list, autotest_acked_t,
                                   next);
         response_append("%04x:%d\%, ",
-                        ur_swap16(acked->sid), (acked->acked * 100) / g_cl_state.autotest_seq);
+                        ntohs(acked->sid), (acked->acked * 100) / g_cl_state.autotest_seq);
         slist_del(&acked->next, &g_cl_state.autotest_acked_list);
         ur_mem_free(acked, sizeof(autotest_acked_t));
         num++;
@@ -251,7 +247,7 @@ static void handle_autotest_timer(void *args)
         src = ur_mesh_get_ucast_addr();
         cmd = (autotest_cmd_t *)payload;
         cmd->type = AUTOTEST_REQUEST;
-        cmd->seq = ur_swap16(g_cl_state.autotest_seq++);
+        cmd->seq = htons(g_cl_state.autotest_seq++);
         memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cl_state.autotest_udp_socket, payload, g_cl_state.autotest_length,
                    &g_cl_state.autotest_target, AUTOTEST_UDP_PORT);
@@ -283,7 +279,7 @@ void process_autotest(int argc, char *argv[])
 
     if (argc == 0) {
         for_each_acked(acked) {
-            response_append("%04x: %d, %d\r\n", ur_swap16(acked->sid), acked->seq,
+            response_append("%04x: %d, %d\r\n", ntohs(acked->sid), acked->seq,
                             acked->acked);
         }
         return;
@@ -685,7 +681,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
 
     cmd = (autotest_cmd_t *)payload;
     memcpy(&dest, &cmd->addr, sizeof(ur_ip6_addr_t));
-    seq = ur_swap16(cmd->seq);
+    seq = ntohs(cmd->seq);
     if (cmd->type == AUTOTEST_REQUEST) {
         response_append("%d bytes autotest echo request from " IP6_ADDR_FMT
                         ", seq %d\r\n", length,
@@ -697,7 +693,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         memset(data, 0, length);
         cmd = (autotest_cmd_t *)data;
         cmd->type = AUTOTEST_REPLY;
-        cmd->seq = ur_swap16(seq);
+        cmd->seq = htons(seq);
         src = ur_mesh_get_ucast_addr();
         memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cl_state.autotest_udp_socket, data, length, &dest,

@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef UR_ENCODING_H
-#define UR_ENCODING_H
+#ifndef UMESH_CRYPTO_H
+#define UMESH_CRYPTO_H
 
-uint16_t ur_swap16(uint16_t value);
-uint32_t ur_swap32(uint32_t value);
+ur_error_t umesh_aes128_cbc_encrypt(const void *src,
+                                    uint16_t size, void *dst);
+ur_error_t umesh_aes128_cbc_decrypt(const void *src,
+                                    uint16_t size, void *dst);
 
-#endif  /* UR_ENCODING_H */
+#endif  /* UMESH_CRYPTO_H */

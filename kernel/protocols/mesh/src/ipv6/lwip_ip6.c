@@ -22,7 +22,7 @@
 #include "lwip/inet.h"
 
 #include "ipv6/ip6.h"
-#include "utilities/memory.h"
+#include "umesh_utils.h"
 
 typedef struct listen_sockets_s {
     int                socket;

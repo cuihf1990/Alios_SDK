@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "utilities/mac_whitelist.h"
+#include "umesh_utils.h"
 
 typedef struct mac_whitelist_state_s {
     bool              enabled;

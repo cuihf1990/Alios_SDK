@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/uart.h
+ * @brief UART HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_UART_H
 #define YOS_UART_H
 

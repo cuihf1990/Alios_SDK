@@ -224,11 +224,6 @@ static int linux_80211_mesh_send_bcast(ur_mesh_hal_module_t *module, frame_t *fr
     return error;
 }
 
-static int linux_80211_mesh_set_mtu(ur_mesh_hal_module_t *module, uint16_t mtu)
-{
-    return -1;
-}
-
 static int linux_80211_mesh_get_u_mtu(ur_mesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -367,15 +362,10 @@ static ur_mesh_hal_module_t linux_80211_mesh_wifi_module = {
     .ur_mesh_hal_register_receiver = linux_80211_mesh_set_rxcb,
     .ur_mesh_hal_get_bcast_mtu = linux_80211_mesh_get_b_mtu,
     .ur_mesh_hal_get_ucast_mtu = linux_80211_mesh_get_u_mtu,
-    .ur_mesh_hal_set_bcast_mtu = linux_80211_mesh_set_mtu,
-    .ur_mesh_hal_set_ucast_mtu = linux_80211_mesh_set_mtu,
     .ur_mesh_hal_get_mac_address = linux_80211_mesh_get_mac_address,
-    .ur_mesh_hal_get_ucast_channel = linux_80211_mesh_hal_get_channel,
-    .ur_mesh_hal_get_bcast_channel = linux_80211_mesh_hal_get_channel,
-    .ur_mesh_hal_set_ucast_channel = linux_80211_mesh_hal_set_channel,
-    .ur_mesh_hal_set_bcast_channel = linux_80211_mesh_hal_set_channel,
-    .ur_mesh_hal_get_bcast_chnlist = linux_80211_mesh_get_channel_list,
-    .ur_mesh_hal_get_ucast_chnlist = linux_80211_mesh_get_channel_list,
+    .ur_mesh_hal_get_channel = linux_80211_mesh_hal_get_channel,
+    .ur_mesh_hal_set_channel = linux_80211_mesh_hal_set_channel,
+    .ur_mesh_hal_get_chnlist = linux_80211_mesh_get_channel_list,
     .ur_mesh_hal_set_key = linux_80211_mesh_set_key,
     .ur_mesh_hal_is_sec_enabled = linux_80211_mesh_is_sec_enabled,
     .ur_mesh_hal_get_stats = linux_80211_mesh_get_stats,

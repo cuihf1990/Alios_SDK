@@ -16,10 +16,7 @@
 #include "main_none.h"
 #include "ps.h"
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "rtos_pub.h"
-#include "error.h"
+#include "mico_rtos.h"
 #include "uart_pub.h"
 #include "signal.h"
 

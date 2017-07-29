@@ -305,15 +305,16 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
 
     kstat_t ret;
 
-    if ((g_intrpt_nested_level > 0u) && (ticks != YUNOS_NO_WAIT)) {
-        return YUNOS_NOT_CALLED_BY_INTRPT;
-    }
-
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
     NULL_PARA_CHK(size);
 
     YUNOS_CRITICAL_ENTER();
+
+    if ((g_intrpt_nested_level > 0u) && (ticks != YUNOS_NO_WAIT)) {
+        YUNOS_CRITICAL_EXIT();
+        return YUNOS_NOT_CALLED_BY_INTRPT;
+    }
 
     if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
         YUNOS_CRITICAL_EXIT();

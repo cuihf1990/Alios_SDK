@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/spi.h
+ * @brief SPI HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_SPI_H
 #define YOS_SPI_H
 

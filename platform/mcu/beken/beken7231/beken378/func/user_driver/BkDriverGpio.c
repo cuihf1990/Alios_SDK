@@ -30,8 +30,6 @@
 #include "BkDriverGpio.h"
 #include "drv_model_pub.h"
 #include "ll.h"
-#include "error.h"
-
 
 OSStatus BkGpioAssert( bk_gpio_t gpio )
 {

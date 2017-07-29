@@ -20,6 +20,7 @@
 
 #include "umesh.h"
 #include "umesh_hal.h"
+#include "umesh_utils.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
 #include "core/router_mgr.h"
@@ -27,15 +28,10 @@
 #include "core/network_data.h"
 #include "core/mcast.h"
 #include "core/sid_allocator.h"
-#include "core/address_mgmt.h"
 #include "core/keys_mgr.h"
 #include "core/link_mgmt.h"
-#include "utilities/logging.h"
-#include "utilities/message.h"
-#include "utilities/encoding.h"
-#include "utilities/mac_whitelist.h"
-#include "utilities/timer.h"
-#include "utilities/task.h"
+#include "core/crypto.h"
+#include "core/address_mgmt.h"
 #include "ipv6/ip6.h"
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
@@ -54,14 +50,13 @@ enum {
 enum {
     SENT_SUCCESS = 0,
     SENT_FAIL = -1,
+    SENT_DROP = -2,
 };
 
 static void send_datagram(void *args);
 static void handle_datagram(void *message);
 static neighbor_t *get_next_node(network_context_t *network,
                                  message_info_t *info);
-static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
-                                mac_address_t *addr);
 
 static inline bool is_lowpan_iphc(uint8_t control)
 {
@@ -139,8 +134,10 @@ void message_sent_task(void *args)
     if (hal->frag_info.offset >= msg_length &&
         hal->last_sent == SENT_SUCCESS) {
         free_msg = true;
-    } else if (hal->last_sent != SENT_SUCCESS &&
+    } else if (hal->last_sent == SENT_FAIL &&
                message->retries >= MESSAGE_RETRIES) {
+        free_msg = true;
+    } else if (hal->last_sent == SENT_DROP) {
         free_msg = true;
     }
 
@@ -181,20 +178,16 @@ static message_t *handle_lowpan_iphc(message_t *message)
     return lp_header_decompress(message);
 }
 
-static void resolve_message_info(received_frame_t *frame)
+static void resolve_message_info(received_frame_t *frame, message_info_t *info,
+                                 uint8_t *buf)
 {
-    message_t *message;
     mesh_header_control_t *control;
-    message_info_t *info;
     uint8_t offset;
-    uint8_t *buf;
     mesh_short_addr_t *short_addr;
     mesh_ext_addr_t *ext_addr;
     mesh_subnetid_t *subnetid;
     mesh_netid_t *netid;
 
-    message = frame->message;
-    info = message->info;
     info->hal_type = frame->hal->module->type;
     info->src_channel = frame->frame_info.channel;
     info->key_index = frame->frame_info.key_index;
@@ -202,7 +195,6 @@ static void resolve_message_info(received_frame_t *frame)
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;
-    buf = message_get_payload(message);
     control = (mesh_header_control_t *)buf;
     offset = sizeof(mesh_header_control_t);
     netid = (mesh_netid_t *)(buf + offset);
@@ -451,11 +443,13 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     } else {
         mtu = hal_umesh_get_ucast_mtu(network->hal->module);
     }
+    bzero(network->hal->frame.data, mtu);
 
     if (info->dest.addr.len == EXT_ADDR_SIZE ||
         info->dest.addr.short_addr != BCAST_SID) {
         next_node = get_next_node(network, info);
         if (next_node == NULL) {
+            send_address_unreachable(network, &info->src, &info->dest);
             return UR_ERROR_DROP;
         }
     }
@@ -469,9 +463,14 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         if (header_length == 0) {
             return UR_ERROR_DROP;
         }
+        header_length = info->payload_offset;
+    } else {
+        header_length = info->payload_offset;
+        message_copy_to(message, message->frag_offset,
+                        hal->frame.data, header_length);
+        message_set_payload_offset(message, -header_length);
     }
 
-    header_length = info->payload_offset;
     msg_length = message_get_msglen(message);
     memset(&frag_header, 0, sizeof(frag_header));
 
@@ -480,18 +479,18 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         if (frag_length > (mtu - header_length)) {
             frag_header.dispatch = FRAG_1_DISPATCH;
             frag_header.size     = msg_length;
-            *((uint16_t *)&frag_header) = ur_swap16(*((uint16_t *)&frag_header));
+            *((uint16_t *)&frag_header) = htons(*((uint16_t *)&frag_header));
             hal->frag_info.tag++;
-            frag_header.tag = ur_swap16(hal->frag_info.tag);
+            frag_header.tag = htons(hal->frag_info.tag);
             frag_length = (mtu + 1 - sizeof(frag_header_t) - header_length) & 0xff8;
             append_length = sizeof(frag_header) - 1;
         }
     } else {
         frag_header.dispatch = FRAG_N_DISPATCH;
         frag_header.size     = msg_length;
-        *((uint16_t *)&frag_header) = ur_swap16(*((uint16_t *)&frag_header));
+        *((uint16_t *)&frag_header) = htons(*((uint16_t *)&frag_header));
         frag_header.offset = (uint8_t)(message->frag_offset >> 3);
-        frag_header.tag = ur_swap16(hal->frag_info.tag);
+        frag_header.tag = htons(hal->frag_info.tag);
         frag_length = (mtu - sizeof(frag_header_t) - header_length) & 0xff8;
         if (frag_length > (msg_length - message->frag_offset)) {
             frag_length = msg_length - message->frag_offset;
@@ -503,7 +502,16 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         memcpy(hal->frame.data + header_length, (uint8_t *)&frag_header, append_length);
     }
     payload = hal->frame.data + header_length + append_length;
+
     message_copy_to(message, message->frag_offset, payload, frag_length);
+
+    if ((info->flags & ENCRYPT_ENABLE_FLAG) &&
+        umesh_aes128_cbc_encrypt(hal->frame.data + info->payload_offset,
+                                 append_length + frag_length,
+                                 hal->frame.data + info->payload_offset) != UR_ERROR_NONE) {
+        return UR_ERROR_DROP;
+    }
+
     hal->frame.len = header_length + append_length + frag_length;
     hal->frame.key_index = info->key_index;
 
@@ -523,7 +531,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     }
 
     if (error != UR_ERROR_NONE) {
-        error = UR_ERROR_FAIL;
+        error = UR_ERROR_FAIL;  // wait for handle_sent
     }
     hal->frag_info.offset += frag_length;
     return error;
@@ -541,6 +549,13 @@ static neighbor_t *get_next_node(network_context_t *network,
     local_sid = umesh_mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
         next = get_neighbor_by_mac_addr(&(info->dest.addr));
+        return next;
+    }
+
+    if (info->dest.addr.len == SHORT_ADDR_SIZE &&
+        is_partial_function_sid(info->dest.addr.short_addr)) {
+        next = get_neighbor_by_sid(network->hal, info->dest.addr.short_addr,
+                                   info->dest.netid);
         return next;
     }
 
@@ -582,21 +597,6 @@ static neighbor_t *get_next_node(network_context_t *network,
     return next;
 }
 
-static void set_dest_info(message_info_t *info, address_cache_t *target)
-{
-    info->dest.netid = target->meshnetid;
-    if (is_partial_function_sid(target->sid)) {
-        info->dest2.addr.len = SHORT_ADDR_SIZE;
-        info->dest2.addr.short_addr = target->sid;
-        info->dir = DIR_UP;
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = target->attach_sid;
-    } else {
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = target->sid;
-    }
-}
-
 static void set_src_info(message_info_t *info)
 {
     network_context_t *network;
@@ -614,45 +614,6 @@ static void set_src_info(message_info_t *info)
     info->flags |= INSERT_LOWPAN_FLAG;
 }
 
-static void address_resolved_handler(network_context_t *network,
-                                     address_cache_t *target,
-                                     ur_error_t error)
-{
-    message_t      *message;
-    message_info_t *info;
-    hal_context_t  *hal;
-    bool           matched = false;
-
-    hal = network->hal;
-    for_each_message(message, &hal->send_queue[PENDING_QUEUE]) {
-        info = message->info;
-        if (info->dest.addr.len == SHORT_ADDR_SIZE) {
-            if (info->dest.addr.short_addr == target->sid &&
-                info->dest.netid == target->meshnetid) {
-                matched = true;
-            }
-        } else if (info->dest.addr.len == EXT_ADDR_SIZE) {
-            if (memcmp(target->ueid, info->dest.addr.addr, sizeof(target->ueid)) == 0) {
-                matched = true;
-            }
-        }
-
-        if (matched == false) {
-            continue;
-        }
-        message_queue_dequeue(message);
-        if (error == UR_ERROR_NONE) {
-            set_dest_info(info, target);
-            set_src_info(info);
-            network = info->network;
-            message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE], message);
-            umesh_task_schedule_call(send_datagram, network->hal);
-        } else {
-            message_free(message);
-        }
-    }
-}
-
 ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
 {
     if (ur_is_mcast(dest)) {
@@ -660,8 +621,8 @@ ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     }
 
     dest_addr->addr.len = SHORT_ADDR_SIZE;
-    dest_addr->addr.short_addr = ur_swap16(dest->m16[7]);
-    dest_addr->netid = ur_swap16(dest->m16[3]) | ur_swap16(dest->m16[6]);
+    dest_addr->addr.short_addr = ntohs(dest->m16[7]);
+    dest_addr->netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
     return UR_ERROR_NONE;
 }
 
@@ -694,8 +655,8 @@ static void set_dest_encrypt_flag(message_info_t *info)
     }
 }
 
-static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
-                                mac_address_t *addr)
+neighbor_t *mf_get_neighbor(uint8_t type, uint16_t meshnetid,
+                            mac_address_t *addr)
 {
     network_context_t *network;
     neighbor_t *nbr = NULL;
@@ -722,20 +683,14 @@ static neighbor_t *get_neighbor(uint8_t type, uint16_t meshnetid,
 
 ur_error_t mf_send_message(message_t *message)
 {
-    ur_error_t        error = UR_ERROR_NONE;
-    message_info_t    *info;
-    ur_node_id_t      target;
-    ur_node_id_t      attach;
-    network_context_t *network = NULL;
-    uint8_t           query_type = PF_ATTACH_QUERY;
-    neighbor_t        *nbr = NULL;
-    bool              is_mcast = false;
-    bool              need_resolve = false;
-    slist_t           *hals;
-    hal_context_t     *hal;
-    hal_context_t     *tx_hal;
-    message_t         *mcast_message;
-    uint8_t           append_length;
+    ur_error_t error = UR_ERROR_NONE;
+    message_info_t *info;
+    slist_t *hals;
+    hal_context_t *hal;
+    hal_context_t *tx_hal;
+    message_t *mcast_message;
+    uint8_t append_length;
+    network_context_t *network;
 
     info = message->info;
     if (is_local_ucast_address(info)) {
@@ -753,59 +708,7 @@ ur_error_t mf_send_message(message_t *message)
     info->flags |= INSERT_MESH_HEADER;
     set_dest_encrypt_flag(info);
     if (info->type == MESH_FRAME_TYPE_DATA) {
-        //info->flags |= ENABLE_COMPRESS_FLAG;
-    }
-
-    nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
-    if (info->dest.addr.len == SHORT_ADDR_SIZE) {
-        if (nbr == NULL && is_partial_function_sid(info->dest.addr.short_addr)) {
-            need_resolve = true;
-            target.sid = info->dest.addr.short_addr;
-            target.meshnetid = info->dest.netid;
-            query_type = PF_ATTACH_QUERY;
-        } else if (info->dest.addr.short_addr == BCAST_SID) {
-            is_mcast = true;
-        }
-    } else if (info->dest.addr.len == EXT_ADDR_SIZE &&
-               info->type == MESH_FRAME_TYPE_DATA) {
-        if (nbr == NULL) {
-            need_resolve = true;
-            memcpy(target.ueid, &info->dest.addr.addr, sizeof(target.ueid));
-            query_type = TARGET_QUERY;
-        } else {
-            info->dest.netid = nbr->addr.netid;
-        }
-    }
-    if ((info->dest.addr.len != SHORT_ADDR_SIZE &&
-         info->dest.addr.len != EXT_ADDR_SIZE) ||
-        (info->dest.addr.len == EXT_ADDR_SIZE && nbr == NULL &&
-         need_resolve == false)) {
-        message_free(message);
-        return UR_ERROR_DROP;
-    }
-
-    if (need_resolve) {
-        error = address_resolve(query_type, &target, &attach);
-        if (error == UR_ERROR_ADDRESS_QUERY) {
-            hal = get_default_hal_context();
-            message_queue_enqueue(&hal->send_queue[PENDING_QUEUE], message);
-            return error;
-        } else if (error == UR_ERROR_NONE) {
-            address_cache_t target_cache;
-            target_cache.attach_sid = attach.sid;
-            target_cache.sid = target.sid;
-            target_cache.meshnetid = target.meshnetid;
-            set_dest_info(info, &target_cache);
-        } else {
-            message_free(message);
-            return error;
-        }
-    } else if (is_mcast && info->type == MESH_FRAME_TYPE_DATA) {
-        info->flags |= INSERT_MCAST_FLAG;
-    }
-
-    if (nbr && is_mcast == false) {
-        memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
+        info->flags |= ENABLE_COMPRESS_FLAG;
     }
 
     set_src_info(info);
@@ -814,7 +717,7 @@ ur_error_t mf_send_message(message_t *message)
     if (info->type == MESH_FRAME_TYPE_DATA) {
         message_queue_enqueue(&tx_hal->send_queue[DATA_QUEUE], message);
         umesh_task_schedule_call(send_datagram, tx_hal);
-        if (is_mcast) {
+        if (info->flags & INSERT_MCAST_FLAG) {
             hals = get_hal_contexts();
             slist_for_each_entry(hals, hal, hal_context_t, next) {
                 if (hal == tx_hal) {
@@ -951,7 +854,7 @@ static void message_handler(void *args)
 
     if (forward == true) {
         network = NULL;
-        nbr = get_neighbor(info->type, info->dest.netid, &info->dest.addr);
+        nbr = mf_get_neighbor(info->type, info->dest.netid, &info->dest.addr);
         if (info->dest.addr.len == EXT_ADDR_SIZE) {
             info->dest.netid = BCAST_NETID;
             if (nbr) {
@@ -973,7 +876,6 @@ static void message_handler(void *args)
             memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
         }
         info->network = network;
-        info->payload_offset = 0;
         if (info->type == MESH_FRAME_TYPE_DATA) {
             message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE],
                                   message);
@@ -1014,6 +916,17 @@ exit:
     }
 }
 
+static void enqueue_msg(void *arg)
+{
+    received_frame_t  *rx_frame = arg;
+    hal_context_t *hal = rx_frame->hal;
+
+    message_queue_enqueue(&hal->recv_queue, rx_frame->message);
+    message_handler(hal);
+
+    ur_mem_free(rx_frame, sizeof(received_frame_t));
+}
+
 static void handle_received_frame(void *context, frame_t *frame,
                                   frame_info_t *frame_info,
                                   int error)
@@ -1022,6 +935,9 @@ static void handle_received_frame(void *context, frame_t *frame,
     received_frame_t  *rx_frame = NULL;
     whitelist_entry_t *entry;
     hal_context_t *hal = (hal_context_t *)context;
+    mesh_header_control_t *control;
+    message_info_t info;
+    ur_error_t uerror = UR_ERROR_NONE;
 
     hal->link_stats.in_frames++;
     if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
@@ -1042,26 +958,45 @@ static void handle_received_frame(void *context, frame_t *frame,
         }
     }
 
-    message = message_alloc(frame->len, MESH_FORWARDER_2);
-    if (message == NULL) {
-        hal->link_stats.in_drops++;
-        return;
-    }
     rx_frame = (received_frame_t *)ur_mem_alloc(sizeof(received_frame_t));
     if (rx_frame == NULL) {
         hal->link_stats.in_drops++;
-        message_free(message);
         return;
     }
-    message_copy_from(message, frame->data, frame->len);
-    rx_frame->message = message;
+
     rx_frame->hal = hal;
     memcpy(&rx_frame->frame_info, frame_info, sizeof(rx_frame->frame_info));
-    resolve_message_info(rx_frame);
+    bzero(&info, sizeof(info));
+    resolve_message_info(rx_frame, &info, frame->data);
+    control = (mesh_header_control_t *)frame->data;
+    if (control->control[1] & (ENABLE_SEC << MESH_HEADER_SEC_OFFSET)) {
+        uerror = umesh_aes128_cbc_decrypt(frame->data + info.payload_offset,
+                                          frame->len - info.payload_offset,
+                                          frame->data + info.payload_offset);
+    }
 
-    message_queue_enqueue(&hal->recv_queue, rx_frame->message);
-    umesh_task_schedule_call(message_handler, hal);
-    ur_mem_free(rx_frame, sizeof(received_frame_t));
+    if (uerror != UR_ERROR_NONE) {
+        ur_mem_free(rx_frame, sizeof(received_frame_t));
+        hal->link_stats.in_drops++;
+        return;
+    }
+
+    message = message_alloc(frame->len, MESH_FORWARDER_2);
+    if (message == NULL) {
+        ur_mem_free(rx_frame, sizeof(received_frame_t));
+        hal->link_stats.in_drops++;
+        return;
+    }
+
+    memcpy(message->info, &info, sizeof(info));
+    message_copy_from(message, frame->data, frame->len);
+    rx_frame->message = message;
+
+    if (umesh_task_schedule_call(enqueue_msg, rx_frame) != UR_ERROR_NONE) {
+        hal->link_stats.in_drops++;
+        message_free(message);
+        ur_mem_free(rx_frame, sizeof(received_frame_t));
+    }
 }
 
 static void send_datagram(void *args)
@@ -1108,8 +1043,7 @@ static void send_datagram(void *args)
             lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
             lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
 
-            *(--lowpan_payload) = LOWPAN_IPHC_DISPATCH;
-            offset = ip_hdr_len - lowpan_hdr_len - 1;
+            offset = ip_hdr_len - lowpan_hdr_len;
             message_set_payload_offset(message, -offset);
             message_copy_from(message, lowpan_payload, ip_hdr_len - offset);
             ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
@@ -1131,7 +1065,7 @@ static void send_datagram(void *args)
         hal->sending_timer = ur_start_timer(SENDING_TIMEOUT,
                                             handle_sending_timer, hal);
     } else if (error == UR_ERROR_DROP) {
-        hal->last_sent = SENT_FAIL;
+        hal->last_sent = SENT_DROP;
         umesh_task_schedule_call(message_sent_task, hal);
     }
 }
@@ -1204,7 +1138,6 @@ static void handle_datagram(void *args)
         if (is_uncompressed(*nexth)) {
             message_set_payload_offset(message, -1);
         } else if (is_lowpan_iphc(*nexth)) {
-            message_set_payload_offset(message, -1);
             message = handle_lowpan_iphc(message);
         } else {
             message_free(message);
@@ -1238,8 +1171,6 @@ ur_error_t mf_init(void)
 {
     slist_t *hals;
     hal_context_t *hal;
-
-    address_resolver_init(address_resolved_handler);
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {

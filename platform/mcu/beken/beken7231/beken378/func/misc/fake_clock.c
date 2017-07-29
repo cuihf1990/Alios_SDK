@@ -5,8 +5,7 @@
 #include "drv_model_pub.h"
 #include "uart_pub.h"
 
-#include "FreeRTOS.h"
-#include "task.h"
+#include "mico_rtos.h"
 #include "ll.h"
 #include "k_api.h"
 

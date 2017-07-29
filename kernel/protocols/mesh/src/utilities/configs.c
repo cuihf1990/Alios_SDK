@@ -17,7 +17,7 @@
 #include <string.h>
 #include <yos/framework.h>
 
-#include "utilities/configs.h"
+#include "umesh_utils.h"
 
 enum {
     CONFIGS_MAGIC_NUMBER = 0xbe5cc5ec,

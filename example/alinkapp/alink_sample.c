@@ -477,11 +477,12 @@ void usage(void)
 }
 enum MESH_ROLE {
     MESH_MASTER = 0,
-    MESH_NODE
+    MESH_NODE = 1,
+    MESH_GATEWAY
 };
 
 static int env = DEFAULT;
-static int mesh_mode = MESH_NODE;
+static int mesh_mode = MESH_GATEWAY;
 static char *mesh_num = "1";
 static char log_level = 0;
 extern char *optarg;
@@ -532,9 +533,11 @@ void parse_opt(int argc, char *argv[])
                 mesh_mode = MESH_MASTER;
             else if (!strcmp(optarg, "node"))
                 mesh_mode = MESH_NODE;
+            else if (!strcmp(optarg, "gateway"))
+                mesh_mode = MESH_GATEWAY;
             else {
-                mesh_mode = MESH_NODE;
-                LOG("unknow opt %s, default to MESH_NODE", optarg);
+                mesh_mode = MESH_GATEWAY;
+                LOG("unknow opt %s, default to MESH_GATEWAY", optarg);
             }
             break;
         case 'n':
@@ -668,29 +671,34 @@ int application_start(int argc, char *argv[])
         return 0;
     }
 
-    //awss_demo();
-    if (env == SANDBOX)
-        alink_enable_sandbox_mode();
-    else if (env == DAILY)
-        alink_enable_daily_mode(NULL, 0);
-
-    alink_cloud_init();
-
-    yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
-    yos_register_event_filter(EV_SYS, alink_connect_event, NULL);
-    yos_register_event_filter(EV_KEY, alink_key_process, NULL);
-
-    netmgr_init();
-    netmgr_start(false);
-
-    cli_register_command(&ncmd);
-    cli_register_command(&uuidcmd);
-    cli_register_command(&modelcmd);
-    cli_register_command(&resetcmd);
-
 #ifdef CONFIG_YOS_DDA
     dda_enable(atoi(mesh_num));
     dda_service_init();
+#endif
+
+    cli_register_command(&uuidcmd);
+    alink_cloud_init();
+
+    if (mesh_mode == MESH_GATEWAY) {
+        cli_register_command(&ncmd);
+        cli_register_command(&modelcmd);
+        cli_register_command(&resetcmd);
+
+        //awss_demo();
+        if (env == SANDBOX)
+            alink_enable_sandbox_mode();
+        else if (env == DAILY)
+            alink_enable_daily_mode(NULL, 0);
+
+        yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
+        yos_register_event_filter(EV_SYS, alink_connect_event, NULL);
+        yos_register_event_filter(EV_KEY, alink_key_process, NULL);
+
+        netmgr_init();
+        netmgr_start(false);
+    }
+
+#ifdef CONFIG_YOS_DDA
     dda_service_start();
 #else
     yos_loop_run();

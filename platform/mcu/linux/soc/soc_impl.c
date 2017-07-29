@@ -19,6 +19,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <execinfo.h>
 
 #define _linux_backtrace_depth 10
 

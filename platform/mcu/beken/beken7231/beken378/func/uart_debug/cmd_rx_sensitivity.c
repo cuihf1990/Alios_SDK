@@ -7,7 +7,6 @@
 #include "uart_debug_pub.h"
 #include "schedule_pub.h"
 #include "rtos_pub.h"
-#include "error.h"
 
 UINT32 mode = RXSENS_DEFUALT_MODE;
 UINT32 duration = RXSENS_DEFUALT_DURATION;

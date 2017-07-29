@@ -18,9 +18,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "umesh_utils.h"
 #include "core/mesh_mgmt.h"
 #include "core/mcast.h"
-#include "utilities/timer.h"
 #include "hal/interfaces.h"
 
 enum {

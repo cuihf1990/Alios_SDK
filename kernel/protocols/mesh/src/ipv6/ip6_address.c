@@ -17,7 +17,7 @@
 #include <stdbool.h>
 
 #include "ipv6/ip6.h"
-#include "utilities/encoding.h"
+#include "umesh_utils.h"
 
 bool is_valid_digit(uint8_t ch)
 {
@@ -120,7 +120,7 @@ ur_error_t string_to_ip6_addr(const char *buf, ur_ip6_addr_t *target)
 
     if (target) {
         for (addr_index = 0; addr_index < 4; addr_index++) {
-            target->m32[addr_index] = ur_swap32(target->m32[addr_index]);
+            target->m32[addr_index] = htonl(target->m32[addr_index]);
         }
     }
 

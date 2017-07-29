@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/adc.h
+ * @brief PWM HAL
+ * @version since 5.5.0
+ */
 
 #ifndef YOS_ADC_H
 #define YOS_ADC_H

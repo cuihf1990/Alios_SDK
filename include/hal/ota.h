@@ -17,6 +17,12 @@
 #ifndef __OTA_H__
 #define __OTA_H__
 
+/**
+ * @file hal/ota.h
+ * @brief ota API&structures for HAL
+ * @version since 5.5.0
+ */
+
 #pragma once
 
 #ifdef __cplusplus

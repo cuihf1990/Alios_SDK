@@ -31,7 +31,6 @@
 #include "drv_model_pub.h"
 #include "uart_pub.h"
 #include "ll.h"
-#include "error.h"
 
 typedef struct
 {

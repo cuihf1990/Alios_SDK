@@ -269,13 +269,6 @@ static void task_event_co1_entry(void *arg)
     kstat_t  ret;
     uint32_t actl_flags;
 
-    ret = yunos_event_create(&test_event, MODULE_NAME, TEST_FLAG);
-    if (ret != YUNOS_SUCCESS && test_event.flags != TEST_FLAG) {
-        test_case_fail++;
-        PRINT_RESULT(MODULE_NAME_CO, FAIL);
-        return;
-    }
-
     while (1) {
         ret = yunos_event_get(&test_event, ~CHK_AND_ALL_FLAG, YUNOS_AND, &actl_flags,
                               YUNOS_WAIT_FOREVER);
@@ -316,6 +309,13 @@ static void task_event_co2_entry(void *arg)
 void event_coopr_test(void)
 {
     kstat_t ret;
+
+    ret = yunos_event_create(&test_event, MODULE_NAME, TEST_FLAG);
+    if (ret != YUNOS_SUCCESS && test_event.flags != TEST_FLAG) {
+        test_case_fail++;
+        PRINT_RESULT(MODULE_NAME_CO, FAIL);
+        return;
+    }
 
     ret = yunos_task_dyn_create(&task_event_co1, MODULE_NAME, 0, TASK_EVENT_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_event_co1_entry, 1);

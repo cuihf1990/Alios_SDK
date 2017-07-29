@@ -139,47 +139,6 @@ int hal_umesh_register_receiver(ur_mesh_hal_module_t *m,
     return -1;
 }
 
-int hal_umesh_start_beacons(ur_mesh_hal_module_t *m,
-                            frame_t *data, mac_address_t *dest,
-                            uint16_t max_interval)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_start_beacons != NULL)) {
-        return m->ur_mesh_hal_start_beacons(m, data, dest, max_interval);
-    }
-
-    return -1;
-}
-
-int hal_umesh_stop_beacons(ur_mesh_hal_module_t *m)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_stop_beacons != NULL)) {
-        return m->ur_mesh_hal_stop_beacons(m);
-    }
-
-    return -1;
-}
-
-int hal_umesh_set_bcast_mtu(ur_mesh_hal_module_t *m, uint16_t mtu)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_set_bcast_mtu != NULL)) {
-        return m->ur_mesh_hal_set_bcast_mtu(m, mtu);
-    }
-
-    return -1;
-}
-
 int hal_umesh_get_bcast_mtu(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
@@ -188,19 +147,6 @@ int hal_umesh_get_bcast_mtu(ur_mesh_hal_module_t *m)
 
     if ((m != NULL) && (m->ur_mesh_hal_get_bcast_mtu != NULL)) {
         return m->ur_mesh_hal_get_bcast_mtu(m);
-    }
-
-    return -1;
-}
-
-int hal_umesh_set_ucast_mtu(ur_mesh_hal_module_t *m, uint16_t mtu)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_set_ucast_mtu != NULL)) {
-        return m->ur_mesh_hal_set_ucast_mtu(m, mtu);
     }
 
     return -1;
@@ -219,81 +165,41 @@ int hal_umesh_get_ucast_mtu(ur_mesh_hal_module_t *m)
     return -1;
 }
 
-int hal_umesh_set_bcast_channel(ur_mesh_hal_module_t *m, uint8_t channel)
+int hal_umesh_set_channel(ur_mesh_hal_module_t *m, uint8_t channel)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
     }
 
-    if ((m != NULL) && (m->ur_mesh_hal_set_bcast_channel != NULL)) {
-        return m->ur_mesh_hal_set_bcast_channel(m, channel);
+    if ((m != NULL) && (m->ur_mesh_hal_set_channel != NULL)) {
+        return m->ur_mesh_hal_set_channel(m, channel);
     }
 
     return -1;
 }
 
-int hal_umesh_get_bcast_channel(ur_mesh_hal_module_t *m)
+int hal_umesh_get_channel(ur_mesh_hal_module_t *m)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
     }
 
-    if ((m != NULL) && (m->ur_mesh_hal_get_bcast_channel != NULL)) {
-        return m->ur_mesh_hal_get_bcast_channel(m);
+    if ((m != NULL) && (m->ur_mesh_hal_get_channel != NULL)) {
+        return m->ur_mesh_hal_get_channel(m);
     }
 
     return -1;
 }
 
-int hal_umesh_get_bcast_chnlist(ur_mesh_hal_module_t *m,
+int hal_umesh_get_chnlist(ur_mesh_hal_module_t *m,
                                 const uint8_t **chnlist)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();
     }
 
-    if ((m != NULL) && (m->ur_mesh_hal_get_bcast_chnlist != NULL)) {
-        return m->ur_mesh_hal_get_bcast_chnlist(m, chnlist);
-    }
-
-    return -1;
-}
-
-int hal_umesh_set_ucast_channel(ur_mesh_hal_module_t *m, uint8_t channel)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_set_ucast_channel != NULL)) {
-        return m->ur_mesh_hal_set_ucast_channel(m, channel);
-    }
-
-    return -1;
-}
-
-int hal_umesh_get_ucast_channel(ur_mesh_hal_module_t *m)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_get_ucast_channel != NULL)) {
-        return m->ur_mesh_hal_get_ucast_channel(m);
-    }
-
-    return -1;
-}
-
-int hal_umesh_get_ucast_chnlist(ur_mesh_hal_module_t *m,
-                                const uint8_t **chnlist)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_get_ucast_chnlist != NULL)) {
-        return m->ur_mesh_hal_get_ucast_chnlist(m, chnlist);
+    if ((m != NULL) && (m->ur_mesh_hal_get_chnlist != NULL)) {
+        return m->ur_mesh_hal_get_chnlist(m, chnlist);
     }
 
     return -1;
@@ -349,20 +255,6 @@ void hal_umesh_get_extnetid(ur_mesh_hal_module_t *m,
     if ((m != NULL) && (m->umesh_hal_get_extnetid != NULL)) {
         m->umesh_hal_get_extnetid(m, extnetid);
     }
-}
-
-int hal_umesh_set_mac_address(ur_mesh_hal_module_t *m,
-                              const mac_address_t *addr)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->ur_mesh_hal_set_mac_address != NULL)) {
-        return m->ur_mesh_hal_set_mac_address(m, addr);
-    }
-
-    return -1;
 }
 
 const mac_address_t *hal_umesh_get_mac_address(ur_mesh_hal_module_t *m)

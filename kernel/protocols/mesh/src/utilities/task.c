@@ -16,7 +16,7 @@
 
 
 #include "umesh_types.h"
-#include "utilities/task.h"
+#include "umesh_utils.h"
 
 typedef void (*yos_call_t)(void *);
 extern int yos_schedule_call(yos_call_t f, void *arg);

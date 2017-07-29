@@ -20,7 +20,7 @@
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
 #include "core/mesh_mgmt.h"
-#include "utilities/memory.h"
+#include "umesh_utils.h"
 #include "hal/interfaces.h"
 #include "hal/interface_context.h"
 #include "hal/hals.h"
@@ -88,8 +88,7 @@ void interface_init(void)
         if (module->type <= MEDIA_TYPE_15_4) {
             hal_context = new_hal_context(module);
             hal_context->channel_list.num =
-                hal_umesh_get_bcast_chnlist(module,
-                                            &hal_context->channel_list.channels);
+                hal_umesh_get_chnlist(module, &hal_context->channel_list.channels);
             memcpy(&hal_context->mac_addr, hal_umesh_get_mac_address(module),
                    sizeof(hal_context->mac_addr));
 

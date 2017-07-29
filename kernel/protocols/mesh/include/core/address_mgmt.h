@@ -57,27 +57,22 @@ enum {
     TARGET_QUERY = 1,
 };
 
-typedef void (* address_resolved_handler_t)(network_context_t *network,
-                                            address_cache_t *target,
-                                            ur_error_t error);
-
-void address_resolver_init(address_resolved_handler_t handler);
-ur_error_t address_resolve(uint8_t query_type, ur_node_id_t *target,
-                           ur_node_id_t *attach);
+void address_resolver_init(void);
+ur_error_t address_resolve(message_t *message);
 ur_error_t handle_address_query(message_t *message);
 ur_error_t handle_address_query_response(message_t *message);
 ur_error_t handle_address_notification(message_t *message);
+ur_error_t handle_address_unreachable(message_t *message);
 
 ur_error_t send_address_notification(network_context_t *network,
                                      ur_addr_t *dest);
+ur_error_t send_address_unreachable(network_context_t *network,
+                                    ur_addr_t *dest, ur_addr_t *target);
 
 void start_addr_cache(void);
 void stop_addr_cache(void);
 
 ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
                                 ur_node_id_t *attach);
-
-void get_attach_by_nodeid(ur_node_id_t *attach, ur_node_id_t *target);
-void get_target_by_ueid(ur_node_id_t *node_id, uint8_t *ueid);
 
 #endif  /* UR_AR_H */

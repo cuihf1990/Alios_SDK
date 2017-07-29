@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-#include <stdint.h>
+#ifndef __UMESH_UTILS_H__
+#define __UMESH_UTILS_H__
 
-#include "utilities/encoding.h"
+#include <lwip/def.h>
+#include "umesh_types.h"
+#include "utilities/configs.h"
+#include "utilities/logging.h"
+#include "utilities/message.h"
+#include "utilities/timer.h"
+#include "utilities/memory.h"
+#include "utilities/mac_whitelist.h"
+#include "utilities/task.h"
 
-inline uint16_t ur_swap16(uint16_t value)
-{
-    return
-        ((value & (uint16_t)(0x00ffU)) << 8) |
-        ((value & (uint16_t)(0xff00U)) >> 8);
-}
-
-inline uint32_t ur_swap32(uint32_t value)
-{
-    return
-        ((value & (uint32_t)(0x000000ffUL)) << 24) |
-        ((value & (uint32_t)(0x0000ff00UL)) <<  8) |
-        ((value & (uint32_t)(0x00ff0000UL)) >>  8) |
-        ((value & (uint32_t)(0xff000000UL)) >> 24);
-}
+#endif

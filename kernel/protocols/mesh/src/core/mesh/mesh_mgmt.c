@@ -20,6 +20,7 @@
 
 #include "umesh.h"
 #include "umesh_hal.h"
+#include "umesh_utils.h"
 #include "core/mesh_forwarder.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_mgmt_tlvs.h"
@@ -30,10 +31,8 @@
 #include "core/address_mgmt.h"
 #include "core/link_mgmt.h"
 #include "core/network_mgmt.h"
+#include "core/crypto.h"
 #include "core/master_key.h"
-#include "utilities/logging.h"
-#include "utilities/timer.h"
-#include "utilities/memory.h"
 #include "hal/interfaces.h"
 #include "hal/hals.h"
 
@@ -244,7 +243,7 @@ void become_leader(void)
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         if (g_mm_state.device.mode & MODE_LEADER) {
-            channel = hal_umesh_get_ucast_channel(network->hal->module);
+            channel = hal_umesh_get_channel(network->hal->module);
         } else {
             channel = network->hal->channel_list.channels[0];
         }
@@ -297,8 +296,7 @@ void become_leader(void)
     g_mm_state.callback->interface_up();
     stop_addr_cache();
     start_addr_cache();
-    set_master_key(NULL, 0);
-    set_group_key(NULL, 0);
+    address_resolver_init();
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "become leader\r\n");
@@ -411,11 +409,8 @@ static uint8_t get_tv_value(network_context_t *network,
             length += 8;
             break;
         case TYPE_UCAST_CHANNEL:
-            *data = hal_umesh_get_ucast_channel(network->hal->module);
-            length += 1;
-            break;
         case TYPE_BCAST_CHANNEL:
-            *data = hal_umesh_get_bcast_channel(network->hal->module);
+            *data = hal_umesh_get_channel(network->hal->module);
             length += 1;
             break;
         default:
@@ -1498,6 +1493,7 @@ static ur_error_t handle_sid_response(message_t *message)
     start_advertisement_timer(network);
     network->state = INTERFACE_UP;
     stop_addr_cache();
+    address_resolver_init();
 
     g_mm_state.callback->interface_up();
     start_keep_alive_timer(network);
@@ -1620,6 +1616,7 @@ void become_detached(void)
     nm_stop_discovery();
     stop_neighbor_updater();
     stop_addr_cache();
+    address_resolver_init();
     g_mm_state.callback->interface_down();
 
     networks = get_network_contexts();
@@ -1932,7 +1929,8 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
         case COMMAND_LINK_REJECT:
             error = handle_link_reject(message);
             break;
-        case COMMAND_DEST_UNREACHABLE:
+        case COMMAND_ADDRESS_UNREACHABLE:
+            error = handle_address_unreachable(message);
             break;
         case COMMAND_ADDRESS_ERROR:
             error = handle_address_error(message);
@@ -2233,7 +2231,7 @@ void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
     hal_context_t *hal;
 
     network = network ? : get_default_network_context();
-    hal_umesh_set_bcast_channel(network->hal->module, channel);
+    hal_umesh_set_channel(network->hal->module, channel);
     hal = network->hal;
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {

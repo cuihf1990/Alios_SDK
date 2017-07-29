@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 #include "core/sid_allocator.h"
-#include "utilities/memory.h"
+#include "umesh_utils.h"
 
 allocator_t rsid_allocator_init(int sid_type)
 {

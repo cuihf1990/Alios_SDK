@@ -20,8 +20,7 @@
 
 #include "yos/log.h"
 
-#include "utilities/logging.h"
-#include "utilities/memory.h"
+#include "umesh_utils.h"
 #include "tools/cli.h"
 
 extern int dda_log(char *str);

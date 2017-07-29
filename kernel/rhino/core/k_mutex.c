@@ -77,10 +77,6 @@ kstat_t yunos_mutex_del(kmutex_t *mutex)
         return YUNOS_NULL_PTR;
     }
 
-    if (g_intrpt_nested_level > 0u) {
-        return YUNOS_NOT_CALLED_BY_INTRPT;
-    }
-
     NULL_PARA_CHK(mutex);
 
     YUNOS_CRITICAL_ENTER();
@@ -157,10 +153,6 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
 
     if (mutex == NULL) {
         return YUNOS_NULL_PTR;
-    }
-
-    if (g_intrpt_nested_level > 0u) {
-        return YUNOS_NOT_CALLED_BY_INTRPT;
     }
 
     NULL_PARA_CHK(mutex);

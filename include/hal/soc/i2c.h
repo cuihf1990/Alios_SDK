@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * @file hal/soc/i2c.h
+ * @brief I2C HAL
+ * @version since 5.5.0
+ */
+
 #ifndef YOS_I2C_H
 #define YOS_I2C_H
 

@@ -22,9 +22,7 @@
 #include "core/link_mgmt.h"
 #include "core/mesh_mgmt.h"
 #include "core/vector_router.h"
-#include "utilities/timer.h"
-#include "utilities/logging.h"
-#include "utilities/memory.h"
+#include "umesh_utils.h"
 
 #define VECTOR_ROUTER_DEBUG_LEVEL UR_LOG_LEVEL_DEBUG
 

@@ -9,7 +9,6 @@
 
 #include "umesh_types.h"
 #include "utilities/message.h"
-#include "utilities/encoding.h"
 #include "ipv6/ip6.h"
 #include "ipv6/lwip_adapter.h"
 
@@ -37,7 +36,7 @@ void test_uradar_lwip_adapter_case(void)
     ur_ip6_header_t *ip6_header;
     ip6_header = (ur_ip6_header_t *)message_get_payload(message);
     memset(ip6_header, 0x00, UR_IP6_HLEN);
-    ip6_header->v_tc_fl = ur_swap32(6<<24);
+    ip6_header->v_tc_fl = htonl(6<<24);
     ip6_header->len = 60 - UR_IP6_HLEN;
     ip6_header->next_header = 17;
     ip6_header->hop_lim = 255;
@@ -47,9 +46,9 @@ void test_uradar_lwip_adapter_case(void)
     ur_udp_header_t *header;
     ur_ip6_addr_t dst;
     header = (ur_udp_header_t *)malloc(16);
-    header->src_port = ur_swap16(2016);
-    header->dst_port = ur_swap16(2016);
-    header->length = ur_swap16(16);
+    header->src_port = htons(2016);
+    header->dst_port = htons(2016);
+    header->length = htons(16);
     header->chksum = 0;
     string_to_ip6_addr("F'00::0", &dst);
     string_to_ip6_addr("fc00::0", &dst);
