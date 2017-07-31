@@ -38,7 +38,6 @@ static int            cliexit = 0;
 
 int cli_putstr(const char *msg);
 
-
 /* Find the command 'name' in the cli commands table.
 * If len is 0 then full match will be performed else upto len bytes.
 * Returns: a pointer to the corresponding cli_command struct or NULL.
@@ -421,6 +420,12 @@ void reboot(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
     hal_reboot();
 }
 
+void wifi_debug_mode_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                             char **argv)
+{
+    hal_wifi_start_debug_mode();
+}
+
 static void echo_cmd_handler(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                              char **argv)
 {
@@ -470,6 +475,7 @@ static const struct cli_command built_ins[] = {
     {"tftp",     "tftp",                        tftp_Command},
     {"time",     "system time",                 uptime_Command},
     {"ota",      "system ota",                  ota_Command},
+    { "wifi_debug", "wifi debug mode", wifi_debug_mode_command},
 };
 
 /* Built-in "help" command: prints all registered commands and their help

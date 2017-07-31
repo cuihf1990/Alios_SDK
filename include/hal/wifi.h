@@ -191,6 +191,8 @@ struct hal_wifi_module_s {
     void (*register_monitor_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
     void (*register_wlan_mgnt_monitor_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
     int (*wlan_send_80211_raw_frame)(hal_wifi_module_t *m, uint8_t *buf, int len);
+    void (*start_debug_mode)(hal_wifi_module_t *m);
+    void (*stop_debug_mode)(hal_wifi_module_t *m);
 };
 
 /**
@@ -252,6 +254,9 @@ int  hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
 void hal_wifi_start_wifi_monitor(hal_wifi_module_t *m);
 void hal_wifi_stop_wifi_monitor(hal_wifi_module_t *m);
 void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
+
+void hal_wifi_start_debug_mode(hal_wifi_module_t *m);
+void hal_wifi_stop_debug_mode(hal_wifi_module_t *m);
 
 /**
  * @brief Set the event callback function array for the wifi
