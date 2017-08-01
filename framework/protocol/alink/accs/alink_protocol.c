@@ -65,7 +65,7 @@ const char RequestFormat[] =
     "\"request\":{\"cid\":\"%s\",\"rspID\":%d,\"target\":\"%s\",\"token\":\"%s\",\"uuid\":\"%s\"},";
 const char RequestFormat_test[] =
     "\"request\":{\"cid\":\"%s\",\"rspID\":%d,\"service\":\"check\",\"target\":\"%s\",\"testId\":\"%s\",\"token\":\"%s\",\"uuid\":\"%s\"},";
-#ifdef SUPPORT_ID2
+#if (defined(SUPPORT_ID2) && defined(CONFIG_SDS))
 const char SignatureFormat[] =
     "cid:%s,rspID:%d,target:%s,token:%s,uuid:%s,time:%s";
 const char SignatureFormat_test[] =
@@ -135,7 +135,7 @@ static void alink_calculate_signature(char *signbuf, int *signbuf_len,
                  main_device->config->test_id,
                  main_device->config->token,
                  main_device->config->uuid, time
-#ifndef SUPPORT_ID2
+#if (!defined(SUPPORT_ID2) && !defined(CONFIG_SDS))
                  , devinfo_get_secret()
 #endif
                 );
@@ -144,14 +144,37 @@ static void alink_calculate_signature(char *signbuf, int *signbuf_len,
                  main_device->info->cid, rspid, target,
                  main_device->config->token,
                  main_device->config->uuid, time
-#ifndef SUPPORT_ID2
+#if (!defined(SUPPORT_ID2) && !defined(CONFIG_SDS))
                  , devinfo_get_secret()
 #endif
                 );
 
     alink_debug_protocol(MODULE_NAME_ALINK_PROTOCOL, "fingerprint: %s", buf);
 
-#ifndef SUPPORT_ID2
+#if defined(SUPPORT_ID2)
+    {
+        uint8_t res[TFS_ID2_SIGN_SIZE] = { 0 };
+        int ret, res_len = sizeof(res);
+
+        ret = tfs_id2_sign(buf, strlen(buf), res, &res_len);
+        if (ret)
+            log_error("tfs_id2_sign error(%d)", ret);
+
+        base64_encode(res, res_len, signbuf, signbuf_len);
+    }
+#elif defined(CONFIG_SDS)
+    {
+        uint8_t digest[16] = {0};
+        int i = 0;
+
+        digest_hmac(DIGEST_TYPE_MD5, buf, strlen(buf), devinfo_get_device_secret(), strlen(devinfo_get_device_secret()),digest);
+        for (i = 0; i < sizeof(digest); i++) {
+            sprintf(signbuf + i * 2, "%02x", digest[i]);
+        }
+        signbuf_len = sizeof(digest) * 2;
+        alink_debug_protocol("hmac md5 sign: %s", signbuf);
+    }
+#else
     {
         uint8_t md5_ret[MD5_SIZE_BYTE];
         int i;
@@ -162,21 +185,8 @@ static void alink_calculate_signature(char *signbuf, int *signbuf_len,
             sprintf(signbuf + i * 2, "%02x", md5_ret[i]);
         }
 
-        if (signbuf_len) {
+        if (signbuf_len)
             *signbuf_len = MD5_SIZE_BYTE * 2;
-        }
-    }
-#else
-    {
-        uint8_t res[TFS_ID2_SIGN_SIZE] = { 0 };
-        int ret, res_len = sizeof(res);
-
-        ret = tfs_ID2_sign(buf, strlen(buf), res, &res_len);
-        if (ret) {
-            LOGE(MODULE_NAME_ALINK_PROTOCOL, "tfs_ID2_sign error(%d)", ret);
-        }
-
-        base64_encode(res, res_len, signbuf, signbuf_len);
     }
 #endif
 }
@@ -205,8 +215,12 @@ static void alink_request_json_system(char *buf, int rspid, const char *target,
     char signature[SIGNATURE_RESULT_MAX_SIZE] = { 0 };
     int signature_len = SIGNATURE_RESULT_MAX_SIZE;
     alink_calculate_signature(signature, &signature_len, rspid, target, time);
+#ifdef CONFIG_SDS
+    sprintf(buf, SystemFormat, main_device->info->alink_version, signature, devinfo_get_device_key(), time);
+#else
     sprintf(buf, SystemFormat, main_device->info->alink_version, signature,
             devinfo_get_key(), time);
+#endif
     if (main_device->config->test_mode) {
         sprintf(buf + strlen(buf), RequestFormat_test, main_device->info->cid, rspid,
                 target, main_device->config->test_id, main_device->config->token,

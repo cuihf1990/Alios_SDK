@@ -36,6 +36,8 @@ static const char *product_key = light_key;
 static const char *product_secret = light_secret;
 static const char *product_debug_key = light_debug_key;
 static const char *product_debug_secret = light_debug_secret;
+#define device_key              "ws8EbiEYJgPSmCMMBkCl"
+#define device_secret           "MZo7oPsjTAUHCoCersyNGdmeUmtvy3Xk"
 
 void product_init(void)
 {
@@ -57,9 +59,21 @@ void product_init(void)
     }
 }
 
+
+char *product_get_device_key(char key_str[DEVICE_KEY_LEN])
+{
+      return strncpy(key_str, device_key, DEVICE_KEY_LEN);
+}
+
+char *product_get_device_secret(char secret_str[DEVICE_SECRET_LEN])
+{
+      return strncpy(secret_str, device_secret, DEVICE_SECRET_LEN);
+}
+
+
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 {
-    return strncpy(name_str, "alink_product", PRODUCT_NAME_LEN);
+      return strncpy(name_str, "alink_product", PRODUCT_NAME_LEN);
 }
 
 char *product_get_version(char ver_str[PRODUCT_VERSION_LEN])

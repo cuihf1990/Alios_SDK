@@ -20,8 +20,10 @@
 #include "git_version.h"
 #include "os.h"
 const char *online_server = "alink.tcp.aliyun.com";
-#ifdef SUPPORT_ID2
+#if defined(SUPPORT_ID2)
 #define ALINK_PROTOCOL_VERSION  "1.0.SE"
+#elif defined(CONFIG_SDS)
+#define ALINK_PROTOCOL_VERSION  "1.0.1"
 #else
 #define ALINK_PROTOCOL_VERSION  "1.0"
 #endif
@@ -58,6 +60,10 @@ static void devinfo_dump(void)
     LOGI(MODULE_NAME, "secret: %s", main_devinfo.secret);
     LOGI(MODULE_NAME, "debug_key: %s", main_devinfo.debug_key);
     LOGI(MODULE_NAME, "debug_secret: %s", main_devinfo.debug_secret);
+    #ifdef CONFIG_SDS
+    LOGI(MODULE_NAME, "device key: %s", main_devinfo.device_key);
+    LOGI(MODULE_NAME, "device secret: %s", main_devinfo.device_secret);
+    #endif
     LOGI(MODULE_NAME, "A[%s|%s|%04x]OS[%s]T[%s.%s]", main_devinfo.alink_version,
          ALINK_AGENT_GIT_VERSION, 0x0000, version, module_name, ALINK_AGENT_BUILD_TIME);
     LOGI(MODULE_NAME, "~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -89,6 +95,19 @@ char *devinfo_get_version(void)
     return main_devinfo.firmware_version;
 }
 
+
+#ifdef CONFIG_SDS
+char *devinfo_get_device_key(void)
+{
+    return main_devinfo.device_key;
+}
+
+char *devinfo_get_device_secret(void)
+{
+    return main_devinfo.device_secret;
+}
+#endif
+
 static int devinfo_init(void)
 {
     product_init();
@@ -99,6 +118,10 @@ static int devinfo_init(void)
     os_product_get_sn(main_devinfo.sn);
     os_product_get_model(main_devinfo.model);
 
+#ifdef CONFIG_SDS
+    os_get_device_key(main_devinfo.device_key);
+    os_get_device_secret(main_devinfo.device_secret);
+#endif
     os_get_version(main_devinfo.os_version);
     strcpy(main_devinfo.alink_version, ALINK_PROTOCOL_VERSION);
     os_product_get_version(main_devinfo.firmware_version);

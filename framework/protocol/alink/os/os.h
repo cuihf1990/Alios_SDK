@@ -51,6 +51,8 @@ extern "C" {
 #define OS_PRODUCT_KEY_LEN      PRODUCT_KEY_LEN
 #define OS_PRODUCT_SECRET_LEN   PRODUCT_SECRET_LEN
 #define OS_PRODUCT_VERSION_LEN  PRODUCT_VERSION_LEN
+#define OS_DEVICE_KEY_LEN      DEVICE_KEY_LEN
+#define OS_DEVICE_SECRET_LEN   DEVICE_SECRET_LEN
 /***************************************** Misc Interface *****************************************/
 
 /** @defgroup group_misc misc
@@ -93,7 +95,7 @@ static inline int os_is_big_endian(void)
     uint32_t data = 0xFF000000;
 
     if (0xFF == *(uint8_t *) & data) {
-        return 1;                                   //big endian
+       return 1;                                   //big endian
     }
 
     return 0;                                       //little endian
@@ -1675,6 +1677,19 @@ static inline int os_aes128_cbc_decrypt(
     return platform_aes128_cbc_decrypt(aes, src, blockNum, dst);
 }
 
+ /**
+ * @brief Get device secret string.
+ *
+ * @param[out] secret_str @n Buffer for using to store secret string.
+ * @return A pointer to the start address of secret_str.
+ * @see None.
+ * @note None.
+ */
+      static inline char *os_get_device_secret(char secret_str[OS_DEVICE_SECRET_LEN]) {
+               return (char *)product_get_device_secret(secret_str);
+      }
+
+
 /**
  * @brief get the information of the connected AP.
  *
@@ -1742,6 +1757,19 @@ static inline char *os_product_get_sn(char sn_str[OS_PRODUCT_SN_LEN])
 {
     return product_get_sn(sn_str);
 }
+
+ /**
+  *@brief Get device key string.
+  *
+  *@param[out] key_str @n Buffer for using to store debug key string.
+  *@return A pointer to the start address of key_str.
+  * @see None.
+  * @note None.
+  */
+static inline char *os_get_device_key(char key_str[OS_DEVICE_KEY_LEN]) {
+    return (char *)product_get_device_key(key_str);
+}
+
 
 /**
  * @brief Get product model string.
