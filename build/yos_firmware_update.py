@@ -660,6 +660,7 @@ if assert_response(["bootloader", "read: usage: read [address] [size]"], 1) == F
         sys.exit(1)
 port.flushInput()
 
+failed_num = 0
 updates = [bootloader, application, driver]
 for i in range(len(updates)):
     if updates[i] != None:
@@ -676,10 +677,11 @@ for i in range(len(updates)):
             print "updating {0} with {1} ... succeed".format(device, updates[i])
         else:
             print "updating {0} with {1} ... failed".format(device, updates[i])
+            failed_num += 1
 
 if bootapp:
     port.write("boot\r\n")
     assert_response(["Booting......"], 1)
 port.close()
-sys.exit(0)
+sys.exit(failed_num)
 
