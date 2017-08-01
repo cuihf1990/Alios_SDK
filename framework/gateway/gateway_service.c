@@ -40,6 +40,7 @@
 
 #define MODULE_NAME "gateway"
 #define ADV_INTERVAL (5 * 1000)
+#define MAX_GATEWAY_RECONNECT_TIMEOUT 48
 #define GW_DEBUG(x, y, ...)     printf("GATEWAY: " y "\n", ##__VA_ARGS__)
 
 typedef struct reg_info_s {
@@ -56,6 +57,7 @@ typedef struct {
     dlist_t next;
     dev_info_t *devinfo;
     struct sockaddr_in6 addr;
+    uint8_t timeout;
 } client_t;
 
 typedef struct {
@@ -267,7 +269,7 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
         memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) == 0 &&
         pstate->mqtt_reconnect == false) {
         yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
-        yos_post_delayed_action(10 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
+        yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
         return;
     }
 
@@ -447,6 +449,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
              (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
 
 add_enrollee:
+    client->timeout = 0;
     if (reginfo->login == true)
         devmgr_login_device(client->devinfo);
     else
@@ -529,7 +532,7 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
     memcpy(pstate->uuid, conn_ack->payload, sizeof(pstate->uuid));
     pstate->uuid[STR_UUID_LEN] = '\x0';
     pstate->mqtt_connected = true;
-    yos_post_delayed_action(10 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
+    yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
 
     yos_cloud_register_backend(&gateway_cloud_report);
     if(pstate->mqtt_reconnect == false)
@@ -537,7 +540,7 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
 
     pstate->mqtt_reconnect = false;
     yos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
-    yos_post_delayed_action((16+(rand()&0xf)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
+    yos_post_delayed_action((8+(rand()&0x7)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
 
     LOGD(MODULE_NAME, "connack");
 }
@@ -591,8 +594,9 @@ static void gateway_advertise(void *arg)
     void *buf;
     int len;
     adv_body_t *adv;
+    client_t *client;
 
-    yos_post_delayed_action(10 * 1000, gateway_advertise, arg);
+    yos_post_delayed_action(ADV_INTERVAL, gateway_advertise, arg);
 
     ur_ip6_addr_t *mcast_addr = (ur_ip6_addr_t *)ur_mesh_get_mcast_addr();
     ur_ip6_addr_t *ucast_addr = (ur_ip6_addr_t *)ur_mesh_get_ucast_addr();
@@ -614,6 +618,14 @@ static void gateway_advertise(void *arg)
     LOGD(MODULE_NAME, "gateway_advertise");
 
     yos_free(buf);
+
+    dlist_for_each_entry(&pstate->clients, client, client_t, next) {
+        if (client->timeout < MAX_GATEWAY_RECONNECT_TIMEOUT) {
+            client->timeout ++;
+            if (client->timeout >= MAX_GATEWAY_RECONNECT_TIMEOUT)
+                devmgr_logout_device(client->devinfo);
+        }
+    }
 }
 
 #define GATEWAY_WORKER_THREAD
