@@ -250,6 +250,10 @@ static int _run_test_case(void *test_suite, void *test_case)
 {
     yunit_test_suite_node_t *test_suite_node = test_suite;
     yunit_test_case_node_t *test_case_node = test_case;
+    int cnt1 = g_test_context.failed_test_cases_count + g_test_context.fatal_test_cases_count;
+    int cnt2;
+    long long now = yos_now_ms();
+    int delta;
 
     if (test_suite_node->setup != NULL) {
         test_suite_node->setup();
@@ -262,6 +266,10 @@ static int _run_test_case(void *test_suite, void *test_case)
     if (test_suite_node->teardown != NULL) {
         test_suite_node->teardown();
     }
+
+    cnt2 = g_test_context.failed_test_cases_count + g_test_context.fatal_test_cases_count;
+    delta = yos_now_ms() - now;
+    fprintf(stderr, "test case %s finished %d failed %d ms\n", test_case_node->name, cnt2-cnt1, delta);
 
     return 0;
 }
