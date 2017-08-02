@@ -197,6 +197,26 @@ static yunit_test_case_t yunos_uradar_stress_testcases[] = {
     YUNIT_TEST_CASE_NULL
 };
 
+static yunit_test_case_t yunos_uradar_mini_testcases[] = {
+    /* submodule ut */
+    { "sid_router", test_uradar_sid_router_case },
+    { "6lowpan", test_uradar_6lowpan_case },
+    { "sid_allocator", test_uradar_sid_allocator_case },
+    { "rsid_allocator", test_uradar_rsid_allocator_case },
+    { "lwip_adapter", test_uradar_lwip_adapter_case },
+    { "mesh_mgmt", test_uradar_mesh_mgmt_case },
+    /* compound case */
+    { "mcast", test_uradar_mcast_case },
+    { "1hop", test_uradar_1hop_case },
+    { "top_line", test_uradar_topology_line_case },
+    { "layer_routing_simple", test_uradar_layer_routing_line_topology_case },
+    { "layer_routing_2mobile", test_uradar_layer_routing_2mobile_case },
+    { "topology", test_uradar_topo_case },
+    /* stress case */
+    { "scales_5", test_uradar_scales_5nodes_case },
+    YUNIT_TEST_CASE_NULL
+};
+
 static yunit_test_case_t yunos_uradar_testcases[] = {
     /* submodule ut */
     { "hal_mesh", test_hal_mesh_case },
@@ -250,6 +270,11 @@ static yunit_test_suite_t stress_suites[] = {
     YUNIT_TEST_SUITE_NULL
 };
 
+static yunit_test_suite_t mini_suites[] = {
+    { "mesh_mini", init, cleanup, setup, teardown, yunos_uradar_mini_testcases },
+    YUNIT_TEST_SUITE_NULL
+};
+
 void test_uradar(void)
 {
     int argc;
@@ -260,6 +285,7 @@ void test_uradar(void)
         yunit_add_test_suites(sub_suites);
         yunit_add_test_suites(com_suites);
         yunit_add_test_suites(stress_suites);
+        yunit_add_test_suites(mini_suites);
     }
 
     yunit_add_test_suites(suites);
