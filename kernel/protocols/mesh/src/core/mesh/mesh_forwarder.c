@@ -24,7 +24,6 @@
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
 #include "core/router_mgr.h"
-#include "core/lowpan6.h"
 #include "core/network_data.h"
 #include "core/mcast.h"
 #include "core/sid_allocator.h"
@@ -57,16 +56,6 @@ static void send_datagram(void *args);
 static void handle_datagram(void *message);
 static neighbor_t *get_next_node(network_context_t *network,
                                  message_info_t *info);
-
-static inline bool is_lowpan_iphc(uint8_t control)
-{
-    return (control & LOWPAN_IPHC_DISPATCH_MASK) == LOWPAN_IPHC_DISPATCH;
-}
-
-static inline bool is_uncompressed(uint8_t control)
-{
-    return control == UNCOMPRESSED_DISPATCH;
-}
 
 static inline bool is_mesh_header(uint8_t control)
 {
@@ -171,11 +160,6 @@ static void handle_sent(void *context, frame_t *frame, int error)
     }
     hal->last_sent = error;
     umesh_task_schedule_call(message_sent_task, hal);
-}
-
-static message_t *handle_lowpan_iphc(message_t *message)
-{
-    return lp_header_decompress(message);
 }
 
 static void resolve_message_info(received_frame_t *frame, message_info_t *info,
@@ -611,7 +595,6 @@ static void set_src_info(message_info_t *info)
     info->src.netid = umesh_mm_get_meshnetid(info->network);
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = umesh_mm_get_local_sid();
-    info->flags |= INSERT_LOWPAN_FLAG;
 }
 
 ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
@@ -707,9 +690,6 @@ ur_error_t mf_send_message(message_t *message)
 
     info->flags |= INSERT_MESH_HEADER;
     set_dest_encrypt_flag(info);
-    if (info->type == MESH_FRAME_TYPE_DATA) {
-        info->flags |= ENABLE_COMPRESS_FLAG;
-    }
 
     set_src_info(info);
     network = info->network;
@@ -1007,9 +987,6 @@ static void send_datagram(void *args)
     uint8_t *lowpan_payload;
     message_info_t *info;
     int16_t offset = 0;
-    uint8_t ip_hdr_len;
-    uint8_t lowpan_hdr_len;
-    uint8_t *ip_payload;
 
     hal = (hal_context_t *)args;
     message = hal->send_message;
@@ -1027,29 +1004,6 @@ static void send_datagram(void *args)
         hal->send_message = message;
     }
     info = message->info;
-    if (info->flags & INSERT_LOWPAN_FLAG) {
-        if (info->flags & ENABLE_COMPRESS_FLAG) {
-            ip_payload = (uint8_t *)ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);
-            if (ip_payload == NULL) {
-                hal->link_stats.out_errors++;
-                return;
-            }
-            message_set_payload_offset(message, -1);
-            if (message_get_msglen(message) >= (UR_IP6_HLEN + UR_UDP_HLEN)) {
-                message_copy_to(message, 0, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN);
-            } else if (message_get_msglen(message) >= UR_IP6_HLEN) {
-                message_copy_to(message, 0, ip_payload, UR_IP6_HLEN);
-            }
-            lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
-            lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
-
-            offset = ip_hdr_len - lowpan_hdr_len;
-            message_set_payload_offset(message, -offset);
-            message_copy_from(message, lowpan_payload, ip_hdr_len - offset);
-            ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
-        }
-        info->flags &= (~(INSERT_LOWPAN_FLAG | ENABLE_COMPRESS_FLAG));
-    }
 
     if (info->flags & INSERT_MCAST_FLAG) {
         offset = sizeof(mcast_header_t) + 1;
@@ -1134,14 +1088,6 @@ static void handle_datagram(void *args)
             offset = sizeof(mcast_header_t) + 1;
             message_set_payload_offset(message, -offset);
             nexth = message_get_payload(message);
-        }
-        if (is_uncompressed(*nexth)) {
-            message_set_payload_offset(message, -1);
-        } else if (is_lowpan_iphc(*nexth)) {
-            message = handle_lowpan_iphc(message);
-        } else {
-            message_free(message);
-            return;
         }
         ur_mesh_input((umessage_t *)message);
     } else {
