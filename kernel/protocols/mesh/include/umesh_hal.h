@@ -125,7 +125,7 @@ typedef struct ur_mesh_hal_module_s {
 int hal_umesh_init(void);
 
 /**
- * Get the defaut uRadar mesh HAL
+ * Get the defaut umesh HAL
  *
  * The system may have more than 1 mesh HAL instances.
  *
@@ -135,7 +135,7 @@ int hal_umesh_init(void);
 ur_mesh_hal_module_t *hal_umesh_get_default_module(void);
 
 /**
- * Get the next uRadar mesh HAL
+ * Get the next umesh HAL
  *
  * The system may have more than 1 mesh HAL instances.
  *
@@ -152,7 +152,7 @@ ur_mesh_hal_module_t *hal_umesh_get_next_module(ur_mesh_hal_module_t *cur);
 void hal_umesh_register_module(ur_mesh_hal_module_t *module);
 
 /**
- * Enable a uRadar HAL module, which usually powers on its hardware
+ * Enable a umesh HAL module, which usually powers on its hardware
  *
  * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
  *
@@ -162,7 +162,7 @@ void hal_umesh_register_module(ur_mesh_hal_module_t *module);
 int hal_umesh_enable(ur_mesh_hal_module_t *module);
 
 /**
- * Disable a uRadar HAL module, which usually power off its hardware
+ * Disable a umesh HAL module, which usually power off its hardware
  *
  * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
  *
@@ -404,7 +404,7 @@ int hal_umesh_set_key(struct ur_mesh_hal_module_s *module,
 int hal_umesh_is_sec_enabled(struct ur_mesh_hal_module_s *module);
 
 /**
- * Read uRadar mesh HAL frame stats.
+ * Read umesh HAL frame stats.
  *
  * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
  *

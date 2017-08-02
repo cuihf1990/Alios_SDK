@@ -313,7 +313,7 @@ void process_autotest(int argc, char *argv[])
         }
     }
     if (g_cl_state.autotest_length > UR_IP6_MTU) {
-        response_append("exceed uRadar mesh IP6 MTU %d\r\n", UR_IP6_MTU);
+        response_append("exceed mesh IP6 MTU %d\r\n", UR_IP6_MTU);
         return;
     }
     string_to_ip6_addr(argv[0], &g_cl_state.autotest_target);
@@ -595,7 +595,7 @@ void process_ping(int argc, char *argv[])
     }
 
     if (length > UR_IP6_MTU) {
-        response_append("exceed uRadar mesh IP6 MTU %d\r\n", UR_IP6_MTU);
+        response_append("exceed mesh IP6 MTU %d\r\n", UR_IP6_MTU);
         return;
     }
 
