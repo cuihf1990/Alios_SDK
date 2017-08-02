@@ -135,8 +135,6 @@ typedef struct mesh_header_frame_counter_s {
 } __attribute__((packed)) mesh_header_frame_counter_t;
 
 enum {
-    INSERT_LOWPAN_FLAG   = 1 << 5,
-    ENABLE_COMPRESS_FLAG = 1 << 6,
     INSERT_MCAST_FLAG    = 1 << 7,
     ENCRYPT_ENABLE_FLAG  = 1 << 9,
 

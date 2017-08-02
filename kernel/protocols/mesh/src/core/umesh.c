@@ -169,31 +169,50 @@ exit:
 ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
 {
     transmit_frame_t *frame;
-    uint8_t          append_length;
-    uint8_t          *payload;
+    uint8_t append_length;
     ur_error_t error = UR_ERROR_NONE;
+    uint8_t ip_hdr_len;
+    uint8_t lowpan_hdr_len;
+    uint8_t *ip_payload;
+    uint8_t *lowpan_payload;
+    int16_t offset;
 
     if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
         return UR_ERROR_FAIL;
     }
 
+    ip_payload = ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);
+    if (ip_payload == NULL) {
+        return UR_ERROR_MEM;
+    }
+    if (message_get_msglen((message_t *)message) >= (UR_IP6_HLEN + UR_UDP_HLEN)) {
+        message_copy_to((message_t *)message, 0, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN);
+    } else if (message_get_msglen((message_t *)message) >= UR_IP6_HLEN) {
+        message_copy_to((message_t *)message, 0, ip_payload, UR_IP6_HLEN);
+    }
+    lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
+    lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
+    offset = ip_hdr_len - lowpan_hdr_len;
+
     frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
     if (frame == NULL) {
+        ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
         return UR_ERROR_FAIL;
     }
     append_length = sizeof(mcast_header_t) + 2;
     frame->message = message_alloc(((message_t *)message)->data->tot_len +
-                                   append_length, UMESH_1);
+                                   append_length - offset, UMESH_1);
     if (frame->message == NULL) {
         ur_mem_free(frame, sizeof(transmit_frame_t));
+        ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
         return UR_ERROR_FAIL;
     }
-    message_set_payload_offset(frame->message, -append_length);
-    message_copy(frame->message, (message_t *)message);
 
-    message_set_payload_offset(frame->message, 1);
-    payload = message_get_payload(frame->message);
-    *payload = UNCOMPRESSED_DISPATCH;
+    message_set_payload_offset(frame->message, -(append_length + lowpan_hdr_len));
+    message_set_payload_offset((message_t *)message, -ip_hdr_len);
+    message_copy(frame->message, (message_t *)message);
+    message_set_payload_offset(frame->message, lowpan_hdr_len);
+    message_copy_from(frame->message, lowpan_payload, lowpan_hdr_len);
 
     memcpy(&frame->dest, dest, sizeof(frame->dest));
     error = umesh_task_schedule_call(output_message_handler, frame);
@@ -202,6 +221,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
         ur_mem_free(frame, sizeof(transmit_frame_t));
     }
 
+    ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
     return UR_ERROR_NONE;
 }
 
@@ -217,13 +237,19 @@ static void input_message_handler(void *args)
 ur_error_t ur_mesh_input(umessage_t *message)
 {
     ur_error_t error = UR_ERROR_FAIL;
+    message_t *dec_message;
 
-    if (g_um_state.adapter_callback) {
-        error = umesh_task_schedule_call(input_message_handler, message);
+    dec_message = lp_header_decompress((message_t *)message);
+    if (dec_message == NULL) {
+        message_free((message_t *)message);
+        return error;
     }
 
+    if (g_um_state.adapter_callback) {
+        error = umesh_task_schedule_call(input_message_handler, dec_message);
+    }
     if (error != UR_ERROR_NONE) {
-        message_free((message_t *)message);
+        message_free(dec_message);
     }
 
     return error;
