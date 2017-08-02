@@ -37,7 +37,7 @@ typedef struct lwip_adapter_state_s {
 
 static lwip_adapter_state_t g_la_state = {.interface_name = "ur"};
 
-/* Receive IP frame from uRadar and pass up to LwIP */
+/* Receive IP frame from umesh and pass up to LwIP */
 ur_error_t ur_adapter_input(void *message)
 {
     err_t       error = ERR_ARG;
