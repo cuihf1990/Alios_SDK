@@ -141,6 +141,7 @@ message_t *lp_header_decompress(message_t *message);
 ur_error_t lp_reassemble(message_t *p, message_t **reass_p);
 void       lp_start(void);
 void       lp_stop(void);
+bool       lp_reass_queue_empty(void);
 #ifdef __cplusplus
 }
 #endif

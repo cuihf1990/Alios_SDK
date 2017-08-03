@@ -701,12 +701,11 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
     return UR_ERROR_NONE;
 }
 
-static void handle_timer(void *args)
+void lp_handle_timer(void *args)
 {
     lowpan_reass_t *lrh, *lrh_temp;
 
-    g_reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL,
-                                   handle_timer, NULL);
+    g_reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL, lp_handle_timer, NULL);
 
     lrh = g_reass_list;
     while (lrh != NULL) {
@@ -729,8 +728,7 @@ static void handle_timer(void *args)
 
 void lp_start(void)
 {
-    g_reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL,
-                                   handle_timer, NULL);
+    g_reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL, lp_handle_timer, NULL);
 }
 
 void lp_stop(void)
@@ -748,3 +746,9 @@ void lp_stop(void)
         lrh = lrh_temp;
     }
 }
+
+bool lp_reass_queue_empty(void)
+{
+    return (g_reass_list == NULL);
+}
+

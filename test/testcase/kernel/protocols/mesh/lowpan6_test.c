@@ -340,6 +340,9 @@ void test_uradar_6lowpan_case(void)
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
     message_free(message);
 
+    lp_stop();
+    lp_start();
+
     message = message_alloc(length + sizeof(frag_header_t) - 1, UT_MSG);
     info = message->info;
     data = message_get_payload(message);
@@ -377,6 +380,10 @@ void test_uradar_6lowpan_case(void)
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     message_free(reass_pkt);
-    yos_msleep(6000); /* wait timer_hanlder to clean up incomplete fragments */
+    extern void lp_handle_timer(void *args);
+    for (size = 0; size < 8; size++) { /* delete incomplete fragments */
+        lp_handle_timer(NULL);
+    }
+    YUNIT_ASSERT(true == lp_reass_queue_empty());
     lp_stop();
 }
