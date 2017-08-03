@@ -322,6 +322,7 @@ ur_error_t ur_mesh_init(node_mode_t mode)
         return UR_ERROR_NONE;
     }
 
+    umesh_mem_init();
     hal_umesh_init();
     g_um_state.mm_cb.interface_up = ur_mesh_interface_up;
     g_um_state.mm_cb.interface_down = ur_mesh_interface_down;

@@ -199,17 +199,17 @@ enum {
 };
 
 typedef struct ur_message_stats_s {
-    uint16_t num;
-    uint16_t queue_fulls;
-    uint16_t mem_fails;
-    uint16_t pbuf_fails;
-    uint16_t size;
+    int16_t num;
+    int16_t queue_fulls;
+    int16_t mem_fails;
+    int16_t pbuf_fails;
+    int16_t size;
 
-    uint16_t debug_info[MSG_DEBUG_INFO_SIZE];
+    int16_t debug_info[MSG_DEBUG_INFO_SIZE];
 } ur_message_stats_t;
 
 typedef struct ur_mem_stats_s {
-    uint32_t num;
+    int32_t num;
 } ur_mem_stats_t;
 
 enum {
