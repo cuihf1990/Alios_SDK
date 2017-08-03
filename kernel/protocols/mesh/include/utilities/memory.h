@@ -23,7 +23,7 @@
 #include "umesh_types.h"
 
 enum {
-    MEM_BUF_SIZE = 13 * 1024,  // 13kB
+    MEM_BUF_SIZE = 16 * 1024,  // 16kB
 };
 
 void umesh_mem_init(void);
