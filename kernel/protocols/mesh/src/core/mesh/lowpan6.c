@@ -467,7 +467,6 @@ message_t *lp_header_decompress(message_t *message)
     if (buffer == NULL) {
         ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
                "lowpan6: out of memory, decompress failed\r\n");
-        message_free(message);
         return NULL;
     }
     info = message->info;
@@ -479,7 +478,6 @@ message_t *lp_header_decompress(message_t *message)
     if (error != UR_ERROR_NONE) {
         ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
                "lowpan6: unsupported 6LowPAN IPHC header, decompress failed\r\n");
-        message_free(message);
         ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
         return NULL;
     }
@@ -502,7 +500,6 @@ message_t *lp_header_decompress(message_t *message)
         if (error != UR_ERROR_NONE) {
             ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
                    "lowpan6: unsupported 6LowPAN NHC header, decompress failed\r\n");
-            message_free(message);
             ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
             return NULL;
         }
@@ -522,7 +519,6 @@ message_t *lp_header_decompress(message_t *message)
     message_set_payload_offset(message, -hc_len);
     dec_message = message_alloc(dec_header_len, LOWPAN6_1);
     if (dec_message == NULL) {
-        message_free(message);
         ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
         return NULL;
     }
