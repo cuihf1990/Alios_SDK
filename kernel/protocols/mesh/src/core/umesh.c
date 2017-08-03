@@ -171,8 +171,8 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
     transmit_frame_t *frame;
     uint8_t append_length;
     ur_error_t error = UR_ERROR_NONE;
-    uint8_t ip_hdr_len;
-    uint8_t lowpan_hdr_len;
+    uint16_t ip_hdr_len;
+    uint16_t lowpan_hdr_len;
     uint8_t *ip_payload;
     uint8_t *lowpan_payload;
     int16_t offset;
@@ -237,21 +237,52 @@ static void input_message_handler(void *args)
 ur_error_t ur_mesh_input(umessage_t *message)
 {
     ur_error_t error = UR_ERROR_FAIL;
-    message_t *dec_message;
+    uint8_t *header;
+    uint16_t header_size;
+    uint16_t lowpan_header_size;
+    message_info_t *info;
+    message_t *message_header;
 
-    dec_message = lp_header_decompress((message_t *)message);
-    if (dec_message == NULL) {
-        message_free((message_t *)message);
-        return error;
+    header = ur_mem_alloc(UR_IP6_HLEN + UR_UDP_HLEN);
+    if (header == NULL) {
+        error = UR_ERROR_FAIL;
+        goto exit;
     }
+    message_copy_to((message_t *)message, 0, header, UR_IP6_HLEN + UR_UDP_HLEN);
+    info = ((message_t *)message)->info;
+
+    header_size = message_get_msglen((message_t *)message);
+    if (header_size < MIN_LOWPAN_FRM_SIZE) {
+        error = UR_ERROR_FAIL;
+        goto exit;
+    }
+    error = lp_header_decompress(header, &header_size, &lowpan_header_size,
+                                 &info->src, &info->dest);
+    if (error != UR_ERROR_NONE) {
+        goto exit;
+    }
+
+    message_set_payload_offset((message_t *)message, -lowpan_header_size);
+    message_header = message_alloc(header_size, UMESH_2);
+    if (message_header == NULL) {
+        error = UR_ERROR_FAIL;
+        goto exit;
+    }
+
+    message_copy_from(message_header, header, header_size);
+    message_concatenate(message_header, (message_t *)message, false);
+    message = (umessage_t *)message_header;
 
     if (g_um_state.adapter_callback) {
-        error = umesh_task_schedule_call(input_message_handler, dec_message);
-    }
-    if (error != UR_ERROR_NONE) {
-        message_free(dec_message);
+        error = umesh_task_schedule_call(input_message_handler, message);
     }
 
+exit:
+    if (error != UR_ERROR_NONE) {
+        message_free((message_t *)message);
+    }
+
+    ur_mem_free(header, UR_IP6_HLEN + UR_UDP_HLEN);
     return error;
 }
 
