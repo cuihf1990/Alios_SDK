@@ -147,7 +147,8 @@ ur_error_t address_resolve(message_t *message)
 
     info = message->info;
     if (info->dest.addr.len == SHORT_ADDR_SIZE &&
-        info->dest.addr.short_addr == BCAST_SID) {
+        info->dest.addr.short_addr == BCAST_SID &&
+        info->type == MESH_FRAME_TYPE_DATA) {
         info->flags |= INSERT_MCAST_FLAG;
         return UR_ERROR_NONE;
     }
@@ -190,7 +191,7 @@ ur_error_t address_resolve(message_t *message)
     }
 
     if (cache == NULL) {
-        return UR_ERROR_MEM;
+        return UR_ERROR_DROP;
     }
 
     network = get_default_network_context();
@@ -443,7 +444,7 @@ static ur_error_t send_address_query_response(network_context_t *network,
     error = address_resolve(message);
     if (error == UR_ERROR_NONE) {
         error = mf_send_message(message);
-    } else {
+    } else if (error == UR_ERROR_DROP) {
         message_free(message);
     }
 

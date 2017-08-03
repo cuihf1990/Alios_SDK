@@ -505,6 +505,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         hal->link_stats.out_command++;
     }
 
+    hal->frag_info.offset += frag_length;
     if (next_node) {
         error = hal_umesh_send_ucast_request(hal->module, &hal->frame,
                                              &next_node->mac,
@@ -517,7 +518,6 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     if (error != UR_ERROR_NONE) {
         error = UR_ERROR_FAIL;  // wait for handle_sent
     }
-    hal->frag_info.offset += frag_length;
     return error;
 }
 

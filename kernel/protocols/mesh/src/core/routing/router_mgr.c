@@ -236,7 +236,7 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
     error = address_resolve(message);
     if (error == UR_ERROR_NONE) {
         error = mf_send_message(message);
-    } else {
+    } else if(error == UR_ERROR_DROP) {
         message_free(message);
     }
 
