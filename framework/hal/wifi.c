@@ -224,3 +224,29 @@ int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
 
     return m->wlan_send_80211_raw_frame(m, buf, len);
 }
+
+void hal_wifi_start_debug_mode(hal_wifi_module_t *m)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    if (m->start_debug_mode == NULL) {
+        return;
+    }
+
+    return m->start_debug_mode(m);
+}
+
+void hal_wifi_stop_debug_mode(hal_wifi_module_t *m)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    if (m->stop_debug_mode == NULL) {
+        return;
+    }
+
+    return m->stop_debug_mode(m);
+}
