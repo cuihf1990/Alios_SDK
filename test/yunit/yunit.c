@@ -259,7 +259,7 @@ static int _run_test_case(void *test_suite, void *test_case)
         test_suite_node->setup();
     }
 
-    printf("run test case %s\n", test_case_node->name);
+    fprintf(stderr, "run test case %s\n", test_case_node->name);
 
     test_case_node->test_proc();
 
