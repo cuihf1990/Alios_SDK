@@ -199,7 +199,7 @@ ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
         ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
         return UR_ERROR_FAIL;
     }
-    append_length = sizeof(mcast_header_t) + 2;
+    append_length = sizeof(mcast_header_t) + 1;
     frame->message = message_alloc(((message_t *)message)->data->tot_len +
                                    append_length - offset, UMESH_1);
     if (frame->message == NULL) {

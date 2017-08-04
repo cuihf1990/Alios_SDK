@@ -887,7 +887,10 @@ static void message_handler(void *args)
         }
     }
 
-    umesh_task_schedule_call(handle_datagram, message);
+    error = umesh_task_schedule_call(handle_datagram, message);
+    if (error != UR_ERROR_NONE) {
+        message_free(message);
+    }
 
 exit:
     message = message_queue_get_head(&hal->recv_queue);
@@ -1087,7 +1090,6 @@ static void handle_datagram(void *args)
             }
             offset = sizeof(mcast_header_t) + 1;
             message_set_payload_offset(message, -offset);
-            nexth = message_get_payload(message);
         }
         ur_mesh_input((umessage_t *)message);
     } else {

@@ -147,9 +147,10 @@ ur_error_t address_resolve(message_t *message)
 
     info = message->info;
     if (info->dest.addr.len == SHORT_ADDR_SIZE &&
-        info->dest.addr.short_addr == BCAST_SID &&
-        info->type == MESH_FRAME_TYPE_DATA) {
-        info->flags |= INSERT_MCAST_FLAG;
+        info->dest.addr.short_addr == BCAST_SID) {
+        if (info->type == MESH_FRAME_TYPE_DATA) {
+            info->flags |= INSERT_MCAST_FLAG;
+        }
         return UR_ERROR_NONE;
     }
 
