@@ -1,6 +1,8 @@
 import os, sys, time, subprocess
-import socket, thread, glob
+import socket, thread, threading, glob
 import TBframe
+
+DEBUG = True
 
 try:
     import serial
@@ -36,18 +38,22 @@ class Client:
             if self.connected == False:
                 time.sleep(0.1)
                 continue
-            if self.devices[port]['status'] == "logging":
+            if self.devices[port]['lock'].acquire(False):
                 if self.devices[port]['serial'].isOpen() == False:
                     try:
                         self.devices[port]['serial'].open()
                     except:
                         print "error: unable to open {0}".format(port)
+                        self.devices[port]['lock'].release()
+                        time.sleep(1)
                         break
+                self.devices[port]['lock'].release()
                 newline = False
                 log = ''
                 try:
-                    while self.devices[port]['status'] == 'logging':
+                    while self.devices[port]['lock'].acquire(False):
                         c = self.devices[port]['serial'].read(1)
+                        self.devices[port]['lock'].release()
                         if c != '':
                             if log == '':
                                 log_time = time.time()
@@ -58,6 +64,8 @@ class Client:
                         else:
                             break
                 except:
+                    if DEBUG:
+                        raise
                     break
                 if log != '' and newline == True:
                     log = port + ":{0:.3f}:".format(log_time) + log
@@ -68,9 +76,7 @@ class Client:
                         self.connected == False
                         continue
             else:
-                if self.devices[port]['serial'].isOpen() == True:
-                    self.devices[port]['serial'].close()
-                time.sleep(0.05)
+                time.sleep(0.01)
         self.devices[port]['serial'].close()
         self.devices.pop(port)
         self.send_device_list()
@@ -83,13 +89,13 @@ class Client:
                 if port in self.devices:
                     continue
                 try:
-                    ser = serial.Serial(port, 115200, timeout = 0.05)
+                    ser = serial.Serial(port, 115200, timeout = 0.02)
                     ser.setDTR(True)
                     ser.setRTS(True)
                 except:
                     print "error: unable to open {0}".format(port)
                     continue
-                self.devices[port] = {'status':'logging', 'model':'esp32', 'serial':ser}
+                self.devices[port] = {'lock':threading.RLock(), 'model':'esp32', 'serial':ser}
                 thread.start_new_thread(self.device_logging, (port,))
                 self.send_device_list()
 
@@ -99,20 +105,20 @@ class Client:
                 if port in self.devices:
                     continue
                 try:
-                    ser = serial.Serial(port, 921600, timeout = 0.05)
+                    ser = serial.Serial(port, 921600, timeout = 0.02)
                     ser.setDTR(True)
                     ser.setRTS(True)
                 except:
                     print "error: unable to open {0}".format(port)
                     continue
-                self.devices[port] = {'status':'logging', 'model':'mk3060', 'serial':ser}
+                self.devices[port] = {'lock':threading.RLock(), 'model':'mk3060', 'serial':ser}
                 thread.start_new_thread(self.device_logging, (port,))
                 self.send_device_list()
             time.sleep(0.05)
 
     def esp32_erase(self, port):
-        self.devices[port]['status'] = "erasing"
-        time.sleep(0.1)
+        if self.devices[port]['serial'].isOpen() == True:
+            self.devices[port]['serial'].close()
         retry = 3
         baudrate = 921600
         error = "fail"
@@ -127,7 +133,6 @@ class Client:
             script += [str(baudrate)]
             script += ['erase_flash']
             ret = subprocess.call(script)
-            self.devices[port]['status'] = "logging"
             if ret == 0:
                 error = "success"
                 break
@@ -136,16 +141,19 @@ class Client:
         return error
 
     def erase_devive(self, port):
+        ret = "fail"
         if os.path.exists(port) == False:
-            return "fail"
+            return ret
 
         if self.devices[port]['model'] == "esp32":
-            return esp32_erase(port)
+            self.devices[port]['lock'].acquire()
+            ret = esp32_erase(port)
+            self.devices[port]['lock'].release()
         return "fail"
 
     def esp32_program(self, port, address, file):
-        self.devices[port]['status'] = "programming"
-        time.sleep(0.1)
+        if self.devices[port]['serial'].isOpen() == True:
+            self.devices[port]['serial'].close()
         retry = 3
         baudrate = 921600
         error = "fail"
@@ -178,17 +186,17 @@ class Client:
                 break
             retry -= 1
             baudrate = baudrate / 2
-        self.devices[port]['status'] = "logging"
         return error
 
     def mxchip_program(self, port, address, file):
-        self.devices[port]['status'] = "programming"
+        if self.devices[port]['serial'].isOpen() == True:
+            self.devices[port]['serial'].close()
         time.sleep(0.1)
         retry = 3
         baudrate = 921600
         error = "fail"
         while retry > 0:
-            script = ['timeout', '60', 'python']
+            script = ['timeout', '80', 'python']
             script += ['autoscripts/yos_firmware_update.py']
             script += [port]
             script += ['-a']
@@ -199,20 +207,24 @@ class Client:
                 break
             retry -= 1
             baudrate = baudrate / 2
-        self.devices[port]['status'] = "logging"
         return error
 
     def program_devive(self, port, address, file):
+        ret = "fail"
         if os.path.exists(port) == False:
             return "fail"
         if os.path.exists(file) == False:
             return "fail"
 
         if self.devices[port]['model'] == "esp32":
-            return self.esp32_program(port, address, file)
+            self.devices[port]['lock'].acquire()
+            ret = self.esp32_program(port, address, file)
+            self.devices[port]['lock'].release()
         elif self.devices[port]['model'] == "mk3060":
-            return self.mxchip_program(port, address, file)
-        return "fail"
+            self.devices[port]['lock'].acquire()
+            ret = self.mxchip_program(port, address, file)
+            self.devices[port]['lock'].release()
+        return ret
 
     def heartbeat_func(self):
         heartbeat_timeout = time.time() + 10
@@ -336,8 +348,11 @@ class Client:
                             self.service_socket.close()
                             return
                 print "connetion to server resumed"
-            except:
+            except KeyboardInterrupt:
                 self.keep_running = False
                 time.sleep(0.3)
                 break
+            except:
+                if DEBUG:
+                    raise
         self.service_socket.close()

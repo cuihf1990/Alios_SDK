@@ -14,6 +14,11 @@ NAK = b'\x15'
 CAN = b'\x18'
 CRC = b'C'
 
+LOG_LEVEL_ERROR=0
+LOG_LEVEL_WARN =1
+LOG_LEVEL_INFO =2
+LOG_LEVEL_DEBUG=3
+
 class XMODEM(object):
     '''
     XMODEM Protocol handler, expects an object to read from and an object to
@@ -80,7 +85,12 @@ class XMODEM(object):
         self.putc = putc
         self.mode = mode
         self.pad = pad
-        self.log = logging.getLogger('xmodem.XMODEM')
+        self.log_level = LOG_LEVEL_WARN
+
+    def log(self, log_level, logstr):
+        if log_level <= self.log_level:
+            print logstr
+
 
     def abort(self, count=2, timeout=60):
         '''
@@ -130,7 +140,7 @@ class XMODEM(object):
             raise ValueError("Invalid mode specified: {self.mode!r}"
                              .format(self=self))
 
-        self.log.debug('Begin start sequence, packet_size=%d', packet_size)
+            self.log(LOG_LEVEL_DEBUG, 'Begin start sequence, packet_size={0:d}'.format(packet_size))
         error_count = 0
         crc_mode = 0
         cancel = 0
@@ -138,31 +148,28 @@ class XMODEM(object):
             char = self.getc(1)
             if char:
                 if char == NAK:
-                    self.log.debug('standard checksum requested (NAK).')
+                    self.log(LOG_LEVEL_DEBUG, 'standard checksum requested (NAK).')
                     crc_mode = 0
                     break
                 elif char == CRC:
-                    self.log.debug('16-bit CRC requested (CRC).')
+                    self.log(LOG_LEVEL_DEBUG, '16-bit CRC requested (CRC).')
                     crc_mode = 1
                     break
                 elif char == CAN:
                     if not quiet:
                         sys.stderr.write('received CAN\n')
                     if cancel:
-                        self.log.info('Transmission canceled: received 2xCAN '
-                                      'at start-sequence')
+                        self.log(LOG_LEVEL_INFO, 'Transmission canceled: received 2xCAN at start-sequence')
                         return False
                     else:
-                        self.log.debug('cancellation at start sequence.')
+                        self.log(LOG_LEVEL_DEBUG, 'cancellation at start sequence.')
                         cancel = 1
                 else:
-                    self.log.error('send error: expected NAK, CRC, or CAN; '
-                                   'got %r', char)
+                    self.log(LOG_LEVEL_ERROR, 'send error: expected NAK, CRC, or CAN; got {0}'.format(char))
 
             error_count += 1
             if error_count > retry:
-                self.log.info('send error: error_count reached %d, '
-                              'aborting.', retry)
+                self.log(LOG_LEVEL_INFO, 'send error: error_count reached {0}, aborting.'.format(retry))
                 self.abort(timeout=timeout)
                 return False
 
@@ -187,13 +194,13 @@ class XMODEM(object):
                     stream = open(filename, 'rb')
                     stat = os.stat(filename)
                     data = os.path.basename(filename) + NUL + str(stat.st_size)
-                    self.log.debug('ymodem sending : "%s" len:%d', filename, stat.st_size)
+                    self.log(LOG_LEVEL_DEBUG, 'ymodem sending : {0} len:{1}'.format(filename, stat.st_size))
                 else:
                     # empty file name packet terminates transmission
                     filename = ''
                     data = ''
                     stream = None
-                    self.log.debug('ymodem done, sending empty header.')
+                    self.log(LOG_LEVEL_DEBUG, 'ymodem done, sending empty header.')
                 if len(data) <= 128:
                     header_size = 128
                 else:
@@ -210,7 +217,7 @@ class XMODEM(object):
                 data = stream.read(packet_size)
                 if not data:
                     # end of stream
-                    self.log.debug('send: at EOF')
+                    self.log(LOG_LEVEL_DEBUG, 'send: at EOF')
                     break
                 total_packets += 1
 
@@ -220,7 +227,7 @@ class XMODEM(object):
 
             # emit packet & get ACK
             while True:
-                self.log.debug('send: block %d', sequence)
+                self.log(LOG_LEVEL_DEBUG, 'send: block {0}'.format(sequence))
                 self.putc(header + data + checksum)
                 char = self.getc(1, timeout)
                 if char == ACK:
@@ -234,21 +241,18 @@ class XMODEM(object):
                             char = self.getc(1, timeout)
                         if char == CRC:
                             break
-                        self.log.error('send error: ymodem expected CRC; got %r for block %d',
-                                       char, sequence)
+                        self.log(LOG_LEVEL_ERROR, 'send error: ymodem expected CRC; got {0} for block {1}'.format(char, sequence))
                     else:
                         break
 
-                self.log.error('send error: expected ACK; got %r for block %d',
-                               char, sequence)
+                self.log(LOG_LEVEL_ERROR, 'send error: expected ACK; got {0} for block {1}'.format(char, sequence))
                 error_count += 1
                 if callable(callback):
                     callback(total_packets, success_count, error_count)
                 if error_count > retry:
                     # excessive amounts of retransmissions requested,
                     # abort transfer
-                    self.log.error('send error: NAK received %d times, '
-                                   'aborting.', error_count)
+                    self.log(LOG_LEVEL_ERROR, 'send error: NAK received {0} times, aborting.'.format(error_count))
                     self.abort(timeout=timeout)
                     return False
 
@@ -257,7 +261,7 @@ class XMODEM(object):
 
         # emit EOT and get corresponding ACK
         while True:
-            self.log.debug('sending EOT, awaiting ACK')
+            self.log(LOG_LEVEL_DEBUG, 'sending EOT, awaiting ACK')
             # end of transmission
             self.putc(EOT)
 
@@ -266,14 +270,14 @@ class XMODEM(object):
             if char == ACK:
                 break
             else:
-                self.log.error('send error: expected ACK; got %r', char)
+                self.log(LOG_LEVEL_ERROR, 'send error: expected ACK; got {0}'.format(char))
                 error_count += 1
                 if error_count > retry:
-                    self.log.warn('EOT was not ACKd, aborting transfer')
+                    self.log(LOG_LEVEL_WARN, 'EOT was not ACKd, aborting transfer')
                     self.abort(timeout=timeout)
                     return False
 
-        self.log.info('Transmission successful (ACK received).')
+        self.log(LOG_LEVEL_INFO, 'Transmission successful (ACK received).')
         if self.mode == 'ymodem':
             # YMODEM - recursively send next file
             # or empty filename header to end the xfer batch.
@@ -321,41 +325,38 @@ class XMODEM(object):
             # first try CRC mode, if this fails,
             # fall back to checksum mode
             if error_count >= retry:
-                self.log.info('error_count reached %d, aborting.', retry)
+                self.log(LOG_LEVEL_INFO, 'error_count reached {0}, aborting.'.format(retry))
                 self.abort(timeout=timeout)
                 return None
             elif crc_mode and error_count < (retry // 2):
                 if not self.putc(CRC):
-                    self.log.debug('recv error: putc failed, '
-                                   'sleeping for %d', delay)
+                    self.log(LOG_LEVEL_DEBUG, 'recv error: putc failed, sleeping for {0}'.format(delay))
                     time.sleep(delay)
                     error_count += 1
             else:
                 crc_mode = 0
                 if not self.putc(NAK):
-                    self.log.debug('recv error: putc failed, '
-                                   'sleeping for %d', delay)
+                    self.log(LOG_LEVEL_DEBUG, 'recv error: putc failed, sleeping for {0}'.format(delay))
                     time.sleep(delay)
                     error_count += 1
 
             char = self.getc(1, timeout)
             if char is None:
-                self.log.warn('recv error: getc timeout in start sequence')
+                self.log(LOG_LEVEL_WARN, 'recv error: getc timeout in start sequence')
                 error_count += 1
                 continue
             elif char == SOH:
-                self.log.debug('recv: SOH')
+                self.log(LOG_LEVEL_DEBUG, 'recv: SOH')
                 break
             elif char == STX:
-                self.log.debug('recv: STX')
+                self.log(LOG_LEVEL_DEBUG, 'recv: STX')
                 break
             elif char == CAN:
                 if cancel:
-                    self.log.info('Transmission canceled: received 2xCAN '
-                                  'at start-sequence')
+                    self.log(LOG_LEVEL_INFO, 'Transmission canceled: received 2xCAN at start-sequence')
                     return None
                 else:
-                    self.log.debug('cancellation at start sequence.')
+                    self.log(LOG_LEVEL_DEBUG, 'cancellation at start sequence.')
                     cancel = 1
             else:
                 error_count += 1
@@ -370,56 +371,53 @@ class XMODEM(object):
             while True:
                 if char == SOH:
                     if packet_size != 128:
-                        self.log.debug('recv: SOH, using 128b packet_size')
+                        self.log(LOG_LEVEL_DEBUG, 'recv: SOH, using 128b packet_size')
                         packet_size = 128
                     break
                 elif char == STX:
                     if packet_size != 1024:
-                        self.log.debug('recv: SOH, using 1k packet_size')
+                        self.log(LOG_LEVEL_DEBUG, 'recv: SOH, using 1k packet_size')
                         packet_size = 1024
                     break
                 elif char == EOT:
                     # We received an EOT, so send an ACK and return the
                     # received data length.
                     self.putc(ACK)
-                    self.log.info("Transmission complete, %d bytes",
-                                  income_size)
+                    self.log(LOG_LEVEL_INFO, "Transmission complete, {0} bytes".format(income_size))
                     return income_size
                 elif char == CAN:
                     # cancel at two consecutive cancels
                     if cancel:
-                        self.log.info('Transmission canceled: received 2xCAN '
-                                      'at block %d', sequence)
+                        self.log(LOG_LEVEL_INFO, 'Transmission canceled: received 2xCAN at block {0}'.format(sequence))
                         return None
                     else:
-                        self.log.debug('cancellation at block %d', sequence)
+                        self.log(LOG_LEVEL_DEBUG, 'cancellation at block {0}'.format(sequence))
                         cancel = 1
                 else:
                     err_msg = ('recv error: expected SOH, EOT; '
                                'got {0!r}'.format(char))
                     if not quiet:
                         sys.stderr.write(err_msg+"\n")
-                    self.log.warn(err_msg)
+                    self.log(LOG_LEVEL_WARN, err_msg)
                     error_count += 1
                     if error_count > retry:
-                        self.log.info('error_count reached %d, aborting.',
-                                      retry)
+                        self.log(LOG_LEVEL_INFO, 'error_count reached {0}, aborting.'.format(retry))
                         self.abort()
                         return None
 
             # read sequence
             error_count = 0
             cancel = 0
-            self.log.debug('recv: data block %d', sequence)
+            self.log(LOG_LEVEL_DEBUG, 'recv: data block {0}'.format(sequence))
             seq1 = self.getc(1, timeout)
             if seq1 is None:
-                self.log.warn('getc failed to get first sequence byte')
+                self.log(LOG_LEVEL_WARN, 'getc failed to get first sequence byte')
                 seq2 = None
             else:
                 seq1 = ord(seq1)
                 seq2 = self.getc(1, timeout)
                 if seq2 is None:
-                    self.log.warn('getc failed to get second sequence byte')
+                    self.log(LOG_LEVEL_WARN, 'getc failed to get second sequence byte')
                 else:
                     # second byte is the same as first as 1's complement
                     seq2 = 0xff - ord(seq2)
@@ -427,10 +425,9 @@ class XMODEM(object):
             if not (seq1 == seq2 == sequence):
                 # consume data anyway ... even though we will discard it,
                 # it is not the sequence we expected!
-                self.log.error('expected sequence %d, '
-                               'got (seq1=%r, seq2=%r), '
-                               'receiving next block, will NAK.',
-                               sequence, seq1, seq2)
+                err_msg = 'expected sequence {0}, got (seq1={1}, seq2={2}), \
+                          receiving next block, will NAK.'.format(sequence, seq1, seq2)
+                self.log(LOG_LEVEL_ERROR, err_msg)
                 self.getc(packet_size + 1 + crc_mode)
             else:
                 # sequence is ok, read packet
@@ -449,7 +446,7 @@ class XMODEM(object):
                     continue
 
             # something went wrong, request retransmission
-            self.log.warn('recv error: purge, requesting retransmission (NAK)')
+            self.log(LOG_LEVEL_WARN, 'recv error: purge, requesting retransmission (NAK)')
             while True:
                 # When the receiver wishes to <nak>, it should call a "PURGE"
                 # subroutine, to wait for the line to clear. Recall the sender
@@ -477,9 +474,7 @@ class XMODEM(object):
             our_sum = self.calc_crc(data)
             valid = bool(their_sum == our_sum)
             if not valid:
-                self.log.warn('recv error: checksum fail '
-                              '(theirs=%04x, ours=%04x), ',
-                              their_sum, our_sum)
+                self.log(LOG_LEVEL_WARN, 'recv error: checksum fail (theirs={0:04x}, ours={1:04x}), '.format(their_sum, our_sum))
         else:
             _checksum = bytearray([data[-1]])
             their_sum = _checksum[0]
@@ -488,9 +483,7 @@ class XMODEM(object):
             our_sum = self.calc_checksum(data)
             valid = their_sum == our_sum
             if not valid:
-                self.log.warn('recv error: checksum fail '
-                              '(theirs=%02x, ours=%02x)',
-                              their_sum, our_sum)
+                self.log(LOG_LEVEL_WARN, 'recv error: checksum fail (theirs={0:02x}, ours={1:02x})'.forma(their_sum, our_sum))
         return valid, data
 
     def calc_checksum(self, data, checksum=0):
@@ -660,6 +653,7 @@ if assert_response(["bootloader", "read: usage: read [address] [size]"], 1) == F
         sys.exit(1)
 port.flushInput()
 
+failed_num = 0
 updates = [bootloader, application, driver]
 for i in range(len(updates)):
     if updates[i] != None:
@@ -676,10 +670,11 @@ for i in range(len(updates)):
             print "updating {0} with {1} ... succeed".format(device, updates[i])
         else:
             print "updating {0} with {1} ... failed".format(device, updates[i])
+            failed_num += 1
 
-if bootapp:
+if bootapp and failed_num == 0:
     port.write("boot\r\n")
     assert_response(["Booting......"], 1)
 port.close()
-sys.exit(0)
+sys.exit(failed_num)
 
