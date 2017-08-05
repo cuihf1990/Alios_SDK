@@ -19,7 +19,6 @@
 
 #include <yts.h>
 #include <dda.h>
-#include <kvmgr.h>
 
 int application_start(int argc, char **argv)
 {
@@ -37,7 +36,6 @@ int application_start(int argc, char **argv)
     }
 
     yts_run(argc, argv);
-    yos_kv_deinit();
     exit(0);
 }
 

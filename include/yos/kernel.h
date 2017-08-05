@@ -180,6 +180,13 @@ int yos_sem_wait(yos_sem_t *sem, unsigned int timeout);
 void yos_sem_signal(yos_sem_t *sem);
 
 /**
+ * release all semaphore
+ * @param[in] sem semaphore object,,it contains kernel obj pointer which yos_sem_new alloced
+ */
+void yos_sem_signal_all(yos_sem_t *sem);
+
+
+/**
  * This function will create a queue
  * @param[in]  queue    pointer to the queue(the space is provided by user)
  * @param[in]  buf      buf of the queue(provided by user)
