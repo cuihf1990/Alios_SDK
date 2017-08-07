@@ -24,19 +24,9 @@ typedef struct {
     const void       *arg;
 } cpu_event_t;
 
-#ifdef HAVE_RHINO_KERNEL
 int cpu_notify_event(cpu_event_t *event);
 void *cpu_event_malloc(int size);
 void cpu_event_free(void *p);
-#else
-static inline int cpu_notify_event(cpu_event_t *event)
-{
-    event->handler(event->arg);
-    return 0;
-}
-#define cpu_event_malloc malloc
-#define cpu_event_free free
-#endif
 
 static inline int cpu_call_handler(cpu_event_handler handler, const void *arg)
 {

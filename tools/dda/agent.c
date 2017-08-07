@@ -33,7 +33,7 @@
 void *yos_malloc(size_t size);
 void  yos_free(void *mem);
 
-#if defined(CSP_LINUXHOST) && defined(HAVE_RHINO_KERNEL)
+#if defined(CSP_LINUXHOST)
 #define LINUXHOST_RHINO
 #endif
 
