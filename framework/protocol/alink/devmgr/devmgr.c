@@ -32,10 +32,10 @@
 #ifdef GATEWAY_SDK
 #include "devmgr_cache.h"
 #include "devmgr_alink.h"
-#include "stdd_datatype.h"
+/* #include "stdd_datatype.h" */
 #include "kvmgr.h"
-#include "attrs_profile_mgr.h"
-#include "stdd.h"
+/* #include "attrs_profile_mgr.h" */
+/* #include "stdd.h" */
 #endif
 
 #define MODULE_NAME             MODULE_NAME_DEVMGR
