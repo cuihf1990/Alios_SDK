@@ -45,18 +45,23 @@ class Autotest:
             return
 
         if self.filter['lines_exp'] == 0:
-            if self.filter['filterstr'] in logstr:
+            if self.filter['cmdstr'] in logstr:
                 self.sync_event.set()
         else:
             if self.filter['lines_num'] == 0:
-                if self.filter['filterstr'] in logstr:
+                if self.filter['cmdstr'] in logstr:
                     self.filter['lines_num'] += 1
             elif self.filter['lines_num'] <= self.filter['lines_exp']:
                 log = logstr.replace("\r", "")
                 log = log.replace("\n", "")
                 if log != "":
-                    self.filter['response'].append(log)
-                    self.filter['lines_num'] += 1
+                    for filterstr in self.filter['filters']:
+                        if filterstr not in log:
+                            continue
+                        else:
+                            self.filter['response'].append(log)
+                            self.filter['lines_num'] += 1
+                            break
                 if self.filter['lines_num'] > self.filter['lines_exp']:
                     self.sync_event.set()
 
@@ -105,7 +110,8 @@ class Autotest:
                         log =value[len(dev) + 1 + len(logtime) + 1:]
                         try:
                             logtime = float(logtime)
-                            logtime = time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(logtime));
+                            logtimestr = time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(logtime));
+                            logtimestr += "{0:.3f}".format(logtime-int(logtime))
                         except:
                             continue
                         if dev not in list(self.device_list):
@@ -113,7 +119,7 @@ class Autotest:
                         devname = self.get_devname_by_devstr(dev)
                         if devname != "":
                             self.response_filter(devname, log)
-                            log =  devname + ":" + logtime + ":" + log
+                            log =  devname + ":" + logtimestr + ":" + log
                             self.logfile.write(log)
                     if type == TBframe.CMD_DONE:
                         self.cmd_excute_state = 'done'
@@ -233,7 +239,7 @@ class Autotest:
         self.service_socket.send(data)
         return True
 
-    def device_run_cmd(self, devname, args, expect_lines = 0, timeout=0.2):
+    def device_run_cmd(self, devname, args, expect_lines = 0, timeout=0.2, filters=[""]):
         if devname not in list(self.subscribed):
             return False
         if len(args) == 0:
@@ -242,13 +248,20 @@ class Autotest:
         content += ':' + '|'.join(args)
         data = TBframe.construct(TBframe.DEVICE_CMD, content)
         self.filter['devname'] = devname
-        self.filter['filterstr'] = ' '.join(args)
+        self.filter['cmdstr'] = ' '.join(args)
         self.filter['lines_exp'] = expect_lines
         self.filter['lines_num'] = 0
+        self.filter['filters'] = filters
         self.filter['response'] = []
-        self.service_socket.send(data)
-        self.sync_event.clear()
-        self.sync_event.wait(timeout)
+
+        retry = 3
+        while retry > 0:
+            self.service_socket.send(data)
+            self.sync_event.clear()
+            self.sync_event.wait(timeout)
+            if self.filter['lines_num'] > 0:
+                break;
+            retry -= 1
         response = self.filter['response']
         self.filter = {}
         return response
