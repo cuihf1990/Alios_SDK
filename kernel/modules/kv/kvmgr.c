@@ -112,20 +112,8 @@ typedef struct _kv_mgr_t
 
 static kv_mgr_t g_kv_mgr;
 
-//static yos_mutex_t  g_kv_mutex;
-//static yos_work_t   g_gc_work;
-//static yos_sem_t    g_gc_sem;
-
-//static block_info_t g_block_info[BLK_NUMS];                 /* The array to record block management information */
-
-//static uint16_t g_write_pos;                                /* Current write position for key-value item */
-
 static const uint8_t BLK_MAGIC_NUM  = 'K';                  /* The block header magic number */
 static const uint8_t ITEM_MAGIC_NUM = 'I';                  /* The key-value item header magic number */
-
-//static uint8_t g_kv_init;                                   /* The flag to indicate the key-value store is initialized */
-//static uint8_t g_gc_triggered;                              /* The flag to indicate garbage collection is triggered */
-//static uint8_t g_clean_blk_nums;                            /* The number of block which state is clean */
 
 static void yos_kv_gc(void *arg);
 
