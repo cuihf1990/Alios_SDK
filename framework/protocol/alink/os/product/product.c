@@ -36,8 +36,8 @@ static const char *product_key = light_key;
 static const char *product_secret = light_secret;
 static const char *product_debug_key = light_debug_key;
 static const char *product_debug_secret = light_debug_secret;
-#define device_key              "ws8EbiEYJgPSmCMMBkCl"
-#define device_secret           "MZo7oPsjTAUHCoCersyNGdmeUmtvy3Xk"
+#define device_key              "1hldEkvAUMhdtyKeqUD1"
+#define device_secret           "u531CJi3mDmeDELKFPML6EzdSDpmedEF"
 
 void product_init(void)
 {

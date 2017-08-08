@@ -65,7 +65,7 @@ const char RequestFormat[] =
     "\"request\":{\"cid\":\"%s\",\"rspID\":%d,\"target\":\"%s\",\"token\":\"%s\",\"uuid\":\"%s\"},";
 const char RequestFormat_test[] =
     "\"request\":{\"cid\":\"%s\",\"rspID\":%d,\"service\":\"check\",\"target\":\"%s\",\"testId\":\"%s\",\"token\":\"%s\",\"uuid\":\"%s\"},";
-#if (defined(SUPPORT_ID2) && defined(CONFIG_SDS))
+#if (defined(SUPPORT_ID2) || defined(CONFIG_SDS))
 const char SignatureFormat[] =
     "cid:%s,rspID:%d,target:%s,token:%s,uuid:%s,time:%s";
 const char SignatureFormat_test[] =
@@ -171,7 +171,9 @@ static void alink_calculate_signature(char *signbuf, int *signbuf_len,
         for (i = 0; i < sizeof(digest); i++) {
             sprintf(signbuf + i * 2, "%02x", digest[i]);
         }
-        signbuf_len = sizeof(digest) * 2;
+
+        if (signbuf_len)
+            *signbuf_len = sizeof(digest) * 2;
         alink_debug_protocol("hmac md5 sign: %s", signbuf);
     }
 #else

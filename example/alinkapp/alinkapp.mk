@@ -43,3 +43,7 @@ ifeq ($(DDA),1)
 GLOBAL_LDFLAGS += -lreadline -lncurses
 $(NAME)_COMPONENTS  += dda
 endif
+
+ifeq ($(sds),1)
+GLOBAL_DEFINES += CONFIG_SDS
+endif
