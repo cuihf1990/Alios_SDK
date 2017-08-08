@@ -83,9 +83,6 @@ static void test_vcall_case(void)
 
     mico_rtos_delete_thread((mico_thread_t*)&g_idle_task);
 
-    mico_rtos_enter_critical();
-    mico_rtos_exit_critical();
-
     mico_rtos_init_queue(&queue1, NULL, MSG_SIZE, 2);
 
     mico_rtos_create_thread(&task1, 10, NULL, task1_entry, 4096, 0);
