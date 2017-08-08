@@ -293,9 +293,9 @@ uint8_t udp_header_compress(ur_udp_header_t *udp_header, uint8_t *buffer)
 }
 
 ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
-                              uint8_t *ip_header_len, uint8_t *hc_header_len)
+                              uint16_t *ip_header_len, uint16_t *hc_header_len)
 {
-    uint8_t iphc_len, nhc_len;
+    uint16_t iphc_len, nhc_len;
     ur_ip6_header_t *ip6_header = (ur_ip6_header_t *)header;
 
     uint32_t v_tc_fl = ntohl(ip6_header->v_tc_fl);
@@ -326,15 +326,19 @@ ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
     return UR_ERROR_NONE;
 }
 
-static ur_error_t ipv6_header_decompress(message_info_t *info, const uint8_t *iphc_data,
-                                         uint8_t *buffer, uint8_t *hc_len)
+static ur_error_t ipv6_header_decompress(uint8_t *header, uint16_t *header_size,
+                                         uint16_t *lowpan_header_size,
+                                         ur_addr_t *src, ur_addr_t *dest)
 {
-    ur_ip6_header_t *ip6_header = (ur_ip6_header_t *)buffer;
+    ur_ip6_header_t ip6_header;
+    iphc_header_t *iphc_header;
     uint8_t offset = sizeof(iphc_header_t);
     ur_ip6_prefix_t prefix;
+    uint16_t tmp;
 
-    uint16_t tmp = (((uint16_t)iphc_data[0]) << 8 ) | iphc_data[1];
-    iphc_header_t *iphc_header = (iphc_header_t *)&tmp;
+    tmp = (uint16_t)((header[0] << 8) | header[1]);
+    iphc_header = (iphc_header_t *)&tmp;
+
     if (iphc_header->CID == STATEFULL_COMPRESS ||
         iphc_header->SAC == STATEFULL_COMPRESS ||
         iphc_header->DAC == STATEFULL_COMPRESS) {
@@ -343,41 +347,41 @@ static ur_error_t ipv6_header_decompress(message_info_t *info, const uint8_t *ip
     }
 
     /* Set IPv6 version, traffic class and flow label. */
-    ip6_header->v_tc_fl = IP_VERSION_6;
+    ip6_header.v_tc_fl = IP_VERSION_6;
     if (iphc_header->TF == TC_FL_BOTH_APEENDED) {
-        ip6_header->v_tc_fl |= ((uint32_t)iphc_data[offset++]) << 20;
-        ip6_header->v_tc_fl |= ((uint32_t)(iphc_data[offset++] & 0x0F)) << 16;
-        ip6_header->v_tc_fl |= ((uint32_t)iphc_data[offset++]) << 8;
-        ip6_header->v_tc_fl |= ((uint32_t)iphc_data[offset++]);
+        ip6_header.v_tc_fl |= ((uint32_t)header[offset++]) << 20;
+        ip6_header.v_tc_fl |= ((uint32_t)(header[offset++] & 0x0F)) << 16;
+        ip6_header.v_tc_fl |= ((uint32_t)header[offset++]) << 8;
+        ip6_header.v_tc_fl |= ((uint32_t)header[offset++]);
     } else if (iphc_header->TF == DCSP_ELEDED_ECN_FL_APPENDED) {
-        ip6_header->v_tc_fl |= (uint32_t)(iphc_data[offset] & 0xc0) << 20;
-        ip6_header->v_tc_fl |= (uint32_t)(iphc_data[offset++] & 0x0f) << 16;
-        ip6_header->v_tc_fl |= ((uint32_t)iphc_data[offset++]) << 8;
-        ip6_header->v_tc_fl |= ((uint32_t)iphc_data[offset++]);
+        ip6_header.v_tc_fl |= (uint32_t)(header[offset] & 0xc0) << 20;
+        ip6_header.v_tc_fl |= (uint32_t)(header[offset++] & 0x0f) << 16;
+        ip6_header.v_tc_fl |= ((uint32_t)header[offset++]) << 8;
+        ip6_header.v_tc_fl |= ((uint32_t)header[offset++]);
     } else if (iphc_header->TF == TC_APENDED_FL_ELIDED) {
-        ip6_header->v_tc_fl |= ((uint32_t)iphc_data[offset++]) << 20;
+        ip6_header.v_tc_fl |= ((uint32_t)header[offset++]) << 20;
     } else if (iphc_header->TF == TC_FL_BOTH_ELIDED) {
-        ip6_header->v_tc_fl |= 0;
+        ip6_header.v_tc_fl |= 0;
     }
-    ip6_header->v_tc_fl = htonl(ip6_header->v_tc_fl);
+    ip6_header.v_tc_fl = htonl(ip6_header.v_tc_fl);
 
     /* Set Next Header */
     if (iphc_header->NH == NEXT_HEADER_APPENDED) {
-        ip6_header->next_header = iphc_data[offset++];
+        ip6_header.next_header = header[offset++];
     } else {
         /* We should fill this later with NHC decoding */
-        ip6_header->next_header = 0x00;
+        ip6_header.next_header = 0x00;
     }
 
     /* Set Hop Limit */
     if (iphc_header->HLIM == HOP_LIM_APPENDED) {
-        ip6_header->hop_lim = iphc_data[offset++];
+        ip6_header.hop_lim = header[offset++];
     } else if (iphc_header->HLIM == HOP_LIM_1) {
-        ip6_header->hop_lim = 1;
+        ip6_header.hop_lim = 1;
     } else if (iphc_header->HLIM == HOP_LIM_64) {
-        ip6_header->hop_lim = 64;
+        ip6_header.hop_lim = 64;
     } else if (iphc_header->HLIM == HOP_LIM_255) {
-        ip6_header->hop_lim = 255;
+        ip6_header.hop_lim = 255;
     }
 
     if (nd_get_ip6_prefix(&prefix) != UR_ERROR_NONE) {
@@ -385,30 +389,38 @@ static ur_error_t ipv6_header_decompress(message_info_t *info, const uint8_t *ip
     }
 
     /* Source address decoding. */
-    offset += ucast_addr_decompress(iphc_header->SAM, &prefix, &iphc_data[offset],
-                                    &ip6_header->src, info->src.addr.short_addr);
+    offset += ucast_addr_decompress(iphc_header->SAM, &prefix, &header[offset],
+                                    &ip6_header.src, src->addr.short_addr);
 
     /* Destination address decoding. */
     if (iphc_header->M == MULTICAST_DESTINATION) {
-        offset += mcast_addr_decompress(iphc_header->DAM, &iphc_data[offset],
-                                        &ip6_header->dest);
+        offset += mcast_addr_decompress(iphc_header->DAM, &header[offset],
+                                        &ip6_header.dest);
     } else {
-        offset += ucast_addr_decompress(iphc_header->DAM, &prefix, &iphc_data[offset],
-                                        &ip6_header->dest, info->dest.addr.short_addr);
+        offset += ucast_addr_decompress(iphc_header->DAM, &prefix, &header[offset],
+                                        &ip6_header.dest, dest->addr.short_addr);
     }
 
-    *hc_len = offset;
+    *lowpan_header_size = offset;
+    *header_size = UR_IP6_HLEN;
+    memmove(header + UR_IP6_HLEN, header + offset, UR_UDP_HLEN);
+    memcpy(header, &ip6_header, UR_IP6_HLEN);
+
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
+           "lowpan6: decompressed %d bytes 6LowPAN IPHC header"
+           " to 40 bytes IPv6 header\r\n", offset);
 
     return UR_ERROR_NONE;
 }
 
-static ur_error_t next_header_decompress(const uint8_t *nhc_data,
-                                         uint8_t *buffer, uint8_t *hc_len)
+static ur_error_t next_header_decompress(uint8_t *nhc_data, uint8_t *nhc_len)
 {
+    ur_udp_header_t udp_header_storage;
+    ur_udp_header_t *udp_header = &udp_header_storage;
     nhc_header_t *nhc_header = (nhc_header_t *)nhc_data;
+
     if (nhc_header->DP == NHC_UDP_DISPATCH) {
         /* UDP decompress */
-        ur_udp_header_t *udp_header = (ur_udp_header_t *)buffer;
         uint8_t offset = sizeof(nhc_header_t);
 
         if (nhc_header->C == CHKSUM_ELIDED) {
@@ -442,91 +454,68 @@ static ur_error_t next_header_decompress(const uint8_t *nhc_data,
         udp_header->chksum = (uint16_t)nhc_data[offset++] << 8;
         udp_header->chksum |= (uint16_t)nhc_data[offset++];
         udp_header->chksum = htons(udp_header->chksum);
-        *hc_len = offset;
+        *nhc_len = offset;
+
+        memcpy(nhc_data, udp_header, UR_UDP_HLEN);
+
+        ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
+               "lowpan6: decompressed %d bytes 6LowPAN NHC header"
+               " to 8 bytes UDP header\r\n", offset);
 
         return UR_ERROR_NONE;
     } else {
+        ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
+               "lowpan6: unsupported 6LowPAN NHC header, decompress failed\r\n");
         /* does not support other NHC yet */
         return UR_ERROR_FAIL;
     }
 }
 
-message_t *lp_header_decompress(message_t *message)
+ur_error_t lp_header_decompress(uint8_t *header, uint16_t *header_size,
+                                uint16_t *lowpan_header_size,
+                                ur_addr_t *src, ur_addr_t *dest)
 {
     ur_error_t error;
-    uint8_t *iphc_data = (uint8_t *)message_get_payload(message);
-    uint16_t pkt_len = message_get_msglen(message);
     ur_ip6_header_t *ip6_header;
-    uint8_t  iphc_len, nhc_len, hc_len;
-    uint16_t ip_payload_len, dec_header_len;
-    uint8_t  *buffer;
-    message_t *dec_message = NULL;
-    message_info_t *info;
+    iphc_header_t *iphc_header;
+    uint16_t payload_size;
+    uint16_t tmp;
 
-    buffer = (uint8_t *)ur_mem_alloc(UR_IP6_HLEN + UR_UDP_HLEN);
-    if (buffer == NULL) {
-        ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
-               "lowpan6: out of memory, decompress failed\r\n");
-        return NULL;
-    }
-    info = message->info;
+    *lowpan_header_size = 0;
+    payload_size = *header_size;
+    tmp = (uint16_t)((header[0] << 8) | header[1]);
+    iphc_header = (iphc_header_t *)&tmp;
 
-    /* decompress IPv6 header */
-    hc_len = 0;
-    ip6_header = (ur_ip6_header_t *)buffer;
-    error = ipv6_header_decompress(info, iphc_data, buffer, &iphc_len);
+    error = ipv6_header_decompress(header, header_size, lowpan_header_size,
+                                   src, dest);
     if (error != UR_ERROR_NONE) {
-        ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
-               "lowpan6: unsupported 6LowPAN IPHC header, decompress failed\r\n");
-        ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
-        return NULL;
+        goto exit;
     }
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
-           "lowpan6: decompressed %d bytes 6LowPAN IPHC header"
-           " to 40 bytes IPv6 header\r\n", iphc_len);
 
-    hc_len += iphc_len;
-    dec_header_len = UR_IP6_HLEN;
-    ip_payload_len = pkt_len - hc_len;
+    ip6_header = (ur_ip6_header_t *)header;
+    payload_size -= (*lowpan_header_size);
 
-    /* decompress next header */
-    /* Next Header Compression (NHC) decoding? */
-    uint16_t tmp = (((uint16_t)iphc_data[0]) << 8 ) | iphc_data[1];
-    iphc_header_t *iphc_header = (iphc_header_t *)&tmp;
-    if (iphc_header->NH == 0b1) {
-        uint8_t *nhc_data = iphc_data + iphc_len;
-        ur_udp_header_t *udp_header = (ur_udp_header_t *)(buffer + UR_IP6_HLEN);
-        error = next_header_decompress(nhc_data, buffer + UR_IP6_HLEN, &nhc_len);
+    if (iphc_header->NH == 0x01) {
+        uint8_t nhc_len = 0;
+        uint8_t *nhc_data = header + (*header_size);
+        ur_udp_header_t *udp_header;
+
+        error = next_header_decompress(nhc_data, &nhc_len);
         if (error != UR_ERROR_NONE) {
-            ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
-                   "lowpan6: unsupported 6LowPAN NHC header, decompress failed\r\n");
-            ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
-            return NULL;
+            goto exit;
         }
-        ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_6LOWPAN,
-               "lowpan6: decompressed %d bytes 6LowPAN NHC header"
-               " to 8 bytes UDP header\r\n", nhc_len);
 
-        hc_len += nhc_len;
-        dec_header_len = UR_IP6_HLEN + UR_UDP_HLEN;
-        ip_payload_len = pkt_len - hc_len + 8;
-        udp_header->length = htons(ip_payload_len);
+        udp_header = (ur_udp_header_t *)nhc_data;
+        (*lowpan_header_size) += nhc_len;
+        (*header_size) += UR_UDP_HLEN;
+        payload_size = payload_size - nhc_len + UR_UDP_HLEN;
+        udp_header->length = htons(payload_size);
         ip6_header->next_header = UR_IPPROTO_UDP;
     }
+    ip6_header->len = htons(payload_size);
 
-    ip6_header->len = htons(ip_payload_len);
-
-    message_set_payload_offset(message, -hc_len);
-    dec_message = message_alloc(dec_header_len, LOWPAN6_1);
-    if (dec_message == NULL) {
-        ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
-        return NULL;
-    }
-    message_copy_from(dec_message, buffer, dec_header_len);
-    message_concatenate(dec_message, message, false);
-    ur_mem_free(buffer, (UR_IP6_HLEN + UR_UDP_HLEN));
-
-    return dec_message;
+exit:
+    return error;
 }
 
 static ur_error_t dequeue_list_element(lowpan_reass_t *lrh)

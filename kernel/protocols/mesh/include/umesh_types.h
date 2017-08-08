@@ -186,7 +186,6 @@ enum {
     ADDRESS_MGMT_4,  // 14
     NETWORK_MGMT_1,  // 15
     NETWORK_MGMT_2,  // 16
-    LOWPAN6_1,  // 17
     LOWPAN6_2,  // 18
     LINK_MGMT_1,  // 19
     LINK_MGMT_2,  // 20
@@ -195,6 +194,7 @@ enum {
     DIAGS_1,  // 23
     DIAGS_2,  // 24
     UT_MSG,  // 25
+    UMESH_2,
     MSG_DEBUG_INFO_SIZE,
 };
 
