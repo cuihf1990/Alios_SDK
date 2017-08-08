@@ -165,6 +165,17 @@ int32_t hal_gpio_enable_irq(uint8_t gpio, hal_gpio_irq_trigger_t trigger,
  */
 int32_t hal_gpio_disable_irq(uint8_t gpio);
 
+/**@brief Clear the interrupt flag from an input GPIO pins
+ *
+ * @note Clear the interrupt flag from an input GPIO pins.
+ *
+ * @param gpio    : the gpio pin which provided the interrupt trigger
+ *
+ * @return    kNoErr        : on success.
+ * @return    kGeneralErr   : if an error occurred with any step
+ */
+int32_t hal_gpio_clear_irq(uint8_t gpio);
+
 /** @} */
 /** @} */
 

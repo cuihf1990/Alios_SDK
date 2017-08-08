@@ -16,7 +16,7 @@ typedef enum
     GIRQ_TRIGGER_FALLING_EDGE = 0x3 /* Interrupt triggered at input signal's falling edge */
 };
 
-typedef struct 
+typedef struct
 {
     void *arg;
     hal_gpio_irq_handler_t handler;
@@ -24,7 +24,7 @@ typedef struct
 
 static gpio_int_hdl gpio_int_hdls[ 22 ];
 
-static const uint8_t gpio_map[] = 
+static const uint8_t gpio_map[] =
 {
     [1] = 30,
     [2] = 29,
@@ -43,7 +43,7 @@ static const uint8_t gpio_map[] =
     [21] = 21,
 };
 
-static const uint8_t config_map[] = 
+static const uint8_t config_map[] =
 {
     [INPUT_PULL_UP] = GMODE_INPUT_PULLUP,
     [INPUT_PULL_DOWN] = GMODE_INPUT_PULLDOWN,
@@ -51,7 +51,7 @@ static const uint8_t config_map[] =
     [OUTPUT_PUSH_PULL] = GMODE_OUTPUT,
 };
 
-static const uint8_t int_edge_map[] = 
+static const uint8_t int_edge_map[] =
 {
     [IRQ_TRIGGER_RISING_EDGE] = GIRQ_TRIGGER_RISING_EDGE,
     [IRQ_TRIGGER_FALLING_EDGE] = GIRQ_TRIGGER_FALLING_EDGE,
@@ -60,7 +60,7 @@ static const uint8_t int_edge_map[] =
 int32_t hal_gpio_init(uint8_t gpio, hal_gpio_config_t config)
 {
     uint32_t param;
-    
+
     if(config == OUTPUT_OPEN_DRAIN_NO_PULL || config == OUTPUT_OPEN_DRAIN_PULL_UP)
         return -1;
 
@@ -112,7 +112,7 @@ int32_t hal_gpio_output_trigger(uint8_t gpio)
 
 int8_t hal_gpio_inputget(uint8_t gpio)
 {
-    uint32_t param; 
+    uint32_t param;
 
     param = gpio_map[gpio];
     return gpio_ctrl(CMD_GPIO_INPUT, &param);
@@ -122,7 +122,7 @@ static gpio_int_cb( uint8_t i )
 {
     void *arg = gpio_int_hdls[i].arg;
     hal_gpio_irq_handler_t cb_fn = gpio_int_hdls[i].handler;
-    
+
     if(cb_fn != NULL)
         cb_fn(arg);
 }
@@ -152,6 +152,17 @@ int32_t hal_gpio_disable_irq(uint8_t gpio)
     param = gpio_map[gpio];
 
     gpio_ctrl(CMD_GPIO_INT_DISABLE, &param);
+
+    return 0;
+}
+
+int32_t hal_gpio_clear_irq(uint8_t gpio)
+{
+    uint32_t param;
+
+    param = gpio_map[gpio];
+
+    gpio_ctrl(CMD_GPIO_INT_CLEAR, &param);
 
     return 0;
 }
