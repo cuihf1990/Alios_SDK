@@ -36,21 +36,6 @@
 #define KV_PTN    CONFIG_YOS_KV_PTN
 #endif
 
-/* The physical backup partition for key-value store, if backup mode enabled */
-#ifdef  CONFIG_YOS_KV_MULTIPTN_MODE
-#ifndef CONFIG_YOS_KV_PTN_SIZE
-#define KV_PTN_SIZE   (4 * 1024)
-#else
-#define KV_PTN_SIZE   CONFIG_YOS_KV_PTN_SIZE
-#endif
-
-#ifndef CONFIG_YOS_KV_SECOND_PTN
-#define KV_SECOND_PTN HAL_PARTITION_PARAMETER_3
-#else
-#define KV_SECOND_PTN CONFIG_YOS_KV_SECOND_PTN
-#endif
-#endif
-
 /**
  * @brief init the kv module.
  *
