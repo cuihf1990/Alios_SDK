@@ -34,7 +34,7 @@ static int open_flash(int pno, bool w)
 {
     char fn[64];
     int flash_fd;
-    snprintf(fn, sizeof fn, "/tmp/yos_partition_%d.bin", pno);
+    snprintf(fn, sizeof fn, "./yos_partition_%d.bin", pno);
     if(w)
         flash_fd = open(fn, O_RDWR);
     else
@@ -50,11 +50,31 @@ static int open_flash(int pno, bool w)
 
 int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,uint32_t buf_size)
 {
+    int ret;
+    char *tmp, *new_val;
+
     int flash_fd = open_flash(pno, true);
     if (flash_fd < 0)
         return -1;
 
-    int ret = pwrite(flash_fd, buf, buf_size, *poff);
+    char *origin = (char *)malloc(buf_size);
+    if (!origin)
+        return -1;
+    memset(origin, 0, buf_size);
+
+    ret = pread(flash_fd, origin, buf_size, *poff);
+    if (ret < 0)
+        perror("error reading flash:");
+
+    tmp = origin;
+    new_val = (char *)buf;
+    for (int i = 0; i < buf_size; i++) {
+        (*tmp) &= (*new_val);
+        new_val++;
+        tmp++;
+    }
+
+    ret = pwrite(flash_fd, origin, buf_size, *poff);
     if (ret < 0)
         perror("error writing flash:");
     else if (poff)
