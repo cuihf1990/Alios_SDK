@@ -10,9 +10,13 @@
 
 #define TRACE_PACKET_LENGTH 120
 #define MAX_MODULE_NAME 40
+#define TRACE_TYPE  0XFFFFFF00
+#define TRACE_EVENT 0X000000FF
 
 struct k_fifo trace_fifo;
 static uint32_t buffer[TRACE_BUFFER_SIZE];
+static uint32_t event_mask;
+static void *hit_task;
 
 /* task trace function */
 void _trace_init(void)
@@ -20,12 +24,52 @@ void _trace_init(void)
     uint32_t buf[10];
 
     fifo_init(&trace_fifo, buffer, TRACE_BUFFER_SIZE * 4);
+    event_mask  = TRACE_TYPE|TRACE_EVENT;
+    hit_task = NULL;
 
     buf[0] = 0x101;
     buf[1] = 0x0;
     buf[2] = 0x0;
-
     fifo_in_full_reject_lock(&trace_fifo, buf, 12);
+}
+
+void trace_filter_and_write(ktask_t *task, const void *buf, uint32_t len)
+{
+    if (hit_task != NULL && hit_task != task) return;
+    
+    uint32_t event = *(uint32_t *)buf;
+
+    /*when event_mask represents an event, filter exact event*/
+    if ((event_mask & TRACE_EVENT) != 0 && event_mask != event) return;
+    
+    /*when event_mask represents an event type, filter match type*/
+    if ((event_mask & TRACE_TYPE) != (event & TRACE_TYPE)) return;
+
+    fifo_in_full_reject_lock(&trace_fifo, buf, len);
+}
+
+int32_t set_filter_task(const char * task_name)
+{
+    NULL_PARA_CHK(task_name);
+
+    klist_t *taskhead = &g_kobj_list.task_head;
+    klist_t *taskend  = taskhead, *tmp;
+    ktask_t  *task;
+
+    for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
+        task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+        if (task->task_name != NULL && !memcmp(task_name, task->task_name, strlen(task->task_name))) {
+            hit_task = task;
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+void set_event_mask(const uint32_t mask)
+{
+    event_mask = mask;
 }
 
 void _trace_task_switch(ktask_t *from, ktask_t *to)
@@ -58,7 +102,7 @@ void _trace_task_switch(ktask_t *from, ktask_t *to)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(from, buf, addr_second - addr_first);
 }
 
 void _trace_intrpt_task_switch(ktask_t *from, ktask_t *to)
@@ -91,7 +135,7 @@ void _trace_intrpt_task_switch(ktask_t *from, ktask_t *to)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(from, buf, addr_second - addr_first);
 }
 
 void _trace_task_create(ktask_t *task)
@@ -125,7 +169,7 @@ void _trace_task_create(ktask_t *task)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_task_sleep(ktask_t *task, tick_t ticks)
@@ -156,7 +200,7 @@ void _trace_task_sleep(ktask_t *task, tick_t ticks)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_task_pri_change(ktask_t *task, ktask_t *task_pri_chg, uint8_t pri)
@@ -193,7 +237,7 @@ void _trace_task_pri_change(ktask_t *task, ktask_t *task_pri_chg, uint8_t pri)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_task_suspend(ktask_t *task, ktask_t *task_suspended)
@@ -226,7 +270,7 @@ void _trace_task_suspend(ktask_t *task, ktask_t *task_suspended)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_task_resume(ktask_t *task, ktask_t *task_resumed)
@@ -259,7 +303,7 @@ void _trace_task_resume(ktask_t *task, ktask_t *task_resumed)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_task_del(ktask_t *task, ktask_t *task_del)
@@ -292,7 +336,7 @@ void _trace_task_del(ktask_t *task, ktask_t *task_del)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_task_abort(ktask_t *task, ktask_t *task_abort)
@@ -325,7 +369,7 @@ void _trace_task_abort(ktask_t *task, ktask_t *task_abort)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 /* semaphore trace function */
@@ -371,7 +415,7 @@ void _trace_sem_create(ktask_t *task, ksem_t *sem)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_sem_overflow(ktask_t *task, ksem_t *sem)
@@ -404,7 +448,7 @@ void _trace_sem_overflow(ktask_t *task, ksem_t *sem)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_sem_del(ktask_t *task, ksem_t *sem)
@@ -437,7 +481,7 @@ void _trace_sem_del(ktask_t *task, ksem_t *sem)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_sem_get_success(ktask_t *task, ksem_t *sem)
@@ -470,7 +514,7 @@ void _trace_sem_get_success(ktask_t *task, ksem_t *sem)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_sem_get_blk(ktask_t *task, ksem_t *sem, tick_t wait_option)
@@ -507,7 +551,7 @@ void _trace_sem_get_blk(ktask_t *task, ksem_t *sem, tick_t wait_option)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_sem_task_wake(ktask_t *task, ktask_t *task_waked_up, ksem_t *sem, uint8_t opt_wake_all)
@@ -549,7 +593,7 @@ void _trace_sem_task_wake(ktask_t *task, ktask_t *task_waked_up, ksem_t *sem, ui
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_sem_cnt_increase(ktask_t *task, ksem_t *sem)
@@ -582,7 +626,7 @@ void _trace_sem_cnt_increase(ktask_t *task, ksem_t *sem)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 /* mutex trace function */
@@ -629,7 +673,7 @@ void _trace_mutex_create(ktask_t *task, kmutex_t *mutex, const name_t *name)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_mutex_release(ktask_t *task, ktask_t *task_release, uint8_t new_pri)
@@ -666,7 +710,7 @@ void _trace_mutex_release(ktask_t *task, ktask_t *task_release, uint8_t new_pri)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_mutex_get(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
@@ -703,7 +747,7 @@ void _trace_mutex_get(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_task_pri_inv(ktask_t *task, ktask_t *mtxtsk)
@@ -736,7 +780,7 @@ void _trace_task_pri_inv(ktask_t *task, ktask_t *mtxtsk)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_mutex_get_blk(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
@@ -773,7 +817,7 @@ void _trace_mutex_get_blk(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_mutex_release_success(ktask_t *task, kmutex_t *mutex)
@@ -806,7 +850,7 @@ void _trace_mutex_release_success(ktask_t *task, kmutex_t *mutex)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 
@@ -844,7 +888,7 @@ void _trace_mutex_task_wake(ktask_t *task, ktask_t *task_waked_up, kmutex_t *mut
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_mutex_del(ktask_t *task, kmutex_t *mutex)
@@ -877,7 +921,7 @@ void _trace_mutex_del(ktask_t *task, kmutex_t *mutex)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 /* event trace function */
@@ -927,7 +971,7 @@ void _trace_event_create(ktask_t *task, kevent_t *event, const name_t *name, uin
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 
 }
 
@@ -961,7 +1005,7 @@ void _trace_event_get(ktask_t *task, kevent_t *event)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_event_get_blk(ktask_t *task, kevent_t *event, tick_t wait_option)
@@ -998,7 +1042,7 @@ void _trace_event_get_blk(ktask_t *task, kevent_t *event, tick_t wait_option)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_event_task_wake(ktask_t *task, ktask_t *task_waked_up, kevent_t *event)
@@ -1035,7 +1079,7 @@ void _trace_event_task_wake(ktask_t *task, ktask_t *task_waked_up, kevent_t *eve
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 
@@ -1069,7 +1113,7 @@ void _trace_event_del(ktask_t *task, kevent_t *event)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 /* buf_queue trace function */
@@ -1115,7 +1159,7 @@ void _trace_buf_queue_create(ktask_t *task, kbuf_queue_t *buf_queue)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_buf_max(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_t msg_size)
@@ -1152,7 +1196,7 @@ void _trace_buf_max(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_t
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_buf_post(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_t msg_size)
@@ -1189,7 +1233,7 @@ void _trace_buf_post(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 
@@ -1227,7 +1271,7 @@ void _trace_buf_queue_task_wake(ktask_t *task, ktask_t *task_waked_up, kbuf_queu
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 
@@ -1265,7 +1309,7 @@ void _trace_buf_queue_get_blk(ktask_t *task, kbuf_queue_t *buf_queue, tick_t wai
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 /* timer trace function */
@@ -1311,7 +1355,7 @@ void _trace_timer_create(ktask_t *task, ktimer_t *timer)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_timer_del(ktask_t *task, ktimer_t *timer)
@@ -1344,7 +1388,7 @@ void _trace_timer_del(ktask_t *task, ktimer_t *timer)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 /* mblk trace function */
@@ -1386,7 +1430,7 @@ void _trace_mblk_pool_create(ktask_t *task, mblk_pool_t *pool)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 /* mm trace function */
@@ -1429,7 +1473,7 @@ void _trace_mm_pool_create(ktask_t *task, mm_pool_t *pool)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 #endif
 /* mm region function */
@@ -1471,7 +1515,7 @@ void _trace_mm_region_create(ktask_t *task, k_mm_region_t *regions)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 /* work queue trace */
@@ -1513,7 +1557,7 @@ void _trace_work_init(ktask_t *task, kwork_t *work)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_workqueue_create(ktask_t *task, kworkqueue_t *workqueue)
@@ -1558,7 +1602,7 @@ void _trace_workqueue_create(ktask_t *task, kworkqueue_t *workqueue)
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 void _trace_workqueue_del(ktask_t *task, kworkqueue_t *workqueue)
@@ -1590,8 +1634,8 @@ void _trace_workqueue_del(ktask_t *task, kworkqueue_t *workqueue)
     addr_second += 4;
 
     assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
-    fifo_in_full_reject_lock(&trace_fifo, buf, addr_second - addr_first);
+    
+    trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
 #endif
