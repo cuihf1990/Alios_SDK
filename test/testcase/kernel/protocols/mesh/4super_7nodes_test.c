@@ -101,13 +101,13 @@ static void subnet_is_wifi_case(void)
     uint8_t index;
 
     build_topo_wifi();
-    ur_mesh_stop();
+    umesh_stop();
 
     start_node_ext(1, MODE_SUPER, -1, 1);
     check_p2p_str_wait("leader", 1, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 1, "testcmd router", 2);
 
-    ur_mesh_set_mode(MODE_SUPER);
+    umesh_set_mode(MODE_SUPER);
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_SUPER_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == VECTOR_ROUTER);
@@ -150,7 +150,7 @@ static void subnet_is_wifi_case(void)
     check_p2p_str_wait("leaf", 10, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 10, "testcmd router", 2);
 
-    addr = ur_mesh_get_mcast_addr();
+    addr = umesh_get_mcast_addr();
     for (index = 1; index < 12; index++) {
         if (index != 3 || index !=10 || index != 5) {
             continue;
@@ -176,7 +176,7 @@ static void subnet_is_ble_case(void)
 
     build_topo_wifi_ble();
 
-    ur_mesh_stop();
+    umesh_stop();
 
     start_node_ext(153, MODE_SUPER, -1, 3);
     check_p2p_str_wait("leader", 153, "testcmd state", 10);

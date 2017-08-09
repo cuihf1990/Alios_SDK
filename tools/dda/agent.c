@@ -269,7 +269,7 @@ static int send_data(agent_info_t *agent, int type, int cmd, int dst_id, void *b
 static int connect_master(agent_info_t *agent)
 {
     if (!agent->agent_id) {
-        ur_mesh_hal_module_t *m = hal_umesh_get_default_module();
+        umesh_hal_module_t *m = hal_umesh_get_default_module();
         if (!m)
             return 0;
 
@@ -292,8 +292,8 @@ static int connect_master(agent_info_t *agent)
 
 static void yos_loop(void *arg)
 {
-    ur_mesh_init(MODE_RX_ON);
-    ur_mesh_start();
+    umesh_init(MODE_RX_ON);
+    umesh_start();
     yos_loop_run();
     yos_task_exit(0);
 }
@@ -511,8 +511,8 @@ static void report_agent_status(void *d1, void *d2)
 {
     agent_info_t *agent = (agent_info_t *)d2;
     agent_status_t status;
-    status.sid = ur_mesh_get_sid();
-    status.netid = ur_mesh_get_meshnetid();
+    status.sid = umesh_get_sid();
+    status.netid = umesh_get_meshnetid();
     send_data(agent, TYPE_MGMT, CMD_MGMT_STATUS, MASTER_ID, &status, sizeof status);
 
     eloop_register_timeout(5, 0, report_agent_status, 0, agent);

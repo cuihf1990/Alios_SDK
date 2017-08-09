@@ -19,9 +19,9 @@ typedef struct {
     uint8_t media_type;
     uint8_t media_index;
     const uint8_t *channels;
-    ur_mesh_handle_received_frame_t rxcb;
+    umesh_handle_received_frame_t rxcb;
     void *context;
-    ur_mesh_hal_module_t *module;
+    umesh_hal_module_t *module;
     mesh_key_t keys[2];
 } mesh_hal_priv_t;
 
@@ -35,14 +35,14 @@ static void linuxhost_mesh_recv(frame_t *frm, frame_info_t *fino, void *cb_data)
     priv->rxcb(priv->context, frm, fino, 0);
 }
 
-static int linuxhost_ur_init(ur_mesh_hal_module_t *module, void *something)
+static int linuxhost_ur_init(umesh_hal_module_t *module, void *something)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     dda_mesh_register_receiver(priv->media_type, linuxhost_mesh_recv, module->base.priv_dev);
     return 0;
 }
 
-static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest)
+static int send_frame(umesh_hal_module_t *module, frame_t *frame, mac_address_t *dest)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
@@ -59,9 +59,9 @@ static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_
     return 0;
 }
 
-static int linuxhost_ur_send_ucast(ur_mesh_hal_module_t *module, frame_t *frame,
+static int linuxhost_ur_send_ucast(umesh_hal_module_t *module, frame_t *frame,
                                    mac_address_t *dest,
-                                   ur_mesh_handle_sent_ucast_t sent,
+                                   umesh_handle_sent_ucast_t sent,
                                    void *context)
 {
     int error;
@@ -84,8 +84,8 @@ static int linuxhost_ur_send_ucast(ur_mesh_hal_module_t *module, frame_t *frame,
     return error;
 }
 
-static int linuxhost_ur_send_bcast(ur_mesh_hal_module_t *module, frame_t *frame,
-                                   ur_mesh_handle_sent_bcast_t sent,
+static int linuxhost_ur_send_bcast(umesh_hal_module_t *module, frame_t *frame,
+                                   umesh_handle_sent_bcast_t sent,
                                    void *context)
 {
     int error;
@@ -111,20 +111,20 @@ static int linuxhost_ur_send_bcast(ur_mesh_hal_module_t *module, frame_t *frame,
     return error;
 }
 
-static int linuxhost_ur_get_u_mtu(ur_mesh_hal_module_t *module)
+static int linuxhost_ur_get_u_mtu(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     return priv->u_mtu;
 }
 
-static int linuxhost_ur_get_b_mtu(ur_mesh_hal_module_t *module)
+static int linuxhost_ur_get_b_mtu(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     return priv->b_mtu;
 }
 
-static int linuxhost_ur_set_rxcb(ur_mesh_hal_module_t *module,
-                          ur_mesh_handle_received_frame_t received, void *context)
+static int linuxhost_ur_set_rxcb(umesh_hal_module_t *module,
+                          umesh_handle_received_frame_t received, void *context)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
@@ -137,7 +137,7 @@ static int linuxhost_ur_set_rxcb(ur_mesh_hal_module_t *module,
 }
 
 static const mac_address_t *linuxhost_ur_get_mac_address(
-                                        ur_mesh_hal_module_t *module)
+                                        umesh_hal_module_t *module)
 {
     static mac_address_t mac;
     mac.len = 8;
@@ -145,7 +145,7 @@ static const mac_address_t *linuxhost_ur_get_mac_address(
     return &mac;
 }
 
-static int linuxhost_ur_set_key(struct ur_mesh_hal_module_s *module,
+static int linuxhost_ur_set_key(struct umesh_hal_module_s *module,
                                 uint8_t index, uint8_t *key, uint8_t length)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -164,12 +164,12 @@ static int linuxhost_ur_set_key(struct ur_mesh_hal_module_s *module,
     return 0;
 }
 
-static int linuxhost_ur_is_sec_enabled(struct ur_mesh_hal_module_s *module)
+static int linuxhost_ur_is_sec_enabled(struct umesh_hal_module_s *module)
 {
     return 0;
 }
 
-static int linuxhost_ur_hal_set_channel(ur_mesh_hal_module_t *module, uint8_t channel)
+static int linuxhost_ur_hal_set_channel(umesh_hal_module_t *module, uint8_t channel)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
@@ -185,7 +185,7 @@ static int linuxhost_ur_hal_set_channel(ur_mesh_hal_module_t *module, uint8_t ch
     return 0;
 }
 
-static int linuxhost_ur_get_channel_list(ur_mesh_hal_module_t *module, const uint8_t **chnlist)
+static int linuxhost_ur_get_channel_list(umesh_hal_module_t *module, const uint8_t **chnlist)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     if (chnlist == NULL) {
@@ -197,13 +197,13 @@ static int linuxhost_ur_get_channel_list(ur_mesh_hal_module_t *module, const uin
     return priv->chn_num;
 }
 
-static int linuxhost_ur_get_channel(ur_mesh_hal_module_t *module)
+static int linuxhost_ur_get_channel(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     return priv->channel;
 }
 
-static ur_mesh_hal_module_t linuxhost_ur_wifi_module;
+static umesh_hal_module_t linuxhost_ur_wifi_module;
 static const uint8_t g_wifi_channels[] = {1, 2, 3};
 static mesh_hal_priv_t wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
@@ -215,25 +215,25 @@ static mesh_hal_priv_t wifi_priv = {
     .module = &linuxhost_ur_wifi_module,
 };
 
-static ur_mesh_hal_module_t linuxhost_ur_wifi_module = {
+static umesh_hal_module_t linuxhost_ur_wifi_module = {
     .base.name = "linuxhost_ur_wifi_module",
     .base.priv_dev = &wifi_priv,
     .type = MEDIA_TYPE_WIFI,
-    .ur_mesh_hal_init = linuxhost_ur_init,
-    .ur_mesh_hal_send_ucast_request = linuxhost_ur_send_ucast,
-    .ur_mesh_hal_send_bcast_request = linuxhost_ur_send_bcast,
-    .ur_mesh_hal_register_receiver = linuxhost_ur_set_rxcb,
-    .ur_mesh_hal_get_bcast_mtu = linuxhost_ur_get_b_mtu,
-    .ur_mesh_hal_get_ucast_mtu = linuxhost_ur_get_u_mtu,
-    .ur_mesh_hal_get_mac_address = linuxhost_ur_get_mac_address,
-    .ur_mesh_hal_set_channel = linuxhost_ur_hal_set_channel,
-    .ur_mesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
-    .ur_mesh_hal_get_channel = linuxhost_ur_get_channel,
-    .ur_mesh_hal_set_key = linuxhost_ur_set_key,
-    .ur_mesh_hal_is_sec_enabled = linuxhost_ur_is_sec_enabled,
+    .umesh_hal_init = linuxhost_ur_init,
+    .umesh_hal_send_ucast_request = linuxhost_ur_send_ucast,
+    .umesh_hal_send_bcast_request = linuxhost_ur_send_bcast,
+    .umesh_hal_register_receiver = linuxhost_ur_set_rxcb,
+    .umesh_hal_get_bcast_mtu = linuxhost_ur_get_b_mtu,
+    .umesh_hal_get_ucast_mtu = linuxhost_ur_get_u_mtu,
+    .umesh_hal_get_mac_address = linuxhost_ur_get_mac_address,
+    .umesh_hal_set_channel = linuxhost_ur_hal_set_channel,
+    .umesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
+    .umesh_hal_get_channel = linuxhost_ur_get_channel,
+    .umesh_hal_set_key = linuxhost_ur_set_key,
+    .umesh_hal_is_sec_enabled = linuxhost_ur_is_sec_enabled,
 };
 
-static ur_mesh_hal_module_t linuxhost_ur_ble_module;
+static umesh_hal_module_t linuxhost_ur_ble_module;
 static const uint8_t g_ble_channels[] = {0, 1};
 static mesh_hal_priv_t ble_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
@@ -245,20 +245,20 @@ static mesh_hal_priv_t ble_priv = {
     .module = &linuxhost_ur_ble_module,
 };
 
-static ur_mesh_hal_module_t linuxhost_ur_ble_module = {
+static umesh_hal_module_t linuxhost_ur_ble_module = {
     .base.name = "linuxhost_ur_ble_module",
     .base.priv_dev = &ble_priv,
     .type = MEDIA_TYPE_BLE,
-    .ur_mesh_hal_init = linuxhost_ur_init,
-    .ur_mesh_hal_send_ucast_request = linuxhost_ur_send_ucast,
-    .ur_mesh_hal_send_bcast_request = linuxhost_ur_send_bcast,
-    .ur_mesh_hal_register_receiver = linuxhost_ur_set_rxcb,
-    .ur_mesh_hal_get_bcast_mtu = linuxhost_ur_get_b_mtu,
-    .ur_mesh_hal_get_ucast_mtu = linuxhost_ur_get_u_mtu,
-    .ur_mesh_hal_get_mac_address = linuxhost_ur_get_mac_address,
-    .ur_mesh_hal_set_channel = linuxhost_ur_hal_set_channel,
-    .ur_mesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
-    .ur_mesh_hal_get_channel = linuxhost_ur_get_channel,
+    .umesh_hal_init = linuxhost_ur_init,
+    .umesh_hal_send_ucast_request = linuxhost_ur_send_ucast,
+    .umesh_hal_send_bcast_request = linuxhost_ur_send_bcast,
+    .umesh_hal_register_receiver = linuxhost_ur_set_rxcb,
+    .umesh_hal_get_bcast_mtu = linuxhost_ur_get_b_mtu,
+    .umesh_hal_get_ucast_mtu = linuxhost_ur_get_u_mtu,
+    .umesh_hal_get_mac_address = linuxhost_ur_get_mac_address,
+    .umesh_hal_set_channel = linuxhost_ur_hal_set_channel,
+    .umesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
+    .umesh_hal_get_channel = linuxhost_ur_get_channel,
 };
 
 int csp_get_args(const char ***pargv);

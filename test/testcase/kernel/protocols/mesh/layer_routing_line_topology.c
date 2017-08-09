@@ -37,12 +37,12 @@ static void topology_line_case(void)
     check_p2p_str_wait("router", 14, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 14, "testcmd router", 2);
 
-    ur_mesh_set_mode(MODE_RX_ON);
+    umesh_set_mode(MODE_RX_ON);
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
 
-    myaddr = ur_mesh_get_ucast_addr();
+    myaddr = umesh_get_ucast_addr();
     snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 14, "testcmd icmp_acked", 5);

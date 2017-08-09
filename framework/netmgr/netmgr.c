@@ -90,9 +90,9 @@ static void netmgr_connect_fail_event(hal_wifi_module_t *m, int err, void* arg)
 #ifdef CONFIG_YOS_MESH
 static void mesh_delayed_action(void *arg)
 {
-    ur_mesh_set_mode((node_mode_t)arg);
-    ur_mesh_stop();
-    ur_mesh_start();
+    umesh_set_mode((node_mode_t)arg);
+    umesh_stop();
+    umesh_start();
 }
 #endif
 
@@ -101,7 +101,7 @@ static void start_mesh(bool is_leader)
 #ifdef CONFIG_YOS_MESH
     node_mode_t mode;
 
-    mode = ur_mesh_get_mode() & (~MODE_LEADER);
+    mode = umesh_get_mode() & (~MODE_LEADER);
     if (is_leader) {
         mode |= MODE_LEADER;
     }
@@ -113,7 +113,7 @@ static void start_mesh(bool is_leader)
 static void stop_mesh(void)
 {
 #ifdef CONFIG_YOS_MESH
-    ur_mesh_stop();
+    umesh_stop();
 #endif
 }
 
@@ -474,7 +474,7 @@ int netmgr_init(void)
     read_persistent_conf();
 
 #ifdef CONFIG_YOS_MESH
-    ur_mesh_init(MODE_RX_ON);
+    umesh_init(MODE_RX_ON);
 #endif
 
     return 0;

@@ -241,7 +241,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *pad
     reginfo = (reg_info_t *)msn_alloc(CONNECT, sizeof(reg_info_t), &buf, &len);
     memset(reginfo, 0, sizeof(reg_info_t));
     memcpy(reginfo->model_id, &model_id, sizeof(model_id));
-    mac_addr = ur_mesh_net_get_mac_address(UR_MESH_NET_DFL);
+    mac_addr = umesh_net_get_mac_address(UR_MESH_NET_DFL);
     memcpy(reginfo->ieee_addr, mac_addr->addr, IEEE_ADDR_BYTES);
     os_product_get_model(reginfo->model);
     os_product_get_secret(reginfo->secret);
@@ -598,8 +598,8 @@ static void gateway_advertise(void *arg)
 
     yos_post_delayed_action(ADV_INTERVAL, gateway_advertise, arg);
 
-    ur_ip6_addr_t *mcast_addr = (ur_ip6_addr_t *)ur_mesh_get_mcast_addr();
-    ur_ip6_addr_t *ucast_addr = (ur_ip6_addr_t *)ur_mesh_get_ucast_addr();
+    ur_ip6_addr_t *mcast_addr = (ur_ip6_addr_t *)umesh_get_mcast_addr();
+    ur_ip6_addr_t *ucast_addr = (ur_ip6_addr_t *)umesh_get_ucast_addr();
     if (!mcast_addr || !ucast_addr) {
         return;
     }
@@ -862,7 +862,7 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
             return;
     }
 
-    if (ur_mesh_get_device_state() == DEVICE_STATE_LEADER && gateway_state.yunio_connected == true)
+    if (umesh_get_device_state() == DEVICE_STATE_LEADER && gateway_state.yunio_connected == true)
         gateway_state.gateway_mode = true;
     else
         gateway_state.gateway_mode = false;
