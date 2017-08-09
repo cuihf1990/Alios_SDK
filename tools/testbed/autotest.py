@@ -111,7 +111,7 @@ class Autotest:
                         try:
                             logtime = float(logtime)
                             logtimestr = time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(logtime));
-                            logtimestr += "{0:.3f}".format(logtime-int(logtime))
+                            logtimestr += ("{0:.3f}".format(logtime-int(logtime)))[1:]
                         except:
                             continue
                         if dev not in list(self.device_list):
