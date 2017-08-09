@@ -62,7 +62,8 @@ typedef enum {
     TYPE_BCAST_CHANNEL     = 0xa4,  /* bcast channel */
     TYPE_MESH_PREFIX       = 0x0,   /* mesh prefix TLV */
     TYPE_TLV_REQUEST       = 0x1,   /* TLV requests TLV */
-    TYPE_INVALID           = 255,
+    TYPE_HEADER_IES_TERMINATOR = 0x7f,  /* header TLVs terminator */
+    TYPE_INVALID           = 0xff,
 } mm_tlv_type_t;
 
 typedef struct mesh_mgmt_tlv_s {
@@ -162,9 +163,9 @@ typedef struct mesh_mgmt_mcast_addr_tv_s {
     ur_ip6_addr_t mcast;
 } __attribute__((packed)) mm_mcast_addr_tv_t;
 
-typedef struct mesh_mgmt_rssi_tlv_s {
+typedef struct mesh_mgmt_rssi_tv_s {
     mm_tv_t base;
-    int8_t  rssi;
+    int8_t rssi;
 } __attribute__((packed)) mm_rssi_tv_t;
 
 typedef struct mesh_mgmt_hal_type_s {

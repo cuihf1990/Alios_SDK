@@ -41,11 +41,11 @@ typedef struct message_info_s {
     uint8_t src_channel;
 
     ur_addr_t dest;
-
-    uint8_t dir;
     ur_addr_t dest2;
 
     uint8_t command;
+
+    uint8_t header_ies_offset;
     uint8_t payload_offset;
     uint8_t hops;
     uint16_t flags;

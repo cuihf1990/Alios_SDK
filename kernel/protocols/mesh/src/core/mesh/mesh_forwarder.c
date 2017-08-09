@@ -249,9 +249,6 @@ static void resolve_message_info(received_frame_t *frame, message_info_t *info,
             break;
     }
 
-    info->dir = (control->control[1] & MESH_HEADER_DIR_MASK) >>
-                MESH_HEADER_DIR_OFFSET;
-
     switch ((control->control[1] & MESH_HEADER_DEST2_MASK) >>
             MESH_HEADER_DEST2_OFFSET) {
         case NO_ADDR_MODE:
@@ -280,6 +277,11 @@ static void resolve_message_info(received_frame_t *frame, message_info_t *info,
         info->flags |= ENCRYPT_ENABLE_FLAG;
     }
 
+    if (control->control[1] & (1 << MESH_HEADER_IES_OFFSET)) {
+        info->flags |= HEADER_IES_FLAG;
+    }
+
+    info->header_ies_offset = offset;
     info->payload_offset = offset;
 }
 
@@ -390,6 +392,7 @@ static uint8_t insert_mesh_header(network_context_t *network,
     }
 
     info->payload_offset = length;
+    info->header_ies_offset = length;
     return length;
 }
 
@@ -411,6 +414,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     ur_error_t     error = UR_ERROR_NONE;
     uint16_t       frag_length;
     uint16_t       msg_length;
+    uint8_t header_ies_length;
     frag_header_t  frag_header;
     uint16_t       mtu;
     message_info_t *info;
@@ -447,13 +451,16 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         if (header_length == 0) {
             return UR_ERROR_DROP;
         }
-        header_length = info->payload_offset;
+        header_length = info->header_ies_offset;
     } else {
-        header_length = info->payload_offset;
+        header_length = info->header_ies_offset;
         message_copy_to(message, message->frag_offset,
                         hal->frame.data, header_length);
-        message_set_payload_offset(message, -header_length);
+        message_set_payload_offset(message, -info->payload_offset);
     }
+
+    header_ies_length = insert_mesh_header_ies(network, info);
+    header_length += header_ies_length;
 
     msg_length = message_get_msglen(message);
     memset(&frag_header, 0, sizeof(frag_header));
@@ -490,9 +497,9 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     message_copy_to(message, message->frag_offset, payload, frag_length);
 
     if ((info->flags & ENCRYPT_ENABLE_FLAG) &&
-        umesh_aes128_cbc_encrypt(hal->frame.data + info->payload_offset,
-                                 append_length + frag_length,
-                                 hal->frame.data + info->payload_offset) != UR_ERROR_NONE) {
+        umesh_aes128_cbc_encrypt(hal->frame.data + info->header_ies_offset,
+                                 header_ies_length + append_length + frag_length,
+                                 hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
         return UR_ERROR_DROP;
     }
 
@@ -817,6 +824,14 @@ static void message_handler(void *args)
         goto exit;
     }
 
+    if (info->flags & HEADER_IES_FLAG) {
+        error = handle_mesh_header_ies(message);
+        if (error != UR_ERROR_NONE) {
+            message_free(message);
+            goto exit;
+        }
+    }
+
     if (recv && info->dest2.addr.len != 0) {
         memcpy(&info->dest.addr, &info->dest2.addr, sizeof(info->dest.addr));
         info->dest2.addr.len = 0;
@@ -918,7 +933,6 @@ static void handle_received_frame(void *context, frame_t *frame,
     received_frame_t  *rx_frame = NULL;
     whitelist_entry_t *entry;
     hal_context_t *hal = (hal_context_t *)context;
-    mesh_header_control_t *control;
     message_info_t info;
     ur_error_t uerror = UR_ERROR_NONE;
 
@@ -951,11 +965,10 @@ static void handle_received_frame(void *context, frame_t *frame,
     memcpy(&rx_frame->frame_info, frame_info, sizeof(rx_frame->frame_info));
     bzero(&info, sizeof(info));
     resolve_message_info(rx_frame, &info, frame->data);
-    control = (mesh_header_control_t *)frame->data;
-    if (control->control[1] & (ENABLE_SEC << MESH_HEADER_SEC_OFFSET)) {
-        uerror = umesh_aes128_cbc_decrypt(frame->data + info.payload_offset,
-                                          frame->len - info.payload_offset,
-                                          frame->data + info.payload_offset);
+    if (info.flags & ENCRYPT_ENABLE_FLAG) {
+        uerror = umesh_aes128_cbc_decrypt(frame->data + info.header_ies_offset,
+                                          frame->len - info.header_ies_offset,
+                                          frame->data + info.header_ies_offset);
     }
 
     if (uerror != UR_ERROR_NONE) {

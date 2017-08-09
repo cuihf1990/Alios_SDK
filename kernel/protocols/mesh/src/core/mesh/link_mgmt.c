@@ -32,34 +32,29 @@ static void handle_link_request_timer(void *args)
 {
     neighbor_t *attach_node;
     hal_context_t *hal = (hal_context_t *)args;
-    slist_t *networks;
     network_context_t *network;
     uint32_t interval;
     uint8_t tlv_type[1] = {TYPE_UCAST_CHANNEL};
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link update timer\r\n");
+    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link request timer\r\n");
 
     if (umesh_mm_get_mode() & MODE_MOBILE) {
         interval = hal->link_request_mobile_interval;
     } else {
         interval = hal->link_request_interval;
     }
-    hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
-                                             hal);
 
-    networks = get_network_contexts();
-    slist_for_each_entry(networks, network, network_context_t, next) {
-        if (network->hal != hal) {
-            continue;
-        }
+    network = get_default_network_context();
+    attach_node = umesh_mm_get_attach_node(network);
+    if (attach_node == NULL) {
+        return;
+    }
 
-        attach_node = umesh_mm_get_attach_node(network);
-        if (attach_node == NULL) {
-            continue;
-        }
-
-        send_link_request(network, &attach_node->addr,
-                          tlv_type, sizeof(tlv_type));
+    send_link_request(network, &attach_node->addr,
+                      tlv_type, sizeof(tlv_type));
+    if (attach_node->stats.link_request < LINK_ESTIMATE_SENT_THRESHOLD) {
+        hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
+                                                 hal);
     }
 }
 
@@ -69,7 +64,7 @@ static ur_error_t update_link_cost(link_nbr_stats_t *stats)
     uint32_t old;
 
     if (stats->link_request < LINK_ESTIMATE_SENT_THRESHOLD) {
-        return -1;
+        return UR_ERROR_FAIL;
     }
 
     if (stats->link_accept) {
@@ -91,14 +86,14 @@ static ur_error_t update_link_cost(link_nbr_stats_t *stats)
     }
     stats->link_request = 0;
     stats->link_accept = 0;
-    return 0;
+    return UR_ERROR_NONE;
 }
 
 static void handle_link_quality_update_timer(void *args)
 {
-    neighbor_t *attach_node;
+    ur_error_t error;
+    neighbor_t *nbr;
     hal_context_t *hal = (hal_context_t *)args;
-    slist_t *networks;
     network_context_t *network;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -107,21 +102,19 @@ static void handle_link_quality_update_timer(void *args)
     hal->link_quality_update_timer = ur_start_timer(
                                          hal->link_request_interval * LINK_ESTIMATE_TIMES,
                                          handle_link_quality_update_timer, hal);
-    networks = get_network_contexts();
-    slist_for_each_entry(networks, network, network_context_t, next) {
-        if (network->hal != hal) {
-            continue;
-        }
 
-        attach_node = umesh_mm_get_attach_node(network);
-        if (attach_node == NULL) {
-            continue;
+    slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
+        error = update_link_cost(&nbr->stats);
+        network = get_hal_default_network_context(hal);
+        if (error != UR_ERROR_NONE &&
+            nbr == umesh_mm_get_attach_node(network)) {
+            hal->link_request_timer = ur_start_timer(
+                                              hal->link_request_interval,
+                                              handle_link_request_timer, hal);
         }
-
-        update_link_cost(&attach_node->stats);
-        if (attach_node->stats.link_cost >= LINK_COST_MAX) {
-            attach_node->state = STATE_INVALID;
-            g_neighbor_updater_head(attach_node);
+        if (nbr->stats.link_cost >= LINK_COST_MAX) {
+            nbr->state = STATE_INVALID;
+            g_neighbor_updater_head(nbr);
         }
     }
 }
@@ -183,6 +176,7 @@ get_nbr:
     nbr->state              = STATE_INVALID;
     nbr->flags              = 0;
     nbr->last_heard         = ur_get_now();
+    nbr->last_lq_time = 0;
 
     return nbr;
 }
@@ -475,6 +469,13 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
     uint8_t              *data;
     uint16_t             length;
     message_info_t *info;
+    neighbor_t *nbr;
+
+    nbr = get_neighbor_by_sid(network->hal, dest->addr.short_addr,
+                              dest->netid);
+    if (nbr == NULL) {
+        return UR_ERROR_FAIL;
+    }
 
     length = sizeof(mm_header_t);
     if (tlvs_length) {
@@ -504,6 +505,7 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
 
     set_command_type(info, mm_header->command);
     error = mf_send_message(message);
+    nbr->stats.link_request++;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
            "send link request, len %d\r\n", length);
@@ -623,6 +625,87 @@ static ur_error_t send_link_accept(network_context_t *network,
     return error;
 }
 
+uint8_t insert_mesh_header_ies(network_context_t *network,
+                               message_info_t *info)
+{
+    hal_context_t *hal;
+    mesh_header_control_t *control;
+    uint8_t offset = 0;
+    mm_tv_t *tv;
+    mm_rssi_tv_t *rssi;
+    neighbor_t *nbr;
+
+    if (is_bcast_sid(&info->dest) == true) {
+        return 0;
+    }
+
+    hal = network->hal;
+    nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
+                              info->dest.netid);
+    if (nbr == NULL) {
+        return 0;
+    }
+
+    if (nbr->last_lq_time &&
+        (ur_get_now() - nbr->last_lq_time) < LINK_QUALITY_INTERVAL) {
+        return 0;
+    }
+    nbr->last_lq_time = ur_get_now();
+
+    control = (mesh_header_control_t *)hal->frame.data;
+    control->control[1] |= (1 << MESH_HEADER_IES_OFFSET);
+
+    rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset);
+    umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_FORWARD_RSSI);
+    rssi->rssi = 0xff;
+    offset += sizeof(mm_rssi_tv_t);
+
+    tv = (mm_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
+    tv->type = TYPE_HEADER_IES_TERMINATOR;
+    offset += sizeof(mm_tv_t);
+
+    info->payload_offset += offset;
+
+    nbr->stats.link_request++;
+    return offset;
+}
+
+ur_error_t handle_mesh_header_ies(message_t *message)
+{
+    ur_error_t error = UR_ERROR_NONE;
+    message_info_t *info;
+    uint16_t offset;
+    uint8_t *tlvs;
+    mm_tv_t *tv;
+
+    info = message->info;
+    offset = 0;
+    tlvs = (message_get_payload(message) + info->header_ies_offset);
+    tv = (mm_tv_t *)tlvs;
+
+    while (tv->type != TYPE_HEADER_IES_TERMINATOR) {
+        switch (tv->type) {
+            case TYPE_FORWARD_RSSI:
+                send_link_accept(info->network, &info->src_mac, NULL, 0);
+                offset += sizeof(mm_rssi_tv_t);
+                break;
+            default:
+                error = UR_ERROR_PARSE;
+        }
+
+        if (error != UR_ERROR_NONE) {
+            break;
+        }
+
+        tlvs += offset;
+        tv = (mm_tv_t *)tlvs;
+    }
+
+    offset += sizeof(mm_tv_t);
+    info->payload_offset += offset;
+    return error;
+}
+
 ur_error_t handle_link_request(message_t *message)
 {
     mm_tlv_request_tlv_t *tlvs_request;
@@ -714,7 +797,6 @@ ur_error_t handle_link_accept(message_t *message)
     message_info_t *info;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link accept\r\n");
-
     info = message->info;
     node = get_neighbor_by_mac_addr(&(info->src_mac.addr));
     if (node == NULL) {
@@ -753,8 +835,6 @@ void start_neighbor_updater(void)
         } else {
             interval = hal->link_request_interval;
         }
-        hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
-                                                 hal);
         hal->link_quality_update_timer = ur_start_timer(interval * LINK_ESTIMATE_TIMES,
                                                         handle_link_quality_update_timer, hal);
     }
