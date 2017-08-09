@@ -29,6 +29,7 @@ enum
     CMD_GPIO_CLR_DPLL_UNLOOK_INT   = GPIO_CMD_MAGIC + 5,
     CMD_GPIO_INT_ENABLE 	= GPIO_CMD_MAGIC + 6,
     CMD_GPIO_INT_DISABLE	= GPIO_CMD_MAGIC + 7,
+    CMD_GPIO_INT_CLEAR   	= GPIO_CMD_MAGIC + 8,
 };
 
 
@@ -42,7 +43,7 @@ enum
     GMODE_SECOND_FUNC_PULL_UP//Special for uart1
 };
 
-typedef enum 
+typedef enum
 {
     GPIO0 = 0,
     GPIO1,
@@ -96,14 +97,14 @@ enum
     GFUNC_MODE_BT_PRIORITY,
     GFUNC_MODE_UART1,
     GFUNC_MODE_SD_DMA,
-    GFUNC_MODE_SD_HOST,    
-    GFUNC_MODE_SPI_DMA, 
-    GFUNC_MODE_SPI,    
-    GFUNC_MODE_PWM4,    
-    GFUNC_MODE_PWM5,    
-    GFUNC_MODE_I2C1,    
-    GFUNC_MODE_JTAG,    
-    GFUNC_MODE_CLK26M,    
+    GFUNC_MODE_SD_HOST,
+    GFUNC_MODE_SPI_DMA,
+    GFUNC_MODE_SPI,
+    GFUNC_MODE_PWM4,
+    GFUNC_MODE_PWM5,
+    GFUNC_MODE_I2C1,
+    GFUNC_MODE_JTAG,
+    GFUNC_MODE_CLK26M,
     GFUNC_MODE_ADC3
 };
 
@@ -159,13 +160,13 @@ typedef struct gpio_int_st
 									ret = sddev_control(GPIO_DEV_NAME, CMD_GPIO_OUTPUT, &param);\
 									ASSERT(GPIO_SUCCESS == ret);                           \
 								}while(0)
-								
+
 #define GPIO_OUTPUT_REVERSE(id)   do{                                                          \
 									UINT32 ret;                                           \
 									UINT32 param = id;                                         \
 									ret = sddev_control(GPIO_DEV_NAME, CMD_GPIO_OUTPUT_REVERSE, &param);\
 									ASSERT(GPIO_SUCCESS == ret);                           \
-								}while(0)								
+								}while(0)
 
 #define GPIO_INPUT(id)      {                                                          \
 								UINT32 ret;                                           \

@@ -100,7 +100,7 @@ static void key_proc_work(void *arg)
 
 static void handle_elink_key(void *arg)
 {
-    if (elink_time == 0) {
+    if (hal_gpio_inputget(KEY_BOOT) == 0 && elink_time == 0) {
         elink_time = yos_now_ms();
         yos_loop_schedule_work(0, key_proc_work, NULL, NULL, NULL);
     }
@@ -108,5 +108,6 @@ static void handle_elink_key(void *arg)
 
 void board_init(void)
 {
+    hal_gpio_clear_irq(KEY_BOOT);
     hal_gpio_enable_irq(KEY_BOOT, IRQ_TRIGGER_FALLING_EDGE, handle_elink_key, NULL);
 }

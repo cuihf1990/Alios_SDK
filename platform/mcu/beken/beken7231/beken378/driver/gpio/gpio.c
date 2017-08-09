@@ -444,6 +444,11 @@ void gpio_int_enable(UINT32 index, UINT32 mode, void (*p_Int_Handler)(unsigned c
     *(volatile UINT32 *)REG_GPIO_INTEN |= (0x01 << index);
 }
 
+void gpio_int_clear(UINT32 index)
+{
+    *(volatile UINT32 *)REG_GPIO_INTSTA &= ~(0x01 << index);
+}
+
 /*******************************************************************/
 #if 1
 void gpio_init(void)
@@ -557,6 +562,13 @@ UINT32 gpio_ctrl(UINT32 cmd, void *param)
         UINT32 id ;
         id = *(UINT32 *)param;
         gpio_int_disable(id);
+        break;
+    }
+    case CMD_GPIO_INT_CLEAR:
+    {
+        UINT32 id ;
+        id = *(UINT32 *)param;
+        gpio_int_clear(id);
         break;
     }
     default:
