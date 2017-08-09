@@ -558,7 +558,7 @@ class Terminal:
             content = ','.join(device)
             data = TBframe.construct(TBframe.LOG_DOWNLOAD, content)
             self.service_socket.send(data)
-            self.wait_cmd_excute_done(300)
+            self.wait_cmd_excute_done(480)
             status_str += self.cmd_excute_state
             self.cmdrun_status_display(status_str)
             self.cmd_excute_state = 'idle'
