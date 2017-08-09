@@ -21,7 +21,7 @@ GLOBAL_INCLUDES += ./mico/include
 $(NAME)_CFLAGS += -Wall -Werror
 
 $(NAME)_SOURCES := \
-    mico/rtos_rhino.c
+    mico/mico_rhino.c
 
 $(NAME)_SOURCES += \
     yos/yos_rhino.c
