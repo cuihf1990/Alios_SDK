@@ -257,6 +257,15 @@ void yos_sem_signal(yos_sem_t *sem)
     yunos_sem_give(sem->hdl);
 }
 
+void yos_sem_signal_all(yos_sem_t * sem)
+{
+    if (sem == NULL) {
+        return;
+    }
+
+    yunos_sem_give_all(sem->hdl);
+}
+
 int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
 {
     kstat_t       ret;
