@@ -25,17 +25,21 @@
 
 typedef struct
 {
-    uint8_t  adc;            /* the interface which should be initialised */
     uint32_t sampling_cycle; /* sampling period in number of ADC clock cycles */
-    void    *priv;           /* priv data */
-} adc_dev_t;
+} adc_config_t;
 
+typedef struct
+{
+    uint8_t      adc;            /* the interface which should be initialised */
+    adc_config_t config;         /* adc config */
+    void        *priv;           /* priv data */
+} adc_dev_t;
 
 /**@biref Initialises an ADC interface
  *
  * Prepares an ADC hardware interface for sampling
  *
- * @param adc               : the interface which should be initialised
+ * @param     adc           : the interface which should be initialised
  *
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step

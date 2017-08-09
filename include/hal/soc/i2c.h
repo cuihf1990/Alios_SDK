@@ -17,163 +17,117 @@
 /**
  * @file hal/soc/i2c.h
  * @brief I2C HAL
- * @version since 5.5.0
  */
 
 #ifndef YOS_I2C_H
 #define YOS_I2C_H
 
-/**
- * I2C address width
- */
-typedef enum {
-    I2C_ADDRESS_WIDTH_7BIT,
-    I2C_ADDRESS_WIDTH_10BIT,
-    I2C_ADDRESS_WIDTH_16BIT,
-} hal_i2c_bus_address_width_t;
-
-
-/**
- * I2C speed mode
- */
-typedef enum {
-    I2C_LOW_SPEED_MODE,         /* 10Khz devices */
-    I2C_STANDARD_SPEED_MODE,    /* 100Khz devices */
-    I2C_HIGH_SPEED_MODE         /* 400Khz devices */
-} hal_i2c_speed_mode_t;
-
-
-/**
- * I2C message
- */
 typedef struct {
-    const void *tx_buffer;
-    void       *rx_buffer;
-    uint16_t    tx_length;
-    uint16_t    rx_length;
-    uint16_t    retries;    /* Number of times to retry the message */
-    int8_t      combined;   /**< If set, this message is used for both tx and rx. */
-    uint8_t
-    flags;      /* MESSAGE_DISABLE_DMA : if set, this flag disables use of DMA for the message */
-} hal_i2c_msg_t;
-
-
-
+    uint32_t address_width;
+    uint32_t freq;
+} i2c_config_t;
 
 typedef struct {
-    uint8_t
-    port;           /**< Platform I2C port that is connected to the target I2C device, - e.g. MICO_I2C_1 */
-    uint16_t
-    address;        /**< The address of the device on the I2C bus */
-    hal_i2c_bus_address_width_t address_width;  /**< I2C device's address length */
-    hal_i2c_speed_mode_t
-    speed_mode;     /**< Speed mode the device operates in */
-} hal_i2c_device_t;
+    uint8_t      port;    /* i2c port */
+    i2c_config_t config;  /* i2c config */
+    void        *priv;    /* priv data */
+} i2c_dev_t;
 
 
-/******************************************************
- *                 Type Definitions
- ******************************************************/
+/**@brief Initialises an I2C interface
+ * @note Prepares an I2C hardware interface for communication as a master or slave
+ *
+ * @param     device      : the device for which the i2c port should be initialised
+ * @return    kNoErr      : on success.
+ * @return    kGeneralErr : if an error occurred during initialisation
+ */
+int32_t hal_i2c_init(i2c_dev_t *i2c);
 
 
+/**@brief     i2c master send
+ * @param     i2c           : the i2c device
+ * @param     dev_addr      : device address
+ * @param     data          : i2c send data
+ * @param     size          : i2c send data size
+ * @param     timeout       : timeout in ms
+ * @return    kNoErr        : on success.
+ * @return    kGeneralErr   : if an error occurred during initialisation
+ */
+int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, uint16_t size, uint32_t timeout);
 
-/******************************************************
- *                 Function Declarations
- ******************************************************/
 
+/**@brief     i2c master recv
+ *
+ * @param     i2c         : the i2c device
+ * @param     dev_addr    : device address
+ * @param     data        : i2c receive data
+ * @param     size        : i2c receive data size
+ * @param     timeout     : timeout in ms
+ * @return    kNoErr      : on success.
+ * @return    kGeneralErr : if an error occurred during initialisation
+ */
+int32_t hal_i2c_master_recv(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, uint16_t size, uint32_t timeout);
+
+
+/**@brief hal_i2C_slave_send
+ *
+ * @param     i2c         : the i2c device
+ * @param     data        : i2c slave send data
+ * @param     size        : i2c slave send data size
+ * @param     timeout     : timeout in ms
+ * @return    kNoErr      : on success.
+ * @return    kGeneralErr : if an error occurred during initialisation
+ */
+int32_t hal_i2C_slave_send(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_t timeout);
 
 
 /**@brief Initialises an I2C interface
  *
- * @note Prepares an I2C hardware interface for communication as a master
+ * @param     i2c         : tthe i2c device
+ * @param     data        : i2c slave receive data
+ * @param     size        : i2c slave receive data size
+ * @param     timeout     : timeout in ms
+ * @return    kNoErr      : on success.
+ * @return    kGeneralErr : if an error occurred during initialisation
+ */
+int32_t hal_i2c_slave_recv(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_t timeout);
+
+
+/**@brief i2c mem write
  *
- * @param  device : the device for which the i2c port should be initialised
- *
+ * @param     i2c           : the i2c device
+ * @param     dev_addr      : device address
+ * @param     mem_addr      : mem address
+ * @param     mem_addr_size : mem address
+ * @param     data          : i2c master send data
+ * @param     size          : i2c master send data size
+ * @param     timeout       : timeout in ms
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during initialisation
  */
-int32_t hal_i2c_init(hal_i2c_device_t *device);
+int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data, uint16_t size, uint32_t timeout);
 
-
-/**@brief Checks whether the device is available on a bus or not
- *
- * @param  device : the i2c device to be probed
- * @param  retries    : the number of times to attempt to probe the device
- *
- * @return    true : device is found.
- * @return    false: device is not found
- */
-int8_t hal_i2c_probe_device(hal_i2c_device_t *device, int32_t retries);
-
-
-/**@brief Initialize the mico_i2c_message_t structure for i2c tx transaction
- *
- * @param message : pointer to a message structure, this should be a valid pointer
- * @param tx_buffer : pointer to a tx buffer that is already allocated
- * @param tx_buffer_length : number of bytes to transmit
- * @param retries    : the number of times to attempt send a message in case it can't not be sent
- *
- * @return    kNoErr    : message structure was initialised properly.
- * @return    kParamErr : one of the arguments is given incorrectly
- */
-int32_t hal_i2c_build_tx_msg(hal_i2c_msg_t *msg, const void *tx_buf,
-                             uint16_t tx_buf_len, uint16_t retries);
-
-/**@brief Initialize the mico_i2c_message_t structure for i2c rx transaction
- *
- * @param message : pointer to a message structure, this should be a valid pointer
- * @param rx_buffer : pointer to an rx buffer that is already allocated
- * @param rx_buffer_length : number of bytes to receive
- * @param retries    : the number of times to attempt receive a message in case device doesnt respond
- *
- * @return    kNoErr    : message structure was initialised properly.
- * @return    kParamErr : one of the arguments is given incorrectly
- */
-int32_t hal_i2c_build_rx_msg(hal_i2c_msg_t *msg, void *rx_buf,
-                             uint16_t rx_buf_len, uint16_t retries);
-
-
-/**@brief Initialize the mico_i2c_message_t structure for i2c combined transaction
- *
- * @param  message : pointer to a message structure, this should be a valid pointer
- * @param tx_buffer: pointer to a tx buffer that is already allocated
- * @param rx_buffer: pointer to an rx buffer that is already allocated
- * @param tx_buffer_length: number of bytes to transmit
- * @param rx_buffer_length: number of bytes to receive
- * @param  retries    : the number of times to attempt receive a message in case device doesnt respond
- *
- * @return    kNoErr    : message structure was initialised properly.
- * @return    kParamErr : one of the arguments is given incorrectly
- */
-int32_t hal_i2c_build_combined_msg(hal_i2c_msg_t *msg, const void *tx_buf,
-                                   void *rx_buf, uint16_t tx_buf_len, uint16_t rx_buf_len, uint16_t retries);
-
-
-/**@brief Transmits and/or receives data over an I2C interface
- *
- * @param  device             : the i2c device to communicate with
- * @param  message            : a pointer to a message (or an array of messages) to be transmitted/received
- * @param  number_of_messages : the number of messages to transfer. [1 .. N] messages
- *
+/**@brief i2c master mem read
+ * @param     i2c           : the i2c device
+ * @param     dev_addr      : device address
+ * @param     mem_addr      : mem address
+ * @param     mem_addr_size : mem address
+ * @param     data          : i2c master send data
+ * @param     size          : i2c master send data size
+ * @param     timeout       : timeout in ms
  * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred during message transfer
+ * @return    kGeneralErr   : if an error occurred during initialisation
  */
-int32_t hal_i2c_transfer(hal_i2c_device_t *device, hal_i2c_msg_t *msg,
-                         uint16_t num);
+int32_t hal_i2c_mem_read(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data, uint16_t size, uint32_t timeout);
 
 
 /**@brief Deinitialises an I2C device
  *
- * @param  device : the device for which the i2c port should be deinitialised
- *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred during deinitialisation
+ * @param     device      : the i2c device
+ * @return    kNoErr      : on success.
+ * @return    kGeneralErr : if an error occurred during deinitialisation
  */
-int32_t hal_i2c_finalize(hal_i2c_device_t *device);
-
-
-/** @} */
-/** @} */
+int32_t hal_i2c_finalize(i2c_dev_t *i2c);
 
 #endif
 
