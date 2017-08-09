@@ -340,7 +340,11 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
         memset(item, 0, sizeof(kv_item_t));
         hdr = &(item->hdr);
 
-        raw_read(pos, hdr, ITEM_HEADER_SIZE);
+        if (raw_read(pos, hdr, ITEM_HEADER_SIZE) != RES_OK) {
+            kv_item_free(item);
+            return NULL;
+        }
+
         if (hdr->magic != ITEM_MAGIC_NUM) {
             if (hdr->magic == 0xFF) {
                 kv_item_free(item);
@@ -351,6 +355,7 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
 
         if (hdr->val_len > ITEM_MAX_VAL_LEN|| hdr->key_len > ITEM_MAX_KEY_LEN) {
             len += ITEM_HEADER_SIZE;
+            kv_item_free(item);
             continue;
         }
 
