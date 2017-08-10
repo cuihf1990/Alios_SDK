@@ -1,32 +1,11 @@
-#
-#  UNPUBLISHED PROPRIETARY SOURCE CODE
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  The contents of this file may not be disclosed to third parties, copied or
-#  duplicated in any form, in whole or in part, without the prior written
-#  permission of MXCHIP Corporation.
-#
-
 NAME := rhino
-
-VERSION_MAJOR    = $(word 1, $(subst ., ,$(VERSION)))
-VERSION_MINOR    = $(word 1, $(subst ., ,$(VERSION)))
-VERSION_REVISION = $(word 1, $(subst ., ,$(VERSION)))
 
 $(NAME)_COMPONENTS += rhino
 
-# Define some macros to allow for some network-specific checks
-GLOBAL_DEFINES += RTOS_$(NAME)=1
-GLOBAL_DEFINES += $(NAME)_VERSION_MAJOR=$(VERSION_MAJOR)
-GLOBAL_DEFINES += $(NAME)_VERSION_MINOR=$(VERSION_MINOR)
-GLOBAL_DEFINES += $(NAME)_VERSION_REVISION=$(VERSION_REVISION)
-GLOBAL_DEFINES += HAVE_RHINO_KERNEL
-
 GLOBAL_INCLUDES += core/include
 
-GLOBAL_LDFLAGS +=
-
 $(NAME)_CFLAGS += -Wall -Werror
+
 $(NAME)_SOURCES := core/k_err.c          \
                    core/k_mm.c           \
                    core/k_mm_region.c    \

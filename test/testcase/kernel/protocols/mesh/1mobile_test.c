@@ -28,7 +28,7 @@ static void run_in_hop1(void)
     cmd_to_agent("start");
     check_p2p_str_wait("leaf", 11, "testcmd state", 10);
 
-    addr = ur_mesh_get_ucast_addr();
+    addr = umesh_get_ucast_addr();
     snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);
@@ -57,9 +57,9 @@ static void run_in_hop2(void)
     cmd_to_agent("start");
 
     yos_msleep(10 * 1000);
-    YUNIT_ASSERT(ur_mesh_get_sid() == 0xc001);
+    YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
-    addr = ur_mesh_get_ucast_addr();
+    addr = umesh_get_ucast_addr();
     snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 13, "testcmd icmp_acked", 5);

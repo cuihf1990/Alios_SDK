@@ -79,6 +79,8 @@ void device_get_config(void *config);
 char *devinfo_get_secret(void);
 char *devinfo_get_key(void);
 char *devinfo_get_version(void);
+char *devinfo_get_device_key(void);
+char *devinfo_get_device_secret(void);
 
 //TODO: remove these header
 void get_wifi_rssi_dbm(char *dev_stats, int length);

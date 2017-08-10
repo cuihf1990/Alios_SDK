@@ -10,6 +10,9 @@ CMD_WINDOW_HEIGHT = 2
 DEV_WINDOW_WIDTH  = 36
 LOG_WINDOW_HEIGHT = 30
 LOG_WINDOW_WIDTH  = 80
+LOG_HISTORY_LENGTH = 5000
+MOUSE_SCROLL_UP = 0x80000
+MOUSE_SCROLL_DOWN = 0x8000000
 DEBUG = False
 
 class Terminal:
@@ -23,6 +26,7 @@ class Terminal:
         self.service_socket = 0
         self.cmd_excute_state = 'idle'
         self.log_content = []
+        self.log_curr_line = -1
         self.log_subscribed = []
         self.max_log_width = 0
         self.cur_color_pair = 7
@@ -62,6 +66,8 @@ class Terminal:
             self.stdscr = curses.initscr()
             curses.noecho()
             curses.cbreak()
+            curses.mousemask(-1)
+            curses.mouseinterval(0)
             curses.start_color()
             curses.use_default_colors()
             curses.init_pair(0, curses.COLOR_BLACK, -1)
@@ -145,43 +151,81 @@ class Terminal:
             elif color == "37":
                 self.cur_color_pair = 7
 
+    def log_parse_oneline(self, log):
+        log_buffer = []
+
+        log_index = log.split(':')[0] + ':'
+        log = log[len(log_index):]
+        line_length = len(log)
+        j = 0; log_len = 0; log_str = log_index;
+        while j < line_length:
+            c = log[j]
+            if c == '\x1B' and log[j:j+2] == '\x1B[': #ESC
+                k = j + 2
+                find_esc_seq = False
+                while k < line_length:
+                    if log[k] == 'm':
+                        find_esc_seq = True
+                        break
+                    k += 1
+                if find_esc_seq:
+                    self.process_esc_sequence(log[j:k+1])
+                    j = k + 1
+                    continue
+            if c != '\r' and c != '\n' and c != '\0':
+                log_str += c
+                log_len += 1
+                if log_len + len(log_index) >= LOG_WINDOW_WIDTH - 1:
+                    log_buffer.append([self.cur_color_pair, log_str])
+                    log_len = 0; log_str = log_index
+            j += 1
+
+        if log_len > 0:
+            log_buffer.append([self.cur_color_pair, log_str])
+
+        if len(log_buffer) == 0:
+            log_buffer.append([self.cur_color_pair, log_index])
+
+        return log_buffer
+
     def log_display(self, logtime, log):
+        #save log
+        if log != '':
+            self.log_content.append((logtime, log))
+            self.log_content.sort(key=itemgetter(0))
+            if len(self.log_content) > LOG_HISTORY_LENGTH:
+                self.log_content.pop(0)
+                if self.log_curr_line > 0:
+                    self.log_curr_line -= 1
+
+        if self.log_curr_line != -1 and log != '':
+            return
+
+        #clear log screen
         self.log_window.move(1,0)
         clear = (' ' * (LOG_WINDOW_WIDTH - 1) + '\n') * (LOG_WINDOW_HEIGHT - 2)
         clear += ' ' * (LOG_WINDOW_WIDTH-1)
         self.log_window.addstr(clear)
-        while len(log) > 0:
-            line = log[0 : LOG_WINDOW_WIDTH - 1]
-            self.log_content.append((logtime,line))
-            if len(self.log_content) > (LOG_WINDOW_HEIGHT-1):
-                self.log_content.pop(0)
-            log = log[LOG_WINDOW_WIDTH - 1:]
-        self.log_content = sorted(self.log_content, key=itemgetter(0))
-        self.max_log_width = 0
+
+        if self.log_curr_line >= 0:
+            log_dsp_line = self.log_curr_line
+        else:
+            log_dsp_line = len(self.log_content) - 1
+
+        log_dsp_buffer = []
+        while log_dsp_line >= 0:
+            log_line_buffer = self.log_parse_oneline(self.log_content[log_dsp_line][1])
+            log_dsp_buffer = log_line_buffer + log_dsp_buffer
+            log_dsp_line -= 1
+            if len(log_dsp_buffer) >= (LOG_WINDOW_HEIGHT - 1):
+                break
+        remove_len = len(log_dsp_buffer) - (LOG_WINDOW_HEIGHT - 1)
+        if remove_len > 0:
+            log_dsp_buffer = log_dsp_buffer[remove_len:]
+
         self.curseslock.acquire()
-        for i in range(len(self.log_content)):
-            if len(self.log_content[i][1]) > self.max_log_width:
-                self.max_log_width = len(self.log_content[i][1])
-            j = 0; p = 0
-            line_length = len(self.log_content[i][1])
-            while j < line_length:
-                c = self.log_content[i][1][j]
-                if c == '\x1B' and self.log_content[i][1][j:j+2] == '\x1B[': #ESC
-                    k = j + 2
-                    find_esc_seq = False
-                    while k < line_length:
-                        if self.log_content[i][1][k] == 'm':
-                            find_esc_seq = True
-                            break
-                        k += 1
-                    if find_esc_seq:
-                        self.process_esc_sequence(self.log_content[i][1][j:k+1])
-                        j = k + 1
-                        continue
-                if c != '\r' and c != '\n' and c != '\0':
-                    self.log_window.addch(i+1, p, c, curses.color_pair(self.cur_color_pair))
-                    p += 1
-                j += 1
+        for i in range(len(log_dsp_buffer)):
+            self.log_window.addstr(i+1, 0, log_dsp_buffer[i][1], curses.color_pair(log_dsp_buffer[i][0]))
         self.log_window.refresh()
         self.cmd_window.refresh()
         self.curseslock.release()
@@ -221,12 +265,13 @@ class Terminal:
         self.cmd_window.refresh()
         self.curseslock.release()
 
-    def cmdrun_command_display(self, cmd):
+    def cmdrun_command_display(self, cmd, postion):
         self.curseslock.acquire()
         self.cmd_window.move(0, len("Command:"))
         self.cmd_window.addstr(' ' * (LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH - len("Command:")))
         self.cmd_window.move(0, len("Command:"))
         self.cmd_window.addstr(cmd)
+        self.cmd_window.move(0, len("Command:") + postion)
         self.cmd_window.refresh()
         self.curseslock.release()
 
@@ -354,12 +399,17 @@ class Terminal:
                 break;
 
     def send_file_to_server(self, filename):
-        if os.path.exists(filename) == False:
+        try:
+            expandname = os.path.expanduser(filename)
+        except:
+            self.cmdrun_status_display("{0} does not exist".format(filename))
+            return False
+        if os.path.exists(expandname) == False:
             self.cmdrun_status_display("{0} does not exist".format(filename))
             return False
         self.cmdrun_status_display("sending "+ filename + "...")
-        file = open(filename,'r')
-        content = filename.split('/')[-1]
+        file = open(expandname,'r')
+        content = expandname.split('/')[-1]
         data = TBframe.construct(TBframe.FILE_BEGIN, content)
         self.service_socket.send(data)
         content = file.read(1024)
@@ -558,7 +608,7 @@ class Terminal:
             content = ','.join(device)
             data = TBframe.construct(TBframe.LOG_DOWNLOAD, content)
             self.service_socket.send(data)
-            self.wait_cmd_excute_done(300)
+            self.wait_cmd_excute_done(480)
             status_str += self.cmd_excute_state
             self.cmdrun_status_display(status_str)
             self.cmd_excute_state = 'idle'
@@ -671,15 +721,19 @@ class Terminal:
             self.cmdrun_status_display("unknown command:" + cmd)
 
     def user_interaction(self):
-        x = len("Command:")
         cmd = ""
         saved_cmd = ""
         history_index = -1
+        p = 0
         while self.keep_running:
             c = self.cmd_window.getch()
             if c == ord('\n'):
+                if self.log_curr_line != -1:
+                    self.log_curr_line = -1
+                    self.log_display(time.time(), '')
                 if cmd == "q" :
                     self.keep_running = False
+                    time.sleep(0.2)
                     break
                 elif cmd != "":
                     self.process_cmd(cmd)
@@ -687,19 +741,23 @@ class Terminal:
                 cmd = ""
                 saved_cmd = ""
                 history_index = -1
-                self.cmdrun_command_display("")
+                p = 0
+                self.cmdrun_command_display(cmd, 0)
             elif c == curses.KEY_BACKSPACE: #DELETE
-                if cmd == "":
+                if cmd[0:p] == "":
                     continue
-                cmd = cmd[0:-1]
-                self.cmdrun_command_display(cmd)
+                newcmd = cmd[0:p-1] + cmd[p:]
+                cmd = newcmd
+                p -= 1
+                self.cmdrun_command_display(cmd, p)
             elif c == curses.KEY_UP and len(self.cmd_history) > 0:
                 if history_index == -1:
                     saved_cmd = cmd
                 if history_index < (len(self.cmd_history) - 1):
                     history_index += 1
                 cmd = self.cmd_history[history_index]
-                self.cmdrun_command_display(cmd)
+                p = len(cmd)
+                self.cmdrun_command_display(cmd, p)
             elif c == curses.KEY_DOWN and len(self.cmd_history) > 0:
                 if history_index <= -1:
                     history_index = -1
@@ -709,23 +767,57 @@ class Terminal:
                     cmd = self.cmd_history[history_index]
                 else:
                     cmd = saved_cmd
-                self.cmdrun_command_display(cmd)
+                p = len(cmd)
+                self.cmdrun_command_display(cmd, p)
+            elif c == curses.KEY_LEFT:
+                if p > 0:
+                    p -= 1
+                    self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == curses.KEY_RIGHT:
+                if p < len(cmd):
+                    p += 1
+                    self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == curses.KEY_MOUSE:
+                mouse_state = curses.getmouse()[4]
+                if mouse_state == MOUSE_SCROLL_UP:
+                    if self.log_curr_line == -1:
+                        self.log_curr_line = len(self.log_content) - 2
+                    elif self.log_curr_line > 0:
+                        self.log_curr_line -= 1
+                    self.log_display(time.time(), '')
+                    continue
+                elif mouse_state == MOUSE_SCROLL_DOWN:
+                    if self.log_curr_line == -1:
+                        continue
+
+                    self.log_curr_line += 1
+                    if self.log_curr_line >= len(self.log_content):
+                        self.log_curr_line = -1
+                    self.log_display(time.time(), '')
+                    continue
             elif c == curses.KEY_RESIZE:
                 try:
                     self.window_redraw()
                     self.device_list_display()
                     self.log_display(time.time(), '')
-                    self.cmdrun_command_display(cmd);
+                    self.cmdrun_command_display(cmd, p);
                 except:
+                    if DEBUG:
+                        raise
                     self.keep_running = False
                     break
             else:
                 try:
-                    cmd = cmd + str(unichr(c))
+                    c = str(unichr(c))
+                    newcmd = cmd[0:p] + c + cmd[p:]
+                    cmd = newcmd
+                    p += 1
                 except:
                     self.cmdrun_status_display("Error: unsupported unicode character {0}".format(c))
                     continue
-                self.cmdrun_command_display(cmd)
+                self.cmdrun_command_display(cmd, p)
 
     def run(self):
         thread.start_new_thread(self.server_interaction, ())
@@ -733,11 +825,12 @@ class Terminal:
         while self.keep_running:
             try:
                 self.user_interaction()
+            except KeyboardInterrupt:
+                self.keep_running = False
+                time.sleep(0.2)
             except:
                 if DEBUG:
                     raise
-                self.keep_running = False
-                time.sleep(0.2)
 
     def deinit(self):
         curses.nocbreak()

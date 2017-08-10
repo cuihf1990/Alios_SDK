@@ -4,6 +4,7 @@
 #include "board.h"
 
 extern int errno;
+wdg_dev_t wdg;
 
 const hal_uart_config_t uart_cfg = {
     .baud_rate = STDIO_UART_BUADRATE,
@@ -37,6 +38,9 @@ void hal_boot(hal_partition_t partition)
 
 void hal_reboot(void)
 {
-    hal_wdg_init(1);
+    wdg.port = 0;
+    wdg.config.timeout = 1;
+
+    hal_wdg_init(&wdg);
 }
 

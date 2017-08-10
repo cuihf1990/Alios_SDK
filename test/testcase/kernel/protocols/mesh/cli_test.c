@@ -15,7 +15,7 @@ void test_uradar_cli_case(void)
 {
     cmd_to_agent("stop");
     cmd_to_agent("start");
-    check_cond_wait(ur_mesh_get_device_state() == DEVICE_STATE_LEADER, 10);
+    check_cond_wait(umesh_get_device_state() == DEVICE_STATE_LEADER, 10);
 
     cmd_to_agent("help");
     cmd_to_agent("channel");

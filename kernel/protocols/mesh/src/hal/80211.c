@@ -30,7 +30,7 @@ static inline void dump_packet(unsigned char *pkt, int count)
     printf("\n");
 }
 
-int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest, void *fpkt)
+int umesh_80211_make_frame(umesh_hal_module_t *module, frame_t *frame, mac_address_t *dest, void *fpkt)
 {
     static unsigned long nb_pkt_sent;
     umesh_extnetid_t extnetid;
@@ -97,7 +97,7 @@ static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
 }
 #endif
 
-bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int count)
+bool umesh_80211_filter_frame(umesh_hal_module_t *module, uint8_t *pkt, int count)
 {
     const uint8_t bcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     umesh_extnetid_t extnetid;

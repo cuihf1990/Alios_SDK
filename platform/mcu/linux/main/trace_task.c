@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <fifo.h>
-#include <trace_hal.h>
+#include <hal/trace.h>
 
 #if (YUNOS_CONFIG_TRACE > 0)
 

@@ -25,6 +25,8 @@ enum {
     LINK_ESTIMATE_COEF            = 256,
     LINK_ESTIMATE_UPDATE_ALPHA    = 32,
     LINK_COST_MAX                 = 1024,
+
+    LINK_QUALITY_INTERVAL = 30000,  /* 30ms */
 };
 
 ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
@@ -34,6 +36,10 @@ ur_error_t handle_link_request(message_t *message);
 ur_error_t handle_link_accept_and_request(message_t *message);
 ur_error_t handle_link_accept(message_t *message);
 ur_error_t handle_link_reject(message_t *message);
+
+uint8_t insert_mesh_header_ies(network_context_t *network,
+                               message_info_t *info);
+ur_error_t handle_mesh_header_ies(message_t *message);
 
 void start_neighbor_updater(void);
 void stop_neighbor_updater(void);

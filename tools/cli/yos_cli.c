@@ -376,10 +376,10 @@ void help_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                   char **argv);
 
 
-void memory_show_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
-                         char **argv)
+void devname_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                       char **argv)
 {
-    dumpsys_mm_info_func(NULL, 0);
+    cli_printf("%s\r\n", SYSINFO_DEVICE_NAME);
 }
 
 void dumpsys_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
@@ -387,6 +387,13 @@ void dumpsys_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 {
     dumpsys_func(pcWriteBuffer, xWriteBufferLen, argc, argv);
 }
+
+void memory_show_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                         char **argv)
+{
+    dumpsys_mm_info_func(NULL, 0);
+}
+
 void memory_dump_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                          char **argv)
 {
@@ -408,7 +415,7 @@ void memp_dump_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 void get_version(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                  char **argv)
 {
-    cli_printf("get_version\r\n");
+    cli_printf("%s\r\n", SYSINFO_OS_VERSION);
 }
 
 void reboot(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -464,6 +471,7 @@ static const struct cli_command built_ins[] = {
     {"tasklist", "list all thread name status", task_Command},
 
     // others
+    {"devname", "print device name", devname_Command},
     {"dumpsys", "dump system information", dumpsys_Command},
     {"memshow", "print memory information", memory_show_Command},
     {"memdump", "<addr> <length>", memory_dump_Command},

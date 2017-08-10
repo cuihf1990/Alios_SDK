@@ -17,9 +17,11 @@ $(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
 $(NAME)_COMPONENTS += platform/mcu/beken/hal_init
 
 GLOBAL_DEFINES += CONFIG_MX108
-GLOBAL_DEFINES += CONFIG_YOS_KVFILE=\"/dev/flash6\"
-GLOBAL_DEFINES += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash7\"
-GLOBAL_DEFINES += CONFIG_YOS_KV_BUFFER_SIZE=4096
+GLOBAL_DEFINES += CONFIG_YOS_KV_MULTIPTN_MODE
+GLOBAL_DEFINES += CONFIG_YOS_KV_PTN=6
+GLOBAL_DEFINES += CONFIG_YOS_KV_SECOND_PTN=7
+GLOBAL_DEFINES += CONFIG_YOS_KV_PTN_SIZE=4096
+GLOBAL_DEFINES += CONFIG_YOS_KV_BUFFER_SIZE=8192
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
@@ -38,11 +40,7 @@ GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/ip/common \
                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es
 
-ifneq ($(mico_lwip), 1)
 $(NAME)_COMPONENTS += protocols.net
-else
-GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/src/include
-endif
 
 GLOBAL_LDFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
@@ -438,91 +436,6 @@ ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_SOURCES +=  hal/mesh_wifi_hal.c
 endif
 
-ifneq ($(mico_lwip), 1)
 $(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \
                     ../../../kernel/protocols/net/include/netif
 
-else
-$(NAME)_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/src \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/port \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/include \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/include/lwip \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/include/netif
-
-$(NAME)_SOURCES  += beken7231/beken378/func/mxchip/lwip-2.0.2/port/sys_arch.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/api/api_lib.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/api/api_msg.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/api/err.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/api/netbuf.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/api/netdb.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/api/netifapi.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/api/sockets.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/api/tcpip.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/def.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/dns.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/inet_chksum.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/init.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ip.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv4/autoip.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv4/dhcp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv4/etharp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv4/icmp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv4/igmp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv4/ip4.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv4/ip4_addr.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv4/ip4_frag.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/dhcp6.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/ethip6.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/icmp6.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/inet6.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/ip6.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/ip6_addr.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/ip6_frag.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/mld6.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/ipv6/nd6.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/mem.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/memp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/netif.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/pbuf.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/raw.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/stats.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/sys.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/tcp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/tcp_in.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/tcp_out.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/timeouts.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/core/udp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ethernet.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/lowpan6.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/auth.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/ccp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/chap-md5.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/chap-new.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/chap_ms.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/demand.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/eap.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/ecp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/eui64.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/fsm.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/ipcp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/ipv6cp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/lcp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/magic.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/mppe.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/multilink.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/polarssl/arc4.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/polarssl/des.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/polarssl/md4.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/polarssl/md5.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/polarssl/sha1.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/ppp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/pppapi.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/pppcrypt.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/pppoe.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/pppol2tp.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/pppos.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/upap.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/utils.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/ppp/vj.c \
-                    beken7231/beken378/func/mxchip/lwip-2.0.2/src/netif/slipif.c
-endif

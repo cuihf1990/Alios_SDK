@@ -99,7 +99,7 @@ static int init(void)
         yos_msleep(100);
     }
 
-    YUNIT_ASSERT(UR_ERROR_NONE == ur_mesh_stop());
+    YUNIT_ASSERT(UR_ERROR_NONE == umesh_stop());
 
     yos_msleep(1000);
 

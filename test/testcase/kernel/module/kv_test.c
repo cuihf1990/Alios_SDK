@@ -16,20 +16,22 @@ static char *g_val_2 = "val_2";
 static char *g_val_3 = "val_3";
 static char *g_val_4 = "val_4";
 
+static char *g_key_update = "test_10";
+static char *g_val_update = "val_19";
+
 static void test_kv_add(void)
 {
     int ret = 0;
-    
-    ret = yos_kv_set(g_key_1,g_val_1,strlen(g_val_1),1);
+    ret = yos_kv_set(g_key_1, g_val_1, strlen(g_val_1),1);
     YUNIT_ASSERT(0 == ret);
 
-    ret = yos_kv_set(g_key_2,g_val_2,strlen(g_val_2),1);
+    ret = yos_kv_set(g_key_2, g_val_2, strlen(g_val_2),1);
     YUNIT_ASSERT(0 == ret);
     
-    ret = yos_kv_set(g_key_3,g_val_3,strlen(g_val_3),1);
+    ret = yos_kv_set(g_key_3, g_val_3, strlen(g_val_3),1);
     YUNIT_ASSERT(0 == ret);
     
-    ret = yos_kv_set(g_key_4,g_val_4,strlen(g_val_4),1);
+    ret = yos_kv_set(g_key_4, g_val_4, strlen(g_val_4),1);
     YUNIT_ASSERT(0 == ret);
 }
 
@@ -75,6 +77,52 @@ static void test_kv_del(void)
     YUNIT_ASSERT(0 != ret);
     YUNIT_ASSERT(len != strlen(g_val_3)+1);
 }
+
+static void test_kv_loop(void)
+{
+    int i, j, count, ret = 0;
+    char key[10] = {0};
+    char val[10] = {0};
+    int len = sizeof(val);
+
+    count = 0;
+    for (j = 0; j < 10; j++) {
+        for (i = 0; i < 100; i++) {
+            snprintf(key, sizeof(key), "test_%d", i);
+            snprintf(val, sizeof(val), "val_%d", i);
+            ret = yos_kv_set(key, val, strlen(val),1);
+            if (ret != 0)
+                count++;
+            memset(key, 0, sizeof(key));
+            memset(val, 0, sizeof(val));
+        }
+
+        ret = yos_kv_set(g_key_update, g_val_update, strlen(g_val_update), 1);
+        if (ret != 0)
+            count++;
+
+        for (i = 0; i < 100; i++) {
+            len = sizeof(val);
+            snprintf(key, sizeof(key), "test_%d", i);
+            ret = yos_kv_get(key, val, &len);
+            if ((ret != 0) || (strlen(val) != len))
+                count++;
+            memset(key, 0, sizeof(key));
+            memset(val, 0, sizeof(val));
+        }
+
+        for (i = 0; i < 100; i++) {
+            snprintf(key, sizeof(key), "test_%d", i);
+            ret = yos_kv_del(key);
+            if (ret != 0)
+                count++;
+            memset(key, 0, sizeof(key));
+        }
+   }
+
+   YUNIT_ASSERT(0 == ret);
+}
+
 static int init(void)
 {
     int ret = 0;
@@ -88,7 +136,8 @@ static int cleanup(void)
 {
 	/*wangbin change it because it's a global table,
 	call deinit it will cause whole system crash*/
-    //yos_kv_deinit();
+    yos_msleep(1000);
+    yos_kv_deinit();
 	
     return 0;
 }
@@ -107,6 +156,7 @@ static yunit_test_case_t yunos_basic_testcases[] = {
     { "ht_add", test_kv_add },
     { "ht_find", test_kv_find },
     { "ht_del", test_kv_del },
+    { "ht_loop", test_kv_loop},
     YUNIT_TEST_CASE_NULL
 };
 

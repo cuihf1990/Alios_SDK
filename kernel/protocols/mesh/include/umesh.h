@@ -38,71 +38,71 @@ ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
                                uint8_t *payload, uint8_t length);
 ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver);
 
-ur_error_t ur_mesh_ipv6_output(umessage_t *message,
+ur_error_t umesh_ipv6_output(umessage_t *message,
                                const ur_ip6_addr_t *ip6addr);
-ur_error_t ur_mesh_input(umessage_t *p);
+ur_error_t umesh_input(umessage_t *p);
 
-ur_error_t ur_mesh_init(node_mode_t mode);
-ur_error_t ur_mesh_start(void);
-bool       ur_mesh_is_initialized(void);
-ur_error_t ur_mesh_stop(void);
-ur_error_t ur_mesh_register_callback(ur_adapter_callback_t *callback);
+ur_error_t umesh_init(node_mode_t mode);
+ur_error_t umesh_start(void);
+bool       umesh_is_initialized(void);
+ur_error_t umesh_stop(void);
+ur_error_t umesh_register_callback(ur_adapter_callback_t *callback);
 
 /* per device API */
-uint8_t ur_mesh_get_device_state(void);
-uint8_t ur_mesh_get_mode(void);
-ur_error_t ur_mesh_set_mode(uint8_t mode);
-int8_t ur_mesh_get_seclevel(void);
-ur_error_t ur_mesh_set_seclevel(int8_t level);
+uint8_t umesh_get_device_state(void);
+uint8_t umesh_get_mode(void);
+ur_error_t umesh_set_mode(uint8_t mode);
+int8_t umesh_get_seclevel(void);
+ur_error_t umesh_set_seclevel(int8_t level);
 
 /* per network API */
 typedef enum {
     UR_MESH_NET_CORE = 1,
     UR_MESH_NET_SUB = 2,
     UR_MESH_NET_DFL = UR_MESH_NET_SUB,
-} ur_mesh_net_index_t;
+} umesh_net_index_t;
 
-const mac_address_t *ur_mesh_net_get_mac_address(ur_mesh_net_index_t nettype);
-uint16_t ur_mesh_net_get_meshnetid(ur_mesh_net_index_t nettype);
-void ur_mesh_net_set_meshnetid(ur_mesh_net_index_t nettype, uint16_t meshnetid);
-uint16_t ur_mesh_net_get_sid(ur_mesh_net_index_t nettype);
-uint16_t ur_mesh_net_get_meshnetsize(ur_mesh_net_index_t nettype);
+const mac_address_t *umesh_net_get_mac_address(umesh_net_index_t nettype);
+uint16_t umesh_net_get_meshnetid(umesh_net_index_t nettype);
+void umesh_net_set_meshnetid(umesh_net_index_t nettype, uint16_t meshnetid);
+uint16_t umesh_net_get_sid(umesh_net_index_t nettype);
+uint16_t umesh_net_get_meshnetsize(umesh_net_index_t nettype);
 /* translation macros */
-#define ur_mesh_get_meshnetid() ur_mesh_net_get_meshnetid(UR_MESH_NET_DFL)
-#define ur_mesh_set_meshnetid(meshnetid) \
-            ur_mesh_net_set_meshnetid(UR_MESH_NET_DFL, meshnetid)
-#define ur_mesh_get_sid() ur_mesh_net_get_sid(UR_MESH_NET_DFL)
-#define ur_mesh_get_meshnetsize() ur_mesh_net_get_meshnetsize(UR_MESH_NET_DFL)
-#define ur_mesh_get_mac_address() ur_mesh_net_get_mac_address(UR_MESH_NET_DFL)
+#define umesh_get_meshnetid() umesh_net_get_meshnetid(UR_MESH_NET_DFL)
+#define umesh_set_meshnetid(meshnetid) \
+            umesh_net_set_meshnetid(UR_MESH_NET_DFL, meshnetid)
+#define umesh_get_sid() umesh_net_get_sid(UR_MESH_NET_DFL)
+#define umesh_get_meshnetsize() umesh_net_get_meshnetsize(UR_MESH_NET_DFL)
+#define umesh_get_mac_address() umesh_net_get_mac_address(UR_MESH_NET_DFL)
 
-bool ur_mesh_is_mcast_subscribed(const ur_ip6_addr_t *addr);
-const ur_netif_ip6_address_t *ur_mesh_get_ucast_addr(void);
-const ur_netif_ip6_address_t *ur_mesh_get_mcast_addr(void);
+bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr);
+const ur_netif_ip6_address_t *umesh_get_ucast_addr(void);
+const ur_netif_ip6_address_t *umesh_get_mcast_addr(void);
 
-ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest,
+ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest,
                                 ur_addr_t *dest_addr);
-void ur_mesh_get_channel(channel_t *channel);
+void umesh_get_channel(channel_t *channel);
 
 void umesh_get_extnetid(umesh_extnetid_t *extnetid);
 ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid);
 
-slist_t *ur_mesh_get_hals(void);
-slist_t *ur_mesh_get_networks(void);
+slist_t *umesh_get_hals(void);
+slist_t *umesh_get_networks(void);
 
-bool ur_mesh_is_whitelist_enabled(void);
-void ur_mesh_enable_whitelist(void);
-void ur_mesh_disable_whitelist(void);
-const whitelist_entry_t *ur_mesh_get_whitelist_entries(void);
-ur_error_t ur_mesh_add_whitelist(const mac_address_t *address);
-ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address,
+bool umesh_is_whitelist_enabled(void);
+void umesh_enable_whitelist(void);
+void umesh_disable_whitelist(void);
+const whitelist_entry_t *umesh_get_whitelist_entries(void);
+ur_error_t umesh_add_whitelist(const mac_address_t *address);
+ur_error_t umesh_add_whitelist_rssi(const mac_address_t *address,
                                       int8_t rssi);
-void ur_mesh_remove_whitelist(const mac_address_t *address);
-void ur_mesh_clear_whitelist(void);
+void umesh_remove_whitelist(const mac_address_t *address);
+void umesh_clear_whitelist(void);
 
-const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type);
-const frame_stats_t *ur_mesh_get_hal_stats(media_type_t type);
-const ur_message_stats_t *ur_mesh_get_message_stats(void);
-const ur_mem_stats_t *ur_mesh_get_mem_stats(void);
+const ur_link_stats_t *umesh_get_link_stats(media_type_t type);
+const frame_stats_t *umesh_get_hal_stats(media_type_t type);
+const ur_message_stats_t *umesh_get_message_stats(void);
+const ur_mem_stats_t *umesh_get_mem_stats(void);
 
 #ifdef __cplusplus
 }

@@ -87,7 +87,7 @@ static void network_data_update_handler(bool stable)
 {
 }
 
-static ur_error_t ur_mesh_interface_up(void)
+static ur_error_t umesh_interface_up(void)
 {
     update_ipaddr();
 
@@ -100,7 +100,7 @@ static ur_error_t ur_mesh_interface_up(void)
     return UR_ERROR_NONE;
 }
 
-static ur_error_t ur_mesh_interface_down(void)
+static ur_error_t umesh_interface_down(void)
 {
     if (g_um_state.adapter_callback) {
         g_um_state.adapter_callback->interface_down();
@@ -166,13 +166,13 @@ exit:
     ur_mem_free(frame, sizeof(transmit_frame_t));
 }
 
-ur_error_t ur_mesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
+ur_error_t umesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
 {
     transmit_frame_t *frame;
     uint8_t append_length;
     ur_error_t error = UR_ERROR_NONE;
-    uint8_t ip_hdr_len;
-    uint8_t lowpan_hdr_len;
+    uint16_t ip_hdr_len;
+    uint16_t lowpan_hdr_len;
     uint8_t *ip_payload;
     uint8_t *lowpan_payload;
     int16_t offset;
@@ -234,24 +234,55 @@ static void input_message_handler(void *args)
     }
 }
 
-ur_error_t ur_mesh_input(umessage_t *message)
+ur_error_t umesh_input(umessage_t *message)
 {
     ur_error_t error = UR_ERROR_FAIL;
-    message_t *dec_message;
+    uint8_t *header;
+    uint16_t header_size;
+    uint16_t lowpan_header_size;
+    message_info_t *info;
+    message_t *message_header;
 
-    dec_message = lp_header_decompress((message_t *)message);
-    if (dec_message == NULL) {
-        message_free((message_t *)message);
-        return error;
+    header = ur_mem_alloc(UR_IP6_HLEN + UR_UDP_HLEN);
+    if (header == NULL) {
+        error = UR_ERROR_FAIL;
+        goto exit;
     }
+    message_copy_to((message_t *)message, 0, header, UR_IP6_HLEN + UR_UDP_HLEN);
+    info = ((message_t *)message)->info;
+
+    header_size = message_get_msglen((message_t *)message);
+    if (header_size < MIN_LOWPAN_FRM_SIZE) {
+        error = UR_ERROR_FAIL;
+        goto exit;
+    }
+    error = lp_header_decompress(header, &header_size, &lowpan_header_size,
+                                 &info->src, &info->dest);
+    if (error != UR_ERROR_NONE) {
+        goto exit;
+    }
+
+    message_set_payload_offset((message_t *)message, -lowpan_header_size);
+    message_header = message_alloc(header_size, UMESH_2);
+    if (message_header == NULL) {
+        error = UR_ERROR_FAIL;
+        goto exit;
+    }
+
+    message_copy_from(message_header, header, header_size);
+    message_concatenate(message_header, (message_t *)message, false);
+    message = (umessage_t *)message_header;
 
     if (g_um_state.adapter_callback) {
-        error = umesh_task_schedule_call(input_message_handler, dec_message);
-    }
-    if (error != UR_ERROR_NONE) {
-        message_free(dec_message);
+        error = umesh_task_schedule_call(input_message_handler, message);
     }
 
+exit:
+    if (error != UR_ERROR_NONE) {
+        message_free((message_t *)message);
+    }
+
+    ur_mem_free(header, UR_IP6_HLEN + UR_UDP_HLEN);
     return error;
 }
 
@@ -316,7 +347,7 @@ static void parse_args(void)
 }
 #endif
 
-ur_error_t ur_mesh_init(node_mode_t mode)
+ur_error_t umesh_init(node_mode_t mode)
 {
     if (g_um_state.initialized) {
         return UR_ERROR_NONE;
@@ -324,8 +355,8 @@ ur_error_t ur_mesh_init(node_mode_t mode)
 
     umesh_mem_init();
     hal_umesh_init();
-    g_um_state.mm_cb.interface_up = ur_mesh_interface_up;
-    g_um_state.mm_cb.interface_down = ur_mesh_interface_down;
+    g_um_state.mm_cb.interface_up = umesh_interface_up;
+    g_um_state.mm_cb.interface_down = umesh_interface_down;
     ur_adapter_interface_init();
     ur_router_register_module();
     interface_init();
@@ -345,14 +376,14 @@ ur_error_t ur_mesh_init(node_mode_t mode)
     return UR_ERROR_NONE;
 }
 
-bool ur_mesh_is_initialized(void)
+bool umesh_is_initialized(void)
 {
     return g_um_state.initialized;
 }
 
-ur_error_t ur_mesh_start()
+ur_error_t umesh_start()
 {
-    ur_mesh_hal_module_t *wifi_hal = NULL;
+    umesh_hal_module_t *wifi_hal = NULL;
     umesh_extnetid_t extnetid;
     int extnetid_len = 6;
 
@@ -384,9 +415,9 @@ ur_error_t ur_mesh_start()
     return UR_ERROR_NONE;
 }
 
-ur_error_t ur_mesh_stop(void)
+ur_error_t umesh_stop(void)
 {
-    ur_mesh_hal_module_t *wifi_hal = NULL;
+    umesh_hal_module_t *wifi_hal = NULL;
 
     if (g_um_state.started == false) {
         return UR_ERROR_NONE;
@@ -407,104 +438,104 @@ ur_error_t ur_mesh_stop(void)
 }
 
 /* per device APIs */
-uint8_t ur_mesh_get_device_state(void)
+uint8_t umesh_get_device_state(void)
 {
     return (uint8_t)umesh_mm_get_device_state();
 }
 
-ur_error_t ur_mesh_register_callback(ur_adapter_callback_t *callback)
+ur_error_t umesh_register_callback(ur_adapter_callback_t *callback)
 {
     g_um_state.adapter_callback = callback;
     return UR_ERROR_NONE;
 }
 
-uint8_t ur_mesh_get_mode(void)
+uint8_t umesh_get_mode(void)
 {
     return (uint8_t)umesh_mm_get_mode();
 }
 
-ur_error_t ur_mesh_set_mode(uint8_t mode)
+ur_error_t umesh_set_mode(uint8_t mode)
 {
     return umesh_mm_set_mode(mode);
 }
 
-int8_t ur_mesh_get_seclevel(void)
+int8_t umesh_get_seclevel(void)
 {
     return umesh_mm_get_seclevel();
 }
 
-ur_error_t ur_mesh_set_seclevel(int8_t level)
+ur_error_t umesh_set_seclevel(int8_t level)
 {
     return umesh_mm_set_seclevel(level);
 }
 
 /* per network APIs */
-const mac_address_t *ur_mesh_net_get_mac_address(ur_mesh_net_index_t nettype)
+const mac_address_t *umesh_net_get_mac_address(umesh_net_index_t nettype)
 {
     return umesh_mm_get_mac_address();
 }
 
-uint16_t ur_mesh_net_get_meshnetid(ur_mesh_net_index_t nettype)
+uint16_t umesh_net_get_meshnetid(umesh_net_index_t nettype)
 {
     return umesh_mm_get_meshnetid(NULL);
 }
 
-void ur_mesh_net_set_meshnetid(ur_mesh_net_index_t nettype, uint16_t meshnetid)
+void umesh_net_set_meshnetid(umesh_net_index_t nettype, uint16_t meshnetid)
 {
     umesh_mm_set_meshnetid(NULL, meshnetid);
 }
 
-uint16_t ur_mesh_net_get_meshnetsize(ur_mesh_net_index_t nettype)
+uint16_t umesh_net_get_meshnetsize(umesh_net_index_t nettype)
 {
     return umesh_mm_get_meshnetsize();
 }
 
-uint16_t ur_mesh_net_get_sid(ur_mesh_net_index_t nettype)
+uint16_t umesh_net_get_sid(umesh_net_index_t nettype)
 {
     return umesh_mm_get_local_sid();
 }
 
-bool ur_mesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)
+bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)
 {
     return nd_is_subscribed_mcast(addr);
 }
 
-const ur_netif_ip6_address_t *ur_mesh_get_ucast_addr(void)
+const ur_netif_ip6_address_t *umesh_get_ucast_addr(void)
 {
     return g_um_state.ucast_address;
 }
 
-const ur_netif_ip6_address_t *ur_mesh_get_mcast_addr(void)
+const ur_netif_ip6_address_t *umesh_get_mcast_addr(void)
 {
     return g_um_state.mcast_address;
 }
 
-ur_error_t ur_mesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
+ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
 {
     return mf_resolve_dest(dest, dest_addr);
 }
 
-bool ur_mesh_is_whitelist_enabled(void)
+bool umesh_is_whitelist_enabled(void)
 {
     return is_whitelist_enabled();
 }
 
-void ur_mesh_enable_whitelist(void)
+void umesh_enable_whitelist(void)
 {
     whitelist_enable();
 }
 
-void ur_mesh_disable_whitelist(void)
+void umesh_disable_whitelist(void)
 {
     whitelist_disable();
 }
 
-const whitelist_entry_t *ur_mesh_get_whitelist_entries(void)
+const whitelist_entry_t *umesh_get_whitelist_entries(void)
 {
     return whitelist_get_entries();
 }
 
-ur_error_t ur_mesh_add_whitelist(const mac_address_t *address)
+ur_error_t umesh_add_whitelist(const mac_address_t *address)
 {
     whitelist_entry_t *entry;
 
@@ -515,7 +546,7 @@ ur_error_t ur_mesh_add_whitelist(const mac_address_t *address)
     return UR_ERROR_MEM;
 }
 
-ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi)
+ur_error_t umesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi)
 {
     whitelist_entry_t *entry;
 
@@ -527,19 +558,19 @@ ur_error_t ur_mesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi)
     return UR_ERROR_NONE;
 }
 
-void ur_mesh_remove_whitelist(const mac_address_t *address)
+void umesh_remove_whitelist(const mac_address_t *address)
 {
     whitelist_remove(address);
 }
 
-void ur_mesh_clear_whitelist(void)
+void umesh_clear_whitelist(void)
 {
     whitelist_clear();
 }
 
-void ur_mesh_get_channel(channel_t *channel)
+void umesh_get_channel(channel_t *channel)
 {
-    ur_mesh_hal_module_t   *ur_wifi_hal = NULL;
+    umesh_hal_module_t   *ur_wifi_hal = NULL;
 
     if (channel) {
         ur_wifi_hal = hal_umesh_get_default_module();
@@ -568,7 +599,7 @@ ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid)
     return umesh_mm_set_extnetid(extnetid);
 }
 
-const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type)
+const ur_link_stats_t *umesh_get_link_stats(media_type_t type)
 {
     hal_context_t *hal;
 
@@ -576,7 +607,7 @@ const ur_link_stats_t *ur_mesh_get_link_stats(media_type_t type)
     return mf_get_stats(hal);
 }
 
-const frame_stats_t *ur_mesh_get_hal_stats(media_type_t type)
+const frame_stats_t *umesh_get_hal_stats(media_type_t type)
 {
     hal_context_t *hal;
 
@@ -588,22 +619,22 @@ const frame_stats_t *ur_mesh_get_hal_stats(media_type_t type)
     return hal_umesh_get_stats(hal->module);
 }
 
-const ur_message_stats_t *ur_mesh_get_message_stats(void)
+const ur_message_stats_t *umesh_get_message_stats(void)
 {
     return message_get_stats();
 }
 
-const ur_mem_stats_t *ur_mesh_get_mem_stats(void)
+const ur_mem_stats_t *umesh_get_mem_stats(void)
 {
     return ur_mem_get_stats();
 }
 
-slist_t *ur_mesh_get_hals(void)
+slist_t *umesh_get_hals(void)
 {
     return get_hal_contexts();
 }
 
-slist_t *ur_mesh_get_networks(void)
+slist_t *umesh_get_networks(void)
 {
     return get_network_contexts();
 }

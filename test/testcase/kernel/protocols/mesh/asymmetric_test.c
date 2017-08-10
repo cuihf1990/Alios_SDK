@@ -23,7 +23,7 @@ static void two_nodes_case(void)
 
     set_rssi_ext(IF_WIFI, 11, 12, 0, 1);
 
-    ur_mesh_set_mode(MODE_RX_ON);
+    umesh_set_mode(MODE_RX_ON);
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_LEADER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
@@ -32,9 +32,9 @@ static void two_nodes_case(void)
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 12, "testcmd router", 2);
 
-    for (index = 0; index < 10; index++) {
+    for (index = 0; index < 3; index++) {
         yos_msleep(5* 1000);
-        YUNIT_ASSERT(DEVICE_STATE_LEADER == ur_mesh_get_device_state());
+        YUNIT_ASSERT(DEVICE_STATE_LEADER == umesh_get_device_state());
     }
 
     stop_node(12);
@@ -68,15 +68,15 @@ static void three_nodes_case(void)
     check_p2p_str_wait("router", 12, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 12, "testcmd router", 2);
 
-    ur_mesh_set_mode(MODE_RX_ON);
+    umesh_set_mode(MODE_RX_ON);
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
 
-    myaddr = ur_mesh_get_ucast_addr();
+    myaddr = umesh_get_ucast_addr();
     snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
 
-    for (index = 0; index < 5; index++) {
+    for (index = 0; index < 2; index++) {
         check_cond_wait(umesh_mm_get_attach_state() == ATTACH_IDLE || \
                         umesh_mm_get_attach_state() == ATTACH_DONE, 10);
         cmd_to_master(ping_cmd);

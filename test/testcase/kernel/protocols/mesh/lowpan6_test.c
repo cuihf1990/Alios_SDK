@@ -13,13 +13,15 @@ void test_uradar_6lowpan_case(void)
     #define TEST_MSG_LEN 60
     uint8_t ip6_buffer[TEST_MSG_LEN];
     uint8_t lowpan_buffer[TEST_MSG_LEN];
-    uint8_t ip_hdr_len, lowpan_hdr_len, pkt_len;
-    message_t *message, *dec_message;
+    uint16_t ip_hdr_len, lowpan_hdr_len, pkt_len;
     ur_ip6_header_t *ip6hdr;
     iphc_header_t iphc_header;
     ur_udp_header_t *udphdr;
     nhc_header_t  nhc_header;
     ur_ip6_prefix_t prefix;
+    ur_error_t error;
+    ur_addr_t src;
+    ur_addr_t dest;
 
     lp_start();
     nd_get_ip6_prefix(&prefix);
@@ -63,19 +65,16 @@ void test_uradar_6lowpan_case(void)
     YUNIT_ASSERT(BOTH_PORT_COMPRESSED == nhc_header.P);
     YUNIT_ASSERT((UR_IP6_HLEN + UR_UDP_HLEN) == ip_hdr_len);
     YUNIT_ASSERT(6 == lowpan_hdr_len);
-    pkt_len = lowpan_hdr_len + sizeof(ip6_buffer) - ip_hdr_len;
-    message = message_alloc(pkt_len, UT_MSG);
-    message->info->src.addr.len = 2;
-    message->info->src.addr.short_addr = 0x0001;
-    message->info->dest.addr.len = 2;
-    message->info->dest.addr.short_addr = 0x0002;
-    message_copy_from(message, lowpan_buffer, pkt_len);
-    dec_message = lp_header_decompress(message);
-    YUNIT_ASSERT_PTR_NOT_NULL(dec_message);
-    YUNIT_ASSERT(sizeof(ip6_buffer) == message_get_msglen(dec_message));
-    message_copy_to(dec_message, 0 , lowpan_buffer, sizeof(ip6_buffer));
-    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, sizeof(ip6_buffer)));
-    message_free(dec_message);
+
+    ip_hdr_len = 18;
+    src.addr.len = 2;
+    src.addr.short_addr = 0x0001;
+    dest.addr.len = 2;
+    dest.addr.short_addr = 0x0002;
+    error = lp_header_decompress(lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len,
+                                 &src, &dest);
+    YUNIT_ASSERT(error == UR_ERROR_NONE);
+    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, ip_hdr_len));
 
     ip6hdr->v_tc_fl = htonl((6 << 28) | (1 << 20)); /* TC=1, Fl=0 */
     ip6hdr->hop_lim = 64;
@@ -99,15 +98,17 @@ void test_uradar_6lowpan_case(void)
     YUNIT_ASSERT(SRC_PORT_COMPRESSED == nhc_header.P);
     YUNIT_ASSERT((UR_IP6_HLEN + UR_UDP_HLEN) == ip_hdr_len);
     YUNIT_ASSERT(12 == lowpan_hdr_len);
-    pkt_len = lowpan_hdr_len + sizeof(ip6_buffer) - ip_hdr_len;
-    message = message_alloc(pkt_len, UT_MSG);
-    message_copy_from(message, lowpan_buffer, pkt_len);
-    dec_message = lp_header_decompress(message);
-    YUNIT_ASSERT_PTR_NOT_NULL(dec_message);
-    YUNIT_ASSERT(sizeof(ip6_buffer) == message_get_msglen(dec_message));
-    message_copy_to(dec_message, 0 , lowpan_buffer, sizeof(ip6_buffer));
-    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, sizeof(ip6_buffer)));
-    message_free(dec_message);
+
+    ip_hdr_len = 24;
+    src.addr.len = 2;
+    src.addr.short_addr = 0x0001;
+    dest.addr.len = 2;
+    dest.addr.short_addr = 0xffff;
+
+    error = lp_header_decompress(lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len,
+                                 &src, &dest);
+    YUNIT_ASSERT(error == UR_ERROR_NONE);
+    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, ip_hdr_len));
 
     ip6hdr->v_tc_fl = htonl((6 << 28) | (1 << 0)); /* TC=0, Fl=1 */
     ip6hdr->hop_lim = 1;
@@ -127,15 +128,16 @@ void test_uradar_6lowpan_case(void)
     YUNIT_ASSERT(DST_PORT_COMPRESSED == nhc_header.P);
     YUNIT_ASSERT((UR_IP6_HLEN + UR_UDP_HLEN) == ip_hdr_len);
     YUNIT_ASSERT(23 == lowpan_hdr_len);
-    pkt_len = lowpan_hdr_len + sizeof(ip6_buffer) - ip_hdr_len;
-    message = message_alloc(pkt_len, UT_MSG);
-    message_copy_from(message, lowpan_buffer, pkt_len);
-    dec_message = lp_header_decompress(message);
-    YUNIT_ASSERT_PTR_NOT_NULL(dec_message);
-    YUNIT_ASSERT(sizeof(ip6_buffer) == message_get_msglen(dec_message));
-    message_copy_to(dec_message, 0 , lowpan_buffer, sizeof(ip6_buffer));
-    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, sizeof(ip6_buffer)));
-    message_free(dec_message);
+
+    ip_hdr_len = 35;
+    src.addr.len = 2;
+    src.addr.short_addr = 0x0001;
+    dest.addr.len = 2;
+    dest.addr.short_addr = 0xffff;
+    error = lp_header_decompress(lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len,
+                                 &src, &dest);
+    YUNIT_ASSERT(error == UR_ERROR_NONE);
+    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, ip_hdr_len));
 
     ip6hdr->v_tc_fl = htonl((6 << 28) | (1 << 20) | (1 << 0)); /* TC=1, Fl=1 */
     ip6hdr->hop_lim = 1;
@@ -155,15 +157,16 @@ void test_uradar_6lowpan_case(void)
     YUNIT_ASSERT(NO_PORT_COMPRESSED == nhc_header.P);
     YUNIT_ASSERT((UR_IP6_HLEN + UR_UDP_HLEN) == ip_hdr_len);
     YUNIT_ASSERT(35 == lowpan_hdr_len);
-    pkt_len = lowpan_hdr_len + sizeof(ip6_buffer) - ip_hdr_len;
-    message = message_alloc(pkt_len, UT_MSG);
-    message_copy_from(message, lowpan_buffer, pkt_len);
-    dec_message = lp_header_decompress(message);
-    YUNIT_ASSERT_PTR_NOT_NULL(dec_message);
-    YUNIT_ASSERT(sizeof(ip6_buffer) == message_get_msglen(dec_message));
-    message_copy_to(dec_message, 0 , lowpan_buffer, sizeof(ip6_buffer));
-    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, sizeof(ip6_buffer)));
-    message_free(dec_message);
+
+    ip_hdr_len = 47;
+    src.addr.len = 2;
+    src.addr.short_addr = 0x0001;
+    dest.addr.len = 2;
+    dest.addr.short_addr = 0x0002;
+    error = lp_header_decompress(lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len,
+                                 &src, &dest);
+    YUNIT_ASSERT(error == UR_ERROR_NONE);
+    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, ip_hdr_len));
 
     ip6hdr->v_tc_fl = htonl((6 << 28) | (1 << 0)); /* TC=0, Fl=1 */
     ip6hdr->hop_lim = 20;
@@ -181,40 +184,39 @@ void test_uradar_6lowpan_case(void)
     YUNIT_ASSERT(MCAST_ADDR_128BIT == iphc_header.DAM);
     YUNIT_ASSERT(UR_IP6_HLEN == ip_hdr_len);
     YUNIT_ASSERT(39 == lowpan_hdr_len);
-    pkt_len = lowpan_hdr_len + sizeof(ip6_buffer) - ip_hdr_len;
-    message = message_alloc(pkt_len, UT_MSG);
-    message_copy_from(message, lowpan_buffer, pkt_len);
-    dec_message = lp_header_decompress(message);
-    YUNIT_ASSERT_PTR_NOT_NULL(dec_message);
-    YUNIT_ASSERT(sizeof(ip6_buffer) == message_get_msglen(dec_message));
-    message_copy_to(dec_message, 0 , lowpan_buffer, sizeof(ip6_buffer));
-    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, sizeof(ip6_buffer)));
-    message_free(dec_message);
+
+    ip_hdr_len = 59;
+    src.addr.len = 2;
+    src.addr.short_addr = 0x0001;
+    dest.addr.len = 2;
+    dest.addr.short_addr = 0x0002;
+    error = lp_header_decompress(lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len,
+                                 &src, &dest);
+    YUNIT_ASSERT(error == UR_ERROR_NONE);
+    YUNIT_ASSERT(0 == memcmp(ip6_buffer, lowpan_buffer, ip_hdr_len));
 
     ip6hdr->v_tc_fl = htonl((4 << 28)); /* IPv4 */
     YUNIT_ASSERT(UR_ERROR_FAIL == lp_header_compress(ip6_buffer, lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len));
 
     uint8_t tmp = lowpan_buffer[1];
     lowpan_buffer[1] = tmp | 0x80; /* STATEFULL compress */
-    message = message_alloc(pkt_len, UT_MSG);
-    message_copy_from(message, lowpan_buffer, pkt_len);
-    dec_message = lp_header_decompress(message);
-    YUNIT_ASSERT_PTR_NULL(dec_message);
+    error = lp_header_decompress(lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len,
+                                 &src, &dest);
+    YUNIT_ASSERT(error != UR_ERROR_NONE);
 
     lowpan_buffer[1] = tmp | 0x40; /* STATEFULL compress */
-    message = message_alloc(pkt_len, UT_MSG);
-    message_copy_from(message, lowpan_buffer, pkt_len);
-    dec_message = lp_header_decompress(message);
-    YUNIT_ASSERT_PTR_NULL(dec_message);
+    error = lp_header_decompress(lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len,
+                                 &src, &dest);
+    YUNIT_ASSERT(error != UR_ERROR_NONE);
 
     lowpan_buffer[1] = tmp | 0x04; /* STATEFULL compress */
-    message = message_alloc(pkt_len, UT_MSG);
-    message_copy_from(message, lowpan_buffer, pkt_len);
-    dec_message = lp_header_decompress(message);
-    YUNIT_ASSERT_PTR_NULL(dec_message);
+    error = lp_header_decompress(lowpan_buffer, &ip_hdr_len, &lowpan_hdr_len,
+                                 &src, &dest);
+    YUNIT_ASSERT(error != UR_ERROR_NONE);
 
     /*************** test reassemble functions *******************/
     message_t *reass_pkt = NULL;
+    message_t *message = NULL;
     uint8_t   *data;
     uint16_t  size = 256, length = 96, offset = 0;
     message_info_t *info;

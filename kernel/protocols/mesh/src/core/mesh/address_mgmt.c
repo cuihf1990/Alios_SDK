@@ -57,7 +57,6 @@ static void set_dest_info(message_info_t *info, address_cache_t *target)
     if (is_partial_function_sid(target->sid)) {
         info->dest2.addr.len = SHORT_ADDR_SIZE;
         info->dest2.addr.short_addr = target->sid;
-        info->dir = DIR_UP;
         info->dest.addr.len = SHORT_ADDR_SIZE;
         info->dest.addr.short_addr = target->attach_sid;
     } else {

@@ -244,7 +244,7 @@ static void handle_autotest_timer(void *args)
     g_cl_state.autotest_timer = NULL;
     payload = (uint8_t *)ur_mem_alloc(g_cl_state.autotest_length);
     if (payload) {
-        src = ur_mesh_get_ucast_addr();
+        src = umesh_get_ucast_addr();
         cmd = (autotest_cmd_t *)payload;
         cmd->type = AUTOTEST_REQUEST;
         cmd->seq = htons(g_cl_state.autotest_seq++);
@@ -325,7 +325,7 @@ void process_channel(int argc, char *argv[])
 {
     channel_t channel;
 
-    ur_mesh_get_channel(&channel);
+    umesh_get_channel(&channel);
     response_append("%d\r\n", channel.channel);
     response_append("wifi %d\r\n", channel.wifi_channel);
     response_append("hal ucast %d\r\n", channel.hal_ucast_channel);
@@ -361,21 +361,21 @@ void process_extnetid(int argc, char *argv[])
 
 void process_init(int argc, char *argv[])
 {
-    ur_mesh_init(MODE_RX_ON);
+    umesh_init(MODE_RX_ON);
     response_append("done\r\n");
 }
 
 static void show_ipaddr(network_context_t *network)
 {
     const ur_netif_ip6_address_t *addr;
-    addr = ur_mesh_get_ucast_addr();
+    addr = umesh_get_ucast_addr();
     while (addr) {
         response_append("\t" IP6_ADDR_FMT "\r\n",
                         IP6_ADDR_DATA(addr->addr));
         addr = addr->next;
     }
 
-    addr = ur_mesh_get_mcast_addr();
+    addr = umesh_get_mcast_addr();
     while (addr) {
         response_append("\t" IP6_ADDR_FMT "\r\n",
                         IP6_ADDR_DATA(addr->addr));
@@ -405,7 +405,7 @@ void process_nbrs(int argc, char *argv[])
     hal_context_t *hal;
 
     response_append("neighbors:\r\n");
-    hals = ur_mesh_get_hals();
+    hals = umesh_get_hals();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         uint16_t   num = 0;
         response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
@@ -448,7 +448,7 @@ void process_networks(int argc, char *argv[])
     slist_t *networks;
     network_context_t *network;
 
-    networks = ur_mesh_get_networks();
+    networks = umesh_get_networks();
     slist_for_each_entry(networks, network, network_context_t, next) {
         response_append("index %d\r\n", network->index);
         response_append("  hal %d\r\n", network->hal->module->type);
@@ -465,7 +465,7 @@ void process_networks(int argc, char *argv[])
 
 void process_macaddr(int argc, char *argv[])
 {
-    const mac_address_t *addr = ur_mesh_get_mac_address();
+    const mac_address_t *addr = umesh_get_mac_address();
     if (addr) {
         response_append("%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
                         addr->addr[0], addr->addr[1], addr->addr[2], addr->addr[3],
@@ -480,10 +480,10 @@ void process_meshnetid(int argc, char *argv[])
     uint16_t meshnetid;
 
     if (argc == 0) {
-        response_append("0x%x\r\n", ur_mesh_get_meshnetid());
+        response_append("0x%x\r\n", umesh_get_meshnetid());
     } else {
         meshnetid = (uint16_t)strtol(argv[0], &end, 0);
-        ur_mesh_set_meshnetid(meshnetid);
+        umesh_set_meshnetid(meshnetid);
     }
     response_append("done\r\n");
 }
@@ -498,7 +498,7 @@ void process_mode(int argc, char *argv[])
     uint8_t mode, index;
     ur_error_t error;
 
-    mode = ur_mesh_get_mode();
+    mode = umesh_get_mode();
 
     for (index = 0; index < argc; index++) {
         if (strcmp(argv[index], "none") == 0) {
@@ -543,7 +543,7 @@ void process_mode(int argc, char *argv[])
         /* or specify number */
         mode = atoi(argv[index]);
     }
-    error = ur_mesh_set_mode(mode);
+    error = umesh_set_mode(mode);
 
     if (mode == 0 || error != UR_ERROR_NONE) {
         response_append("none\r\n");
@@ -694,7 +694,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         cmd = (autotest_cmd_t *)data;
         cmd->type = AUTOTEST_REPLY;
         cmd->seq = htons(seq);
-        src = ur_mesh_get_ucast_addr();
+        src = umesh_get_ucast_addr();
         memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cl_state.autotest_udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
@@ -782,18 +782,18 @@ void process_seclevel(int argc, char *argv[])
     char    *end;
 
     if (argc == 0) {
-        level = ur_mesh_get_seclevel();
+        level = umesh_get_seclevel();
         response_append("%d\r\n", level);
     } else if (argc > 0) {
         level = (uint8_t)strtol(argv[0], &end, 0);
-        ur_mesh_set_seclevel(level);
+        umesh_set_seclevel(level);
     }
     response_append("done\r\n");
 }
 
 void process_start(int argc, char *argv[])
 {
-    ur_mesh_start();
+    umesh_start();
     response_append("done\r\n");
 }
 
@@ -801,7 +801,7 @@ void process_state(int argc, char *argv[])
 {
     mm_device_state_t state;
 
-    state = ur_mesh_get_device_state();
+    state = umesh_get_device_state();
 
     response_append("%s\r\n", state2str(state));
 }
@@ -815,9 +815,9 @@ void process_stats(int argc, char *argv[])
     const frame_stats_t      *hal_stats;
     const ur_mem_stats_t     *mem_stats;
 
-    hals = ur_mesh_get_hals();
+    hals = umesh_get_hals();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        link_stats = ur_mesh_get_link_stats(hal->module->type);
+        link_stats = umesh_get_link_stats(hal->module->type);
         if (link_stats) {
             response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
             response_append("link stats\r\n");
@@ -836,7 +836,7 @@ void process_stats(int argc, char *argv[])
             response_append("  sending_timeouts %d\r\n", link_stats->sending_timeouts);
         }
 
-        hal_stats = ur_mesh_get_hal_stats(hal->module->type);
+        hal_stats = umesh_get_hal_stats(hal->module->type);
         if (hal_stats) {
             response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
             response_append("hal stats\r\n");
@@ -845,7 +845,7 @@ void process_stats(int argc, char *argv[])
         }
     }
 
-    message_stats = ur_mesh_get_message_stats();
+    message_stats = umesh_get_message_stats();
     if (message_stats) {
         response_append("message stats\r\n");
         response_append("  allocate nums %d\r\n", message_stats->num);
@@ -862,7 +862,7 @@ void process_stats(int argc, char *argv[])
         response_append("\r\n");
     }
 
-    mem_stats = ur_mesh_get_mem_stats();
+    mem_stats = umesh_get_mem_stats();
     if (mem_stats) {
         response_append("memory stats\r\n");
         response_append("  nums %d\r\n", mem_stats->num);
@@ -873,7 +873,7 @@ static void process_status(int argc, char *argv[])
 {
     slist_t *networks;
     network_context_t *network;
-    response_append("state\t%s\r\n", state2str(ur_mesh_get_device_state()));
+    response_append("state\t%s\r\n", state2str(umesh_get_device_state()));
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         response_append("<<network %s %d>>\r\n",
@@ -900,7 +900,7 @@ static void process_status(int argc, char *argv[])
 
 void process_stop(int argc, char *argv[])
 {
-    ur_mesh_stop();
+    umesh_stop();
     response_append("done\r\n");
 }
 
@@ -914,10 +914,10 @@ void process_sids(int argc, char *argv[])
     slist_t       *networks;
     network_context_t *network;
 
-    response_append("me=%04x\r\n", ur_mesh_get_sid());
+    response_append("me=%04x\r\n", umesh_get_sid());
 
     response_append("children:\r\n");
-    hals = ur_mesh_get_hals();
+    hals = umesh_get_hals();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
             if (node->state != STATE_CHILD) {
@@ -929,7 +929,7 @@ void process_sids(int argc, char *argv[])
     }
 
     response_append("mobile:\r\n");
-    networks = ur_mesh_get_networks();
+    networks = umesh_get_networks();
     slist_for_each_entry(networks, network, network_context_t, next) {
         nodes_list = get_ssid_nodes_list(network->sid_base);
         if (nodes_list == NULL) {
@@ -957,12 +957,12 @@ void process_testcmd(int argc, char *argv[])
 
     cmd = argv[0];
     if (strcmp(cmd, "sid") == 0) {
-        response_append("%04x", ur_mesh_get_sid());
+        response_append("%04x", umesh_get_sid());
     } else if (strcmp(cmd, "state") == 0) {
-        response_append("%s", state2str(ur_mesh_get_device_state()));
+        response_append("%s", state2str(umesh_get_device_state()));
     } else if (strcmp(cmd, "parent") == 0) {
         neighbor_t *nbr;
-        hals = ur_mesh_get_hals();
+        hals = umesh_get_hals();
         slist_for_each_entry(hals, hal, hal_context_t, next) {
             slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
                 if (nbr->state != STATE_PARENT) {
@@ -975,13 +975,13 @@ void process_testcmd(int argc, char *argv[])
     } else if (strcmp(cmd, "netsize") == 0) {
         response_append("%d", umesh_mm_get_meshnetsize());
     } else if (strcmp(cmd, "netid") == 0) {
-        response_append("%04x", ur_mesh_get_meshnetid());
+        response_append("%04x", umesh_get_meshnetid());
     } else if (strcmp(cmd, "icmp_acked") == 0) {
         response_append("%d", g_cl_state.icmp_acked);
     } else if (strcmp(cmd, "autotest_acked") == 0) {
         response_append("%d", g_cl_state.autotest_acked);
     } else if (strcmp(cmd, "ipaddr") == 0) {
-        response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(ur_mesh_get_ucast_addr()->addr));
+        response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(umesh_get_ucast_addr()->addr));
     } else if (strcmp(cmd, "router") == 0) {
         show_router(ur_router_get_default_router());
     }
@@ -998,7 +998,7 @@ void process_traceroute(int argc, char *argv[])
     }
 
     string_to_ip6_addr(argv[0], &dest);
-    if (ur_mesh_resolve_dest(&dest, &dest_addr) != UR_ERROR_NONE) {
+    if (umesh_resolve_dest(&dest, &dest_addr) != UR_ERROR_NONE) {
         return;
     }
 
@@ -1018,8 +1018,8 @@ void process_whitelist(int argc, char *argv[])
 
     if (arg_index >= argc) {
         int i = 0;
-        bool enabled = ur_mesh_is_whitelist_enabled();
-        const whitelist_entry_t *whitelist = ur_mesh_get_whitelist_entries();
+        bool enabled = umesh_is_whitelist_enabled();
+        const whitelist_entry_t *whitelist = umesh_get_whitelist_entries();
         response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
         for(i = 0; i < WHITELIST_ENTRY_NUM; i++) {
             if (whitelist[i].valid == false) {
@@ -1045,16 +1045,16 @@ void process_whitelist(int argc, char *argv[])
         }
         if (++arg_index < argc) {
             rssi = (int8_t)strtol(argv[arg_index], NULL, 0);
-            ur_mesh_add_whitelist_rssi(&addr, rssi);
+            umesh_add_whitelist_rssi(&addr, rssi);
         } else {
-            ur_mesh_add_whitelist(&addr);
+            umesh_add_whitelist(&addr);
         }
     } else if (strcmp(argv[arg_index], "clear") == 0) {
-        ur_mesh_clear_whitelist();
+        umesh_clear_whitelist();
     } else if (strcmp(argv[arg_index], "disable") == 0) {
-        ur_mesh_disable_whitelist();
+        umesh_disable_whitelist();
     } else if (strcmp(argv[arg_index], "enable") == 0) {
-        ur_mesh_enable_whitelist();
+        umesh_enable_whitelist();
     } else if (strcmp(argv[arg_index], "remove") == 0) {
         if (++arg_index >= argc) {
             return;
@@ -1064,7 +1064,7 @@ void process_whitelist(int argc, char *argv[])
         if (length != sizeof(addr.addr)) {
             return;
         }
-        ur_mesh_remove_whitelist(&addr);
+        umesh_remove_whitelist(&addr);
     }
     response_append("done\r\n");
 }
@@ -1085,7 +1085,7 @@ static void do_cli(void *arg)
         }
     }
 
-    if (ur_mesh_is_initialized() == false && strcmp(cmd, "init") != 0) {
+    if (umesh_is_initialized() == false && strcmp(cmd, "init") != 0) {
         ur_mem_free(buf->data, buf->length);
         ur_mem_free(buf, sizeof(input_cli_t));
         return;
@@ -1144,7 +1144,7 @@ void ur_cli_input_args(char **argv, uint16_t argc)
         return;
     }
 
-    if (ur_mesh_is_initialized() == false && strcmp(argv[1], "init") != 0) {
+    if (umesh_is_initialized() == false && strcmp(argv[1], "init") != 0) {
         return;
     }
 

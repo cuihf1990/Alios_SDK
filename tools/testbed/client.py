@@ -34,6 +34,7 @@ class Client:
 
     def device_logging(self, port):
         log_time = time.time()
+        log = ''
         while self.keep_running:
             if self.connected == False:
                 time.sleep(0.1)
@@ -45,15 +46,20 @@ class Client:
                     except:
                         print "error: unable to open {0}".format(port)
                         self.devices[port]['lock'].release()
-                        time.sleep(1)
+                        time.sleep(0.1)
                         break
                 self.devices[port]['lock'].release()
                 newline = False
-                log = ''
                 try:
-                    while self.devices[port]['lock'].acquire(False):
-                        c = self.devices[port]['serial'].read(1)
-                        self.devices[port]['lock'].release()
+                    while self.devices[port]['lock'].acquire(False) == True:
+                        try:
+                            c = self.devices[port]['serial'].read(1)
+                        except:
+                            time.sleep(0.02)
+                            c = ''
+                            self.devices[port]['serial'].close()
+                        finally:
+                            self.devices[port]['lock'].release()
                         if c != '':
                             if log == '':
                                 log_time = time.time()
@@ -70,6 +76,7 @@ class Client:
                 if log != '' and newline == True:
                     log = port + ":{0:.3f}:".format(log_time) + log
                     data = TBframe.construct(TBframe.DEVICE_LOG,log)
+                    log = ''
                     try:
                         self.service_socket.send(data)
                     except:

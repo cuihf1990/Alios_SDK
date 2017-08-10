@@ -129,17 +129,6 @@ extern mico_worker_thread_t mico_worker_thread;
   * @{
   */
 
-/** @brief Enter a critical session, all interrupts are disabled
-  *
-  * @return    none
-  */
-void mico_rtos_enter_critical( void );
-
-/** @brief Exit a critical session, all interrupts are enabled
-  *
-  * @return    none
-  */
-void mico_rtos_exit_critical( void );
 
 /**
   * @}

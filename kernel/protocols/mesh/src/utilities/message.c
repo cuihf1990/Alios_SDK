@@ -49,6 +49,8 @@ message_t *message_alloc(uint16_t length, uint16_t debug_info)
         memset(data->payload, 0, data->len);
         if (offset < length) {
             data = data->next;
+        } else {
+            break;
         }
     }
 
