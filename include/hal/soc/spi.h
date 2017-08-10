@@ -23,72 +23,60 @@
 #ifndef YOS_SPI_H
 #define YOS_SPI_H
 
-/******************************************************
- *                    Constants
- ******************************************************/
-/* SPI mode constants */
-#define SPI_CLOCK_RISING_EDGE  ( 1 << 0 )
-#define SPI_CLOCK_FALLING_EDGE ( 0 << 0 )
-#define SPI_CLOCK_IDLE_HIGH    ( 1 << 1 )
-#define SPI_CLOCK_IDLE_LOW     ( 0 << 1 )
-#define SPI_USE_DMA            ( 1 << 2 )
-#define SPI_NO_DMA             ( 0 << 2 )
-#define SPI_MSB_FIRST          ( 1 << 3 )
-#define SPI_LSB_FIRST          ( 0 << 3 )
-
-
-/******************************************************
- *                   Enumerations
- ******************************************************/
-
-
-/******************************************************
- *                    Structures
- ******************************************************/
+typedef struct {
+    uint32_t mode;
+    uint32_t freq;
+} spi_config_t;
 
 typedef struct {
-    uint8_t  port;
-    uint8_t  chip_select;
-    uint32_t speed;
-    uint8_t  mode;
-    uint8_t  bits;
-} hal_spi_device_t;
-
-
-/**
- * SPI message segment
- */
-typedef struct {
-    const void *tx_buffer;
-    void       *rx_buffer;
-    uint32_t    length;
-} hal_spi_msg_segment_t;
+    uint8_t      port;    /* spi port */
+    spi_config_t config;  /* spi config */
+    void        *priv;    /* priv data */
+} spi_dev_t;
 
 
 /**@brief Initialises the SPI interface for a given SPI device
- *
  * @note  Prepares a SPI hardware interface for communication as a master
  *
- * @param  spi : the SPI device to be initialised
+ * @param     spi         : the spi device
+ * @return    kNoErr      : on success.
+ * @return    kGeneralErr : if the SPI device could not be initialised
+ */
+int32_t hal_spi_init(spi_dev_t *spi);
+
+
+/**@brief spi_send
  *
+ * @param     spi           : the spi device
+ * @param     data          : spi send data
+ * @param     size          : spi send data size
+ * @param     timeout       : timeout in ms
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if the SPI device could not be initialised
  */
-int32_t hal_spi_init(const hal_spi_device_t *spi);
+int32_t hal_spi_send(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t timeout);
 
-
-/**@brief Transmits and/or receives data from a SPI device
- *
- * @param  spi      : the SPI device to be initialised
- * @param  segments : a pointer to an array of segments
- * @param  number_of_segments : the number of segments to transfer
- *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred
+/**@brief spi_recv
+ * @param     spi         : the spi device
+ * @param     data        : spi recv data
+ * @param     size        : spi recv data size
+ * @param     timeout     : timeout in ms
+ * @return    kNoErr      : on success.
+ * @return    kGeneralErr : if the SPI device could not be initialised
  */
-int32_t hal_spi_transfer(const hal_spi_device_t *spi,
-                         const hal_spi_msg_segment_t *segments, uint16_t num);
+int32_t hal_spi_recv(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t timeout);
 
+/**@brief spi send data and recv
+ * @param     spi         : the spi device
+ * @param     tx_data     : spi send data
+ * @param     rx_data     : spi recv data
+ * @param     tx_size     : spi data to be sent
+ * @param     rx_size     : spi data to be recv
+ * @param     timeout     : timeout in ms
+ * @return    kNoErr      : on success.
+ * @return    kGeneralErr : if the SPI device could not be initialised
+ */
+int32_t hal_spi_send_recv(spi_dev_t *spi, uint8_t *tx_data, uint16_t tx_size, uint8_t *rx_data, uint16_t rx_size, uint32_t timeout);
 
 /**@brief De-initialises a SPI interface
  *
@@ -99,9 +87,6 @@ int32_t hal_spi_transfer(const hal_spi_device_t *spi,
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred
  */
-int32_t hal_spi_finalize(const hal_spi_device_t *spi);
-
-/** @} */
-/** @} */
+int32_t hal_spi_finalize(spi_dev_t *spi);
 
 #endif
