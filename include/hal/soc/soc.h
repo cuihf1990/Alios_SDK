@@ -24,7 +24,6 @@
 #include "adc.h"
 #include "flash.h"
 #include "i2c.h"
-#include "mfi_auth.h"
 #include "pwm.h"
 #include "rng.h"
 #include "rtc.h"
