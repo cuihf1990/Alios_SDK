@@ -49,10 +49,10 @@ typedef struct {
     uint8_t channel;
     uint8_t chn_num;
     const uint8_t *channels;
-    ur_mesh_handle_received_frame_t rxcb;
+    umesh_handle_received_frame_t rxcb;
 
     void *context;
-    ur_mesh_hal_module_t *module;
+    umesh_hal_module_t *module;
     mesh_key_t keys[2];
     unsigned char bssid[WIFI_MAC_ADDR_SIZE];
     unsigned char macaddr[WIFI_MAC_ADDR_SIZE];
@@ -108,7 +108,7 @@ static void wifi_monitor_cb(uint8_t *data, int len,
 {
     compound_msg_t *pf;
     mesh_hal_priv_t *priv = g_hal_priv;
-    ur_mesh_hal_module_t *module = priv->module;
+    umesh_hal_module_t *module = priv->module;
 
     if (umesh_80211_filter_frame(module, data, len)) {
         return;
@@ -136,7 +136,7 @@ static void wifi_monitor_cb(uint8_t *data, int len,
     pass_to_umesh(pf);
 }
 
-static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
+static int beken_wifi_mesh_init(umesh_hal_module_t *module, void *config)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
@@ -145,7 +145,7 @@ static int beken_wifi_mesh_init(ur_mesh_hal_module_t *module, void *config)
     return 0;
 }
 
-static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
+static int beken_wifi_mesh_enable(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     struct tx_policy_tbl *pol;
@@ -165,19 +165,19 @@ static int beken_wifi_mesh_enable(ur_mesh_hal_module_t *module)
     return 0;
 }
 
-static int beken_wifi_mesh_disable(ur_mesh_hal_module_t *module)
+static int beken_wifi_mesh_disable(umesh_hal_module_t *module)
 {
     wlan_register_mesh_monitor_cb(NULL);
     return 0;
 }
 
-static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame,
+static int send_frame(umesh_hal_module_t *module, frame_t *frame,
                       mac_address_t *dest, send_cxt_t *cxt)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     uint8_t *pkt;
     int len = frame->len + WIFI_MESH_OFFSET;
-    ur_mesh_handle_sent_ucast_t sent;
+    umesh_handle_sent_ucast_t sent;
     int result = 0;
 
     pkt = yos_malloc(len);
@@ -202,9 +202,9 @@ tx_exit:
     return 0;
 }
 
-static int beken_wifi_mesh_send_ucast(ur_mesh_hal_module_t *module,
+static int beken_wifi_mesh_send_ucast(umesh_hal_module_t *module,
                                       frame_t *frame, mac_address_t *dest,
-                                      ur_mesh_handle_sent_ucast_t sent,
+                                      umesh_handle_sent_ucast_t sent,
                                       void *context)
 {
     int error;
@@ -225,9 +225,9 @@ static int beken_wifi_mesh_send_ucast(ur_mesh_hal_module_t *module,
     return error;
 }
 
-static int beken_wifi_mesh_send_bcast(ur_mesh_hal_module_t *module,
+static int beken_wifi_mesh_send_bcast(umesh_hal_module_t *module,
                                       frame_t *frame,
-                                      ur_mesh_handle_sent_bcast_t sent,
+                                      umesh_handle_sent_bcast_t sent,
                                       void *context)
 {
     int error;
@@ -252,8 +252,8 @@ static int beken_wifi_mesh_send_bcast(ur_mesh_hal_module_t *module,
     return error;
 }
 
-static int beken_wifi_mesh_register_receiver(ur_mesh_hal_module_t *module,
-                                    ur_mesh_handle_received_frame_t received,
+static int beken_wifi_mesh_register_receiver(umesh_hal_module_t *module,
+                                    umesh_handle_received_frame_t received,
                                     void *context)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -267,7 +267,7 @@ static int beken_wifi_mesh_register_receiver(ur_mesh_hal_module_t *module,
     return 0;
 }
 
-static int beken_wifi_mesh_get_mtu(ur_mesh_hal_module_t *module)
+static int beken_wifi_mesh_get_mtu(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
@@ -275,7 +275,7 @@ static int beken_wifi_mesh_get_mtu(ur_mesh_hal_module_t *module)
 }
 
 static const mac_address_t *beken_wifi_mesh_get_mac_address(
-                                         ur_mesh_hal_module_t *module)
+                                         umesh_hal_module_t *module)
 {
     static mac_address_t addr;
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -285,7 +285,7 @@ static const mac_address_t *beken_wifi_mesh_get_mac_address(
     return &addr;
 }
 
-static int beken_wifi_mesh_get_channel(ur_mesh_hal_module_t *module)
+static int beken_wifi_mesh_get_channel(umesh_hal_module_t *module)
 {
     int channel;
     struct phy_channel_info phy_info;
@@ -295,7 +295,7 @@ static int beken_wifi_mesh_get_channel(ur_mesh_hal_module_t *module)
     return channel;
 }
 
-static int beken_wifi_mesh_set_channel(ur_mesh_hal_module_t *module,
+static int beken_wifi_mesh_set_channel(umesh_hal_module_t *module,
                                        uint8_t channel)
 {
     uint32_t freq;
@@ -305,7 +305,7 @@ static int beken_wifi_mesh_set_channel(ur_mesh_hal_module_t *module,
     return 0;
 }
 
-static int beken_wifi_mesh_get_channel_list(ur_mesh_hal_module_t *module,
+static int beken_wifi_mesh_get_channel_list(umesh_hal_module_t *module,
                                             const uint8_t **chnlist)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -317,7 +317,7 @@ static int beken_wifi_mesh_get_channel_list(ur_mesh_hal_module_t *module,
     return priv->chn_num;
 }
 
-int beken_wifi_mesh_set_extnetid(ur_mesh_hal_module_t *module,
+int beken_wifi_mesh_set_extnetid(umesh_hal_module_t *module,
                                  const umesh_extnetid_t *extnetid)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -327,7 +327,7 @@ int beken_wifi_mesh_set_extnetid(ur_mesh_hal_module_t *module,
     return 0;
 }
 
-void beken_wifi_mesh_get_extnetid(ur_mesh_hal_module_t *module,
+void beken_wifi_mesh_get_extnetid(umesh_hal_module_t *module,
                                   umesh_extnetid_t *extnetid)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -340,13 +340,13 @@ void beken_wifi_mesh_get_extnetid(ur_mesh_hal_module_t *module,
 }
 
 static const frame_stats_t *beken_wifi_mesh_get_stats(
-                                         ur_mesh_hal_module_t *module)
+                                         umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     return &priv->stats;
 }
 
-static ur_mesh_hal_module_t beken_wifi_mesh_module;
+static umesh_hal_module_t beken_wifi_mesh_module;
 static const uint8_t g_wifi_channels[] = {1, 4, 6, 9, 11};
 static mesh_hal_priv_t g_wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
@@ -358,25 +358,25 @@ static mesh_hal_priv_t g_wifi_priv = {
     .bssid = {0x0, 0x1, 0x2, 0x3, 0x4, 0x5},
 };
 
-static ur_mesh_hal_module_t beken_wifi_mesh_module = {
+static umesh_hal_module_t beken_wifi_mesh_module = {
     .base.name = "beken7231_mesh_wifi_module",
     .base.priv_dev = &g_wifi_priv,
     .type = MEDIA_TYPE_WIFI,
-    .ur_mesh_hal_init = beken_wifi_mesh_init,
-    .ur_mesh_hal_enable = beken_wifi_mesh_enable,
-    .ur_mesh_hal_disable = beken_wifi_mesh_disable,
-    .ur_mesh_hal_send_ucast_request = beken_wifi_mesh_send_ucast,
-    .ur_mesh_hal_send_bcast_request = beken_wifi_mesh_send_bcast,
-    .ur_mesh_hal_register_receiver = beken_wifi_mesh_register_receiver,
-    .ur_mesh_hal_get_bcast_mtu = beken_wifi_mesh_get_mtu,
-    .ur_mesh_hal_get_ucast_mtu = beken_wifi_mesh_get_mtu,
-    .ur_mesh_hal_get_mac_address = beken_wifi_mesh_get_mac_address,
-    .ur_mesh_hal_get_channel = beken_wifi_mesh_get_channel,
-    .ur_mesh_hal_set_channel = beken_wifi_mesh_set_channel,
+    .umesh_hal_init = beken_wifi_mesh_init,
+    .umesh_hal_enable = beken_wifi_mesh_enable,
+    .umesh_hal_disable = beken_wifi_mesh_disable,
+    .umesh_hal_send_ucast_request = beken_wifi_mesh_send_ucast,
+    .umesh_hal_send_bcast_request = beken_wifi_mesh_send_bcast,
+    .umesh_hal_register_receiver = beken_wifi_mesh_register_receiver,
+    .umesh_hal_get_bcast_mtu = beken_wifi_mesh_get_mtu,
+    .umesh_hal_get_ucast_mtu = beken_wifi_mesh_get_mtu,
+    .umesh_hal_get_mac_address = beken_wifi_mesh_get_mac_address,
+    .umesh_hal_get_channel = beken_wifi_mesh_get_channel,
+    .umesh_hal_set_channel = beken_wifi_mesh_set_channel,
     .umesh_hal_set_extnetid = beken_wifi_mesh_set_extnetid,
     .umesh_hal_get_extnetid = beken_wifi_mesh_get_extnetid,
-    .ur_mesh_hal_get_stats = beken_wifi_mesh_get_stats,
-    .ur_mesh_hal_get_chnlist = beken_wifi_mesh_get_channel_list,
+    .umesh_hal_get_stats = beken_wifi_mesh_get_stats,
+    .umesh_hal_get_chnlist = beken_wifi_mesh_get_channel_list,
 };
 
 void beken_wifi_mesh_register(void)
