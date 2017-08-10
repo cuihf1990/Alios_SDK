@@ -32,7 +32,7 @@ static void two_nodes_case(void)
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 12, "testcmd router", 2);
 
-    for (index = 0; index < 10; index++) {
+    for (index = 0; index < 3; index++) {
         yos_msleep(5* 1000);
         YUNIT_ASSERT(DEVICE_STATE_LEADER == umesh_get_device_state());
     }
@@ -76,7 +76,7 @@ static void three_nodes_case(void)
     myaddr = umesh_get_ucast_addr();
     snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
 
-    for (index = 0; index < 5; index++) {
+    for (index = 0; index < 2; index++) {
         check_cond_wait(umesh_mm_get_attach_state() == ATTACH_IDLE || \
                         umesh_mm_get_attach_state() == ATTACH_DONE, 10);
         cmd_to_master(ping_cmd);
