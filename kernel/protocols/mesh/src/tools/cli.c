@@ -34,7 +34,6 @@
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 #include "tools/diags.h"
-#include "tools/cli_serial.h"
 
 extern mm_device_state_t mm_get_local_device_state(void);
 
@@ -213,7 +212,12 @@ void response_append(const char *format, ...)
     if (g_cur_cmd_cb) {
         g_cur_cmd_cb(res_buf, len, g_cur_cmd_priv);
     } else {
-        ur_cli_output((const uint8_t *)res_buf, len);
+#ifdef CONFIG_YOS_DDA
+        dda_cli_log((char *)res_buf);
+#endif
+        if (!g_cli_silent) {
+            csp_printf("%s", res_buf);
+        }
     }
 }
 

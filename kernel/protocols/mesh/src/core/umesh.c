@@ -363,12 +363,15 @@ ur_error_t umesh_init(node_mode_t mode)
 
     umesh_mm_init(mode);
     neighbors_init();
-    mesh_cli_init();
     mf_init();
     nd_init();
     message_stats_reset();
     g_um_state.initialized = true;
     register_raw_data_receiver(umesh_raw_data_receiver);
+
+#ifdef CONFIG_YOS_MESH_DEBUG
+    mesh_cli_init();
+#endif
 
 #ifdef CONFIG_YOS_DDA
     parse_args();
