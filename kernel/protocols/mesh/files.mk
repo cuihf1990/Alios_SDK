@@ -12,7 +12,6 @@ umesh_srcs := src/core/umesh.c \
               src/core/routing/vector_router.c \
               src/core/routing/ssid_allocator.c \
               src/core/routing/rsid_allocator.c \
-              src/core/security/master_key.c \
               src/core/security/keys_mgr.c \
               src/core/security/crypto.c \
               src/ipv6/lwip_adapter.c \
