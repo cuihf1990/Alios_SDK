@@ -29,12 +29,12 @@ typedef struct {
     uint8_t channel;
     uint8_t chn_num;
     const uint8_t *channels;
-    ur_mesh_handle_received_frame_t rxcb;
+    umesh_handle_received_frame_t rxcb;
 
     struct wif *wif;
 
     void *context;
-    ur_mesh_hal_module_t *module;
+    umesh_hal_module_t *module;
     mesh_key_t keys[2];
     unsigned char bssid[6];
     unsigned char macaddr[6];
@@ -134,7 +134,7 @@ static void *wifi_recv_entry(void *arg)
     return NULL;
 }
 
-static int linux_80211_mesh_init(ur_mesh_hal_module_t *module, void *something)
+static int linux_80211_mesh_init(umesh_hal_module_t *module, void *something)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     priv->wif = wi_open(LINUX_WIFI_MESH_IF_NAME);
@@ -147,7 +147,7 @@ static int linux_80211_mesh_init(ur_mesh_hal_module_t *module, void *something)
     return 0;
 }
 
-static int send_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest)
+static int send_frame(umesh_hal_module_t *module, frame_t *frame, mac_address_t *dest)
 {
     void *pkt = NULL;
     int count = frame->len + MESH_DATA_OFF;
@@ -170,9 +170,9 @@ out:
     return ret;
 }
 
-static int linux_80211_mesh_send_ucast(ur_mesh_hal_module_t *module, frame_t *frame,
+static int linux_80211_mesh_send_ucast(umesh_hal_module_t *module, frame_t *frame,
                                    mac_address_t *dest,
-                                   ur_mesh_handle_sent_ucast_t sent,
+                                   umesh_handle_sent_ucast_t sent,
                                    void *context)
 {
     int error;
@@ -196,8 +196,8 @@ static int linux_80211_mesh_send_ucast(ur_mesh_hal_module_t *module, frame_t *fr
     return error;
 }
 
-static int linux_80211_mesh_send_bcast(ur_mesh_hal_module_t *module, frame_t *frame,
-                                   ur_mesh_handle_sent_bcast_t sent,
+static int linux_80211_mesh_send_bcast(umesh_hal_module_t *module, frame_t *frame,
+                                   umesh_handle_sent_bcast_t sent,
                                    void *context)
 {
     int error;
@@ -224,20 +224,20 @@ static int linux_80211_mesh_send_bcast(ur_mesh_hal_module_t *module, frame_t *fr
     return error;
 }
 
-static int linux_80211_mesh_get_u_mtu(ur_mesh_hal_module_t *module)
+static int linux_80211_mesh_get_u_mtu(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     return priv->u_mtu;
 }
 
-static int linux_80211_mesh_get_b_mtu(ur_mesh_hal_module_t *module)
+static int linux_80211_mesh_get_b_mtu(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     return priv->b_mtu;
 }
 
-static int linux_80211_mesh_set_rxcb(ur_mesh_hal_module_t *module,
-                          ur_mesh_handle_received_frame_t received, void *context)
+static int linux_80211_mesh_set_rxcb(umesh_hal_module_t *module,
+                          umesh_handle_received_frame_t received, void *context)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
@@ -250,7 +250,7 @@ static int linux_80211_mesh_set_rxcb(ur_mesh_hal_module_t *module,
 }
 
 static const mac_address_t *linux_80211_mesh_get_mac_address(
-                                        ur_mesh_hal_module_t *module)
+                                        umesh_hal_module_t *module)
 {
     static mac_address_t addr;
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -260,7 +260,7 @@ static const mac_address_t *linux_80211_mesh_get_mac_address(
     return &addr;
 }
 
-static int linux_80211_mesh_set_key(struct ur_mesh_hal_module_s *module,
+static int linux_80211_mesh_set_key(struct umesh_hal_module_s *module,
                                 uint8_t index, uint8_t *key, uint8_t length)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -279,19 +279,19 @@ static int linux_80211_mesh_set_key(struct ur_mesh_hal_module_s *module,
     return 0;
 }
 
-static int linux_80211_mesh_is_sec_enabled(struct ur_mesh_hal_module_s *module)
+static int linux_80211_mesh_is_sec_enabled(struct umesh_hal_module_s *module)
 {
     return 0;
 }
 
-static int linux_80211_mesh_hal_get_channel(ur_mesh_hal_module_t *module)
+static int linux_80211_mesh_hal_get_channel(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     int chan = wi_get_channel(priv->wif);
     return chan < 0 ? priv->channel : chan;
 }
 
-static int linux_80211_mesh_hal_set_channel(ur_mesh_hal_module_t *module, uint8_t channel)
+static int linux_80211_mesh_hal_set_channel(umesh_hal_module_t *module, uint8_t channel)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     printf("setting channel to %d\n", channel);
@@ -301,7 +301,7 @@ static int linux_80211_mesh_hal_set_channel(ur_mesh_hal_module_t *module, uint8_
     return 0;
 }
 
-static int linux_80211_mesh_get_channel_list(ur_mesh_hal_module_t *module, const uint8_t **chnlist)
+static int linux_80211_mesh_get_channel_list(umesh_hal_module_t *module, const uint8_t **chnlist)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     if (chnlist == NULL) {
@@ -313,13 +313,13 @@ static int linux_80211_mesh_get_channel_list(ur_mesh_hal_module_t *module, const
     return priv->chn_num;
 }
 
-static const frame_stats_t *linux_80211_mesh_get_stats(struct ur_mesh_hal_module_s *module)
+static const frame_stats_t *linux_80211_mesh_get_stats(struct umesh_hal_module_s *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     return &priv->stats;
 }
 
-static int linux_80211_wifi_mesh_set_extnetid(ur_mesh_hal_module_t *module,
+static int linux_80211_wifi_mesh_set_extnetid(umesh_hal_module_t *module,
                                  const umesh_extnetid_t *extnetid)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -328,7 +328,7 @@ static int linux_80211_wifi_mesh_set_extnetid(ur_mesh_hal_module_t *module,
     return 0;
 }
 
-static void linux_80211_wifi_mesh_get_extnetid(ur_mesh_hal_module_t *module,
+static void linux_80211_wifi_mesh_get_extnetid(umesh_hal_module_t *module,
                                   umesh_extnetid_t *extnetid)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -340,7 +340,7 @@ static void linux_80211_wifi_mesh_get_extnetid(ur_mesh_hal_module_t *module,
     memcpy(extnetid->netid, priv->bssid, extnetid->len);
 }
 
-static ur_mesh_hal_module_t linux_80211_mesh_wifi_module;
+static umesh_hal_module_t linux_80211_mesh_wifi_module;
 static const uint8_t g_wifi_channels[] = {1, 6, 11};
 static mesh_hal_priv_t wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
@@ -352,23 +352,23 @@ static mesh_hal_priv_t wifi_priv = {
     .bssid = {0x0, 0x1, 0x2, 0x3, 0x4, 0x5},
 };
 
-static ur_mesh_hal_module_t linux_80211_mesh_wifi_module = {
+static umesh_hal_module_t linux_80211_mesh_wifi_module = {
     .base.name = "linux_80211_mesh_wifi_module",
     .base.priv_dev = &wifi_priv,
     .type = MEDIA_TYPE_WIFI,
-    .ur_mesh_hal_init = linux_80211_mesh_init,
-    .ur_mesh_hal_send_ucast_request = linux_80211_mesh_send_ucast,
-    .ur_mesh_hal_send_bcast_request = linux_80211_mesh_send_bcast,
-    .ur_mesh_hal_register_receiver = linux_80211_mesh_set_rxcb,
-    .ur_mesh_hal_get_bcast_mtu = linux_80211_mesh_get_b_mtu,
-    .ur_mesh_hal_get_ucast_mtu = linux_80211_mesh_get_u_mtu,
-    .ur_mesh_hal_get_mac_address = linux_80211_mesh_get_mac_address,
-    .ur_mesh_hal_get_channel = linux_80211_mesh_hal_get_channel,
-    .ur_mesh_hal_set_channel = linux_80211_mesh_hal_set_channel,
-    .ur_mesh_hal_get_chnlist = linux_80211_mesh_get_channel_list,
-    .ur_mesh_hal_set_key = linux_80211_mesh_set_key,
-    .ur_mesh_hal_is_sec_enabled = linux_80211_mesh_is_sec_enabled,
-    .ur_mesh_hal_get_stats = linux_80211_mesh_get_stats,
+    .umesh_hal_init = linux_80211_mesh_init,
+    .umesh_hal_send_ucast_request = linux_80211_mesh_send_ucast,
+    .umesh_hal_send_bcast_request = linux_80211_mesh_send_bcast,
+    .umesh_hal_register_receiver = linux_80211_mesh_set_rxcb,
+    .umesh_hal_get_bcast_mtu = linux_80211_mesh_get_b_mtu,
+    .umesh_hal_get_ucast_mtu = linux_80211_mesh_get_u_mtu,
+    .umesh_hal_get_mac_address = linux_80211_mesh_get_mac_address,
+    .umesh_hal_get_channel = linux_80211_mesh_hal_get_channel,
+    .umesh_hal_set_channel = linux_80211_mesh_hal_set_channel,
+    .umesh_hal_get_chnlist = linux_80211_mesh_get_channel_list,
+    .umesh_hal_set_key = linux_80211_mesh_set_key,
+    .umesh_hal_is_sec_enabled = linux_80211_mesh_is_sec_enabled,
+    .umesh_hal_get_stats = linux_80211_mesh_get_stats,
     .umesh_hal_set_extnetid = linux_80211_wifi_mesh_set_extnetid,
     .umesh_hal_get_extnetid = linux_80211_wifi_mesh_get_extnetid,
 };
