@@ -80,30 +80,33 @@ static void test_kv_del(void)
 
 static void test_kv_loop(void)
 {
-    int i, j, ret = 0;
+    int i, j, count, ret = 0;
     char key[10] = {0};
     char val[10] = {0};
     int len = sizeof(val);
 
+    count = 0;
     for (j = 0; j < 10; j++) {
         for (i = 0; i < 100; i++) {
             snprintf(key, sizeof(key), "test_%d", i);
             snprintf(val, sizeof(val), "val_%d", i);
             ret = yos_kv_set(key, val, strlen(val),1);
-            YUNIT_ASSERT(0 == ret);
+            if (ret != 0)
+                count++;
             memset(key, 0, sizeof(key));
             memset(val, 0, sizeof(val));
         }
 
         ret = yos_kv_set(g_key_update, g_val_update, strlen(g_val_update), 1);
-        YUNIT_ASSERT(0 == ret);
+        if (ret != 0)
+            count++;
 
         for (i = 0; i < 100; i++) {
             len = sizeof(val);
             snprintf(key, sizeof(key), "test_%d", i);
             ret = yos_kv_get(key, val, &len);
-            YUNIT_ASSERT(0 == ret);
-            YUNIT_ASSERT(len == strlen(val));
+            if ((ret != 0) || (strlen(val) != len))
+                count++;
             memset(key, 0, sizeof(key));
             memset(val, 0, sizeof(val));
         }
@@ -111,12 +114,13 @@ static void test_kv_loop(void)
         for (i = 0; i < 100; i++) {
             snprintf(key, sizeof(key), "test_%d", i);
             ret = yos_kv_del(key);
-            YUNIT_ASSERT(0 == ret);
             if (ret != 0)
-                printf("%s: the %d delete fail %d\n", __func__, i, ret);
+                count++;
             memset(key, 0, sizeof(key));
         }
    }
+
+   YUNIT_ASSERT(0 == ret);
 }
 
 static int init(void)
