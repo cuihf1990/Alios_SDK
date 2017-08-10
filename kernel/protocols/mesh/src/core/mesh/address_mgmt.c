@@ -28,16 +28,14 @@
 #include "umesh_utils.h"
 
 typedef struct address_resolver_state_s {
-    address_cache_t            cache[UR_MESH_ADDRESS_CACHE_SIZE];
-    ur_timer_t                 timer;
-    address_resolved_handler_t handler;
+    address_cache_t cache[UR_MESH_ADDRESS_CACHE_SIZE];
+    ur_timer_t timer;
 } address_resolver_state_t;
 
 typedef struct address_cache_state_s {
-    slist_t                    cache_list;
-    uint16_t                   cache_num;
-    ur_timer_t                 timer;
-    address_resolved_handler_t handler;
+    slist_t cache_list;
+    uint16_t cache_num;
+    ur_timer_t timer;
 } address_cache_state_t;
 
 static address_resolver_state_t g_ar_state;
@@ -50,6 +48,58 @@ static ur_error_t send_address_query_response(network_context_t *network,
                                               ur_addr_t *dest,
                                               ur_node_id_t *attach_node,
                                               ur_node_id_t *target_node);
+static void get_attach_by_nodeid(ur_node_id_t *attach, ur_node_id_t *target);
+static void get_target_by_ueid(ur_node_id_t *node_id, uint8_t *ueid);
+
+static void set_dest_info(message_info_t *info, address_cache_t *target)
+{
+    info->dest.netid = target->meshnetid;
+    if (is_partial_function_sid(target->sid)) {
+        info->dest2.addr.len = SHORT_ADDR_SIZE;
+        info->dest2.addr.short_addr = target->sid;
+        info->dest.addr.len = SHORT_ADDR_SIZE;
+        info->dest.addr.short_addr = target->attach_sid;
+    } else {
+        info->dest.addr.len = SHORT_ADDR_SIZE;
+        info->dest.addr.short_addr = target->sid;
+    }
+}
+
+static void address_resolved_handler(network_context_t *network,
+                                     address_cache_t *target,
+                                     ur_error_t error)
+{
+    message_t *message;
+    message_info_t *info;
+    hal_context_t *hal;
+    bool matched = false;
+
+    hal = network->hal;
+    for_each_message(message, &hal->send_queue[PENDING_QUEUE]) {
+        info = message->info;
+        if (info->dest.addr.len == SHORT_ADDR_SIZE) {
+            if (info->dest.addr.short_addr == target->sid &&
+                info->dest.netid == target->meshnetid) {
+                matched = true;
+            }
+        } else if (info->dest.addr.len == EXT_ADDR_SIZE) {
+            if (memcmp(target->ueid, info->dest.addr.addr, sizeof(target->ueid)) == 0) {
+                matched = true;
+            }
+        }
+
+        if (matched == false) {
+            continue;
+        }
+        message_queue_dequeue(message);
+        if (error == UR_ERROR_NONE) {
+            set_dest_info(info, target);
+            mf_send_message(message);
+        } else {
+            message_free(message);
+        }
+    }
+}
 
 static void timer_handler(void *args)
 {
@@ -67,11 +117,8 @@ static void timer_handler(void *args)
             g_ar_state.cache[index].timeout--;
             if (g_ar_state.cache[index].timeout == 0) {
                 g_ar_state.cache[index].retry_timeout = ADDRESS_QUERY_RETRY_TIMEOUT;
-                network = get_network_context_by_meshnetid(g_ar_state.cache[index].meshnetid);
-                if (network == NULL) {
-                    network = get_default_network_context();
-                }
-                g_ar_state.handler(network, &g_ar_state.cache[index], UR_ERROR_DROP);
+                network = get_default_network_context();
+                address_resolved_handler(network, &g_ar_state.cache[index], UR_ERROR_DROP);
             }
         } else if (g_ar_state.cache[index].retry_timeout > 0) {
             g_ar_state.cache[index].retry_timeout--;
@@ -84,24 +131,56 @@ static void timer_handler(void *args)
     }
 }
 
-ur_error_t address_resolve(uint8_t query_type, ur_node_id_t *target,
-                           ur_node_id_t *attach)
+ur_error_t address_resolve(message_t *message)
 {
-    ur_error_t        error = UR_ERROR_NONE;
-    uint8_t           index = 0;
-    address_cache_t   *cache = NULL;
+    ur_error_t error = UR_ERROR_NONE;
+    uint8_t index = 0;
+    address_cache_t *cache = NULL;
     network_context_t *network;
-    ur_addr_t         dest;
+    ur_addr_t dest;
+    neighbor_t *nbr = NULL;
+    uint8_t query_type;
+    ur_node_id_t target;
+    message_info_t *info;
+    hal_context_t *hal;
+
+    info = message->info;
+    if (info->dest.addr.len == SHORT_ADDR_SIZE &&
+        info->dest.addr.short_addr == BCAST_SID) {
+        if (info->type == MESH_FRAME_TYPE_DATA) {
+            info->flags |= INSERT_MCAST_FLAG;
+        }
+        return UR_ERROR_NONE;
+    }
+
+    nbr = mf_get_neighbor(info->type, info->dest.netid, &info->dest.addr);
+    if (nbr) {
+        memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
+        info->dest.netid = nbr->addr.netid;
+        return UR_ERROR_NONE;
+    } else if (info->dest.addr.len == SHORT_ADDR_SIZE &&
+               is_partial_function_sid(info->dest.addr.short_addr) == false) {
+        return UR_ERROR_NONE;
+    }
+
+    if (info->dest.addr.len == SHORT_ADDR_SIZE) {
+        query_type = PF_ATTACH_QUERY;
+        target.sid = info->dest.addr.short_addr;
+        target.meshnetid = info->dest.netid;
+    } else {
+        query_type = TARGET_QUERY;
+        memcpy(target.ueid, info->dest.addr.addr, sizeof(target.ueid));
+    }
 
     for (index = 0; index < UR_MESH_ADDRESS_CACHE_SIZE; index++) {
         if (g_ar_state.cache[index].state != AQ_STATE_INVALID) {
             if (query_type == PF_ATTACH_QUERY &&
-                g_ar_state.cache[index].meshnetid == target->meshnetid &&
-                g_ar_state.cache[index].sid == target->sid) {
+                g_ar_state.cache[index].meshnetid == target.meshnetid &&
+                g_ar_state.cache[index].sid == target.sid) {
                 cache = &g_ar_state.cache[index];
                 break;
             } else if (query_type == TARGET_QUERY &&
-                       memcmp(target->ueid, g_ar_state.cache[index].ueid,
+                       memcmp(target.ueid, g_ar_state.cache[index].ueid,
                               sizeof(g_ar_state.cache[index].ueid)) == 0) {
                 cache = &g_ar_state.cache[index];
                 break;
@@ -112,22 +191,22 @@ ur_error_t address_resolve(uint8_t query_type, ur_node_id_t *target,
     }
 
     if (cache == NULL) {
-        return UR_ERROR_MEM;
+        return UR_ERROR_DROP;
     }
 
     network = get_default_network_context();
     get_leader_addr(&dest);
     switch (cache->state) {
         case AQ_STATE_INVALID:
-            memcpy(cache->ueid, target->ueid, sizeof(cache->ueid));
-            cache->sid = target->sid;
-            cache->meshnetid = target->meshnetid;
-            cache->attach_sid = attach->sid;
-            cache->attach_netid = attach->meshnetid;
+            memcpy(cache->ueid, target.ueid, sizeof(cache->ueid));
+            cache->sid = target.sid;
+            cache->meshnetid = target.meshnetid;
+            cache->attach_sid = BCAST_SID;
+            cache->attach_netid = BCAST_NETID;
             cache->timeout = ADDRESS_QUERY_TIMEOUT;
             cache->retry_timeout = ADDRESS_QUERY_RETRY_TIMEOUT;
             cache->state = AQ_STATE_QUERY;
-            send_address_query(network, &dest, query_type, target);
+            send_address_query(network, &dest, query_type, &target);
             error = UR_ERROR_ADDRESS_QUERY;
             break;
         case AQ_STATE_QUERY:
@@ -135,22 +214,26 @@ ur_error_t address_resolve(uint8_t query_type, ur_node_id_t *target,
                 error = UR_ERROR_ADDRESS_QUERY;
             } else if (cache->timeout == 0 && cache->retry_timeout == 0) {
                 cache->timeout = ADDRESS_QUERY_TIMEOUT;
-                send_address_query(network, &dest, query_type, target);
+                send_address_query(network, &dest, query_type, &target);
                 error = UR_ERROR_ADDRESS_QUERY;
             } else {
                 error = UR_ERROR_DROP;
             }
             break;
         case AQ_STATE_CACHED:
-            attach->sid = cache->attach_sid;
-            attach->meshnetid = cache->attach_netid;
-            target->sid = cache->sid;
-            target->meshnetid = cache->meshnetid;
             break;
         default:
             assert(0);
             break;
     }
+
+    if (error == UR_ERROR_ADDRESS_QUERY) {
+        hal = get_default_hal_context();
+        message_queue_enqueue(&hal->send_queue[PENDING_QUEUE], message);
+    } else if (error == UR_ERROR_NONE) {
+        set_dest_info(info, cache);
+    }
+
     return error;
 }
 
@@ -358,7 +441,12 @@ static ur_error_t send_address_query_response(network_context_t *network,
     // dest
     memcpy(&info->dest, dest, sizeof(info->dest));
     set_command_type(info, mm_header->command);
-    error = mf_send_message(message);
+    error = address_resolve(message);
+    if (error == UR_ERROR_NONE) {
+        error = mf_send_message(message);
+    } else if (error == UR_ERROR_DROP) {
+        message_free(message);
+    }
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
            "send address query response, len %d\r\n", length);
@@ -408,14 +496,14 @@ ur_error_t handle_address_query_response(message_t *message)
                 g_ar_state.cache[index].timeout = 0;
                 memcpy(g_ar_state.cache[index].ueid, target_ueid->ueid,
                        sizeof(g_ar_state.cache[index].ueid));
-                g_ar_state.handler(network, &g_ar_state.cache[index], error);
+                address_resolved_handler(network, &g_ar_state.cache[index], error);
             }
             break;
         } else if (target_ueid &&
                    memcmp(target_ueid->ueid, g_ar_state.cache[index].ueid,
                           sizeof(target_ueid->ueid)) == 0) {
             if (g_ar_state.cache[index].state != AQ_STATE_CACHED) {
-                g_ar_state.cache[index].state = AQ_STATE_CACHED;
+               g_ar_state.cache[index].state = AQ_STATE_CACHED;
                 g_ar_state.cache[index].sid = target_id->sid;
                 g_ar_state.cache[index].meshnetid = target_id->meshnetid;
                 if (attach_id) {
@@ -426,7 +514,7 @@ ur_error_t handle_address_query_response(message_t *message)
                     g_ar_state.cache[index].attach_netid = INVALID_NETID;
                 }
                 g_ar_state.cache[index].timeout = 0;
-                g_ar_state.handler(network, &g_ar_state.cache[index], error);
+                address_resolved_handler(network, &g_ar_state.cache[index], error);
             }
             break;
         }
@@ -637,10 +725,9 @@ ur_error_t handle_address_unreachable(message_t *message)
     return error;
 }
 
-void address_resolver_init(address_resolved_handler_t handler)
+void address_resolver_init(void)
 {
-    memset(&g_ar_state.cache, 0, sizeof(g_ar_state.cache));
-    g_ar_state.handler = handler;
+    memset(g_ar_state.cache, 0, sizeof(g_ar_state.cache));
 }
 
 static void handle_addr_cache_timer(void *args)

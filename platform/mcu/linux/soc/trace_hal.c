@@ -29,7 +29,7 @@
 #include <arpa/inet.h>
 
 
-#include "trace_hal.h"
+#include <hal/trace.h>
 
 static int trace_is_started;
 

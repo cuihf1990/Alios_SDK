@@ -33,10 +33,12 @@ void test_diags_case(void)
     uint8_t *data;
     uint16_t length;
 
+    interface_start();
     network = get_default_network_context();
-    dest.netid = umesh_mm_get_meshnetid(network);
-    dest.addr.short_addr = umesh_mm_get_local_sid();
-    send_trace_route_request(network, &dest);
+    dest.netid = 0x100;
+    dest.addr.len = SHORT_ADDR_SIZE;
+    dest.addr.short_addr = 0x1000;
+    YUNIT_ASSERT(UR_ERROR_NONE == send_trace_route_request(network, &dest));
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
     message = message_alloc(length, UT_MSG);
@@ -58,7 +60,7 @@ void test_diags_case(void)
     memcpy(&info->dest, &dest, sizeof(info->dest));
     set_command_type(info, mm_header->command);
 
-    handle_diags_command(message, true);
+    YUNIT_ASSERT(UR_ERROR_NONE == handle_diags_command(message, true));
     message_free(message);
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
@@ -82,6 +84,7 @@ void test_diags_case(void)
 
     set_command_type(info, mm_header->command);
 
-    handle_diags_command(message, true);
+    YUNIT_ASSERT(UR_ERROR_NONE == handle_diags_command(message, true));
     message_free(message);
+    interface_stop();
 }

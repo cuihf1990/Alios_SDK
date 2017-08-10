@@ -123,9 +123,9 @@ void add_test(void)
     test_cjson();
 
     test_hashtable();
-    
+
     test_digest_algorithm();
-   
+
     test_kv();
 
     test_vcall();
@@ -142,11 +142,11 @@ void add_test(void)
 
     test_vflash();
 
-    test_netmgr();
-
 #ifdef CONFIG_YOS_MESH
     test_uradar();
 #endif
+
+    test_netmgr();
 
     test_aosapi();
 

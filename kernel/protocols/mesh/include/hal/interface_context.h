@@ -145,7 +145,7 @@ typedef struct frag_info_s {
 
 typedef struct hal_context_s {
     slist_t              next;
-    ur_mesh_hal_module_t *module;
+    umesh_hal_module_t *module;
     channel_list_t       channel_list;
     mac_address_t        mac_addr;
 

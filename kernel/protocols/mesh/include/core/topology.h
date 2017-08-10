@@ -100,6 +100,7 @@ typedef struct neighbor_s {
     uint8_t channel;
     int8_t rssi;
     uint32_t last_heard;
+    uint32_t last_lq_time;
 } neighbor_t;
 
 #define ueid64(ueid) ({ \

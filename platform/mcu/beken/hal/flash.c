@@ -108,6 +108,16 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
     uint32_t start_addr, end_addr;
     hal_logic_partition_t *partition_info;
 
+#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
+        if (in_partition == CONFIG_YOS_KV_PTN) {
+            if (off_set >= CONFIG_YOS_KV_PTN_SIZE) {
+                in_partition = CONFIG_YOS_KV_SECOND_PTN;
+                off_set -= CONFIG_YOS_KV_PTN_SIZE;
+            }
+        }
+#endif
+
+
     GLOBAL_INT_DECLARATION();
 
     partition_info = hal_flash_get_info( in_partition );
@@ -135,6 +145,15 @@ int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set, const v
     uint32_t start_addr;
     hal_logic_partition_t *partition_info;
 
+#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
+        if (in_partition == CONFIG_YOS_KV_PTN) {
+            if ((*off_set) >= CONFIG_YOS_KV_PTN_SIZE) {
+                in_partition = CONFIG_YOS_KV_SECOND_PTN;
+                *off_set = (*off_set) - CONFIG_YOS_KV_PTN_SIZE;
+            }
+        }
+#endif
+
     GLOBAL_INT_DECLARATION();
 
     partition_info = hal_flash_get_info( in_partition );
@@ -159,6 +178,15 @@ int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set, void *ou
 {
     uint32_t start_addr;
     hal_logic_partition_t *partition_info;
+
+#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
+    if (in_partition == CONFIG_YOS_KV_PTN) {
+        if ((*off_set) >=  CONFIG_YOS_KV_PTN_SIZE) {
+            in_partition = CONFIG_YOS_KV_SECOND_PTN;
+            *off_set = (*off_set) - CONFIG_YOS_KV_PTN_SIZE;
+        }
+    }
+#endif
 
     GLOBAL_INT_DECLARATION();
 

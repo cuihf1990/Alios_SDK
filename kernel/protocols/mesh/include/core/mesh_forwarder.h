@@ -40,7 +40,7 @@ enum {
 
 /* mesh header control field format */
 /* 2bits | 1bit | 3bits | 2bits |    2bits   | 2bits | 1bit | 2bits | 1 bit */
-/* flags | type | hops  |  src  | dest netid |  dest |  dir | dest2 |  sec  */
+/* flags | type | hops  |  src  | dest netid |  dest |  ie  | dest2 |  sec  */
 
 enum {
     MESH_FRAME_TYPE_MASK       = 0x20,
@@ -56,8 +56,8 @@ enum {
     MESH_HEADER_DESTNETID_OFFSET = 6,
     MESH_HEADER_DEST_MASK      = 0x30,
     MESH_HEADER_DEST_OFFSET    = 4,
-    MESH_HEADER_DIR_MASK       = 0x80,
-    MESH_HEADER_DIR_OFFSET     = 3,
+    MESH_HEADER_IES_MASK       = 0x08,
+    MESH_HEADER_IES_OFFSET     = 3,
     MESH_HEADER_DEST2_MASK     = 0x06,
     MESH_HEADER_DEST2_OFFSET   = 1,
     MESH_HEADER_SEC_MASK       = 0x01,
@@ -74,11 +74,6 @@ enum {
     SHORT_ADDR_MODE = 1,
     EXT_ADDR_MODE   = 2,
     BCAST_ADDR_MODE = 3,
-};
-
-enum {
-    DIR_UP   = 0,
-    DIR_DOWN = 1,
 };
 
 enum {
@@ -135,8 +130,7 @@ typedef struct mesh_header_frame_counter_s {
 } __attribute__((packed)) mesh_header_frame_counter_t;
 
 enum {
-    INSERT_LOWPAN_FLAG   = 1 << 5,
-    ENABLE_COMPRESS_FLAG = 1 << 6,
+    HEADER_IES_FLAG = 1 << 0,
     INSERT_MCAST_FLAG    = 1 << 7,
     ENCRYPT_ENABLE_FLAG  = 1 << 9,
 
@@ -147,6 +141,8 @@ ur_error_t mf_init(void);
 ur_error_t mf_deinit(void);
 ur_error_t mf_send_message(message_t *message);
 ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr);
+neighbor_t *mf_get_neighbor(uint8_t type, uint16_t meshnetid,
+                            mac_address_t *addr);
 const ur_link_stats_t *mf_get_stats(hal_context_t *hal);
 
 #ifdef __cplusplus

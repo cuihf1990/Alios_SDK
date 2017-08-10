@@ -38,7 +38,6 @@ static int            cliexit = 0;
 
 int cli_putstr(const char *msg);
 
-
 /* Find the command 'name' in the cli commands table.
 * If len is 0 then full match will be performed else upto len bytes.
 * Returns: a pointer to the corresponding cli_command struct or NULL.
@@ -377,10 +376,10 @@ void help_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                   char **argv);
 
 
-void memory_show_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
-                         char **argv)
+void devname_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                       char **argv)
 {
-    dumpsys_mm_info_func(NULL, 0);
+    cli_printf("%s\r\n", SYSINFO_DEVICE_NAME);
 }
 
 void dumpsys_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
@@ -388,6 +387,13 @@ void dumpsys_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 {
     dumpsys_func(pcWriteBuffer, xWriteBufferLen, argc, argv);
 }
+
+void memory_show_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                         char **argv)
+{
+    dumpsys_mm_info_func(NULL, 0);
+}
+
 void memory_dump_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                          char **argv)
 {
@@ -409,7 +415,7 @@ void memp_dump_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 void get_version(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                  char **argv)
 {
-    cli_printf("get_version\r\n");
+    cli_printf("%s\r\n", SYSINFO_OS_VERSION);
 }
 
 void reboot(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -419,6 +425,12 @@ void reboot(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
     cli_printf("reboot\r\n");
 
     hal_reboot();
+}
+
+void wifi_debug_mode_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                             char **argv)
+{
+    hal_wifi_start_debug_mode();
 }
 
 static void echo_cmd_handler(char *pcWriteBuffer, int xWriteBufferLen, int argc,
@@ -459,6 +471,7 @@ static const struct cli_command built_ins[] = {
     {"tasklist", "list all thread name status", task_Command},
 
     // others
+    {"devname", "print device name", devname_Command},
     {"dumpsys", "dump system information", dumpsys_Command},
     {"memshow", "print memory information", memory_show_Command},
     {"memdump", "<addr> <length>", memory_dump_Command},
@@ -470,6 +483,7 @@ static const struct cli_command built_ins[] = {
     {"tftp",     "tftp",                        tftp_Command},
     {"time",     "system time",                 uptime_Command},
     {"ota",      "system ota",                  ota_Command},
+    { "wifi_debug", "wifi debug mode", wifi_debug_mode_command},
 };
 
 /* Built-in "help" command: prints all registered commands and their help

@@ -8,7 +8,6 @@
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
 #include "utilities/logging.h"
-#include "utilities/encoding.h"
 #include "tools/cli.h"
 
 #include "dda_util.h"
@@ -17,7 +16,7 @@
  *                     11(super)
  *                 ----------
  *                 |   |    |
- *     ____________|   |    |_________ 
+ *     ____________|   |    |_________
  *    |                |              |
  *    2(super)---------1(leader)----- 4 (super)
  *    |                |              |
@@ -58,7 +57,7 @@ static void build_topo_wifi(void)
  *                     151(super)
  *                 ----------
  *                 |   |    |
- *     ____________|   |    |_________ 
+ *     ____________|   |    |_________
  *    |                |              |
  *   152(super)------153(leader)------154 (super)
  *    |                |              |
@@ -102,15 +101,13 @@ static void subnet_is_wifi_case(void)
     uint8_t index;
 
     build_topo_wifi();
-
-    cmd_to_agent("stop");
-    yos_msleep(3 * 1000);
+    umesh_stop();
 
     start_node_ext(1, MODE_SUPER, -1, 1);
     check_p2p_str_wait("leader", 1, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 1, "testcmd router", 2);
 
-    ur_mesh_set_mode(MODE_SUPER);
+    umesh_set_mode(MODE_SUPER);
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_SUPER_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == VECTOR_ROUTER);
@@ -123,7 +120,7 @@ static void subnet_is_wifi_case(void)
     check_p2p_str_wait("super_router", 4, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 4, "testcmd router", 2);
 
-    yos_msleep(20 * 1000);
+    yos_msleep(15 * 1000);
 
     start_node_ext(5, MODE_RX_ON, -1, 1);
     check_p2p_str_wait("router", 5, "testcmd state", 10);
@@ -153,18 +150,11 @@ static void subnet_is_wifi_case(void)
     check_p2p_str_wait("leaf", 10, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 10, "testcmd router", 2);
 
-    yos_msleep(20 * 1000);
-
-    addr = ur_mesh_get_mcast_addr();
-
+    addr = umesh_get_mcast_addr();
     for (index = 1; index < 12; index++) {
-        snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT,
-                 index, IP6_ADDR_DATA(addr->addr));
-        cmd_to_master(autotest_cmd);
-        check_p2p_str_wait("10", index, "testcmd autotest_acked", 10);
-    }
-
-    for (index = 1; index < 12; index++) {
+        if (index != 3 || index !=10 || index != 5) {
+            continue;
+        }
         snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT " 1 500",
                  index, IP6_ADDR_DATA(addr->addr));
         cmd_to_master(autotest_cmd);
@@ -175,7 +165,7 @@ static void subnet_is_wifi_case(void)
         stop_node(index);
     }
     cmd_to_agent("stop");
-    yos_msleep(3 * 1000);
+    yos_msleep(1 * 1000);
 }
 
 static void subnet_is_ble_case(void)
@@ -186,8 +176,7 @@ static void subnet_is_ble_case(void)
 
     build_topo_wifi_ble();
 
-    cmd_to_agent("stop");
-    yos_msleep(3 * 1000);
+    umesh_stop();
 
     start_node_ext(153, MODE_SUPER, -1, 3);
     check_p2p_str_wait("leader", 153, "testcmd state", 10);
@@ -205,7 +194,7 @@ static void subnet_is_ble_case(void)
     check_p2p_str_wait("super_router", 154, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 154, "testcmd router", 2);
 
-    yos_msleep(20 * 1000);
+    yos_msleep(15 * 1000);
 
     start_node_ext(155, MODE_RX_ON, -1, 2);
     check_p2p_str_wait("router", 155, "testcmd state", 10);
@@ -235,12 +224,10 @@ static void subnet_is_ble_case(void)
     check_p2p_str_wait("leaf", 158, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 158, "testcmd router", 2);
 
-    yos_msleep(2 * 1000);
-
     char *ipaddr = dda_p2p_req_and_wait(154, "testcmd ipaddr", 5);
     YUNIT_ASSERT(ipaddr != NULL);
     for (index = 151; index < 161; index++) {
-        if (index == 154) {
+        if (index != 153 || index != 158 || index != 159) {
             continue;
         }
         snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest %s",
@@ -253,7 +240,7 @@ static void subnet_is_ble_case(void)
     for (index = 151; index < 162; index++) {
         stop_node(index);
     }
-    yos_msleep(3 * 1000);
+    yos_msleep(1 * 1000);
 }
 
 void test_umesh_4super_7nodes_case(void)

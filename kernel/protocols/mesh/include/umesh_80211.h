@@ -45,8 +45,8 @@ typedef struct {
     uint8_t order:1;
 } __attribute__((packed)) mac80211_fctl_t;
 
-int umesh_80211_make_frame(ur_mesh_hal_module_t *module, frame_t *frame, mac_address_t *dest, void *fpkt);
-bool umesh_80211_filter_frame(ur_mesh_hal_module_t *module, uint8_t *pkt, int count);
+int umesh_80211_make_frame(umesh_hal_module_t *module, frame_t *frame, mac_address_t *dest, void *fpkt);
+bool umesh_80211_filter_frame(umesh_hal_module_t *module, uint8_t *pkt, int count);
 
 #ifdef __cplusplus
 }

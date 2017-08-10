@@ -19,6 +19,7 @@
 #include "core/mesh_mgmt.h"
 #include "core/router_mgr.h"
 #include "umesh_utils.h"
+#include "core/address_mgmt.h"
 
 #ifndef DEFAULT_ROUTER
 #define DEFAULT_ROUTER SID_ROUTER
@@ -232,7 +233,13 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
 
     set_command_type(info, mm_header->command);
     ur_mem_free(data, msg_length);
-    error = mf_send_message(message);
+    error = address_resolve(message);
+    if (error == UR_ERROR_NONE) {
+        error = mf_send_message(message);
+    } else if(error == UR_ERROR_DROP) {
+        message_free(message);
+    }
+
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_ROUTE,
            "router %d send routing info to %04x, len %d\r\n", router->id, dst, msg_length);
     return error;

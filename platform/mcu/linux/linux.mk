@@ -30,8 +30,6 @@ GLOBAL_INCLUDES     += include include/yos csp/lwip/include
 GLOBAL_LDFLAGS      += -lpthread -lm
 GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
-GLOBAL_DEFINES      += CONFIG_YOS_KVFILE=\"/dev/flash0\"
-GLOBAL_DEFINES      += CONFIG_YOS_KVFILE_BACKUP=\"/dev/flash1\"
 GLOBAL_CFLAGS       += -Wall -Wno-missing-field-initializers -Wno-strict-aliasing -Wno-address -Wno-unused-result
 GLOBAL_DEFINES      += CSP_LINUXHOST
 GLOBAL_DEFINES      += CONFIG_LOGMACRO_DETAILS

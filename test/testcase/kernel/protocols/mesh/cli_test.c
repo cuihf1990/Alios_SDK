@@ -8,7 +8,6 @@
 
 #include "umesh.h"
 #include "utilities/logging.h"
-#include "utilities/encoding.h"
 #include "core/mesh_mgmt.h"
 #include "tools/cli.h"
 
@@ -16,7 +15,7 @@ void test_uradar_cli_case(void)
 {
     cmd_to_agent("stop");
     cmd_to_agent("start");
-    check_cond_wait(ur_mesh_get_device_state() == DEVICE_STATE_LEADER, 10);
+    check_cond_wait(umesh_get_device_state() == DEVICE_STATE_LEADER, 10);
 
     cmd_to_agent("help");
     cmd_to_agent("channel");
@@ -37,16 +36,7 @@ void test_uradar_cli_case(void)
     cmd_to_agent("whitelist disable");
     cmd_to_agent("whitelist clear");
     cmd_to_agent("networks");
-
-    char ping_cmd[64];
-    const ur_netif_ip6_address_t *myaddr;
-
-    myaddr = ur_mesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "autotest " IP6_ADDR_FMT " 2", IP6_ADDR_DATA(myaddr->addr));
-    cmd_to_agent(ping_cmd);
-    yos_msleep(5 * 1000);
-
     cmd_to_agent("stop");
-    yos_msleep(2 * 1000);
+    yos_msleep(1 * 1000);
 }
 

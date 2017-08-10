@@ -18,29 +18,22 @@
 #define _key_value_h
 
 #if defined(__cplusplus) /* If this is a C++ compiler, use C linkage */
-extern "C"
-{
+ extern "C"
+ {
 #endif
 
-#define HASH_TABLE_MAX_SIZE 32
-#define MAX_KV_LEN 512
-
-#ifndef CONFIG_YOS_KVFILE
-#define KVFILE_NAME "/tmp/KVfile"
-#else
-#define KVFILE_NAME CONFIG_YOS_KVFILE
-#endif
-
-#ifndef CONFIG_YOS_KVFILE_BACKUP
-#define KVFILE_NAME_BACKUP "/tmp/KVfile_backup"
-#else
-#define KVFILE_NAME_BACKUP CONFIG_YOS_KVFILE_BACKUP
-#endif
-
+/* The totally storage size for key-value store */
 #ifndef CONFIG_YOS_KV_BUFFER_SIZE
-#define KV_BUFFER_SIZE  (8 * 1024)
+#define KV_TOTAL_SIZE   (8 * 1024)
 #else
-#define KV_BUFFER_SIZE CONFIG_YOS_KV_BUFFER_SIZE
+#define KV_TOTAL_SIZE   CONFIG_YOS_KV_BUFFER_SIZE
+#endif
+
+/* The physical parition for key-value store */
+#ifndef CONFIG_YOS_KV_PTN
+#define KV_PTN    HAL_PARTITION_PARAMETER_2
+#else
+#define KV_PTN    CONFIG_YOS_KV_PTN
 #endif
 
 /**
@@ -69,3 +62,5 @@ void yos_kv_deinit();
 #endif
 
 #endif
+
+

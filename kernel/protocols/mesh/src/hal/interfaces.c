@@ -55,7 +55,7 @@ static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
     return network;
 }
 
-static hal_context_t *new_hal_context(ur_mesh_hal_module_t *module)
+static hal_context_t *new_hal_context(umesh_hal_module_t *module)
 {
     hal_context_t *hal;
     int i;
@@ -79,7 +79,7 @@ static hal_context_t *new_hal_context(ur_mesh_hal_module_t *module)
 
 void interface_init(void)
 {
-    ur_mesh_hal_module_t *module;
+    umesh_hal_module_t *module;
     hal_context_t        *hal_context;
     int16_t              mtu;
 

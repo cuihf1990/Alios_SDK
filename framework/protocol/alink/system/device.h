@@ -50,6 +50,10 @@ typedef struct device_info {
     char model[PRODUCT_MODEL_LEN]; /* <brand>_<category>_<type>_<name> */
     char key[PRODUCT_KEY_LEN];
     char secret[PRODUCT_SECRET_LEN];
+#ifdef CONFIG_SDS
+    char device_key[DEVICE_KEY_LEN];
+    char device_secret[DEVICE_SECRET_LEN];
+#endif
     char debug_key[PRODUCT_KEY_LEN];
     char debug_secret[PRODUCT_SECRET_LEN];
     char sn[PRODUCT_SN_LEN];
@@ -75,6 +79,8 @@ void device_get_config(void *config);
 char *devinfo_get_secret(void);
 char *devinfo_get_key(void);
 char *devinfo_get_version(void);
+char *devinfo_get_device_key(void);
+char *devinfo_get_device_secret(void);
 
 //TODO: remove these header
 void get_wifi_rssi_dbm(char *dev_stats, int length);

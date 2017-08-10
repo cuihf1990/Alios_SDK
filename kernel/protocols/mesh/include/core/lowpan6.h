@@ -102,6 +102,10 @@ enum {
 };
 
 enum {
+    MIN_LOWPAN_FRM_SIZE = 6,
+};
+
+enum {
     REASSEMBLE_TICK_INTERVAL = 600,
 };
 
@@ -136,11 +140,14 @@ typedef struct frag_header_s {
 #define lowpan_mem_free   ur_mem_free
 
 ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
-                              uint8_t *ip_hdr_len, uint8_t *lowpan_hdr_len);
-message_t *lp_header_decompress(message_t *message);
+                              uint16_t *ip_hdr_len, uint16_t *lowpan_hdr_len);
+ur_error_t lp_header_decompress(uint8_t *header, uint16_t *header_size,
+                                uint16_t *lowpan_header_size,
+                                ur_addr_t *src, ur_addr_t *dest);
 ur_error_t lp_reassemble(message_t *p, message_t **reass_p);
 void       lp_start(void);
 void       lp_stop(void);
+bool       lp_reass_queue_empty(void);
 #ifdef __cplusplus
 }
 #endif

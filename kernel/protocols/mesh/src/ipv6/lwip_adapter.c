@@ -37,7 +37,7 @@ typedef struct lwip_adapter_state_s {
 
 static lwip_adapter_state_t g_la_state = {.interface_name = "ur"};
 
-/* Receive IP frame from uRadar and pass up to LwIP */
+/* Receive IP frame from umesh and pass up to LwIP */
 ur_error_t ur_adapter_input(void *message)
 {
     err_t       error = ERR_ARG;
@@ -70,7 +70,7 @@ static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
 
     memset(&message, 0, sizeof(message_t));
     message.data = p;
-    error = ur_mesh_ipv6_output((umessage_t *)&message, (ur_ip6_addr_t *)ip6addr);
+    error = umesh_ipv6_output((umessage_t *)&message, (ur_ip6_addr_t *)ip6addr);
 
     /* error mapping */
     switch (error) {
@@ -104,7 +104,7 @@ ur_error_t ur_adapter_interface_init(void)
     g_la_state.adapter_cb.interface_up = ur_adapter_interface_up;
     g_la_state.adapter_cb.interface_down = ur_adapter_interface_down;
     g_la_state.adapter_cb.interface_update = ur_adapter_interface_update;
-    ur_mesh_register_callback(&g_la_state.adapter_cb);
+    umesh_register_callback(&g_la_state.adapter_cb);
     return UR_ERROR_NONE;
 }
 
@@ -120,7 +120,7 @@ static void update_interface_ipaddr(void)
     uint8_t                      index = 0;
     uint8_t                      addr_index;
 
-    ip6_addr = ur_mesh_get_ucast_addr();
+    ip6_addr = umesh_get_ucast_addr();
     while (ip6_addr) {
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
         IP6_ADDR(&addr6, ip6_addr->addr.m32[0], ip6_addr->addr.m32[1],
@@ -131,7 +131,7 @@ static void update_interface_ipaddr(void)
         index++;
     }
 
-    ip6_addr = ur_mesh_get_mcast_addr();
+    ip6_addr = umesh_get_mcast_addr();
     while (ip6_addr) {
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
         memset(&addr6, 0, sizeof(addr6));
@@ -153,7 +153,7 @@ ur_error_t ur_adapter_interface_up(void)
     interface = netif_find(g_la_state.interface_name);
 
     if (interface == NULL) {
-        mac_addr = ur_mesh_get_mac_address();
+        mac_addr = umesh_get_mac_address();
         g_la_state.adpif.hwaddr_len = mac_addr->len;
         memcpy(g_la_state.adpif.hwaddr, mac_addr->addr, 6);
         g_la_state.adpif.ip6_autoconfig_enabled = 1;
@@ -196,7 +196,7 @@ struct netif *ur_adapter_ip6_route(const ip6_addr_t *src,
 
 bool ur_adapter_is_mcast_subscribed(const ip6_addr_t *addr)
 {
-    return ur_mesh_is_mcast_subscribed((const ur_ip6_addr_t *)addr);
+    return umesh_is_mcast_subscribed((const ur_ip6_addr_t *)addr);
 }
 
 struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest)

@@ -144,6 +144,8 @@ typedef struct dev_info_s {
     uint8_t ref_cnt;
 } dev_info_t;
 
+typedef int32_t (*zigbee_remove_device_cb_t)(uint8_t ieee_addr[IEEE_ADDR_BYTES]);
+
 int devmgr_get_dev_type(const char *devid_or_uuid, uint8_t *dev_type);
 
 dev_info_t *devmgr_get_devinfo(const char *devid_or_uuid_or_mac);

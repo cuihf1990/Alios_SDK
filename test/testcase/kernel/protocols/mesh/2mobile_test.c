@@ -22,7 +22,7 @@ static void run_in_hop1(void)
     cmd_to_agent("start");
     yos_msleep(10000);
 
-    YUNIT_ASSERT(ur_mesh_get_sid() == 0xc001);
+    YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
     cmd_to_agent("stop");
     stop_node(12);
@@ -44,7 +44,7 @@ static void run_in_hop2(void)
     cmd_to_agent("start");
 
     yos_msleep(10 * 1000);
-    YUNIT_ASSERT(ur_mesh_get_sid() == 0xc001);
+    YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
     cmd_to_agent("stop");
     stop_node(12);

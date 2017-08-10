@@ -16,56 +16,48 @@
 
 /**
  * @file hal/soc/adc.h
- * @brief PWM HAL
+ * @brief adc HAL
  * @version since 5.5.0
  */
 
 #ifndef YOS_ADC_H
 #define YOS_ADC_H
 
+typedef struct
+{
+    uint32_t sampling_cycle; /* sampling period in number of ADC clock cycles */
+} adc_config_t;
+
+typedef struct
+{
+    uint8_t      adc;            /* the interface which should be initialised */
+    adc_config_t config;         /* adc config */
+    void        *priv;           /* priv data */
+} adc_dev_t;
+
 /**@biref Initialises an ADC interface
  *
  * Prepares an ADC hardware interface for sampling
  *
- * @param adc            : the interface which should be initialised
- * @param sampling_cycle : sampling period in number of ADC clock cycles. If the
- *                         MCU does not support the value provided, the closest
- *                         supported value is used.
+ * @param     adc           : the interface which should be initialised
  *
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_adc_init(uint8_t adc, uint32_t sampling_cycle);
+int32_t hal_adc_init(adc_dev_t *adc);
 
 
 /**@biref Takes a single sample from an ADC interface
  *
  * Takes a single sample from an ADC interface
  *
- * @param adc    : the interface which should be sampled
- * @param output : pointer to a variable which will receive the sample
- *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @param  adc           : the interface which should be sampled
+ * @param  output        : pointer to a variable which will receive the sample
+ * @param  timeout       : ms timeout
+ * @return kNoErr        : on success.
+ * @return kGeneralErr   : if an error occurred with any step
  */
-int32_t intask_sample(uint8_t adc, uint16_t *output);
-
-
-/**@biref Takes multiple samples from an ADC interface
- *
- * Takes multiple samples from an ADC interface and stores them in
- * a memory buffer
- *
- * @param adc           : the interface which should be sampled
- * @param buffer        : a memory buffer which will receive the samples
- *                        Each sample will be uint16_t little endian.
- * @param buffer_length : length in bytes of the memory buffer.
- *
- *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
- */
-int32_t intake_sample_streram(uint8_t adc, void *buf, uint16_t buf_len);
+int32_t hal_adc_value_get(adc_dev_t *adc, void *output, uint32_t timeout);
 
 
 /**@biref     De-initialises an ADC interface
@@ -77,7 +69,7 @@ int32_t intake_sample_streram(uint8_t adc, void *buf, uint16_t buf_len);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_adc_finalize(uint8_t adc);
+int32_t hal_adc_finalize(adc_dev_t *adc);
 
 /** @} */
 /** @} */

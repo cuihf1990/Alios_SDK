@@ -196,6 +196,16 @@ void ApListAdvCallback(hal_wifi_scan_result_adv_t *pApAdvList)
 		pApAdvList, NULL);
 }
 
+extern void rwnx_go_debug_mode(void);
+void start_debug_mode(hal_wifi_module_t *m)
+{
+    rwnx_go_debug_mode();
+}
+
+void stop_debug_mode(hal_wifi_module_t *m)
+{
+}
+
 hal_wifi_module_t sim_yos_wifi_beken = {
     .base.name           = "sim_yos_wifi_beken",
     .init                =  wifi_init,
@@ -216,6 +226,8 @@ hal_wifi_module_t sim_yos_wifi_beken = {
     .stop_monitor        =  stop_monitor,
     .register_monitor_cb =  register_monitor_cb,
     .register_wlan_mgnt_monitor_cb = register_wlan_mgnt_monitor_cb,
-    .wlan_send_80211_raw_frame = wlan_send_80211_raw_frame
+    .wlan_send_80211_raw_frame = wlan_send_80211_raw_frame,
+    .start_debug_mode = start_debug_mode,
+    .stop_debug_mode = stop_debug_mode
 };
 

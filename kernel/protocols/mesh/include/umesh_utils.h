@@ -21,7 +21,6 @@
 #include "umesh_types.h"
 #include "utilities/configs.h"
 #include "utilities/logging.h"
-#include "utilities/encoding.h"
 #include "utilities/message.h"
 #include "utilities/timer.h"
 #include "utilities/memory.h"
