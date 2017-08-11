@@ -25,6 +25,7 @@ extern void evm_set_bandwidth(UINT32 bandwidth);
 extern void evm_stop_bypass_mac(void);
 extern void evm_bypass_mac_set_guard_i_type(UINT32 gi_tpye);
 extern void evm_start_bypass_mac(void);
+extern void evm_bypass_set_single_carrier(void);
 
 #endif //_TX_EVM_PUB_H_
 // eof

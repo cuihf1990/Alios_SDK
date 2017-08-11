@@ -8,11 +8,6 @@
 #include "schedule_pub.h"
 #include "rtos_pub.h"
 
-UINT32 mode = RXSENS_DEFUALT_MODE;
-UINT32 duration = RXSENS_DEFUALT_DURATION;
-UINT32 channel = RXSENS_DEFUALT_CHANNEL;
-
-
 #if CFG_RX_SENSITIVITY_TEST
 mico_timer_t rx_sens_tmr = {0};
 UINT32 g_rxsens_start = 0;
@@ -26,14 +21,25 @@ void rxsens_ct_hdl(void *param)
 #endif // CFG_RX_SENSITIVITY_TEST
 }
 
+void rxsens_ct_show_hdl(void *param)
+{
+#if CFG_RX_SENSITIVITY_TEST
+    rx_get_rx_result_end();
+#endif // CFG_RX_SENSITIVITY_TEST
+}
+
 int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
+    OSStatus err;
     char cmd0 = 0;
     char cmd1 = 0;
     UINT8 fail = 0;
 
+    UINT32 mode = RXSENS_DEFUALT_MODE;
+    UINT32 duration = RXSENS_DEFUALT_DURATION;
+    UINT32 channel = RXSENS_DEFUALT_CHANNEL;
+
 #if CFG_RX_SENSITIVITY_TEST
-    OSStatus err;
     UINT8 ret;
 #endif
 
@@ -84,12 +90,12 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 #if CFG_RX_SENSITIVITY_TEST
                 UINT32 op = os_strtoul(argv[arg_id + 1], NULL, 10);
                 if(op < RXSENS_G_MAX) {
-                    if(op == RXSENS_G_STOP_TIME)
-                    {
-                        err = mico_rtos_stop_timer(&rx_sens_tmr);
-	            ASSERT(kNoErr == err);
-                    } else if (op == RXSENS_G_STOP_LASTRX) {
+                    if (op == RXSENS_G_STOP_LASTRX) {
                         g_rxsens_start = 0;
+                        if(rx_sens_tmr.function) {
+                            err = mico_rtos_deinit_timer(&rx_sens_tmr); 
+                            ASSERT(kNoErr == err); 
+                        }
     	            } else {
                         FUNCPTR reboot = 0;
                         os_printf("reboot\r\n");
@@ -107,7 +113,6 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
                 UINT32 sta = os_strtoul(argv[arg_id + 1], NULL, 10);
                 if(sta) { 
                     rx_clean_rx_statistic_result();
-                    rx_get_rx_result_begin();
                 }
                 else {
                     rx_get_rx_result_end();
@@ -127,8 +132,12 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
                     else if(g_type == RXSENS_RTYPTE_20M) { 
                         rx_get_rx20M_statistic_result();
                     }
-                    else {
+                    
+                    else if(g_type == RXSENS_RTYPTE_40M){
                         rx_get_rx40M_statistic_result();
+                    }
+                    else if(g_type == RXSENS_RTYPTE_SIG_RES){
+                        rxsens_ct_hdl(NULL);
                     }
                     return 0;
                 } else 
@@ -187,7 +196,6 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 
     if(duration) {
     rx_get_rx_result_begin();
-
     t_ms = fclk_from_sec_to_tick(duration);
 
         if(rx_sens_tmr.function) {
@@ -202,8 +210,13 @@ int do_rx_sensitivity(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
     ASSERT(kNoErr == err);
     	err = mico_rtos_start_timer(&rx_sens_tmr);
 	ASSERT(kNoErr == err);
-    
+    } else {
+        if(rx_sens_tmr.function) {
+            err = mico_rtos_deinit_timer(&rx_sens_tmr); 
+            ASSERT(kNoErr == err); 
+        } 
     }
+    
     
 #endif // CFG_RX_SENSITIVITY_TEST
 

@@ -49,29 +49,44 @@ const UINT16 tx_freq_2_4_G[TX_2_4_G_CHANNEL_NUM] = {
 						2484
 };
 
-static void evm_set_trx_regs_extern(void)
+static void set_trx_regs_extern(void)
 {
     UINT32 reg;
 
     REG_WRITE((0x01050080+0x12*4), 0xD0640561);
 
     reg = REG_READ((0x01050080+0x0d*4));
-    REG_WRITE((0x01050080+0x0d*4),(reg|0x4)); 
-    REG_WRITE((0x01050080+0x0d*4),(reg|0x2)); 
+    reg |= (0x4|0x2);
+    REG_WRITE((0x01050080+0x0d*4),reg); 
 
     reg = REG_READ((0x01050080+0x0e*4));
-    REG_WRITE((0x01050080+0x0e*4),(reg|0x4)); 
-    REG_WRITE((0x01050080+0x0e*4),(reg|0x2));   
+    reg |= (0x4|0x2);
+    REG_WRITE((0x01050080+0x0e*4),reg);   
 
     reg = REG_READ((0x01050080+0x10*4));
-    REG_WRITE((0x01050080+0x10*4),(reg|0x4)); 
-    REG_WRITE((0x01050080+0x10*4),(reg|0x2)); 
+    reg |= (0x4|0x2);
+    REG_WRITE((0x01050080+0x10*4),reg); 
 
     reg = REG_READ((0x01050080+0x0f*4));
-    REG_WRITE((0x01050080+0x0f*4),(reg|0x4)); 
-    REG_WRITE((0x01050080+0x0f*4),(reg|0x2));    
+    reg |= (0x4|0x2);
+    REG_WRITE((0x01050080+0x0f*4),reg);    
 
     while(REG_READ((0x01050000+0x1*4))&(0xFFFFFFF));
+}
+
+void evm_bypass_set_single_carrier(void)
+{
+    UINT32 reg;
+
+    reg = REG_READ((0x01050000+0x00*4));  // RC_BEKEN_0x0 [31] : 1
+    reg |= (1u<<31);
+    REG_WRITE((0x01050000+0x00*4),reg); 
+
+    reg = REG_READ((0x01050000+0x4c*4));  // RC_BEKEN_0x4c [31:30] : 1
+    reg &= ~(0x3u<<30);
+    reg |= (0x1u<<30);    
+    REG_WRITE((0x01050000+0x4c*4),reg); 
+    
 }
 
 void evm_bypass_mac_init(UINT32 channel, UINT32 bandwidth)
@@ -95,7 +110,7 @@ void evm_bypass_mac_init(UINT32 channel, UINT32 bandwidth)
     phy_set_channel(PHY_BAND_2G4, bandwidth, channel, channel, 0, PHY_PRIM);
 
     if(bandwidth == PHY_CHNL_BW_40)
-       evm_set_trx_regs_extern();
+       set_trx_regs_extern();
 
 	/* Put the HW in active state*/
 	mm_active();

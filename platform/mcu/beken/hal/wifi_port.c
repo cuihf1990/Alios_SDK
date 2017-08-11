@@ -199,7 +199,7 @@ void ApListAdvCallback(hal_wifi_scan_result_adv_t *pApAdvList)
 extern void rwnx_go_debug_mode(void);
 void start_debug_mode(hal_wifi_module_t *m)
 {
-    rwnx_go_debug_mode();
+    //rwnx_go_debug_mode();
 }
 
 void stop_debug_mode(hal_wifi_module_t *m)

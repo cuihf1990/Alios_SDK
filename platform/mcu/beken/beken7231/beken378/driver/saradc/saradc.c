@@ -127,6 +127,7 @@ static UINT32 saradc_open(UINT32 op_flag)
         | ( 0x10 << SARADC_ADC_PRE_DIV_POSI);
     REG_WRITE(SARADC_ADC_CONFIG, value);
 
+    if(saradc_desc->p_Int_Handler != NULL)
     saradc_enable_interrupt();
 
 	return SARADC_SUCCESS;
@@ -136,6 +137,7 @@ static UINT32 saradc_close(void)
 {
 	UINT32 value;
 
+    if(saradc_desc->p_Int_Handler != NULL)
     saradc_disable_interrupt();
 
 	value = REG_READ(SARADC_ADC_CONFIG);
@@ -249,6 +251,32 @@ static UINT32 saradc_set_clk_rate(UINT8 rate)
 	return SARADC_SUCCESS;
 }
 
+UINT32 saradc_get_value_without_isr(void)
+{
+	UINT32 value;
+
+    if(!saradc_desc)
+        return SARADC_FAILURE;
+
+	value = REG_READ(SARADC_ADC_CONFIG);
+    while((value & SARADC_ADC_FIFO_EMPTY) == 0) {
+        UINT16 dac_val;
+        if (saradc_desc->current_sample_data_cnt >= saradc_desc->data_buff_size){
+            saradc_desc->current_sample_data_cnt = 0;
+        }
+
+        dac_val = REG_READ(SARADC_ADC_DATA)&0x03FF;
+        saradc_desc->pData[saradc_desc->current_sample_data_cnt++] = dac_val;
+        saradc_desc->has_data = 1;
+                      
+        value = REG_READ(SARADC_ADC_CONFIG);
+    }
+    saradc_int_clr();
+
+    return SARADC_SUCCESS;
+}
+
+
 static UINT32 saradc_ctrl(UINT32 cmd, void *param)
 {
 	UINT32 ret = SARADC_SUCCESS;
@@ -275,6 +303,9 @@ static UINT32 saradc_ctrl(UINT32 cmd, void *param)
 	case SARADC_CMD_SET_CLK_RATE:
 		ret = saradc_set_clk_rate(*(UINT8 *)param);
 		break;
+    case SARADC_CMD_GET_VAULE_WITHOUT_ISR:
+        ret = saradc_get_value_without_isr();
+        break;
 	default:
 		ret = SARADC_FAILURE;
 		break;

@@ -74,11 +74,14 @@ typedef struct
     unsigned char param[];
 } __attribute__ ((packed)) HCI_EVENT_PACKET;
 
-
-#define TX_FIFO_THRD                            0x40
+#include "uart.h"
+#define BKREG_TX_FIFO_THRD                      RX_RB_LENGTH //(0x40)
 
 #define HCI_EVENT_HEAD_LENGTH                   (0x03)
 #define HCI_COMMAND_HEAD_LENGTH                 (0x04)
+#define OTP_CMD_RET_LEN                         (12)
+#define OTP_READ_MAX_LEN                        (BKREG_TX_FIFO_THRD - HCI_EVENT_HEAD_LENGTH - OTP_CMD_RET_LEN)
+#define OTP_WRITE_MAX_LEN                       (RX_RB_LENGTH - 13) // RX_RB_LENGTH 01E0FCXXA8 ADDR-4 LEN-4
 
 /*****************************
  * HCI Events - Event codes
@@ -255,6 +258,8 @@ enum
     BEKEN_SHOW_BT_DEBUG                         = 0xAD,
     BEKEN_PRINT_LINK_KEY                        = 0XAE,
     BEKEN_ENTRY_DUT_MODE                        = 0XAF,
+    BEKEN_READ_OTP_CMD                          = 0XA7,
+    BEKEN_WRITE_OTP_CMD                         = 0XA8,    
     LOOP_MODE_CMD                               = 0XCC,
     BEKEN_TEMP_CMD                              = 0XDD,
     BEKEN_TEMP_TCP                              = 0XEE,
