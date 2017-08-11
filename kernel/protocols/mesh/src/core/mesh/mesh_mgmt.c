@@ -32,7 +32,6 @@
 #include "core/link_mgmt.h"
 #include "core/network_mgmt.h"
 #include "core/crypto.h"
-#include "core/master_key.h"
 #include "hal/interfaces.h"
 #include "hal/hals.h"
 
@@ -80,18 +79,9 @@ static void network_data_update_handler(bool stable)
 {
 }
 
-static void master_key_updated_handler(ur_error_t result)
-{
-    neighbor_t *nbr;
-    hal_context_t *hal;
-
-    if (result == UR_ERROR_NONE) {
-        hal = get_default_hal_context();
-        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+static void nbr_discovered_handler(neighbor_t *nbr) {
+    if (nbr) {
         attach_start(nbr);
-    } else {
-        become_detached();
-        nm_start_discovery();
     }
 }
 
@@ -591,7 +581,7 @@ static void handle_migrate_wait_timer(void *args)
 static void handle_net_scan_timer(void *args)
 {
     g_mm_state.device.net_scan_timer = NULL;
-    nm_start_discovery();
+    nm_start_discovery(nbr_discovered_handler);
     g_mm_state.device.reboot_flag = false;
 }
 
@@ -1979,15 +1969,12 @@ ur_error_t umesh_mm_init(node_mode_t mode)
         g_mm_state.device.mode |= MODE_SUPER;
     }
 
-    master_key_init(master_key_updated_handler);
-
     return error;
 }
 
 ur_error_t umesh_mm_deinit(void)
 {
     nd_unregister_update_handler(&g_mm_state.network_data_updater);
-    master_key_deinit();
     return UR_ERROR_NONE;
 }
 
@@ -2008,7 +1995,7 @@ ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
     if (g_mm_state.device.mode & MODE_LEADER) {
         become_leader();
     } else {
-        error = nm_start_discovery();
+        error = nm_start_discovery(nbr_discovered_handler);
     }
 
     return error;
@@ -2036,7 +2023,7 @@ void umesh_mm_set_meshnetid(network_context_t *network, uint16_t meshnetid)
     network->meshnetid = meshnetid;
 
     if (g_mm_state.device.state == DEVICE_STATE_DETACHED) {
-        nm_start_discovery();
+        nm_start_discovery(nbr_discovered_handler);
     }
 }
 

@@ -79,6 +79,8 @@ typedef struct scan_result_s {
     uint16_t      net_size;
 } scan_result_t;
 
+typedef void (* discovered_handler_t)(neighbor_t *nbr);
+
 typedef struct network_data_s {
     uint8_t  version;
     uint16_t size;
@@ -171,6 +173,7 @@ typedef struct hal_context_s {
     uint8_t               discovery_timeouts;
     ur_timer_t            discovery_timer;
     scan_result_t         discovery_result;
+    discovered_handler_t  discovered_handler;
 
     // hal configurations
     uint32_t              discovery_interval;
