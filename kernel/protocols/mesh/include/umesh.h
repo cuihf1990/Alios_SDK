@@ -23,7 +23,11 @@ extern "C" {
 
 #include "umesh_types.h"
 
-typedef ur_error_t (* adapter_input_t)(void *message);
+struct pbuf;
+struct message_s;
+
+/* for ip layer */
+typedef ur_error_t (* adapter_input_t)(struct pbuf *buf);
 typedef ur_error_t (* adapter_interface_up_t)(void);
 typedef ur_error_t (* adapter_interface_down_t)(void);
 typedef ur_error_t (* adapter_interface_update_t)(void);
@@ -38,15 +42,19 @@ ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
                                uint8_t *payload, uint8_t length);
 ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver);
 
-ur_error_t umesh_ipv6_output(umessage_t *message,
+ur_error_t umesh_ipv4_output(struct pbuf *buf,
                                const ur_ip6_addr_t *ip6addr);
-ur_error_t umesh_input(umessage_t *p);
+ur_error_t umesh_ipv6_output(struct pbuf *buf,
+                               const ur_ip6_addr_t *ip6addr);
+ur_error_t umesh_register_callback(ur_adapter_callback_t *callback);
+
+/* for mesh layer */
+ur_error_t umesh_input(struct message_s *message);
 
 ur_error_t umesh_init(node_mode_t mode);
 ur_error_t umesh_start(void);
 bool       umesh_is_initialized(void);
 ur_error_t umesh_stop(void);
-ur_error_t umesh_register_callback(ur_adapter_callback_t *callback);
 
 /* per device API */
 uint8_t umesh_get_device_state(void);

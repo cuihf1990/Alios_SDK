@@ -45,8 +45,6 @@ typedef enum media_type_s {
     MEDIA_TYPE_15_4 = 2,
 } media_type_t;
 
-typedef void *umessage_t;
-
 #ifndef NULL
 #define NULL (void *)0
 #endif

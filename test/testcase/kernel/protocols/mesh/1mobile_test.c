@@ -49,14 +49,14 @@ static void run_in_hop2(void)
     set_line_rssi(11, 13);
 
     start_node_ext(13, MODE_RX_ON, -1, -1);
-    yos_msleep(5000);
+    check_p2p_str_wait("leader", 13, "testcmd state", 10);
     start_node_ext(12, MODE_RX_ON, -1, -1);
-    yos_msleep(5000);
+    check_p2p_str_wait("router", 12, "testcmd state", 10);
 
     cmd_to_agent("mode MOBILE");
     cmd_to_agent("start");
 
-    yos_msleep(10 * 1000);
+    check_p2p_str_wait("leaf", 11, "testcmd state", 10);
     YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
     addr = umesh_get_ucast_addr();

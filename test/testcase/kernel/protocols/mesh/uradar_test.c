@@ -34,8 +34,8 @@ static int start_ddm(void)
     if (pid == 0) {
         const char **argv;
         yts_get_args(&argv);
-        const char * const args[] = {
-            argv[0],
+        char * const args[] = {
+            (char *)argv[0],
             "--mesh-master",
             "-l",
             "/tmp/ddm_log_ut.txt",

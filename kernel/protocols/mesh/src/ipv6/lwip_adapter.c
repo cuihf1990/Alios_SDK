@@ -38,39 +38,44 @@ typedef struct lwip_adapter_state_s {
 static lwip_adapter_state_t g_la_state = {.interface_name = "ur"};
 
 /* Receive IP frame from umesh and pass up to LwIP */
-ur_error_t ur_adapter_input(void *message)
+ur_error_t ur_adapter_input(struct pbuf *buf)
 {
     err_t       error = ERR_ARG;
-    struct pbuf *buffer;
-
-    buffer = pbuf_alloc(PBUF_RAW, message_get_msglen((message_t *)message),
-                        PBUF_POOL);
-    if (buffer == NULL) {
-        message_free(message);
-        return UR_ERROR_FAIL;
-    }
-    pbuf_copy(buffer, (struct pbuf *)((message_t *)message)->data);
     if (g_la_state.adpif.input) {
-        error = g_la_state.adpif.input(buffer, &g_la_state.adpif);
+        pbuf_ref(buf);
+        error = g_la_state.adpif.input(buf, &g_la_state.adpif);
     }
-    if (error != ERR_OK) {
-        message_free(message);
-        pbuf_free(buffer);
-        return UR_ERROR_FAIL;
+    return error == ERR_OK ? UR_ERROR_NONE : UR_ERROR_FAIL;
+}
+
+static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
+                                    const ip4_addr_t *ip4addr)
+{
+    ur_error_t error;
+
+    error = umesh_ipv4_output(p, (ur_ip6_addr_t *)ip4addr);
+
+    /* error mapping */
+    switch (error) {
+        case UR_ERROR_NONE:
+            return ERR_OK;
+            break;
+        case UR_ERROR_FAIL:
+            return ERR_VAL;
+            break;
+        default:
+            return ERR_VAL;
+            break;
     }
-    message_free(message);
-    return UR_ERROR_NONE;
+    return ERR_OK;
 }
 
 static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
                                     const ip6_addr_t *ip6addr)
 {
     ur_error_t error;
-    message_t  message;
 
-    memset(&message, 0, sizeof(message_t));
-    message.data = p;
-    error = umesh_ipv6_output((umessage_t *)&message, (ur_ip6_addr_t *)ip6addr);
+    error = umesh_ipv6_output(p, (ur_ip6_addr_t *)ip6addr);
 
     /* error mapping */
     switch (error) {
@@ -93,6 +98,7 @@ static err_t ur_adapter_if_init(struct netif *netif)
     netif->name[1] = g_la_state.interface_name[1];
     netif->num = g_la_state.interface_name[2] - '0';
     netif->output_ip6 = ur_adapter_ipv6_output;
+    netif->output = ur_adapter_ipv4_output;
     netif->mtu = 127;
     netif->flags = NETIF_FLAG_LINK_UP | NETIF_FLAG_UP;
     return ERR_OK;
