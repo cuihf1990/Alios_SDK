@@ -69,16 +69,3 @@ void __attribute__((weak)) ur_log(ur_log_level_t level, ur_log_region_t region,
     ur_mem_free(buffer, MAX_LOG_SIZE);
 }
 #endif
-
-ur_error_t ur_cli_output(const char *buf, uint16_t length)
-{
-#ifdef CONFIG_YOS_DDA
-    dda_cli_log((char *)buf);
-#endif
-    if (!g_cli_silent) {
-        csp_printf("%s", buf);
-    }
-
-    return UR_ERROR_NONE;
-}
-
