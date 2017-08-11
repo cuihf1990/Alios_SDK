@@ -31,8 +31,9 @@ $(NAME)_COMPONENTS  += protocols.net
 no_with_lwip := 0
 endif
 
+MESHDEBUG = 0
 ifeq ($(meshdebug), 1)
-MESHDEBUG ?= 1
+MESHDEBUG = 1
 endif
 
 $(NAME)_INCLUDES := ../../framework/protocol/alink/system/ ../../framework/protocol/alink/json/
