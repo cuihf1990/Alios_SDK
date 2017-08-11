@@ -154,7 +154,7 @@ static int linuxhost_ur_set_key(struct umesh_hal_module_s *module,
         return -1;
     }
 
-    if (length > MAX_KEY_SIZE) {
+    if (length > KEY_SIZE) {
         priv->keys[index].len = 0;
         return -1;
     }

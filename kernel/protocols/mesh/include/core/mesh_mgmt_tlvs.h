@@ -55,7 +55,7 @@ typedef enum {
     TYPE_ATTACH_NODE_ID    = 0x9d,  /* attach node id */
     TYPE_DEF_HAL_TYPE      = 0x9e,  /* default hal type */
     TYPE_TIMESTAMP         = 0x9f,  /* timestamp */
-    TYPE_GROUP_KEY         = 0xa0,  /* network wide group key */
+    TYPE_SYMMETRIC_KEY     = 0xa0,  /* symmetric key */
     TYPE_SSID_INFO         = 0xa1,  /* structured sid info */
     TYPE_STATE_FLAGS       = 0xa2,  /* node state flags */
     TYPE_UCAST_CHANNEL     = 0xa3,  /* ucast channel */
@@ -178,10 +178,10 @@ typedef struct mesh_mgmt_timestamp_tv_s {
     uint32_t timestamp;
 } __attribute__((packed)) mm_timestamp_tv_t;
 
-typedef struct mesh_mgmt_group_key_tv_s {
+typedef struct mesh_mgmt_symmetric_key_tv_s {
     mm_tv_t base;
-    uint8_t group_key[16];
-} __attribute__((packed)) mm_group_key_tv_t;
+    uint8_t symmetric_key[16];
+} __attribute__((packed)) mm_symmetric_key_tv_t;
 
 typedef struct mesh_mgmt_state_flags_tv_s {
     mm_tv_t base;

@@ -423,6 +423,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     hal_context_t  *hal;
     neighbor_t     *next_node = NULL;
     uint8_t        *payload;
+    const uint8_t *key;
 
     hal = network->hal;
     info = message->info;
@@ -496,10 +497,20 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
     message_copy_to(message, message->frag_offset, payload, frag_length);
 
+    if (info->key_index == ONE_TIME_KEY_INDEX) {
+        if (next_node == NULL) {
+            return UR_ERROR_DROP;
+        }
+        key = next_node->one_time_key;
+    } else if (info->key_index != INVALID_KEY_INDEX) {
+        key = get_symmetric_key(GROUP_KEY1_INDEX);
+    }
+
     if ((info->flags & ENCRYPT_ENABLE_FLAG) &&
-        umesh_aes128_cbc_encrypt(hal->frame.data + info->header_ies_offset,
-                                 header_ies_length + append_length + frag_length,
-                                 hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
+         umesh_aes_encrypt(key, KEY_SIZE,
+                           hal->frame.data + info->header_ies_offset,
+                           header_ies_length + append_length + frag_length,
+                           hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
         return UR_ERROR_DROP;
     }
 
@@ -624,21 +635,22 @@ static void set_dest_encrypt_flag(message_info_t *info)
 
     if (info->type == MESH_FRAME_TYPE_DATA) {
         info->flags |= ENCRYPT_ENABLE_FLAG;
-        info->key_index = MASTER_KEY_INDEX;
+        info->key_index = GROUP_KEY1_INDEX;
         return;
     }
 
     if (info->type == MESH_FRAME_TYPE_CMD) {
         if (info->command == COMMAND_ADVERTISEMENT ||
             info->command == COMMAND_DISCOVERY_REQUEST ||
-            info->command == COMMAND_DISCOVERY_RESPONSE) {
+            info->command == COMMAND_DISCOVERY_RESPONSE ||
+            info->command == COMMAND_ATTACH_REQUEST ||
+            info->command == COMMAND_LINK_ACCEPT) {
             info->key_index = INVALID_KEY_INDEX;
             return;
         }
         info->flags |= ENCRYPT_ENABLE_FLAG;
-        if (info->command == COMMAND_ATTACH_REQUEST ||
-            info->command == COMMAND_ATTACH_RESPONSE) {
-            info->key_index = MASTER_KEY_INDEX;
+        if (info->command == COMMAND_ATTACH_RESPONSE) {
+            info->key_index = ONE_TIME_KEY_INDEX;
         } else {
             info->key_index = GROUP_KEY1_INDEX;
         }
@@ -937,6 +949,8 @@ static void handle_received_frame(void *context, frame_t *frame,
     hal_context_t *hal = (hal_context_t *)context;
     message_info_t info;
     ur_error_t uerror = UR_ERROR_NONE;
+    const uint8_t *key;
+    network_context_t *network;
 
     hal->link_stats.in_frames++;
     if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
@@ -968,9 +982,17 @@ static void handle_received_frame(void *context, frame_t *frame,
     bzero(&info, sizeof(info));
     resolve_message_info(rx_frame, &info, frame->data);
     if (info.flags & ENCRYPT_ENABLE_FLAG) {
-        uerror = umesh_aes128_cbc_decrypt(frame->data + info.header_ies_offset,
-                                          frame->len - info.header_ies_offset,
-                                          frame->data + info.header_ies_offset);
+        if (umesh_mm_get_attach_state() == ATTACH_REQUEST) {
+            network = get_default_network_context();
+            key = network->one_time_key;
+        } else {
+            key = get_symmetric_key(GROUP_KEY1_INDEX);
+        }
+
+        uerror = umesh_aes_decrypt(key, KEY_SIZE,
+                                   frame->data + info.header_ies_offset,
+                                   frame->len - info.header_ies_offset,
+                                   frame->data + info.header_ies_offset);
     }
 
     if (uerror != UR_ERROR_NONE) {
