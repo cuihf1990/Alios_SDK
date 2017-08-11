@@ -274,11 +274,11 @@ class Autotest:
         except:
             print "connect to server {0}:{1} failed".format(server_ip, server_port)
             return False
-        if os.path.exists('autotest') == False:
-            subprocess.call(['mkdir','autotest'])
+        if os.path.exists('testlog') == False:
+            subprocess.call(['mkdir','testlog'])
 
         try:
-            self.logfile = open("autotest/"+logname, 'w');
+            self.logfile = open("testlog/"+logname, 'w');
         except:
             print "open logfile {0} failed".format(logfile)
             return False
