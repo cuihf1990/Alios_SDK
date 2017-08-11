@@ -13,7 +13,7 @@ LOG_WINDOW_WIDTH  = 80
 LOG_HISTORY_LENGTH = 5000
 MOUSE_SCROLL_UP = 0x80000
 MOUSE_SCROLL_DOWN = 0x8000000
-DEBUG = False
+DEBUG = True
 
 class Terminal:
     def __init__(self):
@@ -25,6 +25,7 @@ class Terminal:
         self.device_list= {}
         self.service_socket = 0
         self.cmd_excute_state = 'idle'
+        self.cmd_excute_return = ''
         self.log_content = []
         self.log_curr_line = -1
         self.log_subscribed = []
@@ -371,8 +372,10 @@ class Terminal:
                             log =  str(index) + log
                             self.log_display(logtime, log)
                     if type == TBframe.CMD_DONE:
+                        self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
                     if type == TBframe.CMD_ERROR:
+                        self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
             except:
                 if DEBUG:
@@ -518,11 +521,14 @@ class Terminal:
             status_str += "failed: {0}".format(failed)
         self.cmdrun_status_display(status_str)
 
-    def reset_devices(self, args):
+    def control_devices(self, operate, args):
         if len(args) < 1:
             self.cmdrun_status_display("Usage error, usage: reset devices")
             return False
 
+        operations = {"start":TBframe.DEVICE_START, "stop":TBframe.DEVICE_STOP, "reset":TBframe.DEVICE_RESET}
+        operate = operations[operate]
+        succeed = []; failed = []
         for dev in args:
             index = self.parse_device_index(dev)
             if index < 0:
@@ -530,38 +536,22 @@ class Terminal:
                 return False
 
             content = self.get_devstr_by_index(index)
-            data = TBframe.construct(TBframe.DEVICE_RESET, content)
+            data = TBframe.construct(operate, content)
             self.service_socket.send(data)
-
-    def start_devices(self, args):
-        if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: start devices")
-            return False
-
-        for dev in args:
-            index = self.parse_device_index(dev)
-            if index < 0:
-                self.cmdrun_status_display('invalid device index {0}'.format(dev))
-                return False
-
-            content = self.get_devstr_by_index(index)
-            data = TBframe.construct(TBframe.DEVICE_START, content)
-            self.service_socket.send(data)
-
-    def stop_devices(self, args):
-        if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: stop devices")
-            return False
-
-        for dev in args:
-            index = self.parse_device_index(dev)
-            if index < 0:
-                self.cmdrun_status_display('invalid device index {0}'.format(dev))
-                return False
-
-            content = self.get_devstr_by_index(index)
-            data = TBframe.construct(TBframe.DEVICE_STOP, content)
-            self.service_socket.send(data)
+            self.wait_cmd_excute_done(1)
+            if self.cmd_excute_state == "done":
+                succeed.append(index)
+            else:
+                failed.append(index)
+            self.cmd_excute_state = 'idle'
+        status_str = ''
+        if succeed != []:
+            status_str += "succeed: {0}".format(succeed)
+        if failed != []:
+            if status_str != '':
+                status_str += ', '
+            status_str += "failed: {0}".format(failed)
+        self.cmdrun_status_display(status_str)
 
     def log_on_off(self, args):
         if len(args) < 2:
@@ -643,6 +633,10 @@ class Terminal:
         content += ':' + '|'.join(args)
         data = TBframe.construct(TBframe.DEVICE_CMD, content)
         self.service_socket.send(data)
+        self.wait_cmd_excute_done(1)
+        self.cmd_excute_state = 'idle'
+        status_str = '{0} run: '.format(index) + ' '.join(args) + ", " + self.cmd_excute_return
+        self.cmdrun_status_display(status_str)
 
     def client_alias(self, args):
         if len(args) < 1:
@@ -700,11 +694,11 @@ class Terminal:
         elif cmd == "program" or cmd == "pg":
             self.program_devices(args)
         elif cmd == "reset" or cmd == "rs":
-            self.reset_devices(args)
+            self.control_devices('reset', args)
         elif cmd == "start" or cmd == "st":
-            self.start_devices(args)
+            self.control_devices('start', args)
         elif cmd == "stop" or cmd == "sp":
-            self.stop_devices(args)
+            self.control_devices('stop', args)
         elif cmd == "log" or cmd == "lg":
             self.log_on_off(args)
         elif cmd == "logdownload" or cmd == 'ld':
