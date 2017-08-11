@@ -17,8 +17,7 @@
 #ifndef UR_NETWORK_MGMT_H
 #define UR_NETWORK_MGMT_H
 
-#include "core/mesh_mgmt.h"
-#include "hal/interface_context.h"
+#include "core/topology.h"
 
 enum {
     DISCOVERY_RETRY_TIMES = 4,
@@ -26,7 +25,7 @@ enum {
 
 ur_error_t handle_discovery_request(message_t *message);
 ur_error_t handle_discovery_response(message_t *message);
-ur_error_t nm_start_discovery(void);
+ur_error_t nm_start_discovery(discovered_handler_t handler);
 ur_error_t nm_stop_discovery(void);
 
 #endif  /* UR_NETWORK_MGMT_H */
