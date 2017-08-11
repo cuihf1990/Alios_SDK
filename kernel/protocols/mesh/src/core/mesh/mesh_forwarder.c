@@ -843,9 +843,11 @@ static void message_handler(void *args)
         forward = true;
     }
 
+#ifdef CONFIG_YOS_MESH_DEBUG
     if (info->type == MESH_FRAME_TYPE_CMD) {
         handle_diags_command(message, recv);
     }
+#endif
 
     if (forward == true) {
         network = NULL;

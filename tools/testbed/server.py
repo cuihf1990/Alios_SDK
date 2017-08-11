@@ -56,6 +56,7 @@ class Server:
                     if type == TBframe.TYPE_NONE:
                         break
 
+                    heartbeat_timeout = time.time() + 30
                     if type == TBframe.CLIENT_DEV:
                         new_devices = value.split(':')
                         for port in new_devices:
@@ -120,8 +121,6 @@ class Server:
                             else:
                                 data = TBframe.construct(TBframe.CMD_DONE, '')
                             terminal['socket'].send(data)
-                    elif type == TBframe.HEARTBEAT:
-                        heartbeat_timeout = time.time() + 30
             except socket.timeout:
                 continue
             except:
@@ -207,6 +206,7 @@ class Server:
                     if type == TBframe.TYPE_NONE:
                         break
 
+                    heartbeat_timeout = time.time() + 30
                     if type == TBframe.FILE_BEGIN:
                         if 'file' in locals() and file.closed == False:
                             file.close()
@@ -331,8 +331,6 @@ class Server:
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "downloading log of device {0}:{1} ...".format(values[0], port),
                         print "succeed"
-                    elif type == TBframe.HEARTBEAT:
-                        heartbeat_timeout = time.time() + 30
             except socket.timeout:
                 continue
             except:
