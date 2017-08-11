@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <yos/cli.h>
 #include <yos/framework.h>
+#include <yos/log.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"
@@ -213,6 +214,7 @@ void response_append(const char *format, ...)
         g_cur_cmd_cb(res_buf, len, g_cur_cmd_priv);
     } else {
 #ifdef CONFIG_YOS_DDA
+        extern int dda_cli_log(char *str);
         dda_cli_log((char *)res_buf);
 #endif
         if (!g_cli_silent) {

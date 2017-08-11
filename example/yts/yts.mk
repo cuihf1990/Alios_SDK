@@ -11,3 +11,5 @@ GLOBAL_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 GLOBAL_DEFINES += TAPIF_DEFAULT_OFF
 GLOBAL_LDFLAGS += -lreadline -lncurses
 GLOBAL_DEFINES += CONFIG_YOS_MESHYTS DEBUG
+
+MESHDEBUG ?= 1
