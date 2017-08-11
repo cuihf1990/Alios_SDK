@@ -19,7 +19,7 @@ typedef enum
 typedef struct
 {
     void *arg;
-    hal_gpio_irq_handler_t handler;
+    gpio_irq_handler_t handler;
 } gpio_int_hdl;
 
 static gpio_int_hdl gpio_int_hdls[ 22 ];
@@ -57,84 +57,85 @@ static const uint8_t int_edge_map[] =
     [IRQ_TRIGGER_FALLING_EDGE] = GIRQ_TRIGGER_FALLING_EDGE,
 };
 
-int32_t hal_gpio_init(uint8_t gpio, hal_gpio_config_t config)
+int32_t hal_gpio_init(gpio_dev_t *gpio)
 {
     uint32_t param;
 
-    if(config == OUTPUT_OPEN_DRAIN_NO_PULL || config == OUTPUT_OPEN_DRAIN_PULL_UP)
+    if((gpio->config == OUTPUT_OPEN_DRAIN_NO_PULL) || (gpio->config == OUTPUT_OPEN_DRAIN_PULL_UP))
         return -1;
 
-    param = GPIO_CFG_PARAM(gpio_map[gpio], config_map[config]);
+    param = GPIO_CFG_PARAM(gpio_map[gpio->port], config_map[gpio->config]);
     gpio_ctrl(CMD_GPIO_CFG, &param);
 
     return 0;
 }
 
-int32_t hal_gpio_finalize(uint8_t gpio)
+int32_t hal_gpio_finalize(gpio_dev_t *gpio)
 {
     uint32_t param;
 
-    param = GPIO_CFG_PARAM(gpio_map[gpio], config_map[INPUT_HIGH_IMPEDANCE]);
+    param = GPIO_CFG_PARAM(gpio_map[gpio->port], config_map[INPUT_HIGH_IMPEDANCE]);
     gpio_ctrl(CMD_GPIO_CFG, &param);
 
     return 0;
 }
 
-int32_t hal_gpio_output_high(uint8_t gpio)
+int32_t hal_gpio_output_high(gpio_dev_t *gpio)
 {
     uint32_t param;
 
-    param = GPIO_OUTPUT_PARAM(gpio_map[gpio], 1);
+    param = GPIO_OUTPUT_PARAM(gpio_map[gpio->port], 1);
     gpio_ctrl(CMD_GPIO_OUTPUT, &param);
 
     return 0;
 }
 
-int32_t hal_gpio_output_low(uint8_t gpio)
+int32_t hal_gpio_output_low(gpio_dev_t *gpio)
 {
     uint32_t param;
 
-    param = GPIO_OUTPUT_PARAM(gpio_map[gpio], 0);
+    param = GPIO_OUTPUT_PARAM(gpio_map[gpio->port], 0);
     gpio_ctrl(CMD_GPIO_OUTPUT, &param);
 
     return 0;
 }
 
-int32_t hal_gpio_output_trigger(uint8_t gpio)
+int32_t hal_gpio_output_toggle(gpio_dev_t *gpio)
 {
     uint32_t param;
 
-    param = gpio_map[gpio];
+    param = gpio_map[gpio->port];
     gpio_ctrl(CMD_GPIO_OUTPUT_REVERSE, &param);
 
     return 0;
 }
 
-int8_t hal_gpio_inputget(uint8_t gpio)
+int8_t hal_gpio_input_get(gpio_dev_t *gpio, uint32_t *value)
 {
     uint32_t param;
 
-    param = gpio_map[gpio];
-    return gpio_ctrl(CMD_GPIO_INPUT, &param);
+    param = gpio_map[gpio->port];
+    *value = gpio_ctrl(CMD_GPIO_INPUT, &param);
 }
 
 static gpio_int_cb( uint8_t i )
 {
     void *arg = gpio_int_hdls[i].arg;
-    hal_gpio_irq_handler_t cb_fn = gpio_int_hdls[i].handler;
+    gpio_irq_handler_t cb_fn = gpio_int_hdls[i].handler;
 
     if(cb_fn != NULL)
         cb_fn(arg);
 }
 
-int32_t hal_gpio_enable_irq(uint8_t gpio, hal_gpio_irq_trigger_t trigger, hal_gpio_irq_handler_t handler, void *arg)
+int32_t hal_gpio_enable_irq(gpio_dev_t *gpio, gpio_irq_trigger_t trigger,
+                                     gpio_irq_handler_t handler, void *arg)
 {
     GPIO_INT_ST int_struct;
 
     if(trigger == IRQ_TRIGGER_BOTH_EDGES)
         return -1;
 
-    int_struct.id = gpio_map[gpio];
+    int_struct.id = gpio_map[gpio->port];
     int_struct.mode = int_edge_map[trigger];
     int_struct.phandler = gpio_int_cb;
     gpio_int_hdls[ int_struct.id ].arg = arg;
@@ -145,22 +146,22 @@ int32_t hal_gpio_enable_irq(uint8_t gpio, hal_gpio_irq_trigger_t trigger, hal_gp
     return 0;
 }
 
-int32_t hal_gpio_disable_irq(uint8_t gpio)
+int32_t hal_gpio_disable_irq(gpio_dev_t *gpio)
 {
     uint32_t param;
 
-    param = gpio_map[gpio];
+    param = gpio_map[gpio->port];
 
     gpio_ctrl(CMD_GPIO_INT_DISABLE, &param);
 
     return 0;
 }
 
-int32_t hal_gpio_clear_irq(uint8_t gpio)
+int32_t hal_gpio_clear_irq(gpio_dev_t *gpio)
 {
     uint32_t param;
 
-    param = gpio_map[gpio];
+    param = gpio_map[gpio->port];
 
     gpio_ctrl(CMD_GPIO_INT_CLEAR, &param);
 
