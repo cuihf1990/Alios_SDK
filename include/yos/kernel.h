@@ -34,6 +34,7 @@ typedef struct {
     void *hdl;
 } yos_hdl_t;
 
+typedef yos_hdl_t yos_task_t;
 typedef yos_hdl_t yos_mutex_t;
 typedef yos_hdl_t yos_sem_t;
 typedef yos_hdl_t yos_queue_t;
@@ -88,6 +89,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
 /**
  * Create a task([thread--Rhino&other-kernel][MainLoop--noRTOS])
  *
+ * @param[in] task handle
  * @param[in] name task name, any string
  * @param[in] fn task function
  * @param[in] arg any pointer, will give to your task-function as argument
@@ -97,8 +99,9 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
  *
  * @return: task code
  */
-int yos_task_new_ext(const char *name, void (*fn)(void *), void *arg,
+int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), void *arg,
                      int stack_size, int prio);
+
 
 /**
  * exit a task
@@ -153,6 +156,12 @@ int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout);
 int yos_mutex_unlock(yos_mutex_t *mutex);
 
 /**
+ * This function will check if mutex is valid
+ * @param[in]   mutex    pointer to the mutex
+ * @return  the check status, YUNOS_TRUE is OK, YUNOS_FALSE indicates invalid
+ */
+int yos_mutex_is_valid(yos_mutex_t *mutex);
+/**
  * alloc a semaphore
  * @param[out] sem pointer of semaphore object,semaphore object must be alloced,
  * hdl pointer in yos_sem_t will refer a kernel obj internally
@@ -178,6 +187,13 @@ int yos_sem_wait(yos_sem_t *sem, unsigned int timeout);
  * @param[in] sem semaphore object,,it contains kernel obj pointer which yos_sem_new alloced
  */
 void yos_sem_signal(yos_sem_t *sem);
+
+/**
+ * This function will check if semaphore is valid
+ * @param[in]   sem    pointer to the semaphore
+ * @return  the check status, YUNOS_TRUE is OK, YUNOS_FALSE indicates invalid
+ */
+int yos_sem_is_vaid(yos_sem_t *sem);
 
 /**
  * release all semaphore
@@ -223,6 +239,33 @@ int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size);
  */
 int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
                    unsigned int *size);
+
+
+/**
+ * This function will check if queue is valid
+ * @param[in]   queue    pointer to the queue
+ * @return  the check status, YUNOS_TRUE is OK, YUNOS_FALSE indicates invalid
+ */
+int yos_queue_is_valid(yos_queue_t *queue);
+
+/**
+ * This function will return buf ptr if queue is inited
+ * @param[in]   queue    pointer to the queue
+ * @return  the check status, NULL is error
+ */
+void* yos_queue_buf_ptr(yos_queue_t *queue);
+
+/**
+ * This function will disable kernel sched
+ * @return  the operation status, 0 is OK, others is error
+ */
+int yos_sched_disable(void);
+
+/**
+ * This function will enable kernel sched
+ * @return  the operation status, 0 is OK, others is error
+ */
+int yos_sched_enable(void);
 
 /**
  * This function will create a timer

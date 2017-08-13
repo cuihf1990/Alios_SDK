@@ -103,5 +103,12 @@ kstat_t yunos_sem_count_set(ksem_t *sem, sem_count_t  count);
  */
 kstat_t yunos_sem_count_get(ksem_t *sem, sem_count_t *count);
 
+/**
+ * This function will check if semaphore is valid
+ * @param[in]   sem    pointer to the semaphore
+ * @return  the check status, YUNOS_SUCCESS is OK, others is error
+ */
+kstat_t yunos_sem_is_valid(ksem_t *sem);
+
 #endif /* K_SEM_H */
 

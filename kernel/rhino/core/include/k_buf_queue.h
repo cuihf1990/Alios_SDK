@@ -125,5 +125,12 @@ kstat_t yunos_buf_queue_flush(kbuf_queue_t *queue);
  */
 kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info);
 
+/**
+ * This function will check if buf queue is valid
+ * @param[in]   queue pointer to the buf queue
+ * @return  the check status, YUNOS_SUCCESS is OK, others is error
+ */
+kstat_t yunos_buf_queue_is_valid(kbuf_queue_t * queue);
+
 #endif /* K_BUF_QUEUE_H */
 
