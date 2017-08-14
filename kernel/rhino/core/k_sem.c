@@ -357,5 +357,18 @@ kstat_t yunos_sem_count_get(ksem_t *sem, sem_count_t *count)
 
     return YUNOS_SUCCESS;
 }
+
+kstat_t yunos_sem_is_valid(ksem_t *sem)
+{
+    NULL_PARA_CHK(sem);
+
+    if(sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE)
+    {
+      return YUNOS_KOBJ_TYPE_ERR;
+    }
+    
+    return YUNOS_SUCCESS;
+}
+
 #endif /* YUNOS_CONFIG_SEM */
 

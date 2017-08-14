@@ -24,8 +24,6 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
 {
     CPSR_ALLOC();
 
-    size_t  buf_size;
-
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(buf);
     NULL_PARA_CHK(name);
@@ -34,17 +32,16 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
         return YUNOS_INV_PARAM;
     }
 
-    buf_size = size;
-
-    if (buf_size == 0u) {
+    if (size == 0u) {
         return YUNOS_BUF_QUEUE_SIZE_ZERO;
     }
 
     /* init the queue blocked list */
     klist_init(&queue->blk_obj.blk_list);
 
-    queue->cur_num           = 0u;
-    queue->peak_num          = 0u;
+    queue->buf                = buf;
+    queue->cur_num            = 0u;
+    queue->peak_num           = 0u;
     queue->max_msg_size       = max_msg;
     queue->blk_obj.name       = name;
     queue->blk_obj.blk_policy = BLK_POLICY_PRI;
@@ -61,7 +58,7 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
 
     queue->blk_obj.obj_type = YUNOS_BUF_QUEUE_OBJ_TYPE;
 
-    ringbuf_init(&(queue->ringbuf), (uint8_t *)buf, size, RINGBUF_TYPE_DYN, 0);
+    ringbuf_init(&(queue->ringbuf), buf, size, RINGBUF_TYPE_DYN, 0);
     queue->min_free_buf_size  = queue->ringbuf.freesize;
     TRACE_BUF_QUEUE_CREATE(g_active_task, queue);
 
@@ -110,6 +107,8 @@ kstat_t yunos_buf_queue_del(kbuf_queue_t *queue)
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&queue->buf_queue_item);
 #endif
+    
+    ringbuf_reset(&(queue->ringbuf));
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
@@ -188,6 +187,8 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&queue->buf_queue_item);
 #endif
+    
+    ringbuf_reset(&(queue->ringbuf));
 
     YUNOS_CRITICAL_EXIT_SCHED();
     yunos_mm_free(queue->buf);
@@ -396,7 +397,7 @@ kstat_t yunos_buf_queue_flush(kbuf_queue_t *queue)
     ringbuf_reset(&(queue->ringbuf));
     queue->cur_num           = 0u;
     queue->peak_num          = 0u;
-    queue->min_free_buf_size  = queue->ringbuf.freesize;
+    queue->min_free_buf_size = queue->ringbuf.freesize;
 
     YUNOS_CRITICAL_EXIT();
 
@@ -426,6 +427,18 @@ kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
 
     YUNOS_CRITICAL_EXIT();
 
+    return YUNOS_SUCCESS;
+}
+
+kstat_t yunos_buf_queue_is_valid(kbuf_queue_t * queue)
+{
+    NULL_PARA_CHK(queue);
+
+    if(queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE)
+    {
+      return YUNOS_KOBJ_TYPE_ERR;
+    }
+    
     return YUNOS_SUCCESS;
 }
 #endif

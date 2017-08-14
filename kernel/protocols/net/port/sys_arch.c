@@ -49,7 +49,6 @@
 /*-----------------------------------------------------------------------------------*/
 /*
     err_t sys_sem_new(sys_sem_t *sem, u8_t count)
-
     Creates a new semaphore.
 */
 err_t sys_sem_new(sys_sem_t *sem, u8_t count)
@@ -57,7 +56,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
     kstat_t stat;
     err_t ret = ERR_MEM;
 
-    stat = yunos_sem_create(sem, "lwip_sem", count);
+    stat = yos_sem_new(sem,count);
 
     if (stat == YUNOS_SUCCESS) {
         ret = ERR_OK;
@@ -74,7 +73,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 void sys_sem_free(sys_sem_t *sem)
 {
     if ((sem != NULL)) {
-        yunos_sem_del(sem);
+        yos_sem_free(sem);
     }
 }
 
@@ -87,7 +86,7 @@ void sys_sem_free(sys_sem_t *sem)
 */
 void sys_sem_signal(sys_sem_t *sem)
 {
-    yunos_sem_give(sem);
+    yos_sem_signal(sem);
 }
 
 
@@ -109,7 +108,6 @@ void sys_sem_signal(sys_sem_t *sem)
 */
 u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 {
-    tick_t ticks = yunos_ms_to_ticks(timeout);
     u32_t begin_ms, end_ms, elapsed_ms;
     u32_t ret;
 
@@ -119,7 +117,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
     begin_ms = sys_now();
 
     if( timeout != 0UL ) {
-        ret = yunos_sem_take(sem, ticks);
+        ret = yos_sem_wait(sem,timeout);
         if(ret == YUNOS_SUCCESS) {
             end_ms = sys_now();
 
@@ -130,7 +128,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
             ret = SYS_ARCH_TIMEOUT;
         }
     } else {
-        while( !(yunos_sem_take(sem, YUNOS_WAIT_FOREVER) == YUNOS_SUCCESS));
+        while( !(yos_sem_wait(sem, YOS_WAIT_FOREVER) == YUNOS_SUCCESS));
         end_ms = sys_now();
 
         elapsed_ms = end_ms - begin_ms;
@@ -146,6 +144,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 }
 
 #ifndef LWIP_MAILBOX_QUEUE
+
 /*-----------------------------------------------------------------------------------*/
 /*
     err_t sys_mbox_new(sys_mbox_t *mbox, int size)
@@ -376,6 +375,7 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mb, void **msg)
     return 0;
 }
 #else
+
 /*-----------------------------------------------------------------------------------*/
 /*
     err_t sys_mbox_new(sys_mbox_t *mbox, int size)
@@ -393,7 +393,7 @@ err_t sys_mbox_new(sys_mbox_t *mb, int size)
         return ERR_MEM;
     }
 
-    stat = yunos_queue_create(mb, "lwip_mbox", (void **)msg_start, size);
+    stat = yos_queue_new(mb,msg_start,size * sizeof(void *),sizeof(void *));
 
     if (stat == YUNOS_SUCCESS) {
         ret = ERR_OK;
@@ -409,13 +409,13 @@ err_t sys_mbox_new(sys_mbox_t *mb, int size)
 */
 void sys_mbox_free(sys_mbox_t *mb)
 {
-    void **start;
+    void *start;
 
     if ((mb != NULL)) {
-        start = mb->msg_q.queue_start;
+        start = yos_queue_buf_ptr(mb);
         if(start != NULL)
             free(start);
-        yunos_queue_del(mb);
+        yos_queue_free(mb);
     }
 }
 
@@ -427,7 +427,7 @@ void sys_mbox_free(sys_mbox_t *mb)
 */
 void sys_mbox_post(sys_mbox_t *mb, void *msg)
 {
-    yunos_queue_back_send(mb, msg);
+    yos_queue_send(mb,&msg,sizeof(void*));
 }
 
 /*
@@ -437,7 +437,7 @@ void sys_mbox_post(sys_mbox_t *mb, void *msg)
 */
 err_t sys_mbox_trypost(sys_mbox_t *mb, void *msg)
 {
-    if (yunos_queue_back_send(mb, msg) != YUNOS_SUCCESS)
+    if (yos_queue_send(mb,&msg,sizeof(void*)) != YUNOS_SUCCESS)
         return ERR_MEM;
     else
         return ERR_OK;
@@ -461,8 +461,8 @@ err_t sys_mbox_trypost(sys_mbox_t *mb, void *msg)
 */
 u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
 {
-    tick_t ticks = yunos_ms_to_ticks(timeout);
     u32_t begin_ms, end_ms, elapsed_ms;
+    u32_t len;
     u32_t ret;
 
     if (mb == NULL)
@@ -471,7 +471,8 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
     begin_ms = sys_now();
 
     if( timeout != 0UL ) {
-        if(yunos_queue_recv(mb, ticks, msg) == YUNOS_SUCCESS) {
+
+        if(yos_queue_recv(mb,timeout,msg,&len) == YUNOS_SUCCESS) {
             end_ms = sys_now();
             elapsed_ms = end_ms - begin_ms;
             ret = elapsed_ms;
@@ -479,7 +480,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
             ret = SYS_ARCH_TIMEOUT;
         }
     } else {
-        while( yunos_queue_recv(mb, YUNOS_WAIT_FOREVER, msg) != YUNOS_SUCCESS);
+        while(yos_queue_recv(mb,YOS_WAIT_FOREVER,msg,&len) != YUNOS_SUCCESS);
         end_ms = sys_now();
         elapsed_ms = end_ms - begin_ms;
 
@@ -501,7 +502,9 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
 */
 u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mb, void **msg)
 {
-    if(yunos_queue_recv(mb, YUNOS_NO_WAIT, msg) != YUNOS_SUCCESS ) {
+    u32_t len;
+
+    if(yos_queue_recv(mb,0u,msg,&len) != YUNOS_SUCCESS ) {
         return SYS_MBOX_EMPTY;
     } else {
         return ERR_OK;
@@ -519,7 +522,7 @@ err_t sys_mutex_new(sys_mutex_t *mutex)
     kstat_t stat;
     err_t ret = ERR_MEM;
 
-    stat = yunos_mutex_create(mutex, "lwip_mutex");
+    stat = yos_mutex_new(mutex);
 
     if (stat == YUNOS_SUCCESS) {
         ret = ERR_OK;
@@ -532,14 +535,14 @@ err_t sys_mutex_new(sys_mutex_t *mutex)
  **/
 void sys_mutex_lock(sys_mutex_t *mutex)
 {
-    yunos_mutex_lock(mutex, YUNOS_WAIT_FOREVER);
+    yos_mutex_lock(mutex,YOS_WAIT_FOREVER);
 }
 
 /** Unlock a mutex
  * @param mutex the mutex to unlock */
 void sys_mutex_unlock(sys_mutex_t *mutex)
 {
-    yunos_mutex_unlock(mutex);
+    yos_mutex_unlock(mutex);
 }
 
 
@@ -548,7 +551,7 @@ void sys_mutex_unlock(sys_mutex_t *mutex)
  **/
 void sys_mutex_free(sys_mutex_t *mutex)
 {
-    yunos_mutex_del(mutex);
+    yos_mutex_free(mutex);
 }
 
 /*
@@ -559,28 +562,27 @@ void sys_mutex_free(sys_mutex_t *mutex)
 */
 u32_t sys_now(void)
 {
-    return yunos_sys_time_get();
+    return yos_now_ms();
 }
 
 /*
     u32_t sys_jiffies(void)
-
     This optional function returns the current time in milliseconds (don't care  for wraparound,
     this is only used for time diffs).
 */
+
 u32_t sys_jiffies(void)
 {
-    return yunos_sys_time_get() * 1000000L;
+    return yos_now();
 }
 
 sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio)
 {
-    ktask_t *task_handle = NULL;
+    yos_task_t task_handle;
 
-    yunos_task_dyn_create(&task_handle, name, arg, prio, 0,
-                                          stacksize / sizeof(cpu_stack_t), thread, 1u);
+    yos_task_new_ext(&task_handle,name,thread,arg,stacksize,prio);
 
-    return (sys_thread_t)task_handle;
+    return (sys_thread_t)task_handle.hdl;
 }
 
 #if SYS_LIGHTWEIGHT_PROT
@@ -599,7 +601,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 */
 sys_prot_t sys_arch_protect(void)
 {
-    yunos_sched_disable();
+    yos_sched_disable();
     return 0;
 }
 
@@ -611,7 +613,7 @@ sys_prot_t sys_arch_protect(void)
 */
 void sys_arch_unprotect(sys_prot_t pval)
 {
-    yunos_sched_enable();
+    yos_sched_enable();
 }
 
 #endif
@@ -638,3 +640,4 @@ void sys_init(void)
 {
 
 }
+
