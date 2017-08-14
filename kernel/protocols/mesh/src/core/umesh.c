@@ -45,7 +45,6 @@ typedef struct urmesh_state_s {
     mm_cb_t                mm_cb;
     ur_netif_ip6_address_t ucast_address[IP6_UCAST_ADDR_NUM];
     ur_netif_ip6_address_t mcast_address[IP6_MCAST_ADDR_NUM];
-    nd_updater_t           network_data_updater;
     ur_adapter_callback_t  *adapter_callback;
     bool                   initialized;
     bool                   started;
@@ -80,10 +79,6 @@ static void update_ipaddr(void)
     memcpy(&g_um_state.mcast_address[0].addr, mcast,
            sizeof(g_um_state.mcast_address[0].addr));
     g_um_state.mcast_address[0].prefix_length = 64;
-}
-
-static void network_data_update_handler(bool stable)
-{
 }
 
 static ur_error_t umesh_interface_up(void)
@@ -425,8 +420,6 @@ ur_error_t umesh_start()
     if (wifi_hal) {
         hal_umesh_enable(wifi_hal);
     }
-    g_um_state.network_data_updater.handler = network_data_update_handler;
-    nd_register_update_handler(&g_um_state.network_data_updater);
 
     yos_post_event(EV_MESH, CODE_MESH_STARTED, 0);
 
@@ -446,8 +439,6 @@ ur_error_t umesh_stop(void)
     if (wifi_hal) {
         hal_umesh_disable(wifi_hal);
     }
-
-    nd_unregister_update_handler(&g_um_state.network_data_updater);
 
     lp_stop();
     umesh_mm_stop();

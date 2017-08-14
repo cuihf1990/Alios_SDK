@@ -185,8 +185,9 @@ int platform_thread_create(
     int ret = -1;
     *stack_used = 0;
     (void)stack;
+    yos_task_t task;
 
-    ret = yos_task_new_ext(name, (thread_entry_t)start_routine, arg, stack_size,
+    ret = yos_task_new_ext(&task, name, (thread_entry_t)start_routine, arg, stack_size,
                            DEFAULT_THREAD_PRI);
 
     *thread = start_routine;

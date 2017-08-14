@@ -597,6 +597,7 @@ int yos_cli_stop(void)
 int yos_cli_init(void)
 {
     int ret;
+    yos_task_t task;
 
     pCli = (struct cli_st *)yos_malloc(sizeof(struct cli_st));
     if (pCli == NULL) {
@@ -612,7 +613,7 @@ int yos_cli_init(void)
         goto init_general_err;
     }
 
-    ret = yos_task_new_ext("cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
+    ret = yos_task_new_ext(&task,"cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
     if (ret != YUNOS_SUCCESS) {
         cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);

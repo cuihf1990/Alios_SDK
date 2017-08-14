@@ -50,7 +50,6 @@ typedef struct mesh_mgmt_state_s {
     mm_device_t             device;
     node_mode_t             leader_mode;
     mm_cb_t                 *callback;
-    nd_updater_t            network_data_updater;
     umesh_raw_data_received raw_data_receiver;
 } mesh_mgmt_state_t;
 
@@ -74,10 +73,6 @@ static ur_error_t send_advertisement(network_context_t *network);
 
 static void write_prev_netinfo(void);
 static void read_prev_netinfo(void);
-
-static void network_data_update_handler(bool stable)
-{
-}
 
 static void nbr_discovered_handler(neighbor_t *nbr) {
     if (nbr) {
@@ -1953,11 +1948,6 @@ ur_error_t umesh_mm_init(node_mode_t mode)
     g_mm_state.device.seclevel = SEC_LEVEL_1;
     g_mm_state.device.prev_channel = -1;
 
-    memset(&g_mm_state.network_data_updater, 0 ,
-           sizeof(g_mm_state.network_data_updater));
-    g_mm_state.network_data_updater.handler = network_data_update_handler;
-    nd_register_update_handler(&g_mm_state.network_data_updater);
-
     register_neighbor_updater(neighbor_updated_handler);
 
     memset(&configs, 0, sizeof(configs));
@@ -1974,7 +1964,6 @@ ur_error_t umesh_mm_init(node_mode_t mode)
 
 ur_error_t umesh_mm_deinit(void)
 {
-    nd_unregister_update_handler(&g_mm_state.network_data_updater);
     return UR_ERROR_NONE;
 }
 
