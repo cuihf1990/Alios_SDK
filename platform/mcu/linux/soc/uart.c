@@ -110,8 +110,7 @@ static void * clirev_thread(void * arg)
 }
 
 
-
-int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
+int32_t hal_uart_init(uart_dev_t *uart)
 {
     _uart_drv_t    *pdrv = &_uart_drv[0];
     struct termios  term_vi;
@@ -126,7 +125,7 @@ int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
         term_vi.c_iflag &= (~IXON & ~ICRNL);
         tcsetattr(0, TCSANOW, &term_vi);
         atexit(exit_cleanup);
-        stat = yunos_buf_queue_dyn_create(&pdrv->bufque, "cli", config->rx_buf_size , CLI_BUFQUE_NUM);
+        stat = yunos_buf_queue_dyn_create(&pdrv->bufque, "cli", 256 , CLI_BUFQUE_NUM);
         if(stat != YUNOS_SUCCESS) {
             return stat;
         }
@@ -137,15 +136,9 @@ int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
     return 0;
 }
 
-int32_t hal_stdio_uart_init(const hal_uart_config_t *config)
+int32_t hal_uart_finalize(uart_dev_t *uart)
 {
-    return 0;
-}
-
-int32_t hal_uart_finalize(uint8_t uart)
-{
-    _uart_drv_t *pdrv = &_uart_drv[uart];
-
+    _uart_drv_t *pdrv = &_uart_drv[uart->port];
 
     yunos_mutex_del(&pdrv->tx_mutex);
     pdrv->status = _UART_STATUS_CLOSED;
@@ -154,10 +147,10 @@ int32_t hal_uart_finalize(uint8_t uart)
     return 0;
 }
 
-int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size)
+int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
 {
     uint32_t i = 0;
-    _uart_drv_t *pdrv = &_uart_drv[uart];
+    _uart_drv_t *pdrv = &_uart_drv[uart->port];
 
     yunos_mutex_lock(&pdrv->tx_mutex, YUNOS_WAIT_FOREVER);
 
@@ -170,18 +163,17 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size)
     return 0;
 }
 
-int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size,
-                      uint32_t *recv_size, uint32_t timeout)
+int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
 {
     uint32_t       readlen  = 0;
     uint32_t       totallen = 0;
     kstat_t        retval;
-    _uart_drv_t   *pdrv = &_uart_drv[uart];
+    _uart_drv_t   *pdrv = &_uart_drv[uart->port];
 
     while(1) {
         retval = yunos_buf_queue_recv(pdrv->bufque, YUNOS_WAIT_FOREVER, data, &readlen);
         if(retval != YUNOS_SUCCESS) {
-            if(recv_size) {
+            if (recv_size) {
                 *recv_size = totallen;
             }
             return -1;
@@ -191,16 +183,10 @@ int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size,
             break;
         }
     }
-    if(recv_size) {
+    if (recv_size) {
         *recv_size = totallen;
     }
     return 0;
 
-}
-
-
-uint32_t hal_uart_get_len_in_buf(int uart)
-{
-    return 0;
 }
 

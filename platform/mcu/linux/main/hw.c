@@ -177,22 +177,22 @@ int csp_printf(const char *fmt, ...)
     return ret;
 }
 
-const hal_uart_config_t config = {
-    .baud_rate = 921600,
-    .data_width = DATA_WIDTH_8BIT,
-    .parity = NO_PARITY,
-    .stop_bits = STOP_BITS_1,
-    .flow_control = FLOW_CONTROL_DISABLED,
-    .rx_buf_size = 256,
-};
-
 extern hal_wifi_module_t sim_yos_wifi_linux;
 extern struct hal_ota_module_s linuxhost_ota_module;
+uart_dev_t uart_0;
+
 void linux_wifi_register(void);
 void hw_start_hal(void)
 {
+    uart_0.port                = 0;
+    uart_0.config.baud_rate    = 921600;
+    uart_0.config.data_width   = DATA_WIDTH_8BIT;
+    uart_0.config.parity       = NO_PARITY;
+    uart_0.config.stop_bits    = STOP_BITS_1;
+    uart_0.config.flow_control = FLOW_CONTROL_DISABLED;
+
 #ifdef CONFIG_YOS_CLI
-    hal_uart_init(0, &config);
+    hal_uart_init(&uart_0);
 #endif
 
     hal_wifi_register_module(&sim_yos_wifi_linux);

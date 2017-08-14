@@ -35,8 +35,9 @@ static void task_Command( char *pcWriteBuffer, int xWriteBufferLen, int argc,
 
 static struct cli_st *pCli = NULL;
 static int            cliexit = 0;
+extern uart_dev_t     uart_0;
 
-int cli_putstr(const char *msg);
+int cli_putstr(char *msg);
 
 /* Find the command 'name' in the cli commands table.
 * If len is 0 then full match will be performed else upto len bytes.
@@ -656,15 +657,15 @@ int cli_printf(const char *msg, ...)
         return 0;
     }
 
-    cli_putstr((const char *)message);
+    cli_putstr(message);
     return 0;
 }
 
 
-int cli_putstr(const char *msg)
+int cli_putstr(char *msg)
 {
     if (msg[0] != 0) {
-        hal_uart_send(STDIO_UART, (const char *)msg, strlen(msg) );
+        hal_uart_send(&uart_0, msg, strlen(msg), 0);
     }
 
     return 0;
@@ -672,7 +673,7 @@ int cli_putstr(const char *msg)
 
 int cli_getchar(char *inbuf)
 {
-    if (hal_uart_recv(STDIO_UART, inbuf, 1, NULL, 0xFFFFFFFF) == 0) {
+    if (hal_uart_recv(&uart_0, inbuf, 1, NULL, 0xFFFFFFFF) == 0) {
         return 1;
     } else {
         return 0;
