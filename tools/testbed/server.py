@@ -108,7 +108,9 @@ class Server:
                                     s.send(data)
                                 except:
                                     continue
-                    elif type == TBframe.DEVICE_ERASE or type == TBframe.DEVICE_PROGRAM:
+                    elif type == TBframe.DEVICE_ERASE or type == TBframe.DEVICE_PROGRAM or \
+                         type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP or \
+                         type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_CMD:
                         values = value.split(',')
                         addr = (values[0], int(values[1]))
                         terminal = ''
@@ -117,9 +119,9 @@ class Server:
                                 terminal = t
                         if terminal != '':
                             if values[2] != 'success':
-                                data = TBframe.construct(TBframe.CMD_ERROR, '')
+                                data = TBframe.construct(TBframe.CMD_ERROR, values[2])
                             else:
-                                data = TBframe.construct(TBframe.CMD_DONE, '')
+                                data = TBframe.construct(TBframe.CMD_DONE, values[2])
                             terminal['socket'].send(data)
             except socket.timeout:
                 continue
@@ -225,18 +227,18 @@ class Server:
                         addr = (dst[0], int(dst[1]))
                         client = self.get_client_by_addr(addr)
                         if client == None:
-                            data = TBframe.construct(TBframe.CMD_ERROR,'')
+                            data = TBframe.construct(TBframe.CMD_ERROR,'fail')
                             terminal['socket'].send(data)
                             continue
                         self.send_file_to_someone(client, filename)
-                        data = TBframe.construct(TBframe.CMD_DONE,'')
+                        data = TBframe.construct(TBframe.CMD_DONE,'success')
                         terminal['socket'].send(data)
                     elif type == TBframe.DEVICE_ERASE:
                         dst = value.split(',')
                         addr = (dst[0], int(dst[1]))
                         client = self.get_client_by_addr(addr)
                         if client == None:
-                            data = TBframe.construct(TBframe.CMD_ERROR,'')
+                            data = TBframe.construct(TBframe.CMD_ERROR,'fail')
                             terminal['socket'].send(data)
                         else:
                             content = terminal['addr'][0]
@@ -250,7 +252,7 @@ class Server:
                         addr = (dst[0], int(dst[1]))
                         client = self.get_client_by_addr(addr)
                         if client == None:
-                            data = TBframe.construct(TBframe.CMD_ERROR,'')
+                            data = TBframe.construct(TBframe.CMD_ERROR,'fail')
                             terminal['socket'].send(data)
                         else:
                             content = terminal['addr'][0]
@@ -266,17 +268,28 @@ class Server:
                         addr = (dst[0], int(dst[1]))
                         client = self.get_client_by_addr(addr)
                         if client != None:
-                            data = TBframe.construct(type, value)
+                            content = terminal['addr'][0]
+                            content += ',' + str(terminal['addr'][1])
+                            content += ',' + dst[2]
+                            data = TBframe.construct(type, content)
                             client['socket'].send(data)
                             self.increase_device_refer(client, dst[2], using_list)
                     elif type == TBframe.DEVICE_CMD:
                         dst = (value.split(':')[0]).split(',')
+                        devlen = len(value.split(':')[0])
+                        cmds = value[devlen:]
                         addr = (dst[0], int(dst[1]))
                         client = self.get_client_by_addr(addr)
                         if client != None:
-                            data = TBframe.construct(TBframe.DEVICE_CMD, value)
+                            content = terminal['addr'][0]
+                            content += ',' + str(terminal['addr'][1])
+                            content += ',' + dst[2] + cmds
+                            data = TBframe.construct(TBframe.DEVICE_CMD, content)
                             client['socket'].send(data)
                             self.increase_device_refer(client, dst[2], using_list)
+                        else:
+                            data = TBframe.construct(TBframe.CMD_ERROR,'fail')
+                            terminal['socket'].send(data)
                     elif type == TBframe.LOG_SUB:
                         values = value.split(',')
                         if len(values) != 3:
@@ -318,7 +331,7 @@ class Server:
                         filename = 'server/' + addr[0] + '-' + port[5:] + '.log'
                         client = self.get_client_by_addr(addr)
                         if client == None or port not in list(client['devices']) or os.path.exists(filename) == False:
-                            data = TBframe.construct(TBframe.CMD_ERROR,'')
+                            data = TBframe.construct(TBframe.CMD_ERROR,'fail')
                             terminal['socket'].send(data)
                             print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                             print "downloading log of device {0}:{1} ...".format(values[0], port),
@@ -326,7 +339,7 @@ class Server:
                             continue
                         self.send_file_to_someone(terminal, filename)
                         heartbeat_timeout = time.time() + 30
-                        data = TBframe.construct(TBframe.CMD_DONE, '')
+                        data = TBframe.construct(TBframe.CMD_DONE, 'success')
                         terminal['socket'].send(data)
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "downloading log of device {0}:{1} ...".format(values[0], port),

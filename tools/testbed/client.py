@@ -39,19 +39,19 @@ class Client:
             if self.connected == False:
                 time.sleep(0.1)
                 continue
-            if self.devices[port]['lock'].acquire(False):
+            if self.devices[port]['rlock'].acquire(False):
                 if self.devices[port]['serial'].isOpen() == False:
                     try:
                         self.devices[port]['serial'].open()
                     except:
                         print "error: unable to open {0}".format(port)
-                        self.devices[port]['lock'].release()
+                        self.devices[port]['rlock'].release()
                         time.sleep(0.1)
                         break
-                self.devices[port]['lock'].release()
+                self.devices[port]['rlock'].release()
                 newline = False
                 try:
-                    while self.devices[port]['lock'].acquire(False) == True:
+                    while self.devices[port]['rlock'].acquire(False) == True:
                         try:
                             c = self.devices[port]['serial'].read(1)
                         except:
@@ -59,7 +59,7 @@ class Client:
                             c = ''
                             self.devices[port]['serial'].close()
                         finally:
-                            self.devices[port]['lock'].release()
+                            self.devices[port]['rlock'].release()
                         if c != '':
                             if log == '':
                                 log_time = time.time()
@@ -102,7 +102,7 @@ class Client:
                 except:
                     print "error: unable to open {0}".format(port)
                     continue
-                self.devices[port] = {'lock':threading.RLock(), 'model':'esp32', 'serial':ser}
+                self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'esp32', 'serial':ser}
                 thread.start_new_thread(self.device_logging, (port,))
                 self.send_device_list()
 
@@ -118,7 +118,7 @@ class Client:
                 except:
                     print "error: unable to open {0}".format(port)
                     continue
-                self.devices[port] = {'lock':threading.RLock(), 'model':'mk3060', 'serial':ser}
+                self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'mk3060', 'serial':ser}
                 thread.start_new_thread(self.device_logging, (port,))
                 self.send_device_list()
             time.sleep(0.05)
@@ -147,16 +147,18 @@ class Client:
             baudrate = baudrate / 2
         return error
 
-    def erase_devive(self, port):
+    def erase_device(self, port):
         ret = "fail"
         if os.path.exists(port) == False:
             return ret
 
         if self.devices[port]['model'] == "esp32":
-            self.devices[port]['lock'].acquire()
+            self.devices[port]['rlock'].acquire()
+            self.devices[port]['wlock'].acquire()
             ret = esp32_erase(port)
-            self.devices[port]['lock'].release()
-        return "fail"
+            self.devices[port]['wlock'].release()
+            self.devices[port]['rlock'].release()
+        return ret
 
     def esp32_program(self, port, address, file):
         if self.devices[port]['serial'].isOpen() == True:
@@ -196,13 +198,14 @@ class Client:
         return error
 
     def mxchip_program(self, port, address, file):
-        if self.devices[port]['serial'].isOpen() == True:
-            self.devices[port]['serial'].close()
-        time.sleep(0.1)
         retry = 3
         baudrate = 921600
         error = "fail"
         while retry > 0:
+            if self.mxchip_control(port, TBframe.DEVICE_RESET) != "success":
+                retry -= 1
+                continue
+            self.devices[port]['serial'].write("      \r\n")
             script = ['timeout', '80', 'python']
             script += ['autoscripts/yos_firmware_update.py']
             script += [port]
@@ -216,21 +219,80 @@ class Client:
             baudrate = baudrate / 2
         return error
 
-    def program_devive(self, port, address, file):
+    def program_device(self, port, address, file):
         ret = "fail"
         if os.path.exists(port) == False:
             return "fail"
         if os.path.exists(file) == False:
             return "fail"
 
+        self.devices[port]['rlock'].acquire()
+        self.devices[port]['wlock'].acquire()
         if self.devices[port]['model'] == "esp32":
-            self.devices[port]['lock'].acquire()
             ret = self.esp32_program(port, address, file)
-            self.devices[port]['lock'].release()
         elif self.devices[port]['model'] == "mk3060":
-            self.devices[port]['lock'].acquire()
             ret = self.mxchip_program(port, address, file)
-            self.devices[port]['lock'].release()
+        self.devices[port]['wlock'].release()
+        self.devices[port]['rlock'].release()
+        return ret
+
+    def esp32_control(self, port, operation):
+        if operation == TBframe.DEVICE_RESET:
+            print "reset", port
+            self.devices[port]['serial'].setDTR(False)
+            time.sleep(0.1)
+            self.devices[port]['serial'].setDTR(True)
+            return "success"
+        elif operation == TBframe.DEVICE_STOP:
+            print "stop", port
+            self.devices[port]['serial'].setDTR(False)
+            return "success"
+        elif operation == TBframe.DEVICE_START:
+            print "start", port
+            self.devices[port]['serial'].setDTR(True)
+            return "success"
+        return "fail"
+
+    def mxchip_control(self, port, operation):
+        if operation == TBframe.DEVICE_RESET:
+            print "reset", port
+            self.devices[port]['serial'].setRTS(True)
+            time.sleep(0.1)
+            self.devices[port]['serial'].setRTS(False)
+            return "success"
+        elif operation == TBframe.DEVICE_STOP:
+            print "stop", port
+            self.devices[port]['serial'].setRTS(True)
+            return "success"
+        elif operation == TBframe.DEVICE_START:
+            print "start", port
+            self.devices[port]['serial'].setRTS(False)
+            return "success"
+        return "fail"
+
+    def control_device(self, port, operation):
+        if os.path.exists(port) == False:
+            return "fail"
+
+        if self.devices[port]['serial'].isOpen() == False:
+            try:
+                self.devices[port]['serial'].open()
+            except:
+                print "error: unable to open {0}".format(port)
+                return "fail"
+
+        ret = "busy"
+        if self.devices[port]['wlock'].acquire(False) == True:
+            if self.devices[port]['model'] == "esp32":
+                ret = self.esp32_control(port, operation)
+            elif self.devices[port]['model'] == "mk3060":
+                ret = self.mxchip_control(port, operation)
+            else:
+                ret = "fail"
+            self.devices[port]['wlock'].release()
+        else:
+            operate= {TBframe.DEVICE_RESET:"reset", TBframe.DEVICE_STOP:"stop", TBframe.DEVICE_START:"start"}
+            print operate[operation], port, "failed, device busy"
         return ret
 
     def heartbeat_func(self):
@@ -290,7 +352,7 @@ class Client:
                             continue
                         term = args[0:2]
                         port = args[2]
-                        result = self.erase_devive(port)
+                        result = self.erase_device(port)
                         print "erasing", port, "...", result
                         content = ','.join(term) + ',' + result
                         data = TBframe.construct(TBframe.DEVICE_ERASE, content)
@@ -306,7 +368,7 @@ class Client:
                         port = args[2]
                         address = args[3]
                         filename = 'client/' + args[4]
-                        result = self.program_devive(port, address, filename)
+                        result = self.program_device(port, address, filename)
                         print "programming", args[4], "to", port, "@", address, "...", result
                         content = ','.join(term) + ',' + result
                         data = TBframe.construct(TBframe.DEVICE_PROGRAM, content)
@@ -315,28 +377,46 @@ class Client:
                         except:
                             raise ConnetionLost
                     elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
-                        port = value.split(',')[2]
-                        if port not in self.devices:
+                        args = value.split(',')
+                        if len(args) != 3:
                             continue
-                        if type == TBframe.DEVICE_RESET:
-                            print "reset", port
-                            self.devices[port]['serial'].setDTR(False)
-                            time.sleep(0.1)
-                            self.devices[port]['serial'].setDTR(True)
-                        elif type == TBframe.DEVICE_STOP:
-                            print "stop", port
-                            self.devices[port]['serial'].setDTR(False)
+                        term = args[0:2]
+                        port = args[2]
+                        if port not in self.devices:
+                            result = "error"
                         else:
-                            print "start", port
-                            self.devices[port]['serial'].setDTR(True)
+                            result = self.control_device(port, type)
+                        content = ','.join(term) + ',' + result
+                        data = TBframe.construct(type, content)
+                        try:
+                            self.service_socket.send(data)
+                        except:
+                            raise ConnetionLost
                     elif type == TBframe.DEVICE_CMD:
-                        port = (value.split(':')[0]).split(',')[2]
-                        dev_len = len(value.split(':')[0]) + 1
-                        cmds = value[dev_len:].split('|')
+                        args = value.split(':')[0]
+                        arglen = len(args) + 1
+                        args = args.split(',')
+                        term = args[0:2]
+                        port = args[2]
+                        cmds = value[arglen:].split('|')
                         cmds = ' '.join(cmds) +'\r'
                         if port in self.devices:
-                            self.devices[port]['serial'].write(cmds)
-                            print "device", port, "run command:", cmds
+                            if self.devices[port]['wlock'].acquire(False) == True:
+                                self.devices[port]['serial'].write(cmds)
+                                self.devices[port]['wlock'].release()
+                                result="success"
+                                print "device", port, "run command:", cmds, "succeed"
+                            else:
+                                result = "busy"
+                                print "device", port, "run command:", cmds, "failed, device busy"
+                        else:
+                            result = "error"
+                        content = ','.join(term) + ',' + result
+                        data = TBframe.construct(type, content)
+                        try:
+                            self.service_socket.send(data)
+                        except:
+                            raise ConnetionLost
             except ConnetionLost:
                 self.connected = False
                 print "connection to server lost, try reconnecting..."
