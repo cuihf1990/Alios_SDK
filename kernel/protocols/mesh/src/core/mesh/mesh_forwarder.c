@@ -54,8 +54,7 @@ enum {
 
 static void send_datagram(void *args);
 static void handle_datagram(void *message);
-static neighbor_t *get_next_node(network_context_t *network,
-                                 message_info_t *info);
+static neighbor_t *get_next_node(message_info_t *info);
 
 static inline bool is_mesh_header(uint8_t control)
 {
@@ -436,7 +435,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
     if (info->dest.addr.len == EXT_ADDR_SIZE ||
         info->dest.addr.short_addr != BCAST_SID) {
-        next_node = get_next_node(network, info);
+        next_node = get_next_node(info);
         if (next_node == NULL) {
             send_address_unreachable(network, &info->src, &info->dest);
             return UR_ERROR_DROP;
@@ -470,7 +469,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         frag_length = msg_length;
         if (frag_length > (mtu - header_length)) {
             frag_header.dispatch = FRAG_1_DISPATCH;
-            frag_header.size     = msg_length;
+            frag_header.size = msg_length;
             *((uint16_t *)&frag_header) = htons(*((uint16_t *)&frag_header));
             hal->frag_info.tag++;
             frag_header.tag = htons(hal->frag_info.tag);
@@ -539,14 +538,14 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     return error;
 }
 
-static neighbor_t *get_next_node(network_context_t *network,
-                                 message_info_t *info)
+static neighbor_t *get_next_node(message_info_t *info)
 {
     uint16_t   local_sid;
     uint16_t   next_hop;
     neighbor_t *next = NULL;
     bool       same_subnet = false;
     bool       same_net = true;
+    network_context_t *network = info->network;
 
     local_sid = umesh_mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
@@ -793,7 +792,10 @@ static void message_handler(void *args)
     message_info_t *info;
     bool recv = false;
     bool forward = false;
-    neighbor_t *nbr = NULL;
+    int8_t cmp_mode;
+    bool is_diff_level = false;
+    bool is_check_level = false;
+    uint16_t meshnetid;
 
     hal = (hal_context_t *)args;
     message = message_queue_get_head(&hal->recv_queue);
@@ -855,6 +857,50 @@ static void message_handler(void *args)
         forward = true;
     }
 
+    if (info->dest.netid != BCAST_NETID) {
+        info->network = get_network_context_by_meshnetid(info->dest.netid);
+        if (info->network == NULL) {
+            if (is_subnet(info->dest.netid)) {
+                info->network = get_sub_network_context(hal);
+            } else {
+                info->network = get_hal_default_network_context(hal);
+            }
+        }
+    } else if (info->src.netid != BCAST_NETID &&
+               info->src.netid != INVALID_NETID) {
+        info->network = get_network_context_by_meshnetid(info->src.netid);
+        is_check_level = true;
+    }
+
+    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode(), info->mode);
+    if (info->network == NULL) {
+        if (cmp_mode <= 0) {
+            info->network = get_hal_default_network_context(hal);
+        } else {
+            info->network = get_sub_network_context(hal);
+        }
+    }
+    meshnetid = umesh_mm_get_meshnetid(info->network);
+    if (meshnetid != BCAST_NETID && meshnetid != INVALID_NETID) {
+        uint8_t local_subnet_type = is_subnet(meshnetid)? 1: 0;
+        uint8_t subnet_type = is_subnet(info->src.netid)? 1: 0;
+        if ((local_subnet_type ^ subnet_type) ||
+            (cmp_mode == -1 && local_subnet_type == 0 && subnet_type == 0)) {
+            is_diff_level = true;
+        }
+        if (cmp_mode < 0 && subnet_type) {
+            is_diff_level = false;
+        }
+    } else if (cmp_mode == 1) {
+        is_diff_level = true;
+    }
+
+    if (info->network == NULL ||
+        (is_check_level && is_diff_level)) {
+        message_free(message);
+        return;
+    }
+
 #ifdef CONFIG_YOS_MESH_DEBUG
     if (info->type == MESH_FRAME_TYPE_CMD) {
         handle_diags_command(message, recv);
@@ -862,37 +908,19 @@ static void message_handler(void *args)
 #endif
 
     if (forward == true) {
-        network = NULL;
-        nbr = mf_get_neighbor(info->type, info->dest.netid, &info->dest.addr);
-        if (info->dest.addr.len == EXT_ADDR_SIZE) {
-            info->dest.netid = BCAST_NETID;
-            if (nbr) {
-                hal = (hal_context_t *)nbr->hal;
-                network = get_hal_default_network_context(hal);
-            }
-        } else if (info->dest.netid != BCAST_NETID) {
-            network = get_network_context_by_meshnetid(info->dest.netid);
-            if (network == NULL) {
-                network = get_default_network_context();
-            }
+        info->network = get_network_context_by_meshnetid(info->dest.netid);
+        if (info->network == NULL) {
+            info->network = get_default_network_context();
         }
-        if (network == NULL) {
-            hal->link_stats.in_drops++;
-            message_free(message);
-            goto exit;
-        }
-        if (nbr) {
-            memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
-        }
-        info->network = network;
+        network = info->network;
+        hal = network->hal;
+
         if (info->type == MESH_FRAME_TYPE_DATA) {
-            message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE],
-                                  message);
+            message_queue_enqueue(&hal->send_queue[DATA_QUEUE], message);
         } else {
-            message_queue_enqueue(&network->hal->send_queue[CMD_QUEUE],
-                                  message);
+            message_queue_enqueue(&hal->send_queue[CMD_QUEUE], message);
         }
-        umesh_task_schedule_call(send_datagram, network->hal);
+        umesh_task_schedule_call(send_datagram, hal);
         goto exit;
     }
 
@@ -1078,27 +1106,6 @@ static void handle_datagram(void *args)
 
     message = (message_t *)args;
     info = message->info;
-
-    if (info->dest.netid != BCAST_NETID) {
-        info->network = get_network_context_by_meshnetid(info->dest.netid);
-        if (info->network == NULL) {
-            network = get_default_network_context();
-            if (info->dest.addr.short_addr == BCAST_SID &&
-                is_same_mainnet(info->dest.netid, mm_get_main_netid(network))) {
-                info->network = network;
-            }
-        }
-    } else if (info->src.netid != BCAST_NETID) {
-        info->network = get_network_context_by_meshnetid(info->src.netid);
-        if (info->network == NULL) {
-            hal = get_hal_context(info->hal_type);
-            info->network = get_hal_default_network_context(hal);
-        }
-    }
-    if (info->network == NULL) {
-        message_free(message);
-        return;
-    }
 
     update_neighbor(info, NULL, 0, false);
 

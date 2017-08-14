@@ -91,13 +91,12 @@ static ur_error_t send_discovery_request(network_context_t *network)
     uint16_t        length;
     mm_header_t     *mm_header;
     mm_version_tv_t *version;
-    mm_mode_tv_t    *mode;
     mm_state_flags_tv_t *flag;
     uint8_t         *data;
     message_t       *message = NULL;
     message_info_t  *info;
 
-    length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) + sizeof(mm_mode_tv_t) +
+    length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
              sizeof(mm_state_flags_tv_t);
     message = message_alloc(length, NETWORK_MGMT_1);
     if (message == NULL) {
@@ -112,11 +111,6 @@ static ur_error_t send_discovery_request(network_context_t *network)
     umesh_mm_init_tv_base((mm_tv_t *)version, TYPE_VERSION);
     version->version = 1;
     data += sizeof(mm_version_tv_t);
-
-    mode = (mm_mode_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
-    mode->mode = (uint8_t)umesh_mm_get_mode();
-    data += sizeof(mm_mode_tv_t);
 
     flag = (mm_state_flags_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)flag, TYPE_STATE_FLAGS);
@@ -196,14 +190,12 @@ ur_error_t handle_discovery_request(message_t *message)
 {
     ur_error_t        error = UR_ERROR_NONE;
     mm_version_tv_t   *version;
-    mm_mode_tv_t      *mode;
     mm_state_flags_tv_t *flag;
     uint8_t           *tlvs;
     uint16_t          tlvs_length;
     neighbor_t        *nbr;
     network_context_t *network;
     message_info_t    *info;
-    int8_t            cmp_mode = 0;
 
     if (umesh_mm_get_device_state() < DEVICE_STATE_LEADER) {
         return UR_ERROR_FAIL;
@@ -224,28 +216,10 @@ ur_error_t handle_discovery_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    if ((mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                TYPE_MODE)) == NULL) {
-        return UR_ERROR_FAIL;
-    }
-
     flag = (mm_state_flags_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_STATE_FLAGS);
-
-    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode(), mode->mode);
-    if (cmp_mode < 0) {
-        return UR_ERROR_NONE;
-    }
 
     if ((nbr = update_neighbor(info, tlvs, tlvs_length, true)) == NULL) {
         return UR_ERROR_FAIL;
-    }
-
-    if (((umesh_mm_get_mode() & MODE_SUPER) && (mode->mode & MODE_SUPER)) ||
-        ((umesh_mm_get_mode() & MODE_SUPER) == 0 && (mode->mode & MODE_SUPER) == 0)) {
-        network = get_default_network_context();
-    } else if ((umesh_mm_get_mode() & MODE_SUPER) &&
-               (mode->mode & MODE_SUPER) == 0) {
-        network = get_sub_network_context(network->hal);
     }
 
     if (flag && flag->flags) {
@@ -268,7 +242,6 @@ ur_error_t handle_discovery_response(message_t *message)
     message_info_t    *info;
     mm_netinfo_tv_t   *netinfo;
     mm_channel_tv_t   *channel;
-    int8_t            cmp_mode = 0;
 
     if (umesh_mm_get_device_state() != DEVICE_STATE_DETACHED) {
         return UR_ERROR_NONE;
@@ -295,11 +268,6 @@ ur_error_t handle_discovery_response(message_t *message)
            info->src.netid);
 
     if (is_bcast_netid(info->src.netid)) {
-        return UR_ERROR_NONE;
-    }
-
-    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode(), netinfo->leader_mode);
-    if (cmp_mode > 0) {
         return UR_ERROR_NONE;
     }
 

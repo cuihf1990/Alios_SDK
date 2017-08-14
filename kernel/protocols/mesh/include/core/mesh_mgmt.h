@@ -145,7 +145,6 @@ typedef struct mm_cb_s {
 } mm_cb_t;
 
 ur_error_t umesh_mm_init(node_mode_t mode);
-ur_error_t umesh_mm_deinit(void);
 ur_error_t umesh_mm_start(mm_cb_t *cb);
 ur_error_t umesh_mm_stop(void);
 

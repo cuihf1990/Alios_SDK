@@ -631,7 +631,6 @@ ur_error_t send_advertisement(network_context_t *network)
     mm_netinfo_tv_t   *netinfo;
     mm_ssid_info_tv_t *ssid_info;
     mm_cost_tv_t      *path_cost;
-    mm_mode_tv_t      *mode;
     mm_channel_tv_t   *channel;
     message_info_t    *info;
     uint16_t          subnet_size = 0;
@@ -641,7 +640,7 @@ ur_error_t send_advertisement(network_context_t *network)
     }
 
     length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) +
-             sizeof(mm_cost_tv_t) + sizeof(mm_mode_tv_t);
+             sizeof(mm_cost_tv_t);
     if (network->hal->module->type == MEDIA_TYPE_WIFI) {
         length += sizeof(mm_channel_tv_t);
     }
@@ -702,11 +701,6 @@ ur_error_t send_advertisement(network_context_t *network)
     }
     data += sizeof(mm_cost_tv_t);
 
-    mode = (mm_mode_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
-    mode->mode = (uint8_t)g_mm_state.device.mode;
-    data += sizeof(mm_mode_tv_t);
-
     if (network->hal->module->type == MEDIA_TYPE_WIFI) {
         channel = (mm_channel_tv_t *)data;
         umesh_mm_init_tv_base((mm_tv_t *)channel, TYPE_UCAST_CHANNEL);
@@ -737,7 +731,6 @@ static ur_error_t send_attach_request(network_context_t *network,
     mm_header_t     *mm_header;
     mm_version_tv_t *version;
     mm_ueid_tv_t    *src_ueid;
-    mm_mode_tv_t    *mode;
     mm_timestamp_tv_t *timestamp;
     uint8_t         *data;
     message_t       *message = NULL;
@@ -745,8 +738,7 @@ static ur_error_t send_attach_request(network_context_t *network,
     uint32_t time;
 
     length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
-             sizeof(mm_ueid_tv_t) + sizeof(mm_mode_tv_t) +
-             sizeof(mm_timestamp_tv_t);
+             sizeof(mm_ueid_tv_t) + sizeof(mm_timestamp_tv_t);
     message = message_alloc(length, MESH_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
@@ -765,11 +757,6 @@ static ur_error_t send_attach_request(network_context_t *network,
     umesh_mm_init_tv_base((mm_tv_t *)src_ueid, TYPE_SRC_UEID);
     memcpy(src_ueid->ueid, g_mm_state.device.ueid, sizeof(src_ueid->ueid));
     data += sizeof(mm_ueid_tv_t);
-
-    mode = (mm_mode_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
-    mode->mode = (uint8_t)g_mm_state.device.mode;
-    data += sizeof(mm_mode_tv_t);
 
     time = ur_get_now();
     timestamp = (mm_timestamp_tv_t *)data;
@@ -806,7 +793,6 @@ static ur_error_t send_attach_response(network_context_t *network,
     mm_header_t   *mm_header;
     mm_ueid_tv_t  *src_ueid;
     mm_cost_tv_t  *path_cost;
-    mm_mode_tv_t  *mode;
     mm_symmetric_key_tv_t *symmetric_key;
     message_t     *message;
     uint8_t       *data;
@@ -818,7 +804,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     }
 
     length = sizeof(mm_header_t) + sizeof(mm_cost_tv_t) +
-             sizeof(mm_ueid_tv_t) + sizeof(mm_mode_tv_t);
+             sizeof(mm_ueid_tv_t);
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         length += sizeof(mm_symmetric_key_tv_t);
     }
@@ -840,11 +826,6 @@ static ur_error_t send_attach_response(network_context_t *network,
     umesh_mm_init_tv_base((mm_tv_t *)path_cost, TYPE_PATH_COST);
     path_cost->cost = network->path_cost;
     data += sizeof(mm_cost_tv_t);
-
-    mode = (mm_mode_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
-    mode->mode = g_mm_state.device.mode;
-    data += sizeof(mm_mode_tv_t);
 
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         symmetric_key = (mm_symmetric_key_tv_t *)data;
@@ -873,7 +854,6 @@ static ur_error_t handle_attach_request(message_t *message)
     ur_error_t      error = UR_ERROR_NONE;
     mm_version_tv_t *version;
     mm_ueid_tv_t    *ueid;
-    mm_mode_tv_t    *mode;
     mm_timestamp_tv_t *timestamp;
     uint8_t         *tlvs;
     uint16_t        tlvs_length;
@@ -906,11 +886,6 @@ static ur_error_t handle_attach_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    if ((mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                TYPE_MODE)) == NULL) {
-        return UR_ERROR_FAIL;
-    }
-
     node = get_neighbor_by_ueid(ueid->ueid);
     if (node && node == network->attach_node) {
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
@@ -920,21 +895,6 @@ static ur_error_t handle_attach_request(message_t *message)
 
     if ((node = update_neighbor(info, tlvs, tlvs_length, true)) == NULL) {
         return UR_ERROR_FAIL;
-    }
-
-    if (((umesh_mm_get_mode() & MODE_SUPER) && (mode->mode & MODE_SUPER)) ||
-        ((umesh_mm_get_mode() & MODE_SUPER) == 0 && (mode->mode & MODE_SUPER) == 0)) {
-        if (network != get_default_network_context()) {
-            return UR_ERROR_NONE;
-        }
-    } else if ((umesh_mm_get_mode() & MODE_SUPER) &&
-               (mode->mode & MODE_SUPER) == 0) {
-        if (network == get_default_network_context()) {
-            return UR_ERROR_NONE;
-        }
-    } else if ((umesh_mm_get_mode() & MODE_SUPER) == 0 &&
-               (mode->mode & MODE_SUPER)) {
-        return UR_ERROR_NONE;
     }
 
     timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
@@ -1606,7 +1566,6 @@ ur_error_t handle_address_error(message_t *message)
     if (memcmp(info->src_mac.addr.addr, network->attach_node->mac.addr, EXT_ADDR_SIZE) != 0)
         return error;
 
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "parent notify address error, try reattach\r\n");
     attach_start(network->attach_node);
 
     return error;
@@ -1808,7 +1767,6 @@ static ur_error_t handle_advertisement(message_t *message)
     neighbor_t        *nbr;
     mm_netinfo_tv_t   *netinfo;
     mm_cost_tv_t      *path_cost;
-    mm_mode_tv_t      *mode;
     network_context_t *network;
     uint8_t           tlv_type;
     message_info_t    *info;
@@ -1828,36 +1786,9 @@ static ur_error_t handle_advertisement(message_t *message)
     netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                  TYPE_NETWORK_INFO);
     path_cost = (mm_cost_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_PATH_COST);
-    mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MODE);
     if (netinfo == NULL || info->src.netid == BCAST_NETID ||
-        path_cost == NULL || mode == NULL) {
+        path_cost == NULL) {
         return UR_ERROR_FAIL;
-    }
-
-    // filter the unexpected advs
-    if (network->meshnetid != BCAST_NETID && network->meshnetid != INVALID_NETID) {
-        if (g_mm_state.device.mode & MODE_SUPER) {
-            if ((is_subnet(network->meshnetid) && is_subnet(info->src.netid) == 0) ||
-                (is_subnet(network->meshnetid) == 0 && is_subnet(info->src.netid))) {
-                return UR_ERROR_NONE;
-            }
-        } else if (is_subnet(network->meshnetid) && is_subnet(info->src.netid) == 0) {
-            return UR_ERROR_NONE;
-        }
-    } else {
-        if ((mode->mode & MODE_SUPER) && (g_mm_state.device.mode & MODE_SUPER) == 0) {
-            if (is_subnet(info->src.netid) == 0) {
-                return UR_ERROR_NONE;
-            }
-        } else if ((mode->mode & MODE_SUPER) == 0 &&
-                   (g_mm_state.device.mode & MODE_SUPER)) {
-            return UR_ERROR_NONE;
-        }
-    }
-
-    if ((g_mm_state.device.mode & MODE_SUPER) && (mode->mode & MODE_SUPER) &&
-        is_subnet(network->meshnetid) && is_subnet(info->src.netid)) {
-        return UR_ERROR_NONE;
     }
 
     nbr = update_neighbor(info, tlvs, tlvs_length, false);
@@ -1991,11 +1922,6 @@ ur_error_t umesh_mm_init(node_mode_t mode)
     }
 
     return error;
-}
-
-ur_error_t umesh_mm_deinit(void)
-{
-    return UR_ERROR_NONE;
 }
 
 ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
@@ -2156,9 +2082,9 @@ int8_t umesh_mm_compare_mode(node_mode_t local, node_mode_t other)
             ((local & MODE_LOW_MASK) != 0 && (other & MODE_LOW_MASK) != 0)) {
             return 0;
         } else if ((local & MODE_LOW_MASK) == 0) {
-            return 1;
+            return 2;
         } else {
-            return -1;
+            return -2;
         }
     }
 
