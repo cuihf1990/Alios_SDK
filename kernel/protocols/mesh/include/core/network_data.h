@@ -44,15 +44,7 @@ typedef struct stable_network_data_s {
     lowpan_context_t context[LOWPAN_CONTEXT_NUM];
 } stable_network_data_t;
 
-typedef void (* nd_update_handler_t)(bool stable);
-typedef struct nd_updater_s {
-    slist_t             next;
-    nd_update_handler_t handler;
-} nd_updater_t;
-
 ur_error_t nd_init(void);
-ur_error_t nd_register_update_handler(nd_updater_t *updater);
-ur_error_t nd_unregister_update_handler(nd_updater_t *handler);
 
 // stable network data
 ur_error_t nd_stable_set(stable_network_data_t *stable_network_data);
