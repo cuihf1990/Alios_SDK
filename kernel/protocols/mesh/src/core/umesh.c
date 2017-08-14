@@ -37,7 +37,7 @@
 #include "tools/cli.h"
 
 typedef struct transmit_frame_s {
-    message_t     *message;
+    struct pbuf *buf;
     ur_ip6_addr_t dest;
 } transmit_frame_t;
 
@@ -123,27 +123,26 @@ static inline bool is_sid_address(const uint8_t *addr)
     return false;
 }
 
-static void output_message_handler(void *args)
+static void output_message(message_t *message, ur_ip6_addr_t *dest)
 {
     ur_error_t error = UR_ERROR_NONE;
     message_info_t *info;
-    transmit_frame_t *frame = (transmit_frame_t *)args;
     network_context_t *network;
 
-    info = frame->message->info;
-    if ((ur_is_mcast(&frame->dest)) && (nd_is_subscribed_mcast(&frame->dest))) {
+    info = message->info;
+    if ((ur_is_mcast(dest)) && (nd_is_subscribed_mcast(dest))) {
         info->dest.addr.len = SHORT_ADDR_SIZE;
         info->dest.addr.short_addr = BCAST_SID;
         network = get_default_network_context();
         info->dest.netid = mm_get_main_netid(network);
-    } else if (ur_is_unique_local(&frame->dest)) {
-        if (is_sid_address(&frame->dest.m8[8]) == false) {
+    } else if (ur_is_unique_local(dest)) {
+        if (is_sid_address(&dest->m8[8]) == false) {
             info->dest.addr.len = EXT_ADDR_SIZE;
-            memcpy(info->dest.addr.addr, &frame->dest.m8[8], sizeof(info->dest.addr.addr));
+            memcpy(info->dest.addr.addr, &dest->m8[8], sizeof(info->dest.addr.addr));
         } else {
             info->dest.addr.len = SHORT_ADDR_SIZE;
-            info->dest.addr.short_addr = ntohs(frame->dest.m16[7]);
-            info->dest.netid = ntohs(frame->dest.m16[3]) | ntohs(frame->dest.m16[6]);
+            info->dest.addr.short_addr = ntohs(dest->m16[7]);
+            info->dest.netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
         }
     } else {
         error = UR_ERROR_DROP;
@@ -153,87 +152,106 @@ static void output_message_handler(void *args)
     info->type = MESH_FRAME_TYPE_DATA;
     info->flags = 0;
 
-    error = address_resolve(frame->message);
+    error = address_resolve(message);
     if (error == UR_ERROR_NONE) {
-        mf_send_message(frame->message);
+        mf_send_message(message);
     }
 
 exit:
     if (error == UR_ERROR_DROP) {
-        message_free(frame->message);
+        message_free(message);
     }
-    ur_mem_free(frame, sizeof(transmit_frame_t));
 }
 
-ur_error_t umesh_ipv6_output(umessage_t *message, const ur_ip6_addr_t *dest)
+ur_error_t umesh_ipv4_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
 {
-    transmit_frame_t *frame;
+    return UR_ERROR_FAIL;
+}
+
+#define dump_data(p, sz) do { \
+    uint16_t *p16 = (uint16_t *)(p); \
+    int i; \
+    printf("%s-%04d: ", __func__, __LINE__); \
+    for(i=0;i<(sz)/2;i++) { \
+        printf("%04x ", p16[i]); \
+        if (i && i % 8 == 0) \
+            printf("\n"); \
+    } \
+    printf("\n"); \
+} while(0)
+
+static void output_frame_handler(void *args)
+{
+    transmit_frame_t *frame = (transmit_frame_t *)args;
+    struct pbuf *buf = frame->buf;
+    message_t *message = NULL;
     uint8_t append_length;
     ur_error_t error = UR_ERROR_NONE;
     uint16_t ip_hdr_len;
     uint16_t lowpan_hdr_len;
     uint8_t *ip_payload;
     uint8_t *lowpan_payload;
-    int16_t offset;
+
+    ip_payload = ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);
+    if (ip_payload == NULL) {
+        error = UR_ERROR_MEM;
+        goto out;
+    }
+
+    pbuf_copy_partial(buf, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN, 0);
+    lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
+    error = lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
+    if (error != UR_ERROR_NONE)
+        goto out;
+
+    append_length = sizeof(mcast_header_t) + 1;
+    message = message_alloc(lowpan_hdr_len + append_length, UMESH_1);
+    if (message == NULL) {
+        error = UR_ERROR_FAIL;
+        goto out;
+    }
+
+    pbuf_header(buf, -ip_hdr_len);
+    pbuf_chain(message->data, buf);
+
+    message_set_payload_offset(message, -append_length);
+    message_copy_from(message, lowpan_payload, lowpan_hdr_len);
+    output_message(message, &frame->dest);
+
+out:
+    ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
+    ur_mem_free(frame, sizeof(*frame));
+    pbuf_free(buf);
+}
+
+ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
+{
+    transmit_frame_t *frame;
+    ur_error_t error = UR_ERROR_NONE;
 
     if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
         return UR_ERROR_FAIL;
     }
 
-    ip_payload = ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);
-    if (ip_payload == NULL) {
-        return UR_ERROR_MEM;
-    }
-    if (message_get_msglen((message_t *)message) >= (UR_IP6_HLEN + UR_UDP_HLEN)) {
-        message_copy_to((message_t *)message, 0, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN);
-    } else if (message_get_msglen((message_t *)message) >= UR_IP6_HLEN) {
-        message_copy_to((message_t *)message, 0, ip_payload, UR_IP6_HLEN);
-    }
-    lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
-    lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
-    offset = ip_hdr_len - lowpan_hdr_len;
-
     frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
     if (frame == NULL) {
-        ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
         return UR_ERROR_FAIL;
     }
-    append_length = sizeof(mcast_header_t) + 1;
-    frame->message = message_alloc(((message_t *)message)->data->tot_len +
-                                   append_length - offset, UMESH_1);
-    if (frame->message == NULL) {
-        ur_mem_free(frame, sizeof(transmit_frame_t));
-        ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
-        return UR_ERROR_FAIL;
-    }
-
-    message_set_payload_offset(frame->message, -(append_length + lowpan_hdr_len));
-    message_set_payload_offset((message_t *)message, -ip_hdr_len);
-    message_copy(frame->message, (message_t *)message);
-    message_set_payload_offset(frame->message, lowpan_hdr_len);
-    message_copy_from(frame->message, lowpan_payload, lowpan_hdr_len);
 
     memcpy(&frame->dest, dest, sizeof(frame->dest));
-    error = umesh_task_schedule_call(output_message_handler, frame);
+    pbuf_ref(buf);
+    frame->buf = buf;
+
+    error = umesh_task_schedule_call(output_frame_handler, frame);
     if (error != UR_ERROR_NONE) {
-        message_free(frame->message);
         ur_mem_free(frame, sizeof(transmit_frame_t));
+        pbuf_free(frame->buf);
     }
 
-    ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
-    return UR_ERROR_NONE;
+    return error;
 }
 
-static void input_message_handler(void *args)
-{
-    if (g_um_state.adapter_callback) {
-        g_um_state.adapter_callback->input((message_t *)args);
-    } else {
-        message_free((message_t *)args);
-    }
-}
-
-ur_error_t umesh_input(umessage_t *message)
+ur_error_t umesh_input(message_t *message)
 {
     ur_error_t error = UR_ERROR_FAIL;
     uint8_t *header;
@@ -247,10 +265,10 @@ ur_error_t umesh_input(umessage_t *message)
         error = UR_ERROR_FAIL;
         goto exit;
     }
-    message_copy_to((message_t *)message, 0, header, UR_IP6_HLEN + UR_UDP_HLEN);
-    info = ((message_t *)message)->info;
+    message_copy_to(message, 0, header, UR_IP6_HLEN + UR_UDP_HLEN);
+    info = message->info;
 
-    header_size = message_get_msglen((message_t *)message);
+    header_size = message_get_msglen(message);
     if (header_size < MIN_LOWPAN_FRM_SIZE) {
         error = UR_ERROR_FAIL;
         goto exit;
@@ -261,7 +279,7 @@ ur_error_t umesh_input(umessage_t *message)
         goto exit;
     }
 
-    message_set_payload_offset((message_t *)message, -lowpan_header_size);
+    message_set_payload_offset(message, -lowpan_header_size);
     message_header = message_alloc(header_size, UMESH_2);
     if (message_header == NULL) {
         error = UR_ERROR_FAIL;
@@ -269,17 +287,15 @@ ur_error_t umesh_input(umessage_t *message)
     }
 
     message_copy_from(message_header, header, header_size);
-    message_concatenate(message_header, (message_t *)message, false);
-    message = (umessage_t *)message_header;
+    message_concatenate(message_header, message, false);
+    message = message_header;
 
     if (g_um_state.adapter_callback) {
-        error = umesh_task_schedule_call(input_message_handler, message);
+        g_um_state.adapter_callback->input(message->data);
     }
 
 exit:
-    if (error != UR_ERROR_NONE) {
-        message_free((message_t *)message);
-    }
+    message_free((message_t *)message);
 
     ur_mem_free(header, UR_IP6_HLEN + UR_UDP_HLEN);
     return error;

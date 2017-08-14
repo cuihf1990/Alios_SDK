@@ -80,14 +80,15 @@ static void icmp6_send_response(struct pbuf *p, u8_t code, u32_t data, u8_t type
 void
 icmp6_input(struct pbuf *p, struct netif *inp)
 {
-  struct icmp6_hdr *icmp6hdr;
+  struct icmp6_hdr icmp6hdr_storage;
+  struct icmp6_hdr *icmp6hdr = &icmp6hdr_storage;
   struct pbuf *r;
   const ip6_addr_t *reply_src;
 
   ICMP6_STATS_INC(icmp6.recv);
 
   /* Check that ICMPv6 header fits in payload */
-  if (p->len < sizeof(struct icmp6_hdr)) {
+  if (p->tot_len < sizeof(struct icmp6_hdr)) {
     /* drop short packets */
     pbuf_free(p);
     ICMP6_STATS_INC(icmp6.lenerr);
@@ -95,7 +96,7 @@ icmp6_input(struct pbuf *p, struct netif *inp)
     return;
   }
 
-  icmp6hdr = (struct icmp6_hdr *)p->payload;
+  pbuf_copy_partial(p, icmp6hdr, sizeof(*icmp6hdr), 0);
 
 #if CHECKSUM_CHECK_ICMP6
   IF__NETIF_CHECKSUM_ENABLED(inp, NETIF_CHECKSUM_CHECK_ICMP6) {

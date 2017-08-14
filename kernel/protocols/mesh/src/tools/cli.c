@@ -146,7 +146,7 @@ enum {
 
 typedef struct autotest_cmd_s {
     uint16_t seq;
-    uint8_t type;
+    uint16_t type;
     ur_ip6_addr_t addr;
 }  __attribute__((packed)) autotest_cmd_t;
 

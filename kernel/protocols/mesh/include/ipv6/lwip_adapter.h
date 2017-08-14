@@ -23,8 +23,6 @@
 extern "C" {
 #endif
 
-ur_error_t ur_adapter_input(void *p);
-
 ur_error_t ur_adapter_interface_init(void);
 ur_error_t ur_adapter_interface_deinit(void);
 
