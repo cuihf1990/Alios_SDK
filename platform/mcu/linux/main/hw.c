@@ -58,13 +58,17 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
         return -1;
 
     char *origin = (char *)malloc(buf_size);
-    if (!origin)
-        return -1;
+    if (!origin) {
+        ret = -1;
+        goto exit;
+    }
     memset(origin, -1, buf_size);
 
     ret = pread(flash_fd, origin, buf_size, *poff);
-    if (ret < 0)
+    if (ret < 0) {
         perror("error reading flash:");
+        goto exit;
+    }
 
     tmp = origin;
     new_val = (char *)buf;
@@ -79,8 +83,10 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
         perror("error writing flash:");
     else if (poff)
         *poff += ret;
-    close(flash_fd);
 
+exit:
+    close(flash_fd);
+    free(origin);
     return ret < 0 ? ret : 0;
 }
 
@@ -103,19 +109,23 @@ int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t 
 int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set,
                         uint32_t size)
 {
+    int ret;
     int flash_fd = open_flash(in_partition, true);
     if (flash_fd < 0)
         return -1;
     
     char *buf = (char *)malloc(size);
-    if (!buf)
-        return -1;
+    if (!buf) {
+        ret = -1;
+        goto exit;
+    }
     memset(buf, -1, size);
 
-    int ret = pwrite(flash_fd, buf, size, off_set);
+    ret = pwrite(flash_fd, buf, size, off_set);
     if (ret < 0)
         perror("error erase flash:");
     
+exit:
     close(flash_fd);
     free(buf);
     return ret < 0 ? ret : 0;
