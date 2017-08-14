@@ -29,9 +29,6 @@ typedef struct network_data_state_s {
 
 static network_data_state_t g_nd_state;
 
-#define for_each_updater(updater) \
-    slist_for_each_entry(&g_nd_state.updater_list, updater, nd_updater_t, next)
-
 static uint16_t generate_meshnetid(void)
 {
     uint16_t meshnetid = 0x0000;
@@ -71,39 +68,16 @@ ur_error_t nd_init(void)
     return UR_ERROR_NONE;
 }
 
-ur_error_t nd_register_update_handler(nd_updater_t *handler)
-{
-    slist_add_tail(&handler->next, &g_nd_state.updater_list);
-    return UR_ERROR_NONE;
-}
-
-ur_error_t nd_unregister_update_handler(nd_updater_t *handler)
-{
-    nd_updater_t *updater;
-
-    for_each_updater(updater) {
-        if (updater == handler) {
-            slist_del(&updater->next, &g_nd_state.updater_list);
-            return UR_ERROR_NONE;
-        }
-    }
-    return UR_ERROR_FAIL;
-}
-
 ur_error_t nd_stable_set(stable_network_data_t *network_data)
 {
     ur_error_t   error = UR_ERROR_FAIL;
     int8_t       diff;
-    nd_updater_t *updater;
 
     diff = network_data->minor_version -
            g_nd_state.stable_network_data.minor_version;
     if (diff >= 0 || g_nd_state.stable_network_data.minor_version == 0) {
         memcpy(&g_nd_state.stable_network_data, network_data,
                sizeof(g_nd_state.stable_network_data));
-        for_each_updater(updater) {
-            updater->handler(true);
-        }
         error = UR_ERROR_NONE;
     }
     return error;
@@ -207,7 +181,6 @@ ur_error_t nd_set(network_context_t *network, network_data_t *network_data)
 {
     ur_error_t   error = UR_ERROR_FAIL;
     int8_t       diff;
-    nd_updater_t *updater;
     network_data_t *local_network_data;
 
     if (network == NULL) {
@@ -219,9 +192,6 @@ ur_error_t nd_set(network_context_t *network, network_data_t *network_data)
     diff = network_data->version - local_network_data->version;
     if (diff > 0) {
         memcpy(local_network_data, network_data, sizeof(network_data_t));
-        for_each_updater(updater) {
-            updater->handler(false);
-        }
         error = UR_ERROR_NONE;
     }
     return error;
