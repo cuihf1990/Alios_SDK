@@ -92,7 +92,7 @@
 #endif
 
 /* kernel idle conf */
-#define YUNOS_CONFIG_IDLE_TASK_STACK_SIZE    100
+#define YUNOS_CONFIG_IDLE_TASK_STACK_SIZE    200
 
 /* kernel hook conf */
 #define YUNOS_CONFIG_USER_HOOK               0

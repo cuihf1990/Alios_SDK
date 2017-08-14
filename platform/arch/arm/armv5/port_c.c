@@ -122,3 +122,60 @@ uint32_t platform_is_in_interrupt_context( void )
                 || (platform_is_in_irq_context()));
 }
 
+/*-----------------------------------------------------------*/
+int portDISABLE_FIQ(void)
+{						                     
+	unsigned long temp;				       
+	unsigned long mask;		
+	
+	__asm volatile(					
+	"mrs	%1, cpsr		@ local_irq_disable\n"	
+	"orr	%0, %1, #0x40\n"					
+	"msr	cpsr_c, %0"					       
+	: "=r" (temp),"=r" (mask)						       
+	:							              
+	: "memory");		
+
+	return (!!(mask & 0x40));
+}
+
+int portDISABLE_IRQ(void)
+{						                     
+	unsigned long temp;				       
+	unsigned long mask;		
+	
+	__asm volatile(					
+	"mrs	%1, cpsr		@ local_irq_disable\n"	
+	"orr	%0, %1, #0x80\n"					
+	"msr	cpsr_c, %0"					       
+	: "=r" (temp),"=r" (mask)						       
+	:							              
+	: "memory");		
+
+	return (!!(mask & 0x80));
+}
+
+void portENABLE_IRQ(void)					
+{							              
+	unsigned long temp;				
+	__asm volatile(					
+	"mrs	%0, cpsr		@ local_irq_enablen"	
+       "bic	%0, %0, #0x80n"					
+       "msr	cpsr_c, %0"					       
+	: "=r" (temp)						       
+	:							              
+	: "memory");						       
+}
+
+void portENABLE_FIQ(void)					
+{							              
+	unsigned long temp;				
+	__asm volatile(					
+	"mrs	%0, cpsr		@ local_irq_enablen"	
+       "bic	%0, %0, #0x40n"					
+       "msr	cpsr_c, %0"					       
+	: "=r" (temp)						       
+	:							              
+	: "memory");						       
+}
+

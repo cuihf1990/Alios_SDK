@@ -12,67 +12,6 @@ typedef int32_t   		      INT32;          /* Signed   32 bit quantity        */
 
 extern wdg_dev_t wdg;
 
-/*
- * Enable Interrupts
- */	
-#define portENABLE_IRQ()					\
-	({							              \
-		unsigned long temp;				\
-		__asm volatile(					\
-		"mrs	%0, cpsr		@ local_irq_enable\n"	\
-	       "bic	%0, %0, #0x80\n"					\
-	       "msr	cpsr_c, %0"					       \
-		: "=r" (temp)						       \
-		:							              \
-		: "memory");						       \
-	})
-#define portENABLE_FIQ()					\
-	({							              \
-		unsigned long temp;				\
-		__asm volatile(					\
-		"mrs	%0, cpsr		@ local_irq_enable\n"	\
-	       "bic	%0, %0, #0x40\n"					\
-	       "msr	cpsr_c, %0"					       \
-		: "=r" (temp)						       \
-		:							              \
-		: "memory");						       \
-	})
-										    
-/*
- * Disable Interrupts
- */
-static inline  int portDISABLE_FIQ(void)
-{						                     
-	unsigned long temp;				       
-	unsigned long mask;		
-	
-	__asm volatile(					
-	"mrs	%1, cpsr		@ local_irq_disable\n"	
-	"orr	%0, %1, #0x40\n"					
-	"msr	cpsr_c, %0"					       
-	: "=r" (temp),"=r" (mask)						       
-	:							              
-	: "memory");		
-
-	return (!!(mask & 0x40));
-}
-
-static inline  int portDISABLE_IRQ(void)
-{						                     
-	unsigned long temp;				       
-	unsigned long mask;		
-	
-	__asm volatile(					
-	"mrs	%1, cpsr		@ local_irq_disable\n"	
-	"orr	%0, %1, #0x80\n"					
-	"msr	cpsr_c, %0"					       
-	: "=r" (temp),"=r" (mask)						       
-	:							              
-	: "memory");		
-
-	return (!!(mask & 0x80));
-}
-
 #define GLOBAL_INT_DECLARATION()   uint32_t fiq_tmp, irq_tmp
 #define GLOBAL_INT_DISABLE()       do{\
 										fiq_tmp = portDISABLE_FIQ();\
