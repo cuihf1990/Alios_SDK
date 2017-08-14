@@ -19,6 +19,9 @@
 #include "hal/soc/soc.h"
 #include "helloworld.h"
 
+static gpio_dev_t gpio_2;
+static gpio_dev_t gpio_12;
+
 static void el_int_hdl(void *arg)
 {
     printf("easylink interrupt handler\r\n");
@@ -26,12 +29,16 @@ static void el_int_hdl(void *arg)
 
 void application_start(void)
 {
-    hal_gpio_enable_irq(2, IRQ_TRIGGER_FALLING_EDGE, el_int_hdl, NULL);
+    gpio_2.port = 2;
+    hal_gpio_enable_irq(&gpio_2, IRQ_TRIGGER_FALLING_EDGE, el_int_hdl, NULL);
 
-    hal_gpio_init(12, OUTPUT_PUSH_PULL);
+    gpio_12.port = 12;
+    gpio_12.config = OUTPUT_PUSH_PULL;
+    hal_gpio_init(&gpio_12);
+
     for(;;)
     {
-        hal_gpio_output_trigger(12);
+        hal_gpio_output_toggle(&gpio_12);
         yos_msleep(1000);
     }
 }

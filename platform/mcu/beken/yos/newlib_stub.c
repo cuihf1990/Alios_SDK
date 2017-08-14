@@ -22,6 +22,8 @@
 #include "hal/soc/soc.h"
 #include "board.h"
 
+extern uart_dev_t uart_0;
+
 int _execve_r(struct _reent *ptr, const char *name, char *const *argv, char *const *env)
 {
     ptr->_errno = ENOTSUP;
@@ -116,8 +118,8 @@ _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
 
     for (int i = 0; i < nbytes; i++) {
         if (*tmp == '\n')
-            hal_uart_send(STDIO_UART, (const void*)"\r", 1);
-        hal_uart_send(STDIO_UART, (const void*)tmp, 1);
+            hal_uart_send(&uart_0, (const void*)"\r", 1, 0);
+        hal_uart_send(&uart_0, (const void*)tmp, 1, 0);
         tmp ++;
     }
 
