@@ -8,7 +8,6 @@ $(NAME)_CFLAGS += -Wall -Werror
 
 $(NAME)_SOURCES := core/k_err.c          \
                    core/k_mm.c           \
-                   core/k_mm_region.c    \
                    core/k_mm_debug.c     \
                    core/k_obj_set.c      \
                    core/k_ringbuf.c      \
