@@ -66,13 +66,16 @@ const hal_logic_partition_t hal_partitions[] =
 #define KEY_STATUS 1
 #define KEY_ELINK  2
 #define KEY_BOOT   7
-static uint64_t elink_time = 0;
+
+static uint64_t   elink_time = 0;
+static gpio_dev_t gpio_key_boot;
+
 static void key_poll_func(void *arg)
 {
-    int8_t level;
+    uint32_t level;
     uint64_t diff;
 
-    level = hal_gpio_inputget(KEY_BOOT);
+    hal_gpio_input_get(&gpio_key_boot, &level);
 
     if (level == 0) {
         yos_post_delayed_action(10, key_poll_func, NULL);
@@ -100,7 +103,10 @@ static void key_proc_work(void *arg)
 
 static void handle_elink_key(void *arg)
 {
-    if (hal_gpio_inputget(KEY_BOOT) == 0 && elink_time == 0) {
+    uint32_t gpio_value;
+
+    hal_gpio_input_get(&gpio_key_boot, &gpio_value);
+    if (gpio_value == 0 && elink_time == 0) {
         elink_time = yos_now_ms();
         yos_loop_schedule_work(0, key_proc_work, NULL, NULL, NULL);
     }
@@ -108,6 +114,8 @@ static void handle_elink_key(void *arg)
 
 void board_init(void)
 {
-    hal_gpio_clear_irq(KEY_BOOT);
-    hal_gpio_enable_irq(KEY_BOOT, IRQ_TRIGGER_FALLING_EDGE, handle_elink_key, NULL);
+    gpio_key_boot.port = KEY_BOOT;
+
+    hal_gpio_clear_irq(&gpio_key_boot);
+    hal_gpio_enable_irq(&gpio_key_boot, IRQ_TRIGGER_FALLING_EDGE, handle_elink_key, NULL);
 }

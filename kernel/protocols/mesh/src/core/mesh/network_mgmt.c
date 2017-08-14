@@ -22,7 +22,6 @@
 #include "core/topology.h"
 #include "core/network_data.h"
 #include "core/link_mgmt.h"
-#include "core/master_key.h"
 #include "core/keys_mgr.h"
 #include "hal/interfaces.h"
 #include "umesh_utils.h"
@@ -58,7 +57,8 @@ static void handle_discovery_timer(void *args)
     }
     if (hal->discovery_times > 0 && migrate) {
         umesh_mm_set_channel(network, hal->discovery_result.channel);
-        master_key_request_start();
+        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+        hal->discovered_handler(nbr);
         return;
     } else if (hal->discovery_times < DISCOVERY_RETRY_TIMES) {
         if (umesh_mm_get_prev_channel() == hal->discovery_channel) {
@@ -323,7 +323,7 @@ ur_error_t handle_discovery_response(message_t *message)
     return UR_ERROR_NONE;
 }
 
-ur_error_t nm_start_discovery(void)
+ur_error_t nm_start_discovery(discovered_handler_t handler)
 {
     network_context_t *network;
     hal_context_t     *hal;
@@ -339,6 +339,7 @@ ur_error_t nm_start_discovery(void)
                                           handle_discovery_timer, network);
     memset(&hal->discovery_result, 0, sizeof(hal->discovery_result));
     hal->discovery_result.meshnetid = BCAST_NETID;
+    hal->discovered_handler = handler;
 
     umesh_mm_set_prev_channel();
     return UR_ERROR_NONE;

@@ -40,7 +40,7 @@ void test_uradar_lwip_adapter_case(void)
     ip6_header->len = 60 - UR_IP6_HLEN;
     ip6_header->next_header = 17;
     ip6_header->hop_lim = 255;
-    YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_input(message));
+    YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_input(message->data));
 
     int socket;
     ur_udp_header_t *header;

@@ -3,8 +3,10 @@ sys.path.append("../")
 from autotest import Autotest
 
 devices = {'A':"mxchip-DN02QYH3", "B":"mxchip-DN02QYHF", "C":"mxchip-DN02QYHK"}
+logname=time.strftime("%Y-%m-%d@%H-%M")
+logname = "example-" + logname +".log"
 at=Autotest()
-at.start("10.125.52.132", 34568, "example_test.log")
+at.start("10.125.52.132", 34568, logname)
 
 at.device_subscribe(devices)
 at.device_run_cmd('A', ['netmgr', 'clear'])

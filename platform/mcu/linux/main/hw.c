@@ -60,7 +60,7 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
     char *origin = (char *)malloc(buf_size);
     if (!origin)
         return -1;
-    memset(origin, 0, buf_size);
+    memset(origin, -1, buf_size);
 
     ret = pread(flash_fd, origin, buf_size, *poff);
     if (ret < 0)

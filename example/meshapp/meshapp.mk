@@ -14,8 +14,6 @@ ifneq (,$(filter armhflinux,$(COMPONENTS)))
 DDA ?= 1
 endif
 
-MESHDEBUG ?= 1
-
 ifeq ($(DDA),1)
 GLOBAL_LDFLAGS += -lreadline -lncurses
 $(NAME)_COMPONENTS  += dda

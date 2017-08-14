@@ -1183,7 +1183,13 @@ lwip_sendto(int s, const void *data, size_t size, int flags,
   LWIP_DEBUGF(SOCKETS_DEBUG, (" port=%"U16_F"\n", remote_port));
 
   /* make the buffer point to the data that should be sent */
-#if LWIP_NETIF_TX_SINGLE_PBUF
+
+  /*
+   *      --- CAUTION ---
+   * alaways copy on UDP case, _data_ is lost right after this func
+   * LWIP_NETIF_TX_SINGLE_PBUF
+   */
+#if 1
   /* Allocate a new netbuf and copy the data into it. */
   if (netbuf_alloc(&buf, short_size) == NULL) {
     err = ERR_MEM;

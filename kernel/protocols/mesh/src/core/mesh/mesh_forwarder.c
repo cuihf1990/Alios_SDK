@@ -1106,7 +1106,7 @@ static void handle_datagram(void *args)
             offset = sizeof(mcast_header_t) + 1;
             message_set_payload_offset(message, -offset);
         }
-        umesh_input((umessage_t *)message);
+        umesh_input(message);
     } else {
         umesh_mm_handle_frame_received(message);
         message_free(message);
