@@ -388,30 +388,6 @@ void dumpsys_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     dumpsys_func(pcWriteBuffer, xWriteBufferLen, argc, argv);
 }
 
-void memory_show_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
-                         char **argv)
-{
-    dumpsys_mm_info_func(NULL, 0);
-}
-
-void memory_dump_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
-                         char **argv)
-{
-    cli_printf("memory_dump_Command\r\n");
-}
-
-void memory_set_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
-                        char **argv)
-{
-    cli_printf("memory_set_Command\r\n");
-}
-
-void memp_dump_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
-                       char **argv)
-{
-    cli_printf("memp_dump_Command\r\n");
-}
-
 void get_version(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                  char **argv)
 {
@@ -473,13 +449,7 @@ static const struct cli_command built_ins[] = {
     // others
     {"devname", "print device name", devname_Command},
     {"dumpsys", "dump system information", dumpsys_Command},
-    {"memshow", "print memory information", memory_show_Command},
-    {"memdump", "<addr> <length>", memory_dump_Command},
-    {"memset", "<addr> <value 1> [<value 2> ... <value n>]", memory_set_Command},
-    {"memp", "print memp list", memp_dump_Command},
-
     {"reboot", "reboot system", reboot},
-
     {"tftp",     "tftp",                        tftp_Command},
     {"time",     "system time",                 uptime_Command},
     {"ota",      "system ota",                  ota_Command},
