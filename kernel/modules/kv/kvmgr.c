@@ -355,6 +355,7 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
 
         if (hdr->val_len > ITEM_MAX_VAL_LEN|| hdr->key_len > ITEM_MAX_KEY_LEN) {
             len += ITEM_HEADER_SIZE;
+            pos += len;
             kv_item_free(item);
             continue;
         }
