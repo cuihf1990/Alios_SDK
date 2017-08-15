@@ -23,7 +23,6 @@ umesh_srcs := src/core/umesh.c \
               src/utilities/message.c \
               src/utilities/timer.c \
               src/utilities/logging.c \
-              src/utilities/mac_whitelist.c \
               src/utilities/memory.c \
               src/utilities/configs.c \
               src/utilities/task.c \

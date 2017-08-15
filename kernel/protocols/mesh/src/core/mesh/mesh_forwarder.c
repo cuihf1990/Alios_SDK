@@ -963,6 +963,7 @@ static void handle_received_frame(void *context, frame_t *frame,
         return;
     }
 
+#ifdef CONFIG_YOS_MESH_DEBUG
     if (whitelist_is_enabled()) {
         entry = whitelist_find(&frame_info->peer);
         if (entry == NULL) {
@@ -970,6 +971,7 @@ static void handle_received_frame(void *context, frame_t *frame,
             return;
         }
     }
+#endif
 
     rx_frame = (received_frame_t *)ur_mem_alloc(sizeof(received_frame_t));
     if (rx_frame == NULL) {

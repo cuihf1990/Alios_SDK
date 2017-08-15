@@ -558,6 +558,7 @@ ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     return mf_resolve_dest(dest, dest_addr);
 }
 
+#ifdef CONFIG_YOS_MESH_DEBUG
 bool umesh_is_whitelist_enabled(void)
 {
     return is_whitelist_enabled();
@@ -610,6 +611,7 @@ void umesh_clear_whitelist(void)
 {
     whitelist_clear();
 }
+#endif
 
 void umesh_get_channel(channel_t *channel)
 {
