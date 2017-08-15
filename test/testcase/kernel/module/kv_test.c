@@ -175,6 +175,9 @@ static void test_kv_error(void)
     }
     test_kv_error_cycle();    
     
+    int ret = yos_kv_init();
+    YUNIT_ASSERT(ret == 0);
+    return;
 }
 
 static int init(void)
