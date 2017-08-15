@@ -24,7 +24,6 @@
 #include "core/mesh_forwarder.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_mgmt_tlvs.h"
-#include "core/sid_allocator.h"
 #include "core/router_mgr.h"
 #include "core/network_data.h"
 #include "core/keys_mgr.h"
@@ -174,30 +173,6 @@ static void start_advertisement_timer(network_context_t *network)
                                            network->hal->advertisement_interval,
                                            handle_advertisement_timer, network);
     }
-}
-
-static void sid_allocator_init(network_context_t *network)
-{
-    int sid_type = network->router->sid_type;
-    if (sid_type == STRUCTURED_SID) {
-        uint16_t sid = umesh_mm_get_local_sid();
-        if (umesh_mm_get_device_state() == DEVICE_STATE_SUPER_ROUTER) {
-            sid = SUPER_ROUTER_SID;
-        }
-        network->sid_base = allocator_init(sid, sid_type);
-    } else {
-        network->sid_base = rsid_allocator_init(sid_type);
-    }
-}
-
-static void sid_allocator_deinit(network_context_t *network)
-{
-    if (network->router->sid_type == STRUCTURED_SID) {
-        allocator_deinit(network->sid_base);
-    } else {
-        rsid_allocator_deinit(network->sid_base);
-    }
-    network->sid_base = 0;
 }
 
 void set_command_type(message_info_t *info, uint8_t command)
@@ -576,45 +551,6 @@ static void handle_net_scan_timer(void *args)
     g_mm_state.device.reboot_flag = false;
 }
 
-static uint16_t calc_ssid_child_num(network_context_t *network)
-{
-    uint16_t num = 0;
-    neighbor_t *nbr;
-    neighbor_t *next_nbr;
-    bool       dup = false;
-    slist_t    *nbrs;
-
-    nbrs = &network->hal->neighbors_list;
-    slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
-        if (nbr->state != STATE_CHILD || network->meshnetid != nbr->addr.netid) {
-            continue;
-        }
-        dup = false;
-        slist_for_each_entry(nbrs, next_nbr, neighbor_t, next) {
-            if (nbr == next_nbr) {
-                continue;
-            }
-            if (next_nbr->addr.netid == umesh_mm_get_meshnetid(network) &&
-                nbr->addr.addr.short_addr != INVALID_SID &&
-                nbr->addr.addr.short_addr == next_nbr->addr.addr.short_addr) {
-                dup = true;
-            }
-        }
-        if (dup == false) {
-            num += nbr->ssid_info.child_num;
-        }
-    }
-
-    if (g_mm_state.device.state == DEVICE_STATE_LEADER) {
-        num += get_allocated_pf_number(network->sid_base);
-    }
-
-    /* including myelf */
-    num += 1;
-
-    return num;
-}
-
 ur_error_t send_advertisement(network_context_t *network)
 {
     ur_error_t        error = UR_ERROR_NONE;
@@ -650,22 +586,10 @@ ur_error_t send_advertisement(network_context_t *network)
     mm_header->command = COMMAND_ADVERTISEMENT;
     data += sizeof(mm_header_t);
 
-    if (network->router->sid_type == STRUCTURED_SID) {
-        subnet_size = calc_ssid_child_num(network);
-    }
-    switch (g_mm_state.device.state) {
-        case DEVICE_STATE_LEADER:
-            if (network->router->sid_type == SHORT_RANDOM_SID ||
-                network->router->sid_type == RANDOM_SID) {
-                nd_set_meshnetsize(network, rsid_get_allocated_number(network->sid_base) + 1);
-            }
-        case DEVICE_STATE_SUPER_ROUTER:
-            if (network->router->sid_type == STRUCTURED_SID) {
-                nd_set_meshnetsize(network, subnet_size);
-            }
-            break;
-        default:
-            break;
+    subnet_size = sid_allocator_get_num(network);
+    if (g_mm_state.device.state == DEVICE_STATE_LEADER ||
+        g_mm_state.device.state == DEVICE_STATE_SUPER_ROUTER) {
+        nd_set_meshnetsize(network, subnet_size);
     }
 
     netinfo = (mm_netinfo_tv_t *)data;
@@ -1212,24 +1136,16 @@ static ur_error_t handle_sid_request(message_t *message)
     if (node == NULL) {
         node_id.sid = INVALID_SID;
     }
-
-    switch (network->router->sid_type) {
-        case STRUCTURED_SID:
-            if (attach_node_id->mode & MODE_SUPER) {
-                node_id.attach_sid = SUPER_ROUTER_SID;
-            } else {
-                node_id.attach_sid = attach_node_id->sid;
-            }
-            node_id.mode = mode->mode;
-            error = allocate_sid(network->sid_base, &node_id);
-            break;
-        case SHORT_RANDOM_SID:
-        case RANDOM_SID:
-            error = rsid_allocate_sid(network->sid_base, &node_id);
-            break;
-        default:
-            error = UR_ERROR_PARSE;
+    if (attach_node_id) {
+        if (attach_node_id->mode & MODE_SUPER) {
+            node_id.attach_sid = SUPER_ROUTER_SID;
+        } else {
+            node_id.attach_sid = attach_node_id->sid;
+        }
     }
+    node_id.mode = mode->mode;
+    error = sid_allocator_alloc(network, &node_id);
+
     if (error == UR_ERROR_NONE) {
         ur_addr_t dest;
         ur_addr_t dest2;

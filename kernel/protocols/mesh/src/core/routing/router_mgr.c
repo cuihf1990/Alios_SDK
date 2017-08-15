@@ -17,9 +17,10 @@
 #include <string.h>
 
 #include "core/mesh_mgmt.h"
-#include "core/router_mgr.h"
-#include "umesh_utils.h"
 #include "core/address_mgmt.h"
+#include "core/router_mgr.h"
+#include "hal/interfaces.h"
+#include "umesh_utils.h"
 
 #ifndef DEFAULT_ROUTER
 #define DEFAULT_ROUTER SID_ROUTER
@@ -35,7 +36,9 @@ static router_mgmr_state_t g_rm_state;
 extern neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
                                        uint16_t meshnetid);
 extern void sid_router_register(void);
+#ifdef CONFIG_YOS_MESH_SUPER
 extern void vector_router_register(void);
+#endif
 
 void ur_router_register_module(void)
 {
@@ -43,7 +46,9 @@ void ur_router_register_module(void)
 
     slist_init(&g_rm_state.router_list);
     sid_router_register();
+#ifdef CONFIG_YOS_MESH_SUPER
     vector_router_register();
+#endif
 
     /* enable the default router */
     slist_for_each_entry(&g_rm_state.router_list, router, router_t, next) {
@@ -276,4 +281,127 @@ ur_error_t register_router(router_t *router)
 
     slist_add(&router->next, &g_rm_state.router_list);
     return UR_ERROR_NONE;
+}
+
+void sid_allocator_init(network_context_t *network)
+{
+    int sid_type = network->router->sid_type;
+    if (sid_type == STRUCTURED_SID) {
+        uint16_t sid = umesh_mm_get_local_sid();
+        if (umesh_mm_get_device_state() == DEVICE_STATE_SUPER_ROUTER) {
+            sid = SUPER_ROUTER_SID;
+        }
+        network->sid_base = allocator_init(sid, sid_type);
+#ifdef CONFIG_YOS_MESH_SUPER
+    } else {
+        network->sid_base = rsid_allocator_init(sid_type);
+#endif
+    }
+}
+
+void sid_allocator_deinit(network_context_t *network)
+{
+    if (network->router->sid_type == STRUCTURED_SID) {
+        allocator_deinit(network->sid_base);
+#ifdef CONFIG_YOS_MESH_SUPER
+    } else {
+        rsid_allocator_deinit(network->sid_base);
+#endif
+    }
+    network->sid_base = 0;
+}
+
+ur_error_t sid_allocator_alloc(network_context_t *network, ur_node_id_t *node)
+{
+    ur_error_t error;
+
+    switch (network->router->sid_type) {
+        case STRUCTURED_SID:
+            error = allocate_sid(network->sid_base, node);
+            break;
+#ifdef CONFIG_YOS_MESH_SUPER
+        case SHORT_RANDOM_SID:
+        case RANDOM_SID:
+            error = rsid_allocate_sid(network->sid_base, node);
+            break;
+#endif
+        default:
+            error = UR_ERROR_PARSE;
+    }
+
+    return error;
+}
+
+ur_error_t sid_allocator_free(network_context_t *network, ur_node_id_t *node)
+{
+    if (is_partial_function_sid(node->sid)) {
+        network = get_default_network_context();
+        update_sid_mapping(network->sid_base, node, false);
+#ifdef CONFIG_YOS_MESH_SUPER
+    } else {
+        network = get_network_context_by_meshnetid(node->meshnetid);
+        if (network == NULL) {
+            return UR_ERROR_NONE;
+        }
+
+        if (network->router->sid_type == SHORT_RANDOM_SID ||
+            network->router->sid_type == RANDOM_SID) {
+            rsid_free_sid(network->sid_base, node);
+        }
+#endif
+    }
+
+    return UR_ERROR_NONE;
+}
+
+static uint16_t calc_ssid_child_num(network_context_t *network)
+{
+    uint16_t num = 1;
+    neighbor_t *nbr;
+    neighbor_t *next_nbr;
+    bool dup = false;
+    slist_t *nbrs;
+
+    nbrs = &network->hal->neighbors_list;
+    slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
+        if (nbr->state != STATE_CHILD || network->meshnetid != nbr->addr.netid) {
+            continue;
+        }
+        dup = false;
+        slist_for_each_entry(nbrs, next_nbr, neighbor_t, next) {
+            if (nbr == next_nbr) {
+                continue;
+            }
+            if (next_nbr->addr.netid == umesh_mm_get_meshnetid(network) &&
+                nbr->addr.addr.short_addr != INVALID_SID &&
+                nbr->addr.addr.short_addr == next_nbr->addr.addr.short_addr) {
+                dup = true;
+            }
+        }
+        if (dup == false) {
+            num += nbr->ssid_info.child_num;
+        }
+    }
+
+    if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
+        num += get_allocated_pf_number(network->sid_base);
+    }
+    return num;
+}
+
+uint16_t sid_allocator_get_num(network_context_t *network)
+{
+    uint16_t num = 0;
+
+#ifdef CONFIG_YOS_MESH_SUPER
+    if (network->router->sid_type == SHORT_RANDOM_SID ||
+        network->router->sid_type == RANDOM_SID) {
+        num = rsid_get_allocated_number(network->sid_base) + 1;
+    }
+#endif
+    if (network->router->sid_type == STRUCTURED_SID) {
+        num = calc_ssid_child_num(network);
+    }
+
+    return num;
 }

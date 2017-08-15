@@ -28,6 +28,7 @@
 #include "umesh_hal.h"
 #include "umesh_utils.h"
 #include "ipv6/lwip_adapter.h"
+#include "core/mesh_mgmt.h"
 
 typedef struct lwip_adapter_state_s {
     struct netif          adpif;

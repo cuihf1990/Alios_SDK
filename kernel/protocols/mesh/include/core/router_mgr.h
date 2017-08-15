@@ -55,6 +55,12 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
 ur_error_t handle_router_message_received(message_t *message);
 ur_error_t register_router(router_t *router);
 
+void sid_allocator_init(network_context_t *network);
+void sid_allocator_deinit(network_context_t *network);
+ur_error_t sid_allocator_alloc(network_context_t *network, ur_node_id_t *node);
+ur_error_t sid_allocator_free(network_context_t *network, ur_node_id_t *node);
+uint16_t sid_allocator_get_num(network_context_t *network);
+
 #ifdef __cplusplus
 }
 #endif

@@ -136,9 +136,6 @@ typedef struct frag_header_s {
     uint8_t  offset;
 } __attribute__((packed)) frag_header_t;
 
-#define lowpan_mem_alloc  ur_mem_alloc
-#define lowpan_mem_free   ur_mem_free
-
 ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
                               uint16_t *ip_hdr_len, uint16_t *lowpan_hdr_len);
 ur_error_t lp_header_decompress(uint8_t *header, uint16_t *header_size,
