@@ -12,8 +12,10 @@
 #include "ipv6/ip6.h"
 #include "ipv6/lwip_adapter.h"
 
+#if LWIP_IPV6
 extern struct netif *ur_adapter_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest);
 extern bool ur_adapter_is_mcast_subscribed(const ip6_addr_t *addr);
+#endif
 extern void interface_start(void);
 extern void interface_stop(void);
 
@@ -24,12 +26,14 @@ void test_uradar_lwip_adapter_case(void)
     interface_start();
     YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_up());
 
+#if LWIP_IPV6
     YUNIT_ASSERT(NULL != ur_adapter_ip6_route(NULL, NULL));
 
     ip6_addr_t ip6addr;
     memset(ip6addr.addr, 0x00, sizeof(ip6addr));
     ip6addr.addr[0] = 0x00110011;
     YUNIT_ASSERT(false == ur_adapter_is_mcast_subscribed(&ip6addr));
+#endif
 
     message_t *message;
     message = message_alloc(60, UT_MSG);

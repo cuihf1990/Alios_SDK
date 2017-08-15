@@ -38,8 +38,7 @@ typedef struct ur_adapter_callback_s {
     adapter_interface_update_t interface_update;
 } ur_adapter_callback_t;
 
-ur_error_t umesh_ipv4_output(struct pbuf *buf,
-                               const ur_ip6_addr_t *ip6addr);
+ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid);
 ur_error_t umesh_ipv6_output(struct pbuf *buf,
                                const ur_ip6_addr_t *ip6addr);
 ur_error_t umesh_register_callback(ur_adapter_callback_t *callback);
