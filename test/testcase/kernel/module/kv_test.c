@@ -123,6 +123,63 @@ static void test_kv_loop(void)
    YUNIT_ASSERT(0 == ret);
 }
 
+static void test_kv_error_cycle(void)
+{
+    yos_kv_init();
+    test_kv_loop();
+    yos_kv_deinit();
+}
+
+
+/* The physical parition for key-value store */
+#ifndef CONFIG_YOS_KV_PTN
+#define KV_TEST_PTN    6
+#else
+#define KV_TEST_PTN    CONFIG_YOS_KV_PTN
+#endif
+
+static void test_kv_error(void)
+{
+    int i, blk_size = 4096;
+    int blk_nums = KV_TOTAL_SIZE / blk_size;
+    uint32_t offset = 0;
+    char *buf;
+
+    yos_kv_deinit();
+    buf = (char *)yos_malloc(blk_size);
+    if (!buf) {
+        YUNIT_FAIL("malloc failure");
+        return;
+    }
+
+    //KV partition all zero
+    memset(buf, 0, blk_size);
+    for (i = 0; i < blk_nums; i++) {
+        offset = i * blk_size;
+        hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+    }
+    test_kv_error_cycle();
+
+    //KV block header state error
+    buf[0] = 'K';
+    offset = 0;
+    hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+    test_kv_error_cycle();
+
+    //KV block header is normal, but others is filled by 0
+    buf[0] = 'K';
+    buf[1] = 0xCC;
+    for (i = 0; i < blk_nums; i++) {
+        offset = i * blk_size;
+        hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+    }
+    test_kv_error_cycle();    
+    
+    int ret = yos_kv_init();
+    YUNIT_ASSERT(ret == 0);
+    return;
+}
+
 static int init(void)
 {
     int ret = 0;
@@ -133,12 +190,7 @@ static int init(void)
 }
 
 static int cleanup(void)
-{
-	/*wangbin change it because it's a global table,
-	call deinit it will cause whole system crash*/
-    yos_msleep(1000);
-    yos_kv_deinit();
-	
+{	
     return 0;
 }
 
@@ -153,10 +205,11 @@ static void teardown(void)
 }
 
 static yunit_test_case_t yunos_basic_testcases[] = {
-    { "ht_add", test_kv_add },
-    { "ht_find", test_kv_find },
-    { "ht_del", test_kv_del },
-    { "ht_loop", test_kv_loop},
+    { "kv_add", test_kv_add },
+    { "kv_find", test_kv_find },
+    { "kv_del", test_kv_del },
+    { "kv_loop", test_kv_loop},
+    { "kv_error", test_kv_error},
     YUNIT_TEST_CASE_NULL
 };
 

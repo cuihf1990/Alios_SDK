@@ -49,6 +49,11 @@ typedef enum {
 #define BLK_STATE_DIRTY         0x44                        /* Block state: DIRTY --> block is inused and with dirty data */
 #define BLK_HEADER_SIZE         4                           /* The block header size 4bytes */
 
+#define INVALID_BLK_STATE(state) \
+    (((state) != BLK_STATE_USED) && \
+     ((state) != BLK_STATE_CLEAN) && \
+     ((state) != BLK_STATE_DIRTY))
+
 /* Defination of key-value item information */
 #define ITEM_HEADER_SIZE        8                           /* The key-value item header size 8bytes */
 #define ITEM_STATE_NORMAL       0xEE                        /* Key-value item state: NORMAL --> the key-value item is valid */
@@ -353,10 +358,14 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
             hdr->val_len = 0xFFFF;
         }
 
-        if (hdr->val_len > ITEM_MAX_VAL_LEN|| hdr->key_len > ITEM_MAX_KEY_LEN) {
+        if (hdr->val_len > ITEM_MAX_VAL_LEN || hdr->key_len > ITEM_MAX_KEY_LEN) {
             len += ITEM_HEADER_SIZE;
             pos += len;
             kv_item_free(item);
+            if (g_kv_mgr.block_info[blk_index].state == BLK_STATE_USED) {
+                kv_state_set((blk_index << BLK_BITS), BLK_STATE_DIRTY);
+                g_kv_mgr.block_info[blk_index].state = BLK_STATE_DIRTY;
+            }
             continue;
         }
 
@@ -372,13 +381,18 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
                 kv_item_free(item);
                 return NULL;
             }
+        } else {
+            if (g_kv_mgr.block_info[blk_index].state == BLK_STATE_USED) {
+                kv_state_set((blk_index << BLK_BITS), BLK_STATE_DIRTY);
+                g_kv_mgr.block_info[blk_index].state = BLK_STATE_DIRTY;
+            }
         }
 
         kv_item_free(item);
         pos += len;
-    } while (pos < end);
+    } while ((end - pos) > ITEM_HEADER_SIZE);
 
-    g_kv_mgr.block_info[blk_index].space = (end - pos) > 0 ? (end - pos) : 0;
+    g_kv_mgr.block_info[blk_index].space = end - pos;
     return NULL;
 }
 
@@ -475,6 +489,13 @@ static int kv_init(void)
         memset(&hdr, 0, sizeof(block_hdr_t));
         raw_read((i << BLK_BITS), &hdr, BLK_HEADER_SIZE);
         if (hdr.magic == BLK_MAGIC_NUM) {
+            if (INVALID_BLK_STATE(hdr.state)) {
+                if ((ret = kv_block_format(i)) != RES_OK)
+                    return ret;
+                else
+                    continue;
+            }
+
             g_kv_mgr.block_info[i].state = hdr.state;
             kv_item_traverse(__item_recovery_cb, i, NULL);
             if (hdr.state == BLK_STATE_CLEAN) {
@@ -489,6 +510,11 @@ static int kv_init(void)
              if ((ret = kv_block_format(i)) != RES_OK)
                 return ret;
         }
+    }
+
+    if (g_kv_mgr.clean_blk_nums == 0) {
+        if ((ret = kv_block_format(0)) != RES_OK)
+            return ret;
     }
 
     if (g_kv_mgr.clean_blk_nums == BLK_NUMS) {
@@ -730,10 +756,12 @@ static struct cli_command ncmd = {
 int yos_kv_init(void)
 {
     int ret;
+    uint8_t blk_index;
 
     if (g_kv_mgr.kv_initialize)
         return RES_OK;
 
+    memset(&g_kv_mgr, 0, sizeof(g_kv_mgr));
     if (yos_mutex_new(&(g_kv_mgr.kv_mutex)) != 0) {
         return RES_MUTEX_ERR;
     }
@@ -751,7 +779,8 @@ int yos_kv_init(void)
 
     g_kv_mgr.kv_initialize = 1;
 
-    if (((g_kv_mgr.write_pos & (~BLK_OFF_MASK)) > (BLK_SIZE - ITEM_MAX_LEN)) && 
+    blk_index = (g_kv_mgr.write_pos >> BLK_BITS);
+    if (((g_kv_mgr.block_info[blk_index].space) < ITEM_MAX_LEN) && 
         (g_kv_mgr.clean_blk_nums < KV_GC_RESERVED + 1))
         trigger_gc();
 
