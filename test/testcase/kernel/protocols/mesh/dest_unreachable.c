@@ -37,7 +37,7 @@ static void one_layer_case(void)
     check_p2p_str_wait("router", 13, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 13, "testcmd router", 2);
 
-    start_node_ext(14, MODE_MOBILE, -1, -1);
+    start_node_ext(14, MODE_RX_ON | MODE_MOBILE, -1, -1);
     check_p2p_str_wait("leaf", 14, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 14, "testcmd router", 2);
 

@@ -263,7 +263,6 @@ neighbor_t *update_neighbor(const message_info_t *info,
     mm_cost_tv_t      *path_cost = NULL;
     mm_ueid_tv_t      *src_ueid = NULL;
     mm_ssid_info_tv_t *ssid_info = NULL;
-    mm_mode_tv_t      *mode;
     mm_channel_tv_t   *channel;
     hal_context_t     *hal;
     network_context_t *network;
@@ -281,11 +280,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
     path_cost = (mm_cost_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_PATH_COST);
     src_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SRC_UEID);
     ssid_info = (mm_ssid_info_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SSID_INFO);
-    mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_MODE);
     channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_UCAST_CHANNEL);
 
     // remove nbr, if mode changed
-    if (nbr && mode && nbr->mode != 0 && nbr->mode != mode->mode) {
+    if (nbr && info->mode && nbr->mode != 0 && nbr->mode != info->mode) {
         remove_neighbor(hal, nbr);
         nbr = NULL;
     }
@@ -304,8 +302,8 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (src_ueid != NULL) {
         memcpy(nbr->ueid, src_ueid->ueid, sizeof(src_ueid->ueid));
     }
-    if (mode != NULL) {
-        nbr->mode = (node_mode_t)mode->mode;
+    if (info->mode) {
+        nbr->mode = (node_mode_t)info->mode;
     }
 
     if (nbr->state < STATE_CANDIDATE) {
@@ -634,32 +632,31 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
     uint8_t offset = 0;
     mm_tv_t *tv;
     mm_rssi_tv_t *rssi;
+    mm_mode_tv_t *mode;
     neighbor_t *nbr;
 
-    if (is_bcast_sid(&info->dest) == true) {
-        return 0;
-    }
-
     hal = network->hal;
-    nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
-                              info->dest.netid);
-    if (nbr == NULL) {
-        return 0;
-    }
-
-    if (nbr->last_lq_time &&
-        (ur_get_now() - nbr->last_lq_time) < LINK_QUALITY_INTERVAL) {
-        return 0;
-    }
-    nbr->last_lq_time = ur_get_now();
-
     control = (mesh_header_control_t *)hal->frame.data;
     control->control[1] |= (1 << MESH_HEADER_IES_OFFSET);
 
-    rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset);
-    umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_FORWARD_RSSI);
-    rssi->rssi = 0xff;
-    offset += sizeof(mm_rssi_tv_t);
+    mode = (mm_mode_tv_t *)(hal->frame.data + info->header_ies_offset);
+    umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
+    mode->mode = umesh_mm_get_mode();
+    offset += sizeof(mm_mode_tv_t);
+
+    nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
+                              info->dest.netid);
+    if (nbr && (nbr->last_lq_time == 0 ||
+        (ur_get_now() - nbr->last_lq_time) >= LINK_QUALITY_INTERVAL)) {
+        nbr->last_lq_time = ur_get_now();
+        rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset +
+                                offset);
+        umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_FORWARD_RSSI);
+        rssi->rssi = 0xff;
+        offset += sizeof(mm_rssi_tv_t);
+
+        nbr->stats.link_request++;
+    }
 
     tv = (mm_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
     tv->type = TYPE_HEADER_IES_TERMINATOR;
@@ -667,7 +664,6 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
 
     info->payload_offset += offset;
 
-    nbr->stats.link_request++;
     return offset;
 }
 
@@ -675,7 +671,8 @@ ur_error_t handle_mesh_header_ies(message_t *message)
 {
     ur_error_t error = UR_ERROR_NONE;
     message_info_t *info;
-    uint16_t offset;
+    uint8_t offset;
+    uint8_t len;
     uint8_t *tlvs;
     mm_tv_t *tv;
 
@@ -688,7 +685,11 @@ ur_error_t handle_mesh_header_ies(message_t *message)
         switch (tv->type) {
             case TYPE_FORWARD_RSSI:
                 send_link_accept(info->network, &info->src_mac, NULL, 0);
-                offset += sizeof(mm_rssi_tv_t);
+                len = sizeof(mm_rssi_tv_t);
+                break;
+            case TYPE_MODE:
+                info->mode = ((mm_mode_tv_t *)tv)->mode;
+                len = sizeof(mm_mode_tv_t);
                 break;
             default:
                 error = UR_ERROR_PARSE;
@@ -698,8 +699,9 @@ ur_error_t handle_mesh_header_ies(message_t *message)
             break;
         }
 
-        tlvs += offset;
+        tlvs += len;
         tv = (mm_tv_t *)tlvs;
+        offset += len;
     }
 
     offset += sizeof(mm_tv_t);

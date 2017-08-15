@@ -39,6 +39,7 @@ typedef struct message_info_s {
     ur_addr_t src_mac;
     ur_addr_t src;
     uint8_t src_channel;
+    node_mode_t mode;
 
     ur_addr_t dest;
     ur_addr_t dest2;
