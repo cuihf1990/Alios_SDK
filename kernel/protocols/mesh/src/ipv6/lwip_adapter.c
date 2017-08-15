@@ -114,11 +114,6 @@ ur_error_t ur_adapter_interface_init(void)
     return UR_ERROR_NONE;
 }
 
-ur_error_t ur_adapter_interface_deinit(void)
-{
-    return UR_ERROR_NONE;
-}
-
 static void update_interface_ipaddr(void)
 {
     ip6_addr_t                   addr6;

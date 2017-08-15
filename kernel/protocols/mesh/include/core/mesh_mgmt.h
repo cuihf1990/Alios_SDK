@@ -74,13 +74,8 @@ typedef enum mm_command_s {
     COMMAND_DISCOVERY_RESPONSE      = 0x3,
     COMMAND_ATTACH_REQUEST          = 0x4,
     COMMAND_ATTACH_RESPONSE         = 0x5,
-    COMMAND_DATA_REQUEST            = 0x6,
-    COMMAND_DATA_RESPONSE           = 0x7,
     COMMAND_SID_REQUEST             = 0x8,
     COMMAND_SID_RESPONSE            = 0x9,
-    COMMAND_TOPOLOGY_MGMT           = 0xa,
-    COMMAND_NETWORK_DATA_REQUEST    = 0xb,
-    COMMAND_NETWORK_DATA_RESPONSE   = 0xc,
     COMMAND_ADDRESS_QUERY           = 0xd,
     COMMAND_ADDRESS_QUERY_RESPONSE  = 0xe,
     COMMAND_ADDRESS_NOTIFICATION    = 0xf,
@@ -91,8 +86,6 @@ typedef enum mm_command_s {
     COMMAND_ADDRESS_UNREACHABLE     = 0x14,
     COMMAND_ADDRESS_ERROR           = 0x15,
     COMMAND_ROUTING_INFO_UPDATE     = 0x16,
-
-    COMMAND_RAW_DATA                = 0x70,
 
     // diags command
     COMMAND_TRACE_ROUTE_REQUEST     = 0x71,
@@ -145,7 +138,6 @@ typedef struct mm_cb_s {
 } mm_cb_t;
 
 ur_error_t umesh_mm_init(node_mode_t mode);
-ur_error_t umesh_mm_deinit(void);
 ur_error_t umesh_mm_start(mm_cb_t *cb);
 ur_error_t umesh_mm_stop(void);
 
@@ -156,14 +148,11 @@ uint8_t umesh_mm_get_prev_channel(void);
 void umesh_mm_set_prev_channel(void);
 
 uint16_t            umesh_mm_get_local_sid(void);
-ur_error_t          umesh_mm_set_local_sid(uint16_t sid);
 neighbor_t          *umesh_mm_get_attach_node(network_context_t *network);
 neighbor_t          *umesh_mm_get_attach_candidate(network_context_t *network);
 uint8_t             *umesh_mm_get_local_ueid(void);
 mm_device_state_t   umesh_mm_get_device_state(void);
 attach_state_t      umesh_mm_get_attach_state(void);
-void                umesh_mm_set_meshnetid(network_context_t *network,
-                                           uint16_t meshnetid);
 uint16_t            umesh_mm_get_meshnetid(network_context_t *network);
 uint16_t            umesh_mm_get_meshnetsize(void);
 const mac_address_t *umesh_mm_get_mac_address(void);
@@ -191,11 +180,6 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message);
 
 void become_leader(void);
 void become_detached(void);
-
-ur_error_t send_raw_data(network_context_t *network,
-                         ur_addr_t *dest, ur_addr_t *dest2,
-                         uint8_t *payload, uint8_t payload_length);
-ur_error_t register_raw_data_receiver(umesh_raw_data_received receiver);
 
 uint16_t tlvs_set_value(network_context_t *network,
                         uint8_t *buf, const uint8_t *tlvs,

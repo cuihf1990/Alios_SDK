@@ -50,7 +50,6 @@ typedef struct mesh_mgmt_state_s {
     mm_device_t             device;
     node_mode_t             leader_mode;
     mm_cb_t                 *callback;
-    umesh_raw_data_received raw_data_receiver;
 } mesh_mgmt_state_t;
 
 static mesh_mgmt_state_t g_mm_state;
@@ -516,12 +515,7 @@ static void handle_attach_timer(void *args)
                 detached = true;
             }
             break;
-        case ATTACH_DONE:
-            break;
-        case ATTACH_IDLE:
-            break;
         default:
-            assert(0);
             break;
     }
 
@@ -1295,109 +1289,6 @@ static ur_error_t handle_sid_request(message_t *message)
     return error;
 }
 
-ur_error_t send_raw_data(network_context_t *network,
-                         ur_addr_t *dest, ur_addr_t *dest2,
-                         uint8_t *payload, uint8_t payload_length)
-{
-    ur_error_t     error = UR_ERROR_NONE;
-    mm_header_t    *mm_header;
-    mm_ueid_tv_t   *ueid;
-    message_t      *message;
-    uint8_t        *data;
-    uint16_t       length;
-    message_info_t *info;
-    hal_context_t  *hal;
-    neighbor_t     *nbr;
-
-    hal = network->hal;
-    if (dest == NULL && hal->discovery_result.meshnetid == BCAST_NETID) {
-        return UR_ERROR_FAIL;
-    }
-
-    length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) + payload_length;
-    message = message_alloc(length, MESH_MGMT_6);
-    if (message == NULL) {
-        return UR_ERROR_MEM;
-    }
-
-    data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_RAW_DATA;
-    data += sizeof(mm_header_t);
-
-    ueid = (mm_ueid_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)ueid, TYPE_SRC_UEID);
-    memcpy(ueid->ueid, g_mm_state.device.ueid, sizeof(ueid->ueid));
-    data += sizeof(mm_ueid_tv_t);
-
-    memcpy(data, payload, payload_length);
-    data += payload_length;
-
-    info = message->info;
-    info->network = network;
-    // dest
-    if (dest == NULL) {
-        nbr = get_neighbor_by_mac_addr(&hal->discovery_result.addr);
-        if (nbr == NULL) {
-            message_free(message);
-            return UR_ERROR_FAIL;
-        }
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = nbr->addr.addr.short_addr;
-        info->dest.netid = get_main_netid(nbr->addr.netid);
-        info->dest2.addr.len = SHORT_ADDR_SIZE;
-        info->dest2.addr.short_addr = BCAST_SID;
-        info->dest2.netid = BCAST_NETID;
-    } else {
-        memcpy(&info->dest, dest, sizeof(info->dest));
-        if (dest2) {
-            memcpy(&info->dest2, dest2, sizeof(info->dest2));
-        }
-    }
-
-    set_command_type(info, mm_header->command);
-    error = mf_send_message(message);
-
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send raw data, len %d\r\n", length);
-
-    return error;
-}
-
-ur_error_t register_raw_data_receiver(umesh_raw_data_received receiver)
-{
-    g_mm_state.raw_data_receiver = receiver;
-    return UR_ERROR_NONE;
-}
-
-ur_error_t handle_raw_data(message_t *message)
-{
-    ur_error_t   error = UR_ERROR_NONE;
-    mm_ueid_tv_t *ueid;
-    uint8_t      *tlvs;
-    ur_addr_t    src;
-    uint8_t      *payload;
-    uint8_t      length;
-
-    tlvs = message_get_payload(message) + sizeof(mm_header_t);
-
-    if ((ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, sizeof(mm_ueid_tv_t),
-                                                TYPE_SRC_UEID)) == NULL) {
-        return UR_ERROR_FAIL;
-    }
-
-    src.addr.len = EXT_ADDR_SIZE;
-    memcpy(&src.addr.addr, ueid, sizeof(src.addr.addr));
-    payload = tlvs + sizeof(mm_ueid_tv_t);
-    length = message_get_msglen(message) - sizeof(mm_header_t) - sizeof(
-                 mm_ueid_tv_t);
-    error = g_mm_state.raw_data_receiver(&src, payload, length);
-
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle raw data\r\n");
-
-    return error;
-}
-
 static ur_error_t handle_sid_response(message_t *message)
 {
     ur_error_t        error = UR_ERROR_NONE;
@@ -1904,19 +1795,11 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
         case COMMAND_DISCOVERY_RESPONSE:
             handle_discovery_response(message);
             break;
-        case COMMAND_DATA_REQUEST:
-            break;
-        case COMMAND_DATA_RESPONSE:
-            break;
         case COMMAND_ATTACH_REQUEST:
             error = handle_attach_request(message);
             break;
         case COMMAND_ATTACH_RESPONSE:
             error = handle_attach_response(message);
-            break;
-        case COMMAND_NETWORK_DATA_REQUEST:
-            break;
-        case COMMAND_NETWORK_DATA_RESPONSE:
             break;
         case COMMAND_SID_REQUEST:
             error = handle_sid_request(message);
@@ -1954,9 +1837,6 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
         case COMMAND_ROUTING_INFO_UPDATE:
             error = handle_router_message_received(message);
             break;
-        case COMMAND_RAW_DATA:
-            error = handle_raw_data(message);
-            break;
         default:
             break;
     }
@@ -1991,11 +1871,6 @@ ur_error_t umesh_mm_init(node_mode_t mode)
     }
 
     return error;
-}
-
-ur_error_t umesh_mm_deinit(void)
-{
-    return UR_ERROR_NONE;
 }
 
 ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
@@ -2034,17 +1909,6 @@ ur_error_t umesh_mm_stop(void)
     neighbors_init();
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
     return UR_ERROR_NONE;
-}
-
-void umesh_mm_set_meshnetid(network_context_t *network, uint16_t meshnetid)
-{
-    network = network ? : get_default_network_context();
-    nd_set_stable_meshnetid(meshnetid);
-    network->meshnetid = meshnetid;
-
-    if (g_mm_state.device.state == DEVICE_STATE_DETACHED) {
-        nm_start_discovery(nbr_discovered_handler);
-    }
 }
 
 uint16_t umesh_mm_get_meshnetid(network_context_t *network)
@@ -2089,23 +1953,6 @@ uint16_t umesh_mm_get_local_sid(void)
         sid = BCAST_SID;
     }
     return sid;
-}
-
-ur_error_t umesh_mm_set_local_sid(uint16_t sid)
-{
-    network_context_t *network;
-
-    network = get_default_network_context();
-    network->sid = sid;
-    if (g_mm_state.device.state > DEVICE_STATE_ATTACHED) {
-        network->change_sid = true;
-        network->attach_state = ATTACH_SID_REQUEST;
-        ur_stop_timer(&network->attach_timer, network);
-        network->attach_timer = ur_start_timer(network->hal->sid_request_interval,
-                                               handle_attach_timer, network);
-        send_sid_request(network);
-    }
-    return UR_ERROR_NONE;
 }
 
 uint8_t *umesh_mm_get_local_ueid(void)

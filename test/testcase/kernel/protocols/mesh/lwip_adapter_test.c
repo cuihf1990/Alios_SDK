@@ -60,7 +60,6 @@ void test_uradar_lwip_adapter_case(void)
 
     interface_stop();
     YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_down());
-    YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_deinit());
 }
 
 
