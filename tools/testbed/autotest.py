@@ -20,7 +20,6 @@ class Autotest:
         self.sync_event = threading.Event()
         self.sync_event.clear()
 
-
     def heartbeat_func(self):
         heartbeat_timeout = time.time() + 10
         while self.keep_running:
@@ -46,6 +45,7 @@ class Autotest:
 
         if self.filter['lines_exp'] == 0:
             if self.filter['cmdstr'] in logstr:
+                self.filter['lines_num'] += 1
                 self.sync_event.set()
         else:
             if self.filter['lines_num'] == 0:
@@ -102,8 +102,6 @@ class Autotest:
                         for dev in list(self.device_list):
                             if dev not in list(new_list):
                                 self.device_list.pop(dev)
-                                if dev in self.log_subscribed:
-                                    self.log_subscribed.remove(dev)
                     if type == TBframe.DEVICE_LOG:
                         dev = value.split(':')[0]
                         logtime = value.split(':')[1]
@@ -239,7 +237,7 @@ class Autotest:
         self.service_socket.send(data)
         return True
 
-    def device_run_cmd(self, devname, args, expect_lines = 0, timeout=0.2, filters=[""]):
+    def device_run_cmd(self, devname, args, expect_lines = 0, timeout=0.8, filters=[""]):
         if devname not in list(self.subscribed):
             return False
         if len(args) == 0:
