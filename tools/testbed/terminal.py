@@ -157,6 +157,7 @@ class Terminal:
 
         log_index = log.split(':')[0] + ':'
         log = log[len(log_index):]
+        log = log.replace('\t', ' ' * 8)
         line_length = len(log)
         j = 0; log_len = 0; log_str = log_index;
         while j < line_length:
@@ -173,7 +174,7 @@ class Terminal:
                     self.process_esc_sequence(log[j:k+1])
                     j = k + 1
                     continue
-            if c > '\x1F':
+            if ord(c) >= 0x20 and ord(c) < 0x7F:
                 log_str += c
                 log_len += 1
                 if log_len + len(log_index) >= LOG_WINDOW_WIDTH - 1:

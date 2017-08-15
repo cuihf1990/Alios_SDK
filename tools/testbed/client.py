@@ -44,7 +44,8 @@ class Client:
                     try:
                         self.devices[port]['serial'].open()
                     except:
-                        print "error: unable to open {0}".format(port)
+                        if os.path.exists(port) == True:
+                            print "device_logging, error: unable to open {0}".format(port)
                         self.devices[port]['rlock'].release()
                         time.sleep(0.1)
                         break
@@ -237,37 +238,43 @@ class Client:
         return ret
 
     def esp32_control(self, port, operation):
-        if operation == TBframe.DEVICE_RESET:
-            print "reset", port
-            self.devices[port]['serial'].setDTR(False)
-            time.sleep(0.1)
-            self.devices[port]['serial'].setDTR(True)
-            return "success"
-        elif operation == TBframe.DEVICE_STOP:
-            print "stop", port
-            self.devices[port]['serial'].setDTR(False)
-            return "success"
-        elif operation == TBframe.DEVICE_START:
-            print "start", port
-            self.devices[port]['serial'].setDTR(True)
-            return "success"
+        try:
+            if operation == TBframe.DEVICE_RESET:
+                print "reset", port
+                self.devices[port]['serial'].setDTR(False)
+                time.sleep(0.1)
+                self.devices[port]['serial'].setDTR(True)
+                return "success"
+            elif operation == TBframe.DEVICE_STOP:
+                print "stop", port
+                self.devices[port]['serial'].setDTR(False)
+                return "success"
+            elif operation == TBframe.DEVICE_START:
+                print "start", port
+                self.devices[port]['serial'].setDTR(True)
+                return "success"
+        except:
+            pass
         return "fail"
 
     def mxchip_control(self, port, operation):
-        if operation == TBframe.DEVICE_RESET:
-            print "reset", port
-            self.devices[port]['serial'].setRTS(True)
-            time.sleep(0.1)
-            self.devices[port]['serial'].setRTS(False)
-            return "success"
-        elif operation == TBframe.DEVICE_STOP:
-            print "stop", port
-            self.devices[port]['serial'].setRTS(True)
-            return "success"
-        elif operation == TBframe.DEVICE_START:
-            print "start", port
-            self.devices[port]['serial'].setRTS(False)
-            return "success"
+        try:
+            if operation == TBframe.DEVICE_RESET:
+                print "reset", port
+                self.devices[port]['serial'].setRTS(True)
+                time.sleep(0.1)
+                self.devices[port]['serial'].setRTS(False)
+                return "success"
+            elif operation == TBframe.DEVICE_STOP:
+                print "stop", port
+                self.devices[port]['serial'].setRTS(True)
+                return "success"
+            elif operation == TBframe.DEVICE_START:
+                print "start", port
+                self.devices[port]['serial'].setRTS(False)
+                return "success"
+        except:
+            pass
         return "fail"
 
     def control_device(self, port, operation):
@@ -278,7 +285,9 @@ class Client:
             try:
                 self.devices[port]['serial'].open()
             except:
-                print "error: unable to open {0}".format(port)
+                if DEBUG:
+                    raise
+                print "control_device, error: unable to open {0}".format(port)
                 return "fail"
 
         ret = "busy"
@@ -405,10 +414,11 @@ class Client:
                                 self.devices[port]['serial'].write(cmds)
                                 self.devices[port]['wlock'].release()
                                 result="success"
-                                print "device", port, "run command:", cmds, "succeed"
+                                print "device", port, "run command:", cmds[:-1]+", succeed"
                             else:
                                 result = "busy"
-                                print "device", port, "run command:", cmds, "failed, device busy"
+                                cmds[-1] = ','
+                                print "device", port, "run command:", cmds[:-1]+", failed, device busy"
                         else:
                             result = "error"
                         content = ','.join(term) + ',' + result
