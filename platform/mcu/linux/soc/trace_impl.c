@@ -24,7 +24,7 @@ void _trace_init(void)
     uint32_t buf[10];
 
     fifo_init(&trace_fifo, buffer, TRACE_BUFFER_SIZE * 4);
-    event_mask  = TRACE_TYPE|TRACE_EVENT;
+    event_mask  = 0;
     hit_task = NULL;
 
     buf[0] = 0x101;
@@ -43,7 +43,7 @@ void trace_filter_and_write(ktask_t *task, const void *buf, uint32_t len)
     if ((event_mask & TRACE_EVENT) != 0 && event_mask != event) return;
     
     /*when event_mask represents an event type, filter match type*/
-    if ((event_mask & TRACE_TYPE) != (event & TRACE_TYPE)) return;
+    if (((event_mask & TRACE_TYPE) != 0) && (event_mask & TRACE_TYPE) != (event & TRACE_TYPE)) return;
 
     fifo_in_full_reject_lock(&trace_fifo, buf, len);
 }
