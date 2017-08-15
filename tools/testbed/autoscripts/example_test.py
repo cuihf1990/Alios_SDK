@@ -13,7 +13,7 @@ at.device_run_cmd('A', ['netmgr', 'clear'])
 at.device_run_cmd('A', ['reboot'])
 time.sleep(5)
 at.device_run_cmd('A', ['netmgr', 'connect', 'wuchen_test', 'aliyunos'])
-time.sleep(8)
+time.sleep(10)
 filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
 print at.device_run_cmd('A', ['umesh', 'state'], 1, 0.5, filter)
 

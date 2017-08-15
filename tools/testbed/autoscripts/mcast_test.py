@@ -31,7 +31,10 @@ for device in device_list:
         print 'error: get mac addr for device {0} failed'.format(device)
         exit(1)
 
-#setup line topology: A <--> B <--> C <--> D
+#setup topology
+print 'topology:'
+print 'router  leader  router  mobile'
+print '  A <---> B <---> C <---> D'
 for i in range(len(device_list)):
     device = device_list[i]
     at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
@@ -98,9 +101,7 @@ for i in [1, 2, 3, 0]:
         ipaddr[1] = ipaddr[1].replace('\t', '')
         ipaddr[2] = ipaddr[2].replace('\t', '')
         device_attr[device]['ipaddr'] = ipaddr[0:3]
-print '\n'
-print device_attr
-print '\n'
+print '\n{0}\n'.format(device_attr)
 
 #udp multicast test
 print 'test multicast connectivity:'

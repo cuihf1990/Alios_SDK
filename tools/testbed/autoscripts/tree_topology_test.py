@@ -167,7 +167,7 @@ for device in device_list:
 print 'ping: succeed-{0}, failed-{1}'.format(success_num, fail_num)
 
 #udp
-print 'test connectivity with udp:'
+print '\ntest connectivity with udp:'
 success_num = 0; fail_num = 0
 for device in device_list:
     for other in device_list:

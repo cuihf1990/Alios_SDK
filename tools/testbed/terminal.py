@@ -173,7 +173,7 @@ class Terminal:
                     self.process_esc_sequence(log[j:k+1])
                     j = k + 1
                     continue
-            if c != '\r' and c != '\n' and c != '\0':
+            if c > '\x1F':
                 log_str += c
                 log_len += 1
                 if log_len + len(log_index) >= LOG_WINDOW_WIDTH - 1:
@@ -226,7 +226,16 @@ class Terminal:
 
         self.curseslock.acquire()
         for i in range(len(log_dsp_buffer)):
-            self.log_window.addstr(i+1, 0, log_dsp_buffer[i][1], curses.color_pair(log_dsp_buffer[i][0]))
+            try:
+                self.log_window.addstr(i+1, 0, log_dsp_buffer[i][1], curses.color_pair(log_dsp_buffer[i][0]))
+            except:
+                self.curseslock.release()
+                if DEBUG:
+                    print log_dsp_buffer[i]
+                    print "len:", len(log_dsp_buffer[i][1])
+                    raise
+                return
+
         self.log_window.refresh()
         self.cmd_window.refresh()
         self.curseslock.release()

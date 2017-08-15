@@ -177,11 +177,11 @@ class Server:
         return ret
 
     def increase_device_refer(self, client, port, using_list):
-        if [client, port] not in using_list:
+        if [client['addr'], port] not in using_list:
             if port in list(client['devices']):
                 with client['devices'][port]['lock']:
                     client['devices'][port]['using'] += 1
-                using_list.append([client, port])
+                using_list.append([client['addr'], port])
                 self.send_device_list_to_all();
 
     def terminal_serve_thread(self, terminal):
@@ -353,9 +353,10 @@ class Server:
                 if terminal['socket'] in client['devices'][port]['subscribe']:
                     client['devices'][port]['subscribe'].remove(terminal['socket'])
         for device in using_list:
-            client = device[0]
+            addr = device[0]
             port = device[1]
-            if client in self.client_list and port in list(client['devices']):
+            client = self.get_client_by_addr(addr)
+            if client != None and port in list(client['devices']):
                 with client['devices'][port]['lock']:
                     client['devices'][port]['using'] -= 1
         terminal['socket'].close()
