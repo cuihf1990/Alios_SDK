@@ -196,6 +196,7 @@ static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     }
 
     slist_del(&neighbor->next, &hal->neighbors_list);
+    ur_mem_free(neighbor->one_time_key, KEY_SIZE);
     ur_mem_free(neighbor, sizeof(neighbor_t));
     hal->neighbors_num--;
     return UR_ERROR_NONE;

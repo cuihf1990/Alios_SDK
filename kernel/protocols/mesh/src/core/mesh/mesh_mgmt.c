@@ -283,6 +283,8 @@ void become_leader(void)
     start_addr_cache();
     address_resolver_init();
 
+    calculate_network_key();
+
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "become leader\r\n");
     networks = get_network_contexts();
@@ -355,7 +357,7 @@ static uint8_t get_tv_value_length(uint8_t type)
             length = 8;
             break;
         case TYPE_MCAST_ADDR:
-        case TYPE_GROUP_KEY:
+        case TYPE_SYMMETRIC_KEY:
             length = 16;
             break;
         default:
@@ -736,12 +738,15 @@ static ur_error_t send_attach_request(network_context_t *network,
     mm_version_tv_t *version;
     mm_ueid_tv_t    *src_ueid;
     mm_mode_tv_t    *mode;
+    mm_timestamp_tv_t *timestamp;
     uint8_t         *data;
     message_t       *message = NULL;
     message_info_t  *info;
+    uint32_t time;
 
     length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
-             sizeof(mm_ueid_tv_t) + sizeof(mm_mode_tv_t);
+             sizeof(mm_ueid_tv_t) + sizeof(mm_mode_tv_t) +
+             sizeof(mm_timestamp_tv_t);
     message = message_alloc(length, MESH_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
@@ -765,6 +770,15 @@ static ur_error_t send_attach_request(network_context_t *network,
     umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
     mode->mode = (uint8_t)g_mm_state.device.mode;
     data += sizeof(mm_mode_tv_t);
+
+    time = ur_get_now();
+    timestamp = (mm_timestamp_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
+    timestamp->timestamp = time;
+    data += sizeof(mm_timestamp_tv_t);
+
+    calculate_one_time_key(network->one_time_key, time,
+                           umesh_mm_get_mac_address());
 
     info = message->info;
     info->network = network;
@@ -793,7 +807,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     mm_ueid_tv_t  *src_ueid;
     mm_cost_tv_t  *path_cost;
     mm_mode_tv_t  *mode;
-    mm_group_key_tv_t *group_key;
+    mm_symmetric_key_tv_t *symmetric_key;
     message_t     *message;
     uint8_t       *data;
     uint16_t      length;
@@ -806,7 +820,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     length = sizeof(mm_header_t) + sizeof(mm_cost_tv_t) +
              sizeof(mm_ueid_tv_t) + sizeof(mm_mode_tv_t);
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
-        length += sizeof(mm_group_key_tv_t);
+        length += sizeof(mm_symmetric_key_tv_t);
     }
     message = message_alloc(length, MESH_MGMT_3);
     if (message == NULL) {
@@ -833,10 +847,12 @@ static ur_error_t send_attach_response(network_context_t *network,
     data += sizeof(mm_mode_tv_t);
 
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
-        group_key = (mm_group_key_tv_t *)data;
-        umesh_mm_init_tv_base((mm_tv_t *)group_key, TYPE_GROUP_KEY);
-        memcpy(group_key->group_key, get_group_key(), sizeof(group_key->group_key));
-        data += sizeof(mm_group_key_tv_t);
+        symmetric_key = (mm_symmetric_key_tv_t *)data;
+        umesh_mm_init_tv_base((mm_tv_t *)symmetric_key, TYPE_SYMMETRIC_KEY);
+        memcpy(symmetric_key->symmetric_key,
+               get_symmetric_key(GROUP_KEY1_INDEX),
+               sizeof(symmetric_key->symmetric_key));
+        data += sizeof(mm_symmetric_key_tv_t);
     }
 
     info = message->info;
@@ -858,6 +874,7 @@ static ur_error_t handle_attach_request(message_t *message)
     mm_version_tv_t *version;
     mm_ueid_tv_t    *ueid;
     mm_mode_tv_t    *mode;
+    mm_timestamp_tv_t *timestamp;
     uint8_t         *tlvs;
     uint16_t        tlvs_length;
     neighbor_t      *node;
@@ -901,7 +918,7 @@ static ur_error_t handle_attach_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    if (update_neighbor(info, tlvs, tlvs_length, true) == NULL) {
+    if ((node = update_neighbor(info, tlvs, tlvs_length, true)) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -920,11 +937,24 @@ static ur_error_t handle_attach_request(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    send_attach_response(network, &info->src_mac);
+    timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_TIMESTAMP);
+    if (timestamp) {
+        if (node->one_time_key == NULL) {
+            node->one_time_key = ur_mem_alloc(KEY_SIZE);
+        }
+        error = calculate_one_time_key(node->one_time_key,
+                                       timestamp->timestamp, &node->mac);
+    }
+
+    if (error == UR_ERROR_NONE) {
+        send_attach_response(network, &info->src_mac);
+    }
 
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "attach response to " EXT_ADDR_FMT "\r\n",
            EXT_ADDR_DATA(info->src_mac.addr.addr));
+
     return error;
 }
 
@@ -932,7 +962,7 @@ static ur_error_t handle_attach_response(message_t *message)
 {
     neighbor_t    *nbr;
     mm_cost_tv_t  *path_cost;
-    mm_group_key_tv_t *group_key;
+    mm_symmetric_key_tv_t *symmetric_key;
     uint8_t       *tlvs;
     uint16_t      tlvs_length;
     network_context_t *network;
@@ -962,13 +992,14 @@ static ur_error_t handle_attach_response(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    group_key = (mm_group_key_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_GROUP_KEY);
+    symmetric_key = (mm_symmetric_key_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_SYMMETRIC_KEY);
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
-        if (group_key == NULL) {
+        if (symmetric_key == NULL) {
             return UR_ERROR_NONE;
         }
-        set_group_key(group_key->group_key, sizeof(group_key->group_key));
+        set_symmetric_key(GROUP_KEY1_INDEX, symmetric_key->symmetric_key,
+                          sizeof(symmetric_key->symmetric_key));
     }
 
     if ((info->src.netid == network->prev_netid) &&

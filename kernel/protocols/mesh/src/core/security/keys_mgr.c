@@ -18,67 +18,69 @@
 
 #include "umesh_hal.h"
 #include "core/keys_mgr.h"
+#include "core/crypto.h"
 #include "hal/interfaces.h"
 #include "hal/interface_context.h"
 
-static uint8_t g_master_key[] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+static uint8_t g_symmetric_key[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,		 
+    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,		 
 };
 
-static uint8_t g_group_key[] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-};
-
-ur_error_t set_master_key(const uint8_t *key, uint8_t length)
+ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
+                                  const mac_address_t *addr)
 {
-    slist_t *hals;
-    hal_context_t *hal;
+    ur_error_t error;
+    uint8_t timestamp_expand[KEY_SIZE];
+    uint8_t index;
 
-    if (key != NULL && length == sizeof(g_master_key)) {
-        memcpy(g_master_key, key, length);
+    if (key == NULL || addr == NULL) {
+        return UR_ERROR_MEM;
     }
 
-    hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        hal_umesh_set_key(hal->module, MASTER_KEY_INDEX, g_group_key,
-                          sizeof(g_group_key));
+    for (index = 0; index < KEY_SIZE / sizeof(uint32_t); index++) {
+        memcpy(&timestamp_expand[index * sizeof(uint32_t)],
+               (uint8_t *)&timestamp, sizeof(uint32_t));
     }
 
-    return UR_ERROR_NONE;
-}
-
-const uint8_t *get_master_key(uint8_t *length)
-{
-    if (length == NULL) {
-        return NULL;
+    for (index = 0; index < KEY_SIZE / sizeof(addr->addr); index++) {
+        memcpy(&key[index * sizeof(addr->addr)], addr->addr,
+                    sizeof(addr->addr));
     }
 
-    *length = sizeof(g_master_key);
-    return g_master_key;
-}
-
-ur_error_t set_group_key(uint8_t *payload, uint8_t length)
-{
-    slist_t *hals;
-    hal_context_t *hal;
-    ur_error_t error = UR_ERROR_NONE;
-
-    if (payload != NULL && length == sizeof(g_group_key)) {
-        memcpy(g_group_key, payload, length);
-    }
-
-    hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        hal_umesh_set_key(hal->module, GROUP_KEY1_INDEX, g_group_key,
-                          sizeof(g_group_key));
-    }
+    error = umesh_aes_encrypt(timestamp_expand, KEY_SIZE,
+                              key, KEY_SIZE, key);
 
     return error;
 }
 
-const uint8_t *get_group_key(void)
+ur_error_t calculate_network_key(void)
 {
-    return g_group_key;
+    uint8_t network_key[KEY_SIZE];
+    uint32_t now = ur_get_now();
+    uint8_t index = 0;
+
+    for (index = 0; index < KEY_SIZE / sizeof(uint32_t); index++) {
+        memcpy(&network_key[index * sizeof(now)],
+               (uint8_t *)&now, sizeof(now));
+    }
+
+    set_symmetric_key(GROUP_KEY1_INDEX, network_key, KEY_SIZE);
+
+    return UR_ERROR_NONE;
+}
+
+ur_error_t set_symmetric_key(uint8_t key_index, uint8_t *payload,
+                             uint8_t length)
+{
+    if (payload != NULL && length == sizeof(g_symmetric_key)) {
+        memcpy(g_symmetric_key, payload, length);
+        return UR_ERROR_NONE;
+    }
+    return UR_ERROR_FAIL;
+}
+
+const uint8_t *get_symmetric_key(uint8_t key_index)
+{
+    return g_symmetric_key;
 }

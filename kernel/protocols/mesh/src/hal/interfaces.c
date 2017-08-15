@@ -50,6 +50,12 @@ static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
         ur_router_set_default_router(router_id);
     }
 
+    network->one_time_key = ur_mem_alloc(KEY_SIZE);
+    if (network->one_time_key == NULL) {
+        ur_mem_free(network, sizeof(network_context_t));
+        return NULL;
+    }
+
     slist_add_tail(&network->next, &g_networks_list);
 
     return network;
@@ -221,6 +227,7 @@ void interface_stop(void)
     while (!slist_empty(&g_networks_list)) {
         network_context_t *network;
         network = slist_first_entry(&g_networks_list, network_context_t, next);
+        ur_mem_free(network->one_time_key, KEY_SIZE);
         slist_del(&network->next, &g_networks_list);
         ur_mem_free(network, sizeof(*network));
     }

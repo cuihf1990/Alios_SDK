@@ -99,6 +99,7 @@ typedef struct neighbor_s {
     ssid_info_t ssid_info;
     uint8_t channel;
     int8_t rssi;
+    uint8_t *one_time_key;
     uint32_t last_heard;
     uint32_t last_lq_time;
 } neighbor_t;
