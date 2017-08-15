@@ -296,28 +296,6 @@ exit:
     return error;
 }
 
-ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
-                               uint8_t *payload, uint8_t length)
-{
-    ur_error_t        error = UR_ERROR_NONE;
-    network_context_t *network;
-
-    network = get_default_network_context();
-    error = send_raw_data(network, dest, dest2, payload, length);
-    return error;
-}
-
-ur_error_t umesh_raw_data_receiver(ur_addr_t *src,
-                                   uint8_t *payload, uint8_t length)
-{
-    return UR_ERROR_NONE;
-}
-
-ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver)
-{
-    return UR_ERROR_NONE;
-}
-
 #ifdef CONFIG_YOS_DDA
 int csp_get_args(const char ***pargv);
 static void parse_args(void)
@@ -377,7 +355,6 @@ ur_error_t umesh_init(node_mode_t mode)
     nd_init();
     message_stats_reset();
     g_um_state.initialized = true;
-    register_raw_data_receiver(umesh_raw_data_receiver);
 
 #ifdef CONFIG_YOS_MESH_DEBUG
     mesh_cli_init();
@@ -487,11 +464,6 @@ const mac_address_t *umesh_net_get_mac_address(umesh_net_index_t nettype)
 uint16_t umesh_net_get_meshnetid(umesh_net_index_t nettype)
 {
     return umesh_mm_get_meshnetid(NULL);
-}
-
-void umesh_net_set_meshnetid(umesh_net_index_t nettype, uint16_t meshnetid)
-{
-    umesh_mm_set_meshnetid(NULL, meshnetid);
 }
 
 uint16_t umesh_net_get_meshnetsize(umesh_net_index_t nettype)

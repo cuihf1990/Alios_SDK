@@ -53,7 +53,6 @@ static void process_nbrs(int argc, char *argv[]);
 static void process_networks(int argc, char *argv[]);
 static void process_ping(int argc, char *argv[]);
 static void process_prefix(int argc, char *argv[]);
-static void process_rawdata(int argc, char *argv[]);
 static void process_router(int argc, char *argv[]);
 static void process_seclevel(int argc, char *argv[]);
 static void process_start(int argc, char *argv[]);
@@ -82,7 +81,6 @@ const cli_command_t g_commands[] = {
     { "networks", &process_networks },
     { "ping", &process_ping },
     { "prefix", &process_prefix },
-    { "rawdata", &process_rawdata },
     { "router", &process_router },
     { "seclevel", &process_seclevel },
     { "start", &process_start },
@@ -482,16 +480,7 @@ void process_macaddr(int argc, char *argv[])
 
 void process_meshnetid(int argc, char *argv[])
 {
-    char *end;
-    uint16_t meshnetid;
-
-    if (argc == 0) {
-        response_append("0x%x\r\n", umesh_get_meshnetid());
-    } else {
-        meshnetid = (uint16_t)strtol(argv[0], &end, 0);
-        umesh_set_meshnetid(meshnetid);
-    }
-    response_append("done\r\n");
+    response_append("0x%x\r\n", umesh_get_meshnetid());
 }
 
 void process_meshnetsize(int argc, char *argv[])
@@ -734,14 +723,6 @@ void show_router(uint8_t id)
             response_append("UNKNOWN_ROUTER");
             break;
     }
-}
-
-void process_rawdata(int argc, char *argv[])
-{
-    uint8_t rawdata[] = "test";
-
-    umesh_send_raw_data(NULL, NULL, rawdata, sizeof(rawdata));
-    response_append("done\r\n");
 }
 
 void process_router(int argc, char *argv[])

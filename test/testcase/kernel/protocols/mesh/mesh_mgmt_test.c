@@ -28,7 +28,6 @@ void test_uradar_mesh_mgmt_case(void)
     interface_start();
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_start(&mm_cb));
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_stop());
-    YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_deinit());
     YUNIT_ASSERT(DEVICE_STATE_DISABLED == umesh_mm_get_device_state());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_init(MODE_RX_ON));
     YUNIT_ASSERT(BCAST_SID == umesh_mm_get_local_sid());
@@ -62,10 +61,7 @@ void test_uradar_mesh_mgmt_case(void)
     YUNIT_ASSERT_PTR_NOT_NULL(umesh_mm_get_tv(tlvs, length, TYPE_VERSION));
     umesh_mm_init_tlv_base((mm_tlv_t *)tlvs, TYPE_FORWARD_RSSI, 1);
 
-    if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
-        umesh_mm_set_meshnetid(NULL, 0x1000);
-        YUNIT_ASSERT(0x1000 == umesh_mm_get_meshnetid(NULL));
-    } else {
+    if (umesh_mm_get_device_state() != DEVICE_STATE_LEADER) {
         YUNIT_ASSERT(0x0000 != umesh_mm_get_meshnetid(NULL));
     }
 
