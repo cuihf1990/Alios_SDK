@@ -16,10 +16,6 @@ void test_uradar_urmesh_case(void)
     YUNIT_ASSERT(INVALID_SID == umesh_get_sid());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_start());
     check_cond_wait(umesh_get_device_state() == DEVICE_STATE_LEADER, 5);
-    if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
-        umesh_set_meshnetid(0x1000);
-        YUNIT_ASSERT(0x1000 == umesh_get_meshnetid());
-    }
 
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_set_mode(MODE_MOBILE));
     YUNIT_ASSERT(MODE_MOBILE == umesh_get_mode());

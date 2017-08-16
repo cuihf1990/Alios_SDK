@@ -47,6 +47,7 @@ static void ur_sock_read_cb(int fd, void *arg)
     ur_mem_free(buffer, UR_IP6_MTU + UR_IP6_HLEN);
 }
 
+#if LWIP_IPV6
 int echo_socket(raw_data_handler_t handler)
 {
     static listen_sockets_t g_echo;
@@ -91,6 +92,49 @@ int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
     return lwip_sendto(socket, payload, length, 0, (struct sockaddr *)&sock_addr,
                        sizeof(sock_addr));
 }
+#else
+int echo_socket(raw_data_handler_t handler)
+{
+    static listen_sockets_t g_echo;
+    g_echo.socket = lwip_socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    g_echo.handler = handler;
+#ifdef WITH_LWIP
+    yos_poll_read_fd(g_echo.socket, ur_sock_read_cb, &g_echo);
+#endif
+    return g_echo.socket;
+}
+
+int autotest_udp_socket(raw_data_handler_t handler, uint16_t port)
+{
+    static listen_sockets_t udp_autotest;
+    struct sockaddr_in      addr;
+
+    udp_autotest.socket = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    lwip_bind(udp_autotest.socket, (const struct sockaddr *)&addr, sizeof(addr));
+    udp_autotest.handler = handler;
+#ifdef WITH_LWIP
+    yos_poll_read_fd(udp_autotest.socket, ur_sock_read_cb, &udp_autotest);
+#endif
+    return udp_autotest.socket;
+}
+
+int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
+               ur_ip6_addr_t *dest, uint16_t port)
+{
+    struct sockaddr_in sock_addr;
+
+    memset(&sock_addr, 0, sizeof(sock_addr));
+    sock_addr.sin_len = sizeof(sock_addr);
+    sock_addr.sin_family = AF_INET;
+    sock_addr.sin_port = htons(port);
+    sock_addr.sin_addr.s_addr = 0xa8c0 | (dest->m16[7] << 16);
+    return lwip_sendto(socket, payload, length, 0, (struct sockaddr *)&sock_addr,
+                       sizeof(sock_addr));
+}
+#endif
 
 int ip6_recv(int socket, void *payload, uint16_t length)
 {

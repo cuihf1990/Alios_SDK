@@ -52,8 +52,16 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
                                     const ip4_addr_t *ip4addr)
 {
     ur_error_t error;
+    uint16_t sid;
 
-    error = umesh_ipv4_output(p, (ur_ip6_addr_t *)ip4addr);
+    if (ip4_addr_isany(ip4addr) || ip4_addr_isbroadcast(ip4addr, netif)) {
+        sid = 0xffff;
+    }
+    else {
+        sid = ntohl(ip4addr->addr) & 0xffff;
+    }
+
+    error = umesh_ipv4_output(p, sid);
 
     /* error mapping */
     switch (error) {
@@ -70,6 +78,7 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
     return ERR_OK;
 }
 
+#if LWIP_IPV6
 static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
                                     const ip6_addr_t *ip6addr)
 {
@@ -91,16 +100,19 @@ static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
     }
     return ERR_OK;
 }
+#endif
 
 static err_t ur_adapter_if_init(struct netif *netif)
 {
     netif->name[0] = g_la_state.interface_name[0];
     netif->name[1] = g_la_state.interface_name[1];
     netif->num = g_la_state.interface_name[2] - '0';
+#if LWIP_IPV6
     netif->output_ip6 = ur_adapter_ipv6_output;
+#endif
     netif->output = ur_adapter_ipv4_output;
     netif->mtu = 127;
-    netif->flags = NETIF_FLAG_LINK_UP | NETIF_FLAG_UP;
+    netif->flags = NETIF_FLAG_LINK_UP | NETIF_FLAG_UP | NETIF_FLAG_BROADCAST ;
     return ERR_OK;
 }
 
@@ -114,20 +126,16 @@ ur_error_t ur_adapter_interface_init(void)
     return UR_ERROR_NONE;
 }
 
-ur_error_t ur_adapter_interface_deinit(void)
-{
-    return UR_ERROR_NONE;
-}
-
 static void update_interface_ipaddr(void)
 {
-    ip6_addr_t                   addr6;
+#if LWIP_IPV6
     const ur_netif_ip6_address_t *ip6_addr;
     uint8_t                      index = 0;
     uint8_t                      addr_index;
 
     ip6_addr = umesh_get_ucast_addr();
     while (ip6_addr) {
+        ip6_addr_t addr6;
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
         IP6_ADDR(&addr6, ip6_addr->addr.m32[0], ip6_addr->addr.m32[1],
                  ip6_addr->addr.m32[2], ip6_addr->addr.m32[3]);
@@ -139,6 +147,7 @@ static void update_interface_ipaddr(void)
 
     ip6_addr = umesh_get_mcast_addr();
     while (ip6_addr) {
+        ip6_addr_t addr6;
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
         memset(&addr6, 0, sizeof(addr6));
         for (addr_index = 0; addr_index < ip6_addr->prefix_length / 32; addr_index++) {
@@ -149,12 +158,16 @@ static void update_interface_ipaddr(void)
         ip6_addr = ip6_addr->next;
         index++;
     }
+
+    g_la_state.adpif.ip6_autoconfig_enabled = 1;
+#endif
 }
 
 ur_error_t ur_adapter_interface_up(void)
 {
     const mac_address_t *mac_addr;
     struct netif        *interface;
+    ip4_addr_t          ipaddr, netmask, gw;
 
     interface = netif_find(g_la_state.interface_name);
 
@@ -162,11 +175,13 @@ ur_error_t ur_adapter_interface_up(void)
         mac_addr = umesh_get_mac_address();
         g_la_state.adpif.hwaddr_len = mac_addr->len;
         memcpy(g_la_state.adpif.hwaddr, mac_addr->addr, 6);
-        g_la_state.adpif.ip6_autoconfig_enabled = 1;
 
-        netif_add(&g_la_state.adpif, NULL, NULL, NULL, NULL, ur_adapter_if_init,
-                  tcpip_input);
-        update_interface_ipaddr();
+        uint16_t sid = umesh_mm_get_local_sid();
+        IP4_ADDR(&gw, 192,168,0,1);
+        IP4_ADDR(&ipaddr, 192,168,sid>>8,sid&0xff);
+        IP4_ADDR(&netmask, 255,255,0,0);
+        netif_add(&g_la_state.adpif, &ipaddr, &netmask, &gw, NULL,
+                  ur_adapter_if_init, tcpip_input);
         interface = &g_la_state.adpif;
     }
 
@@ -193,7 +208,7 @@ ur_error_t ur_adapter_interface_update(void)
     update_interface_ipaddr();
     return UR_ERROR_NONE;
 }
-
+#if LWIP_IPV6
 struct netif *ur_adapter_ip6_route(const ip6_addr_t *src,
                                    const ip6_addr_t *dest)
 {
@@ -214,3 +229,4 @@ bool lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest)
 {
     return ur_adapter_is_mcast_subscribed(dest);
 }
+#endif

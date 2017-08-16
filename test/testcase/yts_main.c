@@ -126,8 +126,6 @@ void add_test(void)
 
     test_digest_algorithm();
 
-    test_kv();
-
     test_vcall();
 
     test_rhino();
@@ -151,5 +149,7 @@ void add_test(void)
     test_aosapi();
 
     test_alicrypto();
+
+    test_kv();
 }
 

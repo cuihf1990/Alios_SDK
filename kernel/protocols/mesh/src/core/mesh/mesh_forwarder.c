@@ -54,8 +54,7 @@ enum {
 
 static void send_datagram(void *args);
 static void handle_datagram(void *message);
-static neighbor_t *get_next_node(network_context_t *network,
-                                 message_info_t *info);
+static neighbor_t *get_next_node(message_info_t *info);
 
 static inline bool is_mesh_header(uint8_t control)
 {
@@ -423,6 +422,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     hal_context_t  *hal;
     neighbor_t     *next_node = NULL;
     uint8_t        *payload;
+    const uint8_t *key;
 
     hal = network->hal;
     info = message->info;
@@ -435,7 +435,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
     if (info->dest.addr.len == EXT_ADDR_SIZE ||
         info->dest.addr.short_addr != BCAST_SID) {
-        next_node = get_next_node(network, info);
+        next_node = get_next_node(info);
         if (next_node == NULL) {
             send_address_unreachable(network, &info->src, &info->dest);
             return UR_ERROR_DROP;
@@ -469,7 +469,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         frag_length = msg_length;
         if (frag_length > (mtu - header_length)) {
             frag_header.dispatch = FRAG_1_DISPATCH;
-            frag_header.size     = msg_length;
+            frag_header.size = msg_length;
             *((uint16_t *)&frag_header) = htons(*((uint16_t *)&frag_header));
             hal->frag_info.tag++;
             frag_header.tag = htons(hal->frag_info.tag);
@@ -496,10 +496,20 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
     message_copy_to(message, message->frag_offset, payload, frag_length);
 
+    if (info->key_index == ONE_TIME_KEY_INDEX) {
+        if (next_node == NULL) {
+            return UR_ERROR_DROP;
+        }
+        key = next_node->one_time_key;
+    } else if (info->key_index != INVALID_KEY_INDEX) {
+        key = get_symmetric_key(GROUP_KEY1_INDEX);
+    }
+
     if ((info->flags & ENCRYPT_ENABLE_FLAG) &&
-        umesh_aes128_cbc_encrypt(hal->frame.data + info->header_ies_offset,
-                                 header_ies_length + append_length + frag_length,
-                                 hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
+         umesh_aes_encrypt(key, KEY_SIZE,
+                           hal->frame.data + info->header_ies_offset,
+                           header_ies_length + append_length + frag_length,
+                           hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
         return UR_ERROR_DROP;
     }
 
@@ -528,14 +538,14 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     return error;
 }
 
-static neighbor_t *get_next_node(network_context_t *network,
-                                 message_info_t *info)
+static neighbor_t *get_next_node(message_info_t *info)
 {
     uint16_t   local_sid;
     uint16_t   next_hop;
     neighbor_t *next = NULL;
     bool       same_subnet = false;
     bool       same_net = true;
+    network_context_t *network = info->network;
 
     local_sid = umesh_mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
@@ -624,21 +634,22 @@ static void set_dest_encrypt_flag(message_info_t *info)
 
     if (info->type == MESH_FRAME_TYPE_DATA) {
         info->flags |= ENCRYPT_ENABLE_FLAG;
-        info->key_index = MASTER_KEY_INDEX;
+        info->key_index = GROUP_KEY1_INDEX;
         return;
     }
 
     if (info->type == MESH_FRAME_TYPE_CMD) {
         if (info->command == COMMAND_ADVERTISEMENT ||
             info->command == COMMAND_DISCOVERY_REQUEST ||
-            info->command == COMMAND_DISCOVERY_RESPONSE) {
+            info->command == COMMAND_DISCOVERY_RESPONSE ||
+            info->command == COMMAND_ATTACH_REQUEST ||
+            info->command == COMMAND_LINK_ACCEPT) {
             info->key_index = INVALID_KEY_INDEX;
             return;
         }
         info->flags |= ENCRYPT_ENABLE_FLAG;
-        if (info->command == COMMAND_ATTACH_REQUEST ||
-            info->command == COMMAND_ATTACH_RESPONSE) {
-            info->key_index = MASTER_KEY_INDEX;
+        if (info->command == COMMAND_ATTACH_RESPONSE) {
+            info->key_index = ONE_TIME_KEY_INDEX;
         } else {
             info->key_index = GROUP_KEY1_INDEX;
         }
@@ -781,7 +792,10 @@ static void message_handler(void *args)
     message_info_t *info;
     bool recv = false;
     bool forward = false;
-    neighbor_t *nbr = NULL;
+    int8_t cmp_mode;
+    bool is_diff_level = false;
+    bool is_check_level = false;
+    uint16_t meshnetid;
 
     hal = (hal_context_t *)args;
     message = message_queue_get_head(&hal->recv_queue);
@@ -843,6 +857,50 @@ static void message_handler(void *args)
         forward = true;
     }
 
+    if (info->dest.netid != BCAST_NETID) {
+        info->network = get_network_context_by_meshnetid(info->dest.netid);
+        if (info->network == NULL) {
+            if (is_subnet(info->dest.netid)) {
+                info->network = get_sub_network_context(hal);
+            } else {
+                info->network = get_hal_default_network_context(hal);
+            }
+        }
+    } else if (info->src.netid != BCAST_NETID &&
+               info->src.netid != INVALID_NETID) {
+        info->network = get_network_context_by_meshnetid(info->src.netid);
+        is_check_level = true;
+    }
+
+    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode(), info->mode);
+    if (info->network == NULL) {
+        if (cmp_mode <= 0) {
+            info->network = get_hal_default_network_context(hal);
+        } else {
+            info->network = get_sub_network_context(hal);
+        }
+    }
+    meshnetid = umesh_mm_get_meshnetid(info->network);
+    if (meshnetid != BCAST_NETID && meshnetid != INVALID_NETID) {
+        uint8_t local_subnet_type = is_subnet(meshnetid)? 1: 0;
+        uint8_t subnet_type = is_subnet(info->src.netid)? 1: 0;
+        if ((local_subnet_type ^ subnet_type) ||
+            (cmp_mode == -1 && local_subnet_type == 0 && subnet_type == 0)) {
+            is_diff_level = true;
+        }
+        if (cmp_mode < 0 && subnet_type) {
+            is_diff_level = false;
+        }
+    } else if (cmp_mode == 1) {
+        is_diff_level = true;
+    }
+
+    if (info->network == NULL ||
+        (is_check_level && is_diff_level)) {
+        message_free(message);
+        return;
+    }
+
 #ifdef CONFIG_YOS_MESH_DEBUG
     if (info->type == MESH_FRAME_TYPE_CMD) {
         handle_diags_command(message, recv);
@@ -850,37 +908,19 @@ static void message_handler(void *args)
 #endif
 
     if (forward == true) {
-        network = NULL;
-        nbr = mf_get_neighbor(info->type, info->dest.netid, &info->dest.addr);
-        if (info->dest.addr.len == EXT_ADDR_SIZE) {
-            info->dest.netid = BCAST_NETID;
-            if (nbr) {
-                hal = (hal_context_t *)nbr->hal;
-                network = get_hal_default_network_context(hal);
-            }
-        } else if (info->dest.netid != BCAST_NETID) {
-            network = get_network_context_by_meshnetid(info->dest.netid);
-            if (network == NULL) {
-                network = get_default_network_context();
-            }
+        info->network = get_network_context_by_meshnetid(info->dest.netid);
+        if (info->network == NULL) {
+            info->network = get_default_network_context();
         }
-        if (network == NULL) {
-            hal->link_stats.in_drops++;
-            message_free(message);
-            goto exit;
-        }
-        if (nbr) {
-            memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
-        }
-        info->network = network;
+        network = info->network;
+        hal = network->hal;
+
         if (info->type == MESH_FRAME_TYPE_DATA) {
-            message_queue_enqueue(&network->hal->send_queue[DATA_QUEUE],
-                                  message);
+            message_queue_enqueue(&hal->send_queue[DATA_QUEUE], message);
         } else {
-            message_queue_enqueue(&network->hal->send_queue[CMD_QUEUE],
-                                  message);
+            message_queue_enqueue(&hal->send_queue[CMD_QUEUE], message);
         }
-        umesh_task_schedule_call(send_datagram, network->hal);
+        umesh_task_schedule_call(send_datagram, hal);
         goto exit;
     }
 
@@ -937,6 +977,8 @@ static void handle_received_frame(void *context, frame_t *frame,
     hal_context_t *hal = (hal_context_t *)context;
     message_info_t info;
     ur_error_t uerror = UR_ERROR_NONE;
+    const uint8_t *key;
+    network_context_t *network;
 
     hal->link_stats.in_frames++;
     if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
@@ -949,6 +991,7 @@ static void handle_received_frame(void *context, frame_t *frame,
         return;
     }
 
+#ifdef CONFIG_YOS_MESH_DEBUG
     if (whitelist_is_enabled()) {
         entry = whitelist_find(&frame_info->peer);
         if (entry == NULL) {
@@ -956,6 +999,7 @@ static void handle_received_frame(void *context, frame_t *frame,
             return;
         }
     }
+#endif
 
     rx_frame = (received_frame_t *)ur_mem_alloc(sizeof(received_frame_t));
     if (rx_frame == NULL) {
@@ -968,9 +1012,17 @@ static void handle_received_frame(void *context, frame_t *frame,
     bzero(&info, sizeof(info));
     resolve_message_info(rx_frame, &info, frame->data);
     if (info.flags & ENCRYPT_ENABLE_FLAG) {
-        uerror = umesh_aes128_cbc_decrypt(frame->data + info.header_ies_offset,
-                                          frame->len - info.header_ies_offset,
-                                          frame->data + info.header_ies_offset);
+        if (umesh_mm_get_attach_state() == ATTACH_REQUEST) {
+            network = get_default_network_context();
+            key = network->one_time_key;
+        } else {
+            key = get_symmetric_key(GROUP_KEY1_INDEX);
+        }
+
+        uerror = umesh_aes_decrypt(key, KEY_SIZE,
+                                   frame->data + info.header_ies_offset,
+                                   frame->len - info.header_ies_offset,
+                                   frame->data + info.header_ies_offset);
     }
 
     if (uerror != UR_ERROR_NONE) {
@@ -1056,27 +1108,6 @@ static void handle_datagram(void *args)
 
     message = (message_t *)args;
     info = message->info;
-
-    if (info->dest.netid != BCAST_NETID) {
-        info->network = get_network_context_by_meshnetid(info->dest.netid);
-        if (info->network == NULL) {
-            network = get_default_network_context();
-            if (info->dest.addr.short_addr == BCAST_SID &&
-                is_same_mainnet(info->dest.netid, mm_get_main_netid(network))) {
-                info->network = network;
-            }
-        }
-    } else if (info->src.netid != BCAST_NETID) {
-        info->network = get_network_context_by_meshnetid(info->src.netid);
-        if (info->network == NULL) {
-            hal = get_hal_context(info->hal_type);
-            info->network = get_hal_default_network_context(hal);
-        }
-    }
-    if (info->network == NULL) {
-        message_free(message);
-        return;
-    }
 
     update_neighbor(info, NULL, 0, false);
 

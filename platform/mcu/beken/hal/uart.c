@@ -12,6 +12,7 @@ typedef int32_t   		      INT32;          /* Signed   32 bit quantity        */
 #include "uart_pub.h"
 
 #define MAX_UART_NUM 2
+#define UART_FIFO_SIZE 256
 
 enum _uart_status_e
 {
@@ -39,42 +40,38 @@ extern uint8_t uart_is_tx_fifo_empty( uint8_t port );
 extern uint8_t uart_is_tx_fifo_full( uint8_t port );
 extern void uart_set_tx_stop_end_int( uint8_t port, uint8_t set );
 
-int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config)
+int32_t hal_uart_init(uart_dev_t *uart)
 {
-    _uart_drv_t *pdrv = &_uart_drv[uart];
+    _uart_drv_t *pdrv = &_uart_drv[uart->port];
 
     if(pdrv->status == _UART_STATUS_CLOSED)
     {
-        pdrv->rx_buf = (uint8_t *)malloc(config->rx_buf_size);
-        ring_buffer_init(&pdrv->rx_ringbuf, pdrv->rx_buf, config->rx_buf_size);
+        pdrv->rx_buf = (uint8_t *)malloc(UART_FIFO_SIZE);
+        ring_buffer_init(&pdrv->rx_ringbuf, pdrv->rx_buf, UART_FIFO_SIZE);
 
         mico_rtos_init_semaphore( &pdrv->tx_semphr, 0 );
         mico_rtos_init_semaphore( &pdrv->rx_semphr, 0 );
         mico_rtos_init_mutex( &pdrv->tx_mutex );
 
-        uart_open(uart);
+        uart_open(uart->port);
 
         pdrv->status = _UART_STATUS_OPENED;
     }
 
-    while(!uart_is_tx_fifo_empty(uart));
-    uart_config(uart, config);
+    while(!uart_is_tx_fifo_empty(uart->port));
+    uart_config(uart->port, &uart->config);
 
     return 0;
 }
 
-int32_t hal_stdio_uart_init(const hal_uart_config_t *config)
+
+int32_t hal_uart_finalize(uart_dev_t *uart)
 {
+    _uart_drv_t *pdrv = &_uart_drv[uart->port];
 
-}
+    while(!uart_is_tx_fifo_empty(uart->port));
 
-int32_t hal_uart_finalize(uint8_t uart)
-{
-    _uart_drv_t *pdrv = &_uart_drv[uart];
-
-    while(!uart_is_tx_fifo_empty(uart));
-
-    uart_close(uart);
+    uart_close(uart->port);
 
     ring_buffer_deinit(&pdrv->rx_ringbuf);
     free(pdrv->rx_buf);
@@ -86,27 +83,29 @@ int32_t hal_uart_finalize(uint8_t uart)
     pdrv->status = _UART_STATUS_CLOSED;
 }
 
-int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size)
+int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
 {
     uint32_t i = 0;
-    _uart_drv_t *pdrv = &_uart_drv[uart];
+    (void)timeout;
+
+    _uart_drv_t *pdrv = &_uart_drv[uart->port];
 
     mico_rtos_lock_mutex( &pdrv->tx_mutex );
 
     for( i = 0; i < size; i++ )
     {
-        if( uart_is_tx_fifo_full(uart) )
+        if( uart_is_tx_fifo_full(uart->port) )
         {
-            uart_set_tx_stop_end_int( uart, 1 );
+            uart_set_tx_stop_end_int(uart->port, 1 );
             /* The data in Tx FIFO may have been sent out before enable TX_STOP_END interrupt */
             /* So double check the FIFO status */
-            if( !uart_is_tx_fifo_empty(uart) )
-                mico_rtos_get_semaphore( &pdrv->tx_semphr, MICO_WAIT_FOREVER );
+            if( !uart_is_tx_fifo_empty(uart->port) )
+                mico_rtos_get_semaphore(&pdrv->tx_semphr, MICO_WAIT_FOREVER );
 
-            uart_set_tx_stop_end_int( uart, 0 );
+            uart_set_tx_stop_end_int( uart->port, 0 );
         }
 
-        uart_write_byte( uart, ((uint8_t *)data)[i] );
+        uart_write_byte(uart->port, ((uint8_t *)data)[i] );
     }
 
     mico_rtos_unlock_mutex( &pdrv->tx_mutex );
@@ -114,12 +113,12 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size)
     return 0;
 }
 
-int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
+int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
 {
     uint32_t read_size, actual_size, tmp;
     uint32_t ringbuf_size;
     uint32_t start_time, expired_time;
-    _uart_drv_t *pdrv = &_uart_drv[uart];
+    _uart_drv_t *pdrv = &_uart_drv[uart->port];
 
     recv_size = recv_size == NULL ? &actual_size : recv_size;
 
@@ -166,11 +165,6 @@ int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size, uint32_t *
     }
 
     return 0;
-}
-
-uint32_t hal_uart_get_len_in_buf(int uart)
-{
-
 }
 
 void uart_rx_cb(uint8_t port)

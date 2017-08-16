@@ -24,9 +24,12 @@ enum {
     SEC_LEVEL_1 = 1,
 };
 
-ur_error_t set_master_key(const uint8_t *key, uint8_t length);
-const uint8_t *get_master_key(uint8_t *length);
-ur_error_t set_group_key(uint8_t *payload, uint8_t length);
-const uint8_t *get_group_key(void);
+ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
+                                  const mac_address_t *addr);
+ur_error_t calculate_network_key(void);
+
+ur_error_t set_symmetric_key(uint8_t key_index, uint8_t *payload,
+                             uint8_t length);
+const uint8_t *get_symmetric_key(uint8_t key_index);
 
 #endif /* UR_KEYS_MANAGER_H */

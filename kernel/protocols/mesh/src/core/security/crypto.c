@@ -23,8 +23,6 @@
 #include "core/crypto.h"
 #include "core/keys_mgr.h"
 
-#define KEY_SIZE 16
-
 typedef void *umesh_aes_ctx_t;
 
 uint8_t g_umesh_iv[] = {
@@ -32,15 +30,10 @@ uint8_t g_umesh_iv[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-uint8_t g_umesh_key[KEY_SIZE] = {
-    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-    0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00,
-};
-
-static ur_error_t umesh_aes128_cbc_encrypt_decrypt(umesh_aes_ctx_t *aes,
-                                                   const void *src,
-                                                   uint16_t size,
-                                                   void *dst)
+static ur_error_t umesh_aes_encrypt_decrypt(umesh_aes_ctx_t *aes,
+                                            const void *src,
+                                            uint16_t size,
+                                            void *dst)
 {
     ali_crypto_result result;
     uint32_t dlen = 1024;
@@ -58,15 +51,16 @@ static ur_error_t umesh_aes128_cbc_encrypt_decrypt(umesh_aes_ctx_t *aes,
     return UR_ERROR_NONE;
 }
 
-ur_error_t umesh_aes128_cbc_encrypt(const void *src,
-                                    uint16_t size, void *dst)
+ur_error_t umesh_aes_encrypt(const uint8_t *key, uint8_t key_size,
+                             const void *src,
+                             uint16_t size, void *dst)
 {
     ur_error_t error;
     umesh_aes_ctx_t *aes;
     uint32_t aes_ctx_size;
     ali_crypto_result result;
 
-    if (src == NULL || dst == NULL) {
+    if (key == NULL || src == NULL || dst == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -81,27 +75,28 @@ ur_error_t umesh_aes128_cbc_encrypt(const void *src,
     }
 
     result = ali_aes_init(AES_CTR, true,
-                 g_umesh_key, NULL, KEY_SIZE, g_umesh_iv, aes);
+                 key, NULL, key_size, g_umesh_iv, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
         yos_free(aes);
         return UR_ERROR_FAIL;
     }
 
-    error = umesh_aes128_cbc_encrypt_decrypt(aes, src, size, dst);
+    error = umesh_aes_encrypt_decrypt(aes, src, size, dst);
     yos_free(aes);
 
     return error;
 }
 
-ur_error_t umesh_aes128_cbc_decrypt(const void *src,
-                                    uint16_t size, void *dst)
+ur_error_t umesh_aes_decrypt(const uint8_t *key, uint8_t key_size,
+                             const void *src,
+                             uint16_t size, void *dst)
 {
     ur_error_t error;
     umesh_aes_ctx_t *aes;
     uint32_t aes_ctx_size;
     ali_crypto_result result;
 
-    if (src == NULL || dst == NULL) {
+    if (key == NULL || src == NULL || dst == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -116,13 +111,13 @@ ur_error_t umesh_aes128_cbc_decrypt(const void *src,
     }
 
     result = ali_aes_init(AES_CTR, false,
-                 g_umesh_key, NULL, KEY_SIZE, g_umesh_iv, aes);
+                 key, NULL, key_size, g_umesh_iv, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
         yos_free(aes);
         return UR_ERROR_FAIL;
     }
 
-    error = umesh_aes128_cbc_encrypt_decrypt(aes, src, size, dst);
+    error = umesh_aes_encrypt_decrypt(aes, src, size, dst);
     yos_free(aes);
 
     return error;

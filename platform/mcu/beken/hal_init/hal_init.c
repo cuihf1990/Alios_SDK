@@ -4,20 +4,19 @@
 #include "board.h"
 
 extern int errno;
-wdg_dev_t wdg;
-
-const hal_uart_config_t uart_cfg = {
-    .baud_rate = STDIO_UART_BUADRATE,
-    .data_width = DATA_WIDTH_8BIT,
-    .parity = NO_PARITY,
-    .stop_bits = STOP_BITS_1,
-    .flow_control = FLOW_CONTROL_DISABLED,
-    .rx_buf_size = 256,
-};
+wdg_dev_t  wdg;
+uart_dev_t uart_0;
 
 void hal_init(void)
 {
-    hal_uart_init(STDIO_UART, &uart_cfg);
+    uart_0.port                = STDIO_UART;
+    uart_0.config.baud_rate    = STDIO_UART_BUADRATE;
+    uart_0.config.data_width   = DATA_WIDTH_8BIT;
+    uart_0.config.parity       = NO_PARITY;
+    uart_0.config.stop_bits    = STOP_BITS_1;
+    uart_0.config.flow_control = FLOW_CONTROL_DISABLED;
+
+    hal_uart_init(&uart_0);
 
 #ifdef BOOTLOADER
     /* init for bootloader */

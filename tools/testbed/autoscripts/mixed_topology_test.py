@@ -2,13 +2,13 @@ import sys, time
 sys.path.append('../')
 from autotest import Autotest
 
-devices = {'A':'mxchip-DN02QYHE', 'B':'mxchip-DN02QYI2', 'C':'mxchip-DN02QYI9', 'D':'mxchip-DN02QYIH', 'E':'mxchip-DN02QYJ4'}
+devices = {'A':'mxchip-DN02QYHE', 'B':'mxchip-DN02QYI2', 'C':'mxchip-DN02QYI9', 'D':'mxchip-DN02QYIH', 'E':'mxchip-DN02QYIJ', 'F':'mxchip-DN02QYH7', 'G':'mxchip-DN02QYJ4'}
 device_list = list(devices)
 device_attr={}
 device_list.sort()
 at=Autotest()
 logname=time.strftime('%Y-%m-%d@%H-%M')
-logname = 'line_topology-' + logname +'.log'
+logname = 'tree_topology-' + logname +'.log'
 at.start('10.125.52.132', 34568, logname)
 at.device_subscribe(devices)
 
@@ -31,20 +31,61 @@ for device in device_list:
         print 'error: get mac addr for device {0} failed, ret={1}'.format(device, mac)
         exit(1)
 
-#setup line topology
-print "topology:"
-print "A <--> B <--> C <--> D <--> E\n"
-for i in range(len(device_list)):
-    device = device_list[i]
-    at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
-    if (i-1) >= 0:
-        prev_dev = device_list[i-1]
-        at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr[prev_dev]['mac']+'0000'])
-    if (i+1) < len(device_list):
-        next_dev = device_list[i+1]
-        at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr[next_dev]['mac']+'0000'])
-    at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
-    at.device_run_cmd(device, ['umesh', 'whitelist'])
+#setup tree topology
+print 'topology: {}=SUPER ()=MOBILE'
+print '     {A}'
+print '    /   \\'
+print '  {B}---{C}'
+print ' /   \    \\'
+print 'D    (E)   F'
+print '            \\'
+print '             G\n'
+device = 'A'
+at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['B']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['C']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
+at.device_run_cmd(device, ['umesh', 'whitelist'])
+at.device_run_cmd(device, ['umesh', 'mode', 'SUPER'])
+device = 'B'
+at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['A']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['C']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['D']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['E']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
+at.device_run_cmd(device, ['umesh', 'whitelist'])
+at.device_run_cmd(device, ['umesh', 'mode', 'SUPER'])
+device = 'C'
+at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['A']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['B']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['F']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
+at.device_run_cmd(device, ['umesh', 'whitelist'])
+at.device_run_cmd(device, ['umesh', 'mode', 'SUPER'])
+device = 'D'
+at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['B']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
+at.device_run_cmd(device, ['umesh', 'whitelist'])
+device = 'E'
+at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['B']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
+at.device_run_cmd(device, ['umesh', 'whitelist'])
+at.device_run_cmd(device, ['umesh', 'mode', 'MOBILE'])
+device = 'F'
+at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['C']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['G']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
+at.device_run_cmd(device, ['umesh', 'whitelist'])
+device = 'G'
+at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr['F']['mac']+'0000'])
+at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
+at.device_run_cmd(device, ['umesh', 'whitelist'])
 
 #start devices
 for i in range(len(device_list)):
@@ -64,17 +105,21 @@ for i in range(len(device_list)):
     filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
     while retry > 0:
         state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
-        if i == 0:
+        if device in ['A']:
             if state == ['leader']:
-                print '{0} connect to mesh as leader succeed'.format(device)
+                print '{0} connect to mesh as super_leader succeed'.format(device)
                 break
-        elif i < len(device_list) - 1:
+        elif device in ['B', 'C']:
+            if state == ['super_router']:
+                print '{0} connect to mesh as super_router succeed'.format(device)
+                break
+        elif device in ['D', 'F', 'G']:
             if state == ['router']:
                 print '{0} connect to mesh as router succeed'.format(device)
                 break
-        else:
+        elif device in ['E']:
             if state == ['leaf']:
-                print '{0} connect to mesh as leaf succeed'.format(device)
+                print '{0} connect to mesh as mobile leaf succeed'.format(device)
                 break
         at.device_run_cmd(device, ['umesh', 'stop'], 1, 1)
         at.device_run_cmd(device, ['umesh', 'start'], 5, 1)
@@ -82,7 +127,7 @@ for i in range(len(device_list)):
         retry -= 1
 
     if retry == 0:
-        print 'error: {0} connect to mesh failed'.format(device)
+        print 'error: {0} connect to mesh failed, state={1}'.format(device, state)
         exit(1)
 
     ipaddr = at.device_run_cmd(device, ['umesh', 'ipaddr'], 3, 1, [':'])
@@ -94,6 +139,10 @@ for i in range(len(device_list)):
         ipaddr[1] = ipaddr[1].replace('\t', '')
         ipaddr[2] = ipaddr[2].replace('\t', '')
         device_attr[device]['ipaddr'] = ipaddr[0:3]
+
+    if device == 'C':
+        print "wait 1 minute till vector router complete routing infomation exchange"
+        time.sleep(60)
 print "\n{0}\n".format(device_attr)
 
 retry = 3

@@ -106,16 +106,16 @@ typedef struct umesh_extnetid_s {
 } umesh_extnetid_t;
 
 enum {
-    MAX_KEY_SIZE      = 16,  // bytes
+    KEY_SIZE = 16,  // bytes
 
     INVALID_KEY_INDEX = 0xff,
-    MASTER_KEY_INDEX  = 0,
+    ONE_TIME_KEY_INDEX  = 0,
     GROUP_KEY1_INDEX  = 1,
 };
 
 typedef struct mesh_key_s {
     uint8_t len;
-    uint8_t key[MAX_KEY_SIZE];
+    uint8_t key[KEY_SIZE];
 } mesh_key_t;
 
 typedef struct frame_s {

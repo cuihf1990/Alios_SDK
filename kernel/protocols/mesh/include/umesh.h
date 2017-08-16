@@ -38,12 +38,7 @@ typedef struct ur_adapter_callback_s {
     adapter_interface_update_t interface_update;
 } ur_adapter_callback_t;
 
-ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
-                               uint8_t *payload, uint8_t length);
-ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver);
-
-ur_error_t umesh_ipv4_output(struct pbuf *buf,
-                               const ur_ip6_addr_t *ip6addr);
+ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid);
 ur_error_t umesh_ipv6_output(struct pbuf *buf,
                                const ur_ip6_addr_t *ip6addr);
 ur_error_t umesh_register_callback(ur_adapter_callback_t *callback);
@@ -72,13 +67,10 @@ typedef enum {
 
 const mac_address_t *umesh_net_get_mac_address(umesh_net_index_t nettype);
 uint16_t umesh_net_get_meshnetid(umesh_net_index_t nettype);
-void umesh_net_set_meshnetid(umesh_net_index_t nettype, uint16_t meshnetid);
 uint16_t umesh_net_get_sid(umesh_net_index_t nettype);
 uint16_t umesh_net_get_meshnetsize(umesh_net_index_t nettype);
 /* translation macros */
 #define umesh_get_meshnetid() umesh_net_get_meshnetid(UR_MESH_NET_DFL)
-#define umesh_set_meshnetid(meshnetid) \
-            umesh_net_set_meshnetid(UR_MESH_NET_DFL, meshnetid)
 #define umesh_get_sid() umesh_net_get_sid(UR_MESH_NET_DFL)
 #define umesh_get_meshnetsize() umesh_net_get_meshnetsize(UR_MESH_NET_DFL)
 #define umesh_get_mac_address() umesh_net_get_mac_address(UR_MESH_NET_DFL)

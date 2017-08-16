@@ -70,10 +70,13 @@ typedef struct {
     hal_uart_parity_t       parity;
     hal_uart_stop_bits_t    stop_bits;
     hal_uart_flow_control_t flow_control;
-    uint8_t
-    flags; /**< if set, UART can wake up MCU from stop mode, reference: @ref UART_WAKEUP_DISABLE and @ref UART_WAKEUP_ENABLE*/
-    uint32_t                rx_buf_size;
-} hal_uart_config_t;
+} uart_config_t;
+
+typedef struct {
+    uint8_t       port;    /* uart port */
+    uart_config_t config;  /* uart config */
+    void         *priv;    /* priv data */
+} uart_dev_t;
 
 
 /**@brief Initialises a UART interface
@@ -87,30 +90,7 @@ typedef struct {
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_uart_init(uint8_t uart, const hal_uart_config_t *config);
-
-
-/**@brief Initialises a STDIO UART interface, internal use only
- *
- * @note Prepares an UART hardware interface for stdio communications
- *
- * @param  config   : UART configuration structure
- * @param  optional_rx_buffer : Pointer to an optional RX ring buffer
- *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
- */
-int32_t hal_stdio_uart_init(const hal_uart_config_t *config);
-
-
-/**@brief Deinitialises a UART interface
- *
- * @param  uart : the interface which should be deinitialised
- *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
- */
-int32_t hal_uart_finalize(uint8_t uart);
+int32_t hal_uart_init(uart_dev_t *uart);
 
 
 /**@brief Transmit data on a UART interface
@@ -122,7 +102,7 @@ int32_t hal_uart_finalize(uint8_t uart);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size);
+int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout);
 
 
 /**@brief Receive data on a UART interface
@@ -135,19 +115,16 @@ int32_t hal_uart_send(uint8_t uart, const void *data, uint32_t size);
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t hal_uart_recv(uint8_t uart, void *data, uint32_t expect_size,
-                      uint32_t *recv_size,
-                      uint32_t timeout);
+int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout);
 
-/**@brief Read the length of the data that is already recived by uart driver and stored in buffer
+
+/**@brief Deinitialises a UART interface
  *
- * @param uart     : the UART interface
+ * @param  uart : the interface which should be deinitialised
  *
- * @return    Data length
+ * @return    kNoErr        : on success.
+ * @return    kGeneralErr   : if an error occurred with any step
  */
-uint32_t hal_uart_get_len_in_buf(int uart);
-
-/** @} */
-/** @} */
+int32_t hal_uart_finalize(uart_dev_t *uart);
 
 #endif

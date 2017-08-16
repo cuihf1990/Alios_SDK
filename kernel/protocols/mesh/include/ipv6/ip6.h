@@ -31,8 +31,13 @@ enum {
 };
 
 enum {
+#if LWIP_IPV6
     UR_ICMP6_TYPE_EREQ = 128,
     UR_ICMP6_TYPE_EREP = 129,
+#else
+    UR_ICMP6_TYPE_EREQ = 8,
+    UR_ICMP6_TYPE_EREP = 0,
+#endif
 };
 
 typedef struct ur_ip6_header_s {

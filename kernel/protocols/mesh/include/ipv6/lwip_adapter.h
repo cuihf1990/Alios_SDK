@@ -24,7 +24,6 @@ extern "C" {
 #endif
 
 ur_error_t ur_adapter_interface_init(void);
-ur_error_t ur_adapter_interface_deinit(void);
 
 ur_error_t ur_adapter_interface_up(void);
 ur_error_t ur_adapter_interface_down(void);

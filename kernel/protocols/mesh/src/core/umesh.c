@@ -158,9 +158,62 @@ exit:
     }
 }
 
-ur_error_t umesh_ipv4_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
+static void output_ipv4_frame_handler(void *args)
 {
-    return UR_ERROR_FAIL;
+    transmit_frame_t *frame = (transmit_frame_t *)args;
+    struct pbuf *buf = frame->buf;
+    message_t *message;
+    message_info_t *info;
+    uint16_t sid = frame->dest.m16[7];
+    uint8_t append_length;
+
+    append_length = sizeof(mcast_header_t) + 1;
+    message = message_alloc(buf->tot_len + append_length, UMESH_1);
+    if (message == NULL) {
+        goto out;
+    }
+    message_set_payload_offset(message, -append_length);
+    pbuf_copy(message->data, buf);
+
+    info = message->info;
+    info->dest.addr.len = SHORT_ADDR_SIZE;
+    info->dest.addr.short_addr = sid;
+    info->dest.netid = umesh_mm_get_meshnetid(NULL);
+    info->type = MESH_FRAME_TYPE_DATA;
+    if (sid == BCAST_SID)
+        info->flags |= INSERT_MCAST_FLAG;
+
+    mf_send_message(message);
+
+out:
+    pbuf_free(buf);
+}
+
+ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid)
+{
+    transmit_frame_t *frame;
+    ur_error_t error = UR_ERROR_NONE;
+
+    if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
+        return UR_ERROR_FAIL;
+    }
+
+    frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
+    if (frame == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    frame->dest.m16[7] = sid;
+    pbuf_ref(buf);
+    frame->buf = buf;
+
+    error = umesh_task_schedule_call(output_ipv4_frame_handler, frame);
+    if (error != UR_ERROR_NONE) {
+        ur_mem_free(frame, sizeof(transmit_frame_t));
+        pbuf_free(frame->buf);
+    }
+
+    return error;
 }
 
 #define dump_data(p, sz) do { \
@@ -248,7 +301,8 @@ ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
 
 ur_error_t umesh_input(message_t *message)
 {
-    ur_error_t error = UR_ERROR_FAIL;
+#if LWIP_IPV6
+    ur_error_t error = UR_ERROR_NONE;
     uint8_t *header;
     uint16_t header_size;
     uint16_t lowpan_header_size;
@@ -266,12 +320,12 @@ ur_error_t umesh_input(message_t *message)
     header_size = message_get_msglen(message);
     if (header_size < MIN_LOWPAN_FRM_SIZE) {
         error = UR_ERROR_FAIL;
-        goto exit;
+        goto handle_non_ipv6;
     }
     error = lp_header_decompress(header, &header_size, &lowpan_header_size,
                                  &info->src, &info->dest);
     if (error != UR_ERROR_NONE) {
-        goto exit;
+        goto handle_non_ipv6;
     }
 
     message_set_payload_offset(message, -lowpan_header_size);
@@ -285,6 +339,7 @@ ur_error_t umesh_input(message_t *message)
     message_concatenate(message_header, message, false);
     message = message_header;
 
+handle_non_ipv6:
     if (g_um_state.adapter_callback) {
         g_um_state.adapter_callback->input(message->data);
     }
@@ -294,28 +349,13 @@ exit:
 
     ur_mem_free(header, UR_IP6_HLEN + UR_UDP_HLEN);
     return error;
-}
-
-ur_error_t umesh_send_raw_data(ur_addr_t *dest, ur_addr_t *dest2,
-                               uint8_t *payload, uint8_t length)
-{
-    ur_error_t        error = UR_ERROR_NONE;
-    network_context_t *network;
-
-    network = get_default_network_context();
-    error = send_raw_data(network, dest, dest2, payload, length);
-    return error;
-}
-
-ur_error_t umesh_raw_data_receiver(ur_addr_t *src,
-                                   uint8_t *payload, uint8_t length)
-{
+#else
+    if (g_um_state.adapter_callback) {
+        g_um_state.adapter_callback->input(message->data);
+    }
+    message_free((message_t *)message);
     return UR_ERROR_NONE;
-}
-
-ur_error_t umesh_register_raw_data_receiver(umesh_raw_data_received receiver)
-{
-    return UR_ERROR_NONE;
+#endif
 }
 
 #ifdef CONFIG_YOS_DDA
@@ -377,7 +417,6 @@ ur_error_t umesh_init(node_mode_t mode)
     nd_init();
     message_stats_reset();
     g_um_state.initialized = true;
-    register_raw_data_receiver(umesh_raw_data_receiver);
 
 #ifdef CONFIG_YOS_MESH_DEBUG
     mesh_cli_init();
@@ -489,11 +528,6 @@ uint16_t umesh_net_get_meshnetid(umesh_net_index_t nettype)
     return umesh_mm_get_meshnetid(NULL);
 }
 
-void umesh_net_set_meshnetid(umesh_net_index_t nettype, uint16_t meshnetid)
-{
-    umesh_mm_set_meshnetid(NULL, meshnetid);
-}
-
 uint16_t umesh_net_get_meshnetsize(umesh_net_index_t nettype)
 {
     return umesh_mm_get_meshnetsize();
@@ -524,6 +558,7 @@ ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     return mf_resolve_dest(dest, dest_addr);
 }
 
+#ifdef CONFIG_YOS_MESH_DEBUG
 bool umesh_is_whitelist_enabled(void)
 {
     return is_whitelist_enabled();
@@ -576,6 +611,7 @@ void umesh_clear_whitelist(void)
 {
     whitelist_clear();
 }
+#endif
 
 void umesh_get_channel(channel_t *channel)
 {
