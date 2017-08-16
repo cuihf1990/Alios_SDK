@@ -32,7 +32,7 @@ int ke_mgmt_packet_tx(unsigned char *buf, int len, int flag)
 	ret = ke_sk_send(sk, buf, len, flag);
 
 #if CFG_WIFI_AP_MODE
-	hostapd_poll(0);
+	wpa_supplicant_poll(0);
 #endif
 	
 	return ret;
@@ -71,7 +71,7 @@ int ke_l2_packet_tx(unsigned char *buf, int len, int flag)
 	if(g_wlan_general_param->role == CONFIG_ROLE_AP)
 #endif
 	{
-		hostapd_poll(0);
+		wpa_supplicant_poll(0);
 	}
 #endif
 

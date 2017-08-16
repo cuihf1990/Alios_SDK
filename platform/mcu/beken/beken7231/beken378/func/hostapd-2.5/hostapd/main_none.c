@@ -32,7 +32,6 @@ static struct hapd_global s_hapd_global;
 struct hapd_interfaces g_hapd_interfaces;
 extern mico_semaphore_t eloop_sema;
 
-char *bss_iface = "wlan0";
 
 void hostapd_cfg_defaults_bss(struct hostapd_bss_config *bss)
 {
@@ -722,14 +721,6 @@ void hostapd_thread_stop(void)
 	}
 }
 
-void hostapd_poll(void *param)
-{
-	if(eloop_sema)
-	{
-		mico_rtos_set_semaphore(&eloop_sema);
-	}
-
-}
-
+ 
 // eof
 
