@@ -16,7 +16,7 @@ include $(MAKEFILES_PATH)/yos_host_cmd.mk
 define USAGE_TEXT
 Aborting due to invalid targets
 
-Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1]
+Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1] [BINS=1]
        make run
 
   <target>
@@ -40,6 +40,9 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1]
 
   [VERBOSE=1]
     Shows the commands as they are being executed
+
+  [BINS=1]
+    Build two bins: app and kernel
 
   Notes
     * Component names are case sensitive
@@ -106,6 +109,7 @@ ifeq (,$(SUB_BUILD))
 JOBSNO := -j$(JOBS)
 endif
 
+BINS ?=0
 
 PASSDOWN_TARGETS := $(strip $(filter-out $(MAKEFILE_TARGETS) $(BUILD_STRING),$(MAKECMDGOALS))) #download total
 $(PASSDOWN_TARGETS):
@@ -113,10 +117,19 @@ $(PASSDOWN_TARGETS):
 
 $(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit)
 
+ifeq ($(BINS), 0)
 main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/yos_target_build.mk
+	$(QUIET)$(ECHO) Build AOS Now
 	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
 	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/yos_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
 	$(QUIET)$(ECHO) Build complete
+else
+main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/yos_target_build_bins.mk
+	$(QUIET)$(ECHO) Build AOS-BINS Now
+	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
+	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/yos_target_build_bins.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
+	$(QUIET)$(ECHO) Build complete
+endif
 
 ifeq ($(SUB_BUILD),)
 .gdbinit: out/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk main_app

@@ -7,7 +7,7 @@
 #  permission of MXCHIP Corporation.
 #
 
-NAME := entry
+NAME := kernel_entry
 
 GLOBAL_INCLUDES += .
 

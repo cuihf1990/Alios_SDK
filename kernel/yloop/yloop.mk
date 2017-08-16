@@ -1,4 +1,4 @@
-NAME := yloop
+NAME := kernel_yloop
 
 $(NAME)_SOURCES     := yloop.c
 $(NAME)_SOURCES     += local_event.c

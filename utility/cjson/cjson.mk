@@ -14,7 +14,7 @@
  # limitations under the License.
 ##
 
-NAME := cjson
+NAME := share_cjson
 
 GLOBAL_INCLUDES += include
 # don't modify to L_CFLAGS, because CONFIG_CJSON_WITHOUT_DOUBLE should enable global

@@ -7,7 +7,7 @@
 #  permission of MXCHIP Corporation.
 #
 
-NAME := beken
+NAME := platform_beken
 
 HOST_OPENOCD := beken
 
@@ -55,10 +55,19 @@ GLOBAL_LDFLAGS += -mcpu=arm968e-s \
                  $(CLIB_LDFLAGS_NANO_FLOAT)
 
 
+BINS ?= 0
+
 ifeq ($(APP),bootloader)
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_boot.ld
 else
+
+ifeq ($(BINS),0)
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231.ld
+else
+GLOBAL_LDFLAGS_APP    := -T platform/mcu/beken/beken7231/beken378/build/bk7231_app.ld
+GLOBAL_LDFLAGS_KERNEL := -T platform/mcu/beken/beken7231/beken378/build/bk7231_kernel.ld
+endif
+
 endif
 
 GLOBAL_LDFLAGS += -Wl,-wrap,_malloc_r -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,_free_r -Wl,-wrap,_realloc_r 
@@ -436,10 +445,11 @@ $(NAME)_SOURCES	 += hal/gpio.c \
 					hal/wifi_port.c \
                     port/ota_port.c
 
-ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
+#ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_SOURCES +=  hal/mesh_wifi_hal.c
-endif
+#endif
 
 $(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \
-                    ../../../kernel/protocols/net/include/netif
+                    ../../../kernel/protocols/net/include/netif \
+                    ../../../kernel/protocols/mesh/include
 

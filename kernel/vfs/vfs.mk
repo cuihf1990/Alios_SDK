@@ -1,4 +1,4 @@
-NAME := vfs
+NAME := kernel_vfs
 
 $(NAME)_SOURCES     := vfs.c
 $(NAME)_SOURCES     += device.c

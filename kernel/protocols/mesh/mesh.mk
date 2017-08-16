@@ -1,4 +1,4 @@
-NAME := mesh
+NAME := kernel_mesh
 
 GLOBAL_INCLUDES += include
 

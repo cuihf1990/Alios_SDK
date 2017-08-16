@@ -126,16 +126,6 @@ hal_stat_t hal_ota_set_boot(hal_ota_module_t *m, void *something);
  */
 hal_ota_module_t *hal_ota_get_default_module(void);
 
-/**
- * Get the next ota HAL
- *
- * The system may have more than 1 ota HAL instances.
- *
- * @return
- *     Instance pointer or NULL
- */
-hal_ota_module_t *hal_ota_get_next_module(hal_ota_module_t *m);
-
 #ifdef __cplusplus
 }
 #endif

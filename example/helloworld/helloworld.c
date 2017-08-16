@@ -19,27 +19,49 @@
 #include "hal/soc/soc.h"
 #include "helloworld.h"
 
-static gpio_dev_t gpio_2;
-static gpio_dev_t gpio_12;
-
-static void el_int_hdl(void *arg)
+static void app_delayed_action(void *arg)
 {
-    printf("easylink interrupt handler\r\n");
+    printf("%s:%d %s\r\n", __func__, __LINE__, yos_task_name());
+    yos_post_delayed_action(5000, app_delayed_action, NULL);
 }
 
-void application_start(void)
+#ifdef YOS_BINS
+extern unsigned int _app_data_ram_begin;
+extern unsigned int _app_data_ram_end;
+extern unsigned int _app_data_flash_begin;
+extern unsigned int _app_bss_start;
+extern unsigned int _app_bss_end;
+extern unsigned int _app_heap_start;
+extern unsigned int _app_heap_end;
+extern int application_start(int argc, char **argv);
+
+struct app_info_t {
+     int (*application_start)(int argc, char *argv[]);
+     unsigned int data_ram_start;
+     unsigned int data_ram_end;
+     unsigned int data_flash_begin;
+     unsigned int bss_start;
+     unsigned int bss_end;
+     unsigned int heap_start;
+     unsigned int heap_end;
+};
+
+__attribute__ ((section(".app_info"))) struct app_info_t app_info = {
+    application_start,
+    &_app_data_ram_begin,
+    &_app_data_ram_end,
+    &_app_data_flash_begin,
+    &_app_bss_start,
+    &_app_bss_end,
+    &_app_heap_start,
+    &_app_heap_end
+};
+#endif
+
+int application_start(int argc, char *argv[])
 {
-    gpio_2.port = 2;
-    hal_gpio_enable_irq(&gpio_2, IRQ_TRIGGER_FALLING_EDGE, el_int_hdl, NULL);
-
-    gpio_12.port = 12;
-    gpio_12.config = OUTPUT_PUSH_PULL;
-    hal_gpio_init(&gpio_12);
-
-    for(;;)
-    {
-        hal_gpio_output_toggle(&gpio_12);
-        yos_msleep(1000);
-    }
+    yos_framework_init();
+    yos_post_delayed_action(1000, app_delayed_action, NULL);
+    yos_loop_run();
 }
 

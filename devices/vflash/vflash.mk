@@ -1,4 +1,4 @@
-NAME := vflash
+NAME := devices_vflash
 
 $(NAME)_SOURCES     := vflash.c
 

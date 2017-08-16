@@ -1,4 +1,4 @@
-NAME := net
+NAME := kernel_net
 
 include kernel/protocols/net/Filelists.mk
 GLOBAL_INCLUDES += include port/include

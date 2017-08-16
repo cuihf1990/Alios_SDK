@@ -1,4 +1,4 @@
-NAME := cli
+NAME := kernel_cli
 
 $(NAME)_SOURCES     := yos_cli.c
 $(NAME)_SOURCES     += dumpsys.c

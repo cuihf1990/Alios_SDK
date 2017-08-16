@@ -22,8 +22,6 @@
 #include "hal/soc/soc.h"
 #include "board.h"
 
-extern uart_dev_t uart_0;
-
 int _execve_r(struct _reent *ptr, const char *name, char *const *argv, char *const *env)
 {
     ptr->_errno = ENOTSUP;
@@ -118,8 +116,8 @@ _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
 
     for (int i = 0; i < nbytes; i++) {
         if (*tmp == '\n')
-            hal_uart_send(&uart_0, (const void*)"\r", 1, 0);
-        hal_uart_send(&uart_0, (const void*)tmp, 1, 0);
+            yos_uart_send((void*)"\r", 1, 0);
+        yos_uart_send((void*)tmp, 1, 0);
         tmp ++;
     }
 
@@ -212,5 +210,47 @@ void _system(const char *s)
 void abort(void)
 {
     while (1);
+}
+
+void *__wrap__malloc_r(void *p, size_t size)
+{
+    return yos_malloc(size);
+}
+
+void *__wrap__realloc_r(void *p, void *x, size_t sz)
+{
+    return yos_realloc (x, sz);
+}
+
+void __wrap__free_r(void *p, void *x)
+{
+    yos_free(x);
+}
+
+void *__wrap_malloc(size_t size)
+{
+    return yos_malloc(size);
+}
+
+void __wrap_free(void *pv)
+{
+    yos_free(pv);
+}
+
+void *__wrap_calloc(size_t a, size_t b)
+{
+    void *pvReturn;
+
+    pvReturn = yos_malloc(a * b);
+    if (pvReturn) {
+        memset(pvReturn, 0, a * b);
+    }
+
+    return pvReturn;
+}
+
+void *__wrap_realloc(void *pv, size_t size)
+{
+    return yos_realloc(pv, size);
 }
 

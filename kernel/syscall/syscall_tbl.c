@@ -14,28 +14,29 @@
  * limitations under the License.
  */
 
+#include <yos/cli.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
-#include <vfs.h>
-#include <kvmgr.h>
-#include <vflash.h>
+#include <lwip/netdb.h>
+#include <lwip/sockets.h>
+#include <hal/wifi.h>
+#include <hal/ota.h>
+#include <hal/soc/soc.h>
+#include <umesh.h>
 
-#include "yos/cli.h"
+extern void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t 
+fn);
+extern int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int 
+len);
 
-#ifdef MESH_GATEWAY_SERVICE
-#include "gateway_service.h"
-#endif
 
-extern void ota_service_init(void);
+#define SYSCALL_MAX 183
+#define SYSCALL_NUM 136
 
-int yos_framework_init(void)
-{
-#ifdef MESH_GATEWAY_SERVICE
-    gateway_service_init();
-#endif
+#define SYSCALL(nr, func) [nr] = func,
 
-    ota_service_init();
-
-    return 0;
-}
+const void *g_syscall_tbl[] __attribute__ ((section(".syscall_tbl"))) = {
+    [0 ... SYSCALL_MAX - 1] = (void *)0XABCDABCD,
+#include <syscall_tbl.h>
+    };
 

@@ -1,4 +1,4 @@
-NAME := armv5
+NAME := kernel_armv5
 
 GLOBAL_INCLUDES += .
 
