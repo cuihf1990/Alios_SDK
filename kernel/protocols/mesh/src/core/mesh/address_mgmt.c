@@ -243,8 +243,6 @@ static ur_error_t send_address_query(network_context_t *network,
 {
     ur_error_t  error = UR_ERROR_NONE;
     mm_addr_query_tv_t *addr_query;
-    mm_node_id_tv_t *target_id;
-    mm_ueid_tv_t *target_ueid;
     message_t *message;
     uint8_t *data;
     uint16_t length;
@@ -273,17 +271,10 @@ static ur_error_t send_address_query(network_context_t *network,
 
     switch (query_type) {
         case PF_ATTACH_QUERY:
-            target_id = (mm_node_id_tv_t *)data;
-            umesh_mm_init_tv_base((mm_tv_t *)target_id, TYPE_NODE_ID);
-            target_id->sid = target->sid;
-            target_id->meshnetid = target->meshnetid;
-            data += sizeof(mm_node_id_tv_t);
+            data += set_mm_node_id_tv(data, TYPE_NODE_ID, target);
             break;
         case TARGET_QUERY:
-            target_ueid = (mm_ueid_tv_t *)data;
-            umesh_mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
-            memcpy(target_ueid->ueid, target->ueid, sizeof(target_ueid->ueid));
-            data += sizeof(mm_ueid_tv_t);
+            data += set_mm_ueid_tv(data, TYPE_TARGET_UEID, target->ueid);
             break;
         default:
             assert(0);
@@ -388,9 +379,6 @@ static ur_error_t send_address_query_response(network_context_t *network,
                                               ur_node_id_t *target_node)
 {
     ur_error_t  error = UR_ERROR_NONE;
-    mm_node_id_tv_t *attach_id;
-    mm_node_id_tv_t *target_id;
-    mm_ueid_tv_t *target_ueid;
     message_t   *message;
     uint8_t     *data;
     uint16_t    length;
@@ -409,25 +397,12 @@ static ur_error_t send_address_query_response(network_context_t *network,
     data = message_get_payload(message);
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_ADDRESS_QUERY_RESPONSE);
-
-    target_id = (mm_node_id_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)target_id, TYPE_NODE_ID);
-    target_id->sid = target_node->sid;
-    target_id->meshnetid = target_node->meshnetid;
-    data += sizeof(mm_node_id_tv_t);
-
-    target_ueid = (mm_ueid_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
-    memcpy(target_ueid->ueid, target_node->ueid, sizeof(target_ueid->ueid));
-    data += sizeof(mm_ueid_tv_t);
+    data += set_mm_node_id_tv(data, TYPE_NODE_ID, target_node);
+    data += set_mm_ueid_tv(data, TYPE_TARGET_UEID, target_node->ueid);
 
     if (attach_node->sid != INVALID_SID &&
         attach_node->meshnetid != INVALID_NETID) {
-        attach_id = (mm_node_id_tv_t *)data;
-        umesh_mm_init_tv_base((mm_tv_t *)attach_id, TYPE_ATTACH_NODE_ID);
-        attach_id->sid = attach_node->sid;
-        attach_id->meshnetid = attach_node->meshnetid;
-        data += sizeof(mm_node_id_tv_t);
+        data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, attach_node);
     }
 
     info->network = network;
@@ -520,15 +495,13 @@ ur_error_t send_address_notification(network_context_t *network,
                                      ur_addr_t *dest)
 {
     ur_error_t      error = UR_ERROR_NONE;
-    mm_ueid_tv_t    *target_ueid;
-    mm_node_id_tv_t *target_node;
-    mm_node_id_tv_t *attach_node;
     mm_hal_type_tv_t *hal_type;
     message_t       *message;
     uint8_t         *data;
     uint16_t        length;
     message_info_t *info;
     hal_context_t   *hal;
+    ur_node_id_t node_id;
 
     length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) +
              sizeof(mm_node_id_tv_t) + sizeof(mm_hal_type_tv_t);
@@ -542,17 +515,11 @@ ur_error_t send_address_notification(network_context_t *network,
     data = message_get_payload(message);
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_ADDRESS_NOTIFICATION);
+    data += set_mm_ueid_tv(data, TYPE_TARGET_UEID, umesh_mm_get_local_ueid());
 
-    target_ueid = (mm_ueid_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
-    memcpy(target_ueid->ueid, umesh_mm_get_local_ueid(), sizeof(target_ueid->ueid));
-    data += sizeof(mm_ueid_tv_t);
-
-    target_node = (mm_node_id_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)target_node, TYPE_NODE_ID);
-    target_node->sid = umesh_mm_get_local_sid();
-    target_node->meshnetid = umesh_mm_get_meshnetid(network);
-    data += sizeof(mm_node_id_tv_t);
+    node_id.sid = umesh_mm_get_local_sid();
+    node_id.meshnetid = umesh_mm_get_meshnetid(network);
+    data += set_mm_node_id_tv(data, TYPE_NODE_ID, &node_id);
 
     hal_type = (mm_hal_type_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)hal_type, TYPE_DEF_HAL_TYPE);
@@ -561,11 +528,9 @@ ur_error_t send_address_notification(network_context_t *network,
     data += sizeof(mm_hal_type_tv_t);
 
     if (network->attach_node) {
-        attach_node = (mm_node_id_tv_t *)data;
-        umesh_mm_init_tv_base((mm_tv_t *)attach_node, TYPE_ATTACH_NODE_ID);
-        attach_node->sid = network->attach_node->addr.addr.short_addr;
-        attach_node->meshnetid = network->attach_node->addr.netid;
-        data += sizeof(mm_node_id_tv_t);
+        node_id.sid = network->attach_node->addr.addr.short_addr;
+        node_id.meshnetid = network->attach_node->addr.netid;
+        data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, &node_id);
     }
 
     info->network = network;
@@ -587,11 +552,11 @@ ur_error_t send_address_unreachable(network_context_t *network,
                                     ur_addr_t *dest, ur_addr_t *target)
 {
     ur_error_t error = UR_ERROR_NONE;
-    mm_node_id_tv_t *target_node;
     message_t *message;
     uint8_t *data;
     uint16_t length;
     message_info_t *info;
+    ur_node_id_t node_id;
 
     if (target == NULL || target->addr.len != SHORT_ADDR_SIZE) {
         return UR_ERROR_FAIL;
@@ -606,11 +571,9 @@ ur_error_t send_address_unreachable(network_context_t *network,
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_ADDRESS_UNREACHABLE);
 
-    target_node = (mm_node_id_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)target_node, TYPE_NODE_ID);
-    target_node->sid = target->addr.short_addr;
-    target_node->meshnetid = target->netid;
-    data += sizeof(mm_node_id_tv_t);
+    node_id.sid = target->addr.short_addr;
+    node_id.meshnetid = target->netid;
+    data += set_mm_node_id_tv(data, TYPE_NODE_ID, &node_id);
 
     info->network = network;
     memcpy(&info->dest, dest, sizeof(info->dest));

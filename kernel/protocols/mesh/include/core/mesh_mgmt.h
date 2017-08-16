@@ -33,28 +33,6 @@ typedef enum device_state_s {
     DEVICE_STATE_ROUTER       = 6,
 } mm_device_state_t;
 
-static inline const char *state2str(mm_device_state_t state)
-{
-    switch (state) {
-        case DEVICE_STATE_DISABLED:
-            return "disabled";
-        case DEVICE_STATE_DETACHED:
-            return "detached";
-        case DEVICE_STATE_ATTACHED:
-            return "attached";
-        case DEVICE_STATE_LEAF:
-            return "leaf";
-        case DEVICE_STATE_LEADER:
-            return "leader";
-        case DEVICE_STATE_SUPER_ROUTER:
-            return "super_router";
-        case DEVICE_STATE_ROUTER:
-            return "router";
-        default:
-            return "unknown";
-    }
-}
-
 static inline uint16_t get_subnetsize_from_netinfo(mm_netinfo_tv_t *netinfo)
 {
     return (netinfo->subnet_size_1 << 8) | netinfo->subnet_size_2;
@@ -82,7 +60,6 @@ typedef enum mm_command_s {
     COMMAND_LINK_REQUEST            = 0x10,
     COMMAND_LINK_ACCEPT             = 0x11,
     COMMAND_LINK_ACCEPT_AND_REQUEST = 0x12,
-    COMMAND_LINK_REJECT             = 0x13,
     COMMAND_ADDRESS_UNREACHABLE     = 0x14,
     COMMAND_ADDRESS_ERROR           = 0x15,
     COMMAND_ROUTING_INFO_UPDATE     = 0x16,
@@ -159,7 +136,6 @@ const mac_address_t *umesh_mm_get_mac_address(void);
 node_mode_t         umesh_mm_get_mode(void);
 int8_t              umesh_mm_compare_mode(node_mode_t local, node_mode_t other);
 ur_error_t          umesh_mm_set_mode(node_mode_t mode);
-uint16_t            umesh_mm_get_path_cost(void);
 uint16_t            umesh_mm_get_channel(network_context_t *network);
 void                umesh_mm_set_channel(network_context_t *network,
                                          uint16_t channel);
@@ -209,5 +185,11 @@ static inline bool is_bcast_sid(ur_addr_t *addr)
 uint8_t set_mm_header_type(message_info_t *info, uint8_t *data, uint8_t type);
 uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data);
+uint8_t set_mm_ueid_tv(uint8_t *data, uint8_t type, uint8_t *ueid);
+uint8_t set_mm_path_cost_tv(network_context_t *network, uint8_t *data);
+uint8_t set_mm_version_tv(uint8_t *data);
+uint8_t set_mm_node_id_tv(uint8_t *data, uint8_t type, ur_node_id_t *node);
+uint8_t set_mm_sid_tv(uint8_t *data, uint8_t type, uint16_t sid);
+uint8_t set_mm_mode_tv(uint8_t *data);
 
 #endif  /* UR_MM_H */
