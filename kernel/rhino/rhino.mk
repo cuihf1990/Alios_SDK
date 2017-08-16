@@ -4,7 +4,10 @@ $(NAME)_COMPONENTS += rhino
 
 GLOBAL_INCLUDES += core/include
 
-$(NAME)_CFLAGS += -Wall -Werror -marm -mthumb-interwork
+$(NAME)_CFLAGS += -Wall -Werror
+ifeq ($(HOST_ARCH),ARM968E-S)
+$(NAME)_CFLAGS += -marm -mthumb-interwork
+endif
 
 $(NAME)_SOURCES := core/k_err.c          \
                    core/k_mm.c           \
