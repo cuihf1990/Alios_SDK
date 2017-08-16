@@ -506,10 +506,12 @@ void process_mode(int argc, char *argv[])
             continue;
         }
 
+#ifdef CONFIG_YOS_MESH_SUPER
         if (strcmp(argv[index], "SUPER") == 0) {
             mode |= MODE_SUPER;
             continue;
         }
+#endif
 
         if (strcmp(argv[index], "ROUTER") == 0) {
             mode &= ~MODE_SUPER;

@@ -872,7 +872,8 @@ static void message_handler(void *args)
         is_check_level = true;
     }
 
-    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode(), info->mode);
+    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode() & (~MODE_LEADER),
+                                     info->mode & (~MODE_LEADER));
     if (info->network == NULL) {
         if (cmp_mode <= 0) {
             info->network = get_hal_default_network_context(hal);

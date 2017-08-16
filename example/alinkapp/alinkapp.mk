@@ -36,6 +36,11 @@ ifeq ($(meshdebug), 1)
 MESHDEBUG = 1
 endif
 
+MESHSUPER = 0
+ifeq ($(meshsuper), 1)
+MESHSUPER = 1
+endif
+
 $(NAME)_INCLUDES := ../../framework/protocol/alink/system/ ../../framework/protocol/alink/json/
 $(NAME)_INCLUDES += ../../kernel/modules/kv/include
 $(NAME)_INCLUDES += ../../framework/gateway/

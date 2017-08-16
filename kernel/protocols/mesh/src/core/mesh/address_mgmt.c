@@ -20,7 +20,7 @@
 #include "core/address_mgmt.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
-#include "core/sid_allocator.h"
+#include "core/router_mgr.h"
 #include "core/network_data.h"
 #include "core/link_mgmt.h"
 #include "hal/hals.h"
@@ -734,7 +734,7 @@ static void handle_addr_cache_timer(void *args)
 {
     sid_node_t        *node;
     uint8_t           timeout;
-    network_context_t *network;
+    network_context_t *network = NULL;
     slist_t           *tmp;
 
     g_ac_state.timer = NULL;
@@ -756,16 +756,7 @@ static void handle_addr_cache_timer(void *args)
 
         node->node_id.timeout++;
         if (node->node_id.timeout > timeout) {
-            if (is_partial_function_sid(node->node_id.sid)) {
-                network = get_default_network_context();
-                update_sid_mapping(network->sid_base, &node->node_id, false);
-            } else if ((network = get_network_context_by_meshnetid(node->node_id.meshnetid))
-                       != NULL) {
-                if (network->router->sid_type == SHORT_RANDOM_SID ||
-                    network->router->sid_type == RANDOM_SID) {
-                    rsid_free_sid(network->sid_base, &node->node_id);
-                }
-            }
+            sid_allocator_free(network, &node->node_id);
             slist_del(&node->next, &g_ac_state.cache_list);
             ur_mem_free(node, sizeof(sid_node_t));
             g_ac_state.cache_num--;

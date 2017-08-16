@@ -138,6 +138,10 @@ void interface_init(void)
         }
 
         module = hal_umesh_get_next_module(module);
+
+#ifndef CONFIG_YOS_MESH_SUPER
+        break;
+#endif
     }
 }
 
