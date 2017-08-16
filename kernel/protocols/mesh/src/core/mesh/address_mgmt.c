@@ -242,7 +242,6 @@ static ur_error_t send_address_query(network_context_t *network,
                                      uint8_t query_type, ur_node_id_t *target)
 {
     ur_error_t  error = UR_ERROR_NONE;
-    mm_header_t *mm_header;
     mm_addr_query_tv_t *addr_query;
     mm_node_id_tv_t *target_id;
     mm_ueid_tv_t *target_ueid;
@@ -264,9 +263,8 @@ static ur_error_t send_address_query(network_context_t *network,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ADDRESS_QUERY;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ADDRESS_QUERY);
 
     addr_query = (mm_addr_query_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)addr_query, TYPE_ADDR_QUERY);
@@ -297,12 +295,10 @@ static ur_error_t send_address_query(network_context_t *network,
                                           timer_handler, NULL);
     }
 
-    info = message->info;
     info->network = network;
     // dest
     memcpy(&info->dest, dest, sizeof(info->dest));
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -392,7 +388,6 @@ static ur_error_t send_address_query_response(network_context_t *network,
                                               ur_node_id_t *target_node)
 {
     ur_error_t  error = UR_ERROR_NONE;
-    mm_header_t *mm_header;
     mm_node_id_tv_t *attach_id;
     mm_node_id_tv_t *target_id;
     mm_ueid_tv_t *target_ueid;
@@ -412,9 +407,8 @@ static ur_error_t send_address_query_response(network_context_t *network,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ADDRESS_QUERY_RESPONSE;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ADDRESS_QUERY_RESPONSE);
 
     target_id = (mm_node_id_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)target_id, TYPE_NODE_ID);
@@ -436,11 +430,9 @@ static ur_error_t send_address_query_response(network_context_t *network,
         data += sizeof(mm_node_id_tv_t);
     }
 
-    info = message->info;
     info->network = network;
     // dest
     memcpy(&info->dest, dest, sizeof(info->dest));
-    set_command_type(info, mm_header->command);
     error = address_resolve(message);
     if (error == UR_ERROR_NONE) {
         error = mf_send_message(message);
@@ -528,7 +520,6 @@ ur_error_t send_address_notification(network_context_t *network,
                                      ur_addr_t *dest)
 {
     ur_error_t      error = UR_ERROR_NONE;
-    mm_header_t     *mm_header;
     mm_ueid_tv_t    *target_ueid;
     mm_node_id_tv_t *target_node;
     mm_node_id_tv_t *attach_node;
@@ -549,9 +540,8 @@ ur_error_t send_address_notification(network_context_t *network,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ADDRESS_NOTIFICATION;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ADDRESS_NOTIFICATION);
 
     target_ueid = (mm_ueid_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)target_ueid, TYPE_TARGET_UEID);
@@ -578,7 +568,6 @@ ur_error_t send_address_notification(network_context_t *network,
         data += sizeof(mm_node_id_tv_t);
     }
 
-    info = message->info;
     info->network = network;
     // dest
     if (dest == NULL) {
@@ -587,7 +576,6 @@ ur_error_t send_address_notification(network_context_t *network,
         memcpy(&info->dest, dest, sizeof(info->dest));
     }
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -599,7 +587,6 @@ ur_error_t send_address_unreachable(network_context_t *network,
                                     ur_addr_t *dest, ur_addr_t *target)
 {
     ur_error_t error = UR_ERROR_NONE;
-    mm_header_t *mm_header;
     mm_node_id_tv_t *target_node;
     message_t *message;
     uint8_t *data;
@@ -616,9 +603,8 @@ ur_error_t send_address_unreachable(network_context_t *network,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ADDRESS_UNREACHABLE;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ADDRESS_UNREACHABLE);
 
     target_node = (mm_node_id_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)target_node, TYPE_NODE_ID);
@@ -626,11 +612,9 @@ ur_error_t send_address_unreachable(network_context_t *network,
     target_node->meshnetid = target->netid;
     data += sizeof(mm_node_id_tv_t);
 
-    info = message->info;
     info->network = network;
     memcpy(&info->dest, dest, sizeof(info->dest));
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,

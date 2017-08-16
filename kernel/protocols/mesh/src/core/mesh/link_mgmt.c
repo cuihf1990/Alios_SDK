@@ -462,7 +462,6 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
                              uint8_t *tlvs, uint8_t tlvs_length)
 {
     ur_error_t           error = UR_ERROR_NONE;
-    mm_header_t          *mm_header;
     mm_tlv_request_tlv_t *request_tlvs;
     message_t            *message;
     uint8_t              *data;
@@ -485,9 +484,8 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_LINK_REQUEST;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_LINK_REQUEST);
 
     if (tlvs_length) {
         request_tlvs = (mm_tlv_request_tlv_t *)data;
@@ -497,12 +495,10 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
         data += tlvs_length;
     }
 
-    info = message->info;
     info->network = network;
     // dest
     memcpy(&info->dest, dest, sizeof(info->dest));
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
     nbr->stats.link_request++;
 
@@ -518,7 +514,6 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
                                                uint8_t tlvs_length)
 {
     ur_error_t  error = UR_ERROR_NONE;
-    mm_header_t *mm_header;
     mm_tlv_request_tlv_t *request_tlvs;
     message_t   *message;
     uint8_t     *data;
@@ -550,9 +545,8 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_LINK_ACCEPT_AND_REQUEST;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_LINK_ACCEPT_AND_REQUEST);
     data += tlvs_set_value(network, data, tlvs, tlvs_length);
 
     if (tlv_types_length) {
@@ -564,12 +558,10 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
         data += tlv_types_length;
     }
 
-    info = message->info;
     info->network = network;
     // dest
     memcpy(&info->dest, dest, sizeof(info->dest));
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
     node->stats.link_request++;
 
@@ -583,7 +575,6 @@ static ur_error_t send_link_accept(network_context_t *network,
                                    uint8_t *tlvs, uint8_t tlvs_length)
 {
     ur_error_t  error = UR_ERROR_NONE;
-    mm_header_t *mm_header;
     message_t   *message;
     uint8_t     *data;
     int16_t     length;
@@ -606,17 +597,14 @@ static ur_error_t send_link_accept(network_context_t *network,
     }
 
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_LINK_ACCEPT;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_LINK_ACCEPT);
     data += tlvs_set_value(network, data, tlvs, tlvs_length);
 
-    info = message->info;
     info->network = network;
     // dest
     memcpy(&info->dest, dest, sizeof(info->dest));
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,

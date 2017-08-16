@@ -186,11 +186,10 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
                                   uint8_t *payload, uint16_t length)
 {
     ur_error_t  error = UR_ERROR_NONE;
-    mm_header_t *mm_header;
-    uint16_t    msg_length;
     message_t   *message;
     uint8_t     *data;
     message_info_t *info;
+    uint16_t msg_length;
 
     if (router == NULL || payload == NULL) {
         return UR_ERROR_FAIL;
@@ -206,38 +205,25 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
     }
 
     msg_length = sizeof(mm_header_t) + sizeof(router->id) + length;
-    data = (uint8_t *)ur_mem_alloc(msg_length);
-    if (data == NULL) {
-        return UR_ERROR_MEM;
-    }
-
-    msg_length = 0;
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ROUTING_INFO_UPDATE;
-    msg_length += sizeof(mm_header_t);
-
-    *(data + msg_length) = router->id;
-    msg_length += sizeof(router->id);
-    memcpy((data + msg_length), payload, length);
-    msg_length += length;
-
     message = message_alloc(msg_length, ROUTER_MGR_1);
     if (message == NULL) {
-        ur_mem_free(data, msg_length);
         return UR_ERROR_MEM;
     }
-
-    message_copy_from(message, data, msg_length);
-
+    data = message_get_payload(message);
     info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ROUTING_INFO_UPDATE);
+
+    *data = router->id;
+    data += sizeof(router->id);
+    memcpy(data, payload, length);
+    data += length;
+
     info->network = router->network;
     // dest
     info->dest.addr.len = SHORT_ADDR_SIZE;
     info->dest.addr.short_addr = dst;
     info->dest.netid = umesh_mm_get_meshnetid(NULL);
 
-    set_command_type(info, mm_header->command);
-    ur_mem_free(data, msg_length);
     error = address_resolve(message);
     if (error == UR_ERROR_NONE) {
         error = mf_send_message(message);
