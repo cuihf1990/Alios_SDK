@@ -18,7 +18,10 @@ NAME := vcall
 
 GLOBAL_INCLUDES += ./mico/include
 
-$(NAME)_CFLAGS += -Wall -Werror -marm 
+$(NAME)_CFLAGS += -Wall -Werror
+ifeq ($(HOST_ARCH),ARM968E-S)
+$(NAME)_CFLAGS += -marm
+endif
 
 $(NAME)_SOURCES := \
     mico/mico_rhino.c
