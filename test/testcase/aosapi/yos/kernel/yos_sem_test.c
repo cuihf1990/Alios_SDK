@@ -97,7 +97,7 @@ static void CASE_aosapi_kernel_sem_param()
 
 	ret = yos_sem_new(&sem, 0);
 	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
-	ret = yos_sem_wait(&sem, -2);
+	ret = yos_sem_wait(&sem, 0);
 	YUNIT_ASSERT_MSG(ret==YUNOS_NO_PEND_WAIT, "ret=%d", ret);
 	yos_sem_free(&sem);
 }
