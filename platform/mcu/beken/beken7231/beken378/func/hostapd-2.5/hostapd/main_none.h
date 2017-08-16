@@ -17,7 +17,6 @@ static void hostapd_thread_start(void);
 
 #if CFG_WIFI_AP_MODE
 extern int wpa_main_entry(int argc, char *argv[]);
-void hostapd_poll(void *param);
 #endif
 
 #if CFG_WIFI_STATION_MODE

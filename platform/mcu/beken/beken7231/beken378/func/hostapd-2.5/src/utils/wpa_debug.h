@@ -44,6 +44,9 @@ static inline int wpa_debug_reopen_file(void)
 
 
 #ifdef CONFIG_NO_WPA_MSG
+#ifndef CONFIG_SOFTAP
+#define wpa_dbg(args...) do { } while (0)
+#endif
 #define wpa_msg(args...) do { } while (0)
 #define wpa_msg_ctrl(args...) do { } while (0)
 #define wpa_msg_global(args...) do { } while (0)

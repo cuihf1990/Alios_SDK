@@ -11,6 +11,10 @@ NAME := beken
 
 HOST_OPENOCD := beken
 
+ifeq ($(CONFIG_SOFTAP),1)
+GLOBAL_CFLAGS += -DCONFIG_SOFTAP
+endif
+
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += hal vflash netmgr framework mbedtls cjson cli
 $(NAME)_COMPONENTS += platform/mcu/beken/hal_init
@@ -228,32 +232,6 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/func/hostapd-2.5/bk_patch/signal.c \
                     beken7231/beken378/func/hostapd-2.5/bk_patch/sk_intf.c \
                     beken7231/beken378/func/hostapd-2.5/bk_patch/socket.c \
-                    beken7231/beken378/func/hostapd-2.5/hostapd/main_none.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ap_config.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ap_drv_ops.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ap_list.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ap_mlme.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/authsrv.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/beacon.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/bss_load.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/dfs.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/drv_callbacks.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/eap_user_db.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/hostapd.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/hw_features.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_11.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_11_auth.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_11_ht.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_11_shared.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_1x.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/pmksa_cache_auth.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/sta_info.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/tkip_countermeasures.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/utils.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/wmm.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/wpa_auth.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/wpa_auth_glue.c \
-                    beken7231/beken378/func/hostapd-2.5/src/ap/wpa_auth_ie.c \
                     beken7231/beken378/func/hostapd-2.5/src/common/hw_features_common.c \
                     beken7231/beken378/func/hostapd-2.5/src/common/ieee802_11_common.c \
                     beken7231/beken378/func/hostapd-2.5/src/common/wpa_common.c \
@@ -285,7 +263,6 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/func/hostapd-2.5/src/utils/eloop.c \
                     beken7231/beken378/func/hostapd-2.5/src/utils/os_none.c \
                     beken7231/beken378/func/hostapd-2.5/src/utils/wpabuf.c \
-                    beken7231/beken378/func/hostapd-2.5/wpa_supplicant/ap.c \
                     beken7231/beken378/func/hostapd-2.5/wpa_supplicant/blacklist.c \
                     beken7231/beken378/func/hostapd-2.5/wpa_supplicant/bss.c \
                     beken7231/beken378/func/hostapd-2.5/wpa_supplicant/config.c \
@@ -301,8 +278,6 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/func/hostapd_intf/hostapd_intf.c \
                     beken7231/beken378/func/misc/fake_clock.c \
                     beken7231/beken378/func/misc/target_util.c \
-                    beken7231/beken378/func/mxchip/dhcpd/dhcp-server-main.c \
-                    beken7231/beken378/func/mxchip/dhcpd/dhcp-server.c \
                     beken7231/beken378/func/mxchip/lwip-2.0.2/port/ethernetif.c \
                     beken7231/beken378/func/mxchip/lwip-2.0.2/port/net.c \
                     beken7231/beken378/func/rf_test/rx_sensitivity.c \
@@ -412,6 +387,38 @@ $(NAME)_SOURCES	 += beken7231/beken378/ip/common/co_dlist.c \
                     beken7231/beken378/ip/umac/src/sm/sm.c \
                     beken7231/beken378/ip/umac/src/sm/sm_task.c \
                     beken7231/beken378/ip/umac/src/txu/txu_cntrl.c 
+endif
+
+ifeq ($(CONFIG_SOFTAP),1)
+$(NAME)_SOURCES	 += beken7231/beken378/func/hostapd-2.5/src/ap/ap_config.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/ap_drv_ops.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/ap_list.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/ap_mlme.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/authsrv.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/beacon.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/bss_load.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/dfs.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/drv_callbacks.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/eap_user_db.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/hostapd.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/hw_features.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_11.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_11_auth.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_11_ht.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_11_shared.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/ieee802_1x.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/pmksa_cache_auth.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/sta_info.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/tkip_countermeasures.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/utils.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/wmm.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/wpa_auth.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/wpa_auth_glue.c \
+                    beken7231/beken378/func/hostapd-2.5/src/ap/wpa_auth_ie.c \
+                    beken7231/beken378/func/hostapd-2.5/hostapd/main_none.c \
+                    beken7231/beken378/func/hostapd-2.5/wpa_supplicant/ap.c \
+                    beken7231/beken378/func/mxchip/dhcpd/dhcp-server-main.c \
+                    beken7231/beken378/func/mxchip/dhcpd/dhcp-server.c 
 endif
 
 $(NAME)_SOURCES	 += hal/gpio.c \

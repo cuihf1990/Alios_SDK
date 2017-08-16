@@ -180,7 +180,7 @@ void net_wlan_init(void)
 		net_ipv6stack_init(&g_mlan.netif);
 #endif /* CONFIG_IPV6 */
 		netifapi_netif_set_default(&g_mlan.netif);
-
+#ifdef CONFIG_SOFTAP 
 		ret = netifapi_netif_add(&g_uap.netif, &g_uap.ipaddr,
 					 &g_uap.ipaddr, &g_uap.ipaddr, NULL,
 					 lwip_netif_uap_init, tcpip_input);
@@ -188,7 +188,7 @@ void net_wlan_init(void)
 			/*FIXME: Handle the error case cleanly */
 			net_e("UAP interface add failed");
 		}
-
+#endif
 		wlan_init_done = 1;
 	}
 
@@ -538,9 +538,11 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 		 */
 		 up_iface = 1;
 	} else {
+#ifdef CONFIG_SOFTAP 	
 		// softap IP up, start dhcp server;
 		dhcp_server_start(net_get_uap_handle());
 		up_iface = 0;
+#endif  
 	}
 
 	return 0;

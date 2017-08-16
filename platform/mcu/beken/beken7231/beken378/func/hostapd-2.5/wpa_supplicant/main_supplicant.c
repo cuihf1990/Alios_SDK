@@ -20,6 +20,7 @@
 #include "uart_pub.h"
 #include "signal.h"
 
+char *bss_iface = "wlan0";
 
 static struct wpa_global *wpa_global_ptr = NULL;
 static mico_thread_t wpas_thread_handle;

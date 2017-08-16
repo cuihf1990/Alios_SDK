@@ -18,8 +18,9 @@
 #include "sys_config.h"
 
 /* Insert configuration defines, e.g., #define EAP_MD5, here, if needed. */
-
+#ifdef CONFIG_SOFTAP 
 #define CONFIG_AP
+#endif
 #define NEED_AP_MLME
 #define CONFIG_NO_CONFIG_WRITE
 #define OS_NO_C_LIB_DEFINES

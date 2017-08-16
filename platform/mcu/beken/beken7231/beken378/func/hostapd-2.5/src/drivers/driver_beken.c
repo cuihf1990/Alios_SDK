@@ -1582,6 +1582,7 @@ const struct wpa_driver_ops wpa_driver_hostap_ops =
     .name = "hostap_beken",
     .desc = "Host AP driver",
     .set_key = wpa_driver_hostap_set_key,
+#ifdef CONFIG_SOFTAP  
     .hapd_init = hostap_init,
     .hapd_deinit = hostap_driver_deinit,
     .set_ieee8021x = hostap_set_ieee8021x,
@@ -1605,6 +1606,7 @@ const struct wpa_driver_ops wpa_driver_hostap_ops =
     .set_freq = hostap_set_freq,
     .poll_client = wpa_driver_hostap_poll_client,
     .set_ap = hostap_set_ap,
+#endif
     .init = wpa_driver_init,
     .deinit = wpa_driver_deinit,
     .scan2 = wpa_driver_scan2,
@@ -1618,6 +1620,7 @@ const struct wpa_driver_ops wpa_driver_hostap_ops =
     .set_operstate = wpa_driver_set_operstate,
 };
 
+#ifdef CONFIG_SOFTAP
 void wpa_dbg(void *ctx, int level, const char *fmt, ...)
 {
 	va_list ap;
@@ -1644,4 +1647,5 @@ void wpa_dbg(void *ctx, int level, const char *fmt, ...)
 	
 	bk_printf("\r\n");
 }
+#endif
 

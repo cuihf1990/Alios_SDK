@@ -218,7 +218,7 @@ uint32_t bk_sta_cipher_is_wep(void)
     return (SECURITY_TYPE_WEP == g_sta_param_ptr->security);
 }
 
-void bk_wlan_ap_init(hal_wifi_init_type_t *inNetworkInitPara)
+ void bk_wlan_ap_init(hal_wifi_init_type_t *inNetworkInitPara)
 {
     os_printf("Soft_AP_start\r\n");
 
@@ -278,7 +278,7 @@ void bk_wlan_ap_init(hal_wifi_init_type_t *inNetworkInitPara)
 
     sa_ap_init();
 }
-
+ 
 void bk_wlan_sta_init(hal_wifi_init_type_t *inNetworkInitPara)
 {
     if(!g_sta_param_ptr)
@@ -332,6 +332,7 @@ OSStatus bk_wlan_start(hal_wifi_init_type_t *inNetworkInitPara)
 {
     if(inNetworkInitPara->wifi_mode == SOFT_AP)
     {
+#ifdef CONFIG_SOFTAP    
     	hostapd_thread_stop();
 		supplicant_main_exit();
         bk_wlan_ap_init(inNetworkInitPara);
@@ -348,10 +349,15 @@ OSStatus bk_wlan_start(hal_wifi_init_type_t *inNetworkInitPara)
 
         sm_build_broadcast_deauthenticate();
 		uap_ip_start();
+#else
+        return kUnsupportedErr;
+#endif
     }
     else if(inNetworkInitPara->wifi_mode == STATION)
     {
+#ifdef CONFIG_SOFTAP     
     	hostapd_thread_stop();
+#endif
         supplicant_main_exit();
         sta_ip_down();
         ip_address_set(STATION, inNetworkInitPara->dhcp_mode, inNetworkInitPara->local_ip_addr,
@@ -520,7 +526,9 @@ void bk_wlan_sta_init_adv(hal_wifi_init_type_adv_t *inNetworkInitParaAdv)
 
 OSStatus bk_wlan_start_adv(hal_wifi_init_type_adv_t *inNetworkInitParaAdv)
 {
+#ifdef CONFIG_SOFTAP 
     hostapd_thread_stop();
+#endif
     supplicant_main_exit();
     sta_ip_down();
     ip_address_set(STATION, inNetworkInitParaAdv->dhcp_mode,
@@ -818,7 +826,9 @@ int bk_wlan_power_on(void)
 int bk_wlan_suspend(void)
 {
 	supplicant_main_exit();
-	hostapd_thread_stop();
+#ifdef CONFIG_SOFTAP 
+    hostapd_thread_stop();
+#endif
 	return 0;
 }
 
@@ -831,8 +841,9 @@ int bk_wlan_suspend_station(void)
 
 int bk_wlan_suspend_softap(void)
 {
-	hostapd_thread_stop();
-
+#ifdef CONFIG_SOFTAP 
+    hostapd_thread_stop();
+#endif
 	return 0;
 }
 
