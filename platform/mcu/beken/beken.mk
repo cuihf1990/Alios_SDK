@@ -170,7 +170,6 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/driver/gpio/gpio.c \
                     beken7231/beken378/driver/i2s/i2s.c \
                     beken7231/beken378/driver/icu/icu.c \
-                    beken7231/beken378/driver/intc/intc.c \
                     beken7231/beken378/driver/irda/irda.c \
                     beken7231/beken378/driver/macphy_bypass/mac_phy_bypass.c \
                     beken7231/beken378/driver/phy/phy_trident.c \

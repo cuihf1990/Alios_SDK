@@ -26,4 +26,5 @@ $(NAME)_INCLUDES := ../../app      \
 $(NAME)_SOURCES	 += arch_main.c \
                     boot_handlers.S \
                     boot_vectors.S \
-                    ll.S 
+                    ll.S \
+                    ../intc/intc.c 

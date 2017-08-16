@@ -18,7 +18,7 @@ NAME := vcall
 
 GLOBAL_INCLUDES += ./mico/include
 
-$(NAME)_CFLAGS += -Wall -Werror
+$(NAME)_CFLAGS += -Wall -Werror -marm 
 
 $(NAME)_SOURCES := \
     mico/mico_rhino.c

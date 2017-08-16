@@ -845,6 +845,7 @@ int manual_cal_save_txpwr_tab_to_flash(void)
             addr_start = TXPWR_TAB_FLASH_ADDR;
         }else {
             // txpwr is exist, and found start addr.
+            len = txpwr_len;
             txpwr_buf = buf = (UINT8*)os_malloc(txpwr_len); 
             if(!buf) {
                 MCAL_FATAL("no memory for txpwr tab save to flash\r\n");
