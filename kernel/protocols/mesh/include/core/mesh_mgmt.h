@@ -186,7 +186,6 @@ uint16_t tlvs_set_value(network_context_t *network,
                         uint8_t tlvs_length);
 int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length);
 
-void set_command_type(message_info_t *info, uint8_t command);
 void get_leader_addr(ur_addr_t *addr);
 
 static inline uint16_t mm_get_main_netid(network_context_t *network)
@@ -206,5 +205,9 @@ static inline bool is_bcast_sid(ur_addr_t *addr)
     }
     return false;
 }
+
+uint8_t set_mm_header_type(message_info_t *info, uint8_t *data, uint8_t type);
+uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data);
+uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data);
 
 #endif  /* UR_MM_H */

@@ -46,19 +46,16 @@ void test_diags_case(void)
         return;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_TRACE_ROUTE_RESPONSE;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_TRACE_ROUTE_RESPONSE);
 
     timestamp = (mm_timestamp_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = 10;
     data += sizeof(mm_timestamp_tv_t);
 
-    info = message->info;
     info->network = network;
     memcpy(&info->dest, &dest, sizeof(info->dest));
-    set_command_type(info, mm_header->command);
 
     YUNIT_ASSERT(UR_ERROR_NONE == handle_diags_command(message, true));
     message_free(message);
@@ -69,20 +66,16 @@ void test_diags_case(void)
         return;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_TRACE_ROUTE_REQUEST;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_TRACE_ROUTE_REQUEST);
 
     timestamp = (mm_timestamp_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = ur_get_now();
     data += sizeof(mm_timestamp_tv_t);
 
-    info = message->info;
     info->network = network;
     memcpy(&info->dest, &dest, sizeof(info->dest));
-
-    set_command_type(info, mm_header->command);
 
     YUNIT_ASSERT(UR_ERROR_NONE == handle_diags_command(message, true));
     message_free(message);

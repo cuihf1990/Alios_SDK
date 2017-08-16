@@ -46,9 +46,9 @@ typedef struct mm_device_s {
 } mm_device_t;
 
 typedef struct mesh_mgmt_state_s {
-    mm_device_t             device;
-    node_mode_t             leader_mode;
-    mm_cb_t                 *callback;
+    mm_device_t device;
+    node_mode_t leader_mode;
+    mm_cb_t *callback;
 } mesh_mgmt_state_t;
 
 static mesh_mgmt_state_t g_mm_state;
@@ -175,12 +175,6 @@ static void start_advertisement_timer(network_context_t *network)
     }
 }
 
-void set_command_type(message_info_t *info, uint8_t command)
-{
-    info->type = MESH_FRAME_TYPE_CMD;
-    info->command = command;
-}
-
 void get_leader_addr(ur_addr_t *addr)
 {
     network_context_t *network;
@@ -246,9 +240,6 @@ void become_leader(void)
         start_advertisement_timer(network);
     }
 
-    if (g_mm_state.device.net_scan_timer) {
-        ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
-    }
     umesh_mm_start_net_scan_timer();
     umesh_mm_set_prev_channel();
 
@@ -557,11 +548,8 @@ ur_error_t send_advertisement(network_context_t *network)
     message_t         *message;
     uint16_t          length;
     uint8_t           *data;
-    mm_header_t       *mm_header;
-    mm_netinfo_tv_t   *netinfo;
     mm_ssid_info_tv_t *ssid_info;
     mm_cost_tv_t      *path_cost;
-    mm_channel_tv_t   *channel;
     message_info_t    *info;
     uint16_t          subnet_size = 0;
 
@@ -582,9 +570,8 @@ ur_error_t send_advertisement(network_context_t *network)
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ADVERTISEMENT;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ADVERTISEMENT);
 
     subnet_size = sid_allocator_get_num(network);
     if (g_mm_state.device.state == DEVICE_STATE_LEADER ||
@@ -592,16 +579,7 @@ ur_error_t send_advertisement(network_context_t *network)
         nd_set_meshnetsize(network, subnet_size);
     }
 
-    netinfo = (mm_netinfo_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)netinfo, TYPE_NETWORK_INFO);
-    netinfo->stable_version = (nd_get_stable_main_version() <<
-                               STABLE_MAIN_VERSION_OFFSET) |
-                              nd_get_stable_minor_version();
-    netinfo->version        = nd_get_version(NULL);
-    netinfo->size           = nd_get_meshnetsize(NULL);
-    set_subnetsize_to_netinfo(netinfo, nd_get_meshnetsize(network));
-    netinfo->leader_mode = g_mm_state.leader_mode;
-    data += sizeof(mm_netinfo_tv_t);
+    data += set_mm_netinfo_tv(network, data);
 
     if (network->router->sid_type == STRUCTURED_SID) {
         ssid_info = (mm_ssid_info_tv_t *)data;
@@ -619,21 +597,14 @@ ur_error_t send_advertisement(network_context_t *network)
     }
     data += sizeof(mm_cost_tv_t);
 
-    if (network->hal->module->type == MEDIA_TYPE_WIFI) {
-        channel = (mm_channel_tv_t *)data;
-        umesh_mm_init_tv_base((mm_tv_t *)channel, TYPE_UCAST_CHANNEL);
-        channel->channel = umesh_mm_get_channel(network);
-        data += sizeof(mm_channel_tv_t);
-    }
+    data += set_mm_channel_tv(network, data);
 
-    info = message->info;
     info->network = network;
     // dest
     info->dest.addr.len = SHORT_ADDR_SIZE;
     info->dest.addr.short_addr = BCAST_SID;
     info->dest.netid = BCAST_NETID;
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -646,7 +617,6 @@ static ur_error_t send_attach_request(network_context_t *network,
 {
     ur_error_t      error = UR_ERROR_NONE;
     uint16_t        length;
-    mm_header_t     *mm_header;
     mm_version_tv_t *version;
     mm_ueid_tv_t    *src_ueid;
     mm_timestamp_tv_t *timestamp;
@@ -662,9 +632,8 @@ static ur_error_t send_attach_request(network_context_t *network,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ATTACH_REQUEST;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ATTACH_REQUEST);
 
     version = (mm_version_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)version, TYPE_VERSION);
@@ -685,7 +654,6 @@ static ur_error_t send_attach_request(network_context_t *network,
     calculate_one_time_key(network->one_time_key, time,
                            umesh_mm_get_mac_address());
 
-    info = message->info;
     info->network = network;
     // dest
     if (dest) {
@@ -696,7 +664,6 @@ static ur_error_t send_attach_request(network_context_t *network,
         info->dest.netid = network->candidate_meshnetid;
     }
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -708,7 +675,6 @@ static ur_error_t send_attach_response(network_context_t *network,
                                        ur_addr_t *dest)
 {
     ur_error_t    error = UR_ERROR_NONE;
-    mm_header_t   *mm_header;
     mm_ueid_tv_t  *src_ueid;
     mm_cost_tv_t  *path_cost;
     mm_symmetric_key_tv_t *symmetric_key;
@@ -731,9 +697,8 @@ static ur_error_t send_attach_response(network_context_t *network,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ATTACH_RESPONSE;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ATTACH_RESPONSE);
 
     src_ueid = (mm_ueid_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)src_ueid, TYPE_SRC_UEID);
@@ -754,12 +719,10 @@ static ur_error_t send_attach_response(network_context_t *network,
         data += sizeof(mm_symmetric_key_tv_t);
     }
 
-    info = message->info;
     info->network = network;
     // dest
     memcpy(&info->dest, dest, sizeof(info->dest));
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -932,7 +895,6 @@ static ur_error_t handle_attach_response(message_t *message)
 static ur_error_t send_sid_request(network_context_t *network)
 {
     ur_error_t   error = UR_ERROR_NONE;
-    mm_header_t  *mm_header;
     mm_node_id_tv_t *attach_node_id;
     mm_sid_tv_t  *src_sid;
     mm_ueid_tv_t *src_ueid;
@@ -957,9 +919,8 @@ static ur_error_t send_sid_request(network_context_t *network)
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_SID_REQUEST;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_SID_REQUEST);
 
     attach_node_id = (mm_node_id_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)attach_node_id, TYPE_ATTACH_NODE_ID);
@@ -986,7 +947,6 @@ static ur_error_t send_sid_request(network_context_t *network)
         data += sizeof(mm_sid_tv_t);
     }
 
-    info = message->info;
     info->network = network;
     // dest
     info->dest.addr.len = SHORT_ADDR_SIZE;
@@ -1002,7 +962,6 @@ static ur_error_t send_sid_request(network_context_t *network)
         info->dest.netid = network->attach_candidate->addr.netid;
     }
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -1015,10 +974,8 @@ static ur_error_t send_sid_response(network_context_t *network,
                                     ur_node_id_t *node_id)
 {
     ur_error_t        error = UR_ERROR_NONE;
-    mm_header_t       *mm_header;
     mm_sid_tv_t       *allocated_sid;
     mm_node_type_tv_t *allocated_node_type;
-    mm_netinfo_tv_t   *netinfo;
     mm_mcast_addr_tv_t *mcast;
     uint8_t           *data;
     message_t         *message;
@@ -1037,9 +994,8 @@ static ur_error_t send_sid_response(network_context_t *network,
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_SID_RESPONSE;
-    data += sizeof(mm_header_t);
+    info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_SID_RESPONSE);
 
     allocated_sid = (mm_sid_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)allocated_sid, TYPE_ALLOCATE_SID);
@@ -1051,30 +1007,18 @@ static ur_error_t send_sid_response(network_context_t *network,
     allocated_node_type->type = node_id->type;
     data += sizeof(mm_node_type_tv_t);
 
-    netinfo = (mm_netinfo_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)netinfo, TYPE_NETWORK_INFO);
-    netinfo->stable_version = (nd_get_stable_main_version() <<
-                               STABLE_MAIN_VERSION_OFFSET) |
-                              nd_get_stable_minor_version();
-    netinfo->version = nd_get_version(NULL);
-    netinfo->size = nd_get_meshnetsize(NULL);
-    netinfo->subnet_size_1  = (uint8_t)((nd_get_meshnetsize(network) >> 8) & 0x7);
-    netinfo->subnet_size_2  = (uint8_t)(nd_get_meshnetsize(network) & 0xff);
-    netinfo->leader_mode = g_mm_state.leader_mode;
-    data += sizeof(mm_netinfo_tv_t);
+    data += set_mm_netinfo_tv(network, data);
 
     mcast = (mm_mcast_addr_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)mcast, TYPE_MCAST_ADDR);
     memcpy(mcast->mcast.m8, nd_get_subscribed_mcast(), 16);
     data += sizeof(mm_mcast_addr_tv_t);
 
-    info = message->info;
     info->network = network;
     // dest
     memcpy(&info->dest, dest, sizeof(info->dest));
     memcpy(&info->dest2, dest2, sizeof(info->dest));
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -1329,7 +1273,6 @@ static ur_error_t handle_sid_response(message_t *message)
 ur_error_t send_address_error(network_context_t *network, ur_addr_t *dest)
 {
     ur_error_t  error = UR_ERROR_NONE;
-    mm_header_t *mm_header;
     message_t   *message;
     uint8_t     *data;
     uint16_t    length;
@@ -1341,15 +1284,12 @@ ur_error_t send_address_error(network_context_t *network, ur_addr_t *dest)
         return UR_ERROR_MEM;
     }
     data = message_get_payload(message);
-    mm_header = (mm_header_t *)data;
-    mm_header->command = COMMAND_ADDRESS_ERROR;
-    data += sizeof(mm_header_t);
-
     info = message->info;
+    data += set_mm_header_type(info, data, COMMAND_ADDRESS_ERROR);
+
     info->network = network;
     memcpy(&info->dest, dest, sizeof(info->dest));
 
-    set_command_type(info, mm_header->command);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -2094,6 +2034,10 @@ void umesh_mm_start_net_scan_timer(void)
 {
     network_context_t *network;
 
+    if (g_mm_state.device.net_scan_timer) {
+        ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
+    }
+
     if (g_mm_state.device.mode & MODE_LEADER) {
         return;
     }
@@ -2120,4 +2064,48 @@ void umesh_mm_set_prev_channel(void)
 uint8_t umesh_mm_get_reboot_flag(void)
 {
     return g_mm_state.device.reboot_flag;
+}
+
+uint8_t set_mm_header_type(message_info_t *info, uint8_t *data, uint8_t type)
+{
+    mm_header_t *mm_header;
+
+    mm_header = (mm_header_t *)data;
+    mm_header->command = type;
+
+    info->type = MESH_FRAME_TYPE_CMD;
+    info->command = type;
+    return sizeof(mm_header_t);
+}
+
+uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data)
+{
+    mm_netinfo_tv_t *netinfo;
+
+    netinfo = (mm_netinfo_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)netinfo, TYPE_NETWORK_INFO);
+    netinfo->stable_version = (nd_get_stable_main_version() <<
+                               STABLE_MAIN_VERSION_OFFSET) |
+                              nd_get_stable_minor_version();
+    netinfo->version = nd_get_version(NULL);
+    netinfo->size = nd_get_meshnetsize(NULL);
+    set_subnetsize_to_netinfo(netinfo, nd_get_meshnetsize(network));
+    netinfo->leader_mode = umesh_mm_get_leader_mode();
+
+    return sizeof(mm_netinfo_tv_t);
+}
+
+uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data)
+{
+    mm_channel_tv_t *channel;
+
+    if (network->hal->module->type == MEDIA_TYPE_WIFI) {
+        return 0;
+    }
+
+    channel = (mm_channel_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)channel, TYPE_UCAST_CHANNEL);
+    channel->channel = umesh_mm_get_channel(network);
+
+    return sizeof(mm_channel_tv_t);
 }
