@@ -1022,31 +1022,35 @@ static UINT32 rwnx_cal_translate_tx_rate_for_n(UINT32 rate)
 #endif
 
 //static INT32 cur_rate;
-void rwnx_cal_set_txpwr_by_rate(INT32 rate)
+void rwnx_cal_set_txpwr_by_rate(INT32 rate, UINT32 test_mode)
 {
-    UINT32 txpwr_val_A, txpwr_val_B, txpwr_val_C, channel;
-    UINT32 dcorMod, dcorPA;
+    UINT32 txpwr_val_A, txpwr_val_B, txpwr_val_C;
+    UINT32 pwr_gain;
+
+#if CFG_SUPPORT_MANUAL_CALI 
+    struct phy_channel_info info;
+    UINT32 channel, bandwidth;   // PHY_CHNL_BW_20,  PHY_CHNL_BW_40:
+
+    phy_get_channel(&info, 0);
+    bandwidth = (info.info1 >> 8) & 0xff;
 
     channel = (BK7011TRXONLY.REG0x7->bits.chin60 - 7) / 5;
     if(channel > 14)
         channel = 14;
-
-#if CFG_SUPPORT_MANUAL_CALI   
-    if(!manual_cal_get_txpwr(rwnx_cal_translate_tx_rate(rate), channel, &dcorMod, &dcorPA))
+    if(!manual_cal_get_txpwr(rwnx_cal_translate_tx_rate(rate), channel, bandwidth, &pwr_gain)) 
 #endif
     {
         // unable get txpwr from manual cal, use register value
-        dcorMod = (UINT32)BK7011TRXONLY.REG0xB->bits.dcorMod30;
-        dcorPA = (UINT32)BK7011TRXONLY.REG0xC->bits.dcorPA30;
+        //pwr_gain = gtx_pre_gain;
+        pwr_gain = (UINT32)BK7011RCBEKEN.REG0x52->bits.TXPREGAIN;
     }
 
     rate = rwnx_cal_translate_tx_rate_for_n(rate);
-
     txpwr_val_A = tx_pwr_rate[rate][0];
-    txpwr_val_B = (tx_pwr_rate[rate][1] & (~(0xf << 12))) | (dcorMod << 12);
-    txpwr_val_C = (tx_pwr_rate[rate][2] & (~(0xf << 12))) | (dcorPA << 12);
+    txpwr_val_B = (tx_pwr_rate[rate][1] & (~(0xf<<12))) | (gtx_dcorMod<<12);
+    txpwr_val_C = (tx_pwr_rate[rate][2] & (~(0xf<<12))) | (gtx_dcorPA<<12);  
 
-    os_printf("rate:%d, mod:%d, pa:%d\r\n", rate, dcorMod, dcorPA);  
+    os_printf("rate:%d, pwr_gain:%d\r\n", rate, pwr_gain);  
 
     BK7011TRX.REG0xA->value = txpwr_val_A;
     CAL_WR_TRXREGS(0xA);
@@ -1059,32 +1063,43 @@ void rwnx_cal_set_txpwr_by_rate(INT32 rate)
     bk7011_trx_val[11] = BK7011TRXONLY.REG0xB->value ;
     bk7011_trx_val[12] = BK7011TRXONLY.REG0xC->value ;
 
-    //    cur_rate = rate;
+    BK7011RCBEKEN.REG0x52->bits.TXPREGAIN = gtx_pre_gain = pwr_gain;
+    bk7011_rc_val[21] = BK7011RCBEKEN.REG0x52->value;
+
+    if(test_mode) {
+        os_printf("add extral movement in test\r\n"); 
+        
+        BK7011TRX.REG0x6->bits.lpfcapcalq50 = 0x3f;
+        BK7011TRX.REG0x6->bits.lpfcapcali50 = 0x3f; 
+        CAL_WR_TRXREGS(0x6);
+
+        BK7011TRX.REG0xB->bits.gctrlmod30 = 0x4;
+        CAL_WR_TRXREGS(0xB);        
+    }
+
 }
 
 #if CFG_SUPPORT_MANUAL_CALI
-void rwnx_cal_set_txpwr(UINT32 mod, UINT32 pa)
+void rwnx_cal_set_txpwr(UINT32 pwr_gain)
 {
-    UINT32 txpwr_val_B, txpwr_val_C;
+    pwr_gain &= 0x1f;
+    pwr_gain = 0x1f - pwr_gain;
 
-    txpwr_val_B = BK7011TRXONLY.REG0xB->value;
-    txpwr_val_C = BK7011TRXONLY.REG0xC->value;
+    os_printf("set txpwr pwr_gain:%d\r\n", pwr_gain);  
 
-    txpwr_val_B = (txpwr_val_B & (~(0xf << 12))) | (mod << 12);
-    txpwr_val_C = (txpwr_val_C & (~(0xf << 12))) | (pa << 12);
-
-    BK7011TRX.REG0xB->value = txpwr_val_B;
-    CAL_WR_TRXREGS(0xB);
-    BK7011TRX.REG0xC->value = txpwr_val_C;
-    CAL_WR_TRXREGS(0xC);
-
-    bk7011_trx_val[11] = BK7011TRXONLY.REG0xB->value ;
-    bk7011_trx_val[12] = BK7011TRXONLY.REG0xC->value ;
+    BK7011RCBEKEN.REG0x52->bits.TXPREGAIN = gtx_pre_gain = pwr_gain;
+    bk7011_rc_val[21] = BK7011RCBEKEN.REG0x52->value;
 }
 #endif
 
 void rwnx_tx_cal_save_cal_result(void)
 {
+    // Manual calibration not used PA & MOD, but use pre_gain
+    #if CFG_SUPPORT_MANUAL_CALI 
+    gtx_dcorMod = 0x8;
+    gtx_dcorPA = 8;
+    #endif
+
     bk7011_trx_val[11] = (bk7011_trx_val[11] & (~(0xf << 12))) | (((0xf)&gtx_dcorMod) << 12);
     bk7011_trx_val[12] = (bk7011_trx_val[12] & (~(0xf << 12))) | (((0xf)&gtx_dcorPA) << 12);
     bk7011_rc_val[21] = (bk7011_rc_val[21] & (~(0x1f << 16))) | (((0x1f)&gtx_pre_gain) << 16);

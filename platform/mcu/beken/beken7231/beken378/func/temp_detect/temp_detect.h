@@ -13,7 +13,7 @@
 #endif
 
 #define ADC_TEMP_SENSER_CHANNEL                     7
-#define ADC_TEMP_DETECT_BUFFER_SIZE                 5
+#define ADC_TEMP_BUFFER_SIZE                        5
 #define ADC_TMEP_SYSCTRL_LDO_VAL                    0x14
 #define ADC_TMEP_DETECT_INTVAL                      (10)  // how many second
 #define ADC_TMEP_FIRST_DETECT_INTVAL                (2)

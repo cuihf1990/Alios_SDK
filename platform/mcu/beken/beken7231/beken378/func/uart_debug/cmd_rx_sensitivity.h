@@ -7,6 +7,7 @@ typedef enum {
     RXSENS_RTYPTE_CLEAN    = 0,
     RXSENS_RTYPTE_20M      = 1,
     RXSENS_RTYPTE_40M      = 2,
+    RXSENS_RTYPTE_SIG_RES  = 3,
     RXSENS_RTYPTE_MAX
 } RXSENS_RESULT_TYPE;
 

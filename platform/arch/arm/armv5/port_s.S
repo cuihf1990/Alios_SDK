@@ -39,6 +39,9 @@ cpu_first_task_start:
     LDR SP, [R0]
     
     LDMFD   SP!, {R0}  
+    LDR     R1, [SP, #56]
+    TST     R1, #1
+    ORRNE   R0, #32          @ if PC is thumb mode, set SPSR to thumb
     MSR     SPSR_cxsf, R0
     LDMFD   SP!, {R0-R12, LR, PC}^
 
@@ -69,7 +72,10 @@ cpu_intrpt_switch:
 	@ Restore New Task context
 	@----------------------------------------------------------------------------------
 	
-    LDMFD   SP!, {R0}              
+    LDMFD   SP!, {R0}       
+    LDR     R1, [SP, #56]
+    TST     R1, #1
+    ORRNE   R0, #32          @ if PC is thumb mode, set SPSR to thumb
     MSR     SPSR_cxsf, R0
     LDMFD   SP!, {R0-R12, LR, PC}^  
 

@@ -111,7 +111,7 @@ static void kmsg_bk_thread_main( void *arg )
 
 static void init_thread_main( void *arg )
 {
-	GLOBAL_INT_START();     
+//	GLOBAL_INT_START();     
 
 	app_init();     
 	os_printf("app_init finished\r\n");

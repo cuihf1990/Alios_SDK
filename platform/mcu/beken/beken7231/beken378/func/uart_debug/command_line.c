@@ -410,7 +410,7 @@ int run_command(const char *cmd, int flag)
 #include "bk7011_cal_pub.h"
 int bkreg_run_command(const char *content, int cnt)
 {
-    char tx_buf[64];
+    char tx_buf[BKREG_TX_FIFO_THRD];
     UINT32 uart_rx_index;
     REGISTER_PARAM *rx_param;
     REGISTER_PARAM *tx_param;
@@ -418,6 +418,8 @@ int bkreg_run_command(const char *content, int cnt)
     HCI_COMMAND_PACKET *pHCIrxBuf = (HCI_COMMAND_PACKET *)content;
 
     uart_rx_index = cnt;
+    pHCItxBuf->total = 1;
+    pHCItxBuf->param[0] = pHCIrxBuf->cmd;
     switch(pHCIrxBuf->cmd)
     {
     case BEKEN_UART_REGISTER_WRITE_CMD:
@@ -452,46 +454,96 @@ int bkreg_run_command(const char *content, int cnt)
         tx_param->addr  = rx_param->addr;
 
         if(rx_param->addr == 0x00800014)
-            tx_param->value = 0x20170512;
+            tx_param->value = 0x170724;
         else
             tx_param->value = REG_READ(rx_param->addr);
         break;
 
-    case BEKEN_TEMP_CMD:
-    {
+    case BEKEN_WRITE_OTP_CMD: {
+        UINT8 *flag_ptr = NULL, *write_buf = NULL;
+        UINT8 flag = 0, write_len = 0;;
+        rx_param        = (REGISTER_PARAM *)pHCIrxBuf->param;
+        write_buf       = (UINT8 *)(rx_param + 1);
+        //os_printf("write flash opt: %08x, %08x, %p\r\n", rx_param->addr, rx_param->value, write_buf);
+        write_len = (rx_param->value > OTP_WRITE_MAX_LEN)? OTP_WRITE_MAX_LEN : rx_param->value;
+        
+        flag = manual_cal_wirte_otp_flash(rx_param->addr, rx_param->value, write_buf);
+        
+        pHCItxBuf->total = OTP_CMD_RET_LEN + 1;
+        os_memcpy(pHCItxBuf->param, pHCIrxBuf, HCI_EVENT_HEAD_LENGTH);
+        pHCItxBuf->param[3] = pHCIrxBuf->cmd;
+
+        tx_param = (REGISTER_PARAM *)&pHCItxBuf->param[HCI_COMMAND_HEAD_LENGTH];
+        tx_param->addr      = rx_param->addr;
+        tx_param->value     = rx_param->value;
+
+        flag_ptr = (UINT8 *)&pHCItxBuf->param[OTP_CMD_RET_LEN];
+        *flag_ptr = flag;
+        }
+        break;
+
+    case BEKEN_READ_OTP_CMD: { 
+        UINT32 len, len_left = 0;
+        UINT8 *read_buf = (UINT8 *)&pHCItxBuf->param[OTP_CMD_RET_LEN];
+        rx_param        = (REGISTER_PARAM *)pHCIrxBuf->param;
+        //os_printf("read flash opt: %08x, %08x\r\n", rx_param->addr, rx_param->value);
+
+        len_left = rx_param->value;
+        while(len_left) {
+
+            len = (len_left > OTP_READ_MAX_LEN)? OTP_READ_MAX_LEN : len_left;
+            len = manual_cal_read_otp_flash(rx_param->addr, len, read_buf);
+            if(len == 0)
+                return 0;
+
+            pHCItxBuf->total = OTP_CMD_RET_LEN + len;
+            os_memcpy(pHCItxBuf->param, pHCIrxBuf, HCI_EVENT_HEAD_LENGTH);
+            pHCItxBuf->param[3] = pHCIrxBuf->cmd;
+
+            tx_param = (REGISTER_PARAM *)&pHCItxBuf->param[HCI_COMMAND_HEAD_LENGTH];
+            tx_param->addr      = rx_param->addr;
+            tx_param->value     = len;
+            bkreg_tx(pHCItxBuf);
+            len_left -= len;
+            rx_param->addr += len;
+        }
+        return 0;
+        }
+        break;
+
+    case BEKEN_TEMP_CMD: {
         rwnx_cal_save_trx_rcbekn_reg_val();
         do_calibration_in_temp_dect();
         rwnx_cal_load_trx_rcbekn_reg_val(); 
     }
     break;
 
-    case BEKEN_TEMP_TCP:
-    {
+    case BEKEN_TEMP_TCP: {
         calibration_main();
-
     }
     break;
 
-    case BEKEN_TEST_UDP:
-    {
+    case BEKEN_TEST_UDP: {
         #if CFG_SUPPORT_MANUAL_CALI
         manual_cal_show_txpwr_tab();
 #endif
     }
     break;
 
-    case BEKEN_SD_CLOSE:
-    {
+    case BEKEN_SD_CLOSE: {
         #if CFG_SUPPORT_MANUAL_CALI
         manual_cal_fitting_txpwr_tab();
 #endif
     }
     break;
 
-    case LOOP_MODE_CMD:
-    {
-        bk7011_micopwr_tssi_read();
-        bk7011_micopwr_tssi_show();
+    case LOOP_MODE_CMD: {
+        //bk7011_micopwr_tssi_read();
+        //bk7011_micopwr_tssi_show();
+        //extern int temp_single_get_current_temperature(UINT32 *temp_value);
+        //UINT32 temp;
+        
+        //temp_single_get_current_temperature(&temp);
     }
     break;
 

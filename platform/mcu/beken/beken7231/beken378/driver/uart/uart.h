@@ -28,7 +28,7 @@
 #define DEBUG_PRT_MAX_CNT          (16)
 
 #if CFG_UART_DEBUG_COMMAND_LINE
-#define RX_RB_LENGTH               (64)
+#define RX_RB_LENGTH               (128)  // 64
 #define TX_RB_LENGTH               (64)
 #else
 #define RX_RB_LENGTH               (64)
@@ -69,7 +69,7 @@
 #endif // CFG_RUNNING_PLATFORM == FPGA_PLATFORM
 
 #define TX_FIFO_THRD               (0x01)
-#define RX_FIFO_THRD               (0x20)
+#define RX_FIFO_THRD                RX_RB_LENGTH // (0x20)
 
 #define DEF_TX_EN                   0x1
 #define DEF_RX_EN                   0x1

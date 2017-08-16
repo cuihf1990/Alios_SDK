@@ -105,7 +105,7 @@ void mpb_start_trx(void)
 
 static UINT32 mpb_select_tx_rate(UINT32 rate)
 {
-    UINT32 param;
+    UINT32 param = rate;
     
     switch(rate)
     {
@@ -122,16 +122,15 @@ static UINT32 mpb_select_tx_rate(UINT32 rate)
         case 48:	param = 0x8;	break;	// 48Mbps
         case 54:	param = 0xc;	break;	// 54Mbps
         default: {
-            if(rate >= 128)
-                rate -= 128;
+            if(rate >= 128 && rate <=135)
+                param -= 128;
             else {
                 os_printf("mpb_select_tx_rate wrong rate:%d\r\n", rate);
-                param = rate;
             }
         }
     }  
 
-    os_printf("mpb_select_tx_rate rate:%d\r\n", rate);
+    os_printf("mpb_select_tx_rate rate:%d\r\n", param);
     return param;
 }
 

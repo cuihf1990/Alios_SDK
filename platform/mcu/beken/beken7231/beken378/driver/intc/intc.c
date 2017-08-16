@@ -27,6 +27,7 @@
 #include "mem_pub.h"
 #include "uart_pub.h"
 #include "ll.h"
+#include "../icu/icu.h"
 
 extern void do_irq( void );
 extern void do_fiq( void );
@@ -152,6 +153,7 @@ void intc_disable(int index)
     sddev_control(ICU_DEV_NAME, CMD_ICU_INT_DISABLE, &param);
 }
 
+#if 0
 
 void intc_irq(void)
 {
@@ -185,7 +187,42 @@ void intc_fiq(void)
 
     ASSERT(!platform_is_in_fiq_enable());
 }
+#else
 
+void intc_irq(void)
+{
+    UINT32 irq_status, reg;
+
+    irq_status = REG_READ(ICU_INT_STATUS);
+    irq_status = irq_status & 0xFFFF;
+    if(0 == irq_status)
+    {
+        os_printf("irq:dead\r\n");
+    }
+    reg = REG_READ(ICU_INT_STATUS);
+    REG_WRITE(ICU_INT_STATUS, reg | irq_status);
+    intc_hdl_entry(irq_status);
+
+    ASSERT(!platform_is_in_irq_enable());
+}
+
+void intc_fiq(void)
+{
+    UINT32 fiq_status, reg;
+
+    ASSERT(platform_is_in_fiq_context());
+
+    fiq_status = REG_READ(ICU_INT_STATUS);
+    fiq_status = fiq_status & 0xFFFF0000;
+    reg = REG_READ(ICU_INT_STATUS);
+    REG_WRITE(ICU_INT_STATUS, reg | fiq_status);
+    
+    intc_hdl_entry(fiq_status);
+
+    ASSERT(!platform_is_in_fiq_enable());
+}
+
+#endif
 void deafult_swi(void)
 {
     while(1);

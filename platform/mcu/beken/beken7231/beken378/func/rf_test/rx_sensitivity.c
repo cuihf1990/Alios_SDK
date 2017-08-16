@@ -61,27 +61,27 @@ const UINT16 rs_freq_2_4_G[RS_2_4_G_CHANNEL_NUM] = {
 UINT32 rs_channel = 2437;
 UINT32 rs_mode = PHY_CHNL_BW_20;
 
-void rs_set_trx_regs_extern(void)
+static void set_trx_regs_extern(void)
 {
     UINT32 reg;
 
     REG_WRITE((0x01050080+0x12*4), 0xD0640561);
 
     reg = REG_READ((0x01050080+0x0d*4));
-    REG_WRITE((0x01050080+0x0d*4),(reg|0x4)); 
-    REG_WRITE((0x01050080+0x0d*4),(reg|0x2)); 
+    reg |= (0x4|0x2);
+    REG_WRITE((0x01050080+0x0d*4),reg); 
 
     reg = REG_READ((0x01050080+0x0e*4));
-    REG_WRITE((0x01050080+0x0e*4),(reg|0x4)); 
-    REG_WRITE((0x01050080+0x0e*4),(reg|0x2));   
+    reg |= (0x4|0x2);
+    REG_WRITE((0x01050080+0x0e*4),reg);   
 
     reg = REG_READ((0x01050080+0x10*4));
-    REG_WRITE((0x01050080+0x10*4),(reg|0x4)); 
-    REG_WRITE((0x01050080+0x10*4),(reg|0x2)); 
+    reg |= (0x4|0x2);
+    REG_WRITE((0x01050080+0x10*4),reg); 
 
     reg = REG_READ((0x01050080+0x0f*4));
-    REG_WRITE((0x01050080+0x0f*4),(reg|0x4)); 
-    REG_WRITE((0x01050080+0x0f*4),(reg|0x2));    
+    reg |= (0x4|0x2);
+    REG_WRITE((0x01050080+0x0f*4),reg);     
 
     while(REG_READ((0x01050000+0x1*4))&(0xFFFFFFF));
 }
@@ -116,7 +116,7 @@ void rs_init(UINT32 channel, UINT32 mode)
     phy_set_channel(PHY_BAND_2G4, mode, channel, channel, 0, PHY_PRIM);
 
     if(mode == PHY_CHNL_BW_40)
-        rs_set_trx_regs_extern();
+        set_trx_regs_extern();
 	
 	/*add mm interface*/
 	//RS_PRT("[RS]add_mm_interface\r\n");
@@ -298,21 +298,21 @@ void rx_get_rx_result_end(void)
 		txtot = 1;
 	}
 	
-	RS_PRT("tx\r\n");
-	RS_PRT("20mhz  : %0d (%0d %%)\r\n", txbw20cur, 100*txbw20cur/txtot);
-	RS_PRT("40mhz  : %0d (%0d %%)\r\n", txbw40cur, 100*txbw40cur/txtot);
-	RS_PRT("80mhz  : %0d (%0d %%)\r\n", txbw80cur, 100*txbw80cur/txtot);
-	RS_PRT("160mhz : %0d (%0d %%)\r\n", txbw160cur, 100*txbw160cur/txtot);
+	//RS_PRT("tx\r\n");
+	//RS_PRT("20mhz  : %0d (%0d %%)\r\n", txbw20cur, 100*txbw20cur/txtot);
+	//RS_PRT("40mhz  : %0d (%0d %%)\r\n", txbw40cur, 100*txbw40cur/txtot);
+	//RS_PRT("80mhz  : %0d (%0d %%)\r\n", txbw80cur, 100*txbw80cur/txtot);
+	//RS_PRT("160mhz : %0d (%0d %%)\r\n", txbw160cur, 100*txbw160cur/txtot);
 
-	RS_PRT("ampdu  : %0d (%0d %%)\r\n", txampducur, 100*txampducur/txtot);
+	//RS_PRT("ampdu  : %0d (%0d %%)\r\n", txampducur, 100*txampducur/txtot);
 
 	if(0 == txampducur)
 	{
 		txampducur = 1;
 	}
 	
-	RS_PRT("bytes in ampdu : %0d\r\n", (txoctectinampducur/txampducur));
-	RS_PRT("ampdu throughput : %0.1f mbps\r\n", ((float)8*txoctectinampducur/1000000));
+	//RS_PRT("bytes in ampdu : %0d\r\n", (txoctectinampducur/txampducur));
+	//RS_PRT("ampdu throughput : %0.1f mbps\r\n", ((float)8*txoctectinampducur/1000000));
 
 	rxbw20cur =  (rxbw20new - g_rxbw20);
     g_s_rxbw20 = rxbw20cur;
@@ -335,30 +335,30 @@ void rx_get_rx_result_end(void)
 		rxtot = 1;
 	} 
 
-	RS_PRT("\nrx\r\n");
+	RS_PRT("\r\nrx\r\n");
 	RS_PRT("20mhz  : %0d (%0d %%)\r\n",  rxbw20cur, (100*rxbw20cur/rxtot));
 	RS_PRT("40mhz  : %0d (%0d %%)\r\n",  rxbw40cur, (100*rxbw40cur/rxtot));
-	RS_PRT("80mhz  : %0d (%0d %%)\r\n",  rxbw80cur, (100*rxbw80cur/rxtot));
-	RS_PRT("160mhz : %0d (%0d %%)\r\n",  rxbw160cur, (100*rxbw160cur/rxtot));
+	//RS_PRT("80mhz  : %0d (%0d %%)\r\n",  rxbw80cur, (100*rxbw80cur/rxtot));
+	//RS_PRT("160mhz : %0d (%0d %%)\r\n",  rxbw160cur, (100*rxbw160cur/rxtot));
 
-	RS_PRT("ampdu  : %0d (%0d %%)\r\n",  rxampducur, (100*rxampducur/rxtot));
+	//RS_PRT("ampdu  : %0d (%0d %%)\r\n",  rxampducur, (100*rxampducur/rxtot));
 	  
 	if(0 == rxampducur)
 	{
 		rxampducur = 1;
 	} 
 
-	RS_PRT("bytes in ampdu : %0d\r\n", (rxoctectinampducur/rxampducur));
-	RS_PRT("ampdu throughput : %0.1f mbps\r\n", ((float)8*rxoctectinampducur/1000000));
+	//RS_PRT("bytes in ampdu : %0d\r\n", (rxoctectinampducur/rxampducur));
+	//RS_PRT("ampdu throughput : %0.1f mbps\r\n", ((float)8*rxoctectinampducur/1000000));
 
-	RS_PRT("fcserr   : %0d (%0d %%)\r\n",  fcserrcur, (100*fcserrcur/rxtot));
-	RS_PRT("phyerr   : %0d (%0d %%)\r\n",  phyerrcur, (100*phyerrcur/rxtot)); 
+	RS_PRT("fcserr : %0d (%0d %%), ",  fcserrcur, (100*fcserrcur/rxtot));
+	RS_PRT("phyerr : %0d (%0d %%), ",  phyerrcur, (100*phyerrcur/rxtot)); 
 	RS_PRT("rxflowerr: %0d (%0d %%)\r\n",  rxflowccur, (100*rxflowccur/rxtot)); 
-	RS_PRT("ccaprim  busy : %3d %%\r\n", (ccapri / 10000));
-	RS_PRT("ccasec20 busy : %3d %%\r\n", (ccasec20 / 10000));
-	RS_PRT("ccasec40 busy : %3d %%\r\n", (ccasec40 / 10000));
-	RS_PRT("ccasec80 busy : %3d %%\r\n", (ccasec80 / 10000));
-	RS_PRT("\r\n");
+	//RS_PRT("ccaprim  busy : %3d %%\r\n", (ccapri / 10000));
+	//RS_PRT("ccasec20 busy : %3d %%\r\n", (ccasec20 / 10000));
+	//RS_PRT("ccasec40 busy : %3d %%\r\n", (ccasec40 / 10000));
+	//RS_PRT("ccasec80 busy : %3d %%\r\n", (ccasec80 / 10000));
+	//RS_PRT("\r\n");
 }
 
 /* refer to txrx_stat.sh*/

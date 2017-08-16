@@ -159,22 +159,8 @@ void sctrl_exit(void)
 
 void sctrl_modem_core_reset(void)
 {
-    os_printf("sctrl_modem_core_reset\r\n");
     sctrl_ctrl(CMD_SCTRL_MODEM_CORE_RESET, 0);
 }
-
-void sctrl_modem_core_set_idle(void)
-{
-    os_printf("sctrl_modem_core_set idle\r\n");
-    sctrl_ctrl(CMD_SCTRL_SET_IDLE_MODEM_CORE, 0);
-}
-
-void sctrl_modem_core_set_active(void)
-{
-    os_printf("sctrl_modem_core set active\r\n");
-    sctrl_ctrl(CMD_SCTRL_SET_ACTIVE_MODEM_CORE, 0);
-}
-
 
 void sctrl_sub_reset(void)
 {
@@ -522,31 +508,6 @@ UINT32 sctrl_ctrl(UINT32 cmd, void *param)
         }
         ret = SCTRL_SUCCESS;
         break;
-    case CMD_SCTRL_SET_IDLE_MODEM_CORE:
-        ret = REG_READ(SCTRL_MODEM_CORE_RESET_PHY_HCLK);
-        ret = ret & (~((MODEM_CORE_RESET_MASK) << MODEM_CORE_RESET_POSI));
-        reg = ret | ((MODEM_CORE_RESET_WORD & MODEM_CORE_RESET_MASK)
-                     << MODEM_CORE_RESET_POSI);
-        REG_WRITE(SCTRL_MODEM_CORE_RESET_PHY_HCLK, reg);
-    
-        ret = SCTRL_SUCCESS;
-        break;
-    
-    case CMD_SCTRL_SET_ACTIVE_MODEM_CORE:
-        ret = REG_READ(SCTRL_MODEM_CORE_RESET_PHY_HCLK);
-        ret = ret & (~((MODEM_CORE_RESET_MASK) << MODEM_CORE_RESET_POSI));
-        REG_WRITE(SCTRL_MODEM_CORE_RESET_PHY_HCLK, reg);
-    
-        /*resetting, and waiting for done*/
-        reg = REG_READ(SCTRL_RESET);
-        while(reg & MODEM_CORE_RESET_BIT)
-        {
-            delay(10);
-            reg = REG_READ(SCTRL_RESET);
-        }
-        ret = SCTRL_SUCCESS;
-        break;
-    
 
     case CMD_SCTRL_MPIF_CLK_INVERT:
         reg = REG_READ(SCTRL_CONTROL);

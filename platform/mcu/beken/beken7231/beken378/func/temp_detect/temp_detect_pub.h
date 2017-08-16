@@ -8,5 +8,7 @@ UINT32 temp_detect_init(void);
 UINT32 temp_detect_uninit(void);
 #endif
 
+UINT32 temp_single_get_current_temperature(UINT32 *temp_value);
+
 #endif
 

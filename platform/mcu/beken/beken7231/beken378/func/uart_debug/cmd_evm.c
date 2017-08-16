@@ -20,6 +20,11 @@ typedef enum {
     TXEVM_E_MAX
 } TXEVM_E_TYPE;
 
+typedef enum {
+    TXEVM_G_TEMP     = 0,  
+    TXEVM_G_MAX
+} TXEVM_G_TYPE;
+
 #if CFG_TX_EVM_TEST
 static UINT32 evm_translate_tx_rate(UINT32 rate)
 {
@@ -88,6 +93,9 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
     UINT32 pwr_pa = EVM_DEFUALT_PWR_PA; 
     UINT32 modul_format = EVM_DEFUALT_MODUL_FORMAT;
     UINT32 guard_i_tpye = EVM_DEFUALT_GI_TYPE;
+    UINT32 single_carrier = EVM_DEFUALT_SINGLE_CARRIER;    
+    UINT32 dif_g_n20 = 0; 
+    UINT32 test_mode = 0; 
     UINT32 arg_id = 1;
     UINT32 arg_cnt = argc;
 
@@ -143,26 +151,55 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
                 guard_i_tpye = os_strtoul(argv[arg_id + 1], NULL, 10);
                 break;    
 
+            case 'w':
+                single_carrier = os_strtoul(argv[arg_id + 1], NULL, 10);
+                break; 
+
+            case 't':
+                test_mode = os_strtoul(argv[arg_id + 1], NULL, 10);
+                break; 
+
+#if CFG_SUPPORT_MANUAL_CALI
+            case 'g':  {// get system current temperature
+                UINT32 op = os_strtoul(argv[arg_id + 1], NULL, 10);
+                if(op < TXEVM_G_MAX) {
+                    if(op == TXEVM_G_TEMP){
+                        manual_cal_get_current_temperature();
+                    }
+                    return 0;
+                } else {
+                    return -1;
+                }    
+                break; 
+            }
+
+            case 'd':
+                dif_g_n20 = os_strtoul(argv[arg_id + 1], NULL, 10);
+                os_printf("set dif g and n20: dif:%d\r\n", dif_g_n20);
+                manual_cal_set_dif_g_n40(dif_g_n20);
+                return 0;
+                break;
+
             case 'p': {  // power: mod, pa
-                pwr_mod = (os_strtoul(argv[arg_id + 1], NULL, 10))&0xf;
-                pwr_pa = (os_strtoul(argv[arg_id + 2], NULL, 10))&0xf;
+                pwr_mod = (os_strtoul(argv[arg_id + 1], NULL, 10));
+                pwr_pa = (os_strtoul(argv[arg_id + 2], NULL, 10));
                 arg_cnt -= 1;
                 arg_id += 1;
-                os_printf("mod:%d, pa:%d\r\n", pwr_mod, pwr_pa);
-                rwnx_cal_set_txpwr(pwr_mod, pwr_pa);
+                os_printf("set pwr: gain:%d, unused:%d\r\n", pwr_mod, pwr_pa);
+                rwnx_cal_set_txpwr(pwr_mod);
                 return 0;
                 }
-#if CFG_SUPPORT_MANUAL_CALI
+
             case 's': { // save txpwr: rate:b or g? channel mod pa
                 rate = os_strtoul(argv[arg_id + 1], NULL, 10);
                 channel = os_strtoul(argv[arg_id + 2], NULL, 10);
-                pwr_mod = (os_strtoul(argv[arg_id + 3], NULL, 10))&0xf;
-                pwr_pa = (os_strtoul(argv[arg_id + 4], NULL, 10))&0xf;
+                pwr_mod = (os_strtoul(argv[arg_id + 3], NULL, 10));
+                pwr_pa = (os_strtoul(argv[arg_id + 4], NULL, 10));
                 arg_cnt -= 3;
                 arg_id += 3;
-                os_printf("save pwr: rate:%d ch:%d, mod:%d, pa:%d\r\n", 
+                os_printf("save pwr: rate:%d, ch:%d, gain:%d, unused:%d\r\n", 
                     rate, channel, pwr_mod, pwr_pa);
-                manual_cal_save_txpwr(rate, channel, pwr_mod, pwr_pa);
+                manual_cal_save_txpwr(rate, channel, pwr_mod);
                 return 0;
                 }
 #endif
@@ -176,7 +213,8 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
                     #if CFG_SUPPORT_MANUAL_CALI
                     else if(op == TXEVM_E_DOFITTING) {
                         manual_cal_fitting_txpwr_tab();
-                        manual_cal_save_txpwr_tab_flash();
+                        manual_cal_save_chipinfo_tab_to_flash();
+                        manual_cal_save_txpwr_tab_to_flash();
                     } 
                     #endif
                     else {
@@ -249,6 +287,9 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
     if(mode)
     {
         evm_bypass_mac_set_tx_data_length(modul_format, packet_len);
+        if(rate <= 54) {
+            modul_format = 0;
+        }
         evm_bypass_mac_set_rate_mformat(rate, modul_format);
         evm_bypass_mac_set_channel(channel);
         evm_set_bandwidth(bandwidth);
@@ -257,9 +298,12 @@ int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
         evm_bypass_mac_test();
 
 #if CFG_SUPPORT_CALIBRATION
-        rwnx_cal_set_txpwr_by_rate(evm_translate_tx_rate(rate));
+        rwnx_cal_set_txpwr_by_rate(evm_translate_tx_rate(rate), test_mode);
 #endif
         evm_start_bypass_mac();
+
+        if(single_carrier)
+            evm_bypass_set_single_carrier();
     }
     else
     {

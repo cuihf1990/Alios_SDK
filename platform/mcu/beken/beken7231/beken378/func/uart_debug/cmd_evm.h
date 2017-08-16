@@ -8,7 +8,7 @@ extern int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[]);
 #define CMD_EVM_MAXARG                          10
 
 #define EVM_DEFUALT_MODE                       (1)
-#define EVM_DEFUALT_PACKET_LEN                 (1500)
+#define EVM_DEFUALT_PACKET_LEN                 (1024)
 #define EVM_DEFUALT_RATE                       (54)
 #define EVM_DEFUALT_CHANNEL                    (6)
 #define EVM_DEFUALT_BW                         (0)
@@ -16,6 +16,7 @@ extern int do_evm(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[]);
 #define EVM_DEFUALT_PWR_PA                     (8)
 #define EVM_DEFUALT_MODUL_FORMAT               (0)
 #define EVM_DEFUALT_GI_TYPE                    (0)
+#define EVM_DEFUALT_SINGLE_CARRIER             (0)
 
 
 #define ENTRY_CMD_EVM               \

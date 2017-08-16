@@ -12,9 +12,9 @@ NAME := beken
 HOST_OPENOCD := beken
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
-$(NAME)_COMPONENTS += platform/mcu/beken/hal
-$(NAME)_COMPONENTS := hal vflash netmgr framework mbedtls cjson cli
+$(NAME)_COMPONENTS += hal vflash netmgr framework mbedtls cjson cli
 $(NAME)_COMPONENTS += platform/mcu/beken/hal_init
+$(NAME)_COMPONENTS += platform/mcu/beken/beken7231/beken378/driver/entry
 
 GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_YOS_KV_MULTIPTN_MODE
@@ -25,18 +25,18 @@ GLOBAL_DEFINES += CONFIG_YOS_KV_BUFFER_SIZE=8192
 
 GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
-                 -marm \
+                 -mthumb -mthumb-interwork \
                  -mlittle-endian
 
 GLOBAL_CFLAGS += -w
 
-GLOBAL_INCLUDES += ../../arch/arm/armv5
-
 GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/common \
+                   beken7231/beken378/app/config \
+                   beken7231/beken378/func/include \
+                   beken7231/beken378/os/include \
                    beken7231/beken378/driver/include \
                    beken7231/beken378/driver/common \
-                   beken7231/beken378/driver/entry \
                    beken7231/beken378/ip/common \
                    beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es
 
@@ -44,10 +44,12 @@ $(NAME)_COMPONENTS += protocols.net
 
 GLOBAL_LDFLAGS += -mcpu=arm968e-s \
                  -march=armv5te \
-                 -marm \
+                 -mthumb -mthumb-interwork\
                  -mlittle-endian \
                  --specs=nosys.specs \
-                 -nostartfiles
+                 -nostartfiles \
+                 $(CLIB_LDFLAGS_NANO_FLOAT)
+
 
 ifeq ($(APP),bootloader)
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_boot.ld
@@ -94,8 +96,6 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/driver/gpio \
                     beken7231/beken378/ip/lmac/src/p2p \
                     beken7231/beken378/ip/umac/src/apm \
-                    beken7231/beken378/func/include \
-                    beken7231/beken378/app/config \
                     beken7231/beken378/driver/sdcard \
                     beken7231/beken378/common \
                     beken7231/beken378/ip/lmac/src/chan \
@@ -137,7 +137,6 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/func/spidma_intf \
                     beken7231/beken378/driver/general_dma \
                     beken7231/beken378/driver/spidma \
-                    beken7231/beken378/os/include \
                     beken7231/beken378/func/rwnx_intf \
                     beken7231/beken378/app \
                     beken7231/beken378/app/ftp \
@@ -165,17 +164,12 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/driver/common/drv_model.c \
                     beken7231/beken378/driver/dma/dma.c \
                     beken7231/beken378/driver/driver.c \
-                    beken7231/beken378/driver/entry/arch_main.c \
-                    beken7231/beken378/driver/entry/boot_handlers.S \
-                    beken7231/beken378/driver/entry/boot_vectors.S \
-                    beken7231/beken378/driver/entry/ll.S \
                     beken7231/beken378/driver/fft/fft.c \
                     beken7231/beken378/driver/flash/flash.c \
                     beken7231/beken378/driver/general_dma/general_dma.c \
                     beken7231/beken378/driver/gpio/gpio.c \
                     beken7231/beken378/driver/i2s/i2s.c \
                     beken7231/beken378/driver/icu/icu.c \
-                    beken7231/beken378/driver/intc/intc.c \
                     beken7231/beken378/driver/irda/irda.c \
                     beken7231/beken378/driver/macphy_bypass/mac_phy_bypass.c \
                     beken7231/beken378/driver/phy/phy_trident.c \
@@ -348,8 +342,6 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/mico_cli.c \
                     beken7231/mico_api/mxchipWNet.c \
                     beken7231/mico_api/platform_stub.c \
-                    ../../arch/arm/armv5/port_c.c \
-                    ../../arch/arm/armv5/port_s.S \
                     yos/soc_impl.c 
 
 
