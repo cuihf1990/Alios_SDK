@@ -24,28 +24,32 @@
  * +------------+ 
  * |   Para 2   |   4k
  * +------------+  0x0012000
+ * |   Para 3   |   4k
+ * +------------+  0x0013000 
  * |vectors     |
  * |            |
  * |------------+
  * |text        |  
- * |data        |  984k
+ * |data        |  568k
  * |            |  
- * +------------+  0x108800
+ * +------------+  0xA1000
  * |            |
  * |            |
  * |  OTA TEMP  |
- * |            |  984k
+ * |            |  380k
  * |            |
  * |            |  
- * +------------+  0x1FF000
- * |   Para 3   |   4k
- * +------------+ 
+ * +------------+  0x100000
  */
 
+/* Application's phy start address is 0x13200. 
+ * Flash size = 0xA1000-0x13200 = 0x8DE00
+ * Code size = 0x8DE00*32/34=546936
+ */
 
 /* Split memory into area for vectors and ram */
 MEMORY
 {
-	flash  (rx) : ORIGIN = 0x0012000, LENGTH = 926k
+	flash  (rx) : ORIGIN = 0x0012000, LENGTH = 546936
 	ram   (rwx): ORIGIN = 0x00400020, LENGTH = 256k - 32
 }
