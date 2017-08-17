@@ -56,13 +56,22 @@ typedef struct reg_info_s {
 typedef struct {
     dlist_t next;
     dev_info_t *devinfo;
-    struct sockaddr addr;
+#if LWIP_IPV6
+    struct sockaddr_in6 addr;
+#else
+    struct sockaddr_in addr;
+#endif
     uint8_t timeout;
 } client_t;
 
 typedef struct {
-    struct sockaddr gw_addr;
-    struct sockaddr src_addr;
+#if LWIP_IPV6
+    struct sockaddr_in6 gw_addr;
+    struct sockaddr_in6 src_addr;
+#else
+    struct sockaddr_in gw_addr;
+    struct sockaddr_in src_addr;
+#endif
     int sockfd;
     dlist_t clients;
     char uuid[STR_UUID_LEN + 1];
@@ -92,7 +101,11 @@ static uint8_t g_key[KEY_SIZE] = {
 static uint32_t aes_ctx_size;
 
 
-static int send_sock(int fd, void *buf, int len, struct sockaddr *paddr)
+#if LWIP_IPV6
+static int send_sock(int fd, void *buf, int len, struct sockaddr_in6 *paddr)
+#else
+static int send_sock(int fd, void *buf, int len, struct sockaddr_in *paddr)
+#endif
 {
     ali_crypto_result result;
     void *aes_ctx;
@@ -111,7 +124,7 @@ static int send_sock(int fd, void *buf, int len, struct sockaddr *paddr)
     if (result != ALI_CRYPTO_SUCCESS)
         goto out;
 
-    ret = sendto(fd, buf, len, MSG_DONTWAIT, paddr, sizeof(*paddr));
+    ret = sendto(fd, buf, len, MSG_DONTWAIT, (struct sockaddr *)paddr, sizeof(*paddr));
 
 out:
     if (result != ALI_CRYPTO_SUCCESS)
@@ -122,11 +135,15 @@ out:
     return ret;
 }
 
-static int recv_sock(int fd, void *buf, int len, struct sockaddr *paddr)
+#if LWIP_IPV6
+static int recv_sock(int fd, void *buf, int len, struct sockaddr_in6 *paddr)
+#else
+static int recv_sock(int fd, void *buf, int len, struct sockaddr_in *paddr)
+#endif
 {
     size_t slen = sizeof(*paddr);
 
-    len = recvfrom(fd, buf, len, MSG_DONTWAIT, paddr, &slen);
+    len = recvfrom(fd, buf, len, MSG_DONTWAIT, (struct sockaddr *)paddr, &slen);
     if (len <= 0)
         return len;
 
@@ -165,7 +182,11 @@ static char *get_uuid_by_ipaddr(struct sockaddr *addr)
     return NULL;
 }
 
-static struct sockaddr *get_ipaddr_by_uuid(const char *uuid)
+#if LWIP_IPV6
+static struct sockaddr_in6 *get_ipaddr_by_uuid(const char *uuid)
+#else
+static struct sockaddr_in *get_ipaddr_by_uuid(const char *uuid)
+#endif
 {
     client_t *client = NULL;
     dlist_for_each_entry(&gateway_state.clients, client, client_t, next) {
@@ -178,8 +199,13 @@ static struct sockaddr *get_ipaddr_by_uuid(const char *uuid)
 
 static int yos_cloud_get_attr(const char* uuid, const char *attr_name)
 {
-    struct sockaddr *paddr = NULL;
+#if LWIP_IPV6
+    struct sockaddr_in6 *paddr = NULL;
     paddr = get_ipaddr_by_uuid(uuid);
+#else
+    struct sockaddr_in *paddr = NULL;
+    paddr = get_ipaddr_by_uuid(uuid);
+#endif
     if (paddr == NULL)
         return -1;
 
@@ -197,8 +223,13 @@ static int yos_cloud_get_attr(const char* uuid, const char *attr_name)
 
 static int yos_cloud_set_attr(const char *uuid, const char *attr_name, const char *attr_value)
 {
-    struct sockaddr *paddr = NULL;
+#if LWIP_IPV6
+    struct sockaddr_in6 *paddr = NULL;
     paddr = get_ipaddr_by_uuid(uuid);
+#else
+    struct sockaddr_in *paddr = NULL;
+    paddr = get_ipaddr_by_uuid(uuid);
+#endif
     if (paddr == NULL)
         return -1;
 
@@ -225,7 +256,11 @@ static void set_reconnect_flag(void *arg)
     gateway_state.mqtt_reconnect = true;
 }
 
-static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr *paddr)
+#if LWIP_IPV6
+static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in6 *paddr)
+#else
+static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in *paddr)
+#endif
 {
     void *buf;
     int len;
@@ -263,7 +298,7 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
     LOGD(MODULE_NAME, "handle_adv");
     adv_body_t *adv_msg = pmsg;
 #if LWIP_IPV6
-    struct sockaddr_in6 *gw_addr = (struct sockaddr_in6 *)&pstate->gw_addr;
+    struct sockaddr_in6 *gw_addr = &pstate->gw_addr;
 
     if (pstate->mqtt_connected &&
         memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) == 0 &&
@@ -281,7 +316,7 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
     gw_addr->sin6_family = AF_INET6;
     gw_addr->sin6_port = htons(MQTT_SN_PORT);
 #else
-    struct sockaddr_in *gw_addr = (struct sockaddr_in *)&pstate->gw_addr;
+    struct sockaddr_in *gw_addr = &pstate->gw_addr;
 
     if (pstate->mqtt_connected &&
         memcmp(&gw_addr->sin_addr, adv_msg->payload, sizeof(gw_addr->sin_addr)) == 0 &&
@@ -315,7 +350,7 @@ static void handle_publish(gateway_state_t *pstate, void *pmsg, int len)
             return;
         }
 
-        const char *uuid = get_uuid_by_ipaddr(&pstate->src_addr);
+        const char *uuid = get_uuid_by_ipaddr((struct sockaddr *)&pstate->src_addr);
         if (uuid == NULL) {
             LOGE(MODULE_NAME, "error: cloud report data from unconnected node");
             return;
@@ -522,7 +557,6 @@ static int gateway_cloud_report(const char *method, const char *json_buffer)
 
     void *buf;
     int len;
-    struct sockaddr *paddr = &pstate->gw_addr;
     int sz = 4+strlen(method)+1+strlen(json_buffer)+1;
     pub_body_t *pub_body = msn_alloc(PUBLISH, sz, &buf, &len);
 
@@ -530,7 +564,7 @@ static int gateway_cloud_report(const char *method, const char *json_buffer)
     memcpy(pub_body->payload + 4, method, strlen(method) + 1);
     memcpy(pub_body->payload + 4 + strlen(method) + 1, json_buffer, strlen(json_buffer) + 1);
 
-    send_sock(pstate->sockfd, buf, len, paddr);
+    send_sock(pstate->sockfd, buf, len, &pstate->gw_addr);
 
     yos_free(buf);
 }
@@ -658,7 +692,7 @@ static void gateway_advertise(void *arg)
     memcpy(&addr.sin_addr, ip4_addr, sizeof(addr.sin_addr));
 #endif
 
-    send_sock(pstate->sockfd, buf, len, (struct sockaddr *)&addr);
+    send_sock(pstate->sockfd, buf, len, &addr);
     LOGD(MODULE_NAME, "gateway_advertise");
 
     yos_free(buf);
@@ -781,7 +815,6 @@ const char *gateway_get_uuid(void)
 static int init_socket(void)
 {
     gateway_state_t *pstate = &gateway_state;
-    struct sockaddr addr;
     int sockfd;
     int ret;
 
@@ -809,15 +842,16 @@ static int init_socket(void)
 #endif
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 
-    memset(&addr, 0, sizeof(addr));
 #if LWIP_IPV6
-    struct sockaddr_in6 *ip6_addr = (struct sockaddr_in6 *)&addr;
-    ip6_addr->sin6_family = AF_INET6;
-    ip6_addr->sin6_port = htons(MQTT_SN_PORT);
+    struct sockaddr_in6 addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin6_family = AF_INET6;
+    addr.sin6_port = htons(MQTT_SN_PORT);
 #else
-    struct sockaddr_in *ip4_addr = (struct sockaddr_in *)&addr;
-    ip4_addr->sin_family = AF_INET;
-    ip4_addr->sin_port = htons(MQTT_SN_PORT);
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(MQTT_SN_PORT);
 #endif
     ret = bind(sockfd, (const struct sockaddr *)&addr, sizeof(addr));
     if (ret < 0) {
