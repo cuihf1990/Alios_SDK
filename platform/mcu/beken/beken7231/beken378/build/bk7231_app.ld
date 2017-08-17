@@ -17,9 +17,9 @@ SECTIONS
 {
 	. = 0x00DA000;
 
-    .app_info :
+    .appinfo :
     {
-        KEEP(*(.app_info))
+        KEEP(*(*.app_info))
     } > flash
 
 /* code, instructions.for example: i=i+1; */
