@@ -75,11 +75,6 @@ typedef struct mesh_mgmt_tv_s {
     uint8_t type;
 } __attribute__((packed)) mm_tv_t;
 
-typedef struct mesh_mgmt_version_tv_s {
-    mm_tv_t base;
-    uint8_t version;
-} __attribute__((packed)) mm_version_tv_t;
-
 typedef struct mesh_mgmt_ueid_tv_s {
     mm_tv_t base;
     uint8_t ueid[8];

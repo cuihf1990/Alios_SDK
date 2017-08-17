@@ -161,8 +161,8 @@ static void handle_sent(void *context, frame_t *frame, int error)
     umesh_task_schedule_call(message_sent_task, hal);
 }
 
-static void resolve_message_info(received_frame_t *frame, message_info_t *info,
-                                 uint8_t *buf)
+static ur_error_t resolve_message_info(received_frame_t *frame,
+                                       message_info_t *info, uint8_t *buf)
 {
     mesh_header_control_t *control;
     uint8_t offset;
@@ -170,6 +170,13 @@ static void resolve_message_info(received_frame_t *frame, message_info_t *info,
     mesh_ext_addr_t *ext_addr;
     mesh_subnetid_t *subnetid;
     mesh_netid_t *netid;
+    uint8_t version;
+
+    control = (mesh_header_control_t *)buf;
+    version = control->control[2] & MESH_HEADER_VER_MASK;
+    if (version != MESH_VERSION_1) {
+        return UR_ERROR_FAIL;
+    }
 
     info->hal_type = frame->hal->module->type;
     info->src_channel = frame->frame_info.channel;
@@ -178,7 +185,6 @@ static void resolve_message_info(received_frame_t *frame, message_info_t *info,
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;
-    control = (mesh_header_control_t *)buf;
     offset = sizeof(mesh_header_control_t);
     netid = (mesh_netid_t *)(buf + offset);
     info->src.netid = netid->netid;
@@ -282,6 +288,7 @@ static void resolve_message_info(received_frame_t *frame, message_info_t *info,
 
     info->header_ies_offset = offset;
     info->payload_offset = offset;
+    return UR_ERROR_NONE;
 }
 
 static uint8_t insert_mesh_header(network_context_t *network,
@@ -300,6 +307,7 @@ static uint8_t insert_mesh_header(network_context_t *network,
     control = (mesh_header_control_t *)hal->frame.data;
     control->control[0] = MESH_HEADER_DISPATCH;
     control->control[1] = 0;
+    control->control[2] = 0;
     length = sizeof(mesh_header_control_t);
     if (info->type != MESH_FRAME_TYPE_DATA) {
         control->control[0] |= (MESH_FRAME_TYPE_CMD << MESH_FRAME_TYPE_OFFSET);
@@ -389,6 +397,8 @@ static uint8_t insert_mesh_header(network_context_t *network,
     if (info->flags & ENCRYPT_ENABLE_FLAG) {
         control->control[1] |= (ENABLE_SEC << MESH_HEADER_SEC_OFFSET);
     }
+
+    control->control[2] |= MESH_VERSION_1;
 
     info->payload_offset = length;
     info->header_ies_offset = length;
@@ -1009,8 +1019,9 @@ static void handle_received_frame(void *context, frame_t *frame,
     rx_frame->hal = hal;
     memcpy(&rx_frame->frame_info, frame_info, sizeof(rx_frame->frame_info));
     bzero(&info, sizeof(info));
-    resolve_message_info(rx_frame, &info, frame->data);
-    if (info.flags & ENCRYPT_ENABLE_FLAG) {
+    uerror = resolve_message_info(rx_frame, &info, frame->data);
+    if (uerror == UR_ERROR_NONE &&
+        (info.flags & ENCRYPT_ENABLE_FLAG)) {
         if (umesh_mm_get_attach_state() == ATTACH_REQUEST) {
             network = get_default_network_context();
             key = network->one_time_key;

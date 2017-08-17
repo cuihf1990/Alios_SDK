@@ -39,8 +39,8 @@ enum {
 };
 
 /* mesh header control field format */
-/* 2bits | 1bit | 3bits | 2bits |    2bits   | 2bits | 1bit | 2bits | 1 bit */
-/* flags | type | hops  |  src  | dest netid |  dest |  ie  | dest2 |  sec  */
+/* 2bits | 1bit | 3bits | 2bits |    2bits   | 2bits | 1bit | 2bits | 1 bit  | 5 bits | 3 bits */
+/* flags | type | hops  |  src  | dest netid |  dest |  ie  | dest2 |  sec   |  rsv   | ver    */
 
 enum {
     MESH_FRAME_TYPE_MASK       = 0x20,
@@ -62,6 +62,8 @@ enum {
     MESH_HEADER_DEST2_OFFSET   = 1,
     MESH_HEADER_SEC_MASK       = 0x01,
     MESH_HEADER_SEC_OFFSET     = 0,
+
+    MESH_HEADER_VER_MASK       = 0x7,
 };
 
 enum {
@@ -106,7 +108,7 @@ enum {
 #define is_same_mainnet(nid1, nid2) (get_main_netid(nid1) == get_main_netid(nid2))
 
 typedef struct mesh_header_control_s {
-    uint8_t control[2];
+    uint8_t control[3];
 } __attribute__((packed)) mesh_header_control_t;
 
 typedef struct mesh_short_addr_s {
