@@ -244,7 +244,14 @@ static int handle_input(char *inbuf)
     cli_putstr(pCli->outbuf);
 
     // Added for testbed cli, no impact on normal cli <beginning>
-    if (cmd_prefix_len > 0) {cli_putstr(cmd_prefix); cli_putstr("\r\n");}
+    if (cmd_prefix_len > 0) {
+        // Wait for output from special commands: umesh ping/autotest
+        if ((strcmp(command->name, "umesh") == 0) && 
+          ((strcmp(argv[1], "ping") == 0) || (strcmp(argv[1], "autotest") == 0)))
+            yos_msleep(500);
+        cli_putstr(cmd_prefix);
+        cli_putstr("\r\n");
+    }
     // testbed cli <end>
 
     return 0;
