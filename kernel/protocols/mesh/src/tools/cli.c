@@ -158,6 +158,56 @@ typedef struct input_cli_s {
 static cmd_cb_t g_cur_cmd_cb;
 static void *g_cur_cmd_priv;
 
+static const char *state2str(mm_device_state_t state)
+{
+    switch (state) {
+        case DEVICE_STATE_DISABLED:
+            return "disabled";
+        case DEVICE_STATE_DETACHED:
+            return "detached";
+        case DEVICE_STATE_ATTACHED:
+            return "attached";
+        case DEVICE_STATE_LEAF:
+            return "leaf";
+        case DEVICE_STATE_LEADER:
+            return "leader";
+        case DEVICE_STATE_SUPER_ROUTER:
+            return "super_router";
+        case DEVICE_STATE_ROUTER:
+            return "router";
+        default:
+            return "unknown";
+    }
+}
+
+static const char *attachstate2str(attach_state_t state)
+{
+    switch (state) {
+        case ATTACH_IDLE:
+            return "idle";
+        case ATTACH_REQUEST:
+            return "attaching";
+        case ATTACH_SID_REQUEST:
+            return "sid";
+        case ATTACH_DONE:
+            return "done";
+    }
+    return "unknown";
+}
+
+static const char *mediatype2str(media_type_t media)
+{
+    switch (media) {
+        case MEDIA_TYPE_WIFI:
+            return "wifi";
+        case MEDIA_TYPE_BLE:
+            return "ble";
+        case MEDIA_TYPE_15_4:
+            return "15.4";
+    }
+    return "unknown";
+}
+
 static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
 {
     uint16_t hex_length = strlen(hex);

@@ -695,10 +695,8 @@ ur_error_t mf_send_message(message_t *message)
 
     info = message->info;
     if (is_local_ucast_address(info)) {
-        network = get_default_network_context();
-        info->src.netid = umesh_mm_get_meshnetid(network);
-        info->src.addr.len = SHORT_ADDR_SIZE;
-        info->src.addr.short_addr = umesh_mm_get_local_sid();
+        info->network = get_default_network_context();
+        set_src_info(info);
         error = umesh_task_schedule_call(handle_datagram, message);
         if (error != UR_ERROR_NONE) {
             message_free(message);

@@ -36,34 +36,6 @@ typedef enum attach_state_s {
     ATTACH_DONE,
 } attach_state_t;
 
-static inline const char *attachstate2str(attach_state_t state)
-{
-    switch (state) {
-        case ATTACH_IDLE:
-            return "idle";
-        case ATTACH_REQUEST:
-            return "attaching";
-        case ATTACH_SID_REQUEST:
-            return "sid";
-        case ATTACH_DONE:
-            return "done";
-    }
-    return "unknown";
-}
-
-static inline const char *mediatype2str(media_type_t media)
-{
-    switch (media) {
-        case MEDIA_TYPE_WIFI:
-            return "wifi";
-        case MEDIA_TYPE_BLE:
-            return "ble";
-        case MEDIA_TYPE_15_4:
-            return "15.4";
-    }
-    return "unknown";
-}
-
 typedef struct channel_list_s {
     const uint8_t *channels;
     uint8_t num;

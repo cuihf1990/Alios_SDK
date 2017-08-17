@@ -620,17 +620,13 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
     uint8_t offset = 0;
     mm_tv_t *tv;
     mm_rssi_tv_t *rssi;
-    mm_mode_tv_t *mode;
     neighbor_t *nbr;
 
     hal = network->hal;
     control = (mesh_header_control_t *)hal->frame.data;
     control->control[1] |= (1 << MESH_HEADER_IES_OFFSET);
 
-    mode = (mm_mode_tv_t *)(hal->frame.data + info->header_ies_offset);
-    umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
-    mode->mode = umesh_mm_get_mode();
-    offset += sizeof(mm_mode_tv_t);
+    offset += set_mm_mode_tv(hal->frame.data + info->header_ies_offset);
 
     nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
                               info->dest.netid);
@@ -803,13 +799,6 @@ ur_error_t handle_link_accept(message_t *message)
     if (ueid) {
         memcpy(node->ueid, ueid->ueid, sizeof(node->ueid));
     }
-    return UR_ERROR_NONE;
-}
-
-ur_error_t handle_link_reject(message_t *message)
-{
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link reject\r\n");
-
     return UR_ERROR_NONE;
 }
 
