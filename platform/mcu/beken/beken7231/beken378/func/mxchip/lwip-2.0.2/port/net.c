@@ -51,14 +51,14 @@ uint32_t sta_ip_start_flag = 0;
 #endif
 
 
-#define net_e warning_prf
-#define net_d warning_prf
+#define net_e 
+#define net_d 
 
 struct interface {
 	struct netif netif;
-	ip4_addr_t ipaddr;
-	ip4_addr_t nmask;
-	ip4_addr_t gw;
+	struct ip4_addr ipaddr;
+	struct ip4_addr nmask;
+	struct ip4_addr gw;
 };
 
 static struct interface g_mlan;
@@ -124,42 +124,12 @@ void net_ipv4stack_init()
 #ifdef CONFIG_IPV6
 void net_ipv6stack_init(struct netif *netif)
 {
-	uint8_t mac[6];
-
 	netif->flags |= NETIF_IPV6_FLAG_UP;
-
-	/* Set Multicast filter for IPV6 link local address
-	 * It contains first three bytes: 0x33 0x33 0xff (fixed)
-	 * and last three bytes as last three bytes of device mac */
-	mac[0] = 0x33;
-	mac[1] = 0x33;
-	mac[2] = 0xff;
-	mac[3] = netif->hwaddr[3];
-	mac[4] = netif->hwaddr[4];
-	mac[5] = netif->hwaddr[5];
-	wifi_add_mcast_filter(mac);
 
 	netif_create_ip6_linklocal_address(netif, 1);
 	netif->ip6_autoconfig_enabled = 1;
-
-	/* IPv6 routers use multicast IPv6 ff02::1 and MAC address
-	   33:33:00:00:00:01 for router advertisements */
-	mac[0] = 0x33;
-	mac[1] = 0x33;
-	mac[2] = 0x00;
-	mac[3] = 0x00;
-	mac[4] = 0x00;
-	mac[5] = 0x01;
-	wifi_add_mcast_filter(mac);
 }
 
-static void wm_netif_ipv6_status_callback(struct netif *n)
-{
-	/*	TODO: Implement appropriate functionality here*/
-	net_d("Received callback on IPv6 address state change");
-	wlan_wlcmgr_send_msg(WIFI_EVENT_NET_IPV6_CONFIG,
-				     WIFI_EVENT_REASON_SUCCESS, NULL);
-}
 #endif /* CONFIG_IPV6 */
 
 void net_wlan_init(void)
@@ -195,13 +165,13 @@ void net_wlan_init(void)
 	return;
 }
 
-static void dhcp_up(ip_addr_t ip, ip_addr_t netmask, 
-					ip_addr_t gateway, ip_addr_t dnsServer)
+static void dhcp_up(uint32_t ip, uint32_t netmask, uint32_t gateway, uint32_t dnsServer)
 {
     hal_wifi_ip_stat_t netpara;
     hal_wifi_ip_stat_t *pnetpara = &netpara;
     unsigned char mac[6];
 	char macstr[14];
+    struct in_addr addr;
 	
 	memset(pnetpara, 0, sizeof(hal_wifi_ip_stat_t));
 	wifi_get_mac_address(mac);
@@ -210,11 +180,14 @@ static void dhcp_up(ip_addr_t ip, ip_addr_t netmask,
 			mac[1], mac[2], mac[3], mac[4], mac[5]);
 	memcpy(pnetpara->mac, macstr, 12);
 
-	strcpy(pnetpara->ip, inet_ntoa(ip));
-	os_printf("IP up: %s\r\n", pnetpara->ip);
-	strcpy(pnetpara->mask, inet_ntoa(netmask));
-	strcpy(pnetpara->gate, inet_ntoa(gateway));
-	strcpy(pnetpara->dns, inet_ntoa(dnsServer));
+	addr.s_addr = ip;
+	strcpy(pnetpara->ip, inet_ntoa(addr));
+	addr.s_addr = netmask;
+	strcpy(pnetpara->mask, inet_ntoa(addr));
+	addr.s_addr = gateway;
+	strcpy(pnetpara->gate, inet_ntoa(addr));
+	addr.s_addr = dnsServer;
+	strcpy(pnetpara->dns, inet_ntoa(addr));
     pnetpara->dhcp = 1;
     sprintf(pnetpara->broadcastip, "255.255.255.255");
     NetCallback(pnetpara);
@@ -256,7 +229,40 @@ void wifi_uap_changed(int connected)
 }
 
 const ip_addr_t* dns_getserver(u8_t numdns);
+#ifdef CONFIG_IPV6
+/** check if ipv6 address supplied netif->ip_addr
+ *
+ * @param netif the netif to check
+ * @return 1 if valid ipv6 addrss supplied netif->ip_addr (state valid),
+ *         0 otherwise
+ */
+u8_t
+ipv6_supplied_address(const struct netif *netif)
+{
+	s8_t i;
+	/* Skip link-local address at index 0 */
+  	for (i = 1; i < LWIP_IPV6_NUM_ADDRESSES; i++) { 
+    	if (ip6_addr_isvalid(netif_ip6_addr_state(netif, i))) {
+      		return 1;
+    	}
+  	}
+  return 0;
+}
 
+u8_t
+ipv6_show_address(const struct netif *netif)
+{
+	s8_t i;
+	/* Skip link-local address at index 0 */
+  	for (i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) { 
+    	if (ip6_addr_isvalid(netif_ip6_addr_state(netif, i))) {
+      		printf("ipv6 address(%d): %s\r\n", i, ip6addr_ntoa(netif_ip6_addr(netif, i)));
+    	}
+  	}
+  return 0;
+}
+
+#endif
 static void netif_status_callback(struct netif *n)
 {
 	ip_addr_t *dns_server;
@@ -273,15 +279,21 @@ static void netif_status_callback(struct netif *n)
 			if (dhcp->state == DHCP_STATE_BOUND) {
 				// dhcp success
 				dns_server = dns_getserver(0);
-				dhcp_up(n->ip_addr, n->netmask, n->gw, *dns_server);
+				dhcp_up(ip_addr_get_ip4_u32(&n->ip_addr), 
+                    ip_addr_get_ip4_u32(&n->netmask), 
+                    ip_addr_get_ip4_u32(&n->gw),
+					ip_addr_get_ip4_u32(dns_server));
 				wifi_station_changed(1);
 			} else {
 				// dhcp fail
 			}
-		} else {
-			
-			// static IP success;
-		}
+		} 
+#ifdef CONFIG_IPV6
+        if (ipv6_supplied_address(n)) {
+            wifi_station_changed(1);
+            ipv6_show_address(n);
+        }
+#endif
 		
 	} else {
 		// dhcp fail;
@@ -336,12 +348,12 @@ void *net_sock_to_interface(int sock)
 
 void *net_get_sta_handle(void)
 {
-	return &g_mlan.netif;
+	return &g_mlan;
 }
 
 void *net_get_uap_handle(void)
 {
-	return &g_uap.netif;
+	return &g_uap;
 }
 
 void *net_get_netif_handle(void)
@@ -455,13 +467,12 @@ void ip_address_set(int iface, int dhcp, char *ip, char *mask, char*gw, char*dns
 
 int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 {
-	ip_addr_t dns;
-	int i=0;
-	
 	if (!intrfc_handle)
 		return -1;
 
 	struct interface *if_handle = (struct interface *)intrfc_handle;
+	struct ip4_addr dns;
+	int i = 0;
 
 	net_d("\r\nconfiguring interface %s (with %s)",
 		(if_handle == &g_mlan) ? "mlan" :"uap",
@@ -472,17 +483,8 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 	/* De-register previously registered DHCP Callback for correct
 	 * address configuration.
 	 */
-	netif_set_status_callback(&if_handle->netif, NULL);
-#ifdef CONFIG_IPV6
-	if (if_handle == &g_mlan) {
-		netif_set_ipv6_status_callback(&if_handle->netif,
-			wm_netif_ipv6_status_callback);
-		/* Explicitly call this function so that the linklocal address
-		 * gets updated even if the interface does not get any IPv6
-		 * address in its lifetime */
-		wm_netif_ipv6_status_callback(&if_handle->netif);
-	}
-#endif
+	netif_set_status_callback(&if_handle->netif,
+					netif_status_callback);
 	//if (if_handle == &g_mlan) //TODO: dual mode, only set station as the default interface
 		netifapi_netif_set_default(&if_handle->netif);
 	switch (addr->addr_type) {
@@ -494,13 +496,11 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 					&if_handle->nmask, &if_handle->gw);
 		netifapi_netif_set_up(&if_handle->netif);
 		if (addr->dns1 != 0) {
-			dns.u_addr.ip4.addr = addr->dns1;
-			dns.type = IPADDR_TYPE_V4;
+			dns.addr = addr->dns1;
 			dns_setserver(i++, &dns);
 		}
 		if (addr->dns2 != 0) {
-			dns.u_addr.ip4.addr = addr->dns2;
-			dns.type = IPADDR_TYPE_V4;
+			dns.addr = addr->dns2;
 			dns_setserver(i, &dns);
 		}
 		if (if_handle == &g_mlan) {
@@ -512,14 +512,12 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 
 	case ADDR_TYPE_DHCP:
 		/* Reset the address since we might be transitioning from static to DHCP */
-		memset(&if_handle->ipaddr, 0, sizeof(ip4_addr_t));
-		memset(&if_handle->nmask, 0, sizeof(ip4_addr_t));
-		memset(&if_handle->gw, 0, sizeof(ip4_addr_t));
+		memset(&if_handle->ipaddr, 0, sizeof(struct ip4_addr));
+		memset(&if_handle->nmask, 0, sizeof(struct ip4_addr));
+		memset(&if_handle->gw, 0, sizeof(struct ip4_addr));
 		netifapi_netif_set_addr(&if_handle->netif, &if_handle->ipaddr,
 				&if_handle->nmask, &if_handle->gw);
 
-		netif_set_status_callback(&if_handle->netif,
-					netif_status_callback);
 		netifapi_netif_set_up(&if_handle->netif);
 		netifapi_dhcp_start(&if_handle->netif);
 		break;
@@ -550,17 +548,17 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 
 int net_get_if_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 {
-	const ip_addr_t *tmp;
+	ip_addr_t *tmp;
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	addr->ipv4.address = if_handle->netif.ip_addr.u_addr.ip4.addr;
-	addr->ipv4.netmask = if_handle->netif.netmask.u_addr.ip4.addr;
-	addr->ipv4.gw = if_handle->netif.gw.u_addr.ip4.addr;
+	addr->ipv4.address = ip_addr_get_ip4_u32(&if_handle->netif.ip_addr);
+	addr->ipv4.netmask = ip_addr_get_ip4_u32(&if_handle->netif.netmask);
+	addr->ipv4.gw = ip_addr_get_ip4_u32(&if_handle->netif.gw);
 
 	tmp = dns_getserver(0);
-	addr->ipv4.dns1 = tmp->u_addr.ip4.addr;
+	addr->ipv4.dns1 = ip_addr_get_ip4_u32(tmp);
 	tmp = dns_getserver(1);
-	addr->ipv4.dns2 = tmp->u_addr.ip4.addr;
+	addr->ipv4.dns2 = ip_addr_get_ip4_u32(tmp);
 
 	return 0;
 }
@@ -573,7 +571,7 @@ int net_get_if_ipv6_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 
 	for (i = 0; i < MAX_IPV6_ADDRESSES; i++) {
 		memcpy(addr->ipv6[i].address,
-			if_handle->netif.ip6_addr[i].addr, 16);
+			if_handle->netif.ip6_addr[i].u_addr.ip6.addr, 16);
 		addr->ipv6[i].addr_state = if_handle->netif.ip6_addr_state[i];
 	}
 	/* TODO carry out more processing based on IPv6 fields in netif */
@@ -588,7 +586,7 @@ int net_get_if_ipv6_pref_addr(struct wlan_ip_config *addr, void *intrfc_handle)
 	for (i = 0; i < MAX_IPV6_ADDRESSES; i++) {
 		if (if_handle->netif.ip6_addr_state[i] == IP6_ADDR_PREFERRED) {
 			memcpy(addr->ipv6[ret++].address,
-				if_handle->netif.ip6_addr[i].addr, 16);
+				if_handle->netif.ip6_addr[i].u_addr.ip6.addr, 16);
 		}
 	}
 	return ret;
@@ -599,7 +597,7 @@ int net_get_if_ip_addr(uint32_t *ip, void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	*ip = if_handle->netif.ip_addr.u_addr.ip4.addr;
+	*ip = ip_addr_get_ip4_u32(&if_handle->netif.ip_addr);
 	return 0;
 }
 
@@ -607,13 +605,13 @@ int net_get_if_ip_mask(uint32_t *nm, void *intrfc_handle)
 {
 	struct interface *if_handle = (struct interface *)intrfc_handle;
 
-	*nm = if_handle->netif.netmask.u_addr.ip4.addr;
+	*nm = ip_addr_get_ip4_u32(&if_handle->netif.netmask);
 	return 0;
 }
 
 void net_configure_dns(struct wlan_ip_config *ip)
 {
-	ip4_addr_t tmp;
+	ip_addr_t tmp;
 
 	if (ip->ipv4.addr_type == ADDR_TYPE_STATIC) {
 
@@ -621,10 +619,9 @@ void net_configure_dns(struct wlan_ip_config *ip)
 			ip->ipv4.dns1 = ip->ipv4.gw;
 		if (ip->ipv4.dns2 == 0)
 			ip->ipv4.dns2 = ip->ipv4.dns1;
-
-		tmp.addr = ip->ipv4.dns1;
+        ip_addr_set_ip4_u32(&tmp, ip->ipv4.dns1);
 		dns_setserver(0, &tmp);
-		tmp.addr = ip->ipv4.dns2;
+		ip_addr_set_ip4_u32(&tmp, ip->ipv4.dns2);
 		dns_setserver(1, &tmp);
 	}
 
