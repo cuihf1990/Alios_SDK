@@ -19,6 +19,7 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += hal vflash netmgr framework mbedtls cjson cli
 $(NAME)_COMPONENTS += platform/mcu/beken/hal_init
 $(NAME)_COMPONENTS += platform/mcu/beken/beken7231/beken378/driver/entry
+$(NAME)_COMPONENTS += platform/mcu/beken/art
 
 GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_YOS_KV_MULTIPTN_MODE
