@@ -173,7 +173,7 @@ void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
 
     while ((ret = mbedtls_ssl_handshake(&ssl_param->ssl)) != 0) {
         if ((ret != MBEDTLS_ERR_SSL_WANT_READ) && (ret != MBEDTLS_ERR_SSL_WANT_WRITE)) {
-            printf("ssl_connect: mbedtls_ssl_handshake returned -0x04%x\n", -ret);
+            printf("ssl_connect: mbedtls_ssl_handshake returned -0x%x\n", -ret);
             goto _err;
         }
     }

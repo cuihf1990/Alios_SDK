@@ -154,13 +154,15 @@ static void app_delayed_action(void *arg)
         printf("mbedtls ssl send ok\n");
     }
 
-    ret = mbedtls_ssl_recv(ssl, buf, 128);
-    if (ret < 0) {
-        printf("ssl recv fail\n");
-        goto _out;
-    } else {
-        printf("mbedtls ssl recv ok\n");
-    }
+    do {
+        ret = mbedtls_ssl_recv(ssl, buf, 128);
+        if (ret < 0 && ret != -EAGAIN) {
+            printf("ssl recv fail\n");
+            goto _out;
+        } else {
+            printf("mbedtls ssl recv ok\n");
+        }
+    } while(ret < 0);
 
 _out:
     if (ssl != NULL) {
