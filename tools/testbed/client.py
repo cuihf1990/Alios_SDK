@@ -114,8 +114,7 @@ class Client:
                     continue
                 try:
                     ser = serial.Serial(port, 921600, timeout = 0.02)
-                    ser.setDTR(True)
-                    ser.setRTS(True)
+                    ser.setRTS(False)
                 except:
                     print "error: unable to open {0}".format(port)
                     continue
@@ -203,15 +202,12 @@ class Client:
         baudrate = 921600
         error = "fail"
         while retry > 0:
-            if self.mxchip_control(port, TBframe.DEVICE_RESET) != "success":
-                retry -= 1
-                continue
-            self.devices[port]['serial'].write("      \r\n")
             script = ['timeout', '80', 'python']
             script += ['autoscripts/yos_firmware_update.py']
             script += [port]
-            script += ['-a']
+            script += [address]
             script += [file]
+            script += ["--hardreset"]
             ret = subprocess.call(script)
             if ret == 0:
                 error =  "success"
