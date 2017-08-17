@@ -48,8 +48,8 @@ $(NAME)_SOURCES += \
 endif # end ALICRYPTO_TEST=yes
 
 else ifeq ($(findstring mk108, $(BUILD_STRING)), mk108)
-$(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedcrypto.a  \
-		lib/mk108/libalicrypto.a
+$(NAME)_PREBUILT_LIBRARY := lib/mk108/thumb/libmbedcrypto.a  \
+		lib/mk108/thumb/libalicrypto.a
 
 ifeq ($(ALICRYPTO_TEST), yes)
 GLOBAL_INCLUDES     += test
@@ -66,8 +66,8 @@ $(NAME)_SOURCES += \
 endif # end ALICRYPTO_TEST=yes
 
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
-$(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedcrypto.a  \
-		lib/mk108/libalicrypto.a
+$(NAME)_PREBUILT_LIBRARY := lib/mk108/thumb/libmbedcrypto.a  \
+		lib/mk108/thumb/libalicrypto.a
 
 ifeq ($(ALICRYPTO_TEST), yes)
 GLOBAL_INCLUDES     += test
