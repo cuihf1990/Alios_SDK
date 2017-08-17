@@ -9,7 +9,6 @@ $(NAME)_SOURCES := $(umesh_srcs)
 
 MESHDEBUG ?= 1
 ifeq ($(MESHDEBUG), 1)
-$(NAME)_SOURCES += src/tools/cli.c
 $(NAME)_SOURCES += src/tools/diags.c
 $(NAME)_SOURCES += src/utilities/mac_whitelist.c
 GLOBAL_DEFINES += CONFIG_YOS_MESH_DEBUG
