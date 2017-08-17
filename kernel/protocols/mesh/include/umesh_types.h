@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+enum {
+    MESH_VERSION_1 = 1,
+};
+
 typedef enum ur_error_s {
     UR_ERROR_NONE          = 0,
     UR_ERROR_FAIL          = 1,

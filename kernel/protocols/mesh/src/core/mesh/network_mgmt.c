@@ -94,8 +94,7 @@ static ur_error_t send_discovery_request(network_context_t *network)
     message_t       *message = NULL;
     message_info_t  *info;
 
-    length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
-             sizeof(mm_state_flags_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_state_flags_tv_t);
     message = message_alloc(length, NETWORK_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
@@ -103,7 +102,6 @@ static ur_error_t send_discovery_request(network_context_t *network)
     data = message_get_payload(message);
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_DISCOVERY_REQUEST);
-    data += set_mm_version_tv(data);
 
     flag = (mm_state_flags_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)flag, TYPE_STATE_FLAGS);
@@ -160,7 +158,6 @@ static ur_error_t send_discovery_response(network_context_t *network,
 ur_error_t handle_discovery_request(message_t *message)
 {
     ur_error_t        error = UR_ERROR_NONE;
-    mm_version_tv_t   *version;
     mm_state_flags_tv_t *flag;
     uint8_t           *tlvs;
     uint16_t          tlvs_length;
@@ -178,11 +175,6 @@ ur_error_t handle_discovery_request(message_t *message)
     network = info->network;
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    version = (mm_version_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_VERSION);
-    if (version == NULL || version->version != 1) {
-        return UR_ERROR_FAIL;
-    }
 
     flag = (mm_state_flags_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_STATE_FLAGS);
 

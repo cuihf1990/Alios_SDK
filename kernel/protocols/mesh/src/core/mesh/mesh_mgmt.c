@@ -601,8 +601,8 @@ static ur_error_t send_attach_request(network_context_t *network,
     message_info_t  *info;
     uint32_t time;
 
-    length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
-             sizeof(mm_ueid_tv_t) + sizeof(mm_timestamp_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) +
+             sizeof(mm_timestamp_tv_t);
     message = message_alloc(length, MESH_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
@@ -610,7 +610,6 @@ static ur_error_t send_attach_request(network_context_t *network,
     data = message_get_payload(message);
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_ATTACH_REQUEST);
-    data += set_mm_version_tv(data);
     data += set_mm_ueid_tv(data, TYPE_SRC_UEID, g_mm_state.device.ueid);
 
     time = ur_get_now();
@@ -691,7 +690,6 @@ static ur_error_t send_attach_response(network_context_t *network,
 static ur_error_t handle_attach_request(message_t *message)
 {
     ur_error_t      error = UR_ERROR_NONE;
-    mm_version_tv_t *version;
     mm_ueid_tv_t    *ueid;
     mm_timestamp_tv_t *timestamp;
     uint8_t         *tlvs;
@@ -711,11 +709,9 @@ static ur_error_t handle_attach_request(message_t *message)
 
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    version = (mm_version_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_VERSION);
     ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                            TYPE_SRC_UEID);
-    if (version == NULL || version->version != 1 || ueid == NULL) {
+    if (ueid == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -1980,16 +1976,6 @@ uint8_t set_mm_path_cost_tv(network_context_t *network, uint8_t *data)
         path_cost->cost = INFINITY_PATH_COST;
     }
     return sizeof(mm_cost_tv_t);
-}
-
-uint8_t set_mm_version_tv(uint8_t *data)
-{
-    mm_version_tv_t *version;
-
-    version = (mm_version_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)version, TYPE_VERSION);
-    version->version = 1;
-    return sizeof(mm_version_tv_t);
 }
 
 uint8_t set_mm_node_id_tv(uint8_t *data, uint8_t type, ur_node_id_t *node)
