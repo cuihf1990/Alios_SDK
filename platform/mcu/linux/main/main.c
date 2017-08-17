@@ -50,6 +50,13 @@ static void signal_handler(int signo);
 static int  setrlimit_for_vfs(void);
 extern int application_start(int argc, char **argv);
 
+static void exit_clean(void)
+{
+    char fn[64] = {0};
+    snprintf(fn, sizeof(fn), "rm -f ./yos_partition_%d_*", getpid());
+    system(fn);
+}
+
 static void app_entry(void *arg)
 {
     yos_features_init();
@@ -141,6 +148,8 @@ int main(int argc, char **argv)
 #ifdef CONFIG_YOS_UT
     signal(SIGPIPE, SIG_IGN);
 #endif
+
+    atexit(exit_clean);
 
     ret = setrlimit_for_vfs();
     if (ret != 0) {
