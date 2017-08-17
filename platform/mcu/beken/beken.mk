@@ -235,18 +235,10 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/func/hostapd-2.5/src/common/hw_features_common.c \
                     beken7231/beken378/func/hostapd-2.5/src/common/ieee802_11_common.c \
                     beken7231/beken378/func/hostapd-2.5/src/common/wpa_common.c \
-                    beken7231/beken378/func/hostapd-2.5/src/crypto/aes-internal-dec.c \
-                    beken7231/beken378/func/hostapd-2.5/src/crypto/aes-internal-enc.c \
-                    beken7231/beken378/func/hostapd-2.5/src/crypto/aes-internal.c \
                     beken7231/beken378/func/hostapd-2.5/src/crypto/aes-unwrap.c \
-                    beken7231/beken378/func/hostapd-2.5/src/crypto/aes-wrap.c \
-                    beken7231/beken378/func/hostapd-2.5/src/crypto/md5-internal.c \
-                    beken7231/beken378/func/hostapd-2.5/src/crypto/md5.c \
                     beken7231/beken378/func/hostapd-2.5/src/crypto/rc4.c \
-                    beken7231/beken378/func/hostapd-2.5/src/crypto/sha1-internal.c \
                     beken7231/beken378/func/hostapd-2.5/src/crypto/sha1-pbkdf2.c \
                     beken7231/beken378/func/hostapd-2.5/src/crypto/sha1-prf.c \
-                    beken7231/beken378/func/hostapd-2.5/src/crypto/sha1.c \
                     beken7231/beken378/func/hostapd-2.5/src/crypto/tls_none.c \
                     beken7231/beken378/func/hostapd-2.5/src/drivers/driver_beken.c \
                     beken7231/beken378/func/hostapd-2.5/src/drivers/driver_common.c \
@@ -419,6 +411,19 @@ $(NAME)_SOURCES	 += beken7231/beken378/func/hostapd-2.5/src/ap/ap_config.c \
                     beken7231/beken378/func/hostapd-2.5/wpa_supplicant/ap.c \
                     beken7231/beken378/func/mxchip/dhcpd/dhcp-server-main.c \
                     beken7231/beken378/func/mxchip/dhcpd/dhcp-server.c 
+endif
+
+ifeq ($(WPA_CRYPTO),1)
+$(NAME)_SOURCES	 += beken7231/beken378/func/hostapd-2.5/src/crypto/aes-internal-dec.c \
+                    beken7231/beken378/func/hostapd-2.5/src/crypto/aes-internal-enc.c \
+                    beken7231/beken378/func/hostapd-2.5/src/crypto/aes-internal.c \
+                    beken7231/beken378/func/hostapd-2.5/src/crypto/aes-wrap.c \
+                    beken7231/beken378/func/hostapd-2.5/src/crypto/md5-internal.c \
+                    beken7231/beken378/func/hostapd-2.5/src/crypto/md5.c \
+                    beken7231/beken378/func/hostapd-2.5/src/crypto/sha1-internal.c \
+                    beken7231/beken378/func/hostapd-2.5/src/crypto/sha1.c 
+else
+$(NAME)_SOURCES	 += beken7231/beken378/func/hostapd-2.5/src/crypto/crypto_ali.c
 endif
 
 $(NAME)_SOURCES	 += hal/gpio.c \
