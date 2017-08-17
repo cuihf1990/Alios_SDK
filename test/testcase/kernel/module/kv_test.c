@@ -174,9 +174,9 @@ static void test_kv_error(void)
         hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     }
     test_kv_error_cycle();    
-    
-    int ret = yos_kv_init();
-    YUNIT_ASSERT(ret == 0);
+
+    if(buf)
+        yos_free(buf);
     return;
 }
 
@@ -190,7 +190,9 @@ static int init(void)
 }
 
 static int cleanup(void)
-{	
+{
+    int ret = yos_kv_init();
+    YUNIT_ASSERT(ret == 0);
     return 0;
 }
 

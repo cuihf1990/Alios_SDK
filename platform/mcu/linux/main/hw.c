@@ -34,7 +34,8 @@ static int open_flash(int pno, bool w)
 {
     char fn[64];
     int flash_fd;
-    snprintf(fn, sizeof fn, "./yos_partition_%d.bin", pno);
+
+    snprintf(fn, sizeof(fn), "./yos_partition_%d_%d.bin", getpid(), pno);
     if(w)
         flash_fd = open(fn, O_RDWR);
     else
