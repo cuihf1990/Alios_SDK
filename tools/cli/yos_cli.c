@@ -27,6 +27,7 @@
 #define END_CHAR        '\r'
 #define PROMPT          "\r\n# "
 #define EXIT_MSG        "exit"
+#define CLI_TAG         "\e[63m"  //CLI TAG, use ESC characters, c(cli) ascii is 63 
 
 #define DEBUG 1
 
@@ -689,9 +690,11 @@ int cli_printf(const char *msg, ...)
     int nMessageLen = 0;
 
     memset(message, 0, 256);
-    pos = message;
 
-    sz = 0;
+    strcpy(message, CLI_TAG);
+    sz = strlen(CLI_TAG);
+    pos = message + sz;
+
     va_start(ap, msg);
     nMessageLen = vsnprintf(pos, 256 - sz, msg, ap);
     va_end(ap);
