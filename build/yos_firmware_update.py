@@ -570,36 +570,20 @@ if os.path.exists(sys.argv[1]) == False:
     exit(1)
 device = sys.argv[1]
 
-bootloader=None
-application=None
-driver=None
+updates=[]
 bootloader_baudrate=921600
 application_baudrate=921600
 bootapp = True
-newboard = True
+hardreboot = False
 
 i = 2
 update = 0
 while i < len(sys.argv):
-    if sys.argv[i] == "-b" and (i + 1) < len(sys.argv):
+    if sys.argv[i].startswith("0x") and (i + 1) < len(sys.argv):
         if os.path.isfile(sys.argv[i+1]) == False:
             sys.stderr.write("error: file {0} does not exist\n".format(sys.argv[i+1]))
             exit(1)
-        bootloader = sys.argv[i+1]
-        update += 1
-        i += 1
-    elif sys.argv[i] == "-a" and (i + 1) < len(sys.argv):
-        if os.path.isfile(sys.argv[i+1]) == False:
-            sys.stderr.write("error: file {0} does not exist\n".format(sys.argv[i+1]))
-            exit(1)
-        application = sys.argv[i+1]
-        update += 1
-        i += 1
-    elif sys.argv[i] == "-d" and (i + 1) < len(sys.argv):
-        if os.path.isfile(sys.argv[i+1]) == False:
-            sys.stderr.write("error: file {0} does not exist\n".format(sys.argv[i+1]))
-            exit(1)
-        driver = sys.argv[i+1]
+        updates.append([sys.argv[i], sys.argv[i+1]])
         update += 1
         i += 1
     elif sys.argv[i] == "--bootloader-baudrate" and (i + 1) < len(sys.argv):
@@ -616,10 +600,10 @@ while i < len(sys.argv):
             sys.stderr.write("error: invalid bootload baudrate value {0}\n".format(sys.argv[i+1]))
             exit(1)
         i += 1
-    elif sys.argv[i] == "--noboot":
+    elif sys.argv[i] == "--hardreset":
+        hardreboot = True
+    elif sys.argv[i] == "--noappboot":
         bootapp = False
-    elif sys.argv[i] == "--oldboard":
-        newboard = False
     i += 1
 
 if update <= 0:
@@ -627,25 +611,36 @@ if update <= 0:
 
 try:
     port = serial.Serial(device, bootloader_baudrate, timeout = 0.05)
+    port.setRTS(False)
 except:
     sys.stderr.write("error: unable to open {0}\n".format(device))
     exit(1)
 
-port.write("a\r\n") #abort potential ongoing YMODEM transfer
-port.flushInput()
-port.write("help\r\n")
-if assert_response(["bootloader", "read: usage: read [address] [size]"], 1) == False:
-    if application_baudrate != bootloader_baudrate:
-        port.baudrate = application_baudrate
-        port.flushInput()
-        port.write("dummycmd_for_flushing_purpose\r\n")
-        time.sleep(0.1)
-    port.write("reboot\r\n")
-    if assert_response(["reboot"] , 1) == False:
-        sys.stderr.write("error: failed to reboot the board, it did not respond to \"reboot\" command\n")
-        sys.exit(1)
-    if application_baudrate != bootloader_baudrate:
-        port.baudrate = bootloader_baudrate
+if hardreboot == False:
+    port.write("a\r\n") #abort potential ongoing YMODEM transfer
+    port.flushInput()
+    port.write("help\r\n")
+    if assert_response(["bootloader", "read: usage: read [address] [size]"], 1) == False:
+        if application_baudrate != bootloader_baudrate:
+            port.baudrate = application_baudrate
+            port.flushInput()
+            port.write("dummycmd_for_flushing_purpose\r\n")
+            time.sleep(0.1)
+        port.write("reboot\r\n")
+        if assert_response(["reboot"] , 1) == False:
+            sys.stderr.write("error: failed to reboot the board, it did not respond to \"reboot\" command\n")
+            sys.exit(1)
+        if application_baudrate != bootloader_baudrate:
+            port.baudrate = bootloader_baudrate
+        time.sleep(0.12)
+        port.write("          \r\n");
+        if assert_response(["ootloader"], 1) == False:
+            sys.stderr.write("error: failed to enter bootloader\n")
+            sys.exit(1)
+else:
+    port.setRTS(True)
+    time.sleep(0.1)
+    port.setRTS(False)
     time.sleep(0.12)
     port.write("          \r\n");
     if assert_response(["ootloader"], 1) == False:
@@ -654,23 +649,20 @@ if assert_response(["bootloader", "read: usage: read [address] [size]"], 1) == F
 port.flushInput()
 
 failed_num = 0
-updates = [bootloader, application, driver]
-for i in range(len(updates)):
-    if updates[i] != None:
-        print "updating {0} with {1} ...".format(device, updates[i])
-        if newboard == False:
-            port.write("{0}\r\n".format(i))
-        elif newboard == True:
-            port.write("write 0x13200\r\n")
-        if assert_response(["Waiting for the file to be sent"], 1) == False:
-            sys.stderr.write("error: waiting for target to enter into YMODEM recived mode failed\n")
-            sys.exit(1)
-        result = send_file(updates[i])
-        if result == True:
-            print "updating {0} with {1} ... succeed".format(device, updates[i])
-        else:
-            print "updating {0} with {1} ... failed".format(device, updates[i])
-            failed_num += 1
+for [addr, image] in updates:
+    status_str = "updating {0} with {1} @ address {2} ...".format(device, image, addr)
+    print status_str
+    port.write("write {0}\r\n".format(addr))
+    if assert_response(["Waiting for the file to be sent"], 1) == False:
+        sys.stderr.write("error: waiting for target to enter into YMODEM recived mode failed\n")
+        sys.exit(1)
+    result = send_file(image)
+    if result == True:
+        status_str = status_str + " succeed"
+    else:
+        status_str = status_str + " failed"
+        failed_num += 1
+    print status_str
 
 if bootapp and failed_num == 0:
     port.write("boot\r\n")
