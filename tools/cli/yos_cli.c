@@ -71,6 +71,46 @@ static const struct cli_command *lookup_command(char *name, int len)
     return NULL;
 }
 
+/*
+ * This function is used to locate the command prefix (if any)
+ * incorperated inside '<' and '>' paire. The leading spaces will be
+ * skipped (if any) first. the prefix begins on '<' and ends on '>'.
+ * the prefix length is calculated from '<' to '>'. If '<' and '>'
+ * are not paired, error will be reported.
+ *
+ * @param inbuf [in] - the original command string.
+ *        prefix [in|out] - holder of the thead of command prefix.
+ *        len [in|out] - holder of the prefix length.
+ * @return -1 - error.
+ *          0 - no prefix found.
+ *         a number>0 - the skipped length, including leading spaces
+ *                      and prefix string.
+ *
+ * Example valid inputs:
+ *   1. "help"
+ *   2. " help "
+ *   3. "<123>help"
+ *   4. " <12 3> help "
+ */
+static int check_cmd_prefix(const char *inbuf, char **prefix, int *len)
+{
+    char *p = (char *)inbuf;
+    int ret = 0;
+
+    if (!inbuf || !prefix || !len) return -1;
+    while (*p == ' ') {p++; ret++;} // skip the leading space char
+
+    if (*p != '<') return 0; // no prefix found
+    *prefix = p; // prefix start with '<'
+    while (*p != '>' && *p != '\0') {*len += 1; p++; ret++;}
+
+    if (*p == '\0') return -1; // no tailing '>' found
+    *len += 1; // prefix on with '>'
+    ret++;
+
+    return ret;
+}
+
 /* Parse input line and locate arguments (if any), keeping count of the number
 * of arguments and their locations.  Look up and call the corresponding cli
 * function if one is found and pass it the argv array.
@@ -93,9 +133,20 @@ static int handle_input(char *inbuf)
     int i = 0;
     const struct cli_command *command = NULL;
     const char *p;
+    char *cmd_prefix = NULL;
+    int cmd_prefix_len = 0, skipped_len = 0;
 
     memset((void *)&argv, 0, sizeof(argv));
     memset(&stat, 0, sizeof(stat));
+
+    // Added for testbed cli, no impact on normal cli <beginning>
+    skipped_len = check_cmd_prefix(inbuf, &cmd_prefix, &cmd_prefix_len);
+    if (skipped_len < 0) {
+        cli_printf("\r\ncheck_cmd_prefix func failed\r\n");
+        return 2;
+    }
+    if (cmd_prefix_len > 0) inbuf += skipped_len;
+    // testbed cli <end>
 
     do {
         switch (inbuf[i]) {
@@ -180,8 +231,22 @@ static int handle_input(char *inbuf)
 
     memset(pCli->outbuf, 0, OUTBUF_SIZE);
     cli_putstr("\r\n");
+
+    // Added for testbed cli, no impact on normal cli <beginning>
+    if (cmd_prefix_len > 0) {
+        *(cmd_prefix + cmd_prefix_len) = '\0'; // safe to operate in place now
+        cli_putstr(cmd_prefix);
+        cli_putstr("\r\n");
+    }
+    // testbed cli <end>
+
     command->function(pCli->outbuf, OUTBUF_SIZE, argc, argv);
     cli_putstr(pCli->outbuf);
+
+    // Added for testbed cli, no impact on normal cli <beginning>
+    if (cmd_prefix_len > 0) {cli_putstr(cmd_prefix); cli_putstr("\r\n");}
+    // testbed cli <end>
+
     return 0;
 }
 
