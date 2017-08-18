@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef YUNOS_VFS_H
-#define YUNOS_VFS_H
+#ifndef YOS_VFS_H
+#define YOS_VFS_H
 
 #ifdef __cplusplus
 extern "C" {

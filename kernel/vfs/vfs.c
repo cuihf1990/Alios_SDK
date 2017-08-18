@@ -109,19 +109,19 @@ int vfs_init(void)
     return VFS_SUCCESS;
 }
 
-#define MAX_FILE_NUM (YUNOS_CONFIG_VFS_DEV_NODES * 2)
+#define MAX_FILE_NUM (YOS_CONFIG_VFS_DEV_NODES * 2)
 static file_t files[MAX_FILE_NUM];
 
 static inline int get_fd(file_t *file)
 {
-    return (file - files) + YUNOS_CONFIG_VFS_FD_OFFSET;
+    return (file - files) + YOS_CONFIG_VFS_FD_OFFSET;
 }
 
 static inline file_t *get_file(int fd)
 {
     file_t *f;
 
-    fd -= YUNOS_CONFIG_VFS_FD_OFFSET;
+    fd -= YOS_CONFIG_VFS_FD_OFFSET;
 
     if (fd < 0) {
         return NULL;
@@ -302,7 +302,7 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
     return err;
 }
 
-#if (YUNOS_CONFIG_VFS_POLL_SUPPORT>0)
+#if (YOS_CONFIG_VFS_POLL_SUPPORT>0)
 
 #ifndef WITH_LWIP
 #define NEED_WAIT_IO
@@ -319,7 +319,7 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
 #define MS2TICK(ms) ((ms * YUNOS_CONFIG_TICKS_PER_SECOND + 999) / 1000)
 
 struct poll_arg {
-    ksem_t sem;
+    yos_sem_t sem;
 };
 
 static void setup_fd(int fd)
@@ -353,9 +353,9 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
         return ret;
     }
 
-    timeout = timeout >= 0 ? MS2TICK(timeout) : YUNOS_WAIT_FOREVER;
-    ret = yunos_sem_take(&parg->sem, timeout);
-    if (ret != YUNOS_SUCCESS) {
+    timeout = timeout >= 0 ? MS2TICK(timeout) : YOS_WAIT_FOREVER;
+    ret = yos_sem_wait(&parg->sem, timeout);
+    if (ret != VFS_SUCCESS) {
         return 0;
     }
 
@@ -367,13 +367,13 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
 static void vfs_poll_notify(struct pollfd *fd, void *arg)
 {
     struct poll_arg *parg = arg;
-    yunos_sem_give(&parg->sem);
+    yos_sem_signal(&parg->sem);
 }
 
 static void vfs_io_cb(int fd, void *arg)
 {
     struct poll_arg *parg = arg;
-    yunos_sem_give(&parg->sem);
+    yos_sem_signal(&parg->sem);
 }
 
 void cpu_io_register(void (*f)(int, void *), void *arg);
@@ -381,13 +381,13 @@ void cpu_io_unregister(void (*f)(int, void *), void *arg);
 static int init_parg(struct poll_arg *parg)
 {
     cpu_io_register(vfs_io_cb, parg);
-    yunos_sem_create(&parg->sem, "io", 0);
+    yos_sem_new(&parg->sem,  0);
     return 0;
 }
 
 static void deinit_parg(struct poll_arg *parg)
 {
-    yunos_sem_del(&parg->sem);
+    yos_sem_free(&parg->sem);
     cpu_io_unregister(vfs_io_cb, parg);
 }
 
@@ -458,7 +458,7 @@ static int pre_poll(struct pollfd *fds, int nfds, fd_set *rfds, void *parg)
         file_t  *f;
         struct pollfd *pfd = &fds[i];
 
-        if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+        if (pfd->fd < YOS_CONFIG_VFS_FD_OFFSET) {
             setup_fd(pfd->fd);
             FD_SET(pfd->fd, rfds);
             maxfd = pfd->fd > maxfd ? pfd->fd : maxfd;
@@ -487,7 +487,7 @@ static int post_poll(struct pollfd *fds, int nfds)
         file_t  *f;
         struct pollfd *pfd = &fds[j];
 
-        if (pfd->fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+        if (pfd->fd < YOS_CONFIG_VFS_FD_OFFSET) {
             teardown_fd(pfd->fd);
             continue;
         }
@@ -559,7 +559,7 @@ int yos_fcntl(int fd, int cmd, int val)
         return E_VFS_ERR_PARAM;
     }
 
-    if (fd < YUNOS_CONFIG_VFS_FD_OFFSET) {
+    if (fd < YOS_CONFIG_VFS_FD_OFFSET) {
         return trap_fcntl(fd, cmd, val);
     }
 
@@ -571,8 +571,8 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
     int      err;
     int      fd;
 
-    for (fd = YUNOS_CONFIG_VFS_FD_OFFSET;
-         fd < YUNOS_CONFIG_VFS_FD_OFFSET + YUNOS_CONFIG_VFS_DEV_NODES; fd++) {
+    for (fd = YOS_CONFIG_VFS_FD_OFFSET;
+         fd < YOS_CONFIG_VFS_FD_OFFSET + YOS_CONFIG_VFS_DEV_NODES; fd++) {
         file_t  *f;
         inode_t *node;
 
