@@ -24,8 +24,6 @@ ktask_t *g_yos_init;
 
 #ifdef YOS_BINS
 extern void *g_syscall_tbl[];
-#endif
-
 extern int application_start(int argc, char **argv);
 extern void board_init(void);
 extern char app_info_addr;
@@ -44,6 +42,7 @@ static void application_init(void)
     yunos_mm_leak_region_init((void *)(app_info->data_ram_start), (void *)(app_info->data_ram_end));
     yunos_mm_leak_region_init((void *)(app_info->bss_start), (void *)(app_info->bss_end));
 }
+#endif
 
 static void yos_init(void)
 {
