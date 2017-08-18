@@ -56,8 +56,6 @@ static void yos_init(void)
 
     board_init();
 
-//    yos_framework_init();
-
     vfs_init();
     vfs_device_init();
 
@@ -70,8 +68,8 @@ static void yos_init(void)
     yos_loop_init();
 #ifdef YOS_BINS
     application_init();
-    if(app_info->application_start)
-        app_info->application_start((int)g_syscall_tbl, NULL);
+    if(app_info->app_entry)
+        app_info->app_entry((int)g_syscall_tbl, NULL);
 #else
     application_start(0, NULL);
 #endif
