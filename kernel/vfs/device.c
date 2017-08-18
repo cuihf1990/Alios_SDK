@@ -22,10 +22,10 @@
 
 #include <vfs_conf.h>
 #include <vfs_err.h>
-#include <vfs_driver.h>
+#include <vfs_register.h>
 #include <event_device.h>
 
-#if (YUNOS_CONFIG_VFS_POLL_SUPPORT > 0)
+#if (YOS_CONFIG_VFS_POLL_SUPPORT > 0)
 static int inited;
 
 typedef struct {
@@ -210,7 +210,7 @@ int vfs_device_init(void)
         return  VFS_SUCCESS;
     }
 
-    ret = yunos_register_driver("/dev/event", &event_fops, NULL);
+    ret = yos_register_driver("/dev/event", &event_fops, NULL);
 
     if (ret != VFS_SUCCESS) {
         return ret;

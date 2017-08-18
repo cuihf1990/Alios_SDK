@@ -23,7 +23,7 @@
 
 #include "vfs.h"
 #include "vfs_inode.h"
-#include "vfs_driver.h"
+#include "vfs_register.h"
 #include "vfs_err.h"
 
 #include "yunit.h"
@@ -58,7 +58,7 @@ static void test_yos_vfs_case(void)
     };
 
     for (i = 0; i < 10; i++) {
-        ret = yunos_register_driver(names[i], &myops, NULL);
+        ret = yos_register_driver(names[i], &myops, NULL);
         YUNIT_ASSERT(ret == VFS_SUCCESS);
     }
 
@@ -76,7 +76,7 @@ static void test_yos_vfs_case(void)
 
         yos_close(fd);
 
-        ret = yunos_unregister_driver(names[i]);
+        ret = yos_unregister_driver(names[i]);
         YUNIT_ASSERT(ret == 0);
 
         fd = yos_open(names[i], 0);

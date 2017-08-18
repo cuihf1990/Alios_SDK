@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <vfs_driver.h>
+#include <vfs_register.h>
 #include <hal/soc/flash.h>
 #include <yos/kernel.h>
 
@@ -96,7 +96,7 @@ int vflash_register_partition(int pno)
     int ret;
 
     snprintf(pname, sizeof(pname) - 1, "/dev/flash%d", pno);
-    ret = yunos_register_driver(pname, &flash_fops, (void *)(long)pno);
+    ret = yos_register_driver(pname, &flash_fops, (void *)(long)pno);
 
     return ret;
 }

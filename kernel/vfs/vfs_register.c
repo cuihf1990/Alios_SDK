@@ -19,11 +19,11 @@
 #include <yos/kernel.h>
 #include <vfs_conf.h>
 #include <vfs_err.h>
-#include <vfs_driver.h>
+#include <vfs_register.h>
 
 extern yos_mutex_t g_vfs_mutex;
 
-int yunos_register_driver(const char *path, file_ops_t *ops, void *arg)
+int yos_register_driver(const char *path, file_ops_t *ops, void *arg)
 {
     inode_t *node;
     int      ret;
@@ -77,7 +77,7 @@ int yunos_register_driver(const char *path, file_ops_t *ops, void *arg)
     return VFS_SUCCESS;
 }
 
-int yunos_unregister_driver(const char *path)
+int yos_unregister_driver(const char *path)
 {
     int ret;
     inode_t *node;

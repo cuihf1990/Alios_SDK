@@ -161,7 +161,7 @@ static int cleanup(void)
 {
     int ret;
 
-    ret = yunos_unregister_driver(dev_name);
+    ret = yos_unregister_driver(dev_name);
 
     return ret;
 }

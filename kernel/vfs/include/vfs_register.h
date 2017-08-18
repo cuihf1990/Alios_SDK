@@ -23,8 +23,8 @@
 extern "C" {
 #endif
 
-int yunos_register_driver(const char *path, file_ops_t *fops, void *arg);
-int yunos_unregister_driver(const char *path);
+int yos_register_driver(const char *path, file_ops_t *fops, void *arg);
+int yos_unregister_driver(const char *path);
 
 #ifdef __cplusplus
 }

@@ -56,7 +56,7 @@ struct file_ops {
     ssize_t (*read)(file_t *, void *, size_t);
     ssize_t (*write)(file_t *, const void *buf, size_t len);
     int (*ioctl)(file_t *, int cmd, unsigned long arg);
-#ifdef YUNOS_CONFIG_VFS_POLL_SUPPORT
+#ifdef YOS_CONFIG_VFS_POLL_SUPPORT
     int (*poll)(file_t *, bool , poll_notify_t, struct pollfd *, void *);
 #endif
 };
