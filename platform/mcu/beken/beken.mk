@@ -7,13 +7,15 @@
 #  permission of MXCHIP Corporation.
 #
 
-NAME := platform_beken
+NAME := beken
 
 HOST_OPENOCD := beken
 
 ifeq ($(CONFIG_SOFTAP),1)
 GLOBAL_CFLAGS += -DCONFIG_SOFTAP
 endif
+
+$(NAME)_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += hal vflash netmgr framework mbedtls cjson cli

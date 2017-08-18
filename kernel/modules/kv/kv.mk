@@ -1,5 +1,6 @@
-NAME := kernel_kv
+NAME := kv
 
+$(NAME)_TYPE := kernel
 $(NAME)_SOURCES := kvmgr.c 
 $(NAME)_COMPONENTS += log hashtable digest_algorithm
 

@@ -14,8 +14,9 @@
  # limitations under the License.
 ##
 
-NAME := kernel_syscall
+NAME := syscall
 
+$(NAME)_TYPE := kernel
 $(NAME)_INCLUDES := ./ \
                     ../protocols/net/include/ \
                     ../protocols/mesh/include/

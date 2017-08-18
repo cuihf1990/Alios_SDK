@@ -8,8 +8,7 @@ NAME := rhino
 #  permission of MXCHIP Corporation.
 #
 
-NAME := kernel_rhino
-
+$(NAME)_TYPE := kernel
 $(NAME)_COMPONENTS += rhino
 
 GLOBAL_INCLUDES += core/include

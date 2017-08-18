@@ -1,6 +1,6 @@
+NAME = kernel
 
-NAME = kernel_kernel
-
+$(NAME)_TYPE := kernel
 $(NAME)_COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY)
 
 ifeq ($(HOST_MCU_FAMILY), linux)

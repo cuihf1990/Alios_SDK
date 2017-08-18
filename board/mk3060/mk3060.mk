@@ -21,10 +21,11 @@
 #  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ############################################################################### 
 
-NAME := board_mk3060
+NAME := mk3060
 
 JTAG := jlink
 
+$(NAME)_TYPE := kernel
 MODULE               := EMW3060
 HOST_ARCH            := ARM968E-S
 HOST_MCU_FAMILY      := beken

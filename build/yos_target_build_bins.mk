@@ -117,6 +117,22 @@ define BUILD_COMPONENT_RULES
 
 $(eval LINK_LIBS +=$(if $($(1)_SOURCES),$(LIBS_DIR)/$(1).a))
 
+ifeq ($($(1)_TYPE),kernel)
+KERNEL_LINK_LIBS += $(if $($(1)_SOURCES),$(LIBS_DIR)/$(1).a)
+endif
+
+ifeq ($($(1)_TYPE),app)
+APP_LINK_LIBS += $(if $($(1)_SOURCES),$(LIBS_DIR)/$(1).a)
+endif
+
+ifeq ($($(1)_TYPE),share)
+KERNEL_LINK_LIBS += $(if $($(1)_SOURCES),$(LIBS_DIR)/$(1).a)
+APP_LINK_LIBS += $(if $($(1)_SOURCES),$(LIBS_DIR)/$(1).a)
+endif
+
+ifeq ($($(1)_TYPE),)
+APP_LINK_LIBS += $(if $($(1)_SOURCES),$(LIBS_DIR)/$(1).a)
+endif
 
 ifneq ($($(1)_PRE_BUILD_TARGETS),)
 include $($(1)_MAKEFILE)
@@ -189,14 +205,25 @@ $(LIBS_DIR):
 ##################################
 ## APP^KERNEL
 
-APP_LINK_LIBS := $(foreach lib,$(LINK_LIBS),$(if $(filter-out hal_% platform_% kernel_% board_% devices_%,$(notdir $(lib))),$(lib)))
+#APP_LINK_LIBS := $(foreach lib,$(LINK_LIBS),$(if $(filter-out hal_% platform_% kernel_% board_% devices_%,$(notdir $(lib))),$(lib)))
 
-KERNEL_LINK_LIBS := $(foreach lib,$(LINK_LIBS),$(if $(filter hal_% lib% platform_% kernel_% board_% devices_% share_%,$(notdir $(lib))),$(lib)))
+#KERNEL_LINK_LIBS := $(foreach lib,$(LINK_LIBS),$(if $(filter hal_% lib% platform_% kernel_% board_% devices_% share_%,$(notdir $(lib))),$(lib)))
+
+APP_LINK_LIBS += 	./security/mbedtls/lib/mk108/libmbedtls.a \
+			./security/alicrypto/lib/mk108/libmbedcrypto.a \
+			./security/alicrypto/lib/mk108/libalicrypto.a
+
+KERNEL_LINK_LIBS +=	./platform/mcu/beken/librwnx.a \
+			./security/mbedtls/lib/mk108/libmbedtls.a \
+			./security/alicrypto/lib/mk108/libmbedcrypto.a \
+			./security/alicrypto/lib/mk108/libalicrypto.a
 
 $(warning --------------------------------------------------)
 $(warning $(APP_LINK_LIBS))
 $(warning --------------------------------------------------)
 $(warning $(KERNEL_LINK_LIBS))
+$(warning --------------------------------------------------)
+$(warning $(YOS_SDK_PREBUILT_LIBRARIES))
 $(warning --------------------------------------------------)
 ##################################
 ## APP

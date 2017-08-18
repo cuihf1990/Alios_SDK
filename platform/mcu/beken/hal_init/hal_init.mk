@@ -7,6 +7,7 @@
 #  permission of MXCHIP Corporation.
 #
 
-NAME := hal_init
+NAME := init
 
+$(NAME)_TYPE := kernel
 $(NAME)_SOURCES := hal_init.c

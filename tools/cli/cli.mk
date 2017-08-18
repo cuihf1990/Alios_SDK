@@ -1,5 +1,6 @@
-NAME := kernel_cli
+NAME := cli
 
+$(NAME)_TYPE := kernel
 $(NAME)_SOURCES     := yos_cli.c
 $(NAME)_SOURCES     += dumpsys.c
 

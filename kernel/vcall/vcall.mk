@@ -14,8 +14,9 @@
  # limitations under the License.
 ##
 
-NAME := kernel_vcall
+NAME := vcall
 
+$(NAME)_TYPE := kernel
 GLOBAL_INCLUDES += ./mico/include
 
 $(NAME)_CFLAGS += -Wall -Werror
