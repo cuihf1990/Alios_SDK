@@ -2,7 +2,7 @@ import sys, time
 sys.path.append('../')
 from autotest import Autotest
 
-devices = {'A':'mxchip-DN02QYHE', 'B':'mxchip-DN02QYI2', 'C':'mxchip-DN02QYI9', 'D':'mxchip-DN02QYIH'}
+devices = {'A':'mxchip-DN02QRIX', 'B':'mxchip-DN02QRJ9', 'C':'mxchip-DN02QRJM', 'D':'mxchip-DN02QRJP'}
 device_list = list(devices)
 device_attr={}
 device_list.sort()
@@ -10,26 +10,32 @@ at=Autotest()
 logname=time.strftime('%Y-%m-%d@%H-%M')
 logname = 'mcast-' + logname +'.log'
 at.start('10.125.52.132', 34568, logname)
-at.device_subscribe(devices)
+if at.device_subscribe(devices) == False:
+    print 'error: subscribe to device failed, some devices may not exist in testbed'
+    exit(1)
 
+#reboot and get device mac address
 for device in device_list:
     at.device_run_cmd(device, ['netmgr', 'clear'])
     at.device_run_cmd(device, ['kv', 'delete', 'alink'])
-    ret = at.device_run_cmd(device, ['reboot'])
-time.sleep(4)
-
-#get device mac address
-for device in device_list:
-    at.device_run_cmd(device, ['umesh', 'extnetid','122798010203'])
-    at.device_run_cmd(device, ['umesh', 'stop'])
-    mac = at.device_run_cmd(device, ['mac'], 1, 1, ['MAC address:'])
+    mac =  at.device_run_cmd(device, ['reboot'], 1, 1.5, ['mac'])
     if mac != False and mac != []:
-        mac = mac[0].replace('MAC address: ', '')
-        mac = mac.replace('-', '')
+        mac = mac[0].replace('mac ', '')
+        print '{0} mac: {1}'.format(device, mac)
+        mac = mac.replace(':', '')
         device_attr[device] = {'mac':mac}
     else:
-        print 'error: get mac addr for device {0} failed'.format(device)
+        print 'error: reboot and get mac addr for device {0} failed, ret={1}'.format(device, mac)
         exit(1)
+time.sleep(5)
+
+bytes = os.urandom(6)
+extnetid = ''
+for byte in bytes:
+    extnetid = extnetid + '{0:02x}'.format(ord(byte))
+for device in device_list:
+    at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+    at.device_run_cmd(device, ['umesh', 'stop'])
 
 #setup topology
 print 'topology:'

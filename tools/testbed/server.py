@@ -358,7 +358,8 @@ class Server:
             client = self.get_client_by_addr(addr)
             if client != None and port in list(client['devices']):
                 with client['devices'][port]['lock']:
-                    client['devices'][port]['using'] -= 1
+                    if client['devices'][port]['using'] > 0:
+                        client['devices'][port]['using'] -= 1
         terminal['socket'].close()
         print "terminal ", terminal['addr'], "disconnected"
         self.terminal_list.remove(terminal)
