@@ -414,15 +414,15 @@ void cpu_init_hook(void)
 {
     int              ret;
     struct sigaction tick_sig_action = {
-        .sa_flags = SA_SIGINFO,
+        .sa_flags = SA_SIGINFO | SA_RESTART,
         .sa_sigaction = cpu_sig_handler,
     };
     struct sigaction event_sig_action = {
-        .sa_flags = SA_SIGINFO,
+        .sa_flags = SA_SIGINFO | SA_RESTART,
         .sa_sigaction = cpu_sig_handler,
     };
     struct sigaction event_io_action = {
-        .sa_flags = SA_SIGINFO,
+        .sa_flags = SA_SIGINFO | SA_RESTART,
         .sa_sigaction = cpu_sig_handler,
     };
 
