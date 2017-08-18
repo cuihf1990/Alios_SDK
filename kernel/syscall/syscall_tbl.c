@@ -14,21 +14,29 @@
  * limitations under the License.
  */
 
+#include <yos/cli.h>
+#include <yos/kernel.h>
 #include <yos/framework.h>
+#include <lwip/netdb.h>
+#include <lwip/sockets.h>
+#include <hal/wifi.h>
+#include <hal/ota.h>
+#include <hal/soc/soc.h>
+#include <umesh.h>
 
-#include "hal/soc/soc.h"
-#include "helloworld.h"
+extern void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t 
+fn);
+extern int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int 
+len);
 
-static void app_delayed_action(void *arg)
-{
-    printf("%s:%d %s\r\n", __func__, __LINE__, yos_task_name());
-    yos_post_delayed_action(5000, app_delayed_action, NULL);
-}
 
-int application_start(int argc, char *argv[])
-{
-    yos_framework_init();
-    yos_post_delayed_action(1000, app_delayed_action, NULL);
-    yos_loop_run();
-}
+#define SYSCALL_MAX 183
+#define SYSCALL_NUM 136
+
+#define SYSCALL(nr, func) [nr] = func,
+
+const void *g_syscall_tbl[] __attribute__ ((section(".syscall_tbl"))) = {
+    [0 ... SYSCALL_MAX - 1] = (void *)0XABCDABCD,
+#include <syscall_tbl.h>
+    };
 

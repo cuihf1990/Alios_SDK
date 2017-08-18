@@ -289,6 +289,16 @@ int yos_ioctl(int fd, int cmd, unsigned long arg);
 int yos_poll(struct pollfd *fds, int nfds, int timeout);
 int yos_fcntl(int fd, int cmd, int val);
 
+/**@brief Transmit data on a UART interface
+ *
+ * @param  data     : pointer to the start of data
+ * @param  size     : number of bytes to transmit
+ *
+ * @return    kNoErr        : on success.
+ * @return    kGeneralErr   : if an error occurred with any step
+ */
+int32_t yos_uart_send(void *data, uint32_t size, uint32_t timeout);
+
 /** @} */ //end of Framework API
 
 #ifdef __cplusplus

@@ -1,5 +1,6 @@
 NAME := mesh
 
+$(NAME)_TYPE := kernel
 GLOBAL_INCLUDES += include
 
 $(NAME)_INCLUDES += include

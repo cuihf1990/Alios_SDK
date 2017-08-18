@@ -18,6 +18,8 @@ endif
 TOOLCHAIN_PREFIX  := arm-none-eabi-
 TOOLCHAIN_VERSION := 5_4-2016q2-20160622
 
+BINS ?= 0
+
 ifeq ($(HOST_OS),Win32)
 ################
 # Windows settings
@@ -43,10 +45,16 @@ ifeq ($(HOST_OS),Linux64)
 ################
 # Linux 64-bit settings
 ################
-
+ifeq ($(BINS), 0)
 TOOLCHAIN_PATH    := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Linux64/bin/
 GDBINIT_STRING     = 'shell $(COMMON_TOOLS_PATH)dash -c "trap \\"\\" 2;$(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE) &"'
 GDB_COMMAND        = "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gdb"
+else
+TOOLCHAIN_PATH    := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Linux64/bin/
+LOAD_SYMBOL_ADDR   = 0x`$(TOOLCHAIN_PATH)/arm-none-eabi-readelf -S $(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING).app$(LINK_OUTPUT_SUFFIX) | $(TOOLS_ROOT)/cmd/linux64/grep ".text" | $(TOOLS_ROOT)/cmd/linux64/awk '{print $$5}'`
+GDBINIT_STRING     = add-symbol-file $(BUILD_DIR)/eclipse_debug/app_built.elf $(LOAD_SYMBOL_ADDR)
+GDB_COMMAND        = "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gdb"
+endif # BINS
 
 else # Linux64
 ifeq ($(HOST_OS),OSX)

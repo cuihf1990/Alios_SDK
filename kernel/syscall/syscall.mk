@@ -14,19 +14,19 @@
  # limitations under the License.
 ##
 
-NAME := vcall
+NAME := syscall
 
 $(NAME)_TYPE := kernel
-GLOBAL_INCLUDES += ./mico/include
+$(NAME)_INCLUDES := ./ \
+                    ../protocols/net/include/ \
+                    ../protocols/mesh/include/
 
 $(NAME)_CFLAGS += -Wall -Werror
-ifeq ($(HOST_ARCH),ARM968E-S)
-$(NAME)_CFLAGS += -marm
-endif
+
+$(NAME)_COMPONENTS += protocols.net protocols.mesh
 
 $(NAME)_SOURCES := \
-    mico/mico_rhino.c
+                   syscall_tbl.c
 
-$(NAME)_SOURCES += \
-    yos/yos_rhino.c
+GLOBAL_INCLUDES += ./
 

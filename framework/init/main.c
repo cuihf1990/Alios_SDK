@@ -26,27 +26,10 @@
 #include "gateway_service.h"
 #endif
 
-static void register_devices()
-{
-    int i;
-    for(i = 0; i < 10; i++)
-        vflash_register_partition(i);
-}
-
 extern void ota_service_init(void);
 
 int yos_framework_init(void)
 {
-    vfs_init();
-    vfs_device_init();
-
-    register_devices();
-
-    yos_loop_init();
-
-    yos_cli_init();
-
-    yos_kv_init();
 #ifdef MESH_GATEWAY_SERVICE
     gateway_service_init();
 #endif

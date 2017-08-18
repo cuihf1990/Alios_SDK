@@ -14,19 +14,12 @@
  # limitations under the License.
 ##
 
-NAME := vcall
+NAME := art
 
-$(NAME)_TYPE := kernel
-GLOBAL_INCLUDES += ./mico/include
+$(NAME)_TYPE := app
 
-$(NAME)_CFLAGS += -Wall -Werror
-ifeq ($(HOST_ARCH),ARM968E-S)
-$(NAME)_CFLAGS += -marm
-endif
+#GLOBAL_INCLUDES += include
+# don't modify to L_CFLAGS, because CONFIG_CJSON_WITHOUT_DOUBLE should enable global
+GLOBAL_LDFLAGS += -uapp_info
 
-$(NAME)_SOURCES := \
-    mico/mico_rhino.c
-
-$(NAME)_SOURCES += \
-    yos/yos_rhino.c
-
+$(NAME)_SOURCES := art.c

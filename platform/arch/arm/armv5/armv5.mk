@@ -1,5 +1,6 @@
 NAME := armv5
 
+$(NAME)_TYPE := kernel
 GLOBAL_INCLUDES += .
 
 $(NAME)_CFLAGS := -marm -mthumb-interwork

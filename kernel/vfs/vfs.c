@@ -22,6 +22,9 @@
 #include <vfs_inode.h>
 #include <vfs.h>
 #include <stdio.h>
+#include <hal/soc/uart.h>
+
+extern uart_dev_t uart_0;
 
 static uint8_t    g_vfs_init;
 
@@ -600,5 +603,10 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
     }
 
     return VFS_SUCCESS;
+}
+
+int32_t yos_uart_send(void *data, uint32_t size, uint32_t timeout)
+{
+    return hal_uart_send(&uart_0, data, size, timeout);
 }
 

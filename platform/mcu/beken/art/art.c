@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef YOS_H
-#define YOS_H
+#include <yos/framework.h>
+#include "hal/soc/soc.h"
 
-void soc_driver_init(void);
-
-void soc_system_init(void);
-
-void yos_start(void);
+#ifdef YOS_BINS
+extern unsigned int _app_data_ram_begin;
+extern unsigned int _app_data_ram_end;
+extern unsigned int _app_data_flash_begin;
+extern unsigned int _app_bss_start;
+extern unsigned int _app_bss_end;
+extern unsigned int _app_heap_start;
+extern unsigned int _app_heap_end;
+extern int application_start(int argc, char **argv);
 
 struct app_info_t {
      int (*application_start)(int argc, char *argv[]);
@@ -34,5 +38,15 @@ struct app_info_t {
      unsigned int heap_end;
 };
 
-#endif /* YOS_H */
+__attribute__ ((used, section(".app_info"))) struct app_info_t app_info = {
+    application_start,
+    &_app_data_ram_begin,
+    &_app_data_ram_end,
+    &_app_data_flash_begin,
+    &_app_bss_start,
+    &_app_bss_end,
+    &_app_heap_start,
+    &_app_heap_end
+};
+#endif
 

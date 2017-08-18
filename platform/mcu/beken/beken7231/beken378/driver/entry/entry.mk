@@ -9,6 +9,8 @@
 
 NAME := entry
 
+$(NAME)_TYPE := kernel
+
 GLOBAL_INCLUDES += .
 
 $(NAME)_CFLAGS += -marm
