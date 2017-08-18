@@ -84,11 +84,12 @@ class Client:
                         self.connected == False
                         continue
             else:
-                time.sleep(0.01)
+                time.sleep(0.02)
         self.devices[port]['serial'].close()
         self.devices.pop(port)
         print "device {0} removed".format(port)
         self.send_device_list()
+        print "device logging thread for {0} exited".format(port)
 
     def device_monitor(self):
         while self.keep_running:
