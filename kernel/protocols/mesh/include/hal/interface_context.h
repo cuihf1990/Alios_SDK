@@ -181,7 +181,6 @@ typedef struct network_context_s {
     uint8_t           retry_times;
     uint8_t           leader_times;
     uint8_t           migrate_times;
-    bool              change_sid;
     ur_timer_t        attach_timer;
     ur_timer_t        advertisement_timer;
     ur_timer_t        migrate_wait_timer;

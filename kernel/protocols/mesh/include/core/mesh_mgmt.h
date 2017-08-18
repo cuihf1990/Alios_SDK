@@ -190,5 +190,7 @@ uint8_t set_mm_path_cost_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_node_id_tv(uint8_t *data, uint8_t type, ur_node_id_t *node);
 uint8_t set_mm_sid_tv(uint8_t *data, uint8_t type, uint16_t sid);
 uint8_t set_mm_mode_tv(uint8_t *data);
+uint8_t set_mm_allocated_node_type_tv(uint8_t *data, uint8_t type);
+uint8_t set_mm_mcast_tv(uint8_t *data);
 
 #endif  /* UR_MM_H */
