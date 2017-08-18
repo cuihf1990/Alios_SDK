@@ -61,7 +61,7 @@ enum log_level_bit {
 #define COL_CYN "\x1B[36m"
 #define COL_MAG "\x1B[35m"
 
-#define LOG_TAG "\e[65m"    //LOG TAG, use ESC characters, g(cli) ascii is 65
+#define GLOBAL_LOG_TAG "\e[65m"    //LOG TAG, use ESC characters, g(cli) ascii is 65
 
 #include <yos/kernel.h>
 #ifdef CONFIG_LOGMACRO_DETAILS
@@ -69,8 +69,8 @@ enum log_level_bit {
     do { \
         if (CON) { \
             long long ms = yos_now_ms();; \
-            csp_printf(LOG_TAG COLOR " [%4d.%03d]<%s> %s [%s#%d] : ", (int)(ms/1000), (int)(ms%1000), LVL, MOD, __FUNCTION__, __LINE__); \
-            csp_printf(LOG_TAG FMT COL_DEF "\r\n", ##__VA_ARGS__); \
+            csp_printf(GLOBAL_LOG_TAG COLOR " [%4d.%03d]<%s> %s [%s#%d] : ", (int)(ms/1000), (int)(ms%1000), LVL, MOD, __FUNCTION__, __LINE__); \
+            csp_printf(GLOBAL_LOG_TAG FMT COL_DEF "\r\n", ##__VA_ARGS__); \
         } \
     } while (0)
 
@@ -78,7 +78,7 @@ enum log_level_bit {
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
     do { \
         if (CON) { \
-            csp_printf(LOG_TAG "[%06d]<" LVL "> "FMT"\n", (unsigned)yos_now_ms(), ##__VA_ARGS__); \
+            csp_printf(GLOBAL_LOG_TAG "[%06d]<" LVL "> "FMT"\n", (unsigned)yos_now_ms(), ##__VA_ARGS__); \
         } \
     } while (0)
 
