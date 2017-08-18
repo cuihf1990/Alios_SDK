@@ -76,7 +76,10 @@ static void app_entry(void *arg)
         vflash_register_partition(i);
     }
 
+#ifdef CONFIG_YOS_CLI
     yos_cli_init();
+#endif
+
     yos_kv_init();
     yos_loop_init();
 
