@@ -656,8 +656,6 @@ static void alink_cloud_init(void)
 
 int application_start(int argc, char *argv[])
 {
-    yos_framework_init();
-
     parse_opt(argc, argv);
 
     //if(argc > 1 && strlen(argv[1]) <= 65){

@@ -27,7 +27,6 @@ static void app_delayed_action(void *arg)
 
 int application_start(int argc, char *argv[])
 {
-    yos_framework_init();
     yos_post_delayed_action(1000, app_delayed_action, NULL);
     yos_loop_run();
 }

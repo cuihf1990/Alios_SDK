@@ -27,6 +27,7 @@
 
 #include <arg_options.h>
 
+
 #define TAG "main"
 
 #ifdef TFS_EMULATE
@@ -42,6 +43,7 @@ extern void hw_start_hal(void);
 extern void trace_start(int flag);
 extern void netmgr_init(void);
 extern int yos_framework_init(void);
+extern int yos_cli_init(void);
 
 static options_t options = { 0 };
 
@@ -59,11 +61,24 @@ static void exit_clean(void)
 
 static void app_entry(void *arg)
 {
+    int i = 0;
+
     yos_features_init();
 
     trace_start(options.trace_flag);
 
     hw_start_hal();
+
+    vfs_init();
+    vfs_device_init();
+
+    for(i = 0; i < 10; i++) {
+        vflash_register_partition(i);
+    }
+
+    yos_cli_init();
+    yos_kv_init();
+    yos_loop_init();
 
     yos_framework_init();
 

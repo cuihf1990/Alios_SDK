@@ -21,7 +21,7 @@
 #  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ############################################################################### 
 
-NAME := mk3060
+NAME := board_mk3060
 
 JTAG := jlink
 
