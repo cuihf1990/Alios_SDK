@@ -84,25 +84,28 @@ class Client:
                         self.connected == False
                         continue
             else:
-                time.sleep(0.01)
+                time.sleep(0.02)
         self.devices[port]['serial'].close()
         self.devices.pop(port)
+        print "device {0} removed".format(port)
         self.send_device_list()
+        print "device logging thread for {0} exited".format(port)
 
     def device_monitor(self):
         while self.keep_running:
             devices_new = glob.glob("/dev/espif-*")
             devices_new.sort()
             for port in devices_new:
-                if port in self.devices:
+                if port in list(self.devices):
                     continue
                 try:
                     ser = serial.Serial(port, 115200, timeout = 0.02)
                     ser.setDTR(True)
                     ser.setRTS(True)
                 except:
-                    print "error: unable to open {0}".format(port)
+                    print "device_monitor, error: unable to open {0}".format(port)
                     continue
+                print "device {0} added".format(port)
                 self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'esp32', 'serial':ser}
                 thread.start_new_thread(self.device_logging, (port,))
                 self.send_device_list()
@@ -110,14 +113,15 @@ class Client:
             devices_new = glob.glob("/dev/mxchip-*")
             devices_new.sort()
             for port in devices_new:
-                if port in self.devices:
+                if port in list(self.devices):
                     continue
                 try:
                     ser = serial.Serial(port, 921600, timeout = 0.02)
                     ser.setRTS(False)
                 except:
-                    print "error: unable to open {0}".format(port)
+                    print "device_monitor, error: unable to open {0}".format(port)
                     continue
+                print "device {0} added".format(port)
                 self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'mk3060', 'serial':ser}
                 thread.start_new_thread(self.device_logging, (port,))
                 self.send_device_list()

@@ -146,7 +146,7 @@ class Autotest:
                 return devstr
         return ""
 
-    def copy_file_to_client(self, devame, filename):
+    def copy_file_to_client(self, devname, filename):
         #argument check
         if devname not in list(self.subscribed):
             print "{0} is not subscribed".format(devname)
@@ -171,10 +171,10 @@ class Autotest:
         self.service_socket.send(data)
 
         #command server to copy file to client
-        content = self.subscribed[device]
+        content = self.subscribed[devname]
         data = TBframe.construct(TBframe.FILE_COPY, content);
         self.service_socket.send(data)
-        self.wait_cmd_excute_done(300)
+        self.wait_cmd_excute_done(180)
         if self.cmd_excute_state == "done":
             ret = True
         else:
@@ -209,14 +209,14 @@ class Autotest:
         self.cmd_excute_state = 'idle'
         return ret
 
-    def device_program(self, devname, filename, address):
+    def device_program(self, devname, address, filename):
         if self.copy_file_to_client(devname, filename)== False:
             return False
 
         content = self.subscribed[devname] + ',' + address
         data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
         self.service_socket.send(data)
-        self.wait_cmd_excute_done(90)
+        self.wait_cmd_excute_done(270)
         if self.cmd_excute_state == "done":
             ret = True
         else:

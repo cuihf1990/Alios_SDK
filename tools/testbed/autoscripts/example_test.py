@@ -2,13 +2,15 @@ import sys, time
 sys.path.append('../')
 from autotest import Autotest
 
-devices = {'A':'mxchip-DN02QYHE', 'B':'mxchip-DN02QYI2', 'C':'mxchip-DN02QYI9'}
+devices = {'A':'mxchip-DN02QRIX', 'B':'mxchip-DN02QRJ9', 'C':'mxchip-DN02QRJM'}
 logname=time.strftime('%Y-%m-%d@%H-%M')
 logname = 'example-' + logname +'.log'
 at=Autotest()
 at.start('10.125.52.132', 34568, logname)
+if at.device_subscribe(devices) == False:
+    print 'error: subscribe to device failed, some devices may not exist in testbed'
+    exit(1)
 
-at.device_subscribe(devices)
 at.device_run_cmd('A', ['netmgr', 'clear'])
 at.device_run_cmd('A', ['reboot'])
 time.sleep(5)

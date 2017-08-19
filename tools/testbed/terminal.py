@@ -268,7 +268,10 @@ class Terminal:
             else:
                 dev_str += dev[2][5:5 + mid_len]
             dev_str += '  ' + self.device_list[devfull]
-            self.dev_window.addstr(linenum, 0, dev_str)
+            try:
+                self.dev_window.addstr(linenum, 0, dev_str)
+            except:
+                pass
             linenum += 1
             if linenum >= LOG_WINDOW_HEIGHT:
                 break
