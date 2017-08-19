@@ -42,7 +42,7 @@ typedef enum {
 /* Defination of block information */
 #define BLK_BITS                12                          /* The number of bits in block size */
 #define BLK_SIZE                (1 << BLK_BITS)             /* Block size, current is 4k bytes */
-#define BLK_NUMS                (KV_TOTAL_SIZE >> BLK_BITS) /* The number of blocks */
+#define BLK_NUMS                (KV_TOTAL_SIZE >> BLK_BITS) /* The number of blocks, must be bigger than KV_GC_RESERVED */
 #define BLK_OFF_MASK            ~(BLK_SIZE - 1)             /* The mask of block offset in key-value store */
 #define BLK_STATE_USED          0xCC                        /* Block state: USED --> block is inused and without dirty data */
 #define BLK_STATE_CLEAN         0xEE                        /* Block state: CLEAN --> block is clean, ready for used */
@@ -359,8 +359,7 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
         }
 
         if (hdr->val_len > ITEM_MAX_VAL_LEN || hdr->key_len > ITEM_MAX_KEY_LEN) {
-            len += ITEM_HEADER_SIZE;
-            pos += len;
+            pos += ITEM_HEADER_SIZE;
             kv_item_free(item);
             if (g_kv_mgr.block_info[blk_index].state == BLK_STATE_USED) {
                 kv_state_set((blk_index << BLK_BITS), BLK_STATE_DIRTY);
@@ -390,9 +389,9 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
 
         kv_item_free(item);
         pos += len;
-    } while ((end - pos) > ITEM_HEADER_SIZE);
+    } while (end > (pos + ITEM_HEADER_SIZE));
 
-    g_kv_mgr.block_info[blk_index].space = end - pos;
+    g_kv_mgr.block_info[blk_index].space = (end > pos) ? (end - pos) : ITEM_HEADER_SIZE;
     return NULL;
 }
 
@@ -483,7 +482,7 @@ static int kv_init(void)
     block_hdr_t hdr;
     int ret;
     uint8_t i;
-    uint8_t last_used;
+    uint8_t next;
 
     for (i = 0; i < BLK_NUMS; i++) {
         memset(&hdr, 0, sizeof(block_hdr_t));
@@ -525,16 +524,13 @@ static int kv_init(void)
         }
     } else {
         for (i = 0; i < BLK_NUMS; i++) {
-            if (g_kv_mgr.block_info[i].state == BLK_STATE_CLEAN) {
-                if (i == 0) {
-                   i = BLK_NUMS - 1;
-                   g_kv_mgr.write_pos = (i << BLK_BITS) + BLK_SIZE - g_kv_mgr.block_info[i].space;
+            if ((g_kv_mgr.block_info[i].state == BLK_STATE_USED) ||
+                (g_kv_mgr.block_info[i].state == BLK_STATE_DIRTY)) {
+                next = ((i + 1) == BLK_NUMS) ? 0 : (i + 1);
+                if (g_kv_mgr.block_info[next].state == BLK_STATE_CLEAN) {
+                    g_kv_mgr.write_pos = (i << BLK_BITS) + BLK_SIZE - g_kv_mgr.block_info[i].space;
+                    break;
                 }
-                else {
-                   last_used = i - 1;
-                   g_kv_mgr.write_pos = (last_used << BLK_BITS) + BLK_SIZE - g_kv_mgr.block_info[last_used].space;
-                }
-                break;
             }
         }
     }
@@ -760,6 +756,9 @@ int yos_kv_init(void)
 
     if (g_kv_mgr.kv_initialize)
         return RES_OK;
+
+    if (BLK_NUMS <= KV_GC_RESERVED)
+        return -1;
 
     memset(&g_kv_mgr, 0, sizeof(g_kv_mgr));
     if (yos_mutex_new(&(g_kv_mgr.kv_mutex)) != 0) {
