@@ -7,3 +7,4 @@ $(NAME)_INCLUDES += ../protocol/alink/system/ ../gateway/
 $(NAME)_DEFINES += DEBUG
 
 GLOBAL_DEFINES += CONFIG_YWSS
+GLOBAL_INCLUDES += .
