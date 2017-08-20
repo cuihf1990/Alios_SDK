@@ -5,4 +5,4 @@ $(NAME)_SOURCES := wsf.c wsf_list.c wsf_network.c wsf_client.c wsf_msg.c \
 
 $(NAME)_INCLUDES += ../../protocol/alink/os/
 $(NAME)_DEFINES += DEBUG
-
+GLOBAL_INCLUDES += .
