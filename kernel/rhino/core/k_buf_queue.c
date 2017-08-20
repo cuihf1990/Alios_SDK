@@ -221,10 +221,12 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
 
     if (msg_size > queue->max_msg_size) {
         TRACE_BUF_QUEUE_MAX(g_active_task, queue, msg, msg_size);
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_BUF_QUEUE_MSG_SIZE_OVERFLOW;
     }
 
-    if (msg_size == 0) {
+    if (msg_size == 0) {        
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_INV_PARAM;
     }
 
@@ -261,11 +263,9 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
         YUNOS_CRITICAL_EXIT();
 
 #if (YUNOS_CONFIG_KOBJ_SET > 0)
-
         if (queue->blk_obj.handle != NULL) {
             queue->blk_obj.handle->notify((blk_obj_t *)queue, queue->blk_obj.handle);
         }
-
 #endif
         return YUNOS_SUCCESS;
     }
