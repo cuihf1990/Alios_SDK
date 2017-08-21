@@ -9,4 +9,4 @@ include framework/protocol/alink/system/system.mk
 include framework/protocol/alink/cota/cota.mk
 include framework/protocol/alink/os/os.mk
 
-$(NAME)_COMPONENTS  := gateway gateway.devmgr gateway.msdp
+$(NAME)_COMPONENTS  :=  gateway.devmgr gateway.msdp
