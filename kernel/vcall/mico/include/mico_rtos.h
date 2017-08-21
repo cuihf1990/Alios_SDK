@@ -278,12 +278,6 @@ OSStatus mico_rtos_thread_force_awake( mico_thread_t* thread );
   */
 bool mico_rtos_is_current_thread( mico_thread_t* thread );
 
-/** @brief    Get current thread handler
-  *
-  * @return   Current MiCO RTOS thread handler
-  */
-mico_thread_t* mico_rtos_get_current_thread( void );
-
 /** @brief    Suspend current thread for a specific time
   *
   * @param    seconds : A time interval (Unit: seconds)
