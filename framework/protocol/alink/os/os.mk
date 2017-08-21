@@ -1,6 +1,5 @@
-$(NAME)_INCLUDES += os/
+GLOBAL_INCLUDES  += os
 $(NAME)_INCLUDES += os/product/ os/platform/
-
 
 $(NAME)_SOURCES  += os/os_misc.c os/os_thread.c
 $(NAME)_SOURCES  += os/product/product.c
