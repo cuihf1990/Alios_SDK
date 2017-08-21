@@ -19,7 +19,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/stat.h>
 #include "vfs.h"
+#include "vfs_dirent.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,19 +29,46 @@ extern "C" {
 
 enum {
     VFS_TYPE_NOT_INIT,
-    VFS_TYPE_CHAR_DEV
+    VFS_TYPE_CHAR_DEV,
+    VFS_TYPE_BLOCK_DEV,
+    VFS_TYPE_FS_DEV
 };
 
+#define INODE_IS_TYPE(i,t) \
+    ((i)->type == (t))
+
+#define INODE_IS_CHAR(i)   INODE_IS_TYPE(i, VFS_TYPE_CHAR_DEV)
+#define INODE_IS_BLOCK(i)  INODE_IS_TYPE(i, VFS_TYPE_BLOCK_DEV)
+#define INODE_IS_FS(i)     INODE_IS_TYPE(i, VFS_TYPE_FS_DEV)
+
+#define INODE_GET_TYPE(i) ((i)->type)
+#define INODE_SET_TYPE(i,t) \
+    do \
+      { \
+        (i)->type = (t); \
+      } \
+    while(0)
+
+#define INODE_SET_CHAR(i)  INODE_SET_TYPE(i, VFS_TYPE_CHAR_DEV)
+#define INODE_SET_BLOCK(i) INODE_SET_TYPE(i, VFS_TYPE_BLOCK_DEV)
+#define INODE_SET_FS(i)    INODE_SET_TYPE(i, VFS_TYPE_FS_DEV)
+
 typedef const struct file_ops file_ops_t;
+typedef const struct fs_ops   fs_ops_t;
+
+union inode_ops_t {
+    const file_ops_t    *i_ops;     /* char driver operations */
+    const fs_ops_t      *i_fops;    /* FS operations */
+};
 
 /* this structure represents inode for driver and fs*/
 typedef struct {
-    file_ops_t *ops;      /* inode operations */
-    void       *i_arg;    /* per inode private data */
-    char       *i_name;   /* name of inode */
-    int         i_flags;  /* flags for inode*/
-    uint8_t     type;     /* type for inode */
-    uint8_t     refs;     /* refs for inode */
+    union inode_ops_t   ops;      /* inode operations */
+    void               *i_arg;    /* per inode private data */
+    char               *i_name;   /* name of inode */
+    int                 i_flags;  /* flags for inode*/
+    uint8_t             type;     /* type for inode */
+    uint8_t             refs;     /* refs for inode */
 } inode_t;
 
 typedef struct {
@@ -61,6 +90,22 @@ struct file_ops {
 #endif
 };
 
+struct fs_ops {
+    int     (*open)     (file_t *fp, const char *path, int flags);
+    int     (*close)    (file_t *fp);
+    ssize_t (*read)     (file_t *fp, char *buf, size_t len);
+    ssize_t (*write)    (file_t *fp, const char *buf, size_t len);
+    int     (*lseek)    (file_t *fp, off_t off, int whence);
+    int     (*sync)     (file_t *fp);
+    off_t   (*stat)     (file_t *fp, const char *path, struct stat *st);
+    int     (*unlink)   (file_t *fp, const char *path);
+    int     (*rename)   (file_t *fp, const char *oldpath, const char *newpath);
+    DIR*    (*opendir)  (file_t *fp, const char *path);
+    Dirent* (*readdir)  (file_t *fp, DIR *dir);
+    int     (*closedir) (file_t *fp, DIR *dir);
+    int     (*mkdir)    (file_t *fp, const char *path);
+};
+
 int     inode_init(void);
 int     inode_alloc(void);
 int     inode_del(inode_t *node);
@@ -70,6 +115,8 @@ int     inode_avail_count(void);
 void    inode_ref(inode_t *);
 void    inode_unref(inode_t *);
 int     inode_busy(inode_t *);
+int     inode_reserve(const char *path, inode_t **inode);
+int     inode_release(const char *path);
 
 #ifdef __cplusplus
 }
