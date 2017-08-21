@@ -152,7 +152,7 @@ static void test_kv_error(void)
         return;
     }
 
-    //KV partition all zero
+    /* case situation : all partition filled by zero */
     memset(buf, 0, blk_size);
     for (i = 0; i < blk_nums; i++) {
         offset = i * blk_size;
@@ -160,13 +160,13 @@ static void test_kv_error(void)
     }
     test_kv_error_cycle();
 
-    //KV block header state error
+    /* case situation : block header state is error */
     buf[0] = 'K';
     offset = 0;
     hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     test_kv_error_cycle();
 
-    //KV block header is normal, but others is filled by 0
+    /* case situation : block header is normal, but others is filled by 0 */
     buf[0] = 'K';
     buf[1] = 0xCC;
     for (i = 0; i < blk_nums; i++) {
@@ -174,6 +174,19 @@ static void test_kv_error(void)
         hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     }
     test_kv_error_cycle();    
+
+    /* case situation : one middle block is abnormal, and other block is clean */
+    memset(buf, -1, blk_size);
+    buf[0] = 'K';
+    buf[1] = 0xEE;
+    for (i = 0; i < blk_nums; i++) {
+        offset = i * blk_size;
+        hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+    }
+    buf[1] = 0;
+    offset = blk_size;
+    hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+    test_kv_error_cycle(); 
 
     if(buf)
         yos_free(buf);
