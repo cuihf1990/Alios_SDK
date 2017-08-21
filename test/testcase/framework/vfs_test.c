@@ -33,6 +33,41 @@ static int test_ioctl(file_t *node, int cmd, unsigned long arg)
     return -123;
 }
 
+static int test_lseek(file_t *fp, off_t off, int whence)
+{
+    return -123;
+}
+
+static int test_sync(file_t *fp) 
+{
+    return -123;
+}
+
+static off_t test_stat(file_t *fp, const char *path, struct stat *st)
+{
+    return -123;
+}
+
+static int test_unlink(file_t *fp, const char *path)
+{
+    return -123;
+}
+
+static int test_rename(file_t *fp, const char *oldpath, const char *newpath)
+{
+    return -123;
+}
+
+static int test_closedir(file_t *fp, DIR *dir)
+{
+    return -123;
+}
+
+static int test_mkdir(file_t *fp, const char *path)
+{
+    return -123;
+}
+
 static void test_yos_vfs_case(void)
 {
     int i   = 0;
@@ -84,6 +119,49 @@ static void test_yos_vfs_case(void)
         YUNIT_ASSERT(E_VFS_K_ERR == ret);
     }
 }
+
+static void test_vfs_fs_case(void)
+{
+    int i   = 0;
+    int fd  = 0;
+    int ret = 0;
+    struct stat st;
+    DIR dir;
+    char *names = "/tmp/abcd0";
+
+    fs_ops_t myops = {
+        .open       = NULL,
+        .lseek      = test_lseek,
+        .sync       = test_sync,
+        .stat       = test_stat,
+        .unlink     = test_unlink,
+        .rename     = test_rename,
+        .mkdir      = test_mkdir,
+    };
+
+    ret = yos_register_fs(names, &myops, NULL);
+    YUNIT_ASSERT(ret == VFS_SUCCESS);
+
+    fd = yos_open(names, 0);
+    YUNIT_ASSERT(fd >= 0);
+    
+    YUNIT_ASSERT(-123 == yos_lseek(fd, 0, 0));
+    YUNIT_ASSERT(-123 == yos_sync(fd));
+    yos_close(fd);
+
+    YUNIT_ASSERT(-123 == yos_stat(names, &st));
+    YUNIT_ASSERT(-123 == yos_unlink(names));
+    YUNIT_ASSERT(-123 == yos_rename(names, names));
+    YUNIT_ASSERT(-123 == yos_mkdir(names));
+
+    ret = yos_unregister_fs(names);
+    YUNIT_ASSERT(ret == 0);
+
+    YUNIT_ASSERT(E_VFS_INODE_NOT_FOUND == yos_stat(names, &st));
+    YUNIT_ASSERT(E_VFS_INODE_NOT_FOUND == yos_unlink(names));
+    YUNIT_ASSERT(E_VFS_INODE_NOT_FOUND == yos_rename(names, names));
+}
+
 
 static int create_socket(int port)
 {
@@ -191,6 +269,7 @@ static void test_yos_poll_case(void)
 static yunit_test_case_t yos_vfs_testcases[] = {
     { "register", test_yos_vfs_case },
     { "poll", test_yos_poll_case },
+    { "fs_register", test_vfs_fs_case},
     YUNIT_TEST_CASE_NULL
 };
 

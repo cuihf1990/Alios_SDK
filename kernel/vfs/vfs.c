@@ -471,7 +471,7 @@ int yos_rename(const char *oldpath, const char *newpath)
     inode_t *node;
     int      err = E_VFS_NOSYS;
 
-    if (oldpath == NULL) {
+    if (oldpath == NULL || newpath == NULL) {
         return E_VFS_NULL_PTR;
     }
 
