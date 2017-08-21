@@ -73,7 +73,6 @@ endif
 
 endif
 
-GLOBAL_LDFLAGS += -Wl,-wrap,_malloc_r -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,_free_r -Wl,-wrap,_realloc_r 
 $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/func/rf_test \
                     beken7231/mico_api \
@@ -162,8 +161,6 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/os/FreeRTOSv9.0.0
 
 $(NAME)_SOURCES :=  yos/yos.c
-$(NAME)_SOURCES +=  yos/newlib_stub.c
-$(NAME)_LINK_FILES := yos/newlib_stub.o
 $(NAME)_INCLUDES += yos
                     
 $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
