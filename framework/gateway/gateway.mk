@@ -18,7 +18,7 @@ NAME := gateway
 
 GLOBAL_INCLUDES += ./
 
-GLOBAL_CFLAGS += -DMESH_GATEWAY_SERVICE
+GLOBAL_CFLAGS += -DMESH_GATEWAY_SERVICE -DGATEWAY_SDK
 
 $(NAME)_CFLAGS += -Wall -Werror
 
@@ -27,4 +27,4 @@ $(NAME)_SOURCES += \
 
 $(NAME)_COMPONENTS += cjson protocols.net protocols.mesh protocol.alink gateway.devmgr gateway.msdp
 
-$(NAME)_CFLAGS += -DGATEWAY_SDK
+
