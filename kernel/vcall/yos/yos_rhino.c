@@ -72,7 +72,7 @@ void yos_task_exit(int code)
 
 const char *yos_task_name(void)
 {
-    return g_active_task->task_name;
+    return yunos_cur_task_get()->task_name;
 }
 
 int yos_task_key_create(yos_task_key_t *key)
@@ -102,14 +102,14 @@ void yos_task_key_delete(yos_task_key_t key)
 
 int yos_task_setspecific(yos_task_key_t key, void *vp)
 {
-    return yunos_task_info_set(g_active_task, key, vp);
+    return yunos_task_info_set(yunos_cur_task_get(), key, vp);
 }
 
 void *yos_task_getspecific(yos_task_key_t key)
 {
     void *vp = NULL;
 
-    yunos_task_info_get(g_active_task, key, &vp);
+    yunos_task_info_get(yunos_cur_task_get(), key, &vp);
 
     return vp;
 }
