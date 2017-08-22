@@ -168,7 +168,7 @@ void test_uradar_vector_router_case(void)
     cmd->cmd = 0;
     YUNIT_ASSERT(UR_ERROR_FAIL == vector_router_message_received(data, len));
     /* neighbor updated */
-    neighbor.addr.addr.short_addr = 0x1000;
+    neighbor.sid = 0x1000;
     memset(neighbor.ueid, 0x00, sizeof(neighbor.ueid));
     neighbor.ueid[0] = 0x02;
     neighbor.stats.link_cost = 256;

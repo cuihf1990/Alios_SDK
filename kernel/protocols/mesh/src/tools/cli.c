@@ -645,7 +645,7 @@ void process_sids(int argc, char *argv[])
                 continue;
             }
             response_append(EXT_ADDR_FMT ", %04x\r\n",
-                            EXT_ADDR_DATA(node->ueid), node->addr.addr.short_addr);
+                            EXT_ADDR_DATA(node->ueid), node->sid);
         }
     }
 
@@ -689,7 +689,7 @@ void process_testcmd(int argc, char *argv[])
                 if (nbr->state != STATE_PARENT) {
                     continue;
                 }
-                response_append(EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac.addr));
+                response_append(EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac));
                 return;
             }
         }
@@ -912,9 +912,9 @@ void process_nbrs(int argc, char *argv[])
         response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
         slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
             response_append("\t" EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->ueid));
-            response_append("," EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac.addr));
-            response_append(",0x%04x", nbr->addr.netid);
-            response_append(",0x%04x", nbr->addr.addr.short_addr);
+            response_append("," EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac));
+            response_append(",0x%04x", nbr->netid);
+            response_append(",0x%04x", nbr->sid);
             response_append(",%d", nbr->stats.link_cost);
             response_append(",%d", nbr->ssid_info.child_num);
 

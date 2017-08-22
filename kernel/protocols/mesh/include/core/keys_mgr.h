@@ -25,7 +25,7 @@ enum {
 };
 
 ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
-                                  const mac_address_t *addr);
+                                  const uint8_t *mac);
 ur_error_t calculate_network_key(void);
 
 ur_error_t set_symmetric_key(uint8_t key_index, uint8_t *payload,

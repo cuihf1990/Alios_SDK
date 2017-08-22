@@ -28,13 +28,13 @@ static uint8_t g_symmetric_key[] = {
 };
 
 ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
-                                  const mac_address_t *addr)
+                                  const uint8_t *mac)
 {
     ur_error_t error;
     uint8_t timestamp_expand[KEY_SIZE];
     uint8_t index;
 
-    if (key == NULL || addr == NULL) {
+    if (key == NULL || mac == NULL) {
         return UR_ERROR_MEM;
     }
 
@@ -43,9 +43,8 @@ ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
                (uint8_t *)&timestamp, sizeof(uint32_t));
     }
 
-    for (index = 0; index < KEY_SIZE / sizeof(addr->addr); index++) {
-        memcpy(&key[index * sizeof(addr->addr)], addr->addr,
-               sizeof(addr->addr));
+    for (index = 0; index < KEY_SIZE / EXT_ADDR_SIZE; index++) {
+        memcpy(&key[index * EXT_ADDR_SIZE], mac, EXT_ADDR_SIZE);
     }
 
     error = umesh_aes_encrypt(timestamp_expand, KEY_SIZE,

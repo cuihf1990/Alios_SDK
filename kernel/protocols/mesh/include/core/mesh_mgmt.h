@@ -163,6 +163,8 @@ uint16_t tlvs_set_value(network_context_t *network,
 int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length);
 
 void get_leader_addr(ur_addr_t *addr);
+void set_mesh_short_addr(ur_addr_t *addr, uint16_t netid, uint16_t sid);
+void set_mesh_ext_addr(ur_addr_t *addr, uint16_t netid, uint8_t *value);
 
 static inline uint16_t mm_get_main_netid(network_context_t *network)
 {
