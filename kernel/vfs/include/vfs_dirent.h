@@ -21,21 +21,16 @@
 extern "C" {
 #endif
 
-#define CONFIG_NAME_MAX 255
 typedef struct {
     int     d_ino;                      /* file number */
     uint8_t d_type;                     /* type of file */
-    char    d_name[CONFIG_NAME_MAX+1];  /* file name */
-}vfs_dirent_t;
+    char*   d_name;                     /* file name */
+}yos_dirent_t;
 
 typedef struct {
     int         dd_vfs_fd;              /* This keeps track of the current directory position for telldir */
     int         dd_rsv;
-}vfs_dir_t;
-
-typedef vfs_dir_t DIR;
-typedef vfs_dirent_t Dirent;
-
+}yos_dir_t;
 
 #ifdef __cplusplus
 }

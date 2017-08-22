@@ -510,11 +510,11 @@ int yos_rename(const char *oldpath, const char *newpath)
     return err;
 }
 
-DIR* yos_opendir(const char *path)
+yos_dir_t* yos_opendir(const char *path)
 {
     file_t  *file;
     inode_t *node;
-    DIR *dp = NULL;
+    yos_dir_t *dp = NULL;
 
     if (path == NULL) {
         return NULL;
@@ -560,7 +560,7 @@ DIR* yos_opendir(const char *path)
     return dp;
 }
 
-int yos_closedir(DIR *dir)
+int yos_closedir(yos_dir_t *dir)
 {
     file_t  *f;
     inode_t *node;
@@ -594,11 +594,11 @@ int yos_closedir(DIR *dir)
     return err;
 }
 
-Dirent *yos_readdir(DIR *dir)
+yos_dirent_t* yos_readdir(yos_dir_t *dir)
 {
     file_t *f;
     inode_t *node;
-    Dirent *ret = NULL;
+    yos_dirent_t *ret = NULL;
 
     if (dir == NULL)
         return NULL;

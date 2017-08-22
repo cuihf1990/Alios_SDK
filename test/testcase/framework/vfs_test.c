@@ -58,11 +58,6 @@ static int test_rename(file_t *fp, const char *oldpath, const char *newpath)
     return -123;
 }
 
-static int test_closedir(file_t *fp, DIR *dir)
-{
-    return -123;
-}
-
 static int test_mkdir(file_t *fp, const char *path)
 {
     return -123;
@@ -126,7 +121,7 @@ static void test_vfs_fs_case(void)
     int fd  = 0;
     int ret = 0;
     struct stat st;
-    DIR dir;
+    yos_dir_t dir;
     char *names = "/tmp/abcd0";
 
     fs_ops_t myops = {

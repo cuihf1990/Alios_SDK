@@ -91,19 +91,19 @@ struct file_ops {
 };
 
 struct fs_ops {
-    int     (*open)     (file_t *fp, const char *path, int flags);
-    int     (*close)    (file_t *fp);
-    ssize_t (*read)     (file_t *fp, char *buf, size_t len);
-    ssize_t (*write)    (file_t *fp, const char *buf, size_t len);
-    int     (*lseek)    (file_t *fp, off_t off, int whence);
-    int     (*sync)     (file_t *fp);
-    off_t   (*stat)     (file_t *fp, const char *path, struct stat *st);
-    int     (*unlink)   (file_t *fp, const char *path);
-    int     (*rename)   (file_t *fp, const char *oldpath, const char *newpath);
-    DIR*    (*opendir)  (file_t *fp, const char *path);
-    Dirent* (*readdir)  (file_t *fp, DIR *dir);
-    int     (*closedir) (file_t *fp, DIR *dir);
-    int     (*mkdir)    (file_t *fp, const char *path);
+    int             (*open)     (file_t *fp, const char *path, int flags);
+    int             (*close)    (file_t *fp);
+    ssize_t         (*read)     (file_t *fp, char *buf, size_t len);
+    ssize_t         (*write)    (file_t *fp, const char *buf, size_t len);
+    int             (*lseek)    (file_t *fp, off_t off, int whence);
+    int             (*sync)     (file_t *fp);
+    off_t           (*stat)     (file_t *fp, const char *path, struct stat *st);
+    int             (*unlink)   (file_t *fp, const char *path);
+    int             (*rename)   (file_t *fp, const char *oldpath, const char *newpath);
+    yos_dir_t*      (*opendir)  (file_t *fp, const char *path);
+    yos_dirent_t*   (*readdir)  (file_t *fp, yos_dir_t *dir);
+    int             (*closedir) (file_t *fp, yos_dir_t *dir);
+    int             (*mkdir)    (file_t *fp, const char *path);
 };
 
 int     inode_init(void);
