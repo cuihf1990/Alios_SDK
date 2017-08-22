@@ -17,24 +17,24 @@
 #include <k_api.h>
 
 kstat_t      g_sys_stat;
-uint8_t      g_idle_task_spawned;
+uint8_t      g_idle_task_spawned[YUNOS_CONFIG_CPU_NUM];
 
 runqueue_t   g_ready_queue;
 
 /* schedule lock counter */
-uint8_t      g_sched_lock;
-uint8_t      g_intrpt_nested_level;
+uint8_t      g_sched_lock[YUNOS_CONFIG_CPU_NUM];
+uint8_t      g_intrpt_nested_level[YUNOS_CONFIG_CPU_NUM];
 
 /* highest pri task in ready queue */
-ktask_t     *g_preferred_ready_task;
+ktask_t     *g_preferred_ready_task[YUNOS_CONFIG_CPU_NUM];
 
 /* current active task */
-ktask_t     *g_active_task;
+ktask_t     *g_active_task[YUNOS_CONFIG_CPU_NUM];
 
 /* idle task attribute */
-ktask_t      g_idle_task;
-idle_count_t g_idle_count;
-cpu_stack_t  g_idle_task_stack[YUNOS_CONFIG_IDLE_TASK_STACK_SIZE];
+ktask_t      g_idle_task[YUNOS_CONFIG_CPU_NUM];
+idle_count_t g_idle_count[YUNOS_CONFIG_CPU_NUM];
+cpu_stack_t  g_idle_task_stack[YUNOS_CONFIG_CPU_NUM][YUNOS_CONFIG_IDLE_TASK_STACK_SIZE];
 
 /* tick attribute */
 tick_t       g_tick_count;

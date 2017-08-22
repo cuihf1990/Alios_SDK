@@ -30,12 +30,21 @@
         YUNOS_CPU_INTRPT_ENABLE();      \
     } while (0)
 
+#if (YUNOS_CONFIG_CPU_NUM > 1)
+#define YUNOS_CRITICAL_EXIT_SCHED()         \
+        do {                                \
+            intrpt_disable_measure_stop();  \
+            core_sched();                   \
+            YUNOS_CPU_INTRPT_ENABLE();      \
+        } while (0)
+#else
 #define YUNOS_CRITICAL_EXIT_SCHED()         \
         do {                                \
             intrpt_disable_measure_stop();  \
             YUNOS_CPU_INTRPT_ENABLE();      \
             core_sched();                   \
         } while (0)
+#endif
 
 #else /* YUNOS_CONFIG_DISABLE_INTRPT_STATS */
 #define YUNOS_CRITICAL_ENTER()          \
@@ -48,11 +57,19 @@
         YUNOS_CPU_INTRPT_ENABLE();      \
     } while (0)
 
+#if (YUNOS_CONFIG_CPU_NUM > 1)
+#define YUNOS_CRITICAL_EXIT_SCHED()     \
+        do {                            \
+            core_sched();               \
+            YUNOS_CPU_INTRPT_ENABLE();  \
+        } while (0)
+#else
 #define YUNOS_CRITICAL_EXIT_SCHED()     \
         do {                            \
             YUNOS_CPU_INTRPT_ENABLE();  \
             core_sched();               \
         } while (0)
+#endif
 
 #endif /* YUNOS_CONFIG_DISABLE_INTRPT_STATS */
 

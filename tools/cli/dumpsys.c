@@ -70,8 +70,8 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     memset(printbuf, 0, totallen);
 
     yunos_sched_disable();
-    preferred_ready_task_get(&g_ready_queue);
-    candidate = g_preferred_ready_task;
+    preferred_cpu_ready_task_get(&g_ready_queue, cpu_cur_get());
+    candidate = g_preferred_ready_task[cpu_cur_get()];
 
     safesprintf(printbuf, totallen, offset, "---------------------------------------------------------------------\r\n");
 

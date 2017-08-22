@@ -85,7 +85,7 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
         yunos_timer_start(timer);
     }
 
-    TRACE_TIMER_CREATE(g_active_task, timer);
+    TRACE_TIMER_CREATE(g_active_task[cpu_cur_get()], timer);
 
     return YUNOS_SUCCESS;
 }
@@ -121,7 +121,7 @@ kstat_t yunos_timer_del(ktimer_t *timer)
 
     yunos_mutex_unlock(&g_timer_mutex);
 
-    TRACE_TIMER_DEL(g_active_task, timer);
+    TRACE_TIMER_DEL(g_active_task[cpu_cur_get()], timer);
 
     return YUNOS_SUCCESS;
 }

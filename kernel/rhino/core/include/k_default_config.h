@@ -262,6 +262,10 @@
 #define YUNOS_CONFIG_TRACE                   0
 #endif
 
+#ifndef YUNOS_CONFIG_CPU_NUM
+#define YUNOS_CONFIG_CPU_NUM                 1
+#endif
+
 #if ((YUNOS_CONFIG_DYNTICKLESS >= 1) && (YUNOS_CONFIG_SCHED_RR != 0))
 #error  "YUNOS_CONFIG_SCHED_RR should be 0 when YUNOS_CONFIG_DYNTICKLESS is enabled."
 #endif

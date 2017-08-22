@@ -31,12 +31,12 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
 
 void fiq_pre_proc(void)
 {
-    g_intrpt_nested_level++;
+    g_intrpt_nested_level[cpu_cur_get()]++;
 }
 
 void fiq_end_proc(void)
 {
-    g_intrpt_nested_level--;
+    g_intrpt_nested_level[cpu_cur_get()]--;
 }
 
 /*-----------------------------------------------------------*/

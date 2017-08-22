@@ -54,7 +54,7 @@ kstat_t yunos_task_sem_give(ktask_t *task)
 
 kstat_t yunos_task_sem_take(tick_t ticks)
 {
-    return yunos_sem_take(g_active_task->task_sem_obj, ticks);
+    return yunos_sem_take(yunos_cur_task_get()->task_sem_obj, ticks);
 }
 
 kstat_t yunos_task_sem_count_set(ktask_t *task, sem_count_t count)

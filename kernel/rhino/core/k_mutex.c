@@ -42,7 +42,7 @@ kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
 
     mutex->blk_obj.obj_type = YUNOS_MUTEX_OBJ_TYPE;
 
-    TRACE_MUTEX_CREATE(g_active_task, mutex, name);
+    TRACE_MUTEX_CREATE(g_active_task[cpu_cur_get()], mutex, name);
 
     return YUNOS_SUCCESS;
 }
@@ -62,7 +62,7 @@ static void mutex_release(ktask_t *task, kmutex_t *mutex_rel)
         /* change prio */
         task_pri_change(task, new_pri);
 
-        TRACE_MUTEX_RELEASE(g_active_task, task, new_pri);
+        TRACE_MUTEX_RELEASE(g_active_task[cpu_cur_get()], task, new_pri);
 
     }
 }
@@ -110,7 +110,7 @@ kstat_t yunos_mutex_del(kmutex_t *mutex)
     klist_rm(&mutex->mutex_item);
 #endif
 
-    TRACE_MUTEX_DEL(g_active_task, mutex);
+    TRACE_MUTEX_DEL(g_active_task[cpu_cur_get()], mutex);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
@@ -188,7 +188,7 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
     klist_rm(&mutex->mutex_item);
 #endif
 
-    TRACE_MUTEX_DEL(g_active_task, mutex);
+    TRACE_MUTEX_DEL(g_active_task[cpu_cur_get()], mutex);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
@@ -286,6 +286,7 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
 
     kstat_t  ret;
     ktask_t *mutex_task;
+    uint8_t  cur_cpu_num;
 
     NULL_PARA_CHK(mutex);
 
@@ -302,8 +303,10 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
         return YUNOS_KOBJ_TYPE_ERR;
     }
 
+    cur_cpu_num = cpu_cur_get();
+
     /* if the same task get the same mutex again, it causes mutex owner nested */
-    if (g_active_task == mutex->mutex_task) {
+    if (g_active_task[cur_cpu_num] == mutex->mutex_task) {
         if (mutex->owner_nested == (mutex_nested_t) - 1) {
             /* fatal error here, system must be stoped here */
             k_err_proc(YUNOS_MUTEX_NESTED_OVF);
@@ -321,12 +324,12 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
     mutex_task = mutex->mutex_task;
     if (mutex_task == NULL) {
         /* get lock */
-        mutex->mutex_task         = g_active_task;
-        mutex->mutex_list         = g_active_task->mutex_list;
-        g_active_task->mutex_list = mutex;
+        mutex->mutex_task         = g_active_task[cur_cpu_num];
+        mutex->mutex_list         = g_active_task[cur_cpu_num]->mutex_list;
+        g_active_task[cur_cpu_num]->mutex_list = mutex;
         mutex->owner_nested       = 1u;
 
-        TRACE_MUTEX_GET(g_active_task, mutex, ticks);
+        TRACE_MUTEX_GET(g_active_task[cur_cpu_num], mutex, ticks);
 
         YUNOS_CRITICAL_EXIT();
 
@@ -340,24 +343,24 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
     }
 
     /* system is locked so task can not be blocked just return immediately */
-    if (g_sched_lock > 0u) {
+    if (g_sched_lock[cur_cpu_num] > 0u) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_SCHED_DISABLE;
     }
 
     /* if current task is a higher prio task and block on the mutex
        prio inverse condition happened, prio inherit method is used here */
-    if (g_active_task->prio < mutex_task->prio) {
-        task_pri_change(mutex_task, g_active_task->prio);
+    if (g_active_task[cur_cpu_num]->prio < mutex_task->prio) {
+        task_pri_change(mutex_task, g_active_task[cur_cpu_num]->prio);
 
-        TRACE_TASK_PRI_INV(g_active_task, mutex_task);
+        TRACE_TASK_PRI_INV(g_active_task[cur_cpu_num], mutex_task);
 
     }
 
     /* any way block the current task */
-    pend_to_blk_obj((blk_obj_t *)mutex, g_active_task, ticks);
+    pend_to_blk_obj((blk_obj_t *)mutex, g_active_task[cur_cpu_num], ticks);
 
-    TRACE_MUTEX_GET_BLK(g_active_task, mutex, ticks);
+    TRACE_MUTEX_GET_BLK(g_active_task[cur_cpu_num], mutex, ticks);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
@@ -365,7 +368,7 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
     YUNOS_CPU_INTRPT_DISABLE();
 
     /* so the task is waked up, need know which reason cause wake up */
-    ret = pend_state_end_proc(g_active_task);
+    ret = pend_state_end_proc(g_active_task[cpu_cur_get()]);
 
     YUNOS_CPU_INTRPT_ENABLE();
 #else
@@ -380,6 +383,7 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
 
     klist_t *blk_list_head;
     ktask_t *task;
+    uint8_t  cur_cpu_num;
 
     NULL_PARA_CHK(mutex);
 
@@ -396,8 +400,10 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
         return YUNOS_KOBJ_TYPE_ERR;
     }
 
+    cur_cpu_num = cpu_cur_get();
+
     /* mutex must be released by itself */
-    if (g_active_task != mutex->mutex_task) {
+    if (g_active_task[cur_cpu_num] != mutex->mutex_task) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_MUTEX_NOT_RELEASED_BY_OWNER;
     }
@@ -409,7 +415,7 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
         return YUNOS_MUTEX_OWNER_NESTED;
     }
 
-    mutex_release(g_active_task, mutex);
+    mutex_release(g_active_task[cur_cpu_num], mutex);
 
     blk_list_head = &mutex->blk_obj.blk_list;
 
@@ -418,7 +424,7 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
         /* No wait task */
         mutex->mutex_task = NULL;
 
-        TRACE_MUTEX_RELEASE_SUCCESS(g_active_task, mutex);
+        TRACE_MUTEX_RELEASE_SUCCESS(g_active_task[cur_cpu_num], mutex);
         YUNOS_CRITICAL_EXIT();
 
         return YUNOS_SUCCESS;
@@ -430,7 +436,7 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
     /* wake up the occupy task, which is the highst prio task on the list */
     pend_task_wakeup(task);
 
-    TRACE_MUTEX_TASK_WAKE(g_active_task, task, mutex);
+    TRACE_MUTEX_TASK_WAKE(g_active_task[cur_cpu_num], task, mutex);
 
     /* change mutex get task */
     mutex->mutex_task   = task;
@@ -442,7 +448,6 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
 
     return YUNOS_SUCCESS;
 }
-
 
 kstat_t yunos_mutex_is_valid(kmutex_t *mutex)
 {

@@ -124,7 +124,7 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
         return ret;
     }
 
-    TRACE_WORKQUEUE_CREATE(g_active_task, workqueue);
+    TRACE_WORKQUEUE_CREATE(g_active_task[cpu_cur_get()], workqueue);
 
     return YUNOS_SUCCESS;
 }
@@ -142,7 +142,7 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
         return YUNOS_WORKQUEUE_NOT_EXIST;
     }
 
-    TRACE_WORKQUEUE_DEL(g_active_task, workqueue);
+    TRACE_WORKQUEUE_DEL(g_active_task[cpu_cur_get()], workqueue);
 
     YUNOS_CRITICAL_ENTER();
     if (!is_klist_empty(&(workqueue->work_list))) {
@@ -234,7 +234,7 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
         }
     }
 
-    TRACE_WORK_INIT(g_active_task, work);
+    TRACE_WORK_INIT(g_active_task[cpu_cur_get()], work);
 
     return YUNOS_SUCCESS;
 }
