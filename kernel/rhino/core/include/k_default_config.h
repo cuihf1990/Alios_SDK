@@ -75,10 +75,6 @@
 #define YUNOS_CONFIG_MM_BYTE                 0
 #endif
 
-#ifndef YUNOS_CONFIG_MM_BESTFIT
-#define YUNOS_CONFIG_MM_BESTFIT              1
-#endif
-
 #ifndef YUNOS_CONFIG_TASK_SEM
 #define YUNOS_CONFIG_TASK_SEM                0
 #endif

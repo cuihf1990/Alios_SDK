@@ -83,8 +83,6 @@ $(NAME)_SOURCES := \
     core/timer/timer_test.c \
     core/workqueue/workqueue_test.c \
     core/workqueue/workqueue_interface.c \
-    core/mm_region/mm_region_break.c \
-    core/mm_region/mm_region_test.c \
     core/ringbuf/ringbuf_break.c \
     core/ringbuf/ringbuf_test.c \
     core/combination/comb_test.c \

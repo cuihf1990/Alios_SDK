@@ -59,9 +59,6 @@ typedef struct blk_obj {
 typedef struct {
     klist_t task_head;
     klist_t mutex_head;
-#if (YUNOS_CONFIG_MM_FIRSTFIT > 0)
-    klist_t mmpool_head;
-#endif
 
 #if (YUNOS_CONFIG_MM_BLK > 0)
     klist_t mblkpool_head;

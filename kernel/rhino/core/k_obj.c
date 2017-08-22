@@ -110,16 +110,6 @@ kworkqueue_t  g_workqueue_default;
 cpu_stack_t   g_workqueue_stack[YUNOS_CONFIG_WORKQUEUE_STACK_SIZE];
 #endif
 
-#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRST_FIT > 0)
-klist_t            g_mm_region_list_head = { NULL, NULL };
-k_mm_region_head_t g_kmm_region_head; /*kernel mm region*/
-
-
-#if (YUNOS_CONFIG_MM_REGION_MUTEX == 1)
-kmutex_t g_mm_region_mutex;
-#endif
-#endif
-
 #if (YUNOS_CONFIG_MM_TLF > 0)
 
 k_mm_head       *g_kmm_head;
