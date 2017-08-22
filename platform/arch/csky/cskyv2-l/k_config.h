@@ -29,7 +29,6 @@
 #define YUNOS_CONFIG_TIMER                   1
 #define YUNOS_CONFIG_BUF_QUEUE               1
 #define YUNOS_CONFIG_MM_BLK                  1
-#define YUNOS_CONFIG_MM_FIRSTFIT             1
 #define YUNOS_CONFIG_KOBJ_SET                1
 
 /* kernel dynamic tick conf */

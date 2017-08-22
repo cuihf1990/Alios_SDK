@@ -82,11 +82,6 @@ void _trace_mblk_pool_create(ktask_t *task, mblk_pool_t *pool);
 /* mm trace function */
 //void _trace_mm_pool_create(ktask_t *task, mm_pool_t *pool);
 
-/* mm region function */
-#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
-void _trace_mm_region_create(ktask_t *task, k_mm_region_t *regions);
-#endif
-
 /* work queue trace */
 void _trace_work_init(ktask_t *task, kwork_t *work);
 void _trace_workqueue_create(ktask_t *task, kworkqueue_t *workqueue);
