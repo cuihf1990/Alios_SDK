@@ -26,6 +26,16 @@ void   cpu_first_task_start(void);
 void  *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_t entry);
 void   cpu_task_switch(void);
 
+#if (YUNOS_CONFIG_CPU_NUM > 1)
+void cpu_signal(uint8_t cpu_num);
+uint8_t cpu_cur_get(void);
+#else
+YUNOS_INLINE uint8_t cpu_cur_get(void)
+{
+    return 0;
+}
+#endif
+
 #define CPSR_ALLOC()    sigset_t cpsr
 
 #define YUNOS_CPU_INTRPT_DISABLE() { cpsr = cpu_intrpt_save(); }

@@ -68,9 +68,17 @@ YUNOS_INLINE kstat_t rhino_init(void)
     dyn_mem_proc_task_start();
 #endif
 
-    yunos_task_create(&g_idle_task, "idle_task", NULL, YUNOS_IDLE_PRI, 0,
-                      g_idle_task_stack, YUNOS_CONFIG_IDLE_TASK_STACK_SIZE,
-                      idle_task, 1u);
+#if (YUNOS_CONFIG_CPU_NUM > 1)
+    for (uint8_t i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+        yunos_task_cpu_create(&g_idle_task[i], "idle_task", NULL, YUNOS_IDLE_PRI, 0,
+                              &g_idle_task_stack[i][0], YUNOS_CONFIG_IDLE_TASK_STACK_SIZE,
+                               idle_task, i, 1u);
+    }
+#else
+    yunos_task_create(&g_idle_task[0], "idle_task", NULL, YUNOS_IDLE_PRI, 0,
+                      &g_idle_task_stack[0][0], YUNOS_CONFIG_IDLE_TASK_STACK_SIZE,
+                       idle_task, 1u);
+#endif
 
 #if (YUNOS_CONFIG_TIMER > 0)
     timer_init();
@@ -92,9 +100,16 @@ YUNOS_INLINE kstat_t rhino_init(void)
 YUNOS_INLINE kstat_t rhino_start(void)
 {
     if (g_sys_stat == YUNOS_STOPPED) {
-        preferred_ready_task_get(&g_ready_queue);
-        g_active_task = g_preferred_ready_task;
-
+#if (YUNOS_CONFIG_CPU_NUM > 1)
+        for (uint8_t i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+            preferred_cpu_ready_task_get(&g_ready_queue, i);
+            g_active_task[i] = g_preferred_ready_task[i];
+            g_active_task[i]->cur_exc = 1;
+        }
+#else
+        preferred_cpu_ready_task_get(&g_ready_queue, 0);
+        g_active_task[0] = g_preferred_ready_task[0];
+#endif
         workqueue_init();
 
 #if (YUNOS_CONFIG_USER_HOOK > 0)
@@ -149,14 +164,14 @@ kstat_t yunos_intrpt_enter(void)
 
     YUNOS_CPU_INTRPT_DISABLE();
 
-    if (g_intrpt_nested_level >= YUNOS_CONFIG_INTRPT_MAX_NESTED_LEVEL) {
+    if (g_intrpt_nested_level[cpu_cur_get()] >= YUNOS_CONFIG_INTRPT_MAX_NESTED_LEVEL) {
         k_err_proc(YUNOS_INTRPT_NESTED_LEVEL_OVERFLOW);
         YUNOS_CPU_INTRPT_ENABLE();
 
         return YUNOS_INTRPT_NESTED_LEVEL_OVERFLOW;
     }
 
-    g_intrpt_nested_level++;
+    g_intrpt_nested_level[cpu_cur_get()]++;
 
     YUNOS_CPU_INTRPT_ENABLE();
 
@@ -166,42 +181,51 @@ kstat_t yunos_intrpt_enter(void)
 void yunos_intrpt_exit(void)
 {
     CPSR_ALLOC();
+    uint8_t cur_cpu_num;
 
 #if (YUNOS_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
     yunos_intrpt_stack_ovf_check();
 #endif
 
-    if (g_intrpt_nested_level == 0u) {
+    YUNOS_CPU_INTRPT_DISABLE();
+
+    cur_cpu_num = cpu_cur_get();
+
+    if (g_intrpt_nested_level[cur_cpu_num] == 0u) {
+        YUNOS_CPU_INTRPT_ENABLE();
         k_err_proc(YUNOS_INV_INTRPT_NESTED_LEVEL);
     }
 
-    YUNOS_CPU_INTRPT_DISABLE();
+    g_intrpt_nested_level[cur_cpu_num]--;
 
-    g_intrpt_nested_level--;
-
-    if (g_intrpt_nested_level > 0u) {
+    if (g_intrpt_nested_level[cur_cpu_num] > 0u) {
         YUNOS_CPU_INTRPT_ENABLE();
         return;
     }
 
-    if (g_sched_lock > 0u) {
+    if (g_sched_lock[cur_cpu_num] > 0u) {
         YUNOS_CPU_INTRPT_ENABLE();
         return;
     }
 
-    preferred_ready_task_get(&g_ready_queue);
-    if (g_preferred_ready_task == g_active_task) {
+    preferred_cpu_ready_task_get(&g_ready_queue, cur_cpu_num);
+
+    if (g_preferred_ready_task[cur_cpu_num] == g_active_task[cur_cpu_num]) {
         YUNOS_CPU_INTRPT_ENABLE();
         return;
     }
 
-    TRACE_INTRPT_TASK_SWITCH(g_active_task, g_preferred_ready_task);
+    TRACE_INTRPT_TASK_SWITCH(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
+
+    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    g_active_task[cur_cpu_num]->cur_exc = 0;
+    #endif
 
     cpu_intrpt_switch();
 
 #if (YUNOS_CONFIG_STACK_OVF_CHECK_HW != 0)
-    cpu_task_stack_protect(g_preferred_ready_task->task_stack_base,
-                           g_preferred_ready_task->stack_size);
+    cpu_task_stack_protect(g_preferred_ready_task[cur_cpu_num]->task_stack_base,
+                           g_preferred_ready_task[cur_cpu_num]->stack_size);
 #endif
 
     YUNOS_CPU_INTRPT_ENABLE();

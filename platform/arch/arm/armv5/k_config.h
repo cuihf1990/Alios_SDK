@@ -106,5 +106,7 @@
 #define YUNOS_CONFIG_TASK_SCHED_STATS        0
 #define YUNOS_CONFIG_CPU_USAGE_TASK_STACK    256
 
+#define YUNOS_CONFIG_CPU_NUM                 1
+
 #endif /* CONFIG_H */
 

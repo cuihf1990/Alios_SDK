@@ -18,24 +18,24 @@
 #define K_INTERNAL_H
 
 extern kstat_t g_sys_stat;
-extern uint8_t g_idle_task_spawned;
+extern uint8_t g_idle_task_spawned[YUNOS_CONFIG_CPU_NUM];
 
 extern runqueue_t g_ready_queue;
 
 /* System lock */
-extern uint8_t g_sched_lock;
-extern uint8_t g_intrpt_nested_level;
+extern uint8_t g_sched_lock[YUNOS_CONFIG_CPU_NUM];
+extern uint8_t g_intrpt_nested_level[YUNOS_CONFIG_CPU_NUM];
 
 /* highest pri ready task object */
-extern ktask_t *g_preferred_ready_task;
+extern ktask_t *g_preferred_ready_task[YUNOS_CONFIG_CPU_NUM];
 
 /* current active task */
-extern ktask_t *g_active_task;
+extern ktask_t *g_active_task[YUNOS_CONFIG_CPU_NUM];
 
 /* idle attribute */
-extern ktask_t      g_idle_task;
-extern idle_count_t g_idle_count;
-extern cpu_stack_t  g_idle_task_stack[YUNOS_CONFIG_IDLE_TASK_STACK_SIZE];
+extern ktask_t      g_idle_task[YUNOS_CONFIG_CPU_NUM];
+extern idle_count_t g_idle_count[YUNOS_CONFIG_CPU_NUM];
+extern cpu_stack_t  g_idle_task_stack[YUNOS_CONFIG_CPU_NUM][YUNOS_CONFIG_IDLE_TASK_STACK_SIZE];
 
 /* tick attribute */
 extern tick_t     g_tick_count;
@@ -132,13 +132,13 @@ extern k_mm_head         *g_kmm_head;
 
 #define INTRPT_NESTED_LEVEL_CHK()\
         do {                                       \
-            if (g_intrpt_nested_level > 0u) {      \
+            if (g_intrpt_nested_level[cpu_cur_get()] > 0u) {      \
                 YUNOS_CRITICAL_EXIT();             \
                 return YUNOS_NOT_CALLED_BY_INTRPT; \
             }                                      \
         } while (0)
 
-void preferred_ready_task_get(runqueue_t *rq);
+void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num);
 
 void core_sched(void);
 void runqueue_init(runqueue_t *rq);

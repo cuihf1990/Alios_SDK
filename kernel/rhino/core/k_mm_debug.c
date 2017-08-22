@@ -186,9 +186,9 @@ uint32_t check_malloc_region(void *adress)
             VGF(VALGRIND_MAKE_MEM_DEFINED(cur, MMLIST_HEAD_SIZE));
             if ((cur->size & YUNOS_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & YUNOS_MM_BLKSIZE_MASK);
-                if(0 == g_recheck_flag && !(cur->size & YUNOS_MM_FREE)) {
-                    if(g_active_task->task_stack_base >= cur->mbinfo.buffer
-                        &&g_active_task->task_stack_base < next) {
+                if (0 == g_recheck_flag && !(cur->size & YUNOS_MM_FREE)) {
+                    if (yunos_cur_task_get()->task_stack_base >= cur->mbinfo.buffer
+                        && yunos_cur_task_get()->task_stack_base < next) {
                             cur = next;
                             continue;
                         }

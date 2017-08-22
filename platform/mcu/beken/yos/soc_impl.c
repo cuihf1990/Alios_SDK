@@ -101,7 +101,7 @@ static void soc_print_stack()
     int      i=0;
     int     *p;
 
-    end   = g_active_task->task_stack_base + g_active_task->stack_size;
+    end   = yunos_cur_task_get()->task_stack_base + yunos_cur_task_get()->stack_size;
     cur = soc_get_cur_sp();
     p = (int*)cur;
     while(p < (int*)end) {

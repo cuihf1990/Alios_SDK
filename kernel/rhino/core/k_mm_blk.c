@@ -86,7 +86,7 @@ kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
     YUNOS_CRITICAL_EXIT();
 #endif
 
-    TRACE_MBLK_POOL_CREATE(g_active_task, pool);
+    TRACE_MBLK_POOL_CREATE(g_active_task[cpu_cur_get()], pool);
 
     return YUNOS_SUCCESS;
 }

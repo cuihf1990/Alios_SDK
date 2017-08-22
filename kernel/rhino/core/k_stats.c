@@ -47,13 +47,13 @@ void yunos_stack_ovf_check(void)
 {
     cpu_stack_t *stack_start;
 
-    stack_start = g_active_task->task_stack_base;
+    stack_start = g_active_task[cpu_cur_get()]->task_stack_base;
 
     if (*stack_start != YUNOS_TASK_STACK_OVF_MAGIC) {
         k_err_proc(YUNOS_TASK_STACK_OVF);
     }
 
-    if ((cpu_stack_t *)(g_active_task->task_stack) < stack_start) {
+    if ((cpu_stack_t *)(g_active_task[cpu_cur_get()]->task_stack) < stack_start) {
         k_err_proc(YUNOS_TASK_STACK_OVF);
     }
 }
@@ -65,14 +65,14 @@ void yunos_stack_ovf_check(void)
     cpu_stack_t *stack_start;
     cpu_stack_t *stack_end;
 
-    stack_start = g_active_task->task_stack_base;
-    stack_end   = stack_start + g_active_task->stack_size;
+    stack_start = g_active_task[cpu_cur_get()]->task_stack_base;
+    stack_end   = stack_start + g_active_task[cpu_cur_get()]->stack_size;
 
     if (*(stack_end - 1) != YUNOS_TASK_STACK_OVF_MAGIC) {
         k_err_proc(YUNOS_TASK_STACK_OVF);
     }
 
-    if ((cpu_stack_t *)(g_active_task->task_stack) > stack_end) {
+    if ((cpu_stack_t *)(g_active_task[cpu_cur_get()]->task_stack) > stack_end) {
         k_err_proc(YUNOS_TASK_STACK_OVF);
     }
 }
@@ -111,8 +111,8 @@ void yunos_task_sched_stats_get(void)
         intrpt_disable_time = 0;
     }
 
-    if (g_active_task->task_intrpt_disable_time_max < intrpt_disable_time) {
-        g_active_task->task_intrpt_disable_time_max = intrpt_disable_time;
+    if (g_active_task[cpu_cur_get()]->task_intrpt_disable_time_max < intrpt_disable_time) {
+        g_active_task[cpu_cur_get()]->task_intrpt_disable_time_max = intrpt_disable_time;
     }
 
     g_cur_intrpt_disable_max_time = 0;
@@ -120,23 +120,23 @@ void yunos_task_sched_stats_get(void)
 
 #if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
 
-    if (g_active_task->task_sched_disable_time_max < g_cur_sched_disable_max_time) {
-        g_active_task->task_sched_disable_time_max = g_cur_sched_disable_max_time;
+    if (g_active_task[cpu_cur_get()]->task_sched_disable_time_max < g_cur_sched_disable_max_time) {
+        g_active_task[cpu_cur_get()]->task_sched_disable_time_max = g_cur_sched_disable_max_time;
     }
 
     g_cur_sched_disable_max_time = 0;
 #endif
 
     /* Keep track of new task and total system context switch times */
-    g_preferred_ready_task->task_ctx_switch_times++;
+    g_preferred_ready_task[cpu_cur_get()]->task_ctx_switch_times++;
     g_sys_ctx_switch_times++;
 
     cur_time   = (lr_timer_t)LR_COUNT_GET();
-    exec_time  = cur_time - g_active_task->task_time_start;
+    exec_time  = cur_time - g_active_task[cpu_cur_get()]->task_time_start;
 
-    g_active_task->task_time_total_run += (sys_time_t)exec_time;
+    g_active_task[cpu_cur_get()]->task_time_total_run += (sys_time_t)exec_time;
 
-    g_preferred_ready_task->task_time_start = cur_time;
+    g_preferred_ready_task[cpu_cur_get()]->task_time_start = cur_time;
 }
 #endif /* YUNOS_CONFIG_TASK_SCHED_STATS */
 
@@ -212,9 +212,9 @@ void yunos_cpu_usage_stats_init(void)
             (task != (ktask_t *)&g_tick_task) &&
 #endif
 #if (YUNOS_CONFIG_TIMER > 0)
-            (task != (ktask_t *)&g_idle_task) &&
+            (task != (ktask_t *)&g_idle_task[cpu_cur_get()]) &&
 #endif
-            (task != (ktask_t *)&g_active_task)) {
+            (task != (ktask_t *)&g_active_task[cpu_cur_get()])) {
             yunos_task_suspend(task);
         }
     }
@@ -238,9 +238,9 @@ void yunos_cpu_usage_stats_init(void)
             (task != (ktask_t *)&g_tick_task) &&
 #endif
 #if (YUNOS_CONFIG_TIMER > 0)
-            (task != (ktask_t *)&g_idle_task) &&
+            (task != (ktask_t *)&g_idle_task[cpu_cur_get()]) &&
 #endif
-            (task != (ktask_t *)&g_active_task)) {
+            (task != (ktask_t *)&g_active_task[cpu_cur_get()])) {
             yunos_task_resume(task);
         }
     }

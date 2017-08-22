@@ -283,13 +283,16 @@ kstat_t yunos_queue_recv(kqueue_t *queue, tick_t ticks, void **msg)
     CPSR_ALLOC();
 
     kstat_t ret;
+    uint8_t cur_cpu_num;
 
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
 
     YUNOS_CRITICAL_ENTER();
 
-    if ((g_intrpt_nested_level > 0u) && (ticks != YUNOS_NO_WAIT)) {
+    cur_cpu_num = cpu_cur_get();
+
+    if ((g_intrpt_nested_level[cur_cpu_num] > 0u) && (ticks != YUNOS_NO_WAIT)) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_NOT_CALLED_BY_INTRPT;
     }
@@ -319,24 +322,26 @@ kstat_t yunos_queue_recv(kqueue_t *queue, tick_t ticks, void **msg)
     }
 
     /* if system is locked, block operation is not allowed */
-    if (g_sched_lock > 0u) {
+    if (g_sched_lock[cur_cpu_num] > 0u) {
         *msg = NULL;
         YUNOS_CRITICAL_EXIT();
         return YUNOS_SCHED_DISABLE;
     }
 
-    pend_to_blk_obj((blk_obj_t *)queue, g_active_task, ticks);
+    pend_to_blk_obj((blk_obj_t *)queue, g_active_task[cur_cpu_num], ticks);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
     YUNOS_CPU_INTRPT_DISABLE();
 
+    cur_cpu_num = cpu_cur_get();
+
 #ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
-    ret = pend_state_end_proc(g_active_task);
+    ret = pend_state_end_proc(g_active_task[cur_cpu_num]);
 
     switch (ret) {
         case YUNOS_SUCCESS:
-            *msg = g_active_task->msg;
+            *msg = g_active_task[cur_cpu_num]->msg;
             break;
         default:
             *msg = NULL;
@@ -344,8 +349,8 @@ kstat_t yunos_queue_recv(kqueue_t *queue, tick_t ticks, void **msg)
     }
 
 #else
-    if (g_active_task->blk_state == BLK_FINISH) {
-        *msg = g_active_task->msg;
+    if (g_active_task[cur_cpu_num]->blk_state == BLK_FINISH) {
+        *msg = g_active_task[cur_cpu_num]->msg;
     } else {
         *msg = NULL;
     }

@@ -46,7 +46,7 @@ static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count,
 
     sem->blk_obj.obj_type = YUNOS_SEM_OBJ_TYPE;
 
-    TRACE_SEM_CREATE(g_active_task, sem);
+    TRACE_SEM_CREATE(g_active_task[cpu_cur_get()], sem);
 
     return YUNOS_SUCCESS;
 }
@@ -90,7 +90,7 @@ kstat_t yunos_sem_del(ksem_t *sem)
     klist_rm(&sem->sem_item);
 #endif
 
-    TRACE_SEM_DEL(g_active_task, sem);
+    TRACE_SEM_DEL(g_active_task[cpu_cur_get()], sem);
     YUNOS_CRITICAL_EXIT_SCHED();
 
     return YUNOS_SUCCESS;
@@ -157,7 +157,7 @@ kstat_t yunos_sem_dyn_del(ksem_t *sem)
     klist_rm(&sem->sem_item);
 #endif
 
-    TRACE_SEM_DEL(g_active_task, sem);
+    TRACE_SEM_DEL(g_active_task[cpu_cur_get()], sem);
     YUNOS_CRITICAL_EXIT_SCHED();
 
     yunos_mm_free(sem);
@@ -171,6 +171,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
 {
     CPSR_ALLOC();
 
+    uint8_t  cur_cpu_num;
     klist_t *blk_list_head;
 
     /* this is only needed when system zero interrupt feature is enabled */
@@ -185,12 +186,14 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
         return YUNOS_KOBJ_TYPE_ERR;
     }
 
+    cur_cpu_num = cpu_cur_get();
+
     blk_list_head = &sem->blk_obj.blk_list;
 
     if (is_klist_empty(blk_list_head)) {
         if (sem->count == (sem_count_t) - 1) {
 
-            TRACE_SEM_OVERFLOW(g_active_task, sem);
+            TRACE_SEM_OVERFLOW(g_active_task[cur_cpu_num], sem);
             YUNOS_CRITICAL_EXIT();
 
             return YUNOS_SEM_OVF;
@@ -203,7 +206,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
             sem->peak_count = sem->count;
         }
 
-        TRACE_SEM_CNT_INCREASE(g_active_task, sem);
+        TRACE_SEM_CNT_INCREASE(g_active_task[cur_cpu_num], sem);
         YUNOS_CRITICAL_EXIT();
 
 #if (YUNOS_CONFIG_KOBJ_SET > 0)
@@ -217,7 +220,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
     /* wake all the task blocked on this semaphore */
     if (opt_wake_all) {
         while (!is_klist_empty(blk_list_head)) {
-            TRACE_SEM_TASK_WAKE(g_active_task, yunos_list_entry(blk_list_head->next,
+            TRACE_SEM_TASK_WAKE(g_active_task[cur_cpu_num], yunos_list_entry(blk_list_head->next,
                                                                 ktask_t, task_list),
                                 sem, opt_wake_all);
 
@@ -225,7 +228,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
         }
 
     } else {
-        TRACE_SEM_TASK_WAKE(g_active_task, yunos_list_entry(blk_list_head->next,
+        TRACE_SEM_TASK_WAKE(g_active_task[cur_cpu_num], yunos_list_entry(blk_list_head->next,
                                                             ktask_t, task_list),
                             sem, opt_wake_all);
 
@@ -256,7 +259,8 @@ kstat_t yunos_sem_take(ksem_t *sem, tick_t ticks)
 {
     CPSR_ALLOC();
 
-    kstat_t stat;
+    uint8_t  cur_cpu_num;
+    kstat_t  stat;
 
     NULL_PARA_CHK(sem);
 
@@ -269,10 +273,12 @@ kstat_t yunos_sem_take(ksem_t *sem, tick_t ticks)
         return YUNOS_KOBJ_TYPE_ERR;
     }
 
+    cur_cpu_num = cpu_cur_get();
+
     if (sem->count > 0u) {
         sem->count--;
 
-        TRACE_SEM_GET_SUCCESS(g_active_task, sem);
+        TRACE_SEM_GET_SUCCESS(g_active_task[cur_cpu_num], sem);
         YUNOS_CRITICAL_EXIT();
 
         return YUNOS_SUCCESS;
@@ -284,21 +290,21 @@ kstat_t yunos_sem_take(ksem_t *sem, tick_t ticks)
         return YUNOS_NO_PEND_WAIT;
     }
 
-    if (g_sched_lock > 0u) {
+    if (g_sched_lock[cur_cpu_num] > 0u) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_SCHED_DISABLE;
     }
 
-    pend_to_blk_obj((blk_obj_t *)sem, g_active_task, ticks);
+    pend_to_blk_obj((blk_obj_t *)sem, g_active_task[cur_cpu_num], ticks);
 
-    TRACE_SEM_GET_BLK(g_active_task, sem, ticks);
+    TRACE_SEM_GET_BLK(g_active_task[cur_cpu_num], sem, ticks);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
 #ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
     YUNOS_CPU_INTRPT_DISABLE();
 
-    stat = pend_state_end_proc(g_active_task);
+    stat = pend_state_end_proc(g_active_task[cpu_cur_get()]);
 
     YUNOS_CPU_INTRPT_ENABLE();
 #else
