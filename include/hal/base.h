@@ -17,7 +17,7 @@
 /**
  * @file hal/base.h
  * @brief basic data structures for HAL
- * @version since 5.5.0
+ * @version since 1.0.0
  */
 
 #ifndef HAL_BASE_H

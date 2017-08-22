@@ -17,7 +17,7 @@
 /**
  * @file yos/cloud.h
  * @brief cloud API
- * @version since 5.5.0
+ * @version since 1.0.0
  */
 
 #ifndef __YOS_CLOUD_H__

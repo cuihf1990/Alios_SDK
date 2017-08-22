@@ -17,7 +17,7 @@
 /**
  * @file yos/kernel.h
  * @brief kernel API
- * @version since 5.5.0
+ * @version since 1.0.0
  */
 
 #ifndef YOS_KERNEL_H
