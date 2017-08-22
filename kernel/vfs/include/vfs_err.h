@@ -33,12 +33,15 @@ extern "C" {
 
 #define    E_VFS_FD_ILLEGAL         -31 /* fd is not in scope */
 
+#define    E_VFS_NOSYS              -38 /* Function not implemented */
+
 #define    E_VFS_BUSY               -41 /* device is opened */
 
 #define    E_VFS_NO_MEM             -51 /* no mem */
 
 #define    E_VFS_REGISTERED         -52 /* registered */
 
+#define VFS_NULL_PARA_CHK(para)     do { if (!(para)) return E_VFS_NULL_PTR; } while(0)
 
 #ifdef __cplusplus
 }

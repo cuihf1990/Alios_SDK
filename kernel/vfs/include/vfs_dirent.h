@@ -14,24 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef VFS_DRIVER_H
-#define VFS_DRIVER_H
-
-#include <vfs_inode.h>
+#ifndef VFS_DIRENT_H
+#define VFS_DIRENT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int yos_register_driver(const char *path, file_ops_t *fops, void *arg);
-int yos_unregister_driver(const char *path);
+typedef struct {
+    int     d_ino;                      /* file number */
+    uint8_t d_type;                     /* type of file */
+    char*   d_name;                     /* file name */
+}yos_dirent_t;
 
-int yos_register_fs(const char *path, fs_ops_t *fops, void *arg);
-int yos_unregister_fs(const char *path);
+typedef struct {
+    int         dd_vfs_fd;              /* This keeps track of the current directory position for telldir */
+    int         dd_rsv;
+}yos_dir_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif    /*VFS_DRIVER_H*/
+#endif /* VFS_DIRENT_H */
+
 

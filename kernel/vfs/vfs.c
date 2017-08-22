@@ -18,6 +18,7 @@
 #include <yos/framework.h>
 #include <yos/network.h>
 #include <vfs_conf.h>
+#include <vfs_dirent.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
 #include <vfs.h>
@@ -194,8 +195,15 @@ int yos_open(const char *path, int flags)
         return E_VFS_K_ERR;
     }
 
-    if ((node->ops->open) != NULL) {
-        err = node->ops->open(node, file);
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->open) != NULL) {
+            err = (node->ops.i_fops->open)(file, path, flags);
+        }
+
+    } else {
+        if ((node->ops.i_ops->open) != NULL) {
+            err = (node->ops.i_ops->open)(node, file);
+        }
     }
 
     if (err != VFS_SUCCESS) {
@@ -220,8 +228,16 @@ int yos_close(int fd)
 
     node = f->node;
 
-    if ((node->ops->close) != NULL) {
-        (node->ops->close)(f);
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->close) != NULL) {
+            err = (node->ops.i_fops->close)(f);
+        }
+
+    } else {
+
+        if ((node->ops.i_ops->close) != NULL) {
+            err = (node->ops.i_ops->close)(f);
+        }
     }
 
     if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
@@ -249,8 +265,14 @@ ssize_t yos_read(int fd, void *buf, size_t nbytes)
 
     node = f->node;
 
-    if ((node->ops->read) != NULL) {
-        nread = (node->ops->read)(f, buf, nbytes);
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->read) != NULL) {
+            nread = (node->ops.i_fops->read)(f, buf, nbytes);
+        }
+    } else {
+        if ((node->ops.i_ops->read) != NULL) {
+            nread = (node->ops.i_ops->read)(f, buf, nbytes);
+        }
     }
 
     return nread;
@@ -270,8 +292,14 @@ ssize_t yos_write(int fd, const void *buf, size_t nbytes)
 
     node = f->node;
 
-    if ((node->ops->write) != NULL) {
-        nwrite = (node->ops->write)(f, buf, nbytes);
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->write) != NULL) {
+            nwrite = (node->ops.i_fops->write)(f, buf, nbytes);
+        }
+    } else {
+        if ((node->ops.i_ops->write) != NULL) {
+            nwrite = (node->ops.i_ops->write)(f, buf, nbytes);
+        }
     }
 
     return nwrite;
@@ -295,12 +323,349 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
 
     node = f->node;
 
-    if ((node->ops->ioctl) != NULL) {
-        err = (node->ops->ioctl)(f, cmd, arg);
+    if ((node->ops.i_ops->ioctl) != NULL) {
+        err = (node->ops.i_ops->ioctl)(f, cmd, arg);
     }
 
     return err;
 }
+
+off_t yos_lseek(int fd, off_t offset, int whence)
+{
+    file_t *f;
+    inode_t *node;
+    int err = E_VFS_NOSYS;
+
+    f = get_file(fd);
+
+    if (f == NULL)
+        return E_VFS_FD_ILLEGAL;
+
+    node = f->node;
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->lseek) != NULL) {
+            err = (node->ops.i_fops->lseek)(f, offset, whence);
+        }
+    }
+    
+    return err;
+}
+
+int yos_sync(int fd)
+{
+    file_t  *f;
+    inode_t *node;
+    int err = E_VFS_NOSYS;
+
+    f = get_file(fd);
+
+    if (f == NULL) {
+        return E_VFS_FD_ILLEGAL;
+    }
+
+    node = f->node;
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->sync) != NULL) {
+            err = (node->ops.i_fops->sync)(f);
+        }
+    } 
+
+    return err;
+}
+
+int yos_stat(const char *path, struct stat *st)
+{
+    file_t  *file;
+    inode_t *node;
+    int      err = E_VFS_NOSYS;
+
+    if (path == NULL) {
+        return E_VFS_NULL_PTR;
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    node = inode_open(path);
+
+    if (node == NULL) {
+        yos_mutex_unlock(&g_vfs_mutex);
+        return E_VFS_INODE_NOT_FOUND;
+    }
+
+    file = new_file(node);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+
+    if (file == NULL) {
+        return E_VFS_K_ERR;
+    }
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->stat) != NULL) {
+            err = (node->ops.i_fops->stat)(file, path, st);
+        }
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    del_file(file);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+    return err;
+}
+
+int yos_unlink(const char *path)
+{
+    file_t  *f;
+    inode_t *node;
+    int      err = E_VFS_NOSYS;
+
+    if (path == NULL) {
+        return E_VFS_NULL_PTR;
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    node = inode_open(path);
+
+    if (node == NULL) {
+        yos_mutex_unlock(&g_vfs_mutex);
+        return E_VFS_INODE_NOT_FOUND;
+    }
+
+    f = new_file(node);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+
+    if (f == NULL) {
+        return E_VFS_K_ERR;
+    }
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->unlink) != NULL) {
+            err = (node->ops.i_fops->unlink)(f, path);
+        }
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    del_file(f);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+    return err;
+}
+
+int yos_rename(const char *oldpath, const char *newpath)
+{
+    file_t  *f;
+    inode_t *node;
+    int      err = E_VFS_NOSYS;
+
+    if (oldpath == NULL || newpath == NULL) {
+        return E_VFS_NULL_PTR;
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    node = inode_open(oldpath);
+
+    if (node == NULL) {
+        yos_mutex_unlock(&g_vfs_mutex);
+        return E_VFS_INODE_NOT_FOUND;
+    }
+
+    f = new_file(node);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+
+    if (f == NULL) {
+        return E_VFS_K_ERR;
+    }
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->rename) != NULL) {
+            err = (node->ops.i_fops->rename)(f, oldpath, newpath);
+        }
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    del_file(f);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+    return err;
+}
+
+yos_dir_t* yos_opendir(const char *path)
+{
+    file_t  *file;
+    inode_t *node;
+    yos_dir_t *dp = NULL;
+
+    if (path == NULL) {
+        return NULL;
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return NULL;
+    }
+
+    node = inode_open(path);
+
+    if (node == NULL) {
+        yos_mutex_unlock(&g_vfs_mutex);
+        return NULL;
+    }
+
+    file = new_file(node);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+
+    if (file == NULL) {
+        return NULL;
+    }
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->opendir) != NULL) {
+            dp = (node->ops.i_fops->opendir)(file, path);
+        }
+    }
+
+    if (dp == NULL) {
+        if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+            return NULL;
+        }
+
+        del_file(file);
+
+        yos_mutex_unlock(&g_vfs_mutex);
+        return NULL;
+    }
+
+    dp->dd_vfs_fd = get_fd(file);
+    return dp;
+}
+
+int yos_closedir(yos_dir_t *dir)
+{
+    file_t  *f;
+    inode_t *node;
+    int      err = E_VFS_NOSYS;
+
+    if (dir == NULL)
+        return E_VFS_ERR_PARAM;
+
+    f = get_file(dir->dd_vfs_fd);
+
+    if (f == NULL) {
+        return E_VFS_ERR_PARAM;
+    }
+
+    node = f->node;
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->closedir) != NULL) {
+            err = (node->ops.i_fops->closedir)(f, dir);
+        }
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    del_file(f);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+
+    return err;
+}
+
+yos_dirent_t* yos_readdir(yos_dir_t *dir)
+{
+    file_t *f;
+    inode_t *node;
+    yos_dirent_t *ret = NULL;
+
+    if (dir == NULL)
+        return NULL;
+
+    f = get_file(dir->dd_vfs_fd);
+    if (f == NULL)
+        return NULL;
+
+    node = f->node;
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->readdir) != NULL) {
+            ret = (node->ops.i_fops->readdir)(f, dir);
+        }
+    }
+
+    if (ret != NULL)
+        return ret;
+
+    return NULL;
+}
+
+int yos_mkdir(const char *path)
+{
+    file_t  *file;
+    inode_t *node;
+    int      err = E_VFS_NOSYS;
+
+    if (path == NULL) {
+        return E_VFS_NULL_PTR;
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    node = inode_open(path);
+
+    if (node == NULL) {
+        yos_mutex_unlock(&g_vfs_mutex);
+        return E_VFS_INODE_NOT_FOUND;
+    }
+
+    file = new_file(node);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+
+    if (file == NULL) {
+        return E_VFS_K_ERR;
+    }
+
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->mkdir) != NULL) {
+            err = (node->ops.i_fops->mkdir)(file, path);
+        }
+    }
+
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        return E_VFS_K_ERR;
+    }
+
+    del_file(file);
+
+    yos_mutex_unlock(&g_vfs_mutex);
+    return err;
+}
+
 
 #if (YOS_CONFIG_VFS_POLL_SUPPORT>0)
 
@@ -472,7 +837,7 @@ static int pre_poll(struct pollfd *fds, int nfds, fd_set *rfds, void *parg)
         }
 
         pfd = &fds[i];
-        (f->node->ops->poll)(f, true, vfs_poll_notify, pfd, parg);
+        (f->node->ops.i_ops->poll)(f, true, vfs_poll_notify, pfd, parg);
     }
 
     return maxfd;
@@ -499,7 +864,7 @@ static int post_poll(struct pollfd *fds, int nfds)
             continue;
         }
 
-        (f->node->ops->poll)(f, false, NULL, NULL, NULL);
+        (f->node->ops.i_ops->poll)(f, false, NULL, NULL, NULL);
 
         if (pfd->revents) {
             ret ++;
@@ -593,8 +958,8 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
 
         node = f->node;
 
-        if ((node->ops->ioctl) != NULL) {
-            err = (node->ops->ioctl)(f, cmd, arg);
+        if ((node->ops.i_ops->ioctl) != NULL) {
+            err = (node->ops.i_ops->ioctl)(f, cmd, arg);
 
             if (err != VFS_SUCCESS) {
                 return err;
