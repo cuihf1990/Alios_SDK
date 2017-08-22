@@ -124,27 +124,41 @@ SYSCALL(SYS_WORK_SCHED, yos_work_sched)
 #define SYS_WORK_CANCEL 35
 SYSCALL(SYS_WORK_CANCEL, yos_work_cancel)
 
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+
+#define SYS_MALLOC 36
+SYSCALL(SYS_MALLOC, sys_yos_malloc)
+
+#define SYS_REALLOC 37
+SYSCALL(SYS_REALLOC, sys_yos_realloc)
+
+#define SYS_ZALLOC 38
+SYSCALL(SYS_ZALLOC, sys_yos_zalloc)
+
+#else
+
 #define SYS_MALLOC 36
 SYSCALL(SYS_MALLOC, yos_malloc)
 
 #define SYS_REALLOC 37
 SYSCALL(SYS_REALLOC, yos_realloc)
 
-#define SYS_FREE 38
-SYSCALL(SYS_FREE, yos_free)
-
-#define SYS_NOW 39
-SYSCALL(SYS_NOW, yos_now)
-
-#define SYS_NOW_MS 40
-SYSCALL(SYS_NOW_MS, yos_now_ms)
-
-#define SYS_MSLEEP 41
-SYSCALL(SYS_MSLEEP, yos_msleep)
-
-#define SYS_ZALLOC 42
+#define SYS_ZALLOC 38
 SYSCALL(SYS_ZALLOC, yos_zalloc)
 
+#endif
+
+#define SYS_FREE 39
+SYSCALL(SYS_FREE, yos_free)
+
+#define SYS_NOW 40
+SYSCALL(SYS_NOW, yos_now)
+
+#define SYS_NOW_MS 41
+SYSCALL(SYS_NOW_MS, yos_now_ms)
+
+#define SYS_MSLEEP 42
+SYSCALL(SYS_MSLEEP, yos_msleep)
 
 /* keep 42~50 for Rhino */
 

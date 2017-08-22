@@ -564,13 +564,20 @@ void *yos_zalloc(unsigned int size)
     }
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
-        tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
-        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
-#else
-        tmp = yunos_mm_alloc(size);
+    tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+
+#ifndef YOS_BINS
+    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
 #endif
-    if (tmp)
+
+#else
+    tmp = yunos_mm_alloc(size);
+#endif
+
+    if (tmp) {
         bzero(tmp, size);
+    }
+
     return tmp;
 }
 
@@ -584,7 +591,11 @@ void *yos_malloc(unsigned int size)
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
     tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+
+#ifndef YOS_BINS
     yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif
+
 #else
     tmp = yunos_mm_alloc(size);
 #endif
@@ -598,7 +609,11 @@ void *yos_realloc(void *mem, unsigned int size)
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
     tmp = yunos_mm_realloc(mem, size|YOS_UNSIGNED_INT_MSB);
+
+#ifndef YOS_BINS
     yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif
+
 #else
     tmp = yunos_mm_realloc(mem, size);
 #endif
