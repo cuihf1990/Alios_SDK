@@ -20,7 +20,7 @@
 /**
  * @file hal/ota.h
  * @brief ota API&structures for HAL
- * @version since 5.5.0
+ * @version since 1.0.0
  */
 
 #pragma once

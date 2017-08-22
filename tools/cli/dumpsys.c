@@ -129,7 +129,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
         safesprintf(printbuf, totallen, offset,tmpbuf);
 
         /* for chip not support stack frame interface,do nothing*/
-        if (detail == true && task != g_active_task && soc_get_first_frame_info &&
+        if (detail == true && task != yunos_cur_task_get() && soc_get_first_frame_info &&
             soc_get_subs_frame_info) {
             depth = YUNOS_BACKTRACE_DEPTH;
             snprintf(tmpbuf, 255, "Task %s Call Stack Dump:\r\n", task_name);
@@ -268,7 +268,7 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         if (argc == 3) {
             ret = dump_task_stack_byname(argv[2]);
         } else {
-            ret = dump_task_stack_byname(g_active_task->task_name);
+            ret = dump_task_stack_byname(yunos_cur_task_get()->task_name);
         }
 
         return ret;

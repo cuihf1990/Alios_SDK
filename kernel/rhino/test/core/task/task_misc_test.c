@@ -108,7 +108,6 @@ void task_misc_entry(void *arg)
     CPSR_ALLOC();
 
     yunos_task_resume(task_misc3);
-    yunos_task_del(&g_idle_task);
     yunos_task_del(task_misc3);
 
     yunos_sched_disable();
@@ -116,13 +115,6 @@ void task_misc_entry(void *arg)
     yunos_sched_enable();
 
     yunos_task_suspend(NULL);
-    yunos_task_suspend(&g_idle_task);
-
-    YUNOS_CPU_INTRPT_DISABLE();
-    g_intrpt_nested_level = 255;
-    yunos_task_sleep(10);
-    g_intrpt_nested_level = 0;
-    YUNOS_CPU_INTRPT_ENABLE();
 
     yunos_task_sleep(0);
 
@@ -135,14 +127,6 @@ void task_misc_entry(void *arg)
     yunos_task_stack_min_free(NULL, &task_free);
     yunos_task_stack_min_free(task_misc, NULL);
     yunos_task_stack_min_free(task_misc, &task_free);
-
-    yunos_task_pri_change(&g_idle_task, 15, &old_pri);
-
-    YUNOS_CPU_INTRPT_DISABLE();
-    g_intrpt_nested_level = 255;
-    yunos_task_pri_change(task_misc, 15, &old_pri);
-    g_intrpt_nested_level = 0;
-    YUNOS_CPU_INTRPT_ENABLE();
 
     yunos_mutex_create(&mutex, "test");
     yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
@@ -223,14 +207,6 @@ void task_misc_entry(void *arg)
     yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
-
-    YUNOS_CPU_INTRPT_DISABLE();
-    g_intrpt_nested_level = 255;
-    yunos_task_create(&task_misc2, "task_misc2", NULL, 1,
-                      50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
-                      task_misc_entry2, 1);
-    g_intrpt_nested_level = 0;
-    YUNOS_CPU_INTRPT_ENABLE();
 
     yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_IDLE_PRI,
                       50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
@@ -314,14 +290,6 @@ void task_misc_entry(void *arg)
         PRINT_RESULT("yunos_task_time_slice_set para 3", FAIL);
         test_case_fail++;
     }
-
-    YUNOS_CPU_INTRPT_DISABLE();
-    g_intrpt_nested_level = 255;
-    yunos_sched_policy_set(task_misc, KSCHED_FIFO);
-    yunos_task_time_slice_set(task_misc, 20);
-    yunos_sched_policy_get(task_misc, &policy);
-    g_intrpt_nested_level = 0;
-    YUNOS_CPU_INTRPT_ENABLE();
 
     yunos_sched_policy_set(task_misc, 0x11);
 

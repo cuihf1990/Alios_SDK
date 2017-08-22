@@ -27,7 +27,7 @@ endif
 
 $(NAME)_INCLUDES    += .
 GLOBAL_INCLUDES     += include include/yos csp/lwip/include
-GLOBAL_LDFLAGS      += -lpthread -lm
+GLOBAL_LDFLAGS      += -lpthread -lm -lrt
 GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
 GLOBAL_CFLAGS       += -Wall -Wno-missing-field-initializers -Wno-strict-aliasing -Wno-address -Wno-unused-result
@@ -36,6 +36,7 @@ GLOBAL_DEFINES      += CONFIG_LOGMACRO_DETAILS
 
 # arch linux
 $(NAME)_SOURCES := $(ARCH_LINUX)/cpu_impl.c
+$(NAME)_SOURCES += $(ARCH_LINUX)/swap.S
 # mcu
 $(NAME)_SOURCES     += main/arg_options.c
 $(NAME)_SOURCES     += main/main.c

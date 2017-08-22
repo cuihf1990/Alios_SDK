@@ -17,7 +17,7 @@
 /**
  * @file yoc/log.h
  * @brief YoC LOG APIs
- * @version since 5.5.0
+ * @version since 1.0.0
  */
 
 #ifndef YOS_LOG_H

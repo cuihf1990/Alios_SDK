@@ -336,7 +336,7 @@ static void process_msg_request(wsf_msg_t *msg, int length)
         return;
     }
 
-    yos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
+    request_msg_handle(NULL);
 }
 
 void init_req_glist(void)

@@ -82,7 +82,7 @@ void TASK_aosapi_kernel_task_new_stack(void *arg)
 {
 	int array[2048];
     memset(array, 0, sizeof(int)*2048);
-	PRINT_TASK_INFO(g_active_task);
+	PRINT_TASK_INFO(yunos_cur_task_get());
 	yos_task_exit(0);
 }
 static void CASE_aosapi_kernel_task_new_stack()

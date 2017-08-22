@@ -17,7 +17,7 @@
 /**
  * @file yos/kernel.h
  * @brief kernel API
- * @version since 5.5.0
+ * @version since 1.0.0
  */
 
 #ifndef YOS_KERNEL_H
@@ -110,22 +110,34 @@ int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), voi
 void yos_task_exit(int code);
 
 /**
+ * get task name
  */
 const char *yos_task_name(void);
 
-/** thread local storage
+/**
+ * create a task key
+ * @param[in] key pointer of key object
+ * @return  the check status, 0 is OK, -1 indicates invalid
  */
 int yos_task_key_create(yos_task_key_t *key);
 
 /**
+ * delete a task key
+ * @param[in] key key object
  */
 void yos_task_key_delete(yos_task_key_t key);
 
 /**
+ * associate a task-specific value with a key
+ * @param[in] key key object
+ * @param[in] vp pointer of a task-specific value
+ * @return  the check status, 0 is OK, -1 indicates invalid
  */
 int yos_task_setspecific(yos_task_key_t key, void *vp);
 
 /**
+ * get the value currently bound to the specified key
+ * @param[in] key key object
  */
 void *yos_task_getspecific(yos_task_key_t key);
 
