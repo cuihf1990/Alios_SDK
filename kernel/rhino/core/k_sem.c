@@ -46,7 +46,7 @@ static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count,
 
     sem->blk_obj.obj_type = YUNOS_SEM_OBJ_TYPE;
 
-    TRACE_SEM_CREATE(g_active_task[cpu_cur_get()], sem);
+    TRACE_SEM_CREATE(yunos_cur_task_get(), sem);
 
     return YUNOS_SUCCESS;
 }

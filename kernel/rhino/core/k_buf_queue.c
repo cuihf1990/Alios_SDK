@@ -59,7 +59,7 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
 
     ringbuf_init(&(queue->ringbuf), buf, size, RINGBUF_TYPE_DYN, 0);
     queue->min_free_buf_size  = queue->ringbuf.freesize;
-    TRACE_BUF_QUEUE_CREATE(g_active_task[cpu_cur_get()], queue);
+    TRACE_BUF_QUEUE_CREATE(yunos_cur_task_get(), queue);
 
     return YUNOS_SUCCESS;
 }

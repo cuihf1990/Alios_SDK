@@ -42,7 +42,7 @@ kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
 
     mutex->blk_obj.obj_type = YUNOS_MUTEX_OBJ_TYPE;
 
-    TRACE_MUTEX_CREATE(g_active_task[cpu_cur_get()], mutex, name);
+    TRACE_MUTEX_CREATE(yunos_cur_task_get(), mutex, name);
 
     return YUNOS_SUCCESS;
 }

@@ -234,7 +234,7 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
         }
     }
 
-    TRACE_WORK_INIT(g_active_task[cpu_cur_get()], work);
+    TRACE_WORK_INIT(yunos_cur_task_get(), work);
 
     return YUNOS_SUCCESS;
 }
