@@ -1,7 +1,7 @@
 NAME := alinkapp
 
 $(NAME)_SOURCES := alink_sample.c
-$(NAME)_COMPONENTS := base64 hashtable log connectivity protocol.alink modules.kv cli
+$(NAME)_COMPONENTS := log protocol.alink  cli
 
 ifneq ($(ywss),0)
 $(NAME)_COMPONENTS += ywss
