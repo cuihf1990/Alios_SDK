@@ -28,6 +28,12 @@ typedef enum {
 /*---------------------------------------*/
 /* Prototypes for disk control functions */
 
+/* Redefine names of disk IO functions to prevent name collisions */
+#define disk_initialize     ff_disk_initialize
+#define disk_status         ff_disk_status
+#define disk_read           ff_disk_read
+#define disk_write          ff_disk_write
+#define disk_ioctl          ff_disk_ioctl
 
 DSTATUS disk_initialize (BYTE pdrv);
 DSTATUS disk_status (BYTE pdrv);

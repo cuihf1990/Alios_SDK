@@ -97,7 +97,7 @@ struct fs_ops {
     ssize_t         (*write)    (file_t *fp, const char *buf, size_t len);
     int             (*lseek)    (file_t *fp, off_t off, int whence);
     int             (*sync)     (file_t *fp);
-    off_t           (*stat)     (file_t *fp, const char *path, struct stat *st);
+    int             (*stat)     (file_t *fp, const char *path, struct stat *st);
     int             (*unlink)   (file_t *fp, const char *path);
     int             (*rename)   (file_t *fp, const char *oldpath, const char *newpath);
     yos_dir_t*      (*opendir)  (file_t *fp, const char *path);
