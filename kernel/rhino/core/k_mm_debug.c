@@ -22,6 +22,13 @@
 #endif
 #include "k_mm_debug.h"
 #include "yos/log.h"
+#include "yos/cli.h"
+
+#ifdef CONFIG_YOS_CLI
+#define print cli_printf
+#else
+#define print printf
+#endif
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
 
@@ -278,7 +285,7 @@ uint32_t dump_mmleak()
                  if (!(cur->size & YUNOS_MM_FREE) &&
                      0 == check_mm_leak(cur->mbinfo.buffer)
                      && 0 == recheck((void*)cur->mbinfo.buffer , (void*)next)) {
-                     printf("adress:0x%0x owner:0x%0x len:%-5d type:%s\r\n",
+                     print("adress:0x%0x owner:0x%0x len:%-5d type:%s\r\n",
                             (void*)cur->mbinfo.buffer, cur->owner,
                             cur->size&YUNOS_MM_BLKSIZE_MASK, "leak");
                  }
@@ -307,53 +314,53 @@ void print_block(k_mm_list_t *b)
     if (!b) {
         return;
     }
-    printf("%p ", b);
+    print("%p ", b);
     if (b->size & YUNOS_MM_FREE) {
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
         if(b->dye != YUNOS_MM_FREE_DYE){
-            printf("!");
+            print("!");
         }
         else{
-            printf(" ");
+            print(" ");
         }
 #endif
-        printf("free ");
+        print("free ");
     } else {
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
         if(b->dye != YUNOS_MM_CORRUPT_DYE){
-            printf("!");
+            print("!");
         }
         else{
-            printf(" ");
+            print(" ");
         }
 #endif
-        printf("used ");
+        print("used ");
     }
     if ((b->size & YUNOS_MM_BLKSIZE_MASK)) {
-        printf(" %6lu ", (unsigned long) (b->size & YUNOS_MM_BLKSIZE_MASK));
+        print(" %6lu ", (unsigned long) (b->size & YUNOS_MM_BLKSIZE_MASK));
     } else {
-        printf(" sentinel ");
+        print(" sentinel ");
     }
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
-    printf(" %8x ",b->dye);
-    printf(" 0x%-8x ",b->owner);
+    print(" %8x ",b->dye);
+    print(" 0x%-8x ",b->owner);
 #endif
 
     if (b->size & YUNOS_MM_PREVFREE) {
-        printf("pre-free [%8p];", b->prev);
+        print("pre-free [%8p];", b->prev);
     }
     else {
-        printf("pre-used;");
+        print("pre-used;");
     }
 
     if (b->size & YUNOS_MM_FREE) {
         VGF(VALGRIND_MAKE_MEM_DEFINED(&b->mbinfo, sizeof(struct free_ptr_struct)));
-        printf(" free[%8p,%8p] ", b->mbinfo.free_ptr.prev, b->mbinfo.free_ptr.next);
+        print(" free[%8p,%8p] ", b->mbinfo.free_ptr.prev, b->mbinfo.free_ptr.next);
         VGF(VALGRIND_MAKE_MEM_NOACCESS(&b->mbinfo, sizeof(struct free_ptr_struct)));
     }
-    printf("\r\n");
+    print("\r\n");
 
 }
 
@@ -366,19 +373,19 @@ void dump_kmm_free_map(k_mm_head *mmhead)
         return;
     }
 
-    printf("address,  stat   size     dye     caller   pre-stat    point\r\n");
+    print("address,  stat   size     dye     caller   pre-stat    point\r\n");
 
-    printf("FL bitmap: 0x%x\r\n", (unsigned) mmhead->fl_bitmap);
+    print("FL bitmap: 0x%x\r\n", (unsigned) mmhead->fl_bitmap);
 
     for (i = 0; i < FLT_SIZE; i++) {
         if (mmhead->sl_bitmap[i]) {
-            printf("SL bitmap 0x%x\r\n", (unsigned) mmhead->sl_bitmap[i]);
+            print("SL bitmap 0x%x\r\n", (unsigned) mmhead->sl_bitmap[i]);
         }
 
         for (j = 0; j < SLT_SIZE; j++) {
             next = mmhead->mm_tbl[i][j];
             if (next) {
-                printf("-> [%d][%d]\r\n", i, j);
+                print("-> [%d][%d]\r\n", i, j);
             }
             while (next) {
                 VGF(VALGRIND_MAKE_MEM_DEFINED(next, MMLIST_HEAD_SIZE));
@@ -402,8 +409,8 @@ void dump_kmm_map(k_mm_head *mmhead)
         return;
     }
 
-    printf("ALL BLOCKS\r\n");
-    printf("address,  stat   size     dye     caller   pre-stat    point\r\n");
+    print("ALL BLOCKS\r\n");
+    print("address,  stat   size     dye     caller   pre-stat    point\r\n");
     reginfo = mmhead->regioninfo;
     while (reginfo) {
         VGF(VALGRIND_MAKE_MEM_DEFINED(reginfo, sizeof(k_mm_region_info_t)));
@@ -433,17 +440,18 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
         return;
     }
 #if (K_MM_STATISTIC > 0)
-    printf("     free     |     used     |     maxused\r\n");
-    printf("  %10d  |  %10d  |  %10d\r\n", mmhead->free_size, mmhead->used_size,
+    print("     free     |     used     |     maxused\r\n");
+    print("  %10d  |  %10d  |  %10d\r\n", mmhead->free_size, mmhead->used_size,
            mmhead->maxused_size);
-    printf("\r\n-----------------alloc size statistic:-----------------\r\n");
+    print("\r\n");
+    print("-----------------alloc size statistic:-----------------\r\n");
     for (i = 0; i < MAX_MM_BIT - 1; i++) {
         if (i % 4 == 0 && i != 0) {
-            printf("\r\n");
+            print("\r\n");
         }
-        printf("[2^%02d] bytes: %5d   |", (i + 2), mmhead->mm_size_stats[i]);
+        print("[2^%02d] bytes: %5d   |", (i + 2), mmhead->mm_size_stats[i]);
     }
-    printf("\r\n");
+    print("\r\n");
 #endif
 }
 
@@ -454,13 +462,16 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     YUNOS_CRITICAL_ENTER();
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(g_kmm_head, sizeof(k_mm_head)));
-    printf("\r\n------------------------------- all memory blocks --------------------------------- \r\n");
-    printf("g_kmm_head = %8x\r\n",(unsigned int)g_kmm_head);
+    print("\r\n");
+    print("------------------------------- all memory blocks --------------------------------- \r\n");
+    print("g_kmm_head = %8x\r\n",(unsigned int)g_kmm_head);
 
     dump_kmm_map(g_kmm_head);
-    printf("\r\n----------------------------- all free memory blocks ------------------------------- \r\n");
+    print("\r\n");
+    print("----------------------------- all free memory blocks ------------------------------- \r\n");
     dump_kmm_free_map(g_kmm_head);
-    printf("\r\n------------------------- memory allocation statistic ------------------------------ \r\n");
+    print("\r\n");
+    print("------------------------- memory allocation statistic ------------------------------ \r\n");
     dump_kmm_statistic_info(g_kmm_head);
     VGF(VALGRIND_MAKE_MEM_NOACCESS(g_kmm_head, sizeof(k_mm_head)));
 

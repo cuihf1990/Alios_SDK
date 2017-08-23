@@ -21,6 +21,7 @@
 #include "hal/soc/flash.h"
 #include "kvmgr.h"
 #include <string.h>
+#include <yos/cli.h>
 
 /* Key-value function return code description */
 typedef enum {
@@ -682,7 +683,7 @@ static int __item_print_cb(kv_item_t *item, const char *key)
     memset(p_val, 0, item->hdr.val_len + 1);
     raw_read(item->pos + ITEM_HEADER_SIZE + item->hdr.key_len, p_val, item->hdr.val_len);
 
-    LOGI("KV", "%s = %s", p_key, p_val);
+    cli_printf("%s = %s\r\n", p_key, p_val);
     yos_free(p_key);
     yos_free(p_val);
 
@@ -701,7 +702,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
         ret = yos_kv_set(argv[2], argv[3], strlen(argv[3]), 1);
         if (ret != 0) {
-            LOGW("KV", "cli set kv failed");
+            cli_printf("cli set kv failed\r\n");
         }
     } else if (strcmp(rtype, "get") == 0) {
         if (argc != 3) {
@@ -709,7 +710,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
         buffer = yos_malloc(BLK_SIZE);
         if (!buffer) {
-            LOGW("KV", "cli get kv failed");
+            cli_printf("cli get kv failed\r\n");
             return;
         }
 
@@ -718,9 +719,9 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 
         ret = yos_kv_get(argv[2], buffer, &len);
         if (ret != 0) {
-            LOGW("KV", "cli: no paired kv");
+            cli_printf("cli: no paired kv\r\n");
         } else {
-            LOGI("KV", "value is %s", buffer);
+            cli_printf("value is %s\r\n", buffer);
         }
 
         if (buffer) {
@@ -732,7 +733,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
         ret = yos_kv_del(argv[2]);
         if (ret != 0) {
-            LOGW("KV", "cli kv del failed");
+            cli_printf("cli kv del failed\r\n");
         }
     } else if (strcmp(rtype, "list") == 0) {
         for (int i = 0; i < BLK_NUMS; i++) {
