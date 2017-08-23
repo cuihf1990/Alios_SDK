@@ -6,7 +6,7 @@ no_with_lwip ?= 1
 
 GLOBAL_INCLUDES += . $(ARCH_LINUX)
 
-$(NAME)_COMPONENTS  := hal vflash netmgr framework modules.fs.kv
+$(NAME)_COMPONENTS  := hal vflash netmgr framework.common  modules.fs.kv
 
 ifeq ($(openssl),1)
 GLOBAL_LDFLAGS += -lssl -lcrypto
