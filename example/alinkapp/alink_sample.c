@@ -654,6 +654,9 @@ static void alink_cloud_init(void)
 #endif
 }
 
+#ifdef CONFIG_WIFIMONITOR
+extern struct cli_command count_mac_cmd;
+#endif
 int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
@@ -697,6 +700,10 @@ int application_start(int argc, char *argv[])
         netmgr_init();
         netmgr_start(false);
     }
+
+#ifdef CONFIG_WIFIMONITOR
+    cli_register_command(&count_mac_cmd);
+#endif
 
 #ifdef CONFIG_YOS_DDA
     dda_service_start();
