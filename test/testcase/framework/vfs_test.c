@@ -43,7 +43,7 @@ static int test_sync(file_t *fp)
     return -123;
 }
 
-static off_t test_stat(file_t *fp, const char *path, struct stat *st)
+static int test_stat(file_t *fp, const char *path, struct stat *st)
 {
     return -123;
 }
