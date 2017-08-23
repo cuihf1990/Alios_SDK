@@ -16,9 +16,10 @@
 
 #include <reent.h>
 #include <sys/errno.h>
-#include <k_api.h>
 #include <sys/unistd.h>
 #include <sys/errno.h>
+#include <k_api.h>
+#include <yos/kernel.h>
 #include "hal/soc/soc.h"
 #include "board.h"
 
@@ -178,17 +179,42 @@ int _gettimeofday_r(struct _reent *ptr, struct timeval *tv, void *__tzp)
 
 void *_malloc_r(struct _reent *ptr, size_t size)
 {
-    return yos_malloc(size);
+    void *mem;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    mem = yos_malloc(size | YOS_UNSIGNED_INT_MSB);
+    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+#else
+    mem = yos_malloc(size);
+#endif
+
+    return mem;
 }
 
 void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
 {
-    return yos_realloc(old, newlen);
+    void *mem;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    mem = yos_realloc(old, newlen | YOS_UNSIGNED_INT_MSB);
+    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+#else
+    mem = yos_realloc(old, newlen);
+#endif
+
+    return mem;
 }
 
 void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
 {
-    void *mem = yos_malloc(size * len);
+    void *mem;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    mem = yos_malloc((size * len) | YOS_UNSIGNED_INT_MSB);
+    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+#else
+    mem = yos_malloc(size * len);
+#endif
 
     if (mem) {
         bzero(mem, size * len);
