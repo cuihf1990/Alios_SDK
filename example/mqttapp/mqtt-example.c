@@ -23,15 +23,30 @@
 
 #include "iot_import.h"
 #include "iot_export.h"
-
+#include "yos/log.h"
+//#include "json_parser.h"
+#include "yos/framework.h"
+#include "yos/network.h"
+#include "kvmgr.h"
+#include <netmgr.h>
+#include <yos/kernel.h>
+#include <k_err.h>
+//#include "aliot_platform.h"
+//#include "aliot_log.h"
+//#include "aliot_mqtt_client.h"
+//#include "aliot_auth.h"
+//#include "aliot_device.h"
+#include <netmgr.h>
+#include <yos/cli.h>
+#include <yos/cloud.h>
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
-    #define PRODUCT_KEY             "OvNmiEYRDSY"
-    #define DEVICE_NAME             "sh_online_sample_mqtt"
-    #define DEVICE_SECRET           "v9mqGzepKEphLhXmAoiaUIR2HZ7XwTky"
+    #define PRODUCT_KEY             "edWuENTjOf4"
+    #define DEVICE_NAME             "zmmqtttest-device"
+    #define DEVICE_SECRET           "AU6hOT7CCKitFKb3d9thMjaEszHzCfTA"
 #else
-    #define PRODUCT_KEY             "yfTuLfBJTiL"
-    #define DEVICE_NAME             "TestDeviceForDemo"
-    #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
+    #define PRODUCT_KEY             "edWuENTjOf4"
+    #define DEVICE_NAME             "zmmqtttest-device"
+    #define DEVICE_SECRET           "AU6hOT7CCKitFKb3d9thMjaEszHzCfTA"
 #endif
 
 // These are pre-defined topics
@@ -51,6 +66,27 @@
 
 static int      user_argc;
 static char   **user_argv;
+static void mqtt_main_async( );
+
+
+static int is_demo_started = 0;
+static void wifi_service_event(input_event_t *event, void *priv_data) {
+    LOG("wifi_service_event!");
+    if (event->type != EV_WIFI) {
+        return;
+    }
+
+    if (event->code != CODE_WIFI_ON_GOT_IP) {
+        return;
+    }
+
+    if (is_demo_started == 0) {
+        is_demo_started = 1;
+        mqtt_main_async();
+        //mqtt_client();
+    }
+}
+
 
 void event_handle(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
@@ -276,7 +312,7 @@ do_exit:
 
     return rc;
 }
-
+/*
 int main(int argc, char **argv)
 {
     IOT_OpenLog("mqtt");
@@ -293,4 +329,54 @@ int main(int argc, char **argv)
     EXAMPLE_TRACE("out of sample!");
     return 0;
 }
+*/
 
+static void mqtt_main( void *data )
+{
+    mqtt_client();
+    yos_task_exit(0);
+}
+
+static void mqtt_main_async( )
+{
+        int ret = yos_task_new("mqtttask", mqtt_main, 0, 1024*10);
+        if (ret != YUNOS_SUCCESS) {
+           printf("Error: Failed to create cli thread: %d\r\n", ret);
+       }
+}
+
+static void handle_mqtt(char *pwbuf, int blen, int argc, char **argv)
+{
+    //mqtt_client();
+    mqtt_main_async();
+}
+
+static struct cli_command mqttcmd = {
+    .name = "mqtt",
+    .help = "factory mqtt",
+    .function = handle_mqtt
+};
+
+
+int application_start(int argc, char *argv[])
+{
+    yos_set_log_level(YOS_LL_DEBUG);
+
+    printf("zmxin application_start\n");
+    yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
+
+    netmgr_init();
+    netmgr_start(false);
+
+    cli_register_command(&mqttcmd);
+    int ret = yos_task_new("mqtttask", mqtt_main, 0, 1024*10);
+    if (ret != YUNOS_SUCCESS) {
+        printf("Error: Failed to create cli thread: %d\r\n", ret);
+    }
+
+    LOG("yos_loop_run end.");
+    yos_loop_run();
+    LOG("alink end.");
+    yos_msleep(10000000);
+    return 0;
+}

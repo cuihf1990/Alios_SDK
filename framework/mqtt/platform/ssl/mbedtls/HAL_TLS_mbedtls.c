@@ -21,6 +21,7 @@
 #include <memory.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "mbedtls/error.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/net.h"
@@ -48,7 +49,7 @@ typedef struct _TLSDataParams {
 
 
 #define DEBUG_LEVEL 10
-
+//#define MBEDTLS_DEBUG_C
 static unsigned int _avRandom()
 {
     return (((unsigned int)rand() << 16) + rand());
@@ -136,6 +137,19 @@ static int _ssl_parse_crt(mbedtls_x509_crt *crt)
     return i;
 }
 
+#if defined(MBEDTLS_DEBUG_C)
+static void ssl_debug(void *ctx, int level,
+                      const char *file, int line, const char *str)
+{
+    (void)ctx;
+    (void) level;
+
+    printf("%s, line: %d: %s", file, line, str);
+
+    return;
+}
+#endif
+
 static int _ssl_client_init(mbedtls_ssl_context *ssl,
                          mbedtls_net_context *tcp_fd,
                          mbedtls_ssl_config *conf,
@@ -151,6 +165,7 @@ static int _ssl_client_init(mbedtls_ssl_context *ssl,
      */
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold((int)DEBUG_LEVEL);
+    mbedtls_ssl_conf_dbg(conf, ssl_debug, NULL);
 #endif
     mbedtls_net_init(tcp_fd);
     mbedtls_ssl_init(ssl);
@@ -246,7 +261,22 @@ int utils_network_ssl_read(TLSDataParams_t *pTlsData, char *buffer, int len, int
                 return readLen;
             } else {
                 //mbedtls_strerror(ret, err_str, sizeof(err_str));
-                SSL_LOG("ssl recv error: code = %d, err_str = '%s'", ret, err_str);
+                if(ret == MBEDTLS_ERR_SSL_WANT_READ) {
+                    if(errno == EINTR) {
+                        SSL_LOG("check sleep 200ms readLen = %d", readLen);
+                        /*
+                           yos_msleep(200);
+                           continue;
+                           if(_ota_socket_check_conn((pTlsData->fd).fd) <0 )
+                           {
+                           SSL_LOG("check fd %d err", (pTlsData->fd).fd);
+                           break;
+                           }
+                           */
+                        return readLen;
+                    }
+                    continue;
+                }
                 net_status = -1;
                 return -1; // Connection error
             }

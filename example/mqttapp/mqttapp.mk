@@ -23,7 +23,7 @@ $(NAME)_COMPONENTS := log
 $(NAME)_COMPONENTS  += mbedtls
 $(NAME)_COMPONENTS  += mqtt
 
-LWIP := 1
+LWIP := 0
 ifeq ($(LWIP),1)
 $(NAME)_COMPONENTS  += protocols.net
 no_with_lwip := 0

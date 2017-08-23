@@ -1,5 +1,5 @@
 NAME := platform
-$(NAME)_INCLUDES := ssl/mbedtls/mbedtls/include/ os/ network/ ssl/ ../utils ./ ../sdk-impl/imports/ ../sdk-impl/
+$(NAME)_INCLUDES := ssl/mbedtls/mbedtls/include/ os/ network/ ssl/ ../utils ./ ../sdk-impl/imports/ ../sdk-impl/ ../../../security/mbedtls/include/
 
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_MQTT := linux
@@ -12,16 +12,10 @@ PLATFORM_MQTT := rhino
 NETWORK_MQTT := rhinosock
 endif
 
-$(NAME)_SOURCES := os/linux/HAL_OS_linux.c
-$(NAME)_SOURCES += os/linux/HAL_TCP_linux.c
-#$(NAME)_SOURCES := os/linux/HAL_UDP_linux.c
-
-
-#$(NAME)_SOURCES := os/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
-#$(NAME)_SOURCES := os/$(PLATFORM_MQTT)/HAL_TCP_$(PLATFORM_MQTT).c
+$(NAME)_SOURCES := os/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
+$(NAME)_SOURCES += os/$(PLATFORM_MQTT)/HAL_TCP_$(PLATFORM_MQTT).c
 #$(NAME)_SOURCES := os/$(PLATFORM_MQTT)/HAL_UDP_$(PLATFORM_MQTT).c
 #$(NAME)_SOURCES += network/$(NETWORK_MQTT)/$(NETWORK_MQTT).c
-
 
 #mbedtls
 $(NAME)_SOURCES += ssl/mbedtls/HAL_DTLS_mbedtls.c

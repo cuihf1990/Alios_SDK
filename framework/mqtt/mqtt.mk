@@ -2,7 +2,7 @@ NAME := mqtt
 
 $(NAME)_COMPONENTS := mqtt.mqtt
 $(NAME)_COMPONENTS += mqtt.guider
-#$(NAME)_COMPONENTS += mqtt.security-mqtt
+$(NAME)_COMPONENTS += mqtt.security-mqtt
 $(NAME)_COMPONENTS += mqtt.shadow
 $(NAME)_COMPONENTS += mqtt.system-mqtt
 $(NAME)_COMPONENTS += mqtt.utils
