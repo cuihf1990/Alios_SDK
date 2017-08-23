@@ -16,8 +16,11 @@
 
 #include "diskio.h"
 #include "ff.h"
+#include "vfs_inode.h"
+#include "vfs_register.h"
 #include <string.h>
 #include <sys/fcntl.h>
+
 
 /* Definitions of physical drive number for each drive */
 #define DEV_RAMDISK     0
@@ -31,6 +34,8 @@ DSTATUS ff_disk_status(BYTE pdrv)
 
         case DEV_SDCARD:
             // return sdcard_status();
+        default:
+            break;
     }
     return STA_NOINIT;
 }
@@ -43,6 +48,8 @@ DSTATUS ff_disk_initialize(BYTE pdrv)
 
         case DEV_SDCARD:
             // return sdcard_initialize();
+        default:
+            break;
     }
     return STA_NOINIT;
 }
@@ -55,6 +62,8 @@ DRESULT ff_disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
 
         case DEV_SDCARD:
             // return sdcard_read();
+        default:
+            break;
     }
     return RES_PARERR;
 }
@@ -67,6 +76,8 @@ DRESULT ff_disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
 
         case DEV_SDCARD:
             // return sdcard_write();
+        default:
+            break;
     }
     return RES_PARERR;
 }
@@ -79,10 +90,17 @@ DRESULT ff_disk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
 
         case DEV_SDCARD:
             // return sdcard_ioctl();
+        default:
+            break;
     }
     return RES_PARERR;
 }
 
+#if FF_USE_LFN == 0
+#define MAX_NAME_LEN    12
+#else
+#define MAX_NAME_LEN    FF_MAX_LFN
+#endif
 
 typedef struct _fsid_map_t
 {
@@ -90,23 +108,20 @@ typedef struct _fsid_map_t
     const char *id;
 }fsid_map_t;
 
+typedef struct _fat_dir_t
+{
+    yos_dir_t       dir;
+    FF_DIR          ffdir;
+    FILINFO         filinfo;
+    yos_dirent_t    cur_dirent;
+}fat_dir_t;
+
 static fsid_map_t g_fsid[] = {
         { "/ramdisk",   "0:" },
         { "/sdcard",    "1:" }
 };
 
 static FATFS *g_fatfs[FF_VOLUMES] = {0};
-
-static const fs_ops_t fatfs_ops = {
-    .open       = &fatfs_open,
-    .close      = &fatfs_close,
-    .read       = &fatfs_read,
-    .write      = &fatfs_write,
-    .sync       = &fatfs_sync,
-    .stat       = &fatfs_stat,
-    .unlink     = &fatfs_unlink,
-    .rename     = &fatfs_rename
-};
 
 static char* translate_relative_path(const char *path)
 {
@@ -303,6 +318,104 @@ static int fatfs_rename(file_t *fp, const char *oldpath, const char *newpath)
     yos_free(newname);
     return ret;
 }
+
+static yos_dir_t* fatfs_opendir(file_t *fp, const char *path)
+{
+    fat_dir_t *dp = NULL;
+    char *relpath = NULL;
+
+    relpath = translate_relative_path(path);
+    if (!relpath)
+        return NULL;
+
+    dp = (fat_dir_t *)yos_malloc(sizeof(fat_dir_t) + MAX_NAME_LEN + 1);
+    if (!dp) {
+        yos_free(relpath);
+        return NULL;
+    }
+
+    memset(dp, 0, sizeof(fat_dir_t) + MAX_NAME_LEN + 1);
+    if (f_opendir(&dp->ffdir, relpath) == FR_OK) {
+        yos_free(relpath);
+        return (yos_dir_t *)dp;
+    }
+
+    yos_free(relpath);
+    yos_free(dp);
+    return NULL;
+}
+
+static yos_dirent_t* fatfs_readdir(file_t *fp, yos_dir_t *dir)
+{
+    fat_dir_t *dp = (fat_dir_t *)dir;
+    yos_dirent_t *out_dirent;
+
+    if (!dp)
+        return NULL;
+
+    if (f_readdir(&dp->ffdir, &dp->filinfo) != FR_OK)
+        return NULL;
+
+    if (dp->filinfo.fname[0] == 0)
+        return NULL;
+
+    dp->cur_dirent.d_ino = 0;
+    if (dp->filinfo.fattrib & AM_DIR) {
+        dp->cur_dirent.d_type = AM_DIR;
+    }
+
+    strncpy(dp->cur_dirent.d_name, dp->filinfo.fname, MAX_NAME_LEN);
+    dp->cur_dirent.d_name[MAX_NAME_LEN] = '\0';
+
+    out_dirent = &dp->cur_dirent;
+    return out_dirent;
+}
+
+static int fatfs_closedir(file_t *fp, yos_dir_t *dir)
+{
+    int ret = -1;
+    fat_dir_t *dp = (fat_dir_t *)dir;
+
+    if (!dp)
+        return -1;
+
+    ret = f_closedir(&dp->ffdir);
+    if (ret == FR_OK)
+        yos_free(dp);
+
+    return ret;
+}
+
+static int fatfs_mkdir(file_t *fp, const char *path)
+{
+    int ret = -1;
+    char *relpath = NULL;
+
+    relpath = translate_relative_path(path);
+    if (!relpath)
+        return -1;
+
+    ret = f_mkdir(relpath);
+
+    yos_free(relpath);
+    return ret;
+}
+
+static const fs_ops_t fatfs_ops = {
+    .open       = &fatfs_open,
+    .close      = &fatfs_close,
+    .read       = &fatfs_read,
+    .write      = &fatfs_write,
+    .lseek      = NULL,
+    .sync       = &fatfs_sync,
+    .stat       = &fatfs_stat,
+    .unlink     = &fatfs_unlink,
+    .rename     = &fatfs_rename,
+    .opendir    = &fatfs_opendir,
+    .readdir    = &fatfs_readdir,
+    .closedir   = &fatfs_closedir,
+    .mkdir      = &fatfs_mkdir
+};
 
 int fatfs_register(unsigned char pdrv)
 {
