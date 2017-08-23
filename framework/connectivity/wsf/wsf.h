@@ -17,7 +17,7 @@
 #ifndef WSF_H
 #define WSF_H
 
-#include "../connectivity.h"
+#include "connectivity.h"
 #include "os.h"
 
 #define MODULE_NAME "wsf"

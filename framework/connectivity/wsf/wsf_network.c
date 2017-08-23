@@ -18,7 +18,7 @@
 #include "wsf_log.h"
 #include "wsf_msg.h"
 #include "wsf_network.h"
-#include "../connectivity.h"
+#include "connectivity.h"
 #include "os.h"
 
 wsf_connection_t *wsf_conn = NULL;

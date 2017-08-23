@@ -16,8 +16,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "../connectivity_manager.h"
-#include "../connectivity.h"
+#include "connectivity_manager.h"
+#include "connectivity.h"
 #include "yos/list.h"
 #include "yos/log.h"
 #include "wsf.h"

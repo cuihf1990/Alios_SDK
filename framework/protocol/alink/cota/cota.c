@@ -23,7 +23,7 @@
 #include "yos/list.h"
 #include "yos/log.h"
 #include "service_manager.h"
-#include "wsf/wsf.h"
+#include "wsf.h"
 #include "yos/kernel.h"
 #include "config.h"
 #include "accs.h"

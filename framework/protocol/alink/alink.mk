@@ -9,3 +9,4 @@ include framework/protocol/alink/system/system.mk
 include framework/protocol/alink/cota/cota.mk
 include framework/protocol/alink/os/os.mk
 
+$(NAME)_COMPONENTS := connectivity.wsf digest_algorithm cjson base64 hashtable log
