@@ -21,7 +21,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <fifo.h>
 #include <hal/trace.h>
 
 #if (YUNOS_CONFIG_TRACE > 0)
