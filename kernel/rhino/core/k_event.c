@@ -41,7 +41,7 @@ static kstat_t event_create(kevent_t *event, const name_t *name, uint32_t flags,
     YUNOS_CRITICAL_EXIT();
 #endif
 
-    TRACE_EVENT_CREATE(g_active_task[cpu_cur_get()], event, name, flags);
+    TRACE_EVENT_CREATE(yunos_cur_task_get(), event, name, flags);
 
     event->blk_obj.obj_type = YUNOS_EVENT_OBJ_TYPE;
 

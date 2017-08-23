@@ -85,7 +85,7 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
         yunos_timer_start(timer);
     }
 
-    TRACE_TIMER_CREATE(g_active_task[cpu_cur_get()], timer);
+    TRACE_TIMER_CREATE(yunos_cur_task_get(), timer);
 
     return YUNOS_SUCCESS;
 }
