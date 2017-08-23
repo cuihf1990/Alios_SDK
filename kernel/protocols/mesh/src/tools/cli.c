@@ -1272,7 +1272,11 @@ static void ur_read_sock(int fd, raw_data_handler_t handler)
 
 static void mesh_worker(void *arg)
 {
+#ifdef CONFIG_YOS_MESH_DEBUG
     int maxfd = g_cli_autotest.udp_socket;
+#else
+    int maxfd = -1;
+#endif
 
     if (g_cl_state.icmp_socket > maxfd) {
         maxfd = g_cl_state.icmp_socket;
@@ -1282,16 +1286,20 @@ static void mesh_worker(void *arg)
         fd_set rfds;
         FD_ZERO(&rfds);
         FD_SET(g_cl_state.icmp_socket, &rfds);
+#ifdef CONFIG_YOS_MESH_DEBUG
         FD_SET(g_cli_autotest.udp_socket, &rfds);
+#endif
 
         lwip_select(maxfd + 1, &rfds, NULL, NULL, NULL);
 
         if (FD_ISSET(g_cl_state.icmp_socket, &rfds)) {
             ur_read_sock(g_cl_state.icmp_socket, cli_handle_echo_response);
         }
+#ifdef CONFIG_YOS_MESH_DEBUG
         if (FD_ISSET(g_cli_autotest.udp_socket, &rfds)) {
             ur_read_sock(g_cli_autotest.udp_socket, handle_udp_autotest);
         }
+#endif
     }
 }
 #endif
