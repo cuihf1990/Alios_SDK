@@ -27,7 +27,7 @@
 #define END_CHAR        '\r'
 #define PROMPT          "\r\n# "
 #define EXIT_MSG        "exit"
-#define CLI_TAG         "\e[63m"  //CLI TAG, use ESC characters, c(cli) ascii is 63 
+#define CLI_TAG         "\e[63m"  //CLI TAG, use ESC characters, c(cli) ascii is 63
 
 #define DEBUG 1
 
@@ -550,7 +550,8 @@ void help_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                        pCli->commands[i]->help : "");
             n++;
             if ( n == build_in_count - 1 ) {
-                cli_printf("\r\n====User Commands====\r\n");
+                cli_printf("\r\n");
+                cli_printf("====User Commands====\r\n");
             }
         }
     }
