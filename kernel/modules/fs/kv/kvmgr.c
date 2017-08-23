@@ -667,6 +667,7 @@ int yos_kv_get(const char *key, void *buffer, int *buffer_len)
 }
 
 /* CLI Support */
+#ifdef CONFIG_YOS_CLI
 static int __item_print_cb(kv_item_t *item, const char *key)
 {
     char *p_key = (char *)yos_malloc(item->hdr.key_len + 1);
@@ -689,7 +690,9 @@ static int __item_print_cb(kv_item_t *item, const char *key)
 
     return RES_CONT;
 }
+#endif
 
+#ifdef CONFIG_YOS_CLI
 static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     const char *rtype = argc > 1 ? argv[1] : "";
@@ -742,13 +745,15 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
     }
     return;
 }
+#endif
 
-
+#ifdef CONFIG_YOS_CLI
 static struct cli_command ncmd = {
     .name = "kv",
     .help = "kv [set key value | get key | del key | list]",
     .function = handle_kv_cmd,
 };
+#endif
 
 int yos_kv_init(void)
 {
@@ -766,7 +771,9 @@ int yos_kv_init(void)
         return RES_MUTEX_ERR;
     }
 
+#ifdef CONFIG_YOS_CLI
     cli_register_command(&ncmd);
+#endif
 
     if (kv_init() != RES_OK)
         return -1;
