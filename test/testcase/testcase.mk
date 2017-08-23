@@ -44,7 +44,7 @@ $(NAME)_COMPONENTS  := yunit cjson
 
 $(NAME)_COMPONENTS  += mbedtls
 
-$(NAME)_COMPONENTS  += base64 hashtable log connectivity ywss protocol.alink modules.kv
+$(NAME)_COMPONENTS  += base64 hashtable log connectivity.wsf ywss protocol.alink modules.fs.kv
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_INCLUDES := ../../kernel/protocols/mesh/include
