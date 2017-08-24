@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <malloc.h>
 #include <string.h>
 #include <yos/log.h>
@@ -31,13 +32,13 @@ extern uint32_t dump_mmleak(void);
 ktimer_t g_mm_leak_check_timer;
 
 #define safesprintf(buf,totallen,offset,string) do {\
-    if((totallen - offset) < strlen(string)) { \
+    if ((totallen - offset) < strlen(string)) { \
         printf("%s",buf); \
         offset = 0; \
     } \
     sprintf(buf+offset,"%s",string); \
     offset += strlen(string); \
-    } while(0)
+    } while (0)
 
 uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 {
@@ -51,13 +52,16 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     klist_t *taskhead = &g_kobj_list.task_head;
     klist_t *taskend  = taskhead;
     klist_t *tmp;
-    ktask_t  *task;
-    ktask_t  *candidate;
-    const name_t  *task_name;
+    ktask_t *task;
+    ktask_t *candidate;
+
+    const name_t *task_name;
     char  yes = 'N';
+
     size_t pc = 0;
     size_t c_frame = 0;
     size_t n_frame = 0;
+
     int depth = YUNOS_BACKTRACE_DEPTH;
 
     char *printbuf = NULL;
@@ -66,7 +70,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     int   totallen = 2048;
 
     printbuf = yos_malloc(totallen);
-    if(printbuf ==  NULL) {
+    if (printbuf ==  NULL) {
         return YUNOS_NO_MEM;
     }
     memset(printbuf, 0, totallen);
@@ -79,7 +83,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 
 #if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
     snprintf(tmpbuf, 255, CLI_TAG "CPU usage :%-10d   MAX:%-10d                 \n");
-               g_cpu_usage / 100, g_cpu_usage_max / 100);
+             g_cpu_usage / 100, g_cpu_usage_max / 100);
     safesprintf(printbuf, totallen, offset,tmpbuf);
     safesprintf(printbuf, totallen, offset, CLI_TAG "---------------------------------------------------------------------\r\n",255);
 
@@ -88,8 +92,8 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     safesprintf(printbuf, totallen, offset, CLI_TAG "---------------------------------------------------------------------\r\n");
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-        task       = yunos_list_entry(tmp, ktask_t, task_stats_item);
-        rst        = yunos_task_stack_min_free(task, &free_size);
+        task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+        rst  = yunos_task_stack_min_free(task, &free_size);
 
         if (rst != YUNOS_SUCCESS) {
             free_size = 0;
@@ -113,10 +117,10 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 
 #ifndef HAVE_NOT_ADVANCED_FORMATE
         snprintf(tmpbuf, 255, CLI_TAG "%-19.18s%-9s%-5d%-10d%-9zu%-9llu%-11c\r\n",
-                   task_name, cpu_stat[task->task_state - K_RDY], task->prio,
-                   task->stack_size, free_size, (unsigned long long)time_total, yes);
+                 task_name, cpu_stat[task->task_state - K_RDY], task->prio,
+                 task->stack_size, free_size, (unsigned long long)time_total, yes);
 #else
-        /* if not support %-N.Ms,cut it manually*/
+        /* if not support %-N.Ms,cut it manually */
         if (strlen(task_name) > 18) {
             char name_cut[19];
             memset(name_cut, 0, sizeof(name_cut));
@@ -125,8 +129,8 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
         }
 
         snprintf(tmpbuf,255,CLI_TAG "%-19s%-9s%-5d%-10d%-9u%-9u%-11c\r\n",
-                   task_name, cpu_stat[task->task_state - K_RDY], task->prio,
-                   task->stack_size, free_size, (unsigned int)time_total, yes);
+                 task_name, cpu_stat[task->task_state - K_RDY], task->prio,
+                 task->stack_size, free_size, (unsigned int)time_total, yes);
 #endif
         safesprintf(printbuf, totallen, offset,tmpbuf);
 
@@ -162,26 +166,27 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
 {
     int16_t plen = 0;
 
-    plen += sprintf(buf + plen,
-                    CLI_TAG "---------------------------------------------\r\n");
+    plen += sprintf(buf + plen, CLI_TAG "---------------------------------------------\r\n");
 #if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
     plen += sprintf(buf + plen, CLI_TAG "CPU usage :%-10d     MAX:%-10d\r\n",
                     g_cpu_usage / 100, g_cpu_usage_max / 100);
 #endif
+
 #if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
     plen += sprintf(buf + plen, CLI_TAG "Max sched disable time  :%-10d\r\n",
                     g_sched_disable_max_time);
 #else
     plen += sprintf(buf + plen, CLI_TAG "Max sched disable time  :%-10d\r\n", 0);
 #endif
+
 #if (YUNOS_CONFIG_DISABLE_INTRPT_STATS > 0)
     plen += sprintf(buf + plen, CLI_TAG "Max intrpt disable time :%-10d\r\n",
                     g_intrpt_disable_max_time);
 #else
     plen += sprintf(buf + plen, CLI_TAG "Max intrpt disable time :%-10d\r\n", 0);
 #endif
-    plen += sprintf(buf + plen,
-                    CLI_TAG "---------------------------------------------\r\n");
+
+    plen += sprintf(buf + plen, CLI_TAG "---------------------------------------------\r\n");
 
     return YUNOS_SUCCESS;
 }
@@ -257,6 +262,7 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                      CLI_TAG "\tdumpsys info       : show the system info\r\n"
 #endif
                      ;
+
     if (argc >= 2  && 0 == strcmp(argv[1], "task")) {
         if (argc == 3 && (0 == strcmp(argv[2], "detail"))) {
             ret = dumpsys_task_func(pcWriteBuffer, xWriteBufferLen, true);
@@ -302,7 +308,6 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     }
 }
 
-
 int dump_task_stack(ktask_t *task)
 {
     uint32_t offset = 0;
@@ -336,8 +341,8 @@ int dump_task_stack(ktask_t *task)
         return 1;
     }
     p = (int*)cur;
-    while(p < (int*)end) {
-        if(i%4==0) {
+    while (p < (int*)end) {
+        if (i % 4 == 0) {
             sprintf(tmp, CLI_TAG "\r\n%08x:",(uint32_t)p);
             safesprintf(printbuf, totallen, bufoffset, tmp);
         }
@@ -355,9 +360,9 @@ int dump_task_stack(ktask_t *task)
     return 0;
 
 }
+
 int dump_task_stack_byname(char * taskname)
 {
-
     klist_t *taskhead = &g_kobj_list.task_head;
     klist_t *taskend  = taskhead;
     klist_t *tmp;
@@ -367,6 +372,7 @@ int dump_task_stack_byname(char * taskname)
     if(strcmp(taskname,"all") == 0) {
         printall = 1;
     }
+
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
         task = yunos_list_entry(tmp, ktask_t, task_stats_item);
         if(printall == 1 || strcmp(taskname, task->task_name) == 0){
@@ -377,5 +383,4 @@ int dump_task_stack_byname(char * taskname)
 
     return 0;
 }
-
 

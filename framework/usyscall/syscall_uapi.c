@@ -233,7 +233,7 @@ void *yos_malloc(unsigned int size)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
     } else {
-        return SYS_CALL1(SYS_MALLOC, void *, unsigned int, size);
+        return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, 0);
     }
 #else
     return SYS_CALL1(SYS_MALLOC, void *, unsigned int, size);
@@ -247,7 +247,7 @@ void *yos_realloc(void *mem, unsigned int size)
         return SYS_CALL3(SYS_REALLOC, void *, void *, mem, unsigned int, size,
                          size_t, (size_t)__builtin_return_address(0));
     } else {
-        return SYS_CALL2(SYS_REALLOC, void *, void *, mem, unsigned int, size);
+        return SYS_CALL3(SYS_REALLOC, void *, void *, mem, unsigned int, size, size_t, 0);
     }
 #else
     return SYS_CALL2(SYS_REALLOC, void *, void *, mem, unsigned int, size);
@@ -260,7 +260,7 @@ void *yos_zalloc(unsigned int size)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
     } else {
-        return SYS_CALL1(SYS_ZALLOC, void *, unsigned int, size);
+        return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, 0);
     }
 #else
     return SYS_CALL1(SYS_ZALLOC, void *, unsigned int, size);
@@ -815,15 +815,42 @@ hal_ota_module_t *hal_ota_get_default_module(void)
     return SYS_CALL0(SYS_OTA_GET_DEFAULT_MODULE, hal_ota_module_t *);
 }
 
+/* --------------------CLI-------------------- */
+
+int cli_register_command(const struct cli_command *cmd)
+{
+    return SYS_CALL1(SYS_CLI_REG_CMD, int, const struct cli_command *, cmd);
+}
+
+int cli_unregister_command(const struct cli_command *cmd)
+{
+    return SYS_CALL1(SYS_CLI_UNREG_CMD, int, const struct cli_command *, cmd);
+}
+
+int cli_register_commands(const struct cli_command *cmds, int num_cmds)
+{
+    return SYS_CALL2(SYS_CLI_REG_CMDS, int, const struct cli_command *, cmds, int, num_cmds);
+}
+
+int cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
+{
+    return SYS_CALL2(SYS_CLI_UNREG_CMDS, int, const struct cli_command *, cmds, int, num_cmds);
+}
+
+int yos_cli_init(void)
+{
+    return SYS_CALL0(SYS_CLI_INIT, int);
+}
+
+int yos_cli_stop(void)
+{
+    return SYS_CALL0(SYS_CLI_STOP, int);
+}
+
 /* --------------------OTHERS-------------------- */
 
 int32_t yos_uart_send(void *data, uint32_t size, uint32_t timeout)
 {
     return SYS_CALL3(SYS_UART_SEND, int32_t, void *, data, uint32_t, size, uint32_t, timeout);
-}
-
-int cli_register_command(const struct cli_command *command)
-{
-    return SYS_CALL1(SYS_CLI_REGISTER_COMMAND, int, const struct cli_command *, command);
 }
 

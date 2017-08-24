@@ -82,14 +82,6 @@ int cli_register_command(const struct cli_command *command);
  */
 int cli_unregister_command(const struct cli_command *command);
 
-/** Stop the CLI thread and carry out the cleanup
- *
- * \return kNoErr on success
- * \return error code otherwise.
- *
- */
-int yos_cli_stop(void);
-
 /** Register a batch of CLI commands
  *
  * Often, a module will want to register several commands.
@@ -137,6 +129,14 @@ int cli_printf(const char *buff, ...);
 /* library CLI APIs
  */
 int yos_cli_init(void);
+
+/* Stop the CLI thread and carry out the cleanup
+ *
+ * \return kNoErr on success
+ * \return error code otherwise.
+ *
+ */
+int yos_cli_stop(void);
 
 #else /* CONFIG_YOS_CLI */
 
