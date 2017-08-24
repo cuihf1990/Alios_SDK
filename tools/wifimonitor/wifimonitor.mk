@@ -20,13 +20,8 @@ GLOBAL_INCLUDES += ./
 
 GLOBAL_CFLAGS += -DCONFIG_WIFIMONITOR
 
-$(NAME)_CFLAGS += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration
-$(NAME)_CFLAGS  += -Wno-type-limits -Wno-sign-compare -Wno-pointer-sign -Wno-uninitialized
-$(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-variable
-$(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
-
 $(NAME)_SOURCES += wifimonitor.c
 
-$(NAME)_INCLUDEs += framework/protocol/alink/os/platform/ include/
+$(NAME)_COMPONENTS += log cli
 
-$(NAME)_COMPONENTS += log cli 
+$(NAME)_DEFINES += DEBUG

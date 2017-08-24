@@ -20,18 +20,16 @@
 #include <string.h>
 #include <assert.h>
 #include "yos/log.h"
-#include <yos/cli.h>
 #include <yos/cloud.h>
 #include <yos/kernel.h>
 #include "platform.h"
+#include "wifimonitor.h"
 
 #ifndef Method_PostData
-#define Method_PostData    "postDeviceData"
+#define Method_PostData "postDeviceData"
 #endif
-#define post_data_buffer_size    (512)
+#define post_data_buffer_size (512)
 static char post_data_buffer[post_data_buffer_size];
-
-//-------------------------------
 
 #define MODULE_NAME "wifimonitor"
 #ifndef MAC_KV_NAME
@@ -51,21 +49,31 @@ static char post_data_buffer[post_data_buffer_size];
  *
  * table size: 4B * 2 ^ 8
  */
-
 struct mac_hash_t {
     struct mac_hash_t * next;
     uint8_t high_mac[6-MAC_HASH_IDX_BYTES];
 }*g_mac_table[MAC_HASH_TABLE_SIZE] = {NULL};
 
-int g_mac_sum = 0;
+static int g_mac_sum = 0;
 
 static void free_mac_table()
 {
-    // <TODO>
+    int tbl_idx;
+    struct mac_hash_t *h, *tmp;
+
+    for (tbl_idx = 0; tbl_idx < MAC_HASH_TABLE_SIZE; tbl_idx++) {
+        h = g_mac_table[tbl_idx];
+        while (h != NULL) {
+            tmp = h;
+            h = h->next;
+            yos_free(tmp);
+        }
+    }
+
     return;
 }
 
-static void wifimonitor_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi/*, int buffer_type*/);
+static void wifimonitor_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi);
 void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     int val = 0;
@@ -81,7 +89,7 @@ void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
          * example of the old mngt frame callback is the registrar's.
          * <TODO>
          */
-        //os_wifi_enable_mgnt_frame_filter(0, NULL, NULL);
+        hal_wlan_register_mgnt_monitor_cb(NULL, NULL);
         free_mac_table();
         return;
     } else if (strcmp(rtype, "suspend") == 0) {
@@ -95,7 +103,6 @@ void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
         memset(g_mac_table, 0, sizeof(g_mac_table));
         LOG("Will start the mac count process.");
         hal_wlan_register_mgnt_monitor_cb(NULL, wifimonitor_wifi_mgnt_frame_callback);
-        //hal_wifi_start_wifi_monitor(NULL); // Note: do NOT need start monitor here
     }
 }
 
@@ -136,7 +143,6 @@ static int check_same_mac_and_add_new(uint8_t * mac)
     while (node != NULL) {
         if (0 == compare_high_mac(node->high_mac,
           mac+MAC_HASH_IDX_BYTES, 6-MAC_HASH_IDX_BYTES)) {
-            //LOGD(MODULE_NAME, "Same mac found, let's skip it.");
             return 1;
         }
         tail = node;
@@ -156,7 +162,6 @@ static int check_same_mac_and_add_new(uint8_t * mac)
     else tail->next = new_n;
 
     g_mac_sum++;
-    // may write kv every duration (e.g. 1s), <TODO>
     LOGD(MODULE_NAME, "g_mac_sum is %d", g_mac_sum);
 
     return 0;
@@ -177,17 +182,13 @@ static void report_new_mac(const uint8_t *mac, char rssi)
 #ifndef MGMT_PROBE_REQ
 #define MGMT_PROBE_REQ  (0x40)
 #endif
-void wifimonitor_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi/*, int buffer_type*/)
+static void wifimonitor_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi)
 {
     int type = buffer[0];
     uint8_t * mac = &buffer[10]; // SA in the probe req frame
 
-    //if (buffer_type) return;
-
     switch (type) {
     case MGMT_PROBE_REQ:
-        //LOGD(MODULE_NAME, "probe_req frame received, src mac: %02x:%02x:%02x:%02x:%02x:%02x", 
-        //  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         if (rssi < -60) return;
         if (check_same_mac_and_add_new(mac) == 0) report_new_mac(mac, rssi);
         break;
@@ -195,5 +196,3 @@ void wifimonitor_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi
         break;
     }
 }
-
-//------------------------------

@@ -32,6 +32,10 @@
 #include <yos/cli.h>
 #include <yos/cloud.h>
 
+#ifdef CONFIG_WIFIMONITOR
+#include <wifimonitor.h>
+#endif
+
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
  * for each product model, vendor need to sumbit a lua script
@@ -654,9 +658,6 @@ static void alink_cloud_init(void)
 #endif
 }
 
-#ifdef CONFIG_WIFIMONITOR
-extern struct cli_command count_mac_cmd;
-#endif
 int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
