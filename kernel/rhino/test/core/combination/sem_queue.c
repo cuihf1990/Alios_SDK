@@ -43,14 +43,6 @@ static void task_sem_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_kobj_set_dyn_create(&handle, "obj_set", OBJ_SET_COUNT);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
-
-    yunos_queue_create(&queue1, "queue1", (void **)&queue1_msg_buff, TEST_MSG_SIZE);
-    yunos_queue_create(&queue2, "queue2", (void **)&queue2_msg_buff, TEST_MSG_SIZE);
-
-    yunos_kobj_set_insert((blk_obj_t *)&queue1, handle);
-    yunos_kobj_set_insert((blk_obj_t *)&queue2, handle);
     ret = yunos_kobj_select(handle, &select_obj, YUNOS_WAIT_FOREVER);
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
@@ -117,6 +109,15 @@ void sem_queue_coopr_test(void)
     kstat_t ret;
 
     test_case_check_err = 0;
+
+    ret = yunos_kobj_set_dyn_create(&handle, "obj_set", OBJ_SET_COUNT);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+
+    yunos_queue_create(&queue1, "queue1", (void **)&queue1_msg_buff, TEST_MSG_SIZE);
+    yunos_queue_create(&queue2, "queue2", (void **)&queue2_msg_buff, TEST_MSG_SIZE);
+
+    yunos_kobj_set_insert((blk_obj_t *)&queue1, handle);
+    yunos_kobj_set_insert((blk_obj_t *)&queue2, handle);
 
     ret = yunos_task_dyn_create(&task_select, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);

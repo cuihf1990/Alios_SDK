@@ -45,13 +45,6 @@ static void task_mutex_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_mutex_dyn_create(&mutex_comb, "mutexcomb");
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
-
-    ret = yunos_queue_create(&queue, "queue", (void **)&queue_msg_buff,
-                             TEST_MSG_SIZE);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
-
     ret = yunos_mutex_lock(mutex_comb, YUNOS_WAIT_FOREVER);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
@@ -81,8 +74,6 @@ static void task_mutex_opr_entry(void *arg)
 static void task_queue_opr_entry(void *arg)
 {
     kstat_t ret;
-    ret = yunos_kobj_set_dyn_create(&handle, "obj_set", TEST_MSG_NUM);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
     ret = yunos_kobj_set_insert((blk_obj_t *)&queue, handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
@@ -117,6 +108,16 @@ void mutex_queue_coopr_test(void)
 {
     kstat_t ret;
     test_case_check_err = 0;
+
+    ret = yunos_kobj_set_dyn_create(&handle, "obj_set", TEST_MSG_NUM);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+
+    ret = yunos_mutex_dyn_create(&mutex_comb, "mutexcomb");
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+
+    ret = yunos_queue_create(&queue, "queue", (void **)&queue_msg_buff,
+                             TEST_MSG_SIZE);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);

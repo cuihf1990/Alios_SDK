@@ -80,13 +80,6 @@ static void task_sem_coopr1_co1_entry(void *arg)
     kstat_t ret;
     uint8_t cnt = 0;
 
-    ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, 3);
-    if (ret != YUNOS_SUCCESS) {
-        test_case_fail++;
-        PRINT_RESULT(MODULE_NAME_CO1, FAIL);
-        return;
-    }
-
     yunos_sem_take(test_sem, 100);
     yunos_sem_take(test_sem, 100);
     yunos_sem_take(test_sem, 100);
@@ -147,6 +140,13 @@ void sem_coopr1_test(void)
 {
     kstat_t ret;
 
+    ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, 3);
+    if (ret != YUNOS_SUCCESS) {
+        test_case_fail++;
+        PRINT_RESULT(MODULE_NAME_CO1, FAIL);
+        return;
+    }
+
     ret = yunos_task_dyn_create(&task_sem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr1_co1_entry, 1);
 
@@ -168,8 +168,6 @@ static void task_sem_coopr2_co1_entry(void *arg)
 {
     kstat_t ret;
 
-    yunos_sem_dyn_create(&test_sem_co1, MODULE_NAME, 0);
-
     ret = yunos_sem_take(test_sem_co1, YUNOS_WAIT_FOREVER);
 
     TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == YUNOS_SUCCESS);
@@ -190,8 +188,6 @@ static void task_sem_coopr2_co1_entry(void *arg)
 static void task_sem_coopr2_co2_entry(void *arg)
 {
     kstat_t ret;
-
-    yunos_sem_dyn_create(&test_sem_co2, MODULE_NAME, 0);
 
     while (1) {
         /* no task block on the semaphore and wait notification from other task */
@@ -227,6 +223,9 @@ void sem_coopr2_test(void)
 {
     kstat_t ret;
     test_case_check_err = 0;
+
+    yunos_sem_dyn_create(&test_sem_co1, MODULE_NAME, 0);
+    yunos_sem_dyn_create(&test_sem_co2, MODULE_NAME, 0);
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co1_entry, 1);

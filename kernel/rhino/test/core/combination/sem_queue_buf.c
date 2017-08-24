@@ -34,10 +34,6 @@ static void task_sem_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    yunos_sem_dyn_create(&test_sem, "semtest", 0);
-    yunos_buf_queue_create(&test_buf_queue, "bugqueue", (void *)buf_queue_test_buf,
-                           8, 1);
-
     ret = yunos_sem_take(test_sem, YUNOS_WAIT_FOREVER);
     if (ret == YUNOS_SUCCESS) {
         test_case_success++;
@@ -77,6 +73,10 @@ static void task_buf_queue_trigger_entry(void *arg)
 void sem_buf_queue_coopr_test(void)
 {
     kstat_t ret;
+
+    yunos_sem_dyn_create(&test_sem, "semtest", 0);
+    yunos_buf_queue_create(&test_buf_queue, "bugqueue", (void *)buf_queue_test_buf,
+                           8, 1);
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);

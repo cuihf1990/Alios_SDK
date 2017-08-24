@@ -68,9 +68,6 @@ static void task_tasksem_co1_entry(void *arg)
     kstat_t  ret;
     uint8_t  cnt = 0;
 
-    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == YUNOS_SUCCESS);
-
     while (1) {
         ret = yunos_task_sem_take(YUNOS_WAIT_FOREVER);
         MYASSERT_INFO(ret == YUNOS_SUCCESS);
@@ -93,9 +90,6 @@ static void task_tasksem_co2_entry(void *arg)
 {
     kstat_t ret;
     uint8_t cnt = 0;
-
-    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
         yunos_sched_disable();
@@ -131,6 +125,12 @@ void tasksem_coopr1_test(void)
 {
     kstat_t ret;
 
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == YUNOS_SUCCESS);
+
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == YUNOS_SUCCESS);
+
     ret = yunos_task_dyn_create(&task_tasksem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co1_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
@@ -150,9 +150,6 @@ static void task_tasksem_co3_entry(void *arg)
 {
     kstat_t ret;
     uint8_t cnt = 0;
-
-    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
         yunos_task_sleep(5);
@@ -175,9 +172,6 @@ static void task_tasksem_co4_entry(void *arg)
 {
     kstat_t ret;
     uint8_t cnt = 0;
-
-    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
         ret = yunos_task_sem_take(YUNOS_WAIT_FOREVER);
@@ -205,6 +199,12 @@ static void task_tasksem_co4_entry(void *arg)
 void tasksem_coopr2_test(void)
 {
     kstat_t ret;
+
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == YUNOS_SUCCESS);
+
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_tasksem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co3_entry, 1);
