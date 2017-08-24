@@ -24,7 +24,7 @@ extern "C" {
 typedef struct {
     int     d_ino;                      /* file number */
     uint8_t d_type;                     /* type of file */
-    char*   d_name;                     /* file name */
+    char    d_name[];                   /* file name */
 }yos_dirent_t;
 
 typedef struct {
