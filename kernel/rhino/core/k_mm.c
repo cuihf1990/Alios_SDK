@@ -1033,6 +1033,7 @@ void yunos_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
 #else
     yunos_mutex_lock(&(mmhead->mm_mutex), YUNOS_WAIT_FOREVER);
 #endif
+
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead->fixedmblk, MMLIST_HEAD_SIZE));
 
@@ -1045,17 +1046,14 @@ void yunos_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
 
     VGF(VALGRIND_MAKE_MEM_NOACCESS(mmhead->fixedmblk, MMLIST_HEAD_SIZE));
     VGF(VALGRIND_MAKE_MEM_NOACCESS(mmhead, sizeof(k_mm_head)));
+
 #if (YUNOS_CONFIG_MM_REGION_MUTEX == 0)
     YUNOS_CRITICAL_EXIT();
 #else
     yunos_mutex_unlock(&(mmhead->mm_mutex));
 #endif
-    return;
-
-
 }
 #endif
-
 
 void *yunos_mm_alloc(size_t size)
 {

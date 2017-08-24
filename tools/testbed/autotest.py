@@ -151,12 +151,13 @@ class Autotest:
         if devname not in list(self.subscribed):
             print "{0} is not subscribed".format(devname)
             return False
-        if os.path.exists(filename) == False:
+        expandfilename = os.path.expanduser(filename)
+        if os.path.exists(expandfilename) == False:
             print "{0} does not exist".format(filename)
             return False
 
         #send file to server first
-        file = open(filename,'r')
+        file = open(expandfilename,'r')
         content = filename.split('/')[-1]
         data = TBframe.construct(TBframe.FILE_BEGIN, content)
         self.service_socket.send(data)
@@ -166,7 +167,7 @@ class Autotest:
             self.service_socket.send(data)
             content = file.read(1024)
         file.close()
-        content = filename
+        content = filename.split('/')[-1]
         data = TBframe.construct(TBframe.FILE_END, content)
         self.service_socket.send(data)
 

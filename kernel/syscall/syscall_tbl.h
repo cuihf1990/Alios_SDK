@@ -148,19 +148,22 @@ SYSCALL(SYS_ZALLOC, yos_zalloc)
 
 #endif
 
-#define SYS_FREE 39
+#define SYS_ALLOC_TRACE 39
+SYSCALL(SYS_ALLOC_TRACE, yos_alloc_trace)
+
+#define SYS_FREE 40
 SYSCALL(SYS_FREE, yos_free)
 
-#define SYS_NOW 40
+#define SYS_NOW 41
 SYSCALL(SYS_NOW, yos_now)
 
-#define SYS_NOW_MS 41
+#define SYS_NOW_MS 42
 SYSCALL(SYS_NOW_MS, yos_now_ms)
 
-#define SYS_MSLEEP 42
+#define SYS_MSLEEP 43
 SYSCALL(SYS_MSLEEP, yos_msleep)
 
-/* keep 42~50 for Rhino */
+/* keep 44~50 for Rhino */
 
 /* --------------------Framework-------------------- */
 
