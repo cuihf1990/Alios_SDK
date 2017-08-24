@@ -95,7 +95,7 @@ struct fs_ops {
     int             (*close)    (file_t *fp);
     ssize_t         (*read)     (file_t *fp, char *buf, size_t len);
     ssize_t         (*write)    (file_t *fp, const char *buf, size_t len);
-    int             (*lseek)    (file_t *fp, off_t off, int whence);
+    off_t           (*lseek)    (file_t *fp, off_t off, int whence);
     int             (*sync)     (file_t *fp);
     int             (*stat)     (file_t *fp, const char *path, struct stat *st);
     int             (*unlink)   (file_t *fp, const char *path);

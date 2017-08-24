@@ -14,87 +14,13 @@
  * limitations under the License.
  */
 
-#include "diskio.h"
-#include "ff.h"
-#include "vfs_inode.h"
-#include "vfs_register.h"
 #include <string.h>
 #include <sys/fcntl.h>
-
-
-/* Definitions of physical drive number for each drive */
-#define DEV_RAMDISK     0
-#define DEV_SDCARD      1
-
-DSTATUS ff_disk_status(BYTE pdrv)
-{
-    switch (pdrv) {
-        case DEV_RAMDISK:
-            // return ramdisk_status();
-
-        case DEV_SDCARD:
-            // return sdcard_status();
-        default:
-            break;
-    }
-    return STA_NOINIT;
-}
-
-DSTATUS ff_disk_initialize(BYTE pdrv)
-{
-    switch (pdrv) {
-        case DEV_RAMDISK:
-            // return ramdisk_initialize();
-
-        case DEV_SDCARD:
-            // return sdcard_initialize();
-        default:
-            break;
-    }
-    return STA_NOINIT;
-}
-
-DRESULT ff_disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
-{
-    switch (pdrv) {
-        case DEV_RAMDISK:
-            // return ramdisk_read();
-
-        case DEV_SDCARD:
-            // return sdcard_read();
-        default:
-            break;
-    }
-    return RES_PARERR;
-}
-
-DRESULT ff_disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
-{
-    switch (pdrv) {
-        case DEV_RAMDISK:
-            // return ramdisk_write();
-
-        case DEV_SDCARD:
-            // return sdcard_write();
-        default:
-            break;
-    }
-    return RES_PARERR;
-}
-
-DRESULT ff_disk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
-{
-    switch (pdrv) {
-        case DEV_RAMDISK:
-            // return ramdisk_ioctl();
-
-        case DEV_SDCARD:
-            // return sdcard_ioctl();
-        default:
-            break;
-    }
-    return RES_PARERR;
-}
+#include "diskio.h"
+#include "ff.h"
+#include "vfs_err.h"
+#include "vfs_inode.h"
+#include "vfs_register.h"
 
 #if FF_USE_LFN == 0
 #define MAX_NAME_LEN    12
@@ -123,6 +49,108 @@ static fsid_map_t g_fsid[] = {
 
 static FATFS *g_fatfs[FF_VOLUMES] = {0};
 
+#if FF_USE_LFN == 3 /* Dynamic memory allocation */
+
+/*------------------------------------------------------------------------*/
+/* Allocate a memory block                                                */
+/*------------------------------------------------------------------------*/
+
+void* ff_memalloc ( /* Returns pointer to the allocated memory block (null on not enough core) */
+    UINT msize      /* Number of bytes to allocate */
+)
+{
+    return (void *)yos_malloc(msize);   /* Allocate a new memory block with POSIX API */
+}
+
+
+/*------------------------------------------------------------------------*/
+/* Free a memory block                                                    */
+/*------------------------------------------------------------------------*/
+
+void ff_memfree (
+    void* mblock    /* Pointer to the memory block to free */
+)
+{
+    yos_free(mblock);   /* Free the memory block with POSIX API */
+}
+
+#endif
+
+
+
+#if FF_FS_REENTRANT /* Mutal exclusion */
+
+/*------------------------------------------------------------------------*/
+/* Create a Synchronization Object                                        */
+/*------------------------------------------------------------------------*/
+/* This function is called in f_mount() function to create a new
+/  synchronization object for the volume, such as semaphore and mutex.
+/  When a 0 is returned, the f_mount() function fails with FR_INT_ERR.
+*/
+
+//const osMutexDef_t Mutex[FF_VOLUMES]; /* CMSIS-RTOS */
+
+
+int ff_cre_syncobj (    /* 1:Function succeeded, 0:Could not create the sync object */
+    BYTE vol,           /* Corresponding volume (logical drive number) */
+    FF_SYNC_t *sobj     /* Pointer to return the created sync object */
+)
+{
+    int ret = yos_mutex_new(sobj);
+    return (ret == FR_OK) ? 1 : 0;
+}
+
+
+/*------------------------------------------------------------------------*/
+/* Delete a Synchronization Object                                        */
+/*------------------------------------------------------------------------*/
+/* This function is called in f_mount() function to delete a synchronization
+/  object that created with ff_cre_syncobj() function. When a 0 is returned,
+/  the f_mount() function fails with FR_INT_ERR.
+*/
+
+int ff_del_syncobj (    /* 1:Function succeeded, 0:Could not delete due to an error */
+    FF_SYNC_t sobj      /* Sync object tied to the logical drive to be deleted */
+)
+{
+    yos_mutex_free(&sobj);
+    return 1;
+}
+
+
+/*------------------------------------------------------------------------*/
+/* Request Grant to Access the Volume                                     */
+/*------------------------------------------------------------------------*/
+/* This function is called on entering file functions to lock the volume.
+/  When a 0 is returned, the file function fails with FR_TIMEOUT.
+*/
+
+int ff_req_grant (  /* 1:Got a grant to access the volume, 0:Could not get a grant */
+    FF_SYNC_t sobj  /* Sync object to wait */
+)
+{
+    int ret = yos_mutex_lock(&sobj, FF_FS_TIMEOUT);
+    return (ret == FR_OK) ? 1 : 0;
+}
+
+
+/*------------------------------------------------------------------------*/
+/* Release Grant to Access the Volume                                     */
+/*------------------------------------------------------------------------*/
+/* This function is called on leaving file functions to unlock the volume.
+*/
+
+void ff_rel_grant (
+    FF_SYNC_t sobj  /* Sync object to be signaled */
+)
+{
+    yos_mutex_unlock(&sobj);
+}
+
+#endif
+
+
+
 static char* translate_relative_path(const char *path)
 {
     int len, prefix_len;
@@ -133,8 +161,8 @@ static char* translate_relative_path(const char *path)
         return NULL;
 
     len = strlen(path);
-    prefix_len = strlen(g_fsid[pdrv].root);
     for (pdrv = 0; pdrv < FF_VOLUMES; pdrv++) {
+        prefix_len = strlen(g_fsid[pdrv].root);
         if (strncmp(g_fsid[pdrv].root, path, prefix_len) == 0)
             break;
     }
@@ -247,6 +275,32 @@ static ssize_t fatfs_write(file_t *fp, const char *buf, size_t len)
     }
 
     return -1;
+}
+
+static off_t fatfs_lseek(file_t *fp, off_t off, int whence)
+{
+    off_t new_pos;
+    FIL *f = (FIL *)(fp->f_arg);
+
+    if (f) {
+        if (whence == SEEK_SET) {
+            new_pos = off;
+        } else if (whence == SEEK_CUR) {
+            off_t cur_pos = f_tell(f);
+            new_pos = cur_pos + off;
+        } else if (whence == SEEK_END) {
+            off_t size = f_size(f);
+            new_pos = size + off;
+        } else {
+            return -1;
+        }
+
+        if (f_lseek(f, new_pos) != FR_OK) {
+            return -1;
+        }
+    }
+
+    return new_pos;
 }
 
 static int fatfs_sync(file_t *fp)
@@ -406,7 +460,7 @@ static const fs_ops_t fatfs_ops = {
     .close      = &fatfs_close,
     .read       = &fatfs_read,
     .write      = &fatfs_write,
-    .lseek      = NULL,
+    .lseek      = &fatfs_lseek,
     .sync       = &fatfs_sync,
     .stat       = &fatfs_stat,
     .unlink     = &fatfs_unlink,

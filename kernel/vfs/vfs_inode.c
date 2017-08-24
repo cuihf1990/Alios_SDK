@@ -74,6 +74,11 @@ inode_t *inode_open(const char *path)
         if (node->i_name == NULL) {
             continue;
         }
+        if (INODE_IS_TYPE(node, VFS_TYPE_FS_DEV)) {
+            if ((strncmp(node->i_name, path, strlen(node->i_name)) == 0) &&
+                (*(path + strlen(node->i_name)) == '/'))
+                return node;
+        }
         if (strcmp(node->i_name, path) == 0) {
             return node;
         }

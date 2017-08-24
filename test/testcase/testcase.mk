@@ -17,6 +17,7 @@ $(NAME)_SOURCES     += tfs/tfs_test.c
 $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
 $(NAME)_SOURCES     += kernel/module/kv_test.c
+$(NAME)_SOURCES     += kernel/module/fatfs_test.c
 $(NAME)_SOURCES     += kernel/vcall/vcall_test.c
 $(NAME)_SOURCES     += devices/vflash/vflash_test.c
 
@@ -44,7 +45,7 @@ $(NAME)_COMPONENTS  := yunit cjson
 
 $(NAME)_COMPONENTS  += mbedtls
 
-$(NAME)_COMPONENTS  += base64 hashtable log connectivity.wsf ywss protocol.alink modules.fs.kv
+$(NAME)_COMPONENTS  += base64 hashtable log connectivity.wsf ywss protocol.alink modules.fs.kv modules.fs.fatfs
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_INCLUDES := ../../kernel/protocols/mesh/include
