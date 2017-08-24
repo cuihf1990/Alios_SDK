@@ -1,10 +1,7 @@
 #include <assert.h>
 #include <k_api.h>
-#include <fifo.h>
-
 
 #if (YUNOS_CONFIG_TRACE > 0)
-
 #define TRACE_BUFFER_SIZE 1024
 #define ROUND_POINT(sz) (((sz) + (4 - 1)) & ~(4 - 1))
 

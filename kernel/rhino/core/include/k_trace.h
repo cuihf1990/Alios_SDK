@@ -17,6 +17,7 @@
 #ifndef K_TRACE_H
 #define K_TRACE_H
 
+
 #if (YUNOS_CONFIG_TRACE > 0)
 /* task trace function */
 void _trace_init(void);

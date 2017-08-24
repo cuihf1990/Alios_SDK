@@ -57,6 +57,7 @@ extern "C" {
 #include <k_hook.h>
 #include <port.h>
 #include <k_endian.h>
+#include <k_fifo.h>
 
 #ifdef __cplusplus
 }

@@ -15,7 +15,6 @@
  */
 
 #include <k_api.h>
-#include "fifo.h"
 
 
 /*
@@ -32,9 +31,6 @@ static int8_t is_power_of_2(uint32_t n)
 {
     return (n != 0 && ((n & (n - 1)) == 0));
 }
-
-
-/*static fifio alloc do not need raw_malloc*/
 
 int8_t fifo_init(struct k_fifo *fifo, void *buffer, uint32_t size)
 {
@@ -63,7 +59,6 @@ int8_t fifo_init(struct k_fifo *fifo, void *buffer, uint32_t size)
     return 0;
 }
 
-
 static void fifo_copy_in(struct k_fifo *fifo, const void *src,
                          uint32_t len, uint32_t off)
 {
@@ -81,7 +76,6 @@ static void fifo_copy_in(struct k_fifo *fifo, const void *src,
 
 }
 
-/*fifo write in*/
 uint32_t fifo_in(struct k_fifo *fifo, const void *buf, uint32_t len)
 {
     uint32_t l;
@@ -145,8 +139,6 @@ uint32_t fifo_in_full_reject_lock(struct k_fifo *fifo, const void *buf, uint32_t
     return len;
 }
 
-
-
 static void kfifo_copy_out(struct k_fifo *fifo, void *dst,
                            uint32_t len, uint32_t off)
 {
@@ -176,8 +168,6 @@ static uint32_t internal_fifo_out_peek(struct k_fifo *fifo,
     return len;
 }
 
-/*fifo read out but data remain in fifo*/
-
 uint32_t fifo_out_peek(struct k_fifo *fifo,
                        void *buf, uint32_t len)
 {
@@ -196,8 +186,6 @@ uint32_t fifo_out_peek(struct k_fifo *fifo,
 
 }
 
-/*fifo read out*/
-
 uint32_t fifo_out(struct k_fifo *fifo, void *buf, uint32_t len)
 {
     CPSR_ALLOC();
@@ -213,8 +201,6 @@ uint32_t fifo_out(struct k_fifo *fifo, void *buf, uint32_t len)
 
     return len;
 }
-
-/*fifo read out all*/
 
 uint32_t fifo_out_all(struct k_fifo *fifo, void *buf)
 {
