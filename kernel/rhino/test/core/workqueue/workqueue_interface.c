@@ -132,11 +132,20 @@ static uint8_t workqueue_interface_case1(void)
         return 1;
     }
 
-    ret = yunos_workqueue_del(&wq0);
-    if (ret != YUNOS_SUCCESS) {
-        MYASSERT(ret);
-        yunos_sem_give(&g_wq_test_sem);
-        return 1;
+    while (1) {
+        ret = yunos_workqueue_del(&wq0);
+
+        if (ret == YUNOS_TRY_AGAIN) {
+            continue;
+        }
+        else if (ret != YUNOS_SUCCESS) {
+            MYASSERT(ret);
+            yunos_sem_give(&g_wq_test_sem);
+            return 1;
+        }
+        else {
+            break;
+        }
     }
 
     /* init works */

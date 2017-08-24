@@ -106,16 +106,15 @@ static void task_queue0_entry(void *arg)
                                    g_test_recv_msg0, &size);
         BUFQUEUE_VAL_CHK(ret == YUNOS_BLK_DEL);
 
+        ret = yunos_buf_queue_dyn_del(g_test_bufqueue0);
+        BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+
         yunos_task_dyn_del(task_0_test);
     }
 }
 
 static void task_queue1_entry(void *arg)
 {
-    int ret;
-    ret = yunos_buf_queue_dyn_del(g_test_bufqueue0);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
-
     if (test_case_check_err == 0) {
         test_case_success++;
         PRINT_RESULT("buf queue dyn create&del", PASS);

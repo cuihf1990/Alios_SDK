@@ -160,6 +160,13 @@ void mm_coopr_test(void)
 {
     kstat_t ret;
 
+    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    if (ret != YUNOS_SUCCESS) {
+        test_case_fail++;
+        PRINT_RESULT(MODULE_NAME_CO, FAIL);
+        return;
+    }
+
     ret = yunos_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_co1_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
