@@ -33,7 +33,7 @@ static int test_ioctl(file_t *node, int cmd, unsigned long arg)
     return -123;
 }
 
-static int test_lseek(file_t *fp, off_t off, int whence)
+static off_t test_lseek(file_t *fp, off_t off, int whence)
 {
     return -123;
 }
