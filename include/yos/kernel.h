@@ -23,6 +23,8 @@
 #ifndef YOS_KERNEL_H
 #define YOS_KERNEL_H
 
+#include <sys/types.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -396,6 +398,13 @@ void *yos_malloc(unsigned int size);
  * @return  the operation status, NULL is error, others is memory address
  */
 void *yos_zalloc(unsigned int size);
+
+/**
+ * trace alloced mems
+ * @param[in] addr       pointer of the mem alloced by malloc
+ * @param[in] allocator  buildin_address
+ */
+void yos_alloc_trace(void *addr, size_t allocator);
 
 /**
  * free memory

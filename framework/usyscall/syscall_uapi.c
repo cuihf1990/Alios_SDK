@@ -230,7 +230,11 @@ int yos_work_cancel(yos_work_t *work)
 void *yos_malloc(unsigned int size)
 {
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
-    return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
+    } else {
+        return SYS_CALL1(SYS_MALLOC, void *, unsigned int, size);
+    }
 #else
     return SYS_CALL1(SYS_MALLOC, void *, unsigned int, size);
 #endif
@@ -239,8 +243,12 @@ void *yos_malloc(unsigned int size)
 void *yos_realloc(void *mem, unsigned int size)
 {
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
-    return SYS_CALL3(SYS_REALLOC, void *, void *, mem, unsigned int, size,
-                     size_t, (size_t)__builtin_return_address(0));
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        return SYS_CALL3(SYS_REALLOC, void *, void *, mem, unsigned int, size,
+                         size_t, (size_t)__builtin_return_address(0));
+    } else {
+        return SYS_CALL2(SYS_REALLOC, void *, void *, mem, unsigned int, size);
+    }
 #else
     return SYS_CALL2(SYS_REALLOC, void *, void *, mem, unsigned int, size);
 #endif
@@ -249,10 +257,19 @@ void *yos_realloc(void *mem, unsigned int size)
 void *yos_zalloc(unsigned int size)
 {
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
-    return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
+    } else {
+        return SYS_CALL1(SYS_ZALLOC, void *, unsigned int, size);
+    }
 #else
     return SYS_CALL1(SYS_ZALLOC, void *, unsigned int, size);
 #endif
+}
+
+void yos_alloc_trace(void *addr, size_t allocator)
+{
+    return SYS_CALL2(SYS_ALLOC_TRACE, void, void *, addr, size_t, allocator);
 }
 
 void yos_free(void *mem)
