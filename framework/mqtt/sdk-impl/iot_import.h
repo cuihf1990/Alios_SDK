@@ -273,7 +273,7 @@ int32_t HAL_SSL_Destroy(uintptr_t handle);
    @endverbatim
  * @see None.
  */
-int32_t HAL_SSL_Write(uintptr_t handle, const char *buf, int len, int timeout_ms);
+int HAL_SSL_Write(uintptr_t handle, const char *buf, int len, int timeout_ms);
 
 
 /**
@@ -293,7 +293,7 @@ int32_t HAL_SSL_Write(uintptr_t handle, const char *buf, int len, int timeout_ms
    @endverbatim
  * @see None.
  */
-int32_t HAL_SSL_Read(uintptr_t handle, char *buf, int len, int timeout_ms);
+int HAL_SSL_Read(uintptr_t handle, char *buf, int len, int timeout_ms);
 
 
 #if defined(__cplusplus)
