@@ -42,8 +42,6 @@ YUNOS_INLINE kstat_t rhino_init(void)
     yunos_init_hook();
 #endif
 
-    TRACE_INIT();
-
     runqueue_init(&g_ready_queue);
 
     tick_list_init();
