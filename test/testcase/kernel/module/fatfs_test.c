@@ -51,6 +51,7 @@ static void test_fatfs_case(void)
 
     /* Fatfs read test */
     fd = yos_open(g_filepath, O_RDONLY);
+    YUNIT_ASSERT(fd > 0);
     if (fd > 0) {
         ret = yos_read(fd, readBuffer, sizeof(readBuffer));
         YUNIT_ASSERT(ret > 0);
@@ -73,14 +74,17 @@ static void test_fatfs_case(void)
 
     /* Fatfs readdir test */
     fd = yos_open(g_dirtest_1, O_RDWR | O_CREAT | O_TRUNC);
+    YUNIT_ASSERT(fd > 0);
     if (fd > 0)
         yos_close(fd);
 
     fd = yos_open(g_dirtest_2, O_RDWR | O_CREAT | O_TRUNC);
+    YUNIT_ASSERT(fd > 0);
     if (fd > 0)
         yos_close(fd);
 
     fd = yos_open(g_dirtest_3, O_RDWR | O_CREAT | O_TRUNC);
+    YUNIT_ASSERT(fd > 0);
     if (fd > 0)
         yos_close(fd);
 
