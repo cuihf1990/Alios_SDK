@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
+ * Copyright (C) 2017 YunOS Project. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,14 @@
 #include <yos/cloud.h>
 #include <yos/debug.h>
 #include <yos/framework.h>
+#include <yos/kv.h>
 #include <yos/list.h>
 #include <yos/log.h>
 #include <yos/network.h>
 #include <yos/types.h>
 #include <yos/version.h>
+#include <yos/vfs.h>
+#include <yos/yloop.h>
 
 #endif
 
