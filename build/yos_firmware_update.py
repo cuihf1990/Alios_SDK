@@ -641,7 +641,7 @@ else:
     port.setRTS(True)
     time.sleep(0.1)
     port.setRTS(False)
-    time.sleep(0.12)
+    time.sleep(0.19)
     port.write("          \r\n");
     if assert_response(["ootloader"], 1) == False:
         sys.stderr.write("error: failed to enter bootloader\n")
