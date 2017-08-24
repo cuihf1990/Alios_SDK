@@ -18,11 +18,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <assert.h>
-#include "yos/log.h"
+#include <yos/log.h>
 #include <yos/cloud.h>
 #include <yos/kernel.h>
-#include "platform.h"
 #include "wifimonitor.h"
 
 #ifndef Method_PostData
@@ -74,7 +72,7 @@ static void free_mac_table()
 }
 
 static void wifimonitor_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi);
-void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
+static void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     int val = 0;
     const char *rtype= argc > 1 ? argv[1] : "";
