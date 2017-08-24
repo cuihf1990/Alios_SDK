@@ -32,6 +32,10 @@
 #include <yos/cli.h>
 #include <yos/cloud.h>
 
+#ifdef CONFIG_WIFIMONITOR
+#include <wifimonitor.h>
+#endif
+
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
  * for each product model, vendor need to sumbit a lua script
@@ -697,6 +701,10 @@ int application_start(int argc, char *argv[])
         netmgr_init();
         netmgr_start(false);
     }
+
+#ifdef CONFIG_WIFIMONITOR
+    cli_register_command(&count_mac_cmd);
+#endif
 
 #ifdef CONFIG_YOS_DDA
     dda_service_start();
