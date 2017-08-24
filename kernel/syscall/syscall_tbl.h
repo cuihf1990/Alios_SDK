@@ -458,11 +458,28 @@ SYSCALL(SYS_OTA_SET_BOOT, hal_ota_set_boot)
 #define SYS_OTA_GET_DEFAULT_MODULE 176
 SYSCALL(SYS_OTA_GET_DEFAULT_MODULE, hal_ota_get_default_module)
 
-/* keep 167~170 for OTA */
+/* keep 177~180 for OTA */
+
+/* --------------------CLI-------------------- */
+#define SYS_CLI_REG_CMD 181
+SYSCALL(SYS_CLI_REG_CMD, cli_register_command)
+
+#define SYS_CLI_UNREG_CMD 182
+SYSCALL(SYS_CLI_UNREG_CMD, cli_unregister_command)
+
+#define SYS_CLI_REG_CMDS 183
+SYSCALL(SYS_CLI_REG_CMDS, cli_register_commands)
+
+#define SYS_CLI_UNREG_CMDS 184
+SYSCALL(SYS_CLI_UNREG_CMDS, cli_unregister_commands)
+
+#define SYS_CLI_INIT 185
+SYSCALL(SYS_CLI_INIT, yos_cli_init)
+
+#define SYS_CLI_STOP 186
+SYSCALL(SYS_CLI_STOP, yos_cli_stop)
 
 /* --------------------OTHERS-------------------- */
-#define SYS_UART_SEND 181
+#define SYS_UART_SEND 187
 SYSCALL(SYS_UART_SEND, yos_uart_send)
 
-#define SYS_CLI_REGISTER_COMMAND 182
-SYSCALL(SYS_CLI_REGISTER_COMMAND, cli_register_command)

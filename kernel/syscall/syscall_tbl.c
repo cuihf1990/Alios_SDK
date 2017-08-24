@@ -79,8 +79,8 @@ void *sys_yos_zalloc(unsigned int size, size_t allocator)
     return tmp;
 }
 
-#define SYSCALL_MAX 183
-#define SYSCALL_NUM 136
+#define SYSCALL_MAX 188
+#define SYSCALL_NUM 141
 
 #define SYSCALL(nr, func) [nr] = func,
 
