@@ -43,8 +43,9 @@ int yos_register_driver(const char *path, file_ops_t *ops, void *arg)
 
     /* step out critical area for type is allocated */
     if (yos_mutex_unlock(&g_vfs_mutex) != 0) {
-        if (node->i_name != NULL)
+        if (node->i_name != NULL) {
             yos_free(node->i_name);
+        }
 
         memset(node, 0, sizeof(inode_t));
         return E_VFS_K_ERR;
@@ -70,13 +71,14 @@ int yos_unregister_driver(const char *path)
     return ret;
 }
 
-int yos_register_fs(const char * path,fs_ops_t * ops,void * arg)
+int yos_register_fs(const char *path, fs_ops_t *ops, void *arg)
 {
     inode_t *node = NULL;
     int      ret;
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0)
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return E_VFS_K_ERR;
+    }
 
     ret = inode_reserve(path, &node);
     if (ret == VFS_SUCCESS) {
@@ -87,8 +89,9 @@ int yos_register_fs(const char * path,fs_ops_t * ops,void * arg)
     }
 
     if (yos_mutex_unlock(&g_vfs_mutex) != 0) {
-        if (node->i_name != NULL)
+        if (node->i_name != NULL) {
             yos_free(node->i_name);
+        }
 
         memset(node, 0, sizeof(inode_t));
         return E_VFS_K_ERR;
@@ -101,13 +104,15 @@ int yos_unregister_fs(const char *path)
 {
     int ret;
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0)
+    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return E_VFS_K_ERR;
+    }
 
     ret = inode_release(path);
 
-    if (yos_mutex_unlock(&g_vfs_mutex) != 0)
+    if (yos_mutex_unlock(&g_vfs_mutex) != 0) {
         return E_VFS_K_ERR;
+    }
 
     return ret;
 }

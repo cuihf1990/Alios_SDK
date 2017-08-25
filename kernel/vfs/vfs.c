@@ -338,8 +338,9 @@ off_t yos_lseek(int fd, off_t offset, int whence)
 
     f = get_file(fd);
 
-    if (f == NULL)
+    if (f == NULL) {
         return E_VFS_FD_ILLEGAL;
+    }
 
     node = f->node;
 
@@ -348,7 +349,7 @@ off_t yos_lseek(int fd, off_t offset, int whence)
             err = (node->ops.i_fops->lseek)(f, offset, whence);
         }
     }
-    
+
     return err;
 }
 
@@ -370,7 +371,7 @@ int yos_sync(int fd)
         if ((node->ops.i_fops->sync) != NULL) {
             err = (node->ops.i_fops->sync)(f);
         }
-    } 
+    }
 
     return err;
 }
@@ -510,7 +511,7 @@ int yos_rename(const char *oldpath, const char *newpath)
     return err;
 }
 
-yos_dir_t* yos_opendir(const char *path)
+yos_dir_t *yos_opendir(const char *path)
 {
     file_t  *file;
     inode_t *node;
@@ -566,8 +567,9 @@ int yos_closedir(yos_dir_t *dir)
     inode_t *node;
     int      err = E_VFS_NOSYS;
 
-    if (dir == NULL)
+    if (dir == NULL) {
         return E_VFS_ERR_PARAM;
+    }
 
     f = get_file(dir->dd_vfs_fd);
 
@@ -594,18 +596,20 @@ int yos_closedir(yos_dir_t *dir)
     return err;
 }
 
-yos_dirent_t* yos_readdir(yos_dir_t *dir)
+yos_dirent_t *yos_readdir(yos_dir_t *dir)
 {
     file_t *f;
     inode_t *node;
     yos_dirent_t *ret = NULL;
 
-    if (dir == NULL)
+    if (dir == NULL) {
         return NULL;
+    }
 
     f = get_file(dir->dd_vfs_fd);
-    if (f == NULL)
+    if (f == NULL) {
         return NULL;
+    }
 
     node = f->node;
 
@@ -615,8 +619,9 @@ yos_dirent_t* yos_readdir(yos_dir_t *dir)
         }
     }
 
-    if (ret != NULL)
+    if (ret != NULL) {
         return ret;
+    }
 
     return NULL;
 }
