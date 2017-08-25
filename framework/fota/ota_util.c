@@ -71,10 +71,10 @@ int8_t ota_result_post()
 
 const char *ota_get_version()
 {
-    ota_mutex_lock(g_ota_info_storage.mutex);
     if (strlen(g_ota_info->ota_version) > 0) {
         return g_ota_info->ota_version;
     }
+    ota_mutex_lock(g_ota_info_storage.mutex);
     strncpy(g_ota_info->ota_version,
             (char *)platform_ota_get_version(), sizeof g_ota_info->ota_version);
     ota_mutex_unlock(g_ota_info_storage.mutex);
