@@ -3,15 +3,19 @@
 import os
 import re
 
-rootdirs = ['../bootloader',            \
-            '../framework',             \
-            '../include',               \
-            '../example',               \
-            '../devices',               \
-            '../kernel/vcall/yos',      \
-            '../kernel/rhino',          \
-            '../kernel/protocols/mesh', \
-            '../kernel/modules']
+rootdirs = ['./bootloader',            \
+            './framework',             \
+            './include',               \
+            './example',               \
+            './devices',               \
+            './kernel/hal',            \
+            './kernel/modules/kv',     \
+            './kernel/protocols/mesh', \
+            './kernel/rhino',          \
+            './kernel/syscall',        \
+            './kernel/vcall/yos',      \
+            './kernel/vfs',            \
+            './kernel/yloop']
 
 def list_files(dir_path):
     file_list = [];
@@ -35,7 +39,7 @@ def insert_copyright(f, regex, copyright):
 def main():
     regex = r'Copyright'
 
-    fo = open("./yos_copyright", 'r')
+    fo = open("./build/copyright", 'r')
     copyright = fo.read()
     fo.close()
 
