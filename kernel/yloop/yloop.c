@@ -143,11 +143,11 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
 
     ctx->reader_count++;
 
-    memcpy(new_sock, ctx->readers, (cnt-1) * sizeof(yloop_sock_t));
+    memcpy(new_sock, ctx->readers, (cnt - 1) * sizeof(yloop_sock_t));
     yos_free(ctx->readers);
     ctx->readers = new_sock;
 
-    memcpy(new_loop_pollfds, ctx->pollfds, (cnt-1) * sizeof(struct pollfd));
+    memcpy(new_loop_pollfds, ctx->pollfds, (cnt - 1) * sizeof(struct pollfd));
     yos_free(ctx->pollfds);
     ctx->pollfds = new_loop_pollfds;
 

@@ -453,11 +453,10 @@ kstat_t yunos_mutex_is_valid(kmutex_t *mutex)
 {
     NULL_PARA_CHK(mutex);
 
-    if(mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE)
-    {
-      return YUNOS_KOBJ_TYPE_ERR;
+    if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
+        return YUNOS_KOBJ_TYPE_ERR;
     }
-    
+
     return YUNOS_SUCCESS;
 }
 

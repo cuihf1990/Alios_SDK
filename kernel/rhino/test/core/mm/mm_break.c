@@ -64,17 +64,17 @@ static uint8_t mm_break_case1(void)
 #endif
 
 
-    ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE/2);
+    ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE / 2);
     MYASSERT(ptr != NULL);
 
-    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE/2 + 1 );
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE / 2 + 1 );
     MYASSERT(newptr == ptr);
 
-    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE -1);
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE - 1);
     MYASSERT(newptr == ptr);
 
     ptr = newptr;
-    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE +1);
+    newptr = k_mm_realloc(pmmhead, ptr, DEF_FIX_BLK_SIZE + 1);
     MYASSERT(newptr != ptr);
 
     ptr = newptr;

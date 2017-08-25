@@ -75,7 +75,7 @@ ur_error_t umesh_aes_encrypt(const uint8_t *key, uint8_t key_size,
     }
 
     result = ali_aes_init(AES_CTR, true,
-                 key, NULL, key_size, g_umesh_iv, aes);
+                          key, NULL, key_size, g_umesh_iv, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
         yos_free(aes);
         return UR_ERROR_FAIL;
@@ -111,7 +111,7 @@ ur_error_t umesh_aes_decrypt(const uint8_t *key, uint8_t key_size,
     }
 
     result = ali_aes_init(AES_CTR, false,
-                 key, NULL, key_size, g_umesh_iv, aes);
+                          key, NULL, key_size, g_umesh_iv, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
         yos_free(aes);
         return UR_ERROR_FAIL;

@@ -229,7 +229,8 @@ ur_error_t message_queue_dequeue(message_t *message)
     return UR_ERROR_NONE;
 }
 
-uint16_t message_queue_get_size(message_queue_t *queue) {
+uint16_t message_queue_get_size(message_queue_t *queue)
+{
     return dlist_entry_number(queue);
 }
 

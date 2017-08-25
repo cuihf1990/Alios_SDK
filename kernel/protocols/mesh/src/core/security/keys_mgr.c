@@ -23,8 +23,8 @@
 #include "hal/interface_context.h"
 
 static uint8_t g_symmetric_key[] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,		 
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,		 
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 };
 
 ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
@@ -45,7 +45,7 @@ ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
 
     for (index = 0; index < KEY_SIZE / sizeof(addr->addr); index++) {
         memcpy(&key[index * sizeof(addr->addr)], addr->addr,
-                    sizeof(addr->addr));
+               sizeof(addr->addr));
     }
 
     error = umesh_aes_encrypt(timestamp_expand, KEY_SIZE,

@@ -260,10 +260,10 @@ static void handle_autotest_timer(void *args)
     }
     if (g_cli_autotest.times) {
         g_cli_autotest.timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL,
-                                                   handle_autotest_timer, NULL);
+                                              handle_autotest_timer, NULL);
     } else if (g_cli_autotest.print_timer == NULL) {
         g_cli_autotest.print_timer = ur_start_timer(AUTOTEST_PRINT_WAIT_TIME,
-                                                         handle_autotest_print_timer, NULL);
+                                                    handle_autotest_print_timer, NULL);
     }
 }
 
@@ -742,15 +742,15 @@ void process_whitelist(int argc, char *argv[])
         bool enabled = umesh_is_whitelist_enabled();
         const whitelist_entry_t *whitelist = umesh_get_whitelist_entries();
         response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
-        for(i = 0; i < WHITELIST_ENTRY_NUM; i++) {
+        for (i = 0; i < WHITELIST_ENTRY_NUM; i++) {
             if (whitelist[i].valid == false) {
                 continue;
             }
             response_append("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n",
-                            whitelist[i].address.addr[0],whitelist[i].address.addr[1],
-                            whitelist[i].address.addr[2],whitelist[i].address.addr[3],
-                            whitelist[i].address.addr[4],whitelist[i].address.addr[5],
-                            whitelist[i].address.addr[6],whitelist[i].address.addr[7]);
+                            whitelist[i].address.addr[0], whitelist[i].address.addr[1],
+                            whitelist[i].address.addr[2], whitelist[i].address.addr[3],
+                            whitelist[i].address.addr[4], whitelist[i].address.addr[5],
+                            whitelist[i].address.addr[6], whitelist[i].address.addr[7]);
         }
         return;
     }
@@ -1311,7 +1311,7 @@ ur_error_t mesh_cli_init(void)
 #ifdef CONFIG_YOS_MESH_DEBUG
     slist_init(&g_cli_autotest.acked_list);
     g_cli_autotest.udp_socket = autotest_udp_socket(&handle_udp_autotest,
-                                                         AUTOTEST_UDP_PORT);
+                                                    AUTOTEST_UDP_PORT);
 #endif
 
 #ifndef WITH_LWIP

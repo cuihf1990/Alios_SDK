@@ -233,32 +233,31 @@ static void task_sched_to_cpu(runqueue_t *rq, ktask_t *task, uint8_t cur_cpu_num
     uint8_t i;
 
     if (g_sys_stat == YUNOS_RUNNING) {
-       if (task->cpu_binded == 1) {
+        if (task->cpu_binded == 1) {
             if (task->cpu_num != cur_cpu_num) {
                 if (task->prio <= g_active_task[task->cpu_num]->prio) {
                     cpu_signal(task->cpu_num);
                 }
             }
-        }
-        else {
-                for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
-                    if (g_active_task[i]->prio == YUNOS_IDLE_PRI) {
-                        if (i != cur_cpu_num) {
-                            cpu_signal(i);
-                        }
-
-                        return;
+        } else {
+            for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+                if (g_active_task[i]->prio == YUNOS_IDLE_PRI) {
+                    if (i != cur_cpu_num) {
+                        cpu_signal(i);
                     }
-                }
 
-                for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
-                    if (task->prio <= g_active_task[i]->prio) {
-                        if (i != cur_cpu_num) {
-                            cpu_signal(i);
-                        }
-                            return;
-                    }
+                    return;
                 }
+            }
+
+            for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+                if (task->prio <= g_active_task[i]->prio) {
+                    if (i != cur_cpu_num) {
+                        cpu_signal(i);
+                    }
+                    return;
+                }
+            }
         }
     }
 }
@@ -362,7 +361,7 @@ void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
         }
 
         flag = ((task->cur_exc == 0) && (task->cpu_binded == 0))
-                 || ((task->cur_exc == 0) && (task->cpu_binded == 1) && (task->cpu_num == cpu_num));
+               || ((task->cur_exc == 0) && (task->cpu_binded == 1) && (task->cpu_num == cpu_num));
 
         if (flag > 0) {
             task->cpu_num = cpu_num;
@@ -372,12 +371,11 @@ void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
         }
 
         if (iter->next == rq->cur_list_item[highest_pri]) {
-            task_bit_map[highest_pri / 32u] &= ~(1u << (31u - (highest_pri % 32u))); 
+            task_bit_map[highest_pri / 32u] &= ~(1u << (31u - (highest_pri % 32u)));
 
             highest_pri = yunos_find_first_bit(task_bit_map);
             iter = rq->cur_list_item[highest_pri];
-        }
-        else {
+        } else {
             iter = iter->next;
         }
     }

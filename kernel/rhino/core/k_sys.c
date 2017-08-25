@@ -67,12 +67,12 @@ YUNOS_INLINE kstat_t rhino_init(void)
     for (uint8_t i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
         yunos_task_cpu_create(&g_idle_task[i], "idle_task", NULL, YUNOS_IDLE_PRI, 0,
                               &g_idle_task_stack[i][0], YUNOS_CONFIG_IDLE_TASK_STACK_SIZE,
-                               idle_task, i, 1u);
+                              idle_task, i, 1u);
     }
 #else
     yunos_task_create(&g_idle_task[0], "idle_task", NULL, YUNOS_IDLE_PRI, 0,
                       &g_idle_task_stack[0][0], YUNOS_CONFIG_IDLE_TASK_STACK_SIZE,
-                       idle_task, 1u);
+                      idle_task, 1u);
 #endif
 
 #if (YUNOS_CONFIG_TIMER > 0)
@@ -212,9 +212,9 @@ void yunos_intrpt_exit(void)
 
     TRACE_INTRPT_TASK_SWITCH(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (YUNOS_CONFIG_CPU_NUM > 1)
     g_active_task[cur_cpu_num]->cur_exc = 0;
-    #endif
+#endif
 
     cpu_intrpt_switch();
 

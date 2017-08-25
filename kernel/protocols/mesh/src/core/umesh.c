@@ -180,8 +180,9 @@ static void output_ipv4_frame_handler(void *args)
     info->dest.addr.short_addr = sid;
     info->dest.netid = umesh_mm_get_meshnetid(NULL);
     info->type = MESH_FRAME_TYPE_DATA;
-    if (sid == BCAST_SID)
+    if (sid == BCAST_SID) {
         info->flags |= INSERT_MCAST_FLAG;
+    }
 
     mf_send_message(message);
 
@@ -249,8 +250,9 @@ static void output_frame_handler(void *args)
     pbuf_copy_partial(buf, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN, 0);
     lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
     error = lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
-    if (error != UR_ERROR_NONE)
+    if (error != UR_ERROR_NONE) {
         goto out;
+    }
 
     append_length = sizeof(mcast_header_t) + 1;
     message = message_alloc(lowpan_hdr_len + append_length, UMESH_1);

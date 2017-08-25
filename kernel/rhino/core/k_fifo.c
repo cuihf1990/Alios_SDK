@@ -86,8 +86,9 @@ uint32_t fifo_in(struct k_fifo *fifo, const void *buf, uint32_t len)
 
     l = fifo_unused(fifo);
 
-    if (len > l)
-    { len = l; }
+    if (len > l) {
+        len = l;
+    }
 
     fifo_copy_in(fifo, buf, len, fifo->in);
     fifo->in += len;
@@ -161,8 +162,9 @@ static uint32_t internal_fifo_out_peek(struct k_fifo *fifo,
 
     l = fifo->in - fifo->out;
 
-    if (len > l)
-    { len = l; }
+    if (len > l) {
+        len = l;
+    }
 
     kfifo_copy_out(fifo, buf, len, fifo->out);
     return len;

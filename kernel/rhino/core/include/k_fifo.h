@@ -88,7 +88,7 @@ uint32_t fifo_out(struct k_fifo *fifo, void *buf, uint32_t len);
  * @return  the size has read
  */
 uint32_t fifo_out_peek(struct k_fifo *fifo,
-                        void *buf, uint32_t len);
+                       void *buf, uint32_t len);
 
 /**
  * This function will read fifo all data

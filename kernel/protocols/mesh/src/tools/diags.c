@@ -158,7 +158,7 @@ static ur_error_t send_trace_route_response(network_context_t *network,
     error = address_resolve(message);
     if (error == UR_ERROR_NONE) {
         error = mf_send_message(message);
-    } else if(error == UR_ERROR_DROP) {
+    } else if (error == UR_ERROR_DROP) {
         message_free(message);
     }
 

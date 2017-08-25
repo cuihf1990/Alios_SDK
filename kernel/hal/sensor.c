@@ -31,7 +31,7 @@ int  hal_sensor_get_sensor_list(hal_sensor_module_t *m, sensor_node_t const  **l
     }
 
     if (m != NULL && m->get_sensor_list != NULL) {
-        return m->get_sensor_list(m,list);
+        return m->get_sensor_list(m, list);
     }
 
     return -1;
@@ -44,7 +44,7 @@ int  hal_sensor_enable(hal_sensor_module_t *m, sensor_type type)
     }
 
     if (m != NULL && m->enable != NULL) {
-        return m->enable(m,type);
+        return m->enable(m, type);
     }
 
     return -1;
@@ -57,7 +57,7 @@ int  hal_sensor_disable(hal_sensor_module_t *m, sensor_type type)
     }
 
     if (m != NULL && m->disable != NULL) {
-        return m->disable(m,type);
+        return m->disable(m, type);
     }
 
     return -1;
@@ -65,12 +65,12 @@ int  hal_sensor_disable(hal_sensor_module_t *m, sensor_type type)
 
 int  hal_sensor_read(hal_sensor_module_t *m, sensor_type type, char *buf, int buf_size)
 {
-   if (m == NULL) {
+    if (m == NULL) {
         m = hal_sensor_get_default_module();
     }
 
     if (m != NULL && m->read != NULL) {
-        return m->read(m,type,buf,buf_size);
+        return m->read(m, type, buf, buf_size);
     }
 
     return -1;
@@ -104,7 +104,7 @@ int hal_sensor_init(void)
 
     /* do low level init */
     dlist_for_each(t, &g_sensor_module) {
-        hal_sensor_module_t *m = (hal_sensor_module_t*)t;
+        hal_sensor_module_t *m = (hal_sensor_module_t *)t;
         m->init(m, NULL);
     }
 

@@ -192,7 +192,7 @@ int hal_umesh_get_channel(umesh_hal_module_t *m)
 }
 
 int hal_umesh_get_chnlist(umesh_hal_module_t *m,
-                                const uint8_t **chnlist)
+                          const uint8_t **chnlist)
 {
     if (m == NULL) {
         m = hal_umesh_get_default_module();

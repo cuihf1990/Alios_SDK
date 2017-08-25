@@ -268,7 +268,7 @@ static int handle_input(char *inbuf)
         /* Wait for output from special commands: umesh ping/autotest */
         if ((strcmp(command->name, "umesh") == 0) &&
             ((strcmp(argv[1], "ping") == 0) ||
-            (strcmp(argv[1], "autotest") == 0))) {
+             (strcmp(argv[1], "autotest") == 0))) {
             yos_msleep(500);
         }
 
@@ -670,7 +670,7 @@ int yos_cli_init(void)
         goto init_general_err;
     }
 
-    ret = yos_task_new_ext(&task,"cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
+    ret = yos_task_new_ext(&task, "cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
     if (ret != YUNOS_SUCCESS) {
         cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);

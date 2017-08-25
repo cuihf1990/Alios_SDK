@@ -19,7 +19,7 @@
 #if (YUNOS_CONFIG_BUF_QUEUE > 0)
 
 static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
-                                       void *buf, size_t size, size_t max_msg, uint8_t mm_alloc_flag)
+                                void *buf, size_t size, size_t max_msg, uint8_t mm_alloc_flag)
 {
     CPSR_ALLOC();
 
@@ -437,15 +437,14 @@ kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
     return YUNOS_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_is_valid(kbuf_queue_t * queue)
+kstat_t yunos_buf_queue_is_valid(kbuf_queue_t *queue)
 {
     NULL_PARA_CHK(queue);
 
-    if(queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE)
-    {
-      return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
+        return YUNOS_KOBJ_TYPE_ERR;
     }
-    
+
     return YUNOS_SUCCESS;
 }
 

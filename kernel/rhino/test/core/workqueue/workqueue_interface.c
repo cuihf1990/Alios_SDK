@@ -137,13 +137,11 @@ static uint8_t workqueue_interface_case1(void)
 
         if (ret == YUNOS_TRY_AGAIN) {
             continue;
-        }
-        else if (ret != YUNOS_SUCCESS) {
+        } else if (ret != YUNOS_SUCCESS) {
             MYASSERT(ret);
             yunos_sem_give(&g_wq_test_sem);
             return 1;
-        }
-        else {
+        } else {
             break;
         }
     }

@@ -22,8 +22,9 @@ static YOS_DLIST_HEAD(g_flash_module);
 int hal_flash_conf_write(hal_flash_module_t *m, char *key,
                          unsigned char *buf, int buf_size)
 {
-    if (!key)
-    { return -1; }
+    if (!key) {
+        return -1;
+    }
 
     if (m == NULL) {
         m = hal_flash_get_default_module();
@@ -39,8 +40,9 @@ int hal_flash_conf_write(hal_flash_module_t *m, char *key,
 int hal_flash_conf_read(hal_flash_module_t *m, char *key,
                         unsigned char *buf, int buf_size)
 {
-    if (!key)
-    { return -1; }
+    if (!key) {
+        return -1;
+    }
 
     if (m == NULL) {
         m = hal_flash_get_default_module();
@@ -94,8 +96,9 @@ int hal_flash_init(void)
         hal_flash_module_t *m = (hal_flash_module_t *)t;
         err = m->init(m, NULL);
 
-        if (err != 0)
-        { break; }
+        if (err != 0) {
+            break;
+        }
     }
 
     return err;

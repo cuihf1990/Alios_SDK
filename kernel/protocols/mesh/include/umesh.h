@@ -40,7 +40,7 @@ typedef struct ur_adapter_callback_s {
 
 ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid);
 ur_error_t umesh_ipv6_output(struct pbuf *buf,
-                               const ur_ip6_addr_t *ip6addr);
+                             const ur_ip6_addr_t *ip6addr);
 ur_error_t umesh_register_callback(ur_adapter_callback_t *callback);
 
 /* for mesh layer */
@@ -80,7 +80,7 @@ const ur_netif_ip6_address_t *umesh_get_ucast_addr(void);
 const ur_netif_ip6_address_t *umesh_get_mcast_addr(void);
 
 ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest,
-                                ur_addr_t *dest_addr);
+                              ur_addr_t *dest_addr);
 void umesh_get_channel(channel_t *channel);
 
 void umesh_get_extnetid(umesh_extnetid_t *extnetid);
@@ -95,7 +95,7 @@ void umesh_disable_whitelist(void);
 const whitelist_entry_t *umesh_get_whitelist_entries(void);
 ur_error_t umesh_add_whitelist(const mac_address_t *address);
 ur_error_t umesh_add_whitelist_rssi(const mac_address_t *address,
-                                      int8_t rssi);
+                                    int8_t rssi);
 void umesh_remove_whitelist(const mac_address_t *address);
 void umesh_clear_whitelist(void);
 

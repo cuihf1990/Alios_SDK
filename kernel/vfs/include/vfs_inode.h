@@ -100,8 +100,8 @@ struct fs_ops {
     int             (*stat)     (file_t *fp, const char *path, struct stat *st);
     int             (*unlink)   (file_t *fp, const char *path);
     int             (*rename)   (file_t *fp, const char *oldpath, const char *newpath);
-    yos_dir_t*      (*opendir)  (file_t *fp, const char *path);
-    yos_dirent_t*   (*readdir)  (file_t *fp, yos_dir_t *dir);
+    yos_dir_t      *(*opendir)  (file_t *fp, const char *path);
+    yos_dirent_t   *(*readdir)  (file_t *fp, yos_dir_t *dir);
     int             (*closedir) (file_t *fp, yos_dir_t *dir);
     int             (*mkdir)    (file_t *fp, const char *path);
 };

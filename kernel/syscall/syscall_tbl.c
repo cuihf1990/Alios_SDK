@@ -87,5 +87,5 @@ void *sys_yos_zalloc(unsigned int size, size_t allocator)
 const void *g_syscall_tbl[] __attribute__ ((section(".syscall_tbl"))) = {
     [0 ... SYSCALL_MAX - 1] = (void *)0XABCDABCD,
 #include <syscall_tbl.h>
-    };
+};
 

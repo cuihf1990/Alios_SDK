@@ -36,7 +36,7 @@ hal_stat_t hal_ota_init(void)
     return ota_module->init(ota_module, NULL);
 }
 
-hal_stat_t hal_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
+hal_stat_t hal_ota_write(hal_ota_module_t *m, volatile uint32_t *off_set, uint8_t *in_buf , uint32_t in_buf_len)
 {
     if (m == NULL) {
         m = hal_ota_get_default_module();
@@ -49,7 +49,7 @@ hal_stat_t hal_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_
     return 0;
 }
 
-hal_stat_t hal_ota_read(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* out_buf, uint32_t out_buf_len)
+hal_stat_t hal_ota_read(hal_ota_module_t *m, volatile uint32_t *off_set, uint8_t *out_buf, uint32_t out_buf_len)
 {
     if (m == NULL) {
         m = hal_ota_get_default_module();

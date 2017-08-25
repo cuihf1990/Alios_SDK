@@ -47,7 +47,7 @@ int hal_wifi_init(void)
 
     /* do low level init */
     dlist_for_each(t, &g_wifi_module) {
-        hal_wifi_module_t *m = (hal_wifi_module_t*)t;
+        hal_wifi_module_t *m = (hal_wifi_module_t *)t;
         m->init(m);
     }
 

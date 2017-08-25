@@ -516,7 +516,7 @@ int lwip_read(int s, void *mem, size_t len)
 }
 
 int lwip_recvfrom(int s, void *mem, size_t len, int flags,
-                      struct sockaddr *from, socklen_t *fromlen)
+                  struct sockaddr *from, socklen_t *fromlen)
 {
     return SYS_CALL6(SYS_LWIP_RECVFROM, int, int, s, void *, mem, size_t, len,
                      int, flags, struct sockaddr *, from, socklen_t *, fromlen);
@@ -535,7 +535,7 @@ int lwip_sendmsg(int s, const struct msghdr *message, int flags)
 }
 
 int lwip_sendto(int s, const void *dataptr, size_t size, int flags,
-                    const struct sockaddr *to, socklen_t tolen)
+                const struct sockaddr *to, socklen_t tolen)
 {
     return SYS_CALL6(SYS_LWIP_SENDTO, int, int, s, const void *, dataptr,
                      size_t, size, int, flags, const struct sockaddr *, to,
@@ -558,7 +558,7 @@ int lwip_writev(int s, const struct iovec *iov, int iovcnt)
 }
 
 int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset,
-                    fd_set *exceptset, struct timeval *timeout)
+                fd_set *exceptset, struct timeval *timeout)
 {
     return SYS_CALL5(SYS_LWIP_SELECT, int, int, maxfdp1, fd_set *, readset,
                      fd_set *, writeset, fd_set *, exceptset, struct timeval *, timeout);

@@ -267,7 +267,7 @@ int yos_queue_is_valid(yos_queue_t *queue);
  * @param[in]   queue    pointer to the queue
  * @return  the check status, NULL is error
  */
-void* yos_queue_buf_ptr(yos_queue_t *queue);
+void *yos_queue_buf_ptr(yos_queue_t *queue);
 
 /**
  * This function will disable kernel sched

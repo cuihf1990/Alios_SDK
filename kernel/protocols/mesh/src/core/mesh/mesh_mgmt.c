@@ -71,7 +71,8 @@ static ur_error_t send_advertisement(network_context_t *network);
 static void write_prev_netinfo(void);
 static void read_prev_netinfo(void);
 
-static void nbr_discovered_handler(neighbor_t *nbr) {
+static void nbr_discovered_handler(neighbor_t *nbr)
+{
     if (nbr) {
         attach_start(nbr);
     }
@@ -194,7 +195,7 @@ static void set_leader_network_context(network_context_t *default_network,
         network->state = INTERFACE_UP;
         network->attach_state = ATTACH_DONE;
         network->attach_candidate = NULL;
-        network->sid = default_network == NULL? LEADER_SID: default_network->sid;
+        network->sid = default_network == NULL ? LEADER_SID : default_network->sid;
         network->candidate_meshnetid = BCAST_NETID;
         network->meshnetid = generate_meshnetid(network->sid, index);
         ++index;
@@ -904,7 +905,7 @@ static ur_error_t handle_attach_response(message_t *message)
     }
 
     symmetric_key = (mm_symmetric_key_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_SYMMETRIC_KEY);
+                                                             TYPE_SYMMETRIC_KEY);
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         if (symmetric_key == NULL) {
             return UR_ERROR_NONE;
@@ -1179,11 +1180,13 @@ ur_error_t handle_address_error(message_t *message)
     network = message->info->network;
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address error\r\n");
 
-    if (network->attach_node == NULL)
+    if (network->attach_node == NULL) {
         return error;
+    }
 
-    if (memcmp(info->src_mac.addr.addr, network->attach_node->mac.addr, EXT_ADDR_SIZE) != 0)
+    if (memcmp(info->src_mac.addr.addr, network->attach_node->mac.addr, EXT_ADDR_SIZE) != 0) {
         return error;
+    }
 
     attach_start(network->attach_node);
 
@@ -1886,7 +1889,7 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
         }
     }
 
-   return update_migrate_times(network, nbr);
+    return update_migrate_times(network, nbr);
 }
 
 void umesh_mm_start_net_scan_timer(void)

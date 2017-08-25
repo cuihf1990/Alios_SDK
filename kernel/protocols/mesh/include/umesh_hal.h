@@ -35,7 +35,7 @@ struct umesh_hal_module_s;
  * @param[out] error   The error code for this sent frame
  */
 typedef void (*umesh_handle_sent_ucast_t)(void *context,
-                                            frame_t *frame, int error);
+                                          frame_t *frame, int error);
 
 /**
  * Callback function when bcast frame send done
@@ -45,7 +45,7 @@ typedef void (*umesh_handle_sent_ucast_t)(void *context,
  * @param[out] error   The error code for this sent frame
  */
 typedef void (*umesh_handle_sent_bcast_t)(void *context,
-                                            frame_t *frame, int error);
+                                          frame_t *frame, int error);
 
 /**
  * Callback function when frame received
@@ -56,8 +56,8 @@ typedef void (*umesh_handle_sent_bcast_t)(void *context,
  * @param[out] error      The error code for this received data frame
  */
 typedef void (*umesh_handle_received_frame_t)(void *context, frame_t *frame,
-                                                frame_info_t *frame_info,
-                                                int error);
+                                              frame_info_t *frame_info,
+                                              int error);
 
 /**
  * Callback function when received commands
@@ -78,18 +78,18 @@ typedef struct umesh_hal_module_s {
 
     /* send ucast frame */
     int (*umesh_hal_send_ucast_request)(struct umesh_hal_module_s *module,
-                                          frame_t *frame, mac_address_t *dest,
-                                          umesh_handle_sent_ucast_t sent,
-                                          void *context);
+                                        frame_t *frame, mac_address_t *dest,
+                                        umesh_handle_sent_ucast_t sent,
+                                        void *context);
     /* send bcast frame */
     int (*umesh_hal_send_bcast_request)(struct umesh_hal_module_s *module,
-                                          frame_t *frame,
-                                          umesh_handle_sent_bcast_t sent,
-                                          void *context);
+                                        frame_t *frame,
+                                        umesh_handle_sent_bcast_t sent,
+                                        void *context);
 
     /* register call back when received packet */
     int (*umesh_hal_register_receiver)(struct umesh_hal_module_s *module,
-                                         umesh_handle_received_frame_t received, void *context);
+                                       umesh_handle_received_frame_t received, void *context);
 
     /* request low layer to transmit beacons intervally*/
     int (*umesh_hal_get_bcast_mtu)(struct umesh_hal_module_s *module);
@@ -110,7 +110,7 @@ typedef struct umesh_hal_module_s {
         struct umesh_hal_module_s *module);
 
     int (*umesh_hal_set_key)(struct umesh_hal_module_s *module,
-                               uint8_t index, uint8_t *key, uint8_t length);
+                             uint8_t index, uint8_t *key, uint8_t length);
     int (*umesh_hal_is_sec_enabled)(struct umesh_hal_module_s *module);
 
     const frame_stats_t *(*umesh_hal_get_stats)(struct umesh_hal_module_s *module);
