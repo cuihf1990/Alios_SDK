@@ -23,13 +23,11 @@
 #ifndef YOS_ADC_H
 #define YOS_ADC_H
 
-typedef struct
-{
+typedef struct {
     uint32_t sampling_cycle; /* sampling period in number of ADC clock cycles */
 } adc_config_t;
 
-typedef struct
-{
+typedef struct {
     uint8_t      adc;            /* the interface which should be initialised */
     adc_config_t config;         /* adc config */
     void        *priv;           /* priv data */

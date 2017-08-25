@@ -105,7 +105,8 @@ int32_t hal_i2c_slave_recv(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during initialisation
  */
-int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data, uint16_t size, uint32_t timeout);
+int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data,
+                          uint16_t size, uint32_t timeout);
 
 /**@brief i2c master mem read
  * @param     i2c           : the i2c device
@@ -118,7 +119,8 @@ int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, 
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred during initialisation
  */
-int32_t hal_i2c_mem_read(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data, uint16_t size, uint32_t timeout);
+int32_t hal_i2c_mem_read(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data,
+                         uint16_t size, uint32_t timeout);
 
 
 /**@brief Deinitialises an I2C device
