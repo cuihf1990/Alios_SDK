@@ -117,8 +117,9 @@ _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
     }
 
     for (int i = 0; i < nbytes; i++) {
-        if (*tmp == '\n')
-        { yos_uart_send((void *)"\r", 1, 0); }
+        if (*tmp == '\n') {
+            yos_uart_send((void *)"\r", 1, 0);
+        }
 
         yos_uart_send((void *)tmp, 1, 0);
         tmp ++;

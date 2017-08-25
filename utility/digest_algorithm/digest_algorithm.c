@@ -226,7 +226,7 @@ int digest_hmac(enum digest_type type, const unsigned char *data,
 {
     switch (type) {
         case DIGEST_TYPE_MD5:
-                return digest_hmac_md5(data, data_len, key, key_len, digest);
+            return digest_hmac_md5(data, data_len, key, key_len, digest);
 
         case DIGEST_TYPE_SHA256:
             break;
