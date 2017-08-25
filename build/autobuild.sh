@@ -78,3 +78,6 @@ echo "build ${branch} branch succeed"
 echo "----------check CODE-STYLE now----------"
 ./build/astyle.sh
 echo "----------------------------------------"
+echo "----------check COPYRIGHT now-----------"
+python ./build/copyright.py
+echo "----------------------------------------"
