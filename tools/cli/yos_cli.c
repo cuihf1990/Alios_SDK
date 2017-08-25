@@ -235,7 +235,7 @@ static int handle_input(char *inbuf)
     }
 
     if (!cli->echo_disabled) {
-        cli_printf("\r\n");
+        printf("\r\n");
     }
 
     /*
@@ -351,7 +351,7 @@ static int get_input(char *inbuf, unsigned int *bp)
             if (*bp > 0) {
                 (*bp)--;
                 if (!cli->echo_disabled) {
-                    cli_printf("%c %c", 0x08, 0x08);
+                    printf("%c %c", 0x08, 0x08);
                 }
             }
             continue;
@@ -364,7 +364,7 @@ static int get_input(char *inbuf, unsigned int *bp)
         }
 
         if (!cli->echo_disabled) {
-            cli_printf("%c", inbuf[*bp]);
+            printf("%c", inbuf[*bp]);
         }
 
         (*bp)++;
