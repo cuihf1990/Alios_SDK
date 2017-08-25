@@ -279,7 +279,7 @@ static ssize_t fatfs_write(file_t *fp, const char *buf, size_t len)
 
 static off_t fatfs_lseek(file_t *fp, off_t off, int whence)
 {
-    off_t new_pos;
+    off_t new_pos = 0;
     FIL *f = (FIL *)(fp->f_arg);
 
     if (f) {
