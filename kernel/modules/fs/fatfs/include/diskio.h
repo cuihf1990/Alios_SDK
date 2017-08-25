@@ -57,6 +57,7 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
 #define GET_SECTOR_SIZE		2	/* Get sector size (needed at _MAX_SS != _MIN_SS) */
 #define GET_BLOCK_SIZE		3	/* Get erase block size (needed at _USE_MKFS == 1) */
 #define CTRL_TRIM			4	/* Inform device that the data on the block of sectors is no longer used (needed at _USE_TRIM == 1) */
+#define GET_FORMAT_OPTION   9   /* Get media format option (need at _USE_MKFS == 1) */
 
 /* Generic command (Not used by FatFs) */
 #define CTRL_POWER			5	/* Get/Set power status */

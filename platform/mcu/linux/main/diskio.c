@@ -100,6 +100,9 @@ static DRESULT ramdisk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
         case GET_BLOCK_SIZE:
             *(DWORD *)buff = RAMDISK_SEC_PER_BLOCK;
             return RES_OK;
+        case GET_FORMAT_OPTION:
+            *(BYTE *)buff = (FM_ANY | FM_SFD);
+            return RES_OK;
         case CTRL_SYNC:
         default:
             return RES_OK;
