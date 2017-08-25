@@ -490,14 +490,18 @@ int fatfs_register(unsigned char pdrv)
         return yos_register_fs(g_fsid[pdrv].root, &fatfs_ops, NULL);
     }
 
+#if FF_USE_MKFS && !FF_FS_READONLY
     if (err == FR_NO_FILESYSTEM) {
         char *work = (char *)yos_malloc(FF_MAX_SS);
         if (!work) {
             err = -1;
             goto error;
         }
-        
-        err = f_mkfs(g_fsid[pdrv].id, FM_ANY | FM_SFD, 0, work, FF_MAX_SS);
+
+        BYTE opt = FM_ANY;
+        disk_ioctl(pdrv, GET_FORMAT_OPTION, &opt);
+
+        err = f_mkfs(g_fsid[pdrv].id, opt, 0, work, FF_MAX_SS);
         yos_free(work);
 
         if (err != FR_OK)
@@ -511,7 +515,7 @@ int fatfs_register(unsigned char pdrv)
             return yos_register_fs(g_fsid[pdrv].root, &fatfs_ops, NULL);
         }
     }
-
+#endif
 error:
     yos_free(fatfs);
     return err;
