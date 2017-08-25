@@ -120,7 +120,7 @@ kstat_t task_queue_back_send_test(void)
     yunos_queue_dyn_create_param_test();
 
     ret = yunos_queue_dyn_create(&g_test_queue0, "test_queue0",
-                             TEST_QUEUE_MSG0_SIZE);
+                                 TEST_QUEUE_MSG0_SIZE);
     QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_0_test, "task_queue0_test", 0, 10,

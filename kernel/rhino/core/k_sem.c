@@ -221,7 +221,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
     if (opt_wake_all) {
         while (!is_klist_empty(blk_list_head)) {
             TRACE_SEM_TASK_WAKE(g_active_task[cur_cpu_num], yunos_list_entry(blk_list_head->next,
-                                                                ktask_t, task_list),
+                                                                             ktask_t, task_list),
                                 sem, opt_wake_all);
 
             pend_task_wakeup(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
@@ -229,7 +229,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
 
     } else {
         TRACE_SEM_TASK_WAKE(g_active_task[cur_cpu_num], yunos_list_entry(blk_list_head->next,
-                                                            ktask_t, task_list),
+                                                                         ktask_t, task_list),
                             sem, opt_wake_all);
 
         /* wake up the highest prio task block on the semaphore */
@@ -368,11 +368,10 @@ kstat_t yunos_sem_is_valid(ksem_t *sem)
 {
     NULL_PARA_CHK(sem);
 
-    if(sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE)
-    {
-      return YUNOS_KOBJ_TYPE_ERR;
+    if (sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE) {
+        return YUNOS_KOBJ_TYPE_ERR;
     }
-    
+
     return YUNOS_SUCCESS;
 }
 

@@ -107,7 +107,7 @@ void mm_blk_coopr_test(void)
     }
 
     ret = yunos_task_dyn_create(&blk_task, MODULE_NAME, 0, TASK_MM_BLK_PRI + 1,
-                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_co1_entry, 1);
+                                0, TASK_TEST_STACK_SIZE, task_mm_blk_co1_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);

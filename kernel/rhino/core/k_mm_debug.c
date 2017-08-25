@@ -86,8 +86,7 @@ static uint32_t check_task_stack(ktask_t *task, void **p)
     if ((uint32_t)p >= cur &&
         (uint32_t)p  < (uint32_t)end) {
         return 1;
-    }
-    else if((uint32_t)p >= start && (uint32_t)p  < (uint32_t)cur) {
+    } else if ((uint32_t)p >= start && (uint32_t)p  < (uint32_t)cur) {
         return 0;
     }
     /*maybe lost*/
@@ -193,10 +192,10 @@ uint32_t check_malloc_region(void *adress)
                 if (0 == g_recheck_flag && !(cur->size & YUNOS_MM_FREE)) {
                     if (yunos_cur_task_get()->task_stack_base >= cur->mbinfo.buffer
                         && yunos_cur_task_get()->task_stack_base < next) {
-                            cur = next;
-                            continue;
-                        }
-                    rst = scan_region(cur->mbinfo.buffer,(void*) next, adress);
+                        cur = next;
+                        continue;
+                    }
+                    rst = scan_region(cur->mbinfo.buffer, (void *) next, adress);
                     if (1 == rst) {
                         VGF(VALGRIND_MAKE_MEM_NOACCESS(cur, MMLIST_HEAD_SIZE));
                         VGF(VALGRIND_MAKE_MEM_NOACCESS(reginfo, sizeof(k_mm_region_info_t)));
@@ -243,7 +242,7 @@ uint32_t if_adress_is_valid(void *adress)
             if ((cur->size & YUNOS_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & YUNOS_MM_BLKSIZE_MASK);
                 if (!(cur->size & YUNOS_MM_FREE) &&
-                     (uint32_t)adress >= (uint32_t)cur->mbinfo.buffer && (uint32_t)adress < next ) {
+                    (uint32_t)adress >= (uint32_t)cur->mbinfo.buffer && (uint32_t)adress < next ) {
                     VGF(VALGRIND_MAKE_MEM_NOACCESS(cur, MMLIST_HEAD_SIZE));
                     VGF(VALGRIND_MAKE_MEM_NOACCESS(reginfo, sizeof(k_mm_region_info_t)));
                     return 1;
@@ -282,13 +281,13 @@ uint32_t dump_mmleak()
             VGF(VALGRIND_MAKE_MEM_DEFINED(cur, MMLIST_HEAD_SIZE));
             if ((cur->size & YUNOS_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & YUNOS_MM_BLKSIZE_MASK);
-                 if (!(cur->size & YUNOS_MM_FREE) &&
-                     0 == check_mm_leak(cur->mbinfo.buffer)
-                     && 0 == recheck((void*)cur->mbinfo.buffer , (void*)next)) {
-                     print("adress:0x%0x owner:0x%0x len:%-5d type:%s\r\n",
-                            (void*)cur->mbinfo.buffer, cur->owner,
-                            cur->size&YUNOS_MM_BLKSIZE_MASK, "leak");
-                 }
+                if (!(cur->size & YUNOS_MM_FREE) &&
+                    0 == check_mm_leak(cur->mbinfo.buffer)
+                    && 0 == recheck((void *)cur->mbinfo.buffer , (void *)next)) {
+                    print("adress:0x%0x owner:0x%0x len:%-5d type:%s\r\n",
+                          (void *)cur->mbinfo.buffer, cur->owner,
+                          cur->size & YUNOS_MM_BLKSIZE_MASK, "leak");
+                }
 
             } else {
                 next = NULL;
@@ -318,20 +317,18 @@ void print_block(k_mm_list_t *b)
     if (b->size & YUNOS_MM_FREE) {
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
-        if(b->dye != YUNOS_MM_FREE_DYE){
+        if (b->dye != YUNOS_MM_FREE_DYE) {
             print("!");
-        }
-        else{
+        } else {
             print(" ");
         }
 #endif
         print("free ");
     } else {
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
-        if(b->dye != YUNOS_MM_CORRUPT_DYE){
+        if (b->dye != YUNOS_MM_CORRUPT_DYE) {
             print("!");
-        }
-        else{
+        } else {
             print(" ");
         }
 #endif
@@ -344,14 +341,13 @@ void print_block(k_mm_list_t *b)
     }
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
-    print(" %8x ",b->dye);
-    print(" 0x%-8x ",b->owner);
+    print(" %8x ", b->dye);
+    print(" 0x%-8x ", b->owner);
 #endif
 
     if (b->size & YUNOS_MM_PREVFREE) {
         print("pre-free [%8p];", b->prev);
-    }
-    else {
+    } else {
         print("pre-used;");
     }
 
@@ -442,7 +438,7 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
 #if (K_MM_STATISTIC > 0)
     print("     free     |     used     |     maxused\r\n");
     print("  %10d  |  %10d  |  %10d\r\n", mmhead->free_size, mmhead->used_size,
-           mmhead->maxused_size);
+          mmhead->maxused_size);
     print("\r\n");
     print("-----------------alloc size statistic:-----------------\r\n");
     for (i = 0; i < MAX_MM_BIT - 1; i++) {
@@ -464,7 +460,7 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     VGF(VALGRIND_MAKE_MEM_DEFINED(g_kmm_head, sizeof(k_mm_head)));
     print("\r\n");
     print("------------------------------- all memory blocks --------------------------------- \r\n");
-    print("g_kmm_head = %8x\r\n",(unsigned int)g_kmm_head);
+    print("g_kmm_head = %8x\r\n", (unsigned int)g_kmm_head);
 
     dump_kmm_map(g_kmm_head);
     print("\r\n");
