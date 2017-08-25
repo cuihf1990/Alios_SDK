@@ -159,8 +159,8 @@ void portENABLE_IRQ(void)
 {							              
 	unsigned long temp;				
 	__asm volatile(					
-	"mrs	%0, cpsr		@ local_irq_enablen"	
-       "bic	%0, %0, #0x80n"					
+	"mrs	%0, cpsr		@ local_irq_enable\n"	
+       "bic	%0, %0, #0x80\n"					
        "msr	cpsr_c, %0"					       
 	: "=r" (temp)						       
 	:							              
@@ -171,8 +171,8 @@ void portENABLE_FIQ(void)
 {							              
 	unsigned long temp;				
 	__asm volatile(					
-	"mrs	%0, cpsr		@ local_irq_enablen"	
-       "bic	%0, %0, #0x40n"					
+	"mrs	%0, cpsr		@ local_irq_enable\n"	
+       "bic	%0, %0, #0x40\n"					
        "msr	cpsr_c, %0"					       
 	: "=r" (temp)						       
 	:							              
