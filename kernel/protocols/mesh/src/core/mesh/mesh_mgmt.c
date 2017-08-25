@@ -1271,8 +1271,8 @@ static ur_error_t attach_start(neighbor_t *nbr)
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "%d node, attach start, from %04x:%04x to %04x:%x\r\n",
            g_mm_state.device.state, network->attach_node ?
-           network->attach_node->sid: 0,
-           network->meshnetid, nbr? nbr->sid: 0,
+           network->attach_node->sid : 0,
+           network->meshnetid, nbr ? nbr->sid : 0,
            network->candidate_meshnetid);
 
     return error;
