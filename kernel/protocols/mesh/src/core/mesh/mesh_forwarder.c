@@ -805,6 +805,10 @@ static void message_handler(void *args)
     bool is_check_level = false;
     uint16_t meshnetid;
 
+
+    if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
+        return;
+    }
     hal = (hal_context_t *)args;
     message = message_queue_get_head(&hal->recv_queue);
     if (message == NULL) {
