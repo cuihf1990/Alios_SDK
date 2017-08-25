@@ -74,3 +74,7 @@ done
 
 yos make clean > /dev/null 2>&1
 echo "build ${branch} branch succeed"
+
+echo "----------check CODE-STYLE now----------"
+./build/astyle.sh
+echo "----------------------------------------"
