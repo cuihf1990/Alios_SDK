@@ -65,7 +65,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     int depth = YUNOS_BACKTRACE_DEPTH;
 
     char *printbuf = NULL;
-    char  tmpbuf[256] ={0};
+    char  tmpbuf[256] = {0};
     int   offset   = 0;
     int   totallen = 2048;
 
@@ -79,20 +79,24 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     preferred_cpu_ready_task_get(&g_ready_queue, cpu_cur_get());
     candidate = g_preferred_ready_task[cpu_cur_get()];
 
-    safesprintf(printbuf, totallen, offset, CLI_TAG "---------------------------------------------------------------------\r\n");
+    safesprintf(printbuf, totallen, offset,
+                CLI_TAG "---------------------------------------------------------------------\r\n");
 
 #if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
     snprintf(tmpbuf, 255, CLI_TAG "CPU usage :%-10d   MAX:%-10d                 \n");
-             g_cpu_usage / 100, g_cpu_usage_max / 100);
-    safesprintf(printbuf, totallen, offset,tmpbuf);
-    safesprintf(printbuf, totallen, offset, CLI_TAG "---------------------------------------------------------------------\r\n",255);
+    g_cpu_usage / 100, g_cpu_usage_max / 100);
+    safesprintf(printbuf, totallen, offset, tmpbuf);
+    safesprintf(printbuf, totallen, offset,
+                CLI_TAG "---------------------------------------------------------------------\r\n", 255);
 
 #endif
-    safesprintf(printbuf, totallen, offset, CLI_TAG "Name               State    Prio StackSize Freesize Runtime Candidate\r\n");
-    safesprintf(printbuf, totallen, offset, CLI_TAG "---------------------------------------------------------------------\r\n");
+    safesprintf(printbuf, totallen, offset,
+                CLI_TAG "Name               State    Prio StackSize Freesize Runtime Candidate\r\n");
+    safesprintf(printbuf, totallen, offset,
+                CLI_TAG "---------------------------------------------------------------------\r\n");
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-        task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+    task = yunos_list_entry(tmp, ktask_t, task_stats_item);
         rst  = yunos_task_stack_min_free(task, &free_size);
 
         if (rst != YUNOS_SUCCESS) {
@@ -128,25 +132,25 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
             task_name = name_cut;
         }
 
-        snprintf(tmpbuf,255,CLI_TAG "%-19s%-9s%-5d%-10d%-9u%-9u%-11c\r\n",
+        snprintf(tmpbuf, 255, CLI_TAG "%-19s%-9s%-5d%-10d%-9u%-9u%-11c\r\n",
                  task_name, cpu_stat[task->task_state - K_RDY], task->prio,
                  task->stack_size, free_size, (unsigned int)time_total, yes);
 #endif
-        safesprintf(printbuf, totallen, offset,tmpbuf);
+        safesprintf(printbuf, totallen, offset, tmpbuf);
 
         /* for chip not support stack frame interface,do nothing*/
         if (detail == true && task != yunos_cur_task_get() && soc_get_first_frame_info &&
             soc_get_subs_frame_info) {
             depth = YUNOS_BACKTRACE_DEPTH;
             snprintf(tmpbuf, 255, CLI_TAG "Task %s Call Stack Dump:\r\n", task_name);
-            safesprintf(printbuf, totallen, offset,tmpbuf);
+            safesprintf(printbuf, totallen, offset, tmpbuf);
             c_frame = (size_t)task->task_stack;
             soc_get_first_frame_info(c_frame, &n_frame, &pc);
 
             for (; (n_frame != 0) && (pc != 0) && (depth >= 0); --depth) {
 
                 snprintf(tmpbuf, 255, CLI_TAG "PC:0x%-12xSP:0x%-12x\r\n", c_frame, pc);
-                safesprintf(printbuf, totallen, offset,tmpbuf);
+                safesprintf(printbuf, totallen, offset, tmpbuf);
                 c_frame = n_frame;
                 soc_get_subs_frame_info(c_frame, &n_frame, &pc);
             }
@@ -157,7 +161,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     safesprintf(printbuf, totallen, offset, CLI_TAG "----------------------------------------------------------\r\n");
     yunos_sched_enable();
 
-    printf("%s",printbuf);
+    printf("%s", printbuf);
     yos_free(printbuf);
     return YUNOS_SUCCESS;
 }
@@ -271,8 +275,7 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         }
 
         return ret;
-    }
-    else if (argc >= 2  && 0 == strcmp(argv[1], "task_stack")) {
+    } else if (argc >= 2  && 0 == strcmp(argv[1], "task_stack")) {
         if (argc == 3) {
             ret = dump_task_stack_byname(argv[2]);
         } else {
@@ -280,8 +283,7 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         }
 
         return ret;
-    }
-    else if (argc == 2 && 0 == strcmp(argv[1], "info")) {
+    } else if (argc == 2 && 0 == strcmp(argv[1], "info")) {
         ret = dumpsys_info_func(pcWriteBuffer, xWriteBufferLen);
         return ret;
     }
@@ -313,17 +315,17 @@ int dump_task_stack(ktask_t *task)
     uint32_t offset = 0;
     kstat_t  rst    = YUNOS_SUCCESS;
     void    *cur, *end;
-    int      i=0;
+    int      i = 0;
     int     *p;
-    char     tmp[256]={0};
+    char     tmp[256] = {0};
 
     char *printbuf = NULL;
-    char  tmpbuf[256] ={0};
+    char  tmpbuf[256] = {0};
     int   bufoffset   = 0;
     int   totallen = 2048;
 
     printbuf = yos_malloc(totallen);
-    if(printbuf ==  NULL) {
+    if (printbuf ==  NULL) {
         return YUNOS_NO_MEM;
     }
     memset(printbuf, 0, totallen);
@@ -340,10 +342,10 @@ int dump_task_stack(ktask_t *task)
         yunos_sched_enable();
         return 1;
     }
-    p = (int*)cur;
-    while (p < (int*)end) {
+    p = (int *)cur;
+    while (p < (int *)end) {
         if (i % 4 == 0) {
-            sprintf(tmp, CLI_TAG "\r\n%08x:",(uint32_t)p);
+            sprintf(tmp, CLI_TAG "\r\n%08x:", (uint32_t)p);
             safesprintf(printbuf, totallen, bufoffset, tmp);
         }
         sprintf(tmp, CLI_TAG  "%08x ", *p);
@@ -352,16 +354,16 @@ int dump_task_stack(ktask_t *task)
         p++;
     }
     safesprintf(printbuf, totallen, bufoffset,
-        CLI_TAG "\r\n-----------------end----------------\r\n\r\n");
+                CLI_TAG "\r\n-----------------end----------------\r\n\r\n");
     yunos_sched_enable();
 
-    printf("%s",printbuf);
+    printf("%s", printbuf);
     yos_free(printbuf);
     return 0;
 
 }
 
-int dump_task_stack_byname(char * taskname)
+int dump_task_stack_byname(char *taskname)
 {
     klist_t *taskhead = &g_kobj_list.task_head;
     klist_t *taskend  = taskhead;
@@ -369,14 +371,14 @@ int dump_task_stack_byname(char * taskname)
     ktask_t *task;
     int      printall = 0;
 
-    if(strcmp(taskname,"all") == 0) {
+    if (strcmp(taskname, "all") == 0) {
         printall = 1;
     }
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
         task = yunos_list_entry(tmp, ktask_t, task_stats_item);
-        if(printall == 1 || strcmp(taskname, task->task_name) == 0){
-            printf(CLI_TAG  "------task %s stack -------",task->task_name);
+        if (printall == 1 || strcmp(taskname, task->task_name) == 0) {
+            printf(CLI_TAG  "------task %s stack -------", task->task_name);
             dump_task_stack(task);
         }
     }
