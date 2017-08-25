@@ -18,8 +18,8 @@
 #define _key_value_h
 
 #if defined(__cplusplus) /* If this is a C++ compiler, use C linkage */
- extern "C"
- {
+extern "C"
+{
 #endif
 
 /* The totally storage size for key-value store */
