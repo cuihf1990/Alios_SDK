@@ -46,19 +46,22 @@ static ssize_t flash_write(file_t *f, const void *buf, size_t len)
 
     offset = sector_off;
     ret = hal_flash_read(pno, &offset, buffer, write_size);
-    if (ret < 0)
+    if (ret < 0) {
         goto exit;
+    }
 
     memcpy(buffer + (f->offset) - sector_off, buf, len);
 
     offset = sector_off;
     ret = hal_flash_erase(pno, offset, write_size);
-    if (ret < 0)
+    if (ret < 0) {
         goto exit;
+    }
 
     ret = hal_flash_write(pno, &offset, buffer, write_size);
-    if (ret < 0)
+    if (ret < 0) {
         goto exit;
+    }
 
     if ((offset - sector_off) == write_size) {
         f->offset += len;
@@ -78,8 +81,9 @@ static ssize_t flash_read(file_t *f, void *buf, size_t len)
 
     ret = hal_flash_read(pno, &f->offset, buf, len);
 
-    if (ret < 0)
+    if (ret < 0) {
         return 0;
+    }
 
     return f->offset - offset;
 }
