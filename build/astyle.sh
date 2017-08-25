@@ -5,13 +5,20 @@
 DIRS=(devices
       framework
       include
-      kernel/modules
+      kernel/hal
+      kernel/modules/fs/kv
       kernel/protocols/mesh
       kernel/rhino
+      kernel/syscall
       kernel/vcall/yos
-      utility/hashtable
-      utility/digest_algorithm
+      kernel/vfs
+      kernel/yloop
+      platform/arch/arm
+      tools/cli
       utility/base64
+      utility/digest_algorithm
+      utility/hashtable
+      utility/libc
       security/tfs
       )
 
