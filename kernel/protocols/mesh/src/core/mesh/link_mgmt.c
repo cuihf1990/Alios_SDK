@@ -359,7 +359,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
 
 exit:
     if (nbr) {
-        nbr->rssi = info->rssi;
+        nbr->stats.reverse_rssi = info->reverse_rssi;
+        if (info->forward_rssi != 0xff) {
+            nbr->stats.forward_rssi = info->forward_rssi;
+        }
         nbr->last_heard = ur_get_now();
     }
     return nbr;
@@ -630,16 +633,19 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
 
     nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
                               info->dest.netid);
-    if (nbr && (nbr->last_lq_time == 0 ||
-                (ur_get_now() - nbr->last_lq_time) >= LINK_QUALITY_INTERVAL)) {
-        nbr->last_lq_time = ur_get_now();
+    if (nbr) {
         rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset +
                                 offset);
-        umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_FORWARD_RSSI);
-        rssi->rssi = 0xff;
+        umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_REVERSE_RSSI);
+        if (nbr->last_lq_time == 0 ||
+            (ur_get_now() - nbr->last_lq_time) >= LINK_QUALITY_INTERVAL) {
+            nbr->last_lq_time = ur_get_now();
+            rssi->rssi = 0xff;
+            nbr->stats.link_request++;
+        } else {
+            rssi->rssi = nbr->stats.reverse_rssi;
+        }
         offset += sizeof(mm_rssi_tv_t);
-
-        nbr->stats.link_request++;
     }
 
     tv = (mm_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
@@ -659,6 +665,7 @@ ur_error_t handle_mesh_header_ies(message_t *message)
     uint8_t len;
     uint8_t *tlvs;
     mm_tv_t *tv;
+    int8_t rssi;
 
     info = message->info;
     offset = 0;
@@ -667,9 +674,13 @@ ur_error_t handle_mesh_header_ies(message_t *message)
 
     while (tv->type != TYPE_HEADER_IES_TERMINATOR) {
         switch (tv->type) {
-            case TYPE_FORWARD_RSSI:
-                send_link_accept(info->network, &info->src_mac, NULL, 0);
+            case TYPE_REVERSE_RSSI:
                 len = sizeof(mm_rssi_tv_t);
+                rssi = ((mm_rssi_tv_t *)tv)->rssi;
+                if (rssi == 0xff) {
+                    send_link_accept(info->network, &info->src_mac, NULL, 0);
+                }
+                info->forward_rssi = rssi;
                 break;
             case TYPE_MODE:
                 info->mode = ((mm_mode_tv_t *)tv)->mode;

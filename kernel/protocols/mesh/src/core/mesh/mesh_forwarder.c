@@ -181,7 +181,7 @@ static ur_error_t resolve_message_info(received_frame_t *frame,
     info->hal_type = frame->hal->module->type;
     info->src_channel = frame->frame_info.channel;
     info->key_index = frame->frame_info.key_index;
-    info->rssi = frame->frame_info.rssi;
+    info->reverse_rssi = frame->frame_info.rssi;
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;

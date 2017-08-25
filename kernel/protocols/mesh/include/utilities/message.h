@@ -52,7 +52,8 @@ typedef struct message_info_s {
     uint16_t flags;
     uint8_t channel;
     int8_t key_index;
-    int8_t rssi;
+    int8_t reverse_rssi;
+    int8_t forward_rssi;
 } message_info_t;
 
 typedef struct message_s {
