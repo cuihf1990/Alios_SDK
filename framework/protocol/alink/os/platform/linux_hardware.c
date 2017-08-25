@@ -128,14 +128,15 @@ char *platform_wifi_get_mac(char mac_str[PLATFORM_MAC_LEN])
     }
 
     int i;
-    for (i=0;i<10;i++) {
+    for (i = 0; i < 10; i++) {
         ifreq.ifr_ifindex = i;
         if (ioctl(sock, SIOCGIFNAME, &ifreq) < 0) {
             continue;
         }
 
-        if (strcmp(ifreq.ifr_name, "lo") == 0)
+        if (strcmp(ifreq.ifr_name, "lo") == 0) {
             continue;
+        }
 
         if (ioctl(sock, SIOCGIFHWADDR, &ifreq) < 0) {
             continue;

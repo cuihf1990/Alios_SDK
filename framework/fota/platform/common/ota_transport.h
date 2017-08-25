@@ -22,7 +22,7 @@ typedef struct {
     const char *product_type;
     const char *product_internal_type;
     const char *system;
-    const char * device_uuid;
+    const char *device_uuid;
 } ota_request_params;
 
 #define MAX_URL_LEN 256
@@ -41,11 +41,11 @@ typedef struct {
 
 typedef void message_arrived(const char *msg);
 
-int8_t parse_ota_requset(const char* request, int *buf_len, ota_request_params * request_parmas);
+int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas);
 
-int8_t parse_ota_response(const char* buf, int buf_len, ota_response_params * response_parmas);
+int8_t parse_ota_response(const char *buf, int buf_len, ota_response_params *response_parmas);
 
-int8_t parse_ota_cancel_response(const char* response, int buf_len, ota_response_params * response_parmas);
+int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response_params *response_parmas);
 
 int8_t ota_cancel_upgrade(message_arrived *msgCallback);
 

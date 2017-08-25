@@ -250,7 +250,7 @@ void config_reset_main_uuid()
     if (!init) {
         config_init();
     }
-    memset(main_config.uuid,0,PRODUCT_UUID_LEN);
+    memset(main_config.uuid, 0, PRODUCT_UUID_LEN);
 }
 
 int config_set_main_uuid(char *uuid)

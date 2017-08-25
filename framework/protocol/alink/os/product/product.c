@@ -63,23 +63,25 @@ void product_init(void)
 char *product_get_device_key(char key_str[DEVICE_KEY_LEN])
 {
     int key_len = DEVICE_KEY_LEN;
-    if (yos_kv_get("sds_key", key_str, &key_len) < 0)
+    if (yos_kv_get("sds_key", key_str, &key_len) < 0) {
         strncpy(key_str, device_key, DEVICE_KEY_LEN);
+    }
     return key_str;
 }
 
 char *product_get_device_secret(char secret_str[DEVICE_SECRET_LEN])
 {
     int sec_len = DEVICE_SECRET_LEN;
-    if (yos_kv_get("sds_secret", secret_str, &sec_len) < 0)
+    if (yos_kv_get("sds_secret", secret_str, &sec_len) < 0) {
         strncpy(secret_str, device_secret, DEVICE_SECRET_LEN);
+    }
     return secret_str;
 }
 
 
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 {
-      return strncpy(name_str, "alink_product", PRODUCT_NAME_LEN);
+    return strncpy(name_str, "alink_product", PRODUCT_NAME_LEN);
 }
 
 char *product_get_version(char ver_str[PRODUCT_VERSION_LEN])

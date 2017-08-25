@@ -60,7 +60,7 @@ typedef struct service {
     int (*start)(void);
     int (*stop)(void);
     int (*put)(void *, int);
-    int (*put_async)(void *, int, void * ( *)(void *), void *);
+    int (*put_async)(void *, int, void *( *)(void *), void *);
     int (*get)(void *, int, void *, int);
     int (*add_listener)(service_cb);
     int (*del_listener)(service_cb);

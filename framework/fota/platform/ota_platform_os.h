@@ -39,10 +39,10 @@ void ota_semaphore_destroy(void *sem);
 
 uint32_t ota_get_time_ms(void);
 
-int8_t ota_thread_create(const char *name, 
-     void *(*start_routine)(void *), void *arg, int stack_size, int prio);
+int8_t ota_thread_create(const char *name,
+                         void *(*start_routine)(void *), void *arg, int stack_size, int prio);
 
 void ota_thread_exit(void *thread);
 
 void ota_reboot(void);
-#endif 
+#endif

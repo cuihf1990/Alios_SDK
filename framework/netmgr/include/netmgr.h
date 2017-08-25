@@ -39,18 +39,18 @@ extern "C"
 
 /* 1 bigger than actual size for holding \0 */
 typedef struct {
-   char ssid[MAX_SSID_SIZE + 1];
-   char bssid[MAX_BSSID_SIZE + 1];
-   char pwd[MAX_PWD_SIZE + 1];
+    char ssid[MAX_SSID_SIZE + 1];
+    char bssid[MAX_BSSID_SIZE + 1];
+    char pwd[MAX_PWD_SIZE + 1];
 } netmgr_ap_config_t;
 
 typedef struct autoconfig_plugin_s {
-   struct autoconfig_plugin_s *next;
-   const char                 *description;
+    struct autoconfig_plugin_s *next;
+    const char                 *description;
 
-   int  (*autoconfig_start)(void);
-   void (*autoconfig_stop)(void);
-   void (*config_result_cb)(int result, uint32_t ip);
+    int  (*autoconfig_start)(void);
+    void (*autoconfig_stop)(void);
+    void (*config_result_cb)(int result, uint32_t ip);
 } autoconfig_plugin_t;
 
 /* auth type */

@@ -176,7 +176,7 @@ int platform_thread_get_stack_size(_IN_ const char *thread_name)
 int platform_thread_create(
     _OUT_ void **thread,
     _IN_ const char *name,
-    _IN_ void * (*start_routine)(void *),
+    _IN_ void *(*start_routine)(void *),
     _IN_ void *arg,
     _IN_ void *stack,
     _IN_ uint32_t stack_size,

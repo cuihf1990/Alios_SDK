@@ -35,19 +35,19 @@
     "version":"v2.0.0.1","zip":"0"
 */
 
-int8_t parse_ota_requset(const char* request, int *buf_len, ota_request_params * request_parmas)
+int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas)
 {
     return 0;
 }
 
-int8_t parse_ota_response(const char* response, int buf_len,ota_response_params * response_parmas)
+int8_t parse_ota_response(const char *response, int buf_len, ota_response_params *response_parmas)
 {
     cJSON *root = cJSON_Parse(response);
     if (!root) {
         OTA_LOG_E("Error before: [%s]\n", cJSON_GetErrorPtr());
         goto parse_failed;
     } else {
-        char* info = cJSON_Print(root);
+        char *info = cJSON_Print(root);
         OTA_LOG_D("root is %s", info);
         cJSON_free(info);
 
@@ -57,7 +57,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
             goto parse_failed;
         }
         strncpy(response_parmas->device_uuid, uuid->valuestring,
-                       sizeof response_parmas->device_uuid);
+                sizeof response_parmas->device_uuid);
         OTA_LOG_D(" response_parmas->device_uuid %s", response_parmas->device_uuid);
 
         cJSON *resourceUrl = cJSON_GetObjectItem(root, "resourceUrl");
@@ -68,7 +68,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
                 sizeof response_parmas->download_url);
         OTA_LOG_D(" response_parmas->download_url %s",
-                response_parmas->download_url);
+                  response_parmas->download_url);
 
         cJSON *md5 = cJSON_GetObjectItem(root, "md5");
         if (!md5) {
@@ -96,32 +96,34 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
         strncpy(response_parmas->primary_version, version->valuestring,
                 sizeof response_parmas->primary_version);
         OTA_LOG_D(" response_parmas->primary_version %s",
-                response_parmas->primary_version);
+                  response_parmas->primary_version);
 
     }
 
     OTA_LOG_D("parse_json success");
     goto parse_success;
 
-parse_failed: if (root) {
+parse_failed:
+    if (root) {
         cJSON_Delete(root);
     }
     return -1;
-parse_success: if (root) {
+parse_success:
+    if (root) {
         cJSON_Delete(root);
     }
     return 0;
 }
 
 
-int8_t parse_ota_cancel_response(const char* response, int buf_len, ota_response_params * response_parmas)
+int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response_params *response_parmas)
 {
     cJSON *root = cJSON_Parse(response);
     if (!root) {
         OTA_LOG_E("Error before: [%s]\n", cJSON_GetErrorPtr());
         goto parse_failed;
     } else {
-        char* info = cJSON_Print(root);
+        char *info = cJSON_Print(root);
         OTA_LOG_D("root is %s", info);
         cJSON_free(info);
 
@@ -130,19 +132,21 @@ int8_t parse_ota_cancel_response(const char* response, int buf_len, ota_response
             OTA_LOG_E("uuid get error.");
             goto parse_failed;
         }
-       
+
         strncpy(response_parmas->device_uuid, uuid->valuestring,
-                       sizeof response_parmas->device_uuid);
+                sizeof response_parmas->device_uuid);
         OTA_LOG_D(" response_parmas->device_uuid %s", response_parmas->device_uuid);
     }
     OTA_LOG_D("parse_json success");
     goto parse_success;
 
-parse_failed: if (root) {
+parse_failed:
+    if (root) {
         cJSON_Delete(root);
     }
     return -1;
-parse_success: if (root) {
+parse_success:
+    if (root) {
         cJSON_Delete(root);
     }
     return 0;
@@ -176,9 +180,10 @@ int8_t platform_ota_result_post(void)
     alink_version = (char *)yos_malloc(64);
     //assert(alink_version, NULL);
     memset(alink_version, 0, 64);
-    alink_get_sdk_version(alink_version,64);
+    alink_get_sdk_version(alink_version, 64);
 
-    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char*)ota_get_id(), (const char *)platform_get_main_version(), alink_version);
+    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)ota_get_id(), (const char *)platform_get_main_version(),
+             alink_version);
     yos_free(alink_version);
     ret = alink_report_async(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
     OTA_LOG_D("alink_ota_status_post: %s, ret=%d\n", buff, ret);
@@ -204,7 +209,7 @@ const char *platform_get_dev_version()
 {
     return config_get_dev_version();
 }
-   
+
 void platform_set_dev_version(const char *dev_version)
 {
     config_set_dev_version((char *)dev_version);
@@ -222,18 +227,19 @@ int8_t ota_sub_request_reply(message_arrived *msgCallback)
 
 int8_t ota_sub_upgrade(message_arrived *msgCallback)
 {
-    return alink_register_callback(ALINK_UPGRADE_DEVICE,msgCallback);
+    return alink_register_callback(ALINK_UPGRADE_DEVICE, msgCallback);
 }
 
 
 int8_t ota_cancel_upgrade(message_arrived *msgCallback)
 {
-    return alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE,msgCallback);
+    return alink_register_callback(ALINK_CANCEL_UPGRADE_DEVICE, msgCallback);
 }
 
 extern char *config_get_main_uuid(void);
 
-char* ota_get_id(void) {
+char *ota_get_id(void)
+{
     return config_get_main_uuid();
 }
 

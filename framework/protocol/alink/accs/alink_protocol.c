@@ -157,8 +157,9 @@ static void alink_calculate_signature(char *signbuf, int *signbuf_len,
         int ret, res_len = sizeof(res);
 
         ret = tfs_id2_sign(buf, strlen(buf), res, &res_len);
-        if (ret)
+        if (ret) {
             log_error("tfs_id2_sign error(%d)", ret);
+        }
 
         base64_encode(res, res_len, signbuf, signbuf_len);
     }
@@ -167,13 +168,15 @@ static void alink_calculate_signature(char *signbuf, int *signbuf_len,
         uint8_t digest[16] = {0};
         int i = 0;
 
-        digest_hmac(DIGEST_TYPE_MD5, buf, strlen(buf), devinfo_get_device_secret(), strlen(devinfo_get_device_secret()),digest);
+        digest_hmac(DIGEST_TYPE_MD5, buf, strlen(buf), devinfo_get_device_secret(), strlen(devinfo_get_device_secret()),
+                    digest);
         for (i = 0; i < sizeof(digest); i++) {
             sprintf(signbuf + i * 2, "%02x", digest[i]);
         }
 
-        if (signbuf_len)
+        if (signbuf_len) {
             *signbuf_len = sizeof(digest) * 2;
+        }
         alink_debug_protocol("hmac md5 sign: %s", signbuf);
     }
 #else
@@ -187,8 +190,9 @@ static void alink_calculate_signature(char *signbuf, int *signbuf_len,
             sprintf(signbuf + i * 2, "%02x", md5_ret[i]);
         }
 
-        if (signbuf_len)
+        if (signbuf_len) {
             *signbuf_len = MD5_SIZE_BYTE * 2;
+        }
     }
 #endif
 }
@@ -542,7 +546,7 @@ static void *__alink_post_cb(connectivity_rsp_t *rsp, void *cb)
 }
 
 
-int32_t __alink_post_async(const char *method, char *buff, void * (*cb)(void *),
+int32_t __alink_post_async(const char *method, char *buff, void *(*cb)(void *),
                            void *arg)
 {
     int ret;
@@ -611,7 +615,7 @@ int32_t __alink_post(const char *method, char *buff)
     return ret;
 }
 
-int32_t alink_post_async(const char *method, char *buff, void * (*cb)(void *),
+int32_t alink_post_async(const char *method, char *buff, void *(*cb)(void *),
                          void *arg)
 {
     if (!cloud_is_connected()) {
@@ -976,11 +980,11 @@ int32_t alink_unregister(void)
 int alink_error_code_handler(uint32_t code)
 {
     switch (code) {
-            //SUCCESS
+        //SUCCESS
         case ALINK_CODE_SUCCESS:
         case ALINK_CODE_SUCCESS_REBOUND:
             break;
-            //RETRY LATER
+        //RETRY LATER
         case ALINK_CODE_ERROR_SYSTEM:
         case ALINK_CODE_ERROR_SERVICE_TIMEOUT:
         case ALINK_CODE_ERROR_SERVICE_UNAVAILABLE:
@@ -988,13 +992,13 @@ int alink_error_code_handler(uint32_t code)
             LOGW(MODULE_NAME_ALINK_PROTOCOL, "alink cloud busy, plz try later(%d)", code);
             alink_phase = PHASE_WAIT;
             break;
-            //RE-LOGIN
+        //RE-LOGIN
         case ALINK_CODE_ERROR_DEV_NOT_LOGIN:
             LOGW(MODULE_NAME_ALINK_PROTOCOL, "device need to re-login(%d)", code);
             alink_phase = PHASE_REGISTER;
             start_accs_work(0);
             break;
-            //RE-HANDSHAKE
+        //RE-HANDSHAKE
         case ALINK_CODE_ERROR_TOKEN:
         case ALINK_CODE_ERROR_TOKEN_STATE:
         case ALINK_CODE_ERROR_UUID:
@@ -1010,7 +1014,7 @@ int alink_error_code_handler(uint32_t code)
             alink_phase = PHASE_REGISTER;
             start_accs_work(0);
             break;
-            //FATAL, system hang
+        //FATAL, system hang
         case ALINK_CODE_ERROR_MISSING_PARAM:
         case ALINK_CODE_ERROR_INVLIAD_METHOD:
         case ALINK_CODE_ERROR_INVLIAD_CID:
@@ -1035,14 +1039,14 @@ int alink_error_code_handler(uint32_t code)
             LOGE(MODULE_NAME_ALINK_PROTOCOL, "fatal error: %d", code);
             alink_phase = PHASE_ABORT;
             break;
-            //SUBDEV
+        //SUBDEV
         case ALINK_CODE_ERROR_SUBDEV_INVALID_UUID:
         case ALINK_CODE_ERROR_SUBDEV_NO_RELATIONSHIP:
         case ALINK_CODE_ERROR_SUBDEV_NOT_LOGIN:
             LOGW(MODULE_NAME_ALINK_PROTOCOL,
                  "subdev error(%d), devmgr will take care of it", code);
             break;
-            //IGNORE
+        //IGNORE
         case ALINK_CODE_ERROR_SIGN_EXCEPTION:
         case ALINK_CODE_ERROR_UTC:
         case ALINK_CODE_ERROR_SIGN:
@@ -1084,7 +1088,7 @@ static int _alink_handshake_cycle(int ret)
             } else {
                 return alink_login_async(_alink_handshake_cycle);
             }
-            
+
         case PHASE_LOGIN_SUCCESS:
             if (!config_get_unregister_flag()) {
                 alink_phase = PHASE_READY;
@@ -1103,7 +1107,7 @@ static int _alink_handshake_cycle(int ret)
             break;
         case PHASE_READY:
             LOGI(MODULE_NAME_ALINK_PROTOCOL, "accs_handshake success");
-	    yos_post_event(EV_SYS,CODE_SYS_ON_ALINK_ONLINE,0);
+            yos_post_event(EV_SYS, CODE_SYS_ON_ALINK_ONLINE, 0);
             return SERVICE_RESULT_OK;
         case PHASE_WAIT:
             start_accs_work(2 * 1000);

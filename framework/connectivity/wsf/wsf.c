@@ -111,8 +111,8 @@ static void *__analy_resp(wsf_response_t *wsf_rsp, __wsf_send_cb_t *cb)
     return conn_rsp;
 }
 
-int wsf_send_async(void *pdata, int len, void * (*cb)(connectivity_rsp_t *rsp,
-                                                      void *), void *arg)
+int wsf_send_async(void *pdata, int len, void *(*cb)(connectivity_rsp_t *rsp,
+                                                     void *), void *arg)
 {
     connectivity_rsp_t *conn_rsp = NULL;
     char *service_name = "devService.request";

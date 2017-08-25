@@ -106,7 +106,7 @@ int accs_stop()
     return SERVICE_RESULT_OK;
 }
 
-int accs_put_async(void *in, int len, void * (*cb)(void *), void *arg)
+int accs_put_async(void *in, int len, void *(*cb)(void *), void *arg)
 {
     int ret;
     if (accs_get_state() != SERVICE_STATE_READY) {
@@ -212,7 +212,7 @@ static int accs_conn_listener(int type, void *data, int dlen, void *result,
                 func();
             }
             accs_set_state(SERVICE_STATE_INIT);
-	    yos_post_event(EV_SYS, CODE_SYS_ON_ALINK_OFFLINE, 0);
+            yos_post_event(EV_SYS, CODE_SYS_ON_ALINK_OFFLINE, 0);
         }
     } else if (type == CONNECT_DATA) {
         alink_data_t pack;

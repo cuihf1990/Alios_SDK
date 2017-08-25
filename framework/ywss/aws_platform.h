@@ -37,12 +37,12 @@ void *platform_malloc(int size);
 void platform_free(void *ptr);
 
 //系统打印函数, 可不实现
-void awss_platform_printf(int log_level, const char* log_tag, const char* file,
-	const char* fun, int line, const char* fmt, ...);
+void awss_platform_printf(int log_level, const char *log_tag, const char *file,
+                          const char *fun, int line, const char *fmt, ...);
 
 //product model/secret, i.e.
-//model		"ALINKTEST_LIVING_LIGHT_SMARTLED"
-//secret	"YJJZjytOCXDhtQqip4EjWbhR95zTgI92RVjzjyZF"
+//model     "ALINKTEST_LIVING_LIGHT_SMARTLED"
+//secret    "YJJZjytOCXDhtQqip4EjWbhR95zTgI92RVjzjyZF"
 char *product_get_model(void);
 char *product_get_secret(void);
 //wifi mac string, format xx:xx:xx:xx:xx:xx
@@ -68,12 +68,12 @@ void platform_monitor_open(void);
 void platform_monitor_close(void);
 
 //wifi信道切换，信道1-13
-void platform_channel_switch(char primary_channel,char secondary_channel,
-		char bssid[6]);
+void platform_channel_switch(char primary_channel, char secondary_channel,
+                             char bssid[6]);
 
 //通过以下函数发送配网成功通知给APP, 端口定义如下
-#define UDP_TX_PORT			(65123)
-#define UDP_RX_PORT			(65126)
+#define UDP_TX_PORT         (65123)
+#define UDP_RX_PORT         (65126)
 int platform_broadcast_notification(char *msg, int msg_num);
 
 #endif

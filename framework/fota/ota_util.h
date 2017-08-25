@@ -18,7 +18,7 @@
 #define _OTA_UTIL_H_
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 #include <stdint.h>
 
@@ -51,7 +51,7 @@ typedef enum {
     OTA_DOWNLOAD_CONTINUE = 0,
     OTA_DOWNLOAD_CANCEL = 1,
     OTA_DOWNLOAD_FINISH = 2
-}OTA_DOWNLOAD_T;
+} OTA_DOWNLOAD_T;
 
 typedef enum {
     OTA_UPDATE_WAY_BEGIN,
@@ -64,11 +64,11 @@ typedef enum {
 #define MAX_VERSION_LEN 64
 
 typedef struct {
-        OTA_STATUS_T status;
-        OTA_ENUM_UPDATE_WAY update_way;
-        void *mutex;
-        char ota_version[MAX_VERSION_LEN];
-        char firmware_version[MAX_VERSION_LEN];
+    OTA_STATUS_T status;
+    OTA_ENUM_UPDATE_WAY update_way;
+    void *mutex;
+    char ota_version[MAX_VERSION_LEN];
+    char firmware_version[MAX_VERSION_LEN];
 } ota_info_t;
 
 

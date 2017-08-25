@@ -37,28 +37,28 @@ static char *g_reply_topic;
 static char *g_upgrad_topic;
 char  post_data_buffer[POST_DATA_BUFFER_SIZE];
 
-int8_t parse_ota_requset(const char* request, int *buf_len, ota_request_params * request_parmas)
+int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas)
 {
     if (0 != request_parmas) {
-            snprintf(post_data_buffer, POST_DATA_BUFFER_SIZE,
-                    POSTOTA_CHECK, request_parmas->device_uuid, request_parmas->primary_version);
-            request = post_data_buffer;
-            *buf_len = strlen(post_data_buffer);
-            OTA_LOG_D("post_data_buffer:%s, len :%d",post_data_buffer,*buf_len);
+        snprintf(post_data_buffer, POST_DATA_BUFFER_SIZE,
+                 POSTOTA_CHECK, request_parmas->device_uuid, request_parmas->primary_version);
+        request = post_data_buffer;
+        *buf_len = strlen(post_data_buffer);
+        OTA_LOG_D("post_data_buffer:%s, len :%d", post_data_buffer, *buf_len);
     } else {
         OTA_LOG_E("update_manifest_read_cb,  error!");
     }
     return 0;
 }
 
-int8_t parse_ota_response(const char* response, int buf_len,ota_response_params * response_parmas)
+int8_t parse_ota_response(const char *response, int buf_len, ota_response_params *response_parmas)
 {
     cJSON *root = cJSON_Parse(response);
     if (!root) {
         OTA_LOG_E("Error before: [%s]\n", cJSON_GetErrorPtr());
         goto parse_failed;
     } else {
-        char* info = cJSON_Print(root);
+        char *info = cJSON_Print(root);
         OTA_LOG_D("root is %s", info);
         free(info);
         cJSON *json_obj = cJSON_GetObjectItem(root, "data");
@@ -74,7 +74,7 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
                 sizeof response_parmas->download_url);
         OTA_LOG_D(" response_parmas->download_url %s",
-                response_parmas->download_url);
+                  response_parmas->download_url);
 
         cJSON *md5 = cJSON_GetObjectItem(json_obj, "md5");
         if (!md5) {
@@ -98,11 +98,13 @@ int8_t parse_ota_response(const char* response, int buf_len,ota_response_params 
     OTA_LOG_D("parse_json success");
     goto parse_success;
 
-parse_failed: if (root) {
+parse_failed:
+    if (root) {
         cJSON_Delete(root);
     }
     return -1;
-parse_success: if (root) {
+parse_success:
+    if (root) {
         cJSON_Delete(root);
     }
     return 0;
@@ -139,17 +141,17 @@ int8_t ota_sub_request_reply(message_arrived *msgCallback)
 
 void free_global_topic()
 {
-    if(g_check_topic) {
+    if (g_check_topic) {
         free(g_check_topic);
         g_check_topic = NULL;
     }
 
-    if(g_reply_topic) {
+    if (g_reply_topic) {
         free(g_reply_topic);
         g_reply_topic = NULL;
     }
 
-    if(g_upgrad_topic) {
+    if (g_upgrad_topic) {
         free(g_upgrad_topic);
         g_upgrad_topic = NULL;
     }

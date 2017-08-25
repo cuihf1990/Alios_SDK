@@ -49,7 +49,7 @@ typedef struct {
     int methStrLen;
 } alink_ap_setup_msg_t;
 
-typedef struct _ap_info_{
+typedef struct _ap_info_ {
     char ssid[PLATFORM_MAX_SSID_LEN];
     uint8_t bssid[ETH_ALEN];
     enum AWSS_AUTH_TYPE auth;
@@ -131,11 +131,13 @@ int cbScan(const char ssid[PLATFORM_MAX_SSID_LEN],
     alink_ap_info_t *p, *q;
 
     p = os_zalloc(sizeof(alink_ap_info_t));
-    if (p == NULL)
+    if (p == NULL) {
         return 0;
+    }
 
-    if (ssid != NULL)
+    if (ssid != NULL) {
         memcpy(p->ssid, ssid, PLATFORM_MAX_SSID_LEN);
+    }
     memcpy(p->bssid, bssid, ETH_ALEN);
     p->auth = auth;
     p->encry = encry;
@@ -146,8 +148,9 @@ int cbScan(const char ssid[PLATFORM_MAX_SSID_LEN],
         ap_info_list = p;
     } else {
         q = ap_info_list;
-        while(q->next != NULL) 
+        while (q->next != NULL) {
             q = q->next;
+        }
         q->next = p;
     }
 
@@ -156,14 +159,16 @@ int cbScan(const char ssid[PLATFORM_MAX_SSID_LEN],
 
 void testSendWifiList(char *str, pplatform_netaddr_t sa)
 {
-	char *msgToSend;
+    char *msgToSend;
 
     msgToSend = os_malloc(500);
-    snprintf(msgToSend, 500, "{\"method\":\"getWifiListResult\", \"code\":\"0\", \"list\":[{\"ssid\":\"alibaba-guest\", \"rssi\":-70, \"auth\":\"4\"}],\"id\":\"%s", str);
+    snprintf(msgToSend, 500,
+             "{\"method\":\"getWifiListResult\", \"code\":\"0\", \"list\":[{\"ssid\":\"alibaba-guest\", \"rssi\":-70, \"auth\":\"4\"}],\"id\":\"%s",
+             str);
     LOGI("[wifimgr]", "sending message to app: %s", msgToSend);
 
     if (0 > os_udp_sendto(udpFd, msgToSend, strlen(msgToSend), sa)) {
-    	LOGI("[wifimgr]", "sending failed.");
+        LOGI("[wifimgr]", "sending failed.");
     }
 
     if (msgToSend) {
@@ -176,7 +181,7 @@ void testSendWifiList(char *str, pplatform_netaddr_t sa)
  *
  */
 static int wifimgrProcessGetWifiListRequest(
-            pplatform_netaddr_t sa, char *msg, int len)
+    pplatform_netaddr_t sa, char *msg, int len)
 {
     int strLen = 0;
     char *str = json_get_value_by_name(msg, len, "id", &strLen, 0);
@@ -187,11 +192,12 @@ static int wifimgrProcessGetWifiListRequest(
     char encodedSSID[OS_MAX_SSID_LEN * 2];
     uint8_t bssidConnected[ETH_ALEN];
     int apNumInMsg = 0;
-    char wifiListRequestId[WIFI_LIST_REQUEST_ID_LEN+1];
+    char wifiListRequestId[WIFI_LIST_REQUEST_ID_LEN + 1];
 
     msgToSend = os_malloc(WIFI_APINFO_LIST_LEN);
-    if (msgToSend == NULL)
+    if (msgToSend == NULL) {
         return SHUB_ERR;
+    }
 
     memset(wifiListRequestId, 0, WIFI_LIST_REQUEST_ID_LEN);
     if (str && (strLen < WIFI_LIST_REQUEST_ID_LEN)) {
@@ -211,7 +217,7 @@ static int wifimgrProcessGetWifiListRequest(
     while (p != NULL) {
         if (0 == msglen) {
             msglen += snprintf(msgToSend + msglen, WIFI_APINFO_LIST_LEN - msglen,
-                            "{\"method\":\"getWifiListResult\", \"code\":\"0\", \"id\":\"%s\", \"list\":[", wifiListRequestId);
+                               "{\"method\":\"getWifiListResult\", \"code\":\"0\", \"id\":\"%s\", \"list\":[", wifiListRequestId);
         }
 
         if (p->ssid[0] != '\0') {
@@ -222,13 +228,13 @@ static int wifimgrProcessGetWifiListRequest(
             }
             if (isUTF8(p->ssid, strlen(p->ssid))) {
                 msglen += snprintf(msgToSend + msglen, WIFI_APINFO_LIST_LEN - msglen,
-                        "{\"ssid\":\"%s\", \"rssi\":\"%d\",%s},",
-                        p->ssid, p->rssi, otherApinfo);
+                                   "{\"ssid\":\"%s\", \"rssi\":\"%d\",%s},",
+                                   p->ssid, p->rssi, otherApinfo);
             } else {
                 utils_hex_to_str((const uint8_t *)oneAP.ssid, strlen(oneAP.ssid), encodedSSID, OS_MAX_SSID_LEN * 2);
                 msglen += snprintf(msgToSend + msglen, WIFI_APINFO_LIST_LEN - msglen,
-                        "{\"xssid\":\"%s\", \"rssi\":\"%d\",%s},",
-                        encodedSSID, p->rssi, otherApinfo);
+                                   "{\"xssid\":\"%s\", \"rssi\":\"%d\",%s},",
+                                   encodedSSID, p->rssi, otherApinfo);
             }
             apNumInMsg++;
         }
@@ -262,7 +268,7 @@ static int wifimgrProcessGetDeviceInfo(pplatform_netaddr_t sa)
     int len = 0;
 
     buf = os_malloc(256);
-        if (!buf) {
+    if (!buf) {
         return SHUB_ERR;
     }
 
@@ -277,8 +283,8 @@ static int wifimgrProcessGetDeviceInfo(pplatform_netaddr_t sa)
     char model[PRODUCT_MODEL_LEN];
     product_get_model(model);
     len += snprintf(buf + len, WIFI_APINFO_LIST_LEN - len,
-            "{\"method\":\"getDeviceInfoResult\", \"code\":\"0\", \"sn\":\"%s\",\"model\":\"%s\",\"ip\":\"%s\",\"security\":\"%d\"}",
-            sn, model, sIP, getShubSecurityLevel());
+                    "{\"method\":\"getDeviceInfoResult\", \"code\":\"0\", \"sn\":\"%s\",\"model\":\"%s\",\"ip\":\"%s\",\"security\":\"%d\"}",
+                    sn, model, sIP, getShubSecurityLevel());
 
     LOGI("[wifimgr]", "sending message to app: %s", buf);
     if (0 > os_udp_sendto(udpFd, buf, strlen(buf), sa)) {
@@ -335,7 +341,7 @@ void aesDecryptString(char *cipherText, char *plainText, int blockNum32B, int se
             os_aes128_destroy(aes);
             break;
         default:
-        	LOGI("[wifimgr]", "wrong security level: %d\n", securityLevel);
+            LOGI("[wifimgr]", "wrong security level: %d\n", securityLevel);
     }
     LOGI("[wifimgr]", "descrypted '%s'\n", plainText);
 
@@ -352,7 +358,7 @@ int switchApDone = 0;
  *
  */
 static int wifimgrProcessSwitchApRequest(
-            pplatform_netaddr_t sa, char *buf, int len)
+    pplatform_netaddr_t sa, char *buf, int len)
 {
     char ssid[PLATFORM_MAX_SSID_LEN * 2] = { 0 }, passwd[PLATFORM_MAX_PASSWD_LEN] = { 0 };
     char msg[128];
@@ -436,7 +442,7 @@ static int wifimgrProcessSwitchApRequest(
         if ((ALINK_CODE_SUCCESS == ret) || (ALINK_CODE_ERROR_DEV_NOT_LOGIN == ret)) {
             break;
         } else {
-        	LOGI("[wifimgr]", "alink_logout() result: %d", ret);
+            LOGI("[wifimgr]", "alink_logout() result: %d", ret);
         }
     }
     uint32_t timeEnd = os_get_time_ms();
@@ -446,9 +452,9 @@ static int wifimgrProcessSwitchApRequest(
     LOGI("[wifimgr]", "Sending message to app: %s", msg);
     for (i = 0; i < 3; i++) {
         if (0 > os_udp_sendto(udpFd, msg, strlen(msg), sa)) {
-        	LOGI("[wifimgr]", "sending failed.");
+            LOGI("[wifimgr]", "sending failed.");
         } else {
-        	LOGI("[wifimgr]", "sending succeeded.");
+            LOGI("[wifimgr]", "sending succeeded.");
         }
     }
 
@@ -487,7 +493,7 @@ static int wifimgrProcessSwitchApRequest(
  *
  */
 int wifimgrProcessRequest(
-            pplatform_netaddr_t sa, char *buf, unsigned int len)
+    pplatform_netaddr_t sa, char *buf, unsigned int len)
 {
     alink_ap_setup_msg_t msg = { 0 };
     LOGI("wifimgr", "in wifimgrProcessRequest, host addr: %s", sa->host);

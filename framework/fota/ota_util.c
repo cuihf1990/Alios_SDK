@@ -23,7 +23,7 @@
 #include "ota_log.h"
 
 static ota_info_t g_ota_info_storage = {
-        .update_way = OTA_SILENT,
+    .update_way = OTA_SILENT,
 };
 static ota_info_t *g_ota_info = &g_ota_info_storage;
 
@@ -42,7 +42,7 @@ void ota_status_deinit()
 }
 
 OTA_STATUS_T ota_get_status(void)
-{ 
+{
     OTA_STATUS_T status;
     ota_mutex_lock(g_ota_info_storage.mutex);
     status = g_ota_info->status;
@@ -53,7 +53,7 @@ OTA_STATUS_T ota_get_status(void)
 void ota_set_status(OTA_STATUS_T status)
 {
     ota_mutex_lock(g_ota_info_storage.mutex);
-    g_ota_info->status = status; 
+    g_ota_info->status = status;
     ota_mutex_unlock(g_ota_info_storage.mutex);
 }
 
@@ -72,18 +72,18 @@ int8_t ota_result_post()
 const char *ota_get_version()
 {
     ota_mutex_lock(g_ota_info_storage.mutex);
-    if(strlen(g_ota_info->ota_version) > 0)
+    if (strlen(g_ota_info->ota_version) > 0) {
         return g_ota_info->ota_version;
-    strncpy(g_ota_info->ota_version, 
-        (char *)platform_ota_get_version(), sizeof g_ota_info->ota_version);
+    }
+    strncpy(g_ota_info->ota_version,
+            (char *)platform_ota_get_version(), sizeof g_ota_info->ota_version);
     ota_mutex_unlock(g_ota_info_storage.mutex);
     return g_ota_info->ota_version;
 }
 
 void ota_set_version(const char *ota_version)
 {
-    if(!ota_version)
-    {
+    if (!ota_version) {
         return;
     }
 
