@@ -516,10 +516,10 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     }
 
     if ((info->flags & ENCRYPT_ENABLE_FLAG) &&
-         umesh_aes_encrypt(key, KEY_SIZE,
-                           hal->frame.data + info->header_ies_offset,
-                           header_ies_length + append_length + frag_length,
-                           hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
+        umesh_aes_encrypt(key, KEY_SIZE,
+                          hal->frame.data + info->header_ies_offset,
+                          header_ies_length + append_length + frag_length,
+                          hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
         return UR_ERROR_DROP;
     }
 
@@ -895,8 +895,8 @@ static void message_handler(void *args)
     }
     meshnetid = umesh_mm_get_meshnetid(info->network);
     if (meshnetid != BCAST_NETID && meshnetid != INVALID_NETID) {
-        uint8_t local_subnet_type = is_subnet(meshnetid)? 1: 0;
-        uint8_t subnet_type = is_subnet(info->src.netid)? 1: 0;
+        uint8_t local_subnet_type = is_subnet(meshnetid) ? 1 : 0;
+        uint8_t subnet_type = is_subnet(info->src.netid) ? 1 : 0;
         if ((local_subnet_type ^ subnet_type) ||
             (cmp_mode == -1 && local_subnet_type == 0 && subnet_type == 0)) {
             is_diff_level = true;

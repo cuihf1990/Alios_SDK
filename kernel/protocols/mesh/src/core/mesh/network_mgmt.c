@@ -239,7 +239,7 @@ ur_error_t handle_discovery_response(message_t *message)
 
     res = &network->hal->discovery_result;
     if ((is_bcast_netid(res->meshnetid) ||
-        res->meshnetid < get_main_netid(info->src.netid)) &&
+         res->meshnetid < get_main_netid(info->src.netid)) &&
         is_same_mainnet(network->meshnetid, info->src.netid) == false) {
         memcpy(&res->addr, &info->src_mac.addr, sizeof(res->addr));
         res->channel = info->src_channel;

@@ -109,8 +109,8 @@ static void handle_link_quality_update_timer(void *args)
         if (error != UR_ERROR_NONE &&
             nbr == umesh_mm_get_attach_node(network)) {
             hal->link_request_timer = ur_start_timer(
-                                              hal->link_request_interval,
-                                              handle_link_request_timer, hal);
+                                          hal->link_request_interval,
+                                          handle_link_request_timer, hal);
         }
         if (nbr->stats.link_cost >= LINK_COST_MAX) {
             nbr->state = STATE_INVALID;
@@ -631,7 +631,7 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
     nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
                               info->dest.netid);
     if (nbr && (nbr->last_lq_time == 0 ||
-        (ur_get_now() - nbr->last_lq_time) >= LINK_QUALITY_INTERVAL)) {
+                (ur_get_now() - nbr->last_lq_time) >= LINK_QUALITY_INTERVAL)) {
         nbr->last_lq_time = ur_get_now();
         rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset +
                                 offset);

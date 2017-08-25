@@ -57,8 +57,7 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
 
     if (ip4_addr_isany(ip4addr) || ip4_addr_isbroadcast(ip4addr, netif)) {
         sid = 0xffff;
-    }
-    else {
+    } else {
         sid = ntohl(ip4addr->addr) & 0xffff;
     }
 
@@ -178,9 +177,9 @@ ur_error_t ur_adapter_interface_up(void)
         memcpy(g_la_state.adpif.hwaddr, mac_addr->addr, 6);
 
         uint16_t sid = umesh_mm_get_local_sid();
-        IP4_ADDR(&gw, 192,168,0,1);
-        IP4_ADDR(&ipaddr, 192,168,sid>>8,sid&0xff);
-        IP4_ADDR(&netmask, 255,255,0,0);
+        IP4_ADDR(&gw, 192, 168, 0, 1);
+        IP4_ADDR(&ipaddr, 192, 168, sid >> 8, sid & 0xff);
+        IP4_ADDR(&netmask, 255, 255, 0, 0);
         netif_add(&g_la_state.adpif, &ipaddr, &netmask, &gw, NULL,
                   ur_adapter_if_init, tcpip_input);
         interface = &g_la_state.adpif;

@@ -24,9 +24,9 @@ static inline void dump_packet(unsigned char *pkt, int count)
     int seqno = calc_seqctrl(pkt);
     mac80211_fctl_t *fctl = (mac80211_fctl_t *)pkt;
     printf("%s(%d) type:%d retry:%d %02x %02x %02x", __func__, count, fctl->type, fctl->retry, pkt[0], pkt[1], seqno);
-    p_addr(pkt+OFF_DST);
-    p_addr(pkt+OFF_SRC);
-    p_addr(pkt+OFF_BSS);
+    p_addr(pkt + OFF_DST);
+    p_addr(pkt + OFF_SRC);
+    p_addr(pkt + OFF_BSS);
     printf("\n");
 }
 
@@ -79,13 +79,15 @@ static mac_entry_t *find_mac_entry(uint8_t  macaddr[6])
     uint32_t youngest = -1u;
     int i;
 
-    for (i=0;i<ENT_NUM;i++) {
+    for (i = 0; i < ENT_NUM; i++) {
         ment = entries + i;
-        if (memcmp(ment->macaddr, macaddr, 6) == 0)
+        if (memcmp(ment->macaddr, macaddr, 6) == 0) {
             return ment;
+        }
 
-        if (ment->mactime > youngest)
+        if (ment->mactime > youngest) {
             continue;
+        }
 
         youngest = ment->mactime;
         yent = ment;
@@ -106,17 +108,21 @@ bool umesh_80211_filter_frame(umesh_hal_module_t *module, uint8_t *pkt, int coun
     mymac = hal_umesh_get_mac_address(module);
     hal_umesh_get_extnetid(module, &extnetid);
 
-    if (memcmp(pkt+OFF_BSS, extnetid.netid, 6))
+    if (memcmp(pkt + OFF_BSS, extnetid.netid, 6)) {
         return 1;
+    }
 
-    if (memcmp(pkt+OFF_SRC, mymac->addr, 6) == 0)
+    if (memcmp(pkt + OFF_SRC, mymac->addr, 6) == 0) {
         return 1;
+    }
 
-    if (memcmp(pkt+OFF_DST, bcast, 6) == 0)
+    if (memcmp(pkt + OFF_DST, bcast, 6) == 0) {
         goto next;
+    }
 
-    if (memcmp(pkt+OFF_DST, mymac->addr, 6))
+    if (memcmp(pkt + OFF_DST, mymac->addr, 6)) {
         return 1;
+    }
 
 next:
 #ifdef FILTER_DUPLICATE_FRAME
@@ -126,7 +132,7 @@ next:
     mac_entry_t *ent;
     uint32_t mactime = yos_now_ms();
 
-    ent = find_mac_entry(pkt+OFF_SRC);
+    ent = find_mac_entry(pkt + OFF_SRC);
 
     if (!fctl->retry) {
         goto no_filter;

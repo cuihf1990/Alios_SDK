@@ -470,7 +470,7 @@ ur_error_t handle_address_query_response(message_t *message)
                    memcmp(target_ueid->ueid, g_ar_state.cache[index].ueid,
                           sizeof(target_ueid->ueid)) == 0) {
             if (g_ar_state.cache[index].state != AQ_STATE_CACHED) {
-               g_ar_state.cache[index].state = AQ_STATE_CACHED;
+                g_ar_state.cache[index].state = AQ_STATE_CACHED;
                 g_ar_state.cache[index].sid = target_id->sid;
                 g_ar_state.cache[index].meshnetid = target_id->meshnetid;
                 if (attach_id) {
