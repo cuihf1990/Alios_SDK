@@ -32,7 +32,7 @@ extern "C" {
 #define PRODUCT_KEY_LEN         (20 + 1)
 #define PRODUCT_SECRET_LEN      (40 + 1)
 #define PRODUCT_UUID_LEN        (32 + 1)
-#define PRODUCT_VERSION_LEN     (16 + 1)
+#define PRODUCT_VERSION_LEN     (32 + 1)
 #define PRODUCT_NAME_LEN        (32 + 1)
 #define DEVICE_KEY_LEN          (20 + 1)
 #define DEVICE_SECRET_LEN       (32 + 1)

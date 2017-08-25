@@ -76,7 +76,7 @@ typedef struct device_flag {
 #define PRODUCT_KEY_LEN         (20 + 1)
 #define PRODUCT_SECRET_LEN      (40 + 1)
 #define PRODUCT_UUID_LEN        (32 + 1)
-#define PRODUCT_VERSION_LEN     (16 + 1)
+//#define PRODUCT_VERSION_LEN     (32 + 1)
 #define PRODUCT_NAME_LEN        (32 + 1)
 #define PLATFORM_CID_LEN (64 + 1)
 #define PLATFORM_MAC_LEN    (17 + 1)
