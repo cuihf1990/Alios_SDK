@@ -40,13 +40,25 @@
 #include <yos/cli.h>
 #include <yos/cloud.h>
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
+/*
+    #define PRODUCT_KEY             "OvNmiEYRDSY"
+    #define DEVICE_NAME             "sh_online_sample_mqtt"
+    #define DEVICE_SECRET           "v9mqGzepKEphLhXmAoiaUIR2HZ7XwTky"
+*/
     #define PRODUCT_KEY             "edWuENTjOf4"
     #define DEVICE_NAME             "zmmqtttest-device"
     #define DEVICE_SECRET           "AU6hOT7CCKitFKb3d9thMjaEszHzCfTA"
+
 #else
+/*
+    #define PRODUCT_KEY             "yfTuLfBJTiL"
+    #define DEVICE_NAME             "TestDeviceForDemo"
+    #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
+*/
     #define PRODUCT_KEY             "edWuENTjOf4"
     #define DEVICE_NAME             "zmmqtttest-device"
     #define DEVICE_SECRET           "AU6hOT7CCKitFKb3d9thMjaEszHzCfTA"
+
 #endif
 
 // These are pre-defined topics
@@ -369,11 +381,12 @@ int application_start(int argc, char *argv[])
     netmgr_start(false);
 
     cli_register_command(&mqttcmd);
+#ifdef CSP_LINUXHOST
     int ret = yos_task_new("mqtttask", mqtt_main, 0, 1024*10);
     if (ret != YUNOS_SUCCESS) {
         printf("Error: Failed to create cli thread: %d\r\n", ret);
     }
-
+#endif
     LOG("yos_loop_run end.");
     yos_loop_run();
     LOG("alink end.");

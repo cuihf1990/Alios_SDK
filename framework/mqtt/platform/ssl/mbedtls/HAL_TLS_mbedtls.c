@@ -18,7 +18,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <memory.h>
+//#include <memory.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -318,8 +318,10 @@ void utils_network_ssl_disconnect(TLSDataParams_t *pTlsData)
     mbedtls_x509_crt_free(&(pTlsData->cacertl));
     if ((pTlsData->pkey).pk_info != NULL) {
         SSL_LOG("need free client crt&key");
+#if defined(MBEDTLS_CERTS_C)
         mbedtls_x509_crt_free(&(pTlsData->clicert));
         mbedtls_pk_free(&(pTlsData->pkey));
+#endif
     }
 #endif
     mbedtls_ssl_free(&(pTlsData->ssl));

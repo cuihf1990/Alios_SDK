@@ -33,7 +33,7 @@ $(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
 
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
 
-$(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
+$(NAME)_PREBUILT_LIBRARY := lib/mk3060/libmbedtls.a
 
 else
 
