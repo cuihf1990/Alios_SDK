@@ -47,8 +47,8 @@ typedef enum {
     TYPE_MCAST_ADDR        = 0x95,  /* multicast address */
     TYPE_TARGET_UEID       = 0x96,  /* target ueid TLV */
     TYPE_TARGET_SID        = 0x97,  /* target sid TLV */
-    TYPE_FORWARD_RSSI      = 0x98,  /* forward RSSI */
-    TYPE_REVERSE_RSSI      = 0x99,  /* reverse RSSI */
+    TYPE_REVERSE_RSSI      = 0x98,  /* reverse RSSI */
+    TYPE_FORWARD_RSSI      = 0x99,  /* forward RSSI */
     TYPE_SID_TYPE          = 0x9a,  /* SID allocate type */
     TYPE_ADDR_QUERY        = 0x9b,  /* address query type */
     TYPE_NODE_ID           = 0x9c,  /* node id */
