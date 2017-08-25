@@ -142,9 +142,10 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
         return YUNOS_WORKQUEUE_NOT_EXIST;
     }
 
+    YUNOS_CRITICAL_ENTER();
+
     TRACE_WORKQUEUE_DEL(g_active_task[cpu_cur_get()], workqueue);
 
-    YUNOS_CRITICAL_ENTER();
     if (!is_klist_empty(&(workqueue->work_list))) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_WORKQUEUE_BUSY;

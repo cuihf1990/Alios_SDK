@@ -43,12 +43,6 @@ static void task_sem_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    yunos_sem_dyn_create(&sem_comb_all, "semcomball", 0);
-    yunos_mutex_create(&mutex_comb_all, "mutexcomball");
-    yunos_event_create(&event_comb_all, "eventcomball", 0x2);
-    yunos_queue_create(&queue_comb_all, "queue1", (void **)&queue1_msg_buff,
-                       TEST_MSG_SIZE);
-
     ret = yunos_sem_take(sem_comb_all, YUNOS_WAIT_FOREVER);
     if ((ret == YUNOS_SUCCESS) && (mutex_count == 66)) {
         test_case_success++;
@@ -123,6 +117,12 @@ static void task_queue_opr_entry(void *arg)
 void comb_all_coopr_test(void)
 {
     kstat_t ret;
+
+    yunos_sem_dyn_create(&sem_comb_all, "semcomball", 0);
+    yunos_mutex_create(&mutex_comb_all, "mutexcomball");
+    yunos_event_create(&event_comb_all, "eventcomball", 0x2);
+    yunos_queue_create(&queue_comb_all, "queue1", (void **)&queue1_msg_buff,
+                       TEST_MSG_SIZE);
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);

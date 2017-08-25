@@ -116,15 +116,10 @@ static void task_queue1_entry(void *arg)
                                          TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
-
         memset(g_test_send_msg0, 's', TEST_BUFQUEUE_MSG_MAX);
         ret = yunos_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
                                    TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
-
-        yunos_buf_queue_info_get(&g_test_bufqueue0, &info);
-
-        BUFQUEUE_VAL_CHK(0 == info.cur_num);
 
         yunos_task_dyn_del(task_1_test);
     }

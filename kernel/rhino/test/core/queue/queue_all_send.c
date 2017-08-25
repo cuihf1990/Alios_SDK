@@ -48,10 +48,6 @@ static void task_queue0_entry(void *arg)
         queue_send_msg  = (void *)1;
         queue_recv_msg  = (void *)1;
 
-        ret = yunos_queue_create(&g_test_queue0, "test_queue0",
-                                 (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
-
         /* check yunos_queue_all_send param */
         queue_all_send_param_test();
 
@@ -115,6 +111,10 @@ static void task_queue2_entry(void *arg)
 kstat_t task_queue_all_send_test(void)
 {
     kstat_t ret;
+
+    ret = yunos_queue_create(&g_test_queue0, "test_queue0",
+                             (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
+    QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_0_test, "task_queue0_test", 0, 10,
                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
