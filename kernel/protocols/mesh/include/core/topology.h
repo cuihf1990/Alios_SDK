@@ -88,8 +88,9 @@ typedef struct neighbor_s {
     slist_t next;
     void *hal;
     uint8_t ueid[EXT_ADDR_SIZE];
-    mac_address_t mac;
-    ur_addr_t addr;
+    uint8_t mac[EXT_ADDR_SIZE];
+    uint16_t netid;
+    uint16_t sid;
     uint16_t path_cost;
     neighbor_state_t state: 4;
     node_mode_t mode;

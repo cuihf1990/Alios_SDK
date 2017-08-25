@@ -110,10 +110,7 @@ static ur_error_t send_discovery_request(network_context_t *network)
 
     info->network = network;
     // dest
-    info->dest.addr.len = SHORT_ADDR_SIZE;
-    info->dest.addr.short_addr = BCAST_SID;
-    info->dest.netid = BCAST_NETID;
-
+    set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,

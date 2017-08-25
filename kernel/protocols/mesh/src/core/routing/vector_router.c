@@ -1005,7 +1005,7 @@ static void handle_heartbeat_timer(void *args)
             }
 
             g_vr_state.sync_status = TOPOLOGY_SYNC_CLIENT_RECEIVING_DATA;
-            g_vr_state.sync_state->peer_sid = node->addr.addr.short_addr;
+            g_vr_state.sync_state->peer_sid = node->sid;
             send_topology_sync_select();
         }
     }
@@ -1082,7 +1082,7 @@ ur_error_t vector_router_neighbor_updated(neighbor_t *neighbor)
         return UR_ERROR_FAIL;
     }
 
-    src = neighbor->addr.addr.short_addr;
+    src = neighbor->sid;
     dst = vertex_me->sid;
     if (neighbor->stats.link_cost != LINK_COST_MAX) {
         cost = (uint8_t)(neighbor->stats.link_cost >> 4);

@@ -220,9 +220,7 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
 
     info->network = router->network;
     // dest
-    info->dest.addr.len = SHORT_ADDR_SIZE;
-    info->dest.addr.short_addr = dst;
-    info->dest.netid = umesh_mm_get_meshnetid(NULL);
+    set_mesh_short_addr(&info->dest, umesh_mm_get_meshnetid(NULL), dst);
 
     error = address_resolve(message);
     if (error == UR_ERROR_NONE) {
@@ -350,7 +348,7 @@ static uint16_t calc_ssid_child_num(network_context_t *network)
 
     nbrs = &network->hal->neighbors_list;
     slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
-        if (nbr->state != STATE_CHILD || network->meshnetid != nbr->addr.netid) {
+        if (nbr->state != STATE_CHILD || network->meshnetid != nbr->netid) {
             continue;
         }
         dup = false;
@@ -358,9 +356,8 @@ static uint16_t calc_ssid_child_num(network_context_t *network)
             if (nbr == next_nbr) {
                 continue;
             }
-            if (next_nbr->addr.netid == umesh_mm_get_meshnetid(network) &&
-                nbr->addr.addr.short_addr != INVALID_SID &&
-                nbr->addr.addr.short_addr == next_nbr->addr.addr.short_addr) {
+            if (next_nbr->netid == umesh_mm_get_meshnetid(network) &&
+                nbr->sid != INVALID_SID && nbr->sid == next_nbr->sid) {
                 dup = true;
             }
         }

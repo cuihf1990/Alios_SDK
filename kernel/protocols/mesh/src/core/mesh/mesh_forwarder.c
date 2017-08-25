@@ -433,6 +433,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     neighbor_t     *next_node = NULL;
     uint8_t        *payload;
     const uint8_t *key;
+    mac_address_t mac;
 
     hal = network->hal;
     info = message->info;
@@ -452,8 +453,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         }
     }
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = next_node->addr.addr.short_addr;
+        set_mesh_short_addr(&info->dest, info->dest.netid, next_node->sid);
     }
 
     if (info->flags & INSERT_MESH_HEADER) {
@@ -534,9 +534,10 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
     hal->frag_info.offset += frag_length;
     if (next_node) {
+        mac.len = EXT_ADDR_SIZE;
+        memcpy(mac.addr, next_node->mac, EXT_ADDR_SIZE);
         error = hal_umesh_send_ucast_request(hal->module, &hal->frame,
-                                             &next_node->mac,
-                                             handle_sent, hal);
+                                             &mac, handle_sent, hal);
     } else {
         error = hal_umesh_send_bcast_request(network->hal->module, &hal->frame,
                                              handle_sent, hal);

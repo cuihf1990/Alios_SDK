@@ -35,6 +35,7 @@ static void handle_link_request_timer(void *args)
     network_context_t *network;
     uint32_t interval;
     uint8_t tlv_type[1] = {TYPE_UCAST_CHANNEL};
+    ur_addr_t addr;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link request timer\r\n");
 
@@ -50,8 +51,8 @@ static void handle_link_request_timer(void *args)
         return;
     }
 
-    send_link_request(network, &attach_node->addr,
-                      tlv_type, sizeof(tlv_type));
+    set_mesh_short_addr(&addr, attach_node->netid, attach_node->sid);
+    send_link_request(network, &addr, tlv_type, sizeof(tlv_type));
     if (attach_node->stats.link_request < LINK_ESTIMATE_SENT_THRESHOLD) {
         hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
                                                  hal);
@@ -156,7 +157,7 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
 
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
                "sid %04x ueid " EXT_ADDR_FMT " is replaced\n",
-               nbr->addr.addr.short_addr, EXT_ADDR_DATA(nbr->ueid));
+               nbr->sid, EXT_ADDR_DATA(nbr->ueid));
         goto get_nbr;
     }
     return NULL;
@@ -164,10 +165,9 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
 get_nbr:
     nbr->hal                = (void *)hal;
     memset(nbr->ueid, 0xff, sizeof(nbr->ueid));
-    memcpy(&nbr->mac, addr, sizeof(nbr->mac));
-    nbr->addr.netid         = BCAST_NETID;
-    nbr->addr.addr.len        = SHORT_ADDR_SIZE;
-    nbr->addr.addr.short_addr = BCAST_SID;
+    memcpy(nbr->mac, addr->addr, sizeof(nbr->mac));
+    nbr->netid = BCAST_NETID;
+    nbr->sid = BCAST_SID;
     nbr->path_cost          = INFINITY_PATH_COST;
     nbr->mode               = 0;
     nbr->stats.link_cost    = 256;
@@ -189,10 +189,10 @@ static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
         return UR_ERROR_NONE;
     }
 
-    network = get_network_context_by_meshnetid(neighbor->addr.netid);
+    network = get_network_context_by_meshnetid(neighbor->netid);
     if (network && network->router->sid_type == STRUCTURED_SID &&
         is_allocated_child(network->sid_base, neighbor)) {
-        free_sid(network->sid_base, neighbor->addr.addr.short_addr);
+        free_sid(network->sid_base, neighbor->sid);
     }
 
     slist_del(&neighbor->next, &hal->neighbors_list);
@@ -225,11 +225,11 @@ static void handle_update_nbr_timer(void *args)
 
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
                "%x neighbor " EXT_ADDR_FMT " become inactive\r\n",
-               sid, EXT_ADDR_DATA(node->mac.addr));
-        network = get_network_context_by_meshnetid(node->addr.netid);
+               sid, EXT_ADDR_DATA(node->mac));
+        network = get_network_context_by_meshnetid(node->netid);
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {
-            free_sid(network->sid_base, node->addr.addr.short_addr);
+            free_sid(network->sid_base, node->sid);
         }
         node->state = STATE_INVALID;
         g_neighbor_updater_head(node);
@@ -313,10 +313,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (path_cost != NULL) {
         nbr->path_cost = path_cost->cost;
     }
-    if (nbr->addr.addr.short_addr != info->src.addr.short_addr) {
+    if (nbr->sid != info->src.addr.short_addr) {
         nbr->flags |= NBR_SID_CHANGED;
     }
-    if (nbr->addr.netid != info->src.netid) {
+    if (nbr->netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
     channel_orig = nbr->channel;
@@ -339,7 +339,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
         if (nbr->state == STATE_CHILD &&
             ((nbr->flags & NBR_NETID_CHANGED) ||
              (nbr->flags & NBR_SID_CHANGED))) {
-            free_sid(network->sid_base, nbr->addr.addr.short_addr);
+            free_sid(network->sid_base, nbr->sid);
             nbr->state = STATE_NEIGHBOR;
         }
         network = get_network_context_by_meshnetid(info->src.netid);
@@ -348,8 +348,8 @@ neighbor_t *update_neighbor(const message_info_t *info,
             nbr->state = STATE_CHILD;
         }
     }
-    nbr->addr.addr.short_addr = info->src.addr.short_addr;
-    nbr->addr.netid = info->src.netid;
+    nbr->sid = info->src.addr.short_addr;
+    nbr->netid = info->src.netid;
     g_neighbor_updater_head(nbr);
 
     if (hal->update_nbr_timer == NULL) {
@@ -412,8 +412,8 @@ neighbor_t *get_neighbor_by_mac_addr(const mac_address_t *mac_addr)
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-            if (mac_addr->len == nbr->mac.len &&
-                memcmp(mac_addr->addr, nbr->mac.addr, sizeof(nbr->mac.addr)) == 0 &&
+            if (mac_addr->len == EXT_ADDR_SIZE &&
+                memcmp(mac_addr->addr, nbr->mac, sizeof(nbr->mac)) == 0 &&
                 nbr->state > STATE_INVALID) {
                 return nbr;
             }
@@ -437,7 +437,7 @@ neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
     }
 
     slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-        if (node->addr.addr.short_addr == sid && node->addr.netid == meshnetid &&
+        if (node->sid == sid && node->netid == meshnetid &&
             node->state > STATE_INVALID) {
             return node;
         }
