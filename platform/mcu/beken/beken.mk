@@ -318,7 +318,8 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/mico_cli.c \
                     beken7231/mico_api/mxchipWNet.c \
                     beken7231/mico_api/platform_stub.c \
-                    yos/soc_impl.c 
+                    yos/soc_impl.c \
+                    yos/trace_impl.c 
 
 
 ifneq ($(wildcard $(CURDIR)librwnx.a),)

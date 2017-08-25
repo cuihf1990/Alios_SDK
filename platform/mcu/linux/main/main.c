@@ -40,7 +40,7 @@ extern void __gcov_flush(void);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
 extern void hw_start_hal(void);
-extern void trace_start(int flag);
+extern void trace_start();
 extern void netmgr_init(void);
 extern int yos_framework_init(void);
 extern int yos_cli_init(void);
@@ -65,8 +65,6 @@ static void app_entry(void *arg)
 
     yos_features_init();
 
-    trace_start(options.trace_flag);
-
     hw_start_hal();
 
     vfs_init();
@@ -84,6 +82,8 @@ static void app_entry(void *arg)
     yos_loop_init();
 
     yos_framework_init();
+
+    trace_start();    
 
     application_start(options.argc, options.argv);
 }

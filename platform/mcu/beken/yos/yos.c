@@ -26,6 +26,8 @@ extern void board_init(void);
 
 extern int application_start(int argc, char **argv);
 
+void trace_start(void);
+
 #ifdef YOS_BINS
 extern void *g_syscall_tbl[];
 extern char  app_info_addr;
@@ -71,6 +73,8 @@ static void yos_init(void)
     yos_kv_init();
     yos_loop_init();
 
+    trace_start();
+    
 #ifdef YOS_BINS
     application_init();
 

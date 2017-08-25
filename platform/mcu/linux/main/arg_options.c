@@ -46,12 +46,6 @@ void parse_options(options_t *options)
             continue;
         }
 
-        if (strcmp(argv[i], "--trace") == 0) {
-            options->trace_flag = 1;
-            shift_argv(options, i);
-            continue;
-        }
-
         if (!strcmp(argv[i], "--log")) {
             shift_argv(options, i);
             if (i >= options->argc) {
