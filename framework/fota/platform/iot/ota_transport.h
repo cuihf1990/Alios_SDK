@@ -21,7 +21,7 @@ typedef struct {
     const char *product_type;
     const char *product_internal_type;
     const char *system;
-    const char * device_uuid;
+    const char *device_uuid;
 } ota_request_params;
 
 #define DOWNLOAD_URL_LEN 256
@@ -31,16 +31,16 @@ typedef struct {
     const char *product_type;
     char download_url[DOWNLOAD_URL_LEN];
     int frimware_size;
-    const char * device_uuid;
+    const char *device_uuid;
     char md5[MD5_LEN];
 } ota_response_params;
 
 typedef void message_arrived(const char *msg, int len);
 
 
-int8_t parse_ota_requset(const char* request, int *buf_len, ota_request_params * request_parmas);
+int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas);
 
-int8_t parse_ota_response(const char* buf, int buf_len, ota_response_params * response_parmas);
+int8_t parse_ota_response(const char *buf, int buf_len, ota_response_params *response_parmas);
 
 int8_t ota_sub_upgrade(message_arrived *msgCallback);
 

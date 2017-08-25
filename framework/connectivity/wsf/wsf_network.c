@@ -60,9 +60,9 @@ static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
             wsf_reset_connection(conn, 0);
             LOGE(MODULE_NAME, "can't open ssl connection");
             return WSF_CONNECTION_ERROR;
-        }else{
+        } else {
             g_wsf_cb.sock = (long)wsf_conn->tcp;
-            yos_poll_read_fd(g_wsf_cb.sock, cb_recv,&g_wsf_cb);
+            yos_poll_read_fd(g_wsf_cb.sock, cb_recv, &g_wsf_cb);
             LOGI(MODULE_NAME, "add new tcp socket fd to poll list.\n");
         }
     }

@@ -110,10 +110,10 @@ enum enrollee_state {
 #define AES_KEY_LEN     (16)
 /* return 0 for success, -1 devid not match, otherwise return -2 */
 extern int (*vendor_decrypt_ssid_passwd)(
-            uint8_t *ie, uint8_t ie_len,
-            uint8_t out_ssid[OS_MAX_SSID_LEN],
-            uint8_t out_passwd[OS_MAX_PASSWD_LEN],
-            uint8_t out_bssid[ETH_ALEN]);
+    uint8_t *ie, uint8_t ie_len,
+    uint8_t out_ssid[OS_MAX_SSID_LEN],
+    uint8_t out_passwd[OS_MAX_PASSWD_LEN],
+    uint8_t out_bssid[ETH_ALEN]);
 
 extern const uint8_t probe_req_frame[64];
 #define SA_POS              (10) //source mac pos
@@ -143,11 +143,11 @@ static inline void awss_clear_enrollee_token(void)
 {
 }
 #endif
-int awss_set_enrollee_token(char* token, int tokenLen);
-void awss_calc_sign(uint32_t rand, 
-                    char devid[OS_PRODUCT_SN_LEN], 
-                    char model[OS_PRODUCT_MODEL_LEN], 
-                    char secret[OS_PRODUCT_SECRET_LEN], 
+int awss_set_enrollee_token(char *token, int tokenLen);
+void awss_calc_sign(uint32_t rand,
+                    char devid[OS_PRODUCT_SN_LEN],
+                    char model[OS_PRODUCT_MODEL_LEN],
+                    char secret[OS_PRODUCT_SECRET_LEN],
                     char sign[ENROLLEE_SIGN_SIZE]);
 
 /* registrar API */

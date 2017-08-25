@@ -82,7 +82,7 @@ static void format_ip(uint32_t ip, char *buf)
     sprintf(buf, "%d.%d.%d.%d", octet[3], octet[2], octet[1], octet[0]);
 }
 
-static void netmgr_connect_fail_event(hal_wifi_module_t *m, int err, void* arg)
+static void netmgr_connect_fail_event(hal_wifi_module_t *m, int err, void *arg)
 {
 
 }
@@ -154,39 +154,43 @@ static void get_bssid(uint8_t *to_fill, int size)
 }
 
 static void netmgr_scan_completed_event(hal_wifi_module_t *m,
-                                         hal_wifi_scan_result_t *result,
-                                         void *arg)
+                                        hal_wifi_scan_result_t *result,
+                                        void *arg)
 {
     netmgr_wifi_scan_result_cb_t cb = g_netmgr_cxt.cb;
     int i, last_ap = 0;
     uint8_t bssid[ETH_ALEN];
 
     if (g_netmgr_cxt.cb) {
-        for(i=0; i<(result->ap_num); i++) {
+        for (i = 0; i < (result->ap_num); i++) {
             LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
-            if (i == (result->ap_num - 1)) last_ap = 1;
+            if (i == (result->ap_num - 1)) {
+                last_ap = 1;
+            }
             get_bssid(bssid, ETH_ALEN);
             cb(result->ap_list[i].ssid, bssid, NETMGR_AWSS_AUTH_TYPE_WPA2PSK,
-                NETMGR_AWSS_ENC_TYPE_NONE, 0, 0, last_ap);
+               NETMGR_AWSS_ENC_TYPE_NONE, 0, 0, last_ap);
         }
         g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
     }
 }
 
 static void netmgr_scan_adv_completed_event(hal_wifi_module_t *m,
-                                             hal_wifi_scan_result_adv_t *result,
-                                             void *arg)
+                                            hal_wifi_scan_result_adv_t *result,
+                                            void *arg)
 {
     netmgr_wifi_scan_result_cb_t cb = g_netmgr_cxt.cb;
     int i, last_ap = 0;
 
     if (g_netmgr_cxt.cb) {
-        for(i=0; i<(result->ap_num); i++) {
+        for (i = 0; i < (result->ap_num); i++) {
             LOGD("netmgr", "AP to add: %s", result->ap_list[i].ssid);
-            if (i == (result->ap_num - 1)) last_ap = 1;
-            cb(result->ap_list[i].ssid, (const uint8_t *)result->ap_list[i].bssid, 
-                result->ap_list[i].security, NETMGR_AWSS_ENC_TYPE_NONE, 
-                result->ap_list[i].channel, result->ap_list[i].ap_power, last_ap);
+            if (i == (result->ap_num - 1)) {
+                last_ap = 1;
+            }
+            cb(result->ap_list[i].ssid, (const uint8_t *)result->ap_list[i].bssid,
+               result->ap_list[i].security, NETMGR_AWSS_ENC_TYPE_NONE,
+               result->ap_list[i].channel, result->ap_list[i].ap_power, last_ap);
         }
         g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
     }
@@ -198,7 +202,7 @@ static void netmgr_para_chg_event(hal_wifi_module_t *m,
 {
 }
 
-static void netmgr_fatal_err_event(hal_wifi_module_t *m, void* arg)
+static void netmgr_fatal_err_event(hal_wifi_module_t *m, void *arg)
 {
 }
 
@@ -298,7 +302,7 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
         return;
     }
 
-    switch(eventinfo->code) {
+    switch (eventinfo->code) {
         case CODE_WIFI_ON_CONNECTED:
             g_netmgr_cxt.disconnected_times = 0;
             break;
@@ -313,7 +317,7 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
                 g_netmgr_cxt.autoconfig_chain->autoconfig_stop();
             } else {
                 yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
-                    (unsigned long)(&g_netmgr_cxt.ipv4_owned));
+                               (unsigned long)(&g_netmgr_cxt.ipv4_owned));
             }
             break;
         case CODE_WIFI_ON_GOT_IP:
@@ -326,7 +330,7 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
             g_netmgr_cxt.disconnected_times = 0;
             g_netmgr_cxt.ip_available = false;
             LOGD("netmgr", "reconnect wifi - %s, %s",
-                g_netmgr_cxt.ap_config.ssid, g_netmgr_cxt.ap_config.pwd);
+                 g_netmgr_cxt.ap_config.ssid, g_netmgr_cxt.ap_config.pwd);
             reconnect_wifi(NULL);
             break;
         default :
@@ -347,7 +351,7 @@ void netmgr_register_wifi_scan_result_callback(netmgr_wifi_scan_result_cb_t cb)
 
 static void netmgr_wifi_config_start(void)
 {
-    autoconfig_plugin_t * valid_plugin = g_netmgr_cxt.autoconfig_chain;
+    autoconfig_plugin_t *valid_plugin = g_netmgr_cxt.autoconfig_chain;
 
     if (valid_plugin != NULL) {
         g_netmgr_cxt.doing_smartconfig = true;
@@ -362,7 +366,7 @@ static int32_t has_valid_ap(void)
 {
     int32_t len = strlen(g_netmgr_cxt.ap_config.ssid);
 
-    if(len <= 0) {
+    if (len <= 0) {
         return 0;
     }
 
@@ -430,11 +434,12 @@ static void read_persistent_conf(void)
 static void handle_netmgr_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     const char *rtype = argc > 1 ? argv[1] : "";
-    if (strcmp(rtype, "clear") == 0)
+    if (strcmp(rtype, "clear") == 0) {
         netmgr_clear_ap_config();
-    else if (strcmp(rtype, "connect") == 0) {
-        if (argc != 4)
+    } else if (strcmp(rtype, "connect") == 0) {
+        if (argc != 4) {
             return;
+        }
 
         netmgr_ap_config_t config;
 
@@ -442,9 +447,9 @@ static void handle_netmgr_cmd(char *pwbuf, int blen, int argc, char **argv)
         memcpy(config.pwd, argv[3], sizeof(config.pwd));
         netmgr_set_ap_config(&config);
         netmgr_start(false);
-    }
-    else
+    } else {
         netmgr_start(true);
+    }
 }
 
 static struct cli_command ncmd = {
@@ -527,10 +532,11 @@ static int def_smart_config_start(void)
 static void def_smart_config_stop(void)
 {
     yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
-        (unsigned long)(&g_netmgr_cxt.ipv4_owned));
+                   (unsigned long)(&g_netmgr_cxt.ipv4_owned));
 }
 
-static void def_smart_config_result_cb(int result, uint32_t ip) {
+static void def_smart_config_result_cb(int result, uint32_t ip)
+{
 }
 
 static autoconfig_plugin_t g_def_smartconfig = {

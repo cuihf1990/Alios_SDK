@@ -130,13 +130,13 @@ static int alink_set_config(char *param)
     pvalue = json_get_value_by_name(param, strlen(param), "alinkServer", &value_len,
                                     0);
     if (pvalue != NULL) {
-        LOGW(MODULE_NAME_COTA, "get alink server ----->  %s\n",pvalue);
+        LOGW(MODULE_NAME_COTA, "get alink server ----->  %s\n", pvalue);
         value_len = (value_len < SERVER_LEN) ? value_len : SERVER_LEN;
-	if(strstr(pvalue,alinkserver) == NULL){
+        if (strstr(pvalue, alinkserver) == NULL) {
             LOGW(MODULE_NAME_COTA, "reset uuid --------\n");
-	    config_reset_main_uuid();
-	}	
-	memset(alinkserver, 0x00, SERVER_LEN);
+            config_reset_main_uuid();
+        }
+        memset(alinkserver, 0x00, SERVER_LEN);
         strncpy(alinkserver, pvalue, value_len);
         yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }

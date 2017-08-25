@@ -24,7 +24,7 @@
 #define OTA_TRANSPORT_PLATFORM_H_
 #include <stdint.h>
 
-char * ota_get_iotId();
+char *ota_get_iotId();
 
 int8_t ota_sub_platform(const char *topic, int len, void *msgCallback);
 

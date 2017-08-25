@@ -210,14 +210,15 @@ static int  __cb_wsf_recv(int fd, void *arg)
     if (wsf_conn && (-1 != fd)) {
         char *buf = wsf_conn->recv_buf + wsf_conn->recv_buf_pos;
         int len = wsf_conn->recv_buf_len - wsf_conn->recv_buf_pos;
-        if(len <= 0)
+        if (len <= 0) {
             return 1;
+        }
         if (NULL != wsf_conn->ssl) {
             count = os_ssl_recv(wsf_conn->ssl, buf, len);
         } else {
             count = os_tcp_recv(wsf_conn->tcp, buf, len);
         }
-        LOGD(MODULE_NAME, "wsf recv : %s,cnt: %d, len: %d\n", buf, count,len);
+        LOGD(MODULE_NAME, "wsf recv : %s,cnt: %d, len: %d\n", buf, count, len);
         if (count < 0 && (count == -EAGAIN || errno == EAGAIN)) {
             LOGD(MODULE_NAME, "wsf recv eagain");
             return 1;

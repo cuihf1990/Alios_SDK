@@ -98,7 +98,7 @@ typedef unsigned long long uint64_t;
 int platform_thread_create(
     _OUT_ void **thread,
     _IN_ const char *name,
-    _IN_ void * (*start_routine) (void *),
+    _IN_ void *(*start_routine) (void *),
     _IN_ void *arg,
     _IN_ void *stack,
     _IN_ uint32_t stack_size,

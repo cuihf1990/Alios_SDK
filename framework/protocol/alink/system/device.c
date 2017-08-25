@@ -60,10 +60,10 @@ static void devinfo_dump(void)
     LOGI(MODULE_NAME, "secret: %s", main_devinfo.secret);
     LOGI(MODULE_NAME, "debug_key: %s", main_devinfo.debug_key);
     LOGI(MODULE_NAME, "debug_secret: %s", main_devinfo.debug_secret);
-    #ifdef CONFIG_SDS
+#ifdef CONFIG_SDS
     LOGI(MODULE_NAME, "device key: %s", main_devinfo.device_key);
     LOGI(MODULE_NAME, "device secret: %s", main_devinfo.device_secret);
-    #endif
+#endif
     LOGI(MODULE_NAME, "A[%s|%s|%04x]OS[%s]T[%s.%s]", main_devinfo.alink_version,
          ALINK_AGENT_GIT_VERSION, 0x0000, version, module_name, ALINK_AGENT_BUILD_TIME);
     LOGI(MODULE_NAME, "~~~~~~~~~~~~~~~~~~~~~~~~~~");

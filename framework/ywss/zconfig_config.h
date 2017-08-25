@@ -19,16 +19,16 @@
 
 //type def
 #ifndef u8
-#define u8	unsigned char
+#define u8  unsigned char
 #endif
 #ifndef u16
-#define u16	unsigned short
+#define u16 unsigned short
 #endif
 #ifndef u32
-#define u32	unsigned int
+#define u32 unsigned int
 #endif
 #ifndef NULL
-#define	NULL ((void *)0)
+#define NULL ((void *)0)
 #endif
 
 #ifndef ATTR

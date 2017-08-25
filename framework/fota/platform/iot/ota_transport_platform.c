@@ -26,12 +26,12 @@ extern char *get_clientID();
 
 extern void *get_iot_handler();
 
-char * ota_get_iotId()
+char *ota_get_iotId()
 {
     return NULL;
 }
 
-static void * ota_get_iot_handler()
+static void *ota_get_iot_handler()
 {
     return NULL;
 }

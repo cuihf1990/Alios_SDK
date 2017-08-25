@@ -63,7 +63,7 @@ typedef struct connectivity {
     int (*connect)(void);
     int (*disconnect)(void);
     connectivity_rsp_t *(*send)(void *, int);
-    int (*send_async)(void *, int, void * (*p)(connectivity_rsp_t *rsp, void *),
+    int (*send_async)(void *, int, void *(*p)(connectivity_rsp_t *rsp, void *),
                       void *);
     int (*add_listener)(connectivity_cb);
     int (*del_listener)(connectivity_cb);

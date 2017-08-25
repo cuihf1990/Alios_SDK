@@ -112,17 +112,18 @@ static inline int msn_parse_header(uint8_t *buf, int l, uint8_t **pbuf)
         len = *buf ++;
         len <<= 8;
         len += *buf ++;
-    }
-    else {
+    } else {
         len = (uint8_t)len - 1;
     }
 
-    if (pbuf)
+    if (pbuf) {
         *pbuf = buf;
+    }
 
     if (l != len &&
-        l != len + 3)
+        l != len + 3) {
         return -1;
+    }
 
     return len;
 }
@@ -130,14 +131,14 @@ static inline int msn_parse_header(uint8_t *buf, int l, uint8_t **pbuf)
 static inline int msn_header_len(uint8_t msg_type)
 {
     switch (msg_type) {
-    case PUBLISH:
-        return sizeof(pub_body_t);
-    case CONNECT:
-        return sizeof(conn_body_t);
-    case CONNACK:
-        return sizeof(conn_ack_t);
-    case ADVERTISE:
-        return sizeof(adv_body_t);
+        case PUBLISH:
+            return sizeof(pub_body_t);
+        case CONNECT:
+            return sizeof(conn_body_t);
+        case CONNACK:
+            return sizeof(conn_ack_t);
+        case ADVERTISE:
+            return sizeof(adv_body_t);
     }
     return 0;
 }
@@ -156,6 +157,6 @@ static inline void *msn_alloc(uint8_t msg_type, int payload_len, void **pbuf, in
     *pbuf = buf;
     *plen = len;
 
-    return buf+2;
+    return buf + 2;
 }
 #endif

@@ -414,7 +414,7 @@ int alink_report(const char *method, const char *json_buffer)
 }
 
 int alink_report_async(const char *method, const char *json_buffer,
-                       void * (*cb)(void *), void *arg)
+                       void *(*cb)(void *), void *arg)
 {
     alink_data_t data = {(char *)method, (char *)json_buffer};
     service_t *service = sm_get_service("accs");

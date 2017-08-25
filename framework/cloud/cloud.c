@@ -22,8 +22,9 @@ static int (*report_backend)(const char *method, const char *json_buffer);
 
 int yos_cloud_register_callback(int cb_type, yos_cloud_cb_t cb)
 {
-    if (cb_type >= MAX_EVENT_TYPE)
+    if (cb_type >= MAX_EVENT_TYPE) {
         return -1;
+    }
 
     cbs[cb_type] = cb;
     return 0;
@@ -34,8 +35,9 @@ int yos_cloud_report(const char *method,
                      void (*done_cb)(void *),
                      void *arg)
 {
-    if (report_backend == NULL)
+    if (report_backend == NULL) {
         return -1;
+    }
 
     return report_backend(method, json_buffer);
 }
@@ -47,8 +49,9 @@ void yos_cloud_register_backend(int (*report)(const char *method, const char *js
 
 void yos_cloud_trigger(int cb_type, const char *json_buffer)
 {
-    if (cb_type >= MAX_EVENT_TYPE)
+    if (cb_type >= MAX_EVENT_TYPE) {
         return;
+    }
 
     cbs[cb_type](cb_type, json_buffer);
 }

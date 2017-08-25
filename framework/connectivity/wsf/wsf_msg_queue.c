@@ -137,8 +137,9 @@ static void wsf_del_first_msg(wsf_request_queue_t *req_queue)
     dlist_del(node);
     req_queue->length--;
 
-    if (req_node->session.cb)
+    if (req_node->session.cb) {
         req_node->session.cb(NULL, req_node->session.extra);
+    }
 
     wsf_msg_session_destroy(&req_node->session);
     os_free(req_node);
