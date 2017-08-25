@@ -316,13 +316,13 @@ void utils_network_ssl_disconnect(TLSDataParams_t *pTlsData)
     mbedtls_net_free(&(pTlsData->fd));
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     mbedtls_x509_crt_free(&(pTlsData->cacertl));
+#if defined(MBEDTLS_CERTS_C)
     if ((pTlsData->pkey).pk_info != NULL) {
         SSL_LOG("need free client crt&key");
-#if defined(MBEDTLS_CERTS_C)
         mbedtls_x509_crt_free(&(pTlsData->clicert));
         mbedtls_pk_free(&(pTlsData->pkey));
-#endif
     }
+#endif
 #endif
     mbedtls_ssl_free(&(pTlsData->ssl));
     mbedtls_ssl_config_free(&(pTlsData->conf));
@@ -401,11 +401,12 @@ int TLSConnectNetwork(TLSDataParams_t *pTlsData, const char *addr, const char *p
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     mbedtls_ssl_conf_ca_chain(&(pTlsData->conf), &(pTlsData->cacertl), NULL);
-
+#if defined(MBEDTLS_CERTS_C)
     if ((ret = mbedtls_ssl_conf_own_cert(&(pTlsData->conf), &(pTlsData->clicert), &(pTlsData->pkey))) != 0) {
         SSL_LOG(" failed\n  ! mbedtls_ssl_conf_own_cert returned %d\n", ret);
         return ret;
     }
+#endif
 #endif
     mbedtls_ssl_conf_rng(&(pTlsData->conf), _ssl_random, NULL);
     mbedtls_ssl_conf_dbg(&(pTlsData->conf), _ssl_debug, NULL);
@@ -489,7 +490,9 @@ uintptr_t HAL_SSL_Establish(const char *host,
 
     if (0 != TLSConnectNetwork(pTlsData, host, port_str, ca_crt, ca_crt_len, NULL, 0, NULL, 0, NULL, 0)) {
         mbedtls_x509_crt_free(&(pTlsData->cacertl));
+#if defined(MBEDTLS_CERTS_C)
         mbedtls_x509_crt_free(&(pTlsData->clicert));
+#endif
         if (pTlsData->ssl.hostname) {
             mbedtls_free(pTlsData->ssl.hostname);
             pTlsData->ssl.hostname = NULL;
