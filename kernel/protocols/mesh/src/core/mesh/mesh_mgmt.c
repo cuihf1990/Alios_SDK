@@ -828,7 +828,7 @@ static ur_error_t handle_attach_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    node = get_neighbor_by_ueid(ueid->ueid);
+    node = get_neighbor_by_mac_addr(ueid->ueid);
     if (node && node == network->attach_node) {
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
                "ignore attach point's attach request\r\n");
@@ -1092,7 +1092,7 @@ static ur_error_t handle_sid_request(message_t *message)
     }
     memcpy(node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
 
-    neighbor_t *node = get_neighbor_by_ueid(node_id.ueid);
+    neighbor_t *node = get_neighbor_by_mac_addr(node_id.ueid);
     if (node == NULL) {
         node_id.sid = INVALID_SID;
     }
@@ -1423,13 +1423,6 @@ static ur_error_t handle_advertisement(message_t *message)
         send_address_error(network, &dest);
     }
 
-    if (g_mm_state.device.state > DEVICE_STATE_ATTACHED &&
-        memcmp(nbr->ueid, INVALID_UEID, sizeof(nbr->ueid)) == 0) {
-        tlv_type = TYPE_TARGET_UEID;
-        set_mesh_short_addr(&dest, nbr->netid, nbr->sid);
-        send_link_request(network, &dest, &tlv_type, 1);
-    }
-
     if (umesh_mm_migration_check(network, nbr, netinfo)) {
         nm_stop_discovery();
         attach_start(nbr);
@@ -1508,6 +1501,7 @@ ur_error_t umesh_mm_init(node_mode_t mode)
 
     // init device
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
+    // ueid is default mac address
     memcpy(g_mm_state.device.ueid, hal_umesh_get_mac_address(NULL),
            sizeof(g_mm_state.device.ueid));
     g_mm_state.device.reboot_flag = true;

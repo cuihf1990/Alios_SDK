@@ -50,8 +50,7 @@ void       neighbors_init(void);
 neighbor_t *update_neighbor(const message_info_t *info,
                             uint8_t *tlvs, uint16_t length, bool is_attach);
 void       set_state_to_neighbor(void);
-neighbor_t *get_neighbor_by_ueid(const uint8_t *ueid);
-neighbor_t *get_neighbor_by_mac_addr(const mac_address_t *mac_addr);
+neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr);
 neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
                                 uint16_t meshnetid);
 neighbor_t *get_neighbors(uint16_t *num);

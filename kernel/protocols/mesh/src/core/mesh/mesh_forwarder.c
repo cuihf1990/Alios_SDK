@@ -560,7 +560,7 @@ static neighbor_t *get_next_node(message_info_t *info)
 
     local_sid = umesh_mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
-        next = get_neighbor_by_mac_addr(&(info->dest.addr));
+        next = get_neighbor_by_mac_addr(info->dest.addr.addr);
         return next;
     }
 
@@ -683,11 +683,7 @@ neighbor_t *mf_get_neighbor(uint8_t type, uint16_t meshnetid,
         }
         nbr = get_neighbor_by_sid(network->hal, addr->short_addr, meshnetid);
     } else if (addr->len == EXT_ADDR_SIZE) {
-        if (type == MESH_FRAME_TYPE_DATA) {
-            nbr = get_neighbor_by_ueid(addr->addr);
-        } else {
-            nbr = get_neighbor_by_mac_addr(addr);
-        }
+        nbr = get_neighbor_by_mac_addr(addr->addr);
     }
 
     return nbr;

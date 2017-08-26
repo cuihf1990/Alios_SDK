@@ -120,7 +120,7 @@ bool is_allocated_child(allocator_t hdl, neighbor_t *nbr)
 
     allocator = (ssid_allocator_t *)hdl;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, nbr->ueid, sizeof(nbr->ueid)) == 0) {
+        if (memcmp(node->node_id.ueid, nbr->mac, sizeof(nbr->mac)) == 0) {
             return true;
         }
     }
