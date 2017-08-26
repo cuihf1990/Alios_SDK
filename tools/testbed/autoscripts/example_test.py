@@ -2,7 +2,7 @@ import sys, time
 sys.path.append('../')
 from autotest import Autotest
 
-devices = {'A':'mxchip-DN02QRIX', 'B':'mxchip-DN02QRJ9', 'C':'mxchip-DN02QRJM'}
+devices = {'A':'mxchip-DN02QRIQ', 'B':'mxchip-DN02QRIX', 'C':'mxchip-DN02QRJ6'}
 logname=time.strftime('%Y-%m-%d@%H-%M')
 logname = 'example-' + logname +'.log'
 at=Autotest()
