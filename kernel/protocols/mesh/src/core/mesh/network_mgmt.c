@@ -48,7 +48,7 @@ static void handle_discovery_timer(void *args)
 
     if (hal->discovery_result.meshnetid != BCAST_NETID) {
         mm_netinfo_tv_t netinfo;
-        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+        nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         netinfo.leader_mode = hal->discovery_result.leader_mode;
         netinfo.size = hal->discovery_result.net_size;
         if (nbr && umesh_mm_migration_check(network, nbr, &netinfo)) {
@@ -57,7 +57,7 @@ static void handle_discovery_timer(void *args)
     }
     if (hal->discovery_times > 0 && migrate) {
         umesh_mm_set_channel(network, hal->discovery_result.channel);
-        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+        nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         hal->discovered_handler(nbr);
         return;
     } else if (hal->discovery_times < DISCOVERY_RETRY_TIMES) {

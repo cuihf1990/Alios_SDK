@@ -169,8 +169,8 @@ void test_uradar_vector_router_case(void)
     YUNIT_ASSERT(UR_ERROR_FAIL == vector_router_message_received(data, len));
     /* neighbor updated */
     neighbor.sid = 0x1000;
-    memset(neighbor.ueid, 0x00, sizeof(neighbor.ueid));
-    neighbor.ueid[0] = 0x02;
+    memset(neighbor.mac, 0x00, sizeof(neighbor.mac));
+    neighbor.mac[0] = 0x02;
     neighbor.stats.link_cost = 256;
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_neighbor_updated(&neighbor));
     neighbor.stats.link_cost = LINK_COST_MAX;
@@ -178,7 +178,7 @@ void test_uradar_vector_router_case(void)
     neighbor.stats.link_cost = 512;
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_neighbor_updated(&neighbor));
     YUNIT_ASSERT(UR_ERROR_FAIL == vector_router_neighbor_updated(&neighbor));
-    neighbor.ueid[0] = 0x03;
+    neighbor.mac[0] = 0x03;
     YUNIT_ASSERT(UR_ERROR_FAIL == vector_router_neighbor_updated(&neighbor));
 
     /* topology sync as server */

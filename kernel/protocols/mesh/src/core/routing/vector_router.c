@@ -1078,7 +1078,7 @@ ur_error_t vector_router_neighbor_updated(neighbor_t *neighbor)
     uint16_t  src, dst;
     uint8_t   cost;
 
-    if (get_vertex_by_ueid(neighbor->ueid) == NULL) {
+    if (get_vertex_by_ueid(neighbor->mac) == NULL) {
         return UR_ERROR_FAIL;
     }
 
