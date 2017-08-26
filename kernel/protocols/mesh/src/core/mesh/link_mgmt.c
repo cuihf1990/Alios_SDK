@@ -163,7 +163,6 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
     return NULL;
 
 get_nbr:
-    nbr->hal                = (void *)hal;
     memcpy(nbr->mac, addr->addr, sizeof(nbr->mac));
     nbr->netid = BCAST_NETID;
     nbr->sid = BCAST_SID;
@@ -738,8 +737,6 @@ ur_error_t handle_link_accept_and_request(message_t *message)
 
 ur_error_t handle_link_accept(message_t *message)
 {
-    uint8_t *tlvs;
-    uint16_t tlvs_length;
     neighbor_t *node;
     message_info_t *info;
 
@@ -751,9 +748,6 @@ ur_error_t handle_link_accept(message_t *message)
     }
 
     node->stats.link_accept++;
-
-    tlvs = message_get_payload(message) + sizeof(mm_header_t);
-    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
 
     return UR_ERROR_NONE;
 }

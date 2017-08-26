@@ -1388,7 +1388,6 @@ static ur_error_t handle_advertisement(message_t *message)
     mm_netinfo_tv_t   *netinfo;
     mm_cost_tv_t      *path_cost;
     network_context_t *network;
-    uint8_t           tlv_type;
     message_info_t    *info;
     ur_addr_t dest;
 
