@@ -123,7 +123,7 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
         return ret;
     }
 
-    TRACE_WORKQUEUE_CREATE(g_active_task[cpu_cur_get()], workqueue);
+    TRACE_WORKQUEUE_CREATE(yunos_cur_task_get(), workqueue);
 
     return YUNOS_SUCCESS;
 }
@@ -143,8 +143,6 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
 
     YUNOS_CRITICAL_ENTER();
 
-    TRACE_WORKQUEUE_DEL(g_active_task[cpu_cur_get()], workqueue);
-
     if (!is_klist_empty(&(workqueue->work_list))) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_WORKQUEUE_BUSY;
@@ -155,11 +153,7 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
         return YUNOS_WORKQUEUE_BUSY;
     }
 
-    klist_rm_init(&(workqueue->workqueue_node));
-
     YUNOS_CRITICAL_EXIT();
-
-    workqueue->name = NULL;
 
     ret = yunos_task_del(&(workqueue->worker));
     if (ret != YUNOS_SUCCESS) {
@@ -170,6 +164,11 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
     if (ret != YUNOS_SUCCESS) {
         return ret;
     }
+
+    YUNOS_CRITICAL_ENTER();
+    klist_rm_init(&(workqueue->workqueue_node));
+    TRACE_WORKQUEUE_DEL(g_active_task[cpu_cur_get()], workqueue);
+    YUNOS_CRITICAL_EXIT();
 
     return YUNOS_SUCCESS;
 }
