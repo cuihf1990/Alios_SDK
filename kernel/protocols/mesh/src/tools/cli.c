@@ -177,6 +177,23 @@ static const char *mediatype2str(media_type_t media)
     return "unknown";
 }
 
+static const char *nbrstate2str(neighbor_state_t state)
+{
+    switch (state) {
+        case STATE_CANDIDATE:
+            return "candidate";
+        case STATE_PARENT:
+            return "parent";
+        case STATE_CHILD:
+            return "child";
+        case STATE_NEIGHBOR:
+            return "nbr";
+        case STATE_INVALID:
+            return "invalid";
+    }
+    return "unknown";
+}
+
 #ifdef CONFIG_YOS_MESH_DEBUG
 static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length);
 
@@ -912,33 +929,10 @@ void process_nbrs(int argc, char *argv[])
         response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
         slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
             response_append("\t" EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac));
-            response_append(",0x%04x", nbr->netid);
-            response_append(",0x%04x", nbr->sid);
-            response_append(",%d", nbr->stats.link_cost);
-            response_append(",%d", nbr->ssid_info.child_num);
-
-            switch (nbr->state) {
-                case STATE_CANDIDATE:
-                    response_append(",candidate");
-                    break;
-                case STATE_PARENT:
-                    response_append(",parent");
-                    break;
-                case STATE_CHILD:
-                    response_append(",child");
-                    break;
-                case STATE_NEIGHBOR:
-                    response_append(",nbr");
-                    break;
-                default:
-                    response_append(",invalid");
-                    break;
-            }
-            response_append(",%d", nbr->channel);
-            response_append(",%d", nbr->stats.reverse_rssi);
-            response_append(",%d", nbr->stats.forward_rssi);
-            response_append(",%d\r\n", nbr->last_heard);
-            num ++;
+            response_append(",%s,0x%04x,0x%04x,%d,%d,%d,%d,%d,%d\r\n", nbrstate2str(nbr->state), \
+                            nbr->netid, nbr->sid, nbr->stats.link_cost, nbr->ssid_info.child_num, \
+                            nbr->channel, nbr->stats.reverse_rssi, nbr->stats.forward_rssi, nbr->last_heard);
+            num++;
         }
         response_append("\tnum=%d\r\n", num);
     }
