@@ -685,9 +685,6 @@ int yos_mkdir(const char *path)
 #include <sys/syscall.h>
 #define gettid() syscall(SYS_gettid)
 
-#include <k_api.h>
-#define MS2TICK(ms) ((ms * YUNOS_CONFIG_TICKS_PER_SECOND + 999) / 1000)
-
 struct poll_arg {
     yos_sem_t sem;
 };
@@ -723,7 +720,7 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
         return ret;
     }
 
-    timeout = timeout >= 0 ? MS2TICK(timeout) : YOS_WAIT_FOREVER;
+    timeout = timeout >= 0 ? timeout : YOS_WAIT_FOREVER;
     ret = yos_sem_wait(&parg->sem, timeout);
     if (ret != VFS_SUCCESS) {
         return 0;
