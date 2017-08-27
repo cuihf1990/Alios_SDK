@@ -97,6 +97,8 @@ static void task_queue2_entry(void *arg)
 {
     kstat_t ret;
 
+    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND / 10);
+
     while (1) {
         /* check yunos_queue_back_send */
         ret = yunos_queue_all_send(&g_test_queue0, queue_send_msg, QMSG_SEND_TO_END);

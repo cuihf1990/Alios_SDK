@@ -38,17 +38,6 @@ static kmutex_t mutex;
 
 void task_misc_entry2(void *arg)
 {
-    yunos_sem_dyn_create(&sem2, "sem_misc22", 0);
-    yunos_sem_take(sem2, YUNOS_WAIT_FOREVER);
-
-    yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
-    yunos_mutex_unlock(&mutex);
-
-    yunos_sem_dyn_create(&sem, "sem_misc2", 0);
-    yunos_sem_take(sem, YUNOS_CONFIG_TICKS_PER_SECOND);
-    yunos_sem_take(sem, YUNOS_WAIT_FOREVER);
-    yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
-
     yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND / 10);
 
     yunos_task_del(NULL);
@@ -70,19 +59,6 @@ void task_misc_entry3(void *arg)
 
 void task_misc_entry4(void *arg)
 {
-    kstat_t ret;
-
-    yunos_task_suspend(task_misc);
-    ret = yunos_task_wait_abort(task_misc);
-
-    if (ret == YUNOS_SUCCESS) {
-        test_case_success++;
-        PRINT_RESULT("yunos_task_wait_abort suspend", PASS);
-    } else {
-        PRINT_RESULT("yunos_task_wait_abort suspend", FAIL);
-        test_case_fail++;
-    }
-
     yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
     yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
     yunos_task_dyn_del(task_misc4);
@@ -216,50 +192,7 @@ void task_misc_entry(void *arg)
                       50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_task_suspend(&task_misc2);
-    yunos_sem_dyn_del(sem2);
-    yunos_task_resume(&task_misc2);
-
-    ret = yunos_task_pri_change(&task_misc2, 2, &old_pri);
-
-    if (ret == YUNOS_SUCCESS) {
-        test_case_success++;
-        PRINT_RESULT("yunos_task_pri_change pend", PASS);
-    } else {
-        PRINT_RESULT("yunos_task_pri_change pend", FAIL);
-        test_case_fail++;
-    }
-
     yunos_mutex_unlock(&mutex);
-
-    yunos_task_suspend(&task_misc2);
-    yunos_task_suspend(&task_misc2);
-    yunos_task_resume(&task_misc2);
-    yunos_task_resume(&task_misc2);
-    yunos_task_resume(NULL);
-
-    yunos_task_suspend(&task_misc2);
-    yunos_sem_give(sem);
-    yunos_task_resume(&task_misc2);
-
-    yunos_task_suspend(&task_misc2);
-    yunos_task_suspend(&task_misc2);
-    yunos_task_resume(&task_misc2);
-    yunos_task_resume(&task_misc2);
-
-    yunos_task_dyn_del(&task_misc2);
-
-    yunos_sem_give(sem);
-    yunos_task_suspend(&task_misc2);
-    yunos_task_suspend(&task_misc2);
-    yunos_task_resume(&task_misc2);
-    yunos_task_resume(&task_misc2);
-
-    yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
-
-    yunos_mm_free(task_misc2_stack);
-
-    PRINT_RESULT("yunos_task_del", PASS);
 
     ret = yunos_task_time_slice_set(NULL, 30);
 
@@ -555,27 +488,6 @@ void task_misc_entry(void *arg)
                           0, TASK_TEST_STACK_SIZE,
                           task_misc_entry4, 1);
 
-    ret = yunos_task_wait_abort(task_misc4);
-
-    if (ret == YUNOS_SUCCESS) {
-        test_case_success++;
-        PRINT_RESULT("yunos_task_wait_abort sleep", PASS);
-    } else {
-        PRINT_RESULT("yunos_task_wait_abort sleep", FAIL);
-        test_case_fail++;
-    }
-
-    yunos_task_suspend(task_misc4);
-    ret = yunos_task_wait_abort(task_misc4);
-
-    if (ret == YUNOS_SUCCESS) {
-        test_case_success++;
-        PRINT_RESULT("yunos_task_wait_abort suspend sleep", PASS);
-    } else {
-        PRINT_RESULT("yunos_task_wait_abort suspend sleep", FAIL);
-        test_case_fail++;
-    }
-
     next_test_case_notify();
     yunos_task_dyn_del(yunos_cur_task_get());
 }
@@ -584,11 +496,6 @@ void task_misc_test(void)
 {
     yunos_task_dyn_create(NULL, "task_misc_test", 0, 10,
                           0, TASK_TEST_STACK_SIZE,
-                          task_misc_entry, 1);
-
-
-    yunos_task_dyn_create(&task_misc, "task_misc_test", 0, 10,
-                          0, TASK_TEST_STACK_SIZE * 10000,
                           task_misc_entry, 1);
 
     yunos_task_dyn_create(&task_misc, "task_misc_test", 0, 10,
