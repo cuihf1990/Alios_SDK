@@ -257,7 +257,7 @@ static ssize_t fatfs_read(file_t *fp, char *buf, size_t len)
     FIL *f = (FIL *)(fp->f_arg);
 
     if (f) {
-        if (f_read(f, buf, len, &nbytes) == FR_OK)
+        if (f_read(f, (void *)buf, (UINT)len, (UINT *)&nbytes) == FR_OK)
             return nbytes;
     }
 
@@ -270,7 +270,7 @@ static ssize_t fatfs_write(file_t *fp, const char *buf, size_t len)
     FIL *f = (FIL *)(fp->f_arg);
 
     if (f) {
-        if (f_write(f, buf, len, &nbytes) == FR_OK)
+        if (f_write(f, (void *)buf, (UINT)len, (UINT *)&nbytes) == FR_OK)
             return nbytes;
     }
 

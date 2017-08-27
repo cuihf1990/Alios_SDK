@@ -208,7 +208,6 @@ static uint16_t kv_item_calc_pos(uint16_t len)
 {
     block_info_t *blk_info;
     uint8_t blk_index = (g_kv_mgr.write_pos) >> BLK_BITS;
-    uint8_t i;
 
     blk_info = &(g_kv_mgr.block_info[blk_index]);
     if (blk_info->space > len) {
@@ -245,7 +244,6 @@ static uint16_t kv_item_calc_pos(uint16_t len)
 static int kv_item_del(kv_item_t *item)
 {
     int ret = RES_OK;
-    uint8_t state;
     uint8_t i = item->pos >> BLK_BITS;
 
     if (g_kv_mgr.block_info[i].state != BLK_STATE_CLEAN) {
@@ -790,7 +788,6 @@ static struct cli_command ncmd = {
 
 int yos_kv_init(void)
 {
-    int ret;
     uint8_t blk_index;
 
     if (g_kv_mgr.kv_initialize) {
