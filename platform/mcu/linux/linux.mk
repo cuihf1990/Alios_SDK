@@ -46,7 +46,7 @@ GLOBAL_DEFINES      += CONFIG_LOGMACRO_DETAILS
 
 $(NAME)_SOURCES     :=
 # arch linux
-ifneq ($(vcall),linux)
+ifneq ($(vcall),posix)
 $(NAME)_SOURCES     += $(ARCH_LINUX)/cpu_impl.c
 $(NAME)_SOURCES     += $(ARCH_LINUX)/swap.S
 $(NAME)_SOURCES     += soc/soc_impl.c

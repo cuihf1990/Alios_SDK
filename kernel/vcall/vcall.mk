@@ -24,7 +24,7 @@ ifeq ($(HOST_ARCH),ARM968E-S)
 $(NAME)_CFLAGS += -marm
 endif
 
-ifneq ($(vcall),linux)
+ifneq ($(vcall),posix)
 GLOBAL_DEFINES += VCALL_RHINO
 $(NAME)_COMPONENTS += rhino
 
