@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
-#include <k_api.h>
 #include "yos/log.h"
 #include "alink_export.h"
 #include "json_parser.h"
