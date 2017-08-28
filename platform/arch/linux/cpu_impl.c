@@ -268,7 +268,9 @@ void cpu_first_task_start(void)
     timer_t timerid;
     struct itimerspec ts;
     int ret = 0;
+#if (YUNOS_CONFIG_CPU_NUM > 1)
     int i = 0;
+#endif
 
     ktask_t    *tcb     = g_preferred_ready_task[cpu_cur_get()];
     task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;

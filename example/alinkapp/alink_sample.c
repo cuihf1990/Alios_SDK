@@ -30,9 +30,14 @@
 #include <netmgr.h>
 #include <yos/cli.h>
 #include <yos/cloud.h>
+#include <accs.h>
 
 #ifdef CONFIG_WIFIMONITOR
 #include <wifimonitor.h>
+#endif
+
+#ifdef CONFIG_YWSS
+#include <enrollee.h>
 #endif
 
 /* raw data device means device post byte stream to cloud,
@@ -105,11 +110,13 @@ static void cloud_disconnected(int cb_type, const char *json_buffer) { LOG("alin
 int callback_upgrade_device(const char *params)
 {
     LOG("alink device start to upgrade.");
+    return 0;
 }
 
 int callback_cancel_upgrade_device(const char *params)
 {
     LOG("alink device stop to upgrade.");
+    return 0;
 }
 
 #ifndef RAW_DATA_DEVICE
@@ -583,6 +590,7 @@ static void alink_connect_event(input_event_t *event, void *priv_data)
     }
 
     if (event->code == CODE_SYS_ON_ALINK_ONLINE ) {
+
 #ifdef CONFIG_YWSS
         awss_registrar_init();
 #endif
