@@ -5,7 +5,6 @@
 #include <yts.h>
 #include "alink_export.h"
 
-
 static void callback_cloud_disconnected(void)
 {
     printf("alink wsf server disconnected.\n");
