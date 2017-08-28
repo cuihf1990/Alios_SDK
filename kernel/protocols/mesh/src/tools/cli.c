@@ -35,6 +35,7 @@
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 #include "tools/diags.h"
+#include "lwip/sockets.h"
 
 #ifdef CONFIG_YOS_MESH_DEBUG
 static void process_help(int argc, char *argv[]);
