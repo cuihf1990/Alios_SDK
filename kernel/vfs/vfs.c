@@ -674,7 +674,7 @@ int yos_mkdir(const char *path)
 
 #if (YOS_CONFIG_VFS_POLL_SUPPORT>0)
 
-#ifndef WITH_LWIP
+#if !defined(WITH_LWIP) && defined(VCALL_RHINO)
 #define NEED_WAIT_IO
 #endif
 
