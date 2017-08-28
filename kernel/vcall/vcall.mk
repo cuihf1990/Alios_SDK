@@ -24,9 +24,19 @@ ifeq ($(HOST_ARCH),ARM968E-S)
 $(NAME)_CFLAGS += -marm
 endif
 
+ifneq ($(vcall),linux)
+GLOBAL_DEFINES += VCALL_RHINO
+$(NAME)_COMPONENTS += rhino
+
 $(NAME)_SOURCES := \
     mico/mico_rhino.c
 
 $(NAME)_SOURCES += \
     yos/yos_rhino.c
+else
+GLOBAL_DEFINES += VCALL_LINUX
+
+$(NAME)_SOURCES += \
+    yos/yos_linux.c
+endif
 
