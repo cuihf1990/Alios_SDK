@@ -509,6 +509,6 @@ uintptr_t HAL_SSL_Establish(const char *host,
     }
 
     ssl_fd = pTlsData->fd.fd;
-    printf(" ssl_fd %d \n ", ssl_fd);
+    SSL_LOG(" ssl_fd %d \n ", ssl_fd);
     return (uintptr_t)pTlsData;
 }

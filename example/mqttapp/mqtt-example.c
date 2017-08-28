@@ -78,7 +78,6 @@
 
 static int      user_argc;
 static char   **user_argv;
-//static void mqtt_main_async( );
 int cnt = 0;
 
 static int is_demo_started = 0;
@@ -96,7 +95,6 @@ static void wifi_service_event(input_event_t *event, void *priv_data) {
 
     if (is_demo_started == 0) {
         is_demo_started = 1;
-        //mqtt_main_async();
         mqtt_client();
     }
 }
@@ -151,7 +149,6 @@ static void mqtt_test() {
     topic_msg.retain = 0;
     topic_msg.dup = 0;
 
-    //do {
         /* Generate topic message */
         int msg_len = snprintf(msg_pub, sizeof(msg_pub), "{\"attr_name\":\"temperature\", \"attr_value\":\"%d\"}", cnt);
         if (msg_len < 0) {
@@ -166,7 +163,6 @@ static void mqtt_test() {
         if (rc < 0) {
             EXAMPLE_TRACE("error occur when publish");
             rc = -1;
-            //break;
         }
 #ifdef MQTT_ID2_CRYPTO
         EXAMPLE_TRACE("packet-id=%u, publish topic msg='0x%02x%02x%02x%02x'...",
@@ -177,18 +173,12 @@ static void mqtt_test() {
         EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
 #endif
 
-        /* handle the MQTT packet received from TCP or SSL connection */
-        //IOT_MQTT_Yield(pclient, 200);
-
         /* infinite loop if running with 'loop' argument */
         if (user_argc >= 2 && !strcmp("loop", user_argv[1])) {
             HAL_SleepMs(2000);
-            //cnt = 0;
         } else {
             cnt++;
         }
-
-    //} while (cnt < 1);
 
     if(cnt < 2) {
         yos_post_delayed_action(200, mqtt_test, NULL);
@@ -292,11 +282,8 @@ void event_handle(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 int mqtt_client(void)
 {
     int rc = 0;
-    //void *pclient;
     iotx_conn_info_pt pconn_info;
     iotx_mqtt_param_t mqtt_params;
-    
-    //char *msg_buf = NULL, *msg_readbuf = NULL;
 
     if (NULL == (msg_buf = (char *)HAL_Malloc(MSG_LEN_MAX))) {
         EXAMPLE_TRACE("not enough memory");
@@ -362,45 +349,12 @@ void release_buff() {
         HAL_Free(msg_readbuf);
     }
 }
-/*
-int main(int argc, char **argv)
-{
-    IOT_OpenLog("mqtt");
-    IOT_SetLogLevel(IOT_LOG_DEBUG);
 
-    user_argc = argc;
-    user_argv = argv;
-
-    mqtt_client();
-
-    IOT_DumpMemoryStats(IOT_LOG_DEBUG);
-    IOT_CloseLog();
-
-    EXAMPLE_TRACE("out of sample!");
-    return 0;
-}
-*/
-/*
-static void mqtt_main( void *data )
-{
-    mqtt_client();
-    yos_task_exit(0);
-}*/
-/*
-static void mqtt_main_async( )
-{
-        int ret = yos_task_new("mqtttask", mqtt_main, 0, 1024*10);
-        if (ret != YUNOS_SUCCESS) {
-           printf("Error: Failed to create cli thread: %d\r\n", ret);
-       }
-}
-*/
 static void handle_mqtt(char *pwbuf, int blen, int argc, char **argv)
 {
     if (is_demo_started == 0) {
         is_demo_started = 1;
         mqtt_client();
-        //mqtt_main_async();
     }
 }
 
@@ -415,7 +369,6 @@ int application_start(int argc, char *argv[])
 {
     yos_set_log_level(YOS_LL_DEBUG);
 
-    printf("zmxin application_start\n");
     yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
     yos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);
 
@@ -424,15 +377,8 @@ int application_start(int argc, char *argv[])
 
     cli_register_command(&mqttcmd);
 #ifdef CSP_LINUXHOST
-    //int ret = yos_task_new("mqtttask", mqtt_main, 0, 1024*10);
-    //if (ret != YUNOS_SUCCESS) {
-        //printf("Error: Failed to create cli thread: %d\r\n", ret);
-    //}
     mqtt_client();
 #endif
-    LOG("yos_loop_run end.");
     yos_loop_run();
-    LOG("alink end.");
-    yos_msleep(10000000);
     return 0;
 }
