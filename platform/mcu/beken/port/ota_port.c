@@ -111,7 +111,7 @@ static int moc108_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, uin
 
 static int moc108_ota_set_boot(hal_ota_module_t *m, void *something)
 {
-    uint8_t parti = (uint8_t)something;
+    uint8_t parti = *(uint8_t *)something;
     CRC16_Final( &contex, &ota_info.ota_crc );
     printf("set boot---------------\n");
     hal_ota_switch_to_new_fw(parti, ota_info.ota_len, ota_info.ota_crc);
