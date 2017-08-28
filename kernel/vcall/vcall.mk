@@ -34,9 +34,9 @@ $(NAME)_SOURCES := \
 $(NAME)_SOURCES += \
     yos/yos_rhino.c
 else
-GLOBAL_DEFINES += VCALL_LINUX
+GLOBAL_DEFINES += VCALL_POSIX
 
 $(NAME)_SOURCES += \
-    yos/yos_linux.c
+    yos/yos_posix.c
 endif
 
