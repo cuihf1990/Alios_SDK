@@ -14,7 +14,7 @@ if at.device_subscribe(devices) == False:
 at.device_run_cmd('A', ['netmgr', 'clear'])
 at.device_run_cmd('A', ['reboot'])
 time.sleep(5)
-at.device_run_cmd('A', ['netmgr', 'connect', 'wuchen_test', 'aliyunos'])
+at.device_run_cmd('A', ['netmgr', 'connect', 'aos_test_01', 'Alios@Embedded'])
 time.sleep(10)
 filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
 print at.device_run_cmd('A', ['umesh', 'state'], 1, 0.5, filter)

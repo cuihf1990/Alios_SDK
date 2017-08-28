@@ -16,6 +16,8 @@ if at.device_subscribe(devices) == False:
 
 #reboot and get device mac address
 for device in device_list:
+    at.device_control(device, 'reset')
+    time.sleep(2.5)
     at.device_run_cmd(device, ['netmgr', 'clear'])
     at.device_run_cmd(device, ['kv', 'delete', 'alink'])
     mac =  at.device_run_cmd(device, ['reboot'], 1, 1.5, ['mac'])
@@ -56,7 +58,7 @@ for i in range(len(device_list)):
 for i in range(len(device_list)):
     device = device_list[i]
     if i == 0:
-        at.device_run_cmd(device, ['netmgr', 'connect', 'wuchen_test', 'aliyunos'])
+        at.device_run_cmd(device, ['netmgr', 'connect', 'aos_test_01', 'Alios@Embedded'])
         time.sleep(12)
         uuid = at.device_run_cmd(device, ['uuid'], 1, 1)
         if uuid == []:
@@ -100,7 +102,8 @@ for i in range(len(device_list)):
         ipaddr[1] = ipaddr[1].replace('\t', '')
         ipaddr[2] = ipaddr[2].replace('\t', '')
         device_attr[device]['ipaddr'] = ipaddr[0:3]
-print "\n{0}\n".format(device_attr)
+for device in device_list:
+    print "{0}:{1}".format(device, device_attr[device])
 
 retry = 3
 #ping

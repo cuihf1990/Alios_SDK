@@ -294,7 +294,7 @@ class Terminal:
         self.cmd_window.move(1,0)
         self.cmd_window.addstr(' ' * (LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH))
         self.cmd_window.move(1,0)
-        self.cmd_window.addstr(log)
+        self.cmd_window.addstr(log[:(LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH)])
         self.cmd_window.refresh()
         self.curseslock.release()
 
