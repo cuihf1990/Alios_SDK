@@ -207,7 +207,7 @@ void yos_sem_signal(yos_sem_t *sem);
  * @param[in]   sem    pointer to the semaphore
  * @return  the check status, YUNOS_TRUE is OK, YUNOS_FALSE indicates invalid
  */
-int yos_sem_is_vaid(yos_sem_t *sem);
+int yos_sem_is_valid(yos_sem_t *sem);
 
 /**
  * release all semaphore

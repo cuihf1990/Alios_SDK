@@ -29,6 +29,7 @@ typedef struct listen_sockets_s {
     raw_data_handler_t handler;
 } listen_sockets_t;
 
+#ifdef WITH_LWIP
 static void ur_sock_read_cb(int fd, void *arg)
 {
     listen_sockets_t *lsock = arg;
@@ -46,6 +47,7 @@ static void ur_sock_read_cb(int fd, void *arg)
     }
     ur_mem_free(buffer, UR_IP6_MTU + UR_IP6_HLEN);
 }
+#endif
 
 #if LWIP_IPV6
 int echo_socket(raw_data_handler_t handler)
