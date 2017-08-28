@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "yos/list.h"
 #include "wsf_client.h"
 #include "wsf_log.h"

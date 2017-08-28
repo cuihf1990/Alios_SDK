@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __DEVMGR_UT__H__
 #define __DEVMGR_UT__H__
 #include <stdint.h>

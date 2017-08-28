@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef TEST_FRAMEWORK_H
 #define TEST_FRAMEWORK_H
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "alink_export_internal.h"
 #include "service_manager.h"
 #include "alink_protocol.h"

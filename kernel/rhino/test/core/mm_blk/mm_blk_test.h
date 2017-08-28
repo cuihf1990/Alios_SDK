@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef MM_BLK_TEST_H
 #define MM_BLK_TEST_H
 

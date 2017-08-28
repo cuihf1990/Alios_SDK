@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef OTA_PLATFORM_OS_H_
 #define OTA_PLATFORM_OS_H_
 #include<stdint.h>

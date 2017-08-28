@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef YOS_FRAMEWORK_API_H
 #define YOS_FRAMEWORK_API_H
 

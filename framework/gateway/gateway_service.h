@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef GATEWAY_SERVICE_H
 #define GATEWAY_SERVICE_H
 

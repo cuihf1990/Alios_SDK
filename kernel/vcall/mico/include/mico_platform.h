@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #pragma once
 
 #ifndef __MICOPLATFORM_H__

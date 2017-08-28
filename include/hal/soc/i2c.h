@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /**
  * @file hal/soc/i2c.h
  * @brief I2C HAL

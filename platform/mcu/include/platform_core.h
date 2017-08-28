@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __PLATFORM_CORE_h__
 #define __PLATFORM_CORE_h__
 

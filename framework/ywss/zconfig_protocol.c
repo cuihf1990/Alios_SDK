@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdlib.h>
 #include <string.h>             // strcpy, memset()
 #include <ctype.h>              // isascii()

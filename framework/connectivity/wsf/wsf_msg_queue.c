@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "wsf_config.h"
 #include "wsf_log.h"
 #include "wsf_msg_queue.h"

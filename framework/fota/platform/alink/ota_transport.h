@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef OTA_TRANSPORT_H_
 #define OTA_TRANSPORT_H_
 #include <stdint.h>

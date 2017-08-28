@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef TASKSEM_TEST_H
 #define TASKSEM_TEST_H
 

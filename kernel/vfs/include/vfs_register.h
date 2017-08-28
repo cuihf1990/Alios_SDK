@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef VFS_DRIVER_H
 #define VFS_DRIVER_H
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "aws_lib.h"
 #include <stdlib.h>
 #include "digest_algorithm.h"

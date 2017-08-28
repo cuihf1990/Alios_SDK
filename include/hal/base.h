@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /**
  * @file hal/base.h
  * @brief basic data structures for HAL

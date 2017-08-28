@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <k_api.h>
 
 static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <k_api.h>
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)

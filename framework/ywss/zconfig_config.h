@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _ZCONFIG_CONFIG_H_
 #define _ZCONFIG_CONFIG_H_
 

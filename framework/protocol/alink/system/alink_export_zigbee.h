@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _ALINK_EXPORT_ZIGBEE_H_
 #define _ALINK_EXPORT_ZIGBEE_H_
 

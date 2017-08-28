@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "wifimgr.h"
 #include "alink_export.h"
 #include "os/platform/platform.h"

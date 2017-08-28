@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>

@@ -1,4 +1,8 @@
 /*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
+/*
  * alink get mac address from this interface
  * mac address may used as unique device id
  */

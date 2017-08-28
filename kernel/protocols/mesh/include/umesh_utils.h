@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __UMESH_UTILS_H__
 #define __UMESH_UTILS_H__
 

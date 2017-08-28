@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <k_api.h>
 
 void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_t entry)

@@ -1,4 +1,8 @@
 /*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
+/*
  * (c) 2010-2016 Thomas d'Otreppe <tdotreppe@aircrack-ng.org>
  *
  * This program is free software; you can redistribute it and/or

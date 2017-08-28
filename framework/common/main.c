@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <vfs.h>

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef EVENT_DEVICE_H
 #define EVENT_DEVICE_H
 

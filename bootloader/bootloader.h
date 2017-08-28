@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __BOOTLOADER_H__
 #define __BOOTLOADER_H__
 

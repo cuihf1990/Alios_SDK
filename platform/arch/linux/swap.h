@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifdef	__ASSEMBLER__
 
 /* Local label name for asm code. */

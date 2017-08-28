@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /** @file
  *  Defines generic data and enumerated types used by Platform Peripheral API
  *  Declares function prototypes for Platform peripheral API

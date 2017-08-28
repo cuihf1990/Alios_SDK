@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef K_OBJ_SET_H
 #define K_OBJ_SET_H
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef YOS_LOG_IMPL_H
 #define YOS_LOG_IMPL_H
 

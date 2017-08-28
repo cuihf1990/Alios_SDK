@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 // Auto-generated build information. see scripts/echo_git_version.sh
 #ifndef ALINK_AGENT_GIT_VERSION
 #define ALINK_AGENT_GIT_VERSION "smarthome-bd18d6d"

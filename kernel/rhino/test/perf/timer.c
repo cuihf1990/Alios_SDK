@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <k_api.h>
 
 #define putreg32(v, x) (*(volatile uint32_t*)(x) = (v))

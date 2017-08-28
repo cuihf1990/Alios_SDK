@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef UR_IEEE_154_HAL_H
 #define UR_IEEE_154_HAL_H
 

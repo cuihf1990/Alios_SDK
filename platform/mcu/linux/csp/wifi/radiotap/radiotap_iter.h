@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __RADIOTAP_ITER_H
 #define __RADIOTAP_ITER_H
 

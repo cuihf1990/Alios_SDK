@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __PRODUCT_ASR_H__
 #define __PRODUCT_ASR_H__
 

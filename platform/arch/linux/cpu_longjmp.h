@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef CPU_LONGJMP_H
 #define CPU_LONGJMP_H
 

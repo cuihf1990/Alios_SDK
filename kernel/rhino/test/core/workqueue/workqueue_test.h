@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef WORKQUEUE_TEST_H
 #define WORKQUEUE_TEST_H
 

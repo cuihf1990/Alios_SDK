@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef VFS_ERRNO_H
 #define VFS_ERRNO_H
 

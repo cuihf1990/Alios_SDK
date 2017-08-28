@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "hal/soc/soc.h"
 #include "yos/kernel.h"
 #include "board.h"

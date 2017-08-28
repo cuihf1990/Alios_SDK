@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef YOS_EVENT_TYPE_CODE_API_H
 #define YOS_EVENT_TYPE_CODE_API_H
 

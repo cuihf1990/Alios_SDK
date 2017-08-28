@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /* Author: Magnus Ivarsson <magnus.ivarsson@volvo.com> */
 
 /* to get rid of implicit function declarations */

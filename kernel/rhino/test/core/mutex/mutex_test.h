@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef MUTEX_TEST_H
 #define MUTEX_TEST_H
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __MSDP_COMMON_H__
 #define __MSDP_COMMON_H__
 

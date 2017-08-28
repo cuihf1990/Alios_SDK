@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /**
  * @file hal/soc/wdg.h
  * @brief WDG HAL

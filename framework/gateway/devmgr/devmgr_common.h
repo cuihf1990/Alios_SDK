@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __DEVMGR_COMMON_UT__
 #define __DEVMGR_COMMON_UT__
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /**
  * @file yoc/log.h
  * @brief YoC LOG APIs

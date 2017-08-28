@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef K_BUF_QUEUE_H
 #define K_BUF_QUEUE_H
 

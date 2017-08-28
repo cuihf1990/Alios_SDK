@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <string.h>
 #include "zconfig_lib.h"
 #include "zconfig_utils.h"

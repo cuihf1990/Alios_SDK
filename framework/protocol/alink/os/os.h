@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __ALINK_OS_H__
 #define __ALINK_OS_H__
 

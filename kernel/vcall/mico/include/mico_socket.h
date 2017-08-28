@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __MICOSOCKET_H__
 #define __MICOSOCKET_H__
 

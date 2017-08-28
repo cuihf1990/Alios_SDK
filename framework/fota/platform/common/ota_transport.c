@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "ota_transport.h"
 
 int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas)

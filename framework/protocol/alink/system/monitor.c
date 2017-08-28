@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "work_queue.h"
 
 extern int os_malloc_get_peak_usage(void);

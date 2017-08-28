@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 // Function to be used by cygwin
 void airpcap_close(void);
 int airpcap_get_mac(void *mac);

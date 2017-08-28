@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef UR_LOWPAN6_H
 #define UR_LOWPAN6_H
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef WSF_CLIENT_H
 #define WSF_CLIENT_H
 #include "wsf_list.h"

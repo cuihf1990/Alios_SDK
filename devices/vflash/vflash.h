@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef DEVICE_VFLASH_H
 #define DEVICE_VFLASH_H
 

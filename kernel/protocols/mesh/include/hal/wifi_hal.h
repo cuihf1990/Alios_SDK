@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef UR_WIFI_HAL_H
 #define UR_WIFI_HAL_H
 

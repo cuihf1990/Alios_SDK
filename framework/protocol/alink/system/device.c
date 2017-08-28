@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "yos/log.h"
 #include "device.h"
 #include "git_version.h"

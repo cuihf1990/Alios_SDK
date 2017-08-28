@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __YMODEM_H_
 #define __YMODEM_H_

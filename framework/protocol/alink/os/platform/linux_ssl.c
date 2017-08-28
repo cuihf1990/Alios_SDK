@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
 #include <openssl/pem.h>

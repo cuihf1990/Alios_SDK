@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _WSF_LOG_H_
 #define _WSF_LOG_H_
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef UR_NETWORK_MGMT_H
 #define UR_NETWORK_MGMT_H
 
