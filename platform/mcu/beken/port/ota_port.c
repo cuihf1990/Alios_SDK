@@ -97,11 +97,9 @@ static int moc108_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uin
         CRC16_Init( &contex );
         memset(&ota_info, 0 , sizeof ota_info);
     }
-    printf("set write len---------------%d\n", in_buf_len);
     CRC16_Update( &contex, in_buf, in_buf_len);
     int ret = hal_flash_write(HAL_PARTITION_OTA_TEMP, &_off_set, in_buf, in_buf_len);
     ota_info.ota_len += in_buf_len;
-    printf(" ret :%d, size :%d\n", ret, ota_info.ota_len);
     return ret;
 }
 
