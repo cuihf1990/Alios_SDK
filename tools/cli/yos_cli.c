@@ -236,6 +236,7 @@ static int handle_input(char *inbuf)
 
     if (!cli->echo_disabled) {
         printf("\r\n");
+        fflush(stdout);
     }
 
     /*
@@ -352,6 +353,7 @@ static int get_input(char *inbuf, unsigned int *bp)
                 (*bp)--;
                 if (!cli->echo_disabled) {
                     printf("%c %c", 0x08, 0x08);
+                    fflush(stdout);
                 }
             }
             continue;
@@ -365,6 +367,7 @@ static int get_input(char *inbuf, unsigned int *bp)
 
         if (!cli->echo_disabled) {
             printf("%c", inbuf[*bp]);
+            fflush(stdout);
         }
 
         (*bp)++;
