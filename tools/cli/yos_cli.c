@@ -17,9 +17,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <k_err.h>
+#include <string.h>
+#include <stdlib.h>
 #include <yos/kernel.h>
-#include <k_api.h>
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
 #include <yos/cli.h>
@@ -536,7 +536,9 @@ static void devname_cmd(char *buf, int len, int argc, char **argv)
 
 static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
 {
+#ifdef VCALL_RHINO
     dumpsys_func(buf, len, argc, argv);
+#endif
 }
 
 static void reboot_cmd(char *buf, int len, int argc, char **argv)
@@ -659,7 +661,7 @@ int yos_cli_init(void)
 
     cli = (struct cli_st *)yos_malloc(sizeof(struct cli_st));
     if (cli == NULL) {
-        return YUNOS_NO_MEM;
+        return -1;
     }
 
     memset((void *)cli, 0, sizeof(struct cli_st));
@@ -671,7 +673,7 @@ int yos_cli_init(void)
     }
 
     ret = yos_task_new_ext(&task, "cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != 0) {
         cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);
         goto init_general_err;
@@ -682,7 +684,7 @@ int yos_cli_init(void)
 
     board_cli_init();
 
-    return YUNOS_SUCCESS;
+    return 0;
 
 init_general_err:
     if (cli) {
@@ -690,7 +692,7 @@ init_general_err:
         cli = NULL;
     }
 
-    return YUNOS_SYS_FATAL_ERR;
+    return -1;
 }
 
 int cli_printf(const char *msg, ...)

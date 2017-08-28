@@ -18,6 +18,8 @@
 #include <string.h>
 #include <yos/log.h>
 #include <yos/kernel.h>
+
+#ifdef VCALL_RHINO
 #include "k_api.h"
 
 #define MM_LEAK_CHECK_ROUND_SCOND 10*60*5*1000
@@ -385,4 +387,5 @@ int dump_task_stack_byname(char *taskname)
 
     return 0;
 }
+#endif
 
