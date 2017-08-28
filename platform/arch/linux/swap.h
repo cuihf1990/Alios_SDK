@@ -1,6 +1,5 @@
 #ifdef	__ASSEMBLER__
 
-
 /* Local label name for asm code. */
 #ifndef L
 #define L(name)		.L##name
