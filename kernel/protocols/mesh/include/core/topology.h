@@ -38,7 +38,6 @@ enum {
 };
 
 typedef struct link_nbr_stats_s {
-    uint32_t last_heard;
     uint16_t link_request;
     uint16_t link_accept;
     uint16_t link_cost;
