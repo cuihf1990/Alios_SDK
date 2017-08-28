@@ -39,9 +39,17 @@ GLOBAL_CFLAGS       += -Wall -Wno-missing-field-initializers -Wno-strict-aliasin
 GLOBAL_DEFINES      += CSP_LINUXHOST
 GLOBAL_DEFINES      += CONFIG_LOGMACRO_DETAILS
 
+$(NAME)_SOURCES     :=
 # arch linux
-$(NAME)_SOURCES := $(ARCH_LINUX)/cpu_impl.c
-$(NAME)_SOURCES += $(ARCH_LINUX)/swap.S
+ifneq ($(vcall),linux)
+$(NAME)_SOURCES     += $(ARCH_LINUX)/cpu_impl.c
+$(NAME)_SOURCES     += $(ARCH_LINUX)/swap.S
+$(NAME)_SOURCES     += soc/soc_impl.c
+$(NAME)_SOURCES     += soc/hook_impl.c
+$(NAME)_SOURCES     += soc/trace_impl.c
+endif
+$(NAME)_SOURCES     += soc/uart.c
+
 # mcu
 $(NAME)_SOURCES     += main/arg_options.c
 $(NAME)_SOURCES     += main/main.c
@@ -49,10 +57,6 @@ $(NAME)_SOURCES     += main/hw.c
 $(NAME)_SOURCES     += main/wifi_port.c
 $(NAME)_SOURCES     += main/ota_port.c
 $(NAME)_SOURCES     += main/diskio.c
-$(NAME)_SOURCES     += soc/soc_impl.c
-$(NAME)_SOURCES     += soc/hook_impl.c
-$(NAME)_SOURCES     += soc/trace_impl.c
-$(NAME)_SOURCES     += soc/uart.c
 
 ifeq ($(linux80211),1)
 $(NAME)_SOURCES     += csp/wifi/common.c

@@ -20,7 +20,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <k_api.h>
 #include <yos/log.h>
 #include <hal/soc/soc.h>
 #include <hal/soc/timer.h>
@@ -137,6 +136,8 @@ void hal_reboot(void)
 
 }
 
+#ifdef VCALL_RHINO
+#include <k_api.h>
 #define us2tick(us) \
     ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
 
@@ -173,6 +174,7 @@ void hal_timer_stop(hal_timer_t *tmr)
     yunos_timer_dyn_del(tmr->priv);
     tmr->priv = NULL;
 }
+#endif
 
 int csp_printf(const char *fmt, ...)
 {

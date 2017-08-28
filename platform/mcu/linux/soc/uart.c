@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <errno.h>
 #include <execinfo.h>
 #include <stdlib.h>
@@ -9,9 +10,10 @@
 #include <cpu_event.h>
 #include <pthread.h>
 #include <signal.h>
-
-#include <k_api.h>
 #include "hal/soc/soc.h"
+
+#ifdef VCALL_RHINO
+#include <k_api.h>
 
 typedef unsigned char
 UINT8;          /* Unsigned  8 bit quantity        */
@@ -189,4 +191,30 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
     return 0;
 
 }
+#else
+int32_t hal_uart_init(uart_dev_t *uart)
+{
+    return 0;
+}
+
+int32_t hal_uart_finalize(uart_dev_t *uart)
+{
+    return 0;
+}
+
+int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
+{
+    write(1, data, size);
+}
+
+int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
+{
+    int n = read(1, data, expect_size);
+    if (*(char *)data == '\n')
+        *(char *)data = '\r';
+    if (recv_size)
+        *recv_size = n;
+    return 0;
+}
+#endif
 

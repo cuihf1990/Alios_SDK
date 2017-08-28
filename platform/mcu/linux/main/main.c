@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <k_api.h>
 #include <yos/log.h>
 #include <yos/kernel.h>
 
@@ -83,7 +82,9 @@ static void app_entry(void *arg)
 
     yos_framework_init();
 
+#ifdef VCALL_RHINO
     trace_start();    
+#endif
 
     application_start(options.argc, options.argv);
 }
