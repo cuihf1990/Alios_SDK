@@ -164,9 +164,6 @@ APP         :=$(notdir $(APP_FULL))
 
 PLATFORM_DIRECTORY := $(PLATFORM_FULL)
 
-COMPONENTS += rhino
-COMPONENTS += libc
-
 EXTRA_CFLAGS :=    -DYOS_SDK_VERSION_MAJOR=$(YOS_SDK_VERSION_MAJOR) \
                    -DYOS_SDK_VERSION_MINOR=$(YOS_SDK_VERSION_MINOR) \
                    -DYOS_SDK_VERSION_REVISION=$(YOS_SDK_VERSION_REVISION) \
@@ -190,7 +187,14 @@ $(error No matching toolchain found for architecture $(HOST_ARCH))
 endif
 
 # Process all the components + YOS
-COMPONENTS += kernel
+
+COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall libc vfs
+
+ifeq ($(BINS), 1)
+$(NAME)_COMPONENTS += syscall usyscall
+GLOBAL_CFLAGS += -DYOS_BINS
+endif
+
 $(info processing components: $(COMPONENTS))
 
 CURDIR :=
