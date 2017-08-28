@@ -39,6 +39,7 @@
 static struct cli_st *cli = NULL;
 static int            cliexit = 0;
 extern uart_dev_t     uart_0;
+extern void hal_reboot(void);
 
 int cli_putstr(char *msg);
 
@@ -546,8 +547,6 @@ static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
 
 static void reboot_cmd(char *buf, int len, int argc, char **argv)
 {
-    FUNCPTR reboot = 0;
-
     cli_printf("reboot\r\n");
 
     hal_reboot();

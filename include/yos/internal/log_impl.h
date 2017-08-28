@@ -89,7 +89,11 @@ enum log_level_bit {
 #ifndef os_printf
 #ifndef csp_printf
 int csp_printf(const char *fmt, ...);
+#else
+extern int csp_printf(const char *fmt, ...);
 #endif
+#else 
+extern int csp_printf(const char *fmt, ...);
 #endif
 
 #undef LOGF
