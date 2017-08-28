@@ -58,4 +58,5 @@ void yos_cloud_trigger(int cb_type, const char *json_buffer)
 
 int yos_cloud_init(void)
 {
+    return 0;
 }
