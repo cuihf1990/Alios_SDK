@@ -10,8 +10,3 @@ $(NAME)_COMPONENTS += syscall usyscall
 GLOBAL_CFLAGS += -DYOS_BINS
 endif
 
-ifeq ($(valgrind), 1)
-GLOBAL_CFLAGS += $(shell [ -f /usr/include/valgrind/valgrind.h ] && echo -DHAVE_VALGRIND_VALGRIND_H)
-GLOBAL_CFLAGS += $(shell [ -f /usr/include/valgrind.h ] && echo -DHAVE_VALGRIND_H)
-endif
-
