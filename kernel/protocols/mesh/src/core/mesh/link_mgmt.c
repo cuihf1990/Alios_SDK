@@ -174,8 +174,6 @@ get_nbr:
     nbr->state              = STATE_INVALID;
     nbr->flags              = 0;
     nbr->last_heard         = ur_get_now();
-    nbr->last_lq_time = 0;
-
     return nbr;
 }
 
@@ -592,9 +590,8 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
         rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset +
                                 offset);
         umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_REVERSE_RSSI);
-        if (nbr->last_lq_time == 0 ||
-            (ur_get_now() - nbr->last_lq_time) >= LINK_QUALITY_INTERVAL) {
-            nbr->last_lq_time = ur_get_now();
+        if ((nbr->flags & NBR_LINK_ESTIMATED) == 0) {
+            nbr->flags |= NBR_LINK_ESTIMATED;
             rssi->rssi = 0xff;
             nbr->stats.link_request++;
         } else {
