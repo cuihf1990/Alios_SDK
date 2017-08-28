@@ -25,8 +25,6 @@ enum {
     LINK_ESTIMATE_COEF            = 256,
     LINK_ESTIMATE_UPDATE_ALPHA    = 32,
     LINK_COST_MAX                 = 1024,
-
-    LINK_QUALITY_INTERVAL = 30000,  /* 30ms */
 };
 
 ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,

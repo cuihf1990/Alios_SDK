@@ -38,7 +38,6 @@ enum {
 };
 
 typedef struct link_nbr_stats_s {
-    uint32_t last_heard;
     uint16_t link_request;
     uint16_t link_accept;
     uint16_t link_cost;
@@ -60,6 +59,7 @@ enum {
     NBR_NETID_CHANGED     = 1 << 2,
     NBR_REBOOT            = 1 << 3,
     NBR_CHANNEL_CHANGED   = 1 << 4,
+    NBR_LINK_ESTIMATED    = 1 << 5,
 };
 
 typedef enum node_type_s {
@@ -97,7 +97,6 @@ typedef struct neighbor_s {
     uint8_t channel;
     uint8_t *one_time_key;
     uint32_t last_heard;
-    uint32_t last_lq_time;
 } neighbor_t;
 
 #define ueid64(ueid) ({ \
