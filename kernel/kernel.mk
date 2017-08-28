@@ -3,10 +3,6 @@ NAME = kernel
 $(NAME)_TYPE := kernel
 $(NAME)_COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY)
 
-ifeq ($(HOST_MCU_FAMILY), linux)
-$(NAME)_COMPONENTS += kernel/rhino/test
-endif
-
 $(NAME)_COMPONENTS += vcall
 
 ifeq ($(BINS), 1)
