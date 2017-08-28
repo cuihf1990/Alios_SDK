@@ -1,7 +1,8 @@
 NAME := yts
 
 $(NAME)_SOURCES := main.c
-$(NAME)_COMPONENTS := protocols.net protocols.mesh dda testcase
+$(NAME)_COMPONENTS := protocols.net protocols.mesh dda testcase  rhino.test
+
 $(NAME)_CFLAGS += -Wall -Werror
 
 GLOBAL_CFLAGS  += -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration

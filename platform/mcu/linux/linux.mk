@@ -25,6 +25,11 @@ GLOBAL_CFLAGS += -pg
 GLOBAL_LDFLAGS += -pg
 endif
 
+ifeq ($(valgrind), 1)
+GLOBAL_CFLAGS += $(shell [ -f /usr/include/valgrind/valgrind.h ] && echo -DHAVE_VALGRIND_VALGRIND_H)
+GLOBAL_CFLAGS += $(shell [ -f /usr/include/valgrind.h ] && echo -DHAVE_VALGRIND_H)
+endif 
+
 $(NAME)_INCLUDES    += .
 GLOBAL_INCLUDES     += include include/yos csp/lwip/include
 GLOBAL_LDFLAGS      += -lpthread -lm -lrt
