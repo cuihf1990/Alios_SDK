@@ -20,7 +20,6 @@ typedef struct
 {
     uint32_t dst_adr;
     uint32_t src_adr;
-    uint32_t siz;
     uint16_t crc;
 } __attribute__((packed)) ota_hdl_t;
 
@@ -61,8 +60,7 @@ int hal_ota_switch_to_new_fw(uint8_t parti, int ota_data_len, uint16_t ota_data_
 
     if(memcmp(&ota_hdl, &ota_hdl_rb, sizeof(ota_hdl_t)) != 0)
     {
-        printf("OTA header compare failed, OTA destination = 0x%08x, source address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", 
-        ota_hdl_rb.dst_adr, ota_hdl_rb.src_adr, ota_hdl_rb.siz, ota_hdl_rb.crc);
+        printf("OTA header compare failed, OTA partition = 0x%02x, address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", ota_hdl_rb.parti, ota_hdl_rb.addr, ota_hdl_rb.size, ota_hdl_rb.crc);
         return -1;
     }
 
