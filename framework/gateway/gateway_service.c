@@ -689,8 +689,8 @@ static void gateway_advertise(void *arg)
     if (!ucast_addr) {
         return;
     }
-    ip4_addr[0] = 192;
-    ip4_addr[1] = 168;
+    ip4_addr[0] = 10;
+    ip4_addr[1] = 0;
     ip4_addr[2] = ucast_addr->m8[14];
     ip4_addr[3] = ucast_addr->m8[15];
 

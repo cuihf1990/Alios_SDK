@@ -149,6 +149,13 @@ static void update_interface_ipaddr(void)
 
     g_la_state.adpif.ip6_autoconfig_enabled = 1;
 #endif
+    ip4_addr_t          ipaddr, netmask, gw;
+    uint16_t sid = umesh_mm_get_local_sid();
+
+    IP4_ADDR(&gw, 10, 0, 0, 1);
+    IP4_ADDR(&ipaddr, 10, 0, sid >> 8, sid & 0xff);
+    IP4_ADDR(&netmask, 255, 255, 0, 0);
+    netif_set_addr(&g_la_state.adpif, &ipaddr, &netmask, &gw);
 }
 
 ur_error_t ur_adapter_interface_up(void)
@@ -164,11 +171,7 @@ ur_error_t ur_adapter_interface_up(void)
         g_la_state.adpif.hwaddr_len = mac_addr->len;
         memcpy(g_la_state.adpif.hwaddr, mac_addr->addr, 6);
 
-        uint16_t sid = umesh_mm_get_local_sid();
-        IP4_ADDR(&gw, 192, 168, 0, 1);
-        IP4_ADDR(&ipaddr, 192, 168, sid >> 8, sid & 0xff);
-        IP4_ADDR(&netmask, 255, 255, 0, 0);
-        netif_add(&g_la_state.adpif, &ipaddr, &netmask, &gw, NULL,
+        netif_add(&g_la_state.adpif, NULL, NULL, NULL, NULL,
                   ur_adapter_if_init, tcpip_input);
         interface = &g_la_state.adpif;
     }
