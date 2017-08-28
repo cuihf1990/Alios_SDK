@@ -65,6 +65,7 @@ enum log_level_bit {
 
 #include <yos/kernel.h>
 #ifdef CONFIG_LOGMACRO_DETAILS
+extern int csp_printf(const char *fmt, ...);
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
     do { \
         if (CON) { \

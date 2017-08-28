@@ -19,6 +19,7 @@
 #include <cJSON.h>
 
 #include "alink_export.h"
+#include "alink_protocol.h"
 #include "device.h"
 #include "ota_transport.h"
 #include "ota_log.h"

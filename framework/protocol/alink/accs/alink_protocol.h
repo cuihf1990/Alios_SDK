@@ -142,6 +142,8 @@ int32_t alink_parse_data(void *data, int len, alink_data_t *pack);
 int alink_handshake(void);
 int alink_error_code_handler(uint32_t error_code);
 
+const char *alink_get_sdk_version(char *buff, unsigned int len);
+
 int32_t alink_unregister(void);
 
 int32_t alink_response_get_data(char *in, char *data, int len);
