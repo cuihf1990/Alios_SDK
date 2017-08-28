@@ -34,6 +34,8 @@
 #include "MQTTPacket/MQTTPacket.h"
 #include "mqtt_client.h"
 
+#include <yos/framework.h>
+
 #ifdef MQTT_ID2_CRYPTO
 /* Macros for accessing the most offset byte of a number */
 #define MQTT_MS(A, OFFSET) ((A << (sizeof(A) - (OFFSET))*8) >> (sizeof(A) - 1) * 8)
@@ -2232,6 +2234,30 @@ static int MQTTPubInfoProc(iotx_mc_client_t *pClient)
     return SUCCESS_RETURN;
 }
 
+int is_connected = 0;
+
+static void cb_recv(int fd, void *arg)
+{
+   iotx_mc_client_t *pClient = (iotx_mc_client_t *)arg;
+
+   if(!is_connected) {
+       if(SUCCESS_RETURN != iotx_mc_wait_CONNACK(pClient)) {
+           (void)MQTTDisconnect(pClient);
+           pClient->ipstack->disconnect(pClient->ipstack);
+           log_err("wait connect ACK timeout, or receive a ACK indicating error!");
+           return;
+        }
+        iotx_mc_set_client_state(pClient, IOTX_MC_STATE_CONNECTED);
+        utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000); 
+        yos_post_event(EV_SYS, CODE_SYS_ON_CONNECT, 0u);
+        is_connected = 1;
+        return;
+   }
+
+   IOT_MQTT_Yield(pClient, 100);
+}
+
+extern int get_ssl_fd();
 
 // connect
 static int iotx_mc_connect(iotx_mc_client_t *pClient)
@@ -2267,7 +2293,11 @@ static int iotx_mc_connect(iotx_mc_client_t *pClient)
         log_err("send connect packet failed");
         return rc;
     }
-
+ 
+    yos_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
+   
+    return rc;
+/*
     if (SUCCESS_RETURN != iotx_mc_wait_CONNACK(pClient)) {
         (void)MQTTDisconnect(pClient);
         pClient->ipstack->disconnect(pClient->ipstack);
@@ -2281,6 +2311,7 @@ static int iotx_mc_connect(iotx_mc_client_t *pClient)
 
     log_info("mqtt connect success!");
     return SUCCESS_RETURN;
+*/
 }
 
 
@@ -2364,6 +2395,8 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
     }
 
 
+    yos_cancel_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
+
     (void)MQTTDisconnect(pClient);
 
     /*close tcp/ip socket or free tls resources*/
@@ -2372,6 +2405,9 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
     iotx_mc_set_client_state(pClient, IOTX_MC_STATE_INITIALIZED);
 
     log_info("mqtt disconnect!");
+
+    is_connected = 0;
+
     return SUCCESS_RETURN;
 }
 
@@ -2549,7 +2585,7 @@ int IOT_MQTT_Yield(void *handle, int timeout_ms)
     iotx_time_init(&time);
     utils_time_countdown_ms(&time, timeout_ms);
 
-    do {
+    //do {
         // acquire package in cycle, such as PINGRESP or PUBLISH
         rc = iotx_mc_cycle(pClient, &time);
         if (SUCCESS_RETURN == rc) {
@@ -2563,7 +2599,7 @@ int IOT_MQTT_Yield(void *handle, int timeout_ms)
         // Keep MQTT alive or reconnect if connection abort.
         iotx_mc_keepalive(pClient);
 
-    } while (!utils_time_is_expired(&time) && (SUCCESS_RETURN == rc));
+    //} while (!utils_time_is_expired(&time) && (SUCCESS_RETURN == rc));
 
     return 0;
 }

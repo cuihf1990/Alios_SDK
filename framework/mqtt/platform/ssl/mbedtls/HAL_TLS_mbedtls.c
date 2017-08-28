@@ -473,6 +473,13 @@ int32_t HAL_SSL_Destroy(uintptr_t handle)
     return 0;
 }
 
+int ssl_fd = -1;
+
+int get_ssl_fd()
+{
+   return ssl_fd;
+}
+
 uintptr_t HAL_SSL_Establish(const char *host,
                                       uint16_t port,
                                       const char *ca_crt,
@@ -501,5 +508,7 @@ uintptr_t HAL_SSL_Establish(const char *host,
         return 0;
     }
 
+    ssl_fd = pTlsData->fd.fd;
+    printf(" ssl_fd %d \n ", ssl_fd);
     return (uintptr_t)pTlsData;
 }
