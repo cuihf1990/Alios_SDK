@@ -19,6 +19,7 @@
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
+#include <yos/kernel.h>
 
 static inode_t g_vfs_dev_nodes[YOS_CONFIG_VFS_DEV_NODES];
 
@@ -151,7 +152,7 @@ static int inode_set_name(const char *path, inode_t **inode)
 int inode_reserve(const char *path, inode_t **inode)
 {
     int ret;
-    inode_t *node;
+    inode_t *node = NULL;
 
     VFS_NULL_PARA_CHK(path != NULL && inode != NULL);
     *inode = NULL;
