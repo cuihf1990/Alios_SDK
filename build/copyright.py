@@ -3,19 +3,28 @@
 import os
 import re
 
-rootdirs = ['./bootloader',            \
-            './framework',             \
-            './include',               \
-            './example',               \
-            './devices',               \
-            './kernel/hal',            \
-            './kernel/modules/kv',     \
-            './kernel/protocols/mesh', \
-            './kernel/rhino',          \
-            './kernel/syscall',        \
-            './kernel/vcall/yos',      \
-            './kernel/vfs',            \
-            './kernel/yloop']
+rootdirs = ['./board/linuxhost',         \
+            './board/mk108',             \
+            './board/mk3060',            \
+            './bootloader',              \
+            './devices',                 \
+            './example',                 \
+            './framework',               \
+            './include',                 \
+            './kernel/hal',              \
+            './kernel/modules/fs/kv',    \
+            './kernel/protocols/mesh',   \
+            './kernel/rhino',            \
+            './kernel/syscall',          \
+            './kernel/vcall',            \
+            './kernel/vfs',              \
+            './kernel/yloop',            \
+            './platform/arch/arm/armv5', \
+            './platform/arch/include',   \
+            './platform/arch/linux',     \
+            './platform/mcu/include',    \
+            './platform/mcu/linux',      \
+            './test']
 
 def list_files(dir_path):
     file_list = [];
