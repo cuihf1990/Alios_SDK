@@ -359,6 +359,7 @@ static int accs_event_handler(int type, void *data, int dlen, void *result,
             //TODO: setDeviceStatusArray not support
         } else if (!strcmp(p->method, "upgradeDevice")) {
             LOGW(MODULE_NAME_ACCS, "start to OTA now...%s\n", p->data);
+            yos_cloud_trigger(_ALINK_UPGRADE_DEVICE, p->data);
             cb = alink_cb_func[_ALINK_UPGRADE_DEVICE];
             ret = EVENT_CONSUMED;
             if (cb) {
@@ -367,6 +368,7 @@ static int accs_event_handler(int type, void *data, int dlen, void *result,
             }
         } else if (!strcmp(p->method, "unUpgradeDevice")) {
             LOGW(MODULE_NAME_ACCS, "stop to OTA now...%s\n", p->data);
+            yos_cloud_trigger(_ALINK_CANCEL_UPGRADE_DEVICE, p->data);
             cb = alink_cb_func[_ALINK_CANCEL_UPGRADE_DEVICE];
             ret = EVENT_CONSUMED;
             if (cb) {
