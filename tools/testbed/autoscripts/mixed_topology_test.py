@@ -1,8 +1,8 @@
-import sys, time
+import sys, os, time
 sys.path.append('../')
 from autotest import Autotest
 
-devices = {'A':'mxchip-DN02QRIX', 'B':'mxchip-DN02QRJ9', 'C':'mxchip-DN02QRJM', 'D':'mxchip-DN02QRJP', 'E':'mxchip-DN02QRK3', 'F':'mxchip-DN02X2ZT', 'G':'mxchip-DN02QX2ZZ'}
+devices = {'A':'mxchip-DN02QRIQ', 'B':'mxchip-DN02QRIX', 'C':'mxchip-DN02QRJ6', 'D':'mxchip-DN02QRJ7', 'E':'mxchip-DN02QRJ9', 'F':'mxchip-DN02QRJE', 'G':'mxchip-DN02QRJK'}
 device_list = list(devices)
 device_attr={}
 device_list.sort()
