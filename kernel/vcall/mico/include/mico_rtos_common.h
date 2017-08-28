@@ -1,23 +1,3 @@
-/**
- ******************************************************************************
- * @file    mico_rtos_common.h
- * @author  William Xu
- * @version V1.0.0
- * @date    22-Aug-2016
- * @brief   Definitions of the MiCO Common RTOS abstraction layer function headers
- ******************************************************************************
- *
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- ******************************************************************************
- */
-
-
 #pragma once
 
 #ifdef __cplusplus
