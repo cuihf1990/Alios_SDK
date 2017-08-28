@@ -119,7 +119,30 @@ char *product_get_debug_key(char key_str[PRODUCT_KEY_LEN]);
  */
 char *product_get_debug_secret(char secret_str[PRODUCT_SECRET_LEN]);
 
+/**
+ * @brief Get product key string.
+ *
+ * @param[out] key_str @n Buffer for using to store  key string.
+ * @return A pointer to the start address of key_str.
+ * @see None.
+ * @note None.
+ */
+char *product_get_device_key(char key_str[DEVICE_KEY_LEN]);
+
+/**
+ * @brief Get product secret string.
+ *
+ * @param[out] secret_str @n Buffer for using to store  secret string.
+ * @return A pointer to the start address of secret_str.
+ * @see None.
+ * @note None.
+ */
+char *product_get_device_secret(char secret_str[DEVICE_SECRET_LEN]);
+
 /** @} */// end of group_product
+
+
+
 
 #ifdef __cplusplus
 }
