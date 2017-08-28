@@ -180,7 +180,6 @@ static ur_error_t resolve_message_info(received_frame_t *frame,
 
     info->hal_type = frame->hal->module->type;
     info->src_channel = frame->frame_info.channel;
-    info->key_index = frame->frame_info.key_index;
     info->reverse_rssi = frame->frame_info.rssi;
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));
@@ -1026,8 +1025,10 @@ static void handle_received_frame(void *context, frame_t *frame,
         if (umesh_mm_get_attach_state() == ATTACH_REQUEST) {
             network = get_default_network_context();
             key = network->one_time_key;
+            info.key_index = ONE_TIME_KEY_INDEX;
         } else {
             key = get_symmetric_key(GROUP_KEY1_INDEX);
+            info.key_index = GROUP_KEY1_INDEX;
         }
 
         uerror = umesh_aes_decrypt(key, KEY_SIZE,
