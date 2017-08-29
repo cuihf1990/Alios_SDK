@@ -192,7 +192,6 @@ COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall libc vfs
 
 ifeq ($(BINS), 1)
 $(NAME)_COMPONENTS += syscall usyscall
-GLOBAL_CFLAGS += -DYOS_BINS
 endif
 
 $(info processing components: $(COMPONENTS))

@@ -25,8 +25,9 @@ $(NAME)_CFLAGS += -Wall -Werror
 
 $(NAME)_COMPONENTS += protocols.net protocols.mesh
 
-$(NAME)_SOURCES := \
-                   syscall_tbl.c
+$(NAME)_SOURCES := syscall_tbl.c
 
 GLOBAL_INCLUDES += ./
+
+GLOBAL_DEFINES += YOS_BINS
 

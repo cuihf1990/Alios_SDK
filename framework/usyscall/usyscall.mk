@@ -24,6 +24,5 @@ $(NAME)_CFLAGS += -Wall -Werror
 
 $(NAME)_COMPONENTS := protocols.net
 
-$(NAME)_SOURCES := \
-                   syscall_uapi.c
+$(NAME)_SOURCES := syscall_uapi.c
 
