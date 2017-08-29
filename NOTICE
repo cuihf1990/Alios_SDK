@@ -1,0 +1,4 @@
+platform/arch
+framework/ywss/
+utility/cjson
+utility/digest_algorithm/md5 sha2.c
