@@ -28,6 +28,7 @@ rootdirs = ['./board/linuxhost',         \
             './platform/mcu/linux',      \
             './test',                    \
             './tools/cli',               \
+            './tools/dda',               \
             './tools/testbed',           \
             './tools/trace',             \
             './tools/wifimonitor',       \
