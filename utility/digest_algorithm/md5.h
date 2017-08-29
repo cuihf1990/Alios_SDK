@@ -1,7 +1,3 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
- */
-
 #ifndef _MD5_H_
 #define _MD5_H_
 #include <stdint.h>
