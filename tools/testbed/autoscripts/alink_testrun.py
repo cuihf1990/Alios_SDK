@@ -131,6 +131,7 @@ def main():
     if result[u'data'][u'case_status'] == 1:
         print 'error: test case {0} is already runing'.format(caseid)
         sys.exit(1)
+    conn.close()
 
     at=Autotest()
     at.start('10.125.52.132', 34568, logname)
@@ -173,6 +174,7 @@ def main():
         sys.exit(1)
 
     #start run test case
+    conn = httplib.HTTPConnection(server, port)
     result = alink_test(conn, 'start', caseid, userid)
     if DEBUG:
         print 'start:', result
@@ -182,11 +184,13 @@ def main():
     if result[u'message'] != u'success':
         print 'error: start test case {0} failed, return:{1}'.format(testid, result[u'message'])
         sys.exit(1)
+    conn.close()
     time.sleep(5)
 
 
     #poll test case status
     while True:
+        conn = httplib.HTTPConnection(server, port)
         result = alink_test(conn, 'status', caseid, userid)
         if DEBUG:
             print 'status:', result
@@ -195,13 +199,17 @@ def main():
             sys.exit(1)
         if result[u'message'] != u'success' or result[u'data'][u'case_status'] != 1:
             break;
-        time.sleep(60)
+        conn.close()
+        time.sleep(120)
 
-    conn.close()
 
     #print result
-    if result[u'data'][u'case_status'] != 2:
+    try:
         print result[u'data'][u'case_fail_desc']
+    except:
+        pass
+
+    if result[u'data'][u'case_status'] != 2:
         print 'test case {0} finished unsuccessfully'.format(caseid)
         sys.exit(1)
     else:
