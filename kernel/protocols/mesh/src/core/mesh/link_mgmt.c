@@ -557,7 +557,7 @@ static ur_error_t send_link_accept(network_context_t *network,
 }
 
 uint8_t insert_mesh_header_ies(network_context_t *network,
-                               message_info_t *info)
+                               message_info_t *info, int16_t hdr_ies_limit)
 {
     hal_context_t *hal;
     mesh_header_control_t *control;
@@ -566,11 +566,18 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
     mm_rssi_tv_t *rssi;
     neighbor_t *nbr;
 
+    if (hdr_ies_limit < (sizeof(mm_mode_tv_t) + sizeof(mm_tv_t))) {
+        return 0;
+    }
+
     hal = network->hal;
     control = (mesh_header_control_t *)hal->frame.data;
     control->control[1] |= (1 << MESH_HEADER_IES_OFFSET);
 
     offset += set_mm_mode_tv(hal->frame.data + info->header_ies_offset);
+    if (hdr_ies_limit < (offset + sizeof(mm_rssi_tv_t) + sizeof(mm_tv_t))) {
+        goto exit;
+    }
 
     nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
                               info->dest.netid);
@@ -588,6 +595,7 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
         offset += sizeof(mm_rssi_tv_t);
     }
 
+exit:
     tv = (mm_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
     tv->type = TYPE_HEADER_IES_TERMINATOR;
     offset += sizeof(mm_tv_t);
