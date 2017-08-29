@@ -13,6 +13,7 @@
 #include "ota_transport.h"
 #include "ota_util.h"
 #include "ota_platform_os.h"
+#include "ota_version.h"
 
 #define OTA_URL_MAX_LEN 512
 

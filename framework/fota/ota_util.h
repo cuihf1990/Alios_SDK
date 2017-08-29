@@ -10,6 +10,9 @@ extern "C" {
 #endif
 #include <stdint.h>
 
+#undef MAX_VERSION_LEN
+#define MAX_VERSION_LEN 64
+
 typedef enum {
     OTA_FAILED_REBOOT = -7,
     OTA_REBOOT_FAILED = -6,
@@ -55,8 +58,6 @@ typedef enum {
     OTA_APP
 } OTA_ENUM_UPDATE_TYPE;
 
-#define MAX_VERSION_LEN 64
-
 typedef struct {
     OTA_STATUS_T status;
     OTA_ENUM_UPDATE_WAY  update_way;
@@ -81,15 +82,9 @@ int8_t ota_status_post(int percent);
 
 int8_t ota_result_post(void);
 
-const char *ota_get_dev_version(void);
-
 const char *ota_get_version();
 
 void ota_set_version(const char *ota_version);
-
-void ota_set_dev_version(const char *dev_version);
-
-const char *ota_get_system_version(void);
 
 #ifdef __cplusplus
 }

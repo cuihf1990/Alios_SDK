@@ -162,7 +162,7 @@ int8_t platform_ota_status_post(int status, int percent)
         OTA_LOG_E("percent error !(status = %d, percent = %d)\n", status, percent);
         percent = 0;
     }
-    const char *ota_version = (const char *)platform_ota_get_version();
+    const char *ota_version = (const char *)ota_get_ota_version();
     snprintf(buff, sizeof(buff), POST_OTA_STATUS_DATA, ota_version, status, percent);
     ret = yos_cloud_report(POST_OTA_STATUS_METHOD, buff, NULL, NULL);
     OTA_LOG_I("alink_ota_status_post: %s, ret=%d", buff, ret);
@@ -181,37 +181,12 @@ int8_t platform_ota_result_post(void)
     memset(alink_version, 0, 64);
     alink_get_sdk_version(alink_version, 64);
 
-    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)ota_get_id(), (const char *)platform_get_main_version(),
+    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)ota_get_id(), (const char *)ota_get_system_version(),
              alink_version);
     yos_free(alink_version);
     ret = yos_cloud_report(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
     OTA_LOG_D("alink_ota_status_post: %s, ret=%d\n", buff, ret);
     return ret;
-}
-
-void platform_ota_set_version(char *version)
-{
-    config_set_ota_version(version);
-}
-
-const char *platform_ota_get_version()
-{
-    return config_get_ota_version();
-}
-
-const char *platform_get_main_version()
-{
-    return devinfo_get_version();
-}
-
-const char *platform_get_dev_version()
-{
-    return config_get_dev_version();
-}
-
-void platform_set_dev_version(const char *dev_version)
-{
-    config_set_dev_version((char *)dev_version);
 }
 
 int8_t ota_pub_request(ota_request_params * request_parmas)
