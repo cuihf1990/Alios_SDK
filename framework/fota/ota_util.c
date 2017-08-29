@@ -12,8 +12,10 @@
 #include "ota_log.h"
 
 static ota_info_t g_ota_info_storage = {
-    .update_way = OTA_SILENT,
+    .update_way =  OTA_SILENT,
+    .update_type = OTA_ALL
 };
+
 static ota_info_t *g_ota_info = &g_ota_info_storage;
 
 void ota_status_init()
@@ -28,6 +30,22 @@ void ota_status_deinit()
         ota_mutex_destroy(g_ota_info->mutex);
         g_ota_info->mutex = NULL;
     }
+}
+
+OTA_ENUM_UPDATE_TYPE ota_get_update_type(void)
+{
+    OTA_ENUM_UPDATE_TYPE  type;
+    ota_mutex_lock(g_ota_info_storage.mutex);
+    type = g_ota_info->update_type;
+    ota_mutex_unlock(g_ota_info_storage.mutex);
+    return type;
+}
+
+void ota_set_update_type(OTA_ENUM_UPDATE_TYPE type)
+{
+    ota_mutex_lock(g_ota_info_storage.mutex);
+    g_ota_info->update_type = type;
+    ota_mutex_unlock(g_ota_info_storage.mutex);
 }
 
 OTA_STATUS_T ota_get_status(void)
@@ -46,8 +64,6 @@ void ota_set_status(OTA_STATUS_T status)
     ota_mutex_unlock(g_ota_info_storage.mutex);
 }
 
-//extern int8_t platform_ota_status_post(int status, int percent);
-
 int8_t ota_status_post(int percent)
 {
     return platform_ota_status_post(g_ota_info->status, percent);
@@ -60,33 +76,19 @@ int8_t ota_result_post()
 
 const char *ota_get_version()
 {
-    if (strlen(g_ota_info->ota_version) > 0) {
-        return g_ota_info->ota_version;
-    }
+    const char *version = NULL;
     ota_mutex_lock(g_ota_info_storage.mutex);
-    strncpy(g_ota_info->ota_version,
-            (char *)platform_ota_get_version(), sizeof g_ota_info->ota_version);
+    version = platform_ota_get_version();
     ota_mutex_unlock(g_ota_info_storage.mutex);
-    return g_ota_info->ota_version;
+    return version;
 }
 
 void ota_set_version(const char *ota_version)
 {
-    if (!ota_version) {
-        return;
-    }
-
     ota_mutex_lock(g_ota_info_storage.mutex);
-    strncpy(g_ota_info->ota_version, ota_version, sizeof g_ota_info->ota_version);
     platform_ota_set_version((char *)ota_version);
     ota_mutex_unlock(g_ota_info_storage.mutex);
 }
-
-const char *ota_get_product_type(void)
-{
-    return NULL;
-}
-
 
 void ota_set_dev_version(const char *dev_version)
 {
@@ -101,10 +103,5 @@ const char *ota_get_dev_version(void)
 const char *ota_get_system_version(void)
 {
     return (const char *)platform_get_main_version();
-}
-
-const char *ota_get_product_internal_type(void)
-{
-    return NULL;
 }
 

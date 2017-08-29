@@ -31,7 +31,6 @@ YOS_EXPORT YOS_WEAK const char   *get_yos_os_version(void)
     return (const char *)SYSINFO_OS_VERSION;
 }
 
-#ifdef SYSINFO_OS_BINS
 YOS_EXPORT YOS_WEAK const char   *get_yos_kernel_version(void)
 {
     return (const char *)SYSINFO_KERNEL_VERSION;
@@ -42,7 +41,6 @@ YOS_EXPORT YOS_WEAK const char   *get_yos_app_version(void)
 {
     return (const char *)SYSINFO_APP_VERSION;
 }
-#endif
 
 YOS_EXPORT YOS_WEAK void dump_sys_info(void)
 {

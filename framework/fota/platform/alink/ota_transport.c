@@ -39,7 +39,7 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
         goto parse_failed;
     } else {
         char *info = cJSON_Print(root);
-        OTA_LOG_D("root is %s", info);
+        OTA_LOG_I("root is %s", info);
         cJSON_free(info);
 
         cJSON *uuid = cJSON_GetObjectItem(root, "uuid");
@@ -49,8 +49,7 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
         }
         strncpy(response_parmas->device_uuid, uuid->valuestring,
                 sizeof response_parmas->device_uuid);
-        OTA_LOG_D(" response_parmas->device_uuid %s", response_parmas->device_uuid);
-
+       
         cJSON *resourceUrl = cJSON_GetObjectItem(root, "resourceUrl");
         if (!resourceUrl) {
             OTA_LOG_E("resourceUrl get error.");
@@ -58,8 +57,7 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
         }
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
                 sizeof response_parmas->download_url);
-        OTA_LOG_D(" response_parmas->download_url %s",
-                  response_parmas->download_url);
+
 
         cJSON *md5 = cJSON_GetObjectItem(root, "md5");
         if (!md5) {
@@ -70,7 +68,7 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
         memset(response_parmas->md5, 0, sizeof response_parmas->md5);
         strncpy(response_parmas->md5, md5->valuestring, sizeof response_parmas->md5);
 
-        OTA_LOG_E("md5 %s", response_parmas->md5);
+
         cJSON *size = cJSON_GetObjectItem(root, "size");
         if (!size) {
             OTA_LOG_E("size get error.");
@@ -84,14 +82,27 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
             OTA_LOG_E("version get error.");
             goto parse_failed;
         }
-        strncpy(response_parmas->primary_version, version->valuestring,
-                sizeof response_parmas->primary_version);
-        OTA_LOG_D(" response_parmas->primary_version %s",
-                  response_parmas->primary_version);
+
+        OTA_LOG_I(" response version %s", version->valuestring);
+
+        char *upgrade_version = strtok(version->valuestring, "_");
+        if(!upgrade_version) {
+            strncpy(response_parmas->primary_version, version->valuestring,
+                    sizeof response_parmas->primary_version);
+        }else {
+            strncpy(response_parmas->primary_version, upgrade_version,
+                               sizeof response_parmas->primary_version);
+            upgrade_version = strtok(NULL, "_");
+            if(upgrade_version) {
+                strncpy(response_parmas->secondary_version, upgrade_version,
+                                              sizeof response_parmas->secondary_version);
+            }
+            OTA_LOG_I(" response primary_version = %s, secondary_version = %s",
+                    response_parmas->primary_version, response_parmas->secondary_version);
+        }
 
     }
 
-    OTA_LOG_D("parse_json success");
     goto parse_success;
 
 parse_failed:
@@ -115,7 +126,7 @@ int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response
         goto parse_failed;
     } else {
         char *info = cJSON_Print(root);
-        OTA_LOG_D("root is %s", info);
+        OTA_LOG_I("root is %s", info);
         cJSON_free(info);
 
         cJSON *uuid = cJSON_GetObjectItem(root, "uuid");
@@ -125,10 +136,8 @@ int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response
         }
 
         strncpy(response_parmas->device_uuid, uuid->valuestring,
-                sizeof response_parmas->device_uuid);
-        OTA_LOG_D(" response_parmas->device_uuid %s", response_parmas->device_uuid);
+                sizeof response_parmas->device_uuid);     
     }
-    OTA_LOG_D("parse_json success");
     goto parse_success;
 
 parse_failed:
@@ -155,9 +164,8 @@ int8_t platform_ota_status_post(int status, int percent)
     }
     const char *ota_version = (const char *)platform_ota_get_version();
     snprintf(buff, sizeof(buff), POST_OTA_STATUS_DATA, ota_version, status, percent);
-    //OTA_LOG_D("%s",buff);
     ret = yos_cloud_report(POST_OTA_STATUS_METHOD, buff, NULL, NULL);
-    OTA_LOG_D("alink_ota_status_post: %s, ret=%d", buff, ret);
+    OTA_LOG_I("alink_ota_status_post: %s, ret=%d", buff, ret);
     return ret;
 }
 
