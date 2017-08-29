@@ -421,6 +421,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     uint8_t        *payload;
     const uint8_t *key;
     mac_address_t mac;
+    int16_t hdr_ies_limit;
 
     hal = network->hal;
     info = message->info;
@@ -456,10 +457,13 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         message_set_payload_offset(message, -info->payload_offset);
     }
 
-    header_ies_length = insert_mesh_header_ies(network, info);
-    header_length += header_ies_length;
-
     msg_length = message_get_msglen(message);
+    hdr_ies_limit = mtu;
+    if ((info->flags & INSERT_MESH_HEADER) == 0) {
+        hdr_ies_limit = mtu - header_length - msg_length;
+    }
+    header_ies_length = insert_mesh_header_ies(network, info, hdr_ies_limit);
+    header_length += header_ies_length;
     memset(&frag_header, 0, sizeof(frag_header));
 
     if (message->frag_offset == 0) {

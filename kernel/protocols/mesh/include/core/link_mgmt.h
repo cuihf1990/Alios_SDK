@@ -23,7 +23,7 @@ ur_error_t handle_link_accept_and_request(message_t *message);
 ur_error_t handle_link_accept(message_t *message);
 
 uint8_t insert_mesh_header_ies(network_context_t *network,
-                               message_info_t *info);
+                               message_info_t *info, int16_t hdr_ies_limit);
 ur_error_t handle_mesh_header_ies(message_t *message);
 
 void start_neighbor_updater(void);
