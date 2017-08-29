@@ -136,6 +136,7 @@ ur_error_t update_sid_mapping(allocator_t hdl,
         if (node) {
             free_sid(hdl, node_id->sid);
             slist_del(&node->next, &allocator->base.node_list);
+            ur_mem_free(node, sizeof(sid_node_t));
         }
         return UR_ERROR_NONE;
     }

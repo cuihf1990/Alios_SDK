@@ -168,6 +168,7 @@ get_nbr:
 static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
 {
     network_context_t *network;
+    ur_node_id_t node_id;
 
     if (neighbor == NULL) {
         return UR_ERROR_NONE;
@@ -176,7 +177,9 @@ static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     network = get_network_context_by_meshnetid(neighbor->netid);
     if (network && network->router->sid_type == STRUCTURED_SID &&
         is_allocated_child(network->sid_base, neighbor)) {
-        free_sid(network->sid_base, neighbor->sid);
+        node_id.sid = neighbor->sid;
+        memcpy(node_id.ueid, neighbor->mac, sizeof(node_id.ueid));
+        update_sid_mapping(network->sid_base, &node_id, false);
     }
 
     slist_del(&neighbor->next, &hal->neighbors_list);
@@ -192,6 +195,7 @@ static void handle_update_nbr_timer(void *args)
     hal_context_t *hal = (hal_context_t *)args;
     uint16_t sid = umesh_mm_get_local_sid();
     network_context_t *network = NULL;
+    ur_node_id_t node_id;
 
     hal->update_nbr_timer = NULL;
     slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
@@ -213,7 +217,9 @@ static void handle_update_nbr_timer(void *args)
         network = get_network_context_by_meshnetid(node->netid);
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {
-            free_sid(network->sid_base, node->sid);
+            node_id.sid = node->sid;
+            memcpy(node_id.ueid, node->mac, sizeof(node_id.ueid));
+            update_sid_mapping(network->sid_base, &node_id, false);
         }
         node->state = STATE_INVALID;
         g_neighbor_updater_head(node);
@@ -250,6 +256,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     hal_context_t     *hal;
     network_context_t *network;
     uint8_t channel_orig;
+    ur_node_id_t node_id;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
@@ -318,7 +325,9 @@ neighbor_t *update_neighbor(const message_info_t *info,
         if (nbr->state == STATE_CHILD &&
             ((nbr->flags & NBR_NETID_CHANGED) ||
              (nbr->flags & NBR_SID_CHANGED))) {
-            free_sid(network->sid_base, nbr->sid);
+            node_id.sid = nbr->sid;
+            memcpy(node_id.ueid, nbr->mac, sizeof(node_id.ueid));
+            update_sid_mapping(network->sid_base, &node_id, false);
             nbr->state = STATE_NEIGHBOR;
         }
         network = get_network_context_by_meshnetid(info->src.netid);
