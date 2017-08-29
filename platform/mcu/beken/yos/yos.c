@@ -70,6 +70,7 @@ static void yos_init(void)
         app_info->app_entry((int)g_syscall_tbl, NULL);
     }
 #else
+    yos_framework_init();
     application_start(0, NULL);
 #endif
 
