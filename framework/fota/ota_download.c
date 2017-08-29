@@ -273,7 +273,7 @@ int http_download(char *url, write_flash_cb_t func)
         }
 
         size += nbytes;
-        OTA_LOG_E("size nbytes %d, %d", size, nbytes);
+        OTA_LOG_I("size nbytes %d, %d", size, nbytes);
         MD5_Update(&g_ctx, (const uint8_t *) http_buffer, nbytes);
         func(BUFFER_MAX_SIZE, (uint8_t *) http_buffer, nbytes, 0);
         memset(http_buffer, 0, BUFFER_MAX_SIZE);
@@ -287,8 +287,6 @@ int http_download(char *url, write_flash_cb_t func)
             break;
         }
     }
-
-    OTA_LOG_E("size nbytes %d, %d", size, nbytes);
 
     if (nbytes < 0) {
         OTA_LOG_E("download read error %s" , strerror(errno));
