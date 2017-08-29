@@ -53,6 +53,7 @@ void *trace_hal_init()
 
         if (connect(fd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) {
             cli_printf("connect (%s:%u) error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno),errno);
+            close(fd);
             return 0;
         }
 
@@ -76,7 +77,7 @@ ssize_t trace_hal_send(void *handle, void *buf, size_t len)
     while (1) {
         len_send = send((int)handle, (buf + len_total_send) , len - len_total_send, 0);
         if (len_send < 0) {
-            cli_printf("send (%s:%u) msg error: %s(errno: %d)\n", ip_addr, ip_port, strerror(errno), errno);
+            cli_printf("send (%s:%u) msg error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno), errno);
             return 0;
         }
 
@@ -175,22 +176,26 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
 
         set_event_mask(atoi(argv[2]));
     } else if (strcmp(rtype, "stop") == 0) {
-        trace_is_started = 0;
-        trace_deinit();
-
-        yunos_task_dyn_del(trace_task);
-        trace_hal_deinit((void *)sockfd);
-       
-        cli_printf("trace (%s:%u) stop....\r\n", ip_addr, ip_port);       
-
-        if (!ip_addr) {
-            free(ip_addr);
-        }    
-
-        if (!filter_task){
-            free(filter_task);
+        if (trace_is_started) {
+            trace_is_started = 0;
+            trace_deinit();
+    
+            trace_hal_deinit((void *)sockfd);
+           
+            cli_printf("trace (%s:%u) stop....\r\n", ip_addr, ip_port);       
+    
+            if (ip_addr) {
+                free(ip_addr);
+                ip_addr = NULL;
+            }    
+    
+            if (filter_task){
+                free(filter_task);
+                ip_addr = NULL;
+            }
+    
+            yunos_task_dyn_del(trace_task);
         }
-
     }
 }
 
@@ -209,7 +214,7 @@ void trace_start(void)
 
 void trace_start(void)
 {
-    printf("trace should have cli to control!!!");
+    printf("trace should have cli to control!!!\r\n");
 }
 
 #endif
