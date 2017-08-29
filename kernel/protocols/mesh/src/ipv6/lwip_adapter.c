@@ -162,7 +162,6 @@ ur_error_t ur_adapter_interface_up(void)
 {
     const mac_address_t *mac_addr;
     struct netif        *interface;
-    ip4_addr_t          ipaddr, netmask, gw;
 
     interface = netif_find(g_la_state.interface_name);
 
