@@ -178,14 +178,20 @@ void hal_timer_stop(hal_timer_t *tmr)
 
 int csp_printf(const char *fmt, ...)
 {
+    CPSR_ALLOC();
+
     va_list args;
     int ret;
+
+    YUNOS_CRITICAL_ENTER();
 
     va_start(args, fmt);
     ret = vprintf(fmt, args);
     va_end(args);
 
     fflush(stdout);
+
+    YUNOS_CRITICAL_EXIT();
 
     return ret;
 }

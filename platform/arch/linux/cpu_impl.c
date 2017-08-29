@@ -144,7 +144,8 @@ void *cpu_entry(void *arg)
 
     sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
 
-    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
+    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) != 0) {
+        printf("Not enough cpu nums!!!\n");
         assert(0);
     }
 
