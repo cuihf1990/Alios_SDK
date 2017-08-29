@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <xtensa/config/core.h>
 #include "frxt/xtensa_rtos.h"
 #include <k_api.h>

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef __CheckSumUtils_h__
 #define __CheckSumUtils_h__
 

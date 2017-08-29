@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef CPU_H
 #define CPU_H
 #include <xtensa/tie/xt_core.h>
