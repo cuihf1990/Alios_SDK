@@ -2,9 +2,9 @@ NAME := fatfs
 
 $(NAME)_TYPE        := kernel
 
-$(NAME)_SOURCES     := ff.c
-$(NAME)_SOURCES     += fatfs.c
-$(NAME)_SOURCES     += ffunicode.c
+$(NAME)_SOURCES     := fatfs.c
+$(NAME)_SOURCES     += ff/ff.c
+$(NAME)_SOURCES     += ff/ffunicode.c
 $(NAME)_CFLAGS      += -Wall -Werror
 
-GLOBAL_INCLUDES     += include 
+GLOBAL_INCLUDES     += include ff/include
