@@ -103,6 +103,9 @@ void *pclient;
 
 char *msg_buf = NULL, *msg_readbuf = NULL;
 
+iotx_mqtt_topic_info_t topic_msg;
+char msg_pub[128];
+
 static void _demo_message_arrive(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
     iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
@@ -138,8 +141,7 @@ static void mqtt_test() {
         HAL_SleepMs(1000);
     }
 
-    iotx_mqtt_topic_info_t topic_msg;
-    char msg_pub[128];
+
 
     /* Initialize topic information */
     memset(&topic_msg, 0x0, sizeof(iotx_mqtt_topic_info_t));

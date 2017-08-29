@@ -22,6 +22,7 @@ $(NAME)_INCLUDES  += ../../framework/mqtt/platform/ \
 $(NAME)_COMPONENTS := log
 $(NAME)_COMPONENTS  += mbedtls
 $(NAME)_COMPONENTS  += mqtt
+$(NAME)_COMPONENTS  += cli
 
 LWIP := 0
 ifeq ($(LWIP),1)
