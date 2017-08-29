@@ -40,6 +40,8 @@
 #include "lwip/mem.h"
 #include "arch/sys_arch.h"
 
+static yos_mutex_t sys_arch_mutex;
+
 //#define      NET_TASK_NUME 2
 //#define      NET_TASK_STACK_SIZE 1024
 
@@ -601,7 +603,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 */
 sys_prot_t sys_arch_protect(void)
 {
-    yos_sched_disable();
+    yos_mutex_lock(&sys_arch_mutex, YOS_WAIT_FOREVER);
     return 0;
 }
 
@@ -613,7 +615,7 @@ sys_prot_t sys_arch_protect(void)
 */
 void sys_arch_unprotect(sys_prot_t pval)
 {
-    yos_sched_enable();
+    yos_mutex_unlock(&sys_arch_mutex);
 }
 
 #endif
@@ -638,6 +640,6 @@ int net_close(int sockfd)
 */
 void sys_init(void)
 {
-
+    yos_mutex_new(&sys_arch_mutex);
 }
 
