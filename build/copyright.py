@@ -24,8 +24,12 @@ rootdirs = ['./board/linuxhost',         \
             './platform/arch/include',   \
             './platform/arch/linux',     \
             './platform/arch/xtensa',    \
+            './platform/mcu/beken/art',  \
+            './platform/mcu/beken/hal',  \
+            './platform/mcu/beken/yos',  \
             './platform/mcu/include',    \
             './platform/mcu/linux',      \
+            './platform/mcu/template',   \
             './test',                    \
             './tools/cli',               \
             './tools/dda',               \
