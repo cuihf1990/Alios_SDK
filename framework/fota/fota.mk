@@ -12,4 +12,5 @@ $(NAME)_COMPONENTS += fota.platform digest_algorithm
 
 $(NAME)_INCLUDES := \
     ./ \
+    ./platform \
     ../../include/hal \

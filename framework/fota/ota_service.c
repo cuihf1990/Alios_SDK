@@ -44,7 +44,7 @@ const char *ota_info = "{\"md5\":\"6B21342306D0F619AF97006B7025D18A\","
         "\"size\": \"265694 \",\"uuid\": \"5B7CFD5C6B1D6A231F5FB6B7DB2B71FD\",\"version\": \"v2.0.0.1\",\"zip\": \"0\"}";
 */
 //const char *ota_info = "{\"uuid\": \"5B7CFD5C6B1D6A231F5FB6B7DB2B71FD\"}";
-void do_update(const char *buf)
+void do_update(int len,  const char *buf)
 {
     LOGD(TAG, "begin do update %s" , (char *)buf);
     if(!buf) {
@@ -65,7 +65,7 @@ void do_update(const char *buf)
             ota_finish_callbak);
 }
 
-void cancel_update(const char *buf)
+void cancel_update(int len, const char *buf)
 {
     LOGD(TAG, "begin cancel update %s" , (char *)buf);
     if(!buf) {
@@ -95,8 +95,9 @@ static int ota_init = 0;
 void ota_regist_upgrade(void)
 {
      ota_post_version_msg();
-     ota_sub_upgrade(do_update);
-     ota_cancel_upgrade(cancel_update);
+
+     ota_sub_upgrade(&do_update);
+     ota_cancel_upgrade(&cancel_update);
 }
 
 void ota_service_event(input_event_t *event, void *priv_data) {
