@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ *Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-
 #include <string.h>
 #include <hal/ota.h>
 #include <yos/framework.h>
+#include <yos/version.h>
 #include <yos/log.h>
 
 #include "ota_transport.h"
@@ -32,9 +32,9 @@ static int ota_hal_write_cb(int32_t writed_size, uint8_t *buf, int32_t buf_len, 
     return hal_ota_write(hal_ota_get_default_module(), NULL, buf, buf_len);
 }
 
-static int ota_hal_finish_cb(int32_t finished_result, const char* updated_version)
+static int ota_hal_finish_cb(int32_t finished_result, void* updated_type)
 {
-    return hal_ota_set_boot(hal_ota_get_default_module(), (void *)updated_version);
+    return hal_ota_set_boot(hal_ota_get_default_module(), (void *)updated_type);
 }
 
 ota_request_params ota_request_parmas;
@@ -51,14 +51,7 @@ void do_update(int len,  const char *buf)
         LOGE(TAG, "do update buf is null");
         return;
     }
-
-    ota_request_parmas.primary_version = ota_get_system_version();
-    ota_request_parmas.product_type = ota_get_product_type();
-    ota_request_parmas.product_internal_type = ota_get_product_internal_type();
-    ota_request_parmas.device_uuid = ota_get_id();
-
     ota_response_params response_parmas;
-
     ota_set_callbacks(ota_hal_write_cb, ota_hal_finish_cb);
     parse_ota_response(buf, strlen((char *)buf), &response_parmas);
     ota_do_update_packet(&response_parmas, &ota_request_parmas, ota_write_flash_callback,
@@ -80,14 +73,8 @@ void cancel_update(int len, const char *buf)
 
 void ota_check_update(const char *buf, int len)
 {
-    ota_request_parmas.primary_version = ota_get_system_version();
-    ota_request_parmas.product_type = ota_get_product_type();
-    ota_request_parmas.product_internal_type = ota_get_product_internal_type();
-    ota_request_parmas.device_uuid = ota_get_id();
-
     ota_sub_request_reply(do_update);
     ota_pub_request(&ota_request_parmas);
-
 }
 
 static int ota_init = 0;
@@ -95,9 +82,20 @@ static int ota_init = 0;
 void ota_regist_upgrade(void)
 {
      ota_post_version_msg();
-
      ota_sub_upgrade(&do_update);
      ota_cancel_upgrade(&cancel_update);
+}
+
+static void init_device_parmas()
+{
+#ifdef SYSINFO_OS_BINS
+        ota_request_parmas.primary_version = get_yos_os_version();
+#else
+        ota_request_parmas.primary_version = get_yos_kernel_version();
+#endif
+        ota_request_parmas.secondary_version = get_yos_app_version();
+        ota_request_parmas.product_type = get_yos_product_model();
+        ota_request_parmas.device_uuid = ota_get_id();
 }
 
 void ota_service_event(input_event_t *event, void *priv_data) {
@@ -106,6 +104,7 @@ void ota_service_event(input_event_t *event, void *priv_data) {
             return;
         }
         ota_init = 1;
+        init_device_parmas();
         ota_regist_upgrade();
     }
 }

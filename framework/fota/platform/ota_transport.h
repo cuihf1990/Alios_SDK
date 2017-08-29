@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-
 #ifndef OTA_TRANSPORT_H_
 #define OTA_TRANSPORT_H_
 #include <stdint.h>
@@ -9,10 +8,8 @@
 
 typedef struct {
     const char *primary_version;
-    const char *secodary_version;
+    const char *secondary_version;
     const char *product_type;
-    const char *product_internal_type;
-    const char *system;
     const char *device_uuid;
 } ota_request_params;
 
@@ -23,7 +20,7 @@ typedef struct {
 
 typedef struct {
     char primary_version[MAX_VERSION_LEN];
-    char secodary_version[MAX_VERSION_LEN];
+    char secondary_version[MAX_VERSION_LEN];
     const char *product_type;
     char download_url[MAX_URL_LEN];
     int frimware_size;
@@ -31,7 +28,6 @@ typedef struct {
     char md5[MAX_MD5_LEN];
 } ota_response_params;
 
-//typedef void message_arrived(const char *msg);
 
 int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas);
 
