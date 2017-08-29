@@ -9,6 +9,7 @@
 
 #include "ota_transport.h"
 #include "ota_update_manifest.h"
+#include "ota_version.h"
 #include "ota_util.h"
 #define TAG "ota"
 

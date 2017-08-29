@@ -10,6 +10,8 @@
 #include "ota_platform_os.h"
 #include "ota_util.h"
 #include "ota_log.h"
+#include "ota_version.h"
+
 
 static ota_info_t g_ota_info_storage = {
     .update_way =  OTA_SILENT,
@@ -78,7 +80,7 @@ const char *ota_get_version()
 {
     const char *version = NULL;
     ota_mutex_lock(g_ota_info_storage.mutex);
-    version = platform_ota_get_version();
+    version = ota_get_ota_version();
     ota_mutex_unlock(g_ota_info_storage.mutex);
     return version;
 }
@@ -86,22 +88,10 @@ const char *ota_get_version()
 void ota_set_version(const char *ota_version)
 {
     ota_mutex_lock(g_ota_info_storage.mutex);
-    platform_ota_set_version((char *)ota_version);
+    ota_set_ota_version((char *)ota_version);
     ota_mutex_unlock(g_ota_info_storage.mutex);
 }
 
-void ota_set_dev_version(const char *dev_version)
-{
-    platform_set_dev_version(dev_version);
-}
 
-const char *ota_get_dev_version(void)
-{
-    return (const char *)platform_get_dev_version();
-}
 
-const char *ota_get_system_version(void)
-{
-    return (const char *)platform_get_main_version();
-}
 
