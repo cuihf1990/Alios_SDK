@@ -19,12 +19,24 @@ rootdirs = ['./board/linuxhost',         \
             './kernel/vcall',            \
             './kernel/vfs',              \
             './kernel/yloop',            \
-            './platform/arch/arm/armv5', \
+            './platform/arch/arm',       \
+            './platform/arch/csky',      \
             './platform/arch/include',   \
             './platform/arch/linux',     \
+            './platform/arch/xtensa',    \
+            './platform/mcu/beken/art',  \
+            './platform/mcu/beken/hal',  \
+            './platform/mcu/beken/yos',  \
             './platform/mcu/include',    \
             './platform/mcu/linux',      \
-            './test']
+            './platform/mcu/template',   \
+            './test',                    \
+            './tools/cli',               \
+            './tools/dda',               \
+            './tools/testbed',           \
+            './tools/trace',             \
+            './tools/wifimonitor',       \
+            './utility']
 
 def list_files(dir_path):
     file_list = [];
