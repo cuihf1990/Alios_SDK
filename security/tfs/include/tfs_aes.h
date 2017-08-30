@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #ifndef __TFS_AES_H
 #define __TFS_AES_H
 

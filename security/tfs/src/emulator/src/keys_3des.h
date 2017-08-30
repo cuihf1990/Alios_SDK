@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #ifndef _KEYS_3DES_H
 #define _KEYS_3DES_H
 

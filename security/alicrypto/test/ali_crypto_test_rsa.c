@@ -1,7 +1,3 @@
-/**
- * Copyright (C) 2016 The YunOS Project. All rights reserved.
- */
-
 #include "ali_crypto.h"
 #include "ali_crypto_test.h"
 

@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #include "aes128.h"
 
 int tfs_aes128_cbc_enc(const uint8_t *key,

@@ -1,8 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
-
 #ifndef _TFS_TEST_DECRYPT_H
 #define _TFS_TEST_DECRYPT_H
 

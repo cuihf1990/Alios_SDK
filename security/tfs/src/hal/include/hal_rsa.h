@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #ifndef _HAL_RSA_H
 #define _HAL_RSA_H
 

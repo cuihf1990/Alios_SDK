@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #ifndef _EMU_ID2_H
 #define _EMU_ID2_H
 

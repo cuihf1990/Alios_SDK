@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #ifndef _HAL_ID2_H
 #define _HAL_ID2_H
 

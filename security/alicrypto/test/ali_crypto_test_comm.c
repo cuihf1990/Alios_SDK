@@ -1,7 +1,3 @@
-/**
- * Copyright (C) 2016 The YunOS Project. All rights reserved.
- */
-
 #include "ali_crypto_test.h"
 
 void ali_crypto_print_data(const char *name, uint8_t *data, size_t size)

@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #include "id2.h"
 
 int tfs_get_ID2(uint8_t *id2, uint32_t *len)

@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #ifndef _EMU_AES128_H
 #define _EMU_AES128_H
 

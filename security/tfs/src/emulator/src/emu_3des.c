@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #include <string.h>
 #if defined(TFS_OPENSSL)
 #include "openssl/des.h"
