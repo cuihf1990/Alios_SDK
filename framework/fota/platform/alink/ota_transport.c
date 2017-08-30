@@ -12,6 +12,7 @@
 #include "ota_transport.h"
 #include "alink_protocol.h"
 #include "ota_log.h"
+#include "ota_version.h"
 
 #define POST_OTA_STATUS_METHOD "ota/postDeviceUpgradeStatus"
 #define POST_OTA_RESULT_METHOD "device.updateVersion"
