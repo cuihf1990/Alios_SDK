@@ -25,6 +25,7 @@ const char *ota_info = "{\"md5\":\"6B21342306D0F619AF97006B7025D18A\",\"resource
 
 static void test_fota_case(void)
 {
+    #ifdef OTA_CH_ALINK
     int ret = 0;
     input_event_t event;
     event.type = EV_SYS;
@@ -42,6 +43,7 @@ static void test_fota_case(void)
     YUNIT_ASSERT(ret == 0);
     ret = parse_ota_response(NULL, 0, NULL);
     YUNIT_ASSERT(ret == -1)
+    #endif
 }
 
 static int init(void)

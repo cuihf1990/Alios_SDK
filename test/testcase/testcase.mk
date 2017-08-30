@@ -60,4 +60,8 @@ $(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-var
 $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
 $(NAME)_INCLUDES += ../../framework/protocol/alink/system/
-$(NAME)_INCLUDES += ../../framework/fota/platform/alink/
+$(NAME)_INCLUDES += ../../framework/fota/alink/platform/alink/
+
+ifeq ($(CONFIG_OTA_CH),alink)
+$(NAME)_DEFINES += OTA_CH_ALINK
+endif

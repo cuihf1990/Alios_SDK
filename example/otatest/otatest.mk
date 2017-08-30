@@ -17,8 +17,6 @@
 NAME := otatest
 
 GLOBAL_DEFINES      += IOTX_DEBUG
-CONFIG_OTA_CH := coap
-
 
 $(NAME)_COMPONENTS  := cli
 #ifeq ($(LWIP),1)
@@ -33,7 +31,7 @@ ifeq ($(CONFIG_OTA_CH),coap)
 $(NAME)_SOURCES     := ota_coap_test.c
 endif
 ifeq ($(CONFIG_OTA_CH),alink)
-$(NAME)_SOURCES     := ota_default_test.c
+$(NAME)_SOURCES     := ota_alink_test.c
 endif
 
 $(NAME)_CFLAGS += \

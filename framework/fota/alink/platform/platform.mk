@@ -5,7 +5,7 @@ GLOBAL_INCLUDES += ./
 
 ifneq (,$(filter protocol.alink,$(COMPONENTS)))
 $(NAME)_CFLAGS += -Wall -Werror
-$(NAME)_COMPONENTS += fota.platform.alink
+$(NAME)_COMPONENTS += fota.alink.platform.alink
 else
-$(NAME)_COMPONENTS += fota.platform.common
+$(NAME)_COMPONENTS += fota.alink.platform.common
 endif
