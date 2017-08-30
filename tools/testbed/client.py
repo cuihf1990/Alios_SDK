@@ -218,6 +218,7 @@ class Client:
                 break
             retry -= 1
             baudrate = baudrate / 2
+            time.sleep(4)
         return error
 
     def program_device(self, port, address, file):

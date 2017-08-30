@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <assert.h>
@@ -53,15 +41,11 @@ static void get_target_by_ueid(ur_node_id_t *node_id, uint8_t *ueid);
 
 static void set_dest_info(message_info_t *info, address_cache_t *target)
 {
-    info->dest.netid = target->meshnetid;
     if (is_partial_function_sid(target->sid)) {
-        info->dest2.addr.len = SHORT_ADDR_SIZE;
-        info->dest2.addr.short_addr = target->sid;
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = target->attach_sid;
+        set_mesh_short_addr(&info->dest2, target->meshnetid, target->sid);
+        set_mesh_short_addr(&info->dest, target->meshnetid, target->attach_sid);
     } else {
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = target->sid;
+        set_mesh_short_addr(&info->dest, target->meshnetid, target->sid);
     }
 }
 
@@ -155,8 +139,7 @@ ur_error_t address_resolve(message_t *message)
 
     nbr = mf_get_neighbor(info->type, info->dest.netid, &info->dest.addr);
     if (nbr) {
-        memcpy(&info->dest.addr, &nbr->mac, sizeof(info->dest.addr));
-        info->dest.netid = nbr->addr.netid;
+        set_mesh_ext_addr(&info->dest, nbr->netid, nbr->mac);
         return UR_ERROR_NONE;
     } else if (info->dest.addr.len == SHORT_ADDR_SIZE &&
                is_partial_function_sid(info->dest.addr.short_addr) == false) {
@@ -470,7 +453,7 @@ ur_error_t handle_address_query_response(message_t *message)
                    memcmp(target_ueid->ueid, g_ar_state.cache[index].ueid,
                           sizeof(target_ueid->ueid)) == 0) {
             if (g_ar_state.cache[index].state != AQ_STATE_CACHED) {
-               g_ar_state.cache[index].state = AQ_STATE_CACHED;
+                g_ar_state.cache[index].state = AQ_STATE_CACHED;
                 g_ar_state.cache[index].sid = target_id->sid;
                 g_ar_state.cache[index].meshnetid = target_id->meshnetid;
                 if (attach_id) {
@@ -528,8 +511,8 @@ ur_error_t send_address_notification(network_context_t *network,
     data += sizeof(mm_hal_type_tv_t);
 
     if (network->attach_node) {
-        node_id.sid = network->attach_node->addr.addr.short_addr;
-        node_id.meshnetid = network->attach_node->addr.netid;
+        node_id.sid = network->attach_node->sid;
+        node_id.meshnetid = network->attach_node->netid;
         data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, &node_id);
     }
 

@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <assert.h>
@@ -120,8 +108,9 @@ bool is_allocated_child(allocator_t hdl, neighbor_t *nbr)
 
     allocator = (ssid_allocator_t *)hdl;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, nbr->ueid, sizeof(nbr->ueid)) == 0)
+        if (memcmp(node->node_id.ueid, nbr->mac, sizeof(nbr->mac)) == 0) {
             return true;
+        }
     }
 
     return false;
@@ -147,6 +136,7 @@ ur_error_t update_sid_mapping(allocator_t hdl,
         if (node) {
             free_sid(hdl, node_id->sid);
             slist_del(&node->next, &allocator->base.node_list);
+            ur_mem_free(node, sizeof(sid_node_t));
         }
         return UR_ERROR_NONE;
     }

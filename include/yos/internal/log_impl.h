@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef YOS_LOG_IMPL_H
@@ -64,6 +52,7 @@ enum log_level_bit {
 #define GLOBAL_LOG_TAG "\e[65m"    //LOG TAG, use ESC characters, g(cli) ascii is 65
 
 #include <yos/kernel.h>
+extern int csp_printf(const char *fmt, ...);
 #ifdef CONFIG_LOGMACRO_DETAILS
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
     do { \
@@ -89,7 +78,11 @@ enum log_level_bit {
 #ifndef os_printf
 #ifndef csp_printf
 int csp_printf(const char *fmt, ...);
+#else
+extern int csp_printf(const char *fmt, ...);
 #endif
+#else
+extern int csp_printf(const char *fmt, ...);
 #endif
 
 #undef LOGF

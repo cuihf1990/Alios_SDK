@@ -294,7 +294,7 @@ class Terminal:
         self.cmd_window.move(1,0)
         self.cmd_window.addstr(' ' * (LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH))
         self.cmd_window.move(1,0)
-        self.cmd_window.addstr(log)
+        self.cmd_window.addstr(log[:(LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH)])
         self.cmd_window.refresh()
         self.curseslock.release()
 
@@ -397,13 +397,36 @@ class Terminal:
         self.keep_running = False;
 
     def parse_device_index(self, index_str):
-        try:
-            index = int(index_str)
-        except:
-            return -1
-        if index >= len(self.device_list):
-            return -1
-        return index
+        max = len(self.device_list) - 1
+        if '-' in index_str:
+            index_split = index_str.split('-')
+            if len(index_split) != 2 or index_split[0].isdigit() == False or index_split[1].isdigit() == False:
+                return [];
+            try:
+                start = int(index_split[0])
+                end   = int(index_split[1])
+                if start > max and end > max:
+                    return []
+                if start > max:
+                    start = max
+                if end > max:
+                    end = max
+            except:
+                return [];
+            if start < end:
+                return range(start, end + 1, 1)
+            else:
+                return range(start, end - 1, -1)
+        else:
+            if index_str.isdigit() == False:
+                return
+            try:
+                index = int(index_str)
+            except:
+                return []
+            if index >= len(self.device_list):
+                return []
+            return [index]
 
     def wait_cmd_excute_done(self, timeout):
         self.cmd_excute_state = 'wait_response'
@@ -458,24 +481,25 @@ class Terminal:
             return False
         succeed = []; failed = []
         for dev in devs:
-            index = self.parse_device_index(dev)
-            if index == -1:
+            indexes = self.parse_device_index(dev)
+            if indexes == []:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
-            status_str = 'erasing {0}.{1}...'. \
-                    format(index, self.get_devstr_by_index(index))
-            self.cmdrun_status_display(status_str)
-            content = self.get_devstr_by_index(index)
-            data = TBframe.construct(TBframe.DEVICE_ERASE, content);
-            self.service_socket.send(data)
-            self.wait_cmd_excute_done(10)
-            status_str += self.cmd_excute_state
-            self.cmdrun_status_display(status_str)
-            if self.cmd_excute_state == "done":
-                succeed.append(index)
-            else:
-                failed.append(index)
-            self.cmd_excute_state = 'idle'
+
+            for index in indexes:
+                status_str = 'erasing {0}.{1}...'.format(index, self.get_devstr_by_index(index))
+                self.cmdrun_status_display(status_str)
+                content = self.get_devstr_by_index(index)
+                data = TBframe.construct(TBframe.DEVICE_ERASE, content);
+                self.service_socket.send(data)
+                self.wait_cmd_excute_done(10)
+                status_str += self.cmd_excute_state
+                self.cmdrun_status_display(status_str)
+                if self.cmd_excute_state == "done":
+                    succeed.append(index)
+                else:
+                    failed.append(index)
+                self.cmd_excute_state = 'idle'
         status_str = ''
         if succeed != []:
             status_str += "succeed: {0}".format(succeed)
@@ -503,28 +527,29 @@ class Terminal:
             return False
         succeed = []; failed = []
         for dev in devs:
-            index = self.parse_device_index(dev)
-            if index == -1:
+            indexes = self.parse_device_index(dev)
+            if indexes == []:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
-            device = self.get_devstr_by_index(index).split(',')
-            if device[0:2] not in file_exist_at:
-                if self.copy_file_to_client(index) == False:
-                    continue
-                file_exist_at.append(device[0:2])
-            status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, device[0], device[2])
-            self.cmdrun_status_display(status_str)
-            content = ','.join(device) + ',' + address
-            data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
-            self.service_socket.send(data)
-            self.wait_cmd_excute_done(90)
-            status_str += self.cmd_excute_state
-            self.cmdrun_status_display(status_str)
-            if self.cmd_excute_state == "done":
-                succeed.append(index)
-            else:
-                failed.append(index)
-            self.cmd_excute_state = 'idle'
+            for index in indexes:
+                device = self.get_devstr_by_index(index).split(',')
+                if device[0:2] not in file_exist_at:
+                    if self.copy_file_to_client(index) == False:
+                        continue
+                    file_exist_at.append(device[0:2])
+                status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, device[0], device[2])
+                self.cmdrun_status_display(status_str)
+                content = ','.join(device) + ',' + address
+                data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
+                self.service_socket.send(data)
+                self.wait_cmd_excute_done(90)
+                status_str += self.cmd_excute_state
+                self.cmdrun_status_display(status_str)
+                if self.cmd_excute_state == "done":
+                    succeed.append(index)
+                else:
+                    failed.append(index)
+                self.cmd_excute_state = 'idle'
         status_str = ''
         if succeed != []:
             status_str += "succeed: {0}".format(succeed)
@@ -543,20 +568,21 @@ class Terminal:
         operate = operations[operate]
         succeed = []; failed = []
         for dev in args:
-            index = self.parse_device_index(dev)
-            if index < 0:
+            indexes = self.parse_device_index(dev)
+            if indexes == []:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
 
-            content = self.get_devstr_by_index(index)
-            data = TBframe.construct(operate, content)
-            self.service_socket.send(data)
-            self.wait_cmd_excute_done(1)
-            if self.cmd_excute_state == "done":
-                succeed.append(index)
-            else:
-                failed.append(index)
-            self.cmd_excute_state = 'idle'
+            for index in indexes:
+                content = self.get_devstr_by_index(index)
+                data = TBframe.construct(operate, content)
+                self.service_socket.send(data)
+                self.wait_cmd_excute_done(1.5)
+                if self.cmd_excute_state == "done":
+                    succeed.append(index)
+                else:
+                    failed.append(index)
+                self.cmd_excute_state = 'idle'
         status_str = ''
         if succeed != []:
             status_str += "succeed: {0}".format(succeed)
@@ -580,41 +606,54 @@ class Terminal:
             return False
 
         for dev in args[1:]:
-            index = self.parse_device_index(dev)
-            if index == -1:
+            indexes = self.parse_device_index(dev)
+            if indexes == []:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
-            device = self.get_devstr_by_index(index)
-            if (type == TBframe.LOG_SUB) and (device not in self.log_subscribed):
-                data = TBframe.construct(type, device)
-                self.service_socket.send(data)
-                self.log_subscribed.append(device)
-            elif (type == TBframe.LOG_UNSUB) and (device in self.log_subscribed):
-                data = TBframe.construct(type, device)
-                self.service_socket.send(data)
-                self.log_subscribed.remove(device)
+            for index in indexes:
+                device = self.get_devstr_by_index(index)
+                if (type == TBframe.LOG_SUB) and (device not in self.log_subscribed):
+                    data = TBframe.construct(type, device)
+                    self.service_socket.send(data)
+                    self.log_subscribed.append(device)
+                elif (type == TBframe.LOG_UNSUB) and (device in self.log_subscribed):
+                    data = TBframe.construct(type, device)
+                    self.service_socket.send(data)
+                    self.log_subscribed.remove(device)
 
     def log_download(self, args):
         if len(args) < 1:
             self.cmdrun_status_display("Usage error, usage: logdownload device0 [device1 ... deviceN]")
             return False
 
+        succeed = []; failed = []
         for dev in args:
-            index = self.parse_device_index(dev)
-            if index < 0:
+            indexes = self.parse_device_index(dev)
+            if indexes == []:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 return False
-
-            device = self.get_devstr_by_index(index).split(',')
-            status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[2])
-            self.cmdrun_status_display(status_str)
-            content = ','.join(device)
-            data = TBframe.construct(TBframe.LOG_DOWNLOAD, content)
-            self.service_socket.send(data)
-            self.wait_cmd_excute_done(480)
-            status_str += self.cmd_excute_state
-            self.cmdrun_status_display(status_str)
-            self.cmd_excute_state = 'idle'
+            for index in indexes:
+                device = self.get_devstr_by_index(index).split(',')
+                status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[2])
+                self.cmdrun_status_display(status_str)
+                content = ','.join(device)
+                data = TBframe.construct(TBframe.LOG_DOWNLOAD, content)
+                self.service_socket.send(data)
+                self.wait_cmd_excute_done(480)
+                if self.cmd_excute_state == "done":
+                    succeed.append(index)
+                else:
+                    failed.append(index)
+                self.cmd_excute_state = 'idle'
+        status_str = ''
+        if succeed != []:
+            status_str += "succeed: {0}".format(succeed)
+        if failed != []:
+            if status_str != '':
+                status_str += ', '
+            status_str += "failed: {0}".format(failed)
+        self.cmdrun_status_display(status_str)
+        return (len(failed) == 0)
 
     def run_command(self, args, uselast = False):
         if uselast == False:
@@ -622,12 +661,12 @@ class Terminal:
                 self.cmdrun_status_display("Usage error, usage: runcmd device cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]")
                 return False
 
-            index = self.parse_device_index(args[0])
-            if index < 0:
+            indexes = self.parse_device_index(args[0])
+            if indexes == []:
                 self.cmdrun_status_display('invalid device index {0}'.format(args[0]))
                 return False
             args = args[1:]
-            self.last_runcmd_dev = self.get_devstr_by_index(index)
+            self.last_runcmd_dev = self.get_devstr_by_index(indexes[-1])
         else:
             if self.last_runcmd_dev == []:
                 self.cmdrun_status_display('Error: you have not excute any remote command with runcmd yet, no target remembered')
@@ -640,16 +679,33 @@ class Terminal:
             if self.last_runcmd_dev not in list(self.device_list):
                 self.cmdrun_status_display("Error: remembered target no longer exists")
                 return False
-            index = self.get_index_by_devstr(self.last_runcmd_dev)
+            indexes = [self.get_index_by_devstr(self.last_runcmd_dev)]
 
-        content = self.get_devstr_by_index(index)
-        content += ':' + '|'.join(args)
-        data = TBframe.construct(TBframe.DEVICE_CMD, content)
-        self.service_socket.send(data)
-        self.wait_cmd_excute_done(1)
-        self.cmd_excute_state = 'idle'
-        status_str = '{0} run: '.format(index) + ' '.join(args) + ", " + self.cmd_excute_return
+        succeed = []; failed = []
+        for index in indexes:
+            content = self.get_devstr_by_index(index)
+            content += ':' + '|'.join(args)
+            data = TBframe.construct(TBframe.DEVICE_CMD, content)
+            self.service_socket.send(data)
+            self.wait_cmd_excute_done(1.5)
+            if self.cmd_excute_state == "done":
+                succeed.append(index)
+            else:
+                failed.append(index)
+            self.cmd_excute_state = 'idle'
+            status_str = '{0} run: '.format(index) + ' '.join(args) + ", " + self.cmd_excute_return
+            self.cmdrun_status_display(status_str)
+        if len(indexes) == 1:
+            return True
+        status_str = ''
+        if succeed != []:
+            status_str += "succeed: {0}".format(succeed)
+        if failed != []:
+            if status_str != '':
+                status_str += ', '
+            status_str += "failed: {0}".format(failed)
         self.cmdrun_status_display(status_str)
+        return (len(failed) == 0)
 
     def client_alias(self, args):
         if len(args) < 1:
@@ -671,38 +727,34 @@ class Terminal:
 
     def print_help_info(self):
         self.log_display(time.time(), "supported commands and usage examples:")
-        self.log_display(time.time(), " 1.send       [sd]: send files to sever")
-        self.log_display(time.time(), "           example: send a.txt b.txt")
-        self.log_display(time.time(), " 2.erase      [er]: erase flash of devices")
-        self.log_display(time.time(), "           example: erase 0 1")
-        self.log_display(time.time(), " 3.program    [pg]: program fireware to devices")
-        self.log_display(time.time(), "           example: program 0x40000 yos_esp32.bin 0 1")
-        self.log_display(time.time(), " 4.reset      [rs]: reset/restart devices")
-        self.log_display(time.time(), "           example: reset 0 1")
-        self.log_display(time.time(), " 5.stop       [sp]: stop devices")
-        self.log_display(time.time(), "           example: stop 0 1")
-        self.log_display(time.time(), " 6.start      [st]: start devices")
-        self.log_display(time.time(), "           example: start 0 1")
-        self.log_display(time.time(), " 7.runcmd     [rc]: run command at remote device")
+        self.log_display(time.time(), " 1.erase      [er]: erase flash of devices")
+        self.log_display(time.time(), "           example: erase 0 1 2-5")
+        self.log_display(time.time(), " 2.program    [pg]: program fireware to devices")
+        self.log_display(time.time(), "           example: program 0x40000 yos_esp32.bin 0 1 5-10")
+        self.log_display(time.time(), " 3.reset      [rs]: reset/restart devices")
+        self.log_display(time.time(), "           example: reset 0 1 3-8")
+        self.log_display(time.time(), " 4.stop       [sp]: stop devices")
+        self.log_display(time.time(), "           example: stop 0 5-7 9")
+        self.log_display(time.time(), " 5.start      [st]: start devices")
+        self.log_display(time.time(), "           example: start 3-5 0 1")
+        self.log_display(time.time(), " 6.runcmd     [rc]: run command at remote device")
         self.log_display(time.time(), "           example: runcmd 0 ping fc:00:00:10:11:22:33:44")
-        self.log_display(time.time(), " 8.^              : run command at latest (runcmd) remote device")
+        self.log_display(time.time(), "                    runcmd 0-10 umesh status")
+        self.log_display(time.time(), " 7.^              : run command at latest (runcmd) remote device")
         self.log_display(time.time(), "           example: ^ping fc:00:00:10:11:22:33:44")
-        self.log_display(time.time(), " 9.log        [lg]: turn on/off log display for devices, eg.: log on 1")
-        self.log_display(time.time(), "           example: log on 1 2; log off 2")
-        self.log_display(time.time(), " 10.logdownload[ld]: download log file of device from server")
-        self.log_display(time.time(), "           example: logdownload 0 1 2")
-        self.log_display(time.time(), " 11.alias     [al]: alias names to ips")
+        self.log_display(time.time(), " 8.log        [lg]: turn on/off log display for devices, eg.: log on 1")
+        self.log_display(time.time(), "           example: log on 1 2 5-8; log off 2-5 7")
+        self.log_display(time.time(), " 9.logdownload[ld]: download log file of device from server")
+        self.log_display(time.time(), "           example: logdownload 0-2 5")
+        self.log_display(time.time(), " 10.alias     [al]: alias names to ips")
         self.log_display(time.time(), "           example: alias 192.168.1.10:Pi1@HZ")
-        self.log_display(time.time(), " 12.help          : print help infomation")
+        self.log_display(time.time(), " 11.help          : print help infomation")
 
     def process_cmd(self, cmd):
         cmd_argv = cmd.split(' ')
         self.cmdrun_status_display('')
         cmd = cmd_argv[0]; args = cmd_argv[1:]
-        if cmd == "send" or cmd == "sd":
-            for file in args:
-                self.send_file_to_server(file)
-        elif cmd == "erase" or cmd == "er":
+        if cmd == "erase" or cmd == "er":
             self.erase_devices(args)
         elif cmd == "program" or cmd == "pg":
             self.program_devices(args)

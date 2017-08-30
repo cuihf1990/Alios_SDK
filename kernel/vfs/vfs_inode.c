@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
@@ -19,6 +7,7 @@
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
+#include <yos/kernel.h>
 
 static inode_t g_vfs_dev_nodes[YOS_CONFIG_VFS_DEV_NODES];
 
@@ -73,6 +62,12 @@ inode_t *inode_open(const char *path)
         }
         if (node->i_name == NULL) {
             continue;
+        }
+        if (INODE_IS_TYPE(node, VFS_TYPE_FS_DEV)) {
+            if ((strncmp(node->i_name, path, strlen(node->i_name)) == 0) &&
+                (*(path + strlen(node->i_name)) == '/')) {
+                return node;
+            }
         }
         if (strcmp(node->i_name, path) == 0) {
             return node;
@@ -131,8 +126,9 @@ static int inode_set_name(const char *path, inode_t **inode)
 
     len = strlen(path);
     mem = (void *)yos_malloc(len + 1);
-    if (!mem)
+    if (!mem) {
         return E_VFS_NO_MEM;
+    }
 
     memcpy(mem, (const void *)path, len);
     (*inode)->i_name = (char *)mem;
@@ -144,24 +140,27 @@ static int inode_set_name(const char *path, inode_t **inode)
 int inode_reserve(const char *path, inode_t **inode)
 {
     int ret;
-    inode_t *node;
+    inode_t *node = NULL;
 
     VFS_NULL_PARA_CHK(path != NULL && inode != NULL);
     *inode = NULL;
 
     /* Handle paths that are interpreted as the root directory */
-    if (path[0] == '\0' || path[0] != '/')
+    if (path[0] == '\0' || path[0] != '/') {
         return E_VFS_REGISTERED;
+    }
 
     ret = inode_alloc();
-    if (ret < 0)
+    if (ret < 0) {
         return ret;
+    }
 
     inode_ptr_get(ret, &node);
 
     ret = inode_set_name(path, &node);
-    if (ret < 0)
+    if (ret < 0) {
         return ret;
+    }
 
     *inode = node;
     return VFS_SUCCESS;
@@ -175,12 +174,14 @@ int inode_release(const char *path)
     VFS_NULL_PARA_CHK(path != NULL);
 
     node = inode_open(path);
-    if (node == NULL)
+    if (node == NULL) {
         return E_VFS_INODE_NOT_FOUND;
+    }
 
     ret = inode_del(node);
-    if (ret < 0)
+    if (ret < 0) {
         return ret;
+    }
 
     return VFS_SUCCESS;
 }

@@ -6,7 +6,7 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = Rhino Kernel
 PROJECT_NUMBER         = 
-PROJECT_BRIEF          = "YunOS kernel for IOT！"
+PROJECT_BRIEF          = "AliOS kernel for IOT！"
 PROJECT_LOGO           = 
 OUTPUT_DIRECTORY       = ./
 CREATE_SUBDIRS         = NO

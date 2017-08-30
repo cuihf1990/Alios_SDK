@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <errno.h>
@@ -21,7 +9,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <k_api.h>
 #include <yos/log.h>
 #include <yos/kernel.h>
 
@@ -40,7 +27,7 @@ extern void __gcov_flush(void);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
 extern void hw_start_hal(void);
-extern void trace_start(int flag);
+extern void trace_start();
 extern void netmgr_init(void);
 extern int yos_framework_init(void);
 extern int yos_cli_init(void);
@@ -65,8 +52,6 @@ static void app_entry(void *arg)
 
     yos_features_init();
 
-    trace_start(options.trace_flag);
-
     hw_start_hal();
 
     vfs_init();
@@ -84,6 +69,10 @@ static void app_entry(void *arg)
     yos_loop_init();
 
     yos_framework_init();
+
+#ifdef VCALL_RHINO
+    trace_start();    
+#endif
 
     application_start(options.argc, options.argv);
 }

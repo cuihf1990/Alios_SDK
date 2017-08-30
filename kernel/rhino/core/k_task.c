@@ -1,25 +1,13 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
 
 static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,
-                                uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
-                                size_t stack_size, task_entry_t entry, uint8_t autorun,
-                                uint8_t mm_alloc_flag, uint8_t cpu_num, uint8_t cpu_binded)
+                           uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
+                           size_t stack_size, task_entry_t entry, uint8_t autorun,
+                           uint8_t mm_alloc_flag, uint8_t cpu_num, uint8_t cpu_binded)
 {
     CPSR_ALLOC();
 
@@ -88,9 +76,9 @@ static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,
     task->cpu_num       = cpu_num;
     cpu_binded          = cpu_binded;
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (YUNOS_CONFIG_CPU_NUM > 1)
     task->cpu_binded    = cpu_binded;
-    #endif
+#endif
 
 #if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
 #if (YUNOS_CONFIG_CPU_STACK_DOWN > 0)
@@ -130,8 +118,8 @@ static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,
 }
 
 kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
-                                  uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
-                                  size_t stack_size, task_entry_t entry, uint8_t autorun)
+                          uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
+                          size_t stack_size, task_entry_t entry, uint8_t autorun)
 {
     return task_create(task, name, arg, prio, ticks, stack_buf, stack_size, entry,
                        autorun, K_OBJ_STATIC_ALLOC, 0, 0);
@@ -139,9 +127,9 @@ kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
 
 #if (YUNOS_CONFIG_CPU_NUM > 1)
 kstat_t yunos_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
-                                        uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
-                                        size_t stack_size, task_entry_t entry, uint8_t cpu_num,
-                                        uint8_t autorun)
+                              uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
+                              size_t stack_size, task_entry_t entry, uint8_t cpu_num,
+                              uint8_t autorun)
 {
     return task_create(task, name, arg, prio, ticks, stack_buf, stack_size, entry,
                        autorun, K_OBJ_STATIC_ALLOC, cpu_num, 1);
@@ -150,8 +138,8 @@ kstat_t yunos_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t task_dyn_create(ktask_t **task, const name_t *name, void *arg,
-                               uint8_t pri, tick_t ticks, size_t stack,task_entry_t entry,
-                               uint8_t cpu_num, uint8_t cpu_binded, uint8_t autorun)
+                        uint8_t pri, tick_t ticks, size_t stack, task_entry_t entry,
+                        uint8_t cpu_num, uint8_t cpu_binded, uint8_t autorun)
 {
     kstat_t      ret;
     cpu_stack_t *task_stack;
@@ -181,7 +169,7 @@ kstat_t task_dyn_create(ktask_t **task, const name_t *name, void *arg,
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
         yunos_mm_free(task_stack);
         yunos_mm_free(task_obj);
-       *task = NULL;
+        *task = NULL;
         return ret;
     }
 
@@ -275,14 +263,14 @@ kstat_t task_suspend(ktask_t *task)
 
     cur_cpu_num = cpu_cur_get();
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (YUNOS_CONFIG_CPU_NUM > 1)
     if (task->cpu_num != cur_cpu_num) {
         if (task->cur_exc == 1) {
             YUNOS_CRITICAL_EXIT();
             return YUNOS_TRY_AGAIN;
         }
     }
-    #endif
+#endif
 
     if (task == g_active_task[cur_cpu_num]) {
         if (g_sched_lock[cur_cpu_num] > 0u) {
@@ -704,14 +692,14 @@ kstat_t yunos_task_del(ktask_t *task)
         return YUNOS_KOBJ_DEL_ERR;
     }
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (YUNOS_CONFIG_CPU_NUM > 1)
     if (task->cpu_num != cur_cpu_num) {
         if (task->cur_exc == 1) {
             YUNOS_CRITICAL_EXIT();
             return YUNOS_TRY_AGAIN;
         }
     }
-    #endif
+#endif
 
     if (task == g_active_task[cpu_cur_get()]) {
         if (g_sched_lock[cpu_cur_get()] > 0u) {
@@ -795,14 +783,14 @@ kstat_t yunos_task_dyn_del(ktask_t *task)
         return YUNOS_KOBJ_DEL_ERR;
     }
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (YUNOS_CONFIG_CPU_NUM > 1)
     if (task->cpu_num != cur_cpu_num) {
         if (task->cur_exc == 1) {
             YUNOS_CRITICAL_EXIT();
             return YUNOS_TRY_AGAIN;
         }
     }
-    #endif
+#endif
 
     if (task == g_active_task[cpu_cur_get()]) {
         if (g_sched_lock[cpu_cur_get()] > 0u) {

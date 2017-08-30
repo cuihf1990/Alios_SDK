@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _DDM_UTIL_H_
 #define _DDM_UTIL_H_
 

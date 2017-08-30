@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -59,7 +47,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
 int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), void *arg,
                      int stack_size, int prio)
 {
-    return (int)yunos_task_dyn_create((ktask_t**)(&(task->hdl)),name, arg, prio, 0,
+    return (int)yunos_task_dyn_create((ktask_t **)(&(task->hdl)), name, arg, prio, 0,
                                       stack_size / sizeof(cpu_stack_t), fn, 1u);
 }
 
@@ -193,11 +181,11 @@ int yos_mutex_unlock(yos_mutex_t *mutex)
 
 int yos_mutex_is_valid(yos_mutex_t *mutex)
 {
-   if(mutex == NULL){
-       return YUNOS_FALSE;
-   }
+    if (mutex == NULL) {
+        return YUNOS_FALSE;
+    }
 
-   return (yunos_mutex_is_valid(mutex->hdl)== YUNOS_SUCCESS)?YUNOS_TRUE:YUNOS_FALSE;
+    return (yunos_mutex_is_valid(mutex->hdl) == YUNOS_SUCCESS) ? YUNOS_TRUE : YUNOS_FALSE;
 }
 
 int yos_sem_new(yos_sem_t *sem, int count)
@@ -266,14 +254,14 @@ void yos_sem_signal(yos_sem_t *sem)
 
 int yos_sem_is_valid(yos_sem_t *sem)
 {
-   if(sem == NULL){
-       return YUNOS_FALSE;
-   }
+    if (sem == NULL) {
+        return YUNOS_FALSE;
+    }
 
-   return (yunos_sem_is_valid(sem->hdl)== YUNOS_SUCCESS)?YUNOS_TRUE:YUNOS_FALSE;
+    return (yunos_sem_is_valid(sem->hdl) == YUNOS_SUCCESS) ? YUNOS_TRUE : YUNOS_FALSE;
 }
 
-void yos_sem_signal_all(yos_sem_t * sem)
+void yos_sem_signal_all(yos_sem_t *sem)
 {
     if (sem == NULL) {
         return;
@@ -341,30 +329,30 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
 
 int yos_queue_is_valid(yos_queue_t *queue)
 {
-   if(queue == NULL){
-       return YUNOS_FALSE;
-   }
+    if (queue == NULL) {
+        return YUNOS_FALSE;
+    }
 
-   return (yunos_buf_queue_is_valid(queue->hdl)== YUNOS_SUCCESS)?YUNOS_TRUE:YUNOS_FALSE;
+    return (yunos_buf_queue_is_valid(queue->hdl) == YUNOS_SUCCESS) ? YUNOS_TRUE : YUNOS_FALSE;
 }
 
-void* yos_queue_buf_ptr(yos_queue_t *queue)
+void *yos_queue_buf_ptr(yos_queue_t *queue)
 {
-   if(yos_queue_is_valid(queue) != YUNOS_SUCCESS){
-       return NULL;
-   }
+    if (yos_queue_is_valid(queue) != YUNOS_SUCCESS) {
+        return NULL;
+    }
 
-   return  ((kbuf_queue_t *)queue->hdl)->buf;
+    return  ((kbuf_queue_t *)queue->hdl)->buf;
 }
 
 int yos_sched_disable()
 {
-   return (int)yunos_sched_disable();
+    return (int)yunos_sched_disable();
 }
 
 int yos_sched_enable()
 {
-   return (int)yunos_sched_enable();
+    return (int)yunos_sched_enable();
 }
 
 int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
@@ -564,13 +552,24 @@ void *yos_zalloc(unsigned int size)
     }
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
-        tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        tmp = yunos_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
+
+#ifndef YOS_BINS
         yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
-#else
-        tmp = yunos_mm_alloc(size);
 #endif
-    if (tmp)
+    } else {
+        tmp = yunos_mm_alloc(size);
+    }
+
+#else
+    tmp = yunos_mm_alloc(size);
+#endif
+
+    if (tmp) {
         bzero(tmp, size);
+    }
+
     return tmp;
 }
 
@@ -583,8 +582,16 @@ void *yos_malloc(unsigned int size)
     }
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
-    tmp = yunos_mm_alloc(size|YOS_UNSIGNED_INT_MSB);
-    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        tmp = yunos_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
+
+#ifndef YOS_BINS
+        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif
+    } else {
+        tmp = yunos_mm_alloc(size);
+    }
+
 #else
     tmp = yunos_mm_alloc(size);
 #endif
@@ -597,13 +604,28 @@ void *yos_realloc(void *mem, unsigned int size)
     void *tmp = NULL;
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
-    tmp = yunos_mm_realloc(mem, size|YOS_UNSIGNED_INT_MSB);
-    yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        tmp = yunos_mm_realloc(mem, size | YOS_UNSIGNED_INT_MSB);
+
+#ifndef YOS_BINS
+        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif
+    } else {
+        tmp = yunos_mm_realloc(mem, size);
+    }
+
 #else
     tmp = yunos_mm_realloc(mem, size);
 #endif
 
     return tmp;
+}
+
+void yos_alloc_trace(void *addr, size_t allocator)
+{
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    yunos_owner_attach(g_kmm_head, addr, allocator);
+#endif
 }
 
 void yos_free(void *mem)

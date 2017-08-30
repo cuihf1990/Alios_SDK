@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef UR_LOGGING_H
@@ -76,7 +64,10 @@ typedef enum {
 #ifndef DEBUG
 static inline void ur_log(ur_log_level_t level, ur_log_region_t region,
                           const char *format, ...) {}
-static inline ur_log_level_t ur_log_get_level(void) {return -1;}
+static inline ur_log_level_t ur_log_get_level(void)
+{
+    return -1;
+}
 static inline void ur_log_set_level(ur_log_level_t lvl) {}
 #else
 void ur_log(ur_log_level_t level, ur_log_region_t region,

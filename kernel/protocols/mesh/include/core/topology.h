@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef UR_TOPOLOGY_H
@@ -22,8 +10,6 @@
 enum {
     MAX_NEIGHBORS_NUM = 32,
 };
-
-#define INVALID_UEID   "\xff\xff\xff\xff\xff\xff\xff\xff"
 
 enum {
     BCAST_NETID   = 0xffff,
@@ -40,7 +26,6 @@ enum {
 };
 
 typedef struct link_nbr_stats_s {
-    uint32_t last_heard;
     uint16_t link_request;
     uint16_t link_accept;
     uint16_t link_cost;
@@ -62,6 +47,7 @@ enum {
     NBR_NETID_CHANGED     = 1 << 2,
     NBR_REBOOT            = 1 << 3,
     NBR_CHANNEL_CHANGED   = 1 << 4,
+    NBR_LINK_ESTIMATED    = 1 << 5,
 };
 
 typedef enum node_type_s {
@@ -86,10 +72,9 @@ typedef struct ssid_info_s {
 
 typedef struct neighbor_s {
     slist_t next;
-    void *hal;
-    uint8_t ueid[EXT_ADDR_SIZE];
-    mac_address_t mac;
-    ur_addr_t addr;
+    uint8_t mac[EXT_ADDR_SIZE];
+    uint16_t netid;
+    uint16_t sid;
     uint16_t path_cost;
     neighbor_state_t state: 4;
     node_mode_t mode;
@@ -98,10 +83,8 @@ typedef struct neighbor_s {
     uint8_t attach_candidate_timeout;
     ssid_info_t ssid_info;
     uint8_t channel;
-    int8_t rssi;
     uint8_t *one_time_key;
     uint32_t last_heard;
-    uint32_t last_lq_time;
 } neighbor_t;
 
 #define ueid64(ueid) ({ \

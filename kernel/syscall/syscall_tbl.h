@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 /* --------------------Rhino-------------------- */
@@ -124,29 +112,46 @@ SYSCALL(SYS_WORK_SCHED, yos_work_sched)
 #define SYS_WORK_CANCEL 35
 SYSCALL(SYS_WORK_CANCEL, yos_work_cancel)
 
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+
+#define SYS_MALLOC 36
+SYSCALL(SYS_MALLOC, sys_yos_malloc)
+
+#define SYS_REALLOC 37
+SYSCALL(SYS_REALLOC, sys_yos_realloc)
+
+#define SYS_ZALLOC 38
+SYSCALL(SYS_ZALLOC, sys_yos_zalloc)
+
+#else
+
 #define SYS_MALLOC 36
 SYSCALL(SYS_MALLOC, yos_malloc)
 
 #define SYS_REALLOC 37
 SYSCALL(SYS_REALLOC, yos_realloc)
 
-#define SYS_FREE 38
-SYSCALL(SYS_FREE, yos_free)
-
-#define SYS_NOW 39
-SYSCALL(SYS_NOW, yos_now)
-
-#define SYS_NOW_MS 40
-SYSCALL(SYS_NOW_MS, yos_now_ms)
-
-#define SYS_MSLEEP 41
-SYSCALL(SYS_MSLEEP, yos_msleep)
-
-#define SYS_ZALLOC 42
+#define SYS_ZALLOC 38
 SYSCALL(SYS_ZALLOC, yos_zalloc)
 
+#endif
 
-/* keep 42~50 for Rhino */
+#define SYS_ALLOC_TRACE 39
+SYSCALL(SYS_ALLOC_TRACE, yos_alloc_trace)
+
+#define SYS_FREE 40
+SYSCALL(SYS_FREE, yos_free)
+
+#define SYS_NOW 41
+SYSCALL(SYS_NOW, yos_now)
+
+#define SYS_NOW_MS 42
+SYSCALL(SYS_NOW_MS, yos_now_ms)
+
+#define SYS_MSLEEP 43
+SYSCALL(SYS_MSLEEP, yos_msleep)
+
+/* keep 44~50 for Rhino */
 
 /* --------------------Framework-------------------- */
 
@@ -441,11 +446,28 @@ SYSCALL(SYS_OTA_SET_BOOT, hal_ota_set_boot)
 #define SYS_OTA_GET_DEFAULT_MODULE 176
 SYSCALL(SYS_OTA_GET_DEFAULT_MODULE, hal_ota_get_default_module)
 
-/* keep 167~170 for OTA */
+/* keep 177~180 for OTA */
+
+/* --------------------CLI-------------------- */
+#define SYS_CLI_REG_CMD 181
+SYSCALL(SYS_CLI_REG_CMD, cli_register_command)
+
+#define SYS_CLI_UNREG_CMD 182
+SYSCALL(SYS_CLI_UNREG_CMD, cli_unregister_command)
+
+#define SYS_CLI_REG_CMDS 183
+SYSCALL(SYS_CLI_REG_CMDS, cli_register_commands)
+
+#define SYS_CLI_UNREG_CMDS 184
+SYSCALL(SYS_CLI_UNREG_CMDS, cli_unregister_commands)
+
+#define SYS_CLI_INIT 185
+SYSCALL(SYS_CLI_INIT, yos_cli_init)
+
+#define SYS_CLI_STOP 186
+SYSCALL(SYS_CLI_STOP, yos_cli_stop)
 
 /* --------------------OTHERS-------------------- */
-#define SYS_UART_SEND 181
+#define SYS_UART_SEND 187
 SYSCALL(SYS_UART_SEND, yos_uart_send)
 
-#define SYS_CLI_REGISTER_COMMAND 182
-SYSCALL(SYS_CLI_REGISTER_COMMAND, cli_register_command)

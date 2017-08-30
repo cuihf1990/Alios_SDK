@@ -1,4 +1,8 @@
 /*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
+/*
  * mesh hal impl.
  */
 #include <stdio.h>
@@ -42,21 +46,6 @@ typedef struct {
     frame_stats_t stats;
 } mesh_hal_priv_t;
 
-static void payload_encrypt(mesh_hal_priv_t *priv, int8_t key_index, frame_t *frame)
-{
-#if 0
-    uint8_t index;
-
-    if (key_index < 0) {
-        return;
-    }
-
-    for (index = 0; (index < priv->keys[key_index].len) && (index < (frame->len -2)); index++) {
-        frame->data[index + 2] ^= priv->keys[key_index].key[index];
-    }
-#endif
-}
-
 typedef struct {
     frame_t frm;
     frame_info_t fino;
@@ -71,10 +60,6 @@ static void linuxhost_mesh_recv(frame_t *frm, frame_info_t *fino, void *cb_data)
     if (!priv->rxcb)
         return;
 
-    control = frm->data[1];
-    if (control & 0x01) {
-        payload_encrypt(priv, fino->key_index, frm);
-    }
     priv->rxcb(priv->context, frm, fino, 0);
 }
 
@@ -188,7 +173,7 @@ static int linux_80211_mesh_send_ucast(umesh_hal_module_t *module, frame_t *fram
         return -2;
     }
 
-    payload_encrypt(priv, frame->key_index, frame);
+    frame->key_index = -1;
     error = send_frame(module, frame, dest);
     if(sent) {
         (*sent)(context, frame, error);
@@ -216,7 +201,6 @@ static int linux_80211_mesh_send_bcast(umesh_hal_module_t *module, frame_t *fram
 
     dest.len = 8;
     memset(dest.addr, 0xff, sizeof(dest.addr));
-    payload_encrypt(priv, frame->key_index, frame);
     error = send_frame(module, frame, &dest);
     if(sent) {
         (*sent)(context, frame, error);

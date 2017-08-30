@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -19,7 +7,7 @@
 #if (YUNOS_CONFIG_BUF_QUEUE > 0)
 
 static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
-                                       void *buf, size_t size, size_t max_msg, uint8_t mm_alloc_flag)
+                                void *buf, size_t size, size_t max_msg, uint8_t mm_alloc_flag)
 {
     CPSR_ALLOC();
 
@@ -59,7 +47,7 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
 
     ringbuf_init(&(queue->ringbuf), buf, size, RINGBUF_TYPE_DYN, 0);
     queue->min_free_buf_size  = queue->ringbuf.freesize;
-    TRACE_BUF_QUEUE_CREATE(g_active_task[cpu_cur_get()], queue);
+    TRACE_BUF_QUEUE_CREATE(yunos_cur_task_get(), queue);
 
     return YUNOS_SUCCESS;
 }
@@ -437,15 +425,14 @@ kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
     return YUNOS_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_is_valid(kbuf_queue_t * queue)
+kstat_t yunos_buf_queue_is_valid(kbuf_queue_t *queue)
 {
     NULL_PARA_CHK(queue);
 
-    if(queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE)
-    {
-      return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
+        return YUNOS_KOBJ_TYPE_ERR;
     }
-    
+
     return YUNOS_SUCCESS;
 }
 

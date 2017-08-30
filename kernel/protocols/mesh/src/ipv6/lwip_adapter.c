@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
@@ -57,8 +45,7 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
 
     if (ip4_addr_isany(ip4addr) || ip4_addr_isbroadcast(ip4addr, netif)) {
         sid = 0xffff;
-    }
-    else {
+    } else {
         sid = ntohl(ip4addr->addr) & 0xffff;
     }
 
@@ -162,13 +149,19 @@ static void update_interface_ipaddr(void)
 
     g_la_state.adpif.ip6_autoconfig_enabled = 1;
 #endif
+    ip4_addr_t          ipaddr, netmask, gw;
+    uint16_t sid = umesh_mm_get_local_sid();
+
+    IP4_ADDR(&gw, 10, 0, 0, 1);
+    IP4_ADDR(&ipaddr, 10, 0, sid >> 8, sid & 0xff);
+    IP4_ADDR(&netmask, 255, 255, 0, 0);
+    netif_set_addr(&g_la_state.adpif, &ipaddr, &netmask, &gw);
 }
 
 ur_error_t ur_adapter_interface_up(void)
 {
     const mac_address_t *mac_addr;
     struct netif        *interface;
-    ip4_addr_t          ipaddr, netmask, gw;
 
     interface = netif_find(g_la_state.interface_name);
 
@@ -177,11 +170,7 @@ ur_error_t ur_adapter_interface_up(void)
         g_la_state.adpif.hwaddr_len = mac_addr->len;
         memcpy(g_la_state.adpif.hwaddr, mac_addr->addr, 6);
 
-        uint16_t sid = umesh_mm_get_local_sid();
-        IP4_ADDR(&gw, 192,168,0,1);
-        IP4_ADDR(&ipaddr, 192,168,sid>>8,sid&0xff);
-        IP4_ADDR(&netmask, 255,255,0,0);
-        netif_add(&g_la_state.adpif, &ipaddr, &netmask, &gw, NULL,
+        netif_add(&g_la_state.adpif, NULL, NULL, NULL, NULL,
                   ur_adapter_if_init, tcpip_input);
         interface = &g_la_state.adpif;
     }

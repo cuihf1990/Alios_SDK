@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
@@ -23,18 +11,18 @@
 #include "hal/interface_context.h"
 
 static uint8_t g_symmetric_key[] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,		 
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,		 
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 };
 
 ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
-                                  const mac_address_t *addr)
+                                  const uint8_t *mac)
 {
     ur_error_t error;
     uint8_t timestamp_expand[KEY_SIZE];
     uint8_t index;
 
-    if (key == NULL || addr == NULL) {
+    if (key == NULL || mac == NULL) {
         return UR_ERROR_MEM;
     }
 
@@ -43,9 +31,8 @@ ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
                (uint8_t *)&timestamp, sizeof(uint32_t));
     }
 
-    for (index = 0; index < KEY_SIZE / sizeof(addr->addr); index++) {
-        memcpy(&key[index * sizeof(addr->addr)], addr->addr,
-                    sizeof(addr->addr));
+    for (index = 0; index < KEY_SIZE / EXT_ADDR_SIZE; index++) {
+        memcpy(&key[index * EXT_ADDR_SIZE], mac, EXT_ADDR_SIZE);
     }
 
     error = umesh_aes_encrypt(timestamp_expand, KEY_SIZE,

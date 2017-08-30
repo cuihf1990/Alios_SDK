@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
@@ -21,7 +9,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
-#include <k_api.h>
 #include "yos/log.h"
 #include "alink_export.h"
 #include "json_parser.h"
@@ -31,6 +18,15 @@
 #include <netmgr.h>
 #include <yos/cli.h>
 #include <yos/cloud.h>
+#include <accs.h>
+
+#ifdef CONFIG_WIFIMONITOR
+#include <wifimonitor.h>
+#endif
+
+#ifdef CONFIG_YWSS
+#include <enrollee.h>
+#endif
 
 /* raw data device means device post byte stream to cloud,
  * cloud translate byte stream to json value by lua script
@@ -102,11 +98,13 @@ static void cloud_disconnected(int cb_type, const char *json_buffer) { LOG("alin
 int callback_upgrade_device(const char *params)
 {
     LOG("alink device start to upgrade.");
+    return 0;
 }
 
 int callback_cancel_upgrade_device(const char *params)
 {
     LOG("alink device stop to upgrade.");
+    return 0;
 }
 
 #ifndef RAW_DATA_DEVICE
@@ -580,6 +578,7 @@ static void alink_connect_event(input_event_t *event, void *priv_data)
     }
 
     if (event->code == CODE_SYS_ON_ALINK_ONLINE ) {
+
 #ifdef CONFIG_YWSS
         awss_registrar_init();
 #endif
@@ -697,6 +696,10 @@ int application_start(int argc, char *argv[])
         netmgr_init();
         netmgr_start(false);
     }
+
+#ifdef CONFIG_WIFIMONITOR
+    cli_register_command(&count_mac_cmd);
+#endif
 
 #ifdef CONFIG_YOS_DDA
     dda_service_start();

@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
@@ -35,6 +23,7 @@ static void handle_link_request_timer(void *args)
     network_context_t *network;
     uint32_t interval;
     uint8_t tlv_type[1] = {TYPE_UCAST_CHANNEL};
+    ur_addr_t addr;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link request timer\r\n");
 
@@ -50,8 +39,8 @@ static void handle_link_request_timer(void *args)
         return;
     }
 
-    send_link_request(network, &attach_node->addr,
-                      tlv_type, sizeof(tlv_type));
+    set_mesh_short_addr(&addr, attach_node->netid, attach_node->sid);
+    send_link_request(network, &addr, tlv_type, sizeof(tlv_type));
     if (attach_node->stats.link_request < LINK_ESTIMATE_SENT_THRESHOLD) {
         hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
                                                  hal);
@@ -109,8 +98,8 @@ static void handle_link_quality_update_timer(void *args)
         if (error != UR_ERROR_NONE &&
             nbr == umesh_mm_get_attach_node(network)) {
             hal->link_request_timer = ur_start_timer(
-                                              hal->link_request_interval,
-                                              handle_link_request_timer, hal);
+                                          hal->link_request_interval,
+                                          handle_link_request_timer, hal);
         }
         if (nbr->stats.link_cost >= LINK_COST_MAX) {
             nbr->state = STATE_INVALID;
@@ -155,19 +144,16 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
         }
 
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-               "sid %04x ueid " EXT_ADDR_FMT " is replaced\n",
-               nbr->addr.addr.short_addr, EXT_ADDR_DATA(nbr->ueid));
+               "sid %04x mac " EXT_ADDR_FMT " is replaced\n",
+               nbr->sid, EXT_ADDR_DATA(nbr->mac));
         goto get_nbr;
     }
     return NULL;
 
 get_nbr:
-    nbr->hal                = (void *)hal;
-    memset(nbr->ueid, 0xff, sizeof(nbr->ueid));
-    memcpy(&nbr->mac, addr, sizeof(nbr->mac));
-    nbr->addr.netid         = BCAST_NETID;
-    nbr->addr.addr.len        = SHORT_ADDR_SIZE;
-    nbr->addr.addr.short_addr = BCAST_SID;
+    memcpy(nbr->mac, addr->addr, sizeof(nbr->mac));
+    nbr->netid = BCAST_NETID;
+    nbr->sid = BCAST_SID;
     nbr->path_cost          = INFINITY_PATH_COST;
     nbr->mode               = 0;
     nbr->stats.link_cost    = 256;
@@ -176,23 +162,24 @@ get_nbr:
     nbr->state              = STATE_INVALID;
     nbr->flags              = 0;
     nbr->last_heard         = ur_get_now();
-    nbr->last_lq_time = 0;
-
     return nbr;
 }
 
 static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
 {
     network_context_t *network;
+    ur_node_id_t node_id;
 
     if (neighbor == NULL) {
         return UR_ERROR_NONE;
     }
 
-    network = get_network_context_by_meshnetid(neighbor->addr.netid);
+    network = get_network_context_by_meshnetid(neighbor->netid);
     if (network && network->router->sid_type == STRUCTURED_SID &&
         is_allocated_child(network->sid_base, neighbor)) {
-        free_sid(network->sid_base, neighbor->addr.addr.short_addr);
+        node_id.sid = neighbor->sid;
+        memcpy(node_id.ueid, neighbor->mac, sizeof(node_id.ueid));
+        update_sid_mapping(network->sid_base, &node_id, false);
     }
 
     slist_del(&neighbor->next, &hal->neighbors_list);
@@ -208,6 +195,7 @@ static void handle_update_nbr_timer(void *args)
     hal_context_t *hal = (hal_context_t *)args;
     uint16_t sid = umesh_mm_get_local_sid();
     network_context_t *network = NULL;
+    ur_node_id_t node_id;
 
     hal->update_nbr_timer = NULL;
     slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
@@ -225,11 +213,13 @@ static void handle_update_nbr_timer(void *args)
 
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
                "%x neighbor " EXT_ADDR_FMT " become inactive\r\n",
-               sid, EXT_ADDR_DATA(node->mac.addr));
-        network = get_network_context_by_meshnetid(node->addr.netid);
+               sid, EXT_ADDR_DATA(node->mac));
+        network = get_network_context_by_meshnetid(node->netid);
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {
-            free_sid(network->sid_base, node->addr.addr.short_addr);
+            node_id.sid = node->sid;
+            memcpy(node_id.ueid, node->mac, sizeof(node_id.ueid));
+            update_sid_mapping(network->sid_base, &node_id, false);
         }
         node->state = STATE_INVALID;
         g_neighbor_updater_head(node);
@@ -261,24 +251,23 @@ neighbor_t *update_neighbor(const message_info_t *info,
 {
     neighbor_t        *nbr = NULL;
     mm_cost_tv_t      *path_cost = NULL;
-    mm_ueid_tv_t      *src_ueid = NULL;
     mm_ssid_info_tv_t *ssid_info = NULL;
     mm_channel_tv_t   *channel;
     hal_context_t     *hal;
     network_context_t *network;
     uint8_t channel_orig;
+    ur_node_id_t node_id;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
 
     hal = get_hal_context(info->hal_type);
-    nbr = get_neighbor_by_mac_addr(&(info->src_mac.addr));
+    nbr = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
 
     if (length == 0) {
         goto exit;
     }
 
     path_cost = (mm_cost_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_PATH_COST);
-    src_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SRC_UEID);
     ssid_info = (mm_ssid_info_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SSID_INFO);
     channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_UCAST_CHANNEL);
 
@@ -299,9 +288,6 @@ neighbor_t *update_neighbor(const message_info_t *info,
         return NULL;
     }
 
-    if (src_ueid != NULL) {
-        memcpy(nbr->ueid, src_ueid->ueid, sizeof(src_ueid->ueid));
-    }
     if (info->mode) {
         nbr->mode = (node_mode_t)info->mode;
     }
@@ -313,10 +299,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (path_cost != NULL) {
         nbr->path_cost = path_cost->cost;
     }
-    if (nbr->addr.addr.short_addr != info->src.addr.short_addr) {
+    if (nbr->sid != info->src.addr.short_addr) {
         nbr->flags |= NBR_SID_CHANGED;
     }
-    if (nbr->addr.netid != info->src.netid) {
+    if (nbr->netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
     channel_orig = nbr->channel;
@@ -339,7 +325,9 @@ neighbor_t *update_neighbor(const message_info_t *info,
         if (nbr->state == STATE_CHILD &&
             ((nbr->flags & NBR_NETID_CHANGED) ||
              (nbr->flags & NBR_SID_CHANGED))) {
-            free_sid(network->sid_base, nbr->addr.addr.short_addr);
+            node_id.sid = nbr->sid;
+            memcpy(node_id.ueid, nbr->mac, sizeof(node_id.ueid));
+            update_sid_mapping(network->sid_base, &node_id, false);
             nbr->state = STATE_NEIGHBOR;
         }
         network = get_network_context_by_meshnetid(info->src.netid);
@@ -348,8 +336,8 @@ neighbor_t *update_neighbor(const message_info_t *info,
             nbr->state = STATE_CHILD;
         }
     }
-    nbr->addr.addr.short_addr = info->src.addr.short_addr;
-    nbr->addr.netid = info->src.netid;
+    nbr->sid = info->src.addr.short_addr;
+    nbr->netid = info->src.netid;
     g_neighbor_updater_head(nbr);
 
     if (hal->update_nbr_timer == NULL) {
@@ -359,7 +347,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
 
 exit:
     if (nbr) {
-        nbr->rssi = info->rssi;
+        nbr->stats.reverse_rssi = info->reverse_rssi;
+        if (info->forward_rssi != 0xff) {
+            nbr->stats.forward_rssi = info->forward_rssi;
+        }
         nbr->last_heard = ur_get_now();
     }
     return nbr;
@@ -384,26 +375,7 @@ void set_state_to_neighbor(void)
     }
 }
 
-neighbor_t *get_neighbor_by_ueid(const uint8_t *ueid)
-{
-    neighbor_t *node;
-    slist_t *hals;
-    hal_context_t *hal;
-
-    hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-            if ((memcmp(ueid, node->ueid, sizeof(node->ueid)) == 0) &&
-                (node->state > STATE_INVALID)) {
-                return node;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-neighbor_t *get_neighbor_by_mac_addr(const mac_address_t *mac_addr)
+neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr)
 {
     neighbor_t *nbr = NULL;
     slist_t *hals;
@@ -412,8 +384,7 @@ neighbor_t *get_neighbor_by_mac_addr(const mac_address_t *mac_addr)
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-            if (mac_addr->len == nbr->mac.len &&
-                memcmp(mac_addr->addr, nbr->mac.addr, sizeof(nbr->mac.addr)) == 0 &&
+            if (memcmp(addr, nbr->mac, sizeof(nbr->mac)) == 0 &&
                 nbr->state > STATE_INVALID) {
                 return nbr;
             }
@@ -437,7 +408,7 @@ neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
     }
 
     slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-        if (node->addr.addr.short_addr == sid && node->addr.netid == meshnetid &&
+        if (node->sid == sid && node->netid == meshnetid &&
             node->state > STATE_INVALID) {
             return node;
         }
@@ -514,15 +485,13 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
                                                uint8_t tlvs_length)
 {
     ur_error_t  error = UR_ERROR_NONE;
-    mm_tlv_request_tlv_t *request_tlvs;
     message_t   *message;
     uint8_t     *data;
     int16_t     length;
     neighbor_t  *node;
     message_info_t *info;
-    uint8_t     tlv_types_length = 0;
 
-    node = get_neighbor_by_mac_addr(&dest->addr);
+    node = get_neighbor_by_mac_addr(dest->addr.addr);
     if (node == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -533,13 +502,6 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
     }
     length += sizeof(mm_header_t);
 
-    if (memcmp(node->ueid, INVALID_UEID, sizeof(node->ueid))) {
-        tlv_types_length += 1;
-    }
-    if (tlv_types_length) {
-        length += (sizeof(mm_tlv_request_tlv_t) + tlv_types_length);
-    }
-
     message = message_alloc(length, LINK_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
@@ -548,15 +510,6 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_LINK_ACCEPT_AND_REQUEST);
     data += tlvs_set_value(network, data, tlvs, tlvs_length);
-
-    if (tlv_types_length) {
-        request_tlvs = (mm_tlv_request_tlv_t *)data;
-        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST,
-                               tlv_types_length);
-        data += sizeof(mm_tlv_request_tlv_t);
-        data[0] = TYPE_TARGET_UEID;
-        data += tlv_types_length;
-    }
 
     info->network = network;
     // dest
@@ -581,7 +534,7 @@ static ur_error_t send_link_accept(network_context_t *network,
     neighbor_t  *node;
     message_info_t *info;
 
-    node = get_neighbor_by_mac_addr(&dest->addr);
+    node = get_neighbor_by_mac_addr(dest->addr.addr);
     if (node == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -613,7 +566,7 @@ static ur_error_t send_link_accept(network_context_t *network,
 }
 
 uint8_t insert_mesh_header_ies(network_context_t *network,
-                               message_info_t *info)
+                               message_info_t *info, int16_t hdr_ies_limit)
 {
     hal_context_t *hal;
     mesh_header_control_t *control;
@@ -622,26 +575,36 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
     mm_rssi_tv_t *rssi;
     neighbor_t *nbr;
 
+    if (hdr_ies_limit < (sizeof(mm_mode_tv_t) + sizeof(mm_tv_t))) {
+        return 0;
+    }
+
     hal = network->hal;
     control = (mesh_header_control_t *)hal->frame.data;
     control->control[1] |= (1 << MESH_HEADER_IES_OFFSET);
 
     offset += set_mm_mode_tv(hal->frame.data + info->header_ies_offset);
+    if (hdr_ies_limit < (offset + sizeof(mm_rssi_tv_t) + sizeof(mm_tv_t))) {
+        goto exit;
+    }
 
     nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
                               info->dest.netid);
-    if (nbr && (nbr->last_lq_time == 0 ||
-        (ur_get_now() - nbr->last_lq_time) >= LINK_QUALITY_INTERVAL)) {
-        nbr->last_lq_time = ur_get_now();
+    if (nbr) {
         rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset +
                                 offset);
-        umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_FORWARD_RSSI);
-        rssi->rssi = 0xff;
+        umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_REVERSE_RSSI);
+        if ((nbr->flags & NBR_LINK_ESTIMATED) == 0) {
+            nbr->flags |= NBR_LINK_ESTIMATED;
+            rssi->rssi = 0xff;
+            nbr->stats.link_request++;
+        } else {
+            rssi->rssi = nbr->stats.reverse_rssi;
+        }
         offset += sizeof(mm_rssi_tv_t);
-
-        nbr->stats.link_request++;
     }
 
+exit:
     tv = (mm_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
     tv->type = TYPE_HEADER_IES_TERMINATOR;
     offset += sizeof(mm_tv_t);
@@ -659,6 +622,7 @@ ur_error_t handle_mesh_header_ies(message_t *message)
     uint8_t len;
     uint8_t *tlvs;
     mm_tv_t *tv;
+    int8_t rssi;
 
     info = message->info;
     offset = 0;
@@ -667,9 +631,13 @@ ur_error_t handle_mesh_header_ies(message_t *message)
 
     while (tv->type != TYPE_HEADER_IES_TERMINATOR) {
         switch (tv->type) {
-            case TYPE_FORWARD_RSSI:
-                send_link_accept(info->network, &info->src_mac, NULL, 0);
+            case TYPE_REVERSE_RSSI:
                 len = sizeof(mm_rssi_tv_t);
+                rssi = ((mm_rssi_tv_t *)tv)->rssi;
+                if (rssi == 0xff) {
+                    send_link_accept(info->network, &info->src_mac, NULL, 0);
+                }
+                info->forward_rssi = rssi;
                 break;
             case TYPE_MODE:
                 info->mode = ((mm_mode_tv_t *)tv)->mode;
@@ -723,10 +691,9 @@ ur_error_t handle_link_request(message_t *message)
 
 ur_error_t handle_link_accept_and_request(message_t *message)
 {
-    uint8_t    *tlvs;
-    uint16_t   tlvs_length;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
     mm_tlv_request_tlv_t *tlvs_request;
-    mm_ueid_tv_t *ueid;
     mm_channel_tv_t *channel;
     neighbor_t *node;
     message_info_t *info;
@@ -738,7 +705,7 @@ ur_error_t handle_link_accept_and_request(message_t *message)
 
     info = message->info;
     network = info->network;
-    node = get_neighbor_by_mac_addr(&(info->src_mac.addr));
+    node = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
     if (node == NULL) {
         return UR_ERROR_NONE;
     }
@@ -747,11 +714,6 @@ ur_error_t handle_link_accept_and_request(message_t *message)
 
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-
-    ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
-    if (ueid) {
-        memcpy(node->ueid, ueid->ueid, sizeof(node->ueid));
-    }
 
     channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                  TYPE_UCAST_CHANNEL);
@@ -777,28 +739,18 @@ ur_error_t handle_link_accept_and_request(message_t *message)
 
 ur_error_t handle_link_accept(message_t *message)
 {
-    uint8_t      *tlvs;
-    uint16_t     tlvs_length;
-    mm_ueid_tv_t *ueid;
-    neighbor_t   *node;
+    neighbor_t *node;
     message_info_t *info;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link accept\r\n");
     info = message->info;
-    node = get_neighbor_by_mac_addr(&(info->src_mac.addr));
+    node = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
     if (node == NULL) {
         return UR_ERROR_NONE;
     }
 
     node->stats.link_accept++;
 
-    tlvs = message_get_payload(message) + sizeof(mm_header_t);
-    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-
-    ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
-    if (ueid) {
-        memcpy(node->ueid, ueid->ueid, sizeof(node->ueid));
-    }
     return UR_ERROR_NONE;
 }
 

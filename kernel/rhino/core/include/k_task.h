@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef K_TASK_H
@@ -108,10 +96,10 @@ typedef struct {
 
     uint8_t          cpu_num;
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (YUNOS_CONFIG_CPU_NUM > 1)
     uint8_t          cpu_binded;
     uint8_t          cur_exc;
-    #endif
+#endif
 
     /* current prio */
     uint8_t          prio;
@@ -141,9 +129,9 @@ kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
 
 #if (YUNOS_CONFIG_CPU_NUM > 1)
 kstat_t yunos_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
-                                        uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
-                                        size_t stack_size, task_entry_t entry, uint8_t cpu_num,
-                                        uint8_t autorun);
+                              uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
+                              size_t stack_size, task_entry_t entry, uint8_t cpu_num,
+                              uint8_t autorun);
 #endif
 
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "yunit.h"
 
 #include "umesh.h"
@@ -5,6 +9,8 @@
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
 #include "hal/interfaces.h"
+
+#define INVALID_UEID "\xff\xff\xff\xff\xff\xff\xff\xff"
 
 extern void hal_arch_time_msleep(int ms);
 extern void ur_ut_send_cmd_to_ddm(const char *cmd);
@@ -43,10 +49,10 @@ void test_uradar_mesh_mgmt_case(void)
     mac_addr.len = sizeof(mac_addr.addr);
     memset(mac_addr.addr, 0x00, sizeof(mac_addr.addr));
     mac_addr.addr[0] = 0x03;
-    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr(&mac_addr));
+    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr((const uint8_t *)&mac_addr));
     YUNIT_ASSERT_PTR_NULL(get_neighbor_by_sid(NULL, 0x1200, umesh_mm_get_meshnetid(NULL)));
     uint8_t ueid1[8] = {0};
-    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_ueid(ueid1));
+    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr(ueid1));
     YUNIT_ASSERT(0 != umesh_mm_get_meshnetid(NULL));
     YUNIT_ASSERT_PTR_NOT_NULL(umesh_mm_get_mac_address());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_set_mode(MODE_MOBILE));

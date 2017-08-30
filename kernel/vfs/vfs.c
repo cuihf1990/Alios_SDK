@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <yos/kernel.h>
@@ -338,8 +326,9 @@ off_t yos_lseek(int fd, off_t offset, int whence)
 
     f = get_file(fd);
 
-    if (f == NULL)
+    if (f == NULL) {
         return E_VFS_FD_ILLEGAL;
+    }
 
     node = f->node;
 
@@ -348,7 +337,7 @@ off_t yos_lseek(int fd, off_t offset, int whence)
             err = (node->ops.i_fops->lseek)(f, offset, whence);
         }
     }
-    
+
     return err;
 }
 
@@ -370,7 +359,7 @@ int yos_sync(int fd)
         if ((node->ops.i_fops->sync) != NULL) {
             err = (node->ops.i_fops->sync)(f);
         }
-    } 
+    }
 
     return err;
 }
@@ -510,7 +499,7 @@ int yos_rename(const char *oldpath, const char *newpath)
     return err;
 }
 
-yos_dir_t* yos_opendir(const char *path)
+yos_dir_t *yos_opendir(const char *path)
 {
     file_t  *file;
     inode_t *node;
@@ -566,8 +555,9 @@ int yos_closedir(yos_dir_t *dir)
     inode_t *node;
     int      err = E_VFS_NOSYS;
 
-    if (dir == NULL)
+    if (dir == NULL) {
         return E_VFS_ERR_PARAM;
+    }
 
     f = get_file(dir->dd_vfs_fd);
 
@@ -594,18 +584,20 @@ int yos_closedir(yos_dir_t *dir)
     return err;
 }
 
-yos_dirent_t* yos_readdir(yos_dir_t *dir)
+yos_dirent_t *yos_readdir(yos_dir_t *dir)
 {
     file_t *f;
     inode_t *node;
     yos_dirent_t *ret = NULL;
 
-    if (dir == NULL)
+    if (dir == NULL) {
         return NULL;
+    }
 
     f = get_file(dir->dd_vfs_fd);
-    if (f == NULL)
+    if (f == NULL) {
         return NULL;
+    }
 
     node = f->node;
 
@@ -615,8 +607,9 @@ yos_dirent_t* yos_readdir(yos_dir_t *dir)
         }
     }
 
-    if (ret != NULL)
+    if (ret != NULL) {
         return ret;
+    }
 
     return NULL;
 }
@@ -669,7 +662,7 @@ int yos_mkdir(const char *path)
 
 #if (YOS_CONFIG_VFS_POLL_SUPPORT>0)
 
-#ifndef WITH_LWIP
+#if !defined(WITH_LWIP) && defined(VCALL_RHINO)
 #define NEED_WAIT_IO
 #endif
 
@@ -679,9 +672,6 @@ int yos_mkdir(const char *path)
 
 #include <sys/syscall.h>
 #define gettid() syscall(SYS_gettid)
-
-#include <k_api.h>
-#define MS2TICK(ms) ((ms * YUNOS_CONFIG_TICKS_PER_SECOND + 999) / 1000)
 
 struct poll_arg {
     yos_sem_t sem;
@@ -718,7 +708,7 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
         return ret;
     }
 
-    timeout = timeout >= 0 ? MS2TICK(timeout) : YOS_WAIT_FOREVER;
+    timeout = timeout >= 0 ? timeout : YOS_WAIT_FOREVER;
     ret = yos_sem_wait(&parg->sem, timeout);
     if (ret != VFS_SUCCESS) {
         return 0;

@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
@@ -35,6 +23,7 @@
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 #include "tools/diags.h"
+#include "lwip/sockets.h"
 
 #ifdef CONFIG_YOS_MESH_DEBUG
 static void process_help(int argc, char *argv[]);
@@ -177,6 +166,23 @@ static const char *mediatype2str(media_type_t media)
     return "unknown";
 }
 
+static const char *nbrstate2str(neighbor_state_t state)
+{
+    switch (state) {
+        case STATE_CANDIDATE:
+            return "candidate";
+        case STATE_PARENT:
+            return "parent";
+        case STATE_CHILD:
+            return "child";
+        case STATE_NEIGHBOR:
+            return "nbr";
+        case STATE_INVALID:
+            return "invalid";
+    }
+    return "unknown";
+}
+
 #ifdef CONFIG_YOS_MESH_DEBUG
 static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length);
 
@@ -260,10 +266,10 @@ static void handle_autotest_timer(void *args)
     }
     if (g_cli_autotest.times) {
         g_cli_autotest.timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL,
-                                                   handle_autotest_timer, NULL);
+                                              handle_autotest_timer, NULL);
     } else if (g_cli_autotest.print_timer == NULL) {
         g_cli_autotest.print_timer = ur_start_timer(AUTOTEST_PRINT_WAIT_TIME,
-                                                         handle_autotest_print_timer, NULL);
+                                                    handle_autotest_print_timer, NULL);
     }
 }
 
@@ -645,7 +651,7 @@ void process_sids(int argc, char *argv[])
                 continue;
             }
             response_append(EXT_ADDR_FMT ", %04x\r\n",
-                            EXT_ADDR_DATA(node->ueid), node->addr.addr.short_addr);
+                            EXT_ADDR_DATA(node->mac), node->sid);
         }
     }
 
@@ -689,7 +695,7 @@ void process_testcmd(int argc, char *argv[])
                 if (nbr->state != STATE_PARENT) {
                     continue;
                 }
-                response_append(EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac.addr));
+                response_append(EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac));
                 return;
             }
         }
@@ -742,15 +748,15 @@ void process_whitelist(int argc, char *argv[])
         bool enabled = umesh_is_whitelist_enabled();
         const whitelist_entry_t *whitelist = umesh_get_whitelist_entries();
         response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
-        for(i = 0; i < WHITELIST_ENTRY_NUM; i++) {
+        for (i = 0; i < WHITELIST_ENTRY_NUM; i++) {
             if (whitelist[i].valid == false) {
                 continue;
             }
             response_append("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n",
-                            whitelist[i].address.addr[0],whitelist[i].address.addr[1],
-                            whitelist[i].address.addr[2],whitelist[i].address.addr[3],
-                            whitelist[i].address.addr[4],whitelist[i].address.addr[5],
-                            whitelist[i].address.addr[6],whitelist[i].address.addr[7]);
+                            whitelist[i].address.addr[0], whitelist[i].address.addr[1],
+                            whitelist[i].address.addr[2], whitelist[i].address.addr[3],
+                            whitelist[i].address.addr[4], whitelist[i].address.addr[5],
+                            whitelist[i].address.addr[6], whitelist[i].address.addr[7]);
         }
         return;
     }
@@ -911,34 +917,11 @@ void process_nbrs(int argc, char *argv[])
         uint16_t   num = 0;
         response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
         slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-            response_append("\t" EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->ueid));
-            response_append("," EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac.addr));
-            response_append(",0x%04x", nbr->addr.netid);
-            response_append(",0x%04x", nbr->addr.addr.short_addr);
-            response_append(",%d", nbr->stats.link_cost);
-            response_append(",%d", nbr->ssid_info.child_num);
-
-            switch (nbr->state) {
-                case STATE_CANDIDATE:
-                    response_append(",candidate");
-                    break;
-                case STATE_PARENT:
-                    response_append(",parent");
-                    break;
-                case STATE_CHILD:
-                    response_append(",child");
-                    break;
-                case STATE_NEIGHBOR:
-                    response_append(",nbr");
-                    break;
-                default:
-                    response_append(",invalid");
-                    break;
-            }
-            response_append(",%d", nbr->channel);
-            response_append(",%d", nbr->rssi);
-            response_append(",%d\r\n", nbr->last_heard);
-            num ++;
+            response_append("\t" EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac));
+            response_append(",%s,0x%04x,0x%04x,%d,%d,%d,%d,%d,%d\r\n", nbrstate2str(nbr->state), \
+                            nbr->netid, nbr->sid, nbr->stats.link_cost, nbr->ssid_info.child_num, \
+                            nbr->channel, nbr->stats.reverse_rssi, nbr->stats.forward_rssi, nbr->last_heard);
+            num++;
         }
         response_append("\tnum=%d\r\n", num);
     }
@@ -1029,7 +1012,6 @@ void process_stats(int argc, char *argv[])
 {
     slist_t                  *hals;
     hal_context_t            *hal;
-    const ur_link_stats_t    *link_stats;
     const ur_message_stats_t *message_stats;
     const frame_stats_t      *hal_stats;
     const ur_mem_stats_t     *mem_stats;
@@ -1037,6 +1019,7 @@ void process_stats(int argc, char *argv[])
     hals = umesh_get_hals();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
 #ifdef CONFIG_YOS_MESH_DEBUG
+        const ur_link_stats_t    *link_stats;
         link_stats = umesh_get_link_stats(hal->module->type);
         if (link_stats) {
             response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
@@ -1272,7 +1255,11 @@ static void ur_read_sock(int fd, raw_data_handler_t handler)
 
 static void mesh_worker(void *arg)
 {
+#ifdef CONFIG_YOS_MESH_DEBUG
     int maxfd = g_cli_autotest.udp_socket;
+#else
+    int maxfd = -1;
+#endif
 
     if (g_cl_state.icmp_socket > maxfd) {
         maxfd = g_cl_state.icmp_socket;
@@ -1282,16 +1269,20 @@ static void mesh_worker(void *arg)
         fd_set rfds;
         FD_ZERO(&rfds);
         FD_SET(g_cl_state.icmp_socket, &rfds);
+#ifdef CONFIG_YOS_MESH_DEBUG
         FD_SET(g_cli_autotest.udp_socket, &rfds);
+#endif
 
         lwip_select(maxfd + 1, &rfds, NULL, NULL, NULL);
 
         if (FD_ISSET(g_cl_state.icmp_socket, &rfds)) {
             ur_read_sock(g_cl_state.icmp_socket, cli_handle_echo_response);
         }
+#ifdef CONFIG_YOS_MESH_DEBUG
         if (FD_ISSET(g_cli_autotest.udp_socket, &rfds)) {
             ur_read_sock(g_cli_autotest.udp_socket, handle_udp_autotest);
         }
+#endif
     }
 }
 #endif
@@ -1303,7 +1294,7 @@ ur_error_t mesh_cli_init(void)
 #ifdef CONFIG_YOS_MESH_DEBUG
     slist_init(&g_cli_autotest.acked_list);
     g_cli_autotest.udp_socket = autotest_udp_socket(&handle_udp_autotest,
-                                                         AUTOTEST_UDP_PORT);
+                                                    AUTOTEST_UDP_PORT);
 #endif
 
 #ifndef WITH_LWIP

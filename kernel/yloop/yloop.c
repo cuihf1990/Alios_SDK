@@ -1,17 +1,5 @@
-/**
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <sys/time.h>
@@ -143,11 +131,11 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
 
     ctx->reader_count++;
 
-    memcpy(new_sock, ctx->readers, (cnt-1) * sizeof(yloop_sock_t));
+    memcpy(new_sock, ctx->readers, (cnt - 1) * sizeof(yloop_sock_t));
     yos_free(ctx->readers);
     ctx->readers = new_sock;
 
-    memcpy(new_loop_pollfds, ctx->pollfds, (cnt-1) * sizeof(struct pollfd));
+    memcpy(new_loop_pollfds, ctx->pollfds, (cnt - 1) * sizeof(struct pollfd));
     yos_free(ctx->pollfds);
     ctx->pollfds = new_loop_pollfds;
 

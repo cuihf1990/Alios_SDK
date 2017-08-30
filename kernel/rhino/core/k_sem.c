@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -46,7 +34,7 @@ static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count,
 
     sem->blk_obj.obj_type = YUNOS_SEM_OBJ_TYPE;
 
-    TRACE_SEM_CREATE(g_active_task[cpu_cur_get()], sem);
+    TRACE_SEM_CREATE(yunos_cur_task_get(), sem);
 
     return YUNOS_SUCCESS;
 }
@@ -221,7 +209,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
     if (opt_wake_all) {
         while (!is_klist_empty(blk_list_head)) {
             TRACE_SEM_TASK_WAKE(g_active_task[cur_cpu_num], yunos_list_entry(blk_list_head->next,
-                                                                ktask_t, task_list),
+                                                                             ktask_t, task_list),
                                 sem, opt_wake_all);
 
             pend_task_wakeup(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
@@ -229,7 +217,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
 
     } else {
         TRACE_SEM_TASK_WAKE(g_active_task[cur_cpu_num], yunos_list_entry(blk_list_head->next,
-                                                            ktask_t, task_list),
+                                                                         ktask_t, task_list),
                             sem, opt_wake_all);
 
         /* wake up the highest prio task block on the semaphore */
@@ -368,11 +356,10 @@ kstat_t yunos_sem_is_valid(ksem_t *sem)
 {
     NULL_PARA_CHK(sem);
 
-    if(sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE)
-    {
-      return YUNOS_KOBJ_TYPE_ERR;
+    if (sem->blk_obj.obj_type != YUNOS_SEM_OBJ_TYPE) {
+        return YUNOS_KOBJ_TYPE_ERR;
     }
-    
+
     return YUNOS_SUCCESS;
 }
 

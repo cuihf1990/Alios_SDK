@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
@@ -48,7 +36,7 @@ static void handle_discovery_timer(void *args)
 
     if (hal->discovery_result.meshnetid != BCAST_NETID) {
         mm_netinfo_tv_t netinfo;
-        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+        nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         netinfo.leader_mode = hal->discovery_result.leader_mode;
         netinfo.size = hal->discovery_result.net_size;
         if (nbr && umesh_mm_migration_check(network, nbr, &netinfo)) {
@@ -57,7 +45,7 @@ static void handle_discovery_timer(void *args)
     }
     if (hal->discovery_times > 0 && migrate) {
         umesh_mm_set_channel(network, hal->discovery_result.channel);
-        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+        nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         hal->discovered_handler(nbr);
         return;
     } else if (hal->discovery_times < DISCOVERY_RETRY_TIMES) {
@@ -110,10 +98,7 @@ static ur_error_t send_discovery_request(network_context_t *network)
 
     info->network = network;
     // dest
-    info->dest.addr.len = SHORT_ADDR_SIZE;
-    info->dest.addr.short_addr = BCAST_SID;
-    info->dest.netid = BCAST_NETID;
-
+    set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -239,7 +224,7 @@ ur_error_t handle_discovery_response(message_t *message)
 
     res = &network->hal->discovery_result;
     if ((is_bcast_netid(res->meshnetid) ||
-        res->meshnetid < get_main_netid(info->src.netid)) &&
+         res->meshnetid < get_main_netid(info->src.netid)) &&
         is_same_mainnet(network->meshnetid, info->src.netid) == false) {
         memcpy(&res->addr, &info->src_mac.addr, sizeof(res->addr));
         res->channel = info->src_channel;

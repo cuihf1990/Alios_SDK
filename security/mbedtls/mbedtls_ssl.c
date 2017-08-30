@@ -1,8 +1,3 @@
-/*
- * Copyright (C) 2017 YunOS IoT Project. All rights reserved.
- *
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef _ENROLLEE_H_
@@ -110,10 +98,10 @@ enum enrollee_state {
 #define AES_KEY_LEN     (16)
 /* return 0 for success, -1 devid not match, otherwise return -2 */
 extern int (*vendor_decrypt_ssid_passwd)(
-            uint8_t *ie, uint8_t ie_len,
-            uint8_t out_ssid[OS_MAX_SSID_LEN],
-            uint8_t out_passwd[OS_MAX_PASSWD_LEN],
-            uint8_t out_bssid[ETH_ALEN]);
+    uint8_t *ie, uint8_t ie_len,
+    uint8_t out_ssid[OS_MAX_SSID_LEN],
+    uint8_t out_passwd[OS_MAX_PASSWD_LEN],
+    uint8_t out_bssid[ETH_ALEN]);
 
 extern const uint8_t probe_req_frame[64];
 #define SA_POS              (10) //source mac pos
@@ -143,11 +131,11 @@ static inline void awss_clear_enrollee_token(void)
 {
 }
 #endif
-int awss_set_enrollee_token(char* token, int tokenLen);
-void awss_calc_sign(uint32_t rand, 
-                    char devid[OS_PRODUCT_SN_LEN], 
-                    char model[OS_PRODUCT_MODEL_LEN], 
-                    char secret[OS_PRODUCT_SECRET_LEN], 
+int awss_set_enrollee_token(char *token, int tokenLen);
+void awss_calc_sign(uint32_t rand,
+                    char devid[OS_PRODUCT_SN_LEN],
+                    char model[OS_PRODUCT_MODEL_LEN],
+                    char secret[OS_PRODUCT_SECRET_LEN],
                     char sign[ENROLLEE_SIGN_SIZE]);
 
 /* registrar API */

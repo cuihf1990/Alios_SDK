@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "hal/soc/soc.h"
 #include "ringbuf.h"
 #include "mico_rtos.h"
@@ -99,8 +103,8 @@ int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t time
             uart_set_tx_stop_end_int(uart->port, 1 );
             /* The data in Tx FIFO may have been sent out before enable TX_STOP_END interrupt */
             /* So double check the FIFO status */
-            if( !uart_is_tx_fifo_empty(uart->port) )
-                mico_rtos_get_semaphore(&pdrv->tx_semphr, MICO_WAIT_FOREVER );
+            while( !uart_is_tx_fifo_empty(uart->port) )
+                mico_rtos_get_semaphore(&pdrv->tx_semphr, 50 );
 
             uart_set_tx_stop_end_int( uart->port, 0 );
         }

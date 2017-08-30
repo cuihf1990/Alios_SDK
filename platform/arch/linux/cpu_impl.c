@@ -1,18 +1,7 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
+
 #define _GNU_SOURCE
 
 #include <sched.h>
@@ -155,7 +144,8 @@ void *cpu_entry(void *arg)
 
     sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
 
-    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
+    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) != 0) {
+        printf("Not enough cpu nums!!!\n");
         assert(0);
     }
 
@@ -268,7 +258,9 @@ void cpu_first_task_start(void)
     timer_t timerid;
     struct itimerspec ts;
     int ret = 0;
+#if (YUNOS_CONFIG_CPU_NUM > 1)
     int i = 0;
+#endif
 
     ktask_t    *tcb     = g_preferred_ready_task[cpu_cur_get()];
     task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;

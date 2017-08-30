@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdlib.h>
@@ -23,9 +11,10 @@
 #include <yunit.h>
 #include <yts.h>
 #include "ota_transport.h"
+extern void ota_service_event(input_event_t *event, void *priv_data);
 extern void ota_check_update(const char *buf, int len);
 extern void ota_service_init(void);
-extern void do_update(const char *buf);
+extern void do_update(int len,  const char *buf);
 extern void http_gethost_info(char* src, char* web, char* file, int* port);
 extern int http_socket_init(int port, char *host_addr);
 extern void ota_download_start(void * buf);
@@ -37,10 +26,14 @@ const char *ota_info = "{\"md5\":\"6B21342306D0F619AF97006B7025D18A\",\"resource
 static void test_fota_case(void)
 {
     int ret = 0;
+    input_event_t event;
+    event.type = EV_SYS;
+    event.code = CODE_SYS_ON_START_FOTA;
+    ota_service_event(&event, NULL);
     ota_check_update("",1);
     ota_download_start(NULL);
-    do_update(NULL);
-    do_update(ota_info);
+    do_update(0, NULL);
+    do_update(0, ota_info);
 
     http_gethost_info(NULL, NULL, NULL, NULL);
     ret = http_socket_init(0, NULL);

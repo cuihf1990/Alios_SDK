@@ -1,26 +1,3 @@
-############################################################################### 
-#
-#  The MIT License
-#  Copyright (c) 2016 MXCHIP Inc.
-#
-#  Permission is hereby granted, free of charge, to any person obtaining a copy 
-#  of this software and associated documentation files (the "Software"), to deal
-#  in the Software without restriction, including without limitation the rights 
-#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#  copies of the Software, and to permit persons to whom the Software is furnished
-#  to do so, subject to the following conditions:
-#
-#  The above copyright notice and this permission notice shall be included in
-#  all copies or substantial portions of the Software.
-#
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-#  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR 
-#  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-############################################################################### 
-
 NAME := board_mk3060
 
 JTAG := jlink
@@ -36,9 +13,19 @@ GLOBAL_INCLUDES += .
 GLOBAL_DEFINES += STDIO_UART=0
 
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
+CONFIG_SYSINFO_KERNEL_VERSION = YOS-R-1.0.1
+
+ifeq (1,${BINS})
+GLOBAL_CFLAGS += -DSYSINFO_OS_BINS
+CONFIG_SYSINFO_APP_VERSION = APP-1.0.0-$(CURRENT_TIME)
 define get-os-version
-YOS-R-$(CURRENT_TIME)
+${CONFIG_SYSINFO_KERNEL_VERSION}_$(CONFIG_SYSINFO_APP_VERSION)
 endef
+else
+define get-os-version
+${CONFIG_SYSINFO_KERNEL_VERSION}-$(CURRENT_TIME)
+endef
+endif
 
 CONFIG_SYSINFO_OS_VERSION := $(call get-os-version)
 
@@ -46,11 +33,13 @@ $(warning $(CONFIG_SYSINFO_OS_VERSION))
 
 CONFIG_SYSINFO_PRODUCT_MODEL := ALI_YOS_MK3060
 CONFIG_SYSINFO_DEVICE_NAME := MK3060
-$(warning ${CONFIG_SYSINFO_OS_VERSION})
+
 
 GLOBAL_CFLAGS += -DSYSINFO_OS_VERSION=\"$(CONFIG_SYSINFO_OS_VERSION)\"
 GLOBAL_CFLAGS += -DSYSINFO_PRODUCT_MODEL=\"$(CONFIG_SYSINFO_PRODUCT_MODEL)\"
 GLOBAL_CFLAGS += -DSYSINFO_DEVICE_NAME=\"$(CONFIG_SYSINFO_DEVICE_NAME)\"
+GLOBAL_CFLAGS += -DSYSINFO_KERNEL_VERSION=\"$(CONFIG_SYSINFO_KERNEL_VERSION)\"
+GLOBAL_CFLAGS += -DSYSINFO_APP_VERSION=\"$(CONFIG_SYSINFO_APP_VERSION)\"
 
 GLOBAL_LDFLAGS  += -L $(SOURCE_ROOT)/board/mk3060
 

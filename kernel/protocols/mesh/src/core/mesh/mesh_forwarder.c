@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
@@ -180,8 +168,7 @@ static ur_error_t resolve_message_info(received_frame_t *frame,
 
     info->hal_type = frame->hal->module->type;
     info->src_channel = frame->frame_info.channel;
-    info->key_index = frame->frame_info.key_index;
-    info->rssi = frame->frame_info.rssi;
+    info->reverse_rssi = frame->frame_info.rssi;
     memcpy(&info->src_mac.addr, &frame->frame_info.peer,
            sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;
@@ -433,6 +420,8 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     neighbor_t     *next_node = NULL;
     uint8_t        *payload;
     const uint8_t *key;
+    mac_address_t mac;
+    int16_t hdr_ies_limit;
 
     hal = network->hal;
     info = message->info;
@@ -452,8 +441,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         }
     }
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = next_node->addr.addr.short_addr;
+        set_mesh_short_addr(&info->dest, info->dest.netid, next_node->sid);
     }
 
     if (info->flags & INSERT_MESH_HEADER) {
@@ -469,10 +457,13 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         message_set_payload_offset(message, -info->payload_offset);
     }
 
-    header_ies_length = insert_mesh_header_ies(network, info);
-    header_length += header_ies_length;
-
     msg_length = message_get_msglen(message);
+    hdr_ies_limit = mtu;
+    if ((info->flags & INSERT_MESH_HEADER) == 0) {
+        hdr_ies_limit = mtu - header_length - msg_length;
+    }
+    header_ies_length = insert_mesh_header_ies(network, info, hdr_ies_limit);
+    header_length += header_ies_length;
     memset(&frag_header, 0, sizeof(frag_header));
 
     if (message->frag_offset == 0) {
@@ -516,10 +507,10 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     }
 
     if ((info->flags & ENCRYPT_ENABLE_FLAG) &&
-         umesh_aes_encrypt(key, KEY_SIZE,
-                           hal->frame.data + info->header_ies_offset,
-                           header_ies_length + append_length + frag_length,
-                           hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
+        umesh_aes_encrypt(key, KEY_SIZE,
+                          hal->frame.data + info->header_ies_offset,
+                          header_ies_length + append_length + frag_length,
+                          hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
         return UR_ERROR_DROP;
     }
 
@@ -534,9 +525,10 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
     hal->frag_info.offset += frag_length;
     if (next_node) {
+        mac.len = EXT_ADDR_SIZE;
+        memcpy(mac.addr, next_node->mac, EXT_ADDR_SIZE);
         error = hal_umesh_send_ucast_request(hal->module, &hal->frame,
-                                             &next_node->mac,
-                                             handle_sent, hal);
+                                             &mac, handle_sent, hal);
     } else {
         error = hal_umesh_send_bcast_request(network->hal->module, &hal->frame,
                                              handle_sent, hal);
@@ -559,7 +551,7 @@ static neighbor_t *get_next_node(message_info_t *info)
 
     local_sid = umesh_mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
-        next = get_neighbor_by_mac_addr(&(info->dest.addr));
+        next = get_neighbor_by_mac_addr(info->dest.addr.addr);
         return next;
     }
 
@@ -682,11 +674,7 @@ neighbor_t *mf_get_neighbor(uint8_t type, uint16_t meshnetid,
         }
         nbr = get_neighbor_by_sid(network->hal, addr->short_addr, meshnetid);
     } else if (addr->len == EXT_ADDR_SIZE) {
-        if (type == MESH_FRAME_TYPE_DATA) {
-            nbr = get_neighbor_by_ueid(addr->addr);
-        } else {
-            nbr = get_neighbor_by_mac_addr(addr);
-        }
+        nbr = get_neighbor_by_mac_addr(addr->addr);
     }
 
     return nbr;
@@ -805,6 +793,10 @@ static void message_handler(void *args)
     bool is_check_level = false;
     uint16_t meshnetid;
 
+
+    if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
+        return;
+    }
     hal = (hal_context_t *)args;
     message = message_queue_get_head(&hal->recv_queue);
     if (message == NULL) {
@@ -891,8 +883,8 @@ static void message_handler(void *args)
     }
     meshnetid = umesh_mm_get_meshnetid(info->network);
     if (meshnetid != BCAST_NETID && meshnetid != INVALID_NETID) {
-        uint8_t local_subnet_type = is_subnet(meshnetid)? 1: 0;
-        uint8_t subnet_type = is_subnet(info->src.netid)? 1: 0;
+        uint8_t local_subnet_type = is_subnet(meshnetid) ? 1 : 0;
+        uint8_t subnet_type = is_subnet(info->src.netid) ? 1 : 0;
         if ((local_subnet_type ^ subnet_type) ||
             (cmp_mode == -1 && local_subnet_type == 0 && subnet_type == 0)) {
             is_diff_level = true;
@@ -982,7 +974,6 @@ static void handle_received_frame(void *context, frame_t *frame,
 {
     message_t         *message;
     received_frame_t  *rx_frame = NULL;
-    whitelist_entry_t *entry;
     hal_context_t *hal = (hal_context_t *)context;
     message_info_t info;
     ur_error_t uerror = UR_ERROR_NONE;
@@ -1002,6 +993,7 @@ static void handle_received_frame(void *context, frame_t *frame,
 
 #ifdef CONFIG_YOS_MESH_DEBUG
     if (whitelist_is_enabled()) {
+        whitelist_entry_t *entry;
         entry = whitelist_find(&frame_info->peer);
         if (entry == NULL) {
             hal->link_stats.in_filterings++;
@@ -1025,8 +1017,10 @@ static void handle_received_frame(void *context, frame_t *frame,
         if (umesh_mm_get_attach_state() == ATTACH_REQUEST) {
             network = get_default_network_context();
             key = network->one_time_key;
+            info.key_index = ONE_TIME_KEY_INDEX;
         } else {
             key = get_symmetric_key(GROUP_KEY1_INDEX);
+            info.key_index = GROUP_KEY1_INDEX;
         }
 
         uerror = umesh_aes_decrypt(key, KEY_SIZE,

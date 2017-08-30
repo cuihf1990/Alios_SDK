@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef NETMGR_H
@@ -39,18 +27,18 @@ extern "C"
 
 /* 1 bigger than actual size for holding \0 */
 typedef struct {
-   char ssid[MAX_SSID_SIZE + 1];
-   char bssid[MAX_BSSID_SIZE + 1];
-   char pwd[MAX_PWD_SIZE + 1];
+    char ssid[MAX_SSID_SIZE + 1];
+    char bssid[MAX_BSSID_SIZE + 1];
+    char pwd[MAX_PWD_SIZE + 1];
 } netmgr_ap_config_t;
 
 typedef struct autoconfig_plugin_s {
-   struct autoconfig_plugin_s *next;
-   const char                 *description;
+    struct autoconfig_plugin_s *next;
+    const char                 *description;
 
-   int  (*autoconfig_start)(void);
-   void (*autoconfig_stop)(void);
-   void (*config_result_cb)(int result, uint32_t ip);
+    int  (*autoconfig_start)(void);
+    void (*autoconfig_stop)(void);
+    void (*config_result_cb)(int result, uint32_t ip);
 } autoconfig_plugin_t;
 
 /* auth type */

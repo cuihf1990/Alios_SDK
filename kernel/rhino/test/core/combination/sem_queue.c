@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -43,14 +31,6 @@ static void task_sem_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_kobj_set_dyn_create(&handle, "obj_set", OBJ_SET_COUNT);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
-
-    yunos_queue_create(&queue1, "queue1", (void **)&queue1_msg_buff, TEST_MSG_SIZE);
-    yunos_queue_create(&queue2, "queue2", (void **)&queue2_msg_buff, TEST_MSG_SIZE);
-
-    yunos_kobj_set_insert((blk_obj_t *)&queue1, handle);
-    yunos_kobj_set_insert((blk_obj_t *)&queue2, handle);
     ret = yunos_kobj_select(handle, &select_obj, YUNOS_WAIT_FOREVER);
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
@@ -117,6 +97,15 @@ void sem_queue_coopr_test(void)
     kstat_t ret;
 
     test_case_check_err = 0;
+
+    ret = yunos_kobj_set_dyn_create(&handle, "obj_set", OBJ_SET_COUNT);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+
+    yunos_queue_create(&queue1, "queue1", (void **)&queue1_msg_buff, TEST_MSG_SIZE);
+    yunos_queue_create(&queue2, "queue2", (void **)&queue2_msg_buff, TEST_MSG_SIZE);
+
+    yunos_kobj_set_insert((blk_obj_t *)&queue1, handle);
+    yunos_kobj_set_insert((blk_obj_t *)&queue2, handle);
 
     ret = yunos_task_dyn_create(&task_select, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);

@@ -1,24 +1,13 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <reent.h>
 #include <sys/errno.h>
-#include <k_api.h>
 #include <sys/unistd.h>
 #include <sys/errno.h>
+#include <k_api.h>
+#include <yos/kernel.h>
 #include "hal/soc/soc.h"
 #include "board.h"
 
@@ -116,8 +105,9 @@ _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
     }
 
     for (int i = 0; i < nbytes; i++) {
-        if (*tmp == '\n')
-        { yos_uart_send((void *)"\r", 1, 0); }
+        if (*tmp == '\n') {
+            yos_uart_send((void *)"\r", 1, 0);
+        }
 
         yos_uart_send((void *)tmp, 1, 0);
         tmp ++;
@@ -178,17 +168,42 @@ int _gettimeofday_r(struct _reent *ptr, struct timeval *tv, void *__tzp)
 
 void *_malloc_r(struct _reent *ptr, size_t size)
 {
-    return yos_malloc(size);
+    void *mem;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    mem = yos_malloc(size | YOS_UNSIGNED_INT_MSB);
+    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+#else
+    mem = yos_malloc(size);
+#endif
+
+    return mem;
 }
 
 void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
 {
-    return yos_realloc(old, newlen);
+    void *mem;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    mem = yos_realloc(old, newlen | YOS_UNSIGNED_INT_MSB);
+    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+#else
+    mem = yos_realloc(old, newlen);
+#endif
+
+    return mem;
 }
 
 void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
 {
-    void *mem = yos_malloc(size * len);
+    void *mem;
+
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    mem = yos_malloc((size * len) | YOS_UNSIGNED_INT_MSB);
+    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+#else
+    mem = yos_malloc(size * len);
+#endif
 
     if (mem) {
         bzero(mem, size * len);

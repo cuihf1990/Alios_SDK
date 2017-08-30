@@ -1,8 +1,8 @@
-import sys, time
+import sys, os, time
 sys.path.append('../')
 from autotest import Autotest
 
-devices = {'A':'mxchip-DN02QRIX', 'B':'mxchip-DN02QRJ9', 'C':'mxchip-DN02QRJM', 'D':'mxchip-DN02QRJP'}
+devices = {'A':'mxchip-DN02QRIQ', 'B':'mxchip-DN02QRIX', 'C':'mxchip-DN02QRJ6', 'D':'mxchip-DN02QRJ7'}
 device_list = list(devices)
 device_attr={}
 device_list.sort()
@@ -16,6 +16,8 @@ if at.device_subscribe(devices) == False:
 
 #reboot and get device mac address
 for device in device_list:
+    at.device_control(device, 'reset')
+    time.sleep(2.5)
     at.device_run_cmd(device, ['netmgr', 'clear'])
     at.device_run_cmd(device, ['kv', 'delete', 'alink'])
     mac =  at.device_run_cmd(device, ['reboot'], 1, 1.5, ['mac'])
@@ -59,7 +61,7 @@ for i in range(len(device_list)):
 for i in [1, 2, 3, 0]:
     device = device_list[i]
     if device == 'B':
-        at.device_run_cmd(device, ['netmgr', 'connect', 'wuchen_test', 'aliyunos'])
+        at.device_run_cmd(device, ['netmgr', 'connect', 'aos_test_01', 'Alios@Embedded'])
         time.sleep(12)
         uuid = at.device_run_cmd(device, ['uuid'], 1, 1)
         if uuid == []:
@@ -107,7 +109,8 @@ for i in [1, 2, 3, 0]:
         ipaddr[1] = ipaddr[1].replace('\t', '')
         ipaddr[2] = ipaddr[2].replace('\t', '')
         device_attr[device]['ipaddr'] = ipaddr[0:3]
-print '\n{0}\n'.format(device_attr)
+for device in device_list:
+    print "{0}:{1}".format(device, device_attr[device])
 
 #udp multicast test
 print 'test multicast connectivity:'

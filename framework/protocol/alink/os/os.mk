@@ -9,4 +9,4 @@ $(NAME)_SOURCES  += os/platform/yos_awss.c os/platform/yos_hardware.c os/platfor
 else
 $(NAME)_SOURCES  += os/platform/yos_awss.c os/platform/linux_hardware.c os/platform/yos_os.c os/platform/linux_ota.c os/platform/yos_network.c
 $(NAME)_SOURCES  += os/platform/yos_ssl.c
-endif                                      
+endif

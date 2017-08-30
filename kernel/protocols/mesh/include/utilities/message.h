@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef UR_MESSAGE_H
@@ -52,7 +40,8 @@ typedef struct message_info_s {
     uint16_t flags;
     uint8_t channel;
     int8_t key_index;
-    int8_t rssi;
+    int8_t reverse_rssi;
+    int8_t forward_rssi;
 } message_info_t;
 
 typedef struct message_s {
@@ -68,7 +57,7 @@ typedef struct message_s {
 
 typedef dlist_t message_queue_t;
 
-message_t  *message_alloc(uint16_t length,uint16_t debug_info);
+message_t  *message_alloc(uint16_t length, uint16_t debug_info);
 ur_error_t message_free(message_t *message);
 ur_error_t message_copy_to(const message_t *src, uint16_t src_offset,
                            uint8_t *dest, uint16_t dest_length);

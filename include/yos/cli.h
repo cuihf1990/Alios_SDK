@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef __YOS_CLI_H__
@@ -82,14 +70,6 @@ int cli_register_command(const struct cli_command *command);
  */
 int cli_unregister_command(const struct cli_command *command);
 
-/** Stop the CLI thread and carry out the cleanup
- *
- * \return kNoErr on success
- * \return error code otherwise.
- *
- */
-int yos_cli_stop(void);
-
 /** Register a batch of CLI commands
  *
  * Often, a module will want to register several commands.
@@ -137,6 +117,14 @@ int cli_printf(const char *buff, ...);
 /* library CLI APIs
  */
 int yos_cli_init(void);
+
+/* Stop the CLI thread and carry out the cleanup
+ *
+ * \return kNoErr on success
+ * \return error code otherwise.
+ *
+ */
+int yos_cli_stop(void);
 
 #else /* CONFIG_YOS_CLI */
 

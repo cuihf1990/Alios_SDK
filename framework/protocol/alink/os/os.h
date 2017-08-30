@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef __ALINK_OS_H__
@@ -95,7 +83,7 @@ static inline int os_is_big_endian(void)
     uint32_t data = 0xFF000000;
 
     if (0xFF == *(uint8_t *) & data) {
-       return 1;                                   //big endian
+        return 1;                                   //big endian
     }
 
     return 0;                                       //little endian
@@ -1111,13 +1099,14 @@ static inline void os_sys_reboot(void)
  *        */
 static inline uint32_t os_get_time_ms(void)
 {
-	static uint32_t fixed_delta;
+    static uint32_t fixed_delta;
 
-	if (!fixed_delta)
-		fixed_delta = platform_get_time_ms() - 0xFFFF0000;
+    if (!fixed_delta) {
+        fixed_delta = platform_get_time_ms() - 0xFFFF0000;
+    }
 
-	/* add a big offset, for easier caught time overflow bug */
-	return platform_get_time_ms() - fixed_delta;
+    /* add a big offset, for easier caught time overflow bug */
+    return platform_get_time_ms() - fixed_delta;
 }
 
 /*
@@ -1129,9 +1118,9 @@ static inline uint32_t os_get_time_ms(void)
  *       */
 static inline uint32_t time_elapsed_ms_since(uint32_t start_timestamp)
 {
-	uint32_t now = os_get_time_ms();
+    uint32_t now = os_get_time_ms();
 
-	return now - start_timestamp;
+    return now - start_timestamp;
 }
 
 //os_get_utc_time() returns the time since the Epoch (00:00:00 UTC, January 1, 1970), measured in seconds.
@@ -1677,17 +1666,18 @@ static inline int os_aes128_cbc_decrypt(
     return platform_aes128_cbc_decrypt(aes, src, blockNum, dst);
 }
 
- /**
- * @brief Get device secret string.
- *
- * @param[out] secret_str @n Buffer for using to store secret string.
- * @return A pointer to the start address of secret_str.
- * @see None.
- * @note None.
- */
-      static inline char *os_get_device_secret(char secret_str[OS_DEVICE_SECRET_LEN]) {
-               return (char *)product_get_device_secret(secret_str);
-      }
+/**
+* @brief Get device secret string.
+*
+* @param[out] secret_str @n Buffer for using to store secret string.
+* @return A pointer to the start address of secret_str.
+* @see None.
+* @note None.
+*/
+static inline char *os_get_device_secret(char secret_str[OS_DEVICE_SECRET_LEN])
+{
+    return (char *)product_get_device_secret(secret_str);
+}
 
 
 /**
@@ -1758,15 +1748,16 @@ static inline char *os_product_get_sn(char sn_str[OS_PRODUCT_SN_LEN])
     return product_get_sn(sn_str);
 }
 
- /**
-  *@brief Get device key string.
-  *
-  *@param[out] key_str @n Buffer for using to store debug key string.
-  *@return A pointer to the start address of key_str.
-  * @see None.
-  * @note None.
-  */
-static inline char *os_get_device_key(char key_str[OS_DEVICE_KEY_LEN]) {
+/**
+ *@brief Get device key string.
+ *
+ *@param[out] key_str @n Buffer for using to store debug key string.
+ *@return A pointer to the start address of key_str.
+ * @see None.
+ * @note None.
+ */
+static inline char *os_get_device_key(char key_str[OS_DEVICE_KEY_LEN])
+{
     return (char *)product_get_device_key(key_str);
 }
 

@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -35,8 +23,6 @@ static uint8_t notify_flag;
 static void task_mutex_opr_entry(void *arg)
 {
     kstat_t ret;
-
-    yunos_mutex_dyn_create(&test_mutex, "mutextest");
 
     yunos_mutex_lock(test_mutex, YUNOS_WAIT_FOREVER);
 
@@ -68,9 +54,6 @@ static void task_buf_queue_entry(void *arg)
     kstat_t ret;
     size_t  size;
 
-    yunos_buf_queue_create(&test_buf_queue, "bugqueue", (void *)buf_queue_test_buf,
-                           8, 1);
-
     ret = yunos_buf_queue_recv(&test_buf_queue, YUNOS_WAIT_FOREVER,
                                (void *)buf_queue_recv, &size);
     if ((ret == YUNOS_SUCCESS) && (*(uint8_t *)buf_queue_recv == 0x5a)) {
@@ -91,6 +74,10 @@ static void task_buf_queue_trigger_entry(void *arg)
 void mutex_buf_queue_coopr_test(void)
 {
     kstat_t ret;
+
+    yunos_mutex_dyn_create(&test_mutex, "mutextest");
+    yunos_buf_queue_create(&test_buf_queue, "bugqueue", (void *)buf_queue_test_buf,
+                           8, 1);
 
     ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);

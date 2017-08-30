@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #define HARDWARE_REVISION   "V1.0"
 #define MODEL               "MOC108"
 

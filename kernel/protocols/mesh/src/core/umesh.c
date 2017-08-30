@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
@@ -180,8 +168,9 @@ static void output_ipv4_frame_handler(void *args)
     info->dest.addr.short_addr = sid;
     info->dest.netid = umesh_mm_get_meshnetid(NULL);
     info->type = MESH_FRAME_TYPE_DATA;
-    if (sid == BCAST_SID)
+    if (sid == BCAST_SID) {
         info->flags |= INSERT_MCAST_FLAG;
+    }
 
     mf_send_message(message);
 
@@ -249,8 +238,9 @@ static void output_frame_handler(void *args)
     pbuf_copy_partial(buf, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN, 0);
     lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
     error = lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
-    if (error != UR_ERROR_NONE)
+    if (error != UR_ERROR_NONE) {
         goto out;
+    }
 
     append_length = sizeof(mcast_header_t) + 1;
     message = message_alloc(lowpan_hdr_len + append_length, UMESH_1);

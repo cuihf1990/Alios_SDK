@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -42,7 +30,7 @@ kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
 
     mutex->blk_obj.obj_type = YUNOS_MUTEX_OBJ_TYPE;
 
-    TRACE_MUTEX_CREATE(g_active_task[cpu_cur_get()], mutex, name);
+    TRACE_MUTEX_CREATE(yunos_cur_task_get(), mutex, name);
 
     return YUNOS_SUCCESS;
 }
@@ -453,11 +441,10 @@ kstat_t yunos_mutex_is_valid(kmutex_t *mutex)
 {
     NULL_PARA_CHK(mutex);
 
-    if(mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE)
-    {
-      return YUNOS_KOBJ_TYPE_ERR;
+    if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
+        return YUNOS_KOBJ_TYPE_ERR;
     }
-    
+
     return YUNOS_SUCCESS;
 }
 

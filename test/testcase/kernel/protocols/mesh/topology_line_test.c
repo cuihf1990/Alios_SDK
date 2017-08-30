@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "yunit.h"
 
 #include "yos/framework.h"
@@ -77,9 +81,9 @@ static void topology_line_case(bool vector_router)
 
     attach_node = umesh_mm_get_attach_node(NULL);
     if (attach_node) {
-        uint64_t ueid = ueid64(attach_node->ueid);
+        uint64_t ueid = ueid64(attach_node->mac);
         YUNIT_ASSERT(ueid == 12);
-        YUNIT_ASSERT(umesh_get_meshnetid() == attach_node->addr.netid);
+        YUNIT_ASSERT(umesh_get_meshnetid() == attach_node->netid);
         goto out;
     }
 
@@ -99,8 +103,8 @@ static void topology_line_case(bool vector_router)
         if (!node)
             continue;
 
-        uint64_t ueid = ueid64(node->ueid);
-        printf("node sid=%04x ueid=%llx\n", node->addr.addr.short_addr, ueid);
+        uint64_t ueid = ueid64(node->mac);
+        printf("node sid=%04x ueid=%llx\n", node->sid, ueid);
         if (ueid == 12)
             found_12 = 1;
     }

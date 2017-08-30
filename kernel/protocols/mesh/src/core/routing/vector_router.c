@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdint.h>
@@ -1005,7 +993,7 @@ static void handle_heartbeat_timer(void *args)
             }
 
             g_vr_state.sync_status = TOPOLOGY_SYNC_CLIENT_RECEIVING_DATA;
-            g_vr_state.sync_state->peer_sid = node->addr.addr.short_addr;
+            g_vr_state.sync_state->peer_sid = node->sid;
             send_topology_sync_select();
         }
     }
@@ -1078,11 +1066,11 @@ ur_error_t vector_router_neighbor_updated(neighbor_t *neighbor)
     uint16_t  src, dst;
     uint8_t   cost;
 
-    if (get_vertex_by_ueid(neighbor->ueid) == NULL) {
+    if (get_vertex_by_ueid(neighbor->mac) == NULL) {
         return UR_ERROR_FAIL;
     }
 
-    src = neighbor->addr.addr.short_addr;
+    src = neighbor->sid;
     dst = vertex_me->sid;
     if (neighbor->stats.link_cost != LINK_COST_MAX) {
         cost = (uint8_t)(neighbor->stats.link_cost >> 4);

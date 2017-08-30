@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef YOS_FRAMEWORK_API_H
@@ -237,7 +225,7 @@ int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
  * @note  this function can be called from non-yos-main-loop context.
  */
 void *yos_loop_schedule_work(int ms, yos_call_t action, void *arg1,
-                        yos_call_t fini_cb, void *arg2);
+                             yos_call_t fini_cb, void *arg2);
 
 /**
  * @brief Cancel a work
@@ -327,7 +315,7 @@ ssize_t yos_read(int fd, void *buf, size_t nbytes);
 ssize_t yos_write(int fd, const void *buf, size_t nbytes);
 
 /**
- * @brief This is a wildcard API for sending controller specific commands. 
+ * @brief This is a wildcard API for sending controller specific commands.
  *
  * @param[in]  @fd, the handle of the file or device
  * @param[in]  @cmd, A controller specific command.
@@ -336,7 +324,7 @@ ssize_t yos_write(int fd, const void *buf, size_t nbytes);
  */
 int yos_ioctl(int fd, int cmd, unsigned long arg);
 
-/** 
+/**
  * @brief A mechanism to multiplex input/output over a set of file handles(file descriptors).
  * For every file handle provided, poll() examines it for any events registered for that particular
  * file handle.
@@ -349,8 +337,8 @@ int yos_ioctl(int fd, int cmd, unsigned long arg);
  */
 int yos_poll(struct pollfd *fds, int nfds, int timeout);
 
-/** 
- * @brief  performs one of the operations described below on the open file descriptor @fd. 
+/**
+ * @brief  performs one of the operations described below on the open file descriptor @fd.
  *            The operation is determined by @cmd.
  *
  * @param[in]  @fd       the handle of the file or device

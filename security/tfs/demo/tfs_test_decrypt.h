@@ -1,7 +1,6 @@
 /*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-
 
 #ifndef _TFS_TEST_DECRYPT_H
 #define _TFS_TEST_DECRYPT_H

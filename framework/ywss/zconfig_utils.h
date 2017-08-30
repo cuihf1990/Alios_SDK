@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef _SMART_UTILS_H_
@@ -23,57 +11,57 @@
 
 
 #ifndef DEBUG
-    #define __zc_loglevel_printf(log_level, format, ...)	do { } while (0)
+#define __zc_loglevel_printf(log_level, format, ...)    do { } while (0)
 #else
 
 #ifdef _PLATFORM_QCOM_
-    extern int cmnos_printf(const char * format, ...);
-    #define __zc_loglevel_printf(log_level, format, ...)	\
-        do {													\
-            cmnos_printf(format, ##__VA_ARGS__);					\
+extern int cmnos_printf(const char *format, ...);
+#define __zc_loglevel_printf(log_level, format, ...)    \
+        do {                                                    \
+            cmnos_printf(format, ##__VA_ARGS__);                    \
         } while (0)
 #elif defined (_PLATFORM_ESPRESSIF_)
-    extern int printf(const char *format, ...);
-    #define __zc_loglevel_printf(log_level, format, ...)	\
-        do {													\
-            printf(format, ##__VA_ARGS__);					\
+extern int printf(const char *format, ...);
+#define __zc_loglevel_printf(log_level, format, ...)    \
+        do {                                                    \
+            printf(format, ##__VA_ARGS__);                  \
         } while (0)
 #elif defined (_PLATFORM_REALTEK_) //realtek 8711
-    extern int printf(const char *format, ...);
-    #define __zc_loglevel_printf(log_level, format, ...)	\
-        do {													\
-            printf(format, ##__VA_ARGS__);					\
+extern int printf(const char *format, ...);
+#define __zc_loglevel_printf(log_level, format, ...)    \
+        do {                                                    \
+            printf(format, ##__VA_ARGS__);                  \
         } while (0)
 #else
-    #define __zc_loglevel_printf(log_level, format, ...)	\
-    do {													\
-            os_printf(format, ##__VA_ARGS__);		\
+#define __zc_loglevel_printf(log_level, format, ...)    \
+    do {                                                    \
+            os_printf(format, ##__VA_ARGS__);       \
     } while (0)
 #endif //end of _PLATFORM_QCOM_
 
 #endif //end of ifndef DEBUG
 
-//for library safety, close the log output 
-#define log(format, ...)						__zc_loglevel_printf(LOGLEVEL_DEBUG, format, ##__VA_ARGS__)
-#define info(format, ...)						__zc_loglevel_printf(LOGLEVEL_INFO, format, ##__VA_ARGS__)
-#define warn(format, ...)						__zc_loglevel_printf(LOGLEVEL_WARN, format, ##__VA_ARGS__)
-#define error(format, ...)						__zc_loglevel_printf(LOGLEVEL_ERROR, format, ##__VA_ARGS__)
+//for library safety, close the log output
+#define log(format, ...)                        __zc_loglevel_printf(LOGLEVEL_DEBUG, format, ##__VA_ARGS__)
+#define info(format, ...)                       __zc_loglevel_printf(LOGLEVEL_INFO, format, ##__VA_ARGS__)
+#define warn(format, ...)                       __zc_loglevel_printf(LOGLEVEL_WARN, format, ##__VA_ARGS__)
+#define error(format, ...)                      __zc_loglevel_printf(LOGLEVEL_ERROR, format, ##__VA_ARGS__)
 
-#define bug_on(condition, format, ...)							\
-do {											\
-		if (condition) {							\
-			error("########BUG ON %d!!!\r\n", __LINE__);			\
-			error(format, ##__VA_ARGS__);					\
-			while (1);							\
-		}										\
+#define bug_on(condition, format, ...)                          \
+do {                                            \
+        if (condition) {                            \
+            error("########BUG ON %d!!!\r\n", __LINE__);            \
+            error(format, ##__VA_ARGS__);                   \
+            while (1);                          \
+        }                                       \
 } while (0)
 
-#define warn_on(condition, format, ...)							\
-do {											\
-		if (condition) {							\
-			warn("########WARNING ON %d!!!\r\n", __LINE__);			\
-			warn(format, ##__VA_ARGS__);					\
-		}									\
+#define warn_on(condition, format, ...)                         \
+do {                                            \
+        if (condition) {                            \
+            warn("########WARNING ON %d!!!\r\n", __LINE__);         \
+            warn(format, ##__VA_ARGS__);                    \
+        }                                   \
 } while (0)
 
 void dump_hex(unsigned char *data, int len, int tab_num);
@@ -99,10 +87,10 @@ void dump_mac(u8 *src, u8 *dst);
  * it less suitable for kernel use.
  */
 void sort(char *base, int num, int size,
-			int (*cmp_func)(const void *, const void *));
+          int (*cmp_func)(const void *, const void *));
 
 u16 zconfig_checksum(u8 *data, u8 len);
 u16 zconfig_checksum_v2(u8 *data, u8 len);
 
 char *zconfig_calc_tpsk(char *model, char *secret, char *tpsk, int tpsk_len);
-#endif	// _UTILS_H_
+#endif  // _UTILS_H_

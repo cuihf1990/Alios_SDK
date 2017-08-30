@@ -1,24 +1,12 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include "wsf.h"
 #include "wsf_log.h"
 #include "wsf_msg.h"
 #include "wsf_network.h"
-#include "../connectivity.h"
+#include "connectivity.h"
 #include "os.h"
 
 wsf_connection_t *wsf_conn = NULL;
@@ -60,9 +48,9 @@ static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
             wsf_reset_connection(conn, 0);
             LOGE(MODULE_NAME, "can't open ssl connection");
             return WSF_CONNECTION_ERROR;
-        }else{
+        } else {
             g_wsf_cb.sock = (long)wsf_conn->tcp;
-            yos_poll_read_fd(g_wsf_cb.sock, cb_recv,&g_wsf_cb);
+            yos_poll_read_fd(g_wsf_cb.sock, cb_recv, &g_wsf_cb);
             LOGI(MODULE_NAME, "add new tcp socket fd to poll list.\n");
         }
     }

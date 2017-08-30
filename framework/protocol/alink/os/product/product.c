@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
@@ -63,23 +51,25 @@ void product_init(void)
 char *product_get_device_key(char key_str[DEVICE_KEY_LEN])
 {
     int key_len = DEVICE_KEY_LEN;
-    if (yos_kv_get("sds_key", key_str, &key_len) < 0)
+    if (yos_kv_get("sds_key", key_str, &key_len) < 0) {
         strncpy(key_str, device_key, DEVICE_KEY_LEN);
+    }
     return key_str;
 }
 
 char *product_get_device_secret(char secret_str[DEVICE_SECRET_LEN])
 {
     int sec_len = DEVICE_SECRET_LEN;
-    if (yos_kv_get("sds_secret", secret_str, &sec_len) < 0)
+    if (yos_kv_get("sds_secret", secret_str, &sec_len) < 0) {
         strncpy(secret_str, device_secret, DEVICE_SECRET_LEN);
+    }
     return secret_str;
 }
 
 
 char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 {
-      return strncpy(name_str, "alink_product", PRODUCT_NAME_LEN);
+    return strncpy(name_str, "alink_product", PRODUCT_NAME_LEN);
 }
 
 char *product_get_version(char ver_str[PRODUCT_VERSION_LEN])

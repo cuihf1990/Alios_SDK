@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <syscall_uapi.h>
@@ -26,13 +14,6 @@
 #define SYSCALL(nr, func)
 
 #include <syscall_tbl.h>
-
-const char *test_version_get(void)
-{
-    return SYS_CALL0(2, const char *);
-}
-
-#if 1
 
 #ifdef WITH_LWIP
 #include <yos/network.h>
@@ -236,17 +217,47 @@ int yos_work_cancel(yos_work_t *work)
 
 void *yos_malloc(unsigned int size)
 {
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
+    } else {
+        return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, 0);
+    }
+#else
     return SYS_CALL1(SYS_MALLOC, void *, unsigned int, size);
+#endif
 }
 
 void *yos_realloc(void *mem, unsigned int size)
 {
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        return SYS_CALL3(SYS_REALLOC, void *, void *, mem, unsigned int, size,
+                         size_t, (size_t)__builtin_return_address(0));
+    } else {
+        return SYS_CALL3(SYS_REALLOC, void *, void *, mem, unsigned int, size, size_t, 0);
+    }
+#else
     return SYS_CALL2(SYS_REALLOC, void *, void *, mem, unsigned int, size);
+#endif
 }
 
 void *yos_zalloc(unsigned int size)
 {
+#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+        return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
+    } else {
+        return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, 0);
+    }
+#else
     return SYS_CALL1(SYS_ZALLOC, void *, unsigned int, size);
+#endif
+}
+
+void yos_alloc_trace(void *addr, size_t allocator)
+{
+    return SYS_CALL2(SYS_ALLOC_TRACE, void, void *, addr, size_t, allocator);
 }
 
 void yos_free(void *mem)
@@ -493,7 +504,7 @@ int lwip_read(int s, void *mem, size_t len)
 }
 
 int lwip_recvfrom(int s, void *mem, size_t len, int flags,
-                      struct sockaddr *from, socklen_t *fromlen)
+                  struct sockaddr *from, socklen_t *fromlen)
 {
     return SYS_CALL6(SYS_LWIP_RECVFROM, int, int, s, void *, mem, size_t, len,
                      int, flags, struct sockaddr *, from, socklen_t *, fromlen);
@@ -512,7 +523,7 @@ int lwip_sendmsg(int s, const struct msghdr *message, int flags)
 }
 
 int lwip_sendto(int s, const void *dataptr, size_t size, int flags,
-                    const struct sockaddr *to, socklen_t tolen)
+                const struct sockaddr *to, socklen_t tolen)
 {
     return SYS_CALL6(SYS_LWIP_SENDTO, int, int, s, const void *, dataptr,
                      size_t, size, int, flags, const struct sockaddr *, to,
@@ -535,7 +546,7 @@ int lwip_writev(int s, const struct iovec *iov, int iovcnt)
 }
 
 int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset,
-                    fd_set *exceptset, struct timeval *timeout)
+                fd_set *exceptset, struct timeval *timeout)
 {
     return SYS_CALL5(SYS_LWIP_SELECT, int, int, maxfdp1, fd_set *, readset,
                      fd_set *, writeset, fd_set *, exceptset, struct timeval *, timeout);
@@ -707,7 +718,7 @@ void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t f
 int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
 {
     return SYS_CALL3(SYS_HAL_WLAN_SEND_80211_RAW_FRAME, int, hal_wifi_module_t *,
-                    m, uint8_t *, buf, int, len);
+                     m, uint8_t *, buf, int, len);
 }
 
 ur_error_t umesh_init(node_mode_t mode)
@@ -792,17 +803,42 @@ hal_ota_module_t *hal_ota_get_default_module(void)
     return SYS_CALL0(SYS_OTA_GET_DEFAULT_MODULE, hal_ota_module_t *);
 }
 
+/* --------------------CLI-------------------- */
+
+int cli_register_command(const struct cli_command *cmd)
+{
+    return SYS_CALL1(SYS_CLI_REG_CMD, int, const struct cli_command *, cmd);
+}
+
+int cli_unregister_command(const struct cli_command *cmd)
+{
+    return SYS_CALL1(SYS_CLI_UNREG_CMD, int, const struct cli_command *, cmd);
+}
+
+int cli_register_commands(const struct cli_command *cmds, int num_cmds)
+{
+    return SYS_CALL2(SYS_CLI_REG_CMDS, int, const struct cli_command *, cmds, int, num_cmds);
+}
+
+int cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
+{
+    return SYS_CALL2(SYS_CLI_UNREG_CMDS, int, const struct cli_command *, cmds, int, num_cmds);
+}
+
+int yos_cli_init(void)
+{
+    return SYS_CALL0(SYS_CLI_INIT, int);
+}
+
+int yos_cli_stop(void)
+{
+    return SYS_CALL0(SYS_CLI_STOP, int);
+}
+
 /* --------------------OTHERS-------------------- */
 
 int32_t yos_uart_send(void *data, uint32_t size, uint32_t timeout)
 {
     return SYS_CALL3(SYS_UART_SEND, int32_t, void *, data, uint32_t, size, uint32_t, timeout);
 }
-
-int cli_register_command(const struct cli_command *command)
-{
-    return SYS_CALL1(SYS_CLI_REGISTER_COMMAND, int, const struct cli_command *, command);
-}
-
-#endif
 
