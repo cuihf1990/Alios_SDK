@@ -81,7 +81,7 @@ int csp_printf(const char *fmt, ...);
 #else
 extern int csp_printf(const char *fmt, ...);
 #endif
-#else 
+#else
 extern int csp_printf(const char *fmt, ...);
 #endif
 

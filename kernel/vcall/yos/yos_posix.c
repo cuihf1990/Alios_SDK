@@ -116,15 +116,17 @@ void yos_mutex_free(yos_mutex_t *mutex)
 
 int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
 {
-    if (mutex)
+    if (mutex) {
         pthread_mutex_lock(mutex->hdl);
+    }
     return 0;
 }
 
 int yos_mutex_unlock(yos_mutex_t *mutex)
 {
-    if (mutex)
+    if (mutex) {
         pthread_mutex_unlock(mutex->hdl);
+    }
     return 0;
 }
 
@@ -291,8 +293,9 @@ int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
 static void worker_entry(void *arg)
 {
     struct work *w = arg;
-    if (w->dly)
+    if (w->dly) {
         usleep(w->dly * 1000);
+    }
     w->fn(w->arg);
 }
 
@@ -360,8 +363,9 @@ void yunos_init(void)
 
 void yunos_start(void)
 {
-    while(1)
+    while (1) {
         usleep(1000 * 1000 * 100);
+    }
 }
 
 #include <stdio.h>
@@ -372,13 +376,19 @@ void dumpsys_task_func(void)
     DIR *proc = opendir("/proc/self/task");
     while (1) {
         struct dirent *ent = readdir(proc);
-        if (!ent) break;
-        if (ent->d_name[0] == '.') continue;
+        if (!ent) {
+            break;
+        }
+        if (ent->d_name[0] == '.') {
+            continue;
+        }
 
         char fn[128];
         snprintf(fn, sizeof fn, "/proc/self/task/%s/comm", ent->d_name);
         FILE *fp = fopen(fn, "r");
-        if (!fp) continue;
+        if (!fp) {
+            continue;
+        }
         bzero(fn, sizeof fn);
         fread(fn, sizeof fn, 1, fp);
         fclose(fp);

@@ -19,17 +19,17 @@
 version_config_t version_config;
 
 const char *ota_get_ota_version(void)
-{   
-    int len=MAX_VERSION_LEN;
-    memset(version_config.ota_version,0,MAX_VERSION_LEN);
-    yos_kv_get(KEY_OTA_VER,version_config.ota_version, &len);
+{
+    int len = MAX_VERSION_LEN;
+    memset(version_config.ota_version, 0, MAX_VERSION_LEN);
+    yos_kv_get(KEY_OTA_VER, version_config.ota_version, &len);
     //LOGI(TAG,"ota_get_ota_version=%s",version_config.ota_version);
     return version_config.ota_version;
 }
 
- void ota_set_ota_version(const char *str)
+void ota_set_ota_version(const char *str)
 {
-    if(str==NULL){
+    if (str == NULL) {
         return ;
     }
     //LOGI(TAG,"ota_set_ota_version=%s",str);
@@ -38,15 +38,15 @@ const char *ota_get_ota_version(void)
 
 const char *ota_get_dev_version(void)
 {
-    int len=MAX_VERSION_LEN;
-    memset(version_config.dev_version,0,MAX_VERSION_LEN);
-    yos_kv_get(KEY_DEV_VER,version_config.dev_version, &len);
+    int len = MAX_VERSION_LEN;
+    memset(version_config.dev_version, 0, MAX_VERSION_LEN);
+    yos_kv_get(KEY_DEV_VER, version_config.dev_version, &len);
     return version_config.dev_version;
 }
 
 void  ota_set_dev_version(const char *str)
 {
-    if(str==NULL){
+    if (str == NULL) {
         return ;
     }
     yos_kv_set(KEY_DEV_VER, str, MAX_VERSION_LEN, 1);
