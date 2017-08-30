@@ -245,8 +245,8 @@ static int handle_input(char *inbuf)
     /* Added for testbed cli, no impact on normal cli <beginning> */
     if (cmd_prefix_len > 0) {
         *(cmd_prefix + cmd_prefix_len) = '\0'; /* safe to operate in place now */
-        cli_putstr(cmd_prefix);
-        cli_putstr("\r\n");
+        cli_printf(cmd_prefix);
+        cli_printf("\r\n");
     }
     /* testbed cli <end> */
 
@@ -262,8 +262,8 @@ static int handle_input(char *inbuf)
             yos_msleep(500);
         }
 
-        cli_putstr(cmd_prefix);
-        cli_putstr("\r\n");
+        cli_printf(cmd_prefix);
+        cli_printf("\r\n");
     }
     /* testbed cli <end> */
 
