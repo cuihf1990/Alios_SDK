@@ -158,6 +158,8 @@ int main(int argc, char **argv)
 
     atexit(exit_clean);
 
+    yunos_init();
+
     ret = setrlimit_for_vfs();
     if (ret != 0) {
         return ret;
@@ -170,8 +172,6 @@ int main(int argc, char **argv)
 #ifdef TFS_EMULATE
     tfs_emulate_id2_index = options.id2_index;
 #endif
-
-    yunos_init();
 
     start_app(argc, argv);
 
