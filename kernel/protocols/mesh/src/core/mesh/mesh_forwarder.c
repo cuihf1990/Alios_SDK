@@ -974,7 +974,6 @@ static void handle_received_frame(void *context, frame_t *frame,
 {
     message_t         *message;
     received_frame_t  *rx_frame = NULL;
-    whitelist_entry_t *entry;
     hal_context_t *hal = (hal_context_t *)context;
     message_info_t info;
     ur_error_t uerror = UR_ERROR_NONE;
@@ -994,6 +993,7 @@ static void handle_received_frame(void *context, frame_t *frame,
 
 #ifdef CONFIG_YOS_MESH_DEBUG
     if (whitelist_is_enabled()) {
+        whitelist_entry_t *entry;
         entry = whitelist_find(&frame_info->peer);
         if (entry == NULL) {
             hal->link_stats.in_filterings++;

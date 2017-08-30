@@ -1012,7 +1012,6 @@ void process_stats(int argc, char *argv[])
 {
     slist_t                  *hals;
     hal_context_t            *hal;
-    const ur_link_stats_t    *link_stats;
     const ur_message_stats_t *message_stats;
     const frame_stats_t      *hal_stats;
     const ur_mem_stats_t     *mem_stats;
@@ -1020,6 +1019,7 @@ void process_stats(int argc, char *argv[])
     hals = umesh_get_hals();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
 #ifdef CONFIG_YOS_MESH_DEBUG
+        const ur_link_stats_t    *link_stats;
         link_stats = umesh_get_link_stats(hal->module->type);
         if (link_stats) {
             response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
