@@ -18,8 +18,8 @@
 
 typedef struct _fsid_map_t
 {
-    const char *root;
-    const char *id;
+    const char *root;       /* The mount point of the physical device */
+    const char *id;         /* The partition name of the device in fatfs */
 }fsid_map_t;
 
 typedef struct _fat_dir_t
@@ -29,6 +29,12 @@ typedef struct _fat_dir_t
     FILINFO         filinfo;
     yos_dirent_t    cur_dirent;
 }fat_dir_t;
+
+/* Note: 
+  *   the index of g_fsid table is the physical drive number which is defined in fatfs.h 
+  *   the "id" in the table should be same as the value of the physical drive number.
+  *   the item number of g_fsid table should not be large than FF_VOLUMES!!
+  */
 
 static fsid_map_t g_fsid[] = {
         { "/ramdisk",   "0:" },
@@ -197,18 +203,18 @@ static int fatfs_mode_conv(int m)
 
 static int fatfs_open(file_t *fp, const char *path, int flags)
 {
-    int ret;
+    int ret = -EPERM;
     FIL *f = NULL;
     char *relpath = NULL;
 
     f = (FIL *)yos_malloc(sizeof(FIL));
     if (!f)
-        return -1;
+        return -ENOMEM;
 
     relpath = translate_relative_path(path);
     if (!relpath) {
         yos_free(f);
-        return -1;
+        return -EINVAL;
     }
 
     ret = f_open(f, relpath, fatfs_mode_conv(flags));
@@ -220,12 +226,12 @@ static int fatfs_open(file_t *fp, const char *path, int flags)
 
     yos_free(relpath);
     yos_free(f);
-    return -1;
+    return ret;
 }
 
 static int fatfs_close(file_t *fp)
 {
-    int ret = -1;
+    int ret = -EPERM;
     FIL *f = (FIL *)(fp->f_arg);
 
     if (f) {
@@ -242,32 +248,35 @@ static int fatfs_close(file_t *fp)
 static ssize_t fatfs_read(file_t *fp, char *buf, size_t len)
 {
     ssize_t nbytes;
+    int ret = -EPERM;
     FIL *f = (FIL *)(fp->f_arg);
 
     if (f) {
-        if (f_read(f, (void *)buf, (UINT)len, (UINT *)&nbytes) == FR_OK)
+        if ((ret = f_read(f, (void *)buf, (UINT)len, (UINT *)&nbytes)) == FR_OK)
             return nbytes;
     }
 
-    return -1;
+    return ret;
 }
 
 static ssize_t fatfs_write(file_t *fp, const char *buf, size_t len)
 {
     ssize_t nbytes;
+    int ret = -EPERM;
     FIL *f = (FIL *)(fp->f_arg);
 
     if (f) {
-        if (f_write(f, (void *)buf, (UINT)len, (UINT *)&nbytes) == FR_OK)
+        if ((ret = f_write(f, (void *)buf, (UINT)len, (UINT *)&nbytes)) == FR_OK)
             return nbytes;
     }
 
-    return -1;
+    return ret;
 }
 
 static off_t fatfs_lseek(file_t *fp, off_t off, int whence)
 {
     off_t new_pos = 0;
+    int ret = -EPERM;
     FIL *f = (FIL *)(fp->f_arg);
 
     if (f) {
@@ -280,11 +289,11 @@ static off_t fatfs_lseek(file_t *fp, off_t off, int whence)
             off_t size = f_size(f);
             new_pos = size + off;
         } else {
-            return -1;
+            return -EINVAL;
         }
 
-        if (f_lseek(f, new_pos) != FR_OK) {
-            return -1;
+        if ((ret = f_lseek(f, new_pos)) != FR_OK) {
+            return ret;
         }
     }
 
@@ -293,7 +302,7 @@ static off_t fatfs_lseek(file_t *fp, off_t off, int whence)
 
 static int fatfs_sync(file_t *fp)
 {
-    int ret = -1;
+    int ret = -EPERM;
     FIL *f = (FIL *)(fp->f_arg);
 
     if (f) {
@@ -311,7 +320,7 @@ static int fatfs_stat(file_t *fp, const char *path, struct stat *st)
 
     relpath = translate_relative_path(path);
     if (!relpath)
-        return -1;
+        return -EINVAL;
 
     if ((ret = f_stat(relpath, &info)) == FR_OK) {
         st->st_size = info.fsize;
@@ -330,7 +339,7 @@ static int fatfs_unlink(file_t *fp, const char *path)
 
     relpath = translate_relative_path(path);
     if (!relpath)
-        return -1;
+        return -EINVAL;
 
     ret = f_unlink(relpath);
 
@@ -346,12 +355,12 @@ static int fatfs_rename(file_t *fp, const char *oldpath, const char *newpath)
 
     oldname = translate_relative_path(oldpath);
     if (!oldname)
-        return -1;
+        return -EINVAL;
 
     newname = translate_relative_path(newpath);
     if (!newname) {
         yos_free(oldname);
-        return -1;
+        return -EINVAL;
     }
 
     ret = f_rename(oldname, newname);
@@ -415,11 +424,11 @@ static yos_dirent_t* fatfs_readdir(file_t *fp, yos_dir_t *dir)
 
 static int fatfs_closedir(file_t *fp, yos_dir_t *dir)
 {
-    int ret = -1;
+    int ret = -EPERM;
     fat_dir_t *dp = (fat_dir_t *)dir;
 
     if (!dp)
-        return -1;
+        return -EINVAL;
 
     ret = f_closedir(&dp->ffdir);
     if (ret == FR_OK)
@@ -430,12 +439,12 @@ static int fatfs_closedir(file_t *fp, yos_dir_t *dir)
 
 static int fatfs_mkdir(file_t *fp, const char *path)
 {
-    int ret = -1;
+    int ret = -EPERM;
     char *relpath = NULL;
 
     relpath = translate_relative_path(path);
     if (!relpath)
-        return -1;
+        return -EINVAL;
 
     ret = f_mkdir(relpath);
 
@@ -469,7 +478,7 @@ int fatfs_register(unsigned char pdrv)
 
     fatfs = (FATFS *)yos_malloc(sizeof(FATFS));
     if (!fatfs)
-        return -1;
+        return -ENOMEM;
 
     err = f_mount(fatfs, g_fsid[pdrv].id, 1);
 
@@ -482,7 +491,7 @@ int fatfs_register(unsigned char pdrv)
     if (err == FR_NO_FILESYSTEM) {
         char *work = (char *)yos_malloc(FF_MAX_SS);
         if (!work) {
-            err = -1;
+            err = -ENOMEM;
             goto error;
         }
 
