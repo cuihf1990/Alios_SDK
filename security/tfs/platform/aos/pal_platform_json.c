@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #include <stdlib.h>
 #include <string.h>
 #include "cJSON.h"

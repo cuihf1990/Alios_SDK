@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2017 YunOS Project. All rights reserved.
- */
-
 #ifndef _TFS_PAL_H
 #define _TFS_PAL_H
 

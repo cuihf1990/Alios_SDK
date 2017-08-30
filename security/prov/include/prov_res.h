@@ -1,7 +1,3 @@
-/**
- * Copyright (C) 2016 The YunOS Project. All rights reserved.
- */
-
 #ifndef _PROV_RES_H_
 #define _PROV_RES_H_
 

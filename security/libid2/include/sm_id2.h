@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2016 YunOS Project. All rights reserved.
- */
-
 #ifndef _SM_ID2_H_
 #define _SM_ID2_H_
 

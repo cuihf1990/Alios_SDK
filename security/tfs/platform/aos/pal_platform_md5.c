@@ -1,7 +1,3 @@
-/*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
- */
-
 #include <stdio.h>
 #include <stdint.h>
 #include "digest_algorithm.h"
