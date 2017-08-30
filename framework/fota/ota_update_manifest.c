@@ -38,21 +38,21 @@ extern int http_download(char *url, write_flash_cb_t func);
 int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *request_parmas)
 {
     if (strncmp(response_parmas->primary_version,
-               request_parmas->primary_version,
-               sizeof response_parmas->primary_version) > 0) {
-           if(strlen(request_parmas->secondary_version)) {
-               ota_set_update_type(OTA_KERNEL);
-           }
-           return 1;
+                request_parmas->primary_version,
+                sizeof response_parmas->primary_version) > 0) {
+        if (strlen(request_parmas->secondary_version)) {
+            ota_set_update_type(OTA_KERNEL);
+        }
+        return 1;
     }
 
     if (strlen(request_parmas->secondary_version) && strncmp(response_parmas->secondary_version,
-            request_parmas->secondary_version,
-            sizeof response_parmas->secondary_version) > 0) {
+                                                             request_parmas->secondary_version,
+                                                             sizeof response_parmas->secondary_version) > 0) {
         ota_set_update_type(OTA_APP);
         return 1;
     }
-    
+
     return 0;
 }
 

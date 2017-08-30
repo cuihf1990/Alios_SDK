@@ -12,6 +12,7 @@
 #include "ota_transport.h"
 #include "alink_protocol.h"
 #include "ota_log.h"
+#include "ota_version.h"
 
 #define POST_OTA_STATUS_METHOD "ota/postDeviceUpgradeStatus"
 #define POST_OTA_RESULT_METHOD "device.updateVersion"
@@ -49,7 +50,7 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
         }
         strncpy(response_parmas->device_uuid, uuid->valuestring,
                 sizeof response_parmas->device_uuid);
-       
+
         cJSON *resourceUrl = cJSON_GetObjectItem(root, "resourceUrl");
         if (!resourceUrl) {
             OTA_LOG_E("resourceUrl get error.");
@@ -86,19 +87,19 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
         OTA_LOG_I(" response version %s", version->valuestring);
 
         char *upgrade_version = strtok(version->valuestring, "_");
-        if(!upgrade_version) {
+        if (!upgrade_version) {
             strncpy(response_parmas->primary_version, version->valuestring,
                     sizeof response_parmas->primary_version);
-        }else {
+        } else {
             strncpy(response_parmas->primary_version, upgrade_version,
-                               sizeof response_parmas->primary_version);
+                    sizeof response_parmas->primary_version);
             upgrade_version = strtok(NULL, "_");
-            if(upgrade_version) {
+            if (upgrade_version) {
                 strncpy(response_parmas->secondary_version, upgrade_version,
-                                              sizeof response_parmas->secondary_version);
+                        sizeof response_parmas->secondary_version);
             }
             OTA_LOG_I(" response primary_version = %s, secondary_version = %s",
-                    response_parmas->primary_version, response_parmas->secondary_version);
+                      response_parmas->primary_version, response_parmas->secondary_version);
         }
 
     }
@@ -136,7 +137,7 @@ int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response
         }
 
         strncpy(response_parmas->device_uuid, uuid->valuestring,
-                sizeof response_parmas->device_uuid);     
+                sizeof response_parmas->device_uuid);
     }
     goto parse_success;
 
@@ -189,7 +190,7 @@ int8_t platform_ota_result_post(void)
     return ret;
 }
 
-int8_t ota_pub_request(ota_request_params * request_parmas)
+int8_t ota_pub_request(ota_request_params *request_parmas)
 {
     return 0;
 }

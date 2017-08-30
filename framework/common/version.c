@@ -45,10 +45,10 @@ YOS_EXPORT YOS_WEAK const char   *get_yos_app_version(void)
 YOS_EXPORT YOS_WEAK void dump_sys_info(void)
 {
     LOGI(TAG, "os_version: %s", get_yos_os_version());
-    #ifdef SYSINFO_OS_BINS
+#ifdef SYSINFO_OS_BINS
     LOGI(TAG, "kernel_version: %s", get_yos_kernel_version());
     LOGI(TAG, "app_version: %s", get_yos_app_version());
-    #endif
+#endif
     LOGI(TAG, "product_model: %s", get_yos_product_model());
     LOGI(TAG, "device_name: %s", get_yos_device_name());
 }
