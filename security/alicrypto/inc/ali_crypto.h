@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /* Alibaba TEE Crypto API: version 1.1 */
 
 #ifndef _ALI_CRYPTO_H_

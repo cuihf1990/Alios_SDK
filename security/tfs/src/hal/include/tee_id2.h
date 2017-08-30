@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _TEE_ID2_H_
 #define _TEE_ID2_H_
 

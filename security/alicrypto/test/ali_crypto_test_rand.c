@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "ali_crypto_test.h"
 
 int ali_crypto_rand_test(void)

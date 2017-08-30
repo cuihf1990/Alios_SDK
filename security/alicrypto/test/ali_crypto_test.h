@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _ALI_CRYPTO_TEST_H_
 #define _ALI_CRYPTO_TEST_H_
 

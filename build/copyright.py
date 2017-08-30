@@ -30,6 +30,12 @@ rootdirs = ['./board/linuxhost',         \
             './platform/mcu/include',    \
             './platform/mcu/linux',      \
             './platform/mcu/template',   \
+            './security/alicrypto/inc',  \
+            './security/alicrypto/test', \
+            './security/libid2/include', \
+            './security/libkm/include',  \
+            './security/prov/include',   \
+            './security/tfs',            \
             './test',                    \
             './tools/cli',               \
             './tools/dda',               \

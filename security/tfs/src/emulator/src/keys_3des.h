@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _KEYS_3DES_H
 #define _KEYS_3DES_H
 
