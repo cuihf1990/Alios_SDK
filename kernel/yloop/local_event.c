@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <yos/kernel.h>
 #include <yos/framework.h>
 #include <yos/list.h>
@@ -111,12 +112,12 @@ int yos_post_event(uint16_t type, uint16_t code, unsigned long value)
 int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv)
 {
     if (cb == NULL) {
-        return -1;
+        return -EINVAL;
     }
 
     event_list_node_t *event_node = yos_malloc(sizeof(event_list_node_t));
     if (NULL == event_node) {
-        return -1;
+        return -ENOMEM;
     }
 
     event_node->cb           = cb;
@@ -149,7 +150,7 @@ int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv)
         return 0;
     }
 
-    return -1;
+    return -EINVAL;
 }
 
 /*
@@ -159,7 +160,7 @@ static int _schedule_call(yos_loop_t *loop, yos_call_t fun, void *arg,
                           bool urgent)
 {
     if (fun == NULL) {
-        return -1;
+        return -EINVAL;
     }
 
     input_event_t event = {
