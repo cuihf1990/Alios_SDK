@@ -99,7 +99,7 @@ static void test_yos_vfs_case(void)
 
         fd = yos_open(names[i], 0);
         ret = yos_ioctl(fd, 0, 0);
-        YUNIT_ASSERT(E_VFS_K_ERR == ret);
+        YUNIT_ASSERT(-ENOENT == ret);
     }
 }
 
@@ -140,9 +140,9 @@ static void test_vfs_fs_case(void)
     ret = yos_unregister_fs(names);
     YUNIT_ASSERT(ret == 0);
 
-    YUNIT_ASSERT(E_VFS_INODE_NOT_FOUND == yos_stat(names, &st));
-    YUNIT_ASSERT(E_VFS_INODE_NOT_FOUND == yos_unlink(names));
-    YUNIT_ASSERT(E_VFS_INODE_NOT_FOUND == yos_rename(names, names));
+    YUNIT_ASSERT(-ENODEV == yos_stat(names, &st));
+    YUNIT_ASSERT(-ENODEV == yos_unlink(names));
+    YUNIT_ASSERT(-ENODEV == yos_rename(names, names));
 }
 
 

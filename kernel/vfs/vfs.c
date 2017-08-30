@@ -23,7 +23,7 @@ yos_mutex_t g_vfs_mutex;
 static int trap_open(const char *path, int flags)
 {
 #ifdef WITH_LWIP
-    return E_VFS_K_ERR;
+    return -ENOSYS;
 #else
     int fd = open(path, flags);
     if (fd < 0) {
@@ -56,46 +56,48 @@ static int trap_fcntl(int fd, int cmd, int val)
 #else
 static int trap_open(const char *path, int flags)
 {
-    return E_VFS_K_ERR;
+    return -ENOSYS;
 }
 
 static int trap_read(int fd, void *buf, int len)
 {
-    return E_VFS_K_ERR;
+    return -ENOSYS;
 }
 
 static int trap_write(int fd, const void *buf, int len)
 {
-    return E_VFS_K_ERR;
+    return -ENOSYS;
 }
 
 static int trap_close(int fd)
 {
-    return E_VFS_K_ERR;
+    return -ENOSYS;
 }
 
 static int trap_fcntl(int fd, int cmd, int val)
 {
-    return E_VFS_K_ERR;
+    return -ENOSYS;
 }
 #endif
 
 
 int vfs_init(void)
 {
+    int ret = VFS_SUCCESS;
+
     if (g_vfs_init == 1) {
-        return VFS_SUCCESS;
+        return ret;
     }
 
-    if (yos_mutex_new(&g_vfs_mutex) != 0) {
-        return E_VFS_K_ERR;
+    if ((ret = yos_mutex_new(&g_vfs_mutex)) != VFS_SUCCESS) {
+        return ret;
     }
 
     inode_init();
 
     g_vfs_init = 1;
 
-    return VFS_SUCCESS;
+    return ret;
 }
 
 #define MAX_FILE_NUM (YOS_CONFIG_VFS_DEV_NODES * 2)
@@ -157,14 +159,14 @@ int yos_open(const char *path, int flags)
 {
     file_t  *file;
     inode_t *node;
-    int      err = VFS_SUCCESS;
+    int ret = VFS_SUCCESS;
 
     if (path == NULL) {
-        return E_VFS_NULL_PTR;
+        return -EINVAL;
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((ret = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return ret;
     }
 
     node = inode_open(path);
@@ -180,23 +182,23 @@ int yos_open(const char *path, int flags)
     yos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
-        return E_VFS_K_ERR;
+        return -ENOENT;
     }
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->open) != NULL) {
-            err = (node->ops.i_fops->open)(file, path, flags);
+            ret = (node->ops.i_fops->open)(file, path, flags);
         }
 
     } else {
         if ((node->ops.i_ops->open) != NULL) {
-            err = (node->ops.i_ops->open)(node, file);
+            ret = (node->ops.i_ops->open)(node, file);
         }
     }
 
-    if (err != VFS_SUCCESS) {
+    if (ret != VFS_SUCCESS) {
         del_file(file);
-        return err;
+        return ret;
     }
 
     return get_fd(file);
@@ -204,7 +206,7 @@ int yos_open(const char *path, int flags)
 
 int yos_close(int fd)
 {
-    int      err = VFS_SUCCESS;
+    int ret = VFS_SUCCESS;
     file_t  *f;
     inode_t *node;
 
@@ -218,25 +220,25 @@ int yos_close(int fd)
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->close) != NULL) {
-            err = (node->ops.i_fops->close)(f);
+            ret = (node->ops.i_fops->close)(f);
         }
 
     } else {
 
         if ((node->ops.i_ops->close) != NULL) {
-            err = (node->ops.i_ops->close)(f);
+            ret = (node->ops.i_ops->close)(f);
         }
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((ret = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return ret;
     }
 
     del_file(f);
 
     yos_mutex_unlock(&g_vfs_mutex);
 
-    return err;
+    return ret;
 }
 
 ssize_t yos_read(int fd, void *buf, size_t nbytes)
@@ -295,94 +297,94 @@ ssize_t yos_write(int fd, const void *buf, size_t nbytes)
 
 int yos_ioctl(int fd, int cmd, unsigned long arg)
 {
-    int      err = E_VFS_K_ERR;
+    int ret = -ENOSYS;
     file_t  *f;
     inode_t *node;
 
     if (fd < 0) {
-        return E_VFS_FD_ILLEGAL;
+        return -EINVAL;
     }
 
     f = get_file(fd);
 
     if (f == NULL) {
-        return E_VFS_K_ERR;
+        return -ENOENT;
     }
 
     node = f->node;
 
     if ((node->ops.i_ops->ioctl) != NULL) {
-        err = (node->ops.i_ops->ioctl)(f, cmd, arg);
+        ret = (node->ops.i_ops->ioctl)(f, cmd, arg);
     }
 
-    return err;
+    return ret;
 }
 
 off_t yos_lseek(int fd, off_t offset, int whence)
 {
     file_t *f;
     inode_t *node;
-    int err = E_VFS_NOSYS;
+    int ret = -ENOSYS;
 
     f = get_file(fd);
 
     if (f == NULL) {
-        return E_VFS_FD_ILLEGAL;
+        return -ENOENT;
     }
 
     node = f->node;
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->lseek) != NULL) {
-            err = (node->ops.i_fops->lseek)(f, offset, whence);
+            ret = (node->ops.i_fops->lseek)(f, offset, whence);
         }
     }
 
-    return err;
+    return ret;
 }
 
 int yos_sync(int fd)
 {
     file_t  *f;
     inode_t *node;
-    int err = E_VFS_NOSYS;
+    int ret = -ENOSYS;
 
     f = get_file(fd);
 
     if (f == NULL) {
-        return E_VFS_FD_ILLEGAL;
+        return -ENOENT;
     }
 
     node = f->node;
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->sync) != NULL) {
-            err = (node->ops.i_fops->sync)(f);
+            ret = (node->ops.i_fops->sync)(f);
         }
     }
 
-    return err;
+    return ret;
 }
 
 int yos_stat(const char *path, struct stat *st)
 {
     file_t  *file;
     inode_t *node;
-    int      err = E_VFS_NOSYS;
+    int err, ret = -ENOSYS;
 
     if (path == NULL) {
-        return E_VFS_NULL_PTR;
+        return -EINVAL;
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
         yos_mutex_unlock(&g_vfs_mutex);
-        return E_VFS_INODE_NOT_FOUND;
+        return -ENODEV;
     }
 
     file = new_file(node);
@@ -390,44 +392,44 @@ int yos_stat(const char *path, struct stat *st)
     yos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
-        return E_VFS_K_ERR;
+        return -ENOENT;
     }
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->stat) != NULL) {
-            err = (node->ops.i_fops->stat)(file, path, st);
+            ret = (node->ops.i_fops->stat)(file, path, st);
         }
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     del_file(file);
 
     yos_mutex_unlock(&g_vfs_mutex);
-    return err;
+    return ret;
 }
 
 int yos_unlink(const char *path)
 {
     file_t  *f;
     inode_t *node;
-    int      err = E_VFS_NOSYS;
+    int err, ret = -ENOSYS;
 
     if (path == NULL) {
-        return E_VFS_NULL_PTR;
+        return -EINVAL;
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
         yos_mutex_unlock(&g_vfs_mutex);
-        return E_VFS_INODE_NOT_FOUND;
+        return -ENODEV;
     }
 
     f = new_file(node);
@@ -435,44 +437,44 @@ int yos_unlink(const char *path)
     yos_mutex_unlock(&g_vfs_mutex);
 
     if (f == NULL) {
-        return E_VFS_K_ERR;
+        return -ENOENT;
     }
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->unlink) != NULL) {
-            err = (node->ops.i_fops->unlink)(f, path);
+            ret = (node->ops.i_fops->unlink)(f, path);
         }
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     del_file(f);
 
     yos_mutex_unlock(&g_vfs_mutex);
-    return err;
+    return ret;
 }
 
 int yos_rename(const char *oldpath, const char *newpath)
 {
     file_t  *f;
     inode_t *node;
-    int      err = E_VFS_NOSYS;
+    int err, ret = -ENOSYS;
 
     if (oldpath == NULL || newpath == NULL) {
-        return E_VFS_NULL_PTR;
+        return -EINVAL;
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     node = inode_open(oldpath);
 
     if (node == NULL) {
         yos_mutex_unlock(&g_vfs_mutex);
-        return E_VFS_INODE_NOT_FOUND;
+        return -ENODEV;
     }
 
     f = new_file(node);
@@ -480,23 +482,23 @@ int yos_rename(const char *oldpath, const char *newpath)
     yos_mutex_unlock(&g_vfs_mutex);
 
     if (f == NULL) {
-        return E_VFS_K_ERR;
+        return -ENOENT;
     }
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->rename) != NULL) {
-            err = (node->ops.i_fops->rename)(f, oldpath, newpath);
+            ret = (node->ops.i_fops->rename)(f, oldpath, newpath);
         }
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     del_file(f);
 
     yos_mutex_unlock(&g_vfs_mutex);
-    return err;
+    return ret;
 }
 
 yos_dir_t *yos_opendir(const char *path)
@@ -553,35 +555,35 @@ int yos_closedir(yos_dir_t *dir)
 {
     file_t  *f;
     inode_t *node;
-    int      err = E_VFS_NOSYS;
+    int err, ret = -ENOSYS;
 
     if (dir == NULL) {
-        return E_VFS_ERR_PARAM;
+        return -EINVAL;
     }
 
     f = get_file(dir->dd_vfs_fd);
 
     if (f == NULL) {
-        return E_VFS_ERR_PARAM;
+        return -ENOENT;
     }
 
     node = f->node;
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->closedir) != NULL) {
-            err = (node->ops.i_fops->closedir)(f, dir);
+            ret = (node->ops.i_fops->closedir)(f, dir);
         }
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     del_file(f);
 
     yos_mutex_unlock(&g_vfs_mutex);
 
-    return err;
+    return ret;
 }
 
 yos_dirent_t *yos_readdir(yos_dir_t *dir)
@@ -618,21 +620,21 @@ int yos_mkdir(const char *path)
 {
     file_t  *file;
     inode_t *node;
-    int      err = E_VFS_NOSYS;
+    int err, ret = -ENOSYS;
 
     if (path == NULL) {
-        return E_VFS_NULL_PTR;
+        return -EINVAL;
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
         yos_mutex_unlock(&g_vfs_mutex);
-        return E_VFS_INODE_NOT_FOUND;
+        return -ENODEV;
     }
 
     file = new_file(node);
@@ -640,23 +642,23 @@ int yos_mkdir(const char *path)
     yos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
-        return E_VFS_K_ERR;
+        return -ENOENT;
     }
 
     if (INODE_IS_FS(node)) {
         if ((node->ops.i_fops->mkdir) != NULL) {
-            err = (node->ops.i_fops->mkdir)(file, path);
+            ret = (node->ops.i_fops->mkdir)(file, path);
         }
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-        return E_VFS_K_ERR;
+    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        return err;
     }
 
     del_file(file);
 
     yos_mutex_unlock(&g_vfs_mutex);
-    return err;
+    return ret;
 }
 
 
@@ -911,7 +913,7 @@ check_poll:
 int yos_fcntl(int fd, int cmd, int val)
 {
     if (fd < 0) {
-        return E_VFS_ERR_PARAM;
+        return -EINVAL;
     }
 
     if (fd < YOS_CONFIG_VFS_FD_OFFSET) {
@@ -931,19 +933,19 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
         file_t  *f;
         inode_t *node;
 
-        if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
-            return E_VFS_K_ERR;
+        if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+            return err;
         }
 
         f = get_file(fd);
 
         if (f == NULL) {
             yos_mutex_unlock(&g_vfs_mutex);
-            return err;
+            return -ENOENT;
         }
 
-        if (yos_mutex_unlock(&g_vfs_mutex) != 0) {
-            return E_VFS_K_ERR;
+        if ((err = yos_mutex_unlock(&g_vfs_mutex)) != 0) {
+            return err;
         }
 
         node = f->node;
