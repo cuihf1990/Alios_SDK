@@ -17,6 +17,7 @@
 NAME := otatest
 
 GLOBAL_DEFINES      += IOTX_DEBUG
+CONFIG_OTA_CH := coap
 
 
 $(NAME)_COMPONENTS  := cli
