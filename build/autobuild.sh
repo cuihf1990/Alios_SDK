@@ -12,7 +12,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-branch=`git status | grep "On branch" | awk '{print $3}'`
+branch=`git status | grep "On branch" | sed -r 's/.*On branch //g'`
 cd $(git rev-parse --show-toplevel)
 
 #single-bin, mk3060
@@ -24,7 +24,7 @@ for target in ${mk3060_targets}; do
             rm -rf ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
-            echo -e "\n"
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
             cat ${target}@${platform}@${branch}.log
             rm -rf ${target}@${platform}@${branch}.log
             echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
@@ -44,7 +44,7 @@ for target in ${mk3060_targets}; do
             rm -rf ${target}@${platform}@${branch}.multi-bins.log
             echo "build ${target}@${platform} as multiple BINs at ${branch} branch succeed"
         else
-            echo -e "\n"
+            echo -e "build ${target}@${platform} as multiple BINs at ${branch} branch failed, log:\n"
             cat ${target}@${platform}@${branch}.multi-bins.log
             rm -rf ${target}@${platform}@${branch}.multi-bins.log
             echo -e "\nbuild ${target}@${platform} as multiple BINs at ${branch} branch failed"
@@ -63,7 +63,7 @@ for target in ${linux_targets}; do
             echo "build ${target}@${platform} at ${branch} branch succeed"
             rm -rf ${target}@${platform}@${branch}.log
         else
-            echo -e "\n"
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
             cat ${target}@${platform}@${branch}.log
             echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
             yos make clean > /dev/null 2>&1
