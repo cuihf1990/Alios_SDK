@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "aes128.h"
 
 int tfs_aes128_cbc_enc(const uint8_t *key,

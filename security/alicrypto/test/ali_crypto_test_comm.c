@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "ali_crypto_test.h"
 
 void ali_crypto_print_data(const char *name, uint8_t *data, size_t size)
