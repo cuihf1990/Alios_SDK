@@ -48,7 +48,9 @@ $(NAME)_SOURCES     :=
 # arch linux
 ifneq ($(vcall),posix)
 $(NAME)_SOURCES     += $(ARCH_LINUX)/cpu_impl.c
+ifeq ($(PLATFORM),linuxhost)
 $(NAME)_SOURCES     += $(ARCH_LINUX)/swap.S
+endif
 $(NAME)_SOURCES     += soc/soc_impl.c
 $(NAME)_SOURCES     += soc/hook_impl.c
 $(NAME)_SOURCES     += soc/trace_impl.c
@@ -74,6 +76,10 @@ $(NAME)_CFLAGS      += -Wno-unused-but-set-variable
 endif
 
 ifneq (,$(filter protocols.net,$(COMPONENTS)))
+LWIP := 1
+endif
+
+ifeq (1,$(LWIP))
 $(NAME)_SOURCES     += \
     csp/lwip/netif/delif.c \
     csp/lwip/netif/fifo.c \
