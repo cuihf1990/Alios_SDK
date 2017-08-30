@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include <sys/errno.h>  /* Standard errno definations */
+#include <errno.h>  /* Standard errno definations */
 #include "integer.h"	/* Basic integer types */
 #include "ffconf.h"		/* FatFs configuration options */
 
