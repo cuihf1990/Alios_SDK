@@ -9,7 +9,7 @@
 #include "md5.h"
 #include "sha2.c"
 #include "hmac.c"
-#include "yos/framework.h"
+#include "yos/yos.h"
 
 void *digest_md5_init(void)
 {

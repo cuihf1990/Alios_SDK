@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <yos/network.h>
 #include <yos/log.h>
 #include <strings.h>

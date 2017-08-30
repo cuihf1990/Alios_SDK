@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <yos/network.h>
 
 #include "ota_util.h"

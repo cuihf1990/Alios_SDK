@@ -10,7 +10,7 @@
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <yos/log.h>
 #include <yos/list.h>
 #include "yos/cli.h"

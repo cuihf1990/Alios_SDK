@@ -8,7 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <yos/network.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <netmgr.h>
 
 #include "mbedtls/mbedtls_ssl.h"

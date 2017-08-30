@@ -7,7 +7,7 @@
 
 #include <yunit.h>
 #include <yts.h>
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "kvmgr.h"
 
 static char *g_key_1 = "key_1";

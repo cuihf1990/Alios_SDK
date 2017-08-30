@@ -7,7 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include "yos/list.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "msdp.h"
 #include "yos/log.h"
 #include "service.h"
