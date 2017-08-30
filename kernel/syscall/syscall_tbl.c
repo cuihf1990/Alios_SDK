@@ -5,7 +5,7 @@
 #include <k_api.h>
 #include <yos/cli.h>
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #include <hal/wifi.h>

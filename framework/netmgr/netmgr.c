@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <yos/network.h>
 #include <yos/log.h>
 #include <hal/wifi.h>

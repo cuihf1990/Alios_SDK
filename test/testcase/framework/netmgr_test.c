@@ -3,7 +3,7 @@
  */
 
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
 #include <yunit.h>

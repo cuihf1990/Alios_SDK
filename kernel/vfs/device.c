@@ -6,7 +6,7 @@
 #include <string.h>
 #include <yos/list.h>
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 
 #include <vfs_conf.h>
 #include <vfs_err.h>

@@ -10,7 +10,7 @@
 
 #include <netdb.h>
 #include <sys/socket.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include "yos/internal/event_type_code.h"
 #ifdef CSP_LINUXHOST
 #include <arpa/inet.h>

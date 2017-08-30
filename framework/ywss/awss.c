@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 #include "yos/kernel.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "aws_lib.h"
 #include "zconfig_lib.h"
 #include "awss.h"

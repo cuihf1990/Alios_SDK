@@ -4,7 +4,7 @@
 
 #include "yunit.h"
 
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "yos/kernel.h"
 
 #include "umesh.h"

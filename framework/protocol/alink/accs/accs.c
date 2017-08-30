@@ -7,7 +7,7 @@
 #include "alink_protocol.h"
 #include "connectivity_manager.h"
 #include "yos/list.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "yos/log.h"
 #include "service_manager.h"
 #include "wsf.h"

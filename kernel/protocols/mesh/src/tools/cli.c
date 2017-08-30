@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <yos/cli.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <yos/log.h>
 
 #include "umesh.h"

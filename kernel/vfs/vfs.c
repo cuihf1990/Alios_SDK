@@ -3,7 +3,7 @@
  */
 
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <yos/network.h>
 #include <vfs_conf.h>
 #include <vfs_dirent.h>

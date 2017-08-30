@@ -3,7 +3,7 @@
  */
 
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <vfs.h>
 #include <kvmgr.h>
 #include <vflash.h>
