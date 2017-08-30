@@ -37,6 +37,19 @@ typedef struct ur_ip6_header_s {
     ur_ip6_addr_t dest;
 } __attribute__((packed)) ur_ip6_header_t;
 
+typedef struct mesh_ip4_header_s {
+    uint8_t v_hl;
+    uint8_t tos;
+    uint16_t len;
+    uint16_t id;
+    uint16_t offset;
+    uint8_t ttl;
+    uint8_t proto;
+    uint16_t chksum;
+    mesh_ip4_addr_t src;
+    mesh_ip4_addr_t dest;
+} __attribute__((packed)) mesh_ip4_header_t;
+
 typedef struct ur_icmp6_header_s {
     uint8_t  type;
     uint8_t  code;

@@ -46,6 +46,8 @@ enum {
 
     IP6_UCAST_ADDR_NUM = 2,
     IP6_MCAST_ADDR_NUM = 1,
+
+    MESH_IP4_ADDR_SIZE = 4,
 };
 
 enum {
@@ -62,6 +64,13 @@ typedef struct ur_ip6_addr_s {
     };
 } __attribute__((packed)) ur_ip6_addr_t;
 
+typedef struct mesh_ip4_addr_s {
+    union {
+        uint8_t  m8[MESH_IP4_ADDR_SIZE];
+        uint16_t m16[MESH_IP4_ADDR_SIZE / sizeof(uint16_t)];
+    };
+} __attribute__((packed)) mesh_ip4_addr_t;
+
 typedef struct ur_ip6_prefix_s {
     ur_ip6_addr_t prefix;
     uint8_t       length;
@@ -69,6 +78,7 @@ typedef struct ur_ip6_prefix_s {
 
 enum {
     UR_IP6_HLEN      = 40,
+    MESH_IP4_HLEN = 20,
     UR_UDP_HLEN      = 8,
 };
 

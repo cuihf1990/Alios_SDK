@@ -25,6 +25,8 @@
 #include "tools/diags.h"
 #include "lwip/sockets.h"
 
+#include "lwip/inet_chksum.h"
+
 #ifdef CONFIG_YOS_MESH_DEBUG
 static void process_help(int argc, char *argv[]);
 static void process_autotest(int argc, char *argv[]);
@@ -963,7 +965,7 @@ void process_ping(int argc, char *argv[])
     header->code = 7;
     header->data = g_cl_state.icmp_seq;
     ++g_cl_state.icmp_seq;
-    header->chksum = 0;  /* checksum disabled */
+    header->chksum = inet_chksum(payload, length);
 
     ip6_sendto(g_cl_state.icmp_socket, payload, length, &target, 0);
     ur_mem_free(payload, length);
@@ -971,8 +973,9 @@ void process_ping(int argc, char *argv[])
 
 void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
 {
-    ur_ip6_header_t   *ip6_header;
     ur_icmp6_header_t *icmp6_header;
+#if LWIP_IPV6
+    ur_ip6_header_t   *ip6_header;
 
     if (length) {
         ip6_header = (ur_ip6_header_t *)payload;
@@ -985,6 +988,21 @@ void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
                             icmp6_header->data, g_cl_state.icmp_acked);
         }
     }
+#else
+    mesh_ip4_header_t *ip4_header;
+
+    if (length) {
+        ip4_header = (mesh_ip4_header_t *)payload;
+        icmp6_header = (ur_icmp6_header_t *)(payload + MESH_IP4_HLEN);
+        if (icmp6_header->type == UR_ICMP6_TYPE_EREP) {
+            g_cl_state.icmp_acked ++;
+            response_append("%d bytes from " IP4_ADDR_FMT " icmp_seq %d icmp_acked %d\r\n",
+                            length - MESH_IP4_HLEN - sizeof(ur_icmp6_header_t),
+                            IP4_ADDR_DATA(ip4_header->src),
+                            icmp6_header->data, g_cl_state.icmp_acked);
+        }
+    }
+#endif
 }
 
 static void show_router(uint8_t id)

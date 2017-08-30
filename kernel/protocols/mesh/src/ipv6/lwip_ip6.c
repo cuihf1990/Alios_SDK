@@ -120,7 +120,11 @@ int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
     sock_addr.sin_len = sizeof(sock_addr);
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_port = htons(port);
-    sock_addr.sin_addr.s_addr = 0x000a | (dest->m16[7] << 16);
+    if (ur_is_mcast(dest)) {
+        sock_addr.sin_addr.s_addr = (dest->m16[7] << 16) | 0x00e0;
+    } else {
+        sock_addr.sin_addr.s_addr = (2 << 24) | (dest->m16[7] << 16) | 0x000a;
+    }
     return lwip_sendto(socket, payload, length, 0, (struct sockaddr *)&sock_addr,
                        sizeof(sock_addr));
 }
