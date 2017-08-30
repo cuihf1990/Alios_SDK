@@ -4,7 +4,8 @@
 
 #include <string.h>
 #include <sys/fcntl.h>
-#include "diskio.h"
+#include "fatfs.h"
+#include "fatfs_diskio.h"
 #include "ff.h"
 #include "vfs_err.h"
 #include "vfs_inode.h"
@@ -18,8 +19,9 @@
 
 typedef struct _fsid_map_t
 {
+    int         index;      /* Device index */
     const char *root;       /* The mount point of the physical device */
-    const char *id;         /* The partition name of the device in fatfs */
+    const char *id;         /* The partition id of the device in fatfs */
 }fsid_map_t;
 
 typedef struct _fat_dir_t
@@ -30,15 +32,10 @@ typedef struct _fat_dir_t
     yos_dirent_t    cur_dirent;
 }fat_dir_t;
 
-/* Note: 
-  *   the index of g_fsid table is the physical drive number which is defined in fatfs.h 
-  *   the "id" in the table should be same as the value of the physical drive number.
-  *   the item number of g_fsid table should not be large than FF_VOLUMES!!
-  */
-
 static fsid_map_t g_fsid[] = {
-        { "/ramdisk",   "0:" },
-        { "/sdcard",    "1:" }
+        { DEV_RAM, RAM_MOUNTPOINT, RAM_PARTITION_ID },
+        { DEV_MMC, MMC_MOUNTPOINT, MMC_PARTITION_ID },
+        { DEV_USB, USB_MOUNTPOINT, USB_PARTITION_ID }
 };
 
 static FATFS *g_fatfs[FF_VOLUMES] = {0};
@@ -143,7 +140,16 @@ void ff_rel_grant (
 
 #endif
 
+static int get_disk_index(int pdrv)
+{
+    int index;
+    for(index = 0; index < FF_VOLUMES; index++) {
+        if (g_fsid[index].index == pdrv)
+            return index;
+    }
 
+    return -1;
+}
 
 static char* translate_relative_path(const char *path)
 {
@@ -470,21 +476,25 @@ static const fs_ops_t fatfs_ops = {
 
 int fatfs_register(unsigned char pdrv)
 {
-    int err;
+    int err, index;
     FATFS *fatfs = NULL;
 
-    if (g_fatfs[pdrv] != NULL)
+    index = get_disk_index(pdrv);
+    if (index < 0)
+        return -EINVAL;
+
+    if (g_fatfs[index] != NULL)
         return FR_OK;
 
     fatfs = (FATFS *)yos_malloc(sizeof(FATFS));
     if (!fatfs)
         return -ENOMEM;
 
-    err = f_mount(fatfs, g_fsid[pdrv].id, 1);
+    err = f_mount(fatfs, g_fsid[index].id, 1);
 
     if (err == FR_OK) {
-        g_fatfs[pdrv] = fatfs;
-        return yos_register_fs(g_fsid[pdrv].root, &fatfs_ops, NULL);
+        g_fatfs[index] = fatfs;
+        return yos_register_fs(g_fsid[index].root, &fatfs_ops, NULL);
     }
 
 #if FF_USE_MKFS && !FF_FS_READONLY
@@ -496,20 +506,20 @@ int fatfs_register(unsigned char pdrv)
         }
 
         BYTE opt = FM_ANY;
-        disk_ioctl(pdrv, GET_FORMAT_OPTION, &opt);
+        disk_ioctl(g_fsid[index].index, GET_FORMAT_OPTION, &opt);
 
-        err = f_mkfs(g_fsid[pdrv].id, opt, 0, work, FF_MAX_SS);
+        err = f_mkfs(g_fsid[index].id, opt, 0, work, FF_MAX_SS);
         yos_free(work);
 
         if (err != FR_OK)
             goto error;
 
-        f_mount(NULL, g_fsid[pdrv].id, 1);
-        err = f_mount(fatfs, g_fsid[pdrv].id, 1);
+        f_mount(NULL, g_fsid[index].id, 1);
+        err = f_mount(fatfs, g_fsid[index].id, 1);
 
         if (err == FR_OK) {
-            g_fatfs[pdrv] = fatfs;
-            return yos_register_fs(g_fsid[pdrv].root, &fatfs_ops, NULL);
+            g_fatfs[index] = fatfs;
+            return yos_register_fs(g_fsid[index].root, &fatfs_ops, NULL);
         }
     }
 #endif
@@ -522,11 +532,17 @@ error:
 int fatfs_unregister(unsigned char pdrv)
 {
     int err = FR_OK;
+    int index;
 
-    err = yos_unregister_fs(g_fsid[pdrv].root);
+    index = get_disk_index(pdrv);
+    if (index < 0)
+        return -EINVAL;
+
+    err = yos_unregister_fs(g_fsid[index].root);
     if (err == FR_OK) {
-        f_mount(NULL, g_fsid[pdrv].id, 1);
-        yos_free(g_fatfs[pdrv]);
+        f_mount(NULL, g_fsid[index].id, 1);
+        yos_free(g_fatfs[index]);
+        g_fatfs[index] = NULL;
     }
 
     return err;

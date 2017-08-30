@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "diskio.h"
+#include "fatfs_diskio.h"
 #include "ff.h"
 
 /* Definitions of physical drive number for each drive */
