@@ -4,7 +4,7 @@
 #ifndef OTA_TRANSPORT_H_
 #define OTA_TRANSPORT_H_
 #include <stdint.h>
-#include <yos/cloud.h>
+#include <yos/yos.h>
 
 #define MAX_URL_LEN 256
 #define MAX_MD5_LEN 34
