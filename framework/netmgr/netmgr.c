@@ -8,7 +8,6 @@
 #include <yos/yos.h>
 #include <yos/network.h>
 #include <hal/wifi.h>
-#include <yos/cli.h>
 
 #include "netmgr.h"
 

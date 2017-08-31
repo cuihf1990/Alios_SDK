@@ -8,8 +8,6 @@
 #include <kvmgr.h>
 #include <vflash.h>
 
-#include "yos/cli.h"
-
 #ifdef MESH_GATEWAY_SERVICE
 #include "gateway_service.h"
 #endif
