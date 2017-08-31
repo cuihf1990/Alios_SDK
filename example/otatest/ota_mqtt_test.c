@@ -18,9 +18,10 @@
 
 #include <yos/framework.h>
 
+extern int mqtt_client();
 int application_start(void)
 {
-    yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+    mqtt_client();
     yos_loop_run();
     return 0;
 }

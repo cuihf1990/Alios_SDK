@@ -126,7 +126,7 @@ void event_handle(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 int mqtt_client(void)
 {
 
-    int rc = 0, ota_over = 0;
+    int rc = 0;
     void *pclient = NULL, *h_ota = NULL;
     iotx_conn_info_pt pconn_info;
     iotx_mqtt_param_t mqtt_params;
@@ -195,9 +195,7 @@ int mqtt_client(void)
 
     HAL_SleepMs(1000);
 
-    do {
-        ota_over = try_fetch_ota(h_ota);
-    } while (1 != ota_over);
+    try_fetch_ota(h_ota);
 
     HAL_SleepMs(200);
 

@@ -65,3 +65,9 @@ $(NAME)_INCLUDES += ../../framework/fota/alink/platform/alink/
 ifeq ($(CONFIG_OTA_CH),alink)
 $(NAME)_DEFINES += OTA_CH_ALINK
 endif
+ifeq ($(CONFIG_OTA_CH),coap)
+$(NAME)_DEFINES += OTA_CH_COAP
+endif
+ifeq ($(CONFIG_OTA_CH),mqtt)
+$(NAME)_DEFINES += OTA_CH_MQTT
+endif
