@@ -44,6 +44,7 @@ endif
 ifneq ($(CONFIG_COAP_DTLS_SUPPORT), y)
 $(NAME)_SOURCES += ../hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
 ifeq ($(CONFIG_OTA_CH),coap)
+$(NAME)_SOURCES += ../hal/$(PLATFORM_MQTT)/HAL_TCP_$(PLATFORM_MQTT).c
 $(NAME)_DEFINES += IOTX_WITHOUT_TLS
 $(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-lib
 endif
