@@ -260,8 +260,7 @@ const char *alink_get_sdk_version(char *buff, unsigned int len)
     char *version, *module_name;
 
     OS_CHECK_PARAMS(buff);
-    if(!main_device)
-    {
+    if (!main_device) {
         return buff;
     }
     version = (char *)os_malloc(STR_SHORT_LEN);
