@@ -30,9 +30,21 @@ $(NAME)_SOURCES := \
     utils_net.c \
     utils_timer.c
 
-#$(NAME)_SOURCES += ../hal/HAL_TCP_linux.c
+ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+PLATFORM_MQTT := rhino
+#NETWORK_MQTT := rhinosock
+endif
 
 ifneq ($(CONFIG_COAP_DTLS_SUPPORT), y)
-#$(NAME)_DEFINES += IOTX_WITHOUT_TLS
-#$(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-lib
+$(NAME)_SOURCES += ../hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
+ifeq ($(CONFIG_OTA_CH),coap)
+$(NAME)_DEFINES += IOTX_WITHOUT_TLS
+$(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-lib
+endif
 endif
