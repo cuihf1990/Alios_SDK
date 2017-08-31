@@ -35,9 +35,9 @@ typedef struct {
 
 /**
  * @biref This function will initialize the on board CPU hardware watch dog
- * @param     wdg         : the watch dog device
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if an error occurred with any step
+ * @param     wdg    : the watch dog device
+ * @return    0      : on success.
+ * @return    EIO    : if an error occurred with any step
  */
 int32_t hal_wdg_init(wdg_dev_t *wdg);
 
@@ -51,9 +51,9 @@ void hal_wdg_reload(wdg_dev_t *wdg);
 
 /**
  * @biref This function performs any platform-specific cleanup needed for hardware watch dog.
- * @param     wdg           : the watch dog device
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @param     wdg   : the watch dog device
+ * @return    0     : on success.
+ * @return    EIO   : if an error occurred with any step
  */
 int32_t hal_wdg_finalize(wdg_dev_t *wdg);
 

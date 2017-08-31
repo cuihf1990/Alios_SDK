@@ -87,8 +87,8 @@ typedef struct {
  * @param  config   : UART configuration structure
  * @param  optional_rx_buffer : Pointer to an optional RX ring buffer
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0     : on success.
+ * @return    EIO   : if an error occurred with any step
  */
 int32_t hal_uart_init(uart_dev_t *uart);
 
@@ -99,8 +99,8 @@ int32_t hal_uart_init(uart_dev_t *uart);
  * @param  data     : pointer to the start of data
  * @param  size     : number of bytes to transmit
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return 0        : on success.
+ * @return EIO      : if an error occurred with any step
  */
 int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout);
 
@@ -112,8 +112,8 @@ int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t time
  * @param  size     : number of bytes to receive
  * @param  timeout  : timeout in milisecond
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return 0        : on success.
+ * @return EIO      : if an error occurred with any step
  */
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout);
 
@@ -122,8 +122,8 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
  *
  * @param  uart : the interface which should be deinitialised
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return 0    : on success.
+ * @return EIO  : if an error occurred with any step
  */
 int32_t hal_uart_finalize(uart_dev_t *uart);
 

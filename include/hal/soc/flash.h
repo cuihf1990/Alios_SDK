@@ -99,8 +99,8 @@ hal_logic_partition_t *hal_flash_get_info(hal_partition_t in_partition);
  * @param  off_set         : Start address of the erased flash area
  * @param  size        : Size of the erased flash area
  *
- * @return  0        : On success.
- * @return  <0   : If an error occurred with any step
+ * @return  0    : On success.
+ * @return  EIO  : If an error occurred with any step
  */
 int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set,
                         uint32_t size);
@@ -115,8 +115,8 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set,
  * @param  inBuffer       : point to the data buffer that will be written to flash
  * @param  inBufferLength : The length of the buffer
  *
- * @return  0        : On success.
- * @return  <0   : If an error occurred with any step
+ * @return  0     : On success.
+ * @return  EIO   : If an error occurred with any step
  */
 int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set,
                         const void *in_buf , uint32_t in_buf_len);
@@ -131,8 +131,8 @@ int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set,
  * @param    outBuffer      : Point to the data buffer that stores the data read from flash
  * @param    inBufferLength : The length of the buffer
  *
- * @return  0        : On success.
- * @return  <0   : If an error occurred with any step
+ * @return  0     : On success.
+ * @return  EIO   : If an error occurred with any step
  */
 int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set,
                        void *out_buf, uint32_t in_buf_len);
@@ -148,8 +148,8 @@ int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set,
  *                          update this start address.
  * @param    size          : Size of enabled flash area
  *
- * @return  0        : On success.
- * @return  <0   : If an error occurred with any step
+ * @return  0     : On success.
+ * @return  EIO   : If an error occurred with any step
  */
 int32_t hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set,
                                 uint32_t size);
@@ -164,8 +164,8 @@ int32_t hal_flash_enable_secure(hal_partition_t partition, uint32_t off_set,
  *                          update this start address.
  * @param    size          : Size of disabled flash area
  *
- * @return  0        : On success.
- * @return  <0   : If an error occurred with any step
+ * @return  0     : On success.
+ * @return  EIO   : If an error occurred with any step
  */
 int32_t hal_flash_dis_secure(hal_partition_t partition, uint32_t off_set,
                              uint32_t size);

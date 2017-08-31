@@ -34,8 +34,8 @@ typedef struct {
                             in this memory with random numbers after executed
  * @param inByteCount     : Length of the memory buffer (bytes)
  *
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if an error occurred with any step
+ * @return    0   : on success.
+ * @return    EIO : if an error occurred with any step
  */
 int32_t hal_random_num_read(random_dev_t random, void *in_buf, int32_t bytes);
 

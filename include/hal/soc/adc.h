@@ -37,10 +37,10 @@ typedef struct {
  *
  * Prepares an ADC hardware interface for sampling
  *
- * @param     adc           : the interface which should be initialised
+ * @param     adc   : the interface which should be initialised
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0     : on success.
+ * @return    EIO   : if an error occurred with any step
  */
 int32_t hal_adc_init(adc_dev_t *adc);
 
@@ -49,11 +49,11 @@ int32_t hal_adc_init(adc_dev_t *adc);
  *
  * Takes a single sample from an ADC interface
  *
- * @param  adc           : the interface which should be sampled
- * @param  output        : pointer to a variable which will receive the sample
- * @param  timeout       : ms timeout
- * @return kNoErr        : on success.
- * @return kGeneralErr   : if an error occurred with any step
+ * @param  adc      : the interface which should be sampled
+ * @param  output   : pointer to a variable which will receive the sample
+ * @param  timeout  : ms timeout
+ * @return 0        : on success.
+ * @return EIO      : if an error occurred with any step
  */
 int32_t hal_adc_value_get(adc_dev_t *adc, void *output, uint32_t timeout);
 
@@ -64,8 +64,8 @@ int32_t hal_adc_value_get(adc_dev_t *adc, void *output, uint32_t timeout);
  *
  * @param  adc : the interface which should be de-initialised
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return 0   : on success.
+ * @return EIO : if an error occurred with any step
  */
 int32_t hal_adc_finalize(adc_dev_t *adc);
 

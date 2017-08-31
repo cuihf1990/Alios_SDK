@@ -38,21 +38,21 @@ typedef struct {
 /**@brief Initialises the SPI interface for a given SPI device
  * @note  Prepares a SPI hardware interface for communication as a master
  *
- * @param     spi         : the spi device
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if the SPI device could not be initialised
+ * @param     spi    : the spi device
+ * @return    0      : on success.
+ * @return    EIO    : if the SPI device could not be initialised
  */
 int32_t hal_spi_init(spi_dev_t *spi);
 
 
 /**@brief spi_send
  *
- * @param     spi           : the spi device
- * @param     data          : spi send data
- * @param     size          : spi send data size
- * @param     timeout       : timeout in ms
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if the SPI device could not be initialised
+ * @param     spi      : the spi device
+ * @param     data     : spi send data
+ * @param     size     : spi send data size
+ * @param     timeout  : timeout in ms
+ * @return    0        : on success.
+ * @return    EIO      : if the SPI device could not be initialised
  */
 int32_t hal_spi_send(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t timeout);
 
@@ -61,8 +61,8 @@ int32_t hal_spi_send(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t time
  * @param     data        : spi recv data
  * @param     size        : spi recv data size
  * @param     timeout     : timeout in ms
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if the SPI device could not be initialised
+ * @return    0           : on success.
+ * @return    EIO         : if the SPI device could not be initialised
  */
 int32_t hal_spi_recv(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t timeout);
 
@@ -85,8 +85,8 @@ int32_t hal_spi_send_recv(spi_dev_t *spi, uint8_t *tx_data, uint16_t tx_size, ui
  *
  * @param  spi : the SPI device to be de-initialised
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred
+ * @return    0     : on success.
+ * @return    EIO   : if an error occurred
  */
 int32_t hal_spi_finalize(spi_dev_t *spi);
 
