@@ -27,7 +27,7 @@ endif
 ifeq ($(CONFIG_OTA_CH),coap)
 $(NAME)_COMPONENTS += fota.coap_mqtt
 endif
-ifeq ($(CONFIG_OTA_CH),alink)
+ifndef CONFIG_OTA_CH
 $(NAME)_COMPONENTS += fota.alink
 endif
 

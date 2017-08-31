@@ -2,8 +2,6 @@ NAME := testcase
 
 GLOBAL_INCLUDES     += include
 
-CONFIG_OTA_CH := alink
-
 $(NAME)_SOURCES     := yts_main.c
 $(NAME)_SOURCES     += basic_test.c
 $(NAME)_SOURCES     += framework/hal/hal_test.c
