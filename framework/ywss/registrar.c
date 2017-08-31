@@ -11,7 +11,6 @@
 #include "awss.h"
 #include "wsf.h"
 #include "os.h"
-#include "yos/log.h"
 #include "yos/yos.h"
 
 static int registrar_event(int type, void *data, int dlen, void *result, int *rlen);

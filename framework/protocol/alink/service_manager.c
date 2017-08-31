@@ -3,7 +3,7 @@
  */
 
 #include <string.h>
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "service_manager.h"
 #include "os.h"
 #define sm_init_service(svc) _##svc##_init()

@@ -8,8 +8,6 @@
 #include "aws_lib.h"
 #include "zconfig_lib.h"
 #include "awss.h"
-#include "yos/list.h"
-#include "yos/log.h"
 #include "os.h"
 #include "enrollee.h"
 

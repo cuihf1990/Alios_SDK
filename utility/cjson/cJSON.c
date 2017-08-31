@@ -44,7 +44,7 @@
 #include <unistd.h>
 
 #include <cJSON.h>
-#include <yos/log.h>
+#include <yos/yos.h>
 #include <yos/kernel.h>
 
 #ifndef LOGE

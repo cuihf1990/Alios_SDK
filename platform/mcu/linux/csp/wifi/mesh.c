@@ -11,7 +11,7 @@
 #include <sys/select.h>
 #include <pthread.h>
 
-#include <yos/log.h>
+#include <yos/yos.h>
 #include <yos/kernel.h>
 
 #include <cpu_event.h>

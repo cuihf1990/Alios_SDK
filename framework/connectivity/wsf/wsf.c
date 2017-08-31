@@ -6,8 +6,7 @@
 #include <string.h>
 #include "connectivity_manager.h"
 #include "connectivity.h"
-#include "yos/list.h"
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "wsf.h"
 #include "wsf_client.h"
 #include "wsf_config.h"

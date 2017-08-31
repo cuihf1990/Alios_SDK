@@ -6,7 +6,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <yos/kernel.h>
-#include <yos/log.h>
 #include <ota_platform_os.h>
 
 #define DEFAULT_THREAD_PRI   10

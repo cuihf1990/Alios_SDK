@@ -5,7 +5,7 @@
 #ifndef UR_SID_ALLOCATOR_H
 #define UR_SID_ALLOCATOR_H
 
-#include <yos/list.h>
+#include <yos/yos.h>
 
 #include "core/topology.h"
 
