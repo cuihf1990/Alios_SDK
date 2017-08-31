@@ -10,7 +10,7 @@ DIRS=(devices
       kernel/protocols/mesh
       kernel/rhino
       kernel/syscall
-      kernel/vcall/yos
+      kernel/vcall/aos
       kernel/vfs
       kernel/yloop
       platform/arch/arm
