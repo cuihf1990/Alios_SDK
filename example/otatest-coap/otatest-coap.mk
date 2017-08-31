@@ -23,16 +23,8 @@ $(NAME)_COMPONENTS  := cli
 #$(NAME)_COMPONENTS  += protocols.net
 #endif
 
-#ifeq ($(OTA_CH_SIGNAL_MQTT), 1)
-ifeq ($(CONFIG_OTA_CH),mqtt)
-$(NAME)_SOURCES     := ota_mqtt_test.c
-endif
-ifeq ($(CONFIG_OTA_CH),coap)
+CONFIG_OTA_CH := coap
 $(NAME)_SOURCES     := ota_coap_test.c
-endif
-ifeq ($(CONFIG_OTA_CH),alink)
-$(NAME)_SOURCES     := ota_alink_test.c
-endif
 
 $(NAME)_CFLAGS += \
     -Wno-unused-function \

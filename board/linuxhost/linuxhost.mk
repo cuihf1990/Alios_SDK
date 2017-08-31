@@ -51,7 +51,3 @@ GLOBAL_LDFLAGS += -m32
 
 CONFIG_COAP_DTLS_SUPPORT := y
 #CONFIG_COAP_ONLINE := y
-
-CONFIG_OTA_CH := alink
-#alink/coap/mqtt
-
