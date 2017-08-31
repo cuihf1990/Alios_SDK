@@ -17,8 +17,8 @@
 #define POST_OTA_STATUS_METHOD "ota/postDeviceUpgradeStatus"
 #define POST_OTA_RESULT_METHOD "device.updateVersion"
 #define POST_OTA_STATUS_DATA "{\"version\":\"%s\",\"step\":\"%d\",\"stepPercent\":\"%d\"}"
-#define POST_OTA_RESULT_DATA "{\"uuid\" :\"%s\",\"version\":\"%s;APP2.0;OTA1.0\",\"description\":\"%s\"}"
-
+//#define POST_OTA_RESULT_DATA "{\"uuid\" :\"%s\",\"version\":\"%s;APP2.0;OTA1.0\",\"description\":\"%s\"}"
+#define POST_OTA_RESULT_DATA "{\"uuid\" :\"%s\",\"version\":\"%s;APP2.0;OTA1.0\"}"
 /*
  *  "md5":"6B21342306D0F619AF97006B7025D18A",
     "resourceUrl":"http://otalink.alicdn.com/ALINKTEST_LIVING_LIGHT_ALINK_TEST/v2.0.0.1/uthash-master.zip",
@@ -175,16 +175,7 @@ int8_t platform_ota_result_post(void)
 {
     int ret = -1;
     char buff[256] = {0};
-    char *alink_version = NULL;
-
-    alink_version = (char *)yos_malloc(64);
-    //assert(alink_version, NULL);
-    memset(alink_version, 0, 64);
-    alink_get_sdk_version(alink_version, 64);
-
-    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)ota_get_id(), (const char *)ota_get_system_version(),
-             alink_version);
-    yos_free(alink_version);
+    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)ota_get_id(), (const char *)ota_get_system_version());
     ret = yos_cloud_report(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
     OTA_LOG_D("alink_ota_status_post: %s, ret=%d\n", buff, ret);
     return ret;
