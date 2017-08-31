@@ -11,7 +11,6 @@
 #include "yos/yos.h"
 #include "service_manager.h"
 #include "wsf.h"
-#include "yos/kernel.h"
 #include "config.h"
 #include "accs.h"
 #include "os.h"

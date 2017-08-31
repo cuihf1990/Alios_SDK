@@ -4,7 +4,6 @@
 
 #include <errno.h>
 #include <string.h>
-#include <yos/kernel.h>
 #include <yos/yos.h>
 #include "hal/soc/flash.h"
 #include "kvmgr.h"

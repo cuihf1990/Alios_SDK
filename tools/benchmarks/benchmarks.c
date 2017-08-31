@@ -1,7 +1,5 @@
 #include <string.h>
-#include <yos/kernel.h>
 #include "yos/yos.h"
-
 
 static void benchmarks_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {

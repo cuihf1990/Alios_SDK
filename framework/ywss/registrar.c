@@ -6,7 +6,6 @@
 #include "service_manager.h"
 #include "alink_protocol.h"
 #include "json_parser.h"
-#include "yos/kernel.h"
 #include "enrollee.h"
 #include "awss.h"
 #include "wsf.h"
