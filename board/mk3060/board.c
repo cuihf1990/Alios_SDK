@@ -46,7 +46,11 @@ const hal_logic_partition_t hal_partitions[] =
         .partition_owner           = HAL_FLASH_EMBEDDED,
         .partition_description     = "OTA Storage",
         .partition_start_addr      = 0xB7200,
+<<<<<<< 9241660351508e9e59c4c1d5d0ceb723578545f3
         .partition_length          = 0x8E000, //568k bytes
+=======
+        .partition_length          = 0x48E00, //291k bytes
+>>>>>>> Update.
         .partition_options         = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
     },
     [HAL_PARTITION_PARAMETER_3] =
