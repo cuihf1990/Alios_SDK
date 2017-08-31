@@ -36,7 +36,7 @@
 #include "utils_hmac.h"
 #include "utils_httpc.h"
 #include "ca.h"
-#include "tfs.h"
+//#include "tfs.h"
 #include "guider.h"
 
 #define GUIDER_IOT_ID_LEN           (256)

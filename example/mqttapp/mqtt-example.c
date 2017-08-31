@@ -95,7 +95,7 @@ static void wifi_service_event(input_event_t *event, void *priv_data) {
 
     if (is_demo_started == 0) {
         is_demo_started = 1;
-        mqtt_client();
+        mqtt_client_example();
     }
 }
 
@@ -213,7 +213,7 @@ static void mqtt_service_event(input_event_t *event, void *priv_data) {
     mqtt_test();
 }
 
-void event_handle(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
+void event_handle_mqtt(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
     uintptr_t packet_id = (uintptr_t)msg->msg;
     iotx_mqtt_topic_info_pt topic_info = (iotx_mqtt_topic_info_pt)msg->msg;
@@ -281,7 +281,7 @@ void event_handle(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
     }
 }
 
-int mqtt_client(void)
+int mqtt_client_example(void)
 {
     int rc = 0;
     iotx_conn_info_pt pconn_info;
@@ -327,7 +327,7 @@ int mqtt_client(void)
     mqtt_params.pwrite_buf = msg_buf;
     mqtt_params.write_buf_size = MSG_LEN_MAX;
 
-    mqtt_params.handle_event.h_fp = event_handle;
+    mqtt_params.handle_event.h_fp = event_handle_mqtt;
     mqtt_params.handle_event.pcontext = NULL;
 
 
@@ -356,7 +356,7 @@ static void handle_mqtt(char *pwbuf, int blen, int argc, char **argv)
 {
     if (is_demo_started == 0) {
         is_demo_started = 1;
-        mqtt_client();
+        mqtt_client_example();
     }
 }
 
@@ -379,7 +379,7 @@ int application_start(int argc, char *argv[])
 
     cli_register_command(&mqttcmd);
 #ifdef CSP_LINUXHOST
-    mqtt_client();
+    mqtt_client_example();
 #endif
     yos_loop_run();
     return 0;

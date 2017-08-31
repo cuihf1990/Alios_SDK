@@ -1,28 +1,44 @@
 NAME := mqttapp
 
-$(NAME)_SOURCES     := mqtt-example.c
 GLOBAL_DEFINES      += ALIOT_DEBUG IOTX_DEBUG
+CONFIG_OTA_CH = mqtt
 
 
+$(NAME)_SOURCES     := mqtt-example.c
+
+ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+PLATFORM_MQTT := rhino
+#NETWORK_MQTT := rhinosock
+endif
+
+$(NAME)_SOURCES += ../../utility/iotx-utils/hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
+$(NAME)_SOURCES += ../../utility/iotx-utils/hal/$(PLATFORM_MQTT)/HAL_TCP_$(PLATFORM_MQTT).c
+
+$(NAME)_SOURCES += ../../utility/iotx-utils/mbedtls-lib/HAL_TLS_mbedtls.c
 
 #$(NAME)_INCLUDES := ../../framework/protocol/alink/json/
 
-$(NAME)_INCLUDES  += ../../framework/mqtt/platform/ \
-../../framework/mqtt/utils \
-../../framework/mqtt/mqtt \
-../../framework/mqtt/guider \
-../../framework/mqtt/system-mqtt \
-../../framework/mqtt/shadow \
-../../framework/mqtt/packages-mqtt \
-../../framework/mqtt/sdk-impl \
-../../framework/mqtt/sdk-impl/imports \
-../../framework/mqtt/utils/digest \
-../../framework/mqtt/utils/misc
+$(NAME)_INCLUDES  += ../../utility/iotx-utils/hal \
+../../utility/iotx-utils/digest \
+../../utility/iotx-utils/mqtt \
+../../utility/iotx-utils/guider \
+../../utility/iotx-utils/LITE-log \
+../../utility/iotx-utils/LITE-utils \
+../../utility/iotx-utils/sdk-impl \
+../../utility/iotx-utils/sdk-impl/imports \
+../../utility/iotx-utils/misc
 #$(NAME)_COMPONENTS := log connectivity protocol.alink.json
 $(NAME)_COMPONENTS := log
 $(NAME)_COMPONENTS  += mbedtls
-$(NAME)_COMPONENTS  += mqtt
-$(NAME)_COMPONENTS  += cli
+$(NAME)_COMPONENTS  += connectivity.mqtt
+$(NAME)_COMPONENTS  += cli utility.digest_algorithm
+$(NAME)_COMPONENTS  += utility.iotx-utils.LITE-log utility.iotx-utils.LITE-utils utility.iotx-utils.misc utility.iotx-utils.sdk-impl utility.iotx-utils.guider utility.iotx-utils.digest
 
 LWIP := 0
 ifeq ($(LWIP),1)

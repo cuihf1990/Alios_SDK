@@ -18,7 +18,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <memory.h>
+//#include <memory.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -49,7 +49,7 @@ typedef struct _TLSDataParams {
 
 
 #define DEBUG_LEVEL 10
-
+//#define MBEDTLS_DEBUG_C
 static unsigned int _avRandom()
 {
     return (((unsigned int)rand() << 16) + rand());
@@ -137,6 +137,19 @@ static int _ssl_parse_crt(mbedtls_x509_crt *crt)
     return i;
 }
 
+#if defined(MBEDTLS_DEBUG_C)
+static void ssl_debug(void *ctx, int level,
+                      const char *file, int line, const char *str)
+{
+    (void)ctx;
+    (void) level;
+
+    printf("%s, line: %d: %s", file, line, str);
+
+    return;
+}
+#endif
+
 static int _ssl_client_init(mbedtls_ssl_context *ssl,
                          mbedtls_net_context *tcp_fd,
                          mbedtls_ssl_config *conf,
@@ -152,6 +165,7 @@ static int _ssl_client_init(mbedtls_ssl_context *ssl,
      */
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold((int)DEBUG_LEVEL);
+    mbedtls_ssl_conf_dbg(conf, ssl_debug, NULL);
 #endif
     mbedtls_net_init(tcp_fd);
     mbedtls_ssl_init(ssl);
@@ -233,7 +247,7 @@ int utils_network_ssl_read(TLSDataParams_t *pTlsData, char *buffer, int len, int
             return (net_status == -2) ? net_status : readLen;
         } else {
             if (MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY == ret) {
-                mbedtls_strerror(ret, err_str, sizeof(err_str));
+                //mbedtls_strerror(ret, err_str, sizeof(err_str));
                 SSL_LOG("ssl recv error: code = %d, err_str = '%s'", ret, err_str);
                 net_status = -2; // connection is closed
                 break;
@@ -249,7 +263,7 @@ int utils_network_ssl_read(TLSDataParams_t *pTlsData, char *buffer, int len, int
 		if (MBEDTLS_ERR_SSL_WANT_READ == ret && errno == EINTR) {
 		    continue;
 		}
-                mbedtls_strerror(ret, err_str, sizeof(err_str));
+                //mbedtls_strerror(ret, err_str, sizeof(err_str));
                 SSL_LOG("ssl recv error: code = %d, err_str = '%s'", ret, err_str);
                 net_status = -1;
                 return -1; // Connection error
@@ -275,7 +289,7 @@ int utils_network_ssl_write(TLSDataParams_t *pTlsData, const char *buffer, int l
             return 0;
         } else {
             char err_str[33];
-            mbedtls_strerror(ret, err_str, sizeof(err_str));
+            //mbedtls_strerror(ret, err_str, sizeof(err_str));
             SSL_LOG("ssl write fail, code=%d, str=%s", ret, err_str);
             return -1; // Connnection error
         }
@@ -290,11 +304,13 @@ void utils_network_ssl_disconnect(TLSDataParams_t *pTlsData)
     mbedtls_net_free(&(pTlsData->fd));
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     mbedtls_x509_crt_free(&(pTlsData->cacertl));
+#if defined(MBEDTLS_CERTS_C)
     if ((pTlsData->pkey).pk_info != NULL) {
         SSL_LOG("need free client crt&key");
         mbedtls_x509_crt_free(&(pTlsData->clicert));
         mbedtls_pk_free(&(pTlsData->pkey));
     }
+#endif
 #endif
     mbedtls_ssl_free(&(pTlsData->ssl));
     mbedtls_ssl_config_free(&(pTlsData->conf));
@@ -373,11 +389,12 @@ int TLSConnectNetwork(TLSDataParams_t *pTlsData, const char *addr, const char *p
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     mbedtls_ssl_conf_ca_chain(&(pTlsData->conf), &(pTlsData->cacertl), NULL);
-
+#if defined(MBEDTLS_CERTS_C)
     if ((ret = mbedtls_ssl_conf_own_cert(&(pTlsData->conf), &(pTlsData->clicert), &(pTlsData->pkey))) != 0) {
         SSL_LOG(" failed\n  ! mbedtls_ssl_conf_own_cert returned %d\n", ret);
         return ret;
     }
+#endif
 #endif
     mbedtls_ssl_conf_rng(&(pTlsData->conf), _ssl_random, NULL);
     mbedtls_ssl_conf_dbg(&(pTlsData->conf), _ssl_debug, NULL);
@@ -444,6 +461,13 @@ int32_t HAL_SSL_Destroy(uintptr_t handle)
     return 0;
 }
 
+int ssl_fd = -1;
+
+int get_ssl_fd()
+{
+   return ssl_fd;
+}
+
 uintptr_t HAL_SSL_Establish(const char *host,
                                       uint16_t port,
                                       const char *ca_crt,
@@ -461,7 +485,9 @@ uintptr_t HAL_SSL_Establish(const char *host,
 
     if (0 != TLSConnectNetwork(pTlsData, host, port_str, ca_crt, ca_crt_len, NULL, 0, NULL, 0, NULL, 0)) {
         mbedtls_x509_crt_free(&(pTlsData->cacertl));
+#if defined(MBEDTLS_CERTS_C)
         mbedtls_x509_crt_free(&(pTlsData->clicert));
+#endif
         if (pTlsData->ssl.hostname) {
             mbedtls_free(pTlsData->ssl.hostname);
             pTlsData->ssl.hostname = NULL;
@@ -470,5 +496,7 @@ uintptr_t HAL_SSL_Establish(const char *host,
         return 0;
     }
 
+    ssl_fd = pTlsData->fd.fd;
+    SSL_LOG(" ssl_fd %d \n ", ssl_fd);
     return (uintptr_t)pTlsData;
 }

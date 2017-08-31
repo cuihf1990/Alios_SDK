@@ -18,7 +18,7 @@
 
 
 #include <stdlib.h>
-#include <memory.h>
+//#include <memory.h>
 
 #include "utils_httpc.h"
 #include "utils_epoch_time.h"

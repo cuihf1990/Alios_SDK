@@ -30,9 +30,9 @@ $(NAME)_SOURCES := \
     utils_net.c \
     utils_timer.c
 
-$(NAME)_SOURCES += ../hal/HAL_TCP_linux.c
+#$(NAME)_SOURCES += ../hal/HAL_TCP_linux.c
 
 ifneq ($(CONFIG_COAP_DTLS_SUPPORT), y)
 #$(NAME)_DEFINES += IOTX_WITHOUT_TLS
-$(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-lib
+#$(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-lib
 endif

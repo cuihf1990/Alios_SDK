@@ -18,6 +18,17 @@ NAME := coap_mqtt
 
 UTIL_SOURCE := ../../../utility/iotx-utils
 
+ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+PLATFORM_MQTT := rhino
+#NETWORK_MQTT := rhinosock
+endif
+
 $(NAME)_INCLUDES :=  \
     ./src \
     ../ \
@@ -32,16 +43,18 @@ $(NAME)_INCLUDES :=  \
 $(NAME)_SOURCES := \
     ./src/ota.c \
     ./src/ota_lib.c \
-    $(UTIL_SOURCE)/hal/HAL_OS_linux.c
+    $(UTIL_SOURCE)/hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
 
 #ifeq ($(OTA_CH_SIGNAL_MQTT), 1)
 ifeq ($(CONFIG_OTA_CH),mqtt)
 $(NAME)_COMPONENTS += connectivity.mqtt
 $(NAME)_SOURCES += ota_service_mqtt.c
+$(NAME)_DEFINES +=  OTA_CH_SIGNAL_MQTT
 endif
 ifeq ($(CONFIG_OTA_CH),coap)
 $(NAME)_COMPONENTS += connectivity.coap
 $(NAME)_SOURCES += ota_service_coap.c
+$(NAME)_DEFINES += OTA_CH_SIGNAL_COAP
 endif
 
 $(NAME)_COMPONENTS += utility.iotx-utils.misc

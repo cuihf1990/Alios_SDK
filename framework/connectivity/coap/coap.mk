@@ -13,6 +13,16 @@ $(NAME)_INCLUDES :=  \
     $(ROOT_DIR)/digest \
     $(ROOT_DIR)/mbedtls-lib/include
     
+ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+PLATFORM_MQTT := rhino
+#NETWORK_MQTT := rhinosock
+endif
 
 $(NAME)_SOURCES := iotx_ca_cert.c iotx_coap_api.c iotx_hmac.c iotx_product_linux.c\
     iot-coap-c/CoAPDeserialize.c \
@@ -20,8 +30,8 @@ $(NAME)_SOURCES := iotx_ca_cert.c iotx_coap_api.c iotx_hmac.c iotx_product_linux
     iot-coap-c/CoAPMessage.c \
     iot-coap-c/CoAPNetwork.c \
     iot-coap-c/CoAPSerialize.c \
-    $(ROOT_DIR)/hal/HAL_UDP_linux.c \
-    $(ROOT_DIR)/hal/HAL_OS_linux.c
+    $(ROOT_DIR)/hal/$(PLATFORM_MQTT)/HAL_UDP_$(PLATFORM_MQTT).c \
+    $(ROOT_DIR)/hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
 
 $(NAME)_COMPONENTS += utility.iotx-utils.LITE-utils
 $(NAME)_COMPONENTS += utility.iotx-utils.digest
