@@ -7,7 +7,6 @@
 #include "fatfs.h"
 #include "fatfs_diskio.h"
 #include "ff.h"
-#include "vfs_err.h"
 #include "vfs_inode.h"
 #include "vfs_register.h"
 
@@ -474,7 +473,7 @@ static const fs_ops_t fatfs_ops = {
     .mkdir      = &fatfs_mkdir
 };
 
-int fatfs_register(unsigned char pdrv)
+int fatfs_register(int pdrv)
 {
     int err, index;
     FATFS *fatfs = NULL;
@@ -529,7 +528,7 @@ error:
 }
 
 
-int fatfs_unregister(unsigned char pdrv)
+int fatfs_unregister(int pdrv)
 {
     int err = FR_OK;
     int index;
