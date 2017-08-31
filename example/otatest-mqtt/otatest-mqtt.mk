@@ -23,7 +23,7 @@ $(NAME)_COMPONENTS  := cli
 #$(NAME)_COMPONENTS  += protocols.net
 #endif
 
-CONFIG_OTA_CH) := mqtt
+CONFIG_OTA_CH := mqtt
 $(NAME)_SOURCES     := ota_mqtt_test.c
 
 $(NAME)_CFLAGS += \
