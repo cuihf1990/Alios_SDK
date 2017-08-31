@@ -31,8 +31,13 @@ typedef struct transmit_frame_s {
 
 typedef struct urmesh_state_s {
     mm_cb_t                mm_cb;
+#if LWIP_IPV6
     ur_netif_ip6_address_t ucast_address[IP6_UCAST_ADDR_NUM];
     ur_netif_ip6_address_t mcast_address[IP6_MCAST_ADDR_NUM];
+#else
+    mesh_netif_ip4_address_t ucast_address[IP6_UCAST_ADDR_NUM];
+    mesh_netif_ip4_address_t mcast_address[IP6_MCAST_ADDR_NUM];
+#endif
     ur_adapter_callback_t  *adapter_callback;
     bool                   initialized;
     bool                   started;
@@ -42,6 +47,7 @@ static urmesh_state_t g_um_state = {.initialized = false , .started = false};
 
 static void update_ipaddr(void)
 {
+#if LWIP_IPV6
     const ur_ip6_addr_t *mcast;
     uint32_t addr;
     network_context_t *network;
@@ -67,6 +73,20 @@ static void update_ipaddr(void)
     memcpy(&g_um_state.mcast_address[0].addr, mcast,
            sizeof(g_um_state.mcast_address[0].addr));
     g_um_state.mcast_address[0].prefix_length = 64;
+#else
+    uint16_t sid;
+
+    sid = umesh_mm_get_local_sid() + 2;
+    g_um_state.ucast_address[0].addr.m8[0] = 10;
+    g_um_state.ucast_address[0].addr.m8[1] = 0;
+    g_um_state.ucast_address[0].addr.m8[2] = sid >> 8;
+    g_um_state.ucast_address[0].addr.m8[3] = sid & 0xff;
+
+    g_um_state.mcast_address[0].addr.m8[0] = 224;
+    g_um_state.mcast_address[0].addr.m8[1] = 0;
+    g_um_state.mcast_address[0].addr.m8[2] = 0;
+    g_um_state.mcast_address[0].addr.m8[3] = 252;
+#endif
 }
 
 static ur_error_t umesh_interface_up(void)
@@ -530,12 +550,20 @@ bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)
     return nd_is_subscribed_mcast(addr);
 }
 
+#if LWIP_IPV6
 const ur_netif_ip6_address_t *umesh_get_ucast_addr(void)
+#else
+const mesh_netif_ip4_address_t *umesh_get_ucast_addr(void)
+#endif
 {
     return g_um_state.ucast_address;
 }
 
+#if LWIP_IPV6
 const ur_netif_ip6_address_t *umesh_get_mcast_addr(void)
+#else
+const mesh_netif_ip4_address_t *umesh_get_mcast_addr(void)
+#endif
 {
     return g_um_state.mcast_address;
 }

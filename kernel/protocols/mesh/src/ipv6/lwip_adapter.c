@@ -18,7 +18,7 @@
 #include "ipv6/lwip_adapter.h"
 #include "core/mesh_mgmt.h"
 
-#if LWIP_IPV4 && LWIP_IGMP
+#if LWIP_IPV6 == 0 && LWIP_IPV4 && LWIP_IGMP
 #include "lwip/igmp.h"
 static struct igmp_group g_group;
 #endif
@@ -162,14 +162,26 @@ static void update_interface_ipaddr(void)
     }
 
     g_la_state.adpif.ip6_autoconfig_enabled = 1;
-#endif
-    ip4_addr_t          ipaddr, netmask, gw;
-    uint16_t sid = umesh_mm_get_local_sid() + 2;
+#else
+    const mesh_netif_ip4_address_t *ip4_addr;
+    ip4_addr_t ipaddr, netmask, gw;
 
+    ip4_addr = umesh_get_ucast_addr();
     IP4_ADDR(&gw, 10, 0, 0, 1);
-    IP4_ADDR(&ipaddr, 10, 0, sid >> 8, sid & 0xff);
+    IP4_ADDR(&ipaddr, ip4_addr->addr.m8[0], ip4_addr->addr.m8[1],\
+             ip4_addr->addr.m8[2], ip4_addr->addr.m8[3]);
     IP4_ADDR(&netmask, 255, 255, 0, 0);
     netif_set_addr(&g_la_state.adpif, &ipaddr, &netmask, &gw);
+
+    ip4_set_default_multicast_netif(&g_la_state.adpif);
+#if LWIP_IGMP
+    g_la_state.adpif.flags |= NETIF_FLAG_IGMP;
+    ip4_addr = umesh_get_mcast_addr();
+    IP4_ADDR(&g_group.group_address, ip4_addr->addr.m8[0], ip4_addr->addr.m8[1],\
+             ip4_addr->addr.m8[2], ip4_addr->addr.m8[3]);
+    netif_set_client_data(&g_la_state.adpif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP, &g_group);
+#endif
+#endif
 }
 
 ur_error_t ur_adapter_interface_up(void)
@@ -196,14 +208,6 @@ ur_error_t ur_adapter_interface_up(void)
     }
     update_interface_ipaddr();
 
-#if LWIP_IPV4
-    ip4_set_default_multicast_netif(&g_la_state.adpif);
-#if LWIP_IGMP
-    g_la_state.adpif.flags |= NETIF_FLAG_IGMP;
-    IP4_ADDR(&g_group.group_address, 224, 0, 0, 252);
-    netif_set_client_data(&g_la_state.adpif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP, &g_group);
-#endif
-#endif
     return UR_ERROR_NONE;
 }
 

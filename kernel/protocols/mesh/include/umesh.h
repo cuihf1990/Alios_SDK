@@ -64,8 +64,13 @@ uint16_t umesh_net_get_meshnetsize(umesh_net_index_t nettype);
 #define umesh_get_mac_address() umesh_net_get_mac_address(UR_MESH_NET_DFL)
 
 bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr);
+#if LWIP_IPV6
 const ur_netif_ip6_address_t *umesh_get_ucast_addr(void);
 const ur_netif_ip6_address_t *umesh_get_mcast_addr(void);
+#else
+const mesh_netif_ip4_address_t *umesh_get_ucast_addr(void);
+const mesh_netif_ip4_address_t *umesh_get_mcast_addr(void);
+#endif
 
 ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest,
                               ur_addr_t *dest_addr);

@@ -68,6 +68,7 @@ typedef struct mesh_ip4_addr_s {
     union {
         uint8_t  m8[MESH_IP4_ADDR_SIZE];
         uint16_t m16[MESH_IP4_ADDR_SIZE / sizeof(uint16_t)];
+        uint32_t m32;
     };
 } __attribute__((packed)) mesh_ip4_addr_t;
 
@@ -87,6 +88,11 @@ typedef struct ur_netif_ip6_address_s {
     uint8_t                       prefix_length;
     struct ur_netif_ip6_address_s *next;
 } ur_netif_ip6_address_t;
+
+typedef struct mesh_netif_ip4_address_s {
+    mesh_ip4_addr_t addr;
+    uint8_t prefix_length;
+} mesh_netif_ip4_address_t;
 
 typedef struct mac_address_s {
     union {

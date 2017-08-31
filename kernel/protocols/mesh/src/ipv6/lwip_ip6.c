@@ -112,7 +112,7 @@ int autotest_udp_socket(raw_data_handler_t handler, uint16_t port)
 }
 
 int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
-               ur_ip6_addr_t *dest, uint16_t port)
+               mesh_ip4_addr_t *dest, uint16_t port)
 {
     struct sockaddr_in sock_addr;
 
@@ -120,11 +120,7 @@ int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
     sock_addr.sin_len = sizeof(sock_addr);
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_port = htons(port);
-    if (ur_is_mcast(dest)) {
-        sock_addr.sin_addr.s_addr = (dest->m16[7] << 16) | 0x00e0;
-    } else {
-        sock_addr.sin_addr.s_addr = (2 << 24) | (dest->m16[7] << 16) | 0x000a;
-    }
+    sock_addr.sin_addr.s_addr = dest->m32;
     return lwip_sendto(socket, payload, length, 0, (struct sockaddr *)&sock_addr,
                        sizeof(sock_addr));
 }
