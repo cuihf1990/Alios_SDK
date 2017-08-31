@@ -9,7 +9,7 @@
 #include <vfs_inode.h>
 #include <vfs.h>
 #include <stdio.h>
-#include <hal/soc/uart.h>
+#include <hal/hal.h>
 
 extern uart_dev_t uart_0;
 

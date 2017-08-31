@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <yos/yos.h>
 #include <yos/network.h>
-#include <hal/wifi.h>
+#include <hal/hal.h>
 
 #include "netmgr.h"
 
