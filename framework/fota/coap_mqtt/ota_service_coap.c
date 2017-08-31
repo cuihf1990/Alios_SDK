@@ -24,10 +24,10 @@
 #include "iot_import.h"
 #include "iot_export.h"
 
-//#define IOTX_PRE_DTLS_SERVER_URI "coaps://pre.iot-as-coap.cn-shanghai.aliyuncs.com:5684"
+#define IOTX_PRE_DTLS_SERVER_URI "coaps://pre.iot-as-coap.cn-shanghai.aliyuncs.com:5684"
 #define IOTX_PRE_NOSEC_SERVER_URI "coap://pre.iot-as-coap.cn-shanghai.aliyuncs.com:5683"
 
-//#define IOTX_PRE_NOSEC_SERVER_URI "coap://iot-as-coap.alibaba.net:5683"
+#define IOTX_ONLINE_DTLS_SERVER_URL "coaps://%s.iot-as-coap.cn-shanghai.aliyuncs.com:5684"
 
 #define EXAMPLE_TRACE(fmt, args...)  \
     do { \
@@ -38,7 +38,6 @@
 
 void coap_client()
 {
-    int rc = 0;
     void *h_ota = NULL;
     iotx_coap_config_t config;
     iotx_deviceinfo_t  devinfo;
@@ -46,12 +45,26 @@ void coap_client()
 
     iotx_set_devinfo(&devinfo);
     config.p_devinfo = &devinfo;
-    config.p_url = IOTX_PRE_NOSEC_SERVER_URI;
+    #ifdef COAP_ONLINE
+        #ifdef COAP_DTLS_SUPPORT
+            char url[256] = {0};
+            snprintf(url, sizeof(url), IOTX_ONLINE_DTLS_SERVER_URL, devinfo.product_key);
+            config.p_url = url;
+        #else
+            printf("Online environment must access with DTLS\r\n");
+            return -1;
+        #endif
+    #else
+        #ifdef COAP_DTLS_SUPPORT
+            config.p_url = IOTX_PRE_DTLS_SERVER_URI;
+        #else
+            config.p_url = IOTX_PRE_NOSEC_SERVER_URI;
+        #endif
+    #endif
 
     h_coap = IOT_CoAP_Init(&config);
 
     if(NULL == h_coap){
-        rc = -1;
         EXAMPLE_TRACE("initialize CoAP failed");
         return;
     }
@@ -60,7 +73,6 @@ void coap_client()
 
     h_ota = IOT_OTA_Init(devinfo.product_key, devinfo.device_name, h_coap);
     if (NULL == h_ota) {
-        rc = -1;
         EXAMPLE_TRACE("initialize OTA failed");
         goto do_exit;
     }

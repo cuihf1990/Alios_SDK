@@ -38,7 +38,7 @@ $(NAME)_CFLAGS += \
     -Wno-unused-function \
     -Wno-implicit-function-declaration \
     -Wno-unused-function \
-#    -Werror
+    -Werror
 
 $(NAME)_INCLUDES    := \
     ../../utility/iotx-utils/sdk-impl \

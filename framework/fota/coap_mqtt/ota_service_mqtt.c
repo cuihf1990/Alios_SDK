@@ -195,7 +195,6 @@ int mqtt_client(void)
 
     HAL_SleepMs(1000);
 
-    int ota_code = 0;
     do {
         ota_over = try_fetch_ota(h_ota);
     } while (1 != ota_over);

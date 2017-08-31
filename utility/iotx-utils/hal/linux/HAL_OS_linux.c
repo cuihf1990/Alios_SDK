@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Alibaba Group. All rights reserved.
+ *Copyright (c) 2014-2016 Alibaba Group. All rights reserved.
  * License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -21,56 +21,83 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <memory.h>
 
+#include <pthread.h>
 #include <unistd.h>
+#include <sys/prctl.h>
 #include <sys/time.h>
-#include <yos/kernel.h>
 
 #include "iot_import.h"
 
 void *HAL_MutexCreate(void)
 {
-    yos_mutex_t mutex;
-
-    if (0 != yos_mutex_new(&mutex)) {
+    int err_num;
+    pthread_mutex_t *mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
+    if (NULL == mutex) {
         return NULL;
     }
 
+    if (0 != (err_num = pthread_mutex_init(mutex, NULL))) {
+        perror("create mutex failed");
+        free(mutex);
+        return NULL;
+    }
+
+    return mutex;
 }
 
 void HAL_MutexDestroy(_IN_ void *mutex)
 {
-    yos_mutex_free((yos_mutex_t *)&mutex);
+    int err_num;
+    if (0 != (err_num = pthread_mutex_destroy((pthread_mutex_t *)mutex))) {
+        perror("destroy mutex failed");
+    }
+
+    free(mutex);
 }
 
 void HAL_MutexLock(_IN_ void *mutex)
 {
-    yos_mutex_lock((yos_mutex_t *)&mutex, YOS_WAIT_FOREVER);
+    int err_num;
+    if (0 != (err_num = pthread_mutex_lock((pthread_mutex_t *)mutex))) {
+        perror("lock mutex failed");
+    }
 }
 
 void HAL_MutexUnlock(_IN_ void *mutex)
 {
-    yos_mutex_unlock((yos_mutex_t *)&mutex);
+    int err_num;
+    if (0 != (err_num = pthread_mutex_unlock((pthread_mutex_t *)mutex))) {
+        perror("unlock mutex failed");
+    }
 }
 
 void *HAL_Malloc(_IN_ uint32_t size)
 {
-    return yos_malloc(size);
+    return malloc(size);
 }
 
 void HAL_Free(_IN_ void *ptr)
 {
-    return yos_free(ptr);
+    return free(ptr);
 }
 
 uint32_t HAL_UptimeMs(void)
 {
-    return yos_now_ms();
+    struct timeval tv = { 0 };
+    uint32_t time_ms;
+
+    gettimeofday(&tv, NULL);
+
+    time_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+    return time_ms;
 }
 
 void HAL_SleepMs(_IN_ uint32_t ms)
 {
-    yos_msleep(ms);
+    usleep(1000 * ms);
 }
 
 void HAL_Printf(_IN_ const char *fmt, ...)

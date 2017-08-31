@@ -72,6 +72,7 @@ static void user_code_start()
     iotx_post_data_to_server((void *)p_ctx);
     IOT_CoAP_Yield(p_ctx);
     if (m_coap_client_running) {
+        m_coap_client_running = 0;
         yos_post_delayed_action(3000,user_code_start,NULL);
     } else {
         IOT_CoAP_Deinit(&p_ctx);
@@ -85,10 +86,11 @@ int application_start(void)
 
     m_coap_client_running = 1;
 
+    iotx_set_devinfo(&deviceinfo);
     #ifdef COAP_ONLINE
         #ifdef COAP_DTLS_SUPPORT
             char url[256] = {0};
-            snprintf(url, sizeof(url), IOTX_ONLINE_DTLS_SERVER_URL, IOTX_PRODUCT_KEY);
+            snprintf(url, sizeof(url), IOTX_ONLINE_DTLS_SERVER_URL, deviceinfo.product_key);
             config.p_url = url;
         #else
             printf("Online environment must access with DTLS\r\n");
@@ -101,7 +103,6 @@ int application_start(void)
             config.p_url = IOTX_PRE_NOSEC_SERVER_URI;
         #endif
     #endif
-    iotx_set_devinfo(&deviceinfo);
     config.p_devinfo = &deviceinfo;
 
     p_ctx = IOT_CoAP_Init(&config);

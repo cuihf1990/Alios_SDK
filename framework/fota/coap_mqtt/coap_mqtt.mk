@@ -59,7 +59,18 @@ endif
 
 $(NAME)_COMPONENTS += utility.iotx-utils.misc
 $(NAME)_COMPONENTS += utility.iotx-utils.sdk-impl
-$(NAME)_CFLAGS := $(filter-out -Werror,$(CFLAGS))
+$(NAME)_CFLAGS := \
+    -Werror \
+    -Wno-unused-function \
+    -Wno-implicit-function-declaration
+#$(filter-out -Werror,$(CFLAGS))
 
 $(NAME)_DEFINES += DEBUG
 GLOBAL_DEFINES      += IOTX_DEBUG
+
+ifeq ($(CONFIG_COAP_ONLINE), y)
+$(NAME)_DEFINES += COAP_ONLINE
+endif
+ifeq ($(CONFIG_COAP_DTLS_SUPPORT), y)
+$(NAME)_DEFINES += COAP_DTLS_SUPPORT
+endif
