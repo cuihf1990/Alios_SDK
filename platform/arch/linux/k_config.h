@@ -102,7 +102,7 @@
 /* kernel trace conf */
 #define YUNOS_CONFIG_TRACE                   1
 
-#define YUNOS_CONFIG_CPU_NUM                 1
+#define YUNOS_CONFIG_CPU_NUM                 2
 
 #endif /* K_CONFIG_H */
 
