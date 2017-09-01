@@ -22,6 +22,7 @@
 
 #include "ota_update_manifest.h"
 #include "ota_log.h"
+#include "ota_version.h"
 
 #define OTA_MQTT_TOPIC_LEN   (64)
 #define POTA_FETCH_PERCENTAGE_MIN 0
@@ -354,7 +355,7 @@ int8_t platform_ota_result_post(void)
     char msg_informed[MSG_INFORM_LEN] = {0};
 
     ret = otalib_GenInfoMsg(msg_informed, MSG_INFORM_LEN, 0,
-                            platform_get_main_version());
+                            ota_get_system_version());
     if (ret != 0) {
         OTA_LOG_E("generate inform message failed");
         return -1;
@@ -369,34 +370,6 @@ int8_t platform_ota_result_post(void)
     return ret;
 
 }
-
-void platform_ota_set_version(char *version)
-{
-
-}
-
-const char   *get_yos_os_version(void);
-
-const char *platform_ota_get_version()
-{
-    return get_yos_os_version();
-}
-
-const char *platform_get_main_version()
-{
-    return 0;
-}
-
-const char *platform_get_dev_version()
-{
-    return 0;
-}
-
-void platform_set_dev_version(const char *dev_version)
-{
-
-}
-
 
 int8_t ota_sub_request_reply(message_arrived *msgCallback)
 {
@@ -417,7 +390,6 @@ char *ota_get_id(void)
 void free_global_topic()
 {
 }
-
 
 //deinitialize OTA module
 int OTA_Deinit(void *handle)
