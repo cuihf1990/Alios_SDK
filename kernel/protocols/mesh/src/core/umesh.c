@@ -175,6 +175,7 @@ static void output_ipv4_frame_handler(void *args)
     mf_send_message(message);
 
 out:
+    ur_mem_free(frame, sizeof(*frame));
     pbuf_free(buf);
 }
 
