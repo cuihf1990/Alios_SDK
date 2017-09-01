@@ -8,8 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/stat.h>
-#include "vfs.h"
-#include "vfs_dirent.h"
+#include <yos/yos.h>
 
 #ifdef __cplusplus
 extern "C" {
