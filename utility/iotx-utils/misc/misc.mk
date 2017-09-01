@@ -32,20 +32,17 @@ $(NAME)_SOURCES := \
 
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_MQTT := linux
-#NETWORK_MQTT := linuxsock
 else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_MQTT := linux
-#NETWORK_MQTT := linuxsock
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
 PLATFORM_MQTT := rhino
-#NETWORK_MQTT := rhinosock
 endif
 
 ifeq ($(CONFIG_OTA_CH),coap)
 $(NAME)_SOURCES += ../hal/$(PLATFORM_MQTT)/HAL_TCP_$(PLATFORM_MQTT).c
 ifneq ($(CONFIG_COAP_DTLS_SUPPORT), y)
 $(NAME)_SOURCES += ../hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
-$(NAME)_DEFINES += IOTX_WITHOUT_TLS
+#$(NAME)_DEFINES += IOTX_WITHOUT_TLS
 $(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-lib
 endif
 endif

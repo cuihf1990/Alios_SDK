@@ -18,6 +18,9 @@ NAME := otatest
 
 GLOBAL_DEFINES      += IOTX_DEBUG
 
+#CONFIG_COAP_DTLS_SUPPORT := y
+#CONFIG_COAP_ONLINE := y
+
 $(NAME)_COMPONENTS  := cli
 #ifeq ($(LWIP),1)
 #$(NAME)_COMPONENTS  += protocols.net
