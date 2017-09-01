@@ -1,0 +1,48 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C++ Launch",
+            "type": "cppdbg",
+            "request": "launch",     
+            "program": "${workspaceRoot}\\out\\eclipse_debug\\last_built.elf",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceRoot}",
+            "environment": [],
+            "externalConsole": true,
+            "miDebuggerServerAddress": "localhost:3333",
+            "serverLaunchTimeout": 2000,
+            "targetArchitecture": "ARM",
+            "setupCommands": [
+                { "text": "cd ${workspaceRoot}" },
+                { "text": "source .gdbinit" },
+                { "text": "target remote localhost:3333" },
+                { "text": "file out/eclipse_debug/last_built.elf" },
+                { "text": "break application_start" }
+            ],
+            "customLaunchSetupCommands": [],
+            "launchCompleteCommand": "exec-run",
+            // "logging": {
+            //     "moduleLoad": true,
+            //     "trace": true,
+            //     "engineLogging": true,
+            //     "programOutput": true,
+            //     "exceptions": true,
+            //     "traceResponse": true
+            // },
+            "osx": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "${workspaceRoot}/build/compiler/arm-none-eabi-5_4-2016q2-20160622/OSX/bin/arm-none-eabi-gdb"
+            },
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "${workspaceRoot}/build/compiler/arm-none-eabi-5_4-2016q2-20160622/Linux64/bin/arm-none-eabi-gdb"
+            },
+            "windows": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "${workspaceRoot}\\build\\compiler\\arm-none-eabi-5_4-2016q2-20160622\\Win32\\bin\\arm-none-eabi-gdb.exe"
+            }
+        }
+    ]
+}
