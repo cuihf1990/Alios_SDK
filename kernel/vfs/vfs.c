@@ -6,7 +6,6 @@
 #include <yos/yos.h>
 #include <yos/network.h>
 #include <vfs_conf.h>
-#include <vfs_dirent.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
 #include <vfs.h>

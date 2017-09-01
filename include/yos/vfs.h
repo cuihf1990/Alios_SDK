@@ -11,6 +11,17 @@
 extern "C" {
 #endif
 
+typedef struct {
+    int     d_ino;                      /* file number */
+    uint8_t d_type;                     /* type of file */
+    char    d_name[];                   /* file name */
+} yos_dirent_t;
+
+typedef struct {
+    int         dd_vfs_fd;              /* This keeps track of the current directory position for telldir */
+    int         dd_rsv;
+} yos_dir_t;
+
 /**
  * @brief open the file or device by its path @path.
  *
@@ -60,6 +71,7 @@ ssize_t yos_write(int fd, const void *buf, size_t nbytes);
  * @param[in]  @fd   the handle of the file or device
  * @param[in]  @cmd  A controller specific command.
  * @param[in]  @arg  Argument to the command; interpreted according to the command.
+ *
  * @retval  any return from the command.
  */
 int yos_ioctl(int fd, int cmd, unsigned long arg);
@@ -88,6 +100,94 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout);
  * @retval  0 on success, otherwise -1 will be returned
  */
 int yos_fcntl(int fd, int cmd, int val);
+
+/**
+  * @brief move the file position to a given offset from from a given location
+  *
+  * @param[in] @fd     File handle
+  * @param[in] @offset   The offset from whence to move to
+  * @param[in] @whence   The start of where to seek
+  *      SEEK_SET to start from beginning of file,
+  *      SEEK_CUR to start from current position in file,
+  *      SEEK_END to start from end of file
+  *
+  * @retval  The new offset of the file
+  */
+off_t yos_lseek(int fd, off_t offset, int whence);
+
+/**
+  * @brief flush any buffers associated with the file
+  *
+  * @param[in] @fd     File handle
+  *
+  * @retval 0 on success, negative error code on failure
+  */
+int yos_sync(int fd);
+
+/**
+  * @brief store information about the file in a stat structure
+  *
+  * @param[in] @path   The name of the file to find information about
+  * @param[out] @st     The stat buffer to write to
+  *
+  * @retval 0 on success, negative error code on failure
+  */
+int yos_stat(const char *path, struct stat *st);
+
+/**
+  * @brief remove a file from the filesystem.
+  *
+  * @param[in] @path     The name of the file to remove.
+  *
+  * @retval 0 on success, negative error code on failure
+  */
+int yos_unlink(const char *path);
+
+/**
+  * @brief rename a file in the filesystem.
+  *
+  * @param[in] @oldpath     The name of the file to rename.
+  * @param[in] @newpath   The name to rename it to
+  *
+  * @retval 0 on success, negative error code on failure
+  */
+int yos_rename(const char *oldpath, const char *newpath);
+
+/**
+  * @brief open a directory on the filesystem
+  *
+  * @param[in] @path     Name of the directory to open
+  *
+  * @retval a point of directory stream on success, NULL on failure
+  */
+yos_dir_t *yos_opendir(const char *path);
+
+/**
+  * @brief close a directory
+  *
+  * @param[in] @dir      Dir handle
+  *
+  * @retval 0 on success, negative error code on failure
+  */
+int yos_closedir(yos_dir_t *dir);
+
+/**
+  * @brief read the next directory entry
+  *
+  * @param[in] @dir      Dir handle
+  *
+  * @retval a pointer to a dirent structure.
+  */
+yos_dirent_t *yos_readdir(yos_dir_t *dir);
+
+/**
+  * @brief create the directory, if they do not already exist.
+  *
+  * @param[in] @path the name of the directory
+  *
+  * @retval 0 on success, negative error code on failure
+  */
+int yos_mkdir(const char *path);
 
 #ifdef __cplusplus
 }
