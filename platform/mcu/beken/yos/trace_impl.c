@@ -19,6 +19,7 @@
 #ifdef CONFIG_YOS_CLI
 
 #define TRACE_TASK_STACK_SIZE 512
+#define SEND_SIZE 512
 
 extern struct k_fifo trace_fifo;
 extern int32_t set_filter_task(const char * task_name);
@@ -73,9 +74,14 @@ ssize_t trace_hal_send(void *handle, void *buf, size_t len)
 {
     int len_send = 0;
     int len_total_send = 0;
-
+    
     while (1) {
-        len_send = send((int)handle, (buf + len_total_send) , len - len_total_send, 0);
+        if (len >= SEND_SIZE) {
+            len_send = send((int)handle, (buf + len_total_send) , SEND_SIZE, 0);
+        } else {
+            len_send = send((int)handle, (buf + len_total_send) , len, 0);
+        }
+
         if (len_send < 0) {
             cli_printf("send (%s:%u) msg error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno), errno);
             return 0;
@@ -117,7 +123,7 @@ static void trace_entry(void *arg)
                 trace_hal_send((void *)sockfd, trace_buf, len + 4);
             }
 
-            yunos_task_sleep(2);
+            yunos_task_sleep(20);
         }
     } 
 }
