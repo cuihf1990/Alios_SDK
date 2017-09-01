@@ -7,6 +7,7 @@ GLOBAL_INCLUDES     += include
 $(NAME)_CFLAGS      += -Wall -Werror -Os
 
 $(NAME)_SOURCES     := mbedtls_ssl.c
+$(NAME)_SOURCES     += mbedtls_net.c
 
 ifeq ($(DEBUG), yes)
 $(NAME)_DEFINES     += CONFIG_SSL_DEBUG
@@ -34,6 +35,11 @@ $(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
 
 $(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
+
+else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
+
+$(NAME)_DEFINES          += MBEDTLS_NET_ALT_UART
+$(NAME)_PREBUILT_LIBRARY := lib/b_l475e/libmbedtls.a
 
 else
 

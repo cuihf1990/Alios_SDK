@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 #include <yos/network.h>
@@ -12,6 +13,7 @@
 #include <netmgr.h>
 
 #include "mbedtls/mbedtls_ssl.h"
+#include "mbedtls/net_sockets.h"
 
 struct cookie {
     int flag;
@@ -48,6 +50,7 @@ unsigned char alink_req_data[] = {
     0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x03
 };
 
+#if !defined(MBEDTLS_NET_ALT_UART)
 void *network_socket_create(const char *net_addr, int port)
 {
     int ret;
@@ -104,14 +107,52 @@ void network_socket_destroy(void *tcp_fd)
     return;
 }
 
+#else /* MBEDTLS_NET_ALT_UART */
+
+void *network_socket_create(mbedtls_net_context *ctx, const char *net_addr, int port)
+{
+    int ret;
+    char server_port[8];
+
+    mbedtls_net_init(ctx);
+
+    memset(server_port, 0, 8);
+    sprintf(server_port, "%d", port);
+
+    ret = mbedtls_net_connect(ctx,
+              net_addr, server_port, MBEDTLS_NET_PROTO_TCP);
+    if (ret != 0) {
+        printf("net connect fail - %d\n", ret);
+        return (void *)-1;
+    }
+
+    return (void *)ctx->fd;
+}
+
+void network_socket_destroy(mbedtls_net_context *ctx)
+{
+    mbedtls_net_free(ctx);
+
+    return;
+}
+
+#endif /* MBEDTLS_NET_ALT_UART */
+
 static void app_delayed_action(void *arg)
 {
     int ret = 0;
     char buf[128];
     void *tcp_fd = NULL;
     void *ssl = NULL;
+#if defined(MBEDTLS_NET_ALT_UART)
+    mbedtls_net_context server_fd;
+#endif
 
+#if !defined(MBEDTLS_NET_ALT_UART)
     tcp_fd = network_socket_create(server_name, server_port);
+#else
+    tcp_fd = network_socket_create(&server_fd, server_name, server_port);
+#endif
     if ((int)tcp_fd < 0) {
         printf("http client connect fail\n");
         return;
@@ -153,7 +194,11 @@ _out:
     }
 
     if (tcp_fd != NULL) {
+#if !defined(MBEDTLS_NET_ALT_UART)
         network_socket_destroy(tcp_fd);
+#else
+        network_socket_destroy(&server_fd);
+#endif
     }
 
     return;
@@ -180,7 +225,11 @@ int application_start(void)
     yos_register_event_filter(EV_WIFI, handle_event, cookie);
 
     netmgr_init();
+#if !defined(MBEDTLS_NET_ALT_UART)
     netmgr_start(true);
+#else
+    netmgr_start(false);
+#endif
 
     yos_loop_run();
     /* never return */

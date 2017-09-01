@@ -98,11 +98,14 @@ void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
      * Initialize the connection
      */
     ssl_param->net.fd = (int)tcp_fd;
+
+#if !defined(MBEDTLS_NET_ALT_UART)
     ret = mbedtls_net_set_block(&ssl_param->net);
     if (ret != 0) {
         printf("ssl_connect: set block failed- 0x%x\n", -ret);
         goto _err;
     }
+#endif
 
     /* 
      * Initialize certificates
