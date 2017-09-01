@@ -2,30 +2,26 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include "yos/cli.h"
-#include "yos/log.h"
-#include "yos/kernel.h"
-#include "yos/yos.h"
-#include "hal/soc/flash.h"
-#include "kvmgr.h"
+#include <errno.h>
 #include <string.h>
 #include <yos/cli.h>
+#include <yos/log.h>
+#include <yos/kernel.h>
+#include <yos/yos.h>
+#include "hal/soc/flash.h"
+#include "kvmgr.h"
 
 /* Key-value function return code description */
 typedef enum {
-    RES_OK = 0,             /* (0) Successed */
-    RES_CONT,               /* (1) Loop continued */
-    RES_SEM_ERR,            /* (2) Error related to semaphore */
-    RES_WORK_ERR,           /* (3) Error related to work (workqueue) */
-    RES_MUTEX_ERR,          /* (4) Error related to mutex */
-    RES_NO_SPACE,           /* (5) The space is out of range */
-    RES_INVALID_PARAM,      /* (6) The parameter is invalid */
-    RES_INVALID_HEADER,     /* (7) The item/block header is invalid */
-    RES_MALLOC_FAILED,      /* (8) Error related to malloc */
-    RES_ITEM_NOT_FOUND,     /* (9) Could not find the key-value item */
-    RES_FLASH_READ_ERR,     /* (10) The flash read operation failed */
-    RES_FLASH_WRITE_ERR,    /* (11) The flash write operation failed */
-    RES_FLASH_EARSE_ERR     /* (12) The flash earse operation failed */
+    RES_OK              = 0,        /* Successed */
+    RES_CONT            = -EAGAIN,  /* Loop continued */
+    RES_NO_SPACE        = -ENOSPC,  /* The space is out of range */
+    RES_INVALID_PARAM   = -EINVAL,  /* The parameter is invalid */
+    RES_MALLOC_FAILED   = -ENOMEM,  /* Error related to malloc */
+    RES_ITEM_NOT_FOUND  = -ENOENT,  /* Could not find the key-value item */
+    RES_FLASH_READ_ERR  = -EIO,     /* The flash read operation failed */
+    RES_FLASH_WRITE_ERR = -EIO,     /* The flash write operation failed */
+    RES_FLASH_EARSE_ERR = -EIO      /* The flash earse operation failed */
 } result_e;
 
 /* Defination of block information */
@@ -206,6 +202,7 @@ static uint16_t kv_item_calc_pos(uint16_t len)
     }
 
 #if BLK_NUMS > KV_GC_RESERVED + 1
+    uint8_t i;
     for (i = blk_index + 1; i != blk_index; i++) {
         if (i == BLK_NUMS) {
             i = 0;
@@ -606,8 +603,8 @@ int yos_kv_del(const char *key)
 {
     kv_item_t *item;
     int ret;
-    if (yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER) != RES_OK) {
-        return RES_MUTEX_ERR;
+    if ((ret = yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+        return ret;
     }
 
     item = kv_item_get(key);
@@ -635,8 +632,8 @@ int yos_kv_set(const char *key, const void *val, int len, int sync)
         yos_sem_wait(&(g_kv_mgr.gc_sem), YOS_WAIT_FOREVER);
     }
 
-    if (yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER) != RES_OK) {
-        return RES_MUTEX_ERR;
+    if ((ret = yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+        return ret;
     }
 
     item = kv_item_get(key);
@@ -654,13 +651,14 @@ int yos_kv_set(const char *key, const void *val, int len, int sync)
 int yos_kv_get(const char *key, void *buffer, int *buffer_len)
 {
     kv_item_t *item = NULL;
+    int ret;
 
     if (!key || !buffer || !buffer_len || *buffer_len <= 0) {
         return RES_INVALID_PARAM;
     }
 
-    if (yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER) != RES_OK) {
-        return RES_MUTEX_ERR;
+    if ((ret = yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+        return ret;
     }
 
     item = kv_item_get(key);
@@ -709,9 +707,7 @@ static int __item_print_cb(kv_item_t *item, const char *key)
 
     return RES_CONT;
 }
-#endif
 
-#ifdef CONFIG_YOS_CLI
 static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     const char *rtype = argc > 1 ? argv[1] : "";
@@ -764,9 +760,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
     }
     return;
 }
-#endif
 
-#ifdef CONFIG_YOS_CLI
 static struct cli_command ncmd = {
     .name = "kv",
     .help = "kv [set key value | get key | del key | list]",
@@ -777,34 +771,35 @@ static struct cli_command ncmd = {
 int yos_kv_init(void)
 {
     uint8_t blk_index;
+    int ret;
 
     if (g_kv_mgr.kv_initialize) {
         return RES_OK;
     }
 
     if (BLK_NUMS <= KV_GC_RESERVED) {
-        return -1;
+        return -EINVAL;
     }
 
     memset(&g_kv_mgr, 0, sizeof(g_kv_mgr));
-    if (yos_mutex_new(&(g_kv_mgr.kv_mutex)) != 0) {
-        return RES_MUTEX_ERR;
+    if ((ret = yos_mutex_new(&(g_kv_mgr.kv_mutex))) != 0) {
+        return ret;
     }
 
 #ifdef CONFIG_YOS_CLI
     cli_register_command(&ncmd);
 #endif
 
-    if (kv_init() != RES_OK) {
-        return -1;
+    if ((ret = kv_init()) != RES_OK) {
+        return ret;
     }
 
-    if (yos_work_init(&(g_kv_mgr.gc_worker), yos_kv_gc, NULL, 0) != RES_OK) {
-        return RES_WORK_ERR;
+    if ((ret = yos_work_init(&(g_kv_mgr.gc_worker), yos_kv_gc, NULL, 0)) != RES_OK) {
+        return ret;
     }
 
-    if (yos_sem_new(&(g_kv_mgr.gc_sem), 0) != RES_OK) {
-        return RES_SEM_ERR;
+    if ((ret = yos_sem_new(&(g_kv_mgr.gc_sem), 0)) != RES_OK) {
+        return ret;
     }
 
     g_kv_mgr.kv_initialize = 1;
@@ -824,9 +819,7 @@ void yos_kv_deinit(void)
     g_kv_mgr.kv_initialize = 0;
     yos_work_cancel(&(g_kv_mgr.gc_worker));
     yos_work_destroy(&(g_kv_mgr.gc_worker));
-
     yos_sem_free(&(g_kv_mgr.gc_sem));
-
     yos_mutex_free(&(g_kv_mgr.kv_mutex));
 }
 
