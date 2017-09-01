@@ -96,10 +96,6 @@ class Terminal:
         self.stdscr.refresh()
         LOG_WINDOW_HEIGHT = max_y - CMD_WINDOW_HEIGHT - 3
         LOG_WINDOW_WIDTH = max_x - DEV_WINDOW_WIDTH - 3
-        if len(self.log_content) > (LOG_WINDOW_HEIGHT - 1):
-            self.log_content = self.log_content[-(LOG_WINDOW_HEIGHT - 1):]
-        if self.max_log_width > (LOG_WINDOW_WIDTH - 1):
-            self.log_content = []
         width = 1 + LOG_WINDOW_WIDTH + 1 + DEV_WINDOW_WIDTH + 1
         height = 1 + LOG_WINDOW_HEIGHT + 1 + CMD_WINDOW_HEIGHT + 1
         horline = '-' * (width-2)

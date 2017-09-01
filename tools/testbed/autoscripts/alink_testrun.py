@@ -205,15 +205,15 @@ def main():
 
     #print result
     try:
-        print result[u'data'][u'case_fail_desc']
+        print result[u'data'][u'case_fail_desc'].encode('utf-8')
     except:
         pass
 
     if result[u'data'][u'case_status'] != 2:
-        print 'test case {0} finished unsuccessfully'.format(caseid)
+        print 'test {0} finished unsuccessfully'.format(testname)
         sys.exit(1)
     else:
-        print 'test case {0} finished successfully'.format(caseid)
+        print 'test {0} finished successfully'.format(testname)
         sys.exit(0)
 
 if __name__ == '__main__':

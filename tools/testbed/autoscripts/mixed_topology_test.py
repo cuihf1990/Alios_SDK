@@ -2,32 +2,50 @@ import sys, os, time
 sys.path.append('../')
 from autotest import Autotest
 
-devices = {'A':'mxchip-DN02QRIQ', 'B':'mxchip-DN02QRIX', 'C':'mxchip-DN02QRJ6', 'D':'mxchip-DN02QRJ7', 'E':'mxchip-DN02QRJ9', 'F':'mxchip-DN02QRJE', 'G':'mxchip-DN02QRJK'}
+ap_ssid = 'aos_test_01'
+ap_pass = 'Alios@Embedded'
+
+devices = {}
+devices['A'] = 'mxchip-DN02QRIQ'
+devices['B'] = 'mxchip-DN02QRIU'
+devices['C'] = 'mxchip-DN02QRIX'
+devices['D'] = 'mxchip-DN02QRJ3'
+devices['E'] = 'mxchip-DN02QRJ6'
+devices['F'] = 'mxchip-DN02QRJ7'
+devices['G'] = 'mxchip-DN02QRJ8'
+
 device_list = list(devices)
-device_attr={}
 device_list.sort()
+device_attr={}
 at=Autotest()
 logname=time.strftime('%Y-%m-%d@%H-%M')
-logname = 'tree_topology-' + logname +'.log'
-at.start('10.125.52.132', 34568, logname)
+logname = 'mixed_topology-' + logname +'.log'
+if at.start('10.125.52.132', 34568, logname) == False:
+    print 'error: start failed'
+    exit(1)
 if at.device_subscribe(devices) == False:
     print 'error: subscribe to device failed, some devices may not exist in testbed'
     exit(1)
 
 #reboot and get device mac address
+retry = 5
 for device in device_list:
-    at.device_control(device, 'reset')
-    time.sleep(2.5)
-    at.device_run_cmd(device, ['netmgr', 'clear'])
-    at.device_run_cmd(device, ['kv', 'delete', 'alink'])
-    mac =  at.device_run_cmd(device, ['reboot'], 1, 1.5, ['mac'])
-    if mac != False and mac != []:
-        mac = mac[0].replace('mac ', '')
-        print '{0} mac: {1}'.format(device, mac)
-        mac = mac.replace(':', '')
-        device_attr[device] = {'mac':mac}
-    else:
-        print 'error: reboot and get mac addr for device {0} failed, ret={1}'.format(device, mac)
+    succeed = False
+    for i in range(retry):
+        at.device_control(device, 'reset')
+        time.sleep(2.5)
+        at.device_run_cmd(device, ['netmgr', 'clear'])
+        at.device_run_cmd(device, ['kv', 'del', 'alink'])
+        mac =  at.device_run_cmd(device, ['reboot'], 1, 1.5, ['mac'])
+        if mac != False and mac != []:
+            mac = mac[0].replace('mac ', '')
+            mac = mac.replace(':', '')
+            mac = mac.replace(' ', '0')
+            device_attr[device] = {'mac':mac}
+            succeed = True
+            break;
+    if succeed == False:
+        print 'error: reboot and get mac addr for device {0} failed'.format(device)
         exit(1)
 time.sleep(5)
 
@@ -96,10 +114,11 @@ at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
 at.device_run_cmd(device, ['umesh', 'whitelist'])
 
 #start devices
+filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
 for i in range(len(device_list)):
     device = device_list[i]
     if i == 0:
-        at.device_run_cmd(device, ['netmgr', 'connect', 'aos_test_01', 'Alios@Embedded'])
+        at.device_run_cmd(device, ['netmgr', 'connect', ap_ssid, ap_pass])
         time.sleep(12)
         uuid = at.device_run_cmd(device, ['uuid'], 1, 1)
         if uuid == []:
@@ -107,46 +126,48 @@ for i in range(len(device_list)):
             exit(1)
     else:
         at.device_run_cmd(device, ['umesh', 'start'])
-        time.sleep(3)
+        time.sleep(5)
 
-    retry = 5
-    filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
+    if device in ['A']:
+        expected_state = 'leader'
+    elif device in ['B', 'C']:
+        expected_state = 'super_router'
+    elif device in ['D', 'F', 'G']:
+        expected_state = 'router'
+    elif device in ['E']:
+        expected_state = 'leaf'
+
+    succeed = False; retry = 5
     while retry > 0:
         state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
-        if device in ['A']:
-            if state == ['leader']:
-                print '{0} connect to mesh as super_leader succeed'.format(device)
-                break
-        elif device in ['B', 'C']:
-            if state == ['super_router']:
-                print '{0} connect to mesh as super_router succeed'.format(device)
-                break
-        elif device in ['D', 'F', 'G']:
-            if state == ['router']:
-                print '{0} connect to mesh as router succeed'.format(device)
-                break
-        elif device in ['E']:
-            if state == ['leaf']:
-                print '{0} connect to mesh as mobile leaf succeed'.format(device)
-                break
+        if state == [expected_state]:
+            succeed = True
+            break
         at.device_run_cmd(device, ['umesh', 'stop'], 1, 1)
         at.device_run_cmd(device, ['umesh', 'start'], 5, 1)
-        time.sleep(3)
+        time.sleep(5)
         retry -= 1
-
-    if retry == 0:
-        print 'error: {0} connect to mesh failed, state={1}'.format(device, state)
-        exit(1)
-
-    ipaddr = at.device_run_cmd(device, ['umesh', 'ipaddr'], 3, 1, [':'])
-    if ipaddr == False or ipaddr == [] or len(ipaddr) != 3:
-        print 'error: get ipaddr for device {0} failed'.format(device)
-        exit(1)
+    if succeed == True:
+        print '{0} connect to mesh as {1} succeed'.format(device, expected_state)
     else:
+        print 'error: {0} connect to mesh as {1} failed'.format(device, expected_state)
+        exit(1)
+
+    succeed = False; retry = 3
+    while retry > 0:
+        ipaddr = at.device_run_cmd(device, ['umesh', 'ipaddr'], 3, 1.5, [':'])
+        if ipaddr == False or ipaddr == [] or len(ipaddr) != 3:
+            retry -= 1
+            continue
         ipaddr[0] = ipaddr[0].replace('\t', '')
         ipaddr[1] = ipaddr[1].replace('\t', '')
         ipaddr[2] = ipaddr[2].replace('\t', '')
         device_attr[device]['ipaddr'] = ipaddr[0:3]
+        succeed = True
+        break;
+    if succeed == False:
+        print 'error: get ipaddr for device {0} failed'.format(device)
+        exit(1)
 
     if device == 'C':
         print "wait 1 minute till vector router complete routing infomation exchange"
