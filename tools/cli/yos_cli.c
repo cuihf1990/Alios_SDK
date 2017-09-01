@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <yos/kernel.h>
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
@@ -651,7 +652,7 @@ int yos_cli_init(void)
 
     cli = (struct cli_st *)yos_malloc(sizeof(struct cli_st));
     if (cli == NULL) {
-        return -1;
+        return -ENOMEM;
     }
 
     memset((void *)cli, 0, sizeof(struct cli_st));
@@ -682,7 +683,7 @@ init_general_err:
         cli = NULL;
     }
 
-    return -1;
+    return -ENOSYS;
 }
 
 int cli_printf(const char *msg, ...)
