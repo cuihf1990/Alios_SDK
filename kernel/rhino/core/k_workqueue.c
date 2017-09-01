@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -48,8 +36,7 @@ static void worker_task(void *arg)
     kworkqueue_t *queue = (kworkqueue_t *)arg;
 
     while (1) {
-        if (is_klist_empty(&(queue->work_list)))
-        {
+        if (is_klist_empty(&(queue->work_list))) {
             ret = yunos_sem_take(&(queue->sem), YUNOS_WAIT_FOREVER);
             if (ret != YUNOS_SUCCESS) {
                 k_err_proc(ret);
@@ -124,7 +111,7 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
         return ret;
     }
 
-    TRACE_WORKQUEUE_CREATE(g_active_task, workqueue);
+    TRACE_WORKQUEUE_CREATE(yunos_cur_task_get(), workqueue);
 
     return YUNOS_SUCCESS;
 }
@@ -142,9 +129,8 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
         return YUNOS_WORKQUEUE_NOT_EXIST;
     }
 
-    TRACE_WORKQUEUE_DEL(g_active_task, workqueue);
-
     YUNOS_CRITICAL_ENTER();
+
     if (!is_klist_empty(&(workqueue->work_list))) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_WORKQUEUE_BUSY;
@@ -155,11 +141,7 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
         return YUNOS_WORKQUEUE_BUSY;
     }
 
-    klist_rm_init(&(workqueue->workqueue_node));
-
     YUNOS_CRITICAL_EXIT();
-
-    workqueue->name = NULL;
 
     ret = yunos_task_del(&(workqueue->worker));
     if (ret != YUNOS_SUCCESS) {
@@ -170,6 +152,11 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
     if (ret != YUNOS_SUCCESS) {
         return ret;
     }
+
+    YUNOS_CRITICAL_ENTER();
+    klist_rm_init(&(workqueue->workqueue_node));
+    TRACE_WORKQUEUE_DEL(g_active_task[cpu_cur_get()], workqueue);
+    YUNOS_CRITICAL_EXIT();
 
     return YUNOS_SUCCESS;
 }
@@ -183,8 +170,7 @@ static void work_timer_cb(void *timer, void *arg)
     kworkqueue_t *wq   = (kworkqueue_t *)arg;
 
     YUNOS_CRITICAL_ENTER();
-    if (wq->work_current == work)
-    {
+    if (wq->work_current == work) {
         YUNOS_CRITICAL_EXIT();
         return;
     }
@@ -201,7 +187,9 @@ static void work_timer_cb(void *timer, void *arg)
         if (ret != YUNOS_SUCCESS) {
             return;
         }
-    } else YUNOS_CRITICAL_EXIT();
+    } else {
+        YUNOS_CRITICAL_EXIT();
+    }
 }
 
 kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
@@ -234,7 +222,7 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
         }
     }
 
-    TRACE_WORK_INIT(g_active_task, work);
+    TRACE_WORK_INIT(yunos_cur_task_get(), work);
 
     return YUNOS_SUCCESS;
 }
@@ -250,8 +238,7 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
 
     if (work->dly == 0) {
         YUNOS_CRITICAL_ENTER();
-        if (workqueue->work_current == work)
-        {
+        if (workqueue->work_current == work) {
             YUNOS_CRITICAL_EXIT();
             return YUNOS_WORKQUEUE_WORK_RUNNING;
         }
@@ -268,7 +255,9 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
             if (ret != YUNOS_SUCCESS) {
                 return ret;
             }
-        } else YUNOS_CRITICAL_EXIT();
+        } else {
+            YUNOS_CRITICAL_EXIT();
+        }
     } else {
         yunos_timer_stop(&(work->timer));
         work->timer.timer_cb_arg = (void *)workqueue;
@@ -305,8 +294,7 @@ kstat_t yunos_work_cancel(kwork_t *work)
     }
 
     YUNOS_CRITICAL_ENTER();
-    if (wq->work_current == work)
-    {
+    if (wq->work_current == work) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_WORKQUEUE_WORK_RUNNING;
     }

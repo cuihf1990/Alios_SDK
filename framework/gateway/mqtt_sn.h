@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef __YOS_MQTT_SN_H__
@@ -112,17 +100,18 @@ static inline int msn_parse_header(uint8_t *buf, int l, uint8_t **pbuf)
         len = *buf ++;
         len <<= 8;
         len += *buf ++;
-    }
-    else {
+    } else {
         len = (uint8_t)len - 1;
     }
 
-    if (pbuf)
+    if (pbuf) {
         *pbuf = buf;
+    }
 
     if (l != len &&
-        l != len + 3)
+        l != len + 3) {
         return -1;
+    }
 
     return len;
 }
@@ -130,14 +119,14 @@ static inline int msn_parse_header(uint8_t *buf, int l, uint8_t **pbuf)
 static inline int msn_header_len(uint8_t msg_type)
 {
     switch (msg_type) {
-    case PUBLISH:
-        return sizeof(pub_body_t);
-    case CONNECT:
-        return sizeof(conn_body_t);
-    case CONNACK:
-        return sizeof(conn_ack_t);
-    case ADVERTISE:
-        return sizeof(adv_body_t);
+        case PUBLISH:
+            return sizeof(pub_body_t);
+        case CONNECT:
+            return sizeof(conn_body_t);
+        case CONNACK:
+            return sizeof(conn_ack_t);
+        case ADVERTISE:
+            return sizeof(adv_body_t);
     }
     return 0;
 }
@@ -156,6 +145,6 @@ static inline void *msn_alloc(uint8_t msg_type, int payload_len, void **pbuf, in
     *pbuf = buf;
     *plen = len;
 
-    return buf+2;
+    return buf + 2;
 }
 #endif

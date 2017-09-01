@@ -1,5 +1,6 @@
 NAME := rhino
 
+$(NAME)_TYPE := kernel
 $(NAME)_COMPONENTS += rhino
 
 GLOBAL_INCLUDES += core/include
@@ -32,5 +33,7 @@ $(NAME)_SOURCES := core/k_err.c          \
                    core/k_queue.c        \
                    core/k_sem.c          \
                    core/k_task.c         \
-                   core/k_time.c
+                   core/k_time.c         \
+                   core/k_fifo.c         \
+                   core/k_trace.c
 

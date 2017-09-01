@@ -1,27 +1,17 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 /**
  * @file yos/kernel.h
  * @brief kernel API
- * @version since 5.5.0
+ * @version since 1.0.0
  */
 
 #ifndef YOS_KERNEL_H
 #define YOS_KERNEL_H
+
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -110,22 +100,34 @@ int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), voi
 void yos_task_exit(int code);
 
 /**
+ * get task name
  */
 const char *yos_task_name(void);
 
-/** thread local storage
+/**
+ * create a task key
+ * @param[in] key pointer of key object
+ * @return  the check status, 0 is OK, -1 indicates invalid
  */
 int yos_task_key_create(yos_task_key_t *key);
 
 /**
+ * delete a task key
+ * @param[in] key key object
  */
 void yos_task_key_delete(yos_task_key_t key);
 
 /**
+ * associate a task-specific value with a key
+ * @param[in] key key object
+ * @param[in] vp pointer of a task-specific value
+ * @return  the check status, 0 is OK, -1 indicates invalid
  */
 int yos_task_setspecific(yos_task_key_t key, void *vp);
 
 /**
+ * get the value currently bound to the specified key
+ * @param[in] key key object
  */
 void *yos_task_getspecific(yos_task_key_t key);
 
@@ -193,7 +195,7 @@ void yos_sem_signal(yos_sem_t *sem);
  * @param[in]   sem    pointer to the semaphore
  * @return  the check status, YUNOS_TRUE is OK, YUNOS_FALSE indicates invalid
  */
-int yos_sem_is_vaid(yos_sem_t *sem);
+int yos_sem_is_valid(yos_sem_t *sem);
 
 /**
  * release all semaphore
@@ -253,7 +255,7 @@ int yos_queue_is_valid(yos_queue_t *queue);
  * @param[in]   queue    pointer to the queue
  * @return  the check status, NULL is error
  */
-void* yos_queue_buf_ptr(yos_queue_t *queue);
+void *yos_queue_buf_ptr(yos_queue_t *queue);
 
 /**
  * This function will disable kernel sched
@@ -384,6 +386,13 @@ void *yos_malloc(unsigned int size);
  * @return  the operation status, NULL is error, others is memory address
  */
 void *yos_zalloc(unsigned int size);
+
+/**
+ * trace alloced mems
+ * @param[in] addr       pointer of the mem alloced by malloc
+ * @param[in] allocator  buildin_address
+ */
+void yos_alloc_trace(void *addr, size_t allocator);
 
 /**
  * free memory

@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include "alink_protocol.h"
@@ -23,7 +11,7 @@
 #include "yos/list.h"
 #include "yos/log.h"
 #include "service_manager.h"
-#include "wsf/wsf.h"
+#include "wsf.h"
 #include "yos/kernel.h"
 #include "config.h"
 #include "accs.h"
@@ -130,13 +118,13 @@ static int alink_set_config(char *param)
     pvalue = json_get_value_by_name(param, strlen(param), "alinkServer", &value_len,
                                     0);
     if (pvalue != NULL) {
-        LOGW(MODULE_NAME_COTA, "get alink server ----->  %s\n",pvalue);
+        LOGW(MODULE_NAME_COTA, "get alink server ----->  %s\n", pvalue);
         value_len = (value_len < SERVER_LEN) ? value_len : SERVER_LEN;
-	if(strstr(pvalue,alinkserver) == NULL){
+        if (strstr(pvalue, alinkserver) == NULL) {
             LOGW(MODULE_NAME_COTA, "reset uuid --------\n");
-	    config_reset_main_uuid();
-	}	
-	memset(alinkserver, 0x00, SERVER_LEN);
+            config_reset_main_uuid();
+        }
+        memset(alinkserver, 0x00, SERVER_LEN);
         strncpy(alinkserver, pvalue, value_len);
         yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
     }

@@ -1,7 +1,3 @@
-/**
- * Copyright (C) 2017 The YunOS IoT Project. All rights reserved.
- */
-
 #ifndef _MBEDTLS_SSL_H_
 #define _MBEDYLS_SSL_H_
 

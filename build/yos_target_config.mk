@@ -164,8 +164,6 @@ APP         :=$(notdir $(APP_FULL))
 
 PLATFORM_DIRECTORY := $(PLATFORM_FULL)
 
-COMPONENTS += rhino
-
 EXTRA_CFLAGS :=    -DYOS_SDK_VERSION_MAJOR=$(YOS_SDK_VERSION_MAJOR) \
                    -DYOS_SDK_VERSION_MINOR=$(YOS_SDK_VERSION_MINOR) \
                    -DYOS_SDK_VERSION_REVISION=$(YOS_SDK_VERSION_REVISION) \
@@ -189,7 +187,13 @@ $(error No matching toolchain found for architecture $(HOST_ARCH))
 endif
 
 # Process all the components + YOS
-COMPONENTS += kernel
+
+COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall libc vfs
+
+ifeq ($(BINS), 1)
+$(NAME)_COMPONENTS += syscall usyscall
+endif
+
 $(info processing components: $(COMPONENTS))
 
 CURDIR :=
@@ -257,6 +261,8 @@ $(CONFIG_FILE): $(YOS_SDK_MAKEFILES) | $(CONFIG_FILE_DIR)
 	$(QUIET)$(call WRITE_FILE_CREATE, $(CONFIG_FILE) ,YOS_SDK_MAKEFILES           		+= $(YOS_SDK_MAKEFILES))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,TOOLCHAIN_NAME            		:= $(TOOLCHAIN_NAME))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_SDK_LDFLAGS             		+= $(strip $(YOS_SDK_LDFLAGS)))
+	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,GLOBAL_LDFLAGS_APP                += $(strip $(GLOBAL_LDFLAGS_APP)))
+	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,GLOBAL_LDFLAGS_KERNEL             += $(strip $(GLOBAL_LDFLAGS_KERNEL)))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,RESOURCE_CFLAGS					+= $(strip $(YOS_SDK_CFLAGS)))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_SDK_LINK_SCRIPT         		+= $(strip $(if $(strip $(YOS_SDK_LINK_SCRIPT)),$(YOS_SDK_LINK_SCRIPT),$(YOS_SDK_DEFAULT_LINK_SCRIPT))))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_SDK_LINK_SCRIPT_CMD    	 	+= $(call COMPILER_SPECIFIC_LINK_SCRIPT,$(strip $(if $(strip $(YOS_SDK_LINK_SCRIPT)),$(YOS_SDK_LINK_SCRIPT),$(YOS_SDK_DEFAULT_LINK_SCRIPT)))))
@@ -289,6 +295,7 @@ $(CONFIG_FILE): $(YOS_SDK_MAKEFILES) | $(CONFIG_FILE_DIR)
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,$(comp)_MAKEFILE         := $($(comp)_MAKEFILE)))
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,$(comp)_PRE_BUILD_TARGETS:= $($(comp)_PRE_BUILD_TARGETS)))
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,$(comp)_PREBUILT_LIBRARY := $(addprefix $($(comp)_LOCATION),$($(comp)_PREBUILT_LIBRARY))))
+	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,$(comp)_TYPE             := $($(comp)_TYPE)))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,YOS_SDK_UNIT_TEST_SOURCES   		:= $(YOS_SDK_UNIT_TEST_SOURCES))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,ALL_RESOURCES             		:= $(call unique,$(ALL_RESOURCES)))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,INTERNAL_MEMORY_RESOURCES 		:= $(call unique,$(INTERNAL_MEMORY_RESOURCES)))

@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef _AWS_LIB_H_
@@ -19,34 +7,34 @@
 
 /* auth type */
 enum AWS_AUTH_TYPE {
-	AWS_AUTH_TYPE_OPEN,
-	AWS_AUTH_TYPE_SHARED,
-	AWS_AUTH_TYPE_WPAPSK,
-	AWS_AUTH_TYPE_WPA8021X,
-	AWS_AUTH_TYPE_WPA2PSK,
-	AWS_AUTH_TYPE_WPA28021X,
-	AWS_AUTH_TYPE_WPAPSKWPA2PSK,
-	AWS_AUTH_TYPE_MAX = AWS_AUTH_TYPE_WPAPSKWPA2PSK,
-	AWS_AUTH_TYPE_INVALID = 0xff,
+    AWS_AUTH_TYPE_OPEN,
+    AWS_AUTH_TYPE_SHARED,
+    AWS_AUTH_TYPE_WPAPSK,
+    AWS_AUTH_TYPE_WPA8021X,
+    AWS_AUTH_TYPE_WPA2PSK,
+    AWS_AUTH_TYPE_WPA28021X,
+    AWS_AUTH_TYPE_WPAPSKWPA2PSK,
+    AWS_AUTH_TYPE_MAX = AWS_AUTH_TYPE_WPAPSKWPA2PSK,
+    AWS_AUTH_TYPE_INVALID = 0xff,
 };
 
 /* encry type */
 enum AWS_ENC_TYPE {
-	AWS_ENC_TYPE_NONE,
-	AWS_ENC_TYPE_WEP,
-	AWS_ENC_TYPE_TKIP,
-	AWS_ENC_TYPE_AES,
-	AWS_ENC_TYPE_TKIPAES,
-	AWS_ENC_TYPE_MAX = AWS_ENC_TYPE_TKIPAES,
-	AWS_ENC_TYPE_INVALID = 0xff,
+    AWS_ENC_TYPE_NONE,
+    AWS_ENC_TYPE_WEP,
+    AWS_ENC_TYPE_TKIP,
+    AWS_ENC_TYPE_AES,
+    AWS_ENC_TYPE_TKIPAES,
+    AWS_ENC_TYPE_MAX = AWS_ENC_TYPE_TKIPAES,
+    AWS_ENC_TYPE_INVALID = 0xff,
 };
 
 /* link type */
 enum AWS_LINK_TYPE {
-	AWS_LINK_TYPE_NONE,
-	AWS_LINK_TYPE_PRISM,
-	AWS_LINK_TYPE_80211_RADIO,
-	AWS_LINK_TYPE_80211_RADIO_AVS
+    AWS_LINK_TYPE_NONE,
+    AWS_LINK_TYPE_PRISM,
+    AWS_LINK_TYPE_80211_RADIO,
+    AWS_LINK_TYPE_80211_RADIO_AVS
 };
 
 //用于打印aws配网库版本
@@ -54,47 +42,47 @@ const char *aws_version(void);
 #if 0
 //将monitor模式下抓到的包传入该函数进行处理
 //参数：
-//	buf: frame buffer
-//	length: frame len
-//	link_type: see enum AWS_LINK_TYPE
-//	with_fcs: frame include 80211 fcs field, the tailing 4bytes
+//  buf: frame buffer
+//  length: frame len
+//  link_type: see enum AWS_LINK_TYPE
+//  with_fcs: frame include 80211 fcs field, the tailing 4bytes
 //
 //说明：
-//	适配前执行以下命令, 检查link_type和with_fcs参数
-//	a) iwconfig wlan0 mode monitor	#进入monitor模式
-//	b) iwconfig wlan0 channel 6	#切换到信道6(以路由器信道为准)
-//	c) tcpdump -i wlan0 -s0 -w file.pacp	#抓包保存文件
-//	d) 用wireshark或者omnipeek打开，检查包头格式，及包尾是否包含FCS 4字节
+//  适配前执行以下命令, 检查link_type和with_fcs参数
+//  a) iwconfig wlan0 mode monitor  #进入monitor模式
+//  b) iwconfig wlan0 channel 6 #切换到信道6(以路由器信道为准)
+//  c) tcpdump -i wlan0 -s0 -w file.pacp    #抓包保存文件
+//  d) 用wireshark或者omnipeek打开，检查包头格式，及包尾是否包含FCS 4字节
 //
-//	常见的包头类型为：
-//	无额外的包头：AWS_LINK_TYPE_NONE
-//	radio header: hdr_len = *(unsigned short *)(buf + 2)
-//	avs header: hdr_len = *(unsigned long *)(buf + 4)
-//	prism header: hdr_len = 144
+//  常见的包头类型为：
+//  无额外的包头：AWS_LINK_TYPE_NONE
+//  radio header: hdr_len = *(unsigned short *)(buf + 2)
+//  avs header: hdr_len = *(unsigned long *)(buf + 4)
+//  prism header: hdr_len = 144
 //
 int aws_80211_frame_handler(char *buf, int length,
-		int link_type, int with_fcs);
+                            int link_type, int with_fcs);
 #endif
 
 //启动一键配网服务, 该函数会block，直到配网成功或者超时退出,
-//	超时时间由aws_timeout_period_ms设置
+//  超时时间由aws_timeout_period_ms设置
 //参数：
-//	model: 产品model, 如
-//	secret: 产品secret, 如
-//	mac: 产品mac地址，如11:22:33:44:55:66
-//	sn: 产品sn条码，通常填NULL
+//  model: 产品model, 如
+//  secret: 产品secret, 如
+//  mac: 产品mac地址，如11:22:33:44:55:66
+//  sn: 产品sn条码，通常填NULL
 void aws_start(char *model, char *secret, char *mac, char *sn);
 //{该函数大致流程如下:
-//	init();
-//	platform_monitor_open();
-//	aws_main_thread_func();
-//	platform_monitor_close();
-//	destroy();
+//  init();
+//  platform_monitor_open();
+//  aws_main_thread_func();
+//  platform_monitor_close();
+//  destroy();
 //}
 
 //aws_start返回后，调用该函数，获取ssid和passwd等信息
 //aws成功时，ssid & passwd一定会返回非NULL字符串, 但bssid和auth, encry, channel
-//	有可能会返回NULL或者INVALID值(取决于是否能在wifi列表里搜索命中)
+//  有可能会返回NULL或者INVALID值(取决于是否能在wifi列表里搜索命中)
 //aws失败超时后，该函数会返回0, 且所有参数为NULL或INVALID VALUE
 //
 //auth defined by enum AWS_AUTH_TYPE
@@ -102,7 +90,7 @@ void aws_start(char *model, char *secret, char *mac, char *sn);
 //
 //返回值：1--成功，0--失败
 int aws_get_ssid_passwd(char ssid[32 + 1], char passwd[64 + 1], unsigned char bssid[6],
-	char *auth, char *encry, unsigned char *channel);
+                        char *auth, char *encry, unsigned char *channel);
 
 //发送广播通知APP，配网成功。
 //默认会广播2min, 广播过程中收到APP应答后，提前终止

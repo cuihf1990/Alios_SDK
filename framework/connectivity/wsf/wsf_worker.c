@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include "yos/list.h"
@@ -24,7 +12,7 @@
 #include "wsf_network.h"
 #include "wsf.h"
 #include "yos/kernel.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "yos/network.h"
 #include "os.h"
 
@@ -210,14 +198,15 @@ static int  __cb_wsf_recv(int fd, void *arg)
     if (wsf_conn && (-1 != fd)) {
         char *buf = wsf_conn->recv_buf + wsf_conn->recv_buf_pos;
         int len = wsf_conn->recv_buf_len - wsf_conn->recv_buf_pos;
-        if(len <= 0)
+        if (len <= 0) {
             return 1;
+        }
         if (NULL != wsf_conn->ssl) {
             count = os_ssl_recv(wsf_conn->ssl, buf, len);
         } else {
             count = os_tcp_recv(wsf_conn->tcp, buf, len);
         }
-        LOGD(MODULE_NAME, "wsf recv : %s,cnt: %d, len: %d\n", buf, count,len);
+        LOGD(MODULE_NAME, "wsf recv : %s,cnt: %d, len: %d\n", buf, count, len);
         if (count < 0 && (count == -EAGAIN || errno == EAGAIN)) {
             LOGD(MODULE_NAME, "wsf recv eagain");
             return 1;
@@ -336,7 +325,7 @@ static void process_msg_request(wsf_msg_t *msg, int length)
         return;
     }
 
-    yos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
+    request_msg_handle(NULL);
 }
 
 void init_req_glist(void)

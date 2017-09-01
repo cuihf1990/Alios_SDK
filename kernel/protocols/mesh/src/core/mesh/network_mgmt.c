@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
@@ -48,7 +36,7 @@ static void handle_discovery_timer(void *args)
 
     if (hal->discovery_result.meshnetid != BCAST_NETID) {
         mm_netinfo_tv_t netinfo;
-        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+        nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         netinfo.leader_mode = hal->discovery_result.leader_mode;
         netinfo.size = hal->discovery_result.net_size;
         if (nbr && umesh_mm_migration_check(network, nbr, &netinfo)) {
@@ -57,7 +45,7 @@ static void handle_discovery_timer(void *args)
     }
     if (hal->discovery_times > 0 && migrate) {
         umesh_mm_set_channel(network, hal->discovery_result.channel);
-        nbr = get_neighbor_by_mac_addr(&(hal->discovery_result.addr));
+        nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         hal->discovered_handler(nbr);
         return;
     } else if (hal->discovery_times < DISCOVERY_RETRY_TIMES) {
@@ -94,8 +82,7 @@ static ur_error_t send_discovery_request(network_context_t *network)
     message_t       *message = NULL;
     message_info_t  *info;
 
-    length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
-             sizeof(mm_state_flags_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_state_flags_tv_t);
     message = message_alloc(length, NETWORK_MGMT_1);
     if (message == NULL) {
         return UR_ERROR_MEM;
@@ -103,7 +90,6 @@ static ur_error_t send_discovery_request(network_context_t *network)
     data = message_get_payload(message);
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_DISCOVERY_REQUEST);
-    data += set_mm_version_tv(data);
 
     flag = (mm_state_flags_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)flag, TYPE_STATE_FLAGS);
@@ -112,10 +98,7 @@ static ur_error_t send_discovery_request(network_context_t *network)
 
     info->network = network;
     // dest
-    info->dest.addr.len = SHORT_ADDR_SIZE;
-    info->dest.addr.short_addr = BCAST_SID;
-    info->dest.netid = BCAST_NETID;
-
+    set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -160,7 +143,6 @@ static ur_error_t send_discovery_response(network_context_t *network,
 ur_error_t handle_discovery_request(message_t *message)
 {
     ur_error_t        error = UR_ERROR_NONE;
-    mm_version_tv_t   *version;
     mm_state_flags_tv_t *flag;
     uint8_t           *tlvs;
     uint16_t          tlvs_length;
@@ -178,11 +160,6 @@ ur_error_t handle_discovery_request(message_t *message)
     network = info->network;
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    version = (mm_version_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_VERSION);
-    if (version == NULL || version->version != 1) {
-        return UR_ERROR_FAIL;
-    }
 
     flag = (mm_state_flags_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_STATE_FLAGS);
 
@@ -247,7 +224,7 @@ ur_error_t handle_discovery_response(message_t *message)
 
     res = &network->hal->discovery_result;
     if ((is_bcast_netid(res->meshnetid) ||
-        res->meshnetid < get_main_netid(info->src.netid)) &&
+         res->meshnetid < get_main_netid(info->src.netid)) &&
         is_same_mainnet(network->meshnetid, info->src.netid) == false) {
         memcpy(&res->addr, &info->src_mac.addr, sizeof(res->addr));
         res->channel = info->src_channel;

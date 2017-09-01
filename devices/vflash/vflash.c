@@ -1,22 +1,10 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
 #include <string.h>
-#include <vfs_driver.h>
+#include <vfs_register.h>
 #include <hal/soc/flash.h>
 #include <yos/kernel.h>
 
@@ -46,19 +34,22 @@ static ssize_t flash_write(file_t *f, const void *buf, size_t len)
 
     offset = sector_off;
     ret = hal_flash_read(pno, &offset, buffer, write_size);
-    if (ret < 0)
+    if (ret < 0) {
         goto exit;
+    }
 
     memcpy(buffer + (f->offset) - sector_off, buf, len);
 
     offset = sector_off;
     ret = hal_flash_erase(pno, offset, write_size);
-    if (ret < 0)
+    if (ret < 0) {
         goto exit;
+    }
 
     ret = hal_flash_write(pno, &offset, buffer, write_size);
-    if (ret < 0)
+    if (ret < 0) {
         goto exit;
+    }
 
     if ((offset - sector_off) == write_size) {
         f->offset += len;
@@ -78,8 +69,9 @@ static ssize_t flash_read(file_t *f, void *buf, size_t len)
 
     ret = hal_flash_read(pno, &f->offset, buf, len);
 
-    if (ret < 0)
+    if (ret < 0) {
         return 0;
+    }
 
     return f->offset - offset;
 }
@@ -96,7 +88,8 @@ int vflash_register_partition(int pno)
     int ret;
 
     snprintf(pname, sizeof(pname) - 1, "/dev/flash%d", pno);
-    ret = yunos_register_driver(pname, &flash_fops, (void *)(long)pno);
+    ret = yos_register_driver(pname, &flash_fops, (void *)(long)pno);
 
     return ret;
 }
+

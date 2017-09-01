@@ -1,40 +1,28 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
 
 kstat_t      g_sys_stat;
-uint8_t      g_idle_task_spawned;
+uint8_t      g_idle_task_spawned[YUNOS_CONFIG_CPU_NUM];
 
 runqueue_t   g_ready_queue;
 
 /* schedule lock counter */
-uint8_t      g_sched_lock;
-uint8_t      g_intrpt_nested_level;
+uint8_t      g_sched_lock[YUNOS_CONFIG_CPU_NUM];
+uint8_t      g_intrpt_nested_level[YUNOS_CONFIG_CPU_NUM];
 
 /* highest pri task in ready queue */
-ktask_t     *g_preferred_ready_task;
+ktask_t     *g_preferred_ready_task[YUNOS_CONFIG_CPU_NUM];
 
 /* current active task */
-ktask_t     *g_active_task;
+ktask_t     *g_active_task[YUNOS_CONFIG_CPU_NUM];
 
 /* idle task attribute */
-ktask_t      g_idle_task;
-idle_count_t g_idle_count;
-cpu_stack_t  g_idle_task_stack[YUNOS_CONFIG_IDLE_TASK_STACK_SIZE];
+ktask_t      g_idle_task[YUNOS_CONFIG_CPU_NUM];
+idle_count_t g_idle_count[YUNOS_CONFIG_CPU_NUM];
+cpu_stack_t  g_idle_task_stack[YUNOS_CONFIG_CPU_NUM][YUNOS_CONFIG_IDLE_TASK_STACK_SIZE];
 
 /* tick attribute */
 tick_t       g_tick_count;
@@ -108,16 +96,6 @@ klist_t       g_workqueue_list_head;
 kmutex_t      g_workqueue_mutex;
 kworkqueue_t  g_workqueue_default;
 cpu_stack_t   g_workqueue_stack[YUNOS_CONFIG_WORKQUEUE_STACK_SIZE];
-#endif
-
-#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRST_FIT > 0)
-klist_t            g_mm_region_list_head = { NULL, NULL };
-k_mm_region_head_t g_kmm_region_head; /*kernel mm region*/
-
-
-#if (YUNOS_CONFIG_MM_REGION_MUTEX == 1)
-kmutex_t g_mm_region_mutex;
-#endif
 #endif
 
 #if (YUNOS_CONFIG_MM_TLF > 0)

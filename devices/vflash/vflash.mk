@@ -1,6 +1,8 @@
 NAME := vflash
 
-$(NAME)_SOURCES     := vflash.c
+$(NAME)_TYPE := kernel
 
-GLOBAL_INCLUDES     += .
+$(NAME)_SOURCES := vflash.c
+
+GLOBAL_INCLUDES += .
 

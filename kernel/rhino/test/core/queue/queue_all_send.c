@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
@@ -47,10 +35,6 @@ static void task_queue0_entry(void *arg)
         g_allsend_count = 0;
         queue_send_msg  = (void *)1;
         queue_recv_msg  = (void *)1;
-
-        ret = yunos_queue_create(&g_test_queue0, "test_queue0",
-                                 (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
         /* check yunos_queue_all_send param */
         queue_all_send_param_test();
@@ -101,6 +85,8 @@ static void task_queue2_entry(void *arg)
 {
     kstat_t ret;
 
+    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND / 10);
+
     while (1) {
         /* check yunos_queue_back_send */
         ret = yunos_queue_all_send(&g_test_queue0, queue_send_msg, QMSG_SEND_TO_END);
@@ -115,6 +101,10 @@ static void task_queue2_entry(void *arg)
 kstat_t task_queue_all_send_test(void)
 {
     kstat_t ret;
+
+    ret = yunos_queue_create(&g_test_queue0, "test_queue0",
+                             (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
+    QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_0_test, "task_queue0_test", 0, 10,
                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);

@@ -1,5 +1,4 @@
 {
-    project : "YunOS",
+    project : "AliOS",
     component : "rhino",
-    
 }

@@ -1,10 +1,13 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <yunit.h>
 #include <yts.h>
 #include "alink_export.h"
-
 
 static void callback_cloud_disconnected(void)
 {

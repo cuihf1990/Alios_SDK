@@ -1,21 +1,10 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef K_TRACE_H
 #define K_TRACE_H
+
 
 #if (YUNOS_CONFIG_TRACE > 0)
 /* task trace function */
@@ -81,11 +70,6 @@ void _trace_mblk_pool_create(ktask_t *task, mblk_pool_t *pool);
 
 /* mm trace function */
 //void _trace_mm_pool_create(ktask_t *task, mm_pool_t *pool);
-
-/* mm region function */
-#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
-void _trace_mm_region_create(ktask_t *task, k_mm_region_t *regions);
-#endif
 
 /* work queue trace */
 void _trace_work_init(ktask_t *task, kwork_t *work);

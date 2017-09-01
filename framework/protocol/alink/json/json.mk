@@ -1,5 +1,3 @@
-NAME := json
-
-$(NAME)_SOURCES := json_parser.c 
-$(NAME)_INCLUDES := ../os/ 
+GLOBAL_INCLUDES  += json
+$(NAME)_SOURCES  += json/json_parser.c
 

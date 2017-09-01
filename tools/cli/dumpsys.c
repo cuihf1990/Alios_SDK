@@ -1,26 +1,19 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
+
 #include <malloc.h>
 #include <string.h>
 #include <yos/log.h>
 #include <yos/kernel.h>
+
+#ifdef VCALL_RHINO
 #include "k_api.h"
 
 #define MM_LEAK_CHECK_ROUND_SCOND 10*60*5*1000
 #define YUNOS_BACKTRACE_DEPTH     10
+
+#define CLI_TAG         "\e[63m"  //CLI TAG, use ESC characters, c(cli) ascii is 63
 
 #if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
 extern uint32_t dump_mmleak(void);
@@ -29,13 +22,13 @@ extern uint32_t dump_mmleak(void);
 ktimer_t g_mm_leak_check_timer;
 
 #define safesprintf(buf,totallen,offset,string) do {\
-    if((totallen - offset) < strlen(string)) { \
+    if ((totallen - offset) < strlen(string)) { \
         printf("%s",buf); \
         offset = 0; \
     } \
     sprintf(buf+offset,"%s",string); \
     offset += strlen(string); \
-    } while(0)
+    } while (0)
 
 uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 {
@@ -49,45 +42,52 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     klist_t *taskhead = &g_kobj_list.task_head;
     klist_t *taskend  = taskhead;
     klist_t *tmp;
-    ktask_t  *task;
-    ktask_t  *candidate;
-    const name_t  *task_name;
+    ktask_t *task;
+    ktask_t *candidate;
+
+    const name_t *task_name;
     char  yes = 'N';
+
     size_t pc = 0;
     size_t c_frame = 0;
     size_t n_frame = 0;
+
     int depth = YUNOS_BACKTRACE_DEPTH;
 
     char *printbuf = NULL;
-    char  tmpbuf[256] ={0};
+    char  tmpbuf[256] = {0};
     int   offset   = 0;
     int   totallen = 2048;
 
     printbuf = yos_malloc(totallen);
-    if(printbuf ==  NULL) {
+    if (printbuf ==  NULL) {
         return YUNOS_NO_MEM;
     }
     memset(printbuf, 0, totallen);
 
     yunos_sched_disable();
-    preferred_ready_task_get(&g_ready_queue);
-    candidate = g_preferred_ready_task;
+    preferred_cpu_ready_task_get(&g_ready_queue, cpu_cur_get());
+    candidate = g_preferred_ready_task[cpu_cur_get()];
 
-    safesprintf(printbuf, totallen, offset, "---------------------------------------------------------------------\r\n");
+    safesprintf(printbuf, totallen, offset,
+                CLI_TAG "---------------------------------------------------------------------\r\n");
 
 #if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
-    snprintf(tmpbuf, 255, "CPU usage :%-10d   MAX:%-10d                 \n");
-               g_cpu_usage / 100, g_cpu_usage_max / 100);
-    safesprintf(printbuf, totallen, offset,tmpbuf);
-    safesprintf(printbuf, totallen, offset, "---------------------------------------------------------------------\r\n",255);
+    snprintf(tmpbuf, 255, CLI_TAG "CPU usage :%-10d   MAX:%-10d                 \n");
+    g_cpu_usage / 100, g_cpu_usage_max / 100);
+    safesprintf(printbuf, totallen, offset, tmpbuf);
+    safesprintf(printbuf, totallen, offset,
+                CLI_TAG "---------------------------------------------------------------------\r\n", 255);
 
 #endif
-    safesprintf(printbuf, totallen, offset, "Name               State    Prio StackSize Freesize Runtime Candidate\r\n");
-    safesprintf(printbuf, totallen, offset, "---------------------------------------------------------------------\r\n");
+    safesprintf(printbuf, totallen, offset,
+                CLI_TAG "Name               State    Prio StackSize Freesize Runtime Candidate\r\n");
+    safesprintf(printbuf, totallen, offset,
+                CLI_TAG "---------------------------------------------------------------------\r\n");
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-        task       = yunos_list_entry(tmp, ktask_t, task_stats_item);
-        rst        = yunos_task_stack_min_free(task, &free_size);
+    task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+        rst  = yunos_task_stack_min_free(task, &free_size);
 
         if (rst != YUNOS_SUCCESS) {
             free_size = 0;
@@ -110,11 +110,11 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
         }
 
 #ifndef HAVE_NOT_ADVANCED_FORMATE
-        snprintf(tmpbuf, 255, "%-19.18s%-9s%-5d%-10d%-9zu%-9llu%-11c\r\n",
-                   task_name, cpu_stat[task->task_state - K_RDY], task->prio,
-                   task->stack_size, free_size, (unsigned long long)time_total, yes);
+        snprintf(tmpbuf, 255, CLI_TAG "%-19.18s%-9s%-5d%-10d%-9zu%-9llu%-11c\r\n",
+                 task_name, cpu_stat[task->task_state - K_RDY], task->prio,
+                 task->stack_size, free_size, (unsigned long long)time_total, yes);
 #else
-        /* if not support %-N.Ms,cut it manually*/
+        /* if not support %-N.Ms,cut it manually */
         if (strlen(task_name) > 18) {
             char name_cut[19];
             memset(name_cut, 0, sizeof(name_cut));
@@ -122,25 +122,25 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
             task_name = name_cut;
         }
 
-        snprintf(tmpbuf,255,"%-19s%-9s%-5d%-10d%-9u%-9u%-11c\r\n",
-                   task_name, cpu_stat[task->task_state - K_RDY], task->prio,
-                   task->stack_size, free_size, (unsigned int)time_total, yes);
+        snprintf(tmpbuf, 255, CLI_TAG "%-19s%-9s%-5d%-10d%-9u%-9u%-11c\r\n",
+                 task_name, cpu_stat[task->task_state - K_RDY], task->prio,
+                 task->stack_size, free_size, (unsigned int)time_total, yes);
 #endif
-        safesprintf(printbuf, totallen, offset,tmpbuf);
+        safesprintf(printbuf, totallen, offset, tmpbuf);
 
         /* for chip not support stack frame interface,do nothing*/
-        if (detail == true && task != g_active_task && soc_get_first_frame_info &&
+        if (detail == true && task != yunos_cur_task_get() && soc_get_first_frame_info &&
             soc_get_subs_frame_info) {
             depth = YUNOS_BACKTRACE_DEPTH;
-            snprintf(tmpbuf, 255, "Task %s Call Stack Dump:\r\n", task_name);
-            safesprintf(printbuf, totallen, offset,tmpbuf);
+            snprintf(tmpbuf, 255, CLI_TAG "Task %s Call Stack Dump:\r\n", task_name);
+            safesprintf(printbuf, totallen, offset, tmpbuf);
             c_frame = (size_t)task->task_stack;
             soc_get_first_frame_info(c_frame, &n_frame, &pc);
 
             for (; (n_frame != 0) && (pc != 0) && (depth >= 0); --depth) {
 
-                snprintf(tmpbuf, 255, "PC:0x%-12xSP:0x%-12x\r\n", c_frame, pc);
-                safesprintf(printbuf, totallen, offset,tmpbuf);
+                snprintf(tmpbuf, 255, CLI_TAG "PC:0x%-12xSP:0x%-12x\r\n", c_frame, pc);
+                safesprintf(printbuf, totallen, offset, tmpbuf);
                 c_frame = n_frame;
                 soc_get_subs_frame_info(c_frame, &n_frame, &pc);
             }
@@ -148,10 +148,10 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     }
 
 
-    safesprintf(printbuf, totallen, offset,"----------------------------------------------------------\r\n");
+    safesprintf(printbuf, totallen, offset, CLI_TAG "----------------------------------------------------------\r\n");
     yunos_sched_enable();
 
-    printf("%s",printbuf);
+    printf("%s", printbuf);
     yos_free(printbuf);
     return YUNOS_SUCCESS;
 }
@@ -160,26 +160,27 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
 {
     int16_t plen = 0;
 
-    plen += sprintf(buf + plen,
-                    "---------------------------------------------\r\n");
+    plen += sprintf(buf + plen, CLI_TAG "---------------------------------------------\r\n");
 #if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
-    plen += sprintf(buf + plen, "CPU usage :%-10d     MAX:%-10d\r\n",
+    plen += sprintf(buf + plen, CLI_TAG "CPU usage :%-10d     MAX:%-10d\r\n",
                     g_cpu_usage / 100, g_cpu_usage_max / 100);
 #endif
+
 #if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
-    plen += sprintf(buf + plen, "Max sched disable time  :%-10d\r\n",
+    plen += sprintf(buf + plen, CLI_TAG "Max sched disable time  :%-10d\r\n",
                     g_sched_disable_max_time);
 #else
-    plen += sprintf(buf + plen, "Max sched disable time  :%-10d\r\n", 0);
+    plen += sprintf(buf + plen, CLI_TAG "Max sched disable time  :%-10d\r\n", 0);
 #endif
+
 #if (YUNOS_CONFIG_DISABLE_INTRPT_STATS > 0)
-    plen += sprintf(buf + plen, "Max intrpt disable time :%-10d\r\n",
+    plen += sprintf(buf + plen, CLI_TAG "Max intrpt disable time :%-10d\r\n",
                     g_intrpt_disable_max_time);
 #else
-    plen += sprintf(buf + plen, "Max intrpt disable time :%-10d\r\n", 0);
+    plen += sprintf(buf + plen, CLI_TAG "Max intrpt disable time :%-10d\r\n", 0);
 #endif
-    plen += sprintf(buf + plen,
-                    "---------------------------------------------\r\n");
+
+    plen += sprintf(buf + plen, CLI_TAG "---------------------------------------------\r\n");
 
     return YUNOS_SUCCESS;
 }
@@ -243,18 +244,19 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                       char **argv)
 {
     kstat_t ret;
-    char *helpinfo = "dumpsys :\r\n"
-                     "\tdumpsys task       : show the task info.\r\n"
-                     "\tdumpsys task_stack : show the task stack info.\r\n"
-                     "\tdumpsys mm_info    : show the memory has alloced.\r\n"
+    char *helpinfo = CLI_TAG "dumpsys :\r\n"
+                     CLI_TAG "\tdumpsys task       : show the task info.\r\n"
+                     CLI_TAG "\tdumpsys task_stack : show the task stack info.\r\n"
+                     CLI_TAG "\tdumpsys mm_info    : show the memory has alloced.\r\n"
 #if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
-                     "\tdumpsys mm_leak    : show the memory maybe leak.\r\n"
-                     "\tdumpsys leak_check : leak check control comand.\r\n"
+                     CLI_TAG "\tdumpsys mm_leak    : show the memory maybe leak.\r\n"
+                     CLI_TAG "\tdumpsys leak_check : leak check control comand.\r\n"
 #endif
 #if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
-                     "\tdumpsys info       : show the system info\r\n"
+                     CLI_TAG "\tdumpsys info       : show the system info\r\n"
 #endif
                      ;
+
     if (argc >= 2  && 0 == strcmp(argv[1], "task")) {
         if (argc == 3 && (0 == strcmp(argv[2], "detail"))) {
             ret = dumpsys_task_func(pcWriteBuffer, xWriteBufferLen, true);
@@ -263,17 +265,15 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         }
 
         return ret;
-    }
-    else if (argc >= 2  && 0 == strcmp(argv[1], "task_stack")) {
+    } else if (argc >= 2  && 0 == strcmp(argv[1], "task_stack")) {
         if (argc == 3) {
             ret = dump_task_stack_byname(argv[2]);
         } else {
-            ret = dump_task_stack_byname(g_active_task->task_name);
+            ret = dump_task_stack_byname(yunos_cur_task_get()->task_name);
         }
 
         return ret;
-    }
-    else if (argc == 2 && 0 == strcmp(argv[1], "info")) {
+    } else if (argc == 2 && 0 == strcmp(argv[1], "info")) {
         ret = dumpsys_info_func(pcWriteBuffer, xWriteBufferLen);
         return ret;
     }
@@ -300,23 +300,22 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     }
 }
 
-
 int dump_task_stack(ktask_t *task)
 {
     uint32_t offset = 0;
     kstat_t  rst    = YUNOS_SUCCESS;
     void    *cur, *end;
-    int      i=0;
+    int      i = 0;
     int     *p;
-    char     tmp[256]={0};
+    char     tmp[256] = {0};
 
     char *printbuf = NULL;
-    char  tmpbuf[256] ={0};
+    char  tmpbuf[256] = {0};
     int   bufoffset   = 0;
     int   totallen = 2048;
 
     printbuf = yos_malloc(totallen);
-    if(printbuf ==  NULL) {
+    if (printbuf ==  NULL) {
         return YUNOS_NO_MEM;
     }
     memset(printbuf, 0, totallen);
@@ -333,47 +332,48 @@ int dump_task_stack(ktask_t *task)
         yunos_sched_enable();
         return 1;
     }
-    p = (int*)cur;
-    while(p < (int*)end) {
-        if(i%4==0) {
-            sprintf(tmp, "\r\n%08x:",(uint32_t)p);
+    p = (int *)cur;
+    while (p < (int *)end) {
+        if (i % 4 == 0) {
+            sprintf(tmp, CLI_TAG "\r\n%08x:", (uint32_t)p);
             safesprintf(printbuf, totallen, bufoffset, tmp);
         }
-        sprintf(tmp, "%08x ", *p);
+        sprintf(tmp, CLI_TAG  "%08x ", *p);
         safesprintf(printbuf, totallen, bufoffset, tmp);
         i++;
         p++;
     }
     safesprintf(printbuf, totallen, bufoffset,
-    "\r\n-----------------end----------------\r\n\r\n");
+                CLI_TAG "\r\n-----------------end----------------\r\n\r\n");
     yunos_sched_enable();
 
-    printf("%s",printbuf);
+    printf("%s", printbuf);
     yos_free(printbuf);
     return 0;
 
 }
-int dump_task_stack_byname(char * taskname)
-{
 
+int dump_task_stack_byname(char *taskname)
+{
     klist_t *taskhead = &g_kobj_list.task_head;
     klist_t *taskend  = taskhead;
     klist_t *tmp;
     ktask_t *task;
     int      printall = 0;
 
-    if(strcmp(taskname,"all") == 0) {
+    if (strcmp(taskname, "all") == 0) {
         printall = 1;
     }
+
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
         task = yunos_list_entry(tmp, ktask_t, task_stats_item);
-        if(printall == 1 || strcmp(taskname, task->task_name) == 0){
-            printf("------task %s stack -------",task->task_name);
+        if (printall == 1 || strcmp(taskname, task->task_name) == 0) {
+            printf(CLI_TAG  "------task %s stack -------", task->task_name);
             dump_task_stack(task);
         }
     }
 
     return 0;
 }
-
+#endif
 

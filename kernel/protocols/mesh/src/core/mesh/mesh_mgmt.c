@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <assert.h>
@@ -59,10 +47,9 @@ static void handle_advertisement_timer(void *args);
 static void handle_migrate_wait_timer(void *args);
 static void handle_net_scan_timer(void *args);
 
-static ur_error_t send_attach_request(network_context_t *network,
-                                      ur_addr_t *dest);
+static ur_error_t send_attach_request(network_context_t *network);
 static ur_error_t send_attach_response(network_context_t *network,
-                                       ur_addr_t *dest);
+                                       ur_addr_t *dest, ur_node_id_t *node_id);
 static ur_error_t send_sid_request(network_context_t *network);
 static ur_error_t send_sid_response(network_context_t *network,
                                     ur_addr_t *dest, ur_addr_t *dest2,
@@ -72,7 +59,8 @@ static ur_error_t send_advertisement(network_context_t *network);
 static void write_prev_netinfo(void);
 static void read_prev_netinfo(void);
 
-static void nbr_discovered_handler(neighbor_t *nbr) {
+static void nbr_discovered_handler(neighbor_t *nbr)
+{
     if (nbr) {
         attach_start(nbr);
     }
@@ -170,14 +158,25 @@ static void start_advertisement_timer(network_context_t *network)
                                        handle_advertisement_timer, network);
 }
 
+void set_mesh_short_addr(ur_addr_t *addr, uint16_t netid, uint16_t sid)
+{
+    addr->addr.len = SHORT_ADDR_SIZE;
+    addr->addr.short_addr = sid;
+    addr->netid = netid;
+}
+
+void set_mesh_ext_addr(ur_addr_t *addr, uint16_t netid, uint8_t *value)
+{
+    addr->addr.len = EXT_ADDR_SIZE;
+    memcpy(addr->addr.addr, value, EXT_ADDR_SIZE);
+    addr->netid = netid;
+}
+
 void get_leader_addr(ur_addr_t *addr)
 {
-    network_context_t *network;
+    network_context_t *network = get_default_network_context();
 
-    network = get_default_network_context();
-    addr->addr.len = SHORT_ADDR_SIZE;
-    addr->addr.short_addr = LEADER_SID;
-    addr->netid = mm_get_main_netid(network);
+    set_mesh_short_addr(addr, mm_get_main_netid(network), LEADER_SID);
 }
 
 static void set_leader_network_context(network_context_t *default_network,
@@ -195,12 +194,11 @@ static void set_leader_network_context(network_context_t *default_network,
         network->state = INTERFACE_UP;
         network->attach_state = ATTACH_DONE;
         network->attach_candidate = NULL;
-        network->sid = default_network == NULL? LEADER_SID: default_network->sid;
+        network->sid = default_network == NULL ? LEADER_SID : default_network->sid;
         network->candidate_meshnetid = BCAST_NETID;
         network->meshnetid = generate_meshnetid(network->sid, index);
         ++index;
         network->path_cost = 0;
-        network->change_sid = false;
         if (network->attach_node) {
             network->attach_node->state = STATE_NEIGHBOR;
             network->attach_node = NULL;
@@ -221,6 +219,109 @@ static void set_leader_network_context(network_context_t *default_network,
             sid_allocator_init(network);
         }
     }
+}
+
+static ur_error_t sid_allocated_handler(message_info_t *info,
+                                        uint8_t *tlvs, uint16_t tlvs_length)
+{
+    network_context_t *network;
+    bool init_allocator = false;
+    mm_sid_tv_t *allocated_sid = NULL;
+    mm_node_type_tv_t *allocated_node_type = NULL;
+    mm_netinfo_tv_t *netinfo;
+    mm_mcast_addr_tv_t *mcast;
+    stable_network_data_t stable_network_data;
+
+    network = info->network;
+    allocated_sid = (mm_sid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                   TYPE_ALLOCATE_SID);
+    allocated_node_type = (mm_node_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                               TYPE_NODE_TYPE);
+    netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                 TYPE_NETWORK_INFO);
+    mcast = (mm_mcast_addr_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                  TYPE_MCAST_ADDR);
+
+    if (allocated_sid == NULL || allocated_node_type == NULL ||
+        netinfo == NULL || mcast == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    stable_network_data.main_version =
+        (netinfo->stable_version & STABLE_MAIN_VERSION_MASK) >>
+        STABLE_MAIN_VERSION_OFFSET;
+    stable_network_data.minor_version = netinfo->version &
+                                        STABLE_MINOR_VERSION_MASK;
+    stable_network_data.meshnetid = get_main_netid(info->src.netid);
+    memcpy(stable_network_data.mcast_addr, &mcast->mcast, sizeof(mcast->mcast));
+    nd_stable_set(&stable_network_data);
+    write_prev_netinfo();
+
+    switch (allocated_node_type->type) {
+        case LEAF_NODE:
+            g_mm_state.device.state = DEVICE_STATE_LEAF;
+            break;
+        case ROUTER_NODE:
+            g_mm_state.device.state = DEVICE_STATE_ROUTER;
+            if (g_mm_state.device.mode & MODE_SUPER) {
+                g_mm_state.device.state = DEVICE_STATE_SUPER_ROUTER;
+            }
+            break;
+        default:
+            network->attach_state = ATTACH_IDLE;
+            return UR_ERROR_FAIL;
+    }
+
+    if (network->attach_node == NULL ||
+        network->meshnetid != network->attach_candidate->netid ||
+        network->sid != allocated_sid->sid) {
+        init_allocator = true;
+    }
+
+    network->sid = allocated_sid->sid;
+    network->attach_state = ATTACH_DONE;
+    network->attach_node = network->attach_candidate;
+    network->attach_candidate->flags &=
+        (~(NBR_SID_CHANGED | NBR_DISCOVERY_REQUEST | NBR_NETID_CHANGED));
+    network->attach_candidate = NULL;
+    network->candidate_meshnetid = BCAST_NETID;
+    network->attach_node->stats.link_cost = 256;
+    network->path_cost = network->attach_node->path_cost +
+                         network->attach_node->stats.link_cost;
+    network->attach_node->state = STATE_PARENT;
+    network->meshnetid = network->attach_node->netid;
+    memset(&network->network_data, 0,  sizeof(network->network_data));
+    if (init_allocator) {
+        sid_allocator_init(network);
+    }
+
+    g_mm_state.leader_mode = netinfo->leader_mode;
+
+    ur_stop_timer(&network->attach_timer, network);
+    ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
+
+    ur_router_start(network);
+    ur_router_sid_updated(network, network->sid);
+    start_neighbor_updater();
+    start_advertisement_timer(network);
+    network->state = INTERFACE_UP;
+    stop_addr_cache();
+    address_resolver_init();
+
+    g_mm_state.callback->interface_up();
+    start_keep_alive_timer(network);
+    send_address_notification(network, NULL);
+
+    ur_stop_timer(&network->migrate_wait_timer, network);
+    umesh_mm_set_prev_channel();
+
+    set_leader_network_context(network, init_allocator);
+
+    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
+           "allocate sid 0x%04x, become %d in net %04x\r\n",
+           network->sid, g_mm_state.device.state, network->meshnetid);
+
+    return UR_ERROR_NONE;
 }
 
 void become_leader(void)
@@ -447,11 +548,7 @@ static void handle_attach_timer(void *args)
         case ATTACH_REQUEST:
             if (network->retry_times < ATTACH_REQUEST_RETRY_TIMES) {
                 ++network->retry_times;
-                if (network->attach_candidate) {
-                    send_attach_request(network, &network->attach_candidate->addr);
-                } else {
-                    send_attach_request(network, NULL);
-                }
+                send_attach_request(network);
                 network->attach_timer = ur_start_timer(network->hal->attach_request_interval,
                                                        handle_attach_timer, args);
             } else {
@@ -477,8 +574,7 @@ static void handle_attach_timer(void *args)
         network->attach_state = ATTACH_IDLE;
         network->candidate_meshnetid = BCAST_NETID;
         network->attach_candidate = NULL;
-        if (g_mm_state.device.state < DEVICE_STATE_LEAF ||
-            network->change_sid == true) {
+        if (g_mm_state.device.state < DEVICE_STATE_LEAF) {
             network->leader_times++;
             if (network->leader_times < BECOME_LEADER_TIMEOUT) {
                 attach_start(NULL);
@@ -578,11 +674,7 @@ ur_error_t send_advertisement(network_context_t *network)
     data += set_mm_channel_tv(network, data);
 
     info->network = network;
-    // dest
-    info->dest.addr.len = SHORT_ADDR_SIZE;
-    info->dest.addr.short_addr = BCAST_SID;
-    info->dest.netid = BCAST_NETID;
-
+    set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -590,8 +682,7 @@ ur_error_t send_advertisement(network_context_t *network)
     return error;
 }
 
-static ur_error_t send_attach_request(network_context_t *network,
-                                      ur_addr_t *dest)
+static ur_error_t send_attach_request(network_context_t *network)
 {
     ur_error_t      error = UR_ERROR_NONE;
     uint16_t        length;
@@ -600,9 +691,10 @@ static ur_error_t send_attach_request(network_context_t *network,
     message_t       *message = NULL;
     message_info_t  *info;
     uint32_t time;
+    const mac_address_t *mac;
 
-    length = sizeof(mm_header_t) + sizeof(mm_version_tv_t) +
-             sizeof(mm_ueid_tv_t) + sizeof(mm_timestamp_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) +
+             sizeof(mm_timestamp_tv_t);
     message = message_alloc(length, MESH_MGMT_2);
     if (message == NULL) {
         return UR_ERROR_MEM;
@@ -610,7 +702,6 @@ static ur_error_t send_attach_request(network_context_t *network,
     data = message_get_payload(message);
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_ATTACH_REQUEST);
-    data += set_mm_version_tv(data);
     data += set_mm_ueid_tv(data, TYPE_SRC_UEID, g_mm_state.device.ueid);
 
     time = ur_get_now();
@@ -619,19 +710,18 @@ static ur_error_t send_attach_request(network_context_t *network,
     timestamp->timestamp = time;
     data += sizeof(mm_timestamp_tv_t);
 
-    calculate_one_time_key(network->one_time_key, time,
-                           umesh_mm_get_mac_address());
+    mac = umesh_mm_get_mac_address();
+    calculate_one_time_key(network->one_time_key, time, mac->addr);
 
     info->network = network;
     // dest
-    if (dest) {
-        memcpy(&info->dest, dest, sizeof(info->dest));
+    if (network->attach_candidate) {
+        set_mesh_short_addr(&info->dest, network->attach_candidate->netid,
+                            network->attach_candidate->sid);
     } else {
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = BCAST_SID;
-        info->dest.netid = network->candidate_meshnetid;
+        set_mesh_short_addr(&info->dest, network->candidate_meshnetid,
+                            BCAST_SID);
     }
-
     error = mf_send_message(message);
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
@@ -640,7 +730,7 @@ static ur_error_t send_attach_request(network_context_t *network,
 }
 
 static ur_error_t send_attach_response(network_context_t *network,
-                                       ur_addr_t *dest)
+                                       ur_addr_t *dest, ur_node_id_t *node_id)
 {
     ur_error_t    error = UR_ERROR_NONE;
     mm_symmetric_key_tv_t *symmetric_key;
@@ -657,6 +747,10 @@ static ur_error_t send_attach_response(network_context_t *network,
              sizeof(mm_ueid_tv_t);
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         length += sizeof(mm_symmetric_key_tv_t);
+    }
+    if (node_id) {
+        length += (sizeof(mm_sid_tv_t) + sizeof(mm_node_type_tv_t) +
+                   sizeof(mm_netinfo_tv_t) + sizeof(mm_mcast_addr_tv_t));
     }
     message = message_alloc(length, MESH_MGMT_3);
     if (message == NULL) {
@@ -676,6 +770,12 @@ static ur_error_t send_attach_response(network_context_t *network,
                sizeof(symmetric_key->symmetric_key));
         data += sizeof(mm_symmetric_key_tv_t);
     }
+    if (node_id) {
+        data += set_mm_sid_tv(data, TYPE_ALLOCATE_SID, node_id->sid);
+        data += set_mm_allocated_node_type_tv(data, node_id->type);
+        data += set_mm_netinfo_tv(network, data);
+        data += set_mm_mcast_tv(data);
+    }
 
     info->network = network;
     // dest
@@ -691,7 +791,6 @@ static ur_error_t send_attach_response(network_context_t *network,
 static ur_error_t handle_attach_request(message_t *message)
 {
     ur_error_t      error = UR_ERROR_NONE;
-    mm_version_tv_t *version;
     mm_ueid_tv_t    *ueid;
     mm_timestamp_tv_t *timestamp;
     uint8_t         *tlvs;
@@ -711,15 +810,13 @@ static ur_error_t handle_attach_request(message_t *message)
 
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    version = (mm_version_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_VERSION);
     ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                            TYPE_SRC_UEID);
-    if (version == NULL || version->version != 1 || ueid == NULL) {
+    if (ueid == NULL) {
         return UR_ERROR_FAIL;
     }
 
-    node = get_neighbor_by_ueid(ueid->ueid);
+    node = get_neighbor_by_mac_addr(ueid->ueid);
     if (node && node == network->attach_node) {
         ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
                "ignore attach point's attach request\r\n");
@@ -737,22 +834,40 @@ static ur_error_t handle_attach_request(message_t *message)
             node->one_time_key = ur_mem_alloc(KEY_SIZE);
         }
         error = calculate_one_time_key(node->one_time_key,
-                                       timestamp->timestamp, &node->mac);
+                                       timestamp->timestamp, node->mac);
     }
 
     if (error == UR_ERROR_NONE) {
-        send_attach_response(network, &info->src_mac);
+        ur_node_id_t *node_id = NULL;
+        ur_node_id_t node_id_storage;
+        node_id_storage.sid = INVALID_SID;
+        memcpy(node_id_storage.ueid, ueid->ueid, sizeof(node_id_storage.ueid));
+        if (umesh_mm_get_mode() & MODE_SUPER) {
+            node_id_storage.attach_sid = SUPER_ROUTER_SID;
+        } else {
+            node_id_storage.attach_sid = umesh_mm_get_local_sid();
+        }
+        node_id_storage.mode = info->mode;
+        if (is_bcast_sid(&info->dest) == false &&
+            (info->mode & MODE_LOW_MASK) == 0 &&
+            (network->router->sid_type == STRUCTURED_SID)) {
+            error = sid_allocator_alloc(network, &node_id_storage);
+            if (error == UR_ERROR_NONE) {
+                node_id = &node_id_storage;
+            }
+        }
+        send_attach_response(network, &info->src_mac, node_id);
+        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
+               "attach response to " EXT_ADDR_FMT "\r\n",
+               EXT_ADDR_DATA(info->src_mac.addr.addr));
     }
-
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-           "attach response to " EXT_ADDR_FMT "\r\n",
-           EXT_ADDR_DATA(info->src_mac.addr.addr));
 
     return error;
 }
 
 static ur_error_t handle_attach_response(message_t *message)
 {
+    ur_error_t error;
     neighbor_t    *nbr;
     mm_cost_tv_t  *path_cost;
     mm_symmetric_key_tv_t *symmetric_key;
@@ -783,7 +898,7 @@ static ur_error_t handle_attach_response(message_t *message)
     }
 
     symmetric_key = (mm_symmetric_key_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_SYMMETRIC_KEY);
+                                                             TYPE_SYMMETRIC_KEY);
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         if (symmetric_key == NULL) {
             return UR_ERROR_NONE;
@@ -803,24 +918,20 @@ static ur_error_t handle_attach_response(message_t *message)
         network->attach_candidate->flags &= (~NBR_SID_CHANGED);
     }
 
-    if (g_mm_state.device.state == DEVICE_STATE_DETACHED) {
-        g_mm_state.device.state = DEVICE_STATE_ATTACHED;
-        ur_router_start(network);
-    }
-
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-           "try to attach network 0x%04x via node %04x\r\n",
-           nbr->addr.netid, nbr->addr.addr.short_addr);
-
+    g_mm_state.device.state = DEVICE_STATE_ATTACHED;
     if (network->attach_timer) {
         ur_stop_timer(&network->attach_timer, network);
     }
 
-    network->attach_state = ATTACH_SID_REQUEST;
-    send_sid_request(network);
-    network->retry_times = 1;
-    network->attach_timer = ur_start_timer(network->hal->sid_request_interval,
-                                           handle_attach_timer, network);
+    error = sid_allocated_handler(info, tlvs, tlvs_length);
+    if (error != UR_ERROR_NONE) {
+        network->attach_state = ATTACH_SID_REQUEST;
+        send_sid_request(network);
+        network->retry_times = 1;
+        network->attach_timer = ur_start_timer(network->hal->sid_request_interval,
+                                               handle_attach_timer, network);
+    }
+
     return UR_ERROR_NONE;
 }
 
@@ -832,6 +943,8 @@ static ur_error_t send_sid_request(network_context_t *network)
     uint16_t     length;
     message_info_t *info;
     ur_node_id_t node_id;
+    uint16_t netid;
+    uint16_t sid;
 
     if (network == NULL || network->attach_candidate == NULL) {
         return UR_ERROR_FAIL;
@@ -840,7 +953,7 @@ static ur_error_t send_sid_request(network_context_t *network)
     length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t) + sizeof(mm_ueid_tv_t) +
              sizeof(mm_mode_tv_t);
     if (network->sid != INVALID_SID &&
-        network->attach_candidate->addr.netid == network->meshnetid) {
+        network->attach_candidate->netid == network->meshnetid) {
         length += sizeof(mm_sid_tv_t);
     }
     message = message_alloc(length, MESH_MGMT_4);
@@ -850,36 +963,32 @@ static ur_error_t send_sid_request(network_context_t *network)
     data = message_get_payload(message);
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_SID_REQUEST);
-    node_id.sid = network->attach_candidate->addr.addr.short_addr;
+    node_id.sid = network->attach_candidate->sid;
     node_id.mode = g_mm_state.device.mode;
-    node_id.meshnetid = network->attach_candidate->addr.netid;
+    node_id.meshnetid = network->attach_candidate->netid;
     data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, &node_id);
     data += set_mm_ueid_tv(data, TYPE_SRC_UEID, g_mm_state.device.ueid);
     data += set_mm_mode_tv(data);
 
     if (network->sid != INVALID_SID &&
-        network->attach_candidate->addr.netid == network->meshnetid) {
+        network->attach_candidate->netid == network->meshnetid) {
         data += set_mm_sid_tv(data, TYPE_SRC_SID, network->sid);
     }
 
     info->network = network;
     // dest
-    info->dest.addr.len = SHORT_ADDR_SIZE;
+    sid = network->attach_candidate->sid;
+    netid = network->attach_candidate->netid;
     if ((g_mm_state.device.mode & MODE_MOBILE) ||
         (network->router->sid_type != STRUCTURED_SID)) {
-        info->dest.addr.short_addr = network->attach_candidate->addr.addr.short_addr;
-        info->dest.netid = get_main_netid(network->attach_candidate->addr.netid);
-        info->dest2.addr.len = SHORT_ADDR_SIZE;
-        info->dest2.addr.short_addr = BCAST_SID;
-        info->dest2.netid = info->dest.netid;
-    } else {
-        info->dest.addr.short_addr = network->attach_candidate->addr.addr.short_addr;
-        info->dest.netid = network->attach_candidate->addr.netid;
+        netid = get_main_netid(netid);
+        set_mesh_short_addr(&info->dest2, netid, BCAST_SID);
     }
+    set_mesh_short_addr(&info->dest, netid, sid);
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
+    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "send sid request, len %d\r\n", length);
     return error;
 }
@@ -888,13 +997,11 @@ static ur_error_t send_sid_response(network_context_t *network,
                                     ur_addr_t *dest, ur_addr_t *dest2,
                                     ur_node_id_t *node_id)
 {
-    ur_error_t        error = UR_ERROR_NONE;
-    mm_node_type_tv_t *allocated_node_type;
-    mm_mcast_addr_tv_t *mcast;
-    uint8_t           *data;
-    message_t         *message;
-    uint16_t          length;
-    message_info_t    *info;
+    ur_error_t error = UR_ERROR_NONE;
+    uint8_t *data;
+    message_t *message;
+    uint16_t length;
+    message_info_t *info;
 
     if (network == NULL) {
         return UR_ERROR_FAIL;
@@ -911,18 +1018,9 @@ static ur_error_t send_sid_response(network_context_t *network,
     info = message->info;
     data += set_mm_header_type(info, data, COMMAND_SID_RESPONSE);
     data += set_mm_sid_tv(data, TYPE_ALLOCATE_SID, node_id->sid);
-
-    allocated_node_type = (mm_node_type_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)allocated_node_type, TYPE_NODE_TYPE);
-    allocated_node_type->type = node_id->type;
-    data += sizeof(mm_node_type_tv_t);
-
+    data += set_mm_allocated_node_type_tv(data, node_id->type);
     data += set_mm_netinfo_tv(network, data);
-
-    mcast = (mm_mcast_addr_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)mcast, TYPE_MCAST_ADDR);
-    memcpy(mcast->mcast.m8, nd_get_subscribed_mcast(), 16);
-    data += sizeof(mm_mcast_addr_tv_t);
+    data += set_mm_mcast_tv(data);
 
     info->network = network;
     // dest
@@ -982,7 +1080,7 @@ static ur_error_t handle_sid_request(message_t *message)
     }
     memcpy(node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
 
-    neighbor_t *node = get_neighbor_by_ueid(node_id.ueid);
+    neighbor_t *node = get_neighbor_by_mac_addr(node_id.ueid);
     if (node == NULL) {
         node_id.sid = INVALID_SID;
     }
@@ -999,12 +1097,9 @@ static ur_error_t handle_sid_request(message_t *message)
     if (error == UR_ERROR_NONE) {
         ur_addr_t dest;
         ur_addr_t dest2;
-        dest.addr.len = SHORT_ADDR_SIZE;
-        dest.addr.short_addr = attach_node_id->sid;
-        dest.netid = attach_node_id->meshnetid;
-        dest2.addr.len = EXT_ADDR_SIZE;
-        memcpy(dest2.addr.addr, ueid->ueid, sizeof(dest2.addr.addr));
-        dest2.netid = BCAST_NETID;
+        set_mesh_short_addr(&dest, attach_node_id->meshnetid,
+                            attach_node_id->sid);
+        set_mesh_ext_addr(&dest2, BCAST_NETID, ueid->ueid);
         network = get_network_context_by_meshnetid(dest.netid);
         if (network == NULL) {
             network = get_default_network_context();
@@ -1018,16 +1113,10 @@ static ur_error_t handle_sid_request(message_t *message)
 static ur_error_t handle_sid_response(message_t *message)
 {
     ur_error_t        error = UR_ERROR_NONE;
-    mm_sid_tv_t       *allocated_sid = NULL;
-    mm_node_type_tv_t *allocated_node_type = NULL;
-    mm_netinfo_tv_t   *netinfo;
-    mm_mcast_addr_tv_t *mcast;
     uint8_t           *tlvs;
     uint16_t          tlvs_length;
     network_context_t *network;
-    stable_network_data_t stable_network_data;
     message_info_t *info;
-    bool init_allocator = false;
 
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle sid response\r\n");
 
@@ -1038,95 +1127,7 @@ static ur_error_t handle_sid_response(message_t *message)
     }
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-
-    allocated_sid = (mm_sid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                   TYPE_ALLOCATE_SID);
-    allocated_node_type = (mm_node_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                               TYPE_NODE_TYPE);
-    netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_NETWORK_INFO);
-    mcast = (mm_mcast_addr_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                  TYPE_MCAST_ADDR);
-
-    if (allocated_sid == NULL || allocated_node_type == NULL ||
-        netinfo == NULL || mcast == NULL) {
-        return UR_ERROR_FAIL;
-    }
-
-    stable_network_data.main_version =
-        (netinfo->stable_version & STABLE_MAIN_VERSION_MASK) >>
-        STABLE_MAIN_VERSION_OFFSET;
-    stable_network_data.minor_version = netinfo->version &
-                                        STABLE_MINOR_VERSION_MASK;
-    stable_network_data.meshnetid = get_main_netid(info->src.netid);
-    memcpy(stable_network_data.mcast_addr, &mcast->mcast, sizeof(mcast->mcast));
-    nd_stable_set(&stable_network_data);
-
-    write_prev_netinfo();
-
-    switch (allocated_node_type->type) {
-        case LEAF_NODE:
-            g_mm_state.device.state = DEVICE_STATE_LEAF;
-            break;
-        case ROUTER_NODE:
-            g_mm_state.device.state = DEVICE_STATE_ROUTER;
-            if (g_mm_state.device.mode & MODE_SUPER) {
-                g_mm_state.device.state = DEVICE_STATE_SUPER_ROUTER;
-            }
-            break;
-        default:
-            network->attach_state = ATTACH_IDLE;
-            return UR_ERROR_FAIL;
-    }
-
-    if (network->attach_node == NULL ||
-        network->meshnetid != network->attach_candidate->addr.netid ||
-        network->sid != allocated_sid->sid) {
-        init_allocator = true;
-    }
-
-    network->sid = allocated_sid->sid;
-    network->attach_state = ATTACH_DONE;
-    network->attach_node = network->attach_candidate;
-    network->attach_candidate->flags &=
-        (~(NBR_SID_CHANGED | NBR_DISCOVERY_REQUEST | NBR_NETID_CHANGED));
-    network->attach_candidate = NULL;
-    network->candidate_meshnetid = BCAST_NETID;
-    network->attach_node->stats.link_cost = 256;
-    network->path_cost = network->attach_node->path_cost +
-                         network->attach_node->stats.link_cost;
-    network->attach_node->state = STATE_PARENT;
-    network->change_sid = false;
-    network->meshnetid = network->attach_node->addr.netid;
-    memset(&network->network_data, 0,  sizeof(network->network_data));
-    if (init_allocator) {
-        sid_allocator_init(network);
-    }
-
-    g_mm_state.leader_mode = netinfo->leader_mode;
-
-    ur_stop_timer(&network->attach_timer, network);
-    ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
-
-    ur_router_sid_updated(network, network->sid);
-    start_neighbor_updater();
-    start_advertisement_timer(network);
-    network->state = INTERFACE_UP;
-    stop_addr_cache();
-    address_resolver_init();
-
-    g_mm_state.callback->interface_up();
-    start_keep_alive_timer(network);
-    send_address_notification(network, NULL);
-
-    ur_stop_timer(&network->migrate_wait_timer, network);
-    umesh_mm_set_prev_channel();
-
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-           "allocate sid 0x%04x, become %d in net %04x\r\n",
-           network->sid, g_mm_state.device.state, network->meshnetid);
-
-    set_leader_network_context(network, init_allocator);
+    error = sid_allocated_handler(info, tlvs, tlvs_length);
     return error;
 }
 
@@ -1167,11 +1168,13 @@ ur_error_t handle_address_error(message_t *message)
     network = message->info->network;
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address error\r\n");
 
-    if (network->attach_node == NULL)
+    if (network->attach_node == NULL) {
         return error;
+    }
 
-    if (memcmp(info->src_mac.addr.addr, network->attach_node->mac.addr, EXT_ADDR_SIZE) != 0)
+    if (memcmp(info->src_mac.addr.addr, network->attach_node->mac, EXT_ADDR_SIZE) != 0) {
         return error;
+    }
 
     attach_start(network->attach_node);
 
@@ -1243,11 +1246,9 @@ static ur_error_t attach_start(neighbor_t *nbr)
             umesh_mm_set_prev_channel();
             umesh_mm_set_channel(network, nbr->channel);
         }
-        network->candidate_meshnetid = nbr->addr.netid;
-        send_attach_request(network, &nbr->addr);
-    } else {
-        send_attach_request(network, NULL);
+        network->candidate_meshnetid = nbr->netid;
     }
+    send_attach_request(network);
     ur_stop_timer(&network->attach_timer, network);
     network->attach_timer = ur_start_timer(network->hal->attach_request_interval,
                                            handle_attach_timer, network);
@@ -1258,8 +1259,8 @@ static ur_error_t attach_start(neighbor_t *nbr)
     ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
            "%d node, attach start, from %04x:%04x to %04x:%x\r\n",
            g_mm_state.device.state, network->attach_node ?
-           network->attach_node->addr.addr.short_addr : 0,
-           network->meshnetid, nbr ? nbr->addr.addr.short_addr : 0,
+           network->attach_node->sid : 0,
+           network->meshnetid, nbr ? nbr->sid : 0,
            network->candidate_meshnetid);
 
     return error;
@@ -1314,7 +1315,7 @@ static bool update_migrate_times(network_context_t *network, neighbor_t *nbr)
     uint16_t netid;
     uint8_t timeout;
 
-    netid = nbr->addr.netid;
+    netid = nbr->netid;
     if (netid == BCAST_NETID) {
         return false;
     }
@@ -1375,8 +1376,8 @@ static ur_error_t handle_advertisement(message_t *message)
     mm_netinfo_tv_t   *netinfo;
     mm_cost_tv_t      *path_cost;
     network_context_t *network;
-    uint8_t           tlv_type;
     message_info_t    *info;
+    ur_addr_t dest;
 
     if (g_mm_state.device.state < DEVICE_STATE_DETACHED) {
         return UR_ERROR_NONE;
@@ -1402,20 +1403,12 @@ static ur_error_t handle_advertisement(message_t *message)
     if (nbr == NULL) {
         return UR_ERROR_NONE;
     }
+    nbr->flags &= (~NBR_LINK_ESTIMATED);
 
-    if (network->router->sid_type == STRUCTURED_SID && network->meshnetid == nbr->addr.netid &&
+    if (network->router->sid_type == STRUCTURED_SID && network->meshnetid == nbr->netid &&
         is_direct_child(network->sid_base, info->src.addr.short_addr) && !is_allocated_child(network->sid_base, nbr)) {
-        ur_addr_t dest;
-        dest.netid = nbr->addr.netid;
-        dest.addr.len = EXT_ADDR_SIZE;
-        memcpy(dest.addr.addr, nbr->mac.addr, EXT_ADDR_SIZE);
+        set_mesh_ext_addr(&dest, nbr->netid, nbr->mac);
         send_address_error(network, &dest);
-    }
-
-    if (g_mm_state.device.state > DEVICE_STATE_ATTACHED &&
-        memcmp(nbr->ueid, INVALID_UEID, sizeof(nbr->ueid)) == 0) {
-        tlv_type = TYPE_TARGET_UEID;
-        send_link_request(network, &nbr->addr, &tlv_type, 1);
     }
 
     if (umesh_mm_migration_check(network, nbr, netinfo)) {
@@ -1496,6 +1489,7 @@ ur_error_t umesh_mm_init(node_mode_t mode)
 
     // init device
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
+    // ueid is default mac address
     memcpy(g_mm_state.device.ueid, hal_umesh_get_mac_address(NULL),
            sizeof(g_mm_state.device.ueid));
     g_mm_state.device.reboot_flag = true;
@@ -1570,7 +1564,7 @@ uint16_t umesh_mm_get_meshnetid(network_context_t *network)
         network->attach_state == ATTACH_DONE) {
         meshnetid = network->meshnetid;
     } else if (network->attach_candidate) {
-        meshnetid = network->attach_candidate->addr.netid;
+        meshnetid = network->attach_candidate->netid;
     }
     return meshnetid;
 }
@@ -1802,9 +1796,9 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
     }
 
     // leader not try to migrate to the same net
-    if (network->meshnetid == nbr->addr.netid) {
+    if (network->meshnetid == nbr->netid) {
         from_same_net = true;
-    } else if (is_same_mainnet(network->meshnetid, nbr->addr.netid)) {
+    } else if (is_same_mainnet(network->meshnetid, nbr->netid)) {
         from_same_core = true;
     }
     attach_node = network->attach_node;
@@ -1849,9 +1843,9 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             return false;
         }
     } else {
-        if (nbr->addr.netid == INVALID_NETID ||
-            nbr->addr.netid == BCAST_NETID ||
-            ((nbr->addr.netid == network->prev_netid) &&
+        if (nbr->netid == INVALID_NETID ||
+            nbr->netid == BCAST_NETID ||
+            ((nbr->netid == network->prev_netid) &&
              (network->prev_path_cost < nbr->path_cost))) {
             return false;
         }
@@ -1866,17 +1860,17 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             net_size = netinfo->size;
             new_metric = compute_network_metric(net_size, 0);
             cur_metric = compute_network_metric(nd_get_meshnetsize(NULL), 0);
-            if ((is_subnet(network->meshnetid) && is_subnet(nbr->addr.netid)) ||
-                (is_subnet(network->meshnetid) == 0 && is_subnet(nbr->addr.netid) == 0)) {
+            if ((is_subnet(network->meshnetid) && is_subnet(nbr->netid)) ||
+                (is_subnet(network->meshnetid) == 0 && is_subnet(nbr->netid) == 0)) {
                 if ((new_metric < cur_metric) ||
-                    (new_metric == cur_metric && nbr->addr.netid <= network->meshnetid)) {
+                    (new_metric == cur_metric && nbr->netid <= network->meshnetid)) {
                     return false;
                 }
             }
         }
     }
 
-   return update_migrate_times(network, nbr);
+    return update_migrate_times(network, nbr);
 }
 
 void umesh_mm_start_net_scan_timer(void)
@@ -1982,16 +1976,6 @@ uint8_t set_mm_path_cost_tv(network_context_t *network, uint8_t *data)
     return sizeof(mm_cost_tv_t);
 }
 
-uint8_t set_mm_version_tv(uint8_t *data)
-{
-    mm_version_tv_t *version;
-
-    version = (mm_version_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)version, TYPE_VERSION);
-    version->version = 1;
-    return sizeof(mm_version_tv_t);
-}
-
 uint8_t set_mm_node_id_tv(uint8_t *data, uint8_t type, ur_node_id_t *node)
 {
     mm_node_id_tv_t *node_id;
@@ -2022,4 +2006,24 @@ uint8_t set_mm_mode_tv(uint8_t *data)
     umesh_mm_init_tv_base((mm_tv_t *)mode, TYPE_MODE);
     mode->mode = (uint8_t)g_mm_state.device.mode;
     return sizeof(mm_mode_tv_t);
+}
+
+uint8_t set_mm_allocated_node_type_tv(uint8_t *data, uint8_t type)
+{
+    mm_node_type_tv_t *allocated_node_type;
+
+    allocated_node_type = (mm_node_type_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)allocated_node_type, TYPE_NODE_TYPE);
+    allocated_node_type->type = type;
+    return sizeof(mm_node_type_tv_t);
+}
+
+uint8_t set_mm_mcast_tv(uint8_t *data)
+{
+    mm_mcast_addr_tv_t *mcast;
+
+    mcast = (mm_mcast_addr_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)mcast, TYPE_MCAST_ADDR);
+    memcpy(mcast->mcast.m8, nd_get_subscribed_mcast(), 16);
+    return sizeof(mm_mcast_addr_tv_t);
 }

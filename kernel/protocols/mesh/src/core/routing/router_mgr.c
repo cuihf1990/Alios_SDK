@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
@@ -220,14 +208,12 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
 
     info->network = router->network;
     // dest
-    info->dest.addr.len = SHORT_ADDR_SIZE;
-    info->dest.addr.short_addr = dst;
-    info->dest.netid = umesh_mm_get_meshnetid(NULL);
+    set_mesh_short_addr(&info->dest, umesh_mm_get_meshnetid(NULL), dst);
 
     error = address_resolve(message);
     if (error == UR_ERROR_NONE) {
         error = mf_send_message(message);
-    } else if(error == UR_ERROR_DROP) {
+    } else if (error == UR_ERROR_DROP) {
         message_free(message);
     }
 
@@ -350,7 +336,7 @@ static uint16_t calc_ssid_child_num(network_context_t *network)
 
     nbrs = &network->hal->neighbors_list;
     slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
-        if (nbr->state != STATE_CHILD || network->meshnetid != nbr->addr.netid) {
+        if (nbr->state != STATE_CHILD || network->meshnetid != nbr->netid) {
             continue;
         }
         dup = false;
@@ -358,9 +344,8 @@ static uint16_t calc_ssid_child_num(network_context_t *network)
             if (nbr == next_nbr) {
                 continue;
             }
-            if (next_nbr->addr.netid == umesh_mm_get_meshnetid(network) &&
-                nbr->addr.addr.short_addr != INVALID_SID &&
-                nbr->addr.addr.short_addr == next_nbr->addr.addr.short_addr) {
+            if (next_nbr->netid == umesh_mm_get_meshnetid(network) &&
+                nbr->sid != INVALID_SID && nbr->sid == next_nbr->sid) {
                 dup = true;
             }
         }

@@ -1,6 +1,10 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "hal/soc/soc.h"
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 
 /* Logic partition on flash devices */
 const hal_logic_partition_t hal_partitions[] =

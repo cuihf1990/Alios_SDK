@@ -1,11 +1,11 @@
 /*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
 #include <string.h>
 #include "log.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 
 #define TAG_PAL_STORAGE "PAL_STORAGE"
 

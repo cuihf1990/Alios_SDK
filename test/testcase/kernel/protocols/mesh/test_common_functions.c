@@ -1,6 +1,10 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "yunit.h"
 
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "yos/kernel.h"
 
 #include "core/mesh_mgmt.h"

@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -23,14 +11,24 @@ void idle_count_set(idle_count_t value)
 
     YUNOS_CPU_INTRPT_DISABLE();
 
-    g_idle_count = value;
+    g_idle_count[cpu_cur_get()] = value;
 
     YUNOS_CPU_INTRPT_ENABLE();
 }
 
 idle_count_t idle_count_get(void)
 {
-    return g_idle_count;
+    CPSR_ALLOC();
+
+    idle_count_t idle_count;
+
+    YUNOS_CPU_INTRPT_DISABLE();
+
+    idle_count = g_idle_count[cpu_cur_get()];
+
+    YUNOS_CPU_INTRPT_ENABLE();
+
+    return idle_count;
 }
 #endif
 
@@ -44,7 +42,7 @@ void idle_task(void *arg)
     while (YUNOS_TRUE) {
         YUNOS_CPU_INTRPT_DISABLE();
 
-        g_idle_count++;
+        g_idle_count[cpu_cur_get()]++;
 
         YUNOS_CPU_INTRPT_ENABLE();
 

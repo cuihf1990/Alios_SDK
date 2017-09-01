@@ -1,4 +1,8 @@
 /*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
+/*
  * mesh hal impl.
  */
 #include <stdio.h>

@@ -1,11 +1,11 @@
 /*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <string.h>
 #include "log.h"
 #include "yos/network.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 
 #define HTTP_PACKET_MAX 512
 

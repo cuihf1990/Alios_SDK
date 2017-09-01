@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include "aws_lib.h"
@@ -20,7 +8,6 @@
 #include "os.h"
 #include "yos/log.h"
 #include "enrollee.h"
-#include "gateway_service.h"
 
 #ifndef AWSS_DISABLE_ENROLLEE
 #define MODULE_NAME "enrollee"
@@ -57,39 +44,41 @@ static int decrypt_ssid_passwd(uint8_t *ie, uint8_t ie_len,
                                uint8_t out_passwd[OS_MAX_PASSWD_LEN],
                                uint8_t out_bssid[ETH_ALEN]);
 
-void awss_calc_sign(uint32_t rand, 
-                    char devid[OS_PRODUCT_SN_LEN], 
-                    char model[OS_PRODUCT_MODEL_LEN], 
-                    char secret[OS_PRODUCT_SECRET_LEN], 
+void awss_calc_sign(uint32_t rand,
+                    char devid[OS_PRODUCT_SN_LEN],
+                    char model[OS_PRODUCT_MODEL_LEN],
+                    char secret[OS_PRODUCT_SECRET_LEN],
                     char sign[ENROLLEE_SIGN_SIZE])
 {
     char *text;
     int text_len, devid_len, model_len, secret_len;
 
-    if (!devid || !model || !secret || !sign) return;
+    if (!devid || !model || !secret || !sign) {
+        return;
+    }
 
     devid_len = strlen(devid);
     model_len = strlen(model);
     secret_len = strlen(secret);
 
-    LOGD(MODULE_NAME, 
+    LOGD(MODULE_NAME,
          "dump rand(%d)+devid(%d)+model(%d)+secret(%d): %d %s %s %s",
-         sizeof(uint32_t), devid_len, model_len, 
+         sizeof(uint32_t), devid_len, model_len,
          secret_len, rand, devid, model, secret);
 
     /* calc sign */
     text_len = sizeof(uint32_t) + devid_len + model_len;
     text = os_malloc(text_len + 1); /* +1 for string print */
     OS_CHECK_MALLOC(text);
-    memset(text, 0, text_len+1);
+    memset(text, 0, text_len + 1);
 
     memcpy(text, &rand, sizeof(uint32_t));
     memcpy(text + sizeof(uint32_t), devid, devid_len);
     memcpy(text + sizeof(uint32_t) + devid_len, model, model_len);
 
     digest_hmac(DIGEST_TYPE_MD5,
-            (const unsigned char *)text, text_len,
-            (const unsigned char *)secret, secret_len, sign);
+                (const unsigned char *)text, text_len,
+                (const unsigned char *)secret, secret_len, sign);
 
     os_free(text);
 }
@@ -200,15 +189,8 @@ void awss_destroy_enrollee_info(void)
 
 void awss_broadcast_enrollee_info(void)
 {
-#ifdef MESH_GATEWAY_SERVICE
-    if (!gateway_service_get_mesh_mqtt_state()) { // if mesh connected, use mesh; otherwise broadcast
-#else
-    if (1) {
-#endif
-        LOGD(MODULE_NAME, "Broadcasting enrrolle msg");
-        os_wifi_send_80211_raw_frame(FRAME_PROBE_REQ, enrollee_frame,
-                                     enrollee_frame_len);
-    }
+    os_wifi_send_80211_raw_frame(FRAME_PROBE_REQ, enrollee_frame,
+                                 enrollee_frame_len);
 
 #if 0   //TODO: send beacon frame, so android device will be able to discover it
     os_wifi_send_80211_raw_frame(FRAME_BEACON, beacon_frame,
@@ -218,10 +200,10 @@ void awss_broadcast_enrollee_info(void)
 
 /* return 0 for success, -1 devid not match, otherwise return -2 */
 static int decrypt_ssid_passwd(
-            uint8_t *ie, uint8_t ie_len,
-            uint8_t out_ssid[OS_MAX_SSID_LEN],
-            uint8_t out_passwd[OS_MAX_PASSWD_LEN],
-            uint8_t out_bssid[ETH_ALEN])
+    uint8_t *ie, uint8_t ie_len,
+    uint8_t out_ssid[OS_MAX_SSID_LEN],
+    uint8_t out_passwd[OS_MAX_PASSWD_LEN],
+    uint8_t out_bssid[ETH_ALEN])
 {
     uint8_t tmp_ssid[OS_MAX_SSID_LEN], key[MAX_KEY_LEN], tmp_passwd[OS_MAX_PASSWD_LEN];
     uint8_t *p_devid, *p_ssid, *p_passwd, *p_bssid, *p_token;
@@ -233,7 +215,7 @@ static int decrypt_ssid_passwd(
 #define REGISTRAR_IE_HDR    (6)
     ie += REGISTRAR_IE_HDR;
     if (ie[0] != DEVICE_TYPE_VERSION) {
-        LOGW(MODULE_NAME,"registrar(devtype/ver=%d not supported!", ie[0]);
+        LOGW(MODULE_NAME, "registrar(devtype/ver=%d not supported!", ie[0]);
         return -1;
     }
 
@@ -242,7 +224,7 @@ static int decrypt_ssid_passwd(
     ie += ie[0] + 1; /* eating devid_len & devid[n] */
 
     if (ie[0] != REGISTRAR_FRAME_TYPE) {
-        LOGW(MODULE_NAME,"registrar(frametype=%d not supported!", ie[0]);
+        LOGW(MODULE_NAME, "registrar(frametype=%d not supported!", ie[0]);
         return -1;
     }
 
@@ -250,12 +232,12 @@ static int decrypt_ssid_passwd(
     ie++; /* eating frame type */
     p_ssid = ie;
     if (ie[0] > OS_MAX_SSID_LEN) {
-        LOGW(MODULE_NAME,"registrar(ssidlen=%d invalid!", ie[0]);
+        LOGW(MODULE_NAME, "registrar(ssidlen=%d invalid!", ie[0]);
         return -1;
     }
     memcpy(tmp_ssid, &p_ssid[1], p_ssid[0]);
     tmp_ssid[p_ssid[0]] = '\0';
-    LOGI(MODULE_NAME,"Registrar ssid:%s, devid:%s", tmp_ssid, &p_devid[1]);
+    LOGI(MODULE_NAME, "Registrar ssid:%s, devid:%s", tmp_ssid, &p_devid[1]);
 
     ie += ie[0] + 1; /* eating ssid_len & ssid[n] */
 
@@ -267,20 +249,20 @@ static int decrypt_ssid_passwd(
     ie += ETH_ALEN; /* eating bssid len */
     p_token = ie;
     if (p_token[0] > MAX_TOKEN_LEN) {
-        LOGW(MODULE_NAME,"bad token len(%d)!", p_token[0]);
+        LOGW(MODULE_NAME, "bad token len(%d)!", p_token[0]);
         return -2;
     }
 
     ie += p_token[0] + 1; /* eating token_len & token[n] */
 
     if (ie - orig_ie - 2 != ie_len) {
-        LOGW(MODULE_NAME,"ie len not match %d != %d", ie - orig_ie - 2, ie_len);
+        LOGW(MODULE_NAME, "ie len not match %d != %d", ie - orig_ie - 2, ie_len);
         return -2;
     }
 
     //if (!enrollee_frame_len) return -2;
     if (!g_devid || memcmp(g_devid, p_devid, p_devid[0])) {
-        LOGW(MODULE_NAME,"devid not match, expect %s!= recv %s", g_devid, p_devid);
+        LOGW(MODULE_NAME, "devid not match, expect %s!= recv %s", g_devid, p_devid);
         return -2;
     }
 
@@ -302,8 +284,8 @@ static int decrypt_ssid_passwd(
 
     /* decrypt key = hmac_md5[key:bssid, payload:secret+devid] */
     digest_hmac(DIGEST_TYPE_MD5,
-            (const unsigned char *)text, text_len,
-            (const unsigned char *)p_bssid, ETH_ALEN, (unsigned char *)key);
+                (const unsigned char *)text, text_len,
+                (const unsigned char *)p_bssid, ETH_ALEN, (unsigned char *)key);
 
 #if 0   //dump decrypt key
     int i;
@@ -319,7 +301,7 @@ static int decrypt_ssid_passwd(
         os_aes128_cbc_decrypt(aes, &p_passwd[1], p_passwd[0] / AES_KEY_LEN, tmp_passwd);
         os_aes128_destroy(aes);
 
-        LOGI(MODULE_NAME,"ssid:%s, passwd:%s\n", tmp_ssid, tmp_passwd);
+        LOGI(MODULE_NAME, "ssid:%s, passwd:%s\n", tmp_ssid, tmp_passwd);
     }
 
     strcpy((char *)out_ssid, (char *)tmp_ssid);
@@ -374,9 +356,11 @@ void awss_clear_enrollee_token(void)
     memset(enrollee_token, 0, MAX_TOKEN_LEN + 1);
 }
 
-int awss_set_enrollee_token(char* token, int tokenLen)
+int awss_set_enrollee_token(char *token, int tokenLen)
 {
-    if (tokenLen > MAX_TOKEN_LEN) return -1;
+    if (tokenLen > MAX_TOKEN_LEN) {
+        return -1;
+    }
     memcpy(enrollee_token, token, tokenLen);
     enrollee_token[tokenLen] = '\0';
     return 0;

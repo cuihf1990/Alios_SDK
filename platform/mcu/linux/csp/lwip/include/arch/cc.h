@@ -84,7 +84,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 /* Plaform specific diagnostic output */
-#define LWIP_PLATFORM_DIAG(x)	do {printf x;} while(0)
+#define LWIP_PLATFORM_DIAG(x)	do {csp_printf x;} while(0)
 
 #define LWIP_PLATFORM_ASSERT(x) do {printf("Assert at line %d in %s - %s\n", \
                                       __LINE__, __FILE__, x); fflush(NULL); *(int *)0=0;} while(0)

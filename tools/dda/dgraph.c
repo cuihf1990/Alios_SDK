@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>

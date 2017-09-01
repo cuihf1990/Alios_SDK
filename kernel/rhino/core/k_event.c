@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -41,9 +29,9 @@ static kstat_t event_create(kevent_t *event, const name_t *name, uint32_t flags,
     YUNOS_CRITICAL_EXIT();
 #endif
 
-    event->blk_obj.obj_type = YUNOS_EVENT_OBJ_TYPE;
+    TRACE_EVENT_CREATE(yunos_cur_task_get(), event, name, flags);
 
-    TRACE_EVENT_CREATE(g_active_task, event, name, flags);
+    event->blk_obj.obj_type = YUNOS_EVENT_OBJ_TYPE;
 
     return YUNOS_SUCCESS;
 }
@@ -89,7 +77,7 @@ kstat_t yunos_event_del(kevent_t *event)
     klist_rm(&event->event_item);
 #endif
 
-    TRACE_EVENT_DEL(g_active_task, event);
+    TRACE_EVENT_DEL(g_active_task[cpu_cur_get()], event);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
@@ -176,6 +164,7 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
 
     kstat_t stat;
     uint8_t status;
+    uint8_t cur_cpu_num;
 
     NULL_PARA_CHK(event);
     NULL_PARA_CHK(actl_flags);
@@ -193,6 +182,8 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
         YUNOS_CRITICAL_EXIT();
         return YUNOS_KOBJ_TYPE_ERR;
     }
+
+    cur_cpu_num = cpu_cur_get();
 
     /* if option is AND MASK or OR MASK */
     if (opt & YUNOS_FLAGS_AND_MASK) {
@@ -216,7 +207,7 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
             event->flags &= ~flags;
         }
 
-        TRACE_EVENT_GET(g_active_task, event);
+        TRACE_EVENT_GET(g_active_task[cur_cpu_num], event);
         YUNOS_CRITICAL_EXIT();
 
         return YUNOS_SUCCESS;
@@ -229,19 +220,19 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
     }
 
     /* system is locked so task can not be blocked just return immediately */
-    if (g_sched_lock > 0u) {
+    if (g_sched_lock[cur_cpu_num] > 0u) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_SCHED_DISABLE;
     }
 
     /* remember the passed information */
-    g_active_task->pend_option = opt;
-    g_active_task->pend_flags  = flags;
-    g_active_task->pend_info   = actl_flags;
+    g_active_task[cur_cpu_num]->pend_option = opt;
+    g_active_task[cur_cpu_num]->pend_flags  = flags;
+    g_active_task[cur_cpu_num]->pend_info   = actl_flags;
 
-    pend_to_blk_obj((blk_obj_t *)event, g_active_task, ticks);
+    pend_to_blk_obj((blk_obj_t *)event, g_active_task[cur_cpu_num], ticks);
 
-    TRACE_EVENT_GET_BLK(g_active_task, event, ticks);
+    TRACE_EVENT_GET_BLK(g_active_task[cur_cpu_num], event, ticks);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
@@ -249,7 +240,7 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
     YUNOS_CPU_INTRPT_DISABLE();
 
     /* so the task is waked up, need know which reason cause wake up */
-    stat = pend_state_end_proc(g_active_task);
+    stat = pend_state_end_proc(g_active_task[cpu_cur_get()]);
 
     YUNOS_CPU_INTRPT_ENABLE();
 #else
@@ -324,7 +315,7 @@ static kstat_t event_set(kevent_t *event, uint32_t flags, uint8_t opt)
             /* the task condition is met, just wake this task */
             pend_task_wakeup(task);
 
-            TRACE_EVENT_TASK_WAKE(g_active_task, task, event);
+            TRACE_EVENT_TASK_WAKE(g_active_task[cpu_cur_get()], task, event);
 
             /* does it need to clear the flags */
             if (task->pend_option & YUNOS_FLAGS_CLEAR_MASK) {

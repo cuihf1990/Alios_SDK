@@ -24,3 +24,4 @@ umesh_srcs := src/core/umesh.c \
               src/utilities/memory.c \
               src/utilities/configs.c \
               src/utilities/task.c \
+              src/tools/cli.c

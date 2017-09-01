@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -68,9 +56,6 @@ static void task_tasksem_co1_entry(void *arg)
     kstat_t  ret;
     uint8_t  cnt = 0;
 
-    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == YUNOS_SUCCESS);
-
     while (1) {
         ret = yunos_task_sem_take(YUNOS_WAIT_FOREVER);
         MYASSERT_INFO(ret == YUNOS_SUCCESS);
@@ -93,9 +78,6 @@ static void task_tasksem_co2_entry(void *arg)
 {
     kstat_t ret;
     uint8_t cnt = 0;
-
-    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
         yunos_sched_disable();
@@ -131,6 +113,12 @@ void tasksem_coopr1_test(void)
 {
     kstat_t ret;
 
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == YUNOS_SUCCESS);
+
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == YUNOS_SUCCESS);
+
     ret = yunos_task_dyn_create(&task_tasksem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co1_entry, 1);
     if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
@@ -150,9 +138,6 @@ static void task_tasksem_co3_entry(void *arg)
 {
     kstat_t ret;
     uint8_t cnt = 0;
-
-    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
         yunos_task_sleep(5);
@@ -175,9 +160,6 @@ static void task_tasksem_co4_entry(void *arg)
 {
     kstat_t ret;
     uint8_t cnt = 0;
-
-    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     while (1) {
         ret = yunos_task_sem_take(YUNOS_WAIT_FOREVER);
@@ -205,6 +187,12 @@ static void task_tasksem_co4_entry(void *arg)
 void tasksem_coopr2_test(void)
 {
     kstat_t ret;
+
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == YUNOS_SUCCESS);
+
+    ret = yunos_task_sem_create(yunos_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == YUNOS_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_tasksem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co3_entry, 1);

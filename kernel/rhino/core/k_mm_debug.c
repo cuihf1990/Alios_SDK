@@ -1,30 +1,22 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
 
 #include <k_api.h>
-#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
-#include "k_mm_region.h"
-#endif
 #if (YUNOS_CONFIG_MM_TLF > 0)
 #include "k_mm.h"
 #endif
 #include "k_mm_debug.h"
 #include "yos/log.h"
+#include "yos/cli.h"
+
+#ifdef CONFIG_YOS_CLI
+#define print cli_printf
+#else
+#define print printf
+#endif
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0)
 
@@ -82,8 +74,7 @@ static uint32_t check_task_stack(ktask_t *task, void **p)
     if ((uint32_t)p >= cur &&
         (uint32_t)p  < (uint32_t)end) {
         return 1;
-    }
-    else if((uint32_t)p >= start && (uint32_t)p  < (uint32_t)cur) {
+    } else if ((uint32_t)p >= start && (uint32_t)p  < (uint32_t)cur) {
         return 0;
     }
     /*maybe lost*/
@@ -186,13 +177,13 @@ uint32_t check_malloc_region(void *adress)
             VGF(VALGRIND_MAKE_MEM_DEFINED(cur, MMLIST_HEAD_SIZE));
             if ((cur->size & YUNOS_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & YUNOS_MM_BLKSIZE_MASK);
-                if(0 == g_recheck_flag && !(cur->size & YUNOS_MM_FREE)) {
-                    if(g_active_task->task_stack_base >= cur->mbinfo.buffer
-                        &&g_active_task->task_stack_base < next) {
-                            cur = next;
-                            continue;
-                        }
-                    rst = scan_region(cur->mbinfo.buffer,(void*) next, adress);
+                if (0 == g_recheck_flag && !(cur->size & YUNOS_MM_FREE)) {
+                    if (yunos_cur_task_get()->task_stack_base >= cur->mbinfo.buffer
+                        && yunos_cur_task_get()->task_stack_base < next) {
+                        cur = next;
+                        continue;
+                    }
+                    rst = scan_region(cur->mbinfo.buffer, (void *) next, adress);
                     if (1 == rst) {
                         VGF(VALGRIND_MAKE_MEM_NOACCESS(cur, MMLIST_HEAD_SIZE));
                         VGF(VALGRIND_MAKE_MEM_NOACCESS(reginfo, sizeof(k_mm_region_info_t)));
@@ -239,7 +230,7 @@ uint32_t if_adress_is_valid(void *adress)
             if ((cur->size & YUNOS_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & YUNOS_MM_BLKSIZE_MASK);
                 if (!(cur->size & YUNOS_MM_FREE) &&
-                     (uint32_t)adress >= (uint32_t)cur->mbinfo.buffer && (uint32_t)adress < next ) {
+                    (uint32_t)adress >= (uint32_t)cur->mbinfo.buffer && (uint32_t)adress < next ) {
                     VGF(VALGRIND_MAKE_MEM_NOACCESS(cur, MMLIST_HEAD_SIZE));
                     VGF(VALGRIND_MAKE_MEM_NOACCESS(reginfo, sizeof(k_mm_region_info_t)));
                     return 1;
@@ -278,13 +269,13 @@ uint32_t dump_mmleak()
             VGF(VALGRIND_MAKE_MEM_DEFINED(cur, MMLIST_HEAD_SIZE));
             if ((cur->size & YUNOS_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & YUNOS_MM_BLKSIZE_MASK);
-                 if (!(cur->size & YUNOS_MM_FREE) &&
-                     0 == check_mm_leak(cur->mbinfo.buffer)
-                     && 0 == recheck((void*)cur->mbinfo.buffer , (void*)next)) {
-                     printf("adress:0x%0x owner:0x%0x len:%-5d type:%s\r\n",
-                            (void*)cur->mbinfo.buffer, cur->owner,
-                            cur->size&YUNOS_MM_BLKSIZE_MASK, "leak");
-                 }
+                if (!(cur->size & YUNOS_MM_FREE) &&
+                    0 == check_mm_leak(cur->mbinfo.buffer)
+                    && 0 == recheck((void *)cur->mbinfo.buffer , (void *)next)) {
+                    print("adress:0x%0x owner:0x%0x len:%-5d type:%s\r\n",
+                          (void *)cur->mbinfo.buffer, cur->owner,
+                          cur->size & YUNOS_MM_BLKSIZE_MASK, "leak");
+                }
 
             } else {
                 next = NULL;
@@ -301,252 +292,6 @@ uint32_t dump_mmleak()
     return 0;
 }
 #endif
-
-
-#if (YUNOS_CONFIG_MM_BESTFIT > 0 || YUNOS_CONFIG_MM_FIRSTFIT > 0)
-static uint32_t check_malloc_region(void *adress)
-{
-    uint32_t            rst = 0;
-    void               *start  = NULL;
-    k_mm_region_list_t *tmp = NULL;
-    klist_t            *head;
-    klist_t            *end;
-    klist_t            *cur;
-    klist_t            *region_list_cur;
-    klist_t            *region_list_head;
-    k_mm_region_head_t *cur_region;
-
-    NULL_PARA_CHK(g_mm_region_list_head.next);
-    NULL_PARA_CHK(g_mm_region_list_head.prev);
-
-    region_list_head = &g_mm_region_list_head;
-
-    for (region_list_cur = region_list_head->next;
-         region_list_cur != region_list_head; region_list_cur = region_list_cur->next) {
-        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
-        head = &cur_region->alloced;
-        end = head;
-
-        for (cur = head->next; cur != end; cur = cur->next) {
-            tmp = yunos_list_entry(cur, k_mm_region_list_t, list);
-            start  = (void *)((uint32_t)tmp + sizeof(k_mm_region_list_t));
-            if (0 == g_recheck_flag && YUNOS_MM_REGION_ALLOCED == tmp->type) {
-                rst = scan_region(start, (void *)((uint32_t)start + tmp->len), adress);
-                if (1 == rst) {
-                    return check_if_in_stack(g_leak_match);
-                }
-            }
-
-            if (1 == g_recheck_flag &&
-                (uint32_t)adress >= (uint32_t)start &&
-                (uint32_t)adress < (uint32_t)start + tmp->len) {
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
-
-
-
-uint32_t if_adress_is_valid(void *adress)
-{
-    void               *start  = NULL;
-    k_mm_region_list_t *tmp = NULL;
-    klist_t            *head;
-    klist_t            *end;
-    klist_t            *cur;
-    klist_t            *region_list_cur;
-    klist_t            *region_list_head;
-    k_mm_region_head_t *cur_region;
-
-    NULL_PARA_CHK(g_mm_region_list_head.next);
-    NULL_PARA_CHK(g_mm_region_list_head.prev);
-
-    region_list_head =  &g_mm_region_list_head;
-
-    for (region_list_cur = region_list_head->next;
-         region_list_cur != region_list_head; region_list_cur = region_list_cur->next) {
-        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
-        head = &cur_region->alloced;
-        end = head;
-
-        for (cur = head->next; cur != end; cur = cur->next) {
-            tmp = yunos_list_entry(cur, k_mm_region_list_t, list);
-            start  = (void *)((uint32_t)tmp + sizeof(k_mm_region_list_t));
-            if ((uint32_t)adress >= (uint32_t)start &&
-                (uint32_t)adress < (uint32_t)start + tmp->len) {
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
-
-
-uint32_t dump_mmleak()
-{
-    uint32_t            i    = 0;
-    void               *start  = NULL;
-    k_mm_region_list_t *min  = NULL;
-    klist_t            *head = NULL;
-    klist_t            *end  = NULL;
-    klist_t            *cur;
-    klist_t            *region_list_cur;
-    klist_t            *region_list_head;
-    k_mm_region_head_t *cur_region;
-
-    yunos_sched_disable();
-
-    NULL_PARA_CHK(g_mm_region_list_head.next);
-    NULL_PARA_CHK(g_mm_region_list_head.prev);
-
-    region_list_head = &g_mm_region_list_head;
-
-    VGF(VALGRIND_MAKE_MEM_DEFINED(region_list_head, sizeof(k_mm_region_head_t)));
-
-    for (region_list_cur = region_list_head->next;
-         region_list_cur != region_list_head;) {
-        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
-
-        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region, sizeof(k_mm_region_head_t)));
-        start  = (void *)((uint32_t)tmp + sizeof(k_mm_region_list_t));
-
-        head = &cur_region->alloced;
-        end = head;
-
-        if (1 == is_klist_empty(head)) {
-            yunos_sched_enable();
-            return 0;
-        }
-
-        for (cur = head->next; cur != end;) {
-            min = yunos_list_entry(cur, k_mm_region_list_t, list);
-
-            VGF(VALGRIND_MAKE_MEM_DEFINED(min, sizeof(k_mm_region_list_t)));
-
-            if (YUNOS_MM_REGION_ALLOCED ==  min->type &&
-                0 == check_mm_leak((uint8_t *)(min + 1))
-                && 0 == recheck(start,(uint32_t)start + min->len)) {
-#if (YUNOS_CONFIG_MM_DEBUG > 0)
-                printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "leak");
-#else
-                printf("[%-4d]:adress:0x%0x  len:%-5d type:%s\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "leak");
-#endif
-            }
-            i++;
-            cur = cur->next;
-            VGF(VALGRIND_MAKE_MEM_NOACCESS(min, sizeof(k_mm_region_list_t)));
-
-        }
-
-        region_list_cur = region_list_cur->next;
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region, sizeof(k_mm_region_head_t)));
-
-    }
-    yunos_sched_enable();
-
-    return 1;
-}
-
-uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
-{
-    (void)buf;
-    (void)len;
-    uint32_t i = 0;
-    k_mm_region_list_t *min  = NULL;
-    klist_t *head = NULL;
-    klist_t *end  = NULL;
-    klist_t *cur  = NULL;
-    klist_t *region_list_cur = NULL , *region_list_head = NULL;
-    k_mm_region_head_t *cur_region;
-
-    NULL_PARA_CHK(g_mm_region_list_head.next);
-    NULL_PARA_CHK(g_mm_region_list_head.prev);
-
-    region_list_head =  &g_mm_region_list_head;
-
-    VGF(VALGRIND_MAKE_MEM_DEFINED(region_list_head, sizeof(k_mm_region_head_t)));
-
-    for (region_list_cur = region_list_head->next;
-         region_list_cur != region_list_head;) {
-        cur_region = yunos_list_entry(region_list_cur, k_mm_region_head_t, regionlist);
-
-        VGF(VALGRIND_MAKE_MEM_DEFINED(cur_region, sizeof(k_mm_region_head_t)));
-
-        printf("----------------------------------------------------------------------\r\n");
-        printf("region info frag number:%d free size:%d\r\n", cur_region->frag_num,
-               cur_region->freesize);
-
-        head = &cur_region->probe;
-        end = head;
-
-        if (1 == is_klist_empty(head)) {
-            printf("the memory list is empty\r\n");
-            continue;
-        }
-
-        printf("free list: \r\n");
-
-        for (cur = head->next; cur != end; ) {
-            min = yunos_list_entry(cur, k_mm_region_list_t, list);
-
-            VGF(VALGRIND_MAKE_MEM_DEFINED(min, sizeof(k_mm_region_list_t)));
-
-#if (YUNOS_CONFIG_MM_DEBUG > 0)
-            printf("[%-4d]:adress:0x%0x                  len:%-5d type:%s  flag:0x%0x\r\n",
-                   i,
-                   (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "free", min->dye);
-#else
-            printf("[%-4d]:adress:0x%0x                  len:%-5d type:%s\r\n", i,
-                   (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "free");
-#endif
-            i++;
-            cur = cur->next;
-
-            VGF(VALGRIND_MAKE_MEM_NOACCESS(min, sizeof(k_mm_region_list_t)));
-
-        }
-        i = 0;
-        head = &cur_region->alloced;
-        end = head;
-        printf("alloced list: \r\n");
-        for (cur = head->next; cur != end;) {
-            min = yunos_list_entry(cur, k_mm_region_list_t, list);
-
-            VGF(VALGRIND_MAKE_MEM_DEFINED(min, sizeof(k_mm_region_list_t)));
-
-#if (YUNOS_CONFIG_MM_DEBUG > 0)
-            if ((YUNOS_MM_REGION_CORRUPT_DYE & min->dye) != YUNOS_MM_REGION_CORRUPT_DYE) {
-                printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s flag:0x%0x\r\n", i,
-                       (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "corrupt",
-                       min->dye);
-            }
-            printf("[%-4d]:adress:0x%0x owner:0x%0x len:%-5d type:%s flag:0x%0x\r\n", i,
-                   (uint32_t)min + sizeof(k_mm_region_list_t), min->owner,  min->len, "taken",
-                   min->dye);
-#else
-            printf("[%-4d]:adress:0x%0x len:%-5d type:%s\r\n", i,
-                   (uint32_t)min + sizeof(k_mm_region_list_t), min->len, "taken");
-
-#endif
-            i++;
-            cur = cur->next;
-
-            VGF(VALGRIND_MAKE_MEM_NOACCESS(min, sizeof(k_mm_region_list_t)));
-
-        }
-
-        region_list_cur = region_list_cur->next;
-
-        VGF(VALGRIND_MAKE_MEM_NOACCESS(cur_region, sizeof(k_mm_region_head_t)));
-
-    }
-    return YUNOS_SUCCESS;
-}
-#endif
 #endif
 
 #if (YUNOS_CONFIG_MM_TLF > 0)
@@ -556,53 +301,50 @@ void print_block(k_mm_list_t *b)
     if (!b) {
         return;
     }
-    printf("%p ", b);
+    print("%p ", b);
     if (b->size & YUNOS_MM_FREE) {
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
-        if(b->dye != YUNOS_MM_FREE_DYE){
-            printf("!");
-        }
-        else{
-            printf(" ");
+        if (b->dye != YUNOS_MM_FREE_DYE) {
+            print("!");
+        } else {
+            print(" ");
         }
 #endif
-        printf("free ");
+        print("free ");
     } else {
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
-        if(b->dye != YUNOS_MM_CORRUPT_DYE){
-            printf("!");
-        }
-        else{
-            printf(" ");
+        if (b->dye != YUNOS_MM_CORRUPT_DYE) {
+            print("!");
+        } else {
+            print(" ");
         }
 #endif
-        printf("used ");
+        print("used ");
     }
     if ((b->size & YUNOS_MM_BLKSIZE_MASK)) {
-        printf(" %6lu ", (unsigned long) (b->size & YUNOS_MM_BLKSIZE_MASK));
+        print(" %6lu ", (unsigned long) (b->size & YUNOS_MM_BLKSIZE_MASK));
     } else {
-        printf(" sentinel ");
+        print(" sentinel ");
     }
 
 #if (YUNOS_CONFIG_MM_DEBUG > 0u)
-    printf(" %8x ",b->dye);
-    printf(" 0x%-8x ",b->owner);
+    print(" %8x ", b->dye);
+    print(" 0x%-8x ", b->owner);
 #endif
 
     if (b->size & YUNOS_MM_PREVFREE) {
-        printf("pre-free [%8p];", b->prev);
-    }
-    else {
-        printf("pre-used;");
+        print("pre-free [%8p];", b->prev);
+    } else {
+        print("pre-used;");
     }
 
     if (b->size & YUNOS_MM_FREE) {
         VGF(VALGRIND_MAKE_MEM_DEFINED(&b->mbinfo, sizeof(struct free_ptr_struct)));
-        printf(" free[%8p,%8p] ", b->mbinfo.free_ptr.prev, b->mbinfo.free_ptr.next);
+        print(" free[%8p,%8p] ", b->mbinfo.free_ptr.prev, b->mbinfo.free_ptr.next);
         VGF(VALGRIND_MAKE_MEM_NOACCESS(&b->mbinfo, sizeof(struct free_ptr_struct)));
     }
-    printf("\r\n");
+    print("\r\n");
 
 }
 
@@ -615,19 +357,19 @@ void dump_kmm_free_map(k_mm_head *mmhead)
         return;
     }
 
-    printf("address,  stat   size     dye     caller   pre-stat    point\r\n");
+    print("address,  stat   size     dye     caller   pre-stat    point\r\n");
 
-    printf("FL bitmap: 0x%x\r\n", (unsigned) mmhead->fl_bitmap);
+    print("FL bitmap: 0x%x\r\n", (unsigned) mmhead->fl_bitmap);
 
     for (i = 0; i < FLT_SIZE; i++) {
         if (mmhead->sl_bitmap[i]) {
-            printf("SL bitmap 0x%x\r\n", (unsigned) mmhead->sl_bitmap[i]);
+            print("SL bitmap 0x%x\r\n", (unsigned) mmhead->sl_bitmap[i]);
         }
 
         for (j = 0; j < SLT_SIZE; j++) {
             next = mmhead->mm_tbl[i][j];
             if (next) {
-                printf("-> [%d][%d]\r\n", i, j);
+                print("-> [%d][%d]\r\n", i, j);
             }
             while (next) {
                 VGF(VALGRIND_MAKE_MEM_DEFINED(next, MMLIST_HEAD_SIZE));
@@ -651,8 +393,8 @@ void dump_kmm_map(k_mm_head *mmhead)
         return;
     }
 
-    printf("ALL BLOCKS\r\n");
-    printf("address,  stat   size     dye     caller   pre-stat    point\r\n");
+    print("ALL BLOCKS\r\n");
+    print("address,  stat   size     dye     caller   pre-stat    point\r\n");
     reginfo = mmhead->regioninfo;
     while (reginfo) {
         VGF(VALGRIND_MAKE_MEM_DEFINED(reginfo, sizeof(k_mm_region_info_t)));
@@ -682,17 +424,18 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
         return;
     }
 #if (K_MM_STATISTIC > 0)
-    printf("     free     |     used     |     maxused\r\n");
-    printf("  %10d  |  %10d  |  %10d\r\n", mmhead->free_size, mmhead->used_size,
-           mmhead->maxused_size);
-    printf("\r\n-----------------alloc size statistic:-----------------\r\n");
+    print("     free     |     used     |     maxused\r\n");
+    print("  %10d  |  %10d  |  %10d\r\n", mmhead->free_size, mmhead->used_size,
+          mmhead->maxused_size);
+    print("\r\n");
+    print("-----------------alloc size statistic:-----------------\r\n");
     for (i = 0; i < MAX_MM_BIT - 1; i++) {
         if (i % 4 == 0 && i != 0) {
-            printf("\r\n");
+            print("\r\n");
         }
-        printf("[2^%02d] bytes: %5d   |", (i + 2), mmhead->mm_size_stats[i]);
+        print("[2^%02d] bytes: %5d   |", (i + 2), mmhead->mm_size_stats[i]);
     }
-    printf("\r\n");
+    print("\r\n");
 #endif
 }
 
@@ -703,13 +446,16 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     YUNOS_CRITICAL_ENTER();
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(g_kmm_head, sizeof(k_mm_head)));
-    printf("\r\n------------------------------- all memory blocks --------------------------------- \r\n");
-    printf("g_kmm_head = %8x\r\n",(unsigned int)g_kmm_head);
+    print("\r\n");
+    print("------------------------------- all memory blocks --------------------------------- \r\n");
+    print("g_kmm_head = %8x\r\n", (unsigned int)g_kmm_head);
 
     dump_kmm_map(g_kmm_head);
-    printf("\r\n----------------------------- all free memory blocks ------------------------------- \r\n");
+    print("\r\n");
+    print("----------------------------- all free memory blocks ------------------------------- \r\n");
     dump_kmm_free_map(g_kmm_head);
-    printf("\r\n------------------------- memory allocation statistic ------------------------------ \r\n");
+    print("\r\n");
+    print("------------------------- memory allocation statistic ------------------------------ \r\n");
     dump_kmm_statistic_info(g_kmm_head);
     VGF(VALGRIND_MAKE_MEM_NOACCESS(g_kmm_head, sizeof(k_mm_head)));
 

@@ -1,23 +1,11 @@
 /*
- * Copyright (C) 2017 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <hal/base.h>
 #include <hal/wifi.h>
 #include <netmgr.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 
 #include "platform.h"
 #include "platform_config.h"
@@ -160,7 +148,9 @@ p_aes128_t platform_aes128_init(
     size_t aes_ctx_size;
     bool en_dec = true; // encrypto by default
 
-    if (dir == PLATFORM_AES_DECRYPTION) en_dec = false;
+    if (dir == PLATFORM_AES_DECRYPTION) {
+        en_dec = false;
+    }
 
     result = ali_aes_get_ctx_size(AES_CBC, &aes_ctx_size);
     if (result != ALI_CRYPTO_SUCCESS) {
@@ -175,7 +165,7 @@ p_aes128_t platform_aes128_init(
     }
 
     result = ali_aes_init(AES_CBC, en_dec,
-                 key, NULL, KEY_LEN, iv, aes_ctx);
+                          key, NULL, KEY_LEN, iv, aes_ctx);
     if (result != ALI_CRYPTO_SUCCESS) {
         LOGE("yos_awss", "ali_aes_init fail(%08x)", result);
         return NULL;
@@ -187,8 +177,9 @@ p_aes128_t platform_aes128_init(
 int platform_aes128_destroy(
     p_aes128_t aes)
 {
-    if (aes)
+    if (aes) {
         os_free(aes);
+    }
 
     return 0;
 }
@@ -203,7 +194,7 @@ int platform_aes128_cbc_encrypt_decrypt(
     size_t dlen = PLATFORM_MAX_PASSWD_LEN;
 
     result = ali_aes_finish(src, blockNum << 4, dst,
-                 &dlen, SYM_NOPAD, aes);
+                            &dlen, SYM_NOPAD, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
         LOGE("yos_awss", "aes_cbc finish fail(%08x)", result);
         return -1;
@@ -238,9 +229,15 @@ int platform_wifi_get_ap_info(
     netmgr_ap_config_t config;
 
     netmgr_get_ap_config(&config);
-    if (ssid) strncpy(ssid, config.ssid, PLATFORM_MAX_SSID_LEN);
-    if (passwd) strncpy(passwd, config.pwd, PLATFORM_MAX_PASSWD_LEN);
-    if (bssid) strncpy(bssid, config.bssid, ETH_ALEN);
+    if (ssid) {
+        strncpy(ssid, config.ssid, PLATFORM_MAX_SSID_LEN);
+    }
+    if (passwd) {
+        strncpy(passwd, config.pwd, PLATFORM_MAX_PASSWD_LEN);
+    }
+    if (bssid) {
+        strncpy(bssid, config.bssid, ETH_ALEN);
+    }
 
     return 0;
 }
@@ -257,9 +254,9 @@ int platform_wifi_low_power(int timeout_ms)
 
 static void mgnt_rx_cb(uint8_t *data, int len)
 {
-	if (monitor_cb) {
-		monitor_cb(data, len, 0, 0);
-	}
+    if (monitor_cb) {
+        monitor_cb(data, len, 0, 0);
+    }
 }
 
 int platform_wifi_enable_mgnt_frame_filter(

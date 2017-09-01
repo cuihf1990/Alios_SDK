@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <k_api.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,7 +47,7 @@ OSStatus mico_rtos_delete_thread( mico_thread_t* thread )
 void mico_rtos_suspend_thread(mico_thread_t* thread)
 {
     if (thread == NULL) {
-        yunos_task_suspend(g_active_task);        
+        yunos_task_suspend(yunos_cur_task_get());        
     }
     else {
         yunos_task_suspend(*((ktask_t **)thread));
@@ -94,22 +98,12 @@ bool mico_rtos_is_current_thread( mico_thread_t* thread )
 
     t = *((ktask_t **)thread);
 
-    if (t == g_active_task) {
+    if (t == yunos_cur_task_get()) {
         return true;
     }
 
     return false;
 }
-
-
-mico_thread_t* mico_rtos_get_current_thread(void)
-{
-    ktask_t **t;
-    t = &g_active_task;
-
-    return (mico_thread_t*)(t);
-}
-
 
 OSStatus mico_rtos_delay_milliseconds( uint32_t num_ms )
 {

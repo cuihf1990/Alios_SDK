@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <k_api.h>
@@ -19,8 +7,7 @@
 #if (YUNOS_CONFIG_BUF_QUEUE > 0)
 
 static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
-                                void *buf,
-                                size_t size, size_t max_msg, uint8_t mm_alloc_flag)
+                                void *buf, size_t size, size_t max_msg, uint8_t mm_alloc_flag)
 {
     CPSR_ALLOC();
 
@@ -60,7 +47,7 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
 
     ringbuf_init(&(queue->ringbuf), buf, size, RINGBUF_TYPE_DYN, 0);
     queue->min_free_buf_size  = queue->ringbuf.freesize;
-    TRACE_BUF_QUEUE_CREATE(g_active_task, queue);
+    TRACE_BUF_QUEUE_CREATE(yunos_cur_task_get(), queue);
 
     return YUNOS_SUCCESS;
 }
@@ -107,8 +94,8 @@ kstat_t yunos_buf_queue_del(kbuf_queue_t *queue)
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&queue->buf_queue_item);
 #endif
-    
-    ringbuf_reset(&(queue->ringbuf));
+
+    ringbuf_reset(&queue->ringbuf);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
@@ -187,8 +174,8 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
 #if (YUNOS_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&queue->buf_queue_item);
 #endif
-    
-    ringbuf_reset(&(queue->ringbuf));
+
+    ringbuf_reset(&queue->ringbuf);
 
     YUNOS_CRITICAL_EXIT_SCHED();
     yunos_mm_free(queue->buf);
@@ -206,6 +193,7 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
     klist_t *head;
     ktask_t *task;
     kstat_t  err;
+    uint8_t  cur_cpu_num;
 
     /* this is only needed when system zero interrupt feature is enabled */
 #if (YUNOS_CONFIG_INTRPT_GUARD > 0)
@@ -219,12 +207,16 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
         return YUNOS_KOBJ_TYPE_ERR;
     }
 
+    cur_cpu_num = cpu_cur_get();
+
     if (msg_size > queue->max_msg_size) {
-        TRACE_BUF_QUEUE_MAX(g_active_task, queue, msg, msg_size);
+        TRACE_BUF_QUEUE_MAX(g_active_task[cur_cpu_num], queue, msg, msg_size);
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_BUF_QUEUE_MSG_SIZE_OVERFLOW;
     }
 
     if (msg_size == 0) {
+        YUNOS_CRITICAL_EXIT();
         return YUNOS_INV_PARAM;
     }
 
@@ -256,16 +248,14 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
             queue->min_free_buf_size = queue->ringbuf.freesize;
         }
 
-        TRACE_BUF_QUEUE_POST(g_active_task, queue, msg, msg_size);
+        TRACE_BUF_QUEUE_POST(g_active_task[cur_cpu_num], queue, msg, msg_size);
 
         YUNOS_CRITICAL_EXIT();
 
 #if (YUNOS_CONFIG_KOBJ_SET > 0)
-
         if (queue->blk_obj.handle != NULL) {
             queue->blk_obj.handle->notify((blk_obj_t *)queue, queue->blk_obj.handle);
         }
-
 #endif
         return YUNOS_SUCCESS;
     }
@@ -276,7 +266,7 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
 
     pend_task_wakeup(task);
 
-    TRACE_BUF_QUEUE_TASK_WAKE(g_active_task, task, queue);
+    TRACE_BUF_QUEUE_TASK_WAKE(g_active_task[cur_cpu_num], task, queue);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
@@ -305,6 +295,7 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
     CPSR_ALLOC();
 
     kstat_t ret;
+    uint8_t cur_cpu_num;
 
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
@@ -312,7 +303,9 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
 
     YUNOS_CRITICAL_ENTER();
 
-    if ((g_intrpt_nested_level > 0u) && (ticks != YUNOS_NO_WAIT)) {
+    cur_cpu_num = cpu_cur_get();
+
+    if ((g_intrpt_nested_level[cur_cpu_num] > 0u) && (ticks != YUNOS_NO_WAIT)) {
         YUNOS_CRITICAL_EXIT();
         return YUNOS_NOT_CALLED_BY_INTRPT;
     }
@@ -335,27 +328,29 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
         return YUNOS_NO_PEND_WAIT;
     }
 
-    if (g_sched_lock > 0u) {
+    if (g_sched_lock[cur_cpu_num] > 0u) {
         *size = 0u;
         YUNOS_CRITICAL_EXIT();
         return YUNOS_SCHED_DISABLE;
     }
 
-    g_active_task->msg = msg;
-    pend_to_blk_obj((blk_obj_t *)queue, g_active_task, ticks);
+    g_active_task[cur_cpu_num]->msg = msg;
+    pend_to_blk_obj((blk_obj_t *)queue, g_active_task[cur_cpu_num], ticks);
 
-    TRACE_BUF_QUEUE_GET_BLK(g_active_task, queue, ticks);
+    TRACE_BUF_QUEUE_GET_BLK(g_active_task[cur_cpu_num], queue, ticks);
 
     YUNOS_CRITICAL_EXIT_SCHED();
 
     YUNOS_CPU_INTRPT_DISABLE();
 
+    cur_cpu_num = cpu_cur_get();
+
 #ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
-    ret = pend_state_end_proc(g_active_task);
+    ret = pend_state_end_proc(g_active_task[cur_cpu_num]);
 
     switch (ret) {
         case YUNOS_SUCCESS:
-            *size = g_active_task->bq_msg_size;
+            *size = g_active_task[cur_cpu_num]->bq_msg_size;
             break;
 
         default:
@@ -365,8 +360,8 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
 
 #else
 
-    if (g_active_task->blk_state == BLK_FINISH) {
-        *size = g_active_task->bq_msg_size;
+    if (g_active_task[cur_cpu_num]->blk_state == BLK_FINISH) {
+        *size = g_active_task[cur_cpu_num]->bq_msg_size;
     } else {
         *size = 0u;
     }
@@ -430,16 +425,16 @@ kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
     return YUNOS_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_is_valid(kbuf_queue_t * queue)
+kstat_t yunos_buf_queue_is_valid(kbuf_queue_t *queue)
 {
     NULL_PARA_CHK(queue);
 
-    if(queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE)
-    {
-      return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
+        return YUNOS_KOBJ_TYPE_ERR;
     }
-    
+
     return YUNOS_SUCCESS;
 }
+
 #endif
 

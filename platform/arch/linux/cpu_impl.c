@@ -1,19 +1,10 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
+#define _GNU_SOURCE
+
+#include <sched.h>
 #include <assert.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -30,6 +21,7 @@
 #include <k_api.h>
 #include <time.h>
 #include <ucontext.h>
+#include <sys/syscall.h>
 
 #ifdef HAVE_VALGRIND_H
 #include <valgrind.h>
@@ -64,6 +56,8 @@ typedef struct {
 #endif
 } task_ext_t;
 
+extern int swapcontext_safe(ucontext_t *oucp, const ucontext_t *ucp);
+
 static sigset_t cpu_sig_set;
 static void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext);
 static void _cpu_task_switch(void);
@@ -89,72 +83,164 @@ typedef struct {
  * as we need to compete with Rhino and non-Rhino tasks
  */
 static pthread_mutex_t g_event_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_t rhino_cpu_thread;
+
+static pthread_t rhino_cpu_thread[YUNOS_CONFIG_CPU_NUM];
+static pthread_mutex_t spin_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutexattr_t spin_lock_attr;
+static int lock;
 
 typedef struct {
     klist_t node;
     cpu_event_t event;
 } cpu_event_internal_t;
 
+static pid_t gettid(void)
+{
+    return syscall(SYS_gettid);
+}
+
+void syscall_error_label(void)
+{
+    assert(0);
+}
+
+void unlock_spin(void)
+{
+    int ret;
+    ret = pthread_mutex_unlock(&spin_lock);
+    assert(ret == 0);
+}
+
+#if (YUNOS_CONFIG_CPU_NUM > 1)
+uint8_t cpu_cur_get(void)
+{
+    int i;
+    pthread_t cur_thread = pthread_self();
+
+    for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+        if (cur_thread == rhino_cpu_thread[i]) {
+            return i;
+        }
+    }
+
+    assert(0);
+}
+
+void cpu_signal(uint8_t cpu_num)
+{
+     pthread_kill(rhino_cpu_thread[cpu_num], SIGRTMIN);
+}
+
+void *cpu_entry(void *arg)
+{
+    cpu_set_t mask;
+    cpu_set_t get;
+
+    CPU_ZERO(&get);
+
+    CPU_ZERO(&mask);
+    CPU_SET((int)arg, &mask);
+    printf("cpu num is %d\n", (int)arg);
+
+    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
+
+    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) != 0) {
+        printf("Not enough cpu nums!!!\n");
+        assert(0);
+    }
+
+    ktask_t    *tcb     = g_preferred_ready_task[(int)arg];
+    task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;
+
+    setcontext(&tcb_ext->uctx);
+
+    assert(0);
+}
+
+#endif
+
 static inline void enter_signal(int signo)
 {
-    task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
+    task_ext_t *tcb_ext = (task_ext_t *)g_active_task[cpu_cur_get()]->task_stack;
     tcb_ext->in_signals ++;
     assert(tcb_ext->in_signals == 1);
 }
 
 static inline void leave_signal(int signo)
 {
-    task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
+    task_ext_t *tcb_ext = (task_ext_t *)g_active_task[cpu_cur_get()]->task_stack;
     tcb_ext->in_signals --;
     assert(tcb_ext->in_signals >= 0);
 }
 
 static inline int in_signal(void)
 {
-    if (!g_active_task)
+    if (!g_active_task[cpu_cur_get()])
         return 0;
 
-    task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
+    task_ext_t *tcb_ext = (task_ext_t *)g_active_task[cpu_cur_get()]->task_stack;
     return tcb_ext->in_signals;
 }
 
 sigset_t cpu_intrpt_save(void)
 {
     sigset_t    oldset = {};
-    if (in_signal())
-        return oldset;
+    int ret;
 
     sigprocmask(SIG_BLOCK, &cpu_sig_set, &oldset);
-    if (g_active_task) {
-        task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
-        tcb_ext->int_lvl ++;
+
+    if (in_signal()) {
+        ret = pthread_mutex_lock(&spin_lock);
+        assert(ret == 0);
+        lock++;
+        return oldset;
     }
 
+    if (g_active_task[cpu_cur_get()]) {
+        task_ext_t *tcb_ext = (task_ext_t *)g_active_task[cpu_cur_get()]->task_stack;
+        tcb_ext->int_lvl++;
+        if (tcb_ext->int_lvl >= 2)
+            return oldset;
+    }
+
+    ret = pthread_mutex_lock(&spin_lock);
+    assert(ret == 0);
+
+    lock++;
     return oldset;
 }
 
 void cpu_intrpt_restore(sigset_t cpsr)
 {
-    if (in_signal())
-        return;
+    int ret;
 
-    if (!g_active_task) {
+    if (in_signal()) {
+        lock--;
+        ret = pthread_mutex_unlock(&spin_lock);
+        assert(ret == 0);
+        return;
+    }
+
+    if (!g_active_task[cpu_cur_get()]) {
         goto out;
     }
 
-    task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
+    task_ext_t *tcb_ext = (task_ext_t *)g_active_task[cpu_cur_get()]->task_stack;
     tcb_ext->int_lvl --;
     if (tcb_ext->int_lvl)
         return;
 
 out:
+    lock--;
+    ret = pthread_mutex_unlock(&spin_lock);
+    assert(ret == 0);
     sigprocmask(SIG_UNBLOCK, &cpu_sig_set, NULL);
 }
 
+
 void cpu_task_switch(void)
 {
-    task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
+    task_ext_t *tcb_ext = (task_ext_t *)g_active_task[cpu_cur_get()]->task_stack;
     _cpu_task_switch();
     assert(!in_signal());
     assert((void *)&tcb_ext >= tcb_ext->real_stack && (void *)&tcb_ext < tcb_ext->real_stack_end);
@@ -168,22 +254,44 @@ void cpu_intrpt_switch(void)
 
 void cpu_first_task_start(void)
 {
-    ktask_t    *tcb     = g_preferred_ready_task;
+    struct sigevent sevp;
+    timer_t timerid;
+    struct itimerspec ts;
+    int ret = 0;
+#if (YUNOS_CONFIG_CPU_NUM > 1)
+    int i = 0;
+#endif
+
+    ktask_t    *tcb     = g_preferred_ready_task[cpu_cur_get()];
     task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;
 
-    struct itimerval value;
-    struct itimerval ovalue;
+    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
 
-    value.it_interval.tv_sec = 0;
-    value.it_interval.tv_usec = 1000000u / YUNOS_CONFIG_TICKS_PER_SECOND;
-    value.it_value.tv_sec = 1;
-    value.it_value.tv_usec = 0;
+    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    for (i = 1; i < YUNOS_CONFIG_CPU_NUM; i++) {
+        if (pthread_create(&rhino_cpu_thread[i], NULL, (void *)cpu_entry, (void *)i) != 0) {
+            assert(0);
+        }
+    }
+    #endif
 
-    setitimer(ITIMER_REAL, &value, &ovalue);
+    memset(&sevp, 0, sizeof(sevp));
+    sevp.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
+    sevp.sigev_signo = SIGUSR1;
+    sevp._sigev_un._tid = gettid();
+    ret = timer_create(CLOCK_REALTIME, &sevp, &timerid);
+    assert(ret == 0);
+
+    ts.it_interval.tv_sec = 0;
+    ts.it_interval.tv_nsec = 1000000000u / YUNOS_CONFIG_TICKS_PER_SECOND;
+    ts.it_value.tv_sec = 1;
+    ts.it_value.tv_nsec = 0;
+
+    ret = timer_settime(timerid, CLOCK_REALTIME, &ts, NULL);
+    assert(ret == 0);
 
     setcontext(&tcb_ext->uctx);
-
-    raise(SIGABRT);
+    assert(0);
 }
 
 void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_t entry)
@@ -194,6 +302,8 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     real_size *= sizeof(cpu_stack_t);
 
     void *real_stack = yos_malloc(real_size);
+    assert(real_stack != NULL);
+
     task_ext_t *tcb_ext = (task_ext_t *)base;
     cpu_stack_t *tmp;
 
@@ -255,12 +365,14 @@ void cpu_task_create_hook(ktask_t *tcb)
 
 void cpu_task_del_hook(ktask_t *tcb)
 {
+    kstat_t ret;
+
     task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;
     LOG("--- Task '%-20s' is deleted\n", tcb->task_name);
 #if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
     VALGRIND_STACK_DEREGISTER(tcb_ext->vid);
 #endif
-    g_sched_lock++;
+    g_sched_lock[cpu_cur_get()]++;
 
     /*
      * ---- hack -----
@@ -270,19 +382,23 @@ void cpu_task_del_hook(ktask_t *tcb)
      * so we just need to free orig_stack
      * for STATIC_ALLOC case, need to free real_stack by ourself
      */
-    if (tcb->mm_alloc_flag == K_OBJ_DYN_ALLOC)
-        yunos_queue_back_send(&g_dyn_queue, tcb_ext->orig_stack);
-    else
-        yunos_queue_back_send(&g_dyn_queue, tcb_ext->real_stack);
-    g_sched_lock--;
+    if (tcb->mm_alloc_flag == K_OBJ_DYN_ALLOC) {
+        ret = yunos_queue_back_send(&g_dyn_queue, tcb_ext->orig_stack);
+        assert(ret == 0);
+    }
+    else {
+        ret = yunos_queue_back_send(&g_dyn_queue, tcb_ext->real_stack);
+        assert(ret == 0);
+    }
 
+    g_sched_lock[cpu_cur_get()]--;
 }
 
 void task_proc(void)
 {
     ktask_t *task_tcb;
 
-    task_ext_t *tcb_ext = (task_ext_t *)g_active_task->task_stack;
+    task_ext_t *tcb_ext = (task_ext_t *)g_active_task[cpu_cur_get()]->task_stack;
 
     LOG("Task '%-20s' running\n", tcb_ext->tcb->task_name);
 
@@ -312,11 +428,15 @@ static void _cpu_task_switch(void)
     ktask_t     *to_tcb;
     task_ext_t  *from_tcb_ext;
     task_ext_t  *to_tcb_ext;
+    uint8_t      cur_cpu_num;
+    int          ret;
 
-    from_tcb = g_active_task;
+    cur_cpu_num = cpu_cur_get();
+
+    from_tcb = g_active_task[cur_cpu_num];
     from_tcb_ext = (task_ext_t *)from_tcb->task_stack;
 
-    to_tcb = g_preferred_ready_task;
+    to_tcb = g_preferred_ready_task[cur_cpu_num];
     to_tcb_ext = (task_ext_t *)to_tcb->task_stack;
     LOG("TASK SWITCH, '%-20s' (%d) -> '%-20s' (%d)\n",
         from_tcb->task_name, from_tcb->task_state,
@@ -326,12 +446,20 @@ static void _cpu_task_switch(void)
     from_tcb_ext->saved_errno = errno;
 
 #if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
-    assert(*(g_active_task->task_stack_base) == YUNOS_TASK_STACK_OVF_MAGIC);
+    assert(*(g_active_task[cur_cpu_num]->task_stack_base) == YUNOS_TASK_STACK_OVF_MAGIC);
 #endif
 
-    g_active_task = g_preferred_ready_task;
+    g_active_task[cur_cpu_num] = g_preferred_ready_task[cur_cpu_num];
 
+    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    swapcontext_safe(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
+    #else
     swapcontext(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
+    #endif
+
+    ret = pthread_mutex_lock(&spin_lock);
+    assert(ret == 0);
+    lock++;
 
     /* restore errno */
     errno = from_tcb_ext->saved_errno;
@@ -340,6 +468,29 @@ static void _cpu_task_switch(void)
 void cpu_idle_hook(void)
 {
     usleep(10);
+}
+
+#if (YUNOS_CONFIG_CPU_NUM > 1)
+static void cpu_assert(int signo, siginfo_t *si, void *ucontext)
+{
+    enter_signal(signo);
+    yunos_intrpt_enter();
+    yunos_intrpt_exit();
+    leave_signal(signo);
+}
+#endif
+
+static void tick_interpt(int signo, siginfo_t *si, void *ucontext)
+{
+    enter_signal(signo);
+
+    yunos_intrpt_enter();
+
+    yunos_tick_proc();
+
+    yunos_intrpt_exit();
+
+    leave_signal(signo);
 }
 
 void *cpu_event_malloc(int size)
@@ -374,7 +525,7 @@ int cpu_notify_event(cpu_event_t *event)
     if (!cpu_event_inited)
         return 0;
 
-    ret = pthread_kill(rhino_cpu_thread, SIGUSR2);
+    ret = pthread_kill(rhino_cpu_thread[0], SIGUSR2);
 
     return ret;
 }
@@ -413,36 +564,56 @@ static void create_intr_task(void)
 void cpu_init_hook(void)
 {
     int              ret;
-    struct sigaction tick_sig_action = {
-        .sa_flags = SA_SIGINFO,
-        .sa_sigaction = cpu_sig_handler,
-    };
+
     struct sigaction event_sig_action = {
-        .sa_flags = SA_SIGINFO,
+        .sa_flags = SA_SIGINFO | SA_RESTART,
         .sa_sigaction = cpu_sig_handler,
     };
     struct sigaction event_io_action = {
-        .sa_flags = SA_SIGINFO,
+        .sa_flags = SA_SIGINFO | SA_RESTART,
         .sa_sigaction = cpu_sig_handler,
     };
+    struct sigaction tick_interpt_action = {
+        .sa_flags = SA_SIGINFO | SA_RESTART,
+        .sa_sigaction = tick_interpt,
+    };
 
-    rhino_cpu_thread = pthread_self();
+    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    struct sigaction cpu_assert_action = {
+        .sa_flags = SA_SIGINFO | SA_RESTART,
+        .sa_sigaction = cpu_assert,
+    };
+    #endif
+
+    rhino_cpu_thread[0] = pthread_self();
 
     sigemptyset(&cpu_sig_set);
-    sigaddset(&cpu_sig_set, SIGALRM);
+    sigaddset(&cpu_sig_set, SIGUSR1);
     sigaddset(&cpu_sig_set, SIGIO);
     sigaddset(&cpu_sig_set, SIGUSR2);
+    sigaddset(&cpu_sig_set, SIGALRM);
 
-    tick_sig_action.sa_mask = cpu_sig_set;
-    event_sig_action.sa_mask = cpu_sig_set;
-    event_io_action.sa_mask = cpu_sig_set;
+    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    sigaddset(&cpu_sig_set, SIGRTMIN);
+    cpu_assert_action.sa_mask   = cpu_sig_set;
+    #endif
 
-    ret = sigaction(SIGALRM, &tick_sig_action, NULL);
+    event_sig_action.sa_mask    = cpu_sig_set;
+    event_io_action.sa_mask     = cpu_sig_set;
+    tick_interpt_action.sa_mask = cpu_sig_set;
+
+    ret  = sigaction(SIGUSR1, &tick_interpt_action, NULL);
     ret |= sigaction(SIGUSR2, &event_sig_action, NULL);
     ret |= sigaction(SIGIO, &event_io_action, NULL);
-    if (ret != 0u) {
-        raise(SIGABRT);
-    }
+    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    ret |= sigaction(SIGRTMIN, &cpu_assert_action, NULL);
+    #endif
+
+    assert(ret == 0);
+
+    pthread_mutexattr_init(&spin_lock_attr);
+    pthread_mutexattr_settype(&spin_lock_attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&spin_lock, &spin_lock_attr);
 }
 
 void cpu_start_hook(void)
@@ -483,24 +654,38 @@ void cpu_io_unregister(void (*f)(int, void *), void *arg)
 static void trigger_io_cb(int fd)
 {
     cpu_io_cb_t *pcb;
+    sigset_t cpsr;
+
+    cpsr = cpu_intrpt_save();
     dlist_for_each_entry(&g_io_list, pcb, cpu_io_cb_t, node) {
         pcb->cb(fd, pcb->arg);
     }
+    cpu_intrpt_restore(cpsr);
 }
 
 void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
 {
-    if (pthread_self() != rhino_cpu_thread) {
+    int cpu_suite = 0;
+
+    pthread_t cur_thread = pthread_self();
+
+    for (int i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+        if (cur_thread == rhino_cpu_thread[i]) {
+            cpu_suite = 1;
+            break;
+        }
+    }
+
+    if (cpu_suite == 0) {
         return;
     }
 
     enter_signal(signo);
     yunos_intrpt_enter();
 
-    if (signo == SIGALRM)
-        yunos_tick_proc();
-    else if (signo == SIGUSR2)
+    if (signo == SIGUSR2) {
         yunos_sem_give(&g_intr_sem);
+    }
     else if (signo == SIGIO) {
         trigger_io_cb(si->si_fd);
     }

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _CRCTABLE_OSDEP_H
 #define _CRCTABLE_OSDEP_H
 

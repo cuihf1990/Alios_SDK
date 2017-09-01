@@ -15,10 +15,13 @@ ifeq ($(CONFIG_SOFTAP),1)
 GLOBAL_CFLAGS += -DCONFIG_SOFTAP
 endif
 
+$(NAME)_TYPE := kernel
+
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
-$(NAME)_COMPONENTS += hal vflash netmgr framework mbedtls cjson cli
+$(NAME)_COMPONENTS += rhino hal vflash netmgr framework.common mbedtls cjson cli
 $(NAME)_COMPONENTS += platform/mcu/beken/hal_init
 $(NAME)_COMPONENTS += platform/mcu/beken/beken7231/beken378/driver/entry
+$(NAME)_COMPONENTS += platform/mcu/beken/art
 
 GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_YOS_KV_MULTIPTN_MODE
@@ -33,6 +36,12 @@ GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -mlittle-endian
 
 GLOBAL_CFLAGS += -w
+
+$(NAME)_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration
+$(NAME)_CFLAGS  += -Wno-type-limits -Wno-sign-compare -Wno-pointer-sign -Wno-uninitialized
+$(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-variable
+$(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
+
 
 GLOBAL_INCLUDES += beken7231/beken378/func/mxchip/lwip-2.0.2/port \
                    beken7231/beken378/common \
@@ -55,13 +64,21 @@ GLOBAL_LDFLAGS += -mcpu=arm968e-s \
                  $(CLIB_LDFLAGS_NANO_FLOAT)
 
 
+BINS ?= 0
+
 ifeq ($(APP),bootloader)
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_boot.ld
 else
+
+ifeq ($(BINS),0)
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231.ld
+else
+GLOBAL_LDFLAGS_APP    := -T platform/mcu/beken/beken7231/beken378/build/bk7231_app.ld
+GLOBAL_LDFLAGS_KERNEL := -T platform/mcu/beken/beken7231/beken378/build/bk7231_kernel.ld
 endif
 
-GLOBAL_LDFLAGS += -Wl,-wrap,_malloc_r -Wl,-wrap,free -Wl,-wrap,realloc -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,_free_r -Wl,-wrap,_realloc_r 
+endif
+
 $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/func/rf_test \
                     beken7231/mico_api \
@@ -150,8 +167,6 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/os/FreeRTOSv9.0.0
 
 $(NAME)_SOURCES :=  yos/yos.c
-$(NAME)_SOURCES +=  yos/newlib_stub.c
-$(NAME)_LINK_FILES := yos/newlib_stub.o
 $(NAME)_INCLUDES += yos
                     
 $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
@@ -309,7 +324,8 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/mico_api/mico_cli.c \
                     beken7231/mico_api/mxchipWNet.c \
                     beken7231/mico_api/platform_stub.c \
-                    yos/soc_impl.c 
+                    yos/soc_impl.c \
+                    yos/trace_impl.c 
 
 
 ifneq ($(wildcard $(CURDIR)librwnx.a),)
@@ -436,10 +452,11 @@ $(NAME)_SOURCES	 += hal/gpio.c \
 					hal/wifi_port.c \
                     port/ota_port.c
 
-ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
+#ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
 $(NAME)_SOURCES +=  hal/mesh_wifi_hal.c
-endif
+#endif
 
 $(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \
-                    ../../../kernel/protocols/net/include/netif
+                    ../../../kernel/protocols/net/include/netif \
+                    ../../../kernel/protocols/mesh/include
 

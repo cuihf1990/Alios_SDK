@@ -1,9 +1,14 @@
 NAME := ywss
+
+GLOBAL_INCLUDES += .
 $(NAME)_SOURCES := awss.c enrollee.c sha256.c zconfig_utils.c zconfig_ieee80211.c wifimgr.c ywss_utils.c
 $(NAME)_SOURCES += zconfig_ut_test.c registrar.c zconfig_protocol.c zconfig_vendor_common.c
-$(NAME)_INCLUDES := ../protocol/alink/os/ ../protocol/alink/ ../../utility/base64/ ../protocol/alink/accs/
-$(NAME)_INCLUDES += ../protocol/alink/json/ ../connectivity/wsf/ ../../utility/digest_algorithm/
-$(NAME)_INCLUDES += ../protocol/alink/system/ ../gateway/
+
 $(NAME)_DEFINES += DEBUG
+
+$(NAME)_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration
+$(NAME)_CFLAGS  += -Wno-type-limits -Wno-sign-compare -Wno-pointer-sign -Wno-uninitialized
+$(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-variable
+$(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
 GLOBAL_DEFINES += CONFIG_YWSS

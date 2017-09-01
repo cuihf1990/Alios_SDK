@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdio.h>
 #include <lwip/sockets.h> /* 使用BSD socket，需要包含sockets.h头文件 */
 

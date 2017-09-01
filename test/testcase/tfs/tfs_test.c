@@ -1,8 +1,12 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <yunit.h>
 #include <yts.h>
 #include <tfs.h>
 #include <stdio.h>
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "../../../security/tfs/platform/pal.h"
 
 extern int tfs_id2_encrypt(const uint8_t *in, uint32_t in_len,uint8_t *out, uint32_t *out_len);

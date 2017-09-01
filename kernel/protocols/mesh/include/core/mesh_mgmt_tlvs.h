@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef UR_MM_TLVS_H
@@ -47,8 +35,8 @@ typedef enum {
     TYPE_MCAST_ADDR        = 0x95,  /* multicast address */
     TYPE_TARGET_UEID       = 0x96,  /* target ueid TLV */
     TYPE_TARGET_SID        = 0x97,  /* target sid TLV */
-    TYPE_FORWARD_RSSI      = 0x98,  /* forward RSSI */
-    TYPE_REVERSE_RSSI      = 0x99,  /* reverse RSSI */
+    TYPE_REVERSE_RSSI      = 0x98,  /* reverse RSSI */
+    TYPE_FORWARD_RSSI      = 0x99,  /* forward RSSI */
     TYPE_SID_TYPE          = 0x9a,  /* SID allocate type */
     TYPE_ADDR_QUERY        = 0x9b,  /* address query type */
     TYPE_NODE_ID           = 0x9c,  /* node id */
@@ -74,11 +62,6 @@ typedef struct mesh_mgmt_tlv_s {
 typedef struct mesh_mgmt_tv_s {
     uint8_t type;
 } __attribute__((packed)) mm_tv_t;
-
-typedef struct mesh_mgmt_version_tv_s {
-    mm_tv_t base;
-    uint8_t version;
-} __attribute__((packed)) mm_version_tv_t;
 
 typedef struct mesh_mgmt_ueid_tv_s {
     mm_tv_t base;

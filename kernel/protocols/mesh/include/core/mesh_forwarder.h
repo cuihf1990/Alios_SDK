@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef UR_MESH_FORWARDER_H
@@ -39,8 +27,8 @@ enum {
 };
 
 /* mesh header control field format */
-/* 2bits | 1bit | 3bits | 2bits |    2bits   | 2bits | 1bit | 2bits | 1 bit */
-/* flags | type | hops  |  src  | dest netid |  dest |  ie  | dest2 |  sec  */
+/* 2bits | 1bit | 3bits | 2bits |    2bits   | 2bits | 1bit | 2bits | 1 bit  | 5 bits | 3 bits */
+/* flags | type | hops  |  src  | dest netid |  dest |  ie  | dest2 |  sec   |  rsv   | ver    */
 
 enum {
     MESH_FRAME_TYPE_MASK       = 0x20,
@@ -62,6 +50,8 @@ enum {
     MESH_HEADER_DEST2_OFFSET   = 1,
     MESH_HEADER_SEC_MASK       = 0x01,
     MESH_HEADER_SEC_OFFSET     = 0,
+
+    MESH_HEADER_VER_MASK       = 0x7,
 };
 
 enum {
@@ -106,7 +96,7 @@ enum {
 #define is_same_mainnet(nid1, nid2) (get_main_netid(nid1) == get_main_netid(nid2))
 
 typedef struct mesh_header_control_s {
-    uint8_t control[2];
+    uint8_t control[3];
 } __attribute__((packed)) mesh_header_control_t;
 
 typedef struct mesh_short_addr_s {

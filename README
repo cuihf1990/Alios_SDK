@@ -1,0 +1,28 @@
+AliOS
+
+AliOS is an open source RTOS for IoT devices from Alibaba.
+
+FEATURES:
+
+
+ARCH-SUPPORT:
+
+    ARM Cortex-M3
+    ARM Cortex-M4
+    ARM 968ES
+    CSKY-V2
+    Xtensa
+
+BOARD-SUPPORT:
+
+
+HOW TO BUILD:
+
+    aos make app@board ...
+
+    app: like alinkapp, located in ./example
+    board: like linuxhost, located in ./board
+
+    eg:
+    aos make clean
+    aos make alinkapp@linuxhost

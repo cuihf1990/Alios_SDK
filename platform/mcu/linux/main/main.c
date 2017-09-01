@@ -1,17 +1,5 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <errno.h>
@@ -21,11 +9,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <k_api.h>
 #include <yos/log.h>
 #include <yos/kernel.h>
 
 #include <arg_options.h>
+
 
 #define TAG "main"
 
@@ -39,9 +27,10 @@ extern void __gcov_flush(void);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
 extern void hw_start_hal(void);
-extern void trace_start(int flag);
+extern void trace_start();
 extern void netmgr_init(void);
 extern int yos_framework_init(void);
+extern int yos_cli_init(void);
 
 static options_t options = { 0 };
 
@@ -50,15 +39,40 @@ static void signal_handler(int signo);
 static int  setrlimit_for_vfs(void);
 extern int application_start(int argc, char **argv);
 
+static void exit_clean(void)
+{
+    char fn[64] = {0};
+    snprintf(fn, sizeof(fn), "rm -f ./yos_partition_%d_*", getpid());
+    system(fn);
+}
+
 static void app_entry(void *arg)
 {
-    yos_features_init();
+    int i = 0;
 
-    trace_start(options.trace_flag);
+    yos_features_init();
 
     hw_start_hal();
 
+    vfs_init();
+    vfs_device_init();
+
+    for(i = 0; i < 10; i++) {
+        vflash_register_partition(i);
+    }
+
+#ifdef CONFIG_YOS_CLI
+    yos_cli_init();
+#endif
+
+    yos_kv_init();
+    yos_loop_init();
+
     yos_framework_init();
+
+#ifdef VCALL_RHINO
+    trace_start();    
+#endif
 
     application_start(options.argc, options.argv);
 }
@@ -142,6 +156,10 @@ int main(int argc, char **argv)
     signal(SIGPIPE, SIG_IGN);
 #endif
 
+    atexit(exit_clean);
+
+    yunos_init();
+
     ret = setrlimit_for_vfs();
     if (ret != 0) {
         return ret;
@@ -154,8 +172,6 @@ int main(int argc, char **argv)
 #ifdef TFS_EMULATE
     tfs_emulate_id2_index = options.id2_index;
 #endif
-
-    yunos_init();
 
     start_app(argc, argv);
 

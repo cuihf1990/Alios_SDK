@@ -84,25 +84,28 @@ class Client:
                         self.connected == False
                         continue
             else:
-                time.sleep(0.01)
+                time.sleep(0.02)
         self.devices[port]['serial'].close()
         self.devices.pop(port)
+        print "device {0} removed".format(port)
         self.send_device_list()
+        print "device logging thread for {0} exited".format(port)
 
     def device_monitor(self):
         while self.keep_running:
             devices_new = glob.glob("/dev/espif-*")
             devices_new.sort()
             for port in devices_new:
-                if port in self.devices:
+                if port in list(self.devices):
                     continue
                 try:
                     ser = serial.Serial(port, 115200, timeout = 0.02)
                     ser.setDTR(True)
                     ser.setRTS(True)
                 except:
-                    print "error: unable to open {0}".format(port)
+                    print "device_monitor, error: unable to open {0}".format(port)
                     continue
+                print "device {0} added".format(port)
                 self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'esp32', 'serial':ser}
                 thread.start_new_thread(self.device_logging, (port,))
                 self.send_device_list()
@@ -110,15 +113,15 @@ class Client:
             devices_new = glob.glob("/dev/mxchip-*")
             devices_new.sort()
             for port in devices_new:
-                if port in self.devices:
+                if port in list(self.devices):
                     continue
                 try:
                     ser = serial.Serial(port, 921600, timeout = 0.02)
-                    ser.setDTR(True)
-                    ser.setRTS(True)
+                    ser.setRTS(False)
                 except:
-                    print "error: unable to open {0}".format(port)
+                    print "device_monitor, error: unable to open {0}".format(port)
                     continue
+                print "device {0} added".format(port)
                 self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'mk3060', 'serial':ser}
                 thread.start_new_thread(self.device_logging, (port,))
                 self.send_device_list()
@@ -203,21 +206,19 @@ class Client:
         baudrate = 921600
         error = "fail"
         while retry > 0:
-            if self.mxchip_control(port, TBframe.DEVICE_RESET) != "success":
-                retry -= 1
-                continue
-            self.devices[port]['serial'].write("      \r\n")
             script = ['timeout', '80', 'python']
             script += ['autoscripts/yos_firmware_update.py']
             script += [port]
-            script += ['-a']
+            script += [address]
             script += [file]
+            script += ["--hardreset"]
             ret = subprocess.call(script)
             if ret == 0:
                 error =  "success"
                 break
             retry -= 1
             baudrate = baudrate / 2
+            time.sleep(4)
         return error
 
     def program_device(self, port, address, file):

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <yunit.h>
@@ -70,7 +74,6 @@ static void timer_callback(void* arg)
 
 static void test_vcall_case(void)
 {
-    static mico_thread_t task_tmp;
     char pcWriteBuffer[20];
     char msg[50];
 
@@ -93,9 +96,6 @@ static void test_vcall_case(void)
     mico_rtos_resume_all_thread();
     mico_rtos_is_current_thread(&task1);
     mico_rtos_thread_force_awake(&task1);
-    
-    task_tmp = mico_rtos_get_current_thread();
-    (void)task_tmp;
 
     mico_rtos_get_semaphore(&sem1, MICO_NEVER_TIMEOUT);
     mico_rtos_deinit_semaphore(&sem1);

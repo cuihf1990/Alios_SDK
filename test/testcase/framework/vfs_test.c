@@ -1,34 +1,52 @@
 /*
- * Copyright (C) 2016 YunOS Project. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #include <stdio.h>
 #include <unistd.h>
 
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <yos/network.h>
 
 #include "vfs.h"
 #include "vfs_inode.h"
-#include "vfs_driver.h"
+#include "vfs_register.h"
 #include "vfs_err.h"
 
 #include "yunit.h"
 
 static int test_ioctl(file_t *node, int cmd, unsigned long arg)
+{
+    return -123;
+}
+
+static off_t test_lseek(file_t *fp, off_t off, int whence)
+{
+    return -123;
+}
+
+static int test_sync(file_t *fp) 
+{
+    return -123;
+}
+
+static int test_stat(file_t *fp, const char *path, struct stat *st)
+{
+    return -123;
+}
+
+static int test_unlink(file_t *fp, const char *path)
+{
+    return -123;
+}
+
+static int test_rename(file_t *fp, const char *oldpath, const char *newpath)
+{
+    return -123;
+}
+
+static int test_mkdir(file_t *fp, const char *path)
 {
     return -123;
 }
@@ -58,7 +76,7 @@ static void test_yos_vfs_case(void)
     };
 
     for (i = 0; i < 10; i++) {
-        ret = yunos_register_driver(names[i], &myops, NULL);
+        ret = yos_register_driver(names[i], &myops, NULL);
         YUNIT_ASSERT(ret == VFS_SUCCESS);
     }
 
@@ -76,14 +94,57 @@ static void test_yos_vfs_case(void)
 
         yos_close(fd);
 
-        ret = yunos_unregister_driver(names[i]);
+        ret = yos_unregister_driver(names[i]);
         YUNIT_ASSERT(ret == 0);
 
         fd = yos_open(names[i], 0);
         ret = yos_ioctl(fd, 0, 0);
-        YUNIT_ASSERT(E_VFS_K_ERR == ret);
+        YUNIT_ASSERT(-ENOENT == ret);
     }
 }
+
+static void test_vfs_fs_case(void)
+{
+    int i   = 0;
+    int fd  = 0;
+    int ret = 0;
+    struct stat st;
+    yos_dir_t dir;
+    char *names = "/tmp/abcd0";
+
+    fs_ops_t myops = {
+        .open       = NULL,
+        .lseek      = test_lseek,
+        .sync       = test_sync,
+        .stat       = test_stat,
+        .unlink     = test_unlink,
+        .rename     = test_rename,
+        .mkdir      = test_mkdir,
+    };
+
+    ret = yos_register_fs(names, &myops, NULL);
+    YUNIT_ASSERT(ret == VFS_SUCCESS);
+
+    fd = yos_open(names, 0);
+    YUNIT_ASSERT(fd >= 0);
+    
+    YUNIT_ASSERT(-123 == yos_lseek(fd, 0, 0));
+    YUNIT_ASSERT(-123 == yos_sync(fd));
+    yos_close(fd);
+
+    YUNIT_ASSERT(-123 == yos_stat(names, &st));
+    YUNIT_ASSERT(-123 == yos_unlink(names));
+    YUNIT_ASSERT(-123 == yos_rename(names, names));
+    YUNIT_ASSERT(-123 == yos_mkdir(names));
+
+    ret = yos_unregister_fs(names);
+    YUNIT_ASSERT(ret == 0);
+
+    YUNIT_ASSERT(-ENODEV == yos_stat(names, &st));
+    YUNIT_ASSERT(-ENODEV == yos_unlink(names));
+    YUNIT_ASSERT(-ENODEV == yos_rename(names, names));
+}
+
 
 static int create_socket(int port)
 {
@@ -191,6 +252,7 @@ static void test_yos_poll_case(void)
 static yunit_test_case_t yos_vfs_testcases[] = {
     { "register", test_yos_vfs_case },
     { "poll", test_yos_poll_case },
+    { "fs_register", test_vfs_fs_case},
     YUNIT_TEST_CASE_NULL
 };
 

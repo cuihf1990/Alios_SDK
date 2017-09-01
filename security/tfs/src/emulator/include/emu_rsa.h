@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 YunOS Project. All rights reserved.
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef _EMU_RSA_H

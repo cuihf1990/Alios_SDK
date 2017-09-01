@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2016 YunOS Project. All rights reserved.
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 /**
@@ -20,7 +20,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <k_api.h>
 #include <yos/log.h>
 #include <hal/soc/soc.h>
 #include <hal/soc/timer.h>
@@ -34,7 +33,8 @@ static int open_flash(int pno, bool w)
 {
     char fn[64];
     int flash_fd;
-    snprintf(fn, sizeof fn, "./yos_partition_%d.bin", pno);
+
+    snprintf(fn, sizeof(fn), "./yos_partition_%d_%d.bin", getpid(), pno);
     if(w)
         flash_fd = open(fn, O_RDWR);
     else
@@ -136,6 +136,8 @@ void hal_reboot(void)
 
 }
 
+#ifdef VCALL_RHINO
+#include <k_api.h>
 #define us2tick(us) \
     ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
 
@@ -172,17 +174,24 @@ void hal_timer_stop(hal_timer_t *tmr)
     yunos_timer_dyn_del(tmr->priv);
     tmr->priv = NULL;
 }
+#endif
 
 int csp_printf(const char *fmt, ...)
 {
+    CPSR_ALLOC();
+
     va_list args;
     int ret;
+
+    YUNOS_CRITICAL_ENTER();
 
     va_start(args, fmt);
     ret = vprintf(fmt, args);
     va_end(args);
 
     fflush(stdout);
+
+    YUNOS_CRITICAL_EXIT();
 
     return ret;
 }
