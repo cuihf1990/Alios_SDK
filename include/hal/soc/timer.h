@@ -38,7 +38,7 @@ void hal_timer_init(hal_timer_t *tmr, unsigned int period,
  * @brief init a hardware timer
  * @param None
  * @retval 0 == success
- *        <0 == failure
+ *         EIO == failure
  */
 int32_t hal_timer_start(hal_timer_t *tmr);
 
