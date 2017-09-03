@@ -54,47 +54,45 @@ typedef enum {
 
 /* Flash block header description */
 typedef struct _block_header_t {
-    uint8_t     magic;                                      /* The magic number of block */
-    uint8_t     state;                                      /* The state of the block */
+    uint8_t     magic;          /* The magic number of block */
+    uint8_t     state;          /* The state of the block */
     uint8_t     reserved[2];
 } __attribute__((packed)) block_hdr_t;
 
 /* Key-value item header description */
 typedef struct _item_header_t {
-    uint8_t     magic;                                      /* The magic number of key-value item */
-    uint8_t     state;                                      /* The state of key-value item */
-    uint8_t     crc;                                        /* The crc-8 value of key-value item */
-    uint8_t     key_len;                                    /* The length of the key */
-    uint16_t    val_len;                                    /* The length of the value */
-    uint16_t
-    origin_off;                                 /* The origin key-value item offset, it will be used when updating */
+    uint8_t     magic;          /* The magic number of key-value item */
+    uint8_t     state;          /* The state of key-value item */
+    uint8_t     crc;            /* The crc-8 value of key-value item */
+    uint8_t     key_len;        /* The length of the key */
+    uint16_t    val_len;        /* The length of the value */
+    uint16_t    origin_off;     /* The origin key-value item offset, it will be used when updating */
 } __attribute__((packed)) item_hdr_t;
 
 /* Key-value item description */
 typedef struct _kv_item_t {
-    item_hdr_t
-    hdr;                                        /* The header of the key-value item, detail see the item_hdr_t structure */
-    char       *store;                                      /* The store buffer for key-value */
-    uint16_t    len;                                        /* The length of the buffer */
-    uint16_t    pos;                                        /* The store position of the key-value item */
+    item_hdr_t  hdr;            /* The header of the key-value item, detail see the item_hdr_t structure */
+    char       *store;          /* The store buffer for key-value */
+    uint16_t    len;            /* The length of the buffer */
+    uint16_t    pos;            /* The store position of the key-value item */
 } kv_item_t;
 
 /* Block information structure for management */
 typedef struct _block_info_t {
-    uint16_t    space;                                      /* Free space in current block */
-    uint8_t     state;                                      /* The state of current block */
+    uint16_t    space;          /* Free space in current block */
+    uint8_t     state;          /* The state of current block */
 } block_info_t;
 
 typedef struct _kv_mgr_t {
-    uint8_t         kv_initialize;                          /* The flag to indicate the key-value store is initialized */
-    uint8_t         gc_triggered;                           /* The flag to indicate garbage collection is triggered */
-    uint8_t         gc_waiter;                              /* The number of thread wait for garbage collection finished */
-    uint8_t         clean_blk_nums;                         /* The number of block which state is clean */
-    uint16_t        write_pos;                              /* Current write position for key-value item */
+    uint8_t         kv_initialize;          /* The flag to indicate the key-value store is initialized */
+    uint8_t         gc_triggered;           /* The flag to indicate garbage collection is triggered */
+    uint8_t         gc_waiter;              /* The number of thread wait for garbage collection finished */
+    uint8_t         clean_blk_nums;         /* The number of block which state is clean */
+    uint16_t        write_pos;              /* Current write position for key-value item */
     yos_sem_t       gc_sem;
     yos_work_t      gc_worker;
     yos_mutex_t     kv_mutex;
-    block_info_t    block_info[BLK_NUMS];                   /* The array to record block management information */
+    block_info_t    block_info[BLK_NUMS];   /* The array to record block management information */
 } kv_mgr_t;
 
 static kv_mgr_t g_kv_mgr;
