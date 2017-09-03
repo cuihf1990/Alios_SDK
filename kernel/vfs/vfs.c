@@ -312,8 +312,14 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
 
     node = f->node;
 
-    if ((node->ops.i_ops->ioctl) != NULL) {
-        ret = (node->ops.i_ops->ioctl)(f, cmd, arg);
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->ioctl) != NULL) {
+            ret = (node->ops.i_fops->ioctl)(f, cmd, arg);
+        }
+    } else {
+        if ((node->ops.i_ops->ioctl) != NULL) {
+            ret = (node->ops.i_ops->ioctl)(f, cmd, arg);
+        }
     }
 
     return ret;

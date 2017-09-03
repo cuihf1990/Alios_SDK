@@ -91,6 +91,7 @@ struct fs_ops {
     yos_dirent_t   *(*readdir)  (file_t *fp, yos_dir_t *dir);
     int             (*closedir) (file_t *fp, yos_dir_t *dir);
     int             (*mkdir)    (file_t *fp, const char *path);
+    int             (*ioctl)    (file_t *fp, int cmd, unsigned long arg);
 };
 
 int     inode_init(void);
