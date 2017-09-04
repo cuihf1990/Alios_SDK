@@ -11,7 +11,7 @@
 #include <yos/yos.h>
 #include <netmgr.h>
 
-#include "mbedtls/mbedtls_ssl.h"
+#include <yos/mbedtls_ssl.h>
 
 struct cookie {
     int flag;
