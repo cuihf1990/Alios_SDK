@@ -18,6 +18,11 @@
 #include "ipv6/lwip_adapter.h"
 #include "core/mesh_mgmt.h"
 
+#if LWIP_IPV6 == 0 && LWIP_IPV4 && LWIP_IGMP
+#include "lwip/igmp.h"
+static struct igmp_group g_group;
+#endif
+
 typedef struct lwip_adapter_state_s {
     struct netif          adpif;
     ur_adapter_callback_t adapter_cb;
@@ -26,15 +31,23 @@ typedef struct lwip_adapter_state_s {
 
 static lwip_adapter_state_t g_la_state = {.interface_name = "ur"};
 
+static void adapter_msg_input(void *arg) {
+    g_la_state.adpif.input(arg, &g_la_state.adpif);
+}
+
 /* Receive IP frame from umesh and pass up to LwIP */
 ur_error_t ur_adapter_input(struct pbuf *buf)
 {
-    err_t       error = ERR_ARG;
+    ur_error_t error = UR_ERROR_NONE;
+
     if (g_la_state.adpif.input) {
         pbuf_ref(buf);
-        error = g_la_state.adpif.input(buf, &g_la_state.adpif);
+        error = umesh_task_schedule_call(adapter_msg_input, buf);
     }
-    return error == ERR_OK ? UR_ERROR_NONE : UR_ERROR_FAIL;
+    if (error != UR_ERROR_NONE) {
+        pbuf_free(buf);
+    }
+    return error;
 }
 
 static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
@@ -43,10 +56,11 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
     ur_error_t error;
     uint16_t sid;
 
-    if (ip4_addr_isany(ip4addr) || ip4_addr_isbroadcast(ip4addr, netif)) {
+    if (ip4_addr_ismulticast(ip4addr)) {
         sid = 0xffff;
-    } else {
-        sid = ntohl(ip4addr->addr) & 0xffff;
+    }
+    else {
+        sid = ntohs(((ip4addr->addr) >> 16)) - 2;
     }
 
     error = umesh_ipv4_output(p, sid);
@@ -148,14 +162,26 @@ static void update_interface_ipaddr(void)
     }
 
     g_la_state.adpif.ip6_autoconfig_enabled = 1;
-#endif
-    ip4_addr_t          ipaddr, netmask, gw;
-    uint16_t sid = umesh_mm_get_local_sid();
+#else
+    const mesh_netif_ip4_address_t *ip4_addr;
+    ip4_addr_t ipaddr, netmask, gw;
 
+    ip4_addr = umesh_get_ucast_addr();
     IP4_ADDR(&gw, 10, 0, 0, 1);
-    IP4_ADDR(&ipaddr, 10, 0, sid >> 8, sid & 0xff);
+    IP4_ADDR(&ipaddr, ip4_addr->addr.m8[0], ip4_addr->addr.m8[1],\
+             ip4_addr->addr.m8[2], ip4_addr->addr.m8[3]);
     IP4_ADDR(&netmask, 255, 255, 0, 0);
     netif_set_addr(&g_la_state.adpif, &ipaddr, &netmask, &gw);
+
+    ip4_set_default_multicast_netif(&g_la_state.adpif);
+#if LWIP_IGMP
+    g_la_state.adpif.flags |= NETIF_FLAG_IGMP;
+    ip4_addr = umesh_get_mcast_addr();
+    IP4_ADDR(&g_group.group_address, ip4_addr->addr.m8[0], ip4_addr->addr.m8[1],\
+             ip4_addr->addr.m8[2], ip4_addr->addr.m8[3]);
+    netif_set_client_data(&g_la_state.adpif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP, &g_group);
+#endif
+#endif
 }
 
 ur_error_t ur_adapter_interface_up(void)
@@ -181,6 +207,7 @@ ur_error_t ur_adapter_interface_up(void)
         netif_set_up(&g_la_state.adpif);
     }
     update_interface_ipaddr();
+
     return UR_ERROR_NONE;
 }
 
