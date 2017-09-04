@@ -32,9 +32,9 @@ typedef struct _fat_dir_t
 }fat_dir_t;
 
 static fsid_map_t g_fsid[] = {
-        { DEV_RAM, RAM_MOUNTPOINT, RAM_PARTITION_ID },
         { DEV_MMC, MMC_MOUNTPOINT, MMC_PARTITION_ID },
-        { DEV_USB, USB_MOUNTPOINT, USB_PARTITION_ID }
+        { DEV_USB, USB_MOUNTPOINT, USB_PARTITION_ID },
+        { DEV_RAM, RAM_MOUNTPOINT, RAM_PARTITION_ID }
 };
 
 static FATFS *g_fatfs[FF_VOLUMES] = {0};
@@ -470,7 +470,8 @@ static const fs_ops_t fatfs_ops = {
     .opendir    = &fatfs_opendir,
     .readdir    = &fatfs_readdir,
     .closedir   = &fatfs_closedir,
-    .mkdir      = &fatfs_mkdir
+    .mkdir      = &fatfs_mkdir,
+    .ioctl      = NULL
 };
 
 int fatfs_register(int pdrv)
