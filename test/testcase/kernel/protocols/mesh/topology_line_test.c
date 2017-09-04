@@ -60,7 +60,7 @@ static void topology_line_case(bool vector_router)
     /* check if ping work */
     yos_msleep(2 * 1000);
     myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 13, "testcmd icmp_acked", 5);
 
@@ -75,7 +75,7 @@ static void topology_line_case(bool vector_router)
     /* check if ping work */
     yos_msleep(2 * 1000);
     myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);
 

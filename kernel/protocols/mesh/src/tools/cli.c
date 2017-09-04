@@ -266,7 +266,7 @@ static void handle_autotest_timer(void *args)
         cmd = (autotest_cmd_t *)payload;
         cmd->type = AUTOTEST_REQUEST;
         cmd->seq = htons(g_cli_autotest.seq++);
-        memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
+        memcpy(&cmd->addr, &src->addr.ip6_addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
                    &g_cli_autotest.target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cli_autotest.length);
@@ -281,7 +281,7 @@ static void handle_autotest_timer(void *args)
     }
 #else
     uint8_t *payload;
-    const mesh_netif_ip4_address_t *src;
+    const ur_netif_ip6_address_t *src;
     autotest_cmd_t *cmd;
 
     g_cli_autotest.timer = NULL;
@@ -291,7 +291,7 @@ static void handle_autotest_timer(void *args)
         cmd = (autotest_cmd_t *)payload;
         cmd->type = AUTOTEST_REQUEST;
         cmd->seq = htons(g_cli_autotest.seq++);
-        memcpy(&cmd->addr, &src->addr, sizeof(mesh_ip4_addr_t));
+        memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(mesh_ip4_addr_t));
         ip6_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
                    &g_cli_autotest.target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cli_autotest.length);
@@ -588,7 +588,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         cmd->type = AUTOTEST_REPLY;
         cmd->seq = htons(seq);
         src = umesh_get_ucast_addr();
-        memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
+        memcpy(&cmd->addr, &src->addr.ip6_addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cli_autotest.udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
@@ -605,7 +605,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
     autotest_cmd_t *cmd;
     uint8_t *data;
     mesh_ip4_addr_t dest;
-    const mesh_netif_ip4_address_t *src;
+    const ur_netif_ip6_address_t *src;
     uint16_t seq;
 
     if (length == 0) {
@@ -628,7 +628,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         cmd->type = AUTOTEST_REPLY;
         cmd->seq = htons(seq);
         src = umesh_get_ucast_addr();
-        memcpy(&cmd->addr, &src->addr, sizeof(mesh_ip4_addr_t));
+        memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(mesh_ip4_addr_t));
         ip6_sendto(g_cli_autotest.udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
@@ -788,7 +788,11 @@ void process_testcmd(int argc, char *argv[])
     } else if (strcmp(cmd, "autotest_acked") == 0) {
         response_append("%d", g_cli_autotest.acked);
     } else if (strcmp(cmd, "ipaddr") == 0) {
-        response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(umesh_get_ucast_addr()->addr));
+#if LWIP_IPV6
+        response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(umesh_get_ucast_addr()->addr.ip6_addr));
+#else
+        response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(umesh_get_ucast_addr()->addr.ip4_addr));
+#endif
     } else if (strcmp(cmd, "router") == 0) {
         show_router(ur_router_get_default_router());
     }
@@ -976,22 +980,22 @@ static void show_ipaddr(network_context_t *network)
     addr = umesh_get_ucast_addr();
     while (addr) {
         response_append("\t" IP6_ADDR_FMT "\r\n",
-                        IP6_ADDR_DATA(addr->addr));
+                        IP6_ADDR_DATA(addr->addr.ip6_addr));
         addr = addr->next;
     }
 
     addr = umesh_get_mcast_addr();
     while (addr) {
         response_append("\t" IP6_ADDR_FMT "\r\n",
-                        IP6_ADDR_DATA(addr->addr));
+                        IP6_ADDR_DATA(addr->addr.ip6_addr));
         addr = addr->next;
     }
 #else
-    const mesh_netif_ip4_address_t *addr;
+    const ur_netif_ip6_address_t *addr;
     addr = umesh_get_ucast_addr();
-    response_append("\t" IP4_ADDR_FMT "\r\n", IP4_ADDR_DATA(addr->addr));
+    response_append("\t" IP4_ADDR_FMT "\r\n", IP4_ADDR_DATA(addr->addr.ip4_addr));
     addr = umesh_get_mcast_addr();
-    response_append("\t" IP4_ADDR_FMT "\r\n", IP4_ADDR_DATA(addr->addr));
+    response_append("\t" IP4_ADDR_FMT "\r\n", IP4_ADDR_DATA(addr->addr.ip4_addr));
 #endif
 }
 

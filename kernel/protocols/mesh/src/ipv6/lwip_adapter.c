@@ -139,8 +139,8 @@ static void update_interface_ipaddr(void)
     while (ip6_addr) {
         ip6_addr_t addr6;
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
-        IP6_ADDR(&addr6, ip6_addr->addr.m32[0], ip6_addr->addr.m32[1],
-                 ip6_addr->addr.m32[2], ip6_addr->addr.m32[3]);
+        IP6_ADDR(&addr6, ip6_addr->addr.ip6_addr.m32[0], ip6_addr->addr.ip6_addr.m32[1],
+                 ip6_addr->addr.ip6_addr.m32[2], ip6_addr->addr.ip6_addr.m32[3]);
         ip6_addr_copy(*(ip_2_ip6(&g_la_state.adpif.ip6_addr[index])), addr6);
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_VALID);
         ip6_addr = ip6_addr->next;
@@ -153,7 +153,7 @@ static void update_interface_ipaddr(void)
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
         memset(&addr6, 0, sizeof(addr6));
         for (addr_index = 0; addr_index < ip6_addr->prefix_length / 32; addr_index++) {
-            addr6.addr[addr_index] = ip6_addr->addr.m32[addr_index];
+            addr6.addr[addr_index] = ip6_addr->addr.ip6_addr.m32[addr_index];
         }
         ip6_addr_copy(*(ip_2_ip6(&g_la_state.adpif.ip6_addr[index])), addr6);
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_VALID);
@@ -163,13 +163,13 @@ static void update_interface_ipaddr(void)
 
     g_la_state.adpif.ip6_autoconfig_enabled = 1;
 #else
-    const mesh_netif_ip4_address_t *ip4_addr;
+    const ur_netif_ip6_address_t *ip4_addr;
     ip4_addr_t ipaddr, netmask, gw;
 
     ip4_addr = umesh_get_ucast_addr();
     IP4_ADDR(&gw, 10, 0, 0, 1);
-    IP4_ADDR(&ipaddr, ip4_addr->addr.m8[0], ip4_addr->addr.m8[1],\
-             ip4_addr->addr.m8[2], ip4_addr->addr.m8[3]);
+    IP4_ADDR(&ipaddr, ip4_addr->addr.ip4_addr.m8[0], ip4_addr->addr.ip4_addr.m8[1],\
+             ip4_addr->addr.ip4_addr.m8[2], ip4_addr->addr.ip4_addr.m8[3]);
     IP4_ADDR(&netmask, 255, 255, 0, 0);
     netif_set_addr(&g_la_state.adpif, &ipaddr, &netmask, &gw);
 
@@ -177,8 +177,8 @@ static void update_interface_ipaddr(void)
 #if LWIP_IGMP
     g_la_state.adpif.flags |= NETIF_FLAG_IGMP;
     ip4_addr = umesh_get_mcast_addr();
-    IP4_ADDR(&g_group.group_address, ip4_addr->addr.m8[0], ip4_addr->addr.m8[1],\
-             ip4_addr->addr.m8[2], ip4_addr->addr.m8[3]);
+    IP4_ADDR(&g_group.group_address, ip4_addr->addr.ip4_addr.m8[0], ip4_addr->addr.ip4_addr.m8[1],\
+             ip4_addr->addr.ip4_addr.m8[2], ip4_addr->addr.ip4_addr.m8[3]);
     netif_set_client_data(&g_la_state.adpif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP, &g_group);
 #endif
 #endif

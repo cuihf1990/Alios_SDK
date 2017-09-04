@@ -84,15 +84,13 @@ enum {
 };
 
 typedef struct ur_netif_ip6_address_s {
-    ur_ip6_addr_t                 addr;
+    union {
+        ur_ip6_addr_t ip6_addr;
+        mesh_ip4_addr_t ip4_addr;
+    } addr;
     uint8_t                       prefix_length;
     struct ur_netif_ip6_address_s *next;
 } ur_netif_ip6_address_t;
-
-typedef struct mesh_netif_ip4_address_s {
-    mesh_ip4_addr_t addr;
-    uint8_t prefix_length;
-} mesh_netif_ip4_address_t;
 
 typedef struct mac_address_s {
     union {
