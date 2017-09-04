@@ -46,7 +46,7 @@ static void one_layer_case(void)
     check_p2p_str_wait("SID_ROUTER", 14, "testcmd router", 2);
 
     myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 14, "testcmd icmp_acked", 5);
 
@@ -62,9 +62,9 @@ static void one_layer_case(void)
 
     yos_msleep(WIFI_NEIGHBOR_ALIVE_TIMEOUT + WIFI_ADVERTISEMENT_TIMEOUT);
     myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
-    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     yos_msleep(WIFI_ADVERTISEMENT_TIMEOUT);
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("2", 14, "testcmd icmp_acked", 10);

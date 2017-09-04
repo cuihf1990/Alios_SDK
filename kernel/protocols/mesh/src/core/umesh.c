@@ -31,13 +31,8 @@ typedef struct transmit_frame_s {
 
 typedef struct urmesh_state_s {
     mm_cb_t                mm_cb;
-#if LWIP_IPV6
     ur_netif_ip6_address_t ucast_address[IP6_UCAST_ADDR_NUM];
     ur_netif_ip6_address_t mcast_address[IP6_MCAST_ADDR_NUM];
-#else
-    mesh_netif_ip4_address_t ucast_address[IP6_UCAST_ADDR_NUM];
-    mesh_netif_ip4_address_t mcast_address[IP6_MCAST_ADDR_NUM];
-#endif
     ur_adapter_callback_t  *adapter_callback;
     bool                   initialized;
     bool                   started;
@@ -53,39 +48,39 @@ static void update_ipaddr(void)
     network_context_t *network;
 
     network = get_default_network_context();
-    memset(g_um_state.ucast_address[0].addr.m8, 0,
-           sizeof(g_um_state.ucast_address[0].addr.m8));
-    g_um_state.ucast_address[0].addr.m32[0] = htonl(0xfc000000);
-    g_um_state.ucast_address[0].addr.m32[1] = htonl(nd_get_stable_meshnetid());
+    memset(g_um_state.ucast_address[0].addr.ip6_addr.m8, 0,
+           sizeof(g_um_state.ucast_address[0].addr.ip6_addr.m8));
+    g_um_state.ucast_address[0].addr.ip6_addr.m32[0] = htonl(0xfc000000);
+    g_um_state.ucast_address[0].addr.ip6_addr.m32[1] = htonl(nd_get_stable_meshnetid());
     addr = (get_sub_netid(network->meshnetid) << 16) | umesh_mm_get_local_sid();
-    g_um_state.ucast_address[0].addr.m32[3] = htonl(addr);
+    g_um_state.ucast_address[0].addr.ip6_addr.m32[3] = htonl(addr);
     g_um_state.ucast_address[0].prefix_length = 64;
 
     g_um_state.ucast_address[0].next = &g_um_state.ucast_address[1];
-    memset(g_um_state.ucast_address[1].addr.m8, 0,
-           sizeof(g_um_state.ucast_address[1].addr.m8));
-    g_um_state.ucast_address[1].addr.m32[0] = htonl(0xfc000000);
-    g_um_state.ucast_address[1].addr.m32[1] = htonl(nd_get_stable_meshnetid());
-    memcpy(&g_um_state.ucast_address[1].addr.m8[8], umesh_mm_get_local_ueid(), 8);
+    memset(g_um_state.ucast_address[1].addr.ip6_addr.m8, 0,
+           sizeof(g_um_state.ucast_address[1].addr.ip6_addr.m8));
+    g_um_state.ucast_address[1].addr.ip6_addr.m32[0] = htonl(0xfc000000);
+    g_um_state.ucast_address[1].addr.ip6_addr.m32[1] = htonl(nd_get_stable_meshnetid());
+    memcpy(&g_um_state.ucast_address[1].addr.ip6_addr.m8[8], umesh_mm_get_local_ueid(), 8);
     g_um_state.ucast_address[1].prefix_length = 64;
 
     mcast = nd_get_subscribed_mcast();
-    memcpy(&g_um_state.mcast_address[0].addr, mcast,
-           sizeof(g_um_state.mcast_address[0].addr));
+    memcpy(&g_um_state.mcast_address[0].addr.ip6_addr, mcast,
+           sizeof(g_um_state.mcast_address[0].addr.ip6_addr));
     g_um_state.mcast_address[0].prefix_length = 64;
 #else
     uint16_t sid;
 
     sid = umesh_mm_get_local_sid() + 2;
-    g_um_state.ucast_address[0].addr.m8[0] = 10;
-    g_um_state.ucast_address[0].addr.m8[1] = 0;
-    g_um_state.ucast_address[0].addr.m8[2] = sid >> 8;
-    g_um_state.ucast_address[0].addr.m8[3] = sid & 0xff;
+    g_um_state.ucast_address[0].addr.ip4_addr.m8[0] = 10;
+    g_um_state.ucast_address[0].addr.ip4_addr.m8[1] = 0;
+    g_um_state.ucast_address[0].addr.ip4_addr.m8[2] = sid >> 8;
+    g_um_state.ucast_address[0].addr.ip4_addr.m8[3] = sid & 0xff;
 
-    g_um_state.mcast_address[0].addr.m8[0] = 224;
-    g_um_state.mcast_address[0].addr.m8[1] = 0;
-    g_um_state.mcast_address[0].addr.m8[2] = 0;
-    g_um_state.mcast_address[0].addr.m8[3] = 252;
+    g_um_state.mcast_address[0].addr.ip4_addr.m8[0] = 224;
+    g_um_state.mcast_address[0].addr.ip4_addr.m8[1] = 0;
+    g_um_state.mcast_address[0].addr.ip4_addr.m8[2] = 0;
+    g_um_state.mcast_address[0].addr.ip4_addr.m8[3] = 252;
 #endif
 }
 
@@ -551,20 +546,12 @@ bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)
     return nd_is_subscribed_mcast(addr);
 }
 
-#if LWIP_IPV6
 const ur_netif_ip6_address_t *umesh_get_ucast_addr(void)
-#else
-const mesh_netif_ip4_address_t *umesh_get_ucast_addr(void)
-#endif
 {
     return g_um_state.ucast_address;
 }
 
-#if LWIP_IPV6
 const ur_netif_ip6_address_t *umesh_get_mcast_addr(void)
-#else
-const mesh_netif_ip4_address_t *umesh_get_mcast_addr(void)
-#endif
 {
     return g_um_state.mcast_address;
 }
