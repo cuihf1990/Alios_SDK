@@ -21,13 +21,16 @@ $(NAME)_CFLAGS += -Wall -Werror
 $(NAME)_SOURCES += \
     ota_service.c
 
+ifndef CONFIG_OTA_CH
+CONFIG_OTA_CH := alink
+endif
 ifeq ($(CONFIG_OTA_CH),mqtt)
 $(NAME)_COMPONENTS += fota.coap_mqtt
 endif
 ifeq ($(CONFIG_OTA_CH),coap)
 $(NAME)_COMPONENTS += fota.coap_mqtt
 endif
-ifndef CONFIG_OTA_CH
+ifeq ($(CONFIG_OTA_CH),alink)
 $(NAME)_COMPONENTS += fota.alink
 endif
 
