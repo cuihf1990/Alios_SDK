@@ -20,8 +20,9 @@ static char *g_val_2 = "val_2";
 static char *g_val_3 = "val_3";
 static char *g_val_4 = "val_4";
 
-static char *g_key_update = "test_10";
+static char *g_key_update = "test_1000";
 static char *g_val_update = "val_19";
+static char *g_val_update_2 = "val_30";
 
 static void test_kv_add(void)
 {
@@ -105,6 +106,10 @@ static void test_kv_loop(void)
         if (ret != 0)
             count++;
 
+        ret = yos_kv_set(g_key_update, g_val_update, strlen(g_val_update), 1);
+        if (ret != 0)
+            count++;
+
         for (i = 0; i < 100; i++) {
             len = sizeof(val);
             snprintf(key, sizeof(key), "test_%d", i);
@@ -122,6 +127,11 @@ static void test_kv_loop(void)
                 count++;
             memset(key, 0, sizeof(key));
         }
+
+        ret = yos_kv_get(g_key_update, val, &len);
+        if ((ret != 0) || (strlen(val) != len))
+            count++;
+
    }
 
    YUNIT_ASSERT(0 == ret);
