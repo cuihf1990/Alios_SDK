@@ -166,7 +166,7 @@ $(NAME)_INCLUDES := beken7231/beken378/ip/common \
                     beken7231/beken378/os/FreeRTOSv9.0.0/FreeRTOS/Source/include \
                     beken7231/beken378/os/FreeRTOSv9.0.0
 
-$(NAME)_SOURCES :=  aos/yos.c
+$(NAME)_SOURCES :=  aos/aos_main.c
 $(NAME)_INCLUDES += aos
                     
 $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \

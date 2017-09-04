@@ -2,7 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos.h>
+#include <aos_main.h>
 #include <k_api.h>
 #include <yos/kernel.h>
 
