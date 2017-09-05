@@ -170,6 +170,7 @@ static void test_kv_error(void)
     memset(buf, 0, blk_size);
     for (i = 0; i < blk_nums; i++) {
         offset = i * blk_size;
+        hal_flash_erase(KV_TEST_PTN, offset, blk_size);
         hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     }
     test_kv_error_cycle();
@@ -177,6 +178,7 @@ static void test_kv_error(void)
     /* case situation : block header state is error */
     buf[0] = 'K';
     offset = 0;
+    hal_flash_erase(KV_TEST_PTN, offset, blk_size);
     hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     test_kv_error_cycle();
 
@@ -185,6 +187,7 @@ static void test_kv_error(void)
     buf[1] = 0xCC;
     for (i = 0; i < blk_nums; i++) {
         offset = i * blk_size;
+        hal_flash_erase(KV_TEST_PTN, offset, blk_size);
         hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     }
     test_kv_error_cycle();    
@@ -195,12 +198,35 @@ static void test_kv_error(void)
     buf[1] = 0xEE;
     for (i = 0; i < blk_nums; i++) {
         offset = i * blk_size;
+        hal_flash_erase(KV_TEST_PTN, offset, blk_size);
         hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     }
     buf[1] = 0;
     offset = blk_size;
+    hal_flash_erase(KV_TEST_PTN, offset, blk_size);
     hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     test_kv_error_cycle(); 
+
+    /* case situation : one block is clean, one block is dirty, but header means clean */
+    memset(buf, -1, blk_size);
+    buf[0] = 'K';
+    buf[1] = 0xEE;
+    offset = 0;
+    hal_flash_erase(KV_TEST_PTN, offset, blk_size);
+    hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+
+    memset(buf+2, 0, 100);
+    offset = blk_size;
+    hal_flash_erase(KV_TEST_PTN, offset, blk_size);
+    hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+
+    yos_kv_init();
+    memset(buf, 0, blk_size);
+    offset = blk_size;
+    hal_flash_read(KV_TEST_PTN, &offset, buf, blk_size);
+    YUNIT_ASSERT(buf[1] == 0x44); 
+    yos_kv_deinit();
+
 
     if(buf)
         yos_free(buf);

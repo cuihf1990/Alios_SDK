@@ -526,9 +526,9 @@ static int kv_item_update(kv_item_t *item, const char *key, const void *val, int
 static int kv_init(void)
 {
     block_hdr_t hdr;
-    int ret;
-    uint8_t i;
-    uint8_t next;
+    int ret, nums = 0;
+    uint8_t i, next;
+    uint8_t unclean[BLK_NUMS] = {0};
 
     for (i = 0; i < BLK_NUMS; i++) {
         memset(&hdr, 0, sizeof(block_hdr_t));
@@ -546,9 +546,8 @@ static int kv_init(void)
             kv_item_traverse(__item_recovery_cb, i, NULL);
             if (hdr.state == BLK_STATE_CLEAN) {
                 if (g_kv_mgr.block_info[i].space != (BLK_SIZE - BLK_HEADER_SIZE)) {
-                    if ((ret = kv_block_format(i)) != RES_OK) {
-                        return ret;
-                    }
+                    unclean[nums] = i;
+                    nums++;
                 } else {
                     (g_kv_mgr.clean_blk_nums)++;
                 }
@@ -558,6 +557,19 @@ static int kv_init(void)
                 return ret;
             }
         }
+    }
+
+    while (nums > 0) {
+        i = unclean[nums - 1];
+        if (g_kv_mgr.clean_blk_nums >= KV_GC_RESERVED) {
+            if ((ret = kv_state_set((i << BLK_BITS), BLK_STATE_DIRTY)) != RES_OK)
+                return ret;
+            g_kv_mgr.block_info[i].state = BLK_STATE_DIRTY;
+        } else {
+            if ((ret = kv_block_format(i)) != RES_OK)
+                return ret;
+        }
+        nums--;
     }
 
     if (g_kv_mgr.clean_blk_nums == 0) {
