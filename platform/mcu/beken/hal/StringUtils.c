@@ -31,7 +31,7 @@
 
 
 #include "StringUtils.h"
-#include "yos/debug.h"
+#include "yos/yos.h"
 #include <stddef.h>
 #include <stdarg.h>
 
