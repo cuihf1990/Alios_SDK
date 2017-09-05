@@ -37,6 +37,9 @@ void  yos_free(void *mem);
 #define dda_task_new yos_task_new
 #define dda_task_exit yos_task_exit
 #else
+#undef  LOGD
+#undef  LOGI
+#undef  LOGE
 #define LOGD(mod, arg...)
 #define LOGI(mod, arg...) printf(mod arg)
 #define LOGE(mod, arg...) printf(mod arg)
