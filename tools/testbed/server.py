@@ -110,7 +110,9 @@ class Server:
                                     continue
                     elif type == TBframe.DEVICE_ERASE or type == TBframe.DEVICE_PROGRAM or \
                          type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP or \
-                         type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_CMD:
+                         type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_CMD or \
+                         type == TBframe.FILE_BEGIN or type == TBframe.FILE_DATA or \
+                         type == TBframe.FILE_END:
                         values = value.split(',')
                         addr = (values[0], int(values[1]))
                         terminal = ''
@@ -118,7 +120,7 @@ class Server:
                             if t['addr'] == addr:
                                 terminal = t
                         if terminal != '':
-                            if values[2] != 'success':
+                            if values[2] != 'success' and value[2] != 'ok':
                                 data = TBframe.construct(TBframe.CMD_ERROR, values[2])
                             else:
                                 data = TBframe.construct(TBframe.CMD_DONE, values[2])
@@ -190,8 +192,6 @@ class Server:
         terminal['socket'].settimeout(1)
         heartbeat_timeout = time.time() + 30
         msg = ''
-        filename = ''
-        filetransmitting = False
         while self.keep_running:
             try:
                 if time.time() > heartbeat_timeout:
@@ -209,30 +209,21 @@ class Server:
                         break
 
                     heartbeat_timeout = time.time() + 30
-                    if type == TBframe.FILE_BEGIN:
-                        if 'file' in locals() and file.closed == False:
-                            file.close()
-                        filename = 'server/' + value + "-" + terminal['addr'][0]
-                        filename += "@" + time.strftime("%Y-%m-%d-%H-%M")
-                        file = open(filename, 'w')
-                    elif type == TBframe.FILE_DATA:
-                        if 'file' in locals() and file.closed == False:
-                            file.write(value)
-                    elif type == TBframe.FILE_END:
-                        if 'file' in locals():
-                            file.close()
-                        print "file {0} reveived from {1}".format(filename.split('/')[-1], terminal['addr'])
-                    elif type == TBframe.FILE_COPY:
-                        dst = value.split(',')
-                        addr = (dst[0], int(dst[1]))
+                    if type == TBframe.FILE_BEGIN or type == TBframe.FILE_DATA or type == TBframe.FILE_END:
+                        target = value.split(':')[0]
+                        target_data = value[len(target):]
+                        [ip, port] = target.split(',')[0:2]
+                        addr = (ip, int(port))
                         client = self.get_client_by_addr(addr)
                         if client == None:
-                            data = TBframe.construct(TBframe.CMD_ERROR,'fail')
+                            data = TBframe.construct(TBframe.CMD_ERROR, 'noexist')
                             terminal['socket'].send(data)
                             continue
-                        self.send_file_to_someone(client, filename)
-                        data = TBframe.construct(TBframe.CMD_DONE,'success')
-                        terminal['socket'].send(data)
+                        content = terminal['addr'][0]
+                        content += ',' + str(terminal['addr'][1])
+                        content += target_data
+                        data = TBframe.construct(type, content)
+                        client['socket'].send(data)
                     elif type == TBframe.DEVICE_ERASE:
                         dst = value.split(',')
                         addr = (dst[0], int(dst[1]))
@@ -259,7 +250,7 @@ class Server:
                             content += ',' + str(terminal['addr'][1])
                             content += ',' + dst[2]
                             content += ',' + dst[3]
-                            content += ',' + filename[7:]
+                            content += ',' + dst[4]
                             data = TBframe.construct(TBframe.DEVICE_PROGRAM, content)
                             client['socket'].send(data)
                             self.increase_device_refer(client, dst[2], using_list)
