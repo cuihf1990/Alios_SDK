@@ -26,7 +26,7 @@ extern void yunos_lwip_init(int enable_tapif);
 extern void __gcov_flush(void);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
-extern void hw_start_hal(void);
+extern void hw_start_hal(options_t *poptions);
 extern void trace_start();
 extern void netmgr_init(void);
 extern int yos_framework_init(void);
@@ -52,7 +52,12 @@ static void app_entry(void *arg)
 
     yos_features_init();
 
-    hw_start_hal();
+#ifdef CONFIG_YOS_MESHYTS
+    options.flash.per_pid = true;
+#else
+    options.flash.per_pid = false;
+#endif
+    hw_start_hal(&options);
 
     vfs_init();
     vfs_device_init();
