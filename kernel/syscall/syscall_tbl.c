@@ -3,7 +3,6 @@
  */
 
 #include <k_api.h>
-#include <yos/kernel.h>
 #include <yos/yos.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>

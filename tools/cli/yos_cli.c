@@ -6,12 +6,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <stdlib.h>
 #include <errno.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
-#include <yos/cli.h>
 
 #ifndef STDIO_UART
 #define STDIO_UART 0

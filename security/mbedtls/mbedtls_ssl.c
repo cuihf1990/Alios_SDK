@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 #include <yos/network.h>
 
 #include "mbedtls/config.h"

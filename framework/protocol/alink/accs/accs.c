@@ -9,7 +9,6 @@
 #include "yos/yos.h"
 #include "service_manager.h"
 #include "wsf.h"
-#include "yos/kernel.h"
 #include "alink_export_internal.h"
 #include "os.h"
 #include "service.h"

@@ -4,7 +4,7 @@
 
 #include <yos.h>
 #include <k_api.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 #define YOS_START_STACK 2048
 

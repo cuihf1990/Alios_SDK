@@ -45,7 +45,6 @@
 
 #include <cJSON.h>
 #include <yos/yos.h>
-#include <yos/kernel.h>
 
 #ifndef LOGE
 #define LOGE(mod, arg...) printf(mod " " arg)

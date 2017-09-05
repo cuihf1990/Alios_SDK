@@ -10,7 +10,7 @@
 #include <sys/prctl.h>
 #include <pthread.h>
 
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 void yos_reboot(void)
 {

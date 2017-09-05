@@ -9,7 +9,6 @@
 #include "yos/yos.h"
 #include "git_version.h"
 #include "connectivity_manager.h"
-#include "yos/kernel.h"
 #include "accs.h"
 #include "config.h"
 #include "cota.h"

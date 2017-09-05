@@ -2,7 +2,7 @@
 #define MBEDTLS_THREADING_ALT_H
 
 #include <stdlib.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 #ifdef __cplusplus
 extern "C" {

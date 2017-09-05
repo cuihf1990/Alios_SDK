@@ -12,7 +12,6 @@
 #endif
 
 #include <stdlib.h>
-#include <yos/kernel.h>
 
 void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len);
 int mbedtls_ssl_send(void *ssl, const char *buffer, int length);

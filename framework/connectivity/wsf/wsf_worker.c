@@ -10,7 +10,6 @@
 #include "wsf_msg_queue.h"
 #include "wsf_network.h"
 #include "wsf.h"
-#include "yos/kernel.h"
 #include "yos/yos.h"
 #include "yos/network.h"
 #include "os.h"

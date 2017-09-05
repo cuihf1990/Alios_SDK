@@ -12,7 +12,6 @@
 #include "wsf.h"
 #include "config.h"
 #include "git_version.h"
-#include "yos/kernel.h"
 #include "yos/yos.h"
 #include "awss.h"
 #include "os.h"

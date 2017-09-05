@@ -12,7 +12,6 @@
 #include <pthread.h>
 
 #include <yos/yos.h>
-#include <yos/kernel.h>
 
 #include <cpu_event.h>
 #include <umesh_hal.h>

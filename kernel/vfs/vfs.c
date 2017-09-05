@@ -2,7 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos/kernel.h>
 #include <yos/yos.h>
 #include <yos/network.h>
 #include <vfs_conf.h>

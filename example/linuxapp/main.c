@@ -3,7 +3,6 @@
  */
 
 #include <stdio.h>
-#include <yos/kernel.h>
 #include <yos/yos.h>
 #include <yos/network.h>
 #include <strings.h>

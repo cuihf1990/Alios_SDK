@@ -4,7 +4,6 @@
 
 #include <syscall_uapi.h>
 #include <k_api.h>
-#include <yos/kernel.h>
 #include <yos/yos.h>
 #include <hal/ota.h>
 #include <hal/wifi.h>

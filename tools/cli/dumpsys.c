@@ -5,7 +5,6 @@
 #include <malloc.h>
 #include <string.h>
 #include <yos/yos.h>
-#include <yos/kernel.h>
 
 #ifdef VCALL_RHINO
 #include "k_api.h"
