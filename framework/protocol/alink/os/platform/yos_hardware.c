@@ -88,7 +88,7 @@ int platform_config_read(char *buffer, int length)
         return -1;
     }
 
-    return yos_kv_get("alink" , buffer, length);
+    return yos_kv_get("alink" , buffer, &length);
 }
 
 int platform_sys_net_is_ready(void)
