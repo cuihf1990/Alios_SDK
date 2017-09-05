@@ -711,40 +711,21 @@ void process_state(int argc, char *argv[])
 
 void process_sids(int argc, char *argv[])
 {
-    neighbor_t    *node = NULL;
-    sid_node_t    *mobile_node;
-    slist_t       *hals;
-    hal_context_t *hal;
+    sid_node_t    *node;
     slist_t       *nodes_list;
     slist_t       *networks;
     network_context_t *network;
 
     response_append("me=%04x\r\n", umesh_get_sid());
-
-    response_append("children:\r\n");
-    hals = umesh_get_hals();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-            if (node->state != STATE_CHILD) {
-                continue;
-            }
-            response_append(EXT_ADDR_FMT ", %04x\r\n",
-                            EXT_ADDR_DATA(node->mac), node->sid);
-        }
-    }
-
-    response_append("mobile:\r\n");
     networks = umesh_get_networks();
     slist_for_each_entry(networks, network, network_context_t, next) {
         nodes_list = get_ssid_nodes_list(network->sid_base);
         if (nodes_list == NULL) {
             continue;
         }
-        slist_for_each_entry(nodes_list, mobile_node, sid_node_t, next) {
-            if (is_partial_function_sid(mobile_node->node_id.sid)) {
-                response_append(EXT_ADDR_FMT ", %04x\r\n",
-                                EXT_ADDR_DATA(mobile_node->node_id.ueid), mobile_node->node_id.sid);
-            }
+        slist_for_each_entry(nodes_list, node, sid_node_t, next) {
+            response_append(EXT_ADDR_FMT ", %04x\r\n",
+                            EXT_ADDR_DATA(node->node_id.ueid), node->node_id.sid);
         }
     }
 }
