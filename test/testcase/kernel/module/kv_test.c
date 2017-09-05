@@ -106,7 +106,7 @@ static void test_kv_loop(void)
         if (ret != 0)
             count++;
 
-        ret = yos_kv_set(g_key_update, g_val_update, strlen(g_val_update), 1);
+        ret = yos_kv_set(g_key_update, g_val_update_2, strlen(g_val_update_2), 1);
         if (ret != 0)
             count++;
 
@@ -129,7 +129,7 @@ static void test_kv_loop(void)
         }
 
         ret = yos_kv_get(g_key_update, val, &len);
-        if ((ret != 0) || (strlen(val) != len))
+        if ((ret != 0) || (strlen(g_val_update_2) != len))
             count++;
 
    }
