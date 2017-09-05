@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include <yos/cli.h>
 #include <yos/yos.h>
 
 #include "umesh.h"

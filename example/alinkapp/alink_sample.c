@@ -15,7 +15,6 @@
 #include "yos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
-#include <yos/cli.h>
 #include <yos/cloud.h>
 #include <accs.h>
 

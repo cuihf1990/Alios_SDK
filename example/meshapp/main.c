@@ -6,7 +6,6 @@
 #include <yos/kernel.h>
 #include <yos/yos.h>
 #include <yos/network.h>
-#include <yos/cli.h>
 #ifdef CONFIG_YOS_DDA
 #include <dda.h>
 #endif

@@ -11,7 +11,6 @@
 #include <lwip/sockets.h>
 
 #include <yos/yos.h>
-#include "yos/cli.h"
 #include <yos/cloud.h>
 #include <lwip/sockets.h>
 #include "umesh.h"

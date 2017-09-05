@@ -10,7 +10,6 @@
 #endif
 #include "k_mm_debug.h"
 #include "yos/yos.h"
-#include "yos/cli.h"
 
 #ifdef CONFIG_YOS_CLI
 #define print cli_printf
