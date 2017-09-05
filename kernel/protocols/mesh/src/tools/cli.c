@@ -26,8 +26,8 @@
 #include "lwip/inet_chksum.h"
 #include "lwip/inet.h"
 
-#ifdef CONFIG_YOS_MESH_DEBUG
 static void process_help(int argc, char *argv[]);
+#ifdef CONFIG_YOS_MESH_DEBUG
 static void process_autotest(int argc, char *argv[]);
 static void process_channel(int argc, char *argv[]);
 static void process_init(int argc, char *argv[]);
@@ -61,8 +61,8 @@ static void show_router(uint8_t id);
 static void show_ipaddr(network_context_t *network);
 
 const cli_command_t g_commands[] = {
-#ifdef CONFIG_YOS_MESH_DEBUG
     { "help", &process_help },
+#ifdef CONFIG_YOS_MESH_DEBUG
     { "autotest", &process_autotest },
     { "channel", &process_channel },
     { "init", &process_init },
@@ -184,6 +184,15 @@ static const char *nbrstate2str(neighbor_state_t state)
     return "unknown";
 }
 
+void process_help(int argc, char *argv[])
+{
+    uint16_t index;
+
+    for (index = 0; index < sizeof(g_commands) / sizeof(g_commands[0]); ++index) {
+        response_append("%s\r\n", g_commands[index].name);
+    }
+}
+
 #ifdef CONFIG_YOS_MESH_DEBUG
 static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length);
 
@@ -303,15 +312,6 @@ static void handle_autotest_timer(void *args)
                                                          handle_autotest_print_timer, NULL);
     }
 #endif
-}
-
-void process_help(int argc, char *argv[])
-{
-    uint16_t index;
-
-    for (index = 0; index < sizeof(g_commands) / sizeof(g_commands[0]); ++index) {
-        response_append("%s\r\n", g_commands[index].name);
-    }
 }
 
 void process_autotest(int argc, char *argv[])
@@ -1313,9 +1313,11 @@ void ur_cli_input_args(char **argv, uint16_t argc)
             }
             argc -= 2;
             g_commands[index].function(argc, options);
-            break;
+            return;
         }
     }
+
+    response_append("cmd no supported\r\n");
 }
 
 static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
