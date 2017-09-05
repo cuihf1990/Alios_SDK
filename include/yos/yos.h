@@ -11,15 +11,15 @@
 #include <yos/kv.h>
 #include <yos/list.h>
 #include <yos/log.h>
+#include <yos/types.h>
 #include <yos/vfs.h>
-#include <yos/yloop.h>
 #include <yos/version.h>
+#include <yos/yloop.h>
 
 /*
 #include <yos/kernel.h>
 #include <yos/alink.h>
 #include <yos/network.h>
-#include <yos/types.h>
 */
 
 /**@brief Transmit data on a UART interface
