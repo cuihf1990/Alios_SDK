@@ -10,6 +10,7 @@
 #include <yos/log.h>
 #include <yos/vfs.h>
 #include <yos/yloop.h>
+#include <yos/version.h>
 
 /*
 #include <yos/kernel.h>
@@ -19,7 +20,6 @@
 #include <yos/debug.h>
 #include <yos/network.h>
 #include <yos/types.h>
-#include <yos/version.h>
 */
 
 /**@brief Transmit data on a UART interface

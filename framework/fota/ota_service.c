@@ -4,7 +4,6 @@
 #include <string.h>
 #include <hal/ota.h>
 #include <yos/yos.h>
-#include <yos/version.h>
 
 #include "ota_transport.h"
 #include "ota_update_manifest.h"
