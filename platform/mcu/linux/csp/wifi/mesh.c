@@ -325,7 +325,7 @@ static void linux_80211_wifi_mesh_get_extnetid(umesh_hal_module_t *module,
 }
 
 static umesh_hal_module_t linux_80211_mesh_wifi_module;
-static const uint8_t g_wifi_channels[] = {1, 6, 11};
+static const uint8_t g_wifi_channels[] = {1, 4, 6, 9, 11};
 static mesh_hal_priv_t wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = DEFAULT_MTU_SIZE,
