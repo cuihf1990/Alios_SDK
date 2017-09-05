@@ -30,6 +30,14 @@ int hal_umesh_init(void)
 
 void hal_umesh_register_module(umesh_hal_module_t *m)
 {
+    dlist_t *t;
+
+    dlist_for_each(t, &g_mesh_module) {
+        umesh_hal_module_t *module = (umesh_hal_module_t *)t;
+        if (module == m) {
+            return;
+        }
+    }
     dlist_add_tail(&m->base.list, &g_mesh_module);
 }
 
