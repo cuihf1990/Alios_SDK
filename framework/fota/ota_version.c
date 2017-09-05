@@ -3,7 +3,7 @@
  */
 
 #include <string.h>
-#include <hal/ota.h>
+#include <hal/hal.h>
 #include <yos/yos.h>
 #include "ota_transport.h"
 #include "ota_update_manifest.h"

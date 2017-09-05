@@ -2,8 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <hal/base.h>
-#include <hal/wifi.h>
+#include <hal/hal.h>
 #include <netmgr.h>
 #include <yos/yos.h>
 

@@ -6,9 +6,7 @@
 #include <yos/yos.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
-#include <hal/wifi.h>
-#include <hal/ota.h>
-#include <hal/soc/soc.h>
+#include <hal/hal.h>
 #include <umesh.h>
 
 extern void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);

@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <yos/yos.h>
-#include "hal/soc/flash.h"
+#include <hal/hal.h>
 #include "kvmgr.h"
 
 /* Key-value function return code description */
