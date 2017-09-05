@@ -1,7 +1,7 @@
 #!/bin/sh
 
-workdir=~/testbed/autoscripts/
-tests="example_test.py line_topology_test.py tree_topology_test.py mixed_topology_test.py mcast_test.py"
+workdir=~/testbed/autoscripts/ipv4/
+tests="line_topology_v4_test.py tree_topology_v4_test.py mcast_v4_test.py"
 recipients="apsaras73@list.alibaba-inc.com"
 #recipients="lc122798@alibaba-inc.com"
 logfile=log.txt
