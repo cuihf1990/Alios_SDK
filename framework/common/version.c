@@ -3,8 +3,8 @@
  */
 
 #include <string.h>
-#include <yos/log.h>
-#include<stdio.h>
+#include <stdio.h>
+#include <yos/yos.h>
 
 #ifndef YOS_EXPORT
 #define YOS_EXPORT

@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <yos/cli.h>
 #include <yos/yos.h>
-#include <yos/log.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"

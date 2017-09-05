@@ -10,9 +10,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <time.h>
-#include "yos/list.h"
 #include "yos/yos.h"
-#include "yos/log.h"
 #include "json_parser.h"
 #include "msdp.h"
 #include "devmgr.h"

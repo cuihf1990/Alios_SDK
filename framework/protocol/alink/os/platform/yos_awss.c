@@ -11,8 +11,6 @@
 #include "platform_config.h"
 #include "os.h"
 
-#include "yos/log.h"
-
 #include "ali_crypto.h"
 
 platform_awss_recv_80211_frame_cb_t g_ieee80211_handler;

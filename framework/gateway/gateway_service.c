@@ -11,8 +11,6 @@
 #include <lwip/sockets.h>
 
 #include <yos/yos.h>
-#include <yos/log.h>
-#include <yos/list.h>
 #include "yos/cli.h"
 #include <yos/cloud.h>
 #include <lwip/sockets.h>

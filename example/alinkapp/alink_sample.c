@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
-#include "yos/log.h"
 #include "alink_export.h"
 #include "json_parser.h"
 #include "yos/yos.h"

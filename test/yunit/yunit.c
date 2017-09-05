@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <yos/kernel.h>
-#include <yos/log.h>
+#include <yos/yos.h>
 #include "yunit.h"
 
 #define TAG "yunit"

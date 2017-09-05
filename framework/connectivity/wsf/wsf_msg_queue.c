@@ -6,7 +6,6 @@
 #include "wsf_log.h"
 #include "wsf_msg_queue.h"
 #include "wsf.h"
-#include "yos/log.h"
 #include "os.h"
 
 extern wsf_list_node_t *wsf_list_pop_front(wsf_list_t *list);

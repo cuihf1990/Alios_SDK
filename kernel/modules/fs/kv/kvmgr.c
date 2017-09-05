@@ -5,7 +5,6 @@
 #include <errno.h>
 #include <string.h>
 #include <yos/cli.h>
-#include <yos/log.h>
 #include <yos/kernel.h>
 #include <yos/yos.h>
 #include "hal/soc/flash.h"

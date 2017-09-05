@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <yos/log.h>
+#include <yos/yos.h>
 #include <hal/soc/soc.h>
 #include <hal/soc/timer.h>
 #include <hal/base.h>

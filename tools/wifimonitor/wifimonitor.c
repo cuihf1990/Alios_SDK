@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <yos/log.h>
+#include <yos/yos.h>
 #include <yos/cloud.h>
 #include <yos/kernel.h>
 #include "wifimonitor.h"

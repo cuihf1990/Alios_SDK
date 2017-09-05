@@ -7,7 +7,6 @@
 #include "device.h"
 #include "digest_algorithm.h"
 #include "json_parser.h"
-#include "yos/log.h"
 #include "accs.h"
 #include "service.h"
 #include "wsf.h"

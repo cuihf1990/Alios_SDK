@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "digest_algorithm.h"
 #include "os.h"
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "enrollee.h"
 
 #ifndef AWSS_DISABLE_ENROLLEE
