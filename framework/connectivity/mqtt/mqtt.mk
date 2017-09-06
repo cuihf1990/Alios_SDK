@@ -6,9 +6,16 @@ $(NAME)_COMPONENTS += connectivity.mqtt
 $(NAME)_COMPONENTS += cli utility.digest_algorithm
 $(NAME)_COMPONENTS += utility.iotx-utils.LITE-log utility.iotx-utils.LITE-utils utility.iotx-utils.misc utility.iotx-utils.sdk-impl utility.iotx-utils.guider utility.iotx-utils.digest
 
-MQTT_UTILS_PATH :=  ../../../utility/iotx-utils
+#MQTT_UTILS_PATH :=  ../../../utility/iotx-utils
+#$(NAME)_INCLUDES := $(MQTT_UTILS_PATH)/digest \
+					$(MQTT_UTILS_PATH)/guider \
+					$(MQTT_UTILS_PATH)/hal \
+					$(MQTT_UTILS_PATH)/LITE-log \
+					$(MQTT_UTILS_PATH)/LITE-utils \
+					$(MQTT_UTILS_PATH)/misc \
+					$(MQTT_UTILS_PATH)/sdk-impl \
+					$(MQTT_UTILS_PATH)/device
 
-$(NAME)_INCLUDES := $(MQTT_UTILS_PATH)/digest $(MQTT_UTILS_PATH)/guider $(MQTT_UTILS_PATH)/utility/iotx-utils/hal $(MQTT_UTILS_PATH)/utility/iotx-utils/LITE-log $(MQTT_UTILS_PATH)/utility/iotx-utils/LITE-utils $(MQTT_UTILS_PATH)/utility/iotx-utils/misc $(MQTT_UTILS_PATH)/utility/iotx-utils/sdk-impl $(MQTT_UTILS_PATH)/utility/iotx-utils/device
 $(NAME)_SOURCES := mqtt_client.c
 
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
