@@ -16,11 +16,11 @@ $(NAME)_SOURCES := \
     mico/mico_rhino.c
 
 $(NAME)_SOURCES += \
-    aos/yos_rhino.c
+    aos/aos_rhino.c
 else
 GLOBAL_DEFINES += VCALL_POSIX
 
 $(NAME)_SOURCES += \
-    aos/yos_posix.c
+    aos/aos_posix.c
 endif
 
