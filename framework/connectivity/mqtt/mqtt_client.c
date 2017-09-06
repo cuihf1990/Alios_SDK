@@ -34,7 +34,7 @@
 #include "MQTTPacket/MQTTPacket.h"
 #include "mqtt_client.h"
 
-#include <yos/framework.h>
+#include <yos/yloop.h>
 
 #ifdef MQTT_ID2_CRYPTO
 /* Macros for accessing the most offset byte of a number */

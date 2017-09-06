@@ -25,7 +25,7 @@
 #include "iot_export.h"
 #include "yos/log.h"
 //#include "json_parser.h"
-#include "yos/framework.h"
+#include "yos/yloop.h"
 #include "yos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
