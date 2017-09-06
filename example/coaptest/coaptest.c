@@ -127,7 +127,7 @@ int application_start(void)
     yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
 
 	netmgr_init();
-	netmgr_start(false);
+	netmgr_start(true);
 
     yos_loop_run();
 
