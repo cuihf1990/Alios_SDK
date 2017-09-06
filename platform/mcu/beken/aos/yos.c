@@ -67,7 +67,7 @@ static void yos_init(void)
     application_init();
 
     if (app_info->app_entry) {
-        app_info->app_entry((int)g_syscall_tbl, NULL);
+        app_info->app_entry((void *)g_syscall_tbl, 0, NULL);
     }
 #else
     yos_framework_init();
