@@ -275,8 +275,7 @@ static ur_error_t send_address_query(network_context_t *network,
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send address query, len %d\r\n", length);
+    MESH_LOG_DEBUG("send address query, len %d", length);
     return error;
 }
 
@@ -352,7 +351,7 @@ ur_error_t handle_address_query(message_t *message)
                                     &target_node);
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address query\r\n");
+    MESH_LOG_DEBUG("handle address query");
     return error;
 }
 
@@ -398,8 +397,7 @@ static ur_error_t send_address_query_response(network_context_t *network,
         message_free(message);
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send address query response, len %d\r\n", length);
+    MESH_LOG_DEBUG("send address query response, len %d", length);
 
     return error;
 }
@@ -469,8 +467,7 @@ ur_error_t handle_address_query_response(message_t *message)
             break;
         }
     }
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "handle address query response\r\n");
+    MESH_LOG_DEBUG("handle address query response");
     return UR_ERROR_NONE;
 }
 
@@ -526,8 +523,7 @@ ur_error_t send_address_notification(network_context_t *network,
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send address notification, len %d\r\n", length);
+    MESH_LOG_DEBUG("send address notification, len %d", length);
     return error;
 }
 
@@ -563,8 +559,7 @@ ur_error_t send_address_unreachable(network_context_t *network,
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send address unreachable, len %d\r\n", length);
+    MESH_LOG_DEBUG("send address unreachable, len %d", length);
     return error;
 }
 
@@ -613,7 +608,7 @@ ur_error_t handle_address_notification(message_t *message)
     memcpy(&target.ueid, target_ueid->ueid, sizeof(target.ueid));
     error = update_address_cache(hal_type->type, &target, &attach);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address notification\r\n");
+    MESH_LOG_DEBUG("handle address notification");
 
     return error;
 }
@@ -650,7 +645,7 @@ ur_error_t handle_address_unreachable(message_t *message)
         }
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address unreachable\r\n");
+    MESH_LOG_DEBUG("handle address unreachable");
 
     return error;
 }
@@ -726,8 +721,7 @@ ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
     node->node_id.timeout = 0;
     node->type = type;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "update_address_cache, ueid %x, sid %x, netid %x, attach_sid %x\r\n",
+    MESH_LOG_DEBUG("update_address_cache, ueid %x, sid %x, netid %x, attach_sid %x",
            node->node_id.ueid[0], node->node_id.sid, node->node_id.meshnetid,
            node->node_id.attach_sid);
     return UR_ERROR_NONE;

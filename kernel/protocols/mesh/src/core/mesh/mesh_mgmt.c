@@ -316,8 +316,7 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
 
     set_leader_network_context(network, init_allocator);
 
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-           "allocate sid 0x%04x, become %d in net %04x\r\n",
+    MESH_LOG_INFO("allocate sid 0x%04x, become %d in net %04x",
            network->sid, g_mm_state.device.state, network->meshnetid);
 
     return UR_ERROR_NONE;
@@ -363,8 +362,7 @@ void become_leader(void)
 
     calculate_network_key();
 
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-           "become leader\r\n");
+    MESH_LOG_INFO("become leader");
 }
 
 void umesh_mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length)
@@ -540,7 +538,7 @@ static void handle_attach_timer(void *args)
     bool detached = false;
     network_context_t *network = (network_context_t *)args;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle attach timer\r\n");
+    MESH_LOG_DEBUG("handle attach timer");
 
     network->attach_timer = NULL;
     switch (network->attach_state) {
@@ -676,8 +674,7 @@ ur_error_t send_advertisement(network_context_t *network)
     set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send advertisement, len %d\r\n", length);
+    MESH_LOG_DEBUG("send advertisement, len %d", length);
     return error;
 }
 
@@ -723,8 +720,8 @@ static ur_error_t send_attach_request(network_context_t *network)
     }
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send attach request, len %d\r\n", length);
+    MESH_LOG_DEBUG("send attach request, len %d", length);
+
     return error;
 }
 
@@ -782,8 +779,7 @@ static ur_error_t send_attach_response(network_context_t *network,
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send attach response, len %d\r\n", length);
+    MESH_LOG_DEBUG("send attach response, len %d", length);
     return error;
 }
 
@@ -805,7 +801,7 @@ static ur_error_t handle_attach_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle attach request\r\n");
+    MESH_LOG_DEBUG("handle attach request");
 
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
@@ -817,8 +813,7 @@ static ur_error_t handle_attach_request(message_t *message)
 
     node = get_neighbor_by_mac_addr(ueid->ueid);
     if (node && node == network->attach_node) {
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-               "ignore attach point's attach request\r\n");
+        MESH_LOG_INFO("ignore attach point's attach request");
         return UR_ERROR_FAIL;
     }
 
@@ -856,8 +851,7 @@ static ur_error_t handle_attach_request(message_t *message)
             }
         }
         send_attach_response(network, &info->src_mac, node_id);
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-               "attach response to " EXT_ADDR_FMT "\r\n",
+        MESH_LOG_INFO("attach response to " EXT_ADDR_FMT "",
                EXT_ADDR_DATA(info->src_mac.addr.addr));
     }
 
@@ -881,7 +875,7 @@ static ur_error_t handle_attach_response(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle attach response\r\n");
+    MESH_LOG_DEBUG("handle attach response");
 
     tlvs = message_get_payload(message) + sizeof(mm_header_t);
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
@@ -987,8 +981,7 @@ static ur_error_t send_sid_request(network_context_t *network)
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-           "send sid request, len %d\r\n", length);
+    MESH_LOG_DEBUG("send sid request, len %d", length);
     return error;
 }
 
@@ -1028,8 +1021,7 @@ static ur_error_t send_sid_response(network_context_t *network,
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send sid response %04x:%d, len %d\r\n", node_id->sid, node_id->type, length);
+    MESH_LOG_DEBUG("send sid response %04x:%d, len %d", node_id->sid, node_id->type, length);
     return error;
 }
 
@@ -1066,7 +1058,7 @@ static ur_error_t handle_sid_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle sid request\r\n");
+    MESH_LOG_DEBUG("handle sid request");
 
     memset(&node_id, 0, sizeof(node_id));
     node_id.sid = INVALID_SID;
@@ -1117,7 +1109,7 @@ static ur_error_t handle_sid_response(message_t *message)
     network_context_t *network;
     message_info_t *info;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle sid response\r\n");
+    MESH_LOG_DEBUG("handle sid response");
 
     info = message->info;
     network = info->network;
@@ -1152,8 +1144,7 @@ ur_error_t send_address_error(network_context_t *network, ur_addr_t *dest)
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send address error, len %d\r\n", length);
+    MESH_LOG_DEBUG("send address error, len %d", length);
     return error;
 }
 
@@ -1165,7 +1156,7 @@ ur_error_t handle_address_error(message_t *message)
 
     info = message->info;
     network = message->info->network;
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle address error\r\n");
+    MESH_LOG_DEBUG("handle address error");
 
     if (network->attach_node == NULL) {
         return error;
@@ -1210,7 +1201,7 @@ void become_detached(void)
 
     umesh_mm_start_net_scan_timer();
 
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "become detached\r\n");
+    MESH_LOG_INFO("become detached");
 }
 
 static ur_error_t attach_start(neighbor_t *nbr)
@@ -1255,8 +1246,7 @@ static ur_error_t attach_start(neighbor_t *nbr)
     stop_neighbor_updater();
     ur_stop_timer(&network->advertisement_timer, network);
 
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-           "%d node, attach start, from %04x:%04x to %04x:%x\r\n",
+    MESH_LOG_INFO("%d node, attach start, from %04x:%04x to %04x:%x",
            g_mm_state.device.state, network->attach_node ?
            network->attach_node->sid : 0,
            network->meshnetid, nbr ? nbr->sid : 0,
@@ -1382,7 +1372,7 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle advertisement\r\n");
+    MESH_LOG_DEBUG("handle advertisement");
 
     info = message->info;
     network = info->network;
@@ -1476,7 +1466,7 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
         default:
             break;
     }
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "cmd %d error %d\r\n",
+    MESH_LOG_DEBUG("cmd %d error %d",
            mm_header->command & COMMAND_COMMAND_MASK, error);
     return error;
 }
@@ -1516,7 +1506,7 @@ ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
 
     assert(mm_cb);
 
-    ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM, "ur started\r\n");
+    MESH_LOG_INFO("mesh started");
 
     reset_network_context();
     read_prev_netinfo();

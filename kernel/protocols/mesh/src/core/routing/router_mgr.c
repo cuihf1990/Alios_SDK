@@ -217,8 +217,7 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
         message_free(message);
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_ROUTE,
-           "router %d send routing info to %04x, len %d\r\n", router->id, dst, msg_length);
+    MESH_LOG_DEBUG("router %d send routing info to %04x, len %d", router->id, dst, msg_length);
     return error;
 }
 

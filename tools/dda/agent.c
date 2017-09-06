@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #include <netdb.h>
 #include <sys/socket.h>
@@ -591,9 +592,21 @@ int dda_enable(int agent_id)
     return 0;
 }
 
-void dda_log(char *buf)
+#define MAX_LOG_SIZE 256
+void dda_log(char *buf, ...)
 {
-    send_data(&agent_info, TYPE_MISC, CMD_MISC_LOG, 0, buf, strlen(buf)+1);
+    va_list args;
+    char *buffer;
+
+    buffer = (char *)aos_malloc(MAX_LOG_SIZE);
+    if (buffer == NULL) {
+        return;
+    }
+    va_start(args, buf);
+    vsnprintf(buffer, MAX_LOG_SIZE, buf, args);
+    va_end(args);
+    send_data(&agent_info, TYPE_MISC, CMD_MISC_LOG, 0, buffer, strlen(buffer)+1);
+    aos_free(buffer);
 }
 
 void dda_cli_log(char *buf)

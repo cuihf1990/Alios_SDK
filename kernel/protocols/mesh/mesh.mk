@@ -12,6 +12,7 @@ MESHDEBUG ?= 1
 ifeq ($(MESHDEBUG), 1)
 $(NAME)_SOURCES += src/tools/diags.c
 $(NAME)_SOURCES += src/utilities/mac_whitelist.c
+$(NAME)_SOURCES += src/utilities/logging.c
 GLOBAL_DEFINES += CONFIG_AOS_MESH_DEBUG
 endif
 

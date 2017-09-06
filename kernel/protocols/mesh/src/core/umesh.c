@@ -93,7 +93,8 @@ static ur_error_t umesh_interface_up(void)
     }
 
     aos_post_event(EV_MESH, CODE_MESH_CONNECTED, 0);
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_API, "mesh interface up\r\n");
+    MESH_LOG_DEBUG("mesh interface up");
+
     return UR_ERROR_NONE;
 }
 
