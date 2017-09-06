@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <yos/yos.h>
 
-#include "ota_service.h"
 #include "iot_import.h"
 #include "iot_export.h"
 
@@ -105,7 +104,14 @@ do_exit:
     yos_post_delayed_action(7*24*60*60*1000,coap_client,NULL);
 }
 
-void ota_service_event(input_event_t *event, void *priv_data)
+void coap_ota()
+{
+	IOT_OpenLog("coap-ota");
+	IOT_SetLogLevel(IOT_LOG_DEBUG);
+
+	coap_client();
+}
+/*void ota_service_event(input_event_t *event, void *priv_data)
 {
     if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP)
     {
@@ -119,4 +125,4 @@ void ota_service_event(input_event_t *event, void *priv_data)
 void ota_service_ch_init()
 {
     yos_register_event_filter(EV_WIFI, ota_service_event, NULL);
-}
+}*/

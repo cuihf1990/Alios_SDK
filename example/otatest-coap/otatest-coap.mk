@@ -38,4 +38,4 @@ $(NAME)_CFLAGS += \
 $(NAME)_INCLUDES    := \
     ../../utility/iotx-utils/sdk-impl \
 
-$(NAME)_COMPONENTS  += fota
+$(NAME)_COMPONENTS  += fota.platform.coap

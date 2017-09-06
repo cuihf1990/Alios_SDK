@@ -16,12 +16,14 @@
  *
  */
 
-//#include <yos/framework.h>
-
 #include <yos/yos.h>
+
+extern void coap_ota();
+
 int application_start(void)
 {
-    yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
+//    yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
+	coap_ota();
     yos_loop_run();
     return 0;
 }
