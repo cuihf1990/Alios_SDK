@@ -19,7 +19,6 @@
 #include "app.h"
 #include "ke_event.h"
 #include "k_api.h"
-#include "yos.h"
 
 void print_exception_addr(unsigned int pc, unsigned int lr, unsigned int sp)
 {

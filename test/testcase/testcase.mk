@@ -21,15 +21,15 @@ $(NAME)_SOURCES     += kernel/module/fatfs_test.c
 $(NAME)_SOURCES     += kernel/vcall/vcall_test.c
 $(NAME)_SOURCES     += devices/vflash/vflash_test.c
 
-$(NAME)_SOURCES    += aosapi/yos/kernel/test_kernel.c
-$(NAME)_SOURCES    += aosapi/yos/kernel/yos_sys_test.c
-$(NAME)_SOURCES    += aosapi/yos/kernel/yos_task_test.c
-$(NAME)_SOURCES    += aosapi/yos/kernel/yos_mm_test.c
-$(NAME)_SOURCES    += aosapi/yos/kernel/yos_mutex_test.c
-$(NAME)_SOURCES    += aosapi/yos/kernel/yos_queue_test.c
-$(NAME)_SOURCES    += aosapi/yos/kernel/yos_sem_test.c
-$(NAME)_SOURCES    += aosapi/yos/kernel/yos_timer_test.c
-$(NAME)_SOURCES    += aosapi/yos/kernel/yos_workqueue_test.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/test_kernel.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/yos_sys_test.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/yos_task_test.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/yos_mm_test.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/yos_mutex_test.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/yos_queue_test.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/yos_sem_test.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/yos_timer_test.c
+$(NAME)_SOURCES    += aosapi/aos/kernel/yos_workqueue_test.c
 
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 # only for for linux host now
