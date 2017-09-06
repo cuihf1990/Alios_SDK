@@ -124,7 +124,7 @@ __attribute__((naked)) void cpu_context_restore(unsigned int addr)
     );
 }
 
-#if (YUNOS_CONFIG_STACK_OVF_CHECK_HW != 0)
+#if (RHINO_CONFIG_STACK_OVF_CHECK_HW != 0)
 void cpu_intrpt_stack_protect(void)
 {
 }

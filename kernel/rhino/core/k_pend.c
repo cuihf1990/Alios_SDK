@@ -4,7 +4,7 @@
 
 #include <k_api.h>
 
-YUNOS_INLINE void pend_list_add(klist_t *head, ktask_t *task)
+RHINO_INLINE void pend_list_add(klist_t *head, ktask_t *task)
 {
     klist_t *tmp;
     klist_t *list_start = head;
@@ -36,7 +36,7 @@ void pend_task_wakeup(ktask_t *task)
             task->task_state = K_SUSPENDED;
             break;
         default:
-            k_err_proc(YUNOS_SYS_FATAL_ERR);
+            k_err_proc(RHINO_SYS_FATAL_ERR);
             break;
     }
 
@@ -52,8 +52,8 @@ void pend_to_blk_obj(blk_obj_t *blk_obj, ktask_t *task, tick_t timeout)
     /* task need to remember which object is blocked on */
     task->blk_obj = blk_obj;
 
-    if (timeout != YUNOS_WAIT_FOREVER) {
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+    if (timeout != RHINO_WAIT_FOREVER) {
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
         g_elapsed_ticks = soc_elapsed_ticks_get();
         tick_list_insert(task, timeout + g_elapsed_ticks);
 #else
@@ -91,7 +91,7 @@ void pend_task_rm(ktask_t *task)
             task->task_state = K_SUSPENDED;
             break;
         default:
-            k_err_proc(YUNOS_SYS_FATAL_ERR);
+            k_err_proc(RHINO_SYS_FATAL_ERR);
             break;
     }
 
@@ -112,27 +112,27 @@ void pend_list_reorder(ktask_t *task)
     }
 }
 
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
 kstat_t pend_state_end_proc(ktask_t *task)
 {
     kstat_t status;
 
     switch (task->blk_state) {
         case BLK_FINISH:
-            status = YUNOS_SUCCESS;
+            status = RHINO_SUCCESS;
             break;
         case BLK_ABORT:
-            status = YUNOS_BLK_ABORT;
+            status = RHINO_BLK_ABORT;
             break;
         case BLK_TIMEOUT:
-            status = YUNOS_BLK_TIMEOUT;
+            status = RHINO_BLK_TIMEOUT;
             break;
         case BLK_DEL:
-            status = YUNOS_BLK_DEL;
+            status = RHINO_BLK_DEL;
             break;
         default:
-            k_err_proc(YUNOS_BLK_INV_STATE);
-            status = YUNOS_BLK_INV_STATE;
+            k_err_proc(RHINO_BLK_INV_STATE);
+            status = RHINO_BLK_INV_STATE;
             break;
     }
 

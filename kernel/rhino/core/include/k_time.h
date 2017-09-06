@@ -5,17 +5,17 @@
 #ifndef K_TIME_H
 #define K_TIME_H
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
 /**
  * This function will handle tickless routine
  * @param[in]  ticks
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 void yunos_tickless_proc(tick_t ticks);
 #else
 /**
  * This function will handle systick routine
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 void yunos_tick_proc(void);
 #endif

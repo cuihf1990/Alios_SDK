@@ -36,7 +36,7 @@ static void BinaryShuf1(void *arg)
 
         Starttime = hobbit_timer0_get_curval();
         yunos_sem_give(Shufhandle[0]);
-        yunos_sem_take(Shufhandle[1], YUNOS_WAIT_FOREVER);
+        yunos_sem_take(Shufhandle[1], RHINO_WAIT_FOREVER);
 
         if (ShufSwitch >= SWITCH_NUM) {
             yunos_sem_give(ShufSynhandle);
@@ -50,7 +50,7 @@ static void BinaryShuf2(void *arg)
     WaitForNew_tick();
 
     while (1) {
-        yunos_sem_take(Shufhandle[0], YUNOS_WAIT_FOREVER);
+        yunos_sem_take(Shufhandle[0], RHINO_WAIT_FOREVER);
 
         Endtime = hobbit_timer0_get_curval();
         Runtime = Starttime - Endtime;
@@ -89,7 +89,7 @@ void BinaryShufTimetest(void *arg)
 
     hobbit_timer0_start();
 
-    yunos_sem_take(ShufSynhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(ShufSynhandle, RHINO_WAIT_FOREVER);
 
     yunos_task_dyn_del(ShufTaskHandle[0]);
     yunos_task_dyn_del(ShufTaskHandle[1]);

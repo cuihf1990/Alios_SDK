@@ -19,18 +19,18 @@ static void CASE_aosapi_kernel_workqueue_param()
 #if 0
 	// TODO: test fail(nullptr coredump)
 	ret = yos_workqueue_create(NULL, 10, 1024);
-	YUNIT_ASSERT(ret == YUNOS_SUCCESS);
+	YUNIT_ASSERT(ret == RHINO_SUCCESS);
 #endif
 
-	ret = yos_workqueue_create(&workqueue, YUNOS_CONFIG_PRI_MAX, 1024);
-	YUNIT_ASSERT_MSG(ret==YUNOS_BEYOND_MAX_PRI, "ret=%d", ret);
+	ret = yos_workqueue_create(&workqueue, RHINO_CONFIG_PRI_MAX, 1024);
+	YUNIT_ASSERT_MSG(ret==RHINO_BEYOND_MAX_PRI, "ret=%d", ret);
 
-	ret = yos_workqueue_create(&workqueue, YUNOS_CONFIG_PRI_MAX+1, 1024);
-	YUNIT_ASSERT_MSG(ret==YUNOS_BEYOND_MAX_PRI, "ret=%d", ret);
+	ret = yos_workqueue_create(&workqueue, RHINO_CONFIG_PRI_MAX+1, 1024);
+	YUNIT_ASSERT_MSG(ret==RHINO_BEYOND_MAX_PRI, "ret=%d", ret);
 
-	// TODO: test fail(YUNOS_TASK_INV_STACK_SIZE)
+	// TODO: test fail(RHINO_TASK_INV_STACK_SIZE)
 	ret = yos_workqueue_create(&workqueue, 10, 0);
-	YUNIT_ASSERT_MSG(ret==YUNOS_TASK_INV_STACK_SIZE, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_TASK_INV_STACK_SIZE, "ret=%d", ret);
 
 #if 0
 	// TODO: test fail(nullptr coredump)
@@ -58,19 +58,19 @@ static void CASE_aosapi_kernel_workqueue_custom()
 	int ret = 0;
 
 	ret = yos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	ret = yos_workqueue_create(&workqueue, 10, 1024);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	ret = yos_work_init(&work, WORK_aosapi_kernel_workqueue_custom, NULL, 100);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	ret = yos_work_run(&workqueue, &work);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
-	ret = yos_sem_wait(&sync_sem, YUNOS_WAIT_FOREVER);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	ret = yos_sem_wait(&sync_sem, RHINO_WAIT_FOREVER);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	yos_workqueue_del(&workqueue);
 }
 
@@ -83,37 +83,37 @@ static void CASE_aosapi_kernel_work_param()
 #if 0
 	// TODO: nullptr coredump
 	ret = yos_work_init(NULL,WORK_aosapi_kernel_work_param,  NULL, 1000);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 #endif
 
 	ret = yos_work_init(&work, NULL, NULL, 1024);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 
 #if 0
 	// TODO: nullptr coredump
 	ret = yos_work_run(NULL, &work);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 #endif
 
 #if 0
 	// TODO: nullptr coredump
 	ret = yos_workqueue_create(&workqueue, 10, 1024);
-	YUNIT_ASSERT(ret == YUNOS_SUCCESS);
+	YUNIT_ASSERT(ret == RHINO_SUCCESS);
 	yos_work_run(&workqueue, NULL);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 	yos_workqueue_del(&workqueue);
 #endif
 
 #if 0
 	// TODO: not implement
 	ret = yos_work_cancel(NULL);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 #endif
 
 #if 0
 	// TODO: not implement
 	ret = yos_work_sched(NULL);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 #endif
 
 	(void)WORK_aosapi_kernel_work_param;

@@ -46,7 +46,7 @@ static void test_cpu_event_case(void)
 
     YUNIT_ASSERT(ret == 0);
 
-    yunos_sem_take(&sem, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(&sem, RHINO_WAIT_FOREVER);
 }
 
 static void test_event_pthread_handler(const void *arg)

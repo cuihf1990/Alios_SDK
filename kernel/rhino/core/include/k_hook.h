@@ -5,7 +5,7 @@
 #ifndef K_HOOK_H
 #define K_HOOK_H
 
-#if (YUNOS_CONFIG_USER_HOOK > 0)
+#if (RHINO_CONFIG_USER_HOOK > 0)
 /**
  * This function will provide init hook
  */

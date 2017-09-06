@@ -20,7 +20,7 @@ void *sys_yos_malloc(unsigned int size, size_t allocator)
         return NULL;
     }
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         yunos_owner_attach(g_kmm_head, tmp, allocator);
     }
@@ -37,7 +37,7 @@ void *sys_yos_realloc(void *mem, unsigned int size, size_t allocator)
         return NULL;
     }
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         yunos_owner_attach(g_kmm_head, tmp, allocator);
     }
@@ -54,7 +54,7 @@ void *sys_yos_zalloc(unsigned int size, size_t allocator)
         return NULL;
     }
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         yunos_owner_attach(g_kmm_head, tmp, allocator);
     }

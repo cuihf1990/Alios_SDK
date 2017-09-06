@@ -18,26 +18,26 @@ static uint8_t sem_opr_case1(void)
     sem_count_t cnt;
 
     ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, 3);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_sem_take(test_sem, YUNOS_NO_WAIT);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = yunos_sem_take(test_sem, RHINO_NO_WAIT);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_sem_take(test_sem, YUNOS_NO_WAIT);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = yunos_sem_take(test_sem, RHINO_NO_WAIT);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_sem_give(test_sem);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_sem_give_all(test_sem);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_sem_count_get(test_sem, &cnt);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(cnt == 3);
 
     ret = yunos_sem_dyn_del(test_sem);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     return 0;
 }
@@ -57,7 +57,7 @@ void sem_opr_test(void)
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
 
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -73,9 +73,9 @@ static void task_sem_coopr1_co1_entry(void *arg)
     yunos_sem_take(test_sem, 100);
 
     while (1) {
-        ret = yunos_sem_take(test_sem, YUNOS_WAIT_FOREVER);
+        ret = yunos_sem_take(test_sem, RHINO_WAIT_FOREVER);
 
-        if (ret == YUNOS_SUCCESS) {
+        if (ret == RHINO_SUCCESS) {
             cnt++;
 
             if (cnt >= LOOP_CNT) {
@@ -129,7 +129,7 @@ void sem_coopr1_test(void)
     kstat_t ret;
 
     ret = yunos_sem_dyn_create(&test_sem, MODULE_NAME, 3);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO1, FAIL);
         return;
@@ -138,7 +138,7 @@ void sem_coopr1_test(void)
     ret = yunos_task_dyn_create(&task_sem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr1_co1_entry, 1);
 
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO1, FAIL);
     }
@@ -146,7 +146,7 @@ void sem_coopr1_test(void)
     ret = yunos_task_dyn_create(&task_sem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr1_co2_entry, 1);
 
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO1, FAIL);
     }
@@ -156,9 +156,9 @@ static void task_sem_coopr2_co1_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_sem_take(test_sem_co1, YUNOS_WAIT_FOREVER);
+    ret = yunos_sem_take(test_sem_co1, RHINO_WAIT_FOREVER);
 
-    TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == RHINO_SUCCESS);
 
     if (test_case_check_err > 0) {
         test_case_fail++;
@@ -180,9 +180,9 @@ static void task_sem_coopr2_co2_entry(void *arg)
     while (1) {
         /* no task block on the semaphore and wait notification from other task */
         yunos_task_sleep(5);
-        ret = yunos_sem_take(test_sem_co2, YUNOS_NO_WAIT);
+        ret = yunos_sem_take(test_sem_co2, RHINO_NO_WAIT);
 
-        if (ret == YUNOS_SUCCESS) {
+        if (ret == RHINO_SUCCESS) {
             yunos_sem_give(test_sem_co1);
             break;
         }
@@ -199,7 +199,7 @@ static void task_sem_coopr2_co3_entry(void *arg)
     while (1) {
         ret = yunos_sem_give(test_sem_co2);
 
-        if (ret == YUNOS_SUCCESS) {
+        if (ret == RHINO_SUCCESS) {
             break;
         }
     }
@@ -218,16 +218,16 @@ void sem_coopr2_test(void)
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co1_entry, 1);
 
-    TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == RHINO_SUCCESS);
 
 
     ret = yunos_task_dyn_create(&task_sem_co1, MODULE_NAME, 0, TASK_SEM_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co2_entry, 1);
 
-    TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == RHINO_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_sem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 2,
                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co3_entry, 1);
-    TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == RHINO_SUCCESS);
 }
 

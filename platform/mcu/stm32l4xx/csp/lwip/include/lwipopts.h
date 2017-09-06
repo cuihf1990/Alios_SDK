@@ -208,8 +208,8 @@
 #define LWIP_SOCKET                     1
 #define LWIP_COMPAT_SOCKETS             1
 #define LWIP_POSIX_SOCKETS_IO_NAMES     1
-#if !defined(FD_SET) && defined(YUNOS_CONFIG_VFS_DEV_NODES)
-#define LWIP_SOCKET_OFFSET              YUNOS_CONFIG_VFS_DEV_NODES
+#if !defined(FD_SET) && defined(RHINO_CONFIG_VFS_DEV_NODES)
+#define LWIP_SOCKET_OFFSET              RHINO_CONFIG_VFS_DEV_NODES
 #endif
 #define LWIP_SO_SNDTIMEO                1
 #define LWIP_SO_RCVTIMEO                1

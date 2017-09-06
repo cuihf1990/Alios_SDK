@@ -20,17 +20,17 @@ void TASK_aosapi_kernel_task_new_param(void *arg)
 }
 static void CASE_aosapi_kernel_task_new_param()
 {
-	int ret = YUNOS_SUCCESS;
+	int ret = RHINO_SUCCESS;
 	ret = yos_task_new(NULL, TASK_aosapi_kernel_task_new_param, NULL, 1024);
-	YUNIT_ASSERT_MSG(ret==YUNOS_NULL_PTR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
 
 	ret = yos_task_new("TASK_aosapi_kernel_task_new_param", NULL, NULL, 1024);
-	YUNIT_ASSERT_MSG(ret==YUNOS_NULL_PTR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
 
 #if 1
 	ret = yos_task_new("TASK_aosapi_kernel_task_new_param",
 			           TASK_aosapi_kernel_task_new_param, NULL, 0);
-	YUNIT_ASSERT_MSG(ret==YUNOS_INV_PARAM, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_INV_PARAM, "ret=%d", ret);
 #endif
 }
 
@@ -44,23 +44,23 @@ static void CASE_aosapi_kernel_task_new_batch()
 {
 	int i = 0;
 	int success_count = 0;
-	int ret = YUNOS_SUCCESS;
+	int ret = RHINO_SUCCESS;
 	const int TASK_COUNT = 100;
 	for(i=0; i<TASK_COUNT; i++) {
 		ret = yos_sem_new(&sync_sem, 0);
-		YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+		YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 		ret = yos_task_new("TASK_aosapi_kernel_task_new_batch",
 						   TASK_aosapi_kernel_task_new_batch, NULL, TEST_TASK_STACK_SIZE);
-		YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
-		if(ret != YUNOS_SUCCESS) {
+		YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+		if(ret != RHINO_SUCCESS) {
 			yos_sem_signal(&sync_sem);
 		}
-		ret = yos_sem_wait(&sync_sem, YUNOS_WAIT_FOREVER);
-		YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+		ret = yos_sem_wait(&sync_sem, RHINO_WAIT_FOREVER);
+		YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 		yos_sem_free(&sync_sem);
-		success_count += (ret==YUNOS_SUCCESS ? 1 : 0);
+		success_count += (ret==RHINO_SUCCESS ? 1 : 0);
 		printf("task %d\t", success_count);
 	}
 	YUNIT_ASSERT(success_count == TASK_COUNT);
@@ -77,24 +77,24 @@ void TASK_aosapi_kernel_task_new_stack(void *arg)
 static void CASE_aosapi_kernel_task_new_stack()
 {
 #if 0
-	int ret = YUNOS_SUCCESS;
+	int ret = RHINO_SUCCESS;
 	ret = yos_task_new("TASK_aosapi_kernel_task_new_stack",
 					   TASK_aosapi_kernel_task_new_stack, NULL, 256);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	yos_msleep(1000);
 #endif
 
 #if 0
 	ret = yos_task_new("TASK_aosapi_kernel_task_new_stack",
 			           TASK_aosapi_kernel_task_new_stack, NULL, 10);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	yos_msleep(1000);
 #endif
 
 #if 0
 	ret = yos_task_new("TASK_aosapi_kernel_task_new_stack",
 			           TASK_aosapi_kernel_task_new_stack, NULL, 20480000);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	yos_msleep(1000);
 #endif
 }
@@ -108,19 +108,19 @@ void TASK_aosapi_kernel_task_getname(void *arg)
 }
 static void CASE_aosapi_kernel_task_getname()
 {
-	int ret = YUNOS_SUCCESS;
+	int ret = RHINO_SUCCESS;
 	ret= yos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	ret = yos_task_new("TASK_aosapi_kernel_task_getname",
 			           TASK_aosapi_kernel_task_getname, NULL, TEST_TASK_STACK_SIZE);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
-	if(ret != YUNOS_SUCCESS) {
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+	if(ret != RHINO_SUCCESS) {
 		yos_sem_signal(&sync_sem);
 	}
 
-	ret = yos_sem_wait(&sync_sem, YUNOS_WAIT_FOREVER);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	ret = yos_sem_wait(&sync_sem, RHINO_WAIT_FOREVER);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	yos_sem_free(&sync_sem);
 }
@@ -134,39 +134,39 @@ void TASK_aosapi_kernel_task_new_priority(void *arg)
 }
 static void CASE_aosapi_kernel_task_new_priority()
 {
-	int ret = YUNOS_SUCCESS;
+	int ret = RHINO_SUCCESS;
 	int success_count = 0;
 	int i = 0;
 
 #if 1
 	/*  */
 	ret = yos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	ret = yos_task_new_ext("TASK_aosapi_kernel_task_new_priority",
 			               TASK_aosapi_kernel_task_new_priority, NULL,
-			               TEST_TASK_STACK_SIZE, YUNOS_CONFIG_PRI_MAX);
-	YUNIT_ASSERT_MSG(ret==YUNOS_BEYOND_MAX_PRI, "ret=%d", ret);
-	if(ret == YUNOS_BEYOND_MAX_PRI) {
+			               TEST_TASK_STACK_SIZE, RHINO_CONFIG_PRI_MAX);
+	YUNIT_ASSERT_MSG(ret==RHINO_BEYOND_MAX_PRI, "ret=%d", ret);
+	if(ret == RHINO_BEYOND_MAX_PRI) {
 		yos_sem_signal(&sync_sem);
 	}
-	ret = yos_sem_wait(&sync_sem, YUNOS_WAIT_FOREVER);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	ret = yos_sem_wait(&sync_sem, RHINO_WAIT_FOREVER);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	yos_sem_free(&sync_sem);
 
 	/*  */
 	ret = yos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	ret = yos_task_new_ext("TASK_aosapi_kernel_task_new_priority",
 			               TASK_aosapi_kernel_task_new_priority, NULL,
-						   TEST_TASK_STACK_SIZE, YUNOS_CONFIG_USER_PRI_MAX);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
-	if(ret != YUNOS_SUCCESS) {
+						   TEST_TASK_STACK_SIZE, RHINO_CONFIG_USER_PRI_MAX);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+	if(ret != RHINO_SUCCESS) {
 		yos_sem_signal(&sync_sem);
 	}
-	ret = yos_sem_wait(&sync_sem, YUNOS_WAIT_FOREVER);
-	YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+	ret = yos_sem_wait(&sync_sem, RHINO_WAIT_FOREVER);
+	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	yos_sem_free(&sync_sem);
 #endif
 
@@ -175,20 +175,20 @@ static void CASE_aosapi_kernel_task_new_priority()
 	int pris[] = {11,12,13};
 	for(i=0; i<sizeof(pris)/sizeof(pris[0]); i++) {
 		ret = yos_sem_new(&sync_sem, 0);
-		YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+		YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 		ret = yos_task_new_ext("TASK_aosapi_kernel_task_new_priority",
 				           TASK_aosapi_kernel_task_new_priority, NULL,
 						   TEST_TASK_STACK_SIZE, pris[i]);
-		YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
-		if(ret != YUNOS_SUCCESS) {
+		YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+		if(ret != RHINO_SUCCESS) {
 			yos_sem_signal(&sync_sem);
 		}
-		ret = yos_sem_wait(&sync_sem, YUNOS_WAIT_FOREVER);
-		YUNIT_ASSERT_MSG(ret==YUNOS_SUCCESS, "ret=%d", ret);
+		ret = yos_sem_wait(&sync_sem, RHINO_WAIT_FOREVER);
+		YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 		yos_sem_free(&sync_sem);
-		success_count += (ret==YUNOS_SUCCESS ? 1 : 0);
+		success_count += (ret==RHINO_SUCCESS ? 1 : 0);
 		printf("\ttask prio=%d\n", pris[i]);
 	}
 	YUNIT_ASSERT_MSG(success_count==sizeof(pris)/sizeof(pris[0]), "success_count=%d", success_count);

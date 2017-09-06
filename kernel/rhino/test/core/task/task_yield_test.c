@@ -13,7 +13,7 @@ extern ktask_t *task_2_test;
 
 void task_yield_1_entry(void *arg)
 {
-#if (YUNOS_CONFIG_SCHED_RR > 0)
+#if (RHINO_CONFIG_SCHED_RR > 0)
     yunos_sched_policy_set(yunos_cur_task_get(), KSCHED_FIFO);
 #endif
 
@@ -27,7 +27,7 @@ void task_yield_1_entry(void *arg)
 
 void task_yield_2_entry(void *arg)
 {
-#if (YUNOS_CONFIG_SCHED_RR > 0)
+#if (RHINO_CONFIG_SCHED_RR > 0)
     yunos_sched_policy_set(yunos_cur_task_get(), KSCHED_FIFO);
 #endif
 

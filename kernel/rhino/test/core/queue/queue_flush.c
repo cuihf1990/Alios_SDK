@@ -21,16 +21,16 @@ static void queue_flush_param_test(void)
     ksem_t  sem;
 
     ret = yunos_queue_flush(NULL);
-    QUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
+    QUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     yunos_intrpt_enter();
     ret = yunos_queue_flush(&g_test_queue0);
-    QUEUE_VAL_CHK(ret == YUNOS_NOT_CALLED_BY_INTRPT);
+    QUEUE_VAL_CHK(ret == RHINO_NOT_CALLED_BY_INTRPT);
     yunos_intrpt_exit();
 
     yunos_sem_create(&sem, "test_sem ", 0);
     ret = yunos_queue_flush((kqueue_t *)&sem);
-    QUEUE_VAL_CHK(ret == YUNOS_KOBJ_TYPE_ERR);
+    QUEUE_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
     yunos_sem_del(&sem);
 }
 
@@ -41,25 +41,25 @@ static void task_queue0_entry(void *arg)
     while (1) {
         ret = yunos_queue_create(&g_test_queue0, "test_queue0",
                                  (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         /* check yunos_queue_flush param */
         queue_flush_param_test();
 
         ret = yunos_queue_is_full(&g_test_queue0);
-        QUEUE_VAL_CHK(ret == YUNOS_QUEUE_NOT_FULL);
+        QUEUE_VAL_CHK(ret == RHINO_QUEUE_NOT_FULL);
 
         ret = yunos_queue_back_send(&g_test_queue0, queue_send_msg);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = yunos_queue_is_full(&g_test_queue0);
-        QUEUE_VAL_CHK(ret == YUNOS_QUEUE_FULL);
+        QUEUE_VAL_CHK(ret == RHINO_QUEUE_FULL);
 
         ret = yunos_queue_flush(&g_test_queue0);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = yunos_queue_is_full(&g_test_queue0);
-        if (ret == YUNOS_QUEUE_NOT_FULL) {
+        if (ret == RHINO_QUEUE_NOT_FULL) {
             test_case_success++;
             PRINT_RESULT("queue flush", PASS);
         } else {
@@ -79,7 +79,7 @@ kstat_t task_queue_flush_test(void)
 
     ret = yunos_task_dyn_create(&task_0_test, "task_queue0_test", 0, 10,
                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
-    QUEUE_VAL_CHK((ret == YUNOS_SUCCESS) || (ret == YUNOS_STOPPED));
+    QUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     return 0;
 }

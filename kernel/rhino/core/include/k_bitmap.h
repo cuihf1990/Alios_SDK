@@ -20,7 +20,7 @@
  **/
 #define BITMAP_DECLARE(name, bits) uint32_t name[((bits) + (BITMAP_UNIT_SIZE - 1U)) >> BITMAP_UNIT_BITS]
 
-#if (YUNOS_CONFIG_BITMAP_HW != 0)
+#if (RHINO_CONFIG_BITMAP_HW != 0)
 extern int32_t cpu_bitmap_clz(uint32_t val);
 #endif
 
@@ -30,7 +30,7 @@ extern int32_t cpu_bitmap_clz(uint32_t val);
  ** @param[in]  nr      position of the bitmap to set
  ** @return  no return
  **/
-YUNOS_INLINE void yunos_bitmap_set(uint32_t *bitmap, int32_t nr)
+RHINO_INLINE void yunos_bitmap_set(uint32_t *bitmap, int32_t nr)
 {
     bitmap[BITMAP_WORD(nr)] |= BITMAP_MASK(nr);
 }
@@ -41,7 +41,7 @@ YUNOS_INLINE void yunos_bitmap_set(uint32_t *bitmap, int32_t nr)
  ** @param[in]  nr      position of the bitmap to clear
  ** @return  no return
  **/
-YUNOS_INLINE void yunos_bitmap_clear(uint32_t *bitmap, int32_t nr)
+RHINO_INLINE void yunos_bitmap_clear(uint32_t *bitmap, int32_t nr)
 {
     bitmap[BITMAP_WORD(nr)] &= ~BITMAP_MASK(nr);
 }
@@ -51,7 +51,7 @@ YUNOS_INLINE void yunos_bitmap_clear(uint32_t *bitmap, int32_t nr)
  ** @param[in]  bitmap  pointer to the bitmap
  ** @return  the first bit position
  **/
-YUNOS_INLINE int yunos_find_first_bit(uint32_t *bitmap)
+RHINO_INLINE int yunos_find_first_bit(uint32_t *bitmap)
 {
     int32_t  nr  = 0;
     uint32_t tmp = 0;
@@ -63,7 +63,7 @@ YUNOS_INLINE int yunos_find_first_bit(uint32_t *bitmap)
 
     tmp = *bitmap;
 
-#if (YUNOS_CONFIG_BITMAP_HW == 0)
+#if (RHINO_CONFIG_BITMAP_HW == 0)
     if (!(tmp & 0XFFFF0000)) {
         tmp <<= 16;
         nr   += 16;

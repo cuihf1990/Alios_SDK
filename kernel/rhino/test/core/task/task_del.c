@@ -16,7 +16,7 @@ static void task_del_entry_0(void *arg)
 {
     while (1) {
         yunos_task_dyn_del(NULL);
-        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+        yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     }
 }
 
@@ -24,7 +24,7 @@ static void task_del_entry_1(void *arg)
 {
     while (1) {
         yunos_task_dyn_del(NULL);
-        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+        yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     }
 }
 
@@ -32,7 +32,7 @@ static void task_del_entry_2(void *arg)
 {
     while (1) {
         yunos_task_dyn_del(NULL);
-        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+        yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     }
 }
 
@@ -42,21 +42,21 @@ void task_del_test()
 
     if (yunos_task_dyn_create(&task_del_test_0, "task_del_test0", NULL, 7,
                               0, TASK_TEST_STACK_SIZE,
-                              task_del_entry_0, 1) != YUNOS_SUCCESS) {
+                              task_del_entry_0, 1) != RHINO_SUCCESS) {
         test_case_check_err++;
         printf("task_del_test 0 creat fail \n");
     }
 
     if (yunos_task_dyn_create(&task_del_test_1, "task_del_test1", NULL, 5,
                               0, TASK_TEST_STACK_SIZE,
-                              task_del_entry_1, 1) != YUNOS_SUCCESS) {
+                              task_del_entry_1, 1) != RHINO_SUCCESS) {
         test_case_check_err++;
         printf("task_del_test1 creat fail \n");
     }
 
     if (yunos_task_dyn_create(&task_del_test_2, "task_del_test2", NULL, 59,
                               0, TASK_TEST_STACK_SIZE,
-                              task_del_entry_2, 1) != YUNOS_SUCCESS) {
+                              task_del_entry_2, 1) != RHINO_SUCCESS) {
         test_case_check_err++;
         printf("task_del_test2 creat fail \n");
     }

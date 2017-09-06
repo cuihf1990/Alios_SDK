@@ -24,15 +24,15 @@ static void queue_dyn_create_param_test(void)
 
     ret = yunos_buf_queue_dyn_create(NULL, "test_bufqueue0", 0,
                                      TEST_BUFQUEUE_MSG_MAX);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
+    BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, NULL, 4,
                                      TEST_BUFQUEUE_MSG_MAX);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
+    BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, NULL, 0,
                                      TEST_BUFQUEUE_MSG_MAX);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_BUF_QUEUE_SIZE_ZERO);
+    BUFQUEUE_VAL_CHK(ret == RHINO_BUF_QUEUE_SIZE_ZERO);
 }
 
 static void queue_dyn_del_param_test(void)
@@ -40,27 +40,27 @@ static void queue_dyn_del_param_test(void)
     kstat_t ret;
     ksem_t  sem;
     ret = yunos_buf_queue_dyn_del(NULL);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
+    BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, "test_bufqueue0",
                                      100, TEST_BUFQUEUE_MSG_MAX);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+    BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
     yunos_intrpt_enter();
     ret = yunos_buf_queue_dyn_del(g_test_bufqueue0);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_NOT_CALLED_BY_INTRPT);
+    BUFQUEUE_VAL_CHK(ret == RHINO_NOT_CALLED_BY_INTRPT);
     yunos_intrpt_exit();
 
     ret = yunos_buf_queue_del(g_test_bufqueue0);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_KOBJ_DEL_ERR);
+    BUFQUEUE_VAL_CHK(ret == RHINO_KOBJ_DEL_ERR);
 
     ret = yunos_buf_queue_dyn_del(g_test_bufqueue0);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+    BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
 
     yunos_sem_create(& sem, "test_sem ", 0);
     ret = yunos_buf_queue_dyn_del((kbuf_queue_t *)&sem);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_KOBJ_TYPE_ERR);
+    BUFQUEUE_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
     yunos_sem_del(&sem);
 }
 
@@ -80,22 +80,22 @@ static void task_queue0_entry(void *arg)
         for (i = 1; i < TEST_BUFQUEUE_MAX_NUM; i++) {
             ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, "test_bufqueue0",
                                              i * 8, TEST_BUFQUEUE_MSG_MAX);
-            BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+            BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
             ret = yunos_buf_queue_dyn_del(g_test_bufqueue0);
-            BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+            BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
         }
 
         ret = yunos_buf_queue_dyn_create(&g_test_bufqueue0, "test_bufqueue0",
                                          TEST_BUFQUEUE_SIZE, TEST_BUFQUEUE_MSG_MAX);
-        BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
-        ret = yunos_buf_queue_recv(g_test_bufqueue0, YUNOS_WAIT_FOREVER,
+        ret = yunos_buf_queue_recv(g_test_bufqueue0, RHINO_WAIT_FOREVER,
                                    g_test_recv_msg0, &size);
-        BUFQUEUE_VAL_CHK(ret == YUNOS_BLK_DEL);
+        BUFQUEUE_VAL_CHK(ret == RHINO_BLK_DEL);
 
         ret = yunos_buf_queue_dyn_del(g_test_bufqueue0);
-        BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         yunos_task_dyn_del(task_0_test);
     }
@@ -122,11 +122,11 @@ kstat_t task_buf_queue_dyn_create_test(void)
 
     ret = yunos_task_dyn_create(&task_0_test, "task_bufqueue0_test", 0, 10,
                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+    BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_1_test, "task_bufqueue0_test", 0, 11,
                                 0, TASK_TEST_STACK_SIZE, task_queue1_entry, 1);
-    BUFQUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+    BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
     return 0;
 }

@@ -84,7 +84,7 @@ typedef struct {
  */
 static pthread_mutex_t g_event_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static pthread_t rhino_cpu_thread[YUNOS_CONFIG_CPU_NUM];
+static pthread_t rhino_cpu_thread[RHINO_CONFIG_CPU_NUM];
 static pthread_mutex_t spin_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutexattr_t spin_lock_attr;
 static int lock;
@@ -111,13 +111,13 @@ void unlock_spin(void)
     assert(ret == 0);
 }
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
 uint8_t cpu_cur_get(void)
 {
     int i;
     pthread_t cur_thread = pthread_self();
 
-    for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+    for (i = 0; i < RHINO_CONFIG_CPU_NUM; i++) {
         if (cur_thread == rhino_cpu_thread[i]) {
             return i;
         }
@@ -258,7 +258,7 @@ void cpu_first_task_start(void)
     timer_t timerid;
     struct itimerspec ts;
     int ret = 0;
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
     int i = 0;
 #endif
 
@@ -267,8 +267,8 @@ void cpu_first_task_start(void)
 
     sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
-    for (i = 1; i < YUNOS_CONFIG_CPU_NUM; i++) {
+    #if (RHINO_CONFIG_CPU_NUM > 1)
+    for (i = 1; i < RHINO_CONFIG_CPU_NUM; i++) {
         if (pthread_create(&rhino_cpu_thread[i], NULL, (void *)cpu_entry, (void *)i) != 0) {
             assert(0);
         }
@@ -283,7 +283,7 @@ void cpu_first_task_start(void)
     assert(ret == 0);
 
     ts.it_interval.tv_sec = 0;
-    ts.it_interval.tv_nsec = 1000000000u / YUNOS_CONFIG_TICKS_PER_SECOND;
+    ts.it_interval.tv_nsec = 1000000000u / RHINO_CONFIG_TICKS_PER_SECOND;
     ts.it_value.tv_sec = 1;
     ts.it_value.tv_nsec = 0;
 
@@ -316,13 +316,13 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tcb_ext->real_stack = real_stack;
     tcb_ext->real_stack_end = real_stack + real_size;
 
-#if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
-#if (YUNOS_CONFIG_CPU_STACK_DOWN > 0)
+#if (RHINO_CONFIG_TASK_STACK_OVF_CHECK > 0)
+#if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
     tmp  = tcb_ext->real_stack;
-    *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
+    *tmp = RHINO_TASK_STACK_OVF_MAGIC;
 #else
     tmp  = (cpu_stack_t *)(tcb_ext->real_stack) + (real_size/sizeof(cpu_stack_t)) - 1u;
-    *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
+    *tmp = RHINO_TASK_STACK_OVF_MAGIC;
 #endif
 #endif
 
@@ -330,11 +330,11 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tcb_ext->vid = VALGRIND_STACK_REGISTER(tcb_ext->real_stack, (char *)(tcb_ext->real_stack) + real_size);
 #endif
 
-    YUNOS_CPU_INTRPT_DISABLE();
+    RHINO_CPU_INTRPT_DISABLE();
 
     int ret = getcontext(&tcb_ext->uctx);
     if (ret < 0) {
-        YUNOS_CPU_INTRPT_ENABLE();
+        RHINO_CPU_INTRPT_ENABLE();
         yos_free(real_stack);
         return NULL;
     }
@@ -343,7 +343,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     tcb_ext->uctx.uc_stack.ss_size = real_size;
     makecontext(&tcb_ext->uctx, task_proc, 0);
 
-    YUNOS_CPU_INTRPT_ENABLE();
+    RHINO_CPU_INTRPT_ENABLE();
 
     return tcb_ext;
 }
@@ -445,13 +445,13 @@ static void _cpu_task_switch(void)
     /* save errno */
     from_tcb_ext->saved_errno = errno;
 
-#if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
-    assert(*(g_active_task[cur_cpu_num]->task_stack_base) == YUNOS_TASK_STACK_OVF_MAGIC);
+#if (RHINO_CONFIG_TASK_STACK_OVF_CHECK > 0)
+    assert(*(g_active_task[cur_cpu_num]->task_stack_base) == RHINO_TASK_STACK_OVF_MAGIC);
 #endif
 
     g_active_task[cur_cpu_num] = g_preferred_ready_task[cur_cpu_num];
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    #if (RHINO_CONFIG_CPU_NUM > 1)
     swapcontext_safe(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
     #else
     swapcontext(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
@@ -470,7 +470,7 @@ void cpu_idle_hook(void)
     usleep(10);
 }
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
 static void cpu_assert(int signo, siginfo_t *si, void *ucontext)
 {
     enter_signal(signo);
@@ -547,7 +547,7 @@ static void cpu_intr_entry(void *arg)
             cpu_event_free(kevent);
         }
 
-        yunos_sem_take(&g_intr_sem, YUNOS_WAIT_FOREVER);
+        yunos_sem_take(&g_intr_sem, RHINO_WAIT_FOREVER);
     }
 }
 
@@ -578,7 +578,7 @@ void cpu_init_hook(void)
         .sa_sigaction = tick_interpt,
     };
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    #if (RHINO_CONFIG_CPU_NUM > 1)
     struct sigaction cpu_assert_action = {
         .sa_flags = SA_SIGINFO | SA_RESTART,
         .sa_sigaction = cpu_assert,
@@ -593,7 +593,7 @@ void cpu_init_hook(void)
     sigaddset(&cpu_sig_set, SIGUSR2);
     sigaddset(&cpu_sig_set, SIGALRM);
 
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    #if (RHINO_CONFIG_CPU_NUM > 1)
     sigaddset(&cpu_sig_set, SIGRTMIN);
     cpu_assert_action.sa_mask   = cpu_sig_set;
     #endif
@@ -605,7 +605,7 @@ void cpu_init_hook(void)
     ret  = sigaction(SIGUSR1, &tick_interpt_action, NULL);
     ret |= sigaction(SIGUSR2, &event_sig_action, NULL);
     ret |= sigaction(SIGIO, &event_io_action, NULL);
-    #if (YUNOS_CONFIG_CPU_NUM > 1)
+    #if (RHINO_CONFIG_CPU_NUM > 1)
     ret |= sigaction(SIGRTMIN, &cpu_assert_action, NULL);
     #endif
 
@@ -669,7 +669,7 @@ void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
 
     pthread_t cur_thread = pthread_self();
 
-    for (int i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+    for (int i = 0; i < RHINO_CONFIG_CPU_NUM; i++) {
         if (cur_thread == rhino_cpu_thread[i]) {
             cpu_suite = 1;
             break;

@@ -14,7 +14,7 @@ kstat_t ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len, size_t type,
 
     ringbuf_reset(p_ringbuf);
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 
 }
 static size_t ringbuf_headlen_compress(size_t head_len, uint8_t *cmp_buf)
@@ -65,7 +65,7 @@ kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
     uint8_t  c_len[RINGBUF_LEN_MAX_SIZE] = {0};
 
     if (ringbuf_is_full(p_ringbuf)) {
-        return YUNOS_RINGBUF_FULL;
+        return RHINO_RINGBUF_FULL;
     }
 
     if (p_ringbuf->type == RINGBUF_TYPE_FIX) {
@@ -77,16 +77,16 @@ kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
         p_ringbuf->tail += len;
         p_ringbuf->freesize -= len;
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
     } else {
         len_bytes = ringbuf_headlen_compress(len, c_len);
         if (len_bytes == 0 || len_bytes > RINGBUF_LEN_MAX_SIZE ) {
-            return YUNOS_INV_PARAM;
+            return RHINO_INV_PARAM;
         }
 
         /* for dynamic length ringbuf */
         if (p_ringbuf->freesize < len_bytes + len ) {
-            return YUNOS_RINGBUF_FULL;
+            return RHINO_RINGBUF_FULL;
         }
 
         if (p_ringbuf->tail == p_ringbuf->end) {
@@ -132,10 +132,10 @@ kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
         p_ringbuf->freesize -= len;
 
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
 
     }
-    return YUNOS_SYS_FATAL_ERR;
+    return RHINO_SYS_FATAL_ERR;
 }
 
 kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
@@ -145,7 +145,7 @@ kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
     uint8_t  c_len[RINGBUF_LEN_MAX_SIZE] = {0};
 
     if (ringbuf_is_full(p_ringbuf)) {
-        return YUNOS_RINGBUF_FULL;
+        return RHINO_RINGBUF_FULL;
     }
     if (p_ringbuf->type == RINGBUF_TYPE_FIX) {
         if (p_ringbuf->head == p_ringbuf->buf) {
@@ -156,15 +156,15 @@ kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
         memcpy(p_ringbuf->head, data, len);
         p_ringbuf->freesize -= len;
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
     } else {
         len_bytes = ringbuf_headlen_compress(len, c_len);
         if (len_bytes == 0 || len_bytes > RINGBUF_LEN_MAX_SIZE ) {
-            return YUNOS_INV_PARAM;
+            return RHINO_INV_PARAM;
         }
 
         if (p_ringbuf->freesize < len_bytes + len ) {
-            return YUNOS_RINGBUF_FULL;
+            return RHINO_RINGBUF_FULL;
         }
 
         if (p_ringbuf->head == p_ringbuf->buf) {
@@ -211,7 +211,7 @@ kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
             p_ringbuf->freesize -= len_bytes;
         }
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
 
     }
 }
@@ -225,7 +225,7 @@ kstat_t ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
     size_t   len_bytes = 0;
 
     if (ringbuf_is_empty(p_ringbuf)) {
-        return YUNOS_RINGBUF_EMPTY;
+        return RHINO_RINGBUF_EMPTY;
     }
 
     if (p_ringbuf->type == RINGBUF_TYPE_FIX) {
@@ -241,7 +241,7 @@ kstat_t ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
             *plen = p_ringbuf->blk_size;
         }
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
     } else {
         if (p_ringbuf->head == p_ringbuf->end) {
             p_ringbuf->head = p_ringbuf->buf;
@@ -260,7 +260,7 @@ kstat_t ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
             /*length use 3 bytes*/
             len_bytes = 3;
         } else {
-            return YUNOS_INV_PARAM;
+            return RHINO_INV_PARAM;
         }
 
 
@@ -300,7 +300,7 @@ kstat_t ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
         p_ringbuf->head     += len;
         p_ringbuf->freesize += len;
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
 
     }
 }
@@ -335,10 +335,10 @@ kstat_t ringbuf_reset(k_ringbuf_t *p_ringbuf)
     p_ringbuf->tail = p_ringbuf->buf;
     p_ringbuf->freesize = p_ringbuf->end - p_ringbuf->buf;
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_RINGBUF_VENDOR > 0)
+#if (RHINO_CONFIG_RINGBUF_VENDOR > 0)
 
 kstat_t yunos_ringbuf_reset(k_ringbuf_t *p_ringbuf)
 {
@@ -353,12 +353,12 @@ kstat_t yunos_ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len,
     NULL_PARA_CHK(buf);
 
     if (len == 0 || (type != RINGBUF_TYPE_DYN && type != RINGBUF_TYPE_FIX)) {
-        return YUNOS_INV_PARAM;
+        return RHINO_INV_PARAM;
     }
 
     if (type == RINGBUF_TYPE_FIX) {
         if (len == 0 || block_size == 0 || len % block_size) {
-            return YUNOS_INV_PARAM;
+            return RHINO_INV_PARAM;
         }
     }
 
@@ -373,7 +373,7 @@ kstat_t yunos_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
     if (len <= 0 || len > RINGBUF_LEN_3BYTES_MAXVALUE ||
         (p_ringbuf->type == RINGBUF_TYPE_FIX && len != p_ringbuf->blk_size) ) {
 
-        return YUNOS_INV_PARAM;
+        return RHINO_INV_PARAM;
     }
 
     return ringbuf_push(p_ringbuf, data, len);
@@ -386,7 +386,7 @@ kstat_t yunos_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
 
     if (len <= 0 || len > RINGBUF_LEN_3BYTES_MAXVALUE ||
         (p_ringbuf->type == RINGBUF_TYPE_FIX && len != p_ringbuf->blk_size) ) {
-        return YUNOS_INV_PARAM;
+        return RHINO_INV_PARAM;
     }
 
     return ringbuf_head_push(p_ringbuf, data, len);
@@ -398,7 +398,7 @@ kstat_t yunos_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
     NULL_PARA_CHK(pdata);
 
     if (p_ringbuf->type == RINGBUF_TYPE_DYN && plen == NULL) {
-        return YUNOS_INV_PARAM;
+        return RHINO_INV_PARAM;
     }
 
     return ringbuf_pop(p_ringbuf, pdata, plen);

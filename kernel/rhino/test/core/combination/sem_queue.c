@@ -6,7 +6,7 @@
 #include <test_fw.h>
 #include "comb_test.h"
 
-#if (YUNOS_CONFIG_KOBJ_SET > 0)
+#if (RHINO_CONFIG_KOBJ_SET > 0)
 static ktask_t *task_select;
 static ktask_t *task_queue_trigger;
 
@@ -31,45 +31,45 @@ static void task_sem_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_kobj_select(handle, &select_obj, YUNOS_WAIT_FOREVER);
+    ret = yunos_kobj_select(handle, &select_obj, RHINO_WAIT_FOREVER);
 
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
     /* queue1 will be selected first */
     TEST_FW_VAL_CHK(MODULE_NAME, ((size_t)select_obj == (size_t)(&queue1)));
 
     if (test_case_check_err == 0) {
-        ret = yunos_queue_recv((kqueue_t *)select_obj, YUNOS_NO_WAIT, &msg_word_recv);
-        TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+        ret = yunos_queue_recv((kqueue_t *)select_obj, RHINO_NO_WAIT, &msg_word_recv);
+        TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
         TEST_FW_VAL_CHK(MODULE_NAME, *((uint8_t *)&msg_word_recv) == MSG_SIGNATURE);
         msg_word_recv = NULL;
     }
 
-    ret = yunos_kobj_select(handle, &select_obj, YUNOS_WAIT_FOREVER);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    ret = yunos_kobj_select(handle, &select_obj, RHINO_WAIT_FOREVER);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
     /* queue2 will be selected next */
     TEST_FW_VAL_CHK(MODULE_NAME, ((size_t)select_obj == (size_t)(&queue2)));
 
     if (test_case_check_err == 0) {
-        ret = yunos_queue_recv((kqueue_t *)select_obj, YUNOS_NO_WAIT, &msg_word_recv);
-        TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+        ret = yunos_queue_recv((kqueue_t *)select_obj, RHINO_NO_WAIT, &msg_word_recv);
+        TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
         TEST_FW_VAL_CHK(MODULE_NAME, *((uint8_t *)&msg_word_recv) == MSG_SIGNATURE);
         msg_word_recv = NULL;
     }
 
     ret = yunos_kobj_set_rm((blk_obj_t *)&queue1);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = yunos_kobj_set_rm((blk_obj_t *)&queue2);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = yunos_kobj_set_dyn_del(handle);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = yunos_queue_del(&queue1);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = yunos_queue_del(&queue2);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     if (test_case_check_err == 0) {
         PRINT_RESULT("sem queue test", PASS);
@@ -99,7 +99,7 @@ void sem_queue_coopr_test(void)
     test_case_check_err = 0;
 
     ret = yunos_kobj_set_dyn_create(&handle, "obj_set", OBJ_SET_COUNT);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     yunos_queue_create(&queue1, "queue1", (void **)&queue1_msg_buff, TEST_MSG_SIZE);
     yunos_queue_create(&queue2, "queue2", (void **)&queue2_msg_buff, TEST_MSG_SIZE);
@@ -110,13 +110,13 @@ void sem_queue_coopr_test(void)
     ret = yunos_task_dyn_create(&task_select, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
 
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0,
                                 TASK_COMB_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_queue_trigger_entry, 1);
 
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == YUNOS_SUCCESS);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
 }
 #endif

@@ -22,8 +22,8 @@ static void task_sem_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_sem_take(test_sem, YUNOS_WAIT_FOREVER);
-    if (ret == YUNOS_SUCCESS) {
+    ret = yunos_sem_take(test_sem, RHINO_WAIT_FOREVER);
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT(MODULE_NAME, PASS);
     } else {
@@ -42,9 +42,9 @@ static void task_buf_queue_entry(void *arg)
     kstat_t ret;
     size_t  size;
 
-    ret = yunos_buf_queue_recv(&test_buf_queue, YUNOS_WAIT_FOREVER,
+    ret = yunos_buf_queue_recv(&test_buf_queue, RHINO_WAIT_FOREVER,
                                (void *)buf_queue_recv, &size);
-    if ((ret == YUNOS_SUCCESS) && (*(uint8_t *)buf_queue_recv == 0x5a)) {
+    if ((ret == RHINO_SUCCESS) && (*(uint8_t *)buf_queue_recv == 0x5a)) {
         yunos_sem_give(test_sem);
         yunos_task_dyn_del(yunos_cur_task_get());
     }
@@ -68,14 +68,14 @@ void sem_buf_queue_coopr_test(void)
 
     ret = yunos_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = yunos_task_dyn_create(&task_buf_queue, MODULE_NAME, 0, TASK_COMB_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_buf_queue_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -83,7 +83,7 @@ void sem_buf_queue_coopr_test(void)
     ret = yunos_task_dyn_create(&task_buf_queue_trigger, MODULE_NAME, 0,
                                 TASK_COMB_PRI + 2,
                                 0, TASK_TEST_STACK_SIZE, task_buf_queue_trigger_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }

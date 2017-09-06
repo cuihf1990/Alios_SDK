@@ -19,8 +19,8 @@ void  *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry
 
 #define CPSR_ALLOC() size_t cpsr
 
-#define YUNOS_CPU_INTRPT_DISABLE() { cpsr = XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL); }
-#define YUNOS_CPU_INTRPT_ENABLE()  { XTOS_RESTORE_JUST_INTLEVEL(cpsr); }
+#define RHINO_CPU_INTRPT_DISABLE() { cpsr = XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL); }
+#define RHINO_CPU_INTRPT_ENABLE()  { XTOS_RESTORE_JUST_INTLEVEL(cpsr); }
 
 #endif /* CPU_H */
 

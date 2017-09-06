@@ -38,7 +38,7 @@ void task_suspend_test(void)
                           task_suspend_entry, 1);
 
     /* for smp sync */
-    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND / 10);
+    yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND / 10);
 
     yunos_task_dyn_create(&task_2_test, "task_suspend_test_2", 0, 11,
                           0, TASK_TEST_STACK_SIZE,

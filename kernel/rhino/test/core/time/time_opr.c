@@ -36,9 +36,9 @@ static uint8_t time_opr_case(void)
     sys_time_t end;
 
     ticks = yunos_ms_to_ticks(1000);
-    MYASSERT(ticks == YUNOS_CONFIG_TICKS_PER_SECOND);
+    MYASSERT(ticks == RHINO_CONFIG_TICKS_PER_SECOND);
 
-    ms = yunos_ticks_to_ms(YUNOS_CONFIG_TICKS_PER_SECOND);
+    ms = yunos_ticks_to_ms(RHINO_CONFIG_TICKS_PER_SECOND);
     MYASSERT(ms == 1000);
 
     start = yunos_sys_tick_get();
@@ -51,7 +51,7 @@ static uint8_t time_opr_case(void)
     yunos_task_sleep(16);
     end   = yunos_sys_time_get();
 
-    MYASSERT((end - start) < (20 * 1000 / YUNOS_CONFIG_TICKS_PER_SECOND));
+    MYASSERT((end - start) < (20 * 1000 / RHINO_CONFIG_TICKS_PER_SECOND));
 
     return 0;
 }
@@ -70,7 +70,7 @@ void time_opr_test(void)
 
     ret = yunos_task_dyn_create(&task_time, MODULE_NAME, 0, TASK_TIME_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_time_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }

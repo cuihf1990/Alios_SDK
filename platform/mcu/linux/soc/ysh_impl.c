@@ -53,14 +53,14 @@ int32_t soc_term_gets_simulate(ysh_ctrl_tbl_t *ctrl_tbl, char *buf, uint32_t len
 {
     kstat_t        ret;
     size_t         size   = 0;
-    tick_t         yield_ticks = YUNOS_CONFIG_TIME_SLICE_DEFAULT;
+    tick_t         yield_ticks = RHINO_CONFIG_TIME_SLICE_DEFAULT;
 
     if (g_ysh_queue_init == 0) {
         ret = yunos_buf_queue_create(&g_ysh_simulate_queue, "test_ysh_simulate_queue",
                                      (void *)&g_ysh_queue_buf,
                                       YSH_QUEUE_BUF_SIZE, YSH_QUEUE_MSG_MAX);
 
-        if (ret != YUNOS_SUCCESS) {
+        if (ret != RHINO_SUCCESS) {
             return -1;
         }
         g_ysh_queue_init = 1;
@@ -68,7 +68,7 @@ int32_t soc_term_gets_simulate(ysh_ctrl_tbl_t *ctrl_tbl, char *buf, uint32_t len
 
     do {
        ret = yunos_buf_queue_recv(&g_ysh_simulate_queue, yield_ticks, buf, &size);
-       if (ret != YUNOS_SUCCESS) {
+       if (ret != RHINO_SUCCESS) {
            continue;
        } else {
            return size;
@@ -84,7 +84,7 @@ int32_t soc_term_gets_impl(ysh_ctrl_tbl_t *ctrl_tbl, char *buf, uint32_t len)
     fd_set         rfds;
     struct timeval tv;
     int            retval;
-    tick_t         yield_ticks = YUNOS_CONFIG_TIME_SLICE_DEFAULT;
+    tick_t         yield_ticks = RHINO_CONFIG_TIME_SLICE_DEFAULT;
 
     /* watch stdin (fd 0) to see when it has input. */
     do {

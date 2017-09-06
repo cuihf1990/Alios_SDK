@@ -16,27 +16,27 @@ static uint8_t mutex_opr_case1(void)
     uint8_t old_pri;
 
     ret = yunos_mutex_create(&test_mutex, MODULE_NAME);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mutex_unlock(&test_mutex);
-    MYASSERT(ret == YUNOS_MUTEX_NOT_RELEASED_BY_OWNER);
+    MYASSERT(ret == RHINO_MUTEX_NOT_RELEASED_BY_OWNER);
 
-    ret = yunos_mutex_lock(&test_mutex, YUNOS_NO_WAIT);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = yunos_mutex_lock(&test_mutex, RHINO_NO_WAIT);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     yunos_task_pri_change(yunos_cur_task_get(), TASK_MUTEX_PRI, &old_pri);
 
-    ret = yunos_mutex_lock(&test_mutex, YUNOS_NO_WAIT);
-    MYASSERT(ret == YUNOS_MUTEX_OWNER_NESTED);
+    ret = yunos_mutex_lock(&test_mutex, RHINO_NO_WAIT);
+    MYASSERT(ret == RHINO_MUTEX_OWNER_NESTED);
 
     ret = yunos_mutex_unlock(&test_mutex);
-    MYASSERT(ret == YUNOS_MUTEX_OWNER_NESTED);
+    MYASSERT(ret == RHINO_MUTEX_OWNER_NESTED);
 
     ret = yunos_mutex_unlock(&test_mutex);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mutex_del(&test_mutex);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     return 0;
 }
@@ -55,7 +55,7 @@ void mutex_opr_test(void)
 
     ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_MUTEX_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -67,11 +67,11 @@ static uint8_t task_pri_get(ktask_t *task)
 
     uint8_t pri;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     pri = task->prio;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
     return pri;
 }
@@ -84,21 +84,21 @@ void task_mutex_coopr1_co1_entry(void *arg)
         yunos_task_sleep(5);
 
         yunos_sched_disable();
-        ret = yunos_mutex_lock(&test_mutex, YUNOS_WAIT_FOREVER);
-        if (ret != YUNOS_SCHED_DISABLE) {
+        ret = yunos_mutex_lock(&test_mutex, RHINO_WAIT_FOREVER);
+        if (ret != RHINO_SCHED_DISABLE) {
             test_case_fail++;
             PRINT_RESULT(MODULE_NAME_CO1, FAIL);
         }
         yunos_sched_enable();
 
-        ret = yunos_mutex_lock(&test_mutex, YUNOS_NO_WAIT);
-        if (ret != YUNOS_NO_PEND_WAIT) {
+        ret = yunos_mutex_lock(&test_mutex, RHINO_NO_WAIT);
+        if (ret != RHINO_NO_PEND_WAIT) {
             test_case_fail++;
             PRINT_RESULT(MODULE_NAME_CO1, FAIL);
         }
 
-        ret = yunos_mutex_lock(&test_mutex, YUNOS_WAIT_FOREVER);
-        if (ret != YUNOS_SUCCESS) {
+        ret = yunos_mutex_lock(&test_mutex, RHINO_WAIT_FOREVER);
+        if (ret != RHINO_SUCCESS) {
             test_case_fail++;
             PRINT_RESULT(MODULE_NAME_CO1, FAIL);
         }
@@ -118,7 +118,7 @@ void task_mutex_coopr1_co2_entry(void *arg)
     yunos_mutex_create(&test_mutex, MODULE_NAME_CO1);
 
     while (1) {
-        yunos_mutex_lock(&test_mutex, YUNOS_WAIT_FOREVER);
+        yunos_mutex_lock(&test_mutex, RHINO_WAIT_FOREVER);
         yunos_task_sleep(10);
 
         /* now, the task's priority is revert */
@@ -156,7 +156,7 @@ void mutex_coopr1_test(void)
 
     ret = yunos_task_dyn_create(&task_mutex_co1, MODULE_NAME_CO1, 0, TASK_MUTEX_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr1_co1_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -164,7 +164,7 @@ void mutex_coopr1_test(void)
     ret = yunos_task_dyn_create(&task_mutex_co2, MODULE_NAME_CO1, 0,
                                 TASK_MUTEX_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr1_co2_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -177,8 +177,8 @@ static void task_mutex_coopr2_co1_entry(void *arg)
     while (1) {
         yunos_task_sleep(10);
 
-        ret = yunos_mutex_lock(&test_mutex_co1, YUNOS_WAIT_FOREVER);
-        if (ret != YUNOS_SUCCESS) {
+        ret = yunos_mutex_lock(&test_mutex_co1, RHINO_WAIT_FOREVER);
+        if (ret != RHINO_SUCCESS) {
             break;
         }
 
@@ -195,8 +195,8 @@ static void task_mutex_coopr2_co2_entry(void *arg)
     while (1) {
         yunos_task_sleep(10);
 
-        yunos_mutex_lock(&test_mutex_co2, YUNOS_WAIT_FOREVER);
-        yunos_mutex_lock(&test_mutex_co2, YUNOS_WAIT_FOREVER);
+        yunos_mutex_lock(&test_mutex_co2, RHINO_WAIT_FOREVER);
+        yunos_mutex_lock(&test_mutex_co2, RHINO_WAIT_FOREVER);
 
         break;
     }
@@ -212,8 +212,8 @@ static void task_mutex_coopr2_co3_entry(void *arg)
     yunos_mutex_create(&test_mutex_co2, MODULE_NAME_CO2);
 
     while (1) {
-        yunos_mutex_lock(&test_mutex_co1, YUNOS_WAIT_FOREVER);
-        yunos_mutex_lock(&test_mutex_co2, YUNOS_WAIT_FOREVER);
+        yunos_mutex_lock(&test_mutex_co1, RHINO_WAIT_FOREVER);
+        yunos_mutex_lock(&test_mutex_co2, RHINO_WAIT_FOREVER);
 
         yunos_task_sleep(20);
         pri = task_pri_get(yunos_cur_task_get());
@@ -279,7 +279,7 @@ void mutex_coopr2_test(void)
 
     ret = yunos_task_dyn_create(&task_mutex_co1, MODULE_NAME_CO2, 0, TASK_MUTEX_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co1_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -287,7 +287,7 @@ void mutex_coopr2_test(void)
     ret = yunos_task_dyn_create(&task_mutex_co2, MODULE_NAME_CO2, 0,
                                 TASK_MUTEX_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co2_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -295,7 +295,7 @@ void mutex_coopr2_test(void)
     ret = yunos_task_dyn_create(&task_mutex_co3, MODULE_NAME_CO2, 0,
                                 TASK_MUTEX_PRI + 2,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co3_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }

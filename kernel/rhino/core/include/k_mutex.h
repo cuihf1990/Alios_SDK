@@ -11,7 +11,7 @@ typedef struct mutex_s {
     struct mutex_s *mutex_list; /* task mutex list */
     mutex_nested_t  owner_nested;
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_t         mutex_item;
 #endif
 
@@ -22,30 +22,30 @@ typedef struct mutex_s {
  * This function will create a mutex
  * @param[in] mutex  pointer to the mutex(the space is provided by user)
  * @param[in] name   name of the mutex
- * @return the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mutex_create(kmutex_t *mutex, const name_t *name);
 
 /**
  * This function will delete a mutex
  * @param[in] mutex pointer to the mutex
- * @return the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mutex_del(kmutex_t *mutex);
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 /**
  * This function will create a dyn mutex
  * @param[in]  mutex  pointer to the mutex(the space is provided by user)
  * @param[in]  name   name of the mutex
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mutex_dyn_create(kmutex_t **mutex, const name_t *name);
 
 /**
  * This function will delete a dyn mutex
  * @param[in] mutex  pointer to the mutex
- * @return the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mutex_dyn_del(kmutex_t *mutex);
 #endif
@@ -54,21 +54,21 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex);
  * This function will lock mutex
  * @param[in]  mutex  pointer to the mutex
  * @param[in]  ticks  ticks to be wait for before lock
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks);
 
 /**
  * This function will unlock a mutex
  * @param[in]  mutex  pointer to the mutex
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mutex_unlock(kmutex_t *mutex);
 
 /**
  * This function will check if mutex is valid
  * @param[in]   mutex    pointer to the mutex
- * @return  the check status, YUNOS_SUCCESS is OK, others is error
+ * @return  the check status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mutex_is_valid(kmutex_t *mutex);
 

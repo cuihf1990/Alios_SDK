@@ -43,11 +43,11 @@ typedef enum {
 } task_stat_t;
 
 typedef enum {
-    YUNOS_SUCCESS                      = 0u,
-    YUNOS_SYS_FATAL_ERR,
-    YUNOS_SYS_SP_ERR,
-    YUNOS_RUNNING,
-    YUNOS_STOPPED
+    RHINO_SUCCESS                      = 0u,
+    RHINO_SYS_FATAL_ERR,
+    RHINO_SYS_SP_ERR,
+    RHINO_RUNNING,
+    RHINO_STOPPED
 }kstat_t;
 
 
@@ -378,7 +378,7 @@ static int rhino_update_threads(struct rtos *rtos)
 		return retval;
 	}
     //if system is not runing, no thread information
-    if(rtos->sys_stat != YUNOS_RUNNING){
+    if(rtos->sys_stat != RHINO_RUNNING){
         return ERROR_OK;
     }
 
@@ -623,7 +623,7 @@ static int rhino_create(struct target *target)
 
 	target->rtos->rtos_specific_params = (void *) &rhino_params_list[i];
 	target->rtos->current_thread = 0;
-    target->rtos->sys_stat       = YUNOS_STOPPED;
+    target->rtos->sys_stat       = RHINO_STOPPED;
 	target->rtos->thread_details = NULL;
 	return 0;
 }

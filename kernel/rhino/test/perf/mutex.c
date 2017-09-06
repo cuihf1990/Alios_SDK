@@ -37,11 +37,11 @@ static uint8_t task_pri_get(ktask_t *task)
 
     uint8_t pri;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     pri = task->prio;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
     return pri;
 }
@@ -52,14 +52,14 @@ static void MutexShuf1(void *arg)
     uint8_t oldpri;
 
     while (1) {
-        yunos_mutex_lock(&Shufhandle_0, YUNOS_WAIT_FOREVER);
+        yunos_mutex_lock(&Shufhandle_0, RHINO_WAIT_FOREVER);
         OurPriority = task_pri_get(yunos_cur_task_get());
         yunos_task_pri_change(ShufTaskHandle[1], OurPriority - 1, &oldpri);
 
         Starttime = hobbit_timer0_get_curval();
         yunos_mutex_unlock(&Shufhandle_0);
 
-        yunos_sem_take(Shufhandle_1, YUNOS_WAIT_FOREVER);
+        yunos_sem_take(Shufhandle_1, RHINO_WAIT_FOREVER);
 
         if (ShufSwitch >= SWITCH_NUM) {
             yunos_sem_give(ShufSynhandle);
@@ -74,7 +74,7 @@ static void MutexShuf2(void *arg)
     uint8_t oldpri;
 
     while (1) {
-        yunos_mutex_lock(&Shufhandle_0, YUNOS_WAIT_FOREVER);
+        yunos_mutex_lock(&Shufhandle_0, RHINO_WAIT_FOREVER);
 
         Endtime = hobbit_timer0_get_curval();
         Runtime = Starttime - Endtime;
@@ -118,7 +118,7 @@ void MutexShufTimetest(void *arg)
                           0, TASK_TEST_STACK_SIZE, MutexShuf2, 1);
 
     hobbit_timer0_start();
-    yunos_sem_take(ShufSynhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(ShufSynhandle, RHINO_WAIT_FOREVER);
 
     yunos_task_dyn_del(ShufTaskHandle[0]);
     yunos_task_dyn_del(ShufTaskHandle[1]);

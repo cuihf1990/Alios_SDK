@@ -14,7 +14,7 @@ kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
     /* init the list */
     klist_init(&mutex->blk_obj.blk_list);
     mutex->blk_obj.blk_policy = BLK_POLICY_PRI;
-#if (YUNOS_CONFIG_KOBJ_SET > 0)
+#if (RHINO_CONFIG_KOBJ_SET > 0)
     mutex->blk_obj.handle = NULL;
 #endif
     mutex->blk_obj.name       = name;
@@ -22,17 +22,17 @@ kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
     mutex->mutex_list         = NULL;
     mutex->mm_alloc_flag      = mm_alloc_flag;
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
-    YUNOS_CRITICAL_ENTER();
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
+    RHINO_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.mutex_head), &mutex->mutex_item);
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 #endif
 
-    mutex->blk_obj.obj_type = YUNOS_MUTEX_OBJ_TYPE;
+    mutex->blk_obj.obj_type = RHINO_MUTEX_OBJ_TYPE;
 
     TRACE_MUTEX_CREATE(yunos_cur_task_get(), mutex, name);
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_mutex_create(kmutex_t *mutex, const name_t *name)
@@ -62,28 +62,28 @@ kstat_t yunos_mutex_del(kmutex_t *mutex)
     klist_t *blk_list_head;
 
     if (mutex == NULL) {
-        return YUNOS_NULL_PTR;
+        return RHINO_NULL_PTR;
     }
 
     NULL_PARA_CHK(mutex);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (mutex->blk_obj.obj_type != RHINO_MUTEX_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (mutex->mm_alloc_flag != K_OBJ_STATIC_ALLOC) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_DEL_ERR;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_DEL_ERR;
     }
 
     blk_list_head = &mutex->blk_obj.blk_list;
 
-    mutex->blk_obj.obj_type = YUNOS_OBJ_TYPE_NONE;
+    mutex->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     if (mutex->mutex_task != NULL) {
         mutex_release(mutex->mutex_task, mutex);
@@ -94,36 +94,36 @@ kstat_t yunos_mutex_del(kmutex_t *mutex)
         pend_task_rm(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
     }
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&mutex->mutex_item);
 #endif
 
     TRACE_MUTEX_DEL(g_active_task[cpu_cur_get()], mutex);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t yunos_mutex_dyn_create(kmutex_t **mutex, const name_t *name)
 {
     kstat_t  stat;
     kmutex_t *mutex_obj;
 
     if (mutex == NULL) {
-        return YUNOS_NULL_PTR;
+        return RHINO_NULL_PTR;
     }
 
     NULL_PARA_CHK(mutex);
 
     mutex_obj = yunos_mm_alloc(sizeof(kmutex_t));
     if (mutex_obj == NULL) {
-        return YUNOS_NO_MEM;
+        return RHINO_NO_MEM;
     }
 
     stat = mutex_create(mutex_obj, name, K_OBJ_DYN_ALLOC);
-    if (stat != YUNOS_SUCCESS) {
+    if (stat != RHINO_SUCCESS) {
         yunos_mm_free(mutex_obj);
         return stat;
     }
@@ -140,28 +140,28 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
     klist_t *blk_list_head;
 
     if (mutex == NULL) {
-        return YUNOS_NULL_PTR;
+        return RHINO_NULL_PTR;
     }
 
     NULL_PARA_CHK(mutex);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (mutex->blk_obj.obj_type != RHINO_MUTEX_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (mutex->mm_alloc_flag != K_OBJ_DYN_ALLOC) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_DEL_ERR;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_DEL_ERR;
     }
 
     blk_list_head = &mutex->blk_obj.blk_list;
 
-    mutex->blk_obj.obj_type = YUNOS_OBJ_TYPE_NONE;
+    mutex->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     if (mutex->mutex_task != NULL) {
         mutex_release(mutex->mutex_task, mutex);
@@ -172,17 +172,17 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
         pend_task_rm(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
     }
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&mutex->mutex_item);
 #endif
 
     TRACE_MUTEX_DEL(g_active_task[cpu_cur_get()], mutex);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
     yunos_mm_free(mutex);
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 #endif
 
@@ -257,7 +257,7 @@ void mutex_task_pri_reset(ktask_t *task)
     kmutex_t *mutex_tmp;
     ktask_t *mutex_task;
 
-    if (task->blk_obj->obj_type == YUNOS_MUTEX_OBJ_TYPE) {
+    if (task->blk_obj->obj_type == RHINO_MUTEX_OBJ_TYPE) {
         mutex_tmp = (kmutex_t *)(task->blk_obj);
         mutex_task = mutex_tmp->mutex_task;
 
@@ -278,17 +278,17 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
 
     NULL_PARA_CHK(mutex);
 
-    if (g_sys_stat == YUNOS_STOPPED) {
-        return YUNOS_SUCCESS;
+    if (g_sys_stat == RHINO_STOPPED) {
+        return RHINO_SUCCESS;
     }
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (mutex->blk_obj.obj_type != RHINO_MUTEX_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     cur_cpu_num = cpu_cur_get();
@@ -297,16 +297,16 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
     if (g_active_task[cur_cpu_num] == mutex->mutex_task) {
         if (mutex->owner_nested == (mutex_nested_t) - 1) {
             /* fatal error here, system must be stoped here */
-            k_err_proc(YUNOS_MUTEX_NESTED_OVF);
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_MUTEX_NESTED_OVF;
+            k_err_proc(RHINO_MUTEX_NESTED_OVF);
+            RHINO_CRITICAL_EXIT();
+            return RHINO_MUTEX_NESTED_OVF;
         } else {
             mutex->owner_nested++;
         }
 
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
 
-        return YUNOS_MUTEX_OWNER_NESTED;
+        return RHINO_MUTEX_OWNER_NESTED;
     }
 
     mutex_task = mutex->mutex_task;
@@ -319,21 +319,21 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
 
         TRACE_MUTEX_GET(g_active_task[cur_cpu_num], mutex, ticks);
 
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
     }
 
-    /* can't get mutex, and return immediately if wait_option is YUNOS_NO_WAIT */
-    if (ticks == YUNOS_NO_WAIT) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_NO_PEND_WAIT;
+    /* can't get mutex, and return immediately if wait_option is RHINO_NO_WAIT */
+    if (ticks == RHINO_NO_WAIT) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_NO_PEND_WAIT;
     }
 
     /* system is locked so task can not be blocked just return immediately */
     if (g_sched_lock[cur_cpu_num] > 0u) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SCHED_DISABLE;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SCHED_DISABLE;
     }
 
     /* if current task is a higher prio task and block on the mutex
@@ -350,17 +350,17 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
 
     TRACE_MUTEX_GET_BLK(g_active_task[cur_cpu_num], mutex, ticks);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
-    YUNOS_CPU_INTRPT_DISABLE();
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
+    RHINO_CPU_INTRPT_DISABLE();
 
     /* so the task is waked up, need know which reason cause wake up */
     ret = pend_state_end_proc(g_active_task[cpu_cur_get()]);
 
-    YUNOS_CPU_INTRPT_ENABLE();
+    RHINO_CPU_INTRPT_ENABLE();
 #else
-    ret = YUNOS_SUCCESS;
+    ret = RHINO_SUCCESS;
 #endif
     return ret;
 }
@@ -375,32 +375,32 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
 
     NULL_PARA_CHK(mutex);
 
-    if (g_sys_stat == YUNOS_STOPPED) {
-        return YUNOS_SUCCESS;
+    if (g_sys_stat == RHINO_STOPPED) {
+        return RHINO_SUCCESS;
     }
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (mutex->blk_obj.obj_type != RHINO_MUTEX_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     cur_cpu_num = cpu_cur_get();
 
     /* mutex must be released by itself */
     if (g_active_task[cur_cpu_num] != mutex->mutex_task) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_MUTEX_NOT_RELEASED_BY_OWNER;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_MUTEX_NOT_RELEASED_BY_OWNER;
     }
 
     mutex->owner_nested--;
 
     if (mutex->owner_nested > 0u) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_MUTEX_OWNER_NESTED;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_MUTEX_OWNER_NESTED;
     }
 
     mutex_release(g_active_task[cur_cpu_num], mutex);
@@ -413,9 +413,9 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
         mutex->mutex_task = NULL;
 
         TRACE_MUTEX_RELEASE_SUCCESS(g_active_task[cur_cpu_num], mutex);
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
     }
 
     /* there must have task blocked on this mutex object */
@@ -432,19 +432,19 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
     task->mutex_list    = mutex;
     mutex->owner_nested = 1u;
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_mutex_is_valid(kmutex_t *mutex)
 {
     NULL_PARA_CHK(mutex);
 
-    if (mutex->blk_obj.obj_type != YUNOS_MUTEX_OBJ_TYPE) {
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (mutex->blk_obj.obj_type != RHINO_MUTEX_OBJ_TYPE) {
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 

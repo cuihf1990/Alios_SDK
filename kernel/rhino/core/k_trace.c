@@ -39,7 +39,7 @@ void trace_deinit(void)
     init = 0;
 }
 
-#if (YUNOS_CONFIG_TRACE > 0)
+#if (RHINO_CONFIG_TRACE > 0)
 
 #define TRACE_BUFFER_SIZE 1024
 #define ROUND_POINT(sz) (((sz) + (4 - 1)) & ~(4 - 1))

@@ -4,7 +4,7 @@
 
 #include <k_api.h>
 
-#if (YUNOS_CONFIG_BUF_QUEUE > 0)
+#if (RHINO_CONFIG_BUF_QUEUE > 0)
 
 static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
                                 void *buf, size_t size, size_t max_msg, uint8_t mm_alloc_flag)
@@ -16,11 +16,11 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
     NULL_PARA_CHK(name);
 
     if (max_msg == 0u) {
-        return YUNOS_INV_PARAM;
+        return RHINO_INV_PARAM;
     }
 
     if (size == 0u) {
-        return YUNOS_BUF_QUEUE_SIZE_ZERO;
+        return RHINO_BUF_QUEUE_SIZE_ZERO;
     }
 
     /* init the queue blocked list */
@@ -32,24 +32,24 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
     queue->max_msg_size       = max_msg;
     queue->blk_obj.name       = name;
     queue->blk_obj.blk_policy = BLK_POLICY_PRI;
-#if (YUNOS_CONFIG_KOBJ_SET > 0)
+#if (RHINO_CONFIG_KOBJ_SET > 0)
     queue->blk_obj.handle = NULL;
 #endif
     queue->mm_alloc_flag      = mm_alloc_flag;
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
-    YUNOS_CRITICAL_ENTER();
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
+    RHINO_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.buf_queue_head), &queue->buf_queue_item);
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 #endif
 
-    queue->blk_obj.obj_type = YUNOS_BUF_QUEUE_OBJ_TYPE;
+    queue->blk_obj.obj_type = RHINO_BUF_QUEUE_OBJ_TYPE;
 
     ringbuf_init(&(queue->ringbuf), buf, size, RINGBUF_TYPE_DYN, 0);
     queue->min_free_buf_size  = queue->ringbuf.freesize;
     TRACE_BUF_QUEUE_CREATE(yunos_cur_task_get(), queue);
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_buf_queue_create(kbuf_queue_t *queue, const name_t *name,
@@ -67,23 +67,23 @@ kstat_t yunos_buf_queue_del(kbuf_queue_t *queue)
 
     NULL_PARA_CHK(queue);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (queue->mm_alloc_flag != K_OBJ_STATIC_ALLOC) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_DEL_ERR;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_DEL_ERR;
     }
 
     head = &queue->blk_obj.blk_list;
 
-    queue->blk_obj.obj_type = YUNOS_OBJ_TYPE_NONE;
+    queue->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     /* all task blocked on this queue is waken up */
     while (!is_klist_empty(head)) {
@@ -91,18 +91,18 @@ kstat_t yunos_buf_queue_del(kbuf_queue_t *queue)
         pend_task_rm(yunos_list_entry(head->next, ktask_t, task_list));
     }
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&queue->buf_queue_item);
 #endif
 
     ringbuf_reset(&queue->ringbuf);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
                                    size_t size, size_t max_msg)
 {
@@ -112,26 +112,26 @@ kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
     NULL_PARA_CHK(queue);
 
     if (size == 0u) {
-        return YUNOS_BUF_QUEUE_SIZE_ZERO;
+        return RHINO_BUF_QUEUE_SIZE_ZERO;
     }
 
     queue_obj = yunos_mm_alloc(sizeof(kbuf_queue_t));
 
     if (queue_obj == NULL) {
-        return YUNOS_NO_MEM;
+        return RHINO_NO_MEM;
     }
 
     queue_obj->buf = yunos_mm_alloc(size);
 
     if (queue_obj->buf == NULL) {
         yunos_mm_free(queue_obj);
-        return YUNOS_NO_MEM;
+        return RHINO_NO_MEM;
     }
 
     stat = buf_queue_create(queue_obj, name, queue_obj->buf, size, max_msg,
                             K_OBJ_DYN_ALLOC);
 
-    if (stat != YUNOS_SUCCESS) {
+    if (stat != RHINO_SUCCESS) {
         yunos_mm_free(queue_obj->buf);
         yunos_mm_free(queue_obj);
         return stat;
@@ -139,7 +139,7 @@ kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
 
     *queue = queue_obj;
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
@@ -149,39 +149,39 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
 
     NULL_PARA_CHK(queue);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (queue->mm_alloc_flag != K_OBJ_DYN_ALLOC) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_DEL_ERR;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_DEL_ERR;
     }
 
     head = &queue->blk_obj.blk_list;
 
-    queue->blk_obj.obj_type = YUNOS_OBJ_TYPE_NONE;
+    queue->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     while (!is_klist_empty(head)) {
         pend_task_rm(yunos_list_entry(head->next, ktask_t, task_list));
     }
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&queue->buf_queue_item);
 #endif
 
     ringbuf_reset(&queue->ringbuf);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
     yunos_mm_free(queue->buf);
     yunos_mm_free(queue);
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 #endif
 
@@ -196,28 +196,28 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
     uint8_t  cur_cpu_num;
 
     /* this is only needed when system zero interrupt feature is enabled */
-#if (YUNOS_CONFIG_INTRPT_GUARD > 0)
+#if (RHINO_CONFIG_INTRPT_GUARD > 0)
     soc_intrpt_guard();
 #endif
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
-    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     cur_cpu_num = cpu_cur_get();
 
     if (msg_size > queue->max_msg_size) {
         TRACE_BUF_QUEUE_MAX(g_active_task[cur_cpu_num], queue, msg, msg_size);
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_BUF_QUEUE_MSG_SIZE_OVERFLOW;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_BUF_QUEUE_MSG_SIZE_OVERFLOW;
     }
 
     if (msg_size == 0) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_INV_PARAM;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_INV_PARAM;
     }
 
     head = &queue->blk_obj.blk_list;
@@ -230,10 +230,10 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
             err = ringbuf_push(&(queue->ringbuf), msg, msg_size);
         }
 
-        if (err != YUNOS_SUCCESS) {
-            YUNOS_CRITICAL_EXIT();
-            if (err ==  YUNOS_RINGBUF_FULL) {
-                err = YUNOS_BUF_QUEUE_FULL;
+        if (err != RHINO_SUCCESS) {
+            RHINO_CRITICAL_EXIT();
+            if (err ==  RHINO_RINGBUF_FULL) {
+                err = RHINO_BUF_QUEUE_FULL;
             }
             return err;
         }
@@ -250,14 +250,14 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
 
         TRACE_BUF_QUEUE_POST(g_active_task[cur_cpu_num], queue, msg, msg_size);
 
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
 
-#if (YUNOS_CONFIG_KOBJ_SET > 0)
+#if (RHINO_CONFIG_KOBJ_SET > 0)
         if (queue->blk_obj.handle != NULL) {
             queue->blk_obj.handle->notify((blk_obj_t *)queue, queue->blk_obj.handle);
         }
 #endif
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
     }
 
     task = yunos_list_entry(head->next, ktask_t, task_list);
@@ -268,9 +268,9 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
 
     TRACE_BUF_QUEUE_TASK_WAKE(g_active_task[cur_cpu_num], task, queue);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size)
@@ -278,7 +278,7 @@ kstat_t yunos_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size)
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
 
-    return buf_queue_send(queue, msg, size, YUNOS_FALSE);
+    return buf_queue_send(queue, msg, size, RHINO_FALSE);
 }
 
 kstat_t yunos_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
@@ -286,7 +286,7 @@ kstat_t yunos_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
 
-    return buf_queue_send(queue, msg, size, YUNOS_TRUE);
+    return buf_queue_send(queue, msg, size, RHINO_TRUE);
 }
 
 kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
@@ -301,37 +301,37 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
     NULL_PARA_CHK(msg);
     NULL_PARA_CHK(size);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     cur_cpu_num = cpu_cur_get();
 
-    if ((g_intrpt_nested_level[cur_cpu_num] > 0u) && (ticks != YUNOS_NO_WAIT)) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_NOT_CALLED_BY_INTRPT;
+    if ((g_intrpt_nested_level[cur_cpu_num] > 0u) && (ticks != RHINO_NO_WAIT)) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_NOT_CALLED_BY_INTRPT;
     }
 
-    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (!ringbuf_is_empty(&(queue->ringbuf))) {
         ringbuf_pop(&(queue->ringbuf), msg, size);
         queue->cur_num --;
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SUCCESS;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SUCCESS;
     }
 
-    if (ticks == YUNOS_NO_WAIT) {
+    if (ticks == RHINO_NO_WAIT) {
         *size = 0u;
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_NO_PEND_WAIT;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_NO_PEND_WAIT;
     }
 
     if (g_sched_lock[cur_cpu_num] > 0u) {
         *size = 0u;
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SCHED_DISABLE;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SCHED_DISABLE;
     }
 
     g_active_task[cur_cpu_num]->msg = msg;
@@ -339,17 +339,17 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
 
     TRACE_BUF_QUEUE_GET_BLK(g_active_task[cur_cpu_num], queue, ticks);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    YUNOS_CPU_INTRPT_DISABLE();
+    RHINO_CPU_INTRPT_DISABLE();
 
     cur_cpu_num = cpu_cur_get();
 
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
     ret = pend_state_end_proc(g_active_task[cur_cpu_num]);
 
     switch (ret) {
-        case YUNOS_SUCCESS:
+        case RHINO_SUCCESS:
             *size = g_active_task[cur_cpu_num]->bq_msg_size;
             break;
 
@@ -366,10 +366,10 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
         *size = 0u;
     }
 
-    ret = YUNOS_SUCCESS;
+    ret = RHINO_SUCCESS;
 #endif
 
-    YUNOS_CPU_INTRPT_ENABLE();
+    RHINO_CPU_INTRPT_ENABLE();
 
     return ret;
 }
@@ -380,13 +380,13 @@ kstat_t yunos_buf_queue_flush(kbuf_queue_t *queue)
 
     NULL_PARA_CHK(queue);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     ringbuf_reset(&(queue->ringbuf));
@@ -394,9 +394,9 @@ kstat_t yunos_buf_queue_flush(kbuf_queue_t *queue)
     queue->peak_num          = 0u;
     queue->min_free_buf_size = queue->ringbuf.freesize;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
@@ -406,11 +406,11 @@ kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(info);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
-    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     info->free_buf_size = queue->ringbuf.freesize;
@@ -420,20 +420,20 @@ kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
     info->cur_num = queue->cur_num;
     info->peak_num = queue->peak_num;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_buf_queue_is_valid(kbuf_queue_t *queue)
 {
     NULL_PARA_CHK(queue);
 
-    if (queue->blk_obj.obj_type != YUNOS_BUF_QUEUE_OBJ_TYPE) {
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 #endif

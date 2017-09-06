@@ -132,7 +132,7 @@ int32_t hal_uart_init(uart_dev_t *uart)
         tcsetattr(0, TCSANOW, &term_vi);
         atexit(exit_cleanup);
         stat = yunos_buf_queue_dyn_create(&pdrv->bufque, "cli", 256 , CLI_BUFQUE_NUM);
-        if(stat != YUNOS_SUCCESS) {
+        if(stat != RHINO_SUCCESS) {
             return stat;
         }
 
@@ -158,7 +158,7 @@ int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t time
     uint32_t i = 0;
     _uart_drv_t *pdrv = &_uart_drv[uart->port];
 
-    yunos_mutex_lock(&pdrv->tx_mutex, YUNOS_WAIT_FOREVER);
+    yunos_mutex_lock(&pdrv->tx_mutex, RHINO_WAIT_FOREVER);
 
     for ( i = 0; i < size; i++ ) {
         putchar( ((uint8_t *)data)[i] );
@@ -177,8 +177,8 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
     _uart_drv_t   *pdrv = &_uart_drv[uart->port];
 
     while(1) {
-        retval = yunos_buf_queue_recv(pdrv->bufque, YUNOS_WAIT_FOREVER, data, &readlen);
-        if(retval != YUNOS_SUCCESS) {
+        retval = yunos_buf_queue_recv(pdrv->bufque, RHINO_WAIT_FOREVER, data, &readlen);
+        if(retval != RHINO_SUCCESS) {
             if (recv_size) {
                 *recv_size = totallen;
             }

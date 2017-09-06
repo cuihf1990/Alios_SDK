@@ -19,13 +19,13 @@ static uint8_t mm_blk_opr_case1(void)
 
     ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
                                MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mblk_alloc(&mblk_pool_test, &ptr);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mblk_free(&mblk_pool_test, ptr);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     return 0;
 }
@@ -44,7 +44,7 @@ void mm_blk_opr_test(void)
 
     ret = yunos_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -88,7 +88,7 @@ void mm_blk_coopr_test(void)
 
     ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
                                MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
         return;
@@ -96,7 +96,7 @@ void mm_blk_coopr_test(void)
 
     ret = yunos_task_dyn_create(&blk_task, MODULE_NAME, 0, TASK_MM_BLK_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_co1_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
     }

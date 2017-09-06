@@ -27,7 +27,7 @@ static void timer_start_param_test()
     kstat_t ret;
 
     ret = yunos_timer_start(NULL);
-    TIMER_VAL_CHK(ret == YUNOS_NULL_PTR);
+    TIMER_VAL_CHK(ret == RHINO_NULL_PTR);
 }
 
 static void timer_stop_param_test()
@@ -35,7 +35,7 @@ static void timer_stop_param_test()
     kstat_t ret;
 
     ret = yunos_timer_stop(NULL);
-    TIMER_VAL_CHK(ret == YUNOS_NULL_PTR);
+    TIMER_VAL_CHK(ret == RHINO_NULL_PTR);
 }
 
 static void task_timer0_entry(void *arg)
@@ -52,20 +52,20 @@ static void task_timer0_entry(void *arg)
         timer_stop_param_test();
 
         ret = yunos_sem_create(&sem_0_test, "sem_0_test", 0);
-        TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
+        TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = yunos_timer_create(&timer_0_test, "timer_0_test", timer_0_func,
                                  TIMER0_ROUND, TIMER0_ROUND, (void *)TIMER0_MAGIC, 1);
-        TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
+        TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
-        ret = yunos_sem_take(&sem_0_test, YUNOS_WAIT_FOREVER);
-        TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
+        ret = yunos_sem_take(&sem_0_test, RHINO_WAIT_FOREVER);
+        TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = yunos_timer_stop(&timer_0_test);
-        TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
+        TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = yunos_timer_del(&timer_0_test);
-        TIMER_VAL_CHK(ret == YUNOS_SUCCESS);
+        TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
         test_case_success++;
         PRINT_RESULT("timer start&stop", PASS);
@@ -82,7 +82,7 @@ kstat_t task_timer_start_stop_test(void)
 
     ret = yunos_task_dyn_create(&task_0_test, "task_timer0_test", 0, 10,
                                 0, TASK_TEST_STACK_SIZE, task_timer0_entry, 1);
-    TIMER_VAL_CHK((ret == YUNOS_SUCCESS) || (ret == YUNOS_STOPPED));
+    TIMER_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     return 0;
 }

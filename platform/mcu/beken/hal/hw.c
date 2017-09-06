@@ -18,7 +18,7 @@
 #define TAG "hw"
 
 #define us2tick(us) \
-    ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
+    ((us * RHINO_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
 
 static void _timer_cb(void *timer, void *arg)
 {

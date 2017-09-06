@@ -87,7 +87,7 @@ void TaskYIELDtimeTest(void *arg)
 
     hobbit_timer0_start();
 
-    yunos_sem_take(SwitchSynhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(SwitchSynhandle, RHINO_WAIT_FOREVER);
 
     yunos_task_dyn_del(xSwitchTaskHandle[0]);
     yunos_task_dyn_del(xSwitchTaskHandle[1]);

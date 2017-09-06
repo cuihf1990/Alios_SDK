@@ -10,7 +10,7 @@
 #define MODULE_NAME_CO "mm_coopr"
 static void *co_ptr;
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 
 static uint8_t mm_opr_case1(void)
 {
@@ -19,7 +19,7 @@ static uint8_t mm_opr_case1(void)
     char    tmp;
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ptr = k_mm_alloc(pmmhead, 64);
     MYASSERT(ptr != NULL);
@@ -31,7 +31,7 @@ static uint8_t mm_opr_case1(void)
     yunos_deinit_mm_head(pmmhead);
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     yunos_deinit_mm_head(pmmhead);
 
@@ -45,7 +45,7 @@ static uint8_t mm_opr_case2(void)
     kstat_t ret;
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     /* alloc out of mm pools then free all */
     cnt = 0;
@@ -81,7 +81,7 @@ void mm_opr_test(void)
 
     ret = yunos_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -92,7 +92,7 @@ static void task_mm_co1_entry(void *arg)
     kstat_t ret;
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
         return;
@@ -149,7 +149,7 @@ void mm_coopr_test(void)
     kstat_t ret;
 
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
         return;
@@ -157,14 +157,14 @@ void mm_coopr_test(void)
 
     ret = yunos_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_co1_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
     }
 
     ret = yunos_task_dyn_create(&task_mm_co, MODULE_NAME, 0, TASK_MM_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_mm_co2_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
     }

@@ -145,7 +145,7 @@ void hal_reboot(void)
 #ifdef VCALL_RHINO
 #include <k_api.h>
 #define us2tick(us) \
-    ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
+    ((us * RHINO_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
 
 static void _timer_cb(void *timer, void *arg)
 {
@@ -189,7 +189,7 @@ int csp_printf(const char *fmt, ...)
     va_list args;
     int ret;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     va_start(args, fmt);
     ret = vprintf(fmt, args);
@@ -197,7 +197,7 @@ int csp_printf(const char *fmt, ...)
 
     fflush(stdout);
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
     return ret;
 }

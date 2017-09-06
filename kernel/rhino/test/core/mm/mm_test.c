@@ -6,7 +6,7 @@
 #include <test_fw.h>
 #include "mm_test.h"
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 
 ktask_t   *task_mm;
 ktask_t   *task_mm_co;

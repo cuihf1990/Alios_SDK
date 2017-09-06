@@ -19,7 +19,7 @@
 #define TAG "hw"
 
 #define us2tick(us) \
-    ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
+    ((us * RHINO_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
 
 uart_dev_t uart_0;
 

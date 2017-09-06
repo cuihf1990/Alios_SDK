@@ -8,7 +8,7 @@ void soc_hw_timer_init()
 {
 }
 
-#if (YUNOS_CONFIG_USER_HOOK > 0)
+#if (RHINO_CONFIG_USER_HOOK > 0)
 void yunos_idle_hook(void)
 {
     cpu_idle_hook();
@@ -16,7 +16,7 @@ void yunos_idle_hook(void)
 
 void yunos_init_hook(void)
 {
-#if (YUNOS_CONFIG_HW_COUNT > 0)
+#if (RHINO_CONFIG_HW_COUNT > 0)
     soc_hw_timer_init();
 #endif
     cpu_init_hook();
@@ -25,7 +25,7 @@ void yunos_init_hook(void)
 
 void yunos_start_hook(void)
 {
-#if (YUNOS_CONFIG_TASK_SCHED_STATS > 0)
+#if (RHINO_CONFIG_TASK_SCHED_STATS > 0)
     yunos_task_sched_stats_reset();
 #endif
     cpu_start_hook();

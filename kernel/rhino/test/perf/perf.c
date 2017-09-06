@@ -63,7 +63,7 @@ void OS_test(void *arg)
 #if 1
     ret = yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                                 0, TASK_TEST_STACK_SIZE, IntRealtimetest, 1);
-    yunos_sem_take(SYNhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     yunos_task_dyn_del(test_task);
 
     yunos_task_sleep(50);
@@ -72,7 +72,7 @@ void OS_test(void *arg)
 #if 1
     yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                           0, TASK_TEST_STACK_SIZE, TaskYIELDtimeTest, 1);
-    yunos_sem_take(SYNhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     yunos_task_dyn_del(test_task);
     yunos_task_sleep(50);
 #endif
@@ -80,7 +80,7 @@ void OS_test(void *arg)
 #if 1
     yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                           0, TASK_TEST_STACK_SIZE, PreemptionTimetest, 1);
-    yunos_sem_take(SYNhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     yunos_task_dyn_del(test_task);
 
     yunos_task_sleep(50);
@@ -90,7 +90,7 @@ void OS_test(void *arg)
     yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                           0, TASK_TEST_STACK_SIZE, MutexShufTimetest, 1);
 
-    yunos_sem_take(SYNhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     yunos_task_dyn_del(test_task);
 
     yunos_task_sleep(50);
@@ -100,7 +100,7 @@ void OS_test(void *arg)
     yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                           0, TASK_TEST_STACK_SIZE, BinaryShufTimetest, 1);
 
-    yunos_sem_take(SYNhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     yunos_task_dyn_del(test_task);
 
     yunos_task_sleep(50);

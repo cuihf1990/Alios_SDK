@@ -4,7 +4,7 @@
 
 #include <k_api.h>
 
-#if (YUNOS_CONFIG_HW_COUNT > 0)
+#if (RHINO_CONFIG_HW_COUNT > 0)
 void soc_hw_timer_init(void)
 {
 }
@@ -18,28 +18,28 @@ lr_timer_t soc_lr_hw_cnt_get(void)
 {
     return 0;
 }
-#endif /* YUNOS_CONFIG_HW_COUNT */
+#endif /* RHINO_CONFIG_HW_COUNT */
 
-#if (YUNOS_CONFIG_INTRPT_GUARD > 0)
+#if (RHINO_CONFIG_INTRPT_GUARD > 0)
 void soc_intrpt_guard(void)
 {
 }
 #endif
 
-#if (YUNOS_CONFIG_INTRPT_STACK_REMAIN_GET > 0)
+#if (RHINO_CONFIG_INTRPT_STACK_REMAIN_GET > 0)
 size_t soc_intrpt_stack_remain_get(void)
 {
     return 0;
 }
 #endif
 
-#if (YUNOS_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
+#if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
 void soc_intrpt_stack_ovf_check(void)
 {
 }
 #endif
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
 void soc_tick_interrupt_set(tick_t next_ticks,tick_t elapsed_ticks)
 {
 }
@@ -50,7 +50,7 @@ tick_t soc_elapsed_ticks_get(void)
 }
 #endif
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 k_mm_region_t      g_mm_region;
 k_mm_region_head_t g_mm_region_head;
 
@@ -68,7 +68,7 @@ void *soc_mm_alloc(size_t size)
     void   *mem;
 
     ret = yunos_mm_bf_alloc(&g_mm_region_head, &mem, size);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         return NULL;
     }
 

@@ -4,7 +4,7 @@
 
 #include <k_api.h>
 
-#if (YUNOS_CONFIG_EVENT_FLAG > 0)
+#if (RHINO_CONFIG_EVENT_FLAG > 0)
 static kstat_t event_create(kevent_t *event, const name_t *name, uint32_t flags,
                             uint8_t mm_alloc_flag)
 {
@@ -17,23 +17,23 @@ static kstat_t event_create(kevent_t *event, const name_t *name, uint32_t flags,
     klist_init(&event->blk_obj.blk_list);
     event->blk_obj.blk_policy = BLK_POLICY_PRI;
     event->blk_obj.name       = name;
-#if (YUNOS_CONFIG_KOBJ_SET > 0)
+#if (RHINO_CONFIG_KOBJ_SET > 0)
     event->blk_obj.handle = NULL;
 #endif
     event->flags              = flags;
     event->mm_alloc_flag      = mm_alloc_flag;
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
-    YUNOS_CRITICAL_ENTER();
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
+    RHINO_CRITICAL_ENTER();
     klist_insert(&(g_kobj_list.event_head), &event->event_item);
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 #endif
 
     TRACE_EVENT_CREATE(yunos_cur_task_get(), event, name, flags);
 
-    event->blk_obj.obj_type = YUNOS_EVENT_OBJ_TYPE;
+    event->blk_obj.obj_type = RHINO_EVENT_OBJ_TYPE;
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_event_create(kevent_t *event, const name_t *name, uint32_t flags)
@@ -49,23 +49,23 @@ kstat_t yunos_event_del(kevent_t *event)
 
     NULL_PARA_CHK(event);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (event->blk_obj.obj_type != YUNOS_EVENT_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (event->blk_obj.obj_type != RHINO_EVENT_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (event->mm_alloc_flag != K_OBJ_STATIC_ALLOC) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_DEL_ERR;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_DEL_ERR;
     }
 
     blk_list_head = &event->blk_obj.blk_list;
 
-    event->blk_obj.obj_type = YUNOS_OBJ_TYPE_NONE;
+    event->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     while (!is_klist_empty(blk_list_head)) {
         pend_task_rm(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
@@ -73,18 +73,18 @@ kstat_t yunos_event_del(kevent_t *event)
 
     event->flags = 0u;
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&event->event_item);
 #endif
 
     TRACE_EVENT_DEL(g_active_task[cpu_cur_get()], event);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
                                uint32_t flags)
 {
@@ -92,18 +92,18 @@ kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
     kevent_t *event_obj;
 
     if (event == NULL) {
-        return YUNOS_NULL_PTR;
+        return RHINO_NULL_PTR;
     }
 
     event_obj = yunos_mm_alloc(sizeof(kevent_t));
 
     if (event_obj == NULL) {
-        return YUNOS_NO_MEM;
+        return RHINO_NO_MEM;
     }
 
     stat = event_create(event_obj, name, flags, K_OBJ_DYN_ALLOC);
 
-    if (stat != YUNOS_SUCCESS) {
+    if (stat != RHINO_SUCCESS) {
         yunos_mm_free(event_obj);
         return stat;
     }
@@ -121,23 +121,23 @@ kstat_t yunos_event_dyn_del(kevent_t *event)
 
     NULL_PARA_CHK(event);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (event->blk_obj.obj_type != YUNOS_EVENT_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (event->blk_obj.obj_type != RHINO_EVENT_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (event->mm_alloc_flag != K_OBJ_DYN_ALLOC) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_DEL_ERR;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_DEL_ERR;
     }
 
     blk_list_head = &event->blk_obj.blk_list;
 
-    event->blk_obj.obj_type = YUNOS_OBJ_TYPE_NONE;
+    event->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     while (!is_klist_empty(blk_list_head)) {
         pend_task_rm(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
@@ -145,15 +145,15 @@ kstat_t yunos_event_dyn_del(kevent_t *event)
 
     event->flags = 0u;
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&event->event_item);
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
     yunos_mm_free(event);
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 #endif
 
@@ -169,60 +169,60 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
     NULL_PARA_CHK(event);
     NULL_PARA_CHK(actl_flags);
 
-    if ((opt != YUNOS_AND) && (opt != YUNOS_OR) && (opt != YUNOS_AND_CLEAR) &&
-        (opt != YUNOS_OR_CLEAR)) {
-        return YUNOS_NO_THIS_EVENT_OPT;
+    if ((opt != RHINO_AND) && (opt != RHINO_OR) && (opt != RHINO_AND_CLEAR) &&
+        (opt != RHINO_OR_CLEAR)) {
+        return RHINO_NO_THIS_EVENT_OPT;
     }
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
-    if (event->blk_obj.obj_type != YUNOS_EVENT_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (event->blk_obj.obj_type != RHINO_EVENT_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     cur_cpu_num = cpu_cur_get();
 
     /* if option is AND MASK or OR MASK */
-    if (opt & YUNOS_FLAGS_AND_MASK) {
+    if (opt & RHINO_FLAGS_AND_MASK) {
         if ((event->flags & flags) == flags) {
-            status = YUNOS_TRUE;
+            status = RHINO_TRUE;
         } else {
-            status = YUNOS_FALSE;
+            status = RHINO_FALSE;
         }
     } else {
         if ((event->flags & flags) > 0u) {
-            status = YUNOS_TRUE;
+            status = RHINO_TRUE;
         } else {
-            status = YUNOS_FALSE;
+            status = RHINO_FALSE;
         }
     }
 
-    if (status == YUNOS_TRUE) {
+    if (status == RHINO_TRUE) {
         *actl_flags = event->flags;
 
-        if (opt & YUNOS_FLAGS_CLEAR_MASK) {
+        if (opt & RHINO_FLAGS_CLEAR_MASK) {
             event->flags &= ~flags;
         }
 
         TRACE_EVENT_GET(g_active_task[cur_cpu_num], event);
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
 
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
     }
 
-    /* can't get event, and return immediately if wait_option is YUNOS_NO_WAIT */
-    if (ticks == YUNOS_NO_WAIT) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_NO_PEND_WAIT;
+    /* can't get event, and return immediately if wait_option is RHINO_NO_WAIT */
+    if (ticks == RHINO_NO_WAIT) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_NO_PEND_WAIT;
     }
 
     /* system is locked so task can not be blocked just return immediately */
     if (g_sched_lock[cur_cpu_num] > 0u) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SCHED_DISABLE;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SCHED_DISABLE;
     }
 
     /* remember the passed information */
@@ -234,17 +234,17 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
 
     TRACE_EVENT_GET_BLK(g_active_task[cur_cpu_num], event, ticks);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
-    YUNOS_CPU_INTRPT_DISABLE();
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
+    RHINO_CPU_INTRPT_DISABLE();
 
     /* so the task is waked up, need know which reason cause wake up */
     stat = pend_state_end_proc(g_active_task[cpu_cur_get()]);
 
-    YUNOS_CPU_INTRPT_ENABLE();
+    RHINO_CPU_INTRPT_ENABLE();
 #else
-    stat = YUNOS_SUCCESS;
+    stat = RHINO_SUCCESS;
 #endif
 
     return stat;
@@ -262,27 +262,27 @@ static kstat_t event_set(kevent_t *event, uint32_t flags, uint8_t opt)
     uint32_t  cur_event_flags;
 
     /* this is only needed when system zero interrupt feature is enabled */
-#if (YUNOS_CONFIG_INTRPT_GUARD > 0)
+#if (RHINO_CONFIG_INTRPT_GUARD > 0)
     soc_intrpt_guard();
 #endif
 
-    status = YUNOS_FALSE;
+    status = RHINO_FALSE;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
-    if (event->blk_obj.obj_type != YUNOS_EVENT_OBJ_TYPE) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_TYPE_ERR;
+    if (event->blk_obj.obj_type != RHINO_EVENT_OBJ_TYPE) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_TYPE_ERR;
     }
 
     event_head = &event->blk_obj.blk_list;
 
     /* if the set_option is AND_MASK, it just clears the flags and will return immediately */
-    if (opt & YUNOS_FLAGS_AND_MASK) {
+    if (opt & RHINO_FLAGS_AND_MASK) {
         event->flags &= flags;
 
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SUCCESS;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SUCCESS;
     } else {
         event->flags |= flags;
     }
@@ -295,21 +295,21 @@ static kstat_t event_set(kevent_t *event, uint32_t flags, uint8_t opt)
         task = yunos_list_entry(iter, ktask_t, task_list);
         iter_temp = iter->next;
 
-        if (task->pend_option & YUNOS_FLAGS_AND_MASK) {
+        if (task->pend_option & RHINO_FLAGS_AND_MASK) {
             if ((cur_event_flags & task->pend_flags) == task->pend_flags) {
-                status = YUNOS_TRUE;
+                status = RHINO_TRUE;
             } else {
-                status = YUNOS_FALSE;
+                status = RHINO_FALSE;
             }
         } else {
             if (cur_event_flags & task->pend_flags) {
-                status = YUNOS_TRUE;
+                status = RHINO_TRUE;
             } else {
-                status = YUNOS_FALSE;
+                status = RHINO_FALSE;
             }
         }
 
-        if (status == YUNOS_TRUE) {
+        if (status == RHINO_TRUE) {
             (*(uint32_t *)(task->pend_info)) = cur_event_flags;
 
             /* the task condition is met, just wake this task */
@@ -318,7 +318,7 @@ static kstat_t event_set(kevent_t *event, uint32_t flags, uint8_t opt)
             TRACE_EVENT_TASK_WAKE(g_active_task[cpu_cur_get()], task, event);
 
             /* does it need to clear the flags */
-            if (task->pend_option & YUNOS_FLAGS_CLEAR_MASK) {
+            if (task->pend_option & RHINO_FLAGS_CLEAR_MASK) {
                 event->flags &= ~(task->pend_flags);
             }
         }
@@ -326,20 +326,20 @@ static kstat_t event_set(kevent_t *event, uint32_t flags, uint8_t opt)
         iter = iter_temp;
     }
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 kstat_t yunos_event_set(kevent_t *event, uint32_t flags, uint8_t opt)
 {
     NULL_PARA_CHK(event);
 
-    if ((opt != YUNOS_AND) && (opt != YUNOS_OR)) {
-        return YUNOS_NO_THIS_EVENT_OPT;
+    if ((opt != RHINO_AND) && (opt != RHINO_OR)) {
+        return RHINO_NO_THIS_EVENT_OPT;
     }
 
     return event_set(event, flags, opt);
 }
-#endif /* YUNOS_CONFIG_EVENT_FLAG */
+#endif /* RHINO_CONFIG_EVENT_FLAG */
 

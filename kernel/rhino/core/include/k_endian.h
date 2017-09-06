@@ -5,7 +5,7 @@
 #ifndef K_ENDIAN_H
 #define K_ENDIAN_H
 
-#if (YUNOS_CONFIG_LITTLE_ENDIAN != 1)
+#if (RHINO_CONFIG_LITTLE_ENDIAN != 1)
 
 #define yunos_htons(x) x
 #define yunos_htonl(x) x
@@ -39,7 +39,7 @@
 #endif
 
 
-#endif /*YUNOS_CONFIG_LITTLE_ENDIAN*/
+#endif /*RHINO_CONFIG_LITTLE_ENDIAN*/
 
 
 

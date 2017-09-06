@@ -8,7 +8,7 @@
 
 #define MODULE_NAME "mm_break"
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 
 static uint8_t mm_break_case1(void)
 {
@@ -18,7 +18,7 @@ static uint8_t mm_break_case1(void)
     int     i;
     size_t  oldsize;
     ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
 #if (K_MM_STATISTIC > 0)
 
@@ -127,7 +127,7 @@ void mm_break_test(void)
 
     ret = yunos_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }

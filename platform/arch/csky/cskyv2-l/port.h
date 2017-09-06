@@ -19,8 +19,8 @@ void  *cpu_task_stack_init(cpu_stack_t *base, size_t size,
 
 #define CPSR_ALLOC() size_t psr
 
-#define YUNOS_CPU_INTRPT_DISABLE() { psr = cpu_intrpt_save(); }
-#define YUNOS_CPU_INTRPT_ENABLE()  { cpu_intrpt_restore(psr); }
+#define RHINO_CPU_INTRPT_DISABLE() { psr = cpu_intrpt_save(); }
+#define RHINO_CPU_INTRPT_ENABLE()  { cpu_intrpt_restore(psr); }
 
 #endif /* PORT_H */
 

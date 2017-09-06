@@ -8,16 +8,16 @@ void tick_list_init(void)
 {
     uint8_t i;
 
-    for (i = 0; i < YUNOS_CONFIG_TICK_HEAD_ARRAY; i++) {
+    for (i = 0; i < RHINO_CONFIG_TICK_HEAD_ARRAY; i++) {
         klist_init(&g_tick_head[i]);
     }
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
     g_next_intrpt_ticks = (tick_t) - 1;
 #endif
 }
 
-YUNOS_INLINE void tick_list_pri_insert(klist_t *head, ktask_t *task)
+RHINO_INLINE void tick_list_pri_insert(klist_t *head, ktask_t *task)
 {
     tick_t   val;
     klist_t *q;
@@ -37,7 +37,7 @@ YUNOS_INLINE void tick_list_pri_insert(klist_t *head, ktask_t *task)
 
     klist_insert(q, &task->tick_list);
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
     task_iter_temp = yunos_list_entry(head->next, ktask_t, tick_list);
 
     if (g_next_intrpt_ticks > task_iter_temp->tick_match - g_tick_count) {
@@ -56,7 +56,7 @@ void tick_list_insert(ktask_t *task, tick_t time)
         task->tick_match  = g_tick_count + time;
         task->tick_remain = time;
 
-        spoke = (uint16_t)(task->tick_match & (YUNOS_CONFIG_TICK_HEAD_ARRAY - 1u));
+        spoke = (uint16_t)(task->tick_match & (RHINO_CONFIG_TICK_HEAD_ARRAY - 1u));
         tick_head_ptr = &g_tick_head[spoke];
 
         tick_list_pri_insert(tick_head_ptr, task);
@@ -84,9 +84,9 @@ void tick_list_update(void)
     klist_t *iter;
     klist_t *iter_temp;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
     g_tick_count       += g_pend_intrpt_ticks;
     g_sys_time_tick    += g_pend_intrpt_ticks;
     g_pend_intrpt_ticks = 0u;
@@ -95,11 +95,11 @@ void tick_list_update(void)
     g_sys_time_tick++;
 #endif
 
-    spoke         = (uint16_t)(g_tick_count & (YUNOS_CONFIG_TICK_HEAD_ARRAY - 1u));
+    spoke         = (uint16_t)(g_tick_count & (RHINO_CONFIG_TICK_HEAD_ARRAY - 1u));
     tick_head_ptr = &g_tick_head[spoke];
     iter          = tick_head_ptr->next;
 
-    while (YUNOS_TRUE) {
+    while (RHINO_TRUE) {
         /* search all the time list if possible */
         if (iter != tick_head_ptr) {
             iter_temp = iter->next;
@@ -139,7 +139,7 @@ void tick_list_update(void)
                         tick_list_rm(p_tcb);
                         break;
                     default:
-                        k_err_proc(YUNOS_SYS_FATAL_ERR);
+                        k_err_proc(RHINO_SYS_FATAL_ERR);
                         break;
                 }
 
@@ -152,7 +152,7 @@ void tick_list_update(void)
         }
     }
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
 
     if (tick_head_ptr->next != tick_head_ptr) {
         p_tcb = yunos_list_entry(tick_head_ptr->next, ktask_t, tick_list);
@@ -164,20 +164,20 @@ void tick_list_update(void)
     soc_tick_interrupt_set(g_next_intrpt_ticks, 0);
 #endif
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 }
 
-#if (YUNOS_CONFIG_TICK_TASK > 0)
+#if (RHINO_CONFIG_TICK_TASK > 0)
 static void tick_task_proc(void *para)
 {
     kstat_t ret;
 
     (void)para;
 
-    while (YUNOS_TRUE) {
-        ret = yunos_task_sem_take(YUNOS_WAIT_FOREVER);
-        if (ret == YUNOS_SUCCESS) {
-            if (g_sys_stat == YUNOS_RUNNING) {
+    while (RHINO_TRUE) {
+        ret = yunos_task_sem_take(RHINO_WAIT_FOREVER);
+        if (ret == RHINO_SUCCESS) {
+            if (g_sys_stat == RHINO_RUNNING) {
                 tick_list_update();
             }
         }
@@ -187,8 +187,8 @@ static void tick_task_proc(void *para)
 void tick_task_start(void)
 {
     /* create tick task to caculate task sleep and timeout */
-    yunos_task_create(&g_tick_task, "tick_task", NULL, YUNOS_CONFIG_TICK_TASK_PRI,
-                      0, g_tick_task_stack, YUNOS_CONFIG_TICK_TASK_STACK_SIZE, tick_task_proc, 1);
+    yunos_task_create(&g_tick_task, "tick_task", NULL, RHINO_CONFIG_TICK_TASK_PRI,
+                      0, g_tick_task_stack, RHINO_CONFIG_TICK_TASK_STACK_SIZE, tick_task_proc, 1);
 
     yunos_task_sem_create(&g_tick_task, &g_tick_sem, "tick_task_sem", 0);
 

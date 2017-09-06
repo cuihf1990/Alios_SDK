@@ -12,7 +12,7 @@ typedef struct {
     size_t        blk_avail;
     size_t        blk_whole;
     uint8_t      *avail_list;
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_t       mblkpool_stats_item;
 #endif
 } mblk_pool_t;
@@ -24,7 +24,7 @@ typedef struct {
  * @param[in]  pool_start  start addr of the pool
  * @param[in]  blk_size    size of the blk
  * @param[in]  pool_size   size of the pool
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
                              void *pool_start,
@@ -34,7 +34,7 @@ kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
  * This function will alloc a blk-pool
  * @param[in]  pool  pointer to a pool
  * @param[in]  blk   pointer to a blk
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mblk_alloc(mblk_pool_t *pool, void **blk);
 
@@ -42,7 +42,7 @@ kstat_t yunos_mblk_alloc(mblk_pool_t *pool, void **blk);
  * This function will free a blk-pool
  * @param[in]  pool  pointer to the pool
  * @param[in]  blk   pointer to the blk
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t yunos_mblk_free(mblk_pool_t *pool, void *blk);
 

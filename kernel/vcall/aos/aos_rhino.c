@@ -7,8 +7,8 @@
 #include <yos/yos.h>
 #include "errno_mapping.h"
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC == 0)
-#error "YUNOS_CONFIG_KOBJ_DYN_ALLOC must be configured!"
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC == 0)
+#error "RHINO_CONFIG_KOBJ_DYN_ALLOC must be configured!"
 #endif
 
 #define MS2TICK(ms) yunos_ms_to_ticks(ms)
@@ -23,7 +23,7 @@ void yos_reboot(void)
 
 int yos_get_hz(void)
 {
-    return YUNOS_CONFIG_TICKS_PER_SECOND;
+    return RHINO_CONFIG_TICKS_PER_SECOND;
 }
 
 const char *yos_version_get(void)
@@ -46,7 +46,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
 
     ret = (int)yunos_task_dyn_create(&task_handle, name, arg, YOS_DEFAULT_APP_PRI, 0,
                                      stack_size / sizeof(cpu_stack_t), fn, 1u);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -59,7 +59,7 @@ int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), voi
     int ret;
     ret = (int)yunos_task_dyn_create((ktask_t **)(&(task->hdl)), name, arg, prio, 0,
                                      stack_size / sizeof(cpu_stack_t), fn, 1u);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -82,7 +82,7 @@ int yos_task_key_create(yos_task_key_t *key)
 {
     int i;
 
-    for (i = YUNOS_CONFIG_TASK_INFO_NUM - 1; i >= 0; i--) {
+    for (i = RHINO_CONFIG_TASK_INFO_NUM - 1; i >= 0; i--) {
         if (!((1 << i) & used_bitmap)) {
             used_bitmap |= 1 << i;
             *key = i;
@@ -96,7 +96,7 @@ int yos_task_key_create(yos_task_key_t *key)
 
 void yos_task_key_delete(yos_task_key_t key)
 {
-    if (key >= YUNOS_CONFIG_TASK_INFO_NUM) {
+    if (key >= RHINO_CONFIG_TASK_INFO_NUM) {
         return;
     }
 
@@ -107,7 +107,7 @@ int yos_task_setspecific(yos_task_key_t key, void *vp)
 {
     int ret;
     ret = yunos_task_info_set(yunos_cur_task_get(), key, vp);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -138,7 +138,7 @@ int yos_mutex_new(yos_mutex_t *mutex)
     }
 
     ret = yunos_mutex_create(m, "YOS");
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         yos_free(m);
         ERRNO_MAPPING(ret);
     }
@@ -170,17 +170,17 @@ int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
     }
 
     if (timeout == YOS_WAIT_FOREVER) {
-        ret = yunos_mutex_lock(mutex->hdl, YUNOS_WAIT_FOREVER);
+        ret = yunos_mutex_lock(mutex->hdl, RHINO_WAIT_FOREVER);
     } else {
         ret = yunos_mutex_lock(mutex->hdl, MS2TICK(timeout));
     }
 
     /* rhino allow nested */
-    if (ret == YUNOS_MUTEX_OWNER_NESTED) {
-        ret = YUNOS_SUCCESS;
+    if (ret == RHINO_MUTEX_OWNER_NESTED) {
+        ret = RHINO_SUCCESS;
     }
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -197,11 +197,11 @@ int yos_mutex_unlock(yos_mutex_t *mutex)
 
     ret = yunos_mutex_unlock(mutex->hdl);
     /* rhino allow nested */
-    if (ret == YUNOS_MUTEX_OWNER_NESTED) {
-        ret = YUNOS_SUCCESS;
+    if (ret == RHINO_MUTEX_OWNER_NESTED) {
+        ret = RHINO_SUCCESS;
     }
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -217,7 +217,7 @@ int yos_mutex_is_valid(yos_mutex_t *mutex)
     }
 
     ret = yunos_mutex_is_valid(mutex->hdl);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -239,7 +239,7 @@ int yos_sem_new(yos_sem_t *sem, int count)
     }
 
     ret = yunos_sem_create(s, "YOS", count);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         yos_free(s);
         ERRNO_MAPPING(ret);
     }
@@ -271,12 +271,12 @@ int yos_sem_wait(yos_sem_t *sem, unsigned int timeout)
     }
 
     if (timeout == YOS_WAIT_FOREVER) {
-        ret = yunos_sem_take(sem->hdl, YUNOS_WAIT_FOREVER);
+        ret = yunos_sem_take(sem->hdl, RHINO_WAIT_FOREVER);
     } else {
         ret = yunos_sem_take(sem->hdl, MS2TICK(timeout));
     }
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -301,7 +301,7 @@ int yos_sem_is_valid(yos_sem_t *sem)
     }
 
     ret = yunos_sem_is_valid(sem->hdl);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -332,7 +332,7 @@ int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
     }
 
     ret = yunos_buf_queue_create(q, "YOS", buf, size, max_msg);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         yos_free(q);
         ERRNO_MAPPING(ret);
     }
@@ -364,7 +364,7 @@ int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size)
     }
 
     ret = yunos_buf_queue_send(queue->hdl, msg, size);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -381,7 +381,7 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
     }
 
     ret = yunos_buf_queue_recv(queue->hdl, MS2TICK(ms), msg, size);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -397,7 +397,7 @@ int yos_queue_is_valid(yos_queue_t *queue)
     }
 
     ret = yunos_buf_queue_is_valid(queue->hdl);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -406,7 +406,7 @@ int yos_queue_is_valid(yos_queue_t *queue)
 
 void *yos_queue_buf_ptr(yos_queue_t *queue)
 {
-    if (yos_queue_is_valid(queue) != YUNOS_SUCCESS) {
+    if (yos_queue_is_valid(queue) != RHINO_SUCCESS) {
         return NULL;
     }
 
@@ -418,7 +418,7 @@ int yos_sched_disable()
     int ret;
 
     ret = (int)yunos_sched_disable();
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -430,7 +430,7 @@ int yos_sched_enable()
     int ret;
 
     ret = (int)yunos_sched_enable();
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -459,7 +459,7 @@ int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
                                  arg, 1);
     }
 
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         yos_free(t);
         ERRNO_MAPPING(ret);
     }
@@ -491,7 +491,7 @@ int yos_timer_start(yos_timer_t *timer)
     }
 
     ret = yunos_timer_start(timer->hdl);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -507,7 +507,7 @@ int yos_timer_stop(yos_timer_t *timer)
     }
 
     ret = yunos_timer_stop(timer->hdl);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -523,7 +523,7 @@ int yos_timer_change(yos_timer_t *timer, int ms)
     }
 
     ret = yunos_timer_change(timer->hdl, MS2TICK(ms), MS2TICK(ms));
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -558,7 +558,7 @@ int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
 
     ret = yunos_workqueue_create(wq, "YOS", pri, stk,
                                  stack_size / sizeof(cpu_stack_t));
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         yos_free(wq);
         yos_free(stk);
         ERRNO_MAPPING(ret);
@@ -600,7 +600,7 @@ int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
     }
 
     ret = yunos_work_init(w, fn, arg, MS2TICK(dly));
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         yos_free(w);
         ERRNO_MAPPING(ret);
     }
@@ -629,7 +629,7 @@ int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
     }
 
     ret = yunos_work_run(workqueue->hdl, work->hdl);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -645,7 +645,7 @@ int yos_work_sched(yos_work_t *work)
     }
 
     ret = yunos_work_sched(work->hdl);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         return 0;
     }
 
@@ -661,7 +661,7 @@ int yos_work_cancel(yos_work_t *work)
     }
 
     ret = yunos_work_cancel(work->hdl);
-    if (ret == YUNOS_WORKQUEUE_WORK_RUNNING) {
+    if (ret == RHINO_WORKQUEUE_WORK_RUNNING) {
         return -EBUSY;
     }
 
@@ -675,7 +675,7 @@ void *yos_zalloc(unsigned int size)
         return NULL;
     }
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         tmp = yunos_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
 
@@ -705,7 +705,7 @@ void *yos_malloc(unsigned int size)
         return NULL;
     }
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         tmp = yunos_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
 
@@ -727,7 +727,7 @@ void *yos_realloc(void *mem, unsigned int size)
 {
     void *tmp = NULL;
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         tmp = yunos_mm_realloc(mem, size | YOS_UNSIGNED_INT_MSB);
 
@@ -747,7 +747,7 @@ void *yos_realloc(void *mem, unsigned int size)
 
 void yos_alloc_trace(void *addr, size_t allocator)
 {
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     yunos_owner_attach(g_kmm_head, addr, allocator);
 #endif
 }

@@ -14,84 +14,84 @@ static uint8_t mutex_param_case1(void)
     CPSR_ALLOC();
 
     ret = yunos_mutex_create(NULL, MODULE_NAME);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = yunos_mutex_create(&test_mutex, NULL);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = yunos_mutex_create(&test_mutex, MODULE_NAME);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mutex_del(NULL);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
     test_mutex.mm_alloc_flag = K_OBJ_DYN_ALLOC;
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
     ret = yunos_mutex_del(&test_mutex);
-    MYASSERT(ret == YUNOS_KOBJ_DEL_ERR);
+    MYASSERT(ret == RHINO_KOBJ_DEL_ERR);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
     test_mutex.mm_alloc_flag = K_OBJ_STATIC_ALLOC;
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
     ret = yunos_mutex_del(&test_mutex);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mutex_dyn_create(NULL, MODULE_NAME);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = yunos_mutex_dyn_create(&test_mutex_dyn, NULL);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = yunos_mutex_dyn_create(&test_mutex_dyn, MODULE_NAME);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mutex_dyn_del(NULL);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
-    YUNOS_CRITICAL_ENTER();
-    test_mutex_dyn->blk_obj.obj_type = YUNOS_SEM_OBJ_TYPE;
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_ENTER();
+    test_mutex_dyn->blk_obj.obj_type = RHINO_SEM_OBJ_TYPE;
+    RHINO_CRITICAL_EXIT();
     ret = yunos_mutex_dyn_del(test_mutex_dyn);
-    MYASSERT(ret == YUNOS_KOBJ_TYPE_ERR);
+    MYASSERT(ret == RHINO_KOBJ_TYPE_ERR);
 
-    YUNOS_CRITICAL_ENTER();
-    test_mutex_dyn->blk_obj.obj_type = YUNOS_MUTEX_OBJ_TYPE;
+    RHINO_CRITICAL_ENTER();
+    test_mutex_dyn->blk_obj.obj_type = RHINO_MUTEX_OBJ_TYPE;
     test_mutex_dyn->mm_alloc_flag = K_OBJ_STATIC_ALLOC;
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
     ret = yunos_mutex_dyn_del(test_mutex_dyn);
-    MYASSERT(ret == YUNOS_KOBJ_DEL_ERR);
+    MYASSERT(ret == RHINO_KOBJ_DEL_ERR);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
     test_mutex_dyn->mm_alloc_flag = K_OBJ_DYN_ALLOC;
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
     ret = yunos_mutex_dyn_del(test_mutex_dyn);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mutex_dyn_create(NULL, MODULE_NAME);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = yunos_mutex_dyn_create(&test_mutex_dyn, NULL);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = yunos_mutex_dyn_create(&test_mutex_dyn, MODULE_NAME);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mutex_dyn_del(NULL);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
-    test_mutex_dyn->blk_obj.obj_type = YUNOS_SEM_OBJ_TYPE;
+    test_mutex_dyn->blk_obj.obj_type = RHINO_SEM_OBJ_TYPE;
     ret = yunos_mutex_dyn_del(test_mutex_dyn);
-    MYASSERT(ret == YUNOS_KOBJ_TYPE_ERR);
+    MYASSERT(ret == RHINO_KOBJ_TYPE_ERR);
 
-    test_mutex_dyn->blk_obj.obj_type = YUNOS_MUTEX_OBJ_TYPE;
+    test_mutex_dyn->blk_obj.obj_type = RHINO_MUTEX_OBJ_TYPE;
     test_mutex_dyn->mm_alloc_flag = K_OBJ_STATIC_ALLOC;
     ret = yunos_mutex_dyn_del(test_mutex_dyn);
-    MYASSERT(ret == YUNOS_KOBJ_DEL_ERR);
+    MYASSERT(ret == RHINO_KOBJ_DEL_ERR);
 
     test_mutex_dyn->mm_alloc_flag = K_OBJ_DYN_ALLOC;
     ret = yunos_mutex_dyn_del(test_mutex_dyn);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     return 0;
 }
@@ -102,32 +102,32 @@ static uint8_t mutex_param_case2(void)
     CPSR_ALLOC();
 
     ret = yunos_mutex_create(&test_mutex, MODULE_NAME);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_mutex_lock(NULL, YUNOS_NO_WAIT);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    ret = yunos_mutex_lock(NULL, RHINO_NO_WAIT);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
-    ret = yunos_mutex_lock(&test_mutex, YUNOS_NO_WAIT);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = yunos_mutex_lock(&test_mutex, RHINO_NO_WAIT);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
     test_mutex.owner_nested = -1;
-    YUNOS_CRITICAL_EXIT();
-    ret = yunos_mutex_lock(&test_mutex, YUNOS_NO_WAIT);
-    MYASSERT(ret == YUNOS_MUTEX_NESTED_OVF);
+    RHINO_CRITICAL_EXIT();
+    ret = yunos_mutex_lock(&test_mutex, RHINO_NO_WAIT);
+    MYASSERT(ret == RHINO_MUTEX_NESTED_OVF);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
     test_mutex.owner_nested = 1;
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
     ret = yunos_mutex_unlock(NULL);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = yunos_mutex_unlock(&test_mutex);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ret = yunos_mutex_del(&test_mutex);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     return 0;
 }
@@ -147,7 +147,7 @@ void mutex_param_test(void)
 
     ret = yunos_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_MUTEX_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mutex_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }

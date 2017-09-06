@@ -124,7 +124,7 @@ void  PreemptionTimetest(void *arg)
     yunos_task_suspend(PreeTaskHandle[3]);
 
     hobbit_timer0_start();
-    yunos_sem_take(PreeSynhandle, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(PreeSynhandle, RHINO_WAIT_FOREVER);
 
     yunos_task_dyn_del(PreeTaskHandle[0]);
     yunos_task_dyn_del(PreeTaskHandle[1]);

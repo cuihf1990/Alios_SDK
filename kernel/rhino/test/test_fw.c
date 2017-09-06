@@ -32,7 +32,7 @@ extern void ringbuf_test(void);
 
 test_case_map_t test_fw_map[] = {
     {"task_test", task_test},
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
     {"mm_test",   mm_test},
 #endif
     {"mm_blk_test", mm_blk_test},
@@ -45,7 +45,7 @@ test_case_map_t test_fw_map[] = {
     {"timer_test", timer_test},
     {"ringbuf_test", ringbuf_test},
     {"queue_test", queue_test},
-#if (YUNOS_CONFIG_WORKQUEUE > 0)
+#if (RHINO_CONFIG_WORKQUEUE > 0)
     {"workqueue_test", workqueue_test},
 #endif
     {"buf_queue_test", buf_queue_test},
@@ -104,7 +104,7 @@ void test_case_cleanup(void)
 
 void test_case_critical_enter(void)
 {
-    yunos_mutex_lock(&test_case_mutex, YUNOS_WAIT_FOREVER);
+    yunos_mutex_lock(&test_case_mutex, RHINO_WAIT_FOREVER);
 }
 
 void test_case_critical_exit(void)
@@ -114,14 +114,14 @@ void test_case_critical_exit(void)
 
 void next_test_case_notify(void)
 {
-    if (yunos_sem_give(&test_case_sem) != YUNOS_SUCCESS) {
+    if (yunos_sem_give(&test_case_sem) != RHINO_SUCCESS) {
         printf("next_test_case_notify failed!!!\n");
     }
 }
 
 void next_test_case_wait(void)
 {
-    if (yunos_sem_take(&test_case_sem, YUNOS_WAIT_FOREVER) != YUNOS_SUCCESS) {
+    if (yunos_sem_take(&test_case_sem, RHINO_WAIT_FOREVER) != RHINO_SUCCESS) {
         printf("next_test_case_wait failed!!!\n");
     }
 

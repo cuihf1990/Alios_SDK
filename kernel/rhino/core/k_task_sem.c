@@ -4,20 +4,20 @@
 
 #include <k_api.h>
 
-#if (YUNOS_CONFIG_TASK_SEM > 0)
+#if (RHINO_CONFIG_TASK_SEM > 0)
 kstat_t yunos_task_sem_create(ktask_t *task, ksem_t *sem, const name_t *name,
                               size_t count)
 {
     kstat_t ret;
 
     if (task == NULL) {
-        return YUNOS_NULL_PTR;
+        return RHINO_NULL_PTR;
     }
 
     NULL_PARA_CHK(task);
 
     ret = yunos_sem_create(sem, name, count);
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         task->task_sem_obj = sem;
     } else {
         task->task_sem_obj = NULL;

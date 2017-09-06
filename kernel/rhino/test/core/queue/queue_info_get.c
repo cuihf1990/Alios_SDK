@@ -39,14 +39,14 @@ static void queue_info_get_param_test(void)
     ksem_t     sem;
 
     ret = yunos_queue_info_get(NULL, &info0);
-    QUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
+    QUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = yunos_queue_info_get(&g_test_queue0, NULL);
-    QUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
+    QUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     yunos_sem_create(&sem, "test_sem ", 0);
     ret = yunos_queue_info_get((kqueue_t *)&sem, &info0);
-    QUEUE_VAL_CHK(ret == YUNOS_KOBJ_TYPE_ERR);
+    QUEUE_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
     yunos_sem_del(&sem);
 }
 
@@ -61,14 +61,14 @@ static void task_queue0_entry(void *arg)
         queue_info_get_param_test();
 
         ret = yunos_queue_info_get(&g_test_queue0, &info0);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
         print_queue_info(&info0);
 
-        ret = yunos_queue_recv(&g_test_queue0, YUNOS_WAIT_FOREVER, &queue_recv_msg);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        ret = yunos_queue_recv(&g_test_queue0, RHINO_WAIT_FOREVER, &queue_recv_msg);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = yunos_queue_info_get(&g_test_queue0, &info1);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
         print_queue_info(&info1);
 
         yunos_task_sleep(10);
@@ -89,13 +89,13 @@ static void task_queue1_entry(void *arg)
 
     while (1) {
         ret = yunos_queue_back_send(&g_test_queue0, queue_send_msg);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = yunos_queue_back_send(&g_test_queue0, queue_send_msg);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = yunos_queue_info_get(&g_test_queue0, &info0);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
         print_queue_info(&info0);
 
         yunos_task_dyn_del(task_1_test);
@@ -108,15 +108,15 @@ kstat_t task_queue_info_get_test(void)
 
     ret = yunos_queue_create(&g_test_queue0, "test_queue0",
                              (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
-    QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+    QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
     ret = yunos_task_dyn_create(&task_0_test, "task_queue0_test", 0, 10,
                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
-    QUEUE_VAL_CHK((ret == YUNOS_SUCCESS) || (ret == YUNOS_STOPPED));
+    QUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     ret = yunos_task_dyn_create(&task_1_test, "task_queue1_test", 0, 11,
                                 0, TASK_TEST_STACK_SIZE, task_queue1_entry, 1);
-    QUEUE_VAL_CHK((ret == YUNOS_SUCCESS) || (ret == YUNOS_STOPPED));
+    QUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     return 0;
 }

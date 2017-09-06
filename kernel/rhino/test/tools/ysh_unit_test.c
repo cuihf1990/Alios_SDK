@@ -54,7 +54,7 @@ static void task_ysh0_entry(void *arg)
 
     cmd = "help";
     tmp = yunos_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
-    YSH_VAL_CHK(tmp == YUNOS_SUCCESS);
+    YSH_VAL_CHK(tmp == RHINO_SUCCESS);
     yunos_task_sleep(1);
 
     cmd = "dumpsys task";
@@ -101,7 +101,7 @@ void ysh_cmd_test(void)
                                 TEST_YSH_CMD_DAEMON_RPI,
                                 0, TASK_TEST_STACK_SIZE, task_ysh0_entry, 1);
 
-    YSH_VAL_CHK(ret == YUNOS_SUCCESS);
+    YSH_VAL_CHK(ret == RHINO_SUCCESS);
     yunos_task_sleep(10);
     return;
 }

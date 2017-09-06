@@ -26,7 +26,7 @@ static kmutex_t mutex;
 
 void task_misc_entry2(void *arg)
 {
-    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND / 10);
+    yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND / 10);
 
     yunos_task_del(NULL);
     yunos_task_dyn_del(&task_misc2);
@@ -36,7 +36,7 @@ void task_misc_entry2(void *arg)
 void task_misc_entry3(void *arg)
 {
     yunos_sem_dyn_create(&sem3, "sem_misc33", 0);
-    yunos_sem_take(sem3, YUNOS_WAIT_FOREVER);
+    yunos_sem_take(sem3, RHINO_WAIT_FOREVER);
 
     yunos_sched_disable();
     yunos_task_dyn_del(task_misc3);
@@ -47,8 +47,8 @@ void task_misc_entry3(void *arg)
 
 void task_misc_entry4(void *arg)
 {
-    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
-    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+    yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
+    yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     yunos_task_dyn_del(task_misc4);
 }
 
@@ -93,11 +93,11 @@ void task_misc_entry(void *arg)
     yunos_task_stack_min_free(task_misc, &task_free);
 
     yunos_mutex_create(&mutex, "test");
-    yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
+    yunos_mutex_lock(&mutex, RHINO_WAIT_FOREVER);
 
     ret = yunos_task_pri_change(task_misc, 15, &old_pri);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_task_pri_change", PASS);
     } else {
@@ -109,7 +109,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_pri_change(NULL, 15, &old_pri);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
         PRINT_RESULT("yunos_task_pri_change para 1", PASS);
     } else {
@@ -119,7 +119,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_pri_change(task_misc, 15, NULL);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
         PRINT_RESULT("yunos_task_pri_change para 2", PASS);
     } else {
@@ -127,9 +127,9 @@ void task_misc_entry(void *arg)
         test_case_fail++;
     }
 
-    ret = yunos_task_pri_change(task_misc, YUNOS_IDLE_PRI, &old_pri);
+    ret = yunos_task_pri_change(task_misc, RHINO_IDLE_PRI, &old_pri);
 
-    if (ret == YUNOS_PRI_CHG_NOT_ALLOWED) {
+    if (ret == RHINO_PRI_CHG_NOT_ALLOWED) {
         test_case_success++;
         PRINT_RESULT("yunos_task_pri_change para 3", PASS);
     } else {
@@ -144,7 +144,7 @@ void task_misc_entry(void *arg)
         PRINT_RESULT("yunos_mm_alloc failed", FAIL);
     }
 
-    yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
+    yunos_mutex_lock(&mutex, RHINO_WAIT_FOREVER);
 
     yunos_task_create(NULL, "task_misc2", NULL, 1,
                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
@@ -162,17 +162,17 @@ void task_misc_entry(void *arg)
                       0, NULL, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
+    yunos_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
                       0, task_misc2_stack, 0, task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
+    yunos_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
                       0, task_misc2_stack, 0, task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
+    yunos_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_IDLE_PRI,
+    yunos_task_create(&task_misc2, "task_misc2", NULL, RHINO_IDLE_PRI,
                       50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
@@ -184,7 +184,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_time_slice_set(NULL, 30);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
         PRINT_RESULT("yunos_task_time_slice_set para 1", PASS);
     } else {
@@ -194,7 +194,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_time_slice_set(task_misc, 0);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_task_time_slice_set para 2", PASS);
     } else {
@@ -204,7 +204,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_time_slice_set(task_misc, 20);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_task_time_slice_set para 3", PASS);
     } else {
@@ -216,7 +216,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_sched_policy_set(task_misc, KSCHED_FIFO);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_sched_policy_set para 1", PASS);
     } else {
@@ -226,7 +226,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_sched_policy_set(task_misc, KSCHED_RR);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_sched_policy_set para 2", PASS);
     } else {
@@ -236,7 +236,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_sched_policy_set(NULL, KSCHED_RR);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
         PRINT_RESULT("yunos_sched_policy_set para 3", PASS);
     } else {
@@ -246,7 +246,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_sched_policy_get(NULL, &policy);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
         PRINT_RESULT("yunos_sched_policy_get para 1", PASS);
     } else {
@@ -256,7 +256,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_sched_policy_get(task_misc, NULL);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
         PRINT_RESULT("yunos_sched_policy_get para 2", PASS);
     } else {
@@ -266,7 +266,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_sched_policy_get(task_misc, &policy);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_sched_policy_get para 3", PASS);
     } else {
@@ -274,10 +274,10 @@ void task_misc_entry(void *arg)
         test_case_fail++;
     }
 
-#define INFO_IDX (YUNOS_CONFIG_TASK_INFO_NUM - 1)
+#define INFO_IDX (RHINO_CONFIG_TASK_INFO_NUM - 1)
     ret = yunos_task_info_set(NULL, INFO_IDX, (void *)0x111);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
         PRINT_RESULT("yunos_task_info_set para 2", PASS);
     } else {
@@ -287,7 +287,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_info_set(task_misc, INFO_IDX, (void *)0x111);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_task_info_set para 3", PASS);
     } else {
@@ -297,7 +297,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_info_get(task_misc, INFO_IDX, &info);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_task_info_get para 1", PASS);
     } else {
@@ -307,7 +307,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_info_get(NULL, INFO_IDX, &info);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
         PRINT_RESULT("yunos_task_info_get para 2", PASS);
     } else {
@@ -328,23 +328,23 @@ void task_misc_entry(void *arg)
     }
 
     tmp.blk_state = BLK_ABORT;
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
     pend_state_end_proc(&tmp);
 #endif
     tmp.blk_state = BLK_TIMEOUT;
 
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
     pend_state_end_proc(&tmp);
 #endif
 
-#if (YUNOS_CONFIG_HW_COUNT > 0)
+#if (RHINO_CONFIG_HW_COUNT > 0)
     yunos_overhead_measure();
 #endif
     yunos_sem_give(sem3);
 
     ret = yunos_sem_dyn_create(&sem4, "del", 0);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_sem_dyn_create", PASS);
     } else {
@@ -354,7 +354,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_sem_dyn_del(sem4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_sem_dyn_del", PASS);
     } else {
@@ -364,7 +364,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_mutex_dyn_create(&mutex4, "mutex4");
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_mutex_dyn_create", PASS);
     } else {
@@ -374,7 +374,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_mutex_dyn_del(mutex4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_mutex_dyn_del", PASS);
     } else {
@@ -384,7 +384,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_event_dyn_create(&event4, "event4", 0);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_event_dyn_create", PASS);
     } else {
@@ -394,7 +394,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_event_dyn_del(event4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_event_dyn_del", PASS);
     } else {
@@ -404,7 +404,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_timer_dyn_create(&timer4, "timer4", timer_cb4, 10, 0, 0, 0);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_timer_dyn_create", PASS);
     } else {
@@ -414,7 +414,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_timer_dyn_del(timer4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_timer_dyn_del", PASS);
     } else {
@@ -424,7 +424,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_buf_queue_dyn_create(&buf_queue4, "queue4", 100, 20);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_buf_queue_dyn_create", PASS);
     } else {
@@ -434,7 +434,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_buf_queue_dyn_del(buf_queue4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_buf_queue_dyn_del", PASS);
     } else {
@@ -444,7 +444,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_queue_dyn_create(&queue4, "queue4", 10);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_queue_dyn_create", PASS);
     } else {
@@ -454,7 +454,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_queue_dyn_del(queue4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_queue_dyn_del", PASS);
     } else {
@@ -464,7 +464,7 @@ void task_misc_entry(void *arg)
 
     ret = yunos_task_wait_abort(yunos_cur_task_get());
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
         PRINT_RESULT("yunos_task_wait_abort ready", PASS);
     } else {

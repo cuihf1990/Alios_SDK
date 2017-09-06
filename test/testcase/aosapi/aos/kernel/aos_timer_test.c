@@ -23,23 +23,23 @@ static void CASE_aosapi_kernel_timer_param()
 	int ret;
 #if 0
 	ret = yos_timer_new(NULL, TIMER_aosapi_kernel_timer_param, NULL, 1000, 0);
-	YUNIT_ASSERT(ret==YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret==RHINO_NULL_PTR);
 #endif
 
 	ret = yos_timer_new(&g_timer, NULL, NULL, 1000, 0);
-	YUNIT_ASSERT(ret==YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret==RHINO_NULL_PTR);
 
 	ret = yos_timer_new(&g_timer, TIMER_aosapi_kernel_timer_param, NULL, 0, 0);
-	YUNIT_ASSERT(ret==YUNOS_INV_PARAM);
+	YUNIT_ASSERT(ret==RHINO_INV_PARAM);
 
 #if 0
 	ret = yos_timer_start(NULL);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 #endif
 
 #if 0
 	ret = yos_timer_stop(NULL);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 #endif
 
 #if 0
@@ -48,7 +48,7 @@ static void CASE_aosapi_kernel_timer_param()
 
 #if 0
 	ret = yos_timer_change(NULL, 0);
-	YUNIT_ASSERT(ret == YUNOS_NULL_PTR);
+	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
 #endif
 }
 
@@ -62,11 +62,11 @@ static void CASE_aosapi_kernel_timer_norepeat()
 	int ret;
 
 	ret = yos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT(ret==YUNOS_SUCCESS);
+	YUNIT_ASSERT(ret==RHINO_SUCCESS);
 
 	timer_trigger_count = 0;
 	ret = yos_timer_new(&g_timer, TIMER_aosapi_kernel_timer_norepeat, NULL, 100, 0);
-	YUNIT_ASSERT(ret==YUNOS_SUCCESS);
+	YUNIT_ASSERT(ret==RHINO_SUCCESS);
 
 	yos_msleep(1000);
 	YUNIT_ASSERT(timer_trigger_count==1);
@@ -86,11 +86,11 @@ static void CASE_aosapi_kernel_timer_repeat()
 	int ret;
 
 	ret = yos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT(ret==YUNOS_SUCCESS);
+	YUNIT_ASSERT(ret==RHINO_SUCCESS);
 
 	timer_trigger_count = 0;
 	ret = yos_timer_new(&g_timer, TIMER_aosapi_kernel_timer_repeat, NULL, 100, 1);
-	YUNIT_ASSERT(ret==YUNOS_SUCCESS);
+	YUNIT_ASSERT(ret==RHINO_SUCCESS);
 
 	yos_msleep(1500);
 	YUNIT_ASSERT(timer_trigger_count==10);
@@ -113,11 +113,11 @@ static void CASE_aosapi_kernel_timer_change()
 	int ret;
 
 	ret = yos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT(ret==YUNOS_SUCCESS);
+	YUNIT_ASSERT(ret==RHINO_SUCCESS);
 
 	timer_trigger_count = 0;
 	ret = yos_timer_new(&g_timer, TIMER_aosapi_kernel_timer_change, NULL, 100, 1);
-	YUNIT_ASSERT(ret==YUNOS_SUCCESS);
+	YUNIT_ASSERT(ret==RHINO_SUCCESS);
 
 	yos_msleep(2000);
 	YUNIT_ASSERT(timer_trigger_count==20);
