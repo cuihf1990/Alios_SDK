@@ -33,7 +33,4 @@ $(NAME)_CFLAGS += \
     -Wno-unused-function \
     -Werror
 
-$(NAME)_INCLUDES    := \
-    ../../utility/iotx-utils/sdk-impl \
-
 $(NAME)_COMPONENTS  += fota.platform.coap
