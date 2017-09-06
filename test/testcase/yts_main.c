@@ -39,6 +39,7 @@ extern void test_netmgr(void);
 extern void test_digest_algorithm(void);
 extern void test_alicrypto(void);
 extern void test_fatfs(void);
+extern void test_mqtt(void);
 
 static void add_test(void);
 
@@ -142,5 +143,7 @@ void add_test(void)
     test_alicrypto();
 
     test_kv();
+
+    test_mqtt();
 }
 

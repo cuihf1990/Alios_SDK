@@ -9,6 +9,7 @@ $(NAME)_SOURCES     += framework/yloop_test.c
 $(NAME)_SOURCES     += framework/fota_test.c
 $(NAME)_SOURCES     += framework/vfs_test.c
 $(NAME)_SOURCES     += framework/netmgr_test.c 
+$(NAME)_SOURCES     += framework/mqtt_test.c
 $(NAME)_SOURCES     += utility/cjson_test.c
 $(NAME)_SOURCES     += utility/hashtable_test.c
 $(NAME)_SOURCES     += utility/digest_algorithm.c
@@ -61,3 +62,7 @@ $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
 $(NAME)_INCLUDES += ../../framework/protocol/alink/system/
 $(NAME)_INCLUDES += ../../framework/fota/platform/alink/
+
+$(NAME)_INCLUDES += ../../utility/iotx-utils/sdk-impl
+
+$(NAME)_COMPONENTS  += connectivity.mqtt
