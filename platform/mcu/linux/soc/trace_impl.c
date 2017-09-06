@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <yos/network.h>
 #include <hal/trace.h>
-#include <yos/cli.h>
+#include <yos/yos.h>
 
 /* CLI Support */
 #ifdef CONFIG_YOS_CLI

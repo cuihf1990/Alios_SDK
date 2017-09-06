@@ -6,8 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "yos/list.h"
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "os.h"
 #include "devmgr.h"
 #include "devmgr_cache.h"

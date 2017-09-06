@@ -5,22 +5,21 @@
 #ifndef YOS_H
 #define YOS_H
 
-#include <yos/kv.h>
-#include <yos/vfs.h>
-#include <yos/yloop.h>
-
-/*
-#include <yos/kernel.h>
-#include <yos/alink.h>
 #include <yos/cli.h>
 #include <yos/cloud.h>
 #include <yos/debug.h>
-#include <yos/yos.h>
+#include <yos/kernel.h>
+#include <yos/kv.h>
 #include <yos/list.h>
 #include <yos/log.h>
-#include <yos/network.h>
 #include <yos/types.h>
+#include <yos/vfs.h>
 #include <yos/version.h>
+#include <yos/yloop.h>
+
+/*
+#include <yos/alink.h>
+#include <yos/network.h>
 */
 
 /**@brief Transmit data on a UART interface

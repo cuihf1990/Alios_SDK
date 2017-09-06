@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "yos/log.h"
+#include "yos/yos.h"
 
 #include "umesh_utils.h"
 #include "tools/cli.h"
@@ -51,7 +51,8 @@ void __attribute__((weak)) ur_log(ur_log_level_t level, ur_log_region_t region,
     dda_log(buffer);
 #endif
     if (!g_cli_silent) {
-        csp_printf("%s", buffer);
+        long long ms = yos_now_ms();
+        csp_printf("[%4d.%03d] %s", (int)(ms/1000), (int)(ms%1000), buffer);
     }
 
     ur_mem_free(buffer, MAX_LOG_SIZE);

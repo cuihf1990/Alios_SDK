@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 #include "ota_update_manifest.h"
 

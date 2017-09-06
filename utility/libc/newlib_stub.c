@@ -7,7 +7,7 @@
 #include <sys/unistd.h>
 #include <sys/errno.h>
 #include <k_api.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 #include "hal/soc/soc.h"
 #include "board.h"
 

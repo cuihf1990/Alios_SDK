@@ -8,9 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include <yos/cli.h>
 #include <yos/yos.h>
-#include <yos/log.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"
@@ -25,8 +23,11 @@
 #include "tools/diags.h"
 #include "lwip/sockets.h"
 
-#ifdef CONFIG_YOS_MESH_DEBUG
+#include "lwip/inet_chksum.h"
+#include "lwip/inet.h"
+
 static void process_help(int argc, char *argv[]);
+#ifdef CONFIG_YOS_MESH_DEBUG
 static void process_autotest(int argc, char *argv[]);
 static void process_channel(int argc, char *argv[]);
 static void process_init(int argc, char *argv[]);
@@ -60,8 +61,8 @@ static void show_router(uint8_t id);
 static void show_ipaddr(network_context_t *network);
 
 const cli_command_t g_commands[] = {
-#ifdef CONFIG_YOS_MESH_DEBUG
     { "help", &process_help },
+#ifdef CONFIG_YOS_MESH_DEBUG
     { "autotest", &process_autotest },
     { "channel", &process_channel },
     { "init", &process_init },
@@ -183,6 +184,15 @@ static const char *nbrstate2str(neighbor_state_t state)
     return "unknown";
 }
 
+void process_help(int argc, char *argv[])
+{
+    uint16_t index;
+
+    for (index = 0; index < sizeof(g_commands) / sizeof(g_commands[0]); ++index) {
+        response_append("%s\r\n", g_commands[index].name);
+    }
+}
+
 #ifdef CONFIG_YOS_MESH_DEBUG
 static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length);
 
@@ -194,7 +204,11 @@ typedef struct cli_autotest_s {
     uint16_t      seq;
     uint16_t      acked;
     uint16_t      length;
+#if LWIP_IPV6
     ur_ip6_addr_t target;
+#else
+    mesh_ip4_addr_t target;
+#endif
     slist_t       acked_list;
 } cli_autotest_t;
 cli_autotest_t g_cli_autotest;
@@ -247,6 +261,7 @@ static void handle_autotest_print_timer(void *args)
 
 static void handle_autotest_timer(void *args)
 {
+#if LWIP_IPV6
     uint8_t                      *payload;
     const ur_netif_ip6_address_t *src;
     autotest_cmd_t               *cmd;
@@ -258,7 +273,7 @@ static void handle_autotest_timer(void *args)
         cmd = (autotest_cmd_t *)payload;
         cmd->type = AUTOTEST_REQUEST;
         cmd->seq = htons(g_cli_autotest.seq++);
-        memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
+        memcpy(&cmd->addr, &src->addr.ip6_addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
                    &g_cli_autotest.target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cli_autotest.length);
@@ -271,15 +286,32 @@ static void handle_autotest_timer(void *args)
         g_cli_autotest.print_timer = ur_start_timer(AUTOTEST_PRINT_WAIT_TIME,
                                                     handle_autotest_print_timer, NULL);
     }
-}
+#else
+    uint8_t *payload;
+    const ur_netif_ip6_address_t *src;
+    autotest_cmd_t *cmd;
 
-void process_help(int argc, char *argv[])
-{
-    uint16_t index;
-
-    for (index = 0; index < sizeof(g_commands) / sizeof(g_commands[0]); ++index) {
-        response_append("%s\r\n", g_commands[index].name);
+    g_cli_autotest.timer = NULL;
+    payload = (uint8_t *)ur_mem_alloc(g_cli_autotest.length);
+    if (payload) {
+        src = umesh_get_ucast_addr();
+        cmd = (autotest_cmd_t *)payload;
+        cmd->type = AUTOTEST_REQUEST;
+        cmd->seq = htons(g_cli_autotest.seq++);
+        memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(mesh_ip4_addr_t));
+        ip6_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
+                   &g_cli_autotest.target, AUTOTEST_UDP_PORT);
+        ur_mem_free(payload, g_cli_autotest.length);
+        g_cli_autotest.times--;
     }
+    if (g_cli_autotest.times) {
+        g_cli_autotest.timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL,
+                                                   handle_autotest_timer, NULL);
+    } else if (g_cli_autotest.print_timer == NULL) {
+        g_cli_autotest.print_timer = ur_start_timer(AUTOTEST_PRINT_WAIT_TIME,
+                                                         handle_autotest_print_timer, NULL);
+    }
+#endif
 }
 
 void process_autotest(int argc, char *argv[])
@@ -326,7 +358,11 @@ void process_autotest(int argc, char *argv[])
         response_append("exceed mesh IP6 MTU %d\r\n", UR_IP6_MTU);
         return;
     }
+#if LWIP_IPV6
     string_to_ip6_addr(argv[0], &g_cli_autotest.target);
+#else
+    g_cli_autotest.target.m32 = inet_addr(argv[0]);
+#endif
 
     handle_autotest_timer(NULL);
 }
@@ -523,6 +559,7 @@ static bool update_autotest_acked_info(uint16_t subnetid, uint16_t sid,
 
 static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
 {
+#if LWIP_IPV6
     autotest_cmd_t               *cmd;
     uint8_t                      *data;
     ur_ip6_addr_t                dest;
@@ -549,7 +586,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         cmd->type = AUTOTEST_REPLY;
         cmd->seq = htons(seq);
         src = umesh_get_ucast_addr();
-        memcpy(&cmd->addr, &src->addr, sizeof(ur_ip6_addr_t));
+        memcpy(&cmd->addr, &src->addr.ip6_addr, sizeof(ur_ip6_addr_t));
         ip6_sendto(g_cli_autotest.udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
@@ -562,6 +599,47 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
                         ", seq %d\r\n", length,
                         IP6_ADDR_DATA(dest), seq);
     }
+#else
+    autotest_cmd_t *cmd;
+    uint8_t *data;
+    mesh_ip4_addr_t dest;
+    const ur_netif_ip6_address_t *src;
+    uint16_t seq;
+
+    if (length == 0) {
+        return;
+    }
+
+    cmd = (autotest_cmd_t *)payload;
+    memcpy(&dest, &cmd->addr, sizeof(mesh_ip4_addr_t));
+    seq = ntohs(cmd->seq);
+    if (cmd->type == AUTOTEST_REQUEST) {
+        response_append("%d bytes autotest echo request from " IP4_ADDR_FMT
+                        ", seq %d\r\n", length,
+                        IP4_ADDR_DATA(dest), seq);
+        data = (uint8_t *)ur_mem_alloc(length);
+        if (data == NULL) {
+            return;
+        }
+        memset(data, 0, length);
+        cmd = (autotest_cmd_t *)data;
+        cmd->type = AUTOTEST_REPLY;
+        cmd->seq = htons(seq);
+        src = umesh_get_ucast_addr();
+        memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(mesh_ip4_addr_t));
+        ip6_sendto(g_cli_autotest.udp_socket, data, length, &dest,
+                   AUTOTEST_UDP_PORT);
+        ur_mem_free(data, length);
+    } else if (cmd->type == AUTOTEST_REPLY) {
+        g_cli_autotest.acked ++;
+        if (update_autotest_acked_info(0, dest.m16[1], seq) == false) {
+            return;
+        }
+        response_append("%d bytes autotest echo reply from " IP4_ADDR_FMT
+                        ", seq %d\r\n", length,
+                        IP4_ADDR_DATA(dest), seq);
+    }
+#endif
 }
 
 void process_prefix(int argc, char *argv[])
@@ -633,40 +711,21 @@ void process_state(int argc, char *argv[])
 
 void process_sids(int argc, char *argv[])
 {
-    neighbor_t    *node = NULL;
-    sid_node_t    *mobile_node;
-    slist_t       *hals;
-    hal_context_t *hal;
+    sid_node_t    *node;
     slist_t       *nodes_list;
     slist_t       *networks;
     network_context_t *network;
 
     response_append("me=%04x\r\n", umesh_get_sid());
-
-    response_append("children:\r\n");
-    hals = umesh_get_hals();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-            if (node->state != STATE_CHILD) {
-                continue;
-            }
-            response_append(EXT_ADDR_FMT ", %04x\r\n",
-                            EXT_ADDR_DATA(node->mac), node->sid);
-        }
-    }
-
-    response_append("mobile:\r\n");
     networks = umesh_get_networks();
     slist_for_each_entry(networks, network, network_context_t, next) {
         nodes_list = get_ssid_nodes_list(network->sid_base);
         if (nodes_list == NULL) {
             continue;
         }
-        slist_for_each_entry(nodes_list, mobile_node, sid_node_t, next) {
-            if (is_partial_function_sid(mobile_node->node_id.sid)) {
-                response_append(EXT_ADDR_FMT ", %04x\r\n",
-                                EXT_ADDR_DATA(mobile_node->node_id.ueid), mobile_node->node_id.sid);
-            }
+        slist_for_each_entry(nodes_list, node, sid_node_t, next) {
+            response_append(EXT_ADDR_FMT ", %04x\r\n",
+                            EXT_ADDR_DATA(node->node_id.ueid), node->node_id.sid);
         }
     }
 }
@@ -708,7 +767,11 @@ void process_testcmd(int argc, char *argv[])
     } else if (strcmp(cmd, "autotest_acked") == 0) {
         response_append("%d", g_cli_autotest.acked);
     } else if (strcmp(cmd, "ipaddr") == 0) {
-        response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(umesh_get_ucast_addr()->addr));
+#if LWIP_IPV6
+        response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(umesh_get_ucast_addr()->addr.ip6_addr));
+#else
+        response_append(IP6_ADDR_FMT, IP6_ADDR_DATA(umesh_get_ucast_addr()->addr.ip4_addr));
+#endif
     } else if (strcmp(cmd, "router") == 0) {
         show_router(ur_router_get_default_router());
     }
@@ -716,6 +779,7 @@ void process_testcmd(int argc, char *argv[])
 
 void process_traceroute(int argc, char *argv[])
 {
+#if LWIP_IPV6
     ur_ip6_addr_t dest;
     ur_addr_t dest_addr;
     network_context_t *network;
@@ -734,6 +798,7 @@ void process_traceroute(int argc, char *argv[])
         network = get_default_network_context();
     }
     send_trace_route_request(network, &dest_addr);
+#endif
 }
 
 void process_whitelist(int argc, char *argv[])
@@ -889,20 +954,28 @@ void process_extnetid(int argc, char *argv[])
 
 static void show_ipaddr(network_context_t *network)
 {
+#if LWIP_IPV6
     const ur_netif_ip6_address_t *addr;
     addr = umesh_get_ucast_addr();
     while (addr) {
         response_append("\t" IP6_ADDR_FMT "\r\n",
-                        IP6_ADDR_DATA(addr->addr));
+                        IP6_ADDR_DATA(addr->addr.ip6_addr));
         addr = addr->next;
     }
 
     addr = umesh_get_mcast_addr();
     while (addr) {
         response_append("\t" IP6_ADDR_FMT "\r\n",
-                        IP6_ADDR_DATA(addr->addr));
+                        IP6_ADDR_DATA(addr->addr.ip6_addr));
         addr = addr->next;
     }
+#else
+    const ur_netif_ip6_address_t *addr;
+    addr = umesh_get_ucast_addr();
+    response_append("\t" IP4_ADDR_FMT "\r\n", IP4_ADDR_DATA(addr->addr.ip4_addr));
+    addr = umesh_get_mcast_addr();
+    response_append("\t" IP4_ADDR_FMT "\r\n", IP4_ADDR_DATA(addr->addr.ip4_addr));
+#endif
 }
 
 void process_nbrs(int argc, char *argv[])
@@ -930,7 +1003,11 @@ void process_nbrs(int argc, char *argv[])
 void process_ping(int argc, char *argv[])
 {
     ur_icmp6_header_t *header;
+#if LWIP_IPV6
     ur_ip6_addr_t     target;
+#else
+    mesh_ip4_addr_t target;
+#endif
     uint8_t           *payload;
     uint16_t          length;
     char              *end;
@@ -940,7 +1017,11 @@ void process_ping(int argc, char *argv[])
     }
 
     length = DEF_ICMP6_PAYLOAD_SIZE + sizeof(ur_icmp6_header_t);
+#if LWIP_IPV6
     string_to_ip6_addr(argv[0], &target);
+#else
+    target.m32 = inet_addr(argv[0]);
+#endif
 
     if (argc > 1) {
         length = (uint16_t)strtol(argv[1], &end, 0);
@@ -948,7 +1029,7 @@ void process_ping(int argc, char *argv[])
     }
 
     if (length > UR_IP6_MTU) {
-        response_append("exceed mesh IP6 MTU %d\r\n", UR_IP6_MTU);
+        response_append("exceed mesh IP MTU %d\r\n", UR_IP6_MTU);
         return;
     }
 
@@ -963,7 +1044,7 @@ void process_ping(int argc, char *argv[])
     header->code = 7;
     header->data = g_cl_state.icmp_seq;
     ++g_cl_state.icmp_seq;
-    header->chksum = 0;  /* checksum disabled */
+    header->chksum = inet_chksum(payload, length);
 
     ip6_sendto(g_cl_state.icmp_socket, payload, length, &target, 0);
     ur_mem_free(payload, length);
@@ -971,8 +1052,9 @@ void process_ping(int argc, char *argv[])
 
 void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
 {
-    ur_ip6_header_t   *ip6_header;
     ur_icmp6_header_t *icmp6_header;
+#if LWIP_IPV6
+    ur_ip6_header_t   *ip6_header;
 
     if (length) {
         ip6_header = (ur_ip6_header_t *)payload;
@@ -985,6 +1067,21 @@ void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
                             icmp6_header->data, g_cl_state.icmp_acked);
         }
     }
+#else
+    mesh_ip4_header_t *ip4_header;
+
+    if (length) {
+        ip4_header = (mesh_ip4_header_t *)payload;
+        icmp6_header = (ur_icmp6_header_t *)(payload + MESH_IP4_HLEN);
+        if (icmp6_header->type == UR_ICMP6_TYPE_EREP) {
+            g_cl_state.icmp_acked ++;
+            response_append("%d bytes from " IP4_ADDR_FMT " icmp_seq %d icmp_acked %d\r\n",
+                            length - MESH_IP4_HLEN - sizeof(ur_icmp6_header_t),
+                            IP4_ADDR_DATA(ip4_header->src),
+                            icmp6_header->data, g_cl_state.icmp_acked);
+        }
+    }
+#endif
 }
 
 static void show_router(uint8_t id)
@@ -1197,9 +1294,11 @@ void ur_cli_input_args(char **argv, uint16_t argc)
             }
             argc -= 2;
             g_commands[index].function(argc, options);
-            break;
+            return;
         }
     }
+
+    response_append("cmd no supported\r\n");
 }
 
 static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,

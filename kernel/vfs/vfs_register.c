@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include <yos/kernel.h>
+#include <yos/yos.h>
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_register.h>

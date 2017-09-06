@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arg_options.h>
-#include <yos/log.h>
+#include <yos/yos.h>
 
 static void shift_argv(options_t *options, int i)
 {
@@ -22,6 +22,18 @@ void parse_options(options_t *options)
     int         i;
 
     for (i = 0; i < options->argc;) {
+        if (!strcmp(argv[i], "--per-pid-flash")) {
+            options->flash.per_pid = true;
+            shift_argv(options, i);
+            continue;
+        }
+
+        if (!strcmp(argv[i], "--no-per-pid-flash")) {
+            options->flash.per_pid = false;
+            shift_argv(options, i);
+            continue;
+        }
+
         if (!strcmp(argv[i], "--tapif")) {
             options->lwip.tapif = true;
             shift_argv(options, i);

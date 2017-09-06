@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "digest_algorithm.h"
-#include "yos/kernel.h"
 #include "md5.h"
 #include "sha2.c"
 #include "hmac.c"

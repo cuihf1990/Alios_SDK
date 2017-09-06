@@ -2,13 +2,10 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos/kernel.h>
 #include <yos/yos.h>
 #include <vfs.h>
 #include <kvmgr.h>
 #include <vflash.h>
-
-#include "yos/cli.h"
 
 #ifdef MESH_GATEWAY_SERVICE
 #include "gateway_service.h"

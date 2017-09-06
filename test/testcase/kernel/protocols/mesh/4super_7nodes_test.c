@@ -160,7 +160,7 @@ static void subnet_is_wifi_case(void)
             continue;
         }
         snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT " 1 500",
-                 index, IP6_ADDR_DATA(addr->addr));
+                 index, IP6_ADDR_DATA(addr->addr.ip6_addr));
         cmd_to_master(autotest_cmd);
         check_p2p_str_wait("10", index, "testcmd autotest_acked", 10);
     }

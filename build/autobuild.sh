@@ -76,7 +76,7 @@ yos make clean > /dev/null 2>&1
 echo "build ${branch} branch succeed"
 
 echo "----------check CODE-STYLE now----------"
-./build/astyle.sh
+#./build/astyle.sh
 echo "----------------------------------------"
 echo "----------check COPYRIGHT now-----------"
 python ./build/copyright.py

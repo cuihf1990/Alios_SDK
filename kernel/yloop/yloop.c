@@ -8,11 +8,8 @@
 #include <stdlib.h>
 
 #include <errno.h>
-#include <yos/kernel.h>
 #include <yos/yos.h>
 #include <yos/network.h>
-#include <yos/log.h>
-#include <yos/list.h>
 
 #include "yloop.h"
 

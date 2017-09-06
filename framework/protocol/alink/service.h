@@ -5,8 +5,7 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
-#include "yos/log.h"
-#include "yos/list.h"
+#include "yos/yos.h"
 #define NAME_LENGTH 12
 
 enum SERVICE_CODE {

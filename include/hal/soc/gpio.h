@@ -60,8 +60,8 @@ typedef void (*gpio_irq_handler_t)(void *arg);
  * @param configuration : A structure containing the required
  *                        gpio configuration
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0         : on success.
+ * @return    EIO       : if an error occurred with any step
  */
 int32_t hal_gpio_init(gpio_dev_t *gpio);
 
@@ -69,10 +69,10 @@ int32_t hal_gpio_init(gpio_dev_t *gpio);
  *
  * @note  Using this function on a gpio pin which is set to input mode is undefined.
  *
- * @param gpio              : the gpio pin which should be set high
+ * @param gpio    : the gpio pin which should be set high
  *
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if an error occurred with any step
+ * @return    0   : on success.
+ * @return    EIO : if an error occurred with any step
  */
 int32_t hal_gpio_output_high(gpio_dev_t *gpio);
 
@@ -81,10 +81,10 @@ int32_t hal_gpio_output_high(gpio_dev_t *gpio);
  *
  * @note  Using this function on a gpio pin which is set to input mode is undefined.
  *
- * @param gpio          : the gpio pin which should be set low
+ * @param gpio      : the gpio pin which should be set low
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0     : on success.
+ * @return    EIO   : if an error occurred with any step
  */
 int32_t hal_gpio_output_low(gpio_dev_t *gpio);
 
@@ -93,10 +93,10 @@ int32_t hal_gpio_output_low(gpio_dev_t *gpio);
  * Trigger an output GPIO pin's output. Using this function on a
  * gpio pin which is set to input mode is undefined.
  *
- * @param gpio          : the gpio pin which should be set low
+ * @param gpio      : the gpio pin which should be set low
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0     : on success.
+ * @return    EIO   : if an error occurred with any step
  */
 int32_t hal_gpio_output_toggle(gpio_dev_t *gpio);
 
@@ -107,10 +107,10 @@ int32_t hal_gpio_output_toggle(gpio_dev_t *gpio);
  * @note Get the state of an input GPIO pin. Using this function on a
  * gpio pin which is set to output mode will return an undefined value.
  *
- * @param gpio          : the gpio pin which should be read
- *
- * @return    true  : if high
- * @return    fasle : if low
+ * @param gpio     : the gpio pin which should be read
+ * @param value    : gpio value
+ * @return    0    : on success
+ * @return    EIO  : if an error occurred with any step
  */
 int8_t hal_gpio_input_get(gpio_dev_t *gpio, uint32_t *value);
 
@@ -127,8 +127,8 @@ int8_t hal_gpio_input_get(gpio_dev_t *gpio, uint32_t *value);
  * @param arg     : an argument that will be passed to the
  *                  interrupt handler
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0   : on success.
+ * @return    EIO : if an error occurred with any step
  */
 int32_t hal_gpio_enable_irq(gpio_dev_t *gpio, gpio_irq_trigger_t trigger,
                             gpio_irq_handler_t handler, void *arg);
@@ -140,10 +140,10 @@ int32_t hal_gpio_enable_irq(gpio_dev_t *gpio, gpio_irq_trigger_t trigger,
  * Using this function on a gpio pin which has not been set up
  * using @ref hal_gpio_input_irq_enable is undefined.
  *
- * @param gpio    : the gpio pin which provided the interrupt trigger
+ * @param gpio      : the gpio pin which provided the interrupt trigger
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0     : on success.
+ * @return    EIO   : if an error occurred with any step
  */
 int32_t hal_gpio_disable_irq(gpio_dev_t *gpio);
 
@@ -154,10 +154,10 @@ int32_t hal_gpio_disable_irq(gpio_dev_t *gpio);
  * Using this function on a gpio pin which has not been set up
  * using @ref hal_gpio_input_irq_enable is undefined.
  *
- * @param gpio    : the gpio pin which provided the interrupt trigger
+ * @param gpio     : the gpio pin which provided the interrupt trigger
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0    : on success.
+ * @return    EIO  : if an error occurred with any step
  */
 int32_t hal_gpio_clear_irq(gpio_dev_t *gpio);
 
@@ -166,10 +166,10 @@ int32_t hal_gpio_clear_irq(gpio_dev_t *gpio);
  *
  * @note  Set a GPIO pin in default state.
  *
- * @param  gpio          : the gpio pin which should be deinitialised
+ * @param  gpio     : the gpio pin which should be deinitialised
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return    0     : on success.
+ * @return    EIO   : if an error occurred with any step
  */
 int32_t hal_gpio_finalize(gpio_dev_t *gpio);
 

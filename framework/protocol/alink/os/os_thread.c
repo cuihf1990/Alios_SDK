@@ -3,7 +3,7 @@
  */
 
 #include "os.h"
-#include "yos/log.h"
+#include "yos/yos.h"
 /******************************** Thread Middleware ********************************/
 
 #define THREAD_NAME_MAX_CHAR_LEN    (32)

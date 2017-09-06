@@ -11,10 +11,6 @@
 #include <lwip/sockets.h>
 
 #include <yos/yos.h>
-#include <yos/log.h>
-#include <yos/list.h>
-#include "yos/cli.h"
-#include <yos/cloud.h>
 #include <lwip/sockets.h>
 #include "umesh.h"
 #include "cJSON.h"
@@ -684,27 +680,21 @@ static void gateway_advertise(void *arg)
     addr.sin6_port = htons(MQTT_SN_PORT);
     memcpy(&addr.sin6_addr, mcast_addr, sizeof(addr.sin6_addr));
 #else
-    uint8_t ip4_addr[4];
-    ur_ip6_addr_t *ucast_addr = (ur_ip6_addr_t *)umesh_get_ucast_addr();
-    if (!ucast_addr) {
+    mesh_ip4_addr_t *ip4_addr = (mesh_ip4_addr_t *)umesh_get_ucast_addr();
+    if (!ip4_addr) {
         return;
     }
-    ip4_addr[0] = 10;
-    ip4_addr[1] = 0;
-    ip4_addr[2] = ucast_addr->m8[14];
-    ip4_addr[3] = ucast_addr->m8[15];
 
-    adv = msn_alloc(ADVERTISE, sizeof(ip4_addr), &buf, &len);
+    adv = msn_alloc(ADVERTISE, sizeof(mesh_ip4_addr_t), &buf, &len);
     bzero(adv, sizeof(*adv));
-    memcpy(adv->payload, ip4_addr, sizeof(ip4_addr));
+    memcpy(adv->payload, ip4_addr->m8, sizeof(mesh_ip4_addr_t));
 
     struct sockaddr_in addr;
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(MQTT_SN_PORT);
-    ip4_addr[2] = 255;
-    ip4_addr[3] = 255;
-    memcpy(&addr.sin_addr, ip4_addr, sizeof(addr.sin_addr));
+    ip4_addr = (mesh_ip4_addr_t *)umesh_get_mcast_addr();
+    memcpy(&addr.sin_addr, ip4_addr->m8, sizeof(addr.sin_addr));
 #endif
 
     send_sock(pstate->sockfd, buf, len, &addr);

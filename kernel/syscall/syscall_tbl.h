@@ -233,7 +233,34 @@ SYSCALL(SYS_POLL, yos_poll)
 #define SYS_FCNTL 76
 SYSCALL(SYS_FCNTL, yos_fcntl)
 
-/* keep 77~100 for Framework */
+#define SYS_LSEEK 77
+SYSCALL(SYS_LSEEK, yos_lseek)
+
+#define SYS_SYNC 78
+SYSCALL(SYS_SYNC, yos_sync)
+
+#define SYS_STAT 79
+SYSCALL(SYS_STAT, yos_stat)
+
+#define SYS_UNLINK 80
+SYSCALL(SYS_UNLINK, yos_unlink)
+
+#define SYS_RENAME 81
+SYSCALL(SYS_RENAME, yos_rename)
+
+#define SYS_OPENDIR 82
+SYSCALL(SYS_OPENDIR, yos_opendir)
+
+#define SYS_CLOSEDIR 83
+SYSCALL(SYS_CLOSEDIR, yos_closedir)
+
+#define SYS_READDIR 84
+SYSCALL(SYS_READDIR, yos_readdir)
+
+#define SYS_MKDIR 85
+SYSCALL(SYS_MKDIR, yos_mkdir)
+
+/* keep 86~100 for Framework */
 
 /* --------------------LWIP-------------------- */
 

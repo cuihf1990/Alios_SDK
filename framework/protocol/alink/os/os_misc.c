@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 #include "os.h"
-#include "yos/list.h"
+#include "yos/yos.h"
 
 #ifndef isprint
 #define in_range(c, lo, up)  ((uint8_t)c >= lo && (uint8_t)c <= up)

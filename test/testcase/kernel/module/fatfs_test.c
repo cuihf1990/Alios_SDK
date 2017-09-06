@@ -3,6 +3,7 @@
  */
 
 #include <fcntl.h>
+#include <fatfs_diskio.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -120,14 +121,14 @@ static int init(void)
     int ret = 0;
 
     /* register RAMDISK dev */
-    ret = fatfs_register(0);
+    ret = fatfs_register(DEV_RAM);
     YUNIT_ASSERT(ret == 0);
     return 0;
 }
 
 static int cleanup(void)
 {
-    int ret = fatfs_unregister(0);
+    int ret = fatfs_unregister(DEV_RAM);
     YUNIT_ASSERT(ret == 0);
     return 0;
 }

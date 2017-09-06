@@ -305,6 +305,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (nbr->netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
+
     channel_orig = nbr->channel;
     if (channel) {
         nbr->channel = channel->channel;
@@ -322,14 +323,17 @@ neighbor_t *update_neighbor(const message_info_t *info,
             nbr->ssid_info.free_slots = ssid_info->free_slots;
         }
 
-        if (nbr->state == STATE_CHILD &&
-            ((nbr->flags & NBR_NETID_CHANGED) ||
-             (nbr->flags & NBR_SID_CHANGED))) {
-            node_id.sid = nbr->sid;
-            memcpy(node_id.ueid, nbr->mac, sizeof(node_id.ueid));
-            update_sid_mapping(network->sid_base, &node_id, false);
-            nbr->state = STATE_NEIGHBOR;
+        if (nbr->flags & (NBR_SID_CHANGED | NBR_NETID_CHANGED)) {
+            if (nbr->state == STATE_CHILD ||
+                (!is_direct_child(network->sid_base, info->src.addr.short_addr) &&
+                 is_allocated_child(network->sid_base, nbr))) {
+                node_id.sid = nbr->sid;
+                memcpy(node_id.ueid, nbr->mac, sizeof(node_id.ueid));
+                update_sid_mapping(network->sid_base, &node_id, false);
+                nbr->state = STATE_NEIGHBOR;
+            }
         }
+
         network = get_network_context_by_meshnetid(info->src.netid);
         if (network && is_direct_child(network->sid_base, info->src.addr.short_addr) &&
             is_allocated_child(network->sid_base, nbr)) {

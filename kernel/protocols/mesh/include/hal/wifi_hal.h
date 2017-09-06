@@ -13,7 +13,7 @@ enum {
     WIFI_LINK_REQUEST_TIMEOUT        = 30000,   /* ms */
 #ifndef CONFIG_YOS_DDA
     WIFI_ADVERTISEMENT_TIMEOUT       = 20000,  /* ms, 20 seconds */
-    WIFI_NEIGHBOR_ALIVE_TIMEOUT      = 120000, /* ms, 2 mins */
+    WIFI_NEIGHBOR_ALIVE_TIMEOUT      = 240000, /* ms, 4 mins */
     WIFI_NET_SCAN_TIMEOUT            = 600000, /* ms, 10 mins */
 #else
     WIFI_ADVERTISEMENT_TIMEOUT       = 4000,  /* ms, 4 seconds */

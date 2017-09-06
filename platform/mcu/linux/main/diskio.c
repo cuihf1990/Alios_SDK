@@ -6,12 +6,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "diskio.h"
+#include "fatfs_diskio.h"
 #include "ff.h"
-
-/* Definitions of physical drive number for each drive */
-#define DEV_RAMDISK     0
-#define DEV_SDCARD      1
 
 #define RAMDISK_BLOCK_SIZE      4096
 #define RAMDISK_SECTOR_COUNT    256
@@ -89,9 +85,11 @@ static DRESULT ramdisk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
         case GET_BLOCK_SIZE:
             *(DWORD *)buff = RAMDISK_SEC_PER_BLOCK;
             return RES_OK;
+#if FF_USE_MKFS && !FF_FS_READONLY
         case GET_FORMAT_OPTION:
             *(BYTE *)buff = (FM_ANY | FM_SFD);
             return RES_OK;
+#endif
         case CTRL_SYNC:
         default:
             return RES_OK;
@@ -103,11 +101,14 @@ static DRESULT ramdisk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
 DSTATUS ff_disk_status(BYTE pdrv)
 {
     switch (pdrv) {
-        case DEV_RAMDISK:
+        case DEV_RAM:
              return ramdisk_status();
 
-        case DEV_SDCARD:
-            // return sdcard_status();
+        case DEV_MMC:
+            // return sdmmc_status();
+
+        case DEV_USB:
+            // retutn usb_status();
 
         default:
             break;
@@ -118,11 +119,14 @@ DSTATUS ff_disk_status(BYTE pdrv)
 DSTATUS ff_disk_initialize(BYTE pdrv)
 {
     switch (pdrv) {
-        case DEV_RAMDISK:
+        case DEV_RAM:
              return ramdisk_initialize();
 
-        case DEV_SDCARD:
-            // return sdcard_initialize();
+        case DEV_MMC:
+            // return sdmmc_initialize();
+
+        case DEV_USB:
+            // return usb_initialize();
 
         default:
             break;
@@ -133,11 +137,14 @@ DSTATUS ff_disk_initialize(BYTE pdrv)
 DRESULT ff_disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
 {
     switch (pdrv) {
-        case DEV_RAMDISK:
+        case DEV_RAM:
              return ramdisk_read(pdrv, buff, sector, count);
 
-        case DEV_SDCARD:
-            // return sdcard_read();
+        case DEV_MMC:
+            // return sdmmc_read();
+
+        case DEV_USB:
+            // return usb_read();
 
         default:
             break;
@@ -148,11 +155,14 @@ DRESULT ff_disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
 DRESULT ff_disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
 {
     switch (pdrv) {
-        case DEV_RAMDISK:
+        case DEV_RAM:
              return ramdisk_write(pdrv, buff, sector, count);
 
-        case DEV_SDCARD:
-            // return sdcard_write();
+        case DEV_MMC:
+            // return sdmmc_write();
+
+        case DEV_USB:
+            // return usb_write();
 
         default:
             break;
@@ -163,11 +173,14 @@ DRESULT ff_disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
 DRESULT ff_disk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
 {
     switch (pdrv) {
-        case DEV_RAMDISK:
+        case DEV_RAM:
              return ramdisk_ioctl(pdrv, cmd, buff);
 
-        case DEV_SDCARD:
-            // return sdcard_ioctl();
+        case DEV_MMC:
+            // return sdmmc_ioctl();
+
+        case DEV_USB:
+            // return usb_ioctl();
 
         default:
             break;
