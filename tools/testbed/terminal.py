@@ -426,6 +426,7 @@ class Terminal:
 
     def wait_cmd_excute_done(self, timeout):
         self.cmd_excute_state = 'wait_response'
+        self.cmd_excute_return = None
         while self.cmd_excute_state == 'wait_response':
             time.sleep(0.01)
             timeout -= 0.01
@@ -433,42 +434,88 @@ class Terminal:
                 self.cmd_excute_state = "timeout"
                 break;
 
-    def send_file_to_server(self, filename):
-        try:
-            expandname = os.path.expanduser(filename)
-        except:
-            self.cmdrun_status_display("{0} does not exist".format(filename))
-            return False
-        if os.path.exists(expandname) == False:
-            self.cmdrun_status_display("{0} does not exist".format(filename))
-            return False
-        self.cmdrun_status_display("sending "+ filename + "...")
-        file = open(expandname,'r')
-        content = expandname.split('/')[-1]
+    def send_file_to_client(self, filename, index):
+        status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0:2])
+        self.cmdrun_status_display(status_str)
+        filehash = TBframe.hash_of_file(filename)
+        devstr = self.get_devstr_by_index(index)
+
+        #send file begin
+        content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
         data = TBframe.construct(TBframe.FILE_BEGIN, content)
-        self.service_socket.send(data)
+        retry = 4
+        while retry > 0:
+            self.service_socket.send(data)
+            self.wait_cmd_excute_done(0.2)
+            if self.cmd_excute_return == None:
+                retry -= 1;
+                continue
+            break
+        if retry == 0:
+            status_str += 'error'
+            self.cmdrun_status_display(status_str)
+            return False
+
+        if self.cmd_excute_return == 'exist':
+            status_str += 'done'
+            self.cmdrun_status_display(status_str)
+            return True
+
+        #send file data
+        seq = 0
+        file = open(filename,'r')
+        header = devstr  + ':' + filehash + ':' + str(seq) + ':'
         content = file.read(1024)
         while(content):
-            data = TBframe.construct(TBframe.FILE_DATA, content)
-            self.service_socket.send(data)
+            data = TBframe.construct(TBframe.FILE_DATA, header + content)
+            retry = 4
+            while retry > 0:
+                self.service_socket.send(data)
+                self.wait_cmd_excute_done(0.2)
+                if self.cmd_excute_return == None:
+                    retry -= 1;
+                    continue
+                elif self.cmd_excute_return != 'ok':
+                    status_str += 'error'
+                    self.cmdrun_status_display(status_str)
+                    file.close()
+                    return False
+                break
+
+            if retry == 0:
+                status_str += 'error'
+                self.cmdrun_status_display(status_str)
+                file.close()
+                return False
+
+            seq += 1
+            header = devstr  + ':' + filehash + ':' + str(seq) + ':'
             content = file.read(1024)
         file.close()
-        content = filename
-        data = TBframe.construct(TBframe.FILE_END, content)
-        self.service_socket.send(data)
-        self.cmdrun_status_display("sending "+ filename + "..."+"done")
-        return True
 
-    def copy_file_to_client(self, index):
-        status_str = 'coping file to {0}...'.format(self.get_devstr_by_index(index).split(',')[0:2])
+        #send file end
+        content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
+        data = TBframe.construct(TBframe.FILE_END, content)
+        retry = 4
+        while retry > 0:
+            self.service_socket.send(data)
+            self.wait_cmd_excute_done(0.2)
+            if self.cmd_excute_return == None:
+                retry -= 1;
+                continue
+            elif self.cmd_excute_return != 'ok':
+                status_str += 'error'
+                self.cmdrun_status_display(status_str)
+                return False
+            break
+        if retry == 0:
+            status_str += 'error'
+            self.cmdrun_status_display(status_str)
+            return False
+
+        status_str += 'done'
         self.cmdrun_status_display(status_str)
-        content = self.get_devstr_by_index(index)
-        data = TBframe.construct(TBframe.FILE_COPY, content);
-        self.service_socket.send(data)
-        self.wait_cmd_excute_done(300)
-        status_str += self.cmd_excute_state
-        self.cmdrun_status_display(status_str)
-        self.cmd_excute_state = 'idle'
+        return True
 
     def erase_devices(self, args):
         devs = args
@@ -514,12 +561,20 @@ class Terminal:
             return False
         address  = args[0]
         filename = args[1]
+        try:
+            expandname = os.path.expanduser(filename)
+        except:
+            self.cmdrun_status_display("{0} does not exist".format(filename))
+            return False
+        if os.path.exists(expandname) == False:
+            self.cmdrun_status_display("{0} does not exist".format(filename))
+            return False
+        filehash = TBframe.hash_of_file(expandname)
+
         devs = args[2:]
         file_exist_at = []
         if devs == []:
             self.cmdrun_status_display("Usage error: please specify devices you want to programg")
-            return False
-        if self.send_file_to_server(filename) == False:
             return False
         succeed = []; failed = []
         for dev in devs:
@@ -530,15 +585,16 @@ class Terminal:
             for index in indexes:
                 device = self.get_devstr_by_index(index).split(',')
                 if device[0:2] not in file_exist_at:
-                    if self.copy_file_to_client(index) == False:
+                    if self.send_file_to_client(expandname, index) == False:
+                        failed.append(index)
                         continue
                     file_exist_at.append(device[0:2])
                 status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, device[0], device[2])
                 self.cmdrun_status_display(status_str)
-                content = ','.join(device) + ',' + address
+                content = ','.join(device) + ',' + address + ',' + filehash
                 data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
                 self.service_socket.send(data)
-                self.wait_cmd_excute_done(90)
+                self.wait_cmd_excute_done(270)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
                 if self.cmd_excute_state == "done":
