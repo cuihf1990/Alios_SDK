@@ -40,6 +40,7 @@ extern void test_digest_algorithm(void);
 extern void test_alicrypto(void);
 extern void test_fatfs(void);
 extern void test_mqtt(void);
+extern void test_coap(void);
 
 static void add_test(void);
 
@@ -102,6 +103,9 @@ void yts_run(int argc, char **argv)
 
 void add_test(void)
 {
+#ifdef YTS_COAP
+    test_coap();
+#else
     test_basic();
 
     test_fota();
@@ -145,5 +149,6 @@ void add_test(void)
     test_kv();
 
     test_mqtt();
+#endif
 }
 
