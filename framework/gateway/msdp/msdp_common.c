@@ -8,7 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
-#include "yos/list.h"
+#include "yos/yos.h"
 #include "json_parser.h"
 #include "service.h"
 #include "msdp.h"

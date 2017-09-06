@@ -1,23 +1,24 @@
-CLIENT_DEV = 'CDEV'
-ALL_DEV    = 'ADEV'
-DEVICE_LOG = 'DLOG'
-DEVICE_CMD = 'DCMD'
-DEVICE_ERASE = 'DERS'
+import hashlib
+
+CLIENT_DEV     = 'CDEV'
+ALL_DEV        = 'ADEV'
+DEVICE_LOG     = 'DLOG'
+DEVICE_CMD     = 'DCMD'
+DEVICE_ERASE   = 'DERS'
 DEVICE_PROGRAM = 'DPRG'
-DEVICE_RESET = 'DRST'
-DEVICE_START = 'DSTR'
-DEVICE_STOP = 'DSTP'
-LOG_SUB    = 'LGSB'
-LOG_UNSUB  = 'LGUS'
-LOG_DOWNLOAD = 'LGDL'
-FILE_BEGIN = 'FBGN'
-FILE_DATA  = 'FDTA'
-FILE_END   = 'FEND'
-FILE_COPY  = 'FCPY'
-CMD_DONE   = 'CMDD'
-CMD_ERROR  = 'CMDE'
-HEARTBEAT  = 'HTBT'
-TYPE_NONE  = 'NONE'
+DEVICE_RESET   = 'DRST'
+DEVICE_START   = 'DSTR'
+DEVICE_STOP    = 'DSTP'
+LOG_SUB        = 'LGSB'
+LOG_UNSUB      = 'LGUS'
+LOG_DOWNLOAD   = 'LGDL'
+FILE_BEGIN     = 'FBGN'
+FILE_DATA      = 'FDTA'
+FILE_END       = 'FEND'
+CMD_DONE       = 'CMDD'
+CMD_ERROR      = 'CMDE'
+HEARTBEAT      = 'HTBT'
+TYPE_NONE      = 'NONE'
 
 def is_valid_type(type):
     if type == CLIENT_DEV:
@@ -50,8 +51,6 @@ def is_valid_type(type):
         return True
     if type == FILE_END:
         return True
-    if type == FILE_COPY:
-        return True
     if type == CMD_DONE:
         return True
     if type == CMD_ERROR:
@@ -63,7 +62,7 @@ def is_valid_type(type):
 def construct(type, value):
     if is_valid_type(type) == False:
         return ''
-    frame = '[' + type + '{0:04d}'.format(len(value)) + value + ']'
+    frame = '{' + type + ',' + '{0:04d}'.format(len(value)) + ',' + value + '}'
     return frame
 
 def parse(msg):
@@ -72,44 +71,51 @@ def parse(msg):
     length = 0
     value = ''
     while msg != '':
-        if len(msg) < 9:
+        if len(msg) < 12:
             type = TYPE_NONE
             length = 0
             value = ''
             break;
+        #  print msg
         for i in range(len(msg)):
-            if msg[i] == '[':
-                sync = True
-                msg = msg[i:]
-                break
+            if msg[i] != '{':
+                continue
+            if (i + 12) > len(msg):
+                break;
+            if is_valid_type(msg[i+1: i+5]) == False:
+                continue
+            if msg[i + 5] != ',':
+                continue
+            if msg[i+6 : i+10].isdigit() == False:
+                continue
+            if msg[i+10] != ',':
+                continue
+            sync = True
+            msg = msg[i:]
+            break
         if sync == False:
-            msg = ''
             break
 
         type = msg[1:5]
-        if is_valid_type(type) == False:
-            sync = False;
-            print msg[0:9],"Lose sync because of TYPE error"
-            msg = msg[1:]
-            continue
-        try:
-            length = int(msg[5:9])
-        except:
-            sync = False
-            print msg[0:9],"Lose sync because of LENGTH error"
-            msg = msg[1:]
-            continue
-        if len(msg) < length + 10:
+        length = int(msg[6:10])
+        if len(msg) < length + 12:
             type = TYPE_NONE
             length = 0
             value = ''
             break
-        if msg[length + 9] != ']':
+        if msg[length + 11] != '}':
             sync = False
-            print msg[0:9],"Lose sync because of FOOTER error"
+            print msg[0:11],"Lose sync because of FOOTER error"
             msg = msg[1:]
             continue
-        value = msg[9:length+9]
-        msg = msg[length+10:]
+        value = msg[11:length+11]
+        msg = msg[length+12:]
         break;
     return type, length, value, msg
+
+def hash_of_file(filename):
+    h = hashlib.sha1()
+    with open(filename, 'rb', buffering=0) as f:
+        for b in iter(lambda : f.read(1024), b''):
+            h.update(b)
+    return h.hexdigest()

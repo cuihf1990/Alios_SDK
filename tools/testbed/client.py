@@ -316,6 +316,13 @@ class Client:
                 except:
                     continue
 
+    def send_response(self, type, content):
+        data = TBframe.construct(type, content)
+        try:
+            self.service_socket.send(data)
+        except:
+            raise ConnetionLost
+
     def client_func(self, server_ip, server_port):
         self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -331,6 +338,9 @@ class Client:
 
         thread.start_new_thread(self.device_monitor,())
         thread.start_new_thread(self.heartbeat_func,())
+
+        file_received = {}
+        file_receiving = {}
         msg = ''
         while True:
             try:
@@ -346,16 +356,74 @@ class Client:
                         break
 
                     if type == TBframe.FILE_BEGIN:
-                        if 'file' in locals() and file.closed == False:
-                            file.close()
-                        filename = 'client/' + value
-                        file = open(filename, 'w')
+                        split_value = value.split(':')
+                        terminal = split_value[0]
+                        hash = split_value[1]
+                        filename = split_value[2]
+                        if hash in file_received:
+                            if os.path.exists(file_received[hash]) == True:
+                                content = terminal + ',' + 'exist'
+                                self.send_response(type, content)
+                                continue
+                            else:
+                                file_received.pop(hash)
+
+                        if hash in file_receiving:
+                            file_receiving[hash]['handle'].close()
+                            try:
+                                os.remove(file_receiving[hash]['name'])
+                            except:
+                                pass
+                            file_receiving.pop(hash)
+
+                        filename = 'client/' + filename
+                        filename += '-' + terminal.split(',')[0]
+                        filename += '@' + time.strftime('%Y-%m-%d-%H-%M')
+                        filehandle = open(filename, 'w')
+                        file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle}
+                        content = terminal + ',' + 'ok'
+                        if DEBUG:
+                            print 'start receiving {0} as {1}'.format(split_value[2], filename)
+                        self.send_response(type, content)
                     elif type == TBframe.FILE_DATA:
-                        if 'file' in locals() and file.closed == False:
-                            file.write(value)
+                        split_value = value.split(':')
+                        terminal = split_value[0]
+                        hash = split_value[1]
+                        seq  = split_value[2]
+                        data = value[(len(terminal) + len(hash) + len(seq) + 3):]
+                        seq = int(seq)
+                        if hash not in file_receiving:
+                            content = terminal + ',' + 'noexist'
+                            self.send_response(type, content)
+                            continue
+                        if file_receiving[hash]['seq'] != seq:
+                            content = terminal + ',' + 'seqerror'
+                            self.send_response(type, content)
+                            continue
+                        file_receiving[hash]['handle'].write(data)
+                        file_receiving[hash]['seq'] += 1
+                        content = terminal + ',' + 'ok'
+                        self.send_response(type, content)
                     elif type == TBframe.FILE_END:
-                        if 'file' in locals():
-                            file.close()
+                        split_value = value.split(':')
+                        terminal = split_value[0]
+                        hash = split_value[1]
+                        if hash not in file_receiving:
+                            content = terminal + ',' + 'noexist'
+                            self.send_response(type, content)
+                            continue
+                        file_receiving[hash]['handle'].close()
+                        localhash = TBframe.hash_of_file(file_receiving[hash]['name'])
+                        if localhash != hash:
+                            response = 'hasherror'
+                        else:
+                            response = 'ok'
+                            file_received[hash] = file_receiving[hash]['name']
+                        if DEBUG:
+                            print 'finished receiving {0}, result:{1}'.format(file_receiving[hash]['name'], response)
+                        file_receiving.pop(hash)
+                        content = terminal + ',' + response
+                        self.send_response(type, content)
                     elif type == TBframe.DEVICE_ERASE:
                         args = value.split(',')
                         if len(args) != 3:
@@ -365,11 +433,7 @@ class Client:
                         result = self.erase_device(port)
                         print "erasing", port, "...", result
                         content = ','.join(term) + ',' + result
-                        data = TBframe.construct(TBframe.DEVICE_ERASE, content)
-                        try:
-                            self.service_socket.send(data)
-                        except:
-                            raise ConnetionLost
+                        self.send_response(type, content)
                     elif type == TBframe.DEVICE_PROGRAM:
                         args = value.split(',')
                         if len(args) != 5:
@@ -377,15 +441,16 @@ class Client:
                         term = args[0:2]
                         port = args[2]
                         address = args[3]
-                        filename = 'client/' + args[4]
+                        hash = args[4]
+                        if hash not in file_received:
+                            content = ','.join(term) + ',' + 'error'
+                            self.send_response(type, content)
+                            continue
+                        filename = file_received[hash]
                         result = self.program_device(port, address, filename)
-                        print "programming", args[4], "to", port, "@", address, "...", result
+                        print "programming", filename, "to", port, "@", address, "...", result
                         content = ','.join(term) + ',' + result
-                        data = TBframe.construct(TBframe.DEVICE_PROGRAM, content)
-                        try:
-                            self.service_socket.send(data)
-                        except:
-                            raise ConnetionLost
+                        self.send_response(type, content)
                     elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
                         args = value.split(',')
                         if len(args) != 3:
@@ -397,11 +462,7 @@ class Client:
                         else:
                             result = self.control_device(port, type)
                         content = ','.join(term) + ',' + result
-                        data = TBframe.construct(type, content)
-                        try:
-                            self.service_socket.send(data)
-                        except:
-                            raise ConnetionLost
+                        self.send_response(type, content)
                     elif type == TBframe.DEVICE_CMD:
                         args = value.split(':')[0]
                         arglen = len(args) + 1
@@ -423,11 +484,7 @@ class Client:
                         else:
                             result = "error"
                         content = ','.join(term) + ',' + result
-                        data = TBframe.construct(type, content)
-                        try:
-                            self.service_socket.send(data)
-                        except:
-                            raise ConnetionLost
+                        self.send_response(type, content)
             except ConnetionLost:
                 self.connected = False
                 print "connection to server lost, try reconnecting..."

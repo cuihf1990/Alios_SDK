@@ -140,36 +140,44 @@ def main():
         sys.exit(1)
 
     #program device
-    retry=5; pg_success = False
+    succeed = False; retry = 5
     print 'programming device {0} ...'.format(devices[device])
     for i in range(retry):
         if at.device_program(device, '0x13200', filename) == True:
-            pg_success = True
+            succeed = True
             break
-    if pg_success == False:
+    if succeed == False:
         print 'error: program device {0} failed'.format(devices[device])
         sys.exit(1)
     print 'program device {0} succeed'.format(devices[device])
+    time.sleep(5)
 
-    #clear previous setting and reboot
-    at.device_run_cmd(device, ['kv', 'del', 'wifi'])
-    at.device_run_cmd(device, ['kv', 'del', 'alink'])
-    at.device_run_cmd(device, ['reboot'])
-    time.sleep(6)
+    succeed = False; retry = 5
+    while retry > 0:
+        #clear previous setting and reboot
+        at.device_run_cmd(device, ['kv', 'del', 'wifi'])
+        at.device_run_cmd(device, ['kv', 'del', 'alink'])
+        at.device_control(device, 'reset')
+        time.sleep(5)
 
-    #set a random mesh extnetid
-    bytes = os.urandom(6)
-    extnetid = ''
-    for byte in bytes:
-        extnetid = extnetid + '{0:02x}'.format(ord(byte))
-    at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+        #set a random mesh extnetid
+        bytes = os.urandom(6)
+        extnetid = ''
+        for byte in bytes:
+            extnetid = extnetid + '{0:02x}'.format(ord(byte))
+        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
 
-    #connect device to alink
-    at.device_run_cmd(device, ['netmgr', 'connect', wifissid, wifipass], timeout=1.5)
-    time.sleep(15)
-    filter = ['uuid:', 'alink is not connected']
-    response = at.device_run_cmd(device, ['uuid'], 1, 1.5, filter)
-    if response == False or len(response) != 1 or 'uuid:' not in response[0]:
+        #connect device to alink
+        at.device_run_cmd(device, ['netmgr', 'connect', wifissid, wifipass], timeout=1.5)
+        time.sleep(15)
+        filter = ['uuid:', 'alink is not connected']
+        response = at.device_run_cmd(device, ['uuid'], 1, 1.5, filter)
+        if response == False or len(response) != 1 or 'uuid:' not in response[0]:
+            retry -= 1
+            continue
+        succeed = True
+        break;
+    if succeed == False:
         print 'error: connect device to alink failed, response = {0}'.format(response)
         sys.exit(1)
 
@@ -205,15 +213,15 @@ def main():
 
     #print result
     try:
-        print result[u'data'][u'case_fail_desc']
+        print result[u'data'][u'case_fail_desc'].encode('utf-8')
     except:
         pass
 
     if result[u'data'][u'case_status'] != 2:
-        print 'test case {0} finished unsuccessfully'.format(caseid)
+        print 'test {0} finished unsuccessfully'.format(testname)
         sys.exit(1)
     else:
-        print 'test case {0} finished successfully'.format(caseid)
+        print 'test {0} finished successfully'.format(testname)
         sys.exit(0)
 
 if __name__ == '__main__':

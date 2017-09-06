@@ -4,8 +4,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <yos/list.h>
-#include <yos/kernel.h>
 #include <yos/yos.h>
 
 #include <vfs_conf.h>

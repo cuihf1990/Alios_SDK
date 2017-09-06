@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 
-#include <yos/list.h>
+#include <yos/yos.h>
 
 #include "yunit.h"
 

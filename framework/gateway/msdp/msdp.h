@@ -9,8 +9,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include "yos/list.h"
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "alink_export_internal.h"
 #include "alink_protocol.h"
 #include "json_parser.h"

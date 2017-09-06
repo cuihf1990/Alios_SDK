@@ -2,16 +2,14 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos/kernel.h>
 #include <yos/yos.h>
 #include <yos/network.h>
 #include <vfs_conf.h>
-#include <vfs_dirent.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
 #include <vfs.h>
 #include <stdio.h>
-#include <hal/soc/uart.h>
+#include <hal/hal.h>
 
 extern uart_dev_t uart_0;
 
@@ -313,8 +311,14 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
 
     node = f->node;
 
-    if ((node->ops.i_ops->ioctl) != NULL) {
-        ret = (node->ops.i_ops->ioctl)(f, cmd, arg);
+    if (INODE_IS_FS(node)) {
+        if ((node->ops.i_fops->ioctl) != NULL) {
+            ret = (node->ops.i_fops->ioctl)(f, cmd, arg);
+        }
+    } else {
+        if ((node->ops.i_ops->ioctl) != NULL) {
+            ret = (node->ops.i_ops->ioctl)(f, cmd, arg);
+        }
     }
 
     return ret;

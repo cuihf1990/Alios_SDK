@@ -16,7 +16,7 @@ extern unsigned int _app_heap_end;
 extern int application_start(int argc, char **argv);
 
 struct app_info_t {
-     int (*app_entry)(int argc, char *argv[]);
+     int (*app_entry)(void *syscall_tbl, int argc, char *argv[]);
      unsigned int data_ram_start;
      unsigned int data_ram_end;
      unsigned int data_flash_begin;
@@ -26,7 +26,7 @@ struct app_info_t {
      unsigned int heap_end;
 };
 
-static int app_entry(int argc, char *argv[])
+static int app_entry(void *syscall_tbl, int argc, char *argv[])
 {
     yos_framework_init();
     return application_start(argc, argv);

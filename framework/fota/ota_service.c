@@ -1,11 +1,10 @@
 /*
  *Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
+
 #include <string.h>
-#include <hal/ota.h>
+#include <hal/hal.h>
 #include <yos/yos.h>
-#include <yos/version.h>
-#include <yos/log.h>
 
 #include "ota_transport.h"
 #include "ota_update_manifest.h"

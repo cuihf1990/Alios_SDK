@@ -7,7 +7,7 @@
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 #define VFS_NULL_PARA_CHK(para)     do { if (!(para)) return -EINVAL; } while(0)
 

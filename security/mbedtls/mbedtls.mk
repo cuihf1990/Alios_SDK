@@ -7,6 +7,7 @@ GLOBAL_INCLUDES     += include
 $(NAME)_CFLAGS      += -Wall -Werror -Os
 
 $(NAME)_SOURCES     := mbedtls_ssl.c
+$(NAME)_SOURCES     += mbedtls_net.c
 
 ifeq ($(DEBUG), yes)
 $(NAME)_DEFINES     += CONFIG_SSL_DEBUG
@@ -14,26 +15,31 @@ endif
 
 $(NAME)_COMPONENTS := alicrypto
 
-ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM := linuxhost
+ifeq ($(HOST_ARCH), linux)
 
-$(NAME)_PREBUILT_LIBRARY := lib/linuxhost/libmbedtls.a
+PLATFORM := linuxhost
+$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedtls.a
 
 ifeq (1,$(with_lwip))
 $(info using lwip version mbedtls)
-$(NAME)_PREBUILT_LIBRARY := lib/linuxhost/libmbedtls.a.lwip
+$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedtls.a.lwip
 endif
 
-else ifeq ($(findstring armhflinux, $(BUILD_STRING)), armhflinux)
+else ifeq ($(HOST_ARCH), armhflinux)
 
-$(NAME)_PREBUILT_LIBRARY := lib/armhflinux/libmbedtls.a
+PLATFORM := armhflinux
+$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedtls.a
 
-else ifeq ($(findstring mk108, $(BUILD_STRING)), mk108)
+else ifeq ($(HOST_ARCH), ARM968E-S)
 
-$(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
+PLATFORM := mk108
+$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedtls.a
 
-else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
 
-$(NAME)_PREBUILT_LIBRARY := lib/mk108/libmbedtls.a
+$(NAME)_DEFINES          += MBEDTLS_NET_ALT_UART
+$(NAME)_PREBUILT_LIBRARY := lib/b_l475e/libmbedtls.a
 
 else
 

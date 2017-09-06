@@ -182,6 +182,10 @@ int ali_crypto_hash_test(void)
         }
 
         result = ali_hash_reset(hash_ctx);
+        if (result != ALI_CRYPTO_SUCCESS) {
+            result = ALI_CRYPTO_ERROR;
+            goto _OUT;
+        }
         CRYPT_FREE(hash_ctx);
         hash_ctx = NULL;
 

@@ -5,7 +5,7 @@
 
 #include <errno.h>
 #include <hal/ota.h>
-#include <yos/log.h>
+#include <yos/yos.h>
 #include <hal/soc/soc.h>
 #include <CheckSumUtils.h>
 

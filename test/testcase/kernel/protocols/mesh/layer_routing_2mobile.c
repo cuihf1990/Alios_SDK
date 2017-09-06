@@ -46,7 +46,7 @@ static void topology_line_case(void)
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
 
     myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 14, "testcmd icmp_acked", 5);
 

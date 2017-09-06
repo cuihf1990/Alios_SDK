@@ -59,7 +59,7 @@
 
 #define MEM_LIBC_MALLOC                 1
 #if MEM_LIBC_MALLOC
-#include <yos/kernel.h>
+#include <yos/yos.h>
 #define mem_clib_malloc yos_malloc
 #define mem_clib_free yos_free
 #define mem_clib_calloc(n, m) yos_zalloc( (n) * (m) )

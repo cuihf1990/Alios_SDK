@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------/
 /  FatFs - Configuration file
 /---------------------------------------------------------------------------*/
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 #define FFCONF_DEF 87030	/* Revision ID */
 
@@ -129,7 +129,7 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
-#define FF_VOLUMES		1
+#define FF_VOLUMES		3
 /* Number of volumes (logical drives) to be used. (1-10) */
 
 

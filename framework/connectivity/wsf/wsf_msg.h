@@ -6,7 +6,6 @@
 #define WSF_MSG_H
 #include "wsf_client.h"
 #include "wsf_list.h"
-#include "yos/list.h"
 #include "yos/yos.h"
 
 //NOTE: Must strictly assure that fields address follow the defination of WSF protocol

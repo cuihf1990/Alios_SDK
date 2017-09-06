@@ -1715,7 +1715,9 @@ void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
     hal_context_t *hal;
 
     network = network ? : get_default_network_context();
-    hal_umesh_set_channel(network->hal->module, channel);
+    if (hal_umesh_set_channel(network->hal->module, channel) < 0) {
+        return;
+    }
     hal = network->hal;
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
@@ -1942,7 +1944,7 @@ uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data)
 {
     mm_channel_tv_t *channel;
 
-    if (network->hal->module->type == MEDIA_TYPE_WIFI) {
+    if (network->hal->module->type != MEDIA_TYPE_WIFI) {
         return 0;
     }
 

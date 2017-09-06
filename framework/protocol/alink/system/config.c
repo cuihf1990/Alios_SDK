@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 #include "config.h"
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "crc.h"
 #include "os.h"
 #ifdef ASR_SDK

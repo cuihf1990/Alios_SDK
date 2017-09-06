@@ -11,8 +11,7 @@
 #include <sys/select.h>
 #include <pthread.h>
 
-#include <yos/log.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 #include <cpu_event.h>
 #include <umesh_hal.h>
@@ -253,7 +252,7 @@ static int linux_80211_mesh_set_key(struct umesh_hal_module_s *module,
         return -1;
     }
 
-    if (length > MAX_KEY_SIZE) {
+    if (length > KEY_SIZE) {
         priv->keys[index].len = 0;
         return -1;
     }
@@ -325,7 +324,7 @@ static void linux_80211_wifi_mesh_get_extnetid(umesh_hal_module_t *module,
 }
 
 static umesh_hal_module_t linux_80211_mesh_wifi_module;
-static const uint8_t g_wifi_channels[] = {1, 6, 11};
+static const uint8_t g_wifi_channels[] = {1, 4, 6, 9, 11};
 static mesh_hal_priv_t wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = DEFAULT_MTU_SIZE,

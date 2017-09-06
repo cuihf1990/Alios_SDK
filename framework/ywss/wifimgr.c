@@ -5,7 +5,7 @@
 #include "wifimgr.h"
 #include "alink_export.h"
 #include "os/platform/platform.h"
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "awss.h"
 #include "alink_protocol.h"
 #include "json_parser.h"

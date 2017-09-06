@@ -3,7 +3,6 @@
  */
 
 #include "yos/yos.h"
-#include "yos/kernel.h"
 
 #include "umesh_utils.h"
 
