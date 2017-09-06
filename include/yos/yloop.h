@@ -29,6 +29,7 @@ extern "C"
 #define CODE_SYS_ON_START_FOTA       5
 #define CODE_SYS_ON_ALINK_ONLINE     6
 #define CODE_SYS_ON_ALINK_OFFLINE    7
+#define CODE_SYS_ON_MQTT_READ        8
 
 /** WiFi event */
 #define  EV_WIFI                  0x0002

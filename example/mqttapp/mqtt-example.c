@@ -206,7 +206,7 @@ static void mqtt_service_event(input_event_t *event, void *priv_data) {
         return;
     }
 
-    if (event->code != CODE_SYS_ON_CONNECT) {
+    if (event->code != CODE_SYS_ON_MQTT_READ) {
         return;
     }
 
