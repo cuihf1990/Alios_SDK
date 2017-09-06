@@ -268,11 +268,7 @@ PUTCHAR_PROTOTYPE
   /* e.g. write a character to the USART2 and Loop until the end of transmission */
   while (HAL_OK != HAL_UART_Transmit(&console_uart, (uint8_t *) &ch, 1, 30000))
   {
-    count++;
-    if(count > 30) {
-        Console_UART_Init();
-        break;
-    }
+    ;
   }
   return ch;
 }

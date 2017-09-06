@@ -75,14 +75,12 @@ int32_t hal_flash_erase(hal_partition_t pno, uint32_t off_set,
             }
         }
 #endif
-    //GLOBAL_INT_DECLARATION();
 
     partition_info = hal_flash_get_info( pno );
     if(size + off_set > partition_info->partition_length)
         return -1;
 
     start_addr = (partition_info->partition_start_addr + off_set) & (~0xFFF);
-    //end_addr = (partition_info->partition_start_addr + off_set + size - 1) & (~0xFFF);
 
     FLASH_unlock_erase(start_addr, size);
     return 0;

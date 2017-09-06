@@ -100,160 +100,141 @@ static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
 
 static int wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_para_adv)
 {
-    int ret = 0;
-
- 	//ret = bk_wlan_start_adv(init_para_adv);
-	
-    return ret;
+    return 0;
 }
 
 static int get_ip_stat(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type)
 {
-    int ret = 0;
-	
-	//ret = bk_wlan_get_ip_status(out_net_para, wifi_type);
-
-    return ret;
+    return 0;
 }
 
 static int get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)
 {
-	int ret = 0;
-	
-    //ret = bk_wlan_get_link_status(out_stat);
-
-	return ret;
+    return 0;
 }
 
 static void start_scan(hal_wifi_module_t *m)
 {
-    //bk_wlan_start_scan();
+    return;
 }
 
 static void start_scan_adv(hal_wifi_module_t *m)
 {
-	//bk_wlan_start_adv_scan();
+    return;
 }
 
 static int power_off(hal_wifi_module_t *m)
 {
-    //return bk_wlan_power_off();
     return 0;
 }
 
 static int power_on(hal_wifi_module_t *m)
 {
-    //return bk_wlan_power_on();
     return 0;
 }
 
 static int suspend(hal_wifi_module_t *m)
 {
-    //return bk_wlan_suspend();
     return 0;
 }
 
 static int suspend_station(hal_wifi_module_t *m)
 {
-    //return bk_wlan_suspend_station();
     return 0;
 }
 
 static int suspend_soft_ap(hal_wifi_module_t *m)
 {
 
-    //return bk_wlan_suspend_softap();
     return 0;
 }
 
 static int set_channel(hal_wifi_module_t *m, int ch)
 {
-    //return bk_wlan_set_channel(ch);
     return 0;
 }
 
 static void start_monitor(hal_wifi_module_t *m)
 {
-	//bk_wlan_start_monitor();
+    return;
 }
 
 static void stop_monitor(hal_wifi_module_t *m)
 {
-	//bk_wlan_stop_monitor();
+    return;
 }
 
 static void register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 {
-	//bk_wlan_register_monitor_cb(fn);
+    return;
 }
 
 static void register_wlan_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 {
-    //bk_wlan_register_mgnt_monitor_cb(fn);
+    return;
 }
 
 static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
 {
-    //return bk_wlan_send_80211_raw_frame(buf, len - 4); // len-4=exclude FCS
     return 0;
 }
 
 void NetCallback(hal_wifi_ip_stat_t *pnet)
 {
-	if (sim_yos_wifi_stm23l475.ev_cb == NULL)
-		return;
-	if (sim_yos_wifi_stm23l475.ev_cb->ip_got == NULL)
-		return;
+    if (sim_yos_wifi_stm23l475.ev_cb == NULL)
+        return;
+    if (sim_yos_wifi_stm23l475.ev_cb->ip_got == NULL)
+        return;
 
-	sim_yos_wifi_stm23l475.ev_cb->ip_got(&sim_yos_wifi_stm23l475, pnet, NULL);
+    sim_yos_wifi_stm23l475.ev_cb->ip_got(&sim_yos_wifi_stm23l475, pnet, NULL);
 }
 
 void connected_ap_info(hal_wifi_ap_info_adv_t *ap_info, char *key, int key_len)
 {
-	if (sim_yos_wifi_stm23l475.ev_cb == NULL)
-		return;
-	if (sim_yos_wifi_stm23l475.ev_cb->para_chg == NULL)
-		return;
+    if (sim_yos_wifi_stm23l475.ev_cb == NULL)
+        return;
+    if (sim_yos_wifi_stm23l475.ev_cb->para_chg == NULL)
+        return;
 
-	sim_yos_wifi_stm23l475.ev_cb->para_chg(&sim_yos_wifi_stm23l475, ap_info, key, key_len, NULL);
+    sim_yos_wifi_stm23l475.ev_cb->para_chg(&sim_yos_wifi_stm23l475, ap_info, key, key_len, NULL);
 }
 
 void WifiStatusHandler(int status)
 {
-	if (sim_yos_wifi_stm23l475.ev_cb == NULL)
-		return;
-	if (sim_yos_wifi_stm23l475.ev_cb->stat_chg == NULL)
-		return;
+    if (sim_yos_wifi_stm23l475.ev_cb == NULL)
+        return;
+    if (sim_yos_wifi_stm23l475.ev_cb->stat_chg == NULL)
+        return;
 
-	sim_yos_wifi_stm23l475.ev_cb->stat_chg(&sim_yos_wifi_stm23l475, status, NULL);
+    sim_yos_wifi_stm23l475.ev_cb->stat_chg(&sim_yos_wifi_stm23l475, status, NULL);
 }
 
 void ApListCallback(hal_wifi_scan_result_t *pApList)
 {
-	int i;
-	
-	printf("AP %d: \r\n", pApList->ap_num);
-	for(i=0; i<pApList->ap_num; i++) {
-		printf("\t %s rssi %d\r\n", pApList->ap_list[i].ssid, pApList->ap_list[i].ap_power);
-	}
-	if (sim_yos_wifi_stm23l475.ev_cb == NULL)
-		return;
-	if (sim_yos_wifi_stm23l475.ev_cb->scan_compeleted == NULL)
-		return;
+    int i;
+    
+    printf("AP %d: \r\n", pApList->ap_num);
+    for(i=0; i<pApList->ap_num; i++) {
+        printf("\t %s rssi %d\r\n", pApList->ap_list[i].ssid, pApList->ap_list[i].ap_power);
+    }
+    if (sim_yos_wifi_stm23l475.ev_cb == NULL)
+        return;
+    if (sim_yos_wifi_stm23l475.ev_cb->scan_compeleted == NULL)
+        return;
 
-	sim_yos_wifi_stm23l475.ev_cb->scan_compeleted(&sim_yos_wifi_stm23l475, 
-		(hal_wifi_scan_result_t*)pApList, NULL);
+    sim_yos_wifi_stm23l475.ev_cb->scan_compeleted(&sim_yos_wifi_stm23l475, 
+        (hal_wifi_scan_result_t*)pApList, NULL);
 }
 
 void ApListAdvCallback(hal_wifi_scan_result_adv_t *pApAdvList)
 {
-	if (sim_yos_wifi_stm23l475.ev_cb == NULL)
-		return;
-	if (sim_yos_wifi_stm23l475.ev_cb->scan_adv_compeleted == NULL)
-		return;
+    if (sim_yos_wifi_stm23l475.ev_cb == NULL)
+        return;
+    if (sim_yos_wifi_stm23l475.ev_cb->scan_adv_compeleted == NULL)
+        return;
 
-	sim_yos_wifi_stm23l475.ev_cb->scan_adv_compeleted(&sim_yos_wifi_stm23l475, 
-		pApAdvList, NULL);
+    sim_yos_wifi_stm23l475.ev_cb->scan_adv_compeleted(&sim_yos_wifi_stm23l475, 
+        pApAdvList, NULL);
 }
 
 hal_wifi_module_t sim_yos_wifi_stm23l475 = {
