@@ -12,7 +12,7 @@ void soc_system_init(void);
 void yos_start(void);
 
 struct app_info_t {
-     int (*app_entry)(int argc, char *argv[]);
+     int (*app_entry)(void *syscall_tbl, int argc, char *argv[]);
      unsigned int data_ram_start;
      unsigned int data_ram_end;
      unsigned int data_flash_begin;
