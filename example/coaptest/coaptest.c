@@ -34,6 +34,7 @@
 #define TAG "coaptest"
 
 char m_coap_client_running = 0;
+int coap_client_init = 0;
 
 static void iotx_response_handler(void * arg, void * p_response)
 {
@@ -72,7 +73,7 @@ static void user_code_start()
     iotx_post_data_to_server((void *)p_ctx);
     IOT_CoAP_Yield(p_ctx);
     if (m_coap_client_running) {
-        // m_coap_client_running = 0;
+        m_coap_client_running = 0;
         yos_post_delayed_action(3000,user_code_start,NULL);
     } else {
         IOT_CoAP_Deinit(&p_ctx);
@@ -118,6 +119,10 @@ void wifi_service_event(input_event_t *event, void *priv_data)
 {
     if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP)
     {
+		if (coap_client_init) {
+			return;
+		}
+		coap_client_init = 1;
         coap_client_example();
     }
 }

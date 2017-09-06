@@ -115,10 +115,7 @@ void coap_ota()
 {
     if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP)
     {
-        IOT_OpenLog("coap-ota");
-        IOT_SetLogLevel(IOT_LOG_DEBUG);
-
-        coap_client();
+        coap_ota();
     }
 }
 

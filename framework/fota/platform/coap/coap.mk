@@ -20,8 +20,6 @@ UTIL_SOURCE := ../../../../utility/iotx-utils
 
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_COAP := linux
-else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
-PLATFORM_COAP := linux
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
 PLATFORM_COAP := rhino
 endif
@@ -40,8 +38,7 @@ $(NAME)_INCLUDES :=  \
 $(NAME)_SOURCES := \
     ./src/ota.c \
     ./src/ota_lib.c \
-    $(UTIL_SOURCE)/hal/$(PLATFORM_COAP)/HAL_OS_$(PLATFORM_COAP).c \
-	./ota_transport.c
+    $(UTIL_SOURCE)/hal/$(PLATFORM_COAP)/HAL_OS_$(PLATFORM_COAP).c
 
 $(NAME)_COMPONENTS += connectivity.coap
 $(NAME)_SOURCES += ota_service_coap.c
