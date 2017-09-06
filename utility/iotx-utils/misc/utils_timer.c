@@ -98,7 +98,9 @@ void utils_time_countdown_ms(iotx_time_t *timer, uint32_t millisecond)
         return;
     }
 
+#ifdef IOTX_DEBUG
     IOTX_ASSERT(millisecond < (UINT32_MAX / 2), "time should NOT exceed UINT32_MAX/2!");
+#endif
     timer->time = HAL_UptimeMs() + millisecond;
 }
 

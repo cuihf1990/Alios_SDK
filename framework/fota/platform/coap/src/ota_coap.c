@@ -71,9 +71,9 @@ static int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic
             ota_topic_type,
             product_key,
             device_name);
-
+#ifdef IOTX_DEBUG
     OTA_ASSERT(ret < buf_len, "buffer should always enough");
-
+#endif
     if (ret < 0) {
         OTA_LOG_ERROR("snprintf failed");
         return -1;
