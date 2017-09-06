@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <yos/log.h>
+#include <yos/yos.h>
+#include <netmgr.h>
 #include <k_err.h>
 #include "iot_import.h"
 #include "iot_export.h"
@@ -77,8 +79,7 @@ static void user_code_start()
     }
 }
 
-int application_start(void)
-{
+static void coap_client_example() {
     iotx_coap_config_t config;
     iotx_deviceinfo_t deviceinfo;
 
@@ -111,6 +112,22 @@ int application_start(void)
     else{
         printf("IoTx CoAP init failed\r\n");
     }
+}
+
+void wifi_service_event(input_event_t *event, void *priv_data)
+{
+    if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP)
+    {
+        coap_client_example();
+    }
+}
+
+int application_start(void)
+{
+    yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
+
+	netmgr_init();
+	netmgr_start(false);
 
     yos_loop_run();
 
