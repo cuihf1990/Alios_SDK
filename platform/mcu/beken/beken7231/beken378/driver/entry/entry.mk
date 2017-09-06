@@ -22,7 +22,7 @@ $(NAME)_INCLUDES := ../../app      \
                    ../../ip/lmac/src/rwnx \
                    ../../ip/ke \
                    ../../ip/mac \
-                   ../../../../yos 
+                   ../../../../aos 
 					
                    
 $(NAME)_SOURCES	 += arch_main.c \
