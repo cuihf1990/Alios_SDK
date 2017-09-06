@@ -213,15 +213,11 @@ int yos_mutex_is_valid(yos_mutex_t *mutex)
     int ret;
 
     if (mutex == NULL) {
-        return -EINVAL;
+        return false;
     }
 
     ret = yunos_mutex_is_valid(mutex->hdl);
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    ERRNO_MAPPING(ret);
+    return (ret == RHINO_SUCCESS);
 }
 
 int yos_sem_new(yos_sem_t *sem, int count)
@@ -297,15 +293,11 @@ int yos_sem_is_valid(yos_sem_t *sem)
     int ret;
 
     if (sem == NULL) {
-        return -EINVAL;
+        return false;
     }
 
     ret = yunos_sem_is_valid(sem->hdl);
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    ERRNO_MAPPING(ret);
+    return (ret == RHINO_SUCCESS);
 }
 
 void yos_sem_signal_all(yos_sem_t *sem)
@@ -393,20 +385,16 @@ int yos_queue_is_valid(yos_queue_t *queue)
     int ret;
 
     if (queue == NULL) {
-        return -EINVAL;
+        return false;
     }
 
     ret = yunos_buf_queue_is_valid(queue->hdl);
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    ERRNO_MAPPING(ret);
+    return (ret == RHINO_SUCCESS);
 }
 
 void *yos_queue_buf_ptr(yos_queue_t *queue)
 {
-    if (yos_queue_is_valid(queue) != RHINO_SUCCESS) {
+    if (!yos_queue_is_valid(queue)) {
         return NULL;
     }
 
