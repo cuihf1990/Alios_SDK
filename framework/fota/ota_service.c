@@ -1,7 +1,6 @@
 /*
  *Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-
 #include <string.h>
 #include <hal/hal.h>
 #include <yos/yos.h>
@@ -105,6 +104,7 @@ void ota_service_event(input_event_t *event, void *priv_data)
             return;
         }
         ota_init = 1;
+        platform_ota_init((void *)(event->value));
         init_device_parmas();
         ota_regist_upgrade();
     }

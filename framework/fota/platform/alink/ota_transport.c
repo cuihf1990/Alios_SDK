@@ -26,6 +26,9 @@
     "uuid":"35C858CFCD6A1FF9F734D749033A29A0",
     "version":"v2.0.0.1","zip":"0"
 */
+void platform_ota_init( void *signal){
+
+}
 
 int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas)
 {

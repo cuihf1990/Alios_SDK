@@ -8,14 +8,12 @@
 #include <yos/yos.h>
 
 #include "ota_update_manifest.h"
-
 #include "ota_log.h"
 #include "ota_transport.h"
 #include "ota_util.h"
 #include "ota_platform_os.h"
 #include "ota_version.h"
 
-#define OTA_URL_MAX_LEN 512
 
 /*
  param-name           meaning                      value-examples
@@ -155,23 +153,19 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
                             write_flash_cb_t func, ota_finish_cb_t fcb)
 {
     int ret = 0;
-
     ret = ota_if_need(response_parmas, request_parmas);
     if (1 != ret) {
         return ret;
     }
-
+    
     ota_set_version(response_parmas->primary_version);
     g_write_func = func;
     g_finish_cb = fcb;
-
     memset(md5, 0, sizeof md5);
     strncpy(md5, response_parmas->md5, sizeof md5);
-
     memset(url, 0, sizeof url);
     strncpy(url, response_parmas->download_url, sizeof url);
     ret = yos_task_new("ota", ota_download_start, 0, 8196);
-
     return ret;
 }
 

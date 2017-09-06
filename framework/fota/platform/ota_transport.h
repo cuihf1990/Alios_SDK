@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <yos/yos.h>
 
-#define MAX_URL_LEN 256
+#define OTA_URL_MAX_LEN 1024
 #define MAX_MD5_LEN 34
 #undef MAX_VERSION_LEN
 #define MAX_VERSION_LEN 64
@@ -23,12 +23,13 @@ typedef struct {
     char primary_version[MAX_VERSION_LEN];
     char secondary_version[MAX_VERSION_LEN];
     const char *product_type;
-    char download_url[MAX_URL_LEN];
+    char download_url[OTA_URL_MAX_LEN];
     int frimware_size;
     char device_uuid[MAX_ID_LEN];
     char md5[MAX_MD5_LEN];
 } ota_response_params;
 
+void platform_ota_init( void *signal);
 
 int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas);
 
