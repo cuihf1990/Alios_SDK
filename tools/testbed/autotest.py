@@ -348,7 +348,7 @@ class Autotest:
 
         thread.start_new_thread(self.server_interaction, ())
         thread.start_new_thread(self.heartbeat_func, ())
-        time.sleep(0.1)
+        time.sleep(0.5)
         return True
 
     def stop(self):
