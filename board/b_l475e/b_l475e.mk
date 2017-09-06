@@ -7,7 +7,7 @@ MODULE               := 1062
 HOST_ARCH            := Cortex-M4
 HOST_MCU_FAMILY      := stm32l4xx
 
-$(NAME)_SOURCES := board.c
+$(NAME)_SOURCES := board.c osa_flash.c
 
 GLOBAL_INCLUDES += .
 GLOBAL_DEFINES += STDIO_UART=0

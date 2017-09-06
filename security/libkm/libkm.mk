@@ -13,14 +13,9 @@ $(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libkm.a
 else ifeq ($(HOST_ARCH), ARM968E-S)
 PLATFORM := mk3060
 $(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libkm.a
-else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
-$(NAME)_PREBUILT_LIBRARY := lib/b_l475e/libkm.a
+else ifeq ($(HOST_ARCH), Cortex-M4)
+PLATFORM := b_l475e
+$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libkm.a
 else
 $(error "not find correct platform!")
 endif
-
-$(NAME)_SOURCES +=  \
-		   lib/b_l475e/osa_flash.c \
-
-#$(NAME)_SOURCES +=  \
-		   sample/ks_test.c

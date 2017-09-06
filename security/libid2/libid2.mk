@@ -14,8 +14,9 @@ $(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libid2.a
 else ifeq ($(HOST_ARCH), ARM968E-S)
 PLATFORM := mk3060
 $(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libid2.a
-else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
-$(NAME)_PREBUILT_LIBRARY := lib/b_l475e/libid2.a
+else ifeq ($(HOST_ARCH), Cortex-M4)
+PLATFORM := b_l475e
+$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libid2.a
 else
 $(error "not find correct platform!")
 endif

@@ -50,9 +50,10 @@ $(NAME)_SOURCES += \
 				
 endif # end ALICRYPTO_TEST=yes
 
-else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
-$(NAME)_PREBUILT_LIBRARY := lib/b_l475e/libmbedcrypto.a  \
-                lib/b_l475e/libalicrypto.a
+else ifeq ($(HOST_ARCH), Cortex-M4)
+PLATFORM := b_l475e
+$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedcrypto.a  \
+                lib/$(PLATFORM)/libalicrypto.a
 
 ifeq ($(ALICRYPTO_TEST), yes)
 GLOBAL_INCLUDES     += test
