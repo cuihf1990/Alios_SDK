@@ -169,7 +169,7 @@ static void mqtt_service_event(input_event_t *event, void *priv_data) {
     mqtt_test();
 }
 
-void event_handle_mqtt(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
+void mqtt_event_handle(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
     uintptr_t packet_id = (uintptr_t)msg->msg;
     iotx_mqtt_topic_info_pt topic_info = (iotx_mqtt_topic_info_pt)msg->msg;
@@ -237,6 +237,48 @@ void event_handle_mqtt(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg
     }
 }
 
+void* mqtt_init()
+{
+    int               ret = -1;
+    void*             pclient = NULL;
+    iotx_conn_info_pt pconn_info = NULL;
+    iotx_mqtt_param_t mqtt_params;
+    int start_time = 0;
+
+    char *tmp_ptr = HAL_Malloc(1024);
+
+    start_time = HAL_UptimeMs();
+    if (0 != IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void**)&pconn_info)) {
+        return NULL;
+    }
+
+    /* Initialize MQTT parameter */
+    memset(&mqtt_params, 0x0, sizeof(mqtt_params));
+    mqtt_params.port = pconn_info->port;
+    mqtt_params.host = pconn_info->host_name;
+    mqtt_params.client_id = pconn_info->client_id;
+    mqtt_params.username = pconn_info->username;
+    mqtt_params.password = pconn_info->password;
+    mqtt_params.pub_key = pconn_info->pub_key;
+    mqtt_params.request_timeout_ms = 2000;
+    mqtt_params.clean_session = 0;
+    mqtt_params.keepalive_interval_ms = 60000;
+    mqtt_params.pread_buf = msg_readbuf;
+    mqtt_params.read_buf_size = MSG_LEN_MAX;
+    mqtt_params.pwrite_buf = msg_buf;
+    mqtt_params.write_buf_size = MSG_LEN_MAX;
+    mqtt_params.handle_event.h_fp = mqtt_event_handle;
+    mqtt_params.handle_event.pcontext = NULL;
+
+    /* Construct a MQTT client with specify parameter */
+    start_time = HAL_UptimeMs();
+    pclient = IOT_MQTT_Construct(&mqtt_params);
+    printf("construct mqtt client...%d ms\n", HAL_UptimeMs()-start_time);
+
+    HAL_Free(tmp_ptr);
+    return pclient;
+}
+
 int mqtt_client_example(void)
 {
     int rc = 0;
@@ -289,7 +331,7 @@ int mqtt_client_example(void)
     mqtt_params.pwrite_buf = msg_buf;
     mqtt_params.write_buf_size = MSG_LEN_MAX;
 
-    mqtt_params.handle_event.h_fp = event_handle_mqtt;
+    mqtt_params.handle_event.h_fp = mqtt_event_handle;
     mqtt_params.handle_event.pcontext = NULL;
 
 
@@ -306,6 +348,7 @@ int mqtt_client_example(void)
     return rc;
 }
 
+// normal case for mqtt subscribe & publish
 static void test_mqtt_case1(void)
 {
     int ret = 0;
@@ -314,9 +357,333 @@ static void test_mqtt_case1(void)
     yos_loop_run();
 }
 
+// IOT_MQTT_Construct:param=NULL
+static void test_mqtt_case2(void)
+{
+    void *pclient = NULL;
+    pclient = IOT_MQTT_Construct((iotx_mqtt_param_pt)NULL);
+    YUNIT_ASSERT(NULL == pclient);
+}
+
+// IOT_MQTT_Construct:param=uninitialized pointer
+static void test_mqtt_case3(void)
+{
+    void *pclient = NULL;
+    // iotx_mqtt_param_pt mqtt_param;
+    iotx_mqtt_param_t *mqtt_param;
+    pclient = IOT_MQTT_Construct(mqtt_param);
+    YUNIT_ASSERT(NULL == pclient);
+}
+
+// IOT_MQTT_Construct:param = 0
+static void test_mqtt_case4(void)
+{
+    void *pclient = NULL;
+    iotx_mqtt_param_t mqtt_param;
+    memset(&mqtt_param, 0, sizeof(iotx_mqtt_param_t));
+    pclient = IOT_MQTT_Construct(&mqtt_param);
+    YUNIT_ASSERT(NULL == pclient);
+}
+
+// IOT_MQTT_Construct:param.host = NULL
+static void test_mqtt_case5(void)
+{
+    int               ret = -1;
+    void              *pclient = NULL;
+    iotx_mqtt_param_t mqtt_params;
+    iotx_conn_info_pt pconn_info;
+
+    ret = IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info);
+    YUNIT_ASSERT(ret >= 0);
+
+    /* Initialize MQTT parameter */
+    memset(&mqtt_params, 0x0, sizeof(mqtt_params));
+    mqtt_params.port = pconn_info->port;
+
+    //mqtt_params.host = pconn->host_name;
+    mqtt_params.host = NULL;
+
+    mqtt_params.client_id = pconn_info->client_id;
+    mqtt_params.username = pconn_info->username;
+    mqtt_params.password = pconn_info->password;
+    mqtt_params.pub_key = pconn_info->pub_key;
+    mqtt_params.request_timeout_ms = 2000;
+    mqtt_params.clean_session = 0;
+    mqtt_params.keepalive_interval_ms = 1000;
+    mqtt_params.pread_buf = msg_readbuf;
+    mqtt_params.read_buf_size = MSG_LEN_MAX;
+    mqtt_params.pwrite_buf = msg_buf;
+    mqtt_params.write_buf_size = MSG_LEN_MAX;
+    mqtt_params.handle_event.h_fp = mqtt_event_handle;
+    mqtt_params.handle_event.pcontext = NULL;
+
+    pclient = IOT_MQTT_Construct(&mqtt_params);
+    if (NULL != pclient) {
+        IOT_MQTT_Destroy(&pclient);
+    }
+    YUNIT_ASSERT(NULL == pclient);
+}
+
+// IOT_MQTT_Construct:param.client_id = NULL
+static void test_mqtt_case6(void)
+{
+    int               ret = -1;
+    void              *pclient = NULL;
+    iotx_mqtt_param_t mqtt_params;
+    iotx_conn_info_pt pconn_info;
+
+    ret = IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info);
+    YUNIT_ASSERT(ret >= 0);
+
+    /* Initialize MQTT parameter */
+    memset(&mqtt_params, 0x0, sizeof(mqtt_params));
+    mqtt_params.port = pconn_info->port;
+    mqtt_params.host = pconn_info->host_name;
+
+    // mqtt_params.client_id = pconn_info->client_id;
+    mqtt_params.client_id = NULL;
+
+    mqtt_params.username = pconn_info->username;
+    mqtt_params.password = pconn_info->password;
+    mqtt_params.pub_key = pconn_info->pub_key;
+    mqtt_params.request_timeout_ms = 2000;
+    mqtt_params.clean_session = 0;
+    mqtt_params.keepalive_interval_ms = 1000;
+    mqtt_params.pread_buf = msg_readbuf;
+    mqtt_params.read_buf_size = MSG_LEN_MAX;
+    mqtt_params.pwrite_buf = msg_buf;
+    mqtt_params.write_buf_size = MSG_LEN_MAX;
+    mqtt_params.handle_event.h_fp = mqtt_event_handle;
+    mqtt_params.handle_event.pcontext = NULL;
+
+    pclient = IOT_MQTT_Construct(&mqtt_params);
+    if (NULL != pclient) {
+        IOT_MQTT_Destroy(&pclient);
+    }
+    YUNIT_ASSERT(NULL == pclient);
+}
+
+// IOT_MQTT_Construct:param.user_name = NULL
+static void test_mqtt_case7(void)
+{
+    int               ret = -1;
+    void              *pclient = NULL;
+    iotx_mqtt_param_t mqtt_params;
+    iotx_conn_info_pt pconn_info;
+
+    ret = IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info);
+    YUNIT_ASSERT(ret >= 0);
+
+    /* Initialize MQTT parameter */
+    memset(&mqtt_params, 0x0, sizeof(mqtt_params));
+    mqtt_params.port = pconn_info->port;
+    mqtt_params.host = pconn_info->host_name;
+    mqtt_params.client_id = pconn_info->client_id;
+
+    // mqtt_params.user_name = pconn_info->username;
+    mqtt_params.username = NULL;
+
+    mqtt_params.password = pconn_info->password;
+    mqtt_params.pub_key = pconn_info->pub_key;
+    mqtt_params.request_timeout_ms = 2000;
+    mqtt_params.clean_session = 0;
+    mqtt_params.keepalive_interval_ms = 1000;
+    mqtt_params.pread_buf = msg_readbuf;
+    mqtt_params.read_buf_size = MSG_LEN_MAX;
+    mqtt_params.pwrite_buf = msg_buf;
+    mqtt_params.write_buf_size = MSG_LEN_MAX;
+    mqtt_params.handle_event.h_fp = mqtt_event_handle;
+    mqtt_params.handle_event.pcontext = NULL;
+
+    pclient = IOT_MQTT_Construct(&mqtt_params);
+    if (NULL != pclient) {
+        IOT_MQTT_Destroy(&pclient);
+    }
+    YUNIT_ASSERT(NULL == pclient);
+}
+
+// IOT_MQTT_Construct:param.passwd= NULL
+static void test_mqtt_case8(void)
+{
+    int               ret = -1;
+    void              *pclient = NULL;
+    iotx_mqtt_param_t mqtt_params;
+    iotx_conn_info_pt pconn_info;
+
+    ret = IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info);
+    YUNIT_ASSERT(ret >= 0);
+
+    /* Initialize MQTT parameter */
+    memset(&mqtt_params, 0x0, sizeof(mqtt_params));
+    mqtt_params.port = pconn_info->port;
+    mqtt_params.host = pconn_info->host_name;
+    mqtt_params.client_id = pconn_info->client_id;
+    mqtt_params.username = pconn_info->username;
+
+    // mqtt_params.password = pconn_info->password;
+    mqtt_params.password = NULL;
+
+    mqtt_params.pub_key = pconn_info->pub_key;
+    mqtt_params.request_timeout_ms = 2000;
+    mqtt_params.clean_session = 0;
+    mqtt_params.keepalive_interval_ms = 1000;
+    mqtt_params.pread_buf = msg_readbuf;
+    mqtt_params.read_buf_size = MSG_LEN_MAX;
+    mqtt_params.pwrite_buf = msg_buf;
+    mqtt_params.write_buf_size = MSG_LEN_MAX;
+    mqtt_params.handle_event.h_fp = mqtt_event_handle;
+    mqtt_params.handle_event.pcontext = NULL;
+
+    pclient = IOT_MQTT_Construct(&mqtt_params);
+    if (NULL != pclient) {
+        IOT_MQTT_Destroy(&pclient);
+    }
+    YUNIT_ASSERT(NULL == pclient);
+}
+
+// IOT_MQTT_Construct:param.request_timeout_ms invalid
+static void test_mqtt_case9(void)
+{
+    int  ret = -1;
+    void *pclient = NULL;
+    iotx_mqtt_param_t mqtt_params;
+    iotx_conn_info_pt pconn_info;
+
+    ret = IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info);
+    YUNIT_ASSERT(ret >= 0);
+
+    /* Initialize MQTT parameter */
+    memset(&mqtt_params, 0x0, sizeof(mqtt_params));
+    mqtt_params.port = pconn_info->port;
+    mqtt_params.host = pconn_info->host_name;
+    mqtt_params.client_id = pconn_info->client_id;
+    mqtt_params.username = pconn_info->username;
+    mqtt_params.password = pconn_info->password;
+    mqtt_params.pub_key = pconn_info->pub_key;
+
+    // mqtt_params.request_timeout_ms = 2000;
+    mqtt_params.request_timeout_ms = -1;
+
+    mqtt_params.clean_session = 0;
+    mqtt_params.keepalive_interval_ms = 6000;
+    mqtt_params.pread_buf = msg_readbuf;
+    mqtt_params.read_buf_size = MSG_LEN_MAX;
+    mqtt_params.pwrite_buf = msg_buf;
+    mqtt_params.write_buf_size = MSG_LEN_MAX;
+    mqtt_params.handle_event.h_fp = mqtt_event_handle;
+    mqtt_params.handle_event.pcontext = NULL;
+
+    pclient = IOT_MQTT_Construct(&mqtt_params);
+    YUNIT_ASSERT(NULL != pclient);
+
+    IOT_MQTT_Destroy(&pclient);
+}
+
+// IOT_MQTT_Construct:param.pread_buf = NULL
+static void test_mqtt_case10(void)
+{
+    int  ret = -1;
+    void *pclient = NULL;
+    iotx_mqtt_param_t mqtt_params;
+    iotx_conn_info_pt pconn_info;
+
+    ret = IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info);
+    YUNIT_ASSERT(ret >= 0);
+
+    /* Initialize MQTT parameter */
+    memset(&mqtt_params, 0x0, sizeof(mqtt_params));
+    mqtt_params.port = pconn_info->port;
+    mqtt_params.host = pconn_info->host_name;
+    mqtt_params.client_id = pconn_info->client_id;
+    mqtt_params.username = pconn_info->username;
+    mqtt_params.password = pconn_info->password;
+    mqtt_params.pub_key = pconn_info->pub_key;
+    mqtt_params.request_timeout_ms = 2000;
+    mqtt_params.clean_session = 0;
+    mqtt_params.keepalive_interval_ms = 6000;
+
+    // mqtt_params.pread_buf = msg_readbuf;
+    mqtt_params.pread_buf = NULL;
+
+    mqtt_params.read_buf_size = MSG_LEN_MAX;
+    mqtt_params.pwrite_buf = msg_buf;
+    mqtt_params.write_buf_size = MSG_LEN_MAX;
+    mqtt_params.handle_event.h_fp = mqtt_event_handle;
+    mqtt_params.handle_event.pcontext = NULL;
+
+    pclient = IOT_MQTT_Construct(&mqtt_params);
+    if (NULL != pclient) {
+        IOT_MQTT_Destroy(&pclient);
+    }
+    YUNIT_ASSERT(NULL == pclient);
+}
+
+// IOT_MQTT_Construct:param.pread_buf = NULL
+static void test_mqtt_case11(void)
+{
+    YUNIT_ASSERT(IOT_MQTT_Destroy((void**)NULL) < 0);
+}
+
+// IOT_MQTT_Publish:handle=NULL
+static void test_mqtt_case12(void)
+{
+    int ret = -1;
+    void *pclient = NULL;
+    iotx_mqtt_topic_info_t topic;
+
+    pclient = mqtt_init();
+
+    sprintf(msg_pub, "{\"attr_name\":\"temperature\", \"attr_value\":\"199\"}");
+    memset(&topic, 0x0, sizeof(iotx_mqtt_topic_info_t));
+    topic.qos = IOTX_MQTT_QOS1;
+    topic.retain = 0;
+    topic.dup = 0;
+    topic.payload = msg_buf;
+    topic.payload_len = strlen(msg_buf);
+
+    ret = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic);
+    YUNIT_ASSERT(ret<0);
+}
+
+// IOT_MQTT_Publish:payload_len out of size
+static void test_mqtt_case13(void)
+{
+    int  ret = -1;
+    void *pclient = NULL;
+    iotx_mqtt_topic_info_t topic;
+
+    pclient = mqtt_init();
+
+    sprintf(msg_pub, "{\"attr_name\":\"temperature\", \"attr_value\":\"199\"}");
+    memset(&topic, 0x0, sizeof(iotx_mqtt_topic_info_t));
+    topic.qos = IOTX_MQTT_QOS1;
+    topic.retain = 0;
+    topic.dup = 0;
+    topic.payload = msg_buf;
+    topic.payload_len = MSG_LEN_MAX;
+
+    ret = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic);
+    IOT_MQTT_Destroy(&pclient);
+
+    YUNIT_ASSERT(ret < 0);
+}
 
 static yunit_test_case_t yunos_basic_testcases[] = {
     { "case1", test_mqtt_case1},
+    { "case2", test_mqtt_case2},
+    { "case3", test_mqtt_case3},
+    { "case4", test_mqtt_case4},
+    { "case5", test_mqtt_case5},
+    { "case6", test_mqtt_case6},
+    { "case7", test_mqtt_case7},
+    { "case8", test_mqtt_case8},
+    { "case9", test_mqtt_case9},
+    { "case10", test_mqtt_case10},
+    { "case11", test_mqtt_case11},
+    { "case12", test_mqtt_case12},
+    { "case13", test_mqtt_case13},
+    /*{ "case14", test_mqtt_case14},
+    { "case1", test_mqtt_case1},*/
     YUNIT_TEST_CASE_NULL
 };
 
