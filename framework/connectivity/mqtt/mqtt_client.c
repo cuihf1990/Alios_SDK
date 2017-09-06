@@ -2249,7 +2249,7 @@ static void cb_recv(int fd, void *arg)
         }
         iotx_mc_set_client_state(pClient, IOTX_MC_STATE_CONNECTED);
         utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000); 
-        yos_post_event(EV_SYS, CODE_SYS_ON_CONNECT, 0u);
+        yos_post_event(EV_SYS, CODE_SYS_ON_MQTT_READ, 0u);
         is_connected = 1;
         return;
    }
