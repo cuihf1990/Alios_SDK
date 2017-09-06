@@ -27,9 +27,9 @@ typedef struct {
  * @note  Prepares a Pulse-Width Modulation pin for use.
  * Does not start the PWM output (use @ref MicoPwmStart).
  *
- * @param     pwm         : the PWM device
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if an error occurred with any step
+ * @param     pwm    : the PWM device
+ * @return    0      : on success.
+ * @return    EIO    : if an error occurred with any step
  */
 int32_t hal_pwm_init(pwm_dev_t *pwm);
 
@@ -38,9 +38,9 @@ int32_t hal_pwm_init(pwm_dev_t *pwm);
  *
  * @note  Starts Pulse-Width Modulation signal output on a PWM pin
  *
- * @param     pwm         : the PWM device
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if an error occurred with any step
+ * @param     pwm  : the PWM device
+ * @return    0    : on success.
+ * @return    EIO  : if an error occurred with any step
  */
 int32_t hal_pwm_start(pwm_dev_t *pwm);
 
@@ -49,9 +49,9 @@ int32_t hal_pwm_start(pwm_dev_t *pwm);
  *
  * @note  Stops Pulse-Width Modulation signal output on a PWM pin
  *
- * @param     pwm         : the PWM device
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if an error occurred with any step
+ * @param     pwm : the PWM device
+ * @return    0   : on success.
+ * @return    EIO : if an error occurred with any step
  */
 int32_t hal_pwm_stop(pwm_dev_t *pwm);
 

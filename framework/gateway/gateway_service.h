@@ -5,9 +5,6 @@
 #ifndef GATEWAY_SERVICE_H
 #define GATEWAY_SERVICE_H
 
-#include <yos/types.h>
-#include <yos/framework.h>
-
 #ifndef bool
 #define bool unsigned char
 #endif

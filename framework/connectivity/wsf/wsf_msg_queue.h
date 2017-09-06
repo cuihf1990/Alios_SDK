@@ -6,8 +6,7 @@
 #define WSF_MSG_QUEUE_H
 
 #include "wsf_list.h"
-#include "yos/kernel.h"
-#include "yos/list.h"
+#include "yos/yos.h"
 #include "wsf_msg.h"
 
 typedef struct wsf_request_queue_t {

@@ -1,0 +1,6 @@
+{
+    "aliosStudio.hardware.board": "mk3060",
+    "aliosStudio.build.multiBin": false,
+    "aliosStudio.name": "alinkapp",
+    "aliosStudio.isAosSource": true
+}

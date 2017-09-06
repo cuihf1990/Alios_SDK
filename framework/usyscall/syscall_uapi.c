@@ -3,12 +3,9 @@
  */
 
 #include <syscall_uapi.h>
-
 #include <k_api.h>
-#include <yos/kernel.h>
-#include <yos/framework.h>
-#include <hal/ota.h>
-#include <hal/wifi.h>
+#include <yos/yos.h>
+#include <hal/hal.h>
 #include <umesh.h>
 
 #define SYSCALL(nr, func)
@@ -432,6 +429,50 @@ int yos_fcntl(int fd, int cmd, int val)
     return SYS_CALL3(SYS_FCNTL, int, int, fd, int, cmd, int, val);
 }
 
+off_t yos_lseek(int fd, off_t offset, int whence)
+{
+    return SYS_CALL3(SYS_LSEEK, off_t, int, fd, off_t, offset, int, whence);
+}
+
+int yos_sync(int fd)
+{
+    return SYS_CALL1(SYS_SYNC, int, int, fd);
+}
+
+int yos_stat(const char *path, struct stat *st)
+{
+    return SYS_CALL2(SYS_STAT, int, const char *, path, struct stat *, st);
+}
+
+int yos_unlink(const char *path)
+{
+    return SYS_CALL1(SYS_UNLINK, int, const char *, path);
+}
+
+int yos_rename(const char *oldpath, const char *newpath)
+{
+    return SYS_CALL2(SYS_RENAME, int, const char *, oldpath, const char *, newpath);
+}
+
+yos_dir_t *yos_opendir(const char *path)
+{
+    return SYS_CALL1(SYS_OPENDIR, yos_dir_t *, const char *, path);
+}
+
+int yos_closedir(yos_dir_t *dir)
+{
+    return SYS_CALL1(SYS_CLOSEDIR, int, yos_dir_t *, dir);
+}
+
+yos_dirent_t *yos_readdir(yos_dir_t *dir)
+{
+    return SYS_CALL1(SYS_READDIR, yos_dirent_t *, yos_dir_t *, dir);
+}
+
+int yos_mkdir(const char *path)
+{
+    return SYS_CALL1(SYS_MKDIR, int, const char *, path);
+}
 /* --------------------LWIP-------------------- */
 
 #ifdef WITH_LWIP

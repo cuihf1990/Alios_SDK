@@ -4,8 +4,7 @@
 
 #include <sys/time.h>
 #include <time.h>
-#include <yos/kernel.h>
-#include <yos/log.h>
+#include <yos/yos.h>
 #include "platform.h"
 #include <stdarg.h>
 #include <stdlib.h>

@@ -214,6 +214,8 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
     work->dly     = dly;
     work->wq      = NULL;
 
+    dly = dly / YUNOS_CONFIG_TIMER_RATE;
+
     if (dly > 0) {
         ret = yunos_timer_create(&(work->timer), "WORK-TIMER", work_timer_cb,
                                  work->dly, 0, (void *)work, 0);

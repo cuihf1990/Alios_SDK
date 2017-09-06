@@ -7,11 +7,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <yos/kernel.h>
-#include <yos/framework.h>
+#include <errno.h>
+#include <yos/yos.h>
 #include <yos/network.h>
-#include <yos/log.h>
-#include <yos/list.h>
 
 #include "yloop.h"
 
@@ -111,7 +109,7 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
 {
     yloop_ctx_t *ctx = get_context();
     if (sock  < 0) {
-        return -1;
+        return -EINVAL;
     }
 
     yloop_sock_t *new_sock;
@@ -123,7 +121,7 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
 
     if (new_sock == NULL || new_loop_pollfds == NULL) {
         LOGE(TAG, "out of memory");
-        return -1;
+        return -ENOMEM;
     }
 
     int status = yos_fcntl(sock, F_GETFL, 0);
@@ -182,13 +180,13 @@ void yos_cancel_poll_read_fd(int sock, yos_poll_call_t action, void *param)
 int yos_post_delayed_action(int ms, yos_call_t action, void *param)
 {
     if (action == NULL) {
-        return -1;
+        return -EINVAL;
     }
 
     yloop_ctx_t *ctx = get_context();
     yloop_timeout_t *timeout = yos_malloc(sizeof(*timeout));
     if (timeout == NULL) {
-        return -1;
+        return -ENOMEM;
     }
 
     timeout->timeout_ms = yos_now_ms() + ms;

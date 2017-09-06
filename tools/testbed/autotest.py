@@ -14,6 +14,7 @@ class Autotest:
         self.device_list= {}
         self.service_socket = 0
         self.cmd_excute_state = 'idle'
+        self.cmd_excute_return = ''
         self.subscribed = {}
         self.subscribed_reverse = {}
         self.filter = {}
@@ -120,14 +121,17 @@ class Autotest:
                             log =  devname + ":" + logtimestr + ":" + log
                             self.logfile.write(log)
                     if type == TBframe.CMD_DONE:
+                        self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
                     if type == TBframe.CMD_ERROR:
+                        self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
             except:
                 if DEBUG:
                     raise
                 break
         self.keep_running = False;
+        print "server interaction thread exited"
 
     def wait_cmd_excute_done(self, timeout):
         self.cmd_excute_state = 'wait_response'
@@ -146,42 +150,84 @@ class Autotest:
                 return devstr
         return ""
 
-    def copy_file_to_client(self, devname, filename):
+    def send_file_to_client(self, devname, filename):
         #argument check
-        if devname not in list(self.subscribed):
+        if devname not in self.subscribed:
             print "{0} is not subscribed".format(devname)
             return False
-        expandfilename = os.path.expanduser(filename)
+        try:
+            expandfilename = os.path.expanduser(filename)
+        except:
+            print "{0} does not exist".format(filename)
+            return False
         if os.path.exists(expandfilename) == False:
             print "{0} does not exist".format(filename)
             return False
+        filename = expandfilename
 
-        #send file to server first
-        file = open(expandfilename,'r')
-        content = filename.split('/')[-1]
+        filehash = TBframe.hash_of_file(filename)
+        devstr = self.subscribed[devname]
+
+        #send file begin
+        content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
         data = TBframe.construct(TBframe.FILE_BEGIN, content)
-        self.service_socket.send(data)
+        retry = 4
+        while retry > 0:
+            self.service_socket.send(data)
+            self.wait_cmd_excute_done(0.2)
+            if self.cmd_excute_return == None:
+                retry -= 1;
+                continue
+            break
+        if retry == 0:
+            return False
+        if self.cmd_excute_return == 'exist':
+            return True
+
+        #send file data
+        seq = 0
+        file = open(filename,'r')
+        header = devstr  + ':' + filehash + ':' + str(seq) + ':'
         content = file.read(1024)
         while(content):
-            data = TBframe.construct(TBframe.FILE_DATA, content)
-            self.service_socket.send(data)
+            data = TBframe.construct(TBframe.FILE_DATA, header + content)
+            retry = 4
+            while retry > 0:
+                self.service_socket.send(data)
+                self.wait_cmd_excute_done(0.2)
+                if self.cmd_excute_return == None:
+                    retry -= 1;
+                    continue
+                elif self.cmd_excute_return != 'ok':
+                    file.close()
+                    return False
+                break
+
+            if retry == 0:
+                file.close()
+                return False
+
+            seq += 1
+            header = devstr  + ':' + filehash + ':' + str(seq) + ':'
             content = file.read(1024)
         file.close()
-        content = filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_END, content)
-        self.service_socket.send(data)
 
-        #command server to copy file to client
-        content = self.subscribed[devname]
-        data = TBframe.construct(TBframe.FILE_COPY, content);
-        self.service_socket.send(data)
-        self.wait_cmd_excute_done(180)
-        if self.cmd_excute_state == "done":
-            ret = True
-        else:
-            ret = False
-        self.cmd_excute_state = 'idle'
-        return ret;
+        #send file end
+        content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
+        data = TBframe.construct(TBframe.FILE_END, content)
+        retry = 4
+        while retry > 0:
+            self.service_socket.send(data)
+            self.wait_cmd_excute_done(0.2)
+            if self.cmd_excute_return == None:
+                retry -= 1;
+                continue
+            elif self.cmd_excute_return != 'ok':
+                return False
+            break
+        if retry == 0:
+            return False
+        return True
 
     def device_subscribe(self, devices):
         for devname in list(devices):
@@ -199,6 +245,9 @@ class Autotest:
         return True
 
     def device_erase(self, devname):
+        if devname not in self.subscribed:
+            print "error: device {0} not subscribed".format(devname)
+            return False
         content = self.subscribed[devname]
         data = TBframe.construct(TBframe.DEVICE_ERASE, content);
         self.service_socket.send(data)
@@ -211,10 +260,25 @@ class Autotest:
         return ret
 
     def device_program(self, devname, address, filename):
-        if self.copy_file_to_client(devname, filename)== False:
+        if devname not in self.subscribed:
+            print "error: device {0} not subscribed".format(devname)
+            return False
+        if address.startswith('0x') == False:
+            print "error: wrong address input {0}, address should start with 0x".format(address)
+            return False
+        try:
+            expandname = os.path.expanduser(filename)
+        except:
+            print "{0} does not exist".format(filename)
+            return False
+        if os.path.exists(expandname) == False:
+            print "{0} does not exist".format(filename)
+            return False
+        if self.send_file_to_client(devname, expandname) == False:
             return False
 
-        content = self.subscribed[devname] + ',' + address
+        filehash = TBframe.hash_of_file(expandname)
+        content = self.subscribed[devname] + ',' + address + ',' + filehash
         data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
         self.service_socket.send(data)
         self.wait_cmd_excute_done(270)
@@ -228,7 +292,7 @@ class Autotest:
     def device_control(self, devname, operation):
         operations = {"start":TBframe.DEVICE_START, "stop":TBframe.DEVICE_STOP, "reset":TBframe.DEVICE_RESET}
 
-        if devname not in list(self.device_list):
+        if devname not in self.subscribed:
             return False
         if operation not in list(operations):
             return False
@@ -239,7 +303,7 @@ class Autotest:
         return True
 
     def device_run_cmd(self, devname, args, expect_lines = 0, timeout=0.8, filters=[""]):
-        if devname not in list(self.subscribed):
+        if devname not in self.subscribed:
             return False
         if len(args) == 0:
             return False

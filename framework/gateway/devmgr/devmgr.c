@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "os.h"
 #include "crc.h"
 #include "alink_protocol.h"

@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <yos/network.h>
 
 #include "ota_util.h"
@@ -267,13 +267,13 @@ int http_download(char *url, write_flash_cb_t func)
                 func(BUFFER_MAX_SIZE, (uint8_t *)pos, size, 0);
             }
 
-            OTA_LOG_I("headbuf %s", headbuf);
+            //OTA_LOG_I("headbuf %s", headbuf);
             memset(headbuf, 0, sizeof headbuf);
             continue;
         }
 
         size += nbytes;
-        OTA_LOG_I("size nbytes %d, %d", size, nbytes);
+        //OTA_LOG_I("size nbytes %d, %d", size, nbytes);
         MD5_Update(&g_ctx, (const uint8_t *) http_buffer, nbytes);
         func(BUFFER_MAX_SIZE, (uint8_t *) http_buffer, nbytes, 0);
         memset(http_buffer, 0, BUFFER_MAX_SIZE);

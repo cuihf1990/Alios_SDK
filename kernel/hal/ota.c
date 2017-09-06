@@ -3,8 +3,7 @@
  */
 
 #include <stdio.h>
-#include <hal/base.h>
-#include <hal/ota.h>
+#include <hal/hal.h>
 
 static hal_ota_module_t *ota_module;
 

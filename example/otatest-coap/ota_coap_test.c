@@ -16,8 +16,9 @@
  *
  */
 
-#include <yos/framework.h>
+//#include <yos/framework.h>
 
+#include <yos/yos.h>
 int application_start(void)
 {
     yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);

@@ -20,21 +20,27 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <yos/log.h>
+#include <yos/yos.h>
 #include <hal/soc/soc.h>
 #include <hal/soc/timer.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
 #include <hal/ota.h>
+#include <arg_options.h>
 
 #define TAG "hw"
 
+static bool per_pid_flash;
 static int open_flash(int pno, bool w)
 {
     char fn[64];
     int flash_fd;
 
-    snprintf(fn, sizeof(fn), "./yos_partition_%d_%d.bin", getpid(), pno);
+    if (per_pid_flash)
+        snprintf(fn, sizeof(fn), "./yos_partition_%d_%d.bin", getpid(), pno);
+    else
+        snprintf(fn, sizeof(fn), "./yos_partition_%d.bin", pno);
+
     if(w)
         flash_fd = open(fn, O_RDWR);
     else
@@ -201,7 +207,7 @@ extern struct hal_ota_module_s linuxhost_ota_module;
 uart_dev_t uart_0;
 
 void linux_wifi_register(void);
-void hw_start_hal(void)
+void hw_start_hal(options_t *poptions)
 {
     uart_0.port                = 0;
     uart_0.config.baud_rate    = 921600;
@@ -209,6 +215,8 @@ void hw_start_hal(void)
     uart_0.config.parity       = NO_PARITY;
     uart_0.config.stop_bits    = STOP_BITS_1;
     uart_0.config.flow_control = FLOW_CONTROL_DISABLED;
+
+    per_pid_flash = poptions->flash.per_pid;
 
 #ifdef CONFIG_YOS_CLI
     hal_uart_init(&uart_0);

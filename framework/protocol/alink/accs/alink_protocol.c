@@ -7,14 +7,12 @@
 #include "device.h"
 #include "digest_algorithm.h"
 #include "json_parser.h"
-#include "yos/log.h"
 #include "accs.h"
 #include "service.h"
 #include "wsf.h"
 #include "config.h"
 #include "git_version.h"
-#include "yos/kernel.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "awss.h"
 #include "os.h"
 #include "enrollee.h"
@@ -260,7 +258,9 @@ const char *alink_get_sdk_version(char *buff, unsigned int len)
     char *version, *module_name;
 
     OS_CHECK_PARAMS(buff);
-
+    if (!main_device) {
+        return buff;
+    }
     version = (char *)os_malloc(STR_SHORT_LEN);
     module_name = (char *)os_malloc(STR_SHORT_LEN);
     OS_CHECK_MALLOC(version && module_name);

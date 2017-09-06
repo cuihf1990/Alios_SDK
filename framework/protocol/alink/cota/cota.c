@@ -8,11 +8,9 @@
 #include "cota.h"
 #include "connectivity_manager.h"
 #include "device.h"
-#include "yos/list.h"
-#include "yos/log.h"
+#include "yos/yos.h"
 #include "service_manager.h"
 #include "wsf.h"
-#include "yos/kernel.h"
 #include "config.h"
 #include "accs.h"
 #include "os.h"
@@ -126,7 +124,7 @@ static int alink_set_config(char *param)
         }
         memset(alinkserver, 0x00, SERVER_LEN);
         strncpy(alinkserver, pvalue, value_len);
-        yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
+        yos_loop_schedule_work(3000, (void (*)(void *))os_sys_reboot, NULL, NULL, NULL);
     }
 
     char *attrsfilter = config_get_attrsfilter();
@@ -148,7 +146,7 @@ static int alink_set_config(char *param)
 
     if (test_reboot) {
         LOGW(MODULE_NAME_COTA, "RebootDevice, device will reboot 3 seconds later!");
-        yos_loop_schedule_work(3000, os_sys_reboot, NULL, NULL, NULL);
+        yos_loop_schedule_work(3000, (void (*)(void *))os_sys_reboot, NULL, NULL, NULL);
     }
 
     return ret;

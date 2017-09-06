@@ -107,6 +107,9 @@ bool is_allocated_child(allocator_t hdl, neighbor_t *nbr)
     sid_node_t       *node;
 
     allocator = (ssid_allocator_t *)hdl;
+    if (allocator == NULL) {
+        return false;
+    }
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
         if (memcmp(node->node_id.ueid, nbr->mac, sizeof(nbr->mac)) == 0) {
             return true;
@@ -231,6 +234,30 @@ static ur_error_t allocate_expected_sid(allocator_t hdl,
     return UR_ERROR_NONE;
 }
 
+sid_node_t *get_sid_mapping(allocator_t hdl, ur_node_id_t *node_id)
+{
+    sid_node_t *sid_node;
+    ssid_allocator_t *allocator;
+
+    allocator = (ssid_allocator_t *)hdl;
+    slist_for_each_entry(&allocator->base.node_list, sid_node, sid_node_t, next) {
+        if (memcmp(sid_node->node_id.ueid, node_id->ueid,
+                   sizeof(sid_node->node_id.ueid)) == 0) {
+            break;
+        }
+    }
+
+    if (sid_node) {
+        node_id->type = allocator->sid_shift == 0 ? LEAF_NODE : ROUTER_NODE;
+        if (node_id->mode & MODE_MOBILE) {
+            node_id->type = LEAF_NODE;
+        }
+        node_id->sid = sid_node->node_id.sid;
+    }
+
+    return sid_node;
+}
+
 ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
 {
     ssid_allocator_t *allocator;
@@ -238,6 +265,10 @@ ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
     int               newsid = -1;
 
     allocator = (ssid_allocator_t *)hdl;
+    sid_node = get_sid_mapping(hdl, node_id);
+    if (sid_node) {
+        return UR_ERROR_NONE;
+    }
 
     if (node_id->sid != INVALID_SID &&
         allocate_expected_sid(hdl, node_id) == UR_ERROR_FAIL) {

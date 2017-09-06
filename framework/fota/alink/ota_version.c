@@ -3,10 +3,8 @@
  */
 
 #include <string.h>
-#include <hal/ota.h>
-#include <yos/framework.h>
-#include <yos/log.h>
-#include <yos/version.h>
+#include <hal/hal.h>
+#include <yos/yos.h>
 #include "ota_transport.h"
 #include "ota_update_manifest.h"
 #include "ota_util.h"

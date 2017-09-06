@@ -24,9 +24,6 @@ $(NAME)_SOURCES += \
 ifndef CONFIG_OTA_CH
 CONFIG_OTA_CH := alink
 endif
-ifeq ($(CONFIG_OTA_CH),mqtt)
-$(NAME)_COMPONENTS += fota.coap_mqtt
-endif
 ifeq ($(CONFIG_OTA_CH),coap)
 $(NAME)_COMPONENTS += fota.coap_mqtt
 endif

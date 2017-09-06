@@ -14,8 +14,7 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include <yos/kernel.h>
-#include <yos/list.h>
+#include <yos/yos.h>
 
 #include <cpu_event.h>
 #include <k_api.h>
@@ -31,6 +30,7 @@
 #define VALGRIND_STACK_REGISTER(...)
 #endif
 
+#undef LOG
 #define LOG(format, ...) //printf(format, __VA_ARGS__)
 
 #ifdef GCOV_ENABLE

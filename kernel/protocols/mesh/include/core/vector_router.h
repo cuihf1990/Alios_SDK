@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#include <yos/list.h>
+#include <yos/yos.h>
 
 enum {
     UNVISITED    = 0x00,

@@ -19,8 +19,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-//#include <yos/conf.h>
-#include <yos/framework.h>
 #include <yos/log.h>
 #include <k_err.h>
 #include "iot_import.h"
@@ -72,7 +70,7 @@ static void user_code_start()
     iotx_post_data_to_server((void *)p_ctx);
     IOT_CoAP_Yield(p_ctx);
     if (m_coap_client_running) {
-        m_coap_client_running = 0;
+        // m_coap_client_running = 0;
         yos_post_delayed_action(3000,user_code_start,NULL);
     } else {
         IOT_CoAP_Deinit(&p_ctx);

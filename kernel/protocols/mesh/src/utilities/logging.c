@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "yos/log.h"
+#include "yos/yos.h"
 
 #include "umesh_utils.h"
 #include "tools/cli.h"

@@ -3,7 +3,6 @@
  */
 #include <string.h>
 #include <hal/ota.h>
-#include <yos/framework.h>
 #include <yos/version.h>
 #include <yos/log.h>
 

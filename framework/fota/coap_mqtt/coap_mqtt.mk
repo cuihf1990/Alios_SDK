@@ -42,16 +42,16 @@ $(NAME)_SOURCES := \
     ./src/ota_lib.c \
     $(UTIL_SOURCE)/hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
 
-ifeq ($(CONFIG_OTA_CH),mqtt)
-$(NAME)_COMPONENTS += connectivity.mqtt
-$(NAME)_SOURCES += ota_service_mqtt.c
-$(NAME)_DEFINES +=  OTA_CH_SIGNAL_MQTT
-endif
-ifeq ($(CONFIG_OTA_CH),coap)
+#ifeq ($(CONFIG_OTA_CH),mqtt)
+#$(NAME)_COMPONENTS += connectivity.mqtt
+#$(NAME)_SOURCES += ota_service_mqtt.c
+#$(NAME)_DEFINES +=  OTA_CH_SIGNAL_MQTT
+#endif
+#ifeq ($(CONFIG_OTA_CH),coap)
 $(NAME)_COMPONENTS += connectivity.coap
 $(NAME)_SOURCES += ota_service_coap.c
 $(NAME)_DEFINES += OTA_CH_SIGNAL_COAP
-endif
+#endif
 
 $(NAME)_COMPONENTS += utility.iotx-utils.misc
 $(NAME)_COMPONENTS += utility.iotx-utils.sdk-impl

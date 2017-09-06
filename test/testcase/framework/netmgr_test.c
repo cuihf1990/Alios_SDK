@@ -3,7 +3,7 @@
  */
 
 #include <yos/kernel.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
 #include <yunit.h>
@@ -96,6 +96,10 @@ static void test_netmgr_connect_case(void)
 
 static int init(void)
 {
+#ifdef CONFIG_YOS_MESH
+    extern void linuxhost_hal_urmesh_register(void);
+    linuxhost_hal_urmesh_register();
+#endif
     done_flag = 0;
     return 0;
 }

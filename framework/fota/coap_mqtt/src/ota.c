@@ -26,9 +26,9 @@
 
 #include "ota_lib.c"
 
-#if defined (OTA_CH_SIGNAL_MQTT)
-#include "ota_mqtt.c"
-#elif defined (OTA_CH_SIGNAL_COAP)
+//#if defined (OTA_CH_SIGNAL_MQTT)
+//#include "ota_mqtt.c"
+#if defined (OTA_CH_SIGNAL_COAP)
 #include "ota_coap.c"
 #else
 #error "NOT support yet!"

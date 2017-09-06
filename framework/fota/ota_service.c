@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <string.h>
-#include <yos/framework.h>
+//#include <yos/framework.h>
 #include <yos/log.h>
 
 #define TAG "ota"

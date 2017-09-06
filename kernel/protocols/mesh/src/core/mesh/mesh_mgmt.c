@@ -1942,7 +1942,7 @@ uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data)
 {
     mm_channel_tv_t *channel;
 
-    if (network->hal->module->type == MEDIA_TYPE_WIFI) {
+    if (network->hal->module->type != MEDIA_TYPE_WIFI) {
         return 0;
     }
 

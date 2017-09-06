@@ -6,7 +6,7 @@
 #include <string.h>
 #include <vfs_register.h>
 #include <hal/soc/flash.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 static int flash_open(inode_t *node, file_t *file)
 {

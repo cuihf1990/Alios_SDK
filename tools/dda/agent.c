@@ -10,7 +10,7 @@
 
 #include <netdb.h>
 #include <sys/socket.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 #include "yos/internal/event_type_code.h"
 #ifdef CSP_LINUXHOST
 #include <arpa/inet.h>
@@ -37,6 +37,9 @@ void  yos_free(void *mem);
 #define dda_task_new yos_task_new
 #define dda_task_exit yos_task_exit
 #else
+#undef  LOGD
+#undef  LOGI
+#undef  LOGE
 #define LOGD(mod, arg...)
 #define LOGI(mod, arg...) printf(mod arg)
 #define LOGE(mod, arg...) printf(mod arg)

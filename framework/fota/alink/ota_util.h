@@ -53,9 +53,9 @@ typedef enum {
 } OTA_ENUM_UPDATE_WAY;
 
 typedef enum {
-    OTA_ALL,
     OTA_KERNEL,
-    OTA_APP
+    OTA_APP,
+    OTA_ALL
 } OTA_ENUM_UPDATE_TYPE;
 
 typedef struct {
