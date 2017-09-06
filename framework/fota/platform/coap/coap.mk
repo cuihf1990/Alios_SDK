@@ -14,7 +14,7 @@
  # limitations under the License.
 ##
 include $(BUILD_MODULE)
-NAME := coap_mqtt
+NAME := coap_ota
 
 UTIL_SOURCE := ../../../../utility/iotx-utils
 
