@@ -63,7 +63,8 @@ void _trace_init(void)
     buf[0] = 0x101;
     buf[1] = 0x0;
     buf[2] = 0x0;
-    fifo_in_full_reject_lock(&trace_fifo, buf, 12);
+    *((char *)buf+13) = '\n';
+    fifo_in_full_reject_lock(&trace_fifo, buf, 13);
     init = 1;
 }
 
@@ -85,7 +86,9 @@ void trace_filter_and_write(ktask_t *task, const void *buf, uint32_t len)
         return;
     }
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, len);
+    *((char *)buf+len) = '\n';
+
+    fifo_in_full_reject_lock(&trace_fifo, buf, len + 1);
 }
 
 void _trace_task_switch(ktask_t *from, ktask_t *to)
