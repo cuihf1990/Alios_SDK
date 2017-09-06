@@ -26,7 +26,7 @@ extern int32_t set_filter_task(const char * task_name);
 extern void set_event_mask(const uint32_t mask);
 extern void trace_deinit(void);
 static ktask_t *trace_task;
-static uint32_t trace_buf[1025];
+static uint32_t trace_buf[1024];
 static int trace_is_started;
 static char *filter_task;
 static char *ip_addr;
@@ -117,10 +117,9 @@ static void trace_entry(void *arg)
     sockfd = (int)trace_hal_init();
     if (sockfd > 0) {
         while (1) {
-            len = fifo_out_all(&trace_fifo, &trace_buf[1]);
+            len = fifo_out_all(&trace_fifo, &trace_buf[0]);
             if (len > 0) {
-                trace_buf[0] = len;
-                trace_hal_send((void *)sockfd, trace_buf, len + 4);
+                trace_hal_send((void *)sockfd, trace_buf, len);
             }
 
             yunos_task_sleep(20);
