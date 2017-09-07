@@ -157,8 +157,8 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
     if (1 != ret) {
         return ret;
     }
-    
-    ota_set_version(response_parmas->primary_version);
+
+    //ota_set_version(response_parmas->primary_version);
     g_write_func = func;
     g_finish_cb = fcb;
     memset(md5, 0, sizeof md5);
