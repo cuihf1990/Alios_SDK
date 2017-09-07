@@ -244,6 +244,6 @@ size_t krhino_global_space_get(void)
 
 const name_t *krhino_version_get(void)
 {
-    return RHINO_VERSION;
+    return SYSINFO_KERNEL_VERSION;
 }
 
