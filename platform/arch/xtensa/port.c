@@ -16,8 +16,8 @@ extern void _frxt_tick_timer_init(void);
 extern void _frxt_setup_switch();
 extern void task_switch();
 extern void _xt_user_exit(void);
-unsigned yunos_sys_run[portNUM_PROCESSORS] = {0};
-unsigned yunos_sys_nest[portNUM_PROCESSORS] = {0};
+unsigned krhino_sys_run[portNUM_PROCESSORS] = {0};
+unsigned krhino_sys_nest[portNUM_PROCESSORS] = {0};
 
 /* Multi-core: get current core ID */
 static inline uint32_t xPortGetCoreID() {
@@ -102,11 +102,11 @@ void cpu_first_task_start()
 
     /* Setup the hardware to generate the tick. */
     _frxt_tick_timer_init();
-    yunos_sys_run[xPortGetCoreID()] = 1;
+    krhino_sys_run[xPortGetCoreID()] = 1;
     __asm__ volatile ("call0    _frxt_dispatch\n");
 }
 
-void yunos_switch_context()
+void krhino_switch_context()
 {
     g_active_task = g_preferred_ready_task;
 }
@@ -117,11 +117,11 @@ void cpu_intrpt_switch()
     _frxt_setup_switch();
 }
 
-void _yunos_tick_proc()
+void _krhino_tick_proc()
 {
-    yunos_intrpt_enter();
-    yunos_tick_proc();
-    yunos_intrpt_exit();
+    krhino_intrpt_enter();
+    krhino_tick_proc();
+    krhino_intrpt_exit();
 }
 
 void cpu_task_switch()

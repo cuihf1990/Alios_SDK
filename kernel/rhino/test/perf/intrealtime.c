@@ -46,9 +46,9 @@ void IntRealtimetest(void *arg)
 
     show_times_detail(InTimeBUFF, NUM, "IntTime\t", 1);
 
-    yunos_sem_give(SYNhandle);
+    krhino_sem_give(SYNhandle);
 
-    yunos_task_yield();
+    krhino_task_yield();
 
 }
 
@@ -79,9 +79,9 @@ void SoftIntRealtimetest(void *arg)
 
     show_times_detail(InTimeBUFF, NUM, "SoftIntTime\t", 1);
 
-    yunos_sem_give(SYNhandle);
+    krhino_sem_give(SYNhandle);
 
-    yunos_task_yield();
+    krhino_task_yield();
 
 }
 

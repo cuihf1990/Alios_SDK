@@ -19,7 +19,7 @@ int32_t set_filter_task(const char *task_name)
     ktask_t  *task;
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-        task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+        task = krhino_list_entry(tmp, ktask_t, task_stats_item);
         if (task->task_name != NULL && !memcmp(task_name, task->task_name, strlen(task->task_name))) {
             hit_task = task;
             return 0;
@@ -39,7 +39,7 @@ void trace_deinit(void)
     init = 0;
 }
 
-#if (YUNOS_CONFIG_TRACE > 0)
+#if (RHINO_CONFIG_TRACE > 0)
 
 #define TRACE_BUFFER_SIZE 1024
 #define ROUND_POINT(sz) (((sz) + (4 - 1)) & ~(4 - 1))
@@ -63,7 +63,8 @@ void _trace_init(void)
     buf[0] = 0x101;
     buf[1] = 0x0;
     buf[2] = 0x0;
-    fifo_in_full_reject_lock(&trace_fifo, buf, 12);
+    *((char *)buf+13) = '\n';
+    fifo_in_full_reject_lock(&trace_fifo, buf, 13);
     init = 1;
 }
 
@@ -85,7 +86,9 @@ void trace_filter_and_write(ktask_t *task, const void *buf, uint32_t len)
         return;
     }
 
-    fifo_in_full_reject_lock(&trace_fifo, buf, len);
+    *((char *)buf+len) = '\n';
+
+    fifo_in_full_reject_lock(&trace_fifo, buf, len + 1);
 }
 
 void _trace_task_switch(ktask_t *from, ktask_t *to)

@@ -11,7 +11,7 @@
 
 #define MYASSERT(value) do {if ((int)(value) == 0) { printf("%s:%d\n", __FUNCTION__, __LINE__);return 1; }} while (0)
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 extern ktask_t *task_mm;
 extern ktask_t *task_mm_co;
 extern k_mm_head *pmmhead;

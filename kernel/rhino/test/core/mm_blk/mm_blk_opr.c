@@ -17,15 +17,15 @@ static uint8_t mm_blk_opr_case1(void)
     void   *ptr;
     kstat_t ret;
 
-    ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
+    ret = krhino_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
                                MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_mblk_alloc(&mblk_pool_test, &ptr);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_mblk_alloc(&mblk_pool_test, &ptr);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_mblk_free(&mblk_pool_test, ptr);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_mblk_free(&mblk_pool_test, ptr);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     return 0;
 }
@@ -42,9 +42,9 @@ void mm_blk_opr_test(void)
     task_mm_blk_entry_register(MODULE_NAME, (test_func_t *)mm_blk_func_runner,
                                sizeof(mm_blk_func_runner) / sizeof(test_func_t));
 
-    ret = yunos_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
+    ret = krhino_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -53,18 +53,18 @@ void mm_blk_opr_test(void)
 static void task_mm_blk_co1_entry(void *arg)
 {
     while (1) {
-        yunos_mblk_alloc(&mblk_pool_test, &co_ptr);
-        yunos_mblk_free(&mblk_pool_test, co_ptr);
-        yunos_task_sleep(5);
-        yunos_mblk_alloc(&mblk_pool_test, &co_ptr);
-        yunos_mblk_free(&mblk_pool_test, co_ptr);
-        yunos_task_sleep(5);
-        yunos_mblk_alloc(&mblk_pool_test, &co_ptr);
-        yunos_mblk_free(&mblk_pool_test, co_ptr);
-        yunos_task_sleep(5);
-        yunos_mblk_alloc(&mblk_pool_test, &co_ptr);
-        yunos_mblk_free(&mblk_pool_test, co_ptr);
-        yunos_task_sleep(5);
+        krhino_mblk_alloc(&mblk_pool_test, &co_ptr);
+        krhino_mblk_free(&mblk_pool_test, co_ptr);
+        krhino_task_sleep(5);
+        krhino_mblk_alloc(&mblk_pool_test, &co_ptr);
+        krhino_mblk_free(&mblk_pool_test, co_ptr);
+        krhino_task_sleep(5);
+        krhino_mblk_alloc(&mblk_pool_test, &co_ptr);
+        krhino_mblk_free(&mblk_pool_test, co_ptr);
+        krhino_task_sleep(5);
+        krhino_mblk_alloc(&mblk_pool_test, &co_ptr);
+        krhino_mblk_free(&mblk_pool_test, co_ptr);
+        krhino_task_sleep(5);
 
         break;
     }
@@ -78,7 +78,7 @@ static void task_mm_blk_co1_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 }
 
 
@@ -86,17 +86,17 @@ void mm_blk_coopr_test(void)
 {
     kstat_t ret;
 
-    ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
+    ret = krhino_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
                                MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
-    if (ret != YUNOS_SUCCESS) {
+    if (ret != RHINO_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
         return;
     }
 
-    ret = yunos_task_dyn_create(&blk_task, MODULE_NAME, 0, TASK_MM_BLK_PRI + 1,
+    ret = krhino_task_dyn_create(&blk_task, MODULE_NAME, 0, TASK_MM_BLK_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_co1_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
     }

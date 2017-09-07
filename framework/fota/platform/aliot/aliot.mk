@@ -1,8 +1,8 @@
-NAME := aliot
+NAME := aliot_transport
 
 $(NAME)_SOURCES := ota_transport.c
 GLOBAL_INCLUDES += ./
-$(NAME)_INCLUDES := ../../ \
+$(NAME)_INCLUDES := ../ \
+                    ../../ \
                     ../../../mqtt/sdk-impl \
-                    ../../../mqtt/platform
-             
+                    ../../../mqtt/platform          

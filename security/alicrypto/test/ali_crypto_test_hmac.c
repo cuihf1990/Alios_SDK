@@ -84,7 +84,7 @@ int ali_crypto_hmac_test(void)
     if (result == ALI_CRYPTO_SUCCESS) {
         return -1;
     }
-    result = ali_hmac_get_ctx_size(HASH_NONE, &hmac_ctx_size);
+    result = ali_hmac_get_ctx_size(HASH_NONE, (size_t *)(&hmac_ctx_size));
     if (result == ALI_CRYPTO_SUCCESS) {
         return -1;
     }
@@ -119,14 +119,14 @@ int ali_crypto_hmac_test(void)
     }
 
     for (type = SHA1; type <= MD5; type++) {
-        result = ali_hmac_get_ctx_size(type, &hmac_ctx_size);
+        result = ali_hmac_get_ctx_size(type, (size_t *)(&hmac_ctx_size));
         if (result != ALI_CRYPTO_SUCCESS) {
             GO_RET(result, "get ctx size fail(%08x)\n", result);
         }
 
         hmac_ctx = CRYPT_MALLOC(hmac_ctx_size);
         if (hmac_ctx == NULL) {
-            GO_RET(ALI_CRYPTO_OUTOFMEM, "kmalloc(%d) fail\n", hmac_ctx_size);
+            GO_RET(ALI_CRYPTO_OUTOFMEM, "kmalloc(%08x) fail\n", (int)hmac_ctx_size);
         }
         CRYPT_MEMSET(hmac_ctx, 0, hmac_ctx_size);
 

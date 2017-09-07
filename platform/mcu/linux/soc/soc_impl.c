@@ -11,21 +11,21 @@
 
 #define _linux_backtrace_depth 10
 
-#if (YUNOS_CONFIG_HW_COUNT > 0)
+#if (RHINO_CONFIG_HW_COUNT > 0)
 hr_timer_t soc_hr_hw_cnt_get(void)
 {
     return 0;
 }
 #endif
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 #ifdef GCOV_ENABLE
 #define       SYS_DYN_POOL_SIZE (1024 *1024)
 #else
 #define       SYS_DYN_POOL_SIZE (512 *1024)
 #endif /* GCOV_ENABLE */
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
 #undef        SYS_DYN_POOL_SIZE
 #define       SYS_DYN_POOL_SIZE (1024 *1024)
 #endif
@@ -56,10 +56,10 @@ void soc_err_proc(kstat_t err)
 {
     printf("kernel panic,err %d!\n",err);
     _linux_backtrace();
-    if(err == YUNOS_TASK_STACK_OVF){
+    if(err == RHINO_TASK_STACK_OVF){
         assert(0);
     }
 }
 
-yunos_err_proc_t g_err_proc = soc_err_proc;
+krhino_err_proc_t g_err_proc = soc_err_proc;
 

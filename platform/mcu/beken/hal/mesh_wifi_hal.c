@@ -288,6 +288,10 @@ static int beken_wifi_mesh_set_channel(umesh_hal_module_t *module,
 {
     uint32_t freq;
 
+    if (channel < 1 || channel > 14) {
+        return -1;
+    }
+
     freq = rw_ieee80211_get_centre_frequency(channel);
     phy_set_channel(PHY_BAND_2G4, PHY_CHNL_BW_20, freq, freq, 0, PHY_PRIM);
     return 0;

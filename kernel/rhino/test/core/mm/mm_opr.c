@@ -10,7 +10,7 @@
 #define MODULE_NAME_CO "mm_coopr"
 static void *co_ptr;
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 
 static uint8_t mm_opr_case1(void)
 {
@@ -18,8 +18,8 @@ static uint8_t mm_opr_case1(void)
     kstat_t ret;
     char    tmp;
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     ptr = k_mm_alloc(pmmhead, 64);
     MYASSERT(ptr != NULL);
@@ -28,12 +28,12 @@ static uint8_t mm_opr_case1(void)
 
     k_mm_free(pmmhead, ptr);
 
-    yunos_deinit_mm_head(pmmhead);
+    krhino_deinit_mm_head(pmmhead);
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    yunos_deinit_mm_head(pmmhead);
+    krhino_deinit_mm_head(pmmhead);
 
     return 0;
 }
@@ -44,8 +44,8 @@ static uint8_t mm_opr_case2(void)
     int8_t  cnt;
     kstat_t ret;
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     /* alloc out of mm pools then free all */
     cnt = 0;
@@ -61,7 +61,7 @@ static uint8_t mm_opr_case2(void)
 
     } while (cnt > 0);
 
-    yunos_deinit_mm_head(pmmhead);
+    krhino_deinit_mm_head(pmmhead);
 
     return 0;
 }
@@ -79,9 +79,9 @@ void mm_opr_test(void)
     task_mm_entry_register(MODULE_NAME, (test_func_t *)mm_func_runner,
                            sizeof(mm_func_runner) / sizeof(test_func_t));
 
-    ret = yunos_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
+    ret = krhino_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
@@ -91,8 +91,8 @@ static void task_mm_co1_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    if (ret != YUNOS_SUCCESS) {
+    ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    if (ret != RHINO_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
         return;
@@ -100,38 +100,38 @@ static void task_mm_co1_entry(void *arg)
 
     while (1) {
         co_ptr = k_mm_alloc(pmmhead, 16);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         co_ptr = k_mm_alloc(pmmhead, 18);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         co_ptr = k_mm_alloc(pmmhead, 32);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         co_ptr = k_mm_alloc(pmmhead, 65);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         co_ptr = k_mm_alloc(pmmhead, 178);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         co_ptr = k_mm_alloc(pmmhead, 333);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         break;
     }
 
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 }
 
 static void task_mm_co2_entry(void *arg)
 {
     while (1) {
         k_mm_free(pmmhead, co_ptr);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         k_mm_free(pmmhead, co_ptr);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         k_mm_free(pmmhead, co_ptr);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         k_mm_free(pmmhead, co_ptr);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         k_mm_free(pmmhead, co_ptr);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         k_mm_free(pmmhead, co_ptr);
-        yunos_task_sleep(5);
+        krhino_task_sleep(5);
         break;
     }
 
@@ -139,32 +139,32 @@ static void task_mm_co2_entry(void *arg)
     PRINT_RESULT(MODULE_NAME_CO, PASS);
 
     next_test_case_notify();
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 
-    yunos_deinit_mm_head(pmmhead);
+    krhino_deinit_mm_head(pmmhead);
 }
 
 void mm_coopr_test(void)
 {
     kstat_t ret;
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    if (ret != YUNOS_SUCCESS) {
+    ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    if (ret != RHINO_SUCCESS) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
         return;
     }
 
-    ret = yunos_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
+    ret = krhino_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_co1_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
     }
 
-    ret = yunos_task_dyn_create(&task_mm_co, MODULE_NAME, 0, TASK_MM_PRI + 1,
+    ret = krhino_task_dyn_create(&task_mm_co, MODULE_NAME, 0, TASK_MM_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_mm_co2_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME_CO, FAIL);
     }

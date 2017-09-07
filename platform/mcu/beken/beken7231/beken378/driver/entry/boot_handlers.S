@@ -297,13 +297,13 @@ do_irq:
     LDR     R5,[R4]
     STR     SP,[R5] 
 
-    BL      yunos_intrpt_enter  
+    BL      krhino_intrpt_enter  
 
     MSR     CPSR_c,#0xd2           @Change to IRQ mode to use IRQ stack to handle interrupt with interrupt disbaled  
  
     BL      intc_irq
     MSR     CPSR_c,#0xd3           @Change to SVC mode with interrupt disabled   
-    BL      yunos_intrpt_exit
+    BL      krhino_intrpt_exit
     LDMFD   SP!,{R4}               @POP the task''s CPSR             
     MSR     SPSR_cxsf,R4
     LDMFD   SP!,{R0-R12,LR,PC}^    @POP new Task''s context
@@ -351,13 +351,13 @@ do_fiq:
     LDR     R5,[R4]
     STR     SP,[R5] 
 
-    BL      yunos_intrpt_enter  
+    BL      krhino_intrpt_enter  
 
     MSR     CPSR_c,#0xd1           @Change to FIRQ mode to use IRQ stack to handle interrupt with interrupt disbaled
  
     BL      intc_fiq
     MSR     CPSR_c,#0xd3           @Change to SVC mode with interrupt disabled   
-    BL      yunos_intrpt_exit
+    BL      krhino_intrpt_exit
     LDMFD   SP!,{R4}               @POP the task''s CPSR             
     MSR     SPSR_cxsf,R4
     LDMFD   SP!,{R0-R12,LR,PC}^    @POP new Task''s context

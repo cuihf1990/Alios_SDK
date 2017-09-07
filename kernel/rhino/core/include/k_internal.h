@@ -6,97 +6,97 @@
 #define K_INTERNAL_H
 
 extern kstat_t g_sys_stat;
-extern uint8_t g_idle_task_spawned[YUNOS_CONFIG_CPU_NUM];
+extern uint8_t g_idle_task_spawned[RHINO_CONFIG_CPU_NUM];
 
 extern runqueue_t g_ready_queue;
 
 /* System lock */
-extern uint8_t g_sched_lock[YUNOS_CONFIG_CPU_NUM];
-extern uint8_t g_intrpt_nested_level[YUNOS_CONFIG_CPU_NUM];
+extern uint8_t g_sched_lock[RHINO_CONFIG_CPU_NUM];
+extern uint8_t g_intrpt_nested_level[RHINO_CONFIG_CPU_NUM];
 
 /* highest pri ready task object */
-extern ktask_t *g_preferred_ready_task[YUNOS_CONFIG_CPU_NUM];
+extern ktask_t *g_preferred_ready_task[RHINO_CONFIG_CPU_NUM];
 
 /* current active task */
-extern ktask_t *g_active_task[YUNOS_CONFIG_CPU_NUM];
+extern ktask_t *g_active_task[RHINO_CONFIG_CPU_NUM];
 
 /* idle attribute */
-extern ktask_t      g_idle_task[YUNOS_CONFIG_CPU_NUM];
-extern idle_count_t g_idle_count[YUNOS_CONFIG_CPU_NUM];
-extern cpu_stack_t  g_idle_task_stack[YUNOS_CONFIG_CPU_NUM][YUNOS_CONFIG_IDLE_TASK_STACK_SIZE];
+extern ktask_t      g_idle_task[RHINO_CONFIG_CPU_NUM];
+extern idle_count_t g_idle_count[RHINO_CONFIG_CPU_NUM];
+extern cpu_stack_t  g_idle_task_stack[RHINO_CONFIG_CPU_NUM][RHINO_CONFIG_IDLE_TASK_STACK_SIZE];
 
 /* tick attribute */
 extern tick_t     g_tick_count;
-extern klist_t    g_tick_head[YUNOS_CONFIG_TICK_HEAD_ARRAY];
+extern klist_t    g_tick_head[RHINO_CONFIG_TICK_HEAD_ARRAY];
 extern sys_time_t g_sys_time_tick;
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
 extern kobj_list_t g_kobj_list;
 #endif
 
-#if (YUNOS_CONFIG_TIMER > 0)
+#if (RHINO_CONFIG_TIMER > 0)
 extern klist_t     g_timer_head;
 extern tick_t      g_timer_count;
 extern uint32_t    g_timer_ctrl;
 extern ktask_t     g_timer_task;
-extern cpu_stack_t g_timer_task_stack[YUNOS_CONFIG_TIMER_TASK_STACK_SIZE];
+extern cpu_stack_t g_timer_task_stack[RHINO_CONFIG_TIMER_TASK_STACK_SIZE];
 extern ksem_t      g_timer_sem;
 extern kmutex_t    g_timer_mutex;
 #endif
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
 extern tick_t g_next_intrpt_ticks;
 extern tick_t g_pend_intrpt_ticks;
 extern tick_t g_elapsed_ticks;
 #endif
 
-#if (YUNOS_CONFIG_TICK_TASK > 0)
+#if (RHINO_CONFIG_TICK_TASK > 0)
 extern ktask_t     g_tick_task;
-extern cpu_stack_t g_tick_task_stack[YUNOS_CONFIG_TICK_TASK_STACK_SIZE];
+extern cpu_stack_t g_tick_task_stack[RHINO_CONFIG_TICK_TASK_STACK_SIZE];
 extern ksem_t      g_tick_sem;
 #endif
 
-#if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
+#if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
 extern hr_timer_t g_sched_disable_time_start;
 extern hr_timer_t g_sched_disable_max_time;
 extern hr_timer_t g_cur_sched_disable_max_time;
 #endif
 
-#if (YUNOS_CONFIG_DISABLE_INTRPT_STATS > 0)
+#if (RHINO_CONFIG_DISABLE_INTRPT_STATS > 0)
 extern uint16_t   g_intrpt_disable_times;
 extern hr_timer_t g_intrpt_disable_time_start;
 extern hr_timer_t g_intrpt_disable_max_time;
 extern hr_timer_t g_cur_intrpt_disable_max_time;
 #endif
 
-#if (YUNOS_CONFIG_HW_COUNT > 0)
+#if (RHINO_CONFIG_HW_COUNT > 0)
 extern hr_timer_t g_sys_measure_waste;
 #endif
 
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
+#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
 extern ktask_t      g_cpu_usage_task;
-extern cpu_stack_t  g_cpu_task_stack[YUNOS_CONFIG_CPU_USAGE_TASK_STACK];
+extern cpu_stack_t  g_cpu_task_stack[RHINO_CONFIG_CPU_USAGE_TASK_STACK];
 extern idle_count_t g_idle_count_max;
 extern uint32_t     g_cpu_usage;
 extern uint32_t     g_cpu_usage_max;
 #endif
 
-#if (YUNOS_CONFIG_TASK_SCHED_STATS > 0)
+#if (RHINO_CONFIG_TASK_SCHED_STATS > 0)
 extern ctx_switch_t g_sys_ctx_switch_times;
 #endif
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 extern kqueue_t  g_dyn_queue;
-extern void     *g_dyn_queue_msg[YUNOS_CONFIG_K_DYN_QUEUE_MSG];
+extern void     *g_dyn_queue_msg[RHINO_CONFIG_K_DYN_QUEUE_MSG];
 extern ktask_t   g_dyn_mem_proc_task;
 #endif
 
-#if (YUNOS_CONFIG_WORKQUEUE > 0)
+#if (RHINO_CONFIG_WORKQUEUE > 0)
 extern klist_t       g_workqueue_list_head;
 extern kmutex_t      g_workqueue_mutex;
 #endif
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 extern k_mm_head         *g_kmm_head;
 #endif
 
@@ -106,15 +106,15 @@ extern k_mm_head         *g_kmm_head;
 #define NULL_PARA_CHK(para)            \
         do {                           \
             if (para == NULL) {        \
-                return YUNOS_NULL_PTR; \
+                return RHINO_NULL_PTR; \
             }                          \
         } while (0)
 
 #define INTRPT_NESTED_LEVEL_CHK()\
         do {                                       \
             if (g_intrpt_nested_level[cpu_cur_get()] > 0u) {      \
-                YUNOS_CRITICAL_EXIT();             \
-                return YUNOS_NOT_CALLED_BY_INTRPT; \
+                RHINO_CRITICAL_EXIT();             \
+                return RHINO_NOT_CALLED_BY_INTRPT; \
             }                                      \
         } while (0)
 
@@ -137,7 +137,7 @@ void pend_task_wakeup(ktask_t *task);
 void pend_to_blk_obj(blk_obj_t *blk_obj, ktask_t *task, tick_t timeout);
 void pend_task_rm(ktask_t *task);
 
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
 kstat_t pend_state_end_proc(ktask_t *task);
 #endif
 

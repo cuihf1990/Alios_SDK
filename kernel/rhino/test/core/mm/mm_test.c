@@ -6,7 +6,7 @@
 #include <test_fw.h>
 #include "mm_test.h"
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 
 ktask_t   *task_mm;
 ktask_t   *task_mm_co;
@@ -78,7 +78,7 @@ void task_mm_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 }
 #endif
 

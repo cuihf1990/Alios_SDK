@@ -16,8 +16,8 @@ cpu_stack_t  test_mtbf_task_stack[TEST_MTBF_TASK_STACK_SIZE];
 
 void test_case_task_entry(void *arg)
 {
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
-    yunos_cpu_usage_stats_init();
+#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
+    krhino_cpu_usage_stats_init();
 #endif
     test_case_init();
 
@@ -35,21 +35,21 @@ void test_case_task_entry(void *arg)
            (int)test_case_success, (int)test_case_fail);
 
     while (1) {
-        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     }
 }
 
 void test_case_task_start(void)
 {
-    yunos_task_create(&test_case_task, "test_case_task", NULL, 5,
+    krhino_task_create(&test_case_task, "test_case_task", NULL, 5,
                       0, test_case_task_stack, TEST_CASE_TASK_STACK_SIZE,
                       test_case_task_entry, 1);
 }
 
 void test_mtbf_task_entry(void *arg)
 {
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
-    yunos_cpu_usage_stats_init();
+#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
+    krhino_cpu_usage_stats_init();
 #endif
     test_case_init();
     int counter = 0;
@@ -76,13 +76,13 @@ void test_mtbf_task_entry(void *arg)
            (int)test_case_success, (int)test_case_fail);
 
     while (1) {
-        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     }
 }
 
 void test_mtbf_task_start(void)
 {
-    yunos_task_create(&test_mtbf_task, "test_mtbf_task", NULL, 9,
+    krhino_task_create(&test_mtbf_task, "test_mtbf_task", NULL, 9,
                       0, test_mtbf_task_stack, TEST_MTBF_TASK_STACK_SIZE,
                       test_mtbf_task_entry, 1);
 }

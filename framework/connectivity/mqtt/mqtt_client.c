@@ -2233,7 +2233,7 @@ static int MQTTPubInfoProc(iotx_mc_client_t *pClient)
 
     return SUCCESS_RETURN;
 }
-
+#ifndef STM32L475xx
 int is_connected = 0;
 
 static void cb_recv(int fd, void *arg)
@@ -2258,6 +2258,7 @@ static void cb_recv(int fd, void *arg)
 }
 
 extern int get_ssl_fd();
+#endif
 
 // connect
 static int iotx_mc_connect(iotx_mc_client_t *pClient)
@@ -2293,9 +2294,22 @@ static int iotx_mc_connect(iotx_mc_client_t *pClient)
         log_err("send connect packet failed");
         return rc;
     }
- 
+#ifdef STM32L475xx
+    if (SUCCESS_RETURN != iotx_mc_wait_CONNACK(pClient)) {
+        (void)MQTTDisconnect(pClient);
+        pClient->ipstack->disconnect(pClient->ipstack);
+        log_err("wait connect ACK timeout, or receive a ACK indicating error!");
+        return MQTT_CONNECT_ERROR;
+    }
+
+    iotx_mc_set_client_state(pClient, IOTX_MC_STATE_CONNECTED);
+
+    utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000);
+
+    log_info("mqtt connect success!");
+#else
     yos_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
-   
+#endif
     return rc;
 }
 
@@ -2379,9 +2393,9 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
         return SUCCESS_RETURN;
     }
 
-
+#ifndef STM32L475xx
     yos_cancel_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
-
+#endif
     (void)MQTTDisconnect(pClient);
 
     /*close tcp/ip socket or free tls resources*/
@@ -2390,9 +2404,9 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
     iotx_mc_set_client_state(pClient, IOTX_MC_STATE_INITIALIZED);
 
     log_info("mqtt disconnect!");
-
+#ifndef STM32L475xx
     is_connected = 0;
-
+#endif
     return SUCCESS_RETURN;
 }
 
@@ -2569,7 +2583,9 @@ int IOT_MQTT_Yield(void *handle, int timeout_ms)
 
     iotx_time_init(&time);
     utils_time_countdown_ms(&time, timeout_ms);
-
+#ifdef STM32L475xx
+    do {
+#endif
         // acquire package in cycle, such as PINGRESP or PUBLISH
         rc = iotx_mc_cycle(pClient, &time);
         if (SUCCESS_RETURN == rc) {
@@ -2582,6 +2598,9 @@ int IOT_MQTT_Yield(void *handle, int timeout_ms)
 
         // Keep MQTT alive or reconnect if connection abort.
         iotx_mc_keepalive(pClient);
+#ifdef STM32L475xx
+    } while (!utils_time_is_expired(&time) && (SUCCESS_RETURN == rc));
+#endif
 
     return 0;
 }

@@ -5,46 +5,46 @@
 #ifndef K_TIME_H
 #define K_TIME_H
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
 /**
  * This function will handle tickless routine
  * @param[in]  ticks
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-void yunos_tickless_proc(tick_t ticks);
+void krhino_tickless_proc(tick_t ticks);
 #else
 /**
  * This function will handle systick routine
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-void yunos_tick_proc(void);
+void krhino_tick_proc(void);
 #endif
 
 /**
  * This function will get time of the system in ms
  * @return  system time
  */
-sys_time_t yunos_sys_time_get(void);
+sys_time_t krhino_sys_time_get(void);
 
 /**
  * This function will get ticks of the system
  * @return  the system ticks
  */
-sys_time_t yunos_sys_tick_get(void);
+sys_time_t krhino_sys_tick_get(void);
 
 /**
  * This function will convert ms to ticks
  * @param[in]  ms  ms which will be converted to ticks
  * @return  the ticks of the ms
  */
-tick_t     yunos_ms_to_ticks(sys_time_t ms);
+tick_t     krhino_ms_to_ticks(sys_time_t ms);
 
 /**
  * This function will convert ticks to ms
  * @param[in]  ticks  ticks which will be converted to ms
  * @return  the ms of the ticks
  */
-sys_time_t yunos_ticks_to_ms(tick_t ticks);
+sys_time_t krhino_ticks_to_ms(tick_t ticks);
 
 #endif /* K_TIME_H */
 

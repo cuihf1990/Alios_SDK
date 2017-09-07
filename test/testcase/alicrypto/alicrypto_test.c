@@ -36,14 +36,14 @@ static void ali_crypto_test(void)
 }
 #endif
 
-static yunit_test_case_t yunos_alicrypto_testcases[] = {
+static yunit_test_case_t krhino_alicrypto_testcases[] = {
     //{ "alicrypto_test", ali_crypto_test},
     { "alicrypto_test", ali_crypto_test_entry},
     YUNIT_TEST_CASE_NULL
 };
 
 static yunit_test_suite_t suites[] = {
-    { "alicrypto", init, cleanup, setup, teardown, yunos_alicrypto_testcases },
+    { "alicrypto", init, cleanup, setup, teardown, krhino_alicrypto_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

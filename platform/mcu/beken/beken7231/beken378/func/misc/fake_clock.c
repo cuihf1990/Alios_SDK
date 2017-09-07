@@ -33,7 +33,7 @@ void fclk_hdl(UINT8 param)
 	second_countdown = FCLK_SECOND;
     }
 
-    yunos_tick_proc();
+    krhino_tick_proc();
     
     #if 0
 	/* Increment the tick counter. */
@@ -78,7 +78,7 @@ UINT32 fclk_cal_endvalue(UINT32 mode)
 	}
 	else if(PWM_CLK_26M == mode)
 	{	/*26m clock*/
-		value = 26000000 / YUNOS_CONFIG_TICKS_PER_SECOND;
+		value = 26000000 / RHINO_CONFIG_TICKS_PER_SECOND;
 	}
 
 	return value;

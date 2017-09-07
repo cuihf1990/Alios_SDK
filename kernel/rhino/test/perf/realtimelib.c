@@ -13,7 +13,7 @@ void show_times_hdr(void)
     printf("\r\nFreeRTOS Function RealTime Test\r\n");
     printf("\r\nTesting Parameters:\r\n");
     printf("   TICK_RATE_HZ :         %dHZ\r\n",
-           (unsigned long) YUNOS_CONFIG_TICKS_PER_SECOND);
+           (unsigned long) RHINO_CONFIG_TICKS_PER_SECOND);
     printf("   CLOCK_SAMPLE :         %dHZ\r\n", (unsigned long) APB_DEFAULT_FREQ);
 
     printf("                                                             Confidence\r\n");

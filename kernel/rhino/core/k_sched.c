@@ -4,7 +4,7 @@
 
 #include <k_api.h>
 
-#if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
+#if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
 static void sched_disable_measure_start(void)
 {
     /* start measure system lock time */
@@ -30,60 +30,60 @@ static void sched_disable_measure_stop(void)
 }
 #endif
 
-kstat_t yunos_sched_disable(void)
+kstat_t krhino_sched_disable(void)
 {
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
     if (g_sched_lock[cpu_cur_get()] >= SCHED_MAX_LOCK_COUNT) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SCHED_LOCK_COUNT_OVF;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SCHED_LOCK_COUNT_OVF;
     }
 
-#if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
+#if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
     sched_disable_measure_start();
 #endif
 
     g_sched_lock[cpu_cur_get()]++;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_sched_enable(void)
+kstat_t krhino_sched_enable(void)
 {
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
     if (g_sched_lock[cpu_cur_get()] == 0u) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SCHED_ALREADY_ENABLED;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SCHED_ALREADY_ENABLED;
     }
 
     g_sched_lock[cpu_cur_get()]--;
 
     if (g_sched_lock[cpu_cur_get()] > 0u) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SCHED_DISABLE;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SCHED_DISABLE;
     }
 
-#if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
+#if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
     sched_disable_measure_stop();
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
 void core_sched(void)
 {
     uint8_t cur_cpu_num;
@@ -107,15 +107,15 @@ void core_sched(void)
 
     TRACE_TASK_SWITCH(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 
-#if (YUNOS_CONFIG_USER_HOOK > 0)
-    yunos_task_switch_hook(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
+#if (RHINO_CONFIG_USER_HOOK > 0)
+    krhino_task_switch_hook(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 #endif
 
     g_active_task[cur_cpu_num]->cur_exc = 0;
 
     cpu_task_switch();
 
-#if (YUNOS_CONFIG_STACK_OVF_CHECK_HW != 0)
+#if (RHINO_CONFIG_STACK_OVF_CHECK_HW != 0)
     cpu_task_stack_protect(g_preferred_ready_task->task_stack_base,
                            g_preferred_ready_task->stack_size);
 #endif
@@ -127,17 +127,17 @@ void core_sched(void)
     CPSR_ALLOC();
     uint8_t cur_cpu_num;
 
-    YUNOS_CPU_INTRPT_DISABLE();
+    RHINO_CPU_INTRPT_DISABLE();
 
     cur_cpu_num = cpu_cur_get();
 
     if (g_intrpt_nested_level[cur_cpu_num] > 0u) {
-        YUNOS_CPU_INTRPT_ENABLE();
+        RHINO_CPU_INTRPT_ENABLE();
         return;
     }
 
     if (g_sched_lock[cur_cpu_num] > 0u) {
-        YUNOS_CPU_INTRPT_ENABLE();
+        RHINO_CPU_INTRPT_ENABLE();
         return;
     }
 
@@ -145,24 +145,24 @@ void core_sched(void)
 
     /* if preferred task is currently task, then no need to do switch and just return */
     if (g_preferred_ready_task[cur_cpu_num] == g_active_task[cur_cpu_num]) {
-        YUNOS_CPU_INTRPT_ENABLE();
+        RHINO_CPU_INTRPT_ENABLE();
         return;
     }
 
     TRACE_TASK_SWITCH(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 
-#if (YUNOS_CONFIG_USER_HOOK > 0)
-    yunos_task_switch_hook(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
+#if (RHINO_CONFIG_USER_HOOK > 0)
+    krhino_task_switch_hook(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 #endif
 
     cpu_task_switch();
 
-#if (YUNOS_CONFIG_STACK_OVF_CHECK_HW != 0)
+#if (RHINO_CONFIG_STACK_OVF_CHECK_HW != 0)
     cpu_task_stack_protect(g_preferred_ready_task->task_stack_base,
                            g_preferred_ready_task->stack_size);
 #endif
 
-    YUNOS_CPU_INTRPT_ENABLE();
+    RHINO_CPU_INTRPT_ENABLE();
 }
 #endif
 
@@ -170,30 +170,30 @@ void runqueue_init(runqueue_t *rq)
 {
     uint8_t prio;
 
-    rq->highest_pri = YUNOS_CONFIG_PRI_MAX;
+    rq->highest_pri = RHINO_CONFIG_PRI_MAX;
 
-    for (prio = 0; prio < YUNOS_CONFIG_PRI_MAX; prio++) {
+    for (prio = 0; prio < RHINO_CONFIG_PRI_MAX; prio++) {
         rq->cur_list_item[prio] = NULL;
     }
 }
 
-YUNOS_INLINE void ready_list_init(runqueue_t *rq, ktask_t *task)
+RHINO_INLINE void ready_list_init(runqueue_t *rq, ktask_t *task)
 {
     rq->cur_list_item[task->prio] = &task->task_list;
     klist_init(rq->cur_list_item[task->prio]);
-    yunos_bitmap_set(rq->task_bit_map, task->prio);
+    krhino_bitmap_set(rq->task_bit_map, task->prio);
 
     if ((task->prio) < (rq->highest_pri)) {
         rq->highest_pri = task->prio;
     }
 }
 
-YUNOS_INLINE uint8_t is_ready_list_empty(uint8_t prio)
+RHINO_INLINE uint8_t is_ready_list_empty(uint8_t prio)
 {
     return (g_ready_queue.cur_list_item[prio] == NULL);
 }
 
-YUNOS_INLINE void _ready_list_add_tail(runqueue_t *rq, ktask_t *task)
+RHINO_INLINE void _ready_list_add_tail(runqueue_t *rq, ktask_t *task)
 {
     if (is_ready_list_empty(task->prio)) {
         ready_list_init(rq, task);
@@ -203,7 +203,7 @@ YUNOS_INLINE void _ready_list_add_tail(runqueue_t *rq, ktask_t *task)
     klist_insert(rq->cur_list_item[task->prio], &task->task_list);
 }
 
-YUNOS_INLINE void _ready_list_add_head(runqueue_t *rq, ktask_t *task)
+RHINO_INLINE void _ready_list_add_head(runqueue_t *rq, ktask_t *task)
 {
     if (is_ready_list_empty(task->prio)) {
         ready_list_init(rq, task);
@@ -214,13 +214,13 @@ YUNOS_INLINE void _ready_list_add_head(runqueue_t *rq, ktask_t *task)
     rq->cur_list_item[task->prio] = &task->task_list;
 }
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
 static void task_sched_to_cpu(runqueue_t *rq, ktask_t *task, uint8_t cur_cpu_num)
 {
     (void)rq;
     uint8_t i;
 
-    if (g_sys_stat == YUNOS_RUNNING) {
+    if (g_sys_stat == RHINO_RUNNING) {
         if (task->cpu_binded == 1) {
             if (task->cpu_num != cur_cpu_num) {
                 if (task->prio <= g_active_task[task->cpu_num]->prio) {
@@ -228,8 +228,8 @@ static void task_sched_to_cpu(runqueue_t *rq, ktask_t *task, uint8_t cur_cpu_num
                 }
             }
         } else {
-            for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
-                if (g_active_task[i]->prio == YUNOS_IDLE_PRI) {
+            for (i = 0; i < RHINO_CONFIG_CPU_NUM; i++) {
+                if (g_active_task[i]->prio == RHINO_IDLE_PRI) {
                     if (i != cur_cpu_num) {
                         cpu_signal(i);
                     }
@@ -238,7 +238,7 @@ static void task_sched_to_cpu(runqueue_t *rq, ktask_t *task, uint8_t cur_cpu_num
                 }
             }
 
-            for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+            for (i = 0; i < RHINO_CONFIG_CPU_NUM; i++) {
                 if (task->prio <= g_active_task[i]->prio) {
                     if (i != cur_cpu_num) {
                         cpu_signal(i);
@@ -302,7 +302,7 @@ void ready_list_rm(runqueue_t *rq, ktask_t *task)
     /* only one item,just set cur item ptr to NULL */
     rq->cur_list_item[pri] = NULL;
 
-    yunos_bitmap_clear(rq->task_bit_map, pri);
+    krhino_bitmap_clear(rq->task_bit_map, pri);
 
     /* if task prio not equal to the highest prio, then we do not need to update the highest prio */
     /* this condition happens when a current high prio task to suspend a low priotity task */
@@ -311,13 +311,13 @@ void ready_list_rm(runqueue_t *rq, ktask_t *task)
     }
 
     /* find the highest ready task */
-    i = yunos_find_first_bit(rq->task_bit_map);
+    i = krhino_find_first_bit(rq->task_bit_map);
 
     /* update the next highest prio task */
     if (i >= 0) {
         rq->highest_pri = i;
     } else {
-        k_err_proc(YUNOS_SYS_FATAL_ERR);
+        k_err_proc(RHINO_SYS_FATAL_ERR);
     }
 }
 
@@ -326,7 +326,7 @@ void ready_list_head_to_tail(runqueue_t *rq, ktask_t *task)
     rq->cur_list_item[task->prio] = rq->cur_list_item[task->prio]->next;
 }
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
 void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
 {
     klist_t *iter;
@@ -342,7 +342,7 @@ void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
 
     while (1) {
 
-        task = yunos_list_entry(iter, ktask_t, task_list);
+        task = krhino_list_entry(iter, ktask_t, task_list);
 
         if (g_active_task[cpu_num] == task) {
             break;
@@ -361,7 +361,7 @@ void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
         if (iter->next == rq->cur_list_item[highest_pri]) {
             task_bit_map[highest_pri / 32u] &= ~(1u << (31u - (highest_pri % 32u)));
 
-            highest_pri = yunos_find_first_bit(task_bit_map);
+            highest_pri = krhino_find_first_bit(task_bit_map);
             iter = rq->cur_list_item[highest_pri];
         } else {
             iter = iter->next;
@@ -373,13 +373,13 @@ void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
 {
     klist_t *node = rq->cur_list_item[rq->highest_pri];
     /* get the highest prio task object */
-    g_preferred_ready_task[cpu_num] = yunos_list_entry(node, ktask_t, task_list);
+    g_preferred_ready_task[cpu_num] = krhino_list_entry(node, ktask_t, task_list);
 }
 #endif
 
-#if (YUNOS_CONFIG_SCHED_RR > 0)
+#if (RHINO_CONFIG_SCHED_RR > 0)
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
 
 static void _time_slice_update(ktask_t *task, uint8_t i)
 {
@@ -430,13 +430,13 @@ void time_slice_update(uint8_t task_pri)
 
     (void)task_pri;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
-    for (i = 0; i < YUNOS_CONFIG_CPU_NUM; i++) {
+    for (i = 0; i < RHINO_CONFIG_CPU_NUM; i++) {
         _time_slice_update(g_active_task[i], i);
     }
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 }
 
 
@@ -448,28 +448,28 @@ void time_slice_update(uint8_t task_pri)
 
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     head = g_ready_queue.cur_list_item[task_pri];
 
     /* if ready list is empty then just return because nothing is to be caculated */
     if (is_ready_list_empty(task_pri)) {
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
         return;
     }
 
     /* Always look at the first task on the ready list */
-    task = yunos_list_entry(head, ktask_t, task_list);
+    task = krhino_list_entry(head, ktask_t, task_list);
 
     if (task->sched_policy == KSCHED_FIFO) {
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
         return;
     }
 
     /* there is only one task on this ready list, so do not need to caculate time slice */
     /* idle task must satisfy this condition */
     if (head->next == head) {
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
         return;
     }
 
@@ -479,7 +479,7 @@ void time_slice_update(uint8_t task_pri)
 
     /* if current active task has time_slice, just return */
     if (task->time_slice > 0u) {
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
         return;
     }
 
@@ -489,7 +489,7 @@ void time_slice_update(uint8_t task_pri)
     /* restore the task time slice */
     task->time_slice = task->time_total;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 }
 #endif
 

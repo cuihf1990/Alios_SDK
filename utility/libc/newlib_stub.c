@@ -170,7 +170,7 @@ void *_malloc_r(struct _reent *ptr, size_t size)
 {
     void *mem;
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     mem = yos_malloc(size | YOS_UNSIGNED_INT_MSB);
     yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else
@@ -184,7 +184,7 @@ void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
 {
     void *mem;
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     mem = yos_realloc(old, newlen | YOS_UNSIGNED_INT_MSB);
     yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else
@@ -198,7 +198,7 @@ void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
 {
     void *mem;
 
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     mem = yos_malloc((size * len) | YOS_UNSIGNED_INT_MSB);
     yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else

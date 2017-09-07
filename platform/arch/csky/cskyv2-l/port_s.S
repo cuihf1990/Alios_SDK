@@ -5,8 +5,8 @@
 
 .extern g_active_task
 .extern g_preferred_ready_task
-.extern yunos_task_sched_stats_get
-.extern yunos_stack_ovf_check
+.extern krhino_task_sched_stats_get
+.extern krhino_stack_ovf_check
 /******************************************************************************
  *                                 EXPORT FUNCTIONS
  ******************************************************************************/
@@ -95,12 +95,12 @@ tspend_handler:
     ldw     r1, (r1)
     stw     sp, (r1)
 
-#if (YUNOS_CONFIG_TASK_SCHED_STATS > 0)
-    jbsr    yunos_task_sched_stats_get
+#if (RHINO_CONFIG_TASK_SCHED_STATS > 0)
+    jbsr    krhino_task_sched_stats_get
 #endif
 
-#if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
-    jbsr    yunos_stack_ovf_check
+#if (RHINO_CONFIG_TASK_STACK_OVF_CHECK > 0)
+    jbsr    krhino_stack_ovf_check
 #endif
 
 __tspend_handler_nosave:

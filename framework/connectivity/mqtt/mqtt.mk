@@ -27,6 +27,9 @@ PLATFORM_MQTT := linux
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
 PLATFORM_MQTT := rhino
 #NETWORK_MQTT := rhinosock
+else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
+PLATFORM_MQTT := rhino
+#NETWORK_MQTT := rhinosock
 endif
 
 

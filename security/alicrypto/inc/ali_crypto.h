@@ -10,7 +10,7 @@
 #include "ali_crypto_types.h"
 
 typedef enum _ali_crypto_result {
-    ALI_CRYPTO_ERROR = 0xffff0000,      /* Generic Error */
+    ALI_CRYPTO_ERROR = (int)0xffff0000, /* Generic Error */
     ALI_CRYPTO_NOSUPPORT,               /* Scheme not support */
     ALI_CRYPTO_INVALID_KEY,             /* Invalid Key in asymmetric scheme: RSA/DSA/ECCP/DH etc */
     ALI_CRYPTO_INVALID_TYPE,            /* Invalid aes_type/des_type/authenc_type/hash_type/cbcmac_type/cmac_type */

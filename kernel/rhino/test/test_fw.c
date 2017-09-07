@@ -32,7 +32,7 @@ extern void ringbuf_test(void);
 
 test_case_map_t test_fw_map[] = {
     {"task_test", task_test},
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
     {"mm_test",   mm_test},
 #endif
     {"mm_blk_test", mm_blk_test},
@@ -45,7 +45,7 @@ test_case_map_t test_fw_map[] = {
     {"timer_test", timer_test},
     {"ringbuf_test", ringbuf_test},
     {"queue_test", queue_test},
-#if (YUNOS_CONFIG_WORKQUEUE > 0)
+#if (RHINO_CONFIG_WORKQUEUE > 0)
     {"workqueue_test", workqueue_test},
 #endif
     {"buf_queue_test", buf_queue_test},
@@ -92,38 +92,38 @@ void test_case_init(void)
 {
     test_case_success = 0;
     test_case_fail = 0;
-    yunos_sem_create(&test_case_sem, "test_case_sem", 0);
-    yunos_mutex_create(&test_case_mutex, "test_case_mutex");
+    krhino_sem_create(&test_case_sem, "test_case_sem", 0);
+    krhino_mutex_create(&test_case_mutex, "test_case_mutex");
 }
 
 void test_case_cleanup(void)
 {
-    yunos_sem_del(&test_case_sem);
-    yunos_mutex_del(&test_case_mutex);
+    krhino_sem_del(&test_case_sem);
+    krhino_mutex_del(&test_case_mutex);
 }
 
 void test_case_critical_enter(void)
 {
-    yunos_mutex_lock(&test_case_mutex, YUNOS_WAIT_FOREVER);
+    krhino_mutex_lock(&test_case_mutex, RHINO_WAIT_FOREVER);
 }
 
 void test_case_critical_exit(void)
 {
-    yunos_mutex_unlock(&test_case_mutex);
+    krhino_mutex_unlock(&test_case_mutex);
 }
 
 void next_test_case_notify(void)
 {
-    if (yunos_sem_give(&test_case_sem) != YUNOS_SUCCESS) {
+    if (krhino_sem_give(&test_case_sem) != RHINO_SUCCESS) {
         printf("next_test_case_notify failed!!!\n");
     }
 }
 
 void next_test_case_wait(void)
 {
-    if (yunos_sem_take(&test_case_sem, YUNOS_WAIT_FOREVER) != YUNOS_SUCCESS) {
+    if (krhino_sem_take(&test_case_sem, RHINO_WAIT_FOREVER) != RHINO_SUCCESS) {
         printf("next_test_case_wait failed!!!\n");
     }
 
-    yunos_task_sleep(10);
+    krhino_task_sleep(10);
 }
