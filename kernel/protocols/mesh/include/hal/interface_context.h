@@ -109,6 +109,7 @@ typedef struct hal_context_s {
     slist_t              next;
     umesh_hal_module_t *module;
     channel_list_t       channel_list;
+    uint8_t              def_channel;
     mac_address_t        mac_addr;
 
     // queue
