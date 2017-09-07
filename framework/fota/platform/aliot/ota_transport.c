@@ -22,6 +22,7 @@
 
 #include "ota_update_manifest.h"
 #include "ota_log.h"
+#include "ota_version.h"
 
 #define OTA_MQTT_TOPIC_LEN   (64)
 #define POTA_FETCH_PERCENTAGE_MIN 0
@@ -40,15 +41,28 @@ OTA_device_info g_ota_device_info;
 
 static char *g_upgrad_topic;
 
-void ota_init( void *signal)
+static const char *to_capital_letter(char *value,int len)
+{
+   if(value==NULL&&len<=0){
+       return NULL;
+   }
+   for(int i=0;i<len;i++)
+   {
+        if(*(value+i)>='a'&&*(value+i)<='z')
+        {
+            *(value+i)-='a'-'A';  
+        }
+    }
+    return value;
+}
+void platform_ota_init( void *signal)
 {
     if (signal == NULL) {
         OTA_LOG_E("ota device info is null");
         return;
     }
-
     OTA_device_info *device_info = (OTA_device_info *)signal;
-    printf("device_info:%s,%s", device_info->product_key, device_info->device_name);
+    OTA_LOG_D("device_info:%s,%s", device_info->product_key, device_info->device_name);
     memcpy(&g_ota_device_info, device_info , sizeof (OTA_device_info));
 }
 
@@ -64,9 +78,9 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
         OTA_LOG_E("Error before: [%s]\n", cJSON_GetErrorPtr());
         goto parse_failed;
     } else {
-        char *info = cJSON_Print(root);
-        OTA_LOG_D("root is %s", info);
-        free(info);
+        // char *info = cJSON_Print(root);
+        // OTA_LOG_D("root is %s", info);
+        // free(info);
 
         cJSON *message =  cJSON_GetObjectItem(root, "message");
 
@@ -76,7 +90,7 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
         }
 
         //check whether is positive message
-        if ((0 == strncmp(message->valuestring, "success", strlen("success")) )) {
+        if ((strncmp(message->valuestring, "success", strlen("success")) )) {
             OTA_LOG_E("fail state of json doc of OTA");
             goto parse_failed;
         }
@@ -105,7 +119,7 @@ int8_t parse_ota_response(const char *response, int buf_len, ota_response_params
 
         strncpy(response_parmas->md5, md5->valuestring,
                 sizeof response_parmas->md5);
-
+        to_capital_letter(response_parmas->md5,sizeof response_parmas->md5);    
         cJSON *size = cJSON_GetObjectItem(json_obj, "size");
         if (!md5) {
             OTA_LOG_E("size back.");
@@ -201,10 +215,11 @@ int8_t ota_pub_request(ota_request_params *request_parmas)
 }
 
 
+
 void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
-    message_arrived *ota_update = (message_arrived *)pcontext;
-    if (ota_update) {
+    yos_cloud_cb_t ota_update = (yos_cloud_cb_t )pcontext;
+    if (!ota_update) {
         OTA_LOG_E("aliot_mqtt_ota_callback  pcontext null");
         return;
     }
@@ -220,10 +235,10 @@ void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_
               ptopic_info->payload,
               ptopic_info->payload_len);
 
-    ota_update(ptopic_info->payload);
+    ota_update(UPGRADE_DEVICE ,ptopic_info->payload);
 }
 
-int8_t ota_sub_upgrade(message_arrived *msgCallback)
+int8_t ota_sub_upgrade(yos_cloud_cb_t msgCallback)
 {
     g_upgrad_topic =  yos_zalloc(OTA_MQTT_TOPIC_LEN);
 
@@ -233,7 +248,7 @@ int8_t ota_sub_upgrade(message_arrived *msgCallback)
     }
 
     int ret = otamqtt_GenTopicName(g_upgrad_topic, OTA_MQTT_TOPIC_LEN, "upgrade", g_ota_device_info.product_key,
-                                   g_ota_device_info.device_name);
+                                   g_ota_device_info.device_name);                            
     if (ret < 0) {
         OTA_LOG_E("generate topic name of upgrade failed");
         goto do_exit;
@@ -241,7 +256,7 @@ int8_t ota_sub_upgrade(message_arrived *msgCallback)
 
     //subscribe the OTA topic: "/ota/device/upgrade/$(product_key)/$(device_name)"
     ret = IOT_MQTT_Subscribe(g_ota_device_info.pclient, g_upgrad_topic, IOTX_MQTT_QOS1,
-                             aliot_mqtt_ota_callback, msgCallback);
+                            aliot_mqtt_ota_callback, msgCallback);
     if (ret < 0) {
         OTA_LOG_E("mqtt subscribe failed");
         goto do_exit;
@@ -354,7 +369,7 @@ int8_t platform_ota_result_post(void)
     char msg_informed[MSG_INFORM_LEN] = {0};
 
     ret = otalib_GenInfoMsg(msg_informed, MSG_INFORM_LEN, 0,
-                            platform_get_main_version());
+                            ota_get_system_version());
     if (ret != 0) {
         OTA_LOG_E("generate inform message failed");
         return -1;
@@ -370,41 +385,13 @@ int8_t platform_ota_result_post(void)
 
 }
 
-void platform_ota_set_version(char *version)
-{
-
-}
-
-const char   *get_yos_os_version(void);
-
-const char *platform_ota_get_version()
-{
-    return get_yos_os_version();
-}
-
-const char *platform_get_main_version()
-{
-    return 0;
-}
-
-const char *platform_get_dev_version()
-{
-    return 0;
-}
-
-void platform_set_dev_version(const char *dev_version)
-{
-
-}
-
-
-int8_t ota_sub_request_reply(message_arrived *msgCallback)
+int8_t ota_sub_request_reply(yos_cloud_cb_t msgCallback)
 {
     return 0;
 }
 
 
-int8_t ota_cancel_upgrade(message_arrived *msgCallback)
+int8_t ota_cancel_upgrade(yos_cloud_cb_t msgCallback)
 {
     return 0;
 }
@@ -418,7 +405,6 @@ void free_global_topic()
 {
 }
 
-
 //deinitialize OTA module
 int OTA_Deinit(void *handle)
 {
@@ -428,6 +414,8 @@ int OTA_Deinit(void *handle)
     }
     return 0;
 }
+
+
 
 
 

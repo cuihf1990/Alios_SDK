@@ -4,6 +4,10 @@
 
 #include "ota_transport.h"
 
+void platform_ota_init( void *signal)
+{
+
+}
 int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas)
 {
     return 0;
