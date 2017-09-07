@@ -12,7 +12,7 @@
 static void CASE_aosapi_kernel_sys_version()
 {
 	const char *version = aos_version_get();
-	YUNIT_ASSERT(strcmp(version, "0.4.0")==0);
+	YUNIT_ASSERT(strcmp(version, SYSINFO_KERNEL_VERSION)==0);
 }
 
 static void CASE_aosapi_kernel_sys_reboot()

@@ -31,25 +31,21 @@ typedef struct {
 
 void platform_ota_init( void *signal);
 
-int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas);
+int8_t platform_ota_parse_requset(const char *request, int *buf_len, ota_request_params *request_parmas);
 
-int8_t parse_ota_response(const char *buf, int buf_len, ota_response_params *response_parmas);
+int8_t platform_ota_parse_response(const char *buf, int buf_len, ota_response_params *response_parmas);
 
-int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response_params *response_parmas);
+int8_t platform_ota_parse_cancel_responce(const char *response, int buf_len, ota_response_params *response_parmas);
 
-int8_t ota_sub_upgrade(aos_cloud_cb_t msgCallback);
+int8_t platform_ota_subscribe_upgrade(yos_cloud_cb_t msgCallback);
 
-int8_t ota_cancel_upgrade(aos_cloud_cb_t msgCallback);
+int8_t platform_ota_cancel_upgrade(yos_cloud_cb_t msgCallback);
 
-int8_t ota_pub_request(ota_request_params *request_parmas);
-
-int8_t ota_sub_request_reply(aos_cloud_cb_t msgCallback);
-
-void free_global_topic();
+int8_t platform_ota_publish_request(ota_request_params *request_parmas);
 
 int8_t platform_ota_status_post(int status, int percent);
 
 int8_t platform_ota_result_post(void);
 
-char *ota_get_id();
+char *platform_ota_get_id();
 #endif /* OTA_TRANSPORT_H_ */

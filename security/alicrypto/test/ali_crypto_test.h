@@ -11,8 +11,10 @@
 #include "ali_crypto.h"
 #include "yos/kernel.h"
 
-#define CRYPT_ERR(_f, _a ...)  printf(_f, ##_a)
-#define CRYPT_INF(_f, _a ...)  printf(_f, ##_a)
+extern int csp_printf(const char *fmt, ...);
+
+#define CRYPT_ERR(_f, _a ...)  csp_printf(_f, ##_a)
+#define CRYPT_INF(_f, _a ...)  csp_printf(_f, ##_a)
 
 #define CRYPT_MALLOC           aos_malloc
 #define CRYPT_FREE             aos_free

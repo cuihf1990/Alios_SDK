@@ -66,12 +66,12 @@ void platform_ota_init( void *signal)
     memcpy(&g_ota_device_info, device_info , sizeof (OTA_device_info));
 }
 
-int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas)
+int8_t platform_ota_parse_requset(const char *request, int *buf_len, ota_request_params *request_parmas)
 {
     return 0;
 }
 
-int8_t parse_ota_response(const char *response, int buf_len, ota_response_params *response_parmas)
+int8_t platform_ota_parse_response(const char *response, int buf_len, ota_response_params *response_parmas)
 {
     cJSON *root = cJSON_Parse(response);
     if (!root) {
@@ -204,12 +204,12 @@ static int otamqtt_Publish(const char *topic_type, const char *msg)
     return 0;
 }
 
-int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response_params *response_parmas)
+int8_t platform_ota_parse_cancel_responce(const char *response, int buf_len, ota_response_params *response_parmas)
 {
     return 0;
 }
 
-int8_t ota_pub_request(ota_request_params *request_parmas)
+int8_t platform_ota_publish_request(ota_request_params *request_parmas)
 {
     return 0;
 }
@@ -238,7 +238,7 @@ void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_
     ota_update(UPGRADE_DEVICE ,ptopic_info->payload);
 }
 
-int8_t ota_sub_upgrade(aos_cloud_cb_t msgCallback)
+int8_t platform_ota_subscribe_upgrade(yos_cloud_cb_t msgCallback)
 {
     g_upgrad_topic =  aos_zalloc(OTA_MQTT_TOPIC_LEN);
 
@@ -382,27 +382,16 @@ int8_t platform_ota_result_post(void)
     }
 
     return ret;
-
 }
 
-int8_t ota_sub_request_reply(aos_cloud_cb_t msgCallback)
+int8_t platform_ota_cancel_upgrade(yos_cloud_cb_t msgCallback)
 {
     return 0;
 }
 
-
-int8_t ota_cancel_upgrade(aos_cloud_cb_t msgCallback)
-{
-    return 0;
-}
-
-char *ota_get_id(void)
+char *platform_ota_get_id(void)
 {
     return NULL;
-}
-
-void free_global_topic()
-{
 }
 
 //deinitialize OTA module

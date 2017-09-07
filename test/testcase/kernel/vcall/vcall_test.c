@@ -23,9 +23,6 @@ static void task1_entry(mico_thread_arg_t arg )
 {
     char msg[MSG_SIZE];
 
-    mico_rtos_suspend_thread(NULL);
-    mico_rtos_suspend_thread(&task1);
-
     mico_rtos_is_current_thread(&task1);
     mico_rtos_set_semaphore(&sem1);
     msg[0] = 0x11;
@@ -40,9 +37,6 @@ static void task1_entry(mico_thread_arg_t arg )
 
 static void task2_entry(mico_thread_arg_t arg )
 {
-    krhino_task_resume((ktask_t *)task1);
-    krhino_task_resume((ktask_t *)task1);
-
     mico_rtos_delete_thread(NULL);
 }
 

@@ -52,7 +52,7 @@ void do_update(int len,  const char *buf)
     }
     ota_response_params response_parmas;
     ota_set_callbacks(ota_hal_write_cb, ota_hal_finish_cb);
-    parse_ota_response(buf, strlen((char *)buf), &response_parmas);
+    platform_ota_parse_response(buf, strlen((char *)buf), &response_parmas);
     ota_do_update_packet(&response_parmas, &ota_request_parmas, ota_write_flash_callback,
                          ota_finish_callbak);
 }
@@ -66,14 +66,13 @@ void cancel_update(int len, const char *buf)
     }
 
     ota_response_params response_parmas;
-    parse_ota_cancel_response(buf, strlen((char *)buf), &response_parmas);
+    platform_ota_parse_cancel_responce(buf, strlen((char *)buf), &response_parmas);
     ota_cancel_update_packet(&response_parmas);
 }
 
 void ota_check_update(const char *buf, int len)
 {
-    ota_sub_request_reply(do_update);
-    ota_pub_request(&ota_request_parmas);
+    platform_ota_publish_request(&ota_request_parmas);
 }
 
 static int ota_init = 0;
@@ -81,8 +80,8 @@ static int ota_init = 0;
 void ota_regist_upgrade(void)
 {
     ota_post_version_msg();
-    ota_sub_upgrade(&do_update);
-    ota_cancel_upgrade(&cancel_update);
+    platform_ota_subscribe_upgrade(&do_update);
+    platform_ota_cancel_upgrade(&cancel_update);
 }
 
 static void init_device_parmas()
