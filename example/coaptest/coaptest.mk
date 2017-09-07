@@ -35,6 +35,10 @@ $(NAME)_COMPONENTS  := cli
 #$(NAME)_COMPONENTS  += protocols.net
 #endif
 
+ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+$(NAME)_DEFINES += PLATFORM_MK3060
+endif
+
 $(NAME)_CFLAGS += \
     -Wno-unused-function \
     -Wno-implicit-function-declaration \

@@ -15,8 +15,13 @@
  */
 
 #include <stdio.h>
-//#include <arpa/inet.h>
+
+#ifdef PLATFORM_MK3060
 #include <lwip/inet.h>
+#else
+#include <arpa/inet.h>
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
