@@ -146,7 +146,6 @@ void *cpu_entry(void *arg)
 
     if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) != 0) {
         printf("Not enough cpu nums!!!\n");
-        assert(0);
     }
 
     ktask_t    *tcb     = g_preferred_ready_task[(int)arg];
