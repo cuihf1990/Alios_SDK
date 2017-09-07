@@ -63,9 +63,6 @@ static void task_queue_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = krhino_kobj_set_insert((blk_obj_t *)&queue, handle);
-    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
-
     ret = krhino_kobj_select(handle, &select_obj, RHINO_WAIT_FOREVER);
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
@@ -105,6 +102,9 @@ void mutex_queue_coopr_test(void)
 
     ret = krhino_queue_create(&queue, "queue", (void **)&queue_msg_buff,
                              TEST_MSG_SIZE);
+    TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
+
+    ret = krhino_kobj_set_insert((blk_obj_t *)&queue, handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI,
