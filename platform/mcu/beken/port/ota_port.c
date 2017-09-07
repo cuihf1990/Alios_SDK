@@ -79,7 +79,7 @@ static int moc108_ota_init(hal_ota_module_t *m, void *something)
 {
     hal_logic_partition_t *partition_info;
 
-    printf("set ota init---------------\n");
+    printf("moc108 ota init\n");
     
     partition_info = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
     hal_flash_erase(HAL_PARTITION_OTA_TEMP, 0 ,partition_info->partition_length);
@@ -113,7 +113,7 @@ static int moc108_ota_set_boot(hal_ota_module_t *m, void *something)
 {
     uint8_t parti = *(uint8_t *)something;
     CRC16_Final( &contex, &ota_info.ota_crc );
-    printf("set boot---------------\n");
+    printf("moc108 set boot\n");
     hal_ota_switch_to_new_fw(parti, ota_info.ota_len, ota_info.ota_crc);
     memset(&ota_info, 0 , sizeof ota_info);
     return 0;
