@@ -20,7 +20,7 @@
 extern int tfs_emulate_id2_index;
 #endif
 
-extern void yunos_lwip_init(int enable_tapif);
+extern void krhino_lwip_init(int enable_tapif);
 /* check in gcc sources gcc/gcov-io.h for the prototype */
 extern void __gcov_flush(void);
 extern void rl_free_line_state(void);
@@ -96,7 +96,7 @@ void yos_features_init(void)
 {
 #ifdef CONFIG_NET_LWIP
     if (options.lwip.enable) {
-        yunos_lwip_init(options.lwip.tapif);
+        krhino_lwip_init(options.lwip.tapif);
     }
 #endif
 }
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 
     atexit(exit_clean);
 
-    yunos_init();
+    krhino_init();
 
     ret = setrlimit_for_vfs();
     if (ret != 0) {
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 
     start_app(argc, argv);
 
-    yunos_start();
+    krhino_start();
 
     return ret;
 }

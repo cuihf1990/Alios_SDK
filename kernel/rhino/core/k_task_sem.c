@@ -5,7 +5,7 @@
 #include <k_api.h>
 
 #if (RHINO_CONFIG_TASK_SEM > 0)
-kstat_t yunos_task_sem_create(ktask_t *task, ksem_t *sem, const name_t *name,
+kstat_t krhino_task_sem_create(ktask_t *task, ksem_t *sem, const name_t *name,
                               size_t count)
 {
     kstat_t ret;
@@ -16,7 +16,7 @@ kstat_t yunos_task_sem_create(ktask_t *task, ksem_t *sem, const name_t *name,
 
     NULL_PARA_CHK(task);
 
-    ret = yunos_sem_create(sem, name, count);
+    ret = krhino_sem_create(sem, name, count);
     if (ret == RHINO_SUCCESS) {
         task->task_sem_obj = sem;
     } else {
@@ -26,37 +26,37 @@ kstat_t yunos_task_sem_create(ktask_t *task, ksem_t *sem, const name_t *name,
     return ret;
 }
 
-kstat_t yunos_task_sem_del(ktask_t *task)
+kstat_t krhino_task_sem_del(ktask_t *task)
 {
     NULL_PARA_CHK(task);
 
-    return yunos_sem_del(task->task_sem_obj);
+    return krhino_sem_del(task->task_sem_obj);
 }
 
-kstat_t yunos_task_sem_give(ktask_t *task)
+kstat_t krhino_task_sem_give(ktask_t *task)
 {
     NULL_PARA_CHK(task);
 
-    return yunos_sem_give(task->task_sem_obj);
+    return krhino_sem_give(task->task_sem_obj);
 }
 
-kstat_t yunos_task_sem_take(tick_t ticks)
+kstat_t krhino_task_sem_take(tick_t ticks)
 {
-    return yunos_sem_take(yunos_cur_task_get()->task_sem_obj, ticks);
+    return krhino_sem_take(krhino_cur_task_get()->task_sem_obj, ticks);
 }
 
-kstat_t yunos_task_sem_count_set(ktask_t *task, sem_count_t count)
-{
-    NULL_PARA_CHK(task);
-
-    return yunos_sem_count_set(task->task_sem_obj, count);
-}
-
-kstat_t yunos_task_sem_count_get(ktask_t *task, sem_count_t *count)
+kstat_t krhino_task_sem_count_set(ktask_t *task, sem_count_t count)
 {
     NULL_PARA_CHK(task);
 
-    return yunos_sem_count_get(task->task_sem_obj, count);
+    return krhino_sem_count_set(task->task_sem_obj, count);
+}
+
+kstat_t krhino_task_sem_count_get(ktask_t *task, sem_count_t *count)
+{
+    NULL_PARA_CHK(task);
+
+    return krhino_sem_count_get(task->task_sem_obj, count);
 }
 #endif
 

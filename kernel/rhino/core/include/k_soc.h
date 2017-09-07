@@ -42,11 +42,11 @@ void soc_err_proc(kstat_t err);
 
 RHINO_INLINE void soc_systick_handle(void)
 {
-    yunos_intrpt_enter();
+    krhino_intrpt_enter();
 
-    yunos_tick_proc();
+    krhino_tick_proc();
 
-    yunos_intrpt_exit();
+    krhino_intrpt_exit();
 }
 
 size_t __attribute__ ((weak)) soc_get_cur_sp(void);

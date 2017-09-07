@@ -37,7 +37,7 @@ typedef struct {
  * @param[in]  stack_size  the size of the worker-stack
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
+kstat_t krhino_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
                                uint8_t pri, cpu_stack_t *stack_buf, size_t stack_size);
 
 /**
@@ -45,7 +45,7 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
  * @param[in]  workqueue  the workqueue to be deleted
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_workqueue_del(kworkqueue_t *workqueue);
+kstat_t krhino_workqueue_del(kworkqueue_t *workqueue);
 
 /**
  * This function will initialize a work
@@ -55,7 +55,7 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue);
  * @param[in]  dly     the ticks to delay before run
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
+kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
                         tick_t dly);
 
 /**
@@ -64,21 +64,21 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
  * @param[in]  work       the work to run
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work);
+kstat_t krhino_work_run(kworkqueue_t *workqueue, kwork_t *work);
 
 /**
  * This function will run a work on the default workqueue
  * @param[in]  work  the work to run
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_work_sched(kwork_t *work);
+kstat_t krhino_work_sched(kwork_t *work);
 
 /**
  * This function will cancel a work
  * @param[in]  work  the work to cancel
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_work_cancel(kwork_t *work);
+kstat_t krhino_work_cancel(kwork_t *work);
 #endif
 
 #endif /* K_WORKQUEUE_H */

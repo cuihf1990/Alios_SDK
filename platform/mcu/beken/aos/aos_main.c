@@ -30,11 +30,11 @@ static void application_init(void)
            app_info->data_ram_end - app_info->data_ram_start);
     memset((void *)(app_info->bss_start), 0, app_info->bss_end - app_info->bss_start);
 
-    yunos_add_mm_region(g_kmm_head, (void *)(app_info->heap_start),
+    krhino_add_mm_region(g_kmm_head, (void *)(app_info->heap_start),
                         app_info->heap_end - app_info->heap_start);
 
-    yunos_mm_leak_region_init((void *)(app_info->data_ram_start), (void *)(app_info->data_ram_end));
-    yunos_mm_leak_region_init((void *)(app_info->bss_start), (void *)(app_info->bss_end));
+    krhino_mm_leak_region_init((void *)(app_info->data_ram_start), (void *)(app_info->data_ram_end));
+    krhino_mm_leak_region_init((void *)(app_info->bss_start), (void *)(app_info->bss_end));
 }
 #endif
 
@@ -79,12 +79,12 @@ static void yos_init(void)
 
 void yos_start(void)
 {
-    yunos_init();
+    krhino_init();
 
     soc_driver_init();
 
-    yunos_task_dyn_create(&g_yos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, yos_init, 1);
+    krhino_task_dyn_create(&g_yos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, yos_init, 1);
 
-    yunos_start();
+    krhino_start();
 }
 

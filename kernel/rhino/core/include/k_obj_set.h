@@ -22,7 +22,7 @@ typedef struct kobj_set {
  * @param[in]  msg_num  num of the kobj_set's contained notify msg
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
+kstat_t krhino_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
                                   size_t msg_num);
 
 /**
@@ -30,7 +30,7 @@ kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
  * @param[in]  handle   pointer to the pointer of kobj_set_t(the space is allocated and freed by kernel)
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_set_dyn_del(kobj_set_t *handle);
+kstat_t krhino_kobj_set_dyn_del(kobj_set_t *handle);
 #endif
 
 /**
@@ -41,7 +41,7 @@ kstat_t yunos_kobj_set_dyn_del(kobj_set_t *handle);
  * @param[in]  msg_num  num of the kobj_set's contained notify msg
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_set_create(kobj_set_t *handle, const name_t *name,
+kstat_t krhino_kobj_set_create(kobj_set_t *handle, const name_t *name,
                               void **start, size_t msg_num);
 
 /**
@@ -49,7 +49,7 @@ kstat_t yunos_kobj_set_create(kobj_set_t *handle, const name_t *name,
  * @param[in]  handle    pointer to the kobj_set_t(the space is provided by user)
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_set_del(kobj_set_t *handle);
+kstat_t krhino_kobj_set_del(kobj_set_t *handle);
 
 /**
  * This function will insert a kobj to the set
@@ -58,7 +58,7 @@ kstat_t yunos_kobj_set_del(kobj_set_t *handle);
  * @param[in]  handle   pointer to the kobj_set_t
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_set_insert(blk_obj_t *obj, kobj_set_t *handle);
+kstat_t krhino_kobj_set_insert(blk_obj_t *obj, kobj_set_t *handle);
 
 /**
  * This function will rm a kobj from the set
@@ -66,7 +66,7 @@ kstat_t yunos_kobj_set_insert(blk_obj_t *obj, kobj_set_t *handle);
                         for example,you can cast a semphore pointer to blk_obj_t *.
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_set_rm(blk_obj_t *obj);
+kstat_t krhino_kobj_set_rm(blk_obj_t *obj);
 
 /**
  * This function will block until any kobj in the set unlock.
@@ -74,7 +74,7 @@ kstat_t yunos_kobj_set_rm(blk_obj_t *obj);
  * @param[out] obj      pointer to the pointer of the kobj,such as semphore,queue,buf queue,etc.
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_kobj_select(kobj_set_t *handle, blk_obj_t **obj, tick_t ticks);
+kstat_t krhino_kobj_select(kobj_set_t *handle, blk_obj_t **obj, tick_t ticks);
 #endif
 
 #endif /*K_OBJ_SET_H*/

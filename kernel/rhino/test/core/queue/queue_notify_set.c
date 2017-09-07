@@ -37,28 +37,28 @@ static ksem_t     *sem0;
 static void kobj_set_param_test()
 {
     kstat_t ret;
-    ret = yunos_kobj_set_dyn_create(NULL, OBJ_SET_NAME, OBJ_SET_SIZE);
+    ret = krhino_kobj_set_dyn_create(NULL, OBJ_SET_NAME, OBJ_SET_SIZE);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_NULL_PTR);
 
-    ret = yunos_kobj_set_dyn_create(&handle, NULL, OBJ_SET_SIZE);
+    ret = krhino_kobj_set_dyn_create(&handle, NULL, OBJ_SET_SIZE);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_NULL_PTR);
 
-    ret = yunos_kobj_set_insert(NULL, handle);
+    ret = krhino_kobj_set_insert(NULL, handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_NULL_PTR);
 
-    ret = yunos_kobj_set_insert(blk_obj, NULL);
+    ret = krhino_kobj_set_insert(blk_obj, NULL);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_NULL_PTR);
 
-    ret = yunos_sem_dyn_create(&sem0, "test_sem0", TEST_SEM_COUNT);
+    ret = krhino_sem_dyn_create(&sem0, "test_sem0", TEST_SEM_COUNT);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_kobj_set_insert((blk_obj_t *)sem0, handle);
+    ret = krhino_kobj_set_insert((blk_obj_t *)sem0, handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_KOBJ_SET_FULL);
 
-    ret = yunos_mutex_dyn_create(&mutex0, "test_mutex0");
+    ret = krhino_mutex_dyn_create(&mutex0, "test_mutex0");
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_kobj_set_insert((blk_obj_t *)mutex0, handle);
+    ret = krhino_kobj_set_insert((blk_obj_t *)mutex0, handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_KOBJ_TYPE_ERR);
 }
 
@@ -66,45 +66,45 @@ static void task_queue0_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_queue_create(&g_queue0, "test_queue0", (void **)&g_queue0_msg_pool,
+    ret = krhino_queue_create(&g_queue0, "test_queue0", (void **)&g_queue0_msg_pool,
                              QUEUE_MAX_MSG);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_buf_queue_create(&g_buf_queue0, "test_buf_queue0",
+    ret = krhino_buf_queue_create(&g_buf_queue0, "test_buf_queue0",
                                  (void *)g_buf_queue0_msg_pool, BUF_QUEUE_SIZE, BUF_QUEUE_MAX_MSG);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_kobj_set_dyn_create(&handle, OBJ_SET_NAME, OBJ_SET_SIZE);
+    ret = krhino_kobj_set_dyn_create(&handle, OBJ_SET_NAME, OBJ_SET_SIZE);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     kobj_set_param_test();
 
-    ret = yunos_queue_back_send(&g_queue0, queue0_send_msg0);
+    ret = krhino_queue_back_send(&g_queue0, queue0_send_msg0);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_kobj_set_insert((blk_obj_t *)&g_queue0, handle);
+    ret = krhino_kobj_set_insert((blk_obj_t *)&g_queue0, handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    yunos_kobj_select(handle, &blk_obj, RHINO_WAIT_FOREVER);
+    krhino_kobj_select(handle, &blk_obj, RHINO_WAIT_FOREVER);
     TEST_FW_VAL_CHK(MODULE_NAME, (size_t)blk_obj == (size_t)&g_queue0);
 
-    ret = yunos_buf_queue_send(&g_buf_queue0, (void *)g_buf_queue0_msg0,
+    ret = krhino_buf_queue_send(&g_buf_queue0, (void *)g_buf_queue0_msg0,
                                strlen(g_buf_queue0_msg0));
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_kobj_set_insert((blk_obj_t *)&g_buf_queue0, handle);
+    ret = krhino_kobj_set_insert((blk_obj_t *)&g_buf_queue0, handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    yunos_kobj_select(handle, &blk_obj, RHINO_WAIT_FOREVER);
+    krhino_kobj_select(handle, &blk_obj, RHINO_WAIT_FOREVER);
     TEST_FW_VAL_CHK(MODULE_NAME, (size_t)blk_obj == (size_t)&g_buf_queue0);
 
-    ret = yunos_queue_del(&g_queue0);
+    ret = krhino_queue_del(&g_queue0);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_buf_queue_del(&g_buf_queue0);
+    ret = krhino_buf_queue_del(&g_buf_queue0);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_kobj_set_dyn_del(handle);
+    ret = krhino_kobj_set_dyn_del(handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     if (test_case_check_err == 0) {
@@ -116,7 +116,7 @@ static void task_queue0_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 }
 
 kstat_t task_queue_notify_set_test(void)
@@ -124,7 +124,7 @@ kstat_t task_queue_notify_set_test(void)
     kstat_t ret;
     test_case_check_err = 0;
 
-    ret = yunos_task_dyn_create(&task0_test, "task_queue0_test", 0, 10,
+    ret = krhino_task_dyn_create(&task0_test, "task_queue0_test", 0, 10,
                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 

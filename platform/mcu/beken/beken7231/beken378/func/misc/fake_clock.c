@@ -33,7 +33,7 @@ void fclk_hdl(UINT8 param)
 	second_countdown = FCLK_SECOND;
     }
 
-    yunos_tick_proc();
+    krhino_tick_proc();
     
     #if 0
 	/* Increment the tick counter. */

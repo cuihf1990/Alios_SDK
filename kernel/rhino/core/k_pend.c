@@ -11,7 +11,7 @@ RHINO_INLINE void pend_list_add(klist_t *head, ktask_t *task)
     klist_t *list_end   = head;
 
     for (tmp = list_start->next; tmp != list_end; tmp = tmp->next) {
-        if (yunos_list_entry(tmp, ktask_t, task_list)->prio > task->prio) {
+        if (krhino_list_entry(tmp, ktask_t, task_list)->prio > task->prio) {
             break;
         }
     }

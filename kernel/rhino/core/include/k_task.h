@@ -123,12 +123,12 @@ typedef void (*task_entry_t)(void *arg);
  * @param[in]  autorun    the autorunning flag of task
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
+kstat_t krhino_task_create(ktask_t *task, const name_t *name, void *arg,
                           uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
                           size_t stack_size, task_entry_t entry, uint8_t autorun);
 
 #if (RHINO_CONFIG_CPU_NUM > 1)
-kstat_t yunos_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
+kstat_t krhino_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
                               uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
                               size_t stack_size, task_entry_t entry, uint8_t cpu_num,
                               uint8_t autorun);
@@ -148,7 +148,7 @@ kstat_t yunos_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
  * @param[in]  autorun  the autorunning flag of task
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
+kstat_t krhino_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
                               uint8_t pri,
                               tick_t ticks, size_t stack,
                               task_entry_t entry, uint8_t autorun);
@@ -160,14 +160,14 @@ kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
  * @param[in]  task  the task to be deleted.
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_del(ktask_t *task);
+kstat_t krhino_task_del(ktask_t *task);
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 /**
  * This function will delete a dyn-task
  * @param[in]  task  the task to be deleted.
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_dyn_del(ktask_t *task);
+kstat_t krhino_task_dyn_del(ktask_t *task);
 #endif
 #endif
 
@@ -177,19 +177,19 @@ kstat_t yunos_task_dyn_del(ktask_t *task);
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 
-kstat_t yunos_task_sleep(tick_t dly);
+kstat_t krhino_task_sleep(tick_t dly);
 
 /**
  * This function will yield a task
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_yield(void);
+kstat_t krhino_task_yield(void);
 
 /**
  * This function will get the current task for this cpu
  * @return the current task
  */
-#define yunos_cur_task_get() ({\
+#define krhino_cur_task_get() ({\
                                 CPSR_ALLOC();\
                                 ktask_t *task;\
                                 RHINO_CRITICAL_ENTER();\
@@ -204,14 +204,14 @@ kstat_t yunos_task_yield(void);
  * @param[in]  task  the task to be suspended
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_suspend(ktask_t *task);
+kstat_t krhino_task_suspend(ktask_t *task);
 
 /**
  * This function will resume a task
  * @param[in]  task  the task to be resumed
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_resume(ktask_t *task);
+kstat_t krhino_task_resume(ktask_t *task);
 #endif
 
 /**
@@ -220,7 +220,7 @@ kstat_t yunos_task_resume(ktask_t *task);
  * @param[in]  free  the free task stack size to be filled with.
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_stack_min_free(ktask_t *task, size_t *free);
+kstat_t krhino_task_stack_min_free(ktask_t *task, size_t *free);
 
 
 /**
@@ -229,7 +229,7 @@ kstat_t yunos_task_stack_min_free(ktask_t *task, size_t *free);
  * @param[in]  free  the free task stack size to be filled with.
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_stack_cur_free(ktask_t *task, size_t *free);
+kstat_t krhino_task_stack_cur_free(ktask_t *task, size_t *free);
 
 /**
  * This function will change the prio of task
@@ -238,7 +238,7 @@ kstat_t yunos_task_stack_cur_free(ktask_t *task, size_t *free);
  * @param[out]  old_pri  the old task prio to be filled with
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri);
+kstat_t krhino_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri);
 
 #if (RHINO_CONFIG_TASK_WAIT_ABORT > 0)
 /**
@@ -246,7 +246,7 @@ kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri);
  * @param[in]  task  the task to be aborted
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_wait_abort(ktask_t *task);
+kstat_t krhino_task_wait_abort(ktask_t *task);
 #endif
 
 #if (RHINO_CONFIG_SCHED_RR > 0)
@@ -256,7 +256,7 @@ kstat_t yunos_task_wait_abort(ktask_t *task);
  * @param[in]  slice  the task time slice
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_time_slice_set(ktask_t *task, size_t slice);
+kstat_t krhino_task_time_slice_set(ktask_t *task, size_t slice);
 
 /**
  * This function will set task sched policy
@@ -264,7 +264,7 @@ kstat_t yunos_task_time_slice_set(ktask_t *task, size_t slice);
  * @param[in]  policy  the policy to be set, pllicy option can be either KSCHED_FIFO or KSCHED_RR
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sched_policy_set(ktask_t *task, uint8_t policy);
+kstat_t krhino_sched_policy_set(ktask_t *task, uint8_t policy);
 
 /**
  * This function will get task sched policy
@@ -272,7 +272,7 @@ kstat_t yunos_sched_policy_set(ktask_t *task, uint8_t policy);
  * @param[out]  policy  the policy to be get
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sched_policy_get(ktask_t *task, uint8_t *policy);
+kstat_t krhino_sched_policy_get(ktask_t *task, uint8_t *policy);
 #endif
 
 #if (RHINO_CONFIG_TASK_INFO > 0)
@@ -282,7 +282,7 @@ kstat_t yunos_sched_policy_get(ktask_t *task, uint8_t *policy);
  * @param[out]  info  the private information
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_task_info_set(ktask_t *task, size_t idx, void *info);
+kstat_t krhino_task_info_set(ktask_t *task, size_t idx, void *info);
 
 /**
  * This function will get task private infomation
@@ -290,14 +290,14 @@ kstat_t yunos_task_info_set(ktask_t *task, size_t idx, void *info);
  * @param[out]  info  to save private infomation
  * @return  the task private information
  */
-kstat_t yunos_task_info_get(ktask_t *task, size_t idx, void **info);
+kstat_t krhino_task_info_get(ktask_t *task, size_t idx, void **info);
 #endif
 
 /**
  * This function will be set in cpu_task_stack_init,set LR reg with
  * this funtion pointer
  */
-void  yunos_task_deathbed(void);
+void  krhino_task_deathbed(void);
 
 #endif /* K_TASK_H */
 

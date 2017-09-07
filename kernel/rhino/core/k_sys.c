@@ -27,7 +27,7 @@ RHINO_INLINE kstat_t rhino_init(void)
     g_sys_stat = RHINO_STOPPED;
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_init_hook();
+    krhino_init_hook();
 #endif
 
     runqueue_init(&g_ready_queue);
@@ -41,24 +41,24 @@ RHINO_INLINE kstat_t rhino_init(void)
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
     /* init memory region */
 #if(RHINO_CONFIG_MM_TLF > 0)
-    yunos_init_mm_head(&g_kmm_head, g_mm_region.start, g_mm_region.len);
+    krhino_init_mm_head(&g_kmm_head, g_mm_region.start, g_mm_region.len);
 #endif
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
     yos_mm_leak_region_init();
 #endif
-    yunos_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
+    krhino_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                        RHINO_CONFIG_K_DYN_QUEUE_MSG);
     dyn_mem_proc_task_start();
 #endif
 
 #if (RHINO_CONFIG_CPU_NUM > 1)
     for (uint8_t i = 0; i < RHINO_CONFIG_CPU_NUM; i++) {
-        yunos_task_cpu_create(&g_idle_task[i], "idle_task", NULL, RHINO_IDLE_PRI, 0,
+        krhino_task_cpu_create(&g_idle_task[i], "idle_task", NULL, RHINO_IDLE_PRI, 0,
                               &g_idle_task_stack[i][0], RHINO_CONFIG_IDLE_TASK_STACK_SIZE,
                               idle_task, i, 1u);
     }
 #else
-    yunos_task_create(&g_idle_task[0], "idle_task", NULL, RHINO_IDLE_PRI, 0,
+    krhino_task_create(&g_idle_task[0], "idle_task", NULL, RHINO_IDLE_PRI, 0,
                       &g_idle_task_stack[0][0], RHINO_CONFIG_IDLE_TASK_STACK_SIZE,
                       idle_task, 1u);
 #endif
@@ -96,7 +96,7 @@ RHINO_INLINE kstat_t rhino_start(void)
         workqueue_init();
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-        yunos_start_hook();
+        krhino_start_hook();
 #endif
 
         g_sys_stat = RHINO_RUNNING;
@@ -109,26 +109,26 @@ RHINO_INLINE kstat_t rhino_start(void)
     return RHINO_RUNNING;
 }
 
-kstat_t yunos_init(void)
+kstat_t krhino_init(void)
 {
     return rhino_init();
 }
 
-kstat_t yunos_start(void)
+kstat_t krhino_start(void)
 {
     return rhino_start();
 }
 
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
 #if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
-void yunos_intrpt_stack_ovf_check(void)
+void krhino_intrpt_stack_ovf_check(void)
 {
     if (*g_intrpt_stack_bottom != RHINO_INTRPT_STACK_OVF_MAGIC) {
         k_err_proc(RHINO_INTRPT_STACK_OVF);
     }
 }
 #else
-void yunos_intrpt_stack_ovf_check(void)
+void krhino_intrpt_stack_ovf_check(void)
 {
     if (*g_intrpt_stack_top != RHINO_INTRPT_STACK_OVF_MAGIC) {
         k_err_proc(RHINO_INTRPT_STACK_OVF);
@@ -137,12 +137,12 @@ void yunos_intrpt_stack_ovf_check(void)
 #endif
 #endif /* RHINO_CONFIG_INTRPT_STACK_OVF_CHECK */
 
-kstat_t yunos_intrpt_enter(void)
+kstat_t krhino_intrpt_enter(void)
 {
     CPSR_ALLOC();
 
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
-    yunos_intrpt_stack_ovf_check();
+    krhino_intrpt_stack_ovf_check();
 #endif
 
     RHINO_CPU_INTRPT_DISABLE();
@@ -161,13 +161,13 @@ kstat_t yunos_intrpt_enter(void)
     return RHINO_SUCCESS;
 }
 
-void yunos_intrpt_exit(void)
+void krhino_intrpt_exit(void)
 {
     CPSR_ALLOC();
     uint8_t cur_cpu_num;
 
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
-    yunos_intrpt_stack_ovf_check();
+    krhino_intrpt_stack_ovf_check();
 #endif
 
     RHINO_CPU_INTRPT_DISABLE();
@@ -214,7 +214,7 @@ void yunos_intrpt_exit(void)
     RHINO_CPU_INTRPT_ENABLE();
 }
 
-size_t yunos_global_space_get(void)
+size_t krhino_global_space_get(void)
 {
     size_t mem;
 
@@ -242,7 +242,7 @@ size_t yunos_global_space_get(void)
     return mem;
 }
 
-const name_t *yunos_version_get(void)
+const name_t *krhino_version_get(void)
 {
     return RHINO_VERSION;
 }

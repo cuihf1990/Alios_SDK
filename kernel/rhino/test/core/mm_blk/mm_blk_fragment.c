@@ -14,7 +14,7 @@ static uint8_t mm_blk_fragment_case1(void)
     kstat_t ret;
     uint8_t blkavail;
 
-    ret = yunos_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
+    ret = krhino_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
                                MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
     MYASSERT(ret == RHINO_SUCCESS);
 
@@ -24,7 +24,7 @@ static uint8_t mm_blk_fragment_case1(void)
     /* alloc all blocks */
     blkavail = 0;
     do {
-        ret = yunos_mblk_alloc(&mblk_pool_test, &ptr[blkavail]);
+        ret = krhino_mblk_alloc(&mblk_pool_test, &ptr[blkavail]);
         if (ret == RHINO_SUCCESS) {
             blkavail++;
         }
@@ -36,7 +36,7 @@ static uint8_t mm_blk_fragment_case1(void)
     /* free all blocks */
     blkavail = 0;
     do {
-        ret = yunos_mblk_free(&mblk_pool_test, ptr[blkavail]);
+        ret = krhino_mblk_free(&mblk_pool_test, ptr[blkavail]);
         if (ret == RHINO_SUCCESS) {
             blkavail++;
         }
@@ -60,7 +60,7 @@ void mm_blk_fragment_test(void)
     task_mm_blk_entry_register(MODULE_NAME, (test_func_t *)mm_blk_func_runner,
                                sizeof(mm_blk_func_runner) / sizeof(test_func_t));
 
-    ret = yunos_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
+    ret = krhino_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;

@@ -68,8 +68,8 @@ extern int __bss_start__, __bss_end__, _sdata, _edata;
 void yos_mm_leak_region_init(void)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0)
-    yunos_mm_leak_region_init(&__bss_start__, &__bss_end__);
-    yunos_mm_leak_region_init(&_sdata, &_edata);
+    krhino_mm_leak_region_init(&__bss_start__, &__bss_end__);
+    krhino_mm_leak_region_init(&_sdata, &_edata);
 #endif
 }
 
@@ -92,7 +92,7 @@ static void soc_print_stack()
     int      i=0;
     int     *p;
 
-    end   = yunos_cur_task_get()->task_stack_base + yunos_cur_task_get()->stack_size;
+    end   = krhino_cur_task_get()->task_stack_base + krhino_cur_task_get()->stack_size;
     cur = soc_get_cur_sp();
     p = (int*)cur;
     while(p < (int*)end) {
@@ -113,5 +113,5 @@ void soc_err_proc(kstat_t err)
     assert(0);
 }
 
-yunos_err_proc_t g_err_proc = soc_err_proc;
+krhino_err_proc_t g_err_proc = soc_err_proc;
 

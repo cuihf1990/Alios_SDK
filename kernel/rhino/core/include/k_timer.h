@@ -39,7 +39,7 @@ typedef enum {
  * @param[in]  auto_run  auto run or not when the timer is created
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
+kstat_t krhino_timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
                            tick_t first, tick_t round, void *arg, uint8_t auto_run);
 
 /**
@@ -47,7 +47,7 @@ kstat_t yunos_timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
  * @param[in]  timer  pointer to a timer
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_timer_del(ktimer_t *timer);
+kstat_t krhino_timer_del(ktimer_t *timer);
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 /**
@@ -61,7 +61,7 @@ kstat_t yunos_timer_del(ktimer_t *timer);
  * @param[in]  auto_run  auto run or not when the timer is created
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_timer_dyn_create(ktimer_t **timer, const name_t *name,
+kstat_t krhino_timer_dyn_create(ktimer_t **timer, const name_t *name,
                                timer_cb_t cb,
                                tick_t first, tick_t round, void *arg, uint8_t auto_run);
 /**
@@ -69,7 +69,7 @@ kstat_t yunos_timer_dyn_create(ktimer_t **timer, const name_t *name,
  * @param[in]  timer  pointer to a timer
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_timer_dyn_del(ktimer_t *timer);
+kstat_t krhino_timer_dyn_del(ktimer_t *timer);
 #endif
 
 /**
@@ -77,14 +77,14 @@ kstat_t yunos_timer_dyn_del(ktimer_t *timer);
  * @param[in]  timer  pointer to the timer
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_timer_start(ktimer_t *timer);
+kstat_t krhino_timer_start(ktimer_t *timer);
 
 /**
  * This function will stop a timer
  * @param[in]  timer  pointer to the timer
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_timer_stop(ktimer_t *timer);
+kstat_t krhino_timer_stop(ktimer_t *timer);
 
 /**
  * This function will change attributes of a timer
@@ -93,7 +93,7 @@ kstat_t yunos_timer_stop(ktimer_t *timer);
  * @param[in]  round  ticks of the normal timer triger
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_timer_change(ktimer_t *timer, tick_t first, tick_t round);
+kstat_t krhino_timer_change(ktimer_t *timer, tick_t first, tick_t round);
 
 #endif /* K_TIMER_H */
 

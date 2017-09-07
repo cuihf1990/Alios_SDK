@@ -29,7 +29,7 @@ RHINO_INLINE void tick_list_pri_insert(klist_t *head, ktask_t *task)
     val = task->tick_remain;
 
     for (q = list_start->next; q != list_end; q = q->next) {
-        task_iter_temp = yunos_list_entry(q, ktask_t, tick_list);
+        task_iter_temp = krhino_list_entry(q, ktask_t, tick_list);
         if ((task_iter_temp->tick_match - g_tick_count) > val) {
             break;
         }
@@ -38,7 +38,7 @@ RHINO_INLINE void tick_list_pri_insert(klist_t *head, ktask_t *task)
     klist_insert(q, &task->tick_list);
 
 #if (RHINO_CONFIG_DYNTICKLESS > 0)
-    task_iter_temp = yunos_list_entry(head->next, ktask_t, tick_list);
+    task_iter_temp = krhino_list_entry(head->next, ktask_t, tick_list);
 
     if (g_next_intrpt_ticks > task_iter_temp->tick_match - g_tick_count) {
         g_next_intrpt_ticks = task_iter_temp->tick_match - g_tick_count;
@@ -103,7 +103,7 @@ void tick_list_update(void)
         /* search all the time list if possible */
         if (iter != tick_head_ptr) {
             iter_temp = iter->next;
-            p_tcb     = yunos_list_entry(iter, ktask_t, tick_list);
+            p_tcb     = krhino_list_entry(iter, ktask_t, tick_list);
 
             /* since time list is sorted by remain time, so just campare  the absolute time */
             if (g_tick_count == p_tcb->tick_match) {
@@ -155,7 +155,7 @@ void tick_list_update(void)
 #if (RHINO_CONFIG_DYNTICKLESS > 0)
 
     if (tick_head_ptr->next != tick_head_ptr) {
-        p_tcb = yunos_list_entry(tick_head_ptr->next, ktask_t, tick_list);
+        p_tcb = krhino_list_entry(tick_head_ptr->next, ktask_t, tick_list);
         g_next_intrpt_ticks = p_tcb->tick_match - g_tick_count;
     } else {
         g_next_intrpt_ticks = (tick_t) - 1;
@@ -175,7 +175,7 @@ static void tick_task_proc(void *para)
     (void)para;
 
     while (RHINO_TRUE) {
-        ret = yunos_task_sem_take(RHINO_WAIT_FOREVER);
+        ret = krhino_task_sem_take(RHINO_WAIT_FOREVER);
         if (ret == RHINO_SUCCESS) {
             if (g_sys_stat == RHINO_RUNNING) {
                 tick_list_update();
@@ -187,10 +187,10 @@ static void tick_task_proc(void *para)
 void tick_task_start(void)
 {
     /* create tick task to caculate task sleep and timeout */
-    yunos_task_create(&g_tick_task, "tick_task", NULL, RHINO_CONFIG_TICK_TASK_PRI,
+    krhino_task_create(&g_tick_task, "tick_task", NULL, RHINO_CONFIG_TICK_TASK_PRI,
                       0, g_tick_task_stack, RHINO_CONFIG_TICK_TASK_STACK_SIZE, tick_task_proc, 1);
 
-    yunos_task_sem_create(&g_tick_task, &g_tick_sem, "tick_task_sem", 0);
+    krhino_task_sem_create(&g_tick_task, &g_tick_sem, "tick_task_sem", 0);
 
 }
 #endif

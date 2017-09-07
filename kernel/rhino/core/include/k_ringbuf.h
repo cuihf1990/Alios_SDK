@@ -55,7 +55,7 @@ size_t    blk_size:
  * @param[in]  block_size  block size of fix length ringbuf, if dynamic ringbuffer, ignore this parameter
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_ringbuf_init   (k_ringbuf_t *p_ringbuf, void *buf, size_t len,
+kstat_t krhino_ringbuf_init   (k_ringbuf_t *p_ringbuf, void *buf, size_t len,
                               size_t type, size_t block_size);
 
 /**
@@ -63,7 +63,7 @@ kstat_t yunos_ringbuf_init   (k_ringbuf_t *p_ringbuf, void *buf, size_t len,
  * @param[in]  p_ringbuf   pointer to ring buffer
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_ringbuf_reset(k_ringbuf_t *p_ringbuf);
+kstat_t krhino_ringbuf_reset(k_ringbuf_t *p_ringbuf);
 
 /**
  * This function will push the data to ring buffer end.
@@ -72,7 +72,7 @@ kstat_t yunos_ringbuf_reset(k_ringbuf_t *p_ringbuf);
  * @param[in]  len         length of data
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
+kstat_t krhino_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
 
 /**
  * This function will push the data to ring buffer head.
@@ -81,7 +81,7 @@ kstat_t yunos_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
  * @param[in]  len         length of data
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
+kstat_t krhino_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
 
 /**
  * This function will pop the data from ring buffer head.
@@ -90,7 +90,7 @@ kstat_t yunos_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
  * @param[out]      plen         length of data
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen);
+kstat_t krhino_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen);
 
 
 /**
@@ -98,14 +98,14 @@ kstat_t yunos_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen);
  * @param[in]       p_ringbuf   pointer to ring buffer
  * @return  the ringbuf status, true is full. else is not.
  */
-uint8_t    yunos_ringbuf_is_full(k_ringbuf_t *p_ringbuf);
+uint8_t    krhino_ringbuf_is_full(k_ringbuf_t *p_ringbuf);
 
 /**
  * This function will check if  the ring buffer is empty.
  * @param[in]       p_ringbuf   pointer to ring buffer
  * @return  the ringbuf status, true is empty. else is not.
  */
-uint8_t    yunos_ringbuf_is_empty(k_ringbuf_t *p_ringbuf);
+uint8_t    krhino_ringbuf_is_empty(k_ringbuf_t *p_ringbuf);
 #endif
 
 #endif

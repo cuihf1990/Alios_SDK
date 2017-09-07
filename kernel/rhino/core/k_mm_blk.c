@@ -5,7 +5,7 @@
 #include <k_api.h>
 
 #if (RHINO_CONFIG_MM_BLK > 0)
-kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
+kstat_t krhino_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
                              void *pool_start,
                              size_t blk_size, size_t pool_size)
 {
@@ -74,12 +74,12 @@ kstat_t yunos_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
     RHINO_CRITICAL_EXIT();
 #endif
 
-    TRACE_MBLK_POOL_CREATE(yunos_cur_task_get(), pool);
+    TRACE_MBLK_POOL_CREATE(krhino_cur_task_get(), pool);
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_mblk_alloc(mblk_pool_t *pool, void **blk)
+kstat_t krhino_mblk_alloc(mblk_pool_t *pool, void **blk)
 {
     CPSR_ALLOC();
 
@@ -112,7 +112,7 @@ kstat_t yunos_mblk_alloc(mblk_pool_t *pool, void **blk)
     return status;
 }
 
-kstat_t yunos_mblk_free(mblk_pool_t *pool, void *blk)
+kstat_t krhino_mblk_free(mblk_pool_t *pool, void *blk)
 {
     CPSR_ALLOC();
 

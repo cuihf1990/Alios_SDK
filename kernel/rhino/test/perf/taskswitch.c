@@ -36,12 +36,12 @@ static void SwitchTask3(void *arg)
     while (1) {
         for (TaskSwitch = 0; TaskSwitch < TASKSWITCH_NUM;) {
             Starttime = hobbit_timer0_get_curval();
-            yunos_task_yield();
+            krhino_task_yield();
             Endtime = hobbit_timer0_get_curval();
             SwitchTimeBUFF[TaskSwitch++] = (double)(Starttime - Endtime);
         }
 
-        yunos_sem_give(SwitchSynhandle);
+        krhino_sem_give(SwitchSynhandle);
     }
 }
 
@@ -52,10 +52,10 @@ static void SwitchTask4(void *arg)
             Endtime = hobbit_timer0_get_curval();
             SwitchTimeBUFF[TaskSwitch++] = (double)(Starttime - Endtime);
             Starttime = hobbit_timer0_get_curval();
-            yunos_task_yield();
+            krhino_task_yield();
         }
 
-        yunos_sem_give(SwitchSynhandle);
+        krhino_sem_give(SwitchSynhandle);
     }
 
 }
@@ -64,7 +64,7 @@ void TaskYIELDtimeTest(void *arg)
 {
     unsigned long i ;
 
-    yunos_sem_dyn_create(&SwitchSynhandle, "switch", 0);
+    krhino_sem_dyn_create(&SwitchSynhandle, "switch", 0);
     TaskSwitch = 0;
     WaitForNew_tick();
 
@@ -74,23 +74,23 @@ void TaskYIELDtimeTest(void *arg)
 
     memset((void *)SwitchTimeBUFF, 0, sizeof(double)*TASKSWITCH_NUM);
 
-    yunos_sem_dyn_create(&Switchhandle[0], "s1", 0);
+    krhino_sem_dyn_create(&Switchhandle[0], "s1", 0);
 
-    yunos_sem_dyn_create(&Switchhandle[1], "s1", 0);
+    krhino_sem_dyn_create(&Switchhandle[1], "s1", 0);
 
 
-    yunos_task_dyn_create(&xSwitchTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
+    krhino_task_dyn_create(&xSwitchTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
                           0, TASK_TEST_STACK_SIZE, SwitchTask3, 1);
 
-    yunos_task_dyn_create(&xSwitchTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 1,
+    krhino_task_dyn_create(&xSwitchTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 1,
                           0, TASK_TEST_STACK_SIZE, SwitchTask4, 1);
 
     hobbit_timer0_start();
 
-    yunos_sem_take(SwitchSynhandle, RHINO_WAIT_FOREVER);
+    krhino_sem_take(SwitchSynhandle, RHINO_WAIT_FOREVER);
 
-    yunos_task_dyn_del(xSwitchTaskHandle[0]);
-    yunos_task_dyn_del(xSwitchTaskHandle[1]);
+    krhino_task_dyn_del(xSwitchTaskHandle[0]);
+    krhino_task_dyn_del(xSwitchTaskHandle[1]);
 
 
     for (i = 0; i < TASKSWITCH_NUM; i++) {
@@ -99,8 +99,8 @@ void TaskYIELDtimeTest(void *arg)
     }
 
     show_times_detail(SwitchTimeBUFF , TASKSWITCH_NUM, "TaskYIELD\t", 1);
-    yunos_task_sleep(10);
+    krhino_task_sleep(10);
 
-    yunos_sem_give(SYNhandle);
+    krhino_sem_give(SYNhandle);
 
 }

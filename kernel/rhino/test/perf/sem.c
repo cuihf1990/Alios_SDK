@@ -35,11 +35,11 @@ static void BinaryShuf1(void *arg)
     while (1) {
 
         Starttime = hobbit_timer0_get_curval();
-        yunos_sem_give(Shufhandle[0]);
-        yunos_sem_take(Shufhandle[1], RHINO_WAIT_FOREVER);
+        krhino_sem_give(Shufhandle[0]);
+        krhino_sem_take(Shufhandle[1], RHINO_WAIT_FOREVER);
 
         if (ShufSwitch >= SWITCH_NUM) {
-            yunos_sem_give(ShufSynhandle);
+            krhino_sem_give(ShufSynhandle);
         }
     }
 }
@@ -50,17 +50,17 @@ static void BinaryShuf2(void *arg)
     WaitForNew_tick();
 
     while (1) {
-        yunos_sem_take(Shufhandle[0], RHINO_WAIT_FOREVER);
+        krhino_sem_take(Shufhandle[0], RHINO_WAIT_FOREVER);
 
         Endtime = hobbit_timer0_get_curval();
         Runtime = Starttime - Endtime;
 
         ShufBUFF[ShufSwitch] = Runtime;
-        yunos_sem_give(Shufhandle[1]);
+        krhino_sem_give(Shufhandle[1]);
         ShufSwitch++;
 
         if (ShufSwitch >= SWITCH_NUM) {
-            yunos_sem_give(ShufSynhandle);
+            krhino_sem_give(ShufSynhandle);
         }
     }
 }
@@ -70,7 +70,7 @@ void BinaryShufTimetest(void *arg)
     unsigned long i ;
     WaitForNew_tick();
 
-    yunos_sem_dyn_create(&ShufSynhandle, "synsem", 0);
+    krhino_sem_dyn_create(&ShufSynhandle, "synsem", 0);
     ShufSwitch = 0;
 
     hobbit_timer0_stop();
@@ -78,27 +78,27 @@ void BinaryShufTimetest(void *arg)
 
     memset(ShufBUFF, 0, sizeof(double)*SWITCH_NUM);
 
-    yunos_sem_dyn_create(&Shufhandle[0], "sem", 0);
-    yunos_sem_dyn_create(&Shufhandle[1], "sem", 0);
+    krhino_sem_dyn_create(&Shufhandle[0], "sem", 0);
+    krhino_sem_dyn_create(&Shufhandle[1], "sem", 0);
 
 
-    yunos_task_dyn_create(&ShufTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
+    krhino_task_dyn_create(&ShufTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
                           0, TASK_TEST_STACK_SIZE, BinaryShuf1, 1);
-    yunos_task_dyn_create(&ShufTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 1,
+    krhino_task_dyn_create(&ShufTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 1,
                           0, TASK_TEST_STACK_SIZE, BinaryShuf2, 1);
 
     hobbit_timer0_start();
 
-    yunos_sem_take(ShufSynhandle, RHINO_WAIT_FOREVER);
+    krhino_sem_take(ShufSynhandle, RHINO_WAIT_FOREVER);
 
-    yunos_task_dyn_del(ShufTaskHandle[0]);
-    yunos_task_dyn_del(ShufTaskHandle[1]);
+    krhino_task_dyn_del(ShufTaskHandle[0]);
+    krhino_task_dyn_del(ShufTaskHandle[1]);
 
     for (i = 0; i < SWITCH_NUM; i++) {
         ShufBUFF[i] = (double) Turn_to_Realtime(ShufBUFF[i]);
     }
 
     show_times_detail(ShufBUFF , SWITCH_NUM, "BinaryShuf\t", 1);
-    yunos_task_sleep(30);
-    yunos_sem_give(SYNhandle);
+    krhino_task_sleep(30);
+    krhino_sem_give(SYNhandle);
 }

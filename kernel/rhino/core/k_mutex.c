@@ -30,12 +30,12 @@ kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
 
     mutex->blk_obj.obj_type = RHINO_MUTEX_OBJ_TYPE;
 
-    TRACE_MUTEX_CREATE(yunos_cur_task_get(), mutex, name);
+    TRACE_MUTEX_CREATE(krhino_cur_task_get(), mutex, name);
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_mutex_create(kmutex_t *mutex, const name_t *name)
+kstat_t krhino_mutex_create(kmutex_t *mutex, const name_t *name)
 {
     return mutex_create(mutex, name, K_OBJ_STATIC_ALLOC);
 }
@@ -55,7 +55,7 @@ static void mutex_release(ktask_t *task, kmutex_t *mutex_rel)
     }
 }
 
-kstat_t yunos_mutex_del(kmutex_t *mutex)
+kstat_t krhino_mutex_del(kmutex_t *mutex)
 {
     CPSR_ALLOC();
 
@@ -91,7 +91,7 @@ kstat_t yunos_mutex_del(kmutex_t *mutex)
 
     /* all task blocked on this mutex is waken up */
     while (!is_klist_empty(blk_list_head)) {
-        pend_task_rm(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
+        pend_task_rm(krhino_list_entry(blk_list_head->next, ktask_t, task_list));
     }
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
@@ -106,7 +106,7 @@ kstat_t yunos_mutex_del(kmutex_t *mutex)
 }
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_mutex_dyn_create(kmutex_t **mutex, const name_t *name)
+kstat_t krhino_mutex_dyn_create(kmutex_t **mutex, const name_t *name)
 {
     kstat_t  stat;
     kmutex_t *mutex_obj;
@@ -117,14 +117,14 @@ kstat_t yunos_mutex_dyn_create(kmutex_t **mutex, const name_t *name)
 
     NULL_PARA_CHK(mutex);
 
-    mutex_obj = yunos_mm_alloc(sizeof(kmutex_t));
+    mutex_obj = krhino_mm_alloc(sizeof(kmutex_t));
     if (mutex_obj == NULL) {
         return RHINO_NO_MEM;
     }
 
     stat = mutex_create(mutex_obj, name, K_OBJ_DYN_ALLOC);
     if (stat != RHINO_SUCCESS) {
-        yunos_mm_free(mutex_obj);
+        krhino_mm_free(mutex_obj);
         return stat;
     }
 
@@ -133,7 +133,7 @@ kstat_t yunos_mutex_dyn_create(kmutex_t **mutex, const name_t *name)
     return stat;
 }
 
-kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
+kstat_t krhino_mutex_dyn_del(kmutex_t *mutex)
 {
     CPSR_ALLOC();
 
@@ -169,7 +169,7 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
 
     /* all task blocked on this mutex is waken up */
     while (!is_klist_empty(blk_list_head)) {
-        pend_task_rm(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
+        pend_task_rm(krhino_list_entry(blk_list_head->next, ktask_t, task_list));
     }
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
@@ -180,7 +180,7 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex)
 
     RHINO_CRITICAL_EXIT_SCHED();
 
-    yunos_mm_free(mutex);
+    krhino_mm_free(mutex);
 
     return RHINO_SUCCESS;
 }
@@ -200,7 +200,7 @@ uint8_t mutex_pri_limit(ktask_t *task, uint8_t pri)
         blk_list_head = &mutex_tmp->blk_obj.blk_list;
 
         if (!is_klist_empty(blk_list_head)) {
-            first_blk_task = yunos_list_entry(blk_list_head->next, ktask_t, task_list);
+            first_blk_task = krhino_list_entry(blk_list_head->next, ktask_t, task_list);
             pri = first_blk_task->prio;
         }
 
@@ -238,7 +238,7 @@ uint8_t mutex_pri_look(ktask_t *task, kmutex_t *mutex_rel)
 
         blk_list_head = &mutex_tmp->blk_obj.blk_list;
         if (!is_klist_empty(blk_list_head)) {
-            first_blk_task = yunos_list_entry(blk_list_head->next, ktask_t, task_list);
+            first_blk_task = krhino_list_entry(blk_list_head->next, ktask_t, task_list);
             pri = first_blk_task->prio;
         }
 
@@ -268,7 +268,7 @@ void mutex_task_pri_reset(ktask_t *task)
     }
 }
 
-kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
+kstat_t krhino_mutex_lock(kmutex_t *mutex, tick_t ticks)
 {
     CPSR_ALLOC();
 
@@ -365,7 +365,7 @@ kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks)
     return ret;
 }
 
-kstat_t yunos_mutex_unlock(kmutex_t *mutex)
+kstat_t krhino_mutex_unlock(kmutex_t *mutex)
 {
     CPSR_ALLOC();
 
@@ -419,7 +419,7 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
     }
 
     /* there must have task blocked on this mutex object */
-    task = yunos_list_entry(blk_list_head->next, ktask_t, task_list);
+    task = krhino_list_entry(blk_list_head->next, ktask_t, task_list);
 
     /* wake up the occupy task, which is the highst prio task on the list */
     pend_task_wakeup(task);
@@ -437,7 +437,7 @@ kstat_t yunos_mutex_unlock(kmutex_t *mutex)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_mutex_is_valid(kmutex_t *mutex)
+kstat_t krhino_mutex_is_valid(kmutex_t *mutex)
 {
     NULL_PARA_CHK(mutex);
 

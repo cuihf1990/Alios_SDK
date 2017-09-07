@@ -131,7 +131,7 @@ static void teardown(void)
 
 }
 
-static yunit_test_case_t yunos_basic_testcases[] = {
+static yunit_test_case_t krhino_basic_testcases[] = {
     { "test_md5", test_md5},
     { "test_sha256", test_sha256},
     { "test_sha384 ", test_sha384 },
@@ -141,7 +141,7 @@ static yunit_test_case_t yunos_basic_testcases[] = {
 };
 
 static yunit_test_suite_t suites[] = {
-    { "hashtable", init, cleanup, setup, teardown, yunos_basic_testcases },
+    { "hashtable", init, cleanup, setup, teardown, krhino_basic_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

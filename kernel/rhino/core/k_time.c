@@ -5,7 +5,7 @@
 #include <k_api.h>
 
 #if (RHINO_CONFIG_DYNTICKLESS > 0)
-void yunos_tickless_proc(tick_t ticks)
+void krhino_tickless_proc(tick_t ticks)
 {
     CPSR_ALLOC();
 
@@ -14,7 +14,7 @@ void yunos_tickless_proc(tick_t ticks)
 #endif
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_tick_hook();
+    krhino_tick_hook();
 #endif
 
     RHINO_CPU_INTRPT_DISABLE();
@@ -24,24 +24,24 @@ void yunos_tickless_proc(tick_t ticks)
     RHINO_CPU_INTRPT_ENABLE();
 
 #if (RHINO_CONFIG_TICK_TASK > 0)
-    yunos_task_sem_give(&g_tick_task);
+    krhino_task_sem_give(&g_tick_task);
 #else
     tick_list_update();
 #endif
 }
 #else
-void yunos_tick_proc(void)
+void krhino_tick_proc(void)
 {
 #if (RHINO_CONFIG_INTRPT_GUARD > 0)
     soc_intrpt_guard();
 #endif
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_tick_hook();
+    krhino_tick_hook();
 #endif
 
 #if (RHINO_CONFIG_TICK_TASK > 0)
-    yunos_task_sem_give(&g_tick_task);
+    krhino_task_sem_give(&g_tick_task);
 #else
     tick_list_update();
 #endif
@@ -56,7 +56,7 @@ void yunos_tick_proc(void)
 }
 #endif
 
-sys_time_t yunos_sys_tick_get(void)
+sys_time_t krhino_sys_tick_get(void)
 {
     sys_time_t tick_tmp;
 
@@ -78,13 +78,13 @@ sys_time_t yunos_sys_tick_get(void)
     return tick_tmp;
 }
 
-sys_time_t yunos_sys_time_get(void)
+sys_time_t krhino_sys_time_get(void)
 {
-    return (sys_time_t)(yunos_sys_tick_get() * 1000 /
+    return (sys_time_t)(krhino_sys_tick_get() * 1000 /
                         RHINO_CONFIG_TICKS_PER_SECOND);
 }
 
-tick_t     yunos_ms_to_ticks(sys_time_t ms)
+tick_t     krhino_ms_to_ticks(sys_time_t ms)
 {
     uint16_t  padding;
     uint16_t  surplus;
@@ -100,7 +100,7 @@ tick_t     yunos_ms_to_ticks(sys_time_t ms)
     return ticks;
 }
 
-sys_time_t yunos_ticks_to_ms(tick_t ticks)
+sys_time_t krhino_ticks_to_ms(tick_t ticks)
 {
     uint32_t   padding;
     uint32_t   surplus;

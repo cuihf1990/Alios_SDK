@@ -31,44 +31,44 @@ static void task_sem_opr_entry(void *arg)
 {
     kstat_t ret;
 
-    ret = yunos_kobj_select(handle, &select_obj, RHINO_WAIT_FOREVER);
+    ret = krhino_kobj_select(handle, &select_obj, RHINO_WAIT_FOREVER);
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
     /* queue1 will be selected first */
     TEST_FW_VAL_CHK(MODULE_NAME, ((size_t)select_obj == (size_t)(&queue1)));
 
     if (test_case_check_err == 0) {
-        ret = yunos_queue_recv((kqueue_t *)select_obj, RHINO_NO_WAIT, &msg_word_recv);
+        ret = krhino_queue_recv((kqueue_t *)select_obj, RHINO_NO_WAIT, &msg_word_recv);
         TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
         TEST_FW_VAL_CHK(MODULE_NAME, *((uint8_t *)&msg_word_recv) == MSG_SIGNATURE);
         msg_word_recv = NULL;
     }
 
-    ret = yunos_kobj_select(handle, &select_obj, RHINO_WAIT_FOREVER);
+    ret = krhino_kobj_select(handle, &select_obj, RHINO_WAIT_FOREVER);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
     /* queue2 will be selected next */
     TEST_FW_VAL_CHK(MODULE_NAME, ((size_t)select_obj == (size_t)(&queue2)));
 
     if (test_case_check_err == 0) {
-        ret = yunos_queue_recv((kqueue_t *)select_obj, RHINO_NO_WAIT, &msg_word_recv);
+        ret = krhino_queue_recv((kqueue_t *)select_obj, RHINO_NO_WAIT, &msg_word_recv);
         TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
         TEST_FW_VAL_CHK(MODULE_NAME, *((uint8_t *)&msg_word_recv) == MSG_SIGNATURE);
         msg_word_recv = NULL;
     }
 
-    ret = yunos_kobj_set_rm((blk_obj_t *)&queue1);
+    ret = krhino_kobj_set_rm((blk_obj_t *)&queue1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_kobj_set_rm((blk_obj_t *)&queue2);
+    ret = krhino_kobj_set_rm((blk_obj_t *)&queue2);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_kobj_set_dyn_del(handle);
+    ret = krhino_kobj_set_dyn_del(handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_queue_del(&queue1);
+    ret = krhino_queue_del(&queue1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_queue_del(&queue2);
+    ret = krhino_queue_del(&queue2);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     if (test_case_check_err == 0) {
@@ -76,17 +76,17 @@ static void task_sem_opr_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 }
 
 static void task_queue_trigger_entry(void *arg)
 {
     *((uint8_t *)&msg_word_send) = MSG_SIGNATURE;
 
-    yunos_queue_front_send(&queue1, (void *)msg_word_send);
-    yunos_queue_back_send(&queue2, (void *)msg_word_send);
+    krhino_queue_front_send(&queue1, (void *)msg_word_send);
+    krhino_queue_back_send(&queue2, (void *)msg_word_send);
 
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 }
 
 /*
@@ -98,21 +98,21 @@ void sem_queue_coopr_test(void)
 
     test_case_check_err = 0;
 
-    ret = yunos_kobj_set_dyn_create(&handle, "obj_set", OBJ_SET_COUNT);
+    ret = krhino_kobj_set_dyn_create(&handle, "obj_set", OBJ_SET_COUNT);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    yunos_queue_create(&queue1, "queue1", (void **)&queue1_msg_buff, TEST_MSG_SIZE);
-    yunos_queue_create(&queue2, "queue2", (void **)&queue2_msg_buff, TEST_MSG_SIZE);
+    krhino_queue_create(&queue1, "queue1", (void **)&queue1_msg_buff, TEST_MSG_SIZE);
+    krhino_queue_create(&queue2, "queue2", (void **)&queue2_msg_buff, TEST_MSG_SIZE);
 
-    yunos_kobj_set_insert((blk_obj_t *)&queue1, handle);
-    yunos_kobj_set_insert((blk_obj_t *)&queue2, handle);
+    krhino_kobj_set_insert((blk_obj_t *)&queue1, handle);
+    krhino_kobj_set_insert((blk_obj_t *)&queue2, handle);
 
-    ret = yunos_task_dyn_create(&task_select, MODULE_NAME, 0, TASK_COMB_PRI,
+    ret = krhino_task_dyn_create(&task_select, MODULE_NAME, 0, TASK_COMB_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
-    ret = yunos_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0,
+    ret = krhino_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0,
                                 TASK_COMB_PRI + 1,
                                 0, TASK_TEST_STACK_SIZE, task_queue_trigger_entry, 1);
 
