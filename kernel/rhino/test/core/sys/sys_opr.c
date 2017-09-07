@@ -14,7 +14,7 @@ static uint8_t sys_opr_case1(void)
     const name_t *ptr;
 
     ptr = krhino_version_get();
-    if (strcmp(ptr, RHINO_VERSION) != 0) {
+    if (strcmp(ptr, SYSINFO_KERNEL_VERSION) != 0) {
         return 1;
     }
 
