@@ -461,12 +461,14 @@ int32_t HAL_SSL_Destroy(uintptr_t handle)
     return 0;
 }
 
+#ifndef STM32L475xx
 int ssl_fd = -1;
 
 int get_ssl_fd()
 {
    return ssl_fd;
 }
+#endif
 
 uintptr_t HAL_SSL_Establish(const char *host,
                                       uint16_t port,
@@ -495,8 +497,9 @@ uintptr_t HAL_SSL_Establish(const char *host,
         free(pTlsData);
         return 0;
     }
-
+#ifndef STM32L475xx
     ssl_fd = pTlsData->fd.fd;
-    SSL_LOG(" ssl_fd %d \n ", ssl_fd);
+    //SSL_LOG(" ssl_fd %d \n ", ssl_fd);
+#endif
     return (uintptr_t)pTlsData;
 }
