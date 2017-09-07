@@ -26,6 +26,7 @@
 #include <yts.h>
 #include "iot_import.h"
 #include "iot_export.h"
+#include "CoAPExport.h"
 
 
 #define IOTX_PRODUCT_KEY         "vtkkbrpmxmF"
@@ -98,6 +99,7 @@ static void user_code_start()
     }
 }
 
+int times = 0;
 static void test_coap_start(void)
 {
     int ret;
@@ -128,13 +130,16 @@ static void test_coap_start(void)
     p_ctx = IOT_CoAP_Init(&config);
     YUNIT_ASSERT(NULL != p_ctx); 
     if(NULL != p_ctx){
+        ret = iotx_get_well_known(p_ctx);
+        YUNIT_ASSERT(IOTX_SUCCESS == ret);
         ret = IOT_CoAP_DeviceNameAuth(p_ctx);
         YUNIT_ASSERT(IOTX_SUCCESS == ret); 
-        {
+        do{
+            times ++;
             iotx_post_data_to_server((void *)p_ctx);
             ret = IOT_CoAP_Yield(p_ctx);
             YUNIT_ASSERT(IOTX_SUCCESS == ret); 
-        }
+        }while(times<2);
         IOT_CoAP_Deinit(&p_ctx);
         YUNIT_ASSERT(NULL == p_ctx); 
     }
@@ -175,13 +180,34 @@ static void ut_coap_init(void)
     void *p_ctx = NULL;
 
     iotx_set_devinfo(&devinfo);
+//case1
     config.p_devinfo = &devinfo;
     config.p_url = "coaps://pre.iot-as-coap.cn-shanghai.aliyuncs.cn:5684";
     p_ctx = IOT_CoAP_Init(&config);
     if (p_ctx != NULL) {
         IOT_CoAP_Deinit(&p_ctx);
     }
-    YUNIT_ASSERT(NULL == p_ctx); 
+    YUNIT_ASSERT(NULL == p_ctx);
+//case2
+    config.p_devinfo = NULL;
+    config.p_url = "coaps://pre.iot-as-coap.cn-shanghai.aliyuncs.cn:5684";
+    if (p_ctx != NULL) {
+        IOT_CoAP_Deinit(&p_ctx);
+    }
+    YUNIT_ASSERT(NULL == p_ctx);
+//case3
+    config.p_devinfo = &devinfo;
+    config.p_url = NULL;
+    if (p_ctx != NULL) {
+        IOT_CoAP_Deinit(&p_ctx);
+    }
+    YUNIT_ASSERT(NULL == p_ctx);
+//case4
+   p_ctx = IOT_CoAP_Init(NULL);
+    if (p_ctx != NULL) {
+        IOT_CoAP_Deinit(&p_ctx);
+    }
+    YUNIT_ASSERT(NULL == p_ctx);
 }
 
 static void ut_coap_deinit(void)
@@ -200,11 +226,68 @@ static void ut_coap_deinit(void)
     YUNIT_ASSERT(NULL == p_ctx); 
 }
 
+/* IOT_CoAP_DeviceNameAuth: p_context=NULL */
+static void ut_coap_auth(void)
+{
+    int ret = IOT_CoAP_DeviceNameAuth(NULL);
+    YUNIT_ASSERT(ret < 0);
+}
+
+// IOT_CoAP_SendMessage: p_context=NULL
+static void ut_coap_sendmsg(void)
+{
+    char uri[IOTX_URI_MAX_LEN+1] = {0};
+    iotx_message_t    message;
+    int ret = -1;
+
+    message.p_payload     = "{\"name\":\"hello world\"}";
+    message.payload_len   = strlen("{\"name\":\"hello world\"}");
+    message.resp_callback = iotx_response_handler;
+    message.msg_type      = IOTX_MESSAGE_NON;
+    message.content_type  = IOTX_CONTENT_TYPE_JSON;
+
+    ret = IOT_CoAP_SendMessage(NULL, uri, &message);
+    YUNIT_ASSERT(ret < 0);
+}
+
+// IOT_CoAP_Yield(NULL)
+static void ut_coap_yield(void)
+{
+    int ret = IOT_CoAP_Yield(NULL);
+    YUNIT_ASSERT(ret<0);
+}
+
+// IOT_CoAP_GetMessageCode(NULL,NULL)
+static void ut_coap_getmsg(void)
+{
+    int ret = -1;
+
+    ret = IOT_CoAP_GetMessageCode(NULL, NULL);
+    ret = IOT_CoAP_GetMessagePayload(NULL, NULL, NULL);
+    YUNIT_ASSERT(ret<0);
+}
+
+// (NULL,NULL)
+static void ut_coap_nullcase(void)
+{
+    int ret = -1;
+    CoAPMessage msg;
+    iotx_event_notifyer(0, NULL);
+    msg.user = NULL;
+    iotx_event_notifyer(0, &msg);
+    YUNIT_ASSERT(ret<0);
+}
+
+
 static yunit_test_case_t yunos_basic_testcases[] = {
-//    { "init", ut_coap_init},
-//    { "deinit", ut_coap_deinit},
+    { "init", ut_coap_init},
+    { "deinit", ut_coap_deinit},
+    { "auth", ut_coap_auth},
+    { "sendmsg", ut_coap_sendmsg},
+    { "getmsg", ut_coap_getmsg},
+    { "yield", ut_coap_yield},
+    { "null_case", ut_coap_nullcase},
     { "coap_start", test_coap_start},
-//    { "sandbox",test_alink_sandbox},
     YUNIT_TEST_CASE_NULL
 };
 

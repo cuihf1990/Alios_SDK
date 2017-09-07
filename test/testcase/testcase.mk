@@ -19,6 +19,13 @@ ifeq ($(CONFIG_COAP_ONLINE), y)
 $(NAME)_DEFINES += COAP_ONLINE
 endif
 
+$(NAME)_INCLUDES += ../../utility/iotx-utils/sdk-impl/imports/
+$(NAME)_INCLUDES += ../../utility/iotx-utils/mbedtls-lib/include
+$(NAME)_INCLUDES += ../../utility/iotx-utils/LITE-log
+$(NAME)_INCLUDES += ../../utility/iotx-utils//LITE-utils
+$(NAME)_INCLUDES += ../../utility/iotx-utils//digest
+$(NAME)_INCLUDES += ../../framework/connectivity/coap/iot-coap-c/
+
 $(NAME)_COMPONENTS  += connectivity.coap
 
 #YTS_COAP
