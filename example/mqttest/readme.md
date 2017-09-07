@@ -27,3 +27,32 @@
 
 ### java客户端
 转到[这儿](http://gitlab.alibaba-inc.com/shaofa.lsf/iotx-sdk-c-test/blob/master/stress/readme.md)
+1. 修改config.properties
+
+```shell
+// device name
+deviceName=dev_mqtt_pressure_01
+
+// device secret
+deviceSecret=DvXBo9foOWMIcWAWi6g76wn7Eu5Qn6UY
+
+// product key
+productKey=GJ2uoVqx7ka
+
+// publish topic name, e.g. roductKey/deviceName/data1
+pubTopic=data1
+
+// subscribe topic name
+subTopic=data2
+
+// pps, in [1, 5]
+packagesPerSecond=1
+
+// online/pre/daily, not support now
+envirinment=online
+```
+
+2. 启动Java SDK 设备
+```shell
+$ java -jar mqttclient-stress-test-client-java.jar
+```
