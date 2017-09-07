@@ -15,9 +15,9 @@ OSStatus mico_rtos_create_thread( mico_thread_t* thread, uint8_t priority, const
     ktask_t *task_tmp;
 
     if (thread == NULL) {
-        ret = yunos_task_dyn_create(&task_tmp, name, (void *)arg, priority, 0, stack_size/4, (task_entry_t)function, 1);
+        ret = krhino_task_dyn_create(&task_tmp, name, (void *)arg, priority, 0, stack_size/4, (task_entry_t)function, 1);
     } else {
-        ret = yunos_task_dyn_create((ktask_t **)thread, name, (void *)arg, priority, 0, stack_size/4, (task_entry_t)function, 1);
+        ret = krhino_task_dyn_create((ktask_t **)thread, name, (void *)arg, priority, 0, stack_size/4, (task_entry_t)function, 1);
     }
 
     if (ret == RHINO_SUCCESS) {
@@ -32,9 +32,9 @@ OSStatus mico_rtos_delete_thread( mico_thread_t* thread )
     kstat_t ret;
 
     if (thread == NULL) {
-        ret = yunos_task_dyn_del(NULL);
+        ret = krhino_task_dyn_del(NULL);
     } else {
-        ret = yunos_task_dyn_del(*((ktask_t **)thread));
+        ret = krhino_task_dyn_del(*((ktask_t **)thread));
     }
 
     if (ret == RHINO_SUCCESS) {
@@ -47,23 +47,23 @@ OSStatus mico_rtos_delete_thread( mico_thread_t* thread )
 void mico_rtos_suspend_thread(mico_thread_t* thread)
 {
     if (thread == NULL) {
-        yunos_task_suspend(yunos_cur_task_get());        
+        krhino_task_suspend(krhino_cur_task_get());        
     }
     else {
-        yunos_task_suspend(*((ktask_t **)thread));
+        krhino_task_suspend(*((ktask_t **)thread));
     }
 }
 
 void mico_rtos_suspend_all_thread(void)
 {
-    yunos_sched_disable();
+    krhino_sched_disable();
 }
 
 long mico_rtos_resume_all_thread(void)
 {
     kstat_t ret;
 
-    ret = yunos_sched_enable();
+    ret = krhino_sched_enable();
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -82,7 +82,7 @@ OSStatus mico_rtos_thread_force_awake( mico_thread_t* thread )
 {
     kstat_t ret;
 
-    ret = yunos_task_wait_abort(*((ktask_t **)thread));
+    ret = krhino_task_wait_abort(*((ktask_t **)thread));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -98,7 +98,7 @@ bool mico_rtos_is_current_thread( mico_thread_t* thread )
 
     t = *((ktask_t **)thread);
 
-    if (t == yunos_cur_task_get()) {
+    if (t == krhino_cur_task_get()) {
         return true;
     }
 
@@ -109,12 +109,12 @@ OSStatus mico_rtos_delay_milliseconds( uint32_t num_ms )
 {
     uint32_t ticks;
 
-    ticks = yunos_ms_to_ticks(num_ms);
+    ticks = krhino_ms_to_ticks(num_ms);
     if (ticks == 0) {
         ticks = 1;
     }
 
-    yunos_task_sleep(ticks);
+    krhino_task_sleep(ticks);
 
     return kNoErr;
 }
@@ -133,7 +133,7 @@ OSStatus mico_rtos_init_semaphore( mico_semaphore_t* semaphore, int count )
 {
     kstat_t ret;
 
-    ret = yunos_sem_dyn_create((ksem_t **)semaphore, "sema", count);
+    ret = krhino_sem_dyn_create((ksem_t **)semaphore, "sema", count);
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -146,7 +146,7 @@ OSStatus mico_rtos_set_semaphore( mico_semaphore_t* semaphore )
 {
     kstat_t ret;
 
-    ret = yunos_sem_give(*((ksem_t **)semaphore));
+    ret = krhino_sem_give(*((ksem_t **)semaphore));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -161,11 +161,11 @@ OSStatus mico_rtos_get_semaphore( mico_semaphore_t* semaphore, uint32_t timeout_
     tick_t ticks;
 
     if (timeout_ms == MICO_NEVER_TIMEOUT) {
-        ret =  yunos_sem_take(*((ksem_t **)semaphore), RHINO_WAIT_FOREVER);
+        ret =  krhino_sem_take(*((ksem_t **)semaphore), RHINO_WAIT_FOREVER);
     }
     else {
-        ticks = yunos_ms_to_ticks(timeout_ms);
-        ret =  yunos_sem_take(*((ksem_t **)semaphore), ticks);
+        ticks = krhino_ms_to_ticks(timeout_ms);
+        ret =  krhino_sem_take(*((ksem_t **)semaphore), ticks);
     }
 
     if (ret == RHINO_SUCCESS) {
@@ -179,7 +179,7 @@ OSStatus mico_rtos_deinit_semaphore( mico_semaphore_t* semaphore )
 {
     kstat_t ret;
 
-    ret =  yunos_sem_dyn_del(*((ksem_t **)semaphore));
+    ret =  krhino_sem_dyn_del(*((ksem_t **)semaphore));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -192,7 +192,7 @@ OSStatus mico_rtos_init_mutex( mico_mutex_t* mutex )
 {
     kstat_t ret;
 
-    ret = yunos_mutex_dyn_create((kmutex_t **)mutex, "mutex");
+    ret = krhino_mutex_dyn_create((kmutex_t **)mutex, "mutex");
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -205,7 +205,7 @@ OSStatus mico_rtos_lock_mutex( mico_mutex_t* mutex )
 {
     kstat_t ret;
 
-    ret = yunos_mutex_lock(*((kmutex_t **)mutex), RHINO_WAIT_FOREVER);
+    ret = krhino_mutex_lock(*((kmutex_t **)mutex), RHINO_WAIT_FOREVER);
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -218,7 +218,7 @@ OSStatus mico_rtos_unlock_mutex( mico_mutex_t* mutex )
 {
     kstat_t ret;
 	
-    ret = yunos_mutex_unlock(*((kmutex_t **)mutex));
+    ret = krhino_mutex_unlock(*((kmutex_t **)mutex));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -231,7 +231,7 @@ OSStatus mico_rtos_deinit_mutex( mico_mutex_t* mutex )
 {
     kstat_t ret;
 
-    ret = yunos_mutex_dyn_del(*((kmutex_t **)mutex));
+    ret = krhino_mutex_dyn_del(*((kmutex_t **)mutex));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -248,7 +248,7 @@ OSStatus mico_rtos_init_queue( mico_queue_t* queue, const char* name, uint32_t m
         name = "default_queue";
     }
 
-    ret = yunos_buf_queue_dyn_create((kbuf_queue_t **)queue, name, number_of_messages * (message_size + COMPRESS_LEN(message_size)), message_size);
+    ret = krhino_buf_queue_dyn_create((kbuf_queue_t **)queue, name, number_of_messages * (message_size + COMPRESS_LEN(message_size)), message_size);
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -265,7 +265,7 @@ OSStatus mico_rtos_push_to_queue( mico_queue_t* queue, void* message, uint32_t t
 
     timeout_ms = timeout_ms;
 
-    ret = yunos_buf_queue_send(q, message, q->max_msg_size);
+    ret = krhino_buf_queue_send(q, message, q->max_msg_size);
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -279,7 +279,7 @@ OSStatus mico_rtos_pop_from_queue( mico_queue_t* queue, void* message, uint32_t 
     kstat_t ret;
     size_t msg_len;
 
-    ret = yunos_buf_queue_recv(*((kbuf_queue_t **)queue), yunos_ms_to_ticks(timeout_ms), message, &msg_len);
+    ret = krhino_buf_queue_recv(*((kbuf_queue_t **)queue), krhino_ms_to_ticks(timeout_ms), message, &msg_len);
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -292,7 +292,7 @@ OSStatus mico_rtos_deinit_queue( mico_queue_t* queue )
 {
     kstat_t ret;
 
-    ret = yunos_buf_queue_dyn_del(*((kbuf_queue_t **)queue));
+    ret = krhino_buf_queue_dyn_del(*((kbuf_queue_t **)queue));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -349,7 +349,7 @@ bool mico_rtos_is_queue_full( mico_queue_t* queue )
 
 mico_time_t mico_rtos_get_time( void )
 {
-    return yunos_ticks_to_ms(yunos_sys_tick_get());
+    return krhino_ticks_to_ms(krhino_sys_tick_get());
 }
 
 static void timmer_wrapper(void *timer, void *arg)
@@ -370,8 +370,8 @@ OSStatus mico_rtos_init_timer( mico_timer_t* timer, uint32_t time_ms, timer_hand
     timer->function = function;
     timer->arg      = arg;
 
-    ret = yunos_timer_dyn_create((ktimer_t **)(&timer->handle),"timer", timmer_wrapper, 
-                                  yunos_ms_to_ticks(time_ms), yunos_ms_to_ticks(time_ms), timer, 0);
+    ret = krhino_timer_dyn_create((ktimer_t **)(&timer->handle),"timer", timmer_wrapper, 
+                                  krhino_ms_to_ticks(time_ms), krhino_ms_to_ticks(time_ms), timer, 0);
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -387,8 +387,8 @@ OSStatus mico_rtos_init_oneshot_timer( mico_timer_t* timer, uint32_t time_ms, ti
     timer->function = function;
     timer->arg      = arg;
 
-    ret = yunos_timer_dyn_create((ktimer_t **)(&timer->handle),"timer", timmer_wrapper, 
-                                  yunos_ms_to_ticks(time_ms), 0, timer, 0);
+    ret = krhino_timer_dyn_create((ktimer_t **)(&timer->handle),"timer", timmer_wrapper, 
+                                  krhino_ms_to_ticks(time_ms), 0, timer, 0);
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -402,7 +402,7 @@ OSStatus mico_rtos_start_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    ret = yunos_timer_start((ktimer_t *)(timer->handle));
+    ret = krhino_timer_start((ktimer_t *)(timer->handle));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -415,7 +415,7 @@ OSStatus mico_rtos_stop_timer( mico_timer_t* timer )
 {
     kstat_t ret;
 
-    ret = yunos_timer_stop((ktimer_t *)(timer->handle));
+    ret = krhino_timer_stop((ktimer_t *)(timer->handle));
 
 
     if (ret == RHINO_SUCCESS) {
@@ -431,9 +431,9 @@ OSStatus mico_rtos_reload_timer( mico_timer_t* timer )
     kstat_t ret;
 
 
-    yunos_timer_stop((ktimer_t *)(timer->handle));
+    krhino_timer_stop((ktimer_t *)(timer->handle));
 
-    ret = yunos_timer_start((ktimer_t *)(timer->handle));
+    ret = krhino_timer_start((ktimer_t *)(timer->handle));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
@@ -447,8 +447,8 @@ OSStatus mico_rtos_deinit_timer( mico_timer_t* timer )
     kstat_t ret;
 
 
-    yunos_timer_stop((ktimer_t *)(timer->handle));
-    ret = yunos_timer_dyn_del((ktimer_t *)(timer->handle));
+    krhino_timer_stop((ktimer_t *)(timer->handle));
+    ret = krhino_timer_dyn_del((ktimer_t *)(timer->handle));
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;

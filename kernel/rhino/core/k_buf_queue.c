@@ -47,19 +47,19 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
 
     ringbuf_init(&(queue->ringbuf), buf, size, RINGBUF_TYPE_DYN, 0);
     queue->min_free_buf_size  = queue->ringbuf.freesize;
-    TRACE_BUF_QUEUE_CREATE(yunos_cur_task_get(), queue);
+    TRACE_BUF_QUEUE_CREATE(krhino_cur_task_get(), queue);
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_create(kbuf_queue_t *queue, const name_t *name,
+kstat_t krhino_buf_queue_create(kbuf_queue_t *queue, const name_t *name,
                                void *buf,
                                size_t size, size_t max_msg)
 {
     return buf_queue_create(queue, name, buf, size, max_msg, K_OBJ_STATIC_ALLOC);
 }
 
-kstat_t yunos_buf_queue_del(kbuf_queue_t *queue)
+kstat_t krhino_buf_queue_del(kbuf_queue_t *queue)
 {
     CPSR_ALLOC();
 
@@ -88,7 +88,7 @@ kstat_t yunos_buf_queue_del(kbuf_queue_t *queue)
     /* all task blocked on this queue is waken up */
     while (!is_klist_empty(head)) {
 
-        pend_task_rm(yunos_list_entry(head->next, ktask_t, task_list));
+        pend_task_rm(krhino_list_entry(head->next, ktask_t, task_list));
     }
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
@@ -103,7 +103,7 @@ kstat_t yunos_buf_queue_del(kbuf_queue_t *queue)
 }
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
+kstat_t krhino_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
                                    size_t size, size_t max_msg)
 {
     kstat_t      stat;
@@ -115,16 +115,16 @@ kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
         return RHINO_BUF_QUEUE_SIZE_ZERO;
     }
 
-    queue_obj = yunos_mm_alloc(sizeof(kbuf_queue_t));
+    queue_obj = krhino_mm_alloc(sizeof(kbuf_queue_t));
 
     if (queue_obj == NULL) {
         return RHINO_NO_MEM;
     }
 
-    queue_obj->buf = yunos_mm_alloc(size);
+    queue_obj->buf = krhino_mm_alloc(size);
 
     if (queue_obj->buf == NULL) {
-        yunos_mm_free(queue_obj);
+        krhino_mm_free(queue_obj);
         return RHINO_NO_MEM;
     }
 
@@ -132,8 +132,8 @@ kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
                             K_OBJ_DYN_ALLOC);
 
     if (stat != RHINO_SUCCESS) {
-        yunos_mm_free(queue_obj->buf);
-        yunos_mm_free(queue_obj);
+        krhino_mm_free(queue_obj->buf);
+        krhino_mm_free(queue_obj);
         return stat;
     }
 
@@ -142,7 +142,7 @@ kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
+kstat_t krhino_buf_queue_dyn_del(kbuf_queue_t *queue)
 {
     CPSR_ALLOC();
     klist_t *head;
@@ -168,7 +168,7 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
     queue->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     while (!is_klist_empty(head)) {
-        pend_task_rm(yunos_list_entry(head->next, ktask_t, task_list));
+        pend_task_rm(krhino_list_entry(head->next, ktask_t, task_list));
     }
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
@@ -178,8 +178,8 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue)
     ringbuf_reset(&queue->ringbuf);
 
     RHINO_CRITICAL_EXIT_SCHED();
-    yunos_mm_free(queue->buf);
-    yunos_mm_free(queue);
+    krhino_mm_free(queue->buf);
+    krhino_mm_free(queue);
 
     return RHINO_SUCCESS;
 }
@@ -260,7 +260,7 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
         return RHINO_SUCCESS;
     }
 
-    task = yunos_list_entry(head->next, ktask_t, task_list);
+    task = krhino_list_entry(head->next, ktask_t, task_list);
     memcpy(task->msg, msg, msg_size);
     task->bq_msg_size = msg_size;
 
@@ -273,7 +273,7 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size)
+kstat_t krhino_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size)
 {
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
@@ -281,7 +281,7 @@ kstat_t yunos_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size)
     return buf_queue_send(queue, msg, size, RHINO_FALSE);
 }
 
-kstat_t yunos_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
+kstat_t krhino_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
 {
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
@@ -289,7 +289,7 @@ kstat_t yunos_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
     return buf_queue_send(queue, msg, size, RHINO_TRUE);
 }
 
-kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
+kstat_t krhino_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
                              size_t *size)
 {
     CPSR_ALLOC();
@@ -374,7 +374,7 @@ kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
     return ret;
 }
 
-kstat_t yunos_buf_queue_flush(kbuf_queue_t *queue)
+kstat_t krhino_buf_queue_flush(kbuf_queue_t *queue)
 {
     CPSR_ALLOC();
 
@@ -399,7 +399,7 @@ kstat_t yunos_buf_queue_flush(kbuf_queue_t *queue)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
+kstat_t krhino_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
 {
     CPSR_ALLOC();
 
@@ -425,7 +425,7 @@ kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_buf_queue_is_valid(kbuf_queue_t *queue)
+kstat_t krhino_buf_queue_is_valid(kbuf_queue_t *queue)
 {
     NULL_PARA_CHK(queue);
 

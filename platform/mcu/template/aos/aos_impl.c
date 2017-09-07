@@ -59,7 +59,7 @@ void soc_sys_mem_init(void)
     g_mm_region.start = **********
     g_mm_region.len   = **********
 
-    yunos_mm_region_init(&g_mm_region_head, &g_mm_region, 1);
+    krhino_mm_region_init(&g_mm_region_head, &g_mm_region, 1);
 }
 
 void *soc_mm_alloc(size_t size)
@@ -67,7 +67,7 @@ void *soc_mm_alloc(size_t size)
     kstat_t ret;
     void   *mem;
 
-    ret = yunos_mm_bf_alloc(&g_mm_region_head, &mem, size);
+    ret = krhino_mm_bf_alloc(&g_mm_region_head, &mem, size);
     if (ret != RHINO_SUCCESS) {
         return NULL;
     }
@@ -77,7 +77,7 @@ void *soc_mm_alloc(size_t size)
 
 void soc_mm_free(void *mem)
 {
-    yunos_mm_bf_free(&g_mm_region_head, mem);
+    krhino_mm_bf_free(&g_mm_region_head, mem);
 }
 #endif
 
@@ -85,4 +85,4 @@ void soc_err_proc(kstat_t err)
 {
 }
 
-yunos_err_proc_t g_err_proc = soc_err_proc;
+krhino_err_proc_t g_err_proc = soc_err_proc;

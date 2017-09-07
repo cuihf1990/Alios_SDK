@@ -74,7 +74,7 @@ RHINO_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
 static size_t sizetoindex(size_t size)
 {
     size_t cnt      = 0;
-    cnt = 31 - yunos_find_first_bit(&size);
+    cnt = 31 - krhino_find_first_bit(&size);
     return cnt;
 }
 static void addsize(k_mm_head *mmhead, size_t size, size_t req_size)
@@ -111,7 +111,7 @@ static void removesize(k_mm_head *mmhead, size_t size)
 #define stats_removesize(mmhead,size) do{}while(0)
 #endif
 
-kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
+kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 {
     k_mm_list_t *nextblk, *curblk, *firstblk;
     k_mm_head   *pmmhead;
@@ -145,14 +145,14 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     /* Zeroing the memory head */
     memset(pmmhead, 0, sizeof(k_mm_head));
 #if (RHINO_CONFIG_MM_REGION_MUTEX > 0)
-    yunos_mutex_create(&pmmhead->mm_mutex, "mm_mutex");
+    krhino_mutex_create(&pmmhead->mm_mutex, "mm_mutex");
 #endif
 
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
-    yunos_mutex_lock(&(pmmhead->mm_mutex), RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(&(pmmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
 
     if ((VGF(VALGRIND_MEMPOOL_EXISTS(addr)) + 0) == 0) {
@@ -213,7 +213,7 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
         VGF(VALGRIND_MAKE_MEM_DEFINED(curblk, sizeof(k_mm_list_t)));
         VGF(VALGRIND_FREELIKE_BLOCK(mmblk_pool, 0));
         VGF(VALGRIND_MAKE_MEM_DEFINED(mmblk_pool, curblk->size & RHINO_MM_BLKSIZE_MASK));
-        stat = yunos_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
+        stat = krhino_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
                                     (void *)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t)),
                                     DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
         if (stat == RHINO_SUCCESS) {
@@ -232,21 +232,21 @@ kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_EXIT();
 #else
-    yunos_mutex_unlock(&(pmmhead->mm_mutex));
+    krhino_mutex_unlock(&(pmmhead->mm_mutex));
 #endif
 
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_deinit_mm_head(k_mm_head *mmhead)
+kstat_t krhino_deinit_mm_head(k_mm_head *mmhead)
 {
 
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
-    yunos_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
     memset(mmhead, 0, sizeof(k_mm_head));
@@ -255,13 +255,13 @@ kstat_t yunos_deinit_mm_head(k_mm_head *mmhead)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_EXIT();
 #else
-    yunos_mutex_unlock(&(mmhead->mm_mutex));
+    krhino_mutex_unlock(&(mmhead->mm_mutex));
 #endif
     return RHINO_SUCCESS;
 
 }
 
-kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
+kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
 {
     k_mm_region_info_t *ptr, *ptr_prev, *ai;
     k_mm_list_t        *ib0, *b0, *lb0, *ib1, *b1, *lb1, *next_b;
@@ -281,7 +281,7 @@ kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
-    yunos_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
 
     memset(addr, 0, len);
@@ -412,7 +412,7 @@ kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_EXIT();
 #else
-    yunos_mutex_unlock(&(mmhead->mm_mutex));
+    krhino_mutex_unlock(&(mmhead->mm_mutex));
 #endif
 
 
@@ -428,7 +428,7 @@ static void *k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
         return NULL;
     }
 
-    sta = yunos_mblk_alloc((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, &tmp);
+    sta = krhino_mblk_alloc((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, &tmp);
     if (sta != RHINO_SUCCESS) {
         return NULL;
     }
@@ -451,7 +451,7 @@ static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
     VGF(VALGRIND_FREELIKE_BLOCK(ptr, 0));
     VGF(VALGRIND_MAKE_MEM_DEFINED(ptr, DEF_FIX_BLK_SIZE));
 
-    sta = yunos_mblk_free((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, ptr);
+    sta = krhino_mblk_free((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, ptr);
     if (sta != RHINO_SUCCESS) {
         assert(0);
     }
@@ -471,12 +471,12 @@ static kstat_t bitmap_search(size_t size , size_t *flt, size_t *slt,
         *slt = size >> (MIN_FLT_BIT - MAX_LOG2_SLT);
     } else {
         *flt = 0;
-        firstbit = 31 - (size_t)yunos_find_first_bit(&size);
+        firstbit = 31 - (size_t)krhino_find_first_bit(&size);
         tmp_size = size;
         if (action == ACTION_GET) {
             padding_size = (1 << (firstbit - MAX_LOG2_SLT)) - 1;
             tmp_size = size + padding_size;
-            firstbit = 31 - (size_t)yunos_find_first_bit(&tmp_size);
+            firstbit = 31 - (size_t)krhino_find_first_bit(&tmp_size);
         }
         *flt = firstbit - MIN_FLT_BIT + 1;
         tmp_size = tmp_size - (1 << firstbit);
@@ -497,8 +497,8 @@ static size_t find_last_bit(int bitmap)
     }
 
     x = bitmap & -bitmap;
-    lsbit = (size_t)yunos_find_first_bit(&x);
-    /*yunos find fist bit return value is left->right as 0-31, but we need left->right as 31 -0*/
+    lsbit = (size_t)krhino_find_first_bit(&x);
+    /* AliOS find fist bit return value is left->right as 0-31, but we need left->right as 31 -0 */
     return 31 - lsbit;
 }
 
@@ -516,8 +516,8 @@ static  void insert_block (k_mm_head *mmhead, k_mm_list_t *blk, int flt,
     }
 
     mmhead->mm_tbl[flt][slt] = blk;
-    yunos_bitmap_set (&mmhead->sl_bitmap[flt], 31 - slt);
-    yunos_bitmap_set (&mmhead->fl_bitmap , 31 - flt);
+    krhino_bitmap_set (&mmhead->sl_bitmap[flt], 31 - slt);
+    krhino_bitmap_set (&mmhead->fl_bitmap , 31 - flt);
 }
 
 static  void get_block(k_mm_head *mmhead, k_mm_list_t *blk, int flt, int slt)
@@ -537,9 +537,9 @@ static  void get_block(k_mm_head *mmhead, k_mm_list_t *blk, int flt, int slt)
     if (mmhead->mm_tbl[flt][slt] == blk) {
         mmhead->mm_tbl[flt][slt] = blk->mbinfo.free_ptr.next;
         if (!mmhead->mm_tbl [flt][slt]) {
-            yunos_bitmap_clear (&mmhead->sl_bitmap[flt], 31 - slt);
+            krhino_bitmap_clear (&mmhead->sl_bitmap[flt], 31 - slt);
             if (!mmhead->sl_bitmap[flt]) {
-                yunos_bitmap_clear(&mmhead->fl_bitmap, 31 - flt);
+                krhino_bitmap_clear(&mmhead->fl_bitmap, 31 - flt);
             }
         }
     }
@@ -587,7 +587,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
-    yunos_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
@@ -604,7 +604,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
             RHINO_CRITICAL_EXIT();
 #else
-            yunos_mutex_unlock(&(mmhead->mm_mutex));
+            krhino_mutex_unlock(&(mmhead->mm_mutex));
 #endif
 
             return retptr;
@@ -637,9 +637,9 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
         mmhead->mm_tbl[fl][sl]->mbinfo.free_ptr.prev = NULL;
         VGF(VALGRIND_MAKE_MEM_NOACCESS(mmhead->mm_tbl[fl][sl], sizeof(k_mm_list_t)));
     } else {
-        yunos_bitmap_clear(&mmhead->sl_bitmap[fl], 31 - sl) ;
+        krhino_bitmap_clear(&mmhead->sl_bitmap[fl], 31 - sl) ;
         if (!mmhead->sl_bitmap[fl]) {
-            yunos_bitmap_clear (&mmhead->fl_bitmap, 31 - fl);
+            krhino_bitmap_clear (&mmhead->fl_bitmap, 31 - fl);
         }
     }
 
@@ -694,7 +694,7 @@ ALLOCEXIT:
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_EXIT();
 #else
-    yunos_mutex_unlock(&(mmhead->mm_mutex));
+    krhino_mutex_unlock(&(mmhead->mm_mutex));
 #endif
 
     return retptr ;
@@ -713,7 +713,7 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
-    yunos_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead->fixedmblk, MMLIST_HEAD_SIZE));
@@ -727,7 +727,7 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
         RHINO_CRITICAL_EXIT();
 #else
-        yunos_mutex_unlock(&(mmhead->mm_mutex));
+        krhino_mutex_unlock(&(mmhead->mm_mutex));
 #endif
 
         return;
@@ -798,7 +798,7 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_EXIT();
 #else
-    yunos_mutex_unlock(&mmhead->mm_mutex);
+    krhino_mutex_unlock(&mmhead->mm_mutex);
 #endif
 
 }
@@ -834,7 +834,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
-    yunos_mutex_lock(&mmhead->mm_mutex, RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(&mmhead->mm_mutex, RHINO_WAIT_FOREVER);
 #endif
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
@@ -865,7 +865,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
         RHINO_CRITICAL_EXIT();
 #else
-        yunos_mutex_unlock(&(mmhead->mm_mutex));
+        krhino_mutex_unlock(&(mmhead->mm_mutex));
 #endif
         return ptr_aux;
     }
@@ -974,7 +974,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
         RHINO_CRITICAL_EXIT();
 #else
-        yunos_mutex_unlock(&mmhead->mm_mutex);
+        krhino_mutex_unlock(&mmhead->mm_mutex);
 #endif
         return ptr_aux;
     }
@@ -983,7 +983,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
         RHINO_CRITICAL_EXIT();
 #else
-        yunos_mutex_unlock(&mmhead->mm_mutex);
+        krhino_mutex_unlock(&mmhead->mm_mutex);
 #endif
         return NULL;
     }
@@ -998,14 +998,14 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_EXIT();
 #else
-    yunos_mutex_unlock(&mmhead->mm_mutex);
+    krhino_mutex_unlock(&mmhead->mm_mutex);
 #endif
     return ptr_aux;
 
 }
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-void yunos_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
+void krhino_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
 {
     k_mm_list_t *blk;
 
@@ -1017,7 +1017,7 @@ void yunos_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
-    yunos_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
@@ -1036,12 +1036,12 @@ void yunos_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_EXIT();
 #else
-    yunos_mutex_unlock(&(mmhead->mm_mutex));
+    krhino_mutex_unlock(&(mmhead->mm_mutex));
 #endif
 }
 #endif
 
-void *yunos_mm_alloc(size_t size)
+void *krhino_mm_alloc(size_t size)
 {
     void *tmp;
 
@@ -1073,24 +1073,24 @@ void *yunos_mm_alloc(size_t size)
     }
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_mm_alloc_hook(tmp, size);
+    krhino_mm_alloc_hook(tmp, size);
 #endif
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if (app_malloc == 0) {
-        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+        krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
     }
 #endif
 
     return tmp;
 }
 
-void yunos_mm_free(void *ptr)
+void krhino_mm_free(void *ptr)
 {
     return k_mm_free(g_kmm_head, ptr);
 }
 
-void *yunos_mm_realloc(void *oldmem, size_t newsize)
+void *krhino_mm_realloc(void *oldmem, size_t newsize)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     unsigned int app_malloc = newsize & YOS_UNSIGNED_INT_MSB;
@@ -1101,7 +1101,7 @@ void *yunos_mm_realloc(void *oldmem, size_t newsize)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if (app_malloc == 0) {
-        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+        krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
     }
 #endif
     if (tmp == NULL && newsize != 0) {

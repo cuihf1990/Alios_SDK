@@ -322,7 +322,7 @@ static void teardown(void)
     return;
 }
 
-static yunit_test_case_t yunos_tls_testcases[] = {
+static yunit_test_case_t krhino_tls_testcases[] = {
     { "tls_ssl_connect", test_tls_ssl_connect},
     { "tls_ssl_send", test_tls_ssl_send},
     { "tls_ssl_recv", test_tls_ssl_recv},
@@ -331,7 +331,7 @@ static yunit_test_case_t yunos_tls_testcases[] = {
 };
 
 static yunit_test_suite_t suites[] = {
-    { "tls", init, cleanup, setup, teardown, yunos_tls_testcases },
+    { "tls", init, cleanup, setup, teardown, krhino_tls_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

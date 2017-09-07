@@ -64,13 +64,13 @@ static void teardown(void)
 
 }
 
-static yunit_test_case_t yunos_basic_testcases[] = {
+static yunit_test_case_t krhino_basic_testcases[] = {
     { "fota", test_fota_case },
     YUNIT_TEST_CASE_NULL
 };
 
 static yunit_test_suite_t suites[] = {
-    { "fota", init, cleanup, setup, teardown, yunos_basic_testcases },
+    { "fota", init, cleanup, setup, teardown, krhino_basic_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

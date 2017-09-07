@@ -99,7 +99,7 @@ cpu_first_task_start:
 
 @******************************************************************************
 @ Functions:
-@     void yunos_pendsv_handler(void);
+@     void krhino_pendsv_handler(void);
 @******************************************************************************
 .thumb_func
 PendSV_Handler:

@@ -25,14 +25,14 @@ typedef struct sem_s {
  * @param[in]  count  the init count of the semaphore
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_create(ksem_t *sem, const name_t *name, sem_count_t count);
+kstat_t krhino_sem_create(ksem_t *sem, const name_t *name, sem_count_t count);
 
 /**
  * This function will delete a semaphore
  * @param[in]  sem  pointer to the semaphore
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_del(ksem_t *sem);
+kstat_t krhino_sem_del(ksem_t *sem);
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 /**
@@ -42,7 +42,7 @@ kstat_t yunos_sem_del(ksem_t *sem);
  * @param[in]   count  the init count of the semaphore
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_dyn_create(ksem_t **sem, const name_t *name,
+kstat_t krhino_sem_dyn_create(ksem_t **sem, const name_t *name,
                              sem_count_t count);
 
 /**
@@ -50,7 +50,7 @@ kstat_t yunos_sem_dyn_create(ksem_t **sem, const name_t *name,
  * @param[in]  sem  pointer to the semaphore
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_dyn_del(ksem_t *sem);
+kstat_t krhino_sem_dyn_del(ksem_t *sem);
 #endif
 
 /**
@@ -58,14 +58,14 @@ kstat_t yunos_sem_dyn_del(ksem_t *sem);
  * @param[in]  sem  pointer to the semphore
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_give(ksem_t *sem);
+kstat_t krhino_sem_give(ksem_t *sem);
 
 /**
  * This function will give a semaphore and wakeup all thee waiting task
  * @param[in]  sem  pointer to the semaphore
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_give_all(ksem_t *sem);
+kstat_t krhino_sem_give_all(ksem_t *sem);
 
 /**
  * This function will take a semaphore
@@ -73,7 +73,7 @@ kstat_t yunos_sem_give_all(ksem_t *sem);
  * @param[in]  ticks  ticks to wait before take
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_take(ksem_t *sem, tick_t ticks);
+kstat_t krhino_sem_take(ksem_t *sem, tick_t ticks);
 
 /**
  * This function will set the count of a semaphore
@@ -81,7 +81,7 @@ kstat_t yunos_sem_take(ksem_t *sem, tick_t ticks);
  * @param[in]  sem_count  count of the semaphore
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_count_set(ksem_t *sem, sem_count_t  count);
+kstat_t krhino_sem_count_set(ksem_t *sem, sem_count_t  count);
 
 /**
  * This function will get count of a semaphore
@@ -89,14 +89,14 @@ kstat_t yunos_sem_count_set(ksem_t *sem, sem_count_t  count);
  * @param[out]  count  count of the semaphore
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_count_get(ksem_t *sem, sem_count_t *count);
+kstat_t krhino_sem_count_get(ksem_t *sem, sem_count_t *count);
 
 /**
  * This function will check if semaphore is valid
  * @param[in]   sem    pointer to the semaphore
  * @return  the check status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sem_is_valid(ksem_t *sem);
+kstat_t krhino_sem_is_valid(ksem_t *sem);
 
 #endif /* K_SEM_H */
 

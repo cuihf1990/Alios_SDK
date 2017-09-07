@@ -24,14 +24,14 @@ typedef struct mutex_s {
  * @param[in] name   name of the mutex
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_mutex_create(kmutex_t *mutex, const name_t *name);
+kstat_t krhino_mutex_create(kmutex_t *mutex, const name_t *name);
 
 /**
  * This function will delete a mutex
  * @param[in] mutex pointer to the mutex
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_mutex_del(kmutex_t *mutex);
+kstat_t krhino_mutex_del(kmutex_t *mutex);
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 /**
@@ -40,14 +40,14 @@ kstat_t yunos_mutex_del(kmutex_t *mutex);
  * @param[in]  name   name of the mutex
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_mutex_dyn_create(kmutex_t **mutex, const name_t *name);
+kstat_t krhino_mutex_dyn_create(kmutex_t **mutex, const name_t *name);
 
 /**
  * This function will delete a dyn mutex
  * @param[in] mutex  pointer to the mutex
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_mutex_dyn_del(kmutex_t *mutex);
+kstat_t krhino_mutex_dyn_del(kmutex_t *mutex);
 #endif
 
 /**
@@ -56,21 +56,21 @@ kstat_t yunos_mutex_dyn_del(kmutex_t *mutex);
  * @param[in]  ticks  ticks to be wait for before lock
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_mutex_lock(kmutex_t *mutex, tick_t ticks);
+kstat_t krhino_mutex_lock(kmutex_t *mutex, tick_t ticks);
 
 /**
  * This function will unlock a mutex
  * @param[in]  mutex  pointer to the mutex
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_mutex_unlock(kmutex_t *mutex);
+kstat_t krhino_mutex_unlock(kmutex_t *mutex);
 
 /**
  * This function will check if mutex is valid
  * @param[in]   mutex    pointer to the mutex
  * @return  the check status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_mutex_is_valid(kmutex_t *mutex);
+kstat_t krhino_mutex_is_valid(kmutex_t *mutex);
 
 #endif /* K_MUTEX_H */
 

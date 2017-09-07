@@ -23,8 +23,8 @@ double  Turn_to_Realtime(double counter);
 void WaitForNew_tick(void);
 void OS_RealTime_test(void);
 
-extern int yunos_bsp_intc_attach_irq(int irq, int isr);
-extern int yunos_bsp_intc_enable_irq(int irq);;
+extern int krhino_bsp_intc_attach_irq(int irq, int isr);
+extern int krhino_bsp_intc_enable_irq(int irq);;
 extern void timer0_handler(void);
 
 extern void show_times_hdr(void);
@@ -45,9 +45,9 @@ double  Turn_to_Realtime(double counter)
 void WaitForNew_tick(void)
 {
     sys_time_t nowtick;
-    nowtick = yunos_sys_tick_get();
+    nowtick = krhino_sys_tick_get();
 
-    while (yunos_sys_tick_get() == nowtick);
+    while (krhino_sys_tick_get() == nowtick);
 }
 
 
@@ -56,67 +56,67 @@ void OS_test(void *arg)
     kstat_t ret;
 
     WaitForNew_tick();
-    yunos_sem_dyn_create(&SYNhandle, "syn_sem", 0);
-    yunos_sem_dyn_create(&SYNmainhandle, "synmain_sem", 0);
+    krhino_sem_dyn_create(&SYNhandle, "syn_sem", 0);
+    krhino_sem_dyn_create(&SYNmainhandle, "synmain_sem", 0);
     show_times_hdr();
 
 #if 1
-    ret = yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
+    ret = krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                                 0, TASK_TEST_STACK_SIZE, IntRealtimetest, 1);
-    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
-    yunos_task_dyn_del(test_task);
+    krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
+    krhino_task_dyn_del(test_task);
 
-    yunos_task_sleep(50);
+    krhino_task_sleep(50);
 #endif
 
 #if 1
-    yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
+    krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                           0, TASK_TEST_STACK_SIZE, TaskYIELDtimeTest, 1);
-    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
-    yunos_task_dyn_del(test_task);
-    yunos_task_sleep(50);
+    krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
+    krhino_task_dyn_del(test_task);
+    krhino_task_sleep(50);
 #endif
 
 #if 1
-    yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
+    krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                           0, TASK_TEST_STACK_SIZE, PreemptionTimetest, 1);
-    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
-    yunos_task_dyn_del(test_task);
+    krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
+    krhino_task_dyn_del(test_task);
 
-    yunos_task_sleep(50);
+    krhino_task_sleep(50);
 #endif
 
 #if 1
-    yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
+    krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                           0, TASK_TEST_STACK_SIZE, MutexShufTimetest, 1);
 
-    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
-    yunos_task_dyn_del(test_task);
+    krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
+    krhino_task_dyn_del(test_task);
 
-    yunos_task_sleep(50);
+    krhino_task_sleep(50);
 #endif
 
 #if 1
-    yunos_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
+    krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
                           0, TASK_TEST_STACK_SIZE, BinaryShufTimetest, 1);
 
-    yunos_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
-    yunos_task_dyn_del(test_task);
+    krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
+    krhino_task_dyn_del(test_task);
 
-    yunos_task_sleep(50);
+    krhino_task_sleep(50);
 #endif
 
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 
 }
 
 void OS_RealTime_test(void)
 {
-    yunos_bsp_intc_enable_irq(2);
+    krhino_bsp_intc_enable_irq(2);
 #ifndef CONFIG_TEST_PERFORMANCE
-    yunos_bsp_intc_attach_irq(2, (int)timer0_handler);
+    krhino_bsp_intc_attach_irq(2, (int)timer0_handler);
 #endif
-    yunos_task_dyn_create(&main_task, "main_task", 0, TASK_MAIN_PRI,
+    krhino_task_dyn_create(&main_task, "main_task", 0, TASK_MAIN_PRI,
                           0, TASK_TEST_STACK_SIZE, OS_test, 1);
 }
 

@@ -76,6 +76,6 @@ void task_tasksem_entry(void *arg)
     }
 
     next_test_case_notify();
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 }
 

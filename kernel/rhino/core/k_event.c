@@ -29,19 +29,19 @@ static kstat_t event_create(kevent_t *event, const name_t *name, uint32_t flags,
     RHINO_CRITICAL_EXIT();
 #endif
 
-    TRACE_EVENT_CREATE(yunos_cur_task_get(), event, name, flags);
+    TRACE_EVENT_CREATE(krhino_cur_task_get(), event, name, flags);
 
     event->blk_obj.obj_type = RHINO_EVENT_OBJ_TYPE;
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_event_create(kevent_t *event, const name_t *name, uint32_t flags)
+kstat_t krhino_event_create(kevent_t *event, const name_t *name, uint32_t flags)
 {
     return event_create(event, name, flags, K_OBJ_STATIC_ALLOC);
 }
 
-kstat_t yunos_event_del(kevent_t *event)
+kstat_t krhino_event_del(kevent_t *event)
 {
     CPSR_ALLOC();
 
@@ -68,7 +68,7 @@ kstat_t yunos_event_del(kevent_t *event)
     event->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     while (!is_klist_empty(blk_list_head)) {
-        pend_task_rm(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
+        pend_task_rm(krhino_list_entry(blk_list_head->next, ktask_t, task_list));
     }
 
     event->flags = 0u;
@@ -85,7 +85,7 @@ kstat_t yunos_event_del(kevent_t *event)
 }
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
+kstat_t krhino_event_dyn_create(kevent_t **event, const name_t *name,
                                uint32_t flags)
 {
     kstat_t   stat;
@@ -95,7 +95,7 @@ kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
         return RHINO_NULL_PTR;
     }
 
-    event_obj = yunos_mm_alloc(sizeof(kevent_t));
+    event_obj = krhino_mm_alloc(sizeof(kevent_t));
 
     if (event_obj == NULL) {
         return RHINO_NO_MEM;
@@ -104,7 +104,7 @@ kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
     stat = event_create(event_obj, name, flags, K_OBJ_DYN_ALLOC);
 
     if (stat != RHINO_SUCCESS) {
-        yunos_mm_free(event_obj);
+        krhino_mm_free(event_obj);
         return stat;
     }
 
@@ -113,7 +113,7 @@ kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
     return stat;
 }
 
-kstat_t yunos_event_dyn_del(kevent_t *event)
+kstat_t krhino_event_dyn_del(kevent_t *event)
 {
     CPSR_ALLOC();
 
@@ -140,7 +140,7 @@ kstat_t yunos_event_dyn_del(kevent_t *event)
     event->blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
 
     while (!is_klist_empty(blk_list_head)) {
-        pend_task_rm(yunos_list_entry(blk_list_head->next, ktask_t, task_list));
+        pend_task_rm(krhino_list_entry(blk_list_head->next, ktask_t, task_list));
     }
 
     event->flags = 0u;
@@ -151,13 +151,13 @@ kstat_t yunos_event_dyn_del(kevent_t *event)
 
     RHINO_CRITICAL_EXIT_SCHED();
 
-    yunos_mm_free(event);
+    krhino_mm_free(event);
 
     return RHINO_SUCCESS;
 }
 #endif
 
-kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
+kstat_t krhino_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
                         uint32_t *actl_flags, tick_t ticks)
 {
     CPSR_ALLOC();
@@ -292,7 +292,7 @@ static kstat_t event_set(kevent_t *event, uint32_t flags, uint8_t opt)
 
     /* if list is not empty */
     while (iter != event_head) {
-        task = yunos_list_entry(iter, ktask_t, task_list);
+        task = krhino_list_entry(iter, ktask_t, task_list);
         iter_temp = iter->next;
 
         if (task->pend_option & RHINO_FLAGS_AND_MASK) {
@@ -331,7 +331,7 @@ static kstat_t event_set(kevent_t *event, uint32_t flags, uint8_t opt)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_event_set(kevent_t *event, uint32_t flags, uint8_t opt)
+kstat_t krhino_event_set(kevent_t *event, uint32_t flags, uint8_t opt)
 {
     NULL_PARA_CHK(event);
 

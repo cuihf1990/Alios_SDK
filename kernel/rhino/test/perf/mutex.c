@@ -52,17 +52,17 @@ static void MutexShuf1(void *arg)
     uint8_t oldpri;
 
     while (1) {
-        yunos_mutex_lock(&Shufhandle_0, RHINO_WAIT_FOREVER);
-        OurPriority = task_pri_get(yunos_cur_task_get());
-        yunos_task_pri_change(ShufTaskHandle[1], OurPriority - 1, &oldpri);
+        krhino_mutex_lock(&Shufhandle_0, RHINO_WAIT_FOREVER);
+        OurPriority = task_pri_get(krhino_cur_task_get());
+        krhino_task_pri_change(ShufTaskHandle[1], OurPriority - 1, &oldpri);
 
         Starttime = hobbit_timer0_get_curval();
-        yunos_mutex_unlock(&Shufhandle_0);
+        krhino_mutex_unlock(&Shufhandle_0);
 
-        yunos_sem_take(Shufhandle_1, RHINO_WAIT_FOREVER);
+        krhino_sem_take(Shufhandle_1, RHINO_WAIT_FOREVER);
 
         if (ShufSwitch >= SWITCH_NUM) {
-            yunos_sem_give(ShufSynhandle);
+            krhino_sem_give(ShufSynhandle);
         }
     }
 }
@@ -74,24 +74,24 @@ static void MutexShuf2(void *arg)
     uint8_t oldpri;
 
     while (1) {
-        yunos_mutex_lock(&Shufhandle_0, RHINO_WAIT_FOREVER);
+        krhino_mutex_lock(&Shufhandle_0, RHINO_WAIT_FOREVER);
 
         Endtime = hobbit_timer0_get_curval();
         Runtime = Starttime - Endtime;
 
         ShufBUFF[ShufSwitch] = (double)Runtime;
 
-        yunos_mutex_unlock(&Shufhandle_0);
-        yunos_sem_give(Shufhandle_1);
+        krhino_mutex_unlock(&Shufhandle_0);
+        krhino_sem_give(Shufhandle_1);
         ShufSwitch++;
 
         if (ShufSwitch >= SWITCH_NUM) {
-            yunos_sem_give(ShufSynhandle);
+            krhino_sem_give(ShufSynhandle);
 
         }
 
         Priority = task_pri_get(ShufTaskHandle[0]);
-        yunos_task_pri_change(yunos_cur_task_get(), Priority + 1, &oldpri);
+        krhino_task_pri_change(krhino_cur_task_get(), Priority + 1, &oldpri);
     }
 }
 
@@ -107,27 +107,27 @@ void MutexShufTimetest(void *arg)
 
     memset(ShufBUFF, 0, sizeof(double)*SWITCH_NUM);
 
-    yunos_mutex_create(&Shufhandle_0, "mutex");
-    yunos_sem_dyn_create(&Shufhandle_1, "sem", 0);
+    krhino_mutex_create(&Shufhandle_0, "mutex");
+    krhino_sem_dyn_create(&Shufhandle_1, "sem", 0);
 
-    yunos_sem_dyn_create(&ShufSynhandle, "sem", 0);
+    krhino_sem_dyn_create(&ShufSynhandle, "sem", 0);
 
-    yunos_task_dyn_create(&ShufTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
+    krhino_task_dyn_create(&ShufTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
                           0, TASK_TEST_STACK_SIZE, MutexShuf1, 1);
-    yunos_task_dyn_create(&ShufTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 2,
+    krhino_task_dyn_create(&ShufTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 2,
                           0, TASK_TEST_STACK_SIZE, MutexShuf2, 1);
 
     hobbit_timer0_start();
-    yunos_sem_take(ShufSynhandle, RHINO_WAIT_FOREVER);
+    krhino_sem_take(ShufSynhandle, RHINO_WAIT_FOREVER);
 
-    yunos_task_dyn_del(ShufTaskHandle[0]);
-    yunos_task_dyn_del(ShufTaskHandle[1]);
+    krhino_task_dyn_del(ShufTaskHandle[0]);
+    krhino_task_dyn_del(ShufTaskHandle[1]);
 
     for (i = 0; i < SWITCH_NUM; i++) {
         ShufBUFF[i] = (double) Turn_to_Realtime(ShufBUFF[i]);
     }
 
     show_times_detail(ShufBUFF , SWITCH_NUM, "MutexShuf\t", 1);
-    yunos_task_sleep(20);
-    yunos_sem_give(SYNhandle);
+    krhino_task_sleep(20);
+    krhino_sem_give(SYNhandle);
 }

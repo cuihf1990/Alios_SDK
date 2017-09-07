@@ -30,7 +30,7 @@ extern int32_t cpu_bitmap_clz(uint32_t val);
  ** @param[in]  nr      position of the bitmap to set
  ** @return  no return
  **/
-RHINO_INLINE void yunos_bitmap_set(uint32_t *bitmap, int32_t nr)
+RHINO_INLINE void krhino_bitmap_set(uint32_t *bitmap, int32_t nr)
 {
     bitmap[BITMAP_WORD(nr)] |= BITMAP_MASK(nr);
 }
@@ -41,7 +41,7 @@ RHINO_INLINE void yunos_bitmap_set(uint32_t *bitmap, int32_t nr)
  ** @param[in]  nr      position of the bitmap to clear
  ** @return  no return
  **/
-RHINO_INLINE void yunos_bitmap_clear(uint32_t *bitmap, int32_t nr)
+RHINO_INLINE void krhino_bitmap_clear(uint32_t *bitmap, int32_t nr)
 {
     bitmap[BITMAP_WORD(nr)] &= ~BITMAP_MASK(nr);
 }
@@ -51,7 +51,7 @@ RHINO_INLINE void yunos_bitmap_clear(uint32_t *bitmap, int32_t nr)
  ** @param[in]  bitmap  pointer to the bitmap
  ** @return  the first bit position
  **/
-RHINO_INLINE int yunos_find_first_bit(uint32_t *bitmap)
+RHINO_INLINE int krhino_find_first_bit(uint32_t *bitmap)
 {
     int32_t  nr  = 0;
     uint32_t tmp = 0;

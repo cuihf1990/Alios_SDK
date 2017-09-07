@@ -121,10 +121,10 @@ typedef struct {
 } k_mm_head;
 
 
-kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len );
-kstat_t yunos_deinit_mm_head(k_mm_head *mmhead);
+kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len );
+kstat_t krhino_deinit_mm_head(k_mm_head *mmhead);
 
-kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len);
+kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len);
 
 
 void *k_mm_alloc(k_mm_head *mmhead, size_t size);
@@ -137,14 +137,14 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size);
  * @param[in]       size        size of the mem to malloc
  * @return  the operation status, NULL is error, others is memory address
  */
-void *yunos_mm_alloc(size_t size);
+void *krhino_mm_alloc(size_t size);
 
 /**
  * This function is wrapper of mm free
  * @param[in]       ptr        address point of the mem
  */
 
-void   yunos_mm_free(void *ptr);
+void   krhino_mm_free(void *ptr);
 
 
 /**
@@ -153,7 +153,7 @@ void   yunos_mm_free(void *ptr);
  * @param[in]       size        size of the mem to malloc
  * @return  the operation status, NULL is error, others is realloced memory address
  */
-void *yunos_mm_realloc(void *oldmem, size_t newsize);
+void *krhino_mm_realloc(void *oldmem, size_t newsize);
 
 
 

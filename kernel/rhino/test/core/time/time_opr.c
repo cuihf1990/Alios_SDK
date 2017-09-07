@@ -21,7 +21,7 @@ void gettaskinfo(void)
     printf("Name                 State          StackSize\n");
     printf("---------------------------------------------\n");
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-        task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+        task = krhino_list_entry(tmp, ktask_t, task_stats_item);
         printf("%s\t\t %d\t\t\%d\n", task->task_name, (int)task->task_state,
                (int)task->stack_size);
     }
@@ -35,21 +35,21 @@ static uint8_t time_opr_case(void)
     sys_time_t start;
     sys_time_t end;
 
-    ticks = yunos_ms_to_ticks(1000);
+    ticks = krhino_ms_to_ticks(1000);
     MYASSERT(ticks == RHINO_CONFIG_TICKS_PER_SECOND);
 
-    ms = yunos_ticks_to_ms(RHINO_CONFIG_TICKS_PER_SECOND);
+    ms = krhino_ticks_to_ms(RHINO_CONFIG_TICKS_PER_SECOND);
     MYASSERT(ms == 1000);
 
-    start = yunos_sys_tick_get();
-    yunos_task_sleep(10);
-    end   = yunos_sys_tick_get();
+    start = krhino_sys_tick_get();
+    krhino_task_sleep(10);
+    end   = krhino_sys_tick_get();
 
     MYASSERT((end - start) < 15);
 
-    start = yunos_sys_time_get();
-    yunos_task_sleep(16);
-    end   = yunos_sys_time_get();
+    start = krhino_sys_time_get();
+    krhino_task_sleep(16);
+    end   = krhino_sys_time_get();
 
     MYASSERT((end - start) < (20 * 1000 / RHINO_CONFIG_TICKS_PER_SECOND));
 
@@ -68,7 +68,7 @@ void time_opr_test(void)
     task_time_entry_register(MODULE_NAME, (test_func_t *)time_func_runner,
                              sizeof(time_func_runner) / sizeof(test_func_t));
 
-    ret = yunos_task_dyn_create(&task_time, MODULE_NAME, 0, TASK_TIME_PRI,
+    ret = krhino_task_dyn_create(&task_time, MODULE_NAME, 0, TASK_TIME_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_time_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;

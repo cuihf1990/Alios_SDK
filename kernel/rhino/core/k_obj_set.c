@@ -5,10 +5,10 @@
 #include <k_api.h>
 
 #if (RHINO_CONFIG_KOBJ_SET > 0)
-void yunos_kobj_set_notify(blk_obj_t *obj, kobj_set_t *handle)
+void krhino_kobj_set_notify(blk_obj_t *obj, kobj_set_t *handle)
 {
     kstat_t stat;
-    stat = yunos_queue_back_send(&(handle->queue), obj);
+    stat = krhino_queue_back_send(&(handle->queue), obj);
 
     if (stat != RHINO_SUCCESS) {
         k_err_proc(stat);
@@ -16,7 +16,7 @@ void yunos_kobj_set_notify(blk_obj_t *obj, kobj_set_t *handle)
 }
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
+kstat_t krhino_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
                                   size_t msg_num)
 {
     kstat_t     stat;
@@ -27,34 +27,34 @@ kstat_t yunos_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
         return RHINO_NULL_PTR;
     }
 
-    kobj_set = yunos_mm_alloc(sizeof(kobj_set_t));
+    kobj_set = krhino_mm_alloc(sizeof(kobj_set_t));
 
     if (kobj_set == NULL) {
         return RHINO_NO_MEM;
     }
 
-    start = yunos_mm_alloc(sizeof(void *)*msg_num);
+    start = krhino_mm_alloc(sizeof(void *)*msg_num);
 
     if (start == NULL) {
         return RHINO_NO_MEM;
     }
 
-    stat  = yunos_queue_create(&(kobj_set->queue), name, (void **)start, msg_num);
+    stat  = krhino_queue_create(&(kobj_set->queue), name, (void **)start, msg_num);
 
     if (stat != RHINO_SUCCESS) {
-        yunos_mm_free(kobj_set);
-        yunos_mm_free(start);
+        krhino_mm_free(kobj_set);
+        krhino_mm_free(start);
         return stat;
     }
 
-    kobj_set->notify = yunos_kobj_set_notify;
+    kobj_set->notify = krhino_kobj_set_notify;
 
     *handle = kobj_set;
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_kobj_set_dyn_del(kobj_set_t *handle)
+kstat_t krhino_kobj_set_dyn_del(kobj_set_t *handle)
 {
     kstat_t stat;
 
@@ -62,15 +62,15 @@ kstat_t yunos_kobj_set_dyn_del(kobj_set_t *handle)
         return RHINO_NULL_PTR;
     }
 
-    stat = yunos_queue_del(&(handle->queue));
-    yunos_mm_free((void *)((handle->queue).msg_q.queue_start));
-    yunos_mm_free((void *)handle);
+    stat = krhino_queue_del(&(handle->queue));
+    krhino_mm_free((void *)((handle->queue).msg_q.queue_start));
+    krhino_mm_free((void *)handle);
 
     return stat;
 }
 #endif
 
-kstat_t yunos_kobj_set_create(kobj_set_t *handle, const name_t *name,
+kstat_t krhino_kobj_set_create(kobj_set_t *handle, const name_t *name,
                               void **start, size_t msg_num)
 {
     kstat_t     stat;
@@ -79,18 +79,18 @@ kstat_t yunos_kobj_set_create(kobj_set_t *handle, const name_t *name,
         return RHINO_NULL_PTR;
     }
 
-    stat  = yunos_queue_create(&(handle->queue), name, start, msg_num);
+    stat  = krhino_queue_create(&(handle->queue), name, start, msg_num);
 
     if (stat != RHINO_SUCCESS) {
         return stat;
     }
 
-    handle->notify = yunos_kobj_set_notify;
+    handle->notify = krhino_kobj_set_notify;
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_kobj_set_del(kobj_set_t *handle)
+kstat_t krhino_kobj_set_del(kobj_set_t *handle)
 {
     kstat_t stat;
 
@@ -98,7 +98,7 @@ kstat_t yunos_kobj_set_del(kobj_set_t *handle)
         return RHINO_NULL_PTR;
     }
 
-    stat = yunos_queue_del(&(handle->queue));
+    stat = krhino_queue_del(&(handle->queue));
     return stat;
 }
 
@@ -146,7 +146,7 @@ static kstat_t kobj_insert_prepare(kobj_set_t *handle, blk_obj_t *obj)
         return RHINO_KOBJ_BLK;
     }
 
-    yunos_queue_info_get(&(handle->queue), &info);
+    krhino_queue_info_get(&(handle->queue), &info);
     free = info.msg_q.size - info.msg_q.cur_num;
 
     stat = kobj_internal_count_get(obj, &count);
@@ -162,7 +162,7 @@ static kstat_t kobj_insert_prepare(kobj_set_t *handle, blk_obj_t *obj)
     }
 
     for (; count > 0; count--) {
-        yunos_queue_back_send(&(handle->queue), (void *) obj);
+        krhino_queue_back_send(&(handle->queue), (void *) obj);
     }
 
     RHINO_CRITICAL_EXIT();
@@ -170,7 +170,7 @@ static kstat_t kobj_insert_prepare(kobj_set_t *handle, blk_obj_t *obj)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_kobj_set_insert(blk_obj_t *obj, kobj_set_t *handle)
+kstat_t krhino_kobj_set_insert(blk_obj_t *obj, kobj_set_t *handle)
 {
     CPSR_ALLOC();
     kstat_t stat;
@@ -198,7 +198,7 @@ kstat_t yunos_kobj_set_insert(blk_obj_t *obj, kobj_set_t *handle)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_kobj_set_rm(blk_obj_t *obj)
+kstat_t krhino_kobj_set_rm(blk_obj_t *obj)
 {
     CPSR_ALLOC();
     kstat_t stat;
@@ -229,7 +229,7 @@ kstat_t yunos_kobj_set_rm(blk_obj_t *obj)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_kobj_select(kobj_set_t *handle, blk_obj_t **obj, tick_t ticks)
+kstat_t krhino_kobj_select(kobj_set_t *handle, blk_obj_t **obj, tick_t ticks)
 {
     kstat_t stat;
 
@@ -237,7 +237,7 @@ kstat_t yunos_kobj_select(kobj_set_t *handle, blk_obj_t **obj, tick_t ticks)
         return RHINO_NULL_PTR;
     }
 
-    stat = yunos_queue_recv(&(handle->queue), ticks, (void **)obj);
+    stat = krhino_queue_recv(&(handle->queue), ticks, (void **)obj);
     return stat;
 }
 #endif  /* RHINO_CONFIG_KOBJ_SET */

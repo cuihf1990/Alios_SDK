@@ -14,7 +14,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     stk = (cpu_stack_t *)temp;
 
     *(--stk)  = (uint32_t)entry;               /* Entry Point   */
-    *(--stk)  = (uint32_t)yunos_task_deathbed; /* LR            */
+    *(--stk)  = (uint32_t)krhino_task_deathbed; /* LR            */
     *(--stk)  = (uint32_t)0;                   /* R12           */
     *(--stk)  = (uint32_t)0;                   /* R11           */
     *(--stk)  = (uint32_t)0;                   /* R10           */

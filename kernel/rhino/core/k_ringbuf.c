@@ -23,7 +23,7 @@ static size_t ringbuf_headlen_compress(size_t head_len, uint8_t *cmp_buf)
     uint8_t *p_len   = NULL;
     size_t   be_len  = 0;
 
-    be_len = yunos_ntohl(head_len);
+    be_len = krhino_ntohl(head_len);
     p_len = (uint8_t *)&be_len;
     len_bytes = COMPRESS_LEN(head_len);
 
@@ -53,7 +53,7 @@ static size_t ringbuf_headlen_decompress(size_t buf_len, uint8_t *cmp_buf)
         len_buf[sizeof(size_t) - buf_len] &= RINGBUF_LEN_MASK_CLEAN_TWOBIT;
     }
 
-    data_len = yunos_ntohl(be_len);
+    data_len = krhino_ntohl(be_len);
 
     return data_len;
 }
@@ -340,13 +340,13 @@ kstat_t ringbuf_reset(k_ringbuf_t *p_ringbuf)
 
 #if (RHINO_CONFIG_RINGBUF_VENDOR > 0)
 
-kstat_t yunos_ringbuf_reset(k_ringbuf_t *p_ringbuf)
+kstat_t krhino_ringbuf_reset(k_ringbuf_t *p_ringbuf)
 {
     NULL_PARA_CHK(p_ringbuf);
 
     return ringbuf_reset(p_ringbuf);
 }
-kstat_t yunos_ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len,
+kstat_t krhino_ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len,
                            size_t type, size_t block_size)
 {
     NULL_PARA_CHK(p_ringbuf);
@@ -365,7 +365,7 @@ kstat_t yunos_ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len,
     return ringbuf_init(p_ringbuf, buf, len, type, block_size);
 }
 
-kstat_t yunos_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
+kstat_t krhino_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
 {
     NULL_PARA_CHK(p_ringbuf);
     NULL_PARA_CHK(data);
@@ -379,7 +379,7 @@ kstat_t yunos_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
     return ringbuf_push(p_ringbuf, data, len);
 }
 
-kstat_t yunos_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
+kstat_t krhino_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
 {
     NULL_PARA_CHK(p_ringbuf);
     NULL_PARA_CHK(data);
@@ -392,7 +392,7 @@ kstat_t yunos_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
     return ringbuf_head_push(p_ringbuf, data, len);
 }
 
-kstat_t yunos_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
+kstat_t krhino_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
 {
     NULL_PARA_CHK(p_ringbuf);
     NULL_PARA_CHK(pdata);
@@ -405,14 +405,14 @@ kstat_t yunos_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
 
 }
 
-uint8_t yunos_ringbuf_is_empty(k_ringbuf_t *p_ringbuf)
+uint8_t krhino_ringbuf_is_empty(k_ringbuf_t *p_ringbuf)
 {
     NULL_PARA_CHK(p_ringbuf);
 
     return ringbuf_is_empty(p_ringbuf);
 }
 
-uint8_t yunos_ringbuf_is_full(k_ringbuf_t *p_ringbuf)
+uint8_t krhino_ringbuf_is_full(k_ringbuf_t *p_ringbuf)
 {
     NULL_PARA_CHK(p_ringbuf);
 

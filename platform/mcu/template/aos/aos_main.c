@@ -27,12 +27,12 @@ static void yos_init(void)
 
 void yos_start(void)
 {
-    yunos_init();
+    krhino_init();
 
     soc_driver_init();
 
-    yunos_task_dyn_create(&g_yos_init, "yos-init", 0, 10, 0, YOS_START_STACK, yos_init, 1);
+    krhino_task_dyn_create(&g_yos_init, "yos-init", 0, 10, 0, YOS_START_STACK, yos_init, 1);
 
-    yunos_start();
+    krhino_start();
 }
 

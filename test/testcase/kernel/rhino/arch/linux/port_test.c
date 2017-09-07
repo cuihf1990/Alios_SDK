@@ -27,7 +27,7 @@ static void test_event_handler(const void *arg)
 {
     YUNIT_ASSERT(arg == test_msg);
 
-    yunos_sem_give(&sem);
+    krhino_sem_give(&sem);
 
     sigset_t sigblocked;
     sigprocmask(SIG_BLOCK, NULL, &sigblocked);
@@ -46,7 +46,7 @@ static void test_cpu_event_case(void)
 
     YUNIT_ASSERT(ret == 0);
 
-    yunos_sem_take(&sem, RHINO_WAIT_FOREVER);
+    krhino_sem_take(&sem, RHINO_WAIT_FOREVER);
 }
 
 static void test_event_pthread_handler(const void *arg)
@@ -97,7 +97,7 @@ static void test_cpu_event_pthread_case(void)
     YUNIT_ASSERT(ret == 0);
 
     while (!test_done) {
-        yunos_task_sleep(10);
+        krhino_task_sleep(10);
     }
 }
 
@@ -105,7 +105,7 @@ static int init(void)
 {
     int ret;
 
-    ret = yunos_sem_create(&sem, "rhino test port", 0);
+    ret = krhino_sem_create(&sem, "rhino test port", 0);
     if (ret != 0) {
         return ret;
     }
@@ -119,7 +119,7 @@ static int cleanup(void)
 {
     int ret;
 
-    ret = yunos_sem_del(&sem);
+    ret = krhino_sem_del(&sem);
     if (ret != 0) {
         return ret;
     }

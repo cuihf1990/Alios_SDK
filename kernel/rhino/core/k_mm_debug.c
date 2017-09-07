@@ -33,7 +33,7 @@ static uint32_t check_malloc_region(void *adress);
 uint32_t if_adress_is_valid(void *adress);
 uint32_t dump_mmleak();
 
-uint32_t yunos_mm_leak_region_init(void *start, void *end)
+uint32_t krhino_mm_leak_region_init(void *start, void *end)
 {
     static uint32_t i = 0;
 
@@ -62,7 +62,7 @@ static uint32_t check_task_stack(ktask_t *task, void **p)
     start = task->task_stack_base;
     end   = task->task_stack_base + task->stack_size;
 
-    rst =  yunos_task_stack_cur_free(task, &offset);
+    rst =  krhino_task_stack_cur_free(task, &offset);
     if (rst == RHINO_SUCCESS) {
         cur = task->task_stack_base + task->stack_size - offset;
     } else {
@@ -90,7 +90,7 @@ static uint32_t check_if_in_stack(void **p)
 
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-        task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+        task = krhino_list_entry(tmp, ktask_t, task_stats_item);
         if (1 == check_task_stack(task, p)) {
             return 1;
         }
@@ -177,8 +177,8 @@ uint32_t check_malloc_region(void *adress)
             if ((cur->size & RHINO_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & RHINO_MM_BLKSIZE_MASK);
                 if (0 == g_recheck_flag && !(cur->size & RHINO_MM_FREE)) {
-                    if (yunos_cur_task_get()->task_stack_base >= cur->mbinfo.buffer
-                        && yunos_cur_task_get()->task_stack_base < next) {
+                    if (krhino_cur_task_get()->task_stack_base >= cur->mbinfo.buffer
+                        && krhino_cur_task_get()->task_stack_base < next) {
                         cur = next;
                         continue;
                     }
@@ -256,7 +256,7 @@ uint32_t dump_mmleak()
     k_mm_region_info_t *reginfo, *nextreg;
     k_mm_list_t *next, *cur;
 
-    yunos_sched_disable();
+    krhino_sched_disable();
 
     reginfo = g_kmm_head->regioninfo;
     while (reginfo) {
@@ -287,7 +287,7 @@ uint32_t dump_mmleak()
         reginfo = nextreg;
     }
 
-    yunos_sched_enable();
+    krhino_sched_enable();
     return 0;
 }
 #endif

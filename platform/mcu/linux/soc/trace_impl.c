@@ -63,7 +63,7 @@ void *trace_hal_init()
         return (void *)fd;
     }
 
-    yunos_task_dyn_del(NULL);
+    krhino_task_dyn_del(NULL);
 
     return 0;
 }
@@ -117,7 +117,7 @@ static void trace_entry(void *arg)
                 trace_hal_send((void *)sockfd, trace_buf, len + 4);
             }
 
-            yunos_task_sleep(2);
+            krhino_task_sleep(2);
         }
     } 
 }
@@ -148,7 +148,7 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
             return ;
         }
 
-        if (yunos_task_dyn_create(&trace_task, "trace_task", NULL, 3,
+        if (krhino_task_dyn_create(&trace_task, "trace_task", NULL, 3,
                 0, TRACE_TASK_STACK_SIZE, trace_entry, 1) != RHINO_SUCCESS) {
             cli_printf("trace task creat fail \r\n");
         }
@@ -194,7 +194,7 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
                 ip_addr = NULL;
             }
     
-            yunos_task_dyn_del(trace_task);
+            krhino_task_dyn_del(trace_task);
         }
     }
 }

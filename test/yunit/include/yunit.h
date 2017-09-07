@@ -182,7 +182,7 @@ void yunit_add_test_case_result(
 	printf("\t%-40s%-10s%-20s\n", "Name","State", "StackSize");\
 	printf("\t--------------------------------------------------------------\n");\
 	for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) { \
-		task = yunos_list_entry(tmp, ktask_t, task_stats_item);\
+		task = krhino_list_entry(tmp, ktask_t, task_stats_item);\
 		PRINT_TASK_INFO(task);\
 	}\
 	printf("\t--------------------------------------------------------------\n");\

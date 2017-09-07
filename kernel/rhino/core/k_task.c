@@ -93,7 +93,7 @@ static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,
     task->task_stack = cpu_task_stack_init(stack_buf, stack_size, arg, entry);
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_task_create_hook(task);
+    krhino_task_create_hook(task);
 #endif
 
     TRACE_TASK_CREATE(task);
@@ -117,7 +117,7 @@ static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
+kstat_t krhino_task_create(ktask_t *task, const name_t *name, void *arg,
                           uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
                           size_t stack_size, task_entry_t entry, uint8_t autorun)
 {
@@ -126,7 +126,7 @@ kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
 }
 
 #if (RHINO_CONFIG_CPU_NUM > 1)
-kstat_t yunos_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
+kstat_t krhino_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
                               uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
                               size_t stack_size, task_entry_t entry, uint8_t cpu_num,
                               uint8_t autorun)
@@ -151,14 +151,14 @@ kstat_t task_dyn_create(ktask_t **task, const name_t *name, void *arg,
         return RHINO_INV_PARAM;
     }
 
-    task_stack = yunos_mm_alloc(stack * sizeof(cpu_stack_t));
+    task_stack = krhino_mm_alloc(stack * sizeof(cpu_stack_t));
     if (task_stack == NULL) {
         return RHINO_NO_MEM;
     }
 
-    task_obj = yunos_mm_alloc(sizeof(ktask_t));
+    task_obj = krhino_mm_alloc(sizeof(ktask_t));
     if (task_obj == NULL) {
-        yunos_mm_free(task_stack);
+        krhino_mm_free(task_stack);
         return RHINO_NO_MEM;
     }
 
@@ -167,8 +167,8 @@ kstat_t task_dyn_create(ktask_t **task, const name_t *name, void *arg,
     ret = task_create(task_obj, name, arg, pri, ticks, task_stack, stack, entry,
                       autorun, K_OBJ_DYN_ALLOC, cpu_num, cpu_binded);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
-        yunos_mm_free(task_stack);
-        yunos_mm_free(task_obj);
+        krhino_mm_free(task_stack);
+        krhino_mm_free(task_obj);
         *task = NULL;
         return ret;
     }
@@ -176,7 +176,7 @@ kstat_t task_dyn_create(ktask_t **task, const name_t *name, void *arg,
     return ret;
 }
 
-kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
+kstat_t krhino_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
                               uint8_t pri, tick_t ticks, size_t stack,
                               task_entry_t entry, uint8_t autorun)
 {
@@ -185,7 +185,7 @@ kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
 
 #endif
 
-kstat_t yunos_task_sleep(tick_t ticks)
+kstat_t krhino_task_sleep(tick_t ticks)
 {
     CPSR_ALLOC();
 
@@ -238,7 +238,7 @@ kstat_t yunos_task_sleep(tick_t ticks)
     return ret;
 }
 
-kstat_t yunos_task_yield(void)
+kstat_t krhino_task_yield(void)
 {
     CPSR_ALLOC();
 
@@ -316,7 +316,7 @@ kstat_t task_suspend(ktask_t *task)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_suspend(ktask_t *task)
+kstat_t krhino_task_suspend(ktask_t *task)
 {
     if (task == NULL) {
         return RHINO_NULL_PTR;
@@ -380,7 +380,7 @@ kstat_t task_resume(ktask_t *task)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_resume(ktask_t *task)
+kstat_t krhino_task_resume(ktask_t *task)
 {
     NULL_PARA_CHK(task);
 
@@ -388,7 +388,7 @@ kstat_t yunos_task_resume(ktask_t *task)
 }
 #endif
 
-kstat_t yunos_task_stack_min_free(ktask_t *task, size_t *free)
+kstat_t krhino_task_stack_min_free(ktask_t *task, size_t *free)
 {
     cpu_stack_t *task_stack;
     size_t free_stk = 0;
@@ -417,7 +417,7 @@ kstat_t yunos_task_stack_min_free(ktask_t *task, size_t *free)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_stack_cur_free(ktask_t *task, size_t *free)
+kstat_t krhino_task_stack_cur_free(ktask_t *task, size_t *free)
 {
     CPSR_ALLOC();
     size_t sp = 0;
@@ -525,7 +525,7 @@ kstat_t task_pri_change(ktask_t *task, uint8_t new_pri)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
+kstat_t krhino_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
 {
     CPSR_ALLOC();
 
@@ -577,7 +577,7 @@ kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
 }
 
 #if (RHINO_CONFIG_TASK_WAIT_ABORT > 0)
-kstat_t yunos_task_wait_abort(ktask_t *task)
+kstat_t krhino_task_wait_abort(ktask_t *task)
 {
     CPSR_ALLOC();
 
@@ -624,7 +624,7 @@ kstat_t yunos_task_wait_abort(ktask_t *task)
     }
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_task_abort_hook(task);
+    krhino_task_abort_hook(task);
 #endif
 
     TRACE_TASK_WAIT_ABORT(g_active_task[cpu_cur_get()], task);
@@ -651,7 +651,7 @@ static void task_mutex_free(ktask_t *task)
         blk_list_head = &mutex->blk_obj.blk_list;
 
         if (!is_klist_empty(blk_list_head)) {
-            next_task = yunos_list_entry(blk_list_head->next, ktask_t, task_list);
+            next_task = krhino_list_entry(blk_list_head->next, ktask_t, task_list);
 
             /* wakeup wait task */
             pend_task_wakeup(next_task);
@@ -667,7 +667,7 @@ static void task_mutex_free(ktask_t *task)
     }
 }
 
-kstat_t yunos_task_del(ktask_t *task)
+kstat_t krhino_task_del(ktask_t *task)
 {
     CPSR_ALLOC();
 
@@ -744,7 +744,7 @@ kstat_t yunos_task_del(ktask_t *task)
     TRACE_TASK_DEL(g_active_task[cur_cpu_num], task);
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_task_del_hook(task);
+    krhino_task_del_hook(task);
 #endif
 
     RHINO_CRITICAL_EXIT_SCHED();
@@ -753,7 +753,7 @@ kstat_t yunos_task_del(ktask_t *task)
 }
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_task_dyn_del(ktask_t *task)
+kstat_t krhino_task_dyn_del(ktask_t *task)
 {
     CPSR_ALLOC();
 
@@ -805,14 +805,14 @@ kstat_t yunos_task_dyn_del(ktask_t *task)
     }
 
     g_sched_lock[cpu_cur_get()]++;
-    ret = yunos_queue_back_send(&g_dyn_queue, task->task_stack_base);
+    ret = krhino_queue_back_send(&g_dyn_queue, task->task_stack_base);
     if (ret != RHINO_SUCCESS) {
         g_sched_lock[cpu_cur_get()]--;
         RHINO_CRITICAL_EXIT();
         return ret;
     }
 
-    ret = yunos_queue_back_send(&g_dyn_queue, task);
+    ret = krhino_queue_back_send(&g_dyn_queue, task);
     if (ret != RHINO_SUCCESS) {
         g_sched_lock[cpu_cur_get()]--;
         RHINO_CRITICAL_EXIT();
@@ -856,7 +856,7 @@ kstat_t yunos_task_dyn_del(ktask_t *task)
     TRACE_TASK_DEL(g_active_task[cpu_cur_get()], task);
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_task_del_hook(task);
+    krhino_task_del_hook(task);
 #endif
 
     RHINO_CRITICAL_EXIT_SCHED();
@@ -868,7 +868,7 @@ kstat_t yunos_task_dyn_del(ktask_t *task)
 #endif
 
 #if (RHINO_CONFIG_SCHED_RR > 0)
-kstat_t yunos_task_time_slice_set(ktask_t *task, size_t slice)
+kstat_t krhino_task_time_slice_set(ktask_t *task, size_t slice)
 {
     CPSR_ALLOC();
 
@@ -893,7 +893,7 @@ kstat_t yunos_task_time_slice_set(ktask_t *task, size_t slice)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_sched_policy_set(ktask_t *task, uint8_t policy)
+kstat_t krhino_sched_policy_set(ktask_t *task, uint8_t policy)
 {
     CPSR_ALLOC();
 
@@ -913,7 +913,7 @@ kstat_t yunos_sched_policy_set(ktask_t *task, uint8_t policy)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_sched_policy_get(ktask_t *task, uint8_t *policy)
+kstat_t krhino_sched_policy_get(ktask_t *task, uint8_t *policy)
 {
     CPSR_ALLOC();
 
@@ -932,7 +932,7 @@ kstat_t yunos_sched_policy_get(ktask_t *task, uint8_t *policy)
 #endif
 
 #if (RHINO_CONFIG_TASK_INFO > 0)
-kstat_t yunos_task_info_set(ktask_t *task, size_t idx, void *info)
+kstat_t krhino_task_info_set(ktask_t *task, size_t idx, void *info)
 {
     CPSR_ALLOC();
 
@@ -949,7 +949,7 @@ kstat_t yunos_task_info_set(ktask_t *task, size_t idx, void *info)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_info_get(ktask_t *task, size_t idx, void **info)
+kstat_t krhino_task_info_get(ktask_t *task, size_t idx, void **info)
 {
     NULL_PARA_CHK(task);
     NULL_PARA_CHK(info);
@@ -963,7 +963,7 @@ kstat_t yunos_task_info_get(ktask_t *task, size_t idx, void **info)
     return RHINO_SUCCESS;
 }
 
-void  yunos_task_deathbed(void)
+void  krhino_task_deathbed(void)
 {
 #if (RHINO_CONFIG_TASK_DEL > 0)
     CPSR_ALLOC();
@@ -977,15 +977,15 @@ void  yunos_task_deathbed(void)
     if (task->mm_alloc_flag == K_OBJ_DYN_ALLOC) {
         /* del my self*/
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-        yunos_task_dyn_del(NULL);
+        krhino_task_dyn_del(NULL);
 #endif
     } else {
-        yunos_task_del(NULL);
+        krhino_task_del(NULL);
     }
 #else
 
     while (1) {
-        yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND * 10);
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND * 10);
     }
 #endif
 }

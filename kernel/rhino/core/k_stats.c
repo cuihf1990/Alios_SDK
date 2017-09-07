@@ -32,7 +32,7 @@ void kobj_list_init(void)
 
 #if (RHINO_CONFIG_TASK_STACK_OVF_CHECK > 0)
 #if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
-void yunos_stack_ovf_check(void)
+void krhino_stack_ovf_check(void)
 {
     cpu_stack_t *stack_start;
 
@@ -49,7 +49,7 @@ void yunos_stack_ovf_check(void)
 
 #else
 
-void yunos_stack_ovf_check(void)
+void krhino_stack_ovf_check(void)
 {
     cpu_stack_t *stack_start;
     cpu_stack_t *stack_end;
@@ -69,7 +69,7 @@ void yunos_stack_ovf_check(void)
 #endif
 
 #if (RHINO_CONFIG_TASK_SCHED_STATS > 0)
-void yunos_task_sched_stats_reset(void)
+void krhino_task_sched_stats_reset(void)
 {
     lr_timer_t cur_time;
 
@@ -86,7 +86,7 @@ void yunos_task_sched_stats_reset(void)
     g_preferred_ready_task->task_time_start = cur_time;
 }
 
-void yunos_task_sched_stats_get(void)
+void krhino_task_sched_stats_get(void)
 {
     lr_timer_t cur_time;
     lr_timer_t exec_time;
@@ -161,7 +161,7 @@ void intrpt_disable_measure_stop(void)
 #endif
 
 #if (RHINO_CONFIG_HW_COUNT > 0)
-void yunos_overhead_measure(void)
+void krhino_overhead_measure(void)
 {
     hr_timer_t diff;
     hr_timer_t m1;
@@ -183,18 +183,18 @@ void yunos_overhead_measure(void)
 
 /*it should be called in cpu_stats task*/
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-void yunos_cpu_usage_stats_init(void)
+void krhino_cpu_usage_stats_init(void)
 {
 
     klist_t *taskhead = &g_kobj_list.task_head;
     klist_t *stats_item = NULL;
     ktask_t *task = NULL;
 
-    yunos_sched_disable();
+    krhino_sched_disable();
 
     for (stats_item = taskhead->next; stats_item != taskhead;
          stats_item = stats_item->next) {
-        task = yunos_list_entry(stats_item, ktask_t, task_stats_item);
+        task = krhino_list_entry(stats_item, ktask_t, task_stats_item);
 
         if (
 #if (RHINO_CONFIG_TICK_TASK > 0)
@@ -204,23 +204,23 @@ void yunos_cpu_usage_stats_init(void)
             (task != (ktask_t *)&g_idle_task[cpu_cur_get()]) &&
 #endif
             (task != (ktask_t *)&g_active_task[cpu_cur_get()])) {
-            yunos_task_suspend(task);
+            krhino_task_suspend(task);
         }
     }
 
-    yunos_sched_enable();
+    krhino_sched_enable();
 
     idle_count_set(0u);
 
-    yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
+    krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
 
     g_idle_count_max = idle_count_get();
 
-    yunos_sched_disable();
+    krhino_sched_disable();
 
     for (stats_item = taskhead->next; stats_item != taskhead;
          stats_item = stats_item->next) {
-        task = yunos_list_entry(stats_item, ktask_t, task_stats_item);
+        task = krhino_list_entry(stats_item, ktask_t, task_stats_item);
 
         if (
 #if (RHINO_CONFIG_TICK_TASK > 0)
@@ -230,11 +230,11 @@ void yunos_cpu_usage_stats_init(void)
             (task != (ktask_t *)&g_idle_task[cpu_cur_get()]) &&
 #endif
             (task != (ktask_t *)&g_active_task[cpu_cur_get()])) {
-            yunos_task_resume(task);
+            krhino_task_resume(task);
         }
     }
 
-    yunos_sched_enable();
+    krhino_sched_enable();
 
 }
 
@@ -244,12 +244,12 @@ static void cpu_usage_task_entry(void *arg)
 
     (void)arg;
 
-    yunos_cpu_usage_stats_init();
+    krhino_cpu_usage_stats_init();
 
     while (1) {
         idle_count_set(0u);
 
-        yunos_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
 
         idle_count = idle_count_get();
 
@@ -269,7 +269,7 @@ static void cpu_usage_task_entry(void *arg)
 void cpu_usage_stats_start(void)
 {
     /* create a statistic task to calculate cpu usage */
-    yunos_task_create(&g_cpu_usage_task, "cpu_stats", 0,
+    krhino_task_create(&g_cpu_usage_task, "cpu_stats", 0,
                       RHINO_CONFIG_CPU_USAGE_TASK_PRI,
                       0, g_cpu_task_stack, RHINO_CONFIG_CPU_USAGE_TASK_STACK, cpu_usage_task_entry,
                       1);

@@ -61,5 +61,5 @@ void soc_err_proc(kstat_t err)
     }
 }
 
-yunos_err_proc_t g_err_proc = soc_err_proc;
+krhino_err_proc_t g_err_proc = soc_err_proc;
 

@@ -30,7 +30,7 @@ static void sched_disable_measure_stop(void)
 }
 #endif
 
-kstat_t yunos_sched_disable(void)
+kstat_t krhino_sched_disable(void)
 {
     CPSR_ALLOC();
 
@@ -54,7 +54,7 @@ kstat_t yunos_sched_disable(void)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_sched_enable(void)
+kstat_t krhino_sched_enable(void)
 {
     CPSR_ALLOC();
 
@@ -108,7 +108,7 @@ void core_sched(void)
     TRACE_TASK_SWITCH(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_task_switch_hook(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
+    krhino_task_switch_hook(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 #endif
 
     g_active_task[cur_cpu_num]->cur_exc = 0;
@@ -152,7 +152,7 @@ void core_sched(void)
     TRACE_TASK_SWITCH(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    yunos_task_switch_hook(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
+    krhino_task_switch_hook(g_active_task[cur_cpu_num], g_preferred_ready_task[cur_cpu_num]);
 #endif
 
     cpu_task_switch();
@@ -181,7 +181,7 @@ RHINO_INLINE void ready_list_init(runqueue_t *rq, ktask_t *task)
 {
     rq->cur_list_item[task->prio] = &task->task_list;
     klist_init(rq->cur_list_item[task->prio]);
-    yunos_bitmap_set(rq->task_bit_map, task->prio);
+    krhino_bitmap_set(rq->task_bit_map, task->prio);
 
     if ((task->prio) < (rq->highest_pri)) {
         rq->highest_pri = task->prio;
@@ -302,7 +302,7 @@ void ready_list_rm(runqueue_t *rq, ktask_t *task)
     /* only one item,just set cur item ptr to NULL */
     rq->cur_list_item[pri] = NULL;
 
-    yunos_bitmap_clear(rq->task_bit_map, pri);
+    krhino_bitmap_clear(rq->task_bit_map, pri);
 
     /* if task prio not equal to the highest prio, then we do not need to update the highest prio */
     /* this condition happens when a current high prio task to suspend a low priotity task */
@@ -311,7 +311,7 @@ void ready_list_rm(runqueue_t *rq, ktask_t *task)
     }
 
     /* find the highest ready task */
-    i = yunos_find_first_bit(rq->task_bit_map);
+    i = krhino_find_first_bit(rq->task_bit_map);
 
     /* update the next highest prio task */
     if (i >= 0) {
@@ -342,7 +342,7 @@ void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
 
     while (1) {
 
-        task = yunos_list_entry(iter, ktask_t, task_list);
+        task = krhino_list_entry(iter, ktask_t, task_list);
 
         if (g_active_task[cpu_num] == task) {
             break;
@@ -361,7 +361,7 @@ void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
         if (iter->next == rq->cur_list_item[highest_pri]) {
             task_bit_map[highest_pri / 32u] &= ~(1u << (31u - (highest_pri % 32u)));
 
-            highest_pri = yunos_find_first_bit(task_bit_map);
+            highest_pri = krhino_find_first_bit(task_bit_map);
             iter = rq->cur_list_item[highest_pri];
         } else {
             iter = iter->next;
@@ -373,7 +373,7 @@ void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num)
 {
     klist_t *node = rq->cur_list_item[rq->highest_pri];
     /* get the highest prio task object */
-    g_preferred_ready_task[cpu_num] = yunos_list_entry(node, ktask_t, task_list);
+    g_preferred_ready_task[cpu_num] = krhino_list_entry(node, ktask_t, task_list);
 }
 #endif
 
@@ -459,7 +459,7 @@ void time_slice_update(uint8_t task_pri)
     }
 
     /* Always look at the first task on the ready list */
-    task = yunos_list_entry(head, ktask_t, task_list);
+    task = krhino_list_entry(head, ktask_t, task_list);
 
     if (task->sched_policy == KSCHED_FIFO) {
         RHINO_CRITICAL_EXIT();

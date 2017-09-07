@@ -31,14 +31,14 @@ typedef struct {
  * @param[in]  flags  flags to be init
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_event_create(kevent_t *event, const name_t *name, uint32_t flags);
+kstat_t krhino_event_create(kevent_t *event, const name_t *name, uint32_t flags);
 
 /**
  * This function will delete a event
  * @param[in]  event  pointer to a event
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_event_del(kevent_t *event);
+kstat_t krhino_event_del(kevent_t *event);
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 /**
@@ -48,7 +48,7 @@ kstat_t yunos_event_del(kevent_t *event);
  * @param[in]   flags  flags to be init
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
+kstat_t krhino_event_dyn_create(kevent_t **event, const name_t *name,
                                uint32_t flags);
 
 /**
@@ -56,7 +56,7 @@ kstat_t yunos_event_dyn_create(kevent_t **event, const name_t *name,
  * @param[in]  event  pointer to a event
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_event_dyn_del(kevent_t *event);
+kstat_t krhino_event_dyn_del(kevent_t *event);
 #endif
 
 /**
@@ -68,7 +68,7 @@ kstat_t yunos_event_dyn_del(kevent_t *event);
  * @param[in]   ticks       ticks to wait
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
+kstat_t krhino_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
                         uint32_t *actl_flags, tick_t ticks);
 
 /**
@@ -78,7 +78,7 @@ kstat_t yunos_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
  * @param[in]  opt    could be RHINO_AND, RHINO_OR
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_event_set(kevent_t *event, uint32_t flags, uint8_t opt);
+kstat_t krhino_event_set(kevent_t *event, uint32_t flags, uint8_t opt);
 
 #endif /* K_EVENT_H */
 

@@ -47,7 +47,7 @@ void idle_task(void *arg)
         RHINO_CPU_INTRPT_ENABLE();
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-        yunos_idle_hook();
+        krhino_idle_hook();
 #endif
     }
 }

@@ -507,7 +507,7 @@ static void test_tfs_http(void) {
     YUNIT_ASSERT(ret != 0);
 }
 
-static yunit_test_case_t yunos_tfs_testcases[] = {
+static yunit_test_case_t krhino_tfs_testcases[] = {
     { "tfs_get_ID2", test_tfs_get_ID2},
     { "tfs_id2_sign", test_tfs_id2_sign},
     { "tfs_id2_decrypt", test_tfs_id2_decrypt},
@@ -526,7 +526,7 @@ static yunit_test_case_t yunos_tfs_testcases[] = {
 };
 
 static yunit_test_suite_t suites[] = {
-    { "tfs", init, cleanup, setup, teardown, yunos_tfs_testcases },
+    { "tfs", init, cleanup, setup, teardown, krhino_tfs_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

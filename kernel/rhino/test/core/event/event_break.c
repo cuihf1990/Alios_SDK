@@ -14,19 +14,19 @@ static uint8_t event_break_case1(void)
 {
     kstat_t ret;
 
-    ret = yunos_event_create(NULL, MODULE_NAME, TEST_FLAG);
+    ret = krhino_event_create(NULL, MODULE_NAME, TEST_FLAG);
     MYASSERT(ret == RHINO_NULL_PTR);
 
-    ret = yunos_event_create(&test_event, MODULE_NAME, TEST_FLAG);
+    ret = krhino_event_create(&test_event, MODULE_NAME, TEST_FLAG);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(test_event.blk_obj.obj_type == RHINO_EVENT_OBJ_TYPE);
 
     test_event.blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
-    ret = yunos_event_del(&test_event);
+    ret = krhino_event_del(&test_event);
     MYASSERT(ret == RHINO_KOBJ_TYPE_ERR);
 
     test_event.blk_obj.obj_type = RHINO_EVENT_OBJ_TYPE;
-    ret = yunos_event_del(&test_event);
+    ret = krhino_event_del(&test_event);
     MYASSERT(ret == RHINO_SUCCESS);
 
     return 0;
@@ -44,7 +44,7 @@ void event_break_test(void)
     task_event_entry_register(MODULE_NAME, (test_func_t *)event_func_runner,
                               sizeof(event_func_runner) / sizeof(test_func_t));
 
-    ret = yunos_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_EVENT_PRI,
+    ret = krhino_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_EVENT_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;

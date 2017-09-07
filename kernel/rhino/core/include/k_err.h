@@ -85,9 +85,9 @@ typedef enum {
     RHINO_INTRPT_STACK_OVF
 } kstat_t;
 
-typedef void (*yunos_err_proc_t)(kstat_t err);
+typedef void (*krhino_err_proc_t)(kstat_t err);
 
-extern yunos_err_proc_t g_err_proc;
+extern krhino_err_proc_t g_err_proc;
 
 #endif /* K_ERR_H */
 

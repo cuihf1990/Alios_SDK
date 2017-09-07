@@ -378,16 +378,16 @@ void cpu_task_del_hook(ktask_t *tcb)
      * ---- hack -----
      * for DYN_ALLOC case,
      * tcb->task_stack_base is replaced with real_stack in create_hook,
-     * and tcb->task_stack_base is freed in yunos_task_dyn_del,
+     * and tcb->task_stack_base is freed in krhino_task_dyn_del,
      * so we just need to free orig_stack
      * for STATIC_ALLOC case, need to free real_stack by ourself
      */
     if (tcb->mm_alloc_flag == K_OBJ_DYN_ALLOC) {
-        ret = yunos_queue_back_send(&g_dyn_queue, tcb_ext->orig_stack);
+        ret = krhino_queue_back_send(&g_dyn_queue, tcb_ext->orig_stack);
         assert(ret == 0);
     }
     else {
-        ret = yunos_queue_back_send(&g_dyn_queue, tcb_ext->real_stack);
+        ret = krhino_queue_back_send(&g_dyn_queue, tcb_ext->real_stack);
         assert(ret == 0);
     }
 
@@ -411,10 +411,10 @@ void task_proc(void)
 
     task_tcb = tcb_ext->tcb;
     if (task_tcb->mm_alloc_flag == K_OBJ_STATIC_ALLOC) {
-        yunos_task_del(tcb_ext->tcb);
+        krhino_task_del(tcb_ext->tcb);
     }
     else if (task_tcb->mm_alloc_flag == K_OBJ_DYN_ALLOC) {
-        yunos_task_dyn_del(tcb_ext->tcb);
+        krhino_task_dyn_del(tcb_ext->tcb);
     }
     else {
         LOG("System crash, the mm_alloc_flag of task is %d\n", task_tcb->mm_alloc_flag);
@@ -474,8 +474,8 @@ void cpu_idle_hook(void)
 static void cpu_assert(int signo, siginfo_t *si, void *ucontext)
 {
     enter_signal(signo);
-    yunos_intrpt_enter();
-    yunos_intrpt_exit();
+    krhino_intrpt_enter();
+    krhino_intrpt_exit();
     leave_signal(signo);
 }
 #endif
@@ -484,11 +484,11 @@ static void tick_interpt(int signo, siginfo_t *si, void *ucontext)
 {
     enter_signal(signo);
 
-    yunos_intrpt_enter();
+    krhino_intrpt_enter();
 
-    yunos_tick_proc();
+    krhino_tick_proc();
 
-    yunos_intrpt_exit();
+    krhino_intrpt_exit();
 
     leave_signal(signo);
 }
@@ -538,7 +538,7 @@ static void cpu_intr_entry(void *arg)
 
             pthread_mutex_lock(&g_event_mutex);
 
-            kevent = yunos_list_entry(g_event_list.next, cpu_event_internal_t, node);
+            kevent = krhino_list_entry(g_event_list.next, cpu_event_internal_t, node);
             klist_rm(&kevent->node);
 
             pthread_mutex_unlock(&g_event_mutex);
@@ -547,7 +547,7 @@ static void cpu_intr_entry(void *arg)
             cpu_event_free(kevent);
         }
 
-        yunos_sem_take(&g_intr_sem, RHINO_WAIT_FOREVER);
+        krhino_sem_take(&g_intr_sem, RHINO_WAIT_FOREVER);
     }
 }
 
@@ -555,8 +555,8 @@ static void create_intr_task(void)
 {
     static uint32_t stack[1024];
 
-    yunos_sem_create(&g_intr_sem, "intr count", 0);
-    yunos_task_create(&g_intr_task, "cpu_intr", 0, 0, 0, stack, 1024, cpu_intr_entry, 1);
+    krhino_sem_create(&g_intr_sem, "intr count", 0);
+    krhino_task_create(&g_intr_task, "cpu_intr", 0, 0, 0, stack, 1024, cpu_intr_entry, 1);
 
     cpu_event_inited = 1;
 }
@@ -681,16 +681,16 @@ void cpu_sig_handler(int signo, siginfo_t *si, void *ucontext)
     }
 
     enter_signal(signo);
-    yunos_intrpt_enter();
+    krhino_intrpt_enter();
 
     if (signo == SIGUSR2) {
-        yunos_sem_give(&g_intr_sem);
+        krhino_sem_give(&g_intr_sem);
     }
     else if (signo == SIGIO) {
         trigger_io_cb(si->si_fd);
     }
 
-    yunos_intrpt_exit();
+    krhino_intrpt_exit();
     leave_signal(signo);
 }
 

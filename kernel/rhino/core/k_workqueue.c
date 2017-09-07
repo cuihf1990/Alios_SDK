@@ -16,7 +16,7 @@ static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
 
     RHINO_CRITICAL_ENTER();
 
-    yunos_list_for_each_entry(current_queue, &g_workqueue_list_head, workqueue_node) {
+    krhino_list_for_each_entry(current_queue, &g_workqueue_list_head, workqueue_node) {
         if (current_queue == workqueue) {
             RHINO_CRITICAL_EXIT();
             return RHINO_WORKQUEUE_EXIST;
@@ -37,7 +37,7 @@ static void worker_task(void *arg)
 
     while (1) {
         if (is_klist_empty(&(queue->work_list))) {
-            ret = yunos_sem_take(&(queue->sem), RHINO_WAIT_FOREVER);
+            ret = krhino_sem_take(&(queue->sem), RHINO_WAIT_FOREVER);
             if (ret != RHINO_SUCCESS) {
                 k_err_proc(ret);
             }
@@ -46,7 +46,7 @@ static void worker_task(void *arg)
         RHINO_CRITICAL_ENTER();
         if (!is_klist_empty(&(queue->work_list))) {
             /* have work to do. */
-            work = yunos_list_entry(queue->work_list.next, kwork_t, work_node);
+            work = krhino_list_entry(queue->work_list.next, kwork_t, work_node);
             klist_rm_init(&(work->work_node));
             queue->work_current = work;
             RHINO_CRITICAL_EXIT();
@@ -61,7 +61,7 @@ static void worker_task(void *arg)
     }
 }
 
-kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
+kstat_t krhino_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
                                uint8_t pri, cpu_stack_t *stack_buf, size_t stack_size)
 {
     CPSR_ALLOC();
@@ -90,15 +90,15 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
     workqueue->work_current = NULL;
     workqueue->name      = name;
 
-    ret = yunos_sem_create(&(workqueue->sem), "WORKQUEUE-SEM", 0);
+    ret = krhino_sem_create(&(workqueue->sem), "WORKQUEUE-SEM", 0);
     if (ret != RHINO_SUCCESS) {
         return ret;
     }
 
-    ret = yunos_task_create(&(workqueue->worker), name, (void *)workqueue, pri,
+    ret = krhino_task_create(&(workqueue->worker), name, (void *)workqueue, pri,
                             0, stack_buf, stack_size, worker_task, 0);
     if (ret != RHINO_SUCCESS) {
-        yunos_sem_del(&(workqueue->sem));
+        krhino_sem_del(&(workqueue->sem));
         return ret;
     }
 
@@ -106,17 +106,17 @@ kstat_t yunos_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
     klist_insert(&g_workqueue_list_head, &(workqueue->workqueue_node));
     RHINO_CRITICAL_EXIT();
 
-    ret = yunos_task_resume(&(workqueue->worker));
+    ret = krhino_task_resume(&(workqueue->worker));
     if (ret != RHINO_SUCCESS) {
         return ret;
     }
 
-    TRACE_WORKQUEUE_CREATE(yunos_cur_task_get(), workqueue);
+    TRACE_WORKQUEUE_CREATE(krhino_cur_task_get(), workqueue);
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
+kstat_t krhino_workqueue_del(kworkqueue_t *workqueue)
 {
     CPSR_ALLOC();
 
@@ -143,12 +143,12 @@ kstat_t yunos_workqueue_del(kworkqueue_t *workqueue)
 
     RHINO_CRITICAL_EXIT();
 
-    ret = yunos_task_del(&(workqueue->worker));
+    ret = krhino_task_del(&(workqueue->worker));
     if (ret != RHINO_SUCCESS) {
         return ret;
     }
 
-    ret = yunos_sem_del(&(workqueue->sem));
+    ret = krhino_sem_del(&(workqueue->sem));
     if (ret != RHINO_SUCCESS) {
         return ret;
     }
@@ -166,7 +166,7 @@ static void work_timer_cb(void *timer, void *arg)
     CPSR_ALLOC();
 
     kstat_t       ret;
-    kwork_t      *work = yunos_list_entry(timer, kwork_t, timer);
+    kwork_t      *work = krhino_list_entry(timer, kwork_t, timer);
     kworkqueue_t *wq   = (kworkqueue_t *)arg;
 
     RHINO_CRITICAL_ENTER();
@@ -183,7 +183,7 @@ static void work_timer_cb(void *timer, void *arg)
 
     if (wq->work_current == NULL) {
         RHINO_CRITICAL_EXIT();
-        ret = yunos_sem_give(&(wq->sem));
+        ret = krhino_sem_give(&(wq->sem));
         if (ret != RHINO_SUCCESS) {
             return;
         }
@@ -192,7 +192,7 @@ static void work_timer_cb(void *timer, void *arg)
     }
 }
 
-kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
+kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
                         tick_t dly)
 {
     kstat_t ret;
@@ -217,19 +217,19 @@ kstat_t yunos_work_init(kwork_t *work, work_handle_t handle, void *arg,
     dly = dly / RHINO_CONFIG_TIMER_RATE;
 
     if (dly > 0) {
-        ret = yunos_timer_create(&(work->timer), "WORK-TIMER", work_timer_cb,
+        ret = krhino_timer_create(&(work->timer), "WORK-TIMER", work_timer_cb,
                                  work->dly, 0, (void *)work, 0);
         if (ret != RHINO_SUCCESS) {
             return ret;
         }
     }
 
-    TRACE_WORK_INIT(yunos_cur_task_get(), work);
+    TRACE_WORK_INIT(krhino_cur_task_get(), work);
 
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
+kstat_t krhino_work_run(kworkqueue_t *workqueue, kwork_t *work)
 {
     CPSR_ALLOC();
 
@@ -253,7 +253,7 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
 
         if (workqueue->work_current == NULL) {
             RHINO_CRITICAL_EXIT();
-            ret = yunos_sem_give(&(workqueue->sem));
+            ret = krhino_sem_give(&(workqueue->sem));
             if (ret != RHINO_SUCCESS) {
                 return ret;
             }
@@ -261,10 +261,10 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
             RHINO_CRITICAL_EXIT();
         }
     } else {
-        yunos_timer_stop(&(work->timer));
+        krhino_timer_stop(&(work->timer));
         work->timer.timer_cb_arg = (void *)workqueue;
 
-        ret = yunos_timer_start(&(work->timer));
+        ret = krhino_timer_start(&(work->timer));
         if (ret != RHINO_SUCCESS) {
             return ret;
         }
@@ -273,12 +273,12 @@ kstat_t yunos_work_run(kworkqueue_t *workqueue, kwork_t *work)
     return RHINO_SUCCESS;
 }
 
-kstat_t yunos_work_sched(kwork_t *work)
+kstat_t krhino_work_sched(kwork_t *work)
 {
-    return yunos_work_run(&g_workqueue_default, work);
+    return krhino_work_run(&g_workqueue_default, work);
 }
 
-kstat_t yunos_work_cancel(kwork_t *work)
+kstat_t krhino_work_cancel(kwork_t *work)
 {
     CPSR_ALLOC();
 
@@ -288,8 +288,8 @@ kstat_t yunos_work_cancel(kwork_t *work)
 
     if (wq == NULL) {
         if (work->dly > 0) {
-            yunos_timer_stop(&(work->timer));
-            yunos_timer_del(&(work->timer));
+            krhino_timer_stop(&(work->timer));
+            krhino_timer_del(&(work->timer));
         }
 
         return RHINO_SUCCESS;
@@ -311,7 +311,7 @@ void workqueue_init(void)
 {
     klist_init(&g_workqueue_list_head);
 
-    yunos_workqueue_create(&g_workqueue_default, "DEFAULT-WORKQUEUE",
+    krhino_workqueue_create(&g_workqueue_default, "DEFAULT-WORKQUEUE",
                            RHINO_CONFIG_WORKQUEUE_TASK_PRIO, g_workqueue_stack,
                            RHINO_CONFIG_WORKQUEUE_STACK_SIZE);
 }

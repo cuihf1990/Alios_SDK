@@ -11,7 +11,7 @@
 #error "RHINO_CONFIG_KOBJ_DYN_ALLOC must be configured!"
 #endif
 
-#define MS2TICK(ms) yunos_ms_to_ticks(ms)
+#define MS2TICK(ms) krhino_ms_to_ticks(ms)
 
 static unsigned int used_bitmap;
 
@@ -28,7 +28,7 @@ int yos_get_hz(void)
 
 const char *yos_version_get(void)
 {
-    return yunos_version_get();
+    return krhino_version_get();
 }
 
 const char *yos_strerror(int errnum)
@@ -44,7 +44,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
 
     ktask_t *task_handle = NULL;
 
-    ret = (int)yunos_task_dyn_create(&task_handle, name, arg, YOS_DEFAULT_APP_PRI, 0,
+    ret = (int)krhino_task_dyn_create(&task_handle, name, arg, YOS_DEFAULT_APP_PRI, 0,
                                      stack_size / sizeof(cpu_stack_t), fn, 1u);
     if (ret == RHINO_SUCCESS) {
         return 0;
@@ -57,7 +57,7 @@ int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), voi
                      int stack_size, int prio)
 {
     int ret;
-    ret = (int)yunos_task_dyn_create((ktask_t **)(&(task->hdl)), name, arg, prio, 0,
+    ret = (int)krhino_task_dyn_create((ktask_t **)(&(task->hdl)), name, arg, prio, 0,
                                      stack_size / sizeof(cpu_stack_t), fn, 1u);
     if (ret == RHINO_SUCCESS) {
         return 0;
@@ -70,12 +70,12 @@ void yos_task_exit(int code)
 {
     (void)code;
 
-    yunos_task_dyn_del(NULL);
+    krhino_task_dyn_del(NULL);
 }
 
 const char *yos_task_name(void)
 {
-    return yunos_cur_task_get()->task_name;
+    return krhino_cur_task_get()->task_name;
 }
 
 int yos_task_key_create(yos_task_key_t *key)
@@ -106,7 +106,7 @@ void yos_task_key_delete(yos_task_key_t key)
 int yos_task_setspecific(yos_task_key_t key, void *vp)
 {
     int ret;
-    ret = yunos_task_info_set(yunos_cur_task_get(), key, vp);
+    ret = krhino_task_info_set(krhino_cur_task_get(), key, vp);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -118,7 +118,7 @@ void *yos_task_getspecific(yos_task_key_t key)
 {
     void *vp = NULL;
 
-    yunos_task_info_get(yunos_cur_task_get(), key, &vp);
+    krhino_task_info_get(krhino_cur_task_get(), key, &vp);
 
     return vp;
 }
@@ -137,7 +137,7 @@ int yos_mutex_new(yos_mutex_t *mutex)
         return -ENOMEM;
     }
 
-    ret = yunos_mutex_create(m, "YOS");
+    ret = krhino_mutex_create(m, "YOS");
     if (ret != RHINO_SUCCESS) {
         yos_free(m);
         ERRNO_MAPPING(ret);
@@ -154,7 +154,7 @@ void yos_mutex_free(yos_mutex_t *mutex)
         return;
     }
 
-    yunos_mutex_del(mutex->hdl);
+    krhino_mutex_del(mutex->hdl);
 
     yos_free(mutex->hdl);
 
@@ -170,9 +170,9 @@ int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
     }
 
     if (timeout == YOS_WAIT_FOREVER) {
-        ret = yunos_mutex_lock(mutex->hdl, RHINO_WAIT_FOREVER);
+        ret = krhino_mutex_lock(mutex->hdl, RHINO_WAIT_FOREVER);
     } else {
-        ret = yunos_mutex_lock(mutex->hdl, MS2TICK(timeout));
+        ret = krhino_mutex_lock(mutex->hdl, MS2TICK(timeout));
     }
 
     /* rhino allow nested */
@@ -195,7 +195,7 @@ int yos_mutex_unlock(yos_mutex_t *mutex)
         return -EINVAL;
     }
 
-    ret = yunos_mutex_unlock(mutex->hdl);
+    ret = krhino_mutex_unlock(mutex->hdl);
     /* rhino allow nested */
     if (ret == RHINO_MUTEX_OWNER_NESTED) {
         ret = RHINO_SUCCESS;
@@ -216,7 +216,7 @@ int yos_mutex_is_valid(yos_mutex_t *mutex)
         return false;
     }
 
-    ret = yunos_mutex_is_valid(mutex->hdl);
+    ret = krhino_mutex_is_valid(mutex->hdl);
     return (ret == RHINO_SUCCESS);
 }
 
@@ -234,7 +234,7 @@ int yos_sem_new(yos_sem_t *sem, int count)
         return -ENOMEM;
     }
 
-    ret = yunos_sem_create(s, "YOS", count);
+    ret = krhino_sem_create(s, "YOS", count);
     if (ret != RHINO_SUCCESS) {
         yos_free(s);
         ERRNO_MAPPING(ret);
@@ -251,7 +251,7 @@ void yos_sem_free(yos_sem_t *sem)
         return;
     }
 
-    yunos_sem_del(sem->hdl);
+    krhino_sem_del(sem->hdl);
 
     yos_free(sem->hdl);
 
@@ -267,9 +267,9 @@ int yos_sem_wait(yos_sem_t *sem, unsigned int timeout)
     }
 
     if (timeout == YOS_WAIT_FOREVER) {
-        ret = yunos_sem_take(sem->hdl, RHINO_WAIT_FOREVER);
+        ret = krhino_sem_take(sem->hdl, RHINO_WAIT_FOREVER);
     } else {
-        ret = yunos_sem_take(sem->hdl, MS2TICK(timeout));
+        ret = krhino_sem_take(sem->hdl, MS2TICK(timeout));
     }
 
     if (ret == RHINO_SUCCESS) {
@@ -285,7 +285,7 @@ void yos_sem_signal(yos_sem_t *sem)
         return;
     }
 
-    yunos_sem_give(sem->hdl);
+    krhino_sem_give(sem->hdl);
 }
 
 int yos_sem_is_valid(yos_sem_t *sem)
@@ -296,7 +296,7 @@ int yos_sem_is_valid(yos_sem_t *sem)
         return false;
     }
 
-    ret = yunos_sem_is_valid(sem->hdl);
+    ret = krhino_sem_is_valid(sem->hdl);
     return (ret == RHINO_SUCCESS);
 }
 
@@ -306,7 +306,7 @@ void yos_sem_signal_all(yos_sem_t *sem)
         return;
     }
 
-    yunos_sem_give_all(sem->hdl);
+    krhino_sem_give_all(sem->hdl);
 }
 
 int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
@@ -323,7 +323,7 @@ int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
         return -ENOMEM;
     }
 
-    ret = yunos_buf_queue_create(q, "YOS", buf, size, max_msg);
+    ret = krhino_buf_queue_create(q, "YOS", buf, size, max_msg);
     if (ret != RHINO_SUCCESS) {
         yos_free(q);
         ERRNO_MAPPING(ret);
@@ -340,7 +340,7 @@ void yos_queue_free(yos_queue_t *queue)
         return;
     }
 
-    yunos_buf_queue_del(queue->hdl);
+    krhino_buf_queue_del(queue->hdl);
 
     yos_free(queue->hdl);
 
@@ -355,7 +355,7 @@ int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size)
         return -EINVAL;
     }
 
-    ret = yunos_buf_queue_send(queue->hdl, msg, size);
+    ret = krhino_buf_queue_send(queue->hdl, msg, size);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -372,7 +372,7 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
         return -EINVAL;
     }
 
-    ret = yunos_buf_queue_recv(queue->hdl, MS2TICK(ms), msg, size);
+    ret = krhino_buf_queue_recv(queue->hdl, MS2TICK(ms), msg, size);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -388,7 +388,7 @@ int yos_queue_is_valid(yos_queue_t *queue)
         return false;
     }
 
-    ret = yunos_buf_queue_is_valid(queue->hdl);
+    ret = krhino_buf_queue_is_valid(queue->hdl);
     return (ret == RHINO_SUCCESS);
 }
 
@@ -405,7 +405,7 @@ int yos_sched_disable()
 {
     int ret;
 
-    ret = (int)yunos_sched_disable();
+    ret = (int)krhino_sched_disable();
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -417,7 +417,7 @@ int yos_sched_enable()
 {
     int ret;
 
-    ret = (int)yunos_sched_enable();
+    ret = (int)krhino_sched_enable();
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -441,9 +441,9 @@ int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
     }
 
     if (repeat == 0) {
-        ret = yunos_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
+        ret = krhino_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
     } else {
-        ret = yunos_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
+        ret = krhino_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
                                  arg, 1);
     }
 
@@ -463,7 +463,7 @@ void yos_timer_free(yos_timer_t *timer)
         return;
     }
 
-    yunos_timer_del(timer->hdl);
+    krhino_timer_del(timer->hdl);
 
     yos_free(timer->hdl);
 
@@ -478,7 +478,7 @@ int yos_timer_start(yos_timer_t *timer)
         return -EINVAL;
     }
 
-    ret = yunos_timer_start(timer->hdl);
+    ret = krhino_timer_start(timer->hdl);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -494,7 +494,7 @@ int yos_timer_stop(yos_timer_t *timer)
         return -EINVAL;
     }
 
-    ret = yunos_timer_stop(timer->hdl);
+    ret = krhino_timer_stop(timer->hdl);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -510,7 +510,7 @@ int yos_timer_change(yos_timer_t *timer, int ms)
         return -EINVAL;
     }
 
-    ret = yunos_timer_change(timer->hdl, MS2TICK(ms), MS2TICK(ms));
+    ret = krhino_timer_change(timer->hdl, MS2TICK(ms), MS2TICK(ms));
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -544,7 +544,7 @@ int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
         return -ENOMEM;
     }
 
-    ret = yunos_workqueue_create(wq, "YOS", pri, stk,
+    ret = krhino_workqueue_create(wq, "YOS", pri, stk,
                                  stack_size / sizeof(cpu_stack_t));
     if (ret != RHINO_SUCCESS) {
         yos_free(wq);
@@ -564,7 +564,7 @@ void yos_workqueue_del(yos_workqueue_t *workqueue)
         return;
     }
 
-    yunos_workqueue_del(workqueue->hdl);
+    krhino_workqueue_del(workqueue->hdl);
 
     yos_free(workqueue->hdl);
     yos_free(workqueue->stk);
@@ -587,7 +587,7 @@ int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
         return -ENOMEM;
     }
 
-    ret = yunos_work_init(w, fn, arg, MS2TICK(dly));
+    ret = krhino_work_init(w, fn, arg, MS2TICK(dly));
     if (ret != RHINO_SUCCESS) {
         yos_free(w);
         ERRNO_MAPPING(ret);
@@ -616,7 +616,7 @@ int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
         return -EINVAL;
     }
 
-    ret = yunos_work_run(workqueue->hdl, work->hdl);
+    ret = krhino_work_run(workqueue->hdl, work->hdl);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -632,7 +632,7 @@ int yos_work_sched(yos_work_t *work)
         return -EINVAL;
     }
 
-    ret = yunos_work_sched(work->hdl);
+    ret = krhino_work_sched(work->hdl);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -648,7 +648,7 @@ int yos_work_cancel(yos_work_t *work)
         return -EINVAL;
     }
 
-    ret = yunos_work_cancel(work->hdl);
+    ret = krhino_work_cancel(work->hdl);
     if (ret == RHINO_WORKQUEUE_WORK_RUNNING) {
         return -EBUSY;
     }
@@ -665,17 +665,17 @@ void *yos_zalloc(unsigned int size)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
-        tmp = yunos_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
+        tmp = krhino_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
 
 #ifndef YOS_BINS
-        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+        krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
 #endif
     } else {
-        tmp = yunos_mm_alloc(size);
+        tmp = krhino_mm_alloc(size);
     }
 
 #else
-    tmp = yunos_mm_alloc(size);
+    tmp = krhino_mm_alloc(size);
 #endif
 
     if (tmp) {
@@ -695,17 +695,17 @@ void *yos_malloc(unsigned int size)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
-        tmp = yunos_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
+        tmp = krhino_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
 
 #ifndef YOS_BINS
-        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+        krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
 #endif
     } else {
-        tmp = yunos_mm_alloc(size);
+        tmp = krhino_mm_alloc(size);
     }
 
 #else
-    tmp = yunos_mm_alloc(size);
+    tmp = krhino_mm_alloc(size);
 #endif
 
     return tmp;
@@ -717,17 +717,17 @@ void *yos_realloc(void *mem, unsigned int size)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
-        tmp = yunos_mm_realloc(mem, size | YOS_UNSIGNED_INT_MSB);
+        tmp = krhino_mm_realloc(mem, size | YOS_UNSIGNED_INT_MSB);
 
 #ifndef YOS_BINS
-        yunos_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+        krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
 #endif
     } else {
-        tmp = yunos_mm_realloc(mem, size);
+        tmp = krhino_mm_realloc(mem, size);
     }
 
 #else
-    tmp = yunos_mm_realloc(mem, size);
+    tmp = krhino_mm_realloc(mem, size);
 #endif
 
     return tmp;
@@ -736,7 +736,7 @@ void *yos_realloc(void *mem, unsigned int size)
 void yos_alloc_trace(void *addr, size_t allocator)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    yunos_owner_attach(g_kmm_head, addr, allocator);
+    krhino_owner_attach(g_kmm_head, addr, allocator);
 #endif
 }
 
@@ -746,21 +746,21 @@ void yos_free(void *mem)
         return;
     }
 
-    yunos_mm_free(mem);
+    krhino_mm_free(mem);
 }
 
 long long yos_now(void)
 {
-    return yunos_sys_time_get() * 1000 * 1000;
+    return krhino_sys_time_get() * 1000 * 1000;
 }
 
 long long yos_now_ms(void)
 {
-    return yunos_sys_time_get();
+    return krhino_sys_time_get();
 }
 
 void yos_msleep(int ms)
 {
-    yunos_task_sleep(MS2TICK(ms));
+    krhino_task_sleep(MS2TICK(ms));
 }
 

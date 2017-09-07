@@ -20,13 +20,13 @@ typedef struct {
  * This function will disable schedule
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sched_disable(void);
+kstat_t krhino_sched_disable(void);
 
 /**
  * This function will enable schedule
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_sched_enable(void);
+kstat_t krhino_sched_enable(void);
 
 #endif /* K_SCHED_H */
 
