@@ -88,6 +88,8 @@ void trace_filter_and_write(ktask_t *task, const void *buf, uint32_t len)
 
     *((char *)buf+len) = '\n';
 
+    assert((len + 1) <= TRACE_PACKET_LENGTH);    
+
     fifo_in_full_reject_lock(&trace_fifo, buf, len + 1);
 }
 
@@ -96,7 +98,6 @@ void _trace_task_switch(ktask_t *from, ktask_t *to)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -104,11 +105,13 @@ void _trace_task_switch(ktask_t *from, ktask_t *to)
     }
 
     buf[0] = 0x102;
-    buf[1] = 0x2;
+    buf[1] = 0x4;
+    buf[2] = (uint32_t)from->task_state;
+    buf[3] = (uint32_t)to->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[4];
     strcpy(addr_second, from->task_name);
-    addr_second = (char *)&buf[2] + strlen(from->task_name) + 1;
+    addr_second = (char *)&buf[4] + strlen(from->task_name) + 1;
     str_len += strlen(from->task_name) + 1;
 
     strcpy(addr_second, to->task_name);
@@ -116,14 +119,8 @@ void _trace_task_switch(ktask_t *from, ktask_t *to)
     str_len += strlen(to->task_name) + 1;
 
     str_len = ROUND_POINT(str_len);
-
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    
+    addr_second = addr_first + 16 + str_len;
 
     trace_filter_and_write(from, buf, addr_second - addr_first);
 }
@@ -133,7 +130,6 @@ void _trace_intrpt_task_switch(ktask_t *from, ktask_t *to)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -141,11 +137,13 @@ void _trace_intrpt_task_switch(ktask_t *from, ktask_t *to)
     }
 
     buf[0] = 0x104;
-    buf[1] = 0x2;
+    buf[1] = 0x4;
+    buf[2] = (uint32_t)from->task_state;
+    buf[3] = (uint32_t)to->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[4];
     strcpy(addr_second, from->task_name);
-    addr_second = (char *)&buf[2] + strlen(from->task_name) + 1;
+    addr_second = (char *)&buf[4] + strlen(from->task_name) + 1;
     str_len += strlen(from->task_name) + 1;
 
     strcpy(addr_second, to->task_name);
@@ -154,13 +152,7 @@ void _trace_intrpt_task_switch(ktask_t *from, ktask_t *to)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 16 + str_len;
 
     trace_filter_and_write(from, buf, addr_second - addr_first);
 }
@@ -170,7 +162,6 @@ void _trace_task_create(ktask_t *task)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -178,27 +169,22 @@ void _trace_task_create(ktask_t *task)
     }
 
     buf[0] = 0x103;
-    buf[1] = 0x1;
+    buf[1] = 0x2;
+    buf[2] = (uint32_t)task->task_state;
 
     if ((strlen(task->task_name) + 1) > MAX_MODULE_NAME) {
 
         task->task_name = "max_length_limited_task";
     }
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[3];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[3] + strlen(task->task_name) + 1;
 
     str_len += strlen(task->task_name) + 1;
     str_len = ROUND_POINT(str_len);
-
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    
+    addr_second = addr_first + 12 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -208,7 +194,6 @@ void _trace_task_sleep(ktask_t *task, tick_t ticks)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -216,24 +201,20 @@ void _trace_task_sleep(ktask_t *task, tick_t ticks)
     }
 
     buf[0] = 0x10a;
-    buf[1] = 0x2;
+    buf[1] = 0x3;
+    buf[2] = (uint32_t)task->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[3];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[3] + strlen(task->task_name) + 1;
 
     str_len += strlen(task->task_name) + 1;
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
+    addr_second = addr_first + 12 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = (uint32_t)ticks;
+    *(uint32_t *)addr_second = (uint32_t)ticks;
     addr_second += 4;
-    *(addr_third + 1) = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -243,7 +224,6 @@ void _trace_task_pri_change(ktask_t *task, ktask_t *task_pri_chg, uint8_t pri)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -251,11 +231,13 @@ void _trace_task_pri_change(ktask_t *task, ktask_t *task_pri_chg, uint8_t pri)
     }
 
     buf[0] = 0x105;
-    buf[1] = 0x3;
+    buf[1] = 0x5;
+    buf[2] = (uint32_t)task->task_state;
+    buf[3] = (uint32_t)task_pri_chg->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[4];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[4] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, task_pri_chg->task_name);
@@ -264,17 +246,10 @@ void _trace_task_pri_change(ktask_t *task, ktask_t *task_pri_chg, uint8_t pri)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
+    addr_second = addr_first + 16 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = pri;
+    *(uint32_t *)addr_second = (uint32_t)pri;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -284,7 +259,6 @@ void _trace_task_suspend(ktask_t *task, ktask_t *task_suspended)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -292,7 +266,9 @@ void _trace_task_suspend(ktask_t *task, ktask_t *task_suspended)
     }
 
     buf[0] = 0x106;
-    buf[1] = 0x2;
+    buf[1] = 0x4;
+    buf[2] = (uint32_t)task->task_state;
+    buf[3] = (uint32_t)task_suspended->task_state;
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task->task_name);
@@ -305,13 +281,7 @@ void _trace_task_suspend(ktask_t *task, ktask_t *task_suspended)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 16 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -321,7 +291,6 @@ void _trace_task_resume(ktask_t *task, ktask_t *task_resumed)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -329,11 +298,13 @@ void _trace_task_resume(ktask_t *task, ktask_t *task_resumed)
     }
 
     buf[0] = 0x107;
-    buf[1] = 0x2;
+    buf[1] = 0x4;
+    buf[2] = (uint32_t)task->task_state;
+    buf[3] = (uint32_t)task_resumed->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[4];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[4] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, task_resumed->task_name);
@@ -342,13 +313,7 @@ void _trace_task_resume(ktask_t *task, ktask_t *task_resumed)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 16 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -358,7 +323,6 @@ void _trace_task_del(ktask_t *task, ktask_t *task_del)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -366,11 +330,13 @@ void _trace_task_del(ktask_t *task, ktask_t *task_del)
     }
 
     buf[0] = 0x108;
-    buf[1] = 0x2;
+    buf[1] = 0x4;
+    buf[2] = (uint32_t)task->task_state;
+    buf[3] = (uint32_t)task_del->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[4];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[4] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, task_del->task_name);
@@ -379,13 +345,7 @@ void _trace_task_del(ktask_t *task, ktask_t *task_del)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 16 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -395,7 +355,6 @@ void _trace_task_abort(ktask_t *task, ktask_t *task_abort)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -403,11 +362,13 @@ void _trace_task_abort(ktask_t *task, ktask_t *task_abort)
     }
 
     buf[0] = 0x109;
-    buf[1] = 0x2;
+    buf[1] = 0x4;
+    buf[2] = (uint32_t)task->task_state;
+    buf[3] = (uint32_t)task_abort->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[4];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[4] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, task_abort->task_name);
@@ -416,13 +377,7 @@ void _trace_task_abort(ktask_t *task, ktask_t *task_abort)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 16 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -433,7 +388,6 @@ void _trace_sem_create(ktask_t *task, ksem_t *sem)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -448,15 +402,16 @@ void _trace_sem_create(ktask_t *task, ksem_t *sem)
     }
 
     buf[0] = 0x201;
-    buf[1] = 0x2;
+    buf[1] = 0x3;
+    buf[2] = (uint32_t)task->task_state;
 
     if ((strlen(sem->blk_obj.name) + 1) > MAX_MODULE_NAME) {
         sem->blk_obj.name = "max_length_limited_sem";
     }
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[3];
     strcpy(addr_second, task_name);
-    addr_second = (char *)&buf[2] + strlen(task_name) + 1;
+    addr_second = (char *)&buf[3] + strlen(task_name) + 1;
     str_len += strlen(task_name) + 1;
 
     strcpy(addr_second, sem->blk_obj.name);
@@ -465,13 +420,7 @@ void _trace_sem_create(ktask_t *task, ksem_t *sem)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 12 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -481,7 +430,6 @@ void _trace_sem_overflow(ktask_t *task, ksem_t *sem)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -489,11 +437,12 @@ void _trace_sem_overflow(ktask_t *task, ksem_t *sem)
     }
 
     buf[0] = 0x202;
-    buf[1] = 0x2;
+    buf[1] = 0x3;
+    buf[2] = (uint32_t)task->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[3];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[3] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, sem->blk_obj.name);
@@ -502,13 +451,7 @@ void _trace_sem_overflow(ktask_t *task, ksem_t *sem)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 12 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -518,7 +461,6 @@ void _trace_sem_del(ktask_t *task, ksem_t *sem)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -526,11 +468,12 @@ void _trace_sem_del(ktask_t *task, ksem_t *sem)
     }
 
     buf[0] = 0x207;
-    buf[1] = 0x2;
+    buf[1] = 0x3;
+    buf[2] = (uint32_t)task->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[3];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[3] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, sem->blk_obj.name);
@@ -539,13 +482,7 @@ void _trace_sem_del(ktask_t *task, ksem_t *sem)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 12 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -555,7 +492,6 @@ void _trace_sem_get_success(ktask_t *task, ksem_t *sem)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -563,11 +499,12 @@ void _trace_sem_get_success(ktask_t *task, ksem_t *sem)
     }
 
     buf[0] = 0x204;
-    buf[1] = 0x2;
+    buf[1] = 0x3;
+    buf[2] = (uint32_t)task->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[3];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[3] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, sem->blk_obj.name);
@@ -576,13 +513,7 @@ void _trace_sem_get_success(ktask_t *task, ksem_t *sem)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 12 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -592,7 +523,6 @@ void _trace_sem_get_blk(ktask_t *task, ksem_t *sem, tick_t wait_option)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -600,11 +530,12 @@ void _trace_sem_get_blk(ktask_t *task, ksem_t *sem, tick_t wait_option)
     }
 
     buf[0] = 0x205;
-    buf[1] = 0x3;
+    buf[1] = 0x4;
+    buf[2] = (uint32_t)task->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[3];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[3] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, sem->blk_obj.name);
@@ -613,17 +544,10 @@ void _trace_sem_get_blk(ktask_t *task, ksem_t *sem, tick_t wait_option)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
+    addr_second = addr_first + 12 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = (uint32_t)wait_option;
+    *(uint32_t *)addr_second = wait_option;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = (uint32_t)0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -634,7 +558,6 @@ void _trace_sem_task_wake(ktask_t *task, ktask_t *task_waked_up, ksem_t *sem, ui
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -642,11 +565,13 @@ void _trace_sem_task_wake(ktask_t *task, ktask_t *task_waked_up, ksem_t *sem, ui
     }
 
     buf[0] = 0x206;
-    buf[1] = 0x3;
+    buf[1] = 0x6;
+    buf[2] = (uint32_t)task->task_state;
+    buf[3] = (uint32_t)task_waked_up->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[4];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[4] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, task_waked_up->task_name);
@@ -659,17 +584,10 @@ void _trace_sem_task_wake(ktask_t *task, ktask_t *task_waked_up, ksem_t *sem, ui
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
+    addr_second = addr_first + 16 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = opt_wake_all;
+    *(uint32_t *)addr_second = (uint32_t)opt_wake_all;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -679,7 +597,6 @@ void _trace_sem_cnt_increase(ktask_t *task, ksem_t *sem)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -687,7 +604,8 @@ void _trace_sem_cnt_increase(ktask_t *task, ksem_t *sem)
     }
 
     buf[0] = 0x203;
-    buf[1] = 0x2;
+    buf[1] = 0x3;
+    buf[2] = (uint32_t)task->task_state;
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task->task_name);
@@ -700,13 +618,7 @@ void _trace_sem_cnt_increase(ktask_t *task, ksem_t *sem)
 
     str_len = ROUND_POINT(str_len);
 
-    addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
+    addr_second = addr_first + 12 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -717,7 +629,6 @@ void _trace_mutex_create(ktask_t *task, kmutex_t *mutex, const name_t *name)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     const name_t *task_name;
@@ -752,12 +663,6 @@ void _trace_mutex_create(ktask_t *task, kmutex_t *mutex, const name_t *name)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -766,7 +671,6 @@ void _trace_mutex_release(ktask_t *task, ktask_t *task_release, uint8_t new_pri)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -789,15 +693,8 @@ void _trace_mutex_release(ktask_t *task, ktask_t *task_release, uint8_t new_pri)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = new_pri;
+    *(uint32_t *)addr_second = new_pri;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -807,7 +704,6 @@ void _trace_mutex_get(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -830,15 +726,8 @@ void _trace_mutex_get(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = wait_option;
+    *(uint32_t *)addr_second = wait_option;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -848,7 +737,6 @@ void _trace_task_pri_inv(ktask_t *task, ktask_t *mtxtsk)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -871,12 +759,6 @@ void _trace_task_pri_inv(ktask_t *task, ktask_t *mtxtsk)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -885,7 +767,6 @@ void _trace_mutex_get_blk(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -908,15 +789,8 @@ void _trace_mutex_get_blk(ktask_t *task, kmutex_t *mutex, tick_t wait_option)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = wait_option;
+    *(uint32_t *)addr_second = wait_option;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -926,7 +800,6 @@ void _trace_mutex_release_success(ktask_t *task, kmutex_t *mutex)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -949,12 +822,6 @@ void _trace_mutex_release_success(ktask_t *task, kmutex_t *mutex)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -964,7 +831,6 @@ void _trace_mutex_task_wake(ktask_t *task, ktask_t *task_waked_up, kmutex_t *mut
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -991,12 +857,6 @@ void _trace_mutex_task_wake(ktask_t *task, ktask_t *task_waked_up, kmutex_t *mut
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1005,7 +865,6 @@ void _trace_mutex_del(ktask_t *task, kmutex_t *mutex)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1028,12 +887,6 @@ void _trace_mutex_del(ktask_t *task, kmutex_t *mutex)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1043,7 +896,6 @@ void _trace_event_create(ktask_t *task, kevent_t *event, const name_t *name, uin
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -1077,15 +929,8 @@ void _trace_event_create(ktask_t *task, kevent_t *event, const name_t *name, uin
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = flags_init;
+    *(uint32_t *)addr_second = flags_init;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third =  0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 
@@ -1096,7 +941,6 @@ void _trace_event_get(ktask_t *task, kevent_t *event)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1119,12 +963,6 @@ void _trace_event_get(ktask_t *task, kevent_t *event)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1133,7 +971,6 @@ void _trace_event_get_blk(ktask_t *task, kevent_t *event, tick_t wait_option)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1156,15 +993,8 @@ void _trace_event_get_blk(ktask_t *task, kevent_t *event, tick_t wait_option)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = (uint32_t)wait_option;
+    *(uint32_t *)addr_second = (uint32_t)wait_option;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = (uint32_t)0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -1174,7 +1004,6 @@ void _trace_event_task_wake(ktask_t *task, ktask_t *task_waked_up, kevent_t *eve
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1201,12 +1030,6 @@ void _trace_event_task_wake(ktask_t *task, ktask_t *task_waked_up, kevent_t *eve
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1216,7 +1039,6 @@ void _trace_event_del(ktask_t *task, kevent_t *event)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1239,12 +1061,6 @@ void _trace_event_del(ktask_t *task, kevent_t *event)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1254,7 +1070,6 @@ void _trace_buf_queue_create(ktask_t *task, kbuf_queue_t *buf_queue)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -1288,12 +1103,6 @@ void _trace_buf_queue_create(ktask_t *task, kbuf_queue_t *buf_queue)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1302,7 +1111,6 @@ void _trace_buf_max(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_t
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1325,15 +1133,8 @@ void _trace_buf_max(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_t
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = msg_size;
+    *(uint32_t *)addr_second = msg_size;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -1343,7 +1144,6 @@ void _trace_buf_post(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1366,15 +1166,8 @@ void _trace_buf_post(ktask_t *task, kbuf_queue_t *buf_queue, void *p_void, size_
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = msg_size;
+    *(uint32_t *)addr_second = msg_size;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -1385,7 +1178,6 @@ void _trace_buf_queue_task_wake(ktask_t *task, ktask_t *task_waked_up, kbuf_queu
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1412,12 +1204,6 @@ void _trace_buf_queue_task_wake(ktask_t *task, ktask_t *task_waked_up, kbuf_queu
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1427,7 +1213,6 @@ void _trace_buf_queue_get_blk(ktask_t *task, kbuf_queue_t *buf_queue, tick_t wai
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1450,15 +1235,8 @@ void _trace_buf_queue_get_blk(ktask_t *task, kbuf_queue_t *buf_queue, tick_t wai
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = (uint32_t)wait_option;
+    *(uint32_t *)addr_second = (uint32_t)wait_option;
     addr_second += 4;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = (uint32_t)0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
@@ -1469,7 +1247,6 @@ void _trace_timer_create(ktask_t *task, ktimer_t *timer)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -1503,12 +1280,6 @@ void _trace_timer_create(ktask_t *task, ktimer_t *timer)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1517,7 +1288,6 @@ void _trace_timer_del(ktask_t *task, ktimer_t *timer)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1540,12 +1310,6 @@ void _trace_timer_del(ktask_t *task, ktimer_t *timer)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1555,7 +1319,6 @@ void _trace_mblk_pool_create(ktask_t *task, mblk_pool_t *pool)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -1585,12 +1348,6 @@ void _trace_mblk_pool_create(ktask_t *task, mblk_pool_t *pool)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1601,7 +1358,6 @@ void _trace_mm_pool_create(ktask_t *task, mm_pool_t *pool)
     uint32_t  buf[20];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -1627,22 +1383,16 @@ void _trace_mm_pool_create(ktask_t *task, mm_pool_t *pool)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 #endif
+
 /* mm region function */
 void _trace_mm_region_create(ktask_t *task, k_mm_region_t *regions)
 {
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -1672,12 +1422,6 @@ void _trace_mm_region_create(ktask_t *task, k_mm_region_t *regions)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1687,7 +1431,6 @@ void _trace_work_init(ktask_t *task, kwork_t *work)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -1717,12 +1460,6 @@ void _trace_work_init(ktask_t *task, kwork_t *work)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1731,7 +1468,6 @@ void _trace_workqueue_create(ktask_t *task, kworkqueue_t *workqueue)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
     const name_t *task_name;
 
@@ -1765,12 +1501,6 @@ void _trace_workqueue_create(ktask_t *task, kworkqueue_t *workqueue)
 
     addr_second = addr_first + 8 + str_len;
 
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
-
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
 
@@ -1779,7 +1509,6 @@ void _trace_workqueue_del(ktask_t *task, kworkqueue_t *workqueue)
     uint32_t  buf[TRACE_PACKET_LENGTH / 4];
     char     *addr_first = (char *)buf;
     char     *addr_second;
-    uint32_t *addr_third;
     uint32_t  str_len = 0;
 
     if (!init) {
@@ -1801,12 +1530,6 @@ void _trace_workqueue_del(ktask_t *task, kworkqueue_t *workqueue)
     str_len = ROUND_POINT(str_len);
 
     addr_second = addr_first + 8 + str_len;
-
-    addr_third = (uint32_t *)addr_second;
-    *addr_third = 0;
-    addr_second += 4;
-
-    assert((addr_second - addr_first) <= TRACE_PACKET_LENGTH);
 
     trace_filter_and_write(task, buf, addr_second - addr_first);
 }
