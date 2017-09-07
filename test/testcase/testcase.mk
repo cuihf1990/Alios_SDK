@@ -24,12 +24,8 @@ $(NAME)_COMPONENTS  += connectivity.coap
 
 #YTS_COAP
 else
-#YTS_MQTT
-ifeq ($(yts_connectivity), mqtt)
-$(NAME)_DEFINES += YTS_MQTT
 $(NAME)_SOURCES     += framework/mqtt_test.c
 $(NAME)_COMPONENTS  += connectivity.mqtt
-else
 $(NAME)_SOURCES     += basic_test.c
 $(NAME)_SOURCES     += framework/hal/hal_test.c
 $(NAME)_SOURCES     += framework/yloop_test.c
@@ -79,8 +75,6 @@ include test/testcase/kernel/protocols/mesh/filelists.mk
 $(NAME)_SOURCES += $(MESHYTSFILE)
 endif
 
-#YTS_MQTT
-endif
 #YTS_COAP
 endif
 
