@@ -20,10 +20,6 @@ GLOBAL_CFLAGS  += -fprofile-arcs -ftest-coverage
 GLOBAL_LDFLAGS += --coverage
 endif
 
-ifeq ($(yts_coap),1)
-GLOBAL_DEFINES += YTS_COAP
-endif
-
 ifeq ($(gprof),1)
 GLOBAL_CFLAGS += -pg
 GLOBAL_LDFLAGS += -pg
