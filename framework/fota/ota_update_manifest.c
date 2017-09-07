@@ -180,7 +180,7 @@ static int8_t ota_if_cancel(ota_response_params *response_parmas)
         return 0;
     }
 
-    if (!strncmp(response_parmas->device_uuid , ota_get_id(), sizeof response_parmas->device_uuid)) {
+    if (!strncmp(response_parmas->device_uuid , platform_ota_get_id(), sizeof response_parmas->device_uuid)) {
         return 0;
     }
 
@@ -193,7 +193,6 @@ static int8_t ota_if_cancel(ota_response_params *response_parmas)
 int8_t ota_cancel_update_packet(ota_response_params *response_parmas)
 {
     int ret = 0;
-
     ret = ota_if_cancel(response_parmas);
     if (ret) {
         ota_set_status(OTA_CANCEL);
