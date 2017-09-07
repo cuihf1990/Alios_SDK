@@ -31,17 +31,17 @@ $(NAME)_SOURCES := \
     utils_timer.c
 
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
-PLATFORM_MQTT := linux
+PLATFORM_MISC := linux
 else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
-PLATFORM_MQTT := linux
+PLATFORM_MISC := linux
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
-PLATFORM_MQTT := rhino
+PLATFORM_MISC := rhino
 endif
 
-ifeq ($(CONFIG_OTA_CH),coap)
-$(NAME)_SOURCES += ../hal/$(PLATFORM_MQTT)/HAL_TCP_$(PLATFORM_MQTT).c
+ifneq (,$(filter connectivity.coap,$(COMPONENTS)))
+$(NAME)_SOURCES += ../hal/$(PLATFORM_MISC)/HAL_TCP_$(PLATFORM_MISC).c
 ifneq ($(CONFIG_COAP_DTLS_SUPPORT), y)
-$(NAME)_SOURCES += ../hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
+$(NAME)_SOURCES += ../hal/$(PLATFORM_MISC)/HAL_OS_$(PLATFORM_MISC).c
 #$(NAME)_DEFINES += IOTX_WITHOUT_TLS
 $(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-lib
 endif

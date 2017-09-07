@@ -7,7 +7,9 @@
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
+
+#define VFS_NULL_PARA_CHK(para)     do { if (!(para)) return -EINVAL; } while(0)
 
 static inode_t g_vfs_dev_nodes[YOS_CONFIG_VFS_DEV_NODES];
 
@@ -27,13 +29,13 @@ int inode_alloc()
         }
     }
 
-    return E_VFS_INODE_NO_AVAIL;
+    return -ENOMEM;
 }
 
 int inode_del(inode_t *node)
 {
     if (node->refs > 0) {
-        return E_VFS_BUSY;
+        return -EBUSY;
     }
 
     if (node->refs == 0) {
@@ -80,7 +82,7 @@ inode_t *inode_open(const char *path)
 int inode_ptr_get(int fd, inode_t **node)
 {
     if (fd < 0 || fd >= YOS_CONFIG_VFS_DEV_NODES) {
-        return E_VFS_FD_ILLEGAL;
+        return -EINVAL;
     }
 
     *node = &g_vfs_dev_nodes[fd];
@@ -127,7 +129,7 @@ static int inode_set_name(const char *path, inode_t **inode)
     len = strlen(path);
     mem = (void *)yos_malloc(len + 1);
     if (!mem) {
-        return E_VFS_NO_MEM;
+        return -ENOMEM;
     }
 
     memcpy(mem, (const void *)path, len);
@@ -147,7 +149,7 @@ int inode_reserve(const char *path, inode_t **inode)
 
     /* Handle paths that are interpreted as the root directory */
     if (path[0] == '\0' || path[0] != '/') {
-        return E_VFS_REGISTERED;
+        return -EINVAL;
     }
 
     ret = inode_alloc();
@@ -175,7 +177,7 @@ int inode_release(const char *path)
 
     node = inode_open(path);
     if (node == NULL) {
-        return E_VFS_INODE_NOT_FOUND;
+        return -ENODEV;
     }
 
     ret = inode_del(node);

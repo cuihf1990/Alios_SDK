@@ -19,9 +19,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-//#include <yos/conf.h>
-#include <yos/framework.h>
 #include <yos/log.h>
+#include <yos/yos.h>
+#include <netmgr.h>
 #include <k_err.h>
 #include "iot_import.h"
 #include "iot_export.h"
@@ -34,6 +34,7 @@
 #define TAG "coaptest"
 
 char m_coap_client_running = 0;
+int coap_client_init = 0;
 
 static void iotx_response_handler(void * arg, void * p_response)
 {
@@ -79,8 +80,7 @@ static void user_code_start()
     }
 }
 
-int application_start(void)
-{
+static void coap_client_example() {
     iotx_coap_config_t config;
     iotx_deviceinfo_t deviceinfo;
 
@@ -113,6 +113,26 @@ int application_start(void)
     else{
         printf("IoTx CoAP init failed\r\n");
     }
+}
+
+void wifi_service_event(input_event_t *event, void *priv_data)
+{
+    if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP)
+    {
+		if (coap_client_init) {
+			return;
+		}
+		coap_client_init = 1;
+        coap_client_example();
+    }
+}
+
+int application_start(void)
+{
+    yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
+
+	netmgr_init();
+	netmgr_start(true);
 
     yos_loop_run();
 

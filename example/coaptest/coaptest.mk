@@ -41,11 +41,4 @@ $(NAME)_CFLAGS += \
     -Wno-unused-function \
 #    -Werror
 
-$(NAME)_INCLUDES    := \
-    ../../framework/coap \
-    ../../framework/coap/iot-coap-c/ \
-    ../../utility/iotx-utils/sdk-impl \
-    ../../utility/iotx-utils/sdk-impl/imports \
-    ../../utility/iotx-utils/sdk-impl/exports
-
 $(NAME)_COMPONENTS  += connectivity.coap

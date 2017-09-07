@@ -35,12 +35,12 @@ void test_uradar_mcast_case(void)
     const ur_netif_ip6_address_t *myaddr;
 
     myaddr = umesh_get_mcast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 autotest " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 autotest " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("3", 12, "testcmd autotest_acked", 10);
 
     myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 autotest " IP6_ADDR_FMT " 1 1200", IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 autotest " IP6_ADDR_FMT " 1 1200", IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd autotest_acked", 10);
 

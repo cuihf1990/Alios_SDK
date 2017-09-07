@@ -3,7 +3,7 @@
  */
 
 #include <stdlib.h>
-#include "yos/kernel.h"
+#include "yos/yos.h"
 
 int pal_get_random()
 {

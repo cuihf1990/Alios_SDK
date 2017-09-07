@@ -1,6 +1,36 @@
 NAME := mqtt
 
 $(NAME)_COMPONENTS := connectivity.mqtt.MQTTPacket
-$(NAME)_INCLUDES := ../../../utility/iotx-utils/digest ../../../utility/iotx-utils/guider ../../../utility/iotx-utils/hal ../../../utility/iotx-utils/LITE-log ../../../utility/iotx-utils/LITE-utils ../../../utility/iotx-utils/misc ../../../utility/iotx-utils/sdk-impl ../../../utility/iotx-utils/device
+$(NAME)_COMPONENTS += mbedtls
+$(NAME)_COMPONENTS += connectivity.mqtt
+$(NAME)_COMPONENTS += cli utility.digest_algorithm
+$(NAME)_COMPONENTS += utility.iotx-utils.LITE-log utility.iotx-utils.LITE-utils utility.iotx-utils.misc utility.iotx-utils.sdk-impl utility.iotx-utils.guider utility.iotx-utils.digest
+
+MQTT_UTILS_PATH :=  ../../../utility/iotx-utils
+#$(NAME)_INCLUDES := $(MQTT_UTILS_PATH)/digest \
+					$(MQTT_UTILS_PATH)/guider \
+					$(MQTT_UTILS_PATH)/hal \
+					$(MQTT_UTILS_PATH)/LITE-log \
+					$(MQTT_UTILS_PATH)/LITE-utils \
+					$(MQTT_UTILS_PATH)/misc \
+					$(MQTT_UTILS_PATH)/sdk-impl \
+					$(MQTT_UTILS_PATH)/device
+
 $(NAME)_SOURCES := mqtt_client.c
 
+ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+PLATFORM_MQTT := linux
+#NETWORK_MQTT := linuxsock
+else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+PLATFORM_MQTT := rhino
+#NETWORK_MQTT := rhinosock
+endif
+
+
+$(NAME)_SOURCES += $(MQTT_UTILS_PATH)/hal/$(PLATFORM_MQTT)/HAL_OS_$(PLATFORM_MQTT).c
+$(NAME)_SOURCES += $(MQTT_UTILS_PATH)/hal/$(PLATFORM_MQTT)/HAL_TCP_$(PLATFORM_MQTT).c
+
+$(NAME)_SOURCES += $(MQTT_UTILS_PATH)/mbedtls-lib/HAL_TLS_mbedtls.c

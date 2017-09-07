@@ -3,7 +3,7 @@
  */
 
 #include <k_api.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 #if (YUNOS_CONFIG_KOBJ_DYN_ALLOC == 0)
 #error "YUNOS_CONFIG_KOBJ_DYN_ALLOC must be configured!"

@@ -4,7 +4,7 @@
 
 #include "yunit.h"
 
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "yos/kernel.h"
 
 #include "umesh.h"
@@ -78,7 +78,7 @@ static void three_nodes_case(void)
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
 
     myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
 
     for (index = 0; index < 2; index++) {
         check_cond_wait(umesh_mm_get_attach_state() == ATTACH_IDLE || \

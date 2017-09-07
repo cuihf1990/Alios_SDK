@@ -2,16 +2,13 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <hal/base.h>
-#include <hal/wifi.h>
+#include <hal/hal.h>
 #include <netmgr.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 
 #include "platform.h"
 #include "platform_config.h"
 #include "os.h"
-
-#include "yos/log.h"
 
 #include "ali_crypto.h"
 

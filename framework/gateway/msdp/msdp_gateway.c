@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "yos/list.h"
+#include "yos/yos.h"
 #include "msdp_common.h"
 #include "json_parser.h"
 #include "service.h"

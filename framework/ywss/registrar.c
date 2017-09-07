@@ -6,13 +6,11 @@
 #include "service_manager.h"
 #include "alink_protocol.h"
 #include "json_parser.h"
-#include "yos/kernel.h"
 #include "enrollee.h"
 #include "awss.h"
 #include "wsf.h"
 #include "os.h"
-#include "yos/log.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 
 static int registrar_event(int type, void *data, int dlen, void *result, int *rlen);
 static void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int buffer_type);

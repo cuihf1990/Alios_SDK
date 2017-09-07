@@ -9,15 +9,12 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
-#include "yos/log.h"
 #include "alink_export.h"
 #include "json_parser.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "yos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
-#include <yos/cli.h>
-#include <yos/cloud.h>
 #include <accs.h>
 
 #ifdef CONFIG_WIFIMONITOR

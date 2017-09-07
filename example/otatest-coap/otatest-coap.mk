@@ -16,8 +16,6 @@
 
 NAME := otatest
 
-GLOBAL_DEFINES      += IOTX_DEBUG
-
 #CONFIG_COAP_DTLS_SUPPORT := y
 #CONFIG_COAP_ONLINE := y
 
@@ -35,7 +33,4 @@ $(NAME)_CFLAGS += \
     -Wno-unused-function \
     -Werror
 
-$(NAME)_INCLUDES    := \
-    ../../utility/iotx-utils/sdk-impl \
-
-$(NAME)_COMPONENTS  += fota
+$(NAME)_COMPONENTS  += fota.platform.coap

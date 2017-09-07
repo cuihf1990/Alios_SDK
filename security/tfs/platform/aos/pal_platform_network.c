@@ -5,7 +5,7 @@
 #include <string.h>
 #include "log.h"
 #include "yos/network.h"
-#include "yos/framework.h"
+#include "yos/yos.h"
 
 #define HTTP_PACKET_MAX 512
 

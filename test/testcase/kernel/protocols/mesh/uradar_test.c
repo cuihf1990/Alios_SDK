@@ -13,7 +13,7 @@
 
 #include "yunit.h"
 
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "yts.h"
 #include "umesh.h"
 

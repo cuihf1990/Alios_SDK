@@ -3,8 +3,7 @@
  */
 
 #include <stdio.h>
-#include <hal/base.h>
-#include <hal/wifi.h>
+#include <hal/hal.h>
 
 static YOS_DLIST_HEAD(g_wifi_module);
 

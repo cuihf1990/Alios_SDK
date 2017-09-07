@@ -2,8 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include "yos/framework.h"
-#include "yos/kernel.h"
+#include "yos/yos.h"
 
 #include "umesh_utils.h"
 

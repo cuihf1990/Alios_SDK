@@ -3,7 +3,7 @@
  */
 
 #include <string.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 
 #include "umesh_utils.h"
 

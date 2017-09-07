@@ -230,7 +230,7 @@
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
  */
 #define LWIP_RAW                        1
-#define LWIP_IPV6                       1
+#define LWIP_IPV6                       0
 
 /* Enable IPv4 Auto IP	*/
 #ifdef CONFIG_AUTOIP
@@ -405,7 +405,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define PBUF_POOL_SIZE                  10
 #define TCP_MSS                 (1500 - 40)
 /* TCP receive window. */
-#define TCP_WND                 (10*TCP_MSS)
+#define TCP_WND                 (3*TCP_MSS)
 /* TCP sender buffer space (bytes). */
 #define TCP_SND_BUF             (10*TCP_MSS)
 

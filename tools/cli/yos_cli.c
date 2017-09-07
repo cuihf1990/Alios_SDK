@@ -6,11 +6,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <stdlib.h>
-#include <yos/kernel.h>
+#include <errno.h>
+#include <yos/yos.h>
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
-#include <yos/cli.h>
 
 #ifndef STDIO_UART
 #define STDIO_UART 0
@@ -245,8 +244,8 @@ static int handle_input(char *inbuf)
     /* Added for testbed cli, no impact on normal cli <beginning> */
     if (cmd_prefix_len > 0) {
         *(cmd_prefix + cmd_prefix_len) = '\0'; /* safe to operate in place now */
-        cli_putstr(cmd_prefix);
-        cli_putstr("\r\n");
+        cli_printf(cmd_prefix);
+        cli_printf("\r\n");
     }
     /* testbed cli <end> */
 
@@ -262,8 +261,8 @@ static int handle_input(char *inbuf)
             yos_msleep(500);
         }
 
-        cli_putstr(cmd_prefix);
-        cli_putstr("\r\n");
+        cli_printf(cmd_prefix);
+        cli_printf("\r\n");
     }
     /* testbed cli <end> */
 
@@ -651,7 +650,7 @@ int yos_cli_init(void)
 
     cli = (struct cli_st *)yos_malloc(sizeof(struct cli_st));
     if (cli == NULL) {
-        return -1;
+        return -ENOMEM;
     }
 
     memset((void *)cli, 0, sizeof(struct cli_st));
@@ -682,7 +681,7 @@ init_general_err:
         cli = NULL;
     }
 
-    return -1;
+    return -ENOSYS;
 }
 
 int cli_printf(const char *msg, ...)

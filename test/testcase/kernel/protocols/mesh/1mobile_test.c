@@ -4,7 +4,7 @@
 
 #include "yunit.h"
 
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "yos/kernel.h"
 
 #include "umesh.h"
@@ -33,7 +33,7 @@ static void run_in_hop1(void)
     check_p2p_str_wait("leaf", 11, "testcmd state", 10);
 
     addr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);
 
@@ -64,7 +64,7 @@ static void run_in_hop2(void)
     YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
     addr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 13, "testcmd icmp_acked", 5);
 

@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <yos/network.h>
 
-#include "mbedtls/mbedtls_ssl.h"
+#include <yos/mbedtls_ssl.h>
 
 const char *mbedtls_real_ca_pem = "-----BEGIN CERTIFICATE-----\n"   \
 "MIIDtzCCAp+gAwIBAgIJAOxbLdldR1+SMA0GCSqGSIb3DQEBBQUAMHIxCzAJBgNV\n"\

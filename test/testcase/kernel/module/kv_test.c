@@ -7,7 +7,7 @@
 
 #include <yunit.h>
 #include <yts.h>
-#include "yos/framework.h"
+#include "yos/yos.h"
 #include "kvmgr.h"
 
 static char *g_key_1 = "key_1";
@@ -20,8 +20,9 @@ static char *g_val_2 = "val_2";
 static char *g_val_3 = "val_3";
 static char *g_val_4 = "val_4";
 
-static char *g_key_update = "test_10";
+static char *g_key_update = "test_1000";
 static char *g_val_update = "val_19";
+static char *g_val_update_2 = "val_30";
 
 static void test_kv_add(void)
 {
@@ -105,6 +106,10 @@ static void test_kv_loop(void)
         if (ret != 0)
             count++;
 
+        ret = yos_kv_set(g_key_update, g_val_update_2, strlen(g_val_update_2), 1);
+        if (ret != 0)
+            count++;
+
         for (i = 0; i < 100; i++) {
             len = sizeof(val);
             snprintf(key, sizeof(key), "test_%d", i);
@@ -122,6 +127,11 @@ static void test_kv_loop(void)
                 count++;
             memset(key, 0, sizeof(key));
         }
+
+        ret = yos_kv_get(g_key_update, val, &len);
+        if ((ret != 0) || (strlen(g_val_update_2) != len))
+            count++;
+
    }
 
    YUNIT_ASSERT(0 == ret);
@@ -160,6 +170,7 @@ static void test_kv_error(void)
     memset(buf, 0, blk_size);
     for (i = 0; i < blk_nums; i++) {
         offset = i * blk_size;
+        hal_flash_erase(KV_TEST_PTN, offset, blk_size);
         hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     }
     test_kv_error_cycle();
@@ -167,6 +178,7 @@ static void test_kv_error(void)
     /* case situation : block header state is error */
     buf[0] = 'K';
     offset = 0;
+    hal_flash_erase(KV_TEST_PTN, offset, blk_size);
     hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     test_kv_error_cycle();
 
@@ -175,6 +187,7 @@ static void test_kv_error(void)
     buf[1] = 0xCC;
     for (i = 0; i < blk_nums; i++) {
         offset = i * blk_size;
+        hal_flash_erase(KV_TEST_PTN, offset, blk_size);
         hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     }
     test_kv_error_cycle();    
@@ -185,12 +198,35 @@ static void test_kv_error(void)
     buf[1] = 0xEE;
     for (i = 0; i < blk_nums; i++) {
         offset = i * blk_size;
+        hal_flash_erase(KV_TEST_PTN, offset, blk_size);
         hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     }
     buf[1] = 0;
     offset = blk_size;
+    hal_flash_erase(KV_TEST_PTN, offset, blk_size);
     hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
     test_kv_error_cycle(); 
+
+    /* case situation : one block is clean, one block is dirty, but header means clean */
+    memset(buf, -1, blk_size);
+    buf[0] = 'K';
+    buf[1] = 0xEE;
+    offset = 0;
+    hal_flash_erase(KV_TEST_PTN, offset, blk_size);
+    hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+
+    memset(buf+2, 0, 100);
+    offset = blk_size;
+    hal_flash_erase(KV_TEST_PTN, offset, blk_size);
+    hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
+
+    yos_kv_init();
+    memset(buf, 0, blk_size);
+    offset = blk_size;
+    hal_flash_read(KV_TEST_PTN, &offset, buf, blk_size);
+    YUNIT_ASSERT(buf[1] == 0x44); 
+    yos_kv_deinit();
+
 
     if(buf)
         yos_free(buf);

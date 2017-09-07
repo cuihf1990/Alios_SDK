@@ -3,7 +3,7 @@
  */
 
 #include <string.h>
-#include <yos/framework.h>
+#include <yos/yos.h>
 
 #include "hal/base.h"
 #include "umesh.h"
@@ -42,31 +42,46 @@ static urmesh_state_t g_um_state = {.initialized = false , .started = false};
 
 static void update_ipaddr(void)
 {
+#if LWIP_IPV6
     const ur_ip6_addr_t *mcast;
     uint32_t addr;
     network_context_t *network;
 
     network = get_default_network_context();
-    memset(g_um_state.ucast_address[0].addr.m8, 0,
-           sizeof(g_um_state.ucast_address[0].addr.m8));
-    g_um_state.ucast_address[0].addr.m32[0] = htonl(0xfc000000);
-    g_um_state.ucast_address[0].addr.m32[1] = htonl(nd_get_stable_meshnetid());
+    memset(g_um_state.ucast_address[0].addr.ip6_addr.m8, 0,
+           sizeof(g_um_state.ucast_address[0].addr.ip6_addr.m8));
+    g_um_state.ucast_address[0].addr.ip6_addr.m32[0] = htonl(0xfc000000);
+    g_um_state.ucast_address[0].addr.ip6_addr.m32[1] = htonl(nd_get_stable_meshnetid());
     addr = (get_sub_netid(network->meshnetid) << 16) | umesh_mm_get_local_sid();
-    g_um_state.ucast_address[0].addr.m32[3] = htonl(addr);
+    g_um_state.ucast_address[0].addr.ip6_addr.m32[3] = htonl(addr);
     g_um_state.ucast_address[0].prefix_length = 64;
 
     g_um_state.ucast_address[0].next = &g_um_state.ucast_address[1];
-    memset(g_um_state.ucast_address[1].addr.m8, 0,
-           sizeof(g_um_state.ucast_address[1].addr.m8));
-    g_um_state.ucast_address[1].addr.m32[0] = htonl(0xfc000000);
-    g_um_state.ucast_address[1].addr.m32[1] = htonl(nd_get_stable_meshnetid());
-    memcpy(&g_um_state.ucast_address[1].addr.m8[8], umesh_mm_get_local_ueid(), 8);
+    memset(g_um_state.ucast_address[1].addr.ip6_addr.m8, 0,
+           sizeof(g_um_state.ucast_address[1].addr.ip6_addr.m8));
+    g_um_state.ucast_address[1].addr.ip6_addr.m32[0] = htonl(0xfc000000);
+    g_um_state.ucast_address[1].addr.ip6_addr.m32[1] = htonl(nd_get_stable_meshnetid());
+    memcpy(&g_um_state.ucast_address[1].addr.ip6_addr.m8[8], umesh_mm_get_local_ueid(), 8);
     g_um_state.ucast_address[1].prefix_length = 64;
 
     mcast = nd_get_subscribed_mcast();
-    memcpy(&g_um_state.mcast_address[0].addr, mcast,
-           sizeof(g_um_state.mcast_address[0].addr));
+    memcpy(&g_um_state.mcast_address[0].addr.ip6_addr, mcast,
+           sizeof(g_um_state.mcast_address[0].addr.ip6_addr));
     g_um_state.mcast_address[0].prefix_length = 64;
+#else
+    uint16_t sid;
+
+    sid = umesh_mm_get_local_sid() + 2;
+    g_um_state.ucast_address[0].addr.ip4_addr.m8[0] = 10;
+    g_um_state.ucast_address[0].addr.ip4_addr.m8[1] = 0;
+    g_um_state.ucast_address[0].addr.ip4_addr.m8[2] = sid >> 8;
+    g_um_state.ucast_address[0].addr.ip4_addr.m8[3] = sid & 0xff;
+
+    g_um_state.mcast_address[0].addr.ip4_addr.m8[0] = 224;
+    g_um_state.mcast_address[0].addr.ip4_addr.m8[1] = 0;
+    g_um_state.mcast_address[0].addr.ip4_addr.m8[2] = 0;
+    g_um_state.mcast_address[0].addr.ip4_addr.m8[3] = 252;
+#endif
 }
 
 static ur_error_t umesh_interface_up(void)
@@ -175,6 +190,7 @@ static void output_ipv4_frame_handler(void *args)
     mf_send_message(message);
 
 out:
+    ur_mem_free(frame, sizeof(*frame));
     pbuf_free(buf);
 }
 

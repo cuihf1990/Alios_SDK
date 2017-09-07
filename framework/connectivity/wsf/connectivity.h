@@ -5,9 +5,8 @@
 #ifndef CONNECTIVITY_H
 #define CONNECTIVITY_H
 
-#include "yos/list.h"
+#include "yos/yos.h"
 #include "os.h"
-#include "yos/log.h"
 
 #define NAME_LENGTH 12
 

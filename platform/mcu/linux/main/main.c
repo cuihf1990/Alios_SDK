@@ -9,8 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <yos/log.h>
-#include <yos/kernel.h>
+#include <yos/yos.h>
 
 #include <arg_options.h>
 
@@ -26,7 +25,7 @@ extern void yunos_lwip_init(int enable_tapif);
 extern void __gcov_flush(void);
 extern void rl_free_line_state(void);
 extern void rl_cleanup_after_signal(void);
-extern void hw_start_hal(void);
+extern void hw_start_hal(options_t *poptions);
 extern void trace_start();
 extern void netmgr_init(void);
 extern int yos_framework_init(void);
@@ -52,7 +51,12 @@ static void app_entry(void *arg)
 
     yos_features_init();
 
-    hw_start_hal();
+#ifdef CONFIG_YOS_MESHYTS
+    options.flash.per_pid = true;
+#else
+    options.flash.per_pid = false;
+#endif
+    hw_start_hal(&options);
 
     vfs_init();
     vfs_device_init();
@@ -158,6 +162,8 @@ int main(int argc, char **argv)
 
     atexit(exit_clean);
 
+    yunos_init();
+
     ret = setrlimit_for_vfs();
     if (ret != 0) {
         return ret;
@@ -170,8 +176,6 @@ int main(int argc, char **argv)
 #ifdef TFS_EMULATE
     tfs_emulate_id2_index = options.id2_index;
 #endif
-
-    yunos_init();
 
     start_app(argc, argv);
 

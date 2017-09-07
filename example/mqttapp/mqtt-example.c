@@ -25,7 +25,7 @@
 #include "iot_export.h"
 #include "yos/log.h"
 //#include "json_parser.h"
-#include "yos/framework.h"
+#include "yos/yloop.h"
 #include "yos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
@@ -206,7 +206,7 @@ static void mqtt_service_event(input_event_t *event, void *priv_data) {
         return;
     }
 
-    if (event->code != CODE_SYS_ON_CONNECT) {
+    if (event->code != CODE_SYS_ON_MQTT_READ) {
         return;
     }
 
