@@ -259,7 +259,7 @@ static void teardown(void)
 
 }
 
-static yunit_test_case_t yunos_basic_testcases[] = {
+static yunit_test_case_t krhino_basic_testcases[] = {
     { "kv_add", test_kv_add },
     { "kv_find", test_kv_find },
     { "kv_del", test_kv_del },
@@ -269,7 +269,7 @@ static yunit_test_case_t yunos_basic_testcases[] = {
 };
 
 static yunit_test_suite_t suites[] = {
-    { "kv", init, cleanup, setup, teardown, yunos_basic_testcases },
+    { "kv", init, cleanup, setup, teardown, krhino_basic_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

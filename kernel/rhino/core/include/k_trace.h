@@ -6,7 +6,7 @@
 #define K_TRACE_H
 
 
-#if (YUNOS_CONFIG_TRACE > 0)
+#if (RHINO_CONFIG_TRACE > 0)
 /* task trace function */
 void _trace_init(void);
 void _trace_task_switch(ktask_t *from, ktask_t *to);

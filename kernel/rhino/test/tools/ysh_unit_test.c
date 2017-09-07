@@ -43,40 +43,40 @@ static void task_ysh0_entry(void *arg)
         ysh_task_start();
     }
 
-    yunos_task_sleep(1);
+    krhino_task_sleep(1);
     if (g_ysh_queue_init == 0) {
         next_test_case_notify();
-        yunos_task_dyn_del(task_0_test);
+        krhino_task_dyn_del(task_0_test);
         return ;
     }
 
-    yunos_task_sleep(1);
+    krhino_task_sleep(1);
 
     cmd = "help";
-    tmp = yunos_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
-    YSH_VAL_CHK(tmp == YUNOS_SUCCESS);
-    yunos_task_sleep(1);
+    tmp = krhino_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
+    YSH_VAL_CHK(tmp == RHINO_SUCCESS);
+    krhino_task_sleep(1);
 
     cmd = "dumpsys task";
-    tmp = yunos_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
+    tmp = krhino_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
 
-    yunos_task_sleep(1);
+    krhino_task_sleep(1);
 
     cmd = "dumpsys info";
-    tmp = yunos_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
+    tmp = krhino_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
 
-    yunos_task_sleep(1);
+    krhino_task_sleep(1);
 
 
     cmd = "bt";
-    tmp = yunos_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
+    tmp = krhino_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
 
-    yunos_task_sleep(1);
+    krhino_task_sleep(1);
 
     cmd = "test";
-    tmp = yunos_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
+    tmp = krhino_buf_queue_send(&g_ysh_simulate_queue, cmd, strlen(cmd));
 
-    yunos_task_sleep(1);
+    krhino_task_sleep(1);
 
     if (test_case_check_err == 0) {
         test_case_success++;
@@ -87,22 +87,22 @@ static void task_ysh0_entry(void *arg)
         PRINT_RESULT("ysh test", FAIL);
     }
 
-    yunos_task_del(&g_ysh_task);
+    krhino_task_del(&g_ysh_task);
 #endif
     next_test_case_notify();
-    yunos_task_dyn_del(task_0_test);
+    krhino_task_dyn_del(task_0_test);
 }
 
 void ysh_cmd_test(void)
 {
     kstat_t ret;
     test_case_check_err = 0;
-    ret = yunos_task_dyn_create(&task_0_test, "ysh_cmd_daemon", 0,
+    ret = krhino_task_dyn_create(&task_0_test, "ysh_cmd_daemon", 0,
                                 TEST_YSH_CMD_DAEMON_RPI,
                                 0, TASK_TEST_STACK_SIZE, task_ysh0_entry, 1);
 
-    YSH_VAL_CHK(ret == YUNOS_SUCCESS);
-    yunos_task_sleep(10);
+    YSH_VAL_CHK(ret == RHINO_SUCCESS);
+    krhino_task_sleep(10);
     return;
 }
 #endif

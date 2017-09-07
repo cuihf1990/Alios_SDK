@@ -20,15 +20,15 @@
 
 /*use two level bit map to find free memory block*/
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 
-#define YUNOS_MM_CORRUPT_DYE  0xFEFEFEFE
-#define YUNOS_MM_FREE_DYE     0xABABABAB
+#define RHINO_MM_CORRUPT_DYE  0xFEFEFEFE
+#define RHINO_MM_FREE_DYE     0xABABABAB
 
-#ifndef YUNOS_CONFIG_MM_MAXMSIZEBIT
+#ifndef RHINO_CONFIG_MM_MAXMSIZEBIT
 #define MAX_MM_BIT          20 /*2^20=1M,will change it to k_config.h*/
 #else
-#define MAX_MM_BIT         YUNOS_CONFIG_MM_MAXMSIZEBIT
+#define MAX_MM_BIT         RHINO_CONFIG_MM_MAXMSIZEBIT
 #endif
 #define MAX_MM_SIZE         (1<<MAX_MM_BIT)
 #define FIX_BLK_BIT         5 /*32 bytes*/
@@ -45,7 +45,7 @@
 #define MM_ALIGN_DOWN(a) ((a) & ~MM_ALIGN_MASK)
 
 
-#define YUNOS_MM_BLKSIZE_MASK (0xFFFFFFFF - MM_ALIGN_MASK)
+#define RHINO_MM_BLKSIZE_MASK (0xFFFFFFFF - MM_ALIGN_MASK)
 
 #define DEF_TOTAL_FIXEDBLK_SIZE     8192 /*by default, total 2k momory fo fix size block */
 #define MIN_FREE_MEMORY_SIZE        1024 /*at least need 1k for user alloced*/
@@ -53,16 +53,16 @@
 
 
 /*bit 0 and bit 1 mask*/
-#define YUNOS_MM_CURSTAT_MASK 0x1
-#define YUNOS_MM_PRESTAT_MASK 0x2
+#define RHINO_MM_CURSTAT_MASK 0x1
+#define RHINO_MM_PRESTAT_MASK 0x2
 
 /*bit 0*/
-#define YUNOS_MM_FREE         1
-#define YUNOS_MM_ALLOCED      0
+#define RHINO_MM_FREE         1
+#define RHINO_MM_ALLOCED      0
 
 /*bit 1*/
-#define YUNOS_MM_PREVFREE     2
-#define YUNOS_MM_PREVALLOCED  0
+#define RHINO_MM_PREVFREE     2
+#define RHINO_MM_PREVALLOCED  0
 
 #define NEXT_MM_BLK(_addr, _r) ((k_mm_list_t *) ((void *) (_addr) + (_r)))
 
@@ -81,7 +81,7 @@ typedef struct free_ptr_struct {
 } free_ptr_t;
 
 typedef struct k_mm_list_struct {
-#if (YUNOS_CONFIG_MM_DEBUG > 0)
+#if (RHINO_CONFIG_MM_DEBUG > 0)
     size_t       dye;
     size_t       owner;
 #endif
@@ -102,7 +102,7 @@ typedef struct k_mm_region_info_struct {
 
 
 typedef struct {
-#if (YUNOS_CONFIG_MM_REGION_MUTEX == 1)
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 1)
     kmutex_t            mm_mutex;
 #endif
     k_mm_region_info_t *regioninfo;
@@ -121,10 +121,10 @@ typedef struct {
 } k_mm_head;
 
 
-kstat_t yunos_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len );
-kstat_t yunos_deinit_mm_head(k_mm_head *mmhead);
+kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len );
+kstat_t krhino_deinit_mm_head(k_mm_head *mmhead);
 
-kstat_t yunos_add_mm_region(k_mm_head *mmhead, void *addr, size_t len);
+kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len);
 
 
 void *k_mm_alloc(k_mm_head *mmhead, size_t size);
@@ -137,14 +137,14 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size);
  * @param[in]       size        size of the mem to malloc
  * @return  the operation status, NULL is error, others is memory address
  */
-void *yunos_mm_alloc(size_t size);
+void *krhino_mm_alloc(size_t size);
 
 /**
  * This function is wrapper of mm free
  * @param[in]       ptr        address point of the mem
  */
 
-void   yunos_mm_free(void *ptr);
+void   krhino_mm_free(void *ptr);
 
 
 /**
@@ -153,7 +153,7 @@ void   yunos_mm_free(void *ptr);
  * @param[in]       size        size of the mem to malloc
  * @return  the operation status, NULL is error, others is realloced memory address
  */
-void *yunos_mm_realloc(void *oldmem, size_t newsize);
+void *krhino_mm_realloc(void *oldmem, size_t newsize);
 
 
 

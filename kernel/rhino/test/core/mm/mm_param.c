@@ -8,68 +8,68 @@
 
 #define MODULE_NAME "mm_param"
 
-#if (YUNOS_CONFIG_MM_TLF > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
 
 static uint8_t mm_param_case1(void)
 {
     kstat_t ret;
 
-    ret = yunos_init_mm_head(NULL, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    ret = krhino_init_mm_head(NULL, (void *)mm_pool, MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
-    ret = yunos_init_mm_head(&pmmhead, NULL, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    ret = krhino_init_mm_head(&pmmhead, NULL, MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool,
+    ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool,
                              MIN_FREE_MEMORY_SIZE + DEF_TOTAL_FIXEDBLK_SIZE - 4);
-    MYASSERT(ret == YUNOS_MM_POOL_SIZE_ERR);
+    MYASSERT(ret == RHINO_MM_POOL_SIZE_ERR);
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)(mm_pool + 1), MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_init_mm_head(&pmmhead, (void *)(mm_pool + 1), MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_deinit_mm_head(pmmhead);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_deinit_mm_head(pmmhead);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE - 1);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE - 1);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_deinit_mm_head(pmmhead);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_deinit_mm_head(pmmhead);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_add_mm_region(NULL, (void *)&mm_pool[MM_POOL_SIZE], MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    ret = krhino_add_mm_region(NULL, (void *)&mm_pool[MM_POOL_SIZE], MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
-    ret = yunos_add_mm_region(pmmhead, NULL, MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_NULL_PTR);
+    ret = krhino_add_mm_region(pmmhead, NULL, MM_POOL_SIZE);
+    MYASSERT(ret == RHINO_NULL_PTR);
 
-    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE], 4);
-    MYASSERT(ret == YUNOS_MM_POOL_SIZE_ERR);
+    ret = krhino_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE], 4);
+    MYASSERT(ret == RHINO_MM_POOL_SIZE_ERR);
 
-    ret = yunos_add_mm_region(pmmhead, (void *)(&mm_pool[MM_POOL_SIZE] + 1),
+    ret = krhino_add_mm_region(pmmhead, (void *)(&mm_pool[MM_POOL_SIZE] + 1),
                               MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_INV_ALIGN);
+    MYASSERT(ret == RHINO_INV_ALIGN);
 
-    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE],
+    ret = krhino_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE],
                               MM_POOL_SIZE - 1);
-    MYASSERT(ret == YUNOS_INV_ALIGN);
+    MYASSERT(ret == RHINO_INV_ALIGN);
 
-    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE],
+    ret = krhino_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE],
                               MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE * 3],
+    ret = krhino_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE * 3],
                               MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE * 2],
+    ret = krhino_add_mm_region(pmmhead, (void *)&mm_pool[MM_POOL_SIZE * 2],
                               MM_POOL_SIZE);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    MYASSERT(ret == RHINO_SUCCESS);
 
-    ret = yunos_deinit_mm_head(pmmhead);
-    MYASSERT(ret == YUNOS_SUCCESS);
+    ret = krhino_deinit_mm_head(pmmhead);
+    MYASSERT(ret == RHINO_SUCCESS);
 
     return 0;
 }
@@ -79,7 +79,7 @@ static uint8_t mm_param_case2(void)
     void   *ptr;
     void   *tmp;
 
-    yunos_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
+    krhino_init_mm_head(&pmmhead, (void *)mm_pool, MM_POOL_SIZE);
 
     ptr = k_mm_alloc( NULL, 64);
     MYASSERT(ptr == NULL);
@@ -101,13 +101,13 @@ static uint8_t mm_param_case2(void)
     VGF(VALGRIND_MAKE_MEM_DEFINED(pmmhead->fixedmblk, MMLIST_HEAD_SIZE));
     tmp = pmmhead->fixedmblk->mbinfo.buffer;
     MYASSERT((ptr > (void *)pmmhead->fixedmblk->mbinfo.buffer) &&
-             (ptr < ((void *)tmp + (pmmhead->fixedmblk->size & YUNOS_MM_BLKSIZE_MASK))));
+             (ptr < ((void *)tmp + (pmmhead->fixedmblk->size & RHINO_MM_BLKSIZE_MASK))));
     VGF(VALGRIND_MAKE_MEM_NOACCESS(pmmhead->fixedmblk, MMLIST_HEAD_SIZE));
     VGF(VALGRIND_MAKE_MEM_NOACCESS(pmmhead, sizeof(k_mm_head)));
 
     k_mm_free(pmmhead, ptr);
 
-    yunos_deinit_mm_head(pmmhead);
+    krhino_deinit_mm_head(pmmhead);
 
     return 0;
 }
@@ -125,9 +125,9 @@ void mm_param_test(void)
     task_mm_entry_register(MODULE_NAME, (test_func_t *)mm_func_runner,
                            sizeof(mm_func_runner) / sizeof(test_func_t));
 
-    ret = yunos_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
+    ret = krhino_task_dyn_create(&task_mm, MODULE_NAME, 0, TASK_MM_PRI,
                                 0, TASK_TEST_STACK_SIZE, task_mm_entry, 1);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }

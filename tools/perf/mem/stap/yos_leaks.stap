@@ -8,7 +8,7 @@ probe begin {
 	println("yos memory leak check ");
 }
 
-probe process(@1).function("yunos_mm_alloc_hook"){
+probe process(@1).function("krhino_mm_alloc_hook"){
 	if (pid() == target()) {
         //print_ubacktrace()
         ptr = $mem
@@ -19,7 +19,7 @@ probe process(@1).function("yunos_mm_alloc_hook"){
     }
 }
 
-probe process(@1).function("yunos_mm_free") {
+probe process(@1).function("krhino_mm_free") {
      if (pid() == target()) {
         ptr = $ptr
 

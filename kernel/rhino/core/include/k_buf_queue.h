@@ -13,7 +13,7 @@ typedef struct {
     size_t         cur_num;
     size_t         peak_num;
     size_t         min_free_buf_size;
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_t        buf_queue_item;
 #endif
     uint8_t        mm_alloc_flag;
@@ -35,37 +35,37 @@ typedef struct {
  * @param[in]  buf      pointer to the buf
  * @param[in]  size     size of the buf
  * @param[in]  max_msg  max size of one msg
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_create(kbuf_queue_t *queue, const name_t *name,
+kstat_t krhino_buf_queue_create(kbuf_queue_t *queue, const name_t *name,
                                void *buf,
                                size_t size, size_t max_msg);
 
 /**
  * This function will delete a queue
  * @param[in]  queue  pointer to the queue
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_del(kbuf_queue_t *queue);
+kstat_t krhino_buf_queue_del(kbuf_queue_t *queue);
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 /**
  * This function will create a dyn-queue
  * @param[out]  queue    pointer to the queue(The space is provided by kernel)
  * @param[in]   name     pointer to the nam
  * @param[in]   size     size of the buf
  * @param[in]   max_msg  max size of one msg
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
+kstat_t krhino_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
                                    size_t size, size_t max_msg);
 
 /**
  * This function will delete a dyn-queue
  * @param[in]  queue  pointer to the queue
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue);
+kstat_t krhino_buf_queue_dyn_del(kbuf_queue_t *queue);
 #endif
 
 /**
@@ -73,18 +73,18 @@ kstat_t yunos_buf_queue_dyn_del(kbuf_queue_t *queue);
  * @param[in]  queue  pointer to the queue
  * @param[in]  msg    pointer to msg to be send
  * @param[in]  size   size of the msg
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size);
+kstat_t krhino_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size);
 
 /**
  * This function will send a msg at the head of queue
  * @param[in]  queue  pointer to the queue
  * @param[in]  msg    pointer to msg to be send
  * @param[in]  size   size of the msg
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size);
+kstat_t krhino_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size);
 
 /**
  * This function will receive msg form aqueue
@@ -92,33 +92,33 @@ kstat_t yunos_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size);
  * @param[in]   ticks  ticks to wait before receiving msg
  * @param[out]  msg    pointer to the buf to save msg
  * @param[out]  size   size of received msg
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
+kstat_t krhino_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
                              size_t *size);
 
 /**
  * This function will reset queue
  * @param[in]  queue  pointer to the queue
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_flush(kbuf_queue_t *queue);
+kstat_t krhino_buf_queue_flush(kbuf_queue_t *queue);
 
 /**
  * This function will get information of a queue
  * @param[in]   queue  pointer to the queue
  * @param[out]  free   free size of the queue buf
  * @param[out]  total  total size of the queue buf
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info);
+kstat_t krhino_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info);
 
 /**
  * This function will check if buf queue is valid
  * @param[in]   queue pointer to the buf queue
- * @return  the check status, YUNOS_SUCCESS is OK, others is error
+ * @return  the check status, RHINO_SUCCESS is OK, others is error
  */
-kstat_t yunos_buf_queue_is_valid(kbuf_queue_t *queue);
+kstat_t krhino_buf_queue_is_valid(kbuf_queue_t *queue);
 
 #endif /* K_BUF_QUEUE_H */
 

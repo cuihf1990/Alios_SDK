@@ -185,7 +185,7 @@ REQUEST_NOT_CONNECT 12104  "the device is not connected" "null"
 REQUEST_DEV_NOT_LOGIN 12105  "the device is not login" "null"
 REQUEST_DEV_NO_CONNECTION 12106  "the device has no connection" "null"
 
-#gateway yunos adapt
+#gateway AliOS adapt
 IDC_SERVICE_ERROR 12200  "Error to cal idc service" "null"
 IDC_SERVICE_GET_FAILURE 12201  "Fail to cal idc service" "null"
 IDC_SERVICE_NO_VALUE 12202  "not value in response" "null"

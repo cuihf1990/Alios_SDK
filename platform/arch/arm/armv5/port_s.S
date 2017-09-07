@@ -15,7 +15,7 @@
 .global cpu_intrpt_switch
 .global cpu_first_task_start
 
-.global yunos_stack_ovf_check
+.global krhino_stack_ovf_check
 
 .text
 
@@ -56,7 +56,7 @@ cpu_task_switch:
     LDR R0, [R0]
     STR SP, [R0]
 
-    BL yunos_stack_ovf_check
+    BL krhino_stack_ovf_check
 
 cpu_intrpt_switch:
     LDR     R0, =g_preferred_ready_task

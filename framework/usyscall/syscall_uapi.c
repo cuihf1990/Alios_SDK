@@ -25,7 +25,7 @@ void yos_reboot(void)
 
 int yos_get_hz(void)
 {
-    return YUNOS_CONFIG_TICKS_PER_SECOND;
+    return RHINO_CONFIG_TICKS_PER_SECOND;
 }
 
 const char *yos_version_get(void)
@@ -214,7 +214,7 @@ int yos_work_cancel(yos_work_t *work)
 
 void *yos_malloc(unsigned int size)
 {
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
     } else {
@@ -227,7 +227,7 @@ void *yos_malloc(unsigned int size)
 
 void *yos_realloc(void *mem, unsigned int size)
 {
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         return SYS_CALL3(SYS_REALLOC, void *, void *, mem, unsigned int, size,
                          size_t, (size_t)__builtin_return_address(0));
@@ -241,7 +241,7 @@ void *yos_realloc(void *mem, unsigned int size)
 
 void *yos_zalloc(unsigned int size)
 {
-#if (YUNOS_CONFIG_MM_DEBUG > 0u && YUNOS_CONFIG_GCC_RETADDR > 0u)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
         return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
     } else {
