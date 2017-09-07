@@ -6,7 +6,8 @@ $(NAME)_SOURCES     := yts_main.c
 $(NAME)_COMPONENTS  := yunit cjson
 
 #YTS_COAP
-ifeq ($(yts_coap), 1)
+ifeq ($(yts_connectivity), coap)
+$(NAME)_DEFINES += YTS_COAP
 $(NAME)_SOURCES     += framework/coap_test.c
 
 CONFIG_COAP_DTLS_SUPPORT := y
@@ -30,13 +31,14 @@ $(NAME)_COMPONENTS  += connectivity.coap
 
 #YTS_COAP
 else
+$(NAME)_SOURCES     += framework/mqtt_test.c
+$(NAME)_COMPONENTS  += connectivity.mqtt
 $(NAME)_SOURCES     += basic_test.c
 $(NAME)_SOURCES     += framework/hal/hal_test.c
 $(NAME)_SOURCES     += framework/yloop_test.c
 $(NAME)_SOURCES     += framework/fota_test.c
 $(NAME)_SOURCES     += framework/vfs_test.c
 $(NAME)_SOURCES     += framework/netmgr_test.c 
-$(NAME)_SOURCES     += framework/mqtt_test.c
 $(NAME)_SOURCES     += utility/cjson_test.c
 $(NAME)_SOURCES     += utility/hashtable_test.c
 $(NAME)_SOURCES     += utility/digest_algorithm.c
@@ -79,8 +81,6 @@ $(NAME)_INCLUDES += ../../tools/dda
 include test/testcase/kernel/protocols/mesh/filelists.mk
 $(NAME)_SOURCES += $(MESHYTSFILE)
 endif
-
-$(NAME)_COMPONENTS  += connectivity.mqtt
 
 #YTS_COAP
 endif

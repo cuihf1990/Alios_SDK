@@ -106,6 +106,8 @@ void add_test(void)
 #ifdef YTS_COAP
     test_coap();
 #else
+    test_mqtt();
+
     test_basic();
 
     test_fota();
@@ -147,8 +149,6 @@ void add_test(void)
     test_alicrypto();
 
     test_kv();
-
-    test_mqtt();
 #endif
 }
 
