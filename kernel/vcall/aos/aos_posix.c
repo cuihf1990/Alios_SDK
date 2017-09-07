@@ -357,11 +357,11 @@ void yos_msleep(int ms)
     usleep(ms * 1000);
 }
 
-void yunos_init(void)
+void krhino_init(void)
 {
 }
 
-void yunos_start(void)
+void krhino_start(void)
 {
     while (1) {
         usleep(1000 * 1000 * 100);

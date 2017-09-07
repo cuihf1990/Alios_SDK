@@ -68,7 +68,7 @@ uint32_t fifo_in(struct k_fifo *fifo, const void *buf, uint32_t len)
 
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     l = fifo_unused(fifo);
 
@@ -81,7 +81,7 @@ uint32_t fifo_in(struct k_fifo *fifo, const void *buf, uint32_t len)
 
     fifo->free_bytes -= len;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
     return len;
 }
 
@@ -108,12 +108,12 @@ uint32_t fifo_in_full_reject_lock(struct k_fifo *fifo, const void *buf, uint32_t
 
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     l = fifo_unused(fifo);
 
     if (len > l) {
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
         return 0;
     }
 
@@ -122,7 +122,7 @@ uint32_t fifo_in_full_reject_lock(struct k_fifo *fifo, const void *buf, uint32_t
 
     fifo->free_bytes -= len;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
     return len;
 }
 
@@ -164,11 +164,11 @@ uint32_t fifo_out_peek(struct k_fifo *fifo,
 
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     ret_len = internal_fifo_out_peek(fifo, buf, len);
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
     return ret_len;
 
@@ -178,14 +178,14 @@ uint32_t fifo_out(struct k_fifo *fifo, void *buf, uint32_t len)
 {
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     len = internal_fifo_out_peek(fifo, buf, len);
     fifo->out += len;
 
     fifo->free_bytes += len;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
     return len;
 }
@@ -196,13 +196,13 @@ uint32_t fifo_out_all(struct k_fifo *fifo, void *buf)
 
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     len = fifo->size - fifo->free_bytes;
 
     if (len == 0) {
 
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
         return 0;
     }
 
@@ -211,7 +211,7 @@ uint32_t fifo_out_all(struct k_fifo *fifo, void *buf)
 
     fifo->free_bytes += len;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
     return len;
 }

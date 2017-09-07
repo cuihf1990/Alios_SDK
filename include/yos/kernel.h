@@ -51,7 +51,7 @@ int yos_get_hz(void);
 /**
  * Get kernel version
  *
- * @return the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
 const char *yos_version_get(void);
 
@@ -160,7 +160,7 @@ int yos_mutex_unlock(yos_mutex_t *mutex);
 /**
  * This function will check if mutex is valid
  * @param[in]   mutex    pointer to the mutex
- * @return  the check status, YUNOS_TRUE is OK, YUNOS_FALSE indicates invalid
+ * @return  the check status, RHINO_TRUE is OK, RHINO_FALSE indicates invalid
  */
 int yos_mutex_is_valid(yos_mutex_t *mutex);
 /**
@@ -193,7 +193,7 @@ void yos_sem_signal(yos_sem_t *sem);
 /**
  * This function will check if semaphore is valid
  * @param[in]   sem    pointer to the semaphore
- * @return  the check status, YUNOS_TRUE is OK, YUNOS_FALSE indicates invalid
+ * @return  the check status, RHINO_TRUE is OK, RHINO_FALSE indicates invalid
  */
 int yos_sem_is_valid(yos_sem_t *sem);
 
@@ -218,7 +218,7 @@ int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size,
 /**
  * This function will delete a queue
  * @param[in]  queue  pointer to the queue
- * @return  the operation status, YUNOS_SUCCESS is OK, others is error
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 void yos_queue_free(yos_queue_t *queue);
 
@@ -246,7 +246,7 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
 /**
  * This function will check if queue is valid
  * @param[in]   queue    pointer to the queue
- * @return  the check status, YUNOS_TRUE is OK, YUNOS_FALSE indicates invalid
+ * @return  the check status, RHINO_TRUE is OK, RHINO_FALSE indicates invalid
  */
 int yos_queue_is_valid(yos_queue_t *queue);
 

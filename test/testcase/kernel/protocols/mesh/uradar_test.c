@@ -161,7 +161,7 @@ extern void test_diags_case(void);
 extern void test_umesh_4super_7nodes_case(void);
 
 /* submodule ut */
-static yunit_test_case_t yunos_uradar_sub_testcases[] = {
+static yunit_test_case_t krhino_uradar_sub_testcases[] = {
     { "hal_mesh", test_hal_mesh_case },
     { "diags", test_diags_case },
     { "sid_router", test_uradar_sid_router_case },
@@ -178,7 +178,7 @@ static yunit_test_case_t yunos_uradar_sub_testcases[] = {
 };
 
 /* compound case */
-static yunit_test_case_t yunos_uradar_com_testcases[] = {
+static yunit_test_case_t krhino_uradar_com_testcases[] = {
     { "mcast", test_uradar_mcast_case },
     { "1hop", test_uradar_1hop_case },
     { "1mobile", test_uradar_1mobile_case },
@@ -193,7 +193,7 @@ static yunit_test_case_t yunos_uradar_com_testcases[] = {
 };
 
 /* stress case */
-static yunit_test_case_t yunos_uradar_stress_testcases[] = {
+static yunit_test_case_t krhino_uradar_stress_testcases[] = {
     { "scales_5", test_uradar_scales_5nodes_case },
     { "scales_10", test_uradar_scales_10nodes_case },
     { "scales_20", test_uradar_scales_20nodes_case },
@@ -201,7 +201,7 @@ static yunit_test_case_t yunos_uradar_stress_testcases[] = {
     YUNIT_TEST_CASE_NULL
 };
 
-static yunit_test_case_t yunos_uradar_mini_testcases[] = {
+static yunit_test_case_t krhino_uradar_mini_testcases[] = {
     /* submodule ut */
     { "sid_router", test_uradar_sid_router_case },
     { "6lowpan", test_uradar_6lowpan_case },
@@ -221,7 +221,7 @@ static yunit_test_case_t yunos_uradar_mini_testcases[] = {
     YUNIT_TEST_CASE_NULL
 };
 
-static yunit_test_case_t yunos_uradar_testcases[] = {
+static yunit_test_case_t krhino_uradar_testcases[] = {
     /* submodule ut */
     { "hal_mesh", test_hal_mesh_case },
     { "diags", test_diags_case },
@@ -255,27 +255,27 @@ static yunit_test_case_t yunos_uradar_testcases[] = {
 };
 
 static yunit_test_suite_t suites[] = {
-    { "mesh", init, cleanup, setup, teardown, yunos_uradar_testcases },
+    { "mesh", init, cleanup, setup, teardown, krhino_uradar_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
 static yunit_test_suite_t sub_suites[] = {
-    { "mesh_sub", init, cleanup, setup, teardown, yunos_uradar_sub_testcases },
+    { "mesh_sub", init, cleanup, setup, teardown, krhino_uradar_sub_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
 static yunit_test_suite_t com_suites[] = {
-    { "mesh_com", init, cleanup, setup, teardown, yunos_uradar_com_testcases },
+    { "mesh_com", init, cleanup, setup, teardown, krhino_uradar_com_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
 static yunit_test_suite_t stress_suites[] = {
-    { "mesh_stress", init, cleanup, setup, teardown, yunos_uradar_stress_testcases },
+    { "mesh_stress", init, cleanup, setup, teardown, krhino_uradar_stress_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
 static yunit_test_suite_t mini_suites[] = {
-    { "mesh_mini", init, cleanup, setup, teardown, yunos_uradar_mini_testcases },
+    { "mesh_mini", init, cleanup, setup, teardown, krhino_uradar_mini_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

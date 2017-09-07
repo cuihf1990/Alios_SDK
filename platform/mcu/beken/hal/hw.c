@@ -18,7 +18,7 @@
 #define TAG "hw"
 
 #define us2tick(us) \
-    ((us * YUNOS_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
+    ((us * RHINO_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
 
 static void _timer_cb(void *timer, void *arg)
 {
@@ -33,11 +33,11 @@ void hal_timer_init(hal_timer_t *tmr, unsigned int period, unsigned char auto_re
     tmr->cb = cb;
     tmr->arg = arg;
     if (auto_reload > 0u) {
-        yunos_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
+        krhino_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
                                 us2tick(period), us2tick(period), tmr, 0);
     }
     else {
-        yunos_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
+        krhino_timer_dyn_create((ktimer_t **)&tmr->priv, "hwtmr", _timer_cb,
                                 us2tick(period), 0, tmr, 0);
     }
 }
@@ -45,8 +45,8 @@ void hal_timer_init(hal_timer_t *tmr, unsigned int period, unsigned char auto_re
 
 void hal_timer_stop(hal_timer_t *tmr)
 {
-    yunos_timer_stop(tmr->priv);
-    yunos_timer_dyn_del(tmr->priv);
+    krhino_timer_stop(tmr->priv);
+    krhino_timer_dyn_del(tmr->priv);
     tmr->priv = NULL;
 }
 

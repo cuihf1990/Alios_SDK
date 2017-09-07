@@ -26,13 +26,16 @@
     "uuid":"35C858CFCD6A1FF9F734D749033A29A0",
     "version":"v2.0.0.1","zip":"0"
 */
+void platform_ota_init( void *signal){
 
-int8_t parse_ota_requset(const char *request, int *buf_len, ota_request_params *request_parmas)
+}
+
+int8_t platform_ota_parse_requset(const char *request, int *buf_len, ota_request_params *request_parmas)
 {
     return 0;
 }
 
-int8_t parse_ota_response(const char *response, int buf_len, ota_response_params *response_parmas)
+int8_t platform_ota_parse_response(const char *response, int buf_len, ota_response_params *response_parmas)
 {
     cJSON *root = cJSON_Parse(response);
     if (!root) {
@@ -119,7 +122,7 @@ parse_success:
 }
 
 
-int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response_params *response_parmas)
+int8_t platform_ota_parse_cancel_responce(const char *response, int buf_len, ota_response_params *response_parmas)
 {
     cJSON *root = cJSON_Parse(response);
     if (!root) {
@@ -175,43 +178,35 @@ int8_t platform_ota_result_post(void)
 {
     int ret = -1;
     char buff[256] = {0};
-    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)ota_get_id(), (const char *)ota_get_system_version());
+    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)platform_ota_get_id(), (const char *)ota_get_system_version());
     ret = yos_cloud_report(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
     OTA_LOG_D("alink_ota_status_post: %s, ret=%d\n", buff, ret);
     return ret;
 }
 
-int8_t ota_pub_request(ota_request_params *request_parmas)
+int8_t platform_ota_publish_request(ota_request_params *request_parmas)
 {
     return 0;
 }
 
-int8_t ota_sub_request_reply(yos_cloud_cb_t msgCallback)
-{
-    return 0;
-}
-
-int8_t ota_sub_upgrade(yos_cloud_cb_t msgCallback)
+int8_t platform_ota_subscribe_upgrade(yos_cloud_cb_t msgCallback)
 {
     return yos_cloud_register_callback(ALINK_UPGRADE_DEVICE, msgCallback);
 }
 
 
-int8_t ota_cancel_upgrade(yos_cloud_cb_t msgCallback)
+int8_t platform_ota_cancel_upgrade(yos_cloud_cb_t msgCallback)
 {
     return yos_cloud_register_callback(ALINK_CANCEL_UPGRADE_DEVICE, msgCallback);
 }
 
 extern char *config_get_main_uuid(void);
 
-char *ota_get_id(void)
+char *platform_ota_get_id(void)
 {
     return config_get_main_uuid();
 }
 
-void free_global_topic()
-{
-}
 
 
 

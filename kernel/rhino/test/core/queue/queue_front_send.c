@@ -21,8 +21,8 @@ static void queue_front_send_param_test(void)
 {
     kstat_t ret;
 
-    ret = yunos_queue_front_send(NULL, queue_send_msg);
-    QUEUE_VAL_CHK(ret == YUNOS_NULL_PTR);
+    ret = krhino_queue_front_send(NULL, queue_send_msg);
+    QUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 }
 
 static void task_queue0_entry(void *arg)
@@ -30,12 +30,12 @@ static void task_queue0_entry(void *arg)
     kstat_t ret;
 
     while (1) {
-        /* check yunos_queue_front param */
+        /* check krhino_queue_front param */
         queue_front_send_param_test();
 
-        /* check yunos_queue_front_send */
-        ret = yunos_queue_recv(&g_test_queue0, YUNOS_WAIT_FOREVER, &queue_recv_msg);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        /* check krhino_queue_front_send */
+        ret = krhino_queue_recv(&g_test_queue0, RHINO_WAIT_FOREVER, &queue_recv_msg);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         if (queue_recv_msg == queue_send_msg) {
             test_case_success++;
@@ -45,9 +45,9 @@ static void task_queue0_entry(void *arg)
             PRINT_RESULT("queue front send", FAIL);
         }
 
-        yunos_queue_del(&g_test_queue0);
+        krhino_queue_del(&g_test_queue0);
         next_test_case_notify();
-        yunos_task_dyn_del(task_0_test);
+        krhino_task_dyn_del(task_0_test);
     }
 }
 
@@ -56,11 +56,11 @@ static void task_queue1_entry(void *arg)
     kstat_t ret;
 
     while (1) {
-        /* check yunos_queue_back_send */
-        ret = yunos_queue_back_send(&g_test_queue0, queue_send_msg);
-        QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+        /* check krhino_queue_back_send */
+        ret = krhino_queue_back_send(&g_test_queue0, queue_send_msg);
+        QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
-        yunos_task_dyn_del(task_1_test);
+        krhino_task_dyn_del(task_1_test);
     }
 }
 
@@ -68,17 +68,17 @@ kstat_t task_queue_front_send_test(void)
 {
     kstat_t ret;
 
-    ret = yunos_queue_create(&g_test_queue0, "test_queue0",
+    ret = krhino_queue_create(&g_test_queue0, "test_queue0",
                              (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
-    QUEUE_VAL_CHK(ret == YUNOS_SUCCESS);
+    QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
-    ret = yunos_task_dyn_create(&task_0_test, "task_queue0_test", 0, 10,
+    ret = krhino_task_dyn_create(&task_0_test, "task_queue0_test", 0, 10,
                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
-    QUEUE_VAL_CHK((ret == YUNOS_SUCCESS) || (ret == YUNOS_STOPPED));
+    QUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
-    ret = yunos_task_dyn_create(&task_1_test, "task_queue1_test", 0, 11,
+    ret = krhino_task_dyn_create(&task_1_test, "task_queue1_test", 0, 11,
                                 0, TASK_TEST_STACK_SIZE, task_queue1_entry, 1);
-    QUEUE_VAL_CHK((ret == YUNOS_SUCCESS) || (ret == YUNOS_STOPPED));
+    QUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     return 0;
 }

@@ -14,7 +14,7 @@ static uint32_t cnt;
 void task_sleep_entry(void *arg)
 {
     while (1) {
-        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
         cnt++;
 
         if (cnt == LOOP_CNT) {
@@ -22,16 +22,16 @@ void task_sleep_entry(void *arg)
             cnt = 0u;
             PRINT_RESULT("task_sleep", PASS);
             next_test_case_notify();
-            yunos_task_dyn_del(yunos_cur_task_get());
+            krhino_task_dyn_del(krhino_cur_task_get());
         }
     }
 }
 
 void task_sleep_test(void)
 {
-    if (yunos_task_dyn_create(&task_0_test, "task_sleep_test", 0, 10,
+    if (krhino_task_dyn_create(&task_0_test, "task_sleep_test", 0, 10,
                               0, TASK_TEST_STACK_SIZE,
-                              task_sleep_entry, 1) != YUNOS_SUCCESS) {
+                              task_sleep_entry, 1) != RHINO_SUCCESS) {
         printf("task_sleep_test fail \n");
     }
 }

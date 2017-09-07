@@ -7,8 +7,8 @@ ifneq (,$(filter protocol.alink,$(COMPONENTS)))
 $(NAME)_CFLAGS += -Wall -Werror
 $(NAME)_COMPONENTS += fota.platform.alink
 else
-ifneq (,$(filter mqtt,$(COMPONENTS)))   
-+$(NAME)_COMPONENTS += fota.platform.aliot 
+ifneq (,$(filter connectivity.mqtt,$(COMPONENTS)))   
+$(NAME)_COMPONENTS += fota.platform.aliot 
 else
 $(NAME)_COMPONENTS += fota.platform.common
 endif

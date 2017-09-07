@@ -10,11 +10,11 @@
 #include "k_api.h"
 
 #define MM_LEAK_CHECK_ROUND_SCOND 10*60*5*1000
-#define YUNOS_BACKTRACE_DEPTH     10
+#define RHINO_BACKTRACE_DEPTH     10
 
 #define CLI_TAG         "\e[63m"  //CLI TAG, use ESC characters, c(cli) ascii is 63
 
-#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
+#if (RHINO_CONFIG_MM_LEAKCHECK > 0)
 extern uint32_t dump_mmleak(void);
 #endif
 
@@ -51,7 +51,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     size_t c_frame = 0;
     size_t n_frame = 0;
 
-    int depth = YUNOS_BACKTRACE_DEPTH;
+    int depth = RHINO_BACKTRACE_DEPTH;
 
     char *printbuf = NULL;
     char  tmpbuf[256] = {0};
@@ -60,18 +60,18 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 
     printbuf = yos_malloc(totallen);
     if (printbuf ==  NULL) {
-        return YUNOS_NO_MEM;
+        return RHINO_NO_MEM;
     }
     memset(printbuf, 0, totallen);
 
-    yunos_sched_disable();
+    krhino_sched_disable();
     preferred_cpu_ready_task_get(&g_ready_queue, cpu_cur_get());
     candidate = g_preferred_ready_task[cpu_cur_get()];
 
     safesprintf(printbuf, totallen, offset,
                 CLI_TAG "---------------------------------------------------------------------\r\n");
 
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
+#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
     snprintf(tmpbuf, 255, CLI_TAG "CPU usage :%-10d   MAX:%-10d                 \n");
     g_cpu_usage / 100, g_cpu_usage_max / 100);
     safesprintf(printbuf, totallen, offset, tmpbuf);
@@ -85,14 +85,14 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
                 CLI_TAG "---------------------------------------------------------------------\r\n");
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-    task = yunos_list_entry(tmp, ktask_t, task_stats_item);
-        rst  = yunos_task_stack_min_free(task, &free_size);
+    task = krhino_list_entry(tmp, ktask_t, task_stats_item);
+        rst  = krhino_task_stack_min_free(task, &free_size);
 
-        if (rst != YUNOS_SUCCESS) {
+        if (rst != RHINO_SUCCESS) {
             free_size = 0;
         }
 
-#if (YUNOS_CONFIG_TASK_SCHED_STATS > 0)
+#if (RHINO_CONFIG_TASK_SCHED_STATS > 0)
         time_total = (sys_time_t)(task->task_time_total_run / 20);
 #endif
 
@@ -128,9 +128,9 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
         safesprintf(printbuf, totallen, offset, tmpbuf);
 
         /* for chip not support stack frame interface,do nothing*/
-        if (detail == true && task != yunos_cur_task_get() && soc_get_first_frame_info &&
+        if (detail == true && task != krhino_cur_task_get() && soc_get_first_frame_info &&
             soc_get_subs_frame_info) {
-            depth = YUNOS_BACKTRACE_DEPTH;
+            depth = RHINO_BACKTRACE_DEPTH;
             snprintf(tmpbuf, 255, CLI_TAG "Task %s Call Stack Dump:\r\n", task_name);
             safesprintf(printbuf, totallen, offset, tmpbuf);
             c_frame = (size_t)task->task_stack;
@@ -148,11 +148,11 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 
 
     safesprintf(printbuf, totallen, offset, CLI_TAG "----------------------------------------------------------\r\n");
-    yunos_sched_enable();
+    krhino_sched_enable();
 
     printf("%s", printbuf);
     yos_free(printbuf);
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 static uint32_t dumpsys_info_func(char *buf, uint32_t len)
@@ -160,19 +160,19 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
     int16_t plen = 0;
 
     plen += sprintf(buf + plen, CLI_TAG "---------------------------------------------\r\n");
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
+#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
     plen += sprintf(buf + plen, CLI_TAG "CPU usage :%-10d     MAX:%-10d\r\n",
                     g_cpu_usage / 100, g_cpu_usage_max / 100);
 #endif
 
-#if (YUNOS_CONFIG_DISABLE_SCHED_STATS > 0)
+#if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
     plen += sprintf(buf + plen, CLI_TAG "Max sched disable time  :%-10d\r\n",
                     g_sched_disable_max_time);
 #else
     plen += sprintf(buf + plen, CLI_TAG "Max sched disable time  :%-10d\r\n", 0);
 #endif
 
-#if (YUNOS_CONFIG_DISABLE_INTRPT_STATS > 0)
+#if (RHINO_CONFIG_DISABLE_INTRPT_STATS > 0)
     plen += sprintf(buf + plen, CLI_TAG "Max intrpt disable time :%-10d\r\n",
                     g_intrpt_disable_max_time);
 #else
@@ -181,15 +181,15 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
 
     plen += sprintf(buf + plen, CLI_TAG "---------------------------------------------\r\n");
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
+#if (RHINO_CONFIG_MM_LEAKCHECK > 0)
 
 uint32_t dumpsys_mm_leak_func(char *buf, uint32_t len)
 {
     dump_mmleak();
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
 uint8_t mm_leak_timer_cb(void *timer, void *arg)
@@ -210,32 +210,32 @@ uint32_t dumpsys_mm_leak_check_func(char *pcWriteBuffer, int xWriteBufferLen,
                 round_sec = atoi(argv[3]) * 1000;
             }
 
-            yunos_timer_create(&g_mm_leak_check_timer, "mm_leak_check_timer",
+            krhino_timer_create(&g_mm_leak_check_timer, "mm_leak_check_timer",
                                (timer_cb_t)mm_leak_timer_cb,
-                               10, yunos_ms_to_ticks(round_sec), NULL, 0);
+                               10, krhino_ms_to_ticks(round_sec), NULL, 0);
         } else {
             if (NULL != argv[3]) {
                 round_sec = atoi(argv[3]) * 1000;
 
                 if (1 == run_flag) {
-                    yunos_timer_stop(&g_mm_leak_check_timer);
+                    krhino_timer_stop(&g_mm_leak_check_timer);
                 }
 
-                yunos_timer_change(&g_mm_leak_check_timer, 10, yunos_ms_to_ticks(round_sec));
+                krhino_timer_change(&g_mm_leak_check_timer, 10, krhino_ms_to_ticks(round_sec));
             }
         }
 
         run_flag = 1;
-        yunos_timer_start(&g_mm_leak_check_timer);
-        return YUNOS_SUCCESS;
+        krhino_timer_start(&g_mm_leak_check_timer);
+        return RHINO_SUCCESS;
     }
 
     if (argc == 2 && 0 == strcmp(argv[2], "stop")) {
-        yunos_timer_stop(&g_mm_leak_check_timer);
+        krhino_timer_stop(&g_mm_leak_check_timer);
         run_flag  = 2;
     }
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 #endif
 
@@ -247,11 +247,11 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                      CLI_TAG "\tdumpsys task       : show the task info.\r\n"
                      CLI_TAG "\tdumpsys task_stack : show the task stack info.\r\n"
                      CLI_TAG "\tdumpsys mm_info    : show the memory has alloced.\r\n"
-#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
+#if (RHINO_CONFIG_MM_LEAKCHECK > 0)
                      CLI_TAG "\tdumpsys mm_leak    : show the memory maybe leak.\r\n"
                      CLI_TAG "\tdumpsys leak_check : leak check control comand.\r\n"
 #endif
-#if (YUNOS_CONFIG_CPU_USAGE_STATS > 0)
+#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
                      CLI_TAG "\tdumpsys info       : show the system info\r\n"
 #endif
                      ;
@@ -268,7 +268,7 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         if (argc == 3) {
             ret = dump_task_stack_byname(argv[2]);
         } else {
-            ret = dump_task_stack_byname(yunos_cur_task_get()->task_name);
+            ret = dump_task_stack_byname(krhino_cur_task_get()->task_name);
         }
 
         return ret;
@@ -277,14 +277,14 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         return ret;
     }
 
-#if (YUNOS_CONFIG_MM_DEBUG> 0)
+#if (RHINO_CONFIG_MM_DEBUG> 0)
     else if (argc == 2 && 0 == strcmp(argv[1], "mm_info")) {
         ret = dumpsys_mm_info_func(NULL, 0);
         return ret;
     }
 #endif
 
-#if (YUNOS_CONFIG_MM_LEAKCHECK > 0)
+#if (RHINO_CONFIG_MM_LEAKCHECK > 0)
     else if (argc == 2 && 0 == strcmp(argv[1], "mm_leak")) {
         ret = dumpsys_mm_leak_func(NULL, 0);
         return ret;
@@ -295,14 +295,14 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 #endif
     else {
         snprintf(pcWriteBuffer, xWriteBufferLen, "%s\r\n", helpinfo);
-        return YUNOS_SUCCESS;
+        return RHINO_SUCCESS;
     }
 }
 
 int dump_task_stack(ktask_t *task)
 {
     uint32_t offset = 0;
-    kstat_t  rst    = YUNOS_SUCCESS;
+    kstat_t  rst    = RHINO_SUCCESS;
     void    *cur, *end;
     int      i = 0;
     int     *p;
@@ -315,20 +315,20 @@ int dump_task_stack(ktask_t *task)
 
     printbuf = yos_malloc(totallen);
     if (printbuf ==  NULL) {
-        return YUNOS_NO_MEM;
+        return RHINO_NO_MEM;
     }
     memset(printbuf, 0, totallen);
-    yunos_sched_disable();
+    krhino_sched_disable();
 
     end   = task->task_stack_base + task->stack_size;
 
-    rst =  yunos_task_stack_cur_free(task, &offset);
-    if (rst == YUNOS_SUCCESS) {
+    rst =  krhino_task_stack_cur_free(task, &offset);
+    if (rst == RHINO_SUCCESS) {
         cur = task->task_stack_base + task->stack_size - offset;
     } else {
-        k_err_proc(YUNOS_SYS_SP_ERR);
+        k_err_proc(RHINO_SYS_SP_ERR);
         yos_free(printbuf);
-        yunos_sched_enable();
+        krhino_sched_enable();
         return 1;
     }
     p = (int *)cur;
@@ -344,7 +344,7 @@ int dump_task_stack(ktask_t *task)
     }
     safesprintf(printbuf, totallen, bufoffset,
                 CLI_TAG "\r\n-----------------end----------------\r\n\r\n");
-    yunos_sched_enable();
+    krhino_sched_enable();
 
     printf("%s", printbuf);
     yos_free(printbuf);
@@ -365,7 +365,7 @@ int dump_task_stack_byname(char *taskname)
     }
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-        task = yunos_list_entry(tmp, ktask_t, task_stats_item);
+        task = krhino_list_entry(tmp, ktask_t, task_stats_item);
         if (printall == 1 || strcmp(taskname, task->task_name) == 0) {
             printf(CLI_TAG  "------task %s stack -------", task->task_name);
             dump_task_stack(task);

@@ -26,30 +26,30 @@ static kmutex_t mutex;
 
 void task_misc_entry2(void *arg)
 {
-    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND / 10);
+    krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND / 10);
 
-    yunos_task_del(NULL);
-    yunos_task_dyn_del(&task_misc2);
-    yunos_task_del(&task_misc2);
+    krhino_task_del(NULL);
+    krhino_task_dyn_del(&task_misc2);
+    krhino_task_del(&task_misc2);
 }
 
 void task_misc_entry3(void *arg)
 {
-    yunos_sem_dyn_create(&sem3, "sem_misc33", 0);
-    yunos_sem_take(sem3, YUNOS_WAIT_FOREVER);
+    krhino_sem_dyn_create(&sem3, "sem_misc33", 0);
+    krhino_sem_take(sem3, RHINO_WAIT_FOREVER);
 
-    yunos_sched_disable();
-    yunos_task_dyn_del(task_misc3);
-    yunos_sched_enable();
+    krhino_sched_disable();
+    krhino_task_dyn_del(task_misc3);
+    krhino_sched_enable();
 
-    yunos_task_dyn_del(task_misc3);
+    krhino_task_dyn_del(task_misc3);
 }
 
 void task_misc_entry4(void *arg)
 {
-    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
-    yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND);
-    yunos_task_dyn_del(task_misc4);
+    krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
+    krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
+    krhino_task_dyn_del(task_misc4);
 }
 
 
@@ -71,426 +71,426 @@ void task_misc_entry(void *arg)
 
     CPSR_ALLOC();
 
-    yunos_task_resume(task_misc3);
-    yunos_task_del(task_misc3);
+    krhino_task_resume(task_misc3);
+    krhino_task_del(task_misc3);
 
-    yunos_sched_disable();
-    yunos_task_suspend(yunos_cur_task_get());
-    yunos_sched_enable();
+    krhino_sched_disable();
+    krhino_task_suspend(krhino_cur_task_get());
+    krhino_sched_enable();
 
-    yunos_task_suspend(NULL);
+    krhino_task_suspend(NULL);
 
-    yunos_task_sleep(0);
+    krhino_task_sleep(0);
 
-    yunos_sched_disable();
-    yunos_task_sleep(1);
-    yunos_sched_enable();
+    krhino_sched_disable();
+    krhino_task_sleep(1);
+    krhino_sched_enable();
 
-    yunos_task_yield();
+    krhino_task_yield();
 
-    yunos_task_stack_min_free(NULL, &task_free);
-    yunos_task_stack_min_free(task_misc, NULL);
-    yunos_task_stack_min_free(task_misc, &task_free);
+    krhino_task_stack_min_free(NULL, &task_free);
+    krhino_task_stack_min_free(task_misc, NULL);
+    krhino_task_stack_min_free(task_misc, &task_free);
 
-    yunos_mutex_create(&mutex, "test");
-    yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
+    krhino_mutex_create(&mutex, "test");
+    krhino_mutex_lock(&mutex, RHINO_WAIT_FOREVER);
 
-    ret = yunos_task_pri_change(task_misc, 15, &old_pri);
+    ret = krhino_task_pri_change(task_misc, 15, &old_pri);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_pri_change", PASS);
+        PRINT_RESULT("krhino_task_pri_change", PASS);
     } else {
-        PRINT_RESULT("yunos_task_pri_change", FAIL);
+        PRINT_RESULT("krhino_task_pri_change", FAIL);
         test_case_fail++;
     }
 
-    yunos_mutex_unlock(&mutex);
+    krhino_mutex_unlock(&mutex);
 
-    ret = yunos_task_pri_change(NULL, 15, &old_pri);
+    ret = krhino_task_pri_change(NULL, 15, &old_pri);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_pri_change para 1", PASS);
+        PRINT_RESULT("krhino_task_pri_change para 1", PASS);
     } else {
-        PRINT_RESULT("yunos_task_pri_change para 1", FAIL);
+        PRINT_RESULT("krhino_task_pri_change para 1", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_task_pri_change(task_misc, 15, NULL);
+    ret = krhino_task_pri_change(task_misc, 15, NULL);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_pri_change para 2", PASS);
+        PRINT_RESULT("krhino_task_pri_change para 2", PASS);
     } else {
-        PRINT_RESULT("yunos_task_pri_change para 2", FAIL);
+        PRINT_RESULT("krhino_task_pri_change para 2", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_task_pri_change(task_misc, YUNOS_IDLE_PRI, &old_pri);
+    ret = krhino_task_pri_change(task_misc, RHINO_IDLE_PRI, &old_pri);
 
-    if (ret == YUNOS_PRI_CHG_NOT_ALLOWED) {
+    if (ret == RHINO_PRI_CHG_NOT_ALLOWED) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_pri_change para 3", PASS);
+        PRINT_RESULT("krhino_task_pri_change para 3", PASS);
     } else {
-        PRINT_RESULT("yunos_task_pri_change para 3", FAIL);
+        PRINT_RESULT("krhino_task_pri_change para 3", FAIL);
         test_case_fail++;
     }
 
-    task_misc2_stack = yunos_mm_alloc(TASK_TEST_STACK_SIZE);
+    task_misc2_stack = krhino_mm_alloc(TASK_TEST_STACK_SIZE);
 
     if (task_misc2_stack == NULL) {
 
-        PRINT_RESULT("yunos_mm_alloc failed", FAIL);
+        PRINT_RESULT("krhino_mm_alloc failed", FAIL);
     }
 
-    yunos_mutex_lock(&mutex, YUNOS_WAIT_FOREVER);
+    krhino_mutex_lock(&mutex, RHINO_WAIT_FOREVER);
 
-    yunos_task_create(NULL, "task_misc2", NULL, 1,
+    krhino_task_create(NULL, "task_misc2", NULL, 1,
                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, NULL, NULL, 1,
+    krhino_task_create(&task_misc2, NULL, NULL, 1,
                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, 1,
+    krhino_task_create(&task_misc2, "task_misc2", NULL, 1,
                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       NULL, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, 1,
+    krhino_task_create(&task_misc2, "task_misc2", NULL, 1,
                       0, NULL, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
+    krhino_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
                       0, task_misc2_stack, 0, task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
+    krhino_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
                       0, task_misc2_stack, 0, task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_CONFIG_PRI_MAX,
+    krhino_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, YUNOS_IDLE_PRI,
+    krhino_task_create(&task_misc2, "task_misc2", NULL, RHINO_IDLE_PRI,
                       50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_task_create(&task_misc2, "task_misc2", NULL, 1,
+    krhino_task_create(&task_misc2, "task_misc2", NULL, 1,
                       50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
                       task_misc_entry2, 1);
 
-    yunos_mutex_unlock(&mutex);
+    krhino_mutex_unlock(&mutex);
 
-    ret = yunos_task_time_slice_set(NULL, 30);
+    ret = krhino_task_time_slice_set(NULL, 30);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_time_slice_set para 1", PASS);
+        PRINT_RESULT("krhino_task_time_slice_set para 1", PASS);
     } else {
-        PRINT_RESULT("yunos_task_time_slice_set para 1", FAIL);
+        PRINT_RESULT("krhino_task_time_slice_set para 1", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_task_time_slice_set(task_misc, 0);
+    ret = krhino_task_time_slice_set(task_misc, 0);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_time_slice_set para 2", PASS);
+        PRINT_RESULT("krhino_task_time_slice_set para 2", PASS);
     } else {
-        PRINT_RESULT("yunos_task_time_slice_set para 2", FAIL);
+        PRINT_RESULT("krhino_task_time_slice_set para 2", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_task_time_slice_set(task_misc, 20);
+    ret = krhino_task_time_slice_set(task_misc, 20);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_time_slice_set para 3", PASS);
+        PRINT_RESULT("krhino_task_time_slice_set para 3", PASS);
     } else {
-        PRINT_RESULT("yunos_task_time_slice_set para 3", FAIL);
+        PRINT_RESULT("krhino_task_time_slice_set para 3", FAIL);
         test_case_fail++;
     }
 
-    yunos_sched_policy_set(task_misc, 0x11);
+    krhino_sched_policy_set(task_misc, 0x11);
 
-    ret = yunos_sched_policy_set(task_misc, KSCHED_FIFO);
+    ret = krhino_sched_policy_set(task_misc, KSCHED_FIFO);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_sched_policy_set para 1", PASS);
+        PRINT_RESULT("krhino_sched_policy_set para 1", PASS);
     } else {
-        PRINT_RESULT("yunos_sched_policy_set para 1", FAIL);
+        PRINT_RESULT("krhino_sched_policy_set para 1", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_sched_policy_set(task_misc, KSCHED_RR);
+    ret = krhino_sched_policy_set(task_misc, KSCHED_RR);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_sched_policy_set para 2", PASS);
+        PRINT_RESULT("krhino_sched_policy_set para 2", PASS);
     } else {
-        PRINT_RESULT("yunos_sched_policy_set para 2", FAIL);
+        PRINT_RESULT("krhino_sched_policy_set para 2", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_sched_policy_set(NULL, KSCHED_RR);
+    ret = krhino_sched_policy_set(NULL, KSCHED_RR);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
-        PRINT_RESULT("yunos_sched_policy_set para 3", PASS);
+        PRINT_RESULT("krhino_sched_policy_set para 3", PASS);
     } else {
-        PRINT_RESULT("yunos_sched_policy_set para 3", FAIL);
+        PRINT_RESULT("krhino_sched_policy_set para 3", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_sched_policy_get(NULL, &policy);
+    ret = krhino_sched_policy_get(NULL, &policy);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
-        PRINT_RESULT("yunos_sched_policy_get para 1", PASS);
+        PRINT_RESULT("krhino_sched_policy_get para 1", PASS);
     } else {
-        PRINT_RESULT("yyunos_sched_policy_get para 1", FAIL);
+        PRINT_RESULT("ykrhino_sched_policy_get para 1", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_sched_policy_get(task_misc, NULL);
+    ret = krhino_sched_policy_get(task_misc, NULL);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
-        PRINT_RESULT("yunos_sched_policy_get para 2", PASS);
+        PRINT_RESULT("krhino_sched_policy_get para 2", PASS);
     } else {
-        PRINT_RESULT("yunos_sched_policy_get para 2", FAIL);
+        PRINT_RESULT("krhino_sched_policy_get para 2", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_sched_policy_get(task_misc, &policy);
+    ret = krhino_sched_policy_get(task_misc, &policy);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_sched_policy_get para 3", PASS);
+        PRINT_RESULT("krhino_sched_policy_get para 3", PASS);
     } else {
-        PRINT_RESULT("yunos_sched_policy_get para 3", FAIL);
+        PRINT_RESULT("krhino_sched_policy_get para 3", FAIL);
         test_case_fail++;
     }
 
-#define INFO_IDX (YUNOS_CONFIG_TASK_INFO_NUM - 1)
-    ret = yunos_task_info_set(NULL, INFO_IDX, (void *)0x111);
+#define INFO_IDX (RHINO_CONFIG_TASK_INFO_NUM - 1)
+    ret = krhino_task_info_set(NULL, INFO_IDX, (void *)0x111);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_info_set para 2", PASS);
+        PRINT_RESULT("krhino_task_info_set para 2", PASS);
     } else {
-        PRINT_RESULT("yunos_task_info_set para 2", FAIL);
+        PRINT_RESULT("krhino_task_info_set para 2", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_task_info_set(task_misc, INFO_IDX, (void *)0x111);
+    ret = krhino_task_info_set(task_misc, INFO_IDX, (void *)0x111);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_info_set para 3", PASS);
+        PRINT_RESULT("krhino_task_info_set para 3", PASS);
     } else {
-        PRINT_RESULT("yunos_task_info_set para 3", FAIL);
+        PRINT_RESULT("krhino_task_info_set para 3", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_task_info_get(task_misc, INFO_IDX, &info);
+    ret = krhino_task_info_get(task_misc, INFO_IDX, &info);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_info_get para 1", PASS);
+        PRINT_RESULT("krhino_task_info_get para 1", PASS);
     } else {
-        PRINT_RESULT("yunos_task_info_get para 1", FAIL);
+        PRINT_RESULT("krhino_task_info_get para 1", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_task_info_get(NULL, INFO_IDX, &info);
+    ret = krhino_task_info_get(NULL, INFO_IDX, &info);
 
-    if (ret == YUNOS_NULL_PTR) {
+    if (ret == RHINO_NULL_PTR) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_info_get para 2", PASS);
+        PRINT_RESULT("krhino_task_info_get para 2", PASS);
     } else {
-        PRINT_RESULT("yunos_task_info_get para 2", FAIL);
+        PRINT_RESULT("krhino_task_info_get para 2", FAIL);
         test_case_fail++;
     }
 
 #undef INFO_IDX
 
-    task_free = yunos_global_space_get();
+    task_free = krhino_global_space_get();
 
     if (task_free > 0u) {
         test_case_success++;
-        PRINT_RESULT("yunos_global_space_get", PASS);
+        PRINT_RESULT("krhino_global_space_get", PASS);
     } else {
-        PRINT_RESULT("yunos_global_space_get", FAIL);
+        PRINT_RESULT("krhino_global_space_get", FAIL);
         test_case_fail++;
     }
 
     tmp.blk_state = BLK_ABORT;
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
     pend_state_end_proc(&tmp);
 #endif
     tmp.blk_state = BLK_TIMEOUT;
 
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
     pend_state_end_proc(&tmp);
 #endif
 
-#if (YUNOS_CONFIG_HW_COUNT > 0)
-    yunos_overhead_measure();
+#if (RHINO_CONFIG_HW_COUNT > 0)
+    krhino_overhead_measure();
 #endif
-    yunos_sem_give(sem3);
+    krhino_sem_give(sem3);
 
-    ret = yunos_sem_dyn_create(&sem4, "del", 0);
+    ret = krhino_sem_dyn_create(&sem4, "del", 0);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_sem_dyn_create", PASS);
+        PRINT_RESULT("krhino_sem_dyn_create", PASS);
     } else {
-        PRINT_RESULT("yunos_sem_dyn_create", FAIL);
+        PRINT_RESULT("krhino_sem_dyn_create", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_sem_dyn_del(sem4);
+    ret = krhino_sem_dyn_del(sem4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_sem_dyn_del", PASS);
+        PRINT_RESULT("krhino_sem_dyn_del", PASS);
     } else {
-        PRINT_RESULT("yunos_sem_dyn_del", FAIL);
+        PRINT_RESULT("krhino_sem_dyn_del", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_mutex_dyn_create(&mutex4, "mutex4");
+    ret = krhino_mutex_dyn_create(&mutex4, "mutex4");
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_mutex_dyn_create", PASS);
+        PRINT_RESULT("krhino_mutex_dyn_create", PASS);
     } else {
-        PRINT_RESULT("yunos_mutex_dyn_create", FAIL);
+        PRINT_RESULT("krhino_mutex_dyn_create", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_mutex_dyn_del(mutex4);
+    ret = krhino_mutex_dyn_del(mutex4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_mutex_dyn_del", PASS);
+        PRINT_RESULT("krhino_mutex_dyn_del", PASS);
     } else {
-        PRINT_RESULT("yunos_mutex_dyn_del", FAIL);
+        PRINT_RESULT("krhino_mutex_dyn_del", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_event_dyn_create(&event4, "event4", 0);
+    ret = krhino_event_dyn_create(&event4, "event4", 0);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_event_dyn_create", PASS);
+        PRINT_RESULT("krhino_event_dyn_create", PASS);
     } else {
-        PRINT_RESULT("yunos_event_dyn_create", FAIL);
+        PRINT_RESULT("krhino_event_dyn_create", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_event_dyn_del(event4);
+    ret = krhino_event_dyn_del(event4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_event_dyn_del", PASS);
+        PRINT_RESULT("krhino_event_dyn_del", PASS);
     } else {
-        PRINT_RESULT("yunos_event_dyn_del", FAIL);
+        PRINT_RESULT("krhino_event_dyn_del", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_timer_dyn_create(&timer4, "timer4", timer_cb4, 10, 0, 0, 0);
+    ret = krhino_timer_dyn_create(&timer4, "timer4", timer_cb4, 10, 0, 0, 0);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_timer_dyn_create", PASS);
+        PRINT_RESULT("krhino_timer_dyn_create", PASS);
     } else {
-        PRINT_RESULT("yunos_timer_dyn_create", FAIL);
+        PRINT_RESULT("krhino_timer_dyn_create", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_timer_dyn_del(timer4);
+    ret = krhino_timer_dyn_del(timer4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_timer_dyn_del", PASS);
+        PRINT_RESULT("krhino_timer_dyn_del", PASS);
     } else {
-        PRINT_RESULT("yunos_timer_dyn_del", FAIL);
+        PRINT_RESULT("krhino_timer_dyn_del", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_buf_queue_dyn_create(&buf_queue4, "queue4", 100, 20);
+    ret = krhino_buf_queue_dyn_create(&buf_queue4, "queue4", 100, 20);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_buf_queue_dyn_create", PASS);
+        PRINT_RESULT("krhino_buf_queue_dyn_create", PASS);
     } else {
-        PRINT_RESULT("yunos_buf_queue_dyn_create", FAIL);
+        PRINT_RESULT("krhino_buf_queue_dyn_create", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_buf_queue_dyn_del(buf_queue4);
+    ret = krhino_buf_queue_dyn_del(buf_queue4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_buf_queue_dyn_del", PASS);
+        PRINT_RESULT("krhino_buf_queue_dyn_del", PASS);
     } else {
-        PRINT_RESULT("yunos_buf_queue_dyn_del", FAIL);
+        PRINT_RESULT("krhino_buf_queue_dyn_del", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_queue_dyn_create(&queue4, "queue4", 10);
+    ret = krhino_queue_dyn_create(&queue4, "queue4", 10);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_queue_dyn_create", PASS);
+        PRINT_RESULT("krhino_queue_dyn_create", PASS);
     } else {
-        PRINT_RESULT("yunos_queue_dyn_create", FAIL);
+        PRINT_RESULT("krhino_queue_dyn_create", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_queue_dyn_del(queue4);
+    ret = krhino_queue_dyn_del(queue4);
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_queue_dyn_del", PASS);
+        PRINT_RESULT("krhino_queue_dyn_del", PASS);
     } else {
-        PRINT_RESULT("yunos_queue_dyn_del", FAIL);
+        PRINT_RESULT("krhino_queue_dyn_del", FAIL);
         test_case_fail++;
     }
 
-    ret = yunos_task_wait_abort(yunos_cur_task_get());
+    ret = krhino_task_wait_abort(krhino_cur_task_get());
 
-    if (ret == YUNOS_SUCCESS) {
+    if (ret == RHINO_SUCCESS) {
         test_case_success++;
-        PRINT_RESULT("yunos_task_wait_abort ready", PASS);
+        PRINT_RESULT("krhino_task_wait_abort ready", PASS);
     } else {
-        PRINT_RESULT("yunos_task_wait_abort ready", FAIL);
+        PRINT_RESULT("krhino_task_wait_abort ready", FAIL);
         test_case_fail++;
     }
 
-    yunos_task_dyn_create(&task_misc4, "task_misc_test4", 0, 1,
+    krhino_task_dyn_create(&task_misc4, "task_misc_test4", 0, 1,
                           0, TASK_TEST_STACK_SIZE,
                           task_misc_entry4, 1);
 
     next_test_case_notify();
-    yunos_task_dyn_del(yunos_cur_task_get());
+    krhino_task_dyn_del(krhino_cur_task_get());
 }
 
 void task_misc_test(void)
 {
-    yunos_task_dyn_create(NULL, "task_misc_test", 0, 10,
+    krhino_task_dyn_create(NULL, "task_misc_test", 0, 10,
                           0, TASK_TEST_STACK_SIZE,
                           task_misc_entry, 1);
 
-    yunos_task_dyn_create(&task_misc, "task_misc_test", 0, 10,
+    krhino_task_dyn_create(&task_misc, "task_misc_test", 0, 10,
                           0, TASK_TEST_STACK_SIZE,
                           task_misc_entry, 1);
 
-    yunos_task_dyn_create(&task_misc3, "task_misc_test3", 0, 5,
+    krhino_task_dyn_create(&task_misc3, "task_misc_test3", 0, 5,
                           0, TASK_TEST_STACK_SIZE,
                           task_misc_entry3, 1);
 }

@@ -6,80 +6,80 @@
 #define CONFIG_H
 
 /* chip level conf */
-#define YUNOS_CONFIG_LITTLE_ENDIAN           1
-#define YUNOS_CONFIG_CPU_STACK_DOWN          1
+#define RHINO_CONFIG_LITTLE_ENDIAN           1
+#define RHINO_CONFIG_CPU_STACK_DOWN          1
 
 /* kernel feature conf */
-#define YUNOS_CONFIG_SEM                     1
-#define YUNOS_CONFIG_QUEUE                   1
-#define YUNOS_CONFIG_TASK_SEM                1
-#define YUNOS_CONFIG_EVENT_FLAG              1
-#define YUNOS_CONFIG_TIMER                   1
-#define YUNOS_CONFIG_BUF_QUEUE               1
-#define YUNOS_CONFIG_MM_BLK                  1
-#define YUNOS_CONFIG_MM_DEBUG                1
-#define YUNOS_CONFIG_KOBJ_SET                1
+#define RHINO_CONFIG_SEM                     1
+#define RHINO_CONFIG_QUEUE                   1
+#define RHINO_CONFIG_TASK_SEM                1
+#define RHINO_CONFIG_EVENT_FLAG              1
+#define RHINO_CONFIG_TIMER                   1
+#define RHINO_CONFIG_BUF_QUEUE               1
+#define RHINO_CONFIG_MM_BLK                  1
+#define RHINO_CONFIG_MM_DEBUG                1
+#define RHINO_CONFIG_KOBJ_SET                1
 
 /* kernel task conf */
-#define YUNOS_CONFIG_TASK_SUSPEND            1
-#define YUNOS_CONFIG_TASK_INFO               1
-#define YUNOS_CONFIG_TASK_DEL                1
-#define YUNOS_CONFIG_TASK_WAIT_ABORT         0
-#define YUNOS_CONFIG_TASK_STACK_OVF_CHECK    1
-#define YUNOS_CONFIG_SCHED_RR                1
-#define YUNOS_CONFIG_TIME_SLICE_DEFAULT      50
-#define YUNOS_CONFIG_PRI_MAX                 62
-#define YUNOS_CONFIG_USER_PRI_MAX            (YUNOS_CONFIG_PRI_MAX - 2)
+#define RHINO_CONFIG_TASK_SUSPEND            1
+#define RHINO_CONFIG_TASK_INFO               1
+#define RHINO_CONFIG_TASK_DEL                1
+#define RHINO_CONFIG_TASK_WAIT_ABORT         0
+#define RHINO_CONFIG_TASK_STACK_OVF_CHECK    1
+#define RHINO_CONFIG_SCHED_RR                1
+#define RHINO_CONFIG_TIME_SLICE_DEFAULT      50
+#define RHINO_CONFIG_PRI_MAX                 62
+#define RHINO_CONFIG_USER_PRI_MAX            (RHINO_CONFIG_PRI_MAX - 2)
 
 /* kernel mm_region conf */
-#define YUNOS_CONFIG_MM_REGION_MUTEX         0
+#define RHINO_CONFIG_MM_REGION_MUTEX         0
 
 /* kernel timer&tick conf */
-#define YUNOS_CONFIG_HW_COUNT                0
-#define YUNOS_CONFIG_TICK_TASK               1
+#define RHINO_CONFIG_HW_COUNT                0
+#define RHINO_CONFIG_TICK_TASK               1
 
-#if (YUNOS_CONFIG_TICK_TASK > 0)
-#define YUNOS_CONFIG_TICK_TASK_STACK_SIZE    256
-#define YUNOS_CONFIG_TICK_TASK_PRI           1
+#if (RHINO_CONFIG_TICK_TASK > 0)
+#define RHINO_CONFIG_TICK_TASK_STACK_SIZE    256
+#define RHINO_CONFIG_TICK_TASK_PRI           1
 #endif
 
-#define YUNOS_CONFIG_TICKLESS                0
-#define YUNOS_CONFIG_TICKS_PER_SECOND        100
+#define RHINO_CONFIG_TICKLESS                0
+#define RHINO_CONFIG_TICKS_PER_SECOND        100
 /* must be 2^n size!, such as 1, 2, 4, 8, 16,32, etc....... */
-#define YUNOS_CONFIG_TICK_HEAD_ARRAY         8
-#define YUNOS_CONFIG_TIMER_TASK_STACK_SIZE   256
-#define YUNOS_CONFIG_TIMER_RATE              1
-#define YUNOS_CONFIG_TIMER_TASK_PRI          5
+#define RHINO_CONFIG_TICK_HEAD_ARRAY         8
+#define RHINO_CONFIG_TIMER_TASK_STACK_SIZE   256
+#define RHINO_CONFIG_TIMER_RATE              1
+#define RHINO_CONFIG_TIMER_TASK_PRI          5
 
 /* kernel intrpt conf */
-#define YUNOS_CONFIG_INTRPT_STACK_REMAIN_GET 1
-#define YUNOS_CONFIG_INTRPT_STACK_OVF_CHECK  0
-#define YUNOS_CONFIG_INTRPT_MAX_NESTED_LEVEL 188u
-#define YUNOS_CONFIG_INTRPT_GUARD            0
+#define RHINO_CONFIG_INTRPT_STACK_REMAIN_GET 1
+#define RHINO_CONFIG_INTRPT_STACK_OVF_CHECK  0
+#define RHINO_CONFIG_INTRPT_MAX_NESTED_LEVEL 188u
+#define RHINO_CONFIG_INTRPT_GUARD            0
 
 /* kernel dyn alloc conf */
-#define YUNOS_CONFIG_KOBJ_DYN_ALLOC          1
+#define RHINO_CONFIG_KOBJ_DYN_ALLOC          1
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-#define YUNOS_CONFIG_K_DYN_QUEUE_MSG         60
-#define YUNOS_CONFIG_K_DYN_TASK_STACK        256
-#define YUNOS_CONFIG_K_DYN_MEM_TASK_PRI      9
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
+#define RHINO_CONFIG_K_DYN_QUEUE_MSG         60
+#define RHINO_CONFIG_K_DYN_TASK_STACK        256
+#define RHINO_CONFIG_K_DYN_MEM_TASK_PRI      9
 #endif
 
 /* kernel idle conf */
-#define YUNOS_CONFIG_IDLE_TASK_STACK_SIZE    256
+#define RHINO_CONFIG_IDLE_TASK_STACK_SIZE    256
 
 /* kernel hook conf */
-#define YUNOS_CONFIG_USER_HOOK               1
+#define RHINO_CONFIG_USER_HOOK               1
 
 /* kernel stats conf */
-#define YUNOS_CONFIG_SYSTEM_STATS            1
-#define YUNOS_CONFIG_DISABLE_SCHED_STATS     0
-#define YUNOS_CONFIG_DISABLE_INTRPT_STATS    0
-#define YUNOS_CONFIG_CPU_USAGE_STATS         1
-#define YUNOS_CONFIG_CPU_USAGE_TASK_PRI      2
-#define YUNOS_CONFIG_TASK_SCHED_STATS        0
-#define YUNOS_CONFIG_CPU_USAGE_TASK_STACK    256
+#define RHINO_CONFIG_SYSTEM_STATS            1
+#define RHINO_CONFIG_DISABLE_SCHED_STATS     0
+#define RHINO_CONFIG_DISABLE_INTRPT_STATS    0
+#define RHINO_CONFIG_CPU_USAGE_STATS         1
+#define RHINO_CONFIG_CPU_USAGE_TASK_PRI      2
+#define RHINO_CONFIG_TASK_SCHED_STATS        0
+#define RHINO_CONFIG_CPU_USAGE_TASK_STACK    256
 
 #endif /* CONFIG_H */
 

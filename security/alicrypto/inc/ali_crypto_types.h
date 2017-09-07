@@ -6,7 +6,7 @@
 #define _ALI_CRYPTO_TYPES_H_
 
 #include <stdint.h>
-#include <stddef.h>
+#include <stddef.h> /* for size_t */
 #include <stdbool.h>
 
 #if 0

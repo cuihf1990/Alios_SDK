@@ -42,7 +42,7 @@ static void tcpip_init_done_callback(void *arg)
     netif_set_up(&netif);
 }
 
-void yunos_lwip_init(int enable_tapif)
+void krhino_lwip_init(int enable_tapif)
 {
     tcpip_init(NULL, NULL);
 

@@ -13,7 +13,7 @@
 #include "md5.h"
 #include "ota_update_manifest.h"
 
-#define BUFFER_MAX_SIZE 512
+#define BUFFER_MAX_SIZE 1536
 
 
 /**
@@ -28,19 +28,24 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
 {
     char *pa;
     char *pb;
-
+    int isHttps=0;
     if (!src || strlen(src) == 0) {
         OTA_LOG_E("http_gethost_info parms error!\n");
         return;
     }
-
     *port = 0;
     if (!(*src)) {
         return;
     }
     pa = src;
-    if (!strncmp(pa, "http://", strlen("http://"))) {
-        pa = src + strlen("http://");
+    if (!strncmp(pa, "https://", strlen("https://"))) { 
+        pa = src + strlen("https://");
+        isHttps=1;
+    }
+    if (!isHttps){
+        if (!strncmp(pa, "http://", strlen("http://"))) { 
+            pa = src + strlen("http://");
+        }
     }
 
     pb = strchr(pa, '/');
@@ -62,7 +67,14 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
     if (pa) {
         *port = atoi(pa + 1);
     } else {
-        *port = 80;
+        if (isHttps)
+        {
+            *port = 80;//443
+        }else
+        {
+            *port = 80; 
+        }
+        
     }
 }
 
@@ -167,8 +179,13 @@ int check_md5(const char *buffer, const int32_t len)
     }
     return 0;
 }
+#define HTTP_HEADER "GET /%s HTTP/1.1\r\nAccept:*/*\r\n\
+User-Agent: Mozilla/5.0\r\n\
+Cache-Control: no-cache\r\n\
+Connection: close\r\n\
+Host:%s:%d\r\n\r\n"
 
-#define HTTP_HEADER  "GET /%s HTTP/1.1\r\nAccept:*/*\r\n\
+#define HTTP_HEADER2  "GET /%s HTTP/1.1\r\nAccept:*/*\r\n\
 Accept-Language:zh-cn\r\n\
 User-Agent:Mozilla/5.0\r\n\
 Cache-Control: no-cache\r\n\
@@ -187,14 +204,16 @@ int http_download(char *url, write_flash_cb_t func)
     char http_buffer[BUFFER_MAX_SIZE] = {0};
     int port = 0;
     int nbytes = 0;
-    char host_file[128] = {0};
+    char host_file[OTA_URL_MAX_LEN] = {0};
     char host_addr[256] = {0};
     int send = 0;
     int totalsend = 0;
 
-    OTA_LOG_I("parameter is: %s\n ", url);
+    // OTA_LOG_I("parameter is: %s\n ", url);
     http_gethost_info(url, host_addr, host_file, &port);
-
+    // OTA_LOG_I("host_addr is: %s\n ", host_addr);
+    // OTA_LOG_I("host_file is: %s\n ", host_file);
+    // OTA_LOG_I("port is: %d\n ", port);
     sockfd = http_socket_init(port, host_addr);
     if (sockfd < 0 ) {
         OTA_LOG_E("http_socket_init error\n ");
@@ -245,10 +264,8 @@ int http_download(char *url, write_flash_cb_t func)
             if (!file_size) {
                 char *ptr = strstr(http_buffer, "Content-Length:");
                 if (ptr) {
-                    //sscanf(ptr, "%*[^ ]%s", file_length);
-                    //file_size = atoi(file_length);
                     sscanf(ptr, "%*[^ ]%d", &file_size);
-                    OTA_LOG_I("file_length %d", file_size);
+
                 }
             }
 
@@ -273,7 +290,7 @@ int http_download(char *url, write_flash_cb_t func)
         }
 
         size += nbytes;
-        //OTA_LOG_I("size nbytes %d, %d", size, nbytes);
+        // OTA_LOG_I("size nbytes %d, %d", size, nbytes);
         MD5_Update(&g_ctx, (const uint8_t *) http_buffer, nbytes);
         func(BUFFER_MAX_SIZE, (uint8_t *) http_buffer, nbytes, 0);
         memset(http_buffer, 0, BUFFER_MAX_SIZE);

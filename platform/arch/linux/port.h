@@ -14,11 +14,11 @@ void   cpu_first_task_start(void);
 void  *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_t entry);
 void   cpu_task_switch(void);
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
 void cpu_signal(uint8_t cpu_num);
 uint8_t cpu_cur_get(void);
 #else
-YUNOS_INLINE uint8_t cpu_cur_get(void)
+RHINO_INLINE uint8_t cpu_cur_get(void)
 {
     return 0;
 }
@@ -26,8 +26,8 @@ YUNOS_INLINE uint8_t cpu_cur_get(void)
 
 #define CPSR_ALLOC()    sigset_t cpsr
 
-#define YUNOS_CPU_INTRPT_DISABLE() { cpsr = cpu_intrpt_save(); }
-#define YUNOS_CPU_INTRPT_ENABLE()  { cpu_intrpt_restore(cpsr); }
+#define RHINO_CPU_INTRPT_DISABLE() { cpsr = cpu_intrpt_save(); }
+#define RHINO_CPU_INTRPT_ENABLE()  { cpu_intrpt_restore(cpsr); }
 
 void   cpu_idle_hook(void);
 void   cpu_init_hook(void);

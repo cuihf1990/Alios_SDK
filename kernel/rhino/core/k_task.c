@@ -19,36 +19,36 @@ static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,
     NULL_PARA_CHK(stack_buf);
 
     if (stack_size == 0u) {
-        return YUNOS_TASK_INV_STACK_SIZE;
+        return RHINO_TASK_INV_STACK_SIZE;
     }
 
-    if (prio >= YUNOS_CONFIG_PRI_MAX) {
-        return YUNOS_BEYOND_MAX_PRI;
+    if (prio >= RHINO_CONFIG_PRI_MAX) {
+        return RHINO_BEYOND_MAX_PRI;
     }
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
     /* idle task is only allowed to create once */
-    if (prio == YUNOS_IDLE_PRI) {
+    if (prio == RHINO_IDLE_PRI) {
         if (g_idle_task_spawned[cpu_num] > 0u) {
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_IDLE_TASK_EXIST;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_IDLE_TASK_EXIST;
         }
 
         g_idle_task_spawned[cpu_num] = 1u;
     }
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
     memset(task, 0, sizeof(ktask_t));
 
-#if (YUNOS_CONFIG_SCHED_RR > 0)
+#if (RHINO_CONFIG_SCHED_RR > 0)
     if (ticks > 0u) {
         task->time_total = ticks;
     } else {
-        task->time_total = YUNOS_CONFIG_TIME_SLICE_DEFAULT;
+        task->time_total = RHINO_CONFIG_TIME_SLICE_DEFAULT;
     }
 
     task->time_slice   = task->time_total;
@@ -76,48 +76,48 @@ static kstat_t task_create(ktask_t *task, const name_t *name, void *arg,
     task->cpu_num       = cpu_num;
     cpu_binded          = cpu_binded;
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
     task->cpu_binded    = cpu_binded;
 #endif
 
-#if (YUNOS_CONFIG_TASK_STACK_OVF_CHECK > 0)
-#if (YUNOS_CONFIG_CPU_STACK_DOWN > 0)
+#if (RHINO_CONFIG_TASK_STACK_OVF_CHECK > 0)
+#if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
     tmp  = task->task_stack_base;
-    *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
+    *tmp = RHINO_TASK_STACK_OVF_MAGIC;
 #else
     tmp  = (cpu_stack_t *)(task->task_stack_base) + task->stack_size - 1u;
-    *tmp = YUNOS_TASK_STACK_OVF_MAGIC;
+    *tmp = RHINO_TASK_STACK_OVF_MAGIC;
 #endif
 #endif
 
     task->task_stack = cpu_task_stack_init(stack_buf, stack_size, arg, entry);
 
-#if (YUNOS_CONFIG_USER_HOOK > 0)
-    yunos_task_create_hook(task);
+#if (RHINO_CONFIG_USER_HOOK > 0)
+    krhino_task_create_hook(task);
 #endif
 
     TRACE_TASK_CREATE(task);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_insert(&(g_kobj_list.task_head), &task->task_stats_item);
 #endif
 
     if (autorun > 0u) {
         ready_list_add_tail(&g_ready_queue, task);
         /* if system is not start,not call core_sched */
-        if (g_sys_stat == YUNOS_RUNNING) {
-            YUNOS_CRITICAL_EXIT_SCHED();
-            return YUNOS_SUCCESS;
+        if (g_sys_stat == RHINO_RUNNING) {
+            RHINO_CRITICAL_EXIT_SCHED();
+            return RHINO_SUCCESS;
         }
     }
 
-    YUNOS_CRITICAL_EXIT();
-    return YUNOS_SUCCESS;
+    RHINO_CRITICAL_EXIT();
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
+kstat_t krhino_task_create(ktask_t *task, const name_t *name, void *arg,
                           uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
                           size_t stack_size, task_entry_t entry, uint8_t autorun)
 {
@@ -125,8 +125,8 @@ kstat_t yunos_task_create(ktask_t *task, const name_t *name, void *arg,
                        autorun, K_OBJ_STATIC_ALLOC, 0, 0);
 }
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
-kstat_t yunos_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
+#if (RHINO_CONFIG_CPU_NUM > 1)
+kstat_t krhino_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
                               uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
                               size_t stack_size, task_entry_t entry, uint8_t cpu_num,
                               uint8_t autorun)
@@ -136,7 +136,7 @@ kstat_t yunos_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
 }
 #endif
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t task_dyn_create(ktask_t **task, const name_t *name, void *arg,
                         uint8_t pri, tick_t ticks, size_t stack, task_entry_t entry,
                         uint8_t cpu_num, uint8_t cpu_binded, uint8_t autorun)
@@ -148,27 +148,27 @@ kstat_t task_dyn_create(ktask_t **task, const name_t *name, void *arg,
     NULL_PARA_CHK(task);
 
     if (stack == 0) {
-        return YUNOS_INV_PARAM;
+        return RHINO_INV_PARAM;
     }
 
-    task_stack = yunos_mm_alloc(stack * sizeof(cpu_stack_t));
+    task_stack = krhino_mm_alloc(stack * sizeof(cpu_stack_t));
     if (task_stack == NULL) {
-        return YUNOS_NO_MEM;
+        return RHINO_NO_MEM;
     }
 
-    task_obj = yunos_mm_alloc(sizeof(ktask_t));
+    task_obj = krhino_mm_alloc(sizeof(ktask_t));
     if (task_obj == NULL) {
-        yunos_mm_free(task_stack);
-        return YUNOS_NO_MEM;
+        krhino_mm_free(task_stack);
+        return RHINO_NO_MEM;
     }
 
     *task = task_obj;
 
     ret = task_create(task_obj, name, arg, pri, ticks, task_stack, stack, entry,
                       autorun, K_OBJ_DYN_ALLOC, cpu_num, cpu_binded);
-    if ((ret != YUNOS_SUCCESS) && (ret != YUNOS_STOPPED)) {
-        yunos_mm_free(task_stack);
-        yunos_mm_free(task_obj);
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
+        krhino_mm_free(task_stack);
+        krhino_mm_free(task_obj);
         *task = NULL;
         return ret;
     }
@@ -176,7 +176,7 @@ kstat_t task_dyn_create(ktask_t **task, const name_t *name, void *arg,
     return ret;
 }
 
-kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
+kstat_t krhino_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
                               uint8_t pri, tick_t ticks, size_t stack,
                               task_entry_t entry, uint8_t autorun)
 {
@@ -185,7 +185,7 @@ kstat_t yunos_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
 
 #endif
 
-kstat_t yunos_task_sleep(tick_t ticks)
+kstat_t krhino_task_sleep(tick_t ticks)
 {
     CPSR_ALLOC();
 
@@ -194,10 +194,10 @@ kstat_t yunos_task_sleep(tick_t ticks)
     kstat_t ret;
 
     if (ticks == 0u) {
-        return YUNOS_INV_PARAM;
+        return RHINO_INV_PARAM;
     }
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
@@ -205,13 +205,13 @@ kstat_t yunos_task_sleep(tick_t ticks)
 
     /* system is locked so task can not be blocked just return immediately */
     if (g_sched_lock[cur_cpu_num] > 0u) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_SCHED_DISABLE;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_SCHED_DISABLE;
     }
 
     g_active_task[cur_cpu_num]->task_state = K_SLEEP;
 
-#if (YUNOS_CONFIG_DYNTICKLESS > 0)
+#if (RHINO_CONFIG_DYNTICKLESS > 0)
     g_elapsed_ticks = soc_elapsed_ticks_get();
     tick_list_insert(g_active_task[cur_cpu_num], ticks + g_elapsed_ticks);
 #else
@@ -222,60 +222,60 @@ kstat_t yunos_task_sleep(tick_t ticks)
 
     TRACE_TASK_SLEEP(g_active_task[cur_cpu_num], ticks);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-#ifndef YUNOS_CONFIG_PERF_NO_PENDEND_PROC
-    YUNOS_CPU_INTRPT_DISABLE();
+#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
+    RHINO_CPU_INTRPT_DISABLE();
 
     /* is task timeout normally after sleep */
     ret = pend_state_end_proc(g_active_task[cpu_cur_get()]);
 
-    YUNOS_CPU_INTRPT_ENABLE();
+    RHINO_CPU_INTRPT_ENABLE();
 #else
-    ret = YUNOS_SUCCESS;
+    ret = RHINO_SUCCESS;
 #endif
 
     return ret;
 }
 
-kstat_t yunos_task_yield(void)
+kstat_t krhino_task_yield(void)
 {
     CPSR_ALLOC();
 
     /* make current task to the end of ready list */
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     ready_list_head_to_tail(&g_ready_queue, g_active_task[cpu_cur_get()]);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_TASK_SUSPEND > 0)
+#if (RHINO_CONFIG_TASK_SUSPEND > 0)
 kstat_t task_suspend(ktask_t *task)
 {
     CPSR_ALLOC();
 
     uint8_t cur_cpu_num;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     cur_cpu_num = cpu_cur_get();
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
     if (task->cpu_num != cur_cpu_num) {
         if (task->cur_exc == 1) {
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_TRY_AGAIN;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_TRY_AGAIN;
         }
     }
 #endif
 
     if (task == g_active_task[cur_cpu_num]) {
         if (g_sched_lock[cur_cpu_num] > 0u) {
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_SCHED_DISABLE;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_SCHED_DISABLE;
         }
     }
 
@@ -297,33 +297,33 @@ kstat_t task_suspend(ktask_t *task)
         case K_SLEEP_SUSPENDED:
         case K_PEND_SUSPENDED:
             if (task->suspend_count == (suspend_nested_t) - 1) {
-                YUNOS_CRITICAL_EXIT();
-                return YUNOS_SUSPENDED_COUNT_OVF;
+                RHINO_CRITICAL_EXIT();
+                return RHINO_SUSPENDED_COUNT_OVF;
             }
 
             task->suspend_count++;
             break;
         case K_SEED:
         default:
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_INV_TASK_STATE;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_INV_TASK_STATE;
     }
 
     TRACE_TASK_SUSPEND(g_active_task[cur_cpu_num], task);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_suspend(ktask_t *task)
+kstat_t krhino_task_suspend(ktask_t *task)
 {
     if (task == NULL) {
-        return YUNOS_NULL_PTR;
+        return RHINO_NULL_PTR;
     }
 
-    if (task->prio == YUNOS_IDLE_PRI) {
-        return YUNOS_TASK_SUSPEND_NOT_ALLOWED;
+    if (task->prio == RHINO_IDLE_PRI) {
+        return RHINO_TASK_SUSPEND_NOT_ALLOWED;
     }
 
     return task_suspend(task);
@@ -333,14 +333,14 @@ kstat_t task_resume(ktask_t *task)
 {
     CPSR_ALLOC();
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     switch (task->task_state) {
         case K_RDY:
         case K_SLEEP:
         case K_PEND:
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_TASK_NOT_SUSPENDED;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_TASK_NOT_SUSPENDED;
         case K_SUSPENDED:
             task->suspend_count--;
 
@@ -369,18 +369,18 @@ kstat_t task_resume(ktask_t *task)
             break;
         case K_SEED:
         default:
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_INV_TASK_STATE;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_INV_TASK_STATE;
     }
 
     TRACE_TASK_RESUME(g_active_task[cpu_cur_get()], task);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_resume(ktask_t *task)
+kstat_t krhino_task_resume(ktask_t *task)
 {
     NULL_PARA_CHK(task);
 
@@ -388,7 +388,7 @@ kstat_t yunos_task_resume(ktask_t *task)
 }
 #endif
 
-kstat_t yunos_task_stack_min_free(ktask_t *task, size_t *free)
+kstat_t krhino_task_stack_min_free(ktask_t *task, size_t *free)
 {
     cpu_stack_t *task_stack;
     size_t free_stk = 0;
@@ -397,10 +397,10 @@ kstat_t yunos_task_stack_min_free(ktask_t *task, size_t *free)
     NULL_PARA_CHK(free);
 
     if (task->task_state == K_DELETED) {
-        return YUNOS_INV_TASK_STATE;
+        return RHINO_INV_TASK_STATE;
     }
 
-#if (YUNOS_CONFIG_CPU_STACK_DOWN > 0)
+#if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
     task_stack = task->task_stack_base + 1u;
     while (*task_stack++ == 0u) {
         free_stk++;
@@ -414,15 +414,15 @@ kstat_t yunos_task_stack_min_free(ktask_t *task, size_t *free)
 
     *free = free_stk;
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_stack_cur_free(ktask_t *task, size_t *free)
+kstat_t krhino_task_stack_cur_free(ktask_t *task, size_t *free)
 {
     CPSR_ALLOC();
     size_t sp = 0;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     if (task == NULL || task == g_active_task[cpu_cur_get()]) {
         task = g_active_task[cpu_cur_get()];
@@ -434,22 +434,22 @@ kstat_t yunos_task_stack_cur_free(ktask_t *task, size_t *free)
     }
 
     if (sp == 0) {
-        YUNOS_CRITICAL_EXIT();
-        k_err_proc(YUNOS_SYS_SP_ERR);
-        return YUNOS_SYS_SP_ERR;
+        RHINO_CRITICAL_EXIT();
+        k_err_proc(RHINO_SYS_SP_ERR);
+        return RHINO_SYS_SP_ERR;
     }
 
     if ((size_t)(task->task_stack_base + task->stack_size) < sp) {
-        YUNOS_CRITICAL_EXIT();
-        k_err_proc(YUNOS_TASK_STACK_OVF);
-        return YUNOS_TASK_STACK_OVF;
+        RHINO_CRITICAL_EXIT();
+        k_err_proc(RHINO_TASK_STACK_OVF);
+        return RHINO_TASK_STACK_OVF;
     }
 
     *free = ((size_t)(task->task_stack_base + task->stack_size) - sp) / sizeof(
                 cpu_stack_t);
 
-    YUNOS_CRITICAL_EXIT();
-    return YUNOS_SUCCESS;
+    RHINO_CRITICAL_EXIT();
+    return RHINO_SUCCESS;
 }
 
 kstat_t task_pri_change(ktask_t *task, uint8_t new_pri)
@@ -486,7 +486,7 @@ kstat_t task_pri_change(ktask_t *task, uint8_t new_pri)
                     task->prio = new_pri;
                     pend_list_reorder(task);
 
-                    if (task->blk_obj->obj_type == YUNOS_MUTEX_OBJ_TYPE) {
+                    if (task->blk_obj->obj_type == RHINO_MUTEX_OBJ_TYPE) {
                         mutex_tmp  = (kmutex_t *)(task->blk_obj);
                         mutex_task = mutex_tmp->mutex_task;
 
@@ -514,18 +514,18 @@ kstat_t task_pri_change(ktask_t *task, uint8_t new_pri)
 
                     break;
                 default:
-                    k_err_proc(YUNOS_INV_TASK_STATE);
-                    return YUNOS_INV_TASK_STATE;
+                    k_err_proc(RHINO_INV_TASK_STATE);
+                    return RHINO_INV_TASK_STATE;
             }
         } else {
             task = NULL;
         }
     } while (task != NULL);
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
+kstat_t krhino_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
 {
     CPSR_ALLOC();
 
@@ -536,21 +536,21 @@ kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
     NULL_PARA_CHK(old_pri);
 
     /* idle task is not allowed to change prio */
-    if (task->prio >= YUNOS_IDLE_PRI) {
-        return YUNOS_PRI_CHG_NOT_ALLOWED;
+    if (task->prio >= RHINO_IDLE_PRI) {
+        return RHINO_PRI_CHG_NOT_ALLOWED;
     }
 
     /* not allowed change to idle prio */
-    if (pri >= YUNOS_IDLE_PRI) {
-        return YUNOS_PRI_CHG_NOT_ALLOWED;
+    if (pri >= RHINO_IDLE_PRI) {
+        return RHINO_PRI_CHG_NOT_ALLOWED;
     }
 
     /* deleted task is not allowed to change prio */
     if (task->task_state == K_DELETED) {
-        return YUNOS_INV_TASK_STATE;
+        return RHINO_INV_TASK_STATE;
     }
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
@@ -564,26 +564,26 @@ kstat_t yunos_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
 
     error = task_pri_change(task, pri);
 
-    if (error != YUNOS_SUCCESS) {
-        YUNOS_CRITICAL_EXIT();
+    if (error != RHINO_SUCCESS) {
+        RHINO_CRITICAL_EXIT();
         return error;
     }
 
     TRACE_TASK_PRI_CHANGE(g_active_task[cpu_cur_get()], task, pri);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_TASK_WAIT_ABORT > 0)
-kstat_t yunos_task_wait_abort(ktask_t *task)
+#if (RHINO_CONFIG_TASK_WAIT_ABORT > 0)
+kstat_t krhino_task_wait_abort(ktask_t *task)
 {
     CPSR_ALLOC();
 
     NULL_PARA_CHK(task);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
@@ -619,23 +619,23 @@ kstat_t yunos_task_wait_abort(ktask_t *task)
 
             break;
         default:
-            YUNOS_CRITICAL_EXIT();
-            return  YUNOS_INV_TASK_STATE;
+            RHINO_CRITICAL_EXIT();
+            return  RHINO_INV_TASK_STATE;
     }
 
-#if (YUNOS_CONFIG_USER_HOOK > 0)
-    yunos_task_abort_hook(task);
+#if (RHINO_CONFIG_USER_HOOK > 0)
+    krhino_task_abort_hook(task);
 #endif
 
     TRACE_TASK_WAIT_ABORT(g_active_task[cpu_cur_get()], task);
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 #endif
 
-#if (YUNOS_CONFIG_TASK_DEL > 0)
+#if (RHINO_CONFIG_TASK_DEL > 0)
 static void task_mutex_free(ktask_t *task)
 {
     kmutex_t *mutex;
@@ -651,7 +651,7 @@ static void task_mutex_free(ktask_t *task)
         blk_list_head = &mutex->blk_obj.blk_list;
 
         if (!is_klist_empty(blk_list_head)) {
-            next_task = yunos_list_entry(blk_list_head->next, ktask_t, task_list);
+            next_task = krhino_list_entry(blk_list_head->next, ktask_t, task_list);
 
             /* wakeup wait task */
             pend_task_wakeup(next_task);
@@ -667,13 +667,13 @@ static void task_mutex_free(ktask_t *task)
     }
 }
 
-kstat_t yunos_task_del(ktask_t *task)
+kstat_t krhino_task_del(ktask_t *task)
 {
     CPSR_ALLOC();
 
     uint8_t cur_cpu_num;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     cur_cpu_num = cpu_cur_get();
 
@@ -683,28 +683,28 @@ kstat_t yunos_task_del(ktask_t *task)
         task = g_active_task[cur_cpu_num];
     }
 
-    if (task->prio == YUNOS_IDLE_PRI) {
-        return YUNOS_TASK_DEL_NOT_ALLOWED;
+    if (task->prio == RHINO_IDLE_PRI) {
+        return RHINO_TASK_DEL_NOT_ALLOWED;
     }
 
     if (task->mm_alloc_flag != K_OBJ_STATIC_ALLOC) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_KOBJ_DEL_ERR;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_KOBJ_DEL_ERR;
     }
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
     if (task->cpu_num != cur_cpu_num) {
         if (task->cur_exc == 1) {
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_TRY_AGAIN;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_TRY_AGAIN;
         }
     }
 #endif
 
     if (task == g_active_task[cpu_cur_get()]) {
         if (g_sched_lock[cpu_cur_get()] > 0u) {
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_SCHED_DISABLE;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_SCHED_DISABLE;
         }
     }
 
@@ -733,27 +733,27 @@ kstat_t yunos_task_del(ktask_t *task)
             mutex_task_pri_reset(task);
             break;
         default:
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_INV_TASK_STATE;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_INV_TASK_STATE;
     }
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&task->task_stats_item);
 #endif
 
     TRACE_TASK_DEL(g_active_task[cur_cpu_num], task);
 
-#if (YUNOS_CONFIG_USER_HOOK > 0)
-    yunos_task_del_hook(task);
+#if (RHINO_CONFIG_USER_HOOK > 0)
+    krhino_task_del_hook(task);
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-kstat_t yunos_task_dyn_del(ktask_t *task)
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
+kstat_t krhino_task_dyn_del(ktask_t *task)
 {
     CPSR_ALLOC();
 
@@ -761,7 +761,7 @@ kstat_t yunos_task_dyn_del(ktask_t *task)
 
     uint8_t cur_cpu_num;
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     cur_cpu_num = cpu_cur_get();
 
@@ -771,51 +771,51 @@ kstat_t yunos_task_dyn_del(ktask_t *task)
         task = g_active_task[cur_cpu_num];
     }
 
-    if (task->prio == YUNOS_IDLE_PRI) {
-        YUNOS_CRITICAL_EXIT();
+    if (task->prio == RHINO_IDLE_PRI) {
+        RHINO_CRITICAL_EXIT();
 
-        return YUNOS_TASK_DEL_NOT_ALLOWED;
+        return RHINO_TASK_DEL_NOT_ALLOWED;
     }
 
     if (task->mm_alloc_flag != K_OBJ_DYN_ALLOC) {
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
 
-        return YUNOS_KOBJ_DEL_ERR;
+        return RHINO_KOBJ_DEL_ERR;
     }
 
-#if (YUNOS_CONFIG_CPU_NUM > 1)
+#if (RHINO_CONFIG_CPU_NUM > 1)
     if (task->cpu_num != cur_cpu_num) {
         if (task->cur_exc == 1) {
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_TRY_AGAIN;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_TRY_AGAIN;
         }
     }
 #endif
 
     if (task == g_active_task[cpu_cur_get()]) {
         if (g_sched_lock[cpu_cur_get()] > 0u) {
-            YUNOS_CRITICAL_EXIT();
-            return YUNOS_SCHED_DISABLE;
+            RHINO_CRITICAL_EXIT();
+            return RHINO_SCHED_DISABLE;
         }
     }
 
     if (task->task_state == K_DELETED) {
-        YUNOS_CRITICAL_EXIT();
-        return YUNOS_INV_TASK_STATE;
+        RHINO_CRITICAL_EXIT();
+        return RHINO_INV_TASK_STATE;
     }
 
     g_sched_lock[cpu_cur_get()]++;
-    ret = yunos_queue_back_send(&g_dyn_queue, task->task_stack_base);
-    if (ret != YUNOS_SUCCESS) {
+    ret = krhino_queue_back_send(&g_dyn_queue, task->task_stack_base);
+    if (ret != RHINO_SUCCESS) {
         g_sched_lock[cpu_cur_get()]--;
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
         return ret;
     }
 
-    ret = yunos_queue_back_send(&g_dyn_queue, task);
-    if (ret != YUNOS_SUCCESS) {
+    ret = krhino_queue_back_send(&g_dyn_queue, task);
+    if (ret != RHINO_SUCCESS) {
         g_sched_lock[cpu_cur_get()]--;
-        YUNOS_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
         return ret;
     }
 
@@ -849,32 +849,32 @@ kstat_t yunos_task_dyn_del(ktask_t *task)
             break;
     }
 
-#if (YUNOS_CONFIG_SYSTEM_STATS > 0)
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_rm(&task->task_stats_item);
 #endif
 
     TRACE_TASK_DEL(g_active_task[cpu_cur_get()], task);
 
-#if (YUNOS_CONFIG_USER_HOOK > 0)
-    yunos_task_del_hook(task);
+#if (RHINO_CONFIG_USER_HOOK > 0)
+    krhino_task_del_hook(task);
 #endif
 
-    YUNOS_CRITICAL_EXIT_SCHED();
+    RHINO_CRITICAL_EXIT_SCHED();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 #endif
 
 #endif
 
-#if (YUNOS_CONFIG_SCHED_RR > 0)
-kstat_t yunos_task_time_slice_set(ktask_t *task, size_t slice)
+#if (RHINO_CONFIG_SCHED_RR > 0)
+kstat_t krhino_task_time_slice_set(ktask_t *task, size_t slice)
 {
     CPSR_ALLOC();
 
     NULL_PARA_CHK(task);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
@@ -883,109 +883,109 @@ kstat_t yunos_task_time_slice_set(ktask_t *task, size_t slice)
         task->time_total = slice;
     } else {
         /* assign the default time slice */
-        task->time_total = YUNOS_CONFIG_TIME_SLICE_DEFAULT;
+        task->time_total = RHINO_CONFIG_TIME_SLICE_DEFAULT;
     }
 
     task->time_slice = task->time_total;
 
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_sched_policy_set(ktask_t *task, uint8_t policy)
+kstat_t krhino_sched_policy_set(ktask_t *task, uint8_t policy)
 {
     CPSR_ALLOC();
 
     NULL_PARA_CHK(task);
 
     if ((policy != KSCHED_FIFO) && (policy != KSCHED_RR)) {
-        return YUNOS_INV_SCHED_WAY;
+        return RHINO_INV_SCHED_WAY;
     }
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
     task->sched_policy = policy;
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_sched_policy_get(ktask_t *task, uint8_t *policy)
+kstat_t krhino_sched_policy_get(ktask_t *task, uint8_t *policy)
 {
     CPSR_ALLOC();
 
     NULL_PARA_CHK(task);
     NULL_PARA_CHK(policy);
 
-    YUNOS_CRITICAL_ENTER();
+    RHINO_CRITICAL_ENTER();
 
     INTRPT_NESTED_LEVEL_CHK();
 
     *policy = task->sched_policy;
-    YUNOS_CRITICAL_EXIT();
+    RHINO_CRITICAL_EXIT();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 #endif
 
-#if (YUNOS_CONFIG_TASK_INFO > 0)
-kstat_t yunos_task_info_set(ktask_t *task, size_t idx, void *info)
+#if (RHINO_CONFIG_TASK_INFO > 0)
+kstat_t krhino_task_info_set(ktask_t *task, size_t idx, void *info)
 {
     CPSR_ALLOC();
 
     NULL_PARA_CHK(task);
 
-    if (idx >= YUNOS_CONFIG_TASK_INFO_NUM) {
-        return YUNOS_INV_PARAM;
+    if (idx >= RHINO_CONFIG_TASK_INFO_NUM) {
+        return RHINO_INV_PARAM;
     }
 
-    YUNOS_CPU_INTRPT_DISABLE();
+    RHINO_CPU_INTRPT_DISABLE();
     task->user_info[idx] = info;
-    YUNOS_CPU_INTRPT_ENABLE();
+    RHINO_CPU_INTRPT_ENABLE();
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-kstat_t yunos_task_info_get(ktask_t *task, size_t idx, void **info)
+kstat_t krhino_task_info_get(ktask_t *task, size_t idx, void **info)
 {
     NULL_PARA_CHK(task);
     NULL_PARA_CHK(info);
 
-    if (idx >= YUNOS_CONFIG_TASK_INFO_NUM) {
-        return YUNOS_INV_PARAM;
+    if (idx >= RHINO_CONFIG_TASK_INFO_NUM) {
+        return RHINO_INV_PARAM;
     }
 
     *info = task->user_info[idx];
 
-    return YUNOS_SUCCESS;
+    return RHINO_SUCCESS;
 }
 
-void  yunos_task_deathbed(void)
+void  krhino_task_deathbed(void)
 {
-#if (YUNOS_CONFIG_TASK_DEL > 0)
+#if (RHINO_CONFIG_TASK_DEL > 0)
     CPSR_ALLOC();
 
     ktask_t *task;
 
-    YUNOS_CPU_INTRPT_DISABLE();
+    RHINO_CPU_INTRPT_DISABLE();
     task = g_active_task[cpu_cur_get()];
-    YUNOS_CPU_INTRPT_ENABLE();
+    RHINO_CPU_INTRPT_ENABLE();
 
     if (task->mm_alloc_flag == K_OBJ_DYN_ALLOC) {
         /* del my self*/
-#if (YUNOS_CONFIG_KOBJ_DYN_ALLOC > 0)
-        yunos_task_dyn_del(NULL);
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
+        krhino_task_dyn_del(NULL);
 #endif
     } else {
-        yunos_task_del(NULL);
+        krhino_task_del(NULL);
     }
 #else
 
     while (1) {
-        yunos_task_sleep(YUNOS_CONFIG_TICKS_PER_SECOND * 10);
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND * 10);
     }
 #endif
 }

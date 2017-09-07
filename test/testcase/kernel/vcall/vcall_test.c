@@ -23,9 +23,6 @@ static void task1_entry(mico_thread_arg_t arg )
 {
     char msg[MSG_SIZE];
 
-    mico_rtos_suspend_thread(NULL);
-    mico_rtos_suspend_thread(&task1);
-
     mico_rtos_is_current_thread(&task1);
     mico_rtos_set_semaphore(&sem1);
     msg[0] = 0x11;
@@ -40,9 +37,6 @@ static void task1_entry(mico_thread_arg_t arg )
 
 static void task2_entry(mico_thread_arg_t arg )
 {
-    yunos_task_resume((ktask_t *)task1);
-    yunos_task_resume((ktask_t *)task1);
-
     mico_rtos_delete_thread(NULL);
 }
 
@@ -133,13 +127,13 @@ static void test_vcall_case(void)
 }
 
 
-static yunit_test_case_t yunos_basic_testcases[] = {
+static yunit_test_case_t krhino_basic_testcases[] = {
     { "vcall", test_vcall_case },
     YUNIT_TEST_CASE_NULL
 };
 
 static yunit_test_suite_t suites[] = {
-    { "vcall", init, cleanup, setup, teardown, yunos_basic_testcases },
+    { "vcall", init, cleanup, setup, teardown, krhino_basic_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
