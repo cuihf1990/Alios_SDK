@@ -5,6 +5,7 @@ ROOT_DIR := ../../../utility/iotx-utils
 $(NAME)_INCLUDES :=  \
     ./ \
     ./iot-coap-c \
+    ../../../kernel/protocols/net/include/ \
     $(ROOT_DIR)/sdk-impl \
     $(ROOT_DIR)/sdk-impl/imports \
     $(ROOT_DIR)/sdk-impl/exports \
