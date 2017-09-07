@@ -44,7 +44,7 @@ int echo_socket(raw_data_handler_t handler)
     g_echo.socket = lwip_socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
     g_echo.handler = handler;
 #ifdef WITH_LWIP
-    yos_poll_read_fd(g_echo.socket, ur_sock_read_cb, &g_echo);
+    aos_poll_read_fd(g_echo.socket, ur_sock_read_cb, &g_echo);
 #endif
     return g_echo.socket;
 }
@@ -61,7 +61,7 @@ int autotest_udp_socket(raw_data_handler_t handler, uint16_t port)
     lwip_bind(udp_autotest.socket, (const struct sockaddr *)&addr, sizeof(addr));
     udp_autotest.handler = handler;
 #ifdef WITH_LWIP
-    yos_poll_read_fd(udp_autotest.socket, ur_sock_read_cb, &udp_autotest);
+    aos_poll_read_fd(udp_autotest.socket, ur_sock_read_cb, &udp_autotest);
 #endif
     return udp_autotest.socket;
 }
@@ -89,7 +89,7 @@ int echo_socket(raw_data_handler_t handler)
     g_echo.socket = lwip_socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     g_echo.handler = handler;
 #ifdef WITH_LWIP
-    yos_poll_read_fd(g_echo.socket, ur_sock_read_cb, &g_echo);
+    aos_poll_read_fd(g_echo.socket, ur_sock_read_cb, &g_echo);
 #endif
     return g_echo.socket;
 }
@@ -106,7 +106,7 @@ int autotest_udp_socket(raw_data_handler_t handler, uint16_t port)
     lwip_bind(udp_autotest.socket, (const struct sockaddr *)&addr, sizeof(addr));
     udp_autotest.handler = handler;
 #ifdef WITH_LWIP
-    yos_poll_read_fd(udp_autotest.socket, ur_sock_read_cb, &udp_autotest);
+    aos_poll_read_fd(udp_autotest.socket, ur_sock_read_cb, &udp_autotest);
 #endif
     return udp_autotest.socket;
 }

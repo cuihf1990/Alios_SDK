@@ -207,7 +207,7 @@ class Client:
         error = "fail"
         while retry > 0:
             script = ['timeout', '80', 'python']
-            script += ['autoscripts/yos_firmware_update.py']
+            script += ['autoscripts/aos_firmware_update.py']
             script += [port]
             script += [address]
             script += [file]

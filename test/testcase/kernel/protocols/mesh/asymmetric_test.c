@@ -37,7 +37,7 @@ static void two_nodes_case(void)
     check_p2p_str_wait("SID_ROUTER", 12, "testcmd router", 2);
 
     for (index = 0; index < 3; index++) {
-        yos_msleep(5* 1000);
+        aos_msleep(5* 1000);
         YUNIT_ASSERT(DEVICE_STATE_LEADER == umesh_get_device_state());
     }
 
@@ -86,7 +86,7 @@ static void three_nodes_case(void)
         cmd_to_master(ping_cmd);
         snprintf(index_str, sizeof(index_str), "%d", index + 1);
         check_p2p_str_wait(index_str, 12, "testcmd icmp_acked", 5);
-        yos_msleep(5 * 1000);
+        aos_msleep(5 * 1000);
     }
 
     stop_node(12);

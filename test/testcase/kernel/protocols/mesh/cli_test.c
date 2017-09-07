@@ -41,6 +41,6 @@ void test_uradar_cli_case(void)
     cmd_to_agent("whitelist clear");
     cmd_to_agent("networks");
     cmd_to_agent("stop");
-    yos_msleep(1 * 1000);
+    aos_msleep(1 * 1000);
 }
 

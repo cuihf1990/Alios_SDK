@@ -12,22 +12,22 @@
 
 #include <yos/yos.h>
 
-void yos_reboot(void)
+void aos_reboot(void)
 {
     exit(0);
 }
 
-int yos_get_hz(void)
+int aos_get_hz(void)
 {
     return 100;
 }
 
-const char *yos_version_get(void)
+const char *aos_version_get(void)
 {
     return "yos-linux-xxx";
 }
 
-const char *yos_strerror(int errnum)
+const char *aos_strerror(int errnum)
 {
     return strerror(errnum);
 }
@@ -51,7 +51,7 @@ static void *dfl_entry(void *arg)
     return 0;
 }
 
-int yos_task_new(const char *name, void (*fn)(void *), void *arg,
+int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {
     pthread_t th;
@@ -62,45 +62,45 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
     return pthread_create(&th, NULL, dfl_entry, targ);
 }
 
-int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), void *arg,
+int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
                      int stack_size, int prio)
 {
-    return yos_task_new(name, fn, arg, stack_size);
+    return aos_task_new(name, fn, arg, stack_size);
 }
 
-void yos_task_exit(int code)
+void aos_task_exit(int code)
 {
     pthread_exit((void *)code);
 }
 
-const char *yos_task_name(void)
+const char *aos_task_name(void)
 {
     static char name[16];
     prctl(PR_GET_NAME, (unsigned long)name, 0, 0, 0);
     return name;
 }
 
-int yos_task_key_create(yos_task_key_t *key)
+int aos_task_key_create(aos_task_key_t *key)
 {
     return pthread_key_create(key, NULL);
 }
 
-void yos_task_key_delete(yos_task_key_t key)
+void aos_task_key_delete(aos_task_key_t key)
 {
     pthread_key_delete(key);
 }
 
-int yos_task_setspecific(yos_task_key_t key, void *vp)
+int aos_task_setspecific(aos_task_key_t key, void *vp)
 {
     return pthread_setspecific(key, vp);
 }
 
-void *yos_task_getspecific(yos_task_key_t key)
+void *aos_task_getspecific(aos_task_key_t key)
 {
     return pthread_getspecific(key);
 }
 
-int yos_mutex_new(yos_mutex_t *mutex)
+int aos_mutex_new(aos_mutex_t *mutex)
 {
     pthread_mutex_t *mtx = malloc(sizeof(*mtx));
     pthread_mutex_init(mtx, NULL);
@@ -108,13 +108,13 @@ int yos_mutex_new(yos_mutex_t *mutex)
     return 0;
 }
 
-void yos_mutex_free(yos_mutex_t *mutex)
+void aos_mutex_free(aos_mutex_t *mutex)
 {
     pthread_mutex_destroy(mutex->hdl);
     free(mutex->hdl);
 }
 
-int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
+int aos_mutex_lock(aos_mutex_t *mutex, unsigned int timeout)
 {
     if (mutex) {
         pthread_mutex_lock(mutex->hdl);
@@ -122,7 +122,7 @@ int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
     return 0;
 }
 
-int yos_mutex_unlock(yos_mutex_t *mutex)
+int aos_mutex_unlock(aos_mutex_t *mutex)
 {
     if (mutex) {
         pthread_mutex_unlock(mutex->hdl);
@@ -130,13 +130,13 @@ int yos_mutex_unlock(yos_mutex_t *mutex)
     return 0;
 }
 
-int yos_mutex_is_valid(yos_mutex_t *mutex)
+int aos_mutex_is_valid(aos_mutex_t *mutex)
 {
     return mutex->hdl != NULL;
 }
 
 #include <semaphore.h>
-int yos_sem_new(yos_sem_t *sem, int count)
+int aos_sem_new(aos_sem_t *sem, int count)
 {
     sem_t *s = malloc(sizeof(*s));
     sem_init(s, 0, count);
@@ -144,28 +144,28 @@ int yos_sem_new(yos_sem_t *sem, int count)
     return 0;
 }
 
-void yos_sem_free(yos_sem_t *sem)
+void aos_sem_free(aos_sem_t *sem)
 {
     sem_destroy(sem->hdl);
     free(sem->hdl);
 }
 
-int yos_sem_wait(yos_sem_t *sem, unsigned int timeout)
+int aos_sem_wait(aos_sem_t *sem, unsigned int timeout)
 {
     return sem_wait(sem->hdl);
 }
 
-void yos_sem_signal(yos_sem_t *sem)
+void aos_sem_signal(aos_sem_t *sem)
 {
     sem_post(sem->hdl);
 }
 
-int yos_sem_is_valid(yos_sem_t *sem)
+int aos_sem_is_valid(aos_sem_t *sem)
 {
     return sem->hdl != NULL;
 }
 
-void yos_sem_signal_all(yos_sem_t *sem)
+void aos_sem_signal_all(aos_sem_t *sem)
 {
     sem_post(sem->hdl);
 }
@@ -176,7 +176,7 @@ struct queue {
     int size;
 };
 
-int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
+int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg)
 {
     struct queue *q = malloc(sizeof(*q));
     pipe(q->fds);
@@ -186,7 +186,7 @@ int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
     return 0;
 }
 
-void yos_queue_free(yos_queue_t *queue)
+void aos_queue_free(aos_queue_t *queue)
 {
     struct queue *q = queue->hdl;
     close(q->fds[0]);
@@ -194,14 +194,14 @@ void yos_queue_free(yos_queue_t *queue)
     free(q);
 }
 
-int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size)
+int aos_queue_send(aos_queue_t *queue, void *msg, unsigned int size)
 {
     struct queue *q = queue->hdl;
     write(q->fds[1], msg, size);
     return 0;
 }
 
-int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
+int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
                    unsigned int *size)
 {
     struct queue *q = queue->hdl;
@@ -209,58 +209,58 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
     return 0;
 }
 
-int yos_queue_is_valid(yos_queue_t *queue)
+int aos_queue_is_valid(aos_queue_t *queue)
 {
     return queue->hdl != NULL;
 }
 
-void *yos_queue_buf_ptr(yos_queue_t *queue)
+void *aos_queue_buf_ptr(aos_queue_t *queue)
 {
     struct queue *q = queue->hdl;
     return q->buf;
 }
 
-int yos_sched_disable()
+int aos_sched_disable()
 {
     return -1;
 }
 
-int yos_sched_enable()
+int aos_sched_enable()
 {
     return -1;
 }
 
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
+int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat)
 {
     return -1;
 }
 
-void yos_timer_free(yos_timer_t *timer)
+void aos_timer_free(aos_timer_t *timer)
 {
 }
 
-int yos_timer_start(yos_timer_t *timer)
-{
-    return -1;
-}
-
-int yos_timer_stop(yos_timer_t *timer)
+int aos_timer_start(aos_timer_t *timer)
 {
     return -1;
 }
 
-int yos_timer_change(yos_timer_t *timer, int ms)
+int aos_timer_stop(aos_timer_t *timer)
 {
     return -1;
 }
 
-int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
+int aos_timer_change(aos_timer_t *timer, int ms)
 {
     return -1;
 }
 
-void yos_workqueue_del(yos_workqueue_t *workqueue)
+int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
+{
+    return -1;
+}
+
+void aos_workqueue_del(aos_workqueue_t *workqueue)
 {
 }
 
@@ -270,7 +270,7 @@ struct work {
     int dly;
 };
 
-int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
+int aos_work_init(aos_work_t *work, void (*fn)(void *), void *arg, int dly)
 {
     struct work *w = malloc(sizeof(*w));
     w->fn = fn;
@@ -280,14 +280,14 @@ int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
     return 0;
 }
 
-void yos_work_destroy(yos_work_t *work)
+void aos_work_destroy(aos_work_t *work)
 {
     free(work->hdl);
 }
 
-int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
+int aos_work_run(aos_workqueue_t *workqueue, aos_work_t *work)
 {
-    return yos_work_sched(work);
+    return aos_work_sched(work);
 }
 
 static void worker_entry(void *arg)
@@ -299,42 +299,42 @@ static void worker_entry(void *arg)
     w->fn(w->arg);
 }
 
-int yos_work_sched(yos_work_t *work)
+int aos_work_sched(aos_work_t *work)
 {
     struct work *w = work->hdl;
-    return yos_task_new("worker", worker_entry, w, 8192);
+    return aos_task_new("worker", worker_entry, w, 8192);
 }
 
-int yos_work_cancel(yos_work_t *work)
+int aos_work_cancel(aos_work_t *work)
 {
     return -1;
 }
 
-void *yos_zalloc(unsigned int size)
+void *aos_zalloc(unsigned int size)
 {
     return calloc(size, 1);
 }
 
-void *yos_malloc(unsigned int size)
+void *aos_malloc(unsigned int size)
 {
     return malloc(size);
 }
 
-void *yos_realloc(void *mem, unsigned int size)
+void *aos_realloc(void *mem, unsigned int size)
 {
     return realloc(mem, size);
 }
 
-void yos_alloc_trace(void *addr, size_t allocator)
+void aos_alloc_trace(void *addr, size_t allocator)
 {
 }
 
-void yos_free(void *mem)
+void aos_free(void *mem)
 {
     free(mem);
 }
 
-long long yos_now(void)
+long long aos_now(void)
 {
     struct timeval tv;
     long long ns;
@@ -343,7 +343,7 @@ long long yos_now(void)
     return ns * 1000LL;
 }
 
-long long yos_now_ms(void)
+long long aos_now_ms(void)
 {
     struct timeval tv;
     long long ms;
@@ -352,7 +352,7 @@ long long yos_now_ms(void)
     return ms;
 }
 
-void yos_msleep(int ms)
+void aos_msleep(int ms)
 {
     usleep(ms * 1000);
 }

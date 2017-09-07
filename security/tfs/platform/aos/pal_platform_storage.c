@@ -19,7 +19,7 @@ int pal_save_info(const char *key, char *value)
         return -1;
     }
 
-    return yos_kv_set(key, value, strlen(value), 1);
+    return aos_kv_set(key, value, strlen(value), 1);
 }
 
 int pal_get_info(const char *key, char *value)
@@ -35,7 +35,7 @@ int pal_get_info(const char *key, char *value)
         return -1;
     }
 
-    ret = yos_kv_get(key, buf, &buf_len);
+    ret = aos_kv_get(key, buf, &buf_len);
 
     if (!ret) {
         strcpy(value, (const char *) buf);

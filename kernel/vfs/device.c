@@ -15,7 +15,7 @@
 static int inited;
 
 typedef struct {
-    yos_mutex_t    mutex;
+    aos_mutex_t    mutex;
     poll_notify_t  poll_cb;
     struct pollfd *fd;
     void          *poll_data;
@@ -33,9 +33,9 @@ typedef struct {
 
 static int event_open(inode_t *node, file_t *file)
 {
-    event_dev_t *pdev = (event_dev_t *)yos_malloc(sizeof * pdev);
+    event_dev_t *pdev = (event_dev_t *)aos_malloc(sizeof * pdev);
     bzero(pdev, sizeof * pdev);
-    yos_mutex_new(&pdev->mutex);
+    aos_mutex_new(&pdev->mutex);
     dlist_init(&pdev->bufs);
     dlist_init(&pdev->buf_cache);
     file->f_arg = pdev;
@@ -45,21 +45,21 @@ static int event_open(inode_t *node, file_t *file)
 static int event_close(file_t *file)
 {
     event_dev_t *pdev = file->f_arg;
-    yos_mutex_free(&pdev->mutex);
+    aos_mutex_free(&pdev->mutex);
 
     while (!dlist_empty(&pdev->bufs)) {
         dlist_t *n = pdev->bufs.next;
         dlist_del(n);
-        yos_free(n);
+        aos_free(n);
     }
 
     while (!dlist_empty(&pdev->buf_cache)) {
         dlist_t *n = pdev->buf_cache.next;
         dlist_del(n);
-        yos_free(n);
+        aos_free(n);
     }
 
-    yos_free(pdev);
+    aos_free(pdev);
 
     return 0;
 }
@@ -67,7 +67,7 @@ static int event_close(file_t *file)
 static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
 {
     event_dev_t *pdev = f->f_arg;
-    yos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
 
     dev_event_t *evt;
     evt = (dev_event_t *)pdev->buf_cache.next;
@@ -76,7 +76,7 @@ static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
         dlist_del(&evt->node);
         pdev->cache_count --;
     } else {
-        evt = (dev_event_t *)yos_malloc(sizeof(*evt) + len);
+        evt = (dev_event_t *)aos_malloc(sizeof(*evt) + len);
     }
 
     if (evt == NULL) {
@@ -99,7 +99,7 @@ static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
         pdev->poll_cb(pdev->fd, pdev->poll_data);
     }
 out:
-    yos_mutex_unlock(&pdev->mutex);
+    aos_mutex_unlock(&pdev->mutex);
     return len;
 }
 
@@ -132,7 +132,7 @@ static ssize_t event_read(file_t *f, void *buf, size_t len)
         return 0;
     }
 
-    yos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
 
     dev_event_t *evt = (dev_event_t *)pdev->bufs.next;
     dlist_del(&evt->node);
@@ -143,12 +143,12 @@ static ssize_t event_read(file_t *f, void *buf, size_t len)
         dlist_add(&evt->node, &pdev->buf_cache);
         pdev->cache_count ++;
     } else {
-        yos_free(evt);
+        aos_free(evt);
     }
 
     pdev->counter --;
 
-    yos_mutex_unlock(&pdev->mutex);
+    aos_mutex_unlock(&pdev->mutex);
 
     return cnt;
 }
@@ -158,7 +158,7 @@ static int event_poll(file_t *f, bool setup, poll_notify_t notify,
 {
     event_dev_t *pdev = f->f_arg;
 
-    yos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
     if (!setup) {
         pdev->poll_cb = NULL;
         pdev->poll_data = NULL;
@@ -174,7 +174,7 @@ static int event_poll(file_t *f, bool setup, poll_notify_t notify,
         (*notify)(fd, opa);
     }
 out:
-    yos_mutex_unlock(&pdev->mutex);
+    aos_mutex_unlock(&pdev->mutex);
 
     return 0;
 }
@@ -196,7 +196,7 @@ int vfs_device_init(void)
         return  VFS_SUCCESS;
     }
 
-    ret = yos_register_driver("/dev/event", &event_fops, NULL);
+    ret = aos_register_driver("/dev/event", &event_fops, NULL);
 
     if (ret != VFS_SUCCESS) {
         return ret;

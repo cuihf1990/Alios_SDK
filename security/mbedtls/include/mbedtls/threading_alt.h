@@ -10,7 +10,7 @@ extern "C" {
 
 typedef struct
 {
-    yos_mutex_t mutex;
+    aos_mutex_t mutex;
     char is_valid;
 } mbedtls_threading_mutex_t;
 

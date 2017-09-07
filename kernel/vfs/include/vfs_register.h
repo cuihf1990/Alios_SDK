@@ -11,11 +11,11 @@
 extern "C" {
 #endif
 
-int yos_register_driver(const char *path, file_ops_t *fops, void *arg);
-int yos_unregister_driver(const char *path);
+int aos_register_driver(const char *path, file_ops_t *fops, void *arg);
+int aos_unregister_driver(const char *path);
 
-int yos_register_fs(const char *path, fs_ops_t *fops, void *arg);
-int yos_unregister_fs(const char *path);
+int aos_register_fs(const char *path, fs_ops_t *fops, void *arg);
+int aos_unregister_fs(const char *path);
 
 #ifdef __cplusplus
 }

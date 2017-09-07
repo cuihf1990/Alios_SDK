@@ -15,8 +15,8 @@
 #include "precision.h"
 #include "pfactor.h"
 
-extern void yos_free(void * mem);
-extern void * yos_malloc(int size);
+extern void aos_free(void * mem);
+extern void * aos_malloc(int size);
 
 
 extern int verbose;
@@ -80,7 +80,7 @@ BitVector newBitVector(value, size)
 #ifdef BWGC
    res = (BitVector) gc_malloc(msize);
 #else
-   res = (BitVector) yos_malloc(msize);
+   res = (BitVector) aos_malloc(msize);
 #endif
    if (res == (BitVector) 0) return res;
 
@@ -174,7 +174,7 @@ SolnPtr newSoln(n, pm, m, next, x, t, e)
 #ifdef BWGC
    SolnPtr bp = (SolnPtr) gc_malloc(sizeof (Soln));
 #else
-   SolnPtr bp = (SolnPtr) yos_malloc(sizeof (Soln));
+   SolnPtr bp = (SolnPtr) aos_malloc(sizeof (Soln));
 #endif
 
    if (bp != (SolnPtr) 0) {
@@ -201,8 +201,8 @@ void freeSoln(p)
       pdestroy(p->t);
       pdestroy(p->r);
 #ifndef IGNOREFREE
-      yos_free(p->e);			/* BitVector */
-      yos_free(p);
+      aos_free(p->e);			/* BitVector */
+      aos_free(p);
 #endif
    }
 }
@@ -257,7 +257,7 @@ void freeEas(eas)
 	 ep++;
       }
 #ifndef IGNOREFREE
-      yos_free(eas);
+      aos_free(eas);
 #endif
    }
 }
@@ -338,7 +338,7 @@ uvec pfactorbase(n, k, m, aborts)
 #ifdef BWGC
    res = (uvec) gc_malloc(count * sizeof (unsigned));
 #else
-   res = (uvec) yos_malloc(count * sizeof (unsigned));
+   res = (uvec) aos_malloc(count * sizeof (unsigned));
 #endif
    if (res == (uvec) 0) goto doneMk;
 
@@ -383,7 +383,7 @@ EasPtr getEas(n, k, pm, m, aborts)
 #ifdef BWGC
    eas = (EasPtr) gc_malloc((aborts+1) * sizeof (EasEntry));
 #else
-   eas = (EasPtr) yos_malloc((aborts+1) * sizeof (EasEntry));
+   eas = (EasPtr) aos_malloc((aborts+1) * sizeof (EasEntry));
 #endif
    if (eas == (EasPtr) 0) return eas;
 
@@ -537,14 +537,14 @@ precision pcfrac(n, maxCount)
 #ifdef BWGC
    b      = (SolnPtr *) gc_malloc(bsize);
 #else
-   b      = (SolnPtr *) yos_malloc(bsize);
+   b      = (SolnPtr *) aos_malloc(bsize);
 #endif
    if (b == (SolnPtr *) 0) goto nomem;
 
 #ifdef BWGC
    e = (solnvec) gc_malloc((m+1) * sizeof e[0]);
 #else
-   e = (solnvec) yos_malloc((m+1) * sizeof e[0]);
+   e = (solnvec) aos_malloc((m+1) * sizeof e[0]);
 #endif
    if (e == (solnvec) 0) {
 nomem:
@@ -703,8 +703,8 @@ bail:
    freeEas(eas);
    freeSolns(oddt);
 #ifndef IGNOREFREE
-   yos_free(e);
-   yos_free(pm);
+   aos_free(e);
+   aos_free(pm);
 #endif
 
    pdestroy(r);  pdestroy(twog);   pdestroy(u);  pdestroy(lastU);
@@ -712,7 +712,7 @@ bail:
    pdestroy(x);  pdestroy(y);      pdestroy(qn); pdestroy(rn);
    pdestroy(t);  pdestroy(n);
 #ifndef IGNOREFREE
-   yos_free(b);
+   aos_free(b);
 #endif
    return presult(res);
 }

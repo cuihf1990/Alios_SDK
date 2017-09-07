@@ -16,9 +16,9 @@ static void benchmarks_command(char *pcWriteBuffer, int xWriteBufferLen, int arg
             }
             cfrac_argv[0] = "cfrac";
             cfrac_argv[1] = number;
-            begintime = yos_now_ms();
+            begintime = aos_now_ms();
             cfrac_main(2, cfrac_argv);
-            endtime = yos_now_ms();
+            endtime = aos_now_ms();
             cli_printf("\r\ncfrac duration time=%ldms!\r\n",endtime > begintime ? endtime-begintime : begintime-endtime);
         }
         else{

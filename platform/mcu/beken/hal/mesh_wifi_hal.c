@@ -88,7 +88,7 @@ static void pass_to_umesh(const void* arg)
         priv->rxcb(priv->context, frm, fino, 0);
     }
 
-    yos_free(cmsg);
+    aos_free(cmsg);
 }
 
 static void wifi_monitor_cb(uint8_t *data, int len,
@@ -106,7 +106,7 @@ static void wifi_monitor_cb(uint8_t *data, int len,
     dump_packet(true, data, len);
 #endif
 
-    pf = yos_malloc(sizeof(*pf) + len - WIFI_MESH_OFFSET);
+    pf = aos_malloc(sizeof(*pf) + len - WIFI_MESH_OFFSET);
     bzero(pf, sizeof(*pf));
     pf->frm.len = len - WIFI_MESH_OFFSET;
     pf->frm.data = (void *)(pf + 1);
@@ -168,7 +168,7 @@ static int send_frame(umesh_hal_module_t *module, frame_t *frame,
     umesh_handle_sent_ucast_t sent;
     int result = 0;
 
-    pkt = yos_malloc(len);
+    pkt = aos_malloc(len);
     if (pkt == NULL) {
         result = 1;
         goto tx_exit;

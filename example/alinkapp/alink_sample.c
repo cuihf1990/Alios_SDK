@@ -264,7 +264,7 @@ static uint32_t work_time = 60*60*10*1000; //default work time 1ms
 static void do_report(void)
 {
     //TODO: async
-    //yos_loop_schedule_work(1000, activate_button_pressed, NULL, NULL, NULL);
+    //aos_loop_schedule_work(1000, activate_button_pressed, NULL, NULL, NULL);
     //helper_api_test();
 #ifdef RAW_DATA_DEVICE
     /*
@@ -284,7 +284,7 @@ static void do_report(void)
             device_state[ATTR_SWITCH_INDEX],
             device_state[ATTR_WORKMODE_INDEX]);
     LOG("start report async");
-    yos_cloud_report(Method_PostData, post_data_buffer, NULL, NULL);
+    aos_cloud_report(Method_PostData, post_data_buffer, NULL, NULL);
 #endif
 }
 
@@ -363,7 +363,7 @@ void alink_key_process(input_event_t *eventinfo, void *priv_data)
             }
         } else if(eventinfo->value == VALUE_KEY_LTCLICK) {
             netmgr_clear_ap_config();
-            yos_reboot();
+            aos_reboot();
         } else if(eventinfo->value == VALUE_KEY_LLTCLICK) {
             netmgr_clear_ap_config();
             alink_factory_reset();
@@ -398,7 +398,7 @@ static void handle_model_cmd(char *pwbuf, int blen, int argc, char **argv)
     #define MAX_MODEL_LENGTH 30
     char model[MAX_MODEL_LENGTH] = "light";
     int  model_len = sizeof(model);
-    yos_kv_get("model", model, &model_len);
+    aos_kv_get("model", model, &model_len);
 
     if (argc == 1) {
         LOG("Usage: model light/gateway. Model is currently %s", model);
@@ -407,16 +407,16 @@ static void handle_model_cmd(char *pwbuf, int blen, int argc, char **argv)
 
     if (strcmp(argv[1], "gateway") == 0) {
         if (strcmp(model, argv[1])) {
-            yos_kv_del("alink");
-            yos_kv_set("model", "gateway", MAX_MODEL_LENGTH, 1);
+            aos_kv_del("alink");
+            aos_kv_set("model", "gateway", MAX_MODEL_LENGTH, 1);
             LOG("Swith model to gateway, please reboot");
         } else {
             LOG("Current model is already gateway");
         }
     } else {
         if (strcmp(model, argv[1])) {
-            yos_kv_del("alink");
-            yos_kv_set("model", "light", MAX_MODEL_LENGTH, 1);
+            aos_kv_del("alink");
+            aos_kv_set("model", "light", MAX_MODEL_LENGTH, 1);
             LOG("Swith model to light, please reboot");
         } else {
             LOG("Current model is already light");
@@ -579,7 +579,7 @@ static void alink_connect_event(input_event_t *event, void *priv_data)
 #ifdef CONFIG_YWSS
         awss_registrar_init();
 #endif
-        yos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+        aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
         do_report();
         return;
     }
@@ -590,36 +590,36 @@ static int alink_cloud_report(const char *method, const char *json_buffer)
 }
 
 static void alink_cloud_connected(void) {
-    yos_post_event(EV_YUNIO, CODE_YUNIO_ON_CONNECTED, 0);
+    aos_post_event(EV_YUNIO, CODE_YUNIO_ON_CONNECTED, 0);
     LOG("alink cloud connected!");
 
-    yos_cloud_register_backend(&alink_cloud_report);
-    yos_cloud_trigger(CLOUD_CONNECTED, NULL);
+    aos_cloud_register_backend(&alink_cloud_report);
+    aos_cloud_trigger(CLOUD_CONNECTED, NULL);
 }
 
 static void alink_cloud_disconnected(void) {
-    yos_post_event(EV_YUNIO, CODE_YUNIO_ON_DISCONNECTED, 0);
-    yos_cloud_trigger(CLOUD_DISCONNECTED, NULL);
+    aos_post_event(EV_YUNIO, CODE_YUNIO_ON_DISCONNECTED, 0);
+    aos_cloud_trigger(CLOUD_DISCONNECTED, NULL);
 }
 
 static void alink_cloud_get_device_status(char *json_buffer)
 {
-    yos_cloud_trigger(GET_DEVICE_STATUS, json_buffer);
+    aos_cloud_trigger(GET_DEVICE_STATUS, json_buffer);
 }
 
 static void alink_cloud_set_device_status(char *json_buffer)
 {
-    yos_cloud_trigger(SET_DEVICE_STATUS, json_buffer);
+    aos_cloud_trigger(SET_DEVICE_STATUS, json_buffer);
 }
 
 static void alink_cloud_get_device_raw_data(char *json_buffer)
 {
-    yos_cloud_trigger(GET_DEVICE_RAWDATA, json_buffer);
+    aos_cloud_trigger(GET_DEVICE_RAWDATA, json_buffer);
 }
 
 static void alink_cloud_set_device_raw_data(char *json_buffer)
 {
-    yos_cloud_trigger(SET_DEVICE_RAWDATA, json_buffer);
+    aos_cloud_trigger(SET_DEVICE_RAWDATA, json_buffer);
 }
 
 static void alink_cloud_init(void)
@@ -631,8 +631,8 @@ static void alink_cloud_init(void)
     alink_register_callback(ALINK_GET_DEVICE_STATUS, &alink_cloud_get_device_status);
     alink_register_callback(ALINK_SET_DEVICE_STATUS, &alink_cloud_set_device_status);
 
-    yos_cloud_register_callback(CLOUD_CONNECTED, &cloud_connected);
-    yos_cloud_register_callback(CLOUD_DISCONNECTED, &cloud_disconnected);
+    aos_cloud_register_callback(CLOUD_CONNECTED, &cloud_connected);
+    aos_cloud_register_callback(CLOUD_DISCONNECTED, &cloud_disconnected);
     /*
      * NOTE: register ALINK_GET/SET_DEVICE_STATUS or ALINK_GET/SET_DEVICE_RAWDATA
      */
@@ -642,11 +642,11 @@ static void alink_cloud_init(void)
      * submit product_model_xxx.lua script to ALINK cloud.
      * ALINKTEST_LIVING_LIGHT_SMARTLED_LUA is done with it.
      */
-    yos_cloud_register_callback(GET_DEVICE_RAWDATA, &cloud_get_device_raw_data);
-    yos_cloud_register_callback(SET_DEVICE_RAWDATA, &cloud_set_device_raw_data);
+    aos_cloud_register_callback(GET_DEVICE_RAWDATA, &cloud_get_device_raw_data);
+    aos_cloud_register_callback(SET_DEVICE_RAWDATA, &cloud_set_device_raw_data);
 #else
-    yos_cloud_register_callback(GET_DEVICE_STATUS, &cloud_get_device_status);
-    yos_cloud_register_callback(SET_DEVICE_STATUS, &cloud_set_device_status);
+    aos_cloud_register_callback(GET_DEVICE_STATUS, &cloud_get_device_status);
+    aos_cloud_register_callback(SET_DEVICE_STATUS, &cloud_set_device_status);
 #endif
 }
 
@@ -658,7 +658,7 @@ int application_start(int argc, char *argv[])
     //    LOG("reset sn to : %s",argv[1]);
     //    g_sn = argv[1];
     //}
-    yos_set_log_level(YOS_LL_DEBUG);
+    aos_set_log_level(YOS_LL_DEBUG);
 
     if (mesh_mode == MESH_MASTER) {
 #ifdef CONFIG_YOS_DDM
@@ -686,9 +686,9 @@ int application_start(int argc, char *argv[])
         else if (env == DAILY)
             alink_enable_daily_mode(NULL, 0);
 
-        yos_register_event_filter(EV_WIFI, alink_service_event, NULL);
-        yos_register_event_filter(EV_SYS, alink_connect_event, NULL);
-        yos_register_event_filter(EV_KEY, alink_key_process, NULL);
+        aos_register_event_filter(EV_WIFI, alink_service_event, NULL);
+        aos_register_event_filter(EV_SYS, alink_connect_event, NULL);
+        aos_register_event_filter(EV_KEY, alink_key_process, NULL);
 
         netmgr_init();
         netmgr_start(false);
@@ -701,7 +701,7 @@ int application_start(int argc, char *argv[])
 #ifdef CONFIG_YOS_DDA
     dda_service_start();
 #else
-    yos_loop_run();
+    aos_loop_run();
     LOG("alink end.");
     alink_end();
 #endif

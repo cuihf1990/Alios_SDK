@@ -37,13 +37,13 @@ int8_t parse_ota_response(const char *buf, int buf_len, ota_response_params *res
 
 int8_t parse_ota_cancel_response(const char *response, int buf_len, ota_response_params *response_parmas);
 
-int8_t ota_sub_upgrade(yos_cloud_cb_t msgCallback);
+int8_t ota_sub_upgrade(aos_cloud_cb_t msgCallback);
 
-int8_t ota_cancel_upgrade(yos_cloud_cb_t msgCallback);
+int8_t ota_cancel_upgrade(aos_cloud_cb_t msgCallback);
 
 int8_t ota_pub_request(ota_request_params *request_parmas);
 
-int8_t ota_sub_request_reply(yos_cloud_cb_t msgCallback);
+int8_t ota_sub_request_reply(aos_cloud_cb_t msgCallback);
 
 void free_global_topic();
 

@@ -7,7 +7,7 @@
 
 int pal_get_random()
 {
-    srand((unsigned int)yos_now() / 1000);
+    srand((unsigned int)aos_now() / 1000);
     return rand();
 }
 

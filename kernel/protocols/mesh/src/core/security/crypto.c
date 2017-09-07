@@ -57,7 +57,7 @@ ur_error_t umesh_aes_encrypt(const uint8_t *key, uint8_t key_size,
         return UR_ERROR_FAIL;
     }
 
-    aes = yos_malloc(aes_ctx_size);
+    aes = aos_malloc(aes_ctx_size);
     if (aes == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -65,12 +65,12 @@ ur_error_t umesh_aes_encrypt(const uint8_t *key, uint8_t key_size,
     result = ali_aes_init(AES_CTR, true,
                           key, NULL, key_size, g_umesh_iv, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
-        yos_free(aes);
+        aos_free(aes);
         return UR_ERROR_FAIL;
     }
 
     error = umesh_aes_encrypt_decrypt(aes, src, size, dst);
-    yos_free(aes);
+    aos_free(aes);
 
     return error;
 }
@@ -93,7 +93,7 @@ ur_error_t umesh_aes_decrypt(const uint8_t *key, uint8_t key_size,
         return UR_ERROR_FAIL;
     }
 
-    aes = yos_malloc(aes_ctx_size);
+    aes = aos_malloc(aes_ctx_size);
     if (aes == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -101,12 +101,12 @@ ur_error_t umesh_aes_decrypt(const uint8_t *key, uint8_t key_size,
     result = ali_aes_init(AES_CTR, false,
                           key, NULL, key_size, g_umesh_iv, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
-        yos_free(aes);
+        aos_free(aes);
         return UR_ERROR_FAIL;
     }
 
     error = umesh_aes_encrypt_decrypt(aes, src, size, dst);
-    yos_free(aes);
+    aos_free(aes);
 
     return error;
 }

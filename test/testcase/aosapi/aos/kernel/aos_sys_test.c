@@ -11,7 +11,7 @@
 
 static void CASE_aosapi_kernel_sys_version()
 {
-	const char *version = yos_version_get();
+	const char *version = aos_version_get();
 	YUNIT_ASSERT(strcmp(version, "0.4.0")==0);
 }
 

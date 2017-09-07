@@ -16,28 +16,28 @@
 static unsigned int used_bitmap;
 
 extern void hal_reboot(void);
-void yos_reboot(void)
+void aos_reboot(void)
 {
     hal_reboot();
 }
 
-int yos_get_hz(void)
+int aos_get_hz(void)
 {
     return RHINO_CONFIG_TICKS_PER_SECOND;
 }
 
-const char *yos_version_get(void)
+const char *aos_version_get(void)
 {
     return krhino_version_get();
 }
 
-const char *yos_strerror(int errnum)
+const char *aos_strerror(int errnum)
 {
     (void)errnum;
     return NULL;
 }
 
-int yos_task_new(const char *name, void (*fn)(void *), void *arg,
+int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {
     int ret;
@@ -53,7 +53,7 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
     ERRNO_MAPPING(ret);
 }
 
-int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), void *arg,
+int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
                      int stack_size, int prio)
 {
     int ret;
@@ -66,19 +66,19 @@ int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), voi
     ERRNO_MAPPING(ret);
 }
 
-void yos_task_exit(int code)
+void aos_task_exit(int code)
 {
     (void)code;
 
     krhino_task_dyn_del(NULL);
 }
 
-const char *yos_task_name(void)
+const char *aos_task_name(void)
 {
     return krhino_cur_task_get()->task_name;
 }
 
-int yos_task_key_create(yos_task_key_t *key)
+int aos_task_key_create(aos_task_key_t *key)
 {
     int i;
 
@@ -94,7 +94,7 @@ int yos_task_key_create(yos_task_key_t *key)
     return -EINVAL;
 }
 
-void yos_task_key_delete(yos_task_key_t key)
+void aos_task_key_delete(aos_task_key_t key)
 {
     if (key >= RHINO_CONFIG_TASK_INFO_NUM) {
         return;
@@ -103,7 +103,7 @@ void yos_task_key_delete(yos_task_key_t key)
     used_bitmap &= ~(1 << key);
 }
 
-int yos_task_setspecific(yos_task_key_t key, void *vp)
+int aos_task_setspecific(aos_task_key_t key, void *vp)
 {
     int ret;
     ret = krhino_task_info_set(krhino_cur_task_get(), key, vp);
@@ -114,7 +114,7 @@ int yos_task_setspecific(yos_task_key_t key, void *vp)
     ERRNO_MAPPING(ret);
 }
 
-void *yos_task_getspecific(yos_task_key_t key)
+void *aos_task_getspecific(aos_task_key_t key)
 {
     void *vp = NULL;
 
@@ -123,7 +123,7 @@ void *yos_task_getspecific(yos_task_key_t key)
     return vp;
 }
 
-int yos_mutex_new(yos_mutex_t *mutex)
+int aos_mutex_new(aos_mutex_t *mutex)
 {
     kstat_t   ret;
     kmutex_t *m;
@@ -132,14 +132,14 @@ int yos_mutex_new(yos_mutex_t *mutex)
         return -EINVAL;
     }
 
-    m = yos_malloc(sizeof(kmutex_t));
+    m = aos_malloc(sizeof(kmutex_t));
     if (m == NULL) {
         return -ENOMEM;
     }
 
     ret = krhino_mutex_create(m, "YOS");
     if (ret != RHINO_SUCCESS) {
-        yos_free(m);
+        aos_free(m);
         ERRNO_MAPPING(ret);
     }
 
@@ -148,7 +148,7 @@ int yos_mutex_new(yos_mutex_t *mutex)
     return 0;
 }
 
-void yos_mutex_free(yos_mutex_t *mutex)
+void aos_mutex_free(aos_mutex_t *mutex)
 {
     if (mutex == NULL) {
         return;
@@ -156,12 +156,12 @@ void yos_mutex_free(yos_mutex_t *mutex)
 
     krhino_mutex_del(mutex->hdl);
 
-    yos_free(mutex->hdl);
+    aos_free(mutex->hdl);
 
     mutex->hdl = NULL;
 }
 
-int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
+int aos_mutex_lock(aos_mutex_t *mutex, unsigned int timeout)
 {
     kstat_t ret;
 
@@ -187,7 +187,7 @@ int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
     ERRNO_MAPPING(ret);
 }
 
-int yos_mutex_unlock(yos_mutex_t *mutex)
+int aos_mutex_unlock(aos_mutex_t *mutex)
 {
     kstat_t ret;
 
@@ -208,7 +208,7 @@ int yos_mutex_unlock(yos_mutex_t *mutex)
     ERRNO_MAPPING(ret);
 }
 
-int yos_mutex_is_valid(yos_mutex_t *mutex)
+int aos_mutex_is_valid(aos_mutex_t *mutex)
 {
     int ret;
 
@@ -220,7 +220,7 @@ int yos_mutex_is_valid(yos_mutex_t *mutex)
     return (ret == RHINO_SUCCESS);
 }
 
-int yos_sem_new(yos_sem_t *sem, int count)
+int aos_sem_new(aos_sem_t *sem, int count)
 {
     kstat_t ret;
     ksem_t *s;
@@ -229,14 +229,14 @@ int yos_sem_new(yos_sem_t *sem, int count)
         return -EINVAL;
     }
 
-    s = yos_malloc(sizeof(ksem_t));
+    s = aos_malloc(sizeof(ksem_t));
     if (s == NULL) {
         return -ENOMEM;
     }
 
     ret = krhino_sem_create(s, "YOS", count);
     if (ret != RHINO_SUCCESS) {
-        yos_free(s);
+        aos_free(s);
         ERRNO_MAPPING(ret);
     }
 
@@ -245,7 +245,7 @@ int yos_sem_new(yos_sem_t *sem, int count)
     return 0;
 }
 
-void yos_sem_free(yos_sem_t *sem)
+void aos_sem_free(aos_sem_t *sem)
 {
     if (sem == NULL) {
         return;
@@ -253,12 +253,12 @@ void yos_sem_free(yos_sem_t *sem)
 
     krhino_sem_del(sem->hdl);
 
-    yos_free(sem->hdl);
+    aos_free(sem->hdl);
 
     sem->hdl = NULL;
 }
 
-int yos_sem_wait(yos_sem_t *sem, unsigned int timeout)
+int aos_sem_wait(aos_sem_t *sem, unsigned int timeout)
 {
     kstat_t ret;
 
@@ -279,7 +279,7 @@ int yos_sem_wait(yos_sem_t *sem, unsigned int timeout)
     ERRNO_MAPPING(ret);
 }
 
-void yos_sem_signal(yos_sem_t *sem)
+void aos_sem_signal(aos_sem_t *sem)
 {
     if (sem == NULL) {
         return;
@@ -288,7 +288,7 @@ void yos_sem_signal(yos_sem_t *sem)
     krhino_sem_give(sem->hdl);
 }
 
-int yos_sem_is_valid(yos_sem_t *sem)
+int aos_sem_is_valid(aos_sem_t *sem)
 {
     int ret;
 
@@ -300,7 +300,7 @@ int yos_sem_is_valid(yos_sem_t *sem)
     return (ret == RHINO_SUCCESS);
 }
 
-void yos_sem_signal_all(yos_sem_t *sem)
+void aos_sem_signal_all(aos_sem_t *sem)
 {
     if (sem == NULL) {
         return;
@@ -309,7 +309,7 @@ void yos_sem_signal_all(yos_sem_t *sem)
     krhino_sem_give_all(sem->hdl);
 }
 
-int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
+int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg)
 {
     kstat_t       ret;
     kbuf_queue_t *q;
@@ -318,14 +318,14 @@ int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
         return -EINVAL;
     }
 
-    q = yos_malloc(sizeof(kbuf_queue_t));
+    q = aos_malloc(sizeof(kbuf_queue_t));
     if (q == NULL) {
         return -ENOMEM;
     }
 
     ret = krhino_buf_queue_create(q, "YOS", buf, size, max_msg);
     if (ret != RHINO_SUCCESS) {
-        yos_free(q);
+        aos_free(q);
         ERRNO_MAPPING(ret);
     }
 
@@ -334,7 +334,7 @@ int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
     return 0;
 }
 
-void yos_queue_free(yos_queue_t *queue)
+void aos_queue_free(aos_queue_t *queue)
 {
     if (queue == NULL) {
         return;
@@ -342,12 +342,12 @@ void yos_queue_free(yos_queue_t *queue)
 
     krhino_buf_queue_del(queue->hdl);
 
-    yos_free(queue->hdl);
+    aos_free(queue->hdl);
 
     queue->hdl = NULL;
 }
 
-int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size)
+int aos_queue_send(aos_queue_t *queue, void *msg, unsigned int size)
 {
     int ret;
 
@@ -363,7 +363,7 @@ int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size)
     ERRNO_MAPPING(ret);
 }
 
-int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
+int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
                    unsigned int *size)
 {
     int ret;
@@ -380,7 +380,7 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
     ERRNO_MAPPING(ret);
 }
 
-int yos_queue_is_valid(yos_queue_t *queue)
+int aos_queue_is_valid(aos_queue_t *queue)
 {
     int ret;
 
@@ -392,16 +392,16 @@ int yos_queue_is_valid(yos_queue_t *queue)
     return (ret == RHINO_SUCCESS);
 }
 
-void *yos_queue_buf_ptr(yos_queue_t *queue)
+void *aos_queue_buf_ptr(aos_queue_t *queue)
 {
-    if (!yos_queue_is_valid(queue)) {
+    if (!aos_queue_is_valid(queue)) {
         return NULL;
     }
 
     return ((kbuf_queue_t *)queue->hdl)->buf;
 }
 
-int yos_sched_disable()
+int aos_sched_disable()
 {
     int ret;
 
@@ -413,7 +413,7 @@ int yos_sched_disable()
     ERRNO_MAPPING(ret);
 }
 
-int yos_sched_enable()
+int aos_sched_enable()
 {
     int ret;
 
@@ -425,7 +425,7 @@ int yos_sched_enable()
     ERRNO_MAPPING(ret);
 }
 
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
+int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat)
 {
     kstat_t   ret;
@@ -435,7 +435,7 @@ int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
         return -EINVAL;
     }
 
-    t = yos_malloc(sizeof(ktimer_t));
+    t = aos_malloc(sizeof(ktimer_t));
     if (t == NULL) {
         return -ENOMEM;
     }
@@ -448,7 +448,7 @@ int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
     }
 
     if (ret != RHINO_SUCCESS) {
-        yos_free(t);
+        aos_free(t);
         ERRNO_MAPPING(ret);
     }
 
@@ -457,7 +457,7 @@ int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
     return 0;
 }
 
-void yos_timer_free(yos_timer_t *timer)
+void aos_timer_free(aos_timer_t *timer)
 {
     if (timer == NULL) {
         return;
@@ -465,12 +465,12 @@ void yos_timer_free(yos_timer_t *timer)
 
     krhino_timer_del(timer->hdl);
 
-    yos_free(timer->hdl);
+    aos_free(timer->hdl);
 
     timer->hdl = NULL;
 }
 
-int yos_timer_start(yos_timer_t *timer)
+int aos_timer_start(aos_timer_t *timer)
 {
     int ret;
 
@@ -486,7 +486,7 @@ int yos_timer_start(yos_timer_t *timer)
     ERRNO_MAPPING(ret);
 }
 
-int yos_timer_stop(yos_timer_t *timer)
+int aos_timer_stop(aos_timer_t *timer)
 {
     int ret;
 
@@ -502,7 +502,7 @@ int yos_timer_stop(yos_timer_t *timer)
     ERRNO_MAPPING(ret);
 }
 
-int yos_timer_change(yos_timer_t *timer, int ms)
+int aos_timer_change(aos_timer_t *timer, int ms)
 {
     int ret;
 
@@ -518,7 +518,7 @@ int yos_timer_change(yos_timer_t *timer, int ms)
     ERRNO_MAPPING(ret);
 }
 
-int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
+int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
 {
     kstat_t ret;
 
@@ -533,22 +533,22 @@ int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
         return -EINVAL;
     }
 
-    stk = yos_malloc(stack_size);
+    stk = aos_malloc(stack_size);
     if (stk == NULL) {
         return -ENOMEM;
     }
 
-    wq = yos_malloc(sizeof(kworkqueue_t));
+    wq = aos_malloc(sizeof(kworkqueue_t));
     if (wq == NULL) {
-        yos_free(stk);
+        aos_free(stk);
         return -ENOMEM;
     }
 
     ret = krhino_workqueue_create(wq, "YOS", pri, stk,
                                  stack_size / sizeof(cpu_stack_t));
     if (ret != RHINO_SUCCESS) {
-        yos_free(wq);
-        yos_free(stk);
+        aos_free(wq);
+        aos_free(stk);
         ERRNO_MAPPING(ret);
     }
 
@@ -558,7 +558,7 @@ int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
     return 0;
 }
 
-void yos_workqueue_del(yos_workqueue_t *workqueue)
+void aos_workqueue_del(aos_workqueue_t *workqueue)
 {
     if (workqueue == NULL) {
         return;
@@ -566,14 +566,14 @@ void yos_workqueue_del(yos_workqueue_t *workqueue)
 
     krhino_workqueue_del(workqueue->hdl);
 
-    yos_free(workqueue->hdl);
-    yos_free(workqueue->stk);
+    aos_free(workqueue->hdl);
+    aos_free(workqueue->stk);
 
     workqueue->hdl = NULL;
     workqueue->stk = NULL;
 }
 
-int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
+int aos_work_init(aos_work_t *work, void (*fn)(void *), void *arg, int dly)
 {
     kstat_t  ret;
     kwork_t *w;
@@ -582,14 +582,14 @@ int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
         return -EINVAL;
     }
 
-    w = yos_malloc(sizeof(kwork_t));
+    w = aos_malloc(sizeof(kwork_t));
     if (w == NULL) {
         return -ENOMEM;
     }
 
     ret = krhino_work_init(w, fn, arg, MS2TICK(dly));
     if (ret != RHINO_SUCCESS) {
-        yos_free(w);
+        aos_free(w);
         ERRNO_MAPPING(ret);
     }
 
@@ -598,17 +598,17 @@ int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
     return 0;
 }
 
-void yos_work_destroy(yos_work_t *work)
+void aos_work_destroy(aos_work_t *work)
 {
     if (work == NULL) {
         return;
     }
 
-    yos_free(work->hdl);
+    aos_free(work->hdl);
     work->hdl = NULL;
 }
 
-int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
+int aos_work_run(aos_workqueue_t *workqueue, aos_work_t *work)
 {
     int ret;
 
@@ -624,7 +624,7 @@ int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
     ERRNO_MAPPING(ret);
 }
 
-int yos_work_sched(yos_work_t *work)
+int aos_work_sched(aos_work_t *work)
 {
     int ret;
 
@@ -640,7 +640,7 @@ int yos_work_sched(yos_work_t *work)
     ERRNO_MAPPING(ret);
 }
 
-int yos_work_cancel(yos_work_t *work)
+int aos_work_cancel(aos_work_t *work)
 {
     int ret;
 
@@ -656,7 +656,7 @@ int yos_work_cancel(yos_work_t *work)
     return 0;
 }
 
-void *yos_zalloc(unsigned int size)
+void *aos_zalloc(unsigned int size)
 {
     void *tmp = NULL;
     if (size == 0) {
@@ -685,7 +685,7 @@ void *yos_zalloc(unsigned int size)
     return tmp;
 }
 
-void *yos_malloc(unsigned int size)
+void *aos_malloc(unsigned int size)
 {
     void *tmp = NULL;
 
@@ -711,7 +711,7 @@ void *yos_malloc(unsigned int size)
     return tmp;
 }
 
-void *yos_realloc(void *mem, unsigned int size)
+void *aos_realloc(void *mem, unsigned int size)
 {
     void *tmp = NULL;
 
@@ -733,14 +733,14 @@ void *yos_realloc(void *mem, unsigned int size)
     return tmp;
 }
 
-void yos_alloc_trace(void *addr, size_t allocator)
+void aos_alloc_trace(void *addr, size_t allocator)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     krhino_owner_attach(g_kmm_head, addr, allocator);
 #endif
 }
 
-void yos_free(void *mem)
+void aos_free(void *mem)
 {
     if (mem == NULL) {
         return;
@@ -749,17 +749,17 @@ void yos_free(void *mem)
     krhino_mm_free(mem);
 }
 
-long long yos_now(void)
+long long aos_now(void)
 {
     return krhino_sys_time_get() * 1000 * 1000;
 }
 
-long long yos_now_ms(void)
+long long aos_now_ms(void)
 {
     return krhino_sys_time_get();
 }
 
-void yos_msleep(int ms)
+void aos_msleep(int ms)
 {
     krhino_task_sleep(MS2TICK(ms));
 }

@@ -938,7 +938,7 @@ void process_extnetid(int argc, char *argv[])
         }
         extnetid.len = length;
         umesh_set_extnetid(&extnetid);
-        yos_kv_set("extnetid", extnetid.netid, extnetid.len, 1);
+        aos_kv_set("extnetid", extnetid.netid, extnetid.len, 1);
     }
 
     memset(&extnetid, 0, sizeof(extnetid));
@@ -1345,7 +1345,7 @@ static void ur_read_sock(int fd, raw_data_handler_t handler)
         arg->handler = handler;
         arg->buffer = buffer;
         arg->length = length;
-        yos_schedule_call(do_read_cb, arg);
+        aos_schedule_call(do_read_cb, arg);
         return;
     }
 
@@ -1397,7 +1397,7 @@ ur_error_t mesh_cli_init(void)
 #endif
 
 #ifndef WITH_LWIP
-    yos_task_new("meshworker", mesh_worker, NULL, 8192);
+    aos_task_new("meshworker", mesh_worker, NULL, 8192);
 #endif
     cli_register_command(&ncmd);
     return UR_ERROR_NONE;

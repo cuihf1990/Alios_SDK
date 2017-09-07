@@ -10,13 +10,13 @@ extern "C"
 {
 #endif
 
-#define yos_offsetof(type, member) ({ \
+#define aos_offsetof(type, member) ({ \
     type tmp;                         \
     (long)(&tmp.member) - (long)&tmp; \
 })
 
-#define yos_container_of(ptr, type, member) \
-    ((type *) ((char *) (ptr) - yos_offsetof(type, member)))
+#define aos_container_of(ptr, type, member) \
+    ((type *) ((char *) (ptr) - aos_offsetof(type, member)))
 
 /* for double link list */
 typedef struct dlist_s {
@@ -34,7 +34,7 @@ static inline void __dlist_add(dlist_t *node, dlist_t *prev, dlist_t *next)
 }
 
 #define dlist_entry(addr, type, member) ({         \
-    (type *)((long)addr - yos_offsetof(type, member)); \
+    (type *)((long)addr - aos_offsetof(type, member)); \
 })
 
 static inline void dlist_add(dlist_t *node, dlist_t *queue)
@@ -86,15 +86,15 @@ static inline int dlist_empty(const dlist_t *head)
     pos = n, n = pos->next)
 
 #define dlist_for_each_entry(queue, node, type, member) \
-    for (node = yos_container_of((queue)->next, type, member); \
+    for (node = aos_container_of((queue)->next, type, member); \
          &node->member != (queue); \
-         node = yos_container_of(node->member.next, type, member))
+         node = aos_container_of(node->member.next, type, member))
 
 #define dlist_for_each_entry_safe(queue, n, node, type, member) \
-    for (node = yos_container_of((queue)->next, type, member), \
+    for (node = aos_container_of((queue)->next, type, member), \
          n = (queue)->next ? (queue)->next->next : NULL; \
          &node->member != (queue); \
-         node = yos_container_of(n, type, member), n = n ? n->next : NULL)
+         node = aos_container_of(n, type, member), n = n ? n->next : NULL)
 
 /**
 * list_entry - get the struct for this entry
@@ -103,7 +103,7 @@ static inline int dlist_empty(const dlist_t *head)
 * @member:     the name of the list_struct within the struct.
 */
 #define list_entry(ptr, type, member) \
-        yos_container_of(ptr, type, member)
+        aos_container_of(ptr, type, member)
 
 /**
 * list_for_each_entry_reverse_t - iterate backwards over list of given type.
@@ -178,9 +178,9 @@ static inline void slist_init(slist_t *head)
  * member
  */
 #define slist_for_each_entry(queue, node, type, member)    \
-    for (node = yos_container_of((queue)->next, type, member); \
+    for (node = aos_container_of((queue)->next, type, member); \
          &node->member;                                    \
-         node = yos_container_of(node->member.next, type, member))
+         node = aos_container_of(node->member.next, type, member))
 
 /*
  * slist_t *queue
@@ -190,17 +190,17 @@ static inline void slist_init(slist_t *head)
  * member
  */
 #define slist_for_each_entry_safe(queue, tmp, node, type, member)    \
-    for (node = yos_container_of((queue)->next, type, member), \
+    for (node = aos_container_of((queue)->next, type, member), \
          tmp = (queue)->next ? (queue)->next->next : NULL; \
          &node->member;                                    \
-         node = yos_container_of(tmp, type, member), tmp = tmp ? tmp->next : tmp)
+         node = aos_container_of(tmp, type, member), tmp = tmp ? tmp->next : tmp)
 
 #define YOS_SLIST_HEAD_INIT(name) { }
 #define YOS_SLIST_HEAD(name) \
         slist_t name = YOS_SLIST_HEAD_INIT(name)
 
 #define slist_entry(addr, type, member) ({                               \
-    addr ? (type *)((long)addr - yos_offsetof(type, member)) : (type *)addr; \
+    addr ? (type *)((long)addr - aos_offsetof(type, member)) : (type *)addr; \
 })
 
 #define slist_first_entry(ptr, type, member) \

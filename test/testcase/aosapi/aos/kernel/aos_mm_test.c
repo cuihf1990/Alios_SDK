@@ -13,18 +13,18 @@
 static void CASE_aosapi_kernel_mm_param()
 {
 	/* dumpsys_mm_info_func here */
-	yos_malloc(0);
+	aos_malloc(0);
 
 	/* coredump here */
 #if 0
-	yos_free(NULL);
+	aos_free(NULL);
 #endif
 }
 
 static void CASE_aosapi_kernel_mm_allocfree()
 {
 	const int COUNT = 1024;
-	int *ptr = yos_malloc(sizeof(int)*COUNT);
+	int *ptr = aos_malloc(sizeof(int)*COUNT);
 
 	memset(ptr, 0, COUNT);
 	int i = 0;
@@ -35,16 +35,16 @@ static void CASE_aosapi_kernel_mm_allocfree()
 	for(; i<COUNT; i++) {
 		YUNIT_ASSERT_MSG((int)*(ptr+i)==i, "*(ptr+i)=%d", i);
 	}
-	yos_free(ptr);
+	aos_free(ptr);
 	ptr = NULL;
 }
 
 static void CASE_aosapi_kernel_mm_alloclarge()
 {
 	char *p = NULL;
-	p = yos_malloc(102400000L);
+	p = aos_malloc(102400000L);
 	if(p) {
-		yos_free(p);
+		aos_free(p);
 	}
 }
 

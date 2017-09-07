@@ -10,7 +10,7 @@
 /*the hashtable hander*/
 typedef struct {
     int             cnt;//the count of hashtable items .
-    yos_mutex_t     lock;
+    aos_mutex_t     lock;
     ht_item_t       *item;
 } ht_t;
 
@@ -46,19 +46,19 @@ void *ht_init(int max_cnt)
         return NULL;
     }
 
-    p = yos_malloc(sizeof(ht_t));
+    p = aos_malloc(sizeof(ht_t));
     if (NULL == p) {
         return NULL;
     }
     memset(p, 0, sizeof(ht_t));
 
-    p->item = yos_malloc(len);
+    p->item = aos_malloc(len);
     if (NULL == p->item) {
-        yos_free(p);
+        aos_free(p);
         return NULL;
     }
     memset(p->item, 0, len);
-    yos_mutex_new(&p->lock);
+    aos_mutex_new(&p->lock);
 
     p->cnt = max_cnt;
     //LOGD(MODULE,"create hashtable : <malloc>%p, item: <malloc>: %p\n", p, p->item);
@@ -75,7 +75,7 @@ void ht_lock(void *ht)
 {
     ht_t *p = (ht_t *)ht;
     if (p) {
-        yos_mutex_lock(&p->lock, YOS_WAIT_FOREVER);
+        aos_mutex_lock(&p->lock, YOS_WAIT_FOREVER);
     }
 }
 
@@ -88,7 +88,7 @@ void ht_unlock(void *ht)
 {
     ht_t *p = (ht_t *)ht;
     if (p) {
-        yos_mutex_unlock(&p->lock);
+        aos_mutex_unlock(&p->lock);
     }
 }
 
@@ -186,20 +186,20 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key,
     p_item = _ht_find_lockless(ht, key, len_key);
 
     if (!p_item->key) {
-        p_item->key = yos_malloc(len_key);
+        p_item->key = aos_malloc(len_key);
         if (!p_item->key) {
             return -1;
         }
         memcpy(p_item->key, key, len_key);
-        p_item->val = yos_malloc(size_val);
+        p_item->val = aos_malloc(size_val);
         if (!p_item->val) {
-            yos_free(p_item->key);
+            aos_free(p_item->key);
             p_item->key = NULL;
             return -1;
         }
         memcpy(p_item->val, val, size_val);
         p_item->size_val = size_val;
-        //LOGD(MODULE,"key: <yos_malloc>%p, val: <yos_malloc>%p\n", p_item->key, p_item->val);
+        //LOGD(MODULE,"key: <aos_malloc>%p, val: <aos_malloc>%p\n", p_item->key, p_item->val);
         return 0;
     }
 
@@ -207,13 +207,13 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key,
     p_tmp = p_item;
     while (p_tmp) {
         if (NULL != p_tmp->key && !memcmp(p_tmp->key, key, len_key)) {
-            //LOGD(MODULE,"repeated key , yos_free last val: %p, yos_malloc\n", p_tmp->val);
-            yos_free(p_tmp->val);
+            //LOGD(MODULE,"repeated key , aos_free last val: %p, aos_malloc\n", p_tmp->val);
+            aos_free(p_tmp->val);
             p_tmp->val = NULL;
-            p_tmp->val = yos_malloc(size_val);
+            p_tmp->val = aos_malloc(size_val);
             if (!p_item->val) {
-                yos_free(p_tmp);
-                LOGE(MODULE, "failed to yos_malloc new value.\n");
+                aos_free(p_tmp);
+                LOGE(MODULE, "failed to aos_malloc new value.\n");
                 return -1;
             }
             p_item->size_val = size_val;
@@ -224,28 +224,28 @@ int ht_add_lockless(void *ht, const void *key, unsigned int len_key,
         p_tmp = p_tmp->next;
     }
 
-    new_tb = (ht_item_t *)yos_malloc(sizeof(ht_item_t));
+    new_tb = (ht_item_t *)aos_malloc(sizeof(ht_item_t));
     if (!new_tb) {
         return -1;
     }
     memset(new_tb, 0, sizeof(ht_item_t));
-    new_tb->key = yos_malloc(len_key);
+    new_tb->key = aos_malloc(len_key);
     if (!new_tb->key) {
-        yos_free(new_tb);
+        aos_free(new_tb);
         return -1;
     }
     memcpy(new_tb->key, key, len_key);
-    new_tb->val = yos_malloc(size_val);
+    new_tb->val = aos_malloc(size_val);
     if (!new_tb->val) {
-        yos_free(new_tb->key);
-        yos_free(new_tb);
+        aos_free(new_tb->key);
+        aos_free(new_tb);
         return -1;
     }
     new_tb->size_val = size_val;
     memcpy(new_tb->val, val, size_val);
     p_item->next = new_tb;
 
-    //LOGD(MODULE,"conflict key: <yos_malloc>%p, val: <yos_malloc>%p,node: <yos_malloc>%p, before: %p\n", new_tb->key, new_tb->val, new_tb, p_item);
+    //LOGD(MODULE,"conflict key: <aos_malloc>%p, val: <aos_malloc>%p,node: <aos_malloc>%p, before: %p\n", new_tb->key, new_tb->val, new_tb, p_item);
     return 0;
 }
 
@@ -287,17 +287,17 @@ static int _ht_del_node(void *ht_item, const void *key, unsigned int len_key)
     while (parent) {
         if (parent->key && parent->val &&
             (!key || !memcmp(parent->key, key, len_key))) {
-            next = parent->next;//store its next item befroe yos_free.
+            next = parent->next;//store its next item befroe aos_free.
 
-            //LOGD(MODULE,"del  key: <yos_free>%p, val: <yos_free>%p,node: %p ,<%s>current: %p, next: %p\n",
-            // parent->key, parent->val,!flag ? NULL : parent, !flag ? "" : "yos_free", parent, next);
-            yos_free(parent->key);
+            //LOGD(MODULE,"del  key: <aos_free>%p, val: <aos_free>%p,node: %p ,<%s>current: %p, next: %p\n",
+            // parent->key, parent->val,!flag ? NULL : parent, !flag ? "" : "aos_free", parent, next);
+            aos_free(parent->key);
             parent->key = NULL;
-            yos_free(parent->val);
+            aos_free(parent->val);
             parent->val = NULL;
             ret = 0;
-            if (1 == flag) {//just yos_free the added item not the root item.
-                yos_free(parent);
+            if (1 == flag) {//just aos_free the added item not the root item.
+                aos_free(parent);
                 p_tmp->next = next;
             } else {
                 p_tmp = parent;
@@ -439,13 +439,13 @@ int ht_destroy(void *ht)
     ht_lock(pt);
 
     ht_clear_lockless(pt);
-    //LOGD(MODULE,"destroy hashtable: <yos_free>%p. <yos_free>%p \n", pt, pt->item);
-    yos_free(pt->item);
+    //LOGD(MODULE,"destroy hashtable: <aos_free>%p. <aos_free>%p \n", pt, pt->item);
+    aos_free(pt->item);
 
     ht_unlock(pt);
 
-    yos_mutex_free(&pt->lock);
-    yos_free(pt);
+    aos_mutex_free(&pt->lock);
+    aos_free(pt);
 
     return 0;
 }

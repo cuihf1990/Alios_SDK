@@ -15,12 +15,12 @@ typedef struct {
     int     d_ino;                      /* file number */
     uint8_t d_type;                     /* type of file */
     char    d_name[];                   /* file name */
-} yos_dirent_t;
+} aos_dirent_t;
 
 typedef struct {
     int         dd_vfs_fd;              /* This keeps track of the current directory position for telldir */
     int         dd_rsv;
-} yos_dir_t;
+} aos_dir_t;
 
 /**
  * @brief open the file or device by its path @path.
@@ -31,7 +31,7 @@ typedef struct {
  * @retval  >=0 on success.
  * @retval <0 failure.
  */
-int yos_open(const char *path, int flags);
+int aos_open(const char *path, int flags);
 
 /**
  * @brief close the file or device by its fd @fd.
@@ -41,7 +41,7 @@ int yos_open(const char *path, int flags);
  * @retval  0 on success.
  * @retval <0 failure.
  */
-int yos_close(int fd);
+int aos_close(int fd);
 
 /**
  * @brief read the contents of a file or device into a buffer.
@@ -52,7 +52,7 @@ int yos_close(int fd);
  *
  * @retval  The number of bytes read, 0 at end of file, negative error on failure
  */
-ssize_t yos_read(int fd, void *buf, size_t nbytes);
+ssize_t aos_read(int fd, void *buf, size_t nbytes);
 
 /**
  * @brief write the contents of a buffer to file or device
@@ -63,7 +63,7 @@ ssize_t yos_read(int fd, void *buf, size_t nbytes);
  *
  * @retval  The number of bytes written, negative error on failure.
  */
-ssize_t yos_write(int fd, const void *buf, size_t nbytes);
+ssize_t aos_write(int fd, const void *buf, size_t nbytes);
 
 /**
  * @brief This is a wildcard API for sending controller specific commands.
@@ -74,7 +74,7 @@ ssize_t yos_write(int fd, const void *buf, size_t nbytes);
  *
  * @retval  any return from the command.
  */
-int yos_ioctl(int fd, int cmd, unsigned long arg);
+int aos_ioctl(int fd, int cmd, unsigned long arg);
 
 /**
  * @brief A mechanism to multiplex input/output over a set of file handles(file descriptors).
@@ -87,7 +87,7 @@ int yos_ioctl(int fd, int cmd, unsigned long arg);
  *
  * @retval number of file handles selected (for which revents is non-zero). 0 if timed out with nothing selected. -1 for error.
  */
-int yos_poll(struct pollfd *fds, int nfds, int timeout);
+int aos_poll(struct pollfd *fds, int nfds, int timeout);
 
 /**
  * @brief  performs one of the operations described below on the open file descriptor @fd.
@@ -99,7 +99,7 @@ int yos_poll(struct pollfd *fds, int nfds, int timeout);
  *
  * @retval  0 on success, otherwise -1 will be returned
  */
-int yos_fcntl(int fd, int cmd, int val);
+int aos_fcntl(int fd, int cmd, int val);
 
 /**
   * @brief move the file position to a given offset from from a given location
@@ -113,7 +113,7 @@ int yos_fcntl(int fd, int cmd, int val);
   *
   * @retval  The new offset of the file
   */
-off_t yos_lseek(int fd, off_t offset, int whence);
+off_t aos_lseek(int fd, off_t offset, int whence);
 
 /**
   * @brief flush any buffers associated with the file
@@ -122,7 +122,7 @@ off_t yos_lseek(int fd, off_t offset, int whence);
   *
   * @retval 0 on success, negative error code on failure
   */
-int yos_sync(int fd);
+int aos_sync(int fd);
 
 /**
   * @brief store information about the file in a stat structure
@@ -132,7 +132,7 @@ int yos_sync(int fd);
   *
   * @retval 0 on success, negative error code on failure
   */
-int yos_stat(const char *path, struct stat *st);
+int aos_stat(const char *path, struct stat *st);
 
 /**
   * @brief remove a file from the filesystem.
@@ -141,7 +141,7 @@ int yos_stat(const char *path, struct stat *st);
   *
   * @retval 0 on success, negative error code on failure
   */
-int yos_unlink(const char *path);
+int aos_unlink(const char *path);
 
 /**
   * @brief rename a file in the filesystem.
@@ -151,7 +151,7 @@ int yos_unlink(const char *path);
   *
   * @retval 0 on success, negative error code on failure
   */
-int yos_rename(const char *oldpath, const char *newpath);
+int aos_rename(const char *oldpath, const char *newpath);
 
 /**
   * @brief open a directory on the filesystem
@@ -160,7 +160,7 @@ int yos_rename(const char *oldpath, const char *newpath);
   *
   * @retval a point of directory stream on success, NULL on failure
   */
-yos_dir_t *yos_opendir(const char *path);
+aos_dir_t *aos_opendir(const char *path);
 
 /**
   * @brief close a directory
@@ -169,7 +169,7 @@ yos_dir_t *yos_opendir(const char *path);
   *
   * @retval 0 on success, negative error code on failure
   */
-int yos_closedir(yos_dir_t *dir);
+int aos_closedir(aos_dir_t *dir);
 
 /**
   * @brief read the next directory entry
@@ -178,7 +178,7 @@ int yos_closedir(yos_dir_t *dir);
   *
   * @retval a pointer to a dirent structure.
   */
-yos_dirent_t *yos_readdir(yos_dir_t *dir);
+aos_dirent_t *aos_readdir(aos_dir_t *dir);
 
 /**
   * @brief create the directory, if they do not already exist.
@@ -187,7 +187,7 @@ yos_dirent_t *yos_readdir(yos_dir_t *dir);
   *
   * @retval 0 on success, negative error code on failure
   */
-int yos_mkdir(const char *path);
+int aos_mkdir(const char *path);
 
 #ifdef __cplusplus
 }

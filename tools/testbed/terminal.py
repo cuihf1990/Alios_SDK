@@ -782,7 +782,7 @@ class Terminal:
         self.log_display(time.time(), " 1.erase      [er]: erase flash of devices")
         self.log_display(time.time(), "           example: erase 0 1 2-5")
         self.log_display(time.time(), " 2.program    [pg]: program fireware to devices")
-        self.log_display(time.time(), "           example: program 0x40000 yos_esp32.bin 0 1 5-10")
+        self.log_display(time.time(), "           example: program 0x40000 aos_esp32.bin 0 1 5-10")
         self.log_display(time.time(), " 3.reset      [rs]: reset/restart devices")
         self.log_display(time.time(), "           example: reset 0 1 3-8")
         self.log_display(time.time(), " 4.stop       [sp]: stop devices")

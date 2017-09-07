@@ -12,9 +12,9 @@
 extern void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
 extern int  hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len);
 
-void *sys_yos_malloc(unsigned int size, size_t allocator)
+void *sys_aos_malloc(unsigned int size, size_t allocator)
 {
-    void *tmp = yos_malloc(size);
+    void *tmp = aos_malloc(size);
 
     if (tmp == NULL) {
         return NULL;
@@ -29,9 +29,9 @@ void *sys_yos_malloc(unsigned int size, size_t allocator)
     return tmp;
 }
 
-void *sys_yos_realloc(void *mem, unsigned int size, size_t allocator)
+void *sys_aos_realloc(void *mem, unsigned int size, size_t allocator)
 {
-    void *tmp = yos_realloc(mem, size);
+    void *tmp = aos_realloc(mem, size);
 
     if (tmp == NULL) {
         return NULL;
@@ -46,9 +46,9 @@ void *sys_yos_realloc(void *mem, unsigned int size, size_t allocator)
     return tmp;
 }
 
-void *sys_yos_zalloc(unsigned int size, size_t allocator)
+void *sys_aos_zalloc(unsigned int size, size_t allocator)
 {
-    void *tmp = yos_zalloc(size);
+    void *tmp = aos_zalloc(size);
 
     if (tmp == NULL) {
         return NULL;

@@ -37,7 +37,7 @@ static void me_as_leader(bool vector_router)
     cmd_to_agent("stop");
     stop_node(12);
 
-    yos_msleep(2 * 1000);
+    aos_msleep(2 * 1000);
 }
 
 static void me_as_router(bool vector_router)

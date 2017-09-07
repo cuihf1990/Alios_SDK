@@ -139,7 +139,7 @@ static int msdp_get_status(char *params)
 
     return ret;
 #else
-    yos_cloud_trigger(GET_SUB_DEVICE_STATUS, params);
+    aos_cloud_trigger(GET_SUB_DEVICE_STATUS, params);
     return SERVICE_RESULT_OK;
 #endif
 }
@@ -161,7 +161,7 @@ static int msdp_set_status(char *params)
 
     return ret;
 #else
-    yos_cloud_trigger(SET_SUB_DEVICE_STATUS, params);
+    aos_cloud_trigger(SET_SUB_DEVICE_STATUS, params);
     return SERVICE_RESULT_OK;
 #endif
 }

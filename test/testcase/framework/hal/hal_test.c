@@ -27,17 +27,17 @@ static void test_timer_case(void)
     int counter = 0, old_counter;
     hal_timer_t t;
     hal_timer_init(&t, 50000, 1, 0, test_timer_cb, &counter);
-    yos_msleep(1000);
+    aos_msleep(1000);
     YUNIT_ASSERT(counter == 0);
 
     hal_timer_start(&t);
     check_cond_wait(counter > 3, 2);
 
     hal_timer_stop(&t);
-    yos_msleep(1000);
+    aos_msleep(1000);
 
     old_counter = counter;
-    yos_msleep(1000);
+    aos_msleep(1000);
     YUNIT_ASSERT(counter == old_counter);
     if (counter != old_counter)
         printf("%s %d %d\n", __func__, counter, old_counter);
@@ -141,8 +141,8 @@ static void register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn)
 }
 
 
-static hal_wifi_module_t sim_yos_wifi_module = {
-    .base.name           = "sim_yos_wifi_module",
+static hal_wifi_module_t sim_aos_wifi_module = {
+    .base.name           = "sim_aos_wifi_module",
     .init                =  wifi_init,
     .get_mac_addr        =  wifi_get_mac_addr,
     .start               =  wifi_start,
@@ -172,24 +172,24 @@ static void test_wifi_case(void)
     tmp = hal_wifi_get_default_module();
     (void)tmp;
 
-    hal_wifi_register_module(&sim_yos_wifi_module);
+    hal_wifi_register_module(&sim_aos_wifi_module);
     hal_wifi_init();
-    hal_wifi_get_mac_addr(&sim_yos_wifi_module, mac);
-    hal_wifi_start(&sim_yos_wifi_module, NULL);
-    hal_wifi_start_adv(&sim_yos_wifi_module, NULL);
-    hal_wifi_get_ip_stat(&sim_yos_wifi_module, NULL, SOFT_AP);
-    hal_wifi_get_link_stat(&sim_yos_wifi_module, NULL);
-    hal_wifi_start_scan(&sim_yos_wifi_module);
-    hal_wifi_start_scan_adv(&sim_yos_wifi_module);
-    hal_wifi_power_off(&sim_yos_wifi_module);
-    hal_wifi_power_on(&sim_yos_wifi_module);
-    hal_wifi_suspend(&sim_yos_wifi_module);
-    hal_wifi_suspend_station(&sim_yos_wifi_module);
-    hal_wifi_suspend_soft_ap(&sim_yos_wifi_module);
-    hal_wifi_set_channel(&sim_yos_wifi_module, 0);
-    hal_wifi_start_wifi_monitor(&sim_yos_wifi_module);
-    hal_wifi_stop_wifi_monitor(&sim_yos_wifi_module);
-    hal_wifi_register_monitor_cb(&sim_yos_wifi_module, NULL);
+    hal_wifi_get_mac_addr(&sim_aos_wifi_module, mac);
+    hal_wifi_start(&sim_aos_wifi_module, NULL);
+    hal_wifi_start_adv(&sim_aos_wifi_module, NULL);
+    hal_wifi_get_ip_stat(&sim_aos_wifi_module, NULL, SOFT_AP);
+    hal_wifi_get_link_stat(&sim_aos_wifi_module, NULL);
+    hal_wifi_start_scan(&sim_aos_wifi_module);
+    hal_wifi_start_scan_adv(&sim_aos_wifi_module);
+    hal_wifi_power_off(&sim_aos_wifi_module);
+    hal_wifi_power_on(&sim_aos_wifi_module);
+    hal_wifi_suspend(&sim_aos_wifi_module);
+    hal_wifi_suspend_station(&sim_aos_wifi_module);
+    hal_wifi_suspend_soft_ap(&sim_aos_wifi_module);
+    hal_wifi_set_channel(&sim_aos_wifi_module, 0);
+    hal_wifi_start_wifi_monitor(&sim_aos_wifi_module);
+    hal_wifi_stop_wifi_monitor(&sim_aos_wifi_module);
+    hal_wifi_register_monitor_cb(&sim_aos_wifi_module, NULL);
     printf("first mac addr is 0x%x\n", mac[0]);
 }
 

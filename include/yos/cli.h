@@ -116,7 +116,7 @@ int cli_printf(const char *buff, ...);
 
 /* library CLI APIs
  */
-int yos_cli_init(void);
+int aos_cli_init(void);
 
 /* Stop the CLI thread and carry out the cleanup
  *
@@ -124,7 +124,7 @@ int yos_cli_init(void);
  * \return error code otherwise.
  *
  */
-int yos_cli_stop(void);
+int aos_cli_stop(void);
 
 #else /* CONFIG_YOS_CLI */
 
@@ -152,12 +152,12 @@ static inline int cli_unregister_commands(const struct cli_command *commands,
     return 0;
 }
 
-static inline int yos_cli_init(void)
+static inline int aos_cli_init(void)
 {
     return 0;
 }
 
-static inline int yos_cli_stop(void)
+static inline int aos_cli_stop(void)
 {
     return 0;
 }

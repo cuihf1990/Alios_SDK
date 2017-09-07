@@ -53,8 +53,8 @@ typedef struct {
     int             sock;
     int             timeout;//ms
     cb_wsf_recv_t   cb_recv;
-    yos_call_t      cb_timeout;
-    yos_poll_call_t cb_close;
+    aos_call_t      cb_timeout;
+    aos_poll_call_t cb_close;
     void            *extra;
 } cb_network;
 

@@ -40,7 +40,7 @@
 #include "lwip/mem.h"
 #include "arch/sys_arch.h"
 
-static yos_mutex_t sys_arch_mutex;
+static aos_mutex_t sys_arch_mutex;
 
 //#define      NET_TASK_NUME 2
 //#define      NET_TASK_STACK_SIZE 1024
@@ -56,7 +56,7 @@ static yos_mutex_t sys_arch_mutex;
 err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 {
     err_t ret = ERR_MEM;
-    int stat = yos_sem_new(sem,count);
+    int stat = aos_sem_new(sem,count);
 
     if (stat == 0) {
         ret = ERR_OK;
@@ -73,7 +73,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 void sys_sem_free(sys_sem_t *sem)
 {
     if ((sem != NULL)) {
-        yos_sem_free(sem);
+        aos_sem_free(sem);
     }
 }
 
@@ -86,7 +86,7 @@ void sys_sem_free(sys_sem_t *sem)
 */
 void sys_sem_signal(sys_sem_t *sem)
 {
-    yos_sem_signal(sem);
+    aos_sem_signal(sem);
 }
 
 
@@ -117,7 +117,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
     begin_ms = sys_now();
 
     if( timeout != 0UL ) {
-        ret = yos_sem_wait(sem,timeout);
+        ret = aos_sem_wait(sem,timeout);
         if(ret == 0) {
             end_ms = sys_now();
 
@@ -128,7 +128,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
             ret = SYS_ARCH_TIMEOUT;
         }
     } else {
-        while( !(yos_sem_wait(sem, YOS_WAIT_FOREVER) == 0));
+        while( !(aos_sem_wait(sem, YOS_WAIT_FOREVER) == 0));
         end_ms = sys_now();
 
         elapsed_ms = end_ms - begin_ms;
@@ -392,7 +392,7 @@ err_t sys_mbox_new(sys_mbox_t *mb, int size)
         return ERR_MEM;
     }
 
-    int stat = yos_queue_new(mb,msg_start,size * sizeof(void *),sizeof(void *));
+    int stat = aos_queue_new(mb,msg_start,size * sizeof(void *),sizeof(void *));
 
     if (stat == 0) {
         ret = ERR_OK;
@@ -411,10 +411,10 @@ void sys_mbox_free(sys_mbox_t *mb)
     void *start;
 
     if ((mb != NULL)) {
-        start = yos_queue_buf_ptr(mb);
+        start = aos_queue_buf_ptr(mb);
         if(start != NULL)
             free(start);
-        yos_queue_free(mb);
+        aos_queue_free(mb);
     }
 }
 
@@ -426,7 +426,7 @@ void sys_mbox_free(sys_mbox_t *mb)
 */
 void sys_mbox_post(sys_mbox_t *mb, void *msg)
 {
-    yos_queue_send(mb,&msg,sizeof(void*));
+    aos_queue_send(mb,&msg,sizeof(void*));
 }
 
 /*
@@ -436,7 +436,7 @@ void sys_mbox_post(sys_mbox_t *mb, void *msg)
 */
 err_t sys_mbox_trypost(sys_mbox_t *mb, void *msg)
 {
-    if (yos_queue_send(mb,&msg,sizeof(void*)) != 0)
+    if (aos_queue_send(mb,&msg,sizeof(void*)) != 0)
         return ERR_MEM;
     else
         return ERR_OK;
@@ -471,7 +471,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
 
     if( timeout != 0UL ) {
 
-        if(yos_queue_recv(mb,timeout,msg,&len) == 0) {
+        if(aos_queue_recv(mb,timeout,msg,&len) == 0) {
             end_ms = sys_now();
             elapsed_ms = end_ms - begin_ms;
             ret = elapsed_ms;
@@ -479,7 +479,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
             ret = SYS_ARCH_TIMEOUT;
         }
     } else {
-        while(yos_queue_recv(mb,YOS_WAIT_FOREVER,msg,&len) != 0);
+        while(aos_queue_recv(mb,YOS_WAIT_FOREVER,msg,&len) != 0);
         end_ms = sys_now();
         elapsed_ms = end_ms - begin_ms;
 
@@ -503,7 +503,7 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mb, void **msg)
 {
     u32_t len;
 
-    if(yos_queue_recv(mb,0u,msg,&len) != 0 ) {
+    if(aos_queue_recv(mb,0u,msg,&len) != 0 ) {
         return SYS_MBOX_EMPTY;
     } else {
         return ERR_OK;
@@ -519,7 +519,7 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mb, void **msg)
 err_t sys_mutex_new(sys_mutex_t *mutex)
 {
     err_t ret = ERR_MEM;
-    int stat = yos_mutex_new(mutex);
+    int stat = aos_mutex_new(mutex);
 
     if (stat == 0) {
         ret = ERR_OK;
@@ -532,14 +532,14 @@ err_t sys_mutex_new(sys_mutex_t *mutex)
  **/
 void sys_mutex_lock(sys_mutex_t *mutex)
 {
-    yos_mutex_lock(mutex,YOS_WAIT_FOREVER);
+    aos_mutex_lock(mutex,YOS_WAIT_FOREVER);
 }
 
 /** Unlock a mutex
  * @param mutex the mutex to unlock */
 void sys_mutex_unlock(sys_mutex_t *mutex)
 {
-    yos_mutex_unlock(mutex);
+    aos_mutex_unlock(mutex);
 }
 
 
@@ -548,7 +548,7 @@ void sys_mutex_unlock(sys_mutex_t *mutex)
  **/
 void sys_mutex_free(sys_mutex_t *mutex)
 {
-    yos_mutex_free(mutex);
+    aos_mutex_free(mutex);
 }
 
 /*
@@ -559,7 +559,7 @@ void sys_mutex_free(sys_mutex_t *mutex)
 */
 u32_t sys_now(void)
 {
-    return yos_now_ms();
+    return aos_now_ms();
 }
 
 /*
@@ -570,14 +570,14 @@ u32_t sys_now(void)
 
 u32_t sys_jiffies(void)
 {
-    return yos_now();
+    return aos_now();
 }
 
 sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio)
 {
-    yos_task_t task_handle;
+    aos_task_t task_handle;
 
-    yos_task_new_ext(&task_handle,name,thread,arg,stacksize,prio);
+    aos_task_new_ext(&task_handle,name,thread,arg,stacksize,prio);
 
     return (sys_thread_t)task_handle.hdl;
 }
@@ -598,7 +598,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 */
 sys_prot_t sys_arch_protect(void)
 {
-    yos_mutex_lock(&sys_arch_mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock(&sys_arch_mutex, YOS_WAIT_FOREVER);
     return 0;
 }
 
@@ -610,7 +610,7 @@ sys_prot_t sys_arch_protect(void)
 */
 void sys_arch_unprotect(sys_prot_t pval)
 {
-    yos_mutex_unlock(&sys_arch_mutex);
+    aos_mutex_unlock(&sys_arch_mutex);
 }
 
 #endif
@@ -635,6 +635,6 @@ int net_close(int sockfd)
 */
 void sys_init(void)
 {
-    yos_mutex_new(&sys_arch_mutex);
+    aos_mutex_new(&sys_arch_mutex);
 }
 

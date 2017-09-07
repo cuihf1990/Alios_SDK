@@ -55,7 +55,7 @@ void yts_run(int argc, char **argv)
     yts_argc = argc;
     yts_argv = argv;
 
-    yos_msleep(2 * 1000);
+    aos_msleep(2 * 1000);
 
     yunit_test_init();
 

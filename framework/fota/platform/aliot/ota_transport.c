@@ -218,7 +218,7 @@ int8_t ota_pub_request(ota_request_params *request_parmas)
 
 void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
-    yos_cloud_cb_t ota_update = (yos_cloud_cb_t )pcontext;
+    aos_cloud_cb_t ota_update = (aos_cloud_cb_t )pcontext;
     if (!ota_update) {
         OTA_LOG_E("aliot_mqtt_ota_callback  pcontext null");
         return;
@@ -238,9 +238,9 @@ void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_
     ota_update(UPGRADE_DEVICE ,ptopic_info->payload);
 }
 
-int8_t ota_sub_upgrade(yos_cloud_cb_t msgCallback)
+int8_t ota_sub_upgrade(aos_cloud_cb_t msgCallback)
 {
-    g_upgrad_topic =  yos_zalloc(OTA_MQTT_TOPIC_LEN);
+    g_upgrad_topic =  aos_zalloc(OTA_MQTT_TOPIC_LEN);
 
     if (!g_upgrad_topic) {
         OTA_LOG_E("generate topic name of upgrade malloc fail");
@@ -385,13 +385,13 @@ int8_t platform_ota_result_post(void)
 
 }
 
-int8_t ota_sub_request_reply(yos_cloud_cb_t msgCallback)
+int8_t ota_sub_request_reply(aos_cloud_cb_t msgCallback)
 {
     return 0;
 }
 
 
-int8_t ota_cancel_upgrade(yos_cloud_cb_t msgCallback)
+int8_t ota_cancel_upgrade(aos_cloud_cb_t msgCallback)
 {
     return 0;
 }

@@ -20,11 +20,11 @@ static void run_in_hop1(void)
 
     start_node(12);
     start_node(13);
-    yos_msleep(5000);
+    aos_msleep(5000);
 
     cmd_to_agent("mode MOBILE");
     cmd_to_agent("start");
-    yos_msleep(10000);
+    aos_msleep(10000);
 
     YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
@@ -32,7 +32,7 @@ static void run_in_hop1(void)
     stop_node(12);
     stop_node(13);
 
-    yos_msleep(2 * 1000);
+    aos_msleep(2 * 1000);
 }
 
 static void run_in_hop2(void)
@@ -40,21 +40,21 @@ static void run_in_hop2(void)
     set_line_rssi(11, 13);
 
     start_node(13);
-    yos_msleep(5000);
+    aos_msleep(5000);
     start_node(12);
-    yos_msleep(5000);
+    aos_msleep(5000);
 
     cmd_to_agent("mode MOBILE");
     cmd_to_agent("start");
 
-    yos_msleep(10 * 1000);
+    aos_msleep(10 * 1000);
     YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
     cmd_to_agent("stop");
     stop_node(12);
     stop_node(13);
 
-    yos_msleep(2 * 1000);
+    aos_msleep(2 * 1000);
 }
 
 

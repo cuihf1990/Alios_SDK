@@ -62,19 +62,19 @@ void yunit_test_deinit(void)
         yunit_test_case_node_t *test_case_node = test_suite_node->test_case_list_header.next;
         while (test_case_node != NULL) {
             yunit_test_case_node_t *test_case_node_next = test_case_node->next;
-            yos_free(test_case_node);
+            aos_free(test_case_node);
             test_case_node = test_case_node_next;
         }
 
         yunit_test_suite_node_t *test_suite_node_next = test_suite_node->next;
-        yos_free(test_suite_node);
+        aos_free(test_suite_node);
         test_suite_node = test_suite_node_next;
     }
 
     yunit_test_case_result_t *test_case_result = g_test_context.failed_test_case_result.next;
     while (test_case_result != NULL) {
         yunit_test_case_result_t *test_case_result_next = test_case_result->next;
-        yos_free(test_case_result);
+        aos_free(test_case_result);
         test_case_result = test_case_result_next;
     }
 }
@@ -86,7 +86,7 @@ void *yunit_add_test_suite(
                    yunit_test_case_setup setup,
                    yunit_test_case_teardown teardown)
 {
-    yunit_test_suite_node_t *node = yos_malloc(sizeof(yunit_test_suite_node_t));
+    yunit_test_suite_node_t *node = aos_malloc(sizeof(yunit_test_suite_node_t));
     if (node == NULL) {
         printf("%s\n", "out of memory");
         return NULL;
@@ -119,7 +119,7 @@ int yunit_add_test_case(void *test_suite, const char *name, yunit_test_case_proc
         prev = prev->next;
     }
 
-    yunit_test_case_node_t *node = yos_malloc(sizeof(yunit_test_case_node_t));
+    yunit_test_case_node_t *node = aos_malloc(sizeof(yunit_test_case_node_t));
     memset(node,0,sizeof(yunit_test_case_node_t));
 
     if (node == NULL) {
@@ -240,7 +240,7 @@ static int _run_test_case(void *test_suite, void *test_case)
     yunit_test_case_node_t *test_case_node = test_case;
     int cnt1 = g_test_context.failed_test_cases_count + g_test_context.fatal_test_cases_count;
     int cnt2;
-    long long now = yos_now_ms();
+    long long now = aos_now_ms();
     int delta;
 
     if (test_suite_node->setup != NULL) {
@@ -256,7 +256,7 @@ static int _run_test_case(void *test_suite, void *test_case)
     }
 
     cnt2 = g_test_context.failed_test_cases_count + g_test_context.fatal_test_cases_count;
-    delta = yos_now_ms() - now;
+    delta = aos_now_ms() - now;
     fprintf(stderr, "test case %s finished %d failed %d ms\n", test_case_node->name, cnt2-cnt1, delta);
 
     return 0;
@@ -323,7 +323,7 @@ void yunit_add_test_case_result(int type, const char *file, size_t line, const c
     } else {
     }
 
-    yunit_test_case_result_t *result = yos_malloc(sizeof(yunit_test_case_result_t));
+    yunit_test_case_result_t *result = aos_malloc(sizeof(yunit_test_case_result_t));
     if (result == NULL) {
         printf("%s\n", "out of memory");
         return;

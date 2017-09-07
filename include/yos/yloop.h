@@ -69,26 +69,26 @@ typedef struct {
 } input_event_t;
 
 /** Event callback */
-typedef void (*yos_event_cb)(input_event_t *event, void *private_data);
+typedef void (*aos_event_cb)(input_event_t *event, void *private_data);
 /** Delayed execution callback */
-typedef void (*yos_call_t)(void *arg);
+typedef void (*aos_call_t)(void *arg);
 /** Delayed execution callback */
-typedef void (*yos_poll_call_t)(int fd, void *arg);
+typedef void (*aos_poll_call_t)(int fd, void *arg);
 
 /**
  * @brief Register system event filter callback
  * @param type event type interested
- * @param yos_event_cb system event callback
+ * @param aos_event_cb system event callback
  * @param private_data data to be bypassed to cb
  * @return None
  */
-int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv);
+int aos_register_event_filter(uint16_t type, aos_event_cb cb, void *priv);
 
 /**
  * @brief Unregister native event callback
- * @param yos_event_cb system event callback
+ * @param aos_event_cb system event callback
  */
-int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv);
+int aos_unregister_event_filter(uint16_t type, aos_event_cb cb, void *priv);
 
 /**
  * @brief Post local event.
@@ -99,7 +99,7 @@ int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv);
  * @retval <=0 failure
  * @see input_event_t
  */
-int yos_post_event(uint16_t type, uint16_t code, unsigned long  value);
+int aos_post_event(uint16_t type, uint16_t code, unsigned long  value);
 
 /**
  * @brief Register a poll event in main loop
@@ -109,7 +109,7 @@ int yos_post_event(uint16_t type, uint16_t code, unsigned long  value);
  * @return ==0 succeed
  * @return !=0 failed
  */
-int yos_poll_read_fd(int fd, yos_poll_call_t action, void *param);
+int aos_poll_read_fd(int fd, aos_poll_call_t action, void *param);
 
 /**
  * @brief Cancel a poll event to be executed in main loop
@@ -117,9 +117,9 @@ int yos_poll_read_fd(int fd, yos_poll_call_t action, void *param);
  * @param action action to be executed
  * @param param private data past to action
  * @returns None
- * @note all the parameters must be the same as yos_poll_read_fd
+ * @note all the parameters must be the same as aos_poll_read_fd
  */
-void yos_cancel_poll_read_fd(int fd, yos_poll_call_t action, void *param);
+void aos_cancel_poll_read_fd(int fd, aos_poll_call_t action, void *param);
 
 /**
  * @brief Post a delayed action to be executed in main loop
@@ -131,7 +131,7 @@ void yos_cancel_poll_read_fd(int fd, yos_poll_call_t action, void *param);
  * @note This function must be called under main loop context.
  *       after 'action' is fired, resource will be automatically released.
  */
-int yos_post_delayed_action(int ms, yos_call_t action, void *arg);
+int aos_post_delayed_action(int ms, aos_call_t action, void *arg);
 
 /**
  * @brief Cancel a delayed action to be executed in main loop
@@ -139,9 +139,9 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *arg);
  * @param action action to be executed
  * @param arg private data past to action
  * @returns None
- * @note all the parameters must be the same as yos_post_delayed_action
+ * @note all the parameters must be the same as aos_post_delayed_action
  */
-void yos_cancel_delayed_action(int ms, yos_call_t action, void *arg);
+void aos_cancel_delayed_action(int ms, aos_call_t action, void *arg);
 
 /**
  * @brief Schedule a callback in next event loop
@@ -149,12 +149,12 @@ void yos_cancel_delayed_action(int ms, yos_call_t action, void *arg);
  * @param arg private data past to action
  * @retval >=0 success
  * @retval <0  failure
- * @note Unlike yos_post_delayed_action,
+ * @note Unlike aos_post_delayed_action,
  *       this function can be called from non-yos-main-loop context.
  */
-int yos_schedule_call(yos_call_t action, void *arg);
+int aos_schedule_call(aos_call_t action, void *arg);
 
-typedef void *yos_loop_t;
+typedef void *aos_loop_t;
 
 /**
  * @brief init a per-task event loop
@@ -162,38 +162,38 @@ typedef void *yos_loop_t;
  * @retval ==NULL failure
  * @retval !=NULL success
  */
-yos_loop_t yos_loop_init(void);
+aos_loop_t aos_loop_init(void);
 
 /**
  * @brief get current event loop
  * @param None
  * @retval default event loop
  */
-yos_loop_t yos_current_loop(void);
+aos_loop_t aos_current_loop(void);
 
 /**
  * @brief start event loop
  * @param None
  * @retval None
- * @note this function won't return until yos_loop_exit called
+ * @note this function won't return until aos_loop_exit called
  */
-void yos_loop_run(void);
+void aos_loop_run(void);
 
 /**
- * @brief exit event loop, yos_loop_run() will return
+ * @brief exit event loop, aos_loop_run() will return
  * @param None
  * @retval None
  * @note this function must be called from the task runninng the event loop
  */
-void yos_loop_exit(void);
+void aos_loop_exit(void);
 
 /**
  * @brief free event loop resources
  * @param None
  * @retval None
- * @note this function should be called after yos_loop_run() return
+ * @note this function should be called after aos_loop_run() return
  */
-void yos_loop_destroy(void);
+void aos_loop_destroy(void);
 
 /**
  * @brief Schedule a callback specified event loop
@@ -202,10 +202,10 @@ void yos_loop_destroy(void);
  * @param arg private data past to action
  * @retval >=0 success
  * @retval <0  failure
- * @note Unlike yos_post_delayed_action,
+ * @note Unlike aos_post_delayed_action,
  *       this function can be called from non-yos-main-loop context.
  */
-int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
+int aos_loop_schedule_call(aos_loop_t *loop, aos_call_t action, void *arg);
 
 /**
  * @brief Schedule a work to be executed in workqueue
@@ -218,8 +218,8 @@ int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg);
  * @retval !0 work handle
  * @note  this function can be called from non-yos-main-loop context.
  */
-void *yos_loop_schedule_work(int ms, yos_call_t action, void *arg1,
-                             yos_call_t fini_cb, void *arg2);
+void *aos_loop_schedule_work(int ms, aos_call_t action, void *arg1,
+                             aos_call_t fini_cb, void *arg2);
 
 /**
  * @brief Cancel a work
@@ -228,7 +228,7 @@ void *yos_loop_schedule_work(int ms, yos_call_t action, void *arg1,
  * @param arg1 private data past to action
  * @retval None
  */
-void yos_cancel_work(void *work, yos_call_t action, void *arg1);
+void aos_cancel_work(void *work, aos_call_t action, void *arg1);
 
 #ifdef __cplusplus
 }

@@ -218,7 +218,7 @@ static void test_tfs_activate_device(void) {
     int ret = -1;
     const char *key = "activate";
 
-    yos_kv_del(key);
+    aos_kv_del(key);
 
     ret = tfs_is_device_activated();
     YUNIT_ASSERT(ret != 0);

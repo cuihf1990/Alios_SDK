@@ -12,24 +12,24 @@
 
 void *ota_malloc(uint32_t size)
 {
-    return yos_malloc(size);
+    return aos_malloc(size);
 }
 
 void ota_free(void *ptr)
 {
-    yos_free(ptr);
+    aos_free(ptr);
 }
 
 void *ota_mutex_init(void)
 {
-    yos_mutex_t *mutex = (yos_mutex_t *)yos_malloc(sizeof(yos_mutex_t));
+    aos_mutex_t *mutex = (aos_mutex_t *)aos_malloc(sizeof(aos_mutex_t));
 
     if (NULL == mutex) {
         return NULL;
     }
 
-    if (0 != yos_mutex_new(mutex)) {
-        yos_free(mutex);
+    if (0 != aos_mutex_new(mutex)) {
+        aos_free(mutex);
         return NULL;
     }
 
@@ -38,30 +38,30 @@ void *ota_mutex_init(void)
 
 void ota_mutex_lock(void *mutex)
 {
-    yos_mutex_lock((yos_mutex_t *)mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock((aos_mutex_t *)mutex, YOS_WAIT_FOREVER);
 }
 
 void ota_mutex_unlock(void *mutex)
 {
-    yos_mutex_unlock((yos_mutex_t *)mutex);
+    aos_mutex_unlock((aos_mutex_t *)mutex);
 }
 
 void ota_mutex_destroy(void *mutex)
 {
-    yos_mutex_free((yos_mutex_t *)mutex);
-    yos_free(mutex);
+    aos_mutex_free((aos_mutex_t *)mutex);
+    aos_free(mutex);
 }
 
 void *ota_semaphore_init(void)
 {
-    yos_sem_t *sem = (yos_sem_t *)yos_malloc(sizeof(yos_sem_t));
+    aos_sem_t *sem = (aos_sem_t *)aos_malloc(sizeof(aos_sem_t));
 
     if (NULL == sem) {
         return NULL;
     }
 
-    if (0 != yos_sem_new(sem, 0)) {
-        yos_free(sem);
+    if (0 != aos_sem_new(sem, 0)) {
+        aos_free(sem);
         return NULL;
     }
 
@@ -71,21 +71,21 @@ void *ota_semaphore_init(void)
 int8_t ota_semaphore_wait( void *sem, uint32_t timeout_ms)
 {
     if (-1 == timeout_ms) {
-        return yos_sem_wait((yos_sem_t *)sem, -1);
+        return aos_sem_wait((aos_sem_t *)sem, -1);
     } else {
-        return yos_sem_wait((yos_sem_t *)sem, timeout_ms);
+        return aos_sem_wait((aos_sem_t *)sem, timeout_ms);
     }
 }
 
 void ota_semaphore_post(void *sem)
 {
-    yos_sem_signal((yos_sem_t *)sem);
+    aos_sem_signal((aos_sem_t *)sem);
 }
 
 void ota_semaphore_destroy(void *sem)
 {
-    yos_sem_free((yos_sem_t *)sem);
-    yos_free(sem);
+    aos_sem_free((aos_sem_t *)sem);
+    aos_free(sem);
 }
 
 uint32_t ota_get_time_ms(void)
@@ -101,11 +101,11 @@ uint32_t ota_get_time_ms(void)
 
 void ota_reboot(void)
 {
-    yos_reboot();
+    aos_reboot();
 }
 
 void ota_thread_exit(void *thread)
 {
-    yos_task_exit(0);
+    aos_task_exit(0);
 }
 

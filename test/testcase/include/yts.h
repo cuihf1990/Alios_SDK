@@ -13,7 +13,7 @@ void osupdate_online_test_run(char *bin, int id2);
 #define check_cond_wait(cond, seconds) do { \
     unsigned int i; \
     for (i=0;i<(unsigned int)seconds && !(cond);i++) { \
-        yos_msleep(1000); \
+        aos_msleep(1000); \
     } \
     YUNIT_ASSERT(cond); \
 } while(0);

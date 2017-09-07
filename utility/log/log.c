@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <yos/log.h>
 
-unsigned int yos_log_level = YOS_LL_V_DEBUG | YOS_LL_V_INFO | YOS_LL_V_WARN | YOS_LL_V_ERROR | YOS_LL_V_FATAL;
+unsigned int aos_log_level = YOS_LL_V_DEBUG | YOS_LL_V_INFO | YOS_LL_V_WARN | YOS_LL_V_ERROR | YOS_LL_V_FATAL;
 
 __attribute__((weak)) int csp_printf(const char *fmt, ...)
 {
@@ -22,7 +22,7 @@ __attribute__((weak)) int csp_printf(const char *fmt, ...)
     return ret;
 }
 
-void yos_set_log_level(yos_log_level_t log_level)
+void aos_set_log_level(aos_log_level_t log_level)
 {
     unsigned int value = 0;
 
@@ -45,6 +45,6 @@ void yos_set_log_level(yos_log_level_t log_level)
             break;
     }
 
-    yos_log_level = value;
+    aos_log_level = value;
 }
 
