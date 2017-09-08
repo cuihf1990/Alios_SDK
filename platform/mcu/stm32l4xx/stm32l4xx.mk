@@ -109,9 +109,9 @@ $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    bsp/Components/vl53l0x/vl53l0x_api_ranging.c \
                    bsp/Components/vl53l0x/vl53l0x_api_strings.c \
                    bsp/Components/vl53l0x/vl53l0x_platform_log.c \
-                   yos/soc_impl.c                \
-                   yos/trace_impl.c             \
-                   yos/yos.c                    \
+                   aos/soc_impl.c                \
+                   aos/trace_impl.c             \
+                   aos/aos.c                    \
                    wifi/src/es_wifi_io.c        \
                    wifi/src/wifi.c              \
                    hal/hw.c                     \

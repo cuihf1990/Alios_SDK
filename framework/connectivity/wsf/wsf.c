@@ -6,7 +6,7 @@
 #include <string.h>
 #include "connectivity_manager.h"
 #include "connectivity.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "wsf.h"
 #include "wsf_client.h"
 #include "wsf_config.h"

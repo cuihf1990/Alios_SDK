@@ -3,7 +3,7 @@
  */
 
 #include <ali_crypto.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include "stdio.h"
 

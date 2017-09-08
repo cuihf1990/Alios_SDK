@@ -16,7 +16,7 @@ extern "C"
 {
 #endif
 
-#include <yos/internal/log_impl.h>
+#include <aos/internal/log_impl.h>
 
 /**
  * @brief log level definition.

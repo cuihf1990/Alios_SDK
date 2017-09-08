@@ -2,7 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include "yunit.h"
 
 #include "umesh_types.h"

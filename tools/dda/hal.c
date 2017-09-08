@@ -7,7 +7,7 @@
  */
 #include <stdio.h>
 
-#include <yos/log.h>
+#include <aos/log.h>
 
 #include "umesh_hal.h"
 #include "msg.h"

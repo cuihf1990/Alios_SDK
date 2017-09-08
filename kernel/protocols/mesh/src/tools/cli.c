@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"

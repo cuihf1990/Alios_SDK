@@ -11,9 +11,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <yos/network.h>
+#include <aos/network.h>
 #include <hal/trace.h>
-#include <yos/cli.h>
+#include <aos/cli.h>
 #include <sys/errno.h>
 
 /* CLI Support */

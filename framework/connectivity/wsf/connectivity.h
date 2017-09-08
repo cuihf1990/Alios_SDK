@@ -5,7 +5,7 @@
 #ifndef CONNECTIVITY_H
 #define CONNECTIVITY_H
 
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "os.h"
 
 #define NAME_LENGTH 12

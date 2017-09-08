@@ -11,7 +11,7 @@
 #undef LOG_TAG
 #define LOG_TAG "OTA"
 
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 #define OTA_LOG_D(format, ...) LOGD(LOG_TAG, format"\r\n",##__VA_ARGS__)
 #define OTA_LOG_I(format, ...) LOGI(LOG_TAG, format"\r\n",##__VA_ARGS__)

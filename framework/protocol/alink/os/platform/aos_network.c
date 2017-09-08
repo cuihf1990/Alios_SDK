@@ -2,7 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos/network.h>
+#include <aos/network.h>
 
 #include <stdlib.h>
 #include <stdio.h>

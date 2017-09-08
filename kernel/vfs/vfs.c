@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos/yos.h>
-#include <yos/network.h>
+#include <aos/aos.h>
+#include <aos/network.h>
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
@@ -672,7 +672,7 @@ int aos_mkdir(const char *path)
 #define NEED_WAIT_IO
 #endif
 
-#include <yos/network.h>
+#include <aos/network.h>
 
 #ifdef NEED_WAIT_IO
 

@@ -2,7 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include "hashtable.h"
 
 #define MODULE "hashtable"

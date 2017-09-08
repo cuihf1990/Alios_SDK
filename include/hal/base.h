@@ -11,7 +11,7 @@
 #ifndef HAL_BASE_H
 #define HAL_BASE_H
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 /**
  * @brief HAL common error code

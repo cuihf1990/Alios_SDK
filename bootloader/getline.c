@@ -3,7 +3,7 @@
  */
 
 #include "hal/soc/soc.h"
-#include "yos/kernel.h"
+#include "aos/kernel.h"
 #include "board.h"
 #include "bootloader.h"
 

@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <unistd.h>
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "service.h"
 #include "devmgr_common.h"
 #include "alink_export_internal.h"

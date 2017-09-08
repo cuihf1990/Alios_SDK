@@ -5,7 +5,7 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
-#include "yos/yos.h"
+#include "aos/aos.h"
 #define NAME_LENGTH 12
 
 enum SERVICE_CODE {

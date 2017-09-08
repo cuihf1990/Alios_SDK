@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <yos/yos.h>
-#include <yos/network.h>
+#include <aos/aos.h>
+#include <aos/network.h>
 #include <hal/hal.h>
 
 #include "netmgr.h"

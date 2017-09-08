@@ -3,7 +3,7 @@
  */
 
 #include <k_api.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #include <hal/hal.h>

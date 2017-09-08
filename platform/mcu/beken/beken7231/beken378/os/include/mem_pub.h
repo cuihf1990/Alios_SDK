@@ -2,7 +2,7 @@
 #define _MEM_PUB_H_
 
 #include <stdarg.h>
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 
 INT32 os_memcmp(const void *s1, const void *s2, UINT32 n);
 void *os_memmove(void *out, const void *in, UINT32 n);

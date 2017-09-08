@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "log.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 #define TAG_PAL_STORAGE "PAL_STORAGE"
 

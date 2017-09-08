@@ -4,7 +4,7 @@
 
 #include <syscall_uapi.h>
 #include <k_api.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include <hal/hal.h>
 #include <umesh.h>
 
@@ -13,7 +13,7 @@
 #include <syscall_tbl.h>
 
 #ifdef WITH_LWIP
-#include <yos/network.h>
+#include <aos/network.h>
 #endif
 
 /* --------------------Rhino-------------------- */

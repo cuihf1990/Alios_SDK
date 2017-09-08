@@ -44,7 +44,7 @@
 #include <unistd.h>
 
 #include <cJSON.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #ifndef LOGE
 #define LOGE(mod, arg...) printf(mod " " arg)

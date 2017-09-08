@@ -10,8 +10,8 @@
 #include "wsf_msg_queue.h"
 #include "wsf_network.h"
 #include "wsf.h"
-#include "yos/yos.h"
-#include "yos/network.h"
+#include "aos/aos.h"
+#include "aos/network.h"
 #include "os.h"
 
 wsf_request_queue_t *global_request_queue;

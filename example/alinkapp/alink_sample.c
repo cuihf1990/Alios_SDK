@@ -11,8 +11,8 @@
 #include <sys/time.h>
 #include "alink_export.h"
 #include "json_parser.h"
-#include "yos/yos.h"
-#include "yos/network.h"
+#include "aos/aos.h"
+#include "aos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
 #include <accs.h>

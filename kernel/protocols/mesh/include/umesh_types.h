@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 #include "hal/base.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 #ifdef __cplusplus
 extern "C" {
