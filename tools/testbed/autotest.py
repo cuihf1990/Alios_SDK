@@ -118,8 +118,9 @@ class Autotest:
                         devname = self.get_devname_by_devstr(dev)
                         if devname != "":
                             self.response_filter(devname, log)
-                            log =  devname + ":" + logtimestr + ":" + log
-                            self.logfile.write(log)
+                            if self.logfile != None:
+                                log =  devname + ":" + logtimestr + ":" + log
+                                self.logfile.write(log)
                     if type == TBframe.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
@@ -131,7 +132,6 @@ class Autotest:
                     raise
                 break
         self.keep_running = False;
-        print "server interaction thread exited"
 
     def wait_cmd_excute_done(self, timeout):
         self.cmd_excute_state = 'wait_response'
@@ -329,7 +329,10 @@ class Autotest:
         self.filter = {}
         return response
 
-    def start(self, server_ip, server_port, logname):
+    def get_device_list(self):
+        return list(self.device_list)
+
+    def start(self, server_ip, server_port, logname=None):
         #connect to server
         self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -337,14 +340,17 @@ class Autotest:
         except:
             print "connect to server {0}:{1} failed".format(server_ip, server_port)
             return False
-        if os.path.exists('testlog') == False:
-            subprocess.call(['mkdir','testlog'])
 
-        try:
-            self.logfile = open("testlog/"+logname, 'w');
-        except:
-            print "open logfile {0} failed".format(logfile)
-            return False
+        self.logfile = None
+        if logname != None:
+            if os.path.exists('testlog') == False:
+                subprocess.call(['mkdir','testlog'])
+
+            try:
+                self.logfile = open("testlog/"+logname, 'w');
+            except:
+                print "open logfile {0} failed".format(logfile)
+                return False
 
         thread.start_new_thread(self.server_interaction, ())
         thread.start_new_thread(self.heartbeat_func, ())
