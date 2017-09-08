@@ -11,7 +11,7 @@
 #include "stm32_wifi.h"
 #endif
 
-/** @defgroup yos_hal_wifi WiFi HAL API
+/** @defgroup aos_hal_wifi WiFi HAL API
  *  @{
  */
 

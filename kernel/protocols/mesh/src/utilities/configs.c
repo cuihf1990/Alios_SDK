@@ -21,7 +21,7 @@ ur_error_t ur_configs_read(ur_configs_t *config)
         return UR_ERROR_FAIL;
     }
 
-    ret = yos_kv_get("umesh", config, &len);
+    ret = aos_kv_get("umesh", config, &len);
     if (ret < 0) {
         return UR_ERROR_FAIL;
     }
@@ -44,7 +44,7 @@ ur_error_t ur_configs_write(ur_configs_t *config)
     config->magic_number = CONFIGS_MAGIC_NUMBER;
     config->version = CONFIGS_VERSION;
 
-    ret = yos_kv_set("umesh", config, sizeof(*config), 1);
+    ret = aos_kv_set("umesh", config, sizeof(*config), 1);
     if (ret < 0) {
         return UR_ERROR_FAIL;
     }

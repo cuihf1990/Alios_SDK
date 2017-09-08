@@ -147,7 +147,7 @@ void dda_p2p_request(int dst_id, const char *cmd, dda_p2p_cb cb, void *cb_data);
 void dda_p2p_remove_request(dda_p2p_cb cb, void *cb_data);
 
 struct wait_cb_data {
-    yos_sem_t sem;
+    aos_sem_t sem;
     char *buf;
 };
 
@@ -155,23 +155,23 @@ static void dda_p2p_wait_cb(const char *buf,  int len, void *cb_data)
 {
     struct wait_cb_data *pdata = cb_data;
     int sz = strlen(buf) + 1;
-    pdata->buf = yos_malloc(sz);
+    pdata->buf = aos_malloc(sz);
     memcpy(pdata->buf, buf, sz);
-    yos_sem_signal(&pdata->sem);
+    aos_sem_signal(&pdata->sem);
 }
 
 inline static char *dda_p2p_req_and_wait(int dst_id, const char *cmd, int max_wait_second)
 {
     struct wait_cb_data wait_data = {};
 
-    yos_sem_new(&wait_data.sem, 0);
+    aos_sem_new(&wait_data.sem, 0);
     dda_p2p_request(dst_id, cmd, dda_p2p_wait_cb, &wait_data);
 
-    yos_sem_wait(&wait_data.sem, max_wait_second * 1000);
+    aos_sem_wait(&wait_data.sem, max_wait_second * 1000);
 
     dda_p2p_remove_request(dda_p2p_wait_cb, &wait_data);
 
-    yos_sem_free(&wait_data.sem);
+    aos_sem_free(&wait_data.sem);
 
     return wait_data.buf;
 }
@@ -186,11 +186,11 @@ inline static char *dda_p2p_req_and_wait(int dst_id, const char *cmd, int max_wa
     int i; \
     for (i=0;i<sec;i++) { \
         char *str; \
-        yos_msleep(1000); \
+        aos_msleep(1000); \
         str = dda_p2p_req_and_wait(did, cmd, 1); \
         if ((i==(sec-1) || DDA_DEBUG) && str) printf("%d %s -> %s\n", did, cmd, str); \
-        if (str && strcmp(ret, str) == 0) { yos_free(str);break;} \
-        if (str) { yos_free(str);} \
+        if (str && strcmp(ret, str) == 0) { aos_free(str);break;} \
+        if (str) { aos_free(str);} \
     } \
     YUNIT_ASSERT(i<sec); \
 } while(0)

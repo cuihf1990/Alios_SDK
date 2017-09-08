@@ -45,9 +45,9 @@ SERVICE_DEFINE(accs);
 
 void start_accs_work(int delay)
 {
-    //yos_loop_schedule_work(0,accs_handshake,NULL,NULL,NULL);
+    //aos_loop_schedule_work(0,accs_handshake,NULL,NULL,NULL);
 
-    yos_loop_schedule_work(delay, accs_handshake_async, NULL, NULL, NULL);
+    aos_loop_schedule_work(delay, accs_handshake_async, NULL, NULL, NULL);
 }
 
 /*
@@ -197,7 +197,7 @@ static int accs_conn_listener(int type, void *data, int dlen, void *result,
                 func();
             }
             accs_set_state(SERVICE_STATE_INIT);
-            yos_post_event(EV_SYS, CODE_SYS_ON_ALINK_OFFLINE, 0);
+            aos_post_event(EV_SYS, CODE_SYS_ON_ALINK_OFFLINE, 0);
         }
     } else if (type == CONNECT_DATA) {
         alink_data_t pack;
@@ -344,7 +344,7 @@ static int accs_event_handler(int type, void *data, int dlen, void *result,
             //TODO: setDeviceStatusArray not support
         } else if (!strcmp(p->method, "upgradeDevice")) {
             LOGW(MODULE_NAME_ACCS, "start to OTA now...%s\n", p->data);
-            yos_cloud_trigger(_ALINK_UPGRADE_DEVICE, p->data);
+            aos_cloud_trigger(_ALINK_UPGRADE_DEVICE, p->data);
             cb = alink_cb_func[_ALINK_UPGRADE_DEVICE];
             ret = EVENT_CONSUMED;
             if (cb) {
@@ -353,7 +353,7 @@ static int accs_event_handler(int type, void *data, int dlen, void *result,
             }
         } else if (!strcmp(p->method, "unUpgradeDevice")) {
             LOGW(MODULE_NAME_ACCS, "stop to OTA now...%s\n", p->data);
-            yos_cloud_trigger(_ALINK_CANCEL_UPGRADE_DEVICE, p->data);
+            aos_cloud_trigger(_ALINK_CANCEL_UPGRADE_DEVICE, p->data);
             cb = alink_cb_func[_ALINK_CANCEL_UPGRADE_DEVICE];
             ret = EVENT_CONSUMED;
             if (cb) {

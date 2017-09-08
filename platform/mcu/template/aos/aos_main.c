@@ -8,30 +8,30 @@
 
 #define YOS_START_STACK 2048
 
-ktask_t *g_yos_init;
+ktask_t *g_aos_init;
 
 extern int application_start(int argc, char **argv);
 
-static void yos_init(void)
+static void aos_init(void)
 {
     soc_system_init();
 
 #ifdef BOOTLOADER
     main();
 #else
-    yos_framework_init();
+    aos_framework_init();
 
     application_start(0, NULL);
 #endif
 }
 
-void yos_start(void)
+void aos_start(void)
 {
     krhino_init();
 
     soc_driver_init();
 
-    krhino_task_dyn_create(&g_yos_init, "yos-init", 0, 10, 0, YOS_START_STACK, yos_init, 1);
+    krhino_task_dyn_create(&g_aos_init, "yos-init", 0, 10, 0, YOS_START_STACK, aos_init, 1);
 
     krhino_start();
 }

@@ -192,19 +192,19 @@ void test_uradar_vector_router_case(void)
     len = sizeof(router_command_t);
     cmd->seq = 2;
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
-    yos_msleep(TOPOLOGY_SYNC_TIMEOUT + TOPOLOGY_SYNC_TIMEOUT / 2);
+    aos_msleep(TOPOLOGY_SYNC_TIMEOUT + TOPOLOGY_SYNC_TIMEOUT / 2);
     cmd->cmd = COMMAND_TOPOLOGY_SYNC_ACK;
     cmd->seq = 1;
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
 
-    yos_msleep(HEARTBEAT_TIMEOUT);
+    aos_msleep(HEARTBEAT_TIMEOUT);
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_deinit());
 
     /* topology sync as client */
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_init());
     sid = 0x1000;
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_event_triggered(EVENT_SID_UPDATED, (uint8_t *)&sid, 2));
-    yos_msleep(STARTUP_TIMEOUT + TOPOLOGY_SYNC_TIMEOUT / 2);
+    aos_msleep(STARTUP_TIMEOUT + TOPOLOGY_SYNC_TIMEOUT / 2);
 
     cmd->cmd = COMMAND_TOPOLOGY_SYNC_DATA;
     cmd->seq = 1;

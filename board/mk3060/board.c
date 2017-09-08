@@ -82,27 +82,27 @@ static void key_poll_func(void *arg)
     hal_gpio_input_get(&gpio_key_boot, &level);
 
     if (level == 0) {
-        yos_post_delayed_action(10, key_poll_func, NULL);
+        aos_post_delayed_action(10, key_poll_func, NULL);
     } else {
-        diff = yos_now_ms() - elink_time;
+        diff = aos_now_ms() - elink_time;
         if (diff > 6000) { /*long long press */
             elink_time = 0;
-            yos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_LLTCLICK);
+            aos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_LLTCLICK);
         } else if (diff > 2000) { /* long press */
             elink_time = 0;
-            yos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_LTCLICK);
+            aos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_LTCLICK);
         } else if (diff > 40) { /* short press */
             elink_time = 0;
-            yos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_CLICK);
+            aos_post_event(EV_KEY, CODE_BOOT, VALUE_KEY_CLICK);
         } else {
-            yos_post_delayed_action(10, key_poll_func, NULL);
+            aos_post_delayed_action(10, key_poll_func, NULL);
         }
     }
 }
 
 static void key_proc_work(void *arg)
 {
-    yos_schedule_call(key_poll_func, NULL);
+    aos_schedule_call(key_poll_func, NULL);
 }
 
 static void handle_elink_key(void *arg)
@@ -111,8 +111,8 @@ static void handle_elink_key(void *arg)
 
     hal_gpio_input_get(&gpio_key_boot, &gpio_value);
     if (gpio_value == 0 && elink_time == 0) {
-        elink_time = yos_now_ms();
-        yos_loop_schedule_work(0, key_proc_work, NULL, NULL, NULL);
+        elink_time = aos_now_ms();
+        aos_loop_schedule_work(0, key_proc_work, NULL, NULL, NULL);
     }
 }
 

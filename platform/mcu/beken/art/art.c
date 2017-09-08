@@ -28,7 +28,7 @@ struct app_info_t {
 
 static int app_entry(void *syscall_tbl, int argc, char *argv[])
 {
-    yos_framework_init();
+    aos_framework_init();
     return application_start(argc, argv);
 }
 

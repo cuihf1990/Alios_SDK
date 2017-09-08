@@ -18,8 +18,8 @@
 
 #include "umesh.h"
 
-void *yos_malloc(size_t size);
-void  yos_free(void *mem);
+void *aos_malloc(size_t size);
+void  aos_free(void *mem);
 
 #if defined(CSP_LINUXHOST)
 #define LINUXHOST_RHINO
@@ -34,8 +34,8 @@ void  yos_free(void *mem);
 #ifndef LINUXHOST_RHINO
 #include "yos/log.h"
 #include "csp.h"
-#define dda_task_new yos_task_new
-#define dda_task_exit yos_task_exit
+#define dda_task_new aos_task_new
+#define dda_task_exit aos_task_exit
 #else
 #undef  LOGD
 #undef  LOGI
@@ -56,8 +56,8 @@ static void dda_task_exit(int code)
     pthread_exit(NULL);
 }
 
-extern int yos_task_new(const char *name, void (*fn)(void *), void *arg, int stacksize);
-extern void yos_task_exit(int code);
+extern int aos_task_new(const char *name, void (*fn)(void *), void *arg, int stacksize);
+extern void aos_task_exit(int code);
 #endif
 
 #include "eloop.h"
@@ -281,12 +281,12 @@ static int connect_master(agent_info_t *agent)
 #ifdef CSP_LINUXHOST
 #include <cpu_event.h>
 
-static void yos_loop(void *arg)
+static void aos_loop(void *arg)
 {
     umesh_init(MODE_RX_ON);
     umesh_start();
-    yos_loop_run();
-    yos_task_exit(0);
+    aos_loop_run();
+    aos_task_exit(0);
 }
 #else
 #define cpu_event_malloc malloc
@@ -297,12 +297,12 @@ static void cpu_call_handler(void (*f)(const void*), const void *arg)
 }
 #endif
 
-static void run_yos_loop(const void* arg)
+static void run_aos_loop(const void* arg)
 {
-    yos_post_event(EV_DDA, CODE_DDA_ON_CONNECTED, 0u);
+    aos_post_event(EV_DDA, CODE_DDA_ON_CONNECTED, 0u);
 
 #ifdef CSP_LINUXHOST
-    yos_task_new("yos", yos_loop, NULL, 8192);
+    aos_task_new("yos", aos_loop, NULL, 8192);
 #endif
 }
 
@@ -462,7 +462,7 @@ static void got_p2p_response(const void* arg)
 
         dlist_del(&req->next);
         req->cb(cmsg->buf, cmsg->len, req->cb_data);
-        yos_free(req);
+        aos_free(req);
         break;
     }
 
@@ -528,7 +528,7 @@ static void handle_event(agent_info_t *agent, ipc_msg_t *msg, struct sockaddr *p
         agent->mac_addr = req.mac_addr;
         LOGD(MYTAG, "ack from master %s\n", inet_ntoa(agent->master_addr.sin_addr));
 
-        cpu_call_handler(run_yos_loop, NULL);
+        cpu_call_handler(run_aos_loop, NULL);
     }
     else if (cmd == CMD_MGMT_ATTACH) {
         memcpy(&agent->master_addr, paddr, sizeof(*paddr));
@@ -646,10 +646,10 @@ void dda_service_stop(void) {
 void dda_service_deinit(void) {
 }
 
-/* called from YoC context, so need to use yos_mm_{alloc,free} */
+/* called from YoC context, so need to use aos_mm_{alloc,free} */
 void dda_p2p_request(int dst_id, const char *cmd, dda_p2p_cb cb, void *cb_data)
 {
-    dda_p2p_t *req = yos_malloc(sizeof(*req));
+    dda_p2p_t *req = aos_malloc(sizeof(*req));
     req->seqno = ++agent_info.p2p_seqno;
     req->cb = cb;
     req->cb_data = cb_data;
@@ -669,7 +669,7 @@ void dda_p2p_remove_request(dda_p2p_cb cb, void *cb_data)
             continue;
 
         dlist_del(&req->next);
-        yos_free(req);
+        aos_free(req);
         break;
     }
 }
@@ -682,7 +682,7 @@ void dda_mesh_send_data(int type, int cmd, uint64_t cmd_pri,
 
 void dda_mesh_register_receiver(int media_type, dda_mesh_cb cb, void *cb_data)
 {
-    /* in very early stage, yos_malloc not usable */
+    /* in very early stage, aos_malloc not usable */
     mesh_cb_t *mcb = malloc(sizeof(*mcb));
 
     mcb->cb = cb;

@@ -168,7 +168,7 @@ int8_t platform_ota_status_post(int status, int percent)
     }
     const char *ota_version = (const char *)ota_get_ota_version();
     snprintf(buff, sizeof(buff), POST_OTA_STATUS_DATA, ota_version, status, percent);
-    ret = yos_cloud_report(POST_OTA_STATUS_METHOD, buff, NULL, NULL);
+    ret = aos_cloud_report(POST_OTA_STATUS_METHOD, buff, NULL, NULL);
     OTA_LOG_I("alink_ota_status_post: %s, ret=%d", buff, ret);
     return ret;
 }
@@ -179,7 +179,7 @@ int8_t platform_ota_result_post(void)
     int ret = -1;
     char buff[256] = {0};
     snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)platform_ota_get_id(), (const char *)ota_get_system_version());
-    ret = yos_cloud_report(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
+    ret = aos_cloud_report(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
     OTA_LOG_D("alink_ota_status_post: %s, ret=%d\n", buff, ret);
     return ret;
 }
@@ -191,13 +191,13 @@ int8_t platform_ota_publish_request(ota_request_params *request_parmas)
 
 int8_t platform_ota_subscribe_upgrade(yos_cloud_cb_t msgCallback)
 {
-    return yos_cloud_register_callback(ALINK_UPGRADE_DEVICE, msgCallback);
+    return aos_cloud_register_callback(ALINK_UPGRADE_DEVICE, msgCallback);
 }
 
 
 int8_t platform_ota_cancel_upgrade(yos_cloud_cb_t msgCallback)
 {
-    return yos_cloud_register_callback(ALINK_CANCEL_UPGRADE_DEVICE, msgCallback);
+    return aos_cloud_register_callback(ALINK_CANCEL_UPGRADE_DEVICE, msgCallback);
 }
 
 extern char *config_get_main_uuid(void);

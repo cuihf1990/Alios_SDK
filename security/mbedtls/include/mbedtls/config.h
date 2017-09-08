@@ -30,6 +30,7 @@
 
 /* System support */
 #define MBEDTLS_HAVE_ASM
+#define MBEDTLS_HAVE_TIME
 
 /* mbed TLS feature support */
 #define MBEDTLS_CIPHER_MODE_CBC
@@ -60,15 +61,22 @@
 #define MBEDTLS_BASE64_C
 #define MBEDTLS_PEM_PARSE_C
 
+/* mbed DTLS modules */
+#define MBEDTLS_TIMING_C
+#define MBEDTLS_SSL_COOKIE_C
+#define MBEDTLS_SSL_PROTO_DTLS
+#define MBEDTLS_SSL_DTLS_ANTI_REPLAY
+
 /* mbed TLS debug */
 //#define MBEDTLS_DEBUG_C
 
 /* OEM configure */
 #define MBEDTLS_IOT_SPECIFIC
+#define MBEDTLS_NET_ALT
 #define MBEDTLS_PK_ALT
 #define MBEDTLS_AES_ALT
 
-#define MBEDTLS_SSL_MAX_CONTENT_LEN    (3 * 1024)    /* Size of the input / output buffer */
+#define MBEDTLS_SSL_MAX_CONTENT_LEN    (4 * 1024)    /* Size of the input / output buffer */
 
 #include "mbedtls/check_config.h"
 

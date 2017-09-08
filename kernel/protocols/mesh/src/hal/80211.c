@@ -134,7 +134,7 @@ next:
     mac80211_fctl_t *fctl = (mac80211_fctl_t *)pkt;
     uint16_t seqno = calc_seqctrl(pkt) << 4;
     mac_entry_t *ent;
-    uint32_t mactime = yos_now_ms();
+    uint32_t mactime = aos_now_ms();
 
     ent = find_mac_entry(pkt + OFF_SRC);
 

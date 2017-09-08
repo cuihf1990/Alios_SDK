@@ -25,7 +25,7 @@ enum {
     MAX_EVENT_TYPE,
 };
 
-typedef void (*yos_cloud_cb_t)(int event, const char *json_buffer);
+typedef void (*aos_cloud_cb_t)(int event, const char *json_buffer);
 
 /**
  * @brief Register cloud event callback
@@ -34,7 +34,7 @@ typedef void (*yos_cloud_cb_t)(int event, const char *json_buffer);
  * @retval 0 success
  * @retval <0 failure
  */
-int yos_cloud_register_callback(int cb_type, yos_cloud_cb_t cb);
+int aos_cloud_register_callback(int cb_type, aos_cloud_cb_t cb);
 
 /**
  * @brief Report event to cloud
@@ -45,7 +45,7 @@ int yos_cloud_register_callback(int cb_type, yos_cloud_cb_t cb);
  * @retval 0 success
  * @retval <0 failure
  */
-int yos_cloud_report(const char *method,
+int aos_cloud_report(const char *method,
                      const char *json_buffer,
                      void (*done_cb)(void *),
                      void *arg);
@@ -56,13 +56,13 @@ int yos_cloud_report(const char *method,
  * @param json_buffer payload
  * @return None
  */
-void yos_cloud_trigger(int cb_type, const char *json_buffer);
+void aos_cloud_trigger(int cb_type, const char *json_buffer);
 
 /**
  * @brief register Cloud Backend
- * @param report called when user do yos_cloud_report
+ * @param report called when user do aos_cloud_report
  * @return None
  */
-void yos_cloud_register_backend(int (*report)(const char *method,
+void aos_cloud_register_backend(int (*report)(const char *method,
                                               const char *json_buffer));
 #endif

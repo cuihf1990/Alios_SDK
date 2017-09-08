@@ -15,7 +15,7 @@ extern uart_dev_t uart_0;
 
 static uint8_t    g_vfs_init;
 
-yos_mutex_t g_vfs_mutex;
+aos_mutex_t g_vfs_mutex;
 
 #ifdef IO_NEED_TRAP
 static int trap_open(const char *path, int flags)
@@ -87,7 +87,7 @@ int vfs_init(void)
         return ret;
     }
 
-    if ((ret = yos_mutex_new(&g_vfs_mutex)) != VFS_SUCCESS) {
+    if ((ret = aos_mutex_new(&g_vfs_mutex)) != VFS_SUCCESS) {
         return ret;
     }
 
@@ -153,7 +153,7 @@ static void del_file(file_t *file)
     file->node = NULL;
 }
 
-int yos_open(const char *path, int flags)
+int aos_open(const char *path, int flags)
 {
     file_t  *file;
     inode_t *node;
@@ -163,21 +163,21 @@ int yos_open(const char *path, int flags)
         return -EINVAL;
     }
 
-    if ((ret = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((ret = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return ret;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
-        yos_mutex_unlock(&g_vfs_mutex);
+        aos_mutex_unlock(&g_vfs_mutex);
         return trap_open(path, flags);
     }
 
     node->i_flags = flags;
     file = new_file(node);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
         return -ENOENT;
@@ -202,7 +202,7 @@ int yos_open(const char *path, int flags)
     return get_fd(file);
 }
 
-int yos_close(int fd)
+int aos_close(int fd)
 {
     int ret = VFS_SUCCESS;
     file_t  *f;
@@ -228,18 +228,18 @@ int yos_close(int fd)
         }
     }
 
-    if ((ret = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((ret = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return ret;
     }
 
     del_file(f);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
 
     return ret;
 }
 
-ssize_t yos_read(int fd, void *buf, size_t nbytes)
+ssize_t aos_read(int fd, void *buf, size_t nbytes)
 {
     ssize_t  nread = -1;
     file_t  *f;
@@ -266,7 +266,7 @@ ssize_t yos_read(int fd, void *buf, size_t nbytes)
     return nread;
 }
 
-ssize_t yos_write(int fd, const void *buf, size_t nbytes)
+ssize_t aos_write(int fd, const void *buf, size_t nbytes)
 {
     ssize_t  nwrite = -1;
     file_t  *f;
@@ -293,7 +293,7 @@ ssize_t yos_write(int fd, const void *buf, size_t nbytes)
     return nwrite;
 }
 
-int yos_ioctl(int fd, int cmd, unsigned long arg)
+int aos_ioctl(int fd, int cmd, unsigned long arg)
 {
     int ret = -ENOSYS;
     file_t  *f;
@@ -324,7 +324,7 @@ int yos_ioctl(int fd, int cmd, unsigned long arg)
     return ret;
 }
 
-off_t yos_lseek(int fd, off_t offset, int whence)
+off_t aos_lseek(int fd, off_t offset, int whence)
 {
     file_t *f;
     inode_t *node;
@@ -347,7 +347,7 @@ off_t yos_lseek(int fd, off_t offset, int whence)
     return ret;
 }
 
-int yos_sync(int fd)
+int aos_sync(int fd)
 {
     file_t  *f;
     inode_t *node;
@@ -370,7 +370,7 @@ int yos_sync(int fd)
     return ret;
 }
 
-int yos_stat(const char *path, struct stat *st)
+int aos_stat(const char *path, struct stat *st)
 {
     file_t  *file;
     inode_t *node;
@@ -380,20 +380,20 @@ int yos_stat(const char *path, struct stat *st)
         return -EINVAL;
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
-        yos_mutex_unlock(&g_vfs_mutex);
+        aos_mutex_unlock(&g_vfs_mutex);
         return -ENODEV;
     }
 
     file = new_file(node);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
         return -ENOENT;
@@ -405,17 +405,17 @@ int yos_stat(const char *path, struct stat *st)
         }
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     del_file(file);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
     return ret;
 }
 
-int yos_unlink(const char *path)
+int aos_unlink(const char *path)
 {
     file_t  *f;
     inode_t *node;
@@ -425,20 +425,20 @@ int yos_unlink(const char *path)
         return -EINVAL;
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
-        yos_mutex_unlock(&g_vfs_mutex);
+        aos_mutex_unlock(&g_vfs_mutex);
         return -ENODEV;
     }
 
     f = new_file(node);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
 
     if (f == NULL) {
         return -ENOENT;
@@ -450,17 +450,17 @@ int yos_unlink(const char *path)
         }
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     del_file(f);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
     return ret;
 }
 
-int yos_rename(const char *oldpath, const char *newpath)
+int aos_rename(const char *oldpath, const char *newpath)
 {
     file_t  *f;
     inode_t *node;
@@ -470,20 +470,20 @@ int yos_rename(const char *oldpath, const char *newpath)
         return -EINVAL;
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     node = inode_open(oldpath);
 
     if (node == NULL) {
-        yos_mutex_unlock(&g_vfs_mutex);
+        aos_mutex_unlock(&g_vfs_mutex);
         return -ENODEV;
     }
 
     f = new_file(node);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
 
     if (f == NULL) {
         return -ENOENT;
@@ -495,40 +495,40 @@ int yos_rename(const char *oldpath, const char *newpath)
         }
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     del_file(f);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
     return ret;
 }
 
-yos_dir_t *yos_opendir(const char *path)
+aos_dir_t *aos_opendir(const char *path)
 {
     file_t  *file;
     inode_t *node;
-    yos_dir_t *dp = NULL;
+    aos_dir_t *dp = NULL;
 
     if (path == NULL) {
         return NULL;
     }
 
-    if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+    if (aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
         return NULL;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
-        yos_mutex_unlock(&g_vfs_mutex);
+        aos_mutex_unlock(&g_vfs_mutex);
         return NULL;
     }
 
     file = new_file(node);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
         return NULL;
@@ -541,13 +541,13 @@ yos_dir_t *yos_opendir(const char *path)
     }
 
     if (dp == NULL) {
-        if (yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        if (aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
             return NULL;
         }
 
         del_file(file);
 
-        yos_mutex_unlock(&g_vfs_mutex);
+        aos_mutex_unlock(&g_vfs_mutex);
         return NULL;
     }
 
@@ -555,7 +555,7 @@ yos_dir_t *yos_opendir(const char *path)
     return dp;
 }
 
-int yos_closedir(yos_dir_t *dir)
+int aos_closedir(aos_dir_t *dir)
 {
     file_t  *f;
     inode_t *node;
@@ -579,22 +579,22 @@ int yos_closedir(yos_dir_t *dir)
         }
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     del_file(f);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
 
     return ret;
 }
 
-yos_dirent_t *yos_readdir(yos_dir_t *dir)
+aos_dirent_t *aos_readdir(aos_dir_t *dir)
 {
     file_t *f;
     inode_t *node;
-    yos_dirent_t *ret = NULL;
+    aos_dirent_t *ret = NULL;
 
     if (dir == NULL) {
         return NULL;
@@ -620,7 +620,7 @@ yos_dirent_t *yos_readdir(yos_dir_t *dir)
     return NULL;
 }
 
-int yos_mkdir(const char *path)
+int aos_mkdir(const char *path)
 {
     file_t  *file;
     inode_t *node;
@@ -630,20 +630,20 @@ int yos_mkdir(const char *path)
         return -EINVAL;
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     node = inode_open(path);
 
     if (node == NULL) {
-        yos_mutex_unlock(&g_vfs_mutex);
+        aos_mutex_unlock(&g_vfs_mutex);
         return -ENODEV;
     }
 
     file = new_file(node);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
         return -ENOENT;
@@ -655,13 +655,13 @@ int yos_mkdir(const char *path)
         }
     }
 
-    if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
     del_file(file);
 
-    yos_mutex_unlock(&g_vfs_mutex);
+    aos_mutex_unlock(&g_vfs_mutex);
     return ret;
 }
 
@@ -680,7 +680,7 @@ int yos_mkdir(const char *path)
 #define gettid() syscall(SYS_gettid)
 
 struct poll_arg {
-    yos_sem_t sem;
+    aos_sem_t sem;
 };
 
 static void setup_fd(int fd)
@@ -715,7 +715,7 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
     }
 
     timeout = timeout >= 0 ? timeout : YOS_WAIT_FOREVER;
-    ret = yos_sem_wait(&parg->sem, timeout);
+    ret = aos_sem_wait(&parg->sem, timeout);
     if (ret != VFS_SUCCESS) {
         return 0;
     }
@@ -728,13 +728,13 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
 static void vfs_poll_notify(struct pollfd *fd, void *arg)
 {
     struct poll_arg *parg = arg;
-    yos_sem_signal(&parg->sem);
+    aos_sem_signal(&parg->sem);
 }
 
 static void vfs_io_cb(int fd, void *arg)
 {
     struct poll_arg *parg = arg;
-    yos_sem_signal(&parg->sem);
+    aos_sem_signal(&parg->sem);
 }
 
 void cpu_io_register(void (*f)(int, void *), void *arg);
@@ -742,13 +742,13 @@ void cpu_io_unregister(void (*f)(int, void *), void *arg);
 static int init_parg(struct poll_arg *parg)
 {
     cpu_io_register(vfs_io_cb, parg);
-    yos_sem_new(&parg->sem,  0);
+    aos_sem_new(&parg->sem,  0);
     return 0;
 }
 
 static void deinit_parg(struct poll_arg *parg)
 {
-    yos_sem_free(&parg->sem);
+    aos_sem_free(&parg->sem);
     cpu_io_unregister(vfs_io_cb, parg);
 }
 
@@ -870,7 +870,7 @@ static int post_poll(struct pollfd *fds, int nfds)
     return ret;
 }
 
-int yos_poll(struct pollfd *fds, int nfds, int timeout)
+int aos_poll(struct pollfd *fds, int nfds, int timeout)
 {
     fd_set rfds;
 
@@ -914,7 +914,7 @@ check_poll:
 }
 #endif
 
-int yos_fcntl(int fd, int cmd, int val)
+int aos_fcntl(int fd, int cmd, int val)
 {
     if (fd < 0) {
         return -EINVAL;
@@ -927,7 +927,7 @@ int yos_fcntl(int fd, int cmd, int val)
     return 0;
 }
 
-int yos_ioctl_in_loop(int cmd, unsigned long arg)
+int aos_ioctl_in_loop(int cmd, unsigned long arg)
 {
     int      err;
     int      fd;
@@ -937,18 +937,18 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
         file_t  *f;
         inode_t *node;
 
-        if ((err = yos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
             return err;
         }
 
         f = get_file(fd);
 
         if (f == NULL) {
-            yos_mutex_unlock(&g_vfs_mutex);
+            aos_mutex_unlock(&g_vfs_mutex);
             return -ENOENT;
         }
 
-        if ((err = yos_mutex_unlock(&g_vfs_mutex)) != 0) {
+        if ((err = aos_mutex_unlock(&g_vfs_mutex)) != 0) {
             return err;
         }
 
@@ -966,7 +966,7 @@ int yos_ioctl_in_loop(int cmd, unsigned long arg)
     return VFS_SUCCESS;
 }
 
-int32_t yos_uart_send(void *data, uint32_t size, uint32_t timeout)
+int32_t aos_uart_send(void *data, uint32_t size, uint32_t timeout)
 {
     return hal_uart_send(&uart_0, data, size, timeout);
 }

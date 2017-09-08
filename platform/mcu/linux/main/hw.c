@@ -37,9 +37,9 @@ static int open_flash(int pno, bool w)
     int flash_fd;
 
     if (per_pid_flash)
-        snprintf(fn, sizeof(fn), "./yos_partition_%d_%d.bin", getpid(), pno);
+        snprintf(fn, sizeof(fn), "./aos_partition_%d_%d.bin", getpid(), pno);
     else
-        snprintf(fn, sizeof(fn), "./yos_partition_%d.bin", pno);
+        snprintf(fn, sizeof(fn), "./aos_partition_%d.bin", pno);
 
     if(w)
         flash_fd = open(fn, O_RDWR);
@@ -202,7 +202,7 @@ int csp_printf(const char *fmt, ...)
     return ret;
 }
 
-extern hal_wifi_module_t sim_yos_wifi_linux;
+extern hal_wifi_module_t sim_aos_wifi_linux;
 extern struct hal_ota_module_s linuxhost_ota_module;
 uart_dev_t uart_0;
 
@@ -222,7 +222,7 @@ void hw_start_hal(options_t *poptions)
     hal_uart_init(&uart_0);
 #endif
 
-    hal_wifi_register_module(&sim_yos_wifi_linux);
+    hal_wifi_register_module(&sim_aos_wifi_linux);
     hal_ota_register_module(&linuxhost_ota_module);
 #ifdef LINUX_MESH_80211
     linux_wifi_register();

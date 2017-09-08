@@ -153,7 +153,7 @@ unsigned findk(n, m, aborts, maxk)
 	 bestcount = count;
       }
 #ifndef IGNOREFREE
-      yos_free(p);
+      aos_free(p);
 #endif
    }
 

@@ -24,12 +24,12 @@
 
  url example:
  http://10.101.111.160/update/manifest?productType＝XJ-1&phone=XJ-1R&
- uuid=yos_id2&system=1.0.0-R-20150101.1201
+ uuid=aos_id2&system=1.0.0-R-20150101.1201
  */
 
 /*static const char _g_update_manifest_url_test[] =
  "http://10.101.111.160/update/manifest?productType＝XJ-1& \
- phone=XJ-1R&uuid=yos_id2&system=1.0.0-R-20150101.1201";*/
+ phone=XJ-1R&uuid=aos_id2&system=1.0.0-R-20150101.1201";*/
 
 extern int http_download(char *url, write_flash_cb_t func);
 
@@ -111,7 +111,7 @@ OTA_END:
     ota_status_post(100);
     ota_status_deinit();
     OTA_LOG_I("reboot system after 3 second!");
-    yos_msleep(3000);
+    aos_msleep(3000);
     OTA_LOG_I("task update over");
     ota_reboot();
 }
@@ -165,7 +165,7 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
     strncpy(md5, response_parmas->md5, sizeof md5);
     memset(url, 0, sizeof url);
     strncpy(url, response_parmas->download_url, sizeof url);
-    ret = yos_task_new("ota", ota_download_start, 0, 8196);
+    ret = aos_task_new("ota", ota_download_start, 0, 8196);
     return ret;
 }
 

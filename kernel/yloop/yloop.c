@@ -18,14 +18,14 @@
 typedef struct {
     int              sock;
     void            *private_data;
-    yos_poll_call_t  cb;
+    aos_poll_call_t  cb;
 } yloop_sock_t;
 
 typedef struct yloop_timeout_s {
     dlist_t          next;
     long long        timeout_ms;
     void            *private_data;
-    yos_call_t       cb;
+    aos_call_t       cb;
     int              ms;
 } yloop_timeout_t;
 
@@ -41,16 +41,16 @@ typedef struct {
 } yloop_ctx_t;
 
 static yloop_ctx_t    *g_main_ctx;
-static yos_task_key_t  g_loop_key;
+static aos_task_key_t  g_loop_key;
 
 static inline void _set_context(yloop_ctx_t *ctx)
 {
-    yos_task_setspecific(g_loop_key, ctx);
+    aos_task_setspecific(g_loop_key, ctx);
 }
 
 static inline yloop_ctx_t *_get_context(void)
 {
-    return yos_task_getspecific(g_loop_key);
+    return aos_task_getspecific(g_loop_key);
 }
 
 static inline yloop_ctx_t *get_context(void)
@@ -63,35 +63,35 @@ static inline yloop_ctx_t *get_context(void)
     return ctx;
 }
 
-void yos_loop_set_eventfd(int fd)
+void aos_loop_set_eventfd(int fd)
 {
     yloop_ctx_t *ctx = get_context();
     ctx->eventfd = fd;
 }
 
-int yos_loop_get_eventfd(void *loop)
+int aos_loop_get_eventfd(void *loop)
 {
     yloop_ctx_t *ctx = loop ? loop : get_context();
     return ctx->eventfd;
 }
 
-yos_loop_t yos_current_loop(void)
+aos_loop_t aos_current_loop(void)
 {
     return get_context();
 }
 
-yos_loop_t yos_loop_init(void)
+aos_loop_t aos_loop_init(void)
 {
     yloop_ctx_t *ctx = _get_context();
 
     if (!g_main_ctx) {
-        yos_task_key_create(&g_loop_key);
+        aos_task_key_create(&g_loop_key);
     } else if (ctx && g_main_ctx != ctx) {
         LOGE(TAG, "yloop already inited");
         return ctx;
     }
 
-    ctx = yos_zalloc(sizeof(*g_main_ctx));
+    ctx = aos_zalloc(sizeof(*g_main_ctx));
     if (!g_main_ctx) {
         g_main_ctx = ctx;
     }
@@ -100,12 +100,12 @@ yos_loop_t yos_loop_init(void)
     ctx->eventfd = -1;
     _set_context(ctx);
 
-    yos_event_service_init();
+    aos_event_service_init();
 
     return ctx;
 }
 
-int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
+int aos_poll_read_fd(int sock, aos_poll_call_t cb, void *private_data)
 {
     yloop_ctx_t *ctx = get_context();
     if (sock  < 0) {
@@ -116,25 +116,25 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
     struct pollfd *new_loop_pollfds;
     int cnt = ctx->reader_count + 1;
 
-    new_sock = yos_malloc(cnt * sizeof(yloop_sock_t));
-    new_loop_pollfds = yos_malloc(cnt * sizeof(struct pollfd));
+    new_sock = aos_malloc(cnt * sizeof(yloop_sock_t));
+    new_loop_pollfds = aos_malloc(cnt * sizeof(struct pollfd));
 
     if (new_sock == NULL || new_loop_pollfds == NULL) {
         LOGE(TAG, "out of memory");
         return -ENOMEM;
     }
 
-    int status = yos_fcntl(sock, F_GETFL, 0);
-    yos_fcntl(sock, F_SETFL, status | O_NONBLOCK);
+    int status = aos_fcntl(sock, F_GETFL, 0);
+    aos_fcntl(sock, F_SETFL, status | O_NONBLOCK);
 
     ctx->reader_count++;
 
     memcpy(new_sock, ctx->readers, (cnt - 1) * sizeof(yloop_sock_t));
-    yos_free(ctx->readers);
+    aos_free(ctx->readers);
     ctx->readers = new_sock;
 
     memcpy(new_loop_pollfds, ctx->pollfds, (cnt - 1) * sizeof(struct pollfd));
-    yos_free(ctx->pollfds);
+    aos_free(ctx->pollfds);
     ctx->pollfds = new_loop_pollfds;
 
     new_sock += cnt - 1;
@@ -149,7 +149,7 @@ int yos_poll_read_fd(int sock, yos_poll_call_t cb, void *private_data)
     return 0;
 }
 
-void yos_cancel_poll_read_fd(int sock, yos_poll_call_t action, void *param)
+void aos_cancel_poll_read_fd(int sock, aos_poll_call_t action, void *param)
 {
     yloop_ctx_t *ctx = get_context();
     if (ctx->readers == NULL || ctx->reader_count == 0) {
@@ -177,19 +177,19 @@ void yos_cancel_poll_read_fd(int sock, yos_poll_call_t action, void *param)
 }
 
 
-int yos_post_delayed_action(int ms, yos_call_t action, void *param)
+int aos_post_delayed_action(int ms, aos_call_t action, void *param)
 {
     if (action == NULL) {
         return -EINVAL;
     }
 
     yloop_ctx_t *ctx = get_context();
-    yloop_timeout_t *timeout = yos_malloc(sizeof(*timeout));
+    yloop_timeout_t *timeout = aos_malloc(sizeof(*timeout));
     if (timeout == NULL) {
         return -ENOMEM;
     }
 
-    timeout->timeout_ms = yos_now_ms() + ms;
+    timeout->timeout_ms = aos_now_ms() + ms;
     timeout->private_data = param;
     timeout->cb = action;
     timeout->ms = ms;
@@ -207,7 +207,7 @@ int yos_post_delayed_action(int ms, yos_call_t action, void *param)
     return 0;
 }
 
-void yos_cancel_delayed_action(int ms, yos_call_t cb, void *private_data)
+void aos_cancel_delayed_action(int ms, aos_call_t cb, void *private_data)
 {
     yloop_ctx_t *ctx = get_context();
     yloop_timeout_t *tmp;
@@ -226,12 +226,12 @@ void yos_cancel_delayed_action(int ms, yos_call_t cb, void *private_data)
         }
 
         dlist_del(&tmp->next);
-        yos_free(tmp);
+        aos_free(tmp);
         return;
     }
 }
 
-void yos_loop_run(void)
+void aos_loop_run(void)
 {
     yloop_ctx_t *ctx = get_context();
 
@@ -243,7 +243,7 @@ void yos_loop_run(void)
 
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            long long now = yos_now_ms();
+            long long now = aos_now_ms();
 
             if (now < tmo->timeout_ms) {
                 delayed_ms = tmo->timeout_ms - now;
@@ -257,22 +257,22 @@ void yos_loop_run(void)
             ctx->pollfds[i].events = POLLIN;
         }
 
-        int res = yos_poll(ctx->pollfds, readers, delayed_ms);
+        int res = aos_poll(ctx->pollfds, readers, delayed_ms);
 
         if (res < 0 && errno != EINTR) {
-            LOGE(TAG, "yos_poll");
+            LOGE(TAG, "aos_poll");
             return;
         }
 
         /* check if some registered timeouts have occurred */
         if (!dlist_empty(&ctx->timeouts)) {
             yloop_timeout_t *tmo = dlist_first_entry(&ctx->timeouts, yloop_timeout_t, next);
-            long long now = yos_now_ms();
+            long long now = aos_now_ms();
 
             if (now >= tmo->timeout_ms) {
                 dlist_del(&tmo->next);
                 tmo->cb(tmo->private_data);
-                yos_free(tmo);
+                aos_free(tmo);
             }
         }
 
@@ -292,13 +292,13 @@ void yos_loop_run(void)
     ctx->terminate = 0;
 }
 
-void yos_loop_exit(void)
+void aos_loop_exit(void)
 {
     yloop_ctx_t *ctx = get_context();
     ctx->terminate = 1;
 }
 
-void yos_loop_destroy(void)
+void aos_loop_destroy(void)
 {
     yloop_ctx_t *ctx = _get_context();
 
@@ -306,21 +306,21 @@ void yos_loop_destroy(void)
         return;
     }
 
-    yos_event_service_deinit(ctx->eventfd);
+    aos_event_service_deinit(ctx->eventfd);
 
     while (!dlist_empty(&ctx->timeouts)) {
         yloop_timeout_t *timeout = dlist_first_entry(&ctx->timeouts, yloop_timeout_t,
                                                      next);
         dlist_del(&timeout->next);
-        yos_free(timeout);
+        aos_free(timeout);
     }
 
-    yos_free(ctx->readers);
-    yos_free(ctx->pollfds);
+    aos_free(ctx->readers);
+    aos_free(ctx->pollfds);
 
     _set_context(NULL);
     if (ctx == g_main_ctx) {
         g_main_ctx = NULL;
     }
-    yos_free(ctx);
+    aos_free(ctx);
 }

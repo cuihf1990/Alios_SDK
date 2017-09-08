@@ -5,260 +5,260 @@
 /* --------------------Rhino-------------------- */
 
 #define SYS_REBOOT 0
-SYSCALL(SYS_REBOOT, yos_reboot)
+SYSCALL(SYS_REBOOT, aos_reboot)
 
 #define SYS_GET_HZ 1
-SYSCALL(SYS_GET_HZ, yos_get_hz)
+SYSCALL(SYS_GET_HZ, aos_get_hz)
 
 #define SYS_VERSION_GET 2
-SYSCALL(SYS_VERSION_GET, yos_version_get)
+SYSCALL(SYS_VERSION_GET, aos_version_get)
 
 #define SYS_STRERROR 3
-SYSCALL(SYS_STRERROR, yos_strerror)
+SYSCALL(SYS_STRERROR, aos_strerror)
 
 #define SYS_TASK_NEW 4
-SYSCALL(SYS_TASK_NEW, yos_task_new)
+SYSCALL(SYS_TASK_NEW, aos_task_new)
 
 #define SYS_TASK_NEW_EXT 5
-SYSCALL(SYS_TASK_NEW_EXT, yos_task_new_ext)
+SYSCALL(SYS_TASK_NEW_EXT, aos_task_new_ext)
 
 #define SYS_TASK_EXIT 6
-SYSCALL(SYS_TASK_EXIT, yos_task_exit)
+SYSCALL(SYS_TASK_EXIT, aos_task_exit)
 
 #define SYS_TASK_NAME 7
-SYSCALL(SYS_TASK_NAME, yos_task_name)
+SYSCALL(SYS_TASK_NAME, aos_task_name)
 
 #define SYS_TASK_KEY_CREATE 8
-SYSCALL(SYS_TASK_KEY_CREATE, yos_task_key_create)
+SYSCALL(SYS_TASK_KEY_CREATE, aos_task_key_create)
 
 #define SYS_TASK_KEY_DELETE 9
-SYSCALL(SYS_TASK_KEY_DELETE, yos_task_key_delete)
+SYSCALL(SYS_TASK_KEY_DELETE, aos_task_key_delete)
 
 #define SYS_TASK_SETSPECIFIC 10
-SYSCALL(SYS_TASK_SETSPECIFIC, yos_task_setspecific)
+SYSCALL(SYS_TASK_SETSPECIFIC, aos_task_setspecific)
 
 #define SYS_TASK_GETSPECIFIC 11
-SYSCALL(SYS_TASK_GETSPECIFIC, yos_task_getspecific)
+SYSCALL(SYS_TASK_GETSPECIFIC, aos_task_getspecific)
 
 #define SYS_MUTEX_NEW 12
-SYSCALL(SYS_MUTEX_NEW, yos_mutex_new)
+SYSCALL(SYS_MUTEX_NEW, aos_mutex_new)
 
 #define SYS_MUTEX_FREE 13
-SYSCALL(SYS_MUTEX_FREE, yos_mutex_free)
+SYSCALL(SYS_MUTEX_FREE, aos_mutex_free)
 
 #define SYS_MUTEX_LOCK 14
-SYSCALL(SYS_MUTEX_LOCK, yos_mutex_lock)
+SYSCALL(SYS_MUTEX_LOCK, aos_mutex_lock)
 
 #define SYS_MUTEX_UNLOCK 15
-SYSCALL(SYS_MUTEX_UNLOCK, yos_mutex_unlock)
+SYSCALL(SYS_MUTEX_UNLOCK, aos_mutex_unlock)
 
 #define SYS_SEM_NEW 16
-SYSCALL(SYS_SEM_NEW, yos_sem_new)
+SYSCALL(SYS_SEM_NEW, aos_sem_new)
 
 #define SYS_SEM_FREE 17
-SYSCALL(SYS_SEM_FREE, yos_sem_free)
+SYSCALL(SYS_SEM_FREE, aos_sem_free)
 
 #define SYS_SEM_WAIT 18
-SYSCALL(SYS_SEM_WAIT, yos_sem_wait)
+SYSCALL(SYS_SEM_WAIT, aos_sem_wait)
 
 #define SYS_SEM_SIGNAL 19
-SYSCALL(SYS_SEM_SIGNAL, yos_sem_signal)
+SYSCALL(SYS_SEM_SIGNAL, aos_sem_signal)
 
 #define SYS_QUEUE_NEW 20
-SYSCALL(SYS_QUEUE_NEW, yos_queue_new)
+SYSCALL(SYS_QUEUE_NEW, aos_queue_new)
 
 #define SYS_QUEUE_FREE 21
-SYSCALL(SYS_QUEUE_FREE, yos_queue_free)
+SYSCALL(SYS_QUEUE_FREE, aos_queue_free)
 
 #define SYS_QUEUE_SEND 22
-SYSCALL(SYS_QUEUE_SEND, yos_queue_send)
+SYSCALL(SYS_QUEUE_SEND, aos_queue_send)
 
 #define SYS_QUEUE_RECV 23
-SYSCALL(SYS_QUEUE_RECV, yos_queue_recv)
+SYSCALL(SYS_QUEUE_RECV, aos_queue_recv)
 
 #define SYS_TIMER_NEW 24
-SYSCALL(SYS_TIMER_NEW, yos_timer_new)
+SYSCALL(SYS_TIMER_NEW, aos_timer_new)
 
 #define SYS_TIMER_FREE 25
-SYSCALL(SYS_TIMER_FREE, yos_timer_free)
+SYSCALL(SYS_TIMER_FREE, aos_timer_free)
 
 #define SYS_TIMER_START 26
-SYSCALL(SYS_TIMER_START, yos_timer_start)
+SYSCALL(SYS_TIMER_START, aos_timer_start)
 
 #define SYS_TIMER_STOP 27
-SYSCALL(SYS_TIMER_STOP, yos_timer_stop)
+SYSCALL(SYS_TIMER_STOP, aos_timer_stop)
 
 #define SYS_TIMER_CHANGE 28
-SYSCALL(SYS_TIMER_CHANGE, yos_timer_change)
+SYSCALL(SYS_TIMER_CHANGE, aos_timer_change)
 
 #define SYS_WORKQUEUE_CREATE 29
-SYSCALL(SYS_WORKQUEUE_CREATE, yos_workqueue_create)
+SYSCALL(SYS_WORKQUEUE_CREATE, aos_workqueue_create)
 
 #define SYS_WORKQUEUE_DEL 30
-SYSCALL(SYS_WORKQUEUE_DEL, yos_workqueue_del)
+SYSCALL(SYS_WORKQUEUE_DEL, aos_workqueue_del)
 
 #define SYS_WORK_INIT 31
-SYSCALL(SYS_WORK_INIT, yos_work_init)
+SYSCALL(SYS_WORK_INIT, aos_work_init)
 
 #define SYS_WORK_DESTROY 32
-SYSCALL(SYS_WORK_DESTROY, yos_work_destroy)
+SYSCALL(SYS_WORK_DESTROY, aos_work_destroy)
 
 #define SYS_WORK_RUN 33
-SYSCALL(SYS_WORK_RUN, yos_work_run)
+SYSCALL(SYS_WORK_RUN, aos_work_run)
 
 #define SYS_WORK_SCHED 34
-SYSCALL(SYS_WORK_SCHED, yos_work_sched)
+SYSCALL(SYS_WORK_SCHED, aos_work_sched)
 
 #define SYS_WORK_CANCEL 35
-SYSCALL(SYS_WORK_CANCEL, yos_work_cancel)
+SYSCALL(SYS_WORK_CANCEL, aos_work_cancel)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
 
 #define SYS_MALLOC 36
-SYSCALL(SYS_MALLOC, sys_yos_malloc)
+SYSCALL(SYS_MALLOC, sys_aos_malloc)
 
 #define SYS_REALLOC 37
-SYSCALL(SYS_REALLOC, sys_yos_realloc)
+SYSCALL(SYS_REALLOC, sys_aos_realloc)
 
 #define SYS_ZALLOC 38
-SYSCALL(SYS_ZALLOC, sys_yos_zalloc)
+SYSCALL(SYS_ZALLOC, sys_aos_zalloc)
 
 #else
 
 #define SYS_MALLOC 36
-SYSCALL(SYS_MALLOC, yos_malloc)
+SYSCALL(SYS_MALLOC, aos_malloc)
 
 #define SYS_REALLOC 37
-SYSCALL(SYS_REALLOC, yos_realloc)
+SYSCALL(SYS_REALLOC, aos_realloc)
 
 #define SYS_ZALLOC 38
-SYSCALL(SYS_ZALLOC, yos_zalloc)
+SYSCALL(SYS_ZALLOC, aos_zalloc)
 
 #endif
 
 #define SYS_ALLOC_TRACE 39
-SYSCALL(SYS_ALLOC_TRACE, yos_alloc_trace)
+SYSCALL(SYS_ALLOC_TRACE, aos_alloc_trace)
 
 #define SYS_FREE 40
-SYSCALL(SYS_FREE, yos_free)
+SYSCALL(SYS_FREE, aos_free)
 
 #define SYS_NOW 41
-SYSCALL(SYS_NOW, yos_now)
+SYSCALL(SYS_NOW, aos_now)
 
 #define SYS_NOW_MS 42
-SYSCALL(SYS_NOW_MS, yos_now_ms)
+SYSCALL(SYS_NOW_MS, aos_now_ms)
 
 #define SYS_MSLEEP 43
-SYSCALL(SYS_MSLEEP, yos_msleep)
+SYSCALL(SYS_MSLEEP, aos_msleep)
 
 /* keep 44~50 for Rhino */
 
 /* --------------------Framework-------------------- */
 
 #define SYS_REGISTER_EVENT_FILTER 51
-SYSCALL(SYS_REGISTER_EVENT_FILTER, yos_register_event_filter)
+SYSCALL(SYS_REGISTER_EVENT_FILTER, aos_register_event_filter)
 
 #define SYS_UNREGISTER_EVENT_FILTER 52
-SYSCALL(SYS_UNREGISTER_EVENT_FILTER, yos_unregister_event_filter)
+SYSCALL(SYS_UNREGISTER_EVENT_FILTER, aos_unregister_event_filter)
 
 #define SYS_POST_EVENT 53
-SYSCALL(SYS_POST_EVENT, yos_post_event)
+SYSCALL(SYS_POST_EVENT, aos_post_event)
 
 #define SYS_POLL_READ_FD 54
-SYSCALL(SYS_POLL_READ_FD, yos_poll_read_fd)
+SYSCALL(SYS_POLL_READ_FD, aos_poll_read_fd)
 
 #define SYS_CANCEL_POLL_READ_FD 55
-SYSCALL(SYS_CANCEL_POLL_READ_FD, yos_cancel_poll_read_fd)
+SYSCALL(SYS_CANCEL_POLL_READ_FD, aos_cancel_poll_read_fd)
 
 #define SYS_POST_DELAYED_ACTION 56
-SYSCALL(SYS_POST_DELAYED_ACTION, yos_post_delayed_action)
+SYSCALL(SYS_POST_DELAYED_ACTION, aos_post_delayed_action)
 
 #define SYS_CANCEL_DELAYED_ACTION 57
-SYSCALL(SYS_CANCEL_DELAYED_ACTION, yos_cancel_delayed_action)
+SYSCALL(SYS_CANCEL_DELAYED_ACTION, aos_cancel_delayed_action)
 
 #define SYS_SCHEDULE_CALL 58
-SYSCALL(SYS_SCHEDULE_CALL, yos_schedule_call)
+SYSCALL(SYS_SCHEDULE_CALL, aos_schedule_call)
 
 #define SYS_LOOP_INIT 59
-SYSCALL(SYS_LOOP_INIT, yos_loop_init)
+SYSCALL(SYS_LOOP_INIT, aos_loop_init)
 
 #define SYS_CURRENT_LOOP 60
-SYSCALL(SYS_CURRENT_LOOP, yos_current_loop)
+SYSCALL(SYS_CURRENT_LOOP, aos_current_loop)
 
 #define SYS_LOOP_RUN 61
-SYSCALL(SYS_LOOP_RUN, yos_loop_run)
+SYSCALL(SYS_LOOP_RUN, aos_loop_run)
 
 #define SYS_LOOP_EXIT 62
-SYSCALL(SYS_LOOP_EXIT, yos_loop_exit)
+SYSCALL(SYS_LOOP_EXIT, aos_loop_exit)
 
 #define SYS_LOOP_DESTROY 63
-SYSCALL(SYS_LOOP_DESTROY, yos_loop_destroy)
+SYSCALL(SYS_LOOP_DESTROY, aos_loop_destroy)
 
 #define SYS_LOOP_SCHEDULE_CALL 64
-SYSCALL(SYS_LOOP_SCHEDULE_CALL, yos_loop_schedule_call)
+SYSCALL(SYS_LOOP_SCHEDULE_CALL, aos_loop_schedule_call)
 
 #define SYS_LOOP_SCHEDULE_WORK 65
-SYSCALL(SYS_LOOP_SCHEDULE_WORK, yos_loop_schedule_work)
+SYSCALL(SYS_LOOP_SCHEDULE_WORK, aos_loop_schedule_work)
 
 #define SYS_CANCEL_WORK 66
-SYSCALL(SYS_CANCEL_WORK, yos_cancel_work)
+SYSCALL(SYS_CANCEL_WORK, aos_cancel_work)
 
 #define SYS_KV_SET 67
-SYSCALL(SYS_KV_SET, yos_kv_set)
+SYSCALL(SYS_KV_SET, aos_kv_set)
 
 #define SYS_KV_GET 68
-SYSCALL(SYS_KV_GET, yos_kv_get)
+SYSCALL(SYS_KV_GET, aos_kv_get)
 
 #define SYS_KV_DEL 69
-SYSCALL(SYS_KV_DEL, yos_kv_del)
+SYSCALL(SYS_KV_DEL, aos_kv_del)
 
 #define SYS_OPEN 70
-SYSCALL(SYS_OPEN, yos_open)
+SYSCALL(SYS_OPEN, aos_open)
 
 #define SYS_CLOSE 71
-SYSCALL(SYS_CLOSE, yos_close)
+SYSCALL(SYS_CLOSE, aos_close)
 
 #define SYS_READ 72
-SYSCALL(SYS_READ, yos_read)
+SYSCALL(SYS_READ, aos_read)
 
 #define SYS_WRITE 73
-SYSCALL(SYS_WRITE, yos_write)
+SYSCALL(SYS_WRITE, aos_write)
 
 #define SYS_IOCTL 74
-SYSCALL(SYS_IOCTL, yos_ioctl)
+SYSCALL(SYS_IOCTL, aos_ioctl)
 
 #define SYS_POLL 75
-SYSCALL(SYS_POLL, yos_poll)
+SYSCALL(SYS_POLL, aos_poll)
 
 #define SYS_FCNTL 76
-SYSCALL(SYS_FCNTL, yos_fcntl)
+SYSCALL(SYS_FCNTL, aos_fcntl)
 
 #define SYS_LSEEK 77
-SYSCALL(SYS_LSEEK, yos_lseek)
+SYSCALL(SYS_LSEEK, aos_lseek)
 
 #define SYS_SYNC 78
-SYSCALL(SYS_SYNC, yos_sync)
+SYSCALL(SYS_SYNC, aos_sync)
 
 #define SYS_STAT 79
-SYSCALL(SYS_STAT, yos_stat)
+SYSCALL(SYS_STAT, aos_stat)
 
 #define SYS_UNLINK 80
-SYSCALL(SYS_UNLINK, yos_unlink)
+SYSCALL(SYS_UNLINK, aos_unlink)
 
 #define SYS_RENAME 81
-SYSCALL(SYS_RENAME, yos_rename)
+SYSCALL(SYS_RENAME, aos_rename)
 
 #define SYS_OPENDIR 82
-SYSCALL(SYS_OPENDIR, yos_opendir)
+SYSCALL(SYS_OPENDIR, aos_opendir)
 
 #define SYS_CLOSEDIR 83
-SYSCALL(SYS_CLOSEDIR, yos_closedir)
+SYSCALL(SYS_CLOSEDIR, aos_closedir)
 
 #define SYS_READDIR 84
-SYSCALL(SYS_READDIR, yos_readdir)
+SYSCALL(SYS_READDIR, aos_readdir)
 
 #define SYS_MKDIR 85
-SYSCALL(SYS_MKDIR, yos_mkdir)
+SYSCALL(SYS_MKDIR, aos_mkdir)
 
 /* keep 86~100 for Framework */
 
@@ -489,12 +489,12 @@ SYSCALL(SYS_CLI_REG_CMDS, cli_register_commands)
 SYSCALL(SYS_CLI_UNREG_CMDS, cli_unregister_commands)
 
 #define SYS_CLI_INIT 185
-SYSCALL(SYS_CLI_INIT, yos_cli_init)
+SYSCALL(SYS_CLI_INIT, aos_cli_init)
 
 #define SYS_CLI_STOP 186
-SYSCALL(SYS_CLI_STOP, yos_cli_stop)
+SYSCALL(SYS_CLI_STOP, aos_cli_stop)
 
 /* --------------------OTHERS-------------------- */
 #define SYS_UART_SEND 187
-SYSCALL(SYS_UART_SEND, yos_uart_send)
+SYSCALL(SYS_UART_SEND, aos_uart_send)
 

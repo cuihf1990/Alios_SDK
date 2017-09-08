@@ -22,19 +22,19 @@ static void test_vflash_write_case()
 {
     int fd, ret;
 
-    fd = yos_open(dev_name, O_RDWR);
+    fd = aos_open(dev_name, O_RDWR);
     YUNIT_ASSERT(fd != 0);
 
-    ret = yos_write(fd, t_string_1, strlen(t_string_1));
+    ret = aos_write(fd, t_string_1, strlen(t_string_1));
     YUNIT_ASSERT(ret == strlen(t_string_1));
 
-    ret = yos_write(fd, t_string_2, strlen(t_string_2));
+    ret = aos_write(fd, t_string_2, strlen(t_string_2));
     YUNIT_ASSERT(ret == strlen(t_string_2));
 
-    ret = yos_write(fd, t_string_3, strlen(t_string_3));
+    ret = aos_write(fd, t_string_3, strlen(t_string_3));
     YUNIT_ASSERT(ret == strlen(t_string_3));
 
-    ret = yos_close(fd);
+    ret = aos_close(fd);
     YUNIT_ASSERT(ret == 0);   
 }
 
@@ -43,27 +43,27 @@ static void test_vflash_read_case()
     int fd, ret;
     char buf[10] = {0};
 
-    fd = yos_open(dev_name, O_RDONLY);
+    fd = aos_open(dev_name, O_RDONLY);
     YUNIT_ASSERT(fd != 0);
 
-    ret = yos_read(fd, buf, strlen(t_string_1));
+    ret = aos_read(fd, buf, strlen(t_string_1));
     YUNIT_ASSERT(ret == strlen(t_string_1));
     ret = memcmp(buf, t_string_1, strlen(t_string_1));
     YUNIT_ASSERT(ret == 0);
 
     memset(buf, 0, sizeof(buf));
-    ret = yos_read(fd, buf, strlen(t_string_2));
+    ret = aos_read(fd, buf, strlen(t_string_2));
     YUNIT_ASSERT(ret == strlen(t_string_2));
     ret = memcmp(buf, t_string_2, strlen(t_string_2));
     YUNIT_ASSERT(ret == 0);
 
     memset(buf, 0, sizeof(buf));
-    ret = yos_read(fd, buf, strlen(t_string_3));
+    ret = aos_read(fd, buf, strlen(t_string_3));
     YUNIT_ASSERT(ret == strlen(t_string_3));
     ret = memcmp(buf, t_string_3, strlen(t_string_3));
     YUNIT_ASSERT(ret == 0);
 
-    ret = yos_close(fd);
+    ret = aos_close(fd);
     YUNIT_ASSERT(ret == 0);   
 }
 
@@ -76,62 +76,62 @@ static void test_vflash_overwrite_case()
     char *buffer = NULL;
     char *cmp_buf = NULL;
 
-    fd = yos_open(dev_name, O_RDWR);
+    fd = aos_open(dev_name, O_RDWR);
     YUNIT_ASSERT(fd != 0);
 
-    buffer = (char *)yos_malloc(2 *SECTOR_SIZE);
+    buffer = (char *)aos_malloc(2 *SECTOR_SIZE);
     if (!buffer)
         return;
 
     memset(buffer, 'a', 2000);
-    ret = yos_write(fd, buffer, 2000);
+    ret = aos_write(fd, buffer, 2000);
     YUNIT_ASSERT(ret == 2000);
 
     memset(buffer, 'b', 2256);
-    ret = yos_write(fd, buffer, 2256);
+    ret = aos_write(fd, buffer, 2256);
     YUNIT_ASSERT(ret == 2256);
 
     memset(buffer, 'c', 2 * SECTOR_SIZE);
-    ret = yos_write(fd, buffer, 2 * SECTOR_SIZE);
+    ret = aos_write(fd, buffer, 2 * SECTOR_SIZE);
     YUNIT_ASSERT(ret == (2 * SECTOR_SIZE));
 
-    ret = yos_close(fd);
+    ret = aos_close(fd);
     YUNIT_ASSERT(ret == 0);
 
-    cmp_buf = (char *)yos_malloc(2 * SECTOR_SIZE);
+    cmp_buf = (char *)aos_malloc(2 * SECTOR_SIZE);
     if (!cmp_buf) {
         if (buffer)
-            yos_free(buffer);
+            aos_free(buffer);
         return;
     }
-    fd = yos_open(dev_name, O_RDONLY);
+    fd = aos_open(dev_name, O_RDONLY);
     YUNIT_ASSERT(fd != 0);
 
     memset(buffer, 0, 2 * SECTOR_SIZE);
-    ret = yos_read(fd, buffer, 2000);
+    ret = aos_read(fd, buffer, 2000);
     YUNIT_ASSERT(ret == 2000);
     memset(cmp_buf, 'a', 2000);
     ret = memcmp(buffer, cmp_buf, 2000);
     YUNIT_ASSERT(ret == 0);
 
-    ret = yos_read(fd, buffer, 2256);
+    ret = aos_read(fd, buffer, 2256);
     YUNIT_ASSERT(ret == 2256);
     memset(cmp_buf, 'b', 2256);
     ret = memcmp(buffer, cmp_buf, 2256);
     YUNIT_ASSERT(ret == 0);
 
-    ret = yos_read(fd, buffer, 2 * SECTOR_SIZE);
+    ret = aos_read(fd, buffer, 2 * SECTOR_SIZE);
     YUNIT_ASSERT(ret == (2 * SECTOR_SIZE));
     memset(cmp_buf, 'c', 2 * SECTOR_SIZE);
     ret = memcmp(buffer, cmp_buf, 2 * SECTOR_SIZE);
     YUNIT_ASSERT(ret == 0);
 
-    yos_close(fd);
+    aos_close(fd);
     if (buffer)
-        yos_free(buffer);
+        aos_free(buffer);
 
     if (cmp_buf)
-        yos_free(cmp_buf);
+        aos_free(cmp_buf);
 
 }
 
@@ -149,7 +149,7 @@ static int cleanup(void)
 {
     int ret;
 
-    ret = yos_unregister_driver(dev_name);
+    ret = aos_unregister_driver(dev_name);
 
     return ret;
 }
@@ -162,7 +162,7 @@ static void teardown(void)
 {
 }
 
-static yunit_test_case_t yos_vflash_testcases[] = {
+static yunit_test_case_t aos_vflash_testcases[] = {
     { "vflash_write", test_vflash_write_case },
     { "vflash_read", test_vflash_read_case },
     { "vflash_overwrite", test_vflash_overwrite_case },
@@ -171,7 +171,7 @@ static yunit_test_case_t yos_vflash_testcases[] = {
 
 
 static yunit_test_suite_t suites[] = {
-    { "vflash", init, cleanup, setup, teardown, yos_vflash_testcases },
+    { "vflash", init, cleanup, setup, teardown, aos_vflash_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

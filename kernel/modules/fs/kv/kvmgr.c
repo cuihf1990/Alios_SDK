@@ -88,9 +88,9 @@ typedef struct _kv_mgr_t {
     uint8_t         gc_waiter;              /* The number of thread wait for garbage collection finished */
     uint8_t         clean_blk_nums;         /* The number of block which state is clean */
     uint16_t        write_pos;              /* Current write position for key-value item */
-    yos_sem_t       gc_sem;
-    yos_work_t      gc_worker;
-    yos_mutex_t     kv_mutex;
+    aos_sem_t       gc_sem;
+    aos_work_t      gc_worker;
+    aos_mutex_t     kv_mutex;
     block_info_t    block_info[BLK_NUMS];   /* The array to record block management information */
 } kv_mgr_t;
 
@@ -99,7 +99,7 @@ static kv_mgr_t g_kv_mgr;
 static const uint8_t BLK_MAGIC_NUM  = 'K';                  /* The block header magic number */
 static const uint8_t ITEM_MAGIC_NUM = 'I';                  /* The key-value item header magic number */
 
-static void yos_kv_gc(void *arg);
+static void aos_kv_gc(void *arg);
 
 /* CRC-8: the poly is 0x31 (x^8 + x^5 + x^4 + 1) */
 static uint8_t utils_crc8(uint8_t *buf, uint16_t length)
@@ -144,16 +144,16 @@ static void trigger_gc(void)
 
     g_kv_mgr.gc_waiter = 0;
     g_kv_mgr.gc_triggered = 1;
-    yos_work_sched(&(g_kv_mgr.gc_worker));
+    aos_work_sched(&(g_kv_mgr.gc_worker));
 }
 
 static void kv_item_free(kv_item_t *item)
 {
     if (item) {
         if (item->store) {
-            yos_free(item->store);
+            aos_free(item->store);
         }
-        yos_free(item);
+        aos_free(item);
     }
 }
 
@@ -245,25 +245,25 @@ static int kv_item_del(kv_item_t *item, int mode)
             return RES_OK;
         }
 
-        char *origin_key = (char *)yos_malloc(hdr.key_len);
+        char *origin_key = (char *)aos_malloc(hdr.key_len);
         if (!origin_key)
             return RES_MALLOC_FAILED;
-        char *new_key = (char *)yos_malloc(hdr.key_len);
+        char *new_key = (char *)aos_malloc(hdr.key_len);
         if (!new_key) {
-            yos_free(origin_key);
+            aos_free(origin_key);
             return RES_MALLOC_FAILED;
         }
 
         raw_read(offset + ITEM_HEADER_SIZE, origin_key, hdr.key_len);
         raw_read(item->pos + ITEM_HEADER_SIZE, new_key, hdr.key_len);
         if(memcmp(origin_key, new_key, hdr.key_len) != 0) {
-            yos_free(origin_key);
-            yos_free(new_key);
+            aos_free(origin_key);
+            aos_free(new_key);
             return RES_OK;
         }
 
-        yos_free(origin_key);
-        yos_free(new_key);
+        aos_free(origin_key);
+        aos_free(new_key);
     } else {
         return RES_INVALID_PARAM;
     }
@@ -288,7 +288,7 @@ typedef int (*item_func)(kv_item_t *item, const char *key);
 
 static int __item_recovery_cb(kv_item_t *item, const char *key)
 {
-    char *p = (char *)yos_malloc(item->len);
+    char *p = (char *)aos_malloc(item->len);
     if (!p) {
         return RES_MALLOC_FAILED;
     }
@@ -305,7 +305,7 @@ static int __item_recovery_cb(kv_item_t *item, const char *key)
         kv_item_del(item, KV_SELF_REMOVE);
     }
 
-    yos_free(p);
+    aos_free(p);
     return RES_CONT;
 }
 
@@ -315,7 +315,7 @@ static int __item_find_cb(kv_item_t *item, const char *key)
         return RES_CONT;
     }
 
-    item->store = (char *)yos_malloc(item->hdr.key_len + item->hdr.val_len);
+    item->store = (char *)aos_malloc(item->hdr.key_len + item->hdr.val_len);
     if (!item->store) {
         return RES_MALLOC_FAILED;
     }
@@ -339,7 +339,7 @@ static int __item_gc_cb(kv_item_t *item, const char *key)
     uint8_t index;
 
     len = (ITEM_HEADER_SIZE + item->len + ~KV_ALIGN_MASK) & KV_ALIGN_MASK;
-    p = (char *)yos_malloc(len);
+    p = (char *)aos_malloc(len);
     if (!p) {
         return RES_MALLOC_FAILED;
     }
@@ -360,7 +360,7 @@ static int __item_gc_cb(kv_item_t *item, const char *key)
     ret = RES_CONT;
 
 err:
-    yos_free(p);
+    aos_free(p);
     return ret;
 }
 
@@ -373,7 +373,7 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
     uint16_t len = 0;
 
     do {
-        item = (kv_item_t *)yos_malloc(sizeof(kv_item_t));
+        item = (kv_item_t *)aos_malloc(sizeof(kv_item_t));
         if (!item) {
             return NULL;
         }
@@ -466,7 +466,7 @@ static int kv_item_store(const char *key, const void *val, int len, uint16_t ori
     hdr.origin_off = origin_off;
 
     store.len = (ITEM_HEADER_SIZE + hdr.key_len + hdr.val_len + ~KV_ALIGN_MASK) & KV_ALIGN_MASK;
-    store.p = (char *)yos_malloc(store.len);
+    store.p = (char *)aos_malloc(store.len);
     if (!store.p) {
         return RES_MALLOC_FAILED;
     }
@@ -493,7 +493,7 @@ static int kv_item_store(const char *key, const void *val, int len, uint16_t ori
     }
 
     if (store.p) {
-        yos_free(store.p);
+        aos_free(store.p);
     }
     return store.ret;
 }
@@ -595,13 +595,13 @@ static int kv_init(void)
     return RES_OK;
 }
 
-static void yos_kv_gc(void *arg)
+static void aos_kv_gc(void *arg)
 {
     uint8_t i;
     uint8_t gc_index;
     uint16_t origin_pos;
 
-    if (yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER) != 0) {
+    if (aos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER) != 0) {
         goto exit;
     }
 
@@ -643,33 +643,33 @@ static void yos_kv_gc(void *arg)
 
 exit:
     g_kv_mgr.gc_triggered = 0;
-    yos_mutex_unlock(&(g_kv_mgr.kv_mutex));
+    aos_mutex_unlock(&(g_kv_mgr.kv_mutex));
     if (g_kv_mgr.gc_waiter > 0) {
-        yos_sem_signal_all(&(g_kv_mgr.gc_sem));
+        aos_sem_signal_all(&(g_kv_mgr.gc_sem));
     }
 }
 
-int yos_kv_del(const char *key)
+int aos_kv_del(const char *key)
 {
     kv_item_t *item;
     int ret;
-    if ((ret = yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
         return ret;
     }
 
     item = kv_item_get(key);
     if (!item) {
-        yos_mutex_unlock(&(g_kv_mgr.kv_mutex));
+        aos_mutex_unlock(&(g_kv_mgr.kv_mutex));
         return RES_ITEM_NOT_FOUND;
     }
 
     ret = kv_item_del(item, KV_SELF_REMOVE);
     kv_item_free(item);
-    yos_mutex_unlock(&(g_kv_mgr.kv_mutex));
+    aos_mutex_unlock(&(g_kv_mgr.kv_mutex));
     return ret;
 }
 
-int yos_kv_set(const char *key, const void *val, int len, int sync)
+int aos_kv_set(const char *key, const void *val, int len, int sync)
 {
     kv_item_t *item;
     int ret;
@@ -679,10 +679,10 @@ int yos_kv_set(const char *key, const void *val, int len, int sync)
 
     if (g_kv_mgr.gc_triggered) {
         (g_kv_mgr.gc_waiter)++;
-        yos_sem_wait(&(g_kv_mgr.gc_sem), YOS_WAIT_FOREVER);
+        aos_sem_wait(&(g_kv_mgr.gc_sem), YOS_WAIT_FOREVER);
     }
 
-    if ((ret = yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
         return ret;
     }
 
@@ -694,11 +694,11 @@ int yos_kv_set(const char *key, const void *val, int len, int sync)
         ret = kv_item_store(key, val, len, 0);
     }
 
-    yos_mutex_unlock(&(g_kv_mgr.kv_mutex));
+    aos_mutex_unlock(&(g_kv_mgr.kv_mutex));
     return ret;
 }
 
-int yos_kv_get(const char *key, void *buffer, int *buffer_len)
+int aos_kv_get(const char *key, void *buffer, int *buffer_len)
 {
     kv_item_t *item = NULL;
     int ret;
@@ -707,13 +707,13 @@ int yos_kv_get(const char *key, void *buffer, int *buffer_len)
         return RES_INVALID_PARAM;
     }
 
-    if ((ret = yos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
         return ret;
     }
 
     item = kv_item_get(key);
 
-    yos_mutex_unlock(&(g_kv_mgr.kv_mutex));
+    aos_mutex_unlock(&(g_kv_mgr.kv_mutex));
 
     if (!item) {
         return RES_ITEM_NOT_FOUND;
@@ -736,24 +736,24 @@ int yos_kv_get(const char *key, void *buffer, int *buffer_len)
 #ifdef CONFIG_YOS_CLI
 static int __item_print_cb(kv_item_t *item, const char *key)
 {
-    char *p_key = (char *)yos_malloc(item->hdr.key_len + 1);
+    char *p_key = (char *)aos_malloc(item->hdr.key_len + 1);
     if (!p_key) {
         return RES_MALLOC_FAILED;
     }
     memset(p_key, 0, item->hdr.key_len + 1);
     raw_read(item->pos + ITEM_HEADER_SIZE, p_key, item->hdr.key_len);
 
-    char *p_val = (char *)yos_malloc(item->hdr.val_len + 1);
+    char *p_val = (char *)aos_malloc(item->hdr.val_len + 1);
     if (!p_val) {
-        yos_free(p_key);
+        aos_free(p_key);
         return RES_MALLOC_FAILED;
     }
     memset(p_val, 0, item->hdr.val_len + 1);
     raw_read(item->pos + ITEM_HEADER_SIZE + item->hdr.key_len, p_val, item->hdr.val_len);
 
     cli_printf("%s = %s\r\n", p_key, p_val);
-    yos_free(p_key);
-    yos_free(p_val);
+    aos_free(p_key);
+    aos_free(p_val);
 
     return RES_CONT;
 }
@@ -768,7 +768,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         if (argc != 4) {
             return ;
         }
-        ret = yos_kv_set(argv[2], argv[3], strlen(argv[3]), 1);
+        ret = aos_kv_set(argv[2], argv[3], strlen(argv[3]), 1);
         if (ret != 0) {
             cli_printf("cli set kv failed\r\n");
         }
@@ -776,7 +776,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         if (argc != 3) {
             return ;
         }
-        buffer = yos_malloc(BLK_SIZE);
+        buffer = aos_malloc(BLK_SIZE);
         if (!buffer) {
             cli_printf("cli get kv failed\r\n");
             return;
@@ -785,7 +785,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         memset(buffer, 0, BLK_SIZE);
         int len = BLK_SIZE;
 
-        ret = yos_kv_get(argv[2], buffer, &len);
+        ret = aos_kv_get(argv[2], buffer, &len);
         if (ret != 0) {
             cli_printf("cli: no paired kv\r\n");
         } else {
@@ -793,13 +793,13 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
 
         if (buffer) {
-            yos_free(buffer);
+            aos_free(buffer);
         }
     } else if (strcmp(rtype, "del") == 0) {
         if (argc != 3) {
             return;
         }
-        ret = yos_kv_del(argv[2]);
+        ret = aos_kv_del(argv[2]);
         if (ret != 0) {
             cli_printf("cli kv del failed\r\n");
         }
@@ -818,7 +818,7 @@ static struct cli_command ncmd = {
 };
 #endif
 
-int yos_kv_init(void)
+int aos_kv_init(void)
 {
     uint8_t blk_index;
     int ret;
@@ -832,7 +832,7 @@ int yos_kv_init(void)
     }
 
     memset(&g_kv_mgr, 0, sizeof(g_kv_mgr));
-    if ((ret = yos_mutex_new(&(g_kv_mgr.kv_mutex))) != 0) {
+    if ((ret = aos_mutex_new(&(g_kv_mgr.kv_mutex))) != 0) {
         return ret;
     }
 
@@ -844,11 +844,11 @@ int yos_kv_init(void)
         return ret;
     }
 
-    if ((ret = yos_work_init(&(g_kv_mgr.gc_worker), yos_kv_gc, NULL, 0)) != RES_OK) {
+    if ((ret = aos_work_init(&(g_kv_mgr.gc_worker), aos_kv_gc, NULL, 0)) != RES_OK) {
         return ret;
     }
 
-    if ((ret = yos_sem_new(&(g_kv_mgr.gc_sem), 0)) != RES_OK) {
+    if ((ret = aos_sem_new(&(g_kv_mgr.gc_sem), 0)) != RES_OK) {
         return ret;
     }
 
@@ -864,12 +864,12 @@ int yos_kv_init(void)
 }
 
 
-void yos_kv_deinit(void)
+void aos_kv_deinit(void)
 {
     g_kv_mgr.kv_initialize = 0;
-    yos_work_cancel(&(g_kv_mgr.gc_worker));
-    yos_work_destroy(&(g_kv_mgr.gc_worker));
-    yos_sem_free(&(g_kv_mgr.gc_sem));
-    yos_mutex_free(&(g_kv_mgr.kv_mutex));
+    aos_work_cancel(&(g_kv_mgr.gc_worker));
+    aos_work_destroy(&(g_kv_mgr.gc_worker));
+    aos_sem_free(&(g_kv_mgr.gc_sem));
+    aos_mutex_free(&(g_kv_mgr.kv_mutex));
 }
 

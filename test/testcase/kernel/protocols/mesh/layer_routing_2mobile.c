@@ -87,7 +87,7 @@ static void dual_if_topology_line_case(void)
     YUNIT_ASSERT(ipaddr != NULL);
     if (ipaddr) {
         snprintf(ping_cmd, sizeof ping_cmd, "send 151 ping %s", ipaddr);
-        yos_free(ipaddr);
+        aos_free(ipaddr);
 
         cmd_to_master(ping_cmd);
         check_p2p_str_wait("1", 151, "testcmd icmp_acked", 5);

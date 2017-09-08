@@ -79,7 +79,7 @@ int platform_config_write(const char *buffer, int length)
         return -1;
     }
 
-    return yos_kv_set("alink", buffer, length, 1);
+    return aos_kv_set("alink", buffer, length, 1);
 }
 
 int platform_config_read(char *buffer, int length)
@@ -88,7 +88,7 @@ int platform_config_read(char *buffer, int length)
         return -1;
     }
 
-    return yos_kv_get("alink" , buffer, &length);
+    return aos_kv_get("alink" , buffer, &length);
 }
 
 int platform_sys_net_is_ready(void)
@@ -107,7 +107,7 @@ int platform_sys_net_is_ready(void)
 
 void platform_sys_reboot(void)
 {
-    yos_reboot();
+    aos_reboot();
 }
 
 char *platform_get_module_name(char name_str[STR_SHORT_LEN])

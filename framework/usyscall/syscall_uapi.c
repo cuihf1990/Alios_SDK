@@ -18,201 +18,201 @@
 
 /* --------------------Rhino-------------------- */
 
-void yos_reboot(void)
+void aos_reboot(void)
 {
     SYS_CALL0(SYS_REBOOT, void);
 }
 
-int yos_get_hz(void)
+int aos_get_hz(void)
 {
     return RHINO_CONFIG_TICKS_PER_SECOND;
 }
 
-const char *yos_version_get(void)
+const char *aos_version_get(void)
 {
     return SYS_CALL0(SYS_VERSION_GET, const char *);
 }
 
-const char *yos_strerror(int errnum)
+const char *aos_strerror(int errnum)
 {
     (void)errnum;
     return NULL;
 }
 
-int yos_task_new(const char *name, void (*fn)(void *), void *arg,
+int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {
     return SYS_CALL4(SYS_TASK_NEW, int, const char *, name,
                      void (*)(void *), fn, void *, arg, int, stack_size);
 }
 
-int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), void *arg,
+int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
                      int stack_size, int prio)
 {
-    return SYS_CALL6(SYS_TASK_NEW_EXT, int, yos_task_t *, task, const char *, name,
+    return SYS_CALL6(SYS_TASK_NEW_EXT, int, aos_task_t *, task, const char *, name,
                      void (*)(void *), fn, void *, arg, int, stack_size, int, prio);
 }
 
-void yos_task_exit(int code)
+void aos_task_exit(int code)
 {
     SYS_CALL1(SYS_TASK_EXIT, void, int, code);
 }
 
-const char *yos_task_name(void)
+const char *aos_task_name(void)
 {
     return SYS_CALL0(SYS_TASK_NAME, const char *);
 }
 
-int yos_task_key_create(yos_task_key_t *key)
+int aos_task_key_create(aos_task_key_t *key)
 {
-    return SYS_CALL1(SYS_TASK_KEY_CREATE, int, yos_task_key_t *, key);
+    return SYS_CALL1(SYS_TASK_KEY_CREATE, int, aos_task_key_t *, key);
 }
 
-void yos_task_key_delete(yos_task_key_t key)
+void aos_task_key_delete(aos_task_key_t key)
 {
-    SYS_CALL1(SYS_TASK_KEY_DELETE, void, yos_task_key_t, key);
+    SYS_CALL1(SYS_TASK_KEY_DELETE, void, aos_task_key_t, key);
 }
 
-int yos_task_setspecific(yos_task_key_t key, void *vp)
+int aos_task_setspecific(aos_task_key_t key, void *vp)
 {
-    return SYS_CALL2(SYS_TASK_SETSPECIFIC, int, yos_task_key_t, key, void *, vp);
+    return SYS_CALL2(SYS_TASK_SETSPECIFIC, int, aos_task_key_t, key, void *, vp);
 }
 
-void *yos_task_getspecific(yos_task_key_t key)
+void *aos_task_getspecific(aos_task_key_t key)
 {
-    return SYS_CALL1(SYS_TASK_GETSPECIFIC, void *, yos_task_key_t, key);
+    return SYS_CALL1(SYS_TASK_GETSPECIFIC, void *, aos_task_key_t, key);
 }
 
-int yos_mutex_new(yos_mutex_t *mutex)
+int aos_mutex_new(aos_mutex_t *mutex)
 {
-    return SYS_CALL1(SYS_MUTEX_NEW, int, yos_mutex_t *, mutex);
+    return SYS_CALL1(SYS_MUTEX_NEW, int, aos_mutex_t *, mutex);
 }
 
-void yos_mutex_free(yos_mutex_t *mutex)
+void aos_mutex_free(aos_mutex_t *mutex)
 {
-    SYS_CALL1(SYS_MUTEX_FREE, void, yos_mutex_t *, mutex);
+    SYS_CALL1(SYS_MUTEX_FREE, void, aos_mutex_t *, mutex);
 }
 
-int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout)
+int aos_mutex_lock(aos_mutex_t *mutex, unsigned int timeout)
 {
-    return SYS_CALL2(SYS_MUTEX_LOCK, int, yos_mutex_t *, mutex, unsigned int, timeout);
+    return SYS_CALL2(SYS_MUTEX_LOCK, int, aos_mutex_t *, mutex, unsigned int, timeout);
 }
 
-int yos_mutex_unlock(yos_mutex_t *mutex)
+int aos_mutex_unlock(aos_mutex_t *mutex)
 {
-    return SYS_CALL1(SYS_MUTEX_UNLOCK, int, yos_mutex_t *, mutex);
+    return SYS_CALL1(SYS_MUTEX_UNLOCK, int, aos_mutex_t *, mutex);
 }
 
-int yos_sem_new(yos_sem_t *sem, int count)
+int aos_sem_new(aos_sem_t *sem, int count)
 {
-    return SYS_CALL2(SYS_SEM_NEW, int, yos_sem_t *, sem, int, count);
+    return SYS_CALL2(SYS_SEM_NEW, int, aos_sem_t *, sem, int, count);
 }
 
-void yos_sem_free(yos_sem_t *sem)
+void aos_sem_free(aos_sem_t *sem)
 {
-    SYS_CALL1(SYS_SEM_FREE, void, yos_sem_t *, sem);
+    SYS_CALL1(SYS_SEM_FREE, void, aos_sem_t *, sem);
 }
 
-int yos_sem_wait(yos_sem_t *sem, unsigned int timeout)
+int aos_sem_wait(aos_sem_t *sem, unsigned int timeout)
 {
-    return SYS_CALL2(SYS_SEM_WAIT, int, yos_sem_t *, sem, unsigned int, timeout);
+    return SYS_CALL2(SYS_SEM_WAIT, int, aos_sem_t *, sem, unsigned int, timeout);
 }
 
-void yos_sem_signal(yos_sem_t *sem)
+void aos_sem_signal(aos_sem_t *sem)
 {
-    SYS_CALL1(SYS_SEM_SIGNAL, void, yos_sem_t *, sem);
+    SYS_CALL1(SYS_SEM_SIGNAL, void, aos_sem_t *, sem);
 }
 
-int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size, int max_msg)
+int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg)
 {
-    return SYS_CALL4(SYS_QUEUE_NEW, int, yos_queue_t *, queue, void *, buf,
+    return SYS_CALL4(SYS_QUEUE_NEW, int, aos_queue_t *, queue, void *, buf,
                      unsigned int, size, int, max_msg);
 }
 
-void yos_queue_free(yos_queue_t *queue)
+void aos_queue_free(aos_queue_t *queue)
 {
-    SYS_CALL1(SYS_QUEUE_FREE, void, yos_queue_t *, queue);
+    SYS_CALL1(SYS_QUEUE_FREE, void, aos_queue_t *, queue);
 }
 
-int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size)
+int aos_queue_send(aos_queue_t *queue, void *msg, unsigned int size)
 {
-    return SYS_CALL3(SYS_QUEUE_SEND, int, yos_queue_t *, queue, void *, msg,
+    return SYS_CALL3(SYS_QUEUE_SEND, int, aos_queue_t *, queue, void *, msg,
                      unsigned int, size);
 }
 
-int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
+int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
                    unsigned int *size)
 {
-    return SYS_CALL4(SYS_QUEUE_RECV, int, yos_queue_t *, queue,
+    return SYS_CALL4(SYS_QUEUE_RECV, int, aos_queue_t *, queue,
                      unsigned int, ms, void *, msg, unsigned int *, size);
 }
 
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *), void *arg, int ms,
+int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *), void *arg, int ms,
                   int repeat)
 {
-    return SYS_CALL5(SYS_TIMER_NEW, int, yos_timer_t *, timer,
+    return SYS_CALL5(SYS_TIMER_NEW, int, aos_timer_t *, timer,
                      void (*)(void *, void *), fn, void *, arg, int, ms, int, repeat);
 }
 
-void yos_timer_free(yos_timer_t *timer)
+void aos_timer_free(aos_timer_t *timer)
 {
-    SYS_CALL1(SYS_TIMER_FREE, void, yos_timer_t *, timer);
+    SYS_CALL1(SYS_TIMER_FREE, void, aos_timer_t *, timer);
 }
 
-int yos_timer_start(yos_timer_t *timer)
+int aos_timer_start(aos_timer_t *timer)
 {
-    return SYS_CALL1(SYS_TIMER_START, int, yos_timer_t *, timer);
+    return SYS_CALL1(SYS_TIMER_START, int, aos_timer_t *, timer);
 }
 
-int yos_timer_stop(yos_timer_t *timer)
+int aos_timer_stop(aos_timer_t *timer)
 {
-    return SYS_CALL1(SYS_TIMER_STOP, int, yos_timer_t *, timer);
+    return SYS_CALL1(SYS_TIMER_STOP, int, aos_timer_t *, timer);
 }
 
-int yos_timer_change(yos_timer_t *timer, int ms)
+int aos_timer_change(aos_timer_t *timer, int ms)
 {
-    return SYS_CALL2(SYS_TIMER_CHANGE, int, yos_timer_t *, timer, int, ms);
+    return SYS_CALL2(SYS_TIMER_CHANGE, int, aos_timer_t *, timer, int, ms);
 }
 
-int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size)
+int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
 {
-    return SYS_CALL3(SYS_WORKQUEUE_CREATE, int, yos_workqueue_t *, workqueue,
+    return SYS_CALL3(SYS_WORKQUEUE_CREATE, int, aos_workqueue_t *, workqueue,
                      int, pri, int, stack_size);
 }
 
-void yos_workqueue_del(yos_workqueue_t *workqueue)
+void aos_workqueue_del(aos_workqueue_t *workqueue)
 {
-    SYS_CALL1(SYS_WORKQUEUE_DEL, void, yos_workqueue_t *, workqueue);
+    SYS_CALL1(SYS_WORKQUEUE_DEL, void, aos_workqueue_t *, workqueue);
 }
 
-int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly)
+int aos_work_init(aos_work_t *work, void (*fn)(void *), void *arg, int dly)
 {
-    return SYS_CALL4(SYS_WORK_INIT, int, yos_work_t *, work,
+    return SYS_CALL4(SYS_WORK_INIT, int, aos_work_t *, work,
                      void (*)(void *), fn, void *, arg, int, dly);
 }
 
-void yos_work_destroy(yos_work_t *work)
+void aos_work_destroy(aos_work_t *work)
 {
-    SYS_CALL1(SYS_WORK_DESTROY, int, yos_work_t *, work);
+    SYS_CALL1(SYS_WORK_DESTROY, int, aos_work_t *, work);
 }
 
-int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work)
+int aos_work_run(aos_workqueue_t *workqueue, aos_work_t *work)
 {
-    return SYS_CALL2(SYS_WORK_RUN, int, yos_workqueue_t *, workqueue,
-                     yos_work_t *, work);
+    return SYS_CALL2(SYS_WORK_RUN, int, aos_workqueue_t *, workqueue,
+                     aos_work_t *, work);
 }
 
-int yos_work_sched(yos_work_t *work)
+int aos_work_sched(aos_work_t *work)
 {
-    return SYS_CALL1(SYS_WORK_SCHED, int, yos_work_t *, work);
+    return SYS_CALL1(SYS_WORK_SCHED, int, aos_work_t *, work);
 }
 
-int yos_work_cancel(yos_work_t *work)
+int aos_work_cancel(aos_work_t *work)
 {
-    return SYS_CALL1(SYS_WORK_CANCEL, int, yos_work_t *, work);
+    return SYS_CALL1(SYS_WORK_CANCEL, int, aos_work_t *, work);
 }
 
-void *yos_malloc(unsigned int size)
+void *aos_malloc(unsigned int size)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
@@ -225,7 +225,7 @@ void *yos_malloc(unsigned int size)
 #endif
 }
 
-void *yos_realloc(void *mem, unsigned int size)
+void *aos_realloc(void *mem, unsigned int size)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
@@ -239,7 +239,7 @@ void *yos_realloc(void *mem, unsigned int size)
 #endif
 }
 
-void *yos_zalloc(unsigned int size)
+void *aos_zalloc(unsigned int size)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
@@ -252,224 +252,224 @@ void *yos_zalloc(unsigned int size)
 #endif
 }
 
-void yos_alloc_trace(void *addr, size_t allocator)
+void aos_alloc_trace(void *addr, size_t allocator)
 {
     return SYS_CALL2(SYS_ALLOC_TRACE, void, void *, addr, size_t, allocator);
 }
 
-void yos_free(void *mem)
+void aos_free(void *mem)
 {
     SYS_CALL1(SYS_FREE, void, void *, mem);
 }
 
-long long yos_now(void)
+long long aos_now(void)
 {
     return SYS_CALL0(SYS_NOW, long long);
 }
 
-long long yos_now_ms(void)
+long long aos_now_ms(void)
 {
     return SYS_CALL0(SYS_NOW_MS, long long);
 }
 
-void yos_msleep(int ms)
+void aos_msleep(int ms)
 {
     SYS_CALL1(SYS_MSLEEP, void, int, ms);
 }
 
 /* --------------------Framework-------------------- */
 
-typedef void (*yos_event_cb)(input_event_t *event, void *private_data);
-typedef void (*yos_call_t)(void *arg);
-typedef void (*yos_poll_call_t)(int fd, void *arg);
+typedef void (*aos_event_cb)(input_event_t *event, void *private_data);
+typedef void (*aos_call_t)(void *arg);
+typedef void (*aos_poll_call_t)(int fd, void *arg);
 
-int yos_register_event_filter(uint16_t type, yos_event_cb cb, void *priv)
+int aos_register_event_filter(uint16_t type, aos_event_cb cb, void *priv)
 {
     return SYS_CALL3(SYS_REGISTER_EVENT_FILTER, int, uint16_t, type,
-                     yos_event_cb, cb, void *, priv);
+                     aos_event_cb, cb, void *, priv);
 }
 
-int yos_unregister_event_filter(uint16_t type, yos_event_cb cb, void *priv)
+int aos_unregister_event_filter(uint16_t type, aos_event_cb cb, void *priv)
 {
     return SYS_CALL3(SYS_UNREGISTER_EVENT_FILTER, int, uint16_t, type,
-                     yos_event_cb, cb, void *, priv);
+                     aos_event_cb, cb, void *, priv);
 }
 
-int yos_post_event(uint16_t type, uint16_t code, unsigned long value)
+int aos_post_event(uint16_t type, uint16_t code, unsigned long value)
 {
     return SYS_CALL3(SYS_POST_EVENT, int, uint16_t, type, uint16_t, code,
                      unsigned long, value);
 }
 
-int yos_poll_read_fd(int fd, yos_poll_call_t action, void *param)
+int aos_poll_read_fd(int fd, aos_poll_call_t action, void *param)
 {
-    return SYS_CALL3(SYS_POLL_READ_FD, int, int, fd, yos_poll_call_t, action,
+    return SYS_CALL3(SYS_POLL_READ_FD, int, int, fd, aos_poll_call_t, action,
                      void *, param);
 }
 
-void yos_cancel_poll_read_fd(int fd, yos_poll_call_t action, void *param)
+void aos_cancel_poll_read_fd(int fd, aos_poll_call_t action, void *param)
 {
     return SYS_CALL3(SYS_CANCEL_POLL_READ_FD, void, int, fd,
-                     yos_poll_call_t, action, void *, param);
+                     aos_poll_call_t, action, void *, param);
 }
 
-int yos_post_delayed_action(int ms, yos_call_t action, void *arg)
+int aos_post_delayed_action(int ms, aos_call_t action, void *arg)
 {
-    return SYS_CALL3(SYS_POST_DELAYED_ACTION, int, int, ms, yos_call_t, action,
+    return SYS_CALL3(SYS_POST_DELAYED_ACTION, int, int, ms, aos_call_t, action,
                      void *, arg);
 }
 
-void yos_cancel_delayed_action(int ms, yos_call_t action, void *arg)
+void aos_cancel_delayed_action(int ms, aos_call_t action, void *arg)
 {
     return SYS_CALL3(SYS_CANCEL_DELAYED_ACTION, void, int, ms,
-                     yos_call_t, action, void *, arg);
+                     aos_call_t, action, void *, arg);
 }
 
-int yos_schedule_call(yos_call_t action, void *arg)
+int aos_schedule_call(aos_call_t action, void *arg)
 {
-    return SYS_CALL2(SYS_SCHEDULE_CALL, int, yos_call_t, action, void *, arg);
+    return SYS_CALL2(SYS_SCHEDULE_CALL, int, aos_call_t, action, void *, arg);
 }
 
-typedef void *yos_loop_t;
+typedef void *aos_loop_t;
 
-yos_loop_t yos_loop_init(void)
+aos_loop_t aos_loop_init(void)
 {
-    return SYS_CALL0(SYS_LOOP_INIT, yos_loop_t);
+    return SYS_CALL0(SYS_LOOP_INIT, aos_loop_t);
 }
 
-yos_loop_t yos_current_loop(void)
+aos_loop_t aos_current_loop(void)
 {
-    return SYS_CALL0(SYS_CURRENT_LOOP, yos_loop_t);
+    return SYS_CALL0(SYS_CURRENT_LOOP, aos_loop_t);
 }
 
-void yos_loop_run(void)
+void aos_loop_run(void)
 {
     return SYS_CALL0(SYS_LOOP_RUN, void);
 }
 
-void yos_loop_exit(void)
+void aos_loop_exit(void)
 {
     return SYS_CALL0(SYS_LOOP_EXIT, void);
 }
 
-void yos_loop_destroy(void)
+void aos_loop_destroy(void)
 {
     return SYS_CALL0(SYS_LOOP_DESTROY, void);
 }
 
-int yos_loop_schedule_call(yos_loop_t *loop, yos_call_t action, void *arg)
+int aos_loop_schedule_call(aos_loop_t *loop, aos_call_t action, void *arg)
 {
-    return SYS_CALL3(SYS_LOOP_SCHEDULE_CALL, int, yos_loop_t *, loop,
-                     yos_call_t, action, void *, arg);
+    return SYS_CALL3(SYS_LOOP_SCHEDULE_CALL, int, aos_loop_t *, loop,
+                     aos_call_t, action, void *, arg);
 }
 
-void *yos_loop_schedule_work(int ms, yos_call_t action, void *arg1,
-                             yos_call_t fini_cb, void *arg2)
+void *aos_loop_schedule_work(int ms, aos_call_t action, void *arg1,
+                             aos_call_t fini_cb, void *arg2)
 {
     return SYS_CALL5(SYS_LOOP_SCHEDULE_WORK, void *, int, ms,
-                     yos_call_t, action, void *, arg1, yos_call_t, fini_cb,
+                     aos_call_t, action, void *, arg1, aos_call_t, fini_cb,
                      void *, arg2);
 }
 
-void yos_cancel_work(void *work, yos_call_t action, void *arg1)
+void aos_cancel_work(void *work, aos_call_t action, void *arg1)
 {
-    return SYS_CALL3(SYS_CANCEL_WORK, void, void *, work, yos_call_t, action,
+    return SYS_CALL3(SYS_CANCEL_WORK, void, void *, work, aos_call_t, action,
                      void *, arg1);
 }
 
-int yos_kv_set(const char *key, const void *value, int len, int sync)
+int aos_kv_set(const char *key, const void *value, int len, int sync)
 {
     return SYS_CALL4(SYS_KV_SET, int, const char *, key, const void *, value,
                      int, len, int, sync);
 }
 
-int yos_kv_get(const char *key, void *buffer, int *buffer_len)
+int aos_kv_get(const char *key, void *buffer, int *buffer_len)
 {
     return SYS_CALL3(SYS_KV_GET, int, const char *, key, void *, buffer,
                      int *, buffer_len);
 }
 
-int yos_kv_del(const char *key)
+int aos_kv_del(const char *key)
 {
     return SYS_CALL1(SYS_KV_DEL, int, const char *, key);
 }
 
-int yos_open(const char *path, int flags)
+int aos_open(const char *path, int flags)
 {
     return SYS_CALL2(SYS_OPEN, int, const char *, path, int, flags);
 }
 
-int yos_close(int fd)
+int aos_close(int fd)
 {
     return SYS_CALL1(SYS_CLOSE, int, int, fd);
 }
 
-ssize_t yos_read(int fd, void *buf, size_t nbytes)
+ssize_t aos_read(int fd, void *buf, size_t nbytes)
 {
     return SYS_CALL3(SYS_READ, ssize_t, int, fd, void *, buf, size_t, nbytes);
 }
 
-ssize_t yos_write(int fd, const void *buf, size_t nbytes)
+ssize_t aos_write(int fd, const void *buf, size_t nbytes)
 {
     return SYS_CALL3(SYS_WRITE, ssize_t, int, fd, const void *, buf, size_t, nbytes);
 }
 
-int yos_ioctl(int fd, int cmd, unsigned long arg)
+int aos_ioctl(int fd, int cmd, unsigned long arg)
 {
     return SYS_CALL3(SYS_IOCTL, int, int, fd, int, cmd, unsigned long, arg);
 }
 
-int yos_poll(struct pollfd *fds, int nfds, int timeout)
+int aos_poll(struct pollfd *fds, int nfds, int timeout)
 {
     return SYS_CALL3(SYS_POLL, int, struct pollfd *, fds, int, nfds, int, timeout);
 }
 
-int yos_fcntl(int fd, int cmd, int val)
+int aos_fcntl(int fd, int cmd, int val)
 {
     return SYS_CALL3(SYS_FCNTL, int, int, fd, int, cmd, int, val);
 }
 
-off_t yos_lseek(int fd, off_t offset, int whence)
+off_t aos_lseek(int fd, off_t offset, int whence)
 {
     return SYS_CALL3(SYS_LSEEK, off_t, int, fd, off_t, offset, int, whence);
 }
 
-int yos_sync(int fd)
+int aos_sync(int fd)
 {
     return SYS_CALL1(SYS_SYNC, int, int, fd);
 }
 
-int yos_stat(const char *path, struct stat *st)
+int aos_stat(const char *path, struct stat *st)
 {
     return SYS_CALL2(SYS_STAT, int, const char *, path, struct stat *, st);
 }
 
-int yos_unlink(const char *path)
+int aos_unlink(const char *path)
 {
     return SYS_CALL1(SYS_UNLINK, int, const char *, path);
 }
 
-int yos_rename(const char *oldpath, const char *newpath)
+int aos_rename(const char *oldpath, const char *newpath)
 {
     return SYS_CALL2(SYS_RENAME, int, const char *, oldpath, const char *, newpath);
 }
 
-yos_dir_t *yos_opendir(const char *path)
+aos_dir_t *aos_opendir(const char *path)
 {
-    return SYS_CALL1(SYS_OPENDIR, yos_dir_t *, const char *, path);
+    return SYS_CALL1(SYS_OPENDIR, aos_dir_t *, const char *, path);
 }
 
-int yos_closedir(yos_dir_t *dir)
+int aos_closedir(aos_dir_t *dir)
 {
-    return SYS_CALL1(SYS_CLOSEDIR, int, yos_dir_t *, dir);
+    return SYS_CALL1(SYS_CLOSEDIR, int, aos_dir_t *, dir);
 }
 
-yos_dirent_t *yos_readdir(yos_dir_t *dir)
+aos_dirent_t *aos_readdir(aos_dir_t *dir)
 {
-    return SYS_CALL1(SYS_READDIR, yos_dirent_t *, yos_dir_t *, dir);
+    return SYS_CALL1(SYS_READDIR, aos_dirent_t *, aos_dir_t *, dir);
 }
 
-int yos_mkdir(const char *path)
+int aos_mkdir(const char *path)
 {
     return SYS_CALL1(SYS_MKDIR, int, const char *, path);
 }
@@ -866,19 +866,19 @@ int cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
     return SYS_CALL2(SYS_CLI_UNREG_CMDS, int, const struct cli_command *, cmds, int, num_cmds);
 }
 
-int yos_cli_init(void)
+int aos_cli_init(void)
 {
     return SYS_CALL0(SYS_CLI_INIT, int);
 }
 
-int yos_cli_stop(void)
+int aos_cli_stop(void)
 {
     return SYS_CALL0(SYS_CLI_STOP, int);
 }
 
 /* --------------------OTHERS-------------------- */
 
-int32_t yos_uart_send(void *data, uint32_t size, uint32_t timeout)
+int32_t aos_uart_send(void *data, uint32_t size, uint32_t timeout)
 {
     return SYS_CALL3(SYS_UART_SEND, int32_t, void *, data, uint32_t, size, uint32_t, timeout);
 }

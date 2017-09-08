@@ -96,7 +96,7 @@ static int send_sock(int fd, void *buf, int len, struct sockaddr_in *paddr)
     int ret = -1;
     size_t dlen = len;
 
-    aes_ctx = yos_malloc(aes_ctx_size);
+    aes_ctx = aos_malloc(aes_ctx_size);
     if (aes_ctx == NULL) {
         return -1;
     }
@@ -118,7 +118,7 @@ out:
         GW_DEBUG(MODULE_NAME, "error encrypting %d", result);
     }
 
-    yos_free(aes_ctx);
+    aos_free(aes_ctx);
 
     return ret;
 }
@@ -141,7 +141,7 @@ static int recv_sock(int fd, void *buf, int len, struct sockaddr_in *paddr)
     int ret;
     size_t dlen = len;
 
-    aes_ctx = yos_malloc(aes_ctx_size);
+    aes_ctx = aos_malloc(aes_ctx_size);
     if (aes_ctx == NULL) {
         return -1;
     }
@@ -160,7 +160,7 @@ out:
     if (result != ALI_CRYPTO_SUCCESS) {
         GW_DEBUG(MODULE_NAME, "error encrypting %d", result);
     }
-    yos_free(aes_ctx);
+    aos_free(aes_ctx);
     return result != ALI_CRYPTO_SUCCESS ? -1 : len;
 }
 
@@ -190,7 +190,7 @@ static struct sockaddr_in *get_ipaddr_by_uuid(const char *uuid)
     return NULL;
 }
 
-static int yos_cloud_get_attr(const char *uuid, const char *attr_name)
+static int aos_cloud_get_attr(const char *uuid, const char *attr_name)
 {
 #if LWIP_IPV6
     struct sockaddr_in6 *paddr = NULL;
@@ -211,11 +211,11 @@ static int yos_cloud_get_attr(const char *uuid, const char *attr_name)
 
     send_sock(gateway_state.sockfd, buf, len, paddr);
 
-    yos_free(buf);
+    aos_free(buf);
     return 0;
 }
 
-static int yos_cloud_set_attr(const char *uuid, const char *attr_name, const char *attr_value)
+static int aos_cloud_set_attr(const char *uuid, const char *attr_name, const char *attr_value)
 {
 #if LWIP_IPV6
     struct sockaddr_in6 *paddr = NULL;
@@ -237,7 +237,7 @@ static int yos_cloud_set_attr(const char *uuid, const char *attr_name, const cha
 
     send_sock(gateway_state.sockfd, buf, len, paddr);
 
-    yos_free(buf);
+    aos_free(buf);
     return 0;
 }
 
@@ -282,7 +282,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in *padd
 
     send_sock(pstate->sockfd, buf, len, paddr);
 
-    yos_free(buf);
+    aos_free(buf);
 }
 
 static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
@@ -299,8 +299,8 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
     if (pstate->mqtt_connected &&
         memcmp(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr)) == 0 &&
         pstate->mqtt_reconnect == false) {
-        yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
-        yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
+        aos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+        aos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
         return;
     }
 
@@ -308,7 +308,7 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
         pstate->mqtt_connected = false;
     }
 
-    yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+    aos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
     memcpy(&gw_addr->sin6_addr, adv_msg->payload, sizeof(gw_addr->sin6_addr));
     gw_addr->sin6_family = AF_INET6;
     gw_addr->sin6_port = htons(MQTT_SN_PORT);
@@ -318,8 +318,8 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
     if (pstate->mqtt_connected &&
         memcmp(&gw_addr->sin_addr, adv_msg->payload, sizeof(gw_addr->sin_addr)) == 0 &&
         pstate->mqtt_reconnect == false) {
-        yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
-        yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
+        aos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+        aos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
         return;
     }
 
@@ -327,7 +327,7 @@ static void handle_adv(gateway_state_t *pstate, void *pmsg, int len)
         pstate->mqtt_connected = false;
     }
 
-    yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+    aos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
     memcpy(&gw_addr->sin_addr, adv_msg->payload, sizeof(gw_addr->sin_addr));
     gw_addr->sin_family = AF_INET;
     gw_addr->sin_port = htons(MQTT_SN_PORT);
@@ -358,20 +358,20 @@ static void handle_publish(gateway_state_t *pstate, void *pmsg, int len)
         char *buf;
         int sz = sizeof(POST_ATTR_VALUE_STRING_FMT) + strlen(uuid) + strlen(attr_value) + 16;
 
-        buf = yos_malloc(sz);
+        buf = aos_malloc(sz);
         /* tricky : attr_value = {"key":"value"} -> {"uuid":"xx", "key":"value"} */
         snprintf(buf, sz, POST_ATTR_VALUE_STRING_FMT, uuid, attr_value + 1);
         alink_report_async("postDeviceData", buf, NULL, NULL);
-        yos_free(buf);
+        aos_free(buf);
         return;
     }
 
     if (strcmp(op_code, "get") == 0) {
         LOGD(MODULE_NAME, "recv %s - %s", op_code, attr_name);
-        yos_cloud_trigger(GET_DEVICE_STATUS, attr_name);
+        aos_cloud_trigger(GET_DEVICE_STATUS, attr_name);
     } else if (strcmp(op_code, "set") == 0) {
         LOGD(MODULE_NAME, "recv %s - %s - %s", op_code, attr_name, attr_value);
-        yos_cloud_trigger(SET_DEVICE_STATUS, attr_name);
+        aos_cloud_trigger(SET_DEVICE_STATUS, attr_name);
     } else {
         const char *payload = (const char *)(pub_msg + 1);
         LOGD(MODULE_NAME, "recv unkown %s", payload);
@@ -480,7 +480,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
         }
     }
 
-    client = yos_malloc(sizeof(client_t));
+    client = aos_malloc(sizeof(client_t));
     PTR_RETURN(client, NULL, "alloc memory failed");
     bzero(client, sizeof(*client));
     uint32_t model_id;
@@ -488,13 +488,13 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     int ret = devmgr_join_zigbee_device(reginfo->ieee_addr, model_id, reginfo->rand, reginfo->sign);
     if (ret ==  SERVICE_RESULT_ERR) {
         LOGD(MODULE_NAME, "register device:%s to alink server failed", reginfo->ieee_addr);
-        yos_free(client);
+        aos_free(client);
         return NULL;
     }
     client->devinfo = devmgr_get_devinfo_by_ieeeaddr(reginfo->ieee_addr);
     if (client->devinfo == NULL) {
         LOGD(MODULE_NAME, "register device:%s to alink server failed", reginfo->ieee_addr);
-        yos_free(client);
+        aos_free(client);
         return NULL;
     }
     devmgr_put_devinfo_ref(client->devinfo);
@@ -548,7 +548,7 @@ static void handle_connect(gateway_state_t *pstate, void *pmsg, int len)
         memcpy(conn_ack->payload, client->devinfo->dev_base.uuid, STR_UUID_LEN + 1);
     }
     send_sock(pstate->sockfd, buf, len, &pstate->src_addr);
-    yos_free(buf);
+    aos_free(buf);
 }
 
 static int gateway_cloud_report(const char *method, const char *json_buffer)
@@ -576,7 +576,7 @@ static int gateway_cloud_report(const char *method, const char *json_buffer)
 
     send_sock(pstate->sockfd, buf, len, &pstate->gw_addr);
 
-    yos_free(buf);
+    aos_free(buf);
 }
 
 static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
@@ -595,16 +595,16 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
     memcpy(pstate->uuid, conn_ack->payload, sizeof(pstate->uuid));
     pstate->uuid[STR_UUID_LEN] = '\x0';
     pstate->mqtt_connected = true;
-    yos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
+    aos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
 
-    yos_cloud_register_backend(&gateway_cloud_report);
+    aos_cloud_register_backend(&gateway_cloud_report);
     if (pstate->mqtt_reconnect == false) {
-        yos_cloud_trigger(CLOUD_CONNECTED, NULL);
+        aos_cloud_trigger(CLOUD_CONNECTED, NULL);
     }
 
     pstate->mqtt_reconnect = false;
-    yos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
-    yos_post_delayed_action((8 + (rand() & 0x7)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
+    aos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
+    aos_post_delayed_action((8 + (rand() & 0x7)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
 
     LOGD(MODULE_NAME, "connack");
 }
@@ -660,7 +660,7 @@ static void gateway_advertise(void *arg)
     adv_body_t *adv;
     client_t *client;
 
-    yos_post_delayed_action(ADV_INTERVAL, gateway_advertise, arg);
+    aos_post_delayed_action(ADV_INTERVAL, gateway_advertise, arg);
 
 
 #if LWIP_IPV6
@@ -700,7 +700,7 @@ static void gateway_advertise(void *arg)
     send_sock(pstate->sockfd, buf, len, &addr);
     LOGD(MODULE_NAME, "gateway_advertise");
 
-    yos_free(buf);
+    aos_free(buf);
 
     dlist_for_each_entry(&pstate->clients, client, client_t, next) {
         if (client->timeout < MAX_GATEWAY_RECONNECT_TIMEOUT) {
@@ -726,7 +726,7 @@ static void gateway_worker(void *arg)
         sockfd = gateway_state.sockfd;
 
         if (sockfd < 0) {
-            yos_msleep(100);
+            aos_msleep(100);
             continue;
         }
 
@@ -795,18 +795,18 @@ int gateway_service_init(void)
     pstate->login = false;
     dlist_init(&gateway_state.clients);
     cli_register_command(&gatewaycmd);
-    yos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
-    yos_register_event_filter(EV_MESH, gateway_service_event, NULL);
+    aos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
+    aos_register_event_filter(EV_MESH, gateway_service_event, NULL);
 #ifdef GATEWAY_WORKER_THREAD
-    yos_task_new("gatewayworker", gateway_worker, NULL, 4096);
+    aos_task_new("gatewayworker", gateway_worker, NULL, 4096);
 #endif
     return 0;
 }
 
 void gateway_service_deinit(void)
 {
-    yos_unregister_event_filter(EV_YUNIO, gateway_service_event, NULL);
-    yos_unregister_event_filter(EV_MESH, gateway_service_event, NULL);
+    aos_unregister_event_filter(EV_YUNIO, gateway_service_event, NULL);
+    aos_unregister_event_filter(EV_MESH, gateway_service_event, NULL);
 }
 
 bool gateway_is_connected(void)
@@ -837,7 +837,7 @@ static int init_socket(void)
 
     if (pstate->sockfd >= 0) {
 #ifndef GATEWAY_WORKER_THREAD
-        yos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
+        aos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
         close(pstate->sockfd);
 #endif
         pstate->sockfd = -1;
@@ -871,7 +871,7 @@ static int init_socket(void)
 
     pstate->sockfd = sockfd;
 #ifndef GATEWAY_WORKER_THREAD
-    yos_poll_read_fd(sockfd, gateway_sock_read_cb, pstate);
+    aos_poll_read_fd(sockfd, gateway_sock_read_cb, pstate);
 #endif
 
     return 0;
@@ -890,9 +890,9 @@ static void gateway_handle_sub_status(int event, const char *json_buffer)
     strncpy(uuid, str_pos, str_len);
 
     if (event == GET_SUB_DEVICE_STATUS) {
-        yos_cloud_get_attr(uuid, json_buffer);
+        aos_cloud_get_attr(uuid, json_buffer);
     } else if (event == SET_SUB_DEVICE_STATUS) {
-        yos_cloud_set_attr(uuid, json_buffer, "");
+        aos_cloud_set_attr(uuid, json_buffer, "");
     }
 }
 
@@ -901,13 +901,13 @@ int gateway_service_start(void)
     init_socket();
 
     if (gateway_state.gateway_mode) {
-        yos_cloud_register_callback(GET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
-        yos_cloud_register_callback(SET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
+        aos_cloud_register_callback(GET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
+        aos_cloud_register_callback(SET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
 
-        yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
-        yos_post_delayed_action(ADV_INTERVAL, gateway_advertise, &gateway_state);
+        aos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
+        aos_post_delayed_action(ADV_INTERVAL, gateway_advertise, &gateway_state);
     } else {
-        yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
+        aos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
     }
 
     return 0;
@@ -916,9 +916,9 @@ int gateway_service_start(void)
 void gateway_service_stop(void)
 {
     client_t *client;
-    yos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
-    yos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
-    yos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
+    aos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
+    aos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
+    aos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
 #ifndef GATEWAY_WORKER_THREAD
     close(gateway_state.sockfd);
 #endif
@@ -928,7 +928,7 @@ void gateway_service_stop(void)
         client = dlist_first_entry(&gateway_state.clients, client_t, next);
         dlist_del(&client->next);
         devmgr_leave_zigbee_device(client->devinfo->dev_base.u.ieee_addr);
-        yos_free(client);
+        aos_free(client);
     }
 }
 

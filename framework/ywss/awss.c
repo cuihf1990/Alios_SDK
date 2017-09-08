@@ -81,14 +81,14 @@ int awss_start(void)
     aws_destroy();
 
     int awssNotifyNeeded = 1;
-    uint32_t startAwssConnectingTimestamp = yos_now() / 1000000;
+    uint32_t startAwssConnectingTimestamp = aos_now() / 1000000;
     int tryCount = 0;
     do {
         if (stopAwssConnecting) {
             break;
         }
         if (strcmp(ssid, DEFAULT_SSID) == 0) {
-            uint32_t now = yos_now() / 1000000;
+            uint32_t now = aos_now() / 1000000;
             if ((0 != os_awss_get_connect_default_ssid_timeout_interval_ms()) &&
                 (now - startAwssConnectingTimestamp > os_awss_get_connect_default_ssid_timeout_interval_ms())) {
                 break;
@@ -111,7 +111,7 @@ int awss_start(void)
                         LOGI("[awss]", "switchApDone");
                         break;
                     }
-                    yos_msleep(500);
+                    aos_msleep(500);
                     hotspotCnt++;
                 }
                 if (hotspotCnt >= HOTSPOT_TIMEOUT) {
@@ -128,7 +128,7 @@ int awss_start(void)
             if (!ret) {
                 LOGI(MODULE_NAME, "awss connect ssid:%s success", ssid);
                 delay_ms = 0;
-                yos_loop_schedule_work(0, awss_notify, NULL, NULL, NULL);
+                aos_loop_schedule_work(0, awss_notify, NULL, NULL, NULL);
                 goto end;
             } else {
                 LOGW(MODULE_NAME, "awss connect ssid:%s passwd:%s fail", ssid, passwd);
@@ -164,7 +164,7 @@ int awss_stop(void)
         if (awssFinished) {
             break;
         }
-        yos_msleep(100);
+        aos_msleep(100);
     }
     return 0;
 }
@@ -180,6 +180,6 @@ static void awss_notify(void *arg)
     delay_ms += 100;
 
     if (!ret) {
-        yos_loop_schedule_work(delay_ms, awss_notify, NULL, NULL, NULL);
+        aos_loop_schedule_work(delay_ms, awss_notify, NULL, NULL, NULL);
     }
 }

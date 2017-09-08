@@ -8,7 +8,7 @@
 
 #define YOS_START_STACK 2048
 
-ktask_t *g_yos_init;
+ktask_t *g_aos_init;
 
 extern void board_init(void);
 
@@ -38,7 +38,7 @@ static void application_init(void)
 }
 #endif
 
-static void yos_init(void)
+static void aos_init(void)
 {
     int i = 0;
 
@@ -57,9 +57,9 @@ static void yos_init(void)
         vflash_register_partition(i);
     }
 
-    yos_cli_init();
-    yos_kv_init();
-    yos_loop_init();
+    aos_cli_init();
+    aos_kv_init();
+    aos_loop_init();
 
     trace_start();
     
@@ -70,20 +70,20 @@ static void yos_init(void)
         app_info->app_entry((void *)g_syscall_tbl, 0, NULL);
     }
 #else
-    yos_framework_init();
+    aos_framework_init();
     application_start(0, NULL);
 #endif
 
 #endif
 }
 
-void yos_start(void)
+void aos_start(void)
 {
     krhino_init();
 
     soc_driver_init();
 
-    krhino_task_dyn_create(&g_yos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, yos_init, 1);
+    krhino_task_dyn_create(&g_aos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, aos_init, 1);
 
     krhino_start();
 }

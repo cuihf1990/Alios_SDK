@@ -12,7 +12,7 @@
 typedef struct wsf_request_queue_t {
     dlist_t list;
     void *mutex;
-    yos_sem_t *psem;
+    aos_sem_t *psem;
     int length;
 } wsf_request_queue_t;
 

@@ -6,8 +6,8 @@
 #include "dns.h"
 #include "dhcp-priv.h"
 
-#define os_mem_alloc yos_malloc
-#define os_mem_free  yos_free
+#define os_mem_alloc aos_malloc
+#define os_mem_free  aos_free
 #define SEND_RESPONSE(w,x,y,z)	send_response(w,x,y,z)
 
 #define DEFAULT_DHCP_ADDRESS_TIMEOUT	(60U*60U*1U) /* 1 hour */

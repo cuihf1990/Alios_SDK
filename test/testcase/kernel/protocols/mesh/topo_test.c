@@ -62,7 +62,7 @@ static void one_super_router_case(void)
     YUNIT_ASSERT(ipaddr != NULL);
     if (ipaddr) {
         snprintf(ping_cmd, sizeof ping_cmd, "send 155 ping %s", ipaddr);
-        yos_free(ipaddr);
+        aos_free(ipaddr);
 
         cmd_to_master(ping_cmd);
         check_p2p_str_wait("1", 155, "testcmd icmp_acked", 5);
@@ -128,7 +128,7 @@ static void two_super_router_case(void)
     YUNIT_ASSERT(ipaddr != NULL);
     if (ipaddr) {
         snprintf(ping_cmd, sizeof ping_cmd, "send 156 ping %s", ipaddr);
-        yos_free(ipaddr);
+        aos_free(ipaddr);
 
         cmd_to_master(ping_cmd);
         check_p2p_str_wait("1", 156, "testcmd icmp_acked", 5);

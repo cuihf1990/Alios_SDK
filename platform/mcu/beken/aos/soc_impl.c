@@ -64,7 +64,7 @@ k_mm_region_t g_mm_region[] = {(uint8_t*)&heap_start,(size_t)&heap_len};
 
 extern int _bss_start, _bss_end, _data_ram_begin, _data_ram_end;
 
-void yos_mm_leak_region_init(void)
+void aos_mm_leak_region_init(void)
 {
     krhino_mm_leak_region_init(&_bss_start, &_bss_end);
     krhino_mm_leak_region_init(&_data_ram_begin, &_data_ram_end);

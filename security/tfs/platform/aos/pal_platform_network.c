@@ -71,7 +71,7 @@ int _http_check_conn(int sockfd)
     socklen_t len = 0;
 
     LOGD(TAG_PAL_NETWORK, "[%s]: enter.\n", __func__);
-    while (yos_poll(&fd, 1, -1) == -1) {
+    while (aos_poll(&fd, 1, -1) == -1) {
         if (errno != EINTR ) {
             LOGE(TAG_PAL_NETWORK, "[%s]: poll EINTR\n", __func__);
             return -1;

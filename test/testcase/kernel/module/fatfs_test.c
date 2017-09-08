@@ -26,94 +26,94 @@ static void test_fatfs_case(void)
     char readBuffer[32];
 
     /* Fatfs write test */
-    fd = yos_open(g_filepath, O_RDWR | O_CREAT | O_TRUNC);
+    fd = aos_open(g_filepath, O_RDWR | O_CREAT | O_TRUNC);
     YUNIT_ASSERT(fd > 0);
  
     if (fd > 0) {
-        ret = yos_write(fd, g_string, strlen(g_string));
+        ret = aos_write(fd, g_string, strlen(g_string));
         YUNIT_ASSERT(ret > 0);
-        ret = yos_sync(fd);
+        ret = aos_sync(fd);
         YUNIT_ASSERT(ret == 0);
 
-        yos_close(fd);
+        aos_close(fd);
     }
 
     /* Fatfs read test */
-    fd = yos_open(g_filepath, O_RDONLY);
+    fd = aos_open(g_filepath, O_RDONLY);
     YUNIT_ASSERT(fd > 0);
     if (fd > 0) {
-        ret = yos_read(fd, readBuffer, sizeof(readBuffer));
+        ret = aos_read(fd, readBuffer, sizeof(readBuffer));
         YUNIT_ASSERT(ret > 0);
 
         ret = memcmp(readBuffer, g_string, strlen(g_string));
         YUNIT_ASSERT(ret == 0);
 
-        yos_close(fd);      
+        aos_close(fd);      
     }
 
     /* Fatfs mkdir test */
-    yos_dir_t *dp = (yos_dir_t *)yos_opendir(g_dirpath);
+    aos_dir_t *dp = (aos_dir_t *)aos_opendir(g_dirpath);
     if (!dp) {
-        ret = yos_mkdir(g_dirpath);
+        ret = aos_mkdir(g_dirpath);
         YUNIT_ASSERT(ret == 0);
     } else {
-        ret = yos_closedir(dp);
+        ret = aos_closedir(dp);
         YUNIT_ASSERT(ret == 0);
     }
 
     /* Fatfs readdir test */
-    fd = yos_open(g_dirtest_1, O_RDWR | O_CREAT | O_TRUNC);
+    fd = aos_open(g_dirtest_1, O_RDWR | O_CREAT | O_TRUNC);
     YUNIT_ASSERT(fd > 0);
     if (fd > 0)
-        yos_close(fd);
+        aos_close(fd);
 
-    fd = yos_open(g_dirtest_2, O_RDWR | O_CREAT | O_TRUNC);
+    fd = aos_open(g_dirtest_2, O_RDWR | O_CREAT | O_TRUNC);
     YUNIT_ASSERT(fd > 0);
     if (fd > 0)
-        yos_close(fd);
+        aos_close(fd);
 
-    fd = yos_open(g_dirtest_3, O_RDWR | O_CREAT | O_TRUNC);
+    fd = aos_open(g_dirtest_3, O_RDWR | O_CREAT | O_TRUNC);
     YUNIT_ASSERT(fd > 0);
     if (fd > 0)
-        yos_close(fd);
+        aos_close(fd);
 
-    dp = (yos_dir_t *)yos_opendir(g_dirpath);
+    dp = (aos_dir_t *)aos_opendir(g_dirpath);
     YUNIT_ASSERT(dp != NULL);
 
     if (dp) {
-        yos_dirent_t *out_dirent;
+        aos_dirent_t *out_dirent;
         while(1) {
-            out_dirent = (yos_dirent_t *)yos_readdir(dp);
+            out_dirent = (aos_dirent_t *)aos_readdir(dp);
             if (out_dirent == NULL)
                 break;
 
             printf("file name is %s\n", out_dirent->d_name);            
         }
     }
-    yos_closedir(dp);
+    aos_closedir(dp);
 
     /* Fatfs rename test */
-    ret = yos_rename(g_filepath, g_new_filepath);
+    ret = aos_rename(g_filepath, g_new_filepath);
     YUNIT_ASSERT(ret == 0);
 
-    fd = yos_open(g_filepath, O_RDONLY);
+    fd = aos_open(g_filepath, O_RDONLY);
     YUNIT_ASSERT(fd < 0);
     if (fd >= 0)
-        yos_close(fd);
+        aos_close(fd);
 
-    fd = yos_open(g_new_filepath, O_RDONLY);
+    fd = aos_open(g_new_filepath, O_RDONLY);
     YUNIT_ASSERT(fd > 0);
     if (fd > 0)
-        yos_close(fd);
+        aos_close(fd);
 
     /* Fatfs unlink test */
-    ret = yos_unlink(g_new_filepath);
+    ret = aos_unlink(g_new_filepath);
     YUNIT_ASSERT(ret == 0);
 
-    fd = yos_open(g_new_filepath, O_RDONLY);
+    fd = aos_open(g_new_filepath, O_RDONLY);
     YUNIT_ASSERT(fd < 0);
     if (fd > 0)
-        yos_close(fd);
+        aos_close(fd);
 }
 
 static int init(void)

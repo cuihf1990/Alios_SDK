@@ -124,7 +124,7 @@ static void subnet_is_wifi_case(void)
     check_p2p_str_wait("super_router", 4, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 4, "testcmd router", 2);
 
-    yos_msleep(15 * 1000);
+    aos_msleep(15 * 1000);
 
     start_node_ext(5, MODE_RX_ON, -1, 1);
     check_p2p_str_wait("router", 5, "testcmd state", 10);
@@ -169,7 +169,7 @@ static void subnet_is_wifi_case(void)
         stop_node(index);
     }
     cmd_to_agent("stop");
-    yos_msleep(1 * 1000);
+    aos_msleep(1 * 1000);
 }
 
 static void subnet_is_ble_case(void)
@@ -198,7 +198,7 @@ static void subnet_is_ble_case(void)
     check_p2p_str_wait("super_router", 154, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 154, "testcmd router", 2);
 
-    yos_msleep(15 * 1000);
+    aos_msleep(15 * 1000);
 
     start_node_ext(155, MODE_RX_ON, -1, 2);
     check_p2p_str_wait("router", 155, "testcmd state", 10);
@@ -239,12 +239,12 @@ static void subnet_is_ble_case(void)
         cmd_to_master(autotest_cmd);
         check_p2p_str_wait("1", index, "testcmd autotest_acked", 10);
     }
-    yos_free(ipaddr);
+    aos_free(ipaddr);
 
     for (index = 151; index < 162; index++) {
         stop_node(index);
     }
-    yos_msleep(1 * 1000);
+    aos_msleep(1 * 1000);
 }
 
 void test_umesh_4super_7nodes_case(void)

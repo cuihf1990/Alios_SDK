@@ -106,10 +106,10 @@ _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
 
     for (int i = 0; i < nbytes; i++) {
         if (*tmp == '\n') {
-            yos_uart_send((void *)"\r", 1, 0);
+            aos_uart_send((void *)"\r", 1, 0);
         }
 
-        yos_uart_send((void *)tmp, 1, 0);
+        aos_uart_send((void *)tmp, 1, 0);
         tmp ++;
     }
 
@@ -160,7 +160,7 @@ int _wait_r(struct _reent *ptr, int *status)
 
 int _gettimeofday_r(struct _reent *ptr, struct timeval *tv, void *__tzp)
 {
-    uint64_t t = yos_now_ms();
+    uint64_t t = aos_now_ms();
     tv->tv_sec = t / 1000;
     tv->tv_usec = (t % 1000) * 1000;
     return 0;
@@ -171,10 +171,10 @@ void *_malloc_r(struct _reent *ptr, size_t size)
     void *mem;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    mem = yos_malloc(size | YOS_UNSIGNED_INT_MSB);
-    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+    mem = aos_malloc(size | YOS_UNSIGNED_INT_MSB);
+    aos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else
-    mem = yos_malloc(size);
+    mem = aos_malloc(size);
 #endif
 
     return mem;
@@ -185,10 +185,10 @@ void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
     void *mem;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    mem = yos_realloc(old, newlen | YOS_UNSIGNED_INT_MSB);
-    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+    mem = aos_realloc(old, newlen | YOS_UNSIGNED_INT_MSB);
+    aos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else
-    mem = yos_realloc(old, newlen);
+    mem = aos_realloc(old, newlen);
 #endif
 
     return mem;
@@ -199,10 +199,10 @@ void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
     void *mem;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    mem = yos_malloc((size * len) | YOS_UNSIGNED_INT_MSB);
-    yos_alloc_trace(mem, (size_t)__builtin_return_address(0));
+    mem = aos_malloc((size * len) | YOS_UNSIGNED_INT_MSB);
+    aos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else
-    mem = yos_malloc(size * len);
+    mem = aos_malloc(size * len);
 #endif
 
     if (mem) {
@@ -214,7 +214,7 @@ void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
 
 void _free_r(struct _reent *ptr, void *addr)
 {
-    yos_free(addr);
+    aos_free(addr);
 }
 
 void _exit(int status)

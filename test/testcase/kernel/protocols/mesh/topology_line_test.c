@@ -58,7 +58,7 @@ static void topology_line_case(bool vector_router)
 
     cmd_to_master("sendall status");
     /* check if ping work */
-    yos_msleep(2 * 1000);
+    aos_msleep(2 * 1000);
     myaddr = umesh_get_ucast_addr();
     snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);
@@ -73,7 +73,7 @@ static void topology_line_case(bool vector_router)
                     tmo_ms / 1000);
 
     /* check if ping work */
-    yos_msleep(2 * 1000);
+    aos_msleep(2 * 1000);
     myaddr = umesh_get_ucast_addr();
     snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
     cmd_to_master(ping_cmd);

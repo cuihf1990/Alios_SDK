@@ -51,7 +51,7 @@ static int test_mkdir(file_t *fp, const char *path)
     return -123;
 }
 
-static void test_yos_vfs_case(void)
+static void test_aos_vfs_case(void)
 {
     int i   = 0;
     int fd  = 0;
@@ -76,29 +76,29 @@ static void test_yos_vfs_case(void)
     };
 
     for (i = 0; i < 10; i++) {
-        ret = yos_register_driver(names[i], &myops, NULL);
+        ret = aos_register_driver(names[i], &myops, NULL);
         YUNIT_ASSERT(ret == VFS_SUCCESS);
     }
 
     for (i = 0; i < 10; i++) {
-        fd = yos_open(names[i], 0);
+        fd = aos_open(names[i], 0);
         YUNIT_ASSERT(fd >= 0);
-        YUNIT_ASSERT(-123 == yos_ioctl(fd, 0, 0));
+        YUNIT_ASSERT(-123 == aos_ioctl(fd, 0, 0));
 
-        yos_close(fd);
+        aos_close(fd);
     }
 
     for (i = 0; i < 10; i++) {
-        fd = yos_open(names[i], 0);
+        fd = aos_open(names[i], 0);
         YUNIT_ASSERT(fd >= 0);
 
-        yos_close(fd);
+        aos_close(fd);
 
-        ret = yos_unregister_driver(names[i]);
+        ret = aos_unregister_driver(names[i]);
         YUNIT_ASSERT(ret == 0);
 
-        fd = yos_open(names[i], 0);
-        ret = yos_ioctl(fd, 0, 0);
+        fd = aos_open(names[i], 0);
+        ret = aos_ioctl(fd, 0, 0);
         YUNIT_ASSERT(-ENOENT == ret);
     }
 }
@@ -109,7 +109,7 @@ static void test_vfs_fs_case(void)
     int fd  = 0;
     int ret = 0;
     struct stat st;
-    yos_dir_t dir;
+    aos_dir_t dir;
     char *names = "/tmp/abcd0";
 
     fs_ops_t myops = {
@@ -122,27 +122,27 @@ static void test_vfs_fs_case(void)
         .mkdir      = test_mkdir,
     };
 
-    ret = yos_register_fs(names, &myops, NULL);
+    ret = aos_register_fs(names, &myops, NULL);
     YUNIT_ASSERT(ret == VFS_SUCCESS);
 
-    fd = yos_open(names, 0);
+    fd = aos_open(names, 0);
     YUNIT_ASSERT(fd >= 0);
     
-    YUNIT_ASSERT(-123 == yos_lseek(fd, 0, 0));
-    YUNIT_ASSERT(-123 == yos_sync(fd));
-    yos_close(fd);
+    YUNIT_ASSERT(-123 == aos_lseek(fd, 0, 0));
+    YUNIT_ASSERT(-123 == aos_sync(fd));
+    aos_close(fd);
 
-    YUNIT_ASSERT(-123 == yos_stat(names, &st));
-    YUNIT_ASSERT(-123 == yos_unlink(names));
-    YUNIT_ASSERT(-123 == yos_rename(names, names));
-    YUNIT_ASSERT(-123 == yos_mkdir(names));
+    YUNIT_ASSERT(-123 == aos_stat(names, &st));
+    YUNIT_ASSERT(-123 == aos_unlink(names));
+    YUNIT_ASSERT(-123 == aos_rename(names, names));
+    YUNIT_ASSERT(-123 == aos_mkdir(names));
 
-    ret = yos_unregister_fs(names);
+    ret = aos_unregister_fs(names);
     YUNIT_ASSERT(ret == 0);
 
-    YUNIT_ASSERT(-ENODEV == yos_stat(names, &st));
-    YUNIT_ASSERT(-ENODEV == yos_unlink(names));
-    YUNIT_ASSERT(-ENODEV == yos_rename(names, names));
+    YUNIT_ASSERT(-ENODEV == aos_stat(names, &st));
+    YUNIT_ASSERT(-ENODEV == aos_unlink(names));
+    YUNIT_ASSERT(-ENODEV == aos_rename(names, names));
 }
 
 
@@ -182,7 +182,7 @@ static int do_poll(int fd_recv, int timeout)
 
     pfd.fd = fd_recv;
     pfd.events = POLLIN;
-    ret = yos_poll(&pfd, 1, timeout);
+    ret = aos_poll(&pfd, 1, timeout);
 
     if (ret > 0)
         ret = recv(fd_recv, buf2, sizeof buf2, 0);
@@ -204,11 +204,11 @@ static void send_seq_data(void *arg)
     int i;
     for (i=1;i<MAXCNT;i++) {
         int ret = sendto(fd, buf, i, 0, (struct sockaddr *)&addr, sizeof addr);
-        yos_msleep((random() % 100) + 1);
+        aos_msleep((random() % 100) + 1);
     }
 }
 
-static void test_yos_poll_case(void)
+static void test_aos_poll_case(void)
 {
     int fd_send = create_socket(12345);
     int fd_recv = create_socket(12346);
@@ -237,7 +237,7 @@ static void test_yos_poll_case(void)
     ret = do_poll(fd_recv, 0);
     YUNIT_ASSERT(ret == 0);
 
-    yos_task_new("sender", send_seq_data, &fd_send, 4096);
+    aos_task_new("sender", send_seq_data, &fd_send, 4096);
 
     int i;
     for (i=1;i<MAXCNT;i++) {
@@ -249,9 +249,9 @@ static void test_yos_poll_case(void)
     close(fd_recv);
 }
 
-static yunit_test_case_t yos_vfs_testcases[] = {
-    { "register", test_yos_vfs_case },
-    { "poll", test_yos_poll_case },
+static yunit_test_case_t aos_vfs_testcases[] = {
+    { "register", test_aos_vfs_case },
+    { "poll", test_aos_poll_case },
     { "fs_register", test_vfs_fs_case},
     YUNIT_TEST_CASE_NULL
 };
@@ -275,7 +275,7 @@ static void teardown(void)
 }
 
 static yunit_test_suite_t suites[] = {
-    { "vfs", init, cleanup, setup, teardown, yos_vfs_testcases },
+    { "vfs", init, cleanup, setup, teardown, aos_vfs_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

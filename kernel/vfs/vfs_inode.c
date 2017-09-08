@@ -40,7 +40,7 @@ int inode_del(inode_t *node)
 
     if (node->refs == 0) {
         if (node->i_name != NULL) {
-            yos_free(node->i_name);
+            aos_free(node->i_name);
         }
 
         node->i_name = NULL;
@@ -127,7 +127,7 @@ static int inode_set_name(const char *path, inode_t **inode)
     void  *mem;
 
     len = strlen(path);
-    mem = (void *)yos_malloc(len + 1);
+    mem = (void *)aos_malloc(len + 1);
     if (!mem) {
         return -ENOMEM;
     }

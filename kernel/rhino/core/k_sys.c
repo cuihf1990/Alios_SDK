@@ -44,7 +44,7 @@ RHINO_INLINE kstat_t rhino_init(void)
     krhino_init_mm_head(&g_kmm_head, g_mm_region.start, g_mm_region.len);
 #endif
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
-    yos_mm_leak_region_init();
+    aos_mm_leak_region_init();
 #endif
     krhino_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                        RHINO_CONFIG_K_DYN_QUEUE_MSG);

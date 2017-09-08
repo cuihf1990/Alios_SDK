@@ -59,8 +59,8 @@ extern "C"
 
 #define cJSON_IsReference 256
 
-#define cJSON_malloc(n) yos_malloc(n)
-#define cJSON_free(p) yos_free(p)
+#define cJSON_malloc(n) aos_malloc(n)
+#define cJSON_free(p) aos_free(p)
 
 #define cJSON_AddNullToObject(object,name) \
   cJSON_AddItemToObject(object, name, cJSON_CreateNull())

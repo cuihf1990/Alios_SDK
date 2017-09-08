@@ -266,7 +266,7 @@ ipv6_show_address(const struct netif *netif)
 static void netif_status_callback(struct netif *n)
 {
 	ip_addr_t *dns_server;
-	uint32_t sed = (uint32_t)yos_now_ms();
+	uint32_t sed = (uint32_t)aos_now_ms();
 
 	/* use current system time to set the start tcp/udp port number RANDOMIZE */
 	srand(sed);

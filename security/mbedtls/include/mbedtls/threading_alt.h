@@ -1,8 +1,12 @@
+/**
+ * Copyright (C) 2017 The YunOS IoT Project. All rights reserved.
+ */
+
 #ifndef MBEDTLS_THREADING_ALT_H
 #define MBEDTLS_THREADING_ALT_H
 
 #include <stdlib.h>
-#include <yos/yos.h>
+#include <yos/kernel.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,7 +14,7 @@ extern "C" {
 
 typedef struct
 {
-    yos_mutex_t mutex;
+    aos_mutex_t mutex;
     char is_valid;
 } mbedtls_threading_mutex_t;
 

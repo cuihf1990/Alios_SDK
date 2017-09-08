@@ -58,7 +58,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     int   offset   = 0;
     int   totallen = 2048;
 
-    printbuf = yos_malloc(totallen);
+    printbuf = aos_malloc(totallen);
     if (printbuf ==  NULL) {
         return RHINO_NO_MEM;
     }
@@ -151,7 +151,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     krhino_sched_enable();
 
     printf("%s", printbuf);
-    yos_free(printbuf);
+    aos_free(printbuf);
     return RHINO_SUCCESS;
 }
 
@@ -313,7 +313,7 @@ int dump_task_stack(ktask_t *task)
     int   bufoffset   = 0;
     int   totallen = 2048;
 
-    printbuf = yos_malloc(totallen);
+    printbuf = aos_malloc(totallen);
     if (printbuf ==  NULL) {
         return RHINO_NO_MEM;
     }
@@ -327,7 +327,7 @@ int dump_task_stack(ktask_t *task)
         cur = task->task_stack_base + task->stack_size - offset;
     } else {
         k_err_proc(RHINO_SYS_SP_ERR);
-        yos_free(printbuf);
+        aos_free(printbuf);
         krhino_sched_enable();
         return 1;
     }
@@ -347,7 +347,7 @@ int dump_task_stack(ktask_t *task)
     krhino_sched_enable();
 
     printf("%s", printbuf);
-    yos_free(printbuf);
+    aos_free(printbuf);
     return 0;
 
 }

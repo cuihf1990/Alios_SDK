@@ -30,7 +30,7 @@
  * @return    kNoErr        : on success.
  * @return    kGeneralErr   : if an error occurred with any step
  */
-int32_t yos_uart_send(void *data, uint32_t size, uint32_t timeout);
+int32_t aos_uart_send(void *data, uint32_t size, uint32_t timeout);
 
 #ifdef __cplusplus
 }

@@ -28,12 +28,12 @@ extern void rl_cleanup_after_signal(void);
 extern void hw_start_hal(options_t *poptions);
 extern void trace_start();
 extern void netmgr_init(void);
-extern int yos_framework_init(void);
-extern int yos_cli_init(void);
+extern int aos_framework_init(void);
+extern int aos_cli_init(void);
 
 static options_t options = { 0 };
 
-static void yos_features_init(void);
+static void aos_features_init(void);
 static void signal_handler(int signo);
 static int  setrlimit_for_vfs(void);
 extern int application_start(int argc, char **argv);
@@ -41,7 +41,7 @@ extern int application_start(int argc, char **argv);
 static void exit_clean(void)
 {
     char fn[64] = {0};
-    snprintf(fn, sizeof(fn), "rm -f ./yos_partition_%d_*", getpid());
+    snprintf(fn, sizeof(fn), "rm -f ./aos_partition_%d_*", getpid());
     system(fn);
 }
 
@@ -49,7 +49,7 @@ static void app_entry(void *arg)
 {
     int i = 0;
 
-    yos_features_init();
+    aos_features_init();
 
 #ifdef CONFIG_YOS_MESHYTS
     options.flash.per_pid = true;
@@ -66,13 +66,13 @@ static void app_entry(void *arg)
     }
 
 #ifdef CONFIG_YOS_CLI
-    yos_cli_init();
+    aos_cli_init();
 #endif
 
-    yos_kv_init();
-    yos_loop_init();
+    aos_kv_init();
+    aos_loop_init();
 
-    yos_framework_init();
+    aos_framework_init();
 
 #ifdef VCALL_RHINO
     trace_start();    
@@ -83,7 +83,7 @@ static void app_entry(void *arg)
 
 static void start_app()
 {
-    yos_task_new("app", app_entry, NULL, 8192);
+    aos_task_new("app", app_entry, NULL, 8192);
 }
 
 int csp_get_args(const char ***pargv)
@@ -92,7 +92,7 @@ int csp_get_args(const char ***pargv)
     return options.argc;
 }
 
-void yos_features_init(void)
+void aos_features_init(void)
 {
 #ifdef CONFIG_NET_LWIP
     if (options.lwip.enable) {
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 
     parse_options(&options);
 
-    yos_set_log_level(options.log_level);
+    aos_set_log_level(options.log_level);
 
 #ifdef TFS_EMULATE
     tfs_emulate_id2_index = options.id2_index;

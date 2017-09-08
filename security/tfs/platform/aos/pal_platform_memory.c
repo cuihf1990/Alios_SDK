@@ -7,11 +7,11 @@
 
 void *pal_memory_malloc(size_t size)
 {
-    return yos_malloc(size);
+    return aos_malloc(size);
 }
 
 void pal_memory_free(void *ptr)
 {
-    yos_free(ptr);
+    aos_free(ptr);
     return;
 }

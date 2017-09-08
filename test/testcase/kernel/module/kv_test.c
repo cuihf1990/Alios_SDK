@@ -27,16 +27,16 @@ static char *g_val_update_2 = "val_30";
 static void test_kv_add(void)
 {
     int ret = 0;
-    ret = yos_kv_set(g_key_1, g_val_1, strlen(g_val_1),1);
+    ret = aos_kv_set(g_key_1, g_val_1, strlen(g_val_1),1);
     YUNIT_ASSERT(0 == ret);
 
-    ret = yos_kv_set(g_key_2, g_val_2, strlen(g_val_2),1);
+    ret = aos_kv_set(g_key_2, g_val_2, strlen(g_val_2),1);
     YUNIT_ASSERT(0 == ret);
     
-    ret = yos_kv_set(g_key_3, g_val_3, strlen(g_val_3),1);
+    ret = aos_kv_set(g_key_3, g_val_3, strlen(g_val_3),1);
     YUNIT_ASSERT(0 == ret);
     
-    ret = yos_kv_set(g_key_4, g_val_4, strlen(g_val_4),1);
+    ret = aos_kv_set(g_key_4, g_val_4, strlen(g_val_4),1);
     YUNIT_ASSERT(0 == ret);
 }
 
@@ -46,19 +46,19 @@ static void test_kv_find(void)
     char buf[10] = {0};
     int len = sizeof(buf);
 
-    ret = yos_kv_get(g_key_1,buf,&len);
+    ret = aos_kv_get(g_key_1,buf,&len);
     YUNIT_ASSERT(0 == ret);
     YUNIT_ASSERT(len == strlen(g_val_1));
 
-    ret = yos_kv_get(g_key_2,buf,&len);
+    ret = aos_kv_get(g_key_2,buf,&len);
     YUNIT_ASSERT(0 == ret);
     YUNIT_ASSERT(len == strlen(g_val_2));
 
-    ret = yos_kv_get(g_key_3,buf,&len);
+    ret = aos_kv_get(g_key_3,buf,&len);
     YUNIT_ASSERT(0 == ret);
     YUNIT_ASSERT(len == strlen(g_val_3));
 
-    ret = yos_kv_get(g_key_4,buf,&len);
+    ret = aos_kv_get(g_key_4,buf,&len);
     YUNIT_ASSERT(0 == ret);
     YUNIT_ASSERT(len == strlen(g_val_4));
 }
@@ -69,16 +69,16 @@ static void test_kv_del(void)
     char buf[10] = {0};
     int len = sizeof(buf);
 
-    ret = yos_kv_del(g_key_1); 
+    ret = aos_kv_del(g_key_1); 
     YUNIT_ASSERT(0 == ret);
 
-    ret = yos_kv_del(g_key_2); 
+    ret = aos_kv_del(g_key_2); 
     YUNIT_ASSERT(0 == ret);
    
-    ret = yos_kv_del(g_key_3); 
+    ret = aos_kv_del(g_key_3); 
     YUNIT_ASSERT(0 == ret);
 
-    ret = yos_kv_get(g_key_3,buf,&len);
+    ret = aos_kv_get(g_key_3,buf,&len);
     YUNIT_ASSERT(0 != ret);
     YUNIT_ASSERT(len != strlen(g_val_3)+1);
 }
@@ -95,25 +95,25 @@ static void test_kv_loop(void)
         for (i = 0; i < 100; i++) {
             snprintf(key, sizeof(key), "test_%d", i);
             snprintf(val, sizeof(val), "val_%d", i);
-            ret = yos_kv_set(key, val, strlen(val),1);
+            ret = aos_kv_set(key, val, strlen(val),1);
             if (ret != 0)
                 count++;
             memset(key, 0, sizeof(key));
             memset(val, 0, sizeof(val));
         }
 
-        ret = yos_kv_set(g_key_update, g_val_update, strlen(g_val_update), 1);
+        ret = aos_kv_set(g_key_update, g_val_update, strlen(g_val_update), 1);
         if (ret != 0)
             count++;
 
-        ret = yos_kv_set(g_key_update, g_val_update_2, strlen(g_val_update_2), 1);
+        ret = aos_kv_set(g_key_update, g_val_update_2, strlen(g_val_update_2), 1);
         if (ret != 0)
             count++;
 
         for (i = 0; i < 100; i++) {
             len = sizeof(val);
             snprintf(key, sizeof(key), "test_%d", i);
-            ret = yos_kv_get(key, val, &len);
+            ret = aos_kv_get(key, val, &len);
             if ((ret != 0) || (strlen(val) != len))
                 count++;
             memset(key, 0, sizeof(key));
@@ -122,13 +122,13 @@ static void test_kv_loop(void)
 
         for (i = 0; i < 100; i++) {
             snprintf(key, sizeof(key), "test_%d", i);
-            ret = yos_kv_del(key);
+            ret = aos_kv_del(key);
             if (ret != 0)
                 count++;
             memset(key, 0, sizeof(key));
         }
 
-        ret = yos_kv_get(g_key_update, val, &len);
+        ret = aos_kv_get(g_key_update, val, &len);
         if ((ret != 0) || (strlen(g_val_update_2) != len))
             count++;
 
@@ -139,9 +139,9 @@ static void test_kv_loop(void)
 
 static void test_kv_error_cycle(void)
 {
-    yos_kv_init();
+    aos_kv_init();
     test_kv_loop();
-    yos_kv_deinit();
+    aos_kv_deinit();
 }
 
 
@@ -159,8 +159,8 @@ static void test_kv_error(void)
     uint32_t offset = 0;
     char *buf;
 
-    yos_kv_deinit();
-    buf = (char *)yos_malloc(blk_size);
+    aos_kv_deinit();
+    buf = (char *)aos_malloc(blk_size);
     if (!buf) {
         YUNIT_FAIL("malloc failure");
         return;
@@ -220,16 +220,16 @@ static void test_kv_error(void)
     hal_flash_erase(KV_TEST_PTN, offset, blk_size);
     hal_flash_write(KV_TEST_PTN, &offset, buf, blk_size);
 
-    yos_kv_init();
+    aos_kv_init();
     memset(buf, 0, blk_size);
     offset = blk_size;
     hal_flash_read(KV_TEST_PTN, &offset, buf, blk_size);
     YUNIT_ASSERT(buf[1] == 0x44); 
-    yos_kv_deinit();
+    aos_kv_deinit();
 
 
     if(buf)
-        yos_free(buf);
+        aos_free(buf);
     return;
 }
 
@@ -237,14 +237,14 @@ static int init(void)
 {
     int ret = 0;
 
-    ret = yos_kv_init();
+    ret = aos_kv_init();
     YUNIT_ASSERT(ret == 0);
     return 0;
 }
 
 static int cleanup(void)
 {
-    int ret = yos_kv_init();
+    int ret = aos_kv_init();
     YUNIT_ASSERT(ret == 0);
     return 0;
 }
