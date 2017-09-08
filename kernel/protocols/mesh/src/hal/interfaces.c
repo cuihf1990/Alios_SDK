@@ -99,6 +99,7 @@ void interface_init(void)
             memset(&hal_context->link_stats, 0, sizeof(hal_context->link_stats));
 
             if (module->type == MEDIA_TYPE_WIFI) {
+                hal_context->def_channel = 6;
                 hal_context->discovery_interval = WIFI_DISCOVERY_TIMEOUT;
                 hal_context->attach_request_interval = WIFI_ATTACH_REQUEST_TIMEOUT;
                 hal_context->sid_request_interval = WIFI_SID_REQUEST_TIMEOUT;
@@ -107,6 +108,7 @@ void interface_init(void)
                 hal_context->neighbor_alive_interval = WIFI_NEIGHBOR_ALIVE_TIMEOUT;
                 hal_context->advertisement_interval = WIFI_ADVERTISEMENT_TIMEOUT;
             } else if (module->type == MEDIA_TYPE_BLE) {
+                hal_context->def_channel = hal_context->channel_list.channels[0];
                 hal_context->discovery_interval = BLE_DISCOVERY_TIMEOUT;
                 hal_context->attach_request_interval = BLE_ATTACH_REQUEST_TIMEOUT;
                 hal_context->sid_request_interval = BLE_SID_REQUEST_TIMEOUT;
@@ -115,6 +117,7 @@ void interface_init(void)
                 hal_context->neighbor_alive_interval = BLE_NEIGHBOR_ALIVE_TIMEOUT;
                 hal_context->advertisement_interval = BLE_ADVERTISEMENT_TIMEOUT;
             } else if (module->type == MEDIA_TYPE_15_4) {
+                hal_context->def_channel = hal_context->channel_list.channels[0];
                 hal_context->discovery_interval = IEEE154_DISCOVERY_TIMEOUT;
                 hal_context->attach_request_interval = IEEE154_ATTACH_REQUEST_TIMEOUT;
                 hal_context->sid_request_interval = IEEE154_SID_REQUEST_TIMEOUT;
