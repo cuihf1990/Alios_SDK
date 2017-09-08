@@ -15,10 +15,10 @@ void *os_zalloc(size_t size);
 void *os_realloc(void *ptr, size_t size);
 void *os_free(void *ptr);
 #else
-#define os_malloc  yos_malloc
-#define os_zalloc  yos_zalloc
-#define os_realloc yos_realloc
-#define os_free    yos_free
+#define os_malloc  aos_malloc
+#define os_zalloc  aos_zalloc
+#define os_realloc aos_realloc
+#define os_free    aos_free
 #endif
 
 int os_memcmp_const(const void *a, const void *b, size_t len);

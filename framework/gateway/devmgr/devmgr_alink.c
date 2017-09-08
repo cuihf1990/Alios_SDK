@@ -447,12 +447,12 @@ static int devmgr_permitjoin_service_cb(char *args, char *buf,
     }
 
     //ÉèÖÃ¶¨Ê±Æ÷
-    yos_cancel_work(disablejoin_work, __work_func, NULL);
+    aos_cancel_work(disablejoin_work, __work_func, NULL);
     if (g_permitjoin_config.enable == true &&
         g_permitjoin_config.duration > 0) {
         log_trace("delay disable device join, duration:%d",
                   g_permitjoin_config.duration);
-        disablejoin_work = yos_loop_schedule_work(g_permitjoin_config.duration * 1000,
+        disablejoin_work = aos_loop_schedule_work(g_permitjoin_config.duration * 1000,
                                                   __work_func, NULL, NULL, NULL);
     }
 
@@ -519,8 +519,8 @@ void devmgr_delay_disable_join(int duration)
     log_trace("permit device join, duration:%d", duration);
     g_permitjoin_config.short_model = DEVMGR_PERMITJOIN_ANY_MODEL;
     g_permitjoin_config.enable = true;
-    yos_cancel_work(disablejoin_work, __work_func, NULL);
-    disablejoin_work = yos_loop_schedule_work(duration * 1000, __work_func, NULL, NULL,
+    aos_cancel_work(disablejoin_work, __work_func, NULL);
+    disablejoin_work = aos_loop_schedule_work(duration * 1000, __work_func, NULL, NULL,
                                               NULL);
 
     return;
@@ -740,7 +740,7 @@ void devmgr_alink_exit()
 {
     sm_detach_service("accs", &devmgr_listener);
 
-    yos_cancel_work(disablejoin_work, __work_func, NULL);
+    aos_cancel_work(disablejoin_work, __work_func, NULL);
     alink_unregister_service(DEVMGR_SERVICE_AUTHORISE_DEVICE_LIST);
     alink_unregister_service(DEVMGR_SERVICE_REMOVE_DEVICE);
     alink_unregister_service(DEVMGR_SERVICE_PERMITJOIN_DEVICE);

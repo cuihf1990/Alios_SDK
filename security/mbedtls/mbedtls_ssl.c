@@ -247,7 +247,7 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
         } else {
             if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
                 retry ++;
-                yos_msleep(10);
+                aos_msleep(10);
                 continue;
             }
 

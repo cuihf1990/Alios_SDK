@@ -95,7 +95,7 @@ static void start_mesh(bool is_leader)
         mode |= MODE_LEADER;
     }
 
-    yos_post_delayed_action(1000, mesh_delayed_action, (void *)(long)mode);
+    aos_post_delayed_action(1000, mesh_delayed_action, (void *)(long)mode);
 #endif
 }
 
@@ -113,7 +113,7 @@ static void netmgr_ip_got_event(hal_wifi_module_t *m,
 
     g_netmgr_cxt.ipv4_owned = (int32_t)inet_addr(pnet->ip);
     g_netmgr_cxt.ip_available = true;
-    yos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
+    aos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
     start_mesh(true);
 }
 
@@ -122,11 +122,11 @@ static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
 {
     switch (stat) {
         case NOTIFY_STATION_UP:
-            yos_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED,
+            aos_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED,
                            (unsigned long)g_netmgr_cxt.ap_config.ssid);
             break;
         case NOTIFY_STATION_DOWN:
-            yos_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0u);
+            aos_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0u);
             break;
         case NOTIFY_AP_UP:
             break;
@@ -282,7 +282,7 @@ static int clear_wifi_ssid(void)
     memset(g_netmgr_cxt.ap_config.pwd, 0, sizeof(g_netmgr_cxt.ap_config.pwd));
 
     memset(&g_netmgr_cxt.saved_conf, 0, sizeof(wifi_conf_t));
-    ret = yos_kv_set("wifi", (unsigned char *)(&g_netmgr_cxt.saved_conf),
+    ret = aos_kv_set("wifi", (unsigned char *)(&g_netmgr_cxt.saved_conf),
                      sizeof(wifi_conf_t), 1);
 
     return ret;
@@ -302,7 +302,7 @@ static int set_wifi_ssid(void)
     strncpy(g_netmgr_cxt.saved_conf.security,
             g_netmgr_cxt.ap_config.security, MAX_SECURITY_SIZE);
 #endif
-    ret = yos_kv_set("wifi", (unsigned char *)&g_netmgr_cxt.saved_conf,
+    ret = aos_kv_set("wifi", (unsigned char *)&g_netmgr_cxt.saved_conf,
                      sizeof(wifi_conf_t), 1);
 
     return ret;
@@ -316,7 +316,7 @@ static void handle_wifi_disconnect(void)
 
 #if 0 // low level handle disconnect
     if (has_valid_ap() == 1 && g_netmgr_cxt.disconnected_times < MAX_RETRY_CONNECT) {
-        yos_post_delayed_action(RETRY_INTERVAL_MS, reconnect_wifi, NULL);
+        aos_post_delayed_action(RETRY_INTERVAL_MS, reconnect_wifi, NULL);
     } else {
         clear_wifi_ssid();
         netmgr_wifi_config_start();
@@ -344,7 +344,7 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
                     0, g_netmgr_cxt.ipv4_owned);
                 g_netmgr_cxt.autoconfig_chain->autoconfig_stop();
             } else {
-                yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
+                aos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
                                (unsigned long)(&g_netmgr_cxt.ipv4_owned));
             }
             break;
@@ -442,9 +442,9 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
             config->security, sizeof(g_netmgr_cxt.saved_conf.security) - 1);
     // STM32L475E ip stack running on WiFi MCU, can only configure with CLI(no ywss)
     // So save the wifi config while config from CLI
-    ret = yos_kv_set("wifi", &g_netmgr_cxt.saved_conf, sizeof(wifi_conf_t), 1);
+    ret = aos_kv_set("wifi", &g_netmgr_cxt.saved_conf, sizeof(wifi_conf_t), 1);
 #else
-    ret = yos_kv_set("wifi", &g_netmgr_cxt.saved_conf, sizeof(wifi_conf_t), 0);
+    ret = aos_kv_set("wifi", &g_netmgr_cxt.saved_conf, sizeof(wifi_conf_t), 0);
 #endif
     return ret;
 }
@@ -461,7 +461,7 @@ static void read_persistent_conf(void)
     int len;
 
     len = sizeof(wifi_conf_t);
-    ret = yos_kv_get("wifi", &g_netmgr_cxt.saved_conf, &len);
+    ret = aos_kv_get("wifi", &g_netmgr_cxt.saved_conf, &len);
     if (ret < 0) {
         return;
     }
@@ -510,7 +510,7 @@ int netmgr_init(void)
 {
     hal_wifi_module_t *module;
 
-    yos_register_event_filter(EV_WIFI, netmgr_events_executor, NULL);
+    aos_register_event_filter(EV_WIFI, netmgr_events_executor, NULL);
     cli_register_command(&ncmd);
 
     module = hal_wifi_get_default_module();
@@ -543,7 +543,7 @@ int netmgr_start(bool autoconfig)
     stop_mesh();
 
     if (has_valid_ap() == 1) {
-        yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
+        aos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
         return 0;
     }
 
@@ -573,13 +573,13 @@ static int def_smart_config_start(void)
     memcpy(config.ssid, DEMO_AP_SSID, sizeof(config.ssid));
     memcpy(config.pwd, DEMO_AP_PASSWORD, sizeof(config.pwd));
     netmgr_set_ap_config(&config);
-    yos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
+    aos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
     return 0;
 }
 
 static void def_smart_config_stop(void)
 {
-    yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
+    aos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
                    (unsigned long)(&g_netmgr_cxt.ipv4_owned));
 }
 

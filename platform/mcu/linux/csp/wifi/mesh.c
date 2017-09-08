@@ -137,7 +137,7 @@ static int send_frame(umesh_hal_module_t *module, frame_t *frame, mac_address_t 
     int count = frame->len + MESH_DATA_OFF;
     int ret;
 
-    pkt = yos_malloc(count);
+    pkt = aos_malloc(count);
     if (pkt == NULL)
         return -1;
 
@@ -150,7 +150,7 @@ static int send_frame(umesh_hal_module_t *module, frame_t *frame, mac_address_t 
     priv->stats.out_frames ++;
 
 out:
-    yos_free(pkt);
+    aos_free(pkt);
     return ret;
 }
 

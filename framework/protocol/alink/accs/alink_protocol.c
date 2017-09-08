@@ -1094,7 +1094,7 @@ static int _alink_handshake_cycle(int ret)
             break;
         case PHASE_READY:
             LOGI(MODULE_NAME_ALINK_PROTOCOL, "accs_handshake success");
-            yos_post_event(EV_SYS, CODE_SYS_ON_ALINK_ONLINE, 0);
+            aos_post_event(EV_SYS, CODE_SYS_ON_ALINK_ONLINE, 0);
             return SERVICE_RESULT_OK;
         case PHASE_WAIT:
             start_accs_work(2 * 1000);

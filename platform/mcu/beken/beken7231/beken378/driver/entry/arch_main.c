@@ -79,7 +79,7 @@ void task_test3(void *arg)
 
 void entry_main(void)
 {
-    yos_start();
+    aos_start();
 }
 
 extern void hw_start_hal(void);

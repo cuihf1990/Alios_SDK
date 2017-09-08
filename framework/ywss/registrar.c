@@ -68,9 +68,9 @@ int alink_enrollee_checkin(char *params)
     char *value;
     int attr_len, ret = -1;
 
-    token = yos_zalloc(MAX_TOKEN_LEN + 1);
-    devid = yos_zalloc(MAX_DEVID_LEN + 1);
-    key = yos_zalloc(MAX_KEY_LEN * 2 + 1);
+    token = aos_zalloc(MAX_TOKEN_LEN + 1);
+    devid = aos_zalloc(MAX_DEVID_LEN + 1);
+    key = aos_zalloc(MAX_KEY_LEN * 2 + 1);
 
     if (!token || !devid || !key) {
         goto out;
@@ -122,13 +122,13 @@ int alink_enrollee_checkin(char *params)
 
 out:
     if (token) {
-        yos_free(token);
+        aos_free(token);
     }
     if (devid) {
-        yos_free(devid);
+        aos_free(devid);
     }
     if (key) {
-        yos_free(key);
+        aos_free(key);
     }
 
     if (ret > 0) {
@@ -267,7 +267,7 @@ static int enrollee_enable_somebody_checkin(int dev_type, char *token, char *key
                 && !memcmp(devid, enrollee_info[i].devid, enrollee_info[i].devid_len)) {
 
                 int key_byte_len = 0;
-                uint8_t *key_byte = yos_malloc(MAX_KEY_LEN);
+                uint8_t *key_byte = aos_malloc(MAX_KEY_LEN);
                 if (!key_byte) {
                     return 0;
                 }
@@ -282,13 +282,13 @@ static int enrollee_enable_somebody_checkin(int dev_type, char *token, char *key
                 memcpy((char *)&enrollee_info[i].key[0], key_byte, AES_KEY_LEN);
                 strcpy((char *)&enrollee_info[i].token[0], token);
 
-                yos_free(key_byte);
+                aos_free(key_byte);
 
                 LOGI(MODULE_NAME_ENROLLEE, "enrollee[%d] state %d->%d", i, enrollee_info[i].state,
                      ENR_CHECKIN_ENABLE);
                 enrollee_info[i].state = ENR_CHECKIN_ENABLE;
                 enrollee_info[i].checkin_priority = 1;//TODO: not implement yet
-                yos_loop_schedule_work(0, enrollee_checkin, NULL, NULL, NULL);
+                aos_loop_schedule_work(0, enrollee_checkin, NULL, NULL, NULL);
                 return 1;/* match */
             }
         }
@@ -349,7 +349,7 @@ ongoing:
         enrollee_info[i].state = ENR_FREE;
         registrar_raw_frame_destroy();
     }
-    yos_loop_schedule_work(REGISTRAR_SEND_PKT_INTERVAL, enrollee_checkin, NULL, NULL, NULL);
+    aos_loop_schedule_work(REGISTRAR_SEND_PKT_INTERVAL, enrollee_checkin, NULL, NULL, NULL);
 }
 
 unsigned int enrollee_report_period_ms = 30 * 1000;
@@ -573,7 +573,7 @@ int enrollee_put(struct enrollee_info *in)
     LOGI(MODULE_NAME_ENROLLEE, "new enrollee[%d] devid:%s time:%x",
          empty_slot, in->devid, enrollee_info[empty_slot].timestamp);
 
-    yos_loop_schedule_work(0, enrollee_report, NULL, NULL, NULL);
+    aos_loop_schedule_work(0, enrollee_report, NULL, NULL, NULL);
 
     return 0;
 }

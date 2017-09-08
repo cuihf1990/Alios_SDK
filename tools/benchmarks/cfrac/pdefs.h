@@ -24,15 +24,15 @@ extern char *gc_malloc_atomic();
 #define allocate(size)	(char *) gc_malloc_atomic(size)
 
 #    else
-extern void *yos_malloc();
-#define allocate(size)	(char *) yos_malloc(size)
+extern void *aos_malloc();
+#define allocate(size)	(char *) aos_malloc(size)
 #    endif
 
 #ifdef IGNOREFREE
 #define deallocate(p)	{};
 #else
-extern int  yos_free();
-#define deallocate(p)	yos_free(p)
+extern int  aos_free();
+#define deallocate(p)	aos_free(p)
 #endif
 
 #else

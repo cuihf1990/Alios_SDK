@@ -43,15 +43,15 @@ struct sys_mbox_msg {
     void *msg;
 };
 
-typedef yos_sem_t sys_sem_t;
+typedef aos_sem_t sys_sem_t;
 
-#define sys_sem_valid(sem)           yos_sem_is_valid(sem)
+#define sys_sem_valid(sem)           aos_sem_is_valid(sem)
 #define sys_sem_set_invalid(sem)     do { if(sem != NULL) { (sem)->hdl = NULL; }}while(0)
 
 typedef u32_t sys_prot_t;
 
-typedef yos_mutex_t sys_mutex_t;
-#define sys_mutex_valid(mutex)       yos_mutex_is_valid(mutex)
+typedef aos_mutex_t sys_mutex_t;
+#define sys_mutex_valid(mutex)       aos_mutex_is_valid(mutex)
 #define sys_mutex_set_invalid(mutex) do { if(mutex != NULL) { (mutex)->hdl = NULL; }}while(0)
 
 #ifndef LWIP_MAILBOX_QUEUE
@@ -70,8 +70,8 @@ typedef struct sys_mbox *sys_mbox_t;
 #define sys_mbox_valid(mbox)       #error TODO:impl
 #define sys_mbox_set_invalid(mbox) #error TODO:impl
 #else
-typedef yos_queue_t sys_mbox_t;
-#define sys_mbox_valid(mbox)       yos_queue_is_valid(mbox)
+typedef aos_queue_t sys_mbox_t;
+#define sys_mbox_valid(mbox)       aos_queue_is_valid(mbox)
 #define sys_mbox_set_invalid(mbox) do { if(mbox != NULL) { (mbox)->hdl = NULL; }}while(0)
 #endif
 

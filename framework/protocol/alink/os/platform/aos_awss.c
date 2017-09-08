@@ -106,13 +106,13 @@ int platform_awss_connect_ap(
     ret = netmgr_set_ap_config(&config);
 
     hal_wifi_suspend_station(NULL);
-    LOGD("yos_awss", "Will reconnect wifi: %s %s", ssid, passwd);
+    LOGD("aos_awss", "Will reconnect wifi: %s %s", ssid, passwd);
     netmgr_reconnect_wifi();
 
     while (ms_cnt < connection_timeout_ms) {
         if (netmgr_get_ip_state() == false) {
             LOGD("[waitConnAP]", "waiting for connecting AP");
-            yos_msleep(500);
+            aos_msleep(500);
             ms_cnt += 500;
         } else {
             LOGI("[waitConnAP]", "AP connected");
@@ -129,7 +129,7 @@ int platform_wifi_scan(platform_wifi_scan_result_cb_t cb)
     netmgr_register_wifi_scan_result_callback((netmgr_wifi_scan_result_cb_t)cb);
     hal_wifi_start_scan_adv(NULL);
     while (netmgr_get_scan_cb_finished() != true) { // block
-        yos_msleep(500);
+        aos_msleep(500);
     }
     return 0;
 }
@@ -151,20 +151,20 @@ p_aes128_t platform_aes128_init(
 
     result = ali_aes_get_ctx_size(AES_CBC, &aes_ctx_size);
     if (result != ALI_CRYPTO_SUCCESS) {
-        LOGE("yos_awss", "get ctx size fail(%08x)", result);
+        LOGE("aos_awss", "get ctx size fail(%08x)", result);
         return NULL;
     }
 
     aes_ctx = os_malloc(aes_ctx_size);
     if (aes_ctx == NULL) {
-        LOGE("yos_awss", "kmalloc(%d) fail", (int)aes_ctx_size);
+        LOGE("aos_awss", "kmalloc(%d) fail", (int)aes_ctx_size);
         return NULL;
     }
 
     result = ali_aes_init(AES_CBC, en_dec,
                           key, NULL, KEY_LEN, iv, aes_ctx);
     if (result != ALI_CRYPTO_SUCCESS) {
-        LOGE("yos_awss", "ali_aes_init fail(%08x)", result);
+        LOGE("aos_awss", "ali_aes_init fail(%08x)", result);
         return NULL;
     }
 
@@ -193,7 +193,7 @@ int platform_aes128_cbc_encrypt_decrypt(
     result = ali_aes_finish(src, blockNum << 4, dst,
                             &dlen, SYM_NOPAD, aes);
     if (result != ALI_CRYPTO_SUCCESS) {
-        LOGE("yos_awss", "aes_cbc finish fail(%08x)", result);
+        LOGE("aos_awss", "aes_cbc finish fail(%08x)", result);
         return -1;
     }
 
@@ -290,7 +290,7 @@ static void smart_config_stop(void)
 
 static void smart_config_result_cb(int result, uint32_t ip)
 {
-    yos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0u);
+    aos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0u);
 }
 
 autoconfig_plugin_t g_alink_smartconfig = {

@@ -12,11 +12,11 @@
 
 #define WIFI_PRODUCT_INFO_SIZE                      ES_WIFI_MAX_SSID_NAME_SIZE
 
-ktask_t *g_yos_init;
+ktask_t *g_aos_init;
 
 extern int application_start(int argc, char **argv);
 void trace_start(void);
-extern int yos_framework_init(void);
+extern int aos_framework_init(void);
 
 static int init_wifi()
 {
@@ -61,7 +61,7 @@ static void hal_init()
 
 extern void hw_start_hal(void);
 
-static void yos_init(void)
+static void aos_init(void)
 {
     int i = 0;
 
@@ -80,28 +80,28 @@ static void yos_init(void)
         vflash_register_partition(i);
     }
 
-    yos_cli_init();
-    yos_kv_init();
-    yos_loop_init();
+    aos_cli_init();
+    aos_kv_init();
+    aos_loop_init();
 
     trace_start();
 
-    yos_framework_init();
+    aos_framework_init();
     application_start(0, NULL);
 #endif
 }
 
 
-void yos_start(void)
+void aos_start(void)
 {
     krhino_init();
-    krhino_task_dyn_create(&g_yos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, (task_entry_t)yos_init, 1);
+    krhino_task_dyn_create(&g_aos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, (task_entry_t)aos_init, 1);
     krhino_start();
 }
 
 void entry_main(void)
 {
-    yos_start();
+    aos_start();
 }
 
 

@@ -30,14 +30,14 @@ typedef enum {
     YOS_LL_INFO,  /**< info + warn + error log will output */
     YOS_LL_DEBUG, /**< debug + info + warn + error + fatal log will output */
 }
-yos_log_level_t;
+aos_log_level_t;
 
 /**
  * @brief log level control
  * @param[in] log_level
- * @see yos_log_level_t.
+ * @see aos_log_level_t.
  */
-void yos_set_log_level(yos_log_level_t log_level);
+void aos_set_log_level(aos_log_level_t log_level);
 
 /**
  * @brief fatal log

@@ -50,7 +50,7 @@ static void free_mac_table()
         while (h != NULL) {
             tmp = h;
             h = h->next;
-            yos_free(tmp);
+            aos_free(tmp);
         }
     }
 
@@ -133,11 +133,11 @@ static int check_same_mac_and_add_new(uint8_t * mac)
         node = node->next;
     }
 
-    new_n = (struct mac_hash_t *)yos_malloc(sizeof(struct mac_hash_t));
+    new_n = (struct mac_hash_t *)aos_malloc(sizeof(struct mac_hash_t));
     LOGD(MODULE_NAME, "New mac (%02x:%02x:%02x:%02x:%02x:%02x) found, let's add it.",
       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     if (new_n == NULL) {
-        LOGI(MODULE_NAME, "Error: yos_malloc failed");
+        LOGI(MODULE_NAME, "Error: aos_malloc failed");
         return -1;
     }
     new_n->next = NULL;
@@ -160,7 +160,7 @@ static void report_new_mac(const uint8_t *mac, char rssi)
     snprintf(post_data_buffer, post_data_buffer_size, PostMacDataFormat,
       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], rssi);
     LOG("Start report new found mac. %s", post_data_buffer);
-    yos_cloud_report(Method_PostNewProbeReqData, post_data_buffer, NULL, NULL);
+    aos_cloud_report(Method_PostNewProbeReqData, post_data_buffer, NULL, NULL);
 }
 
 #ifndef MGMT_PROBE_REQ

@@ -63,11 +63,11 @@ void hal_timer_stop(hal_timer_t *tmr)
     tmr->priv = NULL;
 }
 
-extern hal_wifi_module_t sim_yos_wifi_stm23l475;
+extern hal_wifi_module_t sim_aos_wifi_stm23l475;
 extern struct hal_ota_module_s stm32l475_ota_module;
 void hw_start_hal(void)
 {
     printf("start-----------hal\n");
-    hal_wifi_register_module(&sim_yos_wifi_stm23l475);
+    hal_wifi_register_module(&sim_aos_wifi_stm23l475);
     hal_ota_register_module(&stm32l475_ota_module);
 }

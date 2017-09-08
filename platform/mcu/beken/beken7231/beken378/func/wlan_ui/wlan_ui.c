@@ -798,7 +798,7 @@ int bk_wlan_send_80211_raw_frame(uint8_t *buffer, int len)
     uint8_t *pkt;
     int ret;
 
-    pkt = yos_malloc(len);
+    pkt = aos_malloc(len);
     if (pkt == NULL) {
         return -1;
     }

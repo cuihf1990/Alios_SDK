@@ -183,7 +183,7 @@ static void mqtt_test() {
         }
 
     if(cnt < 2) {
-        yos_post_delayed_action(200, mqtt_test, NULL);
+        aos_post_delayed_action(200, mqtt_test, NULL);
     } else {
 
         IOT_MQTT_Unsubscribe(pclient, TOPIC_DATA);
@@ -369,10 +369,10 @@ static struct cli_command mqttcmd = {
 
 int application_start(int argc, char *argv[])
 {
-    yos_set_log_level(YOS_LL_DEBUG);
+    aos_set_log_level(YOS_LL_DEBUG);
 
-    yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
-    yos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);
+    aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
+    aos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);
 
     netmgr_init();
     netmgr_start(false);
@@ -381,6 +381,6 @@ int application_start(int argc, char *argv[])
 #ifdef CSP_LINUXHOST
     mqtt_client_example();
 #endif
-    yos_loop_run();
+    aos_loop_run();
     return 0;
 }

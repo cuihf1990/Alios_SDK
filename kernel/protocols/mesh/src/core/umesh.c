@@ -92,7 +92,7 @@ static ur_error_t umesh_interface_up(void)
         g_um_state.adapter_callback->interface_up();
     }
 
-    yos_post_event(EV_MESH, CODE_MESH_CONNECTED, 0);
+    aos_post_event(EV_MESH, CODE_MESH_CONNECTED, 0);
     ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_API, "mesh interface up\r\n");
     return UR_ERROR_NONE;
 }
@@ -102,7 +102,7 @@ static ur_error_t umesh_interface_down(void)
     if (g_um_state.adapter_callback) {
         g_um_state.adapter_callback->interface_down();
     }
-    yos_post_event(EV_MESH, CODE_MESH_DISCONNECTED, 0);
+    aos_post_event(EV_MESH, CODE_MESH_DISCONNECTED, 0);
     return UR_ERROR_NONE;
 }
 
@@ -453,7 +453,7 @@ ur_error_t umesh_start()
     umesh_mm_start(&g_um_state.mm_cb);
     lp_start();
 
-    if (yos_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
+    if (aos_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
         extnetid.len = extnetid_len;
         umesh_set_extnetid(&extnetid);
     }
@@ -463,7 +463,7 @@ ur_error_t umesh_start()
         hal_umesh_enable(wifi_hal);
     }
 
-    yos_post_event(EV_MESH, CODE_MESH_STARTED, 0);
+    aos_post_event(EV_MESH, CODE_MESH_STARTED, 0);
 
     return UR_ERROR_NONE;
 }

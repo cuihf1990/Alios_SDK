@@ -26,7 +26,7 @@ static ssize_t flash_write(file_t *f, const void *buf, size_t len)
     sector_off = f->offset & SECTOR_MASK;
     write_size = (f->offset - sector_off + len + (~SECTOR_MASK)) & SECTOR_MASK;
 
-    void *buffer = (void *)yos_malloc(write_size);
+    void *buffer = (void *)aos_malloc(write_size);
     if (!buffer) {
         return 0;
     }
@@ -57,7 +57,7 @@ static ssize_t flash_write(file_t *f, const void *buf, size_t len)
     }
 
 exit:
-    yos_free(buffer);
+    aos_free(buffer);
     return ret;
 }
 
@@ -88,7 +88,7 @@ int vflash_register_partition(int pno)
     int ret;
 
     snprintf(pname, sizeof(pname) - 1, "/dev/flash%d", pno);
-    ret = yos_register_driver(pname, &flash_fops, (void *)(long)pno);
+    ret = aos_register_driver(pname, &flash_fops, (void *)(long)pno);
 
     return ret;
 }

@@ -37,19 +37,19 @@ void platform_printf(const char *fmt, ...)
 
 void *platform_malloc(uint32_t size)
 {
-    return yos_malloc(size);
+    return aos_malloc(size);
 }
 
 void platform_free(void *ptr)
 {
-    yos_free(ptr);
+    aos_free(ptr);
 }
 
 void *platform_mutex_init(void)
 {
-    yos_mutex_t mutex;
+    aos_mutex_t mutex;
 
-    if (0 != yos_mutex_new(&mutex)) {
+    if (0 != aos_mutex_new(&mutex)) {
         return NULL;
     }
 
@@ -58,24 +58,24 @@ void *platform_mutex_init(void)
 
 void platform_mutex_lock(void *mutex)
 {
-    yos_mutex_lock((yos_mutex_t *)&mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock((aos_mutex_t *)&mutex, YOS_WAIT_FOREVER);
 }
 
 void platform_mutex_unlock(void *mutex)
 {
-    yos_mutex_unlock((yos_mutex_t *)&mutex);
+    aos_mutex_unlock((aos_mutex_t *)&mutex);
 }
 
 void platform_mutex_destroy(void *mutex)
 {
-    yos_mutex_free((yos_mutex_t *)&mutex);
+    aos_mutex_free((aos_mutex_t *)&mutex);
 }
 
 void *platform_semaphore_init(void)
 {
-    yos_sem_t sem;
+    aos_sem_t sem;
 
-    if (0 != yos_sem_new(&sem, 0)) {
+    if (0 != aos_sem_new(&sem, 0)) {
         return NULL;
     }
 
@@ -85,30 +85,30 @@ void *platform_semaphore_init(void)
 int platform_semaphore_wait(_IN_ void *sem, _IN_ uint32_t timeout_ms)
 {
     if (PLATFORM_WAIT_INFINITE == timeout_ms) {
-        return yos_sem_wait((yos_sem_t *)&sem, YOS_WAIT_FOREVER);
+        return aos_sem_wait((aos_sem_t *)&sem, YOS_WAIT_FOREVER);
     } else {
-        return yos_sem_wait((yos_sem_t *)&sem, timeout_ms);
+        return aos_sem_wait((aos_sem_t *)&sem, timeout_ms);
     }
 }
 
 void platform_semaphore_post(void *sem)
 {
-    yos_sem_signal((yos_sem_t *)&sem);
+    aos_sem_signal((aos_sem_t *)&sem);
 }
 
 void platform_semaphore_destroy(void *sem)
 {
-    yos_sem_free((yos_sem_t *)&sem);
+    aos_sem_free((aos_sem_t *)&sem);
 }
 
 void platform_msleep(_IN_ uint32_t ms)
 {
-    yos_msleep(ms);
+    aos_msleep(ms);
 }
 
 uint32_t platform_get_time_ms(void)
 {
-    return yos_now_ms();
+    return aos_now_ms();
 }
 
 uint64_t platform_get_utc_time(_INOUT_ uint64_t *p_utc)
@@ -172,9 +172,9 @@ int platform_thread_create(
     int ret = -1;
     *stack_used = 0;
     (void)stack;
-    yos_task_t task;
+    aos_task_t task;
 
-    ret = yos_task_new_ext(&task, name, (thread_entry_t)start_routine, arg, stack_size,
+    ret = aos_task_new_ext(&task, name, (thread_entry_t)start_routine, arg, stack_size,
                            DEFAULT_THREAD_PRI);
 
     *thread = start_routine;
@@ -184,6 +184,6 @@ int platform_thread_create(
 
 void platform_thread_exit(void *thread)
 {
-    yos_task_exit(0);
+    aos_task_exit(0);
 }
 

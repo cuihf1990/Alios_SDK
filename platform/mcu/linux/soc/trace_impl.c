@@ -131,7 +131,7 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
     if (strcmp(rtype, "start") == 0) {
         if (argc == 3 || argc == 4) {
             if (ip_addr == NULL) {
-                ip_addr = (char *) yos_malloc(strlen(argv[2])+1);
+                ip_addr = (char *) aos_malloc(strlen(argv[2])+1);
                 if (ip_addr == NULL) {
                     k_err_proc(RHINO_NO_MEM);
                 }
@@ -157,10 +157,10 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
             return;
         }
         if (filter_task) {
-            yos_free(filter_task);
+            aos_free(filter_task);
         }
 
-        filter_task = (char *) yos_malloc(strlen(argv[2])+1);
+        filter_task = (char *) aos_malloc(strlen(argv[2])+1);
         if (filter_task == NULL) {
             k_err_proc(RHINO_NO_MEM);
         }

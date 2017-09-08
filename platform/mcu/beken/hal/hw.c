@@ -50,12 +50,12 @@ void hal_timer_stop(hal_timer_t *tmr)
     tmr->priv = NULL;
 }
 
-extern hal_wifi_module_t sim_yos_wifi_beken;
+extern hal_wifi_module_t sim_aos_wifi_beken;
 extern struct hal_ota_module_s moc108_ota_module;
 void hw_start_hal(void)
 {
     printf("start-----------hal\n");
-    hal_wifi_register_module(&sim_yos_wifi_beken);
+    hal_wifi_register_module(&sim_aos_wifi_beken);
     hal_ota_register_module(&moc108_ota_module);
 #ifdef CONFIG_YOS_MESH
     extern void beken_wifi_mesh_register(void);

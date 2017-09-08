@@ -62,7 +62,7 @@ static void handle_discovery_timer(void *args)
     } else if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
         umesh_mm_set_channel(network, umesh_mm_get_prev_channel());
     } else {
-        umesh_mm_set_channel(network, hal->channel_list.channels[0]);
+        umesh_mm_set_channel(network, hal->def_channel);
         if ((umesh_mm_get_mode() & MODE_MOBILE) == 0) {
             become_leader();
         }

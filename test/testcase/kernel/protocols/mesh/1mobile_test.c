@@ -42,7 +42,7 @@ static void run_in_hop1(void)
     stop_node(12);
     stop_node(13);
 
-    yos_msleep(2 * 1000);
+    aos_msleep(2 * 1000);
 }
 
 static void run_in_hop2(void)
@@ -73,7 +73,7 @@ static void run_in_hop2(void)
     stop_node(12);
     stop_node(13);
 
-    yos_msleep(2 * 1000);
+    aos_msleep(2 * 1000);
 }
 
 

@@ -11,7 +11,7 @@ export SCRIPTS_PATH := $(SOURCE_ROOT)/build/scripts
 MAKEFILE_TARGETS := clean  # targets used by makefile 
 
 #define BUILD_STRING, YOS toolchain commands on different hosts
-include $(MAKEFILES_PATH)/yos_host_cmd.mk
+include $(MAKEFILES_PATH)/aos_host_cmd.mk
 
 define USAGE_TEXT
 Aborting due to invalid targets
@@ -96,11 +96,11 @@ clean:
 ifneq ($(BUILD_STRING),)
 -include out/$(CLEANED_BUILD_STRING)/config.mk
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
- include $(MAKEFILES_PATH)/yos_toolchain_gcc.mk
+ include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
-out/$(CLEANED_BUILD_STRING)/config.mk: $(MAKEFILES_PATH)/yos_target_config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk $(MAKEFILES_PATH)/yos_toolchain_gcc.mk $(YOS_SDK_MAKEFILES)
+out/$(CLEANED_BUILD_STRING)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(YOS_SDK_MAKEFILES)
 	$(QUIET)$(ECHO) $(if $(YOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
-	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/yos_target_config.mk $(CLEANED_BUILD_STRING)
+	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/aos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
 
 
@@ -118,21 +118,21 @@ $(PASSDOWN_TARGETS):
 $(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit)
 
 ifeq ($(BINS), 0)
-main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/yos_target_build.mk
+main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
 	$(QUIET)$(ECHO) Build AOS Now
 	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
-	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/yos_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
+	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
 	$(QUIET)$(ECHO) Build complete
 else
-main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/yos_target_build_bins.mk
+main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build_bins.mk
 	$(QUIET)$(ECHO) Build AOS-BINS Now
 	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
-	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/yos_target_build_bins.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
+	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build_bins.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
 	$(QUIET)$(ECHO) Build complete
 endif
 
 ifeq ($(SUB_BUILD),)
-.gdbinit: out/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/yos_host_cmd.mk main_app
+.gdbinit: out/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
 	$(QUIET)$(ECHO) Making $@
 	$(QUIET)$(ECHO) set remotetimeout 20 > $@
 	$(QUIET)$(ECHO) $(GDBINIT_STRING) >> $@

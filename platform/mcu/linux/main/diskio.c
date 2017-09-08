@@ -27,7 +27,7 @@ static DSTATUS ramdisk_initialize()
 static INT ramdisk_open(BYTE w)
 {
     INT fd;
-    BYTE path[] = "./yos_partition_ramdisk.bin";
+    BYTE path[] = "./aos_partition_ramdisk.bin";
 
     if (w)
         fd = open(path, O_RDWR);

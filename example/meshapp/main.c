@@ -20,8 +20,8 @@ static void app_delayed_action(void *arg)
 
 static void app_main_entry(void *arg)
 {
-    yos_post_delayed_action(1000, app_delayed_action, arg);
-    yos_loop_run();
+    aos_post_delayed_action(1000, app_delayed_action, arg);
+    aos_loop_run();
 }
 
 int application_start(int argc, char **argv)
@@ -36,13 +36,13 @@ int application_start(int argc, char **argv)
 #endif
     }
     else if (strcmp(mode, "--mesh-master") == 0) {
-        yos_cli_stop();
+        aos_cli_stop();
 #ifdef CONFIG_YOS_DDM
         ddm_run(argc, argv);
 #endif
     }
     else {
-        yos_task_new("meshappmain", app_main_entry, NULL, 8192);
+        aos_task_new("meshappmain", app_main_entry, NULL, 8192);
     }
 
     return 0;

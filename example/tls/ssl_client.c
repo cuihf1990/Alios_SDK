@@ -214,15 +214,15 @@ static void handle_event(input_event_t *event, void *arg)
         return;
     }
 
-    yos_post_delayed_action(1000, app_delayed_action, arg);
+    aos_post_delayed_action(1000, app_delayed_action, arg);
 }
 
 int application_start(void)
 {
-    struct cookie *cookie = yos_malloc(sizeof(*cookie));
+    struct cookie *cookie = aos_malloc(sizeof(*cookie));
     bzero(cookie, sizeof(*cookie));
 
-    yos_register_event_filter(EV_WIFI, handle_event, cookie);
+    aos_register_event_filter(EV_WIFI, handle_event, cookie);
 
     netmgr_init();
 #if !defined(MBEDTLS_NET_ALT_UART)
@@ -231,7 +231,7 @@ int application_start(void)
     netmgr_start(false);
 #endif
 
-    yos_loop_run();
+    aos_loop_run();
     /* never return */
 
     return 0;

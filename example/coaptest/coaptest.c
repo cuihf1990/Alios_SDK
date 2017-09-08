@@ -80,7 +80,7 @@ static void user_code_start()
     IOT_CoAP_Yield(p_ctx);
     if (m_coap_client_running) {
         m_coap_client_running = 0;
-        yos_post_delayed_action(3000,user_code_start,NULL);
+        aos_post_delayed_action(3000,user_code_start,NULL);
     } else {
         IOT_CoAP_Deinit(&p_ctx);
     }
@@ -135,12 +135,12 @@ void wifi_service_event(input_event_t *event, void *priv_data)
 
 int application_start(void)
 {
-    yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
+    aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
 
 	netmgr_init();
 	netmgr_start(true);
 
-    yos_loop_run();
+    aos_loop_run();
 
     /* never return */
     return 0;

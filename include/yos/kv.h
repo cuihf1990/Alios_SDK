@@ -23,7 +23,7 @@ extern "C"
  *
  * @retval  0 on success, otherwise -1 will be returned
  */
-int yos_kv_set(const char *key, const void *value, int len, int sync);
+int aos_kv_set(const char *key, const void *value, int len, int sync);
 
 /**
  * @brief get the KV value stored in @buffer by its key @key.
@@ -36,7 +36,7 @@ int yos_kv_set(const char *key, const void *value, int len, int sync);
  *            otherwise @buffer would be NULL.
  * @retval  0 on success, otherwise -1 will be returned
  */
-int yos_kv_get(const char *key, void *buffer, int *buffer_len);
+int aos_kv_get(const char *key, void *buffer, int *buffer_len);
 
 /**
  * @brief delete the KV pair by its key @key.
@@ -45,7 +45,7 @@ int yos_kv_get(const char *key, void *buffer, int *buffer_len);
  *
  * @retval  0 on success, otherwise -1 will be returned
  */
-int yos_kv_del(const char *key);
+int aos_kv_del(const char *key);
 
 #ifdef __cplusplus
 }

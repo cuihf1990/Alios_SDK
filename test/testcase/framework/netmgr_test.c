@@ -48,50 +48,50 @@ static void saved_config_event_executor(input_event_t *eventinfo, void *cb_para)
 static void smart_config_event_executor(input_event_t *eventinfo, void *cb_para)
 {
     if (events_executor(eventinfo, cb_para, SMART_CONFIG_FLAG) == 0) {
-        yos_schedule_call(saved_config_test, NULL);
+        aos_schedule_call(saved_config_test, NULL);
     }
 }
 
 static void smart_config_test(void *arg)
 {
-    yos_unregister_event_filter(EV_WIFI, saved_config_event_executor, NULL);
-    yos_register_event_filter(EV_WIFI, smart_config_event_executor, NULL);
+    aos_unregister_event_filter(EV_WIFI, saved_config_event_executor, NULL);
+    aos_register_event_filter(EV_WIFI, smart_config_event_executor, NULL);
     netmgr_init();
     netmgr_start(true);
 }
 
 static void saved_config_test(void *arg)
 {
-    yos_unregister_event_filter(EV_WIFI, smart_config_event_executor, NULL);
-    yos_register_event_filter(EV_WIFI, saved_config_event_executor, NULL);
+    aos_unregister_event_filter(EV_WIFI, smart_config_event_executor, NULL);
+    aos_register_event_filter(EV_WIFI, saved_config_event_executor, NULL);
     netmgr_init();
     netmgr_start(true);
 }
 
 static void test_netmgr_cases(void *arg)
 {
-    yos_schedule_call(smart_config_test, NULL);
+    aos_schedule_call(smart_config_test, NULL);
 }
 
 static void netmgr_test_entry(void *arg)
 {
-    yos_post_delayed_action(1000, test_netmgr_cases, NULL);
-    yos_loop_run();
+    aos_post_delayed_action(1000, test_netmgr_cases, NULL);
+    aos_loop_run();
 }
 
 static void netmgr_test_exit(void *arg)
 {
-    yos_loop_exit();
+    aos_loop_exit();
 }
 
 static void test_netmgr_connect_case(void)
 {
-    yos_task_new("netmgr_test_main", netmgr_test_entry, NULL, 8192);
+    aos_task_new("netmgr_test_main", netmgr_test_entry, NULL, 8192);
 
     check_cond_wait(done_flag == DONE_FLAGS, 10);
-    yos_schedule_call(netmgr_test_exit, NULL);
-    yos_unregister_event_filter(EV_WIFI, smart_config_event_executor, NULL);
-    yos_unregister_event_filter(EV_WIFI, saved_config_event_executor, NULL);
+    aos_schedule_call(netmgr_test_exit, NULL);
+    aos_unregister_event_filter(EV_WIFI, smart_config_event_executor, NULL);
+    aos_unregister_event_filter(EV_WIFI, saved_config_event_executor, NULL);
 }
 
 static int init(void)
@@ -117,13 +117,13 @@ static void teardown(void)
 {
 }
 
-static yunit_test_case_t yos_netmgr_testcases[] = {
+static yunit_test_case_t aos_netmgr_testcases[] = {
     { "netmgr_connect", test_netmgr_connect_case },
     YUNIT_TEST_CASE_NULL
 };
 
 static yunit_test_suite_t suites[] = {
-    { "netmgr", init, cleanup, setup, teardown, yos_netmgr_testcases },
+    { "netmgr", init, cleanup, setup, teardown, aos_netmgr_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 

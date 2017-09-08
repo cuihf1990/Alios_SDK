@@ -138,7 +138,7 @@ static void mqtt_test() {
     cnt++;
 
     if(cnt < 2) {
-        yos_post_delayed_action(200, mqtt_test, NULL);
+        aos_post_delayed_action(200, mqtt_test, NULL);
     } else {
 
         IOT_MQTT_Unsubscribe(pclient, TOPIC_DATA);

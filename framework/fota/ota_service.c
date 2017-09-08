@@ -26,7 +26,7 @@ void ota_service_event(input_event_t *event, void *priv_data)
 
 void ota_service_init(void)
 {
-    yos_register_event_filter(EV_WIFI, ota_service_event, NULL);
+    aos_register_event_filter(EV_WIFI, ota_service_event, NULL);
 }
 #else
 #include "ota_transport.h"
@@ -108,12 +108,13 @@ void ota_regist_upgrade(void)
 static void init_device_parmas()
 {
 #ifdef SYSINFO_OS_BINS
-    ota_request_parmas.primary_version = get_yos_os_version();
+    ota_request_parmas.primary_version = get_aos_os_version();
 #else
-    ota_request_parmas.primary_version = get_yos_kernel_version();
+    ota_request_parmas.primary_version = get_aos_kernel_version();
 #endif
-    ota_request_parmas.secondary_version = get_yos_app_version();
-    ota_request_parmas.product_type = get_yos_product_model();
+
+    ota_request_parmas.secondary_version = get_aos_app_version();
+    ota_request_parmas.product_type = get_aos_product_model();
     ota_request_parmas.device_uuid = platform_ota_get_id();
 }
 
@@ -132,6 +133,6 @@ void ota_service_event(input_event_t *event, void *priv_data)
 
 void ota_service_init(void)
 {
-    yos_register_event_filter(EV_SYS, ota_service_event, NULL);
+    aos_register_event_filter(EV_SYS, ota_service_event, NULL);
 }
 #endif

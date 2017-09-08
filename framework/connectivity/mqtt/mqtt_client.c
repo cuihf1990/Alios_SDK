@@ -2249,7 +2249,7 @@ static void cb_recv(int fd, void *arg)
         }
         iotx_mc_set_client_state(pClient, IOTX_MC_STATE_CONNECTED);
         utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000); 
-        yos_post_event(EV_SYS, CODE_SYS_ON_MQTT_READ, 0u);
+        aos_post_event(EV_SYS, CODE_SYS_ON_MQTT_READ, 0u);
         is_connected = 1;
         return;
    }
@@ -2308,7 +2308,7 @@ static int iotx_mc_connect(iotx_mc_client_t *pClient)
 
     log_info("mqtt connect success!");
 #else
-    yos_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
+    aos_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
 #endif
     return rc;
 }
@@ -2394,7 +2394,7 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
     }
 
 #ifndef STM32L475xx
-    yos_cancel_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
+    aos_cancel_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
 #endif
     (void)MQTTDisconnect(pClient);
 

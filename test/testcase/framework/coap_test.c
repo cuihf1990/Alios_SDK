@@ -92,7 +92,7 @@ static void user_code_start()
     ret = IOT_CoAP_Yield(p_ctx);
     YUNIT_ASSERT(IOTX_SUCCESS == ret); 
     if (m_coap_client_running) {
-        yos_post_delayed_action(3000,user_code_start,NULL);
+        aos_post_delayed_action(3000,user_code_start,NULL);
     } else {
         IOT_CoAP_Deinit(&p_ctx);
         YUNIT_ASSERT(NULL == p_ctx); 

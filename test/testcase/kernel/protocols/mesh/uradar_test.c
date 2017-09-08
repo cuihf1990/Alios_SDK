@@ -91,7 +91,7 @@ static void input_event_executor(input_event_t *eventinfo, void* cb_para)
 
 static int init(void)
 {
-    yos_register_event_filter(EV_DDA, input_event_executor, NULL);
+    aos_register_event_filter(EV_DDA, input_event_executor, NULL);
 
     ddm_pid = start_ddm();
     ur_ut_send_cmd_to_ddm("log off 0");
@@ -100,19 +100,19 @@ static int init(void)
 
     int cnt = 0;
     while (!dda_connected && cnt++ < 100) {
-        yos_msleep(100);
+        aos_msleep(100);
     }
 
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_stop());
 
-    yos_msleep(1000);
+    aos_msleep(1000);
 
     return cnt < 100 ? 0 : -1;
 }
 
 static int cleanup(void)
 {
-    yos_schedule_call(stop_dda, NULL);
+    aos_schedule_call(stop_dda, NULL);
 
     ur_ut_send_cmd_to_ddm("goto master");
     ur_ut_send_cmd_to_ddm("ls");
@@ -120,7 +120,7 @@ static int cleanup(void)
 
     waitpid(ddm_pid, NULL, 0);
 
-    yos_register_event_filter(EV_DDA, input_event_executor, NULL);
+    aos_register_event_filter(EV_DDA, input_event_executor, NULL);
 
     return 0;
 }

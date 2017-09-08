@@ -52,5 +52,5 @@ WIFI_FIRMWARE_SECTOR_START    := 2      #0x2000
 FILESYSTEM_IMAGE_SECTOR_START := 256    #0x100000
 
 # Extra build target in mico_standard_targets.mk, include bootloader, and copy output file to eclipse debug file (copy_output_for_eclipse)
-EXTRA_TARGET_MAKEFILES +=  $(MAKEFILES_PATH)/yos_standard_targets.mk
+EXTRA_TARGET_MAKEFILES +=  $(MAKEFILES_PATH)/aos_standard_targets.mk
 #EXTRA_TARGET_MAKEFILES +=  $(SOURCE_ROOT)/platform/mcu/$(HOST_MCU_FAMILY)/gen_crc_bin.mk

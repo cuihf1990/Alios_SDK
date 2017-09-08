@@ -15,9 +15,9 @@
 
 void *HAL_MutexCreate(void)
 {
-    yos_mutex_t mutex;
+    aos_mutex_t mutex;
 
-    if (0 != yos_mutex_new(&mutex)) {
+    if (0 != aos_mutex_new(&mutex)) {
         return NULL;
     }
 
@@ -41,7 +41,7 @@ void *HAL_MutexCreate(void)
 
 void HAL_MutexDestroy(_IN_ void *mutex)
 {
-    yos_mutex_free((yos_mutex_t *)&mutex);
+    aos_mutex_free((aos_mutex_t *)&mutex);
     /*
     int err_num;
     if (0 != (err_num = pthread_mutex_destroy((pthread_mutex_t *)mutex))) {
@@ -53,7 +53,7 @@ void HAL_MutexDestroy(_IN_ void *mutex)
 
 void HAL_MutexLock(_IN_ void *mutex)
 {
-    yos_mutex_lock((yos_mutex_t *)&mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock((aos_mutex_t *)&mutex, YOS_WAIT_FOREVER);
     /*
     int err_num;
     if (0 != (err_num = pthread_mutex_lock((pthread_mutex_t *)mutex))) {
@@ -64,7 +64,7 @@ void HAL_MutexLock(_IN_ void *mutex)
 
 void HAL_MutexUnlock(_IN_ void *mutex)
 {
-    yos_mutex_unlock((yos_mutex_t *)&mutex);
+    aos_mutex_unlock((aos_mutex_t *)&mutex);
     /*
     int err_num;
     if (0 != (err_num = pthread_mutex_unlock((pthread_mutex_t *)mutex))) {
@@ -74,13 +74,13 @@ void HAL_MutexUnlock(_IN_ void *mutex)
 
 void *HAL_Malloc(_IN_ uint32_t size)
 {
-    return yos_malloc(size);
+    return aos_malloc(size);
     //return malloc(size);
 }
 
 void HAL_Free(_IN_ void *ptr)
 {
-    yos_free(ptr);
+    aos_free(ptr);
     //return free(ptr);
 }
 
@@ -104,12 +104,12 @@ int aliot_platform_ota_finalize(_IN_ int stat)
 
 uint32_t HAL_UptimeMs(void)
 {
-    return yos_now_ms();
+    return aos_now_ms();
 }
 
 void HAL_SleepMs(_IN_ uint32_t ms)
 {
-    return yos_msleep(ms);
+    return aos_msleep(ms);
     //usleep( 1000 * ms );
 }
 

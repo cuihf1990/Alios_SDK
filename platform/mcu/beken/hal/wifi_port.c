@@ -9,7 +9,7 @@
 #include <hal/wifi.h>
 #include "common.h"
 
-hal_wifi_module_t sim_yos_wifi_beken;
+hal_wifi_module_t sim_aos_wifi_beken;
 
 
 static int wifi_init(hal_wifi_module_t *m)
@@ -128,32 +128,32 @@ static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len
 
 void NetCallback(hal_wifi_ip_stat_t *pnet)
 {
-	if (sim_yos_wifi_beken.ev_cb == NULL)
+	if (sim_aos_wifi_beken.ev_cb == NULL)
 		return;
-	if (sim_yos_wifi_beken.ev_cb->ip_got == NULL)
+	if (sim_aos_wifi_beken.ev_cb->ip_got == NULL)
 		return;
 
-	sim_yos_wifi_beken.ev_cb->ip_got(&sim_yos_wifi_beken, pnet, NULL);
+	sim_aos_wifi_beken.ev_cb->ip_got(&sim_aos_wifi_beken, pnet, NULL);
 }
 
 void connected_ap_info(hal_wifi_ap_info_adv_t *ap_info, char *key, int key_len)
 {
-	if (sim_yos_wifi_beken.ev_cb == NULL)
+	if (sim_aos_wifi_beken.ev_cb == NULL)
 		return;
-	if (sim_yos_wifi_beken.ev_cb->para_chg == NULL)
+	if (sim_aos_wifi_beken.ev_cb->para_chg == NULL)
 		return;
 
-	sim_yos_wifi_beken.ev_cb->para_chg(&sim_yos_wifi_beken, ap_info, key, key_len, NULL);
+	sim_aos_wifi_beken.ev_cb->para_chg(&sim_aos_wifi_beken, ap_info, key, key_len, NULL);
 }
 
 void WifiStatusHandler(int status)
 {
-	if (sim_yos_wifi_beken.ev_cb == NULL)
+	if (sim_aos_wifi_beken.ev_cb == NULL)
 		return;
-	if (sim_yos_wifi_beken.ev_cb->stat_chg == NULL)
+	if (sim_aos_wifi_beken.ev_cb->stat_chg == NULL)
 		return;
 
-	sim_yos_wifi_beken.ev_cb->stat_chg(&sim_yos_wifi_beken, status, NULL);
+	sim_aos_wifi_beken.ev_cb->stat_chg(&sim_aos_wifi_beken, status, NULL);
 }
 
 void ApListCallback(hal_wifi_scan_result_t *pApList)
@@ -164,23 +164,23 @@ void ApListCallback(hal_wifi_scan_result_t *pApList)
 	for(i=0; i<pApList->ap_num; i++) {
 		printf("\t %s rssi %d\r\n", pApList->ap_list[i].ssid, pApList->ap_list[i].ap_power);
 	}
-	if (sim_yos_wifi_beken.ev_cb == NULL)
+	if (sim_aos_wifi_beken.ev_cb == NULL)
 		return;
-	if (sim_yos_wifi_beken.ev_cb->scan_compeleted == NULL)
+	if (sim_aos_wifi_beken.ev_cb->scan_compeleted == NULL)
 		return;
 
-	sim_yos_wifi_beken.ev_cb->scan_compeleted(&sim_yos_wifi_beken, 
+	sim_aos_wifi_beken.ev_cb->scan_compeleted(&sim_aos_wifi_beken, 
 		(hal_wifi_scan_result_t*)pApList, NULL);
 }
 
 void ApListAdvCallback(hal_wifi_scan_result_adv_t *pApAdvList)
 {
-	if (sim_yos_wifi_beken.ev_cb == NULL)
+	if (sim_aos_wifi_beken.ev_cb == NULL)
 		return;
-	if (sim_yos_wifi_beken.ev_cb->scan_adv_compeleted == NULL)
+	if (sim_aos_wifi_beken.ev_cb->scan_adv_compeleted == NULL)
 		return;
 
-	sim_yos_wifi_beken.ev_cb->scan_adv_compeleted(&sim_yos_wifi_beken, 
+	sim_aos_wifi_beken.ev_cb->scan_adv_compeleted(&sim_aos_wifi_beken, 
 		pApAdvList, NULL);
 }
 
@@ -194,8 +194,8 @@ void stop_debug_mode(hal_wifi_module_t *m)
 {
 }
 
-hal_wifi_module_t sim_yos_wifi_beken = {
-    .base.name           = "sim_yos_wifi_beken",
+hal_wifi_module_t sim_aos_wifi_beken = {
+    .base.name           = "sim_aos_wifi_beken",
     .init                =  wifi_init,
     .get_mac_addr        =  wifi_get_mac_addr,
     .start               =  wifi_start,

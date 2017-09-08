@@ -101,7 +101,7 @@ do_exit:
         IOT_CoAP_Deinit(&h_coap);
     }
 
-    yos_post_delayed_action(7*24*60*60*1000,coap_client,NULL);
+    aos_post_delayed_action(7*24*60*60*1000,coap_client,NULL);
 }
 
 void coap_ota()

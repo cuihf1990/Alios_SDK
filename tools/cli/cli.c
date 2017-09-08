@@ -258,7 +258,7 @@ static int handle_input(char *inbuf)
         if ((strcmp(command->name, "umesh") == 0) &&
             ((strcmp(argv[1], "ping") == 0) ||
              (strcmp(argv[1], "autotest") == 0))) {
-            yos_msleep(500);
+            aos_msleep(500);
         }
 
         cli_printf(cmd_prefix);
@@ -424,10 +424,10 @@ static void cli_main(void *data)
     }
 
     cli_printf("CLI exited\r\n");
-    yos_free(cli);
+    aos_free(cli);
     cli = NULL;
 
-    yos_task_exit(0);
+    aos_task_exit(0);
 }
 
 static void help_cmd(char *buf, int len, int argc, char **argv);
@@ -541,17 +541,17 @@ static void reboot_cmd(char *buf, int len, int argc, char **argv)
 
 static void uptime_cmd(char *buf, int len, int argc, char **argv)
 {
-    cli_printf("UP time %ldms\r\n", yos_now_ms());
+    cli_printf("UP time %ldms\r\n", aos_now_ms());
 }
 
 void tftp_ota_thread(void *arg)
 {
-    yos_task_exit(0);
+    aos_task_exit(0);
 }
 
 static void ota_cmd(char *buf, int len, int argc, char **argv)
 {
-    yos_task_new("LOCAL OTA", tftp_ota_thread, 0, 4096);
+    aos_task_new("LOCAL OTA", tftp_ota_thread, 0, 4096);
 }
 
 static void wifi_debug_cmd(char *buf, int len, int argc, char **argv)
@@ -636,19 +636,19 @@ __attribute__ ((weak)) int board_cli_init(void)
     return 0;
 }
 
-int yos_cli_stop(void)
+int aos_cli_stop(void)
 {
     cliexit = 1;
 
     return 0;
 }
 
-int yos_cli_init(void)
+int aos_cli_init(void)
 {
     int ret;
-    yos_task_t task;
+    aos_task_t task;
 
-    cli = (struct cli_st *)yos_malloc(sizeof(struct cli_st));
+    cli = (struct cli_st *)aos_malloc(sizeof(struct cli_st));
     if (cli == NULL) {
         return -ENOMEM;
     }
@@ -661,7 +661,7 @@ int yos_cli_init(void)
         goto init_general_err;
     }
 
-    ret = yos_task_new_ext(&task, "cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
+    ret = aos_task_new_ext(&task, "cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
     if (ret != 0) {
         cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);
@@ -677,7 +677,7 @@ int yos_cli_init(void)
 
 init_general_err:
     if (cli) {
-        yos_free(cli);
+        aos_free(cli);
         cli = NULL;
     }
 

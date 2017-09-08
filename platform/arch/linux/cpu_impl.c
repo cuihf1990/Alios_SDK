@@ -300,7 +300,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     size_t real_size = size > MIN_STACK_SIZE ? size : MIN_STACK_SIZE;
     real_size *= sizeof(cpu_stack_t);
 
-    void *real_stack = yos_malloc(real_size);
+    void *real_stack = aos_malloc(real_size);
     assert(real_stack != NULL);
 
     task_ext_t *tcb_ext = (task_ext_t *)base;
@@ -334,7 +334,7 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     int ret = getcontext(&tcb_ext->uctx);
     if (ret < 0) {
         RHINO_CPU_INTRPT_ENABLE();
-        yos_free(real_stack);
+        aos_free(real_stack);
         return NULL;
     }
 
@@ -623,7 +623,7 @@ void cpu_start_hook(void)
 void cpu_io_register(void (*f)(int, void *), void *arg)
 {
     sigset_t cpsr;
-    cpu_io_cb_t *pcb = yos_malloc(sizeof(*pcb));
+    cpu_io_cb_t *pcb = aos_malloc(sizeof(*pcb));
     pcb->cb = f;
     pcb->arg = arg;
 
@@ -644,7 +644,7 @@ void cpu_io_unregister(void (*f)(int, void *), void *arg)
             continue;
         dlist_del(&pcb->node);
         cpu_intrpt_restore(cpsr);
-        yos_free(pcb);
+        aos_free(pcb);
         return;
     }
     cpu_intrpt_restore(cpsr);

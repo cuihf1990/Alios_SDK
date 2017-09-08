@@ -207,7 +207,7 @@ void bmsg_tx_raw_handler(BUS_MSG_T *msg)
     txl_cntrl_push(txdesc_new, queue_idx);
 
 exit:
-    yos_free(pkt);
+    aos_free(pkt);
 }
 
 void bmsg_ioctl_handler(BUS_MSG_T *msg)
@@ -311,7 +311,7 @@ int bmsg_tx_raw_sender(uint8_t *payload, uint16_t length)
 
     if(ret != kNoErr) {
         APP_PRT("bmsg_tx_sender failed\r\n");
-        yos_free(payload);
+        aos_free(payload);
     }
 
     return ret;

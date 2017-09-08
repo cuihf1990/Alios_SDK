@@ -16,8 +16,8 @@ extern int csp_printf(const char *fmt, ...);
 #define CRYPT_ERR(_f, _a ...)  csp_printf(_f, ##_a)
 #define CRYPT_INF(_f, _a ...)  csp_printf(_f, ##_a)
 
-#define CRYPT_MALLOC           yos_malloc
-#define CRYPT_FREE             yos_free
+#define CRYPT_MALLOC           aos_malloc
+#define CRYPT_FREE             aos_free
 #define CRYPT_MEMSET           memset
 #define CRYPT_MEMCPY           memcpy
 #define CRYPT_MEMCMP           memcmp

@@ -13,7 +13,7 @@
 
 extern void ota_service_init(void);
 
-int yos_framework_init(void)
+int aos_framework_init(void)
 {
 #ifdef MESH_GATEWAY_SERVICE
     gateway_service_init();

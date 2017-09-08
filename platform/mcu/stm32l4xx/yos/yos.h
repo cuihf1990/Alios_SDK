@@ -9,7 +9,7 @@ void soc_driver_init(void);
 
 void soc_system_init(void);
 
-void yos_start(void);
+void aos_start(void);
 
 #endif /* YOS_H */
 

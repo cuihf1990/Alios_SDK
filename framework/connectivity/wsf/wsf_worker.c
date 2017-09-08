@@ -70,8 +70,8 @@ void cb_recv(int fd, void *arg)
         cb->cb_close(fd, cb);
     }
 
-    yos_cancel_delayed_action(cb->timeout, cb->cb_timeout, cb);
-    yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
+    aos_cancel_delayed_action(cb->timeout, cb->cb_timeout, cb);
+    aos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
 static void _receive_worker(void *arg)
@@ -172,13 +172,13 @@ static void receive_worker(void *arg)
     g_wsf_cb.cb_close = __cb_wsf_close;
     g_wsf_cb.cb_timeout = __cb_wsf_timeout;
     g_wsf_cb.extra = arg;
-    yos_post_delayed_action(g_wsf_cb.timeout, g_wsf_cb.cb_timeout, &g_wsf_cb);
+    aos_post_delayed_action(g_wsf_cb.timeout, g_wsf_cb.cb_timeout, &g_wsf_cb);
 }
 
 static void stop_receive_worker()
 {
-    yos_cancel_poll_read_fd(g_wsf_cb.sock, cb_recv, &g_wsf_cb);
-    yos_cancel_delayed_action(g_wsf_cb.timeout, g_wsf_cb.cb_timeout, &g_wsf_cb);
+    aos_cancel_poll_read_fd(g_wsf_cb.sock, cb_recv, &g_wsf_cb);
+    aos_cancel_delayed_action(g_wsf_cb.timeout, g_wsf_cb.cb_timeout, &g_wsf_cb);
 }
 
 
@@ -260,7 +260,7 @@ static void __cb_wsf_timeout(void *arg)
     wsf_keep_connection(config);
 
     //kick the timer
-    yos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
+    aos_post_delayed_action(cb->timeout, cb->cb_timeout, cb);
 }
 
 static void process_msg_response(wsf_msg_t *msg, int length)
@@ -374,7 +374,7 @@ void request_msg_handle(void *arg)
     os_mutex_unlock(g_req_mutex);
 
     if (!dlist_empty(&g_list)) {
-        yos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
+        aos_loop_schedule_work(0, request_msg_handle, NULL, NULL, NULL);
     }
 }
 

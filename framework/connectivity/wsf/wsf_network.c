@@ -50,7 +50,7 @@ static wsf_code wsf_open_connection0(wsf_connection_t *conn, const char *host,
             return WSF_CONNECTION_ERROR;
         } else {
             g_wsf_cb.sock = (long)wsf_conn->tcp;
-            yos_poll_read_fd(g_wsf_cb.sock, cb_recv, &g_wsf_cb);
+            aos_poll_read_fd(g_wsf_cb.sock, cb_recv, &g_wsf_cb);
             LOGI(MODULE_NAME, "add new tcp socket fd to poll list.\n");
         }
     }
@@ -105,7 +105,7 @@ wsf_code wsf_reset_connection(wsf_connection_t *conn, int clear_session)
         }
         if (conn->tcp != OS_INVALID_FD) {
             os_tcp_close(conn->tcp);
-            yos_cancel_poll_read_fd((int)conn->tcp, NULL, NULL);
+            aos_cancel_poll_read_fd((int)conn->tcp, NULL, NULL);
             conn->tcp = OS_INVALID_FD;
         }
 

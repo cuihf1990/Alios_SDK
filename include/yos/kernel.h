@@ -22,38 +22,38 @@ extern "C" {
 
 typedef struct {
     void *hdl;
-} yos_hdl_t;
+} aos_hdl_t;
 
-typedef yos_hdl_t yos_task_t;
-typedef yos_hdl_t yos_mutex_t;
-typedef yos_hdl_t yos_sem_t;
-typedef yos_hdl_t yos_queue_t;
-typedef yos_hdl_t yos_timer_t;
-typedef yos_hdl_t yos_work_t;
+typedef aos_hdl_t aos_task_t;
+typedef aos_hdl_t aos_mutex_t;
+typedef aos_hdl_t aos_sem_t;
+typedef aos_hdl_t aos_queue_t;
+typedef aos_hdl_t aos_timer_t;
+typedef aos_hdl_t aos_work_t;
 
 typedef struct {
     void *hdl;
     void *stk;
-} yos_workqueue_t;
+} aos_workqueue_t;
 
-typedef unsigned int yos_task_key_t;
+typedef unsigned int aos_task_key_t;
 
 /**
  * System reboot
  */
-void yos_reboot(void);
+void aos_reboot(void);
 
 /**
  * get HZ
  */
-int yos_get_hz(void);
+int aos_get_hz(void);
 
 /**
  * Get kernel version
  *
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
-const char *yos_version_get(void);
+const char *aos_version_get(void);
 
 /**
  * get error information
@@ -61,7 +61,7 @@ const char *yos_version_get(void);
  *
  * @return: error information
  */
-const char *yos_strerror(int errnum);
+const char *aos_strerror(int errnum);
 
 /**
  * Create a task([thread--Rhino&other-kernel][MainLoop--noRTOS])
@@ -73,7 +73,7 @@ const char *yos_strerror(int errnum);
  *
  * @return: task code
  */
-int yos_task_new(const char *name, void (*fn)(void *), void *arg,
+int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size);
 
 /**
@@ -89,33 +89,33 @@ int yos_task_new(const char *name, void (*fn)(void *), void *arg,
  *
  * @return: task code
  */
-int yos_task_new_ext(yos_task_t *task, const char *name, void (*fn)(void *), void *arg,
+int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
                      int stack_size, int prio);
 
 
 /**
  * exit a task
- * @param[in] code the id which yos_task_new returned
+ * @param[in] code the id which aos_task_new returned
  */
-void yos_task_exit(int code);
+void aos_task_exit(int code);
 
 /**
  * get task name
  */
-const char *yos_task_name(void);
+const char *aos_task_name(void);
 
 /**
  * create a task key
  * @param[in] key pointer of key object
  * @return  the check status, 0 is OK, -1 indicates invalid
  */
-int yos_task_key_create(yos_task_key_t *key);
+int aos_task_key_create(aos_task_key_t *key);
 
 /**
  * delete a task key
  * @param[in] key key object
  */
-void yos_task_key_delete(yos_task_key_t key);
+void aos_task_key_delete(aos_task_key_t key);
 
 /**
  * associate a task-specific value with a key
@@ -123,85 +123,85 @@ void yos_task_key_delete(yos_task_key_t key);
  * @param[in] vp pointer of a task-specific value
  * @return  the check status, 0 is OK, -1 indicates invalid
  */
-int yos_task_setspecific(yos_task_key_t key, void *vp);
+int aos_task_setspecific(aos_task_key_t key, void *vp);
 
 /**
  * get the value currently bound to the specified key
  * @param[in] key key object
  */
-void *yos_task_getspecific(yos_task_key_t key);
+void *aos_task_getspecific(aos_task_key_t key);
 
 /**
  * alloc a mutex
  * @param[in] mutex pointer of mutex object,mutex object must be alloced,
- * hdl pointer in yos_mutex_t will refer a kernel obj internally
+ * hdl pointer in aos_mutex_t will refer a kernel obj internally
  */
-int yos_mutex_new(yos_mutex_t *mutex);
+int aos_mutex_new(aos_mutex_t *mutex);
 
 /**
  * free a mutex
- * @param[in] mutex mutex object,mem refered by hdl pointer in yos_mutex_t will
+ * @param[in] mutex mutex object,mem refered by hdl pointer in aos_mutex_t will
  * be freed internally
  */
-void yos_mutex_free(yos_mutex_t *mutex);
+void aos_mutex_free(aos_mutex_t *mutex);
 
 /**
  * lock a mutex
- * @param[in] mutex mutex object,it contains kernel obj pointer which yos_mutex_new alloced
+ * @param[in] mutex mutex object,it contains kernel obj pointer which aos_mutex_new alloced
  */
-int yos_mutex_lock(yos_mutex_t *mutex, unsigned int timeout);
+int aos_mutex_lock(aos_mutex_t *mutex, unsigned int timeout);
 
 /**
  * unlock a mutex
  * @param[in] mutex mutex object,,it contains kernel obj pointer which oc_mutex_new alloced
  */
-int yos_mutex_unlock(yos_mutex_t *mutex);
+int aos_mutex_unlock(aos_mutex_t *mutex);
 
 /**
  * This function will check if mutex is valid
  * @param[in]   mutex    pointer to the mutex
  * @return  the check status, RHINO_TRUE is OK, RHINO_FALSE indicates invalid
  */
-int yos_mutex_is_valid(yos_mutex_t *mutex);
+int aos_mutex_is_valid(aos_mutex_t *mutex);
 /**
  * alloc a semaphore
  * @param[out] sem pointer of semaphore object,semaphore object must be alloced,
- * hdl pointer in yos_sem_t will refer a kernel obj internally
+ * hdl pointer in aos_sem_t will refer a kernel obj internally
  * @param[in] count initial semaphore counter
  */
-int yos_sem_new(yos_sem_t *sem, int count);
+int aos_sem_new(aos_sem_t *sem, int count);
 
 /**
  * destroy a semaphore
- * @param[in] sem pointer of semaphore object,mem refered by hdl pointer in yos_sem_t will be freed internally
+ * @param[in] sem pointer of semaphore object,mem refered by hdl pointer in aos_sem_t will be freed internally
  */
-void yos_sem_free(yos_sem_t *sem);
+void aos_sem_free(aos_sem_t *sem);
 
 /**
  * acquire a semaphore
- * @param[in] sem semaphore object,,it contains kernel obj pointer which yos_sem_new alloced
+ * @param[in] sem semaphore object,,it contains kernel obj pointer which aos_sem_new alloced
  * @param[in] timeout waiting until timeout in milliseconds
  */
-int yos_sem_wait(yos_sem_t *sem, unsigned int timeout);
+int aos_sem_wait(aos_sem_t *sem, unsigned int timeout);
 
 /**
  * release a semaphore
- * @param[in] sem semaphore object,,it contains kernel obj pointer which yos_sem_new alloced
+ * @param[in] sem semaphore object,,it contains kernel obj pointer which aos_sem_new alloced
  */
-void yos_sem_signal(yos_sem_t *sem);
+void aos_sem_signal(aos_sem_t *sem);
 
 /**
  * This function will check if semaphore is valid
  * @param[in]   sem    pointer to the semaphore
  * @return  the check status, RHINO_TRUE is OK, RHINO_FALSE indicates invalid
  */
-int yos_sem_is_valid(yos_sem_t *sem);
+int aos_sem_is_valid(aos_sem_t *sem);
 
 /**
  * release all semaphore
- * @param[in] sem semaphore object,,it contains kernel obj pointer which yos_sem_new alloced
+ * @param[in] sem semaphore object,,it contains kernel obj pointer which aos_sem_new alloced
  */
-void yos_sem_signal_all(yos_sem_t *sem);
+void aos_sem_signal_all(aos_sem_t *sem);
 
 
 /**
@@ -212,7 +212,7 @@ void yos_sem_signal_all(yos_sem_t *sem);
  * @param[in]  max_msg  the max size of the msg
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size,
+int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size,
                   int max_msg);
 
 /**
@@ -220,7 +220,7 @@ int yos_queue_new(yos_queue_t *queue, void *buf, unsigned int size,
  * @param[in]  queue  pointer to the queue
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
-void yos_queue_free(yos_queue_t *queue);
+void aos_queue_free(aos_queue_t *queue);
 
 /**
  * This function will send a msg to the front of a queue
@@ -229,7 +229,7 @@ void yos_queue_free(yos_queue_t *queue);
  * @param[in]  size   size of the msg
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size);
+int aos_queue_send(aos_queue_t *queue, void *msg, unsigned int size);
 
 /**
  * This function will receive msg from a queue
@@ -239,7 +239,7 @@ int yos_queue_send(yos_queue_t *queue, void *msg, unsigned int size);
  * @param[out]  size   size of the msg
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
+int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
                    unsigned int *size);
 
 
@@ -248,26 +248,26 @@ int yos_queue_recv(yos_queue_t *queue, unsigned int ms, void *msg,
  * @param[in]   queue    pointer to the queue
  * @return  the check status, RHINO_TRUE is OK, RHINO_FALSE indicates invalid
  */
-int yos_queue_is_valid(yos_queue_t *queue);
+int aos_queue_is_valid(aos_queue_t *queue);
 
 /**
  * This function will return buf ptr if queue is inited
  * @param[in]   queue    pointer to the queue
  * @return  the check status, NULL is error
  */
-void *yos_queue_buf_ptr(yos_queue_t *queue);
+void *aos_queue_buf_ptr(aos_queue_t *queue);
 
 /**
  * This function will disable kernel sched
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_sched_disable(void);
+int aos_sched_disable(void);
 
 /**
  * This function will enable kernel sched
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_sched_enable(void);
+int aos_sched_enable(void);
 
 /**
  * This function will create a timer
@@ -278,7 +278,7 @@ int yos_sched_enable(void);
  * @param[in]  repeat  repeat or not when the timer is created
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
+int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat);
 
 /**
@@ -286,21 +286,21 @@ int yos_timer_new(yos_timer_t *timer, void (*fn)(void *, void *),
  * @param[in]  timer  pointer to a timer
  * @return  the operation status, 0 is OK, others is error
  */
-void yos_timer_free(yos_timer_t *timer);
+void aos_timer_free(aos_timer_t *timer);
 
 /**
  * This function will start a timer
  * @param[in]  timer  pointer to the timer
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_timer_start(yos_timer_t *timer);
+int aos_timer_start(aos_timer_t *timer);
 
 /**
  * This function will stop a timer
  * @param[in]  timer  pointer to the timer
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_timer_stop(yos_timer_t *timer);
+int aos_timer_stop(aos_timer_t *timer);
 
 /**
  * This function will change attributes of a timer
@@ -308,7 +308,7 @@ int yos_timer_stop(yos_timer_t *timer);
  * @param[in]  ms     ms of the timer triger
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_timer_change(yos_timer_t *timer, int ms);
+int aos_timer_change(aos_timer_t *timer, int ms);
 
 /**
  * This function will creat a workqueue
@@ -317,14 +317,14 @@ int yos_timer_change(yos_timer_t *timer, int ms);
  * @param[in]  stack_size  the size of the worker-stack
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_workqueue_create(yos_workqueue_t *workqueue, int pri, int stack_size);
+int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size);
 
 /**
  * This function will delete a workqueue
  * @param[in]  workqueue  the workqueue to be deleted
  * @return  the operation status, 0 is OK, others is error
  */
-void yos_workqueue_del(yos_workqueue_t *workqueue);
+void aos_workqueue_del(aos_workqueue_t *workqueue);
 
 /**
  * This function will initialize a work
@@ -334,14 +334,14 @@ void yos_workqueue_del(yos_workqueue_t *workqueue);
  * @param[in]  dly   ms to delay before run
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_work_init(yos_work_t *work, void (*fn)(void *), void *arg, int dly);
+int aos_work_init(aos_work_t *work, void (*fn)(void *), void *arg, int dly);
 
 /**
  * This function will destroy a work
  * @param[in]  work  the work to be destroied
  * @return None
  */
-void yos_work_destroy(yos_work_t *work);
+void aos_work_destroy(aos_work_t *work);
 
 /**
  * This function will run a work on a workqueue
@@ -349,21 +349,21 @@ void yos_work_destroy(yos_work_t *work);
  * @param[in]  work       the work to run
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_work_run(yos_workqueue_t *workqueue, yos_work_t *work);
+int aos_work_run(aos_workqueue_t *workqueue, aos_work_t *work);
 
 /**
  * This function will run a work on the default workqueue
  * @param[in]  work  the work to run
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_work_sched(yos_work_t *work);
+int aos_work_sched(aos_work_t *work);
 
 /**
  * This function will cancel a work on the default workqueue
  * @param[in]  work  the work to cancel
  * @return  the operation status, 0 is OK, others is error
  */
-int yos_work_cancel(yos_work_t *work);
+int aos_work_cancel(aos_work_t *work);
 
 /**
  * realloc memory
@@ -371,53 +371,53 @@ int yos_work_cancel(yos_work_t *work);
  * @param[in] size  new size of the mem to remalloc
  * @return  the operation status, NULL is error, others is memory address
  */
-void *yos_realloc(void *mem, unsigned int size);
+void *aos_realloc(void *mem, unsigned int size);
 
 /**
  * alloc memory
  * @param[in] size size of the mem to malloc
  * @return  the operation status, NULL is error, others is memory address
  */
-void *yos_malloc(unsigned int size);
+void *aos_malloc(unsigned int size);
 
 /**
  * alloc memory and clear to zero
  * @param[in] size size of the mem to malloc
  * @return  the operation status, NULL is error, others is memory address
  */
-void *yos_zalloc(unsigned int size);
+void *aos_zalloc(unsigned int size);
 
 /**
  * trace alloced mems
  * @param[in] addr       pointer of the mem alloced by malloc
  * @param[in] allocator  buildin_address
  */
-void yos_alloc_trace(void *addr, size_t allocator);
+void aos_alloc_trace(void *addr, size_t allocator);
 
 /**
  * free memory
  * @param[in]  ptr address point of the mem
  */
-void yos_free(void *mem);
+void aos_free(void *mem);
 
 
 /**
  * get current time in nano seconds
  * @return elapsed time in nano seconds from system starting
  */
-long long yos_now(void);
+long long aos_now(void);
 
 /**
  * get current time in mini seconds
  * @return elapsed time in mini seconds from system starting
  */
-long long yos_now_ms(void);
+long long aos_now_ms(void);
 
 /**
  * msleep
  * @param[in] ms sleep time in milliseconds
  */
-void yos_msleep(int ms);
+void aos_msleep(int ms);
 
 #ifdef __cplusplus
 }

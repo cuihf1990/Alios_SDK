@@ -10,10 +10,10 @@ extern "C"
 {
 #endif
 
-extern unsigned int yos_log_level;
-static inline unsigned int yos_log_get_level(void)
+extern unsigned int aos_log_level;
+static inline unsigned int aos_log_get_level(void)
 {
-    return yos_log_level;
+    return aos_log_level;
 }
 
 enum log_level_bit {
@@ -26,7 +26,7 @@ enum log_level_bit {
     YOS_LL_V_MAX_BIT
 };
 
-#define YOS_LOG_LEVEL yos_log_get_level()
+#define YOS_LOG_LEVEL aos_log_get_level()
 
 #define YOS_LL_V_NONE  0
 #define YOS_LL_V_ALL  0xFF
@@ -57,7 +57,7 @@ extern int csp_printf(const char *fmt, ...);
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
     do { \
         if (CON) { \
-            long long ms = yos_now_ms();; \
+            long long ms = aos_now_ms();; \
             csp_printf(GLOBAL_LOG_TAG COLOR " [%4d.%03d]<%s> %s [%s#%d] : ", (int)(ms/1000), (int)(ms%1000), LVL, MOD, __FUNCTION__, __LINE__); \
             csp_printf(GLOBAL_LOG_TAG FMT COL_DEF "\r\n", ##__VA_ARGS__); \
         } \
@@ -67,7 +67,7 @@ extern int csp_printf(const char *fmt, ...);
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
     do { \
         if (CON) { \
-            csp_printf(GLOBAL_LOG_TAG "[%06d]<" LVL "> "FMT"\n", (unsigned)yos_now_ms(), ##__VA_ARGS__); \
+            csp_printf(GLOBAL_LOG_TAG "[%06d]<" LVL "> "FMT"\n", (unsigned)aos_now_ms(), ##__VA_ARGS__); \
         } \
     } while (0)
 

@@ -1,10 +1,12 @@
+/**
+ * Copyright (C) 2017 The YunOS IoT Project. All rights reserved.
+ */
+
 #ifndef MBEDTLS_AES_ALT_H
 #define MBEDTLS_AES_ALT_H
 
 #include <stddef.h>
 #include <stdint.h>
-
-#include "ali_crypto.h"
 
 #ifdef __cplusplus
 extern "C" {
