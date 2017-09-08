@@ -24,7 +24,7 @@ int aos_get_hz(void)
 
 const char *aos_version_get(void)
 {
-    return "yos-linux-xxx";
+    return "aos-linux-xxx";
 }
 
 const char *aos_strerror(int errnum)

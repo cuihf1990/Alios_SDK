@@ -68,7 +68,7 @@ char *platform_get_chipid(char chipid[PLATFORM_CID_LEN])
 
 char *platform_get_os_version(char os_ver[STR_SHORT_LEN])
 {
-    strncpy(os_ver, "yos", STR_SHORT_LEN);
+    strncpy(os_ver, "aos", STR_SHORT_LEN);
     os_ver[STR_SHORT_LEN - 1] = '\0';
     return os_ver;
 }

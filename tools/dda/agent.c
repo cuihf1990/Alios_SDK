@@ -302,7 +302,7 @@ static void run_aos_loop(const void* arg)
     aos_post_event(EV_DDA, CODE_DDA_ON_CONNECTED, 0u);
 
 #ifdef CSP_LINUXHOST
-    aos_task_new("yos", aos_loop, NULL, 8192);
+    aos_task_new("aos", aos_loop, NULL, 8192);
 #endif
 }
 

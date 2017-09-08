@@ -36,7 +36,7 @@ $(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-var
 $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
 $(NAME)_INCLUDES    += .
-GLOBAL_INCLUDES     += include include/yos csp/lwip/include
+GLOBAL_INCLUDES     += include include/aos csp/lwip/include
 GLOBAL_LDFLAGS      += -lpthread -lm -lrt
 GLOBAL_DEFINES      += CONFIG_YOS_RHINO_MMREGION
 GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
