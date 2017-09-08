@@ -37,9 +37,9 @@ int8_t platform_ota_parse_response(const char *buf, int buf_len, ota_response_pa
 
 int8_t platform_ota_parse_cancel_responce(const char *response, int buf_len, ota_response_params *response_parmas);
 
-int8_t platform_ota_subscribe_upgrade(yos_cloud_cb_t msgCallback);
+int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback);
 
-int8_t platform_ota_cancel_upgrade(yos_cloud_cb_t msgCallback);
+int8_t platform_ota_cancel_upgrade(aos_cloud_cb_t msgCallback);
 
 int8_t platform_ota_publish_request(ota_request_params *request_parmas);
 

@@ -23,13 +23,13 @@ int8_t platform_ota_parse_cancel_responce(const char *response, int buf_len, ota
     return 0;
 }
 
-int8_t platform_ota_cancel_upgrade(yos_cloud_cb_t msgCallback)
+int8_t platform_ota_cancel_upgrade(aos_cloud_cb_t msgCallback)
 {
     return 0;
 }
 
 
-int8_t platform_ota_subscribe_upgrade(yos_cloud_cb_t msgCallback)
+int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
 {
     return 0;
 }
