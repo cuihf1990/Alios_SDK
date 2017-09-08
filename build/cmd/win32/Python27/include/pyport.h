@@ -384,7 +384,7 @@ typedef Py_intptr_t     Py_ssize_t;
 #endif
 
 #ifdef HAVE_SYS_STAT_H
-#if defined(PYOS_OS2) && defined(PYCC_GCC)
+#if defined(PAOS_OS2) && defined(PYCC_GCC)
 #include <sys/types.h>
 #endif
 #include <sys/stat.h>

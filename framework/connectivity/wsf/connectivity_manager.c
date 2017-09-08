@@ -16,7 +16,7 @@ CONNECTIVITY_DELCARE(wsf);
 
 int cm_init()
 {
-    INIT_YOS_DLIST_HEAD(&g_conn_list);
+    INIT_AOS_DLIST_HEAD(&g_conn_list);
     cm_init_connect(wsf);
     cm_add_conn(&wsf);
     return CONNECT_RESULT_OK;

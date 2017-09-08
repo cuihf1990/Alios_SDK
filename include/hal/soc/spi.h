@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_SPI_H
-#define YOS_SPI_H
+#ifndef AOS_SPI_H
+#define AOS_SPI_H
 
 typedef struct {
     uint32_t mode;

@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_UNIT_TEST_H
-#define YOS_UNIT_TEST_H
+#ifndef AOS_UNIT_TEST_H
+#define AOS_UNIT_TEST_H
 
 #include <stddef.h>
 #include <string.h>
@@ -192,5 +192,5 @@ void yunit_add_test_case_result(
 }
 #endif
 
-#endif /* YOS_UNIT_TEST_H */
+#endif /* AOS_UNIT_TEST_H */
 

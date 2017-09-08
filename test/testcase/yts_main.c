@@ -131,7 +131,7 @@ void add_test(void)
 
     test_fatfs();
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
     test_uradar();
 #endif
 

@@ -128,7 +128,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
             ret = SYS_ARCH_TIMEOUT;
         }
     } else {
-        while( !(aos_sem_wait(sem, YOS_WAIT_FOREVER) == 0));
+        while( !(aos_sem_wait(sem, AOS_WAIT_FOREVER) == 0));
         end_ms = sys_now();
 
         elapsed_ms = end_ms - begin_ms;
@@ -479,7 +479,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
             ret = SYS_ARCH_TIMEOUT;
         }
     } else {
-        while(aos_queue_recv(mb,YOS_WAIT_FOREVER,msg,&len) != 0);
+        while(aos_queue_recv(mb,AOS_WAIT_FOREVER,msg,&len) != 0);
         end_ms = sys_now();
         elapsed_ms = end_ms - begin_ms;
 
@@ -532,7 +532,7 @@ err_t sys_mutex_new(sys_mutex_t *mutex)
  **/
 void sys_mutex_lock(sys_mutex_t *mutex)
 {
-    aos_mutex_lock(mutex,YOS_WAIT_FOREVER);
+    aos_mutex_lock(mutex,AOS_WAIT_FOREVER);
 }
 
 /** Unlock a mutex
@@ -598,7 +598,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 */
 sys_prot_t sys_arch_protect(void)
 {
-    aos_mutex_lock(&sys_arch_mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock(&sys_arch_mutex, AOS_WAIT_FOREVER);
     return 0;
 }
 

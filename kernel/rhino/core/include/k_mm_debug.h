@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#define YOS_MM_SCAN_REGION_MAX 10
+#define AOS_MM_SCAN_REGION_MAX 10
 typedef struct {
     void *start;
     void *end;
@@ -19,7 +19,7 @@ typedef struct {
 
 #if (RHINO_CONFIG_GCC_RETADDR > 0u)
 #include <k_mm.h>
-#define YOS_UNSIGNED_INT_MSB (1 << (sizeof(unsigned int) * 8 - 1))
+#define AOS_UNSIGNED_INT_MSB (1 << (sizeof(unsigned int) * 8 - 1))
 void krhino_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator);
 #endif
 

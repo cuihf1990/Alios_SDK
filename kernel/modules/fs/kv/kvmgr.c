@@ -601,7 +601,7 @@ static void aos_kv_gc(void *arg)
     uint8_t gc_index;
     uint16_t origin_pos;
 
-    if (aos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER) != 0) {
+    if (aos_mutex_lock(&(g_kv_mgr.kv_mutex), AOS_WAIT_FOREVER) != 0) {
         goto exit;
     }
 
@@ -653,7 +653,7 @@ int aos_kv_del(const char *key)
 {
     kv_item_t *item;
     int ret;
-    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), AOS_WAIT_FOREVER)) != RES_OK) {
         return ret;
     }
 
@@ -679,10 +679,10 @@ int aos_kv_set(const char *key, const void *val, int len, int sync)
 
     if (g_kv_mgr.gc_triggered) {
         (g_kv_mgr.gc_waiter)++;
-        aos_sem_wait(&(g_kv_mgr.gc_sem), YOS_WAIT_FOREVER);
+        aos_sem_wait(&(g_kv_mgr.gc_sem), AOS_WAIT_FOREVER);
     }
 
-    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), AOS_WAIT_FOREVER)) != RES_OK) {
         return ret;
     }
 
@@ -707,7 +707,7 @@ int aos_kv_get(const char *key, void *buffer, int *buffer_len)
         return RES_INVALID_PARAM;
     }
 
-    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), YOS_WAIT_FOREVER)) != RES_OK) {
+    if ((ret = aos_mutex_lock(&(g_kv_mgr.kv_mutex), AOS_WAIT_FOREVER)) != RES_OK) {
         return ret;
     }
 
@@ -733,7 +733,7 @@ int aos_kv_get(const char *key, void *buffer, int *buffer_len)
 }
 
 /* CLI Support */
-#ifdef CONFIG_YOS_CLI
+#ifdef CONFIG_AOS_CLI
 static int __item_print_cb(kv_item_t *item, const char *key)
 {
     char *p_key = (char *)aos_malloc(item->hdr.key_len + 1);
@@ -836,7 +836,7 @@ int aos_kv_init(void)
         return ret;
     }
 
-#ifdef CONFIG_YOS_CLI
+#ifdef CONFIG_AOS_CLI
     cli_register_command(&ncmd);
 #endif
 

@@ -9,7 +9,7 @@
 
 #if (RHINO_CONFIG_MM_TLF > 0)
 
-#define YOS_MM_TLF_ALLOC_MIN_LENGTH  2*sizeof(void *)
+#define AOS_MM_TLF_ALLOC_MIN_LENGTH  2*sizeof(void *)
 
 typedef enum {
     ACTION_INSERT,
@@ -613,7 +613,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     VGF(VALGRIND_MAKE_MEM_NOACCESS(mmhead->fixedmblk, MMLIST_HEAD_SIZE));
 
     size = MM_ALIGN_UP(size);
-    size = (size < YOS_MM_TLF_ALLOC_MIN_LENGTH) ? YOS_MM_TLF_ALLOC_MIN_LENGTH : size;
+    size = (size < AOS_MM_TLF_ALLOC_MIN_LENGTH) ? AOS_MM_TLF_ALLOC_MIN_LENGTH : size;
 
     /* Rounding up the requested size and calculating fl and sl */
     if (bitmap_search(size, &fl, &sl, ACTION_GET) != RHINO_SUCCESS) {
@@ -1046,8 +1046,8 @@ void *krhino_mm_alloc(size_t size)
     void *tmp;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    unsigned int app_malloc = size & YOS_UNSIGNED_INT_MSB;
-    size = size & (~YOS_UNSIGNED_INT_MSB);
+    unsigned int app_malloc = size & AOS_UNSIGNED_INT_MSB;
+    size = size & (~AOS_UNSIGNED_INT_MSB);
 #endif
 
     if (size == 0) {
@@ -1093,8 +1093,8 @@ void krhino_mm_free(void *ptr)
 void *krhino_mm_realloc(void *oldmem, size_t newsize)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    unsigned int app_malloc = newsize & YOS_UNSIGNED_INT_MSB;
-    newsize = newsize & (~YOS_UNSIGNED_INT_MSB);
+    unsigned int app_malloc = newsize & AOS_UNSIGNED_INT_MSB;
+    newsize = newsize & (~AOS_UNSIGNED_INT_MSB);
 #endif
 
     void *tmp = k_mm_realloc(g_kmm_head, oldmem, newsize);

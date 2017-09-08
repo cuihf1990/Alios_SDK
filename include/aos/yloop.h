@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_YLOOP_H
-#define YOS_YLOOP_H
+#ifndef AOS_YLOOP_H
+#define AOS_YLOOP_H
 
 #include <aos/types.h>
 
@@ -14,7 +14,7 @@ extern "C"
 
 #include <aos/internal/event_type_code.h>
 
-#ifndef YOS_DOXYGEN_MODE
+#ifndef AOS_DOXYGEN_MODE
 
 /** special event filter */
 #define EV_ALL                       0
@@ -234,5 +234,5 @@ void aos_cancel_work(void *work, aos_call_t action, void *arg1);
 }
 #endif
 
-#endif /* YOS_YLOOP_H */
+#endif /* AOS_YLOOP_H */
 

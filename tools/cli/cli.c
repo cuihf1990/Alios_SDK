@@ -661,7 +661,7 @@ int aos_cli_init(void)
         goto init_general_err;
     }
 
-    ret = aos_task_new_ext(&task, "cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
+    ret = aos_task_new_ext(&task, "cli", cli_main, 0, 4096, AOS_DEFAULT_APP_PRI);
     if (ret != 0) {
         cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);

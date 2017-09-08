@@ -5,7 +5,7 @@
 #include <aos/aos.h>
 #include "hal/soc/soc.h"
 
-#ifdef YOS_BINS
+#ifdef AOS_BINS
 extern unsigned int _app_data_ram_begin;
 extern unsigned int _app_data_ram_end;
 extern unsigned int _app_data_flash_begin;

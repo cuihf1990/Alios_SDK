@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_NETWORK_API_H
-#define YOS_NETWORK_API_H
+#ifndef AOS_NETWORK_API_H
+#define AOS_NETWORK_API_H
 
 #ifdef __cplusplus
 extern "C"
@@ -32,4 +32,4 @@ extern "C"
 }
 #endif
 
-#endif /* YOS_NETWORK_API_H */
+#endif /* AOS_NETWORK_API_H */

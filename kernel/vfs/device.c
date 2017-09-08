@@ -11,7 +11,7 @@
 #include <vfs_register.h>
 #include <event_device.h>
 
-#if (YOS_CONFIG_VFS_POLL_SUPPORT > 0)
+#if (AOS_CONFIG_VFS_POLL_SUPPORT > 0)
 static int inited;
 
 typedef struct {
@@ -67,7 +67,7 @@ static int event_close(file_t *file)
 static ssize_t _event_write(file_t *f, const void *buf, size_t len, bool urgent)
 {
     event_dev_t *pdev = f->f_arg;
-    aos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock(&pdev->mutex, AOS_WAIT_FOREVER);
 
     dev_event_t *evt;
     evt = (dev_event_t *)pdev->buf_cache.next;
@@ -132,7 +132,7 @@ static ssize_t event_read(file_t *f, void *buf, size_t len)
         return 0;
     }
 
-    aos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock(&pdev->mutex, AOS_WAIT_FOREVER);
 
     dev_event_t *evt = (dev_event_t *)pdev->bufs.next;
     dlist_del(&evt->node);
@@ -158,7 +158,7 @@ static int event_poll(file_t *f, bool setup, poll_notify_t notify,
 {
     event_dev_t *pdev = f->f_arg;
 
-    aos_mutex_lock(&pdev->mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock(&pdev->mutex, AOS_WAIT_FOREVER);
     if (!setup) {
         pdev->poll_cb = NULL;
         pdev->poll_data = NULL;

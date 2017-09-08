@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <hal/hal.h>
 
-static YOS_DLIST_HEAD(g_flash_module);
+static AOS_DLIST_HEAD(g_flash_module);
 
 int hal_flash_conf_write(hal_flash_module_t *m, char *key,
                          unsigned char *buf, int buf_size)

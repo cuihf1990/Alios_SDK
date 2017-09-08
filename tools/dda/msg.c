@@ -17,7 +17,7 @@ typedef struct {
     void *ctx;
 } message_handle_node_t;
 
-static dlist_t handlers = YOS_DLIST_INIT(handlers);
+static dlist_t handlers = AOS_DLIST_INIT(handlers);
 
 int dda_register_message_handler(int message_type, message_handler_t hdl, void *ctx)
 {

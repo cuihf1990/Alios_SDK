@@ -64,7 +64,7 @@ enum {
     MIGRATE_TIMEOUT              = 2,
     DETACHED_MIGRATE_TIMEOUT     = 1,
 
-#ifndef CONFIG_YOS_DDA
+#ifndef CONFIG_AOS_DDA
     ATTACH_CANDIDATE_TIMEOUT     = 30,     /* 30 * ADVERTISEMENT_TIMEOUT */
 #else
     ATTACH_CANDIDATE_TIMEOUT     = 0,

@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <hal/hal.h>
 
-static YOS_DLIST_HEAD(g_sensor_module);
+static AOS_DLIST_HEAD(g_sensor_module);
 
 void hal_sensor_register_module(hal_sensor_module_t *module)
 {
