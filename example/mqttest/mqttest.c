@@ -345,10 +345,10 @@ int application_start(int argc, char *argv[])
     user_argc = argc;
     user_argv = argv;
 
-    yos_set_log_level(YOS_LL_DEBUG);
+    aos_set_log_level(YOS_LL_DEBUG);
 
-    yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
-    yos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);
+    aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
+    aos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);
 
     netmgr_init();
     netmgr_start(false);
@@ -357,6 +357,6 @@ int application_start(int argc, char *argv[])
 #ifdef CSP_LINUXHOST
     mqtt_client_example();
 #endif
-    yos_loop_run();
+    aos_loop_run();
     return 0;
 }

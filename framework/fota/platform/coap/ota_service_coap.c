@@ -121,5 +121,5 @@ void coap_ota()
 
 void ota_service_ch_init()
 {
-    yos_register_event_filter(EV_WIFI, ota_service_event, NULL);
+    aos_register_event_filter(EV_WIFI, ota_service_event, NULL);
 }*/

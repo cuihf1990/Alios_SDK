@@ -151,7 +151,7 @@ static void mqtt_test() {
 
         is_subscribed = 0;
         cnt = 0;
-        yos_loop_exit();
+        aos_loop_exit();
     }
 }
 
@@ -301,7 +301,7 @@ int mqtt_client_example(void)
         return rc;
     }
 
-    yos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);
+    aos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);
 
     /* Device AUTH */
     if (0 != IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info)) {
@@ -354,7 +354,7 @@ static void test_mqtt_case1(void)
     int ret = 0;
     ret = mqtt_client_example();
     YUNIT_ASSERT(0 == ret); 
-    yos_loop_run();
+    aos_loop_run();
 }
 
 // IOT_MQTT_Construct:param=NULL

@@ -346,12 +346,12 @@ int main(int argc, char **argv)
 static void mqtt_main( void *data )
 {
     mqtt_client_example();
-    yos_task_exit(0);
+    aos_task_exit(0);
 }
 
 static void mqtt_main_async( )
 {
-        int ret = yos_task_new("mqtttask", mqtt_main, 0, 1024*10);
+        int ret = aos_task_new("mqtttask", mqtt_main, 0, 1024*10);
         if (ret != SUCCESS_RETURN) {
            printf("Error: Failed to create cli thread: %d\r\n", ret);
        }
@@ -372,24 +372,24 @@ static struct cli_command mqttcmd = {
 
 int application_start(int argc, char *argv[])
 {
-    yos_set_log_level(YOS_LL_DEBUG);
+    aos_set_log_level(YOS_LL_DEBUG);
 
     printf("zmxin application_start\n");
-    yos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
+    aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
 
     netmgr_init();
     netmgr_start(false);
 
     cli_register_command(&mqttcmd);
 #ifdef CSP_LINUXHOST
-    int ret = yos_task_new("mqtttask", mqtt_main, 0, 1024*10);
+    int ret = aos_task_new("mqtttask", mqtt_main, 0, 1024*10);
     if (ret != SUCCESS_RETURN) {
         printf("Error: Failed to create cli thread: %d\r\n", ret);
     }
 #endif
-    LOG("yos_loop_run end.");
-    yos_loop_run();
+    LOG("aos_loop_run end.");
+    aos_loop_run();
     LOG("alink end.");
-    yos_msleep(10000000);
+    aos_msleep(10000000);
     return 0;
 }
