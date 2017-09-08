@@ -210,13 +210,13 @@ $(LIBS_DIR):
 #KERNEL_LINK_LIBS := $(foreach lib,$(LINK_LIBS),$(if $(filter hal_% lib% platform_% kernel_% board_% devices_% share_%,$(notdir $(lib))),$(lib)))
 
 APP_LINK_LIBS += 	./security/mbedtls/lib/mk108/libmbedtls.a \
-			./security/alicrypto/lib/mk108/libmbedcrypto.a \
-			./security/alicrypto/lib/mk108/libalicrypto.a
+			./security/alicrypto/lib/mk108/thumb/libmbedcrypto.a \
+			./security/alicrypto/lib/mk108/thumb/libalicrypto.a
 
 KERNEL_LINK_LIBS +=	./platform/mcu/beken/librwnx.a \
 			./security/mbedtls/lib/mk108/libmbedtls.a \
-			./security/alicrypto/lib/mk108/libmbedcrypto.a \
-			./security/alicrypto/lib/mk108/libalicrypto.a
+			./security/alicrypto/lib/mk108/thumb/libmbedcrypto.a \
+			./security/alicrypto/lib/mk108/thumb/libalicrypto.a
 
 $(warning --------------------------------------------------)
 $(warning $(APP_LINK_LIBS))

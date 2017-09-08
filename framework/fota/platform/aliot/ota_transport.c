@@ -238,7 +238,7 @@ void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_
     ota_update(UPGRADE_DEVICE ,ptopic_info->payload);
 }
 
-int8_t platform_ota_subscribe_upgrade(yos_cloud_cb_t msgCallback)
+int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
 {
     g_upgrad_topic =  aos_zalloc(OTA_MQTT_TOPIC_LEN);
 
@@ -384,7 +384,7 @@ int8_t platform_ota_result_post(void)
     return ret;
 }
 
-int8_t platform_ota_cancel_upgrade(yos_cloud_cb_t msgCallback)
+int8_t platform_ota_cancel_upgrade(aos_cloud_cb_t msgCallback)
 {
     return 0;
 }
