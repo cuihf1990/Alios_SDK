@@ -9,6 +9,7 @@
 #include <aos/kernel.h>
 
 #include <yunit.h>
+#include <errno.h>
 
 static aos_timer_t g_timer;
 static aos_sem_t sync_sem;
@@ -27,10 +28,10 @@ static void CASE_aosapi_kernel_timer_param()
 #endif
 
 	ret = aos_timer_new(&g_timer, NULL, NULL, 1000, 0);
-	YUNIT_ASSERT(ret==RHINO_NULL_PTR);
+	YUNIT_ASSERT(ret==(-EFAULT));
 
 	ret = aos_timer_new(&g_timer, TIMER_aosapi_kernel_timer_param, NULL, 0, 0);
-	YUNIT_ASSERT(ret==RHINO_INV_PARAM);
+	YUNIT_ASSERT(ret==(-EINVAL));
 
 #if 0
 	ret = aos_timer_start(NULL);

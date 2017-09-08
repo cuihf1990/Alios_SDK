@@ -9,6 +9,7 @@
 #include <aos/kernel.h>
 
 #include <yunit.h>
+#include <errno.h>
 
 static aos_workqueue_t workqueue;
 static aos_work_t work;
@@ -23,14 +24,14 @@ static void CASE_aosapi_kernel_workqueue_param()
 #endif
 
 	ret = aos_workqueue_create(&workqueue, RHINO_CONFIG_PRI_MAX, 1024);
-	YUNIT_ASSERT_MSG(ret==RHINO_BEYOND_MAX_PRI, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 
 	ret = aos_workqueue_create(&workqueue, RHINO_CONFIG_PRI_MAX+1, 1024);
-	YUNIT_ASSERT_MSG(ret==RHINO_BEYOND_MAX_PRI, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 
 	// TODO: test fail(RHINO_TASK_INV_STACK_SIZE)
 	ret = aos_workqueue_create(&workqueue, 10, 0);
-	YUNIT_ASSERT_MSG(ret==RHINO_TASK_INV_STACK_SIZE, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 
 #if 0
 	// TODO: test fail(nullptr coredump)
@@ -87,7 +88,7 @@ static void CASE_aosapi_kernel_work_param()
 #endif
 
 	ret = aos_work_init(&work, NULL, NULL, 1024);
-	YUNIT_ASSERT(ret == RHINO_NULL_PTR);
+	YUNIT_ASSERT(ret == (-EFAULT));
 
 #if 0
 	// TODO: nullptr coredump
