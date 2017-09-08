@@ -91,9 +91,10 @@ static void init_device_parmas()
 #else
     ota_request_parmas.primary_version = get_aos_kernel_version();
 #endif
+
     ota_request_parmas.secondary_version = get_aos_app_version();
     ota_request_parmas.product_type = get_aos_product_model();
-    ota_request_parmas.device_uuid = ota_get_id();
+    ota_request_parmas.device_uuid = platform_ota_get_id();
 }
 
 void ota_service_event(input_event_t *event, void *priv_data)
