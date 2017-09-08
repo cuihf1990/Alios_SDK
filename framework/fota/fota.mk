@@ -24,6 +24,12 @@ $(NAME)_SOURCES += \
 else
 ifneq (,$(filter connectivity.coap,$(COMPONENTS)))
 $(NAME)_DEFINES += CONNECTIVITY_COAP
+else
+$(NAME)_SOURCES += \
+    ota_util.c \
+    ota_update_manifest.c \
+    ota_download.c \
+    ota_version.c
 endif
 endif
 endif
