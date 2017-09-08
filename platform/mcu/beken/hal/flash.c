@@ -71,7 +71,7 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
         return -1;
 
     start_addr = (partition_info->partition_start_addr + off_set) & (~0xFFF);
-    end_addr = (partition_info->partition_start_addr + off_set + size + SECTOR_SIZE - 1) & (~0xFFF);
+    end_addr = (partition_info->partition_start_addr + off_set + size  - 1) & (~0xFFF);
 
     for(addr = start_addr; addr <= end_addr; addr += SECTOR_SIZE)
     {

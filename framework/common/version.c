@@ -29,13 +29,16 @@ YOS_EXPORT YOS_WEAK const char   *get_aos_device_name(void)
     return (const char *)SYSINFO_DEVICE_NAME;
 }
 
+#ifdef SYSINFO_OS_BINS
 #define OS_MAX_VERSION_LEN 64    
 char  os_version[OS_MAX_VERSION_LEN];
+#endif
 
 YOS_EXPORT YOS_WEAK const char   *get_aos_kernel_version(void)
 {
     return (const char *)yos_version_get();
 }
+
 
 YOS_EXPORT YOS_WEAK const char   *get_aos_app_version(void)
 {
@@ -48,7 +51,7 @@ YOS_EXPORT YOS_WEAK const char   *get_aos_os_version(void)
     snprintf(os_version, OS_MAX_VERSION_LEN, "%s_%s", get_aos_kernel_version(), get_aos_app_version());
     return os_version;
     #else  
-    return (const char *)SYSINFO_OS_VERSION;
+    return (const char *)SYSINFO_APP_VERSION;
     #endif
 }
 
