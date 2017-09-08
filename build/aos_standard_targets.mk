@@ -101,20 +101,10 @@ else
 APP_SIZE := 0xF6000
 endif
 
-BINS ?= 0
-
-ifeq ($(BINS), 0)
 download_app: $(STRIPPED_LINK_OUTPUT_FILE) display_map_summary download_bootloader sflash_write_app kill_openocd
 	$(eval IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(BIN_OUTPUT_FILE)))
 	$(QUIET)$(ECHO) Downloading application to partition: $(APPLICATION_FIRMWARE_PARTITION_TCL) size: $(IMAGE_SIZE) bytes... 
-	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x12000 $(APP_SIZE)" -c "load_image $(BUILD_DIR)/eclipse_debug/last_built.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
-else
-download_app: $(STRIPPED_LINK_OUTPUT_FILE) app_display_map_summary kernel_display_map_summary kill_openocd
-	$(eval IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(APP_BIN_OUTPUT_FILE)))
-	$(eval IMAGE_SIZE += $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(KERNEL_BIN_OUTPUT_FILE)))
-	$(QUIET)$(ECHO) Downloading APP and KERNEL to partition: $(APPLICATION_FIRMWARE_PARTITION_TCL) size: $(IMAGE_SIZE) bytes... 
-	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x12000 $(APP_SIZE)" -c "load_image $(BUILD_DIR)/eclipse_debug/app_built.elf 0"  -c "load_image $(BUILD_DIR)/eclipse_debug/kernel_built.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
-endif
+	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x12000 $(APP_SIZE)" -c "load_image $(BUILD_DIR)/eclipse_debug/$(BINSTYPE_LOWER)_built.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
 
 endif
 
@@ -138,12 +128,7 @@ copy_output_for_eclipse: build_done
 else
 copy_output_for_eclipse: build_done copy_bootloader_output_for_eclipse
 	$(QUIET)$(call MKDIR, $(BUILD_DIR)/eclipse_debug/)
-ifeq ($(BINS), 0)
-	$(QUIET)$(CP) $(LINK_OUTPUT_FILE) $(BUILD_DIR)/eclipse_debug/last_built.elf
-else
-	$(QUIET)$(CP) $(KERNEL_LINK_OUTPUT_FILE) $(BUILD_DIR)/eclipse_debug/kernel_built.elf
-	$(QUIET)$(CP) $(APP_LINK_OUTPUT_FILE) $(BUILD_DIR)/eclipse_debug/app_built.elf
-endif
+	$(QUIET)$(CP) $(LINK_OUTPUT_FILE) $(BUILD_DIR)/eclipse_debug/$(BINSTYPE_LOWER)_built.elf
 endif
 
 debug: $(BUILD_STRING) $(SHOULD_I_WAIT_FOR_DOWNLOAD)

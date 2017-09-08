@@ -192,8 +192,12 @@ endif
 
 COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall libc vfs
 
-ifeq ($(BINS), 1)
-$(NAME)_COMPONENTS += syscall usyscall
+ifeq ($(BINS),app)
+#$(NAME)_COMPONENTS += usyscall
+COMPONENTS += usyscall syscall
+else ifeq ($(BINS),kernel)
+#$(NAME)_COMPONENTS += syscall
+COMPONENTS += syscall
 endif
 
 $(info processing components: $(COMPONENTS))
@@ -263,8 +267,6 @@ $(CONFIG_FILE): $(AOS_SDK_MAKEFILES) | $(CONFIG_FILE_DIR)
 	$(QUIET)$(call WRITE_FILE_CREATE, $(CONFIG_FILE) ,AOS_SDK_MAKEFILES           		+= $(AOS_SDK_MAKEFILES))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,TOOLCHAIN_NAME            		:= $(TOOLCHAIN_NAME))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,AOS_SDK_LDFLAGS             		+= $(strip $(AOS_SDK_LDFLAGS)))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,GLOBAL_LDFLAGS_APP                += $(strip $(GLOBAL_LDFLAGS_APP)))
-	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,GLOBAL_LDFLAGS_KERNEL             += $(strip $(GLOBAL_LDFLAGS_KERNEL)))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,RESOURCE_CFLAGS					+= $(strip $(AOS_SDK_CFLAGS)))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,AOS_SDK_LINK_SCRIPT         		+= $(strip $(if $(strip $(AOS_SDK_LINK_SCRIPT)),$(AOS_SDK_LINK_SCRIPT),$(AOS_SDK_DEFAULT_LINK_SCRIPT))))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,AOS_SDK_LINK_SCRIPT_CMD    	 	+= $(call COMPILER_SPECIFIC_LINK_SCRIPT,$(strip $(if $(strip $(AOS_SDK_LINK_SCRIPT)),$(AOS_SDK_LINK_SCRIPT),$(AOS_SDK_DEFAULT_LINK_SCRIPT)))))
