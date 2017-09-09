@@ -212,8 +212,7 @@ static void set_leader_network_context(network_context_t *default_network,
         sid_allocator_init(network);
         start_advertisement_timer(network);
         if (default_network) {
-            umesh_mm_set_channel(network,
-                                 network->hal->channel_list.channels[0]);
+            umesh_mm_set_channel(network, network->hal->def_channel);
         }
         if (init_allocator) {
             sid_allocator_init(network);
@@ -336,7 +335,7 @@ void become_leader(void)
         if (g_mm_state.device.mode & MODE_LEADER) {
             channel = hal_umesh_get_channel(network->hal->module);
         } else {
-            channel = network->hal->channel_list.channels[0];
+            channel = network->hal->def_channel;
         }
         umesh_mm_set_channel(network, channel);
     }
