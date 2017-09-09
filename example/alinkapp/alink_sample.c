@@ -83,6 +83,8 @@ char *device_attr[] = {
     NULL
 };
 
+static bool auto_netmgr;
+
 void helper_api_test(void);
 void activate_button_pressed(void *arg);
 
@@ -650,14 +652,106 @@ static void alink_cloud_init(void)
 #endif
 }
 
+static void clear_kv_and_reboot()
+{
+    aos_kv_del("wifi");
+    LOG("KV cleared, will reboot now.");
+    aos_reboot();
+}
+
+#define AUTO_HOTSPOT_TIMEOUT_S (2*60) // 2 min
+#define HOTSPOT_TIMEOUT_KV_NAME "hotspot_timeout"
+static int get_hotspot_timeout()
+{
+    char timeout_s[10];
+    int len = sizeof(timeout_s);
+    int timeout;
+
+    if (aos_kv_get(HOTSPOT_TIMEOUT_KV_NAME, (void *)timeout_s, &len) == 0) {
+        LOG("hotspot_timeout KV value will be used: %s seconds", timeout_s);
+        timeout = atoi(timeout_s);
+    } else {
+        timeout = AUTO_HOTSPOT_TIMEOUT_S;
+        LOG("Default hotspot timeout (%s) will be used.", timeout);
+    }
+
+    return timeout * 1000; // s -> ms
+}
+
+static void hotspot_timer_fn(void *arg1, void *arg2)
+{
+    LOG("Info: Hotspot timeout hit.");
+    clear_kv_and_reboot();
+}
+
+static aos_timer_t hotspot_timer = {NULL};
+static void awss_hotspot_connected_handler()
+{
+    int ms = get_hotspot_timeout();
+
+    LOG("%s", __func__);
+    if (auto_netmgr == false) return;
+    if (aos_timer_new(&hotspot_timer, hotspot_timer_fn, NULL, ms, 0) != 0) {
+        LOG("Error: aos_timer_new failed");
+        return;
+    }
+    if (aos_timer_start(&hotspot_timer) != 0) {
+        LOG("Error: aos_timer_start failed");
+        return;
+    }
+}
+
+static void awss_hotspot_switch_ap_done_handler()
+{
+    LOG("%s", __func__);
+    if (aos_timer_stop(&hotspot_timer) != 0) {
+        LOG("Error: aos_timer_stop failed");
+        return;
+    }
+}
+
+#define ACTIVE_DELAY (5*1000)
+static void do_auto_active()
+{
+    alink_activate(NULL);
+    LOG("--------auto active done------");
+    aos_msleep(ACTIVE_DELAY);
+    clear_kv_and_reboot();
+}
+
+static void auto_active_handler(input_event_t *event, void *priv_data)
+{
+    if (auto_netmgr == false) return;
+    if (event->type != EV_YUNIO) return;
+    if (event->code != CODE_YUNIO_ON_CONNECTED) return;
+
+    aos_post_delayed_action(ACTIVE_DELAY, do_auto_active, NULL);
+}
+
+#define AUTO_NETMGR_KEY "auto_netmgr"
+static bool get_auto_netmgr_config()
+{
+    char c[5];
+    int len = sizeof(c);
+    bool ret;
+
+    if (aos_kv_get(AUTO_NETMGR_KEY, (void *)c, &len) != 0) {
+        ret = false;
+        LOGE("alink", "kv(%s) not set, auto_netmgr will be disabled",
+          AUTO_NETMGR_KEY);
+    } else {
+        ret = true;
+        LOGD("alink", "kv(%s) found, auto_netmgr will be enabled",
+          AUTO_NETMGR_KEY);
+    }
+
+    return ret;
+}
+
 int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
 
-    //if(argc > 1 && strlen(argv[1]) <= 65){
-    //    LOG("reset sn to : %s",argv[1]);
-    //    g_sn = argv[1];
-    //}
     aos_set_log_level(YOS_LL_DEBUG);
 
     if (mesh_mode == MESH_MASTER) {
@@ -680,7 +774,6 @@ int application_start(int argc, char *argv[])
         cli_register_command(&modelcmd);
         cli_register_command(&resetcmd);
 
-        //awss_demo();
         if (env == SANDBOX)
             alink_enable_sandbox_mode();
         else if (env == DAILY)
@@ -689,9 +782,17 @@ int application_start(int argc, char *argv[])
         aos_register_event_filter(EV_WIFI, alink_service_event, NULL);
         aos_register_event_filter(EV_SYS, alink_connect_event, NULL);
         aos_register_event_filter(EV_KEY, alink_key_process, NULL);
+        aos_register_event_filter(EV_YUNIO, auto_active_handler, NULL);
 
+        auto_netmgr = get_auto_netmgr_config();
+        if (auto_netmgr) {
+            awss_register_callback(AWSS_HOTSPOT_CONNECTED,
+              &awss_hotspot_connected_handler);
+            awss_register_callback(AWSS_HOTSPOT_SWITCH_AP_DONE,
+              &awss_hotspot_switch_ap_done_handler);
+        }
         netmgr_init();
-        netmgr_start(false);
+        netmgr_start(auto_netmgr);
     }
 
 #ifdef CONFIG_WIFIMONITOR

@@ -187,6 +187,11 @@ enum ALINK_WIFI_CALLBACK {
     ALINK_CANCEL_UPGRADE_DEVICE
 };
 
+enum AWSS_CB {
+    AWSS_HOTSPOT_CONNECTED = 0,
+    AWSS_HOTSPOT_SWITCH_AP_DONE
+};
+
 /**
  * @brief register misc callback
  *
