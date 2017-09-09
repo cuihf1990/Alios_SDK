@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include <yos/cloud.h>
+#include <aos/cloud.h>
 
 static aos_cloud_cb_t cbs[MAX_EVENT_TYPE];
 static int (*report_backend)(const char *method, const char *json_buffer);

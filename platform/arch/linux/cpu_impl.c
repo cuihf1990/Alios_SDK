@@ -14,7 +14,7 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include <cpu_event.h>
 #include <k_api.h>

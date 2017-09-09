@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <yos/kernel.h>
-#include <yos/yos.h>
+#include <aos/kernel.h>
+#include <aos/aos.h>
 #include "yunit.h"
 
 #define TAG "yunit"

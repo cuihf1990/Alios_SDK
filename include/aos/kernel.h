@@ -3,7 +3,7 @@
  */
 
 /**
- * @file yos/kernel.h
+ * @file aos/kernel.h
  * @brief kernel API
  * @version since 1.0.0
  */

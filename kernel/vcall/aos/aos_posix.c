@@ -10,7 +10,7 @@
 #include <sys/prctl.h>
 #include <pthread.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 void aos_reboot(void)
 {

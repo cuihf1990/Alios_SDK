@@ -9,7 +9,7 @@
 
 #include <errno.h>
 #include "hal/ota.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 static int linuxhost_ota_init(hal_ota_module_t *m, void *something)
 {

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 
 #include "yunit.h"
 #include "yts.h"

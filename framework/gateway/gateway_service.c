@@ -10,7 +10,7 @@
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include <lwip/sockets.h>
 #include "umesh.h"
 #include "cJSON.h"

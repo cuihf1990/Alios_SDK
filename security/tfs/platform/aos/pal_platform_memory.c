@@ -3,7 +3,7 @@
  */
 
 #include <stdio.h>
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 void *pal_memory_malloc(size_t size)
 {

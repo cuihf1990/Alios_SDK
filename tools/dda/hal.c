@@ -7,7 +7,7 @@
  */
 #include <stdio.h>
 
-#include <yos/log.h>
+#include <aos/log.h>
 
 #include "umesh_hal.h"
 #include "msg.h"
@@ -208,7 +208,7 @@ static int linuxhost_ur_get_channel(umesh_hal_module_t *module)
 }
 
 static umesh_hal_module_t linuxhost_ur_wifi_module;
-static const uint8_t g_wifi_channels[] = {1, 2, 3};
+static const uint8_t g_wifi_channels[] = {1, 6, 11};
 static mesh_hal_priv_t wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = DEFAULT_MTU_SIZE,

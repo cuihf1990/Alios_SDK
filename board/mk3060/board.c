@@ -3,8 +3,8 @@
  */
 
 #include "hal/soc/soc.h"
-#include <yos/kernel.h>
-#include <yos/yos.h>
+#include <aos/kernel.h>
+#include <aos/aos.h>
 
 /* Logic partition on flash devices */
 const hal_logic_partition_t hal_partitions[] =

@@ -6,7 +6,7 @@
 
 #include "yunit.h"
 
-#include "yos/kernel.h"
+#include "aos/kernel.h"
 
 #include "umesh_types.h"
 #include "core/mesh_mgmt.h"

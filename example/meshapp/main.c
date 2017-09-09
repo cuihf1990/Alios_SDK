@@ -3,8 +3,8 @@
  */
 
 #include <stdio.h>
-#include <yos/yos.h>
-#include <yos/network.h>
+#include <aos/aos.h>
+#include <aos/network.h>
 #ifdef CONFIG_YOS_DDA
 #include <dda.h>
 #endif

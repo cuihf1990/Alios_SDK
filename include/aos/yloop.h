@@ -5,14 +5,14 @@
 #ifndef YOS_YLOOP_H
 #define YOS_YLOOP_H
 
-#include <yos/types.h>
+#include <aos/types.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include <yos/internal/event_type_code.h>
+#include <aos/internal/event_type_code.h>
 
 #ifndef YOS_DOXYGEN_MODE
 

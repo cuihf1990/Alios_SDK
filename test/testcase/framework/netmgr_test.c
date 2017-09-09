@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos/kernel.h>
-#include <yos/yos.h>
+#include <aos/kernel.h>
+#include <aos/aos.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
 #include <yunit.h>

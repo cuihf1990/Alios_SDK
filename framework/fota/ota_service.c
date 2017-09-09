@@ -3,7 +3,7 @@
  */
 #include <string.h>
 #include <hal/hal.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #define TAG "ota"
 

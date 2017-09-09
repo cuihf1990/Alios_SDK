@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include "event_device.h"
 #include "yloop.h"

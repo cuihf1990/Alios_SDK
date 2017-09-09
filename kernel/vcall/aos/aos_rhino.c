@@ -4,7 +4,7 @@
 
 #include <k_api.h>
 #include <errno.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include "errno_mapping.h"
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC == 0)

@@ -5,7 +5,7 @@
 #ifndef WSF_WORKER_H
 #define WSF_WORKER_H
 
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "wsf_client.h"
 #include "wsf_config.h"
 

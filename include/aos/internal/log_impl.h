@@ -51,7 +51,7 @@ enum log_level_bit {
 
 #define GLOBAL_LOG_TAG "\e[65m"    //LOG TAG, use ESC characters, g(cli) ascii is 65
 
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 extern int csp_printf(const char *fmt, ...);
 #ifdef CONFIG_LOGMACRO_DETAILS
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \

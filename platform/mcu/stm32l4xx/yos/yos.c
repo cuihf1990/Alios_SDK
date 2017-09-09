@@ -4,7 +4,7 @@
 
 #include <yos.h>
 #include <k_api.h>
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "stm32_wifi.h"

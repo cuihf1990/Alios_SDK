@@ -12,7 +12,7 @@
 #include "wsf.h"
 #include "config.h"
 #include "git_version.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "awss.h"
 #include "os.h"
 #include "enrollee.h"

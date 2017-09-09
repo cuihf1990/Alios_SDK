@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include <umesh_hal.h>
 #include <umesh_80211.h>
 

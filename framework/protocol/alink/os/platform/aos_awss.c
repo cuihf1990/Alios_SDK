@@ -4,7 +4,7 @@
 
 #include <hal/hal.h>
 #include <netmgr.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include "platform.h"
 #include "platform_config.h"

@@ -4,8 +4,8 @@
 
 #include "yunit.h"
 
-#include "yos/yos.h"
-#include "yos/kernel.h"
+#include "aos/aos.h"
+#include "aos/kernel.h"
 
 #include "umesh.h"
 #include "core/link_mgmt.h"

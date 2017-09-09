@@ -3,7 +3,7 @@
  */
 
 #include <stdlib.h>
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "aws_lib.h"
 #include "zconfig_lib.h"
 #include "awss.h"

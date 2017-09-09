@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #include <k_api.h>
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include <assert.h>
 
 #include <yunit.h>

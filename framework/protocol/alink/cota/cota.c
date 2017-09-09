@@ -8,7 +8,7 @@
 #include "cota.h"
 #include "connectivity_manager.h"
 #include "device.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "service_manager.h"
 #include "wsf.h"
 #include "config.h"

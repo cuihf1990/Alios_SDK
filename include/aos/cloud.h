@@ -3,7 +3,7 @@
  */
 
 /**
- * @file yos/cloud.h
+ * @file aos/cloud.h
  * @brief cloud API
  * @version since 1.0.0
  */
