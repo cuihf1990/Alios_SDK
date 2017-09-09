@@ -13,7 +13,7 @@ $(NAME)_SOURCES := \
     string_utils.c \
     lite-utils_prog.c
 
-$(NAME)_COMPONENTS += utility.iotx-utils.LITE-log
+$(NAME)_COMPONENTS += iotx-utils.LITE-log
 
 # TODO: fix warnings
 $(NAME)_CFLAGS := $(filter-out -Werror,$(CFLAGS))

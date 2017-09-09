@@ -30,5 +30,4 @@ GLOBAL_INCLUDES += \
 $(NAME)_SOURCES := \
     guider.c
 
-$(NAME)_COMPONENTS += utility.iotx-utils.device
-#$(NAME)_COMPONENTS += utility.digest
+$(NAME)_COMPONENTS += iotx-utils.device

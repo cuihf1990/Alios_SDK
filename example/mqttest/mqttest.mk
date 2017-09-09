@@ -37,8 +37,6 @@ $(NAME)_INCLUDES  += ../../utility/iotx-utils/hal \
 $(NAME)_COMPONENTS := log
 $(NAME)_COMPONENTS  += mbedtls
 $(NAME)_COMPONENTS  += connectivity.mqtt
-$(NAME)_COMPONENTS  += cli utility.digest_algorithm
-$(NAME)_COMPONENTS  += utility.iotx-utils.LITE-log utility.iotx-utils.LITE-utils utility.iotx-utils.misc utility.iotx-utils.sdk-impl utility.iotx-utils.guider utility.iotx-utils.digest
 
 LWIP := 0
 ifeq ($(LWIP),1)

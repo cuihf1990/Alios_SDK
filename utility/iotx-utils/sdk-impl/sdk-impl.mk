@@ -33,4 +33,4 @@ $(NAME)_INCLUDES    := \
     ../guider \
     ../device
 
-$(NAME)_COMPONENTS  += utility.iotx-utils.guider
+$(NAME)_COMPONENTS  += iotx-utils.guider
