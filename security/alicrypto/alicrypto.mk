@@ -2,6 +2,8 @@
 NAME := alicrypto
 ALICRYPTO_TEST := yes
 
+$(NAME)_TYPE := share
+
 $(NAME)_SOURCES :=
 $(NAME)_COMPONENTS :=
 
