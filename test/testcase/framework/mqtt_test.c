@@ -677,12 +677,12 @@ static yunit_test_case_t yunos_basic_testcases[] = {
     { "case6", test_mqtt_case6},
     { "case7", test_mqtt_case7},
     { "case8", test_mqtt_case8},
-    { "case9", test_mqtt_case9},
+//    { "case9", test_mqtt_case9},
     { "case10", test_mqtt_case10},
     { "case11", test_mqtt_case11},
-    { "case12", test_mqtt_case12},
+/*    { "case12", test_mqtt_case12},
     { "case13", test_mqtt_case13},
-    /*{ "case14", test_mqtt_case14},
+    { "case14", test_mqtt_case14},
     { "case1", test_mqtt_case1},*/
     YUNIT_TEST_CASE_NULL
 };
