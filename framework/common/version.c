@@ -36,7 +36,7 @@ char  os_version[OS_MAX_VERSION_LEN];
 
 YOS_EXPORT YOS_WEAK const char   *get_aos_kernel_version(void)
 {
-    return (const char *)yos_version_get();
+    return (const char *)aos_version_get();
 }
 
 
