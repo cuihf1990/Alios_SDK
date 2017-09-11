@@ -41,7 +41,7 @@ int aos_kv_get(const char *key, void *buffer, int *buffer_len);
 /**
  * @brief delete the KV pair by its key @key.
  *
- * @param[in]  key  the key of the KV pair you want to delete.
+ * @param[in]  @key  the key of the KV pair you want to delete.
  *
  * @retval  0 on success, otherwise -1 will be returned
  */
