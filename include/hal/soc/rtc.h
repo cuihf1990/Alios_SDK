@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_RTC_H
-#define YOS_RTC_H
+#ifndef AOS_RTC_H
+#define AOS_RTC_H
 
 /**
  * RTC time

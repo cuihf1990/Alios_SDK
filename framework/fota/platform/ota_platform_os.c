@@ -38,7 +38,7 @@ void *ota_mutex_init(void)
 
 void ota_mutex_lock(void *mutex)
 {
-    aos_mutex_lock((aos_mutex_t *)mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock((aos_mutex_t *)mutex, AOS_WAIT_FOREVER);
 }
 
 void ota_mutex_unlock(void *mutex)

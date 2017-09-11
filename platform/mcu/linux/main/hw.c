@@ -218,7 +218,7 @@ void hw_start_hal(options_t *poptions)
 
     per_pid_flash = poptions->flash.per_pid;
 
-#ifdef CONFIG_YOS_CLI
+#ifdef CONFIG_AOS_CLI
     hal_uart_init(&uart_0);
 #endif
 

@@ -8,7 +8,7 @@ $(NAME)_SOURCES :=  main.c \
                     update_for_ota.c \
                     ymodem.c
 
-GLOBAL_DEFINES := YOS_NO_WIFI
+GLOBAL_DEFINES := AOS_NO_WIFI
 
 GLOBAL_LDFLAGS += $$(CLIB_LDFLAGS_NANO)
 

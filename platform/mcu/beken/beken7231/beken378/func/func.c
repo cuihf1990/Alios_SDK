@@ -24,7 +24,7 @@
 
 UINT32 func_init(void)
 {
-#ifndef YOS_NO_WIFI
+#ifndef AOS_NO_WIFI
 	cfg_param_init();
 	
     FUNC_PRT("[FUNC]rwnxl_init\r\n");

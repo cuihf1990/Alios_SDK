@@ -27,7 +27,7 @@
 #include "lwip/inet.h"
 
 static void process_help(int argc, char *argv[]);
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
 static void process_autotest(int argc, char *argv[]);
 static void process_channel(int argc, char *argv[]);
 static void process_init(int argc, char *argv[]);
@@ -62,7 +62,7 @@ static void show_ipaddr(network_context_t *network);
 
 const cli_command_t g_commands[] = {
     { "help", &process_help },
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
     { "autotest", &process_autotest },
     { "channel", &process_channel },
     { "init", &process_init },
@@ -193,7 +193,7 @@ void process_help(int argc, char *argv[])
     }
 }
 
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
 static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length);
 
 typedef struct cli_autotest_s {
@@ -459,7 +459,7 @@ void process_mode(int argc, char *argv[])
             continue;
         }
 
-#ifdef CONFIG_YOS_MESH_SUPER
+#ifdef CONFIG_AOS_MESH_SUPER
         if (strcmp(argv[index], "SUPER") == 0) {
             mode |= MODE_SUPER;
             continue;
@@ -916,7 +916,7 @@ void response_append(const char *format, ...)
     if (g_cur_cmd_cb) {
         g_cur_cmd_cb(res_buf, len, g_cur_cmd_priv);
     } else {
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
         extern int dda_cli_log(char *str);
         dda_cli_log((char *)res_buf);
 #endif
@@ -1115,7 +1115,7 @@ void process_stats(int argc, char *argv[])
 
     hals = umesh_get_hals();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
         const ur_link_stats_t    *link_stats;
         link_stats = umesh_get_link_stats(hal->module->type);
         if (link_stats) {
@@ -1354,7 +1354,7 @@ static void ur_read_sock(int fd, raw_data_handler_t handler)
 
 static void mesh_worker(void *arg)
 {
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
     int maxfd = g_cli_autotest.udp_socket;
 #else
     int maxfd = -1;
@@ -1368,7 +1368,7 @@ static void mesh_worker(void *arg)
         fd_set rfds;
         FD_ZERO(&rfds);
         FD_SET(g_cl_state.icmp_socket, &rfds);
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
         FD_SET(g_cli_autotest.udp_socket, &rfds);
 #endif
 
@@ -1377,7 +1377,7 @@ static void mesh_worker(void *arg)
         if (FD_ISSET(g_cl_state.icmp_socket, &rfds)) {
             ur_read_sock(g_cl_state.icmp_socket, cli_handle_echo_response);
         }
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
         if (FD_ISSET(g_cli_autotest.udp_socket, &rfds)) {
             ur_read_sock(g_cli_autotest.udp_socket, handle_udp_autotest);
         }
@@ -1390,7 +1390,7 @@ int g_cli_silent;
 ur_error_t mesh_cli_init(void)
 {
     g_cl_state.icmp_socket = echo_socket(&cli_handle_echo_response);
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
     slist_init(&g_cli_autotest.acked_list);
     g_cli_autotest.udp_socket = autotest_udp_socket(&handle_udp_autotest,
                                                     AUTOTEST_UDP_PORT);

@@ -18,7 +18,7 @@ L_SRCS += \
     msg.c \
     hal.c
 
-ifeq ($(CONFIG_YOS_DDM), y)
+ifeq ($(CONFIG_AOS_DDM), y)
 L_SRCS += config_parser.c
 L_SRCS += master.c
 L_SRCS += dgraph.c
@@ -26,7 +26,7 @@ endif
 
 L_INCS += services/framework/include
 
-ifeq ($(CONFIG_YOS_DDM_DG), y)
+ifeq ($(CONFIG_AOS_DDM_DG), y)
 L_CFLAGS += -DCONFIG_DDA_DGRAPH_ENABLE
 endif
 

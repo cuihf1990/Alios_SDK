@@ -96,7 +96,7 @@ static void test_netmgr_connect_case(void)
 
 static int init(void)
 {
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
     extern void linuxhost_hal_urmesh_register(void);
     linuxhost_hal_urmesh_register();
 #endif

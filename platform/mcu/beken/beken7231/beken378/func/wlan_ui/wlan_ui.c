@@ -18,7 +18,7 @@
 #include "hal_machw.h"
 
 monitor_data_cb_t g_monitor_cb = 0;
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 monitor_data_cb_t g_mesh_monitor_cb = 0;
 uint8_t g_mesh_bssid[6];
 #endif
@@ -702,7 +702,7 @@ monitor_data_cb_t bk_wlan_get_mgnt_monitor_cb(void)
     return g_mgnt_cb;
 }
 
-#ifndef CONFIG_YOS_MESH
+#ifndef CONFIG_AOS_MESH
 int wlan_is_mesh_monitor_mode(void)
 {
     return FALSE;

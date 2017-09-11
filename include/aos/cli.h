@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef __YOS_CLI_H__
-#define __YOS_CLI_H__
+#ifndef __AOS_CLI_H__
+#define __AOS_CLI_H__
 
 #define MAX_COMMANDS    64
 #define INBUF_SIZE      128
@@ -38,7 +38,7 @@ struct cli_st {
 
 #define CLI_ARGS char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
 
-#ifdef CONFIG_YOS_CLI
+#ifdef CONFIG_AOS_CLI
 
 #define cmd_printf(...) \
     do {\
@@ -126,7 +126,7 @@ int aos_cli_init(void);
  */
 int aos_cli_stop(void);
 
-#else /* CONFIG_YOS_CLI */
+#else /* CONFIG_AOS_CLI */
 
 #define cmd_printf(...) do {} while(0)
 

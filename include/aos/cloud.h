@@ -8,8 +8,8 @@
  * @version since 1.0.0
  */
 
-#ifndef __YOS_CLOUD_H__
-#define __YOS_CLOUD_H__
+#ifndef __AOS_CLOUD_H__
+#define __AOS_CLOUD_H__
 
 enum {
     CLOUD_CONNECTED,

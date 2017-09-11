@@ -33,7 +33,7 @@ static int list_num(slist_t *head)
 
 static void test_slist_case(void)
 {
-    YOS_SLIST_HEAD(head);
+    AOS_SLIST_HEAD(head);
     struct test_node *node;
     int i;
 
@@ -116,7 +116,7 @@ static int dlist_num(dlist_t *head)
 
 static void test_dlist_case(void)
 {
-    YOS_DLIST_HEAD(dhead);
+    AOS_DLIST_HEAD(dhead);
     YUNIT_ASSERT(dlist_num(&dhead) == 0);
 
     struct test_node *node;

@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_UART_H
-#define YOS_UART_H
+#ifndef AOS_UART_H
+#define AOS_UART_H
 
 /**
  * UART data width

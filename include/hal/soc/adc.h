@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_ADC_H
-#define YOS_ADC_H
+#ifndef AOS_ADC_H
+#define AOS_ADC_H
 
 typedef struct {
     uint32_t sampling_cycle; /* sampling period in number of ADC clock cycles */

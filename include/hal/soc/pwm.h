@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_PWM_H
-#define YOS_PWM_H
+#ifndef AOS_PWM_H
+#define AOS_PWM_H
 
 typedef struct {
     float    duty_cycle;  /* the pwm duty_cycle */

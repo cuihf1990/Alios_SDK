@@ -24,7 +24,7 @@ static struct {
     .fd = -1,
 };
 
-static dlist_t g_local_event_list = YOS_DLIST_INIT(g_local_event_list);
+static dlist_t g_local_event_list = AOS_DLIST_INIT(g_local_event_list);
 
 static void handle_events(input_event_t *event);
 static int  input_add_event(int fd, input_event_t *event);

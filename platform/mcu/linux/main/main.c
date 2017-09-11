@@ -51,7 +51,7 @@ static void app_entry(void *arg)
 
     aos_features_init();
 
-#ifdef CONFIG_YOS_MESHYTS
+#ifdef CONFIG_AOS_MESHYTS
     options.flash.per_pid = true;
 #else
     options.flash.per_pid = false;
@@ -65,7 +65,7 @@ static void app_entry(void *arg)
         vflash_register_partition(i);
     }
 
-#ifdef CONFIG_YOS_CLI
+#ifdef CONFIG_AOS_CLI
     aos_cli_init();
 #endif
 
@@ -109,7 +109,7 @@ void signal_handler(int signo)
     __gcov_flush();
 #endif
 
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
     rl_free_line_state ();
     rl_cleanup_after_signal ();
 #endif
@@ -151,12 +151,12 @@ int main(int argc, char **argv)
 #else
     options.lwip.tapif  = true;
 #endif
-    options.log_level   = YOS_LL_WARN;
+    options.log_level   = AOS_LL_WARN;
 
-#if defined(CONFIG_YOS_DDA) || defined(ENABLE_GCOV)
+#if defined(CONFIG_AOS_DDA) || defined(ENABLE_GCOV)
     signal(SIGINT, signal_handler);
 #endif
-#ifdef CONFIG_YOS_UT
+#ifdef CONFIG_AOS_UT
     signal(SIGPIPE, SIG_IGN);
 #endif
 
