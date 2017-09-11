@@ -23,13 +23,13 @@
 
 #include "iot_import.h"
 #include "iot_export.h"
-#include "yos/log.h"
+#include "aos/log.h"
 //#include "json_parser.h"
-#include "yos/yloop.h"
-#include "yos/network.h"
+#include "aos/yloop.h"
+#include "aos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include <k_err.h>
 //#include "aliot_platform.h"
 //#include "aliot_log.h"
@@ -37,8 +37,8 @@
 //#include "aliot_auth.h"
 //#include "aliot_device.h"
 #include <netmgr.h>
-#include <yos/cli.h>
-#include <yos/cloud.h>
+#include <aos/cli.h>
+#include <aos/cloud.h>
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
 /*
     #define PRODUCT_KEY             "OvNmiEYRDSY"
@@ -94,8 +94,7 @@ static void wifi_service_event(input_event_t *event, void *priv_data) {
 
     if (is_demo_started == 0) {
         is_demo_started = 1;
-        mqtt_main_async();
-        //mqtt_client_example();
+        mqtt_client_example();
     }
 }
 
