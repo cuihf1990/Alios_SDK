@@ -20,7 +20,6 @@ umesh_srcs := src/core/umesh.c \
               src/hal/80211.c \
               src/utilities/message.c \
               src/utilities/timer.c \
-              src/utilities/logging.c \
               src/utilities/memory.c \
               src/utilities/configs.c \
               src/utilities/task.c \

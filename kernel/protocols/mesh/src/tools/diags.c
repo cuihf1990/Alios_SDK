@@ -28,7 +28,7 @@ static ur_error_t handle_trace_route_request(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle trace route request\r\n");
+    MESH_LOG_DEBUG("handle trace route request");
 
     info = message->info;
     tlvs = message_get_payload(message) + sizeof(mm_header_t) +
@@ -59,7 +59,7 @@ static ur_error_t handle_trace_route_response(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle trace route response\r\n");
+    MESH_LOG_DEBUG("handle trace route response");
 
     info = message->info;
     tlvs = message_get_payload(message) + sizeof(mm_header_t) +
@@ -110,8 +110,7 @@ ur_error_t send_trace_route_request(network_context_t *network,
         message_free(message);
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send trace route request, len %d\r\n", length);
+    MESH_LOG_DEBUG("send trace route request, len %d", length);
     return error;
 }
 
@@ -150,8 +149,7 @@ static ur_error_t send_trace_route_response(network_context_t *network,
         message_free(message);
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send trace route response, len %d\r\n", length);
+    MESH_LOG_DEBUG("send trace route response, len %d", length);
     return error;
 }
 

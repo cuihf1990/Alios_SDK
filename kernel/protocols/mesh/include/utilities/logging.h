@@ -6,7 +6,7 @@
 #define UR_LOGGING_H
 
 typedef enum {
-    UR_LOG_LEVEL_CRIT,
+    UR_LOG_LEVEL_ERROR,
     UR_LOG_LEVEL_WARN,
     UR_LOG_LEVEL_INFO,
     UR_LOG_LEVEL_DEBUG,
@@ -15,7 +15,7 @@ typedef enum {
 #define lvl2str(l) ({ \
     const char *_s = "unknown"; \
     switch (l) { \
-    case UR_LOG_LEVEL_CRIT: _s = "critical"; break; \
+    case UR_LOG_LEVEL_ERROR: _s = "error"; break; \
     case UR_LOG_LEVEL_WARN: _s = "warning"; break; \
     case UR_LOG_LEVEL_INFO: _s = "information"; break; \
     case UR_LOG_LEVEL_DEBUG: _s = "debug"; break; \
@@ -24,23 +24,12 @@ typedef enum {
 
 #define str2lvl(s) ({ \
     int _l; \
-    if (strcmp(s, "critical") == 0) _l = UR_LOG_LEVEL_CRIT; \
+    if (strcmp(s, "error") == 0) _l = UR_LOG_LEVEL_ERROR; \
     else if (strcmp(s, "warning") == 0) _l = UR_LOG_LEVEL_WARN; \
     else if (strcmp(s, "information") == 0) _l = UR_LOG_LEVEL_INFO; \
     else if (strcmp(s, "debug") == 0) _l = UR_LOG_LEVEL_DEBUG; \
     else _l = UR_LOG_LEVEL_INFO; \
     _l; })
-
-typedef enum {
-    UR_LOG_REGION_API,
-    UR_LOG_REGION_ROUTE,
-    UR_LOG_REGION_MM,
-    UR_LOG_REGION_ARP,
-    UR_LOG_REGION_6LOWPAN,
-    UR_LOG_REGION_IP6,
-    UR_LOG_REGION_HAL,
-    UR_LOG_REGION_CLI,
-} ur_log_region_t;
 
 #define EXT_ADDR_FMT "%02x%02x%02x%02x%02x%02x%02x%02x"
 #define EXT_ADDR_DATA(addr) \
@@ -66,18 +55,43 @@ typedef enum {
 #define format_ip6_str(ip6_addr, buf, len) \
     snprintf(buf, len, IP6_ADDR_FMT, IP6_ADDR_DATA(ip6_addr))
 
-#ifndef DEBUG
-static inline void ur_log(ur_log_level_t level, ur_log_region_t region,
-                          const char *format, ...) {}
-static inline ur_log_level_t ur_log_get_level(void)
-{
-    return -1;
-}
-static inline void ur_log_set_level(ur_log_level_t lvl) {}
+#ifndef CONFIG_AOS_MESH_DEBUG
+#define MESH_LOG_DEBUG(format, ...)
+#define MESH_LOG_INFO(format, ...) LOGI("mesh", format, ##__VA_ARGS__)
+#define MESH_LOG_WARN(format, ...)
+#define MESH_LOG_ERROR(format, ...)
 #else
-void ur_log(ur_log_level_t level, ur_log_region_t region,
-            const char *format, ...);
 ur_log_level_t ur_log_get_level(void);
-void ur_log_set_level(ur_log_level_t);
+void ur_log_set_level(ur_log_level_t level);
+extern int dda_log(char *str, ...);
+
+#define MESH_LOG_LEVEL ur_log_get_level()
+
+#ifdef CONFIG_AOS_DDA
+#define LOG_OUTPUT(format, ...) \
+    dda_log(format, ##__VA_ARGS__); \
+    csp_printf(format"\r\n", ##__VA_ARGS__);
+#else
+#define LOG_OUTPUT(format, ...) \
+    LOGI("mesh", format, ##__VA_ARGS__);
 #endif
+
+#define MESH_LOG_DEBUG(format, ...) \
+    if (MESH_LOG_LEVEL >= UR_LOG_LEVEL_DEBUG) { \
+        LOG_OUTPUT(format, ##__VA_ARGS__); \
+    }
+#define MESH_LOG_INFO(format, ...) \
+    if (MESH_LOG_LEVEL >= UR_LOG_LEVEL_INFO) { \
+        LOG_OUTPUT(format, ##__VA_ARGS__); \
+    }
+#define MESH_LOG_WARN(format, ...) \
+    if (MESH_LOG_LEVEL >= UR_LOG_LEVEL_WARN) { \
+        LOG_OUTPU(format, ##__VA_ARGS__); \
+    }
+#define MESH_LOG_ERROR(format, ...) \
+    if (MESH_LOG_LEVEL >= UR_LOG_LEVEL_ERROR) { \
+        LOG_OUTPUT(format, ##__VA_ARGS__); \
+    }
+#endif
+
 #endif  /* UR_LOGGING_H */

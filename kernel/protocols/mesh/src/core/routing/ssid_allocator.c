@@ -312,8 +312,7 @@ new_sid:
     if (newsid < 0) {
         return UR_ERROR_MEM;
     }
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "allocate 0x%04x\r\n", node_id->sid);
+    MESH_LOG_DEBUG("allocate 0x%04x", node_id->sid);
 
     if (!(node_id->mode & MODE_MOBILE)) {
         if (UR_ERROR_NONE != update_sid_mapping(hdl, node_id, true)) {
