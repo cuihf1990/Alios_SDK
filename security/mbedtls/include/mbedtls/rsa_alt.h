@@ -1,7 +1,3 @@
-/**
- * Copyright (C) 2017 The YunOS IoT Project. All rights reserved.
- */
-
 #ifndef MBEDTLS_RSA_ALT_H
 #define MBEDTLS_RSA_ALT_H
 
