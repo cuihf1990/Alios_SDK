@@ -33,7 +33,6 @@ GLOBAL_INCLUDES += include \
                    bsp/Components/lps22hb \
                    bsp/Components/lsm6dsl \
                    bsp/Components/vl53l0x \
-                   yos \
                    wifi/inc \
                    csp/lwip/include
 
