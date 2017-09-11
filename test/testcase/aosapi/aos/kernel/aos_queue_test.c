@@ -10,6 +10,7 @@
 #include <assert.h>
 
 #include <yunit.h>
+#include <errno.h>
 
 #define TEST_TASK_STACK_SIZE (8192)
 
@@ -43,13 +44,13 @@ static void CASE_aosapi_kernel_queue_param()
 	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
 #endif
 	ret = aos_queue_new(&queue, NULL, TEST_QUEUE_SIZE, TEST_QUEUE_MAX_MSG_SIZE);
-	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 
 	ret = aos_queue_new(&queue, queue_buf, 0, TEST_QUEUE_MAX_MSG_SIZE);
-	YUNIT_ASSERT_MSG(ret==RHINO_BUF_QUEUE_SIZE_ZERO, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 
 	ret = aos_queue_new(&queue, queue_buf, TEST_QUEUE_SIZE, 0);
-	YUNIT_ASSERT_MSG(ret==RHINO_INV_PARAM, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 
 	/* aos_queue_send invalid param test */
 #if 0
@@ -63,10 +64,10 @@ static void CASE_aosapi_kernel_queue_param()
 	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	ret = aos_queue_send(&queue, NULL, sizeof(send_msg));
-	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 
 	ret = aos_queue_send(&queue, &send_msg, 0);
-	YUNIT_ASSERT_MSG(ret==RHINO_INV_PARAM, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 
 	ret = aos_queue_send(&queue, &send_msg, TEST_QUEUE_MAX_MSG_SIZE);
 	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
@@ -74,7 +75,7 @@ static void CASE_aosapi_kernel_queue_param()
 	ret = aos_sem_new(&tmp_sem, 0);
 	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	ret = aos_queue_send((aos_queue_t*)&tmp_sem, &send_msg, sizeof(send_msg));
-	YUNIT_ASSERT_MSG(ret==RHINO_KOBJ_TYPE_ERR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 	aos_sem_free(&tmp_sem);
 
 	/* aos_queue_recv invalid param test */
@@ -88,14 +89,14 @@ static void CASE_aosapi_kernel_queue_param()
 	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
 	ret= aos_queue_recv(&queue, RHINO_WAIT_FOREVER, NULL, &recv_size);
-	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EFAULT), "ret=%d", ret);
 
 	ret= aos_queue_recv(&queue, RHINO_WAIT_FOREVER, &recv_msg, NULL);
-	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EFAULT), "ret=%d", ret);
 
 	aos_sem_new(&tmp_sem, 0);
 	ret = aos_queue_recv((aos_queue_t*)&tmp_sem, RHINO_WAIT_FOREVER, &recv_msg, &recv_size);
-	YUNIT_ASSERT_MSG(ret==RHINO_KOBJ_TYPE_ERR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 	aos_sem_free(&tmp_sem);
         aos_queue_free(&queue);
 
@@ -184,7 +185,7 @@ static void CASE_aosapi_kernel_queue_full()
 		YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	}
 	ret = aos_queue_send(&g_queue, &send_msg, sizeof(send_msg));
-	YUNIT_ASSERT_MSG(ret==RHINO_BUF_QUEUE_FULL, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EPERM), "ret=%d", ret);
 
 	aos_queue_free(&g_queue);
 }

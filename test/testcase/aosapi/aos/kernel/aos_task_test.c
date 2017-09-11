@@ -9,6 +9,7 @@
 #include <aos/kernel.h>
 
 #include <yunit.h>
+#include <errno.h>
 
 static aos_sem_t sync_sem;
 #define TEST_TASK_STACK_SIZE (8192)
@@ -22,15 +23,15 @@ static void CASE_aosapi_kernel_task_new_param()
 {
 	int ret = RHINO_SUCCESS;
 	ret = aos_task_new(NULL, TASK_aosapi_kernel_task_new_param, NULL, 1024);
-	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EFAULT), "ret=%d", ret);
 
 	ret = aos_task_new("TASK_aosapi_kernel_task_new_param", NULL, NULL, 1024);
-	YUNIT_ASSERT_MSG(ret==RHINO_NULL_PTR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EFAULT), "ret=%d", ret);
 
 #if 1
 	ret = aos_task_new("TASK_aosapi_kernel_task_new_param",
 			           TASK_aosapi_kernel_task_new_param, NULL, 0);
-	YUNIT_ASSERT_MSG(ret==RHINO_INV_PARAM, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 #endif
 }
 
