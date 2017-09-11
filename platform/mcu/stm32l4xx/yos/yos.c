@@ -4,7 +4,7 @@
 
 #include <yos.h>
 #include <k_api.h>
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "stm32_wifi.h"
@@ -95,7 +95,7 @@ static void aos_init(void)
 void aos_start(void)
 {
     krhino_init();
-    krhino_task_dyn_create(&g_aos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, (task_entry_t)aos_init, 1);
+    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, (task_entry_t)aos_init, 1);
     krhino_start();
 }
 

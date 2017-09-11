@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #ifndef YOS_EXPORT
 #define YOS_EXPORT

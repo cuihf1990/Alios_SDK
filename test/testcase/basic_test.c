@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include "yunit.h"
 

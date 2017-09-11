@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <yos/yos.h>
-#include <yos/network.h>
+#include <aos/aos.h>
+#include <aos/network.h>
 
 #include "ota_util.h"
 #include "ota_log.h"

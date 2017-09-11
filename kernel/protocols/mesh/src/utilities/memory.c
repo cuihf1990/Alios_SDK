@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include "umesh_utils.h"
 
 typedef struct mem_info_s {

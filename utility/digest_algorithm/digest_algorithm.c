@@ -8,7 +8,7 @@
 #include "md5.h"
 #include "sha2.c"
 #include "hmac.c"
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 void *digest_md5_init(void)
 {

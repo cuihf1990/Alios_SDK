@@ -3,7 +3,7 @@
  */
 
 #include <unistd.h>
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 
 #include "yunit.h"
 #include "test_fw.h"

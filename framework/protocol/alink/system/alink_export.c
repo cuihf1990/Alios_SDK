@@ -6,7 +6,7 @@
 #include "service_manager.h"
 #include "alink_protocol.h"
 #include "device.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "git_version.h"
 #include "connectivity_manager.h"
 #include "accs.h"

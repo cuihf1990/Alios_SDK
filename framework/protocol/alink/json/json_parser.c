@@ -9,7 +9,7 @@
 
 #include "os.h"
 #include "json_parser.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 #define JSON_PARSE 0
 #if (JSON_PARSE==1)

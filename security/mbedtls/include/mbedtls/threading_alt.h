@@ -6,7 +6,7 @@
 #define MBEDTLS_THREADING_ALT_H
 
 #include <stdlib.h>
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 
 #ifdef __cplusplus
 extern "C" {

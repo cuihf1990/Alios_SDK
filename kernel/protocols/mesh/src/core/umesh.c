@@ -3,7 +3,7 @@
  */
 
 #include <string.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include "hal/base.h"
 #include "umesh.h"

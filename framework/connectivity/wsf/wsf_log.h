@@ -10,7 +10,7 @@ extern "C"
 {
 #endif
 
-#include "yos/log.h"
+#include "aos/log.h"
 
 #ifdef  __cplusplus
 }

@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <yos/kernel.h>
-#include <yos/yos.h>
-#include <yos/network.h>
+#include <aos/kernel.h>
+#include <aos/aos.h>
+#include <aos/network.h>
 
 #include "vfs.h"
 #include "vfs_inode.h"

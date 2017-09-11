@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <time.h>
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "json_parser.h"
 #include "msdp.h"
 #include "devmgr.h"

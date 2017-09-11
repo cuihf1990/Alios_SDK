@@ -8,11 +8,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
-#include <yos/network.h>
-#include <yos/yos.h>
+#include <aos/network.h>
+#include <aos/aos.h>
 #include <netmgr.h>
 
-#include <yos/mbedtls_ssl.h>
+#include <aos/mbedtls_ssl.h>
 #include "mbedtls/net_sockets.h"
 
 struct cookie {

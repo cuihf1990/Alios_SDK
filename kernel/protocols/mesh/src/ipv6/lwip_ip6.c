@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include "lwip/sockets.h"
 #include "lwip/inet.h"

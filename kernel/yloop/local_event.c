@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include "event_device.h"
 #include "yloop.h"
@@ -152,7 +152,7 @@ int aos_unregister_event_filter(uint16_t type, aos_event_cb cb, void *priv)
 }
 
 /*
- * schedule a callback in yos loop main thread
+ * schedule a callback in aos loop main thread
  */
 static int _schedule_call(aos_loop_t *loop, aos_call_t fun, void *arg,
                           bool urgent)

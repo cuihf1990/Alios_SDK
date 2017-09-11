@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/stat.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #ifdef __cplusplus
 extern "C" {

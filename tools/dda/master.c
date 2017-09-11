@@ -23,7 +23,7 @@
 #include <readline/history.h>
 #include <pthread.h>
 
-#include "yos/list.h"
+#include "aos/list.h"
 
 #include "eloop.h"
 #include "packet.h"

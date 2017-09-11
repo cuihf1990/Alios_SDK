@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 
 #include "yunit.h"
 
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "yts.h"
 #include "umesh.h"
 

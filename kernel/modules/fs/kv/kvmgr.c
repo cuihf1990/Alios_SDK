@@ -4,7 +4,7 @@
 
 #include <errno.h>
 #include <string.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include <hal/hal.h>
 #include "kvmgr.h"
 

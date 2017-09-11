@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include <ota_platform_os.h>
 
 #define DEFAULT_THREAD_PRI   10

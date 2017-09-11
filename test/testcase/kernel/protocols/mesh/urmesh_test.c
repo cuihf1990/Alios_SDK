@@ -4,7 +4,7 @@
 
 #include "yunit.h"
 
-#include "yos/kernel.h"
+#include "aos/kernel.h"
 #include "umesh.h"
 #include "core/topology.h"
 #include "core/mesh_mgmt.h"

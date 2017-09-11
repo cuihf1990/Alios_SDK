@@ -9,7 +9,7 @@
 #include "k_mm.h"
 #endif
 #include "k_mm_debug.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 #ifdef CONFIG_YOS_CLI
 #define print cli_printf

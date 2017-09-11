@@ -3,12 +3,13 @@
  */
 
 #include <stdlib.h>
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "aws_lib.h"
 #include "zconfig_lib.h"
 #include "awss.h"
 #include "os.h"
 #include "enrollee.h"
+#include "alink_export.h"
 
 #define SHUB_UDP_PORT 65128
 
@@ -53,6 +54,23 @@ end:
     os_free(buf);
 
     return ret;
+}
+
+#define AWSS_CB_MAX 5
+void *awss_cb_func[AWSS_CB_MAX] = {NULL};
+int awss_register_callback(unsigned char cb_type, void *cb_func)
+{
+    if (cb_type >= AWSS_CB_MAX) {
+        LOGE("[awss]", "Error: %s failed, wrong cb_type (%d)", __func__, cb_type);
+        return -1;
+    }
+
+    if (awss_cb_func[cb_type] != NULL)
+        LOGE("[awss]", "Same type cb registered.");
+
+    awss_cb_func[cb_type] = cb_func;
+
+    return 0;
 }
 
 #define HOTSPOT_TIMEOUT (2*60*10) // 10 mins
@@ -102,13 +120,21 @@ int awss_start(void)
 
             if (ret == 0 && strcmp(ssid, DEFAULT_SSID) == 0) { // hotspot mode
                 int hotspotCnt = 0;
-                LOGI("[awss]", "hotspot mode deteched");
+                LOGI("[awss]", "hotspot mode detected");
+                if (awss_cb_func[AWSS_HOTSPOT_CONNECTED]) {
+                    void (*fn)(void) = awss_cb_func[AWSS_HOTSPOT_CONNECTED];
+                    fn();
+                }
                 udpFd = os_udp_server_create(SHUB_UDP_PORT);
                 OS_ASSERT(udpFd >= 0, "shub create socket failed!\r\n");
                 while (hotspotCnt < HOTSPOT_TIMEOUT) {
                     handleSocketPacket(udpFd);
                     if (switchApDone) {
                         LOGI("[awss]", "switchApDone");
+                        if (awss_cb_func[AWSS_HOTSPOT_SWITCH_AP_DONE]) {
+                            void (*fn)(void) = awss_cb_func[AWSS_HOTSPOT_SWITCH_AP_DONE];
+                            fn();
+                        }
                         break;
                     }
                     aos_msleep(500);

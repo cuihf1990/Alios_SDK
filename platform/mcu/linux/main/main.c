@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 #include <arg_options.h>
 

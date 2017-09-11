@@ -9,7 +9,7 @@
  */
 #include "rtos_pub.h"
 
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "stdarg.h"
 
 #include "include.h"

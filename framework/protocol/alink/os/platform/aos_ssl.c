@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #include "platform.h"
-#include <yos/mbedtls_ssl.h>
+#include <aos/mbedtls_ssl.h>
 
 void *platform_ssl_connect(_IN_ void *tcp_fd, _IN_ const char *server_cert,
                            _IN_ int server_cert_len)

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include "yunit.h"
 
 #include "dda_util.h"

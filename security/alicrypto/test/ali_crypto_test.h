@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ali_crypto.h"
-#include "yos/kernel.h"
+#include "aos/kernel.h"
 
 extern int csp_printf(const char *fmt, ...);
 

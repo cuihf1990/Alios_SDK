@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
 

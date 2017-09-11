@@ -4,7 +4,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <yos/log.h>
+#include <aos/log.h>
 
 unsigned int aos_log_level = YOS_LL_V_DEBUG | YOS_LL_V_INFO | YOS_LL_V_WARN | YOS_LL_V_ERROR | YOS_LL_V_FATAL;
 

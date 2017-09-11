@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "connectivity_manager.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 #define cm_init_connect(conn) _##conn##_init()
 #define MODULE "conn_mgr"

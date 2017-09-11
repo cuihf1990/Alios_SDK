@@ -1,5 +1,5 @@
 #include <string.h>
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 static void benchmarks_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {

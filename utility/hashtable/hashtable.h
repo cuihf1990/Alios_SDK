@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "yos/yos.h"
+#include "aos/aos.h"
 
 #if defined(__cplusplus) /* If this is a C++ compiler, use C linkage */
 extern "C" {

@@ -10,8 +10,8 @@
 
 #include <netdb.h>
 #include <sys/socket.h>
-#include <yos/yos.h>
-#include "yos/internal/event_type_code.h"
+#include <aos/aos.h>
+#include "aos/internal/event_type_code.h"
 #ifdef CSP_LINUXHOST
 #include <arpa/inet.h>
 #endif
@@ -32,7 +32,7 @@ void  aos_free(void *mem);
  * and mesh HAL work as an HW in Rhino utilizing cpu_event infra
  */
 #ifndef LINUXHOST_RHINO
-#include "yos/log.h"
+#include "aos/log.h"
 #include "csp.h"
 #define dda_task_new aos_task_new
 #define dda_task_exit aos_task_exit
@@ -302,7 +302,7 @@ static void run_aos_loop(const void* arg)
     aos_post_event(EV_DDA, CODE_DDA_ON_CONNECTED, 0u);
 
 #ifdef CSP_LINUXHOST
-    aos_task_new("yos", aos_loop, NULL, 8192);
+    aos_task_new("aos", aos_loop, NULL, 8192);
 #endif
 }
 

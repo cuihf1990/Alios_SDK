@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include "stdbool.h"
 #include "hal/soc/soc.h"
-#include "yos/debug.h"
-#include "yos/kernel.h"
+#include "aos/debug.h"
+#include "aos/kernel.h"
 #include "board.h"    
 #include "ymodem.h"
 #include "bootloader.h" 

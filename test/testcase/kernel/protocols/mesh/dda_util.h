@@ -5,7 +5,7 @@
 #ifndef _DDM_UTIL_H_
 #define _DDM_UTIL_H_
 
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include "config_parser.h"
 #include "yts.h"
 

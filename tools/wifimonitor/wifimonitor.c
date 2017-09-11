@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <yos/yos.h>
+#include <aos/aos.h>
 #include "wifimonitor.h"
 
 #ifndef Method_PostData

@@ -10,7 +10,7 @@
 #include <sys/prctl.h>
 #include <pthread.h>
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 
 void aos_reboot(void)
 {
@@ -24,7 +24,7 @@ int aos_get_hz(void)
 
 const char *aos_version_get(void)
 {
-    return "yos-linux-xxx";
+    return "aos-linux-xxx";
 }
 
 const char *aos_strerror(int errnum)

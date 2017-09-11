@@ -12,7 +12,7 @@
 #include <time.h>
 #include "devmgr.h"
 #include "devmgr_router.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "json_parser.h"
 #include "msdp.h"
 #include "service_manager.h"

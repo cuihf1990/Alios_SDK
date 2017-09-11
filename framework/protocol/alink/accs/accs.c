@@ -6,7 +6,7 @@
 #include "accs.h"
 #include "alink_protocol.h"
 #include "connectivity_manager.h"
-#include "yos/yos.h"
+#include "aos/aos.h"
 #include "service_manager.h"
 #include "wsf.h"
 #include "alink_export_internal.h"

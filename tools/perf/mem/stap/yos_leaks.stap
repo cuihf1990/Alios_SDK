@@ -5,7 +5,7 @@ global ptr2size
 global bt_stats
 
 probe begin {
-	println("yos memory leak check ");
+	println("aos memory leak check ");
 }
 
 probe process(@1).function("krhino_mm_alloc_hook"){
@@ -37,12 +37,12 @@ probe process(@1).function("krhino_mm_free") {
 }
 
 probe end {
-	println("\n******yos memory leak backtrace start******");
+	println("\n******aos memory leak backtrace start******");
 	foreach (bt in bt_stats) {
         print_ustack(bt)
         printf("\t%d\n\n", @sum(bt_stats[bt]))
     }
-    println("\n******yos memory leak backtrace end******");
+    println("\n******aos memory leak backtrace end******");
 	delete ptr2bt
     delete ptr2size
 }
