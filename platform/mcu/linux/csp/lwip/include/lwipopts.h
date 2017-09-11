@@ -208,8 +208,8 @@
 #define LWIP_SOCKET                     1
 #define LWIP_COMPAT_SOCKETS             1
 #define LWIP_POSIX_SOCKETS_IO_NAMES     1
-#if !defined(FD_SET) && defined(YOS_CONFIG_VFS_DEV_NODES)
-#define LWIP_SOCKET_OFFSET              YOS_CONFIG_VFS_DEV_NODES
+#if !defined(FD_SET) && defined(AOS_CONFIG_VFS_DEV_NODES)
+#define LWIP_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
 #endif
 #define LWIP_SO_SNDTIMEO                1
 #define LWIP_SO_RCVTIMEO                1
@@ -233,7 +233,7 @@
    ---------- Hook options ---------------
 */
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 #define LWIP_DECLARE_HOOK \
     struct netif *lwip_hook_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest); \
     int lwip_hook_mesh_is_mcast_subscribed(const ip6_addr_t *dest);

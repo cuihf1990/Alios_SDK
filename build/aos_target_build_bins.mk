@@ -83,7 +83,7 @@ $(eval $(1)_CHECK_HEADER_LIST+=$(OUTPUT_DIR)/Modules/$(strip $($(1)_LOCATION))$(
 .PHONY: $(OUTPUT_DIR)/Modules/$(strip $($(1)_LOCATION))$(2:.h=.chk)
 $(OUTPUT_DIR)/Modules/$(strip $($(1)_LOCATION))$(2:.h=.chk): $(strip $($(1)_LOCATION))$(2) $(CONFIG_FILE) $$(dir $(OUTPUT_DIR)/Modules/$(call GET_BARE_LOCATION,$(1))$(2)).d
 	$(QUIET)$(ECHO) Checking header  $(2)
-	$(QUIET)$(CC) -c $(YOS_SDK_CFLAGS) $(filter-out -pedantic -Werror, $($(1)_CFLAGS) $(C_BUILD_OPTIONS) ) $($(1)_INCLUDES) $($(1)_DEFINES) $(YOS_SDK_INCLUDES) $(YOS_SDK_DEFINES) -o $$@ $$<
+	$(QUIET)$(CC) -c $(AOS_SDK_CFLAGS) $(filter-out -pedantic -Werror, $($(1)_CFLAGS) $(C_BUILD_OPTIONS) ) $($(1)_INCLUDES) $($(1)_DEFINES) $(AOS_SDK_INCLUDES) $(AOS_SDK_DEFINES) -o $$@ $$<
 endef
 
 ###############################################################################
@@ -143,10 +143,10 @@ $(eval $(1)_LIB_OBJS := $(addprefix $(strip $(OUTPUT_DIR)/Modules/$(call GET_BAR
 
 
 $(LIBS_DIR)/$(1).c_opts: $($(1)_PRE_BUILD_TARGETS) $(CONFIG_FILE) | $(LIBS_DIR)
-	$(QUIET)$$(call WRITE_FILE_CREATE, $$@, $(subst $(COMMA),$$(COMMA), $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(YOS_SDK_INCLUDES) $(YOS_SDK_DEFINES)))
+	$(QUIET)$$(call WRITE_FILE_CREATE, $$@, $(subst $(COMMA),$$(COMMA), $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(AOS_SDK_INCLUDES) $(AOS_SDK_DEFINES)))
 
 $(LIBS_DIR)/$(1).cpp_opts: $($(1)_PRE_BUILD_TARGETS) $(CONFIG_FILE) | $(LIBS_DIR)
-	 $(QUIET)$$(call WRITE_FILE_CREATE, $$@ ,$(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CXXFLAGS)  $($(1)_INCLUDES) $($(1)_DEFINES) $(YOS_SDK_INCLUDES) $(YOS_SDK_DEFINES))
+	 $(QUIET)$$(call WRITE_FILE_CREATE, $$@ ,$(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CXXFLAGS)  $($(1)_INCLUDES) $($(1)_DEFINES) $(AOS_SDK_INCLUDES) $(AOS_SDK_DEFINES))
 
 #$(LIBS_DIR)/$(1).as_opts: $(CONFIG_FILE) | $(LIBS_DIR)
 #	$(QUIET)$$(call WRITE_FILE_CREATE, $$@ ,$($(1)_ASMFLAGS))
@@ -158,10 +158,10 @@ $(LIBS_DIR)/$(1).ar_opts: $(CONFIG_FILE) | $(LIBS_DIR)
 $(foreach src, $(if $(findstring 1,$(CHECK_HEADERS)), $(filter %.h, $($(1)_CHECK_HEADERS)), ),$(eval $(call CHECK_HEADER_RULE,$(1),$(src))))
 
 # Target for build-from-source
-#$(OUTPUT_DIR)/libraries/$(1).a: $$($(1)_LIB_OBJS) $($(1)_CHECK_HEADER_LIST) $(OUTPUT_DIR)/libraries/$(1).ar_opts $$(if $(YOS_BUILT_WITH_ROM_SYMBOLS),$(ROMOBJCOPY_OPTS_FILE))
+#$(OUTPUT_DIR)/libraries/$(1).a: $$($(1)_LIB_OBJS) $($(1)_CHECK_HEADER_LIST) $(OUTPUT_DIR)/libraries/$(1).ar_opts $$(if $(AOS_BUILT_WITH_ROM_SYMBOLS),$(ROMOBJCOPY_OPTS_FILE))
 $(LIBS_DIR)/$(1).a: $$($(1)_LIB_OBJS) $($(1)_CHECK_HEADER_LIST) $(OUTPUT_DIR)/libraries/$(1).ar_opts
 	$(ECHO) Making $$@
-	$(QUIET)$(AR) $(YOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_CREATE) $$@ $(OPTIONS_IN_FILE_OPTION)$(OUTPUT_DIR)/libraries/$(1).ar_opts
+	$(QUIET)$(AR) $(AOS_SDK_ARFLAGS) $(COMPILER_SPECIFIC_ARFLAGS_CREATE) $$@ $(OPTIONS_IN_FILE_OPTION)$(OUTPUT_DIR)/libraries/$(1).ar_opts
 
 # Create targets to built the component's source files into object files
 $(foreach src, $(filter %.c, $($(1)_SOURCES)),$(eval $(call BUILD_C_RULE,$(1),$(src))))
@@ -169,7 +169,7 @@ $(foreach src, $(filter %.cpp, $($(1)_SOURCES)) $(filter %.cc, $($(1)_SOURCES)),
 $(foreach src, $(filter %.s %.S, $($(1)_SOURCES)),$(eval $(call BUILD_S_RULE,$(1),$(src))))
 
 
-$(eval $(1)_LINT_FLAGS +=  $(filter -D% -I%, $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(YOS_SDK_INCLUDES) $(YOS_SDK_DEFINES) ) )
+$(eval $(1)_LINT_FLAGS +=  $(filter -D% -I%, $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(AOS_SDK_INCLUDES) $(AOS_SDK_DEFINES) ) )
 $(eval LINT_FLAGS +=  $($(1)_LINT_FLAGS) )
 $(eval LINT_FILES +=  $(addprefix $(strip $($(1)_LOCATION)), $(filter %.c, $($(1)_SOURCES))) )
 endef
@@ -188,7 +188,7 @@ LINK_LIBS += $(RESOURCES_LIBRARY)
 $(foreach comp,$(COMPONENTS),$(eval $(call BUILD_COMPONENT_RULES,$(comp))))
 
 # Add pre-built libraries
-LINK_LIBS += $(YOS_SDK_PREBUILT_LIBRARIES)
+LINK_LIBS += $(AOS_SDK_PREBUILT_LIBRARIES)
 
 ##################################
 # Build rules
@@ -223,20 +223,20 @@ $(warning $(APP_LINK_LIBS))
 $(warning --------------------------------------------------)
 $(warning $(KERNEL_LINK_LIBS))
 $(warning --------------------------------------------------)
-$(warning $(YOS_SDK_PREBUILT_LIBRARIES))
+$(warning $(AOS_SDK_PREBUILT_LIBRARIES))
 $(warning --------------------------------------------------)
 ##################################
 ## APP
 
 $(APP_LINK_OPTS_FILE): out/$(CLEANED_BUILD_STRING)/config.mk
 #$(COMPILER_SPECIFIC_LINK_MAP) $(APP_MAP_OUTPUT_FILE) $(APP_LINK_OPTS_FILE)
-	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(YOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(APP_MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(YOS_SDK_LINK_FILES) $(filter %.a,$^) $(APP_LINK_LIBS)) $(YOS_SDK_LDFLAGS) $(GLOBAL_LDFLAGS_APP))
+	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(AOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(APP_MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(AOS_SDK_LINK_FILES) $(filter %.a,$^) $(APP_LINK_LIBS)) $(AOS_SDK_LDFLAGS) $(GLOBAL_LDFLAGS_APP))
 
 $(APP_LINT_OPTS_FILE): $(APP_LINK_LIBS)
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ , )
 	$(QUIET)$(foreach opt,$(sort $(subst \",",$(LINT_FLAGS))) $(sort $(LINT_FILES)),$(call WRITE_FILE_APPEND, $@ ,$(opt)))
 
-$(APP_LINK_OUTPUT_FILE): $(APP_LINK_LIBS) $(YOS_SDK_LINK_SCRIPT) $(APP_LINK_OPTS_FILE) $(LINT_DEPENDENCY) | $(EXTRA_PRE_LINK_TARGETS)
+$(APP_LINK_OUTPUT_FILE): $(APP_LINK_LIBS) $(AOS_SDK_LINK_SCRIPT) $(APP_LINK_OPTS_FILE) $(LINT_DEPENDENCY) | $(EXTRA_PRE_LINK_TARGETS)
 	$(QUIET)$(ECHO) Making $(notdir $@)
 	$(warning $(LINKER) $@ $(OPTIONS_IN_FILE_OPTION)$(APP_LINK_OPTS_FILE) $(COMPILER_SPECIFIC_STDOUT_REDIRECT))
 	$(QUIET)$(LINKER) -o  $@ $(OPTIONS_IN_FILE_OPTION)$(APP_LINK_OPTS_FILE) $(COMPILER_SPECIFIC_STDOUT_REDIRECT)
@@ -257,15 +257,15 @@ $(APP_HEX_OUTPUT_FILE): $(APP_STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(OBJCOPY) -O ihex -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes $< $@
 # Linker output target - This links all component & resource libraries and objects into an output executable
 # CXX is used for compatibility with C++
-#$(YOS_SDK_CONVERTER_OUTPUT_FILE): $(APP_LINK_OUTPUT_FILE)
+#$(AOS_SDK_CONVERTER_OUTPUT_FILE): $(APP_LINK_OUTPUT_FILE)
 #	$(QUIET)$(ECHO) Making $(notdir $@)
 #	$(QUIET)$(CONVERTER) "--ihex" "--verbose" $(APP_LINK_OUTPUT_FILE) $@
 
-#$(YOS_SDK_FINAL_OUTPUT_FILE): $(YOS_SDK_CONVERTER_OUTPUT_FILE)
-#	$(QUIET)$(ECHO) Making $(PYTHON_FULL_NAME) $(YOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(YOS_SDK_CONVERTER_OUTPUT_FILE) -o $(YOS_SDK_FINAL_OUTPUT_FILE)
-#	$(QUIET)$(PYTHON_FULL_NAME) $(YOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(YOS_SDK_CONVERTER_OUTPUT_FILE) -o $(YOS_SDK_FINAL_OUTPUT_FILE)
+#$(AOS_SDK_FINAL_OUTPUT_FILE): $(AOS_SDK_CONVERTER_OUTPUT_FILE)
+#	$(QUIET)$(ECHO) Making $(PYTHON_FULL_NAME) $(AOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(AOS_SDK_CONVERTER_OUTPUT_FILE) -o $(AOS_SDK_FINAL_OUTPUT_FILE)
+#	$(QUIET)$(PYTHON_FULL_NAME) $(AOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(AOS_SDK_CONVERTER_OUTPUT_FILE) -o $(AOS_SDK_FINAL_OUTPUT_FILE)
 
-app_display_map_summary: $(APP_LINK_OUTPUT_FILE) $(YOS_SDK_CONVERTER_OUTPUT_FILE) $(YOS_SDK_FINAL_OUTPUT_FILE)
+app_display_map_summary: $(APP_LINK_OUTPUT_FILE) $(AOS_SDK_CONVERTER_OUTPUT_FILE) $(AOS_SDK_FINAL_OUTPUT_FILE)
 	$(QUIET) $(call COMPILER_SPECIFIC_MAPFILE_DISPLAY_SUMMARY,$(APP_MAP_OUTPUT_FILE))
 
 # Main Target - Ensures the required parts get built
@@ -278,13 +278,13 @@ app_build_done: $(EXTRA_PRE_BUILD_TARGETS) $(APP_BIN_OUTPUT_FILE) $(APP_HEX_OUTP
 
 $(KERNEL_LINK_OPTS_FILE): out/$(CLEANED_BUILD_STRING)/config.mk
 #$(COMPILER_SPECIFIC_LINK_MAP) $(KERNEL_MAP_OUTPUT_FILE) $(KERNEL_LINK_OPTS_FILE)
-	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(YOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(KERNEL_MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(YOS_SDK_LINK_FILES) $(filter %.a,$^) $(KERNEL_LINK_LIBS)) $(YOS_SDK_LDFLAGS) $(GLOBAL_LDFLAGS_KERNEL))
+	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(AOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(KERNEL_MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(AOS_SDK_LINK_FILES) $(filter %.a,$^) $(KERNEL_LINK_LIBS)) $(AOS_SDK_LDFLAGS) $(GLOBAL_LDFLAGS_KERNEL))
 
 $(KERNELLINT_OPTS_FILE): $(KERNEL_LINK_LIBS)
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ , )
 	$(QUIET)$(foreach opt,$(sort $(subst \",",$(LINT_FLAGS))) $(sort $(LINT_FILES)),$(call WRITE_FILE_APPEND, $@ ,$(opt)))
 
-$(KERNEL_LINK_OUTPUT_FILE): $(KERNEL_LINK_LIBS) $(YOS_SDK_LINK_SCRIPT) $(KERNEL_LINK_OPTS_FILE) $(LINT_DEPENDENCY) | $(EXTRA_PRE_LINK_TARGETS)
+$(KERNEL_LINK_OUTPUT_FILE): $(KERNEL_LINK_LIBS) $(AOS_SDK_LINK_SCRIPT) $(KERNEL_LINK_OPTS_FILE) $(LINT_DEPENDENCY) | $(EXTRA_PRE_LINK_TARGETS)
 	$(QUIET)$(ECHO) Making $(notdir $@)
 	$(warning $(LINKER) $@ $(OPTIONS_IN_FILE_OPTION)$(KERNEL_LINK_OPTS_FILE) $(COMPILER_SPECIFIC_STDOUT_REDIRECT))
 	$(QUIET)$(LINKER) -o  $@ $(OPTIONS_IN_FILE_OPTION)$(KERNEL_LINK_OPTS_FILE) $(COMPILER_SPECIFIC_STDOUT_REDIRECT)
@@ -305,15 +305,15 @@ $(KERNEL_HEX_OUTPUT_FILE): $(KERNEL_STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(OBJCOPY) -O ihex -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes $< $@
 # Linker output target - This links all component & resource libraries and objects into an output executable
 # CXX is used for compatibility with C++
-#$(YOS_SDK_CONVERTER_OUTPUT_FILE): $(KERNEL_LINK_OUTPUT_FILE)
+#$(AOS_SDK_CONVERTER_OUTPUT_FILE): $(KERNEL_LINK_OUTPUT_FILE)
 #	$(QUIET)$(ECHO) Making $(notdir $@)
 #	$(QUIET)$(CONVERTER) "--ihex" "--verbose" $(KERNEL_LINK_OUTPUT_FILE) $@
 
-#$(YOS_SDK_FINAL_OUTPUT_FILE): $(YOS_SDK_CONVERTER_OUTPUT_FILE)
-#	$(QUIET)$(ECHO) Making $(PYTHON_FULL_NAME) $(YOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(YOS_SDK_CONVERTER_OUTPUT_FILE) -o $(YOS_SDK_FINAL_OUTPUT_FILE)
-#	$(QUIET)$(PYTHON_FULL_NAME) $(YOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(YOS_SDK_CONVERTER_OUTPUT_FILE) -o $(YOS_SDK_FINAL_OUTPUT_FILE)
+#$(AOS_SDK_FINAL_OUTPUT_FILE): $(AOS_SDK_CONVERTER_OUTPUT_FILE)
+#	$(QUIET)$(ECHO) Making $(PYTHON_FULL_NAME) $(AOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(AOS_SDK_CONVERTER_OUTPUT_FILE) -o $(AOS_SDK_FINAL_OUTPUT_FILE)
+#	$(QUIET)$(PYTHON_FULL_NAME) $(AOS_SDK_CHIP_SPECIFIC_SCRIPT) -i $(AOS_SDK_CONVERTER_OUTPUT_FILE) -o $(AOS_SDK_FINAL_OUTPUT_FILE)
 
-kernel_display_map_summary: $(KERNEL_LINK_OUTPUT_FILE) $(YOS_SDK_CONVERTER_OUTPUT_FILE) $(YOS_SDK_FINAL_OUTPUT_FILE)
+kernel_display_map_summary: $(KERNEL_LINK_OUTPUT_FILE) $(AOS_SDK_CONVERTER_OUTPUT_FILE) $(AOS_SDK_FINAL_OUTPUT_FILE)
 	$(QUIET) $(call COMPILER_SPECIFIC_MAPFILE_DISPLAY_SUMMARY,$(KERNEL_MAP_OUTPUT_FILE))
 
 # Main Target - Ensures the required parts get built

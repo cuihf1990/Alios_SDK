@@ -11,7 +11,7 @@ enum {
     WIFI_SID_REQUEST_TIMEOUT         = 3000,   /* ms */
     WIFI_LINK_REQUEST_MOBILE_TIMEOUT = 1000,     /* ms */
     WIFI_LINK_REQUEST_TIMEOUT        = 30000,   /* ms */
-#ifndef CONFIG_YOS_DDA
+#ifndef CONFIG_AOS_DDA
     WIFI_ADVERTISEMENT_TIMEOUT       = 20000,  /* ms, 20 seconds */
     WIFI_NEIGHBOR_ALIVE_TIMEOUT      = 240000, /* ms, 4 mins */
     WIFI_NET_SCAN_TIMEOUT            = 600000, /* ms, 10 mins */

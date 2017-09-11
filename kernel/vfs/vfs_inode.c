@@ -11,11 +11,11 @@
 
 #define VFS_NULL_PARA_CHK(para)     do { if (!(para)) return -EINVAL; } while(0)
 
-static inode_t g_vfs_dev_nodes[YOS_CONFIG_VFS_DEV_NODES];
+static inode_t g_vfs_dev_nodes[AOS_CONFIG_VFS_DEV_NODES];
 
 int inode_init()
 {
-    memset(g_vfs_dev_nodes, 0, sizeof(inode_t) * YOS_CONFIG_VFS_DEV_NODES);
+    memset(g_vfs_dev_nodes, 0, sizeof(inode_t) * AOS_CONFIG_VFS_DEV_NODES);
     return 0;
 }
 
@@ -23,7 +23,7 @@ int inode_alloc()
 {
     int e = 0;
 
-    for (; e < YOS_CONFIG_VFS_DEV_NODES; e++) {
+    for (; e < AOS_CONFIG_VFS_DEV_NODES; e++) {
         if (g_vfs_dev_nodes[e].type == VFS_TYPE_NOT_INIT) {
             return e;
         }
@@ -57,7 +57,7 @@ inode_t *inode_open(const char *path)
     int e = 0;
     inode_t *node;
 
-    for (; e < YOS_CONFIG_VFS_DEV_NODES; e++) {
+    for (; e < AOS_CONFIG_VFS_DEV_NODES; e++) {
         node = &g_vfs_dev_nodes[e];
         if (node == NULL) {
             continue;
@@ -81,7 +81,7 @@ inode_t *inode_open(const char *path)
 
 int inode_ptr_get(int fd, inode_t **node)
 {
-    if (fd < 0 || fd >= YOS_CONFIG_VFS_DEV_NODES) {
+    if (fd < 0 || fd >= AOS_CONFIG_VFS_DEV_NODES) {
         return -EINVAL;
     }
 
@@ -112,7 +112,7 @@ int inode_avail_count(void)
     int count = 0;
     int e = 0;
 
-    for (; e < YOS_CONFIG_VFS_DEV_NODES; e++) {
+    for (; e < AOS_CONFIG_VFS_DEV_NODES; e++) {
         if (g_vfs_dev_nodes[count].type == VFS_TYPE_NOT_INIT) {
             count++;
         }

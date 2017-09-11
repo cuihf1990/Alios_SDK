@@ -68,7 +68,7 @@
 
 /// RX filter for active mode (i.e. not monitoring)
 #if CFG_MODE_SWITCH
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 #define MM_RX_FILTER_ACTIVE (NXMAC_ACCEPT_MULTICAST_BIT | NXMAC_ACCEPT_BROADCAST_BIT | \
                              NXMAC_ACCEPT_MY_UNICAST_BIT | \
                              NXMAC_ACCEPT_BEACON_BIT | NXMAC_ACCEPT_OTHER_MGMT_FRAMES_BIT | \

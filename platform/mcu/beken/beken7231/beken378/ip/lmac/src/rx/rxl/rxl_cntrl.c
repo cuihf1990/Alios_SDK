@@ -91,7 +91,7 @@ static uint8_t rx_header[RXL_HEADER_INFO_LEN + 2];
 
 extern void bmsg_rx_sender(void *arg);
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 #include "reg_mac_core.h"
 
 extern int beken_get_sm_connect_flag(void);
@@ -157,7 +157,7 @@ int rxl_data_monitor(struct rx_swdesc *swdesc, uint8_t *payload,
 		fn = bk_wlan_get_monitor_cb();		
 		(*fn)((uint8_t *)payload, length, &link_info);
 	}
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
         else if (wlan_is_mesh_monitor_mode()) {
             fn = wlan_get_mesh_monitor_cb();
             (*fn)((uint8_t *)payload, length, &link_info);
@@ -269,7 +269,7 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
     	du_ptr = (uint8_t *)os_malloc(du_len);	
 	    hostbuf_start = (uint32_t)du_ptr;	 
 	}
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
     else if (rxu_mesh_monitor(swdesc)) {
         du_len = mpdu_len;		
         du_ptr = (uint8_t *)os_malloc(du_len);	
@@ -376,7 +376,7 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 	    dma_desc->ctrl = 0;
 	}
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 	if(bk_wlan_is_monitor_mode()  || rxu_mesh_monitor(swdesc))
 #else
 	if(bk_wlan_is_monitor_mode())
@@ -386,7 +386,7 @@ void rxl_mpdu_transfer(struct rx_swdesc *swdesc)
 		{
 			dma_push(first_dma_desc, dma_desc, IPC_DMA_CHANNEL_DATA_RX);
 			du_len += rxu_cntrl_patch_get_compensation_len(du_ptr);
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 			if(du_len >= 42 || rxu_mesh_monitor(swdesc))
 #else
 			if(du_len >= 42)

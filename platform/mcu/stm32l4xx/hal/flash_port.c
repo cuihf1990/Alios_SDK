@@ -17,11 +17,11 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
     uint32_t start_addr, end_addr;
     hal_logic_partition_t *partition_info;
 
-#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
-        if (pno == CONFIG_YOS_KV_PTN) {
-            if ((*poff) >= CONFIG_YOS_KV_PTN_SIZE) {
-                pno = CONFIG_YOS_KV_SECOND_PTN;
-                *poff = (*poff) - CONFIG_YOS_KV_PTN_SIZE;
+#ifdef CONFIG_AOS_KV_MULTIPTN_MODE
+        if (pno == CONFIG_AOS_KV_PTN) {
+            if ((*poff) >= CONFIG_AOS_KV_PTN_SIZE) {
+                pno = CONFIG_AOS_KV_SECOND_PTN;
+                *poff = (*poff) - CONFIG_AOS_KV_PTN_SIZE;
             }
         }
 #endif
@@ -40,11 +40,11 @@ int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t 
     uint32_t start_addr;
     hal_logic_partition_t *partition_info;
 
-#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
-    if (pno == CONFIG_YOS_KV_PTN) {
-        if ((*poff) >=  CONFIG_YOS_KV_PTN_SIZE) {
-            pno = CONFIG_YOS_KV_SECOND_PTN;
-            *poff = (*poff) - CONFIG_YOS_KV_PTN_SIZE;
+#ifdef CONFIG_AOS_KV_MULTIPTN_MODE
+    if (pno == CONFIG_AOS_KV_PTN) {
+        if ((*poff) >=  CONFIG_AOS_KV_PTN_SIZE) {
+            pno = CONFIG_AOS_KV_SECOND_PTN;
+            *poff = (*poff) - CONFIG_AOS_KV_PTN_SIZE;
         }
     }
 #endif
@@ -67,11 +67,11 @@ int32_t hal_flash_erase(hal_partition_t pno, uint32_t off_set,
     uint32_t start_addr, end_addr;
     hal_logic_partition_t *partition_info;
 
-#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
-        if (pno == CONFIG_YOS_KV_PTN) {
-            if (off_set >= CONFIG_YOS_KV_PTN_SIZE) {
-                pno = CONFIG_YOS_KV_SECOND_PTN;
-                off_set -= CONFIG_YOS_KV_PTN_SIZE;
+#ifdef CONFIG_AOS_KV_MULTIPTN_MODE
+        if (pno == CONFIG_AOS_KV_PTN) {
+            if (off_set >= CONFIG_AOS_KV_PTN_SIZE) {
+                pno = CONFIG_AOS_KV_SECOND_PTN;
+                off_set -= CONFIG_AOS_KV_PTN_SIZE;
             }
         }
 #endif

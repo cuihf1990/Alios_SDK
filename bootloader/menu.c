@@ -135,7 +135,7 @@ void SerialUpload(hal_partition_t partition, char * fileName)
   uint8_t key;
   
   printf("Select Receive File\n\r");
-  hal_uart_recv( STDIO_UART, &key, 1, NULL, YOS_WAIT_FOREVER );
+  hal_uart_recv( STDIO_UART, &key, 1, NULL, AOS_WAIT_FOREVER );
   
   if (key == CRC16)
   {
@@ -202,7 +202,7 @@ void menu_loop(void)
       SerialDownload( HAL_PARTITION_BOOTLOADER );
     }
     
-    /***************** Command "1" or "FWUPDATE": Update the YOS application  *************************/
+    /***************** Command "1" or "FWUPDATE": Update the AOS application  *************************/
     else if(strcmp(cmdname, "FWUPDATE") == 0 || strcmp(cmdname, "1") == 0)	{
       if (findCommandPara(cmdbuf, "r", NULL, 0) != -1){
         printf ("\n\rRead application...\n\r");

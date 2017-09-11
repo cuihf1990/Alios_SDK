@@ -69,7 +69,7 @@ static ktask_t g_intr_task;
 static ksem_t  g_intr_sem;
 static klist_t g_event_list = { &g_event_list, &g_event_list };
 static klist_t g_recycle_list = { &g_recycle_list, &g_recycle_list };
-static dlist_t g_io_list = YOS_DLIST_INIT(g_io_list);
+static dlist_t g_io_list = AOS_DLIST_INIT(g_io_list);
 static int cpu_event_inited;
 
 typedef struct {

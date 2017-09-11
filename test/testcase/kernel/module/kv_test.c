@@ -146,10 +146,10 @@ static void test_kv_error_cycle(void)
 
 
 /* The physical parition for key-value store */
-#ifndef CONFIG_YOS_KV_PTN
+#ifndef CONFIG_AOS_KV_PTN
 #define KV_TEST_PTN    6
 #else
-#define KV_TEST_PTN    CONFIG_YOS_KV_PTN
+#define KV_TEST_PTN    CONFIG_AOS_KV_PTN
 #endif
 
 static void test_kv_error(void)

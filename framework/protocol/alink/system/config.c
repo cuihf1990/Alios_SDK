@@ -115,7 +115,7 @@ int config_reset(int unregister_flag)
 
     strcpy(main_config.magic, CONFIG_MAGIC_STR);
     main_config.version = CONFIG_VERSION;
-    main_config.df.ulog.log = YOS_LL_INFO | YOS_LL_WARN | YOS_LL_ERROR;
+    main_config.df.ulog.log = AOS_LL_INFO | AOS_LL_WARN | AOS_LL_ERROR;
     main_config.df.uflag.fb.factoryreset = !!unregister_flag;
     strcpy(main_config.alinkserver, default_online_server_with_port);
     main_config.heartbeat_interval = default_heartbeat_interval;

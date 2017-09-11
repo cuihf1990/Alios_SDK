@@ -473,7 +473,7 @@ static void rxu_msdu_upload_and_indicate(struct rx_swdesc *p_rx_swdesc,
                           (rx_stat->vif_idx << RX_FLAGS_VIF_INDEX_OFT) |
                           (rx_stat->dst_idx << RX_FLAGS_DST_INDEX_OFT);
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
     if (rxu_mesh_monitor(p_rx_swdesc) == false)
 #endif
     // Translate the MAC frame to an Ethernet frame
@@ -2473,7 +2473,7 @@ static bool rxu_mgt_frame_check(struct rx_swdesc* swdesc, uint8_t sta_idx)
         if (!mfp_ignore_mgmt_frame(rx_status, frame, rhd->frmlen, &upload))
         #endif
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
         if (rxu_mesh_monitor(swdesc) == true) {
             upload = false;
         }
@@ -2609,7 +2609,7 @@ bool rxu_cntrl_frame_handle(struct rx_swdesc* swdesc)
             rxu_cntrl_pm_mon_check(frame, statinfo);
 
             // When the sender is unknown, only management frames are handled here
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
             if(rxu_mesh_monitor(swdesc) == false)
 #endif
             {

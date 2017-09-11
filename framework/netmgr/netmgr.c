@@ -11,7 +11,7 @@
 
 #include "netmgr.h"
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 #include "umesh.h"
 #endif
 
@@ -76,7 +76,7 @@ static void netmgr_connect_fail_event(hal_wifi_module_t *m, int err, void *arg)
 
 }
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 static void mesh_delayed_action(void *arg)
 {
     umesh_set_mode((node_mode_t)arg);
@@ -87,7 +87,7 @@ static void mesh_delayed_action(void *arg)
 
 static void start_mesh(bool is_leader)
 {
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
     node_mode_t mode;
 
     mode = umesh_get_mode() & (~MODE_LEADER);
@@ -101,7 +101,7 @@ static void start_mesh(bool is_leader)
 
 static void stop_mesh(void)
 {
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
     umesh_stop();
 #endif
 }
@@ -526,7 +526,7 @@ int netmgr_init(void)
     hal_wifi_install_event(g_netmgr_cxt.wifi_hal_mod, &g_wifi_hal_event);
     read_persistent_conf();
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
     umesh_init(MODE_RX_ON);
 #endif
 

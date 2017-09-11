@@ -75,7 +75,7 @@ void ht_lock(void *ht)
 {
     ht_t *p = (ht_t *)ht;
     if (p) {
-        aos_mutex_lock(&p->lock, YOS_WAIT_FOREVER);
+        aos_mutex_lock(&p->lock, AOS_WAIT_FOREVER);
     }
 }
 

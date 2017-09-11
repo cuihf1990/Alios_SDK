@@ -16,7 +16,7 @@
 #include <aos/aos.h>
 
 /* CLI Support */
-#ifdef CONFIG_YOS_CLI
+#ifdef CONFIG_AOS_CLI
 
 #define TRACE_TASK_STACK_SIZE 512
 #define SEND_SIZE 512

@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_VFS_H
-#define YOS_VFS_H
+#ifndef AOS_VFS_H
+#define AOS_VFS_H
 
 #include <sys/types.h>
 

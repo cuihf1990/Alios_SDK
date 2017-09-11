@@ -364,7 +364,7 @@ exit:
 #endif
 }
 
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
 int csp_get_args(const char ***pargv);
 static void parse_args(void)
 {
@@ -425,7 +425,7 @@ ur_error_t umesh_init(node_mode_t mode)
     g_um_state.initialized = true;
     mesh_cli_init();
 
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
     parse_args();
 #endif
     return UR_ERROR_NONE;
@@ -561,7 +561,7 @@ ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     return mf_resolve_dest(dest, dest_addr);
 }
 
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
 bool umesh_is_whitelist_enabled(void)
 {
     return is_whitelist_enabled();

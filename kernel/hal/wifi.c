@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <hal/hal.h>
 
-static YOS_DLIST_HEAD(g_wifi_module);
+static AOS_DLIST_HEAD(g_wifi_module);
 
 hal_wifi_module_t *hal_wifi_get_default_module(void)
 {

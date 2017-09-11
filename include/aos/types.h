@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_TYPES_API_H
-#define YOS_TYPES_API_H
+#ifndef AOS_TYPES_API_H
+#define AOS_TYPES_API_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -26,5 +26,5 @@ struct pollfd {
 #include <fcntl.h>
 #endif
 
-#endif /* YOS_TYPES_API_H */
+#endif /* AOS_TYPES_API_H */
 

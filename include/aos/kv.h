@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_KV_H
-#define YOS_KV_H
+#ifndef AOS_KV_H
+#define AOS_KV_H
 
 #include <aos/types.h>
 
@@ -51,5 +51,5 @@ int aos_kv_del(const char *key);
 }
 #endif
 
-#endif /* YOS_KV_H */
+#endif /* AOS_KV_H */
 
