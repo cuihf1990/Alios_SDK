@@ -48,7 +48,7 @@ void tasksem_count_test(void)
                                 sizeof(tasksem_func_runner) / sizeof(test_case_t));
 
     ret = krhino_task_dyn_create(&task_tasksem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_tasksem_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_tasksem_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

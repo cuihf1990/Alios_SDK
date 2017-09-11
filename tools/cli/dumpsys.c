@@ -211,8 +211,8 @@ uint32_t dumpsys_mm_leak_check_func(char *pcWriteBuffer, int xWriteBufferLen,
             }
 
             krhino_timer_create(&g_mm_leak_check_timer, "mm_leak_check_timer",
-                               (timer_cb_t)mm_leak_timer_cb,
-                               10, krhino_ms_to_ticks(round_sec), NULL, 0);
+                                (timer_cb_t)mm_leak_timer_cb,
+                                10, krhino_ms_to_ticks(round_sec), NULL, 0);
         } else {
             if (NULL != argv[3]) {
                 round_sec = atoi(argv[3]) * 1000;

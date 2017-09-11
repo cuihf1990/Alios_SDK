@@ -6,8 +6,8 @@
 
 #if (RHINO_CONFIG_MM_BLK > 0)
 kstat_t krhino_mblk_pool_init(mblk_pool_t *pool, const name_t *name,
-                             void *pool_start,
-                             size_t blk_size, size_t pool_size)
+                              void *pool_start,
+                              size_t blk_size, size_t pool_size)
 {
     CPSR_ALLOC();
 

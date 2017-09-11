@@ -63,7 +63,7 @@ void _trace_init(void)
     buf[0] = 0x101;
     buf[1] = 0x0;
     buf[2] = 0x0;
-    *((char *)buf+13) = '\n';
+    *((char *)buf + 13) = '\n';
     fifo_in_full_reject_lock(&trace_fifo, buf, 13);
     init = 1;
 }
@@ -86,9 +86,9 @@ void trace_filter_and_write(ktask_t *task, const void *buf, uint32_t len)
         return;
     }
 
-    *((char *)buf+len) = '\n';
+    *((char *)buf + len) = '\n';
 
-    assert((len + 1) <= TRACE_PACKET_LENGTH);    
+    assert((len + 1) <= TRACE_PACKET_LENGTH);
 
     fifo_in_full_reject_lock(&trace_fifo, buf, len + 1);
 }
@@ -119,7 +119,7 @@ void _trace_task_switch(ktask_t *from, ktask_t *to)
     str_len += strlen(to->task_name) + 1;
 
     str_len = ROUND_POINT(str_len);
-    
+
     addr_second = addr_first + 16 + str_len;
 
     trace_filter_and_write(from, buf, addr_second - addr_first);
@@ -183,7 +183,7 @@ void _trace_task_create(ktask_t *task)
 
     str_len += strlen(task->task_name) + 1;
     str_len = ROUND_POINT(str_len);
-    
+
     addr_second = addr_first + 12 + str_len;
 
     trace_filter_and_write(task, buf, addr_second - addr_first);

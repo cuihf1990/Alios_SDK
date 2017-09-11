@@ -143,7 +143,7 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
         }
 
         MESH_LOG_INFO("sid %04x mac " EXT_ADDR_FMT " is replaced",
-               nbr->sid, EXT_ADDR_DATA(nbr->mac));
+                      nbr->sid, EXT_ADDR_DATA(nbr->mac));
         goto get_nbr;
     }
     return NULL;
@@ -210,7 +210,7 @@ static void handle_update_nbr_timer(void *args)
         }
 
         MESH_LOG_INFO("%x neighbor " EXT_ADDR_FMT " become inactive",
-               sid, EXT_ADDR_DATA(node->mac));
+                      sid, EXT_ADDR_DATA(node->mac));
         network = get_network_context_by_meshnetid(node->netid);
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {

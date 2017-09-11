@@ -55,7 +55,7 @@ static void task_buf_queue_entry(void *arg)
     size_t  size;
 
     ret = krhino_buf_queue_recv(&test_buf_queue, RHINO_WAIT_FOREVER,
-                               (void *)buf_queue_recv, &size);
+                                (void *)buf_queue_recv, &size);
     if ((ret == RHINO_SUCCESS) && (*(uint8_t *)buf_queue_recv == 0x5a)) {
         notify_flag = 0x5a;
         krhino_buf_queue_del(&test_buf_queue);
@@ -77,25 +77,25 @@ void mutex_buf_queue_coopr_test(void)
 
     krhino_mutex_dyn_create(&test_mutex, "mutextest");
     krhino_buf_queue_create(&test_buf_queue, "bugqueue", (void *)buf_queue_test_buf,
-                           8, 1);
+                            8, 1);
 
     ret = krhino_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_buf_queue, MODULE_NAME, 0, TASK_COMB_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_buf_queue_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_buf_queue_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_buf_queue_trigger, MODULE_NAME, 0,
-                                TASK_COMB_PRI + 2,
-                                0, TASK_TEST_STACK_SIZE, task_buf_queue_trigger_entry, 1);
+                                 TASK_COMB_PRI + 2,
+                                 0, TASK_TEST_STACK_SIZE, task_buf_queue_trigger_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

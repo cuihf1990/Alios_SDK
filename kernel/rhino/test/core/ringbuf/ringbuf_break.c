@@ -54,19 +54,19 @@ static uint8_t ringbuf_break_case_fix(void)
     MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = krhino_ringbuf_init(&g_fix_ringbuf, (void *)ringbuf_small_buf, 0,
-                             RINGBUF_TYPE_FIX, 0);
+                              RINGBUF_TYPE_FIX, 0);
     MYASSERT(ret == RHINO_INV_PARAM);
 
     ret = krhino_ringbuf_init(&g_fix_ringbuf, (void *)ringbuf_small_buf,
-                             sizeof(ringbuf_small_buf), 3, 0);
+                              sizeof(ringbuf_small_buf), 3, 0);
     MYASSERT(ret == RHINO_INV_PARAM);
 
     ret = krhino_ringbuf_init(&g_fix_ringbuf, (void *)ringbuf_small_buf,
-                             sizeof(ringbuf_small_buf), RINGBUF_TYPE_FIX, 0);
+                              sizeof(ringbuf_small_buf), RINGBUF_TYPE_FIX, 0);
     MYASSERT(ret == RHINO_INV_PARAM);
 
     ret = krhino_ringbuf_init(&g_fix_ringbuf, (void *)ringbuf_small_buf,
-                             sizeof(ringbuf_small_buf), RINGBUF_TYPE_FIX, RINGBUF_FIX_LEN);
+                              sizeof(ringbuf_small_buf), RINGBUF_TYPE_FIX, RINGBUF_FIX_LEN);
     MYASSERT(ret == RHINO_SUCCESS);
 
     ret = krhino_ringbuf_push(NULL, NULL, 0);
@@ -204,19 +204,19 @@ static uint8_t ringbuf_break_case_dyn(void)
     MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = krhino_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, 0, RINGBUF_TYPE_DYN,
-                             0);
+                              0);
     MYASSERT(ret == RHINO_INV_PARAM);
 
     ret = krhino_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, RINGBUF_SIZE_SMALL,
-                             3, 0);
+                              3, 0);
     MYASSERT(ret == RHINO_INV_PARAM);
 
     ret = krhino_ringbuf_init(&g_dyn_ringbuf, ringbuf_small_buf, RINGBUF_SIZE_SMALL,
-                             RINGBUF_TYPE_DYN, 0);
+                              RINGBUF_TYPE_DYN, 0);
     MYASSERT(ret == RHINO_SUCCESS);
 
     ret = krhino_ringbuf_push(&g_dyn_ringbuf, dyn_data_small,
-                             sizeof(dyn_data_small));
+                              sizeof(dyn_data_small));
     MYASSERT(ret == RHINO_SUCCESS);
 
     ret = krhino_ringbuf_pop(&g_dyn_ringbuf, NULL, NULL);
@@ -233,15 +233,15 @@ static uint8_t ringbuf_break_case_dyn(void)
     MYASSERT(ret == RHINO_RINGBUF_EMPTY);
 
     ret = krhino_ringbuf_push(&g_dyn_ringbuf, dyn_data_small,
-                             sizeof(dyn_data_small));
+                              sizeof(dyn_data_small));
     MYASSERT(ret == RHINO_SUCCESS);
 
     ret = krhino_ringbuf_head_push(&g_dyn_ringbuf, dyn_data_small,
-                                  sizeof(dyn_data_small));
+                                   sizeof(dyn_data_small));
     MYASSERT(ret == RHINO_SUCCESS);
 
     ret = krhino_ringbuf_push(&g_dyn_ringbuf, dyn_data_small,
-                             sizeof(dyn_data_small));
+                              sizeof(dyn_data_small));
     MYASSERT(ret == RHINO_RINGBUF_FULL);
 
     ret = krhino_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
@@ -249,7 +249,7 @@ static uint8_t ringbuf_break_case_dyn(void)
     MYASSERT(len == sizeof(dyn_data_small));
 
     ret = krhino_ringbuf_push(&g_dyn_ringbuf, dyn_data_small,
-                             sizeof(dyn_data_small));
+                              sizeof(dyn_data_small));
     MYASSERT(ret == RHINO_SUCCESS);
 
     ret = krhino_ringbuf_pop(&g_dyn_ringbuf, dyn_data_big_rev, &len);
@@ -258,7 +258,7 @@ static uint8_t ringbuf_break_case_dyn(void)
 
     /* middle buffer */
     ret = krhino_ringbuf_init(&g_dyn_ringbuf, ringbuf_middle_buf,
-                             RINGBUF_SIZE_MIDDLE, RINGBUF_TYPE_DYN, 0);
+                              RINGBUF_SIZE_MIDDLE, RINGBUF_TYPE_DYN, 0);
     MYASSERT(ret == RHINO_SUCCESS);
 
     data_len = sizeof(dyn_data_middle) - 2;
@@ -363,7 +363,7 @@ static uint8_t ringbuf_break_case_dyn(void)
 
 
     ret = krhino_ringbuf_init(&g_dyn_ringbuf, dyn_data_big_buf, RINGBUF_SIZE_BIG,
-                             RINGBUF_TYPE_DYN, 0);
+                              RINGBUF_TYPE_DYN, 0);
     MYASSERT(ret == RHINO_SUCCESS);
 
     data_len = sizeof(dyn_data_big_buf) - 4;
@@ -430,7 +430,7 @@ void ringbuf_break_test(void)
                                 sizeof(ringbuf_func_runner) / sizeof(test_func_t));
 
     ret = krhino_task_dyn_create(&task_ringbuf, MODULE_NAME, 0, TASK_RINGBUF_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_ringbuf_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_ringbuf_entry, 1);
 
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;

@@ -55,7 +55,7 @@ static kstat_t queue_create(kqueue_t *queue, const name_t *name, void **start,
 }
 
 kstat_t krhino_queue_create(kqueue_t *queue, const name_t *name, void **start,
-                           size_t msg_num)
+                            size_t msg_num)
 {
     return queue_create(queue, name, start, msg_num, K_OBJ_STATIC_ALLOC);
 }
@@ -104,7 +104,7 @@ kstat_t krhino_queue_del(kqueue_t *queue)
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t krhino_queue_dyn_create(kqueue_t **queue, const name_t *name,
-                               size_t msg_num)
+                                size_t msg_num)
 {
     kstat_t   stat;
     kqueue_t *queue_obj;

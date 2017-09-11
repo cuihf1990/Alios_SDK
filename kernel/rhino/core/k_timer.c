@@ -79,7 +79,7 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
 }
 
 kstat_t krhino_timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
-                           tick_t first, tick_t round, void *arg, uint8_t auto_run)
+                            tick_t first, tick_t round, void *arg, uint8_t auto_run)
 {
     return timer_create(timer, name, cb, first, round, arg, auto_run,
                         K_OBJ_STATIC_ALLOC);
@@ -116,8 +116,8 @@ kstat_t krhino_timer_del(ktimer_t *timer)
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t krhino_timer_dyn_create(ktimer_t **timer, const name_t *name,
-                               timer_cb_t cb,
-                               tick_t first, tick_t round, void *arg, uint8_t auto_run)
+                                timer_cb_t cb,
+                                tick_t first, tick_t round, void *arg, uint8_t auto_run)
 {
     kstat_t   ret;
     ktimer_t *timer_obj;
@@ -342,8 +342,8 @@ void timer_init(void)
     klist_init(&g_timer_head);
 
     krhino_task_create(&g_timer_task, "timer_task", NULL,
-                      RHINO_CONFIG_TIMER_TASK_PRI, 0u, g_timer_task_stack,
-                      RHINO_CONFIG_TIMER_TASK_STACK_SIZE, timer_task, 1u);
+                       RHINO_CONFIG_TIMER_TASK_PRI, 0u, g_timer_task_stack,
+                       RHINO_CONFIG_TIMER_TASK_STACK_SIZE, timer_task, 1u);
 
     krhino_sem_create(&g_timer_sem, "timer_sem", 0u);
 

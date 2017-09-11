@@ -83,9 +83,9 @@ void BinaryShufTimetest(void *arg)
 
 
     krhino_task_dyn_create(&ShufTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
-                          0, TASK_TEST_STACK_SIZE, BinaryShuf1, 1);
+                           0, TASK_TEST_STACK_SIZE, BinaryShuf1, 1);
     krhino_task_dyn_create(&ShufTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 1,
-                          0, TASK_TEST_STACK_SIZE, BinaryShuf2, 1);
+                           0, TASK_TEST_STACK_SIZE, BinaryShuf2, 1);
 
     hobbit_timer0_start();
 

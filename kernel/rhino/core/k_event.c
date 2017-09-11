@@ -86,7 +86,7 @@ kstat_t krhino_event_del(kevent_t *event)
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t krhino_event_dyn_create(kevent_t **event, const name_t *name,
-                               uint32_t flags)
+                                uint32_t flags)
 {
     kstat_t   stat;
     kevent_t *event_obj;
@@ -158,7 +158,7 @@ kstat_t krhino_event_dyn_del(kevent_t *event)
 #endif
 
 kstat_t krhino_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
-                        uint32_t *actl_flags, tick_t ticks)
+                         uint32_t *actl_flags, tick_t ticks)
 {
     CPSR_ALLOC();
 

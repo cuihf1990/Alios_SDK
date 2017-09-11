@@ -45,7 +45,7 @@ int aos_task_new(const char *name, void (*fn)(void *), void *arg,
     ktask_t *task_handle = NULL;
 
     ret = (int)krhino_task_dyn_create(&task_handle, name, arg, AOS_DEFAULT_APP_PRI, 0,
-                                     stack_size / sizeof(cpu_stack_t), fn, 1u);
+                                      stack_size / sizeof(cpu_stack_t), fn, 1u);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -58,7 +58,7 @@ int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), voi
 {
     int ret;
     ret = (int)krhino_task_dyn_create((ktask_t **)(&(task->hdl)), name, arg, prio, 0,
-                                     stack_size / sizeof(cpu_stack_t), fn, 1u);
+                                      stack_size / sizeof(cpu_stack_t), fn, 1u);
     if (ret == RHINO_SUCCESS) {
         return 0;
     }
@@ -444,7 +444,7 @@ int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
         ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
     } else {
         ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
-                                 arg, 1);
+                                  arg, 1);
     }
 
     if (ret != RHINO_SUCCESS) {
@@ -545,7 +545,7 @@ int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
     }
 
     ret = krhino_workqueue_create(wq, "AOS", pri, stk,
-                                 stack_size / sizeof(cpu_stack_t));
+                                  stack_size / sizeof(cpu_stack_t));
     if (ret != RHINO_SUCCESS) {
         aos_free(wq);
         aos_free(stk);

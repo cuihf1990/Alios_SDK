@@ -21,7 +21,7 @@ typedef struct  {
     const char *device_name;
     ota_cb_fpt cb;
     void *context;
-}otacoap_Struct_t, *otacoap_Struct_pt;
+} otacoap_Struct_t, *otacoap_Struct_pt;
 
 
 static otacoap_Struct_pt h_osc_coap = NULL;
@@ -45,16 +45,17 @@ static void otacoap_response_handler(void *arg, void *p_response)
 //Generate topic name according to @ota_topic_type, @product_key, @device_name
 //and then copy to @buf.
 //0, successful; -1, failed
-static int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key, const char *device_name)
+static int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key,
+                                const char *device_name)
 {
     int ret;
 
     ret = snprintf(buf,
-            buf_len,
-            "/topic/ota/device/%s/%s/%s",
-            ota_topic_type,
-            product_key,
-            device_name);
+                   buf_len,
+                   "/topic/ota/device/%s/%s/%s",
+                   ota_topic_type,
+                   product_key,
+                   device_name);
 #ifdef IOTX_DEBUG
     OTA_ASSERT(ret < buf_len, "buffer should always enough");
 #endif
@@ -70,7 +71,7 @@ static int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic
 static int otacoap_Publish(otacoap_Struct_pt handle, const char *topic_type, const char *msg)
 {
     int ret;
-    char uri[IOTX_URI_MAX_LEN+1] = {0};
+    char uri[IOTX_URI_MAX_LEN + 1] = {0};
     iotx_message_t     message;
     message.p_payload = (unsigned char *)msg;
     message.payload_len = (unsigned short)strlen(msg);
@@ -81,12 +82,11 @@ static int otacoap_Publish(otacoap_Struct_pt handle, const char *topic_type, con
     //topic name: /topic/ota/device/${topic_type}/${productKey}/${deviceName}
     ret = otacoap_GenTopicName(uri, OSC_COAP_URI_MAX_LEN, topic_type, handle->product_key, handle->device_name);
     if (ret < 0) {
-       OTA_LOG_ERROR("generate topic name failed");
-       return -1;
+        OTA_LOG_ERROR("generate topic name failed");
+        return -1;
     }
 
-    if (IOTX_SUCCESS != (ret = IOT_CoAP_SendMessage(handle->coap, (char *)uri, &message)))
-    {
+    if (IOTX_SUCCESS != (ret = IOT_CoAP_SendMessage(handle->coap, (char *)uri, &message))) {
         OTA_LOG_ERROR("send CoAP msg failed%d", ret);
         return -1;
     }

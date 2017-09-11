@@ -42,8 +42,8 @@ static void task_queue0_entry(void *arg)
 
     while (1) {
         ret = krhino_buf_queue_create(&g_test_bufqueue0, "test_bufqueue0",
-                                     g_test_bufqueue_buf0,
-                                     TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
+                                      g_test_bufqueue_buf0,
+                                      TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
 
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
@@ -56,7 +56,7 @@ static void task_queue0_entry(void *arg)
                          (info.buf_size == TEST_BUFQUEUE_BUF0_SIZE));
 
         ret = krhino_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
-                                   TEST_BUFQUEUE_MSG_MAX);
+                                    TEST_BUFQUEUE_MSG_MAX);
 
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
@@ -87,7 +87,7 @@ kstat_t task_buf_queue_info_get_test(void)
     kstat_t ret;
 
     ret = krhino_task_dyn_create(&task_0_test, "task_bufqueue0_test", 0, 10,
-                                0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
     BUFQUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     return 0;

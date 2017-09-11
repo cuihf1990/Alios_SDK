@@ -30,8 +30,8 @@ void task_sleep_entry(void *arg)
 void task_sleep_test(void)
 {
     if (krhino_task_dyn_create(&task_0_test, "task_sleep_test", 0, 10,
-                              0, TASK_TEST_STACK_SIZE,
-                              task_sleep_entry, 1) != RHINO_SUCCESS) {
+                               0, TASK_TEST_STACK_SIZE,
+                               task_sleep_entry, 1) != RHINO_SUCCESS) {
         printf("task_sleep_test fail \n");
     }
 }

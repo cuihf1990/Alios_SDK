@@ -188,7 +188,7 @@ void tick_task_start(void)
 {
     /* create tick task to caculate task sleep and timeout */
     krhino_task_create(&g_tick_task, "tick_task", NULL, RHINO_CONFIG_TICK_TASK_PRI,
-                      0, g_tick_task_stack, RHINO_CONFIG_TICK_TASK_STACK_SIZE, tick_task_proc, 1);
+                       0, g_tick_task_stack, RHINO_CONFIG_TICK_TASK_STACK_SIZE, tick_task_proc, 1);
 
     krhino_task_sem_create(&g_tick_task, &g_tick_sem, "tick_task_sem", 0);
 

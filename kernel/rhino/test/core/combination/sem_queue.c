@@ -108,13 +108,13 @@ void sem_queue_coopr_test(void)
     krhino_kobj_set_insert((blk_obj_t *)&queue2, handle);
 
     ret = krhino_task_dyn_create(&task_select, MODULE_NAME, 0, TASK_COMB_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0,
-                                TASK_COMB_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_queue_trigger_entry, 1);
+                                 TASK_COMB_PRI + 1,
+                                 0, TASK_TEST_STACK_SIZE, task_queue_trigger_entry, 1);
 
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 

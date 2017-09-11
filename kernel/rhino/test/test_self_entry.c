@@ -42,8 +42,8 @@ void test_case_task_entry(void *arg)
 void test_case_task_start(void)
 {
     krhino_task_create(&test_case_task, "test_case_task", NULL, 5,
-                      0, test_case_task_stack, TEST_CASE_TASK_STACK_SIZE,
-                      test_case_task_entry, 1);
+                       0, test_case_task_stack, TEST_CASE_TASK_STACK_SIZE,
+                       test_case_task_entry, 1);
 }
 
 void test_mtbf_task_entry(void *arg)
@@ -83,7 +83,7 @@ void test_mtbf_task_entry(void *arg)
 void test_mtbf_task_start(void)
 {
     krhino_task_create(&test_mtbf_task, "test_mtbf_task", NULL, 9,
-                      0, test_mtbf_task_stack, TEST_MTBF_TASK_STACK_SIZE,
-                      test_mtbf_task_entry, 1);
+                       0, test_mtbf_task_stack, TEST_MTBF_TASK_STACK_SIZE,
+                       test_mtbf_task_entry, 1);
 }
 
