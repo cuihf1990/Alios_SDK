@@ -40,9 +40,9 @@
     #define DEVICE_NAME             "TestDeviceForDemo"
     #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
 */
-    #define PRODUCT_KEY             "edWuENTjOf4"
-    #define DEVICE_NAME             "zmmqtttest-device"
-    #define DEVICE_SECRET           "AU6hOT7CCKitFKb3d9thMjaEszHzCfTA"
+    #define PRODUCT_KEY             "F0GaFXDa2r5"
+    #define DEVICE_NAME             "tt04"
+    #define DEVICE_SECRET           "viwGCLwGNYdYdi72jnpeXBcd0Qw4Be6u"
 
 #endif
 
@@ -52,7 +52,7 @@
 #define TOPIC_GET               "/"PRODUCT_KEY"/"DEVICE_NAME"/get"
 #define TOPIC_DATA              "/"PRODUCT_KEY"/"DEVICE_NAME"/data"
 
-#define MSG_LEN_MAX             (1024)
+#define MSG_LEN_MAX             (2048)
 
 #define EXAMPLE_TRACE(fmt, args...)  \
     do { \
@@ -64,9 +64,18 @@
 static int      user_argc;
 static char   **user_argv;
 int cnt = 0;
-
 static int is_demo_started = 0;
 static int is_subscribed = 0;
+
+typedef struct ota_device_info {
+    const char *product_key;
+    const char *device_name;
+    void *pclient;
+} OTA_device_info_t;
+
+OTA_device_info_t ota_device_info;
+
+static void ota_init();
 
 static void wifi_service_event(input_event_t *event, void *priv_data) {
     LOG("wifi_service_event!");
@@ -167,8 +176,8 @@ static void mqtt_test() {
             cnt++;
         }
 
-    if(cnt < 2) {
-        aos_post_delayed_action(200, mqtt_test, NULL);
+    if(cnt < 200) {
+        aos_post_delayed_action(2000, mqtt_test, NULL);
     } else {
 
         IOT_MQTT_Unsubscribe(pclient, TOPIC_DATA);
@@ -323,7 +332,10 @@ int mqtt_client_example(void)
         rc = -1;
         release_buff();
     }
-
+    else
+    {
+        aos_post_delayed_action(3000, ota_init, NULL);
+    }
     return rc;
 }
 
@@ -368,4 +380,11 @@ int application_start(int argc, char *argv[])
 #endif
     aos_loop_run();
     return 0;
+}
+
+static void ota_init(){
+    ota_device_info.product_key=PRODUCT_KEY;
+    ota_device_info.device_name=DEVICE_NAME;
+    ota_device_info.pclient=pclient;
+    aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, &ota_device_info);
 }
