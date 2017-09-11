@@ -54,7 +54,7 @@ static void task_mutex_opr_entry(void *arg)
     uint32_t flag;
 
     krhino_event_get(&event_comb_all, 0x1, RHINO_AND_CLEAR, &flag,
-                    RHINO_WAIT_FOREVER);
+                     RHINO_WAIT_FOREVER);
 
     krhino_mutex_lock(&mutex_comb_all, RHINO_WAIT_FOREVER);
     krhino_mutex_lock(&mutex_comb_all, RHINO_WAIT_FOREVER);
@@ -87,7 +87,7 @@ static void task_event_opr_entry(void *arg)
     kstat_t ret;
 
     ret = krhino_queue_recv(&queue_comb_all, RHINO_WAIT_FOREVER,
-                           (void *)&queue1_trigger_msg);
+                            (void *)&queue1_trigger_msg);
     if ((*(uint8_t *)&queue1_trigger_msg == MSG_SIGNATURE) &&
         (ret == RHINO_SUCCESS)) {
         krhino_event_set(&event_comb_all, 0x1, RHINO_OR);
@@ -110,31 +110,31 @@ void comb_all_coopr_test(void)
     krhino_mutex_create(&mutex_comb_all, "mutexcomball");
     krhino_event_create(&event_comb_all, "eventcomball", 0x2);
     krhino_queue_create(&queue_comb_all, "queue1", (void **)&queue1_msg_buff,
-                       TEST_MSG_SIZE);
+                        TEST_MSG_SIZE);
 
     ret = krhino_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_COMB_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_COMB_PRI + 2,
-                                0, TASK_TEST_STACK_SIZE, task_event_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_event_opr_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_queue, MODULE_NAME, 0, TASK_COMB_PRI + 3,
-                                0, TASK_TEST_STACK_SIZE, task_queue_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_queue_opr_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

@@ -214,8 +214,8 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
         VGF(VALGRIND_FREELIKE_BLOCK(mmblk_pool, 0));
         VGF(VALGRIND_MAKE_MEM_DEFINED(mmblk_pool, curblk->size & RHINO_MM_BLKSIZE_MASK));
         stat = krhino_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
-                                    (void *)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t)),
-                                    DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
+                                     (void *)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t)),
+                                     DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
         if (stat == RHINO_SUCCESS) {
             pmmhead->fixedmblk = curblk;
         } else {

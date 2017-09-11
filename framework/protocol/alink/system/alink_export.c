@@ -35,7 +35,7 @@
  */
 int alink_enable_sandbox_mode(void)
 {
-return config_set_alinkserver(default_sandbox_server_with_port);
+    return config_set_alinkserver(default_sandbox_server_with_port);
 }
 
 /**

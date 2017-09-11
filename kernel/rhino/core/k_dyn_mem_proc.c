@@ -27,8 +27,8 @@ void dyn_mem_proc_task_start(void)
     ktask_t *dyn_mem_task;
 
     krhino_task_dyn_create(&dyn_mem_task, "dyn_mem_proc_task", 0,
-                          RHINO_CONFIG_K_DYN_MEM_TASK_PRI,
-                          0, RHINO_CONFIG_K_DYN_TASK_STACK, dyn_mem_proc_task, 1);
+                           RHINO_CONFIG_K_DYN_MEM_TASK_PRI,
+                           0, RHINO_CONFIG_K_DYN_TASK_STACK, dyn_mem_proc_task, 1);
 
 }
 #endif

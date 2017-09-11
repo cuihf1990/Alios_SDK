@@ -30,16 +30,14 @@ OTA_device_info g_ota_device_info;
 
 static char *g_upgrad_topic;
 
-static const char *to_capital_letter(char *value,int len)
+static const char *to_capital_letter(char *value, int len)
 {
-   if(value==NULL&&len<=0){
-       return NULL;
-   }
-   for(int i=0;i<len;i++)
-   {
-        if(*(value+i)>='a'&&*(value+i)<='z')
-        {
-            *(value+i)-='a'-'A';  
+    if (value == NULL && len <= 0) {
+        return NULL;
+    }
+    for (int i = 0; i < len; i++) {
+        if (*(value + i) >= 'a' && *(value + i) <= 'z') {
+            *(value + i) -= 'a' - 'A';
         }
     }
     return value;
@@ -108,7 +106,7 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
 
         strncpy(response_parmas->md5, md5->valuestring,
                 sizeof response_parmas->md5);
-        to_capital_letter(response_parmas->md5,sizeof response_parmas->md5);    
+        to_capital_letter(response_parmas->md5, sizeof response_parmas->md5);
         cJSON *size = cJSON_GetObjectItem(json_obj, "size");
         if (!md5) {
             OTA_LOG_E("size back.");
@@ -224,7 +222,7 @@ void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_
               ptopic_info->payload,
               ptopic_info->payload_len);
 
-    ota_update(UPGRADE_DEVICE ,ptopic_info->payload);
+    ota_update(UPGRADE_DEVICE , ptopic_info->payload);
 }
 
 int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
@@ -237,7 +235,7 @@ int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
     }
 
     int ret = otamqtt_GenTopicName(g_upgrad_topic, OTA_MQTT_TOPIC_LEN, "upgrade", g_ota_device_info.product_key,
-                                   g_ota_device_info.device_name);                            
+                                   g_ota_device_info.device_name);
     if (ret < 0) {
         OTA_LOG_E("generate topic name of upgrade failed");
         goto do_exit;
@@ -245,7 +243,7 @@ int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
 
     //subscribe the OTA topic: "/ota/device/upgrade/$(product_key)/$(device_name)"
     ret = IOT_MQTT_Subscribe(g_ota_device_info.pclient, g_upgrad_topic, IOTX_MQTT_QOS1,
-                            aliot_mqtt_ota_callback, msgCallback);
+                             aliot_mqtt_ota_callback, msgCallback);
     if (ret < 0) {
         OTA_LOG_E("mqtt subscribe failed");
         goto do_exit;

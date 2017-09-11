@@ -270,9 +270,9 @@ void cpu_usage_stats_start(void)
 {
     /* create a statistic task to calculate cpu usage */
     krhino_task_create(&g_cpu_usage_task, "cpu_stats", 0,
-                      RHINO_CONFIG_CPU_USAGE_TASK_PRI,
-                      0, g_cpu_task_stack, RHINO_CONFIG_CPU_USAGE_TASK_STACK, cpu_usage_task_entry,
-                      1);
+                       RHINO_CONFIG_CPU_USAGE_TASK_PRI,
+                       0, g_cpu_task_stack, RHINO_CONFIG_CPU_USAGE_TASK_STACK, cpu_usage_task_entry,
+                       1);
 }
 #endif /* RHINO_CONFIG_CPU_USAGE_STATS */
 

@@ -113,9 +113,9 @@ void MutexShufTimetest(void *arg)
     krhino_sem_dyn_create(&ShufSynhandle, "sem", 0);
 
     krhino_task_dyn_create(&ShufTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
-                          0, TASK_TEST_STACK_SIZE, MutexShuf1, 1);
+                           0, TASK_TEST_STACK_SIZE, MutexShuf1, 1);
     krhino_task_dyn_create(&ShufTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 2,
-                          0, TASK_TEST_STACK_SIZE, MutexShuf2, 1);
+                           0, TASK_TEST_STACK_SIZE, MutexShuf2, 1);
 
     hobbit_timer0_start();
     krhino_sem_take(ShufSynhandle, RHINO_WAIT_FOREVER);

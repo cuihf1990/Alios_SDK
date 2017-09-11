@@ -26,7 +26,8 @@
     "uuid":"35C858CFCD6A1FF9F734D749033A29A0",
     "version":"v2.0.0.1","zip":"0"
 */
-void platform_ota_init( void *signal){
+void platform_ota_init( void *signal)
+{
 
 }
 
@@ -180,7 +181,8 @@ int8_t platform_ota_result_post(void)
     int ret = -1;
     char buff[256] = {0};
 
-    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)platform_ota_get_id(), (const char *)ota_get_system_version());
+    snprintf(buff, sizeof buff, POST_OTA_RESULT_DATA, (char *)platform_ota_get_id(),
+             (const char *)ota_get_system_version());
     ret = aos_cloud_report(POST_OTA_RESULT_METHOD, buff, NULL, NULL);
 
     OTA_LOG_D("alink_ota_status_post: %s, ret=%d\n", buff, ret);

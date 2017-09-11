@@ -85,13 +85,13 @@ static int fetch_ota(void *h_ota)
 
         last_percent = percent;
         percent = (size_downloaded * 100) / size_file;
-        OTA_LOG_ERROR("fetch percent = %d",percent);
+        OTA_LOG_ERROR("fetch percent = %d", percent);
         if (percent - last_percent > 0) {
             IOT_OTA_ReportProgress(h_ota, percent, NULL);
             IOT_OTA_ReportProgress(h_ota, percent, "hello");
         }
 
-    }while(!IOT_OTA_IsFetchFinish(h_ota));
+    } while (!IOT_OTA_IsFetchFinish(h_ota));
 
     while (1 == rc) {
         IOT_OTA_Ioctl(h_ota, IOT_OTAG_CHECK_FIRMWARE, &firmware_valid, 4);
@@ -218,7 +218,7 @@ do_exit:
     if (NULL != h_ota->ch_signal) {
         osc_Deinit(h_ota->ch_signal);
     }
-    
+
     if (NULL != h_ota->md5) {
         otalib_MD5Deinit(h_ota->md5);
     }
@@ -347,7 +347,7 @@ int IOT_OTA_ReportProgress(void *handle, IOT_OTA_Progress_t progress, const char
         return -1;
     }
 
-    if (!ota_check_progress(progress)){
+    if (!ota_check_progress(progress)) {
         OTA_LOG_ERROR("progress is a invalid parameter");
         h_ota->err = IOT_OTAE_INVALID_PARAM;
         return -1;
@@ -412,7 +412,7 @@ bool IOT_OTA_IsFetchFinish(void *handle)
 
     if (NULL == handle) {
         OTA_LOG_ERROR("handle is NULL");
-        return 0; 
+        return 0;
     }
 
     if (IOT_OTAS_UNINITED == h_ota->state) {
@@ -475,64 +475,64 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, size_t buf_le
         return IOT_OTAE_INVALID_STATE;
     }
 
-    switch( type ) {
-    case IOT_OTAG_FETCHED_SIZE:
-        if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
-            OTA_LOG_ERROR("Invalid parameter");
-            h_ota->err = IOT_OTAE_INVALID_PARAM;
-            return -1;
-        } else {
-            *((uint32_t *)buf) = h_ota->size_fetched;
-            return 0;
-        }
-        break;
-
-    case IOT_OTAG_FILE_SIZE:
-        if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
-            OTA_LOG_ERROR("Invalid parameter");
-            h_ota->err = IOT_OTAE_INVALID_PARAM;
-            return -1;
-        } else {
-            *((uint32_t *)buf) = h_ota->size_file;
-            return 0;
-        };
-        break;
-
-    case IOT_OTAG_VERSION:
-        strncpy(buf, h_ota->version, buf_len);
-        ((char *)buf)[buf_len-1] = '\0';
-        break;
-
-    case IOT_OTAG_MD5SUM:
-        strncpy(buf, h_ota->md5sum, buf_len);
-        ((char *)buf)[buf_len-1] = '\0';
-        break;
-
-    case IOT_OTAG_CHECK_FIRMWARE:
-        if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
-            OTA_LOG_ERROR("Invalid parameter");
-            h_ota->err = IOT_OTAE_INVALID_PARAM;
-            return -1;
-        } else if (h_ota->state != IOT_OTAS_FETCHED) {
-            h_ota->err = IOT_OTAE_INVALID_STATE;
-            OTA_LOG_ERROR("Firmware can be checked in IOT_OTAS_FETCHED state only");
-            return -1;
-        } else {
-            char md5_str[33];
-            otalib_MD5Finalize(h_ota->md5, md5_str);
-            OTA_LOG_DEBUG("origin=%s, now=%s", h_ota->md5sum, md5_str);
-            if (0 == strcmp(h_ota->md5sum, md5_str)) {
-                *((uint32_t *)buf) = 1;
+    switch ( type ) {
+        case IOT_OTAG_FETCHED_SIZE:
+            if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
+                OTA_LOG_ERROR("Invalid parameter");
+                h_ota->err = IOT_OTAE_INVALID_PARAM;
+                return -1;
             } else {
-                *((uint32_t *)buf) = 0;
+                *((uint32_t *)buf) = h_ota->size_fetched;
+                return 0;
             }
-            return 0;
-        }
+            break;
 
-    default:
-        OTA_LOG_ERROR("invalid cmd type");
-        h_ota->err = IOT_OTAE_INVALID_PARAM;
-        return -1;
+        case IOT_OTAG_FILE_SIZE:
+            if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
+                OTA_LOG_ERROR("Invalid parameter");
+                h_ota->err = IOT_OTAE_INVALID_PARAM;
+                return -1;
+            } else {
+                *((uint32_t *)buf) = h_ota->size_file;
+                return 0;
+            };
+            break;
+
+        case IOT_OTAG_VERSION:
+            strncpy(buf, h_ota->version, buf_len);
+            ((char *)buf)[buf_len - 1] = '\0';
+            break;
+
+        case IOT_OTAG_MD5SUM:
+            strncpy(buf, h_ota->md5sum, buf_len);
+            ((char *)buf)[buf_len - 1] = '\0';
+            break;
+
+        case IOT_OTAG_CHECK_FIRMWARE:
+            if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
+                OTA_LOG_ERROR("Invalid parameter");
+                h_ota->err = IOT_OTAE_INVALID_PARAM;
+                return -1;
+            } else if (h_ota->state != IOT_OTAS_FETCHED) {
+                h_ota->err = IOT_OTAE_INVALID_STATE;
+                OTA_LOG_ERROR("Firmware can be checked in IOT_OTAS_FETCHED state only");
+                return -1;
+            } else {
+                char md5_str[33];
+                otalib_MD5Finalize(h_ota->md5, md5_str);
+                OTA_LOG_DEBUG("origin=%s, now=%s", h_ota->md5sum, md5_str);
+                if (0 == strcmp(h_ota->md5sum, md5_str)) {
+                    *((uint32_t *)buf) = 1;
+                } else {
+                    *((uint32_t *)buf) = 0;
+                }
+                return 0;
+            }
+
+        default:
+            OTA_LOG_ERROR("invalid cmd type");
+            h_ota->err = IOT_OTAE_INVALID_PARAM;
+            return -1;
     }
 
     return 0;

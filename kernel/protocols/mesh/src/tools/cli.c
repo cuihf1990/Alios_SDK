@@ -306,10 +306,10 @@ static void handle_autotest_timer(void *args)
     }
     if (g_cli_autotest.times) {
         g_cli_autotest.timer = ur_start_timer(AUTOTEST_ECHO_INTERVAL,
-                                                   handle_autotest_timer, NULL);
+                                              handle_autotest_timer, NULL);
     } else if (g_cli_autotest.print_timer == NULL) {
         g_cli_autotest.print_timer = ur_start_timer(AUTOTEST_PRINT_WAIT_TIME,
-                                                         handle_autotest_print_timer, NULL);
+                                                    handle_autotest_print_timer, NULL);
     }
 #endif
 }

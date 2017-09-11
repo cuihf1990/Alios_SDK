@@ -55,7 +55,7 @@ static void task_timer0_entry(void *arg)
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = krhino_timer_create(&timer_0_test, "timer_0_test", timer_0_func,
-                                 TIMER0_ROUND, TIMER0_ROUND, (void *)TIMER0_MAGIC, 1);
+                                  TIMER0_ROUND, TIMER0_ROUND, (void *)TIMER0_MAGIC, 1);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = krhino_sem_take(&sem_0_test, RHINO_WAIT_FOREVER);
@@ -81,7 +81,7 @@ kstat_t task_timer_start_stop_test(void)
     kstat_t ret;
 
     ret = krhino_task_dyn_create(&task_0_test, "task_timer0_test", 0, 10,
-                                0, TASK_TEST_STACK_SIZE, task_timer0_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_timer0_entry, 1);
     TIMER_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     return 0;

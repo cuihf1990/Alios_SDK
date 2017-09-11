@@ -8,11 +8,11 @@
 #define __COAP_HANDLE_MSG_H__
 
 int CoAPStrOption_add(CoAPMessage *message, unsigned short optnum,
-            unsigned char *data, unsigned short datalen);
+                      unsigned char *data, unsigned short datalen);
 
 
 int CoAPUintOption_add(CoAPMessage *message, unsigned short  optnum,
-            unsigned int data);
+                       unsigned int data);
 
 unsigned short CoAPMessageId_gen(CoAPContext *context);
 
@@ -23,12 +23,12 @@ int CoAPMessageType_set(CoAPMessage *message, unsigned char type);
 int CoAPMessageCode_set(CoAPMessage *message, CoAPMessageCode code);
 
 int CoAPMessageToken_set(CoAPMessage *message, unsigned char *token,
-        unsigned char tokenlen);
+                         unsigned char tokenlen);
 
 int CoAPMessageUserData_set(CoAPMessage *message, void *userdata);
 
 int CoAPMessagePayload_set(CoAPMessage *message, unsigned char *payload,
-        unsigned short payloadlen);
+                           unsigned short payloadlen);
 
 int CoAPMessageHandler_set(CoAPMessage *message, CoAPRespMsgHandler handler);
 

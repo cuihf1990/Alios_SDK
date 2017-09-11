@@ -44,12 +44,12 @@ static void buf_queue_recv_param_test(void)
     BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = krhino_buf_queue_recv(&g_test_bufqueue0, RHINO_WAIT_FOREVER,
-                               &g_test_recv_msg0, NULL);
+                                &g_test_recv_msg0, NULL);
     BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     krhino_sem_create(& sem, "test_sem ", 0);
     ret = krhino_buf_queue_recv((kbuf_queue_t *)&sem, RHINO_WAIT_FOREVER,
-                               &g_test_recv_msg0, &size);
+                                &g_test_recv_msg0, &size);
     BUFQUEUE_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
     krhino_sem_del(&sem);
 }
@@ -69,7 +69,7 @@ static void buf_queue_send_param_test(void)
     BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = krhino_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
-                               TEST_BUFQUEUE_MSG_MAX + 1);
+                                TEST_BUFQUEUE_MSG_MAX + 1);
     BUFQUEUE_VAL_CHK(ret == RHINO_BUF_QUEUE_MSG_SIZE_OVERFLOW);
 
 
@@ -78,7 +78,7 @@ static void buf_queue_send_param_test(void)
 
     g_test_bufqueue0.blk_obj.obj_type = RHINO_OBJ_TYPE_NONE;
     ret = krhino_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
-                               TEST_BUFQUEUE_MSG_MAX);
+                                TEST_BUFQUEUE_MSG_MAX);
     g_test_bufqueue0.blk_obj.obj_type = RHINO_BUF_QUEUE_OBJ_TYPE;
     BUFQUEUE_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
 
@@ -96,17 +96,17 @@ static void task_queue1_entry(void *arg)
     while (1) {
         memset(g_test_send_msg0, 'y', TEST_BUFQUEUE_MSG_MAX);
         ret = krhino_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
-                                   TEST_BUFQUEUE_MSG_MAX);
+                                    TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         memset(g_test_send_msg0, 'o', TEST_BUFQUEUE_MSG_MAX);
         ret = krhino_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg0,
-                                         TEST_BUFQUEUE_MSG_MAX);
+                                          TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         memset(g_test_send_msg0, 's', TEST_BUFQUEUE_MSG_MAX);
         ret = krhino_buf_queue_send(&g_test_bufqueue0, g_test_send_msg0,
-                                   TEST_BUFQUEUE_MSG_MAX);
+                                    TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         krhino_task_dyn_del(task_1_test);
@@ -123,27 +123,27 @@ static void task_queue2_entry(void *arg)
 
         memset(g_test_send_msg1, 's', TEST_BUFQUEUE_MSG_MAX);
         ret = krhino_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1,
-                                         TEST_BUFQUEUE_MSG_MAX);
+                                          TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
         count++;
 
         memset(g_test_send_msg1, 'o', TEST_BUFQUEUE_MSG_MAX);
         ret = krhino_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1,
-                                         TEST_BUFQUEUE_MSG_MAX);
+                                          TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
         count++;
 
 
         memset(g_test_send_msg1, 'y', TEST_BUFQUEUE_MSG_MAX);
         ret = krhino_buf_queue_send_front(&g_test_bufqueue0, g_test_send_msg1,
-                                         TEST_BUFQUEUE_MSG_MAX);
+                                          TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
         count++;
 
 
         memset(g_test_send_msg1, 'w', TEST_BUFQUEUE_MSG_MAX);
         ret = krhino_buf_queue_send(&g_test_bufqueue0, g_test_send_msg1,
-                                   TEST_BUFQUEUE_MSG_MAX);
+                                    TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == RHINO_BUF_QUEUE_FULL);
 
         krhino_buf_queue_info_get(&g_test_bufqueue0, &info);
@@ -161,14 +161,14 @@ static void task_queue0_entry(void *arg)
 
     /* err param test */
     ret = krhino_buf_queue_create(&g_test_bufqueue0, "test_bufqueue0",
-                                 (void *)g_test_bufqueue_buf0,
-                                 TEST_BUFQUEUE_BUF0_SIZE, 0);
+                                  (void *)g_test_bufqueue_buf0,
+                                  TEST_BUFQUEUE_BUF0_SIZE, 0);
 
     BUFQUEUE_VAL_CHK(ret == RHINO_INV_PARAM);
 
     ret = krhino_buf_queue_create(&g_test_bufqueue0, "test_bufqueue0",
-                                 (void *)g_test_bufqueue_buf0,
-                                 TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
+                                  (void *)g_test_bufqueue_buf0,
+                                  TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
 
     BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
@@ -179,27 +179,27 @@ static void task_queue0_entry(void *arg)
 
     /* check RHINO_NO_WAIT */
     ret = krhino_buf_queue_recv(&g_test_bufqueue0, RHINO_NO_WAIT, &g_test_recv_msg0,
-                               &size);
+                                &size);
     BUFQUEUE_VAL_CHK(ret == RHINO_NO_PEND_WAIT);
 
     /* check sched disalbe */
     ret = krhino_sched_disable();
     BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
     ret = krhino_buf_queue_recv(&g_test_bufqueue0, RHINO_WAIT_FOREVER,
-                               &g_test_recv_msg0, &size);
+                                &g_test_recv_msg0, &size);
     BUFQUEUE_VAL_CHK(ret == RHINO_SCHED_DISABLE);
     ret = krhino_sched_enable();
     BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
     ret = krhino_task_dyn_create(&task_1_test, "task_bufqueue1_test", 0,
-                                TEST_BUFQUEUE_SND_TASK_LOW_RPI,
-                                0, TASK_TEST_STACK_SIZE, task_queue1_entry, 1);
+                                 TEST_BUFQUEUE_SND_TASK_LOW_RPI,
+                                 0, TASK_TEST_STACK_SIZE, task_queue1_entry, 1);
 
     BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
     do {
         ret = krhino_buf_queue_recv(&g_test_bufqueue0, RHINO_WAIT_FOREVER,
-                                   g_test_recv_msg0, &size);
+                                    g_test_recv_msg0, &size);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         memset(g_test_send_msg0, send_char[count], TEST_BUFQUEUE_MSG_MAX);
@@ -211,8 +211,8 @@ static void task_queue0_entry(void *arg)
 
 
     ret = krhino_task_dyn_create(&task_2_test, "task_bufqueue2_test", 0,
-                                TEST_BUFQUEUE_SND_TASK_HIGH_RPI,
-                                0, TASK_TEST_STACK_SIZE, task_queue2_entry, 1);
+                                 TEST_BUFQUEUE_SND_TASK_HIGH_RPI,
+                                 0, TASK_TEST_STACK_SIZE, task_queue2_entry, 1);
 
     BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
@@ -220,7 +220,7 @@ static void task_queue0_entry(void *arg)
 
     do {
         ret = krhino_buf_queue_recv(&g_test_bufqueue0, RHINO_WAIT_FOREVER,
-                                   g_test_recv_msg0, &size);
+                                    g_test_recv_msg0, &size);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         memset(g_test_send_msg1, send_char[count], TEST_BUFQUEUE_MSG_MAX);
@@ -249,8 +249,8 @@ kstat_t task_buf_queue_recv_test(void)
     kstat_t ret;
     test_case_check_err = 0;
     ret = krhino_task_dyn_create(&task_0_test, "task_bufqueue0_test", 0,
-                                TEST_BUFQUEUE_RCV_TASK_RPI,
-                                0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
+                                 TEST_BUFQUEUE_RCV_TASK_RPI,
+                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
     BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
     return 0;

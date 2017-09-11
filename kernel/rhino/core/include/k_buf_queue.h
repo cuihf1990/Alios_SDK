@@ -38,8 +38,8 @@ typedef struct {
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_buf_queue_create(kbuf_queue_t *queue, const name_t *name,
-                               void *buf,
-                               size_t size, size_t max_msg);
+                                void *buf,
+                                size_t size, size_t max_msg);
 
 /**
  * This function will delete a queue
@@ -58,7 +58,7 @@ kstat_t krhino_buf_queue_del(kbuf_queue_t *queue);
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
-                                   size_t size, size_t max_msg);
+                                    size_t size, size_t max_msg);
 
 /**
  * This function will delete a dyn-queue
@@ -95,7 +95,7 @@ kstat_t krhino_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
-                             size_t *size);
+                              size_t *size);
 
 /**
  * This function will reset queue

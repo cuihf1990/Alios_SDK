@@ -304,7 +304,7 @@ ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
         udp_header = (ur_udp_header_t *)(header + UR_IP6_HLEN);
         nhc_len = udp_header_compress(udp_header, buffer + iphc_len);
         MESH_LOG_DEBUG("lowpan6: compressed 8 bytes UDP header to"
-               " %d bytes 6LowPAN NHC header", nhc_len);
+                       " %d bytes 6LowPAN NHC header", nhc_len);
         *ip_header_len = UR_IP6_HLEN + UR_UDP_HLEN;
         *hc_header_len = *hc_header_len + nhc_len;
     }
@@ -444,7 +444,7 @@ static ur_error_t next_header_decompress(uint8_t *nhc_data, uint8_t *nhc_len)
         memcpy(nhc_data, udp_header, UR_UDP_HLEN);
 
         MESH_LOG_DEBUG("lowpan6: decompressed %d bytes 6LowPAN NHC header"
-               " to 8 bytes UDP header", offset);
+                       " to 8 bytes UDP header", offset);
 
         return UR_ERROR_NONE;
     } else {
@@ -557,8 +557,8 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
                     (datagram_size == lrh->datagram_size)) {
                     /* duplicate fragment. */
                     MESH_LOG_DEBUG("lowpan6: received duplicated FRAG_1 from"
-                           " %04hx (tag=%u tot_len=%u), drop it",
-                           info->src.addr.short_addr, datagram_tag, datagram_size);
+                                   " %04hx (tag=%u tot_len=%u), drop it",
+                                   info->src.addr.short_addr, datagram_tag, datagram_size);
                     return UR_ERROR_FAIL;
                 } else {
                     /* We are receiving the start of a new datagram. Discard old incomplete one. */
@@ -579,7 +579,7 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
         message_set_payload_offset(p, - 4); /* hide FRAG_1 header */
 
         MESH_LOG_DEBUG("lowpan6: received new FRAG_1 from %04hx, tag=%u tot_len=%u len=%u offset=0",
-               info->src.addr.short_addr, datagram_tag, datagram_size, message_get_msglen(p));
+                       info->src.addr.short_addr, datagram_tag, datagram_size, message_get_msglen(p));
 
         lrh = (lowpan_reass_t *) ur_mem_alloc(sizeof(lowpan_reass_t));
         if (lrh == NULL) {
@@ -617,16 +617,16 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
         if (message_get_msglen(lrh->message) > datagram_offset) {
             /* duplicate, ignore. */
             MESH_LOG_DEBUG("lowpan6: received duplicated FRAG_N from"
-                   " %04hx, tag=%u len=%u offset=%u, drop it",
-                   info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
-                   datagram_offset);
+                           " %04hx, tag=%u len=%u offset=%u, drop it",
+                           info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
+                           datagram_offset);
             return UR_ERROR_FAIL;
         } else if (message_get_msglen(lrh->message) < datagram_offset) {
             /* We have missed a fragment. Delete whole reassembly. */
             MESH_LOG_DEBUG("lowpan6: received disordered FRAG_N from %04hx,"
-                   " tag=%u len=%u offset=%u, drop the whole fragment packets",
-                   info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
-                   datagram_offset);
+                           " tag=%u len=%u offset=%u, drop the whole fragment packets",
+                           info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
+                           datagram_offset);
             dequeue_list_element(lrh);
             message_free(lrh->message);
             ur_mem_free(lrh, sizeof(lowpan_reass_t));
@@ -634,8 +634,8 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
         }
 
         MESH_LOG_DEBUG("lowpan6: received FRAG_N from %04hx, tag=%u len=%u offset=%u",
-               info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
-               datagram_offset);
+                       info->src.addr.short_addr, datagram_tag, message_get_msglen(p),
+                       datagram_offset);
         message_concatenate(lrh->message, p, false);
         p = NULL;
 
@@ -675,8 +675,8 @@ void lp_handle_timer(void *args)
 
         if ((--lrh->timer) == 0) {
             MESH_LOG_DEBUG("lowpan6: fragment packts from %04hx (tag=%u tot_len=%u)"
-                   " timeout, drop from reassemble queue",
-                   lrh->sender_addr, lrh->datagram_tag, lrh->datagram_size);
+                           " timeout, drop from reassemble queue",
+                           lrh->sender_addr, lrh->datagram_tag, lrh->datagram_size);
             dequeue_list_element(lrh);
             message_free(lrh->message);
             ur_mem_free(lrh, sizeof(lowpan_reass_t));

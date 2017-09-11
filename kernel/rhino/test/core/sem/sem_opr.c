@@ -55,7 +55,7 @@ void sem_opr_test(void)
                             sizeof(sem_func_runner) / sizeof(test_case_t));
 
     ret = krhino_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
 
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
@@ -136,7 +136,7 @@ void sem_coopr1_test(void)
     }
 
     ret = krhino_task_dyn_create(&task_sem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_sem_coopr1_co1_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr1_co1_entry, 1);
 
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
@@ -144,7 +144,7 @@ void sem_coopr1_test(void)
     }
 
     ret = krhino_task_dyn_create(&task_sem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_sem_coopr1_co2_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr1_co2_entry, 1);
 
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
@@ -216,18 +216,18 @@ void sem_coopr2_test(void)
     krhino_sem_dyn_create(&test_sem_co2, MODULE_NAME, 0);
 
     ret = krhino_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co1_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co1_entry, 1);
 
     TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == RHINO_SUCCESS);
 
 
     ret = krhino_task_dyn_create(&task_sem_co1, MODULE_NAME, 0, TASK_SEM_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co2_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co2_entry, 1);
 
     TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == RHINO_SUCCESS);
 
     ret = krhino_task_dyn_create(&task_sem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 2,
-                                0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co3_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_coopr2_co3_entry, 1);
     TEST_FW_VAL_CHK(MODULE_NAME_CO2, ret == RHINO_SUCCESS);
 }
 

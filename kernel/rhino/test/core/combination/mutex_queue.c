@@ -101,22 +101,22 @@ void mutex_queue_coopr_test(void)
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_queue_create(&queue, "queue", (void **)&queue_msg_buff,
-                             TEST_MSG_SIZE);
+                              TEST_MSG_SIZE);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_kobj_set_insert((blk_obj_t *)&queue, handle);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_COMB_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_opr_entry, 1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
     ret = krhino_task_dyn_create(&task_queue, MODULE_NAME, 0, TASK_COMB_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_queue_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_queue_opr_entry, 1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_task_dyn_create(&task_queue_trigger, MODULE_NAME, 0,
-                                TASK_COMB_PRI + 2,
-                                0, TASK_TEST_STACK_SIZE, task_queue_trigger_entry, 1);
+                                 TASK_COMB_PRI + 2,
+                                 0, TASK_TEST_STACK_SIZE, task_queue_trigger_entry, 1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 }
 #endif

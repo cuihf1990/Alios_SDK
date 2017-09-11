@@ -31,26 +31,26 @@ void coap_client()
 
     iotx_set_devinfo(&devinfo);
     config.p_devinfo = &devinfo;
-    #ifdef COAP_ONLINE
-        #ifdef COAP_DTLS_SUPPORT
-            char url[256] = {0};
-            snprintf(url, sizeof(url), IOTX_ONLINE_DTLS_SERVER_URL, devinfo.product_key);
-            config.p_url = url;
-        #else
-            printf("Online environment must access with DTLS\r\n");
-            return -1;
-        #endif
-    #else
-        #ifdef COAP_DTLS_SUPPORT
-            config.p_url = IOTX_PRE_DTLS_SERVER_URI;
-        #else
-            config.p_url = IOTX_PRE_NOSEC_SERVER_URI;
-        #endif
-    #endif
+#ifdef COAP_ONLINE
+#ifdef COAP_DTLS_SUPPORT
+    char url[256] = {0};
+    snprintf(url, sizeof(url), IOTX_ONLINE_DTLS_SERVER_URL, devinfo.product_key);
+    config.p_url = url;
+#else
+    printf("Online environment must access with DTLS\r\n");
+    return -1;
+#endif
+#else
+#ifdef COAP_DTLS_SUPPORT
+    config.p_url = IOTX_PRE_DTLS_SERVER_URI;
+#else
+    config.p_url = IOTX_PRE_NOSEC_SERVER_URI;
+#endif
+#endif
 
     h_coap = IOT_CoAP_Init(&config);
 
-    if(NULL == h_coap){
+    if (NULL == h_coap) {
         EXAMPLE_TRACE("initialize CoAP failed");
         return;
     }
@@ -64,7 +64,7 @@ void coap_client()
     }
 
     int ota_code = 0;
-    do{
+    do {
 
         HAL_SleepMs(2000);
         //TODO: get version by code
@@ -88,15 +88,15 @@ do_exit:
         IOT_CoAP_Deinit(&h_coap);
     }
 
-    aos_post_delayed_action(7*24*60*60*1000,coap_client,NULL);
+    aos_post_delayed_action(7 * 24 * 60 * 60 * 1000, coap_client, NULL);
 }
 
 void coap_ota()
 {
-	IOT_OpenLog("coap-ota");
-	IOT_SetLogLevel(IOT_LOG_DEBUG);
+    IOT_OpenLog("coap-ota");
+    IOT_SetLogLevel(IOT_LOG_DEBUG);
 
-	coap_client();
+    coap_client();
 }
 /*void ota_service_event(input_event_t *event, void *priv_data)
 {

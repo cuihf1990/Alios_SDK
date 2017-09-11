@@ -62,7 +62,7 @@ void OS_test(void *arg)
 
 #if 1
     ret = krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
-                                0, TASK_TEST_STACK_SIZE, IntRealtimetest, 1);
+                                 0, TASK_TEST_STACK_SIZE, IntRealtimetest, 1);
     krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     krhino_task_dyn_del(test_task);
 
@@ -71,7 +71,7 @@ void OS_test(void *arg)
 
 #if 1
     krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
-                          0, TASK_TEST_STACK_SIZE, TaskYIELDtimeTest, 1);
+                           0, TASK_TEST_STACK_SIZE, TaskYIELDtimeTest, 1);
     krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     krhino_task_dyn_del(test_task);
     krhino_task_sleep(50);
@@ -79,17 +79,7 @@ void OS_test(void *arg)
 
 #if 1
     krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
-                          0, TASK_TEST_STACK_SIZE, PreemptionTimetest, 1);
-    krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
-    krhino_task_dyn_del(test_task);
-
-    krhino_task_sleep(50);
-#endif
-
-#if 1
-    krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
-                          0, TASK_TEST_STACK_SIZE, MutexShufTimetest, 1);
-
+                           0, TASK_TEST_STACK_SIZE, PreemptionTimetest, 1);
     krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     krhino_task_dyn_del(test_task);
 
@@ -98,7 +88,17 @@ void OS_test(void *arg)
 
 #if 1
     krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
-                          0, TASK_TEST_STACK_SIZE, BinaryShufTimetest, 1);
+                           0, TASK_TEST_STACK_SIZE, MutexShufTimetest, 1);
+
+    krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
+    krhino_task_dyn_del(test_task);
+
+    krhino_task_sleep(50);
+#endif
+
+#if 1
+    krhino_task_dyn_create(&test_task, "test_task", 0, TASK_TEST_PRI,
+                           0, TASK_TEST_STACK_SIZE, BinaryShufTimetest, 1);
 
     krhino_sem_take(SYNhandle, RHINO_WAIT_FOREVER);
     krhino_task_dyn_del(test_task);
@@ -117,6 +117,6 @@ void OS_RealTime_test(void)
     krhino_bsp_intc_attach_irq(2, (int)timer0_handler);
 #endif
     krhino_task_dyn_create(&main_task, "main_task", 0, TASK_MAIN_PRI,
-                          0, TASK_TEST_STACK_SIZE, OS_test, 1);
+                           0, TASK_TEST_STACK_SIZE, OS_test, 1);
 }
 

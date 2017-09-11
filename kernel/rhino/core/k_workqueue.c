@@ -62,7 +62,7 @@ static void worker_task(void *arg)
 }
 
 kstat_t krhino_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
-                               uint8_t pri, cpu_stack_t *stack_buf, size_t stack_size)
+                                uint8_t pri, cpu_stack_t *stack_buf, size_t stack_size)
 {
     CPSR_ALLOC();
 
@@ -96,7 +96,7 @@ kstat_t krhino_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
     }
 
     ret = krhino_task_create(&(workqueue->worker), name, (void *)workqueue, pri,
-                            0, stack_buf, stack_size, worker_task, 0);
+                             0, stack_buf, stack_size, worker_task, 0);
     if (ret != RHINO_SUCCESS) {
         krhino_sem_del(&(workqueue->sem));
         return ret;
@@ -193,7 +193,7 @@ static void work_timer_cb(void *timer, void *arg)
 }
 
 kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
-                        tick_t dly)
+                         tick_t dly)
 {
     kstat_t ret;
 
@@ -218,7 +218,7 @@ kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
 
     if (dly > 0) {
         ret = krhino_timer_create(&(work->timer), "WORK-TIMER", work_timer_cb,
-                                 work->dly, 0, (void *)work, 0);
+                                  work->dly, 0, (void *)work, 0);
         if (ret != RHINO_SUCCESS) {
             return ret;
         }
@@ -312,8 +312,8 @@ void workqueue_init(void)
     klist_init(&g_workqueue_list_head);
 
     krhino_workqueue_create(&g_workqueue_default, "DEFAULT-WORKQUEUE",
-                           RHINO_CONFIG_WORKQUEUE_TASK_PRIO, g_workqueue_stack,
-                           RHINO_CONFIG_WORKQUEUE_STACK_SIZE);
+                            RHINO_CONFIG_WORKQUEUE_TASK_PRIO, g_workqueue_stack,
+                            RHINO_CONFIG_WORKQUEUE_STACK_SIZE);
 }
 #endif
 

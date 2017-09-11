@@ -53,8 +53,8 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
 }
 
 kstat_t krhino_buf_queue_create(kbuf_queue_t *queue, const name_t *name,
-                               void *buf,
-                               size_t size, size_t max_msg)
+                                void *buf,
+                                size_t size, size_t max_msg)
 {
     return buf_queue_create(queue, name, buf, size, max_msg, K_OBJ_STATIC_ALLOC);
 }
@@ -104,7 +104,7 @@ kstat_t krhino_buf_queue_del(kbuf_queue_t *queue)
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t krhino_buf_queue_dyn_create(kbuf_queue_t **queue, const name_t *name,
-                                   size_t size, size_t max_msg)
+                                    size_t size, size_t max_msg)
 {
     kstat_t      stat;
     kbuf_queue_t *queue_obj;
@@ -290,7 +290,7 @@ kstat_t krhino_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
 }
 
 kstat_t krhino_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
-                             size_t *size)
+                              size_t *size)
 {
     CPSR_ALLOC();
 

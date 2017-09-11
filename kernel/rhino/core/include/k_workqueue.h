@@ -38,7 +38,7 @@ typedef struct {
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_workqueue_create(kworkqueue_t *workqueue, const name_t *name,
-                               uint8_t pri, cpu_stack_t *stack_buf, size_t stack_size);
+                                uint8_t pri, cpu_stack_t *stack_buf, size_t stack_size);
 
 /**
  * This function will delete a workqueue
@@ -56,7 +56,7 @@ kstat_t krhino_workqueue_del(kworkqueue_t *workqueue);
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
-                        tick_t dly);
+                         tick_t dly);
 
 /**
  * This function will run a work on a workqueue

@@ -102,7 +102,7 @@ static ur_error_t send_discovery_request(network_context_t *network)
     error = mf_send_message(message);
 
     MESH_LOG_DEBUG("send discovery request in channel %d, len %d",
-           umesh_mm_get_channel(network), length);
+                   umesh_mm_get_channel(network), length);
 
     return error;
 }
@@ -207,7 +207,7 @@ ur_error_t handle_discovery_response(message_t *message)
     }
 
     MESH_LOG_DEBUG("handle discovery response from %x",
-           info->src.netid);
+                   info->src.netid);
 
     if (is_bcast_netid(info->src.netid)) {
         return UR_ERROR_NONE;
