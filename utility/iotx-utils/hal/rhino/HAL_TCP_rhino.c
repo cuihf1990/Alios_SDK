@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <yos/network.h>
+#include <aos/network.h>
 #include <errno.h>
 //#include "aliot_platform_network.h"
 
