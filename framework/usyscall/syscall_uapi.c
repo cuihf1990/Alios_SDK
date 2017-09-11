@@ -215,7 +215,7 @@ int aos_work_cancel(aos_work_t *work)
 void *aos_malloc(unsigned int size)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+    if ((size & AOS_UNSIGNED_INT_MSB) == 0) {
         return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
     } else {
         return SYS_CALL2(SYS_MALLOC, void *, unsigned int, size, size_t, 0);
@@ -228,7 +228,7 @@ void *aos_malloc(unsigned int size)
 void *aos_realloc(void *mem, unsigned int size)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+    if ((size & AOS_UNSIGNED_INT_MSB) == 0) {
         return SYS_CALL3(SYS_REALLOC, void *, void *, mem, unsigned int, size,
                          size_t, (size_t)__builtin_return_address(0));
     } else {
@@ -242,7 +242,7 @@ void *aos_realloc(void *mem, unsigned int size)
 void *aos_zalloc(unsigned int size)
 {
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
+    if ((size & AOS_UNSIGNED_INT_MSB) == 0) {
         return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, (size_t)__builtin_return_address(0));
     } else {
         return SYS_CALL2(SYS_ZALLOC, void *, unsigned int, size, size_t, 0);

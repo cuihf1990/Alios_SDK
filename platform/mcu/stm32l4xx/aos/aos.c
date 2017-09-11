@@ -2,13 +2,13 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yos.h>
+#include <aos/aos.h>
 #include <k_api.h>
 #include <aos/kernel.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "stm32_wifi.h"
-#define YOS_START_STACK 2048
+#define AOS_START_STACK 2048
 
 #define WIFI_PRODUCT_INFO_SIZE                      ES_WIFI_MAX_SSID_NAME_SIZE
 
@@ -95,7 +95,7 @@ static void aos_init(void)
 void aos_start(void)
 {
     krhino_init();
-    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, (task_entry_t)aos_init, 1);
+    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, AOS_DEFAULT_APP_PRI, 0, AOS_START_STACK, (task_entry_t)aos_init, 1);
     krhino_start();
 }
 

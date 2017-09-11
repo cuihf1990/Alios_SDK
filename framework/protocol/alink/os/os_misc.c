@@ -353,7 +353,7 @@ uint8_t *os_wifi_get_mac(uint8_t mac[OS_ETH_ALEN])
 int memory_current_usage;
 int memory_peak_usage;
 void *os_malloc_lock;
-static dlist_t os_malloc_list = YOS_DLIST_INIT(os_malloc_list);
+static dlist_t os_malloc_list = AOS_DLIST_INIT(os_malloc_list);
 
 /*
  * with DEBUG enabled, each memory block was prefixed with os_malloc_node, and

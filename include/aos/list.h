@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_LIST_H
-#define YOS_LIST_H
+#ifndef AOS_LIST_H
+#define AOS_LIST_H
 
 #ifdef __cplusplus
 extern "C"
@@ -61,7 +61,7 @@ static inline void dlist_init(dlist_t *node)
     node->next = node->prev = node;
 }
 
-static inline void INIT_YOS_DLIST_HEAD(dlist_t *list)
+static inline void INIT_AOS_DLIST_HEAD(dlist_t *list)
 {
     list->next = list;
     list->prev = list;
@@ -73,7 +73,7 @@ static inline int dlist_empty(const dlist_t *head)
 }
 
 /* initialize list head staticly */
-#define YOS_DLIST_INIT(list)  {&(list), &(list)}
+#define AOS_DLIST_INIT(list)  {&(list), &(list)}
 
 #define dlist_first_entry(ptr, type, member) \
     dlist_entry((ptr)->next, type, member)
@@ -125,9 +125,9 @@ static inline int dlist_empty(const dlist_t *head)
     num; \
 })
 
-#define YOS_DLIST_HEAD_INIT(name) { &(name), &(name) }
-#define YOS_DLIST_HEAD(name) \
-        dlist_t name = YOS_DLIST_HEAD_INIT(name)
+#define AOS_DLIST_HEAD_INIT(name) { &(name), &(name) }
+#define AOS_DLIST_HEAD(name) \
+        dlist_t name = AOS_DLIST_HEAD_INIT(name)
 
 /* for single link list */
 typedef struct slist_s {
@@ -195,9 +195,9 @@ static inline void slist_init(slist_t *head)
          &node->member;                                    \
          node = aos_container_of(tmp, type, member), tmp = tmp ? tmp->next : tmp)
 
-#define YOS_SLIST_HEAD_INIT(name) { }
-#define YOS_SLIST_HEAD(name) \
-        slist_t name = YOS_SLIST_HEAD_INIT(name)
+#define AOS_SLIST_HEAD_INIT(name) { }
+#define AOS_SLIST_HEAD(name) \
+        slist_t name = AOS_SLIST_HEAD_INIT(name)
 
 #define slist_entry(addr, type, member) ({                               \
     addr ? (type *)((long)addr - aos_offsetof(type, member)) : (type *)addr; \
@@ -217,5 +217,5 @@ static inline void slist_init(slist_t *head)
 }
 #endif
 
-#endif /* YOS_LIST_H */
+#endif /* AOS_LIST_H */
 

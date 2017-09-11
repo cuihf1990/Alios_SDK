@@ -24,7 +24,7 @@ static router_mgmr_state_t g_rm_state;
 extern neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
                                        uint16_t meshnetid);
 extern void sid_router_register(void);
-#ifdef CONFIG_YOS_MESH_SUPER
+#ifdef CONFIG_AOS_MESH_SUPER
 extern void vector_router_register(void);
 #endif
 
@@ -34,7 +34,7 @@ void ur_router_register_module(void)
 
     slist_init(&g_rm_state.router_list);
     sid_router_register();
-#ifdef CONFIG_YOS_MESH_SUPER
+#ifdef CONFIG_AOS_MESH_SUPER
     vector_router_register();
 #endif
 
@@ -264,7 +264,7 @@ void sid_allocator_init(network_context_t *network)
             sid = SUPER_ROUTER_SID;
         }
         network->sid_base = allocator_init(sid, sid_type);
-#ifdef CONFIG_YOS_MESH_SUPER
+#ifdef CONFIG_AOS_MESH_SUPER
     } else {
         network->sid_base = rsid_allocator_init(sid_type);
 #endif
@@ -275,7 +275,7 @@ void sid_allocator_deinit(network_context_t *network)
 {
     if (network->router->sid_type == STRUCTURED_SID) {
         allocator_deinit(network->sid_base);
-#ifdef CONFIG_YOS_MESH_SUPER
+#ifdef CONFIG_AOS_MESH_SUPER
     } else {
         rsid_allocator_deinit(network->sid_base);
 #endif
@@ -291,7 +291,7 @@ ur_error_t sid_allocator_alloc(network_context_t *network, ur_node_id_t *node)
         case STRUCTURED_SID:
             error = allocate_sid(network->sid_base, node);
             break;
-#ifdef CONFIG_YOS_MESH_SUPER
+#ifdef CONFIG_AOS_MESH_SUPER
         case SHORT_RANDOM_SID:
         case RANDOM_SID:
             error = rsid_allocate_sid(network->sid_base, node);
@@ -309,7 +309,7 @@ ur_error_t sid_allocator_free(network_context_t *network, ur_node_id_t *node)
     if (is_partial_function_sid(node->sid)) {
         network = get_default_network_context();
         update_sid_mapping(network->sid_base, node, false);
-#ifdef CONFIG_YOS_MESH_SUPER
+#ifdef CONFIG_AOS_MESH_SUPER
     } else {
         network = get_network_context_by_meshnetid(node->meshnetid);
         if (network == NULL) {
@@ -364,7 +364,7 @@ uint16_t sid_allocator_get_num(network_context_t *network)
 {
     uint16_t num = 0;
 
-#ifdef CONFIG_YOS_MESH_SUPER
+#ifdef CONFIG_AOS_MESH_SUPER
     if (network->router->sid_type == SHORT_RANDOM_SID ||
         network->router->sid_type == RANDOM_SID) {
         num = rsid_get_allocated_number(network->sid_base) + 1;

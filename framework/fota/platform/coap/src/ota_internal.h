@@ -1,4 +1,6 @@
-
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
 
 #ifndef _OTA_INTERNAL_H_
 #define _OTA_INTERNAL_H_

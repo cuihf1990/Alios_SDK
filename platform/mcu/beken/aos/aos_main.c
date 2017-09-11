@@ -6,7 +6,7 @@
 #include <k_api.h>
 #include <aos/kernel.h>
 
-#define YOS_START_STACK 2048
+#define AOS_START_STACK 2048
 
 ktask_t *g_aos_init;
 
@@ -16,7 +16,7 @@ extern int application_start(int argc, char **argv);
 
 void trace_start(void);
 
-#ifdef YOS_BINS
+#ifdef AOS_BINS
 extern void *g_syscall_tbl[];
 extern char  app_info_addr;
 
@@ -63,7 +63,7 @@ static void aos_init(void)
 
     trace_start();
     
-#ifdef YOS_BINS
+#ifdef AOS_BINS
     application_init();
 
     if (app_info->app_entry) {
@@ -83,7 +83,7 @@ void aos_start(void)
 
     soc_driver_init();
 
-    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, aos_init, 1);
+    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, AOS_DEFAULT_APP_PRI, 0, AOS_START_STACK, aos_init, 1);
 
     krhino_start();
 }

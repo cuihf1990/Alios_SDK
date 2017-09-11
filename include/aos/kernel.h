@@ -8,8 +8,8 @@
  * @version since 1.0.0
  */
 
-#ifndef YOS_KERNEL_H
-#define YOS_KERNEL_H
+#ifndef AOS_KERNEL_H
+#define AOS_KERNEL_H
 
 #include <sys/types.h>
 
@@ -17,8 +17,8 @@
 extern "C" {
 #endif
 
-#define YOS_WAIT_FOREVER        0xffffffffu
-#define YOS_DEFAULT_APP_PRI    32
+#define AOS_WAIT_FOREVER        0xffffffffu
+#define AOS_DEFAULT_APP_PRI    32
 
 typedef struct {
     void *hdl;

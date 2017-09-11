@@ -35,11 +35,11 @@
 /*子设备序号bit map*/
 static uint8_t devidx_bit_map[DEVMGR_MAX_SUBDEVICE / 8 + 1] = {0};
 /*待删除设备链表*/
-static YOS_DLIST_HEAD(delele_dev_head);
+static AOS_DLIST_HEAD(delele_dev_head);
 /*有效设备链表*/
-YOS_DLIST_HEAD(dev_head);
+AOS_DLIST_HEAD(dev_head);
 /*未知设备链表*/
-YOS_DLIST_HEAD(unknown_dev_head);
+AOS_DLIST_HEAD(unknown_dev_head);
 
 void *devlist_lock = NULL;
 

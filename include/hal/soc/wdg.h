@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_WDG_H
-#define YOS_WDG_H
+#ifndef AOS_WDG_H
+#define AOS_WDG_H
 
 typedef struct {
     uint32_t timeout;  /* Watchdag timeout */

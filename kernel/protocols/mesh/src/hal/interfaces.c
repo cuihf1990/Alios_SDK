@@ -13,8 +13,8 @@
 #include "hal/interface_context.h"
 #include "hal/hals.h"
 
-YOS_SLIST_HEAD(g_networks_list);
-YOS_SLIST_HEAD(g_hals_list);
+AOS_SLIST_HEAD(g_networks_list);
+AOS_SLIST_HEAD(g_hals_list);
 
 static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
                                               int router_id)
@@ -130,7 +130,7 @@ void interface_init(void)
 
         module = hal_umesh_get_next_module(module);
 
-#ifndef CONFIG_YOS_MESH_SUPER
+#ifndef CONFIG_AOS_MESH_SUPER
         break;
 #endif
     }

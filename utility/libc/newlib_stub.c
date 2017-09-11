@@ -171,7 +171,7 @@ void *_malloc_r(struct _reent *ptr, size_t size)
     void *mem;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    mem = aos_malloc(size | YOS_UNSIGNED_INT_MSB);
+    mem = aos_malloc(size | AOS_UNSIGNED_INT_MSB);
     aos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else
     mem = aos_malloc(size);
@@ -185,7 +185,7 @@ void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
     void *mem;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    mem = aos_realloc(old, newlen | YOS_UNSIGNED_INT_MSB);
+    mem = aos_realloc(old, newlen | AOS_UNSIGNED_INT_MSB);
     aos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else
     mem = aos_realloc(old, newlen);
@@ -199,7 +199,7 @@ void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
     void *mem;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    mem = aos_malloc((size * len) | YOS_UNSIGNED_INT_MSB);
+    mem = aos_malloc((size * len) | AOS_UNSIGNED_INT_MSB);
     aos_alloc_trace(mem, (size_t)__builtin_return_address(0));
 #else
     mem = aos_malloc(size * len);

@@ -53,11 +53,11 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
     uint32_t start_addr, end_addr;
     hal_logic_partition_t *partition_info;
 
-#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
-        if (in_partition == CONFIG_YOS_KV_PTN) {
-            if (off_set >= CONFIG_YOS_KV_PTN_SIZE) {
-                in_partition = CONFIG_YOS_KV_SECOND_PTN;
-                off_set -= CONFIG_YOS_KV_PTN_SIZE;
+#ifdef CONFIG_AOS_KV_MULTIPTN_MODE
+        if (in_partition == CONFIG_AOS_KV_PTN) {
+            if (off_set >= CONFIG_AOS_KV_PTN_SIZE) {
+                in_partition = CONFIG_AOS_KV_SECOND_PTN;
+                off_set -= CONFIG_AOS_KV_PTN_SIZE;
             }
         }
 #endif
@@ -71,7 +71,7 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
         return -1;
 
     start_addr = (partition_info->partition_start_addr + off_set) & (~0xFFF);
-    end_addr = (partition_info->partition_start_addr + off_set + size - 1) & (~0xFFF);
+    end_addr = (partition_info->partition_start_addr + off_set + size  - 1) & (~0xFFF);
 
     for(addr = start_addr; addr <= end_addr; addr += SECTOR_SIZE)
     {
@@ -90,11 +90,11 @@ int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set, const v
     uint32_t start_addr;
     hal_logic_partition_t *partition_info;
 
-#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
-        if (in_partition == CONFIG_YOS_KV_PTN) {
-            if ((*off_set) >= CONFIG_YOS_KV_PTN_SIZE) {
-                in_partition = CONFIG_YOS_KV_SECOND_PTN;
-                *off_set = (*off_set) - CONFIG_YOS_KV_PTN_SIZE;
+#ifdef CONFIG_AOS_KV_MULTIPTN_MODE
+        if (in_partition == CONFIG_AOS_KV_PTN) {
+            if ((*off_set) >= CONFIG_AOS_KV_PTN_SIZE) {
+                in_partition = CONFIG_AOS_KV_SECOND_PTN;
+                *off_set = (*off_set) - CONFIG_AOS_KV_PTN_SIZE;
             }
         }
 #endif
@@ -124,11 +124,11 @@ int32_t hal_flash_read(hal_partition_t in_partition, uint32_t *off_set, void *ou
     uint32_t start_addr;
     hal_logic_partition_t *partition_info;
 
-#ifdef CONFIG_YOS_KV_MULTIPTN_MODE
-    if (in_partition == CONFIG_YOS_KV_PTN) {
-        if ((*off_set) >=  CONFIG_YOS_KV_PTN_SIZE) {
-            in_partition = CONFIG_YOS_KV_SECOND_PTN;
-            *off_set = (*off_set) - CONFIG_YOS_KV_PTN_SIZE;
+#ifdef CONFIG_AOS_KV_MULTIPTN_MODE
+    if (in_partition == CONFIG_AOS_KV_PTN) {
+        if ((*off_set) >=  CONFIG_AOS_KV_PTN_SIZE) {
+            in_partition = CONFIG_AOS_KV_SECOND_PTN;
+            *off_set = (*off_set) - CONFIG_AOS_KV_PTN_SIZE;
         }
     }
 #endif

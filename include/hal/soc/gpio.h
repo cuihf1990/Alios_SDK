@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_GPIO_H
-#define YOS_GPIO_H
+#ifndef AOS_GPIO_H
+#define AOS_GPIO_H
 
 /**
  * Pin configuration

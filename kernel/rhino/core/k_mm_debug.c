@@ -11,7 +11,7 @@
 #include "k_mm_debug.h"
 #include "aos/aos.h"
 
-#ifdef CONFIG_YOS_CLI
+#ifdef CONFIG_AOS_CLI
 #define print cli_printf
 #else
 #define print printf
@@ -25,7 +25,7 @@ extern klist_t g_mm_region_list_head;
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0)
 
 
-static mm_scan_region_t g_mm_scan_region[YOS_MM_SCAN_REGION_MAX];
+static mm_scan_region_t g_mm_scan_region[AOS_MM_SCAN_REGION_MAX];
 static void           **g_leak_match;
 static uint32_t         g_recheck_flag = 0;
 
@@ -37,7 +37,7 @@ uint32_t krhino_mm_leak_region_init(void *start, void *end)
 {
     static uint32_t i = 0;
 
-    if (i >= YOS_MM_SCAN_REGION_MAX) {
+    if (i >= AOS_MM_SCAN_REGION_MAX) {
         return -1;
     }
 
@@ -117,7 +117,7 @@ uint32_t check_mm_leak(uint8_t *adress)
     uint32_t rst = 0;
     uint32_t i;
 
-    for (i = 0; i < YOS_MM_SCAN_REGION_MAX; i++) {
+    for (i = 0; i < AOS_MM_SCAN_REGION_MAX; i++) {
 
         if ((NULL == g_mm_scan_region[i].start) || (NULL == g_mm_scan_region[i].end)) {
             continue;

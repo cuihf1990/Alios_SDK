@@ -266,7 +266,7 @@ ${EXPANDED_PLATFORMS}
 endef
 
 ##########
-# Recurse directories to find valid YOS components.
+# Recurse directories to find valid AOS components.
 # $(1) = starting directory
 # $(2) = name of variable to which to add components that are found
 define RECURSE_DIR_COMPONENT_SEARCH

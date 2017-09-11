@@ -489,7 +489,8 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
 
 static void version_cmd(char *buf, int len, int argc, char **argv)
 {
-    cli_printf("%s\r\n", SYSINFO_OS_VERSION);
+    cli_printf("app version    :%s\r\n", SYSINFO_APP_VERSION);
+    cli_printf("kernel version :%s\r\n", SYSINFO_KERNEL_VERSION);
 }
 
 static void echo_cmd(char *buf, int len, int argc, char **argv)
@@ -661,7 +662,7 @@ int aos_cli_init(void)
         goto init_general_err;
     }
 
-    ret = aos_task_new_ext(&task, "cli", cli_main, 0, 4096, YOS_DEFAULT_APP_PRI);
+    ret = aos_task_new_ext(&task, "cli", cli_main, 0, 4096, AOS_DEFAULT_APP_PRI);
     if (ret != 0) {
         cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);

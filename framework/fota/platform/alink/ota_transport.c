@@ -89,6 +89,7 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
 
         OTA_LOG_I(" response version %s", version->valuestring);
 
+        ota_set_version(version->valuestring);
         char *upgrade_version = strtok(version->valuestring, "_");
         if (!upgrade_version) {
             strncpy(response_parmas->primary_version, version->valuestring,
@@ -101,7 +102,7 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
                 strncpy(response_parmas->secondary_version, upgrade_version,
                         sizeof response_parmas->secondary_version);
             }
-            OTA_LOG_I(" response primary_version = %s, secondary_version = %s",
+            OTA_LOG_I("response primary_version = %s, secondary_version = %s",
                       response_parmas->primary_version, response_parmas->secondary_version);
         }
 
