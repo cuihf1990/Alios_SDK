@@ -9,12 +9,20 @@
 #include <hal/soc/soc.h>
 #include <CheckSumUtils.h>
 
+enum ota_parti_e
+{
+    OTA_PARTITION_KERNEL,
+    OTA_PARTITION_APP,
+    OTA_PARTITION_DEFAULT,
+};
+
 typedef struct
 {
-    uint32_t addr;
-    uint32_t size;
+    uint32_t dst_adr;
+    uint32_t src_adr;
+    uint32_t siz;
     uint16_t crc;
-} ota_hdl_t;
+} __attribute__((packed)) ota_hdl_t;
 
 typedef struct
 {
@@ -24,7 +32,7 @@ typedef struct
 
 static ota_reboot_info_t ota_info;
 
-int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
+int hal_ota_switch_to_new_fw(uint8_t parti, int ota_data_len, uint16_t ota_data_crc )
 {
     uint32_t offset;
     ota_hdl_t ota_hdl,ota_hdl_rb;
@@ -32,12 +40,14 @@ int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
     
     ota_partition = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
 
-    memset( &ota_hdl, 0, sizeof(ota_hdl_t) );
-    ota_hdl.size = ota_data_len;
-    ota_hdl.addr = ota_partition->partition_start_addr;
+    memset( &ota_hdl, 0, sizeof(ota_hdl_t) );    
+    ota_hdl.dst_adr = parti == OTA_PARTITION_KERNEL ? 0x13200 : parti == OTA_PARTITION_APP ? 0x7C720 : 0x13200;
+    ota_hdl.src_adr = ota_partition->partition_start_addr;
+    ota_hdl.siz = ota_data_len;
     ota_hdl.crc = ota_data_crc;
 
-    printf("OTA address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", ota_hdl.addr, ota_hdl.size, ota_hdl.crc);
+    printf("OTA destination = 0x%08x, source address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", 
+    ota_hdl.dst_adr, ota_hdl.src_adr, ota_hdl.siz, ota_hdl.crc);
 
     offset = 0x00;
     hal_flash_erase( HAL_PARTITION_PARAMETER_1, offset, sizeof(ota_hdl_t) );
@@ -51,7 +61,8 @@ int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
 
     if(memcmp(&ota_hdl, &ota_hdl_rb, sizeof(ota_hdl_t)) != 0)
     {
-        printf("OTA header compare failed, OTA address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", ota_hdl_rb.addr, ota_hdl_rb.size, ota_hdl_rb.crc);
+        printf("OTA header compare failed, OTA destination = 0x%08x, source address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", 
+        ota_hdl_rb.dst_adr, ota_hdl_rb.src_adr, ota_hdl_rb.siz, ota_hdl_rb.crc);
         return -1;
     }
 
@@ -68,7 +79,7 @@ static int moc108_ota_init(hal_ota_module_t *m, void *something)
 {
     hal_logic_partition_t *partition_info;
 
-    printf("set ota init---------------\n");
+    printf("moc108 ota init\n");
     
     partition_info = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
     hal_flash_erase(HAL_PARTITION_OTA_TEMP, 0 ,partition_info->partition_length);
@@ -86,11 +97,10 @@ static int moc108_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uin
         CRC16_Init( &contex );
         memset(&ota_info, 0 , sizeof ota_info);
     }
-    printf("set write len---------------%d\n", in_buf_len);
     CRC16_Update( &contex, in_buf, in_buf_len);
     int ret = hal_flash_write(HAL_PARTITION_OTA_TEMP, &_off_set, in_buf, in_buf_len);
     ota_info.ota_len += in_buf_len;
-    printf(" ret :%d, size :%d\n", ret, ota_info.ota_len);
+    printf(" &_off_set 0x %08x, %d\n", _off_set ,ota_info.ota_len);
     return ret;
 }
 
@@ -102,9 +112,10 @@ static int moc108_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, uin
 
 static int moc108_ota_set_boot(hal_ota_module_t *m, void *something)
 {
+    uint8_t parti = *(uint8_t *)something;
     CRC16_Final( &contex, &ota_info.ota_crc );
-    printf("set boot---------------\n");
-    hal_ota_switch_to_new_fw(ota_info.ota_len, ota_info.ota_crc);
+    printf("moc108 set boot\n");
+    hal_ota_switch_to_new_fw(parti, ota_info.ota_len, ota_info.ota_crc);
     memset(&ota_info, 0 , sizeof ota_info);
     return 0;
 }
