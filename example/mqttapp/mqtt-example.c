@@ -369,7 +369,7 @@ static struct cli_command mqttcmd = {
 
 int application_start(int argc, char *argv[])
 {
-    aos_set_log_level(YOS_LL_DEBUG);
+    aos_set_log_level(AOS_LL_DEBUG);
 
     aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
     aos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);

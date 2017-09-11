@@ -53,7 +53,7 @@ void HAL_MutexDestroy(_IN_ void *mutex)
 
 void HAL_MutexLock(_IN_ void *mutex)
 {
-    aos_mutex_lock((aos_mutex_t *)&mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock((aos_mutex_t *)&mutex, AOS_WAIT_FOREVER);
     /*
     int err_num;
     if (0 != (err_num = pthread_mutex_lock((pthread_mutex_t *)mutex))) {
