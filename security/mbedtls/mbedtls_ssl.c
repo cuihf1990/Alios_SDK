@@ -3,7 +3,9 @@
 #include <string.h>
 #include <aos/aos.h>
 #include <aos/network.h>
+#include <sys/time.h>
 
+#include "ali_crypto.h"
 #include "mbedtls/config.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
@@ -29,13 +31,13 @@ typedef struct _ssl_param_t {
 static int ssl_random(void *prng, unsigned char *output, size_t output_len)
 {
 
-    size_t i;
+    struct timeval tv;
 
     (void)prng;
 
-    for (i = 0; i < output_len; i++) {
-        output[i] = rand() & 0xff;
-    }
+    gettimeofday(&tv, NULL);
+    ali_seed((uint8_t *)&tv.tv_usec, sizeof(suseconds_t));
+    ali_rand_gen(output, output_len);
 
     return 0;
 }
