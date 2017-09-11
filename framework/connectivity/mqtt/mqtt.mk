@@ -3,7 +3,7 @@ NAME := mqtt
 $(NAME)_COMPONENTS := connectivity.mqtt.MQTTPacket
 $(NAME)_COMPONENTS += mbedtls
 $(NAME)_COMPONENTS += connectivity.mqtt
-$(NAME)_COMPONENTS += cli digest_algorithm
+$(NAME)_COMPONENTS += digest_algorithm
 $(NAME)_COMPONENTS += iotx-utils.LITE-log iotx-utils.LITE-utils iotx-utils.misc iotx-utils.sdk-impl iotx-utils.guider iotx-utils.digest
 
 MQTT_UTILS_PATH :=  ../../../utility/iotx-utils
