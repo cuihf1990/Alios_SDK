@@ -54,12 +54,12 @@ extern "C"
 
 /**
  * @struct input_event_t
- * @brief yos event structure
+ * @brief aos event structure
  */
 typedef struct {
-    /** The time event is generated, auto filled by yos event system */
+    /** The time event is generated, auto filled by aos event system */
     uint32_t time;
-    /** Event type, value < 0x1000 are used by yos system */
+    /** Event type, value < 0x1000 are used by aos system */
     uint16_t type;
     /** Defined according to type */
     uint16_t code;
@@ -151,7 +151,7 @@ void aos_cancel_delayed_action(int ms, aos_call_t action, void *arg);
  * @retval >=0 success
  * @retval <0  failure
  * @note Unlike aos_post_delayed_action,
- *       this function can be called from non-yos-main-loop context.
+ *       this function can be called from non-aos-main-loop context.
  */
 int aos_schedule_call(aos_call_t action, void *arg);
 
@@ -204,7 +204,7 @@ void aos_loop_destroy(void);
  * @retval >=0 success
  * @retval <0  failure
  * @note Unlike aos_post_delayed_action,
- *       this function can be called from non-yos-main-loop context.
+ *       this function can be called from non-aos-main-loop context.
  */
 int aos_loop_schedule_call(aos_loop_t *loop, aos_call_t action, void *arg);
 
@@ -217,7 +217,7 @@ int aos_loop_schedule_call(aos_loop_t *loop, aos_call_t action, void *arg);
  * @param arg2 private data past to fini_cb
  * @retval  0 failure
  * @retval !0 work handle
- * @note  this function can be called from non-yos-main-loop context.
+ * @note  this function can be called from non-aos-main-loop context.
  */
 void *aos_loop_schedule_work(int ms, aos_call_t action, void *arg1,
                              aos_call_t fini_cb, void *arg2);

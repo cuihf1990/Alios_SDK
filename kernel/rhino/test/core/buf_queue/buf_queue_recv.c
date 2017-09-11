@@ -14,7 +14,7 @@
 #define TEST_BUFQUEUE_MSG_NUM       3
 #define TEST_BUFQUEUE_MSG_MAX       (TEST_BUFQUEUE_BUF0_SIZE/TEST_BUFQUEUE_MSG_NUM)-sizeof(size_t)
 /* four char here */
-static char send_char[TEST_BUFQUEUE_MSG_NUM + 1] = "yos";
+static char send_char[TEST_BUFQUEUE_MSG_NUM + 1] = "aos";
 
 #define TEST_BUFQUEUE_RCV_TASK_RPI       10
 #define TEST_BUFQUEUE_SND_TASK_HIGH_RPI  9

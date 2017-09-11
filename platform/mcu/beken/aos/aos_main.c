@@ -83,7 +83,7 @@ void aos_start(void)
 
     soc_driver_init();
 
-    krhino_task_dyn_create(&g_aos_init, "yos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, aos_init, 1);
+    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, YOS_DEFAULT_APP_PRI, 0, YOS_START_STACK, aos_init, 1);
 
     krhino_start();
 }
