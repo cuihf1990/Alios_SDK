@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_FLASH_H
-#define YOS_FLASH_H
+#ifndef AOS_FLASH_H
+#define AOS_FLASH_H
 
 #define PAR_OPT_READ_POS      ( 0 )
 #define PAR_OPT_WRITE_POS     ( 1 )

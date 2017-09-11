@@ -58,7 +58,7 @@ void *platform_mutex_init(void)
 
 void platform_mutex_lock(void *mutex)
 {
-    aos_mutex_lock((aos_mutex_t *)&mutex, YOS_WAIT_FOREVER);
+    aos_mutex_lock((aos_mutex_t *)&mutex, AOS_WAIT_FOREVER);
 }
 
 void platform_mutex_unlock(void *mutex)
@@ -85,7 +85,7 @@ void *platform_semaphore_init(void)
 int platform_semaphore_wait(_IN_ void *sem, _IN_ uint32_t timeout_ms)
 {
     if (PLATFORM_WAIT_INFINITE == timeout_ms) {
-        return aos_sem_wait((aos_sem_t *)&sem, YOS_WAIT_FOREVER);
+        return aos_sem_wait((aos_sem_t *)&sem, AOS_WAIT_FOREVER);
     } else {
         return aos_sem_wait((aos_sem_t *)&sem, timeout_ms);
     }

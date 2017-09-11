@@ -8,8 +8,8 @@
  * @version since 1.0.0
  */
 
-#ifndef YOS_LOG_H
-#define YOS_LOG_H
+#ifndef AOS_LOG_H
+#define AOS_LOG_H
 
 #if defined(__cplusplus)
 extern "C"
@@ -23,12 +23,12 @@ extern "C"
  */
 
 typedef enum {
-    YOS_LL_NONE,  /**< disable log */
-    YOS_LL_FATAL, /**< fatal log will output */
-    YOS_LL_ERROR, /**< fatal + error log will output */
-    YOS_LL_WARN,  /**< fatal + warn + error log will output(default level) */
-    YOS_LL_INFO,  /**< info + warn + error log will output */
-    YOS_LL_DEBUG, /**< debug + info + warn + error + fatal log will output */
+    AOS_LL_NONE,  /**< disable log */
+    AOS_LL_FATAL, /**< fatal log will output */
+    AOS_LL_ERROR, /**< fatal + error log will output */
+    AOS_LL_WARN,  /**< fatal + warn + error log will output(default level) */
+    AOS_LL_INFO,  /**< info + warn + error log will output */
+    AOS_LL_DEBUG, /**< debug + info + warn + error + fatal log will output */
 }
 aos_log_level_t;
 
@@ -84,5 +84,5 @@ void aos_set_log_level(aos_log_level_t log_level);
 }
 #endif
 
-#endif /* YOS_LOG_H */
+#endif /* AOS_LOG_H */
 

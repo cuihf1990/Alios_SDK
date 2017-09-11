@@ -7,8 +7,8 @@
  * @brief I2C HAL
  */
 
-#ifndef YOS_I2C_H
-#define YOS_I2C_H
+#ifndef AOS_I2C_H
+#define AOS_I2C_H
 
 typedef struct {
     uint32_t address_width;

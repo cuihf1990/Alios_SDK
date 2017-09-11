@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <aos/aos.h>
 #include <aos/network.h>
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
 #include <dda.h>
 #endif
 #include "netmgr.h"
@@ -29,7 +29,7 @@ int application_start(int argc, char **argv)
     const char *mode = argc > 1 ? argv[1] : "";
 
     if (strcmp(mode, "--mesh-node") == 0) {
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
         dda_enable(atoi(argv[argc-1]));
         dda_service_init();
         dda_service_start();
@@ -37,7 +37,7 @@ int application_start(int argc, char **argv)
     }
     else if (strcmp(mode, "--mesh-master") == 0) {
         aos_cli_stop();
-#ifdef CONFIG_YOS_DDM
+#ifdef CONFIG_AOS_DDM
         ddm_run(argc, argv);
 #endif
     }

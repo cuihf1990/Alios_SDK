@@ -246,7 +246,7 @@ int msdp_get_device_status_handler(char *params, void *cb, void *exec_cb,
     char *report_params = NULL;
     attribute_info *pnode;
     dlist_t *pnode_next = NULL;
-    YOS_DLIST_HEAD(head);
+    AOS_DLIST_HEAD(head);
     char uuid[MAX_UUID_LEN] = {0};
     char *entry, *pos;
     int entry_len, type;

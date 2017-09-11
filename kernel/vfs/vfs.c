@@ -98,19 +98,19 @@ int vfs_init(void)
     return ret;
 }
 
-#define MAX_FILE_NUM (YOS_CONFIG_VFS_DEV_NODES * 2)
+#define MAX_FILE_NUM (AOS_CONFIG_VFS_DEV_NODES * 2)
 static file_t files[MAX_FILE_NUM];
 
 static inline int get_fd(file_t *file)
 {
-    return (file - files) + YOS_CONFIG_VFS_FD_OFFSET;
+    return (file - files) + AOS_CONFIG_VFS_FD_OFFSET;
 }
 
 static inline file_t *get_file(int fd)
 {
     file_t *f;
 
-    fd -= YOS_CONFIG_VFS_FD_OFFSET;
+    fd -= AOS_CONFIG_VFS_FD_OFFSET;
 
     if (fd < 0) {
         return NULL;
@@ -163,7 +163,7 @@ int aos_open(const char *path, int flags)
         return -EINVAL;
     }
 
-    if ((ret = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((ret = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return ret;
     }
 
@@ -228,7 +228,7 @@ int aos_close(int fd)
         }
     }
 
-    if ((ret = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((ret = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return ret;
     }
 
@@ -380,7 +380,7 @@ int aos_stat(const char *path, struct stat *st)
         return -EINVAL;
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -405,7 +405,7 @@ int aos_stat(const char *path, struct stat *st)
         }
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -425,7 +425,7 @@ int aos_unlink(const char *path)
         return -EINVAL;
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -450,7 +450,7 @@ int aos_unlink(const char *path)
         }
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -470,7 +470,7 @@ int aos_rename(const char *oldpath, const char *newpath)
         return -EINVAL;
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -495,7 +495,7 @@ int aos_rename(const char *oldpath, const char *newpath)
         }
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -515,7 +515,7 @@ aos_dir_t *aos_opendir(const char *path)
         return NULL;
     }
 
-    if (aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+    if (aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER) != 0) {
         return NULL;
     }
 
@@ -541,7 +541,7 @@ aos_dir_t *aos_opendir(const char *path)
     }
 
     if (dp == NULL) {
-        if (aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER) != 0) {
+        if (aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER) != 0) {
             return NULL;
         }
 
@@ -579,7 +579,7 @@ int aos_closedir(aos_dir_t *dir)
         }
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -630,7 +630,7 @@ int aos_mkdir(const char *path)
         return -EINVAL;
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -655,7 +655,7 @@ int aos_mkdir(const char *path)
         }
     }
 
-    if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+    if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
         return err;
     }
 
@@ -666,7 +666,7 @@ int aos_mkdir(const char *path)
 }
 
 
-#if (YOS_CONFIG_VFS_POLL_SUPPORT>0)
+#if (AOS_CONFIG_VFS_POLL_SUPPORT>0)
 
 #if !defined(WITH_LWIP) && defined(VCALL_RHINO)
 #define NEED_WAIT_IO
@@ -714,7 +714,7 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
         return ret;
     }
 
-    timeout = timeout >= 0 ? timeout : YOS_WAIT_FOREVER;
+    timeout = timeout >= 0 ? timeout : AOS_WAIT_FOREVER;
     ret = aos_sem_wait(&parg->sem, timeout);
     if (ret != VFS_SUCCESS) {
         return 0;
@@ -819,7 +819,7 @@ static int pre_poll(struct pollfd *fds, int nfds, fd_set *rfds, void *parg)
         file_t  *f;
         struct pollfd *pfd = &fds[i];
 
-        if (pfd->fd < YOS_CONFIG_VFS_FD_OFFSET) {
+        if (pfd->fd < AOS_CONFIG_VFS_FD_OFFSET) {
             setup_fd(pfd->fd);
             FD_SET(pfd->fd, rfds);
             maxfd = pfd->fd > maxfd ? pfd->fd : maxfd;
@@ -848,7 +848,7 @@ static int post_poll(struct pollfd *fds, int nfds)
         file_t  *f;
         struct pollfd *pfd = &fds[j];
 
-        if (pfd->fd < YOS_CONFIG_VFS_FD_OFFSET) {
+        if (pfd->fd < AOS_CONFIG_VFS_FD_OFFSET) {
             teardown_fd(pfd->fd);
             continue;
         }
@@ -920,7 +920,7 @@ int aos_fcntl(int fd, int cmd, int val)
         return -EINVAL;
     }
 
-    if (fd < YOS_CONFIG_VFS_FD_OFFSET) {
+    if (fd < AOS_CONFIG_VFS_FD_OFFSET) {
         return trap_fcntl(fd, cmd, val);
     }
 
@@ -932,12 +932,12 @@ int aos_ioctl_in_loop(int cmd, unsigned long arg)
     int      err;
     int      fd;
 
-    for (fd = YOS_CONFIG_VFS_FD_OFFSET;
-         fd < YOS_CONFIG_VFS_FD_OFFSET + YOS_CONFIG_VFS_DEV_NODES; fd++) {
+    for (fd = AOS_CONFIG_VFS_FD_OFFSET;
+         fd < AOS_CONFIG_VFS_FD_OFFSET + AOS_CONFIG_VFS_DEV_NODES; fd++) {
         file_t  *f;
         inode_t *node;
 
-        if ((err = aos_mutex_lock(&g_vfs_mutex, YOS_WAIT_FOREVER)) != 0) {
+        if ((err = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
             return err;
         }
 

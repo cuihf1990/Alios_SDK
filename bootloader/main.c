@@ -16,7 +16,7 @@ extern void menu_loop(void);
 
 const char menu[] =
 "\r\n"
-"YOS bootloader for %s, %s, HARDWARE_REVISION: %s\r\n"
+"AOS bootloader for %s, %s, HARDWARE_REVISION: %s\r\n"
 "+ command -------------------------+ function ------------+\r\n"
 "| 0:BOOTUPDATE    <-r>             | Update bootloader    |\r\n"
 "| 1:FWUPDATE      <-r>             | Update application   |\r\n"

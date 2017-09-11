@@ -24,7 +24,7 @@ void *ur_mem_alloc(uint16_t size)
 
     mem = (void *)aos_malloc((size_t)size);
     if (mem) {
-        aos_mutex_lock(&g_mem_info.mutex, YOS_WAIT_FOREVER);
+        aos_mutex_lock(&g_mem_info.mutex, AOS_WAIT_FOREVER);
         g_mem_info.stats.num += size;
         aos_mutex_unlock(&g_mem_info.mutex);
     }
@@ -35,7 +35,7 @@ void ur_mem_free(void *mem, uint16_t size)
 {
     if (mem) {
         aos_free(mem);
-        aos_mutex_lock(&g_mem_info.mutex, YOS_WAIT_FOREVER);
+        aos_mutex_lock(&g_mem_info.mutex, AOS_WAIT_FOREVER);
         g_mem_info.stats.num -= size;
         aos_mutex_unlock(&g_mem_info.mutex);
     }

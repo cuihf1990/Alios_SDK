@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <aos/log.h>
 
-unsigned int aos_log_level = YOS_LL_V_DEBUG | YOS_LL_V_INFO | YOS_LL_V_WARN | YOS_LL_V_ERROR | YOS_LL_V_FATAL;
+unsigned int aos_log_level = AOS_LL_V_DEBUG | AOS_LL_V_INFO | AOS_LL_V_WARN | AOS_LL_V_ERROR | AOS_LL_V_FATAL;
 
 __attribute__((weak)) int csp_printf(const char *fmt, ...)
 {
@@ -27,19 +27,19 @@ void aos_set_log_level(aos_log_level_t log_level)
     unsigned int value = 0;
 
     switch (log_level) {
-        case YOS_LL_NONE:
-            value |= YOS_LL_V_NONE;
+        case AOS_LL_NONE:
+            value |= AOS_LL_V_NONE;
             break;
-        case YOS_LL_DEBUG:
-            value |= YOS_LL_V_DEBUG;
-        case YOS_LL_INFO:
-            value |= YOS_LL_V_INFO;
-        case YOS_LL_WARN:
-            value |= YOS_LL_V_WARN;
-        case YOS_LL_ERROR:
-            value |= YOS_LL_V_ERROR;
-        case YOS_LL_FATAL:
-            value |= YOS_LL_V_FATAL;
+        case AOS_LL_DEBUG:
+            value |= AOS_LL_V_DEBUG;
+        case AOS_LL_INFO:
+            value |= AOS_LL_V_INFO;
+        case AOS_LL_WARN:
+            value |= AOS_LL_V_WARN;
+        case AOS_LL_ERROR:
+            value |= AOS_LL_V_ERROR;
+        case AOS_LL_FATAL:
+            value |= AOS_LL_V_FATAL;
             break;
         default:
             break;

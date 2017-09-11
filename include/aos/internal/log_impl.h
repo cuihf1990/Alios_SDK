@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_LOG_IMPL_H
-#define YOS_LOG_IMPL_H
+#ifndef AOS_LOG_IMPL_H
+#define AOS_LOG_IMPL_H
 
 #if defined(__cplusplus)
 extern "C"
@@ -17,24 +17,24 @@ static inline unsigned int aos_log_get_level(void)
 }
 
 enum log_level_bit {
-    YOS_LL_V_NONE_BIT = -1,
-    YOS_LL_V_FATAL_BIT,
-    YOS_LL_V_ERROR_BIT,
-    YOS_LL_V_WARN_BIT,
-    YOS_LL_V_INFO_BIT,
-    YOS_LL_V_DEBUG_BIT,
-    YOS_LL_V_MAX_BIT
+    AOS_LL_V_NONE_BIT = -1,
+    AOS_LL_V_FATAL_BIT,
+    AOS_LL_V_ERROR_BIT,
+    AOS_LL_V_WARN_BIT,
+    AOS_LL_V_INFO_BIT,
+    AOS_LL_V_DEBUG_BIT,
+    AOS_LL_V_MAX_BIT
 };
 
-#define YOS_LOG_LEVEL aos_log_get_level()
+#define AOS_LOG_LEVEL aos_log_get_level()
 
-#define YOS_LL_V_NONE  0
-#define YOS_LL_V_ALL  0xFF
-#define YOS_LL_V_FATAL (1 << YOS_LL_V_FATAL_BIT)
-#define YOS_LL_V_ERROR (1 << YOS_LL_V_ERROR_BIT)
-#define YOS_LL_V_WARN  (1 << YOS_LL_V_WARN_BIT)
-#define YOS_LL_V_INFO  (1 << YOS_LL_V_INFO_BIT)
-#define YOS_LL_V_DEBUG (1 << YOS_LL_V_DEBUG_BIT)
+#define AOS_LL_V_NONE  0
+#define AOS_LL_V_ALL  0xFF
+#define AOS_LL_V_FATAL (1 << AOS_LL_V_FATAL_BIT)
+#define AOS_LL_V_ERROR (1 << AOS_LL_V_ERROR_BIT)
+#define AOS_LL_V_WARN  (1 << AOS_LL_V_WARN_BIT)
+#define AOS_LL_V_INFO  (1 << AOS_LL_V_INFO_BIT)
+#define AOS_LL_V_DEBUG (1 << AOS_LL_V_DEBUG_BIT)
 
 /*
  * color def.
@@ -93,7 +93,7 @@ extern int csp_printf(const char *fmt, ...);
 #undef LOG
 
 #define LOG_IMPL(fmt, ...) \
-            log_print(1, "YOS", COL_DEF, "V", fmt, ##__VA_ARGS__)
+            log_print(1, "AOS", COL_DEF, "V", fmt, ##__VA_ARGS__)
 
 #ifdef NDEBUG
 #define CONFIG_LOGMACRO_SILENT
@@ -101,7 +101,7 @@ extern int csp_printf(const char *fmt, ...);
 
 #ifdef DEBUG
 #define LOGD_IMPL(mod, fmt, ...) \
-            log_print(YOS_LOG_LEVEL & YOS_LL_V_DEBUG, mod, COL_WHE, "D", fmt, ##__VA_ARGS__)
+            log_print(AOS_LOG_LEVEL & AOS_LL_V_DEBUG, mod, COL_WHE, "D", fmt, ##__VA_ARGS__)
 #else
 #define LOGD_IMPL(mod, fmt, ...) void_func(fmt, ##__VA_ARGS__)
 #endif
@@ -115,13 +115,13 @@ extern int csp_printf(const char *fmt, ...);
 #else
 
 #define LOGF_IMPL(mod, fmt, ...) \
-            log_print(YOS_LOG_LEVEL & YOS_LL_V_FATAL, mod, COL_RED, "F", fmt, ##__VA_ARGS__)
+            log_print(AOS_LOG_LEVEL & AOS_LL_V_FATAL, mod, COL_RED, "F", fmt, ##__VA_ARGS__)
 #define LOGE_IMPL(mod, fmt, ...) \
-            log_print(YOS_LOG_LEVEL & YOS_LL_V_ERROR, mod, COL_YEL, "E", fmt, ##__VA_ARGS__)
+            log_print(AOS_LOG_LEVEL & AOS_LL_V_ERROR, mod, COL_YEL, "E", fmt, ##__VA_ARGS__)
 #define LOGW_IMPL(mod, fmt, ...) \
-            log_print(YOS_LOG_LEVEL & YOS_LL_V_WARN, mod, COL_BLU, "W", fmt, ##__VA_ARGS__)
+            log_print(AOS_LOG_LEVEL & AOS_LL_V_WARN, mod, COL_BLU, "W", fmt, ##__VA_ARGS__)
 #define LOGI_IMPL(mod, fmt, ...) \
-            log_print(YOS_LOG_LEVEL & YOS_LL_V_INFO, mod, COL_GRE, "I", fmt, ##__VA_ARGS__)
+            log_print(AOS_LOG_LEVEL & AOS_LL_V_INFO, mod, COL_GRE, "I", fmt, ##__VA_ARGS__)
 
 #endif /* CONFIG_LOGMACRO_SILENT */
 
@@ -129,5 +129,5 @@ extern int csp_printf(const char *fmt, ...);
 }
 #endif
 
-#endif /* YOS_LOG_IMPL_H */
+#endif /* AOS_LOG_IMPL_H */
 

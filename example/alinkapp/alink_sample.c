@@ -508,7 +508,7 @@ void parse_opt(int argc, char *argv[])
         case 'l':
             /*
             if (!strcmp(optarg, "trace"))
-                log_level = YOS_LL_TRACE;
+                log_level = AOS_LL_TRACE;
             else if (!strcmp(optarg, "debug"))
                 log_level = ALINK_LL_DEBUG;
             else if (!strcmp(optarg, "info"))
@@ -752,16 +752,16 @@ int application_start(int argc, char *argv[])
 {
     parse_opt(argc, argv);
 
-    aos_set_log_level(YOS_LL_DEBUG);
+    aos_set_log_level(AOS_LL_DEBUG);
 
     if (mesh_mode == MESH_MASTER) {
-#ifdef CONFIG_YOS_DDM
+#ifdef CONFIG_AOS_DDM
         ddm_run(argc, argv);
 #endif
         return 0;
     }
 
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
     dda_enable(atoi(mesh_num));
     dda_service_init();
 #endif
@@ -799,7 +799,7 @@ int application_start(int argc, char *argv[])
     cli_register_command(&count_mac_cmd);
 #endif
 
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
     dda_service_start();
 #else
     aos_loop_run();

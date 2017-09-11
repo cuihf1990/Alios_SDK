@@ -61,7 +61,7 @@ extern "C"
             if( unlikely( !(X) ) )                                                                      \
             {                                                                                           \
                 debug_print_assert( 0, #X, STR, SHORT_FILE, __LINE__, __PRETTY_FUNCTION__ );              \
-                YOS_ASSERTION_FAIL_ACTION();                                                           \
+                AOS_ASSERTION_FAIL_ACTION();                                                           \
             }                                                                                           \
                                                                                                         \
         }   while( 1==0 )

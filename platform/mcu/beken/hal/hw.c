@@ -57,7 +57,7 @@ void hw_start_hal(void)
     printf("start-----------hal\n");
     hal_wifi_register_module(&sim_aos_wifi_beken);
     hal_ota_register_module(&moc108_ota_module);
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
     extern void beken_wifi_mesh_register(void);
     beken_wifi_mesh_register();
 #endif

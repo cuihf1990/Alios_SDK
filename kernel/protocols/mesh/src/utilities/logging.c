@@ -47,7 +47,7 @@ void __attribute__((weak)) ur_log(ur_log_level_t level, ur_log_region_t region,
     vsnprintf(buffer, MAX_LOG_SIZE, format, args);
     va_end(args);
 
-#ifdef CONFIG_YOS_DDA
+#ifdef CONFIG_AOS_DDA
     dda_log(buffer);
 #endif
     if (!g_cli_silent) {

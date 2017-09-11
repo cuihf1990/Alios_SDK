@@ -6,7 +6,7 @@
 
 #include "umesh_hal.h"
 
-static YOS_DLIST_HEAD(g_mesh_module);
+static AOS_DLIST_HEAD(g_mesh_module);
 
 int hal_umesh_init(void)
 {

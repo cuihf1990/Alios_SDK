@@ -49,21 +49,21 @@ void parse_options(options_t *options)
         if (!strcmp(argv[i], "--log")) {
             shift_argv(options, i);
             if (i >= options->argc) {
-                options->log_level = YOS_LL_DEBUG;
+                options->log_level = AOS_LL_DEBUG;
                 continue;
             }
 
             const char *ll = argv[i];
             if (strcmp(ll, "fatal") == 0)
-                options->log_level = YOS_LL_FATAL;
+                options->log_level = AOS_LL_FATAL;
             else if (strcmp(ll, "error") == 0)
-                options->log_level = YOS_LL_ERROR;
+                options->log_level = AOS_LL_ERROR;
             else if (strcmp(ll, "warn") == 0)
-                options->log_level = YOS_LL_WARN;
+                options->log_level = AOS_LL_WARN;
             else if (strcmp(ll, "info") == 0)
-                options->log_level = YOS_LL_INFO;
+                options->log_level = AOS_LL_INFO;
             else if (strcmp(ll, "debug") == 0)
-                options->log_level = YOS_LL_DEBUG;
+                options->log_level = AOS_LL_DEBUG;
             shift_argv(options, i);
             continue;
         }

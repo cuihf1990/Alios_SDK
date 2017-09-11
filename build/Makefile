@@ -1,8 +1,8 @@
 default: Help
 
-export YOS_SDK_VERSION_MAJOR    :=  3
-export YOS_SDK_VERSION_MINOR    :=  2
-export YOS_SDK_VERSION_REVISION :=  3
+export AOS_SDK_VERSION_MAJOR    :=  3
+export AOS_SDK_VERSION_MINOR    :=  2
+export AOS_SDK_VERSION_REVISION :=  3
 
 export SOURCE_ROOT ?= ./
 
@@ -10,7 +10,7 @@ export MAKEFILES_PATH := $(SOURCE_ROOT)/build
 export SCRIPTS_PATH := $(SOURCE_ROOT)/build/scripts
 MAKEFILE_TARGETS := clean  # targets used by makefile 
 
-#define BUILD_STRING, YOS toolchain commands on different hosts
+#define BUILD_STRING, AOS toolchain commands on different hosts
 include $(MAKEFILES_PATH)/aos_host_cmd.mk
 
 define USAGE_TEXT
@@ -98,8 +98,8 @@ ifneq ($(BUILD_STRING),)
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
-out/$(CLEANED_BUILD_STRING)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(YOS_SDK_MAKEFILES)
-	$(QUIET)$(ECHO) $(if $(YOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
+out/$(CLEANED_BUILD_STRING)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
+	$(QUIET)$(ECHO) $(if $(AOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
 	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/aos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
 
@@ -118,13 +118,13 @@ $(PASSDOWN_TARGETS):
 $(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit)
 
 ifeq ($(BINS), 0)
-main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
+main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
 	$(QUIET)$(ECHO) Build AOS Now
 	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
 	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
 	$(QUIET)$(ECHO) Build complete
 else
-main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build_bins.mk
+main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build_bins.mk
 	$(QUIET)$(ECHO) Build AOS-BINS Now
 	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
 	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build_bins.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
