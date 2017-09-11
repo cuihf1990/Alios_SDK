@@ -3,6 +3,5 @@ BUILD DOC:
     u can build doc with the follow command:
         doxygen api.doxygen
 
-
 READ DOC:
     u can open file "index.html" with browser to read doc.
