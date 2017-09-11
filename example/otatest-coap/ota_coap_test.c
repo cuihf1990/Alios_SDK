@@ -16,9 +16,9 @@
  *
  */
 
-#include <yos/yos.h>
+#include <aos/aos.h>
 
-extern void coap_ota();
+//extern void coap_ota();
 
 int application_start(void)
 {
