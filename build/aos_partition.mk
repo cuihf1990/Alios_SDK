@@ -1,4 +1,4 @@
-# Add YOS image download script define
+# Add AOS image download script define
 BOOTLOADER_FIRMWARE_PARTITION_TCL          	:= 1
 APPLICATION_FIRMWARE_PARTITION_TCL        	:= 2
 ATE_FIRMWARE_PARTITION_TCL                 	:= 3

@@ -97,12 +97,12 @@ void soc_system_init(void)
 
     hal_init();
 
-#ifndef YOS_NO_WIFI
+#ifndef AOS_NO_WIFI
     app_start();
 
     hw_start_hal();
 
-#ifdef CONFIG_YOS_CLI
+#ifdef CONFIG_AOS_CLI
     board_cli_init();
 #endif
 #endif

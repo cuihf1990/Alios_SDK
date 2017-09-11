@@ -105,9 +105,9 @@ typedef struct agent_info_s {
 static agent_info_t agent_info = {
     .agent_id = 0,
     .sockfd = -1,
-    .sending_queue = YOS_DLIST_INIT(agent_info.sending_queue),
-    .p2p_queue = YOS_DLIST_INIT(agent_info.p2p_queue),
-    .mesh_cbs = YOS_DLIST_INIT(agent_info.mesh_cbs),
+    .sending_queue = AOS_DLIST_INIT(agent_info.sending_queue),
+    .p2p_queue = AOS_DLIST_INIT(agent_info.p2p_queue),
+    .mesh_cbs = AOS_DLIST_INIT(agent_info.mesh_cbs),
 };
 
 static int create_socket(void)
@@ -362,7 +362,7 @@ static void handle_mesh(agent_info_t *agent, ipc_msg_t *msg, struct sockaddr *pa
         handle_data(agent, msg, paddr);
 }
 
-#ifdef CONFIG_YOS_MESH
+#ifdef CONFIG_AOS_MESH
 #define CLI_RES_SIZE 0x10000
 void dda_cli_log(char *buf);
 void ur_cli_input(char *buf, int len);

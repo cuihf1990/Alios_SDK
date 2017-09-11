@@ -11,17 +11,17 @@ extern "C"
 #endif
 
 /* The totally storage size for key-value store */
-#ifndef CONFIG_YOS_KV_BUFFER_SIZE
+#ifndef CONFIG_AOS_KV_BUFFER_SIZE
 #define KV_TOTAL_SIZE   (8 * 1024)
 #else
-#define KV_TOTAL_SIZE   CONFIG_YOS_KV_BUFFER_SIZE
+#define KV_TOTAL_SIZE   CONFIG_AOS_KV_BUFFER_SIZE
 #endif
 
 /* The physical parition for key-value store */
-#ifndef CONFIG_YOS_KV_PTN
+#ifndef CONFIG_AOS_KV_PTN
 #define KV_PTN    HAL_PARTITION_PARAMETER_2
 #else
-#define KV_PTN    CONFIG_YOS_KV_PTN
+#define KV_PTN    CONFIG_AOS_KV_PTN
 #endif
 
 /**

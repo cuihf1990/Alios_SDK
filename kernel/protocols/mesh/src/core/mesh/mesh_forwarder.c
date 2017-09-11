@@ -902,7 +902,7 @@ static void message_handler(void *args)
         return;
     }
 
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
     if (info->type == MESH_FRAME_TYPE_CMD) {
         handle_diags_command(message, recv);
     }
@@ -991,7 +991,7 @@ static void handle_received_frame(void *context, frame_t *frame,
         return;
     }
 
-#ifdef CONFIG_YOS_MESH_DEBUG
+#ifdef CONFIG_AOS_MESH_DEBUG
     if (whitelist_is_enabled()) {
         whitelist_entry_t *entry;
         entry = whitelist_find(&frame_info->peer);

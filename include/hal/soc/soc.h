@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef YOS_SOC_H
-#define YOS_SOC_H
+#ifndef AOS_SOC_H
+#define AOS_SOC_H
 
 #include <stdint.h>
 #include <stddef.h>

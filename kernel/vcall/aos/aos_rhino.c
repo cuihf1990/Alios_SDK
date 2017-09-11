@@ -44,7 +44,7 @@ int aos_task_new(const char *name, void (*fn)(void *), void *arg,
 
     ktask_t *task_handle = NULL;
 
-    ret = (int)krhino_task_dyn_create(&task_handle, name, arg, YOS_DEFAULT_APP_PRI, 0,
+    ret = (int)krhino_task_dyn_create(&task_handle, name, arg, AOS_DEFAULT_APP_PRI, 0,
                                      stack_size / sizeof(cpu_stack_t), fn, 1u);
     if (ret == RHINO_SUCCESS) {
         return 0;
@@ -137,7 +137,7 @@ int aos_mutex_new(aos_mutex_t *mutex)
         return -ENOMEM;
     }
 
-    ret = krhino_mutex_create(m, "YOS");
+    ret = krhino_mutex_create(m, "AOS");
     if (ret != RHINO_SUCCESS) {
         aos_free(m);
         ERRNO_MAPPING(ret);
@@ -169,7 +169,7 @@ int aos_mutex_lock(aos_mutex_t *mutex, unsigned int timeout)
         return -EINVAL;
     }
 
-    if (timeout == YOS_WAIT_FOREVER) {
+    if (timeout == AOS_WAIT_FOREVER) {
         ret = krhino_mutex_lock(mutex->hdl, RHINO_WAIT_FOREVER);
     } else {
         ret = krhino_mutex_lock(mutex->hdl, MS2TICK(timeout));
@@ -234,7 +234,7 @@ int aos_sem_new(aos_sem_t *sem, int count)
         return -ENOMEM;
     }
 
-    ret = krhino_sem_create(s, "YOS", count);
+    ret = krhino_sem_create(s, "AOS", count);
     if (ret != RHINO_SUCCESS) {
         aos_free(s);
         ERRNO_MAPPING(ret);
@@ -266,7 +266,7 @@ int aos_sem_wait(aos_sem_t *sem, unsigned int timeout)
         return -EINVAL;
     }
 
-    if (timeout == YOS_WAIT_FOREVER) {
+    if (timeout == AOS_WAIT_FOREVER) {
         ret = krhino_sem_take(sem->hdl, RHINO_WAIT_FOREVER);
     } else {
         ret = krhino_sem_take(sem->hdl, MS2TICK(timeout));
@@ -323,7 +323,7 @@ int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg)
         return -ENOMEM;
     }
 
-    ret = krhino_buf_queue_create(q, "YOS", buf, size, max_msg);
+    ret = krhino_buf_queue_create(q, "AOS", buf, size, max_msg);
     if (ret != RHINO_SUCCESS) {
         aos_free(q);
         ERRNO_MAPPING(ret);
@@ -441,9 +441,9 @@ int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
     }
 
     if (repeat == 0) {
-        ret = krhino_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
+        ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
     } else {
-        ret = krhino_timer_create(t, "YOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
+        ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
                                  arg, 1);
     }
 
@@ -544,7 +544,7 @@ int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
         return -ENOMEM;
     }
 
-    ret = krhino_workqueue_create(wq, "YOS", pri, stk,
+    ret = krhino_workqueue_create(wq, "AOS", pri, stk,
                                  stack_size / sizeof(cpu_stack_t));
     if (ret != RHINO_SUCCESS) {
         aos_free(wq);
@@ -664,10 +664,10 @@ void *aos_zalloc(unsigned int size)
     }
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
-        tmp = krhino_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
+    if ((size & AOS_UNSIGNED_INT_MSB) == 0) {
+        tmp = krhino_mm_alloc(size | AOS_UNSIGNED_INT_MSB);
 
-#ifndef YOS_BINS
+#ifndef AOS_BINS
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
 #endif
     } else {
@@ -694,10 +694,10 @@ void *aos_malloc(unsigned int size)
     }
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
-        tmp = krhino_mm_alloc(size | YOS_UNSIGNED_INT_MSB);
+    if ((size & AOS_UNSIGNED_INT_MSB) == 0) {
+        tmp = krhino_mm_alloc(size | AOS_UNSIGNED_INT_MSB);
 
-#ifndef YOS_BINS
+#ifndef AOS_BINS
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
 #endif
     } else {
@@ -716,10 +716,10 @@ void *aos_realloc(void *mem, unsigned int size)
     void *tmp = NULL;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    if ((size & YOS_UNSIGNED_INT_MSB) == 0) {
-        tmp = krhino_mm_realloc(mem, size | YOS_UNSIGNED_INT_MSB);
+    if ((size & AOS_UNSIGNED_INT_MSB) == 0) {
+        tmp = krhino_mm_realloc(mem, size | AOS_UNSIGNED_INT_MSB);
 
-#ifndef YOS_BINS
+#ifndef AOS_BINS
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
 #endif
     } else {

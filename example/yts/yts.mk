@@ -6,7 +6,7 @@ $(NAME)_COMPONENTS := protocols.net protocols.mesh dda testcase  rhino.test
 $(NAME)_CFLAGS += -Wall -Werror
 
 GLOBAL_LDFLAGS += -lreadline -lncurses
-GLOBAL_DEFINES += CONFIG_YOS_MESHYTS DEBUG
+GLOBAL_DEFINES += CONFIG_AOS_MESHYTS DEBUG
 
 ifeq (1,${BINS})
 GLOBAL_CFLAGS += -DSYSINFO_OS_BINS

@@ -8,8 +8,8 @@
  * @version since 5.5.0
  */
 
-#ifndef YOS_RNG_H
-#define YOS_RNG_H
+#ifndef AOS_RNG_H
+#define AOS_RNG_H
 
 typedef struct {
     uint8_t      port;    /* random device port */

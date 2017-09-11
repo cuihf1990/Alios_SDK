@@ -67,8 +67,8 @@ $(SOURCE_ROOT)out/$(NAME)/%.o: %.S Makefile
 # Standard library defines
 CFLAGS += -c -MD -ggdb $(CPU_CFLAGS) $(ENDIAN_CFLAGS_LITTLE) -Wall -fsigned-char -ffunction-sections -Werror -fdata-sections -fno-common -std=gnu11 
 
-# YOS pre-built library defines
-CFLAGS += -DYOS_PREBUILT_LIBS
+# AOS pre-built library defines
+CFLAGS += -DAOS_PREBUILT_LIBS
 
 ifdef DEBUG
 CFLAGS += -DDEBUG
@@ -91,7 +91,7 @@ CFLAGS += -I$(SOURCE_ROOT)platform \
           -I$(SOURCE_ROOT)platform/$(HOST_ARCH)
           
           
-CFLAGS += -DYOS_PREBUILT_LIBS 
+CFLAGS += -DAOS_PREBUILT_LIBS 
 
 OBJS := $(addprefix $(SOURCE_ROOT)out/$(NAME)/,$(filter %.o,$(SOURCES:.cpp=.o) $(SOURCES:.c=.o) $(SOURCES:.S=.o)))
 

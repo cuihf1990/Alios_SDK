@@ -237,7 +237,7 @@ void intc_init(void)
     *((volatile uint32_t *)0x400004) = &do_fiq;
     *((volatile uint32_t *)0x400008) = &do_swi;
 
-#ifndef YOS_NO_WIFI
+#ifndef AOS_NO_WIFI
     intc_enable(FIQ_MAC_GENERAL);
     intc_enable(FIQ_MAC_PROT_TRIGGER);
 

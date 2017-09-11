@@ -102,7 +102,7 @@ static void wifi_monitor_cb(uint8_t *data, int len,
         return;
     }
 
-#ifdef YOS_DEBUG_MESH
+#ifdef AOS_DEBUG_MESH
     dump_packet(true, data, len);
 #endif
 
