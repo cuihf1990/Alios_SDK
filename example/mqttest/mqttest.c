@@ -1,21 +1,6 @@
 /*
- * Copyright (c) 2014-2016 Alibaba Group. All rights reserved.
- * License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,13 +8,13 @@
 
 #include "iot_import.h"
 #include "iot_export.h"
-#include "yos/log.h"
+#include "aos/log.h"
 // #include "json_parser.h"
-#include "yos/yloop.h"
-#include "yos/network.h"
+#include "aos/yloop.h"
+#include "aos/network.h"
 #include "kvmgr.h"
 #include <netmgr.h>
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include <k_err.h>
 //#include "aliot_platform.h"
 //#include "aliot_log.h"
@@ -37,8 +22,8 @@
 //#include "aliot_auth.h"
 //#include "aliot_device.h"
 #include <netmgr.h>
-#include <yos/cli.h>
-#include <yos/cloud.h>
+#include <aos/cli.h>
+#include <aos/cloud.h>
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
 /*
     #define PRODUCT_KEY             "OvNmiEYRDSY"
@@ -345,7 +330,7 @@ int application_start(int argc, char *argv[])
     user_argc = argc;
     user_argv = argv;
 
-    aos_set_log_level(YOS_LL_DEBUG);
+    aos_set_log_level(AOS_LL_DEBUG);
 
     aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
     aos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);

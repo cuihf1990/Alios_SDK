@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -668,7 +672,7 @@ static void test_mqtt_case13(void)
     YUNIT_ASSERT(ret < 0);
 }
 
-static yunit_test_case_t yunos_basic_testcases[] = {
+static yunit_test_case_t aos_basic_testcases[] = {
     { "case1", test_mqtt_case1},
     { "case2", test_mqtt_case2},
     { "case3", test_mqtt_case3},
@@ -688,7 +692,7 @@ static yunit_test_case_t yunos_basic_testcases[] = {
 };
 
 static yunit_test_suite_t suites[] = {
-    { "mqtt", init, cleanup, setup, teardown, yunos_basic_testcases },
+    { "mqtt", init, cleanup, setup, teardown, aos_basic_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
