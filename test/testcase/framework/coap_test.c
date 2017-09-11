@@ -148,8 +148,6 @@ static void test_coap_start(void)
         YUNIT_ASSERT(NULL != p_ctx); 
     }
 
-//    yos_loop_run();
-   
 }
 
 static int init(void)
