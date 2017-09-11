@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <sys/time.h>
 
-#include <yos/kernel.h>
+#include <aos/kernel.h>
 #include "iot_import.h"
 //#include "aliot_platform_os.h"
 
