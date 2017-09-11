@@ -25,8 +25,8 @@ typedef struct {
 /**
  * @brief open the file or device by its path @path.
  *
- * @param[in] @path   the path of the file or device you want to open.
- * @param[in] @flags  the mode of open operation
+ * @param[in]  @path   the path of the file or device you want to open.
+ * @param[in]  @flags  the mode of open operation
  *
  * @retval  >=0 on success.
  * @retval <0 failure.
@@ -36,7 +36,7 @@ int aos_open(const char *path, int flags);
 /**
  * @brief close the file or device by its fd @fd.
  *
- * @param[in] @fd  the handle of the file or device.
+ * @param[in]  @fd  the handle of the file or device.
  *
  * @retval  0 on success.
  * @retval <0 failure.
@@ -57,9 +57,9 @@ ssize_t aos_read(int fd, void *buf, size_t nbytes);
 /**
  * @brief write the contents of a buffer to file or device
  *
- * @param[in]   @fd      the handle of the file or device.
- * @param[in]   @nbytes  the number of bytes to write.
- * @param[in]   @buf     the buffer to write from.
+ * @param[in]  @fd      the handle of the file or device.
+ * @param[in]  @nbytes  the number of bytes to write.
+ * @param[in]  @buf     the buffer to write from.
  *
  * @retval  The number of bytes written, negative error on failure.
  */
@@ -104,9 +104,9 @@ int aos_fcntl(int fd, int cmd, int val);
 /**
   * @brief move the file position to a given offset from from a given location
   *
-  * @param[in] @fd     File handle
-  * @param[in] @offset   The offset from whence to move to
-  * @param[in] @whence   The start of where to seek
+  * @param[in]  @fd      File handle
+  * @param[in]  @offset  The offset from whence to move to
+  * @param[in]  @whence  The start of where to seek
   *      SEEK_SET to start from beginning of file,
   *      SEEK_CUR to start from current position in file,
   *      SEEK_END to start from end of file
@@ -118,7 +118,7 @@ off_t aos_lseek(int fd, off_t offset, int whence);
 /**
   * @brief flush any buffers associated with the file
   *
-  * @param[in] @fd     File handle
+  * @param[in]  @fd  File handle
   *
   * @retval 0 on success, negative error code on failure
   */
@@ -127,8 +127,8 @@ int aos_sync(int fd);
 /**
   * @brief store information about the file in a stat structure
   *
-  * @param[in] @path   The name of the file to find information about
-  * @param[out] @st     The stat buffer to write to
+  * @param[in]   @path  The name of the file to find information about
+  * @param[out]  @st    The stat buffer to write to
   *
   * @retval 0 on success, negative error code on failure
   */
@@ -137,7 +137,7 @@ int aos_stat(const char *path, struct stat *st);
 /**
   * @brief remove a file from the filesystem.
   *
-  * @param[in] @path     The name of the file to remove.
+  * @param[in]  @path  The name of the file to remove.
   *
   * @retval 0 on success, negative error code on failure
   */
@@ -146,8 +146,8 @@ int aos_unlink(const char *path);
 /**
   * @brief rename a file in the filesystem.
   *
-  * @param[in] @oldpath     The name of the file to rename.
-  * @param[in] @newpath   The name to rename it to
+  * @param[in]  @oldpath  The name of the file to rename.
+  * @param[in]  @newpath  The name to rename it to
   *
   * @retval 0 on success, negative error code on failure
   */
@@ -156,7 +156,7 @@ int aos_rename(const char *oldpath, const char *newpath);
 /**
   * @brief open a directory on the filesystem
   *
-  * @param[in] @path     Name of the directory to open
+  * @param[in]  @path  Name of the directory to open
   *
   * @retval a point of directory stream on success, NULL on failure
   */
@@ -165,7 +165,7 @@ aos_dir_t *aos_opendir(const char *path);
 /**
   * @brief close a directory
   *
-  * @param[in] @dir      Dir handle
+  * @param[in]  @dir  Dir handle
   *
   * @retval 0 on success, negative error code on failure
   */
@@ -174,7 +174,7 @@ int aos_closedir(aos_dir_t *dir);
 /**
   * @brief read the next directory entry
   *
-  * @param[in] @dir      Dir handle
+  * @param[in]  @dir  Dir handle
   *
   * @retval a pointer to a dirent structure.
   */
@@ -183,7 +183,7 @@ aos_dirent_t *aos_readdir(aos_dir_t *dir);
 /**
   * @brief create the directory, if they do not already exist.
   *
-  * @param[in] @path the name of the directory
+  * @param[in]  @path  the name of the directory
   *
   * @retval 0 on success, negative error code on failure
   */
