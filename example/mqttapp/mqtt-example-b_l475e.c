@@ -67,7 +67,7 @@
 #define TOPIC_GET               "/"PRODUCT_KEY"/"DEVICE_NAME"/get"
 #define TOPIC_DATA              "/"PRODUCT_KEY"/"DEVICE_NAME"/data"
 
-#define MSG_LEN_MAX             (1024)
+#define MSG_LEN_MAX             (2048)
 
 #define EXAMPLE_TRACE(fmt, args...)  \
     do { \
@@ -78,10 +78,18 @@
 
 static int      user_argc;
 static char   **user_argv;
-static void mqtt_main_async( );
-
-
 static int is_demo_started = 0;
+void *pclient;
+typedef struct ota_device_info {
+    const char *product_key;
+    const char *device_name;
+    void *pclient;
+} OTA_device_info_t;
+
+OTA_device_info_t ota_device_info;
+
+static void ota_init();
+static void mqtt_main_async();
 static void wifi_service_event(input_event_t *event, void *priv_data) {
     LOG("wifi_service_event!");
     if (event->type != EV_WIFI) {
@@ -187,7 +195,6 @@ static void _demo_message_arrive(void *pcontext, void *pclient, iotx_mqtt_event_
 int mqtt_client_example(void)
 {
     int rc = 0, msg_len, cnt = 0;
-    void *pclient;
     iotx_conn_info_pt pconn_info;
     iotx_mqtt_param_t mqtt_params;
     iotx_mqtt_topic_info_t topic_msg;
@@ -242,6 +249,7 @@ int mqtt_client_example(void)
         rc = -1;
         goto do_exit;
     }
+    
 
     /* Subscribe the specific topic */
     rc = IOT_MQTT_Subscribe(pclient, TOPIC_DATA, IOTX_MQTT_QOS1, _demo_message_arrive, NULL);
@@ -253,7 +261,7 @@ int mqtt_client_example(void)
     }
 
     HAL_SleepMs(1000);
-
+    ota_init();
     /* Initialize topic information */
     memset(&topic_msg, 0x0, sizeof(iotx_mqtt_topic_info_t));
     strcpy(msg_pub, "message: hello! start!");
@@ -296,7 +304,7 @@ int mqtt_client_example(void)
 #endif
 
         /* handle the MQTT packet received from TCP or SSL connection */
-        IOT_MQTT_Yield(pclient, 200);
+        IOT_MQTT_Yield(pclient, 2000);
 
         /* infinite loop if running with 'loop' argument */
         if (user_argc >= 2 && !strcmp("loop", user_argv[1])) {
@@ -304,7 +312,7 @@ int mqtt_client_example(void)
             cnt = 0;
         }
 
-    } while (cnt < 1);
+    } while (cnt < 100);
 
     IOT_MQTT_Unsubscribe(pclient, TOPIC_DATA);
 
@@ -391,4 +399,11 @@ int application_start(int argc, char *argv[])
     LOG("alink end.");
     aos_msleep(10000000);
     return 0;
+}
+
+static void ota_init(){
+    ota_device_info.product_key=PRODUCT_KEY;
+    ota_device_info.device_name=DEVICE_NAME;
+    ota_device_info.pclient=pclient;
+    aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, &ota_device_info);
 }
