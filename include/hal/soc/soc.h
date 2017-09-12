@@ -18,6 +18,7 @@
 #include "timer.h"
 #include "uart.h"
 #include "wdg.h"
+#include "sd.h"
 
 #endif
 
