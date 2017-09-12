@@ -214,6 +214,8 @@ static void task_queue0_entry(void *arg)
 
     BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
+    krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND / 10);
+
     count = 0;
 
     do {
