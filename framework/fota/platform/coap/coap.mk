@@ -7,6 +7,8 @@ ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_COAP := linux
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
 PLATFORM_COAP := rhino
+else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
+PLATFORM_COAP := rhino
 endif
 
 $(NAME)_INCLUDES :=  \

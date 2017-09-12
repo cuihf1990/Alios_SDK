@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#ifdef PLATFORM_MK3060
+#ifdef PLATFORM_NOT_LINUX
 #include <lwip/inet.h>
 #else
 #include <arpa/inet.h>

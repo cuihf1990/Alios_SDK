@@ -16,7 +16,7 @@ else
 $(NAME)_SOURCES     := mqtt-example.c
 endif
 
-$(NAME)_COMPONENTS := cli connectivity.mqtt
+$(NAME)_COMPONENTS := cli connectivity.mqtt cjson
 
 LWIP := 0
 ifeq ($(LWIP),1)

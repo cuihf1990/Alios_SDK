@@ -27,8 +27,8 @@ $(NAME)_COMPONENTS  := cli
 #$(NAME)_COMPONENTS  += protocols.net
 #endif
 
-ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
-$(NAME)_DEFINES += PLATFORM_MK3060
+ifneq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
+$(NAME)_DEFINES += PLATFORM_NOT_LINUX
 endif
 
 $(NAME)_CFLAGS += \
