@@ -23,11 +23,6 @@ static void queue_flush_param_test(void)
     ret = krhino_queue_flush(NULL);
     QUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
-    krhino_intrpt_enter();
-    ret = krhino_queue_flush(&g_test_queue0);
-    QUEUE_VAL_CHK(ret == RHINO_NOT_CALLED_BY_INTRPT);
-    krhino_intrpt_exit();
-
     krhino_sem_create(&sem, "test_sem ", 0);
     ret = krhino_queue_flush((kqueue_t *)&sem);
     QUEUE_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);

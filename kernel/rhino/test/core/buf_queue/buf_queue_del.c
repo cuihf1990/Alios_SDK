@@ -47,11 +47,6 @@ static void buf_queue_del_param_test(void)
     ret = krhino_buf_queue_del(NULL);
     BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
-    krhino_intrpt_enter();
-    ret = krhino_buf_queue_del(&g_test_bufqueue0);
-    BUFQUEUE_VAL_CHK(ret == RHINO_NOT_CALLED_BY_INTRPT);
-    krhino_intrpt_exit();
-
     krhino_sem_create(& sem, "test_sem ", 0);
     ret = krhino_buf_queue_del((kbuf_queue_t *)&sem);
     BUFQUEUE_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
