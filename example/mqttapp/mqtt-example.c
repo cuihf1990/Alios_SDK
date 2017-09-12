@@ -30,19 +30,15 @@
     #define DEVICE_NAME             "sh_online_sample_mqtt"
     #define DEVICE_SECRET           "v9mqGzepKEphLhXmAoiaUIR2HZ7XwTky"
 */
-    #define PRODUCT_KEY             "edWuENTjOf4"
-    #define DEVICE_NAME             "zmmqtttest-device"
-    #define DEVICE_SECRET           "AU6hOT7CCKitFKb3d9thMjaEszHzCfTA"
-
 #else
 /*
     #define PRODUCT_KEY             "yfTuLfBJTiL"
     #define DEVICE_NAME             "TestDeviceForDemo"
     #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
 */
-    #define PRODUCT_KEY             "F0GaFXDa2r5"
-    #define DEVICE_NAME             "tt04"
-    #define DEVICE_SECRET           "viwGCLwGNYdYdi72jnpeXBcd0Qw4Be6u"
+    #define PRODUCT_KEY             "bcilH87XB1U"
+    #define DEVICE_NAME             "aos_mqtt_test"
+    #define DEVICE_SECRET           "C4cwcJA9hGyAsAXDDZDYnckP0bGedYVQ"
 
 #endif
 
