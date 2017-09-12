@@ -41,7 +41,7 @@ void sem_break_test(void)
                             sizeof(sem_func_runner) / sizeof(test_case_t));
 
     ret = krhino_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

@@ -67,11 +67,11 @@ static void task_queue0_entry(void *arg)
     kstat_t ret;
 
     ret = krhino_queue_create(&g_queue0, "test_queue0", (void **)&g_queue0_msg_pool,
-                             QUEUE_MAX_MSG);
+                              QUEUE_MAX_MSG);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_buf_queue_create(&g_buf_queue0, "test_buf_queue0",
-                                 (void *)g_buf_queue0_msg_pool, BUF_QUEUE_SIZE, BUF_QUEUE_MAX_MSG);
+                                  (void *)g_buf_queue0_msg_pool, BUF_QUEUE_SIZE, BUF_QUEUE_MAX_MSG);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_kobj_set_dyn_create(&handle, OBJ_SET_NAME, OBJ_SET_SIZE);
@@ -89,7 +89,7 @@ static void task_queue0_entry(void *arg)
     TEST_FW_VAL_CHK(MODULE_NAME, (size_t)blk_obj == (size_t)&g_queue0);
 
     ret = krhino_buf_queue_send(&g_buf_queue0, (void *)g_buf_queue0_msg0,
-                               strlen(g_buf_queue0_msg0));
+                                strlen(g_buf_queue0_msg0));
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     ret = krhino_kobj_set_insert((blk_obj_t *)&g_buf_queue0, handle);
@@ -125,7 +125,7 @@ kstat_t task_queue_notify_set_test(void)
     test_case_check_err = 0;
 
     ret = krhino_task_dyn_create(&task0_test, "task_queue0_test", 0, 10,
-                                0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
     TEST_FW_VAL_CHK(MODULE_NAME, ret == RHINO_SUCCESS);
 
     return 0;

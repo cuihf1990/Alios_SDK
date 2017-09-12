@@ -22,20 +22,20 @@ static void buf_queue_create_param_test(void)
     kstat_t ret;
 
     ret = krhino_buf_queue_create(NULL, "test_bufqueue0", g_test_bufqueue_buf0,
-                                 TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
+                                  TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = krhino_buf_queue_create(&g_test_bufqueue0, NULL, g_test_bufqueue_buf0,
-                                 TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
+                                  TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = krhino_buf_queue_create(&g_test_bufqueue0, "test_bufqueue0", NULL,
-                                 TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
+                                  TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = krhino_buf_queue_create(&g_test_bufqueue0, "test_bufqueue0",
-                                 g_test_bufqueue_buf0,
-                                 0, TEST_BUFQUEUE_MSG_MAX);
+                                  g_test_bufqueue_buf0,
+                                  0, TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == RHINO_BUF_QUEUE_SIZE_ZERO);
 }
 
@@ -68,8 +68,8 @@ static void task_queue0_entry(void *arg)
 
     while (1) {
         ret = krhino_buf_queue_create(&g_test_bufqueue0, "test_bufqueue0",
-                                     (void **)&g_test_bufqueue_buf0,
-                                     TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
+                                      (void **)&g_test_bufqueue_buf0,
+                                      TEST_BUFQUEUE_BUF0_SIZE, TEST_BUFQUEUE_MSG_MAX);
         BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
         /* check krhino_buf_queue_create param */
@@ -93,7 +93,7 @@ kstat_t task_buf_queue_del_test(void)
     test_case_check_err = 0;
 
     ret = krhino_task_dyn_create(&task_0_test, "task_bufqueue0_test", 0, 10,
-                                0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
     BUFQUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     return 0;

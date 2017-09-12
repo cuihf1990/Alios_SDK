@@ -208,24 +208,15 @@ static const hal_wifi_event_cb_t g_wifi_hal_event = {
 #ifdef STM32L475xx
 static void set_access_security(hal_wifi_init_type_t *wifi_type, char *security)
 {
-    if ( strcmp( security, "open" ) == 0 )
-    {
+    if ( strcmp( security, "open" ) == 0 ) {
         wifi_type->access_sec = WIFI_ECN_OPEN;
-    }
-    else if ( strcmp( security, "wep" ) == 0 )
-    {
+    } else if ( strcmp( security, "wep" ) == 0 ) {
         wifi_type->access_sec = WIFI_ECN_WEP;
-    }
-    else if ( strcmp( security, "wpa" ) == 0 )
-    {
+    } else if ( strcmp( security, "wpa" ) == 0 ) {
         wifi_type->access_sec = WIFI_ECN_WPA_PSK;
-    }
-    else if ( strcmp( security, "wpa2" ) == 0 )
-    {
+    } else if ( strcmp( security, "wpa2" ) == 0 ) {
         wifi_type->access_sec = WIFI_ECN_WPA2_PSK;
-    }
-    else
-    {
+    } else {
         // set ES_WIFI_SEC_WPA_WPA2 as default
         wifi_type->access_sec = WIFI_ECN_WPA_WPA2_PSK;
         LOGE("netmgr", "Invalid access security settings! Only support open|wep|wpa|wpa2");

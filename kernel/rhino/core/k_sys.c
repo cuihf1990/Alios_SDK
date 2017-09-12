@@ -47,20 +47,20 @@ RHINO_INLINE kstat_t rhino_init(void)
     aos_mm_leak_region_init();
 #endif
     krhino_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
-                       RHINO_CONFIG_K_DYN_QUEUE_MSG);
+                        RHINO_CONFIG_K_DYN_QUEUE_MSG);
     dyn_mem_proc_task_start();
 #endif
 
 #if (RHINO_CONFIG_CPU_NUM > 1)
     for (uint8_t i = 0; i < RHINO_CONFIG_CPU_NUM; i++) {
         krhino_task_cpu_create(&g_idle_task[i], "idle_task", NULL, RHINO_IDLE_PRI, 0,
-                              &g_idle_task_stack[i][0], RHINO_CONFIG_IDLE_TASK_STACK_SIZE,
-                              idle_task, i, 1u);
+                               &g_idle_task_stack[i][0], RHINO_CONFIG_IDLE_TASK_STACK_SIZE,
+                               idle_task, i, 1u);
     }
 #else
     krhino_task_create(&g_idle_task[0], "idle_task", NULL, RHINO_IDLE_PRI, 0,
-                      &g_idle_task_stack[0][0], RHINO_CONFIG_IDLE_TASK_STACK_SIZE,
-                      idle_task, 1u);
+                       &g_idle_task_stack[0][0], RHINO_CONFIG_IDLE_TASK_STACK_SIZE,
+                       idle_task, 1u);
 #endif
 
 #if (RHINO_CONFIG_TIMER > 0)

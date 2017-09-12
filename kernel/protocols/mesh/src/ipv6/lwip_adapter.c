@@ -31,7 +31,8 @@ typedef struct lwip_adapter_state_s {
 
 static lwip_adapter_state_t g_la_state = {.interface_name = "ur"};
 
-static void adapter_msg_input(void *arg) {
+static void adapter_msg_input(void *arg)
+{
     g_la_state.adpif.input(arg, &g_la_state.adpif);
 }
 
@@ -58,8 +59,7 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
 
     if (ip4_addr_ismulticast(ip4addr)) {
         sid = 0xffff;
-    }
-    else {
+    } else {
         sid = ntohs(((ip4addr->addr) >> 16)) - 2;
     }
 
@@ -168,7 +168,7 @@ static void update_interface_ipaddr(void)
 
     ip4_addr = umesh_get_ucast_addr();
     IP4_ADDR(&gw, 10, 0, 0, 1);
-    IP4_ADDR(&ipaddr, ip4_addr->addr.ip4_addr.m8[0], ip4_addr->addr.ip4_addr.m8[1],\
+    IP4_ADDR(&ipaddr, ip4_addr->addr.ip4_addr.m8[0], ip4_addr->addr.ip4_addr.m8[1], \
              ip4_addr->addr.ip4_addr.m8[2], ip4_addr->addr.ip4_addr.m8[3]);
     IP4_ADDR(&netmask, 255, 255, 0, 0);
     netif_set_addr(&g_la_state.adpif, &ipaddr, &netmask, &gw);
@@ -177,7 +177,7 @@ static void update_interface_ipaddr(void)
 #if LWIP_IGMP
     g_la_state.adpif.flags |= NETIF_FLAG_IGMP;
     ip4_addr = umesh_get_mcast_addr();
-    IP4_ADDR(&g_group.group_address, ip4_addr->addr.ip4_addr.m8[0], ip4_addr->addr.ip4_addr.m8[1],\
+    IP4_ADDR(&g_group.group_address, ip4_addr->addr.ip4_addr.m8[0], ip4_addr->addr.ip4_addr.m8[1], \
              ip4_addr->addr.ip4_addr.m8[2], ip4_addr->addr.ip4_addr.m8[3]);
     netif_set_client_data(&g_la_state.adpif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP, &g_group);
 #endif

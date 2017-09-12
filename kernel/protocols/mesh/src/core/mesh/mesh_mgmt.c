@@ -317,7 +317,7 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
     set_leader_network_context(network, init_allocator);
 
     MESH_LOG_INFO("allocate sid 0x%04x, become %d in net %04x",
-           network->sid, g_mm_state.device.state, network->meshnetid);
+                  network->sid, g_mm_state.device.state, network->meshnetid);
 
     return UR_ERROR_NONE;
 }
@@ -852,7 +852,7 @@ static ur_error_t handle_attach_request(message_t *message)
         }
         send_attach_response(network, &info->src_mac, node_id);
         MESH_LOG_INFO("attach response to " EXT_ADDR_FMT "",
-               EXT_ADDR_DATA(info->src_mac.addr.addr));
+                      EXT_ADDR_DATA(info->src_mac.addr.addr));
     }
 
     return error;
@@ -1247,10 +1247,10 @@ static ur_error_t attach_start(neighbor_t *nbr)
     ur_stop_timer(&network->advertisement_timer, network);
 
     MESH_LOG_INFO("%d node, attach start, from %04x:%04x to %04x:%x",
-           g_mm_state.device.state, network->attach_node ?
-           network->attach_node->sid : 0,
-           network->meshnetid, nbr ? nbr->sid : 0,
-           network->candidate_meshnetid);
+                  g_mm_state.device.state, network->attach_node ?
+                  network->attach_node->sid : 0,
+                  network->meshnetid, nbr ? nbr->sid : 0,
+                  network->candidate_meshnetid);
 
     return error;
 }
@@ -1467,7 +1467,7 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
             break;
     }
     MESH_LOG_DEBUG("cmd %d error %d",
-           mm_header->command & COMMAND_COMMAND_MASK, error);
+                   mm_header->command & COMMAND_COMMAND_MASK, error);
     return error;
 }
 

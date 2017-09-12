@@ -39,7 +39,7 @@ static void task_ksem_trigger_opr_entry(void *arg)
     uint32_t flag;
 
     ret = krhino_event_get(&event_sem, 0x1, RHINO_AND_CLEAR, &flag,
-                          RHINO_WAIT_FOREVER);
+                           RHINO_WAIT_FOREVER);
     if ((ret == RHINO_SUCCESS) && (flag == 0x3)) {
         krhino_sem_give(sem_comb);
         krhino_event_del(&event_sem);
@@ -65,23 +65,23 @@ void sem_event_coopr_test(void)
     krhino_event_create(&event_sem, "eventtest", 0x2);
 
     ret = krhino_task_dyn_create(&task_sem, MODULE_NAME, 0, TASK_COMB_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_sem_opr_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_ksem_trigger, MODULE_NAME, 0,
-                                TASK_COMB_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_ksem_trigger_opr_entry, 1);
+                                 TASK_COMB_PRI + 1,
+                                 0, TASK_TEST_STACK_SIZE, task_ksem_trigger_opr_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_event_trigger, MODULE_NAME, 0,
-                                TASK_COMB_PRI + 2,
-                                0, TASK_TEST_STACK_SIZE, task_event_trigger_opr_entry, 1);
+                                 TASK_COMB_PRI + 2,
+                                 0, TASK_TEST_STACK_SIZE, task_event_trigger_opr_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

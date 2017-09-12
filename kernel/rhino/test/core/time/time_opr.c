@@ -69,7 +69,7 @@ void time_opr_test(void)
                              sizeof(time_func_runner) / sizeof(test_func_t));
 
     ret = krhino_task_dyn_create(&task_time, MODULE_NAME, 0, TASK_TIME_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_time_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_time_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

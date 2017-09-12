@@ -147,38 +147,38 @@ void task_misc_entry(void *arg)
     krhino_mutex_lock(&mutex, RHINO_WAIT_FOREVER);
 
     krhino_task_create(NULL, "task_misc2", NULL, 1,
-                      0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
-                      task_misc_entry2, 1);
+                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
+                       task_misc_entry2, 1);
 
     krhino_task_create(&task_misc2, NULL, NULL, 1,
-                      0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
-                      task_misc_entry2, 1);
+                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
+                       task_misc_entry2, 1);
 
     krhino_task_create(&task_misc2, "task_misc2", NULL, 1,
-                      0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
-                      NULL, 1);
+                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
+                       NULL, 1);
 
     krhino_task_create(&task_misc2, "task_misc2", NULL, 1,
-                      0, NULL, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
-                      task_misc_entry2, 1);
+                       0, NULL, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
+                       task_misc_entry2, 1);
 
     krhino_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
-                      0, task_misc2_stack, 0, task_misc_entry2, 1);
+                       0, task_misc2_stack, 0, task_misc_entry2, 1);
 
     krhino_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
-                      0, task_misc2_stack, 0, task_misc_entry2, 1);
+                       0, task_misc2_stack, 0, task_misc_entry2, 1);
 
     krhino_task_create(&task_misc2, "task_misc2", NULL, RHINO_CONFIG_PRI_MAX,
-                      0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
-                      task_misc_entry2, 1);
+                       0, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
+                       task_misc_entry2, 1);
 
     krhino_task_create(&task_misc2, "task_misc2", NULL, RHINO_IDLE_PRI,
-                      50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
-                      task_misc_entry2, 1);
+                       50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
+                       task_misc_entry2, 1);
 
     krhino_task_create(&task_misc2, "task_misc2", NULL, 1,
-                      50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
-                      task_misc_entry2, 1);
+                       50, task_misc2_stack, TASK_TEST_STACK_SIZE / sizeof(cpu_stack_t),
+                       task_misc_entry2, 1);
 
     krhino_mutex_unlock(&mutex);
 
@@ -473,8 +473,8 @@ void task_misc_entry(void *arg)
     }
 
     krhino_task_dyn_create(&task_misc4, "task_misc_test4", 0, 1,
-                          0, TASK_TEST_STACK_SIZE,
-                          task_misc_entry4, 1);
+                           0, TASK_TEST_STACK_SIZE,
+                           task_misc_entry4, 1);
 
     next_test_case_notify();
     krhino_task_dyn_del(krhino_cur_task_get());
@@ -483,15 +483,15 @@ void task_misc_entry(void *arg)
 void task_misc_test(void)
 {
     krhino_task_dyn_create(NULL, "task_misc_test", 0, 10,
-                          0, TASK_TEST_STACK_SIZE,
-                          task_misc_entry, 1);
+                           0, TASK_TEST_STACK_SIZE,
+                           task_misc_entry, 1);
 
     krhino_task_dyn_create(&task_misc, "task_misc_test", 0, 10,
-                          0, TASK_TEST_STACK_SIZE,
-                          task_misc_entry, 1);
+                           0, TASK_TEST_STACK_SIZE,
+                           task_misc_entry, 1);
 
     krhino_task_dyn_create(&task_misc3, "task_misc_test3", 0, 5,
-                          0, TASK_TEST_STACK_SIZE,
-                          task_misc_entry3, 1);
+                           0, TASK_TEST_STACK_SIZE,
+                           task_misc_entry3, 1);
 }
 

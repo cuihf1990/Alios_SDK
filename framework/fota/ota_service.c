@@ -14,12 +14,11 @@ extern void coap_ota();
 
 void ota_service_event(input_event_t *event, void *priv_data)
 {
-    if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP)
-    {
-		if (ota_init) {
-			return;
-		}
-		ota_init = 1;
+    if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP) {
+        if (ota_init) {
+            return;
+        }
+        ota_init = 1;
         coap_ota();
     }
 }

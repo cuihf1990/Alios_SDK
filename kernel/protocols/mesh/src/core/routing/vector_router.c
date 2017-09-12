@@ -390,7 +390,7 @@ static ur_error_t resend_last_command()
         g_vr_state.sync_timer = ur_start_timer(TOPOLOGY_SYNC_TIMEOUT,
                                                handle_topology_sync_timer, NULL);
         MESH_LOG_DEBUG("vector router: timeout resend to %04x, len = %d",
-               g_vr_state.sync_state->cmd_dst, g_vr_state.sync_state->cmd_len);
+                       g_vr_state.sync_state->cmd_dst, g_vr_state.sync_state->cmd_len);
         return UR_ERROR_NONE;
     }
     return UR_ERROR_FAIL;
@@ -408,7 +408,7 @@ static void send_topology_sync_ack()
     g_vr_state.sync_state->cmd_dst = g_vr_state.sync_state->peer_sid;
     g_vr_state.retry_times = 0;
     MESH_LOG_DEBUG("vector router: send topology sync ack to %04x, len = %d",
-           g_vr_state.sync_state->peer_sid, g_vr_state.sync_state->cmd_len);
+                   g_vr_state.sync_state->peer_sid, g_vr_state.sync_state->cmd_len);
     ur_router_send_message(&g_vr_state.router, g_vr_state.sync_state->peer_sid,
                            (uint8_t *)cmd, sizeof(router_command_t));
     restart_topology_sync_timer();
@@ -426,7 +426,7 @@ static void send_topology_sync_select()
     g_vr_state.sync_state->cmd_dst = g_vr_state.sync_state->peer_sid;
     g_vr_state.retry_times = 0;
     MESH_LOG_DEBUG("vector router: send topology sync select to %04x, len = %d",
-           g_vr_state.sync_state->peer_sid, g_vr_state.sync_state->cmd_len);
+                   g_vr_state.sync_state->peer_sid, g_vr_state.sync_state->cmd_len);
     ur_router_send_message(&g_vr_state.router, g_vr_state.sync_state->peer_sid,
                            (uint8_t *)cmd, sizeof(router_command_t));
     restart_topology_sync_timer();
@@ -516,7 +516,7 @@ static void send_topology_sync_data()
     g_vr_state.sync_state->cmd_dst = g_vr_state.sync_state->peer_sid;
     g_vr_state.sync_state->cmd_len = len;
     MESH_LOG_DEBUG("vector router: send topology data to %04x, seq = %d, len = %d",
-           g_vr_state.sync_state->peer_sid, vertex_me->seq, len);
+                   g_vr_state.sync_state->peer_sid, vertex_me->seq, len);
     ur_router_send_message(&g_vr_state.router, g_vr_state.sync_state->peer_sid,
                            data, len);
     restart_topology_sync_timer();
@@ -681,7 +681,7 @@ static ur_error_t handle_topology_sync_data(const uint8_t *data,
 
     cmd = (router_command_t *)data;
     MESH_LOG_DEBUG("vector router: received topology sync data from %04x, len = %d", cmd->sid,
-           length);
+                   length);
 
     if (g_vr_state.sync_status == TOPOLOGY_SYNC_IDLE) {
         router_command_t ack;
@@ -689,7 +689,7 @@ static ur_error_t handle_topology_sync_data(const uint8_t *data,
         ack.seq = cmd->seq;
         ack.sid = vertex_me->sid;
         MESH_LOG_DEBUG("vector router: send topology sync ack to %04x, len = %d", cmd->sid,
-               sizeof(ack));
+                       sizeof(ack));
         ur_router_send_message(&g_vr_state.router, cmd->sid, (uint8_t *)&ack,
                                sizeof(ack));
         stop_topology_sync_timer();
@@ -789,7 +789,7 @@ static ur_error_t handle_edge_update(const uint8_t *data, uint16_t length)
 
     tv  = (edge_tv_t *)(data + sizeof(router_command_t));
     MESH_LOG_DEBUG("vector router: received edge update from %04x: (%04x, %04x, %d)",
-           ((router_command_t *)data)->sid, tv->src, tv->dst, tv->cost);
+                   ((router_command_t *)data)->sid, tv->src, tv->dst, tv->cost);
 
     error = update_edge(tv->src, tv->dst, tv->cost);
 
@@ -838,7 +838,7 @@ static ur_error_t handle_heartbeat_message(const uint8_t *data, uint16_t length,
     }
 
     MESH_LOG_DEBUG("vector router: received heartbeat message from %04x, len = %d", cmd->sid,
-           length);
+                   length);
 
 
     vertex->seq = cmd->seq;

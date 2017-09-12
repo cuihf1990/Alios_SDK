@@ -14,7 +14,7 @@
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_task_sem_create(ktask_t *task, ksem_t *sem, const name_t *name,
-                              size_t count);
+                               size_t count);
 
 /**
  * This function will delete a task-semaphore

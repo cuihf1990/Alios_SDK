@@ -722,8 +722,8 @@ ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
     node->type = type;
 
     MESH_LOG_DEBUG("update_address_cache, ueid %x, sid %x, netid %x, attach_sid %x",
-           node->node_id.ueid[0], node->node_id.sid, node->node_id.meshnetid,
-           node->node_id.attach_sid);
+                   node->node_id.ueid[0], node->node_id.sid, node->node_id.meshnetid,
+                   node->node_id.attach_sid);
     return UR_ERROR_NONE;
 }
 

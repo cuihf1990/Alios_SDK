@@ -80,10 +80,10 @@ void TaskYIELDtimeTest(void *arg)
 
 
     krhino_task_dyn_create(&xSwitchTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 1,
-                          0, TASK_TEST_STACK_SIZE, SwitchTask3, 1);
+                           0, TASK_TEST_STACK_SIZE, SwitchTask3, 1);
 
     krhino_task_dyn_create(&xSwitchTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 1,
-                          0, TASK_TEST_STACK_SIZE, SwitchTask4, 1);
+                           0, TASK_TEST_STACK_SIZE, SwitchTask4, 1);
 
     hobbit_timer0_start();
 

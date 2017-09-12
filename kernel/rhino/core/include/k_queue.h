@@ -41,7 +41,7 @@ typedef struct queue_s {
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_queue_create(kqueue_t *queue, const name_t *name, void **start,
-                           size_t msg_num);
+                            size_t msg_num);
 
 /**
  * This function will delete a queue
@@ -59,7 +59,7 @@ kstat_t krhino_queue_del(kqueue_t *queue);
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_queue_dyn_create(kqueue_t **queue, const name_t *name,
-                               size_t msg_num);
+                                size_t msg_num);
 
 /**
  * This function will delete a dyn created queue

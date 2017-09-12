@@ -14,7 +14,7 @@ static uint8_t mm_blk_break_case1(void)
     kstat_t ret;
 
     ret = krhino_mblk_pool_init(&mblk_pool_test, MODULE_NAME, (void *)mblk_pool,
-                               MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
+                                MBLK_POOL_SIZE >> 2, MBLK_POOL_SIZE);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(mblk_pool_test.obj_type == RHINO_MM_BLK_OBJ_TYPE);
 
@@ -52,7 +52,7 @@ void mm_blk_break_test(void)
                                sizeof(mm_blk_func_runner) / sizeof(test_func_t));
 
     ret = krhino_task_dyn_create(&task_mm_blk, MODULE_NAME, 0, TASK_MM_BLK_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_mm_blk_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

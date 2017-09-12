@@ -112,13 +112,13 @@ void  PreemptionTimetest(void *arg)
 
     memset(PreeBUFF, 0, sizeof(double)*PreeTime);
     krhino_task_dyn_create(&PreeTaskHandle[0], "test_task", 0, TASK_TEST_PRI + 4,
-                          0, TASK_TEST_STACK_SIZE, Preemption0, 1);
+                           0, TASK_TEST_STACK_SIZE, Preemption0, 1);
     krhino_task_dyn_create(&PreeTaskHandle[1], "test_task", 0, TASK_TEST_PRI + 3,
-                          0, TASK_TEST_STACK_SIZE, Preemption1, 1);
+                           0, TASK_TEST_STACK_SIZE, Preemption1, 1);
     krhino_task_dyn_create(&PreeTaskHandle[2], "test_task", 0, TASK_TEST_PRI + 2,
-                          0, TASK_TEST_STACK_SIZE, Preemption2, 1);
+                           0, TASK_TEST_STACK_SIZE, Preemption2, 1);
     krhino_task_dyn_create(&PreeTaskHandle[3], "test_task", 0, TASK_TEST_PRI + 1,
-                          0, TASK_TEST_STACK_SIZE, Preemption3, 1);
+                           0, TASK_TEST_STACK_SIZE, Preemption3, 1);
     krhino_task_suspend(PreeTaskHandle[1]);
     krhino_task_suspend(PreeTaskHandle[2]);
     krhino_task_suspend(PreeTaskHandle[3]);

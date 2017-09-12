@@ -56,7 +56,7 @@ size_t    blk_size:
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_ringbuf_init   (k_ringbuf_t *p_ringbuf, void *buf, size_t len,
-                              size_t type, size_t block_size);
+                               size_t type, size_t block_size);
 
 /**
  * This function will clean all data in mm ring buffer.
