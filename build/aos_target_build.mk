@@ -1,6 +1,6 @@
 include $(MAKEFILES_PATH)/aos_host_cmd.mk
 
-CONFIG_FILE := out/$(CLEANED_BUILD_STRING)/config.mk
+CONFIG_FILE := $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk
 
 include $(CONFIG_FILE)
 
@@ -49,7 +49,7 @@ include $(MAKEFILES_PATH)/aos_images_download.mk
 # Returns a the location of the given component relative to source-tree-root
 # rather than from the cwd
 # $(1) is component
-GET_BARE_LOCATION =$(patsubst $(call ESCAPE_BACKSLASHES,$(SOURCE_ROOT))%,%,$(strip $($(1)_LOCATION)))
+GET_BARE_LOCATION =$(patsubst $(call ESCAPE_BACKSLASHES,$(SOURCE_ROOT))%,%,$(strip $(subst :,/,$($(1)_LOCATION))))
 
 
 ###############################################################################
@@ -175,7 +175,7 @@ $(LIBS_DIR):
 	$(QUIET)$(call MKDIR, $(dir $@))
 	$(QUIET)$(TOUCH) $(@)
 	
-$(LINK_OPTS_FILE): out/$(CLEANED_BUILD_STRING)/config.mk
+$(LINK_OPTS_FILE): $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk
 #$(COMPILER_SPECIFIC_LINK_MAP) $(MAP_OUTPUT_FILE) $(LINK_OPTS_FILE)
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(AOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(AOS_SDK_LINK_FILES) $(filter %.a,$^) $(LINK_LIBS)) $(AOS_SDK_LDFLAGS) )
 	
