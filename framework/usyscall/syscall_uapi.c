@@ -638,6 +638,19 @@ u32_t ipaddr_addr(const char *cp)
     return SYS_CALL1(SYS_LWIP_IPADDR_ADDR, u32_t, const char *, cp);
 }
 
+void lwip_freeaddrinfo(struct addrinfo *ai)
+{
+    return SYS_CALL1(SYS_LWIP_FREEADDRINFO, void, struct addrinfo *, ai);
+}
+
+int lwip_getaddrinfo(const char *nodename, const char *servname,
+                     const struct addrinfo *hints, struct addrinfo **res)
+{
+    return SYS_CALL4(SYS_LWIP_GETADDRINFO, int, const char *, nodename,
+                     const char *, servname, const struct addrinfo *, hints,
+                     struct addrinfo **, res);
+}
+
 #endif /* WITH_LWIP */
 
 /* --------------------WIFI-------------------- */
