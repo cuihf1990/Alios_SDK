@@ -47,11 +47,6 @@ static void queue_recv_param_test(void)
     ret = krhino_queue_recv(&g_test_queue0, RHINO_NO_WAIT, NULL);
     QUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
-    krhino_intrpt_enter();
-    ret = krhino_queue_recv(&g_test_queue0, RHINO_WAIT_FOREVER, &queue_recv_msg);
-    QUEUE_VAL_CHK(ret == RHINO_NOT_CALLED_BY_INTRPT);
-    krhino_intrpt_exit();
-
     krhino_sem_create(&sem, "test_sem ", 0);
     ret = krhino_queue_recv((kqueue_t *)&sem, RHINO_WAIT_FOREVER, &queue_recv_msg);
     QUEUE_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
