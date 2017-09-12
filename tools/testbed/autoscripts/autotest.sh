@@ -5,6 +5,8 @@ tests="line_topology_v4_test.py tree_topology_v4_test.py mcast_v4_test.py"
 recipients="apsaras73@list.alibaba-inc.com"
 meshrecipients="wanglu.luwang@alibaba-inc.com wenjunchen.cwj@alibaba-inc.com simen.cjj@alibaba-inc.com lc122798@alibaba-inc.com"
 logfile=~/auto_test_log.txt
+log2pps=~/2pps_test_log.txt
+log5pps=~/5pps_test_log.txt
 success_num=0
 fail_num=0
 firmware=master.bin
@@ -20,10 +22,10 @@ python testbed_program.py ${firmware} >> ${logfile} 2>&1
 echo -e "\n---------------------------------------------------------\n" >> ${logfile}
 
 echo -e "Start Alink 2PPS and 5PPS test\n" >> ${logfile}
-python alink_testrun.py --testname=2pps --device=mxchip-DN02XLNN --filename=${firmware} --caseid=15071 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > 2pps.log 2>&1 &
+python alink_testrun.py --testname=2pps --device=mxchip-DN02XLNN --filename=${firmware} --caseid=15071 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > ${log2pps} 2>&1 &
 pps2pid=$!
 sleep 60
-python alink_testrun.py --testname=5pps --device=mxchip-DN02X30I --filename=${firmware} --caseid=15100 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > 5pps.log 2>&1 &
+python alink_testrun.py --testname=5pps --device=mxchip-DN02X30I --filename=${firmware} --caseid=15100 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > ${log5pps} 2>&1 &
 pps5pid=$!
 
 cd ${workdir}/ipv4
@@ -70,8 +72,8 @@ else
     echo -e "run Alink 2PPS test failed, log:\n" >> ${logfile}
     title="2PPS-FAIL"
 fi
-cat 2pps.log >> ${logfile}
-rm -f 2pps.log
+cat ${log2pps} >> ${logfile}
+rm -f ${log2pps}
 
 echo -e "\n---------------------------------------------------------\n" >> ${logfile}
 if [ ${pps5ret} -eq 0 ]; then
@@ -81,10 +83,11 @@ else
     echo -e "run Alink 5PPS test failed, log:\n" >> ${logfile}
     title="${title}; 5PPS-FAIL"
 fi
-cat 5pps.log >> ${logfile}
-rm -f 5pps.log
+cat ${log5pps} >> ${logfile}
+rm -f ${log5pps}
 
 #send email
 title="AOS Automatic Test Result: mesh SUCCESS-${success_num}, FAIL-${fail_num}; ${title}"
 cat ${logfile} | mutt -s "${title}" -- ${recipients}
+rm -f ${logfile}
 

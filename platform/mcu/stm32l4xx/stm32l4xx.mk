@@ -14,7 +14,7 @@ HOST_OPENOCD := stm32f4x
 $(NAME)_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv7m
-$(NAME)_COMPONENTS := rhino hal vflash netmgr framework.common mbedtls cjson cli
+$(NAME)_COMPONENTS := rhino hal netmgr framework.common mbedtls cjson cli
 
 GLOBAL_DEFINES += CONFIG_AOS_KV_MULTIPTN_MODE
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN=6

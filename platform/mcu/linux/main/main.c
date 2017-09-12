@@ -61,10 +61,6 @@ static void app_entry(void *arg)
     vfs_init();
     vfs_device_init();
 
-    for(i = 0; i < 10; i++) {
-        vflash_register_partition(i);
-    }
-
 #ifdef CONFIG_AOS_CLI
     aos_cli_init();
 #endif
