@@ -52,6 +52,8 @@ static void task_queue0_entry(void *arg)
             printf("queue all send is \t[FAIL %d]\n", (int)test_case_fail);
         }
 
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND / 10);
+
         krhino_queue_del(&g_test_queue0);
         next_test_case_notify();
         krhino_task_dyn_del(task_0_test);
@@ -91,6 +93,9 @@ static void task_queue2_entry(void *arg)
         /* check krhino_queue_back_send */
         ret = krhino_queue_all_send(&g_test_queue0, queue_send_msg, QMSG_SEND_TO_END);
         QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
+
+        krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND / 10);
+
         ret = krhino_queue_all_send(&g_test_queue0, queue_send_msg, QMSG_SEND_TO_FRONT);
         QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
