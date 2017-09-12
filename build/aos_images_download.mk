@@ -11,7 +11,7 @@ IMAGES_SECTORS_DEFAULT_COUNT	:= 1
 APPS_HEADER_DEFINES :=
 CURRENT_DEPENDENCY :=
 
-OPENOCD_LOG_FILE ?= out/openocd_log.txt
+OPENOCD_LOG_FILE ?= $(BUILD_DIR)/openocd_log.txt
 DOWNLOAD_LOG := >> $(OPENOCD_LOG_FILE)
 
 ###############################################################################

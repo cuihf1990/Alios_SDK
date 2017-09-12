@@ -72,10 +72,10 @@ endef
 #                CHECK_HEADERS=1 : builds header files to test for their completeness
 ############################
 
-OPENOCD_LOG_FILE ?= out/openocd.log
+OPENOCD_LOG_FILE ?= $(BUILD_DIR)/openocd.log
 DOWNLOAD_LOG := >> $(OPENOCD_LOG_FILE)
 
-BOOTLOADER_LOG_FILE ?= out/bootloader.log
+BOOTLOADER_LOG_FILE ?= $(BUILD_DIR)/bootloader.log
 export HOST_OS
 export VERBOSE
 export SUB_BUILD
@@ -94,11 +94,11 @@ clean:
 	$(QUIET)$(ECHO) Done
 
 ifneq ($(BUILD_STRING),)
--include out/$(CLEANED_BUILD_STRING)/config.mk
+-include $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
-out/$(CLEANED_BUILD_STRING)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
+$(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
 	$(QUIET)$(ECHO) $(if $(AOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
 	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/aos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
@@ -118,13 +118,13 @@ $(PASSDOWN_TARGETS):
 $(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit)
 
 ifeq ($(BINS), 0)
-main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
+main_app: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
 	$(QUIET)$(ECHO) Build AOS Now
 	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
 	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
 	$(QUIET)$(ECHO) Build complete
 else
-main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build_bins.mk
+main_app: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build_bins.mk
 	$(QUIET)$(ECHO) Build AOS-BINS Now
 	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
 	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build_bins.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
@@ -132,7 +132,7 @@ main_app: out/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKE
 endif
 
 ifeq ($(SUB_BUILD),)
-.gdbinit: out/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
+.gdbinit: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
 	$(QUIET)$(ECHO) Making $@
 	$(QUIET)$(ECHO) set remotetimeout 20 > $@
 	$(QUIET)$(ECHO) $(GDBINIT_STRING) >> $@
