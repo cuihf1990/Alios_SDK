@@ -25,7 +25,7 @@ static void handle_link_request_timer(void *args)
     uint8_t tlv_type[1] = {TYPE_UCAST_CHANNEL};
     ur_addr_t addr;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link request timer\r\n");
+    MESH_LOG_DEBUG("handle link request timer");
 
     if (umesh_mm_get_mode() & MODE_MOBILE) {
         interval = hal->link_request_mobile_interval;
@@ -85,8 +85,7 @@ static void handle_link_quality_update_timer(void *args)
     hal_context_t *hal = (hal_context_t *)args;
     network_context_t *network;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "handle link quality update timer\r\n");
+    MESH_LOG_DEBUG("handle link quality update timer");
 
     hal->link_quality_update_timer = ur_start_timer(
                                          hal->link_request_interval * LINK_ESTIMATE_TIMES,
@@ -143,9 +142,8 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
             continue;
         }
 
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-               "sid %04x mac " EXT_ADDR_FMT " is replaced\n",
-               nbr->sid, EXT_ADDR_DATA(nbr->mac));
+        MESH_LOG_INFO("sid %04x mac " EXT_ADDR_FMT " is replaced",
+                      nbr->sid, EXT_ADDR_DATA(nbr->mac));
         goto get_nbr;
     }
     return NULL;
@@ -211,9 +209,8 @@ static void handle_update_nbr_timer(void *args)
             continue;
         }
 
-        ur_log(UR_LOG_LEVEL_INFO, UR_LOG_REGION_MM,
-               "%x neighbor " EXT_ADDR_FMT " become inactive\r\n",
-               sid, EXT_ADDR_DATA(node->mac));
+        MESH_LOG_INFO("%x neighbor " EXT_ADDR_FMT " become inactive",
+                      sid, EXT_ADDR_DATA(node->mac));
         network = get_network_context_by_meshnetid(node->netid);
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {
@@ -258,7 +255,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     uint8_t channel_orig;
     ur_node_id_t node_id;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "update neighbor\r\n");
+    MESH_LOG_DEBUG("update neighbor");
 
     hal = get_hal_context(info->hal_type);
     nbr = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
@@ -477,8 +474,7 @@ ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
     error = mf_send_message(message);
     nbr->stats.link_request++;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send link request, len %d\r\n", length);
+    MESH_LOG_DEBUG("send link request, len %d", length);
 
     return error;
 }
@@ -522,8 +518,7 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
     error = mf_send_message(message);
     node->stats.link_request++;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send link accept and request, len %d\r\n", length);
+    MESH_LOG_DEBUG("send link accept and request, len %d", length);
     return error;
 }
 
@@ -564,8 +559,7 @@ static ur_error_t send_link_accept(network_context_t *network,
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send link accept, len %d\r\n", length);
+    MESH_LOG_DEBUG("send link accept, len %d", length);
     return error;
 }
 
@@ -673,7 +667,7 @@ ur_error_t handle_link_request(message_t *message)
     message_info_t       *info;
     network_context_t    *network;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link request\r\n");
+    MESH_LOG_DEBUG("handle link request");
 
     info = message->info;
     network = info->network;
@@ -704,8 +698,7 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     network_context_t *network;
     uint8_t local_channel;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "handle link accept and resquest\r\n");
+    MESH_LOG_DEBUG("handle link accept and resquest");
 
     info = message->info;
     network = info->network;
@@ -746,7 +739,7 @@ ur_error_t handle_link_accept(message_t *message)
     neighbor_t *node;
     message_info_t *info;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle link accept\r\n");
+    MESH_LOG_DEBUG("handle link accept");
     info = message->info;
     node = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
     if (node == NULL) {

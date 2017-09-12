@@ -9,6 +9,7 @@
 #include <aos/kernel.h>
 
 #include <yunit.h>
+#include <errno.h>
 
 
 static aos_sem_t sem;
@@ -69,25 +70,25 @@ static void CASE_aosapi_kernel_sem_param()
 
 	aos_mutex_new(&mutex);
 	ret = aos_sem_wait((aos_sem_t*)&mutex, RHINO_WAIT_FOREVER);
-	YUNIT_ASSERT_MSG(ret==RHINO_KOBJ_TYPE_ERR, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EINVAL), "ret=%d", ret);
 	aos_mutex_free(&mutex);
 
 	ret = aos_sem_new(&sem, 0);
 	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	ret = aos_sem_wait(&sem, RHINO_NO_WAIT);
-	YUNIT_ASSERT_MSG(ret==RHINO_NO_PEND_WAIT, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EPERM), "ret=%d", ret);
 	aos_sem_free(&sem);
 
 	ret = aos_sem_new(&sem, 0);
 	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	ret = aos_sem_wait(&sem, 1000);
-	YUNIT_ASSERT_MSG(ret==RHINO_BLK_TIMEOUT, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EPERM), "ret=%d", ret);
 	aos_sem_free(&sem);
 
 	ret = aos_sem_new(&sem, 0);
 	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 	ret = aos_sem_wait(&sem, 0);
-	YUNIT_ASSERT_MSG(ret==RHINO_NO_PEND_WAIT, "ret=%d", ret);
+	YUNIT_ASSERT_MSG(ret==(-EPERM), "ret=%d", ret);
 	aos_sem_free(&sem);
 }
 

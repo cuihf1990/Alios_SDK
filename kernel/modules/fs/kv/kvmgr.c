@@ -239,15 +239,16 @@ static int kv_item_del(kv_item_t *item, int mode)
             return RES_FLASH_READ_ERR;
         }
 
-        if ((hdr.magic != ITEM_MAGIC_NUM) || 
-            (hdr.state != ITEM_STATE_NORMAL) || 
+        if ((hdr.magic != ITEM_MAGIC_NUM) ||
+            (hdr.state != ITEM_STATE_NORMAL) ||
             (hdr.key_len != item->hdr.key_len)) {
             return RES_OK;
         }
 
         char *origin_key = (char *)aos_malloc(hdr.key_len);
-        if (!origin_key)
+        if (!origin_key) {
             return RES_MALLOC_FAILED;
+        }
         char *new_key = (char *)aos_malloc(hdr.key_len);
         if (!new_key) {
             aos_free(origin_key);
@@ -256,7 +257,7 @@ static int kv_item_del(kv_item_t *item, int mode)
 
         raw_read(offset + ITEM_HEADER_SIZE, origin_key, hdr.key_len);
         raw_read(item->pos + ITEM_HEADER_SIZE, new_key, hdr.key_len);
-        if(memcmp(origin_key, new_key, hdr.key_len) != 0) {
+        if (memcmp(origin_key, new_key, hdr.key_len) != 0) {
             aos_free(origin_key);
             aos_free(new_key);
             return RES_OK;
@@ -557,12 +558,14 @@ static int kv_init(void)
     while (nums > 0) {
         i = unclean[nums - 1];
         if (g_kv_mgr.clean_blk_nums >= KV_GC_RESERVED) {
-            if ((ret = kv_state_set((i << BLK_BITS), BLK_STATE_DIRTY)) != RES_OK)
+            if ((ret = kv_state_set((i << BLK_BITS), BLK_STATE_DIRTY)) != RES_OK) {
                 return ret;
+            }
             g_kv_mgr.block_info[i].state = BLK_STATE_DIRTY;
         } else {
-            if ((ret = kv_block_format(i)) != RES_OK)
+            if ((ret = kv_block_format(i)) != RES_OK) {
                 return ret;
+            }
         }
         nums--;
     }

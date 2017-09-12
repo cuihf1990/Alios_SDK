@@ -27,7 +27,7 @@ AOS_EXPORT AOS_WEAK const char   *get_aos_device_name(void)
 }
 
 #ifdef SYSINFO_OS_BINS
-#define OS_MAX_VERSION_LEN 64    
+#define OS_MAX_VERSION_LEN 64
 char  os_version[OS_MAX_VERSION_LEN];
 #endif
 
@@ -44,12 +44,12 @@ AOS_EXPORT AOS_WEAK const char   *get_aos_app_version(void)
 
 AOS_EXPORT AOS_WEAK const char   *get_aos_os_version(void)
 {
-    #ifdef SYSINFO_OS_BINS
+#ifdef SYSINFO_OS_BINS
     snprintf(os_version, OS_MAX_VERSION_LEN, "%s_%s", get_aos_kernel_version(), get_aos_app_version());
     return os_version;
-    #else  
+#else
     return (const char *)SYSINFO_APP_VERSION;
-    #endif
+#endif
 }
 
 AOS_EXPORT AOS_WEAK void dump_sys_info(void)

@@ -28,7 +28,7 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
 {
     char *pa;
     char *pb;
-    int isHttps=0;
+    int isHttps = 0;
     if (!src || strlen(src) == 0) {
         OTA_LOG_E("http_gethost_info parms error!\n");
         return;
@@ -38,12 +38,12 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
         return;
     }
     pa = src;
-    if (!strncmp(pa, "https://", strlen("https://"))) { 
+    if (!strncmp(pa, "https://", strlen("https://"))) {
         pa = src + strlen("https://");
-        isHttps=1;
+        isHttps = 1;
     }
-    if (!isHttps){
-        if (!strncmp(pa, "http://", strlen("http://"))) { 
+    if (!isHttps) {
+        if (!strncmp(pa, "http://", strlen("http://"))) {
             pa = src + strlen("http://");
         }
     }
@@ -67,14 +67,12 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
     if (pa) {
         *port = atoi(pa + 1);
     } else {
-        if (isHttps)
-        {
+        if (isHttps) {
             *port = 80;//443
-        }else
-        {
-            *port = 80; 
+        } else {
+            *port = 80;
         }
-        
+
     }
 }
 

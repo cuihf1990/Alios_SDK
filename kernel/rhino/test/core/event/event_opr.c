@@ -48,26 +48,26 @@ static uint8_t event_opr_case1(void)
     test_event.blk_obj.obj_type = RHINO_SEM_OBJ_TYPE;
     RHINO_CRITICAL_EXIT();
     ret = krhino_event_get(&test_event, CHK_AND_ALL_FLAG, RHINO_AND, &actl_flags,
-                          RHINO_NO_WAIT);
+                           RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_KOBJ_TYPE_ERR);
 
     RHINO_CRITICAL_ENTER();
     test_event.blk_obj.obj_type = RHINO_EVENT_OBJ_TYPE;
     RHINO_CRITICAL_EXIT();
     ret = krhino_event_get(&test_event, CHK_AND_ALL_FLAG, RHINO_AND, &actl_flags,
-                          RHINO_NO_WAIT);
+                           RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ONE_FLAG, RHINO_AND, &actl_flags,
-                          RHINO_NO_WAIT);
+                           RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ZERO_FLAG, RHINO_AND, &actl_flags,
-                          RHINO_NO_WAIT);
+                           RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
@@ -93,7 +93,7 @@ static uint8_t event_opr_case2(void)
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ALL_FLAG, RHINO_AND_CLEAR,
-                          &actl_flags, RHINO_NO_WAIT);
+                           &actl_flags, RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == (TEST_FLAG & (~CHK_AND_ALL_FLAG)));
@@ -103,7 +103,7 @@ static uint8_t event_opr_case2(void)
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ONE_FLAG, RHINO_AND_CLEAR,
-                          &actl_flags, RHINO_NO_WAIT);
+                           &actl_flags, RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == (TEST_FLAG & (~CHK_AND_ONE_FLAG)));
@@ -113,7 +113,7 @@ static uint8_t event_opr_case2(void)
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ZERO_FLAG, RHINO_AND_CLEAR,
-                          &actl_flags, RHINO_NO_WAIT);
+                           &actl_flags, RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == (TEST_FLAG & (~CHK_AND_ZERO_FLAG)));
@@ -139,19 +139,19 @@ static uint8_t event_opr_case3(void)
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ALL_FLAG, RHINO_OR, &actl_flags,
-                          RHINO_NO_WAIT);
+                           RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ONE_FLAG, RHINO_OR, &actl_flags,
-                          RHINO_NO_WAIT);
+                           RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ZERO_FLAG, RHINO_OR, &actl_flags,
-                          RHINO_NO_WAIT);
+                           RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_NO_PEND_WAIT);
 
     ret = krhino_event_del(&test_event);
@@ -175,7 +175,7 @@ static uint8_t event_opr_case4(void)
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ALL_FLAG, RHINO_OR_CLEAR,
-                          &actl_flags, RHINO_NO_WAIT);
+                           &actl_flags, RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == (TEST_FLAG & (~CHK_AND_ALL_FLAG)));
@@ -185,7 +185,7 @@ static uint8_t event_opr_case4(void)
     MYASSERT(test_event.flags == TEST_FLAG);
 
     ret = krhino_event_get(&test_event, CHK_AND_ONE_FLAG, RHINO_OR_CLEAR,
-                          &actl_flags, RHINO_NO_WAIT);
+                           &actl_flags, RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
     MYASSERT(actl_flags == TEST_FLAG);
     MYASSERT(test_event.flags == (TEST_FLAG & (~CHK_AND_ONE_FLAG)));
@@ -217,7 +217,7 @@ static uint8_t event_opr_case5(void)
     krhino_sched_disable();
 
     ret = krhino_event_get(&test_event, CHK_AND_PEND_FLAG, RHINO_AND, &actl_flags,
-                          RHINO_WAIT_FOREVER);
+                           RHINO_WAIT_FOREVER);
     MYASSERT(ret == RHINO_SCHED_DISABLE);
 
     krhino_sched_enable();
@@ -245,7 +245,7 @@ void event_opr_test(void)
                               sizeof(event_func_runner) / sizeof(test_func_t));
 
     ret = krhino_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_EVENT_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
@@ -259,7 +259,7 @@ static void task_event_co1_entry(void *arg)
 
     while (1) {
         ret = krhino_event_get(&test_event, ~CHK_AND_ALL_FLAG, RHINO_AND, &actl_flags,
-                              RHINO_WAIT_FOREVER);
+                               RHINO_WAIT_FOREVER);
         if (ret == RHINO_SUCCESS) {
             break;
         } else {
@@ -306,14 +306,14 @@ void event_coopr_test(void)
     }
 
     ret = krhino_task_dyn_create(&task_event_co1, MODULE_NAME, 0, TASK_EVENT_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_event_co1_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_event_co1_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_event_co2, MODULE_NAME, 0, TASK_EVENT_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_event_co2_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_event_co2_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

@@ -22,7 +22,7 @@ static uint8_t tasksem_param_case1(void)
     MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = krhino_task_sem_create(task_tasksem, &test_tasksem, MODULE_NAME,
-                                (sem_count_t) - 1);
+                                 (sem_count_t) - 1);
     MYASSERT(ret == RHINO_SUCCESS);
 
     ret = krhino_task_sem_create(task_tasksem, &test_tasksem, MODULE_NAME, 0);
@@ -72,7 +72,7 @@ void tasksem_param_test(void)
                                 sizeof(tasksem_func_runner) / sizeof(test_case_t));
 
     ret = krhino_task_dyn_create(&task_tasksem, MODULE_NAME, 0, TASK_SEM_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_tasksem_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_tasksem_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

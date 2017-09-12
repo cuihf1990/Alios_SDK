@@ -33,7 +33,7 @@
 #undef LOG
 #define LOG(format, ...) //printf(format, __VA_ARGS__)
 
-#ifdef GCOV_ENABLE
+#if defined(GCOV_ENABLE) || defined(HAVE_VALGRIND_H) || defined(HAVE_VALGRIND_VALGRIND_H)
 #define MIN_STACK_SIZE    8192
 #else
 #define MIN_STACK_SIZE    4096

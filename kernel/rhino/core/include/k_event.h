@@ -49,7 +49,7 @@ kstat_t krhino_event_del(kevent_t *event);
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_event_dyn_create(kevent_t **event, const name_t *name,
-                               uint32_t flags);
+                                uint32_t flags);
 
 /**
  * This function will delete a dyn created event
@@ -69,7 +69,7 @@ kstat_t krhino_event_dyn_del(kevent_t *event);
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_event_get(kevent_t *event, uint32_t flags, uint8_t opt,
-                        uint32_t *actl_flags, tick_t ticks);
+                         uint32_t *actl_flags, tick_t ticks);
 
 /**
  * This function will set a event

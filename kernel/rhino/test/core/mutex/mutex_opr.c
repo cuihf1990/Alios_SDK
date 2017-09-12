@@ -54,7 +54,7 @@ void mutex_opr_test(void)
                               sizeof(mutex_func_runner) / sizeof(test_case_t));
 
     ret = krhino_task_dyn_create(&task_mutex, MODULE_NAME, 0, TASK_MUTEX_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
@@ -155,15 +155,15 @@ void mutex_coopr1_test(void)
     kstat_t ret;
 
     ret = krhino_task_dyn_create(&task_mutex_co1, MODULE_NAME_CO1, 0, TASK_MUTEX_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_coopr1_co1_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr1_co1_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_mutex_co2, MODULE_NAME_CO1, 0,
-                                TASK_MUTEX_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_coopr1_co2_entry, 1);
+                                 TASK_MUTEX_PRI + 1,
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr1_co2_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
@@ -278,23 +278,23 @@ void mutex_coopr2_test(void)
     kstat_t ret;
 
     ret = krhino_task_dyn_create(&task_mutex_co1, MODULE_NAME_CO2, 0, TASK_MUTEX_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co1_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co1_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_mutex_co2, MODULE_NAME_CO2, 0,
-                                TASK_MUTEX_PRI + 1,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co2_entry, 1);
+                                 TASK_MUTEX_PRI + 1,
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co2_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);
     }
 
     ret = krhino_task_dyn_create(&task_mutex_co3, MODULE_NAME_CO2, 0,
-                                TASK_MUTEX_PRI + 2,
-                                0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co3_entry, 1);
+                                 TASK_MUTEX_PRI + 2,
+                                 0, TASK_TEST_STACK_SIZE, task_mutex_coopr2_co3_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

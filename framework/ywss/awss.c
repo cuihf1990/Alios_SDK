@@ -65,8 +65,9 @@ int awss_register_callback(unsigned char cb_type, void *cb_func)
         return -1;
     }
 
-    if (awss_cb_func[cb_type] != NULL)
+    if (awss_cb_func[cb_type] != NULL) {
         LOGE("[awss]", "Same type cb registered.");
+    }
 
     awss_cb_func[cb_type] = cb_func;
 

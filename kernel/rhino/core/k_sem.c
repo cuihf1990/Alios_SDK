@@ -86,7 +86,7 @@ kstat_t krhino_sem_del(ksem_t *sem)
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t krhino_sem_dyn_create(ksem_t **sem, const name_t *name,
-                             sem_count_t count)
+                              sem_count_t count)
 {
     kstat_t stat;
     ksem_t  *sem_obj;
@@ -209,7 +209,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
     if (opt_wake_all) {
         while (!is_klist_empty(blk_list_head)) {
             TRACE_SEM_TASK_WAKE(g_active_task[cur_cpu_num], krhino_list_entry(blk_list_head->next,
-                                                                             ktask_t, task_list),
+                                                                              ktask_t, task_list),
                                 sem, opt_wake_all);
 
             pend_task_wakeup(krhino_list_entry(blk_list_head->next, ktask_t, task_list));
@@ -217,7 +217,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
 
     } else {
         TRACE_SEM_TASK_WAKE(g_active_task[cur_cpu_num], krhino_list_entry(blk_list_head->next,
-                                                                         ktask_t, task_list),
+                                                                          ktask_t, task_list),
                             sem, opt_wake_all);
 
         /* wake up the highest prio task block on the semaphore */

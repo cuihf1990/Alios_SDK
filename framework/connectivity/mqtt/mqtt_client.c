@@ -187,7 +187,7 @@ static int iotx_mc_push_subInfo_to(iotx_mc_client_t *c, int len, unsigned short 
                                    iotx_mc_topic_handle_t *handler,
                                    list_node_t **node);
 static int iotx_mc_check_handle_is_identical(iotx_mc_topic_handle_t *messageHandlers1,
-        iotx_mc_topic_handle_t *messageHandler2);
+                                             iotx_mc_topic_handle_t *messageHandler2);
 
 typedef enum {
     TOPIC_NAME_TYPE = 0,
@@ -620,11 +620,11 @@ static void _to_lower(char *upper, int len)
 #endif
 
 static int _fill_replay_fender(
-            iotx_mc_client_t *c,
-            MQTT_ReplayFender *f,
-            const char *topic,
-            uint16_t msg_id,
-            int enc_payloadlen)
+    iotx_mc_client_t *c,
+    MQTT_ReplayFender *f,
+    const char *topic,
+    uint16_t msg_id,
+    int enc_payloadlen)
 {
     char                hmac_source[MQTT_MAX_TOPIC_LEN + 32] = {0};
     int                 hmac_srclen = 0;
@@ -672,9 +672,9 @@ static int _fill_replay_fender(
 }
 
 static int _create_encoded_payload(
-            iotx_mc_client_t *c,
-            char *topic,
-            iotx_mqtt_topic_info_pt topic_msg)
+    iotx_mc_client_t *c,
+    char *topic,
+    iotx_mqtt_topic_info_pt topic_msg)
 {
     MQTT_ReplayFender       fender;
     int                     ret = -1;
@@ -855,7 +855,7 @@ static int iotx_mc_push_subInfo_to(iotx_mc_client_t *c, int len, unsigned short 
     }
 
     iotx_mc_subsribe_info_t *subInfo = (iotx_mc_subsribe_info_t *)LITE_malloc(sizeof(
-            iotx_mc_subsribe_info_t) + len);
+                                                                                  iotx_mc_subsribe_info_t) + len);
     if (NULL == subInfo) {
         HAL_MutexUnlock(c->lock_list_sub);
         log_err("run iotx_memory_malloc is error!");
@@ -1617,7 +1617,7 @@ static int iotx_mc_check_state_normal(iotx_mc_client_t *c)
 
 // return: 0, identical; NOT 0, different.
 static int iotx_mc_check_handle_is_identical(iotx_mc_topic_handle_t *messageHandlers1,
-        iotx_mc_topic_handle_t *messageHandler2)
+                                             iotx_mc_topic_handle_t *messageHandler2)
 {
     if (!messageHandlers1 || !messageHandler2) {
         return 1;
@@ -2108,7 +2108,7 @@ static void iotx_mc_keepalive(iotx_mc_client_t *pClient)
 
             pClient->reconnect_param.reconnect_time_interval_ms = IOTX_MC_RECONNECT_INTERVAL_MIN_MS;
             utils_time_countdown_ms(&(pClient->reconnect_param.reconnect_next_time),
-                               pClient->reconnect_param.reconnect_time_interval_ms);
+                                    pClient->reconnect_param.reconnect_time_interval_ms);
 
             pClient->ipstack->disconnect(pClient->ipstack);
             iotx_mc_set_client_state(pClient, IOTX_MC_STATE_DISCONNECTED_RECONNECTING);
@@ -2223,23 +2223,23 @@ int is_connected = 0;
 
 static void cb_recv(int fd, void *arg)
 {
-   iotx_mc_client_t *pClient = (iotx_mc_client_t *)arg;
+    iotx_mc_client_t *pClient = (iotx_mc_client_t *)arg;
 
-   if(!is_connected) {
-       if(SUCCESS_RETURN != iotx_mc_wait_CONNACK(pClient)) {
-           (void)MQTTDisconnect(pClient);
-           pClient->ipstack->disconnect(pClient->ipstack);
-           log_err("wait connect ACK timeout, or receive a ACK indicating error!");
-           return;
+    if (!is_connected) {
+        if (SUCCESS_RETURN != iotx_mc_wait_CONNACK(pClient)) {
+            (void)MQTTDisconnect(pClient);
+            pClient->ipstack->disconnect(pClient->ipstack);
+            log_err("wait connect ACK timeout, or receive a ACK indicating error!");
+            return;
         }
         iotx_mc_set_client_state(pClient, IOTX_MC_STATE_CONNECTED);
-        utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000); 
+        utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000);
         aos_post_event(EV_SYS, CODE_SYS_ON_MQTT_READ, 0u);
         is_connected = 1;
         return;
-   }
+    }
 
-   IOT_MQTT_Yield(pClient, 100);
+    IOT_MQTT_Yield(pClient, 100);
 }
 
 extern int get_ssl_fd();
@@ -2359,7 +2359,7 @@ static int iotx_mc_handle_reconnect(iotx_mc_client_t *pClient)
     }
 
     utils_time_countdown_ms(&(pClient->reconnect_param.reconnect_next_time),
-                       pClient->reconnect_param.reconnect_time_interval_ms);
+                            pClient->reconnect_param.reconnect_time_interval_ms);
 
     log_err("mqtt reconnect failed rc = %d", rc);
 

@@ -9,13 +9,14 @@
 #define KEY_IOPAD_SIZE 64
 #define MD5_DIGEST_SIZE 16
 
-void iotx_md5_digest_2_base16(char *out, unsigned char *digest) {
+void iotx_md5_digest_2_base16(char *out, unsigned char *digest)
+{
     static char const encode[] = "0123456789ABCDEF";
     int j = 0;
     int i = 0;
     for (i = 0; i < 16; i ++) {
         int a = digest[i];
-        out[j++] = encode[(a>>4)&0xf];
+        out[j++] = encode[(a >> 4) & 0xf];
         out[j++] = encode[a & 0xf];
     }
 }
@@ -32,8 +33,7 @@ void iotx_hmac_md5(const char *msg, int msg_len, char *digest, const char *key, 
 
     memset(k_ipad, 0x36, sizeof(k_ipad));
     memset(k_opad, 0x5C, sizeof(k_opad));
-    for(index = 0; index < key_len; index++ )
-    {
+    for (index = 0; index < key_len; index++ ) {
         k_ipad[index] = (unsigned char)(k_ipad[index] ^ key[index]);
         k_opad[index] = (unsigned char)(k_opad[index] ^ key[index]);
     }

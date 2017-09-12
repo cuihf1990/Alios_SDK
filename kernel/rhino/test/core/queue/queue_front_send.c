@@ -69,15 +69,15 @@ kstat_t task_queue_front_send_test(void)
     kstat_t ret;
 
     ret = krhino_queue_create(&g_test_queue0, "test_queue0",
-                             (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
+                              (void **)&g_test_queue_msg0, TEST_QUEUE_MSG0_SIZE);
     QUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
     ret = krhino_task_dyn_create(&task_0_test, "task_queue0_test", 0, 10,
-                                0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_queue0_entry, 1);
     QUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     ret = krhino_task_dyn_create(&task_1_test, "task_queue1_test", 0, 11,
-                                0, TASK_TEST_STACK_SIZE, task_queue1_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_queue1_entry, 1);
     QUEUE_VAL_CHK((ret == RHINO_SUCCESS) || (ret == RHINO_STOPPED));
 
     return 0;

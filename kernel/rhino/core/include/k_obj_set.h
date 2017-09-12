@@ -23,7 +23,7 @@ typedef struct kobj_set {
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_kobj_set_dyn_create(kobj_set_t **handle, const name_t *name,
-                                  size_t msg_num);
+                                   size_t msg_num);
 
 /**
  * This function will del a kobj_set
@@ -42,7 +42,7 @@ kstat_t krhino_kobj_set_dyn_del(kobj_set_t *handle);
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_kobj_set_create(kobj_set_t *handle, const name_t *name,
-                              void **start, size_t msg_num);
+                               void **start, size_t msg_num);
 
 /**
  * This function will del a kobj_set

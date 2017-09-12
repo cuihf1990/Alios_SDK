@@ -19,7 +19,7 @@ struct cookie {
     int flag;
 };
 
-const char *mbedtls_test_ca_pem = "-----BEGIN CERTIFICATE-----\n"   \
+const char *tls_test_ca_pem = "-----BEGIN CERTIFICATE-----\n"   \
 "MIIDtzCCAp+gAwIBAgIJAOxbLdldR1+SMA0GCSqGSIb3DQEBBQUAMHIxCzAJBgNV\n"\
 "BAYTAkNOMREwDwYDVQQIDAh6aGVqaWFuZzERMA8GA1UEBwwIaGFuZ3pob3UxEDAO\n"\
 "BgNVBAoMB2FsaWJhYmExDjAMBgNVBAsMBXl1bm9zMRswGQYDVQQDDBIqLnNtYXJ0\n"\
@@ -49,6 +49,8 @@ unsigned char alink_req_data[] = {
     0x57, 0x53, 0x46, 0x31, 0x00, 0x00, 0x00, 0x11,
     0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x03
 };
+
+extern int dtls_client_sample(void);
 
 #if !defined(MBEDTLS_NET_ALT_UART)
 void *network_socket_create(const char *net_addr, int port)
@@ -138,7 +140,7 @@ void network_socket_destroy(mbedtls_net_context *ctx)
 
 #endif /* MBEDTLS_NET_ALT_UART */
 
-static void app_delayed_action(void *arg)
+static void tls_client_sample(void)
 {
     int ret = 0;
     char buf[128];
@@ -161,7 +163,7 @@ static void app_delayed_action(void *arg)
     }
 
     ssl = mbedtls_ssl_connect(tcp_fd,
-              mbedtls_test_ca_pem, strlen(mbedtls_test_ca_pem));
+              tls_test_ca_pem, strlen(tls_test_ca_pem));
     if (ssl == NULL) {
         printf("ssl connect fail\n");
         goto _out;
@@ -202,6 +204,17 @@ _out:
     }
 
     return;
+}
+
+static void app_delayed_action(void *arg)
+{
+    printf("===========> TLS Client Sample start.\n");
+    tls_client_sample();
+    printf("<=========== TLS Client Sample End.\n\n");
+
+    printf("===========> DTLS Client Sample start.\n");
+    dtls_client_sample();
+    printf("<=========== DTLS Client Sample End.\n\n");
 }
 
 static void handle_event(input_event_t *event, void *arg)

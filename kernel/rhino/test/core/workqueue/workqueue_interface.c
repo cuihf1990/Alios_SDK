@@ -82,7 +82,7 @@ static uint8_t workqueue_interface_case1(void)
 
     /* creat workqueues */
     ret = krhino_workqueue_create(&wq0, "WORKQUEUE1-TEST", TASK_WORKQUEUE_PRI,
-                                 stack0_buf, stack0_size);
+                                  stack0_buf, stack0_size);
     if (ret != RHINO_SUCCESS) {
         MYASSERT(ret);
         krhino_sem_give(&g_wq_test_sem);
@@ -90,7 +90,7 @@ static uint8_t workqueue_interface_case1(void)
     }
 
     ret = krhino_workqueue_create(&wq1, "WORKQUEUE1-TEST", TASK_WORKQUEUE_PRI,
-                                 stack1_buf, stack1_size);
+                                  stack1_buf, stack1_size);
     if (ret != RHINO_SUCCESS) {
         MYASSERT(ret);
         krhino_sem_give(&g_wq_test_sem);
@@ -105,7 +105,7 @@ static uint8_t workqueue_interface_case1(void)
     }
 
     ret = krhino_workqueue_create(&wq2, "WORKQUEUE2-TEST", TASK_WORKQUEUE_PRI,
-                                 stack2_buf, stack2_size);
+                                  stack2_buf, stack2_size);
     if (ret != RHINO_SUCCESS) {
         MYASSERT(ret);
         krhino_sem_give(&g_wq_test_sem);
@@ -113,7 +113,7 @@ static uint8_t workqueue_interface_case1(void)
     }
 
     ret = krhino_workqueue_create(&wq1, "WORKQUEUE", TASK_WORKQUEUE_PRI,
-                                 stack1_buf, stack1_size);
+                                  stack1_buf, stack1_size);
     if (ret != RHINO_WORKQUEUE_EXIST) {
         MYASSERT(ret);
         krhino_sem_give(&g_wq_test_sem);
@@ -285,35 +285,35 @@ static uint8_t workqueue_interface_case1(void)
     printf("=====FUNCTION TEST DONE!=====\n");
 
     ret = krhino_workqueue_create(NULL, "WORKQUEUE1-TEST", TASK_WORKQUEUE_PRI,
-                                 stack1_buf, stack1_size);
+                                  stack1_buf, stack1_size);
     if (ret == RHINO_SUCCESS) {
         MYASSERT(ret);
         return 1;
     }
 
     ret = krhino_workqueue_create(&wq1, NULL, TASK_WORKQUEUE_PRI,
-                                 stack1_buf, stack1_size);
+                                  stack1_buf, stack1_size);
     if (ret == RHINO_SUCCESS) {
         MYASSERT(ret);
         return 1;
     }
 
     ret = krhino_workqueue_create(&wq1, "WORKQUEUE1-TEST", RHINO_CONFIG_PRI_MAX,
-                                 stack1_buf, stack1_size);
+                                  stack1_buf, stack1_size);
     if (ret == RHINO_SUCCESS) {
         MYASSERT(ret);
         return 1;
     }
 
     ret = krhino_workqueue_create(&wq1, "WORKQUEUE1-TEST", TASK_WORKQUEUE_PRI,
-                                 NULL, stack1_size);
+                                  NULL, stack1_size);
     if (ret == RHINO_SUCCESS) {
         MYASSERT(ret);
         return 1;
     }
 
     ret = krhino_workqueue_create(&wq1, "WORKQUEUE1-TEST", TASK_WORKQUEUE_PRI,
-                                 stack1_buf, 0);
+                                  stack1_buf, 0);
     if (ret == RHINO_SUCCESS) {
         MYASSERT(ret);
         return 1;
@@ -372,8 +372,8 @@ void workqueue_interface_test(void)
                                   sizeof(workqueue_func_runner) / sizeof(test_func_t));
 
     ret = krhino_task_dyn_create(&task_workqueue, MODULE_NAME, 0,
-                                TASK_WORKQUEUE_PRI, 0, TASK_TEST_STACK_SIZE,
-                                task_workqueue_entry, 1);
+                                 TASK_WORKQUEUE_PRI, 0, TASK_TEST_STACK_SIZE,
+                                 task_workqueue_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

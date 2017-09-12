@@ -144,11 +144,12 @@ void add_test(void)
 
     test_netmgr();
 
-    test_aosapi();
-
     test_alicrypto();
 
     test_kv();
+
+    test_aosapi();
+
 #endif
 }
 

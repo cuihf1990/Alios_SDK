@@ -119,7 +119,7 @@ void event_param_test(void)
                               sizeof(event_func_runner) / sizeof(test_func_t));
 
     ret = krhino_task_dyn_create(&task_event, MODULE_NAME, 0, TASK_EVENT_PRI,
-                                0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
+                                 0, TASK_TEST_STACK_SIZE, task_event_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
         test_case_fail++;
         PRINT_RESULT(MODULE_NAME, FAIL);

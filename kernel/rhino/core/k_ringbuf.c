@@ -347,7 +347,7 @@ kstat_t krhino_ringbuf_reset(k_ringbuf_t *p_ringbuf)
     return ringbuf_reset(p_ringbuf);
 }
 kstat_t krhino_ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len,
-                           size_t type, size_t block_size)
+                            size_t type, size_t block_size)
 {
     NULL_PARA_CHK(p_ringbuf);
     NULL_PARA_CHK(buf);

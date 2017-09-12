@@ -26,7 +26,7 @@ static void handle_discovery_timer(void *args)
     neighbor_t *nbr;
     bool migrate = false;
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle discovery timer\r\n");
+    MESH_LOG_DEBUG("handle discovery timer");
 
     hal->discovery_timer = NULL;
     if (hal->discovery_channel >= hal->channel_list.num) {
@@ -101,9 +101,8 @@ static ur_error_t send_discovery_request(network_context_t *network)
     set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send discovery request in channel %d, len %d\r\n",
-           umesh_mm_get_channel(network), length);
+    MESH_LOG_DEBUG("send discovery request in channel %d, len %d",
+                   umesh_mm_get_channel(network), length);
 
     return error;
 }
@@ -134,8 +133,7 @@ static ur_error_t send_discovery_response(network_context_t *network,
 
     error = mf_send_message(message);
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "send discovery response, len %d\r\n", length);
+    MESH_LOG_DEBUG("send discovery response, len %d", length);
 
     return error;
 }
@@ -154,7 +152,7 @@ ur_error_t handle_discovery_request(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM, "handle discovery request\r\n");
+    MESH_LOG_DEBUG("handle discovery request");
 
     info = message->info;
     network = info->network;
@@ -208,9 +206,8 @@ ur_error_t handle_discovery_response(message_t *message)
         return UR_ERROR_FAIL;
     }
 
-    ur_log(UR_LOG_LEVEL_DEBUG, UR_LOG_REGION_MM,
-           "handle discovery response from %x\r\n",
-           info->src.netid);
+    MESH_LOG_DEBUG("handle discovery response from %x",
+                   info->src.netid);
 
     if (is_bcast_netid(info->src.netid)) {
         return UR_ERROR_NONE;
