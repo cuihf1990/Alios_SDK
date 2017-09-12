@@ -16,9 +16,9 @@ $(NAME)_SOURCES := \
 
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_MISC := linux
-else ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
-PLATFORM_MISC := linux
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
+PLATFORM_MISC := rhino
+else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
 PLATFORM_MISC := rhino
 endif
 
