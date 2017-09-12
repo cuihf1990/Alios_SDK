@@ -91,7 +91,7 @@
 #define RHINO_CONFIG_TRACE                   1
 
 #ifndef RHINO_CONFIG_CPU_NUM
-#define RHINO_CONFIG_CPU_NUM                 2
+#define RHINO_CONFIG_CPU_NUM                 1
 #endif
 
 #endif /* K_CONFIG_H */
