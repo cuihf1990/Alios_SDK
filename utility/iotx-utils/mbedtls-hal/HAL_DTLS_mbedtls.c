@@ -7,8 +7,43 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <sys/time.h>
 #include "iot_import_dtls.h"
+
+#include "ali_crypto.h"
+#include "mbedtls/config.h"
+#include "mbedtls/net_sockets.h"
+#include "mbedtls/debug.h"
+#include "mbedtls/ssl.h"
+#include "mbedtls/error.h"
+#include "mbedtls/timing.h"
 #ifdef COAP_DTLS_SUPPORT
+
+static int ssl_random(void *prng, unsigned char *output, size_t output_len)
+{
+    struct timeval tv;
+
+    (void)prng;
+
+    gettimeofday(&tv, NULL);
+    ali_seed((uint8_t *)&tv.tv_usec, sizeof(suseconds_t));
+    ali_rand_gen(output, output_len);
+
+    return 0;
+}
+
+#if defined(MBEDTLS_DEBUG_C)
+static void ssl_debug(void *ctx, int level,
+                      const char *file, int line, const char *str)
+{
+    (void)ctx;
+    (void) level;
+
+    printf("%s, line: %d: %s", file, line, str);
+
+    return;
+}
+#endif
 
 typedef struct
 {
@@ -19,7 +54,7 @@ typedef struct
     mbedtls_ssl_context    context;
     mbedtls_ssl_config     conf;
     mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_entropy_context entropy;
+//    mbedtls_entropy_context entropy;
 #ifdef MBEDTLS_X509_CRT_PARSE_C
     mbedtls_x509_crt       cacert;
 #endif
@@ -162,7 +197,7 @@ static unsigned int DTLSContext_setup(dtls_session_t *p_dtls_session, coap_dtls_
 
 unsigned int HAL_DTLSSession_free(DTLSContext *context)
 {
-    int ret;
+	int ret;
     dtls_session_t *p_dtls_session = NULL;
     if (context != NULL)
     {
@@ -185,8 +220,8 @@ unsigned int HAL_DTLSSession_free(DTLSContext *context)
         mbedtls_ssl_config_free(&p_dtls_session->conf);
         mbedtls_ssl_free(&p_dtls_session->context);
 
-        mbedtls_ctr_drbg_free(&p_dtls_session->ctr_drbg);
-        mbedtls_entropy_free(&p_dtls_session->entropy);
+//        mbedtls_ctr_drbg_free(&p_dtls_session->ctr_drbg);
+//        mbedtls_entropy_free(&p_dtls_session->entropy);
         coap_free(context);
     }
 
@@ -198,8 +233,10 @@ DTLSContext *HAL_DTLSSession_init()
     dtls_session_t *p_dtls_session = NULL;
     p_dtls_session = coap_malloc(sizeof(dtls_session_t));
 
+#if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(0);
-    mbedtls_platform_set_calloc_free(DTLSCalloc_wrapper, DTLSFree_wrapper);
+#endif
+//    mbedtls_platform_set_calloc_free(DTLSCalloc_wrapper, DTLSFree_wrapper);
     if(NULL != p_dtls_session) {
         p_dtls_session->network.socket_id = -1;
         memset(p_dtls_session->network.remote_addr, 0x00, NETWORK_ADDR_LEN);
@@ -216,8 +253,8 @@ DTLSContext *HAL_DTLSSession_init()
 #ifdef MBEDTLS_X509_CRT_PARSE_C
         mbedtls_x509_crt_init(&p_dtls_session->cacert);
 #endif
-        mbedtls_ctr_drbg_init(&p_dtls_session->ctr_drbg );
-        mbedtls_entropy_init( &p_dtls_session->entropy );
+//        mbedtls_ctr_drbg_init(&p_dtls_session->ctr_drbg );
+//        mbedtls_entropy_init( &p_dtls_session->entropy );
         DTLS_INFO("HAL_DTLSSession_init success\r\n");
 
     }
@@ -240,10 +277,10 @@ unsigned int HAL_DTLSSession_create(DTLSContext *context, coap_dtls_options_t  *
         p_dtls_session->recv_timeout_fn = p_options->recv_timeout_fn;
 
         mbedtls_ssl_config_init(&p_dtls_session->conf);
-        result = mbedtls_ctr_drbg_seed(&p_dtls_session->ctr_drbg, mbedtls_entropy_func, &p_dtls_session->entropy,
-                                       (const unsigned char *)"IoTx",
-                                       strlen("IoTx"));
-        DTLS_TRC("mbedtls_ctr_drbg_seed result 0x%04x\r\n", result);
+//        result = mbedtls_ctr_drbg_seed(&p_dtls_session->ctr_drbg, mbedtls_entropy_func, &p_dtls_session->entropy,
+//                                       (const unsigned char *)"IoTx",
+//                                       strlen("IoTx"));
+//        DTLS_TRC("mbedtls_ctr_drbg_seed result 0x%04x\r\n", result);
 
         result = mbedtls_ssl_config_defaults(&p_dtls_session->conf,
                                              MBEDTLS_SSL_IS_CLIENT,
@@ -252,15 +289,19 @@ unsigned int HAL_DTLSSession_create(DTLSContext *context, coap_dtls_options_t  *
 
         DTLS_TRC("mbedtls_ssl_config_defaults result 0x%04x\r\n", result);
 
-        mbedtls_ssl_conf_rng(&p_dtls_session->conf, mbedtls_ctr_drbg_random, &p_dtls_session->ctr_drbg);
-        mbedtls_ssl_conf_dbg(&p_dtls_session->conf, DTLSLog_wrapper, NULL);
+//        mbedtls_ssl_conf_rng(&p_dtls_session->conf, mbedtls_ctr_drbg_random, &p_dtls_session->ctr_drbg);
+        mbedtls_ssl_conf_rng(&p_dtls_session->conf, ssl_random, NULL/*&p_dtls_session->ctr_drbg*/);
+//        mbedtls_ssl_conf_dbg(&p_dtls_session->conf, DTLSLog_wrapper, NULL);
+#if defined(MBEDTLS_DEBUG_C)
+        mbedtls_ssl_conf_dbg(&p_dtls_session->conf, ssl_debug, NULL);
+#endif
 
-        result = mbedtls_ssl_cookie_setup(&p_dtls_session->cookie_ctx,
-                                          mbedtls_ctr_drbg_random, &p_dtls_session->ctr_drbg);
-        DTLS_TRC("mbedtls_ssl_cookie_setup result 0x%04x\r\n", result);
+//        result = mbedtls_ssl_cookie_setup(&p_dtls_session->cookie_ctx,
+//                                          mbedtls_ctr_drbg_random, &p_dtls_session->ctr_drbg);
+//        DTLS_TRC("mbedtls_ssl_cookie_setup result 0x%04x\r\n", result);
 
-        mbedtls_ssl_conf_dtls_cookies(&p_dtls_session->conf, mbedtls_ssl_cookie_write,
-                                      mbedtls_ssl_cookie_check, &p_dtls_session->cookie_ctx);
+//        mbedtls_ssl_conf_dtls_cookies(&p_dtls_session->conf, mbedtls_ssl_cookie_write,
+//                                      mbedtls_ssl_cookie_check, &p_dtls_session->cookie_ctx);
 
 
         if (result == DTLS_SUCCESS)

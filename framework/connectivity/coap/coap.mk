@@ -12,7 +12,7 @@ $(NAME)_INCLUDES :=  \
     $(ROOT_DIR)/LITE-log \
     $(ROOT_DIR)/LITE-utils \
     $(ROOT_DIR)/digest \
-    $(ROOT_DIR)/mbedtls-lib/include
+#    ../../../security/mbedtls/include
     
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_COAP := linux
@@ -36,7 +36,7 @@ $(NAME)_COMPONENTS += utility.iotx-utils.digest
 #endif
 ifeq ($(CONFIG_COAP_DTLS_SUPPORT), y)
 $(NAME)_DEFINES += COAP_DTLS_SUPPORT
-$(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-lib
+$(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-hal
 endif
 
 # TODO: fix warnings

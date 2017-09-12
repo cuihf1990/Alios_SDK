@@ -1,7 +1,7 @@
-NAME := libmbedtls-2.5.0
+NAME := libmbedtls-hal
 
 $(NAME)_INCLUDES :=  \
-    ./include \
+    ../../../security/mbedtls/include \
     ../sdk-impl \
     ../sdk-impl/imports
     
@@ -15,13 +15,10 @@ $(NAME)_SOURCES := \
     HAL_DTLS_mbedtls.c \
     HAL_TLS_mbedtls.c
 
-#ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
-#$(NAME)_PREBUILT_LIBRARY := lib/linuxhost/mbedtls-2.5.0.a
-#endif
+$(NAME)_COMPONENTS  := mbedtls alicrypto
 
-
-SOURCE_PATH := library
-$(NAME)_SOURCES += \
+#SOURCE_PATH := library
+#$(NAME)_SOURCES += \
     $(SOURCE_PATH)/aes.c \
     $(SOURCE_PATH)/aesni.c \
     $(SOURCE_PATH)/arc4.c \
