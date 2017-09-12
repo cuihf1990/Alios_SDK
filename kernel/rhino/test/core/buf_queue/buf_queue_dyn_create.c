@@ -46,11 +46,6 @@ static void queue_dyn_del_param_test(void)
                                      100, TEST_BUFQUEUE_MSG_MAX);
     BUFQUEUE_VAL_CHK(ret == RHINO_SUCCESS);
 
-    krhino_intrpt_enter();
-    ret = krhino_buf_queue_dyn_del(g_test_bufqueue0);
-    BUFQUEUE_VAL_CHK(ret == RHINO_NOT_CALLED_BY_INTRPT);
-    krhino_intrpt_exit();
-
     ret = krhino_buf_queue_del(g_test_bufqueue0);
     BUFQUEUE_VAL_CHK(ret == RHINO_KOBJ_DEL_ERR);
 
