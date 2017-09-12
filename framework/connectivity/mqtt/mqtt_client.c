@@ -2070,6 +2070,32 @@ static int MQTTSubInfoProc(iotx_mc_client_t *pClient)
     return rc;
 }
 
+#ifndef STM32L475xx
+int is_connected = 0;
+
+static void cb_recv(int fd, void *arg)
+{
+    iotx_mc_client_t *pClient = (iotx_mc_client_t *)arg;
+
+    if (!is_connected) {
+        if (SUCCESS_RETURN != iotx_mc_wait_CONNACK(pClient)) {
+            (void)MQTTDisconnect(pClient);
+            pClient->ipstack->disconnect(pClient->ipstack);
+            log_err("wait connect ACK timeout, or receive a ACK indicating error!");
+            return;
+        }
+        iotx_mc_set_client_state(pClient, IOTX_MC_STATE_CONNECTED);
+        utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000);
+        aos_post_event(EV_SYS, CODE_SYS_ON_MQTT_READ, 0u);
+        is_connected = 1;
+        return;
+    }
+
+    IOT_MQTT_Yield(pClient, 100);
+}
+
+extern int get_ssl_fd();
+#endif
 
 static void iotx_mc_keepalive(iotx_mc_client_t *pClient)
 {
@@ -2109,7 +2135,12 @@ static void iotx_mc_keepalive(iotx_mc_client_t *pClient)
             pClient->reconnect_param.reconnect_time_interval_ms = IOTX_MC_RECONNECT_INTERVAL_MIN_MS;
             utils_time_countdown_ms(&(pClient->reconnect_param.reconnect_next_time),
                                     pClient->reconnect_param.reconnect_time_interval_ms);
-
+#ifndef STM32L475xx
+            if (is_connected) {
+                aos_cancel_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
+                is_connected = 0;
+            }
+#endif
             pClient->ipstack->disconnect(pClient->ipstack);
             iotx_mc_set_client_state(pClient, IOTX_MC_STATE_DISCONNECTED_RECONNECTING);
             break;
@@ -2218,32 +2249,7 @@ static int MQTTPubInfoProc(iotx_mc_client_t *pClient)
 
     return SUCCESS_RETURN;
 }
-#ifndef STM32L475xx
-int is_connected = 0;
 
-static void cb_recv(int fd, void *arg)
-{
-    iotx_mc_client_t *pClient = (iotx_mc_client_t *)arg;
-
-    if (!is_connected) {
-        if (SUCCESS_RETURN != iotx_mc_wait_CONNACK(pClient)) {
-            (void)MQTTDisconnect(pClient);
-            pClient->ipstack->disconnect(pClient->ipstack);
-            log_err("wait connect ACK timeout, or receive a ACK indicating error!");
-            return;
-        }
-        iotx_mc_set_client_state(pClient, IOTX_MC_STATE_CONNECTED);
-        utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000);
-        aos_post_event(EV_SYS, CODE_SYS_ON_MQTT_READ, 0u);
-        is_connected = 1;
-        return;
-    }
-
-    IOT_MQTT_Yield(pClient, 100);
-}
-
-extern int get_ssl_fd();
-#endif
 
 // connect
 static int iotx_mc_connect(iotx_mc_client_t *pClient)
@@ -2377,9 +2383,11 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
     if (!iotx_mc_check_state_normal(pClient)) {
         return SUCCESS_RETURN;
     }
-
 #ifndef STM32L475xx
-    aos_cancel_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
+    if (is_connected) {
+        aos_cancel_poll_read_fd(get_ssl_fd(), cb_recv, pClient);
+        is_connected = 0;
+    }
 #endif
     (void)MQTTDisconnect(pClient);
 
@@ -2389,9 +2397,6 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
     iotx_mc_set_client_state(pClient, IOTX_MC_STATE_INITIALIZED);
 
     log_info("mqtt disconnect!");
-#ifndef STM32L475xx
-    is_connected = 0;
-#endif
     return SUCCESS_RETURN;
 }
 
