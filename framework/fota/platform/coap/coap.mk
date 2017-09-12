@@ -14,6 +14,7 @@ endif
 $(NAME)_INCLUDES :=  \
     ./src \
     ../ \
+	../../ \
     $(UTIL_SOURCE)/misc \
     $(UTIL_SOURCE)/sdk-impl \
     $(UTIL_SOURCE)/sdk-impl/exports \
@@ -29,7 +30,6 @@ $(NAME)_SOURCES := \
     $(UTIL_SOURCE)/hal/$(PLATFORM_COAP)/HAL_OS_$(PLATFORM_COAP).c \
 	ota_transport.c
 
-$(NAME)_COMPONENTS += connectivity.coap
 $(NAME)_DEFINES += OTA_CH_SIGNAL_COAP
 
 $(NAME)_COMPONENTS += iotx-utils.misc
@@ -42,10 +42,3 @@ $(NAME)_CFLAGS := \
 
 $(NAME)_DEFINES += DEBUG
 GLOBAL_DEFINES      += IOTX_DEBUG
-
-ifeq ($(CONFIG_COAP_ONLINE), y)
-$(NAME)_DEFINES += COAP_ONLINE
-endif
-ifeq ($(CONFIG_COAP_DTLS_SUPPORT), y)
-$(NAME)_DEFINES += COAP_DTLS_SUPPORT
-endif

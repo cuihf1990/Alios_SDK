@@ -22,7 +22,7 @@ else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
 PLATFORM_COAP := rhino
 endif
 
-$(NAME)_SOURCES := iotx_ca_cert.c iotx_coap_api.c iotx_hmac.c iotx_product_linux.c\
+$(NAME)_SOURCES := iotx_ca_cert.c iotx_coap_api.c iotx_hmac.c \
     iot-coap-c/CoAPDeserialize.c \
     iot-coap-c/CoAPExport.c \
     iot-coap-c/CoAPMessage.c \
