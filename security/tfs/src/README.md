@@ -1,1 +1,0 @@
-在编译时如果指定dest为lib-debug， 则在编译时将tfs_test.c编译到libtfs.a中，方便系统调用tfs_test接口进行tfs功能和性能测试，如果指定dest为lib-release，则不将tfs_test.c编译到libtfs.a中。

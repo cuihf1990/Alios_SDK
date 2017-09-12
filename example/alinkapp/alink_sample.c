@@ -17,10 +17,6 @@
 #include <netmgr.h>
 #include <accs.h>
 
-#ifdef CONFIG_WIFIMONITOR
-#include <wifimonitor.h>
-#endif
-
 #ifdef CONFIG_YWSS
 #include <enrollee.h>
 #endif
@@ -794,10 +790,6 @@ int application_start(int argc, char *argv[])
         netmgr_init();
         netmgr_start(auto_netmgr);
     }
-
-#ifdef CONFIG_WIFIMONITOR
-    cli_register_command(&count_mac_cmd);
-#endif
 
 #ifdef CONFIG_AOS_DDA
     dda_service_start();

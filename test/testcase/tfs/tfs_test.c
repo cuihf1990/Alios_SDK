@@ -7,7 +7,22 @@
 #include <tfs.h>
 #include <stdio.h>
 #include "aos/aos.h"
-#include "../../../security/tfs/platform/pal.h"
+
+// device info
+struct device_info {
+    const char *product_name;
+    const char *imei;
+    const char *hardware_id;
+    const char *mac;
+    const char *bt_mac;
+    const char *build_time;
+    const char *os_version;
+    const char *dm_pixels;
+    const char *dm_dpi;
+    const char *cup_info;
+    const char *storage_total;
+    const char *camera_resolution;
+};
 
 extern int tfs_id2_encrypt(const uint8_t *in, uint32_t in_len,uint8_t *out, uint32_t *out_len);
 extern int tfs_id2_verify(const uint8_t *in, uint32_t in_len, uint8_t *sign, uint32_t sign_len);
@@ -23,15 +38,15 @@ extern int http_get_seed(const char *func, const char *arg, char *seed);
 extern int http_activate_dev(const char *func, const char *arg);
 
 #define SIGN_IN_DATA_SIZE 4096
-static uint8_t sign_in_data[SIGN_IN_DATA_SIZE + 2];
+static uint8_t sign_in_data[SIGN_IN_DATA_SIZE + 1];
 #define SIGN_OUT_BUF_MAX 256
-static uint8_t sign_out_data[SIGN_OUT_BUF_MAX] = {0};
+static uint8_t sign_out_data[SIGN_OUT_BUF_MAX + 1] = {0};
 
 #define ENCRYPT_IN_DATA_SIZE 3744
 #define ENCRYPT_OUT_DATA_SIZE 4096
-static uint8_t enc_in_data[ENCRYPT_OUT_DATA_SIZE + 2];
+static uint8_t enc_in_data[ENCRYPT_OUT_DATA_SIZE + 1];
 static uint8_t enc_out_data[ENCRYPT_OUT_DATA_SIZE + 256] = {0};
-static uint8_t dec_out_data[ENCRYPT_OUT_DATA_SIZE] = {0};
+static uint8_t dec_out_data[ENCRYPT_OUT_DATA_SIZE + 1] = {0};
 
 #define AUTH_CODE_BUF_MAX 256
 static uint8_t auth_code[AUTH_CODE_BUF_MAX] = {0};
@@ -83,8 +98,8 @@ static void test_tfs_id2_sign(void)
     uint32_t in_len = 0;
 
     prepare_sign_test_data(SIGN_IN_DATA_SIZE);
-    in_len = strlen(sign_in_data);
-    memset(sign_out_data, 0, SIGN_OUT_BUF_MAX);
+    in_len = SIGN_IN_DATA_SIZE;
+    memset(sign_out_data, 0, SIGN_OUT_BUF_MAX + 1);
 
     ret = tfs_id2_sign(NULL, in_len, sign_out_data, &len);
     YUNIT_ASSERT(ret != 0);
@@ -101,35 +116,11 @@ static void test_tfs_id2_sign(void)
     ret = tfs_id2_sign(NULL, 0, NULL, NULL);
     YUNIT_ASSERT(ret != 0);
 
-    ret = tfs_id2_sign(sign_in_data, in_len, sign_in_data, &len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_sign(sign_in_data, in_len, sign_in_data + 10, &len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_sign(sign_in_data, in_len, sign_in_data + in_len - 1, &len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_sign(sign_out_data, in_len, sign_out_data, &len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_sign(sign_out_data + 10, in_len, sign_out_data, &len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_sign(sign_out_data + len - 1, in_len, sign_out_data, &len);
-    YUNIT_ASSERT(ret != 0);
-
     ret = tfs_id2_sign((const uint8_t *)sign_in_data, in_len, sign_out_data, &len);
     YUNIT_ASSERT(ret == 0);
 
     ret = tfs_id2_verify((const uint8_t *)sign_in_data, in_len, sign_out_data, len);
     YUNIT_ASSERT(ret == 0);
-
-    prepare_sign_test_data(SIGN_IN_DATA_SIZE + 1);
-    in_len = strlen(sign_in_data);
-    memset(sign_out_data, 0, SIGN_OUT_BUF_MAX);
-    ret = tfs_id2_sign((const uint8_t *)sign_in_data, in_len, sign_out_data, &len);
-    YUNIT_ASSERT(ret != 0);
 }
 
 static void test_tfs_id2_decrypt(void)
@@ -140,10 +131,10 @@ static void test_tfs_id2_decrypt(void)
     uint32_t in_len = 0;
 
     prepare_decrypt_test_data(ENCRYPT_IN_DATA_SIZE);
-    in_len = strlen(enc_in_data);
+    in_len = ENCRYPT_IN_DATA_SIZE;
 
-    memset(enc_out_data, 0, ENCRYPT_OUT_DATA_SIZE);
-    memset(dec_out_data, 0, ENCRYPT_OUT_DATA_SIZE);
+    memset(enc_out_data, 0, ENCRYPT_OUT_DATA_SIZE + 256);
+    memset(dec_out_data, 0, ENCRYPT_OUT_DATA_SIZE + 1);
     ret = tfs_id2_encrypt((uint8_t *)enc_in_data, in_len, enc_out_data, &enc_len);
     YUNIT_ASSERT(ret == 0);
 
@@ -162,36 +153,8 @@ static void test_tfs_id2_decrypt(void)
     ret = tfs_id2_decrypt(NULL, 0, NULL, NULL);
     YUNIT_ASSERT(ret != 0);
 
-    ret = tfs_id2_decrypt(enc_out_data, enc_len, enc_out_data, &dec_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_decrypt(enc_out_data, enc_len, enc_out_data + 10, &dec_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_decrypt(enc_out_data, enc_len, enc_out_data + enc_len - 1, &dec_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_decrypt(dec_out_data, enc_len, dec_out_data, &dec_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_decrypt(dec_out_data + 10, enc_len, dec_out_data, &dec_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_decrypt(dec_out_data + dec_len - 1, enc_len, dec_out_data, &dec_len);
-    YUNIT_ASSERT(ret != 0);
-
     ret = tfs_id2_decrypt(enc_out_data, enc_len, dec_out_data, &dec_len);
     YUNIT_ASSERT(ret == 0);
-
-    enc_len = ENCRYPT_OUT_DATA_SIZE + 256;
-    prepare_decrypt_test_data(ENCRYPT_IN_DATA_SIZE + 1);
-    in_len = strlen(enc_in_data);
-    memset(enc_out_data, 0, ENCRYPT_OUT_DATA_SIZE + 256);
-    memset(dec_out_data, 0, ENCRYPT_OUT_DATA_SIZE);
-    ret = tfs_id2_encrypt((uint8_t *)enc_in_data, in_len, enc_out_data, &enc_len);
-    YUNIT_ASSERT(ret == 0);
-    ret = tfs_id2_decrypt(enc_out_data, enc_len, dec_out_data, &dec_len);
-    YUNIT_ASSERT(ret != 0);
 }
 
 static void test_tfs_get_auth_code(void)
@@ -214,7 +177,8 @@ static void test_tfs_get_auth_code(void)
     YUNIT_ASSERT(ret == 0);
 }
 
-static void test_tfs_activate_device(void) {
+static void test_tfs_activate_device(void)
+{
     int ret = -1;
     const char *key = "activate";
 
@@ -311,7 +275,8 @@ static void teardown(void)
 
 }
 
-static void test_tfs_pal_storage(void) {
+static void test_tfs_pal_storage(void)
+{
     int ret = -1;
     ret = pal_save_info(NULL, "ok");
     YUNIT_ASSERT(ret != 0);
@@ -332,14 +297,15 @@ static void test_tfs_pal_storage(void) {
     YUNIT_ASSERT(ret != 0);
 }
 
-static void test_tfs_pal_json(void) {
+static void test_tfs_pal_json(void)
+{
     int ret = -1;
-	char *json_str = "{\"code\":18, \"msg\":\"id2 not exist\", \"value\":false}";
-	char *json_str1 = "{code:18, msg:\"id2 not exist\", value:false}";
+    char *json_str = "{\"code\":18, \"msg\":\"id2 not exist\", \"value\":false}";
+    char *json_str1 = "{code:18, msg:\"id2 not exist\", value:false}";
     const char *tokens[1];
-	int tokens_size = 1;
-	char code[3] = {0};
-	int msg;
+    int tokens_size = 1;
+    char code[3] = {0};
+    int msg;
 
     tokens[0] = "code";
     ret = pal_json_get_string_value(NULL, tokens, tokens_size, code);
@@ -388,7 +354,8 @@ static void test_tfs_pal_json(void) {
     YUNIT_ASSERT(ret != 0);
 }
 
-static void test_tfs_pal_network(void) {
+static void test_tfs_pal_network(void)
+{
     int ret = 0;
     const char *hostname = "id2server.yunos.com";
     const char *hostname2 = "hello.yunos.com";
@@ -399,8 +366,8 @@ static void test_tfs_pal_network(void) {
     ret = pal_network_create(hostname2, port);
     YUNIT_ASSERT(ret != 0);
 
-//    ret = pal_network_create(hostname, port);
-//    YUNIT_ASSERT(ret != 0);
+    ret = pal_network_create(hostname, port);
+    YUNIT_ASSERT(ret != 0);
 
     ret = pal_network_send(200, buf, buf_len);
     YUNIT_ASSERT(ret != 0);
@@ -409,13 +376,15 @@ static void test_tfs_pal_network(void) {
     YUNIT_ASSERT(ret != 0);
 }
 
-static void test_tfs_pal_device(void) {
+static void test_tfs_pal_device(void)
+{
     int ret = 0;
     ret = pal_collect_device_info(NULL);
     YUNIT_ASSERT(ret != 0);
 }
 
-static void test_tfs_id2_verify(void) {
+static void test_tfs_id2_verify(void)
+{
     int ret = 0;
     uint32_t len = 128;
     uint32_t in_len = 0;
@@ -433,13 +402,14 @@ static void test_tfs_id2_verify(void) {
     ret = tfs_id2_verify(sign_in_data, in_len, sign_out_data, 0);
     YUNIT_ASSERT(ret != 0);
 
-    prepare_sign_test_data(SIGN_IN_DATA_SIZE + 1);
+    prepare_sign_test_data(SIGN_IN_DATA_SIZE);
     in_len = strlen(sign_in_data);
     ret = tfs_id2_verify(sign_in_data, in_len, sign_out_data, len);
     YUNIT_ASSERT(ret != 0);
 }
 
-static void test_tfs_id2_encrypt(void) {
+static void test_tfs_id2_encrypt(void)
+{
     int ret = 0;
     uint32_t enc_len = ENCRYPT_OUT_DATA_SIZE + 256;
     uint32_t dec_len = ENCRYPT_OUT_DATA_SIZE;
@@ -459,24 +429,8 @@ static void test_tfs_id2_encrypt(void) {
     YUNIT_ASSERT(ret != 0);
     ret = tfs_id2_encrypt(NULL, 0, NULL, NULL);
     YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_encrypt(enc_in_data, in_len, enc_in_data, &enc_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_encrypt(enc_in_data, in_len, enc_in_data + 10, &enc_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_encrypt(enc_in_data, in_len, enc_in_data + in_len - 1, &enc_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_encrypt(enc_out_data, in_len, enc_out_data, &enc_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_encrypt(enc_out_data + 10, in_len, enc_out_data, &enc_len);
-    YUNIT_ASSERT(ret != 0);
-
-    ret = tfs_id2_encrypt(enc_out_data + enc_len - 1, in_len, enc_out_data, &enc_len);
-    YUNIT_ASSERT(ret != 0);
+    ret = tfs_id2_encrypt(enc_in_data, in_len, enc_out_data, &enc_len);
+    YUNIT_ASSERT(ret == 0);
 
     prepare_decrypt_test_data(ENCRYPT_OUT_DATA_SIZE + 1);
     in_len = strlen(enc_in_data);
@@ -485,7 +439,8 @@ static void test_tfs_id2_encrypt(void) {
     YUNIT_ASSERT(ret != 0);
 }
 
-static void test_tfs_http(void) {
+static void test_tfs_http(void)
+{
     char fun[41] = {0};
     char argu[1026] = {0};
     char seed[100] = {0};

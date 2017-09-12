@@ -32,8 +32,8 @@ $(NAME)_SOURCES := \
 $(NAME)_COMPONENTS += connectivity.coap
 $(NAME)_DEFINES += OTA_CH_SIGNAL_COAP
 
-$(NAME)_COMPONENTS += utility.iotx-utils.misc
-$(NAME)_COMPONENTS += utility.iotx-utils.sdk-impl
+$(NAME)_COMPONENTS += iotx-utils.misc
+$(NAME)_COMPONENTS += iotx-utils.sdk-impl
 $(NAME)_CFLAGS := \
     -Werror \
     -Wno-unused-function \

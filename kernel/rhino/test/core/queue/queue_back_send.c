@@ -46,11 +46,6 @@ static void krhino_queue_dyn_del_param_test(void)
     ret = krhino_queue_dyn_del(NULL);
     QUEUE_VAL_CHK(ret == RHINO_NULL_PTR);
 
-    krhino_intrpt_enter();
-    ret = krhino_queue_dyn_del(g_test_queue0);
-    QUEUE_VAL_CHK(ret == RHINO_NOT_CALLED_BY_INTRPT);
-    krhino_intrpt_exit();
-
     ret = krhino_queue_del(g_test_queue0);
     QUEUE_VAL_CHK(ret == RHINO_KOBJ_DEL_ERR);
 

@@ -31,14 +31,14 @@ $(NAME)_SOURCES := iotx_ca_cert.c iotx_coap_api.c iotx_hmac.c iotx_product_linux
     $(ROOT_DIR)/hal/$(PLATFORM_COAP)/HAL_UDP_$(PLATFORM_COAP).c \
     $(ROOT_DIR)/hal/$(PLATFORM_COAP)/HAL_OS_$(PLATFORM_COAP).c
 
-$(NAME)_COMPONENTS += utility.iotx-utils.LITE-utils
-$(NAME)_COMPONENTS += utility.iotx-utils.digest
+$(NAME)_COMPONENTS += iotx-utils.LITE-utils
+$(NAME)_COMPONENTS += iotx-utils.digest
 #ifeq ($(CONFIG_COAP_ONLINE), y)
 #$(NAME)_DEFINES += COAP_ONLINE
 #endif
 ifeq ($(CONFIG_COAP_DTLS_SUPPORT), y)
 $(NAME)_DEFINES += COAP_DTLS_SUPPORT
-$(NAME)_COMPONENTS += utility.iotx-utils.mbedtls-hal
+$(NAME)_COMPONENTS += iotx-utils.mbedtls-hal
 endif
 
 # TODO: fix warnings

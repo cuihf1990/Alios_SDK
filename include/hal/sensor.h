@@ -2,11 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file hal/sensor.h
- * @brief SENSOR HAL API for YOC
- * @version since 5.7.0
- */
 
 #ifndef HAL_SENSOR_H
 #define HAL_SENSOR_H
