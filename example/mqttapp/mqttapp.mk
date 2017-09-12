@@ -18,7 +18,7 @@ endif
 
 $(NAME)_INCLUDES := ../../../../utility/cjson/include
 
-$(NAME)_COMPONENTS := cli connectivity.mqtt utility.cjson
+$(NAME)_COMPONENTS := cli connectivity.mqtt cjson
 
 LWIP := 0
 ifeq ($(LWIP),1)
