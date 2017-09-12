@@ -5,9 +5,6 @@ GLOBAL_INCLUDES     += include
 $(NAME)_SOURCES     := yts_main.c
 $(NAME)_COMPONENTS  := yunit cjson
 
-#YTS_COAP
-ifeq ($(yts_connectivity), coap)
-$(NAME)_DEFINES += YTS_COAP
 $(NAME)_SOURCES     += framework/coap_test.c
 
 CONFIG_COAP_DTLS_SUPPORT := y
@@ -29,8 +26,6 @@ $(NAME)_INCLUDES += ../../security/mbedtls/include
 
 $(NAME)_COMPONENTS  += connectivity.coap
 
-#YTS_COAP
-else
 $(NAME)_SOURCES     += framework/mqtt_test.c
 $(NAME)_COMPONENTS  += connectivity.mqtt
 $(NAME)_SOURCES     += basic_test.c
@@ -76,13 +71,10 @@ $(NAME)_COMPONENTS  += mbedtls
 $(NAME)_COMPONENTS  += base64 hashtable log connectivity.wsf ywss protocol.alink modules.fs.kv modules.fs.fatfs
 
 ifneq (,$(filter protocols.mesh,$(COMPONENTS)))
-$(NAME)_INCLUDES := ../../kernel/protocols/mesh/include
+$(NAME)_INCLUDES += ../../kernel/protocols/mesh/include
 $(NAME)_INCLUDES += ../../tools/dda
 include test/testcase/kernel/protocols/mesh/filelists.mk
 $(NAME)_SOURCES += $(MESHYTSFILE)
-endif
-
-#YTS_COAP
 endif
 
 $(NAME)_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration

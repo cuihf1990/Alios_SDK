@@ -6,17 +6,11 @@ $(NAME)_CFLAGS += \
 	-Wno-unused-function
 
 $(NAME)_SOURCES += \
-    ota_service.c
-
-ifneq (,$(filter connectivity.coap,$(COMPONENTS)))
-$(NAME)_DEFINES += CONNECTIVITY_COAP
-else
-$(NAME)_SOURCES += \
+    ota_service.c \
     ota_util.c \
     ota_update_manifest.c \
     ota_download.c \
     ota_version.c
-endif
 
 $(NAME)_COMPONENTS += fota.platform digest_algorithm
 

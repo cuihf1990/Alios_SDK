@@ -23,10 +23,11 @@ $(NAME)_INCLUDES :=  \
 $(NAME)_SOURCES := \
     ./src/ota.c \
     ./src/ota_lib.c \
-    $(UTIL_SOURCE)/hal/$(PLATFORM_COAP)/HAL_OS_$(PLATFORM_COAP).c
+	ota_service_coap.c \
+    $(UTIL_SOURCE)/hal/$(PLATFORM_COAP)/HAL_OS_$(PLATFORM_COAP).c \
+	ota_transport.c
 
 $(NAME)_COMPONENTS += connectivity.coap
-$(NAME)_SOURCES += ota_service_coap.c
 $(NAME)_DEFINES += OTA_CH_SIGNAL_COAP
 
 $(NAME)_COMPONENTS += utility.iotx-utils.misc

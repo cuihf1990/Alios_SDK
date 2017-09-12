@@ -4,34 +4,14 @@
 #include <string.h>
 #include <hal/hal.h>
 #include <aos/aos.h>
-
-#define TAG "ota"
-
-static int ota_init = 0;
-
-#ifdef CONNECTIVITY_COAP
-extern void coap_ota();
-
-void ota_service_event(input_event_t *event, void *priv_data)
-{
-    if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP) {
-        if (ota_init) {
-            return;
-        }
-        ota_init = 1;
-        coap_ota();
-    }
-}
-
-void ota_service_init(void)
-{
-    aos_register_event_filter(EV_WIFI, ota_service_event, NULL);
-}
-#else
 #include "ota_transport.h"
 #include "ota_update_manifest.h"
 #include "ota_version.h"
 #include "ota_util.h"
+
+#define TAG "ota"
+
+static int ota_init = 0;
 
 static write_flash_cb_t ota_write_flash_callback;
 static ota_finish_cb_t  ota_finish_callbak;
@@ -134,4 +114,3 @@ void ota_service_init(void)
 {
     aos_register_event_filter(EV_SYS, ota_service_event, NULL);
 }
-#endif
