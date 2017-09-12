@@ -1,5 +1,5 @@
 /*
- * copyright (c) 2015-2017 alibaba group holding limited
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
 #ifndef _IOTX_MQTT_CLIENT_H_
