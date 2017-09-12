@@ -5,7 +5,6 @@
 #include <aos/aos.h>
 #include <vfs.h>
 #include <kvmgr.h>
-#include <vflash.h>
 
 #ifdef MESH_GATEWAY_SERVICE
 #include "gateway_service.h"
