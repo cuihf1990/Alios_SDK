@@ -347,7 +347,7 @@ static mesh_hal_priv_t g_wifi_priv = {
     .chn_num = sizeof(g_wifi_channels),
     .channels = g_wifi_channels,
     .module = &beken_wifi_mesh_module,
-    .bssid = {0x0, 0x1, 0x2, 0x3, 0x4, 0x5},
+    .bssid = {0xb0, 0xf8, 0x93, 0x00, 0x00, 0x07},
 };
 
 static umesh_hal_module_t beken_wifi_mesh_module = {
