@@ -21,10 +21,6 @@ else
 gateway ?= 1
 endif
 
-ifeq ($(wifimonitor),1)
-$(NAME)_COMPONENTS += wifimonitor
-endif
-
 ifeq ($(gateway),1)
 
 $(NAME)_COMPONENTS += gateway
