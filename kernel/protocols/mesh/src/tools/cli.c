@@ -17,7 +17,7 @@
 #include "core/sid_allocator.h"
 #include "core/link_mgmt.h"
 #include "core/router_mgr.h"
-#include "ipv6/ip6.h"
+#include "ip/ip6.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 #include "tools/diags.h"

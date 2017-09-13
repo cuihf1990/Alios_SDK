@@ -33,12 +33,6 @@ const char *aos_version_get(void)
     return SYS_CALL0(SYS_VERSION_GET, const char *);
 }
 
-const char *aos_strerror(int errnum)
-{
-    (void)errnum;
-    return NULL;
-}
-
 int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {
@@ -828,9 +822,9 @@ void hal_ota_register_module(hal_ota_module_t *module)
     return SYS_CALL1(SYS_OTA_REGISTER_MODULE, void, hal_ota_module_t *, module);
 }
 
-hal_stat_t hal_ota_init(void)
+hal_stat_t hal_ota_init(void * something)
 {
-    return SYS_CALL0(SYS_OTA_INIT, hal_stat_t);
+    return SYS_CALL1(SYS_OTA_INIT, hal_stat_t, void *, something);
 }
 
 hal_stat_t hal_ota_write(hal_ota_module_t *m, volatile uint32_t *off_set,

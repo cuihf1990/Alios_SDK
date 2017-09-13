@@ -22,13 +22,14 @@
 #include <aos/network.h>
 */
 
-/**@brief Transmit data on a UART interface
+/**
+ * Transmit data on a UART interface
  *
- * @param  data     : pointer to the start of data
- * @param  size     : number of bytes to transmit
+ * @param  data     pointer to the start of data
+ * @param  size     number of bytes to transmit
+ * @param  timeout  time to wait
  *
- * @return    kNoErr        : on success.
- * @return    kGeneralErr   : if an error occurred with any step
+ * @return  0 success, EIO if an error occurred with any step
  */
 int32_t aos_uart_send(void *data, uint32_t size, uint32_t timeout);
 

@@ -5,7 +5,7 @@
 #ifndef UR_MM_TLVS_H
 #define UR_MM_TLVS_H
 
-#include "ipv6/ip6.h"
+#include "ip/ip6.h"
 
 /* mesh managememt TLV types. */
 enum {

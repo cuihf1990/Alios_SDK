@@ -1,6 +1,6 @@
 include $(MAKEFILES_PATH)/aos_host_cmd.mk
 
-CONFIG_FILE_DIR := out/$(CLEANED_BUILD_STRING)
+CONFIG_FILE_DIR := $(BUILD_DIR)/$(CLEANED_BUILD_STRING)
 CONFIG_FILE := $(CONFIG_FILE_DIR)/config.mk
 
 COMPONENT_DIRECTORIES := . \
@@ -14,6 +14,8 @@ COMPONENT_DIRECTORIES := . \
                          test      \
                          devices   \
                          security
+
+COMPONENT_DIRECTORIES += $(APPDIR)
 
 AOS_SDK_VERSION ?= $(AOS_SDK_VERSION_MAJOR).$(AOS_SDK_VERSION_MINOR).$(AOS_SDK_VERSION_REVISION)
 
@@ -33,7 +35,7 @@ $(eval COMP := $(word 1,$(1)))
 $(eval COMP_LOCATION := $(subst .,/,$(COMP)))
 $(eval COMP_MAKEFILE_NAME := $(notdir $(COMP_LOCATION)))
 # Find the component makefile in directory list
-$(eval TEMP_MAKEFILE := $(strip $(wildcard $(foreach dir, $(addprefix $(SOURCE_ROOT),$(COMPONENT_DIRECTORIES)), $(dir)/$(COMP_LOCATION)/$(COMP_MAKEFILE_NAME).mk))))
+$(eval TEMP_MAKEFILE := $(strip $(wildcard $(foreach dir, $(APPDIR)/$(comp) $(addprefix $(SOURCE_ROOT),$(COMPONENT_DIRECTORIES)), $(dir)/$(COMP_LOCATION)/$(COMP_MAKEFILE_NAME).mk))))
 
 # Check if component makefile was found - if not try downloading it and re-doing the makefile search
 $(if $(TEMP_MAKEFILE),,\
@@ -153,11 +155,11 @@ AOS_SDK_LDFLAGS  += $(COMPILER_SPECIFIC_DEBUG_LDFLAGS)
 endif
 
 # Check if there are any unknown components; output error if so.
-$(foreach comp, $(COMPONENTS), $(if $(wildcard $(foreach dir, $(addprefix $(SOURCE_ROOT),$(COMPONENT_DIRECTORIES)), $(dir)/$(subst .,/,$(comp)) ) ),,$(error Unknown component: $(comp))))
+$(foreach comp, $(COMPONENTS), $(if $(wildcard $(APPDIR)/$(comp) $(foreach dir, $(addprefix $(SOURCE_ROOT),$(COMPONENT_DIRECTORIES)), $(dir)/$(subst .,/,$(comp)) ) ),,$(error Unknown component: $(comp))))
 
 # Find the matching platform and application from the build string components
 PLATFORM_FULL   :=$(strip $(foreach comp,$(subst .,/,$(COMPONENTS)),$(if $(wildcard $(SOURCE_ROOT)board/$(comp)),$(comp),)))
-APP_FULL        :=$(strip $(foreach comp,$(subst .,/,$(COMPONENTS)),$(if $(wildcard $(SOURCE_ROOT)example/$(comp) $(SOURCE_ROOT)$(comp)),$(comp),)))
+APP_FULL        :=$(strip $(foreach comp,$(subst .,/,$(COMPONENTS)),$(if $(wildcard $(APPDIR)/$(comp) $(SOURCE_ROOT)example/$(comp) $(SOURCE_ROOT)$(comp)),$(comp),)))
 
 PLATFORM    :=$(notdir $(PLATFORM_FULL))
 APP         :=$(notdir $(APP_FULL))

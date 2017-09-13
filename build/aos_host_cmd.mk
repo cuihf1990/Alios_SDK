@@ -6,6 +6,7 @@ PATH :=
 
 JTAG         ?= jlink_swd
 
+BUILD_DIR    ?= out
 
 ifeq ($(HOST_OS),Win32)
 ################
@@ -39,7 +40,7 @@ PERL              := "$(COMMON_TOOLS_PATH)perl$(EXECUTABLE_SUFFIX)"
 PYTHON            := "$(COMMON_TOOLS_PATH)Python27/python$(EXECUTABLE_SUFFIX)"
 LINT_EXE          := "$(TOOLS_ROOT)/splint/splint/bin/splint$(EXECUTABLE_SUFFIX)"
 PERL_ESC_DOLLAR   :=$$
-CLEAN_COMMAND     := if exist build $(call CONV_SLASHES,$(COMMON_TOOLS_PATH))rmdir /s /q out
+CLEAN_COMMAND     := if exist $(BUILD_DIR) $(call CONV_SLASHES,$(COMMON_TOOLS_PATH))rmdir /s /q $(BUILD_DIR)
 MKDIR              = if not exist $(subst /,\,$1) mkdir $(subst /,\,$1)
 RMDIR              = if exist $(subst /,\,$1) rmdir /s /q $(subst /,\,$1)
 CPDIR              = xcopy /s /q /i $(subst /,\,$1) $(subst /,\,$2)
@@ -84,7 +85,7 @@ CMD_TRUNC         := $(ECHO)
 PERL              := "/usr/bin/perl"
 PYTHON            := "/usr/bin/python"
 PERL_ESC_DOLLAR   :=\$$
-CLEAN_COMMAND     := "$(COMMON_TOOLS_PATH)rm" -rf out
+CLEAN_COMMAND     := "$(COMMON_TOOLS_PATH)rm" -rf $(BUILD_DIR)
 MKDIR              = "$(COMMON_TOOLS_PATH)mkdir" -p $1
 RMDIR              = "$(COMMON_TOOLS_PATH)rm" -rf $1
 CPDIR              = "$(COMMON_TOOLS_PATH)cp" -rf $1 $2
@@ -127,7 +128,7 @@ CMD_TRUNC         := $(ECHO)
 PERL              := "/usr/bin/perl"
 PYTHON            := "/usr/bin/python"
 PERL_ESC_DOLLAR   :=\$$
-CLEAN_COMMAND     := "$(COMMON_TOOLS_PATH)rm" -rf out
+CLEAN_COMMAND     := "$(COMMON_TOOLS_PATH)rm" -rf $(BUILD_DIR)
 MKDIR              = "$(COMMON_TOOLS_PATH)mkdir" -p $1
 RMDIR              = "$(COMMON_TOOLS_PATH)rm" -rf $1
 CPDIR              = "$(COMMON_TOOLS_PATH)cp" -rf $1 $2
@@ -175,7 +176,7 @@ CMD_TRUNC         := $(ECHO)
 PERL              := "/usr/bin/perl"
 PYTHON            := "/usr/bin/python"
 PERL_ESC_DOLLAR   :=\$$
-CLEAN_COMMAND     := "$(COMMON_TOOLS_PATH)rm" -rf out
+CLEAN_COMMAND     := "$(COMMON_TOOLS_PATH)rm" -rf $(BUILD_DIR)
 MKDIR              = "$(COMMON_TOOLS_PATH)mkdir" -p $1
 RMDIR              = "$(COMMON_TOOLS_PATH)rm" -rf $1
 CPDIR              = "$(COMMON_TOOLS_PATH)cp" -rf $1 $2
@@ -216,7 +217,6 @@ BUILD_STRING ?= $(strip $(filter-out $(MAKEFILE_TARGETS) download run total, $(M
 BUILD_STRING_TO_DIR = $(subst .,/,$(1))
 DIR_TO_BUILD_STRING = $(subst /,.,$(1))
 CLEANED_BUILD_STRING := $(BUILD_STRING)
-BUILD_DIR    := out
 
 OUTPUT_DIR   := $(BUILD_DIR)/$(CLEANED_BUILD_STRING)
 

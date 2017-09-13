@@ -6,7 +6,7 @@
 #define UR_MESH_FORWARDER_H
 
 #include "utilities/message.h"
-#include "ipv6/ip6.h"
+#include "ip/ip6.h"
 #include "hal/interface_context.h"
 
 #ifdef __cplusplus

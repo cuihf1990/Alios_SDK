@@ -76,10 +76,6 @@ static void aos_init(void)
     vfs_init();
     vfs_device_init();
 
-    for (i = 0; i < 10; i++) {
-        vflash_register_partition(i);
-    }
-
     aos_cli_init();
     aos_kv_init();
     aos_loop_init();

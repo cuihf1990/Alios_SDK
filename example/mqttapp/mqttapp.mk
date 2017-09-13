@@ -16,8 +16,6 @@ else
 $(NAME)_SOURCES     := mqtt-example.c
 endif
 
-$(NAME)_INCLUDES := ../../../../utility/cjson/include
-
 $(NAME)_COMPONENTS := cli connectivity.mqtt cjson
 
 LWIP := 0

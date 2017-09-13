@@ -13,8 +13,8 @@
 
 #include "umesh_types.h"
 #include "utilities/message.h"
-#include "ipv6/ip6.h"
-#include "ipv6/lwip_adapter.h"
+#include "ip/ip6.h"
+#include "ip/lwip_adapter.h"
 
 #if LWIP_IPV6
 extern struct netif *ur_adapter_ip6_route(const ip6_addr_t *src, const ip6_addr_t *dest);

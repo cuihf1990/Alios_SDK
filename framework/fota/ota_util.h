@@ -58,12 +58,23 @@ typedef enum {
     OTA_ALL
 } OTA_ENUM_UPDATE_TYPE;
 
+typedef enum {
+    OTA_FINISH,
+    OTA_BREAKPOINT  
+} OTA_ENUM_RESULT_TYPE;
+
+typedef struct  {
+    OTA_ENUM_UPDATE_TYPE update_type;
+    OTA_ENUM_RESULT_TYPE result_type ;
+} ota_finish_param_t;
+
 typedef struct {
     OTA_STATUS_T status;
     OTA_ENUM_UPDATE_WAY  update_way;
     OTA_ENUM_UPDATE_TYPE update_type;
     void *mutex;
 } ota_info_t;
+
 
 
 void ota_status_init(void);

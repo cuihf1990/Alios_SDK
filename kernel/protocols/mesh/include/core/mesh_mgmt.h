@@ -8,7 +8,7 @@
 #include "core/mesh_mgmt_tlvs.h"
 #include "core/mesh_forwarder.h"
 #include "core/topology.h"
-#include "ipv6/ip6.h"
+#include "ip/ip6.h"
 #include "hal/interface_context.h"
 
 typedef enum device_state_s {

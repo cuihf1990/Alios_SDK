@@ -5,7 +5,7 @@ EXTRA_POST_BUILD_TARGETS += copy_output_for_eclipse
 
 ifeq (download,$(findstring download,$(MAKECMDGOALS)))
 EXTRA_POST_BUILD_TARGETS  += sflash_write_app
-OPENOCD_LOG_FILE ?= out/openocd_log.txt
+OPENOCD_LOG_FILE ?= $(BUILD_DIR)/openocd_log.txt
 DOWNLOAD_LOG := >> $(OPENOCD_LOG_FILE)
 endif
 
@@ -50,7 +50,7 @@ bootloader:
 download_bootloader: bootloader display_map_summary sflash_write_app
 	$(eval BOOTLOADER_IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(BOOTLOADER_OUTFILE_BIN)))
 	$(QUIET)$(ECHO) Downloading bootloader to partition: $(BOOTLOADER_FIRMWARE_PARTITION_TCL) size: $(BOOTLOADER_IMAGE_SIZE) bytes... 
-	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x00000 0x10000" -c "load_image out/eclipse_debug/last_bootloader.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
+	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x00000 0x10000" -c "load_image $(BUILD_DIR)/eclipse_debug/last_bootloader.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
 
 #$(QUIET)$(call CONV_SLASHES,$(OPENOCD_FULL_NAME)) -f $(OPENOCD_PATH)$(JTAG).cfg -f $(OPENOCD_PATH)$(HOST_OPENOCD).cfg -f $(OPENOCD_PATH)$(HOST_OPENOCD)-flash-app.cfg -c "verify_image_checksum $(BOOTLOADER_OUTFILE).stripped.elf" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) No changes detected && $(ECHO_BLANK_LINE) || $(call CONV_SLASHES,$(OPENOCD_FULL_NAME)) -f $(OPENOCD_PATH)$(JTAG).cfg -f $(OPENOCD_PATH)$(HOST_OPENOCD).cfg -f $(OPENOCD_PATH)$(HOST_OPENOCD)-flash-app.cfg -c "flash write_image erase $(BOOTLOADER_OUTFILE).hex" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) "**** OpenOCD failed - ensure you have installed the driver from the drivers directory, and that the debugger is not running **** In Linux this may be due to USB access permissions. In a virtual machine it may be due to USB passthrough settings. Check in the task list that another OpenOCD process is not running. Check that you have the correct target and JTAG device plugged in. ****"
 
@@ -92,7 +92,7 @@ total:
 ifeq ($(BOOTLOADER_APP),1)
 download_app: $(STRIPPED_LINK_OUTPUT_FILE) display_map_summary sflash_write_app kill_openocd
 	$(eval IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(BIN_OUTPUT_FILE)))
-	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x00000 0x10000" -c "load_image out/eclipse_debug/last_bootloader.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
+	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x00000 0x10000" -c "load_image $(BUILD_DIR)/eclipse_debug/last_bootloader.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
 else
 
 ifeq ($(PLATFORM),mk108)
@@ -107,13 +107,13 @@ ifeq ($(BINS), 0)
 download_app: $(STRIPPED_LINK_OUTPUT_FILE) display_map_summary download_bootloader sflash_write_app kill_openocd
 	$(eval IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(BIN_OUTPUT_FILE)))
 	$(QUIET)$(ECHO) Downloading application to partition: $(APPLICATION_FIRMWARE_PARTITION_TCL) size: $(IMAGE_SIZE) bytes... 
-	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x12000 $(APP_SIZE)" -c "load_image out/eclipse_debug/last_built.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
+	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x12000 $(APP_SIZE)" -c "load_image $(BUILD_DIR)/eclipse_debug/last_built.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
 else
 download_app: $(STRIPPED_LINK_OUTPUT_FILE) app_display_map_summary kernel_display_map_summary kill_openocd
 	$(eval IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(APP_BIN_OUTPUT_FILE)))
 	$(eval IMAGE_SIZE += $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(KERNEL_BIN_OUTPUT_FILE)))
 	$(QUIET)$(ECHO) Downloading APP and KERNEL to partition: $(APPLICATION_FIRMWARE_PARTITION_TCL) size: $(IMAGE_SIZE) bytes... 
-	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x12000 $(APP_SIZE)" -c "load_image out/eclipse_debug/app_built.elf 0"  -c "load_image out/eclipse_debug/kernel_built.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
+	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c soft_reset_halt -c flash_init -c "flash_erase 0x12000 $(APP_SIZE)" -c "load_image $(BUILD_DIR)/eclipse_debug/app_built.elf 0"  -c "load_image $(BUILD_DIR)/eclipse_debug/kernel_built.elf 0" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed
 endif
 
 endif

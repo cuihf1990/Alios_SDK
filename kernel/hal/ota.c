@@ -18,9 +18,9 @@ void hal_ota_register_module(hal_ota_module_t *module)
 }
 
 
-hal_stat_t hal_ota_init(void)
+hal_stat_t hal_ota_init(void *something)
 {
-    return ota_module->init(ota_module, NULL);
+    return ota_module->init(ota_module, something);
 }
 
 hal_stat_t hal_ota_write(hal_ota_module_t *m, volatile uint32_t *off_set, uint8_t *in_buf , uint32_t in_buf_len)

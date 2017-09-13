@@ -20,7 +20,7 @@
 #include "core/mesh_forwarder.h"
 #include "core/crypto.h"
 #include "core/address_mgmt.h"
-#include "ipv6/lwip_adapter.h"
+#include "ip/lwip_adapter.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 

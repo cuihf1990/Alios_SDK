@@ -2383,7 +2383,6 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
     if (!iotx_mc_check_state_normal(pClient)) {
         return SUCCESS_RETURN;
     }
-
 #ifndef STM32L475xx
     if (is_connected) {
         aos_cancel_poll_read_fd(get_ssl_fd(), cb_recv, pClient);

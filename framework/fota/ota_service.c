@@ -23,9 +23,9 @@ static void ota_set_callbacks(write_flash_cb_t flash_cb,
     ota_finish_callbak = finish_cb;
 }
 
-int ota_hal_init()
+int ota_hal_init(uint32_t offset)
 {
-    return hal_ota_init();
+    return hal_ota_init(&offset);
 }
 
 static int ota_hal_write_cb(int32_t writed_size, uint8_t *buf, int32_t buf_len, int type)
@@ -35,7 +35,10 @@ static int ota_hal_write_cb(int32_t writed_size, uint8_t *buf, int32_t buf_len, 
 
 static int ota_hal_finish_cb(int32_t finished_result, void *updated_type)
 {
-    return hal_ota_set_boot(hal_ota_get_default_module(), (void *)updated_type);
+    ota_finish_param_t finsh_para;
+    finsh_para.update_type=*(OTA_ENUM_UPDATE_TYPE*)updated_type;
+    finsh_para.result_type=finished_result;
+    return hal_ota_set_boot(hal_ota_get_default_module(), (void *)&finsh_para);
 }
 
 ota_request_params ota_request_parmas;
@@ -87,13 +90,13 @@ void ota_regist_upgrade(void)
 static void init_device_parmas()
 {
 #ifdef SYSINFO_OS_BINS
-    ota_request_parmas.primary_version = get_aos_os_version();
+    ota_request_parmas.primary_version = aos_get_os_version();
 #else
-    ota_request_parmas.primary_version = get_aos_kernel_version();
+    ota_request_parmas.primary_version = aos_get_kernel_version();
 #endif
 
-    ota_request_parmas.secondary_version = get_aos_app_version();
-    ota_request_parmas.product_type = get_aos_product_model();
+    ota_request_parmas.secondary_version = aos_get_app_version();
+    ota_request_parmas.product_type = aos_get_product_model();
     ota_request_parmas.device_uuid = platform_ota_get_id();
 }
 

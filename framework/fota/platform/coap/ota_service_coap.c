@@ -6,107 +6,58 @@
 #include <string.h>
 #include <stdlib.h>
 #include <aos/aos.h>
+#include "ota_log.h"
 
 #include "iot_import.h"
 #include "iot_export.h"
 
-#define IOTX_PRE_DTLS_SERVER_URI "coaps://pre.iot-as-coap.cn-shanghai.aliyuncs.com:5684"
-#define IOTX_PRE_NOSEC_SERVER_URI "coap://pre.iot-as-coap.cn-shanghai.aliyuncs.com:5683"
+typedef struct ota_device_info {
+    const char *product_key;
+    const char *device_name;
+    void *h_coap;
+} OTA_device_info;
 
-#define IOTX_ONLINE_DTLS_SERVER_URL "coaps://%s.iot-as-coap.cn-shanghai.aliyuncs.com:5684"
+OTA_device_info g_ota_device_info;
 
-#define EXAMPLE_TRACE(fmt, args...)  \
-    do { \
-        printf("%s|%03d :: ", __func__, __LINE__); \
-        printf(fmt, ##args); \
-        printf("%s", "\r\n"); \
-    } while(0)
+void *h_ota = NULL;
 
-void coap_client()
+void coap_ota_init( void *signal)
 {
-    void *h_ota = NULL;
-    iotx_coap_config_t config;
-    iotx_deviceinfo_t  devinfo;
-    iotx_coap_context_t *h_coap = NULL;
-
-    iotx_set_devinfo(&devinfo);
-    config.p_devinfo = &devinfo;
-#ifdef COAP_ONLINE
-#ifdef COAP_DTLS_SUPPORT
-    char url[256] = {0};
-    snprintf(url, sizeof(url), IOTX_ONLINE_DTLS_SERVER_URL, devinfo.product_key);
-    config.p_url = url;
-#else
-    printf("Online environment must access with DTLS\r\n");
-    return -1;
-#endif
-#else
-#ifdef COAP_DTLS_SUPPORT
-    config.p_url = IOTX_PRE_DTLS_SERVER_URI;
-#else
-    config.p_url = IOTX_PRE_NOSEC_SERVER_URI;
-#endif
-#endif
-
-    h_coap = IOT_CoAP_Init(&config);
-
-    if (NULL == h_coap) {
-        EXAMPLE_TRACE("initialize CoAP failed");
+    if (signal == NULL) {
+        OTA_LOG_E("ota device info is null");
         return;
     }
+    OTA_device_info *device_info = (OTA_device_info *)signal;
+    OTA_LOG_D("device_info:%s,%s", device_info->product_key, device_info->device_name);
+    memcpy(&g_ota_device_info, device_info , sizeof (OTA_device_info));
 
-    IOT_CoAP_DeviceNameAuth(h_coap);
+	h_ota = IOT_OTA_Init(g_ota_device_info.product_key, g_ota_device_info.device_name,
+			g_ota_device_info.h_coap);
 
-    h_ota = IOT_OTA_Init(devinfo.product_key, devinfo.device_name, h_coap);
-    if (NULL == h_ota) {
-        EXAMPLE_TRACE("initialize OTA failed");
-        goto do_exit;
+	if (NULL == h_ota) {
+        OTA_LOG_E("initialize OTA failed");
     }
+}
 
+void coap_ota_report_version(char *version)
+{
     int ota_code = 0;
     do {
-
+        ota_code = IOT_OTA_ReportVersion(h_ota, version);
+        IOT_CoAP_Yield(g_ota_device_info.h_coap);
         HAL_SleepMs(2000);
-        //TODO: get version by code
-        ota_code = IOT_OTA_ReportVersion(h_ota, "iotx_ver_1.0.0");
-
-        IOT_CoAP_Yield(h_coap);
-
     } while (0 != ota_code);
 
-    HAL_SleepMs(2000);
+}
 
+void coap_ota_fetch()
+{
     try_fetch_ota(h_ota);
+}
 
-    EXAMPLE_TRACE("OTA success");
-
-do_exit:
+void coap_ota_deinit()
+{
     if (NULL != h_ota) {
         IOT_OTA_Deinit(h_ota);
     }
-    if (NULL != h_coap) {
-        IOT_CoAP_Deinit(&h_coap);
-    }
-
-    aos_post_delayed_action(7 * 24 * 60 * 60 * 1000, coap_client, NULL);
 }
-
-void coap_ota()
-{
-    IOT_OpenLog("coap-ota");
-    IOT_SetLogLevel(IOT_LOG_DEBUG);
-
-    coap_client();
-}
-/*void ota_service_event(input_event_t *event, void *priv_data)
-{
-    if (event->type == EV_WIFI && event->code == CODE_WIFI_ON_GOT_IP)
-    {
-        coap_ota();
-    }
-}
-
-void ota_service_ch_init()
-{
-    aos_register_event_filter(EV_WIFI, ota_service_event, NULL);
-}*/

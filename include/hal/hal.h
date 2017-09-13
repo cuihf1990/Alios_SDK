@@ -25,6 +25,7 @@
 #include <hal/soc/timer.h>
 #include <hal/soc/uart.h>
 #include <hal/soc/wdg.h>
+#include <hal/soc/sd.h>
 
 #endif
 

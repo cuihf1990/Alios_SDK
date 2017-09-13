@@ -46,7 +46,7 @@ typedef struct  {
 
 } OTA_Struct_t, *OTA_Struct_pt;
 
-#define OTA_BUF_LEN        (500)
+#define OTA_BUF_LEN        (300)
 
 static int fetch_ota(void *h_ota)
 {
