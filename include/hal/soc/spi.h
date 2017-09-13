@@ -23,58 +23,66 @@ typedef struct {
 } spi_dev_t;
 
 
-/**@brief Initialises the SPI interface for a given SPI device
- * @note  Prepares a SPI hardware interface for communication as a master
+/**
+ * Initialises the SPI interface for a given SPI device
  *
- * @param     spi    : the spi device
- * @return    0      : on success.
- * @return    EIO    : if the SPI device could not be initialised
+ * @param[in]  spi  the spi device
+ *
+ * @return     0    on success.
+ * @return     EIO   if the SPI device could not be initialised
  */
 int32_t hal_spi_init(spi_dev_t *spi);
 
 
-/**@brief spi_send
+/**
+ * spi_send
  *
- * @param     spi      : the spi device
- * @param     data     : spi send data
- * @param     size     : spi send data size
- * @param     timeout  : timeout in ms
- * @return    0        : on success.
- * @return    EIO      : if the SPI device could not be initialised
+ * @param[in]  spi      the spi device
+ * @param[in]  data     spi send data
+ * @param[in]  size     spi send data size
+ * @param[in]  timeout  timeout in ms
+ *
+ * @return     0        on success.
+ * @return     EIO      if the SPI device could not be initialised
  */
 int32_t hal_spi_send(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t timeout);
 
-/**@brief spi_recv
- * @param     spi         : the spi device
- * @param     data        : spi recv data
- * @param     size        : spi recv data size
- * @param     timeout     : timeout in ms
- * @return    0           : on success.
- * @return    EIO         : if the SPI device could not be initialised
+/**
+ * spi_recv
+ *
+ * @param[in]  spi      the spi device
+ * @param[out] data     spi recv data
+ * @param[in]  size     spi recv data size
+ * @param[in]  timeout  timeout in ms
+ *
+ * @return     0        on success.
+ * @return     EIO      if the SPI device could not be initialised
  */
 int32_t hal_spi_recv(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t timeout);
 
-/**@brief spi send data and recv
- * @param     spi         : the spi device
- * @param     tx_data     : spi send data
- * @param     rx_data     : spi recv data
- * @param     tx_size     : spi data to be sent
- * @param     rx_size     : spi data to be recv
- * @param     timeout     : timeout in ms
- * @return    kNoErr      : on success.
- * @return    kGeneralErr : if the SPI device could not be initialised
+/**
+ * spi send data and recv
+ *
+ * @param[in]  spi      the spi device
+ * @param[in]  tx_data  spi send data
+ * @param[in]  rx_data  spi recv data
+ * @param[in]  tx_size  spi data to be sent
+ * @param[in]  rx_size  spi data to be recv
+ * @param[in]  timeout  timeout in ms
+ *
+ * @return     0        on success.
+ * @return     EIO      if the SPI device could not be initialised
  */
 int32_t hal_spi_send_recv(spi_dev_t *spi, uint8_t *tx_data, uint16_t tx_size, uint8_t *rx_data, uint16_t rx_size,
                           uint32_t timeout);
 
-/**@brief De-initialises a SPI interface
+/**
+ * De-initialises a SPI interface
  *
- * @note Turns off a SPI hardware interface
+ * @param[in]  spi  the SPI device to be de-initialised
  *
- * @param  spi : the SPI device to be de-initialised
- *
- * @return    0     : on success.
- * @return    EIO   : if an error occurred
+ * @return     0    on success.
+ * @return     EIO  if an error occurred
  */
 int32_t hal_spi_finalize(spi_dev_t *spi);
 
