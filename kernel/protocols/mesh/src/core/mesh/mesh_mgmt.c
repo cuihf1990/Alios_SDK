@@ -279,6 +279,9 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
 
     network->sid = allocated_sid->sid;
     network->attach_state = ATTACH_DONE;
+    if (network->attach_node) {
+        network->attach_node->state = STATE_NEIGHBOR;
+    }
     network->attach_node = network->attach_candidate;
     network->attach_candidate->flags &=
         (~(NBR_SID_CHANGED | NBR_DISCOVERY_REQUEST | NBR_NETID_CHANGED));
