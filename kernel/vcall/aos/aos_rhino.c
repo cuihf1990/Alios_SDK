@@ -31,12 +31,6 @@ const char *aos_version_get(void)
     return krhino_version_get();
 }
 
-const char *aos_strerror(int errnum)
-{
-    (void)errnum;
-    return NULL;
-}
-
 int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {

@@ -64,7 +64,7 @@ void *sys_aos_zalloc(unsigned int size, size_t allocator)
 }
 
 #define SYSCALL_MAX 188
-#define SYSCALL_NUM 152
+#define SYSCALL_NUM 151
 
 #define SYSCALL(nr, func) [nr] = func,
 

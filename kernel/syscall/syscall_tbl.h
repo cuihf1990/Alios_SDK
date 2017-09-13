@@ -13,145 +13,142 @@ SYSCALL(SYS_GET_HZ, aos_get_hz)
 #define SYS_VERSION_GET 2
 SYSCALL(SYS_VERSION_GET, aos_version_get)
 
-#define SYS_STRERROR 3
-SYSCALL(SYS_STRERROR, aos_strerror)
-
-#define SYS_TASK_NEW 4
+#define SYS_TASK_NEW 3
 SYSCALL(SYS_TASK_NEW, aos_task_new)
 
-#define SYS_TASK_NEW_EXT 5
+#define SYS_TASK_NEW_EXT 4
 SYSCALL(SYS_TASK_NEW_EXT, aos_task_new_ext)
 
-#define SYS_TASK_EXIT 6
+#define SYS_TASK_EXIT 5
 SYSCALL(SYS_TASK_EXIT, aos_task_exit)
 
-#define SYS_TASK_NAME 7
+#define SYS_TASK_NAME 6
 SYSCALL(SYS_TASK_NAME, aos_task_name)
 
-#define SYS_TASK_KEY_CREATE 8
+#define SYS_TASK_KEY_CREATE 7
 SYSCALL(SYS_TASK_KEY_CREATE, aos_task_key_create)
 
-#define SYS_TASK_KEY_DELETE 9
+#define SYS_TASK_KEY_DELETE 8
 SYSCALL(SYS_TASK_KEY_DELETE, aos_task_key_delete)
 
-#define SYS_TASK_SETSPECIFIC 10
+#define SYS_TASK_SETSPECIFIC 9
 SYSCALL(SYS_TASK_SETSPECIFIC, aos_task_setspecific)
 
-#define SYS_TASK_GETSPECIFIC 11
+#define SYS_TASK_GETSPECIFIC 10
 SYSCALL(SYS_TASK_GETSPECIFIC, aos_task_getspecific)
 
-#define SYS_MUTEX_NEW 12
+#define SYS_MUTEX_NEW 11
 SYSCALL(SYS_MUTEX_NEW, aos_mutex_new)
 
-#define SYS_MUTEX_FREE 13
+#define SYS_MUTEX_FREE 12
 SYSCALL(SYS_MUTEX_FREE, aos_mutex_free)
 
-#define SYS_MUTEX_LOCK 14
+#define SYS_MUTEX_LOCK 13
 SYSCALL(SYS_MUTEX_LOCK, aos_mutex_lock)
 
-#define SYS_MUTEX_UNLOCK 15
+#define SYS_MUTEX_UNLOCK 14
 SYSCALL(SYS_MUTEX_UNLOCK, aos_mutex_unlock)
 
-#define SYS_SEM_NEW 16
+#define SYS_SEM_NEW 15
 SYSCALL(SYS_SEM_NEW, aos_sem_new)
 
-#define SYS_SEM_FREE 17
+#define SYS_SEM_FREE 16
 SYSCALL(SYS_SEM_FREE, aos_sem_free)
 
-#define SYS_SEM_WAIT 18
+#define SYS_SEM_WAIT 17
 SYSCALL(SYS_SEM_WAIT, aos_sem_wait)
 
-#define SYS_SEM_SIGNAL 19
+#define SYS_SEM_SIGNAL 18
 SYSCALL(SYS_SEM_SIGNAL, aos_sem_signal)
 
-#define SYS_QUEUE_NEW 20
+#define SYS_QUEUE_NEW 19
 SYSCALL(SYS_QUEUE_NEW, aos_queue_new)
 
-#define SYS_QUEUE_FREE 21
+#define SYS_QUEUE_FREE 20
 SYSCALL(SYS_QUEUE_FREE, aos_queue_free)
 
-#define SYS_QUEUE_SEND 22
+#define SYS_QUEUE_SEND 21
 SYSCALL(SYS_QUEUE_SEND, aos_queue_send)
 
-#define SYS_QUEUE_RECV 23
+#define SYS_QUEUE_RECV 22
 SYSCALL(SYS_QUEUE_RECV, aos_queue_recv)
 
-#define SYS_TIMER_NEW 24
+#define SYS_TIMER_NEW 23
 SYSCALL(SYS_TIMER_NEW, aos_timer_new)
 
-#define SYS_TIMER_FREE 25
+#define SYS_TIMER_FREE 24
 SYSCALL(SYS_TIMER_FREE, aos_timer_free)
 
-#define SYS_TIMER_START 26
+#define SYS_TIMER_START 25
 SYSCALL(SYS_TIMER_START, aos_timer_start)
 
-#define SYS_TIMER_STOP 27
+#define SYS_TIMER_STOP 26
 SYSCALL(SYS_TIMER_STOP, aos_timer_stop)
 
-#define SYS_TIMER_CHANGE 28
+#define SYS_TIMER_CHANGE 27
 SYSCALL(SYS_TIMER_CHANGE, aos_timer_change)
 
-#define SYS_WORKQUEUE_CREATE 29
+#define SYS_WORKQUEUE_CREATE 28
 SYSCALL(SYS_WORKQUEUE_CREATE, aos_workqueue_create)
 
-#define SYS_WORKQUEUE_DEL 30
+#define SYS_WORKQUEUE_DEL 29
 SYSCALL(SYS_WORKQUEUE_DEL, aos_workqueue_del)
 
-#define SYS_WORK_INIT 31
+#define SYS_WORK_INIT 30
 SYSCALL(SYS_WORK_INIT, aos_work_init)
 
-#define SYS_WORK_DESTROY 32
+#define SYS_WORK_DESTROY 31
 SYSCALL(SYS_WORK_DESTROY, aos_work_destroy)
 
-#define SYS_WORK_RUN 33
+#define SYS_WORK_RUN 32
 SYSCALL(SYS_WORK_RUN, aos_work_run)
 
-#define SYS_WORK_SCHED 34
+#define SYS_WORK_SCHED 33
 SYSCALL(SYS_WORK_SCHED, aos_work_sched)
 
-#define SYS_WORK_CANCEL 35
+#define SYS_WORK_CANCEL 34
 SYSCALL(SYS_WORK_CANCEL, aos_work_cancel)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
 
-#define SYS_MALLOC 36
+#define SYS_MALLOC 35
 SYSCALL(SYS_MALLOC, sys_aos_malloc)
 
-#define SYS_REALLOC 37
+#define SYS_REALLOC 36
 SYSCALL(SYS_REALLOC, sys_aos_realloc)
 
-#define SYS_ZALLOC 38
+#define SYS_ZALLOC 37
 SYSCALL(SYS_ZALLOC, sys_aos_zalloc)
 
 #else
 
-#define SYS_MALLOC 36
+#define SYS_MALLOC 35
 SYSCALL(SYS_MALLOC, aos_malloc)
 
-#define SYS_REALLOC 37
+#define SYS_REALLOC 36
 SYSCALL(SYS_REALLOC, aos_realloc)
 
-#define SYS_ZALLOC 38
+#define SYS_ZALLOC 37
 SYSCALL(SYS_ZALLOC, aos_zalloc)
 
 #endif
 
-#define SYS_ALLOC_TRACE 39
+#define SYS_ALLOC_TRACE 38
 SYSCALL(SYS_ALLOC_TRACE, aos_alloc_trace)
 
-#define SYS_FREE 40
+#define SYS_FREE 39
 SYSCALL(SYS_FREE, aos_free)
 
-#define SYS_NOW 41
+#define SYS_NOW 40
 SYSCALL(SYS_NOW, aos_now)
 
-#define SYS_NOW_MS 42
+#define SYS_NOW_MS 41
 SYSCALL(SYS_NOW_MS, aos_now_ms)
 
-#define SYS_MSLEEP 43
+#define SYS_MSLEEP 42
 SYSCALL(SYS_MSLEEP, aos_msleep)
 
-/* keep 44~50 for Rhino */
+/* keep 43~50 for Rhino */
 
 /* --------------------Framework-------------------- */
 
