@@ -13,7 +13,7 @@
 #include "ota_util.h"
 #include "ota_platform_os.h"
 #include "ota_version.h"
-
+#include "ota_download.h"
 
 /*
  param-name           meaning                      value-examples
@@ -30,8 +30,6 @@
 /*static const char _g_update_manifest_url_test[] =
  "http://10.101.111.160/update/manifest?productType＝XJ-1& \
  phone=XJ-1R&uuid=aos_id2&system=1.0.0-R-20150101.1201";*/
-
-extern int http_download(char *url, write_flash_cb_t func);
 
 int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *request_parmas)
 {
@@ -61,12 +59,12 @@ char md5[33];
 
 extern int  check_md5(const char *buffer, const int32_t len);
 
-extern int ota_hal_init(void);
+extern int ota_hal_init(uint32_t offset);
 
 void ota_download_start(void *buf)
 {
     OTA_LOG_I("task update start");
-    ota_hal_init();
+    ota_hal_init(ota_get_update_breakpoint());
     ota_status_init();
 
     ota_set_status(OTA_INIT);
@@ -74,15 +72,23 @@ void ota_download_start(void *buf)
 
     ota_set_status(OTA_DOWNLOAD);
     ota_status_post(0);
-    int ret = http_download(url, g_write_func);
+    int ret = http_download(url, g_write_func,md5);
     if (ret <= 0) {
         OTA_LOG_E("ota download error");
         ota_set_status(OTA_DOWNLOAD_FAILED);
+        if (NULL != g_finish_cb) {
+            int type = ota_get_update_type();
+            g_finish_cb(OTA_BREAKPOINT, &type);
+        }
         goto OTA_END;
     }
 
     if (ret == OTA_DOWNLOAD_CANCEL) {
         OTA_LOG_E("ota download cancel");
+        if (NULL != g_finish_cb) {
+            int type = ota_get_update_type();
+            g_finish_cb(OTA_BREAKPOINT, &type);
+        }
         ota_set_status(OTA_CANCEL);
         goto OTA_END;
     }
@@ -102,7 +108,7 @@ void ota_download_start(void *buf)
     ota_set_status(OTA_UPGRADE);
     if (NULL != g_finish_cb) {
         int type = ota_get_update_type();
-        g_finish_cb(0, &type);
+        g_finish_cb(OTA_FINISH, &type);
     }
     ota_status_post(100);
     ota_set_status(OTA_REBOOT);
@@ -137,9 +143,9 @@ int8_t ota_post_version_msg()
         }
     }
 
-    if (strncmp((char *)ota_get_system_version(), (char *)ota_get_dev_version(), strlen(ota_get_system_version()))) {
-        ret = ota_result_post();
-        if (ret == 0) {
+    ret = ota_result_post();
+    if (ret == 0) {
+        if (strncmp((char *)ota_get_system_version(), (char *)ota_get_dev_version(), strlen(ota_get_system_version()))) {
             OTA_LOG_I("Save dev version to config");
             ota_set_dev_version(ota_get_system_version());
         }

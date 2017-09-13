@@ -9,6 +9,23 @@
 #include <hal/soc/soc.h>
 #include <CheckSumUtils.h>
 
+#define KV_HAL_OTA_CRC16  "hal_ota_get_crc16"
+typedef enum {
+    OTA_KERNEL,
+    OTA_APP,
+    OTA_ALL
+} OTA_ENUM_UPDATE_TYPE;
+
+typedef enum {
+    OTA_FINISH,
+    OTA_BREAKPOINT  
+} OTA_ENUM_RESULT_TYPE;
+
+typedef struct  {
+    OTA_ENUM_UPDATE_TYPE update_type;
+    OTA_ENUM_RESULT_TYPE result_type ;
+} ota_finish_param_t;
+
 enum ota_parti_e
 {
     OTA_PARTITION_KERNEL,
@@ -31,6 +48,8 @@ typedef struct
 } ota_reboot_info_t;
 
 static ota_reboot_info_t ota_info;
+static uint16_t hal_ota_get_crc16(void);
+static void  hal_ota_save_crc16(uint16_t crc16);
 
 int hal_ota_switch_to_new_fw(uint8_t parti, int ota_data_len, uint16_t ota_data_crc )
 {
@@ -75,20 +94,28 @@ int hal_ota_switch_to_new_fw(uint8_t parti, int ota_data_len, uint16_t ota_data_
 static  CRC16_Context contex;
 
 unsigned int _off_set = 0;
+
 static int moc108_ota_init(hal_ota_module_t *m, void *something)
 {
     hal_logic_partition_t *partition_info;
 
     printf("moc108 ota init\n");
-    
-    partition_info = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
-    hal_flash_erase(HAL_PARTITION_OTA_TEMP, 0 ,partition_info->partition_length);
+    _off_set = *(uint32_t*)something;
+    ota_info.ota_len=_off_set;
+    if(_off_set==0)
+    {
+        partition_info = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
+        hal_flash_erase(HAL_PARTITION_OTA_TEMP, 0 ,partition_info->partition_length);
+        CRC16_Init( &contex );
+    }
+    else
+    {
+        contex.crc=hal_ota_get_crc16();
+        printf("--------get crc16 context.crc=%d!--------\n",contex.crc);
+    }
 
-    int _off_set = 0;
-    CRC16_Init( &contex );
     return 0;
 }
-
 
 static int moc108_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
 {
@@ -112,11 +139,26 @@ static int moc108_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, uin
 
 static int moc108_ota_set_boot(hal_ota_module_t *m, void *something)
 {
-    uint8_t parti = *(uint8_t *)something;
-    CRC16_Final( &contex, &ota_info.ota_crc );
-    printf("moc108 set boot\n");
-    hal_ota_switch_to_new_fw(parti, ota_info.ota_len, ota_info.ota_crc);
-    memset(&ota_info, 0 , sizeof ota_info);
+
+    ota_finish_param_t *param = (ota_finish_param_t *)something;
+    if (param==NULL){
+        return -1;
+    }
+    if (param->result_type==OTA_FINISH)
+    {
+        CRC16_Final( &contex, &ota_info.ota_crc );
+        printf("moc108 set boot\n");
+        hal_ota_switch_to_new_fw(param->update_type, ota_info.ota_len, ota_info.ota_crc);
+        memset(&ota_info, 0 , sizeof ota_info);
+    }
+    else if (param->result_type==OTA_BREAKPOINT)
+    {
+        unsigned int save_env_addr;
+        hal_logic_partition_t *partition_info;
+        printf("-------save breakpoint to flash- crc=%d--------------\n",contex.crc);
+        partition_info = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
+        hal_ota_save_crc16(contex.crc);
+    }
     return 0;
 }
 
@@ -126,3 +168,17 @@ struct hal_ota_module_s moc108_ota_module = {
     .ota_read = moc108_ota_read,
     .ota_set_boot = moc108_ota_set_boot,
 };
+
+
+static uint16_t hal_ota_get_crc16(void)
+{
+    int len = 2;
+    uint16_t crc16=0; 
+    aos_kv_get(KV_HAL_OTA_CRC16, &crc16, &len);
+    return crc16;
+}
+
+static void  hal_ota_save_crc16(uint16_t crc16)
+{
+    aos_kv_set(KV_HAL_OTA_CRC16, &crc16, 2, 1);
+}
