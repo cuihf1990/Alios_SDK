@@ -56,7 +56,11 @@ extern void         *heap_start;
 extern void         *heap_end;
 extern void         *heap_len;
 
-k_mm_region_t g_mm_region[] = {(uint8_t*)&heap_start,(size_t)&heap_len};
+extern void         *heap2_start;
+extern void         *heap2_len;
+
+k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len},{(uint8_t*)&heap2_start,(size_t)&heap2_len}};
+int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
 
