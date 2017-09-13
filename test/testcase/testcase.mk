@@ -44,7 +44,6 @@ $(NAME)_SOURCES     += kernel/rhino/arch/linux/port_test.c
 $(NAME)_SOURCES     += kernel/module/kv_test.c
 $(NAME)_SOURCES     += kernel/module/fatfs_test.c
 $(NAME)_SOURCES     += kernel/vcall/vcall_test.c
-$(NAME)_SOURCES     += devices/vflash/vflash_test.c
 
 $(NAME)_SOURCES    += aosapi/aos/kernel/test_kernel.c
 $(NAME)_SOURCES    += aosapi/aos/kernel/aos_sys_test.c
