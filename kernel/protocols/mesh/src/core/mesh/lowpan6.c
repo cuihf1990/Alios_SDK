@@ -9,7 +9,7 @@
 #include "umesh_utils.h"
 #include "core/lowpan6.h"
 #include "core/network_data.h"
-#include "ipv6/ip6.h"
+#include "ip/ip6.h"
 
 typedef struct lowpan_reass_s {
     struct lowpan_reass_s *next;

@@ -15,7 +15,7 @@
 #include "umesh.h"
 #include "umesh_hal.h"
 #include "umesh_utils.h"
-#include "ipv6/lwip_adapter.h"
+#include "ip/lwip_adapter.h"
 #include "core/mesh_mgmt.h"
 
 #if LWIP_IPV6 == 0 && LWIP_IPV4 && LWIP_IGMP

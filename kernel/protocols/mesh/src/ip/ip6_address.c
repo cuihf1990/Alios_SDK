@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 
-#include "ipv6/ip6.h"
+#include "ip/ip6.h"
 #include "umesh_utils.h"
 
 bool is_valid_digit(uint8_t ch)
