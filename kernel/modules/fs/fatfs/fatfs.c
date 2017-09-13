@@ -474,7 +474,7 @@ static const fs_ops_t fatfs_ops = {
     .ioctl      = NULL
 };
 
-int fatfs_register(int pdrv)
+static int fatfs_dev_register(int pdrv)
 {
     int err, index;
     FATFS *fatfs = NULL;
@@ -529,7 +529,7 @@ error:
 }
 
 
-int fatfs_unregister(int pdrv)
+static int fatfs_dev_unregister(int pdrv)
 {
     int err = FR_OK;
     int index;
@@ -548,3 +548,46 @@ int fatfs_unregister(int pdrv)
     return err;
 }
 
+int fatfs_register()
+{
+    int err = -EINVAL;
+
+#ifdef CONFIG_AOS_FATFS_SUPPORT_MMC
+    if ((err = fatfs_dev_register(DEV_MMC)) != FR_OK)
+        return err;
+#endif
+
+#ifdef CONFIG_AOS_FATFS_SUPPORT_USB
+    if ((err = fatfs_dev_register(DEV_USB)) != FR_OK)
+        return err;
+#endif
+
+#ifdef CONFIG_AOS_FATFS_SUPPORT_RAM
+    if ((err = fatfs_dev_register(DEV_RAM)) != FR_OK)
+        return err;
+#endif
+
+    return err;
+}
+
+int fatfs_unregister()
+{
+    int err = -EINVAL;
+
+#ifdef CONFIG_AOS_FATFS_SUPPORT_MMC
+    if ((err = fatfs_dev_unregister(DEV_MMC)) != FR_OK)
+        return err;
+#endif
+
+#ifdef CONFIG_AOS_FATFS_SUPPORT_USB
+    if ((err = fatfs_dev_unregister(DEV_USB)) != FR_OK)
+        return err;
+#endif
+
+#ifdef CONFIG_AOS_FATFS_SUPPORT_RAM
+    if ((err = fatfs_dev_unregister(DEV_RAM)) != FR_OK)
+        return err;
+#endif
+
+    return err;
+}
