@@ -52,5 +52,5 @@ void  ota_set_dev_version(const char *str)
 
 const char *ota_get_system_version()
 {
-    return get_aos_os_version();
+    return aos_get_os_version();
 }
