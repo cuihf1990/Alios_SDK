@@ -238,6 +238,9 @@ int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
         } else if (0 == ret) {
             break;
         } else {
+			if (errno == EINTR) {
+				continue;
+			}
             perror("select-recv fail");
             err_code = -2;
             break;

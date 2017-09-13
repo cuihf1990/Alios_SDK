@@ -18,11 +18,6 @@
 #define IOTX_DEVICE_SECRET       "Stk4IUErQUBc1tWRWEKWb5ACra4hFDYF"
 #define IOTX_DEVICE_ID           "IoTxCoAPTestDev.1"
 
-/*#define IOTX_PRODUCT_KEY         "ycZw4ilL34g"
-#define IOTX_DEVICE_NAME         "dev2"
-#define IOTX_DEVICE_SECRET       "JgUAhH1IHEeE3iu9jJ6VnW8jfdsncT3T"
-#define IOTX_DEVICE_ID           "ycZw4ilL34g.dev2"*/
-
 int iotx_set_devinfo(iotx_deviceinfo_t *p_devinfo)
 {
     if (NULL == p_devinfo) {
