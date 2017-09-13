@@ -55,7 +55,7 @@ extern void         *heap_start;
 extern void         *heap_end;
 extern void         *heap_len;
 
-k_mm_region_t g_mm_region[] = {(uint8_t*)&heap_start,(size_t)&heap_len}
+k_mm_region_t g_mm_region[] = {(uint8_t*)&heap_start,(size_t)&heap_len};
 int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 
 
