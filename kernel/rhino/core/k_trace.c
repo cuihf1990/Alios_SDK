@@ -607,9 +607,9 @@ void _trace_sem_cnt_increase(ktask_t *task, ksem_t *sem)
     buf[1] = 0x3;
     buf[2] = (uint32_t)task->task_state;
 
-    addr_second = (char *)&buf[2];
+    addr_second = (char *)&buf[3];
     strcpy(addr_second, task->task_name);
-    addr_second = (char *)&buf[2] + strlen(task->task_name) + 1;
+    addr_second = (char *)&buf[3] + strlen(task->task_name) + 1;
     str_len += strlen(task->task_name) + 1;
 
     strcpy(addr_second, sem->blk_obj.name);
@@ -838,7 +838,7 @@ void _trace_mutex_task_wake(ktask_t *task, ktask_t *task_waked_up, kmutex_t *mut
     }
 
     buf[0] = 0x307;
-    buf[1] = 0x2;
+    buf[1] = 0x3;
 
     addr_second = (char *)&buf[2];
     strcpy(addr_second, task->task_name);
