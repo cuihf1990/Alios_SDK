@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef UR_IP6_H
-#define UR_IP6_H
+#ifndef UR_IP_H
+#define UR_IP_H
 
 #include <stdint.h>
 
@@ -82,4 +82,4 @@ ur_error_t string_to_ip6_addr(const char *buf, ur_ip6_addr_t *target);
 bool ur_is_mcast(const ur_ip6_addr_t *addr);
 bool ur_is_unique_local(const ur_ip6_addr_t *addr);
 
-#endif  /* UR_IP6_H */
+#endif  /* UR_IP_H */
