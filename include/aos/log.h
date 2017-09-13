@@ -2,12 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file yoc/log.h
- * @brief YoC LOG APIs
- * @version since 1.0.0
- */
-
 #ifndef AOS_LOG_H
 #define AOS_LOG_H
 
@@ -21,7 +15,6 @@ extern "C"
 /**
  * @brief log level definition.
  */
-
 typedef enum {
     AOS_LL_NONE,  /**< disable log */
     AOS_LL_FATAL, /**< fatal log will output */
@@ -32,51 +25,58 @@ typedef enum {
 }
 aos_log_level_t;
 
-/**
- * @brief log level control
- * @param[in] log_level
- * @see aos_log_level_t.
+
+ /**
+ * set the log level
+ *
+ * @param[in]  log_level  level to be set    
  */
 void aos_set_log_level(aos_log_level_t log_level);
 
 /**
- * @brief fatal log
- * @param[in] mod string description of module
- * @param[in] fmt same as printf() usage
+ * log at fatal level
+ *
+ * @param[in] mod    string description of module
+ * @param[in] fmt    same as printf() usage
  */
 #define LOGF(mod, fmt, ...) LOGF_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * @brief error log
- * @param[in] mod string description of module
- * @param[in] fmt same as printf() usage
+ * log at error level
+ *
+ * @param[in] mod    string description of module
+ * @param[in] fmt    same as printf() usage
  */
 #define LOGE(mod, fmt, ...) LOGE_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * @brief warning log
- * @param[in] mod string description of module
- * @param[in] fmt same as printf() usage
+ * log at warning level
+ *
+ * @param[in] mod    string description of module
+ * @param[in] fmt    same as printf() usage
  */
 #define LOGW(mod, fmt, ...) LOGW_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * @brief information log
- * @param[in] mod string description of module
- * @param[in] fmt same as printf() usage
+ * log at info level
+ *
+ * @param[in] mod    string description of module
+ * @param[in] fmt    same as printf() usage
  */
 #define LOGI(mod, fmt, ...) LOGI_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * @brief debug log
- * @param[in] mod string description of module
- * @param[in] fmt same as printf() usage
+ * log at warning level
+ *
+ * @param[in] mod    string description of module
+ * @param[in] fmt    same as printf() usage
  */
 #define LOGD(mod, fmt, ...) LOGD_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * @brief log at warning level
- * @param[in] fmt same as printf() usage
+ * log at warning level
+ *
+ * @param[in] fmt    same as printf() usage
  */
 #define LOG(fmt, ...) LOG_IMPL(fmt, ##__VA_ARGS__)
 
