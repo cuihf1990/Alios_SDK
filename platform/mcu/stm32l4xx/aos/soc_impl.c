@@ -52,14 +52,11 @@ tick_t soc_elapsed_ticks_get(void)
 }
 #endif
 
-#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 extern void         *heap_start;
 extern void         *heap_end;
 extern void         *heap_len;
 
 k_mm_region_t g_mm_region[] = {(uint8_t*)&heap_start,(size_t)&heap_len};
-
-#endif
 
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
 
