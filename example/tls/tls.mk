@@ -9,7 +9,7 @@ ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
 $(NAME)_DEFINES     := MBEDTLS_NET_ALT_UART
 endif
 
-ifeq (1,${BINS})
+ifneq (,${BINS})
 GLOBAL_CFLAGS += -DSYSINFO_OS_BINS
 endif
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
