@@ -28,11 +28,11 @@ int aos_kv_set(const char *key, const void *value, int len, int sync);
 /**
  * Get the KV value stored in buffer by its key.
  *
- * @param[in]   @key         the key of the KV you want to get.
- * @param[out]  @buffer      the memory to store KV value.
- * @param[out]  @buffer_len  the real lenght of value.
+ * @param[in]   key         the key of the KV you want to get.
+ * @param[out]  buffer      the memory to store KV value.
+ * @param[out]  buffer_len  the real lenght of value.
  * @note: the buffer_len should be large enough to store the value,
- *            otherwise @buffer would be NULL.
+ *            otherwise buffer would be NULL.
  *
  * @retval  0 on success, otherwise -1 will be returned
  */
