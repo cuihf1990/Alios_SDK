@@ -169,7 +169,7 @@ static int _ssl_client_init(mbedtls_ssl_context *ssl,
             return ret;
         }
     }
-    _ssl_parse_crt(crt509_ca);
+//    _ssl_parse_crt(crt509_ca);
     SSL_LOG(" ok (%d skipped)", ret);
 
 
