@@ -19,7 +19,7 @@
 #define RHINO_CONFIG_MM_BLK                  1
 #define RHINO_CONFIG_MM_DEBUG                1
 #define RHINO_CONFIG_MM_TLF                  1
-#define K_MM_STATISTIC                       0
+#define K_MM_STATISTIC                       1
 #define RHINO_CONFIG_MM_MAXMSIZEBIT          19
 #define RHINO_CONFIG_GCC_RETADDR             1
 #define RHINO_CONFIG_MM_LEAKCHECK            1
