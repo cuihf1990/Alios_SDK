@@ -128,7 +128,11 @@ copy_output_for_eclipse: build_done
 else
 copy_output_for_eclipse: build_done copy_bootloader_output_for_eclipse
 	$(QUIET)$(call MKDIR, $(BUILD_DIR)/eclipse_debug/)
+ifeq (,$(BINS))
+	$(QUIET)$(CP) $(LINK_OUTPUT_FILE) $(BUILD_DIR)/eclipse_debug/last_built.elf
+else
 	$(QUIET)$(CP) $(LINK_OUTPUT_FILE) $(BUILD_DIR)/eclipse_debug/$(BINSTYPE_LOWER)_built.elf
+endif
 endif
 
 debug: $(BUILD_STRING) $(SHOULD_I_WAIT_FOR_DOWNLOAD)
