@@ -38,14 +38,16 @@ RHINO_INLINE kstat_t rhino_init(void)
     kobj_list_init();
 #endif
 
-#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
     /* init memory region */
 #if(RHINO_CONFIG_MM_TLF > 0)
     krhino_init_mm_head(&g_kmm_head, g_mm_region.start, g_mm_region.len);
 #endif
+
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
     aos_mm_leak_region_init();
 #endif
+
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
     krhino_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                         RHINO_CONFIG_K_DYN_QUEUE_MSG);
     dyn_mem_proc_task_start();
