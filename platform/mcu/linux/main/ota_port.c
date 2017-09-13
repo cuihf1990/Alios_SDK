@@ -11,14 +11,27 @@
 #include "hal/ota.h"
 #include "aos/aos.h"
 
-static int linuxhost_ota_init(hal_ota_module_t *m, void *something)
-{
-    return 0;
-}
-
 static FILE* ota_fd = NULL;
 #define OTA_IMAGE_TMP_FILE "/tmp/aos_firmware_temp"
 #define OTA_IMAGE_FILE     "alinkapp@linuxhost.elf"
+
+static int linuxhost_ota_init(hal_ota_module_t *m, void *something)
+{
+    uint32_t offset=*(uint32_t *)something;
+    int ret=-1;
+    if(offset!=0){
+        if((access(OTA_IMAGE_TMP_FILE, 0 )) != -1 )
+        {
+            printf( "File tmp exists \n " );
+            if(ota_fd==NULL)
+            {
+                ota_fd = fopen(OTA_IMAGE_TMP_FILE, "a+");
+            } 
+            ret=0;
+        }
+    }
+    return ret;
+}
 
 int linuxhost_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
 {

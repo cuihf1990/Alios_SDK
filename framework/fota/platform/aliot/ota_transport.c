@@ -93,6 +93,29 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
             OTA_LOG_E("resourceUrl back.");
             goto parse_failed;
         }
+
+        cJSON *version = cJSON_GetObjectItem(json_obj, "version");
+        if (!version) {
+            OTA_LOG_E("version back.");
+            goto parse_failed;
+        }     
+        ota_set_version(version->valuestring);
+        char *upgrade_version = strtok(version->valuestring, "_");
+        if (!upgrade_version) {
+            strncpy(response_parmas->primary_version, version->valuestring,
+                    sizeof response_parmas->primary_version);
+        } else {
+            strncpy(response_parmas->primary_version, upgrade_version,
+                    sizeof response_parmas->primary_version);
+            upgrade_version = strtok(NULL, "_");
+            if (upgrade_version) {
+                strncpy(response_parmas->secondary_version, upgrade_version,
+                        sizeof response_parmas->secondary_version);
+            }
+            OTA_LOG_I("response primary_version = %s, secondary_version = %s",
+                      response_parmas->primary_version, response_parmas->secondary_version);
+        }
+
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
                 sizeof response_parmas->download_url);
         OTA_LOG_D(" response_parmas->download_url %s",
@@ -181,7 +204,7 @@ static int otamqtt_Publish(const char *topic_type, const char *msg)
         OTA_LOG_E("generate topic name of info failed");
         return -1;
     }
-
+    OTA_LOG_I("public topic=%s ,payload=%s\n",topic_name, topic_msg.payload);
     ret = IOT_MQTT_Publish(g_ota_device_info.pclient, topic_name, &topic_msg);
     if (ret < 0) {
         OTA_LOG_E("publish failed");
@@ -240,7 +263,6 @@ int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
         OTA_LOG_E("generate topic name of upgrade failed");
         goto do_exit;
     }
-
     //subscribe the OTA topic: "/ota/device/upgrade/$(product_key)/$(device_name)"
     ret = IOT_MQTT_Subscribe(g_ota_device_info.pclient, g_upgrad_topic, IOTX_MQTT_QOS1,
                              aliot_mqtt_ota_callback, msgCallback);
@@ -354,14 +376,12 @@ int8_t platform_ota_result_post(void)
 {
     int ret = -1;
     char msg_informed[MSG_INFORM_LEN] = {0};
-
     ret = otalib_GenInfoMsg(msg_informed, MSG_INFORM_LEN, 0,
                             ota_get_system_version());
     if (ret != 0) {
         OTA_LOG_E("generate inform message failed");
         return -1;
     }
-
     ret = otamqtt_Publish("inform", msg_informed);
     if (0 != ret) {
         OTA_LOG_E("Report version failed");

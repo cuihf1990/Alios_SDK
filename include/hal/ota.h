@@ -58,11 +58,11 @@ void hal_ota_register_module(hal_ota_module_t *module);
 /**@brief  init ota partition
  *
  * @note   when ota start ,maybe it need init something
+ * @param  something       :extra info for ota init
  * @return 0   : On success.
  * @return 1   : If an error occurred with any step
  */
-hal_stat_t hal_ota_init();
-
+hal_stat_t hal_ota_init(void *something);
 /**@brief  Write data to an area on ota partition
  *
  * @param  m              :Refer the ota module which will be used,default module will be used if value is NULL
