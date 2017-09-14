@@ -65,7 +65,7 @@ typedef struct {
  *
  * @note Prepares an UART hardware interface for communications
  *
- * @param[in]  uart                the interface which should be initialised
+ * @param[in]  uart  the interface which should be initialised
  *
  * @return  0 : on success, EIO : if an error occurred with any step
  */

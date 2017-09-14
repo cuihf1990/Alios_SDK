@@ -265,7 +265,7 @@ extern "C" {
 #define require_action_string(X, LABEL, ACTION, STR)                                       \
         do {                                                                               \
             if (unlikely(!(X))) {                                                          \
-				debug_print_assert(0, #X, STR, SHORT_FILE, __LINE__, __PRETTY_FUNCTION__); \
+                debug_print_assert(0, #X, STR, SHORT_FILE, __LINE__, __PRETTY_FUNCTION__); \
                 { ACTION; }                                                                \
                 goto LABEL;                                                                \
             }                                                                              \
