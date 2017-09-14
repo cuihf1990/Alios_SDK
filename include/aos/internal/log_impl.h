@@ -5,9 +5,8 @@
 #ifndef AOS_LOG_IMPL_H
 #define AOS_LOG_IMPL_H
 
-#if defined(__cplusplus)
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 extern unsigned int aos_log_level;
@@ -29,7 +28,7 @@ enum log_level_bit {
 #define AOS_LOG_LEVEL aos_log_get_level()
 
 #define AOS_LL_V_NONE  0
-#define AOS_LL_V_ALL  0xFF
+#define AOS_LL_V_ALL   0XFF
 #define AOS_LL_V_FATAL (1 << AOS_LL_V_FATAL_BIT)
 #define AOS_LL_V_ERROR (1 << AOS_LL_V_ERROR_BIT)
 #define AOS_LL_V_WARN  (1 << AOS_LL_V_WARN_BIT)
@@ -40,24 +39,24 @@ enum log_level_bit {
  * color def.
  * see http://stackoverflow.com/questions/3585846/color-text-in-terminal-applications-in-unix
  */
-#define COL_DEF "\x1B[0m"   //white
-#define COL_RED "\x1B[31m"  //red
-#define COL_GRE "\x1B[32m"  //green
-#define COL_BLU "\x1B[34m"  //blue
-#define COL_YEL "\x1B[33m"  //yellow
-#define COL_WHE "\x1B[37m"  //white
+#define COL_DEF "\x1B[0m"  /* white */
+#define COL_RED "\x1B[31m" /* red */
+#define COL_GRE "\x1B[32m" /* green */
+#define COL_BLU "\x1B[34m" /* blue */
+#define COL_YEL "\x1B[33m" /* yellow */
+#define COL_WHE "\x1B[37m" /* white */
 #define COL_CYN "\x1B[36m"
 #define COL_MAG "\x1B[35m"
 
-#define GLOBAL_LOG_TAG "\e[65m"    //LOG TAG, use ESC characters, g(cli) ascii is 65
+#define GLOBAL_LOG_TAG "\e[65m" /* LOG TAG, use ESC characters, g(cli) ascii is 65 */
 
 #include <aos/kernel.h>
 extern int csp_printf(const char *fmt, ...);
 #ifdef CONFIG_LOGMACRO_DETAILS
 #define log_print(CON, MOD, COLOR, LVL, FMT, ...) \
-    do { \
-        if (CON) { \
-            long long ms = aos_now_ms();; \
+    do {                                          \
+        if (CON) {                                \
+            long long ms = aos_now_ms();;         \
             csp_printf(GLOBAL_LOG_TAG COLOR " [%4d.%03d]<%s> %s [%s#%d] : ", (int)(ms/1000), (int)(ms%1000), LVL, MOD, __FUNCTION__, __LINE__); \
             csp_printf(GLOBAL_LOG_TAG FMT COL_DEF "\r\n", ##__VA_ARGS__); \
         } \
@@ -125,7 +124,7 @@ extern int csp_printf(const char *fmt, ...);
 
 #endif /* CONFIG_LOGMACRO_SILENT */
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 }
 #endif
 

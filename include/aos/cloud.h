@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef __AOS_CLOUD_H__
-#define __AOS_CLOUD_H__
+#ifndef AOS_CLOUD_H
+#define AOS_CLOUD_H
 
 enum {
     CLOUD_CONNECTED,
@@ -46,7 +46,6 @@ int aos_cloud_report(const char *method,
                      void (*done_cb)(void *),
                      void *arg);
 
-
 /**
  * Trigger specific event, used by Cloud Backend
  *
@@ -60,7 +59,7 @@ void aos_cloud_trigger(int cb_type, const char *json_buffer);
 *
 * @param[in]  report  called when user do aos_cloud_report
 */
-void aos_cloud_register_backend(int (*report)(const char *method,
-                                              const char *json_buffer));
-#endif
+void aos_cloud_register_backend(int (*report)(const char *method, const char *json_buffer));
+
+#endif /* AOS_CLOUD_H */
 

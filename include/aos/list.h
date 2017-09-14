@@ -6,8 +6,7 @@
 #define AOS_LIST_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -52,7 +51,7 @@ static inline void __dlist_add(dlist_t *node, dlist_t *prev, dlist_t *next)
  * @param[in]   type    the type of the struct this is embedded in.
  * @param[in]   member  the name of the list_struct within the struct.
  */
-#define dlist_entry(addr, type, member) ({         \
+#define dlist_entry(addr, type, member) ({             \
     (type *)((long)addr - aos_offsetof(type, member)); \
 })
 
@@ -151,9 +150,9 @@ static inline int dlist_empty(const dlist_t *head)
  * @param[in]   member  the name of the list_struct within the struct
  */
 #define dlist_for_each_entry_safe(queue, n, node, type, member) \
-    for (node = aos_container_of((queue)->next, type, member), \
-         n = (queue)->next ? (queue)->next->next : NULL; \
-         &node->member != (queue); \
+    for (node = aos_container_of((queue)->next, type, member),  \
+         n = (queue)->next ? (queue)->next->next : NULL;        \
+         &node->member != (queue);                              \
          node = aos_container_of(n, type, member), n = n ? n->next : NULL)
 
 /**
@@ -175,21 +174,21 @@ static inline int dlist_empty(const dlist_t *head)
  * @param[in]   type    the type of the struct this is embedded in.
  */
 #define dlist_for_each_entry_reverse(pos, head, member, type) \
-    for (pos = list_entry((head)->prev, type, member);  \
-         &pos->member != (head);    \
+    for (pos = list_entry((head)->prev, type, member);        \
+         &pos->member != (head);                              \
          pos = list_entry(pos->member.prev, type, member))
 
 
 /**
  * get zhe list length
  *
- * @param[in]   queue    he head for your list
+ * @param[in]  queue  the head for your list
  */
-#define dlist_entry_number(queue) ({ \
-    int num; \
-    dlist_t *cur = queue; \
+#define dlist_entry_number(queue) ({                     \
+    int num;                                             \
+    dlist_t *cur = queue;                                \
     for (num=0;cur->next != queue;cur=cur->next, num++); \
-    num; \
+    num;                                                 \
 })
 
 #define AOS_DLIST_HEAD_INIT(name) { &(name), &(name) }
@@ -246,9 +245,9 @@ static inline void slist_init(slist_t *head)
  * @param[in]   type    the type of the struct this is embedded in
  * @param[in]   member  the name of the list_struct within the struct
  */
-#define slist_for_each_entry(queue, node, type, member)    \
+#define slist_for_each_entry(queue, node, type, member)        \
     for (node = aos_container_of((queue)->next, type, member); \
-         &node->member;                                    \
+         &node->member;                                        \
          node = aos_container_of(node->member.next, type, member))
 
 /**
@@ -260,10 +259,10 @@ static inline void slist_init(slist_t *head)
  * @param[in]   type    the type of the struct this is embedded in
  * @param[in]   member  the name of the list_struct within the struct
  */
-#define slist_for_each_entry_safe(queue, tmp, node, type, member)    \
-    for (node = aos_container_of((queue)->next, type, member), \
-         tmp = (queue)->next ? (queue)->next->next : NULL; \
-         &node->member;                                    \
+#define slist_for_each_entry_safe(queue, tmp, node, type, member) \
+    for (node = aos_container_of((queue)->next, type, member),    \
+         tmp = (queue)->next ? (queue)->next->next : NULL;        \
+         &node->member;                                           \
          node = aos_container_of(tmp, type, member), tmp = tmp ? tmp->next : tmp)
 
 #define AOS_SLIST_HEAD_INIT(name) { }
@@ -276,7 +275,7 @@ static inline void slist_init(slist_t *head)
  * @param[in]   type     the type of the struct this is embedded in.
  * @param[in]   member   the name of the list_struct within the struct.
  */
-#define slist_entry(addr, type, member) ({                               \
+#define slist_entry(addr, type, member) ({                                   \
     addr ? (type *)((long)addr - aos_offsetof(type, member)) : (type *)addr; \
 })
 
@@ -294,11 +293,11 @@ static inline void slist_init(slist_t *head)
  *
  * @param[in]   queue    he head for your list
  */
-#define slist_entry_number(queue) ({ \
-    int num; \
-    slist_t *cur = queue; \
+#define slist_entry_number(queue) ({            \
+    int num;                                    \
+    slist_t *cur = queue;                       \
     for (num=0;cur->next;cur=cur->next, num++); \
-    num; \
+    num;                                        \
 })
 
 #ifdef __cplusplus

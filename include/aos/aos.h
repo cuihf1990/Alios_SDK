@@ -2,8 +2,12 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef AOS_H
-#define AOS_H
+#ifndef AOS_AOS_H
+#define AOS_AOS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <aos/cli.h>
 #include <aos/cloud.h>
@@ -37,5 +41,5 @@ int32_t aos_uart_send(void *data, uint32_t size, uint32_t timeout);
 }
 #endif
 
-#endif /* AOS_H */
+#endif /* AOS_AOS_H */
 

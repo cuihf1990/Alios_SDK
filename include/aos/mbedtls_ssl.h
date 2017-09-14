@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef _MBEDTLS_SSL_H_
-#define _MBEDTLS_SSL_H_
+#ifndef AOS_MBEDTLS_SSL_H
+#define AOS_MBEDTLS_SSL_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
@@ -18,5 +18,5 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length);
 int mbedtls_ssl_recv(void *ssl, char *buffer, int length);
 int mbedtls_ssl_close(void *ssl);
 
-#endif /* _MBEDTLS_SSL_H_*/
+#endif /* AOS_MBEDTLS_SSL_H */
 
