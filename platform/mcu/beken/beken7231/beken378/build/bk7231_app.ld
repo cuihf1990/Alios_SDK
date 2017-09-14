@@ -15,7 +15,7 @@ ENTRY(application_start)
 
 SECTIONS
 {
-	. = 0x0075200;
+	. = 0x0067C00;
 
     .appinfo :
     {

@@ -31,6 +31,7 @@ hr_timer_t soc_hr_hw_cnt_get(void)
 
 size_t        sys_pool_start[SYS_DYN_POOL_SIZE / sizeof(size_t)];
 k_mm_region_t g_mm_region[] = {{(uint8_t*)&sys_pool_start,SYS_DYN_POOL_SIZE}};
+int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 
 void _linux_backtrace()
 {

@@ -43,6 +43,8 @@ GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
 GLOBAL_CFLAGS       += -Wall -Wno-missing-field-initializers -Wno-strict-aliasing -Wno-address -Wno-unused-result
 GLOBAL_DEFINES      += CSP_LINUXHOST
 GLOBAL_DEFINES      += CONFIG_LOGMACRO_DETAILS
+GLOBAL_DEFINES      += CONFIG_AOS_FATFS_SUPPORT
+GLOBAL_DEFINES      += CONFIG_AOS_FATFS_SUPPORT_MMC
 
 $(NAME)_SOURCES     :=
 # arch linux
@@ -63,7 +65,7 @@ $(NAME)_SOURCES     += main/main.c
 $(NAME)_SOURCES     += main/hw.c
 $(NAME)_SOURCES     += main/wifi_port.c
 $(NAME)_SOURCES     += main/ota_port.c
-$(NAME)_SOURCES     += main/diskio.c
+$(NAME)_SOURCES     += main/sdmmc.c
 
 ifeq ($(linux80211),1)
 $(NAME)_SOURCES     += csp/wifi/common.c

@@ -13,9 +13,9 @@ include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 # Filenames
 ##################################
 
-LINK_OUTPUT_FILE          :=$(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(LINK_OUTPUT_SUFFIX)        	# out/helloworld@mk108/binary/helloworld@mk108.elf
+LINK_OUTPUT_FILE          :=$(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(RADIXPOINT)$(BINSTYPE_LOWER)$(LINK_OUTPUT_SUFFIX)        	# out/helloworld@mk108/binary/helloworld@mk108.elf
 STRIPPED_LINK_OUTPUT_FILE :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.stripped$(LINK_OUTPUT_SUFFIX)) 	# out/helloworld@mk108/binary/helloworld@mk108.stripped.elf
-BIN_OUTPUT_FILE        	  :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(BIN_OUTPUT_SUFFIX))         		# out/helloworld@mk108/binary/helloworld@mk108.bin
+BIN_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(BIN_OUTPUT_SUFFIX))         		# out/helloworld@mk108/binary/helloworld@mk108.bin
 HEX_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(HEX_OUTPUT_SUFFIX))         		# out/helloworld@mk108/binary/helloworld@mk108.bin
 
 MAP_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.map)     							# out/helloworld@mk108/binary/helloworld@mk108.map
@@ -25,9 +25,9 @@ MAP_CSV_OUTPUT_FILE       :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=_map.csv) 	
 OPENOCD_LOG_FILE          ?= $(OUTPUT_DIR)/openocd_log.txt
 
 LIBS_DIR                  := $(OUTPUT_DIR)/libraries
-LINK_OPTS_FILE            := $(OUTPUT_DIR)/binary/link.opts
+LINK_OPTS_FILE            := $(OUTPUT_DIR)/binary/link$(UNDERLINE)$(BINSTYPE_LOWER).opts
 
-LINT_OPTS_FILE            := $(OUTPUT_DIR)/binary/lint.opts
+LINT_OPTS_FILE            := $(OUTPUT_DIR)/binary/lint$(UNDERLINE)$(BINSTYPE_LOWER).opts
 
 
 ifeq (,$(SUB_BUILD))
@@ -158,7 +158,13 @@ LINK_LIBS += $(RESOURCES_LIBRARY)
 
 # $(info Components: $(COMPONENTS))
 # Create targets for components
+ifeq (app, $(BINS))
+$(foreach comp,$(COMPONENTS),$(eval $(if $($(comp)_TYPE), $(if $(filter app share, $($(comp)_TYPE)), $(call BUILD_COMPONENT_RULES,$(comp))), $(call BUILD_COMPONENT_RULES,$(comp)))))
+else ifeq (kernel, $(BINS))
+$(foreach comp,$(COMPONENTS),$(eval $(if $(filter kernel share, $($(comp)_TYPE)), $(call BUILD_COMPONENT_RULES,$(comp)))))
+else ifeq (,$(BINS))
 $(foreach comp,$(COMPONENTS),$(eval $(call BUILD_COMPONENT_RULES,$(comp))))
+endif
 
 # Add pre-built libraries
 LINK_LIBS += $(AOS_SDK_PREBUILT_LIBRARIES)
@@ -178,7 +184,7 @@ $(LIBS_DIR):
 $(LINK_OPTS_FILE): $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk
 #$(COMPILER_SPECIFIC_LINK_MAP) $(MAP_OUTPUT_FILE) $(LINK_OPTS_FILE)
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(AOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(AOS_SDK_LINK_FILES) $(filter %.a,$^) $(LINK_LIBS)) $(AOS_SDK_LDFLAGS) )
-	
+
 $(LINT_OPTS_FILE): $(LINK_LIBS)
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ , )
 	$(QUIET)$(foreach opt,$(sort $(subst \",",$(LINT_FLAGS))) $(sort $(LINT_FILES)),$(call WRITE_FILE_APPEND, $@ ,$(opt)))

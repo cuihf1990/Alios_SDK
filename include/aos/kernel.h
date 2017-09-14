@@ -50,15 +50,6 @@ int aos_get_hz(void);
 const char *aos_version_get(void);
 
 /**
- * Get error information
- *
- * @param[in]  errnum  the error number
- *
- * @return  error information
- */
-const char *aos_strerror(int errnum);
-
-/**
  * Create a task
  *
  * @param[in]  name       task name, any string

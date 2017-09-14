@@ -19,7 +19,7 @@
 #define RHINO_CONFIG_MM_BLK                  1
 #define RHINO_CONFIG_MM_DEBUG                1
 #define RHINO_CONFIG_MM_TLF                  1
-#define K_MM_STATISTIC                       0
+#define K_MM_STATISTIC                       1
 #define RHINO_CONFIG_MM_MAXMSIZEBIT          19
 #define RHINO_CONFIG_GCC_RETADDR             1
 #define RHINO_CONFIG_MM_LEAKCHECK            1
@@ -51,7 +51,7 @@
 #endif
 
 #define RHINO_CONFIG_TICKLESS                0
-#define RHINO_CONFIG_TICKS_PER_SECOND        100
+#define RHINO_CONFIG_TICKS_PER_SECOND        1000
 /* must be 2^n size!, such as 1, 2, 4, 8, 16,32, etc....... */
 #define RHINO_CONFIG_TICK_HEAD_ARRAY         8
 #define RHINO_CONFIG_TIMER_TASK_STACK_SIZE   200

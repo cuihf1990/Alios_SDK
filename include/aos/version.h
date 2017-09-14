@@ -12,35 +12,35 @@
 #define AOS_SYS_VERSION
 
 /**
- * @brief get aos product model 
+ * @brief get aos product model
  * @retval model success
  * @retval 0 failure
  */
 const char *aos_get_product_model(void);
 
 /**
- * @brief get aos os version 
+ * @brief get aos os version
  * @retval os version success
  * @retval 0 failure
  */
 const char *aos_get_os_version (void);
 
 /**
- * @brief get aos kernel version 
+ * @brief get aos kernel version
  * @retval kernel version success
  * @retval 0 failure
  */
 const char *aos_get_kernel_version (void);
 
 /**
- * @brief get aos app version 
+ * @brief get aos app version
  * @retval app version success
  * @retval 0 failure
  */
 const char *aos_get_app_version (void);
 
 /**
- * @brief get aos device name 
+ * @brief get aos device name
  * @retval device name success
  * @retval 0 failure
  */

@@ -4,7 +4,8 @@
 
 #include <k_api.h>
 
-extern k_mm_region_t g_mm_region;
+extern k_mm_region_t   g_mm_region[];
+extern int             g_region_num;
 
 RHINO_INLINE void rhino_stack_check_init(void)
 {
@@ -40,7 +41,10 @@ RHINO_INLINE kstat_t rhino_init(void)
 
     /* init memory region */
 #if(RHINO_CONFIG_MM_TLF > 0)
-    krhino_init_mm_head(&g_kmm_head, g_mm_region.start, g_mm_region.len);
+    krhino_init_mm_head(&g_kmm_head, g_mm_region[0].start, g_mm_region[0].len);
+    for (int e = 1 ; e < g_region_num ; e++) {
+        krhino_add_mm_region(g_kmm_head, g_mm_region[e].start, g_mm_region[e].len);
+    }
 #endif
 
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )

@@ -1,4 +1,4 @@
-ifeq (1,${BINS})
+ifneq (,${BINS})
 	GLOBAL_CFLAGS += -DSYSINFO_OS_BINS
 endif
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)

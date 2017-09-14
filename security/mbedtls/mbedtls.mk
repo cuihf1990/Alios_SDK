@@ -2,6 +2,8 @@ NAME := mbedtls
 
 DEBUG := no
 
+$(NAME)_TYPE := share
+
 GLOBAL_INCLUDES     += include
 
 $(NAME)_CFLAGS      += -Wall -Werror -Os
