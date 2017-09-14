@@ -28,6 +28,8 @@ static int            cliexit = 0;
 extern uart_dev_t     uart_0;
 extern void hal_reboot(void);
 
+int cli_getchar(char *inbuf);
+
 int cli_putstr(char *msg);
 
 /* Find the command 'name' in the cli commands table.

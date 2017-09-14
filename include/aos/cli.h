@@ -50,78 +50,67 @@ struct cli_st {
     } while(0)
 
 
-/** Register a CLI command
- *
+/**
  * This function registers a command with the command-line interface.
  *
- * \param[in] command The structure to register one CLI command
- * \return 0 on success
- * \return 1 on failure
+ * @param[in]  command  The structure to register one CLI command
+ *
+ * @return:  0 on success, 1 on failure
  */
 int cli_register_command(const struct cli_command *command);
 
-/** Unregister a CLI command
- *
+/**
  * This function unregisters a command from the command-line interface.
  *
- * \param[in] command The structure to unregister one CLI command
- * \return 0 on success
- * \return 1 on failure
+ * @param[in]  command  The structure to unregister one CLI command
+ *
+ * @return:  0 on success, 1 on failure
  */
 int cli_unregister_command(const struct cli_command *command);
 
-/** Register a batch of CLI commands
- *
+/**
+ * Register a batch of CLI commands
  * Often, a module will want to register several commands.
  *
- * \param[in] commands Pointer to an array of commands.
- * \param[in] num_commands Number of commands in the array.
- * \return 0 on success
- * \return 1 on failure
+ * @param[in]  commands      Pointer to an array of commands.
+ * @param[in]  num_commands  Number of commands in the array.
+ *
+ * @return:  0 on success， 1 on failure
  */
 int cli_register_commands(const struct cli_command *commands, int num_commands);
 
-/** Unregister a batch of CLI commands
+/**
+ * Unregister a batch of CLI commands
  *
- * \param[in] commands Pointer to an array of commands.
- * \param[in] num_commands Number of commands in the array.
- * \return 0 on success
- * \return 1 on failure
+ * @param[in]  commands      Pointer to an array of commands.
+ * @param[in]  num_commands  Number of commands in the array.
+ *
+ * @return:  0 on success,1 on failure
  */
 int cli_unregister_commands(const struct cli_command *commands,
                             int num_commands);
 
-/* Get a CLI msg
- *
- * If an external input task wants to use the CLI, it can use
- * cli_get_cmd_buffer() to get a command buffer that it can then
- * submit to the CLI later using cli_submit_cmd_buffer().
- *
- * \param buff Pointer to a char * to place the buffer pointer in.
- * \return 0 on success
- * \return error code otherwise.
- */
-int cli_getchar(char *inbuf);
-int cli_getchars(char *inbuf, int len);
-int cli_get_all_chars_len(void);
-int cli_getchars_prefetch(char *inbuf, int len);
 
-/* Send CLI output msg
+/**
+ * Print CLI msg
  *
- * \param buff Pointer to a char * buffer.
- * \return 0 on success
- * \return error code otherwise.
+ * @param[in]  buff  Pointer to a char * buffer.
+ *
+ * @return:  0  on success, error code otherwise.
  */
 int cli_printf(const char *buff, ...);
 
-/* library CLI APIs
+/**
+ * CLI initial function
+ *
+ * @return:  0 on success, error code otherwise
  */
 int aos_cli_init(void);
 
-/* Stop the CLI thread and carry out the cleanup
+/**
+ * Stop the CLI thread and carry out the cleanup
  *
- * \return kNoErr on success
- * \return error code otherwise.
+ * @return:  0 on success, return error code otherwise.
  *
  */
 int aos_cli_stop(void);
