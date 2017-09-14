@@ -11,6 +11,7 @@
 
 #include "ota_update_manifest.h"
 #include "ota_log.h"
+#include "ota_util.h"
 #include "ota_version.h"
 
 #define OTA_MQTT_TOPIC_LEN   (64)
@@ -159,11 +160,10 @@ parse_success:
 //Generate topic name according to @ota_topic_type, @product_key, @device_name
 //and then copy to @buf.
 //0, successful; -1, failed
-static int otamqtt_GenTopicName(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key,
+static int ota_mqtt_gen_topic_name(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key,
                                 const char *device_name)
 {
-    int ret;
-
+    int ret;        
     ret = snprintf(buf,
                    buf_len,
                    "/ota/device/%s/%s/%s",
@@ -183,7 +183,7 @@ static int otamqtt_GenTopicName(char *buf, size_t buf_len, const char *ota_topic
 
 
 //report progress of OTA
-static int otamqtt_Publish(const char *topic_type, const char *msg)
+static int ota_mqtt_publish(const char *topic_type, const char *msg)
 {
     int ret;
     char topic_name[OTA_MQTT_TOPIC_LEN] = {0};
@@ -198,7 +198,7 @@ static int otamqtt_Publish(const char *topic_type, const char *msg)
     topic_msg.payload_len = strlen(msg);
 
     //inform OTA to topic: "/ota/device/progress/$(product_key)/$(device_name)"
-    ret = otamqtt_GenTopicName(topic_name, OTA_MQTT_TOPIC_LEN, topic_type, g_ota_device_info.product_key,
+    ret = ota_mqtt_gen_topic_name(topic_name, OTA_MQTT_TOPIC_LEN, topic_type, g_ota_device_info.product_key,
                                g_ota_device_info.device_name);
     if (ret < 0) {
         OTA_LOG_E("generate topic name of info failed");
@@ -257,7 +257,7 @@ int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
         return -1;
     }
 
-    int ret = otamqtt_GenTopicName(g_upgrad_topic, OTA_MQTT_TOPIC_LEN, "upgrade", g_ota_device_info.product_key,
+    int ret = ota_mqtt_gen_topic_name(g_upgrad_topic, OTA_MQTT_TOPIC_LEN, "upgrade", g_ota_device_info.product_key,
                                    g_ota_device_info.device_name);
     if (ret < 0) {
         OTA_LOG_E("generate topic name of upgrade failed");
@@ -284,7 +284,7 @@ do_exit:
 //Generate firmware information according to @id, @version
 //and then copy to @buf.
 //0, successful; -1, failed
-int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *version)
+int ota_gen_info_msg(char *buf, size_t buf_len, uint32_t id, const char *version)
 {
     int ret;
     ret = snprintf(buf,
@@ -304,7 +304,7 @@ int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *versio
 //Generate report information according to @id, @msg
 //and then copy to @buf.
 //0, successful; -1, failed
-int otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progress, const char *msg_detail)
+int ota_gen_report_msg(char *buf, size_t buf_len, uint32_t id, int progress, const char *msg_detail)
 {
     int ret;
     if (NULL == msg_detail) {
@@ -354,14 +354,14 @@ int8_t platform_ota_status_post(int status, int progress)
         return -1;
     }
 
-    ret = otalib_GenReportMsg(msg_reported, MSG_REPORT_LEN, 0, progress, NULL);
+    ret = ota_gen_report_msg(msg_reported, MSG_REPORT_LEN, 0, progress, NULL);
 
     if (0 != ret) {
         OTA_LOG_E("generate reported message failed");
         return -1;
     }
 
-    ret = otamqtt_Publish("progress", msg_reported);
+    ret = ota_mqtt_publish("progress", msg_reported);
     if (0 != ret) {
         OTA_LOG_E("Report progress failed");
         return -1;
@@ -376,13 +376,13 @@ int8_t platform_ota_result_post(void)
 {
     int ret = -1;
     char msg_informed[MSG_INFORM_LEN] = {0};
-    ret = otalib_GenInfoMsg(msg_informed, MSG_INFORM_LEN, 0,
+    ret = ota_gen_info_msg(msg_informed, MSG_INFORM_LEN, 0,
                             ota_get_system_version());
     if (ret != 0) {
         OTA_LOG_E("generate inform message failed");
         return -1;
     }
-    ret = otamqtt_Publish("inform", msg_informed);
+    ret = ota_mqtt_publish("inform", msg_informed);
     if (0 != ret) {
         OTA_LOG_E("Report version failed");
         return -1;

@@ -21,7 +21,7 @@
 
 static MD5_CTX            g_ctx;
 
-static void saveState(uint32_t breakpoint, MD5_CTX *pMD5);
+static void save_state(uint32_t breakpoint, MD5_CTX *pMD5);
 /**
  * @brief http_gethost_info
  *
@@ -323,13 +323,13 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
 
     if (nbytes < 0) {
         OTA_LOG_E("download read error %s" , strerror(errno));
-        saveState(size + breakpoint, &g_ctx);
+        save_state(size + breakpoint, &g_ctx);
         ret = OTA_DOWNLOAD_FAILED;
     } else if (nbytes == 0) {
         ota_set_update_breakpoint(0);
         ret = OTA_DOWNLOAD_FINISH;
     } else {
-        saveState(size + breakpoint, &g_ctx);
+        save_state(size + breakpoint, &g_ctx);
         ret = OTA_DOWNLOAD_CANCEL;
     }
 
@@ -338,7 +338,7 @@ DOWNLOAD_END:
     return ret;
 }
 
-static void saveState(uint32_t breakpoint, MD5_CTX *pMD5)
+static void save_state(uint32_t breakpoint, MD5_CTX *pMD5)
 {
     ota_set_update_breakpoint(breakpoint);
     ota_set_cur_MD5_context(pMD5);
