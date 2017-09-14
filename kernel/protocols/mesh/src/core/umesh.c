@@ -562,61 +562,6 @@ ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     return mf_resolve_dest(dest, dest_addr);
 }
 
-#ifdef CONFIG_AOS_MESH_DEBUG
-bool umesh_is_whitelist_enabled(void)
-{
-    return is_whitelist_enabled();
-}
-
-void umesh_enable_whitelist(void)
-{
-    whitelist_enable();
-}
-
-void umesh_disable_whitelist(void)
-{
-    whitelist_disable();
-}
-
-const whitelist_entry_t *umesh_get_whitelist_entries(void)
-{
-    return whitelist_get_entries();
-}
-
-ur_error_t umesh_add_whitelist(const mac_address_t *address)
-{
-    whitelist_entry_t *entry;
-
-    entry = whitelist_add(address);
-    if (entry) {
-        return UR_ERROR_NONE;
-    }
-    return UR_ERROR_MEM;
-}
-
-ur_error_t umesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi)
-{
-    whitelist_entry_t *entry;
-
-    entry = whitelist_add(address);
-    if (entry == NULL) {
-        return UR_ERROR_MEM;
-    }
-    whitelist_set_constant_rssi(entry, rssi);
-    return UR_ERROR_NONE;
-}
-
-void umesh_remove_whitelist(const mac_address_t *address)
-{
-    whitelist_remove(address);
-}
-
-void umesh_clear_whitelist(void)
-{
-    whitelist_clear();
-}
-#endif
-
 void umesh_get_channel(channel_t *channel)
 {
     umesh_hal_module_t   *ur_wifi_hal = NULL;
