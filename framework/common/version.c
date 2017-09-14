@@ -52,6 +52,23 @@ AOS_EXPORT AOS_WEAK const char   *aos_get_os_version(void)
 #endif
 }
 
+static void show_version(char *pwbuf, int blen, int argc, char **argv)
+{
+    LOGI(TAG, "kernel version :%s\r\n", aos_get_kernel_version());
+    LOGI(TAG, "app version :%s\r\n", aos_get_app_version());
+}
+
+static struct cli_command versioncmd = {
+    .name = "version",
+    .help = "show version",
+    .function = show_version
+};
+
+void version_init(void)
+{
+   cli_register_command(&versioncmd);
+}
+
 AOS_EXPORT AOS_WEAK void dump_sys_info(void)
 {
     LOGI(TAG, "app_version: %s", aos_get_app_version());
