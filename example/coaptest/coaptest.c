@@ -32,6 +32,17 @@
 #define IOTX_DEVICE_SECRET       "Stk4IUErQUBc1tWRWEKWb5ACra4hFDYF"
 #define IOTX_DEVICE_ID           "IoTxCoAPTestDev.1"
 
+
+typedef struct ota_device_info {
+    const char *product_key;
+    const char *device_name;
+    void *h_coap;
+} OTA_device_info;
+
+OTA_device_info ota_device_info;
+
+static void ota_init();
+
 int iotx_set_devinfo(iotx_deviceinfo_t *p_devinfo)
 {
     if (NULL == p_devinfo) {
@@ -87,7 +98,6 @@ static void user_code_start()
     iotx_post_data_to_server((void *)p_ctx);
     IOT_CoAP_Yield(p_ctx);
     if (m_coap_client_running) {
-        m_coap_client_running = 0;
         aos_post_delayed_action(3000,user_code_start,NULL);
     } else {
         IOT_CoAP_Deinit(&p_ctx);
@@ -123,6 +133,8 @@ static void coap_client_example() {
     if(NULL != p_ctx){
         IOT_CoAP_DeviceNameAuth(p_ctx);
         user_code_start();
+
+		ota_init();
     }
     else{
         printf("IoTx CoAP init failed\r\n");
@@ -152,4 +164,11 @@ int application_start(void)
 
     /* never return */
     return 0;
+}
+
+static void ota_init(){
+    ota_device_info.product_key=IOTX_PRODUCT_KEY;
+    ota_device_info.device_name=IOTX_DEVICE_NAME;
+    ota_device_info.h_coap=p_ctx;
+    aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, &ota_device_info);
 }
