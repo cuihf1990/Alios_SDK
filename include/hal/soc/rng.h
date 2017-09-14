@@ -16,16 +16,17 @@ typedef struct {
     void        *priv;    /* priv data */
 } random_dev_t;
 
-/**@brief Fill in a memory buffer with random data
- * @param random          : the random device
- * @param inBuffer        : Point to a valid memory buffer, this function will fill
-                            in this memory with random numbers after executed
- * @param inByteCount     : Length of the memory buffer (bytes)
+/**
+ * Fill in a memory buffer with random data
  *
- * @return    0   : on success.
- * @return    EIO : if an error occurred with any step
+ * @param[in]   random  the random device
+ * @param[out]  buf     Point to a valid memory buffer
+ * @param[in]   bytes   Length of the memory buffer (bytes)
+ *
+ * @return      0       on success.
+ * @return      EIO     if an error occurred with any step
  */
-int32_t hal_random_num_read(random_dev_t random, void *in_buf, int32_t bytes);
+int32_t hal_random_num_read(random_dev_t random, void *buf, int32_t bytes);
 
 #endif
 

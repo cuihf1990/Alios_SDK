@@ -38,74 +38,84 @@
  } sd_dev_t;
 
 
-/**@brief Initialises a sd interface
+/**
+* Initialises a sd interface
 *
-* @param  sd       : the interface which should be initialised
-* @param  config   : sd configuration structure
+* @param[in] sd   the interface which should be initialised
 *
-* @return    0     : on success.
-* @return    EIO   : if an error occurred with any step
+* @return    0    on success.
+* @return    EIO  if an error occurred with any step
 */
 int32_t hal_sd_init(sd_dev_t *sd);
 
-/**@brief read sd blocks
+
+/**
+* read sd blocks
 *
-* @param  sd       : the interface which should be initialised
-* @param  data     : pointer to the buffer which will store incoming data
-* @param  blk_addr : sd blk addr
-* @param  blks     : sd blks
-* @param  timeout  : timeout in milisecond
-* @return    0     : on success.
-* @return    EIO   : if an error occurred with any step
+* @param[in]   sd        the interface which should be initialised
+* @param[out]  data      pointer to the buffer which will store incoming data
+* @param[in]   blk_addr  sd blk addr
+* @param[in]   blks      sd blks
+* @param[in]   timeout   timeout in milisecond
+* @return      0         on success.
+* @return      EIO       if an error occurred with any step
 */
 int32_t hal_sd_blks_read(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32_t blks, uint32_t timeout);
 
-/**@brief write sd blocks
+
+/**
+* write sd blocks
+* @param[in]  sd        the interface which should be initialised
+* @param[in]  data      pointer to the buffer which will store incoming data
+* @param[in]  blk_addr  sd blk addr
+* @param[in]  blks      sd blks
+* @param[in]  timeout   timeout in milisecond
 *
-* @param  sd       : the interface which should be initialised
-* @param  data     : pointer to the buffer which will store incoming data
-* @param  blk_addr : sd blk addr
-* @param  blks     : sd blks
-* @param  timeout  : timeout in milisecond
-* @return    0     : on success.
-* @return    EIO   : if an error occurred with any step
+* @return     0         on success.
+* @return     EIO       if an error occurred with any step
 */
 int32_t hal_sd_blks_write(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32_t blks, uint32_t timeout);
 
-/**@brief erase sd blocks
+
+/**
+* erase sd blocks
+* @param[in]  sd              the interface which should be initialised
+* @param[in]  blk_start_addr  sd blocks start addr
+* @param[in]  blk_end_addr    sd blocks end addr
 *
-* @param  sd              : the interface which should be initialised
-* @param  blk_start_addr  : sd blocks start addr
-* @param  blk_end_addr    : sd blocks end addr
-* @return    0            : on success.
-* @return    EIO          : if an error occurred with any step
+* @return     0               on success.
+* @return     EIO             if an error occurred with any step
 */
 int32_t hal_sd_erase(sd_dev_t *sd, uint32_t blk_start_addr, uint32_t blk_end_addr);
 
-/**@brief get sd state
+/**
+* get sd state
 *
-* @param  sd       : the interface which should be initialised
-* @param  stat     : pointer to the buffer which will store incoming data
-* @return    0     : on success.
-* @return    EIO   : if an error occurred with any step
+* @param[in]   sd    the interface which should be initialised
+* @param[out]  stat  pointer to the buffer which will store incoming data
+* @return      0     on success.
+* @return      EIO   if an error occurred with any step
 */
 int32_t hal_sd_stat_get(sd_dev_t *sd, hal_sd_stat *stat);
 
-/**@brief get sd info
+/**
+* get sd info
 *
-* @param  sd       : the interface which should be initialised
-* @param  stat     : pointer to the buffer which will store incoming data
-* @return    0     : on success.
-* @return    EIO   : if an error occurred with any step
+* @param[in]   sd    the interface which should be initialised
+* @param[out]  stat  pointer to the buffer which will store incoming data
+* @return      0     on success.
+* @return      EIO   if an error occurred with any step
 */
 int32_t hal_sd_info_get(sd_dev_t *sd, hal_sd_info_t *info);
 
 
-/**@brief Deinitialises a sd interface
+/**
+* Deinitialises a sd interface
 *
-* @param  sd       : the interface which should be initialised
-* @return    0     : on success.
-* @return    EIO   : if an error occurred with any step
+* @param[in]  sd   the interface which should be initialised
+*
+* @return     0    on success.
+* @return     EIO  if an error occurred with any step
 */
 int32_t hal_sd_finalize(sd_dev_t *sd);
 

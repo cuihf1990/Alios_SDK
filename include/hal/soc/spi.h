@@ -2,12 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file hal/soc/spi.h
- * @brief SPI HAL
- * @version since 5.5.0
- */
-
 #ifndef AOS_SPI_H
 #define AOS_SPI_H
 
