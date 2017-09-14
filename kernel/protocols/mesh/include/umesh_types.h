@@ -32,9 +32,10 @@ typedef enum ur_error_s {
 ur_error_t;
 
 typedef enum media_type_s {
-    MEDIA_TYPE_WIFI = 0,
-    MEDIA_TYPE_BLE  = 1,
-    MEDIA_TYPE_15_4 = 2,
+    MEDIA_TYPE_DFL = 0,
+    MEDIA_TYPE_WIFI = 1,
+    MEDIA_TYPE_BLE  = 2,
+    MEDIA_TYPE_15_4 = 3,
 } media_type_t;
 
 #ifndef NULL
@@ -144,9 +145,17 @@ typedef struct channel_s {
     uint16_t hal_bcast_channel;
 } channel_t;
 
-typedef ur_error_t (* umesh_raw_data_received)(ur_addr_t *src,
-                                               uint8_t *payload,
-                                               uint8_t length);
+struct pbuf;
+typedef ur_error_t (* adapter_input_t)(struct pbuf *buf);
+typedef ur_error_t (* adapter_interface_up_t)(void);
+typedef ur_error_t (* adapter_interface_down_t)(void);
+typedef ur_error_t (* adapter_interface_update_t)(void);
+typedef struct ur_adapter_callback_s {
+    adapter_input_t input;
+    adapter_interface_up_t interface_up;
+    adapter_interface_down_t interface_down;
+    adapter_interface_update_t interface_update;
+} ur_adapter_callback_t;
 
 typedef struct frame_stats_s {
     uint32_t in_frames;
