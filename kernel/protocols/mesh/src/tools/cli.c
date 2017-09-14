@@ -807,11 +807,12 @@ void process_whitelist(int argc, char *argv[])
     int           length;
     mac_address_t addr;
     int8_t        rssi;
+    whitelist_entry_t *entry;
 
     if (arg_index >= argc) {
         int i = 0;
-        bool enabled = umesh_is_whitelist_enabled();
-        const whitelist_entry_t *whitelist = umesh_get_whitelist_entries();
+        bool enabled = is_whitelist_enabled();
+        const whitelist_entry_t *whitelist = whitelist_get_entries();
         response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
         for (i = 0; i < WHITELIST_ENTRY_NUM; i++) {
             if (whitelist[i].valid == false) {
@@ -835,18 +836,17 @@ void process_whitelist(int argc, char *argv[])
         if (length != sizeof(addr.addr)) {
             return;
         }
-        if (++arg_index < argc) {
+        entry = whitelist_add(&addr);
+        if (++arg_index < argc && entry) {
             rssi = (int8_t)strtol(argv[arg_index], NULL, 0);
-            umesh_add_whitelist_rssi(&addr, rssi);
-        } else {
-            umesh_add_whitelist(&addr);
+            whitelist_set_constant_rssi(entry, rssi);
         }
     } else if (strcmp(argv[arg_index], "clear") == 0) {
-        umesh_clear_whitelist();
+        whitelist_clear();
     } else if (strcmp(argv[arg_index], "disable") == 0) {
-        umesh_disable_whitelist();
+        whitelist_disable();
     } else if (strcmp(argv[arg_index], "enable") == 0) {
-        umesh_enable_whitelist();
+        whitelist_enable();
     } else if (strcmp(argv[arg_index], "remove") == 0) {
         if (++arg_index >= argc) {
             return;
@@ -856,7 +856,7 @@ void process_whitelist(int argc, char *argv[])
         if (length != sizeof(addr.addr)) {
             return;
         }
-        umesh_remove_whitelist(&addr);
+        whitelist_remove(&addr);
     }
     response_append("done\r\n");
 }

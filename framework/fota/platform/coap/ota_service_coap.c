@@ -31,10 +31,10 @@ void coap_ota_init( void *signal)
     OTA_LOG_D("device_info:%s,%s", device_info->product_key, device_info->device_name);
     memcpy(&g_ota_device_info, device_info , sizeof (OTA_device_info));
 
-	h_ota = IOT_OTA_Init(g_ota_device_info.product_key, g_ota_device_info.device_name,
-			g_ota_device_info.h_coap);
+    h_ota = IOT_OTA_Init(g_ota_device_info.product_key, g_ota_device_info.device_name,
+                         g_ota_device_info.h_coap);
 
-	if (NULL == h_ota) {
+    if (NULL == h_ota) {
         OTA_LOG_E("initialize OTA failed");
     }
 }

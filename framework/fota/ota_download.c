@@ -21,7 +21,7 @@
 
 static MD5_CTX            g_ctx;
 
-static void saveState(uint32_t breakpoint,MD5_CTX *pMD5);
+static void saveState(uint32_t breakpoint, MD5_CTX *pMD5);
 /**
  * @brief http_gethost_info
  *
@@ -44,12 +44,12 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
         return;
     }
     pa = src;
-    if (!strncmp(pa, "https://", strlen("https://"))) { 
+    if (!strncmp(pa, "https://", strlen("https://"))) {
         pa = src + strlen("https://");
         isHttps = 1;
     }
     if (!isHttps) {
-        if (!strncmp(pa, "http://", strlen("http://"))) { 
+        if (!strncmp(pa, "http://", strlen("http://"))) {
             pa = src + strlen("http://");
         }
     }
@@ -76,9 +76,9 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
         if (isHttps) {
             *port = 80;//443
         } else {
-            *port = 80; 
+            *port = 80;
         }
-        
+
     }
 }
 
@@ -195,9 +195,9 @@ Connection: close\r\n\
 Range: bytes=%d-\r\n\
 Host:%s:%d\r\n\r\n"
 
-int http_download(char *url, write_flash_cb_t func,char * md5)
+int http_download(char *url, write_flash_cb_t func, char *md5)
 {
-    if (!url || strlen(url) == 0 || func == NULL||md5==NULL) {
+    if (!url || strlen(url) == 0 || func == NULL || md5 == NULL) {
         OTA_LOG_E("http_download url or func  error!\n");
         return OTA_DOWNLOAD_URL_FAIL;
     }
@@ -210,8 +210,8 @@ int http_download(char *url, write_flash_cb_t func,char * md5)
     char host_addr[256] = {0};
     int send = 0;
     int totalsend = 0;
-    uint32_t breakpoint =0;
-    char last_md5[33]={0};
+    uint32_t breakpoint = 0;
+    char last_md5[33] = {0};
     http_gethost_info(url, host_addr, host_file, &port);
     // OTA_LOG_I("host_addr is: %s\n ", host_addr);
     // OTA_LOG_I("host_file is: %s\n ", host_file);
@@ -222,18 +222,15 @@ int http_download(char *url, write_flash_cb_t func,char * md5)
         ret = OTA_DOWNLOAD_SOCKET_FAIL;
         return ret;
     }
-    breakpoint=ota_get_update_breakpoint();
+    breakpoint = ota_get_update_breakpoint();
     ota_get_last_MD5(last_md5);
-    OTA_LOG_I("----breakpoint=%d------",breakpoint);
-    if(breakpoint&&!strncmp(last_md5, md5, 32))
-    {   
+    OTA_LOG_I("----breakpoint=%d------", breakpoint);
+    if (breakpoint && !strncmp(last_md5, md5, 32)) {
         OTA_LOG_I("----resume download------");
-        sprintf(http_buffer, HTTP_HEADER_RESUME, host_file,breakpoint, host_addr, port);
+        sprintf(http_buffer, HTTP_HEADER_RESUME, host_file, breakpoint, host_addr, port);
         ota_get_last_MD5_context(&g_ctx);
-    }
-    else
-    {
-        breakpoint=0;
+    } else {
+        breakpoint = 0;
         sprintf(http_buffer, HTTP_HEADER, host_file, host_addr, port);
         MD5_Init(&g_ctx);
     }
@@ -259,21 +256,21 @@ int http_download(char *url, write_flash_cb_t func,char * md5)
     int header_found = 0;
     char *pos = 0;
     int file_size = 0;
-    int retry_cnt=0;
+    int retry_cnt = 0;
 
     while ((nbytes = read(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
         // aos_msleep(25);//for slow-motion test
-        if (nbytes < 0) {  
-            OTA_LOG_I("read nbytes < 0");       
+        if (nbytes < 0) {
+            OTA_LOG_I("read nbytes < 0");
             if (errno != EINTR) {
                 break;
             }
             if (_ota_socket_check_conn(sockfd) < 0) {
                 OTA_LOG_E("download system error %s" , strerror(errno));
                 break;
-            } else if(retry_cnt++<20){
+            } else if (retry_cnt++ < 20) {
                 continue;
-            }else{
+            } else {
                 break;
             }
 
@@ -298,7 +295,7 @@ int http_download(char *url, write_flash_cb_t func,char * md5)
                 pos += 4;
                 size = nbytes - len - 4;//去除头部，纯数据部分长度
                 memcpy(headbuf, http_buffer, len);
-               // OTA_LOG_I("headbuf=%s",headbuf);
+                // OTA_LOG_I("headbuf=%s",headbuf);
                 MD5_Update(&g_ctx, (const uint8_t *)pos, size);
                 func(BUFFER_MAX_SIZE, (uint8_t *)pos, size, 0);
             }
@@ -326,13 +323,13 @@ int http_download(char *url, write_flash_cb_t func,char * md5)
 
     if (nbytes < 0) {
         OTA_LOG_E("download read error %s" , strerror(errno));
-        saveState(size+breakpoint,&g_ctx);
+        saveState(size + breakpoint, &g_ctx);
         ret = OTA_DOWNLOAD_FAILED;
     } else if (nbytes == 0) {
         ota_set_update_breakpoint(0);
         ret = OTA_DOWNLOAD_FINISH;
     } else {
-        saveState(size+breakpoint,&g_ctx);
+        saveState(size + breakpoint, &g_ctx);
         ret = OTA_DOWNLOAD_CANCEL;
     }
 
@@ -341,18 +338,19 @@ DOWNLOAD_END:
     return ret;
 }
 
-static void saveState(uint32_t breakpoint,MD5_CTX *pMD5){
+static void saveState(uint32_t breakpoint, MD5_CTX *pMD5)
+{
     ota_set_update_breakpoint(breakpoint);
-    ota_set_cur_MD5_context(pMD5);  
+    ota_set_cur_MD5_context(pMD5);
 }
 
 uint32_t ota_get_update_breakpoint()
 {
-    uint32_t offset=0;
-    int len=4;
+    uint32_t offset = 0;
+    int len = 4;
 
-    if(aos_kv_get(KEY_OTA_BREAKPOINT, &offset, &len)){
-        offset=0;
+    if (aos_kv_get(KEY_OTA_BREAKPOINT, &offset, &len)) {
+        offset = 0;
     }
     //OTA_LOG_I("ota_get_update_breakpoint=%d",offset);
     return offset;
@@ -364,22 +362,22 @@ int ota_set_update_breakpoint(uint32_t offset)
     return  aos_kv_set(KEY_OTA_BREAKPOINT, &offset, 4, 1);
 }
 
-int ota_get_last_MD5(char * value)
+int ota_get_last_MD5(char *value)
 {
-    int len=33;
-    int ret=aos_kv_get(KEY_OTA_MD5, value,&len);
+    int len = 33;
+    int ret = aos_kv_get(KEY_OTA_MD5, value, &len);
     return ret;
 }
 
-int ota_set_cur_MD5(char * value)
+int ota_set_cur_MD5(char *value)
 {
-  return  aos_kv_set(KEY_OTA_MD5, value, 33, 1);
+    return  aos_kv_set(KEY_OTA_MD5, value, 33, 1);
 }
 
 int ota_get_last_MD5_context(MD5_CTX *md5ctx)
 {
-    int len=sizeof(MD5_CTX);
-    int ret=aos_kv_get(KEY_OTA_MD5_CTX, md5ctx,&len);
+    int len = sizeof(MD5_CTX);
+    int ret = aos_kv_get(KEY_OTA_MD5_CTX, md5ctx, &len);
     return ret;
 }
 

@@ -77,16 +77,6 @@ ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid);
 slist_t *umesh_get_hals(void);
 slist_t *umesh_get_networks(void);
 
-bool umesh_is_whitelist_enabled(void);
-void umesh_enable_whitelist(void);
-void umesh_disable_whitelist(void);
-const whitelist_entry_t *umesh_get_whitelist_entries(void);
-ur_error_t umesh_add_whitelist(const mac_address_t *address);
-ur_error_t umesh_add_whitelist_rssi(const mac_address_t *address,
-                                    int8_t rssi);
-void umesh_remove_whitelist(const mac_address_t *address);
-void umesh_clear_whitelist(void);
-
 const ur_link_stats_t *umesh_get_link_stats(media_type_t type);
 const frame_stats_t *umesh_get_hal_stats(media_type_t type);
 const ur_message_stats_t *umesh_get_message_stats(void);
