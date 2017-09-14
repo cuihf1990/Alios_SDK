@@ -30,33 +30,34 @@ typedef struct {
 } rtc_dev_t;
 
 
-/**@brief This function will initialize the on board CPU real time clock
+/**
+ * This function will initialize the on board CPU real time clock
  *
- * @note  This function should be called by MICO system when initializing clocks, so
- *        It is not needed to be called by application
- * @param     rtc   : rtc device
- * @return    0     : on success.
- * @return    EIO   : if an error occurred with any step
+ * @param[in]  rtc  rtc device
+ * @return     0    on success.
+ * @return     EIO  if an error occurred with any step
  */
 void hal_rtc_init(rtc_dev_t *rtc);
 
-/**@brief This function will return the value of time read from the on board CPU real time clock. Time value must be given in the format of
- * the structure hal_rtc_time_t
- * @param     rtc  : rtc device
- * @param     time : pointer to a time structure
+/**
+ * This function will return the value of time read from the on board CPU real time clock.
  *
- * @return    0    : on success.
- * @return    EIO  : if an error occurred with any step
+ * @param[in]   rtc   rtc device
+ * @param[out]  time  pointer to a time structure
+ *
+ * @return      0     on success.
+ * @return      EIO   if an error occurred with any step
  */
 int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time);
 
-/**@brief This function will set MCU RTC time to a new value. Time value must be given in the format of
- * the structure hal_rtc_time_t
- * @param     rtc    : rtc device
- * @param     time   : pointer to a time structure
+/**
+ * This function will set MCU RTC time to a new value.
  *
- * @return    0      : on success.
- * @return    EIO    : if an error occurred with any step
+ * @param[in]   rtc   rtc device
+ * @param[out]  time  pointer to a time structure
+ *
+ * @return      0     on success.
+ * @return      EIO   if an error occurred with any step
  */
 int32_t hal_rtc_set_time(rtc_dev_t *rtc, rtc_time_t *time);
 
