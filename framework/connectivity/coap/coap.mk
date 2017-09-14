@@ -9,7 +9,7 @@ $(NAME)_INCLUDES :=  \
     $(ROOT_DIR)/sdk-impl \
     $(ROOT_DIR)/sdk-impl/imports \
     $(ROOT_DIR)/sdk-impl/exports \
-    $(ROOT_DIR)/LITE-log \
+#    $(ROOT_DIR)/LITE-log \
     $(ROOT_DIR)/LITE-utils \
     $(ROOT_DIR)/digest \
 #    ../../../security/mbedtls/include
@@ -33,6 +33,7 @@ $(NAME)_SOURCES := iotx_ca_cert.c iotx_coap_api.c iotx_hmac.c \
 
 $(NAME)_COMPONENTS += iotx-utils.LITE-utils
 $(NAME)_COMPONENTS += iotx-utils.digest
+$(NAME)_COMPONENTS += iotx-utils.sdk-impl
 #ifeq ($(CONFIG_COAP_ONLINE), y)
 #$(NAME)_DEFINES += COAP_ONLINE
 #endif

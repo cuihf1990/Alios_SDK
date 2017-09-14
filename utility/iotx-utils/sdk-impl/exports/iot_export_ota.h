@@ -81,7 +81,7 @@ typedef enum {
  *
  * @return 0, successful; -1, failed.
  */
-void *IOT_OTA_Init(const char *product_key, const char *device_name, void *ch_signal);
+//void *IOT_OTA_Init(const char *product_key, const char *device_name, void *ch_signal);
 
 
 /**
@@ -92,7 +92,7 @@ void *IOT_OTA_Init(const char *product_key, const char *device_name, void *ch_si
  *
  * @return 0, successful; < 0, failed, the value is error code.
  */
-int IOT_OTA_Deinit(void *handle);
+//int IOT_OTA_Deinit(void *handle);
 
 
 /**
@@ -104,7 +104,7 @@ int IOT_OTA_Deinit(void *handle);
  *
  * @return 0, successful; < 0, failed, the value is error code.
  */
-int IOT_OTA_ReportVersion(void *handle, const char *version);
+//int IOT_OTA_ReportVersion(void *handle, const char *version);
 
 
 /**
@@ -117,7 +117,7 @@ int IOT_OTA_ReportVersion(void *handle, const char *version);
  *
  * @return 0, successful; < 0, failed, the value is error code.
  */
-int IOT_OTA_ReportProgress(void *handle, IOT_OTA_Progress_t progress, const char *msg);
+//int IOT_OTA_ReportProgress(void *handle, IOT_OTA_Progress_t progress, const char *msg);
 
 
 /**
@@ -127,7 +127,7 @@ int IOT_OTA_ReportProgress(void *handle, IOT_OTA_Progress_t progress, const char
  *
  * @return true, yes; false, no.
  */
-bool IOT_OTA_IsFetching(void *handle);
+//bool IOT_OTA_IsFetching(void *handle);
 
 
 /**
@@ -137,7 +137,7 @@ bool IOT_OTA_IsFetching(void *handle);
  *
  * @return true, yes; -1, false.
  */
-bool IOT_OTA_IsFetchFinish(void *handle);
+//bool IOT_OTA_IsFetchFinish(void *handle);
 
 
 /**
@@ -156,7 +156,7 @@ bool IOT_OTA_IsFetchFinish(void *handle);
    (0, len] : The length of data be downloaded in @timeout_ms timeout period in bytes.
    @endverbatim
  */
-int IOT_OTA_FetchYield(void *handle, char *buf, uint32_t buf_len, uint32_t timeout_s);
+//int IOT_OTA_FetchYield(void *handle, char *buf, uint32_t buf_len, uint32_t timeout_s);
 
 
 /**
@@ -179,7 +179,7 @@ int IOT_OTA_FetchYield(void *handle, char *buf, uint32_t buf_len, uint32_t timeo
  *
  * @return 0, successful; < 0, failed, the value is error code.
  */
-int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, size_t buf_len);
+//int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, size_t buf_len);
 
 
 /**
@@ -189,8 +189,8 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, size_t buf_le
  *
  * @return The error code.
  */
-IOT_OTA_Err_t IOT_OTA_GetLastError(void *handle);
+//IOT_OTA_Err_t IOT_OTA_GetLastError(void *handle);
 
 
-int try_fetch_ota(void *h_ota);
+//int try_fetch_ota(void *h_ota);
 #endif /* __OTA_EXPORT_H__ */
