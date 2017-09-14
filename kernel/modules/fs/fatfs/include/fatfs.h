@@ -9,8 +9,8 @@
  extern "C" {
 #endif
  
-int fatfs_register(int pdrv);
-int fatfs_unregister(int pdrv);
+int fatfs_register();
+int fatfs_unregister();
  
 #ifdef __cplusplus
  }

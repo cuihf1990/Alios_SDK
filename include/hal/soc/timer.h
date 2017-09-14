@@ -21,7 +21,8 @@ typedef struct {
 } hal_timer_t;
 
 /**
- * @brief init a hardware timer
+ * init a hardware timer
+ *
  * @param tmr timer struct
  * @param period micro seconds for repeat timer trigger
  * @param auto_reoad set to 0, if you just need oneshot timer
@@ -32,18 +33,21 @@ typedef struct {
  *         *-------|--------|--------|--------|
  */
 void hal_timer_init(hal_timer_t *tmr, unsigned int period,
-                    unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg);
+                           unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg);
 
 /**
- * @brief init a hardware timer
+ * init a hardware timer
+ *
  * @param None
- * @retval 0 == success
- *         EIO == failure
+ *
+ * @return  0    on success.
+ * @return  EIO  if an error occurred with any step
  */
 int32_t hal_timer_start(hal_timer_t *tmr);
 
 /**
- * @brief stop a hardware timer
+ * stop a hardware timer
+ *
  * @param tmr timer struct
  * @param cb callback to be triggered after useconds
  * @param arg passed to cb

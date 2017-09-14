@@ -2,12 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file hal/soc/wdg.h
- * @brief WDG HAL
- * @version since 5.5.0
- */
-
 #ifndef AOS_WDG_H
 #define AOS_WDG_H
 
@@ -22,26 +16,28 @@ typedef struct {
 } wdg_dev_t;
 
 /**
- * @biref This function will initialize the on board CPU hardware watch dog
- * @param     wdg    : the watch dog device
- * @return    0      : on success.
- * @return    EIO    : if an error occurred with any step
+ * This function will initialize the on board CPU hardware watch dog
+ *
+ * @param[in]  wdg  the watch dog device
+ *
+ * @return     0    on success.
+ * @return     EIO  if an error occurred with any step
  */
 int32_t hal_wdg_init(wdg_dev_t *wdg);
 
 /**
- * @biref Reload watchdog counter.
- * @param     wdg         : the watch dog device
- * @param     none
+ * Reload watchdog counter.
+ * @param[in]  wdg  the watch dog device
+ *
  * @return    none
  */
 void hal_wdg_reload(wdg_dev_t *wdg);
 
 /**
- * @biref This function performs any platform-specific cleanup needed for hardware watch dog.
- * @param     wdg   : the watch dog device
- * @return    0     : on success.
- * @return    EIO   : if an error occurred with any step
+ * This function performs any platform-specific cleanup needed for hardware watch dog.
+ * wdg[in]  wdg  the watch dog device
+ * @return  0    on success.
+ * @return  EIO  if an error occurred with any step
  */
 int32_t hal_wdg_finalize(wdg_dev_t *wdg);
 

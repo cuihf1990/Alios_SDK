@@ -2,12 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file hal/soc/pwm.h
- * @brief PWM HAL
- * @version since 5.5.0
- */
-
 #ifndef AOS_PWM_H
 #define AOS_PWM_H
 
