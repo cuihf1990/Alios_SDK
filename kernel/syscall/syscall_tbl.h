@@ -450,7 +450,7 @@ SYSCALL(SYS_UR_MESH_GET_MCAST_ADDR, umesh_get_mcast_addr)
 SYSCALL(SYS_UR_MESH_GET_UCAST_ADDR, umesh_get_ucast_addr)
 
 #define SYS_UR_MESH_NET_GET_MAC_ADDRESS 165
-SYSCALL(SYS_UR_MESH_NET_GET_MAC_ADDRESS, umesh_net_get_mac_address)
+SYSCALL(SYS_UR_MESH_NET_GET_MAC_ADDRESS, umesh_get_mac_address)
 
 #define SYS_UR_MESH_GET_DEVICE_STATE 166
 SYSCALL(SYS_UR_MESH_GET_DEVICE_STATE, umesh_get_device_state)
