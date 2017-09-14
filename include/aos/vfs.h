@@ -28,7 +28,7 @@ typedef struct {
  * @param[in]  path   the path of the file or device you want to open
  * @param[in]  flags  the mode of open operation
  *
- * @return  >=0 on success, <0 failure
+ * @return  the new file descriptor, negative error on failure
  */
 int aos_open(const char *path, int flags);
 
@@ -37,7 +37,7 @@ int aos_open(const char *path, int flags);
  *
  * @param[in]  fd  the handle of the file or device
  *
- * @return  0 on success, <0 failure
+ * @return  0 on success, negative error on failure
  */
 int aos_close(int fd);
 
@@ -91,14 +91,14 @@ int aos_poll(struct pollfd *fds, int nfds, int timeout);
  *
  * @param[in]  fd   the handle of the file or device
  * @param[in]  cmd  the operation of the file or device
- * @param[in]  val  it depends on whether @cmd need params
+ * @param[in]  val  it depends on whether cmd need params
  *
- * @return  0 on success, otherwise -1 will be returned
+ * @return  0 on success, negative error on failure
  */
 int aos_fcntl(int fd, int cmd, int val);
 
 /**
-  * Move the file position to a given offset from from a given location
+  * Move the file position to a given offset from a given location
   *
   * @param[in]  fd      File handle
   * @param[in]  offset  The offset from whence to move to
@@ -142,8 +142,8 @@ int aos_unlink(const char *path);
 /**
   * Rename a file in the filesystem
   *
-  * @param[in]  @oldpath  The name of the file to rename.
-  * @param[in]  @newpath  The name to rename it to
+  * @param[in]  oldpath  The name of the file to rename.
+  * @param[in]  newpath  The name to rename it to
   *
   * @retval 0 on success, negative error code on failure
   */
