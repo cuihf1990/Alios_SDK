@@ -16,12 +16,12 @@
 
 #define TAG "AOS_VERSION"
 
-AOS_EXPORT AOS_WEAK const char   *get_aos_product_model(void)
+AOS_EXPORT AOS_WEAK const char   *aos_get_product_model(void)
 {
     return (const char *)SYSINFO_PRODUCT_MODEL;
 }
 
-AOS_EXPORT AOS_WEAK const char   *get_aos_device_name(void)
+AOS_EXPORT AOS_WEAK const char   *aos_get_device_name(void)
 {
     return (const char *)SYSINFO_DEVICE_NAME;
 }
@@ -31,21 +31,21 @@ AOS_EXPORT AOS_WEAK const char   *get_aos_device_name(void)
 char  os_version[OS_MAX_VERSION_LEN];
 #endif
 
-AOS_EXPORT AOS_WEAK const char   *get_aos_kernel_version(void)
+AOS_EXPORT AOS_WEAK const char   *aos_get_kernel_version(void)
 {
     return (const char *)aos_version_get();
 }
 
 
-AOS_EXPORT AOS_WEAK const char   *get_aos_app_version(void)
+AOS_EXPORT AOS_WEAK const char   *aos_get_app_version(void)
 {
     return (const char *)SYSINFO_APP_VERSION;
 }
 
-AOS_EXPORT AOS_WEAK const char   *get_aos_os_version(void)
+AOS_EXPORT AOS_WEAK const char   *aos_get_os_version(void)
 {
 #ifdef SYSINFO_OS_BINS
-    snprintf(os_version, OS_MAX_VERSION_LEN, "%s_%s", get_aos_kernel_version(), get_aos_app_version());
+    snprintf(os_version, OS_MAX_VERSION_LEN, "%s_%s", aos_get_kernel_version(), aos_get_app_version());
     return os_version;
 #else
     return (const char *)SYSINFO_APP_VERSION;
@@ -54,11 +54,11 @@ AOS_EXPORT AOS_WEAK const char   *get_aos_os_version(void)
 
 AOS_EXPORT AOS_WEAK void dump_sys_info(void)
 {
-    LOGI(TAG, "app_version: %s", get_aos_app_version());
+    LOGI(TAG, "app_version: %s", aos_get_app_version());
 #ifdef SYSINFO_OS_BINS
-    LOGI(TAG, "kernel_version: %s", get_aos_kernel_version());
+    LOGI(TAG, "kernel_version: %s", aos_get_kernel_version());
 #endif
-    LOGI(TAG, "product_model: %s", get_aos_product_model());
-    LOGI(TAG, "device_name: %s", get_aos_device_name());
+    LOGI(TAG, "product_model: %s", aos_get_product_model());
+    LOGI(TAG, "device_name: %s", aos_get_device_name());
 }
 

@@ -5,7 +5,7 @@ from autotest import Autotest
 def print_help():
     print "Usages:"
     print "1. list devices: python {0} --list [--server serverip] [--port port]".format(sys.argv[0])
-    print "2. get device nerghbors: python {0} --nbrs device_string [--server serverip] [--port port]".formart(sys.argv[0])
+    print "2. get device nerghbors: python {0} --nbrs device_string [--server serverip] [--port port]".format(sys.argv[0])
 
 
 def list_devices(at):
@@ -42,7 +42,7 @@ def get_nbrs(at, devices):
             continue
         for j in range(len(nbrs)):
             nbr_index = '{0:02d}'.format(j)
-            nbr = nbrs[i].replace('\t', '')
+            nbr = nbrs[j].replace('\t', '')
             ret[devstr][nbr_index] = nbr
     retstr = json.dumps(ret, sort_keys=True, indent=4)
     print retstr

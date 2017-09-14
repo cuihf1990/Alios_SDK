@@ -594,7 +594,7 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
         umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_REVERSE_RSSI);
         if ((nbr->flags & NBR_LINK_ESTIMATED) == 0) {
             nbr->flags |= NBR_LINK_ESTIMATED;
-            rssi->rssi = 0xff;
+            rssi->rssi = 127;
             nbr->stats.link_request++;
         } else {
             rssi->rssi = nbr->stats.reverse_rssi;
@@ -632,7 +632,7 @@ ur_error_t handle_mesh_header_ies(message_t *message)
             case TYPE_REVERSE_RSSI:
                 len = sizeof(mm_rssi_tv_t);
                 rssi = ((mm_rssi_tv_t *)tv)->rssi;
-                if (rssi == 0xff) {
+                if (rssi == 127) {
                     send_link_accept(info->network, &info->src_mac, NULL, 0);
                 }
                 info->forward_rssi = rssi;

@@ -74,7 +74,7 @@ char *product_get_name(char name_str[PRODUCT_NAME_LEN])
 
 char *product_get_version(char ver_str[PRODUCT_VERSION_LEN])
 {
-    return strncpy(ver_str, (const char *)get_aos_os_version(),
+    return strncpy(ver_str, (const char *)aos_get_os_version(),
                    PRODUCT_VERSION_LEN);
 }
 

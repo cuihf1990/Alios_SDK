@@ -50,7 +50,6 @@ tick_t soc_elapsed_ticks_get(void)
 }
 #endif
 
-#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 k_mm_region_t      g_mm_region;
 k_mm_region_head_t g_mm_region_head;
 
@@ -79,7 +78,6 @@ void soc_mm_free(void *mem)
 {
     krhino_mm_bf_free(&g_mm_region_head, mem);
 }
-#endif
 
 void soc_err_proc(kstat_t err)
 {

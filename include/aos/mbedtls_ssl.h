@@ -3,7 +3,7 @@
  */
 
 #ifndef _MBEDTLS_SSL_H_
-#define _MBEDYLS_SSL_H_
+#define _MBEDTLS_SSL_H_
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
@@ -18,4 +18,5 @@ int mbedtls_ssl_send(void *ssl, const char *buffer, int length);
 int mbedtls_ssl_recv(void *ssl, char *buffer, int length);
 int mbedtls_ssl_close(void *ssl);
 
-#endif /* _THREADING_SSL_H_*/
+#endif /* _MBEDTLS_SSL_H_*/
+

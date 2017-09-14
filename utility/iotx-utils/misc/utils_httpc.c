@@ -15,10 +15,10 @@
 #define HTTPCLIENT_AUTHB_SIZE     128
 
 #define HTTPCLIENT_CHUNK_SIZE     256
-#define HTTPCLIENT_SEND_BUF_SIZE  1024
+#define HTTPCLIENT_SEND_BUF_SIZE  2048
 
 #define HTTPCLIENT_MAX_HOST_LEN   64
-#define HTTPCLIENT_MAX_URL_LEN    1024
+#define HTTPCLIENT_MAX_URL_LEN    2048
 
 #define HTTP_RETRIEVE_MORE_DATA   (1)            /**< More data needs to be retrieved. */
 

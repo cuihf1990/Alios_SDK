@@ -30,7 +30,7 @@ static void saveState(uint32_t breakpoint,MD5_CTX *pMD5);
  * @Param: file  download filename
  * @Param: port  default 80
  */
-static void http_gethost_info(char *src, char *web, char *file, int *port)
+void http_gethost_info(char *src, char *web, char *file, int *port)
 {
     char *pa;
     char *pb;
@@ -112,7 +112,7 @@ static int _ota_socket_check_conn(int sock)
  *
  * Returns: socket fd
  */
-static int http_socket_init(int port, char *host_addr)
+int http_socket_init(int port, char *host_addr)
 {
     if (host_addr == NULL || strlen(host_addr) == 0 || port <= 0) {
         OTA_LOG_E("http_socket_init parms   error\n ");
@@ -212,7 +212,6 @@ int http_download(char *url, write_flash_cb_t func,char * md5)
     int totalsend = 0;
     uint32_t breakpoint =0;
     char last_md5[33]={0};
-    // OTA_LOG_I("parameter is: %s\n ", url);
     http_gethost_info(url, host_addr, host_file, &port);
     // OTA_LOG_I("host_addr is: %s\n ", host_addr);
     // OTA_LOG_I("host_file is: %s\n ", host_file);
@@ -239,7 +238,6 @@ int http_download(char *url, write_flash_cb_t func,char * md5)
         MD5_Init(&g_ctx);
     }
     ota_set_cur_MD5(md5);
-   // OTA_LOG_I("%s\n", http_buffer);
     send = 0;
     totalsend = 0;
     nbytes = strlen(http_buffer);
