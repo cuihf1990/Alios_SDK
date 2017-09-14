@@ -2,12 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file hal/soc/timer.h
- * @brief PWM HAL
- * @version since 5.5.0
- */
-
 #ifndef HAL_TIMER_H
 #define HAL_TIMER_H
 
@@ -23,12 +17,13 @@ typedef struct {
 /**
  * init a hardware timer
  *
- * @param tmr timer struct
- * @param period micro seconds for repeat timer trigger
- * @param auto_reoad set to 0, if you just need oneshot timer
- * @param cb callback to be triggered after useconds
- * @ch    timer channel
- * @param arg passed to cb
+ * @param[in]  tmr         timer struct
+ * @param[in]  period      micro seconds for repeat timer trigger
+ * @param[in]  auto_reoad  set to 0, if you just need oneshot timer
+ * @param[in]  cb          callback to be triggered after useconds
+ * @param[in]  ch          timer channel
+ * @param[in]  arg         passed to cb
+ *
  * @note  period   auto   auto   auto
  *         *-------|--------|--------|--------|
  */
@@ -38,20 +33,18 @@ void hal_timer_init(hal_timer_t *tmr, unsigned int period,
 /**
  * init a hardware timer
  *
- * @param None
- *
- * @return  0    on success.
- * @return  EIO  if an error occurred with any step
+ * @return  0 == success, EIO == failure
  */
 int32_t hal_timer_start(hal_timer_t *tmr);
 
 /**
  * stop a hardware timer
  *
- * @param tmr timer struct
- * @param cb callback to be triggered after useconds
- * @param arg passed to cb
+ * @param[in]  tmr  timer struct
+ * @param[in]  cb   callback to be triggered after useconds
+ * @param[in]  arg  passed to cb
  */
 void hal_timer_stop(hal_timer_t *tmr);
 
-#endif
+#endif /* HAL_TIMER_H*/
+

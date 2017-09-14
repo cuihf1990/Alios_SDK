@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef AOS_SPI_H
-#define AOS_SPI_H
+#ifndef HAL_SPI_H
+#define HAL_SPI_H
 
 typedef struct {
     uint32_t mode;
@@ -16,17 +16,15 @@ typedef struct {
     void        *priv;    /* priv data */
 } spi_dev_t;
 
-
 /**
  * Initialises the SPI interface for a given SPI device
+ * Prepares a SPI hardware interface for communication as a master
  *
  * @param[in]  spi  the spi device
  *
- * @return     0    on success.
- * @return     EIO   if the SPI device could not be initialised
+ * @return  0 : on success, EIO : if the SPI device could not be initialised
  */
 int32_t hal_spi_init(spi_dev_t *spi);
-
 
 /**
  * spi_send
@@ -36,21 +34,19 @@ int32_t hal_spi_init(spi_dev_t *spi);
  * @param[in]  size     spi send data size
  * @param[in]  timeout  timeout in ms
  *
- * @return     0        on success.
- * @return     EIO      if the SPI device could not be initialised
+ * @return  0 : on success, EIO : if the SPI device could not be initialised
  */
 int32_t hal_spi_send(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t timeout);
 
 /**
  * spi_recv
  *
- * @param[in]  spi      the spi device
- * @param[out] data     spi recv data
- * @param[in]  size     spi recv data size
- * @param[in]  timeout  timeout in ms
+ * @param[in]   spi      the spi device
+ * @param[out]  data     spi recv data
+ * @param[in]   size     spi recv data size
+ * @param[in]   timeout  timeout in ms
  *
- * @return     0        on success.
- * @return     EIO      if the SPI device could not be initialised
+ * @return  0 : on success, EIO : if the SPI device could not be initialised
  */
 int32_t hal_spi_recv(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t timeout);
 
@@ -64,20 +60,21 @@ int32_t hal_spi_recv(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t time
  * @param[in]  rx_size  spi data to be recv
  * @param[in]  timeout  timeout in ms
  *
- * @return     0        on success.
- * @return     EIO      if the SPI device could not be initialised
+ * @return  0, on success;  EIO : if the SPI device could not be initialised
  */
-int32_t hal_spi_send_recv(spi_dev_t *spi, uint8_t *tx_data, uint16_t tx_size, uint8_t *rx_data, uint16_t rx_size,
-                          uint32_t timeout);
+int32_t hal_spi_send_recv(spi_dev_t *spi, uint8_t *tx_data, uint16_t tx_size,
+                          uint8_t *rx_data, uint16_t rx_size, uint32_t timeout);
 
 /**
  * De-initialises a SPI interface
  *
- * @param[in]  spi  the SPI device to be de-initialised
+ * @note Turns off a SPI hardware interface
  *
- * @return     0    on success.
- * @return     EIO  if an error occurred
+ * @param[in]  spi the SPI device to be de-initialised
+ *
+ * @return  0 : on success, EIO : if an error occurred
  */
 int32_t hal_spi_finalize(spi_dev_t *spi);
 
-#endif
+#endif /* HAL_SPI_H */
+

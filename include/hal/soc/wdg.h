@@ -2,17 +2,17 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef AOS_WDG_H
-#define AOS_WDG_H
+#ifndef HAL_WDG_H
+#define HAL_WDG_H
 
 typedef struct {
     uint32_t timeout;  /* Watchdag timeout */
 } wdg_config_t;
 
 typedef struct {
-    uint8_t      port;    /* spi port */
-    wdg_config_t config;  /* spi config */
-    void        *priv;    /* priv data */
+    uint8_t      port;   /* spi port */
+    wdg_config_t config; /* spi config */
+    void        *priv;   /* priv data */
 } wdg_dev_t;
 
 /**
@@ -20,27 +20,25 @@ typedef struct {
  *
  * @param[in]  wdg  the watch dog device
  *
- * @return     0    on success.
- * @return     EIO  if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_wdg_init(wdg_dev_t *wdg);
 
 /**
  * Reload watchdog counter.
- * @param[in]  wdg  the watch dog device
  *
- * @return    none
+ * @param[in]  wdg  the watch dog device
  */
 void hal_wdg_reload(wdg_dev_t *wdg);
 
 /**
  * This function performs any platform-specific cleanup needed for hardware watch dog.
- * wdg[in]  wdg  the watch dog device
- * @return  0    on success.
- * @return  EIO  if an error occurred with any step
+ *
+ * @param[in]  wdg  the watch dog device
+ *
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_wdg_finalize(wdg_dev_t *wdg);
 
-#endif
-
+#endif /* HAL_WDG_H */
 
