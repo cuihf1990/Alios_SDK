@@ -11,6 +11,7 @@
 
 #include "ota_update_manifest.h"
 #include "ota_log.h"
+#include "ota_util.h"
 #include "ota_version.h"
 
 #define OTA_MQTT_TOPIC_LEN   (64)
