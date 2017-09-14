@@ -60,7 +60,7 @@ typedef enum {
 
 typedef enum {
     OTA_FINISH,
-    OTA_BREAKPOINT  
+    OTA_BREAKPOINT
 } OTA_ENUM_RESULT_TYPE;
 
 typedef struct  {

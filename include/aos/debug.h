@@ -18,13 +18,13 @@ extern "C"
 #define unlikely( EXPRESSSION )     !!(EXPRESSSION)
 #endif
 
- /**
- * Check that an expression is true (non-zero).
- * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
- * function name, etc.) using the default debugging output method.
- *
- * @param[in]  check     expression to be checked
- */
+/**
+* Check that an expression is true (non-zero).
+* If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
+* function name, etc.) using the default debugging output method.
+*
+* @param[in]  check     expression to be checked
+*/
 #if( !defined( check ) )
 #define check( X )                                                                                  \
         do                                                                                              \
@@ -37,13 +37,13 @@ extern "C"
         }   while( 1==0 )
 #endif
 
- /**
- * Check that an expression is true (non-zero) with an explanation.
- * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
- * function name, etc.) using the default debugging output method.
- *
- * @param[in]  check_string   string to be checked
- */
+/**
+* Check that an expression is true (non-zero) with an explanation.
+* If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
+* function name, etc.) using the default debugging output method.
+*
+* @param[in]  check_string   string to be checked
+*/
 #if( !defined( check_string ) )
 #define check_string( X, STR )                                                                                  \
         do                                                                                              \
@@ -57,14 +57,14 @@ extern "C"
         }   while( 1==0 )
 #endif
 
- /**
- * Requires that an expression evaluate to true.
- * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
- * function name, etc.) using the default debugging output method then jumps to a label.
- *
- * @param[in]  X        expression to be evalulated
- * @param[in]  LABEL    if expression evaluate to false,jumps to a label.
- */
+/**
+* Requires that an expression evaluate to true.
+* If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
+* function name, etc.) using the default debugging output method then jumps to a label.
+*
+* @param[in]  X        expression to be evalulated
+* @param[in]  LABEL    if expression evaluate to false,jumps to a label.
+*/
 #if( !defined( require ) )
 #define require( X, LABEL )                                                                             \
         do                                                                                                  \
@@ -78,15 +78,15 @@ extern "C"
         }   while( 1==0 )
 #endif
 
- /**
- * Requires that an expression evaluate to true with an explanation.
- * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
- * function name, etc.) and a custom explanation string using the default debugging output method then jumps to a label.
- *
- * @param[in]  X        expression to be evalulated
- * @param[in]  LABEL    if expression evaluate to false,jumps to a label.
- * @param[in]  STR      if expression evaluate to false,custom explanation string to print 
- */
+/**
+* Requires that an expression evaluate to true with an explanation.
+* If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
+* function name, etc.) and a custom explanation string using the default debugging output method then jumps to a label.
+*
+* @param[in]  X        expression to be evalulated
+* @param[in]  LABEL    if expression evaluate to false,jumps to a label.
+* @param[in]  STR      if expression evaluate to false,custom explanation string to print
+*/
 #if( !defined( require_string ) )
 #define require_string( X, LABEL, STR )                                                                 \
         do                                                                                                  \
@@ -100,13 +100,13 @@ extern "C"
         }   while( 1==0 )
 #endif
 
- /**
- * RRequires that an expression evaluate to true.
- * If expression evalulates to false, this jumps to a label. No debugging information is printed.
- *
- * @param[in]  X        expression to be evalulated
- * @param[in]  LABEL    if expression evaluate to false,this jumps to a label.
- */
+/**
+* RRequires that an expression evaluate to true.
+* If expression evalulates to false, this jumps to a label. No debugging information is printed.
+*
+* @param[in]  X        expression to be evalulated
+* @param[in]  LABEL    if expression evaluate to false,this jumps to a label.
+*/
 #if( !defined( require_quiet ) )
 #define require_quiet( X, LABEL )                                                                       \
         do                                                                                                  \
@@ -151,7 +151,7 @@ extern "C"
  *
  * @param[in]  ERR       error to be evaluated
  * @param[in]  LABEL     If the error code is non-0, jumps to the LABEL.
- * @param[in]  STR       If the error code is non-0, custom explanation string to print 
+ * @param[in]  STR       If the error code is non-0, custom explanation string to print
  */
 #if( !defined( require_noerr_string ) )
 #define require_noerr_string( ERR, LABEL, STR )                                                         \
@@ -178,7 +178,7 @@ extern "C"
  * @param[in]  ERR       error to be evaluated
  * @param[in]  LABEL     If the error code is non-0, jumps to the LABEL.
  * @param[in]  ACTION    custom code to executes
- * @param[in]  STR       custom explanation string to print 
+ * @param[in]  STR       custom explanation string to print
  */
 #if( !defined( require_noerr_action_string ) )
 #define require_noerr_action_string( ERR, LABEL, ACTION, STR )                                          \

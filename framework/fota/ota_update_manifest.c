@@ -72,7 +72,7 @@ void ota_download_start(void *buf)
 
     ota_set_status(OTA_DOWNLOAD);
     ota_status_post(0);
-    int ret = http_download(url, g_write_func,md5);
+    int ret = http_download(url, g_write_func, md5);
     if (ret <= 0) {
         OTA_LOG_E("ota download error");
         ota_set_status(OTA_DOWNLOAD_FAILED);
