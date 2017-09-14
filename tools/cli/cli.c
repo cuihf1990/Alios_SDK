@@ -446,7 +446,7 @@ static void wifi_debug_cmd(char *buf, int len, int argc, char **argv);
 
 static const struct cli_command built_ins[] = {
     {"help",        NULL,       help_cmd},
-    {"version",     NULL,       version_cmd},
+    {"sysver",     NULL,       version_cmd},
     {"echo",        NULL,       echo_cmd},
     {"exit",        "CLI exit", exit_cmd},
 
@@ -489,10 +489,10 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
     }
 }
 
+
 static void version_cmd(char *buf, int len, int argc, char **argv)
 {
-    cli_printf("app version    :%s\r\n", SYSINFO_APP_VERSION);
-    cli_printf("kernel version :%s\r\n", SYSINFO_KERNEL_VERSION);
+    cli_printf("kernel version :%s\r\n", krhino_version_get());
 }
 
 static void echo_cmd(char *buf, int len, int argc, char **argv)

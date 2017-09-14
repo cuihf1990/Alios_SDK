@@ -11,9 +11,11 @@
 #endif
 
 extern void ota_service_init(void);
+extern void version_init(void);
 
 int aos_framework_init(void)
 {
+    version_init();
 #ifdef MESH_GATEWAY_SERVICE
     gateway_service_init();
 #endif
