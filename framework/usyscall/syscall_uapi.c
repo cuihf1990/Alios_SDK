@@ -805,9 +805,9 @@ const ur_netif_ip6_address_t *umesh_get_ucast_addr(void)
     return SYS_CALL0(SYS_UR_MESH_GET_UCAST_ADDR, ur_netif_ip6_address_t *);
 }
 
-const mac_address_t *umesh_net_get_mac_address(umesh_net_index_t nettype)
+const mac_address_t *umesh_get_mac_address(media_type_t type)
 {
-    return SYS_CALL1(SYS_UR_MESH_NET_GET_MAC_ADDRESS, mac_address_t *, umesh_net_index_t, nettype);
+    return SYS_CALL1(SYS_UR_MESH_NET_GET_MAC_ADDRESS, mac_address_t *, media_type_t, type);
 }
 
 uint8_t umesh_get_device_state(void)

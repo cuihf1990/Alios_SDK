@@ -1098,6 +1098,7 @@ static void send_datagram(void *args)
     }
 }
 
+extern ur_error_t umesh_input(message_t *message);
 static void handle_datagram(void *args)
 {
     ur_error_t        error = UR_ERROR_NONE;

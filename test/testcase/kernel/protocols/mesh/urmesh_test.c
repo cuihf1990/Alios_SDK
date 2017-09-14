@@ -23,7 +23,7 @@ void test_uradar_urmesh_case(void)
 
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_set_mode(MODE_MOBILE));
     YUNIT_ASSERT(MODE_MOBILE == umesh_get_mode());
-    YUNIT_ASSERT(NULL != umesh_get_mac_address());
+    YUNIT_ASSERT(NULL != umesh_get_mac_address(MEDIA_TYPE_DFL));
     umesh_set_mode(MODE_RX_ON);
     YUNIT_ASSERT(MODE_RX_ON == umesh_get_mode());
 

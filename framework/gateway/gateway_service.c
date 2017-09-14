@@ -271,7 +271,7 @@ static void connect_to_gateway(gateway_state_t *pstate, struct sockaddr_in *padd
     reginfo = (reg_info_t *)msn_alloc(CONNECT, sizeof(reg_info_t), &buf, &len);
     memset(reginfo, 0, sizeof(reg_info_t));
     memcpy(reginfo->model_id, &model_id, sizeof(model_id));
-    mac_addr = umesh_net_get_mac_address(UR_MESH_NET_DFL);
+    mac_addr = umesh_get_mac_address(MEDIA_TYPE_DFL);
     memcpy(reginfo->ieee_addr, mac_addr->addr, IEEE_ADDR_BYTES);
     os_product_get_model(reginfo->model);
     os_product_get_secret(reginfo->secret);
