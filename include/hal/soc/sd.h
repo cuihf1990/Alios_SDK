@@ -1,41 +1,39 @@
 /*
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
- 
+
 #ifndef AOS_SD_H
 #define AOS_SD_H
 
- typedef enum
- {
-   SD_STAT_RESET,
-   SD_STAT_READY,
-   SD_STAT_TIMEOUT,       
-   SD_STAT_BUSY,
-   SD_STAT_PROGRAMMING,
-   SD_STAT_RECEIVING,
-   SD_STAT_TRANSFER,
-   SD_STAT_ERR
- } hal_sd_stat;
+typedef enum {
+    SD_STAT_RESET,
+    SD_STAT_READY,
+    SD_STAT_TIMEOUT,
+    SD_STAT_BUSY,
+    SD_STAT_PROGRAMMING,
+    SD_STAT_RECEIVING,
+    SD_STAT_TRANSFER,
+    SD_STAT_ERR
+} hal_sd_stat;
 
- typedef struct
- {
-   uint32_t blk_nums;   /* sd total block nums */
-   uint32_t blk_size;   /* sd block size */
- } hal_sd_info_t;
+typedef struct {
+    uint32_t blk_nums;   /* sd total block nums */
+    uint32_t blk_size;   /* sd block size */
+} hal_sd_info_t;
 
- /**
-  * UART configuration
-  */
- typedef struct {
+/**
+ * UART configuration
+ */
+typedef struct {
     uint32_t bus_wide;  /* sd bus wide */
     uint32_t freq;      /* sd freq */
- } sd_config_t;
+} sd_config_t;
 
- typedef struct {
-     uint8_t       port;    /* sd port */
-     sd_config_t   config;  /* sd config */
-     void         *priv;    /* priv data */
- } sd_dev_t;
+typedef struct {
+    uint8_t       port;    /* sd port */
+    sd_config_t   config;  /* sd config */
+    void         *priv;    /* priv data */
+} sd_dev_t;
 
 
 /**@brief Initialises a sd interface

@@ -98,7 +98,7 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
         if (!version) {
             OTA_LOG_E("version back.");
             goto parse_failed;
-        }     
+        }
         ota_set_version(version->valuestring);
         char *upgrade_version = strtok(version->valuestring, "_");
         if (!upgrade_version) {
@@ -204,7 +204,7 @@ static int otamqtt_Publish(const char *topic_type, const char *msg)
         OTA_LOG_E("generate topic name of info failed");
         return -1;
     }
-    OTA_LOG_I("public topic=%s ,payload=%s\n",topic_name, topic_msg.payload);
+    OTA_LOG_I("public topic=%s ,payload=%s\n", topic_name, topic_msg.payload);
     ret = IOT_MQTT_Publish(g_ota_device_info.pclient, topic_name, &topic_msg);
     if (ret < 0) {
         OTA_LOG_E("publish failed");

@@ -101,7 +101,7 @@ int aos_unregister_event_filter(uint16_t type, aos_event_cb cb, void *priv);
 /**
  * Post local event
  *
- * @param[in]  type     event type 
+ * @param[in]  type     event type
  * @param[in]  code     event code
  * @param[in]  value    event value
  *
@@ -137,7 +137,7 @@ void aos_cancel_poll_read_fd(int fd, aos_poll_call_t action, void *param);
  * @param[in]  arg      private data past to action
  *
  * @return  the operation status, 0 is OK,others is error
- */ 
+ */
 int aos_post_delayed_action(int ms, aos_call_t action, void *arg);
 
 /**
@@ -146,7 +146,7 @@ int aos_post_delayed_action(int ms, aos_call_t action, void *arg);
  * @param[in]  ms       milliseconds to wait, -1 means don't care
  * @param[in]  action   action to be executed
  * @param[in]  arg      private data past to action
- */ 
+ */
 void aos_cancel_delayed_action(int ms, aos_call_t action, void *arg);
 
 /**
@@ -165,7 +165,7 @@ void aos_cancel_delayed_action(int ms, aos_call_t action, void *arg);
  * @param[in]  arg      private data past to action
  *
  * @return  the operation status,  <0 is error,others is OK
- */ 
+ */
 int aos_schedule_call(aos_call_t action, void *arg);
 
 typedef void *aos_loop_t;
@@ -174,29 +174,29 @@ typedef void *aos_loop_t;
  * Init a per-task event loop
  *
  * @return the handler of aos_loop_t,NULL failure,others success
- */ 
+ */
 aos_loop_t aos_loop_init(void);
 
 /**
  * Get current event loop
  *
  * @return  default event loop
- */ 
+ */
 aos_loop_t aos_current_loop(void);
 
 /**
  * Start event loop
- */ 
+ */
 void aos_loop_run(void);
 
 /**
  * Exit event loop, aos_loop_run() will return
- */ 
+ */
 void aos_loop_exit(void);
 
 /**
  * Free event loop resources
- */ 
+ */
 void aos_loop_destroy(void);
 
 /**
@@ -207,7 +207,7 @@ void aos_loop_destroy(void);
  * @param[in]  arg      private data past to action
  *
  * @return  the operation status, <0 is error,others is OK
- */ 
+ */
 int aos_loop_schedule_call(aos_loop_t *loop, aos_call_t action, void *arg);
 
 /**
@@ -220,7 +220,7 @@ int aos_loop_schedule_call(aos_loop_t *loop, aos_call_t action, void *arg);
  * @param[in] private   data past to fini_cb
  *
  * @return  work handle,NULL failure,others is OK
- */ 
+ */
 void *aos_loop_schedule_work(int ms, aos_call_t action, void *arg1,
                              aos_call_t fini_cb, void *arg2);
 
@@ -230,7 +230,7 @@ void *aos_loop_schedule_work(int ms, aos_call_t action, void *arg1,
  * @param[in]  work     work to be cancelled
  * @param[in]  action   action to be executed
  * @param[in]  arg1     private data past to action
- */ 
+ */
 void aos_cancel_work(void *work, aos_call_t action, void *arg1);
 
 #ifdef __cplusplus

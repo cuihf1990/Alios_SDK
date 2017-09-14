@@ -10,12 +10,12 @@ extern "C"
 {
 #endif
 
- /**
-  * get offset of a member variable 
-  *
-  * @param[in]   type     the type of the struct this is embedded in.
-  * @param[in]   member   the name of the list_struct within the struct.
-  */
+/**
+ * get offset of a member variable
+ *
+ * @param[in]   type     the type of the struct this is embedded in.
+ * @param[in]   member   the name of the list_struct within the struct.
+ */
 #define aos_offsetof(type, member) ({ \
     type tmp;                         \
     (long)(&tmp.member) - (long)&tmp; \
@@ -46,7 +46,7 @@ static inline void __dlist_add(dlist_t *node, dlist_t *prev, dlist_t *next)
 }
 
 /**
- * get the struct  
+ * get the struct
  *
  * @param[in]   addr    list address
  * @param[in]   type    the type of the struct this is embedded in.
@@ -92,14 +92,14 @@ static inline int dlist_empty(const dlist_t *head)
 }
 
 /**
- * init zhe list  
+ * init zhe list
  *
  * @param[in]   list    list to be inited
  */
 #define AOS_DLIST_INIT(list)  {&(list), &(list)}
 
 /**
- * get the fist struct in the list 
+ * get the fist struct in the list
  *
  * @param[in]   ptr     the &struct list_head pointer.
  * @param[in]   type    the type of the struct this is embedded in.
@@ -123,7 +123,7 @@ static inline int dlist_empty(const dlist_t *head)
  * @param[in]   pos     the type * to use as a loop cursor
  * @param[in]   n       the type * to use as a loop temp
  * @param[in]   head    he head for your list
- */    
+ */
 #define dlist_for_each_safe(pos, n, head) \
     for (pos = (head)->next, n = pos->next; pos != (head); \
     pos = n, n = pos->next)
@@ -135,7 +135,7 @@ static inline int dlist_empty(const dlist_t *head)
  * @param[in]   node    the type * to use as a loop cursor
  * @param[in]   type    the type of the struct this is embedded in
  * @param[in]   member  the name of the list_struct within the struct
- */     
+ */
 #define dlist_for_each_entry(queue, node, type, member) \
     for (node = aos_container_of((queue)->next, type, member); \
          &node->member != (queue); \
@@ -149,7 +149,7 @@ static inline int dlist_empty(const dlist_t *head)
  * @param[in]   n       the type * to use as a temp.
  * @param[in]   type    the type of the struct this is embedded in
  * @param[in]   member  the name of the list_struct within the struct
- */  
+ */
 #define dlist_for_each_entry_safe(queue, n, node, type, member) \
     for (node = aos_container_of((queue)->next, type, member), \
          n = (queue)->next ? (queue)->next->next : NULL; \
@@ -184,7 +184,7 @@ static inline int dlist_empty(const dlist_t *head)
  * get zhe list length
  *
  * @param[in]   queue    he head for your list
- */         
+ */
 #define dlist_entry_number(queue) ({ \
     int num; \
     dlist_t *cur = queue; \
@@ -245,7 +245,7 @@ static inline void slist_init(slist_t *head)
  * @param[in]   node    the type * to use as a loop cursor
  * @param[in]   type    the type of the struct this is embedded in
  * @param[in]   member  the name of the list_struct within the struct
- */   
+ */
 #define slist_for_each_entry(queue, node, type, member)    \
     for (node = aos_container_of((queue)->next, type, member); \
          &node->member;                                    \
@@ -259,7 +259,7 @@ static inline void slist_init(slist_t *head)
  * @param[in]   n       the type * to use as a temp.
  * @param[in]   type    the type of the struct this is embedded in
  * @param[in]   member  the name of the list_struct within the struct
- */ 
+ */
 #define slist_for_each_entry_safe(queue, tmp, node, type, member)    \
     for (node = aos_container_of((queue)->next, type, member), \
          tmp = (queue)->next ? (queue)->next->next : NULL; \
@@ -293,7 +293,7 @@ static inline void slist_init(slist_t *head)
  * get zhe list length
  *
  * @param[in]   queue    he head for your list
- */  
+ */
 #define slist_entry_number(queue) ({ \
     int num; \
     slist_t *cur = queue; \

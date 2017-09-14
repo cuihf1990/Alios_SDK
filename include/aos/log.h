@@ -26,11 +26,11 @@ typedef enum {
 aos_log_level_t;
 
 
- /**
- * set the log level
- *
- * @param[in]  log_level  level to be set    
- */
+/**
+* set the log level
+*
+* @param[in]  log_level  level to be set
+*/
 void aos_set_log_level(aos_log_level_t log_level);
 
 /**
