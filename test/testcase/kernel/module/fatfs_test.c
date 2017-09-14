@@ -13,12 +13,12 @@
 #include <yts.h>
 
 static const char *g_string         = "Fatfs test string.";
-static const char *g_filepath       = "/ramdisk/test.txt";
-static const char *g_dirpath        = "/ramdisk/testDir";
-static const char *g_dirtest_1      = "/ramdisk/testDir/test_1.txt";
-static const char *g_dirtest_2      = "/ramdisk/testDir/test_2.txt";
-static const char *g_dirtest_3      = "/ramdisk/testDir/test_3.txt";
-static const char *g_new_filepath   = "/ramdisk/testDir/newname.txt";
+static const char *g_filepath       = "/sdcard/test.txt";
+static const char *g_dirpath        = "/sdcard/testDir";
+static const char *g_dirtest_1      = "/sdcard/testDir/test_1.txt";
+static const char *g_dirtest_2      = "/sdcard/testDir/test_2.txt";
+static const char *g_dirtest_3      = "/sdcard/testDir/test_3.txt";
+static const char *g_new_filepath   = "/sdcard/testDir/newname.txt";
 
 static void test_fatfs_case(void)
 {
@@ -120,15 +120,14 @@ static int init(void)
 {
     int ret = 0;
 
-    /* register RAMDISK dev */
-    ret = fatfs_register(DEV_RAM);
+    ret = fatfs_register();
     YUNIT_ASSERT(ret == 0);
     return 0;
 }
 
 static int cleanup(void)
 {
-    int ret = fatfs_unregister(DEV_RAM);
+    int ret = fatfs_unregister();
     YUNIT_ASSERT(ret == 0);
     return 0;
 }
