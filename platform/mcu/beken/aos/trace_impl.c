@@ -182,6 +182,9 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
         set_event_mask(atoi(argv[2]));
     } else if (strcmp(rtype, "stop") == 0) {
         if (trace_is_started) {
+            set_filter_task(NULL);
+            set_event_mask(0);
+
             trace_is_started = 0;
             trace_deinit();
     
