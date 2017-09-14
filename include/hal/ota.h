@@ -2,14 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef __OTA_H__
-#define __OTA_H__
-
-/**
- * @file hal/ota.h
- * @brief ota API&structures for HAL
- * @version since 1.0.0
- */
+#ifndef HAL_OTA_H
+#define HAL_OTA_H
 
 #pragma once
 
@@ -21,13 +15,13 @@ extern "C" {
 #include "base.h"
 
 typedef struct {
-    uint32_t start_address; // the address of the bin saved on flash.
-    uint32_t length; // file real length
-    uint8_t version[8];
-    uint8_t type; // B:bootloader, P:boot_table, A:application, D: 8782 driver
-    uint8_t upgrade_type; //u:upgrade,
+    uint32_t start_address; /* the address of the bin saved on flash. */
+    uint32_t length;        /* file real length */
+    uint8_t  version[8];
+    uint8_t  type;          /* B:bootloader, P:boot_table, A:application, D: 8782 driver */
+    uint8_t  upgrade_type;  /* u:upgrade */
     uint16_t crc;
-    uint8_t reserved[4];
+    uint8_t  reserved[4];
 } boot_table_t;
 
 typedef struct hal_ota_module_s hal_ota_module_t;
@@ -45,72 +39,68 @@ struct hal_ota_module_s {
                     uint8_t *out_buf , uint32_t out_buf_len);
     int (*ota_set_boot)(hal_ota_module_t *m, void *something);
 };
-/******************************************************
-*                 Function Declarations
-******************************************************/
-
 
 /**
- * @brief Arch register a new module before HAL startup
+ * Arch register a new module before HAL startup
  */
 void hal_ota_register_module(hal_ota_module_t *module);
 
-/**@brief  init ota partition
+/**
+ * init ota partition
  *
- * @note   when ota start ,maybe it need init something
- * @param  something       :extra info for ota init
- * @return 0   : On success.
- * @return 1   : If an error occurred with any step
+ * @note   when ota start, maybe it need init something
+ * @param  something  extra info for ota init
+ *
+ * @return  0 : On success, 1 : If an error occurred with any step
  */
 hal_stat_t hal_ota_init(void *something);
-/**@brief  Write data to an area on ota partition
+
+/**
+ * Write data to an area on ota partition
  *
- * @param  m              :Refer the ota module which will be used,default module will be used if value is NULL
- * @param  off_set        : Point to the start address that the data is written to, and
- *                          point to the last unwritten address after this function is
- *                          returned, so you can call this function serval times without
- *                          update this start address.
- * @param  inbuf          : point to the data buffer that will be written to flash
- * @param  in_buf_len     : The length of the buffer
+ * @param  m           Refer the ota module which will be used,default module will be used if value is NULL
+ * @param  off_set     Point to the start address that the data is written to, and
+ *                     point to the last unwritten address after this function is
+ *                     returned, so you can call this function serval times without
+ *                     update this start address.
+ * @param  inbuf       point to the data buffer that will be written to flash
+ * @param  in_buf_len  The length of the buffer
  *
- * @return 0         : On success.
- * @return 1    : If an error occurred with any step
+ * @return  0 : On success, 1 : If an error occurred with any step
  */
 hal_stat_t hal_ota_write(hal_ota_module_t *m, volatile uint32_t *off_set,
                          uint8_t *in_buf , uint32_t in_buf_len);
 
-/**@brief  Read data from an area on ota Flash to data buffer in RAM
+/**
+ * Read data from an area on ota Flash to data buffer in RAM
  *
- * @param  m              :Refer the ota module which will be used,default module will be used if value is NULL
- * @param  off_set        : Point to the start address that the data is read, and
- *                          point to the last unread address after this function is
- *                          returned, so you can call this function serval times without
- *                          update this start address.
- * @param  out_buf        : Point to the data buffer that stores the data read from flash
- * @param  out_buf_len     : The length of the buffer
+ * @param  m            Refer the ota module which will be used,default module will be used if value is NULL
+ * @param  off_set      Point to the start address that the data is read, and
+ *                      point to the last unread address after this function is
+ *                      returned, so you can call this function serval times without
+ *                      update this start address.
+ * @param  out_buf      Point to the data buffer that stores the data read from flash
+ * @param  out_buf_len  The length of the buffer
  *
- * @return 0         : On success.
- * @return 1    : If an error occurred with any step
+ * @return  0 : On success, 1 : If an error occurred with any step
  */
 hal_stat_t hal_ota_read(hal_ota_module_t *m, volatile uint32_t *off_set,
                         uint8_t *out_buf, uint32_t out_buf_len);
 
-/**@brief  Set boot options when ota reboot
+/**
+ * Set boot options when ota reboot
  *
-
- * @param  m              :Refer the ota module which will be used,default module will be used if value is NULL
- * @param  something      : boot parms
- * @return kNoErr         : On success.
- * @return kGeneralErr    : If an error occurred with any step
+ * @param  m          Refer the ota module which will be used,default module will be used if value is NULL
+ * @param  something  boot parms
+ *
+ * @return  kNoErr : On success. kGeneralErr : If an error occurred with any step
  */
 hal_stat_t hal_ota_set_boot(hal_ota_module_t *m, void *something);
 
-
 /**
- * @brief Get the default ota module
+ * Get the default ota module
  *
- * @return
- *     return the first registered ota module ,which is the head of module list
+ * @return  the first registered ota module ,which is the head of module list
  */
 hal_ota_module_t *hal_ota_get_default_module(void);
 
@@ -118,6 +108,5 @@ hal_ota_module_t *hal_ota_get_default_module(void);
 }
 #endif
 
-#endif
-
+#endif /* HAL_OTA_H */
 

@@ -2,51 +2,49 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef __AOS_CLI_H__
-#define __AOS_CLI_H__
+#ifndef AOS_CLI_H
+#define AOS_CLI_H
 
-#define MAX_COMMANDS    64
-#define INBUF_SIZE      128
-#define OUTBUF_SIZE     2048
+#define MAX_COMMANDS 64
+#define INBUF_SIZE   128
+#define OUTBUF_SIZE  2048
 
 #ifndef FUNCPTR
 typedef void (*FUNCPTR)(void);
 #endif
 
-/** Structure for registering CLI commands */
+/* Structure for registering CLI commands */
 struct cli_command {
-    /** The name of the CLI command */
     const char *name;
-    /** The help text associated with the command */
     const char *help;
-    /** The function that should be invoked for this command. */
-    void (*function) (char *pcWriteBuffer, int xWriteBufferLen, int argc,
-                      char **argv);
+
+    void (*function)(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
 };
 
 struct cli_st {
     int initialized;
-    const struct cli_command *commands[MAX_COMMANDS];
-    unsigned int num_commands;
     int echo_disabled;
 
-    unsigned int bp;    /* buffer pointer */
-    char inbuf[INBUF_SIZE];
+    const struct cli_command *commands[MAX_COMMANDS];
 
+    unsigned int num_commands;
+    unsigned int bp; /* buffer pointer */
+
+    char inbuf[INBUF_SIZE];
     char outbuf[OUTBUF_SIZE];
-} ;
+};
 
 #define CLI_ARGS char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
 
 #ifdef CONFIG_AOS_CLI
 
-#define cmd_printf(...) \
-    do {\
-        if (xWriteBufferLen > 0) {\
-            snprintf(pcWriteBuffer, xWriteBufferLen, __VA_ARGS__);\
-            xWriteBufferLen-= os_strlen(pcWriteBuffer);\
-            pcWriteBuffer+= os_strlen(pcWriteBuffer);\
-        }\
+#define cmd_printf(...)                                            \
+    do {                                                           \
+        if (xWriteBufferLen > 0) {                                 \
+            snprintf(pcWriteBuffer, xWriteBufferLen, __VA_ARGS__); \
+            xWriteBufferLen-= os_strlen(pcWriteBuffer);            \
+            pcWriteBuffer+= os_strlen(pcWriteBuffer);              \
+        }                                                          \
     } while(0)
 
 
@@ -87,9 +85,7 @@ int cli_register_commands(const struct cli_command *commands, int num_commands);
  *
  * @return:  0 on success,1 on failure
  */
-int cli_unregister_commands(const struct cli_command *commands,
-                            int num_commands);
-
+int cli_unregister_commands(const struct cli_command *commands, int num_commands);
 
 /**
  * Print CLI msg
@@ -152,6 +148,5 @@ static inline int aos_cli_stop(void)
 }
 #endif
 
-
-#endif
+#endif /* AOS_CLI_H */
 

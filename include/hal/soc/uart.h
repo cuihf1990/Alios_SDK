@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef AOS_UART_H
-#define AOS_UART_H
+#ifndef HAL_UART_H
+#define HAL_UART_H
 
 /**
  * UART data width
@@ -60,29 +60,27 @@ typedef struct {
     void         *priv;    /* priv data */
 } uart_dev_t;
 
-
 /**
  * Initialises a UART interface
  *
+ * @note Prepares an UART hardware interface for communications
+ *
  * @param[in]  uart  the interface which should be initialised
- * @return     0     on success.
- * @return     EIO   if an error occurred with any step
+ *
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_uart_init(uart_dev_t *uart);
 
-
 /**
- *
  * Transmit data on a UART interface
+ *
  * @param[in]  uart  the UART interface
  * @param[in]  data  pointer to the start of data
  * @param[in]  size  number of bytes to transmit
  *
- * @return 0         on success.
- * @return EIO       if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout);
-
 
 /**
  * Receive data on a UART interface
@@ -93,21 +91,18 @@ int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t time
  * @param[out]  recv_size    number of bytes received
  * @param[in]   timeout      timeout in milisecond
  *
- * @return 0                 on success.
- * @return EIO               if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout);
-
 
 /**
  * Deinitialises a UART interface
  *
  * @param[in]  uart  the interface which should be deinitialised
  *
- * @return 0         on success.
- * @return EIO       if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_uart_finalize(uart_dev_t *uart);
 
-#endif
+#endif /* HAL_UART_H */
 

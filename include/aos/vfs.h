@@ -189,5 +189,5 @@ int aos_mkdir(const char *path);
 }
 #endif
 
-#endif
+#endif /* AOS_VFS_H */
 

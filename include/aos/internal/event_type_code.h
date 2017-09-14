@@ -5,22 +5,22 @@
 #ifndef AOS_EVENT_TYPE_CODE_API_H
 #define AOS_EVENT_TYPE_CODE_API_H
 
-/** remote procedure call */
+/* remote procedure call */
 #define EV_RPC                      0x0100
 
-/** YunIO event */
-#define EV_YUNIO                    0x0101
-#define CODE_YUNIO_CMD_START          1
-#define CODE_YUNIO_CMD_RETRY          2
-#define CODE_YUNIO_CMD_DISCONNECT     3
-#define CODE_YUNIO_ON_CONNECTED       4
-#define CODE_YUNIO_ON_DISCONNECTED    5
-#define CODE_YUNIO_ON_CONNECT_FAILED  6
-#define CODE_YUNIO_ON_READ_ERROR      7
-#define CODE_YUNIO_ON_WRITE_ERROR     8
-#define CODE_YUNIO_ON_HEARTBIT_ERROR  9
-#define CODE_YUNIO_PUBLISH_SUCCESS    10
-#define CODE_YUNIO_PUBLISH_TIMEOUT    11
+/* YunIO event */
+#define EV_YUNIO                   0x0101
+#define CODE_YUNIO_CMD_START         1
+#define CODE_YUNIO_CMD_RETRY         2
+#define CODE_YUNIO_CMD_DISCONNECT    3
+#define CODE_YUNIO_ON_CONNECTED      4
+#define CODE_YUNIO_ON_DISCONNECTED   5
+#define CODE_YUNIO_ON_CONNECT_FAILED 6
+#define CODE_YUNIO_ON_READ_ERROR     7
+#define CODE_YUNIO_ON_WRITE_ERROR    8
+#define CODE_YUNIO_ON_HEARTBIT_ERROR 9
+#define CODE_YUNIO_PUBLISH_SUCCESS   10
+#define CODE_YUNIO_PUBLISH_TIMEOUT   11
 
 /** OTA event define */
 #define  EV_OTA                     0x0102
@@ -43,7 +43,7 @@
 /** General key define */
 #define  EV_KEY              0x0201
 #define  CODE_RECORD           1
-#define  CODE_VOLUME           2 //Reserve
+#define  CODE_VOLUME           2 /* Reserve */
 #define  CODE_VOLUME_INC       3
 #define  CODE_VOLUME_DEC       4
 #define  CODE_PLAY_PAUSE       5

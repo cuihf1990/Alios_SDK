@@ -59,8 +59,7 @@ const char *aos_version_get(void);
  *
  * @return  task code
  */
-int aos_task_new(const char *name, void (*fn)(void *), void *arg,
-                 int stack_size);
+int aos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size);
 
 /**
  * Create a task
@@ -222,8 +221,7 @@ void aos_sem_signal_all(aos_sem_t *sem);
  *
  * @return  the operation status, 0 is OK, others is error
  */
-int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size,
-                  int max_msg);
+int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg);
 
 /**
  * This function will delete a queue
@@ -255,9 +253,7 @@ int aos_queue_send(aos_queue_t *queue, void *msg, unsigned int size);
  *
  * @return  the operation status, 0 is OK, others is error
  */
-int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
-                   unsigned int *size);
-
+int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,unsigned int *size);
 
 /**
  * This function will check if queue is valid
@@ -452,7 +448,6 @@ void aos_alloc_trace(void *addr, size_t allocator);
  */
 void aos_free(void *mem);
 
-
 /**
  * Get current time in nano seconds
  *
@@ -478,5 +473,5 @@ void aos_msleep(int ms);
 }
 #endif
 
-#endif
+#endif /* AOS_KERNEL_H */
 

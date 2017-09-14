@@ -2,12 +2,11 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef AOS_NETWORK_API_H
-#define AOS_NETWORK_API_H
+#ifndef AOS_NETWORK_H
+#define AOS_NETWORK_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <errno.h>
@@ -32,4 +31,5 @@ extern "C"
 }
 #endif
 
-#endif /* AOS_NETWORK_API_H */
+#endif /* AOS_NETWORK_H */
+

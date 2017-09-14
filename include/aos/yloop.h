@@ -8,8 +8,7 @@
 #include <aos/types.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <aos/internal/event_type_code.h>
@@ -79,9 +78,9 @@ typedef void (*aos_poll_call_t)(int fd, void *arg);
 /**
  * Register system event filter callback
  *
- * @param[in]  type     event type interested
- * @param[in]  cb       system event callback
- * @param[in]  priv     data to be bypassed to cb
+ * @param[in]  type  event type interested
+ * @param[in]  cb    system event callback
+ * @param[in]  priv  data to be bypassed to cb
  *
  * @return  the operation status, 0 is OK, others is error
  */
@@ -90,9 +89,9 @@ int aos_register_event_filter(uint16_t type, aos_event_cb cb, void *priv);
 /**
  * Unregister native event callback
  *
- * @param[in]  type     event type interested
- * @param[in]  cb       system event callback
- * @param[in]  priv     data to be bypassed to cb
+ * @param[in]  type  event type interested
+ * @param[in]  cb    system event callback
+ * @param[in]  priv  data to be bypassed to cb
  *
  * @return  the operation status, 0 is OK, others is error
  */
@@ -101,9 +100,9 @@ int aos_unregister_event_filter(uint16_t type, aos_event_cb cb, void *priv);
 /**
  * Post local event
  *
- * @param[in]  type     event type
- * @param[in]  code     event code
- * @param[in]  value    event value
+ * @param[in]  type   event type
+ * @param[in]  code   event code
+ * @param[in]  value  event value
  *
  * @return  the operation status, 0 is OK,others is error
  */
@@ -112,9 +111,9 @@ int aos_post_event(uint16_t type, uint16_t code, unsigned long  value);
 /**
  * Register a poll event in main loop
  *
- * @param[in]  fd       poll fd
- * @param[in]  action   action to be executed
- * @param[in]  param    private data past to action
+ * @param[in]  fd      poll fd
+ * @param[in]  action  action to be executed
+ * @param[in]  param   private data past to action
  *
  * @return  the operation status, 0 is OK,others is error
  */
@@ -123,18 +122,18 @@ int aos_poll_read_fd(int fd, aos_poll_call_t action, void *param);
 /**
  * Cancel a poll event to be executed in main loop
  *
- * @param[in]  fd       poll fd
- * @param[in]  action   action to be executed
- * @param[in]  param    private data past to action
+ * @param[in]  fd      poll fd
+ * @param[in]  action  action to be executed
+ * @param[in]  param   private data past to action
  */
 void aos_cancel_poll_read_fd(int fd, aos_poll_call_t action, void *param);
 
 /**
  * Post a delayed action to be executed in main loop
  *
- * @param[in]  ms       milliseconds to wait
- * @param[in]  action   action to be executed
- * @param[in]  arg      private data past to action
+ * @param[in]  ms      milliseconds to wait
+ * @param[in]  action  action to be executed
+ * @param[in]  arg     private data past to action
  *
  * @return  the operation status, 0 is OK,others is error
  */
@@ -143,9 +142,9 @@ int aos_post_delayed_action(int ms, aos_call_t action, void *arg);
 /**
  * Cancel a delayed action to be executed in main loop
  *
- * @param[in]  ms       milliseconds to wait, -1 means don't care
- * @param[in]  action   action to be executed
- * @param[in]  arg      private data past to action
+ * @param[in]  ms      milliseconds to wait, -1 means don't care
+ * @param[in]  action  action to be executed
+ * @param[in]  arg     private data past to action
  */
 void aos_cancel_delayed_action(int ms, aos_call_t action, void *arg);
 
@@ -153,18 +152,19 @@ void aos_cancel_delayed_action(int ms, aos_call_t action, void *arg);
  * @brief Schedule a callback in next event loop
  * @param action action to be executed
  * @param arg private data past to action
- * @retval >=0 success
- * @retval <0  failure
+ *
+ * @return  >=0 success, <0  failure
+ *
  * @note Unlike aos_post_delayed_action,
  *       this function can be called from non-aos-main-loop context.
  */
 /**
  * Schedule a callback in next event loop
  *
- * @param[in]  action   action to be executed
- * @param[in]  arg      private data past to action
+ * @param[in]  action  action to be executed
+ * @param[in]  arg     private data past to action
  *
- * @return  the operation status,  <0 is error,others is OK
+ * @return  the operation status, <0 is error,others is OK
  */
 int aos_schedule_call(aos_call_t action, void *arg);
 
@@ -202,9 +202,9 @@ void aos_loop_destroy(void);
 /**
  * Schedule a callback specified event loop
  *
- * @param[in]  loop     event loop to be scheduled, NULL for default main loop
- * @param[in]  action   action to be executed
- * @param[in]  arg      private data past to action
+ * @param[in]  loop    event loop to be scheduled, NULL for default main loop
+ * @param[in]  action  action to be executed
+ * @param[in]  arg     private data past to action
  *
  * @return  the operation status, <0 is error,others is OK
  */
@@ -216,8 +216,8 @@ int aos_loop_schedule_call(aos_loop_t *loop, aos_call_t action, void *arg);
  * @param[in]  ms       milliseconds to delay before execution, 0 means immediately
  * @param[in]  action   action to be executed
  * @param[in]  arg1     private data past to action
- * @param[in] fini_cb   finish callback to be executed after action is done in current event loop
- * @param[in] private   data past to fini_cb
+ * @param[in]  fini_cb  finish callback to be executed after action is done in current event loop
+ * @param[in]  private  data past to fini_cb
  *
  * @return  work handle,NULL failure,others is OK
  */
@@ -227,9 +227,9 @@ void *aos_loop_schedule_work(int ms, aos_call_t action, void *arg1,
 /**
  * Cancel a work
  *
- * @param[in]  work     work to be cancelled
- * @param[in]  action   action to be executed
- * @param[in]  arg1     private data past to action
+ * @param[in]  work    work to be cancelled
+ * @param[in]  action  action to be executed
+ * @param[in]  arg1    private data past to action
  */
 void aos_cancel_work(void *work, aos_call_t action, void *arg1);
 

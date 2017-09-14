@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef AOS_SOC_H
-#define AOS_SOC_H
+#ifndef HAL_SOC_H
+#define HAL_SOC_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -20,5 +20,5 @@
 #include "wdg.h"
 #include "sd.h"
 
-#endif
+#endif /* HAL_SOC_H */
 
