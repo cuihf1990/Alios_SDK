@@ -8,7 +8,9 @@ sudo apt-get -y install python-pip git
 sudo pip install pyserial
 
 cwd=`pwd`
-mkdir ~/tools
+if [ ! -d ~/tools ]; then
+    mkdir ~/tools
+fi
 cd ~/tools
 git clone https://github.com/espressif/esptool.git
 echo LC_ALL=\"en_US.UTF-8\" >> ~/.bashrc
