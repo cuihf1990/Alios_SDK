@@ -734,6 +734,7 @@ void process_testcmd(int argc, char *argv[])
     slist_t *hals;
     hal_context_t *hal;
     const char *cmd;
+    slist_t *nbrs = NULL;
 
     if (argc < 1) {
         return;
@@ -748,7 +749,8 @@ void process_testcmd(int argc, char *argv[])
         neighbor_t *nbr;
         hals = get_hal_contexts();
         slist_for_each_entry(hals, hal, hal_context_t, next) {
-            slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
+            nbrs = umesh_get_nbrs(hal->module->type);
+            slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
                 if (nbr->state != STATE_PARENT) {
                     continue;
                 }
@@ -981,13 +983,15 @@ void process_nbrs(int argc, char *argv[])
     neighbor_t *nbr;
     slist_t *hals;
     hal_context_t *hal;
+    slist_t *nbrs;
 
     response_append("neighbors:\r\n");
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        uint16_t   num = 0;
+        uint16_t num = 0;
         response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
-        slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
+        nbrs = umesh_get_nbrs(hal->module->type);
+        slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
             response_append("\t" EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac));
             response_append(",%s,0x%04x,0x%04x,%d,%d,%d,%d,%d,%d\r\n", nbrstate2str(nbr->state), \
                             nbr->netid, nbr->sid, nbr->stats.link_cost, nbr->ssid_info.child_num, \

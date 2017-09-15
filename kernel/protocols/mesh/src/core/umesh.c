@@ -531,6 +531,18 @@ uint16_t umesh_get_sid(void)
     return umesh_mm_get_local_sid();
 }
 
+slist_t *umesh_get_nbrs(media_type_t type)
+{
+    hal_context_t *hal;
+    slist_t *nbrs = NULL;
+
+    hal = get_hal_context(type);
+    if (hal) {
+        nbrs = &hal->neighbors_list;
+    }
+    return nbrs;
+}
+
 bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)
 {
     return nd_is_subscribed_mcast(addr);
