@@ -167,9 +167,7 @@ int otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progress, co
 #define OTA_VERSION_STR_LEN_MIN     (1)
 #define OTA_VERSION_STR_LEN_MAX     (32)
 
-static int state = 0;
-
-int COAP_OTA_ReportVersion(const char *version)
+int COAP_OTA_RequestVersion(const char *version)
 {
     int ret, len;
     char msg_informed[MSG_INFORM_LEN] = {0};
@@ -191,17 +189,8 @@ int COAP_OTA_ReportVersion(const char *version)
         return -1;
     }
 
-    if (0 == state) { //report version in initial state
-        ret = otacoap_Publish("inform", msg_informed);
-        if (0 == ret) {
-			state = 1;
-        }
-    }
-
     //request new firmware after initial state
-	if (state == 1) {
-		ret = otacoap_Publish("request", msg_informed);
-	}
+	ret = otacoap_Publish("request", msg_informed);
 
     if (0 != ret) {
         OTA_LOG_E("Report version failed");
@@ -330,7 +319,7 @@ void otacoap_report_version()
 {
     int ota_code = 0;
     do {
-        ota_code = COAP_OTA_ReportVersion(ota_get_system_version());
+        ota_code = COAP_OTA_RequestVersion(ota_get_system_version());
         IOT_CoAP_Yield(g_ota_device_info.h_coap);
         HAL_SleepMs(2000);
     } while (0 != ota_code);
