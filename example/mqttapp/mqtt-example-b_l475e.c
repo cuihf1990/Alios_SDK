@@ -24,6 +24,7 @@
 #include <netmgr.h>
 #include <aos/cli.h>
 #include <aos/cloud.h>
+#include "soc_init.h"
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
 /*
     #define PRODUCT_KEY             "OvNmiEYRDSY"
@@ -50,6 +51,7 @@
 #define TOPIC_DATA              "/"PRODUCT_KEY"/"DEVICE_NAME"/data"
 
 #define MSG_LEN_MAX             (2048)
+#define MAX_MQTT_PUBLISH_COUNT   100
 
 #define EXAMPLE_TRACE(fmt, args...)  \
     do { \
@@ -58,8 +60,6 @@
         printf("%s", "\r\n"); \
     } while(0)
 
-static int      user_argc;
-static char   **user_argv;
 static int is_demo_started = 0;
 void *pclient;
 typedef struct ota_device_info {
@@ -71,7 +71,7 @@ typedef struct ota_device_info {
 OTA_device_info_t ota_device_info;
 
 static void ota_init();
-static void mqtt_main_async();
+
 static void wifi_service_event(input_event_t *event, void *priv_data) {
     LOG("wifi_service_event!");
     if (event->type != EV_WIFI) {
@@ -180,8 +180,10 @@ int mqtt_client_example(void)
     iotx_conn_info_pt pconn_info;
     iotx_mqtt_param_t mqtt_params;
     iotx_mqtt_topic_info_t topic_msg;
-    char msg_pub[128];
+    char msg_pub[512];
     char *msg_buf = NULL, *msg_readbuf = NULL;
+    uint8_t bp_pushed;
+    char ledstate[] = { "Off" };
 
     if (NULL == (msg_buf = (char *)HAL_Malloc(MSG_LEN_MAX))) {
         EXAMPLE_TRACE("not enough memory");
@@ -194,6 +196,15 @@ int mqtt_client_example(void)
         rc = -1;
         goto do_exit;
     }
+
+#ifdef SENSOR
+    int res = init_sensors();
+    if(0 != res)
+    {
+        EXAMPLE_TRACE("init_sensors returned error : %d\n", res);
+        goto do_exit;
+    }
+#endif
 
     /* Device AUTH */
     if (0 != IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info)) {
@@ -244,38 +255,80 @@ int mqtt_client_example(void)
 
     HAL_SleepMs(1000);
     ota_init();
-    /* Initialize topic information */
-    memset(&topic_msg, 0x0, sizeof(iotx_mqtt_topic_info_t));
-    strcpy(msg_pub, "message: hello! start!");
 
+    /* Initialize topic information */
     topic_msg.qos = IOTX_MQTT_QOS1;
     topic_msg.retain = 0;
     topic_msg.dup = 0;
-    topic_msg.payload = (void *)msg_pub;
-    topic_msg.payload_len = strlen(msg_pub);
-
-    rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
-    EXAMPLE_TRACE("rc = IOT_MQTT_Publish() = %d", rc);
 
     do {
-        /* Generate topic message */
         cnt++;
-        msg_len = snprintf(msg_pub, sizeof(msg_pub), "{\"attr_name\":\"temperature\", \"attr_value\":\"%d\"}", cnt);
-        if (msg_len < 0) {
-            EXAMPLE_TRACE("Error occur! Exit program");
-            rc = -1;
+
+        printf("\n********************************************************************************************************\n");
+        printf("Press the User button (Blue) to publish LED desired value on the %s topic\n", TOPIC_DATA);
+        printf("********************************************************************************************************\n\n");
+        bp_pushed = Button_WaitForPush(3000);
+
+        /* exit loop on long push  */
+        if (bp_pushed == BP_MULTIPLE_PUSH) {
+            cnt = 100;
             break;
         }
 
+        if (bp_pushed == BP_SINGLE_PUSH) {
+            if(strstr(ledstate, "Off") != NULL)
+            {
+                strcpy(ledstate, "On");
+            } else {
+                strcpy(ledstate, "Off");
+            }
+
+            /* Generate topic message */
+            memset(msg_pub, 0, sizeof(msg_pub));
+            strcat(msg_pub, "{\"state\":{\"desired\":");
+            strcat(msg_pub, "{\"LED_value\":\"");
+            strcat(msg_pub, ledstate);
+            strcat(msg_pub, "\"}");
+            strcat(msg_pub, "}}");
+
+            topic_msg.payload = (void *)msg_pub;
+            topic_msg.payload_len = strlen(msg_pub);
+
+            rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
+
+            if (rc < 0) {
+                EXAMPLE_TRACE("error occur when publish LED status");
+                rc = -1;
+                break;
+            }
+#ifdef MQTT_ID2_CRYPTO
+            EXAMPLE_TRACE("packet-id=%u, publish topic msg='0x%02x%02x%02x%02x'...",
+                      (uint32_t)rc,
+                      msg_pub[0], msg_pub[1], msg_pub[2], msg_pub[3]
+                     );
+#else
+            EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
+#endif
+            /* handle the MQTT packet received from TCP or SSL connection */
+            IOT_MQTT_Yield(pclient, 2000);
+        }
+
+#ifdef SENSOR
+
+        PrepareMqttPayload(msg_pub, sizeof(msg_pub));
         topic_msg.payload = (void *)msg_pub;
-        topic_msg.payload_len = msg_len;
+        topic_msg.payload_len = strlen(msg_pub);
 
         rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
+
         if (rc < 0) {
-            EXAMPLE_TRACE("error occur when publish");
+            EXAMPLE_TRACE("error occur when publish sensor data");
             rc = -1;
             break;
         }
+
+#endif
+
 #ifdef MQTT_ID2_CRYPTO
         EXAMPLE_TRACE("packet-id=%u, publish topic msg='0x%02x%02x%02x%02x'...",
                       (uint32_t)rc,
@@ -287,14 +340,7 @@ int mqtt_client_example(void)
 
         /* handle the MQTT packet received from TCP or SSL connection */
         IOT_MQTT_Yield(pclient, 2000);
-
-        /* infinite loop if running with 'loop' argument */
-        if (user_argc >= 2 && !strcmp("loop", user_argv[1])) {
-            HAL_SleepMs(2000);
-            cnt = 0;
-        }
-
-    } while (cnt < 100);
+    } while (cnt < MAX_MQTT_PUBLISH_COUNT);
 
     IOT_MQTT_Unsubscribe(pclient, TOPIC_DATA);
 
@@ -310,27 +356,10 @@ do_exit:
     if (NULL != msg_readbuf) {
         HAL_Free(msg_readbuf);
     }
+    is_demo_started = 0;
 
     return rc;
 }
-/*
-int main(int argc, char **argv)
-{
-    IOT_OpenLog("mqtt");
-    IOT_SetLogLevel(IOT_LOG_DEBUG);
-
-    user_argc = argc;
-    user_argv = argv;
-
-    mqtt_client_example();
-
-    IOT_DumpMemoryStats(IOT_LOG_DEBUG);
-    IOT_CloseLog();
-
-    EXAMPLE_TRACE("out of sample!");
-    return 0;
-}
-*/
 
 static void mqtt_main( void *data )
 {
@@ -338,38 +367,15 @@ static void mqtt_main( void *data )
     aos_task_exit(0);
 }
 
-static void mqtt_main_async( )
-{
-        int ret = aos_task_new("mqtttask", mqtt_main, 0, 1024*10);
-        if (ret != SUCCESS_RETURN) {
-           printf("Error: Failed to create cli thread: %d\r\n", ret);
-       }
-}
-
-static void handle_mqtt(char *pwbuf, int blen, int argc, char **argv)
-{
-    //mqtt_client_example();
-    mqtt_main_async();
-}
-
-static struct cli_command mqttcmd = {
-    .name = "mqtt",
-    .help = "factory mqtt",
-    .function = handle_mqtt
-};
-
-
 int application_start(int argc, char *argv[])
 {
     aos_set_log_level(AOS_LL_DEBUG);
 
-    printf("zmxin application_start\n");
     aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
 
     netmgr_init();
     netmgr_start(false);
 
-    cli_register_command(&mqttcmd);
 #ifdef CSP_LINUXHOST
     int ret = aos_task_new("mqtttask", mqtt_main, 0, 1024*10);
     if (ret != SUCCESS_RETURN) {
