@@ -131,7 +131,9 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   HAL_IncTick();
-  soc_systick_handle();
+  if (0 == HAL_GetTick() % 10) {
+    soc_systick_handle();
+  }
   //HAL_SYSTICK_IRQHandler();
 }
 
