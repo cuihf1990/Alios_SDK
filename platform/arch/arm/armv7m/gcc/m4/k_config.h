@@ -51,7 +51,7 @@
 #endif
 
 #define RHINO_CONFIG_TICKLESS                0
-#define RHINO_CONFIG_TICKS_PER_SECOND        1000
+#define RHINO_CONFIG_TICKS_PER_SECOND        100
 /* must be 2^n size!, such as 1, 2, 4, 8, 16,32, etc....... */
 #define RHINO_CONFIG_TICK_HEAD_ARRAY         8
 #define RHINO_CONFIG_TIMER_TASK_STACK_SIZE   200
