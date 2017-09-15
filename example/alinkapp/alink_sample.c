@@ -650,7 +650,7 @@ static void alink_cloud_init(void)
 
 static void clear_kv_and_reboot()
 {
-    aos_kv_del("wifi");
+    aos_kv_del(NETMGR_WIFI_KEY);
     LOG("KV cleared, will reboot now.");
     aos_reboot();
 }
@@ -674,19 +674,55 @@ static int get_hotspot_timeout()
     return timeout * 1000; // s -> ms
 }
 
+static void auto_netmgr_timer_fn(void *arg1, void *arg2)
+{
+    LOG("Info: Auto netmgr timeout hit.");
+    clear_kv_and_reboot();
+}
+
+#define AUTO_NETMGR_TIMEOUT (10*60*1000) // 10 mins
+static aos_timer_t auto_netmgr_timer = {NULL};
+static aos_timer_t hotspot_timer = {NULL};
+static void start_auto_netmgr_timer()
+{
+    int ms = AUTO_NETMGR_TIMEOUT;
+
+    LOG("%s", __func__);
+    if (auto_netmgr == false) return;
+    if (aos_timer_new(&auto_netmgr_timer, auto_netmgr_timer_fn, NULL, ms, 0) != 0) {
+        LOG("Error: aos_timer_new failed in %s", __func__);
+        return;
+    }
+    if (aos_timer_start(&hotspot_timer) != 0) {
+        LOG("Error: aos_timer_start failed in %s", __func__);
+        return;
+    }
+}
+
+static void stop_timer(aos_timer_t *timer)
+{
+    LOG("%s", __func__);
+    if (!timer) {LOG("Timer is not set"); return;}
+    if (aos_timer_stop(timer) != 0) {
+        LOG("Error: aos_timer_stop failed in ");
+        return;
+    }
+}
+
 static void hotspot_timer_fn(void *arg1, void *arg2)
 {
     LOG("Info: Hotspot timeout hit.");
     clear_kv_and_reboot();
 }
 
-static aos_timer_t hotspot_timer = {NULL};
 static void awss_hotspot_connected_handler()
 {
-    int ms = get_hotspot_timeout();
+    int ms;
 
     LOG("%s", __func__);
     if (auto_netmgr == false) return;
+    ms = get_hotspot_timeout();
+    stop_timer(&auto_netmgr_timer);
     if (aos_timer_new(&hotspot_timer, hotspot_timer_fn, NULL, ms, 0) != 0) {
         LOG("Error: aos_timer_new failed");
         return;
@@ -700,10 +736,8 @@ static void awss_hotspot_connected_handler()
 static void awss_hotspot_switch_ap_done_handler()
 {
     LOG("%s", __func__);
-    if (aos_timer_stop(&hotspot_timer) != 0) {
-        LOG("Error: aos_timer_stop failed");
-        return;
-    }
+    if (auto_netmgr == false) return;
+    stop_timer(&hotspot_timer);
 }
 
 #define ACTIVE_DELAY (5*1000)
@@ -720,7 +754,6 @@ static void auto_active_handler(input_event_t *event, void *priv_data)
     if (auto_netmgr == false) return;
     if (event->type != EV_YUNIO) return;
     if (event->code != CODE_YUNIO_ON_CONNECTED) return;
-
     aos_post_delayed_action(ACTIVE_DELAY, do_auto_active, NULL);
 }
 
@@ -781,12 +814,11 @@ int application_start(int argc, char *argv[])
         aos_register_event_filter(EV_YUNIO, auto_active_handler, NULL);
 
         auto_netmgr = get_auto_netmgr_config();
-        if (auto_netmgr) {
-            awss_register_callback(AWSS_HOTSPOT_CONNECTED,
-              &awss_hotspot_connected_handler);
-            awss_register_callback(AWSS_HOTSPOT_SWITCH_AP_DONE,
-              &awss_hotspot_switch_ap_done_handler);
-        }
+        awss_register_callback(AWSS_HOTSPOT_CONNECTED,
+          &awss_hotspot_connected_handler);
+        awss_register_callback(AWSS_HOTSPOT_SWITCH_AP_DONE,
+          &awss_hotspot_switch_ap_done_handler);
+        if (auto_netmgr) start_auto_netmgr_timer();
         netmgr_init();
         netmgr_start(auto_netmgr);
     }
