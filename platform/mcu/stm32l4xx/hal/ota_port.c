@@ -32,14 +32,10 @@ int hal_ota_switch_to_new_fw( int ota_data_len, uint16_t ota_data_crc )
     if (0 == FLASH_set_boot_bank(FLASH_BANK_BOTH)) {
         printf("Default boot bank switched successfully.\n");
         return 0;
-    }
-    else {
+    } else {
         printf("Error: failed changing the boot configuration\n");
         return -1;
     }
-
-    /* reboot */
-    hal_reboot();
 
     return 0;
 }
@@ -64,6 +60,7 @@ static int stm32l475_ota_init(hal_ota_module_t *m, void *something)
 
 static int stm32l475_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
 {
+    hal_partition_t pno = HAL_PARTITION_OTA_TEMP;
     if(ota_info.ota_len == 0) {
         _off_set = 0;
         CRC16_Init( &contex );
@@ -71,7 +68,11 @@ static int stm32l475_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, 
     }
     printf("set write len---------------%d\n", in_buf_len);
     CRC16_Update( &contex, in_buf, in_buf_len);
-    int ret = hal_flash_write(HAL_PARTITION_OTA_TEMP, &_off_set, in_buf, in_buf_len);
+    if (!FLASH_bank1_enabled(FLASH_BANK_BOTH)) {
+        pno = HAL_PARTITION_APPLICATION;
+    }
+    printf("stm32l475_ota_write: pno = %d\n", pno);
+    int ret = hal_flash_write(pno, &_off_set, in_buf, in_buf_len);
     ota_info.ota_len += in_buf_len;
     printf(" ret :%d, size :%d\n", ret, ota_info.ota_len);
     return ret;
