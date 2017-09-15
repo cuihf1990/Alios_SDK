@@ -100,7 +100,7 @@ static void handle_link_quality_update_timer(void *args)
                                           hal->link_request_interval,
                                           handle_link_request_timer, hal);
         }
-        if (nbr->stats.link_cost >= LINK_COST_MAX) {
+        if (nbr->stats.link_cost >= LINK_COST_THRESHOLD) {
             nbr->state = STATE_INVALID;
             g_neighbor_updater_head(nbr);
         }
