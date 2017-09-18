@@ -58,8 +58,6 @@
     } while(0)
 
 
-static int      user_argc;
-static char   **user_argv;
 int cnt = 0;
 static int is_subscribed = 0;
 
@@ -79,7 +77,7 @@ iotx_mqtt_topic_info_t topic_msg;
 char msg_pub[128];
 
 static void ota_init(void *pclient);
-
+int mqtt_client_example(void);
 static void wifi_service_event(input_event_t *event, void *priv_data) {
     EXAMPLE_TRACE("wifi_service_event!");
     if (event->type != EV_WIFI) {
@@ -108,6 +106,16 @@ static void _demo_message_arrive(void *pcontext, void *pclient, iotx_mqtt_event_
                   ptopic_info->payload,
                   ptopic_info->payload_len);
     EXAMPLE_TRACE("----");
+}
+
+void release_buff() {
+    if (NULL != msg_buf) {
+        HAL_Free(msg_buf);
+    }
+
+    if (NULL != msg_readbuf) {
+        HAL_Free(msg_readbuf);
+    }
 }
 
 /*
@@ -333,16 +341,6 @@ int mqtt_client_example(void)
     return rc;
 }
 
-void release_buff() {
-    if (NULL != msg_buf) {
-        HAL_Free(msg_buf);
-    }
-
-    if (NULL != msg_readbuf) {
-        HAL_Free(msg_readbuf);
-    }
-}
-
 static void handle_mqtt(char *pwbuf, int blen, int argc, char **argv)
 {
     mqtt_client_example();
@@ -376,5 +374,5 @@ static void ota_init(void *pclient){
     ota_device_info.product_key=PRODUCT_KEY;
     ota_device_info.device_name=DEVICE_NAME;
     ota_device_info.pclient=pclient;
-    aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, &ota_device_info);
+    aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, (long unsigned int)&ota_device_info);
 }
