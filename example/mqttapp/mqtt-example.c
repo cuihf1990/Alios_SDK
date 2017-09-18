@@ -50,17 +50,9 @@
 
 #define MSG_LEN_MAX             (2048)
 
-#define EXAMPLE_TRACE(fmt, args...)  \
-    do { \
-        printf("%s|%03d :: ", __func__, __LINE__); \
-        printf(fmt, ##args); \
-        printf("%s", "\r\n"); \
-    } while(0)
-
 static int      user_argc;
 static char   **user_argv;
 int cnt = 0;
-static int is_demo_started = 0;
 static int is_subscribed = 0;
 
 typedef struct ota_device_info {
@@ -71,7 +63,14 @@ typedef struct ota_device_info {
 
 OTA_device_info_t ota_device_info;
 
-static void ota_init();
+void *gpclient;
+
+char *msg_buf = NULL, *msg_readbuf = NULL;
+
+iotx_mqtt_topic_info_t topic_msg;
+char msg_pub[128];
+
+static void ota_init(void *pclient);
 
 static void wifi_service_event(input_event_t *event, void *priv_data) {
     LOG("wifi_service_event!");
@@ -83,37 +82,31 @@ static void wifi_service_event(input_event_t *event, void *priv_data) {
         return;
     }
 
-    if (is_demo_started == 0) {
-        is_demo_started = 1;
-        mqtt_client_example();
-    }
+    mqtt_client_example();
 }
-
-void *pclient;
-
-char *msg_buf = NULL, *msg_readbuf = NULL;
-
-iotx_mqtt_topic_info_t topic_msg;
-char msg_pub[128];
 
 static void _demo_message_arrive(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
     iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
 
     // print topic name and topic message
-    EXAMPLE_TRACE("----");
-    EXAMPLE_TRACE("Topic: '%.*s' (Length: %d)",
+    LOG("----");
+    LOG("Topic: '%.*s' (Length: %d)",
                   ptopic_info->topic_len,
                   ptopic_info->ptopic,
                   ptopic_info->topic_len);
-    EXAMPLE_TRACE("Payload: '%.*s' (Length: %d)",
+    LOG("Payload: '%.*s' (Length: %d)",
                   ptopic_info->payload_len,
                   ptopic_info->payload,
                   ptopic_info->payload_len);
-    EXAMPLE_TRACE("----");
+    LOG("----");
 }
 
-static void mqtt_test() {
+/*
+ * Subscribe the topic: IOT_MQTT_Subscribe(pclient, TOPIC_DATA, IOTX_MQTT_QOS1, _demo_message_arrive, NULL);
+ * Publish the topic: IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
+ */
+static void mqtt_publish(void *pclient) {
 
     int rc = -1;
 
@@ -122,7 +115,7 @@ static void mqtt_test() {
         rc = IOT_MQTT_Subscribe(pclient, TOPIC_DATA, IOTX_MQTT_QOS1, _demo_message_arrive, NULL);
         if (rc < 0) {
             IOT_MQTT_Destroy(&pclient);
-            EXAMPLE_TRACE("IOT_MQTT_Subscribe() failed, rc = %d", rc);
+            LOG("IOT_MQTT_Subscribe() failed, rc = %d", rc);
             rc = -1;
             return;
         }
@@ -131,49 +124,40 @@ static void mqtt_test() {
         HAL_SleepMs(1000);
     }
 
-
-
     /* Initialize topic information */
     memset(&topic_msg, 0x0, sizeof(iotx_mqtt_topic_info_t));
-    //strcpy(msg_pub, "message: hello! start!");
 
     topic_msg.qos = IOTX_MQTT_QOS1;
     topic_msg.retain = 0;
     topic_msg.dup = 0;
 
-        /* Generate topic message */
-        int msg_len = snprintf(msg_pub, sizeof(msg_pub), "{\"attr_name\":\"temperature\", \"attr_value\":\"%d\"}", cnt);
-        if (msg_len < 0) {
-            EXAMPLE_TRACE("Error occur! Exit program");
-            rc = -1;
-        }
+    /* Generate topic message */
+    int msg_len = snprintf(msg_pub, sizeof(msg_pub), "{\"attr_name\":\"temperature\", \"attr_value\":\"%d\"}", cnt);
+    if (msg_len < 0) {
+        LOG("Error occur! Exit program");
+        rc = -1;
+    }
 
-        topic_msg.payload = (void *)msg_pub;
-        topic_msg.payload_len = msg_len;
+    topic_msg.payload = (void *)msg_pub;
+    topic_msg.payload_len = msg_len;
 
-        rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
-        if (rc < 0) {
-            EXAMPLE_TRACE("error occur when publish");
-            rc = -1;
-        }
+    rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
+    if (rc < 0) {
+        LOG("error occur when publish");
+        rc = -1;
+    }
 #ifdef MQTT_ID2_CRYPTO
-        EXAMPLE_TRACE("packet-id=%u, publish topic msg='0x%02x%02x%02x%02x'...",
-                      (uint32_t)rc,
-                      msg_pub[0], msg_pub[1], msg_pub[2], msg_pub[3]
-                     );
+    LOG("packet-id=%u, publish topic msg='0x%02x%02x%02x%02x'...",
+            (uint32_t)rc,
+            msg_pub[0], msg_pub[1], msg_pub[2], msg_pub[3]
+       );
 #else
-        EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
+    LOG("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
 #endif
 
-        /* infinite loop if running with 'loop' argument */
-        if (user_argc >= 2 && !strcmp("loop", user_argv[1])) {
-            HAL_SleepMs(2000);
-        } else {
-            cnt++;
-        }
-
+    cnt++;
     if(cnt < 200) {
-        aos_post_delayed_action(2000, mqtt_test, NULL);
+        aos_post_delayed_action(200, mqtt_publish, pclient);
     } else {
 
         IOT_MQTT_Unsubscribe(pclient, TOPIC_DATA);
@@ -184,7 +168,6 @@ static void mqtt_test() {
 
         release_buff();
 
-        is_demo_started = 0;
         is_subscribed = 0;
         cnt = 0;
     }
@@ -200,7 +183,7 @@ static void mqtt_service_event(input_event_t *event, void *priv_data) {
         return;
     }
 
-    mqtt_test();
+    mqtt_publish(priv_data);
 }
 
 void event_handle_mqtt(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
@@ -210,55 +193,55 @@ void event_handle_mqtt(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg
 
     switch (msg->event_type) {
         case IOTX_MQTT_EVENT_UNDEF:
-            EXAMPLE_TRACE("undefined event occur.");
+            LOG("undefined event occur.");
             break;
 
         case IOTX_MQTT_EVENT_DISCONNECT:
-            EXAMPLE_TRACE("MQTT disconnect.");
+            LOG("MQTT disconnect.");
             break;
 
         case IOTX_MQTT_EVENT_RECONNECT:
-            EXAMPLE_TRACE("MQTT reconnect.");
+            LOG("MQTT reconnect.");
             break;
 
         case IOTX_MQTT_EVENT_SUBCRIBE_SUCCESS:
-            EXAMPLE_TRACE("subscribe success, packet-id=%u", (unsigned int)packet_id);
+            LOG("subscribe success, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_SUBCRIBE_TIMEOUT:
-            EXAMPLE_TRACE("subscribe wait ack timeout, packet-id=%u", (unsigned int)packet_id);
+            LOG("subscribe wait ack timeout, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_SUBCRIBE_NACK:
-            EXAMPLE_TRACE("subscribe nack, packet-id=%u", (unsigned int)packet_id);
+            LOG("subscribe nack, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_UNSUBCRIBE_SUCCESS:
-            EXAMPLE_TRACE("unsubscribe success, packet-id=%u", (unsigned int)packet_id);
+            LOG("unsubscribe success, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_UNSUBCRIBE_TIMEOUT:
-            EXAMPLE_TRACE("unsubscribe timeout, packet-id=%u", (unsigned int)packet_id);
+            LOG("unsubscribe timeout, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_UNSUBCRIBE_NACK:
-            EXAMPLE_TRACE("unsubscribe nack, packet-id=%u", (unsigned int)packet_id);
+            LOG("unsubscribe nack, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_PUBLISH_SUCCESS:
-            EXAMPLE_TRACE("publish success, packet-id=%u", (unsigned int)packet_id);
+            LOG("publish success, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_PUBLISH_TIMEOUT:
-            EXAMPLE_TRACE("publish timeout, packet-id=%u", (unsigned int)packet_id);
+            LOG("publish timeout, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_PUBLISH_NACK:
-            EXAMPLE_TRACE("publish nack, packet-id=%u", (unsigned int)packet_id);
+            LOG("publish nack, packet-id=%u", (unsigned int)packet_id);
             break;
 
         case IOTX_MQTT_EVENT_PUBLISH_RECVEIVED:
-            EXAMPLE_TRACE("topic message arrived but without any related handle: topic=%.*s, topic_msg=%.*s",
+            LOG("topic message arrived but without any related handle: topic=%.*s, topic_msg=%.*s",
                           topic_info->topic_len,
                           topic_info->ptopic,
                           topic_info->payload_len,
@@ -266,26 +249,33 @@ void event_handle_mqtt(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg
             break;
 
         default:
-            EXAMPLE_TRACE("Should NOT arrive here.");
+            LOG("Should NOT arrive here.");
             break;
     }
 }
 
+/*
+ * initialization parameter: mqtt_params
+ */
 int mqtt_client_example(void)
 {
     int rc = 0;
     iotx_conn_info_pt pconn_info;
     iotx_mqtt_param_t mqtt_params;
 
+    if (msg_buf != NULL) {
+        return rc;
+    }
+
     if (NULL == (msg_buf = (char *)HAL_Malloc(MSG_LEN_MAX))) {
-        EXAMPLE_TRACE("not enough memory");
+        LOG("not enough memory");
         rc = -1;
         release_buff();
         return rc;
     }
 
     if (NULL == (msg_readbuf = (char *)HAL_Malloc(MSG_LEN_MAX))) {
-        EXAMPLE_TRACE("not enough memory");
+        LOG("not enough memory");
         rc = -1;
         release_buff();
         return rc;
@@ -293,7 +283,7 @@ int mqtt_client_example(void)
 
     /* Device AUTH */
     if (0 != IOT_SetupConnInfo(PRODUCT_KEY, DEVICE_NAME, DEVICE_SECRET, (void **)&pconn_info)) {
-        EXAMPLE_TRACE("AUTH request failed!");
+        LOG("AUTH request failed!");
         rc = -1;
         release_buff();
         return rc;
@@ -322,16 +312,16 @@ int mqtt_client_example(void)
 
 
     /* Construct a MQTT client with specify parameter */
-    pclient = IOT_MQTT_Construct(&mqtt_params);
-    if (NULL == pclient) {
-        EXAMPLE_TRACE("MQTT construct failed");
+    gpclient = IOT_MQTT_Construct(&mqtt_params);
+    if (NULL == gpclient) {
+        LOG("MQTT construct failed");
         rc = -1;
         release_buff();
+    } else {
+        aos_post_delayed_action(3000, ota_init, gpclient);
+        aos_register_event_filter(EV_SYS,  mqtt_service_event, gpclient);
     }
-    else
-    {
-        aos_post_delayed_action(3000, ota_init, NULL);
-    }
+
     return rc;
 }
 
@@ -347,10 +337,7 @@ void release_buff() {
 
 static void handle_mqtt(char *pwbuf, int blen, int argc, char **argv)
 {
-    if (is_demo_started == 0) {
-        is_demo_started = 1;
-        mqtt_client_example();
-    }
+    mqtt_client_example();
 }
 
 static struct cli_command mqttcmd = {
@@ -365,7 +352,6 @@ int application_start(int argc, char *argv[])
     aos_set_log_level(AOS_LL_DEBUG);
 
     aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
-    aos_register_event_filter(EV_SYS,  mqtt_service_event, NULL);
 
     netmgr_init();
     netmgr_start(false);
@@ -378,7 +364,7 @@ int application_start(int argc, char *argv[])
     return 0;
 }
 
-static void ota_init(){
+static void ota_init(void *pclient){
     ota_device_info.product_key=PRODUCT_KEY;
     ota_device_info.device_name=DEVICE_NAME;
     ota_device_info.pclient=pclient;
