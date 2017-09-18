@@ -14,7 +14,6 @@
 #include <lwip/sockets.h>
 #include "umesh.h"
 #include "cJSON.h"
-#include "core/mesh_mgmt.h"
 #include "devmgr.h"
 
 #include "mqtt_sn.h"
@@ -963,6 +962,7 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
         }
     }
 
+    #define DEVICE_STATE_LEADER 4
     if (umesh_get_device_state() == DEVICE_STATE_LEADER && gateway_state.yunio_connected == true) {
         gateway_state.gateway_mode = true;
     } else {

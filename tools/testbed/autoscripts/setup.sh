@@ -4,7 +4,7 @@ sudo apt-get update
 sudo apt-get -y upgrade
 
 sudo apt-get -y install vim mutt msmtp
-sudo apt-get -y install python-pip git
+sudo apt-get -y install python-pip git screen
 sudo pip install pyserial
 
 cwd=`pwd`

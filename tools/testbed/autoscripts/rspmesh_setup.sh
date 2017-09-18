@@ -1,13 +1,9 @@
 #!/bin/sh
 
-sudo apt-get update
-sudo apt-get -y upgrade
-sudo apt-get -y install raspberrypi-kernel-headers git libgmp3-dev gawk qpdf bison flex make bc
-
-if [ ! -d ~/tools ]; then
-    mkdir -p ~/tools
-fi
-cd ~/tools
+apt-get update
+apt-get -y upgrade
+apt-get -y install raspberrypi-kernel-headers git libgmp3-dev gawk qpdf bison flex make bc
+apt-get -y install vim libnl1 libnl-3-200 libnl-dev libnl-genl-3-200 libnl-route-3-200
 
 if [ -d nexmon ]; then
     rm -rf nexmon
@@ -16,37 +12,38 @@ git clone https://github.com/seemoo-lab/nexmon.git
 cd nexmon
 nexmondir=`pwd`
 
-if [ ! -f /usr/lib/arm-linux-gnueabihf/libisl.so.10 ]; then
-    cd buildtools/isl-0.10
-    ./configure
-    make -j4
-    sudo make install
-    sudo ln -s /usr/local/lib/libisl.so /usr/lib/arm-linux-gnueabihf/libisl.so.10
+cd buildtools/isl-0.10
+./configure
+make
+make install
+if [ -f /usr/lib/arm-linux-gnueabihf/libisl.so.10 ]; then
+    rm -f /usr/lib/arm-linux-gnueabihf/libisl.so.10
 fi
+ln -s /usr/local/lib/libisl.so /usr/lib/arm-linux-gnueabihf/libisl.so.10
 
 cd ${nexmondir}
 source setup_env.sh
-make -j4
+make
 if [ $? -ne 0 ]; then
     echo "error: build nexmon failed"
     exit 1
 fi
 
 cd patches/bcm43430a1/7_45_41_46/nexmon/
-make -j4
+make
 if [ $? -ne 0 ]; then
     echo "error: build brcmfmac firmware failed"
     exit 1
 fi
 make backup-firmware
-sudo make install-firmware
+make install-firmware
 
 brcmpath=`modinfo brcmfmac | grep filename | awk '{print $2}'`
 if [ ! -f ${brcmpath}.orig ]; then
-    sudo cp ${brcmpath} ${brcmpath}.orig
+    cp ${brcmpath} ${brcmpath}.orig
 fi
-sudo cp ${nexmondir}/patches/bcm43430a1/7_45_41_46/nexmon/brcmfmac_kernel49/brcmfmac.ko ${brcmpath}
-sudo depmod -a
+cp ${nexmondir}/patches/bcm43430a1/7_45_41_46/nexmon/brcmfmac_kernel49/brcmfmac.ko ${brcmpath}
+depmod -a
 
 cd ${nexmondir}/utilities/nexutil/
 make
@@ -54,8 +51,5 @@ if [ $? -ne 0 ]; then
     echo "error: build utility failed"
     exit 1
 fi
-sudo make install
-
-#optinal step
-#sudo apt-get remove wpasupplicant
-
+make install
+nexutil -m2

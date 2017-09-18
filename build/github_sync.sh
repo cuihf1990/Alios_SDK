@@ -1,19 +1,85 @@
 #!/bin/sh
 
-cd $(git rev-parse --show-toplevel)
-aosfolder=`pwd`
-
-if [ -f sync ] || [ -d sync ]; then
-    rm -rf sync
+cd ~/
+if [ -d githubsync ] || [ -f githubsync ]; then
+    rm -rf githubsync
 fi
-mkdir sync
+mkdir githubsync
 
-git checkout master
-if [ $? -ne 0 ]; then
-    echo "error: swith to master branch failed"
-    exit 1
-fi
+cd ~/githubsync
+git clone git@code.aliyun.com:keepwalking.zeng/aos.git
+git clone git@github.com:alibaba/AliOS.git
+aosdir=~/githubsync/aos
+githubdir=~/githubsync/AliOS
 
+rm -rf ${githubdir}/*
+cp -rf ${aosdir}/* ${githubdir}/
+cp -rf ${aosdir}/.gitignore ${githubdir}/.gitignore
+cp -rf ${aosdir}/.vscode ${githubdir}/.vscode
+
+#remove files from github dir
+rm -rf ${githubdir}/build/github_sync.sh
+rm -rf ${githubdir}/board/armhflinux
+rm -rf ${githubdir}/board/mk108
+rm -rf ${githubdir}/build/OpenOCD
+rm -rf ${githubdir}/build/compiler/arm-none-eabi*
+rm -rf ${githubdir}/platform/mcu/linux/csp/wifi/radiotap
+rm -rf ${githubdir}/script
+
+#tools folder
+rm -rf ${githubdir}/tools/*
+cp -rf ${aosdir}/tools/Doxyfile ${githubdir}/tools/
+cp -rf ${aosdir}/tools/doxygen.sh ${githubdir}/tools/
+cp -rf ${aosdir}/tools/cli ${githubdir}/tools/
+
+#mesh folder
+rm -rf ${githubdir}/kernel/protocols/mesh/*
+mkdir ${githubdir}/kernel/protocols/mesh/lib
+mkdir ${githubdir}/kernel/protocols/mesh/lib/linuxhost
+mkdir ${githubdir}/kernel/protocols/mesh/lib/mk3060
+mkdir ${githubdir}/kernel/protocols/mesh/include
+cp -f ${aosdir}/kernel/protocols/mesh/include/umesh_80211.h ${githubdir}/kernel/protocols/mesh/include/
+cp -f ${aosdir}/kernel/protocols/mesh/include/umesh.h ${githubdir}/kernel/protocols/mesh/include/
+cp -f ${aosdir}/kernel/protocols/mesh/include/umesh_hal.h ${githubdir}/kernel/protocols/mesh/include/
+cp -f ${aosdir}/kernel/protocols/mesh/include/umesh_types.h ${githubdir}/kernel/protocols/mesh/include/
+cd ${aosdir}/kernel/protocols/mesh
+git checkout origin/githubsync -- mesh.mk
+cp -rf mesh.mk ${githubdir}/kernel/protocols/mesh/
+
+#beken folder
+rm -rf ${githubdir}/platform/mcu/beken/*
+cd ${aosdir}/platform/mcu/beken/
+mkdir ${githubdir}/platform/mcu/beken/include
+mkdir ${githubdir}/platform/mcu/beken/include/lwip-2.0.2
+mkdir ${githubdir}/platform/mcu/beken/include/app
+mkdir ${githubdir}/platform/mcu/beken/include/func
+mkdir ${githubdir}/platform/mcu/beken/include/os
+mkdir ${githubdir}/platform/mcu/beken/include/driver
+mkdir ${githubdir}/platform/mcu/beken/include/ip
+cp -rf beken7231/beken378/func/mxchip/lwip-2.0.2/port ${githubdir}/platform/mcu/beken/include/lwip-2.0.2/
+cp -rf beken7231/beken378/common ${githubdir}/platform/mcu/beken/include/
+cp -rf beken7231/beken378/app/config ${githubdir}/platform/mcu/beken/include/app/
+cp -rf beken7231/beken378/func/include ${githubdir}/platform/mcu/beken/include/func/
+cp -rf beken7231/beken378/os/include ${githubdir}/platform/mcu/beken/include/os/
+cp -rf beken7231/beken378/driver/include ${githubdir}/platform/mcu/beken/include/driver/
+cp -rf beken7231/beken378/driver/common ${githubdir}/platform/mcu/beken/include/driver/
+cp -rf beken7231/beken378/ip/common ${githubdir}/platform/mcu/beken/include/ip/
+cp -rf beken7231/beken378/driver/entry/*.h ${githubdir}/platform/mcu/beken/include/
+cp -rf beken7231/beken378/build ${githubdir}/platform/mcu/beken/linkinfo
+find ${githubdir}/platform/mcu/beken/ -type f -name '*.c' -exec rm {} +
+cp -rf art ${githubdir}/platform/mcu/beken/
+cp -rf encrypt_linux ${githubdir}/platform/mcu/beken/
+cp -rf encrypt_osx ${githubdir}/platform/mcu/beken/
+cp -rf encrypt_win.exe ${githubdir}/platform/mcu/beken/
+cp -rf gen_crc_bin.mk ${githubdir}/platform/mcu/beken/
+cd ${aosdir}/platform/mcu/beken/
+git checkout origin/githubsync -- beken.mk
+cp -rf beken.mk ${githubdir}/platform/mcu/beken/
+
+cd ${aosdir}
+git reset
+git checkout kernel/protocols/mesh/mesh.mk
+git checkout platform/mcu/beken/beken.mk
 aos make meshapp@linuxhost meshdebug=1
 if [ $? -ne 0 ]; then
     echo "error: build libraries for linuxhost failed"
@@ -21,43 +87,34 @@ if [ $? -ne 0 ]; then
 fi
 
 aos make alinkapp@mk3060 meshdebug=1
-if [ $? -ne 0]; then
+if [ $? -ne 0 ]; then
     echo "error: build libraries for mk3060 failed"
     exit 1
 fi
 
-cd ${aosfolder}/out/meshapp@linuxhost/libraries/
+cd ${aosdir}/out/meshapp@linuxhost/libraries/
 cp mesh.a libmesh-linuxhost.a
 strip --strip-debug libmesh-linuxhost.a
-mv libmesh-linuxhost.a ${aosfolder}/sync/
+mv libmesh-linuxhost.a ${githubdir}/kernel/protocols/mesh/lib/linuxhost/libmesh.a
 
-cd ${aosfolder}/out/alinkapp@mk3060/libraries/
+cd ${aosdir}/out/alinkapp@mk3060/libraries/
 echo "create libbeken.a" > packscript
 echo "addlib beken.a" >> packscript
 echo "addlib entry.a" >> packscript
 echo "addlib hal_init.a" >> packscript
-echo "addlib ${aosfolder}/platform/mcu/beken/librwnx.a" >> packscript
+echo "addlib ${aosdir}/platform/mcu/beken/librwnx.a" >> packscript
 echo "save" >> packscript
 echo "end" >> packscript
 arm-none-eabi-ar -M < packscript
 arm-none-eabi-strip --strip-debug libbeken.a
-mv libbeken.a ${aosfolder}/sync/
+mv libbeken.a ${githubdir}/platform/mcu/beken/
 
 cp mesh.a libmesh-mk3060.a
 arm-none-eabi-strip --strip-debug libmesh-mk3060.a
-mv libmesh-mk3060.a ${aosfolder}/sync/
+mv libmesh-mk3060.a ${githubdir}/kernel/protocols/mesh/lib/mk3060/libmesh.a
 
-cd ${aosfolder}
-syncbranch=`git branch | grep githubsync`
-if [ "${syncbranch}" == "" ]; then
-    git branch --track githubsync origin/githubsync
-fi
-git checkout githubsync
-cp sync/libmesh-linuxhost.a kernel/protocols/mesh/lib/linuxhost/libmesh.a
-cp sync/libmesh-mk3060.a kernel/protocols/mesh/lib/mk3060/libmesh.a
-cp sync/libbeken.a platform/mcu/beken/
-rm -rf sync
+cd ${githubdir}
 git add -A
 datetime=`date +%F@%H:%M`
-git commit -m "update libraries at ${datetime}"
-git push -f origin githubsync
+git commit -m "code synchronization at ${datetime}"
+#git push origin master
