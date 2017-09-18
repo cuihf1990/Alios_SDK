@@ -32,6 +32,17 @@ cp -rf ${aosdir}/tools/Doxyfile ${githubdir}/tools/
 cp -rf ${aosdir}/tools/doxygen.sh ${githubdir}/tools/
 cp -rf ${aosdir}/tools/cli ${githubdir}/tools/
 
+#ywss folder
+rm -rf ${githubdir}/framework/ywss/*
+mkdir ${githubdir}/framework/ywss/lib/
+mkdir ${githubdir}/framework/ywss/lib/linuxhost
+mkdir ${githubdir}/framework/ywss/lib/mk3060
+cp -f ${aosdir}/framework/ywss/awss.h ${githubdir}/framework/ywss/
+cp -f ${aosdir}/framework/ywss/enrollee.h ${githubdir}/framework/ywss/
+cd ${aosdir}/framework/ywss/
+git checkout origin/githubsync -- ywss.mk
+cp -rf ywss.mk ${githubdir}/framework/ywss/
+
 #mesh folder
 rm -rf ${githubdir}/kernel/protocols/mesh/*
 mkdir ${githubdir}/kernel/protocols/mesh/lib
@@ -80,6 +91,7 @@ cd ${aosdir}
 git reset
 git checkout kernel/protocols/mesh/mesh.mk
 git checkout platform/mcu/beken/beken.mk
+git checkout framework/ywss/ywss.mk
 aos make meshapp@linuxhost meshdebug=1
 if [ $? -ne 0 ]; then
     echo "error: build libraries for linuxhost failed"
@@ -94,10 +106,20 @@ fi
 
 cd ${aosdir}/out/meshapp@linuxhost/libraries/
 cp mesh.a libmesh-linuxhost.a
-strip --strip-debug libmesh-linuxhost.a
-mv libmesh-linuxhost.a ${githubdir}/kernel/protocols/mesh/lib/linuxhost/libmesh.a
+strip --strip-debug libmesh.a
+mv libmesh.a ${githubdir}/kernel/protocols/mesh/lib/linuxhost/libmesh.a
+cp ywss.a libywss.a
+strip --strip-debug libywss.a
+cp libywss.a ${githubdir}/framework/ywss/lib/linuxhost/libywss.a
 
 cd ${aosdir}/out/alinkapp@mk3060/libraries/
+cp mesh.a libmesh.a
+arm-none-eabi-strip --strip-debug libmesh.a
+mv libmesh.a ${githubdir}/kernel/protocols/mesh/lib/mk3060/libmesh.a
+cp ywss.a libywss.a
+arm-none-eabi-strip --strip-debug libywss.a
+cp libywss.a ${githubdir}/framework/ywss/lib/mk3060/libywss.a
+
 echo "create libbeken.a" > packscript
 echo "addlib beken.a" >> packscript
 echo "addlib entry.a" >> packscript
@@ -108,10 +130,6 @@ echo "end" >> packscript
 arm-none-eabi-ar -M < packscript
 arm-none-eabi-strip --strip-debug libbeken.a
 mv libbeken.a ${githubdir}/platform/mcu/beken/
-
-cp mesh.a libmesh-mk3060.a
-arm-none-eabi-strip --strip-debug libmesh-mk3060.a
-mv libmesh-mk3060.a ${githubdir}/kernel/protocols/mesh/lib/mk3060/libmesh.a
 
 cd ${githubdir}
 git add -A
