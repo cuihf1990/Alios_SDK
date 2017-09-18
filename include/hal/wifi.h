@@ -188,188 +188,188 @@ struct hal_wifi_module_s {
  * The system may have more than one wifi instance,
  * this API returns the default one.
  *
- * @return NULL - No instances registered, !=NULL - Instance pointer.
+ * @return  Instance pointer, or NULL if no instance registered.
  */
 hal_wifi_module_t *hal_wifi_get_default_module(void);
 
 /**
  * Regster a wifi instance to the HAL framework.
  *
- * @param[in]  m - The wifi instance.
+ * @param[in]  m  The wifi instance.
  */
 void hal_wifi_register_module(hal_wifi_module_t *m);
 
 /**
  * Initialize wifi instances.
  *
- * @return 0 - Success, otherwise failure.
+ * @return  0 if success, otherwise failure.
  *
  * @note  This is supposed to be called during system boot,
  *        not supposed to be called by user module directly
  */
-int  hal_wifi_init(void);
+int hal_wifi_init(void);
 
 /**
  * Get the MAC address of the specified wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
- * @param[out]  mac - The place to hold the result.
+ * @param[in]   m    The wifi instance, NULL if default.
+ * @param[out]  mac  The place to hold the result.
  */
 void hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac);
 
 /**
  * Start the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
- * @param[in]   init_para - The config used to start the wifi.
+ * @param[in]  m          The wifi instance, NULL if default.
+ * @param[in]  init_para  The config used to start the wifi.
  *
- * @return      0 - Success, otherwise failure.
+ * @return      0 if success, otherwise failure.
  */
-int  hal_wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para);
+int hal_wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para);
 
 /**
  * Start the wifi instance in anvanced way (more config specified).
  *
- * @param[in]   m - The wifi instance, NULL if default.
- * @param[in]   init_para_adv - The advanced config used to start the wifi.
+ * @param[in]  m              The wifi instance, NULL if default.
+ * @param[in]  init_para_adv  The advanced config used to start the wifi.
  *
- * @return      0 - Success, otherwise failure.
+ * @return      0 if success, otherwise failure.
  */
-int  hal_wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_para_adv);
+int hal_wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_para_adv);
 
 /**
  * Get the status of the specified wifi instance, e.g. the IP, mask, dhcp mode, etc.
  *
- * @param[in]   m - The wifi instance, NULL if default.
- * @param[out]  out_net_para - The place to hold the results.
- * @param[in]   wifi_type - SOFT_AP or STATION.
+ * @param[in]   m             The wifi instance, NULL if default.
+ * @param[out]  out_net_para  The place to hold the results.
+ * @param[in]   wifi_type     SOFT_AP or STATION.
  *
- * @return      0 - Success, otherwise failure.
+ * @return      0 if success, otherwise failure.
  */
-int  hal_wifi_get_ip_stat(hal_wifi_module_t *m,
+int hal_wifi_get_ip_stat(hal_wifi_module_t *m,
                           hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type);
 
 /**
  * Get the link status of the wifi instance ,e.g. ssid, bssid, channel, rssi, etc.
  *
- * @param[in]   m - The wifi instance, NULL if default.
- * @param[out]  out_stat - The place to hold the results.
+ * @param[in]   m         The wifi instance, NULL if default.
+ * @param[out]  out_stat  The place to hold the results.
  *
- * @return      0 - Success, otherwise failure.
+ * @return      0 if success, otherwise failure.
  */
-int  hal_wifi_get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat);
+int hal_wifi_get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat);
 
 /**
  * Start the scanning of the specified wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  */
 void hal_wifi_start_scan(hal_wifi_module_t *m);
 
 /**
  * Start the scanning of the specified wifi instance in advanced way.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  */
 void hal_wifi_start_scan_adv(hal_wifi_module_t *m);
 
 /**
  * Power off the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
-int  hal_wifi_power_off(hal_wifi_module_t *m);
+int hal_wifi_power_off(hal_wifi_module_t *m);
 
 /**
  * Power on the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
-int  hal_wifi_power_on(hal_wifi_module_t *m);
+int hal_wifi_power_on(hal_wifi_module_t *m);
 
 /**
  * Suspend the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
-int  hal_wifi_suspend(hal_wifi_module_t *m);
+int hal_wifi_suspend(hal_wifi_module_t *m);
 
 /**
  * Suspend the wifi instance in station mode.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
-int  hal_wifi_suspend_station(hal_wifi_module_t *m);
+int hal_wifi_suspend_station(hal_wifi_module_t *m);
 
 /**
  * Suspend the wifi instance in soft_ap mode.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
-int  hal_wifi_suspend_soft_ap(hal_wifi_module_t *m);
+int hal_wifi_suspend_soft_ap(hal_wifi_module_t *m);
 
 /**
  * Set the channel of the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
-int  hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
+int hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
 
 /**
  * Start the monitor mode of the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
 void hal_wifi_start_wifi_monitor(hal_wifi_module_t *m);
 
 /**
  * Stop the monitor mode of the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
 void hal_wifi_stop_wifi_monitor(hal_wifi_module_t *m);
 
 /**
  * Register the montior callback on the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
- * @param[in]   fn - The callback function.
+ * @param[in]  m   The wifi instance, NULL if default.
+ * @param[in]  fn  The callback function.
  *
- * @return      0 - Success, otherwise failure.
+ * @return      0 if success, otherwise failure.
  */
 void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
 
 /**
  * Start debug mode of the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
 void hal_wifi_start_debug_mode(hal_wifi_module_t *m);
 
 /**
  * Stop debug mode of the wifi instance.
  *
- * @param[in]   m - The wifi instance, NULL if default.
+ * @param[in]  m  The wifi instance, NULL if default.
  *
- * @return      0 - Success, otherwise failure.
+ * @return     0 if success, otherwise failure.
  */
 void hal_wifi_stop_debug_mode(hal_wifi_module_t *m);
 
@@ -377,8 +377,8 @@ void hal_wifi_stop_debug_mode(hal_wifi_module_t *m);
  * Set the event callback function array for the wifi.
  * Please don't do time consuming work in these callbacks.
  *
- * @param[in]  m  - The wifi instance, NULL for default.
- * @param[in]  cb - The event callback function info.
+ * @param[in]  m   The wifi instance, NULL for default.
+ * @param[in]  cb  The event callback function info.
  *
  * @note Please don't do time consuming work in these callbacks
  */
