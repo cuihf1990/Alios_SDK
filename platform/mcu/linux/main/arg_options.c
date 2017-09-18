@@ -22,6 +22,18 @@ void parse_options(options_t *options)
     int         i;
 
     for (i = 0; i < options->argc;) {
+        if (!strcmp(argv[i], "--mesh-master")) {
+            options->cli.enable = false;
+            i ++;
+            continue;
+        }
+
+        if (!strcmp(argv[i], "--no-cli")) {
+            options->cli.enable = false;
+            shift_argv(options, i);
+            continue;
+        }
+
         if (!strcmp(argv[i], "--per-pid-flash")) {
             options->flash.per_pid = true;
             shift_argv(options, i);

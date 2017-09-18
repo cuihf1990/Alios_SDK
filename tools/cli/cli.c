@@ -567,6 +567,10 @@ static void wifi_debug_cmd(char *buf, int len, int argc, char **argv)
 int cli_register_command(const struct cli_command *cmd)
 {
     int i;
+
+    if (!cli)
+        return 1;
+
     if (!cmd->name || !cmd->function) {
         return 1;
     }

@@ -36,7 +36,6 @@ int application_start(int argc, char **argv)
 #endif
     }
     else if (strcmp(mode, "--mesh-master") == 0) {
-        aos_cli_stop();
 #ifdef CONFIG_AOS_DDM
         ddm_run(argc, argv);
 #endif
