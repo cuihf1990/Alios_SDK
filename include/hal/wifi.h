@@ -130,7 +130,7 @@ typedef struct hal_wifi_link_info_s {
 
 /**
  * hal_wifi_event_cb_t
- * The event call back function called at specific events occurred
+ * The event call back function called at specific events occurred.
  *
  * @note For HAL implementors, these callbacks must be
  *       called under normal task context, not from interrupt.
@@ -152,7 +152,7 @@ typedef void (*monitor_data_cb_t)(uint8_t *data, int len, hal_wifi_link_info_t *
 
 /**
  * @struct hal_wifi_module_t
- * @brief The Wifi module for manufacture to implement
+ * @brief The Wifi module for manufacture to implement.
  */
 struct hal_wifi_module_s {
     hal_module_base_t    base;
@@ -205,7 +205,7 @@ void hal_wifi_register_module(hal_wifi_module_t *m);
  * @return  0 if success, otherwise failure.
  *
  * @note  This is supposed to be called during system boot,
- *        not supposed to be called by user module directly
+ *        not supposed to be called by user module directly.
  */
 int hal_wifi_init(void);
 
@@ -380,7 +380,7 @@ void hal_wifi_stop_debug_mode(hal_wifi_module_t *m);
  * @param[in]  m   The wifi instance, NULL for default.
  * @param[in]  cb  The event callback function info.
  *
- * @note Please don't do time consuming work in these callbacks
+ * @note Please don't do time consuming work in these callbacks.
  */
 void hal_wifi_install_event(hal_wifi_module_t *m, const hal_wifi_event_cb_t *cb);
 
