@@ -6,42 +6,42 @@
 #define AOS_VERSION_H
 
 /**
- * get aos product model
+ * Get aos product model.
  *
- * @return  model success, 0 failure
+ * @return  model success, 0 failure.
  */
 const char *aos_get_product_model(void);
 
 /**
- * get aos os version
+ * Get aos os version.
  *
- * @return  os version success, 0 failure
+ * @return  os version success, 0 failure.
  */
 const char *aos_get_os_version(void);
 
 /**
- * get aos kernel version
+ * Get aos kernel version.
  *
- * @return  kernel version success, 0 failure
+ * @return  kernel version success, 0 failure.
  */
 const char *aos_get_kernel_version(void);
 
 /**
- * get aos app version
+ * Get aos app version.
  *
- * @return  app version success, 0 failure
+ * @return  app version success, 0 failure.
  */
 const char *aos_get_app_version(void);
 
 /**
- * get aos device name
+ * Get aos device name.
  *
- * @return  device name success, 0 failure
+ * @return  device name success, 0 failure.
  */
 const char *aos_get_device_name(void);
 
 /**
- * dump sys info
+ * dump sys info.
  */
 void dump_sys_info(void);
 

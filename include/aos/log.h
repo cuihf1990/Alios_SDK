@@ -22,56 +22,57 @@ typedef enum {
 
 
 /**
-* set the log level
+* Set the log level.
 *
-* @param[in]  log_level  level to be set
+* @param[in]  log_level  level to be set,must be one of AOS_LL_NONE,AOS_LL_FATAL,AOS_LL_ERROR,AOS_LL_WARN,AOS_LL_INFO or AOS_LL_DEBUG.
+
 */
 void aos_set_log_level(aos_log_level_t log_level);
 
 /**
- * log at fatal level
+ * Log at fatal level.
  *
- * @param[in]  mod  string description of module
- * @param[in]  fmt  same as printf() usage
+ * @param[in]  mod  string description of module.
+ * @param[in]  fmt  same as printf() usage.
  */
 #define LOGF(mod, fmt, ...) LOGF_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * log at error level
+ * Log at error level.
  *
- * @param[in]  mod  string description of module
- * @param[in]  fmt  same as printf() usage
+ * @param[in]  mod  string description of module.
+ * @param[in]  fmt  same as printf() usage.
  */
 #define LOGE(mod, fmt, ...) LOGE_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * log at warning level
+ * Log at warning level.
  *
- * @param[in]  mod  string description of module
- * @param[in]  fmt  same as printf() usage
+ * @param[in]  mod  string description of module.
+ * @param[in]  fmt  same as printf() usage.
  */
 #define LOGW(mod, fmt, ...) LOGW_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * log at info level
+ * Log at info level.
  *
- * @param[in]  mod  string description of module
- * @param[in]  fmt  same as printf() usage
+ * @param[in]  mod  string description of module.
+ * @param[in]  fmt  same as printf() usage.
  */
 #define LOGI(mod, fmt, ...) LOGI_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * log at warning level
+ * Log at debug level.
  *
- * @param[in]  mod  string description of module
- * @param[in]  fmt  same as printf() usage
+ * @param[in]  mod  string description of module.
+ * @param[in]  fmt  same as printf() usage.
  */
 #define LOGD(mod, fmt, ...) LOGD_IMPL(mod, fmt, ##__VA_ARGS__)
 
 /**
- * log at warning level
+ * Log at the level set by aos_set_log_level().
  *
- * @param[in]  fmt  same as printf() usage
+ * @param[in]  fmt  same as printf() usage.
  */
 #define LOG(fmt, ...) LOG_IMPL(fmt, ##__VA_ARGS__)
 
