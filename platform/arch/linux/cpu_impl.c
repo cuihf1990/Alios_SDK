@@ -39,11 +39,14 @@
 #define MIN_STACK_SIZE    4096
 #endif
 
+/*warning sizeof(task_ext_t) should not be larger than minmal stack size which
+  will satisfied R0~R12/LR/PC/SP storaged in arm m series*/
+
 typedef struct {
     ktask_t     *tcb;
     void        *arg;
     task_entry_t entry;
-    ucontext_t  uctx;
+    ucontext_t  *uctx;
     void        *real_stack;
     void        *real_stack_end;
     void        *orig_stack;
@@ -151,7 +154,7 @@ void *cpu_entry(void *arg)
     ktask_t    *tcb     = g_preferred_ready_task[(int)arg];
     task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;
 
-    setcontext(&tcb_ext->uctx);
+    setcontext(tcb_ext->uctx);
 
     assert(0);
 }
@@ -289,7 +292,7 @@ void cpu_first_task_start(void)
     ret = timer_settime(timerid, CLOCK_REALTIME, &ts, NULL);
     assert(ret == 0);
 
-    setcontext(&tcb_ext->uctx);
+    setcontext(tcb_ext->uctx);
     assert(0);
 }
 
@@ -303,7 +306,11 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
     void *real_stack = aos_malloc(real_size);
     assert(real_stack != NULL);
 
+    /*warning sizeof(task_ext_t) should not be larger than minmal stack size which
+      will satisfied R0~R12 storaged in arm m series*/
     task_ext_t *tcb_ext = (task_ext_t *)base;
+    tcb_ext->uctx = (ucontext_t *)aos_malloc(sizeof(ucontext_t));
+    assert(tcb_ext->uctx != NULL);
     cpu_stack_t *tmp;
 
     bzero(real_stack, real_size);
@@ -331,16 +338,16 @@ void *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_
 
     RHINO_CPU_INTRPT_DISABLE();
 
-    int ret = getcontext(&tcb_ext->uctx);
+    int ret = getcontext(tcb_ext->uctx);
     if (ret < 0) {
         RHINO_CPU_INTRPT_ENABLE();
         aos_free(real_stack);
         return NULL;
     }
 
-    tcb_ext->uctx.uc_stack.ss_sp = tcb_ext->real_stack;
-    tcb_ext->uctx.uc_stack.ss_size = real_size;
-    makecontext(&tcb_ext->uctx, task_proc, 0);
+    tcb_ext->uctx->uc_stack.ss_sp = tcb_ext->real_stack;
+    tcb_ext->uctx->uc_stack.ss_size = real_size;
+    makecontext(tcb_ext->uctx, task_proc, 0);
 
     RHINO_CPU_INTRPT_ENABLE();
 
@@ -367,11 +374,14 @@ void cpu_task_del_hook(ktask_t *tcb)
     kstat_t ret;
 
     task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;
+
     LOG("--- Task '%-20s' is deleted\n", tcb->task_name);
 #if defined(HAVE_VALGRIND_H)||defined(HAVE_VALGRIND_VALGRIND_H)
     VALGRIND_STACK_DEREGISTER(tcb_ext->vid);
 #endif
     g_sched_lock[cpu_cur_get()]++;
+
+    aos_free(tcb_ext->uctx);
 
     /*
      * ---- hack -----
@@ -451,9 +461,9 @@ static void _cpu_task_switch(void)
     g_active_task[cur_cpu_num] = g_preferred_ready_task[cur_cpu_num];
 
     #if (RHINO_CONFIG_CPU_NUM > 1)
-    swapcontext_safe(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
+    swapcontext_safe(from_tcb_ext->uctx, to_tcb_ext->uctx);
     #else
-    swapcontext(&from_tcb_ext->uctx, &to_tcb_ext->uctx);
+    swapcontext(from_tcb_ext->uctx, to_tcb_ext->uctx);
     #endif
 
     ret = pthread_mutex_lock(&spin_lock);
