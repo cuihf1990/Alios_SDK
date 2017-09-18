@@ -2,14 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file aos/cloud.h
- * @brief cloud API
- * @version since 1.0.0
- */
-
-#ifndef __AOS_CLOUD_H__
-#define __AOS_CLOUD_H__
+#ifndef AOS_CLOUD_H
+#define AOS_CLOUD_H
 
 enum {
     CLOUD_CONNECTED,
@@ -28,22 +22,24 @@ enum {
 typedef void (*aos_cloud_cb_t)(int event, const char *json_buffer);
 
 /**
- * @brief Register cloud event callback
- * @param cb_type event type interested
- * @param cb cloud event callback
- * @retval 0 success
- * @retval <0 failure
+ * Register cloud event callback.
+ *
+ * @param[in]  cb_type  event type interested.
+ * @param[in]  cb       cloud event callback.
+ *
+ * @return  the operation status, 0 is OK, others is error.
  */
 int aos_cloud_register_callback(int cb_type, aos_cloud_cb_t cb);
 
 /**
- * @brief Report event to cloud
- * @param method remote method name
- * @param json_buffer method's payload
- * @param done_cb report done callback
- * @param arg private data passed to done_cb
- * @retval 0 success
- * @retval <0 failure
+ * Report event to cloud.
+ *
+ * @param[in]  method       remote method name.
+ * @param[in]  json_buffer  method's payload.
+ * @param[in]  done_cb      report done callback.
+ * @param[in]  arg          private data passed to done_cb.
+ *
+ * @return  the operation status, 0 is OK, others is error.
  */
 int aos_cloud_report(const char *method,
                      const char *json_buffer,
@@ -51,18 +47,19 @@ int aos_cloud_report(const char *method,
                      void *arg);
 
 /**
- * @brief trigger specific event, used by Cloud Backend
- * @param cb_type event type
- * @param json_buffer payload
- * @return None
+ * Trigger specific event, used by Cloud Backend.
+ *
+ * @param[in]  cb_type      event type.
+ * @param[in]  json_buffer  payload.
  */
 void aos_cloud_trigger(int cb_type, const char *json_buffer);
 
 /**
- * @brief register Cloud Backend
- * @param report called when user do aos_cloud_report
- * @return None
- */
-void aos_cloud_register_backend(int (*report)(const char *method,
-                                              const char *json_buffer));
-#endif
+* Register Cloud Backend.
+*
+* @param[in]  report  called when user do aos_cloud_report.
+*/
+void aos_cloud_register_backend(int (*report)(const char *method, const char *json_buffer));
+
+#endif /* AOS_CLOUD_H */
+

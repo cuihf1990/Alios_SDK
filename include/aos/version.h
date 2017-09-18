@@ -2,54 +2,48 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file aos/version.h
- * @brief version API
- * @version since 1.0.0
- */
-
-#ifndef AOS_SYS_VERSION
-#define AOS_SYS_VERSION
+#ifndef AOS_VERSION_H
+#define AOS_VERSION_H
 
 /**
- * @brief get aos product model 
- * @retval model success
- * @retval 0 failure
+ * Get aos product model.
+ *
+ * @return  model success, 0 failure.
  */
 const char *aos_get_product_model(void);
 
 /**
- * @brief get aos os version 
- * @retval os version success
- * @retval 0 failure
+ * Get aos os version.
+ *
+ * @return  os version success, 0 failure.
  */
-const char *aos_get_os_version (void);
+const char *aos_get_os_version(void);
 
 /**
- * @brief get aos kernel version 
- * @retval kernel version success
- * @retval 0 failure
+ * Get aos kernel version.
+ *
+ * @return  kernel version success, 0 failure.
  */
-const char *aos_get_kernel_version (void);
+const char *aos_get_kernel_version(void);
 
 /**
- * @brief get aos app version 
- * @retval app version success
- * @retval 0 failure
+ * Get aos app version.
+ *
+ * @return  app version success, 0 failure.
  */
-const char *aos_get_app_version (void);
+const char *aos_get_app_version(void);
 
 /**
- * @brief get aos device name 
- * @retval device name success
- * @retval 0 failure
+ * Get aos device name.
+ *
+ * @return  device name success, 0 failure.
  */
 const char *aos_get_device_name(void);
 
 /**
- * @brief dump sys info
+ * dump sys info.
  */
 void dump_sys_info(void);
 
-#endif /* AOS_SYS_VERSION */
+#endif /* AOS_VERSION_H */
 

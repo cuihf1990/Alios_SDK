@@ -2,14 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file hal/soc/uart.h
- * @brief UART HAL
- * @version since 5.5.0
- */
-
-#ifndef AOS_UART_H
-#define AOS_UART_H
+#ifndef HAL_UART_H
+#define HAL_UART_H
 
 /**
  * UART data width
@@ -66,53 +60,49 @@ typedef struct {
     void         *priv;    /* priv data */
 } uart_dev_t;
 
-
-/**@brief Initialises a UART interface
+/**
+ * Initialises a UART interface
  *
  * @note Prepares an UART hardware interface for communications
  *
- * @param  uart     : the interface which should be initialised
- * @param  config   : UART configuration structure
- * @param  optional_rx_buffer : Pointer to an optional RX ring buffer
+ * @param[in]  uart  the interface which should be initialised
  *
- * @return    0     : on success.
- * @return    EIO   : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_uart_init(uart_dev_t *uart);
 
-
-/**@brief Transmit data on a UART interface
+/**
+ * Transmit data on a UART interface
  *
- * @param  uart     : the UART interface
- * @param  data     : pointer to the start of data
- * @param  size     : number of bytes to transmit
+ * @param[in]  uart  the UART interface
+ * @param[in]  data  pointer to the start of data
+ * @param[in]  size  number of bytes to transmit
  *
- * @return 0        : on success.
- * @return EIO      : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout);
 
-
-/**@brief Receive data on a UART interface
+/**
+ * Receive data on a UART interface
  *
- * @param  uart     : the UART interface
- * @param  data     : pointer to the buffer which will store incoming data
- * @param  size     : number of bytes to receive
- * @param  timeout  : timeout in milisecond
+ * @param[in]   uart         the UART interface
+ * @param[out]  data         pointer to the buffer which will store incoming data
+ * @param[in]   expect_size  number of bytes to receive
+ * @param[out]  recv_size    number of bytes received
+ * @param[in]   timeout      timeout in milisecond
  *
- * @return 0        : on success.
- * @return EIO      : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout);
 
-
-/**@brief Deinitialises a UART interface
+/**
+ * Deinitialises a UART interface
  *
- * @param  uart : the interface which should be deinitialised
+ * @param[in]  uart  the interface which should be deinitialised
  *
- * @return 0    : on success.
- * @return EIO  : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_uart_finalize(uart_dev_t *uart);
 
-#endif
+#endif /* HAL_UART_H */
+

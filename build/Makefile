@@ -8,6 +8,12 @@ export SOURCE_ROOT ?= ./
 
 export MAKEFILES_PATH := $(SOURCE_ROOT)/build
 export SCRIPTS_PATH := $(SOURCE_ROOT)/build/scripts
+
+export BINSTYPE_UPPER
+export BINSTYPE_LOWER
+export UNDERLINE
+export RADIXPOINT
+
 MAKEFILE_TARGETS := clean  # targets used by makefile 
 
 #define BUILD_STRING, AOS toolchain commands on different hosts
@@ -16,7 +22,7 @@ include $(MAKEFILES_PATH)/aos_host_cmd.mk
 define USAGE_TEXT
 Aborting due to invalid targets
 
-Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1] [BINS=1]
+Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1] [BINS=app/framework/kernel]
        make run
 
   <target>
@@ -41,8 +47,8 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1] [BI
   [VERBOSE=1]
     Shows the commands as they are being executed
 
-  [BINS=1]
-    Build two bins: app and kernel
+  [BINS=app/framework/kernel]
+    Build bins: app or framework or kernel
 
   Notes
     * Component names are case sensitive
@@ -66,6 +72,32 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1] [BI
     Clean output directory
       $> make clean
 endef
+
+BINS ?=
+
+ifeq (,$(BINS))
+BINSTYPE_UPPER :=
+BINSTYPE_LOWER :=
+UNDERLINE :=
+RADIXPOINT :=
+else ifeq (app,$(BINS))
+BINSTYPE_UPPER :=APP
+BINSTYPE_LOWER :=app
+UNDERLINE :=_
+RADIXPOINT :=.
+else ifeq (framework,$(BINS))
+BINSTYPE_UPPER :=FRAMEWORK
+BINSTYPE_LOWER :=framework
+UNDERLINE :=_
+RADIXPOINT :=.
+else ifeq (kernel,$(BINS))
+BINSTYPE_UPPER :=KERNEL
+BINSTYPE_LOWER :=kernel
+UNDERLINE :=_
+RADIXPOINT :=.
+else
+$(error BINS Error, Valid BINS: [BINS=app BINS=kernel BINS=framework])
+endif
 
 ############################
 # Extra options:
@@ -109,27 +141,20 @@ ifeq (,$(SUB_BUILD))
 JOBSNO := -j$(JOBS)
 endif
 
-BINS ?=0
-
 PASSDOWN_TARGETS := $(strip $(filter-out $(MAKEFILE_TARGETS) $(BUILD_STRING),$(MAKECMDGOALS))) #download total
 $(PASSDOWN_TARGETS):
 	@:
 
 $(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit)
 
-ifeq ($(BINS), 0)
-main_app: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
+main_app: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
 	$(QUIET)$(ECHO) Build AOS Now
-	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
+	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/binary)
+	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/modules)
+	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/libraries)
+	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/resources)
 	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
 	$(QUIET)$(ECHO) Build complete
-else
-main_app: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(AOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build_bins.mk
-	$(QUIET)$(ECHO) Build AOS-BINS Now
-	$(QUIET)$(COMMON_TOOLS_PATH)mkdir -p $(OUTPUT_DIR)/binary $(OUTPUT_DIR)/modules $(OUTPUT_DIR)/libraries $(OUTPUT_DIR)/resources
-	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build_bins.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
-	$(QUIET)$(ECHO) Build complete
-endif
 
 ifeq ($(SUB_BUILD),)
 .gdbinit: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app

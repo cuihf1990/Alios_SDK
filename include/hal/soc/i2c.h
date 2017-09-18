@@ -2,13 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file hal/soc/i2c.h
- * @brief I2C HAL
- */
-
-#ifndef AOS_I2C_H
-#define AOS_I2C_H
+#ifndef HAL_I2C_H
+#define HAL_I2C_H
 
 typedef struct {
     uint32_t address_width;
@@ -21,104 +16,108 @@ typedef struct {
     void        *priv;    /* priv data */
 } i2c_dev_t;
 
-
-/**@brief Initialises an I2C interface
- * @note Prepares an I2C hardware interface for communication as a master or slave
+/**
+ * Initialises an I2C interface
+ * Prepares an I2C hardware interface for communication as a master or slave
  *
- * @param     device : the device for which the i2c port should be initialised
- * @return    0      : on success.
- * @return    EIO    : if an error occurred during initialisation
+ * @param[in]  i2c  the device for which the i2c port should be initialised
+ *
+ * @return  0 : on success, EIO : if an error occurred during initialisation
  */
 int32_t hal_i2c_init(i2c_dev_t *i2c);
 
-
-/**@brief     i2c master send
- * @param     i2c           : the i2c device
- * @param     dev_addr      : device address
- * @param     data          : i2c send data
- * @param     size          : i2c send data size
- * @param     timeout       : timeout in ms
- * @return    0             : on success.
- * @return    EIO           : if an error occurred during initialisation
+/**
+ * i2c master send
+ *
+ * @param[in]  i2c       the i2c device
+ * @param[in]  dev_addr  device address
+ * @param[in]  data      i2c send data
+ * @param[in]  size      i2c send data size
+ * @param[in]  timeout   timeout in ms
+ *
+ * @return  0 : on success, EIO : if an error occurred during initialisation
  */
 int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, uint16_t size, uint32_t timeout);
 
-
-/**@brief     i2c master recv
+/**
+ * i2c master recv
  *
- * @param     i2c         : the i2c device
- * @param     dev_addr    : device address
- * @param     data        : i2c receive data
- * @param     size        : i2c receive data size
- * @param     timeout     : timeout in ms
- * @return    0           : on success.
- * @return    EIO         : if an error occurred during initialisation
+ * @param[in]   i2c       the i2c device
+ * @param[in]   dev_addr  device address
+ * @param[out]  data      i2c receive data
+ * @param[in]   size      i2c receive data size
+ * @param[in]   timeout   timeout in ms
+ *
+ * @return  0 : on success, EIO : if an error occurred during initialisation
  */
 int32_t hal_i2c_master_recv(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, uint16_t size, uint32_t timeout);
 
 
-/**@brief hal_i2C_slave_send
+/**
+ * hal_i2C_slave_send
  *
- * @param     i2c         : the i2c device
- * @param     data        : i2c slave send data
- * @param     size        : i2c slave send data size
- * @param     timeout     : timeout in ms
- * @return    0           : on success.
- * @return    EIO         : if an error occurred during initialisation
+ * @param[in]  i2c      the i2c device
+ * @param[in]  data     i2c slave send data
+ * @param[in]  size     i2c slave send data size
+ * @param[in]  timeout  timeout in ms
+ *
+ * @return  0 : on success, EIO : if an error occurred during initialisation
  */
 int32_t hal_i2C_slave_send(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_t timeout);
 
 
-/**@brief Initialises an I2C interface
+/**
+ * Initialises an I2C interface
  *
- * @param     i2c         : tthe i2c device
- * @param     data        : i2c slave receive data
- * @param     size        : i2c slave receive data size
- * @param     timeout     : timeout in ms
- * @return    0           : on success.
- * @return    EIO         : if an error occurred during initialisation
+ * @param[in]   i2c      tthe i2c device
+ * @param[out]  data     i2c slave receive data
+ * @param[in]   size     i2c slave receive data size
+ * @param[in]   timeout  timeout in ms
+ *
+ * @return  0 : on success, EIO : if an error occurred during initialisation
  */
 int32_t hal_i2c_slave_recv(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_t timeout);
 
-
-/**@brief i2c mem write
+/**
+ * i2c mem write
  *
- * @param     i2c           : the i2c device
- * @param     dev_addr      : device address
- * @param     mem_addr      : mem address
- * @param     mem_addr_size : mem address
- * @param     data          : i2c master send data
- * @param     size          : i2c master send data size
- * @param     timeout       : timeout in ms
- * @return    0             : on success.
- * @return    EIO           : if an error occurred during initialisation
+ * @param[in]  i2c            the i2c device
+ * @param[in]  dev_addr       device address
+ * @param[in]  mem_addr       mem address
+ * @param[in]  mem_addr_size  mem address
+ * @param[in]  data           i2c master send data
+ * @param[in]  size           i2c master send data size
+ * @param[in]  timeout        timeout in ms
+ *
+ * @return  0 : on success, EIO : if an error occurred during initialisation
  */
 int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data,
                           uint16_t size, uint32_t timeout);
 
-/**@brief i2c master mem read
- * @param     i2c           : the i2c device
- * @param     dev_addr      : device address
- * @param     mem_addr      : mem address
- * @param     mem_addr_size : mem address
- * @param     data          : i2c master send data
- * @param     size          : i2c master send data size
- * @param     timeout       : timeout in ms
- * @return    0             : on success.
- * @return    EIO           : if an error occurred during initialisation
+/**
+ * i2c master mem read
+ *
+ * @param[in]   i2c            the i2c device
+ * @param[in]   dev_addr       device address
+ * @param[in]   mem_addr       mem address
+ * @param[in]   mem_addr_size  mem address
+ * @param[out]  data           i2c master send data
+ * @param[in]   size           i2c master send data size
+ * @param[in]   timeout        timeout in ms
+ *
+ * @return  0 : on success, EIO : if an error occurred during initialisation
  */
 int32_t hal_i2c_mem_read(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data,
                          uint16_t size, uint32_t timeout);
 
-
-/**@brief Deinitialises an I2C device
+/**
+ * Deinitialises an I2C device
  *
- * @param     device : the i2c device
- * @return    0      : on success.
- * @return    EIO    : if an error occurred during deinitialisation
+ * @param[in]  i2c  the i2c device
+ *
+ * @return  0 : on success, EIO : if an error occurred during deinitialisation
  */
 int32_t hal_i2c_finalize(i2c_dev_t *i2c);
 
-#endif
-
+#endif /* HAL_I2C_H */
 

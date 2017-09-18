@@ -23,7 +23,7 @@ void test_uradar_urmesh_case(void)
 
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_set_mode(MODE_MOBILE));
     YUNIT_ASSERT(MODE_MOBILE == umesh_get_mode());
-    YUNIT_ASSERT(NULL != umesh_get_mac_address());
+    YUNIT_ASSERT(NULL != umesh_get_mac_address(MEDIA_TYPE_DFL));
     umesh_set_mode(MODE_RX_ON);
     YUNIT_ASSERT(MODE_RX_ON == umesh_get_mode());
 
@@ -37,19 +37,6 @@ void test_uradar_urmesh_case(void)
 
     YUNIT_ASSERT(NULL != umesh_get_ucast_addr());
     YUNIT_ASSERT(NULL != umesh_get_mcast_addr());
-
-    mac_address_t mac_addr;
-    umesh_enable_whitelist();
-    mac_addr.len = sizeof(mac_addr.addr);
-    memset(mac_addr.addr, 0x00, sizeof(mac_addr.addr));
-    mac_addr.addr[0] = 0x20;
-    YUNIT_ASSERT(UR_ERROR_NONE == umesh_add_whitelist(&mac_addr));
-    mac_addr.addr[0] = 0x30;
-    YUNIT_ASSERT(UR_ERROR_NONE == umesh_add_whitelist_rssi(&mac_addr, 1));
-    mac_addr.addr[0] = 0x20;
-    umesh_remove_whitelist(&mac_addr);
-    umesh_clear_whitelist();
-    umesh_disable_whitelist();
 
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_stop());
 }

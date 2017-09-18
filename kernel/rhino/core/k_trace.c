@@ -12,17 +12,17 @@ struct k_fifo trace_fifo;
 
 int32_t set_filter_task(const char *task_name)
 {
-    NULL_PARA_CHK(task_name);
-
-    klist_t *taskhead = &g_kobj_list.task_head;
-    klist_t *taskend  = taskhead, *tmp;
-    ktask_t  *task;
-
-    for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
-        task = krhino_list_entry(tmp, ktask_t, task_stats_item);
-        if (task->task_name != NULL && !memcmp(task_name, task->task_name, strlen(task->task_name))) {
-            hit_task = task;
-            return 0;
+    if (task_name != NULL) {
+        klist_t *taskhead = &g_kobj_list.task_head;
+        klist_t *taskend  = taskhead, *tmp;
+        ktask_t  *task;
+    
+        for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
+            task = krhino_list_entry(tmp, ktask_t, task_stats_item);
+            if (task->task_name != NULL && !memcmp(task_name, task->task_name, strlen(task->task_name))) {
+                hit_task = task;
+                return 0;
+            }
         }
     }
 
@@ -57,8 +57,6 @@ void _trace_init(void)
     uint32_t buf[10];
 
     fifo_init(&trace_fifo, buffer, TRACE_BUFFER_SIZE * 4);
-    event_mask  = 0;
-    hit_task = NULL;
 
     buf[0] = 0x101;
     buf[1] = 0x0;

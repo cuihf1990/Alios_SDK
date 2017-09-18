@@ -511,35 +511,36 @@ ur_error_t umesh_set_mode(uint8_t mode)
     return umesh_mm_set_mode(mode);
 }
 
-int8_t umesh_get_seclevel(void)
-{
-    return umesh_mm_get_seclevel();
-}
-
-ur_error_t umesh_set_seclevel(int8_t level)
-{
-    return umesh_mm_set_seclevel(level);
-}
-
-/* per network APIs */
-const mac_address_t *umesh_net_get_mac_address(umesh_net_index_t nettype)
+const mac_address_t *umesh_get_mac_address(media_type_t type)
 {
     return umesh_mm_get_mac_address();
 }
 
-uint16_t umesh_net_get_meshnetid(umesh_net_index_t nettype)
+uint16_t umesh_get_meshnetid(void)
 {
     return umesh_mm_get_meshnetid(NULL);
 }
 
-uint16_t umesh_net_get_meshnetsize(umesh_net_index_t nettype)
+uint16_t umesh_get_meshnetsize(void)
 {
     return umesh_mm_get_meshnetsize();
 }
 
-uint16_t umesh_net_get_sid(umesh_net_index_t nettype)
+uint16_t umesh_get_sid(void)
 {
     return umesh_mm_get_local_sid();
+}
+
+slist_t *umesh_get_nbrs(media_type_t type)
+{
+    hal_context_t *hal;
+    slist_t *nbrs = NULL;
+
+    hal = get_hal_context(type);
+    if (hal) {
+        nbrs = &hal->neighbors_list;
+    }
+    return nbrs;
 }
 
 bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)
@@ -562,75 +563,6 @@ ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
     return mf_resolve_dest(dest, dest_addr);
 }
 
-#ifdef CONFIG_AOS_MESH_DEBUG
-bool umesh_is_whitelist_enabled(void)
-{
-    return is_whitelist_enabled();
-}
-
-void umesh_enable_whitelist(void)
-{
-    whitelist_enable();
-}
-
-void umesh_disable_whitelist(void)
-{
-    whitelist_disable();
-}
-
-const whitelist_entry_t *umesh_get_whitelist_entries(void)
-{
-    return whitelist_get_entries();
-}
-
-ur_error_t umesh_add_whitelist(const mac_address_t *address)
-{
-    whitelist_entry_t *entry;
-
-    entry = whitelist_add(address);
-    if (entry) {
-        return UR_ERROR_NONE;
-    }
-    return UR_ERROR_MEM;
-}
-
-ur_error_t umesh_add_whitelist_rssi(const mac_address_t *address, int8_t rssi)
-{
-    whitelist_entry_t *entry;
-
-    entry = whitelist_add(address);
-    if (entry == NULL) {
-        return UR_ERROR_MEM;
-    }
-    whitelist_set_constant_rssi(entry, rssi);
-    return UR_ERROR_NONE;
-}
-
-void umesh_remove_whitelist(const mac_address_t *address)
-{
-    whitelist_remove(address);
-}
-
-void umesh_clear_whitelist(void)
-{
-    whitelist_clear();
-}
-#endif
-
-void umesh_get_channel(channel_t *channel)
-{
-    umesh_hal_module_t   *ur_wifi_hal = NULL;
-
-    if (channel) {
-        ur_wifi_hal = hal_umesh_get_default_module();
-
-        channel->wifi_channel = (uint16_t)hal_umesh_get_channel( ur_wifi_hal);
-        channel->channel = channel->wifi_channel;
-        channel->hal_ucast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
-        channel->hal_bcast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
-    }
-}
-
 void umesh_get_extnetid(umesh_extnetid_t *extnetid)
 {
     if (extnetid == NULL) {
@@ -646,44 +578,4 @@ ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid)
     }
 
     return umesh_mm_set_extnetid(extnetid);
-}
-
-const ur_link_stats_t *umesh_get_link_stats(media_type_t type)
-{
-    hal_context_t *hal;
-
-    hal = get_hal_context(type);
-    return mf_get_stats(hal);
-}
-
-const frame_stats_t *umesh_get_hal_stats(media_type_t type)
-{
-    hal_context_t *hal;
-
-    hal = get_hal_context(type);
-    if (hal == NULL) {
-        return NULL;
-    }
-
-    return hal_umesh_get_stats(hal->module);
-}
-
-const ur_message_stats_t *umesh_get_message_stats(void)
-{
-    return message_get_stats();
-}
-
-const ur_mem_stats_t *umesh_get_mem_stats(void)
-{
-    return ur_mem_get_stats();
-}
-
-slist_t *umesh_get_hals(void)
-{
-    return get_hal_contexts();
-}
-
-slist_t *umesh_get_networks(void)
-{
-    return get_network_contexts();
 }

@@ -4,11 +4,13 @@ sudo apt-get update
 sudo apt-get -y upgrade
 
 sudo apt-get -y install vim mutt msmtp
-sudo apt-get -y install python-pip git
+sudo apt-get -y install python-pip git screen
 sudo pip install pyserial
 
 cwd=`pwd`
-mkdir ~/tools
+if [ ! -d ~/tools ]; then
+    mkdir ~/tools
+fi
 cd ~/tools
 git clone https://github.com/espressif/esptool.git
 echo LC_ALL=\"en_US.UTF-8\" >> ~/.bashrc

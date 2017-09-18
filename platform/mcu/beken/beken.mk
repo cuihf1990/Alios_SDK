@@ -64,17 +64,18 @@ GLOBAL_LDFLAGS += -mcpu=arm968e-s \
                  $(CLIB_LDFLAGS_NANO_FLOAT)
 
 
-BINS ?= 0
+BINS ?=
 
 ifeq ($(APP),bootloader)
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_boot.ld
 else
 
-ifeq ($(BINS),0)
+ifeq ($(BINS),)
 GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231.ld
-else
-GLOBAL_LDFLAGS_APP    := -T platform/mcu/beken/beken7231/beken378/build/bk7231_app.ld
-GLOBAL_LDFLAGS_KERNEL := -T platform/mcu/beken/beken7231/beken378/build/bk7231_kernel.ld
+else ifeq ($(BINS),app)
+GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_app.ld
+else ifeq ($(BINS),kernel)
+GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_kernel.ld
 endif
 
 endif

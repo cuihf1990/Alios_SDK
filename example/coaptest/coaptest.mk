@@ -1,4 +1,4 @@
-ifeq (1,${BINS})
+ifneq (,${BINS})
 	GLOBAL_CFLAGS += -DSYSINFO_OS_BINS
 endif
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
@@ -12,7 +12,7 @@ $(NAME)_SOURCES     := coaptest.c
 GLOBAL_DEFINES      += ALIOT_DEBUG
 
 CONFIG_COAP_DTLS_SUPPORT := y
-#CONFIG_COAP_ONLINE := y
+CONFIG_COAP_ONLINE := y
 
 ifeq ($(CONFIG_COAP_DTLS_SUPPORT), y)
 $(NAME)_DEFINES += COAP_DTLS_SUPPORT

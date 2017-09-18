@@ -349,5 +349,20 @@ int FLASH_read_at(uint32_t address, uint64_t *pData, uint32_t len_bytes)
     return ret;
 }
 
+int FLASH_bank1_enabled( )
+{
+    int rc = 0;
+    FLASH_OBProgramInitTypeDef    OBInit;
+    /* Set BFB2 bit to enable boot from Flash Bank2 */
+    /* Allow Access to the Flash control registers and user Flash. */
+    HAL_FLASH_Unlock();
+    /* Allow Access to the option bytes sector. */
+    HAL_FLASH_OB_Unlock();
+    /* Get the Dual boot configuration status. */
+    HAL_FLASHEx_OBGetConfig(&OBInit);
+
+    return ( (OBInit.USERConfig & OB_BFB2_ENABLE) == OB_BFB2_ENABLE ) ? 0 : 1;
+}
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

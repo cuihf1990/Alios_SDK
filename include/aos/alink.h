@@ -2,10 +2,10 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef _ALINK_EXPORT_H_
-#define _ALINK_EXPORT_H_
+#ifndef AOS_ALINK_H
+#define AOS_ALINK_H
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 extern "C"
 {
 #endif
@@ -56,7 +56,7 @@ int alink_start(void);
 /**
  * Waiting alink connect to aliyun server
  *
- * @param[in] timeout_ms: time in milliseconds, use ALINK_WAIT_FOREVER to wait until server is connected
+ * @param[in]  timeout_ms  time in milliseconds, use ALINK_WAIT_FOREVER to wait until server is connected
  *
  * @return  0 when connect to server successfully, otherwise -1 will return
  */
@@ -131,8 +131,8 @@ enum ALINK_WIFI_CALLBACK {
 /**
  * @brief register misc callback
  *
- * @param[in] cb_type: callback type.
- * @param[in] cb_func: callback func pointer, func declaration see related comments.
+ * @param[in]  cb_type  callback type.
+ * @param[in]  cb_func  callback func pointer, func declaration see related comments.
  *
  * @retval  0 on success, otherwise -1 will return
  */
@@ -158,5 +158,9 @@ int awss_start(void);
  */
 int awss_stop(void);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* AOS_ALINK_H */
 

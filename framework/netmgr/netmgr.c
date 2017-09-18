@@ -217,10 +217,22 @@ static void set_access_security(hal_wifi_init_type_t *wifi_type, char *security)
     } else if ( strcmp( security, "wpa2" ) == 0 ) {
         wifi_type->access_sec = WIFI_ECN_WPA2_PSK;
     } else {
-        // set ES_WIFI_SEC_WPA_WPA2 as default
-        wifi_type->access_sec = WIFI_ECN_WPA_WPA2_PSK;
+        // set WIFI_ECN_WPA2_PSK as default
+        wifi_type->access_sec = WIFI_ECN_WPA2_PSK;
         LOGE("netmgr", "Invalid access security settings! Only support open|wep|wpa|wpa2");
     }
+}
+
+static bool valid_access_security(char *security)
+{
+    bool ret = false;
+    if ( strcmp( security, "open" ) == 0
+        || strcmp( security, "wep" ) == 0
+        || strcmp( security, "wpa" ) == 0
+        || strcmp( security, "wpa2" ) == 0 ) {
+        ret = true;
+    }
+    return ret;
 }
 #endif
 
@@ -273,7 +285,7 @@ static int clear_wifi_ssid(void)
     memset(g_netmgr_cxt.ap_config.pwd, 0, sizeof(g_netmgr_cxt.ap_config.pwd));
 
     memset(&g_netmgr_cxt.saved_conf, 0, sizeof(wifi_conf_t));
-    ret = aos_kv_set("wifi", (unsigned char *)(&g_netmgr_cxt.saved_conf),
+    ret = aos_kv_set(NETMGR_WIFI_KEY, (unsigned char *)(&g_netmgr_cxt.saved_conf),
                      sizeof(wifi_conf_t), 1);
 
     return ret;
@@ -293,7 +305,7 @@ static int set_wifi_ssid(void)
     strncpy(g_netmgr_cxt.saved_conf.security,
             g_netmgr_cxt.ap_config.security, MAX_SECURITY_SIZE);
 #endif
-    ret = aos_kv_set("wifi", (unsigned char *)&g_netmgr_cxt.saved_conf,
+    ret = aos_kv_set(NETMGR_WIFI_KEY, (unsigned char *)&g_netmgr_cxt.saved_conf,
                      sizeof(wifi_conf_t), 1);
 
     return ret;
@@ -415,6 +427,7 @@ void netmgr_clear_ap_config(void)
     clear_wifi_ssid();
 }
 
+#define HOTSPOT_AP "aha"
 int netmgr_set_ap_config(netmgr_ap_config_t *config)
 {
     int ret = 0;
@@ -433,9 +446,15 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
             config->security, sizeof(g_netmgr_cxt.saved_conf.security) - 1);
     // STM32L475E ip stack running on WiFi MCU, can only configure with CLI(no ywss)
     // So save the wifi config while config from CLI
-    ret = aos_kv_set("wifi", &g_netmgr_cxt.saved_conf, sizeof(wifi_conf_t), 1);
+    if (valid_access_security(g_netmgr_cxt.ap_config.security)) {
+        if (strcmp(config->ssid, HOTSPOT_AP) != 0)
+            ret = aos_kv_set(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf,
+              sizeof(wifi_conf_t), 1);
+    }
 #else
-    ret = aos_kv_set("wifi", &g_netmgr_cxt.saved_conf, sizeof(wifi_conf_t), 0);
+    if (strcmp(config->ssid, HOTSPOT_AP) != 0) // Do not save hotspot AP
+        ret = aos_kv_set(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf,
+          sizeof(wifi_conf_t), 1);
 #endif
     return ret;
 }
@@ -452,7 +471,7 @@ static void read_persistent_conf(void)
     int len;
 
     len = sizeof(wifi_conf_t);
-    ret = aos_kv_get("wifi", &g_netmgr_cxt.saved_conf, &len);
+    ret = aos_kv_get(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf, &len);
     if (ret < 0) {
         return;
     }

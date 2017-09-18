@@ -192,7 +192,7 @@ ur_error_t ur_adapter_interface_up(void)
     interface = netif_find(g_la_state.interface_name);
 
     if (interface == NULL) {
-        mac_addr = umesh_get_mac_address();
+        mac_addr = umesh_get_mac_address(MEDIA_TYPE_DFL);
         g_la_state.adpif.hwaddr_len = mac_addr->len;
         memcpy(g_la_state.adpif.hwaddr, mac_addr->addr, 6);
 

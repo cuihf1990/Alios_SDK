@@ -2,27 +2,27 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/**
- * @file hal/soc/gpio.h
- * @brief GPIO HAL
- * @version since 5.5.0
- */
-
-#ifndef AOS_GPIO_H
-#define AOS_GPIO_H
+#ifndef HAL_GPIO_H
+#define HAL_GPIO_H
 
 /**
  * Pin configuration
  */
 typedef enum {
-    INPUT_PULL_UP,             /* Input with an internal pull-up resistor - use with devices that actively drive the signal low - e.g. button connected to ground */
-    INPUT_PULL_DOWN,           /* Input with an internal pull-down resistor - use with devices that actively drive the signal high - e.g. button connected to a power rail */
+    INPUT_PULL_UP,             /* Input with an internal pull-up resistor - use with devices
+								  that actively drive the signal low - e.g. button connected to ground */
+    INPUT_PULL_DOWN,           /* Input with an internal pull-down resistor - use with devices
+								  that actively drive the signal high - e.g. button connected to a power rail */
     INPUT_HIGH_IMPEDANCE,      /* Input - must always be driven, either actively or by an external pullup resistor */
-    OUTPUT_PUSH_PULL,          /* Output actively driven high and actively driven low - must not be connected to other active outputs - e.g. LED output */
-    OUTPUT_OPEN_DRAIN_NO_PULL, /* Output actively driven low but is high-impedance when set high - can be connected to other open-drain/open-collector outputs. Needs an external pull-up resistor */
-    OUTPUT_OPEN_DRAIN_PULL_UP, /* Output actively driven low and is pulled high with an internal resistor when set high - can be connected to other open-drain/open-collector outputs. */
+    OUTPUT_PUSH_PULL,          /* Output actively driven high and actively driven low -
+								  must not be connected to other active outputs - e.g. LED output */
+    OUTPUT_OPEN_DRAIN_NO_PULL, /* Output actively driven low but is high-impedance when set high -
+								  can be connected to other open-drain/open-collector outputs.
+								  Needs an external pull-up resistor */
+    OUTPUT_OPEN_DRAIN_PULL_UP, /* Output actively driven low and is pulled high
+								  with an internal resistor when set high -
+								  can be connected to other open-drain/open-collector outputs. */
 } gpio_config_t;
-
 
 /**
  * GPIO interrupt trigger
@@ -46,133 +46,106 @@ typedef struct {
  */
 typedef void (*gpio_irq_handler_t)(void *arg);
 
-
-/******************************************************
-*                 Function Declarations
-******************************************************/
-
-
-/**@brief Initialises a GPIO pin
+/**
+ * Initialises a GPIO pin
  *
  * @note  Prepares a GPIO pin for use.
  *
- * @param gpio          : the gpio pin which should be initialised
- * @param configuration : A structure containing the required
- *                        gpio configuration
+ * @param[in]  gpio           the gpio pin which should be initialised
+ * @param[in]  configuration  A structure containing the required gpio configuration
  *
- * @return    0         : on success.
- * @return    EIO       : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_gpio_init(gpio_dev_t *gpio);
 
-/**@brief Sets an output GPIO pin high
+/**
+ * Sets an output GPIO pin high
  *
  * @note  Using this function on a gpio pin which is set to input mode is undefined.
  *
- * @param gpio    : the gpio pin which should be set high
+ * @param[in]  gpio  the gpio pin which should be set high
  *
- * @return    0   : on success.
- * @return    EIO : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_gpio_output_high(gpio_dev_t *gpio);
 
-
-/**@brief Sets an output GPIO pin low
+/**
+ * Sets an output GPIO pin low
  *
  * @note  Using this function on a gpio pin which is set to input mode is undefined.
  *
- * @param gpio      : the gpio pin which should be set low
+ * @param[in]  gpio  the gpio pin which should be set low
  *
- * @return    0     : on success.
- * @return    EIO   : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_gpio_output_low(gpio_dev_t *gpio);
 
-/** Trigger an output GPIO pin
- *
+/**
  * Trigger an output GPIO pin's output. Using this function on a
  * gpio pin which is set to input mode is undefined.
  *
- * @param gpio      : the gpio pin which should be set low
+ * @param[in]  gpio  the gpio pin which should be set low
  *
- * @return    0     : on success.
- * @return    EIO   : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_gpio_output_toggle(gpio_dev_t *gpio);
 
-
-
-/**@brief Get the state of an input GPIO pin
- *
- * @note Get the state of an input GPIO pin. Using this function on a
+/**
+ * Get the state of an input GPIO pin. Using this function on a
  * gpio pin which is set to output mode will return an undefined value.
  *
- * @param gpio     : the gpio pin which should be read
- * @param value    : gpio value
- * @return    0    : on success
- * @return    EIO  : if an error occurred with any step
+ * @param[in]  gpio   the gpio pin which should be read
+ * @param[in]  value  gpio value
+ *
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int8_t hal_gpio_input_get(gpio_dev_t *gpio, uint32_t *value);
 
-
-/**@brief Enables an interrupt trigger for an input GPIO pin
- *
- * @note Enables an interrupt trigger for an input GPIO pin.
+/**
+ * Enables an interrupt trigger for an input GPIO pin.
  * Using this function on a gpio pin which is set to
  * output mode is undefined.
  *
- * @param gpio    : the gpio pin which will provide the interrupt trigger
- * @param trigger : the type of trigger (rising/falling edge)
- * @param handler : a function pointer to the interrupt handler
- * @param arg     : an argument that will be passed to the
- *                  interrupt handler
+ * @param[in]  gpio     the gpio pin which will provide the interrupt trigger
+ * @param[in]  trigger  the type of trigger (rising/falling edge)
+ * @param[in]  handler  a function pointer to the interrupt handler
+ * @param[in]  arg      an argument that will be passed to the interrupt handler
  *
- * @return    0   : on success.
- * @return    EIO : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_gpio_enable_irq(gpio_dev_t *gpio, gpio_irq_trigger_t trigger,
                             gpio_irq_handler_t handler, void *arg);
 
-
-/**@brief Disables an interrupt trigger for an input GPIO pin
- *
- * @note Disables an interrupt trigger for an input GPIO pin.
+/**
+ * Disables an interrupt trigger for an input GPIO pin.
  * Using this function on a gpio pin which has not been set up
  * using @ref hal_gpio_input_irq_enable is undefined.
  *
- * @param gpio      : the gpio pin which provided the interrupt trigger
+ * @param[in]  gpio  the gpio pin which provided the interrupt trigger
  *
- * @return    0     : on success.
- * @return    EIO   : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_gpio_disable_irq(gpio_dev_t *gpio);
 
-
-/**@brief Disables an interrupt trigger for an input GPIO pin
- *
- * @note Disables an interrupt trigger for an input GPIO pin.
+/**
+ * Disables an interrupt trigger for an input GPIO pin.
  * Using this function on a gpio pin which has not been set up
  * using @ref hal_gpio_input_irq_enable is undefined.
  *
- * @param gpio     : the gpio pin which provided the interrupt trigger
+ * @param[in]  gpio  the gpio pin which provided the interrupt trigger
  *
- * @return    0    : on success.
- * @return    EIO  : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_gpio_clear_irq(gpio_dev_t *gpio);
 
-
-/**@brief DeInitialises a GPIO pin
+/**
+ * Set a GPIO pin in default state.
  *
- * @note  Set a GPIO pin in default state.
+ * @param[in]  gpio  the gpio pin which should be deinitialised
  *
- * @param  gpio     : the gpio pin which should be deinitialised
- *
- * @return    0     : on success.
- * @return    EIO   : if an error occurred with any step
+ * @return  0 : on success, EIO : if an error occurred with any step
  */
 int32_t hal_gpio_finalize(gpio_dev_t *gpio);
 
-#endif
-
+#endif /* HAL_GPIO_H */
 

@@ -27,11 +27,6 @@ const char *aos_version_get(void)
     return "aos-linux-xxx";
 }
 
-const char *aos_strerror(int errnum)
-{
-    return strerror(errnum);
-}
-
 struct targ {
     const char *name;
     void (*fn)(void *);

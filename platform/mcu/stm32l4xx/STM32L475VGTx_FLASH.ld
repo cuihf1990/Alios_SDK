@@ -33,7 +33,9 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = 0x20018000;    /* end of RAM */
+_estack  = 0x20018000;          /* end of RAM */
+_estack2_start = 0x10000000;    /* end of RAM2 */
+_estack2       = 0x10008000;    /* end of RAM2 */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x7000;      /* required amount of heap  */
 _Min_Stack_Size = 0x2000; /* required amount of stack */
@@ -183,9 +185,9 @@ SECTIONS
 
     PROVIDE(heap_end      = _stack_unused);
     PROVIDE(heap_len      = heap_end -  heap_start);
-  
-
-  .ARM.attributes 0 : { *(.ARM.attributes) }
+    PROVIDE(heap2_start   = _estack2_start);
+    PROVIDE(heap2_len     = _estack2 - heap2_start);
+    .ARM.attributes 0 : { *(.ARM.attributes) }
 }
 
  GROUP(

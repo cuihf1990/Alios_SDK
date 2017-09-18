@@ -28,6 +28,7 @@ extern "C"
 #define ETH_ALEN                        (6)
 #endif
 
+#define NETMGR_WIFI_KEY "wifi"
 
 /* 1 bigger than actual size for holding \0 */
 typedef struct {

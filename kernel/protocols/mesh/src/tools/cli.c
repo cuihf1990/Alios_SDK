@@ -40,7 +40,6 @@ static void process_mode(int argc, char *argv[]);
 static void process_networks(int argc, char *argv[]);
 static void process_prefix(int argc, char *argv[]);
 static void process_router(int argc, char *argv[]);
-static void process_seclevel(int argc, char *argv[]);
 static void process_state(int argc, char *argv[]);
 static void process_sids(int argc, char *argv[]);
 static void process_testcmd(int argc, char *argv[]);
@@ -75,7 +74,6 @@ const cli_command_t g_commands[] = {
     { "networks", &process_networks },
     { "prefix", &process_prefix },
     { "router", &process_router },
-    { "seclevel", &process_seclevel },
     { "state", &process_state },
     { "sids", &process_sids },
     { "testcmd", &process_testcmd },
@@ -163,8 +161,9 @@ static const char *mediatype2str(media_type_t media)
             return "ble";
         case MEDIA_TYPE_15_4:
             return "15.4";
+        default:
+            return "unknown";
     }
-    return "unknown";
 }
 
 static const char *nbrstate2str(neighbor_state_t state)
@@ -182,6 +181,20 @@ static const char *nbrstate2str(neighbor_state_t state)
             return "invalid";
     }
     return "unknown";
+}
+
+static void get_channel(channel_t *channel)
+{
+    umesh_hal_module_t *ur_wifi_hal = NULL;
+
+    if (channel) {
+        ur_wifi_hal = hal_umesh_get_default_module();
+
+        channel->wifi_channel = (uint16_t)hal_umesh_get_channel( ur_wifi_hal);
+        channel->channel = channel->wifi_channel;
+        channel->hal_ucast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
+        channel->hal_bcast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
+    }
 }
 
 void process_help(int argc, char *argv[])
@@ -371,7 +384,7 @@ void process_channel(int argc, char *argv[])
 {
     channel_t channel;
 
-    umesh_get_channel(&channel);
+    get_channel(&channel);
     response_append("%d\r\n", channel.channel);
     response_append("wifi %d\r\n", channel.wifi_channel);
     response_append("hal ucast %d\r\n", channel.hal_ucast_channel);
@@ -405,7 +418,7 @@ void process_networks(int argc, char *argv[])
     slist_t *networks;
     network_context_t *network;
 
-    networks = umesh_get_networks();
+    networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         response_append("index %d\r\n", network->index);
         response_append("  hal %d\r\n", network->hal->module->type);
@@ -422,7 +435,7 @@ void process_networks(int argc, char *argv[])
 
 void process_macaddr(int argc, char *argv[])
 {
-    const mac_address_t *addr = umesh_get_mac_address();
+    const mac_address_t *addr = umesh_get_mac_address(MEDIA_TYPE_DFL);
     if (addr) {
         response_append("%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
                         addr->addr[0], addr->addr[1], addr->addr[2], addr->addr[3],
@@ -685,21 +698,6 @@ void process_router(int argc, char *argv[])
     response_append("\r\n");
 }
 
-void process_seclevel(int argc, char *argv[])
-{
-    uint8_t level;
-    char    *end;
-
-    if (argc == 0) {
-        level = umesh_get_seclevel();
-        response_append("%d\r\n", level);
-    } else if (argc > 0) {
-        level = (uint8_t)strtol(argv[0], &end, 0);
-        umesh_set_seclevel(level);
-    }
-    response_append("done\r\n");
-}
-
 void process_state(int argc, char *argv[])
 {
     mm_device_state_t state;
@@ -717,7 +715,7 @@ void process_sids(int argc, char *argv[])
     network_context_t *network;
 
     response_append("me=%04x\r\n", umesh_get_sid());
-    networks = umesh_get_networks();
+    networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         nodes_list = get_ssid_nodes_list(network->sid_base);
         if (nodes_list == NULL) {
@@ -736,6 +734,7 @@ void process_testcmd(int argc, char *argv[])
     slist_t *hals;
     hal_context_t *hal;
     const char *cmd;
+    slist_t *nbrs = NULL;
 
     if (argc < 1) {
         return;
@@ -748,9 +747,10 @@ void process_testcmd(int argc, char *argv[])
         response_append("%s", state2str(umesh_get_device_state()));
     } else if (strcmp(cmd, "parent") == 0) {
         neighbor_t *nbr;
-        hals = umesh_get_hals();
+        hals = get_hal_contexts();
         slist_for_each_entry(hals, hal, hal_context_t, next) {
-            slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
+            nbrs = umesh_get_nbrs(hal->module->type);
+            slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
                 if (nbr->state != STATE_PARENT) {
                     continue;
                 }
@@ -807,11 +807,12 @@ void process_whitelist(int argc, char *argv[])
     int           length;
     mac_address_t addr;
     int8_t        rssi;
+    whitelist_entry_t *entry;
 
     if (arg_index >= argc) {
         int i = 0;
-        bool enabled = umesh_is_whitelist_enabled();
-        const whitelist_entry_t *whitelist = umesh_get_whitelist_entries();
+        bool enabled = is_whitelist_enabled();
+        const whitelist_entry_t *whitelist = whitelist_get_entries();
         response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
         for (i = 0; i < WHITELIST_ENTRY_NUM; i++) {
             if (whitelist[i].valid == false) {
@@ -835,18 +836,17 @@ void process_whitelist(int argc, char *argv[])
         if (length != sizeof(addr.addr)) {
             return;
         }
-        if (++arg_index < argc) {
+        entry = whitelist_add(&addr);
+        if (++arg_index < argc && entry) {
             rssi = (int8_t)strtol(argv[arg_index], NULL, 0);
-            umesh_add_whitelist_rssi(&addr, rssi);
-        } else {
-            umesh_add_whitelist(&addr);
+            whitelist_set_constant_rssi(entry, rssi);
         }
     } else if (strcmp(argv[arg_index], "clear") == 0) {
-        umesh_clear_whitelist();
+        whitelist_clear();
     } else if (strcmp(argv[arg_index], "disable") == 0) {
-        umesh_disable_whitelist();
+        whitelist_disable();
     } else if (strcmp(argv[arg_index], "enable") == 0) {
-        umesh_enable_whitelist();
+        whitelist_enable();
     } else if (strcmp(argv[arg_index], "remove") == 0) {
         if (++arg_index >= argc) {
             return;
@@ -856,7 +856,7 @@ void process_whitelist(int argc, char *argv[])
         if (length != sizeof(addr.addr)) {
             return;
         }
-        umesh_remove_whitelist(&addr);
+        whitelist_remove(&addr);
     }
     response_append("done\r\n");
 }
@@ -983,13 +983,15 @@ void process_nbrs(int argc, char *argv[])
     neighbor_t *nbr;
     slist_t *hals;
     hal_context_t *hal;
+    slist_t *nbrs;
 
     response_append("neighbors:\r\n");
-    hals = umesh_get_hals();
+    hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        uint16_t   num = 0;
+        uint16_t num = 0;
         response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
-        slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
+        nbrs = umesh_get_nbrs(hal->module->type);
+        slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
             response_append("\t" EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac));
             response_append(",%s,0x%04x,0x%04x,%d,%d,%d,%d,%d,%d\r\n", nbrstate2str(nbr->state), \
                             nbr->netid, nbr->sid, nbr->stats.link_cost, nbr->ssid_info.child_num, \
@@ -1113,11 +1115,11 @@ void process_stats(int argc, char *argv[])
     const frame_stats_t      *hal_stats;
     const ur_mem_stats_t     *mem_stats;
 
-    hals = umesh_get_hals();
+    hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
 #ifdef CONFIG_AOS_MESH_DEBUG
         const ur_link_stats_t    *link_stats;
-        link_stats = umesh_get_link_stats(hal->module->type);
+        link_stats = mf_get_stats(hal);
         if (link_stats) {
             response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
             response_append("link stats\r\n");
@@ -1137,7 +1139,7 @@ void process_stats(int argc, char *argv[])
         }
 #endif
 
-        hal_stats = umesh_get_hal_stats(hal->module->type);
+        hal_stats = hal_umesh_get_stats(hal->module);
         if (hal_stats) {
             response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
             response_append("hal stats\r\n");
@@ -1146,7 +1148,7 @@ void process_stats(int argc, char *argv[])
         }
     }
 
-    message_stats = umesh_get_message_stats();
+    message_stats = message_get_stats();
     if (message_stats) {
         response_append("message stats\r\n");
         response_append("  nums %d\r\n", message_stats->num);
@@ -1163,7 +1165,7 @@ void process_stats(int argc, char *argv[])
         response_append("\r\n");
     }
 
-    mem_stats = umesh_get_mem_stats();
+    mem_stats = ur_mem_get_stats();
     if (mem_stats) {
         response_append("memory stats\r\n");
         response_append("  nums %d\r\n", mem_stats->num);
@@ -1198,7 +1200,7 @@ static void process_status(int argc, char *argv[])
                         hal_umesh_get_ucast_mtu(network->hal->module));
     }
 
-    umesh_get_channel(&channel);
+    get_channel(&channel);
     response_append("\tchannel %d\r\n", channel.channel);
 }
 

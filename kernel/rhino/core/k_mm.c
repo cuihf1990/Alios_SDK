@@ -80,9 +80,13 @@ static size_t sizetoindex(size_t size)
 static void addsize(k_mm_head *mmhead, size_t size, size_t req_size)
 {
     size_t index ;
-
+    if(mmhead->free_size > size) {
+        mmhead->free_size -= size;
+    }
+    else {
+        mmhead->free_size = 0;
+    }
     mmhead->used_size += size;
-    mmhead->free_size -= size;
     if (mmhead->used_size > mmhead->maxused_size) {
         mmhead->maxused_size = mmhead->used_size;
     }
@@ -99,7 +103,12 @@ static void addsize(k_mm_head *mmhead, size_t size, size_t req_size)
 
 static void removesize(k_mm_head *mmhead, size_t size)
 {
-    mmhead->used_size -= size;
+    if(mmhead->used_size > size ) {
+        mmhead->used_size -= size;
+    }
+    else {
+        mmhead->used_size = 0;
+    }
     mmhead->free_size += size;
 
 }
@@ -393,13 +402,12 @@ kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
 #endif
     /*before free, we need tell valgrind it's a malloced memory*/
     VGF(VALGRIND_MALLOCLIKE_BLOCK(b0->mbinfo.buffer, b0->size & RHINO_MM_BLKSIZE_MASK, 0, 0));
-    k_mm_free(mmhead, b0->mbinfo.buffer);
-    VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
-    VGF(VALGRIND_MAKE_MEM_DEFINED(b0, MMLIST_HEAD_SIZE));
-
+    /* change used_size with b0 size*/
 #if (K_MM_STATISTIC > 0)
-    mmhead->free_size += b0->size & RHINO_MM_BLKSIZE_MASK;
+    mmhead->used_size += (b0->size & RHINO_MM_BLKSIZE_MASK) + MMLIST_HEAD_SIZE;
 #endif
+    /*mark b0 as free*/
+    k_mm_free(mmhead, b0->mbinfo.buffer);
 
     VGF(VALGRIND_MAKE_MEM_NOACCESS(ib0, MMLIST_HEAD_SIZE));
     VGF(VALGRIND_MAKE_MEM_NOACCESS(b0, MMLIST_HEAD_SIZE));
