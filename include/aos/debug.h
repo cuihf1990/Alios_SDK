@@ -22,7 +22,7 @@ extern "C" {
 * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
 * function name, etc.) using the default debugging output method.
 *
-* @param[in]  check  expression to be checked
+ * @param[in]  X       expression to be evaluated.
 */
 #if (!defined(check))
 #define check(X)                                                                            \
@@ -38,7 +38,8 @@ extern "C" {
 * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
 * function name, etc.) using the default debugging output method.
 *
-* @param[in]  check_string   string to be checked
+ * @param[in]  X       expression to be evaluated.
+ * @param[in]  STR     If the expression evaluate to false, custom string to print.
 */
 #if (!defined(check_string))
 #define check_string(X, STR)                                                               \
@@ -55,8 +56,8 @@ extern "C" {
 * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
 * function name, etc.) using the default debugging output method then jumps to a label.
 *
-* @param[in]  X      expression to be evalulated
-* @param[in]  LABEL  if expression evaluate to false,jumps to a label.
+* @param[in]  X      expression to be evalulated.
+* @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
 */
 #if (!defined(require))
 #define require(X, LABEL)                                                                     \
@@ -73,9 +74,9 @@ extern "C" {
 * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
 * function name, etc.) and a custom explanation string using the default debugging output method then jumps to a label.
 *
-* @param[in]  X      expression to be evalulated
-* @param[in]  LABEL  if expression evaluate to false,jumps to a label.
-* @param[in]  STR    if expression evaluate to false,custom explanation string to print
+* @param[in]  X      expression to be evalulated.
+* @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
+* @param[in]  STR    if expression evaluate to false,custom explanation string to print.
 */
 #if (!defined(require_string))
 #define require_string(X, LABEL, STR)                                                      \
@@ -88,11 +89,11 @@ extern "C" {
 #endif
 
 /**
-* RRequires that an expression evaluate to true.
+* Requires that an expression evaluate to true.
 * If expression evalulates to false, this jumps to a label. No debugging information is printed.
 *
 * @param[in]  X      expression to be evalulated
-* @param[in]  LABEL  if expression evaluate to false,this jumps to a label.
+* @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
 */
 #if (!defined(require_quiet))
 #define require_quiet(X, LABEL)   \
@@ -109,7 +110,7 @@ extern "C" {
  * function name, etc.) using the default debugging output method then jumps to a label.
  *
  * @param[in]  ERR    error to be evaluated
- * @param[in]  LABEL  If the error code is non-0,this jumps to a label.
+ * @param[in]  LABEL  If the error code is non-0,jumps to the LABEL.
  */
 #if (!defined(require_noerr))
 #define require_noerr(ERR, LABEL)                                                                    \
@@ -126,7 +127,7 @@ extern "C" {
 #endif
 
 /**
- * Require that an error code is noErr (0).
+ * Require that an error code is noErr (0) with an explanation.
  * If the error code is non-0, this prints debugging information (actual expression string, file, line number,
  * function name, etc.), and a custom explanation string using the default debugging output method using the
  * default debugging output method then jumps to a label.
@@ -149,15 +150,15 @@ extern "C" {
 #endif
 
 /**
- * Require that an error code is noErr (0).
+ * Require that an error code is noErr (0)  with an explanation and action to execute otherwise.
  * If the error code is non-0, this prints debugging information (actual expression string, file, line number,
  * function name, etc.), and a custom explanation string using the default debugging output method using the
  * default debugging output method then executes an action and jumps to a label.
  *
- * @param[in]  ERR     error to be evaluated
+ * @param[in]  ERR     error to be evaluated.
  * @param[in]  LABEL   If the error code is non-0, jumps to the LABEL.
- * @param[in]  ACTION  custom code to executes
- * @param[in]  STR     custom explanation string to print
+ * @param[in]  ACTION  If the error code is non-0, custom code to executes.
+ * @param[in]  STR     If the error code is non-0, custom explanation string to print.
  */
 #if (!defined(require_noerr_action_string))
 #define require_noerr_action_string(ERR, LABEL, ACTION, STR)                                        \
@@ -177,7 +178,7 @@ extern "C" {
  * Require that an error code is noErr (0).
  * If the error code is non-0, this jumps to a label. No debugging information is printed.
  *
- * @param[in]  ERR    error to be evaluated
+ * @param[in]  ERR    error to be evaluated.
  * @param[in]  LABEL  If the error code is non-0, jumps to the LABEL.
  */
 #if (!defined(require_noerr_quiet))
@@ -194,9 +195,9 @@ extern "C" {
  * If the error code is non-0, this prints debugging information (actual expression string, file, line number,
  * function name, etc.) using the default debugging output method then executes an action and jumps to a label.
  *
- * @param[in]  ERR     error to be evaluated
- * @param[in]  LABEL   If the error code is non-0, jumps to the LABEL
- * @param[in]  ACTION  custom code to executes
+ * @param[in]  ERR     error to be evaluated.
+ * @param[in]  LABEL   If the error code is non-0, jumps to the LABEL.
+ * @param[in]  ACTION  If the error code is non-0, custom code to executes.
  */
 #if (!defined(require_noerr_action))
 #define require_noerr_action(ERR, LABEL, ACTION)                                                     \
@@ -216,9 +217,9 @@ extern "C" {
  * Require that an error code is noErr (0) with an action to execute otherwise.
  * If the error code is non-0, this executes an action and jumps to a label. No debugging information is printed.
  *
- * @param[in]  ERR     error to be evaluated
- * @param[in]  LABEL   If the error code is non-0, jumps to the LABEL
- * @param[in]  ACTION  custom code to executes
+ * @param[in]  ERR     error to be evaluated.
+ * @param[in]  LABEL   If the error code is non-0, jumps to the LABEL.
+ * @param[in]  ACTION  If the error code is non-0, custom code to executes.
  */
 #if (!defined(require_noerr_action_quiet))
 #define require_noerr_action_quiet(ERR, LABEL, ACTION) \
@@ -235,9 +236,9 @@ extern "C" {
  * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
  * function name, etc.) using the default debugging output method then executes an action and jumps to a label.
  *
- * @param[in]  X       expression to be evaluated
- * @param[in]  LABEL   If the expression evaluate to false, jumps to the LABEL
- * @param[in]  ACTION  custom code to executes
+ * @param[in]  X       expression to be evaluated.
+ * @param[in]  LABEL   If the expression evaluate to false, jumps to the LABEL.
+ * @param[in]  ACTION  If the expression evaluate to false, custom code to executes.
  */
 #if (!defined(require_action))
 #define require_action(X, LABEL, ACTION)                                                    \
@@ -256,10 +257,10 @@ extern "C" {
  * function name, etc.) and a custom explanation string using the default debugging output method then executes an
  * action and jumps to a label.
  *
- * @param[in]  X       expression to be evaluated
- * @param[in]  LABEL   If the expression evaluate to false, jumps to the LABEL
- * @param[in]  ACTION  custom code to executes
- * @param[in]  STR     custom string to print
+ * @param[in]  X       expression to be evaluated.
+ * @param[in]  LABEL   If the expression evaluate to false, jumps to the LABEL.
+ * @param[in]  ACTION  If the expression evaluate to false, custom code to executes.
+ * @param[in]  STR     If the expression evaluate to false, custom string to print.
  */
 #if (!defined(require_action_string))
 #define require_action_string(X, LABEL, ACTION, STR)                                       \
@@ -277,9 +278,9 @@ extern "C" {
  * If expression evalulates to false, this executes an action and jumps to a label.
  * No debugging information is printed.
  *
- * @param[in]  X       expression to be evaluated
- * @param[in]  LABEL   If the expression evaluate to false, jumps to the LABEL
- * @param[in]  ACTION  If the expression evaluate to false,custom code to executes
+ * @param[in]  X       expression to be evaluated.
+ * @param[in]  LABEL   If the expression evaluate to false, jumps to the LABEL.
+ * @param[in]  ACTION  If the expression evaluate to false, custom code to executes.
  */
 #if (!defined(require_action_quiet))
 #define require_action_quiet(X, LABEL, ACTION) \
