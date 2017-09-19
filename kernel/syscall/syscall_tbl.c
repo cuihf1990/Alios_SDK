@@ -4,10 +4,14 @@
 
 #include <k_api.h>
 #include <aos/aos.h>
+#ifdef WITH_LWIP
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
+#endif
 #include <hal/hal.h>
+#ifdef CONFIG_AOS_MESH
 #include <umesh.h>
+#endif
 
 extern void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
 extern int  hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len);

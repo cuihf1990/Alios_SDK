@@ -422,26 +422,29 @@ SYSCALL(SYS_WIFI_REGISTER_MONITOR_CB, hal_wifi_register_monitor_cb)
 #define SYS_WIFI_INSTALL_EVENT 155
 SYSCALL(SYS_WIFI_INSTALL_EVENT, hal_wifi_install_event)
 
-#define SYS_UR_MESH_INIT 156
-SYSCALL(SYS_UR_MESH_INIT, umesh_init)
-
-#define SYS_UR_MESH_START 157
-SYSCALL(SYS_UR_MESH_START, umesh_start)
-
-#define SYS_UR_MESH_STOP 158
-SYSCALL(SYS_UR_MESH_STOP, umesh_stop)
-
-#define SYS_UR_MESH_SET_MODE 159
-SYSCALL(SYS_UR_MESH_SET_MODE, umesh_set_mode)
-
-#define SYS_UR_MESH_GET_MODE 160
-SYSCALL(SYS_UR_MESH_GET_MODE, umesh_get_mode)
-
-#define SYS_HAL_WLAN_REG_MGNT_MONITOR_CB 161
+#define SYS_HAL_WLAN_REG_MGNT_MONITOR_CB 156
 SYSCALL(SYS_HAL_WLAN_REG_MGNT_MONITOR_CB, hal_wlan_register_mgnt_monitor_cb)
 
-#define SYS_HAL_WLAN_SEND_80211_RAW_FRAME 162
+#define SYS_HAL_WLAN_SEND_80211_RAW_FRAME 157
 SYSCALL(SYS_HAL_WLAN_SEND_80211_RAW_FRAME, hal_wlan_send_80211_raw_frame)
+
+/* --------------------MESH-------------------- */
+
+#ifdef CONFIG_AOS_MESH
+#define SYS_UR_MESH_INIT 158
+SYSCALL(SYS_UR_MESH_INIT, umesh_init)
+
+#define SYS_UR_MESH_START 159
+SYSCALL(SYS_UR_MESH_START, umesh_start)
+
+#define SYS_UR_MESH_STOP 160
+SYSCALL(SYS_UR_MESH_STOP, umesh_stop)
+
+#define SYS_UR_MESH_SET_MODE 161
+SYSCALL(SYS_UR_MESH_SET_MODE, umesh_set_mode)
+
+#define SYS_UR_MESH_GET_MODE 162
+SYSCALL(SYS_UR_MESH_GET_MODE, umesh_get_mode)
 
 #define SYS_UR_MESH_GET_MCAST_ADDR 163
 SYSCALL(SYS_UR_MESH_GET_MCAST_ADDR, umesh_get_mcast_addr)
@@ -454,6 +457,7 @@ SYSCALL(SYS_UR_MESH_NET_GET_MAC_ADDRESS, umesh_get_mac_address)
 
 #define SYS_UR_MESH_GET_DEVICE_STATE 166
 SYSCALL(SYS_UR_MESH_GET_DEVICE_STATE, umesh_get_device_state)
+#endif
 
 
 /* --------------------OTA-------------------- */
