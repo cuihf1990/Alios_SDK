@@ -17,6 +17,7 @@ typedef struct {
     tick_t        dly;
     ktimer_t      timer;
     void         *wq;
+    uint8_t       work_exit;
 } kwork_t;
 
 typedef struct {
