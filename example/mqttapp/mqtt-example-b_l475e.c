@@ -61,6 +61,7 @@
     } while(0)
 
 static int is_demo_started = 0;
+static int ota_started = 0;
 void *pclient;
 typedef struct ota_device_info {
     const char *product_key;
@@ -254,92 +255,96 @@ int mqtt_client_example(void)
     }
 
     HAL_SleepMs(1000);
-    ota_init();
 
     /* Initialize topic information */
     topic_msg.qos = IOTX_MQTT_QOS1;
     topic_msg.retain = 0;
     topic_msg.dup = 0;
 
+    ota_init();
+
     do {
-        cnt++;
+        if (!ota_started) {
+            cnt++;
+            printf("\n*************************************************************************************************************\n");
+            printf("Press the User button (Blue) to publish LED desired value on the %s topic\n", TOPIC_DATA);
+            printf("*************************************************************************************************************\n\n");
+            bp_pushed = Button_WaitForPush(3000);
 
-        printf("\n********************************************************************************************************\n");
-        printf("Press the User button (Blue) to publish LED desired value on the %s topic\n", TOPIC_DATA);
-        printf("********************************************************************************************************\n\n");
-        bp_pushed = Button_WaitForPush(3000);
-
-        /* exit loop on long push  */
-        if (bp_pushed == BP_MULTIPLE_PUSH) {
-            cnt = 100;
-            break;
-        }
-
-        if (bp_pushed == BP_SINGLE_PUSH) {
-            if(strstr(ledstate, "Off") != NULL)
-            {
-                strcpy(ledstate, "On");
-            } else {
-                strcpy(ledstate, "Off");
+            /* exit loop on long push  */
+            if (bp_pushed == BP_MULTIPLE_PUSH) {
+                cnt = 100;
+                break;
             }
 
-            /* Generate topic message */
-            memset(msg_pub, 0, sizeof(msg_pub));
-            strcat(msg_pub, "{\"state\":{\"desired\":");
-            strcat(msg_pub, "{\"LED_value\":\"");
-            strcat(msg_pub, ledstate);
-            strcat(msg_pub, "\"}");
-            strcat(msg_pub, "}}");
+            if (bp_pushed == BP_SINGLE_PUSH) {
+                if(strstr(ledstate, "Off") != NULL)
+                {
+                    strcpy(ledstate, "On");
+                } else {
+                    strcpy(ledstate, "Off");
+                }
 
+                /* Generate topic message */
+                memset(msg_pub, 0, sizeof(msg_pub));
+                strcat(msg_pub, "{\"state\":{\"desired\":");
+                strcat(msg_pub, "{\"LED_value\":\"");
+                strcat(msg_pub, ledstate);
+                strcat(msg_pub, "\"}");
+                strcat(msg_pub, "}}");
+
+                topic_msg.payload = (void *)msg_pub;
+                topic_msg.payload_len = strlen(msg_pub);
+
+                rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
+
+                if (rc < 0) {
+                    EXAMPLE_TRACE("error occur when publish LED status");
+                    rc = -1;
+                    break;
+                }
+#ifdef MQTT_ID2_CRYPTO
+                EXAMPLE_TRACE("packet-id=%u, publish topic msg='0x%02x%02x%02x%02x'...",
+                          (uint32_t)rc,
+                          msg_pub[0], msg_pub[1], msg_pub[2], msg_pub[3]
+                         );
+#else
+                EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
+#endif
+                /* handle the MQTT packet received from TCP or SSL connection */
+                IOT_MQTT_Yield(pclient, 2000);
+            }
+
+#ifdef SENSOR
+            PrepareMqttPayload(msg_pub, sizeof(msg_pub));
             topic_msg.payload = (void *)msg_pub;
             topic_msg.payload_len = strlen(msg_pub);
 
             rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
 
             if (rc < 0) {
-                EXAMPLE_TRACE("error occur when publish LED status");
+                EXAMPLE_TRACE("error occur when publish sensor data");
                 rc = -1;
                 break;
             }
+
+#endif
+
 #ifdef MQTT_ID2_CRYPTO
             EXAMPLE_TRACE("packet-id=%u, publish topic msg='0x%02x%02x%02x%02x'...",
-                      (uint32_t)rc,
-                      msg_pub[0], msg_pub[1], msg_pub[2], msg_pub[3]
-                     );
+                          (uint32_t)rc,
+                          msg_pub[0], msg_pub[1], msg_pub[2], msg_pub[3]
+                         );
 #else
             EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
 #endif
+
             /* handle the MQTT packet received from TCP or SSL connection */
             IOT_MQTT_Yield(pclient, 2000);
+        }else {
+            EXAMPLE_TRACE("ota start, sleep a while");
+            HAL_SleepMs(10000000);
         }
-
-#ifdef SENSOR
-
-        PrepareMqttPayload(msg_pub, sizeof(msg_pub));
-        topic_msg.payload = (void *)msg_pub;
-        topic_msg.payload_len = strlen(msg_pub);
-
-        rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
-
-        if (rc < 0) {
-            EXAMPLE_TRACE("error occur when publish sensor data");
-            rc = -1;
-            break;
-        }
-
-#endif
-
-#ifdef MQTT_ID2_CRYPTO
-        EXAMPLE_TRACE("packet-id=%u, publish topic msg='0x%02x%02x%02x%02x'...",
-                      (uint32_t)rc,
-                      msg_pub[0], msg_pub[1], msg_pub[2], msg_pub[3]
-                     );
-#else
-        EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
-#endif
-
-        /* handle the MQTT packet received from TCP or SSL connection */
-        IOT_MQTT_Yield(pclient, 2000);
     } while (cnt < MAX_MQTT_PUBLISH_COUNT);
 
     IOT_MQTT_Unsubscribe(pclient, TOPIC_DATA);
@@ -384,14 +389,27 @@ int application_start(int argc, char *argv[])
 #endif
     LOG("aos_loop_run end.");
     aos_loop_run();
-    LOG("alink end.");
     aos_msleep(10000000);
     return 0;
 }
 
 static void ota_init(){
+    input_event_t event;
+    event.type = EV_SYS;
+    event.code = CODE_SYS_ON_START_FOTA;
     ota_device_info.product_key=PRODUCT_KEY;
     ota_device_info.device_name=DEVICE_NAME;
     ota_device_info.pclient=pclient;
-    aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, &ota_device_info);
+    event.value = &ota_device_info;
+    ota_service_event(&event, NULL);
+}
+
+void notify_ota_start()
+{
+    ota_started = 1;
+}
+
+void notify_ota_end()
+{
+    ota_started = 0;
 }
