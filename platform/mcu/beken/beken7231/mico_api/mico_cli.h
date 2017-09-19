@@ -44,10 +44,10 @@ struct cli_st
     const struct cli_command *commands[MAX_COMMANDS];
     unsigned int num_commands;
     int echo_disabled;
-	
+
     unsigned int bp;	/* buffer pointer */
     char inbuf[INBUF_SIZE];
-	
+
     char outbuf[OUTBUF_SIZE];
 } ;
 

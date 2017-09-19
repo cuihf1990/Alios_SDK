@@ -793,7 +793,7 @@ int gateway_service_init(void)
     pstate->sockfd = -1;
     pstate->login = false;
     dlist_init(&gateway_state.clients);
-    cli_register_command(&gatewaycmd);
+    aos_cli_register_command(&gatewaycmd);
     aos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
     aos_register_event_filter(EV_MESH, gateway_service_event, NULL);
 #ifdef GATEWAY_WORKER_THREAD

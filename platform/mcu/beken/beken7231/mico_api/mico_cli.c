@@ -408,10 +408,10 @@ static const struct cli_command user_clis[] =
 
 int board_cli_init()
 {
-    cli_register_commands(&built_ins[0],
+    aos_cli_register_commands(&built_ins[0],
                               sizeof(built_ins) /
                               sizeof(struct cli_command));
-    cli_register_commands(&user_clis[0],
+    aos_cli_register_commands(&user_clis[0],
                               sizeof(user_clis) /
                               sizeof(struct cli_command));
 

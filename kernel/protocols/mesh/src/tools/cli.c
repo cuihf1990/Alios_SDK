@@ -1401,6 +1401,6 @@ ur_error_t mesh_cli_init(void)
 #ifndef WITH_LWIP
     aos_task_new("meshworker", mesh_worker, NULL, 8192);
 #endif
-    cli_register_command(&ncmd);
+    aos_cli_register_command(&ncmd);
     return UR_ERROR_NONE;
 }

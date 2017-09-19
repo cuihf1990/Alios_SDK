@@ -43,7 +43,7 @@ void *trace_hal_init()
         TRACE_INIT();
 
         if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-            cli_printf("create socket (%s:%u) error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno),errno);
+            aos_cli_printf("create socket (%s:%u) error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno),errno);
             return 0;
         }
 
@@ -53,13 +53,13 @@ void *trace_hal_init()
         inet_aton(ip_addr, &servaddr.sin_addr);
 
         if (connect(fd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) {
-            cli_printf("connect (%s:%u) error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno),errno);
+            aos_cli_printf("connect (%s:%u) error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno),errno);
             close(fd);
             return 0;
         }
 
         trace_is_started = 1;
-        cli_printf("connected on (%s:%u)\r\n", ip_addr, ip_port);
+        aos_cli_printf("connected on (%s:%u)\r\n", ip_addr, ip_port);
 
         return (void *)fd;
     }
@@ -78,7 +78,7 @@ ssize_t trace_hal_send(void *handle, void *buf, size_t len)
     while (1) {
         len_send = send((int)handle, (buf + len_total_send) , len - len_total_send, 0);
         if (len_send < 0) {
-            cli_printf("send (%s:%u) msg error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno), errno);
+            aos_cli_printf("send (%s:%u) msg error: %s(errno: %d)\r\n", ip_addr, ip_port, strerror(errno), errno);
             return 0;
         }
 
@@ -120,7 +120,7 @@ static void trace_entry(void *arg)
 
             krhino_task_sleep(2);
         }
-    } 
+    }
 }
 
 static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
@@ -145,13 +145,13 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
                 ip_port = atoi(argv[3]);
             }
         } else {
-            cli_printf("trace must specify the host ip (port)... \r\n");
+            aos_cli_printf("trace must specify the host ip (port)... \r\n");
             return ;
         }
 
         if (krhino_task_dyn_create(&trace_task, "trace_task", NULL, 3,
                 0, TRACE_TASK_STACK_SIZE, trace_entry, 1) != RHINO_SUCCESS) {
-            cli_printf("trace task creat fail \r\n");
+            aos_cli_printf("trace task creat fail \r\n");
         }
     } else if (strcmp(rtype, "task") == 0) {
         if (argc != 3) {
@@ -169,7 +169,7 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
         strncpy(filter_task, argv[2], strlen(argv[2]));
         filter_task[strlen(argv[2])] = '\0';
 
-        set_filter_task(filter_task);        
+        set_filter_task(filter_task);
     } else if (strcmp(rtype, "event") == 0) {
         if (argc != 3) {
             return;
@@ -180,21 +180,21 @@ static void handle_trace_cmd(char *pwbuf, int blen, int argc, char **argv)
         if (trace_is_started) {
             trace_is_started = 0;
             trace_deinit();
-    
+
             trace_hal_deinit((void *)sockfd);
-           
-            cli_printf("trace (%s:%u) stop....\r\n", ip_addr, ip_port);       
-    
+
+            aos_cli_printf("trace (%s:%u) stop....\r\n", ip_addr, ip_port);
+
             if (ip_addr) {
                 free(ip_addr);
                 ip_addr = NULL;
-            }    
-    
+            }
+
             if (filter_task){
                 free(filter_task);
                 ip_addr = NULL;
             }
-    
+
             krhino_task_dyn_del(trace_task);
         }
     }
@@ -208,7 +208,7 @@ static struct cli_command ncmd = {
 
 void trace_start(void)
 {
-    cli_register_command(&ncmd);
+    aos_cli_register_command(&ncmd);
 }
 
 #else

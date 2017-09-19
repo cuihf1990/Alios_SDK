@@ -853,22 +853,22 @@ hal_ota_module_t *hal_ota_get_default_module(void)
 
 /* --------------------CLI-------------------- */
 
-int cli_register_command(const struct cli_command *cmd)
+int aos_cli_register_command(const struct cli_command *cmd)
 {
     return SYS_CALL1(SYS_CLI_REG_CMD, int, const struct cli_command *, cmd);
 }
 
-int cli_unregister_command(const struct cli_command *cmd)
+int aos_cli_unregister_command(const struct cli_command *cmd)
 {
     return SYS_CALL1(SYS_CLI_UNREG_CMD, int, const struct cli_command *, cmd);
 }
 
-int cli_register_commands(const struct cli_command *cmds, int num_cmds)
+int aos_cli_register_commands(const struct cli_command *cmds, int num_cmds)
 {
     return SYS_CALL2(SYS_CLI_REG_CMDS, int, const struct cli_command *, cmds, int, num_cmds);
 }
 
-int cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
+int aos_cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
 {
     return SYS_CALL2(SYS_CLI_UNREG_CMDS, int, const struct cli_command *, cmds, int, num_cmds);
 }

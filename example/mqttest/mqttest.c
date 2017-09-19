@@ -338,7 +338,7 @@ int application_start(int argc, char *argv[])
     netmgr_init();
     netmgr_start(false);
 
-    cli_register_command(&mqttcmd);
+    aos_cli_register_command(&mqttcmd);
 #ifdef CSP_LINUXHOST
     mqtt_client_example();
 #endif

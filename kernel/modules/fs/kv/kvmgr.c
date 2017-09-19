@@ -754,7 +754,7 @@ static int __item_print_cb(kv_item_t *item, const char *key)
     memset(p_val, 0, item->hdr.val_len + 1);
     raw_read(item->pos + ITEM_HEADER_SIZE + item->hdr.key_len, p_val, item->hdr.val_len);
 
-    cli_printf("%s = %s\r\n", p_key, p_val);
+    aos_cli_printf("%s = %s\r\n", p_key, p_val);
     aos_free(p_key);
     aos_free(p_val);
 
@@ -773,7 +773,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
         ret = aos_kv_set(argv[2], argv[3], strlen(argv[3]), 1);
         if (ret != 0) {
-            cli_printf("cli set kv failed\r\n");
+            aos_cli_printf("cli set kv failed\r\n");
         }
     } else if (strcmp(rtype, "get") == 0) {
         if (argc != 3) {
@@ -781,7 +781,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
         buffer = aos_malloc(BLK_SIZE);
         if (!buffer) {
-            cli_printf("cli get kv failed\r\n");
+            aos_cli_printf("cli get kv failed\r\n");
             return;
         }
 
@@ -790,9 +790,9 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 
         ret = aos_kv_get(argv[2], buffer, &len);
         if (ret != 0) {
-            cli_printf("cli: no paired kv\r\n");
+            aos_cli_printf("cli: no paired kv\r\n");
         } else {
-            cli_printf("value is %s\r\n", buffer);
+            aos_cli_printf("value is %s\r\n", buffer);
         }
 
         if (buffer) {
@@ -804,7 +804,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
         ret = aos_kv_del(argv[2]);
         if (ret != 0) {
-            cli_printf("cli kv del failed\r\n");
+            aos_cli_printf("cli kv del failed\r\n");
         }
     } else if (strcmp(rtype, "list") == 0) {
         for (int i = 0; i < BLK_NUMS; i++) {
@@ -840,7 +840,7 @@ int aos_kv_init(void)
     }
 
 #ifdef CONFIG_AOS_CLI
-    cli_register_command(&ncmd);
+    aos_cli_register_command(&ncmd);
 #endif
 
     if ((ret = kv_init()) != RES_OK) {

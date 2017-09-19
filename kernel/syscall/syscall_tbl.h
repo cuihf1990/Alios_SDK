@@ -480,16 +480,16 @@ SYSCALL(SYS_OTA_GET_DEFAULT_MODULE, hal_ota_get_default_module)
 
 /* --------------------CLI-------------------- */
 #define SYS_CLI_REG_CMD 181
-SYSCALL(SYS_CLI_REG_CMD, cli_register_command)
+SYSCALL(SYS_CLI_REG_CMD, aos_cli_register_command)
 
 #define SYS_CLI_UNREG_CMD 182
-SYSCALL(SYS_CLI_UNREG_CMD, cli_unregister_command)
+SYSCALL(SYS_CLI_UNREG_CMD, aos_cli_unregister_command)
 
 #define SYS_CLI_REG_CMDS 183
-SYSCALL(SYS_CLI_REG_CMDS, cli_register_commands)
+SYSCALL(SYS_CLI_REG_CMDS, aos_cli_register_commands)
 
 #define SYS_CLI_UNREG_CMDS 184
-SYSCALL(SYS_CLI_UNREG_CMDS, cli_unregister_commands)
+SYSCALL(SYS_CLI_UNREG_CMDS, aos_cli_unregister_commands)
 
 #define SYS_CLI_INIT 185
 SYSCALL(SYS_CLI_INIT, aos_cli_init)
