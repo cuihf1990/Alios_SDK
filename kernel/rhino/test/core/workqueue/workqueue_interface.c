@@ -185,26 +185,9 @@ static uint8_t workqueue_interface_case1(void)
     }
 
     /* work run */
-    ret = krhino_work_run(&wq1, &work0);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
-
-    ret = krhino_work_run(&wq1, &work1);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
-
-    ret = krhino_work_run(&wq1, &work1);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
+    krhino_work_run(&wq1, &work0);
+    krhino_work_run(&wq1, &work1);
+    krhino_work_run(&wq1, &work1);
 
     ret = krhino_workqueue_del(&wq1);
     if (ret != RHINO_WORKQUEUE_BUSY) {
@@ -213,59 +196,18 @@ static uint8_t workqueue_interface_case1(void)
         return 1;
     }
 
-    ret = krhino_work_run(&wq1, &work2);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
+    krhino_work_run(&wq1, &work2);
+    krhino_work_run(&wq1, &work2);
+    krhino_work_run(&wq1, &work3);
 
-    krhino_task_sleep(3);
-
-    ret = krhino_work_run(&wq1, &work2);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
-
-    ret = krhino_work_run(&wq1, &work3);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
-
-    ret = krhino_work_sched(&work4);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
-
-    ret = krhino_work_sched(&work5);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
-
-    ret = krhino_work_sched(&work6);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
+    krhino_work_sched(&work4);
+    krhino_work_sched(&work5);
+    krhino_work_sched(&work6);
 
     /* wait for task4 */
     krhino_sem_take(&g_wq_test_sem, RHINO_WAIT_FOREVER);
 
-    ret = krhino_work_sched(&work5);
-    if (ret != RHINO_SUCCESS) {
-        MYASSERT(ret);
-        krhino_sem_give(&g_wq_test_sem);
-        return 1;
-    }
+    krhino_work_sched(&work5);
 
     /* wait for task6 */
     krhino_sem_take(&g_wq_test_sem, RHINO_WAIT_FOREVER);
@@ -337,17 +279,8 @@ static uint8_t workqueue_interface_case1(void)
         return 1;
     }
 
-    ret = krhino_work_run(NULL, &work3);
-    if (ret == RHINO_SUCCESS) {
-        MYASSERT(ret);
-        return 1;
-    }
-
-    ret = krhino_work_run(&wq1, NULL);
-    if (ret == RHINO_SUCCESS) {
-        MYASSERT(ret);
-        return 1;
-    }
+    krhino_work_run(NULL, &work3);
+    krhino_work_run(&wq1, NULL);
 
     printf("=====PARAMTER TEST DONE!=====\n");
 

@@ -36,27 +36,27 @@ static void worker_task(void *arg)
     kworkqueue_t *queue = (kworkqueue_t *)arg;
 
     while (1) {
-        if (is_klist_empty(&(queue->work_list))) {
-            ret = krhino_sem_take(&(queue->sem), RHINO_WAIT_FOREVER);
-            if (ret != RHINO_SUCCESS) {
-                k_err_proc(ret);
-            }
+
+        ret = krhino_sem_take(&(queue->sem), RHINO_WAIT_FOREVER);
+        if (ret != RHINO_SUCCESS) {
+            k_err_proc(ret);
         }
 
         RHINO_CRITICAL_ENTER();
-        if (!is_klist_empty(&(queue->work_list))) {
-            /* have work to do. */
-            work = krhino_list_entry(queue->work_list.next, kwork_t, work_node);
-            klist_rm_init(&(work->work_node));
-            queue->work_current = work;
-            RHINO_CRITICAL_EXIT();
 
-            /* do work */
-            work->handle(work->arg);
-            RHINO_CRITICAL_ENTER();
-            /* clean current work */
-            queue->work_current = NULL;
-        }
+        /* have work to do. */
+        work = krhino_list_entry(queue->work_list.next, kwork_t, work_node);
+        klist_rm_init(&(work->work_node));
+        queue->work_current = work;
+        work->work_exit = 0;
+        RHINO_CRITICAL_EXIT();
+
+        /* do work */
+        work->handle(work->arg);
+        RHINO_CRITICAL_ENTER();
+        /* clean current work */
+        queue->work_current = NULL;
+
         RHINO_CRITICAL_EXIT();
     }
 }
@@ -175,21 +175,24 @@ static void work_timer_cb(void *timer, void *arg)
         return;
     }
 
+    if (work->work_exit == 1) {
+        RHINO_CRITICAL_EXIT();
+        return;
+    }
+
     /* NOTE: the work MUST be initialized firstly */
     klist_rm_init(&(work->work_node));
     klist_insert(&(wq->work_list), &(work->work_node));
 
     work->wq = wq;
+    work->work_exit = 1;
+    RHINO_CRITICAL_EXIT();
 
-    if (wq->work_current == NULL) {
-        RHINO_CRITICAL_EXIT();
-        ret = krhino_sem_give(&(wq->sem));
-        if (ret != RHINO_SUCCESS) {
-            return;
-        }
-    } else {
-        RHINO_CRITICAL_EXIT();
+    ret = krhino_sem_give(&(wq->sem));
+    if (ret != RHINO_SUCCESS) {
+        return;
     }
+
 }
 
 kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
@@ -245,21 +248,24 @@ kstat_t krhino_work_run(kworkqueue_t *workqueue, kwork_t *work)
             return RHINO_WORKQUEUE_WORK_RUNNING;
         }
 
+        if (work->work_exit == 1) {
+            RHINO_CRITICAL_EXIT();
+            return RHINO_WORKQUEUE_WORK_EXIST;
+        }
+
         /* NOTE: the work MUST be initialized firstly */
         klist_rm_init(&(work->work_node));
         klist_insert(&(workqueue->work_list), &(work->work_node));
 
         work->wq = workqueue;
+        work->work_exit = 1;
 
-        if (workqueue->work_current == NULL) {
-            RHINO_CRITICAL_EXIT();
-            ret = krhino_sem_give(&(workqueue->sem));
-            if (ret != RHINO_SUCCESS) {
-                return ret;
-            }
-        } else {
-            RHINO_CRITICAL_EXIT();
+        RHINO_CRITICAL_EXIT();
+        ret = krhino_sem_give(&(workqueue->sem));
+        if (ret != RHINO_SUCCESS) {
+            return ret;
         }
+
     } else {
         krhino_timer_stop(&(work->timer));
         work->timer.timer_cb_arg = (void *)workqueue;
