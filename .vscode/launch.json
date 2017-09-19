@@ -2,9 +2,9 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C++ Launch",
+            "name": "AOS DEBUG",
             "type": "cppdbg",
-            "request": "launch",     
+            "request": "launch",
             "program": "${workspaceRoot}\\out\\eclipse_debug\\last_built.elf",
             "args": [],
             "stopAtEntry": true,
@@ -15,22 +15,24 @@
             "serverLaunchTimeout": 2000,
             "targetArchitecture": "ARM",
             "setupCommands": [
-                { "text": "cd ${workspaceRoot}" },
-                { "text": "source .gdbinit" },
-                { "text": "target remote localhost:3333" },
-                { "text": "file out/eclipse_debug/last_built.elf" },
-                { "text": "break application_start" }
+                {
+                    "text": "cd ${workspaceRoot}"
+                },
+                {
+                    "text": "source .gdbinit"
+                },
+                {
+                    "text": "target remote localhost:3333"
+                },
+                {
+                    "text": "file out/eclipse_debug/last_built.elf"
+                },
+                {
+                    "text": "break application_start"
+                }
             ],
             "customLaunchSetupCommands": [],
             "launchCompleteCommand": "exec-run",
-            // "logging": {
-            //     "moduleLoad": true,
-            //     "trace": true,
-            //     "engineLogging": true,
-            //     "programOutput": true,
-            //     "exceptions": true,
-            //     "traceResponse": true
-            // },
             "osx": {
                 "MIMode": "gdb",
                 "miDebuggerPath": "${workspaceRoot}/build/compiler/arm-none-eabi-5_4-2016q2-20160622/OSX/bin/arm-none-eabi-gdb"
