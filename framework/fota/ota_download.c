@@ -19,6 +19,13 @@
 #define KEY_OTA_MD5         "key_ota_md5"
 #define KEY_OTA_MD5_CTX     "key_ota_md5_ctx"
 
+#ifdef STM32_SPI_NET
+#include "stm32_wifi.h"
+#define WIFI_WRITE_TIMEOUT   200
+#define WIFI_READ_TIMEOUT    200
+#define MAX_RCV_RETRY_TIME   5
+#endif
+
 static MD5_CTX            g_ctx;
 
 static void save_state(uint32_t breakpoint, MD5_CTX *pMD5);
@@ -104,6 +111,104 @@ static int _ota_socket_check_conn(int sock)
     return 0;
 }
 
+#ifdef STM32_SPI_NET
+static int spi_socket_connect(int port, char *host_addr)
+{
+    WIFI_Status_t ret;
+    uint8_t ip_addr[4];
+    int fake_socket = 1;
+
+    ret = WIFI_GetHostAddress((char *)host_addr, ip_addr);
+    if (ret != WIFI_STATUS_OK) {
+        printf("spi_socket_connect: get host addr fail - %d\n", ret);
+        return -1;
+    }
+
+    ret = WIFI_OpenClientConnection(fake_socket, WIFI_TCP_PROTOCOL, "", ip_addr, port, 1);
+    if (ret != WIFI_STATUS_OK) {
+        printf("spi_socket_connect: open client fail - %d\n", ret);
+        return -1;
+    }
+
+    return fake_socket;
+}
+
+static int spi_socket_send(int socket, const unsigned char *buf, size_t len)
+{
+    WIFI_Status_t ret;
+    uint16_t send_size;
+    uint8_t ip_address[4];
+    char    ip[16];
+
+    if (socket < 0) {
+        printf("spi_socket_send: invalid socket fd\n");
+        return -1;
+    }
+    printf("spi_socket_send: len = %d\n", len);
+    ret = WIFI_SendData((uint8_t)socket,
+                      (uint8_t *)buf, len,
+                      &send_size, WIFI_WRITE_TIMEOUT);
+    if (ret != WIFI_STATUS_OK) {
+      printf("spi_socket_send: send data fail - %d\n", ret);
+      return -1;
+    }
+
+    return send_size;
+}
+
+static int spi_socket_recv(int socket, unsigned char *buf, size_t len)
+{
+    WIFI_Status_t ret;
+    uint16_t recv_size;
+
+    if (socket < 0) {
+        printf("spi_socket_recv: invalid socket fd\n");
+        return -1;
+    }
+
+    if (len > ES_WIFI_PAYLOAD_SIZE) {
+        len = ES_WIFI_PAYLOAD_SIZE;
+    }
+    int err_count = 0;
+    do {
+        ret = WIFI_ReceiveData((uint8_t)socket,
+                                buf, (uint16_t)len,
+                                &recv_size, WIFI_READ_TIMEOUT);
+        if (ret != WIFI_STATUS_OK) {
+            printf("spi_socket_recv: receive data fail - %d\n", ret);
+            return -1;
+        }
+
+        //TODO, how to identify the connection is shutdown?
+        if (recv_size == 0) {
+            if (err_count == MAX_RCV_RETRY_TIME) {
+                printf("spi_socket_recv: retry WIFI_ReceiveData %d times failed\n", err_count);
+                return -1;
+            } else {
+                err_count++;
+                printf("spi_socket_recv: retry WIFI_ReceiveData time %d\n", err_count);
+            }
+        }
+    } while (ret == WIFI_STATUS_OK && recv_size == 0);
+
+    return recv_size;
+}
+
+static void spi_socket_free(int socket)
+{
+    WIFI_Status_t ret;
+
+    if (socket == -1)
+        return;
+
+    ret = WIFI_CloseClientConnection((uint32_t)socket);
+    if (ret != WIFI_STATUS_OK) {
+        printf("spi_socket_free: close client fail - %d\n", ret);
+        return;
+    }
+}
+#endif
+
 /**
  * @brief http_socket_init
  *
@@ -118,6 +223,10 @@ int http_socket_init(int port, char *host_addr)
         OTA_LOG_E("http_socket_init parms   error\n ");
         return -1;
     }
+
+#ifdef STM32_SPI_NET
+    return spi_socket_connect(port, host_addr);
+#else
     struct sockaddr_in server_addr;
     struct hostent *host;
     int sockfd;
@@ -161,6 +270,7 @@ int http_socket_init(int port, char *host_addr)
 err_out:
     close(sockfd);
     return -1;
+#endif
 }
 
 
@@ -239,7 +349,11 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     totalsend = 0;
     nbytes = strlen(http_buffer);
     while (totalsend < nbytes) {
+#ifdef STM32_SPI_NET
+        send = spi_socket_send(sockfd, http_buffer + totalsend, nbytes - totalsend);
+#else
         send = write(sockfd, http_buffer + totalsend, nbytes - totalsend);
+#endif
         if (send == -1) {
             OTA_LOG_E("send error!%s\n ", strerror(errno));
             ret = OTA_DOWNLOAD_SEND_FAIL;
@@ -258,6 +372,13 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     int file_size = 0;
     int retry_cnt = 0;
 
+#ifdef STM32_SPI_NET
+    while ((nbytes = spi_socket_recv(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
+        if (nbytes < 0) {
+            OTA_LOG_E("spi_socket_recv error!");
+            break;
+        }
+#else
     while ((nbytes = read(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
         // aos_msleep(25);//for slow-motion test
         if (nbytes < 0) {
@@ -275,6 +396,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
             }
 
         }
+#endif
 
         if (!header_found) {
             if (!file_size) {
@@ -334,7 +456,11 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     }
 
 DOWNLOAD_END:
+#ifdef STM32_SPI_NET
+    spi_socket_free(sockfd);
+#else
     close(sockfd);
+#endif
     return ret;
 }
 

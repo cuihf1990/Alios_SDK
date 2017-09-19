@@ -16,6 +16,7 @@ $(NAME)_DEFINES     += SENSOR
 $(NAME)_SOURCES     += sensor/sensors_data.c \
                        sensor/vl53l0x_platform.c \
                        sensor/vl53l0x_proximity.c
+GLOBAL_DEFINES      += STM32_SPI_NET
 else
 $(NAME)_SOURCES     := mqtt-example.c
 endif
