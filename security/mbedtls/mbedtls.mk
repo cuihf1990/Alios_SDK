@@ -8,14 +8,21 @@ GLOBAL_INCLUDES     += include
 
 $(NAME)_CFLAGS      += -Wall -Werror -Os
 
-$(NAME)_SOURCES     := mbedtls_ssl.c
-$(NAME)_SOURCES     += mbedtls_net.c
-
 ifeq ($(DEBUG), yes)
 $(NAME)_DEFINES     += CONFIG_SSL_DEBUG
 endif
 
-$(NAME)_COMPONENTS := alicrypto
+$(NAME)_COMPONENTS  := alicrypto
+
+ifeq ($(HOST_ARCH), linux)
+ifeq ($(LWIP), 1)
+$(NAME)_DEFINES     += LWIP_ENABLED
+$(NAME)_COMPONENTS  += protocols.net
+endif
+else
+$(NAME)_DEFINES     += LWIP_ENABLED
+$(NAME)_COMPONENTS  += protocols.net
+endif
 
 PLATFORM := linuxhost
 ifeq ($(HOST_ARCH), linux)
@@ -48,4 +55,7 @@ else
 $(error "not find correct platform!")
 
 endif
+
+$(NAME)_SOURCES     := mbedtls_net.c
+$(NAME)_SOURCES     += mbedtls_ssl.c
 
