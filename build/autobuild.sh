@@ -42,17 +42,17 @@ aos make clean > /dev/null 2>&1
 for target in ${mk3060_targets}; do
     for platform in ${mk3060_platforms}; do
 	for bins in ${bins_type}; do
-            yos make ${target}@${platform} BINS=${bins} > ${target}@${platform}@${bins}@${branch}.multi-bins.log 2>&1
+            aos make ${target}@${platform} BINS=${bins} > ${target}@${platform}@${bins}@${branch}.multi-bins.log 2>&1
             if [ -f out/${target}@${platform}/binary/${target}@${platform}.${bins}.elf ]; then
                 rm -rf ${target}@${platform}@${bins}@${branch}.multi-bins.log
                 echo "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch succeed"
-		yos make clean > /dev/null 2>&1
+		aos make clean > /dev/null 2>&1
             else
                 echo -e "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch failed, log:\n"
                 cat ${target}@${platform}@${bins}@${branch}.multi-bins.log
                 rm -rf ${target}@${platform}@${bins}@${branch}.multi-bins.log
                 echo -e "\nbuild ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch failed"
-                yos make clean > /dev/null 2>&1
+                aos make clean > /dev/null 2>&1
                 exit 1
             fi
         done
