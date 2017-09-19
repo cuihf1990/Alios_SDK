@@ -782,6 +782,7 @@ static int start_one_device(master_info_t *master, int id, int mode, int router,
         sprintf(ifs_str, "%d", ifs);
         char *args[16] = {
             (char *)master_info.self_exec,
+            "--no-cli",
             "--mesh-node",
             "--mesh-ifs",
             ifs_str,

@@ -20,3 +20,5 @@ si
 .cproject
 .project
 .vscode
+*.pyc
+

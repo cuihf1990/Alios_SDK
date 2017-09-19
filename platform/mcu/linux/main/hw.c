@@ -219,7 +219,8 @@ void hw_start_hal(options_t *poptions)
     per_pid_flash = poptions->flash.per_pid;
 
 #ifdef CONFIG_AOS_CLI
-    hal_uart_init(&uart_0);
+    if (poptions->cli.enable)
+        hal_uart_init(&uart_0);
 #endif
 
     hal_wifi_register_module(&sim_aos_wifi_linux);

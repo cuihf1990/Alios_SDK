@@ -62,7 +62,8 @@ static void app_entry(void *arg)
     vfs_device_init();
 
 #ifdef CONFIG_AOS_CLI
-    aos_cli_init();
+    if (options.cli.enable)
+        aos_cli_init();
 #endif
 
     aos_kv_init();
@@ -148,6 +149,7 @@ int main(int argc, char **argv)
     options.lwip.tapif  = true;
 #endif
     options.log_level   = AOS_LL_WARN;
+    options.cli.enable  = true;
 
 #if defined(CONFIG_AOS_DDA) || defined(ENABLE_GCOV)
     signal(SIGINT, signal_handler);

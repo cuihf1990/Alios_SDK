@@ -39,6 +39,10 @@ typedef struct {
     struct {
         bool per_pid;
     } flash;
+
+    struct {
+        bool enable;
+    } cli;
 } options_t;
 
 void parse_options(options_t *config);
