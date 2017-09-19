@@ -91,7 +91,7 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
 
 static int _ota_socket_check_conn(int sock)
 {
-#ifndef WITH_LWIP
+#if !defined(WITH_LWIP) && !defined(CONFIG_NO_TCPIP)
     struct pollfd fd = { .fd = sock, .events = POLLOUT };
     int ret = 0;
     socklen_t len = 0;

@@ -33,8 +33,7 @@ GLOBAL_INCLUDES += include \
                    bsp/Components/lps22hb \
                    bsp/Components/lsm6dsl \
                    bsp/Components/vl53l0x \
-                   wifi/inc \
-                   csp/lwip/include
+                   wifi/inc
 
 
 GLOBAL_CFLAGS += -DSTM32L475xx 
@@ -60,8 +59,6 @@ $(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-var
 $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
 GLOBAL_LDFLAGS += -T platform/mcu/stm32l4xx/STM32L475VGTx_FLASH.ld
-
-$(NAME)_COMPONENTS += protocols.net
 
 $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    startup/stm32l4xx_hal_msp.c      \
@@ -109,7 +106,6 @@ $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    bsp/Components/vl53l0x/vl53l0x_api_strings.c \
                    bsp/Components/vl53l0x/vl53l0x_platform_log.c \
                    aos/soc_impl.c                \
-                   aos/trace_impl.c             \
                    aos/aos.c                    \
                    wifi/src/es_wifi_io.c        \
                    wifi/src/wifi.c              \
@@ -119,8 +115,3 @@ $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    hal/ota_port.c              \
                    ../../arch/arm/armv7m/gcc/m4/port_c.c \
                    ../../arch/arm/armv7m/gcc/m4/port_s.S
-
-
-$(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \
-                    ../../../kernel/protocols/net/include/netif \
-                    ../../../kernel/protocols/net/include

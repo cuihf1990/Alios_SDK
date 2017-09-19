@@ -13,7 +13,11 @@ extern "C" {
 #include <fcntl.h>
 
 /* network */
-#ifndef WITH_LWIP
+#ifdef WITH_LWIP
+#include <lwip/def.h>
+#include <lwip/netdb.h>
+#include <lwip/sockets.h>
+#elif !defined(CONFIG_NO_TCPIP)
 #include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -21,10 +25,6 @@ extern "C" {
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/eventfd.h>
-#else
-#include <lwip/def.h>
-#include <lwip/netdb.h>
-#include <lwip/sockets.h>
 #endif
 
 #ifdef __cplusplus

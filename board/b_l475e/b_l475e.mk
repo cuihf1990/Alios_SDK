@@ -10,7 +10,7 @@ HOST_MCU_FAMILY      := stm32l4xx
 $(NAME)_SOURCES := board.c osa_flash.c
 
 GLOBAL_INCLUDES += .
-GLOBAL_DEFINES += STDIO_UART=0
+GLOBAL_DEFINES += STDIO_UART=0 CONFIG_NO_TCPIP
 
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 CONFIG_SYSINFO_KERNEL_VERSION = AOS-R-1.0.1
@@ -46,7 +46,7 @@ GLOBAL_LDFLAGS  += -L $(SOURCE_ROOT)/board/b_l475e
 # Global defines
 # HSE_VALUE = STM32 crystal frequency = 26MHz (needed to make UART work correctly)
 GLOBAL_DEFINES += $$(if $$(NO_CRLF_STDIO_REPLACEMENT),,CRLF_STDIO_REPLACEMENT)
-GLOBAL_CFLAGS  += -DSTM32L475xx -DWITH_LWIP -mcpu=cortex-m4 -mthumb -mfloat-abi=soft
+GLOBAL_CFLAGS  += -DSTM32L475xx -mcpu=cortex-m4 -mthumb -mfloat-abi=soft
 
 WIFI_FIRMWARE_SECTOR_START    := 2      #0x2000
 FILESYSTEM_IMAGE_SECTOR_START := 256    #0x100000

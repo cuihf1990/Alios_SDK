@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#ifdef WITH_LWIP
+#if defined(WITH_LWIP) || defined(CONFIG_NO_TCPIP)
 #define POLLIN  0x1
 #define POLLOUT 0x2
 #define POLLERR 0x4
