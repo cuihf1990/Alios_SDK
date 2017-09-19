@@ -19,7 +19,7 @@
 #define KEY_OTA_MD5         "key_ota_md5"
 #define KEY_OTA_MD5_CTX     "key_ota_md5_ctx"
 
-#ifdef STM32L475xx
+#ifdef STM32_SPI_NET
 #include "stm32_wifi.h"
 #define WIFI_WRITE_TIMEOUT   200
 #define WIFI_READ_TIMEOUT    200
@@ -111,7 +111,7 @@ static int _ota_socket_check_conn(int sock)
     return 0;
 }
 
-#ifdef STM32L475xx
+#ifdef STM32_SPI_NET
 static int spi_socket_connect(int port, char *host_addr)
 {
     WIFI_Status_t ret;
@@ -224,7 +224,7 @@ int http_socket_init(int port, char *host_addr)
         return -1;
     }
 
-#ifdef STM32L475xx
+#ifdef STM32_SPI_NET
     return spi_socket_connect(port, host_addr);
 #else
     struct sockaddr_in server_addr;
@@ -349,7 +349,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     totalsend = 0;
     nbytes = strlen(http_buffer);
     while (totalsend < nbytes) {
-#ifdef STM32L475xx
+#ifdef STM32_SPI_NET
         send = spi_socket_send(sockfd, http_buffer + totalsend, nbytes - totalsend);
 #else
         send = write(sockfd, http_buffer + totalsend, nbytes - totalsend);
@@ -372,7 +372,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     int file_size = 0;
     int retry_cnt = 0;
 
-#ifdef STM32L475xx
+#ifdef STM32_SPI_NET
     while ((nbytes = spi_socket_recv(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
         if (nbytes < 0) {
             OTA_LOG_E("spi_socket_recv error!");
@@ -456,7 +456,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     }
 
 DOWNLOAD_END:
-#ifdef STM32L475xx
+#ifdef STM32_SPI_NET
     spi_socket_free(sockfd);
 #else
     close(sockfd);
