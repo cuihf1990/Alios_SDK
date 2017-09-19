@@ -443,15 +443,19 @@ static void reboot_cmd(char *buf, int len, int argc, char **argv);
 static void uptime_cmd(char *buf, int len, int argc, char **argv);
 static void ota_cmd(char *buf, int len, int argc, char **argv);
 static void wifi_debug_cmd(char *buf, int len, int argc, char **argv);
+static void udp_cmd(char *buf, int len, int argc, char **argv);
 
 static const struct cli_command built_ins[] = {
     {"help",        NULL,       help_cmd},
-    {"sysver",     NULL,       version_cmd},
+    {"sysver",      NULL,       version_cmd},
     {"echo",        NULL,       echo_cmd},
     {"exit",        "CLI exit", exit_cmd},
 
     /* os */
     {"tasklist",    "list all thread info", task_cmd},
+
+    /* net */
+    {"udp",         "[ip] [port] [string data] send udp data", udp_cmd},
 
     /* others */
     {"devname",     "print device name", devname_cmd},
@@ -516,6 +520,31 @@ static void exit_cmd(char *buf, int len, int argc, char **argv)
 {
     cliexit = 1;
     return;
+}
+
+#include <aos/network.h>
+static void udp_cmd(char *buf, int len, int argc, char **argv)
+{
+    struct sockaddr_in saddr;
+    memset(&saddr, 0, sizeof(saddr));
+    saddr.sin_family = AF_INET;
+    saddr.sin_port = htons(atoi(argv[2]));
+    saddr.sin_addr.s_addr = inet_addr(argv[1]);
+
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if (sockfd < 0) {
+        aos_cli_printf("error creating socket!\n");
+        return;
+    }
+
+    int ret = sendto(sockfd, argv[3], strlen(argv[3]), 0,
+      (struct sockaddr *)&saddr, sizeof(saddr));
+    if (ret < 0) {
+        aos_cli_printf("error send data %d!\n", ret);
+    }
+
+    close(sockfd);
 }
 
 static void task_cmd(char *buf, int len, int argc, char **argv)
