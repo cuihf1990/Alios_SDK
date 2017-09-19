@@ -602,6 +602,7 @@ void aos_kv_gc(void *arg)
 {
     uint8_t i;
     uint8_t gc_index;
+    uint8_t gc_copy = 0;
     uint16_t origin_pos;
 
     if (aos_mutex_lock(&(g_kv_mgr.kv_mutex), AOS_WAIT_FOREVER) != 0) {
@@ -629,6 +630,7 @@ void aos_kv_gc(void *arg)
         if (g_kv_mgr.block_info[i].state == BLK_STATE_DIRTY) {
             kv_item_traverse(__item_gc_cb, i, NULL);
 
+            gc_copy = 1;
             if (kv_block_format(i) != RES_OK) {
                 goto exit;
             }
@@ -643,6 +645,9 @@ void aos_kv_gc(void *arg)
         }
         i++;
     }
+
+    if (gc_copy == 0)
+        g_kv_mgr.write_pos = origin_pos;
 
 exit:
     g_kv_mgr.gc_triggered = 0;
