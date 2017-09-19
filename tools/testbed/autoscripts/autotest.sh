@@ -22,10 +22,10 @@ python testbed_program.py ${firmware} >> ${logfile} 2>&1
 echo -e "\n---------------------------------------------------------\n" >> ${logfile}
 
 echo -e "Start Alink 2PPS and 5PPS test\n" >> ${logfile}
-python alink_testrun.py --testname=2pps --device=mxchip-DN02XLNN --filename=${firmware} --caseid=15071 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > ${log2pps} 2>&1 &
+python alink_testrun.py --testname=2pps --device=mxchip-DN02XLNN --filename=${firmware} --caseid=20247 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > ${log2pps} 2>&1 &
 pps2pid=$!
 sleep 60
-python alink_testrun.py --testname=5pps --device=mxchip-DN02X30I --filename=${firmware} --caseid=15100 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > ${log5pps} 2>&1 &
+python alink_testrun.py --testname=5pps --device=mxchip-DN02X30I --filename=${firmware} --caseid=20231 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > ${log5pps} 2>&1 &
 pps5pid=$!
 
 cd ${workdir}/ipv4
