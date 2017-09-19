@@ -234,23 +234,48 @@ int httpclient_send_auth(httpclient_t *client, char *send_buf, int *send_idx)
 int httpclient_send_header(httpclient_t *client, const char *url, int method, httpclient_data_t *client_data)
 {
     char scheme[8] = { 0 };
-    char host[HTTPCLIENT_MAX_HOST_LEN] = { 0 };
-    char path[HTTPCLIENT_MAX_URL_LEN] = { 0 };
+    //char host[HTTPCLIENT_MAX_HOST_LEN] = { 0 };
+    //char path[HTTPCLIENT_MAX_URL_LEN] = { 0 };
+    char *host;//[HTTPCLIENT_MAX_HOST_LEN] = { 0 };
+    char *path;//[HTTPCLIENT_MAX_URL_LEN] = { 0 };
     int len;
-    char send_buf[HTTPCLIENT_SEND_BUF_SIZE] = { 0 };
-    char buf[HTTPCLIENT_SEND_BUF_SIZE] = { 0 };
+    //char send_buf[HTTPCLIENT_SEND_BUF_SIZE] = { 0 };
+    //char buf[HTTPCLIENT_SEND_BUF_SIZE] = { 0 };
+    char *send_buf;
+    char *buf;
     char *meth = (method == HTTPCLIENT_GET) ? "GET" : (method == HTTPCLIENT_POST) ? "POST" :
                  (method == HTTPCLIENT_PUT) ? "PUT" : (method == HTTPCLIENT_DELETE) ? "DELETE" :
                  (method == HTTPCLIENT_HEAD) ? "HEAD" : "";
     int ret;
     int port;
+    int rc = SUCCESS_RETURN;
 
+    if (NULL == (host = (char *)HAL_Malloc(HTTPCLIENT_MAX_HOST_LEN))) {
+        log_err("not enough memory");
+        return FAIL_RETURN;
+    }
+    if (NULL == (path = (char *)HAL_Malloc(HTTPCLIENT_MAX_HOST_LEN))) {
+        log_err("not enough memory");
+        rc = FAIL_RETURN;
+        goto GO_ERR_3;
+    }
+    if (NULL == (send_buf = (char *)HAL_Malloc(HTTPCLIENT_SEND_BUF_SIZE))) {
+        log_err("not enough memory");
+        rc = FAIL_RETURN;
+        goto GO_ERR_2;
+    }
+    if (NULL == (buf = (char *)HAL_Malloc(HTTPCLIENT_SEND_BUF_SIZE))) {
+        log_err("not enough memory");
+        rc = FAIL_RETURN;
+        goto GO_ERR_1;
+    }
     /* First we need to parse the url (http[s]://host[:port][/[path]]) */
-    //int res = httpclient_parse_url(url, scheme, sizeof(scheme), host, sizeof(host), &(client->remote_port), path, sizeof(path));
-    int res = httpclient_parse_url(url, scheme, sizeof(scheme), host, sizeof(host), &port, path, sizeof(path));
+    int res = httpclient_parse_url(url, scheme, sizeof(scheme), host, HTTPCLIENT_MAX_HOST_LEN, &port, path, HTTPCLIENT_MAX_HOST_LEN);
     if (res != SUCCESS_RETURN) {
         log_err("httpclient_parse_url returned %d", res);
-        return res;
+        //return res;
+        rc = res;
+        goto GO_ERR;
     }
 
     //if (client->remote_port == 0)
@@ -264,13 +289,16 @@ int httpclient_send_header(httpclient_t *client, const char *url, int method, ht
 
     /* Send request */
     memset(send_buf, 0, HTTPCLIENT_SEND_BUF_SIZE);
+    memset(buf, 0, HTTPCLIENT_SEND_BUF_SIZE);
     len = 0; /* Reset send buffer */
 
-    snprintf(buf, sizeof(buf), "%s %s HTTP/1.1\r\nHost: %s\r\n", meth, path, host); /* Write request */
+    snprintf(buf, HTTPCLIENT_SEND_BUF_SIZE, "%s %s HTTP/1.1\r\nHost: %s\r\n", meth, path, host); /* Write request */
     ret = httpclient_get_info(client, send_buf, &len, buf, strlen(buf));
     if (ret) {
         log_err("Could not write request");
-        return ERROR_HTTP_CONN;
+        //return ERROR_HTTP_CONN;
+        rc = ERROR_HTTP_CONN;
+        goto GO_ERR;
     }
 
     /* Send all headers */
@@ -284,11 +312,11 @@ int httpclient_send_header(httpclient_t *client, const char *url, int method, ht
     }
 
     if (client_data->post_buf != NULL) {
-        snprintf(buf, sizeof(buf), "Content-Length: %d\r\n", client_data->post_buf_len);
+        snprintf(buf, HTTPCLIENT_SEND_BUF_SIZE, "Content-Length: %d\r\n", client_data->post_buf_len);
         httpclient_get_info(client, send_buf, &len, buf, strlen(buf));
 
         if (client_data->post_content_type != NULL) {
-            snprintf(buf, sizeof(buf), "Content-Type: %s\r\n", client_data->post_content_type);
+            snprintf(buf, HTTPCLIENT_SEND_BUF_SIZE, "Content-Type: %s\r\n", client_data->post_content_type);
             httpclient_get_info(client, send_buf, &len, buf, strlen(buf));
         }
     }
@@ -304,13 +332,22 @@ int httpclient_send_header(httpclient_t *client, const char *url, int method, ht
         log_debug("Written %d bytes", ret);
     } else if (ret == 0) {
         log_err("ret == 0,Connection was closed by server");
-        return ERROR_HTTP_CLOSED; /* Connection was closed by server */
+        //return ERROR_HTTP_CLOSED; /* Connection was closed by server */
+        rc = ERROR_HTTP_CLOSED;
     } else {
         log_err("Connection error (send returned %d)", ret);
-        return ERROR_HTTP_CONN;
+        //return ERROR_HTTP_CONN;
+        rc = ERROR_HTTP_CONN;
     }
-
-    return SUCCESS_RETURN;
+GO_ERR:
+    HAL_Free(buf);
+GO_ERR_1:
+    HAL_Free(send_buf);
+GO_ERR_2:
+    HAL_Free(path);
+GO_ERR_3:
+    HAL_Free(host);
+    return rc;//SUCCESS_RETURN;
 }
 
 int httpclient_send_userdata(httpclient_t *client, httpclient_data_t *client_data)
