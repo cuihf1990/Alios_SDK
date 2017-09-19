@@ -11,16 +11,6 @@
 #include "ip/ip6.h"
 #include "hal/interface_context.h"
 
-typedef enum device_state_s {
-    DEVICE_STATE_DISABLED     = 0,
-    DEVICE_STATE_DETACHED     = 1,
-    DEVICE_STATE_ATTACHED     = 2,
-    DEVICE_STATE_LEAF         = 3,
-    DEVICE_STATE_LEADER       = 4,
-    DEVICE_STATE_SUPER_ROUTER = 5,
-    DEVICE_STATE_ROUTER       = 6,
-} mm_device_state_t;
-
 static inline uint16_t get_subnetsize_from_netinfo(mm_netinfo_tv_t *netinfo)
 {
     return (netinfo->subnet_size_1 << 8) | netinfo->subnet_size_2;
@@ -116,7 +106,7 @@ uint16_t            umesh_mm_get_local_sid(void);
 neighbor_t          *umesh_mm_get_attach_node(network_context_t *network);
 neighbor_t          *umesh_mm_get_attach_candidate(network_context_t *network);
 uint8_t             *umesh_mm_get_local_ueid(void);
-mm_device_state_t   umesh_mm_get_device_state(void);
+node_state_t        umesh_mm_get_device_state(void);
 attach_state_t      umesh_mm_get_attach_state(void);
 uint16_t            umesh_mm_get_meshnetid(network_context_t *network);
 uint16_t            umesh_mm_get_meshnetsize(void);

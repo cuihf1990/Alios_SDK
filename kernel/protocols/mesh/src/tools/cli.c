@@ -115,7 +115,7 @@ typedef struct input_cli_s {
 static cmd_cb_t g_cur_cmd_cb;
 static void *g_cur_cmd_priv;
 
-static const char *state2str(mm_device_state_t state)
+static const char *state2str(node_state_t state)
 {
     switch (state) {
         case DEVICE_STATE_DISABLED:
@@ -700,7 +700,7 @@ void process_router(int argc, char *argv[])
 
 void process_state(int argc, char *argv[])
 {
-    mm_device_state_t state;
+    node_state_t state;
 
     state = umesh_get_device_state();
 

@@ -239,6 +239,16 @@ typedef enum node_mode_s {
     MODE_HI_MASK = 0xf0,
 } node_mode_t;
 
+typedef enum node_state_s {
+    DEVICE_STATE_DISABLED     = 0,
+    DEVICE_STATE_DETACHED     = 1,
+    DEVICE_STATE_ATTACHED     = 2,
+    DEVICE_STATE_LEAF         = 3,
+    DEVICE_STATE_LEADER       = 4,
+    DEVICE_STATE_SUPER_ROUTER = 5,
+    DEVICE_STATE_ROUTER       = 6,
+} node_state_t;
+
 typedef struct whitelist_entry_s {
     mac_address_t address;
     int8_t        rssi;

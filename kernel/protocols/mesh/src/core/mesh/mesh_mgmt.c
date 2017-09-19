@@ -23,14 +23,14 @@
 #include "hal/hals.h"
 
 typedef struct mm_device_s {
-    mm_device_state_t state;
-    node_mode_t       mode;
-    uint8_t           ueid[8];
-    bool              reboot_flag;
-    ur_timer_t        alive_timer;
-    ur_timer_t        net_scan_timer;
-    uint8_t           seclevel;
-    int8_t            prev_channel;
+    node_state_t state;
+    node_mode_t  mode;
+    uint8_t      ueid[8];
+    bool         reboot_flag;
+    ur_timer_t   alive_timer;
+    ur_timer_t   net_scan_timer;
+    uint8_t      seclevel;
+    int8_t       prev_channel;
 } mm_device_t;
 
 typedef struct mesh_mgmt_state_s {
@@ -1720,7 +1720,7 @@ void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
     }
 }
 
-mm_device_state_t umesh_mm_get_device_state(void)
+node_state_t umesh_mm_get_device_state(void)
 {
     return g_mm_state.device.state;
 }
