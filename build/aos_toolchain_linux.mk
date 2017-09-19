@@ -1,5 +1,7 @@
 ifneq ($(filter $(HOST_ARCH), linux),)
 
+TOOLCHAIN_PATH :=
+
 PATH    := $(PATH):/bin:/usr/bin:/usr/local/bin
 CC      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gcc
 CXX     := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)g++
