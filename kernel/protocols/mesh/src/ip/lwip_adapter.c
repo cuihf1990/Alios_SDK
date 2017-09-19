@@ -18,6 +18,13 @@
 #include "ip/lwip_adapter.h"
 #include "core/mesh_mgmt.h"
 
+#ifdef CONFIG_AOS_MESH_TAPIF
+static bool is_router;
+int umesh_tapif_init(const char *ifname);
+void umesh_tapif_deinit(void);
+void umesh_tapif_send(void *buf, int len);
+#endif
+
 #if LWIP_IPV6 == 0 && LWIP_IPV4 && LWIP_IGMP
 #include "lwip/igmp.h"
 static struct igmp_group g_group;
@@ -51,13 +58,40 @@ ur_error_t ur_adapter_input(struct pbuf *buf)
     return error;
 }
 
+void ur_adapter_input_buf(void *buf, int len)
+{
+    struct pbuf *pbuf = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
+    if (!pbuf)
+        return;
+
+    pbuf_take(pbuf, buf, len);
+    ur_adapter_input(pbuf);
+}
+
 static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
                                     const ip4_addr_t *ip4addr)
 {
     ur_error_t error;
     uint16_t sid;
 
-    if (ip4_addr_ismulticast(ip4addr)) {
+    if (!ip4_addr_netcmp(ip4addr, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
+            ip4_addr_cmp(ip4addr, netif_ip4_gw(netif))) {
+#ifdef CONFIG_AOS_MESH_TAPIF
+        if (is_router) {
+            MESH_LOG_DEBUG("should go to gateway\n");
+            char buf[2048];
+            int l = pbuf_copy_partial(p, buf+4, sizeof(buf)-4, 0);
+            buf[0] = 0;
+            buf[1] = 0;
+            buf[2] = 0;
+            buf[3] = 0;
+            umesh_tapif_send(buf, l+4);
+            return ERR_OK;
+        }
+#endif
+        sid = 0;
+    }
+    else if (ip4_addr_ismulticast(ip4addr)) {
         sid = 0xffff;
     } else {
         sid = ntohs(((ip4addr->addr) >> 16)) - 2;
@@ -198,6 +232,7 @@ ur_error_t ur_adapter_interface_up(void)
 
         netif_add(&g_la_state.adpif, NULL, NULL, NULL, NULL,
                   ur_adapter_if_init, tcpip_input);
+        netif_set_default(&g_la_state.adpif);
         interface = &g_la_state.adpif;
     }
 
@@ -208,6 +243,16 @@ ur_error_t ur_adapter_interface_up(void)
     }
     update_interface_ipaddr();
 
+#ifdef CONFIG_AOS_MESH_TAPIF
+    if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
+        is_router = true;
+        umesh_tapif_init("tun0");
+    }
+    else {
+        is_router = false;
+        umesh_tapif_deinit();
+    }
+#endif
     return UR_ERROR_NONE;
 }
 

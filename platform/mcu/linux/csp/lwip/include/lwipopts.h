@@ -96,8 +96,14 @@
    ---------- IP options ----------
 */
 #define LWIP_IPV4                       1
+
+#ifndef LWIP_IPV6
 #define LWIP_IPV6                       1
-#define IP_FORWARD                      0
+#endif
+
+#define IP_FORWARD                      1
+#define IP_FORWARD_ALLOW_TX_ON_RX_NETIF 1
+
 #define IP_OPTIONS_ALLOWED              1
 #define IP_REASSEMBLY                   0
 #define IP_FRAG                         0
