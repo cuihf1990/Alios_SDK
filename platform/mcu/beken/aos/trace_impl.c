@@ -93,7 +93,7 @@ void trace_hal_deinit(void *handle)
 
     fd = (int)handle;
     close(fd);
-    *（int *)handle = -1;
+    sockfd = -1;
 }
 
 void trace_stop(void)
