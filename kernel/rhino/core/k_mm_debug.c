@@ -12,7 +12,7 @@
 #include "aos/aos.h"
 
 #ifdef CONFIG_AOS_CLI
-#define print cli_printf
+#define print aos_cli_printf
 #else
 #define print printf
 #endif

@@ -226,7 +226,7 @@ void light_init(void)
         rssi_threshold = DEFAULT_THRESHOLD;
     }
     LOGD(MODULE_NAME, "rssi_threshold = %d", rssi_threshold);
-    cli_register_commands(&light_control_cmds[0],
+    aos_cli_register_commands(&light_control_cmds[0],
             sizeof(light_control_cmds) / sizeof(light_control_cmds[0]));
     aos_register_event_filter(EV_MESH, subscribed_event_cb, NULL);
     aos_task_new("lightworker", message_receive_worker, NULL, 4096);

@@ -151,7 +151,7 @@ static int handle_input(char *inbuf)
     /* Added for testbed cli, no impact on normal cli <beginning> */
     skipped_len = check_cmd_prefix(inbuf, &cmd_prefix, &cmd_prefix_len);
     if (skipped_len < 0) {
-        cli_printf("\r\ncheck_cmd_prefix func failed\r\n");
+        aos_cli_printf("\r\ncheck_cmd_prefix func failed\r\n");
         return 2;
     }
 
@@ -246,8 +246,8 @@ static int handle_input(char *inbuf)
     /* Added for testbed cli, no impact on normal cli <beginning> */
     if (cmd_prefix_len > 0) {
         *(cmd_prefix + cmd_prefix_len) = '\0'; /* safe to operate in place now */
-        cli_printf(cmd_prefix);
-        cli_printf("\r\n");
+        aos_cli_printf(cmd_prefix);
+        aos_cli_printf("\r\n");
     }
     /* testbed cli <end> */
 
@@ -263,8 +263,8 @@ static int handle_input(char *inbuf)
             aos_msleep(500);
         }
 
-        cli_printf(cmd_prefix);
-        cli_printf("\r\n");
+        aos_cli_printf(cmd_prefix);
+        aos_cli_printf("\r\n");
     }
     /* testbed cli <end> */
 
@@ -280,7 +280,7 @@ static void tab_complete(char *inbuf, unsigned int *bp)
     int i, n, m;
     const char *fm = NULL;
 
-    cli_printf("\r\n");
+    aos_cli_printf("\r\n");
 
     /* show matching commands */
     for (i = 0, n = 0, m = 0; i < MAX_COMMANDS && n < cli->num_commands;
@@ -291,10 +291,10 @@ static void tab_complete(char *inbuf, unsigned int *bp)
                 if (m == 1) {
                     fm = cli->commands[i]->name;
                 } else if (m == 2)
-                    cli_printf("%s %s ", fm,
+                    aos_cli_printf("%s %s ", fm,
                                cli->commands[i]->name);
                 else
-                    cli_printf("%s ",
+                    aos_cli_printf("%s ",
                                cli->commands[i]->name);
             }
             n++;
@@ -313,7 +313,7 @@ static void tab_complete(char *inbuf, unsigned int *bp)
     }
 
     /* just redraw input line */
-    cli_printf("%s%s", PROMPT, inbuf);
+    aos_cli_printf("%s%s", PROMPT, inbuf);
 }
 
 /* Get an input line.
@@ -323,7 +323,7 @@ static void tab_complete(char *inbuf, unsigned int *bp)
 static int get_input(char *inbuf, unsigned int *bp)
 {
     if (inbuf == NULL) {
-        cli_printf("inbuf_null\r\n");
+        aos_cli_printf("inbuf_null\r\n");
         return 0;
     }
 
@@ -362,8 +362,8 @@ static int get_input(char *inbuf, unsigned int *bp)
 
         (*bp)++;
         if (*bp >= INBUF_SIZE) {
-            cli_printf("Error: input buffer overflow\r\n");
-            cli_printf(PROMPT);
+            aos_cli_printf("Error: input buffer overflow\r\n");
+            aos_cli_printf(PROMPT);
             *bp = 0;
             return 0;
         }
@@ -380,16 +380,16 @@ static void print_bad_command(char *cmd_string)
 {
     if (cmd_string != NULL) {
         char *c = cmd_string;
-        cli_printf("command '");
+        aos_cli_printf("command '");
         while (*c != '\0') {
             if ((*c) >= 0x20 && (*c) <= 0x7f) {
-                cli_printf("%c", *c);
+                aos_cli_printf("%c", *c);
             } else {
-                cli_printf("\\0x%x", *c);
+                aos_cli_printf("\\0x%x", *c);
             }
             ++c;
         }
-        cli_printf("' not found\r\n");
+        aos_cli_printf("' not found\r\n");
     }
 }
 
@@ -418,14 +418,14 @@ static void cli_main(void *data)
             if (ret == 1) {
                 print_bad_command(msg);
             } else if (ret == 2) {
-                cli_printf("syntax error\r\n");
+                aos_cli_printf("syntax error\r\n");
             }
 
-            cli_printf(PROMPT);
+            aos_cli_printf(PROMPT);
         }
     }
 
-    cli_printf("CLI exited\r\n");
+    aos_cli_printf("CLI exited\r\n");
     aos_free(cli);
     cli = NULL;
 
@@ -474,16 +474,16 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
     build_in_count++;
 #endif
 
-    cli_printf( "====Build-in Commands====\r\n" );
+    aos_cli_printf( "====Build-in Commands====\r\n" );
     for (i = 0, n = 0; i < MAX_COMMANDS && n < cli->num_commands; i++) {
         if (cli->commands[i]->name) {
-            cli_printf("%s: %s\r\n", cli->commands[i]->name,
+            aos_cli_printf("%s: %s\r\n", cli->commands[i]->name,
                        cli->commands[i]->help ?
                        cli->commands[i]->help : "");
             n++;
             if ( n == build_in_count - 1 ) {
-                cli_printf("\r\n");
-                cli_printf("====User Commands====\r\n");
+                aos_cli_printf("\r\n");
+                aos_cli_printf("====User Commands====\r\n");
             }
         }
     }
@@ -492,22 +492,22 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
 
 static void version_cmd(char *buf, int len, int argc, char **argv)
 {
-    cli_printf("kernel version :%s\r\n", krhino_version_get());
+    aos_cli_printf("kernel version :%s\r\n", krhino_version_get());
 }
 
 static void echo_cmd(char *buf, int len, int argc, char **argv)
 {
     if (argc == 1) {
-        cli_printf("Usage: echo on/off. Echo is currently %s\r\n",
+        aos_cli_printf("Usage: echo on/off. Echo is currently %s\r\n",
                    cli->echo_disabled ? "Disabled" : "Enabled");
         return;
     }
 
     if (!strcmp(argv[1], "on")) {
-        cli_printf("Enable echo\r\n");
+        aos_cli_printf("Enable echo\r\n");
         cli->echo_disabled = 0;
     } else if (!strcmp(argv[1], "off")) {
-        cli_printf("Disable echo\r\n");
+        aos_cli_printf("Disable echo\r\n");
         cli->echo_disabled = 1;
     }
 }
@@ -525,7 +525,7 @@ static void task_cmd(char *buf, int len, int argc, char **argv)
 
 static void devname_cmd(char *buf, int len, int argc, char **argv)
 {
-    cli_printf("%s\r\n", SYSINFO_DEVICE_NAME);
+    aos_cli_printf("%s\r\n", SYSINFO_DEVICE_NAME);
 }
 
 static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
@@ -537,14 +537,14 @@ static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
 
 static void reboot_cmd(char *buf, int len, int argc, char **argv)
 {
-    cli_printf("reboot\r\n");
+    aos_cli_printf("reboot\r\n");
 
     hal_reboot();
 }
 
 static void uptime_cmd(char *buf, int len, int argc, char **argv)
 {
-    cli_printf("UP time %ldms\r\n", aos_now_ms());
+    aos_cli_printf("UP time %ldms\r\n", aos_now_ms());
 }
 
 void tftp_ota_thread(void *arg)
@@ -564,7 +564,7 @@ static void wifi_debug_cmd(char *buf, int len, int argc, char **argv)
 
 /* ------------------------------------------------------------------------- */
 
-int cli_register_command(const struct cli_command *cmd)
+int aos_cli_register_command(const struct cli_command *cmd)
 {
     int i;
 
@@ -572,7 +572,7 @@ int cli_register_command(const struct cli_command *cmd)
         return 1;
 
     if (!cmd->name || !cmd->function) {
-        return 1;
+        return -EINVAL;
     }
 
     if (cli->num_commands < MAX_COMMANDS) {
@@ -588,14 +588,14 @@ int cli_register_command(const struct cli_command *cmd)
         return 0;
     }
 
-    return 1;
+    return -ENOMEM;
 }
 
-int cli_unregister_command(const struct cli_command *cmd)
+int aos_cli_unregister_command(const struct cli_command *cmd)
 {
     int i;
     if (!cmd->name || !cmd->function) {
-        return 1;
+        return -EINVAL;
     }
 
     for (i = 0; i < cli->num_commands; i++) {
@@ -611,27 +611,29 @@ int cli_unregister_command(const struct cli_command *cmd)
         }
     }
 
-    return 1;
+    return -ENOMEM;
 }
 
-int cli_register_commands(const struct cli_command *cmds, int num_cmds)
+int aos_cli_register_commands(const struct cli_command *cmds, int num_cmds)
 {
     int i;
+    int err;
     for (i = 0; i < num_cmds; i++) {
-        if (cli_register_command(cmds++)) {
-            return 1;
+        if ((err = aos_cli_register_command(cmds++)) != 0) {
+            return err;
         }
     }
 
     return 0;
 }
 
-int cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
+int aos_cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
 {
     int i;
+    int err;
     for (i = 0; i < num_cmds; i++) {
-        if (cli_unregister_command(cmds++)) {
-            return 1;
+        if ((err = aos_cli_unregister_command(cmds++)) != 0) {
+            return err;
         }
     }
 
@@ -663,14 +665,14 @@ int aos_cli_init(void)
     memset((void *)cli, 0, sizeof(struct cli_st));
 
     /* add our built-in commands */
-    if (cli_register_commands(&built_ins[0],
-                              sizeof(built_ins) / sizeof(struct cli_command))) {
+    if ((ret = aos_cli_register_commands(&built_ins[0],
+                sizeof(built_ins) / sizeof(struct cli_command))) != 0) {
         goto init_general_err;
     }
 
     ret = aos_task_new_ext(&task, "cli", cli_main, 0, 4096, AOS_DEFAULT_APP_PRI);
     if (ret != 0) {
-        cli_printf("Error: Failed to create cli thread: %d\r\n",
+        aos_cli_printf("Error: Failed to create cli thread: %d\r\n",
                    ret);
         goto init_general_err;
     }
@@ -688,10 +690,10 @@ init_general_err:
         cli = NULL;
     }
 
-    return -ENOSYS;
+    return ret;
 }
 
-int cli_printf(const char *msg, ...)
+int aos_cli_printf(const char *msg, ...)
 {
     va_list ap;
 

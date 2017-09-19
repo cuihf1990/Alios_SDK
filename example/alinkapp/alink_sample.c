@@ -795,13 +795,13 @@ int application_start(int argc, char *argv[])
     dda_service_init();
 #endif
 
-    cli_register_command(&uuidcmd);
+    aos_cli_register_command(&uuidcmd);
     alink_cloud_init();
 
     if (mesh_mode == MESH_GATEWAY) {
-        cli_register_command(&ncmd);
-        cli_register_command(&modelcmd);
-        cli_register_command(&resetcmd);
+        aos_cli_register_command(&ncmd);
+        aos_cli_register_command(&modelcmd);
+        aos_cli_register_command(&resetcmd);
 
         if (env == SANDBOX)
             alink_enable_sandbox_mode();

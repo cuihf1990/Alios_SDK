@@ -53,18 +53,18 @@ struct cli_st {
  *
  * @param[in]  command  The structure to register one CLI command
  *
- * @return:  0 on success, 1 on failure
+ * @return:  0 on success, error code otherwise.
  */
-int cli_register_command(const struct cli_command *command);
+int aos_cli_register_command(const struct cli_command *command);
 
 /**
  * This function unregisters a command from the command-line interface.
  *
  * @param[in]  command  The structure to unregister one CLI command
  *
- * @return:  0 on success, 1 on failure
+ * @return:  0 on success,  error code otherwise.
  */
-int cli_unregister_command(const struct cli_command *command);
+int aos_cli_unregister_command(const struct cli_command *command);
 
 /**
  * Register a batch of CLI commands
@@ -73,9 +73,9 @@ int cli_unregister_command(const struct cli_command *command);
  * @param[in]  commands      Pointer to an array of commands.
  * @param[in]  num_commands  Number of commands in the array.
  *
- * @return:  0 on success， 1 on failure
+ * @return:  0 on success， error code otherwise.
  */
-int cli_register_commands(const struct cli_command *commands, int num_commands);
+int aos_cli_register_commands(const struct cli_command *commands, int num_commands);
 
 /**
  * Unregister a batch of CLI commands
@@ -83,9 +83,9 @@ int cli_register_commands(const struct cli_command *commands, int num_commands);
  * @param[in]  commands      Pointer to an array of commands.
  * @param[in]  num_commands  Number of commands in the array.
  *
- * @return:  0 on success,1 on failure
+ * @return:  0 on success, error code otherwise.
  */
-int cli_unregister_commands(const struct cli_command *commands, int num_commands);
+int aos_cli_unregister_commands(const struct cli_command *commands, int num_commands);
 
 /**
  * Print CLI msg
@@ -94,7 +94,7 @@ int cli_unregister_commands(const struct cli_command *commands, int num_commands
  *
  * @return:  0  on success, error code otherwise.
  */
-int cli_printf(const char *buff, ...);
+int aos_cli_printf(const char *buff, ...);
 
 /**
  * CLI initial function
@@ -106,7 +106,7 @@ int aos_cli_init(void);
 /**
  * Stop the CLI thread and carry out the cleanup
  *
- * @return:  0 on success, return error code otherwise.
+ * @return:  0 on success, error code otherwise.
  *
  */
 int aos_cli_stop(void);
@@ -115,23 +115,23 @@ int aos_cli_stop(void);
 
 #define cmd_printf(...) do {} while(0)
 
-static inline int cli_register_command(const struct cli_command *command)
+static inline int aos_cli_register_command(const struct cli_command *command)
 {
     return 0;
 }
 
-static inline int cli_unregister_command(const struct cli_command *command)
+static inline int aos_cli_unregister_command(const struct cli_command *command)
 {
     return 0;
 }
 
-static inline int cli_register_commands(const struct cli_command *commands,
+static inline int aos_cli_register_commands(const struct cli_command *commands,
                                         int num_commands)
 {
     return 0;
 }
 
-static inline int cli_unregister_commands(const struct cli_command *commands,
+static inline int aos_cli_unregister_commands(const struct cli_command *commands,
                                           int num_commands)
 {
     return 0;

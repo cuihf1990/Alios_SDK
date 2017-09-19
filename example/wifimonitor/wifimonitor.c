@@ -98,7 +98,7 @@ static uint8_t post_data_buffer[post_data_buffer_size];
 
 static void do_report(struct socket_info *s, const uint8_t *data, size_t len);
 static int create_socket(struct remote_conf *c, struct socket_info *s);
-static void wifimonitor_wifi_mgnt_frame_callback(uint8_t *buffer, 
+static void wifimonitor_wifi_mgnt_frame_callback(uint8_t *buffer,
   int length, char rssi);
 static void clear_socket(struct socket_info *s);
 static int get_gateway_mode();
@@ -128,7 +128,7 @@ static void free_mac_table()
 static void start_helper()
 {
     LOG("Will start the mac count process now.");
-    hal_wlan_register_mgnt_monitor_cb(NULL, 
+    hal_wlan_register_mgnt_monitor_cb(NULL,
       wifimonitor_wifi_mgnt_frame_callback);
 }
 
@@ -225,10 +225,10 @@ static void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
     if (strcmp(rtype, "stop") == 0) {
         LOG("Will stop the mac count process.");
         /*
-         * We simply register a NULL mgnt frame callback here to stop mac 
-         * count process. Later we can create a new hal, e.g. named as 
-         * hal_wlan_get_mgnt_monitor_cb, to save the old mgnt frame callback 
-         * (if any) so that we can save it. After the mac count process is 
+         * We simply register a NULL mgnt frame callback here to stop mac
+         * count process. Later we can create a new hal, e.g. named as
+         * hal_wlan_get_mgnt_monitor_cb, to save the old mgnt frame callback
+         * (if any) so that we can save it. After the mac count process is
          * stopped, we can resume the old mgnt frame callback. A typical
          * example of the old mngt frame callback is the registrar's.
          * <TODO>
@@ -244,7 +244,7 @@ static void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
         hal_wlan_register_mgnt_monitor_cb(NULL, NULL);
     } else if (strcmp(rtype, "resume") == 0) {
         LOG("Will resume the mac count process.");
-        hal_wlan_register_mgnt_monitor_cb(NULL, 
+        hal_wlan_register_mgnt_monitor_cb(NULL,
           wifimonitor_wifi_mgnt_frame_callback);
     } else {
         start_count_mac();
@@ -351,8 +351,8 @@ static void report_probe(const uint8_t *mac, char rssi, CLOUD_T type)
 void rssi_light_control(uint8_t *mac, int8_t rssi);
 static void wifimonitor_wifi_mgnt_frame_callback
 (
-    uint8_t *buffer, 
-    int length, 
+    uint8_t *buffer,
+    int length,
     char rssi
 )
 {
@@ -444,7 +444,7 @@ void wifimonitor_event_handler(input_event_t *event, void *priv_data)
         gateway_work_init();
     }
     create_socket(svr_conf_p, svr_skt_info_p);
-    hal_wlan_register_mgnt_monitor_cb(NULL, 
+    hal_wlan_register_mgnt_monitor_cb(NULL,
       wifimonitor_wifi_mgnt_frame_callback);
 }
 
@@ -452,6 +452,6 @@ void wifimonitor_start(bool automatic)
 {
     if (automatic)
         start_count_mac();
-    cli_register_commands(&count_mac_cmds[0],
+    aos_cli_register_commands(&count_mac_cmds[0],
       sizeof(count_mac_cmds) / sizeof(count_mac_cmds[0]));
 }
