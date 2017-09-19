@@ -48,6 +48,7 @@ typedef enum {
 #define KV_STATE_OFF            1                           /* The offset of block/item state in header structure */
 #define KV_ALIGN_MASK           ~(sizeof(void *) - 1)       /* The mask of key-value store alignment */
 #define KV_GC_RESERVED          1                           /* The reserved block for garbage collection */
+#define KV_GC_STACK_SIZE        512
 
 #define KV_SELF_REMOVE          0
 #define KV_ORIG_REMOVE          1
@@ -89,7 +90,6 @@ typedef struct _kv_mgr_t {
     uint8_t         clean_blk_nums;         /* The number of block which state is clean */
     uint16_t        write_pos;              /* Current write position for key-value item */
     aos_sem_t       gc_sem;
-    aos_work_t      gc_worker;
     aos_mutex_t     kv_mutex;
     block_info_t    block_info[BLK_NUMS];   /* The array to record block management information */
 } kv_mgr_t;
@@ -99,7 +99,7 @@ static kv_mgr_t g_kv_mgr;
 static const uint8_t BLK_MAGIC_NUM  = 'K';                  /* The block header magic number */
 static const uint8_t ITEM_MAGIC_NUM = 'I';                  /* The key-value item header magic number */
 
-static void aos_kv_gc(void *arg);
+void aos_kv_gc(void *arg);
 
 /* CRC-8: the poly is 0x31 (x^8 + x^5 + x^4 + 1) */
 static uint8_t utils_crc8(uint8_t *buf, uint16_t length)
@@ -144,7 +144,7 @@ static void trigger_gc(void)
 
     g_kv_mgr.gc_waiter = 0;
     g_kv_mgr.gc_triggered = 1;
-    aos_work_sched(&(g_kv_mgr.gc_worker));
+    aos_task_new("kv-gc", aos_kv_gc, NULL, KV_GC_STACK_SIZE);
 }
 
 static void kv_item_free(kv_item_t *item)
@@ -598,7 +598,7 @@ static int kv_init(void)
     return RES_OK;
 }
 
-static void aos_kv_gc(void *arg)
+void aos_kv_gc(void *arg)
 {
     uint8_t i;
     uint8_t gc_index;
@@ -650,6 +650,8 @@ exit:
     if (g_kv_mgr.gc_waiter > 0) {
         aos_sem_signal_all(&(g_kv_mgr.gc_sem));
     }
+
+    aos_task_exit(0);
 }
 
 int aos_kv_del(const char *key)
@@ -846,11 +848,7 @@ int aos_kv_init(void)
     if ((ret = kv_init()) != RES_OK) {
         return ret;
     }
-
-    if ((ret = aos_work_init(&(g_kv_mgr.gc_worker), aos_kv_gc, NULL, 0)) != RES_OK) {
-        return ret;
-    }
-
+    
     if ((ret = aos_sem_new(&(g_kv_mgr.gc_sem), 0)) != RES_OK) {
         return ret;
     }
@@ -870,8 +868,6 @@ int aos_kv_init(void)
 void aos_kv_deinit(void)
 {
     g_kv_mgr.kv_initialize = 0;
-    aos_work_cancel(&(g_kv_mgr.gc_worker));
-    aos_work_destroy(&(g_kv_mgr.gc_worker));
     aos_sem_free(&(g_kv_mgr.gc_sem));
     aos_mutex_free(&(g_kv_mgr.kv_mutex));
 }
