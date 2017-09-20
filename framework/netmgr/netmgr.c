@@ -106,10 +106,10 @@ static void stop_mesh(void)
 #endif
 }
 
-static int32_t change_addr(char *str) {
+static int32_t translate_addr(char *str) {
     int32_t a, b, c, d;
     int32_t address = 0;
-    sscanf(str, "%ld.%ld.%ld.%ld", &a, &b, &c, &d);
+    sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d);
     address |= d<<24;
     address |= c<<16;
     address |= b<<8;
@@ -123,7 +123,7 @@ static void netmgr_ip_got_event(hal_wifi_module_t *m,
 {
     LOGI(TAG, "Got ip : %s, gw : %s, mask : %s", pnet->ip, pnet->gate, pnet->mask);
 
-    g_netmgr_cxt.ipv4_owned = change_addr(pnet->ip);
+    g_netmgr_cxt.ipv4_owned = translate_addr(pnet->ip);
     g_netmgr_cxt.ip_available = true;
     aos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
     start_mesh(true);
