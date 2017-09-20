@@ -28,7 +28,7 @@ typedef enum {
  */
 void aos_set_log_level(aos_log_level_t log_level);
 
-/**
+/*
  * Log at fatal level.
  *
  * @param[in]  mod  string description of module.
@@ -36,7 +36,7 @@ void aos_set_log_level(aos_log_level_t log_level);
  */
 #define LOGF(mod, fmt, ...) LOGF_IMPL(mod, fmt, ##__VA_ARGS__)
 
-/**
+/*
  * Log at error level.
  *
  * @param[in]  mod  string description of module.
@@ -44,7 +44,7 @@ void aos_set_log_level(aos_log_level_t log_level);
  */
 #define LOGE(mod, fmt, ...) LOGE_IMPL(mod, fmt, ##__VA_ARGS__)
 
-/**
+/*
  * Log at warning level.
  *
  * @param[in]  mod  string description of module.
@@ -52,7 +52,7 @@ void aos_set_log_level(aos_log_level_t log_level);
  */
 #define LOGW(mod, fmt, ...) LOGW_IMPL(mod, fmt, ##__VA_ARGS__)
 
-/**
+/*
  * Log at info level.
  *
  * @param[in]  mod  string description of module.
@@ -60,7 +60,7 @@ void aos_set_log_level(aos_log_level_t log_level);
  */
 #define LOGI(mod, fmt, ...) LOGI_IMPL(mod, fmt, ##__VA_ARGS__)
 
-/**
+/*
  * Log at debug level.
  *
  * @param[in]  mod  string description of module.
@@ -68,7 +68,7 @@ void aos_set_log_level(aos_log_level_t log_level);
  */
 #define LOGD(mod, fmt, ...) LOGD_IMPL(mod, fmt, ##__VA_ARGS__)
 
-/**
+/*
  * Log at the level set by aos_set_log_level().
  *
  * @param[in]  fmt  same as printf() usage.

@@ -5,7 +5,7 @@
 #ifndef HAL_RTC_H
 #define HAL_RTC_H
 
-/**
+/*
  * RTC time
  */
 typedef struct {

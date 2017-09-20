@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-/**
+/*
  * Get offset of a member variable.
  *
  * @param[in]   type     the type of the struct this is embedded in.
@@ -20,7 +20,7 @@ extern "C" {
     (long)(&tmp.member) - (long)&tmp; \
 })
 
-/**
+/*
  * Get the struct for this entry.
  *
  * @param[in]   ptr     the list head to take the element from.
@@ -45,7 +45,7 @@ static inline void __dlist_add(dlist_t *node, dlist_t *prev, dlist_t *next)
     next->prev = node;
 }
 
-/**
+/*
  * Get the struct for this entry.
  *
  * @param[in]   addr    the list head to take the element from.
@@ -91,14 +91,14 @@ static inline int dlist_empty(const dlist_t *head)
     return head->next == head;
 }
 
-/**
+/*
  * Initialise the list.
  *
  * @param[in]   list    the list to be inited.
  */
 #define AOS_DLIST_INIT(list)  {&(list), &(list)}
 
-/**
+/*
  * Get the first element from a list
  *
  * @param[in]   ptr     the list head to take the element from.
@@ -108,7 +108,7 @@ static inline int dlist_empty(const dlist_t *head)
 #define dlist_first_entry(ptr, type, member) \
     dlist_entry((ptr)->next, type, member)
 
-/**
+/*
  * Iterate over a list.
  *
  * @param[in]   pos     the &struct dlist_t to use as a loop cursor.
@@ -117,7 +117,7 @@ static inline int dlist_empty(const dlist_t *head)
 #define dlist_for_each(pos, head) \
     for (pos = (head)->next; pos != (head); pos = pos->next)
 
-/**
+/*
  * Iterate over a list safe against removal of list entry.
  *
  * @param[in]   pos     the &struct dlist_t to use as a loop cursor.
@@ -128,7 +128,7 @@ static inline int dlist_empty(const dlist_t *head)
     for (pos = (head)->next, n = pos->next; pos != (head); \
     pos = n, n = pos->next)
 
-/**
+/*
  * Iterate over list of given type.
  *
  * @param[in]   queue   he head for your list.
@@ -141,7 +141,7 @@ static inline int dlist_empty(const dlist_t *head)
          &node->member != (queue); \
          node = aos_container_of(node->member.next, type, member))
 
-/**
+/*
  * Iterate over list of given type safe against removal of list entry.
  *
  * @param[in]   queue   the head for your list.
@@ -156,7 +156,7 @@ static inline int dlist_empty(const dlist_t *head)
          &node->member != (queue);                              \
          node = aos_container_of(n, type, member), n = n ? n->next : NULL)
 
-/**
+/*
  * Get the struct for this entry.
  * @param[in]   ptr     the list head to take the element from.
  * @param[in]   type    the type of the struct this is embedded in.
@@ -166,7 +166,7 @@ static inline int dlist_empty(const dlist_t *head)
         aos_container_of(ptr, type, member)
 
 
-/**
+/*
  * Iterate backwards over list of given type.
  *
  * @param[in]   pos     the type * to use as a loop cursor.
@@ -180,7 +180,7 @@ static inline int dlist_empty(const dlist_t *head)
          pos = list_entry(pos->member.prev, type, member))
 
 
-/**
+/*
  * Get the list length.
  *
  * @param[in]  queue  the head for your list.
@@ -192,18 +192,18 @@ static inline int dlist_empty(const dlist_t *head)
     num;                                                 \
 })
 
-/**
+/*
  * Initialise the list.
  *
  * @param[in]   name    the list to be initialized.
- */ 
+ */
 #define AOS_DLIST_HEAD_INIT(name) { &(name), &(name) }
 
-/**
+/*
  * Initialise the list.
  *
  * @param[in]   name    the list to be initialized.
- */ 
+ */
 #define AOS_DLIST_HEAD(name) \
         dlist_t name = AOS_DLIST_HEAD_INIT(name)
 
@@ -249,7 +249,7 @@ static inline void slist_init(slist_t *head)
     head->next = 0;
 }
 
- /**
+ /*
  * Iterate over list of given type.
  *
  * @param[in]   queue   he head for your list.
@@ -262,7 +262,7 @@ static inline void slist_init(slist_t *head)
          &node->member;                                        \
          node = aos_container_of(node->member.next, type, member))
 
-/**
+/*
  * Iterate over list of given type safe against removal of list entry.
  *
  * @param[in]   queue   the head for your list.
@@ -277,22 +277,22 @@ static inline void slist_init(slist_t *head)
          &node->member;                                           \
          node = aos_container_of(tmp, type, member), tmp = tmp ? tmp->next : tmp)
 
-/**
+/*
  * Initialise the list.
  *
  * @param[in]   name    the list to be initialized.
- */         
+ */
 #define AOS_SLIST_HEAD_INIT(name) { }
 
-/**
+/*
  * Initialise the list.
  *
  * @param[in]   name    the list to be initialized.
- */ 
+ */
 #define AOS_SLIST_HEAD(name) \
         slist_t name = AOS_SLIST_HEAD_INIT(name)
 
-/**
+/*
  * Get the struct for this entry.
  * @param[in]   addr     the list head to take the element from.
  * @param[in]   type     the type of the struct this is embedded in.
@@ -302,7 +302,7 @@ static inline void slist_init(slist_t *head)
     addr ? (type *)((long)addr - aos_offsetof(type, member)) : (type *)addr; \
 })
 
- /**
+ /*
  * Get the first element from a list.
  *
  * @param[in]   ptr     the list head to take the element from.
@@ -312,7 +312,7 @@ static inline void slist_init(slist_t *head)
 #define slist_first_entry(ptr, type, member) \
     slist_entry((ptr)->next, type, member)
 
-/**
+/*
  * Get the list length.
  *
  * @param[in]   queue    the head for your list.

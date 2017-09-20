@@ -23,12 +23,9 @@ typedef struct {
  * @param[in]  cb          callback to be triggered after useconds
  * @param[in]  ch          timer channel
  * @param[in]  arg         passed to cb
- *
- * @note  period   auto   auto   auto
- *         *-------|--------|--------|--------|
  */
 void hal_timer_init(hal_timer_t *tmr, unsigned int period,
-                           unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg);
+                    unsigned char auto_reload, unsigned char ch, hal_timer_cb_t cb, void *arg);
 
 /**
  * init a hardware timer
