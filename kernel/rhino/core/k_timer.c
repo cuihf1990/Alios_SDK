@@ -268,7 +268,6 @@ static void timer_task(void *pa)
 {
     klist_t  *timer_head;
     klist_t  *iter;
-    klist_t  *iter_temp;
     ktimer_t *timer;
 
     (void)pa;
@@ -290,7 +289,6 @@ static void timer_task(void *pa)
 
         while (RHINO_TRUE) {
             if (iter != timer_head) {
-                iter_temp = iter->next;
                 timer = krhino_list_entry(iter, ktimer_t, timer_list);
 
                 if (g_timer_count == timer->match) {
@@ -309,7 +307,7 @@ static void timer_task(void *pa)
                     /* the registered timer function should not touch any timer related API,otherwise system will be crashed */
                     timer->cb(timer, timer->timer_cb_arg);
 
-                    iter = iter_temp;
+                    iter = iter->next;
                 } else {
                     break;
                 }
