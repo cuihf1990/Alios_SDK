@@ -32,9 +32,9 @@
     #define DEVICE_NAME             "TestDeviceForDemo"
     #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
 */
-    #define PRODUCT_KEY             "bcilH87XB1U"
+    #define PRODUCT_KEY             "BfKxBDSjWCH"
     #define DEVICE_NAME             "aos_mqtt_test"
-    #define DEVICE_SECRET           "C4cwcJA9hGyAsAXDDZDYnckP0bGedYVQ"
+    #define DEVICE_SECRET           "zcBZ5TB9cfAylUGo1flH0o47PxS8Mqu2"
 
 #endif
 
