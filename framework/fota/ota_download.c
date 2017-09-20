@@ -219,6 +219,7 @@ static void spi_socket_free(int socket)
  */
 int http_socket_init(int port, char *host_addr)
 {
+#ifndef CONFIG_NO_TCPIP
     if (host_addr == NULL || strlen(host_addr) == 0 || port <= 0) {
         OTA_LOG_E("http_socket_init parms   error\n ");
         return -1;
@@ -270,6 +271,7 @@ int http_socket_init(int port, char *host_addr)
 err_out:
     close(sockfd);
     return -1;
+#endif
 #endif
 }
 

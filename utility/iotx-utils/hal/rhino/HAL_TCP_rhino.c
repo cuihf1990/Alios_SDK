@@ -15,6 +15,7 @@
         fflush(stdout);\
     }while(0);
 
+#ifndef CONFIG_NO_TCPIP
 uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 {
     struct addrinfo hints;
@@ -218,3 +219,21 @@ int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
     //It will get error code on next calling
     return (0 != len_recv) ? len_recv : err_code;
 }
+#else
+uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
+{
+    return 0;
+}
+int32_t HAL_TCP_Destroy(uintptr_t fd)
+{
+    return 0;
+}
+int32_t HAL_TCP_Write(uintptr_t fd, const char *buf, uint32_t len, uint32_t timeout_ms)
+{
+    return 0;
+}
+int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
+{
+    return 0;
+}
+#endif
