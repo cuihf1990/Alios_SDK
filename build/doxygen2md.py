@@ -16,7 +16,7 @@ def annotation_analyse(num, annotation, templet):
     templet = templet.replace("FUNC_NUM", str(num))
 
     func = re.findall(r'\*/.*?\);', annotation, re.DOTALL)
-    func_name = (func[0].partition(" "))[2].partition("(")[0].replace("*", "")
+    func_name = (func[0].replace("const ", "").replace("long long", "long").partition(" "))[2].partition("(")[0].replace("*", "")
     templet = templet.replace("FUNC_NAME", func_name)
 
     function = (re.findall(r'\*\/\n(.*?);', func[0], re.DOTALL))[0]
