@@ -16,8 +16,9 @@ def annotation_analyse(num, annotation, templet):
     templet = templet.replace("FUNC_NUM", str(num))
 
     func = re.findall(r'\*/.*?\);', annotation, re.DOTALL)
-    func_name = (func[0].partition(" "))[2].partition("(")[0]
+    func_name = (func[0].partition(" "))[2].partition("(")[0].replace("*", "")
     templet = templet.replace("FUNC_NAME", func_name)
+    print func_name
 
     function = (re.findall(r'\*\/\n(.*?);', func[0], re.DOTALL))[0]
     templet = templet.replace("FUNCTION", function)
@@ -36,7 +37,7 @@ def annotation_analyse(num, annotation, templet):
             if annotation.find("@ret") == -1:
                 templet = templet.replace("RETURN_DESC", "None.\n")
             else:
-                func_return = (re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]
+                func_return = ((re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]).replace(" *           ", "")
                 templet = templet.replace("RETURN_DESC", func_return)
         else:
             templet_head = (templet.partition("  PARAM_DESC"))[0]
@@ -58,7 +59,7 @@ def annotation_analyse(num, annotation, templet):
             if annotation.find("@ret") == -1:
                 templet = templet.replace("RETURN_DESC", "None.\n")
             else:
-                func_return = (re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]
+                func_return = ((re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]).replace(" *           ", "")
                 templet = templet.replace("RETURN_DESC", func_return)
 
     return templet
