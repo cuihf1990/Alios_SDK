@@ -27,8 +27,6 @@ typedef struct {
 /**
  * This function will initialize the on board CPU real time clock
  *
- * @note  This function should be called by MICO system when initializing clocks, so
- *        It is not needed to be called by application
  *
  * @param[in]  rtc  rtc device
  *
@@ -38,7 +36,6 @@ void hal_rtc_init(rtc_dev_t *rtc);
 
 /**
  * This function will return the value of time read from the on board CPU real time clock.
- * Time value must be given in the format of the structure hal_rtc_time_t
  *
  * @param[in]   rtc   rtc device
  * @param[out]  time  pointer to a time structure
@@ -49,7 +46,6 @@ int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time);
 
 /**
  * This function will set MCU RTC time to a new value.
- * Time value must be given in the format of the structure hal_rtc_time_t
  *
  * @param[in]   rtc   rtc device
  * @param[out]  time  pointer to a time structure

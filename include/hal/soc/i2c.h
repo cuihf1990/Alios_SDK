@@ -27,7 +27,7 @@ typedef struct {
 int32_t hal_i2c_init(i2c_dev_t *i2c);
 
 /**
- * i2c master send
+ * I2c master send
  *
  * @param[in]  i2c       the i2c device
  * @param[in]  dev_addr  device address
@@ -40,7 +40,7 @@ int32_t hal_i2c_init(i2c_dev_t *i2c);
 int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, uint16_t size, uint32_t timeout);
 
 /**
- * i2c master recv
+ * I2c master recv
  *
  * @param[in]   i2c       the i2c device
  * @param[in]   dev_addr  device address
@@ -54,7 +54,7 @@ int32_t hal_i2c_master_recv(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, ui
 
 
 /**
- * hal_i2C_slave_send
+ * I2c slave send
  *
  * @param[in]  i2c      the i2c device
  * @param[in]  data     i2c slave send data
@@ -67,7 +67,7 @@ int32_t hal_i2C_slave_send(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_
 
 
 /**
- * Initialises an I2C interface
+ * I2c slave receive
  *
  * @param[in]   i2c      tthe i2c device
  * @param[out]  data     i2c slave receive data
@@ -79,7 +79,7 @@ int32_t hal_i2C_slave_send(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_
 int32_t hal_i2c_slave_recv(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_t timeout);
 
 /**
- * i2c mem write
+ * I2c mem write
  *
  * @param[in]  i2c            the i2c device
  * @param[in]  dev_addr       device address
@@ -95,7 +95,7 @@ int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, 
                           uint16_t size, uint32_t timeout);
 
 /**
- * i2c master mem read
+ * I2c master mem read
  *
  * @param[in]   i2c            the i2c device
  * @param[in]   dev_addr       device address

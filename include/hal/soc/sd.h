@@ -45,7 +45,7 @@ typedef struct {
 int32_t hal_sd_init(sd_dev_t *sd);
 
 /**
- * read sd blocks
+ * Read sd blocks
  *
  * @param[in]   sd        the interface which should be initialised
  * @param[out]  data      pointer to the buffer which will store incoming data
@@ -58,7 +58,7 @@ int32_t hal_sd_init(sd_dev_t *sd);
 int32_t hal_sd_blks_read(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32_t blks, uint32_t timeout);
 
 /**
- * write sd blocks
+ * Write sd blocks
  *
  * @param[in]  sd        the interface which should be initialised
  * @param[in]  data      pointer to the buffer which will store incoming data
@@ -71,7 +71,7 @@ int32_t hal_sd_blks_read(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32_
 int32_t hal_sd_blks_write(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32_t blks, uint32_t timeout);
 
 /**
- * erase sd blocks
+ * Erase sd blocks
  *
  * @param[in]  sd              the interface which should be initialised
  * @param[in]  blk_start_addr  sd blocks start addr
@@ -82,7 +82,7 @@ int32_t hal_sd_blks_write(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32
 int32_t hal_sd_erase(sd_dev_t *sd, uint32_t blk_start_addr, uint32_t blk_end_addr);
 
 /**
- * get sd state
+ * Get sd state
  *
  * @param[in]   sd    the interface which should be initialised
  * @param[out]  stat  pointer to the buffer which will store incoming data
@@ -92,7 +92,7 @@ int32_t hal_sd_erase(sd_dev_t *sd, uint32_t blk_start_addr, uint32_t blk_end_add
 int32_t hal_sd_stat_get(sd_dev_t *sd, hal_sd_stat *stat);
 
 /**
- * get sd info
+ * Get sd info
  *
  * @param[in]   sd    the interface which should be initialised
  * @param[out]  stat  pointer to the buffer which will store incoming data

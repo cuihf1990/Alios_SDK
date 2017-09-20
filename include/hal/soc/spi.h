@@ -18,7 +18,6 @@ typedef struct {
 
 /**
  * Initialises the SPI interface for a given SPI device
- * Prepares a SPI hardware interface for communication as a master
  *
  * @param[in]  spi  the spi device
  *
@@ -27,7 +26,7 @@ typedef struct {
 int32_t hal_spi_init(spi_dev_t *spi);
 
 /**
- * spi_send
+ * Spi send
  *
  * @param[in]  spi      the spi device
  * @param[in]  data     spi send data
@@ -68,7 +67,6 @@ int32_t hal_spi_send_recv(spi_dev_t *spi, uint8_t *tx_data, uint16_t tx_size,
 /**
  * De-initialises a SPI interface
  *
- * @note Turns off a SPI hardware interface
  *
  * @param[in]  spi the SPI device to be de-initialised
  *
