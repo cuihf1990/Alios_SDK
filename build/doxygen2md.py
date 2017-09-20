@@ -48,6 +48,7 @@ def annotation_analyse(num, annotation, templet):
             else:
                 func_params = (re.findall(r'(@param.*?)\n \*\n \* @', annotation, re.DOTALL))[0].replace("\n *", " ").replace("           ", "").split("@param")
 
+            del func_params[0]
             for param in func_params:
                 params = "  | " + (param.strip("@param")).replace("  ", " | ", 2) + " |"
                 templet_mid = templet_mid + params + "\n"
