@@ -15,21 +15,46 @@
 #include "ota_version.h"
 #include "ota_download.h"
 
-/*
- param-name           meaning                      value-examples
- productType          device model                 XJ-1
- phone                internal device model        XJ-1R
- id2                  intelligent device ID        Y00F30001068494F4
- system               system versioin              1.0.0-R-20150101.1201
+ write_flash_cb_t g_write_func;
+ ota_finish_cb_t g_finish_cb;
 
- url example:
- http://10.101.111.160/update/manifest?productType＝XJ-1&phone=XJ-1R&
- uuid=aos_id2&system=1.0.0-R-20150101.1201
- */
+static char * url_temp=NULL;
 
-/*static const char _g_update_manifest_url_test[] =
- "http://10.101.111.160/update/manifest?productType＝XJ-1& \
- phone=XJ-1R&uuid=aos_id2&system=1.0.0-R-20150101.1201";*/
+char md5[33];
+
+char * const get_url()
+{
+    return url_temp;
+}
+
+int set_url(const char * value)
+{
+if(url_temp==NULL)
+{
+    url_temp = aos_malloc(OTA_URL_MAX_LEN);            
+}
+if(url_temp==NULL) 
+{
+    return -1;
+}
+int len=strlen(value);
+len=len<OTA_URL_MAX_LEN?len:OTA_URL_MAX_LEN;
+memcpy(url_temp,value,len);
+return 0;
+}
+
+void free_url()
+{
+    if(url_temp)
+    {
+        aos_free(url_temp);
+        url_temp=NULL;
+    }
+}
+
+extern int  check_md5(const char *buffer, const int32_t len);
+
+extern int ota_hal_init(uint32_t offset);
 
 int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *request_parmas)
 {
@@ -52,15 +77,6 @@ int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *req
     return 0;
 }
 
-write_flash_cb_t g_write_func;
-ota_finish_cb_t g_finish_cb;
-char url[OTA_URL_MAX_LEN];
-char md5[33];
-
-extern int  check_md5(const char *buffer, const int32_t len);
-
-extern int ota_hal_init(uint32_t offset);
-
 void ota_download_start(void *buf)
 {
     OTA_LOG_I("task update start");
@@ -75,7 +91,7 @@ void ota_download_start(void *buf)
 
     ota_set_status(OTA_DOWNLOAD);
     ota_status_post(0);
-    int ret = http_download(url, g_write_func, md5);
+    int ret = http_download(get_url(), g_write_func, md5);
     if (ret <= 0) {
         OTA_LOG_E("ota download error");
         ota_set_status(OTA_DOWNLOAD_FAILED);
@@ -105,7 +121,7 @@ void ota_download_start(void *buf)
         goto OTA_END;
     }
     ota_status_post(100);
-    memset(url, 0, sizeof url);
+    // memset(url, 0, sizeof url);
 
     OTA_LOG_I("ota status %d", ota_get_status());
     ota_set_status(OTA_UPGRADE);
@@ -118,6 +134,7 @@ void ota_download_start(void *buf)
 
 OTA_END:
     ota_status_post(100);
+    free_url();
     ota_status_deinit();
 #ifdef STM32_SPI_NET
     notify_ota_end();
@@ -175,9 +192,15 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
     g_finish_cb = fcb;
     memset(md5, 0, sizeof md5);
     strncpy(md5, response_parmas->md5, sizeof md5);
-    memset(url, 0, sizeof url);
-    strncpy(url, response_parmas->download_url, sizeof url);
-    ret = aos_task_new("ota", ota_download_start, 0, 8196);
+    
+    if(set_url(response_parmas->download_url))
+    {
+        ret=-1;
+        return ret;
+    }
+    // memset(url, 0, sizeof url);
+    // strncpy(url, response_parmas->download_url, sizeof url);
+    ret = aos_task_new("ota", ota_download_start, 0, 4096);
     return ret;
 }
 
