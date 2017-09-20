@@ -105,6 +105,7 @@ static void soc_print_stack()
 void soc_err_proc(kstat_t err)
 {
     (void)err;
+    printf("panic %d!\r\n",err);
     soc_print_stack();
     assert(0);
 }
