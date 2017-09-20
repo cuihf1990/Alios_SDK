@@ -81,8 +81,7 @@ static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
         return -1;
     }
 
-    aos_loop_schedule_work(0, connet_wifi_ap, (void*)init_para, NULL, NULL);
-
+    aos_task_new("wifi", connet_wifi_ap, (void*)init_para, 1024);
     return 0;
 }
 
