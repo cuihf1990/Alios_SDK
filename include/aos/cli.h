@@ -53,7 +53,7 @@ struct cli_st {
  *
  * @param[in]  command  The structure to register one CLI command
  *
- * @return:  0 on success, error code otherwise.
+ * @return  0 on success, error code otherwise.
  */
 int aos_cli_register_command(const struct cli_command *command);
 
@@ -62,7 +62,7 @@ int aos_cli_register_command(const struct cli_command *command);
  *
  * @param[in]  command  The structure to unregister one CLI command
  *
- * @return:  0 on success,  error code otherwise.
+ * @return  0 on success,  error code otherwise.
  */
 int aos_cli_unregister_command(const struct cli_command *command);
 
@@ -73,7 +73,7 @@ int aos_cli_unregister_command(const struct cli_command *command);
  * @param[in]  commands      Pointer to an array of commands.
  * @param[in]  num_commands  Number of commands in the array.
  *
- * @return:  0 on success， error code otherwise.
+ * @return  0 on success， error code otherwise.
  */
 int aos_cli_register_commands(const struct cli_command *commands, int num_commands);
 
@@ -83,7 +83,7 @@ int aos_cli_register_commands(const struct cli_command *commands, int num_comman
  * @param[in]  commands      Pointer to an array of commands.
  * @param[in]  num_commands  Number of commands in the array.
  *
- * @return:  0 on success, error code otherwise.
+ * @return  0 on success, error code otherwise.
  */
 int aos_cli_unregister_commands(const struct cli_command *commands, int num_commands);
 
@@ -92,21 +92,21 @@ int aos_cli_unregister_commands(const struct cli_command *commands, int num_comm
  *
  * @param[in]  buff  Pointer to a char * buffer.
  *
- * @return:  0  on success, error code otherwise.
+ * @return  0  on success, error code otherwise.
  */
 int aos_cli_printf(const char *buff, ...);
 
 /**
  * CLI initial function
  *
- * @return:  0 on success, error code otherwise
+ * @return  0 on success, error code otherwise
  */
 int aos_cli_init(void);
 
 /**
  * Stop the CLI thread and carry out the cleanup
  *
- * @return:  0 on success, error code otherwise.
+ * @return  0 on success, error code otherwise.
  *
  */
 int aos_cli_stop(void);

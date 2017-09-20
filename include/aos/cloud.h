@@ -55,10 +55,10 @@ int aos_cloud_report(const char *method,
 void aos_cloud_trigger(int cb_type, const char *json_buffer);
 
 /**
-* Register Cloud Backend.
-*
-* @param[in]  report  called when user do aos_cloud_report.
-*/
+ * Register Cloud Backend.
+ *
+ * @param[in]  report  called when user do aos_cloud_report.
+ */
 void aos_cloud_register_backend(int (*report)(const char *method, const char *json_buffer));
 
 #endif /* AOS_CLOUD_H */

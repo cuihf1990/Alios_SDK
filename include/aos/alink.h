@@ -94,47 +94,47 @@ int alink_report(const char *method, char *json_buffer);
 int alink_report_rawdata(const char *rawdata, int len);
 
 enum ALINK_WIFI_CALLBACK {
-    /**
+    /*
      * void callback_cloud_connected(void)
      * @n@n called each time when gateway successfully connect(or reconnect)
      * to aliyun server
      */
     ALINK_CLOUD_CONNECTED = 0,
 
-    /**
+    /*
      * void callback_cloud_disconnected(void)
      * @n@n called each time when gateway lose connection with aliyun server
      */
     ALINK_CLOUD_DISCONNECTED,
-    /**
+    /*
      * int callback_read_device_status(const char *params)
      * @n@nuccessfully
      */
     ALINK_GET_DEVICE_STATUS,
 
-    /**
+    /*
      * void callback_write_device_status(const char *params)
      */
     ALINK_SET_DEVICE_STATUS,
-    /**
+    /*
      * int callback_read_device_rawdata(const char *params)
      * @n@nuccessfully
      */
     ALINK_GET_DEVICE_RAWDATA,
 
-    /**
+    /*
      * void callback_write_device_rawdata(const char *params)
      */
     ALINK_SET_DEVICE_RAWDATA,
 };
 
 /**
- * @brief register misc callback
+ * Register misc callback
  *
  * @param[in]  cb_type  callback type.
  * @param[in]  cb_func  callback func pointer, func declaration see related comments.
  *
- * @retval  0 on success, otherwise -1 will return
+ * @return  0 on success, otherwise -1 will return
  */
 int alink_register_callback(unsigned char cb_type, void *cb_func);
 
@@ -142,9 +142,9 @@ int alink_register_callback(unsigned char cb_type, void *cb_func);
  * Start awss service, block method, block until awss succeed, or timeout(see Note).
  *
  * @return  0 on success, otherwise non-zero value will return
- *    =  0: connect AP & DHCP success
- *    = -1: get ssid & passwd fail
- *    = -2: connect AP / DHCP fail
+ *            =  0: connect AP & DHCP success
+ *            = -1: get ssid & passwd fail
+ *            = -2: connect AP / DHCP fail
  *
  * @note  platform_awss_get_timeout_interval_ms() return monitor timeout interval,
  *        AP connection timeout is 30s.
