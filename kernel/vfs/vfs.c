@@ -698,7 +698,7 @@ static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
 {
     timeout = timeout >= 0 ? timeout : AOS_WAIT_FOREVER;
     aos_sem_wait(&parg->sem, timeout);
-    return -1;
+    return 0;
 }
 
 static int init_parg(struct poll_arg *parg)
