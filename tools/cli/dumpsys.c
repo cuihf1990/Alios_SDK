@@ -69,20 +69,20 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     candidate = g_preferred_ready_task[cpu_cur_get()];
 
     safesprintf(printbuf, totallen, offset,
-                CLI_TAG "---------------------------------------------------------------------\r\n");
+                CLI_TAG "------------------------------------------------------------------------\r\n");
 
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
     snprintf(tmpbuf, 255, CLI_TAG "CPU usage :%-10d   MAX:%-10d                 \n");
     g_cpu_usage / 100, g_cpu_usage_max / 100);
     safesprintf(printbuf, totallen, offset, tmpbuf);
     safesprintf(printbuf, totallen, offset,
-                CLI_TAG "---------------------------------------------------------------------\r\n", 255);
+                CLI_TAG "------------------------------------------------------------------------\r\n", 255);
 
 #endif
     safesprintf(printbuf, totallen, offset,
-                CLI_TAG "Name               State    Prio StackSize Freesize Runtime Candidate\r\n");
+                CLI_TAG "Name               State    Prio StackSize MinFreesize Runtime Candidate\r\n");
     safesprintf(printbuf, totallen, offset,
-                CLI_TAG "---------------------------------------------------------------------\r\n");
+                CLI_TAG "------------------------------------------------------------------------\r\n");
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
     task = krhino_list_entry(tmp, ktask_t, task_stats_item);
@@ -109,7 +109,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
         }
 
 #ifndef HAVE_NOT_ADVANCED_FORMATE
-        snprintf(tmpbuf, 255, CLI_TAG "%-19.18s%-9s%-5d%-10d%-9zu%-9llu%-11c\r\n",
+        snprintf(tmpbuf, 255, CLI_TAG "%-19.18s%-9s%-5d%-10d%-12zu%-9llu%-11c\r\n",
                  task_name, cpu_stat[task->task_state - K_RDY], task->prio,
                  task->stack_size, free_size, (unsigned long long)time_total, yes);
 #else
@@ -121,7 +121,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
             task_name = name_cut;
         }
 
-        snprintf(tmpbuf, 255, CLI_TAG "%-19s%-9s%-5d%-10d%-9u%-9u%-11c\r\n",
+        snprintf(tmpbuf, 255, CLI_TAG "%-19s%-9s%-5d%-10d%-12u%-9u%-11c\r\n",
                  task_name, cpu_stat[task->task_state - K_RDY], task->prio,
                  task->stack_size, free_size, (unsigned int)time_total, yes);
 #endif
