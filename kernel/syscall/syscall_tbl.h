@@ -88,6 +88,7 @@ SYSCALL(SYS_TIMER_STOP, aos_timer_stop)
 #define SYS_TIMER_CHANGE 27
 SYSCALL(SYS_TIMER_CHANGE, aos_timer_change)
 
+#if (RHINO_CONFIG_WORKQUEUE > 0)
 #define SYS_WORKQUEUE_CREATE 28
 SYSCALL(SYS_WORKQUEUE_CREATE, aos_workqueue_create)
 
@@ -108,6 +109,7 @@ SYSCALL(SYS_WORK_SCHED, aos_work_sched)
 
 #define SYS_WORK_CANCEL 34
 SYSCALL(SYS_WORK_CANCEL, aos_work_cancel)
+#endif
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
 

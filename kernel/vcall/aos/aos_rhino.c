@@ -512,6 +512,7 @@ int aos_timer_change(aos_timer_t *timer, int ms)
     ERRNO_MAPPING(ret);
 }
 
+#if (RHINO_CONFIG_WORKQUEUE  > 0)
 int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
 {
     kstat_t ret;
@@ -649,6 +650,7 @@ int aos_work_cancel(aos_work_t *work)
 
     return 0;
 }
+#endif
 
 void *aos_zalloc(unsigned int size)
 {

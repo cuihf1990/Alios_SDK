@@ -102,7 +102,9 @@ RHINO_INLINE kstat_t rhino_start(void)
         preferred_cpu_ready_task_get(&g_ready_queue, 0);
         g_active_task[0] = g_preferred_ready_task[0];
 #endif
+#if( RHINO_CONFIG_WORKQUEUE > 0)
         workqueue_init();
+#endif
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
         krhino_start_hook();
