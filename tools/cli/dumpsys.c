@@ -245,7 +245,9 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     kstat_t ret;
     char *helpinfo = CLI_TAG "dumpsys :\r\n"
                      CLI_TAG "\tdumpsys task       : show the task info.\r\n"
+#ifndef CSP_LINUXHOST
                      CLI_TAG "\tdumpsys task_stack : show the task stack info.\r\n"
+#endif
                      CLI_TAG "\tdumpsys mm_info    : show the memory has alloced.\r\n"
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0)
                      CLI_TAG "\tdumpsys mm_leak    : show the memory maybe leak.\r\n"
@@ -264,7 +266,9 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         }
 
         return ret;
-    } else if (argc >= 2  && 0 == strcmp(argv[1], "task_stack")) {
+    }
+#ifndef CSP_LINUXHOST
+    else if (argc >= 2  && 0 == strcmp(argv[1], "task_stack")) {
         if (argc == 3) {
             ret = dump_task_stack_byname(argv[2]);
         } else {
@@ -272,7 +276,9 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         }
 
         return ret;
-    } else if (argc == 2 && 0 == strcmp(argv[1], "info")) {
+    }
+#endif
+    else if (argc == 2 && 0 == strcmp(argv[1], "info")) {
         ret = dumpsys_info_func(pcWriteBuffer, xWriteBufferLen);
         return ret;
     }
@@ -312,7 +318,7 @@ int dump_task_stack(ktask_t *task)
     char  tmpbuf[256] = {0};
     int   bufoffset   = 0;
     int   totallen = 2048;
-
+    
     printbuf = aos_malloc(totallen);
     if (printbuf ==  NULL) {
         return RHINO_NO_MEM;

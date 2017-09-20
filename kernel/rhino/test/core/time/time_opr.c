@@ -14,7 +14,7 @@ void gettaskinfo(void)
     klist_t *taskhead = &g_kobj_list.task_head;
     klist_t *taskend  = taskhead;
     klist_t *tmp;
-    ktask_t  *task;
+    ktask_t *task;
 
     printf("\n");
     printf("---------------------------------------------\n");
