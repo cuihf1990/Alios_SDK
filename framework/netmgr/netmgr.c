@@ -105,7 +105,7 @@ static void stop_mesh(void)
     umesh_stop();
 #endif
 }
-
+#ifndef CONFIG_NO_TCPIP
 static void netmgr_ip_got_event(hal_wifi_module_t *m,
                                 hal_wifi_ip_stat_t *pnet, void *arg)
 {
@@ -116,6 +116,12 @@ static void netmgr_ip_got_event(hal_wifi_module_t *m,
     aos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
     start_mesh(true);
 }
+#else
+static void netmgr_ip_got_event(hal_wifi_module_t *m,
+                                hal_wifi_ip_stat_t *pnet, void *arg)
+{
+}
+#endif
 
 static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
                                   void *arg)
