@@ -63,7 +63,6 @@ typedef struct {
 /**
  * Initialises a UART interface
  *
- * @note Prepares an UART hardware interface for communications
  *
  * @param[in]  uart  the interface which should be initialised
  *

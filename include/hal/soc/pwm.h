@@ -19,8 +19,6 @@ typedef struct {
 /**
  * Initialises a PWM pin
  *
- * @note  Prepares a Pulse-Width Modulation pin for use.
- * Does not start the PWM output (use @ref MicoPwmStart).
  *
  * @param[in]  pwm  the PWM device
  *
@@ -28,9 +26,8 @@ typedef struct {
  */
 int32_t hal_pwm_init(pwm_dev_t *pwm);
 
-/**@brief Starts PWM output on a PWM interface
- *
- * @note  Starts Pulse-Width Modulation signal output on a PWM pin
+/**
+ * Starts Pulse-Width Modulation signal output on a PWM pin
  *
  * @param[in]  pwm  the PWM device
  *
@@ -40,8 +37,6 @@ int32_t hal_pwm_start(pwm_dev_t *pwm);
 
 /**
  * Stops output on a PWM pin
- *
- * @note  Stops Pulse-Width Modulation signal output on a PWM pin
  *
  * @param[in]  pwm  the PWM device
  *
