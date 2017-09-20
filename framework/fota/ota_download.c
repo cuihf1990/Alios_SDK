@@ -13,18 +13,14 @@
 #include "ota_util.h"
 #include "ota_log.h"
 #include "ota_update_manifest.h"
+#include "ota_socket.h"
 
 #define BUFFER_MAX_SIZE     1536
 #define KEY_OTA_BREAKPOINT  "key_ota_breakpoint"
 #define KEY_OTA_MD5         "key_ota_md5"
 #define KEY_OTA_MD5_CTX     "key_ota_md5_ctx"
 
-#ifdef CONFIG_NO_TCPIP
-#include "stm32_wifi.h"
-#define WIFI_WRITE_TIMEOUT   200
-#define WIFI_READ_TIMEOUT    200
-#define MAX_RCV_RETRY_TIME   5
-#endif
+
 
 static MD5_CTX            g_ctx;
 
@@ -89,190 +85,6 @@ void http_gethost_info(char *src, char *web, char *file, int *port)
     }
 }
 
-static int _ota_socket_check_conn(int sock)
-{
-#if !defined(WITH_LWIP) && !defined(CONFIG_NO_TCPIP)
-    struct pollfd fd = { .fd = sock, .events = POLLOUT };
-    int ret = 0;
-    socklen_t len = 0;
-
-    while (poll(&fd, 1, -1) == -1) {
-        if (errno != EINTR ) {
-            return -1;
-        }
-    }
-
-    len = sizeof(ret);
-    if (getsockopt (sock, SOL_SOCKET, SO_ERROR, &ret, &len) == -1 ||
-        ret != 0) {
-        return -1;
-    }
-#endif
-    return 0;
-}
-
-#ifdef CONFIG_NO_TCPIP
-static int spi_socket_connect(int port, char *host_addr)
-{
-    WIFI_Status_t ret;
-    uint8_t ip_addr[4];
-    int fake_socket = 1;
-
-    ret = WIFI_GetHostAddress((char *)host_addr, ip_addr);
-    if (ret != WIFI_STATUS_OK) {
-        printf("spi_socket_connect: get host addr fail - %d\n", ret);
-        return -1;
-    }
-
-    ret = WIFI_OpenClientConnection(fake_socket, WIFI_TCP_PROTOCOL, "", ip_addr, port, 1);
-    if (ret != WIFI_STATUS_OK) {
-        printf("spi_socket_connect: open client fail - %d\n", ret);
-        return -1;
-    }
-
-    return fake_socket;
-}
-
-static int spi_socket_send(int socket, const unsigned char *buf, size_t len)
-{
-    WIFI_Status_t ret;
-    uint16_t send_size;
-    uint8_t ip_address[4];
-    char    ip[16];
-
-    if (socket < 0) {
-        printf("spi_socket_send: invalid socket fd\n");
-        return -1;
-    }
-    printf("spi_socket_send: len = %d\n", len);
-    ret = WIFI_SendData((uint8_t)socket,
-                      (uint8_t *)buf, len,
-                      &send_size, WIFI_WRITE_TIMEOUT);
-    if (ret != WIFI_STATUS_OK) {
-      printf("spi_socket_send: send data fail - %d\n", ret);
-      return -1;
-    }
-
-    return send_size;
-}
-
-static int spi_socket_recv(int socket, unsigned char *buf, size_t len)
-{
-    WIFI_Status_t ret;
-    uint16_t recv_size;
-
-    if (socket < 0) {
-        printf("spi_socket_recv: invalid socket fd\n");
-        return -1;
-    }
-
-    if (len > ES_WIFI_PAYLOAD_SIZE) {
-        len = ES_WIFI_PAYLOAD_SIZE;
-    }
-    int err_count = 0;
-    do {
-        ret = WIFI_ReceiveData((uint8_t)socket,
-                                buf, (uint16_t)len,
-                                &recv_size, WIFI_READ_TIMEOUT);
-        if (ret != WIFI_STATUS_OK) {
-            printf("spi_socket_recv: receive data fail - %d\n", ret);
-            return -1;
-        }
-
-        //TODO, how to identify the connection is shutdown?
-        if (recv_size == 0) {
-            if (err_count == MAX_RCV_RETRY_TIME) {
-                printf("spi_socket_recv: retry WIFI_ReceiveData %d times failed\n", err_count);
-                return -1;
-            } else {
-                err_count++;
-                printf("spi_socket_recv: retry WIFI_ReceiveData time %d\n", err_count);
-            }
-        }
-    } while (ret == WIFI_STATUS_OK && recv_size == 0);
-
-    return recv_size;
-}
-
-static void spi_socket_free(int socket)
-{
-    WIFI_Status_t ret;
-
-    if (socket == -1)
-        return;
-
-    ret = WIFI_CloseClientConnection((uint32_t)socket);
-    if (ret != WIFI_STATUS_OK) {
-        printf("spi_socket_free: close client fail - %d\n", ret);
-        return;
-    }
-}
-#endif
-
-/**
- * @brief http_socket_init
- *
- * @Param: port
- * @Param: host_addr
- *
- * Returns: socket fd
- */
-int http_socket_init(int port, char *host_addr)
-{
-    if (host_addr == NULL || strlen(host_addr) == 0 || port <= 0) {
-        OTA_LOG_E("http_socket_init parms   error\n ");
-        return -1;
-    }
-
-#ifdef CONFIG_NO_TCPIP
-    return spi_socket_connect(port, host_addr);
-#else
-    struct sockaddr_in server_addr;
-    struct hostent *host;
-    int sockfd;
-    if ((host = gethostbyname(host_addr)) == NULL) { /*取得主机IP地址*/
-        OTA_LOG_E("Gethostname   error,   %s\n ", strerror(errno));
-        return -1;
-    }
-    /*   客户程序开始建立   sockfd描述符   */
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) { /*建立SOCKET连接*/
-        OTA_LOG_E("Socket   Error:%s\a\n ", strerror(errno));
-        return -1;
-    }
-
-    struct timeval timeout;
-    timeout.tv_sec = 10;
-    timeout.tv_usec = 0;
-
-    if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
-                    sizeof(timeout)) < 0) {
-        OTA_LOG_E("setsockopt failed\n");
-        return -1;
-    }
-
-    /*   客户程序填充服务端的资料   */
-    bzero(&server_addr, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);
-    server_addr.sin_addr = *((struct in_addr *) host->h_addr);
-    /*   客户程序发起连接请求   */
-    if (connect(sockfd, (struct sockaddr *) (&server_addr), sizeof(struct sockaddr)) == -1) { /*连接网站*/
-        OTA_LOG_E("socket connecting %s failed!\n",  strerror(errno));
-        if (errno != EINTR) {
-            goto err_out;
-        }
-        if (_ota_socket_check_conn(sockfd) < 0) {
-            goto err_out;
-        }
-    }
-    return sockfd;
-
-err_out:
-    close(sockfd);
-    return -1;
-#endif
-}
-
 
 int check_md5(const char *buffer, const int32_t len)
 {
@@ -326,7 +138,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     // OTA_LOG_I("host_addr is: %s\n ", host_addr);
     // OTA_LOG_I("host_file is: %s\n ", host_file);
     // OTA_LOG_I("port is: %d\n ", port);
-    sockfd = http_socket_init(port, host_addr);
+    sockfd = ota_socket_connect(port, host_addr);
     if (sockfd < 0 ) {
         OTA_LOG_E("http_socket_init error\n ");
         ret = OTA_DOWNLOAD_SOCKET_FAIL;
@@ -349,11 +161,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     totalsend = 0;
     nbytes = strlen(http_buffer);
     while (totalsend < nbytes) {
-#ifdef CONFIG_NO_TCPIP
-        send = spi_socket_send(sockfd, http_buffer + totalsend, nbytes - totalsend);
-#else
-        send = write(sockfd, http_buffer + totalsend, nbytes - totalsend);
-#endif
+        send = ota_socket_send(sockfd, http_buffer + totalsend, nbytes - totalsend);
         if (send == -1) {
             OTA_LOG_E("send error!%s\n ", strerror(errno));
             ret = OTA_DOWNLOAD_SEND_FAIL;
@@ -372,21 +180,15 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     int file_size = 0;
     int retry_cnt = 0;
 
-#ifdef CONFIG_NO_TCPIP
-    while ((nbytes = spi_socket_recv(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
-        if (nbytes < 0) {
-            OTA_LOG_E("spi_socket_recv error!");
-            break;
-        }
-#else
-    while ((nbytes = read(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
+
+    while ((nbytes = ota_socket_recv(sockfd, http_buffer, BUFFER_MAX_SIZE))) {
         // aos_msleep(25);//for slow-motion test
         if (nbytes < 0) {
-            OTA_LOG_I("read nbytes < 0");
+            OTA_LOG_I("ota_socket_recv nbytes < 0");
             if (errno != EINTR) {
                 break;
             }
-            if (_ota_socket_check_conn(sockfd) < 0) {
+            if (ota_socket_check_conn(sockfd) < 0) {
                 OTA_LOG_E("download system error %s" , strerror(errno));
                 break;
             } else if (retry_cnt++ < 20) {
@@ -394,9 +196,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
             } else {
                 break;
             }
-
         }
-#endif
 
         if (!header_found) {
             if (!file_size) {
@@ -456,11 +256,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     }
 
 DOWNLOAD_END:
-#ifdef CONFIG_NO_TCPIP
-    spi_socket_free(sockfd);
-#else
-    close(sockfd);
-#endif
+    ota_socket_close(sockfd);
     return ret;
 }
 
