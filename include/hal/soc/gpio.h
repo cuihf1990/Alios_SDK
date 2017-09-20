@@ -5,7 +5,7 @@
 #ifndef HAL_GPIO_H
 #define HAL_GPIO_H
 
-/**
+/*
  * Pin configuration
  */
 typedef enum {
@@ -24,7 +24,7 @@ typedef enum {
 								  can be connected to other open-drain/open-collector outputs. */
 } gpio_config_t;
 
-/**
+/*
  * GPIO interrupt trigger
  */
 typedef enum {
@@ -33,15 +33,13 @@ typedef enum {
     IRQ_TRIGGER_BOTH_EDGES   = IRQ_TRIGGER_RISING_EDGE | IRQ_TRIGGER_FALLING_EDGE,
 } gpio_irq_trigger_t;
 
-
 typedef struct {
     uint8_t       port;    /* gpio port */
     gpio_config_t config;  /* gpio config */
     void         *priv;    /* priv data */
 } gpio_dev_t;
 
-
-/**
+/*
  * GPIO interrupt callback handler
  */
 typedef void (*gpio_irq_handler_t)(void *arg);

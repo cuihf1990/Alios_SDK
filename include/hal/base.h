@@ -7,7 +7,7 @@
 
 #include <aos/aos.h>
 
-/**
+/*
  * HAL common error code
  */
 enum {
@@ -15,7 +15,7 @@ enum {
     HAL_ERR_CAP,
 };
 
-/**
+/*
  * HAL Module define
  */
 typedef struct {
