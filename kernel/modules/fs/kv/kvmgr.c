@@ -220,6 +220,7 @@ static uint16_t kv_item_calc_pos(uint16_t len)
     }
 #endif
 
+    trigger_gc();
     return 0;
 }
 
