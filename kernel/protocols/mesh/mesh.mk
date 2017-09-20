@@ -32,6 +32,9 @@ LWIP ?=1
 ifeq ($(LWIP), 1)
 $(NAME)_SOURCES += src/ip/lwip_adapter.c
 $(NAME)_SOURCES += src/ip/lwip_ip6.c
+else
+$(NAME)_SOURCES += src/utilities/mem/pbuf.c
+$(NAME)_SOURCES += src/utilities/mem/def.c
 endif
 
 $(NAME)_CFLAGS += -Wall -Werror

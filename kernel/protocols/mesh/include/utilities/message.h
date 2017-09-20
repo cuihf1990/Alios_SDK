@@ -7,7 +7,11 @@
 
 #include <stdbool.h>
 
+#ifdef CONFIG_NET_LWIP
 #include "lwip/pbuf.h"
+#else
+#include "utilities/mem/pbuf.h"
+#endif
 
 #include "umesh_types.h"
 

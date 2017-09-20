@@ -3,9 +3,11 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <aos/aos.h>
 #include <aos/network.h>
 #ifdef CONFIG_AOS_DDA
+#include <stdlib.h>
 #include <dda.h>
 #endif
 #include "netmgr.h"
