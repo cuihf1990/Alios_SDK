@@ -9,7 +9,7 @@
 #ifdef VCALL_RHINO
 #include "k_api.h"
 
-#define MM_LEAK_CHECK_ROUND_SCOND 10*60*5*1000
+#define MM_LEAK_CHECK_ROUND_SCOND 10*1000
 #define RHINO_BACKTRACE_DEPTH     10
 
 #define CLI_TAG         "\e[63m"  //CLI TAG, use ESC characters, c(cli) ascii is 63
@@ -243,18 +243,18 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                       char **argv)
 {
     kstat_t ret;
-    char *helpinfo = CLI_TAG "dumpsys :\r\n"
-                     CLI_TAG "\tdumpsys task       : show the task info.\r\n"
+    char *helpinfo = CLI_TAG "dumpsys help:\r\n"
+                     CLI_TAG "\tdumpsys task         : show the task info.\r\n"
 #ifndef CSP_LINUXHOST
-                     CLI_TAG "\tdumpsys task_stack : show the task stack info.\r\n"
+                     CLI_TAG "\tdumpsys task_stack   : show the task stack info.\r\n"
 #endif
-                     CLI_TAG "\tdumpsys mm_info    : show the memory has alloced.\r\n"
+                     CLI_TAG "\tdumpsys mm_info      : show the memory has alloced.\r\n"
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0)
-                     CLI_TAG "\tdumpsys mm_leak    : show the memory maybe leak.\r\n"
-                     CLI_TAG "\tdumpsys leak_check : leak check control comand.\r\n"
+                     CLI_TAG "\tdumpsys mm_leak      : show the memory maybe leak.\r\n"
+                     CLI_TAG "\tdumpsys mm_monitor   : [start/stop] [round time] fire a timer to monitor mm, default 10s.\r\n"
 #endif
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-                     CLI_TAG "\tdumpsys info       : show the system info\r\n"
+                     CLI_TAG "\tdumpsys info         : show the system info\r\n"
 #endif
                      ;
 
@@ -294,7 +294,7 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     else if (argc == 2 && 0 == strcmp(argv[1], "mm_leak")) {
         ret = dumpsys_mm_leak_func(NULL, 0);
         return ret;
-    } else if (argc > 2 && 0 == strcmp(argv[1], "leak_check")) {
+    } else if (argc > 2 && 0 == strcmp(argv[1], "mm_monitor")) {
         ret = dumpsys_mm_leak_check_func(pcWriteBuffer, xWriteBufferLen, argc, argv);
         return ret;
     }
