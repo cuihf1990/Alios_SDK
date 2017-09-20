@@ -5,7 +5,7 @@ mk3060_targets="alinkapp helloworld linuxapp meshapp tls"
 linux_targets="alinkapp helloworld linuxapp meshapp tls yts"
 mk3060_platforms="mk3060 mk3060@release"
 linux_platforms="linuxhost linuxhost@debug linuxhost@release"
-b_l475e_targets="mqttapp helloworld linuxapp tls"
+b_l475e_targets="mqttapp helloworld tls"
 b_l475e_platforms="b_l475e"
 bins_type="app kernel"
 
