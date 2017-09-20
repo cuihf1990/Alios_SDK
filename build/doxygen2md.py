@@ -13,40 +13,56 @@ def annotation_get(f):
 
 def annotation_analyse(num, annotation, templet):
 
-    # deal with function
+    templet = templet.replace("FUNC_NUM", str(num))
+
     func = re.findall(r'\*/.*?\);', annotation, re.DOTALL)
     func_name = (func[0].partition(" "))[2].partition("(")[0]
+    templet = templet.replace("FUNC_NAME", func_name)
 
     function = (re.findall(r'\*\/\n(.*?);', func[0], re.DOTALL))[0]
-
-    func_desc = ((re.findall(r'(/\*\*\n \* )(.*?)(\n \*\n \* @)', annotation, re.DOTALL))[0][1]).replace(" *", " ")
-
-    templet_head = (templet.partition("  PARAM_DESC"))[0]
-    templet_mid  = ''
-    templet_tail = (templet.partition("  PARAM_DESC"))[2]
-
-    func_params = (re.findall(r'(@param.*?)\n \*\n \* @', annotation, re.DOTALL))[0].split('\n * ')
-    for param in func_params:
-        params = "  | " + (param.strip("@param")).replace("  ", " | ", 2) + " |"
-        templet_mid = templet_mid + params + "\n"
-
-    templet = templet_head + templet_mid + templet_tail
-
-    func_return = (re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]
-
-    templet = templet.replace("FUNC_NUM", str(num))
-    templet = templet.replace("FUNC_NAME", func_name)
     templet = templet.replace("FUNCTION", function)
-    templet = templet.replace("FUNC_DESC", func_desc)
-    templet = templet.replace("RETURN_DESC", func_return)
 
-    print templet
+    if annotation.find("@") == -1:
+        func_desc = ((re.findall(r'(/\*\*\n \* )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]).replace(" *", " ")
+        templet = templet.replace("FUNC_DESC", func_desc)
+        templet = templet.replace("PARAM_DESC", "None.\n")
+        templet = templet.replace("RETURN_DESC", "None.\n")
+    else:
+        func_desc = ((re.findall(r'(/\*\*\n \* )(.*?)(\n \*\n \* @)', annotation, re.DOTALL))[0][1]).replace(" *", " ")
+        templet = templet.replace("FUNC_DESC", func_desc)
+
+        if annotation.find("@param") == -1:
+            templet = templet.replace("PARAM_DESC", "None.\n")
+            if annotation.find("@ret") == -1:
+                templet = templet.replace("RETURN_DESC", "None.\n")
+            else:
+                func_return = (re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]
+                templet = templet.replace("RETURN_DESC", func_return)
+        else:
+            templet_head = (templet.partition("  PARAM_DESC"))[0]
+            templet_mid  = "  | IN/OUT |  NAME  |  DESC  |\n  |--------|--------|--------|\n"
+            templet_tail = (templet.partition("  PARAM_DESC"))[2]
+
+            if annotation.find("@ret") == -1:
+                func_params = (re.findall(r'(@param.*?)\n \*/', annotation, re.DOTALL))[0].replace("\n *", " ").replace("           ", "").split("@param")
+            else:
+                func_params = (re.findall(r'(@param.*?)\n \*\n \* @', annotation, re.DOTALL))[0].replace("\n *", " ").replace("           ", "").split("@param")
+
+            for param in func_params:
+                params = "  | " + (param.strip("@param")).replace("  ", " | ", 2) + " |"
+                templet_mid = templet_mid + params + "\n"
+
+            templet = templet_head + templet_mid + templet_tail
+
+            if annotation.find("@ret") == -1:
+                templet = templet.replace("RETURN_DESC", "None.\n")
+            else:
+                func_return = (re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]
+                templet = templet.replace("RETURN_DESC", func_return)
 
     return templet
 
 def doxygen2md(f, templet):
-
-    print f
 
     fd = open("./out/" + os.path.basename(f) + ".md", 'w')
 
@@ -70,8 +86,13 @@ def main():
     templet = fd.read()
     fd.close()
 
+    print "------------------------"
+
     for f in fs:
+        print f
         doxygen2md(f, templet)
+
+    print "------------------------"
 
 if __name__ == '__main__':
     main()
