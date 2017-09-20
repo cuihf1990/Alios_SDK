@@ -89,15 +89,17 @@ kstat_t krhino_timer_del(ktimer_t *timer)
 {
     NULL_PARA_CHK(timer);
 
+    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
+
     if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (timer->timer_state != TIMER_DEACTIVE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_TIMER_STATE_INV;
     }
-
-    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
 
     if (timer->mm_alloc_flag != K_OBJ_STATIC_ALLOC) {
         krhino_mutex_unlock(&g_timer_mutex);
@@ -106,9 +108,9 @@ kstat_t krhino_timer_del(ktimer_t *timer)
 
     timer->obj_type = RHINO_OBJ_TYPE_NONE;
 
-    krhino_mutex_unlock(&g_timer_mutex);
+    TRACE_TIMER_DEL(krhino_cur_task_get(), timer);
 
-    TRACE_TIMER_DEL(g_active_task[cpu_cur_get()], timer);
+    krhino_mutex_unlock(&g_timer_mutex);
 
     return RHINO_SUCCESS;
 }
@@ -145,15 +147,17 @@ kstat_t krhino_timer_dyn_del(ktimer_t *timer)
 {
     NULL_PARA_CHK(timer);
 
+    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
+
     if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (timer->timer_state != TIMER_DEACTIVE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_TIMER_STATE_INV;
     }
-
-    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
 
     if (timer->mm_alloc_flag != K_OBJ_DYN_ALLOC) {
         krhino_mutex_unlock(&g_timer_mutex);
@@ -180,15 +184,17 @@ kstat_t krhino_timer_start(ktimer_t *timer)
     INTRPT_NESTED_LEVEL_CHK();
     RHINO_CRITICAL_EXIT();
 
+    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
+
     if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (timer->timer_state == TIMER_ACTIVE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_TIMER_STATE_INV;
     }
-
-    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
 
     timer->match   = g_timer_count + timer->init_count;
     /* sort by remain time */
@@ -214,15 +220,17 @@ kstat_t krhino_timer_stop(ktimer_t *timer)
     INTRPT_NESTED_LEVEL_CHK();
     RHINO_CRITICAL_EXIT();
 
+    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
+
     if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (timer->timer_state == TIMER_DEACTIVE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_TIMER_STATE_INV;
     }
-
-    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
 
     timer_list_rm(timer);
     timer->timer_state = TIMER_DEACTIVE;
@@ -242,19 +250,22 @@ kstat_t krhino_timer_change(ktimer_t *timer, tick_t first, tick_t round)
     INTRPT_NESTED_LEVEL_CHK();
     RHINO_CRITICAL_EXIT();
 
+    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
+
     if (first == 0u) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_INV_PARAM;
     }
 
     if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_KOBJ_TYPE_ERR;
     }
 
     if (timer->timer_state != TIMER_DEACTIVE) {
+        krhino_mutex_unlock(&g_timer_mutex);
         return RHINO_TIMER_STATE_INV;
     }
-
-    krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
 
     timer->init_count  = first;
     timer->round_ticks = round;
