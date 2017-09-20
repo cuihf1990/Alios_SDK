@@ -10,8 +10,6 @@ FUNCTION
 
 - [x] **Parameters**
 
-  | IN/OUT |  NAME  |  DESC  |
-  |--------|--------|--------|
   PARAM_DESC
 - [x] **Returns**
 
