@@ -6,7 +6,9 @@
 #include <k_api.h>
 #include <aos/aos.h>
 #include <hal/hal.h>
+#ifdef CONFIG_AOS_MESH
 #include <umesh.h>
+#endif
 
 #define SYSCALL(nr, func)
 
@@ -769,6 +771,7 @@ int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
                      m, uint8_t *, buf, int, len);
 }
 
+#ifdef CONFIG_AOS_MESH
 ur_error_t umesh_init(node_mode_t mode)
 {
     return SYS_CALL1(SYS_UR_MESH_INIT, ur_error_t, node_mode_t, mode);
@@ -814,6 +817,7 @@ uint8_t umesh_get_device_state(void)
 {
     return SYS_CALL0(SYS_UR_MESH_GET_DEVICE_STATE, uint8_t);
 }
+#endif
 
 /* --------------------OTA-------------------- */
 

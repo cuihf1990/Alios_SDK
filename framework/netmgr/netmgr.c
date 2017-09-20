@@ -106,12 +106,24 @@ static void stop_mesh(void)
 #endif
 }
 
+static int32_t translate_addr(char *str) {
+    int32_t a, b, c, d;
+    int32_t address = 0;
+    sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d);
+    address |= d<<24;
+    address |= c<<16;
+    address |= b<<8;
+    address |= a;
+
+    return address;
+}
+
 static void netmgr_ip_got_event(hal_wifi_module_t *m,
                                 hal_wifi_ip_stat_t *pnet, void *arg)
 {
     LOGI(TAG, "Got ip : %s, gw : %s, mask : %s", pnet->ip, pnet->gate, pnet->mask);
 
-    g_netmgr_cxt.ipv4_owned = (int32_t)inet_addr(pnet->ip);
+    g_netmgr_cxt.ipv4_owned = translate_addr(pnet->ip);
     g_netmgr_cxt.ip_available = true;
     aos_post_event(EV_WIFI, CODE_WIFI_ON_PRE_GOT_IP, 0u);
     start_mesh(true);
@@ -446,11 +458,12 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
             config->security, sizeof(g_netmgr_cxt.saved_conf.security) - 1);
     // STM32L475E ip stack running on WiFi MCU, can only configure with CLI(no ywss)
     // So save the wifi config while config from CLI
+
     if (valid_access_security(g_netmgr_cxt.ap_config.security)) {
         if (strcmp(config->ssid, HOTSPOT_AP) != 0)
             ret = aos_kv_set(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf,
               sizeof(wifi_conf_t), 1);
-    }
+    } 
 #else
     if (strcmp(config->ssid, HOTSPOT_AP) != 0) // Do not save hotspot AP
         ret = aos_kv_set(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf,

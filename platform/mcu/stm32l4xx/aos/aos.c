@@ -15,7 +15,6 @@
 ktask_t *g_aos_init;
 
 extern int application_start(int argc, char **argv);
-void trace_start(void);
 extern int aos_framework_init(void);
 
 static int init_wifi()
@@ -79,8 +78,6 @@ static void aos_init(void)
     aos_cli_init();
     aos_kv_init();
     aos_loop_init();
-
-    trace_start();
 
     aos_framework_init();
     application_start(0, NULL);

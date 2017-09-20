@@ -674,7 +674,44 @@ int aos_mkdir(const char *path)
 
 #include <aos/network.h>
 
-#ifdef NEED_WAIT_IO
+#ifdef CONFIG_NO_TCPIP
+
+struct poll_arg {
+    aos_sem_t sem;
+};
+
+static void setup_fd(int fd)
+{
+}
+
+static void teardown_fd(int fd)
+{
+}
+
+static void vfs_poll_notify(struct pollfd *fd, void *arg)
+{
+    struct poll_arg *parg = arg;
+    aos_sem_signal(&parg->sem);
+}
+
+static int wait_io(int maxfd, fd_set *rfds, struct poll_arg *parg, int timeout)
+{
+    timeout = timeout >= 0 ? timeout : AOS_WAIT_FOREVER;
+    aos_sem_wait(&parg->sem, timeout);
+    return 0;
+}
+
+static int init_parg(struct poll_arg *parg)
+{
+    aos_sem_new(&parg->sem,  0);
+    return 0;
+}
+
+static void deinit_parg(struct poll_arg *parg)
+{
+    aos_sem_free(&parg->sem);
+}
+#elif defined(NEED_WAIT_IO)
 
 #include <sys/syscall.h>
 #define gettid() syscall(SYS_gettid)

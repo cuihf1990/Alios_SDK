@@ -17,11 +17,9 @@ $(NAME)_COMPONENTS  := alicrypto
 ifeq ($(HOST_ARCH), linux)
 ifeq ($(LWIP), 1)
 $(NAME)_DEFINES     += LWIP_ENABLED
-$(NAME)_COMPONENTS  += protocols.net
 endif
 else
 $(NAME)_DEFINES     += LWIP_ENABLED
-$(NAME)_COMPONENTS  += protocols.net
 endif
 
 PLATFORM := linuxhost

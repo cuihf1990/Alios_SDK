@@ -92,15 +92,20 @@ git reset
 git checkout kernel/protocols/mesh/mesh.mk
 git checkout platform/mcu/beken/beken.mk
 git checkout framework/ywss/ywss.mk
+
 aos make meshapp@linuxhost meshdebug=1
 if [ $? -ne 0 ]; then
-    echo "error: build libraries for linuxhost failed"
+    echo "error: build meshapp@linuxhost failed"
     exit 1
 fi
-
+aos make alinkapp@linuxhost
+if [ $? -ne 0 ]; then
+    echo "error: build alinkapp@linuxhost failed"
+    exit 1
+fi
 aos make alinkapp@mk3060 meshdebug=1
 if [ $? -ne 0 ]; then
-    echo "error: build libraries for mk3060 failed"
+    echo "error: build alinkapp@mk3060 failed"
     exit 1
 fi
 
@@ -108,6 +113,7 @@ cd ${aosdir}/out/meshapp@linuxhost/libraries/
 cp mesh.a libmesh-linuxhost.a
 strip --strip-debug libmesh.a
 mv libmesh.a ${githubdir}/kernel/protocols/mesh/lib/linuxhost/libmesh.a
+cd ${aosdir}/out/alinkapp@linuxhost/libraries/
 cp ywss.a libywss.a
 strip --strip-debug libywss.a
 cp libywss.a ${githubdir}/framework/ywss/lib/linuxhost/libywss.a

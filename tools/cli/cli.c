@@ -455,7 +455,9 @@ static const struct cli_command built_ins[] = {
     {"tasklist",    "list all thread info", task_cmd},
 
     /* net */
+#ifndef CONFIG_NO_TCPIP
     {"udp",         "[ip] [port] [string data] send udp data", udp_cmd},
+#endif
 
     /* others */
     {"devname",     "print device name", devname_cmd},
@@ -522,6 +524,7 @@ static void exit_cmd(char *buf, int len, int argc, char **argv)
     return;
 }
 
+#ifndef CONFIG_NO_TCPIP
 #include <aos/network.h>
 static void udp_cmd(char *buf, int len, int argc, char **argv)
 {
@@ -546,6 +549,7 @@ static void udp_cmd(char *buf, int len, int argc, char **argv)
 
     close(sockfd);
 }
+#endif
 
 static void task_cmd(char *buf, int len, int argc, char **argv)
 {
