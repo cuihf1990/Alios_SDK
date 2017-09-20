@@ -230,7 +230,7 @@ uint32_t dumpsys_mm_leak_check_func(char *pcWriteBuffer, int xWriteBufferLen,
         return RHINO_SUCCESS;
     }
 
-    if (argc == 2 && 0 == strcmp(argv[2], "stop")) {
+    if (argc > 2 && 0 == strcmp(argv[2], "stop")) {
         krhino_timer_stop(&g_mm_leak_check_timer);
         run_flag  = 2;
     }
