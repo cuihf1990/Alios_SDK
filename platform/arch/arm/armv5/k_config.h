@@ -58,7 +58,9 @@
 #define RHINO_CONFIG_TICKS_PER_SECOND        500
 /* must be 2^n size!, such as 1, 2, 4, 8, 16,32, etc....... */
 #define RHINO_CONFIG_TICK_HEAD_ARRAY         8
-#define RHINO_CONFIG_TIMER_TASK_STACK_SIZE   200
+
+/*must reserve enough stack size for timer cb will consume*/
+#define RHINO_CONFIG_TIMER_TASK_STACK_SIZE   300
 #define RHINO_CONFIG_TIMER_RATE              1
 #define RHINO_CONFIG_TIMER_TASK_PRI          5
 
