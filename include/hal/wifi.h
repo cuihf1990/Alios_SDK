@@ -129,7 +129,6 @@ typedef struct hal_wifi_link_info_s {
 } hal_wifi_link_info_t;
 
 /**
- * hal_wifi_event_cb_t
  * The event call back function called at specific events occurred.
  *
  * @note For HAL implementors, these callbacks must be
@@ -150,10 +149,6 @@ typedef struct {
 
 typedef void (*monitor_data_cb_t)(uint8_t *data, int len, hal_wifi_link_info_t *info);
 
-/**
- * @struct hal_wifi_module_t
- * @brief The Wifi module for manufacture to implement.
- */
 struct hal_wifi_module_s {
     hal_module_base_t    base;
     const hal_wifi_event_cb_t *ev_cb;

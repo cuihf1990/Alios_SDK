@@ -98,91 +98,91 @@ int aos_poll(struct pollfd *fds, int nfds, int timeout);
 int aos_fcntl(int fd, int cmd, int val);
 
 /**
-  * Move the file position to a given offset from a given location.
-  *
-  * @param[in]  fd      the file descriptor of the file.
-  * @param[in]  offset  The offset from whence to move to.
-  * @param[in]  whence  The start of where to seek.
-  *      SEEK_SET to start from beginning of file.
-  *      SEEK_CUR to start from current position in file.
-  *      SEEK_END to start from end of file.
-  *
-  * @return  The new offset of the file.
-  */
+ * Move the file position to a given offset from a given location.
+ *
+ * @param[in]  fd      the file descriptor of the file.
+ * @param[in]  offset  The offset from whence to move to.
+ * @param[in]  whence  The start of where to seek.
+ *                     SEEK_SET to start from beginning of file.
+ *                     SEEK_CUR to start from current position in file.
+ *                     SEEK_END to start from end of file.
+ *
+ * @return  The new offset of the file.
+ */
 off_t aos_lseek(int fd, off_t offset, int whence);
 
 /**
-  * Flush any buffers associated with the file.
-  *
-  * @param[in]  fd  the file descriptor of the file.
-  *
-  * @return 0 on success, negative error code on failure.
-  */
+ * Flush any buffers associated with the file.
+ *
+ * @param[in]  fd  the file descriptor of the file.
+ *
+ * @return  0 on success, negative error code on failure.
+ */
 int aos_sync(int fd);
 
 /**
-  * Store information about the file in a stat structure.
-  *
-  * @param[in]   path  The path of the file to find information about.
-  * @param[out]  st    The stat buffer to write to.
-  *
-  * @return 0 on success, negative error code on failure.
-  */
+ * Store information about the file in a stat structure.
+ *
+ * @param[in]   path  The path of the file to find information about.
+ * @param[out]  st    The stat buffer to write to.
+ *
+ * @return  0 on success, negative error code on failure.
+ */
 int aos_stat(const char *path, struct stat *st);
 
 /**
-  * Remove a file from the filesystem.
-  *
-  * @param[in]  path  The path of the file to remove.
-  *
-  * @return  0 on success, negative error code on failure.
-  */
+ * Remove a file from the filesystem.
+ *
+ * @param[in]  path  The path of the file to remove.
+ *
+ * @return  0 on success, negative error code on failure.
+ */
 int aos_unlink(const char *path);
 
 /**
-  * Rename a file in the filesystem.
-  *
-  * @param[in]  oldpath  The path of the file to rename.
-  * @param[in]  newpath  The path to rename it to.
-  *
-  * @retval 0 on success, negative error code on failure.
-  */
+ * Rename a file in the filesystem.
+ *
+ * @param[in]  oldpath  The path of the file to rename.
+ * @param[in]  newpath  The path to rename it to.
+ *
+ * @return  0 on success, negative error code on failure.
+ */
 int aos_rename(const char *oldpath, const char *newpath);
 
 /**
-  * Open a directory on the filesystem.
-  *
-  * @param[in]  path  the path of the directory to open.
-  *
-  * @return  a point of directory stream on success, NULL on failure.
-  */
+ * Open a directory on the filesystem.
+ *
+ * @param[in]  path  the path of the directory to open.
+ *
+ * @return  a point of directory stream on success, NULL on failure.
+ */
 aos_dir_t *aos_opendir(const char *path);
 
 /**
-  * Close a directory.
-  *
-  * @param[in]  dir  the handle of the directory to close.
-  *
-  * @return  0 on success, negative error code on failure.
-  */
+ * Close a directory.
+ *
+ * @param[in]  dir  the handle of the directory to close.
+ *
+ * @return  0 on success, negative error code on failure.
+ */
 int aos_closedir(aos_dir_t *dir);
 
 /**
-  * Read the next directory entry.
-  *
-  * @param[in]  dir  the handle of the directory to read.
-  *
-  * @return  a pointer to a dirent structure.
-  */
+ * Read the next directory entry.
+ *
+ * @param[in]  dir  the handle of the directory to read.
+ *
+ * @return  a pointer to a dirent structure.
+ */
 aos_dirent_t *aos_readdir(aos_dir_t *dir);
 
 /**
-  * Create the directory, if they do not already exist.
-  *
-  * @param[in]  path  the path of the directory.
-  *
-  * @return  0 on success, negative error code on failure.
-  */
+ * Create the directory, if they do not already exist.
+ *
+ * @param[in]  path  the path of the directory.
+ *
+ * @return  0 on success, negative error code on failure.
+ */
 int aos_mkdir(const char *path);
 
 #ifdef __cplusplus

@@ -17,13 +17,13 @@ extern "C" {
 #define unlikely(EXPRESSSION) !!(EXPRESSSION)
 #endif
 
-/**
-* Check that an expression is true (non-zero).
-* If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
-* function name, etc.) using the default debugging output method.
-*
+/*
+ * Check that an expression is true (non-zero).
+ * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
+ * function name, etc.) using the default debugging output method.
+ *
  * @param[in]  X       expression to be evaluated.
-*/
+ */
 #if (!defined(check))
 #define check(X)                                                                            \
         do {                                                                                \
@@ -33,14 +33,14 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
-* Check that an expression is true (non-zero) with an explanation.
-* If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
-* function name, etc.) using the default debugging output method.
-*
+/*
+ * Check that an expression is true (non-zero) with an explanation.
+ * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
+ * function name, etc.) using the default debugging output method.
+ *
  * @param[in]  X       expression to be evaluated.
  * @param[in]  STR     If the expression evaluate to false, custom string to print.
-*/
+ */
 #if (!defined(check_string))
 #define check_string(X, STR)                                                               \
         do {                                                                               \
@@ -51,14 +51,14 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
-* Requires that an expression evaluate to true.
-* If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
-* function name, etc.) using the default debugging output method then jumps to a label.
-*
-* @param[in]  X      expression to be evalulated.
-* @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
-*/
+/*
+ * Requires that an expression evaluate to true.
+ * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
+ * function name, etc.) using the default debugging output method then jumps to a label.
+ *
+ * @param[in]  X      expression to be evalulated.
+ * @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
+ */
 #if (!defined(require))
 #define require(X, LABEL)                                                                     \
         do {                                                                                  \
@@ -69,15 +69,15 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
-* Requires that an expression evaluate to true with an explanation.
-* If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
-* function name, etc.) and a custom explanation string using the default debugging output method then jumps to a label.
-*
-* @param[in]  X      expression to be evalulated.
-* @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
-* @param[in]  STR    if expression evaluate to false,custom explanation string to print.
-*/
+/*
+ * Requires that an expression evaluate to true with an explanation.
+ * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
+ * function name, etc.) and a custom explanation string using the default debugging output method then jumps to a label.
+ *
+ * @param[in]  X      expression to be evalulated.
+ * @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
+ * @param[in]  STR    if expression evaluate to false,custom explanation string to print.
+ */
 #if (!defined(require_string))
 #define require_string(X, LABEL, STR)                                                      \
         do {                                                                               \
@@ -88,13 +88,13 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
-* Requires that an expression evaluate to true.
-* If expression evalulates to false, this jumps to a label. No debugging information is printed.
-*
-* @param[in]  X      expression to be evalulated
-* @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
-*/
+/*
+ * Requires that an expression evaluate to true.
+ * If expression evalulates to false, this jumps to a label. No debugging information is printed.
+ *
+ * @param[in]  X      expression to be evalulated
+ * @param[in]  LABEL  if expression evaluate to false,jumps to the LABEL.
+ */
 #if (!defined(require_quiet))
 #define require_quiet(X, LABEL)   \
         do {                      \
@@ -104,7 +104,7 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
+/*
  * Require that an error code is noErr (0).
  * If the error code is non-0, this prints debugging information (actual expression string, file, line number,
  * function name, etc.) using the default debugging output method then jumps to a label.
@@ -126,7 +126,7 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
+/*
  * Require that an error code is noErr (0) with an explanation.
  * If the error code is non-0, this prints debugging information (actual expression string, file, line number,
  * function name, etc.), and a custom explanation string using the default debugging output method using the
@@ -149,7 +149,7 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
+/*
  * Require that an error code is noErr (0)  with an explanation and action to execute otherwise.
  * If the error code is non-0, this prints debugging information (actual expression string, file, line number,
  * function name, etc.), and a custom explanation string using the default debugging output method using the
@@ -174,7 +174,7 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
+/*
  * Require that an error code is noErr (0).
  * If the error code is non-0, this jumps to a label. No debugging information is printed.
  *
@@ -190,7 +190,7 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
+/*
  * Require that an error code is noErr (0) with an action to execute otherwise.
  * If the error code is non-0, this prints debugging information (actual expression string, file, line number,
  * function name, etc.) using the default debugging output method then executes an action and jumps to a label.
@@ -213,7 +213,7 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
+/*
  * Require that an error code is noErr (0) with an action to execute otherwise.
  * If the error code is non-0, this executes an action and jumps to a label. No debugging information is printed.
  *
@@ -231,7 +231,7 @@ extern "C" {
         } while(1 == 0)
 #endif
 
-/**
+/*
  * Requires that an expression evaluate to true with an action to execute otherwise.
  * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
  * function name, etc.) using the default debugging output method then executes an action and jumps to a label.
@@ -251,7 +251,7 @@ extern "C" {
         } while (1 == 0)
 #endif
 
-/**
+/*
  * Requires that an expression evaluate to true with an explanation and action to execute otherwise.
  * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
  * function name, etc.) and a custom explanation string using the default debugging output method then executes an
@@ -273,7 +273,7 @@ extern "C" {
         } while (1 == 0)
 #endif
 
-/**
+/*
  * Requires that an expression evaluate to true with an action to execute otherwise.
  * If expression evalulates to false, this executes an action and jumps to a label.
  * No debugging information is printed.
