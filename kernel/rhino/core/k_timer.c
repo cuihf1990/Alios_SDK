@@ -101,11 +101,10 @@ kstat_t krhino_timer_del(ktimer_t *timer)
 
     if (timer->mm_alloc_flag != K_OBJ_STATIC_ALLOC) {
         krhino_mutex_unlock(&g_timer_mutex);
-
         return RHINO_KOBJ_DEL_ERR;
     }
 
-    timer->obj_type = RHINO_TIMER_OBJ_TYPE;
+    timer->obj_type = RHINO_OBJ_TYPE_NONE;
 
     krhino_mutex_unlock(&g_timer_mutex);
 
@@ -158,11 +157,10 @@ kstat_t krhino_timer_dyn_del(ktimer_t *timer)
 
     if (timer->mm_alloc_flag != K_OBJ_DYN_ALLOC) {
         krhino_mutex_unlock(&g_timer_mutex);
-
         return RHINO_KOBJ_DEL_ERR;
     }
 
-    timer->obj_type = RHINO_TIMER_OBJ_TYPE;
+    timer->obj_type = RHINO_OBJ_TYPE_NONE;
 
     krhino_mutex_unlock(&g_timer_mutex);
 
@@ -283,7 +281,6 @@ static void timer_task(void *pa)
 #else
         krhino_sem_take(&g_timer_sem, RHINO_WAIT_FOREVER);
 #endif
-
         krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
 
         g_timer_count++;
