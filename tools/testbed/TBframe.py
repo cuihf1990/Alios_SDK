@@ -1,5 +1,7 @@
 import hashlib
 
+DEBUG = False
+
 CLIENT_DEV     = 'CDEV'
 ALL_DEV        = 'ADEV'
 DEVICE_LOG     = 'DLOG'
@@ -91,6 +93,9 @@ def parse(msg):
             if msg[i+10] != ',':
                 continue
             sync = True
+            if DEBUG and i > 0:
+                print "msg:{0}".format(msg)
+                print "discard:{0}".format(msg[0:i])
             msg = msg[i:]
             break
         if sync == False:
@@ -105,7 +110,8 @@ def parse(msg):
             break
         if msg[length + 11] != '}':
             sync = False
-            print msg[0:11],"Lose sync because of FOOTER error"
+            if DEBUG:
+                print msg[0:11],"Lose sync because of FOOTER error"
             msg = msg[1:]
             continue
         value = msg[11:length+11]
