@@ -175,13 +175,7 @@ void mbedtls_net_free(mbedtls_net_context *ctx)
 #include <unistd.h>
 #include <errno.h>
 
-#if !defined(LWIP_ENABLED)
-#include <netdb.h>
-#include <sys/socket.h>
-#else
-#include "lwip/netdb.h"
-#include "lwip/sockets.h"
-#endif
+#include <aos/network.h>
 
 static int net_would_block(const mbedtls_net_context *ctx)
 {
