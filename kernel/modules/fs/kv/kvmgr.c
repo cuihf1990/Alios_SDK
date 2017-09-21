@@ -300,7 +300,7 @@ static int __item_recovery_cb(kv_item_t *item, const char *key)
     }
 
     if (item->hdr.crc == utils_crc8((uint8_t *)p , item->len)) {
-        if (item->hdr.origin_off != 0) {
+        if ((item->hdr.origin_off != 0) && (item->pos != item->hdr.origin_off)) {
             kv_item_del(item, KV_ORIG_REMOVE);
         }
     } else {
