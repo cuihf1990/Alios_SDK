@@ -21,10 +21,12 @@
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 #include "tools/diags.h"
-#include "lwip/sockets.h"
 
+#ifdef CONFIG_NET_LWIP
+#include "lwip/sockets.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/inet.h"
+#endif
 
 static void process_help(int argc, char *argv[]);
 #ifdef CONFIG_AOS_MESH_DEBUG
@@ -329,6 +331,7 @@ static void handle_autotest_timer(void *args)
 
 void process_autotest(int argc, char *argv[])
 {
+#ifdef CONFIG_NET_LWIP
     char                         *end;
     autotest_acked_t             *acked = NULL;
 
@@ -378,6 +381,7 @@ void process_autotest(int argc, char *argv[])
 #endif
 
     handle_autotest_timer(NULL);
+#endif
 }
 
 void process_channel(int argc, char *argv[])
@@ -1004,6 +1008,7 @@ void process_nbrs(int argc, char *argv[])
 
 void process_ping(int argc, char *argv[])
 {
+#ifdef CONFIG_NET_LWIP
     ur_icmp6_header_t *header;
 #if LWIP_IPV6
     ur_ip6_addr_t     target;
@@ -1050,6 +1055,7 @@ void process_ping(int argc, char *argv[])
 
     ip6_sendto(g_cl_state.icmp_socket, payload, length, &target, 0);
     ur_mem_free(payload, length);
+#endif
 }
 
 void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
@@ -1315,6 +1321,7 @@ static struct cli_command ncmd = {
     .function = umesh_command,
 };
 
+#ifdef CONFIG_NET_LWIP
 #ifndef WITH_LWIP
 struct cb_arg {
     raw_data_handler_t handler;
@@ -1387,6 +1394,7 @@ static void mesh_worker(void *arg)
     }
 }
 #endif
+#endif
 
 int g_cli_silent;
 ur_error_t mesh_cli_init(void)
@@ -1398,8 +1406,10 @@ ur_error_t mesh_cli_init(void)
                                                     AUTOTEST_UDP_PORT);
 #endif
 
+#ifdef CONFIG_NET_LWIP
 #ifndef WITH_LWIP
     aos_task_new("meshworker", mesh_worker, NULL, 8192);
+#endif
 #endif
     aos_cli_register_command(&ncmd);
     return UR_ERROR_NONE;

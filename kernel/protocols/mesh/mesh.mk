@@ -28,5 +28,11 @@ $(NAME)_SOURCES += src/ip/tapif_adapter.c
 $(NAME)_DEFINES += CONFIG_AOS_MESH_TAPIF
 endif
 
+LWIP ?=1
+ifeq ($(LWIP), 1)
+$(NAME)_SOURCES += src/ip/lwip_adapter.c
+$(NAME)_SOURCES += src/ip/lwip_ip6.c
+endif
+
 $(NAME)_CFLAGS += -Wall -Werror
 GLOBAL_DEFINES += CONFIG_AOS_MESH
