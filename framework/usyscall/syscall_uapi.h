@@ -23,5 +23,7 @@ extern const void *g_syscall_tbl[];
 
 #define SYS_CALL6(nr, t, t1, p1, t2, p2, t3, p3, t4, p4, t5, p5, t6, p6) ((t (*)(t1, t2, t3, t4, t5, t6))(SYSCALL_TBL[nr]))(p1, p2, p3, p4, p5, p6)
 
+#define SYS_CALL7(nr, t, t1, p1, t2, p2, t3, p3, t4, p4, t5, p5, t6, p6, t7, p7) ((t (*)(t1, t2, t3, t4, t5, t6, t7))(SYSCALL_TBL[nr]))(p1, p2, p3, p4, p5, p6, p7)
+
 #endif
 

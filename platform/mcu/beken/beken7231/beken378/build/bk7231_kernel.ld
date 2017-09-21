@@ -92,7 +92,7 @@ SECTIONS
 	. = ALIGN (8);
 	_empty_ram = .;
 
-    PROVIDE(app_info_addr = 0x0067C00);
+    PROVIDE(app_info_addr = 0x0070400);
 /* This symbol defines end of code/data sections. Heap starts here. */
 	PROVIDE(end    	  = .);
 	PROVIDE(heap_start    	  = .);

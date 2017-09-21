@@ -2,7 +2,7 @@ NAME := mbedtls
 
 DEBUG := no
 
-$(NAME)_TYPE := share
+$(NAME)_TYPE := kernel
 
 GLOBAL_INCLUDES     += include
 

@@ -2,7 +2,7 @@
 NAME := alicrypto
 ALICRYPTO_TEST := yes
 
-$(NAME)_TYPE := share
+$(NAME)_TYPE := kernel
 
 $(NAME)_SOURCES :=
 $(NAME)_COMPONENTS :=

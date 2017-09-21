@@ -259,7 +259,29 @@ SYSCALL(SYS_READDIR, aos_readdir)
 #define SYS_MKDIR 85
 SYSCALL(SYS_MKDIR, aos_mkdir)
 
-/* keep 86~100 for Framework */
+/* keep 86~90 for Framework */
+
+/* --------------------MBEDTLS-------------------- */
+#define SYS_MBEDTLS_CONNECT 91
+SYSCALL(SYS_MBEDTLS_CONNECT, mbedtls_ssl_connect)
+
+#define SYS_MBEDTLS_SEND 92
+SYSCALL(SYS_MBEDTLS_SEND, mbedtls_ssl_send)
+
+#define SYS_MBEDTLS_RECV 93
+SYSCALL(SYS_MBEDTLS_RECV, mbedtls_ssl_recv)
+
+#define SYS_MBEDTLS_CLOSE 94
+SYSCALL(SYS_MBEDTLS_CLOSE, mbedtls_ssl_close)
+
+#define SYS_CRYPTO_AES_INIT 95
+SYSCALL(SYS_CRYPTO_AES_INIT, ali_aes_init)
+
+#define SYS_CRYPTO_AES_FINISH 96
+SYSCALL(SYS_CRYPTO_AES_FINISH, ali_aes_finish)
+
+#define SYS_CRYPTO_AES_GET_CTX_SIZE 97
+SYSCALL(SYS_CRYPTO_AES_GET_CTX_SIZE, ali_aes_get_ctx_size)
 
 /* --------------------LWIP-------------------- */
 
