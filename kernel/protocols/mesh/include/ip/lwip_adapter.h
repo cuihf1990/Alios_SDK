@@ -5,8 +5,6 @@
 #ifndef UR_LWIP_ADAPTER_H
 #define UR_LWIP_ADAPTER_H
 
-#include "lwip/pbuf.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

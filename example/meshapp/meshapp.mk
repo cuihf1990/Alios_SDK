@@ -3,8 +3,13 @@ no_with_lwip := 0
 
 $(NAME)_SOURCES     := main.c
 
-$(NAME)_COMPONENTS  += protocols.net protocols.mesh cli
+$(NAME)_COMPONENTS  += protocols.mesh cli
 GLOBAL_DEFINES      += TAPIF_DEFAULT_OFF DEBUG
+
+LWIP ?=1
+ifeq ($(LWIP), 1)
+$(NAME)_COMPONENTS  += protocols.net
+endif
 
 ifneq (,${BINS})
 GLOBAL_CFLAGS += -DSYSINFO_OS_BINS
