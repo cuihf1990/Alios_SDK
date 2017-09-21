@@ -50,7 +50,7 @@ def annotation_analyse(num, annotation, templet):
 
             del func_params[0]
             for param in func_params:
-                params = "  | " + (param.strip("@param")).replace("  ", " | ", 2) + " |"
+                params = "  | " + param.replace("  ", " | ", 2) + " |"
                 templet_mid = templet_mid + params + "\n"
 
             templet = templet_head + templet_mid + templet_tail
