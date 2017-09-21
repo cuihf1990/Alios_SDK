@@ -5,7 +5,7 @@
 #ifndef HAL_UART_H
 #define HAL_UART_H
 
-/**
+/*
  * UART data width
  */
 typedef enum {
@@ -16,7 +16,7 @@ typedef enum {
     DATA_WIDTH_9BIT
 } hal_uart_data_width_t;
 
-/**
+/*
  * UART stop bits
  */
 typedef enum {
@@ -24,7 +24,7 @@ typedef enum {
     STOP_BITS_2,
 } hal_uart_stop_bits_t;
 
-/**
+/*
  * UART flow control
  */
 typedef enum {
@@ -34,7 +34,7 @@ typedef enum {
     FLOW_CONTROL_CTS_RTS
 } hal_uart_flow_control_t;
 
-/**
+/*
  * UART parity
  */
 typedef enum {
@@ -43,7 +43,7 @@ typedef enum {
     EVEN_PARITY,
 } hal_uart_parity_t;
 
-/**
+/*
  * UART configuration
  */
 typedef struct {

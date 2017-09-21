@@ -65,9 +65,9 @@ int alink_wait_connect(int timeout_ms);
 /**
  * Destroy alink service and free resources
  *
- * @return  0 on success, otherwise -1 will return
- *
  * @note  this func will block at most 15 seconds to stop all alink related process(thread)
+ *
+ * @return  0 on success, otherwise -1 will return
  */
 int alink_end(void);
 
@@ -81,13 +81,13 @@ int alink_factory_reset(void);
 /**
  * Report alink message, it is a fundamental func.
  *
+ * @note when connection with server is unstable, this func will block until got response from server or timeout.
+ *
  * @param[in]  method       alink protocol method, i.e. "postDeviceRawData", "retrieveDeviceData".
  * @param[in]  json_buffer  json format buffer, like {"OnOff":"1", "Light":"80"}.
  *
  * @return  0 when successfully got response from cloud,
  *          otherwise this func will block until timeout and -1 will return
- *
- * @note when connection with server is unstable, this func will block until got response from server or timeout.
  */
 int alink_report(const char *method, char *json_buffer);
 
@@ -141,13 +141,13 @@ int alink_register_callback(unsigned char cb_type, void *cb_func);
 /**
  * Start awss service, block method, block until awss succeed, or timeout(see Note).
  *
- * @return  0 on success, otherwise non-zero value will return
- *            =  0: connect AP & DHCP success
- *            = -1: get ssid & passwd fail
- *            = -2: connect AP / DHCP fail
- *
  * @note  platform_awss_get_timeout_interval_ms() return monitor timeout interval,
  *        AP connection timeout is 30s.
+ *
+ * @return  0 on success, otherwise non-zero value will return
+ *                =  0: connect AP & DHCP success
+ *                = -1: get ssid & passwd fail
+ *                = -2: connect AP / DHCP fail
  */
 int awss_start(void);
 

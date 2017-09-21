@@ -24,7 +24,7 @@ enum wlan_sec_type_e {
     SECURITY_TYPE_AUTO,       /* It is used when calling @ref micoWlanStartAdv, MICO read security type from scan result. */
 };
 
-/**
+/*
  *  Scan result using normal scan.
  */
 typedef struct {
@@ -128,7 +128,7 @@ typedef struct hal_wifi_link_info_s {
     int8_t rssi; /* rssi value of received packet */
 } hal_wifi_link_info_t;
 
-/**
+/*
  * The event call back function called at specific events occurred.
  *
  * @note For HAL implementors, these callbacks must be
@@ -197,10 +197,10 @@ void hal_wifi_register_module(hal_wifi_module_t *m);
 /**
  * Initialize wifi instances.
  *
- * @return  0 on success, otherwise failure.
- *
  * @note  This is supposed to be called during system boot,
  *        not supposed to be called by user module directly.
+ *
+ * @return  0 on success, otherwise failure.
  */
 int hal_wifi_init(void);
 
@@ -362,10 +362,10 @@ void hal_wifi_stop_debug_mode(hal_wifi_module_t *m);
  * Set the event callback function array for the wifi.
  * Please don't do time consuming work in these callbacks.
  *
+ * @note Please don't do time consuming work in these callbacks.
+ *
  * @param[in]  m   the wifi instance, NULL for default.
  * @param[in]  cb  the event callback function info.
- *
- * @note Please don't do time consuming work in these callbacks.
  */
 void hal_wifi_install_event(hal_wifi_module_t *m, const hal_wifi_event_cb_t *cb);
 

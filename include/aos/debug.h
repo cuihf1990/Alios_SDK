@@ -22,7 +22,7 @@ extern "C" {
  * If expression evalulates to false, this prints debugging information (actual expression string, file, line number,
  * function name, etc.) using the default debugging output method.
  *
- * @param[in]  X       expression to be evaluated.
+ * @param[in]  X  expression to be evaluated.
  */
 #if (!defined(check))
 #define check(X)                                                                            \

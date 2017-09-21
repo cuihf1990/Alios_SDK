@@ -42,12 +42,9 @@ RHINO_INLINE kstat_t rhino_init(void)
     /* init memory region */
 #if(RHINO_CONFIG_MM_TLF > 0)
     krhino_init_mm_head(&g_kmm_head, g_mm_region[0].start, g_mm_region[0].len);
-/*Fix me:tlsf multi region*/
-#if 0
     for (int e = 1 ; e < g_region_num ; e++) {
         krhino_add_mm_region(g_kmm_head, g_mm_region[e].start, g_mm_region[e].len);
     }
-#endif
 #endif
 
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )

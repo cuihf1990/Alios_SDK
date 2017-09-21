@@ -21,7 +21,7 @@ typedef struct {
     uint32_t blk_size; /* sd block size */
 } hal_sd_info_t;
 
-/**
+/*
  * UART configuration
  */
 typedef struct {

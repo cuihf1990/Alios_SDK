@@ -16,7 +16,7 @@ def annotation_analyse(num, annotation, templet):
     templet = templet.replace("FUNC_NUM", str(num))
 
     func = re.findall(r'\*/.*?\);', annotation, re.DOTALL)
-    func_name = (func[0].partition(" "))[2].partition("(")[0]
+    func_name = (func[0].replace("const ", "").replace("long long", "long").partition(" "))[2].partition("(")[0].replace("*", "")
     templet = templet.replace("FUNC_NAME", func_name)
 
     function = (re.findall(r'\*\/\n(.*?);', func[0], re.DOTALL))[0]
@@ -36,7 +36,7 @@ def annotation_analyse(num, annotation, templet):
             if annotation.find("@ret") == -1:
                 templet = templet.replace("RETURN_DESC", "None.\n")
             else:
-                func_return = (re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]
+                func_return = ((re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]).replace(" *           ", "")
                 templet = templet.replace("RETURN_DESC", func_return)
         else:
             templet_head = (templet.partition("  PARAM_DESC"))[0]
@@ -50,7 +50,7 @@ def annotation_analyse(num, annotation, templet):
 
             del func_params[0]
             for param in func_params:
-                params = "  | " + (param.strip("@param")).replace("  ", " | ", 2) + " |"
+                params = "  | " + param.replace("  ", " | ", 2) + " |"
                 templet_mid = templet_mid + params + "\n"
 
             templet = templet_head + templet_mid + templet_tail
@@ -58,20 +58,30 @@ def annotation_analyse(num, annotation, templet):
             if annotation.find("@ret") == -1:
                 templet = templet.replace("RETURN_DESC", "None.\n")
             else:
-                func_return = (re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]
+                func_return = ((re.findall(r'(@return  )(.*?)(\n \*/)', annotation, re.DOTALL))[0][1]).replace(" *           ", "")
                 templet = templet.replace("RETURN_DESC", func_return)
 
     return templet
 
 def doxygen2md(f, templet):
+    index = ""
 
-    fd = open("./out/" + os.path.basename(f) + ".md", 'w')
+    fd = open("./out/" + os.path.basename(f) + ".md", 'w+')
 
     num = 0
     for annotation in annotation_get(f):
         num += 1
         md = annotation_analyse(num, annotation, templet)
         fd.write(md)
+        index = index + "  * [" + ((((md.split("\n\n"))[0]).split(" "))[1]).replace("-", " ") + "]" + "(#" + (((md.split("\n\n"))[0]).split(" "))[1] + ")\n"
+
+    fd.seek(0)
+    md = fd.read()
+    fd.seek(0)
+    fd.write("# API INDEX\n\n")
+    fd.write(index)
+    fd.write("\n------\n\n")
+    fd.write(md)
 
     fd.close()
 
