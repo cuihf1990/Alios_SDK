@@ -530,7 +530,6 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
     uint16_t datagram_size, datagram_tag, datagram_offset;
     lowpan_reass_t *lrh, *lrh_temp;
     message_info_t *info;
-    uint8_t *payload;
 
     if (p == NULL || reass_p == NULL) {
         return UR_ERROR_FAIL;
@@ -538,10 +537,9 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
 
     info = p->info;
     *reass_p = NULL;
-    payload = (uint8_t *)message_get_payload(p);
-    memcpy((uint8_t *)&frag_header_content, payload, sizeof(frag_header_t));
-    frag_header = &frag_header_content;
 
+    message_copy_to(p, 0, (uint8_t *)&frag_header_content, sizeof(frag_header_t));
+    frag_header = &frag_header_content;
     *((uint16_t *)frag_header) = ntohs(*(uint16_t *)frag_header);
     datagram_size = frag_header->size;
     datagram_tag = ntohs(frag_header->tag);
@@ -651,8 +649,6 @@ ur_error_t lp_reassemble(message_t *p, message_t **reass_p)
 
             /* release helper */
             ur_mem_free(lrh, sizeof(lowpan_reass_t));
-            return UR_ERROR_NONE;
-        } else {
             return UR_ERROR_NONE;
         }
     } else {

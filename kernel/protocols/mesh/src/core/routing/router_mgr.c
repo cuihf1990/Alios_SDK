@@ -173,9 +173,10 @@ ur_error_t ur_router_set_default_router(uint8_t id)
 ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
                                   uint8_t *payload, uint16_t length)
 {
-    ur_error_t  error = UR_ERROR_NONE;
+    ur_error_t error = UR_ERROR_MEM;
     message_t   *message;
     uint8_t     *data;
+    uint8_t *data_orig;
     message_info_t *info;
     uint16_t msg_length;
 
@@ -193,29 +194,33 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
     }
 
     msg_length = sizeof(mm_header_t) + sizeof(router->id) + length;
-    message = message_alloc(msg_length, ROUTER_MGR_1);
-    if (message == NULL) {
+
+    data = ur_mem_alloc(msg_length);
+    if (data == NULL) {
         return UR_ERROR_MEM;
     }
-    data = message_get_payload(message);
-    info = message->info;
-    data += set_mm_header_type(info, data, COMMAND_ROUTING_INFO_UPDATE);
+    data_orig = data;
 
+    data += sizeof(mm_header_t);
     *data = router->id;
     data += sizeof(router->id);
     memcpy(data, payload, length);
     data += length;
 
-    info->network = router->network;
-    // dest
-    set_mesh_short_addr(&info->dest, umesh_mm_get_meshnetid(NULL), dst);
-
-    error = address_resolve(message);
-    if (error == UR_ERROR_NONE) {
-        error = mf_send_message(message);
-    } else if (error == UR_ERROR_DROP) {
-        message_free(message);
+    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_ROUTING_INFO_UPDATE,
+                               data_orig, msg_length, ROUTER_MGR_1);
+    if (message) {
+        info = message->info;
+        info->network = router->network;
+        set_mesh_short_addr(&info->dest, umesh_mm_get_meshnetid(NULL), dst);
+        error = address_resolve(message);
+        if (error == UR_ERROR_NONE) {
+            error = mf_send_message(message);
+        } else if (error == UR_ERROR_DROP) {
+            message_free(message);
+        }
     }
+    ur_mem_free(data_orig, msg_length);
 
     MESH_LOG_DEBUG("router %d send routing info to %04x, len %d", router->id, dst, msg_length);
     return error;
@@ -226,20 +231,28 @@ ur_error_t handle_router_message_received(message_t *message)
     router_t *router;
     uint8_t *payload;
     uint16_t length;
+    uint8_t *data;
+    uint16_t data_length;
 
-    payload = message_get_payload(message);
     length = message_get_msglen(message);
+    payload = ur_mem_alloc(length);
+    if (payload == NULL) {
+        return UR_ERROR_MEM;
+    }
+    message_copy_to(message, 0, payload, length);
     router = ur_get_router_by_id(payload[sizeof(mm_header_t)]);
-    if (router == NULL) {
+
+    if (router == NULL || router->cb.handle_message_received == NULL) {
+        ur_mem_free(payload, length);
         return UR_ERROR_FAIL;
     }
 
-    if (router->cb.handle_message_received == NULL) {
-        return UR_ERROR_FAIL;
-    }
+    data = payload;
+    data_length = length;
     payload += sizeof(mm_header_t) + sizeof(router->id);
     length  -= sizeof(mm_header_t) + sizeof(router->id);
     router->cb.handle_message_received(payload, length);
+    ur_mem_free(data, data_length);
 
     return UR_ERROR_NONE;
 }
