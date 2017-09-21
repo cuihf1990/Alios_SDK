@@ -40,8 +40,12 @@ def get_nbrs(at, devices):
         if nbrs == False or len(nbrs) == 0:
             fail_num += 1
             continue
+        index = 0
         for j in range(len(nbrs)):
-            nbr_index = '{0:02d}'.format(j)
+            if nbrs[j].startswith('\t') == False:
+                continue
+            nbr_index = '{0:02d}'.format(index)
+            index += 1
             nbr = nbrs[j].replace('\t', '')
             ret[devstr][nbr_index] = nbr
     retstr = json.dumps(ret, sort_keys=True, indent=4)

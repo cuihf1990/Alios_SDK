@@ -42,15 +42,18 @@ class Server:
         client['socket'].settimeout(1)
         heartbeat_timeout = time.time() + 30
         file = {}
+        msg = ''
         while self.keep_running:
             try:
                 if time.time() > heartbeat_timeout:
                     print "client {0} heartbeat timeout".format(client['addr'])
                     break
 
-                msg = client['socket'].recv(MAX_MSG_LENTH)
-                if msg == '':
+                new_msg = client['socket'].recv(MAX_MSG_LENTH)
+                if new_msg == '':
                     break
+
+                msg += new_msg
                 while msg != '':
                     type, length, value, msg = TBframe.parse(msg)
                     if type == TBframe.TYPE_NONE:

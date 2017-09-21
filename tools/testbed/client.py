@@ -3,6 +3,7 @@ import socket, thread, threading, glob
 import TBframe
 
 DEBUG = True
+LOCALLOG = False
 
 try:
     import serial
@@ -35,6 +36,9 @@ class Client:
     def device_logging(self, port):
         log_time = time.time()
         log = ''
+        if LOCALLOG:
+            logfile= 'client/' + port.split('/')[-1] + '.log'
+            flog = open(logfile, 'a')
         while self.keep_running:
             if self.connected == False:
                 time.sleep(0.1)
@@ -76,6 +80,8 @@ class Client:
                     break
                 if log != '' and newline == True:
                     log = port + ":{0:.3f}:".format(log_time) + log
+                    if LOCALLOG:
+                        flog.write(log)
                     data = TBframe.construct(TBframe.DEVICE_LOG,log)
                     log = ''
                     try:
@@ -87,6 +93,8 @@ class Client:
                 time.sleep(0.02)
         self.devices[port]['serial'].close()
         self.devices.pop(port)
+        if LOCALLOG:
+            flog.close()
         print "device {0} removed".format(port)
         self.send_device_list()
         print "device logging thread for {0} exited".format(port)
