@@ -297,8 +297,7 @@ static int clear_wifi_ssid(void)
     memset(g_netmgr_cxt.ap_config.pwd, 0, sizeof(g_netmgr_cxt.ap_config.pwd));
 
     memset(&g_netmgr_cxt.saved_conf, 0, sizeof(wifi_conf_t));
-    ret = aos_kv_set(NETMGR_WIFI_KEY, (unsigned char *)(&g_netmgr_cxt.saved_conf),
-                     sizeof(wifi_conf_t), 1);
+    ret = aos_kv_del(NETMGR_WIFI_KEY); // use kv_del instead of kv_set in case kv is full
 
     return ret;
 }
