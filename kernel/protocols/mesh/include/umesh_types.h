@@ -151,6 +151,7 @@ typedef ur_error_t (* adapter_interface_up_t)(void);
 typedef ur_error_t (* adapter_interface_down_t)(void);
 typedef ur_error_t (* adapter_interface_update_t)(void);
 typedef struct ur_adapter_callback_s {
+    slist_t next;
     adapter_input_t input;
     adapter_interface_up_t interface_up;
     adapter_interface_down_t interface_down;

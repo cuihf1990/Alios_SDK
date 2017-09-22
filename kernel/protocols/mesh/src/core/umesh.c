@@ -30,12 +30,12 @@ typedef struct transmit_frame_s {
 } transmit_frame_t;
 
 typedef struct urmesh_state_s {
-    mm_cb_t                mm_cb;
+    mm_cb_t mm_cb;
     ur_netif_ip6_address_t ucast_address[IP6_UCAST_ADDR_NUM];
     ur_netif_ip6_address_t mcast_address[IP6_MCAST_ADDR_NUM];
-    ur_adapter_callback_t  *adapter_callback;
-    bool                   initialized;
-    bool                   started;
+    slist_t adapter_callback;
+    bool initialized;
+    bool started;
 } urmesh_state_t;
 
 static urmesh_state_t g_um_state = {.initialized = false , .started = false};
@@ -86,10 +86,13 @@ static void update_ipaddr(void)
 
 static ur_error_t umesh_interface_up(void)
 {
+    ur_adapter_callback_t *callback;
+
     update_ipaddr();
 
-    if (g_um_state.adapter_callback) {
-        g_um_state.adapter_callback->interface_up();
+    slist_for_each_entry(&g_um_state.adapter_callback, callback,
+                         ur_adapter_callback_t, next) {
+        callback->interface_up();
     }
 
     aos_post_event(EV_MESH, CODE_MESH_CONNECTED, 0);
@@ -100,10 +103,15 @@ static ur_error_t umesh_interface_up(void)
 
 static ur_error_t umesh_interface_down(void)
 {
-    if (g_um_state.adapter_callback) {
-        g_um_state.adapter_callback->interface_down();
+    ur_adapter_callback_t *callback;
+
+    slist_for_each_entry(&g_um_state.adapter_callback, callback,
+                         ur_adapter_callback_t, next) {
+        callback->interface_down();
     }
+
     aos_post_event(EV_MESH, CODE_MESH_DISCONNECTED, 0);
+    MESH_LOG_DEBUG("mesh interface up");
     return UR_ERROR_NONE;
 }
 
@@ -315,6 +323,7 @@ ur_error_t umesh_input(message_t *message)
     uint16_t lowpan_header_size;
     message_info_t *info;
     message_t *message_header;
+    ur_adapter_callback_t *callback;
 
     header = ur_mem_alloc(UR_IP6_HLEN + UR_UDP_HLEN);
     if (header == NULL) {
@@ -347,8 +356,9 @@ ur_error_t umesh_input(message_t *message)
     message = message_header;
 
 handle_non_ipv6:
-    if (g_um_state.adapter_callback) {
-        g_um_state.adapter_callback->input(message->data);
+    slist_for_each_entry(&g_um_state.adapter_callback, callback,
+                         ur_adapter_callback_t, next) {
+        callback->input(message->data);
     }
 
 exit:
@@ -357,8 +367,9 @@ exit:
     ur_mem_free(header, UR_IP6_HLEN + UR_UDP_HLEN);
     return error;
 #else
-    if (g_um_state.adapter_callback) {
-        g_um_state.adapter_callback->input(message->data);
+    slist_for_each_entry(&g_um_state.adapter_callback, callback,
+                         ur_adapter_callback_t, next) {
+        callback->input(message->data);
     }
     message_free((message_t *)message);
     return UR_ERROR_NONE;
@@ -497,7 +508,7 @@ uint8_t umesh_get_device_state(void)
 
 ur_error_t umesh_register_callback(ur_adapter_callback_t *callback)
 {
-    g_um_state.adapter_callback = callback;
+    slist_add(&callback->next, &g_um_state.adapter_callback);
     return UR_ERROR_NONE;
 }
 
