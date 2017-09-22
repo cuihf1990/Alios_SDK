@@ -21,7 +21,10 @@
 #define EXIT_MSG  "exit"
 #define CLI_TAG   "\e[63m"  /* CLI TAG, use ESC characters, c(cli) ascii is 63 */
 
-#define DEBUG 1
+#ifdef CONFIG_NET_LWIP
+#include "lwip/ip_addr.h"
+#include "lwip/apps/tftp.h"
+#endif /* CONFIG_NET_LWIP */
 
 static struct cli_st *cli = NULL;
 static int            cliexit = 0;
@@ -443,6 +446,9 @@ static void reboot_cmd(char *buf, int len, int argc, char **argv);
 static void uptime_cmd(char *buf, int len, int argc, char **argv);
 static void ota_cmd(char *buf, int len, int argc, char **argv);
 static void wifi_debug_cmd(char *buf, int len, int argc, char **argv);
+#ifdef CONFIG_NET_LWIP
+static void tftp_cmd(char *buf, int len, int argc, char **argv);
+#endif /* CONFIG_NET_LWIP */
 static void udp_cmd(char *buf, int len, int argc, char **argv);
 
 static const struct cli_command built_ins[] = {
@@ -456,6 +462,9 @@ static const struct cli_command built_ins[] = {
 
     /* net */
 #ifndef CONFIG_NO_TCPIP
+#ifdef CONFIG_NET_LWIP
+    {"tftp",        "tftp server/client control", tftp_cmd},
+#endif /* CONFIG_NET_LWIP */
     {"udp",         "[ip] [port] [string data] send udp data", udp_cmd},
 #endif
 
@@ -567,6 +576,46 @@ static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
     dumpsys_func(buf, len, argc, argv);
 #endif
 }
+
+#ifdef CONFIG_NET_LWIP
+static void tftp_get_done(int error, int len)
+{
+    if (error == 0) {
+        aos_cli_printf("tftp client get done, %d bytes reveived\r\n", len);
+    } else {
+        aos_cli_printf("tftp client get failed\r\n");
+    }
+}
+
+static void tftp_cmd(char *buf, int len, int argc, char **argv)
+{
+    if (argc != 3)
+        goto tftp_print_usage;
+
+    if (strncmp(argv[1], "server", 6) == 0) {
+        if (strncmp(argv[2], "start", 5) == 0) {
+            err_t err = tftp_server_start();
+            aos_cli_printf("tftp start server %s\r\n", err == ERR_OK ? "done" : "failed");
+            return;
+        } else if (strncmp(argv[2], "stop", 4) == 0) {
+            tftp_server_stop();
+            aos_cli_printf("tftp stop server done\r\n");
+            return;
+        }
+        goto tftp_print_usage;
+    } else if (strncmp(argv[1], "get", 3) == 0) {
+        ip_addr_t dst_addr;
+        uint8_t   gw_ip[4] = {10, 0 , 0, 2};
+        memcpy(&dst_addr, gw_ip, 4);
+        tftp_client_get(&dst_addr, argv[1], tftp_get_done);
+        return;
+    }
+
+tftp_print_usage:
+    aos_cli_printf("Usage: tftp server start/stop\r\n");
+    aos_cli_printf("       tftp get path/to/file\r\n");
+}
+#endif /* CONFIG_NET_LWIP */
 
 static void reboot_cmd(char *buf, int len, int argc, char **argv)
 {

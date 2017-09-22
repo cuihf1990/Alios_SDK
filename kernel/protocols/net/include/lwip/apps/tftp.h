@@ -107,10 +107,9 @@ typedef struct tftp_context_s {
 
 typedef void (*tftp_done_cb)(int err, int length);
 
-err_t tftp_server_init(const tftp_context_t *ctx);
-void  tftp_server_deinit(void);
-int   tftp_client_get(const ip_addr_t *paddr, const char *fname,
-                      const tftp_context_t *ctx, tftp_done_cb cb);
+err_t tftp_server_start(void);
+void  tftp_server_stop(void);
+int   tftp_client_get(const ip_addr_t *paddr, const char *fname, tftp_done_cb cb);
 
 #ifdef __cplusplus
 }
