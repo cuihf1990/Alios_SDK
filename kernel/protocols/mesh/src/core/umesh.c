@@ -391,7 +391,9 @@ static void parse_args(void)
         }
 
         if (strcmp(argv[i], "--mesh-log") == 0) {
+#ifdef CONFIG_AOS_MESH_DEBUG
             ur_log_set_level(str2lvl(argv[i + 1]));
+#endif
 
             i += 1;
             continue;

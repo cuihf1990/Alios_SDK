@@ -165,7 +165,9 @@ MDNSFILES=apps/mdns/mdns.c
 NETBIOSNSFILES=apps/netbiosns/netbiosns.c
 
 # TFTPFILES: TFTP server files
-TFTPFILES=apps/tftp/tftp_server.c
+TFTPFILES=apps/tftp/tftp_server.c \
+    apps/tftp/tftp_common.c \
+    apps/tftp/tftp_client.c
 
 # LWIPAPPFILES: All LWIP APPs
 LWIPAPPFILES=$(SNMPFILES) \

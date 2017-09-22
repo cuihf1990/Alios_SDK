@@ -12,6 +12,7 @@
 
 #include <aos/aos.h>
 #include <lwip/sockets.h>
+#include <lwip/apps/tftp.h>
 #include "umesh.h"
 #include "cJSON.h"
 #include "devmgr.h"
@@ -779,6 +780,27 @@ static struct cli_command gatewaycmd = {
     .function = handle_gateway_cmd
 };
 
+extern const tftp_context_t client_ctx;
+static void handle_tftp_get_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    if (argc == 1) {
+        LOG("Usage: tftpget path/to/file");
+        return;
+    }
+
+    ip_addr_t dst_addr;
+    uint8_t   gw_ip[4] = {10, 0 , 0, 2};
+    memcpy(&dst_addr, gw_ip, 4);
+    tftp_client_get(&dst_addr, argv[1], &client_ctx, NULL);
+}
+
+static struct cli_command tftpgetcmd = {
+    .name = "tftpget",
+    .help = "tftpget path/to/file",
+    .function = handle_tftp_get_cmd
+};
+
+void gateway_fota_init(void);
 int gateway_service_init(void)
 {
     gateway_state_t *pstate = &gateway_state;
@@ -794,6 +816,7 @@ int gateway_service_init(void)
     pstate->login = false;
     dlist_init(&gateway_state.clients);
     aos_cli_register_command(&gatewaycmd);
+    aos_cli_register_command(&tftpgetcmd);
     aos_register_event_filter(EV_YUNIO, gateway_service_event, NULL);
     aos_register_event_filter(EV_MESH, gateway_service_event, NULL);
 #ifdef GATEWAY_WORKER_THREAD
@@ -838,6 +861,7 @@ static int init_socket(void)
 #ifndef GATEWAY_WORKER_THREAD
         aos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
         close(pstate->sockfd);
+
 #endif
         pstate->sockfd = -1;
     }
@@ -909,6 +933,9 @@ int gateway_service_start(void)
         aos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
     }
 
+    if (umesh_get_device_state() == DEVICE_STATE_LEADER)
+        gateway_tftp_server_start();
+
     return 0;
 }
 
@@ -923,6 +950,7 @@ void gateway_service_stop(void)
 #endif
     gateway_state.sockfd = -1;
     gateway_state.mqtt_connected = false;
+    gateway_tftp_server_stop();
     while (!dlist_empty(&gateway_state.clients)) {
         client = dlist_first_entry(&gateway_state.clients, client_t, next);
         dlist_del(&client->next);

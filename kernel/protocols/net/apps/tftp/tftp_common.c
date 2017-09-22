@@ -1,10 +1,11 @@
 /****************************************************************//**
  *
- * @file tftp_opts.h
+ * @file tftp_common.c
  *
  * @author   Logan Gunthorpe <logang@deltatee.com>
+ *           Dirk Ziegelmeier <dziegel@gmx.de>
  *
- * @brief    Trivial File Transfer Protocol (RFC 1350) implementation options
+ * @brief    Trivial File Transfer Protocol (RFC 1350)
  *
  * Copyright (c) Deltatee Enterprises Ltd. 2013
  * All rights reserved.
@@ -35,71 +36,61 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Author: Logan Gunthorpe <logang@deltatee.com>
+ *         Dirk Ziegelmeier <dziegel@gmx.de>
  *
  */
 
-#ifndef LWIP_HDR_APPS_TFTP_OPTS_H
-#define LWIP_HDR_APPS_TFTP_OPTS_H
-
-#include "lwip/opt.h"
-
 /**
- * @defgroup tftp_opts Options
- * @ingroup tftp
- * @{
+ * @defgroup tftp TFTP server
+ * @ingroup apps
+ *
+ * This is simple TFTP server for the lwIP raw API.
  */
 
-/**
- * Enable TFTP debug messages
- */
-#if !defined TFTP_DEBUG || defined __DOXYGEN__
-#define TFTP_DEBUG            LWIP_DBG_ON
-#endif
 
-/**
- * TFTP server port
- */
-#if !defined TFTP_PORT || defined __DOXYGEN__
-#define TFTP_PORT             69
-#endif
+#include "lwip/udp.h"
+#include "lwip/timeouts.h"
+#include "lwip/debug.h"
+#include "lwip/apps/tftp.h"
 
-/**
- * TFTP timeout
- */
-#if !defined TFTP_TIMEOUT_MSECS || defined __DOXYGEN__
-#define TFTP_TIMEOUT_MSECS    10000
-#endif
+#include <string.h>
 
-/**
- * Max. number of retries when a file is read from server
- */
-#if !defined TFTP_MAX_RETRIES || defined __DOXYGEN__
-#define TFTP_MAX_RETRIES      5
-#endif
+void
+tftp_send_error(struct udp_pcb *pcb, const ip_addr_t *addr, u16_t port,
+                tftp_error_t code, const char *str)
+{
+  int str_length = strlen(str);
+  struct pbuf* p;
+  u16_t* payload;
 
-/**
- * TFTP timer cyclic interval
- */
-#if !defined TFTP_TIMER_MSECS || defined __DOXYGEN__
-#define TFTP_TIMER_MSECS      50
-#endif
+  p = pbuf_alloc(PBUF_TRANSPORT, (u16_t)(TFTP_HEADER_LENGTH + str_length + 1), PBUF_RAM);
+  if(p == NULL) {
+    return;
+  }
 
-/**
- * Max. length of TFTP filename
- */
-#if !defined TFTP_MAX_FILENAME_LEN || defined __DOXYGEN__
-#define TFTP_MAX_FILENAME_LEN 20
-#endif
+  payload = (u16_t*) p->payload;
+  payload[0] = PP_HTONS(TFTP_ERROR);
+  payload[1] = lwip_htons(code);
+  MEMCPY(&payload[2], str, str_length + 1);
 
-/**
- * Max. length of TFTP mode
- */
-#if !defined TFTP_MAX_MODE_LEN || defined __DOXYGEN__
-#define TFTP_MAX_MODE_LEN     10
-#endif
+  udp_sendto(pcb, p, addr, port);
+  pbuf_free(p);
+}
 
-/**
- * @}
- */
+void
+tftp_send_ack(struct udp_pcb *pcb, const ip_addr_t *addr, u16_t port, u16_t blknum)
+{
+  struct pbuf* p;
+  u16_t* payload;
 
-#endif /* LWIP_HDR_APPS_TFTP_OPTS_H */
+  p = pbuf_alloc(PBUF_TRANSPORT, TFTP_HEADER_LENGTH, PBUF_RAM);
+  if(p == NULL) {
+    return;
+  }
+  payload = (u16_t*) p->payload;
+
+  payload[0] = PP_HTONS(TFTP_ACK);
+  payload[1] = lwip_htons(blknum);
+  udp_sendto(pcb, p, addr, port);
+  pbuf_free(p);
+}

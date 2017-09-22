@@ -1,6 +1,6 @@
 /****************************************************************//**
  *
- * @file tftp_server.h
+ * @file tftp.h
  *
  * @author   Logan Gunthorpe <logang@deltatee.com>
  *
@@ -11,7 +11,7 @@
  *
  ********************************************************************/
 
-/* 
+/*
  * Redistribution and use in source and binary forms, with or without
  * modification,are permitted provided that the following conditions are met:
  *
@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef LWIP_HDR_APPS_TFTP_SERVER_H
-#define LWIP_HDR_APPS_TFTP_SERVER_H
+#ifndef LWIP_HDR_APPS_TFTP_H
+#define LWIP_HDR_APPS_TFTP_H
 
 #include "lwip/apps/tftp_opts.h"
 #include "lwip/err.h"
@@ -52,7 +52,27 @@ extern "C" {
 /** @ingroup tftp
  * TFTP context containing callback functions for TFTP transfers
  */
-struct tftp_context {
+
+#define TFTP_MAX_PAYLOAD_SIZE 512
+#define TFTP_HEADER_LENGTH    4
+
+#define TFTP_RRQ   1
+#define TFTP_WRQ   2
+#define TFTP_DATA  3
+#define TFTP_ACK   4
+#define TFTP_ERROR 5
+
+typedef enum tftp_error_s {
+  TFTP_ERROR_FILE_NOT_FOUND    = 1,
+  TFTP_ERROR_ACCESS_VIOLATION  = 2,
+  TFTP_ERROR_DISK_FULL         = 3,
+  TFTP_ERROR_ILLEGAL_OPERATION = 4,
+  TFTP_ERROR_UNKNOWN_TRFR_ID   = 5,
+  TFTP_ERROR_FILE_EXISTS       = 6,
+  TFTP_ERROR_NO_SUCH_USER      = 7
+} tftp_error_t;
+
+typedef struct tftp_context_s {
   /**
    * Open file for read/write.
    * @param fname Filename
@@ -67,7 +87,7 @@ struct tftp_context {
    */
   void (*close)(void* handle);
   /**
-   * Read from file 
+   * Read from file
    * @param handle File handle returned by open()
    * @param buf Target buffer to copy read data to
    * @param bytes Number of bytes to copy to buf
@@ -83,12 +103,17 @@ struct tftp_context {
    * @returns &gt;= 0: Success; &lt; 0: Error
    */
   int (*write)(void* handle, struct pbuf* p);
-};
+} tftp_context_t;
 
-err_t tftp_init(const struct tftp_context* ctx);
+typedef void (*tftp_done_cb)(int err, int length);
+
+err_t tftp_server_init(const tftp_context_t *ctx);
+void  tftp_server_deinit(void);
+int   tftp_client_get(const ip_addr_t *paddr, const char *fname,
+                      const tftp_context_t *ctx, tftp_done_cb cb);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LWIP_HDR_APPS_TFTP_SERVER_H */
+#endif /* LWIP_HDR_APPS_TFTP_H */
