@@ -218,7 +218,8 @@ int alink_factory_reset(void)
         }
     }
 
-    config_reset(unregister_flag);
+    // kv_set may fail, delete it directly
+    aos_kv_del("alink");
 
     os_sys_reboot();
     LOGI(MODULE_NAME, "waiting sys reboot ...");
