@@ -2,6 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
+#include <string.h>
+
 #include "umesh_utils.h"
 #include "core/mesh_mgmt_tlvs.h"
 #include "core/mesh_mgmt.h"

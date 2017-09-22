@@ -256,6 +256,7 @@ typedef struct autotest_cmd_s {
     ur_ip6_addr_t addr;
 }  __attribute__((packed)) autotest_cmd_t;
 
+#ifdef CONFIG_NET_LWIP
 static void handle_autotest_print_timer(void *args)
 {
     autotest_acked_t *acked;
@@ -328,6 +329,7 @@ static void handle_autotest_timer(void *args)
     }
 #endif
 }
+#endif
 
 void process_autotest(int argc, char *argv[])
 {
@@ -541,6 +543,7 @@ void process_mode(int argc, char *argv[])
     response_append("\r\n");
 }
 
+#ifdef CONFIG_NET_LWIP
 static bool update_autotest_acked_info(uint16_t subnetid, uint16_t sid,
                                        uint16_t seq)
 {
@@ -658,6 +661,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
     }
 #endif
 }
+#endif
 
 void process_prefix(int argc, char *argv[])
 {
@@ -1399,6 +1403,7 @@ static void mesh_worker(void *arg)
 int g_cli_silent;
 ur_error_t mesh_cli_init(void)
 {
+#ifdef CONFIG_NET_LWIP
     g_cl_state.icmp_socket = echo_socket(&cli_handle_echo_response);
 #ifdef CONFIG_AOS_MESH_DEBUG
     slist_init(&g_cli_autotest.acked_list);
@@ -1406,7 +1411,6 @@ ur_error_t mesh_cli_init(void)
                                                     AUTOTEST_UDP_PORT);
 #endif
 
-#ifdef CONFIG_NET_LWIP
 #ifndef WITH_LWIP
     aos_task_new("meshworker", mesh_worker, NULL, 8192);
 #endif
