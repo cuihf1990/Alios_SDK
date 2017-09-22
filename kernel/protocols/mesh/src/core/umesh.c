@@ -24,9 +24,16 @@
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 
+enum {
+    TRANSMIT_RAW_FRAME = 0,
+    TRANSMIT_IP6_FRAME = 1,
+    TRANSMIT_IP4_FRAME = 2,
+};
+
 typedef struct transmit_frame_s {
     struct pbuf *buf;
-    ur_ip6_addr_t dest;
+    ur_addr_t dest;
+    uint8_t type;
 } transmit_frame_t;
 
 typedef struct urmesh_state_s {
@@ -130,106 +137,6 @@ static inline bool is_sid_address(const uint8_t *addr)
     return false;
 }
 
-static void output_message(message_t *message, ur_ip6_addr_t *dest)
-{
-    ur_error_t error = UR_ERROR_NONE;
-    message_info_t *info;
-    network_context_t *network;
-
-    info = message->info;
-    if ((ur_is_mcast(dest)) && (nd_is_subscribed_mcast(dest))) {
-        info->dest.addr.len = SHORT_ADDR_SIZE;
-        info->dest.addr.short_addr = BCAST_SID;
-        network = get_default_network_context();
-        info->dest.netid = mm_get_main_netid(network);
-    } else if (ur_is_unique_local(dest)) {
-        if (is_sid_address(&dest->m8[8]) == false) {
-            info->dest.addr.len = EXT_ADDR_SIZE;
-            memcpy(info->dest.addr.addr, &dest->m8[8], sizeof(info->dest.addr.addr));
-        } else {
-            info->dest.addr.len = SHORT_ADDR_SIZE;
-            info->dest.addr.short_addr = ntohs(dest->m16[7]);
-            info->dest.netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
-        }
-    } else {
-        error = UR_ERROR_DROP;
-        goto exit;
-    }
-
-    info->type = MESH_FRAME_TYPE_DATA;
-    info->flags = 0;
-
-    error = address_resolve(message);
-    if (error == UR_ERROR_NONE) {
-        mf_send_message(message);
-    }
-
-exit:
-    if (error == UR_ERROR_DROP) {
-        message_free(message);
-    }
-}
-
-static void output_ipv4_frame_handler(void *args)
-{
-    transmit_frame_t *frame = (transmit_frame_t *)args;
-    struct pbuf *buf = frame->buf;
-    message_t *message;
-    message_info_t *info;
-    uint16_t sid = frame->dest.m16[7];
-    uint8_t append_length;
-
-    append_length = sizeof(mcast_header_t) + 1;
-    message = message_alloc(buf->tot_len + append_length, UMESH_1);
-    if (message == NULL) {
-        goto out;
-    }
-    message_set_payload_offset(message, -append_length);
-    pbuf_copy(message->data, buf);
-
-    info = message->info;
-    info->dest.addr.len = SHORT_ADDR_SIZE;
-    info->dest.addr.short_addr = sid;
-    info->dest.netid = umesh_mm_get_meshnetid(NULL);
-    info->type = MESH_FRAME_TYPE_DATA;
-    if (sid == BCAST_SID) {
-        info->flags |= INSERT_MCAST_FLAG;
-    }
-
-    mf_send_message(message);
-
-out:
-    ur_mem_free(frame, sizeof(*frame));
-    pbuf_free(buf);
-}
-
-ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid)
-{
-    transmit_frame_t *frame;
-    ur_error_t error = UR_ERROR_NONE;
-
-    if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
-        return UR_ERROR_FAIL;
-    }
-
-    frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
-    if (frame == NULL) {
-        return UR_ERROR_FAIL;
-    }
-
-    frame->dest.m16[7] = sid;
-    pbuf_ref(buf);
-    frame->buf = buf;
-
-    error = umesh_task_schedule_call(output_ipv4_frame_handler, frame);
-    if (error != UR_ERROR_NONE) {
-        ur_mem_free(frame, sizeof(transmit_frame_t));
-        pbuf_free(frame->buf);
-    }
-
-    return error;
-}
-
 #define dump_data(p, sz) do { \
     uint16_t *p16 = (uint16_t *)(p); \
     int i; \
@@ -251,35 +158,53 @@ static void output_frame_handler(void *args)
     ur_error_t error = UR_ERROR_NONE;
     uint16_t ip_hdr_len;
     uint16_t lowpan_hdr_len;
-    uint8_t *ip_payload;
-    uint8_t *lowpan_payload;
-
-    ip_payload = ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);
-    if (ip_payload == NULL) {
-        error = UR_ERROR_MEM;
-        goto out;
-    }
-
-    pbuf_copy_partial(buf, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN, 0);
-    lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
-    error = lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
-    if (error != UR_ERROR_NONE) {
-        goto out;
-    }
+    uint8_t *ip_payload = NULL;
+    uint8_t *lowpan_payload = NULL;
+    message_info_t *info;
+    uint16_t frame_len;
 
     append_length = sizeof(mcast_header_t) + 1;
-    message = message_alloc(lowpan_hdr_len + append_length, UMESH_1);
+    frame_len = buf->tot_len + append_length;
+    if (frame->type == TRANSMIT_IP6_FRAME) {
+        ip_payload = ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);
+        if (ip_payload == NULL) {
+            error = UR_ERROR_MEM;
+            goto out;
+        }
+        pbuf_copy_partial(buf, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN, 0);
+        lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
+        error = lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
+        if (error != UR_ERROR_NONE) {
+            goto out;
+        }
+        frame_len = lowpan_hdr_len + append_length;
+    }
+
+    message = message_alloc(frame_len, UMESH_1);
     if (message == NULL) {
         error = UR_ERROR_FAIL;
         goto out;
     }
-
-    pbuf_header(buf, -ip_hdr_len);
-    pbuf_chain(message->data, buf);
-
     message_set_payload_offset(message, -append_length);
-    message_copy_from(message, lowpan_payload, lowpan_hdr_len);
-    output_message(message, &frame->dest);
+    if (lowpan_payload) {
+        pbuf_header(buf, -ip_hdr_len);
+        pbuf_chain(message->data, buf);
+        message_copy_from(message, lowpan_payload, lowpan_hdr_len);
+    } else {
+        pbuf_copy(message->data, buf);
+    }
+
+    info = message->info;
+    memcpy(&info->dest, &frame->dest, sizeof(frame->dest));
+    info->type = MESH_FRAME_TYPE_DATA;
+    info->flags = 0;
+
+    error = address_resolve(message);
+    if (error == UR_ERROR_NONE) {
+        mf_send_message(message);
+    } else if (error == UR_ERROR_DROP) {
+        message_free(message);
+    }
 
 out:
     ur_mem_free(ip_payload, (UR_IP6_HLEN + UR_UDP_HLEN) * 2);
@@ -287,7 +212,7 @@ out:
     pbuf_free(buf);
 }
 
-ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
+ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid)
 {
     transmit_frame_t *frame;
     ur_error_t error = UR_ERROR_NONE;
@@ -301,9 +226,59 @@ ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
         return UR_ERROR_FAIL;
     }
 
-    memcpy(&frame->dest, dest, sizeof(frame->dest));
+    frame->dest.addr.len = SHORT_ADDR_SIZE;
+    frame->dest.addr.short_addr = sid;
+    frame->dest.netid = umesh_mm_get_meshnetid(NULL);
     pbuf_ref(buf);
     frame->buf = buf;
+    frame->type = TRANSMIT_IP4_FRAME;
+
+    error = umesh_task_schedule_call(output_frame_handler, frame);
+    if (error != UR_ERROR_NONE) {
+        ur_mem_free(frame, sizeof(transmit_frame_t));
+        pbuf_free(frame->buf);
+    }
+
+    return error;
+}
+
+ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
+{
+    transmit_frame_t *frame;
+    ur_error_t error = UR_ERROR_NONE;
+    network_context_t *network;
+
+    if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
+        return UR_ERROR_FAIL;
+    }
+
+    frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
+    if (frame == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    if ((ur_is_mcast(dest)) && (nd_is_subscribed_mcast(dest))) {
+        frame->dest.addr.len = SHORT_ADDR_SIZE;
+        frame->dest.addr.short_addr = BCAST_SID;
+        network = get_default_network_context();
+        frame->dest.netid = mm_get_main_netid(network);
+    } else if (ur_is_unique_local(dest)) {
+        if (is_sid_address(&dest->m8[8]) == false) {
+            frame->dest.addr.len = EXT_ADDR_SIZE;
+            memcpy(frame->dest.addr.addr, &dest->m8[8], sizeof(frame->dest.addr.addr));
+        } else {
+            frame->dest.addr.len = SHORT_ADDR_SIZE;
+            frame->dest.addr.short_addr = ntohs(dest->m16[7]);
+            frame->dest.netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
+        }
+    } else {
+        ur_mem_free(frame, sizeof(transmit_frame_t));
+        return UR_ERROR_FAIL;
+    }
+
+    pbuf_ref(buf);
+    frame->buf = buf;
+    frame->type = TRANSMIT_IP6_FRAME;
 
     error = umesh_task_schedule_call(output_frame_handler, frame);
     if (error != UR_ERROR_NONE) {
