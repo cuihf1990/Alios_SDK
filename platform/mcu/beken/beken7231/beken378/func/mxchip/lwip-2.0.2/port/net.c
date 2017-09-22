@@ -34,7 +34,7 @@ struct ipv4_config sta_ip_settings;
 struct ipv4_config uap_ip_settings;
 void *net_get_sta_handle(void);
 void *net_get_uap_handle(void);
-static int up_iface;
+static int up_iface = 1;
 uint32_t sta_ip_start_flag = 0;
 
 #ifdef CONFIG_IPV6
@@ -459,10 +459,13 @@ void ip_address_set(int iface, int dhcp, char *ip, char *mask, char*gw, char*dns
 	    tmp = inet_addr((char*)dns);
 	    addr.dns1 = (tmp);
 	}
-	if (iface == 1) // Station
+	if (iface == 1) {// Station
+	    up_iface = 1;
 		memcpy(&sta_ip_settings, &addr, sizeof(addr));
-	else
-		memcpy(&uap_ip_settings, &addr, sizeof(addr));
+	} else {
+        up_iface = 0;
+        memcpy(&uap_ip_settings, &addr, sizeof(addr));
+    }
 }
 
 int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
@@ -534,12 +537,10 @@ int net_configure_address(struct ipv4_config *addr, void *intrfc_handle)
 		 * address has been obtained, another event,
 		 * WD_EVENT_NET_DHCP_CONFIG, should be sent to the wlcmgr.
 		 */
-		 up_iface = 1;
 	} else {
 #ifdef CONFIG_SOFTAP 	
 		// softap IP up, start dhcp server;
 		dhcp_server_start(net_get_uap_handle());
-		up_iface = 0;
 #endif  
 	}
 
