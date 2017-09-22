@@ -70,21 +70,21 @@ static void recv(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_
             blknum = PP_NTOHS(sbuf[1]);
             blklen = p->tot_len - TFTP_HEADER_LENGTH;
             if (blknum < tftp_state.seqno) {
-                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "revived repeated block\n");
+                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("revived repeated block\n"));
                 tftp_send_ack(pstate->upcb, &pstate->addr, port, blknum);
                 sys_timeout(TFTP_TIMER_MSECS, tftp_tmr, NULL);
                 break;
             }
 
             if (blknum > tftp_state.seqno) {
-                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "revived error block \n");
+                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("revived error block \n"));
                 tftp_send_error(pstate->upcb, addr, port,
                         TFTP_ERROR_ILLEGAL_OPERATION, "seqno error");
                 close_handle(-1);
                 break;
             }
 
-            LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "revived new block \n");
+            LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("revived new block \n"));
             pbuf_header(p, -TFTP_HEADER_LENGTH);
             int wlen = pstate->ctx->write(pstate->handle, p);
             if (wlen != blklen) {
@@ -98,14 +98,14 @@ static void recv(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_
             tftp_send_ack(pstate->upcb, &pstate->addr, port, blknum);
 
             if (blklen < 512) {
-                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "receive file finished\n");
+                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("receive file finished\n"));
                 close_handle(0);
                 break;
             }
             sys_timeout(TFTP_TIMER_MSECS, tftp_tmr, NULL);
             break;
         case TFTP_ERROR:
-            LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "sever return error\n");
+            LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("sever return error\n"));
             close_handle(-1);
             break;
         default:
@@ -120,13 +120,13 @@ int tftp_client_get(const ip_addr_t *paddr, const char *fname,
     err_t ret;
 
     if (ctx == NULL) {
-        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "error: ctx==NULL\n");
+        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("error: ctx==NULL\n"));
         return -1;
     }
 
     tftp_state.handle = ctx->open(fname, "netascii", 1);
     if (tftp_state.handle == NULL) {
-        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "error: open file failed\n");
+        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("error: open file failed\n"));
         return -1;
     }
 
@@ -138,7 +138,7 @@ int tftp_client_get(const ip_addr_t *paddr, const char *fname,
     uint16_t port = rand() % 16384 + 49152;
     ret = udp_bind(pcb, IP4_ADDR_ANY, port);
     if (ret != ERR_OK) {
-        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "error: bind to port failed\n");
+        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("error: bind to port failed\n"));
         udp_remove(pcb);
         return ret;
     }
@@ -147,7 +147,7 @@ int tftp_client_get(const ip_addr_t *paddr, const char *fname,
     int pkt_len = 4 + strlen("netascii") + strlen(fname);
     struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, pkt_len, PBUF_RAM);
     if (p == NULL) {
-        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "error: alloc pbuf failed\n");
+        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("error: alloc pbuf failed\n"));
         udp_remove(pcb);
         return ERR_MEM;
     }
@@ -160,7 +160,7 @@ int tftp_client_get(const ip_addr_t *paddr, const char *fname,
     memcpy(&payload[3 + strlen(fname)], "netascii", strlen("netascii"));
     ret = udp_sendto(pcb, p, paddr, TFTP_PORT);
     if (ret != ERR_OK) {
-        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DGB_STATE, "error: send RRQ to server failed\n");
+        LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("error: send RRQ to server failed\n"));
         pbuf_free(p);
         udp_remove(pcb);
         return ERR_MEM;
