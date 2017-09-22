@@ -18,13 +18,13 @@ struct message_s;
 ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid);
 ur_error_t umesh_ipv6_output(struct pbuf *buf,
                              const ur_ip6_addr_t *ip6addr);
-ur_error_t umesh_register_callback(ur_adapter_callback_t *callback);
 
 /* for mesh layer */
 ur_error_t umesh_init(node_mode_t mode);
 ur_error_t umesh_start(void);
 bool       umesh_is_initialized(void);
 ur_error_t umesh_stop(void);
+ur_error_t umesh_register_callback(ur_adapter_callback_t *callback);
 
 /* per device API */
 uint8_t umesh_get_device_state(void);
