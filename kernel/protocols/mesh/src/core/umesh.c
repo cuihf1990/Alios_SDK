@@ -316,6 +316,7 @@ ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
 
 ur_error_t umesh_input(message_t *message)
 {
+    ur_adapter_callback_t *callback;
 #if LWIP_IPV6
     ur_error_t error = UR_ERROR_NONE;
     uint8_t *header;
@@ -323,7 +324,6 @@ ur_error_t umesh_input(message_t *message)
     uint16_t lowpan_header_size;
     message_info_t *info;
     message_t *message_header;
-    ur_adapter_callback_t *callback;
 
     header = ur_mem_alloc(UR_IP6_HLEN + UR_UDP_HLEN);
     if (header == NULL) {
