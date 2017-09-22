@@ -53,6 +53,7 @@
 #include "lwip/apps/tftp.h"
 
 #include <string.h>
+#include <stdio.h>
 
 struct tftp_state {
   const tftp_context_t *ctx;
@@ -337,12 +338,52 @@ tftp_tmr(void* arg)
   }
 }
 
+static void* tftp_fopen(const char* fname, const char* mode, u8_t write)
+{
+    FILE *fp = NULL;
+
+    if (strncmp(mode, "netascii", 8) == 0) {
+        fp = fopen(fname, write == 0 ? "r" : "w");
+    } else if (strncmp(mode, "octet", 5) == 0) {
+        fp = fopen(fname, write == 0 ? "rb" : "wb");
+    }
+    return (void*)fp;
+}
+
+static void tftp_fclose(void* handle)
+{
+    fclose((FILE*)handle);
+}
+
+static int tftp_fread(void* handle, void* buf, int bytes)
+{
+    size_t readbytes;
+    readbytes = fread(buf, 1, (size_t)bytes, (FILE*)handle);
+    return (int)readbytes;
+}
+
+static int tftp_fwrite(void* handle, struct pbuf* p)
+{
+    char buff[512];
+    size_t writebytes = -1;
+    pbuf_copy_partial(p, buff, p->tot_len, 0);
+    writebytes = fwrite(buff, 1, p->tot_len, (FILE *)handle);
+    return (int)writebytes;
+}
+
+const tftp_context_t server_ctx = {
+    .open = tftp_fopen,
+    .close = tftp_fclose,
+    .read = tftp_fread,
+    .write = tftp_fwrite
+};
+
 /** @ingroup tftp
  * Initialize TFTP server.
  * @param ctx TFTP callback struct
  */
 err_t
-tftp_server_init(const tftp_context_t *ctx)
+tftp_server_start(void)
 {
   err_t ret;
 
@@ -362,7 +403,7 @@ tftp_server_init(const tftp_context_t *ctx)
 
   tftp_state.handle    = NULL;
   tftp_state.port      = 0;
-  tftp_state.ctx       = ctx;
+  tftp_state.ctx       = &server_ctx;
   tftp_state.timer     = 0;
   tftp_state.last_data = NULL;
   tftp_state.upcb      = pcb;
@@ -372,7 +413,7 @@ tftp_server_init(const tftp_context_t *ctx)
 }
 
 void
-tftp_server_deinit(void)
+tftp_server_stop(void)
 {
     if (tftp_state.handle)
         close_handle();

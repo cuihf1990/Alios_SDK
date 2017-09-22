@@ -7,4 +7,3 @@ $(NAME)_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno
 
 GLOBAL_INCLUDES += include
 GLOBAL_DEFINES  += HAVE_NOT_ADVANCED_FORMATE CONFIG_AOS_CLI
-
