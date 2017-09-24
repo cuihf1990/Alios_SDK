@@ -320,7 +320,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
             nbr->ssid_info.free_slots = ssid_info->free_slots;
         }
 
-        if (nbr->flags & (NBR_SID_CHANGED | NBR_NETID_CHANGED)) {
+        if (network->sid_base && (nbr->flags & (NBR_SID_CHANGED | NBR_NETID_CHANGED))) {
             if (nbr->state == STATE_CHILD ||
                 (!is_direct_child(network->sid_base, info->src.addr.short_addr) &&
                  is_allocated_child(network->sid_base, nbr))) {

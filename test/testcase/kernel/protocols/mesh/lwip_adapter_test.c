@@ -25,7 +25,6 @@ extern void interface_stop(void);
 
 void test_uradar_lwip_adapter_case(void)
 {
-    YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_init());
     YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_update());
     interface_start();
     YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_up());
