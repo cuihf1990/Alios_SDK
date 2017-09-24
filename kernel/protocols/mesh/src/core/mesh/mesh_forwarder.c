@@ -818,7 +818,6 @@ static void message_handler(void *args)
     bool is_check_level = false;
     uint16_t meshnetid;
 
-
     if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
         return;
     }
