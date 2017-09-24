@@ -29,6 +29,7 @@ LINK_OPTS_FILE            := $(OUTPUT_DIR)/binary/link$(UNDERLINE)$(BINSTYPE_LOW
 
 LINT_OPTS_FILE            := $(OUTPUT_DIR)/binary/lint$(UNDERLINE)$(BINSTYPE_LOWER).opts
 
+LDS_FILE_DIR              := $(OUTPUT_DIR)/ld
 
 ifeq (,$(SUB_BUILD))
 ifneq (,$(EXTRA_TARGET_MAKEFILES))
@@ -147,6 +148,14 @@ $(eval LINT_FLAGS +=  $($(1)_LINT_FLAGS) )
 $(eval LINT_FILES +=  $(addprefix $(strip $($(1)_LOCATION)), $(filter %.c, $($(1)_SOURCES))) )
 endef
 
+define PROCESS_LDS_FILE
+$(LDS_FILE_DIR)/$(notdir $(1:.ld.S=.ld)): $(LDS_FILE_DIR)
+	$(ECHO) Making $$@
+	$(QUIET)$(CPP) -P $(AOS_SDK_DEFINES) $(1) -o $$@
+
+$(eval LDS_FILES += $(LDS_FILE_DIR)/$(notdir $(1:.ld.S=.ld)))
+endef
+
 ##################################
 # Processing
 ##################################
@@ -166,6 +175,12 @@ else ifeq (,$(BINS))
 $(foreach comp,$(COMPONENTS),$(eval $(call BUILD_COMPONENT_RULES,$(comp))))
 endif
 
+# handle lds file, lds -> ld
+$(foreach ldsfile,$(AOS_SDK_LDS_FILES),$(eval $(call PROCESS_LDS_FILE,$(ldsfile))))
+$(foreach ldsfile,$(AOS_SDK_LDS_INCLUDES),$(eval $(call PROCESS_LDS_FILE,$(ldsfile))))
+$(if $(AOS_SDK_LDS_FILES),$(eval AOS_SDK_LDFLAGS += -T $(LDS_FILE_DIR)/$(notdir $(AOS_SDK_LDS_FILES:.ld.S=.ld))))
+$(if $(AOS_SDK_LDS_FILES),$(eval AOS_SDK_LDFLAGS += -L $(LDS_FILE_DIR)))
+
 # Add pre-built libraries
 LINK_LIBS += $(AOS_SDK_PREBUILT_LIBRARIES)
 
@@ -176,12 +191,15 @@ LINK_LIBS += $(AOS_SDK_PREBUILT_LIBRARIES)
 $(LIBS_DIR):
 	$(QUIET)$(call MKDIR, $@)
 
+$(LDS_FILE_DIR):
+	$(QUIET)$(call MKDIR, $@)
+
 # Directory dependency - causes mkdir to be called once for each directory.
 %/.d:
 	$(QUIET)$(call MKDIR, $(dir $@))
 	$(QUIET)$(TOUCH) $(@)
-	
-$(LINK_OPTS_FILE): $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk
+
+$(LINK_OPTS_FILE): $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(LDS_FILES)
 #$(COMPILER_SPECIFIC_LINK_MAP) $(MAP_OUTPUT_FILE) $(LINK_OPTS_FILE)
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(AOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(AOS_SDK_LINK_FILES) $(filter %.a,$^) $(LINK_LIBS)) $(AOS_SDK_LDFLAGS) )
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * Script for GNU linker.
  * Describes layout of sections, location of stack.
  *
@@ -7,7 +7,7 @@
  */
 
 /* Include memory map */
-INCLUDE memory_kernel.ld
+INCLUDE memory.ld
 
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
@@ -18,21 +18,16 @@ SECTIONS
 {
 /* vectors go to vectors region */
 	. = 0x0012000;
-	.vectors : 
-	{ 
+	.vectors :
+	{
       KEEP(*(*.vectors))
 	} > flash
 
-    . = 0x0012040;
-    .syscall_tbl :
-    {
-      KEEP(*(.syscall_tbl))
-    } > flash
 /* instructions go to the text region*/
 
 	. = ALIGN(0x8);
 /* code, instructions.for example: i=i+1; */
-	.text : 
+	.text :
 	{
 	    *(.text)
 	    *(.text.*)
@@ -41,33 +36,33 @@ SECTIONS
 	    *(.gnu.warning)
 	    *(.gnu.linkonce.t*)
 	    *(.glue_7t) *(.glue_7)
-	} > flash	
+	} > flash
 
 /* read only data.for example: const int rom_data[3]={1,2,3}; */
-	.rodata ALIGN(8) : 
+	.rodata ALIGN(8) :
 	{
 		*(.rodata)
 		*(.rodata.*)
 		*(.gnu.linkonce.r*)
 	} > flash
-	
+
 	.ARM.exidx :
 	{
 	    *(.ARM.exidx*)
 	    *(.gnu.linkonce.armexidx.*)
 	} > flash
-	
+
 /* globals.for example: int ram_data[3]={4,5,6}; */		/* VMA in RAM, but keep LMA in flash */
 	. = ALIGN(0x8);
 	_begin_data = .;
 	.data : AT ( _begin_data )
 	{
 		*(.data .data.*)
-		*(.sdata) 
+		*(.sdata)
 		*(.gnu.linkonce.d*)
-    	SORT(CONSTRUCTORS)
+        SORT(CONSTRUCTORS)
 	} >ram
-	
+
 	/* Loader will copy data from _flash_begin to _ram_begin..ram_end */
 	_data_flash_begin = LOADADDR(.data);
 	_data_ram_begin = ADDR(.data);
@@ -92,11 +87,10 @@ SECTIONS
 	. = ALIGN (8);
 	_empty_ram = .;
 
-    PROVIDE(app_info_addr = 0x0070400);
 /* This symbol defines end of code/data sections. Heap starts here. */
 	PROVIDE(end    	  = .);
 	PROVIDE(heap_start    	  = .);
-	
+
 /* _stack symbol defines initial stack bottom addres. Stack grows to lower addresses.
    Typically you set this to be top of your RAM. Note: code never checks, if stack
    grows into heap area!
@@ -112,7 +106,7 @@ SECTIONS
 	PROVIDE(heap_end      = _stack_unused);
 	PROVIDE(heap_len      = heap_end -  heap_start);
 
-	ASSERT ((heap_len > 0x10000 - 1 ), "Error: No room left for the heap") /*heap must bigger than 120k*/
+	ASSERT ((heap_len > 0x1E000 - 1 ), "Error: No room left for the heap") /*heap must bigger than 120k*/
 }
  GROUP(
    libgcc.a

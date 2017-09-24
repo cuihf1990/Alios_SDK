@@ -9,7 +9,10 @@
 #ifdef CONFIG_AOS_MESH
 #include <umesh.h>
 #endif
+
+#ifdef MBEDTLS_IN_KERNEL
 #include <ali_crypto.h>
+#endif
 
 #define SYSCALL(nr, func)
 
@@ -472,6 +475,9 @@ int aos_mkdir(const char *path)
 }
 
 /* --------------------MBEDTLS----------------- */
+
+#ifdef MBEDTLS_IN_KERNEL
+
 void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
 {
     return SYS_CALL3(SYS_MBEDTLS_CONNECT, void *, void *, tcp_fd, const char *, ca_cert,
@@ -517,6 +523,8 @@ ali_crypto_result ali_aes_get_ctx_size(aes_type_t type, size_t *size)
 {
     return SYS_CALL2(SYS_CRYPTO_AES_GET_CTX_SIZE, ali_crypto_result, aes_type_t, type, size_t *, size);
 }
+
+#endif /* MBEDTLS_IN_KERNEL */
 
 /* --------------------LWIP-------------------- */
 

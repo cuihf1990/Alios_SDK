@@ -1,4 +1,4 @@
-/* 
+/*
  * Script for GNU linker.
  * Describes layout of sections, location of stack.
  *
@@ -15,7 +15,11 @@ ENTRY(application_start)
 
 SECTIONS
 {
+#ifdef MBEDTLS_IN_KERNEL
 	. = 0x0070400;
+#else
+    . = 0x0067C00;
+#endif
 
     .appinfo :
     {
@@ -23,7 +27,7 @@ SECTIONS
     } > flash
 
 /* code, instructions.for example: i=i+1; */
-	.text : 
+	.text :
 	{
 	    *(.text)
 	    *(.text.*)
@@ -32,33 +36,33 @@ SECTIONS
 	    *(.gnu.warning)
 	    *(.gnu.linkonce.t*)
 	    *(.glue_7t) *(.glue_7)
-	} > flash	
+	} > flash
 
 /* read only data.for example: const int rom_data[3]={1,2,3}; */
-	.rodata ALIGN(8) : 
+	.rodata ALIGN(8) :
 	{
 		*(.rodata)
 		*(.rodata.*)
 		*(.gnu.linkonce.r*)
 	} > flash
-	
+
 	.ARM.exidx :
 	{
 	    *(.ARM.exidx*)
 	    *(.gnu.linkonce.armexidx.*)
 	} > flash
-	
+
 /* globals.for example: int ram_data[3]={4,5,6}; */		/* VMA in RAM, but keep LMA in flash */
 	. = ALIGN(0x8);
 	_begin_data = .;
 	.data : AT ( _begin_data )
 	{
 		*(.data .data.*)
-		*(.sdata) 
+		*(.sdata)
 		*(.gnu.linkonce.d*)
-    	SORT(CONSTRUCTORS)
+        SORT(CONSTRUCTORS)
 	} >ram
-	
+
 	/* Loader will copy data from _flash_begin to _ram_begin..ram_end */
 	PROVIDE(_app_data_flash_begin = LOADADDR(.data));
 	PROVIDE(_app_data_ram_begin = ADDR(.data));

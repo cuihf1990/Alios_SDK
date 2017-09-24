@@ -262,6 +262,9 @@ SYSCALL(SYS_MKDIR, aos_mkdir)
 /* keep 86~90 for Framework */
 
 /* --------------------MBEDTLS-------------------- */
+
+#ifdef MBEDTLS_IN_KERNEL
+
 #define SYS_MBEDTLS_CONNECT 91
 SYSCALL(SYS_MBEDTLS_CONNECT, mbedtls_ssl_connect)
 
@@ -282,6 +285,8 @@ SYSCALL(SYS_CRYPTO_AES_FINISH, ali_aes_finish)
 
 #define SYS_CRYPTO_AES_GET_CTX_SIZE 97
 SYSCALL(SYS_CRYPTO_AES_GET_CTX_SIZE, ali_aes_get_ctx_size)
+
+#endif /* MBEDTLS_IN_KERNEL */
 
 /* --------------------LWIP-------------------- */
 
