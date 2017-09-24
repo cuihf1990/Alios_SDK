@@ -2,7 +2,13 @@
 NAME := alicrypto
 ALICRYPTO_TEST := yes
 
+ifneq (,$(BINS))
+ifeq ($(MBEDTLS_SHARE),1)
 $(NAME)_TYPE := share
+else
+$(NAME)_TYPE := kernel
+endif
+endif
 
 $(NAME)_SOURCES :=
 $(NAME)_COMPONENTS :=

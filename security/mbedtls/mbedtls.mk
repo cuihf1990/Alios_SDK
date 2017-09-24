@@ -2,7 +2,15 @@ NAME := mbedtls
 
 DEBUG := no
 
+ifneq (,$(BINS))
+MBEDTLS_SHARE := 0
+ifeq ($(MBEDTLS_SHARE),1)
 $(NAME)_TYPE := share
+else
+$(NAME)_TYPE := kernel
+GLOBAL_DEFINES     += MBEDTLS_IN_KERNEL
+endif
+endif
 
 GLOBAL_INCLUDES     += include
 

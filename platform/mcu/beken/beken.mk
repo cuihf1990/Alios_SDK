@@ -71,11 +71,11 @@ GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_boot.ld
 else
 
 ifeq ($(BINS),)
-GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231.ld
+GLOBAL_LDS_FILES += platform/mcu/beken/beken7231/beken378/build/bk7231.ld.S
 else ifeq ($(BINS),app)
-GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_app.ld
+GLOBAL_LDS_FILES += platform/mcu/beken/beken7231/beken378/build/bk7231_app.ld.S
 else ifeq ($(BINS),kernel)
-GLOBAL_LDFLAGS += -T platform/mcu/beken/beken7231/beken378/build/bk7231_kernel.ld
+GLOBAL_LDS_FILES += platform/mcu/beken/beken7231/beken378/build/bk7231_kernel.ld.S
 endif
 
 endif

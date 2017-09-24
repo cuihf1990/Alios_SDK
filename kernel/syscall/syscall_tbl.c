@@ -12,6 +12,11 @@
 #ifdef CONFIG_AOS_MESH
 #include <umesh.h>
 #endif
+#ifdef MBEDTLS_IN_KERNEL
+#include <aos/mbedtls_ssl.h>
+#include <ali_crypto.h>
+#endif
+
 
 extern void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
 extern int  hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len);
@@ -68,7 +73,7 @@ void *sys_aos_zalloc(unsigned int size, size_t allocator)
 }
 
 #define SYSCALL_MAX 188
-#define SYSCALL_NUM 151
+#define SYSCALL_NUM 158
 
 #define SYSCALL(nr, func) [nr] = func,
 

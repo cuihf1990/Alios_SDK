@@ -10,6 +10,10 @@
 #include <umesh.h>
 #endif
 
+#ifdef MBEDTLS_IN_KERNEL
+#include <ali_crypto.h>
+#endif
+
 #define SYSCALL(nr, func)
 
 #include <syscall_tbl.h>
@@ -469,6 +473,59 @@ int aos_mkdir(const char *path)
 {
     return SYS_CALL1(SYS_MKDIR, int, const char *, path);
 }
+
+/* --------------------MBEDTLS----------------- */
+
+#ifdef MBEDTLS_IN_KERNEL
+
+void *mbedtls_ssl_connect(void *tcp_fd, const char *ca_cert, int ca_cert_len)
+{
+    return SYS_CALL3(SYS_MBEDTLS_CONNECT, void *, void *, tcp_fd, const char *, ca_cert,
+                     int, ca_cert_len);
+}
+
+int mbedtls_ssl_send(void *ssl, const char *buffer, int length)
+{
+    return SYS_CALL3(SYS_MBEDTLS_SEND, int, void *, ssl, const char *, buffer,
+                     int, length);
+}
+
+int mbedtls_ssl_recv(void *ssl, char *buffer, int length)
+{
+    return SYS_CALL3(SYS_MBEDTLS_RECV, int, void *, ssl, char *, buffer,
+                     int, length);
+}
+
+int mbedtls_ssl_close(void *ssl)
+{
+    return SYS_CALL1(SYS_MBEDTLS_CLOSE, int, void *, ssl);
+}
+
+ali_crypto_result ali_aes_init(aes_type_t type, bool is_enc,
+                      const uint8_t *key1, const uint8_t *key2,
+                      size_t keybytes, const uint8_t *iv, void *context)
+{
+    return SYS_CALL7(SYS_CRYPTO_AES_INIT, ali_crypto_result, aes_type_t, type,
+                        bool, is_enc, const uint8_t *, key1, const uint8_t *, key2,
+                        size_t, keybytes, const uint8_t *, iv, void *, context);
+}
+
+ali_crypto_result ali_aes_finish(const uint8_t *src, size_t src_size,
+                                 uint8_t *dst, size_t *dst_size,
+                                 sym_padding_t padding, void *context)
+{
+    return SYS_CALL6(SYS_CRYPTO_AES_FINISH, ali_crypto_result, const uint8_t *, src,
+                        size_t, src_size, uint8_t *, dst, size_t *, dst_size, sym_padding_t,
+                        padding, void *, context);
+}
+
+ali_crypto_result ali_aes_get_ctx_size(aes_type_t type, size_t *size)
+{
+    return SYS_CALL2(SYS_CRYPTO_AES_GET_CTX_SIZE, ali_crypto_result, aes_type_t, type, size_t *, size);
+}
+
+#endif /* MBEDTLS_IN_KERNEL */
+
 /* --------------------LWIP-------------------- */
 
 #ifdef WITH_LWIP
