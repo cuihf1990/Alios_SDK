@@ -303,6 +303,7 @@ static void timer_task(void *pa)
                 timer = krhino_list_entry(iter, ktimer_t, timer_list);
 
                 if (g_timer_count == timer->match) {
+                    iter = iter->next;
                     timer_list_rm(timer);
 
                     if (timer->round_ticks > 0u) {
@@ -317,8 +318,6 @@ static void timer_task(void *pa)
                     /* any way both condition need to call registered timer function */
                     /* the registered timer function should not touch any timer related API,otherwise system will be crashed */
                     timer->cb(timer, timer->timer_cb_arg);
-
-                    iter = iter->next;
                 } else {
                     break;
                 }
