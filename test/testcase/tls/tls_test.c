@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <aos/errno.h>
 #include <aos/network.h>
 
 #include <aos/mbedtls_ssl.h>
@@ -97,7 +97,7 @@ static void *network_socket_create(const char *net_addr, int port)
     setsockopt(tcp_fd, SOL_SOCKET, SO_RCVTIMEO, &opt_val, sizeof(opt_val));
 
     do {
-        errno = 0;
+        set_errno(0);
         ret = connect(tcp_fd, (struct sockaddr*)&saddr, sizeof(struct sockaddr));
         if (ret < 0 && errno != EINTR) {
             printf("socket connect fail - errno: %d\n", errno);

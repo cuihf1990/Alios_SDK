@@ -20,6 +20,7 @@ extern "C" {
 #include <aos/vfs.h>
 #include <aos/version.h>
 #include <aos/yloop.h>
+#include <aos/errno.h>
 
 /*
 #include <aos/alink.h>

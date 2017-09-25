@@ -951,3 +951,13 @@ int32_t aos_uart_send(void *data, uint32_t size, uint32_t timeout)
     return SYS_CALL3(SYS_UART_SEND, int32_t, void *, data, uint32_t, size, uint32_t, timeout);
 }
 
+int get_errno(void)
+{
+    return SYS_CALL0(SYS_GET_ERRNO, int);
+}
+
+void set_errno(int err)
+{
+    return SYS_CALL1(SYS_SET_ERRNO, void, int, err);
+}
+

@@ -61,7 +61,7 @@ void *network_socket_create(const char *net_addr, int port)
     struct sockaddr_in saddr;
     int opt_val = 1;
 
-    errno = 0;
+    set_errno(0);
     tcp_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_fd < 0) {
         printf("creat socket fail - errno: %d\n", errno);
@@ -82,7 +82,7 @@ void *network_socket_create(const char *net_addr, int port)
     setsockopt(tcp_fd, SOL_SOCKET, SO_RCVTIMEO, &opt_val, sizeof(opt_val));
 
     do {
-        errno = 0;
+        set_errno(0);
         ret = connect(tcp_fd, (struct sockaddr*)&saddr, sizeof(saddr));
         if (ret < 0 && errno != EINTR) {
             printf("socket connect fail - errno: %d\n", errno);

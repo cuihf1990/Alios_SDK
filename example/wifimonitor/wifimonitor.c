@@ -9,6 +9,7 @@
 #include <errno.h>
 //#include <aos/network.h>
 #include "wifimonitor.h"
+#include <aos/errno.h>
 
 #define SERVER_PORT 12345 // subject to change
 #define SERVER_IP "255.255.255.255" // subject to change
@@ -388,7 +389,7 @@ static int create_socket(struct remote_conf *c, struct socket_info *s)
         return 0;
     }
 
-    errno = 0;
+    set_errno(0);
     s->sockfd = socket(PF_INET, SOCK_DGRAM, 0);
     if (s->sockfd < 0) {
         LOG("Error: Creating socket failed (errno: %d).", errno);

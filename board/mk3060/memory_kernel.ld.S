@@ -59,7 +59,6 @@
  * Code size = 399K*32/34=375K
  */
 
-
 /* Split memory into area for vectors and ram */
 MEMORY
 {

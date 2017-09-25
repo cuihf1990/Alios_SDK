@@ -42,7 +42,7 @@ aos make clean > /dev/null 2>&1
 for target in ${mk3060_targets}; do
     for platform in ${mk3060_platforms}; do
 	for bins in ${bins_type}; do
-            if [ ${target} = "tls" ]; then
+            if [ ${target} = "tls" -o ${target} = "meshapp" ]; then
                 continue
             fi
             aos make ${target}@${platform} BINS=${bins} > ${target}@${platform}@${bins}@${branch}.multi-bins.log 2>&1
