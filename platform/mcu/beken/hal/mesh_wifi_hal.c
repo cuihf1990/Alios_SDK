@@ -2,21 +2,57 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
+#ifdef CONFIG_AOS_MESH
+
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "wlan_ui_pub.h"
-#include "txl_frame.h"
-#include "rw_msdu.h"
-#include "txu_cntrl.h"
-#include "mm.h"
-#include "reg_mdm_cfg.h"
-#include "phy_trident.h"
-
 #include "umesh_hal.h"
 #include <umesh_80211.h>
 #include <hal/wifi.h>
+
+#include "reg_mac_core.h"
+struct phy_channel_info
+{
+    uint32_t info1;
+    uint32_t info2;
+};
+
+extern uint32_t bk_wlan_is_ap(void);
+extern uint32_t bk_wlan_is_sta(void);
+extern int bk_wlan_start_monitor(void);
+extern void hal_machw_exit_monitor_mode(void);
+extern void tpc_update_tx_power(int8_t pwr);
+extern void wlan_register_mesh_monitor_cb(monitor_data_cb_t fn);
+extern int wlan_set_mesh_bssid(uint8_t *bssid);
+extern int bmsg_tx_raw_sender(uint8_t *payload, uint16_t length);
+extern void phy_get_channel(struct phy_channel_info *info, uint8_t index);
+extern uint8_t rw_ieee80211_get_chan_id(uint32_t freq);
+extern uint32_t rw_ieee80211_get_centre_frequency(uint32_t chan_id);
+extern void phy_set_channel(uint8_t band, uint8_t type, uint16_t prim20_freq,
+                     uint16_t center1_freq, uint16_t center2_freq, uint8_t index);
+
+struct tx_policy_tbl
+{
+    uint32_t upatterntx;
+    uint32_t phycntrlinfo1;
+    uint32_t phycntrlinfo2;
+    uint32_t maccntrlinfo1;
+    uint32_t maccntrlinfo2;
+    uint32_t ratecntrlinfo[4];
+    uint32_t powercntrlinfo[4];
+};
+
+struct txl_buffer_control
+{
+    struct tx_policy_tbl policy_tbl;
+    uint32_t mac_control_info;
+    uint32_t phy_control_info;
+    uint32_t status;
+};
+
+extern struct txl_buffer_control txl_buffer_control_24G;
 
 enum {
     WIFI_MESH_OFFSET = 32,
@@ -142,10 +178,9 @@ static int beken_wifi_mesh_enable(umesh_hal_module_t *module)
         bk_wlan_start_monitor();
         hal_machw_exit_monitor_mode();
 
-        tpc_update_tx_power(PHY_TRIDENT_LIMIT_PWR);
+        tpc_update_tx_power(10);
         pol = &txl_buffer_control_24G.policy_tbl;
-        pol->powercntrlinfo[0] =
-              (nxmac_dsss_max_pwr_level_getf() << TX_PWR_LEVEL_PT_RCX_OFT);
+        pol->powercntrlinfo[0] = nxmac_dsss_max_pwr_level_getf();
     }
 
     wlan_register_mesh_monitor_cb(wifi_monitor_cb);
@@ -278,7 +313,7 @@ static int beken_wifi_mesh_get_channel(umesh_hal_module_t *module)
     int channel;
     struct phy_channel_info phy_info;
 
-    phy_get_channel(&phy_info, PHY_PRIM);
+    phy_get_channel(&phy_info, 0);
     channel = rw_ieee80211_get_chan_id(phy_info.info1 >> 16);
     return channel;
 }
@@ -293,7 +328,7 @@ static int beken_wifi_mesh_set_channel(umesh_hal_module_t *module,
     }
 
     freq = rw_ieee80211_get_centre_frequency(channel);
-    phy_set_channel(PHY_BAND_2G4, PHY_CHNL_BW_20, freq, freq, 0, PHY_PRIM);
+    phy_set_channel(0, 0, freq, freq, 0, 0);
     return 0;
 }
 
@@ -370,8 +405,11 @@ static umesh_hal_module_t beken_wifi_mesh_module = {
     .umesh_hal_get_stats = beken_wifi_mesh_get_stats,
     .umesh_hal_get_chnlist = beken_wifi_mesh_get_channel_list,
 };
+#endif
 
 void beken_wifi_mesh_register(void)
 {
+#ifdef CONFIG_AOS_MESH
     hal_umesh_register_module(&beken_wifi_mesh_module);
+#endif
 }
