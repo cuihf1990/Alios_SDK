@@ -249,14 +249,14 @@ static inline void slist_init(slist_t *head)
     head->next = 0;
 }
 
- /*
- * Iterate over list of given type.
- *
- * @param[in]   queue   he head for your list.
- * @param[in]   node    the type * to use as a loop cursor.
- * @param[in]   type    the type of the struct this is embedded in.
- * @param[in]   member  the name of the slist_t within the struct.
- */
+/*
+* Iterate over list of given type.
+*
+* @param[in]   queue   he head for your list.
+* @param[in]   node    the type * to use as a loop cursor.
+* @param[in]   type    the type of the struct this is embedded in.
+* @param[in]   member  the name of the slist_t within the struct.
+*/
 #define slist_for_each_entry(queue, node, type, member)        \
     for (node = aos_container_of((queue)->next, type, member); \
          &node->member;                                        \
@@ -302,13 +302,13 @@ static inline void slist_init(slist_t *head)
     addr ? (type *)((long)addr - aos_offsetof(type, member)) : (type *)addr; \
 })
 
- /*
- * Get the first element from a list.
- *
- * @param[in]   ptr     the list head to take the element from.
- * @param[in]   type    the type of the struct this is embedded in.
- * @param[in]   member  the name of the slist_t within the struct.
- */
+/*
+* Get the first element from a list.
+*
+* @param[in]   ptr     the list head to take the element from.
+* @param[in]   type    the type of the struct this is embedded in.
+* @param[in]   member  the name of the slist_t within the struct.
+*/
 #define slist_first_entry(ptr, type, member) \
     slist_entry((ptr)->next, type, member)
 

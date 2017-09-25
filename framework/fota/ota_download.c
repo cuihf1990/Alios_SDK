@@ -59,17 +59,17 @@ void http_gethost_info(char *src, char **web, char **file, int *port)
 
     pb = strchr(pa, '/');
     if (pb) {
-        *web=pa;
-        *pb=0;
+        *web = pa;
+        *pb = 0;
         //memcpy(web, pa, strlen(pa) - strlen(pb));
         if (*(pb + 1)) {
-            *file=pb+1;
-            *((*file)+strlen(pb) - 1)=0;
+            *file = pb + 1;
+            *((*file) + strlen(pb) - 1) = 0;
             //memcpy(file, pb + 1, strlen(pb) - 1);
             //file[strlen(pb) - 1] = 0;
         }
     } else {
-        *web=pa;
+        *web = pa;
         //memcpy(web, pa, strlen(pa));
     }
     if (pb) {
@@ -79,7 +79,7 @@ void http_gethost_info(char *src, char **web, char **file, int *port)
     }
     pa = strchr(*web, ':');
     if (pa) {
-        *pa=0;
+        *pa = 0;
         *port = atoi(pa + 1);
     } else {
         if (isHttps) {
@@ -133,7 +133,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     int port = 0;
     int nbytes = 0;
     char *host_file = NULL;
-    char *host_addr = NULL; 
+    char *host_addr = NULL;
     char http_buffer[OTA_BUFFER_MAX_SIZE] = {0};
     // char host_file[OTA_URL_MAX_LEN] = {0};
     // char host_addr[256] = {0};
@@ -145,8 +145,8 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     //  OTA_LOG_I("host_addr is: %s\n ", host_addr);
     //  OTA_LOG_I("host_file is: %s\n ", host_file);
     //  OTA_LOG_I("port is: %d\n ", port);
-    if(host_file==NULL||host_addr==NULL) {
-        ret=OTA_DOWNLOAD_URL_FAIL;
+    if (host_file == NULL || host_addr == NULL) {
+        ret = OTA_DOWNLOAD_URL_FAIL;
         return ret;
     }
 
@@ -172,7 +172,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     send = 0;
     totalsend = 0;
     nbytes = strlen(http_buffer);
-    OTA_LOG_I("send %s",http_buffer);
+    OTA_LOG_I("send %s", http_buffer);
     while (totalsend < nbytes) {
         send = ota_socket_send(sockfd, http_buffer + totalsend, nbytes - totalsend);
         if (send == -1) {
@@ -225,7 +225,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
             } else {
                 pos += 4;
                 int len = pos - http_buffer;
-                header_found = 1; 
+                header_found = 1;
                 size = nbytes - len;
                 //memcpy(headbuf, http_buffer, len);
                 //OTA_LOG_I("headbuf=%s",headbuf);

@@ -295,10 +295,10 @@ static void tab_complete(char *inbuf, unsigned int *bp)
                     fm = cli->commands[i]->name;
                 } else if (m == 2)
                     aos_cli_printf("%s %s ", fm,
-                               cli->commands[i]->name);
+                                   cli->commands[i]->name);
                 else
                     aos_cli_printf("%s ",
-                               cli->commands[i]->name);
+                                   cli->commands[i]->name);
             }
             n++;
         }
@@ -493,8 +493,8 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
     for (i = 0, n = 0; i < MAX_COMMANDS && n < cli->num_commands; i++) {
         if (cli->commands[i]->name) {
             aos_cli_printf("%s: %s\r\n", cli->commands[i]->name,
-                       cli->commands[i]->help ?
-                       cli->commands[i]->help : "");
+                           cli->commands[i]->help ?
+                           cli->commands[i]->help : "");
             n++;
             if ( n == build_in_count - 1 ) {
                 aos_cli_printf("\r\n");
@@ -514,7 +514,7 @@ static void echo_cmd(char *buf, int len, int argc, char **argv)
 {
     if (argc == 1) {
         aos_cli_printf("Usage: echo on/off. Echo is currently %s\r\n",
-                   cli->echo_disabled ? "Disabled" : "Enabled");
+                       cli->echo_disabled ? "Disabled" : "Enabled");
         return;
     }
 
@@ -551,7 +551,7 @@ static void udp_cmd(char *buf, int len, int argc, char **argv)
     }
 
     int ret = sendto(sockfd, argv[3], strlen(argv[3]), 0,
-      (struct sockaddr *)&saddr, sizeof(saddr));
+                     (struct sockaddr *)&saddr, sizeof(saddr));
     if (ret < 0) {
         aos_cli_printf("error send data %d!\n", ret);
     }
@@ -589,8 +589,9 @@ static void tftp_get_done(int error, int len)
 
 static void tftp_cmd(char *buf, int len, int argc, char **argv)
 {
-    if (argc != 3)
+    if (argc != 3) {
         goto tftp_print_usage;
+    }
 
     if (strncmp(argv[1], "server", 6) == 0) {
         if (strncmp(argv[2], "start", 5) == 0) {
@@ -650,8 +651,9 @@ int aos_cli_register_command(const struct cli_command *cmd)
 {
     int i;
 
-    if (!cli)
+    if (!cli) {
         return 1;
+    }
 
     if (!cmd->name || !cmd->function) {
         return -EINVAL;
@@ -748,14 +750,14 @@ int aos_cli_init(void)
 
     /* add our built-in commands */
     if ((ret = aos_cli_register_commands(&built_ins[0],
-                sizeof(built_ins) / sizeof(struct cli_command))) != 0) {
+                                         sizeof(built_ins) / sizeof(struct cli_command))) != 0) {
         goto init_general_err;
     }
 
     ret = aos_task_new_ext(&task, "cli", cli_main, 0, 4096, AOS_DEFAULT_APP_PRI);
     if (ret != 0) {
         aos_cli_printf("Error: Failed to create cli thread: %d\r\n",
-                   ret);
+                       ret);
         goto init_general_err;
     }
 

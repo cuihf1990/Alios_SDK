@@ -502,12 +502,12 @@ int mbedtls_ssl_close(void *ssl)
 }
 
 ali_crypto_result ali_aes_init(aes_type_t type, bool is_enc,
-                      const uint8_t *key1, const uint8_t *key2,
-                      size_t keybytes, const uint8_t *iv, void *context)
+                               const uint8_t *key1, const uint8_t *key2,
+                               size_t keybytes, const uint8_t *iv, void *context)
 {
     return SYS_CALL7(SYS_CRYPTO_AES_INIT, ali_crypto_result, aes_type_t, type,
-                        bool, is_enc, const uint8_t *, key1, const uint8_t *, key2,
-                        size_t, keybytes, const uint8_t *, iv, void *, context);
+                     bool, is_enc, const uint8_t *, key1, const uint8_t *, key2,
+                     size_t, keybytes, const uint8_t *, iv, void *, context);
 }
 
 ali_crypto_result ali_aes_finish(const uint8_t *src, size_t src_size,
@@ -515,8 +515,8 @@ ali_crypto_result ali_aes_finish(const uint8_t *src, size_t src_size,
                                  sym_padding_t padding, void *context)
 {
     return SYS_CALL6(SYS_CRYPTO_AES_FINISH, ali_crypto_result, const uint8_t *, src,
-                        size_t, src_size, uint8_t *, dst, size_t *, dst_size, sym_padding_t,
-                        padding, void *, context);
+                     size_t, src_size, uint8_t *, dst, size_t *, dst_size, sym_padding_t,
+                     padding, void *, context);
 }
 
 ali_crypto_result ali_aes_get_ctx_size(aes_type_t type, size_t *size)

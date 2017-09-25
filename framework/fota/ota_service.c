@@ -58,9 +58,9 @@ void do_update(int len,  const char *buf)
     ota_response_params response_parmas;
     ota_set_callbacks(ota_hal_write_cb, ota_hal_finish_cb);
     if (0 == platform_ota_parse_response(buf, strlen((char *)buf), &response_parmas)) {
-		ota_do_update_packet(&response_parmas, &ota_request_parmas, ota_write_flash_callback,
-                         ota_finish_callbak);
-	}
+        ota_do_update_packet(&response_parmas, &ota_request_parmas, ota_write_flash_callback,
+                             ota_finish_callbak);
+    }
 }
 
 void cancel_update(int len, const char *buf)

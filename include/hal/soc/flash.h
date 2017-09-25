@@ -87,7 +87,7 @@ int32_t hal_flash_erase(hal_partition_t in_partition, uint32_t off_set, uint32_t
  * @return  0 : On success, EIO : If an error occurred with any step
  */
 int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set,
-                               const void *in_buf, uint32_t in_buf_len);
+                        const void *in_buf, uint32_t in_buf_len);
 
 /**
  * Write data to an area on a flash logical partition with erase first
@@ -103,7 +103,7 @@ int32_t hal_flash_write(hal_partition_t in_partition, uint32_t *off_set,
  * @return  0 : On success, EIO : If an error occurred with any step
  */
 int32_t hal_flash_erase_write(hal_partition_t in_partition, uint32_t *off_set,
-                                        const void *in_buf, uint32_t in_buf_len);
+                              const void *in_buf, uint32_t in_buf_len);
 
 /**
  * Read data from an area on a Flash to data buffer in RAM

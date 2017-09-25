@@ -647,8 +647,9 @@ void aos_kv_gc(void *arg)
         i++;
     }
 
-    if (gc_copy == 0)
+    if (gc_copy == 0) {
         g_kv_mgr.write_pos = origin_pos;
+    }
 
 exit:
     g_kv_mgr.gc_triggered = 0;
@@ -854,7 +855,7 @@ int aos_kv_init(void)
     if ((ret = kv_init()) != RES_OK) {
         return ret;
     }
-    
+
     if ((ret = aos_sem_new(&(g_kv_mgr.gc_sem), 0)) != RES_OK) {
         return ret;
     }

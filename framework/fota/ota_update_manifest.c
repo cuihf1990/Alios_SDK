@@ -15,40 +15,37 @@
 #include "ota_version.h"
 #include "ota_download.h"
 
- write_flash_cb_t g_write_func;
- ota_finish_cb_t g_finish_cb;
+write_flash_cb_t g_write_func;
+ota_finish_cb_t g_finish_cb;
 
-static char * url_temp=NULL;
+static char *url_temp = NULL;
 
 char md5[33];
 
-char * const get_url()
+char *const get_url()
 {
     return url_temp;
 }
 
-int set_url(const char * value)
+int set_url(const char *value)
 {
-if(url_temp==NULL)
-{
-    url_temp = aos_malloc(OTA_URL_MAX_LEN);            
-}
-if(url_temp==NULL) 
-{
-    return -1;
-}
-int len=strlen(value);
-len=len<OTA_URL_MAX_LEN?len:OTA_URL_MAX_LEN;
-memcpy(url_temp,value,len);
-return 0;
+    if (url_temp == NULL) {
+        url_temp = aos_malloc(OTA_URL_MAX_LEN);
+    }
+    if (url_temp == NULL) {
+        return -1;
+    }
+    int len = strlen(value);
+    len = len < OTA_URL_MAX_LEN ? len : OTA_URL_MAX_LEN;
+    memcpy(url_temp, value, len);
+    return 0;
 }
 
 void free_url()
 {
-    if(url_temp)
-    {
+    if (url_temp) {
         aos_free(url_temp);
-        url_temp=NULL;
+        url_temp = NULL;
     }
 }
 
@@ -192,10 +189,9 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
     g_finish_cb = fcb;
     memset(md5, 0, sizeof md5);
     strncpy(md5, response_parmas->md5, sizeof md5);
-    
-    if(set_url(response_parmas->download_url))
-    {
-        ret=-1;
+
+    if (set_url(response_parmas->download_url)) {
+        ret = -1;
         return ret;
     }
     // memset(url, 0, sizeof url);

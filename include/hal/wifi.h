@@ -59,7 +59,7 @@ typedef struct {
     char    ssid[32]; /* SSID of the wlan that needs to be connected. Example: "SSID String". */
     char    bssid[6]; /* BSSID of the wlan needs to be connected. Example: {0xC8 0x93 0x46 0x11 0x22 0x33}. */
     uint8_t channel;  /* Wlan's RF frequency, channel 0-13. 1-13 means a fixed channelthat can speed up a connection procedure,
-						 0 is not a fixed input means all channels are possible*/
+                         0 is not a fixed input means all channels are possible*/
     uint8_t security;
 } hal_wifi_ap_info_adv_t;
 
@@ -242,7 +242,7 @@ int hal_wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_para
  * @return      0 on success, otherwise failure.
  */
 int hal_wifi_get_ip_stat(hal_wifi_module_t *m,
-                          hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type);
+                         hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type);
 
 /**
  * Get the link status of the wifi instance ,e.g. ssid, bssid, channel, rssi, etc.

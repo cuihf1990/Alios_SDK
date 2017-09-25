@@ -10,18 +10,18 @@
  */
 typedef enum {
     INPUT_PULL_UP,             /* Input with an internal pull-up resistor - use with devices
-								  that actively drive the signal low - e.g. button connected to ground */
+                                  that actively drive the signal low - e.g. button connected to ground */
     INPUT_PULL_DOWN,           /* Input with an internal pull-down resistor - use with devices
-								  that actively drive the signal high - e.g. button connected to a power rail */
+                                  that actively drive the signal high - e.g. button connected to a power rail */
     INPUT_HIGH_IMPEDANCE,      /* Input - must always be driven, either actively or by an external pullup resistor */
     OUTPUT_PUSH_PULL,          /* Output actively driven high and actively driven low -
-								  must not be connected to other active outputs - e.g. LED output */
+                                  must not be connected to other active outputs - e.g. LED output */
     OUTPUT_OPEN_DRAIN_NO_PULL, /* Output actively driven low but is high-impedance when set high -
-								  can be connected to other open-drain/open-collector outputs.
-								  Needs an external pull-up resistor */
+                                  can be connected to other open-drain/open-collector outputs.
+                                  Needs an external pull-up resistor */
     OUTPUT_OPEN_DRAIN_PULL_UP, /* Output actively driven low and is pulled high
-								  with an internal resistor when set high -
-								  can be connected to other open-drain/open-collector outputs. */
+                                  with an internal resistor when set high -
+                                  can be connected to other open-drain/open-collector outputs. */
 } gpio_config_t;
 
 /*

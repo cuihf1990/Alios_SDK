@@ -80,10 +80,9 @@ static size_t sizetoindex(size_t size)
 static void addsize(k_mm_head *mmhead, size_t size, size_t req_size)
 {
     size_t index ;
-    if(mmhead->free_size > size) {
+    if (mmhead->free_size > size) {
         mmhead->free_size -= size;
-    }
-    else {
+    } else {
         mmhead->free_size = 0;
     }
     mmhead->used_size += size;
@@ -103,10 +102,9 @@ static void addsize(k_mm_head *mmhead, size_t size, size_t req_size)
 
 static void removesize(k_mm_head *mmhead, size_t size)
 {
-    if(mmhead->used_size > size ) {
+    if (mmhead->used_size > size ) {
         mmhead->used_size -= size;
-    }
-    else {
+    } else {
         mmhead->used_size = 0;
     }
     mmhead->free_size += size;

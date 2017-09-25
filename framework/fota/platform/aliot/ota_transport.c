@@ -161,9 +161,9 @@ parse_success:
 //and then copy to @buf.
 //0, successful; -1, failed
 static int ota_mqtt_gen_topic_name(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key,
-                                const char *device_name)
+                                   const char *device_name)
 {
-    int ret;        
+    int ret;
     ret = snprintf(buf,
                    buf_len,
                    "/ota/device/%s/%s/%s",
@@ -199,7 +199,7 @@ static int ota_mqtt_publish(const char *topic_type, const char *msg)
 
     //inform OTA to topic: "/ota/device/progress/$(product_key)/$(device_name)"
     ret = ota_mqtt_gen_topic_name(topic_name, OTA_MQTT_TOPIC_LEN, topic_type, g_ota_device_info.product_key,
-                               g_ota_device_info.device_name);
+                                  g_ota_device_info.device_name);
     if (ret < 0) {
         OTA_LOG_E("generate topic name of info failed");
         return -1;
@@ -258,7 +258,7 @@ int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
     }
 
     int ret = ota_mqtt_gen_topic_name(g_upgrad_topic, OTA_MQTT_TOPIC_LEN, "upgrade", g_ota_device_info.product_key,
-                                   g_ota_device_info.device_name);
+                                      g_ota_device_info.device_name);
     if (ret < 0) {
         OTA_LOG_E("generate topic name of upgrade failed");
         goto do_exit;
@@ -377,7 +377,7 @@ int8_t platform_ota_result_post(void)
     int ret = -1;
     char msg_informed[MSG_INFORM_LEN] = {0};
     ret = ota_gen_info_msg(msg_informed, MSG_INFORM_LEN, 0,
-                            ota_get_system_version());
+                           ota_get_system_version());
     if (ret != 0) {
         OTA_LOG_E("generate inform message failed");
         return -1;

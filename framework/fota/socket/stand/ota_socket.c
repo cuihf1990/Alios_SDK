@@ -69,7 +69,7 @@ int ota_socket_send(int socket, const  char *buf, size_t len)
 
 int ota_socket_recv(int socket,  char *buf, size_t len)
 {
-    return read(socket,buf, len);
+    return read(socket, buf, len);
 }
 
 void ota_socket_close(int socket)
