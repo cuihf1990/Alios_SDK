@@ -159,6 +159,21 @@ void *cpu_entry(void *arg)
     assert(0);
 }
 
+void cpu_spin_lock(kspinlock_t *lock)
+{
+    int ret;
+
+    ret = pthread_mutex_lock(&spin_lock);
+    assert(ret == 0);
+}
+
+void cpu_spin_unlock(kspinlock_t *lock)
+{
+    int ret;
+
+    ret = pthread_mutex_unlock(&spin_lock);
+    assert(ret == 0);
+}
 #endif
 
 static inline void enter_signal(int signo)

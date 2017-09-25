@@ -17,6 +17,8 @@ void   cpu_task_switch(void);
 #if (RHINO_CONFIG_CPU_NUM > 1)
 void cpu_signal(uint8_t cpu_num);
 uint8_t cpu_cur_get(void);
+void cpu_spin_lock(kspinlock_t *lock);
+void cpu_spin_unlock(kspinlock_t *lock);
 #else
 RHINO_INLINE uint8_t cpu_cur_get(void)
 {
