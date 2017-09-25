@@ -84,11 +84,17 @@ static void handle_link_quality_update_timer(void *args)
     neighbor_t *nbr;
     hal_context_t *hal = (hal_context_t *)args;
     network_context_t *network;
+    uint32_t interval;
 
     MESH_LOG_DEBUG("handle link quality update timer");
 
-    hal->link_quality_update_timer = ur_start_timer(
-                                         hal->link_request_interval * LINK_ESTIMATE_TIMES,
+    if (umesh_mm_get_mode() & MODE_MOBILE) {
+        interval = hal->link_request_mobile_interval;
+    } else {
+        interval = hal->link_request_interval;
+    }
+
+    hal->link_quality_update_timer = ur_start_timer(interval * LINK_ESTIMATE_TIMES,
                                          handle_link_quality_update_timer, hal);
 
     slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
@@ -96,9 +102,7 @@ static void handle_link_quality_update_timer(void *args)
         network = get_hal_default_network_context(hal);
         if (error != UR_ERROR_NONE &&
             nbr == umesh_mm_get_attach_node(network)) {
-            hal->link_request_timer = ur_start_timer(
-                                          hal->link_request_interval,
-                                          handle_link_request_timer, hal);
+            hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer, hal);
         }
         if (nbr->stats.link_cost >= LINK_COST_THRESHOLD) {
             nbr->state = STATE_INVALID;
