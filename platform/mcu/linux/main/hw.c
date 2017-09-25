@@ -180,7 +180,6 @@ void hal_timer_stop(hal_timer_t *tmr)
     krhino_timer_dyn_del(tmr->priv);
     tmr->priv = NULL;
 }
-#endif
 
 int csp_printf(const char *fmt, ...)
 {
@@ -201,6 +200,21 @@ int csp_printf(const char *fmt, ...)
 
     return ret;
 }
+#else
+int csp_printf(const char *fmt, ...)
+{
+    va_list args;
+    int ret;
+
+    va_start(args, fmt);
+    ret = vprintf(fmt, args);
+    va_end(args);
+
+    fflush(stdout);
+
+    return ret;
+}
+#endif
 
 extern hal_wifi_module_t sim_aos_wifi_linux;
 extern struct hal_ota_module_s linuxhost_ota_module;
