@@ -109,7 +109,8 @@ typedef void (*tftp_done_cb)(int err, int length);
 
 err_t tftp_server_start(void);
 void  tftp_server_stop(void);
-int   tftp_client_get(const ip_addr_t *paddr, const char *fname, tftp_done_cb cb);
+int   tftp_client_get(const ip_addr_t *paddr, const char *fname,
+                      tftp_context_t *ctx, tftp_done_cb cb);
 
 #ifdef __cplusplus
 }

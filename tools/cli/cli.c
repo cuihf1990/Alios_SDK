@@ -585,12 +585,15 @@ static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
 static void tftp_get_done(int error, int len)
 {
     if (error == 0) {
-        aos_cli_printf("tftp client get done, %d bytes reveived\r\n", len);
+        aos_cli_printf("tftp client get succeed\r\n", len);
     } else {
         aos_cli_printf("tftp client get failed\r\n");
     }
 }
 
+extern tftp_context_t client_ctx;
+extern tftp_context_t ota_ctx;
+void ota_get_done(int error, int len);
 static void tftp_cmd(char *buf, int len, int argc, char **argv)
 {
     if (argc != 3) {
@@ -612,7 +615,13 @@ static void tftp_cmd(char *buf, int len, int argc, char **argv)
         ip_addr_t dst_addr;
         uint8_t   gw_ip[4] = {10, 0 , 0, 2};
         memcpy(&dst_addr, gw_ip, 4);
-        tftp_client_get(&dst_addr, argv[1], tftp_get_done);
+        tftp_client_get(&dst_addr, argv[2], &client_ctx, tftp_get_done);
+        return;
+    } else if (strncmp(argv[1], "ota", 3) == 0) {
+        ip_addr_t dst_addr;
+        uint8_t   gw_ip[4] = {10, 0 , 0, 2};
+        memcpy(&dst_addr, gw_ip, 4);
+        tftp_client_get(&dst_addr, argv[2], &ota_ctx, ota_get_done);
         return;
     }
 

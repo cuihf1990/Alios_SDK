@@ -167,7 +167,8 @@ NETBIOSNSFILES=apps/netbiosns/netbiosns.c
 # TFTPFILES: TFTP server files
 TFTPFILES=apps/tftp/tftp_server.c \
     apps/tftp/tftp_common.c \
-    apps/tftp/tftp_client.c
+    apps/tftp/tftp_client.c \
+    apps/tftp/tftp_ota.c
 
 # LWIPAPPFILES: All LWIP APPs
 LWIPAPPFILES=$(SNMPFILES) \
