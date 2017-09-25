@@ -199,9 +199,13 @@ COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall libc vfs
 ifeq ($(BINS),app)
 #$(NAME)_COMPONENTS += usyscall
 COMPONENTS += usyscall syscall
+AOS_SDK_DEFINES += BUILD_APP
 else ifeq ($(BINS),kernel)
 #$(NAME)_COMPONENTS += syscall
 COMPONENTS += syscall
+AOS_SDK_DEFINES += BUILD_KERNEL
+else ifeq (,$(BINS))
+AOS_SDK_DEFINES += BUILD_BIN
 endif
 
 $(info processing components: $(COMPONENTS))

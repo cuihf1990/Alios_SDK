@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <aos/errno.h>
 
 #include "msdp_ut.h"
 #include "msdp.h"

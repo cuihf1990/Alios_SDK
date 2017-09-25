@@ -72,8 +72,18 @@ void *sys_aos_zalloc(unsigned int size, size_t allocator)
     return tmp;
 }
 
-#define SYSCALL_MAX 188
-#define SYSCALL_NUM 158
+int get_errno(void)
+{
+    return errno;
+}
+
+void set_errno(int err)
+{
+    errno = err;
+}
+
+#define SYSCALL_MAX 190
+#define SYSCALL_NUM 160
 
 #define SYSCALL(nr, func) [nr] = func,
 

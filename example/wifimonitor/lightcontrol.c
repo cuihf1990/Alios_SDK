@@ -10,6 +10,7 @@
 //#include <lwip/sockets.h>
 #include "wifimonitor.h"
 #include "umesh.h"
+#include <aos/errno.h>
 
 #define MODULE_NAME "lightcontrol"
 

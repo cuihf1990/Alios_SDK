@@ -534,3 +534,10 @@ SYSCALL(SYS_CLI_STOP, aos_cli_stop)
 #define SYS_UART_SEND 187
 SYSCALL(SYS_UART_SEND, aos_uart_send)
 
+#define SYS_GET_ERRNO 188
+SYSCALL(SYS_GET_ERRNO, get_errno)
+
+#define SYS_SET_ERRNO 189
+SYSCALL(SYS_SET_ERRNO, set_errno)
+
+
