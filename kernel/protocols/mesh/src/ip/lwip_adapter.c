@@ -61,8 +61,9 @@ ur_error_t ur_adapter_input(struct pbuf *buf)
 void ur_adapter_input_buf(void *buf, int len)
 {
     struct pbuf *pbuf = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
-    if (!pbuf)
+    if (!pbuf) {
         return;
+    }
 
     pbuf_take(pbuf, buf, len);
     ur_adapter_input(pbuf);
@@ -75,23 +76,22 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
     uint16_t sid;
 
     if (!ip4_addr_netcmp(ip4addr, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
-            ip4_addr_cmp(ip4addr, netif_ip4_gw(netif))) {
+        ip4_addr_cmp(ip4addr, netif_ip4_gw(netif))) {
 #ifdef CONFIG_AOS_MESH_TAPIF
         if (is_router) {
             MESH_LOG_DEBUG("should go to gateway\n");
             char buf[2048];
-            int l = pbuf_copy_partial(p, buf+4, sizeof(buf)-4, 0);
+            int l = pbuf_copy_partial(p, buf + 4, sizeof(buf) - 4, 0);
             buf[0] = 0;
             buf[1] = 0;
             buf[2] = 0;
             buf[3] = 0;
-            umesh_tapif_send(buf, l+4);
+            umesh_tapif_send(buf, l + 4);
             return ERR_OK;
         }
 #endif
         sid = 0;
-    }
-    else if (ip4_addr_ismulticast(ip4addr)) {
+    } else if (ip4_addr_ismulticast(ip4addr)) {
         sid = 0xffff;
     } else {
         sid = ntohs(((ip4addr->addr) >> 16)) - 2;
@@ -247,8 +247,7 @@ ur_error_t ur_adapter_interface_up(void)
     if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
         is_router = true;
         umesh_tapif_init("tun0");
-    }
-    else {
+    } else {
         is_router = false;
         umesh_tapif_deinit();
     }

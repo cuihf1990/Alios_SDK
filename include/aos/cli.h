@@ -126,13 +126,13 @@ static inline int aos_cli_unregister_command(const struct cli_command *command)
 }
 
 static inline int aos_cli_register_commands(const struct cli_command *commands,
-                                        int num_commands)
+                                            int num_commands)
 {
     return 0;
 }
 
 static inline int aos_cli_unregister_commands(const struct cli_command *commands,
-                                          int num_commands)
+                                              int num_commands)
 {
     return 0;
 }

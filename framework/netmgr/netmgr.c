@@ -106,13 +106,14 @@ static void stop_mesh(void)
 #endif
 }
 
-static int32_t translate_addr(char *str) {
+static int32_t translate_addr(char *str)
+{
     int32_t a, b, c, d;
     int32_t address = 0;
     sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d);
-    address |= d<<24;
-    address |= c<<16;
-    address |= b<<8;
+    address |= d << 24;
+    address |= c << 16;
+    address |= b << 8;
     address |= a;
 
     return address;
@@ -239,9 +240,9 @@ static bool valid_access_security(char *security)
 {
     bool ret = false;
     if ( strcmp( security, "open" ) == 0
-        || strcmp( security, "wep" ) == 0
-        || strcmp( security, "wpa" ) == 0
-        || strcmp( security, "wpa2" ) == 0 ) {
+         || strcmp( security, "wep" ) == 0
+         || strcmp( security, "wpa" ) == 0
+         || strcmp( security, "wpa2" ) == 0 ) {
         ret = true;
     }
     return ret;
@@ -461,12 +462,12 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
     if (valid_access_security(g_netmgr_cxt.ap_config.security)) {
         if (strcmp(config->ssid, HOTSPOT_AP) != 0)
             ret = aos_kv_set(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf,
-              sizeof(wifi_conf_t), 1);
-    } 
+                             sizeof(wifi_conf_t), 1);
+    }
 #else
     if (strcmp(config->ssid, HOTSPOT_AP) != 0) // Do not save hotspot AP
         ret = aos_kv_set(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf,
-          sizeof(wifi_conf_t), 1);
+                         sizeof(wifi_conf_t), 1);
 #endif
     return ret;
 }

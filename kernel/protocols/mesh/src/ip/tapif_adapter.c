@@ -35,7 +35,7 @@ struct databuf {
 };
 
 void ur_adapter_input_buf(void *buf, int len);
-static void pass_to_urmesh(const void* arg)
+static void pass_to_urmesh(const void *arg)
 {
     struct databuf *dbuf = (struct databuf *)arg;
 
@@ -51,8 +51,9 @@ static void *tapif_recv_entry(void *arg)
         char buf[2048];
         int len = read(fd, buf, sizeof buf);
         if (len < 0) {
-            if (errno == EINTR)
+            if (errno == EINTR) {
                 continue;
+            }
             break;
         }
 
@@ -71,8 +72,8 @@ int umesh_tapif_init(const char *ifname)
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, DEVTAP_DEFAULT_IF, sizeof(ifr.ifr_name));
-    ifr.ifr_name[sizeof(ifr.ifr_name)-1] = 0;
-    ifr.ifr_flags = IFF_TUN|IFF_NO_PI;
+    ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = 0;
+    ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
 
     if (ioctl(fd, TUNSETIFF, (void *) &ifr) < 0) {
         perror("tapif_init: "DEVTAP" ioctl TUNSETIFF");
@@ -94,6 +95,6 @@ void umesh_tapif_deinit(void)
 
 void umesh_tapif_send(void *buf, int len)
 {
-    write(tapif_stat.fd, buf+4, len-4);
+    write(tapif_stat.fd, buf + 4, len - 4);
 }
 

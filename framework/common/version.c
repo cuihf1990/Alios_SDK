@@ -66,7 +66,7 @@ static struct cli_command versioncmd = {
 
 void version_init(void)
 {
-   aos_cli_register_command(&versioncmd);
+    aos_cli_register_command(&versioncmd);
 }
 
 AOS_EXPORT AOS_WEAK void dump_sys_info(void)

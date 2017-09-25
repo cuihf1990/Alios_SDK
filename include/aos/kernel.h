@@ -264,7 +264,7 @@ int aos_queue_send(aos_queue_t *queue, void *msg, unsigned int size);
  *
  * @return  0: success.
  */
-int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,unsigned int *size);
+int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg, unsigned int *size);
 
 /**
  * This function will check if queue is valid.

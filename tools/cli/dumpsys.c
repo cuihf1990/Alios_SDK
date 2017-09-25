@@ -317,7 +317,7 @@ int dump_task_stack(ktask_t *task)
     char  tmpbuf[256] = {0};
     int   bufoffset   = 0;
     int   totallen = 2048;
-    
+
     printbuf = aos_malloc(totallen);
     if (printbuf ==  NULL) {
         return RHINO_NO_MEM;

@@ -53,7 +53,7 @@ static void otacoap_response_handler(void *arg, void *p_response)
     OTA_LOG_D("[CoAP msg_len=%d, msg=%s\r\n", len, p_payload);
 
     if ((NULL != g_ota_device_info.h_coap) && (NULL != p_payload)) {
-		ota_update((uint32_t)len, (const char *)p_payload);
+        ota_update((uint32_t)len, (const char *)p_payload);
     }
 }
 
@@ -98,9 +98,9 @@ int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic_type)
                    ota_topic_type,
                    g_ota_device_info.product_key,
                    g_ota_device_info.device_name);
-//#ifdef IOTX_DEBUG
-//    OTA_ASSERT(ret < buf_len, "buffer should always enough");
-//#endif
+    //#ifdef IOTX_DEBUG
+    //    OTA_ASSERT(ret < buf_len, "buffer should always enough");
+    //#endif
     if (ret < 0) {
         OTA_LOG_E("snprintf failed");
         return -1;
@@ -190,7 +190,7 @@ int COAP_OTA_RequestVersion(const char *version)
     }
 
     //request new firmware after initial state
-	ret = otacoap_Publish("request", msg_informed);
+    ret = otacoap_Publish("request", msg_informed);
 
     if (0 != ret) {
         OTA_LOG_E("Report version failed");
@@ -324,13 +324,13 @@ void otacoap_report_version()
         HAL_SleepMs(2000);
     } while (0 != ota_code);
 
-	aos_post_delayed_action(7 * 24 * 60 * 60 *1000, otacoap_report_version, NULL);
+    aos_post_delayed_action(7 * 24 * 60 * 60 * 1000, otacoap_report_version, NULL);
 }
 
 int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
 {
-	ota_update = msgCallback;
-	otacoap_report_version();
+    ota_update = msgCallback;
+    otacoap_report_version();
     return 0;
 }
 
@@ -371,7 +371,7 @@ int8_t platform_ota_status_post(int status, int progress)
 
 int8_t platform_ota_result_post(void)
 {
-	int ret = -1;
+    int ret = -1;
     char msg_informed[MSG_INFORM_LEN] = {0};
     ret = otalib_GenInfoMsg(msg_informed, MSG_INFORM_LEN, 0,
                             (char *)ota_get_system_version());
@@ -384,5 +384,5 @@ int8_t platform_ota_result_post(void)
         OTA_LOG_E("Report version failed");
         return -1;
     }
-	return ret;
+    return ret;
 }
