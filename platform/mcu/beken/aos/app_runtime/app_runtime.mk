@@ -1,4 +1,4 @@
-NAME := art
+NAME := app_runtime
 
 $(NAME)_TYPE := app
 
@@ -6,4 +6,4 @@ $(NAME)_TYPE := app
 # don't modify to L_CFLAGS, because CONFIG_CJSON_WITHOUT_DOUBLE should enable global
 GLOBAL_LDFLAGS += -uapp_info
 
-$(NAME)_SOURCES := art.c
+$(NAME)_SOURCES := app_runtime.c

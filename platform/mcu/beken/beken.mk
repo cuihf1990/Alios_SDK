@@ -21,7 +21,7 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += rhino hal netmgr framework.common mbedtls cjson cli
 $(NAME)_COMPONENTS += platform/mcu/beken/hal_init
 $(NAME)_COMPONENTS += platform/mcu/beken/beken7231/beken378/driver/entry
-$(NAME)_COMPONENTS += platform/mcu/beken/art
+$(NAME)_COMPONENTS += platform/mcu/beken/aos/app_runtime
 
 GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_AOS_KV_MULTIPTN_MODE
