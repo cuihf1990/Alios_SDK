@@ -5,6 +5,10 @@
 #ifndef K_CRITICAL_H
 #define K_CRITICAL_H
 
+typedef struct {
+    volatile uint32_t lock;
+} kspinlock_t;
+
 #if (RHINO_CONFIG_DISABLE_INTRPT_STATS > 0)
 #define RHINO_CRITICAL_ENTER()          \
     do {                                \

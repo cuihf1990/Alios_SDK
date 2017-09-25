@@ -28,5 +28,13 @@ kstat_t krhino_sched_disable(void);
  */
 kstat_t krhino_sched_enable(void);
 
+#if (RHINO_CONFIG_CPU_NUM > 1)
+#define spin_lock(lock)   cpu_spin_lock((lock));
+#define spin_unlock(lock) cpu_spin_unlock((lock));
+#else
+#define spin_lock(lock)   krhino_sched_disable();
+#define spin_unlock(lock) krhino_sched_enable();
+#endif
+
 #endif /* K_SCHED_H */
 
