@@ -14,7 +14,6 @@ extern "C" {
 #define MAX_VERSION_LEN 64
 
 typedef enum {
-    OTA_FAILED_REBOOT = -7,
     OTA_REBOOT_FAILED = -6,
     OTA_UPGRADE_FAILED = -5,
     OTA_CHECK_FAILED = -4,

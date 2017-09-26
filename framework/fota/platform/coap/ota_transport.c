@@ -13,7 +13,7 @@
 #include "ota_update_manifest.h"
 #include "ota_log.h"
 #include "ota_version.h"
-
+#include "ota_util.h"
 //#include "iot_import_ota.h"
 
 #include "ota_log.h"
@@ -23,7 +23,17 @@
 #define MSG_INFORM_LEN  (128)
 #define FOTA_FETCH_PERCENTAGE_MIN 0
 #define FOTA_FETCH_PERCENTAGE_MAX 100
+#define OTA_VERSION_STR_LEN_MIN     (1)
+#define OTA_VERSION_STR_LEN_MAX     (32)
+#define OTA_CHECK_VER_DUARATION     (24*60*60*1000)
 
+typedef enum {
+    COAP_PROGRAMMING_FAILED = -4,
+    COAP_CHECK_FAILED = -3,
+    COAP_DOWNLOAD_FAILED = -2,
+    COAP_UPGRADE_FAILED = -1,
+} OTA_FAIL_E;
+    
 typedef struct ota_device_info {
     const char *product_key;
     const char *device_name;
@@ -152,7 +162,6 @@ int otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progress, co
                        msg_detail);
     }
 
-
     if (ret < 0) {
         OTA_LOG_E("snprintf failed");
         return -1;
@@ -163,9 +172,6 @@ int otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progress, co
 
     return 0;
 }
-
-#define OTA_VERSION_STR_LEN_MIN     (1)
-#define OTA_VERSION_STR_LEN_MAX     (32)
 
 int COAP_OTA_RequestVersion(const char *version)
 {
@@ -324,13 +330,13 @@ void otacoap_report_version()
         HAL_SleepMs(2000);
     } while (0 != ota_code);
 
-    aos_post_delayed_action(7 * 24 * 60 * 60 * 1000, otacoap_report_version, NULL);
+    aos_post_delayed_action(OTA_CHECK_VER_DUARATION, otacoap_report_version, NULL);
 }
 
 int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
 {
     ota_update = msgCallback;
-    otacoap_report_version();
+    aos_post_delayed_action(OTA_CHECK_VER_DUARATION, otacoap_report_version, NULL);
     return 0;
 }
 
@@ -351,9 +357,25 @@ int8_t platform_ota_status_post(int status, int progress)
 
     if (!ota_check_progress(progress)) {
         OTA_LOG_E("progress is a invalid parameter");
-        return -1;
+        return ret;
     }
 
+    if (status==OTA_CHECK_FAILED) {
+        progress=COAP_CHECK_FAILED;
+    }
+    else if (status==OTA_DOWNLOAD_FAILED) {
+        progress=COAP_DOWNLOAD_FAILED;
+    }
+    else if (status==OTA_DECOMPRESS_FAILED) {
+        progress=COAP_PROGRAMMING_FAILED;
+    }
+    else if (status<0) {
+        progress=COAP_UPGRADE_FAILED;
+    }
+    else if (status==OTA_INIT) {
+        progress=0;
+    }
+    
     ret = otalib_GenReportMsg(msg_reported, MSG_REPORT_LEN, 0, progress, msg_reported);
     if (0 != ret) {
         OTA_LOG_E("generate reported message failed");
