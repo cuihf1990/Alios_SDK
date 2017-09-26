@@ -2,7 +2,7 @@ NAME := linuxapp
 
 $(NAME)_SOURCES    := main.c
 
-$(NAME)_COMPONENTS := cli
+$(NAME)_COMPONENTS := cli yloop
 
 ifeq ($(LWIP),1)
 $(NAME)_COMPONENTS += protocols.net

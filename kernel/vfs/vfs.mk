@@ -9,3 +9,4 @@ $(NAME)_SOURCES     += vfs_register.c
 $(NAME)_DEFINES     += IO_NEED_TRAP
 $(NAME)_CFLAGS      += -Wall -Werror
 GLOBAL_INCLUDES     += include
+GLOBAL_DEFINES      += AOS_VFS

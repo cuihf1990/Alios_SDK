@@ -20,3 +20,5 @@ $(NAME)_INCLUDES := \
     ../../include/hal \
 
 GLOBAL_INCLUDES += .
+
+GLOBAL_DEFINES += AOS_FOTA

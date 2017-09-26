@@ -4,7 +4,6 @@
 
 #include <aos/aos.h>
 #include <vfs.h>
-#include <kvmgr.h>
 
 #ifdef MESH_GATEWAY_SERVICE
 #include "gateway_service.h"
@@ -20,7 +19,9 @@ int aos_framework_init(void)
     gateway_service_init();
 #endif
 
+#ifdef AOS_FOTA
     ota_service_init();
+#endif
 
     return 0;
 }

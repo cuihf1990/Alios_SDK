@@ -5,6 +5,8 @@ GLOBAL_INCLUDES += include
 
 $(NAME)_INCLUDES += include
 
+$(NAME)_COMPONENTS += yloop
+
 include kernel/protocols/mesh/files.mk
 $(NAME)_SOURCES := $(umesh_srcs)
 

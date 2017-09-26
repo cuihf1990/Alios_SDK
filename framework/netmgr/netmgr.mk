@@ -8,4 +8,6 @@ endif
 $(NAME)_SOURCES := netmgr.c
 $(NAME)_CFLAGS += -Wall -Werror
 
+$(NAME)_COMPONENTS += modules.fs.kv yloop
+
 GLOBAL_INCLUDES += include ../protocol/alink/os/platform/

@@ -50,12 +50,22 @@ static void aos_init(void)
 
     board_init();
 
+#ifdef AOS_VFS
     vfs_init();
     vfs_device_init();
+#endif
 
+#ifdef CONFIG_AOS_CLI
     aos_cli_init();
+#endif
+
+#ifdef AOS_KV
     aos_kv_init();
+#endif
+
+#ifdef AOS_YLOOP
     aos_loop_init();
+#endif
 
     trace_start();
     
