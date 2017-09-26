@@ -65,13 +65,13 @@ typedef struct ur_ip6_addr_s {
     };
 } __attribute__((packed)) ur_ip6_addr_t;
 
-typedef struct mesh_ip4_addr_s {
+typedef struct ur_ip4_addr_s {
     union {
         uint8_t  m8[MESH_IP4_ADDR_SIZE];
         uint16_t m16[MESH_IP4_ADDR_SIZE / sizeof(uint16_t)];
         uint32_t m32;
     };
-} __attribute__((packed)) mesh_ip4_addr_t;
+} __attribute__((packed)) ur_ip4_addr_t;
 
 typedef struct ur_ip6_prefix_s {
     ur_ip6_addr_t prefix;
@@ -87,7 +87,7 @@ enum {
 typedef struct ur_netif_ip6_address_s {
     union {
         ur_ip6_addr_t ip6_addr;
-        mesh_ip4_addr_t ip4_addr;
+        ur_ip4_addr_t ip4_addr;
     } addr;
     uint8_t                       prefix_length;
     struct ur_netif_ip6_address_s *next;

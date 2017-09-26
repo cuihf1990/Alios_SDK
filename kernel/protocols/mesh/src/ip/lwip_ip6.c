@@ -112,7 +112,7 @@ int autotest_udp_socket(raw_data_handler_t handler, uint16_t port)
 }
 
 int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
-               mesh_ip4_addr_t *dest, uint16_t port)
+               ur_ip4_addr_t *dest, uint16_t port)
 {
     struct sockaddr_in sock_addr;
 

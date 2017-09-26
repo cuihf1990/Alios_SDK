@@ -222,7 +222,7 @@ typedef struct cli_autotest_s {
 #if LWIP_IPV6
     ur_ip6_addr_t target;
 #else
-    mesh_ip4_addr_t target;
+    ur_ip4_addr_t target;
 #endif
     slist_t       acked_list;
 } cli_autotest_t;
@@ -314,7 +314,7 @@ static void handle_autotest_timer(void *args)
         cmd = (autotest_cmd_t *)payload;
         cmd->type = AUTOTEST_REQUEST;
         cmd->seq = htons(g_cli_autotest.seq++);
-        memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(mesh_ip4_addr_t));
+        memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(ur_ip4_addr_t));
         ip6_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
                    &g_cli_autotest.target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cli_autotest.length);
@@ -622,7 +622,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
 #else
     autotest_cmd_t *cmd;
     uint8_t *data;
-    mesh_ip4_addr_t dest;
+    ur_ip4_addr_t dest;
     const ur_netif_ip6_address_t *src;
     uint16_t seq;
 
@@ -631,7 +631,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
     }
 
     cmd = (autotest_cmd_t *)payload;
-    memcpy(&dest, &cmd->addr, sizeof(mesh_ip4_addr_t));
+    memcpy(&dest, &cmd->addr, sizeof(ur_ip4_addr_t));
     seq = ntohs(cmd->seq);
     if (cmd->type == AUTOTEST_REQUEST) {
         response_append("%d bytes autotest echo request from " IP4_ADDR_FMT
@@ -646,7 +646,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         cmd->type = AUTOTEST_REPLY;
         cmd->seq = htons(seq);
         src = umesh_get_ucast_addr();
-        memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(mesh_ip4_addr_t));
+        memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(ur_ip4_addr_t));
         ip6_sendto(g_cli_autotest.udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
@@ -1017,7 +1017,7 @@ void process_ping(int argc, char *argv[])
 #if LWIP_IPV6
     ur_ip6_addr_t     target;
 #else
-    mesh_ip4_addr_t target;
+    ur_ip4_addr_t target;
 #endif
     uint8_t           *payload;
     uint16_t          length;
@@ -1080,10 +1080,10 @@ void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
         }
     }
 #else
-    mesh_ip4_header_t *ip4_header;
+    ur_ip4_header_t *ip4_header;
 
     if (length) {
-        ip4_header = (mesh_ip4_header_t *)payload;
+        ip4_header = (ur_ip4_header_t *)payload;
         icmp6_header = (ur_icmp6_header_t *)(payload + MESH_IP4_HLEN);
         if (icmp6_header->type == UR_ICMP6_TYPE_EREP) {
             g_cl_state.icmp_acked ++;

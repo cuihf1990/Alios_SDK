@@ -680,20 +680,20 @@ static void gateway_advertise(void *arg)
     addr.sin6_port = htons(MQTT_SN_PORT);
     memcpy(&addr.sin6_addr, mcast_addr, sizeof(addr.sin6_addr));
 #else
-    mesh_ip4_addr_t *ip4_addr = (mesh_ip4_addr_t *)umesh_get_ucast_addr();
+    ur_ip4_addr_t *ip4_addr = (ur_ip4_addr_t *)umesh_get_ucast_addr();
     if (!ip4_addr) {
         return;
     }
 
-    adv = msn_alloc(ADVERTISE, sizeof(mesh_ip4_addr_t), &buf, &len);
+    adv = msn_alloc(ADVERTISE, sizeof(ur_ip4_addr_t), &buf, &len);
     bzero(adv, sizeof(*adv));
-    memcpy(adv->payload, ip4_addr->m8, sizeof(mesh_ip4_addr_t));
+    memcpy(adv->payload, ip4_addr->m8, sizeof(ur_ip4_addr_t));
 
     struct sockaddr_in addr;
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(MQTT_SN_PORT);
-    ip4_addr = (mesh_ip4_addr_t *)umesh_get_mcast_addr();
+    ip4_addr = (ur_ip4_addr_t *)umesh_get_mcast_addr();
     memcpy(&addr.sin_addr, ip4_addr->m8, sizeof(addr.sin_addr));
 #endif
 

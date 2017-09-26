@@ -79,6 +79,30 @@ static ur_error_t update_link_cost(link_nbr_stats_t *stats)
     return UR_ERROR_NONE;
 }
 
+static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
+{
+    network_context_t *network;
+    ur_node_id_t node_id;
+
+    if (neighbor == NULL) {
+        return UR_ERROR_NONE;
+    }
+
+    network = get_network_context_by_meshnetid(neighbor->netid);
+    if (network && network->router->sid_type == STRUCTURED_SID &&
+        is_allocated_child(network->sid_base, neighbor)) {
+        node_id.sid = neighbor->sid;
+        memcpy(node_id.ueid, neighbor->mac, sizeof(node_id.ueid));
+        update_sid_mapping(network->sid_base, &node_id, false);
+    }
+
+    slist_del(&neighbor->next, &hal->neighbors_list);
+    ur_mem_free(neighbor->one_time_key, KEY_SIZE);
+    ur_mem_free(neighbor, sizeof(neighbor_t));
+    hal->neighbors_num--;
+    return UR_ERROR_NONE;
+}
+
 static void handle_link_quality_update_timer(void *args)
 {
     ur_error_t error;
@@ -112,6 +136,7 @@ static void handle_link_quality_update_timer(void *args)
         if (nbr->stats.link_cost >= LINK_COST_THRESHOLD) {
             nbr->state = STATE_INVALID;
             g_neighbor_updater_head(nbr);
+            remove_neighbor(hal, nbr);
         }
     }
 }
@@ -172,30 +197,6 @@ get_nbr:
     return nbr;
 }
 
-static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
-{
-    network_context_t *network;
-    ur_node_id_t node_id;
-
-    if (neighbor == NULL) {
-        return UR_ERROR_NONE;
-    }
-
-    network = get_network_context_by_meshnetid(neighbor->netid);
-    if (network && network->router->sid_type == STRUCTURED_SID &&
-        is_allocated_child(network->sid_base, neighbor)) {
-        node_id.sid = neighbor->sid;
-        memcpy(node_id.ueid, neighbor->mac, sizeof(node_id.ueid));
-        update_sid_mapping(network->sid_base, &node_id, false);
-    }
-
-    slist_del(&neighbor->next, &hal->neighbors_list);
-    ur_mem_free(neighbor->one_time_key, KEY_SIZE);
-    ur_mem_free(neighbor, sizeof(neighbor_t));
-    hal->neighbors_num--;
-    return UR_ERROR_NONE;
-}
-
 static void handle_update_nbr_timer(void *args)
 {
     neighbor_t    *node;
@@ -229,6 +230,7 @@ static void handle_update_nbr_timer(void *args)
         }
         node->state = STATE_INVALID;
         g_neighbor_updater_head(node);
+        remove_neighbor(hal, node);
     }
 
     hal->update_nbr_timer = ur_start_timer(hal->advertisement_interval,
@@ -332,7 +334,8 @@ neighbor_t *update_neighbor(const message_info_t *info,
         if (network->sid_base && (nbr->flags & (NBR_SID_CHANGED | NBR_NETID_CHANGED))) {
             if (nbr->state == STATE_CHILD ||
                 (!is_direct_child(network->sid_base, info->src.addr.short_addr) &&
-                 is_allocated_child(network->sid_base, nbr))) {
+                 is_allocated_child(network->sid_base, nbr) &&
+                 is_partial_function_sid(info->src.addr.short_addr) == false)) {
                 node_id.sid = nbr->sid;
                 memcpy(node_id.ueid, nbr->mac, sizeof(node_id.ueid));
                 update_sid_mapping(network->sid_base, &node_id, false);
