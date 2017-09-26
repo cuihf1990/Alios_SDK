@@ -24,7 +24,7 @@ $(NAME)_INCLUDES += ../../utility/iotx-utils//digest
 $(NAME)_INCLUDES += ../../framework/connectivity/coap/iot-coap-c/
 $(NAME)_INCLUDES += ../../security/mbedtls/include
 
-$(NAME)_COMPONENTS  += connectivity.coap
+$(NAME)_COMPONENTS  += connectivity.coap fota
 
 $(NAME)_SOURCES     += framework/mqtt_test.c
 $(NAME)_COMPONENTS  += connectivity.mqtt
