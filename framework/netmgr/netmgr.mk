@@ -11,3 +11,5 @@ $(NAME)_CFLAGS += -Wall -Werror
 $(NAME)_COMPONENTS += modules.fs.kv yloop hal
 
 GLOBAL_INCLUDES += include ../protocol/alink/os/platform/
+
+GLOBAL_DEFINES += AOS_NETMGR
