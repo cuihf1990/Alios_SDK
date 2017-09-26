@@ -28,11 +28,11 @@
 #define OTA_CHECK_VER_DUARATION     (24*60*60*1000)
 
 typedef enum {
-    COAP_PROGRAMMING_FAILED = -4,
-    COAP_CHECK_FAILED = -3,
-    COAP_DOWNLOAD_FAILED = -2,
-    COAP_UPGRADE_FAILED = -1,
-} OTA_FAIL_E;
+    ALIOT_OTA_PROGRAMMING_FAILED = -4,
+    ALIOT_OTA_CHECK_FAILED = -3,
+    ALIOT_OTA_DOWNLOAD_FAILED = -2,
+    ALIOT_OTA_UPGRADE_FAILED = -1,
+} ALIOT_OTA_FAIL_E;
     
 typedef struct ota_device_info {
     const char *product_key;
@@ -361,16 +361,16 @@ int8_t platform_ota_status_post(int status, int progress)
     }
 
     if (status==OTA_CHECK_FAILED) {
-        progress=COAP_CHECK_FAILED;
+        progress=ALIOT_OTA_CHECK_FAILED;
     }
     else if (status==OTA_DOWNLOAD_FAILED) {
-        progress=COAP_DOWNLOAD_FAILED;
+        progress=ALIOT_OTA_DOWNLOAD_FAILED;
     }
     else if (status==OTA_DECOMPRESS_FAILED) {
-        progress=COAP_PROGRAMMING_FAILED;
+        progress=ALIOT_OTA_PROGRAMMING_FAILED;
     }
     else if (status<0) {
-        progress=COAP_UPGRADE_FAILED;
+        progress=ALIOT_OTA_UPGRADE_FAILED;
     }
     else if (status==OTA_INIT) {
         progress=0;
