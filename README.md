@@ -26,15 +26,15 @@ With the modular and multiple binaries design, Developers can use AliOS features
 
 # Document
 
-  * [Coding Style Guide](https://github.com/alibaba/AliOS/wiki/AliOS-Coding-Style-Guide)
+  * [Coding Style Guide](https://github.com/alibaba/AliOS-Things/wiki/AliOS-Things-Coding-Style-Guide)
 
-  * [Porting Guide](https://github.com/alibaba/AliOS/wiki/AliOS-Porting-Guide)
+  * [Porting Guide](https://github.com/alibaba/AliOS-Things/wiki/AliOS-Things-Porting-Guide)
 
-  * [API Guide](https://github.com/alibaba/AliOS/wiki/AliOS-API-Guide)
+  * [API Guide](https://github.com/alibaba/AliOS-Things/wiki/AliOS-Things-API-Guide)
 
-  * [Application Development Guide](https://github.com/alibaba/AliOS/wiki/AliOS-APP-DEV-Guide)
+  * [Application Development Guide](https://github.com/alibaba/AliOS-Things/wiki/AliOS-Things-APP-DEV-Guide)
 
-  * [AliOS Studio](https://github.com/alibaba/AliOS/wiki/AliOS-Studio)
+  * [AliOS Studio](https://github.com/alibaba/AliOS-Things/wiki/AliOS-Things-Studio)
 
 ------
 
