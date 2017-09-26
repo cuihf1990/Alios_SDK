@@ -3,7 +3,7 @@ NAME := ssl_client
 $(NAME)_SOURCES     := ssl_client.c
 $(NAME)_SOURCES     += dtls_client.c
 
-$(NAME)_COMPONENTS  := mbedtls alicrypto
+$(NAME)_COMPONENTS  := mbedtls alicrypto netmgr
 
 ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
 $(NAME)_DEFINES     := MBEDTLS_NET_ALT_UART
