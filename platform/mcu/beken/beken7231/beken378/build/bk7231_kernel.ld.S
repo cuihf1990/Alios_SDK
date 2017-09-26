@@ -102,8 +102,8 @@ SECTIONS
     PROVIDE(kernel_download_addr = 0x0013200);
     PROVIDE(app_download_addr = 0x006E3C0);
     PROVIDE(ota_download_addr = 0x00A5380);
-
 #endif
+
 /* This symbol defines end of code/data sections. Heap starts here. */
 	PROVIDE(end    	  = .);
 	PROVIDE(heap_start    	  = .);
