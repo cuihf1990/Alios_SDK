@@ -257,12 +257,12 @@ ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
         return UR_ERROR_FAIL;
     }
 
-    if ((ur_is_mcast(dest)) && (nd_is_subscribed_mcast(dest))) {
+    if ((ip6_is_mcast(dest)) && (nd_is_subscribed_mcast(dest))) {
         frame->dest.addr.len = SHORT_ADDR_SIZE;
         frame->dest.addr.short_addr = BCAST_SID;
         network = get_default_network_context();
         frame->dest.netid = mm_get_main_netid(network);
-    } else if (ur_is_unique_local(dest)) {
+    } else if (ip6_is_unique_local(dest)) {
         if (is_sid_address(&dest->m8[8]) == false) {
             frame->dest.addr.len = EXT_ADDR_SIZE;
             memcpy(frame->dest.addr.addr, &dest->m8[8], sizeof(frame->dest.addr.addr));

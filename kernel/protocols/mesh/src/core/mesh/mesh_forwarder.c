@@ -619,7 +619,7 @@ static void set_src_info(message_info_t *info)
 
 ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
 {
-    if (ur_is_mcast(dest)) {
+    if (ip6_is_mcast(dest)) {
         return UR_ERROR_FAIL;
     }
 
