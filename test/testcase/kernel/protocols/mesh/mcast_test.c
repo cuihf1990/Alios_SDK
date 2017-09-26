@@ -27,7 +27,7 @@ void test_uradar_mcast_case(void)
 
     cmd_to_agent("mode FIXED");
     cmd_to_agent("start");
-    check_cond_wait(!!(attach_node = umesh_mm_get_attach_node(NULL)), 15);
+    check_cond_wait(!!(attach_node = umesh_mm_get_attach_node()), 15);
 
     cmd_to_master("sendall status");
 
