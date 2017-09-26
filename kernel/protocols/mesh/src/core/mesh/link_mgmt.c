@@ -41,6 +41,7 @@ static void handle_link_request_timer(void *args)
 
     set_mesh_short_addr(&addr, attach_node->netid, attach_node->sid);
     send_link_request(network, &addr, tlv_type, sizeof(tlv_type));
+    hal->link_request_timer = NULL;
     if (attach_node->stats.link_request < LINK_ESTIMATE_SENT_THRESHOLD) {
         hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
                                                  hal);
@@ -98,11 +99,17 @@ static void handle_link_quality_update_timer(void *args)
                                          handle_link_quality_update_timer, hal);
 
     slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
+        if ((ur_get_now() - nbr->last_heard) > (hal->neighbor_alive_interval / 2)) {
+            nbr->flags &= (~NBR_LINK_ESTIMATED);
+        }
         error = update_link_cost(&nbr->stats);
         network = get_hal_default_network_context(hal);
-        if (error != UR_ERROR_NONE &&
-            nbr == umesh_mm_get_attach_node(network)) {
-            hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer, hal);
+        if (nbr == umesh_mm_get_attach_node(network)) {
+            if (error == UR_ERROR_NONE && nbr->stats.reverse_rssi >= RSSI_THRESHOLD) {
+                nbr->flags |= NBR_LINK_ESTIMATED;
+            } else if ((nbr->flags & NBR_LINK_ESTIMATED) == 0 && hal->link_request_timer == NULL) {
+                hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer, hal);
+            }
         }
         if (nbr->stats.link_cost >= LINK_COST_THRESHOLD) {
             nbr->state = STATE_INVALID;
@@ -353,7 +360,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
 exit:
     if (nbr) {
         nbr->stats.reverse_rssi = info->reverse_rssi;
-        if (info->forward_rssi != 0xff) {
+        if (nbr->stats.reverse_rssi < RSSI_THRESHOLD) {
+            nbr->flags &= (~NBR_LINK_ESTIMATED);
+        }
+        if (info->forward_rssi != 127) {
             nbr->stats.forward_rssi = info->forward_rssi;
         }
         nbr->last_heard = ur_get_now();
@@ -611,7 +621,9 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
                                 offset);
         umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_REVERSE_RSSI);
         if ((nbr->flags & NBR_LINK_ESTIMATED) == 0) {
-            nbr->flags |= NBR_LINK_ESTIMATED;
+            if (nbr->stats.reverse_rssi > RSSI_THRESHOLD) {
+                nbr->flags |= NBR_LINK_ESTIMATED;
+            }
             rssi->rssi = 127;
             nbr->stats.link_request++;
         } else {

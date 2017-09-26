@@ -23,6 +23,8 @@ enum {
 
 enum {
     INFINITY_PATH_COST = 0xffff,
+
+    RSSI_THRESHOLD = -75,  // dBm
 };
 
 typedef struct link_nbr_stats_s {

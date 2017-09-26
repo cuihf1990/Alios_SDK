@@ -1477,7 +1477,6 @@ static ur_error_t handle_advertisement(message_t *message)
         ur_mem_free(tlvs, tlvs_length);
         return UR_ERROR_NONE;
     }
-    nbr->flags &= (~NBR_LINK_ESTIMATED);
 
     if (network->router->sid_type == STRUCTURED_SID && network->meshnetid == nbr->netid &&
         is_direct_child(network->sid_base, info->src.addr.short_addr) && !is_allocated_child(network->sid_base, nbr)) {
