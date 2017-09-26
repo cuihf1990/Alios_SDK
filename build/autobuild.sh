@@ -1,8 +1,10 @@
 #!/bin/sh
 
 workdir=autobuild
+linux_platforms="linuxhost linuxhost@debug linuxhost@release"
 mk3060_targets="alinkapp helloworld linuxapp meshapp tls"
 linux_targets="alinkapp helloworld linuxapp meshapp tls yts"
+linux_posix_targets="alinkapp"
 mk3060_platforms="mk3060 mk3060@release"
 linux_platforms="linuxhost linuxhost@debug linuxhost@release"
 b_l475e_targets="mqttapp helloworld tls"
@@ -17,6 +19,24 @@ fi
 
 branch=`git status | grep "On branch" | sed -r 's/.*On branch //g'`
 cd $(git rev-parse --show-toplevel)
+
+#linuxhost posix
+aos make clean > /dev/null 2>&1
+for target in ${linux_posix_targets}; do
+    for platform in ${linux_platforms}; do
+        vcall=posix aos make ${target}@${platform} > ${target}@${platform}@${branch}.log 2>&1
+        if [ -f out/${target}@${platform}/binary/${target}@${platform}.elf ]; then
+            echo "build vcall=posix ${target}@${platform} at ${branch} branch succeed"
+            rm -rf ${target}@${platform}@${branch}.log
+        else
+            echo -e "build vcall=posix ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
 
 #single-bin, mk3060
 aos make clean > /dev/null 2>&1
