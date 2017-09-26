@@ -47,7 +47,7 @@ static void topology_line_case(bool vector_router)
     else
         cmd_to_agent("router SID_ROUTER");
     cmd_to_agent("start");
-    check_cond_wait(!!(attach_node = umesh_mm_get_attach_node(NULL)), 15);
+    check_cond_wait(!!(attach_node = umesh_mm_get_attach_node()), 15);
 
     YUNIT_ASSERT(attach_node != NULL);
     if (!attach_node) {
@@ -79,7 +79,7 @@ static void topology_line_case(bool vector_router)
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);
 
-    attach_node = umesh_mm_get_attach_node(NULL);
+    attach_node = umesh_mm_get_attach_node();
     if (attach_node) {
         uint64_t ueid = ueid64(attach_node->mac);
         YUNIT_ASSERT(ueid == 12);

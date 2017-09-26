@@ -564,12 +564,12 @@ static neighbor_t *get_next_node(message_info_t *info)
     }
 
     if (local_sid == BCAST_SID) {
-        next = umesh_mm_get_attach_candidate(network);
+        next = umesh_mm_get_attach_candidate();
         return next;
     }
 
     if (is_partial_function_sid(local_sid)) {
-        next = umesh_mm_get_attach_node(network);
+        next = umesh_mm_get_attach_node();
         return next;
     }
 
@@ -588,14 +588,14 @@ static neighbor_t *get_next_node(message_info_t *info)
             }
             next = get_neighbor_by_sid(network->hal, next_hop, info->dest.netid);
         } else if (is_subnet(network->meshnetid)) {
-            next = umesh_mm_get_attach_node(network);
+            next = umesh_mm_get_attach_node();
         } else {
             next_hop = ur_router_get_next_hop(network, get_leader_sid(info->dest.netid));
             next = get_neighbor_by_sid(network->hal, next_hop,
                                        get_main_netid(info->dest.netid));
         }
     } else {
-        next = umesh_mm_get_attach_candidate(network);
+        next = umesh_mm_get_attach_candidate();
     }
 
     return next;

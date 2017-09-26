@@ -34,7 +34,7 @@ static void handle_link_request_timer(void *args)
     }
 
     network = get_default_network_context();
-    attach_node = umesh_mm_get_attach_node(network);
+    attach_node = umesh_mm_get_attach_node();
     if (attach_node == NULL) {
         return;
     }
@@ -84,7 +84,6 @@ static void handle_link_quality_update_timer(void *args)
     ur_error_t error;
     neighbor_t *nbr;
     hal_context_t *hal = (hal_context_t *)args;
-    network_context_t *network;
     uint32_t interval;
 
     MESH_LOG_DEBUG("handle link quality update timer");
@@ -103,8 +102,7 @@ static void handle_link_quality_update_timer(void *args)
             nbr->flags &= (~NBR_LINK_ESTIMATED);
         }
         error = update_link_cost(&nbr->stats);
-        network = get_hal_default_network_context(hal);
-        if (nbr == umesh_mm_get_attach_node(network)) {
+        if (nbr == umesh_mm_get_attach_node()) {
             if (error == UR_ERROR_NONE && nbr->stats.reverse_rssi >= RSSI_THRESHOLD) {
                 nbr->flags |= NBR_LINK_ESTIMATED;
             } else if ((nbr->flags & NBR_LINK_ESTIMATED) == 0 && hal->link_request_timer == NULL) {

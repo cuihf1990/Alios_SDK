@@ -103,8 +103,8 @@ uint8_t umesh_mm_get_prev_channel(void);
 void umesh_mm_set_prev_channel(void);
 
 uint16_t            umesh_mm_get_local_sid(void);
-neighbor_t          *umesh_mm_get_attach_node(network_context_t *network);
-neighbor_t          *umesh_mm_get_attach_candidate(network_context_t *network);
+neighbor_t          *umesh_mm_get_attach_node(void);
+neighbor_t          *umesh_mm_get_attach_candidate(void);
 uint8_t             *umesh_mm_get_local_ueid(void);
 node_state_t        umesh_mm_get_device_state(void);
 attach_state_t      umesh_mm_get_attach_state(void);
