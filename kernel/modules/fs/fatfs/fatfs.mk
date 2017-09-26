@@ -9,3 +9,4 @@ $(NAME)_SOURCES     += ff/ffunicode.c
 $(NAME)_CFLAGS      += -Wall -Werror
 
 GLOBAL_INCLUDES     += include ff/include
+GLOBAL_DEFINES      += AOS_FATFS

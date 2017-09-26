@@ -1,7 +1,7 @@
 NAME := alinkapp
 
 $(NAME)_SOURCES := alink_sample.c
-$(NAME)_COMPONENTS := log protocol.alink  cli fota
+$(NAME)_COMPONENTS := log protocol.alink  cli fota netmgr framework.common
 
 ifneq (,${BINS})
 GLOBAL_CFLAGS += -DSYSINFO_OS_BINS

@@ -1,16 +1,18 @@
-NAME := yts
+NAME := nano
 
-$(NAME)_SOURCES := main.c
-$(NAME)_COMPONENTS := protocols.net protocols.mesh dda testcase  rhino.test netmgr log vfs yloop hal modules.fs.fatfs framework.common
+$(NAME)_SOURCES := nano.c
 
-$(NAME)_CFLAGS += -Wall -Werror
+GLOBAL_DEFINES += AOS_NO_WIFI
 
-GLOBAL_LDFLAGS += -lreadline -lncurses
-GLOBAL_DEFINES += CONFIG_AOS_MESHYTS DEBUG
+ifeq ($(BENCHMARKS),1)
+$(NAME)_COMPONENTS  += benchmarks
+GLOBAL_DEFINES      += CONFIG_CMD_BENCHMARKS
+endif
 
 ifneq (,${BINS})
 GLOBAL_CFLAGS += -DSYSINFO_OS_BINS
 endif
+
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 CONFIG_SYSINFO_APP_VERSION = APP-1.0.0-$(CURRENT_TIME)
 $(info app_version:${CONFIG_SYSINFO_APP_VERSION})
