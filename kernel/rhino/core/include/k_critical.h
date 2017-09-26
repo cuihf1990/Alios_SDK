@@ -5,9 +5,40 @@
 #ifndef K_CRITICAL_H
 #define K_CRITICAL_H
 
+#if (RHINO_CONFIG_CPU_NUM > 1)
 typedef struct {
-    volatile uint32_t lock;
+    arch_spinlock_t lock;
 } kspinlock_t;
+
+#define krhino_spin_lock(lock)                     cpu_spin_lock((lock));
+#define krhino_spin_unlock(lock)                   cpu_spin_unlock((lock));
+
+#define krhino_spin_lock_irq_save(lock, flag)      do {\
+                                                        flag = cpu_intrpt_save();    \
+                                                        cpu_spin_lock((lock));       \
+                                                    } while (0)
+
+#define krhino_spin_lock_irq_restore(lock, flag)   do {\
+                                                        cpu_spin_unlock((lock));     \
+                                                        cpu_intrpt_restore((flag));  \
+                                                    } while (0)
+#else
+typedef struct {
+    uint8_t dummy;
+} kspinlock_t;
+
+#define krhino_spin_lock(lock)                     krhino_sched_disable();
+#define krhino_spin_unlock(lock)                   krhino_sched_enable();
+
+#define krhino_spin_lock_irq_save(lock, flag)      do {\
+                                                        flag = cpu_intrpt_save();    \
+                                                   } while (0)
+
+#define krhino_spin_lock_irq_restore(lock, flag)   do {\
+                                                        cpu_intrpt_restore((flag));  \
+                                                    } while (0)
+
+#endif
 
 #if (RHINO_CONFIG_DISABLE_INTRPT_STATS > 0)
 #define RHINO_CRITICAL_ENTER()          \

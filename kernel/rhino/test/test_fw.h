@@ -9,8 +9,6 @@
 extern "C" {
 #endif
 
-#include <k_types.h>
-
 typedef void (*test_case_t)(void);
 
 typedef struct {
