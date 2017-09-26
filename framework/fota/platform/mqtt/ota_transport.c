@@ -27,6 +27,13 @@ typedef struct ota_device_info {
     void *pclient;
 } OTA_device_info;
 
+typedef enum {
+    ALIOT_OTA_PROGRAMMING_FAILED = -4,
+    ALIOT_OTA_CHECK_FAILED = -3,
+    ALIOT_OTA_DOWNLOAD_FAILED = -2,
+    ALIOT_OTA_UPGRADE_FAILED = -1,
+} ALIOT_OTA_FAIL_E;
+
 OTA_device_info g_ota_device_info;
 
 static char *g_upgrad_topic;
@@ -344,16 +351,30 @@ static bool ota_check_progress(int progress)
             && (progress <= POTA_FETCH_PERCENTAGE_MAX));
 }
 
-
 int8_t platform_ota_status_post(int status, int progress)
 {
     int ret = -1;
     char msg_reported[MSG_REPORT_LEN] = {0};
     if (!ota_check_progress(progress)) {
         OTA_LOG_E("progress is a invalid parameter");
-        return -1;
+        return ret;
     }
 
+    if (status==OTA_CHECK_FAILED) {
+        progress=ALIOT_OTA_CHECK_FAILED;
+    }
+    else if (status==OTA_DOWNLOAD_FAILED) {
+        progress=ALIOT_OTA_DOWNLOAD_FAILED;
+    }
+    else if (status==OTA_DECOMPRESS_FAILED) {
+        progress=ALIOT_OTA_PROGRAMMING_FAILED;
+    }
+    else if (status<0) {
+        progress=ALIOT_OTA_UPGRADE_FAILED;
+    }
+    else if (status==OTA_INIT) {
+        progress=0;
+    }
     ret = ota_gen_report_msg(msg_reported, MSG_REPORT_LEN, 0, progress, NULL);
 
     if (0 != ret) {
