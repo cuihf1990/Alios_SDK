@@ -10,14 +10,20 @@
 #include <stdlib.h>
 #include <dda.h>
 #endif
+
+#ifdef AOS_NETMGR
 #include "netmgr.h"
+#endif
+
 #include "umesh.h"
 #include "umesh_hal.h"
 
 static void app_delayed_action(void *arg)
 {
+#ifdef AOS_NETMGR
     netmgr_init();
     netmgr_start(false);
+#endif
 }
 
 static void app_main_entry(void *arg)

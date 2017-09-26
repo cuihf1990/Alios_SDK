@@ -3,7 +3,7 @@ no_with_lwip := 0
 
 $(NAME)_SOURCES     := main.c
 
-$(NAME)_COMPONENTS  += protocols.mesh cli
+$(NAME)_COMPONENTS  += protocols.mesh cli netmgr
 GLOBAL_DEFINES      += TAPIF_DEFAULT_OFF DEBUG
 
 LWIP ?=1
