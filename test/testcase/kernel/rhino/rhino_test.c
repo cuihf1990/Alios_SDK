@@ -6,8 +6,9 @@
 #include <aos/kernel.h>
 
 #include "yunit.h"
-#include "test_fw.h"
 #include <k_api.h>
+#include "test_fw.h"
+
 
 #define RHINO_TEST_TASK_PRI 9
 
