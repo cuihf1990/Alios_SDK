@@ -84,11 +84,13 @@ void trace_filter_and_write(ktask_t *task, const void *buf, uint32_t len)
         return;
     }
 
-    *((char *)buf + len) = '\n';
+    *((hr_timer_t *)((char *)buf + len)) = HR_COUNT_GET();
+    *((char *)buf + len + sizeof(hr_timer_t)) = '\n';
+    len = len + sizeof(hr_timer_t) + sizeof(char);
+    
+    assert(len <= TRACE_PACKET_LENGTH);
 
-    assert((len + 1) <= TRACE_PACKET_LENGTH);
-
-    fifo_in_full_reject_lock(&trace_fifo, buf, len + 1);
+    fifo_in_full_reject_lock(&trace_fifo, buf, len);
 }
 
 void _trace_task_switch(ktask_t *from, ktask_t *to)
