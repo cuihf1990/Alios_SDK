@@ -237,8 +237,11 @@ void hw_start_hal(options_t *poptions)
         hal_uart_init(&uart_0);
 #endif
 
+#ifdef AOS_HAL
     hal_wifi_register_module(&sim_aos_wifi_linux);
     hal_ota_register_module(&linuxhost_ota_module);
+#endif
+
 #ifdef LINUX_MESH_80211
     linux_wifi_register();
 #endif

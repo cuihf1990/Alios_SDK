@@ -6,7 +6,7 @@ no_with_lwip ?= 1
 
 GLOBAL_INCLUDES += . $(ARCH_LINUX)
 
-$(NAME)_COMPONENTS  := hal netmgr framework.common  modules.fs.kv modules.fs.fatfs
+$(NAME)_COMPONENTS  := log
 
 ifeq ($(openssl),1)
 GLOBAL_LDFLAGS += -lssl -lcrypto
@@ -65,7 +65,10 @@ $(NAME)_SOURCES     += main/main.c
 $(NAME)_SOURCES     += main/hw.c
 $(NAME)_SOURCES     += main/wifi_port.c
 $(NAME)_SOURCES     += main/ota_port.c
+
+ifneq (,$(filter modules.fs.fatfs,$(COMPONENTS)))
 $(NAME)_SOURCES     += main/sdmmc.c
+endif
 
 ifeq ($(linux80211),1)
 $(NAME)_SOURCES     += csp/wifi/common.c

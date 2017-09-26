@@ -58,18 +58,27 @@ static void app_entry(void *arg)
 #endif
     hw_start_hal(&options);
 
+#ifdef AOS_VFS
     vfs_init();
     vfs_device_init();
+#endif
 
 #ifdef CONFIG_AOS_CLI
     if (options.cli.enable)
         aos_cli_init();
 #endif
 
+#ifdef AOS_KV
     aos_kv_init();
-    aos_loop_init();
+#endif
 
+#ifdef AOS_LOOP
+    aos_loop_init();
+#endif
+
+#ifdef AOS_FRAMEWORK_COMMON
     aos_framework_init();
+#endif
 
 #ifdef VCALL_RHINO
     trace_start();    
