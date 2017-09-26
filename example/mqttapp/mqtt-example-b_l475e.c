@@ -381,9 +381,7 @@ int application_start(int argc, char *argv[])
         printf("Error: Failed to create cli thread: %d\r\n", ret);
     }
 #endif
-    LOG("aos_loop_run end.");
     aos_loop_run();
-    aos_msleep(10000000);
     return 0;
 }
 

@@ -964,7 +964,7 @@ static void handle_heartbeat_timer(void *args)
         }
     } else if (g_vr_state.status == STATUS_SYNC_TOPOLOGY) {
         if (g_vr_state.sync_status == TOPOLOGY_SYNC_IDLE) {
-            neighbor_t *node = umesh_mm_get_attach_node(NULL);
+            neighbor_t *node = umesh_mm_get_attach_node();
             if (node == NULL) {
                 return;
             }

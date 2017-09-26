@@ -13,6 +13,8 @@ aosdir=~/githubsync/aos
 githubdir=~/githubsync/AliOS
 
 rm -rf ${githubdir}/*
+rm -rf ${github}/.gitignore
+rm -rf ${github}/.vscode
 cp -rf ${aosdir}/* ${githubdir}/
 cp -rf ${aosdir}/.gitignore ${githubdir}/.gitignore
 cp -rf ${aosdir}/.vscode ${githubdir}/.vscode
@@ -25,6 +27,23 @@ rm -rf ${githubdir}/build/OpenOCD
 rm -rf ${githubdir}/build/compiler/arm-none-eabi*
 rm -rf ${githubdir}/platform/mcu/linux/csp/wifi/radiotap
 rm -rf ${githubdir}/script
+rm -rf ${githubdir}/platform/mcu/linux/csp/wifi
+rm -rf ${githubdir}/platform/arch/linux/swap.*
+rm -rf ${githubdir}/kernel/rhino/test/perf/realtimelib.c
+rm -rf ${githubdir}/example/yts
+rm -rf ${githubdir}/bootloader
+cd ${aosdir}/platform/arch/linux/
+git checkout origin/githubsync -- k_config.h
+cp -f k_config.h ${githubdir}/platform/arch/linux/
+git reset && git checkout k_config.h
+cd ${aosdir}/platform/mcu/linux/
+git checkout origin/githubsync -- linux.mk
+cp -rf linux.mk ${githubdir}/platform/mcu/linux/
+git reset && git checkout linux.mk
+cd ${aosdir}/build/
+git checkout origin/githubsync -- autobuild.sh
+cp -rf autobuild.sh ${githubdir}/build/
+git reset && git checkout autobuild.sh
 
 #tools folder
 rm -rf ${githubdir}/tools/*
@@ -42,6 +61,7 @@ cp -f ${aosdir}/framework/ywss/enrollee.h ${githubdir}/framework/ywss/
 cd ${aosdir}/framework/ywss/
 git checkout origin/githubsync -- ywss.mk
 cp -rf ywss.mk ${githubdir}/framework/ywss/
+git reset && git checkout ywss.mk
 
 #mesh folder
 rm -rf ${githubdir}/kernel/protocols/mesh/*
@@ -56,6 +76,7 @@ cp -f ${aosdir}/kernel/protocols/mesh/include/umesh_types.h ${githubdir}/kernel/
 cd ${aosdir}/kernel/protocols/mesh
 git checkout origin/githubsync -- mesh.mk
 cp -rf mesh.mk ${githubdir}/kernel/protocols/mesh/
+git reset && git checkout mesh.mk
 
 #beken folder
 rm -rf ${githubdir}/platform/mcu/beken/*
@@ -78,7 +99,9 @@ cp -rf beken7231/beken378/ip/common ${githubdir}/platform/mcu/beken/include/ip/
 cp -rf beken7231/beken378/driver/entry/*.h ${githubdir}/platform/mcu/beken/include/
 cp -rf beken7231/beken378/build ${githubdir}/platform/mcu/beken/linkinfo
 find ${githubdir}/platform/mcu/beken/ -type f -name '*.c' -exec rm {} +
+cp -rf aos ${githubdir}/platform/mcu/beken/
 cp -rf art ${githubdir}/platform/mcu/beken/
+cp -rf hal ${githubdir}/platform/mcu/beken/
 cp -rf encrypt_linux ${githubdir}/platform/mcu/beken/
 cp -rf encrypt_osx ${githubdir}/platform/mcu/beken/
 cp -rf encrypt_win.exe ${githubdir}/platform/mcu/beken/
@@ -86,13 +109,9 @@ cp -rf gen_crc_bin.mk ${githubdir}/platform/mcu/beken/
 cd ${aosdir}/platform/mcu/beken/
 git checkout origin/githubsync -- beken.mk
 cp -rf beken.mk ${githubdir}/platform/mcu/beken/
+git reset && git checkout beken.mk
 
 cd ${aosdir}
-git reset
-git checkout kernel/protocols/mesh/mesh.mk
-git checkout platform/mcu/beken/beken.mk
-git checkout framework/ywss/ywss.mk
-
 aos make meshapp@linuxhost meshdebug=1
 if [ $? -ne 0 ]; then
     echo "error: build meshapp@linuxhost failed"
@@ -136,6 +155,11 @@ echo "end" >> packscript
 arm-none-eabi-ar -M < packscript
 arm-none-eabi-strip --strip-debug libbeken.a
 mv libbeken.a ${githubdir}/platform/mcu/beken/
+cd ${githubdir}/platform/mcu/beken/
+arm-none-eabi-ar d aos_main.o
+arm-none-eabi-ar d soc_impl.o
+arm-none-eabi-ar d trace_impl.o
+arm-none-eabi-ar d mesh_wifi_hal.o
 
 cd ${githubdir}
 git add -A

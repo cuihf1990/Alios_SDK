@@ -1815,24 +1815,27 @@ attach_state_t umesh_mm_get_attach_state(void)
     return network->attach_state;
 }
 
-neighbor_t *umesh_mm_get_attach_node(network_context_t *network)
+neighbor_t *umesh_mm_get_attach_node(void)
 {
-    network = network ? : get_default_network_context();
-    if (!network) {
-        return NULL;
+    network_context_t *network;
+
+    network = get_default_network_context();
+    if (network) {
+        return network->attach_node;
     }
 
-    return network->attach_node;
+    return NULL;
 }
 
-neighbor_t *umesh_mm_get_attach_candidate(network_context_t *network)
+neighbor_t *umesh_mm_get_attach_candidate(void)
 {
-    network = network ? : get_default_network_context();
-    if (!network) {
-        return NULL;
-    }
+    network_context_t *network;
 
-    return network->attach_candidate;
+    network = get_default_network_context();
+    if (network) {
+        return network->attach_candidate;
+    }
+    return NULL;
 }
 
 uint8_t umesh_mm_get_leader_mode(void)

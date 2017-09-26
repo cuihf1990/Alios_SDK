@@ -8,7 +8,7 @@ $(NAME)_CFLAGS += -Wall -Werror
 $(NAME)_COMPONENTS += fota.platform.alink
 else
 ifneq (,$(filter connectivity.mqtt,$(COMPONENTS)))
-$(NAME)_COMPONENTS += fota.platform.aliot
+$(NAME)_COMPONENTS += fota.platform.mqtt
 else
 ifneq (,$(filter connectivity.coap,$(COMPONENTS)))
 $(NAME)_COMPONENTS += fota.platform.coap

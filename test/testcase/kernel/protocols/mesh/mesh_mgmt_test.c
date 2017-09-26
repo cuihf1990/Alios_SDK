@@ -59,7 +59,7 @@ void test_uradar_mesh_mgmt_case(void)
     YUNIT_ASSERT(MODE_MOBILE == umesh_mm_get_mode());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_set_mode(MODE_RX_ON));
     YUNIT_ASSERT(MODE_RX_ON == umesh_mm_get_mode());
-    YUNIT_ASSERT_PTR_NULL(umesh_mm_get_attach_node(NULL));
+    YUNIT_ASSERT_PTR_NULL(umesh_mm_get_attach_node());
 
     uint8_t tlvs[10];
     uint8_t length = 10;

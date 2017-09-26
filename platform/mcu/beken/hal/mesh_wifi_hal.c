@@ -12,7 +12,6 @@
 #include <umesh_80211.h>
 #include <hal/wifi.h>
 
-#include "reg_mac_core.h"
 struct phy_channel_info
 {
     uint32_t info1;
@@ -32,6 +31,13 @@ extern uint8_t rw_ieee80211_get_chan_id(uint32_t freq);
 extern uint32_t rw_ieee80211_get_centre_frequency(uint32_t chan_id);
 extern void phy_set_channel(uint8_t band, uint8_t type, uint16_t prim20_freq,
                      uint16_t center1_freq, uint16_t center2_freq, uint8_t index);
+#define NXMAC_MAX_POWER_LEVEL_ADDR   0xC00000A0
+#define REG_PL_RD(addr)              (*(volatile uint32_t *)(addr))
+static inline uint8_t nxmac_dsss_max_pwr_level_getf(void)
+{
+    uint32_t localVal = REG_PL_RD(NXMAC_MAX_POWER_LEVEL_ADDR);
+    return ((localVal & ((uint32_t)0x0000FF00)) >> 8);
+}
 
 struct tx_policy_tbl
 {
