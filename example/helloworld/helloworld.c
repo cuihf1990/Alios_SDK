@@ -3,8 +3,6 @@
  */
 
 #include <aos/aos.h>
-
-#include "hal/soc/soc.h"
 #include "helloworld.h"
 
 static void app_delayed_action(void *arg)
