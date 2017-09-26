@@ -91,6 +91,8 @@ SECTIONS
 	PROVIDE(end    	  = .);
 	PROVIDE(heap_start    	  = .);
 
+    PROVIDE(kernel_download_addr = 0x0013200);
+
 /* _stack symbol defines initial stack bottom addres. Stack grows to lower addresses.
    Typically you set this to be top of your RAM. Note: code never checks, if stack
    grows into heap area!

@@ -96,6 +96,17 @@ SECTIONS
     PROVIDE(_app_heap_len      = _app_heap_end -  _app_heap_start);
 
     PROVIDE(g_syscall_tbl = 0X00012040);
+
+#ifdef MBEDTLS_IN_KERNEL
+    PROVIDE(kernel_download_addr = 0x0013200);
+    PROVIDE(app_download_addr = 0x0077440);
+    PROVIDE(ota_download_addr = 0x009c300);
+#else
+    PROVIDE(kernel_download_addr = 0x0013200);
+    PROVIDE(app_download_addr = 0x006E3C0);
+    PROVIDE(ota_download_addr = 0x00A5380);
+#endif
+
 }
  GROUP(
    libgcc.a
