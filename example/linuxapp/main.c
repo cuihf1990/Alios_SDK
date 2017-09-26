@@ -6,7 +6,10 @@
 #include <aos/aos.h>
 #include <aos/network.h>
 #include <strings.h>
+
+#ifdef AOS_NETMGR
 #include <netmgr.h>
+#endif
 
 struct cookie {
     int flag;
@@ -51,9 +54,11 @@ int application_start(void)
 
     aos_register_event_filter(EV_WIFI, handle_event, cookie);
 
+#ifdef AOS_NETMGR
     netmgr_init();
     netmgr_start(true);
-	
+#endif
+
 #ifdef CONFIG_CMD_BENCHMARKS
     extern void benchmark_cli_init();
     benchmark_cli_init();
