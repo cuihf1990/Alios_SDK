@@ -27,7 +27,7 @@ typedef void (*oob_cb)(void *arg);
 
 typedef struct oob_s {
     unsigned len;
-    const char prefix[PREFIX_MAX];
+    char prefix[PREFIX_MAX];
     oob_cb cb;
     void *arg;
 }oob_t;

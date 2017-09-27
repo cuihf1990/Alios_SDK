@@ -16,12 +16,6 @@
 #include <signal.h>
 #include "hal/soc/soc.h"
 
-#ifdef AOS_ATCMD
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#endif
-
 #ifdef VCALL_RHINO
 #include <k_api.h>
 
@@ -201,9 +195,14 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
 }
 #else
 #ifdef AOS_ATCMD
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #define AT_UART_PORT 1
 #define AT_UART_DEV "/dev/ttyUSB1"
 static int at_uart_fd = -1;
+
 int32_t hal_uart_init(uart_dev_t *uart)
 {
     if (uart->port != AT_UART_PORT) return 0;

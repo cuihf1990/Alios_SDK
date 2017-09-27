@@ -1,6 +1,6 @@
 NAME := atparser
 
-with_atparser := 1
+with_atparser ?= 1
 
 GLOBAL_INCLUDES += ./
 

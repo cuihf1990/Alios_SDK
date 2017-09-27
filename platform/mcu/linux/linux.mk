@@ -8,10 +8,6 @@ GLOBAL_INCLUDES += . $(ARCH_LINUX)
 
 $(NAME)_COMPONENTS  := log
 
-ifeq ($(with_atparser),1)
-$(NAME)_COMPONENTS += atparser
-endif
-
 ifeq ($(openssl),1)
 GLOBAL_LDFLAGS += -lssl -lcrypto
 else
@@ -67,7 +63,11 @@ $(NAME)_SOURCES     += soc/uart.c
 $(NAME)_SOURCES     += main/arg_options.c
 $(NAME)_SOURCES     += main/main.c
 $(NAME)_SOURCES     += main/hw.c
+ifeq ($(with_atparser),1)
+$(NAME)_SOURCES     += main/wifi_atcmd.c
+else
 $(NAME)_SOURCES     += main/wifi_port.c
+endif
 $(NAME)_SOURCES     += main/ota_port.c
 
 ifneq (,$(filter modules.fs.fatfs,$(COMPONENTS)))

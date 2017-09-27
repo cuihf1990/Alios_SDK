@@ -102,6 +102,7 @@ int application_start(int argc, char *argv[])
     uart_1.config.flow_control = FLOW_CONTROL_DISABLED;
 
     at.init(&uart_1, "\r\n", "\r\n", 1000);
+    at.set_mode(ASYN);
     at.oob("+CIPEVENT:SOCKET", socket_handler, NULL);
 
     aos_register_event_filter(EV_WIFI, wifi_event_handler, NULL);

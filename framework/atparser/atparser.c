@@ -418,10 +418,11 @@ check_buffer:
 }
 
 at_parser_t at = {
-    ._oobs = {0},
+    ._oobs = {{0}},
     ._oobs_num = 0,
     ._mode = ASYN, // default mode - atworker
     .init = at_init,
+    .set_mode = at_set_mode,
     .set_timeout = at_set_timeout,
     .set_delimiter = at_set_delimiter,
     .set_recv_delimiter = at_set_recv_delimiter,

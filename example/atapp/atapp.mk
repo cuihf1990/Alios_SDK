@@ -4,6 +4,8 @@ $(NAME)_SOURCES := atapp.c
 
 $(NAME)_COMPONENTS += cli atparser netmgr
 
+with_atparser ?= 1
+
 GLOBAL_DEFINES += AOS_NO_WIFI
 
 ifeq (1,${BINS})
