@@ -403,9 +403,7 @@ ur_error_t umesh_init(node_mode_t mode)
     hal_umesh_init();
     g_um_state.mm_cb.interface_up = umesh_interface_up;
     g_um_state.mm_cb.interface_down = umesh_interface_down;
-#ifdef CONFIG_NET_LWIP
     ur_adapter_interface_init();
-#endif
     ur_router_register_module();
     interface_init();
 

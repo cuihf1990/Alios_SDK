@@ -22,7 +22,7 @@
 static bool is_router;
 int umesh_tapif_init(const char *ifname);
 void umesh_tapif_deinit(void);
-void umesh_tapif_send(void *buf, int len);
+void umesh_tapif_send_pbuf(struct pbuf *pbuf);
 #endif
 
 #if LWIP_IPV6 == 0 && LWIP_IPV4 && LWIP_IGMP
@@ -80,13 +80,7 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
 #ifdef CONFIG_AOS_MESH_TAPIF
         if (is_router) {
             MESH_LOG_DEBUG("should go to gateway\n");
-            char buf[2048];
-            int l = pbuf_copy_partial(p, buf + 4, sizeof(buf) - 4, 0);
-            buf[0] = 0;
-            buf[1] = 0;
-            buf[2] = 0;
-            buf[3] = 0;
-            umesh_tapif_send(buf, l + 4);
+            umesh_tapif_send_pbuf(p);
             return ERR_OK;
         }
 #endif

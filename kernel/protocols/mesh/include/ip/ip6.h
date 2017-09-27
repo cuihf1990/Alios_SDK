@@ -14,6 +14,7 @@ enum {
 };
 
 enum {
+    UR_IPPROTO_TCP    = 6,
     UR_IPPROTO_UDP    = 17,
     UR_IPPROTO_ICMPV6 = 58,
 };
