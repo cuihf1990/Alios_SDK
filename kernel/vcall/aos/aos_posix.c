@@ -352,10 +352,6 @@ void aos_msleep(int ms)
     usleep(ms * 1000);
 }
 
-void krhino_init(void)
-{
-}
-
 void krhino_start(void)
 {
     while (1) {
