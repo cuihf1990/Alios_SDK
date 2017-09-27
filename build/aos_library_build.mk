@@ -46,26 +46,23 @@ MAKEFILES_DIR := $(TOOLS_ROOT)$(SOURCE_ROOT)/tools/makefiles
 # NOTE: The system builds each object twice - once with built-in functions disabled and bad functions poisoned to catch uses of these functions,
 #       Then again with built-in functions re-enabled to allow optimisations
 
-$(SOURCE_ROOT)out/$(NAME)/%.o: %.c Makefile
+$(SOURCE_ROOT)out/$(NAME)/%.o: %.c $(SOURCE_ROOT)build/aos_library_makefile.mk
 	$(QUIET)$(call MKDIR, $(dir $@))
 	$(QUIET)$(ECHO) Compiling $<
 	$(QUIET)$(CC) -I $(SOURCE_ROOT)/tools/makefiles -fno-builtin $(LIBRARY_POISON_H_INCLUSION) $(CFLAGS) -o $@ $<
 	$(QUIET)$(CC) $(CFLAGS) -o $@ $<
 
-$(SOURCE_ROOT)out/$(NAME)/%.o: %.cpp Makefile
+$(SOURCE_ROOT)out/$(NAME)/%.o: %.cpp $(SOURCE_ROOT)build/aos_library_makefile.mk
 	$(QUIET)$(call MKDIR, $(dir $@))
 	$(QUIET)$(ECHO) Compiling $<
 	$(QUIET)$(CC) $(CFLAGS) -o $@ $<
 	$(QUIET)$(CXX) -I $(SOURCE_ROOT)/tools/makefiles $(LIBRARY_POISON_H_INCLUSION) -fno-builtin $(CFLAGS) -o $@ $<
 	$(QUIET)$(CXX) $(CFLAGS) -o $@ $<
 
-$(SOURCE_ROOT)out/$(NAME)/%.o: %.S Makefile
+$(SOURCE_ROOT)out/$(NAME)/%.o: %.S $(SOURCE_ROOT)build/aos_library_makefile.mk
 	$(QUIET)$(call MKDIR, $(dir $@))
 	$(QUIET)$(ECHO) Assembling $<
 	$(QUIET)$(AS) $(ASMFLAGS) -o $@ $<
-
-# Standard library defines
-CFLAGS += -c -MD -ggdb $(CPU_CFLAGS) $(ENDIAN_CFLAGS_LITTLE) -Wall -fsigned-char -ffunction-sections -Werror -fdata-sections -fno-common -std=gnu11 
 
 # AOS pre-built library defines
 CFLAGS += -DAOS_PREBUILT_LIBS
@@ -116,14 +113,14 @@ $(SOURCE_ROOT)out/$(NAME)/$(LIBRARY_NAME).a: $(OBJS)
 	$(if $(wordlist 751,1000, $(OBJS)),$(QUIET)$(AR) -rcs $@ $(wordlist 751,1000, $(OBJS)))
 
 
-stripped_lib: $(SOURCE_ROOT)out/$(NAME)/$(LIBRARY_NAME).a Makefile
+stripped_lib: $(SOURCE_ROOT)out/$(NAME)/$(LIBRARY_NAME).a $(SOURCE_ROOT)build/aos_library_makefile.mk
 ifdef NO_STRIP_LIBS
 	$(QUIET)$(CP) $(SOURCE_ROOT)/out/$(NAME)/$(LIBRARY_NAME).a $(LIBRARY_NAME).a
 else
 	$(QUIET)$(STRIP) -g -o $(LIBRARY_NAME).a $(SOURCE_ROOT)/out/$(NAME)/$(LIBRARY_NAME).a
 endif
 	$(QUIET)$(RM) -rf $(SOURCE_ROOT)/out/$(NAME)
-	$(QUIET)$(ECHO) ALL DONE
+	$(QUIET)$(ECHO) $(LIBRARY_NAME).a DONE
 
 clean:
 	$(QUIET)$(RM) -rf $(NAME)*.a
