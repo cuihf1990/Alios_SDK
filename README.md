@@ -4,36 +4,50 @@
   
 ## AliOS 特性
 
-**极简开发**   
-  基于Linux平台，提供MCU虚拟化环境，开发者直接在Linux平台上开发硬件无关的IoT应用和软件库，开发者直接在Linux平台上开发硬件无关的IoT应用和软件库，使用GDB
- /Valgrind/Systap 等PC平台工具诊断开发问题。
+**极简开发**  
+  基于Linux平台，提供MCU虚拟化环境，开发者直接在Linux平台上开发硬件无关的IoT应用和软件库，开发者直接在Linux平台上开发硬件无关的IoT应用和软件库，使用GDB/Valgrind/Systap 等PC平台工具诊断开发问题。
+  
   提供IDE，支持系统/内核行为Trace、Mesh组网图形化显示。
-  提供shell交互，支持内存踩踏、泄露、最大栈深度等各类侦测。
+  
+  提供Shell交互，支持内存踩踏、泄露、最大栈深度等各类侦测。
+  
   提供面向组件的编译系统以及Cube组件工具，开发者可以灵活组合IOT产品软件栈。
-
+  
 **即插即用的连接和丰富服务**
+  
   支持umesh即插即用网络技术，设备上电自动连网
+  
   通过Alink与阿里云IoT服务无缝连接
 
 **细颗粒度的FOTA更新**
+  
   支持应用代码独立编译映像，IoT App独立极小映像升级
+  
   支持映像高度压缩
 
 **彻底全面的安全保护**
+  
   提供系统和芯片级别安全保护
+  
   支持可信运行环境（支持ARMV8-M Trust Zone）
+  
   支持预置ID2根身份证和非对称密钥以及基于ID2的可信连接和服务
 
 **高度优化的性能**
+  
   内核支持Idle Task成本，Ram<1K,Rom<2k，提供硬实时能力
+  
   提供YLOOP异步事件框架以及基于YLOOP整合的IOT核心组件，避免栈空间无谓消耗，核心架构良好支持NBIOT/LORA等Sensor级别的设备连入云平台和边缘计算节点
 
 **解决IoT实际问题的特性演进**
+  
   更好的云端一体融合优化，更简单的开发体验，更安全，更优整体性能和算法支持，更多的特性演进，我们在路上。
+  
   Stay Hungry，Stay Foolish！
-------
 
-# Document
+-----
+
+# 文档
 
   * [Coding Style Guide](https://github.com/alibaba/AliOS-Things/wiki/AliOS-Things-Coding-Style-Guide)
 
@@ -47,7 +61,7 @@
 
 ------
 
-# Download
+# 下载
 
   * [VS Code](https://code.visualstudio.com)
 
