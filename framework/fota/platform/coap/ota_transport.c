@@ -33,7 +33,7 @@ typedef enum {
     ALIOT_OTA_DOWNLOAD_FAILED = -2,
     ALIOT_OTA_UPGRADE_FAILED = -1,
 } ALIOT_OTA_FAIL_E;
-    
+
 typedef struct ota_device_info {
     const char *product_key;
     const char *device_name;
@@ -360,22 +360,18 @@ int8_t platform_ota_status_post(int status, int progress)
         return ret;
     }
 
-    if (status==OTA_CHECK_FAILED) {
-        progress=ALIOT_OTA_CHECK_FAILED;
+    if (status == OTA_CHECK_FAILED) {
+        progress = ALIOT_OTA_CHECK_FAILED;
+    } else if (status == OTA_DOWNLOAD_FAILED) {
+        progress = ALIOT_OTA_DOWNLOAD_FAILED;
+    } else if (status == OTA_DECOMPRESS_FAILED) {
+        progress = ALIOT_OTA_PROGRAMMING_FAILED;
+    } else if (status < 0) {
+        progress = ALIOT_OTA_UPGRADE_FAILED;
+    } else if (status == OTA_INIT) {
+        progress = 0;
     }
-    else if (status==OTA_DOWNLOAD_FAILED) {
-        progress=ALIOT_OTA_DOWNLOAD_FAILED;
-    }
-    else if (status==OTA_DECOMPRESS_FAILED) {
-        progress=ALIOT_OTA_PROGRAMMING_FAILED;
-    }
-    else if (status<0) {
-        progress=ALIOT_OTA_UPGRADE_FAILED;
-    }
-    else if (status==OTA_INIT) {
-        progress=0;
-    }
-    
+
     ret = otalib_GenReportMsg(msg_reported, MSG_REPORT_LEN, 0, progress, msg_reported);
     if (0 != ret) {
         OTA_LOG_E("generate reported message failed");

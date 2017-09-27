@@ -360,20 +360,16 @@ int8_t platform_ota_status_post(int status, int progress)
         return ret;
     }
 
-    if (status==OTA_CHECK_FAILED) {
-        progress=ALIOT_OTA_CHECK_FAILED;
-    }
-    else if (status==OTA_DOWNLOAD_FAILED) {
-        progress=ALIOT_OTA_DOWNLOAD_FAILED;
-    }
-    else if (status==OTA_DECOMPRESS_FAILED) {
-        progress=ALIOT_OTA_PROGRAMMING_FAILED;
-    }
-    else if (status<0) {
-        progress=ALIOT_OTA_UPGRADE_FAILED;
-    }
-    else if (status==OTA_INIT) {
-        progress=0;
+    if (status == OTA_CHECK_FAILED) {
+        progress = ALIOT_OTA_CHECK_FAILED;
+    } else if (status == OTA_DOWNLOAD_FAILED) {
+        progress = ALIOT_OTA_DOWNLOAD_FAILED;
+    } else if (status == OTA_DECOMPRESS_FAILED) {
+        progress = ALIOT_OTA_PROGRAMMING_FAILED;
+    } else if (status < 0) {
+        progress = ALIOT_OTA_UPGRADE_FAILED;
+    } else if (status == OTA_INIT) {
+        progress = 0;
     }
     ret = ota_gen_report_msg(msg_reported, MSG_REPORT_LEN, 0, progress, NULL);
 
