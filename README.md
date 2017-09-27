@@ -6,7 +6,7 @@
 
 **极简开发**  
 
-　　基于Linux平台，提供MCU虚拟化环境，开发者直接在Linux平台上开发硬件无关的IoT应用和软件库，开发者直接在Linux平台上开发硬件无关的IoT应用和软件库，使用GDB/Valgrind/Systap 等PC平台工具诊断开发问题  
+　　基于Linux平台，提供MCU虚拟化环境，开发者直接在Linux平台上开发硬件无关的IoT应用和软件库，使用GDB/Valgrind/Systap 等PC平台工具诊断开发问题  
 　　提供IDE，支持系统/内核行为Trace、Mesh组网图形化显示  
 　　提供Shell交互，支持内存踩踏、泄露、最大栈深度等各类侦测  
 　　提供面向组件的编译系统以及Cube工具，支持灵活组合IOT产品软件栈  
