@@ -61,8 +61,10 @@ void _trace_init(void)
     buf[0] = 0x101;
     buf[1] = 0x0;
     buf[2] = 0x0;
-    *((char *)buf + 13) = '\n';
-    fifo_in_full_reject_lock(&trace_fifo, buf, 13);
+    buf[3] = HR_COUNT_GET();
+    *((char *)buf + 16) = '\n';
+    
+    fifo_in_full_reject_lock(&trace_fifo, buf, 17);
     init = 1;
 }
 
