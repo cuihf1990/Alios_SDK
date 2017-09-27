@@ -16,16 +16,9 @@
 
 #define POST_OTA_STATUS_METHOD "ota/postDeviceUpgradeStatus"
 #define POST_OTA_RESULT_METHOD "device.updateVersion"
-#define POST_OTA_STATUS_DATA "{\"version\":\"%s\",\"step\":\"%d\",\"stepPercent\":\"%d\"}"
-//#define POST_OTA_RESULT_DATA "{\"uuid\" :\"%s\",\"version\":\"%s;APP2.0;OTA1.0\",\"description\":\"%s\"}"
-#define POST_OTA_RESULT_DATA "{\"uuid\" :\"%s\",\"version\":\"%s;APP2.0;OTA1.0\"}"
-/*
- *  "md5":"6B21342306D0F619AF97006B7025D18A",
-    "resourceUrl":"http://otalink.alicdn.com/ALINKTEST_LIVING_LIGHT_ALINK_TEST/v2.0.0.1/uthash-master.zip",
-    "size":"265694",
-    "uuid":"35C858CFCD6A1FF9F734D749033A29A0",
-    "version":"v2.0.0.1","zip":"0"
-*/
+#define POST_OTA_STATUS_DATA   "{\"version\":\"%s\",\"step\":\"%d\",\"stepPercent\":\"%d\"}"
+#define POST_OTA_RESULT_DATA   "{\"uuid\" :\"%s\",\"version\":\"%s;APP2.0;OTA1.0\"}"
+
 void platform_ota_init( void *signal)
 {
 

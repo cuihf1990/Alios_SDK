@@ -2,30 +2,27 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include "ota_transport.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <cJSON.h>
+
 #include "iot_import.h"
 #include "iot_export.h"
-
+#include "ota_log.h"
+#include "ota_transport.h"
 #include "ota_update_manifest.h"
-#include "ota_log.h"
-#include "ota_version.h"
 #include "ota_util.h"
-//#include "iot_import_ota.h"
+#include "ota_version.h"
 
-#include "ota_log.h"
-
-#define OSC_COAP_URI_MAX_LEN         (135)  /* IoTx CoAP uri maximal length */
-#define MSG_REPORT_LEN  (256)
-#define MSG_INFORM_LEN  (128)
-#define FOTA_FETCH_PERCENTAGE_MIN 0
-#define FOTA_FETCH_PERCENTAGE_MAX 100
-#define OTA_VERSION_STR_LEN_MIN     (1)
-#define OTA_VERSION_STR_LEN_MAX     (32)
-#define OTA_CHECK_VER_DUARATION     (24*60*60*1000)
+#define OSC_COAP_URI_MAX_LEN      (135)  /* IoTx CoAP uri maximal length */
+#define MSG_REPORT_LEN            (256)
+#define MSG_INFORM_LEN            (128)
+#define FOTA_FETCH_PERCENTAGE_MIN (0)
+#define FOTA_FETCH_PERCENTAGE_MAX (100)
+#define OTA_VERSION_STR_LEN_MIN   (1)
+#define OTA_VERSION_STR_LEN_MAX   (32)
+#define OTA_CHECK_VER_DUARATION   (24*60*60*1000)
 
 typedef enum {
     ALIOT_OTA_PROGRAMMING_FAILED = -4,
@@ -43,6 +40,16 @@ typedef struct ota_device_info {
 OTA_device_info g_ota_device_info;
 
 aos_cloud_cb_t ota_update;
+
+static bool ota_check_progress(IOT_OTA_Progress_t progress);
+static int  otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic_type);
+static void otacoap_response_handler(void *arg, void *p_response);
+static int  otacoap_Publish(const char *topic_type, const char *msg);
+static int  otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *version);
+static int  otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progress, const char *msg_detail);
+static int  otacoap_report_version(const char *version);
+static void otacoap_report_version_period();
+static const char *to_capital_letter(char *value, int len);
 
 //check whether the progress state is valid or not
 //return: true, valid progress state; false, invalid progress state.
@@ -98,7 +105,7 @@ static int otacoap_Publish(const char *topic_type, const char *msg)
 //Generate topic name according to @ota_topic_type, @product_key, @device_name
 //and then copy to @buf.
 //0, successful; -1, failed
-int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic_type)
+static int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic_type)
 {
     int ret;
 
@@ -123,7 +130,7 @@ int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic_type)
 //Generate firmware information according to @id, @version
 //and then copy to @buf.
 //0, successful; -1, failed
-int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *version)
+static int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *version)
 {
     int ret;
     ret = snprintf(buf,
@@ -144,7 +151,7 @@ int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *versio
 //Generate report information according to @id, @msg
 //and then copy to @buf.
 //0, successful; -1, failed
-int otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progress, const char *msg_detail)
+static int otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progress, const char *msg_detail)
 {
     int ret;
     if (NULL == msg_detail) {
@@ -173,7 +180,7 @@ int otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progress, co
     return 0;
 }
 
-int COAP_OTA_RequestVersion(const char *version)
+static int otacoap_report_version(const char *version)
 {
     int ret, len;
     char msg_informed[MSG_INFORM_LEN] = {0};
@@ -206,6 +213,17 @@ int COAP_OTA_RequestVersion(const char *version)
     return 0;
 }
 
+static void otacoap_report_version_period()
+{
+    int ota_code = 0;
+    do {
+        ota_code = otacoap_report_version(ota_get_system_version());
+        IOT_CoAP_Yield(g_ota_device_info.h_coap);
+        HAL_SleepMs(2000);
+    } while (0 != ota_code);
+
+    aos_post_delayed_action(OTA_CHECK_VER_DUARATION, otacoap_report_version_period, NULL);
+}
 
 static const char *to_capital_letter(char *value, int len)
 {
@@ -292,7 +310,6 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
         }
 
         response_parmas->frimware_size = size->valueint;
-
     }
 
     OTA_LOG_D("parse_json success");
@@ -321,22 +338,10 @@ int8_t platform_ota_cancel_upgrade(aos_cloud_cb_t msgCallback)
     return 0;
 }
 
-void otacoap_report_version()
-{
-    int ota_code = 0;
-    do {
-        ota_code = COAP_OTA_RequestVersion(ota_get_system_version());
-        IOT_CoAP_Yield(g_ota_device_info.h_coap);
-        HAL_SleepMs(2000);
-    } while (0 != ota_code);
-
-    aos_post_delayed_action(OTA_CHECK_VER_DUARATION, otacoap_report_version, NULL);
-}
-
 int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
 {
     ota_update = msgCallback;
-    aos_post_delayed_action(OTA_CHECK_VER_DUARATION, otacoap_report_version, NULL);
+    otacoap_report_version_period();
     return 0;
 }
 
@@ -397,7 +402,9 @@ int8_t platform_ota_result_post(void)
         OTA_LOG_E("generate inform message failed");
         return -1;
     }
+
     ret = otacoap_Publish("inform", msg_informed);
+    //OTA_LOG_I("platform_ota_result_post =%s",msg_informed);
     if (0 != ret) {
         OTA_LOG_E("Report version failed");
         return -1;
