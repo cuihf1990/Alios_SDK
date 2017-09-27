@@ -141,23 +141,48 @@ int aos_sem_new(aos_sem_t *sem, int count)
 
 void aos_sem_free(aos_sem_t *sem)
 {
+    if (sem == NULL) {
+        return;
+    }
+
     sem_destroy(sem->hdl);
     free(sem->hdl);
 }
 
 int aos_sem_wait(aos_sem_t *sem, unsigned int timeout)
 {
-    return sem_wait(sem->hdl);
+    if (sem == NULL) {
+        return -EINVAL;
+    }
+
+    if (timeout == AOS_WAIT_FOREVER) {
+        return sem_wait(sem->hdl);
+    }
+    else if (timeout == 0) {
+        return sem_trywait(sem->hdl);
+    }
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_nsec += timeout * 1000 * 1000;
+    ts.tv_sec += ts.tv_nsec / 1000000000;
+    ts.tv_nsec /= 1000000000;
+
+    return sem_timedwait(sem->hdl, &ts);
 }
 
 void aos_sem_signal(aos_sem_t *sem)
 {
+    if (sem == NULL) {
+        return;
+    }
+
     sem_post(sem->hdl);
 }
 
 int aos_sem_is_valid(aos_sem_t *sem)
 {
-    return sem->hdl != NULL;
+    return sem && sem->hdl != NULL;
 }
 
 void aos_sem_signal_all(aos_sem_t *sem)
@@ -169,6 +194,7 @@ struct queue {
     int fds[2];
     void *buf;
     int size;
+    int msg_size;
 };
 
 int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg)
@@ -177,6 +203,7 @@ int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg)
     pipe(q->fds);
     q->buf = buf;
     q->size = size;
+    q->msg_size = max_msg;
     queue->hdl = q;
     return 0;
 }
@@ -200,8 +227,8 @@ int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
                    unsigned int *size)
 {
     struct queue *q = queue->hdl;
-    *size = read(q->fds[0], msg, *size);
-    return 0;
+    *size = read(q->fds[0], msg, q->msg_size);
+    return *size < 0 ? -1 : 0;
 }
 
 int aos_queue_is_valid(aos_queue_t *queue)
@@ -329,11 +356,13 @@ void aos_free(void *mem)
     free(mem);
 }
 
+static struct timeval sys_start_time;
 long long aos_now(void)
 {
     struct timeval tv;
     long long ns;
     gettimeofday(&tv, NULL);
+    timersub(&tv, &sys_start_time, &tv);
     ns = tv.tv_sec * 1000000LL + tv.tv_usec;
     return ns * 1000LL;
 }
@@ -343,6 +372,7 @@ long long aos_now_ms(void)
     struct timeval tv;
     long long ms;
     gettimeofday(&tv, NULL);
+    timersub(&tv, &sys_start_time, &tv);
     ms = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
     return ms;
 }
@@ -354,6 +384,7 @@ void aos_msleep(int ms)
 
 void krhino_init(void)
 {
+    gettimeofday(&sys_start_time, NULL);
 }
 
 void krhino_start(void)
