@@ -63,7 +63,7 @@ static void aos_init(void)
     aos_kv_init();
 #endif
 
-#ifdef AOS_YLOOP
+#ifdef AOS_LOOP
     aos_loop_init();
 #endif
 
