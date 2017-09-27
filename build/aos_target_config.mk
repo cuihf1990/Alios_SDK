@@ -213,6 +213,8 @@ $(info processing components: $(COMPONENTS))
 CURDIR :=
 $(eval $(call PROCESS_COMPONENT, $(COMPONENTS)))
 
+PLATFORM    :=$(notdir $(PLATFORM_FULL))
+
 # Add some default values
 AOS_SDK_INCLUDES += -I$(SOURCE_ROOT)include -I$(SOURCE_ROOT)example/$(APP_FULL)
 AOS_SDK_DEFINES += $(EXTERNAL_AOS_GLOBAL_DEFINES)
