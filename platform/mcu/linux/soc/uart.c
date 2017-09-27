@@ -16,6 +16,12 @@
 #include <signal.h>
 #include "hal/soc/soc.h"
 
+#ifdef AOS_ATCMD
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
 #ifdef VCALL_RHINO
 #include <k_api.h>
 
@@ -115,7 +121,6 @@ static void * clirev_thread(void * arg)
     return NULL;
 }
 
-
 int32_t hal_uart_init(uart_dev_t *uart)
 {
     _uart_drv_t    *pdrv = &_uart_drv[0];
@@ -193,9 +198,60 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
         *recv_size = totallen;
     }
     return 0;
-
 }
 #else
+#ifdef AOS_ATCMD
+#define AT_UART_PORT 1
+#define AT_UART_DEV "/dev/ttyUSB1"
+static int at_uart_fd = -1;
+int32_t hal_uart_init(uart_dev_t *uart)
+{
+    if (uart->port != AT_UART_PORT) return 0;
+
+    // still have problem with below stty setting <TODO>
+    //system("stty -F /dev/ttyUSB1 ispeed 115200 ospeed 115200 -echo cs8 -cstopb -parenb");
+    if ((at_uart_fd = open(AT_UART_DEV, O_RDWR | O_NOCTTY)) == -1) {
+        printf("open at uart failed\r\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+int32_t hal_uart_finalize(uart_dev_t *uart)
+{
+    if (uart->port == AT_UART_PORT) close(at_uart_fd);
+    return 0;
+}
+
+int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
+{
+    if (uart->port == AT_UART_PORT) {
+        write(at_uart_fd, data, size);
+    }
+    else write(1, data, size);
+    return 0;
+}
+
+int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
+{
+    int fd, n;
+    if (uart->port == AT_UART_PORT) fd = at_uart_fd;
+    else fd = 1;
+
+    if ((n = read(fd, data, expect_size)) == -1) {
+        printf("read failed\r\n");
+        return -1;
+    }
+
+    if (uart->port != AT_UART_PORT && *(char *)data == '\n')
+        *(char *)data = '\r';
+    if (recv_size)
+        *recv_size = n;
+
+    return 0;
+}
+#else // #ifdef AOS_ATCMD
 int32_t hal_uart_init(uart_dev_t *uart)
 {
     return 0;
@@ -220,5 +276,6 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
         *recv_size = n;
     return 0;
 }
+#endif
 #endif
 

@@ -8,6 +8,10 @@ GLOBAL_INCLUDES += . $(ARCH_LINUX)
 
 $(NAME)_COMPONENTS  := log
 
+ifeq ($(with_atparser),1)
+$(NAME)_COMPONENTS += atparser
+endif
+
 ifeq ($(openssl),1)
 GLOBAL_LDFLAGS += -lssl -lcrypto
 else
