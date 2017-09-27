@@ -14,6 +14,29 @@ extern "C" {
 #include <stdint.h>
 #include "base.h"
 
+typedef enum {
+    OTA_KERNEL,
+    OTA_APP,
+    OTA_ALL
+} OTA_ENUM_UPDATE_TYPE;
+
+typedef enum {
+    OTA_FINISH,
+    OTA_BREAKPOINT
+} OTA_ENUM_RESULT_TYPE;
+
+enum ota_parti_e
+{
+    OTA_PARTITION_KERNEL,
+    OTA_PARTITION_APP,
+    OTA_PARTITION_DEFAULT,
+};
+
+typedef struct  {
+    OTA_ENUM_UPDATE_TYPE update_type;
+    OTA_ENUM_RESULT_TYPE result_type ;
+} ota_finish_param_t;
+
 typedef struct {
     uint32_t start_address; /* the address of the bin saved on flash. */
     uint32_t length;        /* file real length */

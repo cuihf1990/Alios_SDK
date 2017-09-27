@@ -1563,7 +1563,10 @@ lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
           if (sock->select_waiting > 0) {
             sock->select_waiting--;
           }
-        } else if (event == NULL) {
+        } else if (event != NULL) {
+          event->psem = NULL;
+        }
+        else {
           /* Not a valid socket */
           nready = -1;
         }
