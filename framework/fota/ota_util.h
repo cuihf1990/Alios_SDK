@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 #include <stdint.h>
+#include <hal/ota.h>
 
 #undef MAX_VERSION_LEN
 #define MAX_VERSION_LEN 64
@@ -51,30 +52,12 @@ typedef enum {
     OTA_UPDATE_WAY_END
 } OTA_ENUM_UPDATE_WAY;
 
-typedef enum {
-    OTA_KERNEL,
-    OTA_APP,
-    OTA_ALL
-} OTA_ENUM_UPDATE_TYPE;
-
-typedef enum {
-    OTA_FINISH,
-    OTA_BREAKPOINT
-} OTA_ENUM_RESULT_TYPE;
-
-typedef struct  {
-    OTA_ENUM_UPDATE_TYPE update_type;
-    OTA_ENUM_RESULT_TYPE result_type ;
-} ota_finish_param_t;
-
 typedef struct {
     OTA_STATUS_T status;
     OTA_ENUM_UPDATE_WAY  update_way;
     OTA_ENUM_UPDATE_TYPE update_type;
     void *mutex;
 } ota_info_t;
-
-
 
 void ota_status_init(void);
 
