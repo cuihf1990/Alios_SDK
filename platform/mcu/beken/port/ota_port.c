@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h> 
+#include <unistd.h>
 
 #include <errno.h>
 #include <hal/ota.h>
@@ -10,29 +10,6 @@
 #include <CheckSumUtils.h>
 
 #define KV_HAL_OTA_CRC16  "hal_ota_get_crc16"
-typedef enum {
-    OTA_KERNEL,
-    OTA_APP,
-    OTA_ALL
-} OTA_ENUM_UPDATE_TYPE;
-
-typedef enum {
-    OTA_FINISH,
-    OTA_BREAKPOINT  
-} OTA_ENUM_RESULT_TYPE;
-
-typedef struct  {
-    OTA_ENUM_UPDATE_TYPE update_type;
-    OTA_ENUM_RESULT_TYPE result_type ;
-} ota_finish_param_t;
-
-enum ota_parti_e
-{
-    OTA_PARTITION_KERNEL,
-    OTA_PARTITION_APP,
-    OTA_PARTITION_DEFAULT,
-};
-
 typedef struct
 {
     uint32_t dst_adr;
@@ -56,16 +33,16 @@ int hal_ota_switch_to_new_fw(uint8_t parti, int ota_data_len, uint16_t ota_data_
     uint32_t offset;
     ota_hdl_t ota_hdl,ota_hdl_rb;
     hal_logic_partition_t* ota_partition;
-    
+
     ota_partition = hal_flash_get_info( HAL_PARTITION_OTA_TEMP );
 
-    memset( &ota_hdl, 0, sizeof(ota_hdl_t) );    
+    memset( &ota_hdl, 0, sizeof(ota_hdl_t) );
     ota_hdl.dst_adr = parti == OTA_PARTITION_KERNEL ? 0x13200 : parti == OTA_PARTITION_APP ? 0x7C720 : 0x13200;
     ota_hdl.src_adr = ota_partition->partition_start_addr;
     ota_hdl.siz = ota_data_len;
     ota_hdl.crc = ota_data_crc;
 
-    printf("OTA destination = 0x%08x, source address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", 
+    printf("OTA destination = 0x%08x, source address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n",
     ota_hdl.dst_adr, ota_hdl.src_adr, ota_hdl.siz, ota_hdl.crc);
 
     offset = 0x00;
@@ -80,7 +57,7 @@ int hal_ota_switch_to_new_fw(uint8_t parti, int ota_data_len, uint16_t ota_data_
 
     if(memcmp(&ota_hdl, &ota_hdl_rb, sizeof(ota_hdl_t)) != 0)
     {
-        printf("OTA header compare failed, OTA destination = 0x%08x, source address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n", 
+        printf("OTA header compare failed, OTA destination = 0x%08x, source address = 0x%08x, size = 0x%08x, CRC = 0x%04x\r\n",
         ota_hdl_rb.dst_adr, ota_hdl_rb.src_adr, ota_hdl_rb.siz, ota_hdl_rb.crc);
         return -1;
     }
@@ -173,7 +150,7 @@ struct hal_ota_module_s moc108_ota_module = {
 static uint16_t hal_ota_get_crc16(void)
 {
     int len = 2;
-    uint16_t crc16=0; 
+    uint16_t crc16=0;
     aos_kv_get(KV_HAL_OTA_CRC16, &crc16, &len);
     return crc16;
 }
