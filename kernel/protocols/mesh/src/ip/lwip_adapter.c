@@ -226,9 +226,6 @@ ur_error_t ur_adapter_interface_up(void)
 
         netif_add(&g_la_state.adpif, NULL, NULL, NULL, NULL,
                   ur_adapter_if_init, tcpip_input);
-#ifdef CONFIG_AOS_MESH_TAPIF
-        netif_set_default(&g_la_state.adpif);
-#endif
         interface = &g_la_state.adpif;
     }
 
@@ -247,7 +244,17 @@ ur_error_t ur_adapter_interface_up(void)
         is_router = false;
         umesh_tapif_deinit();
     }
+
+    netif_set_default(&g_la_state.adpif);
+#else
+    /*
+     * if we are LEADER MODE, means WiFi is connected
+     * then default if should be WiFi IF
+     */
+    if (!(umesh_get_mode() & MODE_LEADER))
+        netif_set_default(&g_la_state.adpif);
 #endif
+
     return UR_ERROR_NONE;
 }
 
