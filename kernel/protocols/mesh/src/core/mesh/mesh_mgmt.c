@@ -941,10 +941,10 @@ static ur_error_t handle_attach_response(message_t *message)
                           sizeof(symmetric_key->symmetric_key));
     }
 
-    if ((info->src.netid == network->prev_netid) &&
-        (network->prev_path_cost < path_cost->cost)) {
-        error = UR_ERROR_NONE;
-        goto exit;
+    if ((g_mm_state.device.mode & MODE_MOBILE) == 0 &&
+        (info->src.netid == network->prev_netid) &&
+        (network->prev_path_cost < (path_cost->cost + nbr->stats.link_cost))) {
+        return UR_ERROR_NONE;
     }
 
     nbr->attach_candidate_timeout = 0;
