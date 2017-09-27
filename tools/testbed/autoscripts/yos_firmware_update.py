@@ -1,1 +1,0 @@
-../../../build/yos_firmware_update.py

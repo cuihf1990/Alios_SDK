@@ -12,13 +12,19 @@
 #include <stdio.h>
 
 typedef struct tftp_state_s {
-    struct udp_pcb *upcb;
     const tftp_context_t *ctx;
+    struct udp_pcb *upcb;
     void           *handle;
     tftp_done_cb   cb;
     ip_addr_t      addr;
-    uint16_t       seqno;
+    uint16_t       seq_expect;
+    uint16_t       seq_last;
+    uint16_t       seq;
     int            flen;
+    uint16_t       tick;
+    uint16_t       last_tick;
+    uint16_t       retries;
+    uint32_t       time;
 } tftp_state_t;
 
 static tftp_state_t tftp_state;
@@ -31,30 +37,50 @@ void tftp_send_ack(struct udp_pcb *pcb, const ip_addr_t *addr, u16_t port, u16_t
 static void
 close_handle(int err)
 {
-  sys_untimeout(tftp_tmr, NULL);
-  udp_remove(tftp_state.upcb);
+    tftp_state_t *pstate = &tftp_state;
+    sys_untimeout(tftp_tmr, NULL);
+    udp_remove(pstate->upcb);
 
-  if (tftp_state.handle) {
-    tftp_state.ctx->close(tftp_state.handle);
-    tftp_state.handle = NULL;
-  }
-  LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("tftp: closing\n"));
+    if (pstate->handle) {
+        pstate->ctx->close(pstate->handle);
+        pstate->handle = NULL;
+    }
+    LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("tftp: closing\n"));
 
-  if (tftp_state.cb != NULL)
-      tftp_state.cb(err, err == 0 ? tftp_state.flen : -1);
-  memset(&tftp_state, 0, sizeof(tftp_state));
+    if (pstate->cb != NULL)
+        pstate->cb(err, err == 0 ? pstate->flen : -1);
+    memset(pstate, 0, sizeof(tftp_state_t));
 }
 
 static void tftp_tmr(void* arg)
 {
-    if (tftp_state.cb != NULL)
-        tftp_state.cb(-1, -1);
+    tftp_state_t *pstate = &tftp_state;
+    tftp_state.tick++;
+
+    if (tftp_state.handle == NULL) {
+        return;
+    }
+
+    sys_timeout(TFTP_TIMER_MSECS, tftp_tmr, NULL);
+
+    if ((pstate->tick - pstate->last_tick) > (TFTP_TIMEOUT_MSECS / TFTP_TIMER_MSECS)) {
+        if ((pstate->seq_expect > 1) && (pstate->retries < TFTP_MAX_RETRIES)) {
+            LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("tftp: timeout, retrying...............\n"));
+            tftp_send_ack(pstate->upcb, &pstate->addr, TFTP_PORT, pstate->seq_last);
+            pstate->retries++;
+        } else {
+            tftp_send_error(tftp_state.upcb, &tftp_state.addr, TFTP_PORT,
+                    TFTP_ERROR_ILLEGAL_OPERATION, "wait packet timeout");
+            LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("tftp: timeout\n"));
+            close_handle(-1);
+        }
+    }
 }
 
 static void recv(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
     tftp_state_t *pstate = &tftp_state;
-    if ( port != TFTP_PORT || !ip_addr_cmp(&tftp_state.addr, addr) ) {
+    if ( port != TFTP_PORT || !ip_addr_cmp(&pstate->addr, addr) ) {
         tftp_send_error(pstate->upcb, addr, port,
                 TFTP_ERROR_UNKNOWN_TRFR_ID, "port or addr illegal");
         pbuf_free(p);
@@ -62,24 +88,24 @@ static void recv(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_
     }
 
     u16_t *sbuf = (u16_t *) p->payload;
+    pstate->last_tick = pstate->tick;
     uint16_t opcode = PP_NTOHS(sbuf[0]);
-    sys_untimeout(tftp_tmr, NULL);
     uint16_t blknum, blklen, error;
     switch (opcode) {
         case TFTP_DATA:
             blknum = PP_NTOHS(sbuf[1]);
             blklen = p->tot_len - TFTP_HEADER_LENGTH;
-            if (blknum < tftp_state.seqno) {
+            if (blknum < pstate->seq_expect) {
                 LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE,
-                        ("revived repeated block '%d', len='%u'\n", blknum, blklen));
+                        ("received repeated block '%d', len='%u'\n", blknum, blklen));
                 tftp_send_ack(pstate->upcb, &pstate->addr, port, blknum);
-                sys_timeout(TFTP_TIMER_MSECS, tftp_tmr, NULL);
+                pstate->seq_last = blknum;
                 break;
             }
 
-            if (blknum > tftp_state.seqno) {
+            if (blknum > pstate->seq_expect) {
                 LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE,
-                        ("revived error block '%d', len='%u'\n", blknum, blklen ));
+                        ("received error block '%d', len='%u'\n", blknum, blklen ));
                 tftp_send_error(pstate->upcb, addr, port,
                         TFTP_ERROR_ILLEGAL_OPERATION, "seqno error");
                 close_handle(-1);
@@ -87,25 +113,28 @@ static void recv(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_
             }
 
             LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE,
-                    ("revived new block '%d', len='%u'\n", blknum, blklen));
+                    ("received new block '%d', len='%u'\n", blknum, blklen));
             pbuf_header(p, -TFTP_HEADER_LENGTH);
             int wlen = pstate->ctx->write(pstate->handle, p);
             if (wlen != blklen) {
                 tftp_send_error(pstate->upcb, addr, port, TFTP_ERROR_DISK_FULL, "disk full");
+                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("write block failed\n"));
                 close_handle(-1);
                 break;
             }
 
-            tftp_state.flen += blklen;
-            tftp_state.seqno++;
+            pstate->seq_last = blknum;
+            pstate->flen += blklen;
+            pstate->seq_expect++;
             tftp_send_ack(pstate->upcb, &pstate->addr, port, blknum);
 
             if (blklen < 512) {
-                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("receive file finished\n"));
+                pstate->time = aos_now_ms() - pstate->time;
+                LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE,
+                        ("get succeed: received %u bytes in %u mS\n", pstate->flen, pstate->time));
                 close_handle(0);
                 break;
             }
-            sys_timeout(TFTP_TIMER_MSECS, tftp_tmr, NULL);
             break;
         case TFTP_ERROR:
             error = PP_NTOHS(sbuf[1]);
@@ -148,7 +177,8 @@ static int tftp_fwrite(void* handle, struct pbuf* p)
     char buff[512];
     size_t writebytes = -1;
     pbuf_copy_partial(p, buff, p->tot_len, 0);
-    writebytes = fwrite(buff, 1, p->tot_len, (FILE *)handle);
+    /* writebytes = fwrite(buff, 1, p->tot_len, (FILE *)handle); */
+    writebytes = p->tot_len;
     return (int)writebytes;
 }
 
@@ -159,12 +189,15 @@ const tftp_context_t client_ctx = {
     .write = tftp_fwrite
 };
 
-int tftp_client_get(const ip_addr_t *paddr, const char *fname, tftp_done_cb cb)
+int tftp_client_get(const ip_addr_t *paddr, const char *fname,
+                    tftp_context_t *ctx, tftp_done_cb cb)
 {
     err_t ret;
+    tftp_state_t *pstate = &tftp_state;
 
-    tftp_state.handle = client_ctx.open(fname, "netascii", 1);
-    if (tftp_state.handle == NULL) {
+    pstate->time = aos_now_ms();
+    pstate->handle = ctx->open(fname, "netascii", 1);
+    if (pstate->handle == NULL) {
         LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("error: open file '%s' failed\n", fname));
         return -1;
     }
@@ -206,12 +239,15 @@ int tftp_client_get(const ip_addr_t *paddr, const char *fname, tftp_done_cb cb)
     }
 
     udp_recv(pcb, recv, NULL);
+    pstate->tick = 0;
+    pstate->last_tick = 0;
     sys_timeout(TFTP_TIMER_MSECS, tftp_tmr, NULL);
-    tftp_state.upcb = pcb;
-    tftp_state.ctx = &client_ctx;
-    tftp_state.cb = cb;
-    memcpy(&tftp_state.addr, paddr, sizeof(*paddr));
-    tftp_state.seqno = 1;
-    tftp_state.flen = 0;
+    pstate->upcb = pcb;
+    pstate->ctx = ctx;
+    pstate->cb = cb;
+    memcpy(&pstate->addr, paddr, sizeof(*paddr));
+    pstate->seq_expect = 1;
+    pstate->flen = 0;
+    pbuf_free(p);
     return 0;
 }

@@ -1,6 +1,7 @@
 ifneq ($(filter $(HOST_ARCH), armhflinux),)
 
 PATH    := $(PATH):/bin:/usr/bin:/usr/local/bin
+TOOLCHAIN_PATH :=
 TOOLCHAIN_PREFIX := arm-linux-gnueabihf-
 CC      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gcc
 CXX     := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)g++

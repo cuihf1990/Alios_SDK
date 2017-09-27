@@ -67,7 +67,7 @@
  * TFTP timeout
  */
 #if !defined TFTP_TIMEOUT_MSECS || defined __DOXYGEN__
-#define TFTP_TIMEOUT_MSECS    10000
+#define TFTP_TIMEOUT_MSECS    1000
 #endif
 
 /**
