@@ -25,7 +25,7 @@
 
 #define IOTX_ONLINE_DTLS_SERVER_URL "coaps://%s.iot-as-coap.cn-shanghai.aliyuncs.com:5684"
 
-#define TAG "coaptest"
+#define TAG "coapapp"
 
 #define IOTX_PRODUCT_KEY         "vtkkbrpmxmF"
 #define IOTX_DEVICE_NAME         "IoTxCoAPTestDev"
@@ -170,5 +170,5 @@ static void ota_init(){
     ota_device_info.product_key=IOTX_PRODUCT_KEY;
     ota_device_info.device_name=IOTX_DEVICE_NAME;
     ota_device_info.h_coap=p_ctx;
-    aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, &ota_device_info);
+    aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, (long unsigned int)&ota_device_info);
 }
