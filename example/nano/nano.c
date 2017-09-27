@@ -11,7 +11,10 @@ static void app_delayed_action(void *arg)
 
 int application_start(int argc, char *argv[])
 {
-    app_delayed_action(NULL);
-    aos_msleep(10);
+    do
+    {
+        app_delayed_action(NULL);
+        aos_msleep(10);
+    }while(1);
 }
 
