@@ -7,4 +7,4 @@ $(NAME)_SOURCES     := yloop.c
 $(NAME)_SOURCES     += local_event.c
 
 $(NAME)_CFLAGS      += -Wall -Werror
-GLOBAL_DEFINES      += AOS_YLOOP
+GLOBAL_DEFINES      += AOS_LOOP
