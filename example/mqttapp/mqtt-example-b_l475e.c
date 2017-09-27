@@ -11,7 +11,6 @@
 #include "aos/log.h"
 #include "aos/yloop.h"
 #include "aos/network.h"
-#include "kvmgr.h"
 #include <netmgr.h>
 #include <aos/kernel.h>
 #include <k_err.h>

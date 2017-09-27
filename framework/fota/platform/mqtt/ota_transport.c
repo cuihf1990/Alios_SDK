@@ -6,17 +6,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include <cJSON.h>
+
 #include "iot_import.h"
 #include "iot_export.h"
-
-#include "ota_update_manifest.h"
 #include "ota_log.h"
+#include "ota_update_manifest.h"
 #include "ota_util.h"
 #include "ota_version.h"
 
-#define OTA_MQTT_TOPIC_LEN   (64)
-#define POTA_FETCH_PERCENTAGE_MIN 0
-#define POTA_FETCH_PERCENTAGE_MAX 100
+#define OTA_MQTT_TOPIC_LEN        (64)
+#define POTA_FETCH_PERCENTAGE_MIN (0)
+#define POTA_FETCH_PERCENTAGE_MAX (100)
 
 #define MSG_REPORT_LEN  (256)
 #define MSG_INFORM_LEN  (128)
@@ -38,6 +38,15 @@ OTA_device_info g_ota_device_info;
 
 static char *g_upgrad_topic;
 
+static const char *to_capital_letter(char *value, int len);
+static int  ota_mqtt_gen_topic_name(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key,
+                                    const char *device_name);
+static void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg);
+static int  ota_mqtt_publish(const char *topic_type, const char *msg);
+static int  ota_gen_info_msg(char *buf, size_t buf_len, uint32_t id, const char *version);
+static int  ota_gen_report_msg(char *buf, size_t buf_len, uint32_t id, int progress, const char *msg_detail);
+static bool ota_check_progress(int progress);
+
 static const char *to_capital_letter(char *value, int len)
 {
     if (value == NULL && len <= 0) {
@@ -50,6 +59,138 @@ static const char *to_capital_letter(char *value, int len)
     }
     return value;
 }
+
+//Generate topic name according to @ota_topic_type, @product_key, @device_name
+//and then copy to @buf.
+//0, successful; -1, failed
+static int ota_mqtt_gen_topic_name(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key,
+                                   const char *device_name)
+{
+    int ret;
+    ret = snprintf(buf, buf_len, "/ota/device/%s/%s/%s", ota_topic_type, product_key, device_name);
+
+    if (ret < 0) {
+        OTA_LOG_E("snprintf failed");
+        return -1;
+    }
+
+    return 0;
+}
+
+static int ota_mqtt_publish(const char *topic_type, const char *msg)
+{
+    int ret;
+    char topic_name[OTA_MQTT_TOPIC_LEN] = {0};
+    iotx_mqtt_topic_info_t topic_msg;
+
+    memset(&topic_msg, 0, sizeof(iotx_mqtt_topic_info_t));
+
+    topic_msg.qos = IOTX_MQTT_QOS1;
+    topic_msg.retain = 0;
+    topic_msg.dup = 0;
+    topic_msg.payload = (void *) msg;
+    topic_msg.payload_len = strlen(msg);
+
+    //inform OTA to topic: "/ota/device/progress/$(product_key)/$(device_name)"
+    ret = ota_mqtt_gen_topic_name(topic_name, OTA_MQTT_TOPIC_LEN, topic_type, g_ota_device_info.product_key,
+                                  g_ota_device_info.device_name);
+    if (ret < 0) {
+        OTA_LOG_E("generate topic name of info failed");
+        return -1;
+    }
+    OTA_LOG_I("public topic=%s ,payload=%s\n", topic_name, topic_msg.payload);
+    ret = IOT_MQTT_Publish(g_ota_device_info.pclient, topic_name, &topic_msg);
+    if (ret < 0) {
+        OTA_LOG_E("publish failed");
+        return -1;
+    }
+
+    return 0;
+}
+
+void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
+{
+    aos_cloud_cb_t ota_update = (aos_cloud_cb_t )pcontext;
+    if (!ota_update) {
+        OTA_LOG_E("aliot_mqtt_ota_callback  pcontext null");
+        return;
+    }
+
+    iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
+
+    OTA_LOG_D("Topic: '%.*s' (Length: %d)",
+              ptopic_info->topic_len,
+              ptopic_info->ptopic,
+              ptopic_info->topic_len);
+    OTA_LOG_D("Payload: '%.*s' (Length: %d)",
+              ptopic_info->payload_len,
+              ptopic_info->payload,
+              ptopic_info->payload_len);
+
+    ota_update(UPGRADE_DEVICE , ptopic_info->payload);
+}
+
+//Generate firmware information according to @id, @version
+//and then copy to @buf.
+//0, successful; -1, failed
+static int ota_gen_info_msg(char *buf, size_t buf_len, uint32_t id, const char *version)
+{
+    int ret;
+    ret = snprintf(buf,
+                   buf_len,
+                   "{\"id\":%d,\"params\":{\"version\":\"%s\"}}",
+                   id,
+                   version);
+
+    if (ret < 0) {
+        OTA_LOG_E("snprintf failed");
+        return -1;
+    }
+
+    return 0;
+}
+
+//Generate report information according to @id, @msg
+//and then copy to @buf.
+//0, successful; -1, failed
+static int ota_gen_report_msg(char *buf, size_t buf_len, uint32_t id, int progress, const char *msg_detail)
+{
+    int ret;
+    if (NULL == msg_detail) {
+        ret = snprintf(buf,
+                       buf_len,
+                       "{\"id\":%d,\"params\":\{\"step\": \"%d\"}}",
+                       id,
+                       progress);
+    } else {
+        ret = snprintf(buf,
+                       buf_len,
+                       "{\"id\":%d,\"params\":\{\"step\": \"%d\",\"desc\":\"%s\"}}",
+                       id,
+                       progress,
+                       msg_detail);
+    }
+
+
+    if (ret < 0) {
+        OTA_LOG_E("snprintf failed");
+        return -1;
+    } else if (ret >= buf_len) {
+        OTA_LOG_E("msg is too long");
+        return -1;
+    }
+
+    return 0;
+}
+
+//check whether the progress state is valid or not
+//return: true, valid progress state; false, invalid progress state.
+static bool ota_check_progress(int progress)
+{
+    return ((progress >= POTA_FETCH_PERCENTAGE_MIN)
+            && (progress <= POTA_FETCH_PERCENTAGE_MAX));
+}
+
 void platform_ota_init( void *signal)
 {
     if (signal == NULL) {
@@ -163,64 +304,6 @@ parse_success:
     }
     return 0;
 }
-
-//Generate topic name according to @ota_topic_type, @product_key, @device_name
-//and then copy to @buf.
-//0, successful; -1, failed
-static int ota_mqtt_gen_topic_name(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key,
-                                   const char *device_name)
-{
-    int ret;
-    ret = snprintf(buf,
-                   buf_len,
-                   "/ota/device/%s/%s/%s",
-                   ota_topic_type,
-                   product_key,
-                   device_name);
-
-    //OTA_ASSERT(ret < buf_len, "buffer should always enough");
-
-    if (ret < 0) {
-        OTA_LOG_E("snprintf failed");
-        return -1;
-    }
-
-    return 0;
-}
-
-
-//report progress of OTA
-static int ota_mqtt_publish(const char *topic_type, const char *msg)
-{
-    int ret;
-    char topic_name[OTA_MQTT_TOPIC_LEN] = {0};
-    iotx_mqtt_topic_info_t topic_msg;
-
-    memset(&topic_msg, 0, sizeof(iotx_mqtt_topic_info_t));
-
-    topic_msg.qos = IOTX_MQTT_QOS1;
-    topic_msg.retain = 0;
-    topic_msg.dup = 0;
-    topic_msg.payload = (void *) msg;
-    topic_msg.payload_len = strlen(msg);
-
-    //inform OTA to topic: "/ota/device/progress/$(product_key)/$(device_name)"
-    ret = ota_mqtt_gen_topic_name(topic_name, OTA_MQTT_TOPIC_LEN, topic_type, g_ota_device_info.product_key,
-                                  g_ota_device_info.device_name);
-    if (ret < 0) {
-        OTA_LOG_E("generate topic name of info failed");
-        return -1;
-    }
-    OTA_LOG_I("public topic=%s ,payload=%s\n", topic_name, topic_msg.payload);
-    ret = IOT_MQTT_Publish(g_ota_device_info.pclient, topic_name, &topic_msg);
-    if (ret < 0) {
-        OTA_LOG_E("publish failed");
-        return -1;
-    }
-
-    return 0;
-}
-
 int8_t platform_ota_parse_cancel_responce(const char *response, int buf_len, ota_response_params *response_parmas)
 {
     return 0;
@@ -229,30 +312,6 @@ int8_t platform_ota_parse_cancel_responce(const char *response, int buf_len, ota
 int8_t platform_ota_publish_request(ota_request_params *request_parmas)
 {
     return 0;
-}
-
-
-
-void aliot_mqtt_ota_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
-{
-    aos_cloud_cb_t ota_update = (aos_cloud_cb_t )pcontext;
-    if (!ota_update) {
-        OTA_LOG_E("aliot_mqtt_ota_callback  pcontext null");
-        return;
-    }
-
-    iotx_mqtt_topic_info_pt ptopic_info = (iotx_mqtt_topic_info_pt) msg->msg;
-
-    OTA_LOG_D("Topic: '%.*s' (Length: %d)",
-              ptopic_info->topic_len,
-              ptopic_info->ptopic,
-              ptopic_info->topic_len);
-    OTA_LOG_D("Payload: '%.*s' (Length: %d)",
-              ptopic_info->payload_len,
-              ptopic_info->payload,
-              ptopic_info->payload_len);
-
-    ota_update(UPGRADE_DEVICE , ptopic_info->payload);
 }
 
 int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
@@ -286,69 +345,6 @@ do_exit:
     }
 
     return -1;
-}
-
-//Generate firmware information according to @id, @version
-//and then copy to @buf.
-//0, successful; -1, failed
-int ota_gen_info_msg(char *buf, size_t buf_len, uint32_t id, const char *version)
-{
-    int ret;
-    ret = snprintf(buf,
-                   buf_len,
-                   "{\"id\":%d,\"params\":{\"version\":\"%s\"}}",
-                   id,
-                   version);
-
-    if (ret < 0) {
-        OTA_LOG_E("snprintf failed");
-        return -1;
-    }
-
-    return 0;
-}
-
-//Generate report information according to @id, @msg
-//and then copy to @buf.
-//0, successful; -1, failed
-int ota_gen_report_msg(char *buf, size_t buf_len, uint32_t id, int progress, const char *msg_detail)
-{
-    int ret;
-    if (NULL == msg_detail) {
-        ret = snprintf(buf,
-                       buf_len,
-                       "{\"id\":%d,\"params\":\{\"step\": \"%d\"}}",
-                       id,
-                       progress);
-    } else {
-        ret = snprintf(buf,
-                       buf_len,
-                       "{\"id\":%d,\"params\":\{\"step\": \"%d\",\"desc\":\"%s\"}}",
-                       id,
-                       progress,
-                       msg_detail);
-    }
-
-
-    if (ret < 0) {
-        OTA_LOG_E("snprintf failed");
-        return -1;
-    } else if (ret >= buf_len) {
-        OTA_LOG_E("msg is too long");
-        return -1;
-    }
-
-    return 0;
-}
-
-
-
-//check whether the progress state is valid or not
-//return: true, valid progress state; false, invalid progress state.
-static bool ota_check_progress(int progress)
-{
-    return ((progress >= POTA_FETCH_PERCENTAGE_MIN)
-            && (progress <= POTA_FETCH_PERCENTAGE_MAX));
 }
 
 int8_t platform_ota_status_post(int status, int progress)

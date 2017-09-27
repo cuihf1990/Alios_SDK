@@ -37,4 +37,4 @@ $(NAME)_CFLAGS += \
     -Wno-unused-function \
 #    -Werror
 
-$(NAME)_COMPONENTS  += connectivity.coap fota netmgr
+$(NAME)_COMPONENTS  += connectivity.coap  netmgr fota framework.common
