@@ -30,36 +30,17 @@ else
 $(NAME)_DEFINES     += LWIP_ENABLED
 endif
 
-PLATFORM := linuxhost
 ifeq ($(HOST_ARCH), linux)
-
-PLATFORM := linuxhost
-$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedtls.a
-
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
 ifeq (1,$(with_lwip))
 $(info using lwip version mbedtls)
-$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedtls.a.lwip
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a.lwip
 endif
-
-else ifeq ($(HOST_ARCH), armhflinux)
-
-PLATFORM := armhflinux
-$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedtls.a
-
-else ifeq ($(HOST_ARCH), ARM968E-S)
-
-PLATFORM := mk108
-$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libmbedtls.a
-
 else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
-
 $(NAME)_DEFINES          += MBEDTLS_NET_ALT_UART
 $(NAME)_PREBUILT_LIBRARY := lib/b_l475e/libmbedtls.a
-
 else
-
-$(error "not find correct platform!")
-
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
 endif
 
 $(NAME)_SOURCES     := mbedtls_net.c
