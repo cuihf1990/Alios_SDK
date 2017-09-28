@@ -132,9 +132,11 @@ char *platform_wifi_get_mac(char mac_str[PLATFORM_MAC_LEN])
 
         goto get_mac;
     }
+    close(sock);
     return NULL;
 
 get_mac:
+    close(sock);
     snprintf(mac_str, PLATFORM_MAC_LEN, "%02X:%02X:%02X:%02X:%02X:%02X",
              (unsigned char)ifreq.ifr_hwaddr.sa_data[0],
              (unsigned char)ifreq.ifr_hwaddr.sa_data[1],
@@ -171,6 +173,7 @@ uint32_t platform_wifi_get_ip(char ip_str[PLATFORM_IP_LEN])
     strncpy(ifreq.ifr_name, ifname, IFNAMSIZ - 1);
 
     if (ioctl(sock, SIOCGIFADDR, &ifreq) < 0) {
+        close(sock);
         perror("ioctl");
         return -1;
     }
