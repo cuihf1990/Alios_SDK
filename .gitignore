@@ -19,6 +19,5 @@ build/OpenOCD/OSX
 si
 .cproject
 .project
-.vscode
 *.pyc
 
