@@ -420,5 +420,6 @@ void dumpsys_task_func(void)
         fclose(fp);
         printf("%8s - %s", ent->d_name, fn);
     }
+    closedir(proc);
 }
 
