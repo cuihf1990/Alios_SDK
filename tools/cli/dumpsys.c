@@ -44,7 +44,6 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     ktask_t *task;
     ktask_t *candidate;
 
-    const name_t *task_name;
     char  yes = 'N';
 
     size_t pc = 0;
@@ -86,6 +85,8 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
     task = krhino_list_entry(tmp, ktask_t, task_stats_item);
+        const name_t *task_name;
+        char name_cut[19];
         rst  = krhino_task_stack_min_free(task, &free_size);
 
         if (rst != RHINO_SUCCESS) {
@@ -115,7 +116,6 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 #else
         /* if not support %-N.Ms,cut it manually */
         if (strlen(task_name) > 18) {
-            char name_cut[19];
             memset(name_cut, 0, sizeof(name_cut));
             memcpy(name_cut, task->task_name, 18);
             task_name = name_cut;
