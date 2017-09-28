@@ -66,10 +66,9 @@ for target in ${mk3060_targets}; do
                 continue
             fi
             aos make ${target}@${platform} BINS=${bins} > ${target}@${platform}@${bins}@${branch}.multi-bins.log 2>&1
-            if [ -f out/${target}@${platform}/binary/${target}@${platform}.${bins}.elf ]; then
+            if [ -f out/${target}@${platform}${bins}/binary/${target}@${platform}.${bins}.elf ]; then
                 rm -rf ${target}@${platform}@${bins}@${branch}.multi-bins.log
                 echo "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch succeed"
-		aos make clean > /dev/null 2>&1
             else
                 echo -e "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch failed, log:\n"
                 cat ${target}@${platform}@${bins}@${branch}.multi-bins.log
