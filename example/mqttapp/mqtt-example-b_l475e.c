@@ -332,7 +332,6 @@ int mqtt_client_example(void)
                     led_msg = msg_off;
                 }
                 g_led_flag = 0;
-                led_msg = msg_off;
                 topic_msg.qos = IOTX_MQTT_QOS1;
                 topic_msg.retain = 0;
                 topic_msg.dup = 0;
