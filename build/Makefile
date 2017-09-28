@@ -16,6 +16,8 @@ export RADIXPOINT
 
 MAKEFILE_TARGETS := clean  # targets used by makefile 
 
+BINS ?=
+
 #define BUILD_STRING, AOS toolchain commands on different hosts
 include $(MAKEFILES_PATH)/aos_host_cmd.mk
 
@@ -73,8 +75,6 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1] [BI
       $> make clean
 endef
 
-BINS ?=
-
 ifeq (,$(BINS))
 BINSTYPE_UPPER :=
 BINSTYPE_LOWER :=
@@ -126,11 +126,11 @@ clean:
 	$(QUIET)$(ECHO) Done
 
 ifneq ($(BUILD_STRING),)
--include $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk
+-include $(OUTPUT_DIR)/config.mk
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
-$(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
+$(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
 	$(QUIET)$(ECHO) $(if $(AOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
 	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/aos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
@@ -147,7 +147,7 @@ $(PASSDOWN_TARGETS):
 
 $(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit)
 
-main_app: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
+main_app: $(OUTPUT_DIR)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
 	$(QUIET)$(ECHO) Build AOS Now
 	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/binary)
 	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/modules)
@@ -157,7 +157,7 @@ main_app: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(YOS_SDK_PRE_APP_BUILD
 	$(QUIET)$(ECHO) Build complete
 
 ifeq ($(SUB_BUILD),)
-.gdbinit: $(BUILD_DIR)/$(CLEANED_BUILD_STRING)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
+.gdbinit: $(OUTPUT_DIR)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
 	$(QUIET)$(ECHO) Making $@
 	$(QUIET)$(ECHO) set remotetimeout 20 > $@
 	$(QUIET)$(ECHO) $(GDBINIT_STRING) >> $@

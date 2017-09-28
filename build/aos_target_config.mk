@@ -1,6 +1,6 @@
 include $(MAKEFILES_PATH)/aos_host_cmd.mk
 
-CONFIG_FILE_DIR := $(BUILD_DIR)/$(CLEANED_BUILD_STRING)
+CONFIG_FILE_DIR := $(OUTPUT_DIR)
 CONFIG_FILE := $(CONFIG_FILE_DIR)/config.mk
 
 COMPONENT_DIRECTORIES := . \
@@ -198,7 +198,7 @@ COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall libc vfs
 
 ifeq ($(BINS),app)
 #$(NAME)_COMPONENTS += usyscall
-COMPONENTS += usyscall syscall
+COMPONENTS += usyscall
 AOS_SDK_DEFINES += BUILD_APP
 else ifeq ($(BINS),kernel)
 #$(NAME)_COMPONENTS += syscall
