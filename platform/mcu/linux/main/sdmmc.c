@@ -24,7 +24,10 @@ static int sdmmc_open(int w)
 
     if (fd < 0) {
         umask(0111);
-        close(creat(path, S_IRWXU | S_IRWXG));
+        fd = creat(path, S_IRWXU | S_IRWXG);
+        if (fd < 0)
+            return fd;
+        close(fd);
         fd = open(path, O_RDWR);
     }
 
