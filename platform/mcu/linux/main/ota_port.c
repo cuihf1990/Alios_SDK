@@ -18,34 +18,26 @@ static FILE* ota_fd = NULL;
 static int linuxhost_ota_init(hal_ota_module_t *m, void *something)
 {
     uint32_t offset=*(uint32_t *)something;
-    int ret=-1;
-    if(offset!=0){
-        if((access(OTA_IMAGE_TMP_FILE, 0 )) != -1 )
+
+    if(offset!=0){ /*breakpoint resume*/
+        if((access(OTA_IMAGE_TMP_FILE, 0 )) == -1 ) {
+            return -1;        
+        }
+        if(ota_fd==NULL)
         {
-            printf( "File tmp exists \n " );
-            if(ota_fd==NULL)
-            {
-                ota_fd = fopen(OTA_IMAGE_TMP_FILE, "a+");
-            } 
-            ret=0;
+            ota_fd = fopen(OTA_IMAGE_TMP_FILE, "a+");
         }
     }
-    return ret;
+    return 0;
 }
 
 int linuxhost_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
 {
     int ret = 0;
     
-     
     if(ota_fd == NULL) 
     {
-        if((access(OTA_IMAGE_TMP_FILE, 0 )) != -1 )
-        {
-            printf( "File tmp exists \n " );
-            remove(OTA_IMAGE_TMP_FILE);
-        }
-	ota_fd = fopen(OTA_IMAGE_TMP_FILE, "w");
+        ota_fd = fopen(OTA_IMAGE_TMP_FILE, "w");
     }
 
     ret = fwrite(in_buf, in_buf_len, 1, ota_fd);

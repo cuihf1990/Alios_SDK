@@ -291,6 +291,8 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
         }
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
                 sizeof response_parmas->download_url);
+        response_parmas->download_url[(sizeof response_parmas->download_url) - 1] = '\0';
+
         OTA_LOG_D(" response_parmas->download_url %s",
                   response_parmas->download_url);
 
@@ -302,6 +304,8 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
 
         strncpy(response_parmas->md5, md5->valuestring,
                 sizeof response_parmas->md5);
+        response_parmas->md5[(sizeof response_parmas->md5) - 1] = '\0';
+
         to_capital_letter(response_parmas->md5, sizeof response_parmas->md5);
         cJSON *size = cJSON_GetObjectItem(json_obj, "size");
         if (!md5) {
