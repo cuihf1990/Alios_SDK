@@ -192,6 +192,8 @@ enum AWSS_CB {
     AWSS_HOTSPOT_SWITCH_AP_DONE
 };
 
+int awss_register_callback(unsigned char cb_type, void *cb_func);
+
 /**
  * @brief register misc callback
  *
