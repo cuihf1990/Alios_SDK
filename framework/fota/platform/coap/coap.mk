@@ -1,5 +1,5 @@
 include $(BUILD_MODULE)
-NAME := coap_ota
+NAME := fota_coap_transport
 
 $(NAME)_INCLUDES :=  \
     ../ \

@@ -1,4 +1,4 @@
-NAME := mqtt_transport
+NAME := fota_mqtt_transport
 
 $(NAME)_SOURCES := ota_transport.c
 GLOBAL_INCLUDES += ./

@@ -1,4 +1,4 @@
-NAME := alink_transport
+NAME := fota_alink_transport
 
 $(NAME)_SOURCES := ota_transport.c
 $(NAME)_INCLUDES := ../../../protocol/alink/system/ \
