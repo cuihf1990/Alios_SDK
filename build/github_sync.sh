@@ -8,7 +8,7 @@ mkdir githubsync
 
 cd ~/githubsync
 git clone git@code.aliyun.com:keepwalking.zeng/aos.git
-git clone git@github.com:alibaba/AliOS.git
+git clone git@github.com:alibaba/AliOS-Things.git AliOS
 aosdir=~/githubsync/aos
 githubdir=~/githubsync/AliOS
 
@@ -20,9 +20,15 @@ cp -rf ${aosdir}/.gitignore ${githubdir}/.gitignore
 cp -rf ${aosdir}/.vscode ${githubdir}/.vscode
 
 #remove files from github dir
-rm -rf ${githubdir}/build/github_sync.sh
 rm -rf ${githubdir}/board/armhflinux
 rm -rf ${githubdir}/board/mk108
+rm -rf ${githubdir}/build/astyle
+rm -rf ${githubdir}/build/astyle.sh
+rm -rf ${githubdir}/build/copyright.py
+rm -rf ${githubdir}/build/copyright
+rm -rf ${githubdir}/build/doxygen2md.py
+rm -rf ${githubdir}/build/github_sync.sh
+rm -rf ${githubdir}/build/MD.templet
 rm -rf ${githubdir}/build/OpenOCD
 rm -rf ${githubdir}/build/compiler/arm-none-eabi*
 rm -rf ${githubdir}/platform/mcu/linux/csp/wifi/radiotap
@@ -30,11 +36,15 @@ rm -rf ${githubdir}/script
 rm -rf ${githubdir}/platform/mcu/linux/csp/wifi
 rm -rf ${githubdir}/platform/arch/linux/swap.*
 rm -rf ${githubdir}/kernel/rhino/test/perf/realtimelib.c
+rm -rf ${githubdir}/example/mqttest
+rm -rf ${githubdir}/example/tls
 rm -rf ${githubdir}/example/yts
 rm -rf ${githubdir}/bootloader
-cd ${aosdir}/platform/arch/linux/
+rm -rf ${githubdir}/kernel/rhino/test
+rm -rf ${githubdir}/test
+cd ${aosdir}/board/linuxhost/
 git checkout origin/githubsync -- k_config.h
-cp -f k_config.h ${githubdir}/platform/arch/linux/
+cp -f k_config.h ${githubdir}/board/linuxhost/
 git reset && git checkout k_config.h
 cd ${aosdir}/platform/mcu/linux/
 git checkout origin/githubsync -- linux.mk
@@ -112,7 +122,7 @@ cp -rf beken.mk ${githubdir}/platform/mcu/beken/
 git reset && git checkout beken.mk
 
 cd ${aosdir}
-aos make meshapp@linuxhost meshdebug=1
+aos make meshapp@linuxhost
 if [ $? -ne 0 ]; then
     echo "error: build meshapp@linuxhost failed"
     exit 1
@@ -122,7 +132,7 @@ if [ $? -ne 0 ]; then
     echo "error: build alinkapp@linuxhost failed"
     exit 1
 fi
-aos make alinkapp@mk3060 meshdebug=1
+aos make alinkapp@mk3060
 if [ $? -ne 0 ]; then
     echo "error: build alinkapp@mk3060 failed"
     exit 1
