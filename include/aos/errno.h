@@ -18,7 +18,7 @@ extern "C" {
 #ifdef BUILD_BIN
 
 #undef set_errno
-#define set_errno(err) do { errno = (err); } while(0)
+#define set_errno(err) do { if (err) { errno = (err); } } while(0)
 
 
 #else

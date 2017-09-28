@@ -416,9 +416,10 @@ void dumpsys_task_func(void)
             continue;
         }
         bzero(fn, sizeof fn);
-        fread(fn, sizeof fn, 1, fp);
+        fread(fn, sizeof(fn) - 1, 1, fp);
         fclose(fp);
         printf("%8s - %s", ent->d_name, fn);
     }
+    closedir(proc);
 }
 

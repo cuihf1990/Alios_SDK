@@ -253,13 +253,16 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
         if (!upgrade_version) {
             strncpy(response_parmas->primary_version, version->valuestring,
                     sizeof response_parmas->primary_version);
+            response_parmas->primary_version[(sizeof response_parmas->primary_version) - 1] = '\0';
         } else {
             strncpy(response_parmas->primary_version, upgrade_version,
                     sizeof response_parmas->primary_version);
+            response_parmas->primary_version[(sizeof response_parmas->primary_version) - 1] = '\0';
             upgrade_version = strtok(NULL, "_");
             if (upgrade_version) {
                 strncpy(response_parmas->secondary_version, upgrade_version,
                         sizeof response_parmas->secondary_version);
+                response_parmas->secondary_version[(sizeof response_parmas->secondary_version) - 1] = '\0';
             }
             OTA_LOG_I("response primary_version = %s, secondary_version = %s",
                       response_parmas->primary_version, response_parmas->secondary_version);
@@ -267,6 +270,7 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
 
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
                 sizeof response_parmas->download_url);
+        response_parmas->download_url[(sizeof response_parmas->download_url) - 1] = '\0';
         OTA_LOG_D(" response_parmas->download_url %s",
                   response_parmas->download_url);
 
@@ -278,6 +282,7 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
 
         strncpy(response_parmas->md5, md5->valuestring,
                 sizeof response_parmas->md5);
+        response_parmas->md5[(sizeof response_parmas->md5) - 1] = '\0';
         to_capital_letter(response_parmas->md5, sizeof response_parmas->md5);
         cJSON *size = cJSON_GetObjectItem(json_obj, "size");
         if (!md5) {

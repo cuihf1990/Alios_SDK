@@ -328,9 +328,12 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     aos/soc_impl.c \
                     aos/trace_impl.c
 
-
-ifneq ($(wildcard $(CURDIR)librwnx.a),)
-$(NAME)_PREBUILT_LIBRARY := librwnx.a
+ifneq ($(wildcard $(CURDIR)librwnx),)
+ifeq ($(bkdebug),1)
+$(NAME)_PREBUILT_LIBRARY := librwnx/librwnx_debug.a
+else
+$(NAME)_PREBUILT_LIBRARY := librwnx/librwnx.a
+endif
 else
 $(NAME)_SOURCES	 += beken7231/beken378/ip/common/co_dlist.c \
                     beken7231/beken378/ip/common/co_list.c \

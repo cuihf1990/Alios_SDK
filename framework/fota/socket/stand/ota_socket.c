@@ -19,12 +19,12 @@ int ota_socket_connect(int port, char *host_addr)
     struct sockaddr_in server_addr;
     struct hostent *host;
     int sockfd;
-    if ((host = gethostbyname(host_addr)) == NULL) { /*取得主机IP地址*/
+    if ((host = gethostbyname(host_addr)) == NULL) {
         OTA_LOG_E("Gethostname   error,   %s\n ", strerror(errno));
         return -1;
     }
-    /*   客户程序开始建立   sockfd描述符   */
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) { /*建立SOCKET连接*/
+
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         OTA_LOG_E("Socket   Error:%s\a\n ", strerror(errno));
         return -1;
     }
@@ -36,16 +36,15 @@ int ota_socket_connect(int port, char *host_addr)
     if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
                     sizeof(timeout)) < 0) {
         OTA_LOG_E("setsockopt failed\n");
-        return -1;
+        goto err_out;
     }
 
-    /*   客户程序填充服务端的资料   */
     bzero(&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     server_addr.sin_addr = *((struct in_addr *) host->h_addr);
-    /*   客户程序发起连接请求   */
-    if (connect(sockfd, (struct sockaddr *) (&server_addr), sizeof(struct sockaddr)) == -1) { /*连接网站*/
+
+    if (connect(sockfd, (struct sockaddr *) (&server_addr), sizeof(struct sockaddr)) == -1) {
         OTA_LOG_E("socket connecting %s failed!\n",  strerror(errno));
         if (errno != EINTR) {
             goto err_out;
@@ -64,11 +63,29 @@ err_out:
 
 int ota_socket_send(int socket, const  char *buf, size_t len)
 {
+    if (socket < 0) {
+        OTA_LOG_E("ota_socket_send: invalid socket fd\n");
+        return -1;
+    }
+    if (buf == NULL) {
+        OTA_LOG_E("ota_socket_send: buf is NULL\n");
+        return -1;
+    }
+
     return write(socket, buf, len);
 }
 
 int ota_socket_recv(int socket,  char *buf, size_t len)
 {
+    if (socket < 0) {
+        OTA_LOG_E("ota_socket_recv: invalid socket fd\n");
+        return -1;
+    }
+    if (buf == NULL) {
+        OTA_LOG_E("ota_socket_recv: buf is NULL\n");
+        return -1;
+    }
+
     return read(socket, buf, len);
 }
 
@@ -79,6 +96,11 @@ void ota_socket_close(int socket)
 
 int ota_socket_check_conn(int sock)
 {
+    if (sock < 0) {
+        OTA_LOG_E("ota_socket_check_conn: invalid socket fd\n");
+        return -1;
+    }
+
 #if !defined(WITH_LWIP) && !defined(CONFIG_NO_TCPIP)
     struct pollfd fd = { .fd = sock, .events = POLLOUT };
     int ret = 0;

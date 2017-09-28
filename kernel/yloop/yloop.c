@@ -121,6 +121,8 @@ int aos_poll_read_fd(int sock, aos_poll_call_t cb, void *private_data)
 
     if (new_sock == NULL || new_loop_pollfds == NULL) {
         LOGE(TAG, "out of memory");
+        aos_free(new_sock);
+        aos_free(new_loop_pollfds);
         return -ENOMEM;
     }
 
