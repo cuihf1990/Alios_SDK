@@ -75,7 +75,9 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
     ur_error_t error;
     uint16_t sid;
 
-    if (!ip4_addr_netcmp(ip4addr, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
+    if (ip4_addr_ismulticast(ip4addr)) {
+        sid = BCAST_SID;
+    } else if (!ip4_addr_netcmp(ip4addr, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
         ip4_addr_cmp(ip4addr, netif_ip4_gw(netif))) {
 #ifdef CONFIG_AOS_MESH_TAPIF
         if (is_router) {
@@ -85,8 +87,6 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
         }
 #endif
         sid = 0;
-    } else if (ip4_addr_ismulticast(ip4addr)) {
-        sid = 0xffff;
     } else {
         sid = ntohs(((ip4addr->addr) >> 16)) - 2;
     }
