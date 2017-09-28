@@ -296,6 +296,7 @@ static int __item_recovery_cb(kv_item_t *item, const char *key)
     }
 
     if (raw_read(item->pos + ITEM_HEADER_SIZE, p, item->len) != RES_OK) {
+        aos_free(p);
         return RES_FLASH_READ_ERR;
     }
 
@@ -621,6 +622,9 @@ void aos_kv_gc(void *arg)
             break;
         }
     }
+
+    if (gc_index == BLK_NUMS)
+        goto exit;
 
     i = (origin_pos >> BLK_BITS) + 1;
     while (1) {
