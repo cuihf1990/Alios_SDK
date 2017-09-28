@@ -187,8 +187,10 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
     //ota_set_version(response_parmas->primary_version);
     g_write_func = func;
     g_finish_cb = fcb;
+
     memset(md5, 0, sizeof md5);
     strncpy(md5, response_parmas->md5, sizeof md5);
+    md5[(sizeof md5) - 1] = '\0';
 
     if (set_url(response_parmas->download_url)) {
         ret = -1;

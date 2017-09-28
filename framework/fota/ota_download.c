@@ -189,8 +189,6 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     int header_found = 0;
     char *pos = 0;
     int file_size = 0;
-    int retry_cnt = 0;
-
 
     while ((nbytes = ota_socket_recv(sockfd, http_buffer, OTA_BUFFER_MAX_SIZE))) {
         //aos_msleep(25);//for slow-motion test
@@ -202,10 +200,8 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
             if (ota_socket_check_conn(sockfd) < 0) {
                 OTA_LOG_E("download system error %s" , strerror(errno));
                 break;
-            } else if (retry_cnt++ < 20) {
-                continue;
             } else {
-                break;
+                continue;
             }
         }
 

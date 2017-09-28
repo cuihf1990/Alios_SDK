@@ -73,6 +73,10 @@ int ota_socket_recv(int socket,  char *buf, size_t len)
         OTA_LOG_E("ota_socket_recv: invalid socket fd\n");
         return -1;
     }
+    if (buf == NULL) {
+        OTA_LOG_E("ota_socket_recv: buf is NULL\n");
+        return -1;
+    }
 
     if (len > ES_WIFI_PAYLOAD_SIZE) {
         len = ES_WIFI_PAYLOAD_SIZE;
@@ -119,5 +123,5 @@ void ota_socket_close(int socket)
 
 int ota_socket_check_conn(int sock)
 {
-    return 0;
+    return sock;
 }
