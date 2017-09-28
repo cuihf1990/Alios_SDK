@@ -56,6 +56,7 @@
 static int is_demo_started = 0;
 static int ota_started = 0;
 void *pclient;
+int g_led_flag = 0;
 typedef struct ota_device_info {
     const char *product_key;
     const char *device_name;
@@ -166,6 +167,12 @@ static void _demo_message_arrive(void *pcontext, void *pclient, iotx_mqtt_event_
                   ptopic_info->payload,
                   ptopic_info->payload_len);
     EXAMPLE_TRACE("----");
+    g_led_flag = 0;
+    if (strstr((char *) ptopic_info->payload, "\"desired\":{\"LED_value\":\"On\"}") != NULL) {
+        g_led_flag = 1;
+    } else if (strstr((char *) ptopic_info->payload, "\"desired\":{\"LED_value\":\"Off\"}") != NULL) {
+        g_led_flag = 2;
+    }
 }
 
 int mqtt_client_example(void)
@@ -178,6 +185,9 @@ int mqtt_client_example(void)
     char *msg_buf = NULL, *msg_readbuf = NULL;
     uint8_t bp_pushed;
     char ledstate[] = { "Off" };
+    const char msg_on[]  = "{\"state\":{\"reported\":{\"LED_value\":\"On\"}}}";
+    const char msg_off[] = "{\"state\":{\"reported\":{\"LED_value\":\"Off\"}}}";
+    const char *led_msg = NULL;
 
     if (NULL == (msg_buf = (char *)HAL_Malloc(MSG_LEN_MAX))) {
         EXAMPLE_TRACE("not enough memory");
@@ -262,7 +272,7 @@ int mqtt_client_example(void)
             printf("\n*************************************************************************************************************\n");
             printf("Press the User button (Blue) to publish LED desired value on the %s topic\n", TOPIC_DATA);
             printf("*************************************************************************************************************\n\n");
-            bp_pushed = Button_WaitForPush(3000);
+            bp_pushed = Button_WaitForPush(1000);
 
             /* exit loop on long push  */
             if (bp_pushed == BP_MULTIPLE_PUSH) {
@@ -305,9 +315,38 @@ int mqtt_client_example(void)
                 EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
 #endif
                 /* handle the MQTT packet received from TCP or SSL connection */
-                IOT_MQTT_Yield(pclient, 2000);
+                IOT_MQTT_Yield(pclient, 1000);
             }
 
+            /* Report the new LED state to the MQTT broker. */
+            if (g_led_flag > 0) {
+                if (1 == g_led_flag) {
+                    Led_On();
+                    strcpy(ledstate, "On");
+                    EXAMPLE_TRACE("LED On!\n");
+                    led_msg = msg_on;
+                } else {
+                    Led_Off();
+                    strcpy(ledstate, "Off");
+                    EXAMPLE_TRACE("LED Off!\n");
+                    led_msg = msg_off;
+                }
+                g_led_flag = 0;
+                led_msg = msg_off;
+                topic_msg.qos = IOTX_MQTT_QOS1;
+                topic_msg.retain = 0;
+                topic_msg.dup = 0;
+                topic_msg.payload = (void *)led_msg;
+                topic_msg.payload_len = strlen(led_msg);
+
+                rc = IOT_MQTT_Publish(pclient, TOPIC_DATA, &topic_msg);
+
+                if (rc < 0) {
+                    EXAMPLE_TRACE("error occur when publish LED status");
+                }
+                /* handle the MQTT packet received from TCP or SSL connection */
+                IOT_MQTT_Yield(pclient, 3000);
+            }
 #ifdef SENSOR
             PrepareMqttPayload(msg_pub, sizeof(msg_pub));
             topic_msg.payload = (void *)msg_pub;
