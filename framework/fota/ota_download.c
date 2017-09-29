@@ -38,6 +38,7 @@ void http_gethost_info(char *src, char **web, char **file, int *port)
     char *pa;
     char *pb;
     int isHttps = 0;
+
     if (!src || strlen(src) == 0) {
         OTA_LOG_E("http_gethost_info parms error!\n");
         return;
@@ -56,27 +57,20 @@ void http_gethost_info(char *src, char **web, char **file, int *port)
             pa = src + strlen("http://");
         }
     }
-
+    *web = pa;
     pb = strchr(pa, '/');
     if (pb) {
-        *web = pa;
         *pb = 0;
-        //memcpy(web, pa, strlen(pa) - strlen(pb));
-        if (*(pb + 1)) {
-            *file = pb + 1;
-            *((*file) + strlen(pb) - 1) = 0;
-            //memcpy(file, pb + 1, strlen(pb) - 1);
-            //file[strlen(pb) - 1] = 0;
-        }
-    } else {
-        *web = pa;
-        //memcpy(web, pa, strlen(pa));
-    }
-    if (pb) {
-        (*web)[strlen(pa) - strlen(pb)] = 0;
-    } else {
+        pb+=1;
+        if (*pb) {
+            *file = pb;
+            *((*file) + strlen(pb)) = 0;
+        }      
+    } 
+    else {
         (*web)[strlen(pa)] = 0;
     }
+
     pa = strchr(*web, ':');
     if (pa) {
         *pa = 0;
@@ -142,9 +136,9 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     uint32_t breakpoint = 0;
     char last_md5[33] = {0};
     http_gethost_info(url, &host_addr, &host_file, &port);
-    //  OTA_LOG_I("host_addr is: %s\n ", host_addr);
-    //  OTA_LOG_I("host_file is: %s\n ", host_file);
-    //  OTA_LOG_I("port is: %d\n ", port);
+    // OTA_LOG_I("host_addr is: %s\n ", host_addr);
+    // OTA_LOG_I("host_file is: %s\n ", host_file);
+    // OTA_LOG_I("port is: %d\n ", port);
     if (host_file == NULL || host_addr == NULL) {
         ret = OTA_DOWNLOAD_URL_FAIL;
         return ret;

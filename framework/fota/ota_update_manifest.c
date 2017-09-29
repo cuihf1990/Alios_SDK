@@ -37,6 +37,7 @@ int set_url(const char *value)
     }
     int len = strlen(value);
     len = len < OTA_URL_MAX_LEN ? len : OTA_URL_MAX_LEN;
+    memset(url_temp, 0, OTA_URL_MAX_LEN);
     memcpy(url_temp, value, len);
     return 0;
 }
