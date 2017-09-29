@@ -11,7 +11,7 @@
 
 #define TAG "wifi_port"
 
-static int get_mac_helper(uint8_t *mac);
+static int get_mac_helper(char *mac);
 static int get_ip_stat_helper(hal_wifi_ip_stat_t *result);
 
 static void fetch_ip_stat(void *arg)
@@ -59,21 +59,42 @@ static int wifi_init(hal_wifi_module_t *m)
     return 0;
 };
 
+#define MAC_STR_LEN 12
+// str: char[12], mac: hex[6]
+static void mac_str_to_hex(char *str, uint8_t *mac)
+{
+    int i;
+    char c;
+    uint8_t j;
+
+    if (!str || !mac) return;
+
+    memset(mac, 0, MAC_STR_LEN >> 1);
+    for (i = 0; i < MAC_STR_LEN; i++) {
+        c = str[i];
+        if (c >= '0' && c <= '9') j = c - '0';
+        else if (c >= 'A' && c <= 'F') j = c - 'A' + 0xa;
+        else if (c >= 'a' && c <= 'f') j = c - 'a' + 0xa;
+        else j = c % 0xf;
+        j <<= i & 1 ? 0 : 4;
+        mac[i>>1] |= j;
+    }
+}
+
+// mac - hex[6]
 static void wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)
 {
-    char out[64] = {0};
+    char mac_str[MAC_STR_LEN+1] = {0};
+
+    if (!mac) return;
 
     (void)m;
     LOGD(TAG, "wifi_get_mac_addr!!\n");
 
-    if (at.send_raw("AT+WMAC?", out) == 0)
-        LOGD(TAG, "AT command succeed, rsp: %s", out);
-    else
-        LOGE(TAG, "AT command failed\r\n");
-
-    if (strstr(out, "ERROR")) return;
-    sscanf(out, "%*[^:]:%[^\r]", mac);
-    printf("mac result: %s\r\n", mac);
+    get_mac_helper(mac_str);
+    mac_str_to_hex(mac_str, mac);
+    LOGD(TAG, "mac in hex: %02x%02x%02x%02x%02x%02x",
+      mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 };
 
 static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
@@ -109,18 +130,25 @@ static int wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_p
     return 0;
 }
 
-static int get_mac_helper(uint8_t *mac)
+// mac string, e.g. "BF01ADE2F5CE"
+static int get_mac_helper(char *mac)
 {
     char out[128] = {0};
 
     if (!mac) return -1;
 
-    if (at.send_raw("AT+WMAC?", out) == 0)
+    if (at.send_raw("AT+WMAC?", out) == 0) {
         LOGD(TAG, "AT command succeed, rsp: %s", out);
-    else
+    } else {
         LOGE(TAG, "AT command failed\r\n");
+        return -1;
+    }
 
-    if (strstr(out, "ERROR")) return -1;
+    if (strstr(out, "ERROR")) {
+        LOGE(TAG, "Command executed with ERROR.");
+        return -1;
+    }
+
     sscanf(out, "%*[^:]:%[^\r]", mac);
     LOGD(TAG, "mac result: %s\r\n", mac);
 
@@ -130,24 +158,31 @@ static int get_mac_helper(uint8_t *mac)
 static int get_ip_stat_helper(hal_wifi_ip_stat_t *result)
 {
     char out[128] = {0};
+    int ret = 0;
 
     if (!result) return -1;
 
-    if (at.send_raw("AT+WJAPIP?", out) == 0)
+    if (at.send_raw("AT+WJAPIP?", out) == 0) {
         LOGD(TAG, "AT command succeed, rsp: %s", out);
-    else
+    } else {
         LOGE(TAG, "AT command failed\r\n");
+        return -1;
+    }
 
-    if (strstr(out, "ERROR")) return -1;
+    if (strstr(out, "ERROR")) {
+        LOGE(TAG, "Command executed with ERROR");
+        return -1;
+    }
+
     sscanf(out, "%*[^:]:%[^,],%[^,],%[^,],%[^\r]",
       result->ip, result->mask, result->gate, result->dns);
 
     LOGD(TAG, "result: %s %s %s %s\r\n",
       result->ip, result->mask, result->gate, result->dns);
 
-    get_mac_helper(result->mac);
+    ret = get_mac_helper(result->mac);
 
-    return 0;
+    return ret;
 }
 
 static int get_ip_stat(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type)
