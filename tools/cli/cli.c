@@ -596,7 +596,7 @@ extern tftp_context_t ota_ctx;
 void ota_get_done(int error, int len);
 static void tftp_cmd(char *buf, int len, int argc, char **argv)
 {
-    if (argc != 3) {
+    if (argc < 3) {
         goto tftp_print_usage;
     }
 
@@ -613,9 +613,8 @@ static void tftp_cmd(char *buf, int len, int argc, char **argv)
         goto tftp_print_usage;
     } else if (strncmp(argv[1], "get", 3) == 0) {
         ip_addr_t dst_addr;
-        uint8_t   gw_ip[4] = {10, 0 , 0, 2};
-        memcpy(&dst_addr, gw_ip, 4);
-        tftp_client_get(&dst_addr, argv[2], &client_ctx, tftp_get_done);
+        ipaddr_aton(argc == 4 ? argv[2] : "10.0.0.2", &dst_addr);
+        tftp_client_get(&dst_addr, argv[argc - 1], &client_ctx, tftp_get_done);
         return;
     } else if (strncmp(argv[1], "ota", 3) == 0) {
         ip_addr_t dst_addr;
