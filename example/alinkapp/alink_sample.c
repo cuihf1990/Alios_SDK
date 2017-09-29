@@ -406,7 +406,7 @@ static void handle_model_cmd(char *pwbuf, int blen, int argc, char **argv)
     if (strcmp(argv[1], "gateway") == 0) {
         if (strcmp(model, argv[1])) {
             aos_kv_del("alink");
-            aos_kv_set("model", "gateway", MAX_MODEL_LENGTH, 1);
+            aos_kv_set("model", "gateway", sizeof("gateway"), 1);
             LOG("Swith model to gateway, please reboot");
         } else {
             LOG("Current model is already gateway");
@@ -414,7 +414,7 @@ static void handle_model_cmd(char *pwbuf, int blen, int argc, char **argv)
     } else {
         if (strcmp(model, argv[1])) {
             aos_kv_del("alink");
-            aos_kv_set("model", "light", MAX_MODEL_LENGTH, 1);
+            aos_kv_set("model", "light", sizeof("light"), 1);
             LOG("Swith model to light, please reboot");
         } else {
             LOG("Current model is already light");

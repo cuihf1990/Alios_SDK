@@ -101,8 +101,8 @@ int platform_awss_connect_ap(
     int ret, ms_cnt = 0;
     netmgr_ap_config_t config;
 
-    strcpy(config.ssid, ssid);
-    strcpy(config.pwd, passwd);
+    strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
+    strncpy(config.pwd, passwd, sizeof(config.pwd) - 1);
     ret = netmgr_set_ap_config(&config);
 
     hal_wifi_suspend_station(NULL);

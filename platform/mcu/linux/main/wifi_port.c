@@ -81,6 +81,8 @@ static int get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)
 static void start_scan(hal_wifi_module_t *m)
 {
     hal_wifi_scan_result_t scan_ret;
+    ap_list_t aplist = {{0}, 0};
+    scan_ret.ap_list = (ap_list_t *)&aplist;
     scan_ret.ap_num = 1;
     scan_ret.ap_list->ap_power = 80;
     memcpy(scan_ret.ap_list->ssid, "test", 5);

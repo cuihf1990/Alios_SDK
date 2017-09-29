@@ -260,8 +260,8 @@ static void reconnect_wifi(void *arg)
     bzero(&type, sizeof(type));
     type.wifi_mode = STATION;
     type.dhcp_mode = DHCP_CLIENT;
-    memcpy(type.wifi_ssid, ap_config->ssid, sizeof(type.wifi_ssid));
-    memcpy(type.wifi_key, ap_config->pwd, sizeof(type.wifi_key));
+    strncpy(type.wifi_ssid, ap_config->ssid, sizeof(type.wifi_ssid) - 1);
+    strncpy(type.wifi_key, ap_config->pwd, sizeof(type.wifi_key) - 1);
 #ifdef STM32L475xx
     set_access_security(&type, ap_config->security);
 #endif
@@ -277,16 +277,16 @@ void netmgr_reconnect_wifi()
 static void get_wifi_ssid(void)
 {
     memset(g_netmgr_cxt.ap_config.ssid, 0, sizeof(g_netmgr_cxt.ap_config.ssid));
-    strncpy(g_netmgr_cxt.ap_config.ssid,
-            g_netmgr_cxt.saved_conf.ssid, MAX_SSID_SIZE);
+    strncpy(g_netmgr_cxt.ap_config.ssid, g_netmgr_cxt.saved_conf.ssid,
+            sizeof(g_netmgr_cxt.ap_config.ssid) - 1);
 
     memset(g_netmgr_cxt.ap_config.pwd, 0, sizeof(g_netmgr_cxt.ap_config.pwd));
-    strncpy(g_netmgr_cxt.ap_config.pwd,
-            g_netmgr_cxt.saved_conf.pwd, MAX_PWD_SIZE);
+    strncpy(g_netmgr_cxt.ap_config.pwd, g_netmgr_cxt.saved_conf.pwd,
+            sizeof(g_netmgr_cxt.ap_config.pwd) - 1);
 #ifdef STM32L475xx
     memset(g_netmgr_cxt.ap_config.security, 0, sizeof(g_netmgr_cxt.ap_config.security));
-    strncpy(g_netmgr_cxt.ap_config.security,
-            g_netmgr_cxt.saved_conf.security, MAX_SECURITY_SIZE);
+    strncpy(g_netmgr_cxt.ap_config.security, g_netmgr_cxt.saved_conf.security,
+            sizeof(g_netmgr_cxt.ap_config.security) - 1);
 #endif
 }
 
@@ -310,12 +310,15 @@ static int set_wifi_ssid(void)
     memset(&g_netmgr_cxt.saved_conf, 0,
            sizeof(wifi_conf_t));
     strncpy(g_netmgr_cxt.saved_conf.ssid,
-            g_netmgr_cxt.ap_config.ssid, MAX_SSID_SIZE);
+            g_netmgr_cxt.ap_config.ssid,
+            sizeof(g_netmgr_cxt.saved_conf.ssid) - 1);
     strncpy(g_netmgr_cxt.saved_conf.pwd,
-            g_netmgr_cxt.ap_config.pwd, MAX_PWD_SIZE);
+            g_netmgr_cxt.ap_config.pwd,
+            sizeof(g_netmgr_cxt.saved_conf.pwd) - 1);
 #ifdef STM32L475xx
     strncpy(g_netmgr_cxt.saved_conf.security,
-            g_netmgr_cxt.ap_config.security, MAX_SECURITY_SIZE);
+            g_netmgr_cxt.ap_config.security,
+            sizeof(g_netmgr_cxt.saved_conf.security) - 1);
 #endif
     ret = aos_kv_set(NETMGR_WIFI_KEY, (unsigned char *)&g_netmgr_cxt.saved_conf,
                      sizeof(wifi_conf_t), 1);
@@ -444,18 +447,20 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
 {
     int ret = 0;
 
-    strncpy(g_netmgr_cxt.ap_config.ssid, config->ssid, MAX_SSID_SIZE);
-    strncpy(g_netmgr_cxt.ap_config.pwd, config->pwd, MAX_PWD_SIZE);
+    strncpy(g_netmgr_cxt.ap_config.ssid, config->ssid, 
+            sizeof(g_netmgr_cxt.ap_config.ssid) - 1);
+    strncpy(g_netmgr_cxt.ap_config.pwd, config->pwd,
+            sizeof(g_netmgr_cxt.ap_config.pwd) - 1);
 
-    strncpy(g_netmgr_cxt.saved_conf.ssid,
-            config->ssid, sizeof(g_netmgr_cxt.saved_conf.ssid) - 1);
-    strncpy(g_netmgr_cxt.saved_conf.pwd,
-            config->pwd, sizeof(g_netmgr_cxt.saved_conf.pwd) - 1);
+    strncpy(g_netmgr_cxt.saved_conf.ssid, config->ssid,
+            sizeof(g_netmgr_cxt.saved_conf.ssid) - 1);
+    strncpy(g_netmgr_cxt.saved_conf.pwd, config->pwd,
+            sizeof(g_netmgr_cxt.saved_conf.pwd) - 1);
 #ifdef STM32L475xx
     strncpy(g_netmgr_cxt.ap_config.security,
             config->security, MAX_SECURITY_SIZE);
-    strncpy(g_netmgr_cxt.saved_conf.security,
-            config->security, sizeof(g_netmgr_cxt.saved_conf.security) - 1);
+    strncpy(g_netmgr_cxt.saved_conf.security, config->security,
+            sizeof(g_netmgr_cxt.saved_conf.security) - 1);
     // STM32L475E ip stack running on WiFi MCU, can only configure with CLI(no ywss)
     // So save the wifi config while config from CLI
 
@@ -507,10 +512,10 @@ static void handle_netmgr_cmd(char *pwbuf, int blen, int argc, char **argv)
 
         netmgr_ap_config_t config;
 
-        memcpy(config.ssid, argv[2], sizeof(config.ssid));
-        memcpy(config.pwd, argv[3], sizeof(config.pwd));
+        strncpy(config.ssid, argv[2], sizeof(config.ssid) - 1);
+        strncpy(config.pwd, argv[3], sizeof(config.pwd) - 1);
 #ifdef STM32L475xx
-        memcpy(config.security, argv[4], sizeof(config.security));
+        strncpy(config.security, argv[4], sizeof(config.security) - 1);
 #endif
         netmgr_set_ap_config(&config);
         netmgr_start(false);
@@ -593,8 +598,8 @@ static int def_smart_config_start(void)
 {
     netmgr_ap_config_t config;
 
-    memcpy(config.ssid, DEMO_AP_SSID, sizeof(config.ssid));
-    memcpy(config.pwd, DEMO_AP_PASSWORD, sizeof(config.pwd));
+    strncpy(config.ssid, DEMO_AP_SSID, sizeof(config.ssid) - 1);
+    strncpy(config.pwd, DEMO_AP_PASSWORD, sizeof(config.pwd) - 1);
     netmgr_set_ap_config(&config);
     aos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
     return 0;
