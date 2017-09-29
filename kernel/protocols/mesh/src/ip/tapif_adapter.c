@@ -154,6 +154,24 @@ static void retarget_ip4(ur_ip4_header_t *ip_hdr, int len)
     }
 }
 
+static void retarget_ip4_src(ur_ip4_header_t *ip_hdr, int len)
+{
+    if (ip_hdr->src.m32 != 0x0100000a) {
+        return;
+    }
+
+    ip_hdr->src.m32 = 0x0200000a;
+    ip_hdr->chksum = calc_csum(ip_hdr);
+    switch (ip_hdr->proto) {
+    case UR_IPPROTO_UDP:
+        {
+            ur_udp_header_t *uhdr = (ur_udp_header_t *)(ip_hdr + 1);
+            uhdr->chksum = 0;
+        }
+        break;
+    }
+}
+
 /* recv from tapif network */
 void ur_adapter_input_buf(void *buf, int len)
 {
@@ -173,6 +191,7 @@ void ur_adapter_input_buf(void *buf, int len)
         return;
     }
 
+    retarget_ip4_src(ip_hdr, len);
     pbuf_take(pbuf, buf, len);
     umesh_ipv4_output(pbuf, sid);
 }
@@ -182,8 +201,16 @@ ur_error_t ur_adapter_input(struct pbuf *buf)
 {
     ur_error_t error = UR_ERROR_NONE;
     char ip_payload[2048];
+    ur_ip4_header_t *ip_hdr = (ur_ip4_header_t *)ip_payload;
+    uint16_t sid;
 
     pbuf_copy_partial(buf, ip_payload, buf->tot_len, 0);
+
+    sid = ntohl(ip_hdr->dest.m32) - 2;
+    if (sid == umesh_get_sid()) {
+        retarget_ip4(ip_hdr, buf->tot_len);
+    }
+
     umesh_tapif_send(ip_payload, buf->tot_len);
 
     pbuf_free(buf);
