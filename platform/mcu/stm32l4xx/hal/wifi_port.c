@@ -24,8 +24,7 @@ static int wifi_init(hal_wifi_module_t *m)
 static void wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)
 {
     WIFI_Status_t wifi_res = WIFI_GetMAC_Address(mac);
-    if ( WIFI_STATUS_OK != wifi_res)
-    {
+    if ( WIFI_STATUS_OK != wifi_res) {
         printf("Failed to get MAC address\n");
     }
 };
@@ -40,8 +39,12 @@ static void connet_wifi_ap(void *arg)
     hal_wifi_ip_stat_t wifi_pnet;
     hal_wifi_init_type_t *init_para = (hal_wifi_init_type_t *)arg;
 
-    do 
-    {
+    wifi_res = WIFI_Disconnect();
+    if (WIFI_STATUS_OK != wifi_res) {
+        printf("WIFI_Disconnect failed\n");
+    }
+
+    do {
         printf("\rConnecting to AP: %s  Attempt %d/%d ...", init_para->wifi_ssid, ++connect_counter, WIFI_CONNECT_MAX_ATTEMPT_COUNT);
         wifi_res = WIFI_Connect(init_para->wifi_ssid, init_para->wifi_key, init_para->access_sec);
         if (wifi_res == WIFI_STATUS_OK) break;
@@ -50,23 +53,17 @@ static void connet_wifi_ap(void *arg)
     /* Slight delay since the module seems to take some time prior to being able
         to retrieve its IP address after a connection. */
     aos_msleep(500);
-    if (wifi_res == WIFI_STATUS_OK)
-    {
+    if (wifi_res == WIFI_STATUS_OK) {
         WifiStatusHandler(1);
         printf("\nConnected to AP %s\n", init_para->wifi_ssid);
-    }
-    else
-    {
+    } else {
         WifiStatusHandler(2);
         printf("\nFailed to connect to AP %s\n", init_para->wifi_ssid);
     }
    
-    if ( WIFI_STATUS_OK != WIFI_GetIP_Address(ip_address))
-    {
+    if ( WIFI_STATUS_OK != WIFI_GetIP_Address(ip_address) ) {
         printf("Fail to get IP address\n");
-    }
-    else
-    {
+    } else {
         snprintf(wifi_pnet.ip, sizeof(wifi_pnet.ip), "%d.%d.%d.%d", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
         printf("Get IP Address: %s\n", wifi_pnet.ip);
         NetCallback(&wifi_pnet);
@@ -75,8 +72,7 @@ static void connet_wifi_ap(void *arg)
 
 static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
 {
-    if (NULL == m || NULL == init_para)
-    {
+    if (NULL == m || NULL == init_para) {
         printf("wifi_start: invalid parameter\n");
         return -1;
     }
