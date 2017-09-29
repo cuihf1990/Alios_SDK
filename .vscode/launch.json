@@ -35,15 +35,15 @@
             "launchCompleteCommand": "exec-run",
             "osx": {
                 "MIMode": "gdb",
-                "miDebuggerPath": "${workspaceRoot}/build/compiler/arm-none-eabi-5_4-2016q2-20160622/OSX/bin/arm-none-eabi-gdb"
+                "miDebuggerPath": "arm-none-eabi-gdb"
             },
             "linux": {
                 "MIMode": "gdb",
-                "miDebuggerPath": "${workspaceRoot}/build/compiler/arm-none-eabi-5_4-2016q2-20160622/Linux64/bin/arm-none-eabi-gdb"
+                "miDebuggerPath": "arm-none-eabi-gdb"
             },
             "windows": {
                 "MIMode": "gdb",
-                "miDebuggerPath": "${workspaceRoot}\\build\\compiler\\arm-none-eabi-5_4-2016q2-20160622\\Win32\\bin\\arm-none-eabi-gdb.exe"
+                "miDebuggerPath": "arm-none-eabi-gdb.exe"
             }
         }
     ]
