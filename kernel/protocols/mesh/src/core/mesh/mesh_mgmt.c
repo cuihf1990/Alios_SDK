@@ -1566,8 +1566,6 @@ ur_error_t umesh_mm_init(node_mode_t mode)
     // ueid is default mac address
     memcpy(g_mm_state.device.ueid, hal_umesh_get_mac_address(NULL),
            sizeof(g_mm_state.device.ueid));
-    g_mm_state.device.reboot_flag = true;
-
     g_mm_state.device.seclevel = SEC_LEVEL_1;
     g_mm_state.device.prev_channel = -1;
 
@@ -1581,7 +1579,6 @@ ur_error_t umesh_mm_init(node_mode_t mode)
     if (get_hal_contexts_num() > 1) {
         g_mm_state.device.mode |= MODE_SUPER;
     }
-
     return error;
 }
 
@@ -1598,6 +1595,7 @@ ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
     g_mm_state.device.state = DEVICE_STATE_DETACHED;
     g_mm_state.callback = mm_cb;
     g_mm_state.device.alive_timer = NULL;
+    g_mm_state.device.reboot_flag = true;
 
     if (g_mm_state.device.mode & MODE_LEADER) {
         become_leader();
@@ -1895,9 +1893,7 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             g_mm_state.device.state > DEVICE_STATE_ATTACHED &&
             g_mm_state.device.state != DEVICE_STATE_LEADER) {
             nd_set_stable_main_version(main_version);
-            if (g_mm_state.device.mode & MODE_MOBILE) {
-                leader_reboot = true;
-            }
+            leader_reboot = true;
         }
         if ((nbr == attach_node) &&
             (attach_node->flags & NBR_REBOOT) &&
@@ -1906,12 +1902,9 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             attach_node->flags &= (~NBR_REBOOT);
         }
         if (leader_reboot) {
-            network->attach_candidate = network->attach_node;
-            network->attach_state = ATTACH_SID_REQUEST;
-            ur_stop_timer(&network->attach_timer, network);
-            network->attach_timer = ur_start_timer(network->hal->sid_request_interval,
-                                                   handle_attach_timer, network);
-            send_sid_request(network);
+            nbr = network->attach_node;
+            become_detached();
+            attach_start(nbr);
         }
         if (attach_node == nbr) {
             network->path_cost = nbr->path_cost + nbr->stats.link_cost;
