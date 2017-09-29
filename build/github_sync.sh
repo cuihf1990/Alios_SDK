@@ -12,6 +12,10 @@ git clone git@github.com:alibaba/AliOS-Things.git AliOS
 aosdir=~/githubsync/aos
 githubdir=~/githubsync/AliOS
 
+cd ${githubdir}
+git reset --hard 31659df7f8ef0df547a817a218512a820121453e
+cd ~/githubsync
+
 rm -rf ${githubdir}/*
 rm -rf ${github}/.gitignore
 rm -rf ${github}/.vscode
@@ -110,7 +114,6 @@ cp -rf beken7231/beken378/driver/entry/*.h ${githubdir}/platform/mcu/beken/inclu
 cp -rf beken7231/beken378/build ${githubdir}/platform/mcu/beken/linkinfo
 find ${githubdir}/platform/mcu/beken/ -type f -name '*.c' -exec rm {} +
 cp -rf aos ${githubdir}/platform/mcu/beken/
-cp -rf art ${githubdir}/platform/mcu/beken/
 cp -rf hal ${githubdir}/platform/mcu/beken/
 cp -rf encrypt_linux ${githubdir}/platform/mcu/beken/
 cp -rf encrypt_osx ${githubdir}/platform/mcu/beken/
@@ -122,31 +125,33 @@ cp -rf beken.mk ${githubdir}/platform/mcu/beken/
 git reset && git checkout beken.mk
 
 cd ${aosdir}
-aos make meshapp@linuxhost
+aos make meshapp@linuxhost > /dev/null
 if [ $? -ne 0 ]; then
     echo "error: build meshapp@linuxhost failed"
     exit 1
 fi
-aos make alinkapp@linuxhost
+cd ${aosdir}/out/meshapp@linuxhost/libraries/
+cp mesh.a libmesh.a
+strip --strip-debug libmesh.a
+mv libmesh.a ${githubdir}/kernel/protocols/mesh/lib/linuxhost/libmesh.a
+
+cd ${aosdir}
+aos make alinkapp@linuxhost > /dev/null
 if [ $? -ne 0 ]; then
     echo "error: build alinkapp@linuxhost failed"
     exit 1
 fi
-aos make alinkapp@mk3060
-if [ $? -ne 0 ]; then
-    echo "error: build alinkapp@mk3060 failed"
-    exit 1
-fi
-
-cd ${aosdir}/out/meshapp@linuxhost/libraries/
-cp mesh.a libmesh-linuxhost.a
-strip --strip-debug libmesh.a
-mv libmesh.a ${githubdir}/kernel/protocols/mesh/lib/linuxhost/libmesh.a
 cd ${aosdir}/out/alinkapp@linuxhost/libraries/
 cp ywss.a libywss.a
 strip --strip-debug libywss.a
 cp libywss.a ${githubdir}/framework/ywss/lib/linuxhost/libywss.a
 
+cd ${aosdir}
+aos make alinkapp@mk3060 > /dev/null
+if [ $? -ne 0 ]; then
+    echo "error: build alinkapp@mk3060 failed"
+    exit 1
+fi
 cd ${aosdir}/out/alinkapp@mk3060/libraries/
 cp mesh.a libmesh.a
 arm-none-eabi-strip --strip-debug libmesh.a
@@ -154,25 +159,24 @@ mv libmesh.a ${githubdir}/kernel/protocols/mesh/lib/mk3060/libmesh.a
 cp ywss.a libywss.a
 arm-none-eabi-strip --strip-debug libywss.a
 cp libywss.a ${githubdir}/framework/ywss/lib/mk3060/libywss.a
-
 echo "create libbeken.a" > packscript
 echo "addlib beken.a" >> packscript
 echo "addlib entry.a" >> packscript
 echo "addlib hal_init.a" >> packscript
-echo "addlib ${aosdir}/platform/mcu/beken/librwnx.a" >> packscript
+echo "addlib ${aosdir}/platform/mcu/beken/librwnx/librwnx.a" >> packscript
 echo "save" >> packscript
 echo "end" >> packscript
 arm-none-eabi-ar -M < packscript
 arm-none-eabi-strip --strip-debug libbeken.a
 mv libbeken.a ${githubdir}/platform/mcu/beken/
 cd ${githubdir}/platform/mcu/beken/
-arm-none-eabi-ar d aos_main.o
-arm-none-eabi-ar d soc_impl.o
-arm-none-eabi-ar d trace_impl.o
-arm-none-eabi-ar d mesh_wifi_hal.o
+arm-none-eabi-ar dv libbeken.a aos_main.o
+arm-none-eabi-ar dv libbeken.a soc_impl.o
+arm-none-eabi-ar dv libbeken.a trace_impl.o
+arm-none-eabi-ar dv libbeken.a mesh_wifi_hal.o
 
 cd ${githubdir}
 git add -A
 datetime=`date +%F@%H:%M`
-git commit -m "code synchronization at ${datetime}"
-#git push origin master
+git commit -m "code synchronization at ${datetime}" > /dev/null
+git push -f origin master
