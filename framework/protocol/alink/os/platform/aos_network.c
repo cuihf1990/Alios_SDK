@@ -272,7 +272,7 @@ void *platform_tcp_server_accept(_IN_ void *server)
     long new_client;
 
     if ((new_client = accept((long)server, (struct sockaddr *)&addr,
-                             &addr_length)) <= 0) {
+                             &addr_length)) < 0) {
         return PLATFORM_INVALID_FD;
     }
 
