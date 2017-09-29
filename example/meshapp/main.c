@@ -36,6 +36,8 @@ int application_start(int argc, char **argv)
 {
     const char *mode = argc > 1 ? argv[1] : "";
 
+    aos_set_log_level(AOS_LL_DEBUG);
+
     if (strcmp(mode, "--mesh-node") == 0) {
 #ifdef CONFIG_AOS_DDA
         dda_enable(atoi(argv[argc-1]));
