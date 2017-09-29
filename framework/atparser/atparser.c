@@ -91,13 +91,13 @@ static int at_getc()
     char data;
     uint32_t recv_size;
 
-    if (hal_uart_recv(&at._uart, (void *)&data, 1, 
-      &recv_size, at._timeout) != 0) {
+    if (hal_uart_recv(&at._uart, (void *)&data, 1,
+                      &recv_size, at._timeout) != 0) {
         //LOGD(MODULE_NAME, "uart get failed or timeout.");
         return -1;
     }
-    LOGD(MODULE_NAME, "uart get returned (size: %d, data: %c(0x%02x))", 
-      recv_size, data, data);
+    LOGD(MODULE_NAME, "uart get returned (size: %d, data: %c(0x%02x))",
+         recv_size, data, data);
     return data;
 }
 
@@ -161,12 +161,12 @@ vrecv_start:
         int offset = 0;
 
         while (response[i]) {
-            if (memcmp(&response[i+1-at._recv_delim_size], _recv_delimiter, 
-              at._recv_delim_size) == 0) {
+            if (memcmp(&response[i + 1 - at._recv_delim_size], _recv_delimiter,
+                       at._recv_delim_size) == 0) {
                 i++;
                 break;
-            } else if (response[i] == '%' && response[i+1] != '%' && 
-              response[i+1] != '*') {
+            } else if (response[i] == '%' && response[i + 1] != '%' &&
+                       response[i + 1] != '*') {
                 _buffer[offset++] = '%';
                 _buffer[offset++] = '*';
                 i++;
@@ -191,8 +191,8 @@ vrecv_start:
 
             for (int k = 0; k < at._oobs_num; k++) {
                 oob_t *oob = &(at._oobs[k]);
-                if (j == oob->len && 
-                  memcmp(oob->prefix, at._buffer+offset, oob->len) == 0) {
+                if (j == oob->len &&
+                    memcmp(oob->prefix, at._buffer + offset, oob->len) == 0) {
                     LOGD(MODULE_NAME, "AT! %s\r\n", oob->prefix);
                     oob->cb(oob->arg);
 
@@ -201,21 +201,21 @@ vrecv_start:
             }
 
             int count = -1;
-            sscanf(_buffer+offset, _buffer, &count);
+            sscanf(_buffer + offset, _buffer, &count);
 
             if (count == j) {
-                LOGD(MODULE_NAME, "AT= %s\r\n", _buffer+offset);
+                LOGD(MODULE_NAME, "AT= %s\r\n", _buffer + offset);
                 memcpy(_buffer, response, i);
                 _buffer[i] = 0;
-                vsscanf(_buffer+offset, _buffer, args);
+                vsscanf(_buffer + offset, _buffer, args);
                 response += i;
                 break;
             }
 
-            if (j+1 >= BUFFER_SIZE - offset ||
-                strcmp(&_buffer[offset + j-at._recv_delim_size], 
-                  _recv_delimiter) == 0) {
-                LOGD(MODULE_NAME, "AT< %s", _buffer+offset);
+            if (j + 1 >= BUFFER_SIZE - offset ||
+                strcmp(&_buffer[offset + j - at._recv_delim_size],
+                       _recv_delimiter) == 0) {
+                LOGD(MODULE_NAME, "AT< %s", _buffer + offset);
                 j = 0;
             }
         }
@@ -258,8 +258,8 @@ static int at_send_raw(const char *command, char *rsp)
         goto end;
     }
 
-    LOGD(MODULE_NAME, "at task created: %d, smpr: %d", 
-      (uint32_t)tsk, (uint32_t)&tsk->smpr);
+    LOGD(MODULE_NAME, "at task created: %d, smpr: %d",
+         (uint32_t)tsk, (uint32_t)&tsk->smpr);
 
     tsk->rsp = rsp;
     tsk->rsp_offset = 0;
@@ -268,16 +268,16 @@ static int at_send_raw(const char *command, char *rsp)
     slist_add_tail(&tsk->next, &at.task_l);
 
     // uart operation should be inside mutex lock
-    if ((ret = hal_uart_send(&at._uart, (void *)command, 
-      strlen(command), at._timeout)) != 0) {
+    if ((ret = hal_uart_send(&at._uart, (void *)command,
+                             strlen(command), at._timeout)) != 0) {
         aos_mutex_unlock(&at._mutex);
         LOGE(MODULE_NAME, "uart send command failed");
         goto end;
     }
     LOGD(MODULE_NAME, "Sending command %s", command);
 
-    if ((ret = hal_uart_send(&at._uart, (void *)at._send_delimiter, 
-      strlen(at._send_delimiter), at._timeout)) != 0) {
+    if ((ret = hal_uart_send(&at._uart, (void *)at._send_delimiter,
+                             strlen(at._send_delimiter), at._timeout)) != 0) {
         aos_mutex_unlock(&at._mutex);
         LOGE(MODULE_NAME, "uart send delimiter failed");
         goto end;
@@ -297,8 +297,12 @@ end:
     aos_mutex_lock(&at._mutex, AOS_WAIT_FOREVER);
     slist_del(&tsk->next, &at.task_l);
     aos_mutex_unlock(&at._mutex);
-    if (aos_sem_is_valid(&tsk->smpr)) aos_sem_free(&tsk->smpr);
-    if (tsk) aos_free(tsk);
+    if (aos_sem_is_valid(&tsk->smpr)) {
+        aos_sem_free(&tsk->smpr);
+    }
+    if (tsk) {
+        aos_free(tsk);
+    }
     return  ret;
 }
 
@@ -356,7 +360,9 @@ static void at_worker(void *arg)
 recv_start:
         // read from uart and store buf
         c = at_getc();
-        if (c < 0) continue;
+        if (c < 0) {
+            continue;
+        }
 
         if (offset + 1 >= RECV_BUFFER_SIZE) {
             LOGE(MODULE_NAME, "Fatal error, no one is handling AT uart");
@@ -368,8 +374,8 @@ recv_start:
         // check oob first
         for (int k = 0; k < at._oobs_num; k++) {
             oob_t *oob = &(at._oobs[k]);
-            if (offset == oob->len && 
-              memcmp(oob->prefix, buf, oob->len) == 0) {
+            if (offset == oob->len &&
+                memcmp(oob->prefix, buf, oob->len) == 0) {
                 LOGD(MODULE_NAME, "AT! %s\r\n", oob->prefix);
                 // oob.cb is to consume uart data if necessary
                 oob->cb(oob->arg);
@@ -383,7 +389,9 @@ recv_start:
         at_task_empty = slist_empty(&at.task_l);
         aos_mutex_unlock(&at._mutex);
         // if no task, continue recv
-        if (at_task_empty) goto check_buffer;
+        if (at_task_empty) {
+            goto check_buffer;
+        }
 
         // otherwise, get the first task in list
         at_task_t *tsk = slist_first_entry(&at.task_l, at_task_t, next);
@@ -391,10 +399,10 @@ recv_start:
 
         // check if a rsp end matched
         if (strcmp(buf + offset - strlen(RECV_STATUS_OK), RECV_STATUS_OK) == 0 ||
-          strcmp(buf + offset - strlen(RECV_STATUS_ERROR), RECV_STATUS_ERROR) == 0) {
+            strcmp(buf + offset - strlen(RECV_STATUS_ERROR), RECV_STATUS_ERROR) == 0) {
             LOGD(MODULE_NAME, "AT cammand rsp matched");
-            LOGD(MODULE_NAME, "at task is going to be waked up: %d, smpr: %d", 
-              (uint32_t)tsk, (uint32_t)&tsk->smpr);
+            LOGD(MODULE_NAME, "at task is going to be waked up: %d, smpr: %d",
+                 (uint32_t)tsk, (uint32_t)&tsk->smpr);
             memcpy(tsk->rsp + tsk->rsp_offset, buf, offset);
             tsk->rsp_offset += offset;
             aos_sem_signal(&tsk->smpr); // wakeup send task
@@ -406,7 +414,7 @@ recv_start:
 check_buffer:
         // in case buffer is full
         if ((offset >= (RECV_BUFFER_SIZE - 1)) ||
-          (strcmp(&buf[offset-at._recv_delim_size], at._recv_delimiter) == 0)) {
+            (strcmp(&buf[offset - at._recv_delim_size], at._recv_delimiter) == 0)) {
             LOGD(MODULE_NAME, "buffer full or new line hit, offset: %d", offset);
             if (!at_task_empty) {
                 memcpy(tsk->rsp + tsk->rsp_offset, buf, offset);

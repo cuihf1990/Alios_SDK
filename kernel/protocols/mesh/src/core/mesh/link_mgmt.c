@@ -119,7 +119,7 @@ static void handle_link_quality_update_timer(void *args)
     }
 
     hal->link_quality_update_timer = ur_start_timer(interval * LINK_ESTIMATE_TIMES,
-                                         handle_link_quality_update_timer, hal);
+                                                    handle_link_quality_update_timer, hal);
 
     slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
         if ((ur_get_now() - nbr->last_heard) > (hal->neighbor_alive_interval / 2)) {

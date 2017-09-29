@@ -157,8 +157,7 @@ int aos_sem_wait(aos_sem_t *sem, unsigned int timeout)
 
     if (timeout == AOS_WAIT_FOREVER) {
         return sem_wait(sem->hdl);
-    }
-    else if (timeout == 0) {
+    } else if (timeout == 0) {
         return sem_trywait(sem->hdl);
     }
 

@@ -95,8 +95,9 @@ int umesh_tapif_init(const char *ifname)
 
 void umesh_tapif_deinit(void)
 {
-    if (tapif_stat.fd < 0)
+    if (tapif_stat.fd < 0) {
         return;
+    }
     close(tapif_stat.fd);
     tapif_stat.fd = -1;
     pthread_join(tapif_stat.th, NULL);
@@ -129,7 +130,7 @@ static uint16_t calc_csum(ur_ip4_header_t *ip_hdr)
     uint16_t *src = (uint16_t *)ip_hdr;
     uint32_t cksum = 0;
     int i;
-    for (i=0;i<sizeof(*ip_hdr)/2;i++) {
+    for (i = 0; i < sizeof(*ip_hdr) / 2; i++) {
         cksum += src[i];
     }
     cksum -= ip_hdr->chksum;
@@ -145,8 +146,7 @@ static void retarget_ip4(ur_ip4_header_t *ip_hdr, int len)
 
     ip_hdr->chksum = calc_csum(ip_hdr);
     switch (ip_hdr->proto) {
-    case UR_IPPROTO_UDP:
-        {
+        case UR_IPPROTO_UDP: {
             ur_udp_header_t *uhdr = (ur_udp_header_t *)(ip_hdr + 1);
             uhdr->chksum = 0;
         }

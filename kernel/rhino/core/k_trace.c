@@ -63,7 +63,7 @@ void _trace_init(void)
     buf[2] = 0x0;
     buf[3] = HR_COUNT_GET();
     *((char *)buf + 16) = '\n';
-    
+
     fifo_in_full_reject_lock(&trace_fifo, buf, 17);
     init = 1;
 }
@@ -89,7 +89,7 @@ void trace_filter_and_write(ktask_t *task, const void *buf, uint32_t len)
     *((hr_timer_t *)((char *)buf + len)) = HR_COUNT_GET();
     *((char *)buf + len + sizeof(hr_timer_t)) = '\n';
     len = len + sizeof(hr_timer_t) + sizeof(char);
-    
+
     assert(len <= TRACE_PACKET_LENGTH);
 
     fifo_in_full_reject_lock(&trace_fifo, buf, len);
