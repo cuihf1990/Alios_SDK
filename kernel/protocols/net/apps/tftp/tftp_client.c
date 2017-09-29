@@ -17,6 +17,7 @@ typedef struct tftp_state_s {
     void           *handle;
     tftp_done_cb   cb;
     ip_addr_t      addr;
+    uint16_t       port;
     uint16_t       seq_expect;
     uint16_t       seq_last;
     uint16_t       seq;
@@ -66,10 +67,10 @@ static void tftp_tmr(void* arg)
     if ((pstate->tick - pstate->last_tick) > (TFTP_TIMEOUT_MSECS / TFTP_TIMER_MSECS)) {
         if ((pstate->seq_expect > 1) && (pstate->retries < TFTP_MAX_RETRIES)) {
             LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("tftp: timeout, retrying...............\n"));
-            tftp_send_ack(pstate->upcb, &pstate->addr, TFTP_PORT, pstate->seq_last);
+            tftp_send_ack(pstate->upcb, &pstate->addr, pstate->port, pstate->seq_last);
             pstate->retries++;
         } else {
-            tftp_send_error(tftp_state.upcb, &tftp_state.addr, TFTP_PORT,
+            tftp_send_error(tftp_state.upcb, &tftp_state.addr, pstate->port,
                     TFTP_ERROR_ILLEGAL_OPERATION, "wait packet timeout");
             LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("tftp: timeout\n"));
             close_handle(-1);
@@ -80,7 +81,12 @@ static void tftp_tmr(void* arg)
 static void recv(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
     tftp_state_t *pstate = &tftp_state;
-    if ( port != TFTP_PORT || !ip_addr_cmp(&pstate->addr, addr) ) {
+    if (pstate->seq_expect == 0 && ip_addr_cmp(&pstate->addr, addr)){
+        pstate->port = port;
+        pstate->seq_expect = 1;
+    }
+
+    if ( port != pstate->port || !ip_addr_cmp(&pstate->addr, addr) ) {
         tftp_send_error(pstate->upcb, addr, port,
                 TFTP_ERROR_UNKNOWN_TRFR_ID, "port or addr illegal");
         pbuf_free(p);
@@ -230,7 +236,8 @@ int tftp_client_get(const ip_addr_t *paddr, const char *fname,
     payload[1] = TFTP_RRQ;
     memcpy(&payload[2], fname, strlen(fname));
     memcpy(&payload[3 + strlen(fname)], "netascii", strlen("netascii"));
-    ret = udp_sendto(pcb, p, paddr, TFTP_PORT);
+    pstate->port = TFTP_PORT;
+    ret = udp_sendto(pcb, p, paddr, pstate->port);
     if (ret != ERR_OK) {
         LWIP_DEBUGF(TFTP_DEBUG | LWIP_DBG_STATE, ("error: send RRQ to server failed\n"));
         pbuf_free(p);
@@ -246,7 +253,7 @@ int tftp_client_get(const ip_addr_t *paddr, const char *fname,
     pstate->ctx = ctx;
     pstate->cb = cb;
     memcpy(&pstate->addr, paddr, sizeof(*paddr));
-    pstate->seq_expect = 1;
+    pstate->seq_expect = 0;
     pstate->flen = 0;
     pbuf_free(p);
     return 0;
