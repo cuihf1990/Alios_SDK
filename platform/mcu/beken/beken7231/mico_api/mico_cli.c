@@ -41,7 +41,7 @@ void softap_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **a
 	char *ap_ssid = NULL;
 	char *ap_key;
 
-	os_printf("softap_Command\r\n");
+	aos_cli_printf("softap_Command\r\n");
 	if (argc == 2)
 	{
 		ap_ssid = argv[1];
@@ -64,12 +64,12 @@ void cli_monitor_cb(uint8_t*data, int len)
 	uint32_t count, i;
 
 	count = MIN(32,len);
-	os_printf("cli_monitor_cb:%d:%d\r\n", count, len);
+	aos_cli_printf("cli_monitor_cb:%d:%d\r\n", count, len);
 	for(i = 0; i < count; i ++)
 	{
-		os_printf("%x ", data[i]);
+		aos_cli_printf("%x ", data[i]);
 	}
-	os_printf("\r\n");
+	aos_cli_printf("\r\n");
 }
 
 void mtr_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -78,7 +78,7 @@ void mtr_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
 
     if(argc != 2)
     {
-        os_printf("monitor_parameter invalid\r\n");
+        aos_cli_printf("monitor_parameter invalid\r\n");
         return;
     }
     channel_num = os_strtoul(argv[1], NULL, 10);
@@ -100,7 +100,7 @@ void sta_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
     char *oob_ssid = NULL;
     char *connect_key;
 
-    os_printf("sta_Command\r\n");
+    aos_cli_printf("sta_Command\r\n");
     if (argc == 2)
     {
         oob_ssid = argv[1];
@@ -113,7 +113,7 @@ void sta_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
     }
     else
     {
-        os_printf("parameter invalid\r\n");
+        aos_cli_printf("parameter invalid\r\n");
     }
 
     if(oob_ssid)
@@ -125,47 +125,47 @@ void sta_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
 
 void wifistate_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("wifistate_Command\r\n");
+    aos_cli_printf("wifistate_Command\r\n");
 }
 
 void wifidebug_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("wifidebug_Command\r\n");
+    aos_cli_printf("wifidebug_Command\r\n");
 }
 
 void ifconfig_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("ifconfig_Command\r\n");
+    aos_cli_printf("ifconfig_Command\r\n");
 }
 
 void arp_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("arp_Command\r\n");
+    aos_cli_printf("arp_Command\r\n");
 }
 
 void ping_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("ping_Command\r\n");
+    aos_cli_printf("ping_Command\r\n");
 }
 
 void dns_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("dns_Command\r\n");
+    aos_cli_printf("dns_Command\r\n");
 }
 
 void socket_show_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("socket_show_Command\r\n");
+    aos_cli_printf("socket_show_Command\r\n");
 }
 
 void driver_state_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("driver_state_Command\r\n");
+    aos_cli_printf("driver_state_Command\r\n");
 }
 
 void partShow_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    os_printf("partShow_Command\r\n");
+    aos_cli_printf("partShow_Command\r\n");
 }
 
 
@@ -182,7 +182,7 @@ static void Gpio_op_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
 
     for(i = 0; i < argc; i++)
     {
-        os_printf("Argument %d = %s\r\n", i + 1, argv[i]);
+        aos_cli_printf("Argument %d = %s\r\n", i + 1, argv[i]);
     }
 
     if(argc == 4)
@@ -194,17 +194,17 @@ static void Gpio_op_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
         cmd1 = argv[2][1] - 0x30;
 
         id = (uint32_t)(cmd0 * 10 + cmd1);
-        os_printf("---%x,%x----\r\n", id, mode);
+        aos_cli_printf("---%x,%x----\r\n", id, mode);
         ret = MicoGpioOp(cmd, id, mode);
-        os_printf("gpio op:%x\r\n", ret);
+        aos_cli_printf("gpio op:%x\r\n", ret);
     }
     else
-        os_printf("cmd param error\r\n");
+        aos_cli_printf("cmd param error\r\n");
 }
 
 void test_fun(char para)
 {
-    os_printf("---%d---\r\n", para);
+    aos_cli_printf("---%d---\r\n", para);
 }
 /*
 cmd format: GPIO_INT cmd index  triggermode
@@ -229,7 +229,7 @@ static void Gpio_int_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         gpio_test_func(cmd, id, mode, test_fun);
     }
     else
-        os_printf("cmd param error\r\n");
+        aos_cli_printf("cmd param error\r\n");
 
 }
 
@@ -255,7 +255,7 @@ static void tx_evm_cmd_test(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
 {
     int ret = do_evm(NULL, 0, argc, argv);
     if(ret) {
-        os_printf("tx_evm bad parameters\r\n");
+        aos_cli_printf("tx_evm bad parameters\r\n");
     }
 }
 
@@ -263,7 +263,7 @@ static void rx_sens_cmd_test(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 {
     int ret = do_rx_sensitivity(NULL, 0, argc, argv);
     if(ret) {
-        os_printf("rx sensitivity bad parameters\r\n");
+        aos_cli_printf("rx sensitivity bad parameters\r\n");
     }
 }
 
@@ -307,19 +307,19 @@ static void micodebug_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc
 {
     if (argc == 1)
     {
-        os_printf("Usage: micodebug on/off. MICO debug is currently %s\r\n",
+        aos_cli_printf("Usage: micodebug on/off. MICO debug is currently %s\r\n",
                   mico_debug_enabled ? "Enabled" : "Disabled");
         return;
     }
 
     if (!os_strcasecmp(argv[1], "on"))
     {
-        os_printf("Enable MICO debug\r\n");
+        aos_cli_printf("Enable MICO debug\r\n");
         mico_debug_enabled = 1;
     }
     else if (!os_strcasecmp(argv[1], "off"))
     {
-        os_printf("Disable MICO debug\r\n");
+        aos_cli_printf("Disable MICO debug\r\n");
         mico_debug_enabled = 0;
     }
 }
@@ -328,18 +328,18 @@ void monitor(uint8_t *data, int len)
 {
 	int i;
 
-	os_printf("[%d]: ", len);
+	aos_cli_printf("[%d]: ", len);
 	for(i=0;i<len;i++) {
-		os_printf("%02x ", data[i]);
+		aos_cli_printf("%02x ", data[i]);
 	}
-	os_printf("\r\n");
+	aos_cli_printf("\r\n");
 }
 
 static void monitor_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
     if (argc == 1)
     {
-        os_printf("Usage: monitor on/off.");
+        aos_cli_printf("Usage: monitor on/off.");
         return;
     }
 
@@ -364,7 +364,7 @@ static void channel_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
 
     if (argc == 1)
     {
-        os_printf("Usage: channel [1~13].");
+        aos_cli_printf("Usage: channel [1~13].");
         return;
     }
 
@@ -380,14 +380,14 @@ static void mac_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
     if (argc == 1)
     {
         wifi_get_mac_address(mac);
-        os_printf("MAC address: %02x-%02x-%02x-%02x-%02x-%02x\r\n",
+        aos_cli_printf("MAC address: %02x-%02x-%02x-%02x-%02x-%02x\r\n",
 			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }
 	else if(argc == 2)
 	{
 		hexstr2bin(argv[1], mac, 6);
 		wifi_set_mac_address(mac);
-        os_printf("Set MAC address: %02x-%02x-%02x-%02x-%02x-%02x\r\n",
+        aos_cli_printf("Set MAC address: %02x-%02x-%02x-%02x-%02x-%02x\r\n",
 			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
     else
