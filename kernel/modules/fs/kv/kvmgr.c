@@ -623,8 +623,9 @@ void aos_kv_gc(void *arg)
         }
     }
 
-    if (gc_index == BLK_NUMS)
+    if (gc_index == BLK_NUMS) {
         goto exit;
+    }
 
     i = (origin_pos >> BLK_BITS) + 1;
     while (1) {

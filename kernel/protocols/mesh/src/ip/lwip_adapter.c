@@ -78,7 +78,7 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
     if (ip4_addr_ismulticast(ip4addr)) {
         sid = BCAST_SID;
     } else if (!ip4_addr_netcmp(ip4addr, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
-        ip4_addr_cmp(ip4addr, netif_ip4_gw(netif))) {
+               ip4_addr_cmp(ip4addr, netif_ip4_gw(netif))) {
 #ifdef CONFIG_AOS_MESH_TAPIF
         if (is_router) {
             MESH_LOG_DEBUG("should go to gateway\n");
@@ -251,8 +251,9 @@ ur_error_t ur_adapter_interface_up(void)
      * if we are LEADER MODE, means WiFi is connected
      * then default if should be WiFi IF
      */
-    if (!(umesh_get_mode() & MODE_LEADER))
+    if (!(umesh_get_mode() & MODE_LEADER)) {
         netif_set_default(&g_la_state.adpif);
+    }
 #endif
 
     return UR_ERROR_NONE;

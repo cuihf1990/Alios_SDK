@@ -34,7 +34,7 @@ typedef struct oob_s {
     char prefix[PREFIX_MAX];
     oob_cb cb;
     void *arg;
-}oob_t;
+} oob_t;
 
 /*
 * --> | slist | --> | slist | --> NULL
@@ -49,12 +49,12 @@ typedef struct at_task_s {
     aos_sem_t smpr;
     char *rsp;
     int rsp_offset;
-}at_task_t;
+} at_task_t;
 
 typedef enum {
     NORMAL = 0,
     ASYN
-}at_mode_t;
+} at_mode_t;
 
 /**
 * Parser structure for parsing AT commands
