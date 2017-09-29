@@ -62,6 +62,7 @@ int digest_md5_file(const char *path, unsigned char *md5)
 
     MD5_CTX *ctx = (MD5_CTX *) aos_malloc(sizeof(MD5_CTX));
     if (NULL == ctx) {
+        aos_close(fd);
         return -1;
     }
 
