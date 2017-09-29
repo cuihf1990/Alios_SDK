@@ -19,6 +19,7 @@
 
 .text
 
+.type cpu_intrpt_save, %function
 cpu_intrpt_save:
     MRS     R0, CPSR                @Set IRQ and FIQ bits in CPSR to disable all interrupts
     ORR     R1, R0, #0xC0
@@ -29,10 +30,12 @@ cpu_intrpt_save:
     BNE     cpu_intrpt_save         @Not properly disabled (try again)
     BX      LR                      @Disabled, return the original CPSR contents in R0
 
+.type cpu_intrpt_restore, %function
 cpu_intrpt_restore:
     MSR     CPSR_c, R0
     BX      LR
 
+.type cpu_first_task_start, %function
 cpu_first_task_start:
     LDR R0, =g_active_task
     LDR R0, [R0]         
@@ -45,6 +48,7 @@ cpu_first_task_start:
     MSR     SPSR_cxsf, R0
     LDMFD   SP!, {R0-R12, LR, PC}^
 
+.type cpu_task_switch, %function
 cpu_task_switch:
     STMFD SP!,{LR}             
     STMFD SP!,{R0-R12,LR}       
@@ -58,6 +62,7 @@ cpu_task_switch:
 
     BL krhino_stack_ovf_check
 
+.type cpu_intrpt_switch, %function
 cpu_intrpt_switch:
     LDR     R0, =g_preferred_ready_task
     LDR     R1, =g_active_task
