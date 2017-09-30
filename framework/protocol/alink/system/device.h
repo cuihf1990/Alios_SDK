@@ -52,7 +52,7 @@ typedef struct device_info {
     //TODO: move this to config area
     char alink_version[STR_SHORT_LEN];
     char os_version[STR_SHORT_LEN];
-    char firmware_version[STR_SHORT_LEN];
+    char firmware_version[PRODUCT_VERSION_LEN + 1];
 } device_info_t;
 
 typedef struct device {
