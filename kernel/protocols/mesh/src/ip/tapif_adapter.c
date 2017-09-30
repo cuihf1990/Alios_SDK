@@ -194,6 +194,7 @@ void ur_adapter_input_buf(void *buf, int len)
     retarget_ip4_src(ip_hdr, len);
     pbuf_take(pbuf, buf, len);
     umesh_ipv4_output(pbuf, sid);
+    pbuf_free(pbuf);
 }
 
 /* recv from mesh network */
