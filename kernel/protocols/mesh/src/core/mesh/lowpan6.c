@@ -458,7 +458,7 @@ ur_error_t lp_header_decompress(uint8_t *header, uint16_t *header_size,
                                 uint16_t *lowpan_header_size,
                                 ur_addr_t *src, ur_addr_t *dest)
 {
-    ur_error_t error;
+    ur_error_t error = UR_ERROR_FAIL;
     ur_ip6_header_t *ip6_header;
     iphc_header_t *iphc_header;
     uint16_t payload_size;
@@ -466,6 +466,9 @@ ur_error_t lp_header_decompress(uint8_t *header, uint16_t *header_size,
 
     *lowpan_header_size = 0;
     payload_size = *header_size;
+    if (payload_size < MIN_LOWPAN_FRM_SIZE) {
+        goto exit;
+    }
     tmp = (uint16_t)((header[0] << 8) | header[1]);
     iphc_header = (iphc_header_t *)&tmp;
 
