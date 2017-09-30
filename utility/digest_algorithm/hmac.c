@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include "digest_algorithm.h"
 #include <string.h>
+#include "digest_algorithm.h"
 
 static int digest_hmac_md5(const unsigned char *msg, uint32_t msg_len,
                            const unsigned char *key, uint32_t key_len, unsigned char *digest)
@@ -18,8 +18,7 @@ static int digest_hmac_md5(const unsigned char *msg, uint32_t msg_len,
         void *ctx;
         ctx = digest_md5_init();
         digest_md5_update(ctx, (uint8_t *) key, key_len);
-        digest_md5_final(&ctx, (uint8_t *) tk);
-
+        digest_md5_final(ctx, (uint8_t *) tk);
         key = tk;
         key_len = 16;
     }

@@ -194,9 +194,9 @@ static void alink_save_push_state(char *id, char *account)
     last_state.state = 1;
     last_state.id = atoi(id);
     if (account) {
-        strncpy(last_state.account, account, sizeof(last_state.account));
+        strncpy(last_state.account, account, sizeof(last_state.account) - 1);
     } else {
-        strncpy(last_state.account, "", sizeof(last_state.account));
+        strncpy(last_state.account, "", sizeof(last_state.account) - 1);
     }
 }
 

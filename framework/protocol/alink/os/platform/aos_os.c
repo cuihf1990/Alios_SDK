@@ -156,7 +156,7 @@ int platform_thread_get_stack_size(_IN_ const char *thread_name)
         LOGD(TAG, "get asr_websocket_thread thread\n");
         return 8192;
     }
-
+    return 0;
     //assert(0);
 }
 

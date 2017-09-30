@@ -366,6 +366,7 @@ static int accs_event_handler(int type, void *data, int dlen, void *result,
 
         return ret;
     }
+    return -1;
 }
 
 int cloud_is_connected(void)

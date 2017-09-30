@@ -10,6 +10,10 @@
 
 wsf_code wsf_list_push_back(wsf_list_t *list, void *data, size_t length)
 {
+    if (list == NULL) {
+        return WSF_FAIL;
+    }
+
     size_t len = sizeof(wsf_list_node_t);
     wsf_list_node_t *node = (wsf_list_node_t *)os_malloc(len);
     if (!node) {
@@ -20,18 +24,15 @@ wsf_code wsf_list_push_back(wsf_list_t *list, void *data, size_t length)
     node->data = data;
     node->length = length;
 
-    if (list) {
-        if (!list->head) {
-            list->head = node;
-            list->tail = node;
-        } else {
-            list->tail->next = node;
-            list->tail = node;
-        }
+    if (!list->head) {
+        list->head = node;
+        list->tail = node;
+    } else {
+        list->tail->next = node;
+        list->tail = node;
     }
 
     return WSF_SUCCESS;
-
 }
 
 wsf_list_node_t *wsf_list_pop_front(wsf_list_t *list)

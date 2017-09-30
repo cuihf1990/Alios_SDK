@@ -289,12 +289,13 @@ wsf_code wsf_set_secret_key(const char *secret_key)
         }
         global_secret_key = NULL;
     } else {
-        size_t len = strlen(secret_key);
+        size_t len = strlen(secret_key) + 1;
         char *tmp = (char *)os_malloc(len);
         if (!tmp) {
             LOGE(MODULE_NAME, "failed to copy secret key, out of memory");
             return WSF_FAIL;
         }
+        memset(tmp, 0, len);
         strcpy(tmp, secret_key);
         global_secret_key = tmp;
     }
