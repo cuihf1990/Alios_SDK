@@ -25,7 +25,15 @@ ifeq ($(HOST_OS),Win32)
 # Windows settings
 ################
 
-TOOLCHAIN_PATH    ?= $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Win32/bin/
+$(eval GCC_VER := $(shell arm-none-eabi-gcc --version | findstr "Copyright"))
+ifeq ($(TOOLCHAIN_PATH),)
+ifeq ($(GCC_VER),)
+TOOLCHAIN_PATH := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Win32/bin/
+else
+TOOLCHAIN_PATH :=
+endif
+endif
+
 GDBINIT_STRING     = shell start /B $(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE)
 GDB_COMMAND        = cmd /C $(call CONV_SLASHES, $(TOOLCHAIN_PATH))$(TOOLCHAIN_PREFIX)gdb$(EXECUTABLE_SUFFIX)
 
