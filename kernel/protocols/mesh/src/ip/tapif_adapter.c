@@ -50,14 +50,32 @@ static void pass_to_urmesh(const void *arg)
 static void *tapif_recv_entry(void *arg)
 {
     int fd = tapif_stat.fd;
-    while (1) {
+    int f = fcntl(fd, F_GETFL) | O_NONBLOCK;
+    if (fcntl(fd, F_SETFL, f) < 0) {
+        perror("setting non-blocking");
+    }
+
+    while (tapif_stat.fd >= 0) {
         char buf[2048];
-        int len = read(fd, buf, sizeof buf);
-        if (len < 0) {
+
+        fd_set rdset;
+        struct timeval tmo = { .tv_usec = 500000 };
+        FD_ZERO(&rdset);
+        FD_SET(fd, &rdset);
+        int ret = select(fd+1, &rdset, NULL, NULL, &tmo);
+        if (ret == 0) {
+            continue;
+        }
+        else if (ret < 0) {
             if (errno == EINTR) {
                 continue;
             }
             break;
+        }
+
+        int len = read(fd, buf, sizeof buf);
+        if (len < 0) {
+            continue;
         }
 
         struct databuf *databuf = cpu_event_malloc(sizeof(struct databuf) + len);
