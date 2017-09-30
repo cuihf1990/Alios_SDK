@@ -117,7 +117,7 @@ int config_reset(int unregister_flag)
     main_config.version = CONFIG_VERSION;
     main_config.df.ulog.log = AOS_LL_INFO | AOS_LL_WARN | AOS_LL_ERROR;
     main_config.df.uflag.fb.factoryreset = !!unregister_flag;
-    strcpy(main_config.alinkserver, default_online_server_with_port);
+    strncpy(main_config.alinkserver, default_online_server_with_port, sizeof(main_config.alinkserver) - 1);
     main_config.heartbeat_interval = default_heartbeat_interval;
     main_config.reqtimeout_interval = default_reqtimeout_interval;
     main_config.crc = utils_crc16((uint8_t *) &main_config, CONFIG_LEN);
