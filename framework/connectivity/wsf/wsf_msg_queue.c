@@ -13,10 +13,11 @@ extern wsf_list_node_t *wsf_list_pop_front(wsf_list_t *list);
 void wsf_msg_queue_init(wsf_request_queue_t **req_queue)
 {
     wsf_request_queue_t *pqueue;
-
-    if (req_queue) {
-        *req_queue = NULL;
+    if (!req_queue) {
+        return;
     }
+
+    *req_queue = NULL;
 
     pqueue = (wsf_request_queue_t *)os_malloc(sizeof(wsf_request_queue_t));
     if ( NULL == pqueue ) {
@@ -41,10 +42,7 @@ void wsf_msg_queue_init(wsf_request_queue_t **req_queue)
     dlist_init(&pqueue->list);
     pqueue->length = 0;
 
-
-    if (req_queue) {
-        *req_queue = pqueue;
-    }
+    *req_queue = pqueue;
 
     return ;
 

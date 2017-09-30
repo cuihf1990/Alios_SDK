@@ -100,7 +100,7 @@ wsf_msg_t *wsf_msg_response_create(int msg_id, invoke_result_code result,
     }
 
     //fill header
-    strncpy(rsp->header.magic_code, MAGIC_CODE, strlen(MAGIC_CODE));
+    strncpy(rsp->header.magic_code, MAGIC_CODE, sizeof(rsp->header.magic_code));
 
     temp = msg_size;
     memcpy(rsp->header.msg_length, &temp, sizeof(temp));
@@ -199,7 +199,7 @@ wsf_msg_t *wsf_msg_request_create(const char *servcie_name,
     }
 
     //fill header
-    strncpy(req->header.magic_code, MAGIC_CODE, strlen(MAGIC_CODE));
+    strncpy(req->header.magic_code, MAGIC_CODE, sizeof(req->header.magic_code));
 
     temp = msg_size;
     memcpy(req->header.msg_length, &temp, sizeof(temp));
@@ -302,7 +302,7 @@ wsf_msg_t *wsf_msg_register_request_create()
     }
 
     //fill header
-    strncpy(req->header.magic_code, MAGIC_CODE, strlen(MAGIC_CODE));
+    strncpy(req->header.magic_code, MAGIC_CODE, sizeof(req->header.magic_code));
 
     temp = msg_size;
     memcpy(req->header.msg_length, &temp, sizeof(temp));
@@ -353,7 +353,8 @@ wsf_msg_t *wsf_msg_register_request_create()
 void wsf_msg_heartbeat_request_init(wsf_msg_t *hb_req)
 {
     uint32_t temp;
-    strncpy(hb_req->header.magic_code, MAGIC_CODE, strlen(MAGIC_CODE));
+
+    strncpy(hb_req->header.magic_code, MAGIC_CODE, sizeof(hb_req->header.magic_code));
 
     temp = sizeof(wsf_msg_t);
     memcpy(hb_req->header.msg_length, &temp, sizeof(temp));

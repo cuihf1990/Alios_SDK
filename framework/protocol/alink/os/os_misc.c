@@ -436,9 +436,18 @@ int os_malloc_get_peak_usage(void)
 #else
 void os_init(void) {}
 void os_exit(void) {}
-int os_malloc_current_usage(void) {}
-int os_malloc_get_current_usage(void) {}
-int os_malloc_get_peak_usage(void) {}
+int os_malloc_current_usage(void)
+{
+    return 0;
+}
+int os_malloc_get_current_usage(void)
+{
+    return 0;
+}
+int os_malloc_get_peak_usage(void)
+{
+    return 0;
+}
 #endif
 
 void *__os_malloc_debug(const char *name, uint32_t size)

@@ -61,13 +61,12 @@ void http_gethost_info(char *src, char **web, char **file, int *port)
     pb = strchr(pa, '/');
     if (pb) {
         *pb = 0;
-        pb+=1;
+        pb += 1;
         if (*pb) {
             *file = pb;
             *((*file) + strlen(pb)) = 0;
-        }      
-    } 
-    else {
+        }
+    } else {
         (*web)[strlen(pa)] = 0;
     }
 

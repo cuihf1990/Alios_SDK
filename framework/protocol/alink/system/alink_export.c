@@ -59,7 +59,7 @@ int alink_enable_daily_mode(const char *server_ip, int port)
         memset(server_buf, 0, sizeof(server_buf));
         OS_CHECK_PARAMS(strlen(server_ip) + sizeof(port) < STR_SHORT_LEN);
 
-        strncpy(server_buf, server_ip, STR_SHORT_LEN);
+        strncpy(server_buf, server_ip, STR_SHORT_LEN - 1);
         snprintf(server_buf + strlen(server_buf), STR_SHORT_LEN, ":%d", port);
         server = server_buf;
     }

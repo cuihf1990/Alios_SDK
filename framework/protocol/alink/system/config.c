@@ -370,7 +370,7 @@ int config_set_alinkserver(const char *server)
     }
 
     strncpy(main_config.alinkserver, server,
-            sizeof(main_config.alinkserver));
+            sizeof(main_config.alinkserver) - 1);
 
     return config_update();
 }
