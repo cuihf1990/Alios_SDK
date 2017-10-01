@@ -226,8 +226,9 @@ int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
                    unsigned int *size)
 {
     struct queue *q = queue->hdl;
-    *size = read(q->fds[0], msg, q->msg_size);
-    return *size < 0 ? -1 : 0;
+    int len = read(q->fds[0], msg, q->msg_size);
+    *size = len;
+    return len < 0 ? -1 : 0;
 }
 
 int aos_queue_is_valid(aos_queue_t *queue)
