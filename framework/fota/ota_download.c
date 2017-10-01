@@ -183,7 +183,7 @@ int http_download(char *url, write_flash_cb_t func, char *md5)
     char *pos = 0;
     int file_size = 0;
 
-    while ((nbytes = ota_socket_recv(sockfd, http_buffer, OTA_BUFFER_MAX_SIZE))) {
+    while ((nbytes = ota_socket_recv(sockfd, http_buffer, OTA_BUFFER_MAX_SIZE - 1))) {
         //aos_msleep(25);//for slow-motion test
         if (nbytes < 0) {
             OTA_LOG_I("ota_socket_recv nbytes < 0");
