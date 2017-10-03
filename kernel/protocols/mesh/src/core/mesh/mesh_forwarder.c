@@ -719,7 +719,7 @@ ur_error_t mf_send_message(message_t *message)
                 if (hal == tx_hal) {
                     continue;
                 }
-                append_length = sizeof(mcast_header_t) + 1;
+                append_length = sizeof(mcast_header_t);
                 mcast_message = message_alloc(message_get_msglen(message) + append_length,
                                               MESH_FORWARDER_1);
                 if (mcast_message == NULL) {
@@ -1105,11 +1105,10 @@ static void send_datagram(void *args)
     info = message->info;
 
     if (info->flags & INSERT_MCAST_FLAG) {
-        offset = sizeof(mcast_header_t) + 1;
+        offset = sizeof(mcast_header_t);
         message_set_payload_offset(message, offset);
         lowpan_payload = message_get_payload(message);
-        *lowpan_payload = MCAST_HEADER_DISPATCH;
-        insert_mcast_header(info->network, lowpan_payload + 1);
+        insert_mcast_header(info->network, lowpan_payload);
         info->flags &= (~INSERT_MCAST_FLAG);
     }
 
@@ -1151,7 +1150,7 @@ static void handle_datagram(void *args)
                 message_free(message);
                 return;
             }
-            message_copy_to(message, 1, payload, sizeof(mcast_header_t));
+            message_copy_to(message, 0, payload, sizeof(mcast_header_t));
             error = process_mcast_header(network, payload);
             ur_mem_free(payload, sizeof(mcast_header_t));
             if (error != UR_ERROR_NONE) {
@@ -1172,7 +1171,7 @@ static void handle_datagram(void *args)
                     umesh_task_schedule_call(send_datagram, hal);
                 }
             }
-            offset = sizeof(mcast_header_t) + 1;
+            offset = sizeof(mcast_header_t);
             message_set_payload_offset(message, -offset);
         }
         umesh_input(message);
