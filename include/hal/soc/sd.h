@@ -55,7 +55,8 @@ int32_t hal_sd_init(sd_dev_t *sd);
  *
  * @return  0 : on success, EIO : if an error occurred with any step
  */
-int32_t hal_sd_blks_read(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32_t blks, uint32_t timeout);
+int32_t hal_sd_blks_read(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr,
+                         uint32_t blks, uint32_t timeout);
 
 /**
  * Write sd blocks
@@ -68,7 +69,8 @@ int32_t hal_sd_blks_read(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32_
  *
  * @return  0 : on success, EIO : if an error occurred with any step
  */
-int32_t hal_sd_blks_write(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr, uint32_t blks, uint32_t timeout);
+int32_t hal_sd_blks_write(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr,
+                          uint32_t blks, uint32_t timeout);
 
 /**
  * Erase sd blocks
