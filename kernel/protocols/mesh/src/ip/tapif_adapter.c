@@ -62,11 +62,10 @@ static void *tapif_recv_entry(void *arg)
         struct timeval tmo = { .tv_usec = 500000 };
         FD_ZERO(&rdset);
         FD_SET(fd, &rdset);
-        int ret = select(fd+1, &rdset, NULL, NULL, &tmo);
+        int ret = select(fd + 1, &rdset, NULL, NULL, &tmo);
         if (ret == 0) {
             continue;
-        }
-        else if (ret < 0) {
+        } else if (ret < 0) {
             if (errno == EINTR) {
                 continue;
             }
@@ -181,8 +180,7 @@ static void retarget_ip4_src(ur_ip4_header_t *ip_hdr, int len)
     ip_hdr->src.m32 = 0x0200000a;
     ip_hdr->chksum = calc_csum(ip_hdr);
     switch (ip_hdr->proto) {
-    case UR_IPPROTO_UDP:
-        {
+        case UR_IPPROTO_UDP: {
             ur_udp_header_t *uhdr = (ur_udp_header_t *)(ip_hdr + 1);
             uhdr->chksum = 0;
         }
