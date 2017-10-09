@@ -447,7 +447,7 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
 {
     int ret = 0;
 
-    strncpy(g_netmgr_cxt.ap_config.ssid, config->ssid, 
+    strncpy(g_netmgr_cxt.ap_config.ssid, config->ssid,
             sizeof(g_netmgr_cxt.ap_config.ssid) - 1);
     strncpy(g_netmgr_cxt.ap_config.pwd, config->pwd,
             sizeof(g_netmgr_cxt.ap_config.pwd) - 1);
