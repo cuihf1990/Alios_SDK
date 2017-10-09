@@ -37,7 +37,8 @@ int32_t hal_i2c_init(i2c_dev_t *i2c);
  *
  * @return  0 : on success, EIO : if an error occurred during initialisation
  */
-int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, uint16_t size, uint32_t timeout);
+int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,
+                            uint16_t size, uint32_t timeout);
 
 /**
  * I2c master recv
@@ -50,7 +51,8 @@ int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, ui
  *
  * @return  0 : on success, EIO : if an error occurred during initialisation
  */
-int32_t hal_i2c_master_recv(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data, uint16_t size, uint32_t timeout);
+int32_t hal_i2c_master_recv(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,
+                            uint16_t size, uint32_t timeout);
 
 /**
  * I2c slave send
@@ -89,8 +91,9 @@ int32_t hal_i2c_slave_recv(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_
  *
  * @return  0 : on success, EIO : if an error occurred during initialisation
  */
-int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data,
-                          uint16_t size, uint32_t timeout);
+int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr,
+                          uint16_t mem_addr_size, uint8_t *data, uint16_t size,
+                          uint32_t timeout);
 
 /**
  * I2c master mem read
@@ -105,8 +108,9 @@ int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, 
  *
  * @return  0 : on success, EIO : if an error occurred during initialisation
  */
-int32_t hal_i2c_mem_read(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, uint8_t *data,
-                         uint16_t size, uint32_t timeout);
+int32_t hal_i2c_mem_read(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr,
+                         uint16_t mem_addr_size, uint8_t *data, uint16_t size,
+                         uint32_t timeout);
 
 /**
  * Deinitialises an I2C device
