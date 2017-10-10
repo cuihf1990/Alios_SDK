@@ -235,8 +235,8 @@ ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid)
 
     error = umesh_task_schedule_call(output_frame_handler, frame);
     if (error != UR_ERROR_NONE) {
-        ur_mem_free(frame, sizeof(transmit_frame_t));
         pbuf_free(frame->buf);
+        ur_mem_free(frame, sizeof(transmit_frame_t));
     }
 
     return error;
