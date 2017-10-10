@@ -1147,11 +1147,15 @@ static void handle_datagram(void *args)
         if (is_mcast_header(*nexth)) {
             network = get_default_network_context();
             payload = ur_mem_alloc(sizeof(mcast_header_t));
+            if (payload == NULL) {
+                message_free(message);
+                return;
+            }
             message_copy_to(message, 1, payload, sizeof(mcast_header_t));
             error = process_mcast_header(network, payload);
+            ur_mem_free(payload, sizeof(mcast_header_t));
             if (error != UR_ERROR_NONE) {
                 message_free(message);
-                ur_mem_free(payload, sizeof(mcast_header_t));
                 return;
             }
             if (info->flags & ENCRYPT_ENABLE_FLAG) {

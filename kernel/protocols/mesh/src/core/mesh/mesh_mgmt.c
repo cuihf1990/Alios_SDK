@@ -294,6 +294,7 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
     network->meshnetid = network->attach_node->netid;
     memset(&network->network_data, 0,  sizeof(network->network_data));
     if (init_allocator) {
+        sid_allocator_deinit(network);
         sid_allocator_init(network);
     }
 
