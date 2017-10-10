@@ -11,6 +11,7 @@
 #include "aos/log.h"
 #include "aos/yloop.h"
 #include "aos/network.h"
+#include "kvmgr.h"
 #include <netmgr.h>
 #include <aos/kernel.h>
 #include <k_err.h>
@@ -19,18 +20,8 @@
 #include <aos/cloud.h>
 #include "soc_init.h"
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
-/*
-    #define PRODUCT_KEY             "OvNmiEYRDSY"
-    #define DEVICE_NAME             "sh_online_sample_mqtt"
-    #define DEVICE_SECRET           "v9mqGzepKEphLhXmAoiaUIR2HZ7XwTky"
-*/
 
 #else
-/*
-    #define PRODUCT_KEY             "yfTuLfBJTiL"
-    #define DEVICE_NAME             "TestDeviceForDemo"
-    #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
-*/
     #define PRODUCT_KEY             "BfKxBDSjWCH"
     #define DEVICE_NAME             "aos_mqtt_test"
     #define DEVICE_SECRET           "zcBZ5TB9cfAylUGo1flH0o47PxS8Mqu2"
