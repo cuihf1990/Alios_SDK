@@ -29,7 +29,6 @@ static void wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)
     }
 };
 
-extern void ParseIP(char* ptr, uint8_t* arr);
 
 static void connet_wifi_ap(void *arg)
 {
@@ -59,6 +58,7 @@ static void connet_wifi_ap(void *arg)
     } else {
         WifiStatusHandler(2);
         printf("\nFailed to connect to AP %s\n", init_para->wifi_ssid);
+        return;
     }
    
     if ( WIFI_STATUS_OK != WIFI_GetIP_Address(ip_address) ) {
