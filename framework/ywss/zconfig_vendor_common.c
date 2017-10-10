@@ -523,6 +523,10 @@ int aws_80211_frame_handler(char *buf, int length, enum AWSS_LINK_TYPE link_type
     return ret;
 }
 
+#ifdef CONFIG_AWSS_BLE
+extern int alink_ble_init();
+extern void alink_ble_deinit();
+#endif
 void aws_start(char *model, char *secret, char *mac, char *sn)
 {
     aws_info = os_malloc(sizeof(struct aws_info));
@@ -553,6 +557,10 @@ void aws_start(char *model, char *secret, char *mac, char *sn)
     os_free(model_str);
     os_free(secret_str);
 
+#ifdef CONFIG_AWSS_BLE
+    alink_ble_init();
+#endif
+
     os_awss_open_monitor(aws_80211_frame_handler);
 
     awss_init_enrollee_info();
@@ -574,6 +582,10 @@ void aws_destroy(void)
         aws_info = NULL;
 
         awss_destroy_enrollee_info();
+
+#ifdef CONFIG_AWSS_BLE
+        alink_ble_deinit();
+#endif
     }
 }
 
