@@ -60,7 +60,7 @@ static void hal_init()
 
 extern void hw_start_hal(void);
 
-static void aos_init(void)
+static void sys_init(void)
 {
     int i = 0;
 
@@ -85,16 +85,16 @@ static void aos_init(void)
 }
 
 
-void aos_start(void)
+static void sys_start(void)
 {
-    krhino_init();
+    aos_init();
     krhino_task_dyn_create(&g_aos_init, "aos-init", 0, AOS_DEFAULT_APP_PRI, 0, AOS_START_STACK, (task_entry_t)aos_init, 1);
-    krhino_start();
+    aos_start();
 }
 
 void entry_main(void)
 {
-    aos_start();
+    sys_start();
 }
 
 

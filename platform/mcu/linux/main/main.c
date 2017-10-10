@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 
     atexit(exit_clean);
 
-    krhino_init();
+    aos_init();
 
     ret = setrlimit_for_vfs();
     if (ret != 0) {
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 
     start_app(argc, argv);
 
-    krhino_start();
+    aos_start();
 
     return ret;
 }
