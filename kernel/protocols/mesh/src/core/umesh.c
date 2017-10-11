@@ -163,7 +163,7 @@ static void output_frame_handler(void *args)
     message_info_t *info;
     uint16_t frame_len;
 
-    append_length = sizeof(mcast_header_t) + 1;
+    append_length = sizeof(mcast_header_t);
     frame_len = buf->tot_len + append_length;
     if (frame->type == TRANSMIT_IP6_FRAME) {
         ip_payload = ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);

@@ -28,6 +28,7 @@ ur_error_t insert_mcast_header(network_context_t *network, uint8_t *message)
         return UR_ERROR_FAIL;
     }
 
+    header->dispatch = MCAST_HEADER_DISPATCH;
     header->control = 0;
     header->subnetid = mm_get_sub_netid(network);
     header->sid = umesh_mm_get_local_sid();

@@ -8,10 +8,11 @@
 #include "hal/interface_context.h"
 
 typedef struct mcast_header_s {
-    uint8_t  control;
+    uint8_t dispatch;
+    uint8_t control;
     uint8_t subnetid;
     uint16_t sid;
-    uint8_t  sequence;
+    uint8_t sequence;
 } __attribute__((packed)) mcast_header_t;
 
 ur_error_t insert_mcast_header(network_context_t *network,
