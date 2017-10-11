@@ -669,6 +669,14 @@ int bk_wlan_set_channel(int channel)
 #define WLAN_OUI_TYPE_MICROSOFT_WPA	(1)
 #define WLAN_OUI_TYPE_WPS		(4)
 #define WLAN_EID_RSN 48
+#define WLAN_EID_VENDOR_SPECIFIC    (221)
+
+struct ieee80211_vendor_ie {
+    u8 element_id;
+    u8 len;
+    u8 oui[3];
+    u8 oui_type;
+};
 
 static u8 *wlan_find_ie(u8 eid, const u8 *ies, int len)
 {
@@ -681,6 +689,36 @@ static u8 *wlan_find_ie(u8 eid, const u8 *ies, int len)
         if (len < 2 + ies[1])
                 return NULL;
         return ies;
+}
+
+static const u8 *wlan_find_vendor_ie(
+    unsigned int oui, u8 oui_type, const u8 *ies, int len)
+{
+    struct ieee80211_vendor_ie *ie;
+    const u8 *pos = ies, *end = ies + len;
+    int ie_oui;
+
+    while (pos < end) {
+        pos = wlan_find_ie(WLAN_EID_VENDOR_SPECIFIC, pos,
+                               end - pos);
+        if (!pos) {
+            return NULL;
+        }
+
+        ie = (struct ieee80211_vendor_ie *)pos;
+
+        if (ie->len < sizeof(*ie)) {
+            goto cont;
+        }
+
+        ie_oui = ie->oui[0] << 16 | ie->oui[1] << 8 | ie->oui[2];
+        if (ie_oui == oui && ie->oui_type == oui_type) {
+            return pos;
+        }
+cont:
+        pos += 2 + ie->len;
+    }
+    return NULL;
 }
 
 static inline int get_cipher_info(uint8_t *frame, int frame_len,
@@ -697,7 +735,7 @@ static inline int get_cipher_info(uint8_t *frame, int frame_len,
 	if (tmp && tmp[1]) {
 		*pairwise_cipher_type = ENC_CCMP;// TODO: maybe it is a CCMP&TKIP, set to CCMP to try try
 	} else {
-		tmp = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT, WLAN_OUI_TYPE_MICROSOFT_WPA, ie, ielen);
+		tmp = wlan_find_vendor_ie(WLAN_OUI_MICROSOFT, WLAN_OUI_TYPE_MICROSOFT_WPA, ie, ielen);
 		if (tmp) {
 			*pairwise_cipher_type = ENC_TKIP;
 		} else {
