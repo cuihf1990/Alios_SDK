@@ -555,11 +555,21 @@ int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
 
 void aos_workqueue_del(aos_workqueue_t *workqueue)
 {
+    kstat_t ret;
+
     if (workqueue == NULL) {
         return;
     }
 
-    krhino_workqueue_del(workqueue->hdl);
+    while (1) {
+        ret = krhino_workqueue_del(workqueue->hdl);
+        if (ret == RHINO_TRY_AGAIN) {
+            continue;
+        }
+        else {
+            break;
+        }
+    }
 
     aos_free(workqueue->hdl);
     aos_free(workqueue->stk);
