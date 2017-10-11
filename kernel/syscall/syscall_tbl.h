@@ -2,542 +2,829 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-/* --------------------Rhino-------------------- */
 
-#define SYS_REBOOT 0
-SYSCALL(SYS_REBOOT, aos_reboot)
+#if (1)
+#define SYS_AOS_ALLOC_TRACE 0
+SYSCALL(SYS_AOS_ALLOC_TRACE, aos_alloc_trace)
+#endif
 
-#define SYS_GET_HZ 1
-SYSCALL(SYS_GET_HZ, aos_get_hz)
+#if (1)
+#define SYS_AOS_CANCEL_DELAYED_ACTION 1
+SYSCALL(SYS_AOS_CANCEL_DELAYED_ACTION, aos_cancel_delayed_action)
+#endif
 
-#define SYS_VERSION_GET 2
-SYSCALL(SYS_VERSION_GET, aos_version_get)
+#if (1)
+#define SYS_AOS_CANCEL_POLL_READ_FD 2
+SYSCALL(SYS_AOS_CANCEL_POLL_READ_FD, aos_cancel_poll_read_fd)
+#endif
 
-#define SYS_TASK_NEW 3
-SYSCALL(SYS_TASK_NEW, aos_task_new)
+#if (1)
+#define SYS_AOS_CANCEL_WORK 3
+SYSCALL(SYS_AOS_CANCEL_WORK, aos_cancel_work)
+#endif
 
-#define SYS_TASK_NEW_EXT 4
-SYSCALL(SYS_TASK_NEW_EXT, aos_task_new_ext)
+#if (1)
+#define SYS_AOS_CLI_INIT 4
+SYSCALL(SYS_AOS_CLI_INIT, aos_cli_init)
+#endif
 
-#define SYS_TASK_EXIT 5
-SYSCALL(SYS_TASK_EXIT, aos_task_exit)
+#if (1)
+#define SYS_AOS_CLI_REGISTER_COMMAND 5
+SYSCALL(SYS_AOS_CLI_REGISTER_COMMAND, aos_cli_register_command)
+#endif
 
-#define SYS_TASK_NAME 6
-SYSCALL(SYS_TASK_NAME, aos_task_name)
+#if (1)
+#define SYS_AOS_CLI_REGISTER_COMMANDS 6
+SYSCALL(SYS_AOS_CLI_REGISTER_COMMANDS, aos_cli_register_commands)
+#endif
 
-#define SYS_TASK_KEY_CREATE 7
-SYSCALL(SYS_TASK_KEY_CREATE, aos_task_key_create)
+#if (1)
+#define SYS_AOS_CLI_STOP 7
+SYSCALL(SYS_AOS_CLI_STOP, aos_cli_stop)
+#endif
 
-#define SYS_TASK_KEY_DELETE 8
-SYSCALL(SYS_TASK_KEY_DELETE, aos_task_key_delete)
+#if (1)
+#define SYS_AOS_CLI_UNREGISTER_COMMAND 8
+SYSCALL(SYS_AOS_CLI_UNREGISTER_COMMAND, aos_cli_unregister_command)
+#endif
 
-#define SYS_TASK_SETSPECIFIC 9
-SYSCALL(SYS_TASK_SETSPECIFIC, aos_task_setspecific)
+#if (1)
+#define SYS_AOS_CLI_UNREGISTER_COMMANDS 9
+SYSCALL(SYS_AOS_CLI_UNREGISTER_COMMANDS, aos_cli_unregister_commands)
+#endif
 
-#define SYS_TASK_GETSPECIFIC 10
-SYSCALL(SYS_TASK_GETSPECIFIC, aos_task_getspecific)
+#if (1)
+#define SYS_AOS_CLOSE 10
+SYSCALL(SYS_AOS_CLOSE, aos_close)
+#endif
 
-#define SYS_MUTEX_NEW 11
-SYSCALL(SYS_MUTEX_NEW, aos_mutex_new)
+#if (1)
+#define SYS_AOS_CLOSEDIR 11
+SYSCALL(SYS_AOS_CLOSEDIR, aos_closedir)
+#endif
 
-#define SYS_MUTEX_FREE 12
-SYSCALL(SYS_MUTEX_FREE, aos_mutex_free)
+#if (1)
+#define SYS_AOS_CURRENT_LOOP 12
+SYSCALL(SYS_AOS_CURRENT_LOOP, aos_current_loop)
+#endif
 
-#define SYS_MUTEX_LOCK 13
-SYSCALL(SYS_MUTEX_LOCK, aos_mutex_lock)
+#if (1)
+#define SYS_AOS_FCNTL 13
+SYSCALL(SYS_AOS_FCNTL, aos_fcntl)
+#endif
 
-#define SYS_MUTEX_UNLOCK 14
-SYSCALL(SYS_MUTEX_UNLOCK, aos_mutex_unlock)
+#if (1)
+#define SYS_AOS_FREE 14
+SYSCALL(SYS_AOS_FREE, aos_free)
+#endif
 
-#define SYS_SEM_NEW 15
-SYSCALL(SYS_SEM_NEW, aos_sem_new)
+#if (1)
+#define SYS_AOS_GET_HZ 15
+SYSCALL(SYS_AOS_GET_HZ, aos_get_hz)
+#endif
 
-#define SYS_SEM_FREE 16
-SYSCALL(SYS_SEM_FREE, aos_sem_free)
+#if (1)
+#define SYS_AOS_IOCTL 16
+SYSCALL(SYS_AOS_IOCTL, aos_ioctl)
+#endif
 
-#define SYS_SEM_WAIT 17
-SYSCALL(SYS_SEM_WAIT, aos_sem_wait)
+#if (1)
+#define SYS_AOS_KV_DEL 17
+SYSCALL(SYS_AOS_KV_DEL, aos_kv_del)
+#endif
 
-#define SYS_SEM_SIGNAL 18
-SYSCALL(SYS_SEM_SIGNAL, aos_sem_signal)
+#if (1)
+#define SYS_AOS_KV_GET 18
+SYSCALL(SYS_AOS_KV_GET, aos_kv_get)
+#endif
 
-#define SYS_QUEUE_NEW 19
-SYSCALL(SYS_QUEUE_NEW, aos_queue_new)
+#if (1)
+#define SYS_AOS_KV_SET 19
+SYSCALL(SYS_AOS_KV_SET, aos_kv_set)
+#endif
 
-#define SYS_QUEUE_FREE 20
-SYSCALL(SYS_QUEUE_FREE, aos_queue_free)
+#if (1)
+#define SYS_AOS_LOOP_DESTROY 20
+SYSCALL(SYS_AOS_LOOP_DESTROY, aos_loop_destroy)
+#endif
 
-#define SYS_QUEUE_SEND 21
-SYSCALL(SYS_QUEUE_SEND, aos_queue_send)
+#if (1)
+#define SYS_AOS_LOOP_EXIT 21
+SYSCALL(SYS_AOS_LOOP_EXIT, aos_loop_exit)
+#endif
 
-#define SYS_QUEUE_RECV 22
-SYSCALL(SYS_QUEUE_RECV, aos_queue_recv)
+#if (1)
+#define SYS_AOS_LOOP_INIT 22
+SYSCALL(SYS_AOS_LOOP_INIT, aos_loop_init)
+#endif
 
-#define SYS_TIMER_NEW 23
-SYSCALL(SYS_TIMER_NEW, aos_timer_new)
+#if (1)
+#define SYS_AOS_LOOP_RUN 23
+SYSCALL(SYS_AOS_LOOP_RUN, aos_loop_run)
+#endif
 
-#define SYS_TIMER_FREE 24
-SYSCALL(SYS_TIMER_FREE, aos_timer_free)
+#if (1)
+#define SYS_AOS_LOOP_SCHEDULE_CALL 24
+SYSCALL(SYS_AOS_LOOP_SCHEDULE_CALL, aos_loop_schedule_call)
+#endif
 
-#define SYS_TIMER_START 25
-SYSCALL(SYS_TIMER_START, aos_timer_start)
+#if (1)
+#define SYS_AOS_LOOP_SCHEDULE_WORK 25
+SYSCALL(SYS_AOS_LOOP_SCHEDULE_WORK, aos_loop_schedule_work)
+#endif
 
-#define SYS_TIMER_STOP 26
-SYSCALL(SYS_TIMER_STOP, aos_timer_stop)
+#if (1)
+#define SYS_AOS_LSEEK 26
+SYSCALL(SYS_AOS_LSEEK, aos_lseek)
+#endif
 
-#define SYS_TIMER_CHANGE 27
-SYSCALL(SYS_TIMER_CHANGE, aos_timer_change)
+#if (1)
+#define SYS_AOS_MKDIR 27
+SYSCALL(SYS_AOS_MKDIR, aos_mkdir)
+#endif
 
-#if (RHINO_CONFIG_WORKQUEUE > 0)
-#define SYS_WORKQUEUE_CREATE 28
-SYSCALL(SYS_WORKQUEUE_CREATE, aos_workqueue_create)
+#if (1)
+#define SYS_AOS_MSLEEP 28
+SYSCALL(SYS_AOS_MSLEEP, aos_msleep)
+#endif
 
-#define SYS_WORKQUEUE_DEL 29
-SYSCALL(SYS_WORKQUEUE_DEL, aos_workqueue_del)
+#if (1)
+#define SYS_AOS_MUTEX_FREE 29
+SYSCALL(SYS_AOS_MUTEX_FREE, aos_mutex_free)
+#endif
 
-#define SYS_WORK_INIT 30
-SYSCALL(SYS_WORK_INIT, aos_work_init)
+#if (1)
+#define SYS_AOS_MUTEX_LOCK 30
+SYSCALL(SYS_AOS_MUTEX_LOCK, aos_mutex_lock)
+#endif
 
-#define SYS_WORK_DESTROY 31
-SYSCALL(SYS_WORK_DESTROY, aos_work_destroy)
+#if (1)
+#define SYS_AOS_MUTEX_NEW 31
+SYSCALL(SYS_AOS_MUTEX_NEW, aos_mutex_new)
+#endif
 
-#define SYS_WORK_RUN 32
-SYSCALL(SYS_WORK_RUN, aos_work_run)
+#if (1)
+#define SYS_AOS_MUTEX_UNLOCK 32
+SYSCALL(SYS_AOS_MUTEX_UNLOCK, aos_mutex_unlock)
+#endif
 
-#define SYS_WORK_SCHED 33
-SYSCALL(SYS_WORK_SCHED, aos_work_sched)
+#if (1)
+#define SYS_AOS_NOW 33
+SYSCALL(SYS_AOS_NOW, aos_now)
+#endif
 
-#define SYS_WORK_CANCEL 34
-SYSCALL(SYS_WORK_CANCEL, aos_work_cancel)
+#if (1)
+#define SYS_AOS_NOW_MS 34
+SYSCALL(SYS_AOS_NOW_MS, aos_now_ms)
+#endif
+
+#if (1)
+#define SYS_AOS_OPEN 35
+SYSCALL(SYS_AOS_OPEN, aos_open)
+#endif
+
+#if (1)
+#define SYS_AOS_OPENDIR 36
+SYSCALL(SYS_AOS_OPENDIR, aos_opendir)
+#endif
+
+#if (1)
+#define SYS_AOS_POLL 37
+SYSCALL(SYS_AOS_POLL, aos_poll)
+#endif
+
+#if (1)
+#define SYS_AOS_POLL_READ_FD 38
+SYSCALL(SYS_AOS_POLL_READ_FD, aos_poll_read_fd)
+#endif
+
+#if (1)
+#define SYS_AOS_POST_DELAYED_ACTION 39
+SYSCALL(SYS_AOS_POST_DELAYED_ACTION, aos_post_delayed_action)
+#endif
+
+#if (1)
+#define SYS_AOS_POST_EVENT 40
+SYSCALL(SYS_AOS_POST_EVENT, aos_post_event)
+#endif
+
+#if (1)
+#define SYS_AOS_QUEUE_FREE 41
+SYSCALL(SYS_AOS_QUEUE_FREE, aos_queue_free)
+#endif
+
+#if (1)
+#define SYS_AOS_QUEUE_NEW 42
+SYSCALL(SYS_AOS_QUEUE_NEW, aos_queue_new)
+#endif
+
+#if (1)
+#define SYS_AOS_QUEUE_RECV 43
+SYSCALL(SYS_AOS_QUEUE_RECV, aos_queue_recv)
+#endif
+
+#if (1)
+#define SYS_AOS_QUEUE_SEND 44
+SYSCALL(SYS_AOS_QUEUE_SEND, aos_queue_send)
+#endif
+
+#if (1)
+#define SYS_AOS_READ 45
+SYSCALL(SYS_AOS_READ, aos_read)
+#endif
+
+#if (1)
+#define SYS_AOS_READDIR 46
+SYSCALL(SYS_AOS_READDIR, aos_readdir)
+#endif
+
+#if (1)
+#define SYS_AOS_REBOOT 47
+SYSCALL(SYS_AOS_REBOOT, aos_reboot)
+#endif
+
+#if (1)
+#define SYS_AOS_REGISTER_EVENT_FILTER 48
+SYSCALL(SYS_AOS_REGISTER_EVENT_FILTER, aos_register_event_filter)
+#endif
+
+#if (1)
+#define SYS_AOS_RENAME 49
+SYSCALL(SYS_AOS_RENAME, aos_rename)
+#endif
+
+#if (1)
+#define SYS_AOS_SCHEDULE_CALL 50
+SYSCALL(SYS_AOS_SCHEDULE_CALL, aos_schedule_call)
+#endif
+
+#if (1)
+#define SYS_AOS_SEM_FREE 51
+SYSCALL(SYS_AOS_SEM_FREE, aos_sem_free)
+#endif
+
+#if (1)
+#define SYS_AOS_SEM_NEW 52
+SYSCALL(SYS_AOS_SEM_NEW, aos_sem_new)
+#endif
+
+#if (1)
+#define SYS_AOS_SEM_SIGNAL 53
+SYSCALL(SYS_AOS_SEM_SIGNAL, aos_sem_signal)
+#endif
+
+#if (1)
+#define SYS_AOS_SEM_WAIT 54
+SYSCALL(SYS_AOS_SEM_WAIT, aos_sem_wait)
+#endif
+
+#if (1)
+#define SYS_AOS_STAT 55
+SYSCALL(SYS_AOS_STAT, aos_stat)
+#endif
+
+#if (1)
+#define SYS_AOS_SYNC 56
+SYSCALL(SYS_AOS_SYNC, aos_sync)
+#endif
+
+#if (1)
+#define SYS_AOS_TASK_EXIT 57
+SYSCALL(SYS_AOS_TASK_EXIT, aos_task_exit)
+#endif
+
+#if (1)
+#define SYS_AOS_TASK_GETSPECIFIC 58
+SYSCALL(SYS_AOS_TASK_GETSPECIFIC, aos_task_getspecific)
+#endif
+
+#if (1)
+#define SYS_AOS_TASK_KEY_CREATE 59
+SYSCALL(SYS_AOS_TASK_KEY_CREATE, aos_task_key_create)
+#endif
+
+#if (1)
+#define SYS_AOS_TASK_KEY_DELETE 60
+SYSCALL(SYS_AOS_TASK_KEY_DELETE, aos_task_key_delete)
+#endif
+
+#if (1)
+#define SYS_AOS_TASK_NAME 61
+SYSCALL(SYS_AOS_TASK_NAME, aos_task_name)
+#endif
+
+#if (1)
+#define SYS_AOS_TASK_NEW 62
+SYSCALL(SYS_AOS_TASK_NEW, aos_task_new)
+#endif
+
+#if (1)
+#define SYS_AOS_TASK_NEW_EXT 63
+SYSCALL(SYS_AOS_TASK_NEW_EXT, aos_task_new_ext)
+#endif
+
+#if (1)
+#define SYS_AOS_TASK_SETSPECIFIC 64
+SYSCALL(SYS_AOS_TASK_SETSPECIFIC, aos_task_setspecific)
+#endif
+
+#if (1)
+#define SYS_AOS_TIMER_CHANGE 65
+SYSCALL(SYS_AOS_TIMER_CHANGE, aos_timer_change)
+#endif
+
+#if (1)
+#define SYS_AOS_TIMER_FREE 66
+SYSCALL(SYS_AOS_TIMER_FREE, aos_timer_free)
+#endif
+
+#if (1)
+#define SYS_AOS_TIMER_NEW 67
+SYSCALL(SYS_AOS_TIMER_NEW, aos_timer_new)
+#endif
+
+#if (1)
+#define SYS_AOS_TIMER_START 68
+SYSCALL(SYS_AOS_TIMER_START, aos_timer_start)
+#endif
+
+#if (1)
+#define SYS_AOS_TIMER_STOP 69
+SYSCALL(SYS_AOS_TIMER_STOP, aos_timer_stop)
+#endif
+
+#if (1)
+#define SYS_AOS_UART_SEND 70
+SYSCALL(SYS_AOS_UART_SEND, aos_uart_send)
+#endif
+
+#if (1)
+#define SYS_AOS_UNLINK 71
+SYSCALL(SYS_AOS_UNLINK, aos_unlink)
+#endif
+
+#if (1)
+#define SYS_AOS_UNREGISTER_EVENT_FILTER 72
+SYSCALL(SYS_AOS_UNREGISTER_EVENT_FILTER, aos_unregister_event_filter)
+#endif
+
+#if (1)
+#define SYS_AOS_VERSION_GET 73
+SYSCALL(SYS_AOS_VERSION_GET, aos_version_get)
+#endif
+
+#if (1)
+#define SYS_AOS_WRITE 74
+SYSCALL(SYS_AOS_WRITE, aos_write)
+#endif
+
+#if (1)
+#define SYS_GET_ERRNO 75
+SYSCALL(SYS_GET_ERRNO, get_errno)
+#endif
+
+#if (1)
+#define SYS_HAL_OTA_GET_DEFAULT_MODULE 76
+SYSCALL(SYS_HAL_OTA_GET_DEFAULT_MODULE, hal_ota_get_default_module)
+#endif
+
+#if (1)
+#define SYS_HAL_OTA_INIT 77
+SYSCALL(SYS_HAL_OTA_INIT, hal_ota_init)
+#endif
+
+#if (1)
+#define SYS_HAL_OTA_READ 78
+SYSCALL(SYS_HAL_OTA_READ, hal_ota_read)
+#endif
+
+#if (1)
+#define SYS_HAL_OTA_REGISTER_MODULE 79
+SYSCALL(SYS_HAL_OTA_REGISTER_MODULE, hal_ota_register_module)
+#endif
+
+#if (1)
+#define SYS_HAL_OTA_SET_BOOT 80
+SYSCALL(SYS_HAL_OTA_SET_BOOT, hal_ota_set_boot)
+#endif
+
+#if (1)
+#define SYS_HAL_OTA_WRITE 81
+SYSCALL(SYS_HAL_OTA_WRITE, hal_ota_write)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_GET_DEFAULT_MODULE 82
+SYSCALL(SYS_HAL_WIFI_GET_DEFAULT_MODULE, hal_wifi_get_default_module)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_GET_IP_STAT 83
+SYSCALL(SYS_HAL_WIFI_GET_IP_STAT, hal_wifi_get_ip_stat)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_GET_LINK_STAT 84
+SYSCALL(SYS_HAL_WIFI_GET_LINK_STAT, hal_wifi_get_link_stat)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_GET_MAC_ADDR 85
+SYSCALL(SYS_HAL_WIFI_GET_MAC_ADDR, hal_wifi_get_mac_addr)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_INIT 86
+SYSCALL(SYS_HAL_WIFI_INIT, hal_wifi_init)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_INSTALL_EVENT 87
+SYSCALL(SYS_HAL_WIFI_INSTALL_EVENT, hal_wifi_install_event)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_POWER_OFF 88
+SYSCALL(SYS_HAL_WIFI_POWER_OFF, hal_wifi_power_off)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_POWER_ON 89
+SYSCALL(SYS_HAL_WIFI_POWER_ON, hal_wifi_power_on)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_REGISTER_MODULE 90
+SYSCALL(SYS_HAL_WIFI_REGISTER_MODULE, hal_wifi_register_module)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_REGISTER_MONITOR_CB 91
+SYSCALL(SYS_HAL_WIFI_REGISTER_MONITOR_CB, hal_wifi_register_monitor_cb)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_SET_CHANNEL 92
+SYSCALL(SYS_HAL_WIFI_SET_CHANNEL, hal_wifi_set_channel)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_START 93
+SYSCALL(SYS_HAL_WIFI_START, hal_wifi_start)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_START_ADV 94
+SYSCALL(SYS_HAL_WIFI_START_ADV, hal_wifi_start_adv)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_START_SCAN 95
+SYSCALL(SYS_HAL_WIFI_START_SCAN, hal_wifi_start_scan)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_START_SCAN_ADV 96
+SYSCALL(SYS_HAL_WIFI_START_SCAN_ADV, hal_wifi_start_scan_adv)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_START_WIFI_MONITOR 97
+SYSCALL(SYS_HAL_WIFI_START_WIFI_MONITOR, hal_wifi_start_wifi_monitor)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_STOP_WIFI_MONITOR 98
+SYSCALL(SYS_HAL_WIFI_STOP_WIFI_MONITOR, hal_wifi_stop_wifi_monitor)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_SUSPEND 99
+SYSCALL(SYS_HAL_WIFI_SUSPEND, hal_wifi_suspend)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_SUSPEND_SOFT_AP 100
+SYSCALL(SYS_HAL_WIFI_SUSPEND_SOFT_AP, hal_wifi_suspend_soft_ap)
+#endif
+
+#if (1)
+#define SYS_HAL_WIFI_SUSPEND_STATION 101
+SYSCALL(SYS_HAL_WIFI_SUSPEND_STATION, hal_wifi_suspend_station)
+#endif
+
+#if (1)
+#define SYS_HAL_WLAN_REGISTER_MGNT_MONITOR_CB 102
+SYSCALL(SYS_HAL_WLAN_REGISTER_MGNT_MONITOR_CB, hal_wlan_register_mgnt_monitor_cb)
+#endif
+
+#if (1)
+#define SYS_HAL_WLAN_SEND_80211_RAW_FRAME 103
+SYSCALL(SYS_HAL_WLAN_SEND_80211_RAW_FRAME, hal_wlan_send_80211_raw_frame)
+#endif
+
+#if (1)
+#define SYS_SET_ERRNO 104
+SYSCALL(SYS_SET_ERRNO, set_errno)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_GET_DEVICE_STATE 105
+SYSCALL(SYS_UMESH_GET_DEVICE_STATE, umesh_get_device_state)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_GET_MAC_ADDRESS 106
+SYSCALL(SYS_UMESH_GET_MAC_ADDRESS, umesh_get_mac_address)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_GET_MCAST_ADDR 107
+SYSCALL(SYS_UMESH_GET_MCAST_ADDR, umesh_get_mcast_addr)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_GET_MODE 108
+SYSCALL(SYS_UMESH_GET_MODE, umesh_get_mode)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_GET_UCAST_ADDR 109
+SYSCALL(SYS_UMESH_GET_UCAST_ADDR, umesh_get_ucast_addr)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_INIT 110
+SYSCALL(SYS_UMESH_INIT, umesh_init)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_SET_MODE 111
+SYSCALL(SYS_UMESH_SET_MODE, umesh_set_mode)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_START 112
+SYSCALL(SYS_UMESH_START, umesh_start)
+#endif
+
+#if (CONFIG_AOS_MESH > 0u)
+#define SYS_UMESH_STOP 113
+SYSCALL(SYS_UMESH_STOP, umesh_stop)
+#endif
+
+#if (MBEDTLS_IN_KERNEL > 0u)
+#define SYS_MBEDTLS_SSL_CLOSE 114
+SYSCALL(SYS_MBEDTLS_SSL_CLOSE, mbedtls_ssl_close)
+#endif
+
+#if (MBEDTLS_IN_KERNEL > 0u)
+#define SYS_MBEDTLS_SSL_CONNECT 115
+SYSCALL(SYS_MBEDTLS_SSL_CONNECT, mbedtls_ssl_connect)
+#endif
+
+#if (MBEDTLS_IN_KERNEL > 0u)
+#define SYS_MBEDTLS_SSL_RECV 116
+SYSCALL(SYS_MBEDTLS_SSL_RECV, mbedtls_ssl_recv)
+#endif
+
+#if (MBEDTLS_IN_KERNEL > 0u)
+#define SYS_MBEDTLS_SSL_SEND 117
+SYSCALL(SYS_MBEDTLS_SSL_SEND, mbedtls_ssl_send)
+#endif
+
+#if (RHINO_CONFIG_MM_DEBUG <= 0u || RHINO_CONFIG_GCC_RETADDR <= 0u)
+#define SYS_AOS_MALLOC 118
+SYSCALL(SYS_AOS_MALLOC, aos_malloc)
+#endif
+
+#if (RHINO_CONFIG_MM_DEBUG <= 0u || RHINO_CONFIG_GCC_RETADDR <= 0u)
+#define SYS_AOS_REALLOC 119
+SYSCALL(SYS_AOS_REALLOC, aos_realloc)
+#endif
+
+#if (RHINO_CONFIG_MM_DEBUG <= 0u || RHINO_CONFIG_GCC_RETADDR <= 0u)
+#define SYS_AOS_ZALLOC 120
+SYSCALL(SYS_AOS_ZALLOC, aos_zalloc)
 #endif
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-
-#define SYS_MALLOC 35
-SYSCALL(SYS_MALLOC, sys_aos_malloc)
-
-#define SYS_REALLOC 36
-SYSCALL(SYS_REALLOC, sys_aos_realloc)
-
-#define SYS_ZALLOC 37
-SYSCALL(SYS_ZALLOC, sys_aos_zalloc)
-
-#else
-
-#define SYS_MALLOC 35
-SYSCALL(SYS_MALLOC, aos_malloc)
-
-#define SYS_REALLOC 36
-SYSCALL(SYS_REALLOC, aos_realloc)
-
-#define SYS_ZALLOC 37
-SYSCALL(SYS_ZALLOC, aos_zalloc)
-
+#define SYS_ALI_AES_FINISH 121
+SYSCALL(SYS_ALI_AES_FINISH, ali_aes_finish)
 #endif
 
-#define SYS_ALLOC_TRACE 38
-SYSCALL(SYS_ALLOC_TRACE, aos_alloc_trace)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
+#define SYS_ALI_AES_GET_CTX_SIZE 122
+SYSCALL(SYS_ALI_AES_GET_CTX_SIZE, ali_aes_get_ctx_size)
+#endif
 
-#define SYS_FREE 39
-SYSCALL(SYS_FREE, aos_free)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
+#define SYS_ALI_AES_INIT 123
+SYSCALL(SYS_ALI_AES_INIT, ali_aes_init)
+#endif
 
-#define SYS_NOW 40
-SYSCALL(SYS_NOW, aos_now)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
+#define SYS_SYS_AOS_MALLOC 124
+SYSCALL(SYS_SYS_AOS_MALLOC, sys_aos_malloc)
+#endif
 
-#define SYS_NOW_MS 41
-SYSCALL(SYS_NOW_MS, aos_now_ms)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
+#define SYS_SYS_AOS_REALLOC 125
+SYSCALL(SYS_SYS_AOS_REALLOC, sys_aos_realloc)
+#endif
 
-#define SYS_MSLEEP 42
-SYSCALL(SYS_MSLEEP, aos_msleep)
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
+#define SYS_SYS_AOS_ZALLOC 126
+SYSCALL(SYS_SYS_AOS_ZALLOC, sys_aos_zalloc)
+#endif
 
-/* keep 43~50 for Rhino */
+#if (RHINO_CONFIG_WORKQUEUE  > 0)
+#define SYS_AOS_WORK_CANCEL 127
+SYSCALL(SYS_AOS_WORK_CANCEL, aos_work_cancel)
+#endif
 
-/* --------------------Framework-------------------- */
+#if (RHINO_CONFIG_WORKQUEUE  > 0)
+#define SYS_AOS_WORK_DESTROY 128
+SYSCALL(SYS_AOS_WORK_DESTROY, aos_work_destroy)
+#endif
 
-#define SYS_REGISTER_EVENT_FILTER 51
-SYSCALL(SYS_REGISTER_EVENT_FILTER, aos_register_event_filter)
+#if (RHINO_CONFIG_WORKQUEUE  > 0)
+#define SYS_AOS_WORK_INIT 129
+SYSCALL(SYS_AOS_WORK_INIT, aos_work_init)
+#endif
 
-#define SYS_UNREGISTER_EVENT_FILTER 52
-SYSCALL(SYS_UNREGISTER_EVENT_FILTER, aos_unregister_event_filter)
+#if (RHINO_CONFIG_WORKQUEUE  > 0)
+#define SYS_AOS_WORK_RUN 130
+SYSCALL(SYS_AOS_WORK_RUN, aos_work_run)
+#endif
 
-#define SYS_POST_EVENT 53
-SYSCALL(SYS_POST_EVENT, aos_post_event)
+#if (RHINO_CONFIG_WORKQUEUE  > 0)
+#define SYS_AOS_WORK_SCHED 131
+SYSCALL(SYS_AOS_WORK_SCHED, aos_work_sched)
+#endif
 
-#define SYS_POLL_READ_FD 54
-SYSCALL(SYS_POLL_READ_FD, aos_poll_read_fd)
+#if (RHINO_CONFIG_WORKQUEUE  > 0)
+#define SYS_AOS_WORKQUEUE_CREATE 132
+SYSCALL(SYS_AOS_WORKQUEUE_CREATE, aos_workqueue_create)
+#endif
 
-#define SYS_CANCEL_POLL_READ_FD 55
-SYSCALL(SYS_CANCEL_POLL_READ_FD, aos_cancel_poll_read_fd)
+#if (RHINO_CONFIG_WORKQUEUE  > 0)
+#define SYS_AOS_WORKQUEUE_DEL 133
+SYSCALL(SYS_AOS_WORKQUEUE_DEL, aos_workqueue_del)
+#endif
 
-#define SYS_POST_DELAYED_ACTION 56
-SYSCALL(SYS_POST_DELAYED_ACTION, aos_post_delayed_action)
+#if (WITH_LWIP > 0u)
+#define SYS_IP4ADDR_ATON 134
+SYSCALL(SYS_IP4ADDR_ATON, ip4addr_aton)
+#endif
 
-#define SYS_CANCEL_DELAYED_ACTION 57
-SYSCALL(SYS_CANCEL_DELAYED_ACTION, aos_cancel_delayed_action)
+#if (WITH_LWIP > 0u)
+#define SYS_IP4ADDR_NTOA 135
+SYSCALL(SYS_IP4ADDR_NTOA, ip4addr_ntoa)
+#endif
 
-#define SYS_SCHEDULE_CALL 58
-SYSCALL(SYS_SCHEDULE_CALL, aos_schedule_call)
+#if (WITH_LWIP > 0u)
+#define SYS_IPADDR_ADDR 136
+SYSCALL(SYS_IPADDR_ADDR, ipaddr_addr)
+#endif
 
-#define SYS_LOOP_INIT 59
-SYSCALL(SYS_LOOP_INIT, aos_loop_init)
-
-#define SYS_CURRENT_LOOP 60
-SYSCALL(SYS_CURRENT_LOOP, aos_current_loop)
-
-#define SYS_LOOP_RUN 61
-SYSCALL(SYS_LOOP_RUN, aos_loop_run)
-
-#define SYS_LOOP_EXIT 62
-SYSCALL(SYS_LOOP_EXIT, aos_loop_exit)
-
-#define SYS_LOOP_DESTROY 63
-SYSCALL(SYS_LOOP_DESTROY, aos_loop_destroy)
-
-#define SYS_LOOP_SCHEDULE_CALL 64
-SYSCALL(SYS_LOOP_SCHEDULE_CALL, aos_loop_schedule_call)
-
-#define SYS_LOOP_SCHEDULE_WORK 65
-SYSCALL(SYS_LOOP_SCHEDULE_WORK, aos_loop_schedule_work)
-
-#define SYS_CANCEL_WORK 66
-SYSCALL(SYS_CANCEL_WORK, aos_cancel_work)
-
-#define SYS_KV_SET 67
-SYSCALL(SYS_KV_SET, aos_kv_set)
-
-#define SYS_KV_GET 68
-SYSCALL(SYS_KV_GET, aos_kv_get)
-
-#define SYS_KV_DEL 69
-SYSCALL(SYS_KV_DEL, aos_kv_del)
-
-#define SYS_OPEN 70
-SYSCALL(SYS_OPEN, aos_open)
-
-#define SYS_CLOSE 71
-SYSCALL(SYS_CLOSE, aos_close)
-
-#define SYS_READ 72
-SYSCALL(SYS_READ, aos_read)
-
-#define SYS_WRITE 73
-SYSCALL(SYS_WRITE, aos_write)
-
-#define SYS_IOCTL 74
-SYSCALL(SYS_IOCTL, aos_ioctl)
-
-#define SYS_POLL 75
-SYSCALL(SYS_POLL, aos_poll)
-
-#define SYS_FCNTL 76
-SYSCALL(SYS_FCNTL, aos_fcntl)
-
-#define SYS_LSEEK 77
-SYSCALL(SYS_LSEEK, aos_lseek)
-
-#define SYS_SYNC 78
-SYSCALL(SYS_SYNC, aos_sync)
-
-#define SYS_STAT 79
-SYSCALL(SYS_STAT, aos_stat)
-
-#define SYS_UNLINK 80
-SYSCALL(SYS_UNLINK, aos_unlink)
-
-#define SYS_RENAME 81
-SYSCALL(SYS_RENAME, aos_rename)
-
-#define SYS_OPENDIR 82
-SYSCALL(SYS_OPENDIR, aos_opendir)
-
-#define SYS_CLOSEDIR 83
-SYSCALL(SYS_CLOSEDIR, aos_closedir)
-
-#define SYS_READDIR 84
-SYSCALL(SYS_READDIR, aos_readdir)
-
-#define SYS_MKDIR 85
-SYSCALL(SYS_MKDIR, aos_mkdir)
-
-/* keep 86~90 for Framework */
-
-/* --------------------MBEDTLS-------------------- */
-
-#ifdef MBEDTLS_IN_KERNEL
-
-#define SYS_MBEDTLS_CONNECT 91
-SYSCALL(SYS_MBEDTLS_CONNECT, mbedtls_ssl_connect)
-
-#define SYS_MBEDTLS_SEND 92
-SYSCALL(SYS_MBEDTLS_SEND, mbedtls_ssl_send)
-
-#define SYS_MBEDTLS_RECV 93
-SYSCALL(SYS_MBEDTLS_RECV, mbedtls_ssl_recv)
-
-#define SYS_MBEDTLS_CLOSE 94
-SYSCALL(SYS_MBEDTLS_CLOSE, mbedtls_ssl_close)
-
-#define SYS_CRYPTO_AES_INIT 95
-SYSCALL(SYS_CRYPTO_AES_INIT, ali_aes_init)
-
-#define SYS_CRYPTO_AES_FINISH 96
-SYSCALL(SYS_CRYPTO_AES_FINISH, ali_aes_finish)
-
-#define SYS_CRYPTO_AES_GET_CTX_SIZE 97
-SYSCALL(SYS_CRYPTO_AES_GET_CTX_SIZE, ali_aes_get_ctx_size)
-
-#endif /* MBEDTLS_IN_KERNEL */
-
-/* --------------------LWIP-------------------- */
-
-#ifdef WITH_LWIP
-
-#define SYS_LWIP_ACCEPT 101
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_ACCEPT 137
 SYSCALL(SYS_LWIP_ACCEPT, lwip_accept)
-
-#define SYS_LWIP_BIND 102
-SYSCALL(SYS_LWIP_BIND, lwip_bind)
-
-#define SYS_LWIP_SHUTDOWN 103
-SYSCALL(SYS_LWIP_SHUTDOWN, lwip_shutdown)
-
-#define SYS_LWIP_GETPEERNAME 104
-SYSCALL(SYS_LWIP_GETPEERNAME, lwip_getpeername)
-
-#define SYS_LWIP_GETSOCKNAME 105
-SYSCALL(SYS_LWIP_GETSOCKNAME, lwip_getsockname)
-
-#define SYS_LWIP_GETSOCKOPT 106
-SYSCALL(SYS_LWIP_GETSOCKOPT, lwip_getsockopt)
-
-#define SYS_LWIP_SETSOCKOPT 107
-SYSCALL(SYS_LWIP_SETSOCKOPT, lwip_setsockopt)
-
-#define SYS_LWIP_CLOSE 108
-SYSCALL(SYS_LWIP_CLOSE, lwip_close)
-
-#define SYS_LWIP_CONNECT 109
-SYSCALL(SYS_LWIP_CONNECT, lwip_connect)
-
-#define SYS_LWIP_LISTEN 110
-SYSCALL(SYS_LWIP_LISTEN, lwip_listen)
-
-#define SYS_LWIP_RECV 111
-SYSCALL(SYS_LWIP_RECV, lwip_recv)
-
-#define SYS_LWIP_READ 112
-SYSCALL(SYS_LWIP_READ, lwip_read)
-
-#define SYS_LWIP_RECVFROM 113
-SYSCALL(SYS_LWIP_RECVFROM, lwip_recvfrom)
-
-#define SYS_LWIP_SEND 114
-SYSCALL(SYS_LWIP_SEND, lwip_send)
-
-#define SYS_LWIP_SENDMSG 115
-SYSCALL(SYS_LWIP_SENDMSG, lwip_sendmsg)
-
-#define SYS_LWIP_SENDTO 116
-SYSCALL(SYS_LWIP_SENDTO, lwip_sendto)
-
-#define SYS_LWIP_SOCKET 117
-SYSCALL(SYS_LWIP_SOCKET, lwip_socket)
-
-#define SYS_LWIP_WRITE 118
-SYSCALL(SYS_LWIP_WRITE, lwip_write)
-
-#define SYS_LWIP_WRITEV 119
-SYSCALL(SYS_LWIP_WRITEV, lwip_writev)
-
-#define SYS_LWIP_SELECT 120
-SYSCALL(SYS_LWIP_SELECT, lwip_select)
-
-#define SYS_LWIP_IOCTL 121
-SYSCALL(SYS_LWIP_IOCTL, lwip_ioctl)
-
-#define SYS_LWIP_FCNTL 122
-SYSCALL(SYS_LWIP_FCNTL, lwip_fcntl)
-
-#define SYS_LWIP_EVENTFD 123
-SYSCALL(SYS_LWIP_EVENTFD, lwip_eventfd)
-
-#define SYS_LWIP_HTONL 124
-SYSCALL(SYS_LWIP_HTONL, lwip_htonl)
-
-#define SYS_LWIP_HTONS 125
-SYSCALL(SYS_LWIP_HTONS, lwip_htons)
-
-#define SYS_LWIP_GETHOSTBYNAME 126
-SYSCALL(SYS_LWIP_GETHOSTBYNAME, lwip_gethostbyname)
-
-#define SYS_LWIP_IP4ADDR_ATON 127
-SYSCALL(SYS_LWIP_IP4ADDR_ATON, ip4addr_aton)
-
-#define SYS_LWIP_IP4ADDR_NTOA 128
-SYSCALL(SYS_LWIP_IP4ADDR_NTOA, ip4addr_ntoa)
-
-#define SYS_LWIP_IPADDR_ADDR 129
-SYSCALL(SYS_LWIP_IPADDR_ADDR, ipaddr_addr)
-
-#define SYS_LWIP_FREEADDRINFO 130
-SYSCALL(SYS_LWIP_FREEADDRINFO, lwip_freeaddrinfo)
-
-#define SYS_LWIP_GETADDRINFO 131
-SYSCALL(SYS_LWIP_GETADDRINFO, lwip_getaddrinfo)
-
-/* keep 132~135 for LWIP */
-
-#endif /* WITH_LWIP */
-
-/* --------------------WIFI-------------------- */
-
-#define SYS_WIFI_GET_DEFAULT_MODULE 136
-SYSCALL(SYS_WIFI_GET_DEFAULT_MODULE, hal_wifi_get_default_module)
-
-#define SYS_WIFI_REGISTER_MODULE 137
-SYSCALL(SYS_WIFI_REGISTER_MODULE, hal_wifi_register_module)
-
-#define SYS_WIFI_INIT 138
-SYSCALL(SYS_WIFI_INIT, hal_wifi_init)
-
-#define SYS_WIFI_GET_MAC_ADDR 139
-SYSCALL(SYS_WIFI_GET_MAC_ADDR, hal_wifi_get_mac_addr)
-
-#define SYS_WIFI_START 140
-SYSCALL(SYS_WIFI_START, hal_wifi_start)
-
-#define SYS_WIFI_START_ADV 141
-SYSCALL(SYS_WIFI_START_ADV, hal_wifi_start_adv)
-
-#define SYS_WIFI_GET_IP_STAT 142
-SYSCALL(SYS_WIFI_GET_IP_STAT, hal_wifi_get_ip_stat)
-
-#define SYS_WIFI_GET_LINK_STAT 143
-SYSCALL(SYS_WIFI_GET_LINK_STAT, hal_wifi_get_link_stat)
-
-#define SYS_WIFI_START_SCAN 144
-SYSCALL(SYS_WIFI_START_SCAN, hal_wifi_start_scan)
-
-#define SYS_WIFI_START_SCAN_ADV 145
-SYSCALL(SYS_WIFI_START_SCAN_ADV, hal_wifi_start_scan_adv)
-
-#define SYS_WIFI_POWER_OFF 146
-SYSCALL(SYS_WIFI_POWER_OFF, hal_wifi_power_off)
-
-#define SYS_WIFI_POWER_ON 147
-SYSCALL(SYS_WIFI_POWER_ON, hal_wifi_power_on)
-
-#define SYS_WIFI_SUSPEND 148
-SYSCALL(SYS_WIFI_SUSPEND, hal_wifi_suspend)
-
-#define SYS_WIFI_SUSPEND_STATION 149
-SYSCALL(SYS_WIFI_SUSPEND_STATION, hal_wifi_suspend_station)
-
-#define SYS_WIFI_SUSPEND_SOFT_AP 150
-SYSCALL(SYS_WIFI_SUSPEND_SOFT_AP, hal_wifi_suspend_soft_ap)
-
-#define SYS_WIFI_SET_CHANNEL 151
-SYSCALL(SYS_WIFI_SET_CHANNEL, hal_wifi_set_channel)
-
-#define SYS_WIFI_START_WIFI_MONITOR 152
-SYSCALL(SYS_WIFI_START_WIFI_MONITOR, hal_wifi_start_wifi_monitor)
-
-#define SYS_WIFI_STOP_WIFI_MONITOR 153
-SYSCALL(SYS_WIFI_STOP_WIFI_MONITOR, hal_wifi_stop_wifi_monitor)
-
-#define SYS_WIFI_REGISTER_MONITOR_CB 154
-SYSCALL(SYS_WIFI_REGISTER_MONITOR_CB, hal_wifi_register_monitor_cb)
-
-#define SYS_WIFI_INSTALL_EVENT 155
-SYSCALL(SYS_WIFI_INSTALL_EVENT, hal_wifi_install_event)
-
-#define SYS_HAL_WLAN_REG_MGNT_MONITOR_CB 156
-SYSCALL(SYS_HAL_WLAN_REG_MGNT_MONITOR_CB, hal_wlan_register_mgnt_monitor_cb)
-
-#define SYS_HAL_WLAN_SEND_80211_RAW_FRAME 157
-SYSCALL(SYS_HAL_WLAN_SEND_80211_RAW_FRAME, hal_wlan_send_80211_raw_frame)
-
-/* --------------------MESH-------------------- */
-
-#ifdef CONFIG_AOS_MESH
-#define SYS_UR_MESH_INIT 158
-SYSCALL(SYS_UR_MESH_INIT, umesh_init)
-
-#define SYS_UR_MESH_START 159
-SYSCALL(SYS_UR_MESH_START, umesh_start)
-
-#define SYS_UR_MESH_STOP 160
-SYSCALL(SYS_UR_MESH_STOP, umesh_stop)
-
-#define SYS_UR_MESH_SET_MODE 161
-SYSCALL(SYS_UR_MESH_SET_MODE, umesh_set_mode)
-
-#define SYS_UR_MESH_GET_MODE 162
-SYSCALL(SYS_UR_MESH_GET_MODE, umesh_get_mode)
-
-#define SYS_UR_MESH_GET_MCAST_ADDR 163
-SYSCALL(SYS_UR_MESH_GET_MCAST_ADDR, umesh_get_mcast_addr)
-
-#define SYS_UR_MESH_GET_UCAST_ADDR 164
-SYSCALL(SYS_UR_MESH_GET_UCAST_ADDR, umesh_get_ucast_addr)
-
-#define SYS_UR_MESH_NET_GET_MAC_ADDRESS 165
-SYSCALL(SYS_UR_MESH_NET_GET_MAC_ADDRESS, umesh_get_mac_address)
-
-#define SYS_UR_MESH_GET_DEVICE_STATE 166
-SYSCALL(SYS_UR_MESH_GET_DEVICE_STATE, umesh_get_device_state)
 #endif
 
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_BIND 138
+SYSCALL(SYS_LWIP_BIND, lwip_bind)
+#endif
 
-/* --------------------OTA-------------------- */
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_CLOSE 139
+SYSCALL(SYS_LWIP_CLOSE, lwip_close)
+#endif
 
-#define SYS_OTA_REGISTER_MODULE 171
-SYSCALL(SYS_OTA_REGISTER_MODULE, hal_ota_register_module)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_CONNECT 140
+SYSCALL(SYS_LWIP_CONNECT, lwip_connect)
+#endif
 
-#define SYS_OTA_INIT 172
-SYSCALL(SYS_OTA_INIT, hal_ota_init)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_EVENTFD 141
+SYSCALL(SYS_LWIP_EVENTFD, lwip_eventfd)
+#endif
 
-#define SYS_OTA_WRITE 173
-SYSCALL(SYS_OTA_WRITE, hal_ota_write)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_FCNTL 142
+SYSCALL(SYS_LWIP_FCNTL, lwip_fcntl)
+#endif
 
-#define SYS_OTA_READ 174
-SYSCALL(SYS_OTA_READ, hal_ota_read)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_FREEADDRINFO 143
+SYSCALL(SYS_LWIP_FREEADDRINFO, lwip_freeaddrinfo)
+#endif
 
-#define SYS_OTA_SET_BOOT 175
-SYSCALL(SYS_OTA_SET_BOOT, hal_ota_set_boot)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_GETADDRINFO 144
+SYSCALL(SYS_LWIP_GETADDRINFO, lwip_getaddrinfo)
+#endif
 
-#define SYS_OTA_GET_DEFAULT_MODULE 176
-SYSCALL(SYS_OTA_GET_DEFAULT_MODULE, hal_ota_get_default_module)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_GETHOSTBYNAME 145
+SYSCALL(SYS_LWIP_GETHOSTBYNAME, lwip_gethostbyname)
+#endif
 
-/* keep 177~180 for OTA */
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_GETPEERNAME 146
+SYSCALL(SYS_LWIP_GETPEERNAME, lwip_getpeername)
+#endif
 
-/* --------------------CLI-------------------- */
-#define SYS_CLI_REG_CMD 181
-SYSCALL(SYS_CLI_REG_CMD, aos_cli_register_command)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_GETSOCKNAME 147
+SYSCALL(SYS_LWIP_GETSOCKNAME, lwip_getsockname)
+#endif
 
-#define SYS_CLI_UNREG_CMD 182
-SYSCALL(SYS_CLI_UNREG_CMD, aos_cli_unregister_command)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_GETSOCKOPT 148
+SYSCALL(SYS_LWIP_GETSOCKOPT, lwip_getsockopt)
+#endif
 
-#define SYS_CLI_REG_CMDS 183
-SYSCALL(SYS_CLI_REG_CMDS, aos_cli_register_commands)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_HTONL 149
+SYSCALL(SYS_LWIP_HTONL, lwip_htonl)
+#endif
 
-#define SYS_CLI_UNREG_CMDS 184
-SYSCALL(SYS_CLI_UNREG_CMDS, aos_cli_unregister_commands)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_HTONS 150
+SYSCALL(SYS_LWIP_HTONS, lwip_htons)
+#endif
 
-#define SYS_CLI_INIT 185
-SYSCALL(SYS_CLI_INIT, aos_cli_init)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_IOCTL 151
+SYSCALL(SYS_LWIP_IOCTL, lwip_ioctl)
+#endif
 
-#define SYS_CLI_STOP 186
-SYSCALL(SYS_CLI_STOP, aos_cli_stop)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_LISTEN 152
+SYSCALL(SYS_LWIP_LISTEN, lwip_listen)
+#endif
 
-/* --------------------OTHERS-------------------- */
-#define SYS_UART_SEND 187
-SYSCALL(SYS_UART_SEND, aos_uart_send)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_READ 153
+SYSCALL(SYS_LWIP_READ, lwip_read)
+#endif
 
-#define SYS_GET_ERRNO 188
-SYSCALL(SYS_GET_ERRNO, get_errno)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_RECV 154
+SYSCALL(SYS_LWIP_RECV, lwip_recv)
+#endif
 
-#define SYS_SET_ERRNO 189
-SYSCALL(SYS_SET_ERRNO, set_errno)
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_RECVFROM 155
+SYSCALL(SYS_LWIP_RECVFROM, lwip_recvfrom)
+#endif
 
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_SELECT 156
+SYSCALL(SYS_LWIP_SELECT, lwip_select)
+#endif
+
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_SEND 157
+SYSCALL(SYS_LWIP_SEND, lwip_send)
+#endif
+
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_SENDMSG 158
+SYSCALL(SYS_LWIP_SENDMSG, lwip_sendmsg)
+#endif
+
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_SENDTO 159
+SYSCALL(SYS_LWIP_SENDTO, lwip_sendto)
+#endif
+
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_SETSOCKOPT 160
+SYSCALL(SYS_LWIP_SETSOCKOPT, lwip_setsockopt)
+#endif
+
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_SHUTDOWN 161
+SYSCALL(SYS_LWIP_SHUTDOWN, lwip_shutdown)
+#endif
+
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_SOCKET 162
+SYSCALL(SYS_LWIP_SOCKET, lwip_socket)
+#endif
+
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_WRITE 163
+SYSCALL(SYS_LWIP_WRITE, lwip_write)
+#endif
+
+#if (WITH_LWIP > 0u)
+#define SYS_LWIP_WRITEV 164
+SYSCALL(SYS_LWIP_WRITEV, lwip_writev)
+#endif
 

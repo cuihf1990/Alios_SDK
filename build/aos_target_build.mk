@@ -7,7 +7,7 @@ include $(CONFIG_FILE)
 # Include all toolchain makefiles - one of them will handle the architecture
 include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
-.PHONY: display_map_summary build_done
+.PHONY: display_map_summary build_done prebuild_done
 
 ##################################
 # Filenames
@@ -238,11 +238,15 @@ $(HEX_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)
 display_map_summary: $(LINK_OUTPUT_FILE) $(AOS_SDK_CONVERTER_OUTPUT_FILE) $(AOS_SDK_FINAL_OUTPUT_FILE)
 	$(QUIET) $(call COMPILER_SPECIFIC_MAPFILE_DISPLAY_SUMMARY,$(MAP_OUTPUT_FILE))
 
+$(EXTRA_PRE_BUILD_TARGETS):
+	$(QUIET) $(call COMPILER_SPECIFIC_SYSCALL_FILE)
+
 # Main Target - Ensures the required parts get built
 # $(info Prebuild targets:$(EXTRA_PRE_BUILD_TARGETS))
 # $(info $(BIN_OUTPUT_FILE))
 build_done: $(EXTRA_PRE_BUILD_TARGETS) $(BIN_OUTPUT_FILE) $(HEX_OUTPUT_FILE) display_map_summary
 
+$(EXTRA_PRE_BUILD_TARGETS): prebuild_done
 $(EXTRA_POST_BUILD_TARGETS): build_done
 
 $(BUILD_STRING): $(if $(EXTRA_POST_BUILD_TARGETS),$(EXTRA_POST_BUILD_TARGETS),build_done)

@@ -56,6 +56,7 @@ struct cli_st {
  * @return  0 on success, error code otherwise.
  */
 int aos_cli_register_command(const struct cli_command *command);
+EXPORT_SYMBOL_K(1, aos_cli_register_command, "int aos_cli_register_command(const struct cli_command *command)")
 
 /**
  * This function unregisters a command from the command-line interface.
@@ -65,6 +66,7 @@ int aos_cli_register_command(const struct cli_command *command);
  * @return  0 on success,  error code otherwise.
  */
 int aos_cli_unregister_command(const struct cli_command *command);
+EXPORT_SYMBOL_K(1, aos_cli_unregister_command, "int aos_cli_unregister_command(const struct cli_command *command)")
 
 /**
  * Register a batch of CLI commands
@@ -76,6 +78,7 @@ int aos_cli_unregister_command(const struct cli_command *command);
  * @return  0 on success， error code otherwise.
  */
 int aos_cli_register_commands(const struct cli_command *commands, int num_commands);
+EXPORT_SYMBOL_K(1, aos_cli_register_commands, "int aos_cli_register_commands(const struct cli_command *commands, int num_commands)")
 
 /**
  * Unregister a batch of CLI commands
@@ -86,6 +89,7 @@ int aos_cli_register_commands(const struct cli_command *commands, int num_comman
  * @return  0 on success, error code otherwise.
  */
 int aos_cli_unregister_commands(const struct cli_command *commands, int num_commands);
+EXPORT_SYMBOL_K(1, aos_cli_unregister_commands, "int aos_cli_unregister_commands(const struct cli_command *commands, int num_commands)")
 
 /**
  * Print CLI msg
@@ -102,6 +106,7 @@ int aos_cli_printf(const char *buff, ...);
  * @return  0 on success, error code otherwise
  */
 int aos_cli_init(void);
+EXPORT_SYMBOL_K(1, aos_cli_init, "int aos_cli_init(void)")
 
 /**
  * Stop the CLI thread and carry out the cleanup
@@ -110,6 +115,8 @@ int aos_cli_init(void);
  *
  */
 int aos_cli_stop(void);
+EXPORT_SYMBOL_K(1, aos_cli_stop, "int aos_cli_stop(void)")
+
 
 #else /* CONFIG_AOS_CLI */
 

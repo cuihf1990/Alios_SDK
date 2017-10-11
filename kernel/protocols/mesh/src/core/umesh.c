@@ -420,6 +420,7 @@ ur_error_t umesh_init(node_mode_t mode)
 #endif
     return UR_ERROR_NONE;
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_init, "ur_error_t umesh_init(node_mode_t mode)")
 
 bool umesh_is_initialized(void)
 {
@@ -457,6 +458,7 @@ ur_error_t umesh_start()
 
     return UR_ERROR_NONE;
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_start, "ur_error_t umesh_start(void)")
 
 ur_error_t umesh_stop(void)
 {
@@ -477,12 +479,14 @@ ur_error_t umesh_stop(void)
     interface_stop();
     return UR_ERROR_NONE;
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_stop, "ur_error_t umesh_stop(void)")
 
 /* per device APIs */
 uint8_t umesh_get_device_state(void)
 {
     return (uint8_t)umesh_mm_get_device_state();
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_device_state, "uint8_t umesh_get_device_state(void)")
 
 ur_error_t umesh_register_callback(ur_adapter_callback_t *callback)
 {
@@ -494,16 +498,19 @@ uint8_t umesh_get_mode(void)
 {
     return (uint8_t)umesh_mm_get_mode();
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_mode, "uint8_t umesh_get_mode(void)")
 
 ur_error_t umesh_set_mode(uint8_t mode)
 {
     return umesh_mm_set_mode(mode);
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_set_mode, "ur_error_t umesh_set_mode(uint8_t mode)")
 
 const mac_address_t *umesh_get_mac_address(media_type_t type)
 {
     return umesh_mm_get_mac_address();
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_mac_address, "const mac_address_t *umesh_get_mac_address(media_type_t type)")
 
 uint16_t umesh_get_meshnetid(void)
 {
@@ -541,11 +548,13 @@ const ur_netif_ip6_address_t *umesh_get_ucast_addr(void)
 {
     return g_um_state.ucast_address;
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_ucast_addr, "const ur_netif_ip6_address_t *umesh_get_ucast_addr(void)")
 
 const ur_netif_ip6_address_t *umesh_get_mcast_addr(void)
 {
     return g_um_state.mcast_address;
 }
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_mcast_addr, "const ur_netif_ip6_address_t *umesh_get_mcast_addr(void)")
 
 ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
 {

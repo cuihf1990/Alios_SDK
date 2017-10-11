@@ -26,5 +26,11 @@ struct pollfd {
 #include <fcntl.h>
 #endif
 
+/**
+ * define the EXPORT_SYMBOL_K macro, use in kernel
+ *
+ */
+#define EXPORT_SYMBOL_K(condition, fun, fun_str)
+
 #endif /* AOS_TYPES_H */
 
