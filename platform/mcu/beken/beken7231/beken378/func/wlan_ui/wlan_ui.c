@@ -373,6 +373,8 @@ OSStatus bk_wlan_start(hal_wifi_init_type_t *inNetworkInitPara)
 extern int sa_ap_inited();
 extern int sa_sta_inited();
 
+static int wlan_monitor_enabled = 0;
+
 static void scan_cb(void *ctxt, void *user)
 {
 	struct scanu_rst_upload *scan_rst;
@@ -632,6 +634,7 @@ int bk_wlan_monitor_rx_type(int type)
  */
 int bk_wlan_start_monitor(void)
 {
+    wlan_monitor_enabled = 1;
     lsig_init();
     bk_wlan_ap_init(0);
     rwnx_remove_added_interface();
@@ -644,14 +647,23 @@ int bk_wlan_start_monitor(void)
  */
 int bk_wlan_stop_monitor(void)
 {
-    if(g_monitor_cb)
+    if(wlan_monitor_enabled)
     {
         g_monitor_cb = 0;
         hal_machw_exit_monitor_mode();
+        wlan_monitor_enabled = 0;
     }
+    
     return 0;
 }
 
+int bk_wlan_monitor_enabled(void)
+{
+    if (wlan_monitor_enabled == 0)
+        return 0;
+    else
+        return 1;
+}
 /** @brief  Set the monitor channel
  *
  *  @detail This function change the monitor channel (from 1~13).
@@ -753,7 +765,7 @@ static inline int get_cipher_info(uint8_t *frame, int frame_len,
 static void bk_monitor_callback(uint8_t *data, int len, hal_wifi_link_info_t *info)
 {
     uint8_t enc_type;
-    
+
     /* check the RTS packet */
     if ((data[0] == 0xB4) && (len == 16)) { // RTS
         rts_update(data, info->rssi, mico_rtos_get_time());
@@ -789,8 +801,9 @@ monitor_data_cb_t bk_wlan_get_monitor_cb(void)
 {
     if (g_monitor_cb)
         return bk_monitor_callback;
-    else
+    else {
         return NULL;
+    }
 }
 
 #include "mm.h"

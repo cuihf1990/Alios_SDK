@@ -119,6 +119,7 @@ static mac_entry_t entries[ENT_NUM];
 
 static mesh_hal_priv_t *g_hal_priv;
 
+extern int bk_wlan_monitor_enabled(void);
 static void pass_to_umesh(const void* arg)
 {
     compound_msg_t *cmsg = (compound_msg_t *)arg;
@@ -180,7 +181,7 @@ static int beken_wifi_mesh_enable(umesh_hal_module_t *module)
     mesh_hal_priv_t *priv = module->base.priv_dev;
     struct tx_policy_tbl *pol;
 
-    if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0) {
+    if (bk_wlan_is_ap() == 0 && bk_wlan_is_sta() == 0 && bk_wlan_monitor_enabled() == 0) {
         bk_wlan_start_monitor();
         hal_machw_exit_monitor_mode();
 
