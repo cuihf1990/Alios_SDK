@@ -315,6 +315,7 @@ $(NAME)_SOURCES +=  beken7231/beken378/app/app.c \
                     beken7231/beken378/func/user_driver/BkDriverUart.c \
                     beken7231/beken378/func/user_driver/BkDriverWdg.c \
                     beken7231/beken378/func/wlan_ui/wlan_ui.c \
+                    beken7231/beken378/func/wlan_ui/lsig_monitor.c \
                     beken7231/beken378/os/mem_arch.c \
                     beken7231/beken378/os/str_arch.c \
                     beken7231/mico_api/MiCODrivers/MiCODriverFlash.c \

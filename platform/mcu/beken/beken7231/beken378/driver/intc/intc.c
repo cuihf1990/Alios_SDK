@@ -78,7 +78,7 @@ void intc_service_register(UINT8 int_num, UINT8 int_pri, FUNCPTR isr)
     cur_ptr->isr_func = isr;
     cur_ptr->int_num  = int_num;
     cur_ptr->pri      = int_pri;
-
+    
     INTC_PRT("reg_isr:%d:%d:%p\r\n", int_num, int_pri, isr);
 
     GLOBAL_INT_DISABLE();
@@ -153,41 +153,6 @@ void intc_disable(int index)
     sddev_control(ICU_DEV_NAME, CMD_ICU_INT_DISABLE, &param);
 }
 
-#if 0
-
-void intc_irq(void)
-{
-    UINT32 irq_status;
-
-    irq_status = sddev_control(ICU_DEV_NAME, CMD_GET_INTR_STATUS, 0);
-    irq_status = irq_status & 0xFFFF;
-    if(0 == irq_status)
-    {
-        os_printf("irq:dead\r\n");
-    }
-
-    sddev_control(ICU_DEV_NAME, CMD_CLR_INTR_STATUS, &irq_status);
-
-    intc_hdl_entry(irq_status);
-
-    ASSERT(!platform_is_in_irq_enable());
-}
-
-void intc_fiq(void)
-{
-    UINT32 fiq_status;
-
-    ASSERT(platform_is_in_fiq_context());
-
-    fiq_status = sddev_control(ICU_DEV_NAME, CMD_GET_INTR_STATUS, 0);
-    fiq_status = fiq_status & 0xFFFF0000;
-    sddev_control(ICU_DEV_NAME, CMD_CLR_INTR_STATUS, &fiq_status);
-
-    intc_hdl_entry(fiq_status);
-
-    ASSERT(!platform_is_in_fiq_enable());
-}
-#else
 
 void intc_irq(void)
 {
@@ -202,15 +167,13 @@ void intc_irq(void)
     reg = REG_READ(ICU_INT_STATUS);
     REG_WRITE(ICU_INT_STATUS, reg | irq_status);
     intc_hdl_entry(irq_status);
-
-    ASSERT(!platform_is_in_irq_enable());
 }
 
 void intc_fiq(void)
 {
     UINT32 fiq_status, reg;
 
-    ASSERT(platform_is_in_fiq_context());
+    //ASSERT(platform_is_in_fiq_context());
 
     fiq_status = REG_READ(ICU_INT_STATUS);
     fiq_status = fiq_status & 0xFFFF0000;
@@ -218,11 +181,9 @@ void intc_fiq(void)
     REG_WRITE(ICU_INT_STATUS, reg | fiq_status);
     
     intc_hdl_entry(fiq_status);
-
-    ASSERT(!platform_is_in_fiq_enable());
 }
 
-#endif
+
 void deafult_swi(void)
 {
     while(1);
@@ -246,7 +207,8 @@ void intc_init(void)
 
     intc_enable(FIQ_MAC_TX_RX_MISC);
     intc_enable(FIQ_MAC_TX_RX_TIMER);
-
+    
+    intc_enable(FIQ_MODEM);
     param = GINTR_FIQ_BIT | GINTR_IRQ_BIT;
 #else
     param = GINTR_IRQ_BIT;

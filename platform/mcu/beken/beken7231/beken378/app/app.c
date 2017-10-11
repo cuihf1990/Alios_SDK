@@ -276,6 +276,23 @@ void bmsg_rx_sender(void *arg)
 	}
 }
 
+void bmsg_rx_lsig(uint16_t len, uint8_t rssi)
+{
+	BUS_MSG_T msg;
+
+	msg.type = BMSG_RX_LSIG;
+	msg.arg = (uint32_t)((len << 16) | rssi);
+	msg.len = mico_rtos_get_time();
+	msg.sema = NULL;
+
+	mico_rtos_push_to_queue(&g_wifi_core.io_queue, &msg, MICO_NO_WAIT);
+}
+
+void bmsg_rx_lsig_handler(BUS_MSG_T *msg)
+{
+	lsig_input((msg->arg&0xFFFF0000)>>16, msg->arg&0xFF, msg->len);
+}
+
 int bmsg_tx_sender(struct pbuf *p)
 {
 	OSStatus ret;
@@ -377,9 +394,12 @@ static void core_thread_main( void *arg )
 					bmsg_ioctl_handler(&msg);
 					break;
 					
-                        case BMSG_TX_RAW_TYPE:
-                            bmsg_tx_raw_handler(&msg);
-                            break;
+                case BMSG_TX_RAW_TYPE:
+                    bmsg_tx_raw_handler(&msg);
+                    break;
+                case BMSG_RX_LSIG:
+                    bmsg_rx_lsig_handler(&msg);
+                    break;
         		default:
 					APP_PRT("unknown_msg\r\n");
 					break;
