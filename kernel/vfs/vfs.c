@@ -201,6 +201,7 @@ int aos_open(const char *path, int flags)
 
     return get_fd(file);
 }
+EXPORT_SYMBOL_K(1, aos_open, "int aos_open(const char *path, int flags)")
 
 int aos_close(int fd)
 {
@@ -238,6 +239,7 @@ int aos_close(int fd)
 
     return ret;
 }
+EXPORT_SYMBOL_K(1, aos_close, "int aos_close(int fd)")
 
 ssize_t aos_read(int fd, void *buf, size_t nbytes)
 {
@@ -265,6 +267,7 @@ ssize_t aos_read(int fd, void *buf, size_t nbytes)
 
     return nread;
 }
+EXPORT_SYMBOL_K(1, aos_read, "ssize_t aos_read(int fd, void *buf, size_t nbytes)")
 
 ssize_t aos_write(int fd, const void *buf, size_t nbytes)
 {
@@ -292,6 +295,7 @@ ssize_t aos_write(int fd, const void *buf, size_t nbytes)
 
     return nwrite;
 }
+EXPORT_SYMBOL_K(1, aos_write, "ssize_t aos_write(int fd, const void *buf, size_t nbytes)")
 
 int aos_ioctl(int fd, int cmd, unsigned long arg)
 {
@@ -323,6 +327,7 @@ int aos_ioctl(int fd, int cmd, unsigned long arg)
 
     return ret;
 }
+EXPORT_SYMBOL_K(1, aos_ioctl, "int aos_ioctl(int fd, int cmd, unsigned long arg)")
 
 off_t aos_lseek(int fd, off_t offset, int whence)
 {
@@ -346,6 +351,7 @@ off_t aos_lseek(int fd, off_t offset, int whence)
 
     return ret;
 }
+EXPORT_SYMBOL_K(1, aos_lseek, "off_t aos_lseek(int fd, off_t offset, int whence)")
 
 int aos_sync(int fd)
 {
@@ -369,6 +375,7 @@ int aos_sync(int fd)
 
     return ret;
 }
+EXPORT_SYMBOL_K(1, aos_sync, "int aos_sync(int fd)")
 
 int aos_stat(const char *path, struct stat *st)
 {
@@ -414,6 +421,7 @@ int aos_stat(const char *path, struct stat *st)
     aos_mutex_unlock(&g_vfs_mutex);
     return ret;
 }
+EXPORT_SYMBOL_K(1, aos_stat, "int aos_stat(const char *path, struct stat *st)")
 
 int aos_unlink(const char *path)
 {
@@ -459,6 +467,7 @@ int aos_unlink(const char *path)
     aos_mutex_unlock(&g_vfs_mutex);
     return ret;
 }
+EXPORT_SYMBOL_K(1, aos_unlink, "int aos_unlink(const char *path)")
 
 int aos_rename(const char *oldpath, const char *newpath)
 {
@@ -504,6 +513,7 @@ int aos_rename(const char *oldpath, const char *newpath)
     aos_mutex_unlock(&g_vfs_mutex);
     return ret;
 }
+EXPORT_SYMBOL_K(1, aos_rename, "int aos_rename(const char *oldpath, const char *newpath)")
 
 aos_dir_t *aos_opendir(const char *path)
 {
@@ -554,6 +564,7 @@ aos_dir_t *aos_opendir(const char *path)
     dp->dd_vfs_fd = get_fd(file);
     return dp;
 }
+EXPORT_SYMBOL_K(1, aos_opendir, "aos_dir_t *aos_opendir(const char *path)")
 
 int aos_closedir(aos_dir_t *dir)
 {
@@ -589,6 +600,7 @@ int aos_closedir(aos_dir_t *dir)
 
     return ret;
 }
+EXPORT_SYMBOL_K(1, aos_closedir, "int aos_closedir(aos_dir_t *dir)")
 
 aos_dirent_t *aos_readdir(aos_dir_t *dir)
 {
@@ -619,6 +631,7 @@ aos_dirent_t *aos_readdir(aos_dir_t *dir)
 
     return NULL;
 }
+EXPORT_SYMBOL_K(1, aos_readdir, "aos_dirent_t *aos_readdir(aos_dir_t *dir)")
 
 int aos_mkdir(const char *path)
 {
@@ -664,7 +677,7 @@ int aos_mkdir(const char *path)
     aos_mutex_unlock(&g_vfs_mutex);
     return ret;
 }
-
+EXPORT_SYMBOL_K(1, aos_mkdir, "int aos_mkdir(const char *path)")
 
 #if (AOS_CONFIG_VFS_POLL_SUPPORT>0)
 
@@ -949,6 +962,7 @@ check_poll:
 
     return ret < 0 ? 0 : nset;
 }
+EXPORT_SYMBOL_K(1, aos_poll, "int aos_poll(struct pollfd *fds, int nfds, int timeout)")
 #endif
 
 int aos_fcntl(int fd, int cmd, int val)
@@ -963,6 +977,7 @@ int aos_fcntl(int fd, int cmd, int val)
 
     return 0;
 }
+EXPORT_SYMBOL_K(1, aos_fcntl, "int aos_fcntl(int fd, int cmd, int val)")
 
 int aos_ioctl_in_loop(int cmd, unsigned long arg)
 {
@@ -1007,4 +1022,5 @@ int32_t aos_uart_send(void *data, uint32_t size, uint32_t timeout)
 {
     return hal_uart_send(&uart_0, data, size, timeout);
 }
+EXPORT_SYMBOL_K(1, aos_uart_send, "int32_t aos_uart_send(void *data, uint32_t size, uint32_t timeout)")
 

@@ -75,26 +75,31 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1] [BI
       $> make clean
 endef
 
+SYSCALLFILE_CREATE :=$(MAKEFILES_PATH)/scripts/makesyscall.py
 ifeq (,$(BINS))
 BINSTYPE_UPPER :=
 BINSTYPE_LOWER :=
 UNDERLINE :=
 RADIXPOINT :=
+COMPILER_SPECIFIC_SYSCALL_FILE =
 else ifeq (app,$(BINS))
 BINSTYPE_UPPER :=APP
 BINSTYPE_LOWER :=app
 UNDERLINE :=_
 RADIXPOINT :=.
+COMPILER_SPECIFIC_SYSCALL_FILE = $(PYTHON) $(SYSCALLFILE_CREATE) $(1)
 else ifeq (framework,$(BINS))
 BINSTYPE_UPPER :=FRAMEWORK
 BINSTYPE_LOWER :=framework
 UNDERLINE :=_
 RADIXPOINT :=.
+COMPILER_SPECIFIC_SYSCALL_FILE = $(PYTHON) $(SYSCALLFILE_CREATE) $(1)
 else ifeq (kernel,$(BINS))
 BINSTYPE_UPPER :=KERNEL
 BINSTYPE_LOWER :=kernel
 UNDERLINE :=_
 RADIXPOINT :=.
+COMPILER_SPECIFIC_SYSCALL_FILE = $(PYTHON) $(SYSCALLFILE_CREATE) $(1)
 else
 $(error BINS Error, Valid BINS: [BINS=app BINS=kernel BINS=framework])
 endif
@@ -130,7 +135,10 @@ ifneq ($(BUILD_STRING),)
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
+
 $(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
+	$(QUIET)$(if $(COMPILER_SPECIFIC_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/usyscall))
+	$(QUIET)$(if $(COMPILER_SPECIFIC_SYSCALL_FILE), $(call COMPILER_SPECIFIC_SYSCALL_FILE, $(OUTPUT_DIR)/usyscall))
 	$(QUIET)$(ECHO) $(if $(AOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
 	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/aos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
