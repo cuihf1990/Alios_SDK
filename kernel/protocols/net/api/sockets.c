@@ -242,7 +242,7 @@ struct lwip_select_cb {
   /** don't signal the same semaphore twice: set to 1 when signalled */
   int sem_signalled;
   /** semaphore to wake up a task waiting for select */
-  sys_sem_t * psem;
+  SELECT_SEM_T sem;
 };
 
 /** A struct sockaddr replacement that has the same alignment as sockaddr_in/
@@ -1419,8 +1419,8 @@ int lwip_eventfd(unsigned int initval, int flags)
 }
 
 int
-lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-            struct timeval *timeout, sys_sem_t *psem)
+lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
+            struct timeval *timeout)
 {
   u32_t waitres = 0;
   int nready;
@@ -1428,7 +1428,6 @@ lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
   u32_t msectimeout;
   struct lwip_select_cb select_cb;
   int i;
-  sys_sem_t sem;
   int maxfdp2;
 #if LWIP_NETCONN_SEM_PER_THREAD
   int waited = 0;
@@ -1465,17 +1464,12 @@ lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
     select_cb.exceptset = exceptset;
     select_cb.sem_signalled = 0;
 #if LWIP_NETCONN_SEM_PER_THREAD
-    select_cb.psem = LWIP_NETCONN_THREAD_SEM_GET();
+    select_cb.sem = LWIP_NETCONN_THREAD_SEM_GET();
 #else /* LWIP_NETCONN_SEM_PER_THREAD */
-    if(psem)
-        select_cb.psem = psem;
-    else {
-      if (sys_sem_new(&sem, 0) != ERR_OK) {
-        /* failed to create semaphore */
-        set_errno(ENOMEM);
-        return -1;
-      }
-      select_cb.psem = &sem;
+    if (sys_sem_new(&select_cb.sem, 0) != ERR_OK) {
+      /* failed to create semaphore */
+      set_errno(ENOMEM);
+      return -1;
     }
 #endif /* LWIP_NETCONN_SEM_PER_THREAD */
 
@@ -1509,7 +1503,7 @@ lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
           sock->select_waiting++;
           LWIP_ASSERT("sock->select_waiting > 0", sock->select_waiting > 0);
         } else if (event != NULL) {
-          event->psem = select_cb.psem;
+          event->psem = SELECT_SEM_PTR(select_cb.sem);
         } else {
           /* Not a valid socket */
           nready = -1;
@@ -1538,7 +1532,7 @@ lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
           }
         }
 
-        waitres = sys_arch_sem_wait(select_cb.psem, msectimeout);
+        waitres = sys_arch_sem_wait(SELECT_SEM_PTR(select_cb.sem), msectimeout);
 #if LWIP_NETCONN_SEM_PER_THREAD
         waited = 1;
 #endif
@@ -1592,11 +1586,10 @@ lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
 #if LWIP_NETCONN_SEM_PER_THREAD
     if (select_cb.sem_signalled && (!waited || (waitres == SYS_ARCH_TIMEOUT))) {
       /* don't leave the thread-local semaphore signalled */
-      sys_arch_sem_wait(select_cb.psem, 1);
+      sys_arch_sem_wait(select_cb.sem, 1);
     }
 #else /* LWIP_NETCONN_SEM_PER_THREAD */
-    if(!psem)
-      sys_sem_free(select_cb.psem);
+    sys_sem_free(&select_cb.sem);
 #endif /* LWIP_NETCONN_SEM_PER_THREAD */
 
     if (nready < 0) {
@@ -1630,13 +1623,6 @@ return_copy_fdsets:
     *exceptset = lexceptset;
   }
   return nready;
-}
-
-int
-lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-            struct timeval *timeout)
-{
-  return lwip_select2(maxfdp1, readset, writeset, exceptset, timeout, NULL);
 }
 
 /**
@@ -1745,7 +1731,7 @@ again:
         scb->sem_signalled = 1;
         /* Don't call SYS_ARCH_UNPROTECT() before signaling the semaphore, as this might
            lead to the select thread taking itself off the list, invalidating the semaphore. */
-        sys_sem_signal(scb->psem);
+        sys_sem_signal(SELECT_SEM_PTR(scb->sem));
       }
     }
     /* unlock interrupts with each step */
