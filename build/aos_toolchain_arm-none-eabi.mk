@@ -205,11 +205,6 @@ CPU_ASMFLAGS       := $(CPU_BASE_FLAGS)
 CPU_LDFLAGS        := $(CPU_BASE_FLAGS)
 endif
 
-SYSCALLFILE_CREATE            :=$(MAKEFILES_PATH)/scripts/makesyscall.py
-
-# create syscall c and h file
-COMPILER_SPECIFIC_SYSCALL_FILE = $(PYTHON) $(SYSCALLFILE_CREATE)
-
 # $(1) is map file, $(2) is CSV output file
 COMPILER_SPECIFIC_MAPFILE_TO_CSV = $(PYTHON) $(MAPFILE_PARSER) $(1) > $(2)
 

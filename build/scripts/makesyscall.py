@@ -119,18 +119,13 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
     return
 
 
-def _writeSyscallUapi(cr_path, sc_path, sn_path, ui_path):
-    fcr = open(cr_path, 'r')               # read copyright
-    copyright = fcr.read()
-    fcr.close()
-
+def _writeSyscallUapi(sc_path, sn_path, ui_path):
     fui = open(ui_path, 'r')               # read usyscall include
     usys_incl = fui.read()
     fui.close()
 
     fsc = open(sc_path, "w+")              # creat syscall_uapi.c
     fsc.seek(0, 0)
-    fsc.write(copyright)
     fsc.write(usys_incl)
     fsc.write("\n")
 
@@ -199,6 +194,19 @@ def _writeSyscallUapi(cr_path, sc_path, sn_path, ui_path):
 
     return
 
+def _writeSyscallMk(sm_path):
+    fsh = open(sm_path, "w+")              # creat usyscall.mk
+    fsh.seek(0, 0)
+    fsh.write(r"NAME := usyscall" + "\n\n")
+    fsh.write(r"$(NAME)_INCLUDES := ./ ../../../framework/usyscall" + "\n\n")
+    fsh.write(r"$(NAME)_CFLAGS += -Wall -Werror" + "\n\n")
+    fsh.write(r"$(NAME)_SOURCES := syscall_uapi.c" + "\n\n")
+    fsh.write(r"GLOBAL_DEFINES += AOS_BINS" + "\n")
+
+    fsh.close()
+
+    return
+
 def _modifySyscallMax(sc_path):
     global syscall_num
     fcr = open(sc_path, 'r+')               # read syscall_tbl.c
@@ -222,11 +230,15 @@ def _removeSyscallData(sn_path):
     return
 
 def main():
+    syscall_path = sys.argv[1]
+    logging.info(sys.argv[1])
+
     search_string = r"EXPORT_SYMBOL_K\((.*?)\,\s*?[\\|\s]\s*?(\S*?)\,\s*?[\\|\s]\s*?(\".*?\")\)$"
     copyright_path = r"./build/copyright"
     syscall_tblc_path = r"./kernel/syscall/syscall_tbl.c"
-    syscall_tbl_path = r"./kernel/syscall/syscall_tbl.h"
-    syscall_uapi_path = r"./framework/usyscall/syscall_uapi.c"
+    syscall_tbl_path = syscall_path + r"/syscall_tbl.h"
+    syscall_uapi_path = syscall_path + r"/syscall_uapi.c"
+    syscall_mk_path = syscall_path + r"/usyscall.mk"
     syscall_data_path = r"./build/scripts/syscall_data"
     usyscall_incl_path = r"./framework/usyscall/syscall_uapi_include.h"
     global symbol_list
@@ -254,7 +266,10 @@ def main():
     logging.info("======================================")
 
     # Creat and write to syscall_uapi.c
-    _writeSyscallUapi(copyright_path, syscall_uapi_path, syscall_data_path, usyscall_incl_path)
+    _writeSyscallUapi(syscall_uapi_path, syscall_data_path, usyscall_incl_path)
+
+    # Creat and write to usyscall.mk
+    _writeSyscallMk(syscall_mk_path)
 
     #modify SYSCALL_MAX
     _modifySyscallMax(syscall_tblc_path)
@@ -262,10 +277,10 @@ def main():
     endtime = time.time()
 
     print "======================================"
-    print (" create syscall file")
-    print (" total: %s symbol find" % len(symbol_list))
-    print (" total: %s file find" % num)
-    print (" total time: %s s" % (endtime - starttime))
+    print (" create syscall file:")
+    print (" total: %s symbol find." % len(symbol_list))
+    print (" total: %s file find." % num)
+    print (" total time: %s s." % (endtime - starttime))
     print "======================================"
 
 if __name__ == "__main__":

@@ -3,6 +3,15 @@ include $(MAKEFILES_PATH)/aos_host_cmd.mk
 CONFIG_FILE_DIR := $(OUTPUT_DIR)
 CONFIG_FILE := $(CONFIG_FILE_DIR)/config.mk
 
+# auto create syscall h and c file
+ifneq ($(BINS),)
+SYSCALLFILE_CREATE            :=$(MAKEFILES_PATH)/scripts/makesyscall.py
+COMPILER_SPECIFIC_SYSCALL_FILE = $(PYTHON) $(SYSCALLFILE_CREATE) $(1)
+$(eval SYSCALL_DIR := $(shell $(call MKDIR, $(OUTPUT_DIR)/usyscall)))
+$(eval SYSCALL_FILE := $(shell $(call COMPILER_SPECIFIC_SYSCALL_FILE, $(OUTPUT_DIR)/usyscall)))
+$(info $(SYSCALL_FILE))
+endif
+
 COMPONENT_DIRECTORIES := . \
                          example   \
                          board     \
@@ -13,7 +22,8 @@ COMPONENT_DIRECTORIES := . \
                          tools     \
                          test      \
                          devices   \
-                         security
+                         security  \
+                         $(OUTPUT_DIR)
 
 COMPONENT_DIRECTORIES += $(APPDIR)
 
@@ -200,10 +210,12 @@ ifeq ($(BINS),app)
 #$(NAME)_COMPONENTS += usyscall
 COMPONENTS += usyscall
 AOS_SDK_DEFINES += BUILD_APP
+AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/usyscall
 else ifeq ($(BINS),kernel)
 #$(NAME)_COMPONENTS += syscall
 COMPONENTS += syscall
 AOS_SDK_DEFINES += BUILD_KERNEL
+AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/usyscall
 else ifeq (,$(BINS))
 AOS_SDK_DEFINES += BUILD_BIN
 endif
