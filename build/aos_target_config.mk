@@ -3,14 +3,6 @@ include $(MAKEFILES_PATH)/aos_host_cmd.mk
 CONFIG_FILE_DIR := $(OUTPUT_DIR)
 CONFIG_FILE := $(CONFIG_FILE_DIR)/config.mk
 
-# auto create syscall h and c file
-ifneq ($(BINS),)
-SYSCALLFILE_CREATE            :=$(MAKEFILES_PATH)/scripts/makesyscall.py
-COMPILER_SPECIFIC_SYSCALL_FILE = $(PYTHON) $(SYSCALLFILE_CREATE) $(1)
-$(eval SYSCALL_DIR := $(shell $(call MKDIR, $(OUTPUT_DIR)/usyscall)))
-$(eval SYSCALL_FILE := $(shell $(call COMPILER_SPECIFIC_SYSCALL_FILE, $(OUTPUT_DIR)/usyscall)))
-$(info $(SYSCALL_FILE))
-endif
 
 COMPONENT_DIRECTORIES := . \
                          example   \
