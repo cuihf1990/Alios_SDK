@@ -44,7 +44,7 @@ def _loopFolder(path, cont):
     if not arr[-1].startswith('.'):            #Do not check hidden folders
         if os.path.isdir(path):
             folderList = os.listdir(path)
-#            print folderList
+            logging.debug(folderList)
             for x in folderList:
                 _loopFolder(path + "/" + x, cont)
         elif os.path.isfile(path):
@@ -63,10 +63,10 @@ def _verifyContent(path, cont):
         fh.close()
         symbols = re.findall(cont, fhContent, re.M | re.S)
         if symbols:
-#                print symbols
+                logging.debug(symbols)
 	        symbol_list.extend(symbols)
 	        num += 1
-#                print ("%s" % (path))
+                logging.debug("%s" % (path))
     except:
         print "File '" + path + "'can't be read"
 
@@ -88,8 +88,7 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
         fsn = open(sn_path, "w+")              # read from syscall_num
     fsnContent = fsn.read()
     symbols = re.findall(r"\d+\s(.*?)\s\".*?\"\s\".*?\"\n", fsnContent, re.M | re.S)
-#    print symbols
-#    print symbols
+    logging.debug(symbols)
     global symbol_list
     for symbol in symbol_list:                          # write to syscall_num
         if symbol[1] not in symbols:
@@ -102,11 +101,11 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
     fsn.seek(0, 0)
     fsnContent = fsn.read()
     newsymbols = re.findall(r"(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
-#    print newsymbols
+    logging.debug(newsymbols)
     global syscall_num
     syscall_num = len(newsymbols)
     for symbol in newsymbols:                     # according to syscall_num to implementation syscall_tbl.h
-#        print symbol
+        logging.debug(symbol)
         fsh.write("#if (" + symbol[2] + ")\n")
         strdef = "#define SYS_" + symbol[1].upper() + " " + symbol[0] + "\n"
         strsysc = "SYSCALL(SYS_" + symbol[1].upper() + ", " + symbol[1] + ")"
@@ -134,14 +133,14 @@ def _writeSyscallUapi(sc_path, sn_path, ui_path):
     fsn.close()
 
     newsymbols = re.findall(r"(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
-#    print newsymbols
+    logging.debug(newsymbols)
     for symbol in newsymbols:                     # according to syscall_num to implementation syscall_tbl.h
-#        print symbol
+        logging.debug(symbol)
         fsc.write("#if (" + symbol[2] + ")\n" + symbol[3] + "\n" + "{\n" + "    ")
         elements = re.findall(r"(.*?)" + symbol[1] + r"\((.*?)\)$", symbol[3], re.M | re.S)
-#        print elements
+        logging.debug(elements)
         for element in elements:
-#            print element[1]
+            logging.debug(element[1])
             args = element[1].split(',')
             i = 0
             for arg in args:
@@ -154,8 +153,8 @@ def _writeSyscallUapi(sc_path, sn_path, ui_path):
             if arg_nu == 1:
                 if args[0].strip() == r"void" or args[0].strip() == r"":
                     arg_nu = 0
-#            print args
-#            print arg_nu
+            logging.debug(args)
+            logging.debug(arg_nu)
 
         if element[0].strip() != r"void":
             fsc.write("return ")
@@ -176,10 +175,10 @@ def _writeSyscallUapi(sc_path, sn_path, ui_path):
                     u = arg.strip().split(" ", arg.strip().count(" "))
                     u2 = u[arg.strip().count(" ")]
                     u1 = arg[0:(len(arg) - len(u2))]
-    
-    #            print u1
-    #            print u2
-    #            print len(args)
+
+                logging.debug(u1)
+                logging.debug(u2)
+                logging.debug(len(args))
                 i += 1
                 if u1 != "":
                     fsc.write(", " + u1.strip())
@@ -212,8 +211,7 @@ def _modifySyscallMax(sc_path):
     fcr = open(sc_path, 'r+')               # read syscall_tbl.c
     tblc = fcr.readlines()
     fcr.seek(0)
-#    fcr.truncate()
-#    print syscall_num
+    logging.debug(syscall_num)
     for line in tblc:
         if(line.find(r"#define SYSCALL_MAX") == 0):
             line = r"#define SYSCALL_MAX %s" % (syscall_num + 1) + "\n"   
@@ -224,7 +222,7 @@ def _modifySyscallMax(sc_path):
 
 def _removeSyscallData(sn_path):
     if os.path.exists(sn_path):
-#        print sn_path
+        logging.debug(sn_path)
         os.remove(sn_path)                     # remove syscall_num
 
     return
