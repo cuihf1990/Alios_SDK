@@ -1347,6 +1347,28 @@ static void phy_mdm_init(uint32_t tx_dc_off_comp)
     PHY_WPRT("phy_mdm_init-->Static MDM settings done\r\n");
 }
 
+
+void phy_enable_lsig_intr(void)
+{
+	uint32_t val;
+	
+	val = mdm_irqctrl_get();
+	mdm_irqctrl_set(val|MDM_IRQLSIGVALIDEN_BIT);
+
+}
+
+void phy_disable_lsig_intr(void)
+{
+	uint32_t val;
+	
+	val = mdm_irqctrl_get();
+	mdm_irqctrl_set(val&(~MDM_IRQLSIGVALIDEN_BIT));
+	
+
+    nxmac_gen_int_enable_set(0);
+}
+
+
 /**
  ****************************************************************************************
  * @brief AGC initialization function.
@@ -1751,6 +1773,134 @@ void rcbeken_reconfigure(void)
     rc_ch0_en_setf(1);
     rc_rc_en_setf(1);
 }
+
+#define RXVECT1_ARRAY_MAX       30
+
+void phy_unsupported_modulation_check(void)
+{
+     uint32_t rx_vect0;
+     uint32_t rx_vect1[RXVECT1_ARRAY_MAX];
+     uint32_t rx_vect2;
+     int8_t rx_rssi;
+     uint16_t rx_length, mcs;
+     int i;
+
+    rx_vect0 = mdm_rxvector0_get();
+    do
+    {
+        // Ensure that the packet could be a non-legacy one
+        if ((rx_vect0 & MDM_RXLEGRATE_MASK) != (11 << MDM_RXLEGRATE_LSB)) {
+            break;
+        }
+        
+        // Read the RSSI, which is already available
+        rx_rssi = 0xFF00 | mdm_rssi1_getf();
+
+        //if (rx_rssi < -40)
+        //    break;
+        // Poll on the RXFORMAT until it is equal to HT, or timeout otherwise
+        // This loop duration, if we timeout, shall be at least 4us
+        for (i=0; i<100;i++)
+        {
+            rx_vect2 = mdm_rxvector2_get();
+            if ((rx_vect2 & MDM_RXFORMAT_MASK) == 2)
+                break;
+        }
+
+        // Check if the received format is HT
+        if ((rx_vect2 & MDM_RXFORMAT_MASK) != 2){
+            break;
+            }
+		//os_printf("HT Format\r\n");
+        // Now read the RX vector 1 several times and store each value
+        // The duration between the first and the last read shall be around 6us
+        // This reads are done sequentially and not in a loop because the RX
+        // vector 1 is valid only for a few hundreds of ns and we don't want to
+        // suffer from the overhead of the looping
+        i = 0;
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get();
+        rx_vect1[i++] = mdm_rxvector1_get(); // Don't read beyond the array size you defined !!!
+
+        // Search in the RX vector 1 array the index of the latest non-null
+        // length value
+        for (i=(RXVECT1_ARRAY_MAX - 1); i>=0; i--)
+	//	for (i=0; i<(RXVECT1_ARRAY_MAX - 1); i++)
+        {
+            if ((rx_vect1[i] & MDM_RXHTLENGTH_MASK) != 0)
+                break;
+        }
+        
+        // If we did not find any non-null length, don't consider the packet
+        if (i == -1) {
+            break;
+            }
+
+        //break;
+        //os_printf("HT Format Length %d (i=%d) rssi=%d\r\n",rx_vect1[i] & MDM_RXHTLENGTH_MASK,i,rx_rssi);
+        // Check if the modulation is supported. We know that by checking if the
+        // index of the latest non-null length is the last one. Indeed in case
+        // the modulation is supported, the value of the rx vector 1 is kept valid
+        // until the end of the reception. Otherwise it is reset only a few hundreds
+        // of ns after becoming valid. Having a valid length in the latest RX vector 1
+        // read therefore means that the modulation is supported and the packet will
+        // be uploaded in the normal RX path
+        //if (i == (RXVECT1_ARRAY_MAX - 1))
+        //    break;
+
+        // Unsupported modulation received
+        // TODO Forward the length and RSSI indication of this packet to the upper layers
+        rx_length = rx_vect1[i] & MDM_RXHTLENGTH_MASK;
+
+		mcs = ((rx_vect1[i] & MDM_RXMCS_MASK) >> MDM_RXMCS_LSB);
+		if((mcs < 8) || (mcs > 15))
+		{
+			break;
+		}
+        #if 0
+		//test_printf();
+        test_printf("ms-Length %d, rssi %d, mcs %d, idx %i\r\n", 
+				rx_length+44,
+                rx_rssi, 
+				mcs,
+				i);
+        #else
+        //mcs_big_cb(rx_length,rx_rssi, mcs, mico_rtos_get_time() );
+        if (rx_rssi > 0)
+            rx_rssi = 0;
+        bmsg_rx_lsig(rx_length, -rx_rssi);
+        #endif
+    } while(0);
+}
+
 void phy_mdm_isr(void)
 {
     uint32_t irq_status = mdm_irqstat_get();
@@ -1758,7 +1908,12 @@ void phy_mdm_isr(void)
     // Acknowledge the pending interrupts
     mdm_irqack_set(irq_status);
 
-    ASSERT_REC(!(irq_status & MDM_IRQCCATIMEOUT_BIT));
+    if (irq_status & MDM_IRQLSIGVALIDEN_BIT)
+    {
+        phy_unsupported_modulation_check();
+    }
+
+    //ASSERT_REC(!(irq_status & MDM_IRQCCATIMEOUT_BIT));
 }
 
 void phy_rc_isr(void)

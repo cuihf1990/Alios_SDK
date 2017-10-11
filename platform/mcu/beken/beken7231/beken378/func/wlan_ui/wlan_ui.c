@@ -632,10 +632,10 @@ int bk_wlan_monitor_rx_type(int type)
  */
 int bk_wlan_start_monitor(void)
 {
+    lsig_init();
     bk_wlan_ap_init(0);
     rwnx_remove_added_interface();
     g_wlan_general_param->role = CONFIG_ROLE_NULL;
-
     return 0;
 }
 
@@ -664,6 +664,81 @@ int bk_wlan_set_channel(int channel)
     return 0;
 }
 
+#define WLAN_OUI_MICROSOFT		(0x0050F2)
+#define WLAN_OUI_WPS			(0x0050F2)
+#define WLAN_OUI_TYPE_MICROSOFT_WPA	(1)
+#define WLAN_OUI_TYPE_WPS		(4)
+#define WLAN_EID_RSN 48
+
+static u8 *wlan_find_ie(u8 eid, const u8 *ies, int len)
+{
+        while (len > 2 && ies[0] != eid) {
+                len -= ies[1] + 2;
+                ies += ies[1] + 2;
+        }
+        if (len < 2)
+                return NULL;
+        if (len < 2 + ies[1])
+                return NULL;
+        return ies;
+}
+
+static inline int get_cipher_info(uint8_t *frame, int frame_len,
+		uint8_t *pairwise_cipher_type)
+{
+	uint8_t cap = frame[24+10]; // 24 is mac header; 8 timestamp, 2 beacon interval; 
+	u8 is_privacy = !!(cap & 0x10); // bit 4 = privacy
+	const u8 *ie = frame + 36; // 24 + 12
+	u16 ielen = frame_len - 36;
+	const u8 *tmp;
+	int ret = 0;
+
+	tmp = wlan_find_ie(WLAN_EID_RSN, ie, ielen);
+	if (tmp && tmp[1]) {
+		*pairwise_cipher_type = ENC_CCMP;// TODO: maybe it is a CCMP&TKIP, set to CCMP to try try
+	} else {
+		tmp = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT, WLAN_OUI_TYPE_MICROSOFT_WPA, ie, ielen);
+		if (tmp) {
+			*pairwise_cipher_type = ENC_TKIP;
+		} else {
+			if (is_privacy) {
+				*pairwise_cipher_type = ENC_WEP;
+			} else {
+				*pairwise_cipher_type = ENC_OPEN;
+			}
+		}
+	}
+
+	return ret;
+}
+
+static void bk_monitor_callback(uint8_t *data, int len, hal_wifi_link_info_t *info)
+{
+    uint8_t enc_type;
+    
+    /* check the RTS packet */
+    if ((data[0] == 0xB4) && (len == 16)) { // RTS
+        rts_update(data, info->rssi, mico_rtos_get_time());
+        return;
+    }
+    /* check beacon/probe reponse packet */
+    if ((data[0] == 0x80) || (data[0] == 0x50)) {
+        
+        get_cipher_info(data, len, &enc_type);
+        beacon_update(&data[16], enc_type);
+    }
+
+    
+    if (g_monitor_cb)
+        g_monitor_cb(data, len, info);
+}
+
+void upload_monitor_data(uint8_t *data, int len, hal_wifi_link_info_t *info)
+{
+    if (g_monitor_cb)
+        g_monitor_cb(data, len, info);
+}
+
 /** @brief  Register the monitor callback function
  *        Once received a 802.11 packet call the registered function to return the packet.
  */
@@ -674,7 +749,10 @@ void bk_wlan_register_monitor_cb(monitor_data_cb_t fn)
 
 monitor_data_cb_t bk_wlan_get_monitor_cb(void)
 {
-    return g_monitor_cb;
+    if (g_monitor_cb)
+        return bk_monitor_callback;
+    else
+        return NULL;
 }
 
 #include "mm.h"
