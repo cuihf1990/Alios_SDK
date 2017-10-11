@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _blefi_config_h_
 #define _blefi_config_h_
 

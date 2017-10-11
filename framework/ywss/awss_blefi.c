@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "blefi_config.h"
 #include "awss_blefi.h"
 #include "os.h"
