@@ -9,7 +9,7 @@
 
 NAME := STM32L4xx
 
-HOST_OPENOCD := stm32f4x
+HOST_OPENOCD := stm32l4x
 
 $(NAME)_TYPE := kernel
 
@@ -45,8 +45,7 @@ GLOBAL_CFLAGS += -mcpu=cortex-m4 \
 
 GLOBAL_CFLAGS += -w
 
-GLOBAL_LDFLAGS += -march=armv5te  \
-                  -mcpu=cortex-m4        \
+GLOBAL_LDFLAGS += -mcpu=cortex-m4        \
                   -mthumb -mthumb-interwork \
                   -mlittle-endian \
                   -nostartfiles \
