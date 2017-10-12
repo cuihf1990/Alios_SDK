@@ -85,8 +85,6 @@ int8_t platform_ota_parse_response(const char *response, int buf_len,
         }
 
         OTA_LOG_I(" response version %s", version->valuestring);
-
-        ota_set_version(version->valuestring);
         char *upgrade_version = strtok(version->valuestring, "_");
         if (!upgrade_version) {
             strncpy(response_parmas->primary_version, version->valuestring,
