@@ -74,7 +74,7 @@ RHINO_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
 static size_t sizetoindex(size_t size)
 {
     size_t cnt      = 0;
-    cnt = 31 - krhino_find_first_bit(&size);
+    cnt = 31 - krhino_find_first_bit((uint32_t *)(&size));
     return cnt;
 }
 static void addsize(k_mm_head *mmhead, size_t size, size_t req_size)
@@ -477,12 +477,12 @@ static kstat_t bitmap_search(size_t size , size_t *flt, size_t *slt,
         *slt = size >> (MIN_FLT_BIT - MAX_LOG2_SLT);
     } else {
         *flt = 0;
-        firstbit = 31 - (size_t)krhino_find_first_bit(&size);
+        firstbit = 31 - (size_t)krhino_find_first_bit((uint32_t *)(&size));
         tmp_size = size;
         if (action == ACTION_GET) {
             padding_size = (1 << (firstbit - MAX_LOG2_SLT)) - 1;
             tmp_size = size + padding_size;
-            firstbit = 31 - (size_t)krhino_find_first_bit(&tmp_size);
+            firstbit = 31 - (size_t)krhino_find_first_bit((uint32_t *)(&tmp_size));
         }
         *flt = firstbit - MIN_FLT_BIT + 1;
         tmp_size = tmp_size - (1 << firstbit);
@@ -503,7 +503,7 @@ static size_t find_last_bit(int bitmap)
     }
 
     x = bitmap & -bitmap;
-    lsbit = (size_t)krhino_find_first_bit(&x);
+    lsbit = (size_t)krhino_find_first_bit((uint32_t *)(&x));
     /* AliOS find fist bit return value is left->right as 0-31, but we need left->right as 31 -0 */
     return 31 - lsbit;
 }
