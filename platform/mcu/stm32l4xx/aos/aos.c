@@ -72,13 +72,22 @@ static void sys_init(void)
     hal_init();
     hw_start_hal();
 
+#ifdef AOS_VFS
     vfs_init();
     vfs_device_init();
+#endif
 
+#ifdef CONFIG_AOS_CLI
     aos_cli_init();
-    aos_kv_init();
-    aos_loop_init();
+#endif
 
+#ifdef AOS_KV
+    aos_kv_init();
+#endif
+
+#ifdef AOS_LOOP
+    aos_loop_init();
+#endif
     aos_framework_init();
     application_start(0, NULL);
 #endif
@@ -88,7 +97,7 @@ static void sys_init(void)
 static void sys_start(void)
 {
     aos_init();
-    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, AOS_DEFAULT_APP_PRI, 0, AOS_START_STACK, (task_entry_t)aos_init, 1);
+    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, AOS_DEFAULT_APP_PRI, 0, AOS_START_STACK, (task_entry_t)sys_init, 1);
     aos_start();
 }
 
