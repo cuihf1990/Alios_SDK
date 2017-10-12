@@ -11,7 +11,6 @@
 #include "aos/log.h"
 #include "aos/yloop.h"
 #include "aos/network.h"
-#include "kvmgr.h"
 #include <netmgr.h>
 #include <aos/kernel.h>
 #include <k_err.h>
@@ -307,7 +306,7 @@ int mqtt_client_example(void)
                 EXAMPLE_TRACE("packet-id=%u, publish topic msg=%s", (uint32_t)rc, msg_pub);
 #endif
                 /* handle the MQTT packet received from TCP or SSL connection */
-                IOT_MQTT_Yield(pclient, 1000);
+                IOT_MQTT_Yield(pclient, 500);
             }
 
             /* Report the new LED state to the MQTT broker. */
@@ -336,7 +335,7 @@ int mqtt_client_example(void)
                     EXAMPLE_TRACE("error occur when publish LED status");
                 }
                 /* handle the MQTT packet received from TCP or SSL connection */
-                IOT_MQTT_Yield(pclient, 3000);
+                IOT_MQTT_Yield(pclient, 1000);
             }
 #ifdef SENSOR
             PrepareMqttPayload(msg_pub, sizeof(msg_pub));
@@ -363,7 +362,7 @@ int mqtt_client_example(void)
 #endif
 
             /* handle the MQTT packet received from TCP or SSL connection */
-            IOT_MQTT_Yield(pclient, 2000);
+            IOT_MQTT_Yield(pclient, 1000);
         }else {
             EXAMPLE_TRACE("ota start, sleep a while");
             HAL_SleepMs(10000000);
