@@ -56,23 +56,39 @@ extern int ota_hal_init(uint32_t offset);
 
 int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *request_parmas)
 {
-    if (strncmp(response_parmas->primary_version,
+    int is_primary_ota = strncmp(response_parmas->primary_version,
                 request_parmas->primary_version,
-                sizeof response_parmas->primary_version) > 0) {
-        if (strlen(request_parmas->secondary_version)) {
-            ota_set_update_type(OTA_KERNEL);
+                strlen(response_parmas->primary_version));
+
+    int is_secondary_ota = strncmp(response_parmas->secondary_version,
+                request_parmas->secondary_version,
+                strlen(response_parmas->secondary_version));
+
+    int is_need_ota = 0;
+    char ota_version[MAX_VERSION_LEN] = {0};
+    if (is_primary_ota > 0 ) {
+        if (strlen(request_parmas->secondary_version) ) {
+            snprintf(ota_version, MAX_VERSION_LEN, "%s_%s", response_parmas->primary_version, aos_get_app_version());
+            if(is_secondary_ota == 0) {
+                ota_set_update_type(OTA_KERNEL);
+                is_need_ota = 1;
+            }
+        } else {
+            snprintf(ota_version, MAX_VERSION_LEN, "%s", response_parmas->primary_version);
+            is_need_ota = 1;
         }
-        return 1;
     }
 
-    if (strlen(request_parmas->secondary_version) && strncmp(response_parmas->secondary_version,
-                                                             request_parmas->secondary_version,
-                                                             sizeof response_parmas->secondary_version) > 0) {
+    if (is_primary_ota == 0 && is_secondary_ota > 0) {
+        snprintf(ota_version, MAX_VERSION_LEN, "%s_%s", response_parmas->primary_version,
+            response_parmas->secondary_version);
         ota_set_update_type(OTA_APP);
-        return 1;
+        is_need_ota = 1;
     }
 
-    return 0;
+    OTA_LOG_I("ota_version %s", ota_version);
+    ota_set_ota_version(ota_version); 
+    return is_need_ota;
 }
 
 void ota_download_start(void *buf)
@@ -82,10 +98,6 @@ void ota_download_start(void *buf)
     notify_ota_start();
 #endif
     ota_hal_init(ota_get_update_breakpoint());
-    ota_status_init();
-
-    ota_set_status(OTA_INIT);
-    ota_status_post(100);
 
     ota_set_status(OTA_DOWNLOAD);
     ota_status_post(0);
@@ -180,10 +192,19 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
                             write_flash_cb_t func, ota_finish_cb_t fcb)
 {
     int ret = 0;
+
+    ota_status_init();
+    ota_set_status(OTA_INIT);
+    
     ret = ota_if_need(response_parmas, request_parmas);
     if (1 != ret) {
+        OTA_LOG_E("ota cancel,ota version don't match dev version ! ");
+        ota_set_status(OTA_INIT_FAILED);
+        ota_status_post(100);
+        ota_status_deinit();
         return ret;
     }
+    ota_status_post(100);
 
     //ota_set_version(response_parmas->primary_version);
     g_write_func = func;
