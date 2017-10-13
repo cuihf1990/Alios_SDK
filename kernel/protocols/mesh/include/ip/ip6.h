@@ -65,19 +65,6 @@ typedef struct ur_udp_header_s {
     uint16_t chksum;
 } __attribute__((packed)) ur_udp_header_t;
 
-typedef void (* raw_data_handler_t)(const uint8_t *payload, uint16_t length);
-
-int echo_socket(raw_data_handler_t handler);
-int autotest_udp_socket(raw_data_handler_t handler, uint16_t port);
-#if LWIP_IPV6
-int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
-               ur_ip6_addr_t *dest, uint16_t port);
-#else
-int ip6_sendto(int socket, const uint8_t *payload, uint16_t length,
-               ur_ip4_addr_t *dest, uint16_t port);
-#endif
-int ip6_recv(int socket, void *payload, uint16_t length);
-
 ur_error_t string_to_ip6_addr(const char *buf, ur_ip6_addr_t *target);
 
 bool ip6_is_mcast(const ur_ip6_addr_t *addr);
