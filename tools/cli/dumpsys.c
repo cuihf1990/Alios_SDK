@@ -4,6 +4,7 @@
 
 #include <malloc.h>
 #include <string.h>
+#include <stdio.h>
 #include <aos/aos.h>
 
 #ifdef VCALL_RHINO
@@ -71,11 +72,11 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
                 CLI_TAG "------------------------------------------------------------------------\r\n");
 
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-    snprintf(tmpbuf, 255, CLI_TAG "CPU usage :%-10d   MAX:%-10d                 \n");
-    g_cpu_usage / 100, g_cpu_usage_max / 100);
+    snprintf(tmpbuf, 255, CLI_TAG "CPU usage :%-10d   MAX:%-10d                 \n",
+                g_cpu_usage / 100, g_cpu_usage_max / 100);
     safesprintf(printbuf, totallen, offset, tmpbuf);
     safesprintf(printbuf, totallen, offset,
-                CLI_TAG "------------------------------------------------------------------------\r\n", 255);
+                CLI_TAG "------------------------------------------------------------------------\r\n");
 
 #endif
     safesprintf(printbuf, totallen, offset,
