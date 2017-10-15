@@ -175,6 +175,7 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
     }
 
     cur_cpu_num = cpu_cur_get();
+    (void)cur_cpu_num;
 
     blk_list_head = &sem->blk_obj.blk_list;
 
