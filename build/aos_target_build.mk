@@ -151,7 +151,7 @@ endef
 define PROCESS_LDS_FILE
 $(LDS_FILE_DIR)/$(notdir $(1:.ld.S=.ld)): $(LDS_FILE_DIR)
 	$(ECHO) Making $$@
-	$(QUIET)$(CPP) -P $(AOS_SDK_DEFINES) $(1) -o $$@
+	$(QUIET)$(CPP) -P $(AOS_SDK_CFLAGS) $(AOS_SDK_INCLUDES) $(AOS_SDK_DEFINES) $(1) -o $$@
 
 $(eval LDS_FILES += $(LDS_FILE_DIR)/$(notdir $(1:.ld.S=.ld)))
 endef
@@ -178,7 +178,7 @@ endif
 # handle lds file, lds -> ld
 $(foreach ldsfile,$(AOS_SDK_LDS_FILES),$(eval $(call PROCESS_LDS_FILE,$(ldsfile))))
 $(foreach ldsfile,$(AOS_SDK_LDS_INCLUDES),$(eval $(call PROCESS_LDS_FILE,$(ldsfile))))
-$(if $(AOS_SDK_LDS_FILES),$(eval AOS_SDK_LDFLAGS += -T $(LDS_FILE_DIR)/$(notdir $(AOS_SDK_LDS_FILES:.ld.S=.ld))))
+$(foreach ldsfile,$(AOS_SDK_LDS_FILES),$(eval AOS_SDK_LDFLAGS += -T $(notdir $(ldsfile:.ld.S=.ld))))
 $(if $(AOS_SDK_LDS_FILES),$(eval AOS_SDK_LDFLAGS += -L $(LDS_FILE_DIR)))
 
 # Add pre-built libraries
