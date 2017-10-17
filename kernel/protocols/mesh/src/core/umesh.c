@@ -212,86 +212,82 @@ out:
     pbuf_free(buf);
 }
 
-ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid)
+static transmit_frame_t *build_tx_frame(void)
 {
-    transmit_frame_t *frame;
-    ur_error_t error = UR_ERROR_NONE;
+    transmit_frame_t *frame = NULL;
 
-    if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
-        return UR_ERROR_FAIL;
+    if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
+        frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
     }
+    return frame;
+}
 
-    frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
-    if (frame == NULL) {
-        return UR_ERROR_FAIL;
-    }
-
-    frame->dest.addr.len = SHORT_ADDR_SIZE;
-    frame->dest.addr.short_addr = sid;
-    frame->dest.netid = umesh_mm_get_meshnetid(NULL);
-    pbuf_ref(buf);
-    frame->buf = buf;
-    frame->type = TRANSMIT_IP4_FRAME;
+static ur_error_t tx_frame(transmit_frame_t *frame)
+{
+    ur_error_t error;
 
     error = umesh_task_schedule_call(output_frame_handler, frame);
     if (error != UR_ERROR_NONE) {
-        pbuf_free(frame->buf);
         ur_mem_free(frame, sizeof(transmit_frame_t));
+        pbuf_free(frame->buf);
     }
-
     return error;
+}
+
+ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid)
+{
+    ur_addr_t udest;
+
+    udest.addr.len = SHORT_ADDR_SIZE;
+    udest.addr.short_addr = sid;
+    udest.netid = umesh_mm_get_meshnetid(NULL);
+    return umesh_output(buf, &udest, TRANSMIT_IP4_FRAME);
 }
 
 ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
 {
-    transmit_frame_t *frame;
-    ur_error_t error = UR_ERROR_NONE;
     network_context_t *network;
+    ur_addr_t udest;
 
-    if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
+    if ((ip6_is_mcast(dest)) && (nd_is_subscribed_mcast(dest))) {
+        udest.addr.len = SHORT_ADDR_SIZE;
+        udest.addr.short_addr = BCAST_SID;
+        network = get_default_network_context();
+        udest.netid = mm_get_main_netid(network);
+    } else if (ip6_is_unique_local(dest)) {
+        if (is_sid_address(&dest->m8[8]) == false) {
+            udest.addr.len = EXT_ADDR_SIZE;
+            memcpy(udest.addr.addr, &dest->m8[8], sizeof(udest.addr.addr));
+        } else {
+            udest.addr.len = SHORT_ADDR_SIZE;
+            udest.addr.short_addr = ntohs(dest->m16[7]);
+            udest.netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
+        }
+    } else {
         return UR_ERROR_FAIL;
     }
+    return umesh_output(buf, &udest, TRANSMIT_IP6_FRAME);
+}
 
-    frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
+ur_error_t umesh_output(struct pbuf *buf, ur_addr_t *dest, uint8_t type)
+{
+    transmit_frame_t *frame = build_tx_frame();
+
     if (frame == NULL) {
         return UR_ERROR_FAIL;
     }
 
-    if ((ip6_is_mcast(dest)) && (nd_is_subscribed_mcast(dest))) {
-        frame->dest.addr.len = SHORT_ADDR_SIZE;
-        frame->dest.addr.short_addr = BCAST_SID;
-        network = get_default_network_context();
-        frame->dest.netid = mm_get_main_netid(network);
-    } else if (ip6_is_unique_local(dest)) {
-        if (is_sid_address(&dest->m8[8]) == false) {
-            frame->dest.addr.len = EXT_ADDR_SIZE;
-            memcpy(frame->dest.addr.addr, &dest->m8[8], sizeof(frame->dest.addr.addr));
-        } else {
-            frame->dest.addr.len = SHORT_ADDR_SIZE;
-            frame->dest.addr.short_addr = ntohs(dest->m16[7]);
-            frame->dest.netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
-        }
-    } else {
-        ur_mem_free(frame, sizeof(transmit_frame_t));
-        return UR_ERROR_FAIL;
-    }
-
+    memcpy(&frame->dest, dest, sizeof(ur_addr_t));
     pbuf_ref(buf);
     frame->buf = buf;
-    frame->type = TRANSMIT_IP6_FRAME;
-
-    error = umesh_task_schedule_call(output_frame_handler, frame);
-    if (error != UR_ERROR_NONE) {
-        ur_mem_free(frame, sizeof(transmit_frame_t));
-        pbuf_free(frame->buf);
-    }
-
-    return error;
+    frame->type = type;
+    return tx_frame(frame);
 }
 
 ur_error_t umesh_input(message_t *message)
 {
     ur_adapter_callback_t *callback;
+
 #if LWIP_IPV6
     ur_error_t error = UR_ERROR_NONE;
     uint8_t *header;
@@ -309,10 +305,6 @@ ur_error_t umesh_input(message_t *message)
     info = message->info;
 
     header_size = message_get_msglen(message);
-    if (header_size < MIN_LOWPAN_FRM_SIZE) {
-        error = UR_ERROR_FAIL;
-        goto handle_non_ipv6;
-    }
     error = lp_header_decompress(header, &header_size, &lowpan_header_size,
                                  &info->src, &info->dest);
     if (error != UR_ERROR_NONE) {
@@ -403,7 +395,9 @@ ur_error_t umesh_init(node_mode_t mode)
     hal_umesh_init();
     g_um_state.mm_cb.interface_up = umesh_interface_up;
     g_um_state.mm_cb.interface_down = umesh_interface_down;
+#if (defined CONFIG_NET_LWIP) || (defined CONFIG_AOS_MESH_TAPIF)
     ur_adapter_interface_init();
+#endif
     ur_router_register_module();
     interface_init();
 

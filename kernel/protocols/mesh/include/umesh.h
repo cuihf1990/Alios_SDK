@@ -18,6 +18,7 @@ struct message_s;
 ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid);
 ur_error_t umesh_ipv6_output(struct pbuf *buf,
                              const ur_ip6_addr_t *ip6addr);
+ur_error_t umesh_output(struct pbuf *buf, ur_addr_t *dest, uint8_t type);
 
 /* for mesh layer */
 ur_error_t umesh_init(node_mode_t mode);
