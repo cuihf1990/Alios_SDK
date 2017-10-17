@@ -99,7 +99,7 @@ EXPORT_SYMBOL_K(1, set_errno, "void set_errno(int err)")
 #define SYSCALL(nr, func) [nr] = func,
 
 const void *g_syscall_tbl[] __attribute__ ((section(".syscall_tbl"))) = {
-    [0 ... SYSCALL_MAX - 1] = (void *)0XABCDABCD,
+    [0 ... SYSCALL_MAX - 1] = (void *)NULL,
 #include <syscall_tbl.h>
 };
 
