@@ -173,6 +173,7 @@ void lsig_input(int len, int8_t rssi, uint32_t time_ms)
     }
 
     // replace old entry.
+    rep_index = 0;
     min_time = rts_tbl[0].last_time;
     for(i=1; i<MAX_RTS_TBL; i++) {
         if (min_time > rts_tbl[i].last_time) {
@@ -181,11 +182,11 @@ void lsig_input(int len, int8_t rssi, uint32_t time_ms)
         }
     }
 
-    memcpy(rts_tbl[i].ra, last_rts.ra, 12);
-    rts_tbl[i].security = 0xFF;
-    rts_tbl[i].rssi = rssi;
-    rts_tbl[i].last_len = len;
-    rts_tbl[i].last_time = mico_rtos_get_time();
+    memcpy(rts_tbl[rep_index].ra, last_rts.ra, 12);
+    rts_tbl[rep_index].security = 0xFF;
+    rts_tbl[rep_index].rssi = rssi;
+    rts_tbl[rep_index].last_len = len;
+    rts_tbl[rep_index].last_time = mico_rtos_get_time();
 }
 
 
