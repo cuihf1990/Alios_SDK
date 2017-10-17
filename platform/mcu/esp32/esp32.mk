@@ -16,5 +16,5 @@ GLOBAL_LDS_FILES += platform/mcu/esp32/system/ld/esp32.rom.spiram_incompatible_f
 GLOBAL_LDFLAGS   += -L platform/mcu/esp32/system/ld
 
 $(NAME)_SOURCES  := system/cpu_start.c
-$(NAME)_INCLUDES :=
+$(NAME)_INCLUDES := soc/include soc/esp32/include
 $(NAME)_CFLAGS   := -std=gnu99
