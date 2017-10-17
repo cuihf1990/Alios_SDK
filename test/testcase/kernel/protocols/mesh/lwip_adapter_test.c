@@ -60,7 +60,7 @@ void test_uradar_lwip_adapter_case(void)
     string_to_ip6_addr("F'00::0", &dst);
     string_to_ip6_addr("fc00::0", &dst);
     socket = lwip_socket(AF_INET6, SOCK_RAW, IPPROTO_UDP);
-    ip6_sendto(socket, (const uint8_t *)header, 16, &dst, 0);
+    ip_sendto(socket, (const uint8_t *)header, 16, &dst, 0);
     /* TODO: sleep to wait send actually happen */
     free(header);
 

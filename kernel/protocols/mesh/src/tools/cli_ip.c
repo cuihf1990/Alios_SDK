@@ -38,6 +38,104 @@ typedef struct cli_state_s {
 } cli_state_t;
 static cli_state_t g_cl_state;
 
+typedef void (* data_handler_t)(const uint8_t *payload, uint16_t length);
+typedef struct listen_sockets_s {
+    int socket;
+    data_handler_t handler;
+} listen_sockets_t;
+
+#ifdef WITH_LWIP
+static void sock_read_cb(int fd, void *arg)
+{
+    listen_sockets_t *lsock = arg;
+    int length = 0;
+    uint8_t *buffer;
+
+    buffer = ur_mem_alloc(UR_IP6_MTU + UR_IP6_HLEN);
+    if (buffer) {
+        length = lwip_recv(lsock->socket, buffer, UR_IP6_MTU + UR_IP6_HLEN, 0);
+        if (length > 0) {
+            lsock->handler(buffer, length);
+        }
+        ur_mem_free(buffer, UR_IP6_MTU + UR_IP6_HLEN);
+    }
+}
+#endif
+
+int echo_socket(data_handler_t handler)
+{
+    static listen_sockets_t g_echo;
+#if LWIP_IPV6
+    int domain = AF_INET6;
+    int protocol = IPPROTO_ICMPV6;
+#else
+    int domain = AF_INET;
+    int protocol = IPPROTO_ICMP;
+#endif
+
+    g_echo.socket = lwip_socket(domain, SOCK_RAW, protocol);
+    g_echo.handler = handler;
+#ifdef WITH_LWIP
+    aos_poll_read_fd(g_echo.socket, sock_read_cb, &g_echo);
+#endif
+    return g_echo.socket;
+}
+
+#ifdef CONFIG_AOS_MESH_DEBUG
+int autotest_udp_socket(data_handler_t handler, uint16_t port)
+{
+    static listen_sockets_t udp_autotest;
+#if LWIP_IPV6
+    struct sockaddr_in6 addr;
+    int domain = AF_INET6;
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin6_family = AF_INET6;
+    addr.sin6_port = htons(port);
+#else
+    struct sockaddr_in addr;
+    int domain = AF_INET;
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+#endif
+    udp_autotest.socket = lwip_socket(domain, SOCK_DGRAM, IPPROTO_UDP);
+    lwip_bind(udp_autotest.socket, (const struct sockaddr *)&addr, sizeof(addr));
+    udp_autotest.handler = handler;
+#ifdef WITH_LWIP
+    aos_poll_read_fd(udp_autotest.socket, sock_read_cb, &udp_autotest);
+#endif
+    return udp_autotest.socket;
+}
+#endif
+
+int ip_sendto(int socket, const uint8_t *payload, uint16_t length,
+              void *dest, uint16_t port)
+{
+#if LWIP_IPV6
+    struct sockaddr_in6 sock_addr;
+    uint8_t index;
+
+    sock_addr.sin6_len = sizeof(sock_addr);
+    sock_addr.sin6_family = AF_INET6;
+    sock_addr.sin6_port = htons(port);
+    for (index = 0; index < UR_IP6_ADDR_SIZE / sizeof(uint32_t); ++index) {
+        sock_addr.sin6_addr.un.u32_addr[index] = ((ur_ip6_addr_t *)dest)->m32[index];
+    }
+#else
+    struct sockaddr_in sock_addr;
+
+    sock_addr.sin_len = sizeof(sock_addr);
+    sock_addr.sin_family = AF_INET;
+    sock_addr.sin_port = htons(port);
+    sock_addr.sin_addr.s_addr = ((ur_ip4_addr_t *)dest)->m32;
+#endif
+
+    return lwip_sendto(socket, payload, length, 0, (struct sockaddr *)&sock_addr,
+                       sizeof(sock_addr));
+}
+
 #ifdef CONFIG_AOS_MESH_DEBUG
 typedef struct cli_autotest_s {
     int           udp_socket;
@@ -117,7 +215,7 @@ static void handle_autotest_timer(void *args)
         cmd->type = AUTOTEST_REQUEST;
         cmd->seq = htons(g_cli_autotest.seq++);
         memcpy(&cmd->addr, &src->addr.ip6_addr, sizeof(ur_ip6_addr_t));
-        ip6_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
+        ip_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
                    &g_cli_autotest.target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cli_autotest.length);
         g_cli_autotest.times--;
@@ -142,7 +240,7 @@ static void handle_autotest_timer(void *args)
         cmd->type = AUTOTEST_REQUEST;
         cmd->seq = htons(g_cli_autotest.seq++);
         memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(ur_ip4_addr_t));
-        ip6_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
+        ip_sendto(g_cli_autotest.udp_socket, payload, g_cli_autotest.length,
                    &g_cli_autotest.target, AUTOTEST_UDP_PORT);
         ur_mem_free(payload, g_cli_autotest.length);
         g_cli_autotest.times--;
@@ -273,7 +371,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         cmd->seq = htons(seq);
         src = umesh_get_ucast_addr();
         memcpy(&cmd->addr, &src->addr.ip6_addr, sizeof(ur_ip6_addr_t));
-        ip6_sendto(g_cli_autotest.udp_socket, data, length, &dest,
+        ip_sendto(g_cli_autotest.udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
     } else if (cmd->type == AUTOTEST_REPLY) {
@@ -313,7 +411,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
         cmd->seq = htons(seq);
         src = umesh_get_ucast_addr();
         memcpy(&cmd->addr, &src->addr.ip4_addr, sizeof(ur_ip4_addr_t));
-        ip6_sendto(g_cli_autotest.udp_socket, data, length, &dest,
+        ip_sendto(g_cli_autotest.udp_socket, data, length, &dest,
                    AUTOTEST_UDP_PORT);
         ur_mem_free(data, length);
     } else if (cmd->type == AUTOTEST_REPLY) {
@@ -481,7 +579,7 @@ void process_ping(int argc, char *argv[])
     ++g_cl_state.icmp_seq;
     header->chksum = inet_chksum(payload, length);
 
-    ip6_sendto(g_cl_state.icmp_socket, payload, length, &target, 0);
+    ip_sendto(g_cl_state.icmp_socket, payload, length, &target, 0);
     ur_mem_free(payload, length);
 }
 
@@ -521,7 +619,7 @@ void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
 
 #ifndef WITH_LWIP
 struct cb_arg {
-    raw_data_handler_t handler;
+    data_handler_t handler;
     uint8_t *buffer;
     int length;
 };
@@ -535,7 +633,7 @@ static void do_read_cb(void *priv)
     ur_mem_free(arg, sizeof(*arg));
 }
 
-static void ur_read_sock(int fd, raw_data_handler_t handler)
+static void ur_read_sock(int fd, data_handler_t handler)
 {
     int     length = 0;
     uint8_t *buffer;

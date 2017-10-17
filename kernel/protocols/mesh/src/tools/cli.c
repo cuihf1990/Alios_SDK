@@ -435,7 +435,7 @@ void process_whitelist(int argc, char *argv[])
             if (whitelist[i].valid == false) {
                 continue;
             }
-            response_append("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n",
+            response_append("%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
                             whitelist[i].address.addr[0], whitelist[i].address.addr[1],
                             whitelist[i].address.addr[2], whitelist[i].address.addr[3],
                             whitelist[i].address.addr[4], whitelist[i].address.addr[5],
