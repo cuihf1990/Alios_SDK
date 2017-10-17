@@ -450,6 +450,7 @@ static void wifi_debug_cmd(char *buf, int len, int argc, char **argv);
 static void tftp_cmd(char *buf, int len, int argc, char **argv);
 #endif /* CONFIG_NET_LWIP */
 static void udp_cmd(char *buf, int len, int argc, char **argv);
+static void log_cmd(char *buf, int len, int argc, char **argv);
 
 static const struct cli_command built_ins[] = {
     {"help",        NULL,       help_cmd},
@@ -475,6 +476,7 @@ static const struct cli_command built_ins[] = {
     {"time",        "system time",       uptime_cmd},
     {"ota",         "system ota",        ota_cmd},
     {"wifi_debug",  "wifi debug mode",   wifi_debug_cmd},
+    {"loglevel",    "set log level",     log_cmd},
 };
 
 /* Built-in "help" command: prints all registered commands and their help
@@ -563,6 +565,33 @@ static void udp_cmd(char *buf, int len, int argc, char **argv)
     close(sockfd);
 }
 #endif
+
+static void log_cmd(char *buf, int len, int argc, char **argv)
+{
+    const char *lvls[] = {
+        [AOS_LL_FATAL] = "fatal",
+        [AOS_LL_ERROR] = "error",
+        [AOS_LL_WARN]  = "warn",
+        [AOS_LL_INFO]  = "info",
+        [AOS_LL_DEBUG] = "debug",
+    };
+
+    if (argc < 2) {
+        aos_cli_printf("log level : %02x\r\n", aos_get_log_level());
+        return;
+    }
+
+    int i;
+    for (i=0;i<sizeof(lvls)/sizeof(lvls[0]);i++) {
+        if (strncmp(lvls[i], argv[1], strlen(lvls[i])+1) != 0)
+            continue;
+
+        aos_set_log_level(i);
+        aos_cli_printf("set log level success\r\n");
+        return;
+    }
+    aos_cli_printf("set log level fail\r\n");
+}
 
 static void task_cmd(char *buf, int len, int argc, char **argv)
 {
