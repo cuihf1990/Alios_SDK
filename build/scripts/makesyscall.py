@@ -72,6 +72,20 @@ def _verifyContent(path, cont):
 
     return
 
+def _disableSyscall(sn_path):
+    if os.path.exists(sn_path):
+        fsn = open(sn_path, "r+")              # read from syscall_num
+        sysdata = fsn.readlines()
+        fsn.seek(0)
+        for line in sysdata:
+            u = line[-(len(line) - line.find((" "))):-1]
+            logging.debug(u)
+            line = r"%s %s" %(0, u.strip()) + "\n"
+            fsn.write(line)
+        fsn.close()
+
+    return
+
 def _writeSyscallHeader(cr_path, sh_path, sn_path):
     fcr = open(cr_path, 'r')               # read copyright
     copyright = fcr.read()
@@ -83,40 +97,51 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
     fsh.write("\n")
 
     if os.path.exists(sn_path):
-        fsn = open(sn_path, "a+")              # read from syscall_num
+        fsn = open(sn_path, "r+")              # read from syscall_num
     else:
         fsn = open(sn_path, "w+")              # read from syscall_num
-    fsnContent = fsn.read()
-    symbols = re.findall(r"\d+\s(.*?)\s\".*?\"\s\".*?\"\n", fsnContent, re.M | re.S)
-    logging.debug(symbols)
+    sysdata = fsn.readlines()
+    sysdata_num = len(sysdata)
+    fsn.seek(0)
     global symbol_list
+    find = 0
     for symbol in symbol_list:                          # write to syscall_num
-        if symbol[1] not in symbols:
-            str_num = repr(len(symbols)) + " " + symbol[1] + " " + "\"" + symbol[0].replace("\n", "") + "\"" + " " + symbol[2].replace("\n", "")
-            logging.info(str_num)                       # print the data for write to syscall_num
-            fsn.write(str_num + "\n")
-            symbols.append(symbol[1])
+        fsn.seek(0)
+        for line in sysdata:
+            if(re.findall(r"\d+\s\d+\s" + symbol[1] + r"\s\".*?\"\s\".*?\"\n", line, re.M | re.S)):
+                serial_num = line.strip().split(" ", line.strip().count(" "))[1]
+                line = r"%s %s %s %s %s" %(1, serial_num, symbol[1], "\"" + symbol[0].replace("\n", "") + "\"", symbol[2].replace("\n", "")) + "\n"
+                find = 1
+                logging.debug(line)
+                fsn.write(line)
+            fsn.seek(len(line), 1)
+        if find == 0:
+            sysdata_num += 1
+            line = r"%s %s %s %s %s" %(1, sysdata_num, symbol[1], "\"" + symbol[0].replace("\n", "") + "\"", symbol[2].replace("\n", "")) + "\n"
+            fsn.seek(0, 2)
+            fsn.write(line)
+        find = 0
 
 	fsn.flush()
     fsn.seek(0, 0)
     fsnContent = fsn.read()
-    newsymbols = re.findall(r"(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
+    newsymbols = re.findall(r"(\d+)\s(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
     logging.debug(newsymbols)
     global syscall_num
     syscall_num = len(newsymbols)
     for symbol in newsymbols:                     # according to syscall_num to implementation syscall_tbl.h
-        logging.debug(symbol)
-        fsh.write("#if (" + symbol[2] + ")\n")
-        strdef = "#define SYS_" + symbol[1].upper() + " " + symbol[0] + "\n"
-        strsysc = "SYSCALL(SYS_" + symbol[1].upper() + ", " + symbol[1] + ")"
-        fsh.write(strdef + strsysc + "\n")
-        fsh.write("#endif" + "\n\n")
+        logging.debug(symbol[0])
+        if symbol[0] == str(1):
+            fsh.write("#if (" + symbol[3] + ")\n")
+            strdef = "#define SYS_" + symbol[2].upper() + " " + symbol[1] + "\n"
+            strsysc = "SYSCALL(SYS_" + symbol[2].upper() + ", " + symbol[2] + ")"
+            fsh.write(strdef + strsysc + "\n")
+            fsh.write("#endif" + "\n\n")
 
     fsn.close()
     fsh.close()
 
     return
-
 
 def _writeSyscallUapi(sc_path, sn_path, ui_path):
     fui = open(ui_path, 'r')               # read usyscall include
@@ -128,66 +153,74 @@ def _writeSyscallUapi(sc_path, sn_path, ui_path):
     fsc.write(usys_incl)
     fsc.write("\n")
 
-    fsn = open(sn_path, 'r')               # read usyscall include
+    fsn = open(sn_path, 'r')               # read usyscall data
     fsnContent = fsn.read()
     fsn.close()
 
-    newsymbols = re.findall(r"(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
+    newsymbols = re.findall(r"(\d+)\s(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
     logging.debug(newsymbols)
     for symbol in newsymbols:                     # according to syscall_num to implementation syscall_tbl.h
         logging.debug(symbol)
-        fsc.write("#if (" + symbol[2] + ")\n" + symbol[3] + "\n" + "{\n" + "    ")
-        elements = re.findall(r"(.*?)" + symbol[1] + r"\((.*?)\)$", symbol[3], re.M | re.S)
-        logging.debug(elements)
-        for element in elements:
-            logging.debug(element[1])
-            args = element[1].split(',')
+        if symbol[0] == str(1):
+            fsc.write("#if (" + symbol[3] + ")\n" + symbol[4] + "\n" + "{\n" + "    ")
+            elements = re.findall(r"(.*?)" + symbol[2] + r"\((.*?)\)$", symbol[4], re.M | re.S)
+            logging.debug(elements)
+            needreturn = 0
+            for element in elements:
+                logging.debug(element[1])
+                args = element[1].split(',')
+                i = 0
+                for arg in args:
+                    while args[i].count("(") != args[i].count(")"):
+                        args[i] = args[i] + "," + args[i+1]
+                        args.pop(i+1)
+                    i += 1
+                arg_nu = len(args)
+
+                if arg_nu == 1:
+                    if args[0].strip() == r"void" or args[0].strip() == r"":
+                        arg_nu = 0
+                logging.debug(args)
+                logging.debug(arg_nu)
+
+            fsc.write(r"if (SYSCALL_TBL[" + "SYS_" + symbol[2].upper() + "] != NULL) {\n" + "        ")
+            if element[0].strip() != r"void":
+                fsc.write("return ")
+                needreturn = 1
+            fsc.write("SYS_CALL" + str(arg_nu) + "(SYS_" + symbol[2].upper() + ", " + element[0].strip())
             i = 0
-            for arg in args:
-                while args[i].count("(") != args[i].count(")"):
-                    args[i] = args[i] + "," + args[i+1]
-                    args.pop(i+1)
-                i += 1
-            arg_nu = len(args)
+            if arg_nu == 0:
+                fsc.write(r");")
+            else:
+                for arg in args:
+                    if "(" in arg.strip():
+                        u = arg.strip().split("(*")
+                        u1 = u[0] + "(*)(" + u[1].split(")(")[1]
+                        u2 = u[1].split(")(")[0]
+                    elif "*" in arg.strip():
+                        u1 = arg[0:(arg.index("*") + arg.count("*"))]
+                        u2 = arg[-(len(arg) - len(u1)):]
+                    else:
+                        u = arg.strip().split(" ", arg.strip().count(" "))
+                        u2 = u[arg.strip().count(" ")]
+                        u1 = arg[0:(len(arg) - len(u2))]
 
-            if arg_nu == 1:
-                if args[0].strip() == r"void" or args[0].strip() == r"":
-                    arg_nu = 0
-            logging.debug(args)
-            logging.debug(arg_nu)
+                    logging.debug(u1)
+                    logging.debug(u2)
+                    logging.debug(len(args))
+                    i += 1
+                    if u1 != "":
+                        fsc.write(", " + u1.strip())
+                    if u2 != "":
+                        fsc.write(", " + u2.strip())
+                        if i == len(args):
+                            fsc.write(r");")
 
-        if element[0].strip() != r"void":
-            fsc.write("return ")
-        fsc.write("SYS_CALL" + str(arg_nu) + "(SYS_" + symbol[1].upper() + ", " + element[0].strip())
-        i = 0
-        if arg_nu == 0:
-            fsc.write(r");")
-        else:
-            for arg in args:
-                if "(" in arg.strip():
-                    u = arg.strip().split("(*")
-                    u1 = u[0] + "(*)(" + u[1].split(")(")[1]
-                    u2 = u[1].split(")(")[0]
-                elif "*" in arg.strip():
-                    u1 = arg[0:(arg.index("*") + arg.count("*"))]
-                    u2 = arg[-(len(arg) - len(u1)):]
-                else:
-                    u = arg.strip().split(" ", arg.strip().count(" "))
-                    u2 = u[arg.strip().count(" ")]
-                    u1 = arg[0:(len(arg) - len(u2))]
-
-                logging.debug(u1)
-                logging.debug(u2)
-                logging.debug(len(args))
-                i += 1
-                if u1 != "":
-                    fsc.write(", " + u1.strip())
-                if u2 != "":
-                    fsc.write(", " + u2.strip())
-                    if i == len(args):
-                        fsc.write(r");")
-
-        fsc.write("\n}\n" + "#endif" + "\n\n")
+            fsc.write("\n    } else {\n" + "        ")
+            fsc.write("LOGE(\"BINS\", \"%s is NULL in SYSCALL_TBL\", __func__);\n")
+            if needreturn == 1:
+                fsc.write("        return;\n")
+            fsc.write("    }\n}\n#endif" + "\n\n")
 
     fsc.close()
 
@@ -244,11 +277,6 @@ def main():
 
     starttime = time.time()
 
-#--------------------------------------------------
-    # remove syscall data, when want to store the syscall data for release version, annotations it
-    _removeSyscallData(syscall_data_path)
-#--------------------------------------------------
-
     # Search for each directory, find the symbol
     for rootdir in rootdirs:
         search_symbols(rootdir, search_string)
@@ -256,6 +284,9 @@ def main():
     # Remove duplicate element & Element sorting
     symbol_list=sorted(set(symbol_list),key=symbol_list.index)
     symbol_list.sort()
+
+    # set syscall serial num to 0
+    _disableSyscall(syscall_data_path)
 
     logging.info("======================================")
     logging.info(" new symbol:")
@@ -271,7 +302,6 @@ def main():
 
     #modify SYSCALL_MAX
     _modifySyscallMax(syscall_tblc_path)
-
     endtime = time.time()
 
     print "======================================"
