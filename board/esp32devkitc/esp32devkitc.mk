@@ -1,4 +1,4 @@
-NAME := board_esp32evb
+NAME := board_esp32devkitc
 
 MODULE              := 1062
 HOST_ARCH           := xtensa
