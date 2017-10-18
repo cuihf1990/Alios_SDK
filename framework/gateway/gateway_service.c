@@ -662,10 +662,9 @@ static void gateway_advertise(void *arg)
 
     aos_post_delayed_action(ADV_INTERVAL, gateway_advertise, arg);
 
-
 #if LWIP_IPV6
-    ur_ip6_addr_t *mcast_addr = (ur_ip6_addr_t *)umesh_get_mcast_addr();
-    ur_ip6_addr_t *ucast_addr = (ur_ip6_addr_t *)umesh_get_ucast_addr();
+    ip6_addr_t *mcast_addr = (ip6_addr_t *)ur_adapter_get_mcast_ipaddr();
+    ip6_addr_t *ucast_addr = (ip6_addr_t *)ur_adapter_get_default_ipaddr();
     if (!mcast_addr || !ucast_addr) {
         return;
     }
@@ -680,21 +679,21 @@ static void gateway_advertise(void *arg)
     addr.sin6_port = htons(MQTT_SN_PORT);
     memcpy(&addr.sin6_addr, mcast_addr, sizeof(addr.sin6_addr));
 #else
-    ur_ip4_addr_t *ip4_addr = (ur_ip4_addr_t *)umesh_get_ucast_addr();
+    ip4_addr_t *ip4_addr = (ip4_addr_t *)ur_adapter_get_default_ipaddr();
     if (!ip4_addr) {
         return;
     }
 
-    adv = msn_alloc(ADVERTISE, sizeof(ur_ip4_addr_t), &buf, &len);
+    adv = msn_alloc(ADVERTISE, sizeof(ip4_addr_t), &buf, &len);
     bzero(adv, sizeof(*adv));
-    memcpy(adv->payload, ip4_addr->m8, sizeof(ur_ip4_addr_t));
+    memcpy(adv->payload, (uint8_t *)&ip4_addr->addr, sizeof(ip4_addr_t));
 
     struct sockaddr_in addr;
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(MQTT_SN_PORT);
-    ip4_addr = (ur_ip4_addr_t *)umesh_get_mcast_addr();
-    memcpy(&addr.sin_addr, ip4_addr->m8, sizeof(addr.sin_addr));
+    ip4_addr = (ip4_addr_t *)ur_adapter_get_mcast_ipaddr();
+    memcpy(&addr.sin_addr, (uint8_t *)&ip4_addr->addr, sizeof(addr.sin_addr));
 #endif
 
     send_sock(pstate->sockfd, buf, len, &addr);

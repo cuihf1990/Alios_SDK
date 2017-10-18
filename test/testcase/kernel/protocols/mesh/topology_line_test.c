@@ -16,6 +16,7 @@
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
+#include "ip/lwip_adapter.h"
 
 #include "dda_util.h"
 
@@ -25,7 +26,7 @@ static void topology_line_case(bool vector_router)
     neighbor_t *attach_node;
     uint16_t netid;
     char ping_cmd[64];
-    const ur_netif_ip6_address_t *myaddr;
+    const ip6_addr_t *myaddr;
     network_context_t *network;
 
     /* topology:
@@ -59,8 +60,8 @@ static void topology_line_case(bool vector_router)
     cmd_to_master("sendall status");
     /* check if ping work */
     aos_msleep(2 * 1000);
-    myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
+    myaddr = ur_adapter_get_default_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 13, "testcmd icmp_acked", 5);
 
@@ -74,8 +75,8 @@ static void topology_line_case(bool vector_router)
 
     /* check if ping work */
     aos_msleep(2 * 1000);
-    myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
+    myaddr = ur_adapter_get_default_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);
 

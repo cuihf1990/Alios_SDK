@@ -13,6 +13,7 @@
 #include "core/router_mgr.h"
 #include "utilities/logging.h"
 #include "tools/cli.h"
+#include "ip/lwip_adapter.h"
 
 #include "dda_util.h"
 
@@ -101,7 +102,7 @@ static void build_topo_wifi_ble(void)
 static void subnet_is_wifi_case(void)
 {
     char autotest_cmd[64];
-    const ur_netif_ip6_address_t *addr;
+    const ip6_addr_t *addr;
     uint8_t index;
 
     build_topo_wifi();
@@ -154,13 +155,13 @@ static void subnet_is_wifi_case(void)
     check_p2p_str_wait("leaf", 10, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 10, "testcmd router", 2);
 
-    addr = umesh_get_mcast_addr();
+    addr = ur_adapter_get_mcast_ipaddr();
     for (index = 1; index < 12; index++) {
         if (index != 3 || index !=10 || index != 5) {
             continue;
         }
         snprintf(autotest_cmd, sizeof autotest_cmd, "send %d autotest " IP6_ADDR_FMT " 1 500",
-                 index, IP6_ADDR_DATA(addr->addr.ip6_addr));
+                 index, IP6_ADDR_DATA(((ur_ip6_addr_t *)addr)));
         cmd_to_master(autotest_cmd);
         check_p2p_str_wait("10", index, "testcmd autotest_acked", 10);
     }

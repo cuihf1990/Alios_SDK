@@ -9,11 +9,16 @@
 extern "C" {
 #endif
 
+#include "lwip/ip.h"
+
 ur_error_t ur_adapter_interface_init(void);
 
 ur_error_t ur_adapter_interface_up(void);
 ur_error_t ur_adapter_interface_down(void);
 ur_error_t ur_adapter_interface_update(void);
+struct netif *ur_adapter_get_netif(void);
+const void *ur_adapter_get_default_ipaddr(void);
+const void *ur_adapter_get_mcast_ipaddr(void);
 
 #ifdef __cplusplus
 }

@@ -10,6 +10,7 @@
 #include "core/mesh_mgmt.h"
 #include "hal/interfaces.h"
 #include "hal/interface_context.h"
+#include "ip/lwip_adapter.h"
 
 #include "dda_util.h"
 
@@ -35,8 +36,8 @@ void test_uradar_urmesh_case(void)
     ip6addr.m8[15] = 0xfc;
     YUNIT_ASSERT(true == umesh_is_mcast_subscribed(&ip6addr));
 
-    YUNIT_ASSERT(NULL != umesh_get_ucast_addr());
-    YUNIT_ASSERT(NULL != umesh_get_mcast_addr());
+    YUNIT_ASSERT(NULL != ur_adapter_get_default_ipaddr());
+    YUNIT_ASSERT(NULL != ur_adapter_get_mcast_ipaddr());
 
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_stop());
 }
