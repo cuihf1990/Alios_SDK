@@ -208,7 +208,6 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
     }
 
     cur_cpu_num = cpu_cur_get();
-    (void)cur_cpu_num;
 
     if (msg_size > queue->max_msg_size) {
         TRACE_BUF_QUEUE_MAX(g_active_task[cur_cpu_num], queue, msg, msg_size);
