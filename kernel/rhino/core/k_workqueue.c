@@ -267,8 +267,8 @@ kstat_t krhino_work_run(kworkqueue_t *workqueue, kwork_t *work)
         }
 
     } else {
-        krhino_timer_stop(&(work->timer));
-        work->timer.timer_cb_arg = (void *)workqueue;
+        krhino_timer_stop(&work->timer);
+        krhino_timer_arg_change(&work->timer, (void *)workqueue);
 
         ret = krhino_timer_start(&(work->timer));
         if (ret != RHINO_SUCCESS) {
