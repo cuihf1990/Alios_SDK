@@ -77,7 +77,7 @@
 #endif
 
 #ifndef RHINO_CONFIG_TASK_INFO_NUM
-#define RHINO_CONFIG_TASK_INFO_NUM           2
+#define RHINO_CONFIG_TASK_INFO_NUM           3
 #endif
 
 #ifndef RHINO_CONFIG_TASK_DEL
@@ -89,7 +89,7 @@
 #endif
 
 #ifndef RHINO_CONFIG_SCHED_RR
-#define RHINO_CONFIG_SCHED_RR                1
+#define RHINO_CONFIG_SCHED_RR                0
 #endif
 
 #ifndef RHINO_CONFIG_TIME_SLICE_DEFAULT
