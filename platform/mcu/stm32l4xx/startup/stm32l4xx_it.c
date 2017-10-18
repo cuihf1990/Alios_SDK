@@ -56,6 +56,7 @@
 /******************************************************************************/
 
 extern SPI_HandleTypeDef hspi;
+extern UART_HandleTypeDef console_uart;
 
 /**
 * @brief This function handles Non maskable interrupt.
@@ -162,6 +163,16 @@ void EXTI15_10_IRQHandler(void)
 void SPI3_IRQHandler(void)
 {
   HAL_SPI_IRQHandler(&hspi);
+}
+
+/**
+  * @brief  This function handles UART interrupt request.
+  * @param  None
+  * @retval None
+  */
+void USART1_IRQHandler(void)
+{
+    HAL_UART_IRQHandler(&console_uart);
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

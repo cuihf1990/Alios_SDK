@@ -60,7 +60,7 @@ RNG_HandleTypeDef hrng;
 
 /* Private macros ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static UART_HandleTypeDef console_uart;
+UART_HandleTypeDef console_uart;
 static volatile uint8_t button_flags = 0;
 static aos_mutex_t uart_tx_mutex;
 static aos_mutex_t uart_rx_mutex;
@@ -433,24 +433,6 @@ void Error_Handler(void)
      BSP_LED_Toggle(LED_GREEN);
      HAL_Delay(200);
   }
-}
-
-/******************************************************************************/
-/*                 STM32L4xx Peripherals Interrupt Handlers                   */
-/*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
-/*  available peripheral interrupt handler's name please refer to the startup */
-/*  file (startup_stm32l4xx.s).                                               */
-/******************************************************************************/
-/**
-  * @brief  This function handles UART interrupt request.
-  * @param  None
-  * @retval None
-  * @Note   This function is redefined in "main.h" and related to DMA
-  *         used for USART data transmission
-  */
-void USART1_IRQHandler(void)
-{
-    HAL_UART_IRQHandler(&console_uart);
 }
 
 /**
