@@ -50,7 +50,6 @@ RHINO_INLINE void soc_systick_handle(void)
 }
 
 size_t __attribute__ ((weak)) soc_get_cur_sp(void);
-size_t __attribute__ ((weak)) soc_get_cur_pc(void);
 void   __attribute__ ((weak)) soc_get_first_frame_info(size_t c_frame,
                                                        size_t *n_frame, size_t *pc);
 void   __attribute__ ((weak)) soc_get_subs_frame_info(size_t c_frame,
