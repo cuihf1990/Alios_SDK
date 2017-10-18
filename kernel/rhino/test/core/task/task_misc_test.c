@@ -328,14 +328,11 @@ void task_misc_entry(void *arg)
     }
 
     tmp.blk_state = BLK_ABORT;
-#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
     pend_state_end_proc(&tmp);
-#endif
+
     tmp.blk_state = BLK_TIMEOUT;
 
-#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
     pend_state_end_proc(&tmp);
-#endif
 
 #if (RHINO_CONFIG_HW_COUNT > 0)
     krhino_overhead_measure();
