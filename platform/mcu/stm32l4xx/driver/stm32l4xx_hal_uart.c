@@ -2392,6 +2392,8 @@ static void UART_EndRxTransfer(UART_HandleTypeDef *huart)
 
   /* At end of Rx process, restore huart->RxState to Ready */
   huart->RxState = HAL_UART_STATE_READY;
+  // Blocking error occurred, need to call HAL_UART_RxCpltCallback to release rx semaphore
+  HAL_UART_RxCpltCallback(huart);
 }
 
 
