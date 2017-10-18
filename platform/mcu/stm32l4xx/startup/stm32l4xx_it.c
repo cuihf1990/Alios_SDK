@@ -55,6 +55,8 @@
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
 
+extern SPI_HandleTypeDef hspi;
+
 /**
 * @brief This function handles Non maskable interrupt.
 */
@@ -152,5 +154,14 @@ void EXTI15_10_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
 }
 
+/**
+  * @brief  This function handles SPI interrupt request.
+  * @param  None
+  * @retval None
+  */
+void SPI3_IRQHandler(void)
+{
+  HAL_SPI_IRQHandler(&hspi);
+}
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
