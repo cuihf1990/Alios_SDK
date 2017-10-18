@@ -333,7 +333,7 @@ void BSP_COM_Init(COM_TypeDef COM, UART_HandleTypeDef *huart)
   huart->Instance = COM_USART[COM];
   HAL_UART_Init(huart);
 
-  /*##-3- Configure the NVIC for UART ########################################*/
+  /* Configure the NVIC for UART */
   /* NVIC for USART */
   HAL_NVIC_SetPriority(USART1_IRQn, 0, 1);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
