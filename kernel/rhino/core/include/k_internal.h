@@ -139,9 +139,7 @@ void pend_task_wakeup(ktask_t *task);
 void pend_to_blk_obj(blk_obj_t *blk_obj, ktask_t *task, tick_t timeout);
 void pend_task_rm(ktask_t *task);
 
-#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
 kstat_t pend_state_end_proc(ktask_t *task);
-#endif
 
 void         idle_task(void *p_arg);
 void         idle_count_set(idle_count_t value);

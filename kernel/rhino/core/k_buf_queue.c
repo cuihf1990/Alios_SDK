@@ -346,7 +346,6 @@ kstat_t krhino_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
 
     cur_cpu_num = cpu_cur_get();
 
-#ifndef RHINO_CONFIG_PERF_NO_PENDEND_PROC
     ret = pend_state_end_proc(g_active_task[cur_cpu_num]);
 
     switch (ret) {
@@ -358,17 +357,6 @@ kstat_t krhino_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
             *size = 0u;
             break;
     }
-
-#else
-
-    if (g_active_task[cur_cpu_num]->blk_state == BLK_FINISH) {
-        *size = g_active_task[cur_cpu_num]->bq_msg_size;
-    } else {
-        *size = 0u;
-    }
-
-    ret = RHINO_SUCCESS;
-#endif
 
     RHINO_CPU_INTRPT_ENABLE();
 
