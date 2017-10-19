@@ -11,9 +11,6 @@ extern "C" {
 
 #include "umesh_types.h"
 
-struct pbuf;
-struct message_s;
-
 ur_error_t umesh_output_sid(struct pbuf *buf, uint16_t netid, uint16_t sid);
 ur_error_t umesh_output_uuid(struct pbuf *buf, uint8_t *uuid);
 
