@@ -67,63 +67,106 @@ void ur_adapter_input_buf(void *buf, int len)
     ur_adapter_input(pbuf);
 }
 
-static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
-                                    const ip4_addr_t *ip4addr)
+#if LWIP_IPV6
+static inline bool is_sid_address(const uint8_t *addr)
 {
-    ur_error_t error;
-    uint16_t sid;
+    uint8_t index = 0;
 
-    if (ip4_addr_ismulticast(ip4addr)) {
-        sid = BCAST_SID;
-    } else if (!ip4_addr_netcmp(ip4addr, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
-               ip4_addr_cmp(ip4addr, netif_ip4_gw(netif))) {
+    while (index < 5) {
+        if (addr[index] != 0) {
+            return false;
+        }
+        index++;
+    }
+    return true;
+}
+#endif
+
+ur_error_t ur_adapter_resolve_ip(const void *ipaddr, ur_addr_t *addr)
+{
+#if LWIP_IPV6
+    ur_ip6_addr_t *ip6_addr = (ur_ip6_addr_t *)ipaddr;
+
+    if (is_sid_address(&ip6_addr->m8[8]) == false) {
+        addr->addr.len = EXT_ADDR_SIZE;
+        memcpy(addr->addr.addr, &ip6_addr->m8[8], sizeof(addr->addr.addr));
+    } else {
+        addr->addr.len = SHORT_ADDR_SIZE;
+        addr->netid = ntohs(ip6_addr->m16[3]) | ntohs(ip6_addr->m16[6]);
+        addr->addr.short_addr =  ntohs(ip6_addr->m16[7]);
+    }
+#else
+    ip4_addr_t *ip4_addr = (ip4_addr_t *)ipaddr;
+    struct netif *netif = &g_la_state.adpif;
+
+    addr->addr.len = SHORT_ADDR_SIZE;
+    addr->netid = umesh_get_meshnetid();
+    if (ip4_addr_ismulticast(ip4_addr)) {
+        addr->addr.short_addr = BCAST_SID;
+    } else if (!ip4_addr_netcmp(ip4_addr, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
+               ip4_addr_cmp(ip4_addr, netif_ip4_gw(netif))) {
 #ifdef CONFIG_AOS_MESH_TAPIF
         if (is_router) {
             MESH_LOG_DEBUG("should go to gateway\n");
             umesh_tapif_send_pbuf(p);
-            return ERR_OK;
+            return UR_ERROR_FAIL;
         }
 #endif
-        sid = 0;
+        addr->addr.short_addr = 0;
     } else {
-        sid = ntohs(((ip4addr->addr) >> 16)) - 2;
+        addr->addr.short_addr = ntohs(((ip4_addr->addr) >> 16)) - 2;
     }
+#endif
+    return UR_ERROR_NONE;
+}
 
-    error = umesh_ipv4_output(p, sid);
-
-    /* error mapping */
+static err_t err_mapping(ur_error_t error) {
     switch (error) {
         case UR_ERROR_NONE:
             return ERR_OK;
-            break;
         case UR_ERROR_FAIL:
             return ERR_VAL;
-            break;
         default:
             return ERR_VAL;
-            break;
     }
     return ERR_OK;
 }
 
-#if LWIP_IPV6
-static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
-                                    const ip6_addr_t *ip6addr)
+static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
+                                    const ip4_addr_t *dest)
 {
     ur_error_t error;
+    ur_addr_t addr;
 
-    error = umesh_ipv6_output(p, (ur_ip6_addr_t *)ip6addr);
-
-    /* error mapping */
-    switch (error) {
-        case UR_ERROR_NONE:
-            return ERR_OK;
-        case UR_ERROR_FAIL:
-            return ERR_VAL;
-        default:
-            return ERR_VAL;
+    error = ur_adapter_resolve_ip(dest, &addr);
+    if (error == UR_ERROR_NONE) {
+        error = umesh_output_sid(p, addr.netid, addr.addr.short_addr);
     }
-    return ERR_OK;
+
+    return err_mapping(error);
+}
+
+#if LWIP_IPV6
+static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
+                                    const ip6_addr_t *dest)
+{
+    ur_error_t error;
+    ur_addr_t addr;
+
+    if (ip6_addr_ismulticast(dest) && umesh_is_mcast_subscribed((ur_ip6_addr_t *)dest)) {
+        error = umesh_output_sid(p, umesh_get_meshnetid(), BCAST_SID);
+    } else if (ip6_addr_isuniquelocal(dest)) {
+        ur_adapter_resolve_ip(dest, &addr);
+        if (addr.addr.len == EXT_ADDR_SIZE) {
+            error = umesh_output_uuid(p, addr.addr.addr);
+        } else {
+            error = umesh_output_sid(p, addr.netid, addr.addr.short_addr);
+        }
+    } else {
+        error = UR_ERROR_FAIL;
+    }
+
+    return err_mapping(error);
 }
 #endif
 
