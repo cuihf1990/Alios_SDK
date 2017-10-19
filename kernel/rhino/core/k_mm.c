@@ -248,6 +248,10 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 
 kstat_t krhino_deinit_mm_head(k_mm_head *mmhead)
 {
+#if (RHINO_CONFIG_MM_REGION_MUTEX > 0)
+    krhino_mutex_del(&mmhead->mm_mutex);
+#endif
+
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
     memset(mmhead, 0, sizeof(k_mm_head));
     VGF(VALGRIND_DESTROY_MEMPOOL(mmhead));
