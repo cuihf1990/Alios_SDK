@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include "umesh_hal.h"
+#include "umesh_utils.h"
 #include "core/keys_mgr.h"
 #include "core/crypto.h"
 #include "hal/interfaces.h"
@@ -44,7 +44,7 @@ ur_error_t calculate_one_time_key(uint8_t *key, uint32_t timestamp,
 ur_error_t calculate_network_key(void)
 {
     uint8_t network_key[KEY_SIZE];
-    uint32_t now = ur_get_now();
+    uint32_t now = umesh_now_ms();
     uint8_t index = 0;
 
     for (index = 0; index < KEY_SIZE / sizeof(uint32_t); index++) {

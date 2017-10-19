@@ -5,8 +5,6 @@
 #ifndef UR_SID_ALLOCATOR_H
 #define UR_SID_ALLOCATOR_H
 
-#include <aos/aos.h>
-
 #include "core/topology.h"
 
 enum {

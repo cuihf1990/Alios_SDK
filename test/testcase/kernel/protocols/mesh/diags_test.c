@@ -6,6 +6,7 @@
 #include <aos/aos.h>
 #include <aos/kernel.h>
 
+#include "umesh_utils.h"
 #include "core/mesh_mgmt.h"
 #include "tools/diags.h"
 #include "hal/interfaces.h"
@@ -55,7 +56,7 @@ void test_diags_case(void)
     data += sizeof(mm_header_t);
     timestamp = (mm_timestamp_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
-    timestamp->timestamp = ur_get_now();
+    timestamp->timestamp = umesh_now_ms();
     data += sizeof(mm_timestamp_tv_t);
 
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_TRACE_ROUTE_REQUEST,

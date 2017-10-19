@@ -32,6 +32,10 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/utilities/task.c \
                    src/tools/cli.c
 
+ifneq ($(SDK), 1)
+$(NAME)_SOURCES += src/platform/aos.c
+endif
+
 MESHDEBUG ?= 1
 ifeq ($(MESHDEBUG), 1)
 $(NAME)_SOURCES += src/tools/diags.c

@@ -13,6 +13,8 @@
 #endif
 
 #include "umesh_types.h"
+#include "umesh_pal.h"
+
 #include "utilities/configs.h"
 #include "utilities/logging.h"
 #include "utilities/message.h"
@@ -20,5 +22,12 @@
 #include "utilities/memory.h"
 #include "utilities/mac_whitelist.h"
 #include "utilities/task.h"
+
+#define umesh_kv_get umesh_pal_kv_get
+#define umesh_malloc umesh_pal_malloc
+#define umesh_free umesh_pal_free
+#define umesh_now_ms umesh_pal_now_ms
+#define umesh_post_event umesh_pal_post_event
+#define umesh_log umesh_pal_log
 
 #endif

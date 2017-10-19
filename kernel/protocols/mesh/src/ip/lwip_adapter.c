@@ -337,7 +337,6 @@ const void *ur_adapter_get_default_ipaddr(void)
     return netif_ip4_addr(netif);
 #endif
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, ur_adapter_get_default_ipaddr, "const void *ur_adapter_get_default_ipaddr(void)")
 
 const void *ur_adapter_get_mcast_ipaddr(void)
 {
@@ -361,7 +360,6 @@ const void *ur_adapter_get_mcast_ipaddr(void)
 #endif
     return NULL;
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, ur_adapter_get_mcast_ipaddr, "const void *ur_adapter_get_mcast_ipaddr(void)")
 
 #if LWIP_IPV6
 struct netif *ur_adapter_ip6_route(const ip6_addr_t *src,

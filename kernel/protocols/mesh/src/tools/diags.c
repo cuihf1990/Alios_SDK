@@ -79,7 +79,7 @@ static ur_error_t handle_trace_route_response(message_t *message)
 
     timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                      TYPE_TIMESTAMP);
-    time = ur_get_now() - timestamp->timestamp;
+    time = umesh_now_ms() - timestamp->timestamp;
     info = message->info;
 
     ur_mem_free(tlvs, tlvs_length);
@@ -109,7 +109,7 @@ ur_error_t send_trace_route_request(network_context_t *network,
 
     timestamp = (mm_timestamp_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
-    timestamp->timestamp = ur_get_now();
+    timestamp->timestamp = umesh_now_ms();
     data += sizeof(mm_timestamp_tv_t);
 
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_TRACE_ROUTE_REQUEST,

@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <aos/aos.h>
 #include <umesh_hal.h>
 #include <umesh_80211.h>
+#include <umesh_utils.h>
 
 #undef USE_ACTION_FRAME
 #define FILTER_DUPLICATE_FRAME
@@ -134,7 +134,7 @@ next:
     mac80211_fctl_t *fctl = (mac80211_fctl_t *)pkt;
     uint16_t seqno = calc_seqctrl(pkt) << 4;
     mac_entry_t *ent;
-    uint32_t mactime = aos_now_ms();
+    uint32_t mactime = umesh_now_ms();
 
     ent = find_mac_entry(pkt + OFF_SRC);
 

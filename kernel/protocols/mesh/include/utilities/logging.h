@@ -55,9 +55,11 @@ typedef enum {
 #define format_ip6_str(ip6_addr, buf, len) \
     snprintf(buf, len, IP6_ADDR_FMT, IP6_ADDR_DATA(ip6_addr))
 
+void umesh_log(const char *fmt, ...);
+
 #ifndef CONFIG_AOS_MESH_DEBUG
 #define MESH_LOG_DEBUG(format, ...)
-#define MESH_LOG_INFO(format, ...) LOGI("mesh", format, ##__VA_ARGS__)
+#define MESH_LOG_INFO(format, ...) umesh_log(format, ##__VA_ARGS__)
 #define MESH_LOG_WARN(format, ...)
 #define MESH_LOG_ERROR(format, ...)
 #else
@@ -70,10 +72,10 @@ extern int dda_log(char *str, ...);
 #ifdef CONFIG_AOS_DDA
 #define LOG_OUTPUT(format, ...) \
     dda_log(format, ##__VA_ARGS__); \
-    csp_printf(format"\r\n", ##__VA_ARGS__);
+    umesh_log(format, ##__VA_ARGS__);
 #else
 #define LOG_OUTPUT(format, ...) \
-    LOGI("mesh", format, ##__VA_ARGS__);
+    umesh_log(format, ##__VA_ARGS__);
 #endif
 
 #define MESH_LOG_DEBUG(format, ...) \

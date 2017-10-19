@@ -22,12 +22,3 @@ void ur_stop_timer(ur_timer_t *timer, void *args)
         *timer = NULL;
     }
 }
-
-uint32_t ur_get_now(void)
-{
-    uint64_t now;
-
-    now = aos_now();
-    now = now / 1000000;
-    return (uint32_t)now;
-}

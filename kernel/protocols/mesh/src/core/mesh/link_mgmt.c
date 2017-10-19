@@ -122,7 +122,7 @@ static void handle_link_quality_update_timer(void *args)
                                                     handle_link_quality_update_timer, hal);
 
     slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-        if ((ur_get_now() - nbr->last_heard) > (hal->neighbor_alive_interval / 2)) {
+        if ((umesh_now_ms() - nbr->last_heard) > (hal->neighbor_alive_interval / 2)) {
             nbr->flags &= (~NBR_LINK_ESTIMATED);
         }
         error = update_link_cost(&nbr->stats);
@@ -193,7 +193,7 @@ get_nbr:
     nbr->stats.link_accept  = 0;
     nbr->state              = STATE_INVALID;
     nbr->flags              = 0;
-    nbr->last_heard         = ur_get_now();
+    nbr->last_heard         = umesh_now_ms();
     return nbr;
 }
 
@@ -215,7 +215,7 @@ static void handle_update_nbr_timer(void *args)
             node->attach_candidate_timeout--;
         }
 
-        if ((ur_get_now() - node->last_heard) < hal->neighbor_alive_interval) {
+        if ((umesh_now_ms() - node->last_heard) < hal->neighbor_alive_interval) {
             continue;
         }
 
@@ -367,7 +367,7 @@ exit:
         if (info->forward_rssi != 127) {
             nbr->stats.forward_rssi = info->forward_rssi;
         }
-        nbr->last_heard = ur_get_now();
+        nbr->last_heard = umesh_now_ms();
     }
     return nbr;
 }

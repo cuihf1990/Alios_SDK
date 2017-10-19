@@ -711,7 +711,7 @@ static ur_error_t send_attach_request(network_context_t *network)
     data += sizeof(mm_header_t);
     data += set_mm_ueid_tv(data, TYPE_SRC_UEID, g_mm_state.device.ueid);
 
-    time = ur_get_now();
+    time = umesh_now_ms();
     timestamp = (mm_timestamp_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)timestamp, TYPE_TIMESTAMP);
     timestamp->timestamp = time;

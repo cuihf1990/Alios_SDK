@@ -3,9 +3,7 @@
  */
 
 #include <string.h>
-#include <aos/aos.h>
 
-#include "hal/base.h"
 #include "umesh.h"
 #include "umesh_hal.h"
 #include "umesh_utils.h"
@@ -20,7 +18,9 @@
 #include "core/mesh_forwarder.h"
 #include "core/crypto.h"
 #include "core/address_mgmt.h"
+#if (defined CONFIG_NET_LWIP)
 #include "ip/lwip_adapter.h"
+#endif
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 
@@ -47,7 +47,7 @@ static ur_error_t umesh_interface_up(void)
         callback->interface_up();
     }
 
-    aos_post_event(EV_MESH, CODE_MESH_CONNECTED, 0);
+    umesh_post_event(CODE_MESH_CONNECTED, 0);
     MESH_LOG_DEBUG("mesh interface up");
 
     return UR_ERROR_NONE;
@@ -62,7 +62,7 @@ static ur_error_t umesh_interface_down(void)
         callback->interface_down();
     }
 
-    aos_post_event(EV_MESH, CODE_MESH_DISCONNECTED, 0);
+    umesh_post_event(CODE_MESH_DISCONNECTED, 0);
     MESH_LOG_DEBUG("mesh interface down");
     return UR_ERROR_NONE;
 }
@@ -86,8 +86,8 @@ static void output_frame_handler(void *args)
     message_t *message = NULL;
     uint8_t append_length;
     ur_error_t error = UR_ERROR_NONE;
-    uint16_t ip_hdr_len;
-    uint16_t lowpan_hdr_len;
+    uint16_t ip_hdr_len = 0;
+    uint16_t lowpan_hdr_len = 0;
     uint8_t *ip_payload = NULL;
     uint8_t *lowpan_payload = NULL;
     message_info_t *info;
@@ -313,7 +313,6 @@ ur_error_t umesh_init(node_mode_t mode)
 #endif
     return UR_ERROR_NONE;
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_init, "ur_error_t umesh_init(node_mode_t mode)")
 
 bool umesh_is_initialized(void)
 {
@@ -337,7 +336,7 @@ ur_error_t umesh_start()
     umesh_mm_start(&g_um_state.mm_cb);
     lp_start();
 
-    if (aos_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
+    if (umesh_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
         extnetid.len = extnetid_len;
         umesh_set_extnetid(&extnetid);
     }
@@ -347,11 +346,10 @@ ur_error_t umesh_start()
         hal_umesh_enable(wifi_hal);
     }
 
-    aos_post_event(EV_MESH, CODE_MESH_STARTED, 0);
+    umesh_post_event(CODE_MESH_STARTED, 0);
 
     return UR_ERROR_NONE;
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_start, "ur_error_t umesh_start(void)")
 
 ur_error_t umesh_stop(void)
 {
@@ -372,14 +370,12 @@ ur_error_t umesh_stop(void)
     interface_stop();
     return UR_ERROR_NONE;
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_stop, "ur_error_t umesh_stop(void)")
 
 /* per device APIs */
 uint8_t umesh_get_device_state(void)
 {
     return (uint8_t)umesh_mm_get_device_state();
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_device_state, "uint8_t umesh_get_device_state(void)")
 
 ur_error_t umesh_register_callback(ur_adapter_callback_t *callback)
 {
@@ -391,19 +387,16 @@ uint8_t umesh_get_mode(void)
 {
     return (uint8_t)umesh_mm_get_mode();
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_mode, "uint8_t umesh_get_mode(void)")
 
 ur_error_t umesh_set_mode(uint8_t mode)
 {
     return umesh_mm_set_mode(mode);
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_set_mode, "ur_error_t umesh_set_mode(uint8_t mode)")
 
 const mac_address_t *umesh_get_mac_address(media_type_t type)
 {
     return umesh_mm_get_mac_address();
 }
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_mac_address, "const mac_address_t *umesh_get_mac_address(media_type_t type)")
 
 uint16_t umesh_get_meshnetid(void)
 {
