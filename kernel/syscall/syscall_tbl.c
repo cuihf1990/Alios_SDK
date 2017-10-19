@@ -95,5 +95,6 @@ void set_errno(int err)
 EXPORT_SYMBOL_K(1, set_errno, "void set_errno(int err)")
 
 /* for syscall_tbl.h, on the last */
+
 #include <syscall_tbl.h>
 

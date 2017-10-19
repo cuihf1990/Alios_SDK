@@ -1,5 +1,6 @@
 NAME := fota
 
+$(NAME)_TYPE := kernel
 $(NAME)_CFLAGS += \
 	-Wall \
 	-Werror \

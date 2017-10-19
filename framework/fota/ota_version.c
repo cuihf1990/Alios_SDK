@@ -54,3 +54,30 @@ const char *ota_get_system_version()
 {
     return aos_get_os_version();
 }
+
+const char   *aos_get_kernel_version(void)
+{
+    return (const char *)aos_version_get();
+}
+
+const char   *aos_get_app_version(void)
+{
+    int len = MAX_VERSION_LEN;
+    memset(version_config.app_version, 0, MAX_VERSION_LEN);
+    aos_kv_get(KEY_DEV_VER, version_config.app_version, &len); 
+    return version_config.app_version;
+}
+
+const char   *aos_get_os_version(void)
+{
+#ifdef SYSINFO_OS_BINS
+    int len = MAX_VERSION_LEN;
+    memset(version_config.system_version, 0, MAX_VERSION_LEN);
+    snprintf(version_config.system_version, MAX_VERSION_LEN, "%s_%s", aos_get_kernel_version(), aos_get_app_version());
+    return version_config.system_version;
+#else
+    return (const char *)aos_get_app_version();
+#endif
+}
+
+

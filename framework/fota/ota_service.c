@@ -103,7 +103,7 @@ static void init_device_parmas()
 #endif
 
     ota_request_parmas.secondary_version = aos_get_app_version();
-    ota_request_parmas.product_type = aos_get_product_model();
+    //ota_request_parmas.product_type = aos_get_product_model();
     ota_request_parmas.device_uuid = platform_ota_get_id();
 }
 

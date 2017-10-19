@@ -1,5 +1,6 @@
 NAME := fota_socket
 
+$(NAME)_TYPE := kernel
 GLOBAL_INCLUDES += ./
 
 ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
