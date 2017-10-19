@@ -8,7 +8,7 @@
 #include "core/mesh_mgmt_tlvs.h"
 #include "core/mesh_forwarder.h"
 #include "core/topology.h"
-#include "ip/ip6.h"
+#include "ip/ip.h"
 #include "hal/interface_context.h"
 
 static inline uint16_t get_subnetsize_from_netinfo(mm_netinfo_tv_t *netinfo)

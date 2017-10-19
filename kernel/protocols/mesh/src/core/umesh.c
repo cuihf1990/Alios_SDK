@@ -67,18 +67,6 @@ static ur_error_t umesh_interface_down(void)
     return UR_ERROR_NONE;
 }
 
-#define dump_data(p, sz) do { \
-    uint16_t *p16 = (uint16_t *)(p); \
-    int i; \
-    printf("%s-%04d: ", __func__, __LINE__); \
-    for(i=0;i<(sz)/2;i++) { \
-        printf("%04x ", p16[i]); \
-        if (i && i % 8 == 0) \
-            printf("\n"); \
-    } \
-    printf("\n"); \
-} while(0)
-
 static void output_frame_handler(void *args)
 {
     transmit_frame_t *frame = (transmit_frame_t *)args;

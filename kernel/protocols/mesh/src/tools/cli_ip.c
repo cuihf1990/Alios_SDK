@@ -15,7 +15,7 @@
 #include "umesh_utils.h"
 #include "core/mesh_mgmt.h"
 #include "core/router_mgr.h"
-#include "ip/ip6.h"
+#include "ip/ip.h"
 #include "ip/lwip_adapter.h"
 #include "hal/interfaces.h"
 #include "tools/cli.h"
