@@ -14,13 +14,14 @@
 #include "utilities/logging.h"
 #include "hal/hals.h"
 #include "tools/cli.h"
+#include "ip/lwip_adapter.h"
 
 #include "dda_util.h"
 
 static void one_layer_case(void)
 {
     char ping_cmd[64];
-    const ur_netif_ip6_address_t *myaddr;
+    const ip6_addr_t *myaddr;
 
     /* topology:
      *   leader     router   router   mobile
@@ -45,8 +46,8 @@ static void one_layer_case(void)
     check_p2p_str_wait("leaf", 14, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 14, "testcmd router", 2);
 
-    myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
+    myaddr = ur_adapter_get_default_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 14, "testcmd icmp_acked", 5);
 
@@ -61,10 +62,10 @@ static void one_layer_case(void)
     set_rssi_ext(IF_WIFI, 12, 14, 1, 1);
 
     aos_msleep(WIFI_NEIGHBOR_ALIVE_TIMEOUT + WIFI_ADVERTISEMENT_TIMEOUT);
-    myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
+    myaddr = ur_adapter_get_default_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
     cmd_to_master(ping_cmd);
-    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 14 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
     aos_msleep(WIFI_ADVERTISEMENT_TIMEOUT);
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("2", 14, "testcmd icmp_acked", 10);

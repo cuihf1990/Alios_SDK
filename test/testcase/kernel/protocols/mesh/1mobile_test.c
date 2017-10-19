@@ -12,12 +12,13 @@
 #include "core/sid_allocator.h"
 #include "utilities/logging.h"
 #include "tools/cli.h"
+#include "ip/lwip_adapter.h"
 
 #include "dda_util.h"
 
 static void run_in_hop1(void)
 {
-    const ur_netif_ip6_address_t *addr;
+    const ip6_addr_t *addr;
     char ping_cmd[64];
 
     set_full_rssi(11, 13);
@@ -32,8 +33,8 @@ static void run_in_hop1(void)
     cmd_to_agent("start");
     check_p2p_str_wait("leaf", 11, "testcmd state", 10);
 
-    addr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr.ip6_addr));
+    addr = ur_adapter_get_default_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)addr)));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);
 
@@ -47,7 +48,7 @@ static void run_in_hop1(void)
 
 static void run_in_hop2(void)
 {
-    const ur_netif_ip6_address_t *addr;
+    const ip6_addr_t *addr;
     char ping_cmd[64];
 
     set_line_rssi(11, 13);
@@ -63,8 +64,8 @@ static void run_in_hop2(void)
     check_p2p_str_wait("leaf", 11, "testcmd state", 10);
     YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
-    addr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(addr->addr.ip6_addr));
+    addr = ur_adapter_get_default_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 13 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)addr)));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 13, "testcmd icmp_acked", 5);
 

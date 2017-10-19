@@ -44,10 +44,6 @@ typedef enum media_type_s {
 
 enum {
     UR_IP6_ADDR_SIZE   = 16,
-
-    IP6_UCAST_ADDR_NUM = 2,
-    IP6_MCAST_ADDR_NUM = 1,
-
     MESH_IP4_ADDR_SIZE = 4,
 };
 
@@ -83,15 +79,6 @@ enum {
     MESH_IP4_HLEN = 20,
     UR_UDP_HLEN      = 8,
 };
-
-typedef struct ur_netif_ip6_address_s {
-    union {
-        ur_ip6_addr_t ip6_addr;
-        ur_ip4_addr_t ip4_addr;
-    } addr;
-    uint8_t                       prefix_length;
-    struct ur_netif_ip6_address_s *next;
-} ur_netif_ip6_address_t;
 
 typedef struct mac_address_s {
     union {

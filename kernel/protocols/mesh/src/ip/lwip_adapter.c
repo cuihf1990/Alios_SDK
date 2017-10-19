@@ -9,8 +9,6 @@
 #include "lwip/opt.h"
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
-#include "lwip/ip6.h"
-#include "lwip/ip.h"
 
 #include "umesh.h"
 #include "umesh_hal.h"
@@ -120,13 +118,10 @@ static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
     switch (error) {
         case UR_ERROR_NONE:
             return ERR_OK;
-            break;
         case UR_ERROR_FAIL:
             return ERR_VAL;
-            break;
         default:
             return ERR_VAL;
-            break;
     }
     return ERR_OK;
 }
@@ -159,54 +154,58 @@ ur_error_t ur_adapter_interface_init(void)
 static void update_interface_ipaddr(void)
 {
 #if LWIP_IPV6
-    const ur_netif_ip6_address_t *ip6_addr;
-    uint8_t                      index = 0;
-    uint8_t                      addr_index;
+    ur_ip6_addr_t ip6_addr;
+    ip6_addr_t addr6;
+    uint8_t index;
+    uint16_t main_netid = umesh_get_meshnetid() & 0xff00;
 
-    ip6_addr = umesh_get_ucast_addr();
-    while (ip6_addr) {
-        ip6_addr_t addr6;
-        netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
-        IP6_ADDR(&addr6, ip6_addr->addr.ip6_addr.m32[0], ip6_addr->addr.ip6_addr.m32[1],
-                 ip6_addr->addr.ip6_addr.m32[2], ip6_addr->addr.ip6_addr.m32[3]);
-        ip6_addr_copy(*(ip_2_ip6(&g_la_state.adpif.ip6_addr[index])), addr6);
-        netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_VALID);
-        ip6_addr = ip6_addr->next;
-        index++;
-    }
-
-    ip6_addr = umesh_get_mcast_addr();
-    while (ip6_addr) {
-        ip6_addr_t addr6;
-        netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
-        memset(&addr6, 0, sizeof(addr6));
-        for (addr_index = 0; addr_index < ip6_addr->prefix_length / 32; addr_index++) {
-            addr6.addr[addr_index] = ip6_addr->addr.ip6_addr.m32[addr_index];
+    for (index = 0; index < 3; index++) {
+        memset(ip6_addr.m8, 0, sizeof(ip6_addr.m8));
+        ip6_addr.m32[0] = htonl(0xfc000000);
+        ip6_addr.m32[1] = htonl(main_netid);
+        if (index == 0) {
+            ip6_addr.m32[3] = \
+                htonl((get_sub_netid(umesh_get_meshnetid()) << 16) | umesh_mm_get_local_sid());
+        } else if (index == 1) {
+            memcpy(&ip6_addr.m8[8], umesh_mm_get_local_ueid(), 8);
+        } else {  // mcast addr
+            ip6_addr.m8[0] = 0xff;
+            ip6_addr.m8[1] = 0x08;
+            ip6_addr.m8[6] = (uint8_t)(main_netid >> 8);
+            ip6_addr.m8[7] = (uint8_t)main_netid;
         }
+        netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_INVALID);
+        IP6_ADDR(&addr6, ip6_addr.m32[0], ip6_addr.m32[1],
+                 ip6_addr.m32[2], ip6_addr.m32[3]);
         ip6_addr_copy(*(ip_2_ip6(&g_la_state.adpif.ip6_addr[index])), addr6);
         netif_ip6_addr_set_state(&g_la_state.adpif, index, IP6_ADDR_VALID);
-        ip6_addr = ip6_addr->next;
-        index++;
     }
-
     g_la_state.adpif.ip6_autoconfig_enabled = 1;
 #else
-    const ur_netif_ip6_address_t *ip4_addr;
+    uint16_t sid;
+    ur_ip4_addr_t ip4_addr;
     ip4_addr_t ipaddr, netmask, gw;
 
-    ip4_addr = umesh_get_ucast_addr();
+    sid = umesh_get_sid() + 2;
+    ip4_addr.m8[0] = 10;
+    ip4_addr.m8[1] = 0;
+    ip4_addr.m8[2] = sid >> 8;
+    ip4_addr.m8[3] = sid & 0xff;
     IP4_ADDR(&gw, 10, 0, 0, 1);
-    IP4_ADDR(&ipaddr, ip4_addr->addr.ip4_addr.m8[0], ip4_addr->addr.ip4_addr.m8[1], \
-             ip4_addr->addr.ip4_addr.m8[2], ip4_addr->addr.ip4_addr.m8[3]);
+    IP4_ADDR(&ipaddr, ip4_addr.m8[0], ip4_addr.m8[1], \
+             ip4_addr.m8[2], ip4_addr.m8[3]);
     IP4_ADDR(&netmask, 255, 255, 0, 0);
     netif_set_addr(&g_la_state.adpif, &ipaddr, &netmask, &gw);
 
     ip4_set_default_multicast_netif(&g_la_state.adpif);
 #if LWIP_IGMP
+    ip4_addr.m8[0] = 224;
+    ip4_addr.m8[1] = 0;
+    ip4_addr.m8[2] = 0;
+    ip4_addr.m8[3] = 252;
     g_la_state.adpif.flags |= NETIF_FLAG_IGMP;
-    ip4_addr = umesh_get_mcast_addr();
-    IP4_ADDR(&g_group.group_address, ip4_addr->addr.ip4_addr.m8[0], ip4_addr->addr.ip4_addr.m8[1], \
-             ip4_addr->addr.ip4_addr.m8[2], ip4_addr->addr.ip4_addr.m8[3]);
+    IP4_ADDR(&g_group.group_address, ip4_addr.m8[0], ip4_addr.m8[1], \
+             ip4_addr.m8[2], ip4_addr.m8[3]);
     netif_set_client_data(&g_la_state.adpif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP, &g_group);
 #endif
 #endif
@@ -273,6 +272,54 @@ ur_error_t ur_adapter_interface_update(void)
     update_interface_ipaddr();
     return UR_ERROR_NONE;
 }
+
+struct netif *ur_adapter_get_netif(void)
+{
+    return &g_la_state.adpif;
+}
+
+const void *ur_adapter_get_default_ipaddr(void)
+{
+    struct netif *netif = &g_la_state.adpif;
+#if LWIP_IPV6
+    uint8_t index;
+
+    for (index = 0; index < LWIP_IPV6_NUM_ADDRESSES; index++) {
+        if (ip6_addr_isvalid(netif_ip6_addr_state(netif, index))) {
+            return netif_ip_addr6(netif, index);
+        }
+    }
+    return NULL;
+#else
+    return netif_ip4_addr(netif);
+#endif
+}
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, ur_adapter_get_default_ipaddr, "const void *ur_adapter_get_default_ipaddr(void)")
+
+const void *ur_adapter_get_mcast_ipaddr(void)
+{
+    struct netif *netif = &g_la_state.adpif;
+#if LWIP_IPV6
+    static ip6_addr_t mcast;
+    uint8_t index = 2;
+    const ip6_addr_t *mcast_addr = netif_ip6_addr(netif, index);
+
+    if (ip6_addr_isvalid(netif_ip6_addr_state(netif, index))) {
+        IP6_ADDR(&mcast, mcast_addr->addr[0], mcast_addr->addr[1],
+                 0, htonl(0xfc));
+        return &mcast;
+    }
+#else
+    struct igmp_group *group;
+    if (netif->flags & NETIF_FLAG_IGMP) {
+        group = netif_get_client_data(netif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP);
+        return &group->group_address;
+    }
+#endif
+    return NULL;
+}
+EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, ur_adapter_get_mcast_ipaddr, "const void *ur_adapter_get_mcast_ipaddr(void)")
+
 #if LWIP_IPV6
 struct netif *ur_adapter_ip6_route(const ip6_addr_t *src,
                                    const ip6_addr_t *dest)

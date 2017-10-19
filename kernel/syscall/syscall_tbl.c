@@ -12,6 +12,7 @@
 #include <hal/hal.h>
 #ifdef CONFIG_AOS_MESH
 #include <umesh.h>
+#include <ip/lwip_adapter.h>
 #define CONFIG_AOS_MESH 1
 #endif
 #ifdef MBEDTLS_IN_KERNEL
@@ -93,7 +94,7 @@ void set_errno(int err)
 }
 EXPORT_SYMBOL_K(1, set_errno, "void set_errno(int err)")
 
-#define SYSCALL_MAX 166
+#define SYSCALL_MAX 168
 #define SYSCALL_NUM 160
 
 #define SYSCALL(nr, func) [nr] = func,

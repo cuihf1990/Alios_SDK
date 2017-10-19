@@ -38,19 +38,19 @@ typedef enum {
 
 #define IP6_ADDR_FMT "%x:%x:%x:%x:%x:%x:%x:%x"
 #define IP6_ADDR_DATA(dest) \
-                        ntohs(dest.m16[0]), \
-                        ntohs(dest.m16[1]), \
-                        ntohs(dest.m16[2]), \
-                        ntohs(dest.m16[3]), \
-                        ntohs(dest.m16[4]), \
-                        ntohs(dest.m16[5]), \
-                        ntohs(dest.m16[6]), \
-                        ntohs(dest.m16[7])
+                        ntohs(dest->m16[0]), \
+                        ntohs(dest->m16[1]), \
+                        ntohs(dest->m16[2]), \
+                        ntohs(dest->m16[3]), \
+                        ntohs(dest->m16[4]), \
+                        ntohs(dest->m16[5]), \
+                        ntohs(dest->m16[6]), \
+                        ntohs(dest->m16[7])
 
 #define IP4_ADDR_FMT "%d.%d.%d.%d"
 #define IP4_ADDR_DATA(dest) \
-                        dest.m8[0], dest.m8[1], \
-                        dest.m8[2], dest.m8[3]
+                        dest->m8[0], dest->m8[1], \
+                        dest->m8[2], dest->m8[3]
 
 #define format_ip6_str(ip6_addr, buf, len) \
     snprintf(buf, len, IP6_ADDR_FMT, IP6_ADDR_DATA(ip6_addr))

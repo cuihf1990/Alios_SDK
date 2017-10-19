@@ -9,6 +9,8 @@
 #include "utilities/logging.h"
 #include "utilities/message.h"
 #include "tools/cli.h"
+#include "ip/lwip_adapter.h"
+#include "lwip/ip.h"
 
 #include "dda_util.h"
 
@@ -32,15 +34,15 @@ void test_uradar_mcast_case(void)
     cmd_to_master("sendall status");
 
     char ping_cmd[64];
-    const ur_netif_ip6_address_t *myaddr;
+    const ip6_addr_t *myaddr;
 
-    myaddr = umesh_get_mcast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 autotest " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
+    myaddr = ur_adapter_get_mcast_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 autotest " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("3", 12, "testcmd autotest_acked", 10);
 
-    myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 autotest " IP6_ADDR_FMT " 1 1200", IP6_ADDR_DATA(myaddr->addr.ip6_addr));
+    myaddr = ur_adapter_get_default_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 autotest " IP6_ADDR_FMT " 1 1200", IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd autotest_acked", 10);
 

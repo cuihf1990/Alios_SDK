@@ -13,6 +13,7 @@
 #include "core/router_mgr.h"
 #include "utilities/logging.h"
 #include "tools/cli.h"
+#include "ip/lwip_adapter.h"
 
 #include "dda_util.h"
 
@@ -50,7 +51,7 @@ static void three_nodes_case(void)
     uint8_t index;
     char    index_str[3];
     char ping_cmd[64];
-    const ur_netif_ip6_address_t *myaddr;
+    const ip6_addr_t *myaddr;
 
     /* topology:
      *   leader     router      router
@@ -77,8 +78,8 @@ static void three_nodes_case(void)
     check_cond_wait((DEVICE_STATE_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
 
-    myaddr = umesh_get_ucast_addr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(myaddr->addr.ip6_addr));
+    myaddr = ur_adapter_get_default_ipaddr();
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
 
     for (index = 0; index < 2; index++) {
         check_cond_wait(umesh_mm_get_attach_state() == ATTACH_IDLE || \
