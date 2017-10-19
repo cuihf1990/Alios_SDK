@@ -46,12 +46,6 @@ typedef struct network_data_s {
     uint16_t size;
 } network_data_t;
 
-typedef struct lowpan_context_s {
-    ur_ip6_addr_t prefix;
-    uint8_t       prefix_length;
-    uint8_t       context_id;
-} lowpan_context_t;
-
 enum {
     MCAST_CACHE_ENTRIES_SIZE = 32,
 };

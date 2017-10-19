@@ -125,25 +125,6 @@ const ur_ip6_addr_t *nd_get_subscribed_mcast(void)
     return g_nd_state.stable_network_data.mcast_addr;
 }
 
-ur_error_t nd_set_subscribed_mcast(const ur_ip6_addr_t *addr)
-{
-    ur_error_t            error = UR_ERROR_NONE;
-    stable_network_data_t network_data;
-
-    if (umesh_mm_get_device_state() != DEVICE_STATE_LEADER) {
-        return UR_ERROR_FAIL;
-    }
-
-    memcpy(&network_data, &g_nd_state.stable_network_data, sizeof(network_data));
-    if (memcmp(network_data.mcast_addr, addr,
-               sizeof(network_data.mcast_addr[0])) != 0) {
-        network_data.minor_version++;
-        memcpy(network_data.mcast_addr, addr, sizeof(network_data.mcast_addr));
-        error = nd_stable_set(&network_data);
-    }
-    return error;
-}
-
 bool nd_is_subscribed_mcast(const ur_ip6_addr_t *addr)
 {
     return !memcmp(addr, g_nd_state.stable_network_data.mcast_addr,

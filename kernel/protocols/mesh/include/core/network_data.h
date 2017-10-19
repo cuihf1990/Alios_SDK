@@ -19,8 +19,7 @@ enum {
 };
 
 enum {
-    MCAST_NUM          = 1,
-    LOWPAN_CONTEXT_NUM = 1,
+    MCAST_NUM = 1,
 };
 
 typedef struct stable_network_data_s {
@@ -29,7 +28,6 @@ typedef struct stable_network_data_s {
     uint16_t         meshnetid;
     uint8_t          channel;
     ur_ip6_addr_t    mcast_addr[MCAST_NUM];
-    lowpan_context_t context[LOWPAN_CONTEXT_NUM];
 } stable_network_data_t;
 
 ur_error_t nd_init(void);
@@ -42,7 +40,6 @@ uint8_t nd_get_stable_minor_version(void);
 uint16_t nd_get_stable_meshnetid(void);
 ur_error_t nd_set_stable_meshnetid(uint16_t meshnetid);
 const ur_ip6_addr_t *nd_get_subscribed_mcast(void);
-ur_error_t nd_set_subscribed_mcast(const ur_ip6_addr_t *addr);
 bool nd_is_subscribed_mcast(const ur_ip6_addr_t *addr);
 ur_error_t nd_get_ip6_prefix(ur_ip6_prefix_t *prefix);
 
