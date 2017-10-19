@@ -618,18 +618,6 @@ static void set_src_info(message_info_t *info)
     info->src.addr.short_addr = umesh_mm_get_local_sid();
 }
 
-ur_error_t mf_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
-{
-    if (ip6_is_mcast(dest)) {
-        return UR_ERROR_FAIL;
-    }
-
-    dest_addr->addr.len = SHORT_ADDR_SIZE;
-    dest_addr->addr.short_addr = ntohs(dest->m16[7]);
-    dest_addr->netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
-    return UR_ERROR_NONE;
-}
-
 static void set_dest_encrypt_flag(message_info_t *info)
 {
     if (umesh_mm_get_seclevel() < SEC_LEVEL_1) {

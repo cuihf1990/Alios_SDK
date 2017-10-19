@@ -118,8 +118,3 @@ ur_error_t string_to_ip6_addr(const char *buf, ur_ip6_addr_t *target)
 
     return UR_ERROR_NONE;
 }
-
-bool ip6_is_mcast(const ur_ip6_addr_t *addr)
-{
-    return addr->m8[0] == 0xff;
-}

@@ -437,11 +437,6 @@ bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr)
     return nd_is_subscribed_mcast(addr);
 }
 
-ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest, ur_addr_t *dest_addr)
-{
-    return mf_resolve_dest(dest, dest_addr);
-}
-
 void umesh_get_extnetid(umesh_extnetid_t *extnetid)
 {
     if (extnetid == NULL) {

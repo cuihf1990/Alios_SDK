@@ -38,9 +38,6 @@ slist_t *umesh_get_nbrs(media_type_t type);
 
 bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr);
 
-ur_error_t umesh_resolve_dest(const ur_ip6_addr_t *dest,
-                              ur_addr_t *dest_addr);
-
 void umesh_get_extnetid(umesh_extnetid_t *extnetid);
 ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid);
 

@@ -491,7 +491,7 @@ void process_traceroute(int argc, char *argv[])
     }
 
     string_to_ip6_addr(argv[0], &dest);
-    if (umesh_resolve_dest(&dest, &dest_addr) != UR_ERROR_NONE) {
+    if (ur_adapter_resolve_ip(&dest, &dest_addr) != UR_ERROR_NONE) {
         return;
     }
 

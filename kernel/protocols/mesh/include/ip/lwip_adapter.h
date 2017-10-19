@@ -19,6 +19,7 @@ ur_error_t ur_adapter_interface_update(void);
 struct netif *ur_adapter_get_netif(void);
 const void *ur_adapter_get_default_ipaddr(void);
 const void *ur_adapter_get_mcast_ipaddr(void);
+ur_error_t ur_adapter_resolve_ip(const void *ip, ur_addr_t *addr);
 
 #ifdef __cplusplus
 }
