@@ -248,24 +248,10 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 
 kstat_t krhino_deinit_mm_head(k_mm_head *mmhead)
 {
-
-#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-    CPSR_ALLOC();
-    RHINO_CRITICAL_ENTER();
-#else
-    krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
-#endif
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
     memset(mmhead, 0, sizeof(k_mm_head));
     VGF(VALGRIND_DESTROY_MEMPOOL(mmhead));
-
-#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-    RHINO_CRITICAL_EXIT();
-#else
-    krhino_mutex_unlock(&(mmhead->mm_mutex));
-#endif
     return RHINO_SUCCESS;
-
 }
 
 kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
