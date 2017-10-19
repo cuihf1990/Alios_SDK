@@ -440,10 +440,9 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
 
 uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
 {
-    uint8_t old_pri;
-
-    /* make this task pri to the highest pri */
-    krhino_task_pri_change(krhino_cur_task_get(), 0, &old_pri);
+    #if (RHINO_CONFIG_MM_REGION_MUTEX == 1)
+    krhino_mutex_lock(&g_kmm_head->mm_mutex, RHINO_WAIT_FOREVER);
+    #endif
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(g_kmm_head, sizeof(k_mm_head)));
     print("\r\n");
@@ -459,8 +458,9 @@ uint32_t dumpsys_mm_info_func(char *buf, uint32_t len)
     dump_kmm_statistic_info(g_kmm_head);
     VGF(VALGRIND_MAKE_MEM_NOACCESS(g_kmm_head, sizeof(k_mm_head)));
 
-    /* restore the original pri */
-    krhino_task_pri_change(krhino_cur_task_get(), old_pri, &old_pri);
+    #if (RHINO_CONFIG_MM_REGION_MUTEX == 1)
+    krhino_mutex_unlock(&g_kmm_head->mm_mutex);
+    #endif
 
     return RHINO_SUCCESS;
 }
