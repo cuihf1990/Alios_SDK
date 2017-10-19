@@ -68,15 +68,15 @@ void ur_adapter_input_buf(void *buf, int len)
 }
 
 static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
-                                    const ip4_addr_t *ip4addr)
+                                    const ip4_addr_t *dest)
 {
     ur_error_t error;
     uint16_t sid;
 
-    if (ip4_addr_ismulticast(ip4addr)) {
+    if (ip4_addr_ismulticast(dest)) {
         sid = BCAST_SID;
-    } else if (!ip4_addr_netcmp(ip4addr, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
-               ip4_addr_cmp(ip4addr, netif_ip4_gw(netif))) {
+    } else if (!ip4_addr_netcmp(dest, netif_ip4_addr(netif), netif_ip4_netmask(netif)) ||
+               ip4_addr_cmp(dest, netif_ip4_gw(netif))) {
 #ifdef CONFIG_AOS_MESH_TAPIF
         if (is_router) {
             MESH_LOG_DEBUG("should go to gateway\n");
@@ -86,10 +86,10 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
 #endif
         sid = 0;
     } else {
-        sid = ntohs(((ip4addr->addr) >> 16)) - 2;
+        sid = ntohs(((dest->addr) >> 16)) - 2;
     }
 
-    error = umesh_ipv4_output(p, sid);
+    error = umesh_output_sid(p, umesh_get_meshnetid(), sid);
 
     /* error mapping */
     switch (error) {
@@ -107,12 +107,40 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
 }
 
 #if LWIP_IPV6
+static inline bool is_sid_address(const uint8_t *addr)
+{
+    uint8_t index;
+
+    for (index = 0; index < 5; index++) {
+        if (addr[index] != 0) {
+            break;
+        }
+    }
+    if (index == 5) {
+        return true;
+    }
+    return false;
+}
+
 static err_t ur_adapter_ipv6_output(struct netif *netif, struct pbuf *p,
-                                    const ip6_addr_t *ip6addr)
+                                    const ip6_addr_t *dest)
 {
     ur_error_t error;
+    ur_ip6_addr_t *ip_dest;
 
-    error = umesh_ipv6_output(p, (ur_ip6_addr_t *)ip6addr);
+    if (ip6_addr_ismulticast(dest) && umesh_is_mcast_subscribed((ur_ip6_addr_t *)dest)) {
+        error = umesh_output_sid(p, umesh_get_meshnetid(), BCAST_SID);
+    } else if (ip6_addr_isuniquelocal(dest)) {
+        ip_dest = (ur_ip6_addr_t *)dest;
+        if (is_sid_address(&ip_dest->m8[8]) == false) {
+            error = umesh_output_uuid(p, &ip_dest->m8[8]);
+        } else {
+            error = umesh_output_sid(p, ntohs(ip_dest->m16[3]) | ntohs(ip_dest->m16[6]), \
+                                     ntohs(ip_dest->m16[7]));
+        }
+    } else {
+        error = UR_ERROR_FAIL;
+    }
 
     /* error mapping */
     switch (error) {

@@ -68,6 +68,5 @@ typedef struct ur_udp_header_s {
 ur_error_t string_to_ip6_addr(const char *buf, ur_ip6_addr_t *target);
 
 bool ip6_is_mcast(const ur_ip6_addr_t *addr);
-bool ip6_is_unique_local(const ur_ip6_addr_t *addr);
 
 #endif  /* UR_IP_H */

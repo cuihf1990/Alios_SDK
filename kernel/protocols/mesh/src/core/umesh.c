@@ -24,16 +24,9 @@
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 
-enum {
-    TRANSMIT_RAW_FRAME = 0,
-    TRANSMIT_IP6_FRAME = 1,
-    TRANSMIT_IP4_FRAME = 2,
-};
-
 typedef struct transmit_frame_s {
     struct pbuf *buf;
     ur_addr_t dest;
-    uint8_t type;
 } transmit_frame_t;
 
 typedef struct urmesh_state_s {
@@ -74,21 +67,6 @@ static ur_error_t umesh_interface_down(void)
     return UR_ERROR_NONE;
 }
 
-static inline bool is_sid_address(const uint8_t *addr)
-{
-    uint8_t index;
-
-    for (index = 0; index < 5; index++) {
-        if (addr[index] != 0) {
-            break;
-        }
-    }
-    if (index == 5) {
-        return true;
-    }
-    return false;
-}
-
 #define dump_data(p, sz) do { \
     uint16_t *p16 = (uint16_t *)(p); \
     int i; \
@@ -117,20 +95,20 @@ static void output_frame_handler(void *args)
 
     append_length = sizeof(mcast_header_t);
     frame_len = buf->tot_len + append_length;
-    if (frame->type == TRANSMIT_IP6_FRAME) {
-        ip_payload = ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);
-        if (ip_payload == NULL) {
-            error = UR_ERROR_MEM;
-            goto out;
-        }
-        pbuf_copy_partial(buf, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN, 0);
-        lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
-        error = lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
-        if (error != UR_ERROR_NONE) {
-            goto out;
-        }
-        frame_len = lowpan_hdr_len + append_length;
+#if LWIP_IPV6
+    ip_payload = ur_mem_alloc((UR_IP6_HLEN + UR_UDP_HLEN) * 2);
+    if (ip_payload == NULL) {
+        error = UR_ERROR_MEM;
+        goto out;
     }
+    pbuf_copy_partial(buf, ip_payload, UR_IP6_HLEN + UR_UDP_HLEN, 0);
+    lowpan_payload = ip_payload + UR_IP6_HLEN + UR_UDP_HLEN;
+    error = lp_header_compress(ip_payload, lowpan_payload, &ip_hdr_len, &lowpan_hdr_len);
+    if (error != UR_ERROR_NONE) {
+        goto out;
+    }
+    frame_len = lowpan_hdr_len + append_length;
+#endif
 
     message = message_alloc(frame_len, UMESH_1);
     if (message == NULL) {
@@ -164,76 +142,45 @@ out:
     pbuf_free(buf);
 }
 
-static transmit_frame_t *build_tx_frame(void)
+static ur_error_t tx_frame(struct pbuf *buf, ur_addr_t *dest)
 {
-    transmit_frame_t *frame = NULL;
+    ur_error_t error = UR_ERROR_FAIL;
+    transmit_frame_t *frame;
 
-    if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
-        frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
+    if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
+        return error;
     }
-    return frame;
-}
-
-static ur_error_t tx_frame(transmit_frame_t *frame)
-{
-    ur_error_t error;
-
-    error = umesh_task_schedule_call(output_frame_handler, frame);
-    if (error != UR_ERROR_NONE) {
-        ur_mem_free(frame, sizeof(transmit_frame_t));
-        pbuf_free(frame->buf);
+    frame = (transmit_frame_t *)ur_mem_alloc(sizeof(transmit_frame_t));
+    if (frame) {
+        memcpy(&frame->dest, dest, sizeof(ur_addr_t));
+        pbuf_ref(buf);
+        frame->buf = buf;
+        error = umesh_task_schedule_call(output_frame_handler, frame);
+        if (error != UR_ERROR_NONE) {
+            ur_mem_free(frame, sizeof(transmit_frame_t));
+            pbuf_free(frame->buf);
+        }
     }
     return error;
 }
 
-ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid)
+ur_error_t umesh_output_sid(struct pbuf *buf, uint16_t netid, uint16_t sid)
 {
-    ur_addr_t udest;
+    ur_addr_t dest;
 
-    udest.addr.len = SHORT_ADDR_SIZE;
-    udest.addr.short_addr = sid;
-    udest.netid = umesh_mm_get_meshnetid(NULL);
-    return umesh_output(buf, &udest, TRANSMIT_IP4_FRAME);
+    dest.addr.len = SHORT_ADDR_SIZE;
+    dest.addr.short_addr = sid;
+    dest.netid = netid;
+    return tx_frame(buf, &dest);
 }
 
-ur_error_t umesh_ipv6_output(struct pbuf *buf, const ur_ip6_addr_t *dest)
+ur_error_t umesh_output_uuid(struct pbuf *buf, uint8_t *uuid)
 {
-    network_context_t *network;
-    ur_addr_t udest;
+    ur_addr_t dest;
 
-    if ((ip6_is_mcast(dest)) && (nd_is_subscribed_mcast(dest))) {
-        udest.addr.len = SHORT_ADDR_SIZE;
-        udest.addr.short_addr = BCAST_SID;
-        network = get_default_network_context();
-        udest.netid = mm_get_main_netid(network);
-    } else if (ip6_is_unique_local(dest)) {
-        if (is_sid_address(&dest->m8[8]) == false) {
-            udest.addr.len = EXT_ADDR_SIZE;
-            memcpy(udest.addr.addr, &dest->m8[8], sizeof(udest.addr.addr));
-        } else {
-            udest.addr.len = SHORT_ADDR_SIZE;
-            udest.addr.short_addr = ntohs(dest->m16[7]);
-            udest.netid = ntohs(dest->m16[3]) | ntohs(dest->m16[6]);
-        }
-    } else {
-        return UR_ERROR_FAIL;
-    }
-    return umesh_output(buf, &udest, TRANSMIT_IP6_FRAME);
-}
-
-ur_error_t umesh_output(struct pbuf *buf, ur_addr_t *dest, uint8_t type)
-{
-    transmit_frame_t *frame = build_tx_frame();
-
-    if (frame == NULL) {
-        return UR_ERROR_FAIL;
-    }
-
-    memcpy(&frame->dest, dest, sizeof(ur_addr_t));
-    pbuf_ref(buf);
-    frame->buf = buf;
-    frame->type = type;
-    return tx_frame(frame);
+    dest.addr.len = EXT_ADDR_SIZE;
+    memcpy(dest.addr.addr, uuid, sizeof(dest.addr.addr));
+    return tx_frame(buf, &dest);
 }
 
 ur_error_t umesh_input(message_t *message)

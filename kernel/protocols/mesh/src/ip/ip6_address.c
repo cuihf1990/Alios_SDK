@@ -123,8 +123,3 @@ bool ip6_is_mcast(const ur_ip6_addr_t *addr)
 {
     return addr->m8[0] == 0xff;
 }
-
-bool ip6_is_unique_local(const ur_ip6_addr_t *addr)
-{
-    return (addr->m8[0] & 0xfe) == 0xfc;
-}

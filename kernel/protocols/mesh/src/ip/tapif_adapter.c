@@ -209,7 +209,7 @@ void ur_adapter_input_buf(void *buf, int len)
 
     retarget_ip4_src(ip_hdr, len);
     pbuf_take(pbuf, buf, len);
-    umesh_ipv4_output(pbuf, sid);
+    umesh_output_sid(pbuf, umesh_get_meshnetid(), sid);
     pbuf_free(pbuf);
 }
 

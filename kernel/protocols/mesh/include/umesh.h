@@ -14,11 +14,8 @@ extern "C" {
 struct pbuf;
 struct message_s;
 
-/* for ip layer */
-ur_error_t umesh_ipv4_output(struct pbuf *buf, uint16_t sid);
-ur_error_t umesh_ipv6_output(struct pbuf *buf,
-                             const ur_ip6_addr_t *ip6addr);
-ur_error_t umesh_output(struct pbuf *buf, ur_addr_t *dest, uint8_t type);
+ur_error_t umesh_output_sid(struct pbuf *buf, uint16_t netid, uint16_t sid);
+ur_error_t umesh_output_uuid(struct pbuf *buf, uint8_t *uuid);
 
 /* for mesh layer */
 ur_error_t umesh_init(node_mode_t mode);
