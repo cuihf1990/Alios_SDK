@@ -10,7 +10,9 @@
 #include <sys/prctl.h>
 #include <pthread.h>
 
+#undef WITH_LWIP
 #include <aos/aos.h>
+#include <poll.h>
 
 void aos_reboot(void)
 {
@@ -226,9 +228,19 @@ int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
                    unsigned int *size)
 {
     struct queue *q = queue->hdl;
-    int len = read(q->fds[0], msg, q->msg_size);
-    *size = len;
-    return len < 0 ? -1 : 0;
+    struct pollfd rfd = {
+        .fd = q->fds[0],
+        .events = POLLIN,
+    };
+
+    poll(&rfd, 1, ms);
+    if (rfd.revents & POLLIN) {
+        int len = read(q->fds[0], msg, q->msg_size);
+        *size = len;
+        return len < 0 ? -1 : 0;
+    }
+
+    return -1;
 }
 
 int aos_queue_is_valid(aos_queue_t *queue)
