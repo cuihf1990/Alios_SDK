@@ -25,13 +25,12 @@ typedef struct ota_device_info {
     const char *uuid;
 } OTA_device_info;
 
-OTA_device_info *g_device_info;
+OTA_device_info g_device_info;
 
 void platform_ota_init( void *signal)
 {
     OTA_device_info *device_info = (OTA_device_info *)signal;
-    g_device_info->uuid = device_info->uuid;    
-    OTA_LOG_D("device_info uuid :%s", g_device_info->uuid);
+    g_device_info.uuid = device_info->uuid;    
 }
 
 int8_t platform_ota_parse_requset(const char *request, int *buf_len,
@@ -216,7 +215,7 @@ extern char *config_get_main_uuid(void);
 
 char *platform_ota_get_id(void)
 {
-    return g_device_info->uuid;
+    return g_device_info.uuid;
 }
 
 

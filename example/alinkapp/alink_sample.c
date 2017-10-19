@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include "alink_export.h"
+#include "config.h"
 #include "json_parser.h"
 #include "aos/aos.h"
 #include "aos/network.h"
@@ -432,7 +433,6 @@ static struct cli_command modelcmd = {
 static void handle_uuid_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     extern int cloud_is_connected(void);
-    extern const char *config_get_main_uuid(void);
     extern bool gateway_is_connected(void);
     extern const char *gateway_get_uuid(void);
     if (cloud_is_connected()) {
@@ -565,6 +565,13 @@ static void alink_service_event(input_event_t *event, void *priv_data) {
         alink_start();
     }
 }
+typedef struct ota_device_info {
+    const char *product_key;
+    const char *device_name;
+    const char *uuid;
+} OTA_device_info_t;
+
+OTA_device_info_t ota_device_info;
 
 static void alink_connect_event(input_event_t *event, void *priv_data)
 {
@@ -577,7 +584,8 @@ static void alink_connect_event(input_event_t *event, void *priv_data)
 #ifdef CONFIG_YWSS
         awss_registrar_init();
 #endif
-        aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
+        ota_device_info.uuid = config_get_main_uuid();
+        aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, (long unsigned int)&ota_device_info);
         do_report();
         return;
     }

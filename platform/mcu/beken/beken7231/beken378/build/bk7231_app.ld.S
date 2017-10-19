@@ -16,7 +16,7 @@ ENTRY(application_start)
 SECTIONS
 {
 #ifdef MBEDTLS_IN_KERNEL
-	. = 0x0070400;
+	. = 0x007d400;
 #else
     . = 0x0067C00;
 #endif
@@ -99,7 +99,7 @@ SECTIONS
 
 #ifdef MBEDTLS_IN_KERNEL
     PROVIDE(kernel_download_addr = 0x0013200);
-    PROVIDE(app_download_addr = 0x0077440);
+    PROVIDE(app_download_addr = 0x0085140);
     PROVIDE(ota_download_addr = 0x009c300);
 #else
     PROVIDE(kernel_download_addr = 0x0013200);
