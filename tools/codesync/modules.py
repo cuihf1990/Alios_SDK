@@ -5,6 +5,7 @@ import os
 import errno
 import argparse
 import time
+import vendorslib
 
 class ProcessException(Exception):
     pass
@@ -82,26 +83,12 @@ class syncpreparelib():
 
         os.chdir(cur_dir)
         os.chdir("./tmp_synccode")
-        ######################################
-        # add supported boards branch here
-        ######################################
-        if dstbase == "github":
-            git_cmd = "git clone git@github.com:alibaba/AliOS-Things.git"
-            popen(git_cmd, shell=True, cwd=os.getcwd())
-            self.dstdir = "./AliOS-Things"
-        elif dstbase == "mxchip":
-            git_cmd = "git clone git@code.aliyun.com:keepwalking.zeng/aos-pbase.git"
-            popen(git_cmd, shell=True, cwd=os.getcwd())
-            self.dstdir = "./aos-pbase"
-        elif dstbase == "allwinner":
-            git_cmd = "git clone git@code.aliyun.com:keepwalking.zeng/yunos-iot-project.git"
-            popen(git_cmd, shell=True, cwd=os.getcwd())
-            self.dstdir = "./yunos-iot-project"
-            os.chdir(self.dstdir)
-            popen(git_cmd, shell=True, cwd=os.getcwd())
-        else:
-            error('Unknown source base!')
+        vendor = vendorslib.vendorslib(dstbase)
+        if vendor.get_vendor_repo() != 0:
+            error('get vendor fail!')
 
+        popen(vendor.git_cmd, shell=True, cwd=os.getcwd())
+        self.dstdir = vendor.dstdir
         self.dstbase = dstbase
         self.srcbase = srcbase
         os.chdir(cur_dir)
