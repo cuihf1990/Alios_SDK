@@ -14,9 +14,7 @@
 #include <ali_crypto.h>
 #endif
 
-#define SYSCALL(nr, func)
-
-#include <syscall_tbl.h>
+#include <syscall_num.h>
 
 #ifdef WITH_LWIP
 #include <aos/network.h>
