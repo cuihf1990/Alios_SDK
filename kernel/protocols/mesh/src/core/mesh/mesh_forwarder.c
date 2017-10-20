@@ -19,7 +19,6 @@
 #include "core/link_mgmt.h"
 #include "core/crypto.h"
 #include "core/address_mgmt.h"
-#include "ip/ip6.h"
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
 #include "tools/diags.h"
