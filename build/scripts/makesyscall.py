@@ -102,33 +102,35 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
         fsn = open(sn_path, "w+")              # read from syscall_num
     sysdata = fsn.readlines()
     sysdata_num = len(sysdata)
-    fsn.seek(0)
     global symbol_list
     find = 0
     for symbol in symbol_list:                          # write to syscall_num
-        fsn.seek(0)
         for line in sysdata:
             if(re.findall(r"\d+\s\d+\s" + symbol[1] + r"\s\".*?\"\s\".*?\"\n", line, re.M | re.S)):
                 serial_num = line.strip().split(" ", line.strip().count(" "))[1]
-                line = r"%s %s %s %s %s" %(1, serial_num, symbol[1], "\"" + symbol[0].replace("\n", "") + "\"", symbol[2].replace("\n", "")) + "\n"
+                newline = r"%s %s %s %s %s" %(1, serial_num, symbol[1], "\"" + symbol[0].replace("\n", "") + "\"", symbol[2].replace("\n", "")) + "\n"
                 find = 1
-                logging.debug(line)
-                fsn.write(line)
-            fsn.seek(len(line), 1)
+                logging.debug(newline)
+                sysdata[sysdata.index(line)] = newline
+                break
         if find == 0:
-            sysdata_num += 1
             line = r"%s %s %s %s %s" %(1, sysdata_num, symbol[1], "\"" + symbol[0].replace("\n", "") + "\"", symbol[2].replace("\n", "")) + "\n"
-            fsn.seek(0, 2)
-            fsn.write(line)
+            sysdata.append(line)
+            sysdata_num += 1
+
+
         find = 0
 
-	fsn.flush()
+    fsn.truncate(0)
+    fsn.seek(0, 0)
+    fsn.writelines(sysdata)
+    fsn.flush()
     fsn.seek(0, 0)
     fsnContent = fsn.read()
     newsymbols = re.findall(r"(\d+)\s(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
     logging.debug(newsymbols)
     global syscall_num
-    syscall_num = len(newsymbols)
+    syscall_num = 0
     for symbol in newsymbols:                     # according to syscall_num to implementation syscall_tbl.h
         logging.debug(symbol[0])
         if symbol[0] == str(1):
@@ -137,6 +139,7 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
             strsysc = "SYSCALL(SYS_" + symbol[2].upper() + ", " + symbol[2] + ")"
             fsh.write(strdef + strsysc + "\n")
             fsh.write("#endif" + "\n\n")
+            syscall_num += 1
 
     fsn.close()
     fsh.close()
