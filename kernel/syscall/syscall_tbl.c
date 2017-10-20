@@ -94,13 +94,6 @@ void set_errno(int err)
 }
 EXPORT_SYMBOL_K(1, set_errno, "void set_errno(int err)")
 
-#define SYSCALL_MAX 166
-#define SYSCALL_NUM 160
-
-#define SYSCALL(nr, func) [nr] = func,
-
-const void *g_syscall_tbl[] __attribute__ ((section(".syscall_tbl"))) = {
-    [0 ... SYSCALL_MAX - 1] = (void *)NULL,
+/* for syscall_tbl.h, on the last */
 #include <syscall_tbl.h>
-};
 

@@ -72,9 +72,9 @@ def _verifyContent(path, cont):
 
     return
 
-def _disableSyscall(sn_path):
-    if os.path.exists(sn_path):
-        fsn = open(sn_path, "r+")              # read from syscall_num
+def _disableSyscall(sd_path):
+    if os.path.exists(sd_path):
+        fsn = open(sd_path, "r+")              # read from syscall_num
         sysdata = fsn.readlines()
         fsn.seek(0)
         for line in sysdata:
@@ -86,7 +86,7 @@ def _disableSyscall(sn_path):
 
     return
 
-def _writeSyscallHeader(cr_path, sh_path, sn_path):
+def _writeSyscallHeader(cr_path, sh_path, sd_path, sn_path):
     fcr = open(cr_path, 'r')               # read copyright
     copyright = fcr.read()
     fcr.close()
@@ -94,13 +94,21 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
     fsh = open(sh_path, "w+")              # creat syscall_tbl.h
     fsh.seek(0, 0)
     fsh.write(copyright)
-    fsh.write("\n")
+    fsh.write("#define SYSCALL_MAX 0" + "\n")
+    fsh.write("#define SYSCALL(nr, func) [nr] = func," + "\n\n")
+    fsh.write("const void *g_syscall_tbl[] __attribute__ ((section(\".syscall_tbl\"))) = {" + "\n")
+    fsh.write("[0 ... SYSCALL_MAX - 1] = (void *)NULL," + "\n\n")
 
-    if os.path.exists(sn_path):
-        fsn = open(sn_path, "r+")              # read from syscall_num
+    fsn = open(sn_path, "w+")              # creat syscall_num.h
+    fsn.seek(0, 0)
+    fsn.write(copyright)
+
+
+    if os.path.exists(sd_path):
+        fsd = open(sd_path, "r+")              # read from syscall_num
     else:
-        fsn = open(sn_path, "w+")              # read from syscall_num
-    sysdata = fsn.readlines()
+        fsd = open(sd_path, "w+")              # read from syscall_num
+    sysdata = fsd.readlines()
     sysdata_num = len(sysdata)
     global symbol_list
     find = 0
@@ -121,12 +129,12 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
 
         find = 0
 
-    fsn.truncate(0)
-    fsn.seek(0, 0)
-    fsn.writelines(sysdata)
-    fsn.flush()
-    fsn.seek(0, 0)
-    fsnContent = fsn.read()
+    fsd.truncate(0)
+    fsd.seek(0, 0)
+    fsd.writelines(sysdata)
+    fsd.flush()
+    fsd.seek(0, 0)
+    fsnContent = fsd.read()
     newsymbols = re.findall(r"(\d+)\s(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
     logging.debug(newsymbols)
     global syscall_num
@@ -139,14 +147,20 @@ def _writeSyscallHeader(cr_path, sh_path, sn_path):
             strsysc = "SYSCALL(SYS_" + symbol[2].upper() + ", " + symbol[2] + ")"
             fsh.write(strdef + strsysc + "\n")
             fsh.write("#endif" + "\n\n")
+
+            fsn.write("#if (" + symbol[3] + ")\n")
+            fsn.write(strdef)
+            fsn.write("#endif" + "\n\n")
             syscall_num += 1
+    fsh.write("};" + "\n")
 
     fsn.close()
+    fsd.close()
     fsh.close()
 
     return
 
-def _writeSyscallUapi(sc_path, sn_path, ui_path):
+def _writeSyscallUapi(sc_path, sd_path, ui_path):
     fui = open(ui_path, 'r')               # read usyscall include
     usys_incl = fui.read()
     fui.close()
@@ -156,9 +170,9 @@ def _writeSyscallUapi(sc_path, sn_path, ui_path):
     fsc.write(usys_incl)
     fsc.write("\n")
 
-    fsn = open(sn_path, 'r')               # read usyscall data
-    fsnContent = fsn.read()
-    fsn.close()
+    fsd = open(sd_path, 'r')               # read usyscall data
+    fsnContent = fsd.read()
+    fsd.close()
 
     newsymbols = re.findall(r"(\d+)\s(\d+)\s(.*?)\s\"(.*?)\"\s\"(.*?)\"\n", fsnContent, re.M | re.S)
     logging.debug(newsymbols)
@@ -242,9 +256,9 @@ def _writeSyscallMk(sm_path):
 
     return
 
-def _modifySyscallMax(sc_path):
+def _modifySyscallMax(sh_path):
     global syscall_num
-    fcr = open(sc_path, 'r+')               # read syscall_tbl.c
+    fcr = open(sh_path, 'r+')               # read syscall_tbl.c
     tblc = fcr.readlines()
     fcr.seek(0)
     logging.debug(syscall_num)
@@ -256,10 +270,10 @@ def _modifySyscallMax(sc_path):
 
     return
 
-def _removeSyscallData(sn_path):
-    if os.path.exists(sn_path):
-        logging.debug(sn_path)
-        os.remove(sn_path)                     # remove syscall_num
+def _removeSyscallData(sd_path):
+    if os.path.exists(sd_path):
+        logging.debug(sd_path)
+        os.remove(sd_path)                     # remove syscall_num
 
     return
 
@@ -271,6 +285,7 @@ def main():
     copyright_path = r"./build/copyright"
     syscall_tblc_path = r"./kernel/syscall/syscall_tbl.c"
     syscall_tbl_path = syscall_path + r"/syscall_tbl.h"
+    syscall_num_path = syscall_path + r"/syscall_num.h"
     syscall_uapi_path = syscall_path + r"/syscall_uapi.c"
     syscall_mk_path = syscall_path + r"/usyscall.mk"
     syscall_data_path = r"./build/scripts/syscall_data"
@@ -294,7 +309,7 @@ def main():
     logging.info("======================================")
     logging.info(" new symbol:")
     # Creat and write to syscall_tbl.h
-    _writeSyscallHeader(copyright_path, syscall_tbl_path, syscall_data_path)
+    _writeSyscallHeader(copyright_path, syscall_tbl_path, syscall_data_path, syscall_num_path)
     logging.info("======================================")
 
     # Creat and write to syscall_uapi.c
@@ -304,7 +319,7 @@ def main():
     _writeSyscallMk(syscall_mk_path)
 
     #modify SYSCALL_MAX
-    _modifySyscallMax(syscall_tblc_path)
+    _modifySyscallMax(syscall_tbl_path)
     endtime = time.time()
 
     print "======================================"
