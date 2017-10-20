@@ -9,6 +9,7 @@
 #include <ali_crypto.h>
 
 #include <umesh_types.h>
+#include <umesh_pal.h>
 
 /*
  * symbols to export
@@ -57,6 +58,26 @@ void umesh_pal_log(const char *fmt, ...)
     vprintf(fmt, args);
     va_end(args);
     printf("\r\n");
+}
+
+int umesh_pal_sem_new(pal_sem_hdl_t *hdl, int count)
+{
+    return aos_sem_new((aos_sem_t *)hdl, 1);
+}
+
+int umesh_pal_sem_wait(pal_sem_hdl_t *hdl, int ms)
+{
+    return aos_sem_wait((aos_sem_t *)hdl, ms < 0 ? AOS_WAIT_FOREVER : ms);
+}
+
+void umesh_pal_sem_signal(pal_sem_hdl_t *hdl)
+{
+    aos_sem_signal((aos_sem_t *)hdl);
+}
+
+void umesh_pal_sem_free(pal_sem_hdl_t *hdl)
+{
+    aos_sem_free((aos_sem_t *)hdl);
 }
 
 /*

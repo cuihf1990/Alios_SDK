@@ -6,12 +6,11 @@
 #include <stddef.h>
 #include <string.h>
 
-#include <aos/aos.h>
 #include "umesh_utils.h"
 
 typedef struct mem_info_s {
     ur_mem_stats_t stats;
-    aos_mutex_t mutex;
+    pal_sem_hdl_t mutex;
 } mem_info_t;
 static mem_info_t g_mem_info;
 
@@ -23,11 +22,11 @@ void *ur_mem_alloc(uint16_t size)
         return mem;
     }
 
-    mem = (void *)aos_malloc((size_t)size);
+    mem = (void *)umesh_malloc((size_t)size);
     if (mem) {
-        aos_mutex_lock(&g_mem_info.mutex, AOS_WAIT_FOREVER);
+        umesh_pal_sem_wait(&g_mem_info.mutex, -1);
         g_mem_info.stats.num += size;
-        aos_mutex_unlock(&g_mem_info.mutex);
+        umesh_pal_sem_signal(&g_mem_info.mutex);
     }
     return mem;
 }
@@ -35,22 +34,22 @@ void *ur_mem_alloc(uint16_t size)
 void ur_mem_free(void *mem, uint16_t size)
 {
     if (mem) {
-        aos_free(mem);
-        aos_mutex_lock(&g_mem_info.mutex, AOS_WAIT_FOREVER);
+        umesh_free(mem);
+        umesh_pal_sem_wait(&g_mem_info.mutex, -1);
         g_mem_info.stats.num -= size;
-        aos_mutex_unlock(&g_mem_info.mutex);
+        umesh_pal_sem_signal(&g_mem_info.mutex);
     }
 }
 
 void umesh_mem_init(void)
 {
     bzero(&g_mem_info.stats, sizeof(g_mem_info.stats));
-    aos_mutex_new(&g_mem_info.mutex);
+    umesh_pal_sem_new(&g_mem_info.mutex, 1);
 }
 
 void umesh_mem_deinit(void)
 {
-    aos_mutex_free(&g_mem_info.mutex);
+    umesh_pal_sem_free(&g_mem_info.mutex);
 }
 
 const ur_mem_stats_t *ur_mem_get_stats(void)

@@ -12,4 +12,10 @@ uint32_t umesh_pal_now_ms(void);
 void umesh_pal_post_event(int code, unsigned long value);
 void umesh_pal_log(const char *fmt, ...);
 
+typedef long pal_sem_hdl_t;
+int umesh_pal_sem_new(pal_sem_hdl_t *hdl, int count);
+int umesh_pal_sem_wait(pal_sem_hdl_t *hdl, int ms);
+void umesh_pal_sem_signal(pal_sem_hdl_t *hdl);
+void umesh_pal_sem_free(pal_sem_hdl_t *hdl);
+
 #endif
