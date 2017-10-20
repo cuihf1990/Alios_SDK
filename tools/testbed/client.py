@@ -33,7 +33,7 @@ class Client:
         except:
             self.connected = False
 
-    def device_logging(self, port):
+    def device_serve_thread(self, port):
         log_time = time.time()
         log = ''
         if LOCALLOG:
@@ -49,7 +49,7 @@ class Client:
                         self.devices[port]['serial'].open()
                     except:
                         if os.path.exists(port) == True:
-                            print "device_logging, error: unable to open {0}".format(port)
+                            print "device_serve_thread, error: unable to open {0}".format(port)
                         self.devices[port]['rlock'].release()
                         time.sleep(0.1)
                         break
@@ -97,7 +97,7 @@ class Client:
             flog.close()
         print "device {0} removed".format(port)
         self.send_device_list()
-        print "device logging thread for {0} exited".format(port)
+        print "device serve thread for {0} exited".format(port)
 
     def device_monitor(self):
         while self.keep_running:
@@ -115,7 +115,7 @@ class Client:
                     continue
                 print "device {0} added".format(port)
                 self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'esp32', 'serial':ser}
-                thread.start_new_thread(self.device_logging, (port,))
+                thread.start_new_thread(self.device_serve_thread, (port,))
                 self.send_device_list()
 
             devices_new = glob.glob("/dev/mxchip-*")
@@ -131,7 +131,7 @@ class Client:
                     continue
                 print "device {0} added".format(port)
                 self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'mk3060', 'serial':ser}
-                thread.start_new_thread(self.device_logging, (port,))
+                thread.start_new_thread(self.device_serve_thread, (port,))
                 self.send_device_list()
             time.sleep(0.05)
 
@@ -159,7 +159,7 @@ class Client:
             baudrate = baudrate / 2
         return error
 
-    def erase_device(self, port):
+    def erase_device(self, port, term):
         ret = "fail"
         if os.path.exists(port) == False:
             return ret
@@ -170,7 +170,9 @@ class Client:
             ret = esp32_erase(port)
             self.devices[port]['wlock'].release()
             self.devices[port]['rlock'].release()
-        return ret
+        print "erasing", port, "...", ret
+        content = ','.join(term) + ',' + ret
+        self.send_response(TBframe.DEVICE_ERASE, content)
 
     def esp32_program(self, port, address, file):
         if self.devices[port]['serial'].isOpen() == True:
@@ -229,7 +231,7 @@ class Client:
             time.sleep(4)
         return error
 
-    def program_device(self, port, address, file):
+    def program_device(self, port, address, file, term):
         ret = "fail"
         if os.path.exists(port) == False:
             return "fail"
@@ -244,7 +246,9 @@ class Client:
             ret = self.mxchip_program(port, address, file)
         self.devices[port]['wlock'].release()
         self.devices[port]['rlock'].release()
-        return ret
+        print "programming", file, "to", port, "@", address, "...", ret
+        content = ','.join(term) + ',' + ret
+        self.send_response(TBframe.DEVICE_PROGRAM, content)
 
     def esp32_control(self, port, operation):
         try:
@@ -287,6 +291,9 @@ class Client:
         return "fail"
 
     def control_device(self, port, operation):
+        if port not in self.devices:
+            return "error"
+
         if os.path.exists(port) == False:
             return "fail"
 
@@ -438,10 +445,7 @@ class Client:
                             continue
                         term = args[0:2]
                         port = args[2]
-                        result = self.erase_device(port)
-                        print "erasing", port, "...", result
-                        content = ','.join(term) + ',' + result
-                        self.send_response(type, content)
+                        thread.start_new_thread(self.erase_device, (port, term,))
                     elif type == TBframe.DEVICE_PROGRAM:
                         args = value.split(',')
                         if len(args) != 5:
@@ -455,20 +459,14 @@ class Client:
                             self.send_response(type, content)
                             continue
                         filename = file_received[hash]
-                        result = self.program_device(port, address, filename)
-                        print "programming", filename, "to", port, "@", address, "...", result
-                        content = ','.join(term) + ',' + result
-                        self.send_response(type, content)
+                        thread.start_new_thread(self.program_device, (port, address, filename, term,))
                     elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
                         args = value.split(',')
                         if len(args) != 3:
                             continue
                         term = args[0:2]
                         port = args[2]
-                        if port not in self.devices:
-                            result = "error"
-                        else:
-                            result = self.control_device(port, type)
+                        result = self.control_device(port, type)
                         content = ','.join(term) + ',' + result
                         self.send_response(type, content)
                     elif type == TBframe.DEVICE_CMD:

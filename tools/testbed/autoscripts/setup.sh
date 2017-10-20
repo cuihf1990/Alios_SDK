@@ -6,6 +6,7 @@ sudo apt-get -y upgrade
 sudo apt-get -y install vim mutt msmtp
 sudo apt-get -y install python-pip git screen
 sudo pip install pyserial
+sudo usermod -a -G dialout $(whoami)
 
 cwd=`pwd`
 if [ ! -d ~/tools ]; then
