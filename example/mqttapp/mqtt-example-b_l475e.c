@@ -364,6 +364,7 @@ int mqtt_client_example(void)
             /* handle the MQTT packet received from TCP or SSL connection */
             IOT_MQTT_Yield(pclient, 1000);
         }else {
+            IOT_MQTT_Yield(pclient, 2000);
             EXAMPLE_TRACE("ota start, sleep a while");
             HAL_SleepMs(10000000);
         }
