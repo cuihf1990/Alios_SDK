@@ -9,7 +9,7 @@
 #include "core/mesh_forwarder.h"
 #include "core/lowpan6.h"
 #include "core/network_data.h"
-#include "ip/ip6.h"
+#include "ip/ip.h"
 #include "utilities/message.h"
 
 void test_uradar_6lowpan_case(void)

@@ -21,7 +21,7 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/core/routing/ssid_allocator.c \
                    src/core/security/keys_mgr.c \
                    src/core/security/crypto.c \
-                   src/ip/ip6_address.c \
+                   src/ip/ip_address.c \
                    src/hal/interfaces.c \
                    src/hal/umesh_hal.c \
                    src/hal/80211.c \

@@ -13,7 +13,7 @@
 
 #include "umesh_types.h"
 #include "utilities/message.h"
-#include "ip/ip6.h"
+#include "ip/ip.h"
 #include "ip/lwip_adapter.h"
 
 #if LWIP_IPV6
