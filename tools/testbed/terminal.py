@@ -745,6 +745,8 @@ class Terminal:
             else:
                 failed.append(index)
             self.cmd_excute_state = 'idle'
+            if self.cmd_excute_return == None:
+                self.cmd_excute_return = "timeout"
             status_str = '{0} run: '.format(index) + ' '.join(args) + ", " + self.cmd_excute_return
             self.cmdrun_status_display(status_str)
         if len(indexes) == 1:

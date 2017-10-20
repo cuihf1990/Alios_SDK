@@ -23,13 +23,14 @@ HEARTBEAT      = 'HTBT'
 TYPE_NONE      = 'NONE'
 
 def is_valid_type(type):
-    if type == CLIENT_DEV:
-        return True
-    if type == ALL_DEV:
-        return True
+    #frequently used commands
     if type == DEVICE_LOG:
         return True
     if type == DEVICE_CMD:
+        return True
+    if type == CMD_DONE:
+        return True
+    if type == CMD_ERROR:
         return True
     if type == DEVICE_ERASE:
         return True
@@ -40,6 +41,13 @@ def is_valid_type(type):
     if type == DEVICE_START:
         return True
     if type == DEVICE_STOP:
+        return True
+    #less frequently used commands
+    if type == HEARTBEAT:
+        return True
+    if type == CLIENT_DEV:
+        return True
+    if type == ALL_DEV:
         return True
     if type == LOG_SUB:
         return True
@@ -52,12 +60,6 @@ def is_valid_type(type):
     if type == FILE_DATA:
         return True
     if type == FILE_END:
-        return True
-    if type == CMD_DONE:
-        return True
-    if type == CMD_ERROR:
-        return True
-    if type == HEARTBEAT:
         return True
     return False
 
