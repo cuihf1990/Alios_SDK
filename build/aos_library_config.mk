@@ -30,20 +30,25 @@ BYPASS_LIBRARY_POISON_CHECK=1
 
 ONLY_BUILD_LIBRARY := yes
 
-include $(LIB_DIR)/$(LIB_NAME).mk
-TARGET_CFLAGS := $(addprefix -I$(LIB_DIR)/,$(GLOBAL_INCLUDES)) $(addprefix -D,$(GLOBAL_DEFINES)) $(addprefix -I$(LIB_DIR)/,$($(NAME)_INCLUDES)) $(addprefix -D,$($(NAME)_DEFINES)) $($(NAME)_CFLAGS)
-
-SOURCES := $(addprefix $(LIB_DIR)/,$($(NAME)_SOURCES))
 LIBRARY_OUTPUT_DIR := $(LIB_OUT_DIR)
 
 POSSIBLE_APP_NAME := $(LIB_NAME)app
 APP := $(strip $(filter $(POSSIBLE_APP_NAME), $(foreach app, $(SOURCE_ROOT)/example, $(notdir $(wildcard $(app)/*)))))
 
 ifeq ($(APP),)
-APP := helloworld
+ifeq ($(TARGET_BOARD), b_l475e)
+APP := mqttapp
+else
+APP := alinkapp
+endif
 endif
 
 MAKECMDGOALS += $(APP)@$(TARGET_BOARD)
+
+include $(LIB_DIR)/$(LIB_NAME).mk
+TARGET_CFLAGS := $(addprefix -I$(LIB_DIR)/,$(GLOBAL_INCLUDES)) $(addprefix -D,$(GLOBAL_DEFINES)) $(addprefix -I$(LIB_DIR)/,$($(NAME)_INCLUDES)) $(addprefix -D,$($(NAME)_DEFINES)) $($(NAME)_CFLAGS)
+
+SOURCES := $(addprefix $(LIB_DIR)/,$($(NAME)_SOURCES))
 
 CFLAGS :=
 AOS_SDK_CFLAGS :=
