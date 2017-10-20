@@ -65,10 +65,12 @@ int aos_kernel_init(void)
 
     trace_start();
 
+#ifdef AOS_FOTA 
+    ota_service_init();
+#endif
+
 #ifdef AOS_BINS
     application_init();
-
-    ota_service_init();
 
     if (app_info->app_entry) {
         app_info->app_entry((void *)g_syscall_tbl, 0, NULL);
