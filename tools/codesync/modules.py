@@ -53,33 +53,34 @@ class syncpreparelib():
             git_cmd = "git checkout aos1.0.1"
         else:
             error('Unknown source base!')
-
         popen(git_cmd, shell=True, cwd=os.getcwd())
+
         self.srcdir = "./aos"
 
-        linux = "aos make clean"
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+        if srcbase == "1.0.1":
+            linux = "aos make clean"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
-        linux = "aos make meshapp@linuxhost"
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+            linux = "aos make meshapp@linuxhost"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
-        linux = "aos make alinkapp@linuxhost"
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+            linux = "aos make alinkapp@linuxhost"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
-        linux = "aos make alinkapp@mk3060"
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+            linux = "aos make alinkapp@mk3060"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
         os.chdir(cur_dir)
         os.chdir("./tmp_synccode")
@@ -88,21 +89,21 @@ class syncpreparelib():
             error('get vendor fail!')
 
         popen(vendor.git_cmd, shell=True, cwd=os.getcwd())
+        self.srcdir = "./aos"
         self.dstdir = vendor.dstdir
         self.dstbase = dstbase
         self.srcbase = srcbase
         os.chdir(cur_dir)
         os.chdir("./tmp_synccode")
-
         self.mkdir = mkdir
 
     def cleanup_codebase(self):
         mac = ""
         win = ""
-        ##############################################################
-        # keep platform and board folder the same as different targets
-        ##############################################################
         if self.dstbase == "allwinner":
+            ##############################################################
+            # keep platform and board folder the same as different targets
+            ##############################################################
             src = self.dstdir + "/platform"
             linux = "cp -rf " + src + " ./"
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
@@ -209,6 +210,15 @@ class syncpreparelib():
             src = self.srcdir + "/*"
             dst = self.dstdir
             linux = "cp -rf " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+       # exclude codesync tool
+        dst = self.dstdir + "/tools/codesync"
+        if os.path.exists(dst):
+            linux = "rm -rf " + dst
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
             if not cmd:
                 error('Unknown system!')
@@ -543,21 +553,51 @@ class meshlib:
     def make_lib(self):
         mac = ""
         win = ""
-        src = self.srcdir + "/out/alinkapp@mk3060/libraries/mesh.a"
-        dst = self.dstdir + "/kernel/protocols/mesh/lib/mk3060/libmesh.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
 
-        src = self.srcdir + "/out/meshapp@linuxhost/libraries/mesh.a"
-        dst = self.dstdir + "/kernel/protocols/mesh/lib/linuxhost/libmesh.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+        if self.srcbase == "1.0.1":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/mesh.a"		 
+            dst = self.dstdir + "/kernel/protocols/mesh/lib/mk3060/libmesh.a"		 
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/out/meshapp@linuxhost/libraries/mesh.a"
+            dst = self.dstdir + "/kernel/protocols/mesh/lib/linuxhost/libmesh.a"		 
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+        else:
+            linux = "aos makelib -r linux kernel/protocol/mesh"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/mesh.linux.linuxhost.GCC.release.a"
+            dst = self.dstdir + "/kernel/protocols/mesh/lib/linuxhost/libmesh.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            linux = "aos makelib -r ARM968E-S kernel/protocol/mesh"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/mesh.ARM968E-S.mk3060.GCC.release.a"
+            dst = self.dstdir + "/kernel/protocols/mesh/lib/mk3060/libmesh.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
 class ywsslib:
     def __init__(self, srcdir, dstdir, srcbase, dstbase, mkdir):
@@ -625,21 +665,51 @@ class ywsslib:
     def make_lib(self):
         mac = ""
         win = ""
-        src = self.srcdir + "/out/alinkapp@mk3060/libraries/ywss.a"
-        dst = self.dstdir + "/framework/ywss/lib/mk3060/libywss.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
 
-        src = self.srcdir + "/out/alinkapp@linuxhost/libraries/ywss.a"
-        dst = self.dstdir + "/framework/ywss/lib/linuxhost/libywss.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+        if self.srcbase == "1.0.1":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/ywss.a"		 
+            dst = self.dstdir + "/framework/ywss/lib/mk3060/libywss.a"		 
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/out/alinkapp@linuxhost/libraries/ywss.a"
+            dst = self.dstdir + "/framework/ywss/lib/linuxhost/libywss.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+        else:
+            linux = "aos makelib -r linux framework/ywss"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/ywss.linux.linuxhost.GCC.release.a"
+            dst = self.dstdir + "/framework/ywss/lib/linuxhost/libywss.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            linux = "aos makelib -r ARM968E-S framework/ywss"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/ywss.ARM968E-S.mk3060.GCC.release.a"
+            dst = self.dstdir + "/framework/ywss/lib/mk3060/libywss.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
 class rhinolib:
     def __init__(self, srcdir, dstdir, srcbase, dstbase, mkdir):
@@ -699,21 +769,51 @@ class rhinolib:
     def make_lib(self):
         mac = ""
         win = ""
-        src = self.srcdir + "/out/alinkapp@mk3060/libraries/rhino.a"
-        dst = self.dstdir + "/kernel/rhino/lib/mk3060/librhino.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
 
-        src = self.srcdir + "/out/alinkapp@linuxhost/libraries/rhino.a"
-        dst = self.dstdir + "/kernel/rhino/lib/linuxhost/librhino.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+        if self.srcbase == "1.0.1":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/rhino.a"		 
+            dst = self.dstdir + "/kernel/rhino/lib/mk3060/librhino.a"		 
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/out/alinkapp@linuxhost/libraries/rhino.a"
+            dst = self.dstdir + "/kernel/rhino/lib/linuxhost/librhino.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+        else:
+            linux = "aos makelib -r linux kernel/rhino"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/rhino.linux.linuxhost.GCC.release.a"
+            dst = self.dstdir + "/kernel/rhino/lib/linuxhost/librhino.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            linux = "aos makelib -r ARM968E-S kernel/rhino"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/rhino.ARM968E-S.mk3060.GCC.release.a"
+            dst = self.dstdir + "/kernel/rhino/lib/mk3060/librhino.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
 class wsflib:
     def __init__(self, srcdir, dstdir, srcbase, dstbase, mkdir):
@@ -766,21 +866,51 @@ class wsflib:
     def make_lib(self):
         mac = ""
         win = ""
-        src = self.srcdir + "/out/alinkapp@mk3060/libraries/wsf.a"
-        dst = self.dstdir + "/framework/connectivity/wsf/lib/mk3060/libwsf.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
 
-        src = self.srcdir + "/out/alinkapp@linuxhost/libraries/wsf.a"
-        dst = self.dstdir + "/framework/connectivity/wsf/lib/linuxhost/libwsf.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+        if self.srcbase == "1.0.1":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/wsf.a"		 
+            dst = self.dstdir + "/framework/connectivity/wsf/lib/mk3060/libwsf.a"		 
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/out/alinkapp@linuxhost/libraries/wsf.a"
+            dst = self.dstdir + "/framework/connectivity/wsf/lib/linuxhost/libwsf.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+        else:
+            linux = "aos makelib -r linux framework/connectivity/wsf"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/wsf.linux.linuxhost.GCC.release.a"
+            dst = self.dstdir + "/framework/connectivity/wsf/lib/linuxhost/libwsf.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            linux = "aos makelib -r ARM968E-S framework/connectivity/wsf"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/wsf.ARM968E-S.mk3060.GCC.release.a"
+            dst = self.dstdir + "/framework/connectivity/wsf/lib/mk3060/libwsf.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
 class msdplib:
     def __init__(self, srcdir, dstdir, srcbase, dstbase, mkdir):
@@ -842,22 +972,35 @@ class msdplib:
 
         if self.srcbase == "1.0.1":
             base_dstdir = self.dstdir + "/framework/protocol/alink/msdp/"
+            dst = base_dstdir + "lib/mk3060/libmsdp.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/out/alinkapp@linuxhost/libraries/msdp.a"
+            dst = base_dstdir + "lib/linuxhost/libmsdp.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
         else:
             base_dstdir = self.dstdir + "/framework/gateway/msdp/"
-        dst = base_dstdir + "lib/mk3060/libmsdp.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+            linux = "aos makelib -r ARM968E-S framework/gateway/msdp"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
-        src = self.srcdir + "/out/alinkapp@linuxhost/libraries/msdp.a"
-        dst = base_dstdir + "lib/linuxhost/libmsdp.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+            src = self.srcdir + "/msdp.ARM968E-S.mk3060.GCC.release.a"
+            dst = base_dstdir + "lib/mk3060/libmsdp.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
 class devmgrlib:
     def __init__(self, srcdir, dstdir, srcbase, dstbase, mkdir):
@@ -915,26 +1058,39 @@ class devmgrlib:
     def make_lib(self):
         mac = ""
         win = ""
-        src = self.srcdir + "/out/alinkapp@mk3060/libraries/devmgr.a"
 
         if self.srcbase == "1.0.1":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/devmgr.a"
             base_dstdir = self.dstdir + "/framework/protocol/alink/devmgr/"
+            dst = base_dstdir + "lib/mk3060/libdevmgr.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/out/alinkapp@linuxhost/libraries/devmgr.a"
+            dst = base_dstdir + "lib/linuxhost/libdevmgr.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
         else:
             base_dstdir = self.dstdir + "/framework/gateway/devmgr/"
-        dst = base_dstdir + "lib/mk3060/libdevmgr.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+            linux = "aos makelib -r ARM968E-S framework/gateway/devmgr"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
-        src = self.srcdir + "/out/alinkapp@linuxhost/libraries/devmgr.a"
-        dst = base_dstdir + "lib/linuxhost/libdevmgr.a"
-        linux = "cp -f " + src + " " + dst
-        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-        if not cmd:
-            error('Unknown system!')
-        popen(cmd, shell=True, cwd=os.getcwd())
+            src = self.srcdir + "/devmgr.ARM968E-S.mk3060.GCC.release.a"
+            dst = base_dstdir + "lib/mk3060/libdevmgr.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
 class gatewaylib:
     def __init__(self, srcdir, dstdir, srcbase, dstbase, mkdir):
@@ -980,9 +1136,21 @@ class gatewaylib:
     def make_lib(self):
         mac = ""
         win = ""
-        src = self.srcdir + "/out/alinkapp@mk3060/libraries/gateway.a"
-        base_dstdir = self.dstdir + "/framework/gateway/"
-        dst = base_dstdir + "lib/mk3060/libgateway.a"
+        if self.srcbase == "1.0.1":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/gateway.a"
+            base_dstdir = self.dstdir + "/framework/gateway/"
+            dst = base_dstdir + "lib/mk3060/libgateway.a"
+        else:
+            base_dstdir = self.dstdir + "/framework/gateway/"
+            linux = "aos makelib -r ARM968E-S framework/gateway"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/gateway.ARM968E-S.mk3060.GCC.release.a"
+            dst = base_dstdir + "lib/mk3060/libgateway.a"
+
         linux = "cp -f " + src + " " + dst
         cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
         if not cmd:
@@ -1213,6 +1381,18 @@ class bekenlib:
         mac = ""
         win = ""
 
+        linux = "aos make clean"
+        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+        if not cmd:
+            error('Unknown system!')
+        popen(cmd, shell=True, cwd=os.getcwd())
+
+        linux = "aos make alinkapp@mk3060"
+        cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+        if not cmd:
+            error('Unknown system!')
+        popen(cmd, shell=True, cwd=os.getcwd())
+
         linux = "echo \"create libbeken.a\" > packscript"
         cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
         if not cmd:
@@ -1345,14 +1525,15 @@ class pushcodelib():
 
     def execute(self):
         os.chdir(self.dstdir);
-        git_cmd = "git checkout -b code_sync_branch"
+        branch_name = "code_sync_branch_" + str(int(time.time()))
+        git_cmd = "git checkout -b " + branch_name
         popen(git_cmd, shell=True, cwd=os.getcwd())
         git_cmd = "git add -A"
         popen(git_cmd, shell=True, cwd=os.getcwd())
         git_cmd = "code synchronization at " + time.asctime()
         git_cmd = "git commit -m " + "\"" + git_cmd + "\""
         popen(git_cmd, shell=True, cwd=os.getcwd())
-        git_cmd = "git push origin code_sync_branch"
+        git_cmd = "git push origin " + branch_name
         popen(git_cmd, shell=True, cwd=os.getcwd())
 
     def cleancode(self):
