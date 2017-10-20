@@ -188,7 +188,7 @@ typedef struct __ecc_pubkey   ecc_pubkey_t;
  *                   -- caller will alloc "size" memory as context buffer later
  */
 ali_crypto_result ali_aes_get_ctx_size(aes_type_t type, size_t *size);
-EXPORT_SYMBOL_K(RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u, ali_aes_get_ctx_size, \
+EXPORT_SYMBOL_K(MBEDTLS_IN_KERNEL > 0u, ali_aes_get_ctx_size, \
     "ali_crypto_result ali_aes_get_ctx_size(aes_type_t type, size_t *size)")
 
 /*
@@ -206,7 +206,7 @@ EXPORT_SYMBOL_K(RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u, ali
 ali_crypto_result ali_aes_init(aes_type_t type, bool is_enc,
                       const uint8_t *key1, const uint8_t *key2,
                       size_t keybytes, const uint8_t *iv, void *context);
-EXPORT_SYMBOL_K(RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u, ali_aes_init, \
+EXPORT_SYMBOL_K(MBEDTLS_IN_KERNEL > 0u, ali_aes_init, \
     "ali_crypto_result ali_aes_init(aes_type_t type, bool is_enc, const uint8_t *key1, const uint8_t *key2, size_t keybytes, const uint8_t *iv, void *context)")
 
 /*
@@ -245,7 +245,7 @@ ali_crypto_result ali_aes_process(const uint8_t *src, uint8_t *dst,
 ali_crypto_result ali_aes_finish(const uint8_t *src, size_t src_size,
                                  uint8_t *dst, size_t *dst_size,
                                  sym_padding_t padding, void *context);
-EXPORT_SYMBOL_K(RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u, ali_aes_finish, \
+EXPORT_SYMBOL_K(MBEDTLS_IN_KERNEL > 0u, ali_aes_finish, \
     "ali_crypto_result ali_aes_finish(const uint8_t *src, size_t src_size, uint8_t *dst, size_t *dst_size, sym_padding_t padding, void *context)")
 
 ali_crypto_result ali_aes_reset(void *context);
