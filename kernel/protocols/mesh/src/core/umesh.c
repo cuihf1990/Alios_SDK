@@ -9,7 +9,6 @@
 #include "umesh_utils.h"
 #include "core/mcast.h"
 #include "core/link_mgmt.h"
-#include "core/lowpan6.h"
 #include "core/router_mgr.h"
 #include "core/network_data.h"
 #include "core/mesh_mgmt.h"
@@ -18,7 +17,9 @@
 #include "core/mesh_forwarder.h"
 #include "core/crypto.h"
 #include "core/address_mgmt.h"
+#include "core/fragments.h"
 #if (defined CONFIG_NET_LWIP)
+#include "ip/compress6.h"
 #include "ip/lwip_adapter.h"
 #endif
 #include "hal/interfaces.h"

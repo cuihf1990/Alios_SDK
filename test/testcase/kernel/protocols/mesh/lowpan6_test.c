@@ -7,9 +7,10 @@
 
 #include "umesh_types.h"
 #include "core/mesh_forwarder.h"
-#include "core/lowpan6.h"
+#include "core/fragments.h"
 #include "core/network_data.h"
 #include "ip/ip.h"
+#include "ip/compress6.h"
 #include "utilities/message.h"
 
 void test_uradar_6lowpan_case(void)
@@ -390,6 +391,5 @@ void test_uradar_6lowpan_case(void)
     for (size = 0; size < 8; size++) { /* delete incomplete fragments */
         lp_handle_timer(NULL);
     }
-    YUNIT_ASSERT(true == lp_reass_queue_empty());
     lp_stop();
 }

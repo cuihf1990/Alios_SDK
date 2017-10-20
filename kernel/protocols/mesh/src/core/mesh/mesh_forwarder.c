@@ -22,6 +22,7 @@
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
 #include "tools/diags.h"
+#include "core/fragments.h"
 
 typedef struct received_frame_s {
     hal_context_t *hal;
