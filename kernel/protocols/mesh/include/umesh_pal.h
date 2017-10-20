@@ -17,5 +17,6 @@ int umesh_pal_sem_new(pal_sem_hdl_t *hdl, int count);
 int umesh_pal_sem_wait(pal_sem_hdl_t *hdl, int ms);
 void umesh_pal_sem_signal(pal_sem_hdl_t *hdl);
 void umesh_pal_sem_free(pal_sem_hdl_t *hdl);
+int umesh_pal_schedule_call(void (*task)(void *), void *arg);
 
 #endif

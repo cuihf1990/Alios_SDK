@@ -80,6 +80,15 @@ void umesh_pal_sem_free(pal_sem_hdl_t *hdl)
     aos_sem_free((aos_sem_t *)hdl);
 }
 
+int umesh_pal_schedule_call(void (*task)(void *), void *arg)
+{
+    int ret;
+
+    ret = aos_schedule_call(task, arg);
+
+    return ret < 0 ? -1 : 0;
+}
+
 /*
  * security
  */
