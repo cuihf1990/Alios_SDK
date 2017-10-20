@@ -14,7 +14,7 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/core/mesh/network_data.c \
                    src/core/mesh/mesh_forwarder.c \
                    src/core/mesh/address_mgmt.c \
-                   src/core/mesh/lowpan6.c \
+                   src/core/mesh/fragments.c \
                    src/core/mesh/mcast.c \
                    src/core/routing/router_mgr.c \
                    src/core/routing/sid_router.c \
@@ -57,6 +57,7 @@ endif
 LWIP ?=1
 ifeq ($(LWIP), 1)
 $(NAME)_SOURCES += src/ip/lwip_adapter.c
+$(NAME)_SOURCES += src/ip/compress6.c
 $(NAME)_SOURCES += src/tools/cli_ip.c
 else
 $(NAME)_SOURCES += src/utilities/mem/pbuf.c

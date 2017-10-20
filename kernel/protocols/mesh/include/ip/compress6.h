@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef UR_LOWPAN6_H
-#define UR_LOWPAN6_H
+#ifndef MESH_COMPRESS6_H
+#define MESH_COMPRESS66_H
 
 #include "utilities/message.h"
 #include "utilities/memory.h"
@@ -85,16 +85,7 @@ enum {
 };
 
 enum {
-    FRAG_1_DISPATCH = 0b11000,
-    FRAG_N_DISPATCH = 0b11100,
-};
-
-enum {
     MIN_LOWPAN_FRM_SIZE = 6,
-};
-
-enum {
-    REASSEMBLE_TICK_INTERVAL = 600,
 };
 
 typedef struct iphc_header_s {
@@ -117,24 +108,13 @@ typedef struct nhc_header_s {
     unsigned int DP : 5;
 } __attribute__((packed)) nhc_header_t;
 
-typedef struct frag_header_s {
-    uint16_t size : 11;
-    uint16_t dispatch : 5;
-    uint16_t tag;
-    uint8_t  offset;
-} __attribute__((packed)) frag_header_t;
-
 ur_error_t lp_header_compress(const uint8_t *header, uint8_t *buffer,
                               uint16_t *ip_hdr_len, uint16_t *lowpan_hdr_len);
 ur_error_t lp_header_decompress(uint8_t *header, uint16_t *header_size,
                                 uint16_t *lowpan_header_size,
                                 ur_addr_t *src, ur_addr_t *dest);
-ur_error_t lp_reassemble(message_t *p, message_t **reass_p);
-void       lp_start(void);
-void       lp_stop(void);
-bool       lp_reass_queue_empty(void);
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UR_LOWPAN6_H */
+#endif /* MESH_COMPRESS6_H */

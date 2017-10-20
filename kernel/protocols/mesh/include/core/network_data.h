@@ -4,7 +4,6 @@
 
 #include <stdbool.h>
 
-#include "core/lowpan6.h"
 #include "ip/ip.h"
 #include "utilities/configs.h"
 #include "hal/interface_context.h"
