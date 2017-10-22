@@ -1,7 +1,6 @@
 ifneq ($(filter $(HOST_ARCH), xtensa),)
 
-PATH    := $(PATH):/bin:/usr/bin:/usr/local/bin
-TOOLCHAIN_PATH := /home/junjie-cai/workspace/yoc_esp32/csp/vendor/esp32_rhino/toolchain/bin/
+TOOLCHAIN_PATH ?=
 TOOLCHAIN_PREFIX := xtensa-esp32-elf-
 CC      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gcc
 CXX     := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)g++
