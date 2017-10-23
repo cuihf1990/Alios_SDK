@@ -19,9 +19,18 @@
 #define POST_OTA_STATUS_DATA   "{\"version\":\"%s\",\"step\":\"%d\",\"stepPercent\":\"%d\"}"
 #define POST_OTA_RESULT_DATA   "{\"uuid\" :\"%s\",\"version\":\"%s;APP2.0;OTA1.0\"}"
 
+typedef struct ota_device_info {
+    const char *product_key;
+    const char *device_name;
+    const char *uuid;
+} OTA_device_info;
+
+OTA_device_info g_device_info;
+
 void platform_ota_init( void *signal)
 {
-
+    OTA_device_info *device_info = (OTA_device_info *)signal;
+    g_device_info.uuid = device_info->uuid;    
 }
 
 int8_t platform_ota_parse_requset(const char *request, int *buf_len,
@@ -206,7 +215,7 @@ extern char *config_get_main_uuid(void);
 
 char *platform_ota_get_id(void)
 {
-    return config_get_main_uuid();
+    return g_device_info.uuid;
 }
 
 

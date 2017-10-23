@@ -31,6 +31,7 @@ AOS_EXPORT AOS_WEAK const char   *aos_get_device_name(void)
 char  os_version[OS_MAX_VERSION_LEN];
 #endif
 
+
 AOS_EXPORT AOS_WEAK const char   *aos_get_kernel_version(void)
 {
     return (const char *)aos_version_get();
@@ -64,9 +65,13 @@ static struct cli_command versioncmd = {
     .function = show_version
 };
 
+#define KEY_APP_VER  "app_version"
+
 void version_init(void)
 {
     aos_cli_register_command(&versioncmd);
+    const char *app_version = aos_get_app_version();
+    aos_kv_set(KEY_APP_VER, app_version, strlen(app_version),1);
 }
 
 AOS_EXPORT AOS_WEAK void dump_sys_info(void)

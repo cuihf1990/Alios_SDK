@@ -63,7 +63,7 @@
 /* Split memory into area for vectors and ram */
 MEMORY
 {
-	flash  (rx) : ORIGIN = 0x0070400, LENGTH = 138K
+	flash  (rx) : ORIGIN = 0x007d400, LENGTH = 211K
 	ram   (rwx): ORIGIN = 0x00400020, LENGTH = 64k
 }
 

@@ -196,7 +196,7 @@ endif
 
 # Process all the components + AOS
 
-COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall libc vfs
+COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall libc vfs init cloud
 
 ifeq ($(BINS),app)
 #$(NAME)_COMPONENTS += usyscall
