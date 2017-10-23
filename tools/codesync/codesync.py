@@ -43,11 +43,11 @@ def main():
     for module in modules:
         print module
         if module == "mesh":
-            mesh = meshlib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir)
+            mesh = meshlib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir, syncprepare.vendor)
             mesh.make_folder()
             mesh.make_lib()
         elif module == "ywss":
-            ywss = ywsslib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir)
+            ywss = ywsslib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir, syncprepare.vendor)
             ywss.make_folder()
             ywss.make_lib()
         elif module == "beken":
@@ -55,23 +55,23 @@ def main():
             beken.make_folder()
             beken.make_lib()
         elif module == "rhino":
-            rhino = rhinolib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir)
+            rhino = rhinolib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir, syncprepare.vendor)
             rhino.make_folder()
             rhino.make_lib()
         elif module == "msdp":
-            msdp = msdplib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir)
+            msdp = msdplib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir, syncprepare.vendor)
             msdp.make_folder()
             msdp.make_lib()
         elif module == "wsf":
-            wsf = wsflib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir)
+            wsf = wsflib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir, syncprepare.vendor)
             wsf.make_folder()
             wsf.make_lib()
         elif module == "devmgr":
-            devmgr = devmgrlib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir)
+            devmgr = devmgrlib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir, syncprepare.vendor)
             devmgr.make_folder()
             devmgr.make_lib()
         elif module == "gateway":
-            gateway = gatewaylib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir)
+            gateway = gatewaylib(syncprepare.srcdir, syncprepare.dstdir, syncprepare.srcbase, syncprepare.dstbase, syncprepare.mkdir, syncprepare.vendor)
             gateway.make_folder()
             gateway.make_lib()
         else:
