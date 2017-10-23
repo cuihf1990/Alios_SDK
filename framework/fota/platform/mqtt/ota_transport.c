@@ -405,7 +405,9 @@ int8_t platform_ota_result_post(void)
         OTA_LOG_E("Report version failed");
         return -1;
     }
-
+#ifdef STM32L475xx
+    IOT_MQTT_Yield(g_ota_device_info.pclient, 500);
+#endif
     return ret;
 }
 

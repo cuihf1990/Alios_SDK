@@ -62,11 +62,15 @@ static void update_action(void *buf)
         ota_do_update_packet(&response_parmas, &ota_request_parmas, ota_write_flash_callback,
                              ota_finish_callbak);
     }
-
 }
+
 void do_update(int len,  const char *buf)
 {
+#ifdef STM32L475xx
+    update_action(buf);
+#else
     aos_schedule_call(update_action, (void *)buf);
+#endif
 }
 
 void cancel_update(int len, const char *buf)
