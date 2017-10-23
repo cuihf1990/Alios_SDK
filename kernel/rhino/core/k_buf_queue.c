@@ -194,9 +194,7 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
     ktask_t *task;
     kstat_t  err;
 
-#if (RHINO_CONFIG_TRACE > 0)
     uint8_t  cur_cpu_num;
-#endif
 
     /* this is only needed when system zero interrupt feature is enabled */
 #if (RHINO_CONFIG_INTRPT_GUARD > 0)
@@ -210,9 +208,8 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
         return RHINO_KOBJ_TYPE_ERR;
     }
 
-#if (RHINO_CONFIG_TRACE > 0)
     cur_cpu_num = cpu_cur_get();
-#endif
+    (void)cur_cpu_num;
 
     if (msg_size > queue->max_msg_size) {
         TRACE_BUF_QUEUE_MAX(g_active_task[cur_cpu_num], queue, msg, msg_size);
