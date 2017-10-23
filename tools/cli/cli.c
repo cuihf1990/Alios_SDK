@@ -488,7 +488,9 @@ static void wifi_debug_cmd(char *buf, int len, int argc, char **argv);
 #ifdef CONFIG_NET_LWIP
 static void tftp_cmd(char *buf, int len, int argc, char **argv);
 #endif /* CONFIG_NET_LWIP */
+#ifndef CONFIG_NO_TCPIP
 static void udp_cmd(char *buf, int len, int argc, char **argv);
+#endif
 static void log_cmd(char *buf, int len, int argc, char **argv);
 
 static const struct cli_command built_ins[] = {

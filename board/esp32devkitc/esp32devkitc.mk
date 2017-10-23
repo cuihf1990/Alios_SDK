@@ -4,6 +4,10 @@ MODULE              := 1062
 HOST_ARCH           := xtensa
 HOST_MCU_FAMILY     := esp32
 
+# todo: remove these after rhino/lwip ready
+vcall               := freertos
+GLOBAL_DEFINES      += CONFIG_NO_TCPIP
+
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 define get-os-version
 "AOS-R"-$(CURRENT_TIME)

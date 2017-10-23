@@ -8,6 +8,12 @@ ifeq ($(HOST_ARCH),ARM968E-S)
 $(NAME)_CFLAGS += -marm
 endif
 
+ifeq ($(vcall),freertos)
+GLOBAL_DEFINES += VCALL_FREERTOS
+
+$(NAME)_SOURCES += \
+    aos/aos_freertos.c
+else
 ifneq ($(vcall),posix)
 GLOBAL_DEFINES += VCALL_RHINO
 $(NAME)_COMPONENTS += rhino
@@ -22,5 +28,6 @@ GLOBAL_DEFINES += VCALL_POSIX
 
 $(NAME)_SOURCES += \
     aos/aos_posix.c
+endif
 endif
 
