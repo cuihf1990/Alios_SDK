@@ -57,19 +57,19 @@ extern int ota_hal_init(uint32_t offset);
 int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *request_parmas)
 {
     int is_primary_ota = strncmp(response_parmas->primary_version,
-                request_parmas->primary_version,
-                strlen(response_parmas->primary_version));
+                                 request_parmas->primary_version,
+                                 strlen(response_parmas->primary_version));
 
     int is_secondary_ota = strncmp(response_parmas->secondary_version,
-                request_parmas->secondary_version,
-                strlen(response_parmas->secondary_version));
+                                   request_parmas->secondary_version,
+                                   strlen(response_parmas->secondary_version));
 
     int is_need_ota = 0;
     char ota_version[MAX_VERSION_LEN] = {0};
     if (is_primary_ota > 0 ) {
         if (strlen(request_parmas->secondary_version) ) {
             snprintf(ota_version, MAX_VERSION_LEN, "%s_%s", response_parmas->primary_version, aos_get_app_version());
-            if(is_secondary_ota == 0) {
+            if (is_secondary_ota == 0) {
                 ota_set_update_type(OTA_KERNEL);
                 is_need_ota = 1;
             }
@@ -81,13 +81,13 @@ int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *req
 
     if (is_primary_ota == 0 && is_secondary_ota > 0) {
         snprintf(ota_version, MAX_VERSION_LEN, "%s_%s", response_parmas->primary_version,
-            response_parmas->secondary_version);
+                 response_parmas->secondary_version);
         ota_set_update_type(OTA_APP);
         is_need_ota = 1;
     }
 
     OTA_LOG_I("ota_version %s", ota_version);
-    ota_set_ota_version(ota_version); 
+    ota_set_ota_version(ota_version);
     return is_need_ota;
 }
 
@@ -195,7 +195,7 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
 
     ota_status_init();
     ota_set_status(OTA_INIT);
-    
+
     ret = ota_if_need(response_parmas, request_parmas);
     if (1 != ret) {
         OTA_LOG_E("ota cancel,ota version don't match dev version ! ");
@@ -215,12 +215,16 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
     md5[(sizeof md5) - 1] = '\0';
 
     if (set_url(response_parmas->download_url)) {
+        OTA_LOG_E("set_url failed");
         ret = -1;
         return ret;
     }
     // memset(url, 0, sizeof url);
     // strncpy(url, response_parmas->download_url, sizeof url);
     ret = aos_task_new("ota", ota_download_start, 0, 4096);
+#ifdef STM32L475xx
+    aos_task_exit(0);
+#endif
     return ret;
 }
 
