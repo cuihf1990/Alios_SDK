@@ -8,6 +8,7 @@
 #define MAX_COMMANDS 64
 #define INBUF_SIZE   128
 #define OUTBUF_SIZE  2048
+#define HIS_SIZE     5
 
 #ifndef FUNCPTR
 typedef void (*FUNCPTR)(void);
@@ -32,6 +33,10 @@ struct cli_st {
 
     char inbuf[INBUF_SIZE];
     char outbuf[OUTBUF_SIZE];
+
+    int his_idx;
+    int his_cur;
+    char history[HIS_SIZE][INBUF_SIZE];
 };
 
 #define CLI_ARGS char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv

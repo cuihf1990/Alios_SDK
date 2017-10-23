@@ -325,17 +325,53 @@ static void tab_complete(char *inbuf, unsigned int *bp)
  */
 static int get_input(char *inbuf, unsigned int *bp)
 {
+    int esc = 0, key1, key2;
     if (inbuf == NULL) {
         aos_cli_printf("inbuf_null\r\n");
         return 0;
     }
 
+    cli->his_idx = (cli->his_cur + HIS_SIZE - 1) % HIS_SIZE;
     while (cli_getchar(&inbuf[*bp]) == 1) {
         char c = inbuf[*bp];
         if (c == RET_CHAR || c == END_CHAR) {   /* end of input line */
             inbuf[*bp] = '\0';
             *bp = 0;
             return 1;
+        }
+
+        if (c == 0x1b) { /* escape sequence */
+            esc = 1;
+            key1 = -1;
+            key2 = -1;
+            continue;
+        }
+
+        if (esc) {
+            if (key1 < 0) {
+                key1 = c;
+                continue;
+            }
+
+            key2 = c;
+            esc = 0; /* quit escape sequence */
+            if (key1 == 0x5b && key2 == 0x41) { /* UP */
+                char *cmd = cli->history[cli->his_idx];
+                cli->his_idx = (cli->his_idx + HIS_SIZE - 1) % HIS_SIZE;
+                strncpy(inbuf, cmd, INBUF_SIZE);
+                printf("\r" PROMPT "%s", inbuf);
+                *bp = strlen(inbuf);
+                continue;
+            }
+
+            if (key1 == 0x5b && key2 == 0x42) { /* DOWN */
+                char *cmd = cli->history[cli->his_idx];
+                cli->his_idx = (cli->his_idx + 1) % HIS_SIZE;
+                strncpy(inbuf, cmd, INBUF_SIZE);
+                printf("\r" PROMPT "%s", inbuf);
+                *bp = strlen(inbuf);
+                continue;
+            }
         }
 
         if ((c == 0x08) || /* backspace */
@@ -415,6 +451,11 @@ static void cli_main(void *data)
                 break;
             }
 #endif
+            if (strlen(cli->inbuf) > 0) {
+                strncpy(cli->history[cli->his_cur], cli->inbuf, INBUF_SIZE);
+                cli->his_cur = (cli->his_cur + 1) % HIS_SIZE;
+            }
+
             ret = handle_input(msg);
             if (ret == 1) {
                 print_bad_command(msg);
