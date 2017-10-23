@@ -331,17 +331,15 @@ static int get_input(char *inbuf, unsigned int *bp)
     }
 
     while (cli_getchar(&inbuf[*bp]) == 1) {
-        if (inbuf[*bp] == RET_CHAR) {
-            continue;
-        }
-        if (inbuf[*bp] == END_CHAR) {   /* end of input line */
+        char c = inbuf[*bp];
+        if (c == RET_CHAR || c == END_CHAR) {   /* end of input line */
             inbuf[*bp] = '\0';
             *bp = 0;
             return 1;
         }
 
-        if ((inbuf[*bp] == 0x08) || /* backspace */
-            (inbuf[*bp] == 0x7f)) { /* DEL */
+        if ((c == 0x08) || /* backspace */
+            (c == 0x7f)) { /* DEL */
             if (*bp > 0) {
                 (*bp)--;
                 if (!cli->echo_disabled) {
@@ -352,14 +350,14 @@ static int get_input(char *inbuf, unsigned int *bp)
             continue;
         }
 
-        if (inbuf[*bp] == '\t') {
+        if (c == '\t') {
             inbuf[*bp] = '\0';
             tab_complete(inbuf, bp);
             continue;
         }
 
         if (!cli->echo_disabled) {
-            printf("%c", inbuf[*bp]);
+            printf("%c", c);
             fflush(stdout);
         }
 
