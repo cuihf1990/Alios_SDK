@@ -485,7 +485,6 @@ class Client:
                                 print "device", port, "run command:", cmds[:-1]+", succeed"
                             else:
                                 result = "busy"
-                                cmds[-1] = ','
                                 print "device", port, "run command:", cmds[:-1]+", failed, device busy"
                         else:
                             result = "error"

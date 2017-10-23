@@ -17,15 +17,11 @@ if [ $# -gt 0 ] && [ -f $1 ]; then
     firmware=$1
 fi
 
-echo -e "Start programing devices, firmware=${firmware}\n" > ${logfile}
-python testbed_program.py ${firmware} >> ${logfile} 2>&1
-echo -e "\n---------------------------------------------------------\n" >> ${logfile}
-
 echo -e "Start Alink 2PPS and 5PPS test\n" >> ${logfile}
-python alink_testrun.py --testname=2pps --device=mxchip-DN02XLNN --filename=${firmware} --caseid=20247 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > ${log2pps} 2>&1 &
+python alink_testrun.py --testname=2pps --device=mxchip-DN02X304 --firmware=${firmware} --caseid=24015 > ${log2pps} 2>&1 &
 pps2pid=$!
 sleep 60
-python alink_testrun.py --testname=5pps --device=mxchip-DN02X30I --filename=${firmware} --caseid=20231 --userid=500001169232518525 --server=pre-iotx-qs.alibaba.com --port=80 --wifissid=aos_test_01 --wifipass=Alios@Embedded > ${log5pps} 2>&1 &
+python alink_testrun.py --testname=5pps --device=mxchip-DN02X30B --firmware=${firmware} --caseid=24029 > ${log5pps} 2>&1 &
 pps5pid=$!
 
 cd ${workdir}/ipv4
@@ -33,7 +29,7 @@ echo -e "Start AOS functional automatic test\n" >> ${logfile}
 for test in ${tests}; do
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     echo -e "start ${test}\n" >> ${logfile}
-    python ${test} >> ${logfile} 2>&1
+    python ${test} --firmware=${firmware} >> ${logfile} 2>&1
     if [ $? -eq 0 ]; then
         ret="success"
         success_num=$((success_num+1))

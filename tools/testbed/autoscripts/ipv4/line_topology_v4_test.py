@@ -1,29 +1,76 @@
 import os, sys, time
-sys.path.append('../../')
 from autotest import Autotest
 
+filename = '~/lb-all.bin'
 ap_ssid = 'aos_test_01'
 ap_pass = 'Alios@Embedded'
+server = '10.125.52.132'
+port = 34568
 
-devices = {}
-devices['A'] = 'mxchip-DN02QRIQ'
-devices['B'] = 'mxchip-DN02QRIU'
-devices['C'] = 'mxchip-DN02QRIX'
-devices['D'] = 'mxchip-DN02QRJ3'
-devices['E'] = 'mxchip-DN02QRJ6'
+#parse input
+i = 1
+while i < len(sys.argv):
+    arg = sys.argv[i]
+    if arg.startswith('--firmware='):
+        args = arg.split('=')
+        if len(args) != 2:
+            print 'wrong argument {0} input, example: --firmware=firmware.bin'.format(arg)
+        filename = args[1]
+    elif arg.startswith('--wifissid='):
+        args = arg.split('=')
+        if len(args) != 2:
+            print 'wrong argument {0} input, example: --wifissid=test_wifi'.format(arg)
+        ap_ssid = args[1]
+    elif arg.startswith('--wifipass='):
+        args = arg.split('=')
+        if len(args) != 2:
+            print 'wrong argument {0} input, example: --wifipass=test_password'.format(arg)
+        ap_pass = args[1]
+    elif arg=='--help':
+        print 'Usage: python {0} [--firmware=xxx.bin] [--wifissid=wifi_ssid] [--wifipass=password]'.format(sys.argv[0])
+        sys.exit(0)
+    i += 1
 
-device_list = list(devices)
-device_list.sort()
-device_attr={}
 at=Autotest()
 logname=time.strftime('%Y-%m-%d@%H-%M')
 logname = 'line_topology-' + logname +'.log'
-if at.start('10.125.52.132', 34568, logname) == False:
+if at.start(server, port, logname) == False:
     print 'error: start failed'
     exit(1)
+
+#request device allocation
+number = 5
+timeout = 3600
+allocted = at.device_allocate(number, timeout)
+if len(allocted) != number:
+    print "error: request device allocation failed"
+    exit(1)
+devices = {}
+for i in range(len(allocted)):
+    devices[chr(ord('A')+i)] = allocted[i]
+device_list = list(devices)
+device_list.sort()
+device_attr={}
+
 if at.device_subscribe(devices) == False:
     print 'error: subscribe to device failed, some devices may not exist in testbed'
     exit(1)
+for device in device_list:
+    at.device_control(device, 'reset')
+
+#program devices
+for device in device_list:
+    succeed = False; retry = 5
+    print 'programming device {0} ...'.format(devices[device])
+    for i in range(retry):
+        if at.device_program(device, '0x13200', filename) == True:
+            succeed = True
+            break
+        time.sleep(0.5)
+    if succeed == False:
+        print 'error: program device {0} failed'.format(devices[device])
+        exit(1)
+    print 'program device {0} succeed'.format(devices[device])
 
 #reboot and get device mac address
 retry = 5

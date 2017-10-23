@@ -1,5 +1,4 @@
 import sys, os, time, httplib, json, subprocess, pdb
-sys.path.append('../')
 from autotest import Autotest
 
 DEBUG = False
@@ -51,11 +50,11 @@ def main():
     device = 'mxchip-DN02QRKC'
     filename = 'lb.bin'
     caseid = '5366'
-    userid = '500001007540092782'
-    server = '10.125.11.56'
-    wifissid = '112558'
-    wifipass = 'test_wg@aliyun.com'
+    userid = '500001169232518525'
+    server = 'pre-iotx-qs.alibaba.com'
     port = '80'
+    wifissid = 'aos_test_01'
+    wifipass = 'Alios@Embedded'
     #parse input
     i = 1
     while i < len(sys.argv):
@@ -70,10 +69,10 @@ def main():
             if len(args) != 2:
                 print 'wrong argument {0} input, example: --device=mxchip-DN02QRKC'.format(arg)
             device = args[1]
-        elif arg.startswith('--filename='):
+        elif arg.startswith('--firmware='):
             args = arg.split('=')
             if len(args) != 2:
-                print 'wrong argument {0} input, example: --filename=firmware.bin'.format(arg)
+                print 'wrong argument {0} input, example: --firmware=firmware.bin'.format(arg)
             filename = args[1]
         elif arg.startswith('--caseid='):
             args = arg.split('=')
@@ -111,7 +110,7 @@ def main():
                 print 'wrong argument {0} input, example: --debug=1'.format(arg)
             DEBUG = (args[1] != '0')
         elif arg=='--help':
-            print 'Usage: python {0} [--testname=xxxx] [--device=xxx-xxx] [--filename=xxx.bin] [--caseid=xxx] [--userid=xxxxx] [--server=xx.x.x.x] [--port=xx] [--wifissid=wifi_ssid] [--wifipass=password] [--debug=0/1]'.format(sys.argv[0])
+            print 'Usage: python {0} [--testname=xxxx] [--device=xxx-xxx] [--firmware=xxx.bin] [--caseid=xxx] [--userid=xxxxx] [--server=xx.x.x.x] [--port=xx] [--wifissid=wifi_ssid] [--wifipass=password] [--debug=0/1]'.format(sys.argv[0])
             sys.exit(0)
         i += 1
 
@@ -134,7 +133,9 @@ def main():
     conn.close()
 
     at=Autotest()
-    at.start('10.125.52.132', 34568, logname)
+    if at.start('10.125.52.132', 34568, logname) == False:
+        print 'error: start failed'
+        exit(1)
     if at.device_subscribe(devices) == False:
         print 'error: subscribe to device failed, some devices may not exist in testbed'
         sys.exit(1)
@@ -146,6 +147,7 @@ def main():
         if at.device_program(device, '0x13200', filename) == True:
             succeed = True
             break
+        time.sleep(0.5)
     if succeed == False:
         print 'error: program device {0} failed'.format(devices[device])
         sys.exit(1)
