@@ -25,6 +25,9 @@ class vendorslib:
         elif self.base == "allwinner":
             self.git_cmd = "git clone git@code.aliyun.com:keepwalking.zeng/yunos-iot-project.git"
             self.dstdir = "./yunos-iot-project"
+        elif self.base == "telink":
+            self.git_cmd = "git clone git@code.aliyun.com:keepwalking.zeng/alios-nano.git"
+            self.dstdir = "./alios-nano"
         else:
             ret = 1
         return ret
@@ -163,6 +166,247 @@ class vendorslib:
             if not cmd:
                 error('Unknown system!')
             modules.popen(cmd, shell=True, cwd=os.getcwd())
+        elif self.base == "telink":
+            src = self.srcdir + "/alinkconfig.db"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/bootloader"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/device"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/example/nano"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/example/*"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            dst = self.srcdir + "/example"
+            linux = "cp -rf " + "./nano " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/script"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/tags"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/doc"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/framework"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/security"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/test"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            # kernel folder
+            src = self.srcdir + "/kernel/rhino"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/kernel/vcall"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/kernel/vfs"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/kernel/yloop"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/kernel/*"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/kernel"
+            linux = "cp -rf ./rhino " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/kernel"
+            linux = "cp -rf ./vcall " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/kernel"
+            linux = "cp -rf ./vfs " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/kernel"
+            linux = "cp -rf ./yloop " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.dstdir + "/board/linuxhost"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/board/*"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/board"
+            linux = "cp -rf ./linuxhost " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.dstdir + "/platform/mcu/linux"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/platform/mcu/include"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/platform/mcu/*"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/platform/mcu"
+            linux = "cp -rf ./linux " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/platform/mcu/"
+            linux = "cp -rf ./include " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.dstdir + "/build"
+            linux = "cp -rf " + src + " ./"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir + "/build"
+            linux = "rm -rf " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            src = self.srcdir
+            linux = "cp -rf ./build " + src
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            dst = self.dstdir + "/*"
+            linux = "rm -rf " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
+            dst = self.dstdir
+            src = self.srcdir + "/*"
+            linux = "cp -rf " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            modules.popen(cmd, shell=True, cwd=os.getcwd())
+
         else:
             dst = self.dstdir + "/*"
             linux = "rm -rf " + dst
