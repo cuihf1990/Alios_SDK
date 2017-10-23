@@ -181,6 +181,32 @@ class Server:
             break
         return ret
 
+    def allocate_devices(self, value):
+        try:
+            number = int(value)
+        except:
+            return ['error','argument']
+
+        if number <= 0:
+            return ['error','argument']
+
+        allocated = []
+        for client in self.client_list:
+            allocated = []
+            ports = list(client['devices'])
+            ports.sort()
+            for port in ports:
+                if client['devices'][port]['using'] == 0:
+                    allocated.append(port)
+                    if len(allocated) >= number:
+                        break
+            if len(allocated) >= number:
+                break
+        if len(allocated) >= number:
+            return ['success', '|'.join(allocated)]
+        else:
+            return ['fail', 'busy']
+
     def increase_device_refer(self, client, port, using_list):
         if [client['addr'], port] not in using_list:
             if port in list(client['devices']):
@@ -284,6 +310,11 @@ class Server:
                         else:
                             data = TBframe.construct(TBframe.CMD_ERROR,'fail')
                             terminal['socket'].send(data)
+                    elif type == TBframe.DEVICE_ALLOC:
+                        result = self.allocate_devices(value)
+                        content = ','.join(result)
+                        data = TBframe.construct(TBframe.DEVICE_ALLOC, content)
+                        terminal['socket'].send(data)
                     elif type == TBframe.LOG_SUB:
                         values = value.split(',')
                         if len(values) != 3:

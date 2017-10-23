@@ -17,6 +17,7 @@ class Autotest:
         self.cmd_excute_return = ''
         self.subscribed = {}
         self.subscribed_reverse = {}
+        self.allocated = None
         self.filter = {}
         self.sync_event = threading.Event()
         self.sync_event.clear()
@@ -127,6 +128,16 @@ class Autotest:
                     if type == TBframe.CMD_ERROR:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
+                    if type == TBframe.DEVICE_ALLOC:
+                        values = value.split(',')
+                        if len(values) != 2:
+                            continue
+                        result = values[0]
+                        allocated = values[1].split('|')
+                        if result != 'success':
+                            self.allocated = []
+                            continue
+                        self.allocated = allocated
             except:
                 if DEBUG:
                     raise
@@ -229,6 +240,32 @@ class Autotest:
             return False
         return True
 
+    def device_allocate(self, number, timeout):
+        try:
+            number = str(number)
+        except:
+            return []
+        data = TBframe.construct(TBframe.DEVICE_ALLOC, number)
+        timeout += time.time()
+        while time.time() < timeout:
+            self.allocated = None
+            self.service_socket.send(data)
+            subtimeout = 0.8
+            while self.allocated == None:
+                time.sleep(0.02)
+                subtimeout -= 0.02
+                if subtimeout <= 0:
+                    break;
+            if self.allocated == None or self.allocated == []:
+                time.sleep(8)
+                continue
+            if len(self.allocated) != int(number):
+                print "error: allocated number does not equal requested"
+            break
+        if time.time() > timeout:
+            self.allocated = []
+        return self.allocated
+
     def device_subscribe(self, devices):
         for devname in list(devices):
             devstr = self.get_devstr_by_partialstr(devices[devname])
@@ -243,6 +280,15 @@ class Autotest:
             data = TBframe.construct(TBframe.LOG_SUB, self.subscribed[devname])
             self.service_socket.send(data)
         return True
+
+    def device_unsubscribe(self, devices):
+        for devname in list(devices):
+            if devname not in self.subscribed:
+                continue
+            data = TBframe.construct(TBframe.LOG_UNSUB, self.subscribed[devname])
+            self.service_socket.send(data)
+            self.subscribed_reverse.pop(self.subscribed[devname])
+            self.subscribed.pop(devname)
 
     def device_erase(self, devname):
         if devname not in self.subscribed:
