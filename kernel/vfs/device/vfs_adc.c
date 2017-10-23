@@ -81,8 +81,8 @@ ssize_t vfs_adc_read(file_t *fp, void *buf, size_t nbytes)
         ret = aos_mutex_lock(&fp->node->mutex, AOS_WAIT_FOREVER);
         if (ret == 0) {
 
-        /* get adc sampled value. */ 
-        ret = hal_adc_value_get(adc_dev, buf, AOS_WAIT_FOREVER);
+            /* get adc sampled value. */ 
+            ret = hal_adc_value_get(adc_dev, buf, AOS_WAIT_FOREVER);
         }
 
         /* unlock the device. */
