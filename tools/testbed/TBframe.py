@@ -11,6 +11,7 @@ DEVICE_PROGRAM = 'DPRG'
 DEVICE_RESET   = 'DRST'
 DEVICE_START   = 'DSTR'
 DEVICE_STOP    = 'DSTP'
+DEVICE_ALLOC   = 'DALC'
 LOG_SUB        = 'LGSB'
 LOG_UNSUB      = 'LGUS'
 LOG_DOWNLOAD   = 'LGDL'
@@ -25,6 +26,8 @@ TYPE_NONE      = 'NONE'
 def is_valid_type(type):
     #frequently used commands
     if type == DEVICE_LOG:
+        return True
+    if type == HEARTBEAT:
         return True
     if type == DEVICE_CMD:
         return True
@@ -43,8 +46,6 @@ def is_valid_type(type):
     if type == DEVICE_STOP:
         return True
     #less frequently used commands
-    if type == HEARTBEAT:
-        return True
     if type == CLIENT_DEV:
         return True
     if type == ALL_DEV:
@@ -60,6 +61,8 @@ def is_valid_type(type):
     if type == FILE_DATA:
         return True
     if type == FILE_END:
+        return True
+    if type == DEVICE_ALLOC:
         return True
     return False
 
