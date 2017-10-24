@@ -5,7 +5,11 @@
 #include <aos/aos.h>
 #include <aos/kernel.h>
 
-
+extern int vfs_init(void);
+extern int vfs_device_init(void);
+extern int aos_kv_init(void);
+extern void ota_service_init(void);
+extern int aos_framework_init(void);
 extern int application_start(int argc, char **argv);
 extern void trace_start(void);
 int aos_cloud_init(void);
