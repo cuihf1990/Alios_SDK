@@ -19,4 +19,6 @@ void umesh_pal_sem_signal(pal_sem_hdl_t *hdl);
 void umesh_pal_sem_free(pal_sem_hdl_t *hdl);
 int umesh_pal_schedule_call(void (*task)(void *), void *arg);
 
+void umesh_pal_init(void);
+void umesh_pal_ready(void);
 #endif

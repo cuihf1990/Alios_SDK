@@ -366,10 +366,7 @@ static void handle_mesh(agent_info_t *agent, ipc_msg_t *msg, struct sockaddr *pa
 #ifdef CONFIG_AOS_MESH
 #define CLI_RES_SIZE 0x10000
 void dda_cli_log(char *buf);
-void ur_cli_input(char *buf, int len);
-typedef void (*cmd_cb_t)(void *buf, int len, void *priv);
-void ur_cli_cmd(char *buf, uint16_t length, cmd_cb_t cb, void *priv);
-static void handle_cli_response(void *buf, int len, void *priv)
+static void handle_cli_response(char *buf, int len, void *priv)
 {
     if (!buf && !len) {
         dda_cli_log(priv);
@@ -389,7 +386,7 @@ static void pass_to_urcli(const void* arg)
     char *buf = cpu_event_malloc(CLI_RES_SIZE);
     memcpy(buf, "\n", 2);
 
-    ur_cli_cmd(cmsg->buf, cmsg->len, handle_cli_response, buf);
+    umesh_cli_cmd(cmsg->buf, cmsg->len, handle_cli_response, buf);
 
     cpu_event_free(cmsg);
 }
@@ -409,7 +406,7 @@ struct cmd_res {
     char     buf[0];
 };
 
-static void handle_cmd_response(void *buf, int len, void *priv)
+static void handle_cmd_response(char *buf, int len, void *priv)
 {
     struct cmd_res *res = (struct cmd_res *)priv;
     if (!buf && !len) {
@@ -434,7 +431,7 @@ static void got_p2p_request(const void* arg)
 
     res->cmd_src = cmsg->cmd_src;
     res->cmd_private = cmsg->cmd_private;
-    ur_cli_cmd(cmsg->buf, cmsg->len, handle_cmd_response, res);
+    umesh_cli_cmd(cmsg->buf, cmsg->len, handle_cmd_response, res);
 
     cpu_event_free(cmsg);
 }

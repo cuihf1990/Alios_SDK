@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include <aos/aos.h>
 
 #include "umesh.h"
 #include "umesh_hal.h"
@@ -95,10 +94,9 @@ enum {
     RESP_BUF_LEN = 256,
 };
 
-typedef void (*cmd_cb_t)(void *buf, int len, void *priv);
 typedef struct input_cli_s {
-    uint8_t *data;
-    uint16_t length;
+    char *data;
+    int length;
     cmd_cb_t cb;
     void *priv;
 } input_cli_t;
@@ -724,7 +722,7 @@ static void do_cli(void *arg)
     char        *last;
     uint16_t    index;
 
-    cmd = strtok_r((char *)buf->data, " ", &last);
+    cmd = strtok_r(buf->data, " ", &last);
     for (argc = 0; argc < MAX_ARGS_NUM; ++argc) {
         if ((argv[argc] = strtok_r(NULL, " ", &last)) == NULL) {
             break;
@@ -732,9 +730,7 @@ static void do_cli(void *arg)
     }
 
     if (umesh_is_initialized() == false && strcmp(cmd, "init") != 0) {
-        ur_mem_free(buf->data, buf->length);
-        ur_mem_free(buf, sizeof(input_cli_t));
-        return;
+        goto out;
     }
 
     g_cur_cmd_cb = buf->cb;
@@ -751,80 +747,52 @@ static void do_cli(void *arg)
     g_cur_cmd_cb = NULL;
     g_cur_cmd_priv = NULL;
 
+out:
     ur_mem_free(buf->data, buf->length);
     ur_mem_free(buf, sizeof(input_cli_t));
 }
 
-void ur_cli_cmd(char *buf, uint16_t length, cmd_cb_t cb, void *priv)
+void umesh_cli_cmd(char *buf, int length, cmd_cb_t cb, void *priv)
 {
     input_cli_t *input_cli;
 
     input_cli = (input_cli_t *)ur_mem_alloc(sizeof(input_cli_t));
     if (input_cli == NULL) {
-        return;
+        goto err_out;
     }
-    input_cli->data = (uint8_t *)ur_mem_alloc(length + 1);
-    if (input_cli->data == NULL) {
-        ur_mem_free(input_cli, sizeof(input_cli_t));
-        return;
-    }
+
     input_cli->length = length + 1;
+    input_cli->data = ur_mem_alloc(input_cli->length);
+    if (input_cli->data == NULL) {
+        goto err_out;
+    }
+
+    memcpy(input_cli->data, buf, input_cli->length);
     input_cli->cb = cb;
     input_cli->priv = priv;
-    memcpy(input_cli->data, (uint8_t *)buf, length);
-    input_cli->data[length] = '\0';
-    umesh_task_schedule_call(do_cli, input_cli);
-}
 
-void ur_cli_input(char *buf, uint16_t length)
-{
-    ur_cli_cmd(buf, length, NULL, NULL);
-}
-
-void ur_cli_input_args(char **argv, uint16_t argc)
-{
-    uint8_t index;
-    char **options = NULL;
-
-    if (argc < 2) {
+    if (umesh_task_schedule_call(do_cli, input_cli) == 0)
         return;
+
+err_out:
+    if (cb) {
+        cb(NULL, 0, priv);
     }
 
-    if (umesh_is_initialized() == false && strcmp(argv[1], "init") != 0) {
+    if (input_cli == NULL)
         return;
+
+    if (input_cli->data) {
+        ur_mem_free(input_cli->data, input_cli->length);
     }
 
-    for (index = 0; index < sizeof(g_commands) / sizeof(g_commands[0]); index++) {
-        if (strcmp(argv[1], g_commands[index].name) == 0) {
-            if (argc > 2) {
-                options = &argv[2];
-            }
-            argc -= 2;
-            g_commands[index].function(argc, options);
-            return;
-        }
-    }
-
-    response_append("cmd no supported\r\n");
+    ur_mem_free(input_cli, sizeof(input_cli_t));
 }
-
-static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
-                          char **argv)
-{
-    ur_cli_input_args(argv, argc);
-}
-
-static struct cli_command ncmd = {
-    .name = "umesh",
-    .help = "umesh [cmd]",
-    .function = umesh_command,
-};
 
 int g_cli_silent;
 extern void mesh_cli_ip_init(void);
 ur_error_t mesh_cli_init(void)
 {
-    aos_cli_register_command(&ncmd);
 #ifdef CONFIG_NET_LWIP
     mesh_cli_ip_init();
 #endif

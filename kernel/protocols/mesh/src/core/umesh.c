@@ -279,6 +279,8 @@ ur_error_t umesh_init(node_mode_t mode)
         return UR_ERROR_NONE;
     }
 
+    umesh_pal_init();
+
     umesh_mem_init();
     hal_umesh_init();
     g_um_state.mm_cb.interface_up = umesh_interface_up;
@@ -296,6 +298,8 @@ ur_error_t umesh_init(node_mode_t mode)
     message_stats_reset();
     g_um_state.initialized = true;
     mesh_cli_init();
+
+    umesh_pal_ready();
 
 #ifdef CONFIG_AOS_DDA
     parse_args();

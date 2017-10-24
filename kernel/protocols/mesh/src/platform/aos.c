@@ -3,12 +3,13 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
 
 #include <aos/aos.h>
 #include <ali_crypto.h>
 
-#include <umesh_types.h>
+#include <umesh.h>
 #include <umesh_pal.h>
 
 /*
@@ -191,3 +192,61 @@ ur_error_t umesh_pal_aes_decrypt(const uint8_t *key, uint8_t key_size,
 
     return error;
 }
+
+/* init */
+typedef struct {
+    aos_sem_t sem;
+    char buf[128];
+} cli_cookie_t;
+
+static void handle_cli_response(char *buf, int len, void *priv)
+{
+    if (!buf && !len) {
+        cli_cookie_t *cookie = priv;
+        aos_sem_signal(&cookie->sem);
+        return;
+    }
+
+    if (!len)
+        return;
+
+    aos_cli_printf("%s", (char *)buf);
+}
+
+static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
+                          char **argv)
+{
+    cli_cookie_t *cookie = aos_malloc(sizeof(*cookie));
+    int i;
+
+    aos_sem_new(&cookie->sem, 0);
+    cookie->buf[0] = 0;
+    for (i=1;i<argc;i++) {
+        int left;
+
+        left = sizeof(cookie->buf) - strlen(cookie->buf) - 1;
+        strncat(cookie->buf, argv[i], left);
+        left = sizeof(cookie->buf) - strlen(cookie->buf) - 1;
+        strncat(cookie->buf, " ", left);
+    }
+    umesh_cli_cmd(cookie->buf, strlen(cookie->buf), handle_cli_response, cookie);
+
+    aos_sem_wait(&cookie->sem, AOS_WAIT_FOREVER);
+    aos_free(cookie);
+}
+
+static struct cli_command ncmd = {
+    .name = "umesh",
+    .help = "umesh [cmd]",
+    .function = umesh_command,
+};
+
+void umesh_pal_ready(void)
+{
+    aos_cli_register_command(&ncmd);
+}
+
+void umesh_pal_init(void)
+{
+}
+

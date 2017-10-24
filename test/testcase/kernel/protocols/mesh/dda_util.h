@@ -6,6 +6,7 @@
 #define _DDM_UTIL_H_
 
 #include <aos/kernel.h>
+#include <umesh.h>
 #include "config_parser.h"
 #include "yts.h"
 
@@ -14,7 +15,6 @@
 #endif
 
 extern void ur_ut_send_cmd_to_ddm(const char *cmd);
-extern void ur_cli_input(char *buf, uint16_t length);
 
 static void cmd_to_master(char *cmd)
 {
@@ -24,7 +24,7 @@ static void cmd_to_master(char *cmd)
 
 static void cmd_to_agent(char *cmd)
 {
-    ur_cli_input(cmd, strlen(cmd));
+    umesh_cli_cmd(cmd, strlen(cmd), NULL, NULL);
 }
 
 static void set_rssi_ext(int if_idx, int i, int j, int rssi1, int rssi2)

@@ -38,6 +38,10 @@ bool umesh_is_mcast_subscribed(const ur_ip6_addr_t *addr);
 void umesh_get_extnetid(umesh_extnetid_t *extnetid);
 ur_error_t umesh_set_extnetid(const umesh_extnetid_t *extnetid);
 
+/* cli */
+typedef void (*cmd_cb_t)(char *buf, int len, void *priv);
+void umesh_cli_cmd(char *buf, int len, cmd_cb_t cb, void *priv);
+
 #ifdef __cplusplus
 }
 #endif
