@@ -71,7 +71,9 @@ void version_init(void)
 {
     aos_cli_register_command(&versioncmd);
     const char *app_version = aos_get_app_version();
+#ifdef AOS_KV
     aos_kv_set(KEY_APP_VER, app_version, strlen(app_version),1);
+#endif
 }
 
 AOS_EXPORT AOS_WEAK void dump_sys_info(void)
