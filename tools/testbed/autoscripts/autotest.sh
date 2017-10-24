@@ -29,7 +29,7 @@ echo -e "Start AOS functional automatic test\n" >> ${logfile}
 for test in ${tests}; do
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     echo -e "start ${test}\n" >> ${logfile}
-    python ${test} --firmware=${firmware} >> ${logfile} 2>&1
+    python ${test} --firmware=${workdir}/${firmware} >> ${logfile} 2>&1
     if [ $? -eq 0 ]; then
         ret="success"
         success_num=$((success_num+1))

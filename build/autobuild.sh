@@ -25,7 +25,7 @@ aos make clean > /dev/null 2>&1
 for target in ${linux_posix_targets}; do
     for platform in ${linux_platforms}; do
         vcall=posix aos make ${target}@${platform} > ${target}@${platform}@${branch}.log 2>&1
-        if [ -f out/${target}@${platform}/binary/${target}@${platform}.elf ]; then
+        if [ $? -eq 0 ]; then
             echo "build vcall=posix ${target}@${platform} at ${branch} branch succeed"
             rm -rf ${target}@${platform}@${branch}.log
         else
@@ -43,7 +43,7 @@ aos make clean > /dev/null 2>&1
 for target in ${mk3060_targets}; do
     for platform in ${mk3060_platforms}; do
         aos make ${target}@${platform} > ${target}@${platform}@${branch}.log 2>&1
-        if [ -f out/${target}@${platform}/binary/${target}@${platform}.elf ]; then
+        if [ $? -eq 0 ]; then
             rm -rf ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -66,7 +66,7 @@ for target in ${mk3060_targets}; do
                 continue
             fi
             aos make ${target}@${platform} BINS=${bins} > ${target}@${platform}@${bins}@${branch}.multi-bins.log 2>&1
-            if [ -f out/${target}@${platform}${bins}/binary/${target}@${platform}.${bins}.elf ]; then
+            if [ $? -eq 0 ]; then
                 rm -rf ${target}@${platform}@${bins}@${branch}.multi-bins.log
                 echo "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch succeed"
             else
@@ -86,7 +86,7 @@ aos make clean > /dev/null 2>&1
 for target in ${linux_targets}; do
     for platform in ${linux_platforms}; do
         aos make ${target}@${platform} > ${target}@${platform}@${branch}.log 2>&1
-        if [ -f out/${target}@${platform}/binary/${target}@${platform}.elf ]; then
+        if [ $? -eq 0 ]; then
             echo "build ${target}@${platform} at ${branch} branch succeed"
             rm -rf ${target}@${platform}@${branch}.log
         else
@@ -104,7 +104,7 @@ aos make clean > /dev/null 2>&1
 for target in ${b_l475e_targets}; do
     for platform in ${b_l475e_platforms}; do
         aos make ${target}@${platform} > ${target}@${platform}@${branch}.log 2>&1
-        if [ -f out/${target}@${platform}/binary/${target}@${platform}.elf ]; then
+        if [ $? -eq 0 ]; then
             rm -rf ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
