@@ -149,6 +149,8 @@ static inline int aos_cli_unregister_commands(const struct cli_command *commands
     return 0;
 }
 
+#define aos_cli_printf csp_printf
+
 static inline int aos_cli_init(void)
 {
     return 0;
