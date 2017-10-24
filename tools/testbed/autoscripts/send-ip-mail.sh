@@ -16,8 +16,7 @@ do
 done
 
 # get the IP address of eth0, e.g. "192.168.16.5"
-ETH0_IP_ADDR=`ifconfig eth0 | sed -n "2,2p" | awk '{print substr($2,1)}'`
-WLAN0_IP_ADDR=`ifconfig wlan0 | sed -n "2,2p" | awk '{print substr($2,1)}'`
+IP_ADDR=`ifconfig`
 
 # send the Email
-echo "eth-$ETH0_IP_ADDR wifi-$WLAN0_IP_ADDR Current time: `date '+%F %T'`." | mutt -s "Raspberry Pi IPs: eth-$ETH0_IP_ADDR wifi-$WLAN0_IP_ADDR" lc122798@alibaba-inc.com
+echo -e "Current time: `date '+%F %T'`\n\n${IP_ADDR}" | mutt -s "`uname -n` IP infomation" lc122798@alibaba-inc.com

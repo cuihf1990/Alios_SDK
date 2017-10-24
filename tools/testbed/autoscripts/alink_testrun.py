@@ -44,11 +44,10 @@ def alink_test(conn, operation, testid, auid):
         return {}
 
 #main function
-def main():
+def main(filename='lb.bin'):
     global DEBUG
     testname = '5pps'
     device = 'mxchip-DN02QRKC'
-    filename = 'lb.bin'
     caseid = '5366'
     userid = '500001169232518525'
     server = 'pre-iotx-qs.alibaba.com'
@@ -111,7 +110,7 @@ def main():
             DEBUG = (args[1] != '0')
         elif arg=='--help':
             print 'Usage: python {0} [--testname=xxxx] [--device=xxx-xxx] [--firmware=xxx.bin] [--caseid=xxx] [--userid=xxxxx] [--server=xx.x.x.x] [--port=xx] [--wifissid=wifi_ssid] [--wifipass=password] [--debug=0/1]'.format(sys.argv[0])
-            sys.exit(0)
+            return [0, 'help']
         i += 1
 
     logname=time.strftime('-%Y-%m-%d@%H-%M')
@@ -126,19 +125,19 @@ def main():
         print 'status:', result
     if result == {} or result[u'message'] != u'success':
         print 'error: unable to get test case {0} status'.format(caseid)
-        sys.exit(1)
+        return [1, 'get case status failed']
     if result[u'data'][u'case_status'] == 1:
         print 'error: test case {0} is already runing'.format(caseid)
-        sys.exit(1)
+        return [1, 'case already running']
     conn.close()
 
     at=Autotest()
     if at.start('10.125.52.132', 34568, logname) == False:
         print 'error: start failed'
-        exit(1)
+        return [1, 'connect testbed failed']
     if at.device_subscribe(devices) == False:
         print 'error: subscribe to device failed, some devices may not exist in testbed'
-        sys.exit(1)
+        return [1, 'subscribe device failed']
 
     #program device
     succeed = False; retry = 5
@@ -150,7 +149,7 @@ def main():
         time.sleep(0.5)
     if succeed == False:
         print 'error: program device {0} failed'.format(devices[device])
-        sys.exit(1)
+        return [1, 'program device failed']
     print 'program device {0} succeed'.format(devices[device])
     time.sleep(5)
 
@@ -181,7 +180,7 @@ def main():
         break;
     if succeed == False:
         print 'error: connect device to alink failed, response = {0}'.format(response)
-        sys.exit(1)
+        return [1, 'connect alink failed']
 
     #start run test case
     conn = httplib.HTTPConnection(server, port)
@@ -190,10 +189,10 @@ def main():
         print 'start:', result
     if result == {}:
         print 'error: unable to start test case {0}'.format(caseid)
-        sys.exit(1)
+        return [1, 'start case failed']
     if result[u'message'] != u'success':
         print 'error: start test case {0} failed, return:{1}'.format(testid, result[u'message'])
-        sys.exit(1)
+        return [1, 'start case failed']
     conn.close()
     time.sleep(5)
 
@@ -206,7 +205,7 @@ def main():
             print 'status:', result
         if result == {}:
             print 'error: unable to get test case {0} status'.format(caseid)
-            sys.exit(1)
+            return [1, 'get status failed']
         if result[u'message'] != u'success' or result[u'data'][u'case_status'] != 1:
             break;
         conn.close()
@@ -221,10 +220,11 @@ def main():
 
     if result[u'data'][u'case_status'] != 2:
         print 'test {0} finished unsuccessfully'.format(testname)
-        sys.exit(1)
+        return [1, 'failed']
     else:
         print 'test {0} finished successfully'.format(testname)
-        sys.exit(0)
+        return [0, 'succeed']
 
 if __name__ == '__main__':
-    main()
+    [code, msg] = main()
+    sys.exit(code)
