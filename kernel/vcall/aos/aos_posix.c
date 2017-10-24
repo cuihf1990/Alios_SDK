@@ -51,12 +51,15 @@ static void *dfl_entry(void *arg)
 int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {
+    int ret;
     pthread_t th;
     struct targ *targ = malloc(sizeof(*targ));
     targ->name = strdup(name);
     targ->fn = fn;
     targ->arg = arg;
-    return pthread_create(&th, NULL, dfl_entry, targ);
+    ret = pthread_create(&th, NULL, dfl_entry, targ);
+    if (ret == 0) ret = pthread_detach(th);
+    return ret;
 }
 
 int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
