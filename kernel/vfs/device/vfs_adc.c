@@ -83,6 +83,12 @@ ssize_t vfs_adc_read(file_t *fp, void *buf, size_t nbytes)
 
             /* get adc sampled value. */ 
             ret = hal_adc_value_get(adc_dev, buf, AOS_WAIT_FOREVER);
+
+            /* If the data is got successfully, set the return 
+            value to nbytes. */
+            if (ret == 0) {
+                ret = nbytes;
+            }
         }
 
         /* unlock the device. */
