@@ -30,10 +30,9 @@ def error(msg, code=-1):
     sys.exit(code)
 
 class syncpreparelib():
-    def __init__(self, srcbase, dstbase, mkdir):
+    def __init__(self, configs, mkdir):
         mac = ""
         win = ""
-
         if os.path.exists("./tmp_synccode"):
             linux= "rm -rf tmp_synccode"
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
@@ -53,6 +52,7 @@ class syncpreparelib():
         popen(git_cmd, shell=True, cwd=os.getcwd())
 
         os.chdir("./aos")
+        srcbase = configs.srcbase
         if srcbase == "master":
             git_cmd = "git checkout master"
         elif srcbase == "1.0.1":
@@ -92,15 +92,16 @@ class syncpreparelib():
 
         os.chdir(cur_dir)
         os.chdir("./tmp_synccode")
-        self.vendor = vendorslib.vendorslib(srcbase, dstbase)
+        self.vendor = vendorslib.vendorslib(configs)
         if self.vendor.get_vendor_repo() != 0:
             error('get vendor fail!')
 
         popen(self.vendor.git_cmd, shell=True, cwd=os.getcwd())
+        print self.vendor.git_cmd
         self.srcdir = "./aos"
         self.dstdir = self.vendor.dstdir
-        self.dstbase = dstbase
-        self.srcbase = srcbase
+        self.dstbase = configs.dstbase
+        self.srcbase = configs.srcbase
         os.chdir(cur_dir)
         os.chdir("./tmp_synccode")
         self.mkdir = mkdir
@@ -137,12 +138,13 @@ class syncpreparelib():
             popen(cmd, shell=True, cwd=os.getcwd())
 
             src = self.srcdir + "/.vscode"
-            dst = self.dstdir
-            linux = "cp -rf " + src + " " + dst
-            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
-            if not cmd:
-                error('Unknown system!')
-            popen(cmd, shell=True, cwd=os.getcwd())
+            if os.path.exists(src):
+                dst = self.dstdir
+                linux = "cp -rf " + src + " " + dst
+                cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+                if not cmd:
+                    error('Unknown system!')
+                popen(cmd, shell=True, cwd=os.getcwd())
 
     def cleanup_boards(self):
         mac = ""
@@ -1212,10 +1214,11 @@ class bekenlib:
         popen(cmd, shell=True, cwd=os.getcwd())
 
     def make_lib(self):
-        build_tool = self.srcdir + "/build/compiler/arm-none-eabi-5_4-2016q2-20160622/Linux64/bin/"
+        build_tool = self.srcdir + "/build/compiler/arm-none-eabi-5_4-2016q3-20160926/Linux64/bin/"
         mac = ""
         win = ""
 
+        os.chdir(self.srcdir)
         linux = "aos make clean"
         cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
         if not cmd:
@@ -1227,6 +1230,7 @@ class bekenlib:
         if not cmd:
             error('Unknown system!')
         popen(cmd, shell=True, cwd=os.getcwd())
+        os.chdir("./..")
 
         linux = "echo \"create libbeken.a\" > packscript"
         cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))

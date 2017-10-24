@@ -16,19 +16,23 @@ from modules import msdplib
 from modules import gatewaylib
 from modules import bekenlib
 from modules import pushcodelib
+import configslib
 
 parser = argparse.ArgumentParser(prog='codesync',
     description="Code sync tool for aos",
     formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("-s", "--srcbase", dest="srcbase", default='master')
 parser.add_argument("-d", "--dstbase", dest="dstbase", default='github')
-parser.add_argument("-m", "--module", dest="modules", nargs="*", default=['mesh', 'ywss', 'beken'])
 parser.add_argument("-k", "--mks", dest="mks", nargs="*", default='../modules')
 
 def main():
     basedir = os.getcwd()
     pargs, remainder = parser.parse_known_args(sys.argv[1:])
-    syncprepare = syncpreparelib(pargs.srcbase, pargs.dstbase, pargs.mks)
+    configs = configslib.configslib()
+    if configs.get_vendor_configs(pargs.dstbase):
+        print "do not support *" + pargs.dstbase + "*"
+        exit()
+    syncprepare = syncpreparelib(configs, pargs.mks)
+
     syncprepare.cleanup_codebase()
     syncprepare.cleanup_boards()
     syncprepare.cleanup_build()
@@ -39,7 +43,7 @@ def main():
     syncprepare.cleanup_bootloader()
     syncprepare.cleanup_test()
     syncprepare.cleanup_tools()
-    modules = ' '.join(pargs.modules).split(' ')
+    modules = configs.modules.split(' ')
     for module in modules:
         print module
         if module == "mesh":
