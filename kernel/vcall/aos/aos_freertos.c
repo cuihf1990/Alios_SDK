@@ -24,11 +24,14 @@ const char *aos_version_get(void)
     return "aos-linux-xxx";
 }
 
+#define AOS_MAGIC 0x20171020
 typedef struct {
     StaticTask_t fTask;
     uint32_t key_bitmap;
     void *keys[4];
     void *stack;
+    char name[32];
+    uint32_t magic;
 } AosStaticTask_t;
 
 struct targ {
@@ -53,6 +56,9 @@ void vPortCleanUpTCB(void *pxTCB)
 {
     AosStaticTask_t *task = (AosStaticTask_t *)pxTCB;
 
+    if (task->magic != AOS_MAGIC)
+        return;
+
     free(task->stack);
     free(task);
 }
@@ -69,6 +75,8 @@ int aos_task_new(const char *name, void (*fn)(void *), void *arg,
     bzero(task, sizeof(*task));
     task->key_bitmap = 0xfffffff0;
     task->stack = stack;
+    strncpy(task->name, name, sizeof(task->name)-1);
+    task->magic = AOS_MAGIC;
 
     targ->task = task;
     targ->fn = fn;
@@ -98,13 +106,20 @@ void aos_task_exit(int code)
 
 const char *aos_task_name(void)
 {
-    return "unknown";
+    AosStaticTask_t *task = (AosStaticTask_t *)xTaskGetCurrentTaskHandle();
+    if (task->magic != AOS_MAGIC)
+        return "unknown";
+    return task->name;
 }
 
 int aos_task_key_create(aos_task_key_t *key)
 {
     AosStaticTask_t *task = (AosStaticTask_t *)xTaskGetCurrentTaskHandle();
     int i;
+
+    if (task->magic != AOS_MAGIC)
+        return -1;
+
     for (i=0;i<4;i++) {
         if (task->key_bitmap & (1 << i))
             continue;
@@ -120,6 +135,8 @@ int aos_task_key_create(aos_task_key_t *key)
 void aos_task_key_delete(aos_task_key_t key)
 {
     AosStaticTask_t *task = (AosStaticTask_t *)xTaskGetCurrentTaskHandle();
+    if (task->magic != AOS_MAGIC)
+        return;
     task->key_bitmap &= ~(1 << key);
 }
 
@@ -127,6 +144,9 @@ int aos_task_setspecific(aos_task_key_t key, void *vp)
 {
     AosStaticTask_t *task = (AosStaticTask_t *)xTaskGetCurrentTaskHandle();
     if (key >= 4)
+        return -1;
+
+    if (task->magic != AOS_MAGIC)
         return -1;
 
     task->keys[key] = vp;
@@ -137,6 +157,9 @@ void *aos_task_getspecific(aos_task_key_t key)
 {
     AosStaticTask_t *task = (AosStaticTask_t *)xTaskGetCurrentTaskHandle();
     if (key >= 4)
+        return NULL;
+
+    if (task->magic != AOS_MAGIC)
         return NULL;
 
     return task->keys[key];
