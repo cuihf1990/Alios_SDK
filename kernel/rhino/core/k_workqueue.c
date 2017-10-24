@@ -211,13 +211,13 @@ kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
     NULL_PARA_CHK(work);
     NULL_PARA_CHK(handle);
 
+    dly = dly / RHINO_CONFIG_TIMER_RATE;
+
     klist_init(&(work->work_node));
     work->handle  = handle;
     work->arg     = arg;
     work->dly     = dly;
     work->wq      = NULL;
-
-    dly = dly / RHINO_CONFIG_TIMER_RATE;
 
     if (dly > 0) {
         ret = krhino_timer_create(&(work->timer), "WORK-TIMER", work_timer_cb,
