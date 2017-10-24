@@ -67,7 +67,9 @@ int aos_kernel_init(void)
     aos_loop_init();
 #endif
 
+#ifdef VCALL_RHINO
     trace_start();
+#endif
 
 #ifdef AOS_FOTA 
     ota_service_init();
