@@ -94,9 +94,6 @@ int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *req
 void ota_download_start(void *buf)
 {
     OTA_LOG_I("task update start");
-#ifdef STM32_SPI_NET
-    notify_ota_start();
-#endif
     ota_hal_init(ota_get_update_breakpoint());
 
     ota_set_status(OTA_DOWNLOAD);
@@ -146,9 +143,6 @@ OTA_END:
     ota_status_post(100);
     free_url();
     ota_status_deinit();
-#ifdef STM32_SPI_NET
-    notify_ota_end();
-#endif
     OTA_LOG_I("reboot system after 3 second!");
     aos_msleep(3000);
     OTA_LOG_I("task update over");
