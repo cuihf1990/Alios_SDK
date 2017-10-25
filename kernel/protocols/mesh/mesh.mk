@@ -32,6 +32,8 @@ $(NAME)_SOURCES := src/core/umesh.c \
 
 ifneq ($(SDK), 1)
 $(NAME)_SOURCES += src/platform/aos.c
+else
+$(NAME)_SOURCES += src/platform/loop.c
 endif
 
 MESHDEBUG ?= 1
