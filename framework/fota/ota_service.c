@@ -66,7 +66,7 @@ static void update_action(void *buf)
 
 void do_update(int len,  const char *buf)
 {
-#ifdef STM32L475xx
+#ifdef STM32_USE_SPI_WIFI
     update_action(buf);
 #else
     aos_schedule_call(update_action, (void *)buf);

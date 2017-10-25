@@ -10,7 +10,7 @@
             printf("%s %d: "_f,  __FUNCTION__, __LINE__, ##_a)
 
 #if defined(MBEDTLS_NET_ALT)
-#if defined(MBEDTLS_NET_ALT_UART)
+#if defined(STM32_USE_SPI_WIFI)
 
 #include "stm32_wifi.h"
 #include "mbedtls/net_sockets.h"
@@ -169,7 +169,7 @@ void mbedtls_net_free(mbedtls_net_context *ctx)
     ctx->fd = -1;
 }
 
-#else /* MBEDTLS_NET_ALT_UART */
+#else /* STM32_USE_SPI_WIFI */
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -377,5 +377,5 @@ void mbedtls_net_free(mbedtls_net_context *ctx)
     ctx->fd = -1;
 }
 
-#endif /* MBEDTLS_NET_ALT_UART */
+#endif /* STM32_USE_SPI_WIFI */
 #endif /* MBEDTLS_NET_ALT */

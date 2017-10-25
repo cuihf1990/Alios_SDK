@@ -94,9 +94,6 @@ int8_t ota_if_need(ota_response_params *response_parmas, ota_request_params *req
 void ota_download_start(void *buf)
 {
     OTA_LOG_I("task update start");
-#ifdef STM32_SPI_NET
-    notify_ota_start();
-#endif
     ota_hal_init(ota_get_update_breakpoint());
 
     ota_set_status(OTA_DOWNLOAD);
@@ -146,9 +143,6 @@ OTA_END:
     ota_status_post(100);
     free_url();
     ota_status_deinit();
-#ifdef STM32_SPI_NET
-    notify_ota_end();
-#endif
     OTA_LOG_I("reboot system after 3 second!");
     aos_msleep(3000);
     OTA_LOG_I("task update over");
@@ -222,7 +216,7 @@ int8_t ota_do_update_packet(ota_response_params *response_parmas, ota_request_pa
     // memset(url, 0, sizeof url);
     // strncpy(url, response_parmas->download_url, sizeof url);
     ret = aos_task_new("ota", ota_download_start, 0, 4096);
-#ifdef STM32L475xx
+#ifdef STM32_USE_SPI_WIFI
     aos_task_exit(0);
 #endif
     return ret;

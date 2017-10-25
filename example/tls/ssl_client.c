@@ -52,7 +52,7 @@ unsigned char alink_req_data[] = {
 
 extern int dtls_client_sample(void);
 
-#if !defined(MBEDTLS_NET_ALT_UART)
+#if !defined(STM32_USE_SPI_WIFI)
 void *network_socket_create(const char *net_addr, int port)
 {
     int ret;
@@ -109,7 +109,7 @@ void network_socket_destroy(void *tcp_fd)
     return;
 }
 
-#else /* MBEDTLS_NET_ALT_UART */
+#else /* STM32_USE_SPI_WIFI */
 
 void *network_socket_create(mbedtls_net_context *ctx, const char *net_addr, int port)
 {
@@ -138,7 +138,7 @@ void network_socket_destroy(mbedtls_net_context *ctx)
     return;
 }
 
-#endif /* MBEDTLS_NET_ALT_UART */
+#endif /* STM32_USE_SPI_WIFI */
 
 static void tls_client_sample(void)
 {
@@ -146,11 +146,11 @@ static void tls_client_sample(void)
     char buf[128];
     void *tcp_fd = NULL;
     void *ssl = NULL;
-#if defined(MBEDTLS_NET_ALT_UART)
+#if defined(STM32_USE_SPI_WIFI)
     mbedtls_net_context server_fd;
 #endif
 
-#if !defined(MBEDTLS_NET_ALT_UART)
+#if !defined(STM32_USE_SPI_WIFI)
     tcp_fd = network_socket_create(server_name, server_port);
 #else
     tcp_fd = network_socket_create(&server_fd, server_name, server_port);
@@ -196,7 +196,7 @@ _out:
     }
 
     if (tcp_fd != NULL) {
-#if !defined(MBEDTLS_NET_ALT_UART)
+#if !defined(STM32_USE_SPI_WIFI)
         network_socket_destroy(tcp_fd);
 #else
         network_socket_destroy(&server_fd);
@@ -238,7 +238,7 @@ int application_start(void)
     aos_register_event_filter(EV_WIFI, handle_event, cookie);
 
     netmgr_init();
-#if !defined(MBEDTLS_NET_ALT_UART)
+#if !defined(STM32_USE_SPI_WIFI)
     netmgr_start(true);
 #else
     netmgr_start(false);

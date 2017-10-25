@@ -11,10 +11,14 @@ NAME := STM32L4xx
 
 HOST_OPENOCD := stm32l4x
 
+SPI_WIFI_ENABLED := true
+
 $(NAME)_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv7m
-$(NAME)_COMPONENTS := libc rhino hal netmgr framework.common mbedtls cjson cli digest_algorithm
+$(NAME)_COMPONENTS += libc rhino hal netmgr framework.common mbedtls cjson cli digest_algorithm
+
+GLOBAL_DEFINES += STM32_USE_SPI_WIFI
 
 GLOBAL_DEFINES += CONFIG_AOS_KV_MULTIPTN_MODE
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN=6
