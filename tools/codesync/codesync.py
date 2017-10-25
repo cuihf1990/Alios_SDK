@@ -23,6 +23,9 @@ parser = argparse.ArgumentParser(prog='codesync',
     formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("-d", "--dstbase", dest="dstbase", default='github')
 parser.add_argument("-k", "--mks", dest="mks", nargs="*", default='../modules')
+parser.add_argument('-f', action='store_true', default=False,
+                    dest='force',
+                    help='Push to master')
 
 def main():
     basedir = os.getcwd()
@@ -81,7 +84,7 @@ def main():
         else:
             print "unknown module", module
 
-    pushcode = pushcodelib(basedir, syncprepare.srcdir, syncprepare.dstdir)
+    pushcode = pushcodelib(basedir, syncprepare.srcdir, syncprepare.dstdir, pargs.force)
     pushcode.execute()
     pushcode.cleancode()
 
