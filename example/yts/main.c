@@ -6,13 +6,17 @@
 #include <string.h>
 
 #include <yts.h>
-#include <dda.h>
 #include <kvmgr.h>
+
+#ifdef CONFIG_AOS_YTS_ALL
+#include <dda.h>
+#endif
 
 int application_start(int argc, char **argv)
 {
     const char *mode = argc > 1 ? argv[1] : "";
 
+#ifdef CONFIG_AOS_YTS_ALL
     if (strcmp(mode, "--mesh-node") == 0) {
         dda_enable(atoi(argv[argc-1]));
         dda_service_init();
@@ -23,6 +27,7 @@ int application_start(int argc, char **argv)
         ddm_run(argc, argv);
         return 0;
     }
+#endif
 
     yts_run(argc, argv);
     aos_kv_deinit();

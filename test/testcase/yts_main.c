@@ -105,11 +105,8 @@ void add_test(void)
 #ifdef YTS_COAP
     test_coap();
 #else
-    test_mqtt();
 
     test_basic();
-
-    test_fota();
 
     test_yloop();
 
@@ -125,28 +122,34 @@ void add_test(void)
 
     test_rhino();
 
+    test_vfs();
+
+    test_kv();
+
+#ifdef CONFIG_AOS_YTS_ALL
+    test_mqtt();
+
+    test_fota();
+
     test_rhino_port();
 
     test_tls();
 
     test_tfs();
 
-    test_vfs();
-
     test_fatfs();
 
 #ifdef CONFIG_AOS_MESH
     test_uradar();
-#endif
+#endif /* CONFIG_AOS_MESH */
 
     test_netmgr();
 
     test_alicrypto();
 
-    test_kv();
+    test_aosapi();    
+#endif /* CONFIG_AOS_YTS_ALL */
 
-    test_aosapi();
-
-#endif
+#endif /* YTS_COAP */
 }
 
