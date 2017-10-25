@@ -92,6 +92,7 @@ SECTIONS
 	PROVIDE(heap_start    	  = .);
 
     PROVIDE(kernel_download_addr = 0x0013200);
+    PROVIDE(framework_download_addr = 0xffffffff);
     PROVIDE(app_download_addr = 0xffffffff);
 
 /* _stack symbol defines initial stack bottom addres. Stack grows to lower addresses.

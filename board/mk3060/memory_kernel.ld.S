@@ -6,7 +6,12 @@
  * +------------+
  *
  * +------------+  0x00400020
- * data         |  64k
+ * app:         |
+ * data         |  app:16k
+ * bss          |
+ * +------------+  0x00404020
+ * framework:   |
+ * data         |  framework:48k
  * bss          |
  * +------------+  0x00410020
  * data         |
@@ -35,34 +40,38 @@
  * |            |
  * |------------+
  * |text        |
- * |data        |  kernel:425k
+ * |data        |  kernel:455K
  * |            |
- * +------------+  0x007d600
- * +------------+  0x007d640
+ * +------------+  0x0085000
+ * +------------+  0x0085140
  * |text        |
- * |data        |  app:147K
+ * |data        |  framework:159k
  * |            |
- * +------------+  0x009f3e0
- * +------------+  0x009f400
-
+ * +------------+  0x00AD000
+ * +------------+  0x00AD300
+ * |text        |
+ * |data        |  app:51k
+ * |            |
+ * +------------+  0x00BA000
+ * +------------+  0x00BA340
  * |            |
  * |            |
  * |  OTA TEMP  |
- * |            |  250k
+ * |            |  279k(MAX * 60%)
  * |            |
  * |            |
  * +------------+  0x100000
 */
 
 /* kernel's phy start address is 0x13200.
- * Flash size = 0x007d600-0x0013200 = 425K
- * Code size = 425K*32/34=400K
+ * Flash size = 0x0085000-0x0013200 = 455K
+ * Code size = 455K*32/34=428K
  */
 
 /* Split memory into area for vectors and ram */
 MEMORY
 {
-	flash  (rx) : ORIGIN = 0x00012000, LENGTH = 455k
+	flash  (rx) : ORIGIN = 0x00012000, LENGTH = 428k
 	ram   (rwx): ORIGIN = 0x00410020, LENGTH = 256k - 64k - 32
 }
 
@@ -74,7 +83,12 @@ MEMORY
  * +------------+
  *
  * +------------+  0x00400020
- * data         |  64k
+ * app:         |
+ * data         |  app:16k
+ * bss          |
+ * +------------+  0x00404020
+ * framework:   |
+ * data         |  framework:48k
  * bss          |
  * +------------+  0x00410020
  * data         |
@@ -103,16 +117,20 @@ MEMORY
  * |            |
  * |------------+
  * |text        |
- * |data        |  kernel:363k
+ * |data        |  kernel:399k
  * |            |
- * +------------+  0x006E000
- * +------------+  0x006E3C0
+ * +------------+  0x0077000
+ * +------------+  0x0077440
  * |text        |
- * |data        |  app:219K
+ * |data        |  framework:250k
  * |            |
- * +------------+  0x00A5000
- * +------------+  0x00A5380
-
+ * +------------+  0x00B6000
+ * +------------+  0X00B6380
+ * |text        |
+ * |data        |  app:55k
+ * |            |
+ * +------------+  0x00c4000
+ * +------------+  0x00c4080
  * |            |
  * |            |
  * |  OTA TEMP  |
@@ -123,15 +141,15 @@ MEMORY
 */
 
 /* kernel's phy start address is 0x13200.
- * Flash size = 0x006E000-0x0013200 = 363K
- * Code size = 363K*32/34=341K
+ * Flash size = 0x0077000-0x0013200 = 399K
+ * Code size = 399K*32/34=375K
  */
 
 
 /* Split memory into area for vectors and ram */
 MEMORY
 {
-	flash  (rx) : ORIGIN = 0x00012000, LENGTH = 341k
+	flash  (rx) : ORIGIN = 0x00012000, LENGTH = 375k
 	ram   (rwx): ORIGIN = 0x00410020, LENGTH = 256k - 64k - 32
 }
 

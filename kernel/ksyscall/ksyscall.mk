@@ -1,11 +1,11 @@
-NAME := syscall
+NAME := ksyscall
 
 $(NAME)_TYPE := kernel
 $(NAME)_INCLUDES := .
 
 $(NAME)_CFLAGS += -Wall -Werror
 
-$(NAME)_SOURCES := syscall_tbl.c
+$(NAME)_SOURCES := syscall_ktbl.c
 
 GLOBAL_INCLUDES += ./
 

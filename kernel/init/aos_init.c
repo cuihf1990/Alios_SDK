@@ -17,7 +17,7 @@ int aos_cloud_init(void);
 #ifdef AOS_BINS
 #include <k_api.h>
 struct app_info_t {
-     int (*app_entry)(void *syscall_tbl, int argc, char *argv[]);
+     void (*app_entry)(void *ksyscall_tbl, void *fsyscall_tbl, int argc, char *argv[]);
      unsigned int data_ram_start;
      unsigned int data_ram_end;
      unsigned int data_flash_begin;
@@ -27,14 +27,27 @@ struct app_info_t {
      unsigned int heap_end;
 };
 
-extern void *g_syscall_tbl[];
+struct framework_info_t {
+     void (*framework_entry)(void *syscall_tbl, int argc, char *argv[]);
+     unsigned int data_ram_start;
+     unsigned int data_ram_end;
+     unsigned int data_flash_begin;
+     unsigned int bss_start;
+     unsigned int bss_end;
+     unsigned int heap_start;
+     unsigned int heap_end;
+};
+
+extern void *syscall_ktbl[];
 extern char  app_info_addr;
+extern char  framework_info_addr;
 
 extern k_mm_head  *g_kmm_head;
 
+struct framework_info_t *framework_info = (struct framework_info_t *)&framework_info_addr;
 struct app_info_t *app_info = (struct app_info_t *)&app_info_addr;
 
-static void application_init(void)
+static void app_pre_init(void)
 {
     memcpy((void *)(app_info->data_ram_start), (void *)(app_info->data_flash_begin),
            app_info->data_ram_end - app_info->data_ram_start);
@@ -45,6 +58,19 @@ static void application_init(void)
 
     krhino_mm_leak_region_init((void *)(app_info->data_ram_start), (void *)(app_info->data_ram_end));
     krhino_mm_leak_region_init((void *)(app_info->bss_start), (void *)(app_info->bss_end));
+}
+
+static void framework_pre_init(void)
+{
+    memcpy((void *)(framework_info->data_ram_start), (void *)(framework_info->data_flash_begin),
+           framework_info->data_ram_end - framework_info->data_ram_start);
+    memset((void *)(framework_info->bss_start), 0, framework_info->bss_end - framework_info->bss_start);
+
+    krhino_add_mm_region(g_kmm_head, (void *)(framework_info->heap_start),
+                        framework_info->heap_end - framework_info->heap_start);
+
+    krhino_mm_leak_region_init((void *)(framework_info->data_ram_start), (void *)(framework_info->data_ram_end));
+    krhino_mm_leak_region_init((void *)(framework_info->bss_start), (void *)(framework_info->bss_end));
 }
 #endif
 
@@ -76,10 +102,11 @@ int aos_kernel_init(void)
 #endif
 
 #ifdef AOS_BINS
-    application_init();
+    app_pre_init();
+    framework_pre_init();
 
-    if (app_info->app_entry) {
-        app_info->app_entry((void *)g_syscall_tbl, 0, NULL);
+    if (framework_info->framework_entry) {
+        framework_info->framework_entry((void *)syscall_ktbl, 0, NULL);
     }
 #else
     aos_framework_init();

@@ -7,23 +7,29 @@
  */
 
 /* Include memory map */
-INCLUDE memory_app.ld
+INCLUDE memory_framework.ld
 
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
-ENTRY(application_start)
+ENTRY(aos_framework_init)
 
 SECTIONS
 {
 #ifdef MBEDTLS_IN_KERNEL
-	. = 0x00A3000;
+	. = 0x007D400;
 #else
-    . = 0x00AB800;
+    . = 0x0070400;
 #endif
 
-    .appinfo :
+    .frameworkinfo :
     {
-        KEEP(*(*.app_info))
+        KEEP(*(*.framework_info))
+    } > flash
+
+    . = ALIGN(0x8);
+    .syscall_ftbl :
+    {
+        KEEP(*(.syscall_ftbl))
     } > flash
 
     . = ALIGN(0x8);
@@ -65,14 +71,14 @@ SECTIONS
 	} >ram
 
 	/* Loader will copy data from _flash_begin to _ram_begin..ram_end */
-	PROVIDE(_app_data_flash_begin = LOADADDR(.data));
-	PROVIDE(_app_data_ram_begin = ADDR(.data));
-	PROVIDE(_app_data_ram_end = .);
+	PROVIDE(_framework_data_flash_begin = LOADADDR(.data));
+	PROVIDE(_framework_data_ram_begin = ADDR(.data));
+	PROVIDE(_framework_data_ram_end = .);
 
 /* uninitialized data section - global   int i; */
 	.bss ALIGN(8):
 	{
-		PROVIDE(_app_bss_start = .);
+		PROVIDE(_framework_bss_start = .);
 		*(.bss .bss.*)
 		*(.scommon)
 		*(.sbss)
@@ -82,27 +88,28 @@ SECTIONS
 	      _end.  Align after .bss to ensure correct alignment even if the
 	      .bss section disappears because there are no input sections.  */
 	   . = ALIGN(32 / 8);
-		PROVIDE(_app_bss_end = .);
+		PROVIDE(_framework_bss_end = .);
 	} > ram						/* in RAM */
 
     . = ALIGN (8);
 
     /* This symbol defines end of code/data sections. Heap starts here. */
     PROVIDE(end       = .);
-    PROVIDE(_app_heap_start        = .);
+    PROVIDE(_framework_heap_start        = .);
 
-    ASSERT ((0x00404020 > end), "Error: No room left for the app stack")
+    ASSERT ((0x00410020 > end), "Error: No room left for the framework stack")
 
-    PROVIDE(_app_heap_end      = 0x00404020);
-    PROVIDE(_app_heap_len      = _app_heap_end -  _app_heap_start);
-
+    PROVIDE(_framework_heap_end      = 0x00410020);
+    PROVIDE(_framework_heap_len      = _framework_heap_end -  _framework_heap_start);
 
 #ifdef MBEDTLS_IN_KERNEL
+    PROVIDE(app_info_addr = 0x00A3000);
     PROVIDE(kernel_download_addr = 0x0013200);
     PROVIDE(framework_download_addr = 0x0085140);
     PROVIDE(app_download_addr = 0x00AD300);
     PROVIDE(ota_download_addr = 0x00BA340);
 #else
+    PROVIDE(app_info_addr = 0x00AB800);
     PROVIDE(kernel_download_addr = 0x0013200);
     PROVIDE(framework_download_addr = 0x0077440);
     PROVIDE(app_download_addr = 0X00B6380);

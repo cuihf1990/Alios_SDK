@@ -441,6 +441,8 @@ void netmgr_clear_ap_config(void)
 {
     clear_wifi_ssid();
 }
+EXPORT_SYMBOL_F(1, netmgr_clear_ap_config, 
+    "void netmgr_clear_ap_config(void)")
 
 #define HOTSPOT_AP "aha"
 int netmgr_set_ap_config(netmgr_ap_config_t *config)
@@ -560,6 +562,7 @@ int netmgr_init(void)
 
     return 0;
 }
+EXPORT_SYMBOL_F(1, netmgr_init, "int netmgr_init(void)")
 
 void netmgr_deinit(void)
 {
@@ -583,6 +586,7 @@ int netmgr_start(bool autoconfig)
     start_mesh(false);
     return -1;
 }
+EXPORT_SYMBOL_F(1, netmgr_start, "int netmgr_start(bool autoconfig)")
 
 bool netmgr_get_ip_state()
 {

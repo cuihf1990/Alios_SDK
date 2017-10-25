@@ -12,8 +12,8 @@
 #include <hal/hal.h>
 #ifdef CONFIG_AOS_MESH
 #include <umesh.h>
-#include <ip/lwip_adapter.h>
 #define CONFIG_AOS_MESH 1
+#include <ip/lwip_adapter.h>
 #endif
 #ifdef MBEDTLS_IN_KERNEL
 #include <aos/mbedtls_ssl.h>
@@ -94,7 +94,7 @@ void set_errno(int err)
 }
 EXPORT_SYMBOL_K(1, set_errno, "void set_errno(int err)")
 
-/* for syscall_tbl.h, on the last */
 
-#include <syscall_tbl.h>
+/* for syscall_ktbl.h, on the last */
+#include <syscall_ktbl.h>
 

@@ -23,10 +23,10 @@ SECTIONS
       KEEP(*(*.vectors))
 	} > flash
 
-    . = 0x0012040;
-    .syscall_tbl :
+    . = ALIGN(0x8);
+    .syscall_ktbl :
     {
-      KEEP(*(.syscall_tbl))
+      KEEP(*(.syscall_ktbl))
     } > flash
 /* instructions go to the text region*/
 
@@ -93,15 +93,19 @@ SECTIONS
 	_empty_ram = .;
 
 #ifdef MBEDTLS_IN_KERNEL
-    PROVIDE(app_info_addr = 0x007d400);
+    PROVIDE(app_info_addr = 0x00A3000);
+    PROVIDE(framework_info_addr = 0x007D400);
     PROVIDE(kernel_download_addr = 0x0013200);
-    PROVIDE(app_download_addr = 0x0085140);
+    PROVIDE(framework_download_addr = 0x0085140);
+    PROVIDE(app_download_addr = 0x00AD300);
     PROVIDE(ota_download_addr = 0x00BA340);
 #else
-    PROVIDE(app_info_addr = 0x0067C00);
+    PROVIDE(app_info_addr = 0x00AB800);
+    PROVIDE(framework_info_addr = 0x0070400);
     PROVIDE(kernel_download_addr = 0x0013200);
-    PROVIDE(app_download_addr = 0x006E3C0);
-    PROVIDE(ota_download_addr = 0x00A5380);
+    PROVIDE(framework_download_addr = 0x0077440);
+    PROVIDE(app_download_addr = 0X00B6380);
+    PROVIDE(ota_download_addr = 0x00c4080);
 #endif
 
 /* This symbol defines end of code/data sections. Heap starts here. */
