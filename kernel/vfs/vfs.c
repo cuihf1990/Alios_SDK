@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <hal/hal.h>
 #include <limits.h>
+#include <string.h>
 
 extern uart_dev_t uart_0;
 

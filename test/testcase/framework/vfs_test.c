@@ -16,6 +16,25 @@
 
 #include "yunit.h"
 
+#include "device/vfs_adc.h"
+#include "hal/soc/adc.h"
+
+uint32_t adc_init_count = 0;
+uint32_t adc_finalize_count = 0;
+struct file_ops adc_ops =
+{
+    .open = vfs_adc_open,
+    .read = vfs_adc_read,
+    .close = vfs_adc_close
+};
+adc_dev_t adc_dev_test =
+{
+    .adc = 0xCD,
+    .config.sampling_cycle = 0x12345678
+};
+
+char* adc_path = "/dev/adc/";
+
 static int test_ioctl(file_t *node, int cmd, unsigned long arg)
 {
     return -123;
@@ -145,6 +164,86 @@ static void test_vfs_fs_case(void)
     YUNIT_ASSERT(-ENODEV == aos_rename(names, names));
 }
 
+int32_t hal_adc_init(adc_dev_t *adc)
+{
+    adc_dev_t *adc_dev = adc;
+    int32_t ret = -1;
+
+    adc_init_count++;
+
+    if (adc == NULL) {
+        return -1;
+    }
+
+    if ((adc_dev->adc == 0xCD)
+       &&(adc_dev->config.sampling_cycle == 0x12345678)) {
+          ret = 0;
+      }
+
+    return ret;
+}
+
+int32_t hal_adc_value_get(adc_dev_t *adc, void *output, uint32_t timeout)
+{
+    int32_t ret = -1;
+    int32_t *pData = (int32_t *)output;
+
+    if ((adc == NULL)||(output == NULL)) {
+        return -1;
+    }
+
+    pData[0] = 0x87654321;
+
+    ret = 0;
+
+    return ret;
+}
+
+int32_t hal_adc_finalize(adc_dev_t *adc)
+{
+    int32_t ret = -1;
+
+    adc_finalize_count++;
+
+    if (adc == NULL) {
+        return -1;
+    }
+
+    ret = 0;
+
+    return ret;
+}
+
+static void test_vfs_device_io_case(void)
+{
+    int fd1 = 0;
+    int fd2 = 0;
+    int ret = -1;
+    int32_t adc_val = 0;
+
+    ret = aos_register_driver(adc_path, &adc_ops, &adc_dev_test);
+    YUNIT_ASSERT(ret == 0);
+
+    /* The device can be opened several times, but is only initialized when it is first opened */
+    fd1 = aos_open(adc_path,0);
+    YUNIT_ASSERT((fd1 > 64)&&(adc_init_count == 1));
+
+    fd2 = aos_open(adc_path,0);
+    YUNIT_ASSERT((fd2 > 64)&&(adc_init_count == 1));
+
+    ret = aos_read(fd1, &adc_val, sizeof(adc_val));
+    YUNIT_ASSERT((ret == 4)&&(adc_val == 0x87654321));
+
+    ret = aos_read(fd2, &adc_val, sizeof(adc_val));
+    YUNIT_ASSERT((ret == 4)&&(adc_val == 0x87654321));
+
+    /* When the device is opened many times, the hardware is only shut down at the last close */
+    ret = aos_close(fd1);
+    YUNIT_ASSERT((ret == 0)&&(adc_finalize_count == 0));
+
+    ret = aos_close(fd2);
+    YUNIT_ASSERT((ret == 0)&&(adc_finalize_count == 1));
+}
 
 static int create_socket(int port)
 {
@@ -253,6 +352,7 @@ static yunit_test_case_t aos_vfs_testcases[] = {
     { "register", test_aos_vfs_case },
     { "poll", test_aos_poll_case },
     { "fs_register", test_vfs_fs_case},
+    { "device_io", test_vfs_device_io_case},
     YUNIT_TEST_CASE_NULL
 };
 
