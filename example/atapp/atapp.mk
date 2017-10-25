@@ -1,3 +1,7 @@
+##
+ # Copyright (C) 2015-2017 Alibaba Group Holding Limited
+##
+
 NAME := atapp
 
 $(NAME)_SOURCES := atapp.c
