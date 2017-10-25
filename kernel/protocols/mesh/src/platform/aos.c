@@ -44,7 +44,20 @@ uint32_t umesh_pal_now_ms(void)
 
 int umesh_pal_kv_get(const char *key, void *buf, int *len)
 {
+#ifdef AOS_KV
     return aos_kv_get(key, buf, len);
+#else
+    return -1;
+#endif
+}
+
+int umesh_pal_kv_set(const char *key, void *buf, int len, int sync)
+{
+#ifdef AOS_KV
+    return aos_kv_set(key, buf, len, sync);
+#else
+    return -1;
+#endif
 }
 
 void umesh_pal_post_event(int code, unsigned long value)
