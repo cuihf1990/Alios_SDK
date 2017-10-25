@@ -209,7 +209,6 @@ static void enet_raw_data_handler()
         tot_read += pbuf_read;
         q = q->next;
     }
-    LOGD(TAG, "at read result: %d - %s", read_len, pbuf->payload);
 
     tsk = aos_loop_schedule_work(0, enet_raw_data_handler_helper, pbuf, NULL, NULL);
     if (!tsk) {
