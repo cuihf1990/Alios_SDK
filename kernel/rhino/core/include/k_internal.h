@@ -27,7 +27,7 @@ extern cpu_stack_t  g_idle_task_stack[RHINO_CONFIG_CPU_NUM][RHINO_CONFIG_IDLE_TA
 
 /* tick attribute */
 extern tick_t     g_tick_count;
-extern klist_t    g_tick_head[RHINO_CONFIG_TICK_HEAD_ARRAY];
+extern klist_t    g_tick_head;
 extern sys_time_t g_sys_time_tick;
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)

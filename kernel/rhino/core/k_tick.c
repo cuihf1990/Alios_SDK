@@ -6,11 +6,7 @@
 
 void tick_list_init(void)
 {
-    uint8_t i;
-
-    for (i = 0; i < RHINO_CONFIG_TICK_HEAD_ARRAY; i++) {
-        klist_init(&g_tick_head[i]);
-    }
+   klist_init(&g_tick_head);
 
 #if (RHINO_CONFIG_DYNTICKLESS > 0)
     g_next_intrpt_ticks = (tick_t) - 1;
@@ -50,15 +46,12 @@ RHINO_INLINE void tick_list_pri_insert(klist_t *head, ktask_t *task)
 void tick_list_insert(ktask_t *task, tick_t time)
 {
     klist_t *tick_head_ptr;
-    uint16_t spoke;
 
     if (time > 0u) {
         task->tick_match  = g_tick_count + time;
         task->tick_remain = time;
 
-        spoke = (uint16_t)(task->tick_match & (RHINO_CONFIG_TICK_HEAD_ARRAY - 1u));
-        tick_head_ptr = &g_tick_head[spoke];
-
+        tick_head_ptr = &g_tick_head;
         tick_list_pri_insert(tick_head_ptr, task);
         task->tick_head = tick_head_ptr;
     }
@@ -78,7 +71,6 @@ void tick_list_update(void)
 {
     CPSR_ALLOC();
 
-    uint16_t spoke;
     klist_t *tick_head_ptr;
     ktask_t  *p_tcb;
     klist_t *iter;
@@ -95,8 +87,7 @@ void tick_list_update(void)
     g_sys_time_tick++;
 #endif
 
-    spoke         = (uint16_t)(g_tick_count & (RHINO_CONFIG_TICK_HEAD_ARRAY - 1u));
-    tick_head_ptr = &g_tick_head[spoke];
+    tick_head_ptr = &g_tick_head;
     iter          = tick_head_ptr->next;
 
     while (RHINO_TRUE) {
