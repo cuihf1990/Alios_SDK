@@ -156,6 +156,23 @@ void *wifi_realloc( void *ptr, size_t size );
   */
 void *wifi_calloc( size_t n, size_t size );
 
+esp_err_t esp_wifi_eibss_start(void);
+
+esp_err_t esp_wifi_eibss_stop(void);
+
+esp_err_t esp_wifi_eibss_set_bssid(uint8_t bssid[6]);
+
+esp_err_t esp_wifi_eibss_get_bssid(uint8_t bssid[6]);
+
+esp_err_t esp_wifi_eibss_get_mac(uint8_t mac[6]);
+
+esp_err_t esp_wifi_eibss_set_channel(int channel, wifi_second_chan_t width);
+
+esp_err_t esp_wifi_eibss_tx(void* buffer, int len, const uint8_t dst[6]);
+
+typedef void (*esp_wifi_eibss_rxcb_t)(const void* buffer, int len, const uint8_t src[6]);
+esp_err_t esp_wifi_eibss_reg_rxcb(esp_wifi_eibss_rxcb_t fn);
+
 #ifdef __cplusplus
 }
 #endif
