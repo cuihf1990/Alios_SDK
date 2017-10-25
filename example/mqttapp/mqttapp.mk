@@ -10,7 +10,7 @@ NAME := mqttapp
 
 GLOBAL_DEFINES      += ALIOT_DEBUG IOTX_DEBUG
 CONFIG_OTA_CH = mqtt
-ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
+ifeq ($(SPI_WIFI_ENABLED), true)
 $(NAME)_SOURCES     := mqtt-example-b_l475e.c
 $(NAME)_DEFINES     += SENSOR
 $(NAME)_SOURCES     += sensor/sensors_data.c \

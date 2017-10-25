@@ -37,7 +37,6 @@ $(info using lwip version mbedtls)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a.lwip
 endif
 else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
-$(NAME)_DEFINES          += MBEDTLS_NET_ALT_UART
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
 else
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
