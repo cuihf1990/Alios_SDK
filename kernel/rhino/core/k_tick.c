@@ -106,7 +106,7 @@ void tick_list_update(void)
             p_tcb     = krhino_list_entry(iter, ktask_t, tick_list);
 
             /* since time list is sorted by remain time, so just campare  the absolute time */
-            if (g_tick_count >= p_tcb->tick_match) {
+            if (g_tick_count == p_tcb->tick_match) {
                 switch (p_tcb->task_state) {
                     case K_SLEEP:
                         p_tcb->blk_state  = BLK_FINISH;
