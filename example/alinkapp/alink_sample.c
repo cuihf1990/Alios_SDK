@@ -558,11 +558,19 @@ extern char *g_sn;
 static int is_alink_started = 0;
 
 static void alink_service_event(input_event_t *event, void *priv_data) {
+#ifndef AOS_AT_ADAPTER
     if (event->type != EV_WIFI) {
+#else
+    if (event->type != EV_AT) {
+#endif
         return;
     }
 
+#ifndef AOS_AT_ADAPTER
     if (event->code != CODE_WIFI_ON_GOT_IP) {
+#else
+    if (event->code != CODE_AT_IF_READY) {
+#endif
         return;
     }
 
@@ -815,7 +823,6 @@ int application_start(int argc, char *argv[])
     at_uart_configure(&at_uart);
     at.init(&at_uart, AT_RECV_DELIMITER, AT_SEND_DELIMITER, 1000);
     at.set_mode(ASYN);
-    at_adapter_init();
 #endif
 
     parse_opt(argc, argv);
@@ -849,7 +856,11 @@ int application_start(int argc, char *argv[])
         else if (env == DAILY)
             alink_enable_daily_mode(NULL, 0);
 
+#ifndef AOS_AT_ADAPTER
         aos_register_event_filter(EV_WIFI, alink_service_event, NULL);
+#else
+        aos_register_event_filter(EV_AT, alink_service_event, NULL);
+#endif
         aos_register_event_filter(EV_SYS, alink_connect_event, NULL);
         aos_register_event_filter(EV_KEY, alink_key_process, NULL);
 #ifndef AOS_AT_ADAPTER
@@ -863,7 +874,9 @@ int application_start(int argc, char *argv[])
         if (auto_netmgr) start_auto_netmgr_timer();
 #else
         auto_netmgr = false;
+        at_adapter_init();
 #endif
+
         netmgr_init();
         netmgr_start(auto_netmgr);
     }

@@ -338,8 +338,8 @@ static int at_send_data_2stage(const char *fst, const char *data,
         goto end;
     }
 
-    LOGD(MODULE_NAME, "at 2stage task created: %d, smpr: %d, 2nd smpr: %d", 
-      (uint32_t)tsk, (uint32_t)&tsk->smpr, &smpr);
+    LOGD(MODULE_NAME, "at 2stage task created: %d, smpr: %d",
+      (uint32_t)tsk, (uint32_t)&tsk->smpr);
 
     tsk->rsp = rsp;
     tsk->rsp_offset = 0;
@@ -478,7 +478,7 @@ recv_start:
         at_task_empty = slist_empty(&at.task_l);
         // if no task, continue recv
         if (at_task_empty) {
-            LOGD(MODULE_NAME, "No task in queue, let's go check buffer");
+            LOGD(MODULE_NAME, "No task in queue");
             goto check_buffer;
         }
 
@@ -503,17 +503,19 @@ recv_start:
             goto recv_start;
         }
 
+        if ((offset >= (RECV_BUFFER_SIZE - 1)) ||
+            (strcmp(&buf[offset - at._recv_delim_size], at._recv_delimiter) == 0)) {
+            LOGD(MODULE_NAME, "Save buffer to task rsp, offset: %d", offset);
+            memcpy(tsk->rsp + tsk->rsp_offset, buf, offset);
+            tsk->rsp_offset += offset;
+        }
+
 check_buffer:
         // in case buffer is full
         if ((offset >= (RECV_BUFFER_SIZE - 1)) ||
             (strcmp(&buf[offset - at._recv_delim_size], at._recv_delimiter) == 0)) {
             LOGD(MODULE_NAME, "buffer full or new line hit, offset: %d", offset);
-            if (!at_task_empty) {
-                memcpy(tsk->rsp + tsk->rsp_offset, buf, offset);
-                tsk->rsp_offset += offset;
-            }
             offset = 0;
-            goto recv_start;
         }
     }
 
