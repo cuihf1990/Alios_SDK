@@ -14,6 +14,12 @@
 #include "esp_event_loop.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "lwip/sockets.h"
+
+int __attribute__((weak)) eventfd(unsigned int initval, int flags)
+{
+    return socket(AF_INET, SOCK_DGRAM, 0);
+}
 
 uart_dev_t uart_0 = {
     .port = CONFIG_CONSOLE_UART_NUM,

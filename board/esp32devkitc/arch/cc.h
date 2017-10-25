@@ -38,8 +38,11 @@
 #include <errno.h>
 #include <assert.h>
 #include <stdio.h>
+#include <sys/time.h>
 
+int eventfd(unsigned int initval, int flags);
 //#include "arch/sys_arch.h"
+
 
 #define BYTE_ORDER LITTLE_ENDIAN
 

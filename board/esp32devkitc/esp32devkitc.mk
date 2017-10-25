@@ -6,7 +6,11 @@ HOST_MCU_FAMILY     := esp32
 
 # todo: remove these after rhino/lwip ready
 vcall               := freertos
+ifneq ($(wifi),1)
 GLOBAL_DEFINES      += CONFIG_NO_TCPIP
+else
+GLOBAL_DEFINES      += WITH_LWIP
+endif
 
 CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 define get-os-version
