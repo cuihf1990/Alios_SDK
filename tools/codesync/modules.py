@@ -1357,23 +1357,31 @@ class bekenlib:
         popen(cmd, shell=True, cwd=os.getcwd())
 
 class pushcodelib():
-    def __init__(self, basedir, srcdir, dstdir):
+    def __init__(self, basedir, srcdir, dstdir, force):
         self.basedir = basedir
         self.srcdir = srcdir
         self.dstdir = dstdir
+        self.force = force
 
     def execute(self):
         os.chdir(self.dstdir);
-        branch_name = "code_sync_branch_" + str(int(time.time()))
-        git_cmd = "git checkout -b " + branch_name
-        popen(git_cmd, shell=True, cwd=os.getcwd())
-        git_cmd = "git add -A"
-        popen(git_cmd, shell=True, cwd=os.getcwd())
-        git_cmd = "code synchronization at " + time.asctime()
-        git_cmd = "git commit -m " + "\"" + git_cmd + "\""
-        popen(git_cmd, shell=True, cwd=os.getcwd())
-        git_cmd = "git push origin " + branch_name
-        popen(git_cmd, shell=True, cwd=os.getcwd())
+        if self.force == False:
+            branch_name = "code_sync_branch_" + str(int(time.time()))
+            git_cmd = "git checkout -b " + branch_name
+            popen(git_cmd, shell=True, cwd=os.getcwd())
+            git_cmd = "git add -A"
+            popen(git_cmd, shell=True, cwd=os.getcwd())
+            git_cmd = "code synchronization at " + time.asctime()
+            git_cmd = "git commit -m " + "\"" + git_cmd + "\""
+            popen(git_cmd, shell=True, cwd=os.getcwd())
+            git_cmd = "git push origin " + branch_name
+            popen(git_cmd, shell=True, cwd=os.getcwd())
+        else:
+            git_cmd = "code synchronization at " + time.asctime()
+            git_cmd = "git commit -m " + "\"" + git_cmd + "\""
+            popen(git_cmd, shell=True, cwd=os.getcwd())
+            git_cmd = "git push origin master"
+            popen(git_cmd, shell=True, cwd=os.getcwd())
 
     def cleancode(self):
         mac = ""
