@@ -105,6 +105,16 @@ int umesh_pal_schedule_call(void (*task)(void *), void *arg)
     return ret < 0 ? -1 : 0;
 }
 
+int umesh_pal_post_delayed_action(int ms, void (*handler)(void *arg), void *arg)
+{
+    return aos_post_delayed_action(ms, handler, arg);
+}
+
+void umesh_pal_cancel_delayed_action(int ms, void (*handler)(void *arg), void *arg)
+{
+    aos_cancel_delayed_action(ms, handler, arg);
+}
+
 /*
  * security
  */
