@@ -138,11 +138,6 @@
 #define RHINO_CONFIG_TICKS_PER_SECOND        100
 #endif
 
-/*Must be 2^n size!, such as 1, 2, 4, 8, 16,32, etc.......*/
-#ifndef RHINO_CONFIG_TICK_HEAD_ARRAY
-#define RHINO_CONFIG_TICK_HEAD_ARRAY         8
-#endif
-
 #ifndef RHINO_CONFIG_TIMER_TASK_STACK_SIZE
 #define RHINO_CONFIG_TIMER_TASK_STACK_SIZE   200
 #endif
