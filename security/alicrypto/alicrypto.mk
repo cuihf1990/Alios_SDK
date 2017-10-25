@@ -4,7 +4,7 @@ ALICRYPTO_TEST := yes
 
 ifneq (,$(BINS))
 ifeq ($(MBEDTLS_SHARE),1)
-$(NAME)_TYPE := share
+$(NAME)_TYPE := framework&kernel
 else
 $(NAME)_TYPE := kernel
 endif

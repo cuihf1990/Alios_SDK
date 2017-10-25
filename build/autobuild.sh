@@ -9,7 +9,7 @@ mk3060_platforms="mk3060 mk3060@release"
 linux_platforms="linuxhost linuxhost@debug linuxhost@release"
 b_l475e_targets="mqttapp helloworld tls"
 b_l475e_platforms="b_l475e"
-bins_type="app kernel"
+bins_type="app framework kernel"
 
 git status > /dev/null 2>&1
 if [ $? -ne 0 ]; then

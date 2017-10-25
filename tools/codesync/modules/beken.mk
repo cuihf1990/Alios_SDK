@@ -21,6 +21,7 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += rhino hal netmgr framework.common mbedtls cjson cli digest_algorithm
 $(NAME)_COMPONENTS += protocols.net protocols.mesh
 $(NAME)_COMPONENTS += platform/mcu/beken/aos/app_runtime
+$(NAME)_COMPONENTS += platform/mcu/beken/aos/framework_runtime
 
 GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_AOS_KV_MULTIPTN_MODE

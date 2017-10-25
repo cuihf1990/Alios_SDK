@@ -32,5 +32,12 @@ struct pollfd {
  */
 #define EXPORT_SYMBOL_K(condition, fun, fun_str)
 
+/**
+ * define the EXPORT_SYMBOL_F macro, use in framework
+ *
+ */
+#define EXPORT_SYMBOL_F(condition, fun, fun_str)
+
+
 #endif /* AOS_TYPES_H */
 

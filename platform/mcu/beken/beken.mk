@@ -21,6 +21,7 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += libc rhino hal netmgr framework.common mbedtls cjson cli digest_algorithm
 $(NAME)_COMPONENTS += platform/mcu/beken/hal_init
 $(NAME)_COMPONENTS += platform/mcu/beken/beken7231/beken378/driver/entry
+$(NAME)_COMPONENTS += platform/mcu/beken/aos/framework_runtime
 $(NAME)_COMPONENTS += platform/mcu/beken/aos/app_runtime
 
 GLOBAL_DEFINES += CONFIG_MX108
@@ -74,6 +75,8 @@ ifeq ($(BINS),)
 GLOBAL_LDS_FILES += platform/mcu/beken/beken7231/beken378/build/bk7231.ld.S
 else ifeq ($(BINS),app)
 GLOBAL_LDS_FILES += platform/mcu/beken/beken7231/beken378/build/bk7231_app.ld.S
+else ifeq ($(BINS),framework)
+GLOBAL_LDS_FILES += platform/mcu/beken/beken7231/beken378/build/bk7231_framework.ld.S
 else ifeq ($(BINS),kernel)
 GLOBAL_LDS_FILES += platform/mcu/beken/beken7231/beken378/build/bk7231_kernel.ld.S
 endif

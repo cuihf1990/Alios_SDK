@@ -137,8 +137,9 @@ ifneq ($(BUILD_STRING),)
 
 
 $(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
-	$(QUIET)$(if $(COMPILER_SPECIFIC_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/usyscall))
-	$(QUIET)$(if $(COMPILER_SPECIFIC_SYSCALL_FILE), $(call COMPILER_SPECIFIC_SYSCALL_FILE, $(OUTPUT_DIR)/usyscall))
+	$(QUIET)$(if $(COMPILER_SPECIFIC_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/syscall_kapi))
+	$(QUIET)$(if $(COMPILER_SPECIFIC_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/syscall_fapi))
+	$(QUIET)$(if $(COMPILER_SPECIFIC_SYSCALL_FILE), $(call COMPILER_SPECIFIC_SYSCALL_FILE, $(OUTPUT_DIR)))
 	$(QUIET)$(ECHO) $(if $(AOS_SDK_MAKEFILES),Applying changes made to: $?,Making config file for first time)
 	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/aos_target_config.mk $(CLEANED_BUILD_STRING)
 endif

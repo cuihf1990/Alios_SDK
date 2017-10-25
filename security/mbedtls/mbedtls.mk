@@ -5,7 +5,7 @@ DEBUG := no
 ifneq (,$(BINS))
 MBEDTLS_SHARE := 0
 ifeq ($(MBEDTLS_SHARE),1)
-$(NAME)_TYPE := share
+$(NAME)_TYPE := framework&kernel
 else
 $(NAME)_TYPE := kernel
 GLOBAL_DEFINES     += MBEDTLS_IN_KERNEL

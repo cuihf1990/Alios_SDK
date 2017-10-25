@@ -73,6 +73,7 @@ int awss_register_callback(unsigned char cb_type, void *cb_func)
 
     return 0;
 }
+EXPORT_SYMBOL_F(CONFIG_YWSS > 0u, awss_register_callback, "int awss_register_callback(unsigned char cb_type, void *cb_func)")
 
 #define HOTSPOT_TIMEOUT (2*60*10) // 10 mins
 int awss_start(void)

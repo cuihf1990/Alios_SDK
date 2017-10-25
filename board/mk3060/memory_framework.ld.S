@@ -15,10 +15,11 @@
  * data         |  framework:48k
  * bss          |
  * +------------+  0x00410020
+ * kernel:      |
  * data         |
  * end
  * |(heap)      |
- * .            .  kernel:256k - 64k - 32
+ * .            .  256k - 64k - 32
  * .            .
  * |(heap limit)|
  *
@@ -56,6 +57,7 @@
  * |            |
  * +------------+  0x00BA000
  * +------------+  0x00BA340
+
  * |            |
  * |            |
  * |  OTA TEMP  |
@@ -65,16 +67,16 @@
  * +------------+  0x100000
 */
 
-/* Application's phy start address is 0x00AD300.
- * Flash size = 0x00BA000-0x00AD300 = 51K
- * Code size = 51K*32/34=48K
+/* Framework's phy start address is 0x0085140.
+ * Flash size = 0x00AD000-0x0085140 = 159K
+ * Code size = 159K*32/34=149K
  */
 
 /* Split memory into area for vectors and ram */
 MEMORY
 {
-	flash  (rx) : ORIGIN = 0x00A3000, LENGTH = 48K
-	ram   (rwx): ORIGIN = 0x00400020, LENGTH = 16k
+	flash  (rx) : ORIGIN = 0x007D400, LENGTH = 149K
+	ram   (rwx): ORIGIN = 0x00404020, LENGTH = 48k
 }
 
 #else
@@ -93,6 +95,7 @@ MEMORY
  * data         |  framework:48k
  * bss          |
  * +------------+  0x00410020
+ * kernel:      |
  * data         |
  * end
  * |(heap)      |
@@ -142,16 +145,16 @@ MEMORY
  * +------------+  0x100000
 */
 
-/* Application's phy start address is 0x00AD300.
- * Flash size = 0x00c4000-0X00B6380 = 55K
- * Code size = 55K*32/34=51K
+/* Framework's phy start address is 0x0077440.
+ * Flash size = 0x00B6000-0x0077440 = 250K
+ * Code size = 250K*32/34=235K
  */
 
 /* Split memory into area for vectors and ram */
 MEMORY
 {
-	flash  (rx) : ORIGIN = 0x00AB800, LENGTH = 51K
-	ram   (rwx): ORIGIN = 0x00400020, LENGTH = 16k
+	flash  (rx) : ORIGIN = 0x0070400, LENGTH = 235K
+	ram   (rwx): ORIGIN = 0x00404020, LENGTH = 48k
 }
 
 #endif

@@ -812,11 +812,13 @@ bool gateway_is_connected(void)
 {
     return gateway_state.mqtt_connected;
 }
+EXPORT_SYMBOL_F(CONFIG_GATEWAY > 0u, gateway_is_connected, "bool gateway_is_connected(void)")
 
 const char *gateway_get_uuid(void)
 {
     return gateway_state.uuid;
 }
+EXPORT_SYMBOL_F(CONFIG_GATEWAY > 0u, gateway_get_uuid, "const char *gateway_get_uuid(void)")
 
 static int init_socket(void)
 {
