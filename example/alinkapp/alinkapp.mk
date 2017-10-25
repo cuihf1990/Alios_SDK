@@ -15,6 +15,11 @@ ifneq ($(ywss),0)
 $(NAME)_COMPONENTS += ywss
 endif
 
+ifeq ($(at_adapter),1)
+$(NAME)_COMPONENTS += at_adapter
+LWIP = 1
+endif
+
 ifneq (,$(filter linuxhost,$(COMPONENTS)))
 gateway ?= 0
 else

@@ -18,6 +18,12 @@
 #include <netmgr.h>
 #include <accs.h>
 
+#ifdef AOS_AT_ADAPTER
+#include <atparser.h>
+#include <at_adapter.h>
+#undef CONFIG_YWSS
+#endif
+
 #ifdef CONFIG_YWSS
 #include <enrollee.h>
 #endif
@@ -656,6 +662,8 @@ static void alink_cloud_init(void)
 #endif
 }
 
+/***************************auto_netmgr code start*****************************/
+#ifndef AOS_AT_ADAPTER
 static void clear_kv_and_reboot()
 {
     aos_kv_del(NETMGR_WIFI_KEY);
@@ -784,13 +792,37 @@ static bool get_auto_netmgr_config()
 
     return ret;
 }
+#endif
+
+/***************************auto_netmgr code end*******************************/
+
+#ifdef AOS_AT_ADAPTER
+static void at_uart_configure(uart_dev_t *u)
+{
+    u->port                = AT_UART_PORT;
+    u->config.baud_rate    = AT_UART_BAUDRATE;
+    u->config.data_width   = AT_UART_DATA_WIDTH;
+    u->config.parity       = AT_UART_PARITY;
+    u->config.stop_bits    = AT_UART_STOP_BITS;
+    u->config.flow_control = AT_UART_FLOW_CONTROL;
+}
+#endif
 
 int application_start(int argc, char *argv[])
 {
+#ifdef AOS_AT_ADAPTER
+    uart_dev_t at_uart;
+    at_uart_configure(&at_uart);
+    at.init(&at_uart, AT_RECV_DELIMITER, AT_SEND_DELIMITER, 1000);
+    at.set_mode(ASYN);
+    at_adapter_init();
+#endif
+
     parse_opt(argc, argv);
 
     aos_set_log_level(AOS_LL_DEBUG);
 
+#ifndef AOS_AT_ADAPTER
     if (mesh_mode == MESH_MASTER) {
 #ifdef CONFIG_AOS_DDM
         ddm_run(argc, argv);
@@ -802,6 +834,7 @@ int application_start(int argc, char *argv[])
     dda_enable(atoi(mesh_num));
     dda_service_init();
 #endif
+#endif // #ifndef AOS_AT_ADAPTER
 
     aos_cli_register_command(&uuidcmd);
     alink_cloud_init();
@@ -819,6 +852,7 @@ int application_start(int argc, char *argv[])
         aos_register_event_filter(EV_WIFI, alink_service_event, NULL);
         aos_register_event_filter(EV_SYS, alink_connect_event, NULL);
         aos_register_event_filter(EV_KEY, alink_key_process, NULL);
+#ifndef AOS_AT_ADAPTER
         aos_register_event_filter(EV_YUNIO, auto_active_handler, NULL);
 
         auto_netmgr = get_auto_netmgr_config();
@@ -827,11 +861,14 @@ int application_start(int argc, char *argv[])
         awss_register_callback(AWSS_HOTSPOT_SWITCH_AP_DONE,
           &awss_hotspot_switch_ap_done_handler);
         if (auto_netmgr) start_auto_netmgr_timer();
+#else
+        auto_netmgr = false;
+#endif
         netmgr_init();
         netmgr_start(auto_netmgr);
     }
 
-#ifdef CONFIG_AOS_DDA
+#if defined(CONFIG_AOS_DDA) && !defined(AOS_AT_ADAPTER)
     dda_service_start();
 #else
     aos_loop_run();
