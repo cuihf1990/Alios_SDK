@@ -7,7 +7,9 @@
 #include <stdarg.h>
 
 #include <aos/aos.h>
+#ifdef CONFIG_ALICRYPTO
 #include <ali_crypto.h>
+#endif
 
 #include <umesh.h>
 #include <umesh_pal.h>
@@ -95,6 +97,7 @@ int umesh_pal_schedule_call(void (*task)(void *), void *arg)
  */
 typedef void *umesh_aes_ctx_t;
 
+#ifdef CONFIG_ALICRYPTO
 uint8_t g_umesh_iv[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -120,12 +123,14 @@ static ur_error_t umesh_aes_encrypt_decrypt(umesh_aes_ctx_t *aes,
 
     return UR_ERROR_NONE;
 }
+#endif
 
 ur_error_t umesh_pal_aes_encrypt(const uint8_t *key, uint8_t key_size,
                              const void *src,
                              uint16_t size, void *dst)
 {
-    ur_error_t error;
+    ur_error_t error = UR_ERROR_NONE;
+#ifdef CONFIG_ALICRYPTO
     umesh_aes_ctx_t *aes;
     uint32_t aes_ctx_size;
     ali_crypto_result result;
@@ -153,6 +158,7 @@ ur_error_t umesh_pal_aes_encrypt(const uint8_t *key, uint8_t key_size,
 
     error = umesh_aes_encrypt_decrypt(aes, src, size, dst);
     aos_free(aes);
+#endif
 
     return error;
 }
@@ -161,7 +167,8 @@ ur_error_t umesh_pal_aes_decrypt(const uint8_t *key, uint8_t key_size,
                              const void *src,
                              uint16_t size, void *dst)
 {
-    ur_error_t error;
+    ur_error_t error = UR_ERROR_NONE;
+#ifdef CONFIG_ALICRYPTO
     umesh_aes_ctx_t *aes;
     uint32_t aes_ctx_size;
     ali_crypto_result result;
@@ -189,6 +196,7 @@ ur_error_t umesh_pal_aes_decrypt(const uint8_t *key, uint8_t key_size,
 
     error = umesh_aes_encrypt_decrypt(aes, src, size, dst);
     aos_free(aes);
+#endif
 
     return error;
 }
