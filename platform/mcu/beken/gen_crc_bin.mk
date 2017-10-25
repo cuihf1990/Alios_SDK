@@ -9,7 +9,7 @@ XZ_CMD = if [ -f $(XZ) ]; then $(XZ) -f --lzma2=dict=32KiB --check=crc32 -k $(OT
 else # Linux32
 ifeq ($(HOST_OS),Linux64)
 ENCRYPT := "$(SOURCE_ROOT)/platform/mcu/$(HOST_MCU_FAMILY)/encrypt_linux"
-XZ := /usr/bin/xz	
+XZ := $(TOOLS_ROOT)/cmd/linux64/xz	
 XZ_CMD = if [ -f $(XZ) ]; then $(XZ) -f --lzma2=dict=32KiB --check=crc32 -k $(OTA_BIN_OUTPUT_FILE); else echo "xz need be installed"; fi
 else # Linux64
 ifeq ($(HOST_OS),OSX)
