@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _ATCMD_DEFINES_MK3060_H_
 #define _ATCMD_DEFINES_MK3060_H_
 
@@ -17,6 +21,7 @@
 #define AT_CMD_ENET_SEND "AT+ENETRAWSEND"
 #define AT_CMD_ENTER_ENET_MODE "AT+ENETRAWMODE=ON"
 #define AT_CMD_EHCO_OFF "AT+UARTE=OFF"
+#define AT_CMD_TEST "AT"
 
 // Delimiter
 #define AT_RECV_DELIMITER "\r\n"

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _ATCMD_H_
 #define _ATCMD_H_
 
