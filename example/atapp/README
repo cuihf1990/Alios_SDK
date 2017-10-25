@@ -1,0 +1,4 @@
+1. Build Command on linuxhost:
+     #aos make atapp@linuxhost vcall=posix at_adapter=1
+2. Run atapp on linuxhost:
+     #./out/atapp@linuxhost/binary/atapp@linuxhost.elf --no-tapif
