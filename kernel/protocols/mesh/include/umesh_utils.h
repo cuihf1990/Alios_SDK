@@ -23,6 +23,7 @@
 #include "utilities/mac_whitelist.h"
 
 #define umesh_kv_get umesh_pal_kv_get
+#define umesh_kv_set umesh_pal_kv_set
 #define umesh_malloc umesh_pal_malloc
 #define umesh_free umesh_pal_free
 #define umesh_now_ms umesh_pal_now_ms

@@ -6,6 +6,7 @@
 #define UMESH_PAL_H
 
 int umesh_pal_kv_get(const char *key, void *buf, int *len);
+int umesh_pal_kv_set(const char *key, void *buf, int len, int sync);
 void *umesh_pal_malloc(int sz);
 void umesh_pal_free(void *);
 uint32_t umesh_pal_now_ms(void);
