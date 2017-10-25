@@ -97,9 +97,11 @@ static void test_aos_vfs_case(void)
         ret = aos_unregister_driver(names[i]);
         YUNIT_ASSERT(ret == 0);
 
+#ifdef CONFIG_AOS_YTS_ALL
         fd = aos_open(names[i], 0);
         ret = aos_ioctl(fd, 0, 0);
         YUNIT_ASSERT(-ENOENT == ret);
+#endif
     }
 }
 

@@ -126,6 +126,7 @@ static void app_main_entry(void *arg)
     aos_cancel_work(NULL, work_not_exec, NULL);
 
     aos_loop_run();
+    aos_task_exit(0);
 }
 
 static void action_after_terminated(void *arg)
@@ -160,6 +161,8 @@ static void app_second_entry(void *arg)
     aos_loop_destroy();
 
     aos_schedule_call(action_after_terminated, NULL);
+
+    aos_task_exit(0);
 }
 
 static void test_simple_case(void)

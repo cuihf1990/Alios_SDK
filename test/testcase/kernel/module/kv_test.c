@@ -263,8 +263,10 @@ static yunit_test_case_t krhino_basic_testcases[] = {
     { "kv_add", test_kv_add },
     { "kv_find", test_kv_find },
     { "kv_del", test_kv_del },
+#ifdef CONFIG_AOS_YTS_ALL
     { "kv_loop", test_kv_loop},
     { "kv_error", test_kv_error},
+#endif
     YUNIT_TEST_CASE_NULL
 };
 
