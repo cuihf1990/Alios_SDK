@@ -87,7 +87,7 @@ aos_loop_t aos_loop_init(void)
 
     if (!g_main_ctx) {
         aos_task_key_create(&g_loop_key);
-    } else if (ctx && g_main_ctx != ctx) {
+    } else if (ctx) {
         LOGE(TAG, "yloop already inited");
         return ctx;
     }
