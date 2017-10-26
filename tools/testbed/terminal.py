@@ -447,10 +447,18 @@ class Terminal:
         while retry > 0:
             self.service_socket.send(data)
             self.wait_cmd_excute_done(0.2)
-            if self.cmd_excute_return == None:
+            if self.cmd_excute_state == 'timeout':
                 retry -= 1;
                 continue
-            break
+            if self.cmd_excute_return == 'busy':
+                time.sleep(5)
+                continue
+            elif self.cmd_excute_return == 'ok' or self.cmd_excute_return == 'exist':
+                break
+            else:
+                status_str += 'error'
+                self.cmdrun_status_display(status_str)
+                return False
         if retry == 0:
             status_str += 'error'
             self.cmdrun_status_display(status_str)
