@@ -11,6 +11,7 @@ class Server:
         self.terminal_socket = 0
         self.client_list = []
         self.terminal_list = []
+        self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
         self.keep_running = True
 
     def construct_dev_list(self):
@@ -191,21 +192,26 @@ class Server:
             return ['error','argument']
 
         allocated = []
-        for client in self.client_list:
-            allocated = []
-            ports = list(client['devices'])
-            ports.sort()
-            for port in ports:
-                if client['devices'][port]['using'] == 0:
-                    allocated.append(port)
-                    if len(allocated) >= number:
-                        break
+        with self.allocated['lock']:
+            for client in self.client_list:
+                allocated = []
+                ports = list(client['devices'])
+                ports.sort()
+                for port in ports:
+                    if port in self.allocated['devices']:
+                        continue
+                    if client['devices'][port]['using'] == 0:
+                        allocated.append(port)
+                        if len(allocated) >= number:
+                            break
+                if len(allocated) >= number:
+                    break
             if len(allocated) >= number:
-                break
-        if len(allocated) >= number:
-            return ['success', '|'.join(allocated)]
-        else:
-            return ['fail', 'busy']
+                self.allocated['devices'] += allocated
+                self.allocated['timeout'] = time.time() + 10
+                return ['success', '|'.join(allocated)]
+            else:
+                return ['fail', 'busy']
 
     def increase_device_refer(self, client, port, using_list):
         if [client['addr'], port] not in using_list:
@@ -431,6 +437,9 @@ class Server:
             terminal_thread = thread.start_new_thread(self.terminal_listen_thread, ())
             while True:
                 time.sleep(0.1)
+                if self.allocated['devices'] != [] and time.time() > self.allocated['timeout']:
+                    with self.allocated['lock']:
+                        self.allocated['devices'] = []
         except:
             self.keep_running = False
 
