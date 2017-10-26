@@ -10,6 +10,8 @@
 #include <vfs.h>
 #include <stdio.h>
 #include <hal/hal.h>
+#include <limits.h>
+#include <string.h>
 
 extern uart_dev_t uart_0;
 
@@ -157,10 +159,16 @@ int aos_open(const char *path, int flags)
 {
     file_t  *file;
     inode_t *node;
+    size_t len = 0;
     int ret = VFS_SUCCESS;
 
     if (path == NULL) {
         return -EINVAL;
+    }
+
+    len = strlen(path);
+    if (len > PATH_MAX) {
+        return -ENAMETOOLONG;
     }
 
     if ((ret = aos_mutex_lock(&g_vfs_mutex, AOS_WAIT_FOREVER)) != 0) {
@@ -180,7 +188,7 @@ int aos_open(const char *path, int flags)
     aos_mutex_unlock(&g_vfs_mutex);
 
     if (file == NULL) {
-        return -ENOENT;
+        return -ENFILE;
     }
 
     if (INODE_IS_FS(node)) {
