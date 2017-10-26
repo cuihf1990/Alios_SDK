@@ -535,9 +535,6 @@ void response_append(const char *format, ...)
         extern int dda_cli_log(char *str);
         dda_cli_log((char *)res_buf);
 #endif
-        if (!g_cli_silent) {
-            csp_printf("%s", res_buf);
-        }
     }
 }
 
@@ -553,7 +550,7 @@ void process_extnetid(int argc, char *argv[])
         }
         extnetid.len = length;
         umesh_set_extnetid(&extnetid);
-        aos_kv_set("extnetid", extnetid.netid, extnetid.len, 1);
+        umesh_kv_set("extnetid", extnetid.netid, extnetid.len, 1);
     }
 
     memset(&extnetid, 0, sizeof(extnetid));

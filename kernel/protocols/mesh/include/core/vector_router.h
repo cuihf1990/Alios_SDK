@@ -9,8 +9,6 @@
 extern "C" {
 #endif
 
-#include <aos/aos.h>
-
 enum {
     UNVISITED    = 0x00,
     VISITED      = 0x01,
