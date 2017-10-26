@@ -17,8 +17,8 @@ typedef enum {
 } SEARCH_ACTION;
 
 #define ISFIXEDBLK(mh,ptr) \
-        (mh->fixedmblk && (ptr > (void *)mh->fixedmblk->mbinfo.buffer) \
-        && (ptr < (void *)mh->fixedmblk->mbinfo.buffer + mh->fixedmblk->size)) ? 1 : 0
+        (mh->fixedmblk && (ptr > mh->fixedmblk->mbinfo.buffer) \
+        && (ptr < mh->fixedmblk->mbinfo.buffer + mh->fixedmblk->size)) ? 1 : 0
 
 RHINO_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
 {
@@ -135,7 +135,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     */
     orig_addr = addr;
     addr = (void *) MM_ALIGN_UP((size_t)addr);
-    len -= (addr - orig_addr);
+    len -= (size_t)addr - (size_t)orig_addr;
     len = MM_ALIGN_DOWN(len);
 
     if (((unsigned long) addr & MM_ALIGN_MASK) || (len != MM_ALIGN_DOWN(len))) {
@@ -178,7 +178,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(pmmhead, sizeof(k_mm_head)));
 
-    firstblk = init_mm_region(addr + MM_ALIGN_UP(sizeof(k_mm_head)),
+    firstblk = init_mm_region((void *)((size_t)addr + MM_ALIGN_UP(sizeof(k_mm_head))),
                               MM_ALIGN_DOWN(len - sizeof(k_mm_head)));
 
 
@@ -221,7 +221,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
         VGF(VALGRIND_FREELIKE_BLOCK(mmblk_pool, 0));
         VGF(VALGRIND_MAKE_MEM_DEFINED(mmblk_pool, curblk->size & RHINO_MM_BLKSIZE_MASK));
         stat = krhino_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
-                                     (void *)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t)),
+                                     (void *)((size_t)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t))),
                                      DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
         if (stat == RHINO_SUCCESS) {
             pmmhead->fixedmblk = curblk;
@@ -569,6 +569,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     size_t       fl, sl;
     size_t       tmp_size;
     size_t       req_size = size;
+    (void)       req_size;
     mblk_pool_t  *mm_pool;
 
     if (!mmhead) {
@@ -799,9 +800,6 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 
 }
 
-
-
-
 void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 {
     void        *ptr_aux = NULL;
@@ -810,6 +808,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     size_t       fl, sl;
     size_t       tmp_size;
     size_t       req_size;
+    (void)       req_size;
 
     if (!oldmem) {
         if (new_size) {
@@ -975,7 +974,8 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
         return ptr_aux;
     }
 
-    if (!(ptr_aux = k_mm_alloc(mmhead, new_size))) {
+    ptr_aux = k_mm_alloc(mmhead, new_size);
+    if (!ptr_aux) {
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
         RHINO_CRITICAL_EXIT();
 #else
