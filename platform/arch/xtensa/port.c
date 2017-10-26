@@ -91,15 +91,12 @@ void cpu_first_task_start()
 {
 
     // Interrupts are disabled at this point and stack contains PS with enabled interrupts when task context is restored
-
     #if XCHAL_CP_NUM > 0
     /* Initialize co-processor management for tasks. Leave CPENABLE alone. */
     _xt_coproc_init();
     #endif
-
     /* Init the tick divisor value */
     _xt_tick_divisor_init();
-
     /* Setup the hardware to generate the tick. */
     _frxt_tick_timer_init();
     krhino_sys_run[xPortGetCoreID()] = 1;
@@ -108,12 +105,12 @@ void cpu_first_task_start()
 
 void krhino_switch_context()
 {
-    g_active_task = g_preferred_ready_task;
+    g_active_task[cpu_cur_get()] = g_preferred_ready_task[cpu_cur_get()];
 }
 
 void cpu_intrpt_switch()
 {
-    g_active_task = g_preferred_ready_task;
+    g_active_task[cpu_cur_get()] = g_preferred_ready_task[cpu_cur_get()];
     _frxt_setup_switch();
 }
 
