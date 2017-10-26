@@ -3,7 +3,6 @@
  */
 
 #include <string.h>
-#include <aos/aos.h>
 
 #include "umesh_utils.h"
 

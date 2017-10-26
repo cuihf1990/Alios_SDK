@@ -8,8 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "hal/base.h"
-#include "aos/aos.h"
+#include "aos/list.h"
 
 #ifdef __cplusplus
 extern "C" {
