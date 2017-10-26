@@ -197,7 +197,10 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     VGF(VALGRIND_MALLOCLIKE_BLOCK(nextblk->mbinfo.buffer, nextblk->size & RHINO_MM_BLKSIZE_MASK, 0, 0));
 
     /*mark it as free and set it to bitmap*/
+#if (RHINO_CONFIG_MM_DEBUG > 0u)
     nextblk->dye = RHINO_MM_CORRUPT_DYE;
+#endif
+
     k_mm_free(pmmhead, nextblk->mbinfo.buffer);
     /*after free, we need acess mmhead and nextblk again*/
 
