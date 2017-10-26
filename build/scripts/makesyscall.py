@@ -308,7 +308,7 @@ def main():
     syscall_path = sys.argv[1]
     logging.info(sys.argv[1])
 
-    ksearch_string = r"EXPORT_SYMBOL_K\((.*?)\,\s*?[\\|\s]\s*?(\S*?)\,\s*?[\\|\s]\s*?(\".*?\")\)$"
+    ksearch_string = r"^EXPORT_SYMBOL_K\((.*?)\,\s*?[\\|\s]\s*?(\S*?)\,\s*?[\\|\s]\s*?(\".*?\")\)$"
     copyright_path = r"./build/copyright"
     ksyscall_tblc_path = r"./kernel/ksyscall/syscall_ktbl.c"
     ksyscall_tbl_path = syscall_path + r"/syscall_kapi/syscall_ktbl.h"
@@ -318,7 +318,7 @@ def main():
     ksyscall_data_path = r"./build/scripts/syscall_kdata"
     ksyscall_incl_path = r"./framework/fsyscall/syscall_kapi/syscall_kapi.h"
 
-    fsearch_string = r"EXPORT_SYMBOL_F\((.*?)\,\s*?[\\|\s]\s*?(\S*?)\,\s*?[\\|\s]\s*?(\".*?\")\)$"
+    fsearch_string = r"^EXPORT_SYMBOL_F\((.*?)\,\s*?[\\|\s]\s*?(\S*?)\,\s*?[\\|\s]\s*?(\".*?\")\)$"
     fsyscall_tblc_path = r"./framework/fsyscall/syscall_ftbl.c"
     fsyscall_tbl_path = syscall_path + r"/syscall_fapi/syscall_ftbl.h"
     fsyscall_num_path = syscall_path + r"/syscall_fapi/syscall_fnum.h"
@@ -340,7 +340,7 @@ def main():
 
     # Remove duplicate element & Element sorting
     symbol_list=sorted(set(symbol_list),key=symbol_list.index)
-    symbol_list.sort()
+    symbol_list = sorted(symbol_list, key=lambda fun: fun[1].lower())
 
     # set syscall serial num to 0
     _disableSyscall(ksyscall_data_path)
@@ -380,7 +380,7 @@ def main():
 
     # Remove duplicate element & Element sorting
     symbol_list=sorted(set(symbol_list),key=symbol_list.index)
-    symbol_list.sort()
+    symbol_list = sorted(symbol_list, key=lambda fun: fun[1].lower())
 
     # set syscall serial num to 0
     _disableSyscall(fsyscall_data_path)
