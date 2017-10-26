@@ -17,8 +17,8 @@ typedef enum {
 } SEARCH_ACTION;
 
 #define ISFIXEDBLK(mh,ptr) \
-        (mh->fixedmblk && (ptr > mh->fixedmblk->mbinfo.buffer) \
-        && (ptr < mh->fixedmblk->mbinfo.buffer + mh->fixedmblk->size)) ? 1 : 0
+        (mh->fixedmblk && ((void *)ptr > (void *)(mh->fixedmblk->mbinfo.buffer)) \
+        && ((void *)ptr < (void *)(mh->fixedmblk->mbinfo.buffer + mh->fixedmblk->size))) ? 1 : 0
 
 RHINO_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
 {
