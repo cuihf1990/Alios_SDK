@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os, sys, time, socket, pdb
+import os, sys, time, socket, re, pdb
 import subprocess, thread, threading, pickle
 from operator import itemgetter
 import TBframe
@@ -21,6 +21,7 @@ class Autotest:
         self.filter = {}
         self.sync_event = threading.Event()
         self.sync_event.clear()
+        self.esc_seq = re.compile(r'\x1b[^m]*m')
 
     def heartbeat_func(self):
         heartbeat_timeout = time.time() + 10
@@ -54,7 +55,8 @@ class Autotest:
                 if self.filter['cmdstr'] in logstr:
                     self.filter['lines_num'] += 1
             elif self.filter['lines_num'] <= self.filter['lines_exp']:
-                log = logstr.replace("\r", "")
+                log = self.esc_seq.sub('', logstr)
+                log = log.replace("\r", "")
                 log = log.replace("\n", "")
                 if log != "":
                     for filterstr in self.filter['filters']:
