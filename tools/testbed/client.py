@@ -370,6 +370,15 @@ class Client:
                     if type == TBframe.TYPE_NONE:
                         break
 
+                    for hash in list(file_receiving):
+                        if time.time() > file_receiving[hash]['timeout']:
+                            file_receiving[hash]['handle'].close()
+                            try:
+                                os.remove(file_receiving[hash]['name'])
+                            except:
+                                pass
+                            file_receiving.pop(hash)
+
                     if type == TBframe.FILE_BEGIN:
                         split_value = value.split(':')
                         terminal = split_value[0]
@@ -384,22 +393,20 @@ class Client:
                                 file_received.pop(hash)
 
                         if hash in file_receiving:
-                            file_receiving[hash]['handle'].close()
-                            try:
-                                os.remove(file_receiving[hash]['name'])
-                            except:
-                                pass
-                            file_receiving.pop(hash)
+                            content = terminal + ',' + 'busy'
+                            self.send_response(type, content)
+                            continue
 
                         filename = 'client/' + filename
                         filename += '-' + terminal.split(',')[0]
                         filename += '@' + time.strftime('%Y-%m-%d-%H-%M')
                         filehandle = open(filename, 'w')
-                        file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle}
+                        timeout = time.time() + 5
+                        file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle, 'timeout': timeout}
                         content = terminal + ',' + 'ok'
+                        self.send_response(type, content)
                         if DEBUG:
                             print 'start receiving {0} as {1}'.format(split_value[2], filename)
-                        self.send_response(type, content)
                     elif type == TBframe.FILE_DATA:
                         split_value = value.split(':')
                         terminal = split_value[0]
@@ -417,6 +424,7 @@ class Client:
                             continue
                         file_receiving[hash]['handle'].write(data)
                         file_receiving[hash]['seq'] += 1
+                        file_receiving[hash]['timeout'] = time.time() + 5
                         content = terminal + ',' + 'ok'
                         self.send_response(type, content)
                     elif type == TBframe.FILE_END:

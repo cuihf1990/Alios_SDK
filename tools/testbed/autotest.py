@@ -148,6 +148,7 @@ class Autotest:
 
     def wait_cmd_excute_done(self, timeout):
         self.cmd_excute_state = 'wait_response'
+        self.cmd_excute_return = None
         while self.cmd_excute_state == 'wait_response':
             time.sleep(0.01)
             timeout -= 0.01
@@ -188,11 +189,20 @@ class Autotest:
         while retry > 0:
             self.service_socket.send(data)
             self.wait_cmd_excute_done(0.2)
-            if self.cmd_excute_return == None:
+            if self.cmd_excute_state == 'timeout':
                 retry -= 1;
                 continue
-            break
+            if self.cmd_excute_return == 'busy':
+                print "file transfer busy: wait..."
+                time.sleep(5)
+                continue
+            elif self.cmd_excute_return == 'ok' or self.cmd_excute_return == 'exist':
+                break
+            else:
+                print "file transfer error: unexpected response '{0}'".format(self.cmd_excute_return)
+                return False
         if retry == 0:
+            print 'file transfer error: retry timeout'
             return False
         if self.cmd_excute_return == 'exist':
             return True

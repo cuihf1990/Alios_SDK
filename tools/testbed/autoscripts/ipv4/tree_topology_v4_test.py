@@ -58,6 +58,7 @@ def main(filename = '~/lb-all.bin'):
         return [1, 'subscribe devices failed']
     for device in device_list:
         at.device_control(device, 'reset')
+    time.sleep(3)
 
     #program devices
     for device in device_list:
