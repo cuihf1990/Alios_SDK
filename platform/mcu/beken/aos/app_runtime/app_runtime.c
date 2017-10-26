@@ -18,17 +18,6 @@ extern unsigned int _app_heap_start;
 extern unsigned int _app_heap_end;
 extern int application_start(int argc, char **argv);
 
-struct app_info_t {
-     void (*app_entry)(void *ksyscall_tbl, void *fsyscall_tbl, int argc, char *argv[]);
-     unsigned int data_ram_start;
-     unsigned int data_ram_end;
-     unsigned int data_flash_begin;
-     unsigned int bss_start;
-     unsigned int bss_end;
-     unsigned int heap_start;
-     unsigned int heap_end;
-};
-
 int aos_application_init(void)
 {
     LOG("aos application init.");

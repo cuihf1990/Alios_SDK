@@ -5,14 +5,19 @@
 #include <aos_main.h>
 #include <k_api.h>
 #include <aos/kernel.h>
+#include <aos/init.h>
 
 #define AOS_START_STACK 2048
 
 ktask_t *g_aos_init;
 
 extern void board_init(void);
-extern int aos_kernel_init(void);
 
+static kinit_t kinit = {
+    .argc = 0,
+    .argv = NULL,
+    .cli_enable = 1
+};
 
 static void sys_init(void)
 {
@@ -26,7 +31,7 @@ static void sys_init(void)
 
     board_init();
 
-    aos_kernel_init();
+    aos_kernel_init(&kinit);
 
 #endif
 }
