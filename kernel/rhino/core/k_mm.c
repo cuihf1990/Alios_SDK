@@ -130,7 +130,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     NULL_PARA_CHK(addr);
 
     /*check paramters, addr need algin with 4 and len should be multiple of 4
-      1.  the length at least need DEF_TOTAL_FIXEDBLK_SIZE for fixed size memory block
+      1.  the length at least need RHINO_CONFIG_MM_TLF_BLK_SIZE  for fixed size memory block
       2.  and also ast least have 1k for user alloced
     */
     orig_addr = addr;
@@ -142,7 +142,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
         return RHINO_INV_ALIGN;
     }
 
-    if ( !len || len < MIN_FREE_MEMORY_SIZE + DEF_TOTAL_FIXEDBLK_SIZE
+    if ( !len || len < MIN_FREE_MEMORY_SIZE + RHINO_CONFIG_MM_TLF_BLK_SIZE
          || len > MAX_MM_SIZE) {
         return RHINO_MM_POOL_SIZE_ERR;
     }
@@ -216,7 +216,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     VGF(VALGRIND_MAKE_MEM_NOACCESS(nextblk, MMLIST_HEAD_SIZE));
 
     mmblk_pool = k_mm_alloc(pmmhead,
-                            DEF_TOTAL_FIXEDBLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
+                            RHINO_CONFIG_MM_TLF_BLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
     VGF(VALGRIND_MAKE_MEM_DEFINED(pmmhead, sizeof(k_mm_head)));
     if (mmblk_pool) {
         curblk = (k_mm_list_t *) ((char *) mmblk_pool - MMLIST_HEAD_SIZE);
@@ -225,7 +225,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
         VGF(VALGRIND_MAKE_MEM_DEFINED(mmblk_pool, curblk->size & RHINO_MM_BLKSIZE_MASK));
         stat = krhino_mblk_pool_init(mmblk_pool, "fixed_mm_blk",
                                      (void *)((size_t)mmblk_pool + MM_ALIGN_UP(sizeof(mblk_pool_t))),
-                                     DEF_FIX_BLK_SIZE, DEF_TOTAL_FIXEDBLK_SIZE);
+                                     DEF_FIX_BLK_SIZE, RHINO_CONFIG_MM_TLF_BLK_SIZE);
         if (stat == RHINO_SUCCESS) {
             pmmhead->fixedmblk = curblk;
         } else {
@@ -233,7 +233,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
             VGF(VALGRIND_MAKE_MEM_DEFINED(pmmhead, sizeof(k_mm_head)));
         }
 #if (K_MM_STATISTIC > 0)
-        stats_removesize(pmmhead, DEF_TOTAL_FIXEDBLK_SIZE);
+        stats_removesize(pmmhead, RHINO_CONFIG_MM_TLF_BLK_SIZE);
 #endif
     }
 

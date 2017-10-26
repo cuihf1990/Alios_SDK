@@ -21,7 +21,7 @@ static uint8_t mm_param_case1(void)
     MYASSERT(ret == RHINO_NULL_PTR);
 
     ret = krhino_init_mm_head(&pmmhead, (void *)mm_pool,
-                              MIN_FREE_MEMORY_SIZE + DEF_TOTAL_FIXEDBLK_SIZE - 4);
+                              MIN_FREE_MEMORY_SIZE + RHINO_CONFIG_MM_TLF_BLK_SIZE - 4);
     MYASSERT(ret == RHINO_MM_POOL_SIZE_ERR);
 
     ret = krhino_init_mm_head(&pmmhead, (void *)(mm_pool + 1), MM_POOL_SIZE);
