@@ -21,6 +21,7 @@ extern "C" {
 #include <aos/version.h>
 #include <aos/yloop.h>
 #include <aos/errno.h>
+#include <aos/init.h>
 
 /*
 #include <aos/alink.h>

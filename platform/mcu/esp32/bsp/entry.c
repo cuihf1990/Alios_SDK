@@ -25,10 +25,15 @@ uart_dev_t uart_0 = {
     .port = CONFIG_CONSOLE_UART_NUM,
 };
 
-extern int aos_kernel_init(void);
+static kinit_t kinit = {
+    .argc = 0,
+    .argv = NULL,
+    .cli_enable = 1
+};
+
 static void app_entry(void *arg)
 {
-    aos_kernel_init();
+    aos_kernel_init(&kinit);
 }
 
 #ifdef ENABLE_WIFI

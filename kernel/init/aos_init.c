@@ -10,38 +10,14 @@ extern int vfs_device_init(void);
 extern int aos_kv_init(void);
 extern void ota_service_init(void);
 extern int aos_framework_init(void);
-extern int application_start(int argc, char **argv);
 extern void trace_start(void);
-int aos_cloud_init(void);
+extern int application_start(int argc, char **argv);
+
 
 #ifdef AOS_BINS
-#include <k_api.h>
-struct app_info_t {
-     void (*app_entry)(void *ksyscall_tbl, void *fsyscall_tbl, int argc, char *argv[]);
-     unsigned int data_ram_start;
-     unsigned int data_ram_end;
-     unsigned int data_flash_begin;
-     unsigned int bss_start;
-     unsigned int bss_end;
-     unsigned int heap_start;
-     unsigned int heap_end;
-};
-
-struct framework_info_t {
-     void (*framework_entry)(void *syscall_tbl, int argc, char *argv[]);
-     unsigned int data_ram_start;
-     unsigned int data_ram_end;
-     unsigned int data_flash_begin;
-     unsigned int bss_start;
-     unsigned int bss_end;
-     unsigned int heap_start;
-     unsigned int heap_end;
-};
-
 extern void *syscall_ktbl[];
 extern char  app_info_addr;
 extern char  framework_info_addr;
-
 extern k_mm_head  *g_kmm_head;
 
 struct framework_info_t *framework_info = (struct framework_info_t *)&framework_info_addr;
@@ -74,7 +50,7 @@ static void framework_pre_init(void)
 }
 #endif
 
-int aos_kernel_init(void)
+int aos_kernel_init(kinit_t *kinit)
 {
 #ifdef AOS_VFS
     vfs_init();
@@ -82,7 +58,8 @@ int aos_kernel_init(void)
 #endif
     
 #ifdef CONFIG_AOS_CLI
-    aos_cli_init();
+    if (kinit->cli_enable)
+        aos_cli_init();
 #endif
     
 #ifdef AOS_KV
@@ -106,11 +83,15 @@ int aos_kernel_init(void)
     framework_pre_init();
 
     if (framework_info->framework_entry) {
-        framework_info->framework_entry((void *)syscall_ktbl, 0, NULL);
+        framework_info->framework_entry((void *)syscall_ktbl, kinit->argc, kinit->argv);
     }
 #else
+
+#ifdef AOS_FRAMEWORK_COMMON
     aos_framework_init();
-    application_start(0, NULL);
+#endif
+
+    application_start(kinit->argc, kinit->argv);
 #endif
 
     return 0;

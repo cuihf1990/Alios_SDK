@@ -9,17 +9,6 @@
 const int *syscall_ktbl = NULL;
 extern void *syscall_ftbl[];
 
-struct app_info_t {
-     void (*app_entry)(void *ksyscall_tbl, void *fsyscall_tbl, int argc, char *argv[]);
-     unsigned int data_ram_start;
-     unsigned int data_ram_end;
-     unsigned int data_flash_begin;
-     unsigned int bss_start;
-     unsigned int bss_end;
-     unsigned int heap_start;
-     unsigned int heap_end;
-};
-
 extern char  app_info_addr;
 struct app_info_t *app_info = (struct app_info_t *)&app_info_addr;
 
@@ -30,17 +19,6 @@ extern unsigned int _framework_bss_start;
 extern unsigned int _framework_bss_end;
 extern unsigned int _framework_heap_start;
 extern unsigned int _framework_heap_end;
-
-struct framework_info_t {
-     void (*framework_entry)(void *syscall_tbl, int argc, char *argv[]);
-     unsigned int data_ram_start;
-     unsigned int data_ram_end;
-     unsigned int data_flash_begin;
-     unsigned int bss_start;
-     unsigned int bss_end;
-     unsigned int heap_start;
-     unsigned int heap_end;
-};
 
 static void framework_entry(void *syscall_tbl, int argc, char *argv[])
 {
