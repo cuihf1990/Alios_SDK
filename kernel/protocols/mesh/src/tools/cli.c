@@ -535,6 +535,9 @@ void response_append(const char *format, ...)
         extern int dda_cli_log(char *str);
         dda_cli_log((char *)res_buf);
 #endif
+        if (!g_cli_silent) {
+            umesh_log("%s", res_buf);
+        }
     }
 }
 
