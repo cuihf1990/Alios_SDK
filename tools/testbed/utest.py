@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, subprocess
+import sys, os
 
 DEFAULT_SERVER_PORT = 34567
 
@@ -26,7 +26,13 @@ if sys.argv[1] == "client":
         print_usage()
         exit(1)
 
-    tmpfile = "/tmp/uradar_testbed_client"
+    if os.path.exist('client') == False:
+        os.mkdir('client')
+    tmpfile = '.testbed_client'
+    if os.name == 'posix':
+        tmpfile = '/tmp/' + tmpfile
+    elif os.name == 'nt':
+        tmpfile = os.path.expanduser('~') + '\\' + tmpfile
     if os.path.exists(tmpfile):
         print "An urader testbed client is already running"
         exit(0)
@@ -41,10 +47,10 @@ if sys.argv[1] == "client":
             print "Usage error: invalid server port"
             print_usage()
             exit(1)
-    subprocess.call(["touch",tmpfile])
+    open(tmpfile, 'a').close()
     client = Client()
     client.client_func(server_ip, server_port)
-    subprocess.call(["rm",tmpfile])
+    os.remove(tmpfile)
 elif sys.argv[1] == "server":
     from server import Server
     if len(sys.argv) >= 4 and sys.argv[2] == '-p':
@@ -57,14 +63,20 @@ elif sys.argv[1] == "server":
             print_usage()
             exit(1)
 
-    tmpfile = "/tmp/uradar_testbed_server_{0}".format(server_port)
+    if os.path.exist('server') == False:
+        os.mkdir('server')
+    tmpfile = ".testbed_server_{0}".format(server_port)
+    if os.name == 'posix':
+        tmpfile = '/tmp/' + tmpfile
+    elif os.name == 'nt':
+        tmpfile = os.path.expanduser('~') + '\\' + tmpfile
     if os.path.exists(tmpfile):
         print "An urader testbed server is already running at port", server_port
         exit(0)
-    subprocess.call(["touch",tmpfile])
+    open(tmpfile, 'a').close()
     server = Server()
     server.server_func(server_port)
-    subprocess.call(["rm",tmpfile])
+    os.remove(tmpfile)
 elif sys.argv[1] == "terminal":
     from terminal import Terminal
     if len(sys.argv) < 4 or sys.argv[2] != "-s":
@@ -80,6 +92,8 @@ elif sys.argv[1] == "terminal":
             print "Usage error: invalid server port"
             print_usage()
             exit(1)
+    if os.path.exist('terminal') == False:
+        os.mkdir('terminal')
     terminal = Terminal()
     terminal.terminal_func(server_ip, server_port)
 else:

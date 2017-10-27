@@ -1,5 +1,5 @@
 import os, sys, time, socket
-import subprocess, thread, threading, pdb
+import thread, threading, pdb
 import TBframe
 
 MAX_MSG_LENTH      = 2000
@@ -428,7 +428,7 @@ class Server:
             print "address still in use, try later"
             return "fail"
         if os.path.exists('server') == False:
-            subprocess.call(['mkdir','server'])
+            os.mkdir('server')
         return "success"
 
     def run(self):
