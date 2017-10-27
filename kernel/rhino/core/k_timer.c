@@ -369,7 +369,7 @@ void timer_task_sched(void)
     }
 }
 
-void timer_init(void)
+void ktimer_init(void)
 {
     g_timer_ctrl = RHINO_CONFIG_TIMER_RATE;
 
