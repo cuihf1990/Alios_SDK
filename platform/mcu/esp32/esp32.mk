@@ -29,6 +29,7 @@ GLOBAL_LDFLAGS   += -L platform/mcu/esp32/system/ld
 GLOBAL_DEFINES   += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
 $(NAME)_SOURCES  := bsp/entry.c bsp/hal.c hal/flash.c #system/cpu_start.c
+$(NAME)_SOURCES  += hal/wifi_port.c
 $(NAME)_INCLUDES := soc/include soc/esp32/include
 $(NAME)_CFLAGS   := -std=gnu99
 ifeq ($(wifi),1)
