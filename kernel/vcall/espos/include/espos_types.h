@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _ESPOS_TYPES_H_
 #define _ESPOS_TYPES_H_
 
