@@ -33,6 +33,47 @@ ifeq ($(wifi),1)
 $(NAME)_CFLAGS   += -DENABLE_WIFI
 endif
 
-libs := $(wildcard platform/mcu/esp32/lib/lib*.a)
+ifeq (0,1)
+libs := $(wildcard platform/mcu/esp32/lib/*.a)
 libs := $(foreach lib,$(libs),lib/$(notdir $(lib)))
 $(NAME)_PREBUILT_LIBRARY := $(libs)
+endif
+
+$(NAME)_PREBUILT_LIBRARY := lib/libesp32.a
+$(NAME)_PREBUILT_LIBRARY += lib/libsoc.a
+$(NAME)_PREBUILT_LIBRARY += lib/libhal.a
+$(NAME)_PREBUILT_LIBRARY += lib/libnewlib.a
+$(NAME)_PREBUILT_LIBRARY += lib/libvfs.a
+$(NAME)_PREBUILT_LIBRARY += lib/libspi_flash.a
+$(NAME)_PREBUILT_LIBRARY += lib/liblog.a
+$(NAME)_PREBUILT_LIBRARY += lib/libdriver.a
+$(NAME)_PREBUILT_LIBRARY += lib/libcontainer.a
+$(NAME)_PREBUILT_LIBRARY += lib/librtc.a
+
+$(NAME)_PREBUILT_LIBRARY += lib/libcoexist.a
+$(NAME)_PREBUILT_LIBRARY += lib/libcore.a
+$(NAME)_PREBUILT_LIBRARY += lib/libnet80211.a
+$(NAME)_PREBUILT_LIBRARY += lib/libpp.a
+$(NAME)_PREBUILT_LIBRARY += lib/libwpa.a
+$(NAME)_PREBUILT_LIBRARY += lib/libwpa2.a
+$(NAME)_PREBUILT_LIBRARY += lib/libwps.a
+$(NAME)_PREBUILT_LIBRARY += lib/libphy.a
+$(NAME)_PREBUILT_LIBRARY += lib/libnvs_flash.a
+$(NAME)_PREBUILT_LIBRARY += lib/libcxx.a
+$(NAME)_PREBUILT_LIBRARY += lib/liblwip.a
+$(NAME)_PREBUILT_LIBRARY += lib/libstdcc++-cache-workaround.a
+$(NAME)_PREBUILT_LIBRARY += lib/libtcpip_adapter.a
+$(NAME)_PREBUILT_LIBRARY += lib/libwpa_supplicant.a
+$(NAME)_PREBUILT_LIBRARY += lib/libmbedtls.a
+
+ifeq ($(vcall),freertos)
+$(NAME)_PREBUILT_LIBRARY += lib/libespos.a
+$(NAME)_PREBUILT_LIBRARY += lib/libfreertos.a
+$(NAME)_PREBUILT_LIBRARY += lib/libheap.a
+else
+$(NAME)_COMPONENTS       += rhino platform/arch/xtensa
+$(NAME)_SOURCES          += aos/hook_impl.c
+$(NAME)_SOURCES          += aos/soc_impl.c
+$(NAME)_SOURCES          += aos/trace_impl.c
+$(NAME)_SOURCES          += aos/heap_wrapper.c
+endif
