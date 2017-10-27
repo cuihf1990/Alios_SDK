@@ -18,13 +18,8 @@ GLOBAL_LDFLAGS      +=
 GLOBAL_DEFINES      += CONFIG_ALICRYPTO
 GLOBAL_CFLAGS       +=
 
-ifeq ($(findstring ARM968E-S, $(HOST_ARCH)), ARM968E-S)
-$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/thumb/libmbedcrypto.a  \
-		lib/$(HOST_ARCH)/thumb/libalicrypto.a
-else
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedcrypto.a  \
 		lib/$(HOST_ARCH)/libalicrypto.a
-endif
 				
 ifeq ($(ALICRYPTO_TEST), yes)
 GLOBAL_INCLUDES     += test
