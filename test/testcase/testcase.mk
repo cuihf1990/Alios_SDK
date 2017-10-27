@@ -17,6 +17,8 @@ $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/module/kv_test.c
 $(NAME)_SOURCES     += kernel/vcall/vcall_test.c
 
+# tfs
+$(NAME)_COMPONENTS  += tfs libid2 libkm alicrypto
 
 ifneq (,$(findstring linux, $(BUILD_STRING)))
 $(NAME)_COMPONENTS  += fota connectivity.wsf ywss protocol.alink modules.fs.fatfs mbedtls
