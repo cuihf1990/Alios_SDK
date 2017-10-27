@@ -2,7 +2,7 @@ HOST_OPENOCD := esp32
 
 NAME := esp32
 
-$(NAME)_COMPONENTS := framework.common
+$(NAME)_COMPONENTS := framework.common modules.fs.kv
 
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/freertos/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/soc/esp32/include
@@ -26,7 +26,9 @@ GLOBAL_LDS_FILES += platform/mcu/esp32/system/ld/esp32.peripherals.ld
 GLOBAL_LDS_FILES += platform/mcu/esp32/system/ld/esp32.rom.spiram_incompatible_fns.ld
 GLOBAL_LDFLAGS   += -L platform/mcu/esp32/system/ld
 
-$(NAME)_SOURCES  := bsp/entry.c bsp/hal.c #system/cpu_start.c
+GLOBAL_DEFINES   += CONFIG_AOS_KV_BUFFER_SIZE=8192
+
+$(NAME)_SOURCES  := bsp/entry.c bsp/hal.c hal/flash.c #system/cpu_start.c
 $(NAME)_INCLUDES := soc/include soc/esp32/include
 $(NAME)_CFLAGS   := -std=gnu99
 ifeq ($(wifi),1)
