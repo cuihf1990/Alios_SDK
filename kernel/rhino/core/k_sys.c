@@ -70,7 +70,7 @@ RHINO_INLINE kstat_t rhino_init(void)
 #endif
 
 #if (RHINO_CONFIG_TIMER > 0)
-    timer_init();
+    ktimer_init();
 #endif
 
 #if (RHINO_CONFIG_TICK_TASK > 0)

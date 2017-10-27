@@ -159,7 +159,7 @@ kstat_t task_pri_change(ktask_t *task, uint8_t new_pri);
 
 void k_err_proc(kstat_t err);
 
-void timer_init(void);
+void ktimer_init(void);
 
 void intrpt_disable_measure_start(void);
 void intrpt_disable_measure_stop(void);
