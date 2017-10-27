@@ -23,11 +23,13 @@ void ali_crypto_test_entry(void)
         goto _OUT;
     }
 
+#if 0
     CRYPT_INF("Test hmac:\n");
     ret = ali_crypto_hmac_test();
     if (ret < 0) {
         goto _OUT;
     }
+#endif
 
     CRYPT_INF("Test rand:\n");
     ret = ali_crypto_rand_test();
@@ -55,7 +57,7 @@ _OUT:
 #if 0
 int main(void)
 {
-    ali_crypto_test_entry(NULL);
+    ali_crypto_test_entry();
 
     return 0;
 }
