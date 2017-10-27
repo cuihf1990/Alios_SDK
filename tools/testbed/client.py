@@ -349,7 +349,7 @@ class Client:
             return
 
         if os.path.exists('client') == False:
-            subprocess.call(['mkdir','client'])
+            os.mkdir('client')
 
         thread.start_new_thread(self.device_monitor,())
         thread.start_new_thread(self.heartbeat_func,())
