@@ -864,14 +864,14 @@ class Terminal:
                 history_index = -1
                 p = 0
                 self.cmdrun_command_display(cmd, 0)
-            elif c == curses.KEY_BACKSPACE: #DELETE
+            elif c == curses.KEY_BACKSPACE or c == 127: #DELETE
                 if cmd[0:p] == "":
                     continue
                 newcmd = cmd[0:p-1] + cmd[p:]
                 cmd = newcmd
                 p -= 1
                 self.cmdrun_command_display(cmd, p)
-            elif c == curses.KEY_UP and len(self.cmd_history) > 0:
+            elif c == 259 and len(self.cmd_history) > 0: #KEY_UP
                 if history_index == -1:
                     saved_cmd = cmd
                 if history_index < (len(self.cmd_history) - 1):
@@ -879,7 +879,7 @@ class Terminal:
                 cmd = self.cmd_history[history_index]
                 p = len(cmd)
                 self.cmdrun_command_display(cmd, p)
-            elif c == curses.KEY_DOWN and len(self.cmd_history) > 0:
+            elif c == 258 and len(self.cmd_history) > 0: #KEY_DOWN
                 if history_index <= -1:
                     history_index = -1
                     continue
@@ -890,12 +890,12 @@ class Terminal:
                     cmd = saved_cmd
                 p = len(cmd)
                 self.cmdrun_command_display(cmd, p)
-            elif c == curses.KEY_LEFT:
+            elif c == 260: #KEY_LEFT
                 if p > 0:
                     p -= 1
                     self.cmdrun_command_display(cmd, p)
                 continue
-            elif c == curses.KEY_RIGHT:
+            elif c == 261: #KEY_RIGHT
                 if p < len(cmd):
                     p += 1
                     self.cmdrun_command_display(cmd, p)
