@@ -214,11 +214,6 @@ void krhino_intrpt_exit(void)
 
     cpu_intrpt_switch();
 
-#if (RHINO_CONFIG_STACK_OVF_CHECK_HW != 0)
-    cpu_task_stack_protect(g_preferred_ready_task[cur_cpu_num]->task_stack_base,
-                           g_preferred_ready_task[cur_cpu_num]->stack_size);
-#endif
-
     RHINO_CPU_INTRPT_ENABLE();
 }
 

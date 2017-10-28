@@ -115,11 +115,6 @@ void core_sched(void)
 
     cpu_task_switch();
 
-#if (RHINO_CONFIG_STACK_OVF_CHECK_HW != 0)
-    cpu_task_stack_protect(g_preferred_ready_task->task_stack_base,
-                           g_preferred_ready_task->stack_size);
-#endif
-
 }
 #else
 void core_sched(void)
@@ -156,11 +151,6 @@ void core_sched(void)
 #endif
 
     cpu_task_switch();
-
-#if (RHINO_CONFIG_STACK_OVF_CHECK_HW != 0)
-    cpu_task_stack_protect(g_preferred_ready_task->task_stack_base,
-                           g_preferred_ready_task->stack_size);
-#endif
 
     RHINO_CPU_INTRPT_ENABLE();
 }
