@@ -172,10 +172,6 @@
 #define RHINO_CONFIG_TASK_STACK_OVF_CHECK    0
 #endif
 
-#ifndef RHINO_CONFIG_STACK_OVF_CHECK_HW
-#define RHINO_CONFIG_STACK_OVF_CHECK_HW      0
-#endif
-
 /* kernel dyn alloc conf */
 #ifndef RHINO_CONFIG_KOBJ_DYN_ALLOC
 #define RHINO_CONFIG_KOBJ_DYN_ALLOC          0
