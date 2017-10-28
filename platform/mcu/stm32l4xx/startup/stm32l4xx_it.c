@@ -135,7 +135,9 @@ void SysTick_Handler(void)
 {
   HAL_IncTick();
   if (0 == HAL_GetTick() % 10) {
-    soc_systick_handle();
+    krhino_intrpt_enter();
+    krhino_tick_proc();
+    krhino_intrpt_exit();
   }
   //HAL_SYSTICK_IRQHandler();
 }
