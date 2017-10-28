@@ -38,14 +38,16 @@ typedef struct {
 } hal_wifi_scan_result_t;
 
 typedef struct {
+    char ssid[32];    /* The SSID of an access point. */
+    char ap_power;    /* Signal strength, min:0, max:100 */
+    char bssid[6];    /* The BSSID of an access point. */
+    char channel;     /* The RF frequency, 1-13 */
+    uint8_t security; /* Security type, @ref wlan_sec_type_t */
+} ap_list_adv_t;
+
+typedef struct {
     char ap_num;          /* The number of access points found in scanning. */
-    struct {
-        char ssid[32];    /* The SSID of an access point. */
-        char ap_power;    /* Signal strength, min:0, max:100 */
-        char bssid[6];    /* The BSSID of an access point. */
-        char channel;     /* The RF frequency, 1-13 */
-        uint8_t security; /* Security type, @ref wlan_sec_type_t */
-    } *ap_list;
+    ap_list_adv_t *ap_list;
 } hal_wifi_scan_result_adv_t;
 
 typedef enum {
