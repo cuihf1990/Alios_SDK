@@ -52,7 +52,7 @@ typedef struct {
 extern autoconfig_plugin_t g_alink_smartconfig;
 
 static netmgr_cxt_t        g_netmgr_cxt;
-#ifndef CONFIG_YWSS
+#if !defined(CONFIG_YWSS) || defined(CSP_LINUXHOST)
 static autoconfig_plugin_t g_def_smartconfig;
 #endif
 
@@ -600,7 +600,7 @@ bool netmgr_get_scan_cb_finished()
     return g_netmgr_cxt.wifi_scan_complete_cb_finished;
 }
 
-#ifndef CONFIG_YWSS
+#if !defined(CONFIG_YWSS) || defined(CSP_LINUXHOST)
 static int def_smart_config_start(void)
 {
     netmgr_ap_config_t config;
