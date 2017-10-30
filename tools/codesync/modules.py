@@ -65,7 +65,7 @@ class syncpreparelib():
 
         self.srcdir = "./aos"
 
-        if srcbase == "1.0.1":
+        if srcbase == "1.0.1" or srcbase == "1.1.0":
             linux = "aos make clean"
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
             if not cmd:
@@ -449,7 +449,7 @@ class meshlib:
         mac = ""
         win = ""
 
-        if self.srcbase == "1.0.1":
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
             src = self.srcdir + "/out/alinkapp@mk3060/libraries/mesh.a"		 
             dst = self.dstdir + "/kernel/protocols/mesh/lib/mk3060/libmesh.a"		 
             linux = "cp -f " + src + " " + dst
@@ -553,9 +553,9 @@ class ywsslib:
         mac = ""
         win = ""
 
-        if self.srcbase == "1.0.1":
-            src = self.srcdir + "/out/alinkapp@mk3060/libraries/ywss.a"		 
-            dst = self.dstdir + "/framework/ywss/lib/mk3060/libywss.a"		 
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/ywss.a"
+            dst = self.dstdir + "/framework/ywss/lib/mk3060/libywss.a"
             linux = "cp -f " + src + " " + dst
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
             if not cmd:
@@ -649,9 +649,9 @@ class rhinolib:
         mac = ""
         win = ""
 
-        if self.srcbase == "1.0.1":
-            src = self.srcdir + "/out/alinkapp@mk3060/libraries/rhino.a"		 
-            dst = self.dstdir + "/kernel/rhino/lib/mk3060/librhino.a"		 
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/rhino.a"
+            dst = self.dstdir + "/kernel/rhino/lib/mk3060/librhino.a"
             linux = "cp -f " + src + " " + dst
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
             if not cmd:
@@ -738,9 +738,9 @@ class wsflib:
         mac = ""
         win = ""
 
-        if self.srcbase == "1.0.1":
-            src = self.srcdir + "/out/alinkapp@mk3060/libraries/wsf.a"		 
-            dst = self.dstdir + "/framework/connectivity/wsf/lib/mk3060/libwsf.a"		 
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
+            src = self.srcdir + "/out/alinkapp@mk3060/libraries/wsf.a"
+            dst = self.dstdir + "/framework/connectivity/wsf/lib/mk3060/libwsf.a"
             linux = "cp -f " + src + " " + dst
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
             if not cmd:
@@ -833,7 +833,7 @@ class msdplib:
         win = ""
         src = self.srcdir + "/out/alinkapp@mk3060/libraries/msdp.a"
 
-        if self.srcbase == "1.0.1":
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
             base_dstdir = self.dstdir + "/framework/protocol/alink/msdp/"
             dst = base_dstdir + "lib/mk3060/libmsdp.a"
             linux = "cp -f " + src + " " + dst
@@ -911,7 +911,7 @@ class devmgrlib:
         mac = ""
         win = ""
 
-        if self.srcbase == "1.0.1":
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
             src = self.srcdir + "/out/alinkapp@mk3060/libraries/devmgr.a"
             base_dstdir = self.dstdir + "/framework/protocol/alink/devmgr/"
             dst = base_dstdir + "lib/mk3060/libdevmgr.a"
@@ -977,7 +977,7 @@ class gatewaylib:
     def make_lib(self):
         mac = ""
         win = ""
-        if self.srcbase == "1.0.1":
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
             src = self.srcdir + "/out/alinkapp@mk3060/libraries/gateway.a"
             base_dstdir = self.dstdir + "/framework/gateway/"
             dst = base_dstdir + "lib/mk3060/libgateway.a"
@@ -1214,7 +1214,10 @@ class bekenlib:
         popen(cmd, shell=True, cwd=os.getcwd())
 
     def make_lib(self):
-        build_tool = self.srcdir + "/build/compiler/arm-none-eabi-5_4-2016q3-20160926/Linux64/bin/"
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
+            build_tool = self.srcdir + "/build/compiler/arm-none-eabi-5_4-2016q2-20160622/Linux64/bin/"
+        else:
+            build_tool = self.srcdir + "/build/compiler/arm-none-eabi-5_4-2016q3-20160926/Linux64/bin/"
         mac = ""
         win = ""
 
@@ -1262,7 +1265,10 @@ class bekenlib:
             error('Unknown system!')
         popen(cmd, shell=True, cwd=os.getcwd())
 
-        src = self.srcdir + "/platform/mcu/beken/librwnx/librwnx.a"
+        if self.srcbase == "1.0.1" or self.srcbase == "1.1.0":
+            src = self.srcdir + "/platform/mcu/beken/librwnx.a"
+        else:
+            src = self.srcdir + "/platform/mcu/beken/librwnx/librwnx.a"
         dst = " ."
         linux = "cp " + src + dst
         cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
