@@ -26,6 +26,7 @@ class Terminal:
         self.service_socket = 0
         self.cmd_excute_state = 'idle'
         self.cmd_excute_return = ''
+        self.cmd_excute_event = threading.Event()
         self.log_content = []
         self.log_curr_line = -1
         self.log_subscribed = []
@@ -259,10 +260,11 @@ class Terminal:
             else:
                 dev_str = str(i) + '.' + dev[0] + ':'
             mid_len = DEV_WINDOW_WIDTH - len(dev_str) - 5
-            if mid_len >= len(dev[2][5:]):
-                dev_str += dev[2][5:] + ' '*(mid_len - len(dev[2][5:]))
+            devpath = dev[2].replace('/dev/','')
+            if mid_len >= len(devpath):
+                dev_str += devpath + ' '*(mid_len - len(devpath))
             else:
-                dev_str += dev[2][5:5 + mid_len]
+                dev_str += devpath[:mid_len]
             dev_str += '  ' + self.device_list[devfull]
             try:
                 self.dev_window.addstr(linenum, 0, dev_str)
@@ -383,9 +385,11 @@ class Terminal:
                     if type == TBframe.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
+                        self.cmd_excute_event.set()
                     if type == TBframe.CMD_ERROR:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
+                        self.cmd_excute_event.set()
             except:
                 if DEBUG:
                     raise
@@ -427,12 +431,9 @@ class Terminal:
     def wait_cmd_excute_done(self, timeout):
         self.cmd_excute_state = 'wait_response'
         self.cmd_excute_return = None
-        while self.cmd_excute_state == 'wait_response':
-            time.sleep(0.01)
-            timeout -= 0.01
-            if timeout <= 0:
-                self.cmd_excute_state = "timeout"
-                break;
+        self.cmd_excute_event.clear()
+        if self.cmd_excute_event.wait(timeout) == False:
+            self.cmd_excute_state = "timeout"
 
     def send_file_to_client(self, filename, index):
         status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0:2])
