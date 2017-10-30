@@ -29,7 +29,7 @@ struct file_ops adc_ops =
 };
 adc_dev_t adc_dev_test =
 {
-    .adc = 0xCD,
+    .port = 0xCD,
     .config.sampling_cycle = 0x12345678
 };
 
@@ -177,7 +177,7 @@ int32_t hal_adc_init(adc_dev_t *adc)
         return -1;
     }
 
-    if ((adc_dev->adc == 0xCD)
+    if ((adc_dev->port == 0xCD)
        &&(adc_dev->config.sampling_cycle == 0x12345678)) {
           ret = 0;
       }

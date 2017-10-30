@@ -16,11 +16,11 @@ int vfs_adc_open(inode_t *inode, file_t *fp)
 
         /* Initialize if the device is first opened. */
         if (fp->node->refs == 1) {
-            
+
             /* get the device pointer. */
-            adc_dev = (adc_dev_t *)(fp->node->i_arg);  
-        
-            /*  init adc device. */        
+            adc_dev = (adc_dev_t *)(fp->node->i_arg);
+
+            /*  init adc device. */
             ret = hal_adc_init(adc_dev);
         } else {
             ret = VFS_SUCCESS;
@@ -44,7 +44,7 @@ int vfs_adc_close(file_t *fp)
         if (fp->node->refs == 1) {
 
             /* get the device pointer. */
-            adc_dev = (adc_dev_t *)(fp->node->i_arg);  
+            adc_dev = (adc_dev_t *)(fp->node->i_arg);
 
             /* lock the device. */
             ret = aos_mutex_lock(&fp->node->mutex, AOS_WAIT_FOREVER);
@@ -55,7 +55,7 @@ int vfs_adc_close(file_t *fp)
             }
 
             /* unlock the device. */
-            aos_mutex_unlock(&fp->node->mutex);           
+            aos_mutex_unlock(&fp->node->mutex);
         } else {
             ret = VFS_SUCCESS;
         }
@@ -63,7 +63,7 @@ int vfs_adc_close(file_t *fp)
         ret = -EINVAL;
     }
 
-    return ret;  
+    return ret;
 }
 
 ssize_t vfs_adc_read(file_t *fp, void *buf, size_t nbytes)
@@ -75,7 +75,7 @@ ssize_t vfs_adc_read(file_t *fp, void *buf, size_t nbytes)
     if ((fp != NULL) && (fp->node != NULL)) {
 
         /* get the device pointer. */       
-        adc_dev = (adc_dev_t *)(fp->node->i_arg);  
+        adc_dev = (adc_dev_t *)(fp->node->i_arg);
 
         /* lock the device. */
         ret = aos_mutex_lock(&fp->node->mutex, AOS_WAIT_FOREVER);
@@ -92,11 +92,11 @@ ssize_t vfs_adc_read(file_t *fp, void *buf, size_t nbytes)
         }
 
         /* unlock the device. */
-        aos_mutex_unlock(&fp->node->mutex);          
+        aos_mutex_unlock(&fp->node->mutex);
     } else {
         ret = -EINVAL;
-    } 
-    
+    }
+
     return ret;
 }
 
