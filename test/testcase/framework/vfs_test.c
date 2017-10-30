@@ -337,9 +337,7 @@ int32_t hal_i2c_recv(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
     int i = 0;
 
     for (i = 0; i < 10; i++) {
-        if(pData[i] != i) {
-            ret = -1;
-        }
+        pData[i] = i; 
     }
 
     return ret;
@@ -359,7 +357,7 @@ int32_t hal_rtc_init(rtc_dev_t *rtc)
         ret = 0;
     }
 
-        return ret;
+    return ret;
 }
 
 int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time)
@@ -377,7 +375,7 @@ int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time)
 
 int32_t hal_rtc_set_time(rtc_dev_t *rtc, rtc_time_t *time)
 {
-    ret = -1;
+    int ret = -1;
 
     if((time->year == 11) && (time->month == 22) && (time->date == 33)
     && (time->weekday == 44) && (time->hr == 55) && (time->min == 66)
@@ -443,7 +441,7 @@ static void test_vfs_device_io_case(void)
 
     /* read data from gpio */
     ret = aos_read(fd_gpio, &gpio_value, sizeof(gpio_value));
-    YUNIT_ASSERT((ret == 0)&&(gpio_value == 0x12345678));
+    YUNIT_ASSERT((ret == sizeof(gpio_value))&&(gpio_value == 0x12345678));
 
     /* output high */
     ret = aos_ioctl(fd_gpio, IOCTL_GPIO_OUTPUT_HIGHT, 0);
