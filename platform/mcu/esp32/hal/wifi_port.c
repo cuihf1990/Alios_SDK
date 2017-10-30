@@ -117,6 +117,10 @@ static void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
         mngt_data_cb(pkt->payload, pkt->rx_ctrl.sig_len, NULL);
 }
 
+static struct {
+    uint8_t wifi_started:1;
+    uint8_t sta_connected:1;
+} wifi_status;
 static hal_wifi_ip_stat_t _ip_stat;
 static esp_err_t handle_event_cb(void *ctx, system_event_t *evt)
 {
@@ -126,6 +130,7 @@ static esp_err_t handle_event_cb(void *ctx, system_event_t *evt)
     printf("%s %d\n", __func__, eid);
     switch (eid) {
         case SYSTEM_EVENT_STA_START:
+            wifi_status.wifi_started = 1;
             ESP_ERROR_CHECK(esp_wifi_connect());
             break;
         case SYSTEM_EVENT_STA_GOT_IP: {
@@ -147,12 +152,14 @@ static esp_err_t handle_event_cb(void *ctx, system_event_t *evt)
             break;
         }
         case SYSTEM_EVENT_STA_CONNECTED: {
+            wifi_status.sta_connected = 1;
             if (m->ev_cb && m->ev_cb->stat_chg) {
                 m->ev_cb->stat_chg(m, NOTIFY_STATION_UP, NULL);
             }
             break;
         }
         case SYSTEM_EVENT_STA_DISCONNECTED: {
+            wifi_status.sta_connected = 0;
             if (m->ev_cb && m->ev_cb->stat_chg) {
                 m->ev_cb->stat_chg(m, NOTIFY_STATION_DOWN, NULL);
             }
@@ -384,11 +391,21 @@ static int power_on(hal_wifi_module_t *m)
 
 static int suspend(hal_wifi_module_t *m)
 {
+    wifi_mode_t mode;
+    if (!wifi_status.wifi_started) return 0;
+    ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));
+    if (mode == WIFI_MODE_STA && wifi_status.sta_connected) {
+        ESP_ERROR_CHECK(esp_wifi_disconnect());
+    }
+
     return 0;
 }
 
 static int suspend_station(hal_wifi_module_t *m)
 {
+    if (wifi_status.wifi_started && wifi_status.sta_connected)
+        ESP_ERROR_CHECK(esp_wifi_disconnect());
+
     return 0;
 }
 
@@ -427,7 +444,9 @@ static void register_wlan_mgnt_monitor_cb(hal_wifi_module_t *m,
 static int wlan_send_80211_raw_frame(hal_wifi_module_t *m,
                                      uint8_t *buf, int len)
 {
-    printf("WiFi HAL %s not implemeted yet!\r\n", __func__);
+    extern esp_err_t esp_wifi_80211_tx(wifi_interface_t ifx, const void *buffer, int len);
+    ESP_ERROR_CHECK(esp_wifi_80211_tx(ESP_IF_WIFI_STA, buf, len));
+
     return 0;
 }
 
