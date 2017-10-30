@@ -54,6 +54,7 @@ const char *ota_get_system_version()
     return aos_get_os_version();
 }
 
+#ifdef SYSINFO_OS_BINS
 const char   *aos_get_kernel_version(void)
 {
     return (const char *)aos_version_get();
@@ -68,6 +69,7 @@ const char   *aos_get_app_version(void)
     aos_kv_get(KEY_APP_VER, version_config.app_version, &len); 
     return version_config.app_version;
 }
+#endif 
 
 const char   *aos_get_os_version(void)
 {
