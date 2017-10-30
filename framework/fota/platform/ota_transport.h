@@ -6,11 +6,12 @@
 #include <stdint.h>
 #include <aos/aos.h>
 
-#define OTA_URL_MAX_LEN 1024
-#define MAX_MD5_LEN 34
+#define OTA_URL_MAX_LEN  1024
+#define OTA_RESP_MAX_LEN (OTA_URL_MAX_LEN+192)
+#define MAX_MD5_LEN      34
 #undef MAX_VERSION_LEN
-#define MAX_VERSION_LEN 64
-#define MAX_ID_LEN 64
+#define MAX_VERSION_LEN  64
+#define MAX_ID_LEN       64
 
 typedef struct {
     const char *primary_version;
