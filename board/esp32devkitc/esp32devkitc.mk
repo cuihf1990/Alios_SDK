@@ -5,11 +5,11 @@ HOST_ARCH           := xtensa
 HOST_MCU_FAMILY     := esp32
 
 # todo: remove these after rhino/lwip ready
-vcall               ?= rhino
 ifneq ($(wifi),1)
+vcall               ?= rhino
 GLOBAL_DEFINES      += CONFIG_NO_TCPIP
 else
-vcall               := freertos
+vcall               ?= freertos
 GLOBAL_DEFINES      += WITH_LWIP
 endif
 

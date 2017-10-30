@@ -258,6 +258,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     find_ms_setbit a3, a4, a3, 0            /* a3 = interrupt number */
 
     get_percpu_entry_for a3, a12
+    movi    a4, espos_isr_enter
+    callx4  a4
     movi    a4, _xt_interrupt_table
     addx8   a3, a3, a4                      /* a3 = address of interrupt table entry */
     l32i    a4, a3, XIE_HANDLER             /* a4 = handler address */
@@ -270,6 +272,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     mov     a2, a6                          /* save in windowed reg */
     l32i    a6, a3, XIE_ARG                 /* a6 = handler arg */
     callx4  a4                              /* call handler */
+    movi    a4, espos_isr_exit
+    callx4  a4
     #endif
 
     #ifdef XT_USE_SWPRI

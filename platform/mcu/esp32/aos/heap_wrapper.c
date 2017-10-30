@@ -22,3 +22,7 @@ void heap_caps_enable_nonos_stack_heaps()
 {
 }
 
+int heap_caps_get_free_size(void)
+{
+    return 0;
+}
