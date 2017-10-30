@@ -21,17 +21,10 @@ static void handle_link_request_timer(void *args)
     neighbor_t *attach_node;
     hal_context_t *hal = (hal_context_t *)args;
     network_context_t *network;
-    uint32_t interval;
     uint8_t tlv_type[1] = {TYPE_UCAST_CHANNEL};
     ur_addr_t addr;
 
     MESH_LOG_DEBUG("handle link request timer");
-
-    if (umesh_mm_get_mode() & MODE_MOBILE) {
-        interval = hal->link_request_mobile_interval;
-    } else {
-        interval = hal->link_request_interval;
-    }
 
     network = get_default_network_context();
     attach_node = umesh_mm_get_attach_node();
@@ -43,8 +36,8 @@ static void handle_link_request_timer(void *args)
     send_link_request(network, &addr, tlv_type, sizeof(tlv_type));
     hal->link_request_timer = NULL;
     if (attach_node->stats.link_request < LINK_ESTIMATE_SENT_THRESHOLD) {
-        hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer,
-                                                 hal);
+        hal->link_request_timer = ur_start_timer(hal->link_request_interval,
+                                                 handle_link_request_timer, hal);
     }
 }
 
@@ -108,17 +101,10 @@ static void handle_link_quality_update_timer(void *args)
     ur_error_t error;
     neighbor_t *nbr;
     hal_context_t *hal = (hal_context_t *)args;
-    uint32_t interval;
 
     MESH_LOG_DEBUG("handle link quality update timer");
 
-    if (umesh_mm_get_mode() & MODE_MOBILE) {
-        interval = hal->link_request_mobile_interval;
-    } else {
-        interval = hal->link_request_interval;
-    }
-
-    hal->link_quality_update_timer = ur_start_timer(interval * LINK_ESTIMATE_TIMES,
+    hal->link_quality_update_timer = ur_start_timer(hal->link_request_interval * LINK_ESTIMATE_TIMES,
                                                     handle_link_quality_update_timer, hal);
 
     slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
@@ -130,7 +116,8 @@ static void handle_link_quality_update_timer(void *args)
             if (error == UR_ERROR_NONE && nbr->stats.reverse_rssi >= RSSI_THRESHOLD) {
                 nbr->flags |= NBR_LINK_ESTIMATED;
             } else if ((nbr->flags & NBR_LINK_ESTIMATED) == 0 && hal->link_request_timer == NULL) {
-                hal->link_request_timer = ur_start_timer(interval, handle_link_request_timer, hal);
+                hal->link_request_timer = ur_start_timer(hal->link_request_interval,
+                                                         handle_link_request_timer, hal);
             }
         }
         if (nbr->stats.link_cost >= LINK_COST_THRESHOLD) {
@@ -801,17 +788,12 @@ void start_neighbor_updater(void)
 {
     slist_t *hals;
     hal_context_t *hal;
-    uint32_t interval;
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        if (umesh_mm_get_mode() & MODE_MOBILE) {
-            interval = hal->link_request_mobile_interval;
-        } else {
-            interval = hal->link_request_interval;
-        }
-        hal->link_quality_update_timer = ur_start_timer(interval * LINK_ESTIMATE_TIMES,
-                                                        handle_link_quality_update_timer, hal);
+        hal->link_quality_update_timer =
+             ur_start_timer(hal->link_request_interval * LINK_ESTIMATE_TIMES,
+                            handle_link_quality_update_timer, hal);
     }
 }
 

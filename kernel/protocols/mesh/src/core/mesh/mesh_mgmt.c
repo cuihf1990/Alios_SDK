@@ -1762,11 +1762,9 @@ ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid)
 const mac_address_t *umesh_mm_get_mac_address(void)
 {
     hal_context_t *hal;
-    network_context_t *network;
 
-    network = get_default_network_context();
-    if (network) {
-        hal = network->hal;
+    hal = get_default_hal_context();
+    if (hal) {
         return &hal->mac_addr;
     }
     return NULL;

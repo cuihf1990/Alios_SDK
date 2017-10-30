@@ -47,7 +47,6 @@ ur_error_t nd_init(void)
     memset(&g_nd_state.network_data, 0, sizeof(g_nd_state.network_data));
     memset(&g_nd_state.stable_network_data, 0,
            sizeof(g_nd_state.stable_network_data));
-    g_nd_state.stable_network_data.meshnetid = INVALID_NETID;
     if (umesh_mm_get_mode() & MODE_MOBILE) {
         g_nd_state.stable_network_data.meshnetid = INVALID_NETID;
     } else {
@@ -152,12 +151,7 @@ ur_error_t nd_set(network_context_t *network, network_data_t *network_data)
     int8_t       diff;
     network_data_t *local_network_data;
 
-    if (network == NULL) {
-        local_network_data = &g_nd_state.network_data;
-    } else {
-        local_network_data = &network->network_data;
-    }
-
+    local_network_data = network? &network->network_data: &g_nd_state.network_data;
     diff = network_data->version - local_network_data->version;
     if (diff > 0) {
         memcpy(local_network_data, network_data, sizeof(network_data_t));
@@ -170,11 +164,7 @@ uint8_t nd_get_version(network_context_t *network)
 {
     network_data_t *local_network_data;
 
-    if (network == NULL) {
-        local_network_data = &g_nd_state.network_data;
-    } else {
-        local_network_data = &network->network_data;
-    }
+    local_network_data = network? &network->network_data: &g_nd_state.network_data;
     return local_network_data->version;
 }
 
@@ -182,11 +172,7 @@ uint16_t nd_get_meshnetsize(network_context_t *network)
 {
     network_data_t *local_network_data;
 
-    if (network == NULL) {
-        local_network_data = &g_nd_state.network_data;
-    } else {
-        local_network_data = &network->network_data;
-    }
+    local_network_data = network? &network->network_data: &g_nd_state.network_data;
     return local_network_data->size;
 }
 
@@ -201,12 +187,7 @@ ur_error_t nd_set_meshnetsize(network_context_t *network, uint32_t size)
         return UR_ERROR_FAIL;
     }
 
-    if (network == NULL) {
-        local_network_data = &g_nd_state.network_data;
-    } else {
-        local_network_data = &network->network_data;
-    }
-
+    local_network_data = network? &network->network_data: &g_nd_state.network_data;
     memcpy(&network_data, local_network_data, sizeof(network_data));
     if (network_data.size != size) {
         network_data.version++;
