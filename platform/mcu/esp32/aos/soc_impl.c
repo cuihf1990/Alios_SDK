@@ -16,8 +16,12 @@ hr_timer_t soc_hr_hw_cnt_get(void)
 
 #define SYS_DYN_POOL_SIZE_1 0x18000
 
-k_mm_region_t g_mm_region[] = {{(uint8_t*)0x3ffe8000, SYS_DYN_POOL_SIZE_1}};
-int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
+extern uint8_t _heap_start, _heap_size;
+const k_mm_region_t g_mm_region[] = {
+    {(uint8_t*)0x3ffe8000, SYS_DYN_POOL_SIZE_1},
+    {&_heap_start, (uint32_t)&_heap_size},
+};
+int g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 
 void soc_err_proc(kstat_t err)
 {

@@ -68,3 +68,4 @@ MEMORY
 
 /* Heap ends at top of dram0_0_seg */
 _heap_end = 0x40000000 - CONFIG_TRACEMEM_RESERVE_DRAM;
+_heap_size = 0x3FFE0000 - _heap_start;
