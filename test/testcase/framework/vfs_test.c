@@ -267,7 +267,7 @@ int32_t hal_adc_finalize(adc_dev_t *adc)
 
 int32_t hal_gpio_init(gpio_dev_t *gpio)
 {
-    ret = -1;
+    int ret = -1;
 
     if(gpio->port == 0x11)
     {
@@ -305,7 +305,7 @@ int32_t hal_gpio_finalize(gpio_dev_t *gpio)
 
 int32_t hal_i2c_init(i2c_dev_t *i2c)
 {
-    ret = -1;
+    int ret = -1;
 
     if(i2c->port == 0x22)
     {
@@ -317,12 +317,12 @@ int32_t hal_i2c_init(i2c_dev_t *i2c)
 
 int32_t hal_i2c_send(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
 {
-    ret = 0;
+    int ret = 0;
     int *pData = (int *)data;
     int i = 0;
 
     for (i = 0; i < 10; i++) {
-        if(pdata[i] != i) {
+        if(pData[i] != i) {
             ret = -1;
         }
     }
@@ -332,12 +332,12 @@ int32_t hal_i2c_send(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
 
 int32_t hal_i2c_recv(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
 {
-    ret = 0;
+    int ret = 0;
     int *pData = (int *)data;
     int i = 0;
 
     for (i = 0; i < 10; i++) {
-        if(pdata[i] != i) {
+        if(pData[i] != i) {
             ret = -1;
         }
     }
@@ -352,12 +352,12 @@ int32_t hal_i2c_finalize(i2c_dev_t *i2c)
 
 int32_t hal_rtc_init(rtc_dev_t *rtc)
 {
-    ret = -1;
+    int ret = -1;
 
-        if(i2c->port == 0x33)
-        {
-            ret = 0;
-        }
+    if(rtc->port == 0x33)
+    {
+        ret = 0;
+    }
 
         return ret;
 }
@@ -365,8 +365,8 @@ int32_t hal_rtc_init(rtc_dev_t *rtc)
 int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time)
 {
     time->year = 11;
-    time->mouth = 22;
-    time->data = 33;
+    time->month = 22;
+    time->date = 33;
     time->weekday = 44;
     time->hr = 55;
     time->min = 66;
@@ -379,7 +379,7 @@ int32_t hal_rtc_set_time(rtc_dev_t *rtc, rtc_time_t *time)
 {
     ret = -1;
 
-    if((time->year == 11) && (time->mouth == 22) && (time->data == 33)
+    if((time->year == 11) && (time->month == 22) && (time->date == 33)
     && (time->weekday == 44) && (time->hr == 55) && (time->min == 66)
     && (time->sec == 77)){
         ret = 0;
@@ -409,7 +409,7 @@ static void test_vfs_device_io_case(void)
     int read_buf[10] = {0};
     rtc_time_t rtc_time;
 
-    memset(rtc_time, 0, sizeof(rtc_time));
+    memset(&rtc_time, 0, sizeof(rtc_time));
 
     ret = aos_register_driver(adc_path, &adc_ops, &adc_dev_test);
     YUNIT_ASSERT(ret == 0);
@@ -464,17 +464,17 @@ static void test_vfs_device_io_case(void)
     ret = aos_register_driver(i2c_path, &i2c_ops, &i2c_dev_test);
     YUNIT_ASSERT(ret == 0);
 
-    fd_i2c = aos_open(gpio_i2c,0);
+    fd_i2c = aos_open(i2c_path,0);
     YUNIT_ASSERT(fd_i2c > 64);
 
     ret = aos_read(fd_i2c, read_buf, sizeof(read_buf));
 
     for (i = 0; i < 10; i++) {
-        if(pdata[i] != i) {
+        if(read_buf[i] != i) {
             res = -1;
         }
     }
-    YUNIT_ASSERT((ret == sizeof(read_buf))&&(ret1 == 0));
+    YUNIT_ASSERT((ret == sizeof(read_buf))&&(res == 0));
 
     ret = aos_write(fd_i2c, write_buf, sizeof(read_buf));
     YUNIT_ASSERT(ret == sizeof(read_buf));
@@ -486,14 +486,14 @@ static void test_vfs_device_io_case(void)
     ret = aos_register_driver(rtc_path, &rtc_ops, &rtc_dev_test);
     YUNIT_ASSERT(ret == 0);
 
-    fd_rtc = aos_open(gpio_rtc,0);
+    fd_rtc = aos_open(rtc_path,0);
     YUNIT_ASSERT(fd_rtc > 64);
 
     ret = aos_read(fd_rtc, &rtc_time, sizeof(rtc_time));
 
-    if((rtc_time->year == 11) && (rtc_time->mouth == 22) && (rtc_time->data == 33)
-    && (rtc_time->weekday == 44) && (rtc_time->hr == 55) && (rtc_time->min == 66)
-    && (rtc_time->sec == 77)){
+    if((rtc_time.year == 11) && (rtc_time.month == 22) && (rtc_time.date == 33)
+    && (rtc_time.weekday == 44) && (rtc_time.hr == 55) && (rtc_time.min == 66)
+    && (rtc_time.sec == 77)){
         res = 2;
     }
     YUNIT_ASSERT((ret == sizeof(rtc_time))&&(res == 2));
