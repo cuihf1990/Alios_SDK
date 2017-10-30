@@ -418,13 +418,14 @@ class Client:
                             content = terminal + ',' + 'noexist'
                             self.send_response(type, content)
                             continue
-                        if file_receiving[hash]['seq'] != seq:
+                        if file_receiving[hash]['seq'] != seq and file_receiving[hash]['seq'] != seq + 1:
                             content = terminal + ',' + 'seqerror'
                             self.send_response(type, content)
                             continue
-                        file_receiving[hash]['handle'].write(data)
-                        file_receiving[hash]['seq'] += 1
-                        file_receiving[hash]['timeout'] = time.time() + 5
+                        if file_receiving[hash]['seq'] == seq:
+                            file_receiving[hash]['handle'].write(data)
+                            file_receiving[hash]['seq'] += 1
+                            file_receiving[hash]['timeout'] = time.time() + 5
                         content = terminal + ',' + 'ok'
                         self.send_response(type, content)
                     elif type == TBframe.FILE_END:

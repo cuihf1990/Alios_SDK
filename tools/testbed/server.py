@@ -124,10 +124,10 @@ class Server:
                             if t['addr'] == addr:
                                 terminal = t
                         if terminal != '':
-                            if values[2] != 'success' and value[2] != 'ok':
-                                data = TBframe.construct(TBframe.CMD_ERROR, values[2])
+                            if values[2] != 'success' and values[2] != 'ok':
+                                data = TBframe.construct(TBframe.CMD_ERROR, ','.join(values[2:]))
                             else:
-                                data = TBframe.construct(TBframe.CMD_DONE, values[2])
+                                data = TBframe.construct(TBframe.CMD_DONE, ','.join(values[2:]))
                             terminal['socket'].send(data)
             except socket.timeout:
                 continue

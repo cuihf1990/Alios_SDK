@@ -26,6 +26,7 @@ class Terminal:
         self.service_socket = 0
         self.cmd_excute_state = 'idle'
         self.cmd_excute_return = ''
+        self.cmd_excute_event = threading.Event()
         self.log_content = []
         self.log_curr_line = -1
         self.log_subscribed = []
@@ -259,10 +260,11 @@ class Terminal:
             else:
                 dev_str = str(i) + '.' + dev[0] + ':'
             mid_len = DEV_WINDOW_WIDTH - len(dev_str) - 5
-            if mid_len >= len(dev[2][5:]):
-                dev_str += dev[2][5:] + ' '*(mid_len - len(dev[2][5:]))
+            devpath = dev[2].replace('/dev/','')
+            if mid_len >= len(devpath):
+                dev_str += devpath + ' '*(mid_len - len(devpath))
             else:
-                dev_str += dev[2][5:5 + mid_len]
+                dev_str += devpath[:mid_len]
             dev_str += '  ' + self.device_list[devfull]
             try:
                 self.dev_window.addstr(linenum, 0, dev_str)
@@ -383,9 +385,11 @@ class Terminal:
                     if type == TBframe.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
+                        self.cmd_excute_event.set()
                     if type == TBframe.CMD_ERROR:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
+                        self.cmd_excute_event.set()
             except:
                 if DEBUG:
                     raise
@@ -427,12 +431,9 @@ class Terminal:
     def wait_cmd_excute_done(self, timeout):
         self.cmd_excute_state = 'wait_response'
         self.cmd_excute_return = None
-        while self.cmd_excute_state == 'wait_response':
-            time.sleep(0.01)
-            timeout -= 0.01
-            if timeout <= 0:
-                self.cmd_excute_state = "timeout"
-                break;
+        self.cmd_excute_event.clear()
+        if self.cmd_excute_event.wait(timeout) == False:
+            self.cmd_excute_state = "timeout"
 
     def send_file_to_client(self, filename, index):
         status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0:2])
@@ -864,14 +865,14 @@ class Terminal:
                 history_index = -1
                 p = 0
                 self.cmdrun_command_display(cmd, 0)
-            elif c == curses.KEY_BACKSPACE: #DELETE
+            elif c == curses.KEY_BACKSPACE or c == 127: #DELETE
                 if cmd[0:p] == "":
                     continue
                 newcmd = cmd[0:p-1] + cmd[p:]
                 cmd = newcmd
                 p -= 1
                 self.cmdrun_command_display(cmd, p)
-            elif c == curses.KEY_UP and len(self.cmd_history) > 0:
+            elif c == 259 and len(self.cmd_history) > 0: #KEY_UP
                 if history_index == -1:
                     saved_cmd = cmd
                 if history_index < (len(self.cmd_history) - 1):
@@ -879,7 +880,7 @@ class Terminal:
                 cmd = self.cmd_history[history_index]
                 p = len(cmd)
                 self.cmdrun_command_display(cmd, p)
-            elif c == curses.KEY_DOWN and len(self.cmd_history) > 0:
+            elif c == 258 and len(self.cmd_history) > 0: #KEY_DOWN
                 if history_index <= -1:
                     history_index = -1
                     continue
@@ -890,12 +891,12 @@ class Terminal:
                     cmd = saved_cmd
                 p = len(cmd)
                 self.cmdrun_command_display(cmd, p)
-            elif c == curses.KEY_LEFT:
+            elif c == 260: #KEY_LEFT
                 if p > 0:
                     p -= 1
                     self.cmdrun_command_display(cmd, p)
                 continue
-            elif c == curses.KEY_RIGHT:
+            elif c == 261: #KEY_RIGHT
                 if p < len(cmd):
                     p += 1
                     self.cmdrun_command_display(cmd, p)

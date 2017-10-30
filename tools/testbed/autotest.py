@@ -15,12 +15,11 @@ class Autotest:
         self.service_socket = 0
         self.cmd_excute_state = 'idle'
         self.cmd_excute_return = ''
+        self.cmd_excute_event = threading.Event()
         self.subscribed = {}
         self.subscribed_reverse = {}
-        self.allocated = None
         self.filter = {}
-        self.sync_event = threading.Event()
-        self.sync_event.clear()
+        self.response_filter_event = threading.Event()
         self.esc_seq = re.compile(r'\x1b[^m]*m')
 
     def heartbeat_func(self):
@@ -49,7 +48,7 @@ class Autotest:
         if self.filter['lines_exp'] == 0:
             if self.filter['cmdstr'] in logstr:
                 self.filter['lines_num'] += 1
-                self.sync_event.set()
+                self.response_filter_event.set()
         else:
             if self.filter['lines_num'] == 0:
                 if self.filter['cmdstr'] in logstr:
@@ -67,7 +66,7 @@ class Autotest:
                             self.filter['lines_num'] += 1
                             break
                 if self.filter['lines_num'] > self.filter['lines_exp']:
-                    self.sync_event.set()
+                    self.response_filter_event.set()
 
     def server_interaction(self):
         msg = ''
@@ -127,9 +126,11 @@ class Autotest:
                     if type == TBframe.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
+                        self.cmd_excute_event.set()
                     if type == TBframe.CMD_ERROR:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
+                        self.cmd_excute_event.set()
                     if type == TBframe.DEVICE_ALLOC:
                         values = value.split(',')
                         if len(values) != 2:
@@ -137,9 +138,11 @@ class Autotest:
                         result = values[0]
                         allocated = values[1].split('|')
                         if result != 'success':
-                            self.allocated = []
+                            self.cmd_excute_return = []
                             continue
-                        self.allocated = allocated
+                        self.cmd_excute_return = allocated
+                        self.cmd_excute_state = 'done'
+                        self.cmd_excute_event.set()
             except:
                 if DEBUG:
                     raise
@@ -149,12 +152,9 @@ class Autotest:
     def wait_cmd_excute_done(self, timeout):
         self.cmd_excute_state = 'wait_response'
         self.cmd_excute_return = None
-        while self.cmd_excute_state == 'wait_response':
-            time.sleep(0.01)
-            timeout -= 0.01
-            if timeout <= 0:
-                self.cmd_excute_state = "timeout"
-                break;
+        self.cmd_excute_event.clear()
+        if self.cmd_excute_event.wait(timeout) == False:
+            self.cmd_excute_state = "timeout"
 
     def get_devstr_by_partialstr(self, partialstr):
         devices = list(self.device_list)
@@ -260,23 +260,17 @@ class Autotest:
         data = TBframe.construct(TBframe.DEVICE_ALLOC, number)
         timeout += time.time()
         while time.time() < timeout:
-            self.allocated = None
             self.service_socket.send(data)
-            subtimeout = 0.8
-            while self.allocated == None:
-                time.sleep(0.02)
-                subtimeout -= 0.02
-                if subtimeout <= 0:
-                    break;
-            if self.allocated == None or self.allocated == []:
+            self.wait_cmd_excute_done(0.8)
+            if self.cmd_excute_return == None or self.cmd_excute_return == []:
                 time.sleep(8)
                 continue
-            if len(self.allocated) != int(number):
+            if len(self.cmd_excute_return) != int(number):
                 print "error: allocated number does not equal requested"
             break
         if time.time() > timeout:
-            self.allocated = []
-        return self.allocated
+            self.cmd_excute_return = []
+        return self.cmd_excute_return
 
     def device_subscribe(self, devices):
         for devname in list(devices):
@@ -378,8 +372,8 @@ class Autotest:
         retry = 3
         while retry > 0:
             self.service_socket.send(data)
-            self.sync_event.clear()
-            self.sync_event.wait(timeout)
+            self.response_filter_event.clear()
+            self.response_filter_event.wait(timeout)
             if self.filter['lines_num'] > 0:
                 break;
             retry -= 1

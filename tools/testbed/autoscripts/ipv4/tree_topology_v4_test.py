@@ -159,9 +159,9 @@ def main(filename = '~/lb-all.bin'):
         if i == 0:
             at.device_run_cmd(device, ['netmgr', 'connect', ap_ssid, ap_pass])
             time.sleep(12)
-            uuid = at.device_run_cmd(device, ['uuid'], 1, 1)
-            if uuid == []:
-                print 'error: alink connect to server failed'
+            uuid = at.device_run_cmd(device, ['uuid'], 1, 1.5, ['uuid:', 'not connected'])
+            if uuid == False or len(uuid) != 1 or 'uuid:' not in uuid[0]:
+                print 'error: connect device to alink failed, response = {0}'.format(uuid)
                 return [1, 'connect alink failed']
         else:
             at.device_run_cmd(device, ['umesh', 'start'])

@@ -26,7 +26,7 @@ if sys.argv[1] == "client":
         print_usage()
         exit(1)
 
-    if os.path.exist('client') == False:
+    if os.path.exists('client') == False:
         os.mkdir('client')
     tmpfile = '.testbed_client'
     if os.name == 'posix':
@@ -63,7 +63,7 @@ elif sys.argv[1] == "server":
             print_usage()
             exit(1)
 
-    if os.path.exist('server') == False:
+    if os.path.exists('server') == False:
         os.mkdir('server')
     tmpfile = ".testbed_server_{0}".format(server_port)
     if os.name == 'posix':
@@ -92,7 +92,7 @@ elif sys.argv[1] == "terminal":
             print "Usage error: invalid server port"
             print_usage()
             exit(1)
-    if os.path.exist('terminal') == False:
+    if os.path.exists('terminal') == False:
         os.mkdir('terminal')
     terminal = Terminal()
     terminal.terminal_func(server_ip, server_port)
