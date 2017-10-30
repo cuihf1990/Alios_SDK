@@ -69,7 +69,8 @@ void do_update(int len,  const char *buf)
 #ifdef STM32_USE_SPI_WIFI
     update_action(buf);
 #else
-    aos_schedule_call(update_action, (void *)buf);
+    ota_set_resp_msg(buf);
+    aos_schedule_call(update_action, (void *)ota_get_resp_msg());
 #endif
 }
 
