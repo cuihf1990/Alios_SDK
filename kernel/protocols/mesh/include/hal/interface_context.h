@@ -125,7 +125,6 @@ typedef struct hal_context_s {
     // discovery
     uint8_t               discovery_channel;
     uint8_t               discovery_times;
-    uint8_t               discovery_timeouts;
     ur_timer_t            discovery_timer;
     scan_result_t         discovery_result;
     discovered_handler_t  discovered_handler;
