@@ -15,16 +15,24 @@
 #include "ota_update_manifest.h"
 #include "ota_socket.h"
 
-#define KEY_OTA_BREAKPOINT  "key_ota_breakpoint"
-#define KEY_OTA_MD5         "key_ota_md5"
-#define KEY_OTA_MD5_CTX     "key_ota_md5_ctx"
-
 #define OTA_BUFFER_MAX_SIZE  1536
 
-static MD5_CTX            g_ctx;
 
-static void save_state(uint32_t breakpoint, MD5_CTX *pMD5);
+#define HTTP_HEADER "GET /%s HTTP/1.1\r\nAccept:*/*\r\n\
+User-Agent: Mozilla/5.0\r\n\
+Cache-Control: no-cache\r\n\
+Connection: close\r\n\
+Host:%s:%d\r\n\r\n"
 
+#define HTTP_HEADER_RESUME "GET /%s HTTP/1.1\r\nAccept:*/*\r\n\
+User-Agent: Mozilla/5.0\r\n\
+Cache-Control: no-cache\r\n\
+Connection: close\r\n\
+Range: bytes=%d-\r\n\
+Host:%s:%d\r\n\r\n"
+
+
+MD5_CTX  g_ctx;
 /**
  * @brief http_gethost_info
  *
@@ -84,38 +92,7 @@ void http_gethost_info(char *src, char **web, char **file, int *port)
     }
 }
 
-int check_md5(const char *buffer, const int32_t len)
-{
-    uint8_t digest[16] = {0};
-    char digest_str[33] = {0};
-    int i = 0;
-    OTA_LOG_D("digest=%s", buffer);
-    MD5_Final((uint8_t *)digest, &g_ctx);
-    for (; i < 16 ; i++) {
-        snprintf(digest_str + i * 2, 2 + 1, "%02X", digest[i]);
-    }
-    OTA_LOG_I("url md5=%s", buffer);
-    OTA_LOG_I("digestMD5=%s", digest_str);
-    if (strncmp(digest_str, buffer, 32)) {
-        OTA_LOG_E("update_packet md5 check FAIL!");
-        return -1;
-    }
-    return 0;
-}
-#define HTTP_HEADER "GET /%s HTTP/1.1\r\nAccept:*/*\r\n\
-User-Agent: Mozilla/5.0\r\n\
-Cache-Control: no-cache\r\n\
-Connection: close\r\n\
-Host:%s:%d\r\n\r\n"
-
-#define HTTP_HEADER_RESUME "GET /%s HTTP/1.1\r\nAccept:*/*\r\n\
-User-Agent: Mozilla/5.0\r\n\
-Cache-Control: no-cache\r\n\
-Connection: close\r\n\
-Range: bytes=%d-\r\n\
-Host:%s:%d\r\n\r\n"
-
-int http_download(char *url, write_flash_cb_t func, char *md5)
+int ota_download(char *url, write_flash_cb_t func, char *md5)
 {
     if (!url || strlen(url) == 0 || func == NULL || md5 == NULL) {
         OTA_LOG_E("http_download url or func  error!\n");
@@ -258,50 +235,22 @@ DOWNLOAD_END:
     return ret;
 }
 
-static void save_state(uint32_t breakpoint, MD5_CTX *pMD5)
+int check_md5(const char *buffer, const int32_t len)
 {
-    ota_set_update_breakpoint(breakpoint);
-    ota_set_cur_MD5_context(pMD5);
-}
-
-uint32_t ota_get_update_breakpoint()
-{
-    uint32_t offset = 0;
-    int len = 4;
-
-    if (aos_kv_get(KEY_OTA_BREAKPOINT, &offset, &len)) {
-        offset = 0;
+    uint8_t digest[16] = {0};
+    char digest_str[33] = {0};
+    int i = 0;
+    OTA_LOG_D("digest=%s", buffer);
+    MD5_Final((uint8_t *)digest, &g_ctx);
+    for (; i < 16 ; i++) {
+        snprintf(digest_str + i * 2, 2 + 1, "%02X", digest[i]);
     }
-    //OTA_LOG_I("ota_get_update_breakpoint=%d",offset);
-    return offset;
+    OTA_LOG_I("url md5=%s", buffer);
+    OTA_LOG_I("digestMD5=%s", digest_str);
+    if (strncmp(digest_str, buffer, 32)) {
+        OTA_LOG_E("update_packet md5 check FAIL!");
+        return -1;
+    }
+    return 0;
 }
 
-int ota_set_update_breakpoint(uint32_t offset)
-{
-    //OTA_LOG_I("ota_set_update_breakpoint=%d",offset);
-    return  aos_kv_set(KEY_OTA_BREAKPOINT, &offset, 4, 1);
-}
-
-int ota_get_last_MD5(char *value)
-{
-    int len = 33;
-    int ret = aos_kv_get(KEY_OTA_MD5, value, &len);
-    return ret;
-}
-
-int ota_set_cur_MD5(char *value)
-{
-    return  aos_kv_set(KEY_OTA_MD5, value, 33, 1);
-}
-
-int ota_get_last_MD5_context(MD5_CTX *md5ctx)
-{
-    int len = sizeof(MD5_CTX);
-    int ret = aos_kv_get(KEY_OTA_MD5_CTX, md5ctx, &len);
-    return ret;
-}
-
-int ota_set_cur_MD5_context(MD5_CTX *md5ctx)
-{
-    return  aos_kv_set(KEY_OTA_MD5_CTX, md5ctx, sizeof(MD5_CTX), 1);
-}
