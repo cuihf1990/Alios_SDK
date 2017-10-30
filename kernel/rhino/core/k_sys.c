@@ -25,6 +25,8 @@ RHINO_INLINE void rhino_stack_check_init(void)
 void workqueue_init(void);
 RHINO_INLINE kstat_t rhino_init(void)
 {
+    uint32_t e = 0;
+
     g_sys_stat = RHINO_STOPPED;
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
@@ -39,10 +41,12 @@ RHINO_INLINE kstat_t rhino_init(void)
     kobj_list_init();
 #endif
 
+    (void)e;
+
     /* init memory region */
 #if(RHINO_CONFIG_MM_TLF > 0)
     krhino_init_mm_head(&g_kmm_head, g_mm_region[0].start, g_mm_region[0].len);
-    for (int e = 1 ; e < g_region_num ; e++) {
+    for (e = 1 ; e < g_region_num ; e++) {
         krhino_add_mm_region(g_kmm_head, g_mm_region[e].start, g_mm_region[e].len);
     }
 #endif
