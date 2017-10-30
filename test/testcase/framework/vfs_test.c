@@ -18,6 +18,8 @@
 
 #include "device/vfs_adc.h"
 #include "hal/soc/adc.h"
+#include "device/vfs_device.h"
+#include "hal/soc/soc.h"
 
 uint32_t adc_init_count = 0;
 uint32_t adc_finalize_count = 0;
@@ -27,13 +29,60 @@ struct file_ops adc_ops =
     .read = vfs_adc_read,
     .close = vfs_adc_close
 };
+
+struct file_ops gpio_ops =
+{
+    .open = vfs_gpio_open,
+    .close = vfs_gpio_close,
+    .read = vfs_gpio_read,
+    .ioctl = vfs_gpio_ioctl
+};
+
+struct file_ops i2c_ops =
+{
+    .open = vfs_i2c_open,
+    .close = vfs_i2c_close,
+    .read = vfs_i2c_read,
+    .write = vfs_i2c_write
+};
+
+struct file_ops rtc_ops =
+{
+    .open = vfs_rtc_open,
+    .close = vfs_rtc_close,
+    .read = vfs_rtc_read,
+    .write = vfs_rtc_write
+};
+
 adc_dev_t adc_dev_test =
 {
     .port = 0xCD,
     .config.sampling_cycle = 0x12345678
 };
 
+gpio_dev_t gpio_dev_test =
+{
+    .port = 0x11,
+    .config = INPUT_PULL_UP
+};
+
+i2c_dev_t i2c_dev_test =
+{
+    .port = 0x22,
+    .config.address_width = 0x11111111,
+    .config.freq = 0x22222222,
+    .config.mode = 0x33,
+};
+
+rtc_dev_t rtc_dev_test =
+{
+    .port = 0x33
+};
+
 char* adc_path = "/dev/adc/";
+char* gpio_path = "/dev/gpio/";
+char* i2c_path = "/dev/i2c/";
+char* rtc_path = "/dev/rtc/";
 
 static int test_ioctl(file_t *node, int cmd, unsigned long arg)
 {
@@ -216,12 +265,151 @@ int32_t hal_adc_finalize(adc_dev_t *adc)
     return ret;
 }
 
+int32_t hal_gpio_init(gpio_dev_t *gpio)
+{
+    ret = -1;
+
+    if(gpio->port == 0x11)
+    {
+        ret = 0;
+    }
+
+    return ret;
+}
+
+int32_t hal_gpio_output_high(gpio_dev_t *gpio)
+{
+    return 1;
+}
+
+int32_t hal_gpio_output_low(gpio_dev_t *gpio)
+{
+    return 2;
+}
+
+int32_t hal_gpio_output_toggle(gpio_dev_t *gpio)
+{
+    return 3;
+}
+
+int32_t hal_gpio_input_get(gpio_dev_t *gpio, uint32_t *value)
+{
+    *value = 0x12345678;
+    return 0;
+}
+
+int32_t hal_gpio_finalize(gpio_dev_t *gpio)
+{
+    return 0;
+}
+
+int32_t hal_i2c_init(i2c_dev_t *i2c)
+{
+    ret = -1;
+
+    if(i2c->port == 0x22)
+    {
+        ret = 0;
+    }
+
+    return ret;
+}
+
+int32_t hal_i2c_send(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
+{
+    ret = 0;
+    int *pData = (int *)data;
+    int i = 0;
+
+    for (i = 0; i < 10; i++) {
+        if(pdata[i] != i) {
+            ret = -1;
+        }
+    }
+
+    return ret;
+}
+
+int32_t hal_i2c_recv(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
+{
+    ret = 0;
+    int *pData = (int *)data;
+    int i = 0;
+
+    for (i = 0; i < 10; i++) {
+        if(pdata[i] != i) {
+            ret = -1;
+        }
+    }
+
+    return ret;
+}
+
+int32_t hal_i2c_finalize(i2c_dev_t *i2c)
+{
+    return 0;
+}
+
+int32_t hal_rtc_init(rtc_dev_t *rtc)
+{
+    ret = -1;
+
+        if(i2c->port == 0x33)
+        {
+            ret = 0;
+        }
+
+        return ret;
+}
+
+int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time)
+{
+    time->year = 11;
+    time->mouth = 22;
+    time->data = 33;
+    time->weekday = 44;
+    time->hr = 55;
+    time->min = 66;
+    time->sec = 77;
+
+    return 0;
+}
+
+int32_t hal_rtc_set_time(rtc_dev_t *rtc, rtc_time_t *time)
+{
+    ret = -1;
+
+    if((time->year == 11) && (time->mouth == 22) && (time->data == 33)
+    && (time->weekday == 44) && (time->hr == 55) && (time->min == 66)
+    && (time->sec == 77)){
+        ret = 0;
+    }
+
+    return ret;
+}
+
+int32_t hal_rtc_finalize(rtc_dev_t *rtc)
+{
+    return 0;
+}
+
 static void test_vfs_device_io_case(void)
 {
     int fd1 = 0;
     int fd2 = 0;
+    int fd_gpio = 0;
+    int fd_i2c = 0;
+    int fd_rtc = 0;
+    int i = 0;
     int ret = -1;
+    int res = 0;
+    uint32_t gpio_value = 0;
     int32_t adc_val = 0;
+    int write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
+    int read_buf[10] = {0};
+    rtc_time_t rtc_time;
+
+    memset(rtc_time, 0, sizeof(rtc_time));
 
     ret = aos_register_driver(adc_path, &adc_ops, &adc_dev_test);
     YUNIT_ASSERT(ret == 0);
@@ -245,6 +433,76 @@ static void test_vfs_device_io_case(void)
 
     ret = aos_close(fd2);
     YUNIT_ASSERT((ret == 0)&&(adc_finalize_count == 1));
+
+    /* example of gpio */
+    ret = aos_register_driver(gpio_path, &gpio_ops, &gpio_dev_test);
+    YUNIT_ASSERT(ret == 0);
+
+    fd_gpio = aos_open(gpio_path,0);
+    YUNIT_ASSERT(fd1 > 64);
+
+    /* read data from gpio */
+    ret = aos_read(fd_gpio, &gpio_value, sizeof(gpio_value));
+    YUNIT_ASSERT((ret == 0)&&(gpio_value == 0x12345678));
+
+    /* output high */
+    ret = aos_ioctl(fd_gpio, IOCTL_GPIO_OUTPUT_HIGHT, 0);
+    YUNIT_ASSERT(ret == 1);
+
+    /* output low */
+    ret = aos_ioctl(fd_gpio, IOCTL_GPIO_OUTPUT_LOW, 0);
+    YUNIT_ASSERT(ret == 2);
+
+    /* toggle output */
+    ret = aos_ioctl(fd_gpio, IOCTL_GPIO_OUTPUT_TOGGLE, 0);
+    YUNIT_ASSERT(ret == 3);
+
+    ret = aos_close(fd_gpio);
+    YUNIT_ASSERT(ret == 0);
+
+    /* example of i2c */
+    ret = aos_register_driver(i2c_path, &i2c_ops, &i2c_dev_test);
+    YUNIT_ASSERT(ret == 0);
+
+    fd_i2c = aos_open(gpio_i2c,0);
+    YUNIT_ASSERT(fd_i2c > 64);
+
+    ret = aos_read(fd_i2c, read_buf, sizeof(read_buf));
+
+    for (i = 0; i < 10; i++) {
+        if(pdata[i] != i) {
+            res = -1;
+        }
+    }
+    YUNIT_ASSERT((ret == sizeof(read_buf))&&(ret1 == 0));
+
+    ret = aos_write(fd_i2c, write_buf, sizeof(read_buf));
+    YUNIT_ASSERT(ret == sizeof(read_buf));
+
+    ret = aos_close(fd_i2c);
+    YUNIT_ASSERT(ret == 0);
+
+    /* example of rtc */
+    ret = aos_register_driver(rtc_path, &rtc_ops, &rtc_dev_test);
+    YUNIT_ASSERT(ret == 0);
+
+    fd_rtc = aos_open(gpio_rtc,0);
+    YUNIT_ASSERT(fd_rtc > 64);
+
+    ret = aos_read(fd_rtc, &rtc_time, sizeof(rtc_time));
+
+    if((rtc_time->year == 11) && (rtc_time->mouth == 22) && (rtc_time->data == 33)
+    && (rtc_time->weekday == 44) && (rtc_time->hr == 55) && (rtc_time->min == 66)
+    && (rtc_time->sec == 77)){
+        res = 2;
+    }
+    YUNIT_ASSERT((ret == sizeof(rtc_time))&&(res == 2));
+
+    ret = aos_write(fd_rtc, &rtc_time, sizeof(rtc_time));
+    YUNIT_ASSERT(ret == sizeof(rtc_time));
+
+    ret = aos_close(fd_rtc);
+    YUNIT_ASSERT(ret == 0);
 }
 
 static int create_socket(int port)
