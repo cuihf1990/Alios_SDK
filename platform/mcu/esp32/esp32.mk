@@ -2,7 +2,7 @@ HOST_OPENOCD := esp32
 
 NAME := esp32
 
-$(NAME)_COMPONENTS := framework.common modules.fs.kv
+$(NAME)_COMPONENTS := framework.common
 
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/freertos/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/soc/esp32/include
