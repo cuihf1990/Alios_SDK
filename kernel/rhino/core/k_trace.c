@@ -5,6 +5,18 @@
 #include <assert.h>
 #include <k_api.h>
 
+#if (RHINO_CONFIG_TRACE > 0)
+
+#define TRACE_BUFFER_SIZE 1024
+#define ROUND_POINT(sz) (((sz) + (4 - 1)) & ~(4 - 1))
+
+#define TRACE_PACKET_LENGTH 120
+#define MAX_MODULE_NAME 40
+#define TRACE_TYPE  0XFFFFFF00
+#define TRACE_EVENT 0X000000FF
+
+static uint32_t buffer[TRACE_BUFFER_SIZE];
+
 static uint32_t event_mask;
 static void *hit_task;
 static uint8_t init;
@@ -38,18 +50,6 @@ void trace_deinit(void)
 {
     init = 0;
 }
-
-#if (RHINO_CONFIG_TRACE > 0)
-
-#define TRACE_BUFFER_SIZE 1024
-#define ROUND_POINT(sz) (((sz) + (4 - 1)) & ~(4 - 1))
-
-#define TRACE_PACKET_LENGTH 120
-#define MAX_MODULE_NAME 40
-#define TRACE_TYPE  0XFFFFFF00
-#define TRACE_EVENT 0X000000FF
-
-static uint32_t buffer[TRACE_BUFFER_SIZE];
 
 /* task trace function */
 void _trace_init(void)
