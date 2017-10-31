@@ -5,15 +5,17 @@ NAME := esp32
 $(NAME)_COMPONENTS := framework.common modules.fs.kv
 $(NAME)_COMPONENTS += protocols.net alicrypto
 
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/esp32/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/soc/esp32/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/soc/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/driver/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/ethernet/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/log/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/nvs_flash/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/spi_flash/include
-GLOBAL_CFLAGS    += -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls
+ESP_INC_PATH    := bsp/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/esp32/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/soc/esp32/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/soc/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/driver/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/ethernet/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/log/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/nvs_flash/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/spi_flash/include
+
+GLOBAL_CFLAGS   += -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls
 GLOBAL_LDFLAGS   += -nostdlib -Lplatform/mcu/esp32/ -lc
 GLOBAL_LDFLAGS   += -lgcc -lstdc++ -lgcov -lm
 
