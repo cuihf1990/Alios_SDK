@@ -49,7 +49,7 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
 {
     //url="/large";   
     if (!url || strlen(url) == 0 || func == NULL || md5 == NULL) {
-        OTA_LOG_E("http_download params  error!\n");
+        OTA_LOG_E("ota_download parms  error!\n");
         return OTA_DOWNLOAD_URL_FAIL;
     }
     int ret = 0;

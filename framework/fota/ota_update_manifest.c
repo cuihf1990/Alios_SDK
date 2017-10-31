@@ -29,6 +29,9 @@ static char *const get_download_url()
 
 static int set_download_url(const char *value)
 {
+    if (value==NULL) {
+        return -1;
+    }
     if (msg_temp == NULL) {
         msg_temp = aos_malloc(OTA_RESP_MAX_LEN);
     }
