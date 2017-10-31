@@ -158,31 +158,3 @@ void tick_list_update(void)
     RHINO_CRITICAL_EXIT();
 }
 
-#if (RHINO_CONFIG_TICK_TASK > 0)
-static void tick_task_proc(void *para)
-{
-    kstat_t ret;
-
-    (void)para;
-
-    while (RHINO_TRUE) {
-        ret = krhino_task_sem_take(RHINO_WAIT_FOREVER);
-        if (ret == RHINO_SUCCESS) {
-            if (g_sys_stat == RHINO_RUNNING) {
-                tick_list_update();
-            }
-        }
-    }
-}
-
-void tick_task_start(void)
-{
-    /* create tick task to caculate task sleep and timeout */
-    krhino_task_create(&g_tick_task, "tick_task", NULL, RHINO_CONFIG_TICK_TASK_PRI,
-                       0, g_tick_task_stack, RHINO_CONFIG_TICK_TASK_STACK_SIZE, tick_task_proc, 1);
-
-    krhino_task_sem_create(&g_tick_task, &g_tick_sem, "tick_task_sem", 0);
-
-}
-#endif
-

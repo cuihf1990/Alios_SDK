@@ -114,22 +114,6 @@
 #define RHINO_CONFIG_HW_COUNT                0
 #endif
 
-#ifndef RHINO_CONFIG_TICK_TASK
-#define RHINO_CONFIG_TICK_TASK               0
-#endif
-
-#if (RHINO_CONFIG_TICK_TASK > 0)
-
-#ifndef RHINO_CONFIG_TICK_TASK_STACK_SIZE
-#define RHINO_CONFIG_TICK_TASK_STACK_SIZE    256
-#endif
-
-#ifndef RHINO_CONFIG_TICK_TASK_PRI
-#define RHINO_CONFIG_TICK_TASK_PRI           1
-#endif
-
-#endif /* RHINO_CONFIG_TICK_TASK */
-
 #ifndef RHINO_CONFIG_DYNTICKLESS
 #define RHINO_CONFIG_DYNTICKLESS             0
 #endif
