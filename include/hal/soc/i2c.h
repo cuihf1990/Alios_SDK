@@ -5,9 +5,15 @@
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
 
+#define I2C_MODE_MASTER 1
+#define I2C_MODE_SLAVE  2
+#define I2C_MODE_MEM    3
+
 typedef struct {
     uint32_t address_width;
     uint32_t freq;
+    uint8_t  mode;
+    uint16_t dev_addr;
 } i2c_config_t;
 
 typedef struct {
