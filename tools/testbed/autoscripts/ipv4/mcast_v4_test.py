@@ -39,9 +39,10 @@ def main(filename = '~/lb-all.bin'):
         return [1, 'connect testbed failed']
 
     #request device allocation
+    type = 'mxchip'
     number = 4
     timeout = 3600
-    allocted = at.device_allocate(number, timeout)
+    allocted = at.device_allocate(type, number, timeout)
     if len(allocted) != number:
         print "error: request device allocation failed"
         return [1, 'allocate device failed']

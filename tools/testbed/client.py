@@ -1,9 +1,9 @@
-import os, sys, time, subprocess
-import socket, thread, threading, glob
+import os, re, sys, time, platform, json
+import socket, thread, threading, subprocess
 import TBframe
 
 DEBUG = True
-LOCALLOG = False
+LOCALLOG = True
 
 try:
     import serial
@@ -12,6 +12,11 @@ except:
     print "intall@ubuntu: sudo apt-get install python-pip"
     print "               sudo pip install pyserial"
     exit(1)
+
+if platform.system() == 'Windows':
+    import serial.toos.list_ports
+else:
+    import glob
 
 MAX_MSG_LENTH = 2000
 
@@ -24,6 +29,12 @@ class Client:
         self.devices = {}
         self.keep_running = True
         self.connected = False
+        bytes = os.urandom(3)
+        self.poll_str = '<poll'
+        for byte in bytes:
+            self.poll_str += '{0:02x}'.format(ord(byte))
+        self.poll_str += '>'
+        self.esc_seq = re.compile(r'\x1b[^m]*m')
 
     def send_device_list(self):
         content = ":".join(list(self.devices))
@@ -33,7 +44,151 @@ class Client:
         except:
             self.connected = False
 
-    def device_serve_thread(self, port):
+    def response_filter(self, port, logstr):
+        if self.devices[port]['event'].is_set():
+            return
+        if len(self.devices[port]['filter']) == 0:
+            return
+
+        filter = self.devices[port]['filter']
+        if filter['lines_num'] == 0:
+            if filter['cmd_str'] in logstr:
+                self.devices[port]['filter']['lines_num'] += 1
+        elif filter['lines_num'] <= filter['lines_exp']:
+            log = self.esc_seq.sub('', logstr)
+            log = log.replace(self.poll_str, '')
+            log = log.replace('\r', '')
+            log = log.replace('\n', '')
+            if log != '':
+                for filterstr in filter['filters']:
+                    if filterstr not in log:
+                        continue
+                    else:
+                        self.devices[port]['filter']['response'].append(log)
+                        self.devices[port]['filter']['lines_num'] += 1
+                        break
+            if self.devices[port]['filter']['lines_num'] > filter['lines_exp']:
+                self.devices[port]['event'].set()
+
+    def device_info_poll(self, port):
+        while port in self.devices:
+            time.sleep(10)
+            try:
+                ser    = self.devices[port]['serial']
+
+                #poll device model
+                filter = {}
+                filter['cmd_str'] = self.poll_str + 'devname'
+                filter['lines_exp'] = 1
+                filter['lines_num'] = 0
+                filter['filters'] = ['']
+                filter['response'] = []
+                self.devices[port]['filter'] = filter
+                self.devices[port]['event'].clear()
+                with self.devices[port]['wlock']:
+                    ser.write(filter['cmd_str'] + '\r')
+                self.devices[port]['event'].wait(0.3)
+                response = self.devices[port]['filter']['response']
+                if len(response) == self.devices[port]['filter']['lines_exp']:
+                    self.devices[port]['attributes']['model'] = response[0]
+                self.devices[port]['filter'] = {}
+                #poll device version
+                filter = {}
+                filter['cmd_str'] = self.poll_str + 'version'
+                filter['lines_exp'] = 2
+                filter['lines_num'] = 0
+                filter['filters'] = ['version']
+                filter['response'] = []
+                self.devices[port]['filter'] = filter
+                self.devices[port]['event'].clear()
+                with self.devices[port]['wlock']:
+                    ser.write(filter['cmd_str'] + '\r')
+                self.devices[port]['event'].wait(0.3)
+                response = self.devices[port]['filter']['response']
+                if len(response) == filter['lines_exp']:
+                    self.devices[port]['attributes']['kernel_version'] = re.compile(r'.+kernel version :AOS-').sub('', response[0])
+                    self.devices[port]['attributes']['app_version'] = re.compile(r'.+app version :APP-').sub('', response[1])
+                self.devices[port]['filter'] = {}
+                #poll mesh status
+                filter = {}
+                filter['cmd_str'] = self.poll_str + 'umesh status'
+                filter['lines_exp'] = 10
+                filter['lines_num'] = 0
+                filter['response'] = []
+                filter['filters'] = ['\t']
+                self.devices[port]['filter'] = filter
+                self.devices[port]['event'].clear()
+                with self.devices[port]['wlock']:
+                    ser.write(filter['cmd_str'] + '\r')
+                self.devices[port]['event'].wait(0.3)
+                response = self.devices[port]['filter']['response']
+                if len(response) == filter['lines_exp']:
+                    for line in response:
+                        if 'state' in line:
+                            self.devices[port]['attributes']['state'] = re.compile(r'.*state\t').sub('', line)
+                        elif 'netid' in line:
+                            self.devices[port]['attributes']['netid'] = re.compile(r'.*netid\t').sub('', line)
+                        elif 'mac' in line:
+                            self.devices[port]['attributes']['macaddr'] = re.compile(r'.*mac\t').sub('', line)
+                        elif 'sid' in line:
+                            self.devices[port]['attributes']['sid'] = re.compile(r'.*sid\t').sub('', line)
+                        elif 'netsize' in line:
+                            self.devices[port]['attributes']['netsize'] = re.compile(r'.*netsize\t').sub('', line)
+                        elif 'router' in line:
+                            self.devices[port]['attributes']['router'] = re.compile(r'.*router\t').sub('', line)
+                        elif 'channel' in line:
+                            self.devices[port]['attributes']['channel'] = re.compile(r'.*\tchannel ').sub('', line)
+                self.devices[port]['filter'] = {}
+                #poll mesh nbrs
+                filter = {}
+                filter['cmd_str'] = self.poll_str + 'umesh nbrs'
+                filter['lines_exp'] = 34
+                filter['lines_num'] = 0
+                filter['response'] = []
+                filter['filters'] = ['\t']
+                self.devices[port]['filter'] = filter
+                self.devices[port]['event'].clear()
+                with self.devices[port]['wlock']:
+                    ser.write(filter['cmd_str'] + '\r')
+                self.devices[port]['event'].wait(0.3)
+                response = self.devices[port]['filter']['response']
+                if len(response) > 0 and 'num=' in response[-1]:
+                    self.devices[port]['attributes']['nbrs'] = {}
+                    index = 0
+                    for line in response:
+                        if '\t' not in line or ',' not in line:
+                            continue
+                        line = line.replace('\t', '')
+                        self.devices[port]['attributes']['nbrs']['{0:02d}'.format(index)] = line
+                        index += 1
+                self.devices[port]['filter'] = {}
+                #poll mesh extnetid
+                filter = {}
+                filter['cmd_str'] = self.poll_str + 'umesh extnetid'
+                filter['lines_exp'] = 1
+                filter['lines_num'] = 0
+                filter['response'] = []
+                filter['filters'] = [':']
+                self.devices[port]['filter'] = filter
+                self.devices[port]['event'].clear()
+                with self.devices[port]['wlock']:
+                    ser.write(filter['cmd_str'] + '\r')
+                self.devices[port]['event'].wait(0.3)
+                response = self.devices[port]['filter']['response']
+                if len(response) == filter['lines_exp']:
+                    self.devices[port]['attributes']['extnetid'] = response[0]
+                self.devices[port]['filter'] = {}
+                content = port + ',' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
+                data = TBframe.construct(TBframe.DEVICE_STATUS, content)
+                self.service_socket.send(data)
+                print data
+            except:
+                if DEBUG:
+                    raise
+                break;
+        print "devie status poll thread for {0} exited".format(port)
+
+    def device_log_poll(self, port):
         log_time = time.time()
         log = ''
         if LOCALLOG:
@@ -79,6 +234,7 @@ class Client:
                         raise
                     break
                 if log != '' and newline == True:
+                    self.response_filter(port, log)
                     log = port + ":{0:.3f}:".format(log_time) + log
                     if LOCALLOG:
                         flog.write(log)
@@ -97,43 +253,53 @@ class Client:
             flog.close()
         print "device {0} removed".format(port)
         self.send_device_list()
-        print "device serve thread for {0} exited".format(port)
+        print "device log poll thread for {0} exited".format(port)
 
     def device_monitor(self):
         while self.keep_running:
-            devices_new = glob.glob("/dev/espif-*")
-            devices_new.sort()
-            for port in devices_new:
-                if port in list(self.devices):
-                    continue
-                try:
-                    ser = serial.Serial(port, 115200, timeout = 0.02)
-                    ser.setDTR(True)
-                    ser.setRTS(True)
-                except:
-                    print "device_monitor, error: unable to open {0}".format(port)
-                    continue
-                print "device {0} added".format(port)
-                self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'esp32', 'serial':ser}
-                thread.start_new_thread(self.device_serve_thread, (port,))
-                self.send_device_list()
+            os = platform.system()
+            if os == 'Windows':
+                coms = serial.tools.list_ports.comports()
+                devices_new = []
+                for com in coms:
+                    devices_new.append(com.device)
+            elif os == 'Linux':
+                devices_new = glob.glob('/dev/mxchip-*')
+                devices_new += glob.glob('/dev/espif-*')
+                devices_new += glob.glob('/dev/ttyUSB*')
+            elif os == 'Darwin':
+                devices_new = glob.glob('/dev/tty.*')
+            elif 'CYGWIN' in os:
+                devices_new = glob.glob('/dev/ttyS*')
+            else:
+                print 'unsupported os "{0}'.format(os)
+                break
 
-            devices_new = glob.glob("/dev/mxchip-*")
             devices_new.sort()
             for port in devices_new:
                 if port in list(self.devices):
                     continue
                 try:
-                    ser = serial.Serial(port, 921600, timeout = 0.02)
-                    ser.setRTS(False)
+                    if 'mxchip' in port:
+                        ser = serial.Serial(port, 921600, timeout = 0.02)
+                        ser.setRTS(False)
+                    elif 'espif' in port:
+                        ser = serial.Serial(port, 115200, timeout = 0.02)
+                        ser.setDTR(True)
+                        ser.setRTS(True)
+                    else:
+                        ser = serial.Serial(port, 115200, timeout = 0.02)
                 except:
                     print "device_monitor, error: unable to open {0}".format(port)
                     continue
                 print "device {0} added".format(port)
-                self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'model':'mk3060', 'serial':ser}
-                thread.start_new_thread(self.device_serve_thread, (port,))
+                self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'serial':ser, 'event':threading.Event(), 'attributes':{}, 'filter':{}}
+                thread.start_new_thread(self.device_log_poll, (port,))
+                thread.start_new_thread(self.device_info_poll, (port,))
                 self.send_device_list()
-            time.sleep(0.05)
+            time.sleep(0.1)
+        print "device monitor thread exited"
+        self.keep_running = False
 
     def esp32_erase(self, port):
         if self.devices[port]['serial'].isOpen() == True:
@@ -159,18 +325,22 @@ class Client:
             baudrate = baudrate / 2
         return error
 
-    def erase_device(self, port, term):
+    def device_erase(self, port, term):
         ret = "fail"
-        if os.path.exists(port) == False:
-            return ret
+        model = 'unknow'
+        if 'model' in self.devices[port]['attributes']:
+            model = self.devices[port]['attributes']['model']
+        model = model.lower()
 
-        if self.devices[port]['model'] == "esp32":
+        if model == "esp32":
             self.devices[port]['rlock'].acquire()
             self.devices[port]['wlock'].acquire()
             ret = esp32_erase(port)
             self.devices[port]['wlock'].release()
             self.devices[port]['rlock'].release()
-        print "erasing", port, "...", ret
+            print "erasing", port, "...", ret
+        else:
+            print "error: erasing dose not support device '{0}'".format(model)
         content = ','.join(term) + ',' + ret
         self.send_response(TBframe.DEVICE_ERASE, content)
 
@@ -213,7 +383,6 @@ class Client:
 
     def mxchip_program(self, port, address, file):
         retry = 3
-        baudrate = 921600
         error = "fail"
         while retry > 0:
             script = ['timeout', '80', 'python']
@@ -227,26 +396,33 @@ class Client:
                 error =  "success"
                 break
             retry -= 1
-            baudrate = baudrate / 2
             time.sleep(4)
         return error
 
-    def program_device(self, port, address, file, term):
+    def device_program(self, port, address, file, term):
         ret = "fail"
-        if os.path.exists(port) == False:
-            return "fail"
-        if os.path.exists(file) == False:
-            return "fail"
+        model = 'unknow'
 
-        self.devices[port]['rlock'].acquire()
-        self.devices[port]['wlock'].acquire()
-        if self.devices[port]['model'] == "esp32":
+        if 'model' in self.devices[port]['attributes']:
+            model = self.devices[port]['attributes']['model']
+        model = model.lower()
+
+        if model == "esp32":
+            self.devices[port]['rlock'].acquire()
+            self.devices[port]['wlock'].acquire()
             ret = self.esp32_program(port, address, file)
-        elif self.devices[port]['model'] == "mk3060":
+            self.devices[port]['wlock'].release()
+            self.devices[port]['rlock'].release()
+            print "programming", file, "to", port, "@", address, "...", ret
+        elif model == "mk3060":
+            self.devices[port]['rlock'].acquire()
+            self.devices[port]['wlock'].acquire()
             ret = self.mxchip_program(port, address, file)
-        self.devices[port]['wlock'].release()
-        self.devices[port]['rlock'].release()
-        print "programming", file, "to", port, "@", address, "...", ret
+            self.devices[port]['wlock'].release()
+            self.devices[port]['rlock'].release()
+            print "programming", file, "to", port, "@", address, "...", ret
+        else:
+            print "error: programing dose not support device '{0}'".format(model)
         content = ','.join(term) + ',' + ret
         self.send_response(TBframe.DEVICE_PROGRAM, content)
 
@@ -290,12 +466,9 @@ class Client:
             pass
         return "fail"
 
-    def control_device(self, port, operation):
+    def device_control(self, port, operation):
         if port not in self.devices:
             return "error"
-
-        if os.path.exists(port) == False:
-            return "fail"
 
         if self.devices[port]['serial'].isOpen() == False:
             try:
@@ -303,14 +476,20 @@ class Client:
             except:
                 if DEBUG:
                     raise
-                print "control_device, error: unable to open {0}".format(port)
+                print "device_control, error: unable to open {0}".format(port)
                 return "fail"
 
         ret = "busy"
+        model = 'unknow'
+
+        if 'model' in self.devices[port]['attributes']:
+            model = self.devices[port]['attributes']['model']
+        model = model.lower()
+
         if self.devices[port]['wlock'].acquire(False) == True:
-            if self.devices[port]['model'] == "esp32":
+            if model == "esp32":
                 ret = self.esp32_control(port, operation)
-            elif self.devices[port]['model'] == "mk3060":
+            elif model == "mk3060":
                 ret = self.mxchip_control(port, operation)
             else:
                 ret = "fail"
@@ -454,7 +633,7 @@ class Client:
                             continue
                         term = args[0:2]
                         port = args[2]
-                        thread.start_new_thread(self.erase_device, (port, term,))
+                        thread.start_new_thread(self.device_erase, (port, term,))
                     elif type == TBframe.DEVICE_PROGRAM:
                         args = value.split(',')
                         if len(args) != 5:
@@ -468,14 +647,14 @@ class Client:
                             self.send_response(type, content)
                             continue
                         filename = file_received[hash]
-                        thread.start_new_thread(self.program_device, (port, address, filename, term,))
+                        thread.start_new_thread(self.device_program, (port, address, filename, term,))
                     elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
                         args = value.split(',')
                         if len(args) != 3:
                             continue
                         term = args[0:2]
                         port = args[2]
-                        result = self.control_device(port, type)
+                        result = self.device_control(port, type)
                         content = ','.join(term) + ',' + result
                         self.send_response(type, content)
                     elif type == TBframe.DEVICE_CMD:

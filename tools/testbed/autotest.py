@@ -252,12 +252,9 @@ class Autotest:
             return False
         return True
 
-    def device_allocate(self, number, timeout):
-        try:
-            number = str(number)
-        except:
-            return []
-        data = TBframe.construct(TBframe.DEVICE_ALLOC, number)
+    def device_allocate(self, type, number, timeout):
+        content = type + ',' + str(number)
+        data = TBframe.construct(TBframe.DEVICE_ALLOC, content)
         timeout += time.time()
         while time.time() < timeout:
             self.service_socket.send(data)
@@ -265,7 +262,7 @@ class Autotest:
             if self.cmd_excute_return == None or self.cmd_excute_return == []:
                 time.sleep(8)
                 continue
-            if len(self.cmd_excute_return) != int(number):
+            if len(self.cmd_excute_return) != number:
                 print "error: allocated number does not equal requested"
             break
         if time.time() > timeout:
