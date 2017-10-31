@@ -183,8 +183,14 @@ class Server:
         return ret
 
     def allocate_devices(self, value):
+        values = value.split(',')
+        if len(values) != 2:
+            return ['error','argument']
+
+        type = values[0]
+        number = values[1]
         try:
-            number = int(value)
+            number = int(number)
         except:
             return ['error','argument']
 
@@ -200,10 +206,13 @@ class Server:
                 for port in ports:
                     if port in self.allocated['devices']:
                         continue
-                    if client['devices'][port]['using'] == 0:
-                        allocated.append(port)
-                        if len(allocated) >= number:
-                            break
+                    if type not in port:
+                        continue
+                    if client['devices'][port]['using'] != 0:
+                        continue
+                    allocated.append(port)
+                    if len(allocated) >= number:
+                        break
                 if len(allocated) >= number:
                     break
             if len(allocated) >= number:
