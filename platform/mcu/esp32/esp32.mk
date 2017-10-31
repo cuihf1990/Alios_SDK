@@ -7,6 +7,7 @@ $(NAME)_COMPONENTS += protocols.net alicrypto
 
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/freertos/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/espos/include
+GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/esp32/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/soc/esp32/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/soc/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/driver/include
@@ -14,7 +15,8 @@ GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/heap/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/ethernet/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/log/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/nvs_flash/include
-GLOBAL_INCLUDES  += system/include ../../arch/xtensa
+GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/spi_flash/include
+GLOBAL_INCLUDES  += ../../arch/xtensa
 GLOBAL_CFLAGS    += -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls
 GLOBAL_LDFLAGS   += -nostdlib -Lplatform/mcu/esp32/ -lc
 GLOBAL_LDFLAGS   += -lgcc -lstdc++ -lgcov -lm
