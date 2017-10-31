@@ -342,13 +342,23 @@ kstat_t ringbuf_reset(k_ringbuf_t *p_ringbuf)
 
 kstat_t krhino_ringbuf_reset(k_ringbuf_t *p_ringbuf)
 {
+    CPSR_ALLOC();
+    kstat_t err;
+
     NULL_PARA_CHK(p_ringbuf);
 
-    return ringbuf_reset(p_ringbuf);
+    RHINO_CRITICAL_ENTER();
+    err = ringbuf_reset(p_ringbuf);
+    RHINO_CRITICAL_EXIT();
+
+    return err;
 }
 kstat_t krhino_ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len,
                             size_t type, size_t block_size)
 {
+    CPSR_ALLOC();
+    kstat_t err;
+
     NULL_PARA_CHK(p_ringbuf);
     NULL_PARA_CHK(buf);
 
@@ -362,11 +372,18 @@ kstat_t krhino_ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len,
         }
     }
 
-    return ringbuf_init(p_ringbuf, buf, len, type, block_size);
+    RHINO_CRITICAL_ENTER();
+    err = ringbuf_init(p_ringbuf, buf, len, type, block_size);
+    RHINO_CRITICAL_EXIT();
+
+    return err;
 }
 
 kstat_t krhino_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
 {
+    CPSR_ALLOC();
+    kstat_t err;
+
     NULL_PARA_CHK(p_ringbuf);
     NULL_PARA_CHK(data);
 
@@ -376,11 +393,18 @@ kstat_t krhino_ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
         return RHINO_INV_PARAM;
     }
 
-    return ringbuf_push(p_ringbuf, data, len);
+    RHINO_CRITICAL_ENTER();
+    err = ringbuf_push(p_ringbuf, data, len);
+    RHINO_CRITICAL_EXIT();
+
+    return err;
 }
 
 kstat_t krhino_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
 {
+    CPSR_ALLOC();
+    kstat_t err;
+
     NULL_PARA_CHK(p_ringbuf);
     NULL_PARA_CHK(data);
 
@@ -389,11 +413,18 @@ kstat_t krhino_ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
         return RHINO_INV_PARAM;
     }
 
-    return ringbuf_head_push(p_ringbuf, data, len);
+    RHINO_CRITICAL_ENTER();
+    err = ringbuf_head_push(p_ringbuf, data, len);
+    RHINO_CRITICAL_EXIT();
+
+    return err;
 }
 
 kstat_t krhino_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
 {
+    CPSR_ALLOC();
+    kstat_t err;
+
     NULL_PARA_CHK(p_ringbuf);
     NULL_PARA_CHK(pdata);
 
@@ -401,22 +432,39 @@ kstat_t krhino_ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen)
         return RHINO_INV_PARAM;
     }
 
-    return ringbuf_pop(p_ringbuf, pdata, plen);
+    RHINO_CRITICAL_ENTER();
+    err = ringbuf_pop(p_ringbuf, pdata, plen);
+    RHINO_CRITICAL_EXIT();
 
+    return err;
 }
 
 uint8_t krhino_ringbuf_is_empty(k_ringbuf_t *p_ringbuf)
 {
+    CPSR_ALLOC();
+    uint8_t empty;
+
     NULL_PARA_CHK(p_ringbuf);
 
-    return ringbuf_is_empty(p_ringbuf);
+    RHINO_CRITICAL_ENTER();
+    empty = ringbuf_is_empty(p_ringbuf);
+    RHINO_CRITICAL_EXIT();
+
+    return empty;
 }
 
 uint8_t krhino_ringbuf_is_full(k_ringbuf_t *p_ringbuf)
 {
+    CPSR_ALLOC();
+    uint8_t full;
+
     NULL_PARA_CHK(p_ringbuf);
 
-    return ringbuf_is_full(p_ringbuf);
+    RHINO_CRITICAL_ENTER();
+    full = ringbuf_is_empty(p_ringbuf);
+    RHINO_CRITICAL_EXIT();
+
+    return full;
 }
 #endif
 
