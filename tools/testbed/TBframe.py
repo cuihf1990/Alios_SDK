@@ -5,6 +5,7 @@ DEBUG = False
 CLIENT_DEV     = 'CDEV'
 ALL_DEV        = 'ADEV'
 DEVICE_LOG     = 'DLOG'
+DEVICE_STATUS  = 'DSTU'
 DEVICE_CMD     = 'DCMD'
 DEVICE_ERASE   = 'DERS'
 DEVICE_PROGRAM = 'DPRG'
@@ -26,6 +27,8 @@ TYPE_NONE      = 'NONE'
 def is_valid_type(type):
     #frequently used commands
     if type == DEVICE_LOG:
+        return True
+    if type == DEVICE_STATUS:
         return True
     if type == HEARTBEAT:
         return True
