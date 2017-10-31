@@ -41,7 +41,7 @@ enum {
 };
 
 enum {
-    PF_ATTACH_QUERY = 0,
+    ATTACH_QUERY = 0,
     TARGET_QUERY = 1,
 };
 
