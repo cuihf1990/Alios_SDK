@@ -54,7 +54,7 @@ int vfs_rtc_close(file_t *fp)
             if (ret == 0) {
                 
                 /* turns off hardware. */
-                ret = hal_gpio_finalize(rtc_dev);       
+                ret = hal_rtc_finalize(rtc_dev);
             }
 
             /* unlock the device. */
