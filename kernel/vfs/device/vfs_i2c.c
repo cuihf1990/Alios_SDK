@@ -16,11 +16,11 @@ int vfs_i2c_open(inode_t *inode, file_t *fp)
 
         /* Initialize if the device is first opened. */
         if (fp->node->refs == 1) {
-            
+
             /* get the device pointer. */
             i2c_dev = (i2c_dev_t *)(fp->node->i_arg);
-        
-            /*  init i2c device. */        
+
+            /*  init i2c device. */
             ret = hal_i2c_init(i2c_dev);
         } else {
             ret = VFS_SUCCESS;
@@ -55,7 +55,7 @@ int vfs_i2c_close(file_t *fp)
             }
 
             /* unlock the device. */
-            aos_mutex_unlock(&fp->node->mutex);        
+            aos_mutex_unlock(&fp->node->mutex);
         } else {
             ret = VFS_SUCCESS;
         }
@@ -70,7 +70,6 @@ ssize_t vfs_i2c_read(file_t *fp, void *buf, size_t nbytes)
 {
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
-    uint32_t recv_bytes = 0;   /* number of bytes received */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {

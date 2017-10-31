@@ -8,8 +8,8 @@
 
 int vfs_spi_open(inode_t *inode, file_t *fp)
 {
-    int ret = -1;                /* return value */
-    spi_dev_t *spi_dev = NULL;   /* device pointer */
+    int ret = -1;              /* return value */
+    spi_dev_t *spi_dev = NULL; /* device pointer */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {
@@ -34,8 +34,8 @@ int vfs_spi_open(inode_t *inode, file_t *fp)
 
 int vfs_spi_close(file_t *fp)
 {
-    int ret = -1;                /* return value */
-    spi_dev_t *spi_dev = NULL;   /* device pointer */
+    int ret = -1;              /* return value */
+    spi_dev_t *spi_dev = NULL; /* device pointer */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {
@@ -55,7 +55,7 @@ int vfs_spi_close(file_t *fp)
             }
 
             /* unlock the device. */
-            aos_mutex_unlock(&fp->node->mutex);      
+            aos_mutex_unlock(&fp->node->mutex);
         } else {
             ret = VFS_SUCCESS;
         }
@@ -68,8 +68,8 @@ int vfs_spi_close(file_t *fp)
 
 ssize_t vfs_spi_read(file_t *fp, void *buf, size_t nbytes)
 {
-    int ret = -1;                /* return value */
-    spi_dev_t *spi_dev = NULL;   /* device pointer */
+    int ret = -1;              /* return value */
+    spi_dev_t *spi_dev = NULL; /* device pointer */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {
@@ -85,14 +85,14 @@ ssize_t vfs_spi_read(file_t *fp, void *buf, size_t nbytes)
             ret = hal_spi_recv(spi_dev, (unsigned char *)buf, nbytes, AOS_WAIT_FOREVER);
 
             /* If the data is read correctly and the number of read data 
-            bytes is not negative, the return value is set to read bytes. */ 
+            bytes is not negative, the return value is set to read bytes. */
             if (ret == 0) {
                 ret = nbytes;
             }
         }
 
         /* unlock the device. */
-        aos_mutex_unlock(&fp->node->mutex);         
+        aos_mutex_unlock(&fp->node->mutex);
     } else {
         ret = -EINVAL;
     } 
@@ -102,8 +102,8 @@ ssize_t vfs_spi_read(file_t *fp, void *buf, size_t nbytes)
 
 ssize_t vfs_spi_write(file_t *fp, const void *buf, size_t nbytes)
 {
-    int ret = -1;                /* return value */
-    spi_dev_t *spi_dev = NULL;   /* device pointer */
+    int ret = -1;              /* return value */
+    spi_dev_t *spi_dev = NULL; /* device pointer */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {

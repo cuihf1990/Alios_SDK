@@ -55,7 +55,7 @@ int vfs_wdg_close(file_t *fp)
             }
 
             /* unlock the device. */
-            aos_mutex_unlock(&fp->node->mutex);          
+            aos_mutex_unlock(&fp->node->mutex);
         } else {
             ret = VFS_SUCCESS;
         }

@@ -16,10 +16,10 @@ int vfs_gpio_open(inode_t *inode, file_t *fp)
 
         /* Initialize if the device is first opened. */
         if (fp->node->refs == 1) {
-            
+
             /* get the device pointer. */
             gpio_dev = (gpio_dev_t *)(fp->node->i_arg);
-        
+
             /*  init gpio device. */
             ret = hal_gpio_init(gpio_dev);
         } else {
@@ -70,7 +70,6 @@ ssize_t vfs_gpio_read(file_t *fp, void *buf, size_t nbytes)
 {
     int ret = -1;                /* return value */
     gpio_dev_t *gpio_dev = NULL; /* device pointer */
-    uint32_t recv_bytes = 0;     /* number of bytes received */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {

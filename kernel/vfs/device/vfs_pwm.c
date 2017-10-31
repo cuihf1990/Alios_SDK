@@ -16,10 +16,10 @@ int vfs_pwm_open(inode_t *inode, file_t *fp)
 
         /* Initialize if the device is first opened. */
         if (fp->node->refs == 1) {
-            
+
             /* get the device pointer. */
             pwm_dev = (pwm_dev_t *)(fp->node->i_arg);
-        
+
             /*  init pwm device. */
             ret = hal_pwm_init(pwm_dev);
         } else {
@@ -55,7 +55,7 @@ int vfs_pwm_close(file_t *fp)
             }
 
             /* unlock the device. */
-            aos_mutex_unlock(&fp->node->mutex);           
+            aos_mutex_unlock(&fp->node->mutex);
         } else {
             ret = VFS_SUCCESS;
         }

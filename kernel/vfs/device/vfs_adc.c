@@ -99,4 +99,3 @@ ssize_t vfs_adc_read(file_t *fp, void *buf, size_t nbytes)
 
     return ret;
 }
-

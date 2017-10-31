@@ -16,15 +16,12 @@ int vfs_rtc_open(inode_t *inode, file_t *fp)
 
         /* Initialize if the device is first opened. */
         if (fp->node->refs == 1) {
-            
+
             /* get the device pointer. */
             rtc_dev = (rtc_dev_t *)(fp->node->i_arg);
-        
+
             /*  init rtc device. */
             ret = hal_rtc_init(rtc_dev);
-
-            /*  set return value to 0. */
-            ret = VFS_SUCCESS;
         } else {
             ret = VFS_SUCCESS;
         }
