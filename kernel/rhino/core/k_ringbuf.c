@@ -76,8 +76,6 @@ kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
         memcpy(p_ringbuf->tail, data, len);
         p_ringbuf->tail += len;
         p_ringbuf->freesize -= len;
-
-        return RHINO_SUCCESS;
     } else {
         len_bytes = ringbuf_headlen_compress(len, c_len);
         if (len_bytes == 0 || len_bytes > RINGBUF_LEN_MAX_SIZE ) {
@@ -130,12 +128,9 @@ kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
         memcpy(p_ringbuf->tail, data, len);
         p_ringbuf->tail += len;
         p_ringbuf->freesize -= len;
-
-
-        return RHINO_SUCCESS;
-
     }
-    return RHINO_SYS_FATAL_ERR;
+
+   return RHINO_SUCCESS;
 }
 
 kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
