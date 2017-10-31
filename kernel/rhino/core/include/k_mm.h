@@ -25,11 +25,8 @@
 #define RHINO_MM_CORRUPT_DYE  0xFEFEFEFE
 #define RHINO_MM_FREE_DYE     0xABABABAB
 
-#ifndef RHINO_CONFIG_MM_MAXMSIZEBIT
-#define MAX_MM_BIT          20 /*2^20=1M,will change it to k_config.h*/
-#else
-#define MAX_MM_BIT         RHINO_CONFIG_MM_MAXMSIZEBIT
-#endif
+#define MAX_MM_BIT           RHINO_CONFIG_MM_MAXMSIZEBIT
+
 #define MAX_MM_SIZE         (1<<MAX_MM_BIT)
 #define FIX_BLK_BIT         5 /*32 bytes*/
 #define DEF_FIX_BLK_SIZE    (1<<FIX_BLK_BIT) /*32 bytes*/

@@ -217,7 +217,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     VGF(VALGRIND_MAKE_MEM_NOACCESS(firstblk, MMLIST_HEAD_SIZE));
     VGF(VALGRIND_MAKE_MEM_NOACCESS(nextblk, MMLIST_HEAD_SIZE));
 
-#if RHINO_CONFIG_MM_TLF_BLK_SIZE > 0
+#if (RHINO_CONFIG_MM_TLF_BLK_SIZE > 0)
     mmblk_pool = k_mm_alloc(pmmhead,
                             RHINO_CONFIG_MM_TLF_BLK_SIZE + MM_ALIGN_UP(sizeof(mblk_pool_t)));
     VGF(VALGRIND_MAKE_MEM_DEFINED(pmmhead, sizeof(k_mm_head)));
