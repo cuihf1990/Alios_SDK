@@ -95,7 +95,7 @@ void http_gethost_info(char *src, char **web, char **file, int *port)
 int ota_download(char *url, write_flash_cb_t func, char *md5)
 {
     if (!url || strlen(url) == 0 || func == NULL || md5 == NULL) {
-        OTA_LOG_E("http_download url or func  error!\n");
+        OTA_LOG_E("ota_download parms error!\n");
         return OTA_DOWNLOAD_URL_FAIL;
     }
     int ret = 0;
@@ -122,7 +122,7 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
 
     sockfd = ota_socket_connect(port, host_addr);
     if (sockfd < 0 ) {
-        OTA_LOG_E("http_socket_init error\n ");
+        OTA_LOG_E("ota_socket_connect error\n ");
         ret = OTA_DOWNLOAD_SOCKET_FAIL;
         return ret;
     }
