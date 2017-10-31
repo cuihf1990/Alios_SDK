@@ -186,6 +186,14 @@
 #define RHINO_CONFIG_TASK_STACK_CUR_CHECK    1
 #endif
 
+/* kernel workqueue conf */
+#ifndef RHINO_CONFIG_WORKQUEUE
+#define RHINO_CONFIG_WORKQUEUE               1
+#endif
+#ifndef RHINO_CONFIG_WORKQUEUE_STACK_SIZE
+#define RHINO_CONFIG_WORKQUEUE_STACK_SIZE    768
+#endif
+
 
 #endif /* CONFIG_H */
 
