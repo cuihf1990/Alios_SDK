@@ -7,6 +7,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+size_t soc_get_cur_sp()
+{
+    volatile size_t dummy = (size_t)&dummy;
+    return dummy;
+}
+
 #if (RHINO_CONFIG_HW_COUNT > 0)
 hr_timer_t soc_hr_hw_cnt_get(void)
 {

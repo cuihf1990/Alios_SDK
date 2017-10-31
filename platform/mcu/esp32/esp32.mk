@@ -3,7 +3,7 @@ HOST_OPENOCD := esp32
 NAME := esp32
 
 $(NAME)_COMPONENTS := framework.common
-$(NAME)_COMPONENTS += protocols.net
+$(NAME)_COMPONENTS += protocols.net alicrypto
 
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/freertos/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/espos/include
