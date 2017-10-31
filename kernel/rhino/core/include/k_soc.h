@@ -40,10 +40,6 @@ tick_t soc_elapsed_ticks_get(void);
 void soc_err_proc(kstat_t err);
 
 size_t __attribute__ ((weak)) soc_get_cur_sp(void);
-void   __attribute__ ((weak)) soc_get_first_frame_info(size_t c_frame,
-                                                       size_t *n_frame, size_t *pc);
-void   __attribute__ ((weak)) soc_get_subs_frame_info(size_t c_frame,
-                                                      size_t *n_frame, size_t *pc);
 
 #endif /* K_SOC_H */
 

@@ -128,6 +128,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
 #endif
         safesprintf(printbuf, totallen, offset, tmpbuf);
 
+        #if 0
         /* for chip not support stack frame interface,do nothing*/
         if (detail == true && task != krhino_cur_task_get() && soc_get_first_frame_info &&
             soc_get_subs_frame_info) {
@@ -145,6 +146,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
                 soc_get_subs_frame_info(c_frame, &n_frame, &pc);
             }
         }
+        #endif
     }
 
 
