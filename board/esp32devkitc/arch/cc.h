@@ -53,8 +53,10 @@ typedef int16_t  s16_t;
 typedef uint32_t u32_t;
 typedef int32_t  s32_t;
 
-typedef unsigned long   mem_ptr_t;
-typedef int sys_prot_t;
+//typedef unsigned long   mem_ptr_t;
+//typedef int sys_prot_t;
+
+#define LWIP_MAILBOX_QUEUE  1
 
 #define S16_F "d"
 #define U16_F "d"
@@ -70,6 +72,7 @@ typedef int sys_prot_t;
 #define PACK_STRUCT_END
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define LWIP_PLATFORM_DIAG(x)   do {printf x;} while(0)
 // __assert_func is the assertion failure handler from newlib, defined in assert.h
@@ -92,6 +95,8 @@ typedef int sys_prot_t;
 #endif // LWIP_DEBUG
 
 #endif /* NDEBUG */
+
+#define LWIP_RAND() ((u32_t)rand())
 
 
 #endif /* __ARCH_CC_H__ */
