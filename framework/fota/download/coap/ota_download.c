@@ -16,7 +16,7 @@
 #include "ota_util.h"
 #include "ota_log.h"
 #include "ota_update_manifest.h"
-#include "ota_socket.h"
+
 
 #define  OTA_BUFFER_MAX_SIZE  128
 #define  COAP_OPTION_BLOCK2  23

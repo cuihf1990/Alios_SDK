@@ -12,12 +12,11 @@ $(NAME)_SOURCES += \
     ota_update_manifest.c \
     ota_version.c
 
-$(NAME)_COMPONENTS += fota.platform fota.download fota.socket digest_algorithm 
+$(NAME)_COMPONENTS += fota.platform fota.download  digest_algorithm 
 
 $(NAME)_INCLUDES := \
     ./platform \
     ./download \
-    ./socket \
     ../../include/hal \
 
 GLOBAL_INCLUDES += .
