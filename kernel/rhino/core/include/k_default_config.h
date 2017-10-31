@@ -59,8 +59,16 @@
 #define RHINO_CONFIG_MM_BLK                  0
 #endif
 
+#ifndef RHINO_CONFIG_MM_TLF
+#define RHINO_CONFIG_MM_TLF                  1
+#endif
+
+#ifndef RHINO_CONFIG_MM_MAXMSIZEBIT
+#define RHINO_CONFIG_MM_MAXMSIZEBIT          20
+#endif
+
 #ifndef RHINO_CONFIG_MM_TLF_BLK_SIZE
-#define RHINO_CONFIG_MM_TLF_BLK_SIZE         0
+#define RHINO_CONFIG_MM_TLF_BLK_SIZE         8192
 #endif
 
 #ifndef RHINO_CONFIG_TASK_SEM
