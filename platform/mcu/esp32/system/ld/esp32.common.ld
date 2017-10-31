@@ -82,6 +82,11 @@ SECTIONS
     /* Code marked as runnning out of IRAM */
     _iram_text_start = ABSOLUTE(.);
     *(.iram1 .iram1.*)
+    *rhino.a:(.literal .text .literal.* .text.*)
+    *espos.a:(.literal .text .literal.* .text.*)
+    *vcall.a:(.literal .text .literal.* .text.*)
+    *esp32.a:(.literal .text .literal.* .text.*)
+    *xtensa.a:(.literal .text .literal.* .text.*)
     *libfreertos.a:(.literal .text .literal.* .text.*)
     *libheap.a:multi_heap.o(.literal .text .literal.* .text.*)
     *libheap.a:multi_heap_poisoning.o(.literal .text .literal.* .text.*)
