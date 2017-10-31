@@ -72,6 +72,7 @@ i2c_dev_t i2c_dev_test =
     .config.address_width = 0x11111111,
     .config.freq = 0x22222222,
     .config.mode = 0x33,
+    .config.dev_addr = 0x1234
 };
 
 rtc_dev_t rtc_dev_test =
@@ -307,7 +308,9 @@ int32_t hal_i2c_init(i2c_dev_t *i2c)
 {
     int ret = -1;
 
-    if(i2c->port == 0x22)
+    if((i2c->port == 0x22) && (i2c->config.dev_addr == 0x1234)
+      && (i2c->address_width == 0x11111111)
+      && (i2c->mode == 0x33))
     {
         ret = 0;
     }
@@ -315,14 +318,14 @@ int32_t hal_i2c_init(i2c_dev_t *i2c)
     return ret;
 }
 
-int32_t hal_i2c_send(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
+int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,
+    uint16_t size, uint32_t timeout);
 {
     int ret = 0;
-    int *pData = (int *)data;
     int i = 0;
 
     for (i = 0; i < 10; i++) {
-        if(pData[i] != i) {
+        if(data[i] != i) {
             ret = -1;
         }
     }
@@ -330,14 +333,14 @@ int32_t hal_i2c_send(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
     return ret;
 }
 
-int32_t hal_i2c_recv(i2c_dev_t *i2c, void *data, size_t size, uint32_t timeout)
+int32_t hal_i2c_master_recv(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,
+    uint16_t size, uint32_t timeout)
 {
     int ret = 0;
-    int *pData = (int *)data;
     int i = 0;
 
     for (i = 0; i < 10; i++) {
-        pData[i] = i; 
+        data[i] = i;
     }
 
     return ret;
@@ -403,8 +406,8 @@ static void test_vfs_device_io_case(void)
     int res = 0;
     uint32_t gpio_value = 0;
     int32_t adc_val = 0;
-    int write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
-    int read_buf[10] = {0};
+    uint8_t write_buf[10] = {0,1,2,3,4,5,6,7,8,9};
+    uint8_t read_buf[10] = {0};
     rtc_time_t rtc_time;
 
     memset(&rtc_time, 0, sizeof(rtc_time));

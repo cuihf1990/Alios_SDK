@@ -70,6 +70,7 @@ ssize_t vfs_i2c_read(file_t *fp, void *buf, size_t nbytes)
 {
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
+    uint16_t dev_addr = 0；    /* dev address */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {
@@ -77,12 +78,15 @@ ssize_t vfs_i2c_read(file_t *fp, void *buf, size_t nbytes)
         /* get the device pointer. */
         i2c_dev = (i2c_dev_t *)(fp->node->i_arg);
 
+        /* get the device address. */
+        dev_addr = i2c_dev->config.dev_addr;
+
         /* lock the device. */
         ret = aos_mutex_lock(&fp->node->mutex, AOS_WAIT_FOREVER);
         if (ret == 0) {
 
             /* get data from i2c. */
-            ret = hal_i2c_recv(i2c_dev, buf, nbytes, AOS_WAIT_FOREVER);
+            ret = hal_i2c_master_recv(i2c_dev, dev_addr, (uint8_t *)buf, nbytes, AOS_WAIT_FOREVER);
 
             /* If the data is read correctly, the return 
             value is set to read bytes. */ 
@@ -104,6 +108,7 @@ ssize_t vfs_i2c_write(file_t *fp, const void *buf, size_t nbytes)
 {
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
+    uint16_t dev_addr = 0；    /* dev address */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {
@@ -111,12 +116,15 @@ ssize_t vfs_i2c_write(file_t *fp, const void *buf, size_t nbytes)
         /* get the device pointer. */       
         i2c_dev = (i2c_dev_t *)(fp->node->i_arg);
 
+        /* get the device address. */
+        dev_addr = i2c_dev->config.dev_addr;
+
         /* lock the device. */
         ret = aos_mutex_lock(&fp->node->mutex, AOS_WAIT_FOREVER);
         if (ret == 0) {
 
             /* send data from i2c. */ 
-            ret = hal_i2c_send(i2c_dev, buf, nbytes, AOS_WAIT_FOREVER);
+            ret = hal_i2c_master_send(i2c_dev, dev_addr, (uint8_t *)buf, nbytes, AOS_WAIT_FOREVER);
 
             /* If the data is sent successfully, set the return 
             value to nbytes. */
