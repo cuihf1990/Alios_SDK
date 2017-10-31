@@ -117,6 +117,17 @@ static inline void xt_set_intclear(unsigned int arg)
     xthal_set_intclear(arg);
 }
 
+/* Multi-core: get current core ID */
+static inline int xPortGetCoreID() {
+    int id;
+    asm volatile(
+        "rsr.prid %0\n"
+        " extui %0,%0,13,1"
+        :"=r"(id));
+    return id;
+}
+
+
 
 #endif /* __XTENSA_API_H__ */
 

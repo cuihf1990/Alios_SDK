@@ -30,9 +30,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <xtensa/config/core.h>
 
-#include "freertos/FreeRTOS.h"
 #include "xtensa_api.h"
-#include "freertos/portable.h"
+#include "xtensa_rtos.h"
+
 
 #include "rom/ets_sys.h"
 

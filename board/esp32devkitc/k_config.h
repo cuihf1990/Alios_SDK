@@ -194,6 +194,9 @@
 #define RHINO_CONFIG_WORKQUEUE_STACK_SIZE    768
 #endif
 
+#ifndef RHINO_CONFIG_CPU_NUM
+#define RHINO_CONFIG_CPU_NUM                 1
+#endif
 
 #endif /* CONFIG_H */
 

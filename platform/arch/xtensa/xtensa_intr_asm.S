@@ -30,7 +30,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <xtensa/config/core.h>
 
 #include "xtensa_context.h"
-#include "freertos/FreeRTOSConfig.h"
+#include "frxt/xtensa_rtos.h"
+
 
 #if XCHAL_HAVE_INTERRUPTS
 

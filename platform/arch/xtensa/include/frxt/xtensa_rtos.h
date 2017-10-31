@@ -52,13 +52,33 @@ Should be included by all Xtensa generic and RTOS port-specific sources.
 #include    <xtensa/config/system.h>
 #include    <xtensa/simcall.h>
 
+#include    "sdkconfig.h"
+#include    "k_config.h"
+
+
+
+#define configXT_BOARD                      1   /* Board mode */
+#define configXT_SIMULATOR					0
+
+#define portNUM_PROCESSORS (RHINO_CONFIG_CPU_NUM)
+#define configTICK_RATE_HZ (RHINO_CONFIG_TICKS_PER_SECOND)
+
+#ifndef configISR_STACK_SIZE
+#define configISR_STACK_SIZE			CONFIG_FREERTOS_ISR_STACKSIZE
+#endif
+
+#ifndef configMAX_TASK_NAME_LEN
+#define configMAX_TASK_NAME_LEN 16
+#endif
+
+#define XT_CLOCK_FREQ (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000)
+
 /*
 Include any RTOS specific definitions that are needed by this header.
 */
-#include    "freertos/FreeRTOSConfig.h"
 
 /*
-Convert FreeRTOSConfig definitions to XTENSA definitions.
+Convert RTOSConfig definitions to XTENSA definitions.
 However these can still be overridden from the command line.
 */
 
@@ -94,7 +114,7 @@ However these can still be overridden from the command line.
 /*
 Name of RTOS (for messages).
 */
-#define XT_RTOS_NAME    FreeRTOS
+#define XT_RTOS_NAME    ALIOS
 
 /*
 Check some Xtensa configuration requirements and report error if not met.
@@ -102,7 +122,7 @@ Error messages can be customize to the RTOS port.
 */
 
 #if !XCHAL_HAVE_XEA2
-#error "FreeRTOS/Xtensa requires XEA2 (exception architecture 2)."
+#error "RTOS/Xtensa requires XEA2 (exception architecture 2)."
 #endif
 
 

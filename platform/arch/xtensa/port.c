@@ -4,6 +4,8 @@
 
 #include <xtensa/config/core.h>
 #include "frxt/xtensa_rtos.h"
+#include "frxt/xtensa_api.h"
+
 #include <k_api.h>
 #include "esp_log.h"
 
@@ -19,15 +21,7 @@ extern void _xt_user_exit(void);
 unsigned krhino_sys_run[portNUM_PROCESSORS] = {0};
 unsigned krhino_sys_nest[portNUM_PROCESSORS] = {0};
 
-/* Multi-core: get current core ID */
-static inline uint32_t xPortGetCoreID() {
-    int id;
-    asm volatile(
-        "rsr.prid %0\n"
-        " extui %0,%0,13,1"
-        :"=r"(id));
-    return id;
-}
+
 
 void *cpu_task_stack_init(cpu_stack_t *stack_base, size_t stack_size,
                           void *arg, task_entry_t entry)
