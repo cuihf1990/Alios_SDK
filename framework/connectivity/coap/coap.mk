@@ -39,7 +39,7 @@ $(NAME)_COMPONENTS += iotx-utils.sdk-impl
 #endif
 ifeq ($(CONFIG_COAP_DTLS_SUPPORT), y)
 $(NAME)_DEFINES += COAP_DTLS_SUPPORT
-$(NAME)_COMPONENTS += iotx-utils.mbedtls-hal
+$(NAME)_COMPONENTS += iotx-utils.mbedtls-hal mbedtls
 endif
 
 # TODO: fix warnings

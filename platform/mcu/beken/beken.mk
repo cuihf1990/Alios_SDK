@@ -6,7 +6,6 @@
 #  duplicated in any form, in whole or in part, without the prior written
 #  permission of MXCHIP Corporation.
 #
-
 NAME := beken
 
 HOST_OPENOCD := beken
@@ -18,7 +17,7 @@ endif
 $(NAME)_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
-$(NAME)_COMPONENTS += libc rhino hal netmgr framework.common mbedtls cjson cli digest_algorithm
+$(NAME)_COMPONENTS += libc rhino hal netmgr framework.common alicrypto cjson cli digest_algorithm
 $(NAME)_COMPONENTS += platform/mcu/beken/hal_init
 $(NAME)_COMPONENTS += platform/mcu/beken/beken7231/beken378/driver/entry
 $(NAME)_COMPONENTS += platform/mcu/beken/aos/framework_runtime
