@@ -5,18 +5,14 @@ NAME := esp32
 $(NAME)_COMPONENTS := framework.common modules.fs.kv
 $(NAME)_COMPONENTS += protocols.net alicrypto
 
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/freertos/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/espos/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/esp32/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/soc/esp32/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/soc/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/driver/include
-GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/heap/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/ethernet/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/log/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/nvs_flash/include
 GLOBAL_CFLAGS    += -I $(IDF_PATH)/components/spi_flash/include
-GLOBAL_INCLUDES  += ../../arch/xtensa
 GLOBAL_CFLAGS    += -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls
 GLOBAL_LDFLAGS   += -nostdlib -Lplatform/mcu/esp32/ -lc
 GLOBAL_LDFLAGS   += -lgcc -lstdc++ -lgcov -lm
@@ -35,7 +31,6 @@ $(NAME)_SOURCES  += hal/uart.c
 $(NAME)_SOURCES  += hal/flash.c
 $(NAME)_SOURCES  += hal/wifi_port.c
 $(NAME)_SOURCES  += bsp/tcpip_adapter_lwip.c bsp/wlanif.c bsp/ethernetif.c
-$(NAME)_INCLUDES := soc/include soc/esp32/include
 $(NAME)_CFLAGS   := -std=gnu99
 
 ifeq ($(wifi),1)
@@ -74,6 +69,8 @@ $(NAME)_PREBUILT_LIBRARY += lib/libstdcc++-cache-workaround.a
 $(NAME)_PREBUILT_LIBRARY += lib/libwpa_supplicant.a
 
 ifeq ($(vcall),freertos)
+GLOBAL_CFLAGS            += -I $(IDF_PATH)/components/espos/include
+GLOBAL_CFLAGS            += -I $(IDF_PATH)/components/freertos/include
 $(NAME)_PREBUILT_LIBRARY += lib/libespos.a
 $(NAME)_PREBUILT_LIBRARY += lib/libfreertos.a
 $(NAME)_PREBUILT_LIBRARY += lib/libheap.a
