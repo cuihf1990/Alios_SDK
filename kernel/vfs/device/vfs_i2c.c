@@ -70,7 +70,7 @@ ssize_t vfs_i2c_read(file_t *fp, void *buf, size_t nbytes)
 {
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
-    uint16_t dev_addr = 0；    /* dev address */
+    uint16_t dev_addr = 0;     /* dev address */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {
@@ -108,7 +108,7 @@ ssize_t vfs_i2c_write(file_t *fp, const void *buf, size_t nbytes)
 {
     int ret = -1;              /* return value */
     i2c_dev_t *i2c_dev = NULL; /* device pointer */
-    uint16_t dev_addr = 0；    /* dev address */
+    uint16_t dev_addr = 0;     /* dev address */
 
     /* check empty pointer. */
     if ((fp != NULL) && (fp->node != NULL)) {

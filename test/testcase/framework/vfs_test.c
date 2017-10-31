@@ -309,8 +309,8 @@ int32_t hal_i2c_init(i2c_dev_t *i2c)
     int ret = -1;
 
     if((i2c->port == 0x22) && (i2c->config.dev_addr == 0x1234)
-      && (i2c->address_width == 0x11111111)
-      && (i2c->mode == 0x33))
+      && (i2c->config.address_width == 0x11111111)
+      && (i2c->config.mode == 0x33))
     {
         ret = 0;
     }
@@ -319,7 +319,7 @@ int32_t hal_i2c_init(i2c_dev_t *i2c)
 }
 
 int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,
-    uint16_t size, uint32_t timeout);
+    uint16_t size, uint32_t timeout)
 {
     int ret = 0;
     int i = 0;
