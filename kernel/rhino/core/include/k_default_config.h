@@ -84,6 +84,10 @@
 #define RHINO_CONFIG_TASK_DEL                0
 #endif
 
+#ifndef RHINO_CONFIG_TASK_STACK_CUR_CHECK
+#define RHINO_CONFIG_TASK_STACK_CUR_CHECK    0
+#endif
+
 #ifndef RHINO_CONFIG_TASK_WAIT_ABORT
 #define RHINO_CONFIG_TASK_WAIT_ABORT         0
 #endif

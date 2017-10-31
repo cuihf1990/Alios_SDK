@@ -413,6 +413,7 @@ kstat_t krhino_task_stack_min_free(ktask_t *task, size_t *free)
     return RHINO_SUCCESS;
 }
 
+#if (RHINO_CONFIG_TASK_STACK_CUR_CHECK > 0)
 kstat_t krhino_task_stack_cur_free(ktask_t *task, size_t *free)
 {
     CPSR_ALLOC();
@@ -422,9 +423,7 @@ kstat_t krhino_task_stack_cur_free(ktask_t *task, size_t *free)
 
     if (task == NULL || task == g_active_task[cpu_cur_get()]) {
         task = g_active_task[cpu_cur_get()];
-        if (soc_get_cur_sp) {
-            sp = soc_get_cur_sp();
-        }
+        sp = soc_get_cur_sp();
     } else {
         sp = (size_t)task->task_stack;
     }
@@ -447,6 +446,7 @@ kstat_t krhino_task_stack_cur_free(ktask_t *task, size_t *free)
     RHINO_CRITICAL_EXIT();
     return RHINO_SUCCESS;
 }
+#endif
 
 kstat_t task_pri_change(ktask_t *task, uint8_t new_pri)
 {
