@@ -19,16 +19,18 @@ GLOBAL_CFLAGS    += -ffunction-sections -fdata-sections -fstrict-volatile-bitfie
 GLOBAL_LDFLAGS   += -nostdlib -Lplatform/mcu/esp32/ -lc
 GLOBAL_LDFLAGS   += -lgcc -lstdc++ -lgcov -lm
 
-GLOBAL_LDS_FILES += platform/mcu/esp32/system/ld/esp32.ld.S
-GLOBAL_LDS_FILES += platform/mcu/esp32/system/ld/esp32.common.ld
-GLOBAL_LDS_FILES += platform/mcu/esp32/system/ld/esp32.rom.ld
-GLOBAL_LDS_FILES += platform/mcu/esp32/system/ld/esp32.peripherals.ld
-GLOBAL_LDS_FILES += platform/mcu/esp32/system/ld/esp32.rom.spiram_incompatible_fns.ld
-GLOBAL_LDFLAGS   += -L platform/mcu/esp32/system/ld
+GLOBAL_LDS_FILES += platform/mcu/esp32/bsp/ld/esp32.ld.S
+GLOBAL_LDS_FILES += platform/mcu/esp32/bsp/ld/esp32.common.ld
+GLOBAL_LDS_FILES += platform/mcu/esp32/bsp/ld/esp32.rom.ld
+GLOBAL_LDS_FILES += platform/mcu/esp32/bsp/ld/esp32.peripherals.ld
+GLOBAL_LDS_FILES += platform/mcu/esp32/bsp/ld/esp32.rom.spiram_incompatible_fns.ld
+GLOBAL_LDFLAGS   += -L platform/mcu/esp32/bsp/ld
 
 GLOBAL_DEFINES   += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
-$(NAME)_SOURCES  := bsp/entry.c bsp/hal.c hal/flash.c #system/cpu_start.c
+$(NAME)_SOURCES  := bsp/entry.c
+$(NAME)_SOURCES  += hal/uart.c
+$(NAME)_SOURCES  += hal/flash.c
 $(NAME)_SOURCES  += hal/wifi_port.c
 $(NAME)_SOURCES  += bsp/tcpip_adapter_lwip.c bsp/wlanif.c bsp/ethernetif.c
 $(NAME)_INCLUDES := soc/include soc/esp32/include
