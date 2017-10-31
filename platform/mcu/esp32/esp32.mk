@@ -67,7 +67,6 @@ $(NAME)_PREBUILT_LIBRARY += lib/liblwip.a
 $(NAME)_PREBUILT_LIBRARY += lib/libstdcc++-cache-workaround.a
 $(NAME)_PREBUILT_LIBRARY += lib/libtcpip_adapter.a
 $(NAME)_PREBUILT_LIBRARY += lib/libwpa_supplicant.a
-$(NAME)_PREBUILT_LIBRARY += lib/libmbedtls.a
 
 ifeq ($(vcall),freertos)
 $(NAME)_PREBUILT_LIBRARY += lib/libespos.a

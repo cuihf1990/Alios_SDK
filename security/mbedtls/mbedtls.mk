@@ -36,8 +36,12 @@ ifeq (1,$(with_lwip))
 $(info using lwip version mbedtls)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a.lwip
 endif
-else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
+else ifeq ($(HOST_ARCH), xtensa)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
+ifeq ($(DEBUG), yes)
+$(info using debug version mbedtls)
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a.dbg
+endif
 else
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
 endif

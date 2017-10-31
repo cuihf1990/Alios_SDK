@@ -212,9 +212,11 @@ static void app_delayed_action(void *arg)
     tls_client_sample();
     printf("<=========== TLS Client Sample End.\n\n");
 
+#if defined(DTLS_ENABLED)
     printf("===========> DTLS Client Sample start.\n");
     dtls_client_sample();
     printf("<=========== DTLS Client Sample End.\n\n");
+#endif
 }
 
 static void handle_event(input_event_t *event, void *arg)
