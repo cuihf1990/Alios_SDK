@@ -42,7 +42,7 @@ void *cpu_task_stack_init(cpu_stack_t *stack_base, size_t stack_size,
 
     *(--stk) = (uint32_t)0x01000000L; /* xPSR                                                */
     *(--stk) = (uint32_t)entry;       /* Entry Point                                         */
-    *(--stk) = (uint32_t)0xFFFFFFFEL; /* R14 (LR) (init value will cause fault if ever used) */
+    *(--stk) = (uint32_t)krhino_task_deathbed; /* R14 (LR) (init value will cause fault if ever used) */
     *(--stk) = (uint32_t)0x12121212L; /* R12                                                 */
     *(--stk) = (uint32_t)0x03030303L; /* R3                                                  */
     *(--stk) = (uint32_t)0x02020202L; /* R2                                                  */
