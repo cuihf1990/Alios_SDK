@@ -50,12 +50,6 @@ extern tick_t g_pend_intrpt_ticks;
 extern tick_t g_elapsed_ticks;
 #endif
 
-#if (RHINO_CONFIG_TICK_TASK > 0)
-extern ktask_t     g_tick_task;
-extern cpu_stack_t g_tick_task_stack[RHINO_CONFIG_TICK_TASK_STACK_SIZE];
-extern ksem_t      g_tick_sem;
-#endif
-
 #if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
 extern hr_timer_t g_sched_disable_time_start;
 extern hr_timer_t g_sched_disable_max_time;

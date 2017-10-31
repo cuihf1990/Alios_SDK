@@ -77,10 +77,6 @@ RHINO_INLINE kstat_t rhino_init(void)
     ktimer_init();
 #endif
 
-#if (RHINO_CONFIG_TICK_TASK > 0)
-    tick_task_start();
-#endif
-
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
     cpu_usage_stats_start();
 #endif
@@ -231,15 +227,10 @@ size_t krhino_global_space_get(void)
           + sizeof(g_active_task) + sizeof(g_idle_task) + sizeof(g_idle_task_stack)
           + sizeof(g_tick_head) + sizeof(g_idle_count) + sizeof(g_sys_time_tick);
 
-
 #if (RHINO_CONFIG_TIMER > 0)
     mem += sizeof(g_timer_head) + sizeof(g_timer_count) + sizeof(g_timer_ctrl)
            + sizeof(g_timer_task) + sizeof(g_timer_task_stack) + sizeof(g_timer_sem)
            + sizeof(g_timer_mutex);
-#endif
-
-#if (RHINO_CONFIG_TICK_TASK > 0)
-    mem += sizeof(g_tick_task) + sizeof(g_tick_task_stack) + sizeof(g_tick_sem);
 #endif
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
