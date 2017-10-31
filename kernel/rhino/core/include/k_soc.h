@@ -39,7 +39,7 @@ tick_t soc_elapsed_ticks_get(void);
 
 void soc_err_proc(kstat_t err);
 
-size_t __attribute__ ((weak)) soc_get_cur_sp(void);
+size_t soc_get_cur_sp(void);
 
 #endif /* K_SOC_H */
 
