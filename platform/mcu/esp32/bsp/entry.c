@@ -48,5 +48,5 @@ void app_main(void)
 {
     initialise_wifi();
     hal_uart_init(&uart_0);
-    aos_task_new("main", app_entry, 0, 4096);
+    aos_task_new("main", app_entry, 0, 8192);
 }

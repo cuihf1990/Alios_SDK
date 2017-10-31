@@ -1,10 +1,15 @@
-NAME := ssl_client
+NAME := tls_client
 
-$(NAME)_SOURCES     := ssl_client.c
+DTLS := no
+
+$(NAME)_SOURCES     := tls_client.c
+
+ifeq ($(DTLS), yes)
+$(NAME)_DEFINES     += DTLS_ENABLED
 $(NAME)_SOURCES     += dtls_client.c
+endif
 
 $(NAME)_COMPONENTS  := mbedtls alicrypto netmgr
-
 
 ifneq (,${BINS})
 GLOBAL_CFLAGS += -DSYSINFO_OS_BINS
