@@ -20,6 +20,7 @@
 #include "utilities/message.h"
 #include "utilities/timer.h"
 #include "utilities/memory.h"
+#include "utilities/maths.h"
 #include "utilities/mac_whitelist.h"
 
 #define umesh_kv_get umesh_pal_kv_get
