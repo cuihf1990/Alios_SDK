@@ -118,7 +118,7 @@ export VERBOSE
 export SUB_BUILD
 export OPENOCD_LOG_FILE
 
-.PHONY: $(BUILD_STRING) main_app bootloader clean Help download total run download_bootloader .gdbinit
+.PHONY: $(BUILD_STRING) main_app bootloader clean Help download total run download_bootloader .gdbinit$(BINSTYPE_LOWER)
 
 Help: 
 	$(TOOLCHAIN_HOOK_TARGETS)
@@ -127,7 +127,7 @@ Help:
 clean:
 	$(QUIET)$(ECHO) Cleaning...
 	$(QUIET)$(CLEAN_COMMAND)
-	$(QUIET)$(RM) -rf .gdbinit
+	$(QUIET)$(RM) -rf .gdbinit .gdbinitkernel .gdbinitframework .gdbinitapp
 	$(QUIET)$(ECHO) Done
 
 ifneq ($(BUILD_STRING),)
@@ -154,7 +154,7 @@ PASSDOWN_TARGETS := $(strip $(filter-out $(MAKEFILE_TARGETS) $(BUILD_STRING),$(M
 $(PASSDOWN_TARGETS):
 	@:
 
-$(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit)
+$(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit$(BINSTYPE_LOWER))
 
 main_app: $(OUTPUT_DIR)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
 	$(QUIET)$(ECHO) Build AOS Now
@@ -166,7 +166,7 @@ main_app: $(OUTPUT_DIR)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/ao
 	$(QUIET)$(ECHO) Build complete
 
 ifeq ($(SUB_BUILD),)
-.gdbinit: $(OUTPUT_DIR)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
+.gdbinit$(BINSTYPE_LOWER): $(OUTPUT_DIR)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
 	$(QUIET)$(ECHO) Making $@
 	$(QUIET)$(ECHO) set remotetimeout 20 > $@
 	$(QUIET)$(ECHO) $(GDB_KILL_OPENOCD) >> $@
