@@ -15,6 +15,7 @@ GLOBAL_INCLUDES += $(ESP_INC_PATH)/log/include
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/nvs_flash/include
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/spi_flash/include
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/container/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/app_update/include
 
 GLOBAL_CFLAGS   += -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls
 GLOBAL_LDFLAGS   += -nostdlib -Lplatform/mcu/esp32/ -lc
@@ -33,6 +34,7 @@ $(NAME)_SOURCES  := bsp/entry.c
 $(NAME)_SOURCES  += hal/uart.c
 $(NAME)_SOURCES  += hal/flash.c
 $(NAME)_SOURCES  += hal/wifi_port.c
+$(NAME)_SOURCES  += hal/ota_port.c
 $(NAME)_SOURCES  += bsp/tcpip_adapter_lwip.c bsp/wlanif.c bsp/ethernetif.c
 $(NAME)_CFLAGS   := -std=gnu99
 
@@ -70,6 +72,8 @@ $(NAME)_PREBUILT_LIBRARY += lib/libnvs_flash.a
 $(NAME)_PREBUILT_LIBRARY += lib/libcxx.a
 $(NAME)_PREBUILT_LIBRARY += lib/libstdcc++-cache-workaround.a
 $(NAME)_PREBUILT_LIBRARY += lib/libwpa_supplicant.a
+$(NAME)_PREBUILT_LIBRARY += lib/libapp_update.a
+$(NAME)_PREBUILT_LIBRARY += lib/libbootloader_support.a
 
 ifeq ($(vcall),freertos)
 GLOBAL_CFLAGS            += -I $(IDF_PATH)/components/espos/include
