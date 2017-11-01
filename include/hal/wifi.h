@@ -159,6 +159,7 @@ struct hal_wifi_module_s {
 
     int  (*init)(hal_wifi_module_t *m);
     void (*get_mac_addr)(hal_wifi_module_t *m, uint8_t *mac);
+    void (*set_mac_addr)(hal_wifi_module_t *m, const uint8_t *mac);
     int  (*start)(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para);
     int  (*start_adv)(hal_wifi_module_t *m,
                       hal_wifi_init_type_adv_t *init_para_adv);
@@ -213,8 +214,20 @@ int hal_wifi_init(void);
  *
  * @param[in]   m    the wifi instance, NULL if default.
  * @param[out]  mac  the place to hold the result.
+ *
+ * @return  0 on success, otherwise failure.
  */
-void hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac);
+int hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac);
+
+/**
+ * Set the MAC address of the specified wifi instance.
+ *
+ * @param[in]   m    the wifi instance, NULL if default.
+ * @param[in]   mac  mac value
+ *
+ * @return  0 on success, otherwise failure.
+ */
+int hal_wifi_set_mac_addr(hal_wifi_module_t *m, const uint8_t *mac);
 
 /**
  * Start the wifi instance.
