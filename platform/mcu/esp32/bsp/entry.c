@@ -3,8 +3,8 @@
 
 #include <hal/soc/uart.h>
 #include <hal/wifi.h>
+#include <hal/ota.h>
 #include <aos/aos.h>
-
 #include <sdkconfig.h>
 
 uart_dev_t uart_0 = {
@@ -44,9 +44,11 @@ static void initialise_wifi(void)
 #endif
 
 extern uart_dev_t uart_0;
+extern struct hal_ota_module_s esp32_yos_ota_module;
 void app_main(void)
 {
     initialise_wifi();
     hal_uart_init(&uart_0);
+    hal_ota_register_module(&esp32_yos_ota_module);
     aos_task_new("main", app_entry, 0, 8192);
 }
