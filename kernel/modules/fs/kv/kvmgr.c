@@ -48,7 +48,7 @@ typedef enum {
 #define KV_STATE_OFF            1                           /* The offset of block/item state in header structure */
 #define KV_ALIGN_MASK           ~(sizeof(void *) - 1)       /* The mask of key-value store alignment */
 #define KV_GC_RESERVED          1                           /* The reserved block for garbage collection */
-#define KV_GC_STACK_SIZE        512
+#define KV_GC_STACK_SIZE        1024
 
 #define KV_SELF_REMOVE          0
 #define KV_ORIG_REMOVE          1
