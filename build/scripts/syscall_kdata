@@ -100,7 +100,7 @@
 1 99 hal_wifi_get_default_module "1" "hal_wifi_module_t *hal_wifi_get_default_module(void)"
 1 100 hal_wifi_get_ip_stat "1" "int hal_wifi_get_ip_stat(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type)"
 1 101 hal_wifi_get_link_stat "1" "int hal_wifi_get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)"
-1 102 hal_wifi_get_mac_addr "1" "void hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)"
+1 102 hal_wifi_get_mac_addr "1" "int hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)"
 1 103 hal_wifi_init "1" "int hal_wifi_init(void)"
 1 104 hal_wifi_install_event "1" "void hal_wifi_install_event(hal_wifi_module_t *m, const hal_wifi_event_cb_t *cb)"
 1 105 hal_wifi_power_off "1" "int hal_wifi_power_off(hal_wifi_module_t *m)"
@@ -167,3 +167,4 @@
 1 166 umesh_stop "CONFIG_AOS_MESH > 0u" "ur_error_t umesh_stop(void)"
 1 167 ur_adapter_get_default_ipaddr "CONFIG_AOS_MESH > 0u" "const void *ur_adapter_get_default_ipaddr(void)"
 1 168 ur_adapter_get_mcast_ipaddr "CONFIG_AOS_MESH > 0u" "const void *ur_adapter_get_mcast_ipaddr(void)"
+1 169 hal_wifi_set_mac_addr "1" "int hal_wifi_set_mac_addr(hal_wifi_module_t *m, const uint8_t *mac)"
