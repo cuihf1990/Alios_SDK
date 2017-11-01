@@ -1,21 +1,28 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#define uart_dev_t aos_uart_dev_t
+#define uart_config_t aos_uart_config_t
 #include <hal/soc/uart.h>
+#undef uart_dev_t
+#undef uart_config_t
 
-int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
+#include <rom/ets_sys.h>
+#include <driver/uart.h>
+
+int32_t hal_uart_send(aos_uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
 {
-    fwrite(data, size, 1, stdout);
+    uart_write_bytes(uart->port, data, size);
     return 0;
 }
 
-int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
+int32_t hal_uart_recv(aos_uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
 {
     int ttl_len = 0;
     char *buf = data;
     while (1) {
         char c;
-        int ret = fread(&c, 1, 1, stdin);
+        int ret = uart_read_bytes(uart->port, &c, 1, 100);
         if (ret <= 0)
             break;
 
@@ -31,13 +38,12 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
     return ttl_len > 0 ? 0 : -1;
 }
 
-extern void uart_driver_install();
-int32_t hal_uart_init(uart_dev_t *uart)
+int32_t hal_uart_init(aos_uart_dev_t *uart)
 {
     uart_driver_install(uart->port, 256, 0, 0, NULL, 0);
 }
 
-int32_t hal_uart_finalize(uart_dev_t *uart)
+int32_t hal_uart_finalize(aos_uart_dev_t *uart)
 {
 }
 
