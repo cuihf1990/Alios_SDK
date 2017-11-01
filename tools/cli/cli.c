@@ -230,7 +230,7 @@ static int handle_input(char *inbuf)
     }
 
     if (!cli->echo_disabled) {
-        printf("\r\n");
+        csp_printf("\r\n");
         fflush(stdout);
     }
 
@@ -361,7 +361,7 @@ static int get_input(char *inbuf, unsigned int *bp)
                 char *cmd = cli->history[cli->his_idx];
                 cli->his_idx = (cli->his_idx + HIS_SIZE - 1) % HIS_SIZE;
                 strncpy(inbuf, cmd, INBUF_SIZE);
-                printf("\r" PROMPT "%s", inbuf);
+                csp_printf("\r" PROMPT "%s", inbuf);
                 *bp = strlen(inbuf);
                 continue;
             }
@@ -370,7 +370,7 @@ static int get_input(char *inbuf, unsigned int *bp)
                 char *cmd = cli->history[cli->his_idx];
                 cli->his_idx = (cli->his_idx + 1) % HIS_SIZE;
                 strncpy(inbuf, cmd, INBUF_SIZE);
-                printf("\r" PROMPT "%s", inbuf);
+                csp_printf("\r" PROMPT "%s", inbuf);
                 *bp = strlen(inbuf);
                 continue;
             }
@@ -381,7 +381,7 @@ static int get_input(char *inbuf, unsigned int *bp)
             if (*bp > 0) {
                 (*bp)--;
                 if (!cli->echo_disabled) {
-                    printf("%c %c", 0x08, 0x08);
+                    csp_printf("%c %c", 0x08, 0x08);
                     fflush(stdout);
                 }
             }
@@ -395,7 +395,7 @@ static int get_input(char *inbuf, unsigned int *bp)
         }
 
         if (!cli->echo_disabled) {
-            printf("%c", c);
+            csp_printf("%c", c);
             fflush(stdout);
         }
 

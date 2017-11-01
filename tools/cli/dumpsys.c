@@ -23,7 +23,7 @@ ktimer_t g_mm_leak_check_timer;
 
 #define safesprintf(buf,totallen,offset,string) do {\
     if ((totallen - offset) < strlen(string)) { \
-        printf("%s",buf); \
+        csp_printf("%s",buf); \
         offset = 0; \
     } \
     sprintf(buf+offset,"%s",string); \
@@ -153,7 +153,7 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     safesprintf(printbuf, totallen, offset, CLI_TAG "----------------------------------------------------------\r\n");
     krhino_sched_enable();
 
-    printf("%s", printbuf);
+    csp_printf("%s", printbuf);
     aos_free(printbuf);
     return RHINO_SUCCESS;
 }
@@ -354,7 +354,7 @@ int dump_task_stack(ktask_t *task)
                 CLI_TAG "\r\n-----------------end----------------\r\n\r\n");
     krhino_sched_enable();
 
-    printf("%s", printbuf);
+    csp_printf("%s", printbuf);
     aos_free(printbuf);
     return 0;
 
@@ -375,7 +375,7 @@ int dump_task_stack_byname(char *taskname)
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
         task = krhino_list_entry(tmp, ktask_t, task_stats_item);
         if (printall == 1 || strcmp(taskname, task->task_name) == 0) {
-            printf(CLI_TAG  "------task %s stack -------", task->task_name);
+            csp_printf(CLI_TAG  "------task %s stack -------", task->task_name);
             dump_task_stack(task);
         }
     }
