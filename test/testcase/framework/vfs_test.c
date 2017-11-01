@@ -564,7 +564,7 @@ static void send_seq_data(void *arg)
     int i;
     for (i=1;i<MAXCNT;i++) {
         int ret = sendto(fd, buf, i, 0, (struct sockaddr *)&addr, sizeof addr);
-        aos_msleep((random() % 100) + 1);
+        aos_msleep((rand() % 100) + 1);
     }
 }
 
