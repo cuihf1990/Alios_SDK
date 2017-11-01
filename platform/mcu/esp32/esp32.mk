@@ -14,6 +14,7 @@ GLOBAL_INCLUDES += $(ESP_INC_PATH)/ethernet/include
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/log/include
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/nvs_flash/include
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/spi_flash/include
+GLOBAL_INCLUDES += $(ESP_INC_PATH)/container/include
 
 GLOBAL_CFLAGS   += -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls
 GLOBAL_LDFLAGS   += -nostdlib -Lplatform/mcu/esp32/ -lc
