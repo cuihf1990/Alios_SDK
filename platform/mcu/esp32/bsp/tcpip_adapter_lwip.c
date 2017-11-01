@@ -202,7 +202,7 @@ esp_err_t tcpip_adapter_start(tcpip_adapter_if_t tcpip_if, uint8_t *mac, tcpip_a
         tcpip_adapter_v6stack_init(esp_netif[tcpip_if]);
 #endif /* CONFIG_IPV6 */
     }
-    
+
 #if 0
     if (tcpip_if == TCPIP_ADAPTER_IF_AP) {
         netif_set_up(esp_netif[tcpip_if]);
@@ -940,7 +940,7 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
                 return ESP_ERR_TCPIP_ADAPTER_DHCPC_START_FAILED;
             }
 
-            //dhcp_set_cb(p_netif, tcpip_adapter_dhcpc_cb);
+            netif_set_status_callback(p_netif, tcpip_adapter_dhcpc_cb);
 
             ESP_LOGD(TAG, "dhcp client start successfully");
             dhcpc_status[tcpip_if] = TCPIP_ADAPTER_DHCP_STARTED;
