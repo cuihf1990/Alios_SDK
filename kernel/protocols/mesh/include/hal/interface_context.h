@@ -134,7 +134,6 @@ typedef struct hal_context_s {
     uint32_t              attach_request_interval;
     uint32_t              sid_request_interval;
     uint32_t              link_request_interval;
-    uint32_t              link_request_mobile_interval;
     uint32_t              neighbor_alive_interval;
     uint32_t              advertisement_interval;
 

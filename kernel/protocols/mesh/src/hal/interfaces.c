@@ -2,12 +2,14 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
 #include "core/mesh_mgmt.h"
+#include "umesh.h"
 #include "umesh_utils.h"
 #include "hal/interfaces.h"
 #include "hal/interface_context.h"
@@ -22,9 +24,7 @@ static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
     network_context_t *network;
 
     network = (network_context_t *)ur_mem_alloc(sizeof(network_context_t));
-    if (network == NULL) {
-        return network;
-    }
+    assert(network);
     memset(network, 0, sizeof(network_context_t));
     network->index = index;
     network->hal = hal;
@@ -39,97 +39,89 @@ static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
     }
 
     network->one_time_key = ur_mem_alloc(KEY_SIZE);
-    if (network->one_time_key == NULL) {
-        ur_mem_free(network, sizeof(network_context_t));
-        return NULL;
-    }
-
+    assert(network->one_time_key);
     slist_add_tail(&network->next, &g_networks_list);
-
     return network;
 }
 
-static hal_context_t *new_hal_context(umesh_hal_module_t *module)
+static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t type)
 {
     hal_context_t *hal;
     int i;
+    int mtu;
 
-    hal = (hal_context_t *)ur_mem_alloc(sizeof(hal_context_t));
+    mtu = hal_umesh_get_bcast_mtu(module);
+    if (mtu < 0) {
+        mtu = 127;
+    }
+    if (hal_umesh_get_ucast_mtu(module) > mtu) {
+        mtu = hal_umesh_get_ucast_mtu(module);
+    }
+
+    hal = get_hal_context(type);
     if (hal == NULL) {
-        return NULL;
+        hal = (hal_context_t *)ur_mem_alloc(sizeof(hal_context_t));
+        assert(hal);
+        memset(hal, 0, sizeof(hal_context_t));
+        slist_add_tail(&hal->next, &g_hals_list);
+
+        for (i = 0; i < QUEUE_SIZE; i++) {
+            dlist_init(&hal->send_queue[i]);
+        }
+        dlist_init(&hal->recv_queue);
+        hal->frame.data = (uint8_t *)ur_mem_alloc(mtu);
+        assert(hal->frame.data);
     }
-    memset(hal, 0, sizeof(hal_context_t));
     hal->module = module;
-    slist_add_tail(&hal->next, &g_hals_list);
 
-    for (i = 0; i < QUEUE_SIZE; i++) {
-        dlist_init(&hal->send_queue[i]);
+    hal->channel_list.num =
+        hal_umesh_get_chnlist(module, &hal->channel_list.channels);
+    memcpy(&hal->mac_addr, hal_umesh_get_mac_address(module),
+           sizeof(hal->mac_addr));
+
+    memset(hal->frame.data, 0 , mtu);
+    memset(&hal->link_stats, 0, sizeof(hal->link_stats));
+
+    if (type == MEDIA_TYPE_WIFI) {
+        hal->def_channel = 6;
+        hal->discovery_interval = WIFI_DISCOVERY_TIMEOUT;
+        hal->attach_request_interval = WIFI_ATTACH_REQUEST_TIMEOUT;
+        hal->sid_request_interval = WIFI_SID_REQUEST_TIMEOUT;
+        hal->link_request_interval = (umesh_get_mode() & MODE_MOBILE)? \
+                          WIFI_LINK_REQUEST_MOBILE_TIMEOUT: WIFI_LINK_REQUEST_TIMEOUT;
+        hal->neighbor_alive_interval = WIFI_NEIGHBOR_ALIVE_TIMEOUT;
+        hal->advertisement_interval = WIFI_ADVERTISEMENT_TIMEOUT;
+    } else if (module->type == MEDIA_TYPE_BLE) {
+        hal->def_channel = hal->channel_list.channels[0];
+        hal->discovery_interval = BLE_DISCOVERY_TIMEOUT;
+        hal->attach_request_interval = BLE_ATTACH_REQUEST_TIMEOUT;
+        hal->sid_request_interval = BLE_SID_REQUEST_TIMEOUT;
+        hal->link_request_interval = (umesh_get_mode() & MODE_MOBILE)? \
+                           BLE_LINK_REQUEST_MOBILE_TIMEOUT: BLE_LINK_REQUEST_TIMEOUT;
+        hal->neighbor_alive_interval = BLE_NEIGHBOR_ALIVE_TIMEOUT;
+        hal->advertisement_interval = BLE_ADVERTISEMENT_TIMEOUT;
+    } else if (module->type == MEDIA_TYPE_15_4) {
+        hal->def_channel = hal->channel_list.channels[0];
+        hal->discovery_interval = IEEE154_DISCOVERY_TIMEOUT;
+        hal->attach_request_interval = IEEE154_ATTACH_REQUEST_TIMEOUT;
+        hal->sid_request_interval = IEEE154_SID_REQUEST_TIMEOUT;
+        hal->link_request_interval = (umesh_get_mode() & MODE_MOBILE)? \
+                     IEEE154_LINK_REQUEST_MOBILE_TIMEOUT: IEEE154_LINK_REQUEST_TIMEOUT;
+        hal->neighbor_alive_interval = IEEE154_NEIGHBOR_ALIVE_TIMEOUT;
+        hal->advertisement_interval = IEEE154_ADVERTISEMENT_TIMEOUT;
     }
-
-    dlist_init(&hal->recv_queue);
-
     return hal;
 }
 
 void interface_init(void)
 {
     umesh_hal_module_t *module;
-    hal_context_t        *hal_context;
-    int16_t              mtu;
 
     module = hal_umesh_get_default_module();
     while (module) {
-        if (module->type <= MEDIA_TYPE_15_4) {
-            hal_context = new_hal_context(module);
-            hal_context->channel_list.num =
-                hal_umesh_get_chnlist(module, &hal_context->channel_list.channels);
-            memcpy(&hal_context->mac_addr, hal_umesh_get_mac_address(module),
-                   sizeof(hal_context->mac_addr));
-
-            // mesh forwarder
-            mtu = hal_umesh_get_bcast_mtu(module);
-            if (mtu < 0) {
-                mtu = 127;
-            }
-            if (hal_umesh_get_ucast_mtu(module) > mtu) {
-                mtu = hal_umesh_get_ucast_mtu(module);
-            }
-            hal_context->frame.data = (uint8_t *)ur_mem_alloc(mtu);
-            memset(hal_context->frame.data, 0 , mtu);
-            memset(&hal_context->link_stats, 0, sizeof(hal_context->link_stats));
-
-            if (module->type == MEDIA_TYPE_WIFI) {
-                hal_context->def_channel = 6;
-                hal_context->discovery_interval = WIFI_DISCOVERY_TIMEOUT;
-                hal_context->attach_request_interval = WIFI_ATTACH_REQUEST_TIMEOUT;
-                hal_context->sid_request_interval = WIFI_SID_REQUEST_TIMEOUT;
-                hal_context->link_request_interval = WIFI_LINK_REQUEST_TIMEOUT;
-                hal_context->link_request_mobile_interval = WIFI_LINK_REQUEST_MOBILE_TIMEOUT;
-                hal_context->neighbor_alive_interval = WIFI_NEIGHBOR_ALIVE_TIMEOUT;
-                hal_context->advertisement_interval = WIFI_ADVERTISEMENT_TIMEOUT;
-            } else if (module->type == MEDIA_TYPE_BLE) {
-                hal_context->def_channel = hal_context->channel_list.channels[0];
-                hal_context->discovery_interval = BLE_DISCOVERY_TIMEOUT;
-                hal_context->attach_request_interval = BLE_ATTACH_REQUEST_TIMEOUT;
-                hal_context->sid_request_interval = BLE_SID_REQUEST_TIMEOUT;
-                hal_context->link_request_interval = BLE_LINK_REQUEST_TIMEOUT;
-                hal_context->link_request_mobile_interval = BLE_LINK_REQUEST_MOBILE_TIMEOUT;
-                hal_context->neighbor_alive_interval = BLE_NEIGHBOR_ALIVE_TIMEOUT;
-                hal_context->advertisement_interval = BLE_ADVERTISEMENT_TIMEOUT;
-            } else if (module->type == MEDIA_TYPE_15_4) {
-                hal_context->def_channel = hal_context->channel_list.channels[0];
-                hal_context->discovery_interval = IEEE154_DISCOVERY_TIMEOUT;
-                hal_context->attach_request_interval = IEEE154_ATTACH_REQUEST_TIMEOUT;
-                hal_context->sid_request_interval = IEEE154_SID_REQUEST_TIMEOUT;
-                hal_context->link_request_interval = IEEE154_LINK_REQUEST_TIMEOUT;
-                hal_context->link_request_mobile_interval = IEEE154_LINK_REQUEST_MOBILE_TIMEOUT;
-                hal_context->neighbor_alive_interval = IEEE154_NEIGHBOR_ALIVE_TIMEOUT;
-                hal_context->advertisement_interval = IEEE154_ADVERTISEMENT_TIMEOUT;
-            }
-        }
-
+        assert(module->type >= MEDIA_TYPE_DFL && module->type <= MEDIA_TYPE_15_4);
+        new_hal_context(module, module->type);
         module = hal_umesh_get_next_module(module);
-
 #ifndef CONFIG_AOS_MESH_SUPER
         break;
 #endif
@@ -225,29 +217,6 @@ void interface_stop(void)
         ur_mem_free(network->one_time_key, KEY_SIZE);
         slist_del(&network->next, &g_networks_list);
         ur_mem_free(network, sizeof(*network));
-    }
-}
-
-void interface_deinit(void)
-{
-    hal_context_t *hal;
-    int16_t mtu;
-
-    while (!slist_empty(&g_hals_list)) {
-        hal = slist_first_entry(&g_hals_list, hal_context_t, next);
-        slist_del(&hal->next, &g_hals_list);
-
-        mtu = hal_umesh_get_bcast_mtu(hal->module);
-        if (mtu < 0) {
-            mtu = 127;
-        }
-        if (hal_umesh_get_ucast_mtu(hal->module) > mtu) {
-            mtu = hal_umesh_get_ucast_mtu(hal->module);
-        }
-        ur_mem_free(hal->frame.data, mtu);
-        hal->frame.data = NULL;
-
-        ur_mem_free(hal, sizeof(*hal));
     }
 }
 

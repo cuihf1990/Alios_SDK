@@ -22,11 +22,14 @@ void test_uradar_urmesh_case(void)
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_start());
     check_cond_wait(umesh_get_device_state() == DEVICE_STATE_LEADER, 5);
 
+    YUNIT_ASSERT(UR_ERROR_NONE == umesh_stop());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_set_mode(MODE_MOBILE));
     YUNIT_ASSERT(MODE_MOBILE == umesh_get_mode());
     YUNIT_ASSERT(NULL != umesh_get_mac_address(MEDIA_TYPE_DFL));
     umesh_set_mode(MODE_RX_ON);
     YUNIT_ASSERT(MODE_RX_ON == umesh_get_mode());
+    YUNIT_ASSERT(UR_ERROR_NONE == umesh_start());
+    check_cond_wait(umesh_get_device_state() >= DEVICE_STATE_LEAF, 10);
 
     memset(ip6addr.m8, 0x00, sizeof(ip6addr.m8));
     ip6addr.m8[0] = 0xff;
@@ -38,7 +41,6 @@ void test_uradar_urmesh_case(void)
 
     YUNIT_ASSERT(NULL != ur_adapter_get_default_ipaddr());
     YUNIT_ASSERT(NULL != ur_adapter_get_mcast_ipaddr());
-
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_stop());
 }
 

@@ -10,7 +10,6 @@
 void interface_init(void);
 void interface_start(void);
 void interface_stop(void);
-void interface_deinit(void);
 void reset_network_context(void);
 slist_t *get_network_contexts(void);
 network_context_t *get_default_network_context(void);

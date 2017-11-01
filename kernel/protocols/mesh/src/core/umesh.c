@@ -383,7 +383,17 @@ uint8_t umesh_get_mode(void)
 
 ur_error_t umesh_set_mode(uint8_t mode)
 {
-    return umesh_mm_set_mode(mode);
+    ur_error_t error = UR_ERROR_FAIL;
+
+    if (umesh_get_device_state() != DEVICE_STATE_DISABLED) {
+        return error;
+    }
+
+    error = umesh_mm_set_mode(mode);
+    if (error == UR_ERROR_NONE) {
+       interface_init();
+    }
+    return error;
 }
 
 const mac_address_t *umesh_get_mac_address(media_type_t type)
