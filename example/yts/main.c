@@ -14,9 +14,8 @@
 
 int application_start(int argc, char **argv)
 {
-    const char *mode = argc > 1 ? argv[1] : "";
-
 #ifdef CONFIG_AOS_YTS_ALL
+    const char *mode = argc > 1 ? argv[1] : "";
     if (strcmp(mode, "--mesh-node") == 0) {
         dda_enable(atoi(argv[argc-1]));
         dda_service_init();

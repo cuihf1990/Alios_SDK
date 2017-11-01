@@ -3,7 +3,7 @@ NAME := testcase
 GLOBAL_INCLUDES     += include
 
 $(NAME)_COMPONENTS  := yunit cjson
-$(NAME)_COMPONENTS  += base64 hashtable log modules.fs.kv
+$(NAME)_COMPONENTS  += base64 hashtable log modules.fs.kv digest_algorithm
 
 $(NAME)_SOURCES     := yts_main.c
 $(NAME)_SOURCES     += basic_test.c
@@ -17,11 +17,12 @@ $(NAME)_SOURCES     += kernel/rhino/rhino_test.c
 $(NAME)_SOURCES     += kernel/module/kv_test.c
 $(NAME)_SOURCES     += kernel/vcall/vcall_test.c
 
+ifneq (,$(findstring linux, $(BUILD_STRING)))
+$(NAME)_COMPONENTS  += fota connectivity.wsf ywss protocol.alink modules.fs.fatfs mbedtls
+
 # tfs
 $(NAME)_COMPONENTS  += tfs libid2 libkm alicrypto
 
-ifneq (,$(findstring linux, $(BUILD_STRING)))
-$(NAME)_COMPONENTS  += fota connectivity.wsf ywss protocol.alink modules.fs.fatfs mbedtls
 $(NAME)_SOURCES     += framework/fota_test.c
 $(NAME)_SOURCES     += framework/netmgr_test.c
 $(NAME)_SOURCES     += tls/tls_test.c
