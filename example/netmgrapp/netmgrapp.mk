@@ -4,8 +4,6 @@ $(NAME)_SOURCES := netmgrapp.c
 
 $(NAME)_COMPONENTS += netmgr yloop cli
 
-GLOBAL_DEFINES += CONFIG_NO_TCPIP # temperaly used by esp32 <TODO>
-
 ifneq (,${BINS})
 GLOBAL_CFLAGS += -DSYSINFO_OS_BINS
 endif

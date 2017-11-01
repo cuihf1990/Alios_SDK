@@ -8,6 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <aos/aos.h>
+#include <aos/network.h>
 #include "hal/soc/soc.h"
 #include "dumpsys.h"
 
@@ -485,10 +486,10 @@ static void reboot_cmd(char *buf, int len, int argc, char **argv);
 static void uptime_cmd(char *buf, int len, int argc, char **argv);
 static void ota_cmd(char *buf, int len, int argc, char **argv);
 static void wifi_debug_cmd(char *buf, int len, int argc, char **argv);
+#ifndef CONFIG_NO_TCPIP
 #ifdef CONFIG_NET_LWIP
 static void tftp_cmd(char *buf, int len, int argc, char **argv);
 #endif /* CONFIG_NET_LWIP */
-#ifndef CONFIG_NO_TCPIP
 static void udp_cmd(char *buf, int len, int argc, char **argv);
 #endif
 static void log_cmd(char *buf, int len, int argc, char **argv);
@@ -580,33 +581,6 @@ static void exit_cmd(char *buf, int len, int argc, char **argv)
     return;
 }
 
-#ifndef CONFIG_NO_TCPIP
-#include <aos/network.h>
-static void udp_cmd(char *buf, int len, int argc, char **argv)
-{
-    struct sockaddr_in saddr;
-    memset(&saddr, 0, sizeof(saddr));
-    saddr.sin_family = AF_INET;
-    saddr.sin_port = htons(atoi(argv[2]));
-    saddr.sin_addr.s_addr = inet_addr(argv[1]);
-
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-
-    if (sockfd < 0) {
-        aos_cli_printf("error creating socket!\n");
-        return;
-    }
-
-    int ret = sendto(sockfd, argv[3], strlen(argv[3]), 0,
-                     (struct sockaddr *)&saddr, sizeof(saddr));
-    if (ret < 0) {
-        aos_cli_printf("error send data %d!\n", ret);
-    }
-
-    close(sockfd);
-}
-#endif
-
 static void log_cmd(char *buf, int len, int argc, char **argv)
 {
     const char *lvls[] = {
@@ -649,6 +623,31 @@ static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
 #ifdef VCALL_RHINO
     dumpsys_func(buf, len, argc, argv);
 #endif
+}
+
+#ifndef CONFIG_NO_TCPIP
+static void udp_cmd(char *buf, int len, int argc, char **argv)
+{
+    struct sockaddr_in saddr;
+    memset(&saddr, 0, sizeof(saddr));
+    saddr.sin_family = AF_INET;
+    saddr.sin_port = htons(atoi(argv[2]));
+    saddr.sin_addr.s_addr = inet_addr(argv[1]);
+
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if (sockfd < 0) {
+        aos_cli_printf("error creating socket!\n");
+        return;
+    }
+
+    int ret = sendto(sockfd, argv[3], strlen(argv[3]), 0,
+                     (struct sockaddr *)&saddr, sizeof(saddr));
+    if (ret < 0) {
+        aos_cli_printf("error send data %d!\n", ret);
+    }
+
+    close(sockfd);
 }
 
 #ifdef CONFIG_NET_LWIP
@@ -699,6 +698,7 @@ tftp_print_usage:
     aos_cli_printf("       tftp get path/to/file\r\n");
 }
 #endif /* CONFIG_NET_LWIP */
+#endif
 
 static void reboot_cmd(char *buf, int len, int argc, char **argv)
 {
