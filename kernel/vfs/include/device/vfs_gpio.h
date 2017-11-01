@@ -17,7 +17,7 @@ extern "C" {
 #define IOCTL_GPIO_OUTPUT_TOGGLE 3  /* toggle output */
 
 /* gpio driver struct */
-extern struct file_ops gpio_ops;
+extern const struct file_ops gpio_ops;
 
 /**
  * This function is used to open gpio device.

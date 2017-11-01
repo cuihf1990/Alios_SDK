@@ -7,7 +7,7 @@
 #include "vfs_err.h"
 
 /* i2c driver struct */
-struct file_ops i2c_ops =
+const struct file_ops i2c_ops =
 {
     .open = vfs_i2c_open,
     .close = vfs_i2c_close,

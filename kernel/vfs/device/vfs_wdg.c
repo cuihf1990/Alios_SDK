@@ -7,7 +7,7 @@
 #include "vfs_err.h"
 
 /* wdg driver struct */
-struct file_ops wdg_ops =
+const struct file_ops wdg_ops =
 {
     .open = vfs_wdg_open,
     .close = vfs_wdg_close,

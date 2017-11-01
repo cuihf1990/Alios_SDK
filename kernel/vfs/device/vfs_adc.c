@@ -6,7 +6,8 @@
 #include "hal/soc/adc.h"
 #include "vfs_err.h"
 
-struct file_ops adc_ops =
+/* adc driver struct */
+const struct file_ops adc_ops =
 {
     .open = vfs_adc_open,
     .read = vfs_adc_read,

@@ -12,7 +12,7 @@ extern "C" {
 #include "vfs_inode.h"
 
 /* i2c driver struct */
-extern struct file_ops i2c_ops;
+extern const struct file_ops i2c_ops;
 
 /**
  * This function is used to open i2c device.

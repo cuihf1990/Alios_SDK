@@ -7,7 +7,7 @@
 #include "vfs_err.h"
 
 /* pwm driver struct */
-struct file_ops pwm_ops =
+const struct file_ops pwm_ops =
 {
     .open = vfs_pwm_open,
     .close = vfs_pwm_close,

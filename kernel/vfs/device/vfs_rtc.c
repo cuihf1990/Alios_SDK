@@ -7,7 +7,7 @@
 #include "vfs_err.h"
 
 /* rtc driver struct */
-struct file_ops rtc_ops =
+const struct file_ops rtc_ops =
 {
     .open = vfs_rtc_open,
     .close = vfs_rtc_close,

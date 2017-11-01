@@ -7,7 +7,7 @@
 #include "vfs_err.h"
 
 /* gpio driver struct */
-struct file_ops gpio_ops =
+const struct file_ops gpio_ops =
 {
     .open = vfs_gpio_open,
     .close = vfs_gpio_close,

@@ -7,7 +7,7 @@
 #include "vfs_err.h"
 
 /* spi driver struct */
-struct file_ops spi_ops =
+const struct file_ops spi_ops =
 {
     .open = vfs_spi_open,
     .close = vfs_spi_close,

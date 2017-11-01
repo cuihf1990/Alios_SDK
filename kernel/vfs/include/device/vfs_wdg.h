@@ -15,7 +15,7 @@ extern "C" {
 #define IOCTL_WDG_RELOAD 1 /* reload watchdog */
 
 /* wdg driver struct */
-extern struct file_ops wdg_ops;
+extern const struct file_ops wdg_ops;
 
 /**
  * This function is used to open wdg device.

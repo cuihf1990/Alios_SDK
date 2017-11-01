@@ -16,7 +16,7 @@ extern "C" {
 #define IOCTL_PWM_OUTPUT_STOP  2 /* stop output pwm */
 
 /* pwm driver struct */
-extern struct file_ops pwm_ops;
+extern const struct file_ops pwm_ops;
 
 /**
  * This function is used to open pwm device.

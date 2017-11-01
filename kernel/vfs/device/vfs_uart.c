@@ -7,7 +7,7 @@
 #include "vfs_err.h"
 
 /* uart driver struct */
-struct file_ops uart_ops =
+const struct file_ops uart_ops =
 {
     .open = vfs_uart_open,
     .close = vfs_uart_close,
