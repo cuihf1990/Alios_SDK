@@ -85,7 +85,7 @@
 #endif
 
 #ifndef RHINO_CONFIG_TASK_INFO_NUM
-#define RHINO_CONFIG_TASK_INFO_NUM           3
+#define RHINO_CONFIG_TASK_INFO_NUM           2
 #endif
 
 #ifndef RHINO_CONFIG_TASK_DEL
