@@ -36,7 +36,7 @@ $(NAME)_SOURCES  += hal/wifi_port.c
 $(NAME)_SOURCES  += bsp/tcpip_adapter_lwip.c bsp/wlanif.c bsp/ethernetif.c
 $(NAME)_CFLAGS   := -std=gnu99
 
-ifeq ($(wifi),1)
+ifneq ($(wifi),0)
 $(NAME)_CFLAGS   += -DENABLE_WIFI
 endif
 $(NAME)_CFLAGS	 += -I platform/mcu/esp32/bsp
