@@ -28,6 +28,7 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/utilities/timer.c \
                    src/utilities/memory.c \
                    src/utilities/configs.c \
+                   src/utilities/maths.c \
                    src/tools/cli.c
 
 ifneq ($(SDK), 1)
