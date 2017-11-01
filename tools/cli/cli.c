@@ -10,6 +10,7 @@
 #include <aos/aos.h>
 #include <aos/network.h>
 #include "hal/soc/soc.h"
+#include "hal/wifi.h"
 #include "dumpsys.h"
 
 #ifndef STDIO_UART
@@ -493,6 +494,7 @@ static void tftp_cmd(char *buf, int len, int argc, char **argv);
 static void udp_cmd(char *buf, int len, int argc, char **argv);
 #endif
 static void log_cmd(char *buf, int len, int argc, char **argv);
+static void mac_cmd(char *buf, int len, int argc, char **argv);
 
 static const struct cli_command built_ins[] = {
     {"help",        NULL,       help_cmd},
@@ -519,6 +521,7 @@ static const struct cli_command built_ins[] = {
     {"ota",         "system ota",        ota_cmd},
     {"wifi_debug",  "wifi debug mode",   wifi_debug_cmd},
     {"loglevel",    "set log level",     log_cmd},
+    {"mac",         "get/set mac",       mac_cmd},
 };
 
 /* Built-in "help" command: prints all registered commands and their help
@@ -606,6 +609,50 @@ static void log_cmd(char *buf, int len, int argc, char **argv)
         return;
     }
     aos_cli_printf("set log level fail\r\n");
+}
+
+static uint8_t hex(char c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'z')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'Z')
+        return c - 'A' + 10;
+    return 0;
+}
+
+static void hexstr2bin(const char *macstr, uint8_t *mac, int len)
+{
+    int i;
+    for (i=0;i < len && macstr[2 * i];i++) {
+        mac[i] = hex(macstr[2 * i]) << 4;
+        mac[i] |= hex(macstr[2 * i + 1]);
+    }
+}
+
+static void mac_cmd(char *buf, int len, int argc, char **argv)
+{
+    int i, n;
+    uint8_t mac[6];
+
+    if (argc == 1)
+    {
+        hal_wifi_get_mac_addr(NULL, mac);
+        aos_cli_printf("MAC address: %02x-%02x-%02x-%02x-%02x-%02x\r\n",
+                mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    }
+    else if(argc == 2)
+    {
+        hexstr2bin(argv[1], mac, 6);
+        hal_wifi_set_mac_addr(NULL, mac);
+        aos_cli_printf("Set MAC address: %02x-%02x-%02x-%02x-%02x-%02x\r\n",
+                mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    }
+    else
+    {
+        aos_cli_printf("invalid cmd\r\n");
+    }
 }
 
 static void task_cmd(char *buf, int len, int argc, char **argv)
@@ -724,7 +771,7 @@ static void ota_cmd(char *buf, int len, int argc, char **argv)
 
 static void wifi_debug_cmd(char *buf, int len, int argc, char **argv)
 {
-    hal_wifi_start_debug_mode();
+    hal_wifi_start_debug_mode(NULL);
 }
 
 /* ------------------------------------------------------------------------- */
