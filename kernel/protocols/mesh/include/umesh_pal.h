@@ -29,4 +29,7 @@ void umesh_pal_task_entry(void);
 
 void umesh_pal_init(void);
 void umesh_pal_ready(void);
+
+void umesh_pal_sleep(void);
+void umesh_pal_wakeup(void);
 #endif

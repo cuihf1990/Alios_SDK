@@ -18,6 +18,7 @@ static void handle_discovery_timer(void *args);
 static ur_error_t send_discovery_request(network_context_t *netowrk);
 static ur_error_t send_discovery_response(network_context_t *network,
                                           ur_addr_t *dest);
+extern void lowpower_start(void);
 
 static void handle_discovery_timer(void *args)
 {
@@ -47,7 +48,7 @@ static void handle_discovery_timer(void *args)
         umesh_mm_set_channel(network, hal->discovery_result.channel);
         nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         hal->discovered_handler(nbr);
-        return;
+        goto exit;
     } else if (hal->discovery_times < DISCOVERY_RETRY_TIMES) {
         if (umesh_mm_get_prev_channel() == hal->discovery_channel) {
             hal->discovery_channel++;
@@ -71,6 +72,14 @@ static void handle_discovery_timer(void *args)
         (umesh_mm_get_mode() & MODE_LEADER) == 0) {
         umesh_mm_start_net_scan_timer();
     }
+
+exit:
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    if (umesh_mm_get_mode() & MODE_MOBILE) {
+        lowpower_start();
+    }
+#endif
+    return;
 }
 
 static ur_error_t send_discovery_request(network_context_t *network)
