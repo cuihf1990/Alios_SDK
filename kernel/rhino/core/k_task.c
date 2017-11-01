@@ -248,6 +248,18 @@ kstat_t krhino_task_yield(void)
     return RHINO_SUCCESS;
 }
 
+ktask_t *krhino_cur_task_get(void)
+{
+    CPSR_ALLOC();
+    ktask_t *task;
+
+    RHINO_CRITICAL_ENTER();
+    task = g_active_task[cpu_cur_get()];
+    RHINO_CRITICAL_EXIT();
+
+    return task;
+}
+
 #if (RHINO_CONFIG_TASK_SUSPEND > 0)
 kstat_t task_suspend(ktask_t *task)
 {
