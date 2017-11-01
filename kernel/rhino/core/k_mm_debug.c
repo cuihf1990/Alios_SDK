@@ -32,7 +32,7 @@ static uint32_t         g_recheck_flag = 0;
 
 static uint32_t check_malloc_region(void *adress);
 uint32_t if_adress_is_valid(void *adress);
-uint32_t dump_mmleak();
+uint32_t dump_mmleak(void);
 
 uint32_t krhino_mm_leak_region_init(void *start, void *end)
 {
@@ -71,10 +71,10 @@ static uint32_t check_task_stack(ktask_t *task, void **p)
         return 0;
     }
 
-    if ((uint32_t)p >= cur &&
-        (uint32_t)p  < (uint32_t)end) {
+    if ((size_t)p >= (size_t)cur &&
+        (size_t)p  < (size_t)end) {
         return 1;
-    } else if ((uint32_t)p >= start && (uint32_t)p  < (uint32_t)cur) {
+    } else if ((size_t)p >= (size_t)start && (size_t)p  < (size_t)cur) {
         return 0;
     }
     /*maybe lost*/
@@ -178,8 +178,8 @@ uint32_t check_malloc_region(void *adress)
             if ((cur->size & RHINO_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & RHINO_MM_BLKSIZE_MASK);
                 if (0 == g_recheck_flag && !(cur->size & RHINO_MM_FREE)) {
-                    if (krhino_cur_task_get()->task_stack_base >= cur->mbinfo.buffer
-                        && krhino_cur_task_get()->task_stack_base < next) {
+                    if ((uint8_t *)krhino_cur_task_get()->task_stack_base >= cur->mbinfo.buffer
+                        && (uint8_t *)krhino_cur_task_get()->task_stack_base < (uint8_t *)next) {
                         cur = next;
                         continue;
                     }
@@ -215,7 +215,6 @@ uint32_t check_malloc_region(void *adress)
 
 uint32_t if_adress_is_valid(void *adress)
 {
-    uint32_t            rst = 0;
     k_mm_region_info_t *reginfo, *nextreg;
     k_mm_list_t *next, *cur;
 
@@ -230,7 +229,7 @@ uint32_t if_adress_is_valid(void *adress)
             if ((cur->size & RHINO_MM_BLKSIZE_MASK)) {
                 next = NEXT_MM_BLK(cur->mbinfo.buffer, cur->size & RHINO_MM_BLKSIZE_MASK);
                 if (!(cur->size & RHINO_MM_FREE) &&
-                    (uint32_t)adress >= (uint32_t)cur->mbinfo.buffer && (uint32_t)adress < next ) {
+                    (size_t)adress >= (size_t)cur->mbinfo.buffer && (size_t)adress < (size_t)next ) {
                     VGF(VALGRIND_MAKE_MEM_NOACCESS(cur, MMLIST_HEAD_SIZE));
                     VGF(VALGRIND_MAKE_MEM_NOACCESS(reginfo, sizeof(k_mm_region_info_t)));
                     return 1;
@@ -253,7 +252,6 @@ uint32_t if_adress_is_valid(void *adress)
 
 uint32_t dump_mmleak()
 {
-    uint32_t            rst = 0;
     k_mm_region_info_t *reginfo, *nextreg;
     k_mm_list_t *next, *cur;
 
