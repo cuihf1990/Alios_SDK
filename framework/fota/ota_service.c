@@ -12,6 +12,7 @@
 #define TAG "ota"
 
 static int ota_init = 0;
+static ota_request_params ota_request_parmas;
 
 static write_flash_cb_t ota_write_flash_callback;
 static ota_finish_cb_t  ota_finish_callbak;
@@ -41,7 +42,6 @@ static int ota_hal_finish_cb(int32_t finished_result, void *updated_type)
     return hal_ota_set_boot(hal_ota_get_default_module(), (void *)&finsh_para);
 }
 
-ota_request_params ota_request_parmas;
 /*
 const char *ota_info = "{\"md5\":\"6B21342306D0F619AF97006B7025D18A\","
         "\"resourceUrl\":\"http:\/\/otalink.alicdn.com\/ALINKTEST_LIVING_LIGHT_ALINK_TEST\/v2.0.0.1\/uthash-master.zip\","
@@ -56,7 +56,9 @@ static void update_action(void *buf)
         LOGE(TAG, "do update buf is null");
         return;
     }
-    ota_response_params response_parmas;
+
+    ota_response_params response_parmas={0};
+
     ota_set_callbacks(ota_hal_write_cb, ota_hal_finish_cb);
     if (0 == platform_ota_parse_response((char *)buf, strlen((char *)buf), &response_parmas)) {
         ota_do_update_packet(&response_parmas, &ota_request_parmas, ota_write_flash_callback,
@@ -103,11 +105,13 @@ static void init_device_parmas()
 {
 #ifdef SYSINFO_OS_BINS
     ota_request_parmas.primary_version = aos_get_os_version();
-#else
-    ota_request_parmas.primary_version = aos_get_kernel_version();
-#endif
-
     ota_request_parmas.secondary_version = aos_get_app_version();
+#else
+    ota_request_parmas.primary_version = aos_get_app_version();
+
+    ota_request_parmas.secondary_version = "\0";
+#endif
+    
     //ota_request_parmas.product_type = aos_get_product_model();
     ota_request_parmas.device_uuid = platform_ota_get_id();
 }

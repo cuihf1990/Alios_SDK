@@ -290,8 +290,7 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
             goto parse_failed;
         }
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
-                sizeof response_parmas->download_url);
-        response_parmas->download_url[(sizeof response_parmas->download_url) - 1] = '\0';
+                (sizeof response_parmas->download_url)-1);
 
         OTA_LOG_D(" response_parmas->download_url %s",
                   response_parmas->download_url);
@@ -303,8 +302,7 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
         }
 
         strncpy(response_parmas->md5, md5->valuestring,
-                sizeof response_parmas->md5);
-        response_parmas->md5[(sizeof response_parmas->md5) - 1] = '\0';
+                (sizeof response_parmas->md5)-1);
 
         to_capital_letter(response_parmas->md5, sizeof response_parmas->md5);
         cJSON *size = cJSON_GetObjectItem(json_obj, "size");
@@ -354,9 +352,9 @@ int8_t platform_ota_publish_request(ota_request_params *request_parmas)
     return 0;
 }
 
-char *platform_ota_get_id()
+const char *platform_ota_get_id()
 {
-    return 0;
+    return NULL;
 }
 
 int8_t platform_ota_status_post(int status, int progress)
