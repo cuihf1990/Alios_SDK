@@ -521,12 +521,14 @@ static void show_ipaddr(void)
     response_append("\t" IP6_ADDR_FMT "\r\n",
                     IP6_ADDR_DATA(((ur_ip6_addr_t *)mcast_addr)));
 #else
-    response_append("\t" IP4_ADDR_FMT "\r\n",
-                    IP4_ADDR_DATA(((ur_ip4_addr_t *)netif_ip4_addr(netif))));
+    const ip4_addr_t *mcast_addr;
 
-    if (netif->flags & NETIF_FLAG_IGMP) {
-        response_append("\t" IP4_ADDR_FMT "\r\n",
-                        (ur_ip4_addr_t *)netif_get_client_data(netif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP));
+    response_append("\t" IP4_ADDR_FMT "\r\n",
+                    IP4_ADDR_DATA(((const ur_ip4_addr_t *)netif_ip4_addr(netif))));
+
+    mcast_addr = ur_adapter_get_mcast_ipaddr();
+    if (mcast_addr) {
+        response_append("\t" IP4_ADDR_FMT "\r\n", IP4_ADDR_DATA(((ur_ip4_addr_t *)mcast_addr)));
     }
 #endif
 }
