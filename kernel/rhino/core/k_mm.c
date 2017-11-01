@@ -1092,7 +1092,7 @@ void *krhino_mm_alloc(size_t size)
 
 void krhino_mm_free(void *ptr)
 {
-    return k_mm_free(g_kmm_head, ptr);
+    k_mm_free(g_kmm_head, ptr);
 }
 
 void *krhino_mm_realloc(void *oldmem, size_t newsize)
