@@ -48,5 +48,5 @@ int8_t platform_ota_status_post(int status, int percent);
 
 int8_t platform_ota_result_post(void);
 
-char *platform_ota_get_id();
+const char *platform_ota_get_id();
 #endif /* OTA_TRANSPORT_H_ */
