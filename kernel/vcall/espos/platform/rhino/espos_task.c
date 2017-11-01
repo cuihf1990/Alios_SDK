@@ -41,7 +41,7 @@ esp_err_t espos_task_create_on_cpu (
     	name = "default_task";
     }
 
-    if (prio >  RHINO_CONFIG_USER_PRI_MAX)
+    if (prio > ESPOS_TASK_PRIO_NUM)
         return espos_err_map(RHINO_BEYOND_MAX_PRI);
 
     if (ESPOS_TASK_CREATE_NORMAL == opt) {
@@ -51,7 +51,9 @@ esp_err_t espos_task_create_on_cpu (
         auto_run = 0;
     }
 
-    ret = krhino_task_dyn_create(ptask, name, arg, RHINO_CONFIG_USER_PRI_MAX - prio, ticks,
+    prio = ESPOS_TASK_PRIO_NUM - prio;
+    prio = prio <= 0 ? 1 : prio;
+    ret = krhino_task_dyn_create(ptask, name, arg, prio, ticks,
                         stack_size / sizeof(cpu_stack_t), entry, auto_run);
 
     /* The following code may open it later */
