@@ -29,6 +29,7 @@ GLOBAL_LDS_FILES += platform/mcu/esp32/bsp/ld/esp32.rom.spiram_incompatible_fns.
 GLOBAL_LDFLAGS   += -L platform/mcu/esp32/bsp/ld
 
 GLOBAL_DEFINES   += CONFIG_AOS_KV_BUFFER_SIZE=8192
+GLOBAL_DEFINES   += csp_printf=ets_printf
 
 $(NAME)_SOURCES  := bsp/entry.c
 $(NAME)_SOURCES  += hal/uart.c

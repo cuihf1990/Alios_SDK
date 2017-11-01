@@ -372,37 +372,12 @@ static void channel_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
 	cmd_printf("set to channel %d\r\n", channel);
 	bk_wlan_set_channel(channel);
 }
-static void mac_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
-{
-    int i, n;
-    uint8_t mac[6];
-
-    if (argc == 1)
-    {
-        wifi_get_mac_address(mac);
-        aos_cli_printf("MAC address: %02x-%02x-%02x-%02x-%02x-%02x\r\n",
-			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    }
-	else if(argc == 2)
-	{
-		hexstr2bin(argv[1], mac, 6);
-		wifi_set_mac_address(mac);
-        aos_cli_printf("Set MAC address: %02x-%02x-%02x-%02x-%02x-%02x\r\n",
-			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-	}
-    else
-    {
-        printf("invalid cmd\r\n");
-    }
-
-}
 
 static const struct cli_command user_clis[] =
 {
     {"micodebug", "micodebug on/off", micodebug_Command},
 	{"monitor", "monitor on/off", monitor_Command},
 	{"channel", "channel []", channel_Command},
-	{"mac", "mac <mac>, Get mac/Set mac. <mac>: c89346000001", mac_command}
 };
 #endif
 

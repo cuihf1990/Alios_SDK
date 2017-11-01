@@ -45,16 +45,35 @@ int hal_wifi_init(void)
 }
 EXPORT_SYMBOL_K(1, hal_wifi_init, "int hal_wifi_init(void)")
 
-void hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)
+int hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)
 {
     if (m == NULL) {
         m = hal_wifi_get_default_module();
     }
 
-    m->get_mac_addr(m, mac);
-}
-EXPORT_SYMBOL_K(1, hal_wifi_get_mac_addr, "void hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)")
+    if (m && m->get_mac_addr) {
+        m->get_mac_addr(m, mac);
+        return 0;
+    }
 
+    return -1;
+}
+EXPORT_SYMBOL_K(1, hal_wifi_get_mac_addr, "int hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)")
+
+int hal_wifi_set_mac_addr(hal_wifi_module_t *m, const uint8_t *mac)
+{
+    if (m == NULL) {
+        m = hal_wifi_get_default_module();
+    }
+
+    if (m && m->set_mac_addr) {
+        m->set_mac_addr(m, mac);
+        return 0;
+    }
+
+    return -1;
+}
+EXPORT_SYMBOL_K(1, hal_wifi_set_mac_addr, "int hal_wifi_set_mac_addr(hal_wifi_module_t *m, const uint8_t *mac)")
 
 int hal_wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
 {
