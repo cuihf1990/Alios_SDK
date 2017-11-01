@@ -23,36 +23,6 @@
 
 uint32_t adc_init_count = 0;
 uint32_t adc_finalize_count = 0;
-struct file_ops adc_ops =
-{
-    .open = vfs_adc_open,
-    .read = vfs_adc_read,
-    .close = vfs_adc_close
-};
-
-struct file_ops gpio_ops =
-{
-    .open = vfs_gpio_open,
-    .close = vfs_gpio_close,
-    .read = vfs_gpio_read,
-    .ioctl = vfs_gpio_ioctl
-};
-
-struct file_ops i2c_ops =
-{
-    .open = vfs_i2c_open,
-    .close = vfs_i2c_close,
-    .read = vfs_i2c_read,
-    .write = vfs_i2c_write
-};
-
-struct file_ops rtc_ops =
-{
-    .open = vfs_rtc_open,
-    .close = vfs_rtc_close,
-    .read = vfs_rtc_read,
-    .write = vfs_rtc_write
-};
 
 adc_dev_t adc_dev_test =
 {

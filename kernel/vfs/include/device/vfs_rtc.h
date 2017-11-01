@@ -11,6 +11,9 @@ extern "C" {
 
 #include "vfs_inode.h"
 
+/* rtc driver struct */
+extern struct file_ops rtc_ops;
+
 /**
  * This function is used to open rtc device.
  *

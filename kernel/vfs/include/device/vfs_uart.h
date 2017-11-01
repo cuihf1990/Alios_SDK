@@ -11,6 +11,9 @@ extern "C" {
 
 #include "vfs_inode.h"
 
+/* uart driver struct */
+extern struct file_ops uart_ops;
+
 /**
  * This function is used to open uart device.
  *

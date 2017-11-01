@@ -11,7 +11,11 @@ extern "C" {
 
 #include "vfs_inode.h"
 
+/* cmd for ioctl */
 #define IOCTL_WDG_RELOAD 1 /* reload watchdog */
+
+/* wdg driver struct */
+extern struct file_ops wdg_ops;
 
 /**
  * This function is used to open wdg device.

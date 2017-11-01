@@ -11,9 +11,13 @@ extern "C" {
 
 #include "vfs_inode.h"
 
+/* cmd for ioctl */
 #define IOCTL_GPIO_OUTPUT_HIGHT  1  /* output hight */
 #define IOCTL_GPIO_OUTPUT_LOW    2  /* output low */
 #define IOCTL_GPIO_OUTPUT_TOGGLE 3  /* toggle output */
+
+/* gpio driver struct */
+extern struct file_ops gpio_ops;
 
 /**
  * This function is used to open gpio device.

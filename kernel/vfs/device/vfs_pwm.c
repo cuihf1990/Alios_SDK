@@ -6,6 +6,14 @@
 #include "hal/soc/pwm.h"
 #include "vfs_err.h"
 
+/* pwm driver struct */
+struct file_ops pwm_ops =
+{
+    .open = vfs_pwm_open,
+    .close = vfs_pwm_close,
+    .ioctl = vfs_pwm_ioctl
+};
+
 int vfs_pwm_open(inode_t *inode, file_t *fp)
 {
     int ret = -1;              /* return value */

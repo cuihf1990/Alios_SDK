@@ -6,6 +6,14 @@
 #include "hal/soc/wdg.h"
 #include "vfs_err.h"
 
+/* wdg driver struct */
+struct file_ops wdg_ops =
+{
+    .open = vfs_wdg_open,
+    .close = vfs_wdg_close,
+    .ioctl = vfs_wdg_ioctl
+};
+
 int vfs_wdg_open(inode_t *inode, file_t *fp)
 {
     int ret = -1;              /* return value */

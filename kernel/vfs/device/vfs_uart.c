@@ -6,6 +6,15 @@
 #include "hal/soc/uart.h"
 #include "vfs_err.h"
 
+/* uart driver struct */
+struct file_ops uart_ops =
+{
+    .open = vfs_uart_open,
+    .close = vfs_uart_close,
+    .read = vfs_uart_read,
+    .write = vfs_uart_write
+};
+
 int vfs_uart_open(inode_t *inode, file_t *fp)
 {
     int ret = -1;                /* return value */
