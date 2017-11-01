@@ -39,11 +39,11 @@ uint32_t krhino_mm_leak_region_init(void *start, void *end)
     static uint32_t i = 0;
 
     if (i >= AOS_MM_SCAN_REGION_MAX) {
-        return -1;
+        return i;
     }
 
     if ((start == NULL) || (end == NULL)) {
-        return -1;
+        return i;
     }
 
     g_mm_scan_region[i].start = start;

@@ -61,7 +61,7 @@
 #define RHINO_MM_PREVFREE     2
 #define RHINO_MM_PREVALLOCED  0
 
-#define NEXT_MM_BLK(_addr, _r) ((k_mm_list_t *) ((void *) (_addr) + (_r)))
+#define NEXT_MM_BLK(_addr, _r) ((k_mm_list_t *) ((uint8_t *) (_addr) + (_r)))
 
 #define MMLIST_HEAD_SIZE   (sizeof(k_mm_list_t) -  sizeof(free_ptr_t))
 /*
