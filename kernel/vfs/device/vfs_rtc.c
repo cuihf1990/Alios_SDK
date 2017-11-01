@@ -6,6 +6,15 @@
 #include "hal/soc/rtc.h"
 #include "vfs_err.h"
 
+/* rtc driver struct */
+const struct file_ops rtc_ops =
+{
+    .open = vfs_rtc_open,
+    .close = vfs_rtc_close,
+    .read = vfs_rtc_read,
+    .write = vfs_rtc_write
+};
+
 int vfs_rtc_open(inode_t *inode, file_t *fp)
 {
     int ret = -1;              /* return value */

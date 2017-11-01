@@ -11,6 +11,9 @@ extern "C" {
 
 #include "vfs_inode.h"
 
+/* spi driver struct */
+extern const struct file_ops spi_ops;
+
 /**
  * This function is used to open spi device.
  *

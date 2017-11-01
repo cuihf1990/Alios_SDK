@@ -6,6 +6,15 @@
 #include "hal/soc/spi.h"
 #include "vfs_err.h"
 
+/* spi driver struct */
+const struct file_ops spi_ops =
+{
+    .open = vfs_spi_open,
+    .close = vfs_spi_close,
+    .read = vfs_spi_read,
+    .write = vfs_spi_write
+};
+
 int vfs_spi_open(inode_t *inode, file_t *fp)
 {
     int ret = -1;              /* return value */

@@ -6,6 +6,15 @@
 #include "hal/soc/i2c.h"
 #include "vfs_err.h"
 
+/* i2c driver struct */
+const struct file_ops i2c_ops =
+{
+    .open = vfs_i2c_open,
+    .close = vfs_i2c_close,
+    .read = vfs_i2c_read,
+    .write = vfs_i2c_write
+};
+
 int vfs_i2c_open(inode_t *inode, file_t *fp)
 {
     int ret = -1;              /* return value */

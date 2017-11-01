@@ -6,6 +6,15 @@
 #include "hal/soc/gpio.h"
 #include "vfs_err.h"
 
+/* gpio driver struct */
+const struct file_ops gpio_ops =
+{
+    .open = vfs_gpio_open,
+    .close = vfs_gpio_close,
+    .read = vfs_gpio_read,
+    .ioctl = vfs_gpio_ioctl
+};
+
 int vfs_gpio_open(inode_t *inode, file_t *fp)
 {
     int ret = -1;                /* return value */

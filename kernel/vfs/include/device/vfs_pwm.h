@@ -11,8 +11,12 @@ extern "C" {
 
 #include "vfs_inode.h"
 
+/* cmd for ioctl */
 #define IOCTL_PWM_OUTPUT_START 1 /* start output pwm */
 #define IOCTL_PWM_OUTPUT_STOP  2 /* stop output pwm */
+
+/* pwm driver struct */
+extern const struct file_ops pwm_ops;
 
 /**
  * This function is used to open pwm device.

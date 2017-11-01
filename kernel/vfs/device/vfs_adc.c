@@ -6,6 +6,14 @@
 #include "hal/soc/adc.h"
 #include "vfs_err.h"
 
+/* adc driver struct */
+const struct file_ops adc_ops =
+{
+    .open = vfs_adc_open,
+    .read = vfs_adc_read,
+    .close = vfs_adc_close
+};
+
 int vfs_adc_open(inode_t *inode, file_t *fp)
 {
     int ret = -1;              /* return value */

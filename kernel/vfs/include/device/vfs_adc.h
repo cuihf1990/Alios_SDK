@@ -11,6 +11,9 @@ extern "C" {
 
 #include "vfs_inode.h"
 
+/* adc driver struct */
+extern const struct file_ops adc_ops;
+
 /**
  * This function is used to open adc device.
  *
