@@ -11,13 +11,14 @@ extern cpu_stack_t  g_workqueue_stack[RHINO_CONFIG_WORKQUEUE_STACK_SIZE];
 static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
 {
     CPSR_ALLOC();
-
-    kworkqueue_t *current_queue = NULL;
+    kworkqueue_t *pos;
 
     RHINO_CRITICAL_ENTER();
 
-    krhino_list_for_each_entry(current_queue, &g_workqueue_list_head, workqueue_node) {
-        if (current_queue == workqueue) {
+    for (pos = krhino_list_entry(g_workqueue_list_head.next, kworkqueue_t, workqueue_node);
+        &pos->workqueue_node != &g_workqueue_list_head;
+         pos = krhino_list_entry(pos->workqueue_node.next, kworkqueue_t, workqueue_node)) {
+        if (pos == workqueue) {
             RHINO_CRITICAL_EXIT();
             return RHINO_WORKQUEUE_EXIST;
         }
