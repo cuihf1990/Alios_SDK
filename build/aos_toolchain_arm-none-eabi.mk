@@ -60,7 +60,7 @@ ifeq ($(BINS),)
 GDB_KILL_OPENOCD   = 'shell killall openocd'
 GDBINIT_STRING     = 'shell $(COMMON_TOOLS_PATH)dash -c "trap \\"\\" 2;$(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE) &"'
 GDB_COMMAND        = "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gdb"
-else ifeq ($(BINS),app)
+else
 LOAD_SYMBOL_ADDR   = 0x`$(TOOLCHAIN_PATH)/arm-none-eabi-readelf -S $(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING).$(BINSTYPE_LOWER)$(LINK_OUTPUT_SUFFIX) | $(TOOLS_ROOT)/cmd/linux64/grep ".text" | $(TOOLS_ROOT)/cmd/linux64/awk '{print $$5}'`
 GDBINIT_STRING     = add-symbol-file $(BUILD_DIR)/eclipse_debug/$(BINSTYPE_LOWER)_built.elf $(LOAD_SYMBOL_ADDR)
 GDB_COMMAND        = "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gdb"
