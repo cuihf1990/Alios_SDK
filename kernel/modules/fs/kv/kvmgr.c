@@ -374,6 +374,7 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
     uint16_t pos = (blk_index << BLK_BITS) + BLK_HEADER_SIZE;
     uint16_t end = (blk_index << BLK_BITS) + BLK_SIZE;
     uint16_t len = 0;
+    int ret;
 
     do {
         item = (kv_item_t *)aos_malloc(sizeof(kv_item_t));
@@ -411,7 +412,7 @@ static kv_item_t *kv_item_traverse(item_func func, uint8_t blk_index, const char
         if (hdr->state == ITEM_STATE_NORMAL) {
             item->pos = pos;
             item->len = hdr->key_len + hdr->val_len;
-            int ret = func(item, key);
+            ret = func(item, key);
             if (ret == RES_OK) {
                 return item;
             } else if (ret != RES_CONT) {
@@ -461,6 +462,7 @@ static int kv_item_store(const char *key, const void *val, int len, uint16_t ori
     item_hdr_t hdr;
     char *p;
     uint16_t pos;
+    uint8_t index;
 
     hdr.magic = ITEM_MAGIC_NUM;
     hdr.state = ITEM_STATE_NORMAL;
@@ -488,7 +490,7 @@ static int kv_item_store(const char *key, const void *val, int len, uint16_t ori
         store.ret = raw_write(pos, store.p, store.len);
         if (store.ret == RES_OK) {
             g_kv_mgr.write_pos = pos + store.len;
-            uint8_t index = g_kv_mgr.write_pos >> BLK_BITS;
+            index = g_kv_mgr.write_pos >> BLK_BITS;
             g_kv_mgr.block_info[index].space -= store.len;
         }
     } else {
@@ -756,14 +758,16 @@ EXPORT_SYMBOL_K(1, aos_kv_get, "int aos_kv_get(const char *key, void *buffer, in
 #ifdef CONFIG_AOS_CLI
 static int __item_print_cb(kv_item_t *item, const char *key)
 {
-    char *p_key = (char *)aos_malloc(item->hdr.key_len + 1);
+    char *p_key = NULL;
+    char *p_val = NULL;
+    p_key = (char *)aos_malloc(item->hdr.key_len + 1);
     if (!p_key) {
         return RES_MALLOC_FAILED;
     }
     memset(p_key, 0, item->hdr.key_len + 1);
     raw_read(item->pos + ITEM_HEADER_SIZE, p_key, item->hdr.key_len);
 
-    char *p_val = (char *)aos_malloc(item->hdr.val_len + 1);
+    p_val = (char *)aos_malloc(item->hdr.val_len + 1);
     if (!p_val) {
         aos_free(p_key);
         return RES_MALLOC_FAILED;
@@ -781,8 +785,9 @@ static int __item_print_cb(kv_item_t *item, const char *key)
 static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     const char *rtype = argc > 1 ? argv[1] : "";
-    int ret = 0;
+    int i, ret = 0;
     char *buffer = NULL;
+    int len = BLK_SIZE;
 
     if (strcmp(rtype, "set") == 0) {
         if (argc != 4) {
@@ -803,7 +808,6 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
         }
 
         memset(buffer, 0, BLK_SIZE);
-        int len = BLK_SIZE;
 
         ret = aos_kv_get(argv[2], buffer, &len);
         if (ret != 0) {
@@ -824,7 +828,7 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
             aos_cli_printf("cli kv del failed\r\n");
         }
     } else if (strcmp(rtype, "list") == 0) {
-        for (int i = 0; i < BLK_NUMS; i++) {
+        for (i = 0; i < BLK_NUMS; i++) {
             kv_item_traverse(__item_print_cb, i, NULL);
         }
     }
