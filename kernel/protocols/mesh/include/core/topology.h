@@ -72,6 +72,13 @@ typedef struct ssid_info_s {
     uint8_t  free_slots;
 } ssid_info_t;
 
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+typedef struct time_slot_s {
+    uint8_t slot_num;
+    uint16_t offset;
+} time_slot_t;
+#endif
+
 typedef struct neighbor_s {
     slist_t next;
     uint8_t mac[EXT_ADDR_SIZE];
@@ -86,6 +93,9 @@ typedef struct neighbor_s {
     ssid_info_t ssid_info;
     uint8_t channel;
     uint8_t *one_time_key;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    time_slot_t time_slot;  // indicates time slot when wake up
+#endif
     uint32_t last_heard;
 } neighbor_t;
 

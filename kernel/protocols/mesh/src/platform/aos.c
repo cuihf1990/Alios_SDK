@@ -281,3 +281,13 @@ void umesh_pal_init(void)
 {
 }
 
+void umesh_pal_sleep(void)
+{
+
+}
+
+void umesh_pal_wakeup(void)
+{
+
+}
+

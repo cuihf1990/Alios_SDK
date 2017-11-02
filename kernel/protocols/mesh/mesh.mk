@@ -52,6 +52,12 @@ $(NAME)_SOURCES += src/core/routing/rsid_allocator.c
 GLOBAL_DEFINES += CONFIG_AOS_MESH_SUPER
 endif
 
+MESHLOWPOWER ?= 0
+ifeq ($(MESHLOWPOWER), 1)
+$(NAME)_SOURCES += src/core/mesh/lowpower_mgmt.c
+GLOBAL_DEFINES += CONFIG_AOS_MESH_LOWPOWER
+endif
+
 ifeq ($(CONFIG_AOS_MESH_TAPIF), 1)
 $(NAME)_SOURCES += src/ip/tapif_adapter.c
 $(NAME)_DEFINES += CONFIG_AOS_MESH_TAPIF
