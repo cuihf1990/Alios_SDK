@@ -56,7 +56,7 @@
 #endif
 
 #ifndef RHINO_CONFIG_MM_BLK
-#define RHINO_CONFIG_MM_BLK                  0
+#define RHINO_CONFIG_MM_BLK                  1
 #endif
 
 #ifndef RHINO_CONFIG_MM_TLF
@@ -71,15 +71,28 @@
 #define RHINO_CONFIG_MM_TLF_BLK_SIZE         8192
 #endif
 
+#ifndef RHINO_CONFIG_MM_DEBUG
+#define RHINO_CONFIG_MM_DEBUG                0
+#endif
+
 #ifndef RHINO_CONFIG_GCC_RETADDR
 #define RHINO_CONFIG_GCC_RETADDR             0
 #endif
+
 #ifndef RHINO_CONFIG_MM_LEAKCHECK
 #define RHINO_CONFIG_MM_LEAKCHECK            0
 #endif
 
+#ifndef K_MM_STATISTIC
+#define K_MM_STATISTIC                       0
+#endif
+
 #ifndef RHINO_CONFIG_TASK_SEM
 #define RHINO_CONFIG_TASK_SEM                0
+#endif
+
+#ifndef RHINO_CONFIG_KOBJ_SET
+#define RHINO_CONFIG_KOBJ_SET                0
 #endif
 
 /* kernel task conf */
