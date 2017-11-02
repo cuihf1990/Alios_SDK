@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <k_api.h>
 #include <aos/log.h>
