@@ -846,12 +846,12 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     k_mm_list_t *b, *tmp_b, *next_b;
     size_t       fl, sl;
     size_t       tmp_size;
-    size_t       req_size;
+    size_t       req_size = 0;
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
 #endif
 
-    (void)       req_size;
+    (void)req_size;
 
     if (!oldmem) {
         if (new_size) {
