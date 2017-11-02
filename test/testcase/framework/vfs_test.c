@@ -288,7 +288,7 @@ int32_t hal_i2c_init(i2c_dev_t *i2c)
     return ret;
 }
 
-int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, void uint8_t *data,
+int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, const uint8_t *data,
     uint16_t size, uint32_t timeout)
 {
     int ret = 0;
@@ -346,7 +346,7 @@ int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time)
     return 0;
 }
 
-int32_t hal_rtc_set_time(rtc_dev_t *rtc, void rtc_time_t *time)
+int32_t hal_rtc_set_time(rtc_dev_t *rtc, const rtc_time_t *time)
 {
     int ret = -1;
 
