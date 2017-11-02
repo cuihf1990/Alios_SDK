@@ -118,6 +118,10 @@ export VERBOSE
 export SUB_BUILD
 export OPENOCD_LOG_FILE
 
+COMPONENT_DEPENDENCY_SCRIPT := $(MAKEFILES_PATH)/scripts/component_dependencies.py
+COMPONENT_DEPENDENCY = $(PYTHON) $(COMPONENT_DEPENDENCY_SCRIPT)
+export COMPONENT_DEPENDENCY
+
 .PHONY: $(BUILD_STRING) main_app bootloader clean Help download total run download_bootloader .gdbinit$(BINSTYPE_LOWER)
 
 Help: 
