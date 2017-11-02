@@ -124,7 +124,7 @@ ssize_t vfs_rtc_write(file_t *fp, const void *buf, size_t nbytes)
         if (ret == 0) {
 
             /* set rtc time. */
-            ret = hal_rtc_set_time(rtc_dev, (rtc_time_t *)buf);
+            ret = hal_rtc_set_time(rtc_dev, (const rtc_time_t *)buf);
 
             /* If the time is set successfully, set the return 
             value to nbytes. */

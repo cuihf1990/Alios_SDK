@@ -133,7 +133,7 @@ ssize_t vfs_i2c_write(file_t *fp, const void *buf, size_t nbytes)
         if (ret == 0) {
 
             /* send data from i2c. */ 
-            ret = hal_i2c_master_send(i2c_dev, dev_addr, (uint8_t *)buf, nbytes, AOS_WAIT_FOREVER);
+            ret = hal_i2c_master_send(i2c_dev, dev_addr, (const uint8_t *)buf, nbytes, AOS_WAIT_FOREVER);
 
             /* If the data is sent successfully, set the return 
             value to nbytes. */

@@ -301,7 +301,7 @@ GETCHAR_PROTOTYPE
   return ch;
 }
 
-int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout) {
+int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout) {
 
     aos_mutex_lock(&uart_tx_mutex, RHINO_WAIT_FOREVER);
     HAL_UART_StateTypeDef state = HAL_UART_STATE_BUSY_TX;

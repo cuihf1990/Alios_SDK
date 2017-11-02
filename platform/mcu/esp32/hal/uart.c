@@ -10,7 +10,7 @@
 #include <rom/ets_sys.h>
 #include <driver/uart.h>
 
-int32_t hal_uart_send(aos_uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
+int32_t hal_uart_send(aos_uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
     uart_write_bytes(uart->port, data, size);
     return 0;
