@@ -728,7 +728,7 @@ void *aos_zalloc(unsigned int size)
 #endif
 
     if (tmp) {		
-		memset(tmp, 0, size);
+        memset(tmp, 0, size);
     }
 
     return tmp;
