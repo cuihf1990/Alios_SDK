@@ -34,7 +34,7 @@ typedef struct {
 static int event_open(inode_t *node, file_t *file)
 {
     event_dev_t *pdev = (event_dev_t *)aos_malloc(sizeof * pdev);
-    bzero(pdev, sizeof * pdev);
+    memset(pdev,0,sizeof (*pdev));
     aos_mutex_new(&pdev->mutex);
     dlist_init(&pdev->bufs);
     dlist_init(&pdev->buf_cache);

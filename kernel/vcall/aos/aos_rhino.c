@@ -727,8 +727,8 @@ void *aos_zalloc(unsigned int size)
     tmp = krhino_mm_alloc(size);
 #endif
 
-    if (tmp) {
-        bzero(tmp, size);
+    if (tmp) {		
+        memset(tmp, 0, size);
     }
 
     return tmp;
