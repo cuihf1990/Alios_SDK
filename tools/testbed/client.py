@@ -70,10 +70,14 @@ class Client:
             if self.devices[port]['filter']['lines_num'] > filter['lines_exp']:
                 self.devices[port]['event'].set()
 
-    def device_info_poll(self, port):
+    def device_status_poll(self, port):
+        poll_interval = 30
+        time.sleep(2)
         while port in self.devices:
-            time.sleep(10)
             try:
+                if self.devices[port]['serial'].isOpen() == False:
+                    time.sleep(poll_interval)
+                    continue
                 ser    = self.devices[port]['serial']
 
                 #poll device model
@@ -97,7 +101,7 @@ class Client:
                 filter['cmd_str'] = self.poll_str + 'version'
                 filter['lines_exp'] = 2
                 filter['lines_num'] = 0
-                filter['filters'] = ['version']
+                filter['filters'] = ['version :']
                 filter['response'] = []
                 self.devices[port]['filter'] = filter
                 self.devices[port]['event'].clear()
@@ -106,8 +110,11 @@ class Client:
                 self.devices[port]['event'].wait(0.3)
                 response = self.devices[port]['filter']['response']
                 if len(response) == filter['lines_exp']:
-                    self.devices[port]['attributes']['kernel_version'] = re.compile(r'.+kernel version :AOS-').sub('', response[0])
-                    self.devices[port]['attributes']['app_version'] = re.compile(r'.+app version :APP-').sub('', response[1])
+                    for line in response:
+                        if 'kernel version :' in line:
+                            self.devices[port]['attributes']['kernel_version'] = re.compile(r'.+kernel version :AOS-').sub('', line)
+                        if 'app version :' in line:
+                            self.devices[port]['attributes']['app_version'] = re.compile(r'.+app version :APP-').sub('', line)
                 self.devices[port]['filter'] = {}
                 #poll mesh status
                 filter = {}
@@ -124,19 +131,19 @@ class Client:
                 response = self.devices[port]['filter']['response']
                 if len(response) == filter['lines_exp']:
                     for line in response:
-                        if 'state' in line:
+                        if 'state\t' in line:
                             self.devices[port]['attributes']['state'] = re.compile(r'.*state\t').sub('', line)
-                        elif 'netid' in line:
+                        elif 'netid\t' in line:
                             self.devices[port]['attributes']['netid'] = re.compile(r'.*netid\t').sub('', line)
-                        elif 'mac' in line:
+                        elif 'mac\t' in line:
                             self.devices[port]['attributes']['macaddr'] = re.compile(r'.*mac\t').sub('', line)
-                        elif 'sid' in line:
+                        elif 'sid\t' in line:
                             self.devices[port]['attributes']['sid'] = re.compile(r'.*sid\t').sub('', line)
-                        elif 'netsize' in line:
+                        elif 'netsize\t' in line:
                             self.devices[port]['attributes']['netsize'] = re.compile(r'.*netsize\t').sub('', line)
-                        elif 'router' in line:
+                        elif 'router\t' in line:
                             self.devices[port]['attributes']['router'] = re.compile(r'.*router\t').sub('', line)
-                        elif 'channel' in line:
+                        elif '\tchannel' in line:
                             self.devices[port]['attributes']['channel'] = re.compile(r'.*\tchannel ').sub('', line)
                 self.devices[port]['filter'] = {}
                 #poll mesh nbrs
@@ -178,14 +185,13 @@ class Client:
                 if len(response) == filter['lines_exp']:
                     self.devices[port]['attributes']['extnetid'] = response[0]
                 self.devices[port]['filter'] = {}
-                content = port + ',' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
+                content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
                 self.service_socket.send(data)
-                #print data
             except:
-                if DEBUG:
-                    raise
-                break;
+                if port not in self.devices:
+                    break
+            time.sleep(poll_interval)
         print 'devie status poll thread for {0} exited'.format(port)
 
     def device_log_poll(self, port):
@@ -266,7 +272,8 @@ class Client:
             elif os == 'Linux':
                 devices_new = glob.glob('/dev/mxchip-*')
                 devices_new += glob.glob('/dev/espif-*')
-                devices_new += glob.glob('/dev/ttyUSB*')
+                if devices_new == []:
+                    devices_new += glob.glob('/dev/ttyUSB*')
             elif os == 'Darwin':
                 devices_new = glob.glob('/dev/tty.usbserial*')
             elif 'CYGWIN' in os:
@@ -296,7 +303,7 @@ class Client:
                 print 'device {0} added'.format(port)
                 self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'serial':ser, 'event':threading.Event(), 'attributes':{}, 'filter':{}}
                 thread.start_new_thread(self.device_log_poll, (port,))
-                thread.start_new_thread(self.device_info_poll, (port,))
+                thread.start_new_thread(self.device_status_poll, (port,))
                 self.send_device_list()
             time.sleep(0.1)
         print 'device monitor thread exited'
@@ -701,7 +708,7 @@ class Client:
                         except:
                             self.service_socket.close()
                             return
-                print 'connetion to server resumed'
+                print 'connection to server resumed'
             except KeyboardInterrupt:
                 self.keep_running = False
                 time.sleep(0.3)
