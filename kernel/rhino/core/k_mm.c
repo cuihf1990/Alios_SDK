@@ -20,6 +20,26 @@ typedef enum {
         (mh->fixedmblk && ((void *)ptr > (void *)(mh->fixedmblk->mbinfo.buffer)) \
         && ((void *)ptr < (void *)(mh->fixedmblk->mbinfo.buffer + mh->fixedmblk->size))) ? 1 : 0
 
+
+extern k_mm_region_t   g_mm_region[];
+extern int             g_region_num;
+extern void aos_mm_leak_region_init(void);
+
+void k_mm_init(void)
+{
+    uint32_t e = 0;
+
+ /* init memory region */
+    krhino_init_mm_head(&g_kmm_head, g_mm_region[0].start, g_mm_region[0].len);
+    for (e = 1 ; e < g_region_num ; e++) {
+        krhino_add_mm_region(g_kmm_head, g_mm_region[e].start, g_mm_region[e].len);
+    }
+
+#if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
+    aos_mm_leak_region_init();
+#endif
+}
+
 RHINO_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
 {
     k_mm_list_t        *curblk, *lastblk, *firstblk;

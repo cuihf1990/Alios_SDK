@@ -4,9 +4,6 @@
 
 #include <k_api.h>
 
-extern k_mm_region_t   g_mm_region[];
-extern int             g_region_num;
-
 RHINO_INLINE void rhino_stack_check_init(void)
 {
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
@@ -22,11 +19,8 @@ RHINO_INLINE void rhino_stack_check_init(void)
 #endif
 }
 
-void workqueue_init(void);
-RHINO_INLINE kstat_t rhino_init(void)
+kstat_t krhino_init(void)
 {
-    uint32_t e = 0;
-
     g_sys_stat = RHINO_STOPPED;
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
@@ -41,21 +35,8 @@ RHINO_INLINE kstat_t rhino_init(void)
     kobj_list_init();
 #endif
 
-    (void)e;
-
-    /* init memory region */
-#if(RHINO_CONFIG_MM_TLF > 0)
-    krhino_init_mm_head(&g_kmm_head, g_mm_region[0].start, g_mm_region[0].len);
-    for (e = 1 ; e < g_region_num ; e++) {
-        krhino_add_mm_region(g_kmm_head, g_mm_region[e].start, g_mm_region[e].len);
-    }
-#endif
-
-#if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
-    aos_mm_leak_region_init();
-#endif
-
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
+    k_mm_init();
     krhino_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                         RHINO_CONFIG_K_DYN_QUEUE_MSG);
     dyn_mem_proc_task_start();
@@ -86,7 +67,7 @@ RHINO_INLINE kstat_t rhino_init(void)
     return RHINO_SUCCESS;
 }
 
-RHINO_INLINE kstat_t rhino_start(void)
+kstat_t krhino_start(void)
 {
     if (g_sys_stat == RHINO_STOPPED) {
 #if (RHINO_CONFIG_CPU_NUM > 1)
@@ -117,15 +98,6 @@ RHINO_INLINE kstat_t rhino_start(void)
     return RHINO_RUNNING;
 }
 
-kstat_t krhino_init(void)
-{
-    return rhino_init();
-}
-
-kstat_t krhino_start(void)
-{
-    return rhino_start();
-}
 
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
 #if (RHINO_CONFIG_CPU_STACK_DOWN > 0)

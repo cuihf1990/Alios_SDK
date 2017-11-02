@@ -168,6 +168,8 @@ kstat_t ringbuf_head_push(k_ringbuf_t *p_ringbuf, void *data, size_t len);
 kstat_t ringbuf_pop(k_ringbuf_t *p_ringbuf, void *pdata, size_t *plen);
 uint8_t ringbuf_is_full(k_ringbuf_t *p_ringbuf);
 uint8_t ringbuf_is_empty(k_ringbuf_t *p_ringbuf);
+void    workqueue_init(void);
+void    k_mm_init(void);
 
 #endif /* K_INTERNAL_H */
 
