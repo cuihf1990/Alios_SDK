@@ -756,7 +756,7 @@ static void reboot_cmd(char *buf, int len, int argc, char **argv)
 
 static void uptime_cmd(char *buf, int len, int argc, char **argv)
 {
-    aos_cli_printf("UP time %ldms\r\n", aos_now_ms());
+    aos_cli_printf("UP time %lldms\r\n", aos_now_ms());
 }
 
 void tftp_ota_thread(void *arg)

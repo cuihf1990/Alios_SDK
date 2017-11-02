@@ -146,6 +146,10 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     kstat_t      stat;
     void        *orig_addr;
 
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+    CPSR_ALLOC();
+#endif
+
     NULL_PARA_CHK(ppmmhead);
     NULL_PARA_CHK(addr);
 
@@ -176,7 +180,6 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
 #endif
 
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-    CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
     krhino_mutex_lock(&(pmmhead->mm_mutex), RHINO_WAIT_FOREVER);
@@ -289,6 +292,9 @@ kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
 {
     k_mm_region_info_t *ptr, *ptr_prev, *ai;
     k_mm_list_t        *ib0, *b0, *lb0, *ib1, *b1, *lb1, *next_b;
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+    CPSR_ALLOC();
+#endif
 
     NULL_PARA_CHK(mmhead);
     NULL_PARA_CHK(addr);
@@ -302,7 +308,6 @@ kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
     }
 
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-    CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
     krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
@@ -596,8 +601,12 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     size_t       fl, sl;
     size_t       tmp_size;
     size_t       req_size = size;
-    (void)       req_size;
-    mblk_pool_t  *mm_pool;
+    mblk_pool_t *mm_pool;
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+    CPSR_ALLOC();
+#endif
+
+    (void)req_size;
 
     if (!mmhead) {
         return NULL;
@@ -608,7 +617,6 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     }
 
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-    CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
     krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
@@ -731,12 +739,14 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 {
     k_mm_list_t *b,      *tmp_b;
     size_t       fl = 0, sl = 0;
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+    CPSR_ALLOC();
+#endif
 
     if (!ptr || !mmhead) {
         return;
     }
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-    CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
     krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
@@ -837,6 +847,10 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     size_t       fl, sl;
     size_t       tmp_size;
     size_t       req_size;
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+    CPSR_ALLOC();
+#endif
+
     (void)       req_size;
 
     if (!oldmem) {
@@ -855,7 +869,6 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     req_size =  new_size;
 
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-    CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
     krhino_mutex_lock(&mmhead->mm_mutex, RHINO_WAIT_FOREVER);
@@ -1033,13 +1046,15 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 void krhino_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
 {
     k_mm_list_t *blk;
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+        CPSR_ALLOC();
+#endif
 
     if (!mmhead || !addr) {
         return;
     }
 
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-    CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
 #else
     krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
