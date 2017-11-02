@@ -71,6 +71,13 @@
 #define RHINO_CONFIG_MM_TLF_BLK_SIZE         8192
 #endif
 
+#ifndef RHINO_CONFIG_GCC_RETADDR
+#define RHINO_CONFIG_GCC_RETADDR             0
+#endif
+#ifndef RHINO_CONFIG_MM_LEAKCHECK
+#define RHINO_CONFIG_MM_LEAKCHECK            0
+#endif
+
 #ifndef RHINO_CONFIG_TASK_SEM
 #define RHINO_CONFIG_TASK_SEM                0
 #endif

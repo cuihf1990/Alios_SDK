@@ -10,11 +10,11 @@
 
 static uint8_t sys_opr_case1(void)
 {
-    kstat_t       ret;
-    const name_t *ptr;
+    kstat_t  ret;
+    uint32_t version;
 
-    ptr = krhino_version_get();
-    if (strcmp(ptr, SYSINFO_KERNEL_VERSION) != 0) {
+    version = krhino_version_get();
+    if (version != RHINO_VERSION) {
         return 1;
     }
 

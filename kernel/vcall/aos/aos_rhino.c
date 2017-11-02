@@ -31,7 +31,7 @@ EXPORT_SYMBOL_K(1, aos_get_hz, "int aos_get_hz(void)")
 
 const char *aos_version_get(void)
 {
-    return krhino_version_get();
+    return SYSINFO_KERNEL_VERSION;
 }
 EXPORT_SYMBOL_K(1, aos_version_get, "const char *aos_version_get(void)")
 
