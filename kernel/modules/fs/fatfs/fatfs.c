@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-
+#include <stdio.h>
 #include <string.h>
 #include <sys/fcntl.h>
 #include "fatfs.h"
