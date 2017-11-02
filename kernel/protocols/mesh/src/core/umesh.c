@@ -2,6 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
+#include <assert.h>
 #include <string.h>
 
 #include "umesh.h"
@@ -318,7 +319,7 @@ bool umesh_is_initialized(void)
 
 ur_error_t umesh_start()
 {
-    umesh_hal_module_t *wifi_hal = NULL;
+    umesh_hal_module_t *hal = NULL;
     umesh_extnetid_t extnetid;
     int extnetid_len = 6;
 
@@ -327,7 +328,6 @@ ur_error_t umesh_start()
     }
 
     g_um_state.started = true;
-
 
     interface_start();
     umesh_mm_start();
@@ -338,29 +338,26 @@ ur_error_t umesh_start()
         umesh_set_extnetid(&extnetid);
     }
 
-    wifi_hal = hal_umesh_get_default_module();
-    if (wifi_hal) {
-        hal_umesh_enable(wifi_hal);
-    }
+    hal = hal_umesh_get_default_module();
+    assert(hal);
+    hal_umesh_enable(hal);
 
     umesh_post_event(CODE_MESH_STARTED, 0);
-
     return UR_ERROR_NONE;
 }
 
 ur_error_t umesh_stop(void)
 {
-    umesh_hal_module_t *wifi_hal = NULL;
+    umesh_hal_module_t *hal = NULL;
 
     if (g_um_state.started == false) {
         return UR_ERROR_NONE;
     }
 
     g_um_state.started = false;
-    wifi_hal = hal_umesh_get_default_module();
-    if (wifi_hal) {
-        hal_umesh_disable(wifi_hal);
-    }
+    hal = hal_umesh_get_default_module();
+    assert(hal);
+    hal_umesh_disable(hal);
 
     lp_stop();
     umesh_mm_stop();

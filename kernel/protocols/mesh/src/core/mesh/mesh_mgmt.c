@@ -43,7 +43,6 @@ static mesh_mgmt_state_t g_mm_state;
 
 static ur_error_t attach_start(neighbor_t *nbr);
 static void handle_attach_timer(void *args);
-static void handle_advertisement_timer(void *args);
 static void handle_migrate_wait_timer(void *args);
 static void handle_net_scan_timer(void *args);
 
@@ -128,36 +127,25 @@ static uint16_t generate_meshnetid(uint8_t sid, uint8_t index)
     return meshnetid;
 }
 
-static void handle_device_alive_timer(void *args)
+static void start_keep_alive_timer(void *args)
 {
-    network_context_t *network;
+    network_context_t *network = get_default_network_context();
 
-    g_mm_state.device.alive_timer = NULL;
-    network = get_default_network_context();
+    ur_stop_timer(&g_mm_state.device.alive_timer, NULL);
     send_address_notification(network, NULL);
-
     g_mm_state.device.alive_timer = ur_start_timer(network->notification_interval,
-                                                   handle_device_alive_timer, NULL);
+                                                   start_keep_alive_timer, NULL);
 }
 
-static void start_keep_alive_timer(network_context_t *network)
+static void start_advertisement_timer(void *args)
 {
-    hal_context_t *hal;
+    network_context_t *network = (network_context_t *)args;
 
-    hal = get_default_hal_context();
-    if (network->hal == hal && g_mm_state.device.alive_timer == NULL) {
-        g_mm_state.device.alive_timer = ur_start_timer(network->notification_interval,
-                                                       handle_device_alive_timer, NULL);
-    }
-}
-
-static void start_advertisement_timer(network_context_t *network)
-{
     ur_stop_timer(&network->advertisement_timer, network);
-    send_advertisement(network);
-    network->advertisement_timer = ur_start_timer(
-                                       network->hal->advertisement_interval,
-                                       handle_advertisement_timer, network);
+    if (send_advertisement(network) != UR_ERROR_FAIL) {
+        network->advertisement_timer = ur_start_timer(network->hal->advertisement_interval,
+                                                      start_advertisement_timer, network);
+    }
 }
 
 void set_mesh_short_addr(ur_addr_t *addr, uint16_t netid, uint16_t sid)
@@ -313,8 +301,7 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
     stop_addr_cache();
     address_resolver_init();
     mesh_interface_state_callback(true);
-    start_keep_alive_timer(network);
-    send_address_notification(network, NULL);
+    start_keep_alive_timer(NULL);
 
     ur_stop_timer(&network->migrate_wait_timer, network);
     umesh_mm_set_prev_channel();
@@ -594,19 +581,6 @@ static void handle_attach_timer(void *args)
             start_advertisement_timer(network);
         }
     }
-}
-
-static void handle_advertisement_timer(void *args)
-{
-    network_context_t *network = (network_context_t *)args;
-
-    network->advertisement_timer = NULL;
-    if (send_advertisement(network) == UR_ERROR_FAIL) {
-        return;
-    }
-    network->advertisement_timer = ur_start_timer(
-                                       network->hal->advertisement_interval,
-                                       handle_advertisement_timer, args);
 }
 
 static void handle_migrate_wait_timer(void *args)
@@ -1663,6 +1637,7 @@ uint16_t umesh_mm_get_local_sid(void)
     network_context_t *network;
 
     network = get_default_network_context();
+
     if (network == NULL) {
         return sid;
     }
@@ -1958,15 +1933,8 @@ void umesh_mm_start_net_scan_timer(void)
 {
     network_context_t *network;
 
-    if (g_mm_state.device.net_scan_timer) {
-        ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
-    }
-
-    if (g_mm_state.device.mode & MODE_LEADER) {
-        return;
-    }
-
-    if (g_mm_state.device.net_scan_timer == NULL) {
+    ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
+    if ((g_mm_state.device.mode & MODE_LEADER) == 0) {
         network = get_default_network_context();
         g_mm_state.device.net_scan_timer = ur_start_timer(network->net_scan_interval,
                                                           handle_net_scan_timer, NULL);

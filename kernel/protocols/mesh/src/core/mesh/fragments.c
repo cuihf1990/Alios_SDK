@@ -202,7 +202,6 @@ void lp_handle_timer(void *args)
 
         lrh = lrh_temp;
     }
-
 }
 
 void lp_start(void)
