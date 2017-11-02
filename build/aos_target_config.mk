@@ -129,6 +129,8 @@ $(eval PROCESSED_COMPONENTS += $(NAME))
 $(eval PROCESSED_COMPONENTS_LOCS += $(COMP))
 $(eval COMPONENTS += $($(NAME)_COMPONENTS))
 
+DEPENDENCY += '$(NAME)': '$($(NAME)_COMPONENTS)',
+
 $(if $(strip $(filter-out $(PROCESSED_COMPONENTS_LOCS),$(COMPONENTS))),$(eval $(call PROCESS_COMPONENT,$(filter-out $(PROCESSED_COMPONENTS_LOCS),$(COMPONENTS)))),)
 endef
 
@@ -144,6 +146,9 @@ ifneq (,$(filter bootloader,$(COMPONENTS)))
 $(error mk3060 doesn't support bootlaoder option)
 endif
 endif
+
+#Dependency python dict start
+DEPENDENCY := "{
 
 BUILD_TYPE_LIST := debug \
                    release_log \
@@ -218,6 +223,11 @@ $(info processing components: $(COMPONENTS))
 
 CURDIR :=
 $(eval $(call PROCESS_COMPONENT, $(COMPONENTS)))
+
+#Dependency python dict end
+DEPENDENCY += }"
+#Call python script
+$(eval DEPENDENCY = $(shell $(COMPONENT_DEPENDENCY) $(OUTPUT_DIR) $(DEPENDENCY)))
 
 PLATFORM    :=$(notdir $(PLATFORM_FULL))
 
