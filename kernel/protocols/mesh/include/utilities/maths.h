@@ -6,5 +6,6 @@
 #define UMESH_MATHS_H
 
 uint32_t umesh_get_random(void);
+uint32_t umesh_get_hashword(const uint32_t *key, uint16_t length, uint32_t init);
 
-#endif  /* UR_TIMER_H */
+#endif  /* UMESH_MATHS_H */
