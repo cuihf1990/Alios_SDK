@@ -17,14 +17,14 @@ def print_usage():
 
 if len(sys.argv) < 2:
     print_usage()
-    exit(1)
+    sys.exit(1)
 
 server_port = DEFAULT_SERVER_PORT
 if sys.argv[1] == "client":
     from client import Client
     if len(sys.argv) < 4 or sys.argv[2] != "-s":
         print_usage()
-        exit(1)
+        sys.exit(1)
 
     if os.path.exists('client') == False:
         os.mkdir('client')
@@ -35,7 +35,7 @@ if sys.argv[1] == "client":
         tmpfile = os.path.expanduser('~') + '\\' + tmpfile
     if os.path.exists(tmpfile):
         print "An urader testbed client is already running"
-        exit(0)
+        sys.exit(0)
 
     server_ip = sys.argv[3]
     if len(sys.argv) >= 6 and sys.argv[4] == '-p':
@@ -46,7 +46,7 @@ if sys.argv[1] == "client":
         except:
             print "Usage error: invalid server port"
             print_usage()
-            exit(1)
+            sys.exit(1)
     open(tmpfile, 'a').close()
     client = Client()
     client.client_func(server_ip, server_port)
@@ -61,7 +61,7 @@ elif sys.argv[1] == "server":
         except:
             print "Usage error: invalid server port"
             print_usage()
-            exit(1)
+            sys.exit(1)
 
     if os.path.exists('server') == False:
         os.mkdir('server')
@@ -72,7 +72,7 @@ elif sys.argv[1] == "server":
         tmpfile = os.path.expanduser('~') + '\\' + tmpfile
     if os.path.exists(tmpfile):
         print "An urader testbed server is already running at port", server_port
-        exit(0)
+        sys.exit(0)
     open(tmpfile, 'a').close()
     server = Server()
     server.server_func(server_port)
@@ -81,7 +81,7 @@ elif sys.argv[1] == "terminal":
     from terminal import Terminal
     if len(sys.argv) < 4 or sys.argv[2] != "-s":
         print_usage()
-        exit(1)
+        sys.exit(1)
     server_ip = sys.argv[3]
     if len(sys.argv) >= 6 and sys.argv[4] == '-p':
         try:
@@ -91,11 +91,11 @@ elif sys.argv[1] == "terminal":
         except:
             print "Usage error: invalid server port"
             print_usage()
-            exit(1)
+            sys.exit(1)
     if os.path.exists('terminal') == False:
         os.mkdir('terminal')
     terminal = Terminal()
     terminal.terminal_func(server_ip, server_port)
 else:
     print_usage()
-    exit(0)
+    sys.exit(0)

@@ -15,6 +15,8 @@ DEVICE_STOP    = 'DSTP'
 DEVICE_ALLOC   = 'DALC'
 LOG_SUB        = 'LGSB'
 LOG_UNSUB      = 'LGUS'
+STATUS_SUB     = 'STSB'
+STATUS_UNSUB   = 'STUS'
 LOG_DOWNLOAD   = 'LGDL'
 FILE_BEGIN     = 'FBGN'
 FILE_DATA      = 'FDTA'
@@ -56,6 +58,10 @@ def is_valid_type(type):
     if type == LOG_SUB:
         return True
     if type == LOG_UNSUB:
+        return True
+    if type == STATUS_SUB:
+        return True
+    if type == STATUS_UNSUB:
         return True
     if type == LOG_DOWNLOAD:
         return True

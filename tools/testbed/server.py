@@ -66,7 +66,13 @@ class Server:
                         for port in new_devices:
                             if port != "" and port not in client['devices']:
                                 print "device {0} added to client {1}".format(port, client['addr'])
-                                client['devices'][port] = {'lock':threading.Lock(), 'using':0, 'subscribe':[]}
+                                client['devices'][port] = {
+                                        'lock':threading.Lock(),
+                                        'using':0,
+                                        'status':'{}',
+                                        'log_subscribe':[],
+                                        'status_subscribe':[]
+                                        }
 
                         for port in list(client['devices']):
                             if port not in new_devices:
@@ -103,11 +109,25 @@ class Server:
                             if DEBUG:
                                 raise
                             continue
-                        if client['devices'][port]['subscribe'] != []:
+                        if client['devices'][port]['log_subscribe'] != []:
                             log = client['addr'][0] + ',' + str(client['addr'][1]) + ',' + port
                             log += value[len(port):]
-                            data = TBframe.construct(TBframe.DEVICE_LOG, log)
-                            for s in client['devices'][port]['subscribe']:
+                            data = TBframe.construct(type, log)
+                            for s in client['devices'][port]['log_subscribe']:
+                                try:
+                                    s.send(data)
+                                except:
+                                    continue
+                    elif type == TBframe.DEVICE_STATUS:
+                        port = value.split(':')[0]
+                        if port not in client['devices']:
+                            continue
+                        client['devices'][port]['status'] = value[len(port)+1:]
+                        if client['devices'][port]['status_subscribe'] != []:
+                            log = client['addr'][0] + ',' + str(client['addr'][1]) + ',' + port
+                            log += value[len(port):]
+                            data = TBframe.construct(type, log)
+                            for s in client['devices'][port]['status_subscribe']:
                                 try:
                                     s.send(data)
                                 except:
@@ -341,9 +361,9 @@ class Server:
                             continue
                         if port not in list(client['devices']):
                             continue
-                        if terminal['socket'] in client['devices'][port]['subscribe']:
+                        if terminal['socket'] in client['devices'][port]['log_subscribe']:
                             continue
-                        client['devices'][port]['subscribe'].append(terminal['socket'])
+                        client['devices'][port]['log_subscribe'].append(terminal['socket'])
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "subscribed log of device {0}:{1}".format(values[0], port)
                     elif type == TBframe.LOG_UNSUB:
@@ -357,11 +377,47 @@ class Server:
                             continue
                         if port not in list(client['devices']):
                             continue
-                        if terminal['socket'] not in client['devices'][port]['subscribe']:
+                        if terminal['socket'] not in client['devices'][port]['log_subscribe']:
                             continue
-                        client['devices'][port]['subscribe'].remove(terminal['socket'])
+                        client['devices'][port]['log_subscribe'].remove(terminal['socket'])
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "unsubscribed log of device {0}:{1}".format(values[0], port)
+                    elif type == TBframe.STATUS_SUB:
+                        values = value.split(',')
+                        if len(values) != 3:
+                            continue
+                        addr = (values[0], int(values[1]))
+                        port = values[2]
+                        client = self.get_client_by_addr(addr)
+                        if client == None:
+                            continue
+                        if port not in list(client['devices']):
+                            continue
+                        if terminal['socket'] in client['devices'][port]['status_subscribe']:
+                            continue
+                        client['devices'][port]['status_subscribe'].append(terminal['socket'])
+                        print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
+                        print "subscribed status of device {0}:{1}".format(values[0], port)
+                        content = client['addr'][0] + ',' + str(client['addr'][1]) + ',' + port
+                        content += ':' + client['devices'][port]['status']
+                        data = TBframe.construct(TBframe.DEVICE_STATUS, content)
+                        terminal['socket'].send(data)
+                    elif type == TBframe.STATUS_UNSUB:
+                        values = value.split(',')
+                        if len(values) != 3:
+                            continue
+                        addr = (values[0], int(values[1]))
+                        port = values[2]
+                        client = self.get_client_by_addr(addr)
+                        if client == None:
+                            continue
+                        if port not in list(client['devices']):
+                            continue
+                        if terminal['socket'] not in client['devices'][port]['status_subscribe']:
+                            continue
+                        client['devices'][port]['status_subscribe'].remove(terminal['socket'])
+                        print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
+                        print "unsubscribed status of device {0}:{1}".format(values[0], port)
                     elif type == TBframe.LOG_DOWNLOAD:
                         values = value.split(',')
                         if len(values) != 3:
@@ -387,11 +443,15 @@ class Server:
             except socket.timeout:
                 continue
             except:
+                if DEBUG:
+                    raise
                 break
         for client in self.client_list:
             for port in list(client['devices']):
-                if terminal['socket'] in client['devices'][port]['subscribe']:
-                    client['devices'][port]['subscribe'].remove(terminal['socket'])
+                if terminal['socket'] in client['devices'][port]['log_subscribe']:
+                    client['devices'][port]['log_subscribe'].remove(terminal['socket'])
+                if terminal['socket'] in client['devices'][port]['status_subscribe']:
+                    client['devices'][port]['status_subscribe'].remove(terminal['socket'])
         for device in using_list:
             addr = device[0]
             port = device[1]
