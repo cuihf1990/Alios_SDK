@@ -240,8 +240,8 @@ size_t krhino_global_space_get(void)
     return mem;
 }
 
-const name_t *krhino_version_get(void)
+uint32_t krhino_version_get(void)
 {
-    return SYSINFO_KERNEL_VERSION;
+    return RHINO_VERSION;
 }
 

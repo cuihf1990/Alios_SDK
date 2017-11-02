@@ -555,7 +555,7 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
 static void version_cmd(char *buf, int len, int argc, char **argv)
 {
 #ifdef VCALL_RHINO
-    aos_cli_printf("kernel version :%s\r\n", krhino_version_get());
+    aos_cli_printf("kernel version :%d\r\n", krhino_version_get());
 #else
     aos_cli_printf("kernel version :posix\r\n");
 #endif
