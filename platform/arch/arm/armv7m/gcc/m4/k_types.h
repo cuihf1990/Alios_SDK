@@ -28,10 +28,5 @@ typedef uint8_t  suspend_nested_t;
 
 typedef uint64_t ctx_switch_t;
 
-/* keil compiler not define ssize_t */
-#ifdef __CC_ARM
-typedef int32_t ssize_t;
-#endif
-
 #endif /* TYPES_H */
 

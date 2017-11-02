@@ -5,6 +5,7 @@
 #ifndef AOS_KERNEL_H
 #define AOS_KERNEL_H
 
+#include <stddef.h>
 #include <sys/types.h>
 
 #ifdef __cplusplus
