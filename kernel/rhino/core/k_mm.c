@@ -9,7 +9,7 @@
 
 #if (RHINO_CONFIG_MM_TLF > 0)
 
-#define AOS_MM_TLF_ALLOC_MIN_LENGTH  2*sizeof(void *)
+#define AOS_MM_TLF_ALLOC_MIN_LENGTH  (2 * sizeof(void *))
 
 typedef enum {
     ACTION_INSERT,
@@ -1047,7 +1047,7 @@ void krhino_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
 {
     k_mm_list_t *blk;
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
-        CPSR_ALLOC();
+    CPSR_ALLOC();
 #endif
 
     if (!mmhead || !addr) {
@@ -1132,12 +1132,14 @@ void krhino_mm_free(void *ptr)
 
 void *krhino_mm_realloc(void *oldmem, size_t newsize)
 {
+    void *tmp;
+
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     unsigned int app_malloc = newsize & AOS_UNSIGNED_INT_MSB;
     newsize = newsize & (~AOS_UNSIGNED_INT_MSB);
 #endif
 
-    void *tmp = k_mm_realloc(g_kmm_head, oldmem, newsize);
+    tmp = k_mm_realloc(g_kmm_head, oldmem, newsize);
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if (app_malloc == 0) {

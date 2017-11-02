@@ -288,10 +288,11 @@ kstat_t krhino_work_sched(kwork_t *work)
 kstat_t krhino_work_cancel(kwork_t *work)
 {
     CPSR_ALLOC();
+    kworkqueue_t *wq;
 
     NULL_PARA_CHK(work);
 
-    kworkqueue_t *wq = (kworkqueue_t *)work->wq;
+    wq = (kworkqueue_t *)work->wq;
 
     if (wq == NULL) {
         if (work->dly > 0) {
