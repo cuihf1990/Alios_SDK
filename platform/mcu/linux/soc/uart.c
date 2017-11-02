@@ -152,7 +152,7 @@ int32_t hal_uart_finalize(uart_dev_t *uart)
     return 0;
 }
 
-int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
+int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
     uint32_t i = 0;
     _uart_drv_t *pdrv = &_uart_drv[uart->port];
@@ -223,7 +223,7 @@ int32_t hal_uart_finalize(uart_dev_t *uart)
     return 0;
 }
 
-int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
+int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
     if (uart->port == AT_UART_PORT) {
         write(at_uart_fd, data, size);
@@ -261,7 +261,7 @@ int32_t hal_uart_finalize(uart_dev_t *uart)
     return 0;
 }
 
-int32_t hal_uart_send(uart_dev_t *uart, void *data, uint32_t size, uint32_t timeout)
+int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
     write(1, data, size);
 }

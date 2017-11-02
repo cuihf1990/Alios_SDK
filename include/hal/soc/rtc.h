@@ -52,7 +52,7 @@ int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time);
  *
  * @return  0 : on success, EIO : if an error occurred with any step
  */
-int32_t hal_rtc_set_time(rtc_dev_t *rtc, rtc_time_t *time);
+int32_t hal_rtc_set_time(rtc_dev_t *rtc, const rtc_time_t *time);
 
 /**
  * De-initialises an RTC interface, Turns off an RTC hardware interface
