@@ -722,7 +722,13 @@ static void do_cli(void *arg)
     char        *last;
     uint16_t    index;
 
+    g_cur_cmd_cb = buf->cb;
+    g_cur_cmd_priv = buf->priv;
+
     cmd = strtok_r(buf->data, " ", &last);
+    if (!cmd)
+        goto out;
+
     for (argc = 0; argc < MAX_ARGS_NUM; ++argc) {
         if ((argv[argc] = strtok_r(NULL, " ", &last)) == NULL) {
             break;
@@ -733,21 +739,20 @@ static void do_cli(void *arg)
         goto out;
     }
 
-    g_cur_cmd_cb = buf->cb;
-    g_cur_cmd_priv = buf->priv;
     for (index = 0; index < sizeof(g_commands) / sizeof(g_commands[0]); index++) {
         if (strcmp(cmd, g_commands[index].name) == 0) {
             g_commands[index].function(argc, argv);
             break;
         }
     }
+
+out:
     if (g_cur_cmd_cb) {
         g_cur_cmd_cb(NULL, 0, buf->priv);
     }
     g_cur_cmd_cb = NULL;
     g_cur_cmd_priv = NULL;
 
-out:
     ur_mem_free(buf->data, buf->length);
     ur_mem_free(buf, sizeof(input_cli_t));
 }
