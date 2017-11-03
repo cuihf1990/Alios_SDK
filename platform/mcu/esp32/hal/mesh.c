@@ -6,17 +6,25 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_wifi_types.h"
-#include "esp_wifi_internal.h"
+#include <aos/network.h>
 
 #include "hal/wifi.h"
 #include "umesh_hal.h"
+#include "umesh_80211.h"
+
+#include "esp_wifi.h"
+#include "esp_wifi_types.h"
+#include "esp_wifi_internal.h"
+#include "esp_event_loop.h"
 
 enum {
-    DEFAULT_MTU_SIZE = 1024,
+    WIFI_MESH_OFFSET = 32,
+    WIFI_DST_OFFSET = 4,
+    WIFI_SRC_OFFSET = 10,
+    WIFI_BSSID_OFFSET = 16,
     WIFI_MAC_ADDR_SIZE = 6,
+
+    DEFAULT_MTU_SIZE = 1024,
 };
 
 typedef struct {
@@ -37,38 +45,92 @@ typedef struct {
 } mesh_hal_priv_t;
 
 static umesh_hal_module_t esp32_wifi_mesh_module;
+static mesh_hal_priv_t *g_hal_priv;
+
+typedef struct send_ext_s {
+    void *context;
+    void *sent;
+    frame_t *frame;
+} send_cxt_t;
+
+static send_cxt_t g_send_ucast_cxt;
+static send_cxt_t g_send_bcast_cxt;
+
+typedef struct {
+    frame_t frm;
+    frame_info_t fino;
+    mesh_hal_priv_t *priv;
+} compound_msg_t;
 
 /* WiFi HAL */
-static void esp_wifi_eibss_rx_func(const void* buffer, int len,
-                                   const uint8_t* src)
-{
-    mesh_hal_priv_t *priv = esp32_wifi_mesh_module.base.priv_dev;
-    frame_info_t frame_info;
-    frame_t frame;
-
-    priv->stats.in_frames++;
-    if (priv->rxcb) {
-        memset(&frame_info.peer, 0, sizeof(mac_address_t));
-        frame_info.peer.len = 8;
-        memcpy(frame_info.peer.addr, src, 6);
-        frame.len = len;
-        frame.data = (uint8_t *)malloc(frame.len);
-        memcpy(frame.data, (uint8_t *)buffer, frame.len);
-        priv->rxcb(priv->context, &frame, &frame_info, 0);
-        free(frame.data);
-    }
-}
-
 static int esp32_wifi_mesh_init(umesh_hal_module_t *module, void *config)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
-    esp_wifi_eibss_set_bssid(priv->bssid);
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+    g_hal_priv = priv;
+    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_STA, priv->macaddr));
     return 0;
+}
+
+static void pass_to_umesh(const void* arg)
+{
+    compound_msg_t *cmsg = (compound_msg_t *)arg;
+    frame_t *frm = &cmsg->frm;
+    frame_info_t *fino = &cmsg->fino;
+    mesh_hal_priv_t *priv = cmsg->priv;
+
+    if (priv->rxcb) {
+        priv->rxcb(priv->context, frm, fino, 0);
+    }
+
+    aos_free(cmsg);
+}
+
+static void mesh_promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
+{
+    compound_msg_t *pf;
+    wifi_promiscuous_pkt_t *pkt = (wifi_promiscuous_pkt_t *)buf;
+    mesh_hal_priv_t *priv = g_hal_priv;
+    umesh_hal_module_t *module = priv->module;
+
+    if (type != WIFI_PKT_DATA)
+        return;
+
+    if (umesh_80211_filter_frame(module, pkt->payload, pkt->rx_ctrl.sig_len)) {
+        return;
+    }
+
+    pf = aos_malloc(sizeof(*pf) + pkt->rx_ctrl.sig_len - WIFI_MESH_OFFSET);
+    bzero(pf, sizeof(*pf));
+    pf->frm.len = pkt->rx_ctrl.sig_len - WIFI_MESH_OFFSET;
+    pf->frm.data = (void *)(pf + 1);
+    memcpy(pf->fino.peer.addr, pkt->payload + WIFI_SRC_OFFSET, WIFI_MAC_ADDR_SIZE);
+    pf->fino.peer.len = 8;
+
+    module = hal_umesh_get_default_module();
+    pf->fino.channel = hal_umesh_get_channel(module);
+    pf->fino.rssi = pkt->rx_ctrl.rssi;
+
+    pf->priv = priv;
+    memcpy(pf->frm.data, pkt->payload + WIFI_MESH_OFFSET, pf->frm.len);
+
+    priv->stats.in_frames++;
+    pass_to_umesh(pf);
 }
 
 static int esp32_wifi_mesh_enable(umesh_hal_module_t *module)
 {
-    esp_wifi_eibss_start();
+    bool enable;
+    esp_err_t esp_err;
+
+    esp_err = esp_wifi_get_promiscuous(&enable);
+    if (enable == false) {
+        ESP_ERROR_CHECK(esp_wifi_set_promiscuous(1));
+        ESP_ERROR_CHECK(esp_wifi_set_promiscuous_rx_cb(mesh_promiscuous_rx_cb));
+    }
+    ESP_ERROR_CHECK(esp_wifi_set_channel(6, 0));
     return 0;
 }
 
@@ -77,22 +139,63 @@ static int esp32_wifi_mesh_disable(umesh_hal_module_t *module)
     return 0;
 }
 
+
+static int send_frame(umesh_hal_module_t *module, frame_t *frame,
+                      mac_address_t *dest, send_cxt_t *cxt)
+{
+    mesh_hal_priv_t *priv = module->base.priv_dev;
+    uint8_t *pkt;
+    int len = frame->len + WIFI_MESH_OFFSET;
+    umesh_handle_sent_ucast_t sent;
+    int result = 0;
+    esp_err_t esp_err;
+
+    pkt = aos_malloc(len);
+    if (pkt == NULL) {
+        result = 1;
+        goto tx_exit;
+    }
+    umesh_80211_make_frame(module, frame, dest, pkt);
+
+    extern esp_err_t esp_wifi_80211_tx(wifi_interface_t ifx, const void *buffer, int len);
+    esp_err = esp_wifi_80211_tx(ESP_IF_WIFI_STA, pkt, len);
+
+    if (esp_err != ESP_OK) {
+        result = 1;
+    } else {
+        priv->stats.out_frames++;
+    }
+
+tx_exit:
+    if (cxt) {
+        sent = cxt->sent;
+        (*sent)(cxt->context, cxt->frame, result);
+    }
+
+    return 0;
+}
+
 static int esp32_wifi_mesh_send_ucast(umesh_hal_module_t *module,
                                     frame_t *frame, mac_address_t *dest,
                                     umesh_handle_sent_ucast_t sent,
                                     void *context)
 {
-    int32_t result;
+    int error;
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
-    result = esp_wifi_eibss_tx(frame->data, frame->len, dest->addr);
-    if (sent) {
-        sent(priv->context, frame, result == 0? 0: -1);
-        if (result == 0) {
-            priv->stats.out_frames++;
-        }
+    if(frame == NULL) {
+        return -1;
     }
-    return result;
+
+    if(frame->len > priv->u_mtu) {
+        return -2;
+    }
+
+    g_send_ucast_cxt.context = context;
+    g_send_ucast_cxt.sent = sent;
+    g_send_ucast_cxt.frame = frame;
+    error = send_frame(module, frame, dest, &g_send_ucast_cxt);
+    return error;
 }
 
 static int esp32_wifi_mesh_send_bcast(umesh_hal_module_t *module,
@@ -100,9 +203,9 @@ static int esp32_wifi_mesh_send_bcast(umesh_hal_module_t *module,
                                       umesh_handle_sent_bcast_t sent,
                                       void *context)
 {
-    int32_t result;
+    int error;
     mesh_hal_priv_t *priv = module->base.priv_dev;
-    uint8_t dest[6];
+    mac_address_t dest;
 
     if(frame == NULL) {
         return -1;
@@ -112,15 +215,14 @@ static int esp32_wifi_mesh_send_bcast(umesh_hal_module_t *module,
         return -2;
     }
 
-    memset(dest, 0xff, sizeof(dest));
-    result = esp_wifi_eibss_tx(frame->data, frame->len, dest);
-    if (sent) {
-        sent(priv->context, frame, result == 0? 0: -1);
-        if (result == 0) {
-            priv->stats.out_frames++;
-        }
-    }
-    return result;
+    g_send_bcast_cxt.context = context;
+    g_send_bcast_cxt.sent = sent;
+    g_send_bcast_cxt.frame = frame;
+
+    dest.len = 8;
+    memset(dest.addr, 0xff, sizeof(dest.addr));
+    error = send_frame(module, frame, &dest, &g_send_bcast_cxt);
+    return error;
 }
 
 static int esp32_wifi_mesh_register_receiver(umesh_hal_module_t *module,
@@ -135,7 +237,6 @@ static int esp32_wifi_mesh_register_receiver(umesh_hal_module_t *module,
 
     priv->rxcb = received;
     priv->context = context;
-    esp_wifi_eibss_reg_rxcb((esp_wifi_eibss_rxcb_t)esp_wifi_eibss_rx_func);
     return 0;
 }
 
@@ -149,7 +250,7 @@ static const mac_address_t *esp32_wifi_mesh_get_mac_address(umesh_hal_module_t *
     static mac_address_t addr;
     mesh_hal_priv_t *priv = module->base.priv_dev;
 
-    esp_wifi_eibss_get_mac(priv->macaddr);
+    ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_STA, priv->macaddr));
     memcpy(addr.addr, priv->macaddr, WIFI_MAC_ADDR_SIZE);
     addr.len = 8;
     return &addr;
@@ -157,23 +258,17 @@ static const mac_address_t *esp32_wifi_mesh_get_mac_address(umesh_hal_module_t *
 
 static int esp32_wifi_mesh_get_channel(umesh_hal_module_t *module)
 {
-    int channel = 0;
-    return channel;
+    uint8_t primary;
+    wifi_second_chan_t second;
+
+    esp_wifi_get_channel(&primary, &second);
+    return (int)primary;
 }
 
 static int esp32_wifi_mesh_set_channel(umesh_hal_module_t *module,
                                   uint8_t channel)
 {
     /* disable channel switch to avoid interfere with AP */
-    return 0;
-
-    /* dont change channel if connected to AP */
-#if 0
-    if (hal_wifi_is_connected(NULL))
-        return 0;
-#endif
-
-    esp_wifi_eibss_set_channel(channel, 0);
     return 0;
 }
 
@@ -192,12 +287,6 @@ static int esp32_wifi_mesh_get_channel_list(umesh_hal_module_t *module,
 static int esp32_wifi_mesh_set_extnetid(umesh_hal_module_t *module,
                                    const umesh_extnetid_t *extnetid)
 {
-    mesh_hal_priv_t *priv = module->base.priv_dev;
-
-    if (extnetid) {
-        memcpy(priv->bssid, (uint8_t *)&extnetid->netid, extnetid->len);
-        esp_wifi_eibss_set_bssid((uint8_t *)&extnetid->netid);
-    }
     return 0;
 }
 

@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "umesh.h"
 #include "umesh_utils.h"
