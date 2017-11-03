@@ -7,7 +7,6 @@
 
 #define I2C_MODE_MASTER 1
 #define I2C_MODE_SLAVE  2
-#define I2C_MODE_MEM    3
 
 typedef struct {
     uint32_t address_width;
