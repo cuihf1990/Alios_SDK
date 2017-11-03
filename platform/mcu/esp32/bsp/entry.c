@@ -40,15 +40,20 @@ static void initialise_wifi(void)
 #else
 static void initialise_wifi(void)
 {
+    
 }
 #endif
 
 extern uart_dev_t uart_0;
 extern struct hal_ota_module_s esp32_yos_ota_module;
+extern int board_cli_init(void);
 void app_main(void)
 {
     initialise_wifi();
     hal_uart_init(&uart_0);
     hal_ota_register_module(&esp32_yos_ota_module);
+    #ifdef CONFIG_AOS_CLI
+    board_cli_init();
+    #endif
     aos_task_new("main", app_entry, 0, 8192);
 }
