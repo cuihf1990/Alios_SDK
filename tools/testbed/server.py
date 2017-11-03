@@ -109,6 +109,8 @@ class Server:
                             if DEBUG:
                                 raise
                             continue
+                        if 'tag' in client and client['tag'] in logstr:
+                            continue
                         if client['devices'][port]['log_subscribe'] != []:
                             log = client['addr'][0] + ',' + str(client['addr'][1]) + ',' + port
                             log += value[len(port):]
@@ -149,6 +151,9 @@ class Server:
                             else:
                                 data = TBframe.construct(TBframe.CMD_DONE, ','.join(values[2:]))
                             terminal['socket'].send(data)
+                    elif type == TBframe.CLIENT_TAG:
+                        client['tag'] = value
+                        print 'tag=', repr(value)
             except socket.timeout:
                 continue
             except:

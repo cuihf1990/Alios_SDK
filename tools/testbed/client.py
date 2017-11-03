@@ -1,4 +1,4 @@
-import os, re, sys, time, platform, json
+import os, sys, time, platform, json
 import socket, thread, threading, subprocess
 import TBframe
 
@@ -29,12 +29,11 @@ class Client:
         self.devices = {}
         self.keep_running = True
         self.connected = False
-        bytes = os.urandom(3)
-        self.poll_str = '<poll'
+        bytes = os.urandom(4)
+        self.poll_str = '\x1b[t'
         for byte in bytes:
             self.poll_str += '{0:02x}'.format(ord(byte))
-        self.poll_str += '>'
-        self.esc_seq = re.compile(r'\x1b[^m]*m')
+        self.poll_str += 'm'
 
     def send_device_list(self):
         content = ':'.join(list(self.devices))
@@ -55,110 +54,82 @@ class Client:
             if filter['cmd_str'] in logstr:
                 self.devices[port]['filter']['lines_num'] += 1
         elif filter['lines_num'] <= filter['lines_exp']:
-            log = self.esc_seq.sub('', logstr)
-            log = log.replace(self.poll_str, '')
-            log = log.replace('\r', '')
+            log = logstr.replace('\r', '')
             log = log.replace('\n', '')
             if log != '':
                 for filterstr in filter['filters']:
                     if filterstr not in log:
                         continue
                     else:
-                        self.devices[port]['filter']['response'].append(log)
-                        self.devices[port]['filter']['lines_num'] += 1
+                        log = log.replace(self.poll_str, '')
+                        if log != '':
+                            self.devices[port]['filter']['response'].append(log)
+                            self.devices[port]['filter']['lines_num'] += 1
                         break
             if self.devices[port]['filter']['lines_num'] > filter['lines_exp']:
                 self.devices[port]['event'].set()
 
+    def poll_run_command(self, port, command, lines_expect, timeout):
+        filter = {}
+        filter['cmd_str'] = self.poll_str + command
+        filter['lines_exp'] = lines_expect
+        filter['lines_num'] = 0
+        filter['filters'] = [self.poll_str]
+        filter['response'] = []
+        self.devices[port]['filter'] = filter
+        self.devices[port]['event'].clear()
+        ser    = self.devices[port]['serial']
+        with self.devices[port]['wlock']:
+            ser.write(filter['cmd_str'] + '\r')
+        self.devices[port]['event'].wait(timeout)
+        response = self.devices[port]['filter']['response']
+        self.devices[port]['filter'] = {}
+        return response
+
     def device_status_poll(self, port):
-        poll_interval = 30
+        poll_interval = 60
         time.sleep(2)
         while port in self.devices:
             try:
                 if self.devices[port]['serial'].isOpen() == False:
                     time.sleep(poll_interval)
                     continue
-                ser    = self.devices[port]['serial']
 
                 #poll device model
-                filter = {}
-                filter['cmd_str'] = self.poll_str + 'devname'
-                filter['lines_exp'] = 1
-                filter['lines_num'] = 0
-                filter['filters'] = ['']
-                filter['response'] = []
-                self.devices[port]['filter'] = filter
-                self.devices[port]['event'].clear()
-                with self.devices[port]['wlock']:
-                    ser.write(filter['cmd_str'] + '\r')
-                self.devices[port]['event'].wait(0.3)
-                response = self.devices[port]['filter']['response']
-                if len(response) == self.devices[port]['filter']['lines_exp']:
+                response = self.poll_run_command(port, 'devname', 1, 0.3)
+                if len(response) == 1:
                     self.devices[port]['attributes']['model'] = response[0]
-                self.devices[port]['filter'] = {}
+
                 #poll device version
-                filter = {}
-                filter['cmd_str'] = self.poll_str + 'version'
-                filter['lines_exp'] = 2
-                filter['lines_num'] = 0
-                filter['filters'] = ['version :']
-                filter['response'] = []
-                self.devices[port]['filter'] = filter
-                self.devices[port]['event'].clear()
-                with self.devices[port]['wlock']:
-                    ser.write(filter['cmd_str'] + '\r')
-                self.devices[port]['event'].wait(0.3)
-                response = self.devices[port]['filter']['response']
-                if len(response) == filter['lines_exp']:
+                response = self.poll_run_command(port, 'version', 1, 0.3)
+                if len(response) == 2:
                     for line in response:
                         if 'kernel version :' in line:
-                            self.devices[port]['attributes']['kernel_version'] = re.compile(r'.+kernel version :AOS-').sub('', line)
+                            self.devices[port]['attributes']['kernel_version'] = line.replace('kernel version :AOS-', '')
                         if 'app version :' in line:
-                            self.devices[port]['attributes']['app_version'] = re.compile(r'.+app version :APP-').sub('', line)
-                self.devices[port]['filter'] = {}
+                            self.devices[port]['attributes']['app_version'] = line.replace('app version :APP-', '')
+
                 #poll mesh status
-                filter = {}
-                filter['cmd_str'] = self.poll_str + 'umesh status'
-                filter['lines_exp'] = 10
-                filter['lines_num'] = 0
-                filter['response'] = []
-                filter['filters'] = ['\t']
-                self.devices[port]['filter'] = filter
-                self.devices[port]['event'].clear()
-                with self.devices[port]['wlock']:
-                    ser.write(filter['cmd_str'] + '\r')
-                self.devices[port]['event'].wait(0.3)
-                response = self.devices[port]['filter']['response']
-                if len(response) == filter['lines_exp']:
+                response = self.poll_run_command(port, 'umesh status', 11, 0.3)
+                if len(response) == 11:
                     for line in response:
                         if 'state\t' in line:
-                            self.devices[port]['attributes']['state'] = re.compile(r'.*state\t').sub('', line)
-                        elif 'netid\t' in line:
-                            self.devices[port]['attributes']['netid'] = re.compile(r'.*netid\t').sub('', line)
-                        elif 'mac\t' in line:
-                            self.devices[port]['attributes']['macaddr'] = re.compile(r'.*mac\t').sub('', line)
-                        elif 'sid\t' in line:
-                            self.devices[port]['attributes']['sid'] = re.compile(r'.*sid\t').sub('', line)
-                        elif 'netsize\t' in line:
-                            self.devices[port]['attributes']['netsize'] = re.compile(r'.*netsize\t').sub('', line)
-                        elif 'router\t' in line:
-                            self.devices[port]['attributes']['router'] = re.compile(r'.*router\t').sub('', line)
-                        elif '\tchannel' in line:
-                            self.devices[port]['attributes']['channel'] = re.compile(r'.*\tchannel ').sub('', line)
-                self.devices[port]['filter'] = {}
+                            self.devices[port]['attributes']['state'] = line.replace('state\t', '')
+                        elif '\tnetid\t' in line:
+                            self.devices[port]['attributes']['netid'] = line.replace('\tnetid\t', '')
+                        elif '\tmac\t' in line:
+                            self.devices[port]['attributes']['macaddr'] = line.replace('\tmac\t', '')
+                        elif '\tsid\t' in line:
+                            self.devices[port]['attributes']['sid'] = line.replace('\tsid\t', '')
+                        elif '\tnetsize\t' in line:
+                            self.devices[port]['attributes']['netsize'] = line.replace('\tnetsize\t', '')
+                        elif '\trouter\t' in line:
+                            self.devices[port]['attributes']['router'] = line.replace('\trouter\t', '')
+                        elif '\tchannel\t' in line:
+                            self.devices[port]['attributes']['channel'] = line.replace('\tchannel\t', '')
+
                 #poll mesh nbrs
-                filter = {}
-                filter['cmd_str'] = self.poll_str + 'umesh nbrs'
-                filter['lines_exp'] = 34
-                filter['lines_num'] = 0
-                filter['response'] = []
-                filter['filters'] = ['\t']
-                self.devices[port]['filter'] = filter
-                self.devices[port]['event'].clear()
-                with self.devices[port]['wlock']:
-                    ser.write(filter['cmd_str'] + '\r')
-                self.devices[port]['event'].wait(0.3)
-                response = self.devices[port]['filter']['response']
+                response = self.poll_run_command(port, 'umesh nbrs', 33, 0.3)
                 if len(response) > 0 and 'num=' in response[-1]:
                     self.devices[port]['attributes']['nbrs'] = {}
                     index = 0
@@ -168,29 +139,25 @@ class Client:
                         line = line.replace('\t', '')
                         self.devices[port]['attributes']['nbrs']['{0:02d}'.format(index)] = line
                         index += 1
-                self.devices[port]['filter'] = {}
+
                 #poll mesh extnetid
-                filter = {}
-                filter['cmd_str'] = self.poll_str + 'umesh extnetid'
-                filter['lines_exp'] = 1
-                filter['lines_num'] = 0
-                filter['response'] = []
-                filter['filters'] = [':']
-                self.devices[port]['filter'] = filter
-                self.devices[port]['event'].clear()
-                with self.devices[port]['wlock']:
-                    ser.write(filter['cmd_str'] + '\r')
-                self.devices[port]['event'].wait(0.3)
-                response = self.devices[port]['filter']['response']
-                if len(response) == filter['lines_exp']:
+                response = self.poll_run_command(port, 'umesh extnetid', 1, 0.3)
+                if len(response) == 1:
                     self.devices[port]['attributes']['extnetid'] = response[0]
-                self.devices[port]['filter'] = {}
+
+                #poll uuid
+                response = self.poll_run_command(port, 'uuid', 1, 0.3)
+                if len(response) == 1 and 'uuid:' in response[0]:
+                    self.devices[port]['attributes']['uuid'] = response[0].replace('uuid: ', '')
+
                 content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
                 self.service_socket.send(data)
             except:
                 if port not in self.devices:
                     break
+                if DEBUG:
+                    raise
             time.sleep(poll_interval)
         print 'devie status poll thread for {0} exited'.format(port)
 
@@ -221,6 +188,8 @@ class Client:
                         try:
                             c = self.devices[port]['serial'].read(1)
                         except:
+                            if DEBUG:
+                                raise
                             time.sleep(0.02)
                             c = ''
                             self.devices[port]['serial'].close()
@@ -352,7 +321,7 @@ class Client:
         else:
             print "error: erasing dose not support device '{0}'".format(model)
         content = ','.join(term) + ',' + ret
-        self.send_response(TBframe.DEVICE_ERASE, content)
+        self.send_packet(TBframe.DEVICE_ERASE, content)
 
     def esp32_program(self, port, address, file):
         if self.devices[port]['serial'].isOpen() == True:
@@ -437,7 +406,7 @@ class Client:
         else:
             print "error: programing dose not support device '{0}'".format(model)
         content = ','.join(term) + ',' + ret
-        self.send_response(TBframe.DEVICE_PROGRAM, content)
+        self.send_packet(TBframe.DEVICE_PROGRAM, content)
 
     def esp32_control(self, port, operation):
         try:
@@ -523,7 +492,7 @@ class Client:
                 except:
                     continue
 
-    def send_response(self, type, content):
+    def send_packet(self, type, content):
         data = TBframe.construct(type, content)
         try:
             self.service_socket.send(data)
@@ -543,6 +512,7 @@ class Client:
         if os.path.exists('client') == False:
             os.mkdir('client')
 
+        self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
         thread.start_new_thread(self.device_monitor,())
         thread.start_new_thread(self.heartbeat_func,())
 
@@ -579,14 +549,14 @@ class Client:
                         if hash in file_received:
                             if os.path.exists(file_received[hash]) == True:
                                 content = terminal + ',' + 'exist'
-                                self.send_response(type, content)
+                                self.send_packet(type, content)
                                 continue
                             else:
                                 file_received.pop(hash)
 
                         if hash in file_receiving:
                             content = terminal + ',' + 'busy'
-                            self.send_response(type, content)
+                            self.send_packet(type, content)
                             continue
 
                         filename = 'client/' + filename
@@ -596,7 +566,7 @@ class Client:
                         timeout = time.time() + 5
                         file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle, 'timeout': timeout}
                         content = terminal + ',' + 'ok'
-                        self.send_response(type, content)
+                        self.send_packet(type, content)
                         if DEBUG:
                             print 'start receiving {0} as {1}'.format(split_value[2], filename)
                     elif type == TBframe.FILE_DATA:
@@ -608,25 +578,25 @@ class Client:
                         seq = int(seq)
                         if hash not in file_receiving:
                             content = terminal + ',' + 'noexist'
-                            self.send_response(type, content)
+                            self.send_packet(type, content)
                             continue
                         if file_receiving[hash]['seq'] != seq and file_receiving[hash]['seq'] != seq + 1:
                             content = terminal + ',' + 'seqerror'
-                            self.send_response(type, content)
+                            self.send_packet(type, content)
                             continue
                         if file_receiving[hash]['seq'] == seq:
                             file_receiving[hash]['handle'].write(data)
                             file_receiving[hash]['seq'] += 1
                             file_receiving[hash]['timeout'] = time.time() + 5
                         content = terminal + ',' + 'ok'
-                        self.send_response(type, content)
+                        self.send_packet(type, content)
                     elif type == TBframe.FILE_END:
                         split_value = value.split(':')
                         terminal = split_value[0]
                         hash = split_value[1]
                         if hash not in file_receiving:
                             content = terminal + ',' + 'noexist'
-                            self.send_response(type, content)
+                            self.send_packet(type, content)
                             continue
                         file_receiving[hash]['handle'].close()
                         localhash = TBframe.hash_of_file(file_receiving[hash]['name'])
@@ -639,7 +609,7 @@ class Client:
                             print 'finished receiving {0}, result:{1}'.format(file_receiving[hash]['name'], response)
                         file_receiving.pop(hash)
                         content = terminal + ',' + response
-                        self.send_response(type, content)
+                        self.send_packet(type, content)
                     elif type == TBframe.DEVICE_ERASE:
                         args = value.split(',')
                         if len(args) != 3:
@@ -657,7 +627,7 @@ class Client:
                         hash = args[4]
                         if hash not in file_received:
                             content = ','.join(term) + ',' + 'error'
-                            self.send_response(type, content)
+                            self.send_packet(type, content)
                             continue
                         filename = file_received[hash]
                         thread.start_new_thread(self.device_program, (port, address, filename, term,))
@@ -669,7 +639,7 @@ class Client:
                         port = args[2]
                         result = self.device_control(port, type)
                         content = ','.join(term) + ',' + result
-                        self.send_response(type, content)
+                        self.send_packet(type, content)
                     elif type == TBframe.DEVICE_CMD:
                         args = value.split(':')[0]
                         arglen = len(args) + 1
@@ -690,7 +660,7 @@ class Client:
                         else:
                             result = 'error'
                         content = ','.join(term) + ',' + result
-                        self.send_response(type, content)
+                        self.send_packet(type, content)
             except ConnetionLost:
                 self.connected = False
                 print 'connection to server lost, try reconnecting...'
@@ -701,6 +671,7 @@ class Client:
                         self.service_socket.connect((server_ip, server_port))
                         self.connected = True
                         self.send_device_list()
+                        self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
                         break
                     except:
                         try:
