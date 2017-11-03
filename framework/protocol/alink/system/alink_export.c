@@ -37,7 +37,7 @@ int alink_enable_sandbox_mode(void)
 {
     return config_set_alinkserver(default_sandbox_server_with_port);
 }
-EXPORT_SYMBOL_F(CONFIG_ALINK > 0u, alink_enable_sandbox_mode, 
+EXPORT_SYMBOL_F(CONFIG_ALINK > 0u, alink_enable_sandbox_mode,
     "int alink_enable_sandbox_mode(void)")
 
 /**
@@ -225,13 +225,13 @@ int alink_factory_reset(void)
     config_reset(unregister_flag);
 
     os_sys_reboot();
-    LOGI(MODULE_NAME, "waiting sys reboot ...");
+    aos_cli_printf("waiting sys reboot ...\r\n");
 
     //while (1);
 
     return 0;
 }
-EXPORT_SYMBOL_F(CONFIG_ALINK > 0u, alink_factory_reset, 
+EXPORT_SYMBOL_F(CONFIG_ALINK > 0u, alink_factory_reset,
     "int alink_factory_reset(void)")
 
 #ifdef GATEWAY_SDK
@@ -419,7 +419,7 @@ int alink_report_async(const char *method, const char *json_buffer,
 
     return ret;
 }
-EXPORT_SYMBOL_F(CONFIG_ALINK > 0u, alink_report_async, 
+EXPORT_SYMBOL_F(CONFIG_ALINK > 0u, alink_report_async,
     "int alink_report_async(const char *method, const char *json_buffer, void *(*cb)(void *), void *arg)")
 
 /**
@@ -480,7 +480,7 @@ int alink_register_callback(unsigned char cb_type, void *cb_func)
 
     return 0;
 }
-EXPORT_SYMBOL_F(CONFIG_ALINK > 0u, alink_register_callback, 
+EXPORT_SYMBOL_F(CONFIG_ALINK > 0u, alink_register_callback,
     "int alink_register_callback(unsigned char cb_type, void *cb_func)")
 
 #ifdef ASR_SDK

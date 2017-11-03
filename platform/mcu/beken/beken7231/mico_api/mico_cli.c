@@ -345,13 +345,13 @@ static void monitor_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
 
     if (!os_strcasecmp(argv[1], "on"))
     {
-        cmd_printf("start monitor\r\n");
+        aos_cli_printf("start monitor\r\n");
 		bk_wlan_register_monitor_cb(monitor);
         bk_wlan_start_monitor();
     }
     else if (!os_strcasecmp(argv[1], "off"))
     {
-        cmd_printf("stop monitor\r\n");
+        aos_cli_printf("stop monitor\r\n");
         mico_debug_enabled = 0;
 		bk_wlan_register_monitor_cb(NULL);
 		bk_wlan_stop_monitor();
@@ -369,7 +369,7 @@ static void channel_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
     }
 
     channel = atoi(argv[1]);
-	cmd_printf("set to channel %d\r\n", channel);
+	aos_cli_printf("set to channel %d\r\n", channel);
 	bk_wlan_set_channel(channel);
 }
 

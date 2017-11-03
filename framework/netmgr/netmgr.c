@@ -443,7 +443,7 @@ void netmgr_clear_ap_config(void)
 {
     clear_wifi_ssid();
 }
-EXPORT_SYMBOL_F(1, netmgr_clear_ap_config, 
+EXPORT_SYMBOL_F(1, netmgr_clear_ap_config,
     "void netmgr_clear_ap_config(void)")
 
 #define HOTSPOT_AP "aha"

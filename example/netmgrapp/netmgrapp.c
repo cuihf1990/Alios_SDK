@@ -8,7 +8,7 @@
 
 static void handle_test_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
-    printf("Hello world\r\n");
+    aos_cli_printf("Hello world\r\n");
 }
 
 static struct cli_command ncmds[] = {

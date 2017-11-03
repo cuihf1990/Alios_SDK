@@ -168,3 +168,4 @@
 1 167 ur_adapter_get_default_ipaddr "CONFIG_AOS_MESH > 0u" "const void *ur_adapter_get_default_ipaddr(void)"
 1 168 ur_adapter_get_mcast_ipaddr "CONFIG_AOS_MESH > 0u" "const void *ur_adapter_get_mcast_ipaddr(void)"
 1 169 hal_wifi_set_mac_addr "1" "int hal_wifi_set_mac_addr(hal_wifi_module_t *m, const uint8_t *mac)"
+1 170 aos_cli_get_tag "1" "const char *aos_cli_get_tag(void)"

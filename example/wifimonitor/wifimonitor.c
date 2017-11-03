@@ -231,7 +231,7 @@ static void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
     const char *rtype = argc > 1 ? argv[1] : "";
 
     if (strcmp(rtype, "stop") == 0) {
-        LOG("Will stop the mac count process.");
+        aos_cli_printf("Will stop the mac count process\r\n");
         /*
          * We simply register a NULL mgnt frame callback here to stop mac
          * count process. Later we can create a new hal, e.g. named as
@@ -248,10 +248,10 @@ static void handle_count_mac_cmd(char *pwbuf, int blen, int argc, char **argv)
         free_mac_table();
         return;
     } else if (strcmp(rtype, "suspend") == 0) {
-        LOG("Will suspend the mac count process");
+        aos_cli_printf("Will suspend the mac count process\r\n");
         hal_wlan_register_mgnt_monitor_cb(NULL, NULL);
     } else if (strcmp(rtype, "resume") == 0) {
-        LOG("Will resume the mac count process.");
+        aos_cli_printf("Will resume the mac count process\r\n");
         hal_wlan_register_mgnt_monitor_cb(NULL,
           wifimonitor_wifi_mgnt_frame_callback);
     } else {
@@ -268,8 +268,8 @@ static void handle_set_server_cmd(char *pwbuf, int blen, int argc, char **argv)
     aos_kv_set("server_ip", (const void *)svr_conf_p->remote_ip,
       sizeof(svr_conf_p->remote_ip), 1);
     aos_kv_set("server_port", (const void *)argv[2], strlen(argv[2]) + 1, 1);
-    LOG("Server ip/port set: ip - %s, por - %d",
-      svr_conf_p->remote_ip, svr_conf_p->remote_port);
+    aos_cli_printf("Server ip/port set: ip - %s, por - %d\r\n",
+                   svr_conf_p->remote_ip, svr_conf_p->remote_port);
 }
 
 /*

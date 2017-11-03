@@ -43,36 +43,36 @@ static void handle_at(char *pwbuf, int blen, int argc, char **argv)
     char *in, out[256], *rtype = argc > 1 ? argv[1] : "";
 
     if (strcmp(rtype, "simple") == 0) {
-        if (argc != 3) {printf("Incorrect argument\r\n"); return;}
-        printf("Simple AT command test\r\n");
+        if (argc != 3) {aos_cli_printf("Incorrect argument\r\n"); return;}
+        aos_cli_printf("Simple AT command test\r\n");
         in = argv[2];
-        printf("AT> %s\r\n", in);
+        aos_cli_printf("AT> %s\r\n", in);
 
         if (at.send_raw(in, out) == 0)
-            printf("AT command succeed, rsp: %s", out);
+            aos_cli_printf("AT command succeed, rsp: %s\r\n", out);
         else
-            printf("AT command failed\r\n");
+            aos_cli_printf("AT command failed\r\n");
     } else if (strcmp(rtype, "quit") == 0) {
-        printf("quit uart\r\n");
+        aos_cli_printf("quit uart\r\n");
         hal_uart_finalize(&uart_1);
     } else if (strcmp(rtype, "2stage") == 0) {
-        if (argc != 4) {printf("Incorrect argument\r\n"); return;}
-        printf("2stage AT command test\r\n");
+        if (argc != 4) {aos_cli_printf("Incorrect argument\r\n"); return;}
+        aos_cli_printf("2stage AT command test\r\n");
         char *fst = argv[2];
         char *data = argv[3];
         uint32_t len = strlen(data);
-        printf("AT> %s %d %s\r\n", fst, len, data);
+        aos_cli_printf("AT> %s %d %s\r\n", fst, len, data);
 
         if (at.send_data_2stage(fst, data, len, out) == 0)
-            printf("AT command succeed, rsp: %s", out);
+            aos_cli_printf("AT command succeed, rsp: %s\r\n", out);
         else
-            printf("AT command failed\r\n");
+            aos_cli_printf("AT command failed\r\n");
     } else {
-        printf("Full AT command test\r\n");
+        aos_cli_printf("Full AT command test\r\n");
         aos_task_new("at_task1", at_task1, NULL, 1024);
-        printf("New task1 created.\r\n");
+        aos_cli_printf("New task1 created.\r\n");
         aos_task_new("at_task2", at_task2, NULL, 1024);
-        printf("New task2 created.\r\n");
+        aos_cli_printf("New task2 created.\r\n");
     }
 }
 
@@ -128,7 +128,7 @@ static void at_enet_helper(void *arg)
               addrlen, recvaddr.sin_addr.s_addr, recvaddr.sin_port);
             continue;
         }
- 
+
         buf[num]='\0';
         printf("Server Message:%s\n", buf);
 
@@ -153,13 +153,13 @@ static void handle_test_at_enet(char *pwbuf, int len, int argc, char **argv)
     if (strcmp(rtype, "udp") == 0) {
         struct enet_info_s *info;
 
-        printf("udp type test, argc: %d\r\n", argc);
+        aos_cli_printf("udp type test, argc: %d\r\n", argc);
 
-        if (argc != 4 && argc != 3) {printf("Invalid argument\r\n"); return;}
+        if (argc != 4 && argc != 3) {aos_cli_printf("Invalid argument\r\n"); return;}
 
         if ((info = (struct enet_info_s *)aos_malloc(
           sizeof(struct enet_info_s))) == NULL) {
-            printf("aos_malloc failed (len: %d)\r\n",
+            aos_cli_printf("aos_malloc failed (len: %d)\r\n",
               sizeof(struct enet_info_s));
             return;
         }
@@ -174,7 +174,7 @@ static void handle_test_at_enet(char *pwbuf, int len, int argc, char **argv)
         }
 
         if ((info->data = (char *)aos_malloc(info->len)) == NULL) {
-            printf("aos_malloc failed (len: %d)\r\n", info->len);
+            aos_cli_printf("aos_malloc failed (len: %d)\r\n", info->len);
             aos_free(info);
             return;
         }
@@ -182,11 +182,11 @@ static void handle_test_at_enet(char *pwbuf, int len, int argc, char **argv)
 
         tsk = aos_loop_schedule_work(0, at_enet_helper, info, NULL, NULL);
         if (!tsk) {
-            printf("Failed to created task in %s\r\n", __func__);
+            aos_cli_printf("Failed to created task in %s\r\n", __func__);
         }
     }
 
-    printf("udp type test finished\r\n");
+    aos_cli_printf("udp type test finished\r\n");
 }
 
 static struct cli_command atcmds[] = {
@@ -234,7 +234,7 @@ int application_start(int argc, char *argv[])
     at_adapter_init();
 #endif
 
-    aos_cli_register_commands((const struct cli_command *)&atcmds[0], 
+    aos_cli_register_commands((const struct cli_command *)&atcmds[0],
       sizeof(atcmds) / sizeof(atcmds[0]));
 
     netmgr_init();

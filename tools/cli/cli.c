@@ -873,6 +873,11 @@ init_general_err:
     return ret;
 }
 
+const char *aos_cli_get_tag(void)
+{
+    return esc_tag;
+}
+
 int aos_cli_printf(const char *msg, ...)
 {
     va_list ap;
