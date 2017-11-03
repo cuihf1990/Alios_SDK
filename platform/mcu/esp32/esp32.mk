@@ -2,7 +2,9 @@ HOST_OPENOCD := esp32
 
 NAME := esp32
 
-$(NAME)_COMPONENTS := framework.common modules.fs.kv
+$(NAME)_TYPE := kernel 
+
+$(NAME)_COMPONENTS := framework.common modules.fs.kv cli
 $(NAME)_COMPONENTS += protocols.net alicrypto
 
 ESP_INC_PATH    := bsp/include
@@ -30,7 +32,9 @@ GLOBAL_LDFLAGS   += -L platform/mcu/esp32/bsp/ld
 
 GLOBAL_DEFINES   += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
+
 $(NAME)_SOURCES  := bsp/entry.c
+$(NAME)_SOURCES  += bsp/setboot_cli.c
 $(NAME)_SOURCES  += hal/uart.c
 $(NAME)_SOURCES  += hal/flash.c
 $(NAME)_SOURCES  += hal/wifi_port.c
