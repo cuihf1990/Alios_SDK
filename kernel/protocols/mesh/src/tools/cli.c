@@ -53,7 +53,7 @@ extern void process_ping(int argc, char *argv[]);
 #endif
 
 void response_append(const char *format, ...);
-void show_router(uint8_t id);
+const char *routerid2str(uint8_t id);
 
 const cli_command_t g_commands[] = {
     { "help", &process_help },
@@ -269,8 +269,10 @@ void process_mode(int argc, char *argv[])
 {
     uint8_t mode, index;
     ur_error_t error;
+    char modestr[64];
 
     mode = umesh_get_mode();
+    modestr[0] = '\x0';
 
     for (index = 0; index < argc; index++) {
         if (strcmp(argv[index], "none") == 0) {
@@ -325,27 +327,27 @@ void process_mode(int argc, char *argv[])
     }
 
     if (mode & MODE_LEADER) {
-        response_append("LEADER | ");
+        strcat(modestr, "LEADER |");
     }
     if (mode & MODE_SUPER) {
-        response_append("SUPER");
+        strcat(modestr, "SUPER");
     } else {
-        response_append("NORMAL");
+        strcat(modestr, "NORMAL");
     }
 
     if (mode & MODE_RX_ON) {
-        response_append(" | RX_ON");
+        strcat(modestr, " | RX_ON");
     } else {
-        response_append(" | RX_OFF");
+        strcat(modestr, " | RX_OFF");
     }
 
     if (mode & MODE_MOBILE) {
-        response_append(" | MOBILE");
+        strcat(modestr, " | MOBILE");
     } else {
-        response_append(" | FIXED");
+        strcat(modestr, " | FIXED");
     }
 
-    response_append("\r\n");
+    response_append("%s\r\n", modestr);
 }
 
 void process_router(int argc, char *argv[])
@@ -369,21 +371,15 @@ void process_router(int argc, char *argv[])
     }
 
     if (id == 0) {
-        show_router(ur_router_get_default_router());
+        response_append("%s\r\n", routerid2str(ur_router_get_default_router()));
     } else {
         if (id != ur_router_get_default_router()) {
             error = ur_router_set_default_router(id);
         }
 
-        response_append("switch to ");
-        show_router(id);
-        if (error == UR_ERROR_NONE) {
-            response_append(" successfully");
-        } else {
-            response_append(" failed");
-        }
+        response_append("switch to %s %s\r\n", routerid2str(id),
+                        error == UR_ERROR_NONE ? "successfully" : "failed");
     }
-    response_append("\r\n");
 }
 
 void process_state(int argc, char *argv[])
@@ -558,11 +554,8 @@ void process_extnetid(int argc, char *argv[])
 
     memset(&extnetid, 0, sizeof(extnetid));
     umesh_get_extnetid(&extnetid);
-    for (length = 0; length < extnetid.len; length++) {
-        response_append("%02x:", extnetid.netid[length]);
-    }
-    if (extnetid.len > 0) {
-        response_append("\r\n");
+    if (extnetid.len >= 6) {
+        response_append(EXT_NETID_FMT "\r\n", EXT_NETID_DATA(extnetid.netid));
     }
     response_append("done\r\n");
 }
@@ -581,27 +574,28 @@ void process_nbrs(int argc, char *argv[])
         response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
         nbrs = umesh_get_nbrs(hal->module->type);
         slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
-            response_append("\t" EXT_ADDR_FMT, EXT_ADDR_DATA(nbr->mac));
-            response_append(",%s,0x%04x,0x%04x,%d,%d,%d,%d,%d,%d\r\n", nbrstate2str(nbr->state), \
+            response_append("\t" EXT_ADDR_FMT ",%s,0x%04x,0x%04x,%d,%d,%d,%d,%d,%d\r\n", \
+                            EXT_ADDR_DATA(nbr->mac), nbrstate2str(nbr->state), \
                             nbr->netid, nbr->sid, nbr->stats.link_cost, nbr->ssid_info.child_num, \
-                            nbr->channel, nbr->stats.reverse_rssi, nbr->stats.forward_rssi, nbr->last_heard);
+                            nbr->channel, nbr->stats.reverse_rssi, nbr->stats.forward_rssi, \
+                            nbr->last_heard);
             num++;
         }
         response_append("\tnum=%d\r\n", num);
     }
 }
 
-void show_router(uint8_t id)
+const char *routerid2str(uint8_t id)
 {
     switch (id) {
         case SID_ROUTER:
-            response_append("SID_ROUTER");
+            return "SID_ROUTER";
             break;
         case VECTOR_ROUTER:
-            response_append("VECTOR_ROUTER");
+            return "VECTOR_ROUTER";
             break;
         default:
-            response_append("UNKNOWN_ROUTER");
+            return "UNKNOWN_ROUTER";
             break;
     }
 }
@@ -694,17 +688,15 @@ static void process_status(int argc, char *argv[])
         response_append("\tattach\t%s\r\n", attachstate2str(network->attach_state));
         response_append("\tsid\t%04x\r\n", umesh_mm_get_local_sid());
         response_append("\tnetsize\t%d\r\n", umesh_mm_get_meshnetsize());
-        response_append("\trouter\t");
-        show_router(network->router->id);
-        response_append("\r\n");
-        response_append("\tbcast_mtu %d\r\n",
+        response_append("\trouter\t%s\r\n", routerid2str(network->router->id));
+        response_append("\tbcast_mtu\t%d\r\n",
                         hal_umesh_get_bcast_mtu(network->hal->module));
-        response_append("\tucast_mtu %d\r\n",
+        response_append("\tucast_mtu\t%d\r\n",
                         hal_umesh_get_ucast_mtu(network->hal->module));
     }
 
     get_channel(&channel);
-    response_append("\tchannel %d\r\n", channel.channel);
+    response_append("\tchannel\t%d\r\n", channel.channel);
 }
 
 void process_stop(int argc, char *argv[])

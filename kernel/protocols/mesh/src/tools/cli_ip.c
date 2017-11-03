@@ -428,7 +428,7 @@ static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
 }
 
 extern const char *state2str(node_state_t state);
-extern void show_router(uint8_t id);
+extern const char *routerid2str(uint8_t id);
 void process_testcmd(int argc, char *argv[])
 {
     slist_t *hals;
@@ -475,7 +475,7 @@ void process_testcmd(int argc, char *argv[])
                         IP6_ADDR_DATA(((const ur_ip4_addr_t *)ur_adapter_get_default_ipaddr())));
 #endif
     } else if (strcmp(cmd, "router") == 0) {
-        show_router(ur_router_get_default_router());
+        response_append("%s", routerid2str(ur_router_get_default_router()));
     }
 }
 

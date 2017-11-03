@@ -19,9 +19,8 @@
 
 #define RET_CHAR  '\n'
 #define END_CHAR  '\r'
-#define PROMPT    "\r\n# "
+#define PROMPT    "# "
 #define EXIT_MSG  "exit"
-#define CLI_TAG   "\e[63m"  /* CLI TAG, use ESC characters, c(cli) ascii is 63 */
 
 #ifdef CONFIG_NET_LWIP
 #include "lwip/ip_addr.h"
@@ -30,6 +29,8 @@
 
 static struct cli_st *cli = NULL;
 static int            cliexit = 0;
+char                  esc_tag[64] = {0};
+static uint8_t        esc_tag_len = 0;
 extern uart_dev_t     uart_0;
 extern void hal_reboot(void);
 
@@ -69,62 +70,6 @@ static const struct cli_command *lookup_command(char *name, int len)
     return NULL;
 }
 
-/*
- * This function is used to locate the command prefix (if any)
- * incorperated inside '<' and '>' paire. The leading spaces will be
- * skipped (if any) first. the prefix begins on '<' and ends on '>'.
- * the prefix length is calculated from '<' to '>'. If '<' and '>'
- * are not paired, error will be reported.
- *
- * @param inbuf [in] - the original command string.
- *        prefix [in|out] - holder of the thead of command prefix.
- *        len [in|out] - holder of the prefix length.
- * @return -1 - error.
- *          0 - no prefix found.
- *         a number>0 - the skipped length, including leading spaces
- *                      and prefix string.
- *
- * Example valid inputs:
- *   1. "help"
- *   2. " help "
- *   3. "<123>help"
- *   4. " <12 3> help "
- */
-static int check_cmd_prefix(const char *inbuf, char **prefix, int *len)
-{
-    char *p = (char *)inbuf;
-    int ret = 0;
-
-    if (!inbuf || !prefix || !len) {
-        return -1;
-    }
-
-    while (*p == ' ') {
-        p++;
-        ret++;
-    }
-
-    if (*p != '<') {
-        return 0;
-    }
-
-    *prefix = p; /* prefix start with '<' */
-    while (*p != '>' && *p != '\0') {
-        *len += 1;
-        p++;
-        ret++;
-    }
-
-    if (*p == '\0') {
-        return -1; /* no tailing '>' found */
-    }
-
-    *len += 1; /* prefix on with '>' */
-    ret++;
-
-    return ret;
-}
-
 /* Parse input line and locate arguments (if any), keeping count of the number
 * of arguments and their locations.  Look up and call the corresponding cli
 * function if one is found and pass it the argv array.
@@ -147,22 +92,9 @@ static int handle_input(char *inbuf)
     int i = 0;
     const struct cli_command *command = NULL;
     const char *p;
-    char *cmd_prefix = NULL;
-    int cmd_prefix_len = 0, skipped_len = 0;
 
     memset((void *)&argv, 0, sizeof(argv));
     memset(&stat, 0, sizeof(stat));
-
-    /* Added for testbed cli, no impact on normal cli <beginning> */
-    skipped_len = check_cmd_prefix(inbuf, &cmd_prefix, &cmd_prefix_len);
-    if (skipped_len < 0) {
-        aos_cli_printf("\r\ncheck_cmd_prefix func failed\r\n");
-        return 2;
-    }
-
-    if (cmd_prefix_len > 0) {
-        inbuf += skipped_len;
-    }
 
     do {
         switch (inbuf[i]) {
@@ -246,32 +178,9 @@ static int handle_input(char *inbuf)
     }
 
     memset(cli->outbuf, 0, OUTBUF_SIZE);
-    cli_putstr("\r\n");
-
-    /* Added for testbed cli, no impact on normal cli <beginning> */
-    if (cmd_prefix_len > 0) {
-        *(cmd_prefix + cmd_prefix_len) = '\0'; /* safe to operate in place now */
-        aos_cli_printf(cmd_prefix);
-        aos_cli_printf("\r\n");
-    }
-    /* testbed cli <end> */
 
     command->function(cli->outbuf, OUTBUF_SIZE, argc, argv);
     cli_putstr(cli->outbuf);
-
-    /* Added for testbed cli, no impact on normal cli <beginning> */
-    if (cmd_prefix_len > 0) {
-        /* Wait for output from special commands: umesh ping/autotest */
-        if ((strcmp(command->name, "umesh") == 0) &&
-            ((strcmp(argv[1], "ping") == 0) ||
-             (strcmp(argv[1], "autotest") == 0))) {
-            aos_msleep(500);
-        }
-
-        aos_cli_printf(cmd_prefix);
-        aos_cli_printf("\r\n");
-    }
-    /* testbed cli <end> */
 
     return 0;
 }
@@ -327,15 +236,15 @@ static void tab_complete(char *inbuf, unsigned int *bp)
  */
 static int get_input(char *inbuf, unsigned int *bp)
 {
-    int esc = 0, key1, key2;
+    char c;
+    int  esc = 0, key1 = -1, key2 = -1;
     if (inbuf == NULL) {
         aos_cli_printf("inbuf_null\r\n");
         return 0;
     }
 
     cli->his_idx = (cli->his_cur + HIS_SIZE - 1) % HIS_SIZE;
-    while (cli_getchar(&inbuf[*bp]) == 1) {
-        char c = inbuf[*bp];
+    while (cli_getchar(&c) == 1) {
         if (c == RET_CHAR || c == END_CHAR) {   /* end of input line */
             inbuf[*bp] = '\0';
             *bp = 0;
@@ -352,30 +261,95 @@ static int get_input(char *inbuf, unsigned int *bp)
         if (esc) {
             if (key1 < 0) {
                 key1 = c;
+                if (key1 != 0x5b) {
+                    /* not '[' */
+                    inbuf[(*bp)] = 0x1b;
+                    (*bp) ++;
+                    inbuf[*bp] = key1;
+                    (*bp) ++;
+                    if (!cli->echo_disabled) {
+                        csp_printf("\x1b%c", key1);
+                        fflush(stdout);
+                    }
+                    esc = 0; /* quit escape sequence */
+                }
                 continue;
             }
 
-            key2 = c;
-            esc = 0; /* quit escape sequence */
-            if (key1 == 0x5b && key2 == 0x41) { /* UP */
+            if (key2 < 0) {
+                key2 = c;
+                if (key2 == 't') {
+                    esc_tag[0] = 0x1b;
+                    esc_tag[1] = key1;
+                    esc_tag_len = 2;
+                }
+            }
+
+            if (key2 != 0x41 && key2 != 0x42 && key2 != 't') {
+                /*unsupported esc sequence*/
+                inbuf[(*bp)] = 0x1b;
+                (*bp) ++;
+                inbuf[*bp] = key1;
+                (*bp) ++;
+                inbuf[*bp] = key2;
+                (*bp) ++;
+                if (!cli->echo_disabled) {
+                    csp_printf("\x1b%c%c", key1, key2);
+                    fflush(stdout);
+                }
+                esc_tag[0] = '\x0';
+                esc_tag_len = 0;
+                esc = 0; /* quit escape sequence */
+                continue;
+            }
+
+            if (key2 == 0x41) { /* UP */
                 char *cmd = cli->history[cli->his_idx];
                 cli->his_idx = (cli->his_idx + HIS_SIZE - 1) % HIS_SIZE;
                 strncpy(inbuf, cmd, INBUF_SIZE);
-                csp_printf("\r" PROMPT "%s", inbuf);
+                csp_printf("\r\n" PROMPT "%s", inbuf);
                 *bp = strlen(inbuf);
+                esc_tag[0] = '\x0';
+                esc_tag_len = 0;
+                esc = 0; /* quit escape sequence */
                 continue;
             }
 
-            if (key1 == 0x5b && key2 == 0x42) { /* DOWN */
+            if (key2 == 0x42) { /* DOWN */
                 char *cmd = cli->history[cli->his_idx];
                 cli->his_idx = (cli->his_idx + 1) % HIS_SIZE;
                 strncpy(inbuf, cmd, INBUF_SIZE);
-                csp_printf("\r" PROMPT "%s", inbuf);
+                csp_printf("\r\n" PROMPT "%s", inbuf);
                 *bp = strlen(inbuf);
+                esc_tag[0] = '\x0';
+                esc_tag_len = 0;
+                esc = 0; /* quit escape sequence */
                 continue;
             }
+
+
+            /* ESC_TAG */
+            if (esc_tag_len >= sizeof(esc_tag)) {
+                esc_tag[0] = '\x0';
+                esc_tag_len = 0;
+                esc = 0; /* quit escape sequence */
+                csp_printf("Error: esc_tag buffer overflow\r\n");
+                fflush(stdout);
+                continue;
+            }
+            esc_tag[esc_tag_len++] = c;
+            if (c == 'm') {
+                esc_tag[esc_tag_len++] = '\x0';
+                if (!cli->echo_disabled) {
+                    csp_printf("%s", esc_tag);
+                    fflush(stdout);
+                }
+                esc = 0; /* quit escape sequence */
+            }
+            continue;
         }
 
+        inbuf[*bp] = c;
         if ((c == 0x08) || /* backspace */
             (c == 0x7f)) { /* DEL */
             if (*bp > 0) {
@@ -418,17 +392,7 @@ static int get_input(char *inbuf, unsigned int *bp)
 static void print_bad_command(char *cmd_string)
 {
     if (cmd_string != NULL) {
-        char *c = cmd_string;
-        aos_cli_printf("command '");
-        while (*c != '\0') {
-            if ((*c) >= 0x20 && (*c) <= 0x7f) {
-                aos_cli_printf("%c", *c);
-            } else {
-                aos_cli_printf("\\0x%x", *c);
-            }
-            ++c;
-        }
-        aos_cli_printf("' not found\r\n");
+        aos_cli_printf("command '%s' not found\r\n", cmd_string);
     }
 }
 
@@ -465,6 +429,9 @@ static void cli_main(void *data)
                 aos_cli_printf("syntax error\r\n");
             }
 
+            aos_cli_printf("\r\n");
+            esc_tag[0] = '\x0';
+            esc_tag_len = 0;
             aos_cli_printf(PROMPT);
         }
     }
@@ -916,8 +883,11 @@ int aos_cli_printf(const char *msg, ...)
 
     memset(message, 0, 256);
 
-    strcpy(message, CLI_TAG);
-    sz = strlen(CLI_TAG);
+    sz = 0;
+    if (esc_tag_len) {
+        strcpy(message, esc_tag);
+        sz = strlen(esc_tag);
+    }
     pos = message + sz;
 
     va_start(ap, msg);

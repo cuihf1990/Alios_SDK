@@ -12,7 +12,7 @@
 #define MM_LEAK_CHECK_ROUND_SCOND 10*1000
 #define RHINO_BACKTRACE_DEPTH     10
 
-#define CLI_TAG         "\e[63m"  //CLI TAG, use ESC characters, c(cli) ascii is 63
+extern char esc_tag[64];
 
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0)
 extern uint32_t dump_mmleak(void);
@@ -67,21 +67,29 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     preferred_cpu_ready_task_get(&g_ready_queue, cpu_cur_get());
     candidate = g_preferred_ready_task[cpu_cur_get()];
 
-    safesprintf(printbuf, totallen, offset,
-                CLI_TAG "------------------------------------------------------------------------\r\n");
+    snprintf(tmpbuf, 255,
+            "%s------------------------------------------------------------------------\r\n",
+            esc_tag);
+    safesprintf(printbuf, totallen, offset, tmpbuf);
 
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-    snprintf(tmpbuf, 255, CLI_TAG "CPU usage :%-10d   MAX:%-10d                 \n",
-                g_cpu_usage / 100, g_cpu_usage_max / 100);
+    snprintf(tmpbuf, 255, "%sCPU usage :%-10d   MAX:%-10d                 \n",
+                esc_tag, g_cpu_usage / 100, g_cpu_usage_max / 100);
     safesprintf(printbuf, totallen, offset, tmpbuf);
-    safesprintf(printbuf, totallen, offset,
-                CLI_TAG "------------------------------------------------------------------------\r\n");
+    snprintf(tmpbuf, 255,
+            "%s------------------------------------------------------------------------\r\n",
+            esc_tag);
+    safesprintf(printbuf, totallen, offset, tmpbuf);
 
 #endif
-    safesprintf(printbuf, totallen, offset,
-                CLI_TAG "Name               State    Prio StackSize MinFreesize Runtime Candidate\r\n");
-    safesprintf(printbuf, totallen, offset,
-                CLI_TAG "------------------------------------------------------------------------\r\n");
+    snprintf(tmpbuf, 255,
+            "%sName               State    Prio StackSize MinFreesize Runtime Candidate\r\n",
+            esc_tag);
+    safesprintf(printbuf, totallen, offset, tmpbuf);
+    snprintf(tmpbuf, 255,
+            "%s------------------------------------------------------------------------\r\n",
+            esc_tag);
+    safesprintf(printbuf, totallen, offset, tmpbuf);
 
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
     task = krhino_list_entry(tmp, ktask_t, task_stats_item);
@@ -110,8 +118,8 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
         }
 
 #ifndef HAVE_NOT_ADVANCED_FORMATE
-        snprintf(tmpbuf, 255, CLI_TAG "%-19.18s%-9s%-5d%-10d%-12zu%-9llu%-11c\r\n",
-                 task_name, cpu_stat[task->task_state - K_RDY], task->prio,
+        snprintf(tmpbuf, 255, "%s%-19.18s%-9s%-5d%-10d%-12zu%-9llu%-11c\r\n",
+                 esc_tag, task_name, cpu_stat[task->task_state - K_RDY], task->prio,
                  task->stack_size, free_size, (unsigned long long)time_total, yes);
 #else
         /* if not support %-N.Ms,cut it manually */
@@ -121,8 +129,8 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
             task_name = name_cut;
         }
 
-        snprintf(tmpbuf, 255, CLI_TAG "%-19s%-9s%-5d%-10d%-12u%-9u%-11c\r\n",
-                 task_name, cpu_stat[task->task_state - K_RDY], task->prio,
+        snprintf(tmpbuf, 255, "%s%-19s%-9s%-5d%-10d%-12u%-9u%-11c\r\n",
+                 esc_tag, task_name, cpu_stat[task->task_state - K_RDY], task->prio,
                  task->stack_size, free_size, (unsigned int)time_total, yes);
 #endif
         safesprintf(printbuf, totallen, offset, tmpbuf);
@@ -132,14 +140,14 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
         if (detail == true && task != krhino_cur_task_get() && soc_get_first_frame_info &&
             soc_get_subs_frame_info) {
             depth = RHINO_BACKTRACE_DEPTH;
-            snprintf(tmpbuf, 255, CLI_TAG "Task %s Call Stack Dump:\r\n", task_name);
+            snprintf(tmpbuf, 255, "%sTask %s Call Stack Dump:\r\n", esc_tag, task_name);
             safesprintf(printbuf, totallen, offset, tmpbuf);
             c_frame = (size_t)task->task_stack;
             soc_get_first_frame_info(c_frame, &n_frame, &pc);
 
             for (; (n_frame != 0) && (pc != 0) && (depth >= 0); --depth) {
 
-                snprintf(tmpbuf, 255, CLI_TAG "PC:0x%-12xSP:0x%-12x\r\n", c_frame, pc);
+                snprintf(tmpbuf, 255, "%sPC:0x%-12xSP:0x%-12x\r\n", esc_tag, c_frame, pc);
                 safesprintf(printbuf, totallen, offset, tmpbuf);
                 c_frame = n_frame;
                 soc_get_subs_frame_info(c_frame, &n_frame, &pc);
@@ -149,7 +157,10 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     }
 
 
-    safesprintf(printbuf, totallen, offset, CLI_TAG "----------------------------------------------------------\r\n");
+    snprintf(tmpbuf, 255,
+            "%s------------------------------------------------------------------------\r\n",
+            esc_tag);
+    safesprintf(printbuf, totallen, offset, tmpbuf);
     krhino_sched_enable();
 
     csp_printf("%s", printbuf);
@@ -161,27 +172,27 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
 {
     int16_t plen = 0;
 
-    plen += sprintf(buf + plen, CLI_TAG "---------------------------------------------\r\n");
+    plen += sprintf(buf + plen, "%s---------------------------------------------\r\n", esc_tag);
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-    plen += sprintf(buf + plen, CLI_TAG "CPU usage :%-10d     MAX:%-10d\r\n",
+    plen += sprintf(buf + plen, "%sCPU usage :%-10d     MAX:%-10d\r\n", esc_tag,
                     g_cpu_usage / 100, g_cpu_usage_max / 100);
 #endif
 
 #if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
-    plen += sprintf(buf + plen, CLI_TAG "Max sched disable time  :%-10d\r\n",
+    plen += sprintf(buf + plen, "%sMax sched disable time  :%-10d\r\n", esc_tag,
                     g_sched_disable_max_time);
 #else
-    plen += sprintf(buf + plen, CLI_TAG "Max sched disable time  :%-10d\r\n", 0);
+    plen += sprintf(buf + plen, "%sMax sched disable time  :%-10d\r\n", esc_tag, 0);
 #endif
 
 #if (RHINO_CONFIG_DISABLE_INTRPT_STATS > 0)
-    plen += sprintf(buf + plen, CLI_TAG "Max intrpt disable time :%-10d\r\n",
+    plen += sprintf(buf + plen, "%sMax intrpt disable time :%-10d\r\n", esc_tag,
                     g_intrpt_disable_max_time);
 #else
-    plen += sprintf(buf + plen, CLI_TAG "Max intrpt disable time :%-10d\r\n", 0);
+    plen += sprintf(buf + plen, "%sMax intrpt disable time :%-10d\r\n", esc_tag, 0);
 #endif
 
-    plen += sprintf(buf + plen, CLI_TAG "---------------------------------------------\r\n");
+    plen += sprintf(buf + plen, "%s---------------------------------------------\r\n", esc_tag);
 
     return RHINO_SUCCESS;
 }
@@ -244,20 +255,6 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
                       char **argv)
 {
     kstat_t ret;
-    char *helpinfo = CLI_TAG "dumpsys help:\r\n"
-                     CLI_TAG "\tdumpsys task         : show the task info.\r\n"
-#ifndef CSP_LINUXHOST
-                     CLI_TAG "\tdumpsys task_stack   : show the task stack info.\r\n"
-#endif
-                     CLI_TAG "\tdumpsys mm_info      : show the memory has alloced.\r\n"
-#if (RHINO_CONFIG_MM_LEAKCHECK > 0)
-                     CLI_TAG "\tdumpsys mm_leak      : show the memory maybe leak.\r\n"
-                     CLI_TAG "\tdumpsys mm_monitor   : [start/stop] [round time] fire a timer to monitor mm, default 10s.\r\n"
-#endif
-#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-                     CLI_TAG "\tdumpsys info         : show the system info\r\n"
-#endif
-                     ;
 
     if (argc >= 2  && 0 == strcmp(argv[1], "task")) {
         if (argc == 3 && (0 == strcmp(argv[2], "detail"))) {
@@ -301,7 +298,28 @@ uint32_t dumpsys_func(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     }
 #endif
     else {
-        snprintf(pcWriteBuffer, xWriteBufferLen, "%s\r\n", helpinfo);
+        int len = 0;
+        len += snprintf(pcWriteBuffer + len, xWriteBufferLen - len,
+                        "%sdumpsys help:\r\n", esc_tag);
+        len += snprintf(pcWriteBuffer + len, xWriteBufferLen - len,
+                "%s\tdumpsys task         : show the task info.\r\n", esc_tag);
+#ifndef CSP_LINUXHOST
+        len += snprintf(pcWriteBuffer + len, xWriteBufferLen - len,
+                        "%s\tdumpsys task_stack   : show the task stack info.\r\n", esc_tag);
+#endif
+        len += snprintf(pcWriteBuffer + len, xWriteBufferLen - len,
+                       "%s\tdumpsys mm_info      : show the memory has alloced.\r\n", esc_tag);
+#if (RHINO_CONFIG_MM_LEAKCHECK > 0)
+        len += snprintf(pcWriteBuffer + len, xWriteBufferLen - len,
+                     "%s\tdumpsys mm_leak      : show the memory maybe leak.\r\n", esc_tag);
+        len += snprintf(pcWriteBuffer + len, xWriteBufferLen - len,
+                     "%s\tdumpsys mm_monitor   : [start/stop] [round time] fire a timer"
+                     "to monitor mm, default 10s.\r\n", esc_tag);
+#endif
+#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
+        len += snprintf(pcWriteBuffer + len, xWriteBufferLen - len,
+                       "%s\tdumpsys info         : show the system info\r\n", esc_tag);
+#endif
         return RHINO_SUCCESS;
     }
 }
@@ -341,16 +359,16 @@ int dump_task_stack(ktask_t *task)
     p = (int *)cur;
     while (p < (int *)end) {
         if (i % 4 == 0) {
-            sprintf(tmp, CLI_TAG "\r\n%08x:", (uint32_t)p);
+            sprintf(tmp, "%s\r\n%08x:", esc_tag, (uint32_t)p);
             safesprintf(printbuf, totallen, bufoffset, tmp);
         }
-        sprintf(tmp, CLI_TAG  "%08x ", *p);
+        sprintf(tmp,  "%s%08x ", esc_tag, *p);
         safesprintf(printbuf, totallen, bufoffset, tmp);
         i++;
         p++;
     }
-    safesprintf(printbuf, totallen, bufoffset,
-                CLI_TAG "\r\n-----------------end----------------\r\n\r\n");
+    snprintf(tmpbuf, 255, "%s\r\n-----------------end----------------\r\n\r\n", esc_tag);
+    safesprintf(printbuf, totallen, offset, tmpbuf);
     krhino_sched_enable();
 
     csp_printf("%s", printbuf);
@@ -374,7 +392,7 @@ int dump_task_stack_byname(char *taskname)
     for (tmp = taskhead->next; tmp != taskend; tmp = tmp->next) {
         task = krhino_list_entry(tmp, ktask_t, task_stats_item);
         if (printall == 1 || strcmp(taskname, task->task_name) == 0) {
-            csp_printf(CLI_TAG  "------task %s stack -------", task->task_name);
+            csp_printf("%s------task %s stack -------", esc_tag, task->task_name);
             dump_task_stack(task);
         }
     }

@@ -36,6 +36,11 @@ typedef enum {
                       addr[0],addr[1],addr[2],addr[3],\
                       addr[4],addr[5],addr[6],addr[7]
 
+#define EXT_NETID_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
+#define EXT_NETID_DATA(addr) \
+                      addr[0],addr[1],addr[2],\
+                      addr[3],addr[4],addr[5]
+
 #define IP6_ADDR_FMT "%x:%x:%x:%x:%x:%x:%x:%x"
 #define IP6_ADDR_DATA(dest) \
                         ntohs(dest->m16[0]), \
