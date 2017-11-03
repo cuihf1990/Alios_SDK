@@ -79,6 +79,8 @@ void tick_list_update(void)
     RHINO_CRITICAL_ENTER();
 
 #if (RHINO_CONFIG_DYNTICKLESS > 0)
+    soc_dyntick_proc();
+
     g_tick_count       += g_pend_intrpt_ticks;
     g_sys_time_tick    += g_pend_intrpt_ticks;
 #else
@@ -87,7 +89,7 @@ void tick_list_update(void)
 #endif
 
     tick_head_ptr = &g_tick_head;
-    iter          = tick_head_ptr->next;
+    iter          =  tick_head_ptr->next;
 
     while (RHINO_TRUE) {
         /* search all the time list if possible */
