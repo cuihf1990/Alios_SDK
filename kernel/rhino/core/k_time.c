@@ -5,7 +5,7 @@
 #include <k_api.h>
 
 #if (RHINO_CONFIG_DYNTICKLESS > 0)
-void krhino_tickless_proc(tick_t ticks)
+void krhino_tickless_proc(void)
 {
     CPSR_ALLOC();
 
@@ -16,12 +16,6 @@ void krhino_tickless_proc(tick_t ticks)
 #if (RHINO_CONFIG_USER_HOOK > 0)
     krhino_tick_hook();
 #endif
-
-    RHINO_CPU_INTRPT_DISABLE();
-
-    g_pend_intrpt_ticks += ticks;
-
-    RHINO_CPU_INTRPT_ENABLE();
 
     tick_list_update();
 
