@@ -88,12 +88,13 @@ typedef ur_error_t (* interface_up_t)(void);
 typedef ur_error_t (* interface_down_t)(void);
 
 typedef struct mm_cb_s {
+    slist_t next;
     interface_up_t interface_up;
     interface_down_t interface_down;
 } mm_cb_t;
 
-ur_error_t umesh_mm_init(node_mode_t mode);
-ur_error_t umesh_mm_start(mm_cb_t *cb);
+ur_error_t umesh_mm_init(node_mode_t mode, mm_cb_t *cb);
+ur_error_t umesh_mm_start(void);
 ur_error_t umesh_mm_stop(void);
 
 bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
@@ -122,6 +123,8 @@ int8_t              umesh_mm_get_seclevel(void);
 
 void umesh_mm_get_extnetid(umesh_extnetid_t *extnetid);
 ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid);
+
+void umesh_mm_register_callback(mm_cb_t *callback);
 
 uint8_t umesh_mm_get_leader_mode(void);
 uint8_t umesh_mm_get_reboot_flag(void);

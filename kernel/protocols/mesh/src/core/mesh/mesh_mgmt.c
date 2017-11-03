@@ -36,7 +36,7 @@ typedef struct mm_device_s {
 typedef struct mesh_mgmt_state_s {
     mm_device_t device;
     node_mode_t leader_mode;
-    mm_cb_t *callback;
+    slist_t callback;
 } mesh_mgmt_state_t;
 
 static mesh_mgmt_state_t g_mm_state;
@@ -55,6 +55,8 @@ static ur_error_t send_sid_response(network_context_t *network,
                                     ur_addr_t *dest, ur_addr_t *dest2,
                                     ur_node_id_t *node_id);
 static ur_error_t send_advertisement(network_context_t *network);
+
+static void mesh_interface_state_callback(bool up);
 
 static void write_prev_netinfo(void);
 static void read_prev_netinfo(void);
@@ -310,8 +312,7 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
     network->state = INTERFACE_UP;
     stop_addr_cache();
     address_resolver_init();
-
-    g_mm_state.callback->interface_up();
+    mesh_interface_state_callback(true);
     start_keep_alive_timer(network);
     send_address_notification(network, NULL);
 
@@ -358,8 +359,7 @@ void become_leader(void)
     set_leader_network_context(NULL, true);
     umesh_mm_start_net_scan_timer();
     umesh_mm_set_prev_channel();
-
-    g_mm_state.callback->interface_up();
+    mesh_interface_state_callback(true);
     stop_addr_cache();
     start_addr_cache();
     address_resolver_init();
@@ -1197,6 +1197,19 @@ static ur_error_t handle_sid_response(message_t *message)
     return error;
 }
 
+static void mesh_interface_state_callback(bool up)
+{
+    mm_cb_t *callback;
+
+    slist_for_each_entry(&g_mm_state.callback, callback, mm_cb_t, next) {
+        if (up) {
+            callback->interface_up();
+        } else {
+            callback->interface_down();
+        }
+    }
+}
+
 ur_error_t send_address_error(network_context_t *network, ur_addr_t *dest)
 {
     ur_error_t error = UR_ERROR_MEM;
@@ -1272,8 +1285,7 @@ void become_detached(void)
     stop_neighbor_updater();
     stop_addr_cache();
     address_resolver_init();
-    g_mm_state.callback->interface_down();
-
+    mesh_interface_state_callback(false);
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         sid_allocator_deinit(network);
@@ -1557,10 +1569,12 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
     return error;
 }
 
-ur_error_t umesh_mm_init(node_mode_t mode)
+ur_error_t umesh_mm_init(node_mode_t mode, mm_cb_t *mm_cb)
 {
     ur_error_t error = UR_ERROR_NONE;
     ur_configs_t configs;
+
+    assert(mm_cb);
 
     // init device
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
@@ -1569,12 +1583,11 @@ ur_error_t umesh_mm_init(node_mode_t mode)
            sizeof(g_mm_state.device.ueid));
     g_mm_state.device.seclevel = SEC_LEVEL_1;
     g_mm_state.device.prev_channel = -1;
-
     register_neighbor_updater(neighbor_updated_handler);
-
     memset(&configs, 0, sizeof(configs));
     ur_configs_read(&configs);
     nd_set_stable_main_version(configs.main_version);
+    umesh_mm_register_callback(mm_cb);
 
     g_mm_state.device.mode = mode;
     if (get_hal_contexts_num() > 1) {
@@ -1583,18 +1596,15 @@ ur_error_t umesh_mm_init(node_mode_t mode)
     return error;
 }
 
-ur_error_t umesh_mm_start(mm_cb_t *mm_cb)
+ur_error_t umesh_mm_start(void)
 {
     ur_error_t error = UR_ERROR_NONE;
-
-    assert(mm_cb);
 
     MESH_LOG_INFO("mesh started");
 
     reset_network_context();
     read_prev_netinfo();
     g_mm_state.device.state = DEVICE_STATE_DETACHED;
-    g_mm_state.callback = mm_cb;
     g_mm_state.device.alive_timer = NULL;
     g_mm_state.device.reboot_flag = true;
 
@@ -1978,6 +1988,11 @@ void umesh_mm_set_prev_channel(void)
 uint8_t umesh_mm_get_reboot_flag(void)
 {
     return g_mm_state.device.reboot_flag;
+}
+
+void umesh_mm_register_callback(mm_cb_t *callback)
+{
+    slist_add(&callback->next, &g_mm_state.callback);
 }
 
 uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data)
