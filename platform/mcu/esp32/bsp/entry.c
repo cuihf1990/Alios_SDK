@@ -6,6 +6,9 @@
 #include <hal/ota.h>
 #include <aos/aos.h>
 #include <sdkconfig.h>
+#ifdef CONFIG_AOS_MESH
+#include <umesh_hal.h>
+#endif
 
 uart_dev_t uart_0 = {
     .port = CONFIG_CONSOLE_UART_NUM,
@@ -35,6 +38,10 @@ static void initialise_wifi(void)
 {
     tcpip_adapter_init();
     hal_wifi_register_module(&sim_aos_wifi_eps32);
+#ifdef CONFIG_AOS_MESH
+    extern umesh_hal_module_t esp32_wifi_mesh_module;
+    hal_umesh_register_module(&esp32_wifi_mesh_module);
+#endif
     hal_wifi_init();
 }
 #else
