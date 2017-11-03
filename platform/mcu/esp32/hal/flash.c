@@ -1,6 +1,8 @@
 #include "hal/soc/soc.h"
 #include "esp_spi_flash.h"
 
+#define ROUND_DOWN(a,b) (((a) / (b)) * (b))
+
 extern const hal_logic_partition_t hal_partitions[];
 
 hal_logic_partition_t *hal_flash_get_info(hal_partition_t pno)
@@ -56,11 +58,11 @@ int32_t hal_flash_erase(hal_partition_t pno, uint32_t off_set,
     if(size + off_set > partition_info->partition_length)
         return -1;
 
-    start_addr = (partition_info->partition_start_addr + off_set) & (~SPI_FLASH_SEC_SIZE);
-    end_addr = (partition_info->partition_start_addr + off_set + size - 1) & (~SPI_FLASH_SEC_SIZE);
+    start_addr = ROUND_DOWN((partition_info->partition_start_addr + off_set), SPI_FLASH_SEC_SIZE);
+    end_addr = ROUND_DOWN((partition_info->partition_start_addr + off_set + size - 1), SPI_FLASH_SEC_SIZE);
 
     for (addr = start_addr; addr <= end_addr; addr += SPI_FLASH_SEC_SIZE) {
-        ret = spi_flash_erase_range(start_addr, SPI_FLASH_SEC_SIZE);
+        ret = spi_flash_erase_range(addr, SPI_FLASH_SEC_SIZE);
         if (ret != 0)
             return ret;
     }
