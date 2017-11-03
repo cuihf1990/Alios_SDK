@@ -790,7 +790,7 @@ static bool get_auto_netmgr_config()
 
     if (aos_kv_get(AUTO_NETMGR_KEY, (void *)c, &len) != 0) {
         ret = false;
-        LOGE("alink", "kv(%s) not set, auto_netmgr will be disabled",
+        LOGI("alink", "kv(%s) not set, auto_netmgr will be disabled",
           AUTO_NETMGR_KEY);
     } else {
         ret = true;
