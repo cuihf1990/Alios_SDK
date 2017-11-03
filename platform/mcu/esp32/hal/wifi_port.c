@@ -439,6 +439,9 @@ static void register_wlan_mgnt_monitor_cb(hal_wifi_module_t *m,
                                           monitor_data_cb_t fn)
 {
     mngt_data_cb = fn;
+    // Workaround for zero config <TODO>
+    hal_wifi_register_monitor_cb(NULL, NULL);
+    hal_wifi_start_wifi_monitor(NULL);
 }
 
 static int wlan_send_80211_raw_frame(hal_wifi_module_t *m,
