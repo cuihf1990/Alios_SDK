@@ -27,8 +27,10 @@ static void test_md5(void)
     ret = digest_md5(buf_md5,len,buf_store);
     YUNIT_ASSERT(0 == ret);
 
+#ifdef CONFIG_AOS_YTS_ALL
     ret = digest_md5_file("/etc/bash.bashrc",buf_store);
     YUNIT_ASSERT(0 == ret);
+#endif
 
     ret = digest_md5_final(md5,buf_store);
     YUNIT_ASSERT(0 == ret);
