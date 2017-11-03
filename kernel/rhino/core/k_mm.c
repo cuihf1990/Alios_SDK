@@ -307,13 +307,13 @@ kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
         return RHINO_MM_POOL_SIZE_ERR;
     }
 
+    memset(addr, 0, len);
+
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_ENTER();
 #else
     krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
-
-    memset(addr, 0, len);
 
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
 
@@ -775,10 +775,20 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u)
     if (b->dye == RHINO_MM_FREE_DYE) {
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+        RHINO_CRITICAL_EXIT();
+#else
+        krhino_mutex_unlock(&(mmhead->mm_mutex));
+#endif
         printf("WARNING!! memory maybe double free!!\r\n");
         k_err_proc(RHINO_SYS_FATAL_ERR);
     }
     if (b->dye != RHINO_MM_CORRUPT_DYE) {
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+        RHINO_CRITICAL_EXIT();
+#else
+        krhino_mutex_unlock(&(mmhead->mm_mutex));
+#endif
         printf("WARNING,memory maybe corrupt!!\r\n");
         k_err_proc(RHINO_SYS_FATAL_ERR);
     }
@@ -804,6 +814,11 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
         VGF(VALGRIND_MAKE_MEM_DEFINED(tmp_b, sizeof(k_mm_list_t)));
 #if (RHINO_CONFIG_MM_DEBUG > 0u)
         if (tmp_b->dye != RHINO_MM_FREE_DYE) {
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+            RHINO_CRITICAL_EXIT();
+#else
+            krhino_mutex_unlock(&(mmhead->mm_mutex));
+#endif
             printf("WARNING,memory overwritten!!\r\n");
             k_err_proc(RHINO_SYS_FATAL_ERR);
         }
@@ -820,6 +835,11 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
     VGF(VALGRIND_MAKE_MEM_DEFINED(tmp_b, MMLIST_HEAD_SIZE));
 #if (RHINO_CONFIG_MM_DEBUG > 0u)
     if (tmp_b->dye != RHINO_MM_FREE_DYE && tmp_b->dye != RHINO_MM_CORRUPT_DYE) {
+#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+        RHINO_CRITICAL_EXIT();
+#else
+        krhino_mutex_unlock(&(mmhead->mm_mutex));
+#endif
         printf("WARNING,memory overwritten!!\r\n");
         k_err_proc(RHINO_SYS_FATAL_ERR);
     }
