@@ -44,7 +44,7 @@ typedef struct {
     frame_stats_t stats;
 } mesh_hal_priv_t;
 
-static umesh_hal_module_t esp32_wifi_mesh_module;
+umesh_hal_module_t esp32_wifi_mesh_module;
 static mesh_hal_priv_t *g_hal_priv;
 
 typedef struct send_ext_s {
@@ -67,9 +67,14 @@ static int esp32_wifi_mesh_init(umesh_hal_module_t *module, void *config)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    esp_err_t esp_err;
+    bool enable;
 
     g_hal_priv = priv;
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    esp_err = esp_wifi_get_promiscuous(&enable);
+    if (esp_err != ESP_OK) {
+        ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    }
     ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_STA, priv->macaddr));
     return 0;
 }
@@ -130,7 +135,6 @@ static int esp32_wifi_mesh_enable(umesh_hal_module_t *module)
         ESP_ERROR_CHECK(esp_wifi_set_promiscuous(1));
         ESP_ERROR_CHECK(esp_wifi_set_promiscuous_rx_cb(mesh_promiscuous_rx_cb));
     }
-    ESP_ERROR_CHECK(esp_wifi_set_channel(6, 0));
     return 0;
 }
 
@@ -268,7 +272,7 @@ static int esp32_wifi_mesh_get_channel(umesh_hal_module_t *module)
 static int esp32_wifi_mesh_set_channel(umesh_hal_module_t *module,
                                   uint8_t channel)
 {
-    /* disable channel switch to avoid interfere with AP */
+    ESP_ERROR_CHECK(esp_wifi_set_channel(channel, 0));
     return 0;
 }
 
@@ -319,7 +323,7 @@ static mesh_hal_priv_t g_wifi_priv = {
     .bssid = {0xb0, 0xf8, 0x93, 0x00, 0x00, 0x07},
 };
 
-static umesh_hal_module_t esp32_wifi_mesh_module = {
+umesh_hal_module_t esp32_wifi_mesh_module = {
     .base.name = "esp32_mesh_wifi_module",
     .base.priv_dev = &g_wifi_priv,
     .type = MEDIA_TYPE_WIFI,
