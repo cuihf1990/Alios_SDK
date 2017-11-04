@@ -71,7 +71,6 @@ ktask_t      g_cpu_usage_task;
 cpu_stack_t  g_cpu_task_stack[RHINO_CONFIG_CPU_USAGE_TASK_STACK];
 idle_count_t g_idle_count_max;
 uint32_t     g_cpu_usage;
-uint32_t     g_cpu_usage_max;
 #endif
 
 #if (RHINO_CONFIG_TASK_SCHED_STATS > 0)
