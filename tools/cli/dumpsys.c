@@ -73,8 +73,8 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int detail)
     safesprintf(printbuf, totallen, offset, tmpbuf);
 
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-    snprintf(tmpbuf, 255, "%sCPU usage :%-10d   MAX:%-10d                 \n",
-                esc_tag, g_cpu_usage / 100, g_cpu_usage_max / 100);
+    snprintf(tmpbuf, 255, "%sCPU usage :%-10d                    \n",
+                esc_tag, g_cpu_usage / 100);
     safesprintf(printbuf, totallen, offset, tmpbuf);
     snprintf(tmpbuf, 255,
             "%s------------------------------------------------------------------------\r\n",
@@ -174,8 +174,8 @@ static uint32_t dumpsys_info_func(char *buf, uint32_t len)
 
     plen += sprintf(buf + plen, "%s---------------------------------------------\r\n", esc_tag);
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-    plen += sprintf(buf + plen, "%sCPU usage :%-10d     MAX:%-10d\r\n", esc_tag,
-                    g_cpu_usage / 100, g_cpu_usage_max / 100);
+    plen += sprintf(buf + plen, "%sCPU usage :%-10d     \r\n", esc_tag,
+                    g_cpu_usage / 100);
 #endif
 
 #if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
