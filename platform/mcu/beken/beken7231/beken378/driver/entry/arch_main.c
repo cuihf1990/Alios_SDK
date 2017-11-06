@@ -101,10 +101,6 @@ void soc_system_init(void)
     app_start();
 
     hw_start_hal();
-
-#ifdef CONFIG_AOS_CLI
-    board_cli_init();
-#endif
 #endif
 }
 
