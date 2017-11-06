@@ -10,6 +10,8 @@
 #include <rom/ets_sys.h>
 #include <driver/uart.h>
 
+extern void esp_restart();
+
 int32_t hal_uart_send(aos_uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
     uart_write_bytes(uart->port, data, size);
@@ -50,5 +52,6 @@ int32_t hal_uart_finalize(aos_uart_dev_t *uart)
 void hal_reboot(void)
 {
     printf("reboot!\n");
+    esp_restart();
 }
 
