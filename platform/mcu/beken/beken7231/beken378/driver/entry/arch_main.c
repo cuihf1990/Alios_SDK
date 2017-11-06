@@ -60,7 +60,7 @@ static void init_app_thread( void *arg )
 
 extern void fclk_init(void);
 extern void test_case_task_start(void);
-extern void test_mtbf_task_start(void);
+
 
 static int test_cnt;
 
