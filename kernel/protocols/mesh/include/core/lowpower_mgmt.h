@@ -12,6 +12,7 @@ enum {
     SLOT_INTERVAL = 600,
 };
 
+void lowpower_init(void);
 void lowpower_start(void);
 void lowpower_stop(void);
 

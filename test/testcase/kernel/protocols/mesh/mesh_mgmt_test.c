@@ -27,15 +27,10 @@ static ur_error_t dummy_interface_down(void)
 
 void test_uradar_mesh_mgmt_case(void)
 {
-    mm_cb_t mm_cb;
-    mm_cb.interface_up = dummy_interface_up;
-    mm_cb.interface_down = dummy_interface_down;
-
     interface_start();
-    YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_start(&mm_cb));
+    YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_start());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_stop());
     YUNIT_ASSERT(DEVICE_STATE_DISABLED == umesh_mm_get_device_state());
-    YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_init(MODE_RX_ON));
     YUNIT_ASSERT(BCAST_SID == umesh_mm_get_local_sid());
     uint8_t *ueid;
     YUNIT_ASSERT_PTR_NOT_NULL((ueid = umesh_mm_get_local_ueid()));
@@ -72,7 +67,7 @@ void test_uradar_mesh_mgmt_case(void)
     }
 
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_stop());
-    YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_start(&mm_cb));
+    YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_start());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_stop());
     interface_stop();
 }

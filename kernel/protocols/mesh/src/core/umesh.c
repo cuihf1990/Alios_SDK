@@ -291,10 +291,14 @@ ur_error_t umesh_init(node_mode_t mode)
     ur_router_register_module();
     interface_init();
 
-    umesh_mm_init(mode);
+    umesh_mm_init(mode, &g_um_state.mm_cb);
     neighbors_init();
     mf_init();
     nd_init();
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    extern void lowpower_init(void);
+    lowpower_init();
+#endif
     message_stats_reset();
     g_um_state.initialized = true;
     mesh_cli_init();
@@ -326,7 +330,7 @@ ur_error_t umesh_start()
 
 
     interface_start();
-    umesh_mm_start(&g_um_state.mm_cb);
+    umesh_mm_start();
     lp_start();
 
     if (umesh_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
