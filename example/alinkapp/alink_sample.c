@@ -345,11 +345,11 @@ char active_data_tx_buffer[128];
 void alink_activate(void* arg)
 {
     snprintf(active_data_tx_buffer, sizeof(active_data_tx_buffer)-1, ActivateDataFormat, 1);
-    LOG("active send:%s", active_data_tx_buffer);
+    aos_cli_printf("active send:%s\r\n", active_data_tx_buffer);
     alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
 
     snprintf(active_data_tx_buffer, sizeof(active_data_tx_buffer)-1, ActivateDataFormat, 0);
-    LOG("send:%s", active_data_tx_buffer);
+    aos_cli_printf("send:%s\r\n", active_data_tx_buffer);
     alink_report_async(Method_PostData, (char *)active_data_tx_buffer, NULL, NULL);
 }
 
@@ -406,7 +406,7 @@ static void handle_model_cmd(char *pwbuf, int blen, int argc, char **argv)
     aos_kv_get("model", model, &model_len);
 
     if (argc == 1) {
-        LOG("Usage: model light/gateway. Model is currently %s", model);
+        aos_cli_printf("Usage: model light/gateway. Model is currently %s\r\n", model);
         return;
     }
 
@@ -414,17 +414,17 @@ static void handle_model_cmd(char *pwbuf, int blen, int argc, char **argv)
         if (strcmp(model, argv[1])) {
             aos_kv_del("alink");
             aos_kv_set("model", "gateway", sizeof("gateway"), 1);
-            LOG("Swith model to gateway, please reboot");
+            aos_cli_printf("Swith model to gateway, please reboot\r\n");
         } else {
-            LOG("Current model is already gateway");
+            aos_cli_printf("Current model is already gateway\r\n");
         }
     } else {
         if (strcmp(model, argv[1])) {
             aos_kv_del("alink");
             aos_kv_set("model", "light", sizeof("light"), 1);
-            LOG("Swith model to light, please reboot");
+            aos_cli_printf("Swith model to light, please reboot\r\n");
         } else {
-            LOG("Current model is already light");
+            aos_cli_printf("Current model is already light\r\n");
         }
     }
 }
@@ -442,13 +442,13 @@ static void handle_uuid_cmd(char *pwbuf, int blen, int argc, char **argv)
     extern bool gateway_is_connected(void);
     extern const char *gateway_get_uuid(void);
     if (cloud_is_connected()) {
-        LOG("uuid: %s", config_get_main_uuid());
+        aos_cli_printf("uuid: %s\r\n", config_get_main_uuid());
 #ifdef MESH_GATEWAY_SERVICE
     } else if (gateway_is_connected()) {
-        LOG("uuid: %s", gateway_get_uuid());
+        aos_cli_printf("uuid: %s\r\n", gateway_get_uuid());
 #endif
     } else {
-        LOG("alink is not connected");
+        aos_cli_printf("alink is not connected\r\n");
     }
 }
 

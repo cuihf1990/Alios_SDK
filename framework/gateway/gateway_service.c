@@ -758,7 +758,8 @@ static void gateway_worker(void *arg)
 static void handle_gateway_cmd(char *pwbuf, int blen, int argc, char **argv)
 {
     if (argc == 1) {
-        LOG("Usage: gateway login/logout. Currently %s", gateway_state.login ? "login" : "logout");
+        aos_cli_printf("Usage: gateway login/logout. Currently %s\r\n",
+                       gateway_state.login ? "login" : "logout");
         return;
     }
 

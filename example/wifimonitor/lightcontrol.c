@@ -140,14 +140,14 @@ static void handle_set_rssi_threshold(char *pwbuf, int blen, int argc, char **ar
         return;
     ret = sscanf(argv[1], "%d", &rssi_tmp);
     if (ret != 1) {
-        LOGD(MODULE_NAME, "error input: %s", argv[1]);
+        aos_cli_printf("error input: %s\r\n", argv[1]);
         return;
     }
 
     int8_t rssi = rssi_tmp;
     rssi_threshold = rssi;
     aos_kv_set("rssi_threshold", &rssi, 1, 1);
-    LOGD(MODULE_NAME, "set threshold value %d", rssi);
+    aos_cli_printf("set threshold value %d\r\n", rssi);
     snd_buf[0] = TYPE_RSSI_THRESHOLD;
     snd_buf[1] = (int8_t)rssi;
     snd_buf[2] = '\x0';
@@ -163,15 +163,15 @@ static void handle_set_rssi_compensate(char *pwbuf, int blen, int argc, char **a
         return;
     ret = sscanf(argv[1], "%04x", &mac);
     if (ret != 1) {
-        LOGD(MODULE_NAME, "error input: %s", argv[1]);
+        aos_cli_printf("error input: %s\r\n", argv[1]);
         return;
     }
     ret = sscanf(argv[2], "%d", &rssi);
     if (ret != 1) {
-        LOGD(MODULE_NAME, "error input: %s", argv[2]);
+        aos_cli_printf("error input: %s\r\n", argv[2]);
         return;
     }
-    LOGD(MODULE_NAME, "set %04x compensate value %d", mac, rssi);
+    aos_cli_printf("set %04x compensate value %d\r\n", mac, rssi);
     snd_buf[0] = TYPE_RSSI_COMPENSATE;
     snd_buf[1] = (mac >> 8) & 0xff;
     snd_buf[2] = (mac >> 0) & 0xff;

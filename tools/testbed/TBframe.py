@@ -25,6 +25,7 @@ CMD_DONE       = 'CMDD'
 CMD_ERROR      = 'CMDE'
 HEARTBEAT      = 'HTBT'
 TYPE_NONE      = 'NONE'
+CLIENT_TAG     = 'CTAG'
 
 def is_valid_type(type):
     #frequently used commands
@@ -72,6 +73,8 @@ def is_valid_type(type):
     if type == FILE_END:
         return True
     if type == DEVICE_ALLOC:
+        return True
+    if type == CLIENT_TAG:
         return True
     return False
 

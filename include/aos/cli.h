@@ -103,7 +103,13 @@ EXPORT_SYMBOL_K(1, aos_cli_unregister_commands, "int aos_cli_unregister_commands
  *
  * @return  0  on success, error code otherwise.
  */
+#if defined BUILD_BIN || defined BUILD_KERNEL
+ /* SINGLEBIN or KERNEL */
 int aos_cli_printf(const char *buff, ...);
+#else
+ /* FRAMWORK or APP */
+#define aos_cli_printf(fmt, ...) csp_printf("%s" fmt, aos_cli_get_tag(), ##__VA_ARGS__)
+#endif
 
 /**
  * CLI initial function
@@ -121,6 +127,14 @@ EXPORT_SYMBOL_K(1, aos_cli_init, "int aos_cli_init(void)")
  */
 int aos_cli_stop(void);
 EXPORT_SYMBOL_K(1, aos_cli_stop, "int aos_cli_stop(void)")
+
+/**
+ * CLI get tag string
+ *
+ * @return cli tag storing buffer
+ */
+const char *aos_cli_get_tag(void);
+EXPORT_SYMBOL_K(1, aos_cli_get_tag, "const char *aos_cli_get_tag(void)")
 
 
 #else /* CONFIG_AOS_CLI */
