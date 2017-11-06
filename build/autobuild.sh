@@ -12,6 +12,10 @@ esp32_targets="alinkapp helloworld"
 esp32_platforms="esp32devkitc"
 bins_type="app framework kernel"
 
+if [ -f ${HOME}/.bashrc ]; then
+    source ${HOME}/.bashrc
+fi
+
 git status > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "error: not in any git repository"

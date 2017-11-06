@@ -271,6 +271,10 @@ class Client:
                     continue
                 print 'device {0} added'.format(port)
                 self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'serial':ser, 'event':threading.Event(), 'attributes':{}, 'filter':{}}
+                if 'mxchip' in port:
+                    self.devices[port]['attributes']['model'] = 'MK3060'
+                if 'espif' in port:
+                    self.devices[port]['attributes']['model'] = 'ESP32'
                 thread.start_new_thread(self.device_log_poll, (port,))
                 thread.start_new_thread(self.device_status_poll, (port,))
                 self.send_device_list()

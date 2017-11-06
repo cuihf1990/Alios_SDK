@@ -231,8 +231,19 @@ class Server:
                 for port in ports:
                     if port in self.allocated['devices']:
                         continue
-                    if type not in port:
-                        continue
+
+                    try:
+                        status = json.loads(client['devices']['status'])
+                    except:
+                        print 'parse {0} status failed'.format(port)
+                        status = None
+                    if status != None:
+                        if 'model' not in status or type.lower() != status['model'].lower():
+                            continue
+                    else:
+                        if type not in port:
+                            continue
+
                     if client['devices'][port]['using'] != 0:
                         continue
                     allocated.append(port)
