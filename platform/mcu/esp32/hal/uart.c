@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -9,8 +13,6 @@
 
 #include <rom/ets_sys.h>
 #include <driver/uart.h>
-
-extern void esp_restart();
 
 int32_t hal_uart_send(aos_uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
@@ -49,9 +51,4 @@ int32_t hal_uart_finalize(aos_uart_dev_t *uart)
 {
 }
 
-void hal_reboot(void)
-{
-    printf("reboot!\n");
-    esp_restart();
-}
 
