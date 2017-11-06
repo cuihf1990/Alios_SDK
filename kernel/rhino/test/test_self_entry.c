@@ -11,12 +11,9 @@ cpu_stack_t  test_case_task_stack[TEST_CASE_TASK_STACK_SIZE];
 
 void test_case_task_entry(void *arg)
 {
-#if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
-    krhino_cpu_usage_stats_init();
-#endif
-    test_case_init();
-
     int item;
+
+    test_case_init();
 
     for (item = 0 ;; item++) {
         if (test_fw_map[item].fn == NULL) {
