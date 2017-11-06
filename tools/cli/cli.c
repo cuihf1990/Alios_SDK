@@ -34,6 +34,10 @@ static uint8_t        esc_tag_len = 0;
 extern uart_dev_t     uart_0;
 extern void hal_reboot(void);
 
+#ifdef CONFIG_AOS_CLI_BOARD
+extern int board_cli_init(void);
+#endif
+
 int cli_getchar(char *inbuf);
 
 int cli_putstr(char *msg);
@@ -820,11 +824,6 @@ int aos_cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
     return 0;
 }
 
-__attribute__ ((weak)) int board_cli_init(void)
-{
-    return 0;
-}
-
 int aos_cli_stop(void)
 {
     cliexit = 1;
@@ -860,7 +859,9 @@ int aos_cli_init(void)
     cli->initialized = 1;
     cli->echo_disabled = 0;
 
+#ifdef CONFIG_AOS_CLI_BOARD
     board_cli_init();
+#endif
 
     return 0;
 
