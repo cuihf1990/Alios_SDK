@@ -1,7 +1,7 @@
 import os, sys, time
 from autotest import Autotest
 
-def main(filename='~/lb-all.bin'):
+def main(filename='~/lb-all.bin', model='mk3060'):
     ap_ssid = 'aos_test_01'
     ap_pass = 'Alios@Embedded'
     server = '10.125.52.132'
@@ -16,6 +16,11 @@ def main(filename='~/lb-all.bin'):
             if len(args) != 2:
                 print 'wrong argument {0} input, example: --firmware=firmware.bin'.format(arg)
             filename = args[1]
+        elif arg.startswith('--model='):
+            args = arg.split('=')
+            if len(args) != 2:
+                print 'wrong argument {0} input, example: --model=mk3060'.format(arg)
+            model = args[1]
         elif arg.startswith('--wifissid='):
             args = arg.split('=')
             if len(args) != 2:
@@ -39,10 +44,12 @@ def main(filename='~/lb-all.bin'):
         return [1, 'connect testbed failed']
 
     #request device allocation
-    type = 'mxchip'
+    if not model:
+        print "error: unsupported model {0}".format(repr(model))
+        return [1, "model {0} error".format(repr(model))]
     number = 5
     timeout = 3600
-    allocted = at.device_allocate(type, number, timeout)
+    allocted = at.device_allocate(model, number, timeout)
     if len(allocted) != number:
         print "error: request device allocation failed"
         return [1, 'allocate device failed']

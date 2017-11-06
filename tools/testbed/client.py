@@ -88,6 +88,10 @@ class Client:
 
     def device_status_poll(self, port):
         poll_interval = 60
+        if self.devices[port]['attributes'] != {}:
+            content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
+            data = TBframe.construct(TBframe.DEVICE_STATUS, content)
+            self.service_socket.send(data)
         time.sleep(2)
         while port in self.devices:
             try:
