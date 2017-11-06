@@ -1,5 +1,5 @@
 import os, sys, time, socket
-import thread, threading, pdb
+import thread, threading, json
 import TBframe
 
 MAX_MSG_LENTH      = 2000
@@ -121,6 +121,7 @@ class Server:
                                 except:
                                     continue
                     elif type == TBframe.DEVICE_STATUS:
+                        #print value
                         port = value.split(':')[0]
                         if port not in client['devices']:
                             continue
@@ -233,15 +234,16 @@ class Server:
                         continue
 
                     try:
-                        status = json.loads(client['devices']['status'])
+                        status = json.loads(client['devices'][port]['status'])
                     except:
                         print 'parse {0} status failed'.format(port)
                         status = None
-                    if status != None:
+                    if status:
                         if 'model' not in status or type.lower() != status['model'].lower():
                             continue
                     else:
-                        if type not in port:
+                        pathstr = {'mk3060':'mxchip', 'esp32':'espif'}[type.lower()]
+                        if pathstr not in port:
                             continue
 
                     if client['devices'][port]['using'] != 0:
