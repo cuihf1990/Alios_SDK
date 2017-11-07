@@ -19,6 +19,7 @@
 #include "core/link_mgmt.h"
 #include "core/network_mgmt.h"
 #include "core/crypto.h"
+#include "core/lowpower_mgmt.h"
 #include "hal/interfaces.h"
 #include "hal/hals.h"
 
@@ -1266,6 +1267,10 @@ void become_detached(void)
     }
 
     umesh_mm_start_net_scan_timer();
+
+#if CONFIG_AOS_MESH_LOWPOWER
+    lowpower_stop();
+#endif
 
     MESH_LOG_INFO("become detached");
 }
