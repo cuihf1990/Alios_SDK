@@ -6,6 +6,7 @@ def main(filename='~/lb-all.bin', model='mk3060'):
     ap_pass = 'Alios@Embedded'
     server = '10.125.52.132'
     port = 34568
+    models={'mk3060':'0x13200', 'esp32':'0x10000'}
 
     #parse input
     i = 1
@@ -44,9 +45,10 @@ def main(filename='~/lb-all.bin', model='mk3060'):
         return [1, 'connect testbed failed']
 
     #request device allocation
-    if not model:
+    if not model or model.lower() not in models:
         print "error: unsupported model {0}".format(repr(model))
         return [1, "model {0} error".format(repr(model))]
+    model = model.lower()
     number = 5
     timeout = 3600
     allocted = at.device_allocate(model, number, timeout)
@@ -69,10 +71,11 @@ def main(filename='~/lb-all.bin', model='mk3060'):
 
     #program devices
     for device in device_list:
+        addr = models[device]
         succeed = False; retry = 5
         print 'programming device {0} ...'.format(devices[device])
         for i in range(retry):
-            if at.device_program(device, '0x13200', filename) == True:
+            if at.device_program(device, addr, filename) == True:
                 succeed = True
                 break
             time.sleep(0.5)
