@@ -45,10 +45,10 @@ static void process_stop(int argc, char *argv[]);
 #ifdef CONFIG_NET_LWIP
 #ifdef CONFIG_AOS_MESH_DEBUG
 extern void process_autotest(int argc, char *argv[]);
-extern void process_ipaddr(int argc, char *argv[]);
 extern void process_testcmd(int argc, char *argv[]);
 extern void process_traceroute(int argc, char *argv[]);
 #endif
+extern void process_ipaddr(int argc, char *argv[]);
 extern void process_ping(int argc, char *argv[]);
 #endif
 
@@ -81,10 +81,10 @@ const cli_command_t g_commands[] = {
 #ifdef CONFIG_NET_LWIP
 #ifdef CONFIG_AOS_MESH_DEBUG
     { "autotest", &process_autotest },
-    { "ipaddr", &process_ipaddr },
     { "testcmd", &process_testcmd },
     { "traceroute", &process_traceroute },
 #endif
+    { "ipaddr", &process_ipaddr },
     { "ping", &process_ping },
 #endif
 };

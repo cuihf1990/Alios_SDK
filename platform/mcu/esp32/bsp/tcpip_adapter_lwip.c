@@ -466,6 +466,7 @@ static esp_err_t tcpip_adapter_set_ip_info_api(tcpip_adapter_api_msg_t * msg)
     return tcpip_adapter_set_ip_info(msg->tcpip_if, msg->ip_info);
 }
 
+#if LWIP_IPV6
 static void tcpip_adapter_nd6_cb(struct netif *p_netif, uint8_t ip_idex)
 {
     tcpip_adapter_ip6_info_t *ip6_info;
@@ -537,6 +538,7 @@ esp_err_t tcpip_adapter_get_ip6_linklocal(tcpip_adapter_if_t tcpip_if, ip6_addr_
     }
     return ESP_OK;
 }
+#endif
 
 #if 0
 esp_err_t tcpip_adapter_get_mac(tcpip_adapter_if_t tcpip_if, uint8_t mac[6])
