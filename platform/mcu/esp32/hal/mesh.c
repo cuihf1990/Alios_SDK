@@ -23,6 +23,7 @@ enum {
     WIFI_SRC_OFFSET = 10,
     WIFI_BSSID_OFFSET = 16,
     WIFI_MAC_ADDR_SIZE = 6,
+    WIFI_FCS_SIZE = 4,
 
     DEFAULT_MTU_SIZE = 1024,
 };
@@ -79,7 +80,7 @@ static int esp32_wifi_mesh_init(umesh_hal_module_t *module, void *config)
     return 0;
 }
 
-static void pass_to_umesh(const void* arg)
+static void pass_to_umesh(void* arg)
 {
     compound_msg_t *cmsg = (compound_msg_t *)arg;
     frame_t *frm = &cmsg->frm;
@@ -93,7 +94,22 @@ static void pass_to_umesh(const void* arg)
     aos_free(cmsg);
 }
 
-static void mesh_promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
+bool esp32_is_mesh_pkt(void *buf, wifi_promiscuous_pkt_type_t type)
+{
+    wifi_promiscuous_pkt_t *pkt = (wifi_promiscuous_pkt_t *)buf;
+    mesh_hal_priv_t *priv = g_hal_priv;
+    umesh_hal_module_t *module = priv->module;
+
+    if (type != WIFI_PKT_DATA)
+        return false;
+
+    if (umesh_80211_filter_frame(module, pkt->payload, pkt->rx_ctrl.sig_len)) {
+        return false;
+    }
+    return true;
+}
+
+void mesh_promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
 {
     compound_msg_t *pf;
     wifi_promiscuous_pkt_t *pkt = (wifi_promiscuous_pkt_t *)buf;
@@ -107,9 +123,9 @@ static void mesh_promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
         return;
     }
 
-    pf = aos_malloc(sizeof(*pf) + pkt->rx_ctrl.sig_len - WIFI_MESH_OFFSET);
+    pf = aos_malloc(sizeof(*pf) + pkt->rx_ctrl.sig_len - WIFI_MESH_OFFSET - WIFI_FCS_SIZE);
     bzero(pf, sizeof(*pf));
-    pf->frm.len = pkt->rx_ctrl.sig_len - WIFI_MESH_OFFSET;
+    pf->frm.len = pkt->rx_ctrl.sig_len - WIFI_MESH_OFFSET - WIFI_FCS_SIZE;
     pf->frm.data = (void *)(pf + 1);
     memcpy(pf->fino.peer.addr, pkt->payload + WIFI_SRC_OFFSET, WIFI_MAC_ADDR_SIZE);
     pf->fino.peer.len = 8;
@@ -122,7 +138,7 @@ static void mesh_promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
     memcpy(pf->frm.data, pkt->payload + WIFI_MESH_OFFSET, pf->frm.len);
 
     priv->stats.in_frames++;
-    pass_to_umesh(pf);
+    aos_schedule_call(pass_to_umesh, pf);
 }
 
 static int esp32_wifi_mesh_enable(umesh_hal_module_t *module)
@@ -169,6 +185,7 @@ static int send_frame(umesh_hal_module_t *module, frame_t *frame,
     } else {
         priv->stats.out_frames++;
     }
+    aos_free(pkt);
 
 tx_exit:
     if (cxt) {
@@ -291,6 +308,12 @@ static int esp32_wifi_mesh_get_channel_list(umesh_hal_module_t *module,
 static int esp32_wifi_mesh_set_extnetid(umesh_hal_module_t *module,
                                    const umesh_extnetid_t *extnetid)
 {
+    mesh_hal_priv_t *priv = module->base.priv_dev;
+
+    if (extnetid == NULL) {
+        return -1;
+    }
+    memcpy(priv->bssid, extnetid->netid, WIFI_MAC_ADDR_SIZE);
     return 0;
 }
 

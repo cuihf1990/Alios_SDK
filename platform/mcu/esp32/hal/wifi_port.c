@@ -102,6 +102,10 @@ static monitor_data_cb_t mngt_data_cb = NULL;
 /**
     @brief Data RX Callback when in promiscuous mode
 */
+#ifdef CONFIG_AOS_MESH
+extern bool esp32_is_mesh_pkt(void *buf, wifi_promiscuous_pkt_type_t type);
+extern void mesh_promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type);
+#endif
 static void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
 {
     hal_wifi_module_t *m = hal_wifi_get_default_module();
@@ -109,6 +113,13 @@ static void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
 
     if (type != WIFI_PKT_DATA && type != WIFI_PKT_MGMT)
         return;
+
+#ifdef CONFIG_AOS_MESH
+    if (esp32_is_mesh_pkt(buf, type)) {
+        mesh_promiscuous_rx_cb(buf, type);
+        return;
+    }
+#endif
 
     if (data_cb)
         data_cb(pkt->payload, pkt->rx_ctrl.sig_len, NULL);
