@@ -6,8 +6,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "umesh.h"
 #include "umesh_utils.h"
 #include "core/network_data.h"
+#include "core/mesh_forwarder.h"
 #include "ip/ip.h"
 #include "ip/compress6.h"
 
@@ -16,17 +18,23 @@ static bool is_mcast_addr(ur_ip6_addr_t *ip6_addr)
     return (ip6_addr->m8[0] == 0xff);
 }
 
+static void get_addr_prefix(ur_ip6_prefix_t *prefix)
+{
+    uint16_t meshnetid = get_main_netid(umesh_get_meshnetid());
+
+    memset(prefix, 0, sizeof(*prefix));
+    prefix->length = 64;
+    prefix->prefix.m8[0] = 0xfc;
+    prefix->prefix.m8[6] = (uint8_t)(meshnetid >> 8);
+    prefix->prefix.m8[7] = (uint8_t)meshnetid;
+}
+
 static uint8_t ucast_addr_compress(ur_ip6_addr_t *ip6_addr, uint8_t *buffer,
                                    uint8_t *len)
 {
     ur_ip6_prefix_t prefix;
 
-    if (nd_get_ip6_prefix(&prefix) != UR_ERROR_NONE) {
-        memcpy(buffer, &ip6_addr->m8[0], 16);
-        *len = *len + 16;
-        return UCAST_ADDR_128BIT;
-    }
-
+    get_addr_prefix(&prefix);
     if (memcmp(prefix.prefix.m8, ip6_addr->m8, 8) != 0) {
         memcpy(buffer, &ip6_addr->m8[0], 16);
         *len = *len + 16;
@@ -358,10 +366,7 @@ static ur_error_t ipv6_header_decompress(uint8_t *header, uint16_t *header_size,
         ip6_header.hop_lim = 255;
     }
 
-    if (nd_get_ip6_prefix(&prefix) != UR_ERROR_NONE) {
-        return UR_ERROR_FAIL;
-    }
-
+    get_addr_prefix(&prefix);
     /* Source address decoding. */
     offset += ucast_addr_decompress(iphc_header->SAM, &prefix, &header[offset],
                                     &ip6_header.src, src->addr.short_addr);

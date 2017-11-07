@@ -40,7 +40,6 @@ uint16_t nd_get_stable_meshnetid(void);
 ur_error_t nd_set_stable_meshnetid(uint16_t meshnetid);
 const ur_ip6_addr_t *nd_get_subscribed_mcast(void);
 bool nd_is_subscribed_mcast(const ur_ip6_addr_t *addr);
-ur_error_t nd_get_ip6_prefix(ur_ip6_prefix_t *prefix);
 
 // network data
 ur_error_t nd_set(network_context_t *network, network_data_t *network_data);

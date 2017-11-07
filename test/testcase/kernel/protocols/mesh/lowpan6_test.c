@@ -5,6 +5,7 @@
 #include <aos/kernel.h>
 #include "yunit.h"
 
+#include "umesh.h"
 #include "umesh_types.h"
 #include "core/mesh_forwarder.h"
 #include "core/fragments.h"
@@ -12,6 +13,17 @@
 #include "ip/ip.h"
 #include "ip/compress6.h"
 #include "utilities/message.h"
+
+static void get_addr_prefix(ur_ip6_prefix_t *prefix)
+{
+    uint16_t meshnetid = get_main_netid(umesh_get_meshnetid());
+
+    memset(prefix, 0, sizeof(*prefix));
+    prefix->length = 64;
+    prefix->prefix.m8[0] = 0xfc;
+    prefix->prefix.m8[6] = (uint8_t)(meshnetid >> 8);
+    prefix->prefix.m8[7] = (uint8_t)meshnetid;
+}
 
 void test_uradar_6lowpan_case(void)
 {
@@ -29,7 +41,7 @@ void test_uradar_6lowpan_case(void)
     ur_addr_t dest;
 
     lp_start();
-    nd_get_ip6_prefix(&prefix);
+    get_addr_prefix(&prefix);
 
     /*********test header compress and decompress functions*********/
     memset(ip6_buffer, 0x00, sizeof(ip6_buffer));

@@ -130,21 +130,6 @@ bool nd_is_subscribed_mcast(const ur_ip6_addr_t *addr)
                    sizeof(ur_ip6_addr_t));
 }
 
-ur_error_t nd_get_ip6_prefix(ur_ip6_prefix_t *prefix)
-{
-    uint16_t meshnetid;
-
-    if (prefix) {
-        memset(prefix, 0, sizeof(ur_ip6_prefix_t));
-        prefix->length = 64;
-        prefix->prefix.m8[0] = 0xfc;
-        meshnetid = g_nd_state.stable_network_data.meshnetid;
-        prefix->prefix.m8[6] = (uint8_t)(meshnetid >> 8);
-        prefix->prefix.m8[7] = (uint8_t)meshnetid;
-    }
-    return UR_ERROR_NONE;
-}
-
 ur_error_t nd_set(network_context_t *network, network_data_t *network_data)
 {
     ur_error_t   error = UR_ERROR_FAIL;
