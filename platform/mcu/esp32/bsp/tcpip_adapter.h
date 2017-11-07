@@ -76,7 +76,9 @@ typedef struct {
 } tcpip_adapter_ip_info_t;
 
 typedef struct {
+#if LWIP_IPV6
     ip6_addr_t ip;
+#endif
 } tcpip_adapter_ip6_info_t;
 
 /*for not support dhcp server at first*/
@@ -384,6 +386,7 @@ esp_err_t tcpip_adapter_get_old_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapt
 esp_err_t tcpip_adapter_set_old_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_ip_info_t *ip_info);
 
 
+#if LWIP_IPV6
 /**
  * @brief  create interface's linklocal IPv6 information
  *
@@ -412,6 +415,7 @@ esp_err_t tcpip_adapter_create_ip6_linklocal(tcpip_adapter_if_t tcpip_if);
  *         ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS
  */
 esp_err_t tcpip_adapter_get_ip6_linklocal(tcpip_adapter_if_t tcpip_if, ip6_addr_t *if_ip6);
+#endif
 
 #if 0
 esp_err_t tcpip_adapter_get_mac(tcpip_adapter_if_t tcpip_if, uint8_t *mac);
