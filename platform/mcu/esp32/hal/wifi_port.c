@@ -11,6 +11,7 @@
 #include "esp_wifi_types.h"
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
+#include "esp_timer.h"
 
 typedef enum {
     SCAN_NORMAL,
@@ -128,6 +129,22 @@ static void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
         mngt_data_cb(pkt->payload, pkt->rx_ctrl.sig_len, NULL);
 }
 
+static void esp_reconnect_wifi_helper(void *arg)
+{
+    ESP_ERROR_CHECK(esp_wifi_connect());
+}
+
+static esp_timer_handle_t handle = NULL;
+static void esp_reconnect_wifi()
+{
+    esp_timer_create_args_t args = {
+            .callback = &esp_reconnect_wifi_helper,
+            .name = "reconnect_wifi"
+    };
+    if (!handle) esp_timer_create(&args, &handle);
+    esp_timer_start_once(handle, 500 * 1000);
+}
+
 static struct {
     uint8_t wifi_started:1;
     uint8_t sta_connected:1;
@@ -174,6 +191,7 @@ static esp_err_t handle_event_cb(void *ctx, system_event_t *evt)
             if (m->ev_cb && m->ev_cb->stat_chg) {
                 m->ev_cb->stat_chg(m, NOTIFY_STATION_DOWN, NULL);
             }
+            esp_reconnect_wifi();
             break;
         }
         case SYSTEM_EVENT_STA_AUTHMODE_CHANGE: {
