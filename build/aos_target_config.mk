@@ -15,8 +15,11 @@ COMPONENT_DIRECTORIES := . \
                          tools     \
                          test      \
                          devices   \
-                         security  \
-                         $(OUTPUT_DIR)
+                         security
+
+ifneq ($(ONLY_BUILD_LIBRARY), yes)
+COMPONENT_DIRECTORIES += $(OUTPUT_DIR)
+endif
 
 COMPONENT_DIRECTORIES += $(APPDIR)
 
@@ -225,11 +228,6 @@ $(info processing components: $(COMPONENTS))
 CURDIR :=
 $(eval $(call PROCESS_COMPONENT, $(COMPONENTS)))
 
-#Dependency python dict end
-DEPENDENCY += }"
-#Call python script
-$(eval DEPENDENCY = $(shell $(COMPONENT_DEPENDENCY) $(OUTPUT_DIR) $(DEPENDENCY)))
-
 PLATFORM    :=$(notdir $(PLATFORM_FULL))
 
 # Add some default values
@@ -257,6 +255,10 @@ $(eval $(if $(INVALID_PLATFORMS), $(if $(filter $(INVALID_PLATFORMS),$(PLATFORM)
 $(eval $(if $(VALID_BUILD_TYPES), $(if $(filter $(VALID_BUILD_TYPES),$(BUILD_TYPE)),,$(error $(APP) application does not support $(BUILD_TYPE) build)),))
 
 ifneq ($(ONLY_BUILD_LIBRARY), yes)
+#Dependency python dict end
+DEPENDENCY += }"
+#Call python script
+$(eval DEPENDENCY = $(shell $(COMPONENT_DEPENDENCY) $(OUTPUT_DIR) $(DEPENDENCY)))
 
 REMOVE_FIRST = $(wordlist 2,$(words $(1)),$(1))
 
