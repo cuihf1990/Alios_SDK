@@ -1,5 +1,6 @@
 include $(MAKEFILES_PATH)/aos_host_cmd.mk
 
+APPDIR ?=
 CONFIG_FILE_DIR := $(OUTPUT_DIR)
 CONFIG_FILE := $(CONFIG_FILE_DIR)/config.mk
 
@@ -37,7 +38,7 @@ $(eval COMP := $(word 1,$(1)))
 $(eval COMP_LOCATION := $(subst .,/,$(COMP)))
 $(eval COMP_MAKEFILE_NAME := $(notdir $(COMP_LOCATION)))
 # Find the component makefile in directory list
-$(eval TEMP_MAKEFILE := $(strip $(wildcard $(foreach dir, $(APPDIR)/$(comp) $(addprefix $(SOURCE_ROOT),$(COMPONENT_DIRECTORIES)), $(dir)/$(COMP_LOCATION)/$(COMP_MAKEFILE_NAME).mk))))
+$(eval TEMP_MAKEFILE := $(strip $(wildcard $(foreach dir, $(if $(APPDIR),$(APPDIR)/$(comp),) $(addprefix $(SOURCE_ROOT),$(COMPONENT_DIRECTORIES)), $(dir)/$(COMP_LOCATION)/$(COMP_MAKEFILE_NAME).mk))))
 
 # Check if component makefile was found - if not try downloading it and re-doing the makefile search
 $(if $(TEMP_MAKEFILE),,\
