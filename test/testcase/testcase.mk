@@ -21,7 +21,7 @@ ifneq (,$(findstring linux, $(BUILD_STRING)))
 $(NAME)_COMPONENTS  += fota connectivity.wsf ywss protocol.alink modules.fs.fatfs mbedtls
 
 # tfs
-$(NAME)_COMPONENTS  += tfs libid2 libkm alicrypto
+$(NAME)_COMPONENTS  += tfs libid2 libkm alicrypto plat_gen
 
 $(NAME)_SOURCES     += framework/fota_test.c
 $(NAME)_SOURCES     += framework/netmgr_test.c
