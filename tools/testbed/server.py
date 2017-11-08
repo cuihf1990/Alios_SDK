@@ -1,9 +1,13 @@
-import os, sys, time, socket
-import thread, threading, json
+import os, sys, time, socket, signal
+import thread, threading, json, traceback
 import TBframe
 
 MAX_MSG_LENTH      = 2000
-DEBUG = False
+DEBUG = True
+
+def signal_handler(sig, frame):
+    print "received SIGINT"
+    raise KeyboardInterrupt
 
 class Server:
     def __init__(self):
@@ -106,8 +110,7 @@ class Server:
                             logstr = logtimestr + logstr
                             file[port].write(logstr)
                         except:
-                            if DEBUG:
-                                raise
+                            if DEBUG: traceback.print_exc()
                             continue
                         if 'tag' in client and client['tag'] in logstr:
                             continue
@@ -158,8 +161,7 @@ class Server:
             except socket.timeout:
                 continue
             except:
-                if DEBUG:
-                    raise
+                if DEBUG: traceback.print_exc()
                 break
         client['socket'].close()
         print "client ", client['addr'], "disconnected"
@@ -461,8 +463,7 @@ class Server:
             except socket.timeout:
                 continue
             except:
-                if DEBUG:
-                    raise
+                if DEBUG: traceback.print_exc()
                 break
         for client in self.client_list:
             for port in list(client['devices']):
@@ -519,6 +520,7 @@ class Server:
         return "success"
 
     def run(self):
+        signal.signal(signal.SIGINT, signal_handler)
         try:
             client_thread = thread.start_new_thread(self.client_listen_thread, ())
             terminal_thread = thread.start_new_thread(self.terminal_listen_thread, ())
@@ -528,6 +530,7 @@ class Server:
                     with self.allocated['lock']:
                         self.allocated['devices'] = []
         except:
+            print "server exiting ..."
             self.keep_running = False
 
     def deinit(self):
