@@ -75,9 +75,7 @@ static void handle_discovery_timer(void *args)
 
 exit:
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-    if (umesh_mm_get_mode() & MODE_MOBILE) {
-        lowpower_start();
-    }
+    lowpower_start();
 #endif
     return;
 }
