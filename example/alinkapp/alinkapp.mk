@@ -20,7 +20,7 @@ $(NAME)_COMPONENTS += at_adapter
 LWIP = 1
 endif
 
-ifneq (,$(filter linux esp32,$(HOST_MCU_FAMILY)))
+ifneq (,$(filter linux,$(HOST_MCU_FAMILY)))
 gateway ?= 0
 else
 gateway ?= 1
