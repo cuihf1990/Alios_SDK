@@ -123,7 +123,7 @@ static void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type)
 #endif
 
     if (data_cb)
-        data_cb(pkt->payload, pkt->rx_ctrl.sig_len, NULL);
+        data_cb(pkt->payload, pkt->rx_ctrl.sig_len - 4, NULL);  // exclude wifi fcs
 
     if (type == WIFI_PKT_MGMT && mngt_data_cb)
         mngt_data_cb(pkt->payload, pkt->rx_ctrl.sig_len, NULL);
