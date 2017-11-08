@@ -13,9 +13,6 @@ CONFIG_OTA_CH = mqtt
 ifeq ($(SPI_WIFI_ENABLED), true)
 $(NAME)_SOURCES     := mqtt-example-b_l475e.c
 $(NAME)_DEFINES     += SENSOR
-$(NAME)_SOURCES     += sensor/sensors_data.c \
-                       sensor/vl53l0x_platform.c \
-                       sensor/vl53l0x_proximity.c
 else
 $(NAME)_SOURCES     := mqtt-example.c
 endif

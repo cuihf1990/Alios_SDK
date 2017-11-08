@@ -236,8 +236,8 @@ int16_t SPI_WIFI_ReceiveData(uint8_t *pData, uint16_t len, uint32_t timeout)
   uint32_t tickstart = HAL_GetTick();
   int16_t length = 0;
   uint8_t tmp[2];
-  aos_mutex_lock(&spi_rx_mutex, RHINO_WAIT_FOREVER);
   HAL_SPI_StateTypeDef state = HAL_SPI_STATE_BUSY_RX;
+  aos_mutex_lock(&spi_rx_mutex, RHINO_WAIT_FOREVER);
   
   HAL_SPIEx_FlushRxFifo(&hspi);
   
@@ -247,6 +247,7 @@ int16_t SPI_WIFI_ReceiveData(uint8_t *pData, uint16_t len, uint32_t timeout)
   {
     if((HAL_GetTick() - tickstart ) > timeout)
     {
+      aos_mutex_unlock(&spi_rx_mutex);
       return -1;
     }
   }
@@ -263,7 +264,8 @@ int16_t SPI_WIFI_ReceiveData(uint8_t *pData, uint16_t len, uint32_t timeout)
         state = HAL_SPI_STATE_READY;
       }
       if (HAL_SPI_Receive_IT(&hspi, tmp, 1) != HAL_OK) {
-        Error_Handler();
+        aos_mutex_unlock(&spi_rx_mutex);
+        return -1;
       }
       if (HAL_SPI_STATE_READY == state) {
         aos_sem_wait(&spi_rx_sem, RHINO_WAIT_FOREVER);
@@ -292,6 +294,7 @@ int16_t SPI_WIFI_ReceiveData(uint8_t *pData, uint16_t len, uint32_t timeout)
       if((HAL_GetTick() - tickstart ) > timeout)
       {
         WIFI_DISABLE_NSS(); 
+        aos_mutex_unlock(&spi_rx_mutex);
         return -1;
       }
     }
@@ -316,15 +319,15 @@ int16_t SPI_WIFI_SendData( uint8_t *pdata,  uint16_t len, uint32_t timeout)
 {
   uint32_t tickstart = HAL_GetTick();
   uint8_t Padding[2];
-
-  aos_mutex_lock(&spi_tx_mutex, RHINO_WAIT_FOREVER);
   HAL_SPI_StateTypeDef state = HAL_SPI_STATE_BUSY_TX;
+  aos_mutex_lock(&spi_tx_mutex, RHINO_WAIT_FOREVER);
   
   while (!WIFI_IS_CMDDATA_READY())
   {
     if((HAL_GetTick() - tickstart ) > timeout)
     {
       WIFI_DISABLE_NSS();
+      aos_mutex_unlock(&spi_tx_mutex);
       return -1;
     }
   }
@@ -340,6 +343,7 @@ int16_t SPI_WIFI_SendData( uint8_t *pdata,  uint16_t len, uint32_t timeout)
     if( HAL_SPI_Transmit_IT(&hspi, (uint8_t *)pdata , len/2) != HAL_OK)
     {
       WIFI_DISABLE_NSS();
+      aos_mutex_unlock(&spi_tx_mutex);
       return -1;
     }
     if (HAL_SPI_STATE_READY == state) {
@@ -360,6 +364,7 @@ int16_t SPI_WIFI_SendData( uint8_t *pdata,  uint16_t len, uint32_t timeout)
     if( HAL_SPI_Transmit_IT(&hspi, Padding, 1) != HAL_OK)
     {
       WIFI_DISABLE_NSS();
+      aos_mutex_unlock(&spi_tx_mutex);
       return -1;
     }
     if (HAL_SPI_STATE_READY == state) {

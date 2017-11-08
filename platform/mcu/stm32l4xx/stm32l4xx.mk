@@ -109,6 +109,7 @@ $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    bsp/Components/vl53l0x/vl53l0x_api_strings.c \
                    bsp/Components/vl53l0x/vl53l0x_platform_log.c \
                    aos/soc_impl.c                \
+                   aos/trace_impl.c             \
                    aos/aos.c                    \
                    wifi/src/es_wifi_io.c        \
                    wifi/src/wifi.c              \
@@ -116,5 +117,8 @@ $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    hal/wifi_port.c              \
                    hal/flash_port.c              \
                    hal/ota_port.c              \
+                   sensor/vl53l0x_platform.c \
+                   sensor/vl53l0x_proximity.c \
+                   sensor/sensors_data.c \
                    ../../arch/arm/armv7m/gcc/m4/port_c.c \
                    ../../arch/arm/armv7m/gcc/m4/port_s.S

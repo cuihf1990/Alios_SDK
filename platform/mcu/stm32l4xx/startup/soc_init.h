@@ -69,7 +69,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-void stm32_soc_init();
+void stm32_soc_init(void);
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
