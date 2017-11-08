@@ -71,7 +71,7 @@ def main(filename='~/lb-all.bin', model='mk3060'):
 
     #program devices
     for device in device_list:
-        addr = models[device]
+        addr = models[model]
         succeed = False; retry = 5
         print 'programming device {0} ...'.format(devices[device])
         for i in range(retry):
