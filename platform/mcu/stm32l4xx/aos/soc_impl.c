@@ -4,6 +4,7 @@
 
 #include <k_api.h>
 #include <assert.h>
+#include <stdio.h>
 
 #if (RHINO_CONFIG_HW_COUNT > 0)
 void soc_hw_timer_init(void)
@@ -52,14 +53,25 @@ tick_t soc_elapsed_ticks_get(void)
 }
 #endif
 
+
+#if defined (__CC_ARM) /* Keil / armcc */
+extern void         *__heap_base;
+extern void         *__heap_size;
+#else
 extern void         *heap_start;
 extern void         *heap_end;
 extern void         *heap_len;
 
 extern void         *heap2_start;
 extern void         *heap2_len;
+#endif
 
+
+#if defined (__CC_ARM) /* Keil / armcc */
+k_mm_region_t g_mm_region[] = {(uint8_t*)&__heap_base,(size_t)&__heap_size};
+#else
 k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len},{(uint8_t*)&heap2_start,(size_t)&heap2_len}};
+#endif
 int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
@@ -90,15 +102,12 @@ size_t soc_get_cur_sp()
 #endif
 static void soc_print_stack()
 {
-
-    uint32_t offset = 0;
-    kstat_t  rst    = RHINO_SUCCESS;
     void    *cur, *end;
     int      i=0;
     int     *p;
 
     end   = krhino_cur_task_get()->task_stack_base + krhino_cur_task_get()->stack_size;
-    cur = soc_get_cur_sp();
+    cur = (void *)soc_get_cur_sp();
     p = (int*)cur;
     while(p < (int*)end) {
         if(i%4==0) {
@@ -118,5 +127,11 @@ void soc_err_proc(kstat_t err)
     assert(0);
 }
 
+#if defined (__CC_ARM) && defined(__MICROLIB)
+void __aeabi_assert(const char *expr, const char *file, int line)
+{
+    while (1);
+}
+#endif
 krhino_err_proc_t g_err_proc = soc_err_proc;
 

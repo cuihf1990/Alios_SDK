@@ -8,14 +8,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "stm32_wifi.h"
+#include "soc_init.h"
 #define AOS_START_STACK 2048
 
 #define WIFI_PRODUCT_INFO_SIZE                      ES_WIFI_MAX_SSID_NAME_SIZE
 
 ktask_t *g_aos_init;
 
+static kinit_t kinit;
+
 extern int application_start(int argc, char **argv);
 extern int aos_framework_init(void);
+extern void board_init(void);
 
 static int init_wifi()
 {
@@ -58,11 +62,17 @@ static void hal_init()
     init_wifi();
 }
 
+static void var_init()
+{
+    kinit.argc = 0;
+    kinit.argv = NULL;
+    kinit.cli_enable = 1;
+}
+
 extern void hw_start_hal(void);
 
 static void sys_init(void)
 {
-    int i = 0;
 
     stm32_soc_init();
 
@@ -71,25 +81,9 @@ static void sys_init(void)
 #else
     hal_init();
     hw_start_hal();
-
-#ifdef AOS_VFS
-    vfs_init();
-    vfs_device_init();
-#endif
-
-#ifdef CONFIG_AOS_CLI
-    aos_cli_init();
-#endif
-
-#ifdef AOS_KV
-    aos_kv_init();
-#endif
-
-#ifdef AOS_LOOP
-    aos_loop_init();
-#endif
-    aos_framework_init();
-    application_start(0, NULL);
+    board_init();
+    var_init();
+    aos_kernel_init(&kinit);
 #endif
 }
 
@@ -101,9 +95,16 @@ static void sys_start(void)
     aos_start();
 }
 
+#if defined (__CC_ARM) /* Keil / armcc */
+int main(void)
+{
+    sys_start();
+    return 0;
+}
+#else
 void entry_main(void)
 {
     sys_start();
 }
-
+#endif
 

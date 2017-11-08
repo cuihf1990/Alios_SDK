@@ -274,13 +274,7 @@ static void Console_UART_Init(void)
 PUTCHAR_PROTOTYPE
 {
 
-  int count = 0;
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the USART2 and Loop until the end of transmission */
-  while (HAL_OK != HAL_UART_Transmit(&console_uart, (uint8_t *) &ch, 1, 30000))
-  {
-    ;
-  }
+  hal_uart_send(NULL, &ch, 1, 30000);
   return ch;
 }
 
@@ -294,17 +288,14 @@ GETCHAR_PROTOTYPE
   /* Place your implementation of fgetc here */
   /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
   uint8_t ch = 0;
-  while (HAL_OK != HAL_UART_Receive(&console_uart, (uint8_t *)&ch, 1, 30000))
-  {
-    ;
-  }
+  uint32_t recv_size;
+  hal_uart_recv(NULL, &ch, 1, &recv_size, 30000);
   return ch;
 }
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout) {
-
-    aos_mutex_lock(&uart_tx_mutex, RHINO_WAIT_FOREVER);
     HAL_UART_StateTypeDef state = HAL_UART_STATE_BUSY_TX;
+    aos_mutex_lock(&uart_tx_mutex, RHINO_WAIT_FOREVER);
 
     if (console_uart.gState != HAL_UART_STATE_READY) {
         aos_sem_wait(&uart_tx_sem, RHINO_WAIT_FOREVER);
@@ -326,9 +317,8 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
 }
 
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) {
-
-    aos_mutex_lock(&uart_rx_mutex, RHINO_WAIT_FOREVER);
     HAL_UART_StateTypeDef state = HAL_UART_STATE_BUSY_RX;
+    aos_mutex_lock(&uart_rx_mutex, RHINO_WAIT_FOREVER);
 
     if (recv_size != NULL) {
         *recv_size = expect_size;

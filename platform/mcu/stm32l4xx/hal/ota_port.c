@@ -7,12 +7,14 @@
 #include <hal/ota.h>
 #include <aos/log.h>
 #include <hal/soc/soc.h>
+#include "stm32l4xx.h"
 #include "stm32l4xx_hal_flash.h"
 #include <CheckSumUtils.h>
 
 #define KV_HAL_OTA_CRC16  "hal_ota_get_crc16"
 
 extern int FLASH_set_boot_bank(uint32_t bank);
+extern int FLASH_bank1_enabled(void);
 
 typedef struct
 {
@@ -25,6 +27,11 @@ static  CRC16_Context contex;
 
 static uint16_t hal_ota_get_crc16(void);
 static void  hal_ota_save_crc16(uint16_t crc16);
+static int stm32l475_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len);
+static int stm32l475_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, uint8_t* out_buf, uint32_t out_buf_len);
+static int stm32l475_ota_set_boot(hal_ota_module_t *m, void *something);
+
+struct hal_ota_module_s stm32l475_ota_module;
 
 int hal_ota_switch_to_new_fw()
 {
@@ -44,11 +51,16 @@ static int stm32l475_ota_init(hal_ota_module_t *m, void *something)
     hal_logic_partition_t *partition_info;
     hal_partition_t pno = HAL_PARTITION_OTA_TEMP;
 
+    stm32l475_ota_module.init = stm32l475_ota_init;
+    stm32l475_ota_module.ota_write = stm32l475_ota_write;
+    stm32l475_ota_module.ota_read = stm32l475_ota_read;
+    stm32l475_ota_module.ota_set_boot = stm32l475_ota_set_boot;
+
     LOG("set ota init---------------\n");
     _off_set = *(uint32_t*)something;
     ota_info.ota_len=_off_set;
 
-    if (!FLASH_bank1_enabled(FLASH_BANK_BOTH)) {
+    if (!FLASH_bank1_enabled()) {
         pno = HAL_PARTITION_APPLICATION;
     }
     
@@ -68,6 +80,7 @@ static int stm32l475_ota_init(hal_ota_module_t *m, void *something)
 static int stm32l475_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, uint8_t* in_buf ,uint32_t in_buf_len)
 {
     hal_partition_t pno = HAL_PARTITION_OTA_TEMP;
+    int ret;
 
     if (ota_info.ota_len == 0) {
         _off_set = 0;
@@ -76,11 +89,11 @@ static int stm32l475_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, 
     }
     CRC16_Update( &contex, in_buf, in_buf_len);
 
-    if (!FLASH_bank1_enabled(FLASH_BANK_BOTH)) {
+    if (!FLASH_bank1_enabled()) {
         pno = HAL_PARTITION_APPLICATION;
     }
 
-    int ret = hal_flash_write(pno, &_off_set, in_buf, in_buf_len);
+    ret = hal_flash_write(pno, &_off_set, in_buf, in_buf_len);
     ota_info.ota_len += in_buf_len;
     return ret;
 }
@@ -89,10 +102,10 @@ static int stm32l475_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, 
 {
     hal_partition_t pno = HAL_PARTITION_OTA_TEMP;
 
-    if (!FLASH_bank1_enabled(FLASH_BANK_BOTH)) {
+    if (!FLASH_bank1_enabled()) {
         pno = HAL_PARTITION_APPLICATION;
     }
-    hal_flash_read(pno, off_set, out_buf, out_buf_len);
+    hal_flash_read(pno, (uint32_t*)off_set, out_buf, out_buf_len);
     return 0;
 }
 
@@ -104,7 +117,7 @@ static int stm32l475_ota_set_boot(hal_ota_module_t *m, void *something)
     }
     if (param->result_type==OTA_FINISH)
     {
-        CRC16_Final( &contex, &ota_info.ota_crc );
+        CRC16_Final( &contex, (uint16_t *)&ota_info.ota_crc );
         LOG("set boot---------------\n");
         hal_ota_switch_to_new_fw();
         memset(&ota_info, 0 , sizeof ota_info);
@@ -114,13 +127,6 @@ static int stm32l475_ota_set_boot(hal_ota_module_t *m, void *something)
     }
     return 0;
 }
-
-struct hal_ota_module_s stm32l475_ota_module = {
-    .init = stm32l475_ota_init,
-    .ota_write = stm32l475_ota_write,
-    .ota_read = stm32l475_ota_read,
-    .ota_set_boot = stm32l475_ota_set_boot,
-};
 
 static uint16_t hal_ota_get_crc16(void)
 {

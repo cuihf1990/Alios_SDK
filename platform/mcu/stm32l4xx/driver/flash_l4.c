@@ -50,6 +50,7 @@
 #include "flash.h"
 #include <string.h>
 #include <stdbool.h>
+#include "stm32l4xx.h"
 #include "stm32l4xx_hal_flash.h"
 
 
@@ -351,7 +352,6 @@ int FLASH_read_at(uint32_t address, uint64_t *pData, uint32_t len_bytes)
 
 int FLASH_bank1_enabled( )
 {
-    int rc = 0;
     FLASH_OBProgramInitTypeDef    OBInit;
     /* Set BFB2 bit to enable boot from Flash Bank2 */
     /* Allow Access to the Flash control registers and user Flash. */

@@ -1,9 +1,12 @@
 #include "hal/soc/soc.h"
+#include "stm32l4xx.h"
 #include "stm32l4xx_hal_flash.h"
+#include "flash.h"
 
 #define ROUND_DOWN(a,b) (((a) / (b)) * (b))
 
 extern const hal_logic_partition_t hal_partitions[];
+extern int FLASH_read_at(uint32_t address, uint64_t *pData, uint32_t len_bytes);
 
 hal_logic_partition_t *hal_flash_get_info(hal_partition_t pno)
 {
@@ -16,14 +19,13 @@ hal_logic_partition_t *hal_flash_get_info(hal_partition_t pno)
 
 int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,uint32_t buf_size)
 {
-    uint32_t addr;
-    uint32_t start_addr, end_addr;
+    uint32_t start_addr;
     hal_logic_partition_t *partition_info;
 
 #ifdef CONFIG_AOS_KV_MULTIPTN_MODE
         if (pno == CONFIG_AOS_KV_PTN) {
             if ((*poff) >= CONFIG_AOS_KV_PTN_SIZE) {
-                pno = CONFIG_AOS_KV_SECOND_PTN;
+                pno = (hal_partition_t)CONFIG_AOS_KV_SECOND_PTN;
                 *poff = (*poff) - CONFIG_AOS_KV_PTN_SIZE;
             }
         }
@@ -46,7 +48,7 @@ int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t 
 #ifdef CONFIG_AOS_KV_MULTIPTN_MODE
     if (pno == CONFIG_AOS_KV_PTN) {
         if ((*poff) >=  CONFIG_AOS_KV_PTN_SIZE) {
-            pno = CONFIG_AOS_KV_SECOND_PTN;
+            pno = (hal_partition_t)CONFIG_AOS_KV_SECOND_PTN;
             *poff = (*poff) - CONFIG_AOS_KV_PTN_SIZE;
         }
     }
@@ -66,14 +68,13 @@ int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t 
 int32_t hal_flash_erase(hal_partition_t pno, uint32_t off_set,
                         uint32_t size)
 {
-    uint32_t addr;
-    uint32_t start_addr, end_addr;
+    uint32_t start_addr;
     hal_logic_partition_t *partition_info;
 
 #ifdef CONFIG_AOS_KV_MULTIPTN_MODE
         if (pno == CONFIG_AOS_KV_PTN) {
             if (off_set >= CONFIG_AOS_KV_PTN_SIZE) {
-                pno = CONFIG_AOS_KV_SECOND_PTN;
+                pno = (hal_partition_t)CONFIG_AOS_KV_SECOND_PTN;
                 off_set -= CONFIG_AOS_KV_PTN_SIZE;
             }
         }

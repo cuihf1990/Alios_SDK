@@ -7,13 +7,14 @@
 #include <string.h>
 #include <hal/base.h>
 #include <hal/wifi.h>
-#include "common.h"
 #include "stm32_wifi.h"
 
 #define  WIFI_CONNECT_MAX_ATTEMPT_COUNT  3
 
 hal_wifi_module_t sim_aos_wifi_stm23l475;
 
+void NetCallback(hal_wifi_ip_stat_t *pnet);
+void WifiStatusHandler(int status);
 
 static int wifi_init(hal_wifi_module_t *m)
 {
@@ -189,7 +190,7 @@ void WifiStatusHandler(int status)
     if (sim_aos_wifi_stm23l475.ev_cb->stat_chg == NULL)
         return;
 
-    sim_aos_wifi_stm23l475.ev_cb->stat_chg(&sim_aos_wifi_stm23l475, status, NULL);
+    sim_aos_wifi_stm23l475.ev_cb->stat_chg(&sim_aos_wifi_stm23l475, (hal_wifi_event_t)status, NULL);
 }
 
 void ApListCallback(hal_wifi_scan_result_t *pApList)
@@ -242,4 +243,3 @@ hal_wifi_module_t sim_aos_wifi_stm23l475 = {
     .register_wlan_mgnt_monitor_cb = register_wlan_mgnt_monitor_cb,
     .wlan_send_80211_raw_frame = wlan_send_80211_raw_frame
 };
-
