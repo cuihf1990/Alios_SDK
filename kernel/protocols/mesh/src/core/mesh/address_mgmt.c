@@ -735,7 +735,6 @@ static void handle_addr_cache_timer(void *args)
     network_context_t *network = NULL;
     slist_t           *tmp;
 
-    g_ac_state.timer = NULL;
     slist_for_each_entry_safe(&g_ac_state.cache_list, tmp, node, sid_node_t, next) {
         switch (node->type) {
             case MEDIA_TYPE_WIFI:

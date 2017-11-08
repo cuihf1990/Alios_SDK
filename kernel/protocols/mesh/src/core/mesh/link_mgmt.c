@@ -26,6 +26,7 @@ static void handle_link_request_timer(void *args)
 
     MESH_LOG_DEBUG("handle link request timer");
 
+    hal->link_request_timer = NULL;
     network = get_default_network_context();
     attach_node = umesh_mm_get_attach_node();
     if (attach_node == NULL) {
@@ -34,7 +35,6 @@ static void handle_link_request_timer(void *args)
 
     set_mesh_short_addr(&addr, attach_node->netid, attach_node->sid);
     send_link_request(network, &addr, tlv_type, sizeof(tlv_type));
-    hal->link_request_timer = NULL;
     if (attach_node->stats.link_request < LINK_ESTIMATE_SENT_THRESHOLD) {
         hal->link_request_timer = ur_start_timer(hal->link_request_interval,
                                                  handle_link_request_timer, hal);
@@ -192,7 +192,8 @@ static void handle_update_nbr_timer(void *args)
     network_context_t *network = NULL;
     ur_node_id_t node_id;
 
-    hal->update_nbr_timer = NULL;
+    hal->update_nbr_timer = ur_start_timer(hal->advertisement_interval,
+                                           handle_update_nbr_timer, hal);
     slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
         if (node->state < STATE_NEIGHBOR) {
             continue;
@@ -219,9 +220,6 @@ static void handle_update_nbr_timer(void *args)
         g_neighbor_updater_head(node);
         remove_neighbor(hal, node);
     }
-
-    hal->update_nbr_timer = ur_start_timer(hal->advertisement_interval,
-                                           handle_update_nbr_timer, hal);
 }
 
 void neighbors_init(void)
