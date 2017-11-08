@@ -252,8 +252,8 @@ class Autotest:
             return False
         return True
 
-    def device_allocate(self, type, number, timeout):
-        content = type + ',' + str(number)
+    def device_allocate(self, type, number, timeout, purpose='general'):
+        content = ','.join([type, str(number), purpose])
         data = TBframe.construct(TBframe.DEVICE_ALLOC, content)
         timeout += time.time()
         while time.time() < timeout:

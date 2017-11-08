@@ -1,6 +1,25 @@
 import sys, os, time, httplib, json, subprocess, pdb
 from autotest import Autotest
 
+models={'mk3060':'0x13200', 'esp32':'0x10000'}
+testnames={'5pps':0, '2pps':1, 'short5pps':15, 'short2pps':16}
+
+caseids={}
+#mk3060
+caseids['E2D2A7AF74761FC8DF6FD423D6F9B5A4'] = 26621 #DN02X2ZO
+caseids['40BB9203D70AA8628E93FB6379DD628B'] = 26570 #DN02X2ZZ
+caseids['536C0EB02B06B21AB6F54333ED18415F'] = 26553 #DN02X304
+caseids['47112F8E0A5CDFBE05B570F4C7306801'] = 26587 #DN02X30H
+caseids['39F841C8CE86C0B5F3FC864925EB1702'] = 26672 #DN02XRK7
+caseids['1B12DA63F1E56C73CE237A495E8C5087'] = 24127 #DN02XRKB
+caseids['236838BD263486D6A0CEA77FB3D8110E'] = 26604 #DN02X2ZS
+caseids['7089FD4690110E8194F29CDCBC82BC0D'] = 26536 #DN02X303
+#caseids['163454A2DFF5E1C3284D1C9A63BACBD8'] = 26706 #DN02QRJP-for debug only
+#esp32
+caseids['2363A965CE3C548993F485EF5883F6CA'] = 26689 #espif-10
+caseids['794736BDFF2E591F6BFEC2FE3EE383E6'] = 26638 #espif-5
+caseids['59ED5E3E36FF2BDCB81B0FBCE9E997BF'] = 26655 #espif-6
+
 DEBUG = False
 #server inteaction related functions
 operations = {'status':'getCaseStatus', 'start': 'runCase', 'stop':'stopCase'}
@@ -44,40 +63,33 @@ def alink_test(conn, operation, testid, auid):
         return {}
 
 #main function
-def main(filename='lb.bin'):
+def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     global DEBUG
-    testname = '5pps'
-    device = 'mxchip-DN02QRKC'
-    caseid = '5366'
     userid = '500001169232518525'
     server = 'pre-iotx-qs.alibaba.com'
     port = '80'
     wifissid = 'aos_test_01'
     wifipass = 'Alios@Embedded'
+    testbed_server = '10.125.52.132'
     #parse input
     i = 1
     while i < len(sys.argv):
         arg = sys.argv[i]
-        if arg.startswith('--testname='):
+        if arg.startswith('--firmware='):
+            args = arg.split('=')
+            if len(args) != 2:
+                print 'wrong argument {0} input, example: --firmware=firmware.bin'.format(arg)
+            firmware = args[1]
+        elif arg.startswith('--model='):
+            args = arg.split('=')
+            if len(args) != 2:
+                print 'wrong argument {0} input, example: --model=mk3060'.format(arg)
+            model = args[1]
+        elif arg.startswith('--testname='):
             args = arg.split('=')
             if len(args) != 2:
                 print 'wrong argument {0} input, example: --testname=5pps'.format(arg)
             testname = args[1]
-        elif arg.startswith('--device='):
-            args = arg.split('=')
-            if len(args) != 2:
-                print 'wrong argument {0} input, example: --device=mxchip-DN02QRKC'.format(arg)
-            device = args[1]
-        elif arg.startswith('--firmware='):
-            args = arg.split('=')
-            if len(args) != 2:
-                print 'wrong argument {0} input, example: --firmware=firmware.bin'.format(arg)
-            filename = args[1]
-        elif arg.startswith('--caseid='):
-            args = arg.split('=')
-            if len(args) != 2 or args[1].isdigit() == False:
-                print 'wrong argument {0} input, example: --caseid=12345'.format(arg)
-            caseid = args[1]
         elif arg.startswith('--userid='):
             args = arg.split('=')
             if len(args) != 2 or args[1].isdigit() == False:
@@ -109,41 +121,61 @@ def main(filename='lb.bin'):
                 print 'wrong argument {0} input, example: --debug=1'.format(arg)
             DEBUG = (args[1] != '0')
         elif arg=='--help':
-            print 'Usage: python {0} [--testname=xxxx] [--device=xxx-xxx] [--firmware=xxx.bin] [--caseid=xxx] [--userid=xxxxx] [--server=xx.x.x.x] [--port=xx] [--wifissid=wifi_ssid] [--wifipass=password] [--debug=0/1]'.format(sys.argv[0])
+            print 'Usage: python {0} [--firmware=xxx.bin] [--model=xxx] [--testname=xxxx] [--userid=xxxxx] [--server=xx.x.x.x] [--port=xx] [--wifissid=wifi_ssid] [--wifipass=password] [--debug=0/1]'.format(sys.argv[0])
             return [0, 'help']
         i += 1
 
+    if DEBUG:
+        print "firmware: {0}".format(firmware)
+        print "model: {0}".format(model)
+        print "testname: {0}".format(testname)
+        print "userid: {0}".format(userid)
+        print "server: {0}".format(server)
+        print "port: {0}".format(port)
+        print "wifissid: {0}".format(wifissid)
+        print "wifipass: {0}".format(wifipass)
+
+    if testname not in testnames:
+        print "error: unsupported testname {0}".format(repr(testname))
+        return [1, 'testname {0} unsupported'.format(repr(testname))]
+
+    if not model or model.lower() not in models:
+        print "error: unsupported model {0}".format(repr(model))
+        return [1, 'model {0} unsupported'.format(repr(model))]
+    model = model.lower()
+
     logname=time.strftime('-%Y-%m-%d@%H-%M')
     logname = testname + logname +'.log'
-    devices = {'A':device}
-    device = 'A'
-
-    #check test case status
-    conn = httplib.HTTPConnection(server, port)
-    result = alink_test(conn, 'status', caseid, userid)
-    if DEBUG:
-        print 'status:', result
-    if result == {} or result[u'message'] != u'success':
-        print 'error: unable to get test case {0} status'.format(caseid)
-        return [1, 'get case status failed']
-    if result[u'data'][u'case_status'] == 1:
-        print 'error: test case {0} is already runing'.format(caseid)
-        return [1, 'case already running']
-    conn.close()
-
     at=Autotest()
-    if at.start('10.125.52.132', 34568, logname) == False:
+    if at.start(testbed_server, 34568, logname) == False:
         print 'error: start failed'
         return [1, 'connect testbed failed']
+
+    number = 1
+    if testname in ['5pps', '2pps']:
+        timeout = 3600
+    else:
+        timeout = 120
+    allocted = at.device_allocate(model, number, timeout, 'alink')
+    if len(allocted) != number:
+        print "error: request device allocation failed"
+        return [1, 'allocate device failed']
+    print "allocted device", allocted[0]
+
+    devices = {'A':allocted[0]}
+    device = 'A'
+
+    #subscribe device
     if at.device_subscribe(devices) == False:
         print 'error: subscribe to device failed, some devices may not exist in testbed'
         return [1, 'subscribe device failed']
 
     #program device
     succeed = False; retry = 5
+    addr = models[model]
     print 'programming device {0} ...'.format(devices[device])
     for i in range(retry):
-        if at.device_program(device, '0x13200', filename) == True:
+        if at.device_program(device, addr, firmware) == True:
             succeed = True
             break
         time.sleep(0.5)
@@ -153,7 +185,9 @@ def main(filename='lb.bin'):
     print 'program device {0} succeed'.format(devices[device])
     time.sleep(5)
 
+    #connect to alink
     succeed = False; retry = 5
+    uuid = None
     while retry > 0:
         #clear previous setting and reboot
         at.device_run_cmd(device, ['kv', 'del', 'wifi'])
@@ -176,17 +210,49 @@ def main(filename='lb.bin'):
         if response == False or len(response) != 1 or 'uuid:' not in response[0]:
             retry -= 1
             continue
+        uuid = response[0].split()[-1]
+        print "connect alink succeed, uuid: {0}".format(uuid)
         succeed = True
         break;
     if succeed == False:
         print 'error: connect device to alink failed, response = {0}'.format(response)
         return [1, 'connect alink failed']
+    if uuid not in caseids:
+        print 'error: device uuid {0} not in supported list'.format(uuid)
+        return [1, 'uuid {0} invalid'.format(uuid)]
+    caseid = caseids[uuid] + testnames[testname]
+    caseid = str(caseid)
+    if DEBUG:
+        print "caseid: {0}".format(caseid)
+
+    #check test case status
+    already_running = False
+    conn = httplib.HTTPConnection(server, port)
+    result = alink_test(conn, 'status', caseid, userid)
+    if DEBUG: print 'status:', result
+    if result == {} or result[u'message'] != u'success':
+        print 'error: unable to get test case {0} status'.format(caseid)
+        return [1, 'get case {0} status failed'.format(caseid)]
+    if result[u'data'][u'case_status'] == 1:
+        print 'test case {0} is already runing'.format(caseid)
+        already_running = True
+    conn.close()
+
+    if already_running:
+        #already running, stop test case
+        conn = httplib.HTTPConnection(server, port)
+        result = alink_test(conn, 'stop', caseid, userid)
+        if DEBUG: print 'status:', result
+        if result == {} or result[u'message'] != u'success':
+            print 'error: unable to stop test case {0}'.format(caseid)
+            return [1, 'stop case {0} failed'.format(caseid)]
+        conn.close()
+        print 'stop case {0} succeed'.format(caseid)
 
     #start run test case
     conn = httplib.HTTPConnection(server, port)
     result = alink_test(conn, 'start', caseid, userid)
-    if DEBUG:
-        print 'start:', result
+    if DEBUG: print 'start:', result
     if result == {}:
         print 'error: unable to start test case {0}'.format(caseid)
         return [1, 'start case failed']
@@ -196,19 +262,22 @@ def main(filename='lb.bin'):
     conn.close()
     time.sleep(5)
 
-
     #poll test case status
-    while True:
-        conn = httplib.HTTPConnection(server, port)
-        result = alink_test(conn, 'status', caseid, userid)
-        if DEBUG:
-            print 'status:', result
-        if result == {}:
-            print 'error: unable to get test case {0} status'.format(caseid)
-            return [1, 'get status failed']
-        if result[u'message'] != u'success' or result[u'data'][u'case_status'] != 1:
-            break;
-        conn.close()
+    retry = 5
+    while retry > 0:
+        try:
+            conn = httplib.HTTPConnection(server, port)
+            result = alink_test(conn, 'status', caseid, userid)
+            if DEBUG:
+                print 'status:', result
+            if result == {}:
+                print 'error: unable to get test case {0} status'.format(caseid)
+                return [1, 'get status failed']
+            if result[u'message'] != u'success' or result[u'data'][u'case_status'] != 1:
+                break;
+            conn.close()
+        except:
+            retry -= 1
         time.sleep(120)
 
 

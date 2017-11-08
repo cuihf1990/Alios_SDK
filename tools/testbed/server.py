@@ -17,6 +17,11 @@ class Server:
         self.terminal_list = []
         self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
         self.keep_running = True
+        self.special_purpose_set = {}
+        self.special_purpose_set['mk3060-alink'] = ['DN02X2ZO', 'DN02X2ZZ', 'DN02X304', 'DN02X30H']
+        self.special_purpose_set['mk3060-alink'] += ['DN02XRK7', 'DN02XRKB', 'DN02X2ZS', 'DN02X303']
+        #self.special_purpose_set['mk3060-alink'] += ['DN02QRJP'] #for debug only
+        self.special_purpose_set['esp32-alink'] = ['espif-10', 'espif-5', 'espif-6']
 
     def construct_dev_list(self):
         l = []
@@ -212,18 +217,31 @@ class Server:
 
     def allocate_devices(self, value):
         values = value.split(',')
-        if len(values) != 2:
+        if len(values) < 2:
             return ['error','argument']
 
-        type = values[0]
+        model = values[0]
+        model = model.lower()
+
         number = values[1]
         try:
             number = int(number)
         except:
             return ['error','argument']
-
         if number <= 0:
             return ['error','argument']
+
+        purpose = 'general'
+        if len(values) > 2:
+            purpose = values[2]
+        func_set = None
+        if purpose != 'general':
+            func_set = model + '-' + purpose
+            if func_set not in self.special_purpose_set:
+                print "error: allocate {0} for {1} purpose not supported".format(model, purpose)
+                return ['error','argument']
+            func_set = self.special_purpose_set[func_set]
+        if DEBUG and func_set: print purpose, func_set
 
         allocated = []
         with self.allocated['lock']:
@@ -232,7 +250,10 @@ class Server:
                 ports = list(client['devices'])
                 ports.sort()
                 for port in ports:
-                    if port in self.allocated['devices']:
+                    if client['devices'][port]['using'] != 0: #busy
+                        continue
+
+                    if port in self.allocated['devices']: #in allocated buffer
                         continue
 
                     try:
@@ -241,15 +262,26 @@ class Server:
                         print 'parse {0} status failed'.format(port)
                         status = None
                     if status:
-                        if 'model' not in status or type.lower() != status['model'].lower():
+                        if 'model' not in status or model != status['model'].lower():
                             continue
                     else:
-                        pathstr = {'mk3060':'mxchip', 'esp32':'espif'}[type.lower()]
+                        paths = {'mk3060':'mxchip', 'esp32':'espif'}
+                        if model not in paths:
+                            continue
+                        pathstr = paths[model]
                         if pathstr not in port:
                             continue
 
-                    if client['devices'][port]['using'] != 0:
-                        continue
+                    if func_set:
+                        match = False
+                        for devicestr in func_set:
+                            if devicestr not in port:
+                                continue
+                            match = True
+                            break
+                        if match == False:
+                            continue
+
                     allocated.append(port)
                     if len(allocated) >= number:
                         break
@@ -258,8 +290,10 @@ class Server:
             if len(allocated) >= number:
                 self.allocated['devices'] += allocated
                 self.allocated['timeout'] = time.time() + 10
+                if DEBUG: print "allocated", allocated
                 return ['success', '|'.join(allocated)]
             else:
+                if DEBUG: print "allocate failed"
                 return ['fail', 'busy']
 
     def increase_device_refer(self, client, port, using_list):
