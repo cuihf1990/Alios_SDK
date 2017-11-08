@@ -8,4 +8,4 @@ fi
 if [ -f /tmp/.testbed_client ]; then
     rm -rf /tmp/.testbed_client
 fi
-screen -dmL python utest.py client -s 10.125.52.132
+screen -L client.log -dm python utest.py client -s 10.125.52.132

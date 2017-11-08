@@ -1,5 +1,5 @@
-import os, sys, time, platform, json
-import socket, thread, threading, subprocess
+import os, sys, time, platform, json, traceback
+import socket, thread, threading, subprocess, signal
 import TBframe
 
 DEBUG = True
@@ -19,6 +19,10 @@ else:
     import glob
 
 MAX_MSG_LENTH = 2000
+
+def signal_handler(sig, frame):
+    print "received SIGINT"
+    raise KeyboardInterrupt
 
 class ConnetionLost(Exception):
     pass
@@ -79,9 +83,13 @@ class Client:
         self.devices[port]['filter'] = filter
         self.devices[port]['event'].clear()
         ser    = self.devices[port]['serial']
-        with self.devices[port]['wlock']:
-            ser.write(filter['cmd_str'] + '\r')
-        self.devices[port]['event'].wait(timeout)
+        if self.devices[port]['wlock'].acquire(False):
+            try:
+                ser.write(filter['cmd_str'] + '\r')
+                self.devices[port]['wlock'].release()
+                self.devices[port]['event'].wait(timeout)
+            except:
+                self.devices[port]['wlock'].release()
         response = self.devices[port]['filter']['response']
         self.devices[port]['filter'] = {}
         return response
@@ -160,8 +168,7 @@ class Client:
             except:
                 if port not in self.devices:
                     break
-                if DEBUG:
-                    raise
+                if DEBUG: traceback.print_exc()
             time.sleep(poll_interval)
         print 'devie status poll thread for {0} exited'.format(port)
 
@@ -192,8 +199,7 @@ class Client:
                         try:
                             c = self.devices[port]['serial'].read(1)
                         except:
-                            if DEBUG:
-                                raise
+                            if DEBUG: traceback.print_exc()
                             time.sleep(0.02)
                             c = ''
                             self.devices[port]['serial'].close()
@@ -209,8 +215,7 @@ class Client:
                         else:
                             break
                 except:
-                    if DEBUG:
-                        raise
+                    if DEBUG: traceback.print_exc()
                     break
                 if log != '' and newline == True:
                     self.response_filter(port, log)
@@ -460,29 +465,22 @@ class Client:
         if port not in self.devices:
             return 'error'
 
-        if self.devices[port]['serial'].isOpen() == False:
-            try:
-                self.devices[port]['serial'].open()
-            except:
-                if DEBUG:
-                    raise
-                print 'device_control, error: unable to open {0}'.format(port)
-                return 'fail'
-
         ret = 'busy'
         model = 'unknown'
-
         if 'model' in self.devices[port]['attributes']:
             model = self.devices[port]['attributes']['model']
         model = model.lower()
 
         if self.devices[port]['wlock'].acquire(False) == True:
-            if model == 'esp32':
-                ret = self.esp32_control(port, operation)
-            elif model == 'mk3060':
-                ret = self.mxchip_control(port, operation)
-            else:
-                ret = 'fail'
+            try:
+                if model == 'esp32':
+                    ret = self.esp32_control(port, operation)
+                elif model == 'mk3060':
+                    ret = self.mxchip_control(port, operation)
+                else:
+                    ret = 'fail'
+            except:
+                if DEBUG: traceback.print_exc()
             self.devices[port]['wlock'].release()
         else:
             operate= {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_STOP:'stop', TBframe.DEVICE_START:'start'}
@@ -519,6 +517,7 @@ class Client:
 
         if os.path.exists('client') == False:
             os.mkdir('client')
+        signal.signal(signal.SIGINT, signal_handler)
 
         self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
         thread.start_new_thread(self.device_monitor,())
@@ -689,10 +688,10 @@ class Client:
                             return
                 print 'connection to server resumed'
             except KeyboardInterrupt:
+                print "client exiting ..."
                 self.keep_running = False
                 time.sleep(0.3)
                 break
             except:
-                if DEBUG:
-                    raise
+                if DEBUG: traceback.print_exc()
         self.service_socket.close()

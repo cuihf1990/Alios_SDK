@@ -8,4 +8,4 @@ fi
 if [ -f /tmp/.testbed_server_34567 ]; then
     rm -rf /tmp/.testbed_server_34567
 fi
-screen -dmL python utest.py server
+screen -L server.log -dm python utest.py server
