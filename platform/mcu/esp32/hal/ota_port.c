@@ -12,7 +12,6 @@ static esp_partition_t  operate_partition;
 static esp_ota_handle_t out_handle;
 static esp_err_t esp_write_error;
 
-extern void nvs_dump();
 extern void esp_restart(void);
 
 bool esp_ota_prepare()
@@ -140,8 +139,6 @@ static int esp_ota_finish_cb(hal_ota_module_t *m, void *something)
             ESP_LOGE(TAG, "esp_ota_set_boot_partition failed! err=0x%x", err);
             return -1;
         }
-
-        nvs_dump();
 
         ESP_LOGI(TAG, "Prepare to restart system!");
         esp_restart();
