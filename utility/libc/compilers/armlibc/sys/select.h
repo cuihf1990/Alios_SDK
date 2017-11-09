@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _SYS_SELECT_H__
 #define _SYS_SELECT_H__
 
