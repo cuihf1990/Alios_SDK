@@ -751,8 +751,11 @@ out:
 
 void umesh_cli_cmd(char *buf, int length, cmd_cb_t cb, void *priv)
 {
-    input_cli_t *input_cli;
+    input_cli_t *input_cli = NULL;
 
+    if (length == 0) {
+        goto err_out;
+    }
     input_cli = (input_cli_t *)ur_mem_alloc(sizeof(input_cli_t));
     if (input_cli == NULL) {
         goto err_out;
