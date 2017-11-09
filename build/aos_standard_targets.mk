@@ -115,7 +115,7 @@ endif
 download: download_app $(if $(findstring total,$(MAKECMDGOALS)), EXT_IMAGE_DOWNLOAD,)
 
 kill_openocd:
-	$(KILL_OPENOCD)
+	$(info kill_openocd)
 
 run: $(SHOULD_I_WAIT_FOR_DOWNLOAD)
 	$(QUIET)$(ECHO) Resetting target
