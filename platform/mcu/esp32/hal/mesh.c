@@ -289,6 +289,10 @@ static int esp32_wifi_mesh_get_channel(umesh_hal_module_t *module)
 static int esp32_wifi_mesh_set_channel(umesh_hal_module_t *module,
                                   uint8_t channel)
 {
+    if (channel < 1 || channel > 14) {
+        return -1;
+    }
+
     ESP_ERROR_CHECK(esp_wifi_set_channel(channel, 0));
     return 0;
 }
