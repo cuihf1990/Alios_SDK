@@ -31,6 +31,7 @@
 #endif
 #include <lwip/dhcp.h>
 #include "lwip/prot/dhcp.h"
+#include "lwip/priv/tcp_priv.h"
 
 
 #include "esp_event.h"
