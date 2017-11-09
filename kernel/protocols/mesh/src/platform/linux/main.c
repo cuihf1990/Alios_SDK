@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <umesh.h>
 #include <umesh_hal.h>
 #include <umesh_pal.h>
