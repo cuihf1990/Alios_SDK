@@ -271,7 +271,7 @@ class vendorslib:
             if not cmd:
                 error('Unknown system!')
             modules.popen(cmd, shell=True, cwd=os.getcwd())
-        elif self.base == "mxchip" or self.base == "github":
+        elif self.base == "mxchip" or self.base == "github" or self.base == "esp":
             dst = self.dstdir + "/*"
             linux = "rm -rf " + dst
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
@@ -477,9 +477,15 @@ class vendorslib:
         dst = ""
         # default build mk3060
         if module == "mesh":
-            dst = self.dstdir + "/kernel/protocols/mesh/lib/mk3060"
+            if self.base == "esp":
+                dst = self.dstdir + "/kernel/protocols/mesh/lib/esp32"
+            else:
+                dst = self.dstdir + "/kernel/protocols/mesh/lib/mk3060"
         elif module == "ywss":
-            dst = self.dstdir + "/framework/ywss/lib/mk3060"
+            if self.base == "esp":
+                dst = self.dstdir + "/framework/ywss/lib/esp32"
+            else:
+                dst = self.dstdir + "/framework/ywss/lib/mk3060"
         elif module == "rhino":
             dst = self.dstdir + "/kernel/rhino/lib/mk3060"
         elif module == "wsf":

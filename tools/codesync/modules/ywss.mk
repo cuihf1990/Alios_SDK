@@ -18,6 +18,9 @@ $(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libywss.a
 else ifeq ($(HOST_ARCH), ARM968E-S)
 PLATFORM := mk3060
 $(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libywss.a
+else ifeq ($(HOST_ARCH), xtensa)
+PLATFORM := esp32
+$(NAME)_PREBUILT_LIBRARY := lib/$(PLATFORM)/libywss.a
 else
 $(error "not find correct platform!")
 endif
