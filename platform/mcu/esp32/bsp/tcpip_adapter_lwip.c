@@ -790,6 +790,11 @@ static void tcpip_adapter_dhcpc_cb(struct netif *netif)
     tcpip_adapter_ip_info_t *ip_info = NULL;
     tcpip_adapter_if_t tcpip_if;
 
+    long long ts = aos_now();
+    srand((unsigned int)ts);
+    tcp_init();
+    udp_init();
+
     if (!netif) {
         ESP_LOGD(TAG, "null netif=%p", netif);
         return;
