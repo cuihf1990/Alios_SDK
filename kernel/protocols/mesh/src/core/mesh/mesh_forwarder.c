@@ -870,7 +870,7 @@ static void message_handler(void *args)
         forward = true;
     }
 
-    if (info->dest.netid != BCAST_NETID) {
+    if (is_unique_netid(info->dest.netid)) {
         info->network = get_network_context_by_meshnetid(info->dest.netid);
         if (info->network == NULL) {
             if (is_subnet(info->dest.netid)) {
@@ -879,8 +879,7 @@ static void message_handler(void *args)
                 info->network = get_hal_default_network_context(hal);
             }
         }
-    } else if (info->src.netid != BCAST_NETID &&
-               info->src.netid != INVALID_NETID) {
+    } else if (is_unique_netid(info->src.netid)) {
         info->network = get_network_context_by_meshnetid(info->src.netid);
         is_check_level = true;
     }
@@ -895,7 +894,7 @@ static void message_handler(void *args)
         }
     }
     meshnetid = umesh_mm_get_meshnetid(info->network);
-    if (meshnetid != BCAST_NETID && meshnetid != INVALID_NETID) {
+    if (is_unique_netid(meshnetid)) {
         uint8_t local_subnet_type = is_subnet(meshnetid) ? 1 : 0;
         uint8_t subnet_type = is_subnet(info->src.netid) ? 1 : 0;
         if ((local_subnet_type ^ subnet_type) ||

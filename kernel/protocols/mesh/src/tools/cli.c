@@ -321,7 +321,7 @@ void process_mode(int argc, char *argv[])
     }
     error = umesh_set_mode(mode);
 
-    if (mode == 0 || error != UR_ERROR_NONE) {
+    if (error != UR_ERROR_NONE) {
         response_append("none\r\n");
         return;
     }

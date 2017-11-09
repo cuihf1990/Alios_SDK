@@ -29,19 +29,19 @@ static void topology_line_case(void)
     set_line_rssi(11, 14);
     cmd_to_agent("stop");
 
-    start_node_ext(13, MODE_SUPER, -1, -1);
+    start_node_ext(13, MODE_SUPER | MODE_RX_ON, -1, -1);
     check_p2p_str_wait("leader", 13, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 13, "testcmd router", 2);
 
-    start_node_ext(12, MODE_SUPER, -1, -1);
+    start_node_ext(12, MODE_SUPER | MODE_RX_ON, -1, -1);
     check_p2p_str_wait("super_router", 12, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 12, "testcmd router", 2);
 
-    start_node_ext(14, MODE_MOBILE, -1, -1);
+    start_node_ext(14, MODE_MOBILE | MODE_RX_ON, -1, -1);
     check_p2p_str_wait("leaf", 14, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 14, "testcmd router", 2);
 
-    umesh_set_mode(MODE_MOBILE);
+    umesh_set_mode(MODE_MOBILE | MODE_RX_ON);
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_LEAF == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
@@ -68,19 +68,19 @@ static void dual_if_topology_line_case(void)
     set_line_rssi(151, 154);
     cmd_to_agent("stop");
 
-    start_node_ext(152, MODE_SUPER, -1, 3);
+    start_node_ext(152, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("leader", 152, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 152, "testcmd router", 2);
 
-    start_node_ext(153, MODE_SUPER, -1, 3);
+    start_node_ext(153, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("super_router", 153, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 153, "testcmd router", 2);
 
-    start_node_ext(151, MODE_MOBILE, -1, 2);
+    start_node_ext(151, MODE_MOBILE | MODE_RX_ON, -1, 2);
     check_p2p_str_wait("leaf", 151, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 151, "testcmd router", 2);
 
-    start_node_ext(154, MODE_MOBILE, -1, 2);
+    start_node_ext(154, MODE_MOBILE | MODE_RX_ON, -1, 2);
     check_p2p_str_wait("leaf", 154, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 154, "testcmd router", 2);
 

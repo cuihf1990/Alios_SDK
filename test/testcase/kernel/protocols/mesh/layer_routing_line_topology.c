@@ -29,11 +29,11 @@ static void topology_line_case(void)
     set_line_rssi(11, 14);
     cmd_to_agent("stop");
 
-    start_node_ext(13, MODE_SUPER, -1, -1);
+    start_node_ext(13, MODE_SUPER | MODE_RX_ON, -1, -1);
     check_p2p_str_wait("leader", 13, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 13, "testcmd router", 2);
 
-    start_node_ext(12, MODE_SUPER, -1, -1);
+    start_node_ext(12, MODE_SUPER | MODE_RX_ON, -1, -1);
     check_p2p_str_wait("super_router", 12, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 12, "testcmd router", 2);
 
@@ -68,11 +68,11 @@ static void dual_if_topology_line_case(void)
     set_line_rssi(151, 154);
     cmd_to_agent("stop");
 
-    start_node_ext(152, MODE_SUPER, -1, 3);
+    start_node_ext(152, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("leader", 152, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 152, "testcmd router", 2);
 
-    start_node_ext(153, MODE_SUPER, -1, 3);
+    start_node_ext(153, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("super_router", 153, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 153, "testcmd router", 2);
 
@@ -102,6 +102,6 @@ static void dual_if_topology_line_case(void)
 
 void test_uradar_layer_routing_line_topology_case(void)
 {
-    run_times(topology_line_case(), 1);
+    //run_times(topology_line_case(), 1);
     run_times(dual_if_topology_line_case(), 1);
 }
