@@ -256,15 +256,15 @@ static void Console_UART_Init(void)
   aos_sem_new(&uart_rx_sem, 0);
 }
 
-#ifdef __GNUC__
+#if defined (__CC_ARM) && defined(__MICROLIB)
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#define GETCHAR_PROTOTYPE int fgetc(FILE *f)
+#else
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
    set to 'Yes') calls __io_putchar() */
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 #define GETCHAR_PROTOTYPE int __io_getchar(void)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#define GETCHAR_PROTOTYPE int fgetc(FILE *f)
-#endif /* __GNUC__ */
+#endif /* defined (__CC_ARM) && defined(__MICROLIB) */
 
 /**
   * @brief  Retargets the C library printf function to the USART.
@@ -273,7 +273,9 @@ static void Console_UART_Init(void)
   */
 PUTCHAR_PROTOTYPE
 {
-
+  if (ch == '\n') {
+    hal_uart_send(NULL, (void *)"\r", 1, 30000);
+  }
   hal_uart_send(NULL, &ch, 1, 30000);
   return ch;
 }
