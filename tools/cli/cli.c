@@ -647,13 +647,17 @@ static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
 static void udp_cmd(char *buf, int len, int argc, char **argv)
 {
     struct sockaddr_in saddr;
+
+    if (argc < 4) {
+        return;
+    }
+
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family = AF_INET;
     saddr.sin_port = htons(atoi(argv[2]));
     saddr.sin_addr.s_addr = inet_addr(argv[1]);
 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-
     if (sockfd < 0) {
         aos_cli_printf("error creating socket!\n");
         return;
