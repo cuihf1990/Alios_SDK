@@ -123,17 +123,17 @@ static uint8_t utils_crc8(uint8_t *buf, uint16_t length)
 
 static int raw_read(uint32_t offset, void *buf, size_t nbytes)
 {
-    return hal_flash_read(KV_PTN, &offset, buf, nbytes);
+    return hal_flash_read((hal_partition_t)KV_PTN, &offset, buf, nbytes);
 }
 
 static int raw_write(uint32_t offset, const void *buf, size_t nbytes)
 {
-    return hal_flash_write(KV_PTN, &offset, buf, nbytes);
+    return hal_flash_write((hal_partition_t)KV_PTN, &offset, buf, nbytes);
 }
 
 static int raw_erase(uint32_t offset, uint32_t size)
 {
-    return hal_flash_erase(KV_PTN, offset, size);
+    return hal_flash_erase((hal_partition_t)KV_PTN, offset, size);
 }
 
 static void trigger_gc(void)
@@ -189,6 +189,9 @@ static uint16_t kv_item_calc_pos(uint16_t len)
 {
     block_info_t *blk_info;
     uint8_t blk_index = (g_kv_mgr.write_pos) >> BLK_BITS;
+#if BLK_NUMS > KV_GC_RESERVED + 1
+    uint8_t i;
+#endif
 
     blk_info = &(g_kv_mgr.block_info[blk_index]);
     if (blk_info->space > len) {
@@ -199,7 +202,6 @@ static uint16_t kv_item_calc_pos(uint16_t len)
     }
 
 #if BLK_NUMS > KV_GC_RESERVED + 1
-    uint8_t i;
     for (i = blk_index + 1; i != blk_index; i++) {
         if (i == BLK_NUMS) {
             i = 0;
@@ -228,6 +230,8 @@ static int kv_item_del(kv_item_t *item, int mode)
 {
     int ret = RES_OK;
     item_hdr_t hdr;
+    char *origin_key = NULL;
+    char *new_key = NULL;
     uint8_t i;
     uint16_t offset;
 
@@ -246,11 +250,11 @@ static int kv_item_del(kv_item_t *item, int mode)
             return RES_OK;
         }
 
-        char *origin_key = (char *)aos_malloc(hdr.key_len);
+        origin_key = (char *)aos_malloc(hdr.key_len);
         if (!origin_key) {
             return RES_MALLOC_FAILED;
         }
-        char *new_key = (char *)aos_malloc(hdr.key_len);
+        new_key = (char *)aos_malloc(hdr.key_len);
         if (!new_key) {
             aos_free(origin_key);
             return RES_MALLOC_FAILED;
@@ -836,9 +840,9 @@ static void handle_kv_cmd(char *pwbuf, int blen, int argc, char **argv)
 }
 
 static struct cli_command ncmd = {
-    .name = "kv",
-    .help = "kv [set key value | get key | del key | list]",
-    .function = handle_kv_cmd,
+    "kv",
+    "kv [set key value | get key | del key | list]",
+    handle_kv_cmd
 };
 #endif
 
