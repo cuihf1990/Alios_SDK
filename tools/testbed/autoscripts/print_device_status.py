@@ -113,8 +113,15 @@ class Autotest:
 
 
 if __name__ == '__main__':
+    server_ip = '10.125.52.132'
+    for arg in sys.argv[1:]:
+        if arg.startswith("--sever="):
+            args = arg.split('=')
+            if len(args) != 2:
+                print 'wrong argument {0} input, example: --server=192.168.0.8'.format(arg)
+            server_ip = args[1]
     at = Autotest()
-    if at.start('10.125.52.132', 34568) == False:
+    if at.start(server_ip, 34568) == False:
         print 'connect server failed'
         sys.exit(1)
     while at.is_running():
