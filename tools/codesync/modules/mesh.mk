@@ -8,6 +8,8 @@ ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 $(NAME)_PREBUILT_LIBRARY := lib/linuxhost/libmesh.a 
 else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
 $(NAME)_PREBUILT_LIBRARY := lib/mk3060/libmesh.a 
+else ifeq ($(findstring esp32, $(BUILD_STRING)), esp32)
+$(NAME)_PREBUILT_LIBRARY := lib/esp32/libmesh.a
 endif
 
 MESHDEBUG ?= 1

@@ -89,6 +89,12 @@ class syncpreparelib():
             if not cmd:
                 error('Unknown system!')
             popen(cmd, shell=True, cwd=os.getcwd())
+        elif configs.dstbase == "esp":
+            linux = "aos make -e alinkapp@esp32devkitc"
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
 
         os.chdir(cur_dir)
         os.chdir("./tmp_synccode")
@@ -465,6 +471,14 @@ class meshlib:
             if not cmd:
                 error('Unknown system!')
             popen(cmd, shell=True, cwd=os.getcwd())
+        elif self.dstbase == "esp":
+            src = self.srcdir + "/out/alinkapp@esp32devkitc/libraries/mesh.a"
+            dst = self.dstdir + "/kernel/protocols/mesh/lib/esp32/libmesh.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
         else:
             os.chdir(self.srcdir)
             linux = "aos makelib -r linux kernel/protocols/mesh"
@@ -564,6 +578,14 @@ class ywsslib:
 
             src = self.srcdir + "/out/alinkapp@linuxhost/libraries/ywss.a"
             dst = self.dstdir + "/framework/ywss/lib/linuxhost/libywss.a"
+            linux = "cp -f " + src + " " + dst
+            cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
+            if not cmd:
+                error('Unknown system!')
+            popen(cmd, shell=True, cwd=os.getcwd())
+        elif self.dstbase == "esp":
+            src = self.srcdir + "/out/alinkapp@esp32devkitc/libraries/ywss.a"
+            dst = self.dstdir + "/framework/ywss/lib/esp32/libywss.a"
             linux = "cp -f " + src + " " + dst
             cmd = mac if sys.platform == 'darwin' else (linux if sys.platform == 'linux2' else (win if sys.platform == 'win32' else None))
             if not cmd:
