@@ -16,9 +16,14 @@ caseids['236838BD263486D6A0CEA77FB3D8110E'] = 26604 #DN02X2ZS
 caseids['7089FD4690110E8194F29CDCBC82BC0D'] = 26536 #DN02X303
 #caseids['163454A2DFF5E1C3284D1C9A63BACBD8'] = 26706 #DN02QRJP-for debug only
 #esp32
-caseids['2363A965CE3C548993F485EF5883F6CA'] = 26689 #espif-10
 caseids['794736BDFF2E591F6BFEC2FE3EE383E6'] = 26638 #espif-5
 caseids['59ED5E3E36FF2BDCB81B0FBCE9E997BF'] = 26655 #espif-6
+caseids['33688B9B824E66254D109CDAC1C66CF4'] = 26998 #espif-9
+caseids['2363A965CE3C548993F485EF5883F6CA'] = 26689 #espif-10
+caseids['785A61C6F5656AD16D57A919F0CEDFB4'] = 27015 #espif-2.1
+caseids['A007D2D3AE28C4B501A7D57D93B253B4'] = 27044 #espif-1.2.4
+caseids['1A2D6B99CF19A1DE70E197798F2D68FE'] = 27061 #espif-4.2.3
+caseids['E55F17709F0A11180D36AE83720EC22B'] = 27078 #espif-4.2.4
 
 DEBUG = False
 #server inteaction related functions
@@ -71,6 +76,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     wifissid = 'aos_test_01'
     wifipass = 'Alios@Embedded'
     testbed_server = '10.125.52.132'
+
     #parse input
     i = 1
     while i < len(sys.argv):
@@ -229,7 +235,8 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     already_running = False
     conn = httplib.HTTPConnection(server, port)
     result = alink_test(conn, 'status', caseid, userid)
-    if DEBUG: print 'status:', result
+    if DEBUG:
+        print 'status:', result
     if result == {} or result[u'message'] != u'success':
         print 'error: unable to get test case {0} status'.format(caseid)
         return [1, 'get case {0} status failed'.format(caseid)]
@@ -242,7 +249,8 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         #already running, stop test case
         conn = httplib.HTTPConnection(server, port)
         result = alink_test(conn, 'stop', caseid, userid)
-        if DEBUG: print 'status:', result
+        if DEBUG:
+            print 'status:', result
         if result == {} or result[u'message'] != u'success':
             print 'error: unable to stop test case {0}'.format(caseid)
             return [1, 'stop case {0} failed'.format(caseid)]
@@ -252,7 +260,8 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     #start run test case
     conn = httplib.HTTPConnection(server, port)
     result = alink_test(conn, 'start', caseid, userid)
-    if DEBUG: print 'start:', result
+    if DEBUG:
+        print 'start:', result
     if result == {}:
         print 'error: unable to start test case {0}'.format(caseid)
         return [1, 'start case failed']

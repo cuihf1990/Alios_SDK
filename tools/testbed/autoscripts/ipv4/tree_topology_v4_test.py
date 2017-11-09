@@ -1,7 +1,7 @@
 import sys, os, time
 from autotest import Autotest
 
-def main(filename='~/lb-all.bin', model='mk3060'):
+def main(firmware='~/lb-all.bin', model='mk3060'):
     ap_ssid = 'aos_test_01'
     ap_pass = 'Alios@Embedded'
     server = '10.125.52.132'
@@ -16,7 +16,7 @@ def main(filename='~/lb-all.bin', model='mk3060'):
             args = arg.split('=')
             if len(args) != 2:
                 print 'wrong argument {0} input, example: --firmware=firmware.bin'.format(arg)
-            filename = args[1]
+            firmware = args[1]
         elif arg.startswith('--model='):
             args = arg.split('=')
             if len(args) != 2:
@@ -75,7 +75,7 @@ def main(filename='~/lb-all.bin', model='mk3060'):
         succeed = False; retry = 5
         print 'programming device {0} ...'.format(devices[device])
         for i in range(retry):
-            if at.device_program(device, addr, filename) == True:
+            if at.device_program(device, addr, firmware) == True:
                 succeed = True
                 break
             time.sleep(0.5)

@@ -18,10 +18,13 @@ class Server:
         self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
         self.keep_running = True
         self.special_purpose_set = {}
-        self.special_purpose_set['mk3060-alink'] = ['DN02X2ZO', 'DN02X2ZZ', 'DN02X304', 'DN02X30H']
+        self.special_purpose_set['mk3060-alink'] =  ['DN02X2ZO', 'DN02X2ZZ', 'DN02X304', 'DN02X30H']
         self.special_purpose_set['mk3060-alink'] += ['DN02XRK7', 'DN02XRKB', 'DN02X2ZS', 'DN02X303']
         #self.special_purpose_set['mk3060-alink'] += ['DN02QRJP'] #for debug only
-        self.special_purpose_set['esp32-alink'] = ['espif-10', 'espif-5', 'espif-6']
+        self.special_purpose_set['esp32-alink'] =  ['espif-5', 'espif-6']
+        self.special_purpose_set['esp32-alink'] += ['espif-9', 'espif-10']
+        self.special_purpose_set['esp32-alink'] += ['espif-2.1', 'espif-1.2.4']
+        self.special_purpose_set['esp32-alink'] += ['espif-4.2.3', 'espif-4.2.4']
 
     def construct_dev_list(self):
         l = []
