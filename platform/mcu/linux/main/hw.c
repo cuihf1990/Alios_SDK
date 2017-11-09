@@ -46,11 +46,18 @@ static int open_flash(int pno, bool w)
     else
         flash_fd = open(fn, O_RDONLY);
 
-    if (flash_fd < 0) {
-        umask(0111);
-        close(creat(fn, S_IRWXU | S_IRWXG));
-        flash_fd = open(fn, O_RDWR);
+    if (flash_fd >= 0) {
+        goto out;
     }
+
+    umask(0111);
+    flash_fd = creat(fn, S_IRWXU | S_IRWXG);
+    if (flash_fd < 0)
+        goto out;
+
+    close(flash_fd);
+    flash_fd = open(fn, O_RDWR);
+out:
     return flash_fd;
 }
 
