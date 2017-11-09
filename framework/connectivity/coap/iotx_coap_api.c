@@ -400,7 +400,7 @@ int IOT_CoAP_SendMessage_block(iotx_coap_context_t *p_context, char *p_path, iot
 
         CoAPMessage_init(&message);
         CoAPMessageType_set(&message, COAP_MESSAGE_TYPE_CON);
-        CoAPMessageCode_set(&message, COAP_MSG_CODE_GET);
+        CoAPMessageCode_set(&message, COAP_MSG_CODE_POST);
         CoAPMessageId_set(&message, CoAPMessageId_gen(p_coap_ctx));
         len = iotx_get_coap_token(p_iotx_coap, token);
         CoAPMessageToken_set(&message, token, len);
@@ -422,7 +422,6 @@ int IOT_CoAP_SendMessage_block(iotx_coap_context_t *p_context, char *p_path, iot
         CoAPStrOption_add(&message,  block_type, block_val, block_val_len);
         CoAPStrOption_add(&message,  COAP_OPTION_AUTH_TOKEN,
                           (unsigned char *)p_iotx_coap->p_auth_token, strlen(p_iotx_coap->p_auth_token));
-
 
         for (int i = 0; i < message.optnum; i++) {
             COAP_DEBUG("option.num=%d ,message->options[0].val[0]=%d\r\n", message.options[i].num, message.options[i].val[0]);
