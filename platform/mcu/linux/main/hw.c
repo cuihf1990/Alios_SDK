@@ -87,7 +87,7 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
     ret = pwrite(flash_fd, origin, buf_size, *poff);
     if (ret < 0)
         perror("error writing flash:");
-    else if (poff)
+    else
         *poff += ret;
 
 exit:
@@ -105,7 +105,7 @@ int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t 
     int ret = pread(flash_fd, buf, buf_size, *poff);
     if (ret < 0)
         perror("error reading flash:");
-    else if (poff)
+    else
         *poff += ret;
     close(flash_fd);
 
