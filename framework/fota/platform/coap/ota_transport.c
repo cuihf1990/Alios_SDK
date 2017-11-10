@@ -133,12 +133,19 @@ static int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic
 static int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *version)
 {
     int ret;
+#ifdef CONFIG_FOTA_DOWNLOAD_COAP    
+    ret = snprintf(buf,
+                   buf_len,
+                   "{\"id\":%d,\"params\":{\"mode\":\"coap\",\"version\":\"%s\"}}",
+                   id,
+                   version);
+#else
     ret = snprintf(buf,
                    buf_len,
                    "{\"id\":%d,\"params\":{\"version\":\"%s\"}}",
                    id,
                    version);
-
+#endif
     if (ret < 0) {
         OTA_LOG_E("snprintf failed");
         return -1;
@@ -157,13 +164,14 @@ static int otalib_GenReportMsg(char *buf, size_t buf_len, uint32_t id, int progr
     if (NULL == msg_detail) {
         ret = snprintf(buf,
                        buf_len,
-                       "{\"id\":%d,\"params\":\{\"step\": \"%d\"}}",
+                       "{\"id\":%d,\"params\":{\"step\": \"%d\",\"desc\":\"%d%%\"}}",
                        id,
+                       progress,
                        progress);
     } else {
         ret = snprintf(buf,
                        buf_len,
-                       "{\"id\":%d,\"params\":\{\"step\": \"%d\",\"desc\":\"%s\"}}",
+                       "{\"id\":%d,\"params\":{\"step\": \"%d\",\"desc\":\"%s\"}}",
                        id,
                        progress,
                        msg_detail);

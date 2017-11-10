@@ -18,8 +18,12 @@
 #include "ota_update_manifest.h"
 
 
-#define  OTA_BUFFER_MAX_SIZE  128
-#define  COAP_OPTION_BLOCK2  23
+#define  OTA_COAP_BLOCK_SIZE   1024
+#define  COAP_OPTION_BLOCK2    23
+#define  MAX_RETRY             10
+
+#define DOWNLOAD_PATH   "/topic/ota/device/download/%s/%s"
+
 MD5_CTX  g_ctx;
 
 typedef struct ota_device_info {
@@ -32,19 +36,23 @@ extern OTA_device_info g_ota_device_info;
 
 static unsigned int block_cur_num=0;
 static unsigned int block_more=1;
-static unsigned int block_size=OTA_BUFFER_MAX_SIZE;
+static unsigned int block_size=OTA_COAP_BLOCK_SIZE;
 static unsigned int total_size=0;
 
 static int coap_client_running=0;
+static int retry_cnt;
 
 static aos_sem_t sem_send;
 static aos_sem_t sem_rec;  
 
 static void iotx_response_block_handler(void * arg, void * p_response);
-static void iotx_req_block_from_server(const char  *path);
+static void iotx_req_block_from_server( char  *path);
 static void task_rec(void *para);
 
 static write_flash_cb_t write_func=NULL;
+
+
+
 int ota_download(char *url, write_flash_cb_t func, char *md5)
 {
     //url="/large";   
@@ -55,15 +63,29 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
     int ret = 0;
     uint32_t breakpoint = 0;
     char last_md5[33] = {0};
+    char download_topic_buf[128]={0};
+
+    ret = snprintf(download_topic_buf,
+                   sizeof(download_topic_buf),
+                   DOWNLOAD_PATH,
+                   g_ota_device_info.product_key,
+                   g_ota_device_info.device_name);
+
+    if (ret < 0) {
+        LOG("snprintf failed");
+        return -1;
+    }
+
     write_func=func;
+    retry_cnt=0;
+
     breakpoint = ota_get_update_breakpoint();
     ota_get_last_MD5(last_md5);
 
-    OTA_LOG_I("----breakpoint=%d------", breakpoint);
     if (breakpoint && !strncmp(last_md5, md5, 32)) {
-        OTA_LOG_I("----resume download------");
+        OTA_LOG_I("----resume download breakpoint=%d------",breakpoint);
         ota_get_last_MD5_context(&g_ctx);
-        block_cur_num=breakpoint/OTA_BUFFER_MAX_SIZE;//更精准一点，这里应该恢复上次请求块大小
+        block_cur_num=breakpoint/OTA_COAP_BLOCK_SIZE;
     } else {
         breakpoint = 0;
         block_cur_num=0;
@@ -77,7 +99,7 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
 
     aos_task_new("coap rec", task_rec, 0, 2048);
     while(coap_client_running&&block_more){
-        iotx_req_block_from_server(url);
+        iotx_req_block_from_server(download_topic_buf);
         aos_sem_signal(&sem_rec);
         aos_sem_wait(&sem_send, 2000);
     }
@@ -125,21 +147,25 @@ static void iotx_response_block_handler(void * arg, void * p_response)
                 //OTA_LOG_I("size nbytes %d, %d", size, nbytes);
                 MD5_Update(&g_ctx, (const uint8_t *) p_payload, len);
                 if(write_func!=NULL){
-                    write_func(OTA_BUFFER_MAX_SIZE, (uint8_t *) p_payload, len, 0);
+                    write_func(OTA_COAP_BLOCK_SIZE, (uint8_t *) p_payload, len, 0);
                 }
-                // memset(http_buffer, 0, OTA_BUFFER_MAX_SIZE);
+                
             }
 
             aos_sem_signal(&sem_send);
         }else{
-            coap_client_running=0;     
+            if(retry_cnt++>MAX_RETRY){
+                coap_client_running=0; 
+            }    
         }
     } else {
-        coap_client_running=0;        
+        if(retry_cnt++>MAX_RETRY){
+            coap_client_running=0; 
+        }        
     }
 }
 
-static void iotx_req_block_from_server(const char * path)
+static void iotx_req_block_from_server( char * path)
 {
 
     iotx_message_t     message;
