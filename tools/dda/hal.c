@@ -26,7 +26,6 @@ typedef struct {
     umesh_handle_received_frame_t rxcb;
     void *context;
     umesh_hal_module_t *module;
-    mesh_key_t keys[2];
 } mesh_hal_priv_t;
 
 static void linuxhost_mesh_recv(frame_t *frm, frame_info_t *fino, void *cb_data)
@@ -149,30 +148,6 @@ static const mac_address_t *linuxhost_ur_get_mac_address(
     return &mac;
 }
 
-static int linuxhost_ur_set_key(struct umesh_hal_module_s *module,
-                                uint8_t index, uint8_t *key, uint8_t length)
-{
-    mesh_hal_priv_t *priv = module->base.priv_dev;
-
-    if (index > 1) {
-        return -1;
-    }
-
-    if (length > KEY_SIZE) {
-        priv->keys[index].len = 0;
-        return -1;
-    }
-    priv->keys[index].len = length;
-    memcpy(priv->keys[index].key, key, length);
-
-    return 0;
-}
-
-static int linuxhost_ur_is_sec_enabled(struct umesh_hal_module_s *module)
-{
-    return 0;
-}
-
 static int linuxhost_ur_hal_set_channel(umesh_hal_module_t *module, uint8_t channel)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -233,8 +208,6 @@ static umesh_hal_module_t linuxhost_ur_wifi_module = {
     .umesh_hal_set_channel = linuxhost_ur_hal_set_channel,
     .umesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
     .umesh_hal_get_channel = linuxhost_ur_get_channel,
-    .umesh_hal_set_key = linuxhost_ur_set_key,
-    .umesh_hal_is_sec_enabled = linuxhost_ur_is_sec_enabled,
 };
 
 static umesh_hal_module_t linuxhost_ur_ble_module;

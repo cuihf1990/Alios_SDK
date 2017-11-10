@@ -102,10 +102,6 @@ typedef struct umesh_hal_module_s {
     const mac_address_t *(*umesh_hal_get_mac_address)(
         struct umesh_hal_module_s *module);
 
-    int (*umesh_hal_set_key)(struct umesh_hal_module_s *module,
-                             uint8_t index, uint8_t *key, uint8_t length);
-    int (*umesh_hal_is_sec_enabled)(struct umesh_hal_module_s *module);
-
     const frame_stats_t *(*umesh_hal_get_stats)(struct umesh_hal_module_s *module);
 } umesh_hal_module_t;
 
@@ -371,30 +367,6 @@ int hal_umesh_set_mac_address(umesh_hal_module_t *module,
  *     The mac address, NULL if fail
  */
 const mac_address_t *hal_umesh_get_mac_address(umesh_hal_module_t *module);
-
-/**
- * Set HAL encryption key.
- *
- * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
- * @param[in] index  The key index
- * @param[in] key    The pointer to the encryption key
- * @param[in] length The key length, default value is 16
- *
- * @return
- *     Set result, 0 if success, -1 if fail
- */
-int hal_umesh_set_key(struct umesh_hal_module_s *module,
-                      uint8_t index, uint8_t *key, uint8_t length);
-
-/**
- * Check whether security is enabled or not by the specified HAL.
- *
- * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
- *
- * @return
- *     Security state, 0 if disabled, 1 if enabled
- */
-int hal_umesh_is_sec_enabled(struct umesh_hal_module_s *module);
 
 /**
  * Read umesh HAL frame stats.
