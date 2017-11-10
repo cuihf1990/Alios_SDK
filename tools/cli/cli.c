@@ -38,6 +38,10 @@ extern void hal_reboot(void);
 extern int board_cli_init(void);
 #endif
 
+#ifdef VCALL_RHINO
+extern uint32_t krhino_version_get(void);
+#endif
+
 int cli_getchar(char *inbuf);
 
 int cli_putstr(char *msg);
@@ -575,7 +579,7 @@ static void log_cmd(char *buf, int len, int argc, char **argv)
         if (strncmp(lvls[i], argv[1], strlen(lvls[i])+1) != 0)
             continue;
 
-        aos_set_log_level(i);
+        aos_set_log_level((aos_log_level_t)i);
         aos_cli_printf("set log level success\r\n");
         return;
     }
@@ -604,7 +608,6 @@ static void hexstr2bin(const char *macstr, uint8_t *mac, int len)
 
 static void mac_cmd(char *buf, int len, int argc, char **argv)
 {
-    int i, n;
     uint8_t mac[6];
 
     if (argc == 1)
@@ -883,6 +886,7 @@ const char *aos_cli_get_tag(void)
     return esc_tag;
 }
 
+#if defined BUILD_BIN || defined BUILD_KERNEL
 int aos_cli_printf(const char *msg, ...)
 {
     va_list ap;
@@ -912,6 +916,7 @@ int aos_cli_printf(const char *msg, ...)
 
     return 0;
 }
+#endif
 
 int cli_putstr(char *msg)
 {
