@@ -266,20 +266,6 @@ const mac_address_t *hal_umesh_get_mac_address(umesh_hal_module_t *m)
     return NULL;
 }
 
-int hal_umesh_set_key(struct umesh_hal_module_s *m,
-                      uint8_t index, uint8_t *key, uint8_t length)
-{
-    if (m == NULL) {
-        m = hal_umesh_get_default_module();
-    }
-
-    if ((m != NULL) && (m->umesh_hal_set_key != NULL)) {
-        return m->umesh_hal_set_key(m, index, key, length);
-    }
-
-    return -1;
-}
-
 const frame_stats_t *hal_umesh_get_stats(umesh_hal_module_t *m)
 {
     if (m == NULL) {
