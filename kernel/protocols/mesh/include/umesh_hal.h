@@ -102,6 +102,9 @@ typedef struct umesh_hal_module_s {
     const mac_address_t *(*umesh_hal_get_mac_address)(
         struct umesh_hal_module_s *module);
 
+    int (*umesh_hal_radio_wakeup)(struct umesh_hal_module_s *module);
+    int (*umesh_hal_radio_sleep)(struct umesh_hal_module_s *module);
+
     const frame_stats_t *(*umesh_hal_get_stats)(struct umesh_hal_module_s *module);
 } umesh_hal_module_t;
 
@@ -367,6 +370,26 @@ int hal_umesh_set_mac_address(umesh_hal_module_t *module,
  *     The mac address, NULL if fail
  */
 const mac_address_t *hal_umesh_get_mac_address(umesh_hal_module_t *module);
+
+/**
+ * Put umesh radio in wakeup state.
+ *
+ * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
+ *
+ * @return
+ *     Set result, 0 if success, -1 if fail
+ */
+int hal_umesh_radio_wakeup(umesh_hal_module_t *module);
+
+/**
+ * Sleep umesh radio sleep state.
+ *
+ * @param[in] module The HAL module to be operated; if NULL, the default module will be operated
+ *
+ * @return
+ *     Set result, 0 if success, -1 if fail
+ */
+int hal_umesh_radio_sleep(umesh_hal_module_t *module);
 
 /**
  * Read umesh HAL frame stats.
