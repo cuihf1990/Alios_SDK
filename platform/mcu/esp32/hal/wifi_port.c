@@ -280,7 +280,7 @@ static int wifi_getset_ops(hal_wifi_module_t *m, hal_wifi_getset_cmd_t cmd, ...)
         va_start(args, cmd);
         c = va_arg(args, int);
         uint8_t ch = c;
-        ESP_ERROR_CHECK(esp_wifi_set_channel(ch, 0));
+        esp_wifi_set_channel(ch, 0);
         va_end(args);
         break;
     }
