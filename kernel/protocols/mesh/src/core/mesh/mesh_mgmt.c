@@ -59,7 +59,6 @@ static ur_error_t send_advertisement(network_context_t *network);
 static void mesh_interface_state_callback(bool up);
 
 static void write_prev_netinfo(void);
-static void read_prev_netinfo(void);
 
 static void nbr_discovered_handler(neighbor_t *nbr)
 {
@@ -231,7 +230,6 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
                                                  TYPE_NETWORK_INFO);
     mcast = (mm_mcast_addr_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                   TYPE_MCAST_ADDR);
-
     if (allocated_sid == NULL || allocated_node_type == NULL ||
         netinfo == NULL || mcast == NULL) {
         return UR_ERROR_FAIL;
@@ -1334,40 +1332,14 @@ static uint16_t compute_network_metric(uint16_t size, uint16_t path_cost)
 static void write_prev_netinfo(void)
 {
     network_context_t *network;
-    ur_configs_t configs;
 
     network = get_default_network_context();
     if (network == NULL) {
         return;
     }
-
-    if (network->meshnetid == INVALID_NETID ||
-        network->path_cost == INFINITY_PATH_COST) {
-        return;
-    }
-
-    ur_configs_read(&configs);
-    configs.prev_netinfo.meshnetid = network->meshnetid;
-    configs.prev_netinfo.path_cost = network->path_cost;
-    ur_configs_write(&configs);
 
     network->prev_netid = network->meshnetid;
     network->prev_path_cost = network->path_cost;
-}
-
-static void read_prev_netinfo(void)
-{
-    network_context_t *network;
-    ur_configs_t configs;
-
-    network = get_default_network_context();
-    if (network == NULL) {
-        return;
-    }
-    if (ur_configs_read(&configs) == UR_ERROR_NONE) {
-        network->prev_netid = configs.prev_netinfo.meshnetid;
-        network->prev_path_cost = configs.prev_netinfo.path_cost;
-    }
 }
 
 static bool update_migrate_times(network_context_t *network, neighbor_t *nbr)
@@ -1582,7 +1554,6 @@ ur_error_t umesh_mm_start(void)
     MESH_LOG_INFO("mesh started");
 
     reset_network_context();
-    read_prev_netinfo();
     g_mm_state.device.state = DEVICE_STATE_DETACHED;
     g_mm_state.device.alive_timer = NULL;
     g_mm_state.device.reboot_flag = true;

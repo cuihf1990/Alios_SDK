@@ -236,6 +236,8 @@ void reset_network_context(void)
         network->sid       = BCAST_SID;
         network->path_cost = INFINITY_PATH_COST;
         network->meshnetid = INVALID_NETID;
+        network->prev_netid = INVALID_NETID;
+        network->prev_path_cost = INFINITY_PATH_COST;
         if (network->attach_node != NULL &&
             network->attach_node->state == STATE_PARENT) {
             network->attach_node->state = STATE_NEIGHBOR;
