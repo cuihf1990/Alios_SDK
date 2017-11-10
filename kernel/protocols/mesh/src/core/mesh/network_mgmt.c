@@ -14,6 +14,8 @@
 #include "hal/interfaces.h"
 #include "umesh_utils.h"
 
+static bool g_nm_started = false;
+
 static void handle_discovery_timer(void *args);
 static ur_error_t send_discovery_request(network_context_t *netowrk);
 static ur_error_t send_discovery_response(network_context_t *network,
@@ -77,6 +79,7 @@ exit:
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     lowpower_start();
 #endif
+    g_nm_started = false;
     return;
 }
 
@@ -206,7 +209,7 @@ ur_error_t handle_discovery_response(message_t *message)
     mm_netinfo_tv_t   *netinfo;
     mm_channel_tv_t   *channel;
 
-    if (umesh_mm_get_device_state() != DEVICE_STATE_DETACHED) {
+    if (umesh_mm_get_device_state() != DEVICE_STATE_DETACHED && g_nm_started == false) {
         return UR_ERROR_NONE;
     }
 
@@ -264,15 +267,13 @@ ur_error_t handle_discovery_response(message_t *message)
 ur_error_t nm_start_discovery(discovered_handler_t handler)
 {
     network_context_t *network;
-    hal_context_t     *hal;
+    hal_context_t *hal;
 
     network = get_default_network_context();
     hal = network->hal;
     hal->discovery_channel = 0;
     hal->discovery_times = 0;
-    if (hal->discovery_timer) {
-        ur_stop_timer(&hal->discovery_timer, network);
-    }
+    ur_stop_timer(&hal->discovery_timer, network);
     hal->discovery_timer = ur_start_timer(hal->discovery_interval,
                                           handle_discovery_timer, network);
     memset(&hal->discovery_result, 0, sizeof(hal->discovery_result));
@@ -280,6 +281,7 @@ ur_error_t nm_start_discovery(discovered_handler_t handler)
     hal->discovered_handler = handler;
 
     umesh_mm_set_prev_channel();
+    g_nm_started = true;
     return UR_ERROR_NONE;
 }
 
@@ -290,8 +292,8 @@ ur_error_t nm_stop_discovery(void)
 
     network = get_default_network_context();
     hal = network->hal;
-    if (hal->discovery_timer) {
-        ur_stop_timer(&hal->discovery_timer, network);
-    }
+    ur_stop_timer(&hal->discovery_timer, network);
+
+    g_nm_started = false;
     return UR_ERROR_NONE;
 }
