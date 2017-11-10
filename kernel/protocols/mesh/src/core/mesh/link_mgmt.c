@@ -248,7 +248,6 @@ neighbor_t *update_neighbor(const message_info_t *info,
     mm_channel_tv_t   *channel;
     hal_context_t     *hal;
     network_context_t *network;
-    uint8_t channel_orig;
     ur_node_id_t node_id;
 
     MESH_LOG_DEBUG("update neighbor");
@@ -299,16 +298,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
         nbr->flags |= NBR_NETID_CHANGED;
     }
 
-    channel_orig = nbr->channel;
-    if (channel) {
-        nbr->channel = channel->channel;
-    } else {
-        nbr->channel = info->src_channel;
-    }
-    if (channel_orig && nbr->channel != channel_orig) {
-        nbr->flags |= NBR_CHANNEL_CHANGED;
-    }
-
+    nbr->channel = channel? channel->channel: info->src_channel;
     network = info->network;
     if (network->router->sid_type == STRUCTURED_SID) {
         if (ssid_info != NULL) {
@@ -746,9 +736,9 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                  TYPE_UCAST_CHANNEL);
     if (channel) {
-        local_channel = umesh_mm_get_channel(network);
+        local_channel = umesh_mm_get_channel(network->hal);
         if (local_channel != channel->channel) {
-            umesh_mm_set_channel(network, channel->channel);
+            umesh_mm_set_channel(network->hal, channel->channel);
         }
     }
 

@@ -47,7 +47,7 @@ static void handle_discovery_timer(void *args)
         }
     }
     if (hal->discovery_times > 0 && migrate) {
-        umesh_mm_set_channel(network, hal->discovery_result.channel);
+        umesh_mm_set_channel(hal, hal->discovery_result.channel);
         nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         hal->discovered_handler(nbr);
         goto exit;
@@ -55,17 +55,16 @@ static void handle_discovery_timer(void *args)
         if (umesh_mm_get_prev_channel() == hal->discovery_channel) {
             hal->discovery_channel++;
         }
-        umesh_mm_set_channel(network,
-                             hal->channel_list.channels[hal->discovery_channel]);
+        umesh_mm_set_channel(hal, hal->channel_list.channels[hal->discovery_channel]);
         send_discovery_request(network);
         hal->discovery_timer = ur_start_timer(hal->discovery_interval,
                                               handle_discovery_timer, network);
         hal->discovery_channel++;
         return;
     } else if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
-        umesh_mm_set_channel(network, umesh_mm_get_prev_channel());
+        umesh_mm_set_channel(hal, umesh_mm_get_prev_channel());
     } else {
-        umesh_mm_set_channel(network, hal->def_channel);
+        umesh_mm_set_channel(hal, hal->def_channel);
         if ((umesh_mm_get_mode() & MODE_MOBILE) == 0) {
             become_leader();
         }
@@ -117,7 +116,7 @@ static ur_error_t send_discovery_request(network_context_t *network)
     ur_mem_free(data_orig, length);
 
     MESH_LOG_DEBUG("send discovery request in channel %d, len %d",
-                   umesh_mm_get_channel(network), length);
+                   umesh_mm_get_channel(network->hal), length);
 
     return error;
 }

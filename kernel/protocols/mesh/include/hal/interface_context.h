@@ -104,6 +104,7 @@ typedef struct hal_context_s {
     umesh_hal_module_t *module;
     channel_list_t       channel_list;
     uint8_t              def_channel;
+    uint8_t channel;
     mac_address_t        mac_addr;
 
     // queue
@@ -152,7 +153,6 @@ typedef struct network_context_s {
     attach_state_t    attach_state;
     uint16_t          path_cost;
     uint16_t          sid;
-    uint16_t          channel;
     uint16_t          meshnetid;
     uint16_t          candidate_meshnetid;
     uint8_t           *one_time_key;

@@ -67,13 +67,21 @@ static void nbr_discovered_handler(neighbor_t *nbr)
     }
 }
 
+static void update_channel(hal_context_t *hal, uint8_t channel)
+{
+    if (umesh_mm_get_channel(hal) != channel) {
+        umesh_mm_set_prev_channel();
+        umesh_mm_set_channel(hal, channel);
+    }
+}
+
 static void neighbor_updated_handler(neighbor_t *nbr)
 {
     network_context_t *network;
 
     network = get_default_network_context();
     if (network->attach_node != nbr) {
-        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT | NBR_CHANNEL_CHANGED)) ;
+        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT));
         return;
     }
 
@@ -82,12 +90,8 @@ static void neighbor_updated_handler(neighbor_t *nbr)
         become_detached();
         nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT));
         attach_start(NULL);
-    } else if (nbr->flags & NBR_CHANNEL_CHANGED) {
-        if (nbr->channel != umesh_mm_get_channel(network)) {
-            umesh_mm_set_prev_channel();
-            umesh_mm_set_channel(network, nbr->channel);
-        }
     }
+    update_channel(network->hal, nbr->channel);
 }
 
 static void set_default_network_data(void)
@@ -204,7 +208,7 @@ static void set_leader_network_context(network_context_t *default_network,
         ur_router_sid_updated(network, LEADER_SID);
         start_advertisement_timer(network);
         if (default_network) {
-            umesh_mm_set_channel(network, network->hal->def_channel);
+            umesh_mm_set_channel(network->hal, network->hal->def_channel);
         }
     }
 }
@@ -326,7 +330,7 @@ void become_leader(void)
         } else {
             channel = network->hal->def_channel;
         }
-        umesh_mm_set_channel(network, channel);
+        umesh_mm_set_channel(network->hal, channel);
     }
 
     g_mm_state.device.state = DEVICE_STATE_LEADER;
@@ -575,7 +579,7 @@ static void handle_attach_timer(void *args)
             return;
         }
         if (g_mm_state.device.state > DEVICE_STATE_ATTACHED) {
-            umesh_mm_set_channel(network, g_mm_state.device.prev_channel);
+            umesh_mm_set_channel(network->hal, g_mm_state.device.prev_channel);
             start_advertisement_timer(network);
         }
     }
@@ -1300,10 +1304,7 @@ static ur_error_t attach_start(neighbor_t *nbr)
     network->attach_state = ATTACH_REQUEST;
     network->attach_candidate = nbr;
     if (nbr) {
-        if (umesh_mm_get_channel(network) != nbr->channel) {
-            umesh_mm_set_prev_channel();
-            umesh_mm_set_channel(network, nbr->channel);
-        }
+        update_channel(network->hal, nbr->channel);
         network->candidate_meshnetid = nbr->netid;
     }
     send_attach_request(network);
@@ -1730,32 +1731,15 @@ const mac_address_t *umesh_mm_get_mac_address(void)
     return NULL;
 }
 
-uint16_t umesh_mm_get_channel(network_context_t *network)
+uint16_t umesh_mm_get_channel(hal_context_t *hal)
 {
-    network = network ? : get_default_network_context();
-    if (network) {
-        return network->channel;
-    } else {
-        return 0xffff;
-    }
+    return hal->channel;
 }
 
-void umesh_mm_set_channel(network_context_t *network, uint16_t channel)
+void umesh_mm_set_channel(hal_context_t *hal, uint16_t channel)
 {
-    slist_t *networks;
-    hal_context_t *hal;
-
-    network = network ? : get_default_network_context();
-    if (hal_umesh_set_channel(network->hal->module, channel) < 0) {
-        return;
-    }
-    hal = network->hal;
-    networks = get_network_contexts();
-    slist_for_each_entry(networks, network, network_context_t, next) {
-        if (network->hal != hal) {
-            continue;
-        }
-        network->channel = channel;
+    if (hal_umesh_set_channel(hal->module, channel) == 0) {
+        hal->channel = channel;
     }
 }
 
@@ -1923,9 +1907,9 @@ uint8_t umesh_mm_get_prev_channel(void)
 
 void umesh_mm_set_prev_channel(void)
 {
-    network_context_t *network;
-    network = get_default_network_context();
-    g_mm_state.device.prev_channel = network->channel;
+    hal_context_t *hal = get_default_hal_context();
+
+    g_mm_state.device.prev_channel = hal->channel;
 }
 
 uint8_t umesh_mm_get_reboot_flag(void)
@@ -1965,7 +1949,7 @@ uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data)
 
     channel = (mm_channel_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)channel, TYPE_UCAST_CHANNEL);
-    channel->channel = umesh_mm_get_channel(network);
+    channel->channel = umesh_mm_get_channel(network->hal);
 
     return sizeof(mm_channel_tv_t);
 }

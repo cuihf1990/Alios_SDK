@@ -84,6 +84,7 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
 
     if (type == MEDIA_TYPE_WIFI) {
         hal->def_channel = 6;
+        hal->channel = 6;
         hal->discovery_interval = WIFI_DISCOVERY_TIMEOUT;
         hal->attach_request_interval = WIFI_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = WIFI_SID_REQUEST_TIMEOUT;
@@ -93,6 +94,7 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->advertisement_interval = WIFI_ADVERTISEMENT_TIMEOUT;
     } else if (module->type == MEDIA_TYPE_BLE) {
         hal->def_channel = hal->channel_list.channels[0];
+        hal->channel = hal->channel_list.channels[0];
         hal->discovery_interval = BLE_DISCOVERY_TIMEOUT;
         hal->attach_request_interval = BLE_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = BLE_SID_REQUEST_TIMEOUT;
@@ -102,6 +104,7 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->advertisement_interval = BLE_ADVERTISEMENT_TIMEOUT;
     } else if (module->type == MEDIA_TYPE_15_4) {
         hal->def_channel = hal->channel_list.channels[0];
+        hal->channel = hal->channel_list.channels[0];
         hal->discovery_interval = IEEE154_DISCOVERY_TIMEOUT;
         hal->attach_request_interval = IEEE154_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = IEEE154_SID_REQUEST_TIMEOUT;
@@ -246,7 +249,6 @@ void reset_network_context(void)
         network->attach_candidate = NULL;
         network->candidate_meshnetid = BCAST_NETID;
         network->migrate_times = 0;
-        network->channel = -1;
     }
 }
 
