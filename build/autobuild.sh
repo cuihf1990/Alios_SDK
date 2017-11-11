@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 workdir=autobuild
 linux_posix_targets="alinkapp meshapp"

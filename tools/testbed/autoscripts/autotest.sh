@@ -93,10 +93,10 @@ if [ -f ${mk3060firmware} ]; then
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     if [ ${mk3060_5ppsRet} -eq 0 ]; then
         echo -e "run Alink 5PPS test with mk3060 succeed, log:\n" >> ${logfile}
-        title="${title} mk3060: 5PPS-SUCCESS,"
+        title="${title} MK3060: 5PPS-SUCCESS,"
     else
         echo -e "run Alink 5PPS test with mk3060 failed, log:\n" >> ${logfile}
-        title="${title} mk3060: 5PPS-FAIL,"
+        title="${title} MK3060: 5PPS-FAIL,"
     fi
     cat ~/mk3060_5pps.txt >> ${logfile}
     rm -f ~/mk3060_5pps.txt
@@ -121,10 +121,10 @@ if [ -f ${esp32firmware} ]; then
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     if [ ${esp32_5ppsRet} -eq 0 ]; then
         echo -e "run Alink 5PPS test with esp32 succeed, log:\n" >> ${logfile}
-        title="${title} esp32: 5PPS-SUCCESS,"
+        title="${title} ESP32: 5PPS-SUCCESS,"
     else
         echo -e "run Alink 5PPS test with esp32 failed, log:\n" >> ${logfile}
-        title="${title} 5PPS-FAIL,"
+        title="${title} ESP32: 5PPS-FAIL,"
     fi
     cat ~/esp32_5pps.txt >> ${logfile}
     rm -f ~/esp32_5pps.txt
