@@ -289,7 +289,7 @@ static int esp32_wifi_mesh_get_channel(umesh_hal_module_t *module)
 static int esp32_wifi_mesh_set_channel(umesh_hal_module_t *module,
                                   uint8_t channel)
 {
-    if (channel < 1 || channel > 14) {
+    if (channel < 1 || channel > 13) {
         return -1;
     }
 
@@ -339,7 +339,7 @@ static const frame_stats_t *esp32_wifi_mesh_get_stats(umesh_hal_module_t *module
     return &priv->stats;
 }
 
-static const uint8_t g_wifi_channels[] = {1, 4, 6, 9, 11};
+static const uint8_t g_wifi_channels[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 static mesh_hal_priv_t g_wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = DEFAULT_MTU_SIZE,
