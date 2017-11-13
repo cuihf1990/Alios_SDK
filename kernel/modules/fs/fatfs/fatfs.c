@@ -548,7 +548,7 @@ static int fatfs_dev_unregister(int pdrv)
     return err;
 }
 
-int fatfs_register()
+int fatfs_register(void)
 {
     int err = -EINVAL;
 
@@ -570,7 +570,7 @@ int fatfs_register()
     return err;
 }
 
-int fatfs_unregister()
+int fatfs_unregister(void)
 {
     int err = -EINVAL;
 
