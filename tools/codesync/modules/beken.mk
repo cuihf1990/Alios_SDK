@@ -65,15 +65,15 @@ GLOBAL_LDFLAGS += -mcpu=arm968e-s \
 BINS ?=
 
 ifeq ($(APP),bootloader)
-GLOBAL_LDFLAGS += -T platform/mcu/beken/linkinfo/bk7231_boot.ld
+GLOBAL_LDFLAGS += -T platform/mcu/beken/linkinfo/mx108_boot.ld
 else
 
 ifeq ($(BINS),)
-GLOBAL_LDS_FILES += platform/mcu/beken/linkinfo/bk7231.ld.S
+GLOBAL_LDS_FILES += platform/mcu/beken/linkinfo/mx108.ld.S
 else ifeq ($(BINS),app)
-GLOBAL_LDS_FILES += platform/mcu/beken/linkinfo/bk7231_app.ld.S
+GLOBAL_LDS_FILES += platform/mcu/beken/linkinfo/mx108_app.ld.S
 else ifeq ($(BINS),kernel)
-GLOBAL_LDS_FILES += platform/mcu/beken/linkinfo/bk7231_kernel.ld.S
+GLOBAL_LDS_FILES += platform/mcu/beken/linkinfo/mx108_kernel.ld.S
 endif
 
 endif
