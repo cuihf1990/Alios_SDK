@@ -56,6 +56,8 @@ static netmgr_cxt_t        g_netmgr_cxt;
 static autoconfig_plugin_t g_def_smartconfig;
 #endif
 
+static bool g_station_is_up = false;
+
 static void netmgr_wifi_config_start(void);
 static void add_autoconfig_plugin(autoconfig_plugin_t *plugin);
 static int32_t has_valid_ap(void);
@@ -137,10 +139,12 @@ static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
 {
     switch (stat) {
         case NOTIFY_STATION_UP:
+            g_station_is_up = true;
             aos_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED,
                            (unsigned long)g_netmgr_cxt.ap_config.ssid);
             break;
         case NOTIFY_STATION_DOWN:
+            g_station_is_up = false;
             aos_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0u);
             break;
         case NOTIFY_AP_UP:
@@ -352,11 +356,15 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
 
     switch (eventinfo->code) {
         case CODE_WIFI_ON_CONNECTED:
-            g_netmgr_cxt.disconnected_times = 0;
+            if (g_station_is_up == true) {
+                g_netmgr_cxt.disconnected_times = 0;
+            }
             break;
         case CODE_WIFI_ON_DISCONNECT:
-            handle_wifi_disconnect();
-            g_netmgr_cxt.ip_available = false;
+            if (g_station_is_up == false) {
+                handle_wifi_disconnect();
+                g_netmgr_cxt.ip_available = false;
+            }
             break;
         case CODE_WIFI_ON_PRE_GOT_IP:
             if (g_netmgr_cxt.doing_smartconfig) {
