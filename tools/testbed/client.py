@@ -109,8 +109,15 @@ class Client:
 
                 #poll device model
                 response = self.poll_run_command(port, 'devname', 1, 0.3)
-                if len(response) == 1:
-                    self.devices[port]['attributes']['model'] = response[0]
+                if len(response) == 1 and response[0].startswith('device name:'):
+                    self.devices[port]['attributes']['model'] = response[0].split()[-1]
+
+                #poll device mac
+                response = self.poll_run_command(port, 'mac', 1, 0.3)
+                if len(response) == 1 and response[0].startswith('MAC address:'):
+                    macaddr = response[0].split()[-1]
+                    macaddr = macaddr.replace('-', ':')
+                    self.devices[port]['attributes']['macaddr'] = macaddr
 
                 #poll device version
                 response = self.poll_run_command(port, 'version', 1, 0.3)
@@ -129,8 +136,6 @@ class Client:
                             self.devices[port]['attributes']['state'] = line.replace('state\t', '')
                         elif '\tnetid\t' in line:
                             self.devices[port]['attributes']['netid'] = line.replace('\tnetid\t', '')
-                        elif '\tmac\t' in line:
-                            self.devices[port]['attributes']['macaddr'] = line.replace('\tmac\t', '')
                         elif '\tsid\t' in line:
                             self.devices[port]['attributes']['sid'] = line.replace('\tsid\t', '')
                         elif '\tnetsize\t' in line:
