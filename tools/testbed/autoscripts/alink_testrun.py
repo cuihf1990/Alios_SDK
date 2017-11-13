@@ -269,7 +269,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
             print 'status:', result
         if result == {} or result[u'message'] != u'success':
             print 'error: unable to stop test case {0}'.format(caseid)
-            return [1, 'stop case {0} failed'.format(caseid)]
+            return [1, 'stop alink testcase {0} failed'.format(caseid)]
         conn.close()
         print 'stop case {0} succeed'.format(caseid)
 
@@ -282,8 +282,8 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         print 'error: unable to start test case {0}'.format(caseid)
         return [1, 'start case failed']
     if result[u'message'] != u'success':
-        print 'error: start test case {0} failed, return:{1}'.format(testid, result[u'message'])
-        return [1, 'start case failed']
+        print 'error: start test case {0} failed, return:{1}'.format(caseid, result[u'message'])
+        return [1, 'start alink testcase {0} failed'.format(caseid)]
     conn.close()
     time.sleep(5)
 

@@ -93,11 +93,10 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
             time.sleep(2.5)
             at.device_run_cmd(device, ['netmgr', 'clear'])
             at.device_run_cmd(device, ['kv', 'del', 'alink'])
-            mac =  at.device_run_cmd(device, ['reboot'], 1, 1.5, ['mac'])
+            mac =  at.device_run_cmd(device, ['mac'], 1, 1.5, ['MAC address:'])
             if mac != False and mac != []:
-                mac = mac[0].replace('mac ', '')
-                mac = mac.replace(':', '')
-                mac = mac.replace(' ', '0')
+                mac = mac[0].split()[-1]
+                mac = mac.replace('-', '')
                 device_attr[device] = {'mac':mac}
                 succeed = True
                 break;
@@ -214,7 +213,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
     for device in device_list:
         print "{0}:{1}".format(device, device_attr[device])
 
-    retry = 30
+    retry = 8
     #ping
     print 'test connectivity with icmp:'
     success_num = 0; fail_num = 0
@@ -226,7 +225,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
                 filter = ['bytes from']
                 dst_ip = device_attr[other]['ipaddr'][0]
                 for i in range(retry):
-                    response = at.device_run_cmd(device, ['umesh', 'ping', dst_ip, pkt_len], 1, 1.5, filter)
+                    response = at.device_run_cmd(device, ['umesh', 'ping', dst_ip, pkt_len], 1, 0.8, filter)
                     expected_response = '{0} bytes from {1}'.format(pkt_len, dst_ip)
                     if response == False or response == [] or expected_response not in response[0]:
                         if i < retry - 1:
@@ -252,7 +251,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
                 dst_ip = device_attr[other]['ipaddr'][0]
                 filter = ['bytes autotest echo reply from']
                 for i in range(retry):
-                    response = at.device_run_cmd(device, ['umesh', 'autotest', dst_ip, '1', pkt_len], 1, 1, filter)
+                    response = at.device_run_cmd(device, ['umesh', 'autotest', dst_ip, '1', pkt_len], 1, 0.8, filter)
                     expected_response = '{0} bytes autotest echo reply from {1}'.format(pkt_len, dst_ip)
                     if response == False or response == [] or expected_response not in response[0]:
                         if i < retry - 1:

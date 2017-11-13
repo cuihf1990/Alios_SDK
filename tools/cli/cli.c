@@ -636,7 +636,7 @@ static void task_cmd(char *buf, int len, int argc, char **argv)
 
 static void devname_cmd(char *buf, int len, int argc, char **argv)
 {
-    aos_cli_printf("%s\r\n", SYSINFO_DEVICE_NAME);
+    aos_cli_printf("device name: %s\r\n", SYSINFO_DEVICE_NAME);
 }
 
 static void dumpsys_cmd(char *buf, int len, int argc, char **argv)

@@ -93,11 +93,10 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
             time.sleep(2.5)
             at.device_run_cmd(device, ['netmgr', 'clear'])
             at.device_run_cmd(device, ['kv', 'del', 'alink'])
-            mac =  at.device_run_cmd(device, ['reboot'], 1, 1.5, ['mac'])
+            mac =  at.device_run_cmd(device, ['mac'], 1, 1.5, ['MAC address:'])
             if mac != False and mac != []:
-                mac = mac[0].replace('mac ', '')
-                mac = mac.replace(':', '')
-                mac = mac.replace(' ', '0')
+                mac = mac[0].split()[-1]
+                mac = mac.replace('-', '')
                 device_attr[device] = {'mac':mac}
                 succeed = True
                 break;

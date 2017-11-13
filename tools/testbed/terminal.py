@@ -668,7 +668,7 @@ class Terminal:
 
         for dev in args[1:]:
             indexes = self.parse_device_index(dev)
-            if indexes == []:
+            if not indexes:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
             for index in indexes:
