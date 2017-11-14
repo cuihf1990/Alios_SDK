@@ -25,7 +25,7 @@ enum {
     WIFI_MAC_ADDR_SIZE = 6,
     WIFI_FCS_SIZE = 4,
 
-    DEFAULT_MTU_SIZE = 1024,
+    DEFAULT_MTU_SIZE = 512,
 };
 
 typedef struct {
@@ -263,7 +263,7 @@ static int esp32_wifi_mesh_register_receiver(umesh_hal_module_t *module,
 
 static int esp32_wifi_mesh_get_mtu(umesh_hal_module_t *module)
 {
-    return 1024;
+    return DEFAULT_MTU_SIZE;
 }
 
 static const mac_address_t *esp32_wifi_mesh_get_mac_address(umesh_hal_module_t *module)
