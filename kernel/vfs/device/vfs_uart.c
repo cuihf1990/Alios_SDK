@@ -94,9 +94,8 @@ ssize_t vfs_uart_read(file_t *fp, void *buf, size_t nbytes)
             /* get data from uart. */
             ret = hal_uart_recv(uart_dev, buf, nbytes, &recv_bytes, AOS_WAIT_FOREVER);
 
-            /* If the data is read correctly and the number of read data 
-            bytes is not negative, the return value is set to read bytes. */ 
-            if ((ret == 0) && (recv_bytes >= 0)) {
+            /* If the data is read correctly the return value is set to read bytes. */ 
+            if (ret == 0) {
                 ret = recv_bytes;
             }
         }
