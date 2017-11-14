@@ -197,15 +197,14 @@ static void set_leader_network_context(network_context_t *default_network,
         ur_stop_timer(&network->attach_timer, network);
         ur_stop_timer(&network->migrate_wait_timer, network);
 
+        if (init_allocator) {
+            sid_allocator_init(network);
+        }
         ur_router_start(network);
         ur_router_sid_updated(network, LEADER_SID);
-        sid_allocator_init(network);
         start_advertisement_timer(network);
         if (default_network) {
             umesh_mm_set_channel(network, network->hal->def_channel);
-        }
-        if (init_allocator) {
-            sid_allocator_init(network);
         }
     }
 }
