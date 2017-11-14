@@ -81,16 +81,19 @@ class Client:
         filter['filters'] = [self.poll_str]
         filter['response'] = []
         self.devices[port]['filter'] = filter
-        self.devices[port]['event'].clear()
         ser    = self.devices[port]['serial']
         if self.devices[port]['wlock'].acquire(False):
+            self.devices[port]['event'].clear()
             try:
                 ser.write(filter['cmd_str'] + '\r')
                 self.devices[port]['wlock'].release()
                 self.devices[port]['event'].wait(timeout)
             except:
+                if DEBUG: traceback.print_exc()
                 self.devices[port]['wlock'].release()
-        response = self.devices[port]['filter']['response']
+            response = self.devices[port]['filter']['response']
+        else:
+            response = []
         self.devices[port]['filter'] = {}
         return response
 
@@ -116,7 +119,7 @@ class Client:
                 response = self.poll_run_command(port, 'mac', 1, 0.3)
                 if len(response) == 1 and response[0].startswith('MAC address:'):
                     macaddr = response[0].split()[-1]
-                    macaddr = macaddr.replace('-', ':')
+                    macaddr = macaddr.replace('-', '') + '0000'
                     self.devices[port]['attributes']['macaddr'] = macaddr
 
                 #poll device version
@@ -300,7 +303,7 @@ class Client:
         if self.devices[port]['serial'].isOpen() == True:
             self.devices[port]['serial'].close()
         retry = 3
-        baudrate = 921600
+        baudrate = 230400
         error = 'fail'
         while retry > 0:
             script = ['python']
@@ -345,7 +348,7 @@ class Client:
         if self.devices[port]['serial'].isOpen() == True:
             self.devices[port]['serial'].close()
         retry = 3
-        baudrate = 921600
+        baudrate = 230400
         error = 'fail'
         while retry > 0:
             script = ['python']

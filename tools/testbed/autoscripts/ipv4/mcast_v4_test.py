@@ -1,6 +1,12 @@
 import sys, os, time
 from autotest import Autotest
 
+def restore_extnetid(at, device_list):
+    #restore extnetid to default
+    extnetid = '010203040506'
+    for device in device_list:
+        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+
 def main(firmware='~/lb-all.bin', model='mk3060'):
     ap_ssid = 'aos_test_01'
     ap_pass = 'Alios@Embedded'
@@ -94,7 +100,8 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
             at.device_run_cmd(device, ['netmgr', 'clear'])
             at.device_run_cmd(device, ['kv', 'del', 'alink'])
             mac =  at.device_run_cmd(device, ['mac'], 1, 1.5, ['MAC address:'])
-            if mac != False and mac != []:
+            at.device_control(device, 'reset')
+            if mac and len(mac) == 1:
                 mac = mac[0].split()[-1]
                 mac = mac.replace('-', '')
                 device_attr[device] = {'mac':mac}
@@ -141,6 +148,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
             uuid = at.device_run_cmd(device, ['uuid'], 1, 1.5, ['uuid:', 'not connected'])
             if uuid == False or len(uuid) != 1 or 'uuid:' not in uuid[0]:
                 print 'error: connect device to alink failed, response = {0}'.format(uuid)
+                restore_extnetid(at, device_list)
                 return [1, 'connect alink failed']
         else:
             at.device_run_cmd(device, ['umesh', 'start'])
@@ -165,6 +173,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
             print '{0} connect to mesh as {1} succeed'.format(device, expected_state)
         else:
             print 'error: {0} connect to mesh as {1} failed'.format(device, expected_state)
+            restore_extnetid(at, device_list)
             return [1, 'connect mesh failed']
 
         succeed = False; retry = 3
@@ -180,6 +189,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
             break;
         if succeed == False:
             print 'error: get ipaddr for device {0} failed'.format(device)
+            restore_extnetid(at, device_list)
             return [1, 'get ipaddr failed']
 
     for device in device_list:
@@ -208,6 +218,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
                     break
     print 'udp: succeed-{0}, failed-{1}'.format(success_num, fail_num)
 
+    restore_extnetid(at, device_list)
     at.stop()
     return [0, 'success']
 

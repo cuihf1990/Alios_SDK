@@ -8,7 +8,7 @@ caseids={}
 #mk3060
 caseids['39F841C8CE86C0B5F3FC864925EB1702'] = 26672 #DN02QRK7
 caseids['1B12DA63F1E56C73CE237A495E8C5087'] = 27725 #DN02QRKB
-caseids['82A4C68BA791767250242D4D83594EF3'] = 27419 #DN02QRKQ
+caseids['82A4C68BA791767250242D4D83594EF3'] = 27885 #DN02QRKQ
 caseids['F384E85B01EF16120033B21833C7F0D4'] = 27436 #DN02RDVL
 caseids['E57E046D3A6F91257E2551710E6FED23'] = 27453 #DN02RDVT
 caseids['A9036FCE11259562AC9C90999DA77F15'] = 27470 #DN02RDVV
@@ -21,7 +21,7 @@ caseids['536C0EB02B06B21AB6F54333ED18415F'] = 26553 #DN02X304
 caseids['3BD14E6396E3074B61CB83F9257A4F01'] = 27504 #DN02X30B
 caseids['47112F8E0A5CDFBE05B570F4C7306801'] = 26587 #DN02X30H
 #esp32
-caseids['7D917B0B8CF687EC496B3B7788CE6186'] = 27521 #espif-1.1
+caseids['7D917B0B8CF687EC496B3B7788CE6186'] = 27932 #espif-1.1
 caseids['F30F0804BC3752D2E6F43EF35DBE8E29'] = 27538 #espif-1.2.2
 caseids['F731214AA77B4134FD988BC89E7B7B00'] = 27555 #espif-1.2.3
 caseids['59ED5E3E36FF2BDCB81B0FBCE9E997BF'] = 27572 #espif-1.3
@@ -82,6 +82,12 @@ def alink_test(conn, operation, testid, auid):
         if DEBUG:
             raise
         return {}
+
+def restore_extnetid(at, device_list):
+    #restore extnetid to default
+    extnetid = '010203040506'
+    for device in device_list:
+        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
 
 #main function
 def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
@@ -238,9 +244,11 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         break;
     if succeed == False:
         print 'error: connect device to alink failed, response = {0}'.format(response)
+        restore_extnetid(at, list(devices))
         return [1, 'connect alink failed']
     if uuid not in caseids:
         print 'error: device uuid {0} not in supported list'.format(uuid)
+        restore_extnetid(at, list(devices))
         return [1, 'uuid {0} invalid'.format(uuid)]
     caseid = caseids[uuid] + testnames[testname]
     caseid = str(caseid)
@@ -255,6 +263,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         print 'status:', result
     if result == {} or result[u'message'] != u'success':
         print 'error: unable to get test case {0} status'.format(caseid)
+        restore_extnetid(at, list(devices))
         return [1, 'get case {0} status failed'.format(caseid)]
     if result[u'data'][u'case_status'] == 1:
         print 'test case {0} is already runing'.format(caseid)
@@ -269,6 +278,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
             print 'status:', result
         if result == {} or result[u'message'] != u'success':
             print 'error: unable to stop test case {0}'.format(caseid)
+            restore_extnetid(at, list(devices))
             return [1, 'stop alink testcase {0} failed'.format(caseid)]
         conn.close()
         print 'stop case {0} succeed'.format(caseid)
@@ -280,9 +290,11 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         print 'start:', result
     if result == {}:
         print 'error: unable to start test case {0}'.format(caseid)
+        restore_extnetid(at, list(devices))
         return [1, 'start case failed']
     if result[u'message'] != u'success':
         print 'error: start test case {0} failed, return:{1}'.format(caseid, result[u'message'])
+        restore_extnetid(at, list(devices))
         return [1, 'start alink testcase {0} failed'.format(caseid)]
     conn.close()
     time.sleep(5)
@@ -297,6 +309,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
                 print 'status:', result
             if result == {}:
                 print 'error: unable to get test case {0} status'.format(caseid)
+                restore_extnetid(at, list(devices))
                 return [1, 'get status failed']
             if result[u'message'] != u'success' or result[u'data'][u'case_status'] != 1:
                 break;
@@ -304,7 +317,6 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         except:
             retry -= 1
         time.sleep(120)
-
 
     #print result
     try:
@@ -314,10 +326,13 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
 
     if result[u'data'][u'case_status'] != 2:
         print 'test {0} finished unsuccessfully'.format(testname)
+        restore_extnetid(at, list(devices))
         return [1, 'failed']
     else:
         print 'test {0} finished successfully'.format(testname)
+        restore_extnetid(at, list(devices))
         return [0, 'succeed']
+
 
 if __name__ == '__main__':
     [code, msg] = main()

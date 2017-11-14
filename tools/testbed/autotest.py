@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os, sys, time, socket, re, pdb
+import os, sys, time, socket, re, pdb, traceback
 import subprocess, thread, threading, pickle
 from operator import itemgetter
 import TBframe
@@ -19,7 +19,9 @@ class Autotest:
         self.subscribed = {}
         self.subscribed_reverse = {}
         self.filter = {}
-        self.response_filter_event = threading.Event()
+        self.filter_lock = threading.RLock()
+        self.filter_event = threading.Event()
+        self.filter_event.set()
         self.esc_seq = re.compile(r'\x1b[^m]*m')
 
     def heartbeat_func(self):
@@ -39,34 +41,47 @@ class Autotest:
         return ""
 
     def response_filter(self, devname, logstr):
-        if len(self.filter) == 0:
+        if self.filter_event.is_set() == True:
             return
 
-        if self.filter['devname'] != devname:
+        if self.filter_lock.acquire(False) == False:
             return
 
-        if self.filter['lines_exp'] == 0:
-            if self.filter['cmdstr'] in logstr:
-                self.filter['lines_num'] += 1
-                self.response_filter_event.set()
-        else:
-            if self.filter['lines_num'] == 0:
+        try:
+            if len(self.filter) == 0:
+                self.filter_lock.release()
+                return
+
+            if self.filter['devname'] != devname:
+                self.filter_lock.release()
+                return
+
+            if self.filter['lines_exp'] == 0:
                 if self.filter['cmdstr'] in logstr:
                     self.filter['lines_num'] += 1
-            elif self.filter['lines_num'] <= self.filter['lines_exp']:
-                log = self.esc_seq.sub('', logstr)
-                log = log.replace("\r", "")
-                log = log.replace("\n", "")
-                if log != "":
-                    for filterstr in self.filter['filters']:
-                        if filterstr not in log:
-                            continue
-                        else:
-                            self.filter['response'].append(log)
-                            self.filter['lines_num'] += 1
-                            break
-                if self.filter['lines_num'] > self.filter['lines_exp']:
-                    self.response_filter_event.set()
+                    self.filter_event.set()
+            else:
+                if self.filter['lines_num'] == 0:
+                    if self.filter['cmdstr'] in logstr:
+                        self.filter['lines_num'] += 1
+                elif self.filter['lines_num'] <= self.filter['lines_exp']:
+                    log = self.esc_seq.sub('', logstr)
+                    log = log.replace("\r", "")
+                    log = log.replace("\n", "")
+                    if log != "":
+                        for filterstr in self.filter['filters']:
+                            if filterstr not in log:
+                                continue
+                            else:
+                                self.filter['response'].append(log)
+                                self.filter['lines_num'] += 1
+                                break
+                    if self.filter['lines_num'] > self.filter['lines_exp']:
+                        self.filter_event.set()
+            self.filter_lock.release()
+        except:
+            if DEBUG: traceback.print_exc()
+            self.filter_lock.release()
 
     def server_interaction(self):
         msg = ''
@@ -145,6 +160,7 @@ class Autotest:
                         self.cmd_excute_event.set()
             except:
                 if DEBUG:
+                    traceback.print_exc()
                     raise
                 break
         self.keep_running = False;
@@ -359,23 +375,25 @@ class Autotest:
         content = self.subscribed[devname]
         content += ':' + '|'.join(args)
         data = TBframe.construct(TBframe.DEVICE_CMD, content)
-        self.filter['devname'] = devname
-        self.filter['cmdstr'] = ' '.join(args)
-        self.filter['lines_exp'] = expect_lines
-        self.filter['lines_num'] = 0
-        self.filter['filters'] = filters
-        self.filter['response'] = []
+        with self.filter_lock:
+            self.filter['devname'] = devname
+            self.filter['cmdstr'] = ' '.join(args)
+            self.filter['lines_exp'] = expect_lines
+            self.filter['lines_num'] = 0
+            self.filter['filters'] = filters
+            self.filter['response'] = []
 
         retry = 3
         while retry > 0:
             self.service_socket.send(data)
-            self.response_filter_event.clear()
-            self.response_filter_event.wait(timeout)
+            self.filter_event.clear()
+            self.filter_event.wait(timeout)
             if self.filter['lines_num'] > 0:
                 break;
             retry -= 1
         response = self.filter['response']
-        self.filter = {}
+        with self.filter_lock:
+            self.filter = {}
         return response
 
     def get_device_list(self):
