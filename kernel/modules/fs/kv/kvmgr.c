@@ -40,7 +40,7 @@ typedef enum {
 #define ITEM_HEADER_SIZE        8                           /* The key-value item header size 8bytes */
 #define ITEM_STATE_NORMAL       0xEE                        /* Key-value item state: NORMAL --> the key-value item is valid */
 #define ITEM_STATE_DELETE       0                           /* Key-value item state: DELETE --> the key-value item is deleted */
-#define ITEM_MAX_KEY_LEN        255                         /* The max key length for key-value item */
+#define ITEM_MAX_KEY_LEN        128                         /* The max key length for key-value item */
 #define ITEM_MAX_VAL_LEN        512                         /* The max value length for key-value item */
 #define ITEM_MAX_LEN            (ITEM_HEADER_SIZE + ITEM_MAX_KEY_LEN + ITEM_MAX_VAL_LEN)
 
