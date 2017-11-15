@@ -58,20 +58,20 @@ cpu_stack_t stack0_buf[WORK_STACK_BUF];
 cpu_stack_t stack1_buf[WORK_STACK_BUF];
 cpu_stack_t stack2_buf[WORK_STACK_BUF];
 
-kworkqueue_t wq0;
-kworkqueue_t wq1;
-kworkqueue_t wq2;
+static kworkqueue_t wq0;
+static kworkqueue_t wq1;
+static kworkqueue_t wq2;
+static kwork_t      work0;
+static kwork_t      work1;
+static kwork_t      work2;
+static kwork_t      work3;
+static kwork_t      work4;
+static kwork_t      work5;
+static kwork_t      work6;
 
 static uint8_t workqueue_interface_case1(void)
 {
     kstat_t      ret;
-    kwork_t      work0;
-    kwork_t      work1;
-    kwork_t      work2;
-    kwork_t      work3;
-    kwork_t      work4;
-    kwork_t      work5;
-    kwork_t      work6;
 
     size_t stack0_size = WORK_STACK_BUF;
     size_t stack1_size = WORK_STACK_BUF;
