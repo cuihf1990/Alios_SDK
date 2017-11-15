@@ -17,15 +17,15 @@
 /*
  * symbols to export
  */
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_init, "ur_error_t umesh_init(node_mode_t mode)")
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_start, "ur_error_t umesh_start(void)")
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_stop, "ur_error_t umesh_stop(void)")
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_device_state, "uint8_t umesh_get_device_state(void)")
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_mode, "uint8_t umesh_get_mode(void)")
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_set_mode, "ur_error_t umesh_set_mode(uint8_t mode)")
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, umesh_get_mac_address, "const mac_address_t *umesh_get_mac_address(media_type_t type)")
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, ur_adapter_get_default_ipaddr, "const void *ur_adapter_get_default_ipaddr(void)")
-EXPORT_SYMBOL_K(CONFIG_AOS_MESH > 0u, ur_adapter_get_mcast_ipaddr, "const void *ur_adapter_get_mcast_ipaddr(void)")
+AOS_EXPORT(ur_error_t, umesh_init, node_mode_t)
+AOS_EXPORT(ur_error_t, umesh_start, void)
+AOS_EXPORT(ur_error_t, umesh_stop, void)
+AOS_EXPORT(uint8_t, umesh_get_device_state, void)
+AOS_EXPORT(uint8_t, umesh_get_mode, void)
+AOS_EXPORT(ur_error_t, umesh_set_mode, uint8_t)
+AOS_EXPORT(const mac_address_t *, umesh_get_mac_address, media_type_t)
+AOS_EXPORT(const void *, ur_adapter_get_default_ipaddr, void)
+AOS_EXPORT(const void *, ur_adapter_get_mcast_ipaddr, void)
 
 void *umesh_pal_malloc(int sz)
 {

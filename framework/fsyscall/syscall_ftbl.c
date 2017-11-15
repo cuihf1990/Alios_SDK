@@ -16,6 +16,7 @@
 #endif
 #include <netmgr.h>
 
+
 extern const char *gateway_get_uuid(void);
 extern bool gateway_is_connected(void);
 
