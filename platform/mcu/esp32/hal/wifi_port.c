@@ -267,6 +267,7 @@ typedef enum {
 
 static int wifi_getset_ops(hal_wifi_module_t *m, hal_wifi_getset_cmd_t cmd, ...)
 {
+    printf("%s cmd: %d\r\n", __func__, cmd);
     switch (cmd) {
     case HAL_WIFI_GET_CHANNEL: {
         uint8_t channel;
@@ -280,7 +281,9 @@ static int wifi_getset_ops(hal_wifi_module_t *m, hal_wifi_getset_cmd_t cmd, ...)
         va_start(args, cmd);
         c = va_arg(args, int);
         uint8_t ch = c;
-        esp_wifi_set_channel(ch, 0);
+        printf("%s %d: channe - %d\r\n", __func__, __LINE__, ch);
+        if (ch <= 13) // skip 14+ since those will fail per test result
+            ESP_ERROR_CHECK(esp_wifi_set_channel(ch, 0));
         va_end(args);
         break;
     }
