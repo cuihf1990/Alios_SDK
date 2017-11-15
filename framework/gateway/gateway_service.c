@@ -740,12 +740,6 @@ static void gateway_worker(void *arg)
             }
         }
 
-        if (sockfd != gateway_state.sockfd) {
-            gateway_state.mqtt_connected = false;
-            close(sockfd);
-            continue;
-        }
-
         if (FD_ISSET(sockfd, &rfds)) {
             gateway_sock_read_cb(sockfd, &gateway_state);
         }
@@ -840,9 +834,8 @@ static int init_socket(void)
     if (pstate->sockfd >= 0) {
 #ifndef GATEWAY_WORKER_THREAD
         aos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
-        close(pstate->sockfd);
-
 #endif
+        close(pstate->sockfd);
         pstate->sockfd = -1;
     }
 
@@ -922,10 +915,10 @@ void gateway_service_stop(void)
     aos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
     aos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
     aos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
-#ifndef GATEWAY_WORKER_THREAD
-    close(gateway_state.sockfd);
-#endif
-    gateway_state.sockfd = -1;
+    if (gateway_state.sockfd >= 0) {
+        close(gateway_state.sockfd);
+        gateway_state.sockfd = -1;
+    }
     gateway_state.mqtt_connected = false;
     while (!dlist_empty(&gateway_state.clients)) {
         client = dlist_first_entry(&gateway_state.clients, client_t, next);
