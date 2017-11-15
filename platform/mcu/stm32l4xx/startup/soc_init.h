@@ -68,13 +68,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "aos/kernel.h"
 
 void stm32_soc_init(void);
 
 /* Exported types ------------------------------------------------------------*/
+typedef struct {
+  UART_HandleTypeDef handle;
+  aos_mutex_t uart_tx_mutex;
+  aos_mutex_t uart_rx_mutex;
+  aos_sem_t uart_tx_sem;
+  aos_sem_t uart_rx_sem;
+}stm32_uart_t;
 /* Exported constants --------------------------------------------------------*/
 enum {BP_NOT_PUSHED=0, BP_SINGLE_PUSH, BP_MULTIPLE_PUSH};
-
 /* Exported functions --------------------------------------------------------*/
 void    Error_Handler(void);
 uint8_t Button_WaitForPush(uint32_t timeout);

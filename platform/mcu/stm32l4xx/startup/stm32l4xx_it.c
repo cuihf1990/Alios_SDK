@@ -50,14 +50,14 @@
 #include "stm32l4xx.h"
 #include "stm32l4xx_it.h"
 #include "k_api.h"
-
+#include "soc_init.h"
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
 
 extern SPI_HandleTypeDef hspi;
-extern UART_HandleTypeDef console_uart;
-
+//extern UART_HandleTypeDef console_uart;
+extern stm32_uart_t stm32_uart[COMn];
 /**
 * @brief This function handles Non maskable interrupt.
 */
@@ -174,7 +174,16 @@ void SPI3_IRQHandler(void)
   */
 void USART1_IRQHandler(void)
 {
-    HAL_UART_IRQHandler(&console_uart);
+    HAL_UART_IRQHandler(&stm32_uart[COM1].handle);
 }
 
+/**
+  * @brief  This function handles UART interrupt request.
+  * @param  None
+  * @retval None
+  */
+void UART4_IRQHandler(void)
+{
+    HAL_UART_IRQHandler(&stm32_uart[COM4].handle);
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
