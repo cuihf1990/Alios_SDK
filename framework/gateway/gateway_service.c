@@ -25,7 +25,6 @@
 #define MODULE_NAME "gateway"
 #define ADV_INTERVAL (5 * 1000)
 #define MAX_GATEWAY_RECONNECT_TIMEOUT 48
-#define GW_DEBUG(x, y, ...)     printf("GATEWAY: " y "\n", ##__VA_ARGS__)
 
 typedef struct reg_info_s {
     char model_id[sizeof(uint32_t) + 1];
@@ -115,7 +114,7 @@ static int send_sock(int fd, void *buf, int len, struct sockaddr_in *paddr)
 
 out:
     if (result != ALI_CRYPTO_SUCCESS) {
-        GW_DEBUG(MODULE_NAME, "error encrypting %d", result);
+        LOGE(MODULE_NAME, "error encrypting %d", result);
     }
 
     aos_free(aes_ctx);
@@ -158,7 +157,7 @@ static int recv_sock(int fd, void *buf, int len, struct sockaddr_in *paddr)
 
 out:
     if (result != ALI_CRYPTO_SUCCESS) {
-        GW_DEBUG(MODULE_NAME, "error encrypting %d", result);
+        LOGE(MODULE_NAME, "error encrypting %d", result);
     }
     aos_free(aes_ctx);
     return result != ALI_CRYPTO_SUCCESS ? -1 : len;
@@ -467,7 +466,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
             continue;
         }
         if (memcmp(reginfo->ieee_addr, client->devinfo->dev_base.u.ieee_addr, IEEE_ADDR_BYTES) == 0) {
-            GW_DEBUG(MODULE_NAME, "existing client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+            LOGD(MODULE_NAME, "existing client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
@@ -500,15 +499,15 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
     devmgr_put_devinfo_ref(client->devinfo);
     dlist_add_tail(&client->next, &pstate->clients);
 
-    GW_DEBUG(MODULE_NAME, "new client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-             (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
-             (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
-             (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
-             (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
-             (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
-             (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
-             (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
-             (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
+    LOG("GATEWAY: new client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x connected",
+        (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
+        (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
+        (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
+        (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
+        (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
+        (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
+        (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
+        (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
 
 add_enrollee:
     client->timeout = 0;
@@ -588,7 +587,7 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
 
     conn_ack_t *conn_ack = pmsg;
     if (conn_ack->ReturnCode != 0) {
-        LOGE(MODULE_NAME, "connect fail %d!", conn_ack->ReturnCode);
+        LOG("GATEWAY: connect to server fail, ret=%d!", conn_ack->ReturnCode);
         return;
     }
 
@@ -606,7 +605,7 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
     aos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
     aos_post_delayed_action((8 + (rand() & 0x7)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
 
-    LOGD(MODULE_NAME, "connack");
+    LOG("GATEWAY: connect to server succeed");
 }
 
 static void handle_msg(gateway_state_t *pstate, uint8_t *pmsg, int len)
@@ -706,6 +705,15 @@ static void gateway_advertise(void *arg)
             client->timeout ++;
             if (client->timeout >= MAX_GATEWAY_RECONNECT_TIMEOUT) {
                 devmgr_logout_device(client->devinfo);
+                LOG("GATEWAY: client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x went offline",
+                    (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
+                    (uint8_t)client->devinfo->dev_base.u.ieee_addr[1],
+                    (uint8_t)client->devinfo->dev_base.u.ieee_addr[2],
+                    (uint8_t)client->devinfo->dev_base.u.ieee_addr[3],
+                    (uint8_t)client->devinfo->dev_base.u.ieee_addr[4],
+                    (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
+                    (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
+                    (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
             }
         }
     }
@@ -735,7 +743,7 @@ static void gateway_worker(void *arg)
         int ret = lwip_select(sockfd + 1, &rfds, NULL, NULL, &timeout);
         if (ret < 0) {
             if (errno != EINTR) {
-                LOGE(MODULE_NAME, "select error %d", errno);
+                LOGD(MODULE_NAME, "select error %d", errno);
                 continue;
             }
         }
@@ -902,8 +910,10 @@ int gateway_service_start(void)
 
         aos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
         aos_post_delayed_action(ADV_INTERVAL, gateway_advertise, &gateway_state);
+        LOG("GATEWAY: start service as a server");
     } else {
         aos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
+        LOG("GATEWAY: start service as a client");
     }
 
     return 0;
@@ -926,6 +936,7 @@ void gateway_service_stop(void)
         devmgr_leave_zigbee_device(client->devinfo->dev_base.u.ieee_addr);
         aos_free(client);
     }
+    LOG("GATEWAY: stop service");
 }
 
 bool gateway_service_get_mesh_mqtt_state()
@@ -938,10 +949,8 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
     if (eventinfo->type == EV_YUNIO) {
         if (eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
             gateway_state.yunio_connected = true;
-            GW_DEBUG(GATEWAY_MODULE, "yunio_connected");
         } else if (eventinfo->code == CODE_YUNIO_ON_DISCONNECTED) {
             gateway_state.yunio_connected = false;
-            GW_DEBUG(GATEWAY_MODULE, "yunio_disconnected");
         } else {
             return;
         }
@@ -950,10 +959,8 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
     if (eventinfo->type == EV_MESH) {
         if (eventinfo->code == CODE_MESH_CONNECTED) {
             gateway_state.mesh_connected = true;
-            GW_DEBUG(GATEWAY_MODULE, "mesh_connected");
         } else if (eventinfo->code == CODE_MESH_DISCONNECTED) {
             gateway_state.mesh_connected = false;
-            GW_DEBUG(GATEWAY_MODULE, "mesh_disconnected");
         } else {
             return;
         }
