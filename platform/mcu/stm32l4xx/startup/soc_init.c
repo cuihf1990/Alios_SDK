@@ -50,27 +50,26 @@
 #include "hal/soc/uart.h"
 #include "aos/kernel.h"
 #include "k_types.h"
-
+#include "errno.h"
 /* Global variables ---------------------------------------------------------*/
 RTC_HandleTypeDef hrtc;
 RNG_HandleTypeDef hrng;
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private defines -----------------------------------------------------------*/
-
 /* Private macros ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef console_uart;
 static volatile uint8_t button_flags = 0;
-static aos_mutex_t uart_tx_mutex;
-static aos_mutex_t uart_rx_mutex;
-static aos_sem_t uart_tx_sem;
-static aos_sem_t uart_rx_sem;
 
+stm32_uart_t stm32_uart[COMn];
 
+static uart_dev_t console_uart={
+  .port=COM1,
+};
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
-static void Console_UART_Init(void);
+//static void Console_UART_Init(void);
+static int UART_Init(COM_TypeDef com);
 static void RTC_Init(void);
 static void Button_ISR(void);
 
@@ -103,7 +102,9 @@ void stm32_soc_init(void)
   /* RTC init */
   RTC_Init();
   /* UART console init */
-  Console_UART_Init();  
+  //Console_UART_Init(); 
+  UART_Init(COM1); 
+  UART_Init(COM4); 
 }
 
 /**
@@ -234,27 +235,35 @@ uint8_t Button_WaitForPush(uint32_t delay)
 }
 
 
-/**
-  * @brief UART console init function 
-  */
-static void Console_UART_Init(void)
+static int UART_Init(COM_TypeDef com)
 {
-  console_uart.Instance = USART1;
-  console_uart.Init.BaudRate = 115200;
-  console_uart.Init.WordLength = UART_WORDLENGTH_8B;
-  console_uart.Init.StopBits = UART_STOPBITS_1;
-  console_uart.Init.Parity = UART_PARITY_NONE;
-  console_uart.Init.Mode = UART_MODE_TX_RX;
-  console_uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  console_uart.Init.OverSampling = UART_OVERSAMPLING_16;
-  console_uart.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  console_uart.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  BSP_COM_Init(COM1,&console_uart);
-  aos_mutex_new(&uart_tx_mutex);
-  aos_mutex_new(&uart_rx_mutex);
-  aos_sem_new(&uart_tx_sem, 0);
-  aos_sem_new(&uart_rx_sem, 0);
+  switch(com){
+    case COM1:
+      stm32_uart[com].handle.Instance = USART1;
+      break;
+    case COM4:
+      stm32_uart[com].handle.Instance = UART4;
+      break;
+    default:
+      return -1;
+  }  
+  stm32_uart[com].handle.Init.BaudRate = 115200;
+  stm32_uart[com].handle.Init.WordLength = UART_WORDLENGTH_8B;
+  stm32_uart[com].handle.Init.StopBits = UART_STOPBITS_1;
+  stm32_uart[com].handle.Init.Parity = UART_PARITY_NONE;
+  stm32_uart[com].handle.Init.Mode = UART_MODE_TX_RX;
+  stm32_uart[com].handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  stm32_uart[com].handle.Init.OverSampling = UART_OVERSAMPLING_16;
+  stm32_uart[com].handle.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  stm32_uart[com].handle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  BSP_COM_Init(com,&stm32_uart[com].handle);
+  aos_mutex_new(&stm32_uart[com].uart_tx_mutex);
+  aos_mutex_new(&stm32_uart[com].uart_rx_mutex);
+  aos_sem_new(&stm32_uart[com].uart_tx_sem, 0);
+  aos_sem_new(&stm32_uart[com].uart_rx_sem, 0);
+  return 0;
 }
+
 
 #if defined (__CC_ARM) && defined(__MICROLIB)
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
@@ -274,9 +283,9 @@ static void Console_UART_Init(void)
 PUTCHAR_PROTOTYPE
 {
   if (ch == '\n') {
-    hal_uart_send(NULL, (void *)"\r", 1, 30000);
+    hal_uart_send(&console_uart, (void *)"\r", 1, 30000);
   }
-  hal_uart_send(NULL, &ch, 1, 30000);
+  hal_uart_send(&console_uart, &ch, 1, 30000);
   return ch;
 }
 
@@ -291,58 +300,72 @@ GETCHAR_PROTOTYPE
   /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
   uint8_t ch = 0;
   uint32_t recv_size;
-  hal_uart_recv(NULL, &ch, 1, &recv_size, 30000);
+  hal_uart_recv(&console_uart, &ch, 1, &recv_size, 30000);
   return ch;
 }
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout) {
     HAL_UART_StateTypeDef state = HAL_UART_STATE_BUSY_TX;
-    aos_mutex_lock(&uart_tx_mutex, RHINO_WAIT_FOREVER);
+    int ret;
+    if(uart==NULL||data==NULL) {
+      return -EINVAL;
+    }
+    if(uart->port>COMn-1) {
+      return -EINVAL;
+    }
+    aos_mutex_lock(&stm32_uart[uart->port].uart_tx_mutex, RHINO_WAIT_FOREVER);
 
-    if (console_uart.gState != HAL_UART_STATE_READY) {
-        aos_sem_wait(&uart_tx_sem, RHINO_WAIT_FOREVER);
+    if (stm32_uart[uart->port].handle.gState != HAL_UART_STATE_READY) {
+        aos_sem_wait(&stm32_uart[uart->port].uart_tx_sem, timeout);
     } else {
         state = HAL_UART_STATE_READY;
     }
-
-    if (HAL_UART_Transmit_IT(&console_uart, (uint8_t *)data, size) != HAL_OK) {
+    if (HAL_UART_Transmit_IT(&stm32_uart[uart->port].handle, (uint8_t *)data, size) != HAL_OK) {
         Error_Handler();
-    }
+      }
 
     if (HAL_UART_STATE_READY == state) {
-        aos_sem_wait(&uart_tx_sem, RHINO_WAIT_FOREVER);
+        aos_sem_wait(&stm32_uart[uart->port].uart_tx_sem, RHINO_WAIT_FOREVER);
     }
 
-    aos_mutex_unlock(&uart_tx_mutex);
+    aos_mutex_unlock(&stm32_uart[uart->port].uart_tx_mutex);
 
     return size;
 }
 
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) {
     HAL_UART_StateTypeDef state = HAL_UART_STATE_BUSY_RX;
-    aos_mutex_lock(&uart_rx_mutex, RHINO_WAIT_FOREVER);
+    int ret;
+    if(uart==NULL||data==NULL) {
+      return -EINVAL;
+    }
+    if(uart->port>COMn-1) {
+      return -EINVAL;
+    }
+    aos_mutex_lock(&stm32_uart[uart->port].uart_rx_mutex, RHINO_WAIT_FOREVER);
 
     if (recv_size != NULL) {
         *recv_size = expect_size;
     }
 
-    if (console_uart.RxState != HAL_UART_STATE_READY) {
-        aos_sem_wait(&uart_rx_sem, RHINO_WAIT_FOREVER);
+    if (stm32_uart[uart->port].handle.RxState != HAL_UART_STATE_READY) {
+        aos_sem_wait(&stm32_uart[uart->port].uart_rx_sem, timeout);
     } else {
         state = HAL_UART_STATE_READY;
     }
 
-    if (HAL_UART_Receive_IT(&console_uart, (uint8_t *)data, expect_size) != HAL_OK) {
-        Error_Handler();
-    }
+    ret = HAL_UART_Receive_IT(&stm32_uart[uart->port].handle, (uint8_t *)data, expect_size);
+    // if (HAL_UART_Receive_IT(&stm32_uart[uart->port].handle, (uint8_t *)data, expect_size) != HAL_OK) {
+    //     Error_Handler();
+    // }
 
     if (HAL_UART_STATE_READY == state) {
-        aos_sem_wait(&uart_rx_sem, RHINO_WAIT_FOREVER);
+        aos_sem_wait(&stm32_uart[uart->port].uart_rx_sem, timeout);
     }
 
-    aos_mutex_unlock(&uart_rx_mutex);
+    aos_mutex_unlock(&stm32_uart[uart->port].uart_rx_mutex);
 
-    return 0;
+    return ret;
 }
 
 
@@ -434,7 +457,12 @@ void Error_Handler(void)
   */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-    aos_sem_signal(&uart_tx_sem);
+    for(int i=0;i<COMn;i++){
+      if(&stm32_uart[i].handle==huart){
+          aos_sem_signal(&stm32_uart[i].uart_tx_sem);
+          break;
+      }
+    }
 }
 
 /**
@@ -444,7 +472,28 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    aos_sem_signal(&uart_rx_sem);
+  for(int i=0;i<COMn;i++){
+    if(&stm32_uart[i].handle==huart){
+        aos_sem_signal(&stm32_uart[i].uart_rx_sem);
+        break;
+    }
+  }
 }
 
+
+int32_t hal_uart_init(uart_dev_t *uart)
+{
+    if(uart==NULL) {
+        return -EINVAL;
+    }  
+    if(uart->port==COM1||uart->port==COM4){
+        return  0;
+    }   
+    return -EINVAL;
+}
+
+int32_t hal_uart_finalize(uart_dev_t *uart)
+{
+    return 0;
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
