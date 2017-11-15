@@ -378,6 +378,7 @@ do_exit:
         HAL_Free(msg_readbuf);
     }
     is_demo_started = 0;
+    EXAMPLE_TRACE("mqtt example loop end!");
 
     return rc;
 }

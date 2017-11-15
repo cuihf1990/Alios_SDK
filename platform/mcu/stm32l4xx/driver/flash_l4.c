@@ -342,8 +342,7 @@ int FLASH_read_at(uint32_t address, uint64_t *pData, uint32_t len_bytes)
 
     for (i = 0; i < len_bytes; i += 4)
     {
-       *(dst++) = *(src++);
-
+        *(dst + i/4) = *(src++);
     }
 
     ret = 0;
