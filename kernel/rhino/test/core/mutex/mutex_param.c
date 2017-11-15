@@ -110,16 +110,6 @@ static uint8_t mutex_param_case2(void)
     ret = krhino_mutex_lock(&test_mutex, RHINO_NO_WAIT);
     MYASSERT(ret == RHINO_SUCCESS);
 
-    RHINO_CRITICAL_ENTER();
-    test_mutex.owner_nested = -1;
-    RHINO_CRITICAL_EXIT();
-    ret = krhino_mutex_lock(&test_mutex, RHINO_NO_WAIT);
-    MYASSERT(ret == RHINO_MUTEX_NESTED_OVF);
-
-    RHINO_CRITICAL_ENTER();
-    test_mutex.owner_nested = 1;
-    RHINO_CRITICAL_EXIT();
-
     ret = krhino_mutex_unlock(NULL);
     MYASSERT(ret == RHINO_NULL_PTR);
 
