@@ -970,8 +970,9 @@ kstat_t krhino_task_info_get(ktask_t *task, size_t idx, void **info)
 
     return RHINO_SUCCESS;
 }
+#endif
 
-void  krhino_task_deathbed(void)
+void krhino_task_deathbed(void)
 {
 #if (RHINO_CONFIG_TASK_DEL > 0)
     CPSR_ALLOC();
@@ -997,5 +998,4 @@ void  krhino_task_deathbed(void)
     }
 #endif
 }
-#endif
 
