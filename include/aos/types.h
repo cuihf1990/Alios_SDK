@@ -26,18 +26,13 @@ struct pollfd {
 #include <fcntl.h>
 #endif
 
+#ifndef AOS_EXPORTX
 /**
- * define the EXPORT_SYMBOL_K macro, use in kernel
- *
+ * define the AOS_EXPORT macro*
  */
-#define EXPORT_SYMBOL_K(condition, fun, fun_str)
 
-/**
- * define the EXPORT_SYMBOL_F macro, use in framework
- *
- */
-#define EXPORT_SYMBOL_F(condition, fun, fun_str)
-
+#define AOS_EXPORT(rvalue, name, argstype...)
+#endif
 
 #endif /* AOS_TYPES_H */
 

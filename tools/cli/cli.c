@@ -781,6 +781,7 @@ int aos_cli_register_command(const struct cli_command *cmd)
 
     return -ENOMEM;
 }
+AOS_EXPORT(int, aos_cli_register_command, const struct cli_command *)
 
 int aos_cli_unregister_command(const struct cli_command *cmd)
 {
@@ -804,6 +805,7 @@ int aos_cli_unregister_command(const struct cli_command *cmd)
 
     return -ENOMEM;
 }
+AOS_EXPORT(int, aos_cli_unregister_command, const struct cli_command *)
 
 int aos_cli_register_commands(const struct cli_command *cmds, int num_cmds)
 {
@@ -817,6 +819,7 @@ int aos_cli_register_commands(const struct cli_command *cmds, int num_cmds)
 
     return 0;
 }
+AOS_EXPORT(int, aos_cli_register_commands, const struct cli_command *, int)
 
 int aos_cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
 {
@@ -830,6 +833,7 @@ int aos_cli_unregister_commands(const struct cli_command *cmds, int num_cmds)
 
     return 0;
 }
+AOS_EXPORT(int, aos_cli_unregister_commands, const struct cli_command *, int)
 
 int aos_cli_stop(void)
 {
@@ -837,6 +841,7 @@ int aos_cli_stop(void)
 
     return 0;
 }
+AOS_EXPORT(int, aos_cli_stop, void)
 
 int aos_cli_init(void)
 {
@@ -880,11 +885,13 @@ init_general_err:
 
     return ret;
 }
+AOS_EXPORT(int, aos_cli_init, void)
 
 const char *aos_cli_get_tag(void)
 {
     return esc_tag;
 }
+AOS_EXPORT(const char *, aos_cli_get_tag, void)
 
 #if defined BUILD_BIN || defined BUILD_KERNEL
 int aos_cli_printf(const char *msg, ...)

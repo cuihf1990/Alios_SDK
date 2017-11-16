@@ -38,7 +38,7 @@ void awss_registrar_init(void)
         (uint8_t *)alibaba_oui, awss_wifi_mgnt_frame_callback);
     sm_attach_service("accs", &registrar_event);
 }
-EXPORT_SYMBOL_F(CONFIG_YWSS > 0u, awss_registrar_init, "void awss_registrar_init(void)")
+AOS_EXPORT(void, awss_registrar_init, void)
 
 void awss_registrar_exit(void)
 {

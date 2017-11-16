@@ -18,7 +18,7 @@ COMPONENT_DIRECTORIES := . \
                          security
 
 ifneq ($(ONLY_BUILD_LIBRARY), yes)
-COMPONENT_DIRECTORIES += $(OUTPUT_DIR)
+COMPONENT_DIRECTORIES += $(OUTPUT_DIR)/syscall
 endif
 
 COMPONENT_DIRECTORIES += $(APPDIR)
@@ -208,17 +208,17 @@ endif
 COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall vfs init
 
 ifeq ($(BINS),app)
-COMPONENTS += syscall_kapi syscall_fapi
+COMPONENTS += syscall_kapi syscall_fapi ksyscall fsyscall
+AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/syscall/syscall_kapi -I$(OUTPUT_DIR)/syscall/syscall_fapi
 AOS_SDK_DEFINES += BUILD_APP
-#AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/syscall_fapi
 else ifeq ($(BINS),framework)
-COMPONENTS += fsyscall syscall_kapi
+COMPONENTS += fsyscall syscall_kapi ksyscall
 AOS_SDK_DEFINES += BUILD_FRAMEWORK
-AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/syscall_kapi -I$(OUTPUT_DIR)/syscall_fapi
+AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/syscall/syscall_kapi -I$(OUTPUT_DIR)/syscall/syscall_fapi
 else ifeq ($(BINS),kernel)
 COMPONENTS += ksyscall
 AOS_SDK_DEFINES += BUILD_KERNEL
-AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/syscall_kapi
+AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/syscall/syscall_kapi
 else ifeq (,$(BINS))
 AOS_SDK_DEFINES += BUILD_BIN
 endif

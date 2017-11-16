@@ -317,7 +317,7 @@ bool umesh_is_initialized(void)
     return g_um_state.initialized;
 }
 
-ur_error_t umesh_start()
+ur_error_t umesh_start(void)
 {
     umesh_hal_module_t *hal = NULL;
     umesh_extnetid_t extnetid;
