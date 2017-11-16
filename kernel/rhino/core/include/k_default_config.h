@@ -174,6 +174,10 @@
 #define RHINO_CONFIG_TIMER_TASK_PRI          5
 #endif
 
+#ifndef RHINO_CONFIG_TIMER_MSG_NUM
+#define RHINO_CONFIG_TIMER_MSG_NUM           40
+#endif
+
 /* kernel intrpt conf */
 #ifndef RHINO_CONFIG_INTRPT_STACK_REMAIN_GET
 #define RHINO_CONFIG_INTRPT_STACK_REMAIN_GET 0
