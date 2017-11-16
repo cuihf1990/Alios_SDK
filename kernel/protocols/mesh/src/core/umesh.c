@@ -83,6 +83,12 @@ static void output_frame_handler(void *args)
     message_info_t *info;
     uint16_t frame_len;
 
+    if (umesh_mm_get_device_state() < DEVICE_STATE_LEAF) {
+        pbuf_free(buf);
+        ur_mem_free(frame, sizeof(transmit_frame_t));
+        return;
+    }
+
     append_length = sizeof(mcast_header_t);
     frame_len = buf->tot_len + append_length;
 #if LWIP_IPV6
@@ -147,8 +153,8 @@ static ur_error_t tx_frame(struct pbuf *buf, ur_addr_t *dest)
         frame->buf = buf;
         error = umesh_task_schedule_call(output_frame_handler, frame);
         if (error != UR_ERROR_NONE) {
+            pbuf_free(buf);
             ur_mem_free(frame, sizeof(transmit_frame_t));
-            pbuf_free(frame->buf);
         }
     }
     return error;
