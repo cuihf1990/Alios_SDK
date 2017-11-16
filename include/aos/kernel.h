@@ -300,7 +300,7 @@ int aos_sched_disable(void);
 int aos_sched_enable(void);
 
 /**
- * This function will create a timer.
+ * This function will create a timer and run auto.
  *
  * @param[in]  timer   pointer to the timer.
  * @param[in]  fn      callbak of the timer.
@@ -312,6 +312,21 @@ int aos_sched_enable(void);
  */
 int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat);
+
+/**
+ * This function will create a timer.
+ *
+ * @param[in]  timer   pointer to the timer.
+ * @param[in]  fn      callbak of the timer.
+ * @param[in]  arg     the argument of the callback.
+ * @param[in]  ms      ms of the normal timer triger.
+ * @param[in]  repeat  repeat or not when the timer is created.
+ * @param[in]  auto_run  run auto or not when the timer is created. 
+ *
+ * @return  0: success.
+ */
+int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
+                  void *arg, int ms, int repeat, uint8_t auto_run);
 
 /**
  * This function will delete a timer.
