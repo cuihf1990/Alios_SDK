@@ -1007,11 +1007,15 @@ bool gateway_service_get_mesh_mqtt_state()
 
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
 {
+    bool no_gateway_service = false;
+
     if (eventinfo->type == EV_YUNIO) {
         if (eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
             gateway_state.yunio_connected = true;
         } else if (eventinfo->code == CODE_YUNIO_ON_DISCONNECTED) {
             gateway_state.yunio_connected = false;
+            gateway_service_stop();
+            no_gateway_service = true;
         } else {
             return;
         }
@@ -1033,7 +1037,7 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
         gateway_state.gateway_mode = false;
     }
 
-    if (gateway_state.mesh_connected == true) {
+    if (gateway_state.mesh_connected == true && no_gateway_service == false) {
         gateway_service_start();
     } else {
         gateway_service_stop();
