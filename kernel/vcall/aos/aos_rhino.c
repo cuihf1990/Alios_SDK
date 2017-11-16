@@ -475,6 +475,39 @@ int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
 }
 AOS_EXPORT(int, aos_timer_new, aos_timer_t *, void (*)(void *, void *), void *, int, int)
 
+int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
+                  void *arg, int ms, int repeat, uint8_t auto_run)
+{
+    kstat_t   ret;
+    ktimer_t *t;
+
+    if (timer == NULL) {
+        return -EINVAL;
+    }
+
+    t = aos_malloc(sizeof(ktimer_t));
+    if (t == NULL) {
+        return -ENOMEM;
+    }
+
+    if (repeat == 0) {
+        ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, auto_run);
+    } else {
+        ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
+                                  arg, auto_run);
+    }
+
+    if (ret != RHINO_SUCCESS) {
+        aos_free(t);
+        ERRNO_MAPPING(ret);
+    }
+
+    timer->hdl = t;
+
+    return 0;
+}
+AOS_EXPORT(int, aos_timer_new_ext, aos_timer_t *, void (*)(void *, void *), void *, int, int, uint8_t)
+
 void aos_timer_free(aos_timer_t *timer)
 {
     if (timer == NULL) {
