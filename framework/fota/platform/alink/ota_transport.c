@@ -27,9 +27,13 @@ typedef struct ota_device_info {
 
 OTA_device_info g_device_info;
 
-void platform_ota_init( void *signal)
+void platform_ota_init( void *info)
 {
-    OTA_device_info *device_info = (OTA_device_info *)signal;
+    if (info == NULL) {
+        OTA_LOG_E("ota device info is null");
+        return;
+    }
+    OTA_device_info *device_info = (OTA_device_info *)info;
     g_device_info.uuid = device_info->uuid;    
 }
 
