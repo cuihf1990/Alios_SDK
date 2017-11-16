@@ -110,10 +110,12 @@ class Client:
                     time.sleep(poll_interval)
                     continue
 
+                poll_success = 0
                 #poll device model
                 response = self.poll_run_command(port, 'devname', 1, 0.3)
                 if len(response) == 1 and response[0].startswith('device name:'):
                     self.devices[port]['attributes']['model'] = response[0].split()[-1]
+                    poll_success += 1
 
                 #poll device mac
                 response = self.poll_run_command(port, 'mac', 1, 0.3)
@@ -121,10 +123,12 @@ class Client:
                     macaddr = response[0].split()[-1]
                     macaddr = macaddr.replace('-', '') + '0000'
                     self.devices[port]['attributes']['macaddr'] = macaddr
+                    poll_success += 1
 
                 #poll device version
                 response = self.poll_run_command(port, 'version', 1, 0.3)
                 if len(response) == 2:
+                    poll_success += 1
                     for line in response:
                         if 'kernel version :' in line:
                             self.devices[port]['attributes']['kernel_version'] = line.replace('kernel version :AOS-', '')
@@ -134,6 +138,7 @@ class Client:
                 #poll mesh status
                 response = self.poll_run_command(port, 'umesh status', 11, 0.3)
                 if len(response) == 11:
+                    poll_success += 1
                     for line in response:
                         if 'state\t' in line:
                             self.devices[port]['attributes']['state'] = line.replace('state\t', '')
@@ -151,6 +156,7 @@ class Client:
                 #poll mesh nbrs
                 response = self.poll_run_command(port, 'umesh nbrs', 33, 0.3)
                 if len(response) > 0 and 'num=' in response[-1]:
+                    poll_success += 1
                     self.devices[port]['attributes']['nbrs'] = {}
                     index = 0
                     for line in response:
@@ -163,12 +169,19 @@ class Client:
                 #poll mesh extnetid
                 response = self.poll_run_command(port, 'umesh extnetid', 1, 0.3)
                 if len(response) == 1:
+                    poll_success += 1
                     self.devices[port]['attributes']['extnetid'] = response[0]
 
                 #poll uuid
                 response = self.poll_run_command(port, 'uuid', 1, 0.3)
                 if len(response) == 1 and 'uuid:' in response[0]:
+                    poll_success += 1
                     self.devices[port]['attributes']['uuid'] = response[0].replace('uuid: ', '')
+
+                if poll_success > 0:
+                    self.devices[port]['attributes']['status'] = 'active'
+                else:
+                    self.devices[port]['attributes']['status'] = 'inactive'
 
                 content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
@@ -292,6 +305,7 @@ class Client:
                     self.devices[port]['attributes']['model'] = 'MK3060'
                 if 'espif' in port:
                     self.devices[port]['attributes']['model'] = 'ESP32'
+                self.devices[port]['attributes']['status'] = 'inactive'
                 thread.start_new_thread(self.device_log_poll, (port,))
                 thread.start_new_thread(self.device_status_poll, (port,))
                 self.send_device_list()

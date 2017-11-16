@@ -596,6 +596,10 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
         return;
     }
 
+    if (pstate->mesh_connected == false) {
+        LOG("GATEWAY: connect to server succeed");
+    }
+
     memcpy(pstate->uuid, conn_ack->payload, sizeof(pstate->uuid));
     pstate->uuid[STR_UUID_LEN] = '\x0';
     pstate->mqtt_connected = true;
@@ -610,7 +614,6 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
     aos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
     aos_post_delayed_action((8 + (rand() & 0x7)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
 
-    LOG("GATEWAY: connect to server succeed");
 }
 
 static void handle_msg(gateway_state_t *pstate, uint8_t *pmsg, int len)
