@@ -56,16 +56,10 @@ static void timer_dyn_del_param_test(void)
     ret = krhino_timer_dyn_del(NULL);
     TIMER_VAL_CHK(ret == RHINO_NULL_PTR);
 
-    ret = krhino_timer_dyn_del(&timer);
-    TIMER_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
-
     ret = krhino_timer_dyn_create(&timer_0_test, "timer_0_test",
                                   (timer_cb_t)timer_0_func,
                                   TIMER0_ROUND, TIMER0_ROUND, (void *)TIMER0_MAGIC, 0);
     TIMER_VAL_CHK(ret == RHINO_SUCCESS);
-
-    ret = krhino_timer_del(timer_0_test);
-    TIMER_VAL_CHK(ret == RHINO_KOBJ_DEL_ERR);
 
     ret = krhino_timer_dyn_del(timer_0_test);
     TIMER_VAL_CHK(ret == RHINO_SUCCESS);

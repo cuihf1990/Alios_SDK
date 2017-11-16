@@ -57,16 +57,16 @@ static void timer_del_param_test(void)
     TIMER_VAL_CHK(ret == RHINO_NULL_PTR);
 
     ret = krhino_timer_start(&timer);
-    TIMER_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
+    TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
     ret = krhino_timer_stop(&timer);
-    TIMER_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
+    TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
     ret = krhino_timer_change(&timer, 10, 10);
-    TIMER_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
+    TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
     ret = krhino_timer_del(&timer);
-    TIMER_VAL_CHK(ret == RHINO_KOBJ_TYPE_ERR);
+    TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 }
 
 static void task_timer0_entry(void *arg)
@@ -102,7 +102,7 @@ static void task_timer0_entry(void *arg)
         ret = krhino_timer_stop(&timer_0_test);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
         ret = krhino_timer_dyn_del(&timer_0_test);
-        TIMER_VAL_CHK(ret == RHINO_KOBJ_DEL_ERR);
+        TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = krhino_timer_del(&timer_0_test);
         if (ret == RHINO_SUCCESS) {

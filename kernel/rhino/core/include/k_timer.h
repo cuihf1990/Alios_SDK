@@ -5,6 +5,16 @@
 #ifndef K_TIMER_H
 #define K_TIMER_H
 
+enum {
+    TIMER_CMD_CB = 0u,
+    TIMER_CMD_START,
+    TIMER_CMD_STOP,
+    TIMER_CMD_CHG,
+    TIMER_ARG_CHG,
+    TIMER_CMD_DEL,
+    TIMER_CMD_DYN_DEL
+};
+
 typedef void (*timer_cb_t)(void *timer, void *arg);
 
 typedef struct {
@@ -27,6 +37,7 @@ typedef struct {
     ktimer_t *timer;
     tick_t    first;
     tick_t    round;
+    void     *arg;
     uint8_t   cb_num;
 } k_timer_queue_cb;
 
