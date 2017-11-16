@@ -181,78 +181,110 @@ def _writeSyscallUapi(sc_path, sd_path, ui_path, stype):
         logging.debug(symbol)
         if symbol[0] == str(1):
             fsc.write(symbol[3].strip() + " " + symbol[2].strip() + "(")
+            snum = 0
+            seri = 0
+            conti = 0
+            variable_arg = 0
             args_num = symbol[4].strip().count(",")
             args = symbol[4].strip().split(",")
-            i = 0
-            snum = 0
-            conti = 0
-            for arg in args:
-                if conti == 1:
-                    if ")" in arg.strip():
-                        conti = 0
-                    fsc.write(arg.strip())
-
-                    if i != args_num:
-                        fsc.write(", ")
-                    i += 1
-                else:
-                    if arg.strip() == r"void":
-                        fsc.write(arg.strip())
+            if r"(*)" in symbol[4].strip():                          ######## fun((void (*)()))
+                for arg in args:
+                    if r"(*)" in arg:
+                        substr = arg.strip().split("(*")
+                        fsc.write(substr[0] + "(*a" + str(snum) + substr[1])
+                        snum += 1
+                        if arg.count("(") != arg.count(")"):
+                            conti = 1
                     else:
-                        if "(*" in arg.strip():
-                            substr = arg.strip().split("(*")
-                            fsc.write(substr[0] + "(*a" + str(snum) + substr[1])
-                            if (substr[1].count(")") % 2) != 0:
-                                conti = 1
-                            snum += 1
+                        if conti == 1:
+                            if r")" in arg:
+                                fsc.write(arg.strip())
+                                conti = 0
+                            else:
+                                fsc.write(arg.strip())
                         else:
                             if arg.strip() == r"...":
                                 fsc.write(arg.strip())
+                                snum += 1
+                                variable_arg = 1
                             else:
                                 fsc.write(arg.strip() + " a" + str(snum))
                                 snum += 1
-    
-                        if i != args_num:
+                    if seri != args_num:
                             fsc.write(", ")
-                        i += 1
+                    seri += 1
+            elif r"..." in symbol[4].strip():                        ######## fun(fmt, ...)
+                for arg in args:
+                    if arg.strip() == r"...":
+                        fsc.write(arg.strip())
+                        snum += 1
+                        variable_arg = 1
+                    else:
+                        fsc.write(arg.strip() + " a" + str(snum))
+                        snum += 1
+                    if seri != args_num:
+                            fsc.write(", ")
+                    seri += 1
+            elif r"void" == symbol[4].strip():                       ######## fun(void)
+                fsc.write(symbol[4].strip())
+            else:                                                    ######## normal
+                for arg in args:
+                    fsc.write(arg.strip() + " a" + str(snum))
+                    snum += 1
+                    if seri != args_num:
+                        fsc.write(", ")
+                    seri += 1
 
             fsc.write(")" + "\n" + "{\n")
-            if r"..." in symbol[4].strip():
-                fsc.write("    va_list args;\n    char message[128];\n    int ret;\n\n    memset(message, 0, 128);\n\n")
-                fsc.write("    va_start(args, a0);\n    ret = vsnprintf(message, 128, a0, args);\n    va_end(args);\n\n")
+            if variable_arg == 1:
+                if snum < 2:
+                    snum = 2
+                fsc.write("    va_list args;\n    char msg[128];\n    int ret;\n\n    memset(msg, 0, 128);\n\n")
+                fsc.write("    va_start(args, a" +  str(snum - 2) + ");\n    ret = vsnprintf(msg, 128, a" + str(snum - 2) + ", args);\n    va_end(args);\n\n")
             fsc.write(r"    if (SYSCALL_TBL[" + "SYS_" + symbol[2].upper() + "] != NULL) {\n" + "        ")
             needreturn = 0
             if symbol[3].strip() != r"void":
                 fsc.write("return ")
                 needreturn = 1
-
             fsc.write("SYS_CALL" + str(snum) + "(SYS_" + symbol[2].upper() + ", " + symbol[3].strip())
+
             snum = 0
             conti = 0
-            for arg in args:
-                if arg.strip() != r"void":
-                    if conti == 1:
-                        if ")" in arg.strip():
-                            conti = 0
-                            fsc.write(", " + arg.strip() + ", " + "a" + str(snum))
+            if r"(*)" in symbol[4].strip():                          ######## fun((void (*)()))
+                for arg in args:
+                    if r"(*)" in arg:
+                        fsc.write(", " + arg.strip())
+                        if arg.count("(") == arg.count(")"):
+                            fsc.write(", " + "a" + str(snum))
                             snum += 1
                         else:
-                            fsc.write(", " + arg.strip())
+                            conti = 1
                     else:
-                        if "(*" in arg.strip():
-                            if (arg.strip().count(")") % 2) == 0:
+                        if conti == 1:
+                            if r")" in arg:
                                 fsc.write(", " + arg.strip() + ", " + "a" + str(snum))
                                 snum += 1
+                                conti = 0
                             else:
                                 fsc.write(", " + arg.strip())
-                                conti = 1
                         else:
-                            if arg.strip() != r"...":
-                                if r"..." in symbol[4].strip():
-                                    fsc.write(", " + arg.strip() + ", " + "message")
-                                else:
-                                    fsc.write(", " + arg.strip() + ", " + "a" + str(snum))
-                            snum += 1
+                            if arg.strip() == r"...":
+                                fsc.write(", " + "..." + "," + "msg")
+                            else:
+                                fsc.write(", " + arg.strip() + ", " + "a" + str(snum))
+                                snum += 1
+            elif r"..." in symbol[4].strip():                        ######## fun(fmt, ...)
+                for arg in args:
+                    if arg.strip() == r"...":
+                        fsc.write(", " + "..." + "," +  "msg")
+                    else:
+                        fsc.write(", " + arg.strip() + ", " + "a" + str(snum))
+                        snum += 1
+            else:                                                    ######## normal
+                if r"void" != symbol[4].strip():
+                    for arg in args:
+                        fsc.write(", " + arg.strip() + ", " + "a" + str(snum))
+                        snum += 1
 
             fsc.write(r");")
 
