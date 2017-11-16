@@ -5,6 +5,7 @@
 #include <k_api.h>
 #include <assert.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 #if (RHINO_CONFIG_HW_COUNT > 0)
 void soc_hw_timer_init(void)
@@ -54,10 +55,7 @@ tick_t soc_elapsed_ticks_get(void)
 #endif
 
 
-#if defined (__CC_ARM) /* Keil / armcc */
-extern void         *__heap_base;
-extern void         *__heap_size;
-#else
+#if !defined (__CC_ARM) /* Keil / armcc */
 extern void         *heap_start;
 extern void         *heap_end;
 extern void         *heap_len;
@@ -68,7 +66,9 @@ extern void         *heap2_len;
 
 
 #if defined (__CC_ARM) /* Keil / armcc */
-k_mm_region_t g_mm_region[] = {(uint8_t*)&__heap_base,(size_t)&__heap_size};
+#define HEAP_BUFFER_SIZE 1024*37
+uint8_t g_heap_buf[HEAP_BUFFER_SIZE];
+k_mm_region_t g_mm_region[] = {g_heap_buf,HEAP_BUFFER_SIZE};
 #else
 k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len},{(uint8_t*)&heap2_start,(size_t)&heap2_len}};
 #endif
@@ -131,6 +131,14 @@ void soc_err_proc(kstat_t err)
 void __aeabi_assert(const char *expr, const char *file, int line)
 {
     while (1);
+}
+extern long long aos_now_ms(void);
+int gettimeofday(struct timeval *tv, void *tzp)
+{
+    uint64_t t = aos_now_ms();
+    tv->tv_sec = t / 1000;
+    tv->tv_usec = (t % 1000) * 1000;
+    return 0;
 }
 #endif
 krhino_err_proc_t g_err_proc = soc_err_proc;
