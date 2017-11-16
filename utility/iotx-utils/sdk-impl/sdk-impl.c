@@ -21,9 +21,9 @@ void IOT_CloseLog(void)
 
 void IOT_SetLogLevel(IOT_LogLevel level)
 {
-    LOGLEVEL            lvl = level;
+    LOGLEVEL lvl = (LOGLEVEL)level;
 
-    if (lvl < LOG_EMERG_LEVEL || lvl > LOG_DEBUG_LEVEL) {
+    if ((int)lvl < LOG_EMERG_LEVEL || lvl > LOG_DEBUG_LEVEL) {
         log_err("Invalid input level: %d out of [%d, %d]", level,
                 LOG_EMERG_LEVEL,
                 LOG_DEBUG_LEVEL);
@@ -35,9 +35,9 @@ void IOT_SetLogLevel(IOT_LogLevel level)
 
 void IOT_DumpMemoryStats(IOT_LogLevel level)
 {
-    LOGLEVEL            lvl = level;
+    LOGLEVEL lvl = (LOGLEVEL)level;
 
-    if (lvl < LOG_EMERG_LEVEL || lvl > LOG_DEBUG_LEVEL) {
+    if ((int)lvl < LOG_EMERG_LEVEL || lvl > LOG_DEBUG_LEVEL) {
         lvl = LOG_DEBUG_LEVEL;
         log_warning("Invalid input level, using default: %d => %d", level, lvl);
     }
@@ -73,5 +73,4 @@ int IOT_SetupConnInfo(const char *product_key,
         return -1;
     }
 
-    return 0;
 }

@@ -57,7 +57,6 @@ __initial_sp
 ; </h>
 
 Heap_Size      EQU     0x7000
-__heap_size    EQU     Heap_Size
 
                 AREA    HEAP, NOINIT, READWRITE, ALIGN=3
 __heap_base
@@ -415,7 +414,6 @@ FPU_IRQHandler
                  EXPORT  __initial_sp
                  EXPORT  __heap_base
                  EXPORT  __heap_limit
-                 EXPORT  __heap_size
 
                  ELSE
 
