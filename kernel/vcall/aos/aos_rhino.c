@@ -476,7 +476,7 @@ int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
 AOS_EXPORT(int, aos_timer_new, aos_timer_t *, void (*)(void *, void *), void *, int, int)
 
 int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
-                  void *arg, int ms, int repeat, uint8_t auto_run)
+                  void *arg, int ms, int repeat, unsigned char auto_run)
 {
     kstat_t   ret;
     ktimer_t *t;
@@ -506,7 +506,7 @@ int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
 
     return 0;
 }
-AOS_EXPORT(int, aos_timer_new_ext, aos_timer_t *, void (*)(void *, void *), void *, int, int, uint8_t)
+AOS_EXPORT(int, aos_timer_new_ext, aos_timer_t *, void (*)(void *, void *), void *, int, int, unsigned char)
 
 void aos_timer_free(aos_timer_t *timer)
 {
