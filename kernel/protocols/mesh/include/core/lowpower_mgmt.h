@@ -15,5 +15,7 @@ enum {
 void lowpower_init(void);
 void lowpower_start(void);
 void lowpower_stop(void);
+void lowpower_update_time_slot(neighbor_t *nbr, uint8_t *tlvs, uint16_t length);
+uint16_t lowpower_set_time_slot(uint8_t *data);
 
 #endif
