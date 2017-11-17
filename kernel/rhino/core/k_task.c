@@ -975,13 +975,9 @@ kstat_t krhino_task_info_get(ktask_t *task, size_t idx, void **info)
 void krhino_task_deathbed(void)
 {
 #if (RHINO_CONFIG_TASK_DEL > 0)
-    CPSR_ALLOC();
-
     ktask_t *task;
 
-    RHINO_CPU_INTRPT_DISABLE();
-    task = g_active_task[cpu_cur_get()];
-    RHINO_CPU_INTRPT_ENABLE();
+    task = krhino_cur_task_get();
 
     if (task->mm_alloc_flag == K_OBJ_DYN_ALLOC) {
         /* del my self*/
