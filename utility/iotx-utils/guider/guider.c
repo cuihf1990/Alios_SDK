@@ -638,7 +638,7 @@ static char *_authenticate_string(char sign[], char ts[]
                                  )
 {
     char                   buffer[1024];
-    char                   *ret;
+    char                   *ret = NULL;
     iotx_device_info_pt     dev = NULL;
     int                     rc = -1;
 
@@ -673,8 +673,10 @@ static char *_authenticate_string(char sign[], char ts[]
                   , ts);
 #endif
     assert(rc < 1024);
-    ret = (char *)malloc(rc);
+    ret = (char *)malloc(rc + 1);
+    assert(ret != NULL);
     memcpy(ret, buffer, rc);
+    ret[rc] = 0;
 
     return ret;
 }
