@@ -42,8 +42,9 @@
 #define RHINO_CONFIG_MM_TLF_BLK_SIZE         8192
 #endif
 #ifndef RHINO_CONFIG_MM_DEBUG
-#define RHINO_CONFIG_MM_DEBUG                0
+#define RHINO_CONFIG_MM_DEBUG                1
 #endif
+#define K_MM_STATISTIC                       1
 #ifndef RHINO_CONFIG_KOBJ_SET
 #define RHINO_CONFIG_KOBJ_SET                1
 #endif
