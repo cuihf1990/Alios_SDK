@@ -602,9 +602,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     size_t       tmp_size;
     size_t       req_size = size;
     mblk_pool_t *mm_pool;
-#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
-#endif
 
     (void)req_size;
 
@@ -619,6 +617,12 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_ENTER();
 #else
+    RHINO_CRITICAL_ENTER();
+    if (g_intrpt_nested_level[cpu_cur_get()] > 0u) {
+        k_err_proc(RHINO_NOT_CALLED_BY_INTRPT);
+    }
+    RHINO_CRITICAL_EXIT();
+
     krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
 
@@ -739,16 +743,21 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 {
     k_mm_list_t *b,      *tmp_b;
     size_t       fl = 0, sl = 0;
-#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
-#endif
 
     if (!ptr || !mmhead) {
         return;
     }
+
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_ENTER();
 #else
+    RHINO_CRITICAL_ENTER();
+    if (g_intrpt_nested_level[cpu_cur_get()] > 0u) {
+        k_err_proc(RHINO_NOT_CALLED_BY_INTRPT);
+    }
+    RHINO_CRITICAL_EXIT();
+
     krhino_mutex_lock(&(mmhead->mm_mutex), RHINO_WAIT_FOREVER);
 #endif
     VGF(VALGRIND_MAKE_MEM_DEFINED(mmhead, sizeof(k_mm_head)));
@@ -867,9 +876,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     size_t       fl, sl;
     size_t       tmp_size;
     size_t       req_size = 0;
-#if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     CPSR_ALLOC();
-#endif
 
     (void)req_size;
 
@@ -891,6 +898,12 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
     RHINO_CRITICAL_ENTER();
 #else
+    RHINO_CRITICAL_ENTER();
+    if (g_intrpt_nested_level[cpu_cur_get()] > 0u) {
+        k_err_proc(RHINO_NOT_CALLED_BY_INTRPT);
+    }
+    RHINO_CRITICAL_EXIT();
+
     krhino_mutex_lock(&mmhead->mm_mutex, RHINO_WAIT_FOREVER);
 #endif
 
