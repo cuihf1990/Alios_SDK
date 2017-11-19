@@ -675,7 +675,12 @@ wsf_msg_t *__wsf_invoke_sync(wsf_msg_t *req)
              node->session.id);
     }
 
-    wsf_request_queue_pop(global_request_queue, node);
+    //  wsf is disconnected and queue has been flushed
+    if (wsf_request_queue_pop(global_request_queue, node) != 0 &&
+        global_request_queue->length == 0) {
+        return NULL;
+    }
+
     wsf_msg_session_destroy(&node->session);
     os_free(node);
     return p_rsp;

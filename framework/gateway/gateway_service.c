@@ -71,6 +71,7 @@ typedef struct {
 } gateway_state_t;
 
 static gateway_state_t gateway_state;
+static bool gateway_service_started = false;
 
 char *config_get_main_uuid(void);
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data);
@@ -170,20 +171,11 @@ out:
 static char *get_uuid_by_ipaddr(struct sockaddr *addr)
 {
     client_t *client = NULL;
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_lock(gateway_state.mutex, AOS_WAIT_FOREVER);
-#endif
     dlist_for_each_entry(&gateway_state.clients, client, client_t, next) {
         if (memcmp(addr, &client->addr, sizeof(client->addr)) == 0) {
-#ifdef GATEWAY_WORKER_THREAD
-            aos_mutex_unlock(gateway_state.mutex);
-#endif
             return client->devinfo->dev_base.uuid;
         }
     }
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_unlock(gateway_state.mutex);
-#endif
     return NULL;
 }
 
@@ -194,20 +186,11 @@ static struct sockaddr_in *get_ipaddr_by_uuid(const char *uuid)
 #endif
 {
     client_t *client = NULL;
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_lock(gateway_state.mutex, AOS_WAIT_FOREVER);
-#endif
     dlist_for_each_entry(&gateway_state.clients, client, client_t, next) {
         if (memcmp(uuid, client->devinfo->dev_base.uuid, STR_UUID_LEN) == 0) {
-#ifdef GATEWAY_WORKER_THREAD
-            aos_mutex_unlock(gateway_state.mutex);
-#endif
             return &client->addr;
         }
     }
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_unlock(gateway_state.mutex);
-#endif
     return NULL;
 }
 
@@ -483,9 +466,6 @@ static int add_mesh_enrollee(reg_info_t *reginfo)
 static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
 {
     client_t *client = NULL;
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_lock(pstate->mutex, AOS_WAIT_FOREVER);
-#endif
     dlist_for_each_entry(&pstate->clients, client, client_t, next) {
         if (client->devinfo == NULL) {
             continue;
@@ -500,15 +480,9 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[5],
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[6],
                      (uint8_t)client->devinfo->dev_base.u.ieee_addr[7]);
-#ifdef GATEWAY_WORKER_THREAD
-            aos_mutex_unlock(pstate->mutex);
-#endif
             goto add_enrollee;
         }
     }
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_unlock(pstate->mutex);
-#endif
 
     client = aos_malloc(sizeof(client_t));
     PTR_RETURN(client, NULL, "alloc memory failed");
@@ -528,13 +502,7 @@ static client_t *new_client(gateway_state_t *pstate, reg_info_t *reginfo)
         return NULL;
     }
     devmgr_put_devinfo_ref(client->devinfo);
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_lock(pstate->mutex, AOS_WAIT_FOREVER);
-#endif
     dlist_add_tail(&client->next, &pstate->clients);
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_unlock(pstate->mutex);
-#endif
 
     LOG("GATEWAY: new client %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x connected",
         (uint8_t)client->devinfo->dev_base.u.ieee_addr[0],
@@ -630,9 +598,6 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
 
     memcpy(pstate->uuid, conn_ack->payload, sizeof(pstate->uuid));
     pstate->uuid[STR_UUID_LEN] = '\x0';
-    if (pstate->mqtt_connected == false) {
-        LOG("GATEWAY: connect to server succeed");
-    }
     pstate->mqtt_connected = true;
     aos_post_delayed_action(5 * ADV_INTERVAL, clear_connected_flag, &gateway_state);
 
@@ -645,12 +610,16 @@ static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
     aos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
     aos_post_delayed_action((8 + (rand() & 0x7)) * ADV_INTERVAL, set_reconnect_flag, &gateway_state);
 
+    LOG("GATEWAY: connect to server succeed");
 }
 
 static void handle_msg(gateway_state_t *pstate, uint8_t *pmsg, int len)
 {
     uint8_t msg_type = *pmsg++;
     len --;
+#ifdef GATEWAY_WORKER_THREAD
+    aos_mutex_lock(gateway_state.mutex, AOS_WAIT_FOREVER);
+#endif
     switch (msg_type) {
         case PUBLISH:
             handle_publish(pstate, pmsg, len);
@@ -665,6 +634,9 @@ static void handle_msg(gateway_state_t *pstate, uint8_t *pmsg, int len)
             handle_adv(pstate, pmsg, len);
             break;
     }
+#ifdef GATEWAY_WORKER_THREAD
+    aos_mutex_unlock(gateway_state.mutex);
+#endif
 }
 
 static void gateway_sock_read_cb(int fd, void *priv)
@@ -739,9 +711,6 @@ static void gateway_advertise(void *arg)
 
     aos_free(buf);
 
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_lock(pstate->mutex, AOS_WAIT_FOREVER);
-#endif
     dlist_for_each_entry(&pstate->clients, client, client_t, next) {
         if (client->timeout < MAX_GATEWAY_RECONNECT_TIMEOUT) {
             client->timeout ++;
@@ -759,9 +728,6 @@ static void gateway_advertise(void *arg)
             }
         }
     }
-#ifdef GATEWAY_WORKER_THREAD
-    aos_mutex_unlock(pstate->mutex);
-#endif
 }
 
 #ifdef GATEWAY_WORKER_THREAD
@@ -790,6 +756,12 @@ static void gateway_worker(void *arg)
                 LOGD(MODULE_NAME, "select error %d", errno);
                 continue;
             }
+        }
+
+        if (sockfd != gateway_state.sockfd) {
+            gateway_state.mqtt_connected = false;
+            close(sockfd);
+            continue;
         }
 
         if (FD_ISSET(sockfd, &rfds)) {
@@ -854,7 +826,6 @@ int gateway_service_init(void)
         LOGE(MODULE_NAME, "error: create mutex failed");
         return 1;
     }
-
     aos_task_new("gatewayworker", gateway_worker, NULL, 4096);
 #endif
     return 0;
@@ -897,8 +868,9 @@ static int init_socket(void)
     if (pstate->sockfd >= 0) {
 #ifndef GATEWAY_WORKER_THREAD
         aos_cancel_poll_read_fd(pstate->sockfd, gateway_sock_read_cb, pstate);
-#endif
         close(pstate->sockfd);
+
+#endif
         pstate->sockfd = -1;
     }
 
@@ -957,8 +929,6 @@ static void gateway_handle_sub_status(int event, const char *json_buffer)
 
 int gateway_service_start(void)
 {
-    init_socket();
-
     if (gateway_state.gateway_mode) {
         aos_cloud_register_callback(GET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
         aos_cloud_register_callback(SET_SUB_DEVICE_STATUS, gateway_handle_sub_status);
@@ -971,19 +941,28 @@ int gateway_service_start(void)
         LOG("GATEWAY: start service as a client");
     }
 
+    if (gateway_service_started == true) {
+        return 0;
+    }
+    gateway_service_started = true;
+
+    init_socket();
+
     return 0;
 }
 
 void gateway_service_stop(void)
 {
     client_t *client;
+    gateway_service_started = false;
+
     aos_cancel_delayed_action(-1, clear_connected_flag, &gateway_state);
     aos_cancel_delayed_action(-1, set_reconnect_flag, &gateway_state);
     aos_cancel_delayed_action(-1, gateway_advertise, &gateway_state);
-    if (gateway_state.sockfd >= 0) {
-        close(gateway_state.sockfd);
-        gateway_state.sockfd = -1;
-    }
+#ifndef GATEWAY_WORKER_THREAD
+    close(gateway_state.sockfd);
+#endif
+    gateway_state.sockfd = -1;
     gateway_state.mqtt_connected = false;
 #ifdef GATEWAY_WORKER_THREAD
     aos_mutex_lock(gateway_state.mutex, AOS_WAIT_FOREVER);
@@ -1007,15 +986,11 @@ bool gateway_service_get_mesh_mqtt_state()
 
 static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
 {
-    bool no_gateway_service = false;
-
     if (eventinfo->type == EV_YUNIO) {
         if (eventinfo->code == CODE_YUNIO_ON_CONNECTED) {
             gateway_state.yunio_connected = true;
         } else if (eventinfo->code == CODE_YUNIO_ON_DISCONNECTED) {
             gateway_state.yunio_connected = false;
-            gateway_service_stop();
-            no_gateway_service = true;
         } else {
             return;
         }
@@ -1037,7 +1012,7 @@ static void gateway_service_event(input_event_t *eventinfo, void *priv_data)
         gateway_state.gateway_mode = false;
     }
 
-    if (gateway_state.mesh_connected == true && no_gateway_service == false) {
+    if (gateway_state.mesh_connected == true) {
         gateway_service_start();
     } else {
         gateway_service_stop();

@@ -103,6 +103,10 @@ bool esp32_is_mesh_pkt(void *buf, wifi_promiscuous_pkt_type_t type)
     if (type != WIFI_PKT_DATA)
         return false;
 
+    if (pkt->rx_ctrl.sig_len < 40) {
+        return false;
+    }
+
     if (umesh_80211_filter_frame(module, pkt->payload, pkt->rx_ctrl.sig_len)) {
         return false;
     }
