@@ -1,0 +1,3 @@
+NAME := sal
+
+GLOBAL_INCLUDES += .

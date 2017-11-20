@@ -12,8 +12,8 @@
 #include <atparser.h>
 #include <netmgr.h>
 #include <hal/soc/atcmd.h>
-#include <lwip/sockets.h>
 #ifdef AOS_AT_ADAPTER
+#include <lwip/sockets.h>
 #include <at_adapter.h>
 #endif
 #include "atapp.h"
@@ -76,6 +76,7 @@ static void handle_at(char *pwbuf, int blen, int argc, char **argv)
     }
 }
 
+#ifdef AOS_AT_ADAPTER
 #define MAXDATASIZE 100
 #define NET_SEND_DATA_SIZE 1000
 static char net_test_data[NET_SEND_DATA_SIZE] = {0};
@@ -188,6 +189,88 @@ static void handle_test_at_enet(char *pwbuf, int len, int argc, char **argv)
 
     aos_cli_printf("udp type test finished\r\n");
 }
+#endif
+
+#ifdef WITH_SAL_WIFI
+#include <sal.h>
+static void handle_sal_wifi_api(char *pwbuf, int len, int argc, char **argv) 
+{
+    static int fd = 0;
+    char *type, buf[128] = {0}, tmp[10] = {0};
+    //at_conn_t c = {fd, TCP_CLIENT, addr, remote_port, -1, 0};
+    at_conn_t c;
+    uint32_t read_len = 0, tmp_read = 0;
+
+    LOGD("atapp", "%s entry.", __func__);
+
+    if (argc < 2) return;
+    type = argv[1];
+
+    sal_op.init();
+
+    c.fd = fd++;
+
+    if (strcmp(type, "tcp_c") == 0) {
+        c.type = TCP_CLIENT;
+        if (argc < 5) {
+            LOGE("atapp", "Invalid argument %s %d", __func__, __LINE__);
+            return;
+        }
+
+        c.addr = argv[2];
+        c.r_port = atoi(argv[3]);
+        c.l_port = -1;
+        c.tcp_keep_alive = 0;
+    }
+    else {
+        return; /* TODO */
+    }
+
+    if (sal_op.start(&c) != 0) {
+        LOGE("atapp", "sal_op.start failed.");
+        return;
+    }
+
+    if (sal_op.send(c.fd, -1, (uint8_t *)argv[4], strlen(argv[4])) != 0) {
+        LOGE("atapp", "sal_op.send failed.");
+        goto end;
+    }
+
+    while (1) {
+        tmp_read = sizeof(tmp) - 1;
+        if(sal_op.recv(c.fd, -1, (uint8_t *)tmp, &tmp_read) < 0) {
+            LOGE("atapp", "sal_op.recv failed.");
+            break;
+        }
+        if (strstr(buf, "Goodbye") != NULL) {
+            LOGI("atapp", "Goodbye! See you!");
+            break;
+        }
+        if (tmp_read == 0) {aos_msleep(1000); continue;}
+        else {
+            LOGI("atapp", "Receive %d bytes of data (%s) from server.", tmp_read, tmp);
+            if (tmp_read >= (sizeof(buf) - read_len)) {
+                LOGD("atapp", "Read buffer full, let's stop here.");
+                break;
+            }
+            memcpy(buf + read_len, tmp, tmp_read);
+            read_len += tmp_read;
+        }
+    }
+
+end:
+    aos_msleep(5000);
+
+    if (sal_op.close(c.fd, c.r_port) != 0) {
+        LOGE("atapp", "sal_op.stop failed");
+        return;
+    }
+
+    sal_op.deinit();
+
+    LOGD("atapp", "%s exit.", __func__);
+}
+#endif
 
 static struct cli_command atcmds[] = {
     {
@@ -195,11 +278,20 @@ static struct cli_command atcmds[] = {
         .help = "at [simple|full|2stage] [input|fst] [data]",
         .function = handle_at
     },
+#ifdef AOS_AT_ADAPTER
     {
         .name = "test_at_enet",
         .help = "test_at_enet [tcp|udp] [ip] [data_string_to_send]",
         .function = handle_test_at_enet
-    }
+    },
+#endif
+#ifdef WITH_SAL_WIFI
+    {
+        .name = "test_sal_wifi_api",
+        .help = "test_sal_wifi_api type [ip|domain rp|lp data]",
+        .function = handle_sal_wifi_api
+    },
+#endif
 };
 
 static void wifi_event_handler(input_event_t *event, void *priv_data)
