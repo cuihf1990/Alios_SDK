@@ -5,6 +5,7 @@ ID2_TEST_DEBUG := no
 $(NAME)_CFLAGS      += -Wall -Werror -Os
 
 GLOBAL_INCLUDES     += include
+$(NAME)_COMPONENTS := plat_gen libkm
 
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libid2.a
 
