@@ -114,11 +114,17 @@ static int at_write(const char *data, int size)
 
 static int at_read(char *data, int size)
 {
-    uint32_t recv_size;
-    if (hal_uart_recv(&at._uart, (void *)data, size,
-      &recv_size, at._timeout) != 0) {
-        LOGE(MODULE_NAME, "at_read failed on uart_recv.");
-        return -1;
+    uint32_t recv_size, total_read = 0;
+
+    while (total_read < size) {
+        if (hal_uart_recv(&at._uart, (void *)(data + total_read), size - total_read,
+          &recv_size, at._timeout) != 0) {
+            LOGE(MODULE_NAME, "at_read failed on uart_recv.");
+            return -1;
+        }
+        if (recv_size <= 0) continue;
+        total_read += recv_size;
+        if (total_read >= size) break;
     }
 
     return recv_size;
@@ -375,6 +381,14 @@ static int at_send_data_2stage(const char *fst, const char *data,
     }
     LOGD(MODULE_NAME, "Sending 2stage data %s", data);
 
+    if ((ret = hal_uart_send(&at._uart, (void *)at._send_delimiter,
+      strlen(at._send_delimiter), at._timeout)) != 0) {
+        aos_mutex_unlock(&at._mutex);
+        LOGE(MODULE_NAME, "uart send delimiter failed");
+        goto end;
+    }
+    LOGD(MODULE_NAME, "Sending delimiter %s", at._send_delimiter);
+
     aos_mutex_unlock(&at._mutex);
     LOGD(MODULE_NAME, "%s: at lock released", __func__);
     /* Mutex context end*/
@@ -503,7 +517,7 @@ recv_start:
             goto recv_start;
         }
 
-        if ((offset >= (RECV_BUFFER_SIZE - 1)) ||
+        if ((offset >= (RECV_BUFFER_SIZE - 2)) ||
             (strcmp(&buf[offset - at._recv_delim_size], at._recv_delimiter) == 0)) {
             LOGD(MODULE_NAME, "Save buffer to task rsp, offset: %d", offset);
             memcpy(tsk->rsp + tsk->rsp_offset, buf, offset);
@@ -512,9 +526,10 @@ recv_start:
 
 check_buffer:
         // in case buffer is full
-        if ((offset >= (RECV_BUFFER_SIZE - 1)) ||
+        if ((offset >= (RECV_BUFFER_SIZE - 2)) ||
             (strcmp(&buf[offset - at._recv_delim_size], at._recv_delimiter) == 0)) {
-            LOGD(MODULE_NAME, "buffer full or new line hit, offset: %d", offset);
+            buf[offset+1] = '\0';
+            LOGD(MODULE_NAME, "buffer full or new line hit, offset: %d, buf: %s", offset, buf);
             offset = 0;
         }
     }

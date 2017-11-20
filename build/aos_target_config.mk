@@ -14,7 +14,7 @@ COMPONENT_DIRECTORIES := . \
                          framework \
                          tools     \
                          test      \
-                         devices   \
+                         device    \
                          security
 
 ifneq ($(ONLY_BUILD_LIBRARY), yes)

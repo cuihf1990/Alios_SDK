@@ -7,6 +7,11 @@ HOST_MCU_FAMILY     := linux
 
 $(NAME)_COMPONENTS  :=  tfs
 
+# Change to use the correct deivce here if necessary.
+ifeq ($(sal_wifi),1)
+$(NAME)_COMPONENTS += sal.wifi.mk3060
+endif
+
 CONFIG_LIB_TFS := y
 CONFIG_TFS_ID2_RSA := y
 CONFIG_TFS_ID2_3DES := n
