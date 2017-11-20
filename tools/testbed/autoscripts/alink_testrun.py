@@ -8,7 +8,7 @@ caseids={}
 #mk3060
 caseids['39F841C8CE86C0B5F3FC864925EB1702'] = 26672 #DN02QRK7
 caseids['1B12DA63F1E56C73CE237A495E8C5087'] = 27725 #DN02QRKB
-caseids['82A4C68BA791767250242D4D83594EF3'] = 27885 #DN02QRKQ
+caseids['82A4C68BA791767250242D4D83594EF3'] = 28006 #DN02QRKQ
 caseids['F384E85B01EF16120033B21833C7F0D4'] = 27436 #DN02RDVL
 caseids['E57E046D3A6F91257E2551710E6FED23'] = 27453 #DN02RDVT
 caseids['A9036FCE11259562AC9C90999DA77F15'] = 27470 #DN02RDVV
@@ -88,6 +88,7 @@ def restore_extnetid(at, device_list):
     extnetid = '010203040506'
     for device in device_list:
         at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+        at.device_run_cmd(device, ['umesh', 'whitelist', 'disable'])
 
 #main function
 def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
@@ -252,8 +253,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         return [1, 'uuid {0} invalid'.format(uuid)]
     caseid = caseids[uuid] + testnames[testname]
     caseid = str(caseid)
-    if DEBUG:
-        print "caseid: {0}".format(caseid)
+    print "alink test caseid: {0}".format(caseid)
 
     #check test case status
     already_running = False

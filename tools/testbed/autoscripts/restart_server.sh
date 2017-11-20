@@ -8,4 +8,7 @@ fi
 if [ -f /tmp/.testbed_server_34567 ]; then
     rm -rf /tmp/.testbed_server_34567
 fi
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
 screen -dmL python utest.py server
