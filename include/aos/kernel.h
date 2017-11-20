@@ -169,7 +169,7 @@ int aos_mutex_unlock(aos_mutex_t *mutex);
  *
  * @param[in]  mutex  pointer to the mutex.
  *
- * @return  0: success.
+ * @return  0: invalid, 1: valid.
  */
 int aos_mutex_is_valid(aos_mutex_t *mutex);
 
@@ -214,7 +214,7 @@ void aos_sem_signal(aos_sem_t *sem);
  *
  * @param[in]  sem  pointer to the semaphore.
  *
- * @return  0: success.
+ * @return  0: invalid, 1: valid.
  */
 int aos_sem_is_valid(aos_sem_t *sem);
 
@@ -272,7 +272,7 @@ int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg, unsigned int 
  *
  * @param[in]  queue  pointer to the queue.
  *
- * @return  0: success.
+ * @return  0: invalid, 1: valid.
  */
 int aos_queue_is_valid(aos_queue_t *queue);
 
