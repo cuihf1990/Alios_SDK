@@ -6,6 +6,7 @@ def restore_extnetid(at, device_list):
     extnetid = '010203040506'
     for device in device_list:
         at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+        at.device_run_cmd(device, ['umesh', 'whitelist', 'disable'])
 
 def main(firmware='~/lb-all.bin', model='mk3060'):
     ap_ssid = 'aos_test_01'
