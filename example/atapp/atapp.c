@@ -292,8 +292,6 @@ static void do_tcp_socket(void *in)
     }
 
 end:
-    //aos_msleep(5000);
-
     if (sal_op.close(c->fd, c->r_port) != 0) {
         LOGE("atapp", "sal_op.stop failed (%d).", c->fd);
         return;

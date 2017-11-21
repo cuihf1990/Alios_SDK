@@ -24,6 +24,16 @@ typedef struct {
     uint32_t tcp_keep_alive; /* tcp keep alive value (set to 0 if not used) */
 } at_conn_t;
 
+typedef enum netconn_evt {
+    NETCONN_EVT_RCVPLUS,
+    NETCONN_EVT_RCVMINUS,
+    NETCONN_EVT_SENDPLUS,
+    NETCONN_EVT_SENDMINUS,
+    NETCONN_EVT_ERROR
+} netconn_evt_t;
+
+typedef void (*netconn_evt_cb_t)(int s, enum netconn_evt evt);
+
 typedef struct sal_op_s {
     char *version; /* Reserved for furture use. */
 
@@ -100,6 +110,11 @@ typedef struct sal_op_s {
      * @return  0 - success, -1 - failure
      */
     int (*deinit)(void);
+
+    /**
+     * Register network connection event callback function.
+     */
+    int (*register_netconn_evt_cb)(netconn_evt_cb_t cb);
 } sal_op_t;
 
 /* Define it in platform code. */
