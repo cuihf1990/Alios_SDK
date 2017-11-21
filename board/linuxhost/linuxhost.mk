@@ -8,7 +8,7 @@ HOST_MCU_FAMILY     := linux
 $(NAME)_COMPONENTS  :=  tfs
 
 # Change to use the correct deivce here if necessary.
-ifeq ($(sal_wifi),1)
+ifeq ($(sal),1)
 $(NAME)_COMPONENTS += sal.wifi.mk3060
 endif
 

@@ -191,7 +191,7 @@ static void handle_test_at_enet(char *pwbuf, int len, int argc, char **argv)
 }
 #endif
 
-#ifdef WITH_SAL_WIFI
+#ifdef WITH_SAL
 #include <sal.h>
 struct socket_arg {
     at_conn_t *c;
@@ -316,7 +316,7 @@ static struct cli_command atcmds[] = {
         .function = handle_test_at_enet
     },
 #endif
-#ifdef WITH_SAL_WIFI
+#ifdef WITH_SAL
     {
         .name = "test_sal_wifi_api",
         .help = "test_sal_wifi_api type [ip|domain rp|lp data]",
