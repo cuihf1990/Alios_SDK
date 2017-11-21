@@ -927,9 +927,7 @@ static ur_error_t handle_attach_response(message_t *message)
     }
 
     g_mm_state.device.state = DEVICE_STATE_ATTACHED;
-    if (network->attach_timer) {
-        ur_stop_timer(&network->attach_timer, network);
-    }
+    ur_stop_timer(&network->attach_timer, network);
 
     error = sid_allocated_handler(info, tlvs, tlvs_length);
     if (error != UR_ERROR_NONE) {
