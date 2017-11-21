@@ -369,14 +369,9 @@ static void dijkstra(void)
     figure_out_routing_info();
 }
 
-static void stop_topology_sync_timer()
-{
-    ur_stop_timer(&g_vr_state.sync_timer, NULL);
-}
-
 static void restart_topology_sync_timer()
 {
-    stop_topology_sync_timer();
+    ur_stop_timer(&g_vr_state.sync_timer, NULL);
     g_vr_state.sync_timer = ur_start_timer(TOPOLOGY_SYNC_TIMEOUT,
                                            handle_topology_sync_timer, NULL);
 }
@@ -635,7 +630,7 @@ static ur_error_t handle_topology_sync_ack(const uint8_t *data, uint16_t length)
             send_topology_sync_data();
             break;
         case TOPOLOGY_SYNC_SERVER_EXITING:
-            stop_topology_sync_timer();
+            ur_stop_timer(&g_vr_state.sync_timer, NULL);
             if (g_vr_state.sync_state != NULL) {
                 ur_mem_free(g_vr_state.sync_state, sizeof(sync_state_t));
                 g_vr_state.sync_state = NULL;
@@ -692,7 +687,7 @@ static ur_error_t handle_topology_sync_data(const uint8_t *data,
                        sizeof(ack));
         ur_router_send_message(&g_vr_state.router, cmd->sid, (uint8_t *)&ack,
                                sizeof(ack));
-        stop_topology_sync_timer();
+        ur_stop_timer(&g_vr_state.sync_timer, NULL);
     }
 
     if (g_vr_state.status != STATUS_SYNC_TOPOLOGY ||
@@ -736,7 +731,7 @@ static ur_error_t handle_topology_sync_data(const uint8_t *data,
     if (g_vr_state.sync_status == TOPOLOGY_SYNC_CLIENT_RECEIVING_DATA) {
         return UR_ERROR_NONE;
     } else {
-        stop_topology_sync_timer();
+        ur_stop_timer(&g_vr_state.sync_timer, NULL);
     }
 
     if (g_vr_state.sync_state != NULL) {
@@ -1032,14 +1027,8 @@ ur_error_t vector_router_deinit(void)
         g_vr_state.sync_state = NULL;
     }
 
-    if (g_vr_state.sync_timer != NULL) {
-        ur_stop_timer(&g_vr_state.sync_timer, NULL);
-    }
-
-    if (g_vr_state.heartbeat_timer != NULL) {
-        ur_stop_timer(&g_vr_state.heartbeat_timer, NULL);
-    }
-
+    ur_stop_timer(&g_vr_state.sync_timer, NULL);
+    ur_stop_timer(&g_vr_state.heartbeat_timer, NULL);
     return UR_ERROR_NONE;
 }
 
