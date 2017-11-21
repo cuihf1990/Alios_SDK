@@ -2,12 +2,12 @@
 
 mesh_tests="line_topology_v4_test.py tree_topology_v4_test.py mcast_v4_test.py"
 recipients="apsaras73@list.alibaba-inc.com"
-meshrecipients="wanglu.luwang@alibaba-inc.com wenjunchen.cwj@alibaba-inc.com simen.cjj@alibaba-inc.com lc122798@alibaba-inc.com"
+meshrecipients="xiaoma.mx@alibaba-inc.com gubiao.dc@alibaba-inc.com yuanlu.gl@alibaba-inc.com wanglu.luwang@alibaba-inc.com wenjunchen.cwj@alibaba-inc.com simen.cjj@alibaba-inc.com lc122798@alibaba-inc.com"
 #recipients="lc122798@alibaba-inc.com"
 #meshrecipients="lc122798@alibaba-inc.com"
 logfile=~/auto_test_log.txt
-success_num=0
-fail_num=0
+mesh_pass_total=0
+mesh_fail_total=0
 mk3060firmware=""
 esp32firmware=""
 
@@ -43,25 +43,58 @@ fi
 
 if [ -f ${mk3060firmware} ]; then
     model="mk3060"
-    echo -e "Start AOS functional automatic test with ${model}\n" >> ${logfile}
+    mesh_pass=0
+    mesh_fail=0
+    echo -e "Start MESH functional autotest with ${model} ...\n" >> ${logfile}
     for test in ${mesh_tests}; do
         echo -e "\n---------------------------------------------------------\n" >> ${logfile}
         echo -e "start ${test}\n" >> ${logfile}
-        python ipv4/${test} --firmware=${mk3060firmware} >> ${logfile} 2>&1
+        python ipv4/${test} --firmware=${mk3060firmware} --model=${model} >> ${logfile} 2>&1
         if [ $? -eq 0 ]; then
             ret="success"
-            success_num=$((success_num+1))
+            mesh_pass_total=$((mesh_pass_total+1))
+            mesh_pass=$((mesh_pass+1))
         else
             ret="fail"
-            fail_num=$((fail_num+1))
+            mesh_fail_total=$((mesh_fail_total+1))
+            mesh_fail=$((mesh_fail+1))
         fi
         echo -e "\nfinished ${test}, result=${ret}" >> ${logfile}
     done
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
-    echo -e "AOS functional automactic test with ${model} finished, SUCCESS:${success_num}, FAIL:${fail_num}\n" >> ${logfile}
+    echo -e "Finished MESH functional autotest with ${model}, PASS:${mesh_pass} FAIL:${mesh_fail}\n" >> ${logfile}
 
-    #send result to mesh group first
-    title="Mesh ${model} autotest: SUCCESS-${success_num}, FAIL-${fail_num}"
+    title=" ${model}-PASS-${mesh_pass} FAIL-${mesh_fail};"
+fi
+if [ -f ${esp32firmware} ]; then
+    model="esp32"
+    mesh_pass=0
+    mesh_fail=0
+    echo -e "Start MESH functional autotest with ${model} ...\n" >> ${logfile}
+    for test in ${mesh_tests}; do
+        echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+        echo -e "start ${test}\n" >> ${logfile}
+        python ipv4/${test} --firmware=${esp32firmware} --model={model} >> ${logfile} 2>&1
+        if [ $? -eq 0 ]; then
+            ret="success"
+            mesh_pass_total=$((mesh_pass_total+1))
+            mesh_pass=$((mesh_pass+1))
+        else
+            ret="fail"
+            mesh_fail_total=$((mesh_fail_total+1))
+            mesh_fail=$((mesh_fail+1))
+        fi
+        echo -e "\nfinished ${test}, result=${ret}" >> ${logfile}
+    done
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    echo -e "Finished MESH functional automactic test with ${model}, PASS:${mesh_pass} FAIL:${mesh_fail}\n" >> ${logfile}
+
+    title=" ${model}-PASS:${mesh_pass} FAIL:${mesh_fail};"
+fi
+
+#send result to mesh group first
+if [ -f ${mk3060firmware} ] || [ -f ${esp32firmware} ]; then
+    title="Mesh Autotest:${title}"
     cat ${logfile} | mutt -s "${title}" -- ${meshrecipients}
 fi
 
@@ -93,10 +126,10 @@ if [ -f ${mk3060firmware} ]; then
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     if [ ${mk3060_5ppsRet} -eq 0 ]; then
         echo -e "run Alink 5PPS test with mk3060 succeed, log:\n" >> ${logfile}
-        title="${title} MK3060: 5PPS-SUCCESS,"
+        title="${title} MK3060: 5PPS-PASS"
     else
         echo -e "run Alink 5PPS test with mk3060 failed, log:\n" >> ${logfile}
-        title="${title} MK3060: 5PPS-FAIL,"
+        title="${title} MK3060: 5PPS-FAIL"
     fi
     cat ~/mk3060_5pps.txt >> ${logfile}
     rm -f ~/mk3060_5pps.txt
@@ -104,7 +137,7 @@ if [ -f ${mk3060firmware} ]; then
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     if [ ${mk3060_2ppsRet} -eq 0 ]; then
         echo -e "run Alink 2PPS test with mk3060 succeed, log:\n" >> ${logfile}
-        title="${title} 2PPS-SUCCESS;"
+        title="${title} 2PPS-PASS;"
     else
         echo -e "run Alink 2PPS test with mk3060 failed, log:\n" >> ${logfile}
         title="${title} 2PPS-FAIL;"
@@ -121,10 +154,10 @@ if [ -f ${esp32firmware} ]; then
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     if [ ${esp32_5ppsRet} -eq 0 ]; then
         echo -e "run Alink 5PPS test with esp32 succeed, log:\n" >> ${logfile}
-        title="${title} ESP32: 5PPS-SUCCESS,"
+        title="${title} ESP32: 5PPS-PASS"
     else
         echo -e "run Alink 5PPS test with esp32 failed, log:\n" >> ${logfile}
-        title="${title} ESP32: 5PPS-FAIL,"
+        title="${title} ESP32: 5PPS-FAIL"
     fi
     cat ~/esp32_5pps.txt >> ${logfile}
     rm -f ~/esp32_5pps.txt
@@ -132,7 +165,7 @@ if [ -f ${esp32firmware} ]; then
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     if [ ${esp32_2ppsRet} -eq 0 ]; then
         echo -e "run Alink 2PPS test with esp32 succeed, log:\n" >> ${logfile}
-        title="${title} 2PPS-SUCCESS;"
+        title="${title} 2PPS-PASS;"
     else
         echo -e "run Alink 2PPS test with esp32 failed, log:\n" >> ${logfile}
         title="${title} 2PPS-FAIL;"
@@ -142,6 +175,6 @@ if [ -f ${esp32firmware} ]; then
 fi
 
 #send email
-title="Autotest: mesh SUCCESS-${success_num}, FAIL-${fail_num};${title}"
+title="Autotest: MESH: PASS-${mesh_pass_total} FAIL-${mesh_fail_total};${title}"
 cat ${logfile} | mutt -s "${title}" -- ${recipients}
 rm -f ${logfile}
