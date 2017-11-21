@@ -195,7 +195,7 @@ static void handle_update_nbr_timer(void *args)
     hal->update_nbr_timer = ur_start_timer(hal->advertisement_interval,
                                            handle_update_nbr_timer, hal);
     slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-        if (node->state < STATE_NEIGHBOR) {
+        if (node->state < STATE_NEIGHBOR || (node->mode & MODE_RX_ON) == 0) {
             continue;
         }
 
@@ -265,7 +265,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_UCAST_CHANNEL);
 
     // remove nbr, if mode changed
-    if (nbr && info->mode && nbr->mode != 0 && nbr->mode != info->mode) {
+    if (nbr && nbr->mode != info->mode) {
         remove_neighbor(hal, nbr);
         nbr = NULL;
     }
@@ -281,10 +281,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
         return NULL;
     }
 
-    if (info->mode) {
-        nbr->mode = (node_mode_t)info->mode;
-    }
-
+    nbr->mode = (node_mode_t)info->mode;
     if (nbr->state < STATE_CANDIDATE) {
         nbr->state = STATE_NEIGHBOR;
         nbr->stats.link_cost = 256;
@@ -292,9 +289,11 @@ neighbor_t *update_neighbor(const message_info_t *info,
     if (path_cost != NULL) {
         nbr->path_cost = path_cost->cost;
     }
+
     if (nbr->sid != info->src.addr.short_addr) {
         nbr->flags |= NBR_SID_CHANGED;
     }
+
     if (nbr->netid != info->src.netid) {
         nbr->flags |= NBR_NETID_CHANGED;
     }
@@ -334,14 +333,14 @@ neighbor_t *update_neighbor(const message_info_t *info,
             nbr->state = STATE_CHILD;
         }
     }
-    nbr->sid = info->src.addr.short_addr;
-    nbr->netid = info->src.netid;
-    g_neighbor_updater_head(nbr);
 
-    if (hal->update_nbr_timer == NULL) {
+    if (hal->update_nbr_timer == NULL && (umesh_mm_get_mode() & MODE_RX_ON)) {
         hal->update_nbr_timer = ur_start_timer(hal->advertisement_interval,
                                                handle_update_nbr_timer, hal);
     }
+    nbr->sid = info->src.addr.short_addr;
+    nbr->netid = info->src.netid;
+    g_neighbor_updater_head(nbr);
 
 exit:
     if (nbr) {

@@ -108,20 +108,20 @@ static void subnet_is_wifi_case(void)
     build_topo_wifi();
     umesh_stop();
 
-    start_node_ext(1, MODE_SUPER, -1, 1);
+    start_node_ext(1, MODE_SUPER | MODE_RX_ON, -1, 1);
     check_p2p_str_wait("leader", 1, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 1, "testcmd router", 2);
 
-    umesh_set_mode(MODE_SUPER);
+    umesh_set_mode(MODE_SUPER | MODE_RX_ON);
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_SUPER_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == VECTOR_ROUTER);
 
-    start_node_ext(2, MODE_SUPER, -1, 1);
+    start_node_ext(2, MODE_SUPER | MODE_RX_ON, -1, 1);
     check_p2p_str_wait("super_router", 2, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 2, "testcmd router", 2);
 
-    start_node_ext(4, MODE_SUPER, -1, 1);
+    start_node_ext(4, MODE_SUPER | MODE_RX_ON, -1, 1);
     check_p2p_str_wait("super_router", 4, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 4, "testcmd router", 2);
 
@@ -151,7 +151,7 @@ static void subnet_is_wifi_case(void)
     check_p2p_str_wait("router", 9, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 9, "testcmd router", 2);
 
-    start_node_ext(10, MODE_MOBILE, -1, 1);
+    start_node_ext(10, MODE_MOBILE | MODE_RX_ON, -1, 1);
     check_p2p_str_wait("leaf", 10, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 10, "testcmd router", 2);
 
@@ -183,19 +183,19 @@ static void subnet_is_ble_case(void)
 
     umesh_stop();
 
-    start_node_ext(153, MODE_SUPER, -1, 3);
+    start_node_ext(153, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("leader", 153, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 153, "testcmd router", 2);
 
-    start_node_ext(151, MODE_SUPER, -1, 3);
+    start_node_ext(151, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("super_router", 151, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 151, "testcmd router", 2);
 
-    start_node_ext(152, MODE_SUPER, -1, 3);
+    start_node_ext(152, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("super_router", 152, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 152, "testcmd router", 2);
 
-    start_node_ext(154, MODE_SUPER, -1, 3);
+    start_node_ext(154, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("super_router", 154, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 154, "testcmd router", 2);
 
@@ -225,7 +225,7 @@ static void subnet_is_ble_case(void)
     check_p2p_str_wait("router", 157, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 157, "testcmd router", 2);
 
-    start_node_ext(158, MODE_MOBILE, -1, 2);
+    start_node_ext(158, MODE_MOBILE | MODE_RX_ON, -1, 2);
     check_p2p_str_wait("leaf", 158, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 158, "testcmd router", 2);
 

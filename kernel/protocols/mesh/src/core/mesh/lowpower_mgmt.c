@@ -86,7 +86,7 @@ static void sleep_timer_handler(void *args)
     ur_mem_free(args, sizeof(schedule_type_t));
     if (g_lowpower_state.enabled == true) {
         update_schedule_timer(type);
-        if ((umesh_get_mode() & MODE_MOBILE) && g_lowpower_state.sleep_timer == NULL &&
+        if ((umesh_get_mode() & MODE_RX_ON) == 0 && g_lowpower_state.sleep_timer == NULL &&
             g_lowpower_state.parent_sleep_timer == NULL) {
             MESH_LOG_DEBUG("radio goto sleep at %d", umesh_now_ms());
             umesh_pal_sleep();
@@ -110,7 +110,7 @@ static void wakeup_timer_handler(void *args)
 {
     schedule_type_t type = *(schedule_type_t *)args;
 
-    if (umesh_get_mode() & MODE_MOBILE) {
+    if ((umesh_get_mode() & MODE_RX_ON) == 0) {
         MESH_LOG_DEBUG("radio wakeup at %d", umesh_now_ms());
         umesh_pal_wakeup();
     }
@@ -138,7 +138,7 @@ static ur_error_t mesh_interface_up(void)
 {
     uint8_t state = umesh_get_device_state();
 
-    if ((umesh_mm_get_mode() & MODE_MOBILE) &&
+    if ((umesh_mm_get_mode() & MODE_RX_ON) == 0 &&
         state != DEVICE_STATE_LEADER && state != DEVICE_STATE_SUPER_ROUTER) {
         MESH_LOG_DEBUG("lowpower interface up");
         update_schedule_timer(PARENT_SCHEDULE);
@@ -174,8 +174,4 @@ void lowpower_stop(void)
     g_lowpower_state.enabled = false;
     ur_stop_timer(&g_lowpower_state.parent_wakeup_timer, NULL);
     ur_stop_timer(&g_lowpower_state.wakeup_timer, NULL);
-
-    if (umesh_get_mode() & MODE_MOBILE) {
-        umesh_pal_wakeup();
-    }
 }

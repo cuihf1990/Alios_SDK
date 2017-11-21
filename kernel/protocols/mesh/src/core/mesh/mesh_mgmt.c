@@ -141,8 +141,9 @@ static void start_advertisement_timer(void *args)
 {
     network_context_t *network = (network_context_t *)args;
 
-    ur_stop_timer(&network->advertisement_timer, network);
-    if (send_advertisement(network) != UR_ERROR_FAIL) {
+    send_advertisement(network);
+    if (umesh_mm_get_mode() & MODE_RX_ON) {
+        ur_stop_timer(&network->advertisement_timer, network);
         network->advertisement_timer = ur_start_timer(network->hal->advertisement_interval,
                                                       start_advertisement_timer, network);
     }
@@ -1636,10 +1637,6 @@ ur_error_t umesh_mm_set_mode(node_mode_t mode)
     uint8_t       num;
     hal_context_t *wifi_hal;
 
-    if (mode == MODE_NONE) {
-        return UR_ERROR_FAIL;
-    }
-
     num = get_hal_contexts_num();
     wifi_hal = get_hal_context(MEDIA_TYPE_WIFI);
     if (mode & MODE_SUPER) {
@@ -1661,6 +1658,8 @@ node_mode_t umesh_mm_get_mode(void)
 
 int8_t umesh_mm_compare_mode(node_mode_t local, node_mode_t other)
 {
+    local &= (~MODE_RX_ON);
+    other &= (~MODE_RX_ON);
     if ((local & MODE_HI_MASK) == (other & MODE_HI_MASK)) {
         if ((local & MODE_LOW_MASK) == (other & MODE_LOW_MASK) ||
             ((local & MODE_LOW_MASK) != 0 && (other & MODE_LOW_MASK) != 0)) {

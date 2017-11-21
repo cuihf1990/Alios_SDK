@@ -93,6 +93,7 @@ enum {
 #define get_leader_sid(nid) (((nid) & SUB_NETID_MASK) >> 2)
 #define is_same_subnet(nid1, nid2) (get_sub_netid(nid1) == get_sub_netid(nid2))
 #define is_same_mainnet(nid1, nid2) (get_main_netid(nid1) == get_main_netid(nid2))
+#define is_unique_netid(netid) (netid != BCAST_NETID && netid != INVALID_NETID)
 
 typedef struct mesh_header_control_s {
     uint8_t control[3];

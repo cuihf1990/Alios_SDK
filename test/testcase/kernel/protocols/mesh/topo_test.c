@@ -38,7 +38,7 @@ static void one_super_router_case(void)
     set_full_rssi(151, 155);
     cmd_to_agent("stop");
 
-    start_node_ext(151, MODE_SUPER, -1, 3);
+    start_node_ext(151, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("leader", 151, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 151, "testcmd router", 2);
 
@@ -100,11 +100,11 @@ static void two_super_router_case(void)
     set_full_rssi(151, 156);
     cmd_to_agent("stop");
 
-    start_node_ext(151, MODE_SUPER, -1, 3);
+    start_node_ext(151, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("leader", 151, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 151, "testcmd router", 2);
 
-    start_node_ext(152, MODE_SUPER, -1, 3);
+    start_node_ext(152, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("super_router", 152, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 152, "testcmd router", 2);
 
