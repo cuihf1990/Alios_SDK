@@ -55,6 +55,7 @@ typedef struct link_s {
 static slist_t g_data;
 static aos_mutex_t g_data_mutex;
 static link_t g_link[LINK_ID_MAX];// = {{-1, {NULL}}};
+static aos_mutex_t g_link_mutex;
 
 static void handle_server_conn_state(uint8_t link_id)
 {
@@ -63,7 +64,12 @@ static void handle_server_conn_state(uint8_t link_id)
     at.read(s, 13);
     if (strstr(s, "CLOSED") != NULL) {
         // Clear fd_map here
+        if (aos_mutex_lock(&g_link_mutex, AOS_WAIT_FOREVER) != 0) {
+            LOGE(TAG, "Failed to lock mutex (%s).", __func__);
+            return;
+        }
         g_link[link_id].fd = -1;
+        aos_mutex_unlock(&g_link_mutex);
         if (aos_sem_is_valid(&g_link[link_id].sem_close)) {
             LOGD(TAG, "sem is going to be waked up: 0x%x", &g_link[link_id].sem_close);
             aos_sem_signal(&g_link[link_id].sem_close); // wakeup send task
@@ -222,7 +228,12 @@ int sal_wifi_init(void)
     }
 
     if (0 != aos_mutex_new(&g_data_mutex)) {
-        LOGE(TAG, "Creating mutex failed (%s %d).", __func__, __LINE__);
+        LOGE(TAG, "Creating data mutex failed (%s %d).", __func__, __LINE__);
+        return -1;
+    }
+
+    if (0 != aos_mutex_new(&g_link_mutex)) {
+        LOGE(TAG, "Creating link mutex failed (%s %d).", __func__, __LINE__);
         return -1;
     }
 
@@ -242,6 +253,8 @@ int sal_wifi_deinit(void)
     aos_mutex_free(&g_data_mutex);
     // at.exitoob(NET_OOB_PREFIX); // <TODO>
 
+    aos_mutex_free(&g_link_mutex);
+
     return 0;
 }
 
@@ -253,10 +266,15 @@ static char *start_cmd_type_str[] = {"tcp_server", "tcp_client", \
 int sal_wifi_start(at_conn_t *c)
 {
     int link_id;
-    char cmd[START_CMD_LEN] = {0}, out[64];
+    char cmd[START_CMD_LEN] = {0}, out[256];
 
     if (!c || !c->addr) {
         LOGE(TAG, "%s %d - invalid argument", __func__, __LINE__);
+        return -1;
+    }
+
+    if (aos_mutex_lock(&g_link_mutex, AOS_WAIT_FOREVER) != 0) {
+        LOGE(TAG, "Failed to lock mutex (%s).", __func__);
         return -1;
     }
 
@@ -264,6 +282,8 @@ int sal_wifi_start(at_conn_t *c)
         if (g_link[link_id].fd >= 0) continue;
         else {g_link[link_id].fd = c->fd; break;}
     }
+
+    aos_mutex_unlock(&g_link_mutex);
 
     // The caller should deal with this failure
     if (link_id >= LINK_ID_MAX) {
@@ -345,6 +365,8 @@ int sal_wifi_send(int fd,
     char cmd[SEND_CMD_LEN] = {0}, out[128] = {0};
 
     if (!data) return -1;
+
+    LOGD(TAG, "%s on fd %d", __func__, fd);
 
     link_id = fd_to_linkid(fd);
     if (link_id >= LINK_ID_MAX) {
