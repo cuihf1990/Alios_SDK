@@ -56,6 +56,7 @@ static slist_t g_data;
 static aos_mutex_t g_data_mutex;
 static link_t g_link[LINK_ID_MAX];// = {{-1, {NULL}}};
 static aos_mutex_t g_link_mutex;
+static netconn_evt_cb_t g_netconn_evt_cb;
 
 static void handle_server_conn_state(uint8_t link_id)
 {
@@ -164,6 +165,10 @@ static void handle_socket_data()
     aos_mutex_unlock(&g_data_mutex);
 
     LOGD(TAG, "%s socket data with length %d saved to slist", __func__, len);
+
+    if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVPLUS);
+    }
 }
 
 /**
@@ -552,6 +557,11 @@ int sal_wifi_close(int fd,
     return 0;
 }
 
+int sal_wifi_register_netconn_evt_cb(netconn_evt_cb_t cb)
+{
+    if (cb) g_netconn_evt_cb = cb;
+}
+
 sal_op_t sal_op = {
     .version = "1.0.0",
     .init = sal_wifi_init,
@@ -560,5 +570,6 @@ sal_op_t sal_op = {
     .recv = sal_wifi_recv,
     .domain_to_ip = sal_wifi_domain_to_ip,
     .close = sal_wifi_close,
-    .deinit = sal_wifi_deinit
+    .deinit = sal_wifi_deinit,
+    .register_netconn_evt_cb = sal_wifi_register_netconn_evt_cb
 };
