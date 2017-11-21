@@ -223,7 +223,7 @@ static void net_event_handler(void *arg)
 static uint8_t inited = 0;
 
 #define NET_OOB_PREFIX "+CIPEVENT:"
-int sal_wifi_init(void)
+static int sal_wifi_init(void)
 {
     int link;
 
@@ -251,7 +251,7 @@ int sal_wifi_init(void)
     return 0;
 }
 
-int sal_wifi_deinit(void)
+static int sal_wifi_deinit(void)
 {
     if (!inited) return 0;
 
@@ -361,7 +361,7 @@ static int fd_to_linkid(int fd)
 
 #define SEND_CMD "AT+CIPSEND"
 #define SEND_CMD_LEN (sizeof(SEND_CMD)+1+1+5+1+DATA_LEN_MAX+1)
-int sal_wifi_send(int fd,
+static int sal_wifi_send(int fd,
                   int32_t remote_port,
                   uint8_t *data,
                   uint32_t len)
@@ -415,7 +415,7 @@ typedef struct sk_data_s {
  * This func operates on g_data list to obtain socket data for caller.
  * Make sure to consume from the front to end so to ensure data order.
  */
-int sal_wifi_recv(int fd,
+static int sal_wifi_recv(int fd,
                   int32_t local_port,
                   uint8_t *buf,
                   uint32_t *plen)
@@ -461,7 +461,7 @@ int sal_wifi_recv(int fd,
 #define DOMAIN_CMD "AT+CIPDOMAIN"
 #define DOMAIN_CMD_LEN (sizeof(DOMAIN_CMD)+MAX_DOMAIN_LEN+1)
 /* Return the first IP if multiple found. */
-int sal_wifi_domain_to_ip(char *domain,
+static int sal_wifi_domain_to_ip(char *domain,
                           char ip[16])
 {
     char cmd[DOMAIN_CMD_LEN] = {0}, out[256] = {0}, *head, *end;
@@ -517,7 +517,7 @@ err:
 /* <TODO> close should clean the socket data buffer realted to the link id. */
 #define STOP_CMD "AT+CIPSTOP"
 #define STOP_CMD_LEN (sizeof(STOP_CMD)+1+1+5+1)
-int sal_wifi_close(int fd,
+static int sal_wifi_close(int fd,
                    int32_t remote_port)
 {
     int link_id;
@@ -557,9 +557,10 @@ int sal_wifi_close(int fd,
     return 0;
 }
 
-int sal_wifi_register_netconn_evt_cb(netconn_evt_cb_t cb)
+static int sal_wifi_register_netconn_evt_cb(netconn_evt_cb_t cb)
 {
     if (cb) g_netconn_evt_cb = cb;
+    return 0;
 }
 
 sal_op_t sal_op = {
