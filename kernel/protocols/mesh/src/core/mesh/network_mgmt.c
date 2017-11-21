@@ -35,7 +35,7 @@ static void handle_discovery_timer(void *args)
         hal->discovery_times++;
     }
 
-    if (hal->discovery_result.meshnetid != BCAST_NETID) {
+    if (is_unique_netid(hal->discovery_result.meshnetid)) {
         mm_netinfo_tv_t netinfo;
         nbr = get_neighbor_by_mac_addr(hal->discovery_result.addr.addr);
         netinfo.leader_mode = hal->discovery_result.leader_mode;

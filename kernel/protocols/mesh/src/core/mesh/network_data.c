@@ -109,7 +109,7 @@ ur_error_t nd_set_stable_meshnetid(uint16_t meshnetid)
     }
 
     memcpy(&network_data, &g_nd_state.stable_network_data, sizeof(network_data));
-    if (network_data.meshnetid != meshnetid && meshnetid != INVALID_NETID) {
+    if (is_unique_netid(meshnetid) && network_data.meshnetid != meshnetid) {
         network_data.minor_version++;
         network_data.meshnetid = meshnetid;
         network_data.mcast_addr[0].m8[6] = (meshnetid >> 8);

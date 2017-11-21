@@ -1127,7 +1127,7 @@ ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data,
             vertex_me->sid = netids->sid;
             send_vertex_update(vertex_me->ueid, vertex_me->sid, BCAST_SID);
         } else {
-            if (g_vr_state.meshnetid != INVALID_NETID) {
+            if (is_unique_netid(g_vr_state.meshnetid)) {
                 vector_router_deinit();
                 vector_router_init();
             }

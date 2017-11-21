@@ -419,8 +419,7 @@ static ur_error_t send_address_query_response(network_context_t *network,
 
     length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t) +
              sizeof(mm_ueid_tv_t);
-    if (attach_node->sid != INVALID_SID &&
-        attach_node->meshnetid != INVALID_NETID) {
+    if (attach_node->sid != INVALID_SID && is_unique_netid(attach_node->meshnetid)) {
         length += sizeof(mm_node_id_tv_t);
     }
 
@@ -433,8 +432,7 @@ static ur_error_t send_address_query_response(network_context_t *network,
     data += set_mm_node_id_tv(data, TYPE_NODE_ID, target_node);
     data += set_mm_ueid_tv(data, TYPE_TARGET_UEID, target_node->ueid);
 
-    if (attach_node->sid != INVALID_SID &&
-        attach_node->meshnetid != INVALID_NETID) {
+    if (attach_node->sid != INVALID_SID && is_unique_netid(attach_node->meshnetid)) {
         data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, attach_node);
     }
 
@@ -489,8 +487,7 @@ ur_error_t handle_address_query_response(message_t *message)
         goto exit;
     }
 
-    if (attach_id && (attach_id->sid == INVALID_SID ||
-                      attach_id->meshnetid == INVALID_NETID)) {
+    if (attach_id && (attach_id->sid == INVALID_SID || !is_unique_netid(attach_id->meshnetid))) {
         error = UR_ERROR_DROP;
         goto exit;
     }
