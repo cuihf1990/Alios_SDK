@@ -11,6 +11,13 @@
 #define NUM_EVENTS  MEMP_NUM_NETCONN
 
 #define SAL_ASSERT(message, assertion)
+
+#define SAL_EVENT_OFFSET (NUM_SOCKETS + SAL_SOCKET_OFFSET)
+
+#ifndef SELWAIT_T
+#define SELWAIT_T uint8_t
+#endif
+
 static int  sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_set *exceptset_in,
                         fd_set *readset_out, fd_set *writeset_out, fd_set *exceptset_out);
 
@@ -18,7 +25,7 @@ static struct sal_sock *tryget_socket(int s);
 
 static struct sal_event *tryget_event(int s);
 
-#define SAL_EVENT_OFFSET (NUM_SOCKETS + SAL_SOCKET_OFFSET)
+
 struct sal_event {
     uint64_t counts;
     int used;
@@ -28,9 +35,7 @@ struct sal_event {
     sal_sem_t *psem;
 };
 
-#ifndef SELWAIT_T
-#define SELWAIT_T uint8_t
-#endif
+
 
 /** Contains all internal pointers and states used for a socket */
 struct sal_sock {
@@ -118,10 +123,10 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
 #endif
     SAL_ARCH_DECL_PROTECT(lev);
 
-    SAL_DEBUG(("sal_select(%d, %p, %p, %p, tvsec=%d tvusec=%d)\n",
+    SAL_DEBUG("sal_select(%d, %p, %p, %p, tvsec=%d tvusec=%d)",
                     maxfdp1, (void *)readset, (void *) writeset, (void *) exceptset,
                     timeout ? (int32_t)timeout->tv_sec : (int32_t) - 1,
-                    timeout ? (int32_t)timeout->tv_usec : (int32_t) - 1));
+                    timeout ? (int32_t)timeout->tv_usec : (int32_t) - 1);
 
     /* Go through each socket in each list to count number of sockets which
        currently match */
@@ -130,7 +135,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
     /* If we don't have any current events, then suspend if we are supposed to */
     if (!nready) {
         if (timeout && timeout->tv_sec == 0 && timeout->tv_usec == 0) {
-            SAL_DEBUG(("sal_select: no timeout, returning 0\n"));
+            SAL_DEBUG("sal_select: no timeout, returning 0");
             /* This is OK as the local fdsets are empty and nready is zero,
                or we would have returned earlier. */
             goto return_copy_fdsets;
@@ -283,7 +288,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
 
         if (waitres == SAL_ARCH_TIMEOUT) {
             /* Timeout */
-            SAL_DEBUG(("sal_select: timeout expired\n"));
+            SAL_DEBUG("sal_select: timeout expired");
             /* This is OK as the local fdsets are empty and nready is zero,
                or we would have returned earlier. */
             goto return_copy_fdsets;
@@ -293,7 +298,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
         nready = sal_selscan(maxfdp1, readset, writeset, exceptset, &lreadset, &lwriteset, &lexceptset);
     }
 
-    SAL_DEBUG(("sal_select: nready=%d\n", nready));
+    SAL_DEBUG("sal_select: nready=%d", nready);
 return_copy_fdsets:
     set_errno(0);
     if (readset) {
@@ -344,19 +349,19 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_
             /* See if netconn of this socket is ready for read */
             if (readset_in && FD_ISSET(i, readset_in) && ((lastdata != NULL) || (rcvevent > 0))) {
                 FD_SET(i, &lreadset);
-                SAL_DEBUG(("sal_selscan: fd=%d ready for reading\n", i));
+                SAL_DEBUG("sal_selscan: fd=%d ready for reading", i);
                 nready++;
             }
             /* See if netconn of this socket is ready for write */
             if (writeset_in && FD_ISSET(i, writeset_in) && (sendevent != 0)) {
                 FD_SET(i, &lwriteset);
-                SAL_DEBUG(("sal_selscan: fd=%d ready for writing\n", i));
+                SAL_DEBUG("sal_selscan: fd=%d ready for writing", i);
                 nready++;
             }
             /* See if netconn of this socket had an error */
             if (exceptset_in && FD_ISSET(i, exceptset_in) && (errevent != 0)) {
                 FD_SET(i, &lexceptset);
-                SAL_DEBUG(("sal_selscan: fd=%d ready for exception\n", i));
+                SAL_DEBUG("sal_selscan: fd=%d ready for exception", i);
                 nready++;
             }
         } else {
@@ -411,7 +416,7 @@ static struct sal_sock *get_socket(int s)
     s -= SAL_SOCKET_OFFSET;
 
     if ((s < 0) || (s >= NUM_SOCKETS)) {
-        SAL_DEBUG(("get_socket(%d): invalid\n", s + SAL_SOCKET_OFFSET));
+        SAL_DEBUG("get_socket(%d): invalid", s + SAL_SOCKET_OFFSET);
         set_errno(EBADF);
         return NULL;
     }
@@ -419,7 +424,7 @@ static struct sal_sock *get_socket(int s)
     sock = &sockets[s];
 
     if (!sock->conn) {
-        SAL_DEBUG(("get_socket(%d): not active\n", s + SAL_SOCKET_OFFSET));
+        SAL_DEBUG("get_socket(%d): not active", s + SAL_SOCKET_OFFSET);
         set_errno(EBADF);
         return NULL;
     }
@@ -655,7 +660,7 @@ int sal_socket(int domain, int type, int protocol)
     return -1;
   }
   conn->fd = i;
-  SAL_DEBUG(("sal_socket new fd %d\n", i));
+  SAL_DEBUG("sal_socket new fd %d", i);
   set_errno(0);
   return i;
 }
@@ -738,12 +743,12 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
     /* Update conn state here <TODO> */
 
     if (err != ERR_OK) {
-        SAL_ERROR("sal_connect(%d) failed, err=%d\n", s, err);
+        SAL_ERROR("sal_connect(%d) failed, err=%d", s, err);
         sock_set_errno(sock, err_to_errno(err));
         return -1;
     }
 
-    SAL_DEBUG("sal_connect(%d) succeeded\n", s);
+    SAL_DEBUG("sal_connect(%d) succeeded", s);
     sock_set_errno(sock, 0);
     return 0;
 }
@@ -772,7 +777,7 @@ int sal_close(int s)
   struct sal_event *event;
   err_t err;
 
-  SAL_DEBUG("sal_close(%d)\n");
+  SAL_DEBUG("sal_close(%d)");
 
   event = tryget_event(s);
   if (event) {
