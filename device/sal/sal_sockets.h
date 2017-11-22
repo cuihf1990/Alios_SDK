@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <aos/aos.h>
 #include "vfs_conf.h"
+#include "sal_arch.h"
 #include "sal.h"
 
 #ifdef __cplusplus
@@ -100,15 +101,17 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen);
 
 #define MEMP_NUM_NETCONN     5//(MAX_SOCKETS_TCP + MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
 
-#define SAL_TAG "sal"
+#define SAL_TAG  "sal"
+
+
 #define SAL_DEBUG(format, ...)  LOGD(SAL_TAG, format, ##__VA_ARGS__)
 #define SAL_ERROR(format, ...)  LOGE(SAL_TAG, format, ##__VA_ARGS__)
 
 #if SAL_NETCONN_SEM_PER_THREAD
-#define SELECT_SEM_T        sys_sem_t*
+#define SELECT_SEM_T        sal_sem_t*
 #define SELECT_SEM_PTR(sem) (sem)
 #else /* SAL_NETCONN_SEM_PER_THREAD */
-#define SELECT_SEM_T        sys_sem_t
+#define SELECT_SEM_T        sal_sem_t
 #define SELECT_SEM_PTR(sem) (&(sem))
 #endif /* SAL_NETCONN_SEM_PER_THREAD */
 
@@ -140,7 +143,6 @@ typedef struct fd_set {
 #if defined(AOS_CONFIG_VFS_DEV_NODES)
 #define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
 #endif
-typedef aos_sem_t sys_sem_t;
 
 /** Description for a task waiting in select */
 struct sal_select_cb {
