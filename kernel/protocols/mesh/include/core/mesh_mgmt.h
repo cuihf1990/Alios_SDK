@@ -115,9 +115,8 @@ const mac_address_t *umesh_mm_get_mac_address(void);
 node_mode_t         umesh_mm_get_mode(void);
 int8_t              umesh_mm_compare_mode(node_mode_t local, node_mode_t other);
 ur_error_t          umesh_mm_set_mode(node_mode_t mode);
-uint16_t            umesh_mm_get_channel(network_context_t *network);
-void                umesh_mm_set_channel(network_context_t *network,
-                                         uint16_t channel);
+uint16_t umesh_mm_get_channel(hal_context_t *hal);
+void umesh_mm_set_channel(hal_context_t *hal, uint16_t channel);
 ur_error_t          umesh_mm_set_seclevel(int8_t level);
 int8_t              umesh_mm_get_seclevel(void);
 

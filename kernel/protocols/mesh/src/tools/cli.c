@@ -178,7 +178,7 @@ static void get_channel(channel_t *channel)
     if (channel) {
         ur_wifi_hal = hal_umesh_get_default_module();
 
-        channel->wifi_channel = (uint16_t)hal_umesh_get_channel( ur_wifi_hal);
+        channel->wifi_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
         channel->channel = channel->wifi_channel;
         channel->hal_ucast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
         channel->hal_bcast_channel = (uint16_t)hal_umesh_get_channel(ur_wifi_hal);
@@ -240,7 +240,7 @@ void process_networks(int argc, char *argv[])
         response_append("  route id %d\r\n", network->router->id);
         response_append("  netdata version %d\r\n", network->network_data.version);
         response_append("  size %d\r\n", network->network_data.size);
-        response_append("  channel %d\r\n", network->channel);
+        response_append("  channel %d\r\n", network->hal->channel);
     }
 }
 
