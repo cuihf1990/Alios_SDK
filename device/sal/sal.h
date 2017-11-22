@@ -20,7 +20,7 @@ typedef struct {
     CONN_TYPE type;
     char *addr; /* remote ip or domain */
     int32_t r_port; /* remote port (set to -1 if not used) */
-    int32_t l_port; /* local port (set tp -1 if not used) */
+    int32_t l_port; /* local port (set to -1 if not used) */
     uint32_t tcp_keep_alive; /* tcp keep alive value (set to 0 if not used) */
 } at_conn_t;
 
@@ -59,13 +59,15 @@ typedef struct sal_op_s {
      * This function does not return until all data sent.
      *
      * @param[in]  fd - the file descripter to operate on.
-     * @param[in]  remote_port - remote port number.
      * @param[in]  data - pointer to data to send.
      * @param[in]  len - length of the data.
+     * @param[in]  remote_ip - remote port number.
+     * @param[in]  remote_port - remote port number.
      *
      * @return  0 - success, -1 - failure
      */
-    int (*send)(int fd, int32_t remote_port, uint8_t *data, uint32_t len);
+    int (*send)(int fd, uint8_t *data, uint32_t len,
+                char remote_ip[16], int32_t remote_port);
 
     /**
      * Receive data from AT.
@@ -74,14 +76,16 @@ typedef struct sal_op_s {
      * The caller is epected to check the returned len.
      *
      * @param[in]   fd - the file descripter to operate on.
-     * @param[in]   remote_port - remote port number.
      * @param[out]  data - pointer to data to send.
      * @param[out]  len - expected length of the data when IN,
      *                    and real read len when OUT.
+     * @param[out]  remote_ip - remote ip address. Caller manages the memory.
+     * @param[out]  remote_port - remote port number.
      *
      * @return  0 - success, -1 - failure
      */
-    int (*recv)(int fd, int32_t local_port, uint8_t *buf, uint32_t *len);
+    int (*recv)(int fd, uint8_t *buf, uint32_t *len,
+                char remote_ip[16], int32_t remote_port);
 
     /**
      * Get IP information of the corresponding domain.

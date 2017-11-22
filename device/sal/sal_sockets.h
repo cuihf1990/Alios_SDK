@@ -127,16 +127,6 @@ typedef enum {
     ERR_ARG        = -16
 } err_enum_t;
 
-enum netconn_evt {
-    NETCONN_EVT_RCVPLUS,
-    NETCONN_EVT_RCVMINUS,
-    NETCONN_EVT_SENDPLUS,
-    NETCONN_EVT_SENDMINUS,
-    NETCONN_EVT_ERROR
-};
-
-
-
 /** Current state of the netconn. Non-TCP netconns are always
  * in state NETCONN_NONE! */
 enum netconn_state {

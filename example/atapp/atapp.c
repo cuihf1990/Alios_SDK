@@ -191,7 +191,7 @@ static void handle_test_at_enet(char *pwbuf, int len, int argc, char **argv)
 }
 #endif
 
-#ifdef WITH_SAL_WIFI
+#ifdef WITH_SAL
 #include <sal.h>
 struct socket_arg {
     at_conn_t *c;
@@ -263,14 +263,14 @@ static void do_tcp_socket(void *in)
     }
 
     LOGD("atapp", "%s to send on fd %d.", __func__, c->fd);
-    if (sal_op.send(c->fd, -1, data, strlen((const char *)data)) != 0) {
+    if (sal_op.send(c->fd, data, strlen((const char *)data), NULL, -1) != 0) {
         LOGE("atapp", "sal_op.send failed (%d).", c->fd);
         goto end;
     }
 
     while (1) {
         tmp_read = sizeof(tmp) - 1;
-        if(sal_op.recv(c->fd, -1, (uint8_t *)tmp, &tmp_read) < 0) {
+        if(sal_op.recv(c->fd, (uint8_t *)tmp, &tmp_read, NULL, -1) < 0) {
             LOGE("atapp", "sal_op.recv failed (%d).", c->fd);
             break;
         }
@@ -316,7 +316,7 @@ static struct cli_command atcmds[] = {
         .function = handle_test_at_enet
     },
 #endif
-#ifdef WITH_SAL_WIFI
+#ifdef WITH_SAL
     {
         .name = "test_sal_wifi_api",
         .help = "test_sal_wifi_api type [ip|domain rp|lp data]",

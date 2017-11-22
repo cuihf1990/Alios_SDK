@@ -739,3 +739,11 @@ int sal_socket(int domain, int type, int protocol)
   set_errno(0);
   return i;
 }
+
+/* Call this during the init process. */
+int sal_init()
+{
+    LOGI("sal", "Initializing SAL ...");
+    sal_op.register_netconn_evt_cb(&sal_deal_event);
+    return sal_op.init(); /* Low level init. */
+}
