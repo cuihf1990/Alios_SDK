@@ -1,5 +1,5 @@
 import os, sys, time, platform, json, traceback
-import socket, thread, threading, subprocess, signal
+import socket, thread, threading, subprocess, signal, Queue
 import TBframe
 
 DEBUG = True
@@ -50,7 +50,12 @@ class Client:
     def response_filter(self, port, logstr):
         if self.devices[port]['event'].is_set():
             return
+
+        if self.devices[port]['flock'].acquire(False) == False:
+            return
+
         if len(self.devices[port]['filter']) == 0:
+            self.devices[port]['flock'].release()
             return
 
         filter = self.devices[port]['filter']
@@ -72,6 +77,7 @@ class Client:
                         break
             if self.devices[port]['filter']['lines_num'] > filter['lines_exp']:
                 self.devices[port]['event'].set()
+        self.devices[port]['flock'].release()
 
     def poll_run_command(self, port, command, lines_expect, timeout):
         filter = {}
@@ -80,8 +86,9 @@ class Client:
         filter['lines_num'] = 0
         filter['filters'] = [self.poll_str]
         filter['response'] = []
-        self.devices[port]['filter'] = filter
-        ser    = self.devices[port]['serial']
+        with self.devices[port]['flock']:
+            self.devices[port]['filter'] = filter
+        ser = self.devices[port]['serial']
         if self.devices[port]['wlock'].acquire(False):
             self.devices[port]['event'].clear()
             try:
@@ -91,14 +98,19 @@ class Client:
             except:
                 if DEBUG: traceback.print_exc()
                 self.devices[port]['wlock'].release()
-            response = self.devices[port]['filter']['response']
+            with self.devices[port]['flock']:
+                response = self.devices[port]['filter']['response']
         else:
             response = []
-        self.devices[port]['filter'] = {}
+        with self.devices[port]['flock']:
+            self.devices[port]['filter'] = {}
         return response
 
     def device_status_poll(self, port):
         poll_interval = 60
+        poll_fail_num = 0
+        poll_timeout = time.time() + poll_interval
+        poll_queue = Queue.Queue(12)
         if self.devices[port]['attributes'] != {}:
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
             data = TBframe.construct(TBframe.DEVICE_STATUS, content)
@@ -107,81 +119,131 @@ class Client:
         while port in self.devices:
             try:
                 if self.devices[port]['serial'].isOpen() == False:
-                    time.sleep(poll_interval)
+                    time.sleep(0.02)
                     continue
 
-                poll_success = 0
-                #poll device model
-                response = self.poll_run_command(port, 'devname', 1, 0.3)
-                if len(response) == 1 and response[0].startswith('device name:'):
-                    self.devices[port]['attributes']['model'] = response[0].split()[-1]
-                    poll_success += 1
+                if time.time() >= poll_timeout:
+                    poll_timeout += poll_interval
+                    poll_queue.put(['devname', 1, 0.1])
+                    poll_queue.put(['mac', 1, 0.1])
+                    poll_queue.put(['version', 2, 0.1])
+                    poll_queue.put(['umesh status', 11, 0.1])
+                    poll_queue.put(['umesh nbrs', 33, 0.2])
+                    poll_queue.put(['umesh extnetid', 1, 0.1])
+                    poll_queue.put(['uuid', 1, 0.1])
 
-                #poll device mac
-                response = self.poll_run_command(port, 'mac', 1, 0.3)
-                if len(response) == 1 and response[0].startswith('MAC address:'):
-                    macaddr = response[0].split()[-1]
-                    macaddr = macaddr.replace('-', '') + '0000'
-                    self.devices[port]['attributes']['macaddr'] = macaddr
-                    poll_success += 1
+                block=True
+                timeout=0
+                [term, cmd] = [None, None]
+                try:
+                    if self.devices[port]['queue'].empty() == True and poll_queue.empty() == True:
+                        [term, cmd] = self.devices[port]['queue'].get(block=True, timeout=0.2)
+                    elif self.devices[port]['queue'].empty() == False:
+                        [term, cmd] = self.devices[port]['queue'].get()
+                except Queue.Empty:
+                    [term, cmd] = [None, None]
+                    continue
+                except:
+                    if DEBUG: Traceback.print_exc()
+                    [term, cmd] = [None, None]
+                    continue
 
-                #poll device version
-                response = self.poll_run_command(port, 'version', 1, 0.3)
-                if len(response) == 2:
-                    poll_success += 1
-                    for line in response:
-                        if 'kernel version :' in line:
-                            self.devices[port]['attributes']['kernel_version'] = line.replace('kernel version :AOS-', '')
-                        if 'app version :' in line:
-                            self.devices[port]['attributes']['app_version'] = line.replace('app version :APP-', '')
+                if cmd != None:
+                    with self.devices[port]['wlock']:
+                        try:
+                            self.devices[port]['serial'].write(cmd)
+                            result='success'
+                        except:
+                            Traceback.print_exc()
+                            result='fail'
+                    print 'device', port, 'run command:', cmd[:-1]+', succeed'
+                    content = ','.join(term) + ',' + result
+                    self.send_packet(TBframe.DEVICE_CMD, content)
+                    [term, cmd] = [None, None]
+                    time.sleep(0.05)
+                    continue
 
-                #poll mesh status
-                response = self.poll_run_command(port, 'umesh status', 11, 0.3)
-                if len(response) == 11:
-                    poll_success += 1
-                    for line in response:
-                        if 'state\t' in line:
-                            self.devices[port]['attributes']['state'] = line.replace('state\t', '')
-                        elif '\tnetid\t' in line:
-                            self.devices[port]['attributes']['netid'] = line.replace('\tnetid\t', '')
-                        elif '\tsid\t' in line:
-                            self.devices[port]['attributes']['sid'] = line.replace('\tsid\t', '')
-                        elif '\tnetsize\t' in line:
-                            self.devices[port]['attributes']['netsize'] = line.replace('\tnetsize\t', '')
-                        elif '\trouter\t' in line:
-                            self.devices[port]['attributes']['router'] = line.replace('\trouter\t', '')
-                        elif '\tchannel\t' in line:
-                            self.devices[port]['attributes']['channel'] = line.replace('\tchannel\t', '')
+                if poll_queue.empty() == True:
+                    continue
 
-                #poll mesh nbrs
-                response = self.poll_run_command(port, 'umesh nbrs', 33, 0.3)
-                if len(response) > 0 and 'num=' in response[-1]:
-                    poll_success += 1
-                    self.devices[port]['attributes']['nbrs'] = {}
-                    index = 0
-                    for line in response:
-                        if '\t' not in line or ',' not in line:
-                            continue
-                        line = line.replace('\t', '')
-                        self.devices[port]['attributes']['nbrs']['{0:02d}'.format(index)] = line
-                        index += 1
+                [cmd, lines, timeout] = poll_queue.get()
+                response = self.poll_run_command(port, cmd, lines, timeout)
 
-                #poll mesh extnetid
-                response = self.poll_run_command(port, 'umesh extnetid', 1, 0.3)
-                if len(response) == 1:
-                    poll_success += 1
-                    self.devices[port]['attributes']['extnetid'] = response[0]
-
-                #poll uuid
-                response = self.poll_run_command(port, 'uuid', 1, 0.3)
-                if len(response) == 1 and 'uuid:' in response[0]:
-                    poll_success += 1
-                    self.devices[port]['attributes']['uuid'] = response[0].replace('uuid: ', '')
-
-                if poll_success > 0:
-                    self.devices[port]['attributes']['status'] = 'active'
+                if cmd == 'devname': #poll device model
+                    if len(response) == lines and response[0].startswith('device name:'):
+                        poll_fail_num = 0
+                        self.devices[port]['attributes']['model'] = response[0].split()[-1]
+                    else:
+                        poll_fail_num += 1
+                elif cmd == 'mac': #poll device mac
+                    if len(response) == 1 and response[0].startswith('MAC address:'):
+                        poll_fail_num = 0
+                        macaddr = response[0].split()[-1]
+                        macaddr = macaddr.replace('-', '') + '0000'
+                        self.devices[port]['attributes']['macaddr'] = macaddr
+                    else:
+                        poll_fail_num += 1
+                elif cmd == 'version': #poll device version
+                    if len(response) == lines:
+                        poll_fail_num = 0
+                        for line in response:
+                            if 'kernel version :' in line:
+                                self.devices[port]['attributes']['kernel_version'] = line.replace('kernel version :AOS-', '')
+                            if 'app version :' in line:
+                                self.devices[port]['attributes']['app_version'] = line.replace('app version :APP-', '')
+                    else:
+                        poll_fail_num += 1
+                elif cmd == 'umesh status': #poll mesh status
+                    if len(response) == lines:
+                        poll_fail_num = 0
+                        for line in response:
+                            if 'state\t' in line:
+                                self.devices[port]['attributes']['state'] = line.replace('state\t', '')
+                            elif '\tnetid\t' in line:
+                                self.devices[port]['attributes']['netid'] = line.replace('\tnetid\t', '')
+                            elif '\tsid\t' in line:
+                                self.devices[port]['attributes']['sid'] = line.replace('\tsid\t', '')
+                            elif '\tnetsize\t' in line:
+                                self.devices[port]['attributes']['netsize'] = line.replace('\tnetsize\t', '')
+                            elif '\trouter\t' in line:
+                                self.devices[port]['attributes']['router'] = line.replace('\trouter\t', '')
+                            elif '\tchannel\t' in line:
+                                self.devices[port]['attributes']['channel'] = line.replace('\tchannel\t', '')
+                    else:
+                        poll_fail_num += 1
+                elif cmd == 'umesh nbrs': #poll mesh nbrs
+                    if len(response) > 0 and 'num=' in response[-1]:
+                        poll_fail_num = 0
+                        self.devices[port]['attributes']['nbrs'] = {}
+                        index = 0
+                        for line in response:
+                            if '\t' not in line or ',' not in line:
+                                continue
+                            line = line.replace('\t', '')
+                            self.devices[port]['attributes']['nbrs']['{0:02d}'.format(index)] = line
+                            index += 1
+                    else:
+                        poll_fail_num += 1
+                elif cmd == 'umesh extnetid': #poll mesh extnetid
+                    if len(response) == 1:
+                        poll_fail_num += 1
+                        self.devices[port]['attributes']['extnetid'] = response[0]
+                    else:
+                        poll_fail_num += 1
+                elif cmd == 'uuid': #poll uuid
+                    if len(response) == 1 and 'uuid:' in response[0]:
+                        poll_fail_num = 0
+                        self.devices[port]['attributes']['uuid'] = response[0].replace('uuid: ', '')
+                    else:
+                        poll_fail_num += 1
                 else:
+                    print "error: unrecognized poll cmd '{0}'".format(cmd)
+                    continue
+
+                if poll_fail_num >= 7:
                     self.devices[port]['attributes']['status'] = 'inactive'
+                else:
+                    self.devices[port]['attributes']['status'] = 'active'
 
                 content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
@@ -190,7 +252,6 @@ class Client:
                 if port not in self.devices:
                     break
                 if DEBUG: traceback.print_exc()
-            time.sleep(poll_interval)
         print 'devie status poll thread for {0} exited'.format(port)
 
     def device_log_poll(self, port):
@@ -300,7 +361,14 @@ class Client:
                     print 'device_monitor, error: unable to open {0}'.format(port)
                     continue
                 print 'device {0} added'.format(port)
-                self.devices[port] = {'rlock':threading.RLock(), 'wlock':threading.RLock(), 'serial':ser, 'event':threading.Event(), 'attributes':{}, 'filter':{}}
+                self.devices[port] = {'rlock':threading.RLock(), \
+                                      'wlock':threading.RLock(), \
+                                      'serial':ser, \
+                                      'event':threading.Event(), \
+                                      'queue':Queue.Queue(12),
+                                      'attributes':{}, \
+                                      'filter':{}, \
+                                      'flock':threading.RLock()}
                 if 'mxchip' in port:
                     self.devices[port]['attributes']['model'] = 'MK3060'
                 if 'espif' in port:
@@ -675,17 +743,15 @@ class Client:
                         args = args.split(',')
                         term = args[0:2]
                         port = args[2]
-                        cmds = value[arglen:].split('|')
-                        cmds = ' '.join(cmds) +'\r'
+                        cmd = value[arglen:].split('|')
+                        cmd = ' '.join(cmd) +'\r'
                         if port in self.devices:
-                            if self.devices[port]['wlock'].acquire(False) == True:
-                                self.devices[port]['serial'].write(cmds)
-                                self.devices[port]['wlock'].release()
-                                result='success'
-                                print 'device', port, 'run command:', cmds[:-1]+', succeed'
+                            if self.devices[port]['queue'].full() == False:
+                                self.devices[port]['queue'].put([term, cmd])
+                                continue
                             else:
                                 result = 'busy'
-                                print 'device', port, 'run command:', cmds[:-1]+', failed, device busy'
+                                print 'device', port, 'run command:', cmd[:-1]+', failed, device busy'
                         else:
                             result = 'error'
                         content = ','.join(term) + ',' + result
