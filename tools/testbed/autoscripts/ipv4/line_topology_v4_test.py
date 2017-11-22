@@ -198,7 +198,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
     retry = 5
     #ping
     print 'test connectivity with icmp:'
-    success_num = 0; fail_num = 0
+    ping_pass_num = 0; ping_fail_num = 0
     for device in device_list:
         for other in device_list:
             if device == other:
@@ -214,17 +214,16 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
                             continue
                         else:
                             print '{0} ping {1} with {2} bytes by local ip addr failed'.format(device, other, pkt_len)
-                            fail_num += 1
+                            ping_fail_num += 1
                             break
                     else:
-                        success_num += 1
+                        ping_pass_num += 1
                         break
-
-    print 'ping: succeed-{0}, failed-{1}'.format(success_num, fail_num)
+    print 'ping: pass-{0}, fail-{1}'.format(ping_pass_num, ping_fail_num)
 
     #udp
     print '\ntest connectivity with udp:'
-    success_num = 0; fail_num = 0
+    upd_pass_num = 0; udp_fail_num = 0
     for device in device_list:
         for other in device_list:
             if device == other:
@@ -240,22 +239,16 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
                             continue
                         else:
                             print '{0} send {1} with {2} bytes by local ip addr failed'.format(device, other, pkt_len)
-                            fail_num += 1
+                            udp_fail_num += 1
                             break
                     else:
-                        success_num += 1
+                        upd_pass_num += 1
                         break
-
-    print 'udp: succeed-{0}, failed-{1}'.format(success_num, fail_num)
-
-    #restore extnetid to default
-    extnetid = '01:02:03:04:05:06'
-    for device in device_list:
-        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+    print 'udp: pass-{0}, fail-{1}'.format(upd_pass_num, udp_fail_num)
 
     restore_extnetid(at, device_list)
     at.stop()
-    return [0, 'success']
+    return [0, 'success! ping: pass-{0} fail-{1}, udp: pass-{2} fail-{3}'.format(ping_pass_num, ping_fail_num, upd_pass_num, udp_fail_num)]
 
 if __name__ == '__main__':
     [code, msg] = main()

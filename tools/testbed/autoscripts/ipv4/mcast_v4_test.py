@@ -198,7 +198,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
 
     #udp multicast test
     print 'test multicast connectivity:'
-    success_num = 0; fail_num = 0
+    pass_num = 0; fail_num = 0
     retry = 20
     for pkt_len in ['20', '400']:
         for device in device_list:
@@ -215,13 +215,13 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
                         fail_num += 1
                         break
                 else:
-                    success_num += 1
+                    pass_num += 1
                     break
-    print 'udp: succeed-{0}, failed-{1}'.format(success_num, fail_num)
+    print 'udp: pass-{0}, fail-{1}'.format(pass_num, fail_num)
 
     restore_extnetid(at, device_list)
     at.stop()
-    return [0, 'success']
+    return [0, 'success! mcast: pass-{0} fail-{1}'.format(pass_num, fail_num)]
 
 if __name__ == '__main__':
     [code, msg] = main()
