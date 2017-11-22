@@ -1,14 +1,15 @@
 #include <aos/aos.h>
-#include "sal_sockets.h"
 #include <string.h>
+#include "sal_sockets.h"
+#include "err.h"
 
 #define TAG  "sal_socket"
 
-
+/* @todo */
 #define SYS_ARCH_DECL_PROTECT(lev)
 #define SYS_ARCH_PROTECT(lev)
 #define SYS_ARCH_UNPROTECT(lev)
-
+#define SYS_ARCH_SET(var, val) ((var) = (val))
 
 #define NUM_SOCKETS MEMP_NUM_NETCONN
 #define NUM_EVENTS  MEMP_NUM_NETCONN
@@ -37,7 +38,6 @@ struct sal_event {
 #define SELWAIT_T uint8_t
 #endif
 
-
 /** Contains all internal pointers and states used for a socket */
 struct sal_sock {
     /** sockets currently are built on netconns, each socket has one netconn */
@@ -61,6 +61,18 @@ struct sal_sock {
     SELWAIT_T select_waiting;
 };
 
+#define IS_SOCK_ADDR_LEN_VALID(namelen)  ((namelen) == sizeof(struct sockaddr_in))
+
+#ifndef set_errno
+#define set_errno(err) do { if (err) { errno = (err); } } while(0)
+#endif
+
+#define sock_set_errno(sk, e) do { \
+  const int sockerr = (e); \
+  sk->err = (u8_t)sockerr; \
+  set_errno(sockerr); \
+} while (0)
+
 /** The global array of available sockets */
 static struct sal_sock sockets[NUM_SOCKETS];
 /** The global array of available events */
@@ -70,7 +82,6 @@ static struct sal_select_cb *select_cb_list;
 /** This counter is increased from sal_select when the list is changed
     and checked in event_callback to see if it has changed. */
 static volatile int select_cb_ctr;
-
 
 err_t sys_sem_new(sys_sem_t *sem, uint8_t count)
 {
@@ -197,7 +208,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
 #endif
     SYS_ARCH_DECL_PROTECT(lev);
 
-    SAL_DEBUG(TAG, ("sal_select(%d, %p, %p, %p, tvsec=%"S32_F" tvusec=%"S32_F")\n",
+    SAL_DEBUG(("sal_select(%d, %p, %p, %p, tvsec=%d tvusec=%d)\n",
                     maxfdp1, (void *)readset, (void *) writeset, (void *) exceptset,
                     timeout ? (int32_t)timeout->tv_sec : (int32_t) - 1,
                     timeout ? (int32_t)timeout->tv_usec : (int32_t) - 1));
@@ -209,7 +220,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
     /* If we don't have any current events, then suspend if we are supposed to */
     if (!nready) {
         if (timeout && timeout->tv_sec == 0 && timeout->tv_usec == 0) {
-            SAL_DEBUG(TAG, ("sal_select: no timeout, returning 0\n"));
+            SAL_DEBUG(("sal_select: no timeout, returning 0\n"));
             /* This is OK as the local fdsets are empty and nready is zero,
                or we would have returned earlier. */
             goto return_copy_fdsets;
@@ -362,7 +373,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
 
         if (waitres == SYS_ARCH_TIMEOUT) {
             /* Timeout */
-            SAL_DEBUG(TAG, ("sal_select: timeout expired\n"));
+            SAL_DEBUG(("sal_select: timeout expired\n"));
             /* This is OK as the local fdsets are empty and nready is zero,
                or we would have returned earlier. */
             goto return_copy_fdsets;
@@ -372,7 +383,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
         nready = sal_selscan(maxfdp1, readset, writeset, exceptset, &lreadset, &lwriteset, &lexceptset);
     }
 
-    SAL_DEBUG(TAG, ("sal_select: nready=%d\n", nready));
+    SAL_DEBUG(("sal_select: nready=%d\n", nready));
 return_copy_fdsets:
     set_errno(0);
     if (readset) {
@@ -423,19 +434,19 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_
             /* See if netconn of this socket is ready for read */
             if (readset_in && FD_ISSET(i, readset_in) && ((lastdata != NULL) || (rcvevent > 0))) {
                 FD_SET(i, &lreadset);
-                SAL_DEBUG(TAG, ("sal_selscan: fd=%d ready for reading\n", i));
+                SAL_DEBUG(("sal_selscan: fd=%d ready for reading\n", i));
                 nready++;
             }
             /* See if netconn of this socket is ready for write */
             if (writeset_in && FD_ISSET(i, writeset_in) && (sendevent != 0)) {
                 FD_SET(i, &lwriteset);
-                SAL_DEBUG(TAG, ("sal_selscan: fd=%d ready for writing\n", i));
+                SAL_DEBUG(("sal_selscan: fd=%d ready for writing\n", i));
                 nready++;
             }
             /* See if netconn of this socket had an error */
             if (exceptset_in && FD_ISSET(i, exceptset_in) && (errevent != 0)) {
                 FD_SET(i, &lexceptset);
-                SAL_DEBUG(TAG, ("sal_selscan: fd=%d ready for exception\n", i));
+                SAL_DEBUG(("sal_selscan: fd=%d ready for exception\n", i));
                 nready++;
             }
         } else {
@@ -490,7 +501,7 @@ static struct sal_sock *get_socket(int s)
     s -= SAL_SOCKET_OFFSET;
 
     if ((s < 0) || (s >= NUM_SOCKETS)) {
-        SAL_DEBUG(TAG, ("get_socket(%d): invalid\n", s + SAL_SOCKET_OFFSET));
+        SAL_DEBUG(("get_socket(%d): invalid\n", s + SAL_SOCKET_OFFSET));
         set_errno(EBADF);
         return NULL;
     }
@@ -498,7 +509,7 @@ static struct sal_sock *get_socket(int s)
     sock = &sockets[s];
 
     if (!sock->conn) {
-        SAL_DEBUG(TAG, ("get_socket(%d): not active\n", s + SAL_SOCKET_OFFSET));
+        SAL_DEBUG(("get_socket(%d): not active\n", s + SAL_SOCKET_OFFSET));
         set_errno(EBADF);
         return NULL;
     }
@@ -695,7 +706,6 @@ err_t netconn_delete(at_conn_t *conn)
   return ERR_OK;
 }
 
-
 int sal_socket(int domain, int type, int protocol)
 {
   at_conn_t *conn;
@@ -735,7 +745,7 @@ int sal_socket(int domain, int type, int protocol)
     return -1;
   }
   conn->fd = i;
-  SAL_DEBUG(TAG, ("%d\n", i));
+  SAL_DEBUG(("sal_socket new fd %d\n", i));
   set_errno(0);
   return i;
 }
@@ -746,4 +756,105 @@ int sal_init()
     LOGI("sal", "Initializing SAL ...");
     sal_op.register_netconn_evt_cb(&sal_deal_event);
     return sal_op.init(); /* Low level init. */
+}
+
+int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
+{
+    struct sal_sock *sock;
+    err_t err;
+    at_conn_t *c;
+
+    sock = get_socket(s);
+    if (!sock) {
+        SAL_ERROR("get_socket failed.");
+        sock_set_errno(sock, err_to_errno(ERR_VAL));
+        return -1;
+    }
+
+    /* Only IPv4 is supported. */
+    if (name->sa_family != AF_INET) {
+        SAL_ERROR("Not supported (only IPv4 for now)!");
+        sock_set_errno(sock, err_to_errno(ERR_VAL));
+        return -1;
+    }
+
+    /* Check size */
+    if (!IS_SOCK_ADDR_LEN_VALID(namelen)) {
+        SAL_ERROR("sal_connect: invalid address");
+        sock_set_errno(sock, err_to_errno(ERR_ARG));
+        return -1;
+    }
+
+    /* Do connection */
+    c = sock->conn;
+    if ((err = sal_op.start(c)) != 0) {
+        SAL_ERROR("sal_start failed.");
+        sock_set_errno(sock, err_to_errno(ERR_IF));
+        return -1;
+    }
+
+    if (err != ERR_OK) {
+        SAL_ERROR("sal_connect(%d) failed, err=%d\n", s, err);
+        sock_set_errno(sock, err_to_errno(err));
+        return -1;
+    }
+
+    SAL_DEBUG("sal_connect(%d) succeeded\n", s);
+    sock_set_errno(sock, 0);
+    return 0;
+}
+
+/**
+ * Free a socket. The socket's netconn must have been
+ * delete before!
+ *
+ * @param sock the socket to free
+ * @param is_tcp != 0 for TCP sockets, used to free lastdata
+ */
+static void free_socket(struct sal_sock *sock)
+{
+  sock->lastdata   = NULL;
+  sock->lastoffset = 0;
+  sock->err        = 0;
+
+  /* Protect socket array */
+  SYS_ARCH_SET(sock->conn, NULL);
+  /* don't use 'sock' after this line, as another task might have allocated it */
+}
+
+int sal_close(int s)
+{
+  struct sal_sock *sock;
+  struct sal_event *event;
+  err_t err;
+
+  SAL_DEBUG("sal_close(%d)\n");
+
+  event = tryget_event(s);
+  if (event) {
+    event->used = 0;
+    return 0;
+  }
+
+  sock = get_socket(s);
+  if (!sock) {
+    return -1;
+  }
+
+  if (sal_op.close(s, -1) != 0) {
+    SAL_ERROR("sal_op.close failed.");
+    sock_set_errno(sock, err_to_errno(ERR_IF));
+    return -1;
+  }
+
+  err = netconn_delete(sock->conn);
+  if (err != ERR_OK) {
+    SAL_ERROR("netconn_delete failed in %s.", __func__);
+    sock_set_errno(sock, err_to_errno(err));
+    return -1;
+  }
+
+  free_socket(sock);
+  set_errno(0);
+  return 0;
 }

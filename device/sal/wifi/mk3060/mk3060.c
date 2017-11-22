@@ -418,7 +418,7 @@ typedef struct sk_data_s {
  */
 static int sal_wifi_recv(int fd,
                          uint8_t *buf,
-                         uint32_t *plen
+                         uint32_t *plen,
                          char remote_ip[16],
                          int32_t remote_port)
 {

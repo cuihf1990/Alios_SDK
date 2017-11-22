@@ -15,6 +15,72 @@ extern "C" {
 #define SOCK_DGRAM      2
 #define SOCK_RAW        3
 
+/* Define generic types used in sal */
+#if !SAL_NO_STDINT_H
+#include <stdint.h>
+typedef uint8_t   u8_t;
+typedef int8_t    s8_t;
+typedef uint16_t  u16_t;
+typedef int16_t   s16_t;
+typedef uint32_t  u32_t;
+typedef int32_t   s32_t;
+typedef uintptr_t mem_ptr_t;
+#endif
+
+/* If your port already typedef's sa_family_t, define SA_FAMILY_T_DEFINED
+   to prevent this code from redefining it. */
+#if !defined(sa_family_t) && !defined(SA_FAMILY_T_DEFINED)
+typedef u8_t sa_family_t;
+#endif
+/* If your port already typedef's in_port_t, define IN_PORT_T_DEFINED
+   to prevent this code from redefining it. */
+#if !defined(in_port_t) && !defined(IN_PORT_T_DEFINED)
+typedef u16_t in_port_t;
+#endif
+
+struct sockaddr {
+  u8_t        sa_len;
+  sa_family_t sa_family;
+  char        sa_data[14];
+};
+
+/* If your port already typedef's in_addr_t, define IN_ADDR_T_DEFINED
+   to prevent this code from redefining it. */
+#if !defined(in_addr_t) && !defined(IN_ADDR_T_DEFINED)
+typedef u32_t in_addr_t;
+#endif
+
+struct in_addr {
+  in_addr_t s_addr;
+};
+
+struct in6_addr {
+  union {
+    u32_t u32_addr[4];
+    u8_t  u8_addr[16];
+  } un;
+#define s6_addr  un.u8_addr
+};
+
+/* members are in network byte order */
+struct sockaddr_in {
+  u8_t            sin_len;
+  sa_family_t     sin_family;
+  in_port_t       sin_port;
+  struct in_addr  sin_addr;
+#define SIN_ZERO_LEN 8
+  char            sin_zero[SIN_ZERO_LEN];
+};
+
+struct sockaddr_in6 {
+  u8_t            sin6_len;      /* length of this structure    */
+  sa_family_t     sin6_family;   /* AF_INET6                    */
+  in_port_t       sin6_port;     /* Transport layer port #      */
+  u32_t           sin6_flowinfo; /* IPv6 flow information       */
+  struct in6_addr sin6_addr;     /* IPv6 address                */
+  u32_t           sin6_scope_id; /* Set of interfaces for scope */
+};
+
 int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
                struct timeval *timeout);
 
@@ -22,14 +88,21 @@ int sal_socket(int domain, int type, int protocol);
 
 int sal_write(int s, const void *data, size_t size);
 
+int sal_connect(int s, const struct sockaddr *name, socklen_t namelen);
+
 #define select(maxfdp1,readset,writeset,exceptset,timeout)     sal_select(maxfdp1,readset,writeset,exceptset,timeout)
 
 #define write(s, data, size)                                   sal_write(s,data,size)
 
 #define socket(domain,type,protocol)                           sal_socket( domain,type,protocol)
 
+#define connect(s, name, namelen)                              sal_connect(s, name, namelen)
+
 #define MEMP_NUM_NETCONN     5//(MAX_SOCKETS_TCP + MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
-#define SAL_DEBUG(format, ...)  LOGD(LOG_TAG, format"\r\n",##__VA_ARGS__)
+
+#define SAL_TAG "sal"
+#define SAL_DEBUG(format, ...)  LOGD(SAL_TAG, format, ##__VA_ARGS__)
+#define SAL_ERROR(format, ...)  LOGE(SAL_TAG, format, ##__VA_ARGS__)
 
 #if SAL_NETCONN_SEM_PER_THREAD
 #define SELECT_SEM_T        sys_sem_t*
@@ -67,7 +140,6 @@ typedef struct fd_set {
 #if defined(AOS_CONFIG_VFS_DEV_NODES)
 #define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
 #endif
-typedef int8_t err_t;
 typedef aos_sem_t sys_sem_t;
 
 /** Description for a task waiting in select */
@@ -88,45 +160,6 @@ struct sal_select_cb {
     SELECT_SEM_T sem;
 };
 
-
-/** Definitions for error constants. */
-typedef enum {
-    /** No error, everything OK. */
-    ERR_OK         = 0,
-    /** Out of memory error.     */
-    ERR_MEM        = -1,
-    /** Buffer error.            */
-    ERR_BUF        = -2,
-    /** Timeout.                 */
-    ERR_TIMEOUT    = -3,
-    /** Routing problem.         */
-    ERR_RTE        = -4,
-    /** Operation in progress    */
-    ERR_INPROGRESS = -5,
-    /** Illegal value.           */
-    ERR_VAL        = -6,
-    /** Operation would block.   */
-    ERR_WOULDBLOCK = -7,
-    /** Address in use.          */
-    ERR_USE        = -8,
-    /** Already connecting.      */
-    ERR_ALREADY    = -9,
-    /** Conn already established.*/
-    ERR_ISCONN     = -10,
-    /** Not connected.           */
-    ERR_CONN       = -11,
-    /** Low-level netif error    */
-    ERR_IF         = -12,
-    /** Connection aborted.      */
-    ERR_ABRT       = -13,
-    /** Connection reset.        */
-    ERR_RST        = -14,
-    /** Connection closed.       */
-    ERR_CLSD       = -15,
-    /** Illegal argument.        */
-    ERR_ARG        = -16
-} err_enum_t;
-
 /** Current state of the netconn. Non-TCP netconns are always
  * in state NETCONN_NONE! */
 enum netconn_state {
@@ -137,15 +170,19 @@ enum netconn_state {
     NETCONN_CLOSE
 };
 
+#define AF_UNSPEC       0
+#define AF_INET         2
+#define AF_INET6        10
+#define PF_INET         AF_INET
+#define PF_INET6        AF_INET6
+#define PF_UNSPEC       AF_UNSPEC
 
 void sal_deal_event(int s, enum netconn_evt evt);
-
 
 #define API_EVENT_SIMPLE(s,e) sal_deal_event(s,e)
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* __AOS_EVENTFD_H__ */
