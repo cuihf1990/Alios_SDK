@@ -18,6 +18,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+
 branch=`git status | grep "On branch" | sed -r 's/.*On branch //g'`
 cd $(git rev-parse --show-toplevel)
 

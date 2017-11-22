@@ -144,7 +144,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
 
     restore_device_status(at, device_list)
     at.stop()
-    return [0, 'success! mcast: pass-{0} fail-{1}'.format(pass_num, fail_num)]
+    return [0, 'succeed. mcast: pass-{0} fail-{1}'.format(pass_num, fail_num)]
 
 if __name__ == '__main__':
     [code, msg] = main()

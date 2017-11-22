@@ -146,7 +146,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
 
     restore_device_status(at, device_list)
     at.stop()
-    return [0, 'success! ping: pass-{0} fail-{1}, udp: pass-{2} fail-{3}'.format(ping_pass_num, ping_fail_num, udp_pass_num, udp_fail_num)]
+    return [0, 'succeed. ping: pass-{0} fail-{1}, udp: pass-{2} fail-{3}'.format(ping_pass_num, ping_fail_num, udp_pass_num, udp_fail_num)]
 
 if __name__ == '__main__':
     [code, msg] = main()
