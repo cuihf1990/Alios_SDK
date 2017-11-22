@@ -121,7 +121,6 @@ typedef struct hal_context_s {
     uint8_t               neighbors_num;
     ur_timer_t            update_nbr_timer;
     ur_timer_t            link_quality_update_timer;
-    ur_timer_t            link_request_timer;
 
     // discovery
     uint8_t               discovery_channel;
@@ -134,7 +133,7 @@ typedef struct hal_context_s {
     uint32_t              discovery_interval;
     uint32_t              attach_request_interval;
     uint32_t              sid_request_interval;
-    uint32_t              link_request_interval;
+    uint32_t              link_quality_update_interval;
     uint32_t              neighbor_alive_interval;
     uint32_t              advertisement_interval;
 

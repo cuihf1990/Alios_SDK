@@ -43,5 +43,3 @@ void test_uradar_urmesh_case(void)
     YUNIT_ASSERT(NULL != ur_adapter_get_mcast_ipaddr());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_stop());
 }
-
-

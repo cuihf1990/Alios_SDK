@@ -4,6 +4,7 @@
 
 #include <string.h>
 
+#include "umesh.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
 #include "core/link_mgmt.h"
@@ -17,32 +18,14 @@
 #include "umesh_utils.h"
 #include "hal/interfaces.h"
 
-static neighbor_updated_t g_neighbor_updater_head;
-
-static void handle_link_request_timer(void *args)
-{
-    neighbor_t *attach_node;
-    hal_context_t *hal = (hal_context_t *)args;
-    network_context_t *network;
-    uint8_t tlv_type[1] = {TYPE_UCAST_CHANNEL};
-    ur_addr_t addr;
-
-    MESH_LOG_DEBUG("handle link request timer");
-
-    hal->link_request_timer = NULL;
-    network = get_default_network_context();
-    attach_node = umesh_mm_get_attach_node();
-    if (attach_node == NULL) {
-        return;
-    }
-
-    set_mesh_short_addr(&addr, attach_node->netid, attach_node->sid);
-    send_link_request(network, &addr, tlv_type, sizeof(tlv_type));
-    if (attach_node->stats.link_request < LINK_ESTIMATE_SENT_THRESHOLD) {
-        hal->link_request_timer = ur_start_timer(hal->link_request_interval,
-                                                 handle_link_request_timer, hal);
-    }
-}
+typedef struct link_mgmt_state_s {
+    neighbor_updated_t neighbor_updater;
+    mm_cb_t interface_callback;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    lowpower_events_handler_t lowpower_callback;
+#endif
+} link_mgmt_state_t;
+link_mgmt_state_t g_lm_state;
 
 static ur_error_t update_link_cost(link_nbr_stats_t *stats)
 {
@@ -75,7 +58,7 @@ static ur_error_t update_link_cost(link_nbr_stats_t *stats)
     return UR_ERROR_NONE;
 }
 
-static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
+ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
 {
     network_context_t *network;
     ur_node_id_t node_id;
@@ -99,36 +82,46 @@ static ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     return UR_ERROR_NONE;
 }
 
-static void handle_link_quality_update_timer(void *args)
+static void build_and_send_link_request(neighbor_t *nbr)
+{
+    network_context_t *network = get_default_network_context();
+    ur_addr_t addr;
+    uint8_t tlv_types[1] = {TYPE_UCAST_CHANNEL};
+
+    set_mesh_short_addr(&addr, nbr->netid, nbr->sid);
+    send_link_request(network, &addr, tlv_types, sizeof(tlv_types));
+}
+
+static void update_neighbors_link_cost(hal_context_t *hal)
 {
     ur_error_t error;
     neighbor_t *nbr;
+
+    slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
+        error = update_link_cost(&nbr->stats);
+        if (error != UR_ERROR_NONE || nbr->stats.reverse_rssi < RSSI_THRESHOLD ||
+            (umesh_now_ms() - nbr->last_heard) > (hal->neighbor_alive_interval / 2)) {
+            nbr->flags &= (~NBR_LINK_ESTIMATED);
+        }
+        if (nbr->stats.link_cost >= LINK_COST_THRESHOLD) {
+            nbr->state = STATE_INVALID;
+            g_lm_state.neighbor_updater(nbr);
+            remove_neighbor(hal, nbr);
+        } else if (nbr == umesh_mm_get_attach_node() && (nbr->flags & NBR_LINK_ESTIMATED) == 0) {
+            build_and_send_link_request(nbr);
+        }
+    }
+}
+
+static void handle_link_quality_timer(void *args)
+{
     hal_context_t *hal = (hal_context_t *)args;
 
     MESH_LOG_DEBUG("handle link quality update timer");
 
-    hal->link_quality_update_timer = ur_start_timer(hal->link_request_interval * LINK_ESTIMATE_TIMES,
-                                                    handle_link_quality_update_timer, hal);
-
-    slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-        if ((umesh_now_ms() - nbr->last_heard) > (hal->neighbor_alive_interval / 2)) {
-            nbr->flags &= (~NBR_LINK_ESTIMATED);
-        }
-        error = update_link_cost(&nbr->stats);
-        if (nbr == umesh_mm_get_attach_node()) {
-            if (error == UR_ERROR_NONE && nbr->stats.reverse_rssi >= RSSI_THRESHOLD) {
-                nbr->flags |= NBR_LINK_ESTIMATED;
-            } else if ((nbr->flags & NBR_LINK_ESTIMATED) == 0 && hal->link_request_timer == NULL) {
-                hal->link_request_timer = ur_start_timer(hal->link_request_interval,
-                                                         handle_link_request_timer, hal);
-            }
-        }
-        if (nbr->stats.link_cost >= LINK_COST_THRESHOLD) {
-            nbr->state = STATE_INVALID;
-            g_neighbor_updater_head(nbr);
-            remove_neighbor(hal, nbr);
-        }
-    }
+    hal->link_quality_update_timer = ur_start_timer(hal->link_quality_update_interval,
+                                                    handle_link_quality_timer, hal);
+    update_neighbors_link_cost(hal);
 }
 
 static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
@@ -220,26 +213,67 @@ static void handle_update_nbr_timer(void *args)
             update_sid_mapping(network->sid_base, &node_id, false);
         }
         node->state = STATE_INVALID;
-        g_neighbor_updater_head(node);
+        g_lm_state.neighbor_updater(node);
         remove_neighbor(hal, node);
     }
 }
 
-void neighbors_init(void)
+static ur_error_t mesh_interface_up(void)
 {
-    neighbor_t *node;
+    slist_t *hals;
+    hal_context_t *hal;
+
+    if (umesh_get_mode() & MODE_RX_ON) {
+        hals = get_hal_contexts();
+        slist_for_each_entry(hals, hal, hal_context_t, next) {
+            hal->link_quality_update_timer =
+                 ur_start_timer(hal->link_quality_update_interval,
+                                handle_link_quality_timer, hal);
+        }
+    }
+    return UR_ERROR_NONE;
+}
+
+static ur_error_t mesh_interface_down(void)
+{
     slist_t *hals;
     hal_context_t *hal;
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
-        while (!slist_empty(&hal->neighbors_list)) {
-            node = slist_first_entry(&hal->neighbors_list, neighbor_t, next);
-            remove_neighbor(hal, node);
-        }
-        slist_init(&hal->neighbors_list);
-        hal->neighbors_num  = 0;
+        ur_stop_timer(&hal->link_quality_update_timer, hal);
+        ur_stop_timer(&hal->update_nbr_timer, hal);
     }
+    return UR_ERROR_NONE;
+}
+
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+static void lowpower_radio_down_handler(void)
+{
+
+}
+
+static void lowpower_radio_up_handler(void)
+{
+    slist_t *hals = get_hal_contexts();
+    hal_context_t *hal;
+
+    slist_for_each_entry(hals, hal, hal_context_t, next) {
+        update_neighbors_link_cost(hal);
+    }
+}
+#endif
+
+void link_mgmt_init(void)
+{
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    g_lm_state.lowpower_callback.radio_down = lowpower_radio_down_handler;
+    g_lm_state.lowpower_callback.radio_up = lowpower_radio_up_handler;
+    lowpower_register_callback(&g_lm_state.lowpower_callback);
+#endif
+    g_lm_state.interface_callback.interface_up = mesh_interface_up;
+    g_lm_state.interface_callback.interface_down = mesh_interface_down;
+    umesh_mm_register_callback(&g_lm_state.interface_callback);
 }
 
 neighbor_t *update_neighbor(const message_info_t *info,
@@ -338,7 +372,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     }
     nbr->sid = info->src.addr.short_addr;
     nbr->netid = info->src.netid;
-    g_neighbor_updater_head(nbr);
+    g_lm_state.neighbor_updater(nbr);
 
 exit:
     if (nbr) {
@@ -352,25 +386,6 @@ exit:
         nbr->last_heard = umesh_now_ms();
     }
     return nbr;
-}
-
-void set_state_to_neighbor(void)
-{
-    neighbor_t *node;
-    slist_t *hals;
-    hal_context_t *hal;
-
-    hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-            if (node->state == STATE_PARENT) {
-                node->state = STATE_NEIGHBOR;
-            }
-            if (node->state == STATE_CHILD) {
-                node->state = STATE_NEIGHBOR;
-            }
-        }
-    }
 }
 
 neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr)
@@ -789,35 +804,8 @@ ur_error_t handle_link_accept(message_t *message)
     return UR_ERROR_NONE;
 }
 
-void start_neighbor_updater(void)
-{
-    slist_t *hals;
-    hal_context_t *hal;
-
-    hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        hal->link_quality_update_timer =
-             ur_start_timer(hal->link_request_interval * LINK_ESTIMATE_TIMES,
-                            handle_link_quality_update_timer, hal);
-    }
-}
-
-void stop_neighbor_updater(void)
-{
-    slist_t *hals;
-    hal_context_t *hal;
-
-    hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        ur_stop_timer(&hal->link_quality_update_timer, hal);
-        ur_stop_timer(&hal->update_nbr_timer, hal);
-        ur_stop_timer(&hal->link_request_timer, hal);
-    }
-}
-
 ur_error_t register_neighbor_updater(neighbor_updated_t updater)
 {
-    g_neighbor_updater_head = updater;
+    g_lm_state.neighbor_updater = updater;
     return UR_ERROR_NONE;
 }
-

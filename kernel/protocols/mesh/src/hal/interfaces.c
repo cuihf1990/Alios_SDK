@@ -9,6 +9,7 @@
 #include "core/sid_allocator.h"
 #include "core/router_mgr.h"
 #include "core/mesh_mgmt.h"
+#include "core/link_mgmt.h"
 #include "umesh.h"
 #include "umesh_utils.h"
 #include "hal/interfaces.h"
@@ -73,6 +74,8 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         assert(hal->frame.data);
     }
     hal->module = module;
+    slist_init(&hal->neighbors_list);
+    hal->neighbors_num  = 0;
 
     hal->channel_list.num =
         hal_umesh_get_chnlist(module, &hal->channel_list.channels);
@@ -88,8 +91,8 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->discovery_interval = WIFI_DISCOVERY_TIMEOUT;
         hal->attach_request_interval = WIFI_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = WIFI_SID_REQUEST_TIMEOUT;
-        hal->link_request_interval = (umesh_get_mode() & MODE_MOBILE)? \
-                          WIFI_LINK_REQUEST_MOBILE_TIMEOUT: WIFI_LINK_REQUEST_TIMEOUT;
+        hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \
+                          WIFI_LINK_QUALITY_MOBILE_TIMEOUT: WIFI_LINK_QUALITY_TIMEOUT;
         hal->neighbor_alive_interval = WIFI_NEIGHBOR_ALIVE_TIMEOUT;
         hal->advertisement_interval = WIFI_ADVERTISEMENT_TIMEOUT;
     } else if (module->type == MEDIA_TYPE_BLE) {
@@ -98,8 +101,8 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->discovery_interval = BLE_DISCOVERY_TIMEOUT;
         hal->attach_request_interval = BLE_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = BLE_SID_REQUEST_TIMEOUT;
-        hal->link_request_interval = (umesh_get_mode() & MODE_MOBILE)? \
-                           BLE_LINK_REQUEST_MOBILE_TIMEOUT: BLE_LINK_REQUEST_TIMEOUT;
+        hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \
+                           BLE_LINK_QUALITY_MOBILE_TIMEOUT: BLE_LINK_QUALITY_TIMEOUT;
         hal->neighbor_alive_interval = BLE_NEIGHBOR_ALIVE_TIMEOUT;
         hal->advertisement_interval = BLE_ADVERTISEMENT_TIMEOUT;
     } else if (module->type == MEDIA_TYPE_15_4) {
@@ -108,8 +111,8 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->discovery_interval = IEEE154_DISCOVERY_TIMEOUT;
         hal->attach_request_interval = IEEE154_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = IEEE154_SID_REQUEST_TIMEOUT;
-        hal->link_request_interval = (umesh_get_mode() & MODE_MOBILE)? \
-                     IEEE154_LINK_REQUEST_MOBILE_TIMEOUT: IEEE154_LINK_REQUEST_TIMEOUT;
+        hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \
+                     IEEE154_LINK_QUALITY_MOBILE_TIMEOUT: IEEE154_LINK_QUALITY_TIMEOUT;
         hal->neighbor_alive_interval = IEEE154_NEIGHBOR_ALIVE_TIMEOUT;
         hal->advertisement_interval = IEEE154_ADVERTISEMENT_TIMEOUT;
     }
@@ -206,12 +209,20 @@ static void cleanup_queues(hal_context_t *hal)
 void interface_stop(void)
 {
     hal_context_t *hal;
+    neighbor_t *node;
 
     reset_network_context();
 
     slist_for_each_entry(&g_hals_list, hal, hal_context_t, next) {
         cleanup_queues(hal);
         hal->send_message = NULL;
+
+        while (!slist_empty(&hal->neighbors_list)) {
+            node = slist_first_entry(&hal->neighbors_list, neighbor_t, next);
+            remove_neighbor(hal, node);
+        }
+        slist_init(&hal->neighbors_list);
+        hal->neighbors_num  = 0;
     }
 
     while (!slist_empty(&g_networks_list)) {

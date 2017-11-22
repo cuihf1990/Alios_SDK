@@ -9,8 +9,8 @@ enum {
     BLE_DISCOVERY_TIMEOUT          = 500,    /* ms */
     BLE_ATTACH_REQUEST_TIMEOUT     = 10000,   /* ms */
     BLE_SID_REQUEST_TIMEOUT        = 30000,   /* ms */
-    BLE_LINK_REQUEST_MOBILE_TIMEOUT = 3000,     /* ms */
-    BLE_LINK_REQUEST_TIMEOUT        = 30000,   /* ms */
+    BLE_LINK_QUALITY_MOBILE_TIMEOUT = 3000,  /* ms */
+    BLE_LINK_QUALITY_TIMEOUT = 30000,  /* ms */
     BLE_ADVERTISEMENT_TIMEOUT      = 20000,  /* ms, 20 seconds */
     BLE_NEIGHBOR_ALIVE_TIMEOUT     = 120000, /* ms, 2  mins */
     BLE_NET_SCAN_TIMEOUT           = 300000, /* ms, 5  mins */

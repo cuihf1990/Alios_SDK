@@ -3,6 +3,7 @@
  */
 
 #include <string.h>
+#include <assert.h>
 
 #include "core/mesh_mgmt.h"
 #include "core/address_mgmt.h"
@@ -17,8 +18,11 @@
 typedef struct router_mgmr_state_s {
     slist_t  router_list;
     router_t *default_router;
+    mm_cb_t interface_callback;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    lowpower_events_handler_t lowpower_callback;
+#endif
 } router_mgmr_state_t;
-
 static router_mgmr_state_t g_rm_state;
 
 extern neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
@@ -27,47 +31,6 @@ extern void sid_router_register(void);
 #ifdef CONFIG_AOS_MESH_SUPER
 extern void vector_router_register(void);
 #endif
-
-void ur_router_register_module(void)
-{
-    router_t *router;
-
-    slist_init(&g_rm_state.router_list);
-    sid_router_register();
-#ifdef CONFIG_AOS_MESH_SUPER
-    vector_router_register();
-#endif
-
-    /* enable the default router */
-    slist_for_each_entry(&g_rm_state.router_list, router, router_t, next) {
-        if (router->id == DEFAULT_ROUTER) {
-            g_rm_state.default_router = router;
-            g_rm_state.default_router->cb.start();
-            break;
-        }
-    }
-}
-
-ur_error_t ur_router_start(network_context_t *network)
-{
-    if (network && network->router) {
-        network->router->cb.start();
-    } else if (g_rm_state.default_router != NULL) {
-        g_rm_state.default_router->cb.start();
-    }
-    return UR_ERROR_NONE;
-}
-
-void ur_router_stop(void)
-{
-    router_t *router;
-
-    slist_for_each_entry(&g_rm_state.router_list, router, router_t, next) {
-        if (router->cb.stop) {
-            router->cb.stop();
-        }
-    }
-}
 
 uint16_t ur_router_get_next_hop(network_context_t *network, uint16_t dest_sid)
 {
@@ -92,30 +55,6 @@ uint16_t ur_router_get_next_hop(network_context_t *network, uint16_t dest_sid)
     }
 
     return next_hop;
-}
-
-void ur_router_sid_updated(network_context_t *network, uint16_t sid)
-{
-    router_t *router;
-    netids_t netids;
-
-    router = network->router;
-    if (router != NULL) {
-        uint8_t i = 0, call = 0;
-        for (i = 0; i < router->events.num; i++) {
-            if (router->events.events[i] == EVENT_SID_UPDATED) {
-                call = 1;
-                break;
-            }
-        }
-
-        if (call > 0 && router->cb.handle_subscribe_event != NULL) {
-            netids.meshnetid = network->meshnetid;
-            netids.sid = sid;
-            router->cb.handle_subscribe_event(EVENT_SID_UPDATED, (uint8_t *)&netids,
-                                              sizeof(netids_t));
-        }
-    }
 }
 
 void ur_router_neighbor_updated(neighbor_t *neighbor)
@@ -387,4 +326,74 @@ uint16_t sid_allocator_get_num(network_context_t *network)
     }
 
     return num;
+}
+
+static ur_error_t mesh_interface_up(void)
+{
+    slist_t *networks;
+    network_context_t *network;
+    network_context_t *default_network;
+    router_t *router;
+    netids_t netids;
+
+    networks = get_network_contexts();
+    default_network = get_default_network_context();
+    slist_for_each_entry(networks, network, network_context_t, next) {
+        router = network->router? network->router: g_rm_state.default_router;
+        router->cb.start();
+        if (router->cb.handle_subscribe_event) {
+            netids.meshnetid = network->meshnetid;
+            netids.sid = (network == default_network)? network->sid: LEADER_SID;
+            router->cb.handle_subscribe_event(EVENT_SID_UPDATED, (uint8_t *)&netids,
+                                              sizeof(netids_t));
+        }
+    }
+    return UR_ERROR_NONE;
+}
+
+static ur_error_t mesh_interface_down(void)
+{
+    router_t *router;
+
+    slist_for_each_entry(&g_rm_state.router_list, router, router_t, next) {
+        if (router->cb.stop) {
+            router->cb.stop();
+        }
+    }
+    return UR_ERROR_NONE;
+}
+
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+static void lowpower_radio_down_handler(void)
+{
+
+}
+
+static void lowpower_radio_up_handler(void)
+{
+    network_context_t *network = get_default_network_context();
+
+    send_address_notification(network, NULL);
+}
+#endif
+
+void ur_router_register_module(void)
+{
+    slist_init(&g_rm_state.router_list);
+    sid_router_register();
+#ifdef CONFIG_AOS_MESH_SUPER
+    vector_router_register();
+#endif
+
+    g_rm_state.default_router = slist_first_entry(&g_rm_state.router_list, router_t, next);
+    assert(g_rm_state.default_router);
+
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    g_rm_state.lowpower_callback.radio_down = lowpower_radio_down_handler;
+    g_rm_state.lowpower_callback.radio_up = lowpower_radio_up_handler;
+    lowpower_register_callback(&g_rm_state.lowpower_callback);
+#endif
+    g_rm_state.interface_callback.interface_up = mesh_interface_up;
+    g_rm_state.interface_callback.interface_down = mesh_interface_down;
+    umesh_mm_register_callback(&g_rm_state.interface_callback);
 }

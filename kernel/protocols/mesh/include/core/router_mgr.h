@@ -29,11 +29,8 @@ typedef struct netids_s {
 } netids_t;
 
 void       ur_router_register_module(void);
-ur_error_t ur_router_start(network_context_t *network);
-void       ur_router_stop(void);
 uint16_t   ur_router_get_next_hop(network_context_t *network,
                                   uint16_t dest_sid);
-void       ur_router_sid_updated(network_context_t *network, uint16_t sid);
 void       ur_router_neighbor_updated(neighbor_t *neighbor);
 uint8_t    ur_router_get_default_router(void);
 router_t   *ur_get_router_by_id(uint8_t id);

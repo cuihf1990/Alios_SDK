@@ -19,6 +19,9 @@
 #include "core/link_mgmt.h"
 #include "core/network_mgmt.h"
 #include "core/crypto.h"
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+#include "core/lowpower_mgmt.h"
+#endif
 #include "hal/interfaces.h"
 #include "hal/hals.h"
 #ifdef CONFIG_AOS_MESH_LOWPOWER
@@ -30,7 +33,6 @@ typedef struct mm_device_s {
     node_mode_t  mode;
     uint8_t      ueid[8];
     bool         reboot_flag;
-    ur_timer_t   alive_timer;
     ur_timer_t   net_scan_timer;
     uint8_t      seclevel;
     int8_t       prev_channel;
@@ -39,7 +41,10 @@ typedef struct mm_device_s {
 typedef struct mesh_mgmt_state_s {
     mm_device_t device;
     node_mode_t leader_mode;
-    slist_t callback;
+    slist_t interface_callback;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    lowpower_events_handler_t lowpower_callback;
+#endif
 } mesh_mgmt_state_t;
 
 static mesh_mgmt_state_t g_mm_state;
@@ -133,16 +138,6 @@ static uint16_t generate_meshnetid(uint8_t sid, uint8_t index)
     return meshnetid;
 }
 
-static void start_keep_alive_timer(void *args)
-{
-    network_context_t *network = get_default_network_context();
-
-    ur_stop_timer(&g_mm_state.device.alive_timer, NULL);
-    send_address_notification(network, NULL);
-    g_mm_state.device.alive_timer = ur_start_timer(network->notification_interval,
-                                                   start_keep_alive_timer, NULL);
-}
-
 static void start_advertisement_timer(void *args)
 {
     network_context_t *network = (network_context_t *)args;
@@ -207,8 +202,6 @@ static void set_leader_network_context(network_context_t *default_network,
         if (init_allocator) {
             sid_allocator_init(network);
         }
-        ur_router_start(network);
-        ur_router_sid_updated(network, LEADER_SID);
         start_advertisement_timer(network);
         if (default_network) {
             umesh_mm_set_channel(network->hal, network->hal->def_channel);
@@ -298,15 +291,9 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
     ur_stop_timer(&network->attach_timer, network);
     ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
 
-    ur_router_start(network);
-    ur_router_sid_updated(network, network->sid);
-    start_neighbor_updater();
     start_advertisement_timer(network);
     network->state = INTERFACE_UP;
-    stop_addr_cache();
-    address_resolver_init();
     mesh_interface_state_callback(true);
-    start_keep_alive_timer(NULL);
 
     ur_stop_timer(&network->migrate_wait_timer, network);
     umesh_mm_set_prev_channel();
@@ -352,9 +339,6 @@ void become_leader(void)
     umesh_mm_start_net_scan_timer();
     umesh_mm_set_prev_channel();
     mesh_interface_state_callback(true);
-    stop_addr_cache();
-    start_addr_cache();
-    address_resolver_init();
 
     calculate_network_key();
 
@@ -1185,12 +1169,8 @@ static void mesh_interface_state_callback(bool up)
 {
     mm_cb_t *callback;
 
-    slist_for_each_entry(&g_mm_state.callback, callback, mm_cb_t, next) {
-        if (up) {
-            callback->interface_up();
-        } else {
-            callback->interface_down();
-        }
+    slist_for_each_entry(&g_mm_state.interface_callback, callback, mm_cb_t, next) {
+        up? callback->interface_up(): callback->interface_down();
     }
 }
 
@@ -1260,27 +1240,16 @@ void become_detached(void)
 
     write_prev_netinfo();
     g_mm_state.device.state = DEVICE_STATE_DETACHED;
-    ur_stop_timer(&g_mm_state.device.alive_timer, NULL);
     ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
     reset_network_context();
-    mf_init();
     nd_init();
     nm_stop_discovery();
-    stop_neighbor_updater();
-    stop_addr_cache();
-    address_resolver_init();
     mesh_interface_state_callback(false);
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         sid_allocator_deinit(network);
     }
-
     umesh_mm_start_net_scan_timer();
-
-#if CONFIG_AOS_MESH_LOWPOWER
-    lowpower_stop();
-#endif
-
     MESH_LOG_INFO("become detached");
 }
 
@@ -1320,7 +1289,6 @@ static ur_error_t attach_start(neighbor_t *nbr)
     network->attach_timer = ur_start_timer(network->hal->attach_request_interval,
                                            handle_attach_timer, network);
     network->retry_times = 1;
-    stop_neighbor_updater();
     ur_stop_timer(&network->advertisement_timer, network);
 
     MESH_LOG_INFO("%d node, attach start, from %04x:%04x to %04x:%x",
@@ -1528,6 +1496,17 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
     return error;
 }
 
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+static void lowpower_radio_down_handler(void)
+{
+
+}
+
+static void lowpower_radio_up_handler(void)
+{
+}
+#endif
+
 ur_error_t umesh_mm_init(node_mode_t mode, mm_cb_t *mm_cb)
 {
     ur_error_t error = UR_ERROR_NONE;
@@ -1552,6 +1531,12 @@ ur_error_t umesh_mm_init(node_mode_t mode, mm_cb_t *mm_cb)
     if (get_hal_contexts_num() > 1) {
         g_mm_state.device.mode |= MODE_SUPER;
     }
+
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    g_mm_state.lowpower_callback.radio_down = lowpower_radio_down_handler;
+    g_mm_state.lowpower_callback.radio_up = lowpower_radio_up_handler;
+    lowpower_register_callback(&g_mm_state.lowpower_callback);
+#endif
     return error;
 }
 
@@ -1563,7 +1548,6 @@ ur_error_t umesh_mm_start(void)
 
     reset_network_context();
     g_mm_state.device.state = DEVICE_STATE_DETACHED;
-    g_mm_state.device.alive_timer = NULL;
     g_mm_state.device.reboot_flag = true;
 
     if (g_mm_state.device.mode & MODE_LEADER) {
@@ -1577,15 +1561,9 @@ ur_error_t umesh_mm_start(void)
 
 ur_error_t umesh_mm_stop(void)
 {
-    stop_neighbor_updater();
-    mf_init();
-    nd_init();
     nm_stop_discovery();
-    ur_router_stop();
     become_detached();
     ur_stop_timer(&g_mm_state.device.net_scan_timer, NULL);
-    /* finally free all neighbor structures */
-    neighbors_init();
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
     return UR_ERROR_NONE;
 }
@@ -1925,7 +1903,7 @@ uint8_t umesh_mm_get_reboot_flag(void)
 
 void umesh_mm_register_callback(mm_cb_t *callback)
 {
-    slist_add(&callback->next, &g_mm_state.callback);
+    slist_add(&callback->next, &g_mm_state.interface_callback);
 }
 
 uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data)

@@ -25,7 +25,8 @@ typedef struct lowpower_state_s {
     ur_timer_t wakeup_timer;
     ur_timer_t parent_sleep_timer;
     ur_timer_t sleep_timer;
-    mm_cb_t callback;
+    mm_cb_t interface_callback;
+    slist_t lowpower_callback;
 } lowpower_state_t;
 lowpower_state_t g_lowpower_state;
 
@@ -44,6 +45,16 @@ static uint8_t get_next_slot_num(const uint8_t *mac, uint8_t slot_num)
     key.slot_num = (uint32_t)slot_num;
     next_slot_num = (umesh_get_hashword((uint32_t *)&key, sizeof(key) / 4, 0) % SLOTS_SIZE) + 1;
     return next_slot_num;
+}
+
+static void radio_events_handler(bool is_up)
+{
+    lowpower_events_handler_t *callback;
+
+    slist_for_each_entry(&g_lowpower_state.lowpower_callback, callback,
+                         lowpower_events_handler_t, next) {
+        is_up? callback->radio_up(): callback->radio_down();
+    }
 }
 
 static void update_schedule_timer(schedule_type_t type)
@@ -90,6 +101,7 @@ static void sleep_timer_handler(void *args)
         update_schedule_timer(type);
         if ((umesh_get_mode() & MODE_RX_ON) == 0 && g_lowpower_state.sleep_timer == NULL &&
             g_lowpower_state.parent_sleep_timer == NULL) {
+            radio_events_handler(false);
             MESH_LOG_DEBUG("radio goto sleep at %d", umesh_now_ms());
             umesh_pal_sleep();
         }
@@ -115,6 +127,7 @@ static void wakeup_timer_handler(void *args)
     if ((umesh_get_mode() & MODE_RX_ON) == 0) {
         MESH_LOG_DEBUG("radio wakeup at %d", umesh_now_ms());
         umesh_pal_wakeup();
+        radio_events_handler(true);
     }
 
     if (type == SCHEDULE) {
@@ -152,30 +165,24 @@ static ur_error_t mesh_interface_down(void)
 {
     MESH_LOG_DEBUG("lowpower interface down");
     ur_stop_timer(&g_lowpower_state.parent_wakeup_timer, NULL);
+    g_lowpower_state.enabled = false;
     return UR_ERROR_NONE;
 }
 
 void lowpower_init(void)
 {
     g_lowpower_state.enabled = false;
-    g_lowpower_state.callback.interface_up = mesh_interface_up;
-    g_lowpower_state.callback.interface_down = mesh_interface_down;
-    umesh_mm_register_callback(&g_lowpower_state.callback);
-}
+    g_lowpower_state.interface_callback.interface_up = mesh_interface_up;
+    g_lowpower_state.interface_callback.interface_down = mesh_interface_down;
+    umesh_mm_register_callback(&g_lowpower_state.interface_callback);
 
-void lowpower_start(void)
-{
-    g_lowpower_state.enabled = true;
     g_lowpower_state.slot_num = (((uint8_t)umesh_get_random()) % SLOTS_SIZE + 1);
     g_lowpower_state.timestamp = umesh_now_ms();
     update_schedule_timer(SCHEDULE);
-}
 
-void lowpower_stop(void)
-{
-    g_lowpower_state.enabled = false;
-    ur_stop_timer(&g_lowpower_state.parent_wakeup_timer, NULL);
-    ur_stop_timer(&g_lowpower_state.wakeup_timer, NULL);
+    if ((umesh_mm_get_mode() & MODE_RX_ON) == 0) {
+        g_lowpower_state.enabled = true;
+    }
 }
 
 void lowpower_update_time_slot(neighbor_t *nbr, uint8_t *tlvs, uint16_t length)
@@ -198,4 +205,9 @@ uint16_t lowpower_set_time_slot(uint8_t *data)
     time_slot->slot_num = g_lowpower_state.slot_num;
     time_slot->offset = umesh_now_ms() - g_lowpower_state.timestamp;
     return sizeof(mm_time_slot_tv_t);
+}
+
+void lowpower_register_callback(lowpower_events_handler_t *handler)
+{
+    slist_add(&handler->next, &g_lowpower_state.lowpower_callback);
 }
