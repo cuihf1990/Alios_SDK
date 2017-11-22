@@ -66,7 +66,7 @@ extern void         *heap2_len;
 
 
 #if defined (__CC_ARM) /* Keil / armcc */
-#define HEAP_BUFFER_SIZE 1024*37
+#define HEAP_BUFFER_SIZE 1024*65
 uint8_t g_heap_buf[HEAP_BUFFER_SIZE];
 k_mm_region_t g_mm_region[] = {g_heap_buf,HEAP_BUFFER_SIZE};
 #else
@@ -127,19 +127,5 @@ void soc_err_proc(kstat_t err)
     assert(0);
 }
 
-#if defined (__CC_ARM) && defined(__MICROLIB)
-void __aeabi_assert(const char *expr, const char *file, int line)
-{
-    while (1);
-}
-extern long long aos_now_ms(void);
-int gettimeofday(struct timeval *tv, void *tzp)
-{
-    uint64_t t = aos_now_ms();
-    tv->tv_sec = t / 1000;
-    tv->tv_usec = (t % 1000) * 1000;
-    return 0;
-}
-#endif
 krhino_err_proc_t g_err_proc = soc_err_proc;
 
