@@ -19,9 +19,11 @@
 #include "core/link_mgmt.h"
 #include "core/network_mgmt.h"
 #include "core/crypto.h"
-#include "core/lowpower_mgmt.h"
 #include "hal/interfaces.h"
 #include "hal/hals.h"
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+#include "core/lowpower_mgmt.h"
+#endif
 
 typedef struct mm_device_s {
     node_state_t state;
@@ -397,6 +399,7 @@ static uint8_t get_tv_value_length(uint8_t type)
             length = 2;
             break;
         case TYPE_SSID_INFO:
+        case TYPE_TIME_SLOT:
             length = 3;
             break;
         case TYPE_TIMESTAMP:
@@ -738,10 +741,16 @@ static ur_error_t send_attach_response(network_context_t *network,
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         length += sizeof(mm_symmetric_key_tv_t);
     }
-    if (node_id) {
+
+    if (node_id->sid != INVALID_SID && node_id->sid != BCAST_SID) {
         length += (sizeof(mm_sid_tv_t) + sizeof(mm_node_type_tv_t) +
                    sizeof(mm_netinfo_tv_t) + sizeof(mm_mcast_addr_tv_t));
     }
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    if ((node_id->mode & MODE_RX_ON) == 0) {
+        length += sizeof(mm_time_slot_tv_t);
+    }
+#endif
 
     data = ur_mem_alloc(length);
     if (data == NULL) {
@@ -751,6 +760,11 @@ static ur_error_t send_attach_response(network_context_t *network,
     data += sizeof(mm_header_t);
     data += set_mm_ueid_tv(data, TYPE_SRC_UEID, g_mm_state.device.ueid);
     data += set_mm_path_cost_tv(network, data);
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    if ((node_id->mode & MODE_RX_ON) == 0) {
+        data += lowpower_set_time_slot(data);
+    }
+#endif
 
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         symmetric_key = (mm_symmetric_key_tv_t *)data;
@@ -760,7 +774,7 @@ static ur_error_t send_attach_response(network_context_t *network,
                sizeof(symmetric_key->symmetric_key));
         data += sizeof(mm_symmetric_key_tv_t);
     }
-    if (node_id) {
+    if (node_id->sid != INVALID_SID && node_id->sid != BCAST_SID) {
         data += set_mm_sid_tv(data, TYPE_ALLOCATE_SID, node_id->sid);
         data += set_mm_allocated_node_type_tv(data, node_id->type);
         data += set_mm_netinfo_tv(network, data);
@@ -838,25 +852,21 @@ static ur_error_t handle_attach_request(message_t *message)
     }
 
     if (error == UR_ERROR_NONE) {
-        ur_node_id_t *node_id = NULL;
-        ur_node_id_t node_id_storage;
-        node_id_storage.sid = INVALID_SID;
-        memcpy(node_id_storage.ueid, ueid->ueid, sizeof(node_id_storage.ueid));
+        ur_node_id_t node_id;
+        node_id.sid = INVALID_SID;
+        memcpy(node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
         if (umesh_mm_get_mode() & MODE_SUPER) {
-            node_id_storage.attach_sid = SUPER_ROUTER_SID;
+            node_id.attach_sid = SUPER_ROUTER_SID;
         } else {
-            node_id_storage.attach_sid = umesh_mm_get_local_sid();
+            node_id.attach_sid = umesh_mm_get_local_sid();
         }
-        node_id_storage.mode = info->mode;
+        node_id.mode = info->mode;
         if (is_bcast_sid(&info->dest) == false &&
             (info->mode & MODE_LOW_MASK) == 0 &&
             (network->router->sid_type == STRUCTURED_SID)) {
-            error = sid_allocator_alloc(network, &node_id_storage);
-            if (error == UR_ERROR_NONE) {
-                node_id = &node_id_storage;
-            }
+            sid_allocator_alloc(network, &node_id);
         }
-        send_attach_response(network, &info->src_mac, node_id);
+        send_attach_response(network, &info->src_mac, &node_id);
         MESH_LOG_INFO("attach response to " EXT_ADDR_FMT "",
                       EXT_ADDR_DATA(info->src_mac.addr.addr));
     }
@@ -929,7 +939,6 @@ static ur_error_t handle_attach_response(message_t *message)
 
     g_mm_state.device.state = DEVICE_STATE_ATTACHED;
     ur_stop_timer(&network->attach_timer, network);
-
     error = sid_allocated_handler(info, tlvs, tlvs_length);
     if (error != UR_ERROR_NONE) {
         network->attach_state = ATTACH_SID_REQUEST;

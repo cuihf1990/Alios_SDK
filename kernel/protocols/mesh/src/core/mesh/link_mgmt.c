@@ -11,6 +11,9 @@
 #include "core/sid_allocator.h"
 #include "core/address_mgmt.h"
 #include "core/mesh_mgmt_tlvs.h"
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+#include "core/lowpower_mgmt.h"
+#endif
 #include "umesh_utils.h"
 #include "hal/interfaces.h"
 
@@ -281,7 +284,12 @@ neighbor_t *update_neighbor(const message_info_t *info,
         return NULL;
     }
 
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    lowpower_update_time_slot(nbr, tlvs, length);
+#endif
+
     nbr->mode = (node_mode_t)info->mode;
+
     if (nbr->state < STATE_CANDIDATE) {
         nbr->state = STATE_NEIGHBOR;
         nbr->stats.link_cost = 256;
@@ -506,6 +514,11 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
         return UR_ERROR_FAIL;
     }
     length += sizeof(mm_header_t);
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    if ((node->mode & MODE_RX_ON) == 0) {
+        length += sizeof(mm_time_slot_tv_t);
+    }
+#endif
 
     data = ur_mem_alloc(length);
     if (data == NULL) {
@@ -514,6 +527,11 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
     data_orig = data;
     data += sizeof(mm_header_t);
     data += tlvs_set_value(network, data, tlvs, tlvs_length);
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    if ((node->mode & MODE_RX_ON) == 0) {
+        data += lowpower_set_time_slot(data);
+    }
+#endif
 
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_LINK_ACCEPT_AND_REQUEST,
                                data_orig, length, LINK_MGMT_2);
