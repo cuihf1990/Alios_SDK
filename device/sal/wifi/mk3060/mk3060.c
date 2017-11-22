@@ -25,7 +25,7 @@ typedef struct {
     CONN_TYPE type;
     char *addr; // remote ip or domain
     int32_t r_port; // remote port (set to -1 if not used)
-    int32_t l_port; // local port (set tp -1 if not used)
+    int32_t l_port; // local port (set to -1 if not used)
     uint32_t tcp_keep_alive; // tcp keep alive setting (set to 0 if not used)
 } at_conn_t;
 #endif
@@ -362,9 +362,10 @@ static int fd_to_linkid(int fd)
 #define SEND_CMD "AT+CIPSEND"
 #define SEND_CMD_LEN (sizeof(SEND_CMD)+1+1+5+1+DATA_LEN_MAX+1)
 static int sal_wifi_send(int fd,
-                  int32_t remote_port,
-                  uint8_t *data,
-                  uint32_t len)
+                         uint8_t *data,
+                         uint32_t len,
+                         char remote_ip[16],
+                         int32_t remote_port)
 {
     int link_id;
     char cmd[SEND_CMD_LEN] = {0}, out[128] = {0};
@@ -416,9 +417,10 @@ typedef struct sk_data_s {
  * Make sure to consume from the front to end so to ensure data order.
  */
 static int sal_wifi_recv(int fd,
-                  int32_t local_port,
-                  uint8_t *buf,
-                  uint32_t *plen)
+                         uint8_t *buf,
+                         uint32_t *plen
+                         char remote_ip[16],
+                         int32_t remote_port)
 {
     int link_id, total_read = 0, to_read;
     sk_data_t *node;
@@ -462,7 +464,7 @@ static int sal_wifi_recv(int fd,
 #define DOMAIN_CMD_LEN (sizeof(DOMAIN_CMD)+MAX_DOMAIN_LEN+1)
 /* Return the first IP if multiple found. */
 static int sal_wifi_domain_to_ip(char *domain,
-                          char ip[16])
+                                 char ip[16])
 {
     char cmd[DOMAIN_CMD_LEN] = {0}, out[256] = {0}, *head, *end;
 
@@ -518,7 +520,7 @@ err:
 #define STOP_CMD "AT+CIPSTOP"
 #define STOP_CMD_LEN (sizeof(STOP_CMD)+1+1+5+1)
 static int sal_wifi_close(int fd,
-                   int32_t remote_port)
+                          int32_t remote_port)
 {
     int link_id;
     char cmd[STOP_CMD_LEN] = {0}, out[64];
