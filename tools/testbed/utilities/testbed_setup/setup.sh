@@ -34,6 +34,8 @@ sudo chown root:root /root/send-ip-mail.sh
 sudo cp rc.local /etc/rc.local
 sudo chown root:root /etc/rc.local
 sudo cp 98-usb-serial.rules /etc/udev/rules.d/
+sudo cp tb*_*.sh /usr/local/bin/
+sudo chmod +x /usr/local/bin/tb*_*.sh
 
 #install aos build dependent packages
 sudo apt-get -y install gcc-multilib

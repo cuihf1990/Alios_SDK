@@ -1,5 +1,4 @@
 import sys, json
-sys.path.append('../')
 from autotest import Autotest
 
 def print_help():

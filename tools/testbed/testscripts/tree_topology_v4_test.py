@@ -1,12 +1,6 @@
 import sys, os, time
 from autotest import Autotest
-
-def restore_extnetid(at, device_list):
-    #restore extnetid to default
-    extnetid = '010203040506'
-    for device in device_list:
-        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
-        at.device_run_cmd(device, ['umesh', 'whitelist', 'disable'])
+from mesh_common import *
 
 def main(firmware='~/lb-all.bin', model='mk3060'):
     ap_ssid = 'aos_test_01'
@@ -52,29 +46,36 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
         return [1, 'connect testbed failed']
 
     #request device allocation
-    if not model or model.lower() not in models:
-        print "error: unsupported model {0}".format(repr(model))
-        return [1, "model {0} error".format(repr(model))]
-    model = model.lower()
     number = 7
     timeout = 3600
-    allocted = at.device_allocate(model, number, timeout)
-    if len(allocted) != number:
-        print "error: request device allocation failed"
+    allocated = allocate_devices(at, model, number, timeout)
+    if len(allocated) != number:
         return [1, 'allocate device failed']
+
     devices = {}
-    for i in range(len(allocted)):
-        devices[chr(ord('A')+i)] = allocted[i]
+    for i in range(len(allocated)):
+        devices[chr(ord('A')+i)] = allocated[i]
     device_list = list(devices)
     device_list.sort()
     device_attr={}
 
-    if at.device_subscribe(devices) == False:
-        print 'error: subscribe to device failed, some devices may not exist in testbed'
+    #subscribe and reboot devices
+    result = subscribe_and_reboot_devices(at, devices)
+    if result == False:
         return [1, 'subscribe devices failed']
-    for device in device_list:
-        at.device_control(device, 'reset')
-    time.sleep(3)
+
+    #program devices
+    result = program_devices(at, devices, model, firmware)
+    if result == False:
+        return [1, 'program device failed']
+
+    #reboot and get device mac address
+    result = reboot_and_get_mac(at, device_list, device_attr)
+    if result == False:
+        return [1, 'reboot and get macaddr failed']
+
+    #set random extnetid and stop mesh
+    set_random_extnetid_and_stop_mesh(at, device_list)
 
     #program devices
     for device in device_list:
@@ -121,7 +122,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
         at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
         at.device_run_cmd(device, ['umesh', 'stop'])
 
-    #setup tree topology
+    #setup whitelist for tree topology
     print 'topology:'
     print '       A'
     print '    /     \\'
@@ -169,7 +170,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
     at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
     at.device_run_cmd(device, ['umesh', 'whitelist'])
 
-    #start devices
+    #start devices to form mesh network
     filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
     for i in range(len(device_list)):
         device = device_list[i]
@@ -178,8 +179,8 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
             time.sleep(12)
             uuid = at.device_run_cmd(device, ['uuid'], 1, 1.5, ['uuid:', 'not connected'])
             if uuid == False or len(uuid) != 1 or 'uuid:' not in uuid[0]:
-                print 'error: connect device to alink failed, response = {0}'.format(uuid)
-                restore_extnetid(at, device_list)
+                print 'error: connect device {0} to alink failed, response = {1}'.format(devices[device], uuid)
+                restore_device_status(at, device_list)
                 return [1, 'connect alink failed']
         else:
             at.device_run_cmd(device, ['umesh', 'start'])
@@ -204,80 +205,25 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
             print '{0} connect to mesh as {1} succeed'.format(device, expected_state)
         else:
             print 'error: {0} connect to mesh as {1} failed'.format(device, expected_state)
-            restore_extnetid(at, device_list)
-            return [1, 'connect mesh failed']
+            restore_device_status(at, device_list)
+            return [1, 'form desired mesh network failed']
 
-        succeed = False; retry = 3
-        while retry > 0:
-            ipaddr = at.device_run_cmd(device, ['umesh', 'ipaddr'], 2, 1, ['.'])
-            if ipaddr == False or ipaddr == [] or len(ipaddr) != 2:
-                continue
-            ipaddr[0] = ipaddr[0].replace('\t', '')
-            ipaddr[1] = ipaddr[1].replace('\t', '')
-            device_attr[device]['ipaddr'] = ipaddr[0:2]
-            succeed = True
-            break;
-        if succeed == False:
-            print 'error: get ipaddr for device {0} failed'.format(device)
-            restore_extnetid(at, device_list)
-            return [1, 'get ipaddr failed']
-    for device in device_list:
-        print "{0}:{1}".format(device, device_attr[device])
+    #get device ips
+    get_device_ips(at, device_list, device_attr)
 
+    #print device attributes
+    print_device_attrs(device_attr)
+
+    #ping test
+    [ping_pass_num, ping_fail_num] = ping_test(at, device_list, device_attr)
+
+    #udp test
+    [udp_pass_num, udp_fail_num] = udp_test(at, device_list, device_attr)
     retry = 5
-    #ping
-    print 'test connectivity with icmp:'
-    ping_pass_num = 0; ping_fail_num = 0
-    for device in device_list:
-        for other in device_list:
-            if device == other:
-                continue
-            for pkt_len in ['20', '500', '1000']:
-                filter = ['bytes from']
-                dst_ip = device_attr[other]['ipaddr'][0]
-                for i in range(retry):
-                    response = at.device_run_cmd(device, ['umesh', 'ping', dst_ip, pkt_len], 1, 0.5, filter)
-                    expected_response = '{0} bytes from {1}'.format(pkt_len, dst_ip)
-                    if response == False or response == [] or expected_response not in response[0]:
-                        if i < retry - 1:
-                            continue
-                        else:
-                            print '{0} ping {1} with {2} bytes by local ip addr failed'.format(device, other, pkt_len)
-                            ping_fail_num += 1
-                            break
-                    else:
-                        ping_pass_num += 1
-                        break
-    print 'ping: pass-{0}, fail-{1}'.format(ping_pass_num, ping_fail_num)
 
-    #udp
-    print '\ntest connectivity with udp:'
-    upd_pass_num = 0; udp_fail_num = 0
-    for device in device_list:
-        for other in device_list:
-            if device == other:
-                continue
-            for pkt_len in ['20', '500', '1000']:
-                dst_ip = device_attr[other]['ipaddr'][0]
-                filter = ['bytes autotest echo reply from']
-                for i in range(retry):
-                    response = at.device_run_cmd(device, ['umesh', 'autotest', dst_ip, '1', pkt_len], 1, 0.5, filter)
-                    expected_response = '{0} bytes autotest echo reply from {1}'.format(pkt_len, dst_ip)
-                    if response == False or response == [] or expected_response not in response[0]:
-                        if i < retry - 1:
-                            continue
-                        else:
-                            print '{0} send {1} with {2} bytes by local ip addr failed'.format(device, other, pkt_len)
-                            udp_fail_num += 1
-                            break
-                    else:
-                        upd_pass_num += 1
-                        break
-    print 'udp: pass-{0}, fail-{1}'.format(upd_pass_num, udp_fail_num)
-
-    restore_extnetid(at, device_list)
+    restore_device_status(at, device_list)
     at.stop()
-    return [0, 'success! ping: pass-{0} fail-{1}, udp: pass-{2} fail-{3}'.format(ping_pass_num, ping_fail_num, upd_pass_num, udp_fail_num)]
+    return [0, 'succeed. ping: pass-{0} fail-{1}, udp: pass-{2} fail-{3}'.format(ping_pass_num, ping_fail_num, udp_pass_num, udp_fail_num)]
 
 if __name__ == '__main__':
     [code, msg] = main()

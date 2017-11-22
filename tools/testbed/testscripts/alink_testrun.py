@@ -331,7 +331,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     else:
         print 'test {0} finished successfully'.format(testname)
         restore_extnetid(at, list(devices))
-        return [0, 'succeed']
+        return [0, 'passed']
 
 
 if __name__ == '__main__':

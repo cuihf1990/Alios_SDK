@@ -1,5 +1,4 @@
 import os, sys, time
-sys.path.append('../')
 from autotest import Autotest
 
 if len(sys.argv) < 2:

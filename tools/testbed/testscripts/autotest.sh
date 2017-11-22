@@ -49,7 +49,7 @@ if [ -f ${mk3060firmware} ]; then
     for test in ${mesh_tests}; do
         echo -e "\n---------------------------------------------------------\n" >> ${logfile}
         echo -e "start ${test}\n" >> ${logfile}
-        python ipv4/${test} --firmware=${mk3060firmware} --model=${model} >> ${logfile} 2>&1
+        python ${test} --firmware=${mk3060firmware} --model=${model} >> ${logfile} 2>&1
         if [ $? -eq 0 ]; then
             ret="success"
             mesh_pass_total=$((mesh_pass_total+1))
@@ -74,7 +74,7 @@ if [ -f ${esp32firmware} ]; then
     for test in ${mesh_tests}; do
         echo -e "\n---------------------------------------------------------\n" >> ${logfile}
         echo -e "start ${test}\n" >> ${logfile}
-        python ipv4/${test} --firmware=${esp32firmware} --model={model} >> ${logfile} 2>&1
+        python ${test} --firmware=${esp32firmware} --model={model} >> ${logfile} 2>&1
         if [ $? -eq 0 ]; then
             ret="success"
             mesh_pass_total=$((mesh_pass_total+1))
