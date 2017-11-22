@@ -197,7 +197,7 @@ static void netmgr_scan_adv_completed_event(hal_wifi_module_t *m,
                 last_ap = 1;
             }
             cb(result->ap_list[i].ssid, (const uint8_t *)result->ap_list[i].bssid,
-               result->ap_list[i].security, NETMGR_AWSS_ENC_TYPE_NONE,
+               (enum NETMGR_AWSS_AUTH_TYPE)result->ap_list[i].security, NETMGR_AWSS_ENC_TYPE_NONE,
                result->ap_list[i].channel, result->ap_list[i].ap_power, last_ap);
         }
         g_netmgr_cxt.wifi_scan_complete_cb_finished = true;
@@ -263,7 +263,7 @@ static void reconnect_wifi(void *arg)
 
     module = hal_wifi_get_default_module();
 
-    bzero(&type, sizeof(type));
+    memset(&type, 0, sizeof(type));
     type.wifi_mode = STATION;
     type.dhcp_mode = DHCP_CLIENT;
     strncpy(type.wifi_ssid, ap_config->ssid, sizeof(type.wifi_ssid) - 1);
