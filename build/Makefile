@@ -121,7 +121,7 @@ COMPONENT_DEPENDENCY_SCRIPT := $(MAKEFILES_PATH)/scripts/component_dependencies.
 COMPONENT_DEPENDENCY = $(PYTHON) $(COMPONENT_DEPENDENCY_SCRIPT)
 export COMPONENT_DEPENDENCY
 
-.PHONY: $(BUILD_STRING) main_app bootloader clean Help download total run download_bootloader .gdbinit$(BINSTYPE_LOWER)
+.PHONY: $(BUILD_STRING) main_app bootloader clean Help download total run download_bootloader .gdbinit .gdbinit$(BINSTYPE_LOWER)
 
 Help: 
 	$(TOOLCHAIN_HOOK_TARGETS)
@@ -158,7 +158,7 @@ PASSDOWN_TARGETS := $(strip $(filter-out $(MAKEFILE_TARGETS) $(BUILD_STRING),$(M
 $(PASSDOWN_TARGETS):
 	@:
 
-$(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit$(BINSTYPE_LOWER))
+$(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit .gdbinit$(BINSTYPE_LOWER))
 
 main_app: $(OUTPUT_DIR)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
 	$(QUIET)$(ECHO) Build AOS Now
@@ -170,9 +170,15 @@ main_app: $(OUTPUT_DIR)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/ao
 	$(QUIET)$(ECHO) Build complete
 
 ifeq ($(SUB_BUILD),)
-.gdbinit$(BINSTYPE_LOWER): $(OUTPUT_DIR)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
+.gdbinit: $(OUTPUT_DIR)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
 	$(QUIET)$(ECHO) Making $@
 	$(QUIET)$(ECHO) set remotetimeout 20 > $@
 	$(QUIET)$(ECHO) $(GDB_KILL_OPENOCD) >> $@
 	$(QUIET)$(ECHO) $(GDBINIT_STRING) >> $@
+
+ifneq ($(BINS),)
+.gdbinit$(BINSTYPE_LOWER): $(OUTPUT_DIR)/config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk main_app
+	$(QUIET)$(ECHO) Making $@
+	$(QUIET)$(ECHO) $(SUBGDBINIT_STRING) >> $@
+endif
 endif
