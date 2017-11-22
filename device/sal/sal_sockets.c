@@ -1,15 +1,10 @@
 #include <aos/aos.h>
 #include <string.h>
 #include "sal_sockets.h"
+#include "sal_arch.h"
 #include "err.h"
 
 #define TAG  "sal_socket"
-
-/* @todo */
-#define SYS_ARCH_DECL_PROTECT(lev)
-#define SYS_ARCH_PROTECT(lev)
-#define SYS_ARCH_UNPROTECT(lev)
-#define SYS_ARCH_SET(var, val) ((var) = (val))
 
 #define NUM_SOCKETS MEMP_NUM_NETCONN
 #define NUM_EVENTS  MEMP_NUM_NETCONN
@@ -21,8 +16,6 @@ static int  sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd
 static struct sal_sock *tryget_socket(int s);
 
 static struct sal_event *tryget_event(int s);
-//#define EVENT_SIMPLE
-#define SYS_ARCH_TIMEOUT 0xffffffffUL
 
 #define SAL_EVENT_OFFSET (NUM_SOCKETS + SAL_SOCKET_OFFSET)
 struct sal_event {
@@ -31,7 +24,7 @@ struct sal_event {
     int reads;
     int writes;
     /** semaphore to wake up a task waiting for select */
-    sys_sem_t *psem;
+    sal_sem_t *psem;
 };
 
 #ifndef SELWAIT_T
@@ -83,109 +76,25 @@ static struct sal_select_cb *select_cb_list;
     and checked in event_callback to see if it has changed. */
 static volatile int select_cb_ctr;
 
-err_t sys_sem_new(sys_sem_t *sem, uint8_t count)
-{
-    err_t ret = ERR_MEM;
-    int stat = aos_sem_new(sem, count);
-
-    if (stat == 0) {
-        ret = ERR_OK;
-    }
-    return ret;
-}
-
-/*
-    void sys_sem_free(sys_sem_t *sem)
-
-    Deallocates a semaphore.
-*/
-void sys_sem_free(sys_sem_t *sem)
-{
-    if ((sem != NULL)) {
-        aos_sem_free(sem);
-    }
-}
-
-/*
-    void sys_sem_signal(sys_sem_t *sem)
-
-    Signals a semaphore.
-*/
-void sys_sem_signal(sys_sem_t *sem)
-{
-    aos_sem_signal(sem);
-}
-
-/*
-    uint32_t sys_now(void)
-
-    This optional function returns the current time in milliseconds (don't care  for wraparound,
-    this is only used for time diffs).
-*/
-uint32_t sys_now(void)
-{
-    return aos_now_ms();
-}
-
-
-
-uint32_t sys_arch_sem_wait(sys_sem_t *sem, uint32_t timeout)
-{
-    uint32_t begin_ms, end_ms, elapsed_ms;
-    uint32_t ret;
-
-    if (sem == NULL) {
-        return SYS_ARCH_TIMEOUT;
-    }
-
-    begin_ms = sys_now();
-
-    if ( timeout != 0UL ) {
-        ret = aos_sem_wait(sem, timeout);
-        if (ret == 0) {
-            end_ms = sys_now();
-
-            elapsed_ms = end_ms - begin_ms;
-
-            ret = elapsed_ms;
-        } else {
-            ret = SYS_ARCH_TIMEOUT;
-        }
-    } else {
-        while ( !(aos_sem_wait(sem, AOS_WAIT_FOREVER) == 0));
-        end_ms = sys_now();
-
-        elapsed_ms = end_ms - begin_ms;
-
-        if ( elapsed_ms == 0UL ) {
-            elapsed_ms = 1UL;
-        }
-
-        ret = elapsed_ms;
-    }
-
-    return ret;
-}
-
 int sal_eventfd(unsigned int initval, int flags)
 {
     int i;
-    SYS_ARCH_DECL_PROTECT(lev);
+    SAL_ARCH_DECL_PROTECT(lev);
 
     /* allocate a new socket identifier */
     for (i = 0; i < NUM_EVENTS; ++i) {
         /* Protect socket array */
-        SYS_ARCH_PROTECT(lev);
+        SAL_ARCH_PROTECT(lev);
         if (!events[i].used) {
             events[i].used = 1;
             events[i].counts = 0;
             events[i].reads = 0;
             events[i].writes = 0;
             events[i].psem = NULL;
-            SYS_ARCH_UNPROTECT(lev);
+            SAL_ARCH_UNPROTECT(lev);
             return i + SAL_EVENT_OFFSET;
         }
-        SYS_ARCH_UNPROTECT(lev);
+        SAL_ARCH_UNPROTECT(lev);
     }
 
     return -1;
@@ -206,7 +115,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
 #if SAL_NETCONN_SEM_PER_THREAD
     int waited = 0;
 #endif
-    SYS_ARCH_DECL_PROTECT(lev);
+    SAL_ARCH_DECL_PROTECT(lev);
 
     SAL_DEBUG(("sal_select(%d, %p, %p, %p, tvsec=%d tvusec=%d)\n",
                     maxfdp1, (void *)readset, (void *) writeset, (void *) exceptset,
@@ -240,7 +149,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
 #if SAL_NETCONN_SEM_PER_THREAD
         select_cb.sem = SAL_NETCONN_THREAD_SEM_GET();
 #else /* SAL_NETCONN_SEM_PER_THREAD */
-        if (sys_sem_new(&select_cb.sem, 0) != ERR_OK) {
+        if (sal_sem_new(&select_cb.sem, 0) != ERR_OK) {
             /* failed to create semaphore */
             set_errno(ENOMEM);
             return -1;
@@ -248,7 +157,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
 #endif /* SAL_NETCONN_SEM_PER_THREAD */
 
         /* Protect the select_cb_list */
-        SYS_ARCH_PROTECT(lev);
+        SAL_ARCH_PROTECT(lev);
 
         /* Put this select_cb on top of list */
         select_cb.next = select_cb_list;
@@ -260,7 +169,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
         select_cb_ctr++;
 
         /* Now we can safely unprotect */
-        SYS_ARCH_UNPROTECT(lev);
+        SAL_ARCH_UNPROTECT(lev);
 
         /* Increase select_waiting for each socket we are interested in */
         maxfdp2 = maxfdp1;
@@ -270,7 +179,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
                 (exceptset && FD_ISSET(i, exceptset))) {
                 struct sal_sock *sock;
                 struct sal_event *event;
-                SYS_ARCH_PROTECT(lev);
+                SAL_ARCH_PROTECT(lev);
                 sock = tryget_socket(i);
                 event = tryget_event(i);
                 if (sock != NULL) {
@@ -282,10 +191,10 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
                     /* Not a valid socket */
                     nready = -1;
                     maxfdp2 = i;
-                    SYS_ARCH_UNPROTECT(lev);
+                    SAL_ARCH_UNPROTECT(lev);
                     break;
                 }
-                SYS_ARCH_UNPROTECT(lev);
+                SAL_ARCH_UNPROTECT(lev);
             }
         }
 
@@ -306,7 +215,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
                     }
                 }
 
-                waitres = sys_arch_sem_wait(SELECT_SEM_PTR(select_cb.sem), msectimeout);
+                waitres = sal_arch_sem_wait(SELECT_SEM_PTR(select_cb.sem), msectimeout);
 #if SAL_NETCONN_SEM_PER_THREAD
                 waited = 1;
 #endif
@@ -320,7 +229,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
                 (exceptset && FD_ISSET(i, exceptset))) {
                 struct sal_sock *sock;
                 struct sal_event *event;
-                SYS_ARCH_PROTECT(lev);
+                SAL_ARCH_PROTECT(lev);
                 sock = tryget_socket(i);
                 event = tryget_event(i);
                 if (sock != NULL) {
@@ -337,11 +246,11 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
                     /* Not a valid socket */
                     nready = -1;
                 }
-                SYS_ARCH_UNPROTECT(lev);
+                SAL_ARCH_UNPROTECT(lev);
             }
         }
         /* Take us off the list */
-        SYS_ARCH_PROTECT(lev);
+        SAL_ARCH_PROTECT(lev);
         if (select_cb.next != NULL) {
             select_cb.next->prev = select_cb.prev;
         }
@@ -354,15 +263,15 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
         }
         /* Increasing this counter tells event_callback that the list has changed. */
         select_cb_ctr++;
-        SYS_ARCH_UNPROTECT(lev);
+        SAL_ARCH_UNPROTECT(lev);
 
 #if SAL_NETCONN_SEM_PER_THREAD
-        if (select_cb.sem_signalled && (!waited || (waitres == SYS_ARCH_TIMEOUT))) {
+        if (select_cb.sem_signalled && (!waited || (waitres == SAL_ARCH_TIMEOUT))) {
             /* don't leave the thread-local semaphore signalled */
-            sys_arch_sem_wait(select_cb.sem, 1);
+            sal_arch_sem_wait(select_cb.sem, 1);
         }
 #else /* SAL_NETCONN_SEM_PER_THREAD */
-        sys_sem_free(&select_cb.sem);
+        sal_sem_free(&select_cb.sem);
 #endif /* SAL_NETCONN_SEM_PER_THREAD */
 
         if (nready < 0) {
@@ -371,7 +280,7 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
             return -1;
         }
 
-        if (waitres == SYS_ARCH_TIMEOUT) {
+        if (waitres == SAL_ARCH_TIMEOUT) {
             /* Timeout */
             SAL_DEBUG(("sal_select: timeout expired\n"));
             /* This is OK as the local fdsets are empty and nready is zero,
@@ -406,7 +315,7 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_
     fd_set lreadset, lwriteset, lexceptset;
     struct sal_sock *sock;
     struct sal_event *event;
-    SYS_ARCH_DECL_PROTECT(lev);
+    SAL_ARCH_DECL_PROTECT(lev);
 
     FD_ZERO(&lreadset);
     FD_ZERO(&lwriteset);
@@ -422,7 +331,7 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_
             continue;
         }
         /* First get the socket's status (protected)... */
-        SYS_ARCH_PROTECT(lev);
+        SAL_ARCH_PROTECT(lev);
         sock = tryget_socket(i);
         event = tryget_event(i);
         if (sock != NULL || event != NULL) {
@@ -430,7 +339,7 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_
             int16_t rcvevent = sock ? sock->rcvevent : event->reads;
             uint16_t sendevent = sock ? sock->sendevent : event->writes;
             uint16_t errevent = sock ? sock->errevent : 0;
-            SYS_ARCH_UNPROTECT(lev);
+            SAL_ARCH_UNPROTECT(lev);
             /* See if netconn of this socket is ready for read */
             if (readset_in && FD_ISSET(i, readset_in) && ((lastdata != NULL) || (rcvevent > 0))) {
                 FD_SET(i, &lreadset);
@@ -450,7 +359,7 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_
                 nready++;
             }
         } else {
-            SYS_ARCH_UNPROTECT(lev);
+            SAL_ARCH_UNPROTECT(lev);
             /* continue on to next FD in list */
         }
     }
@@ -527,19 +436,19 @@ int sal_write(int s, const void *data, size_t size)
     s -= SAL_SOCKET_OFFSET;
     struct sal_event *event = tryget_event(s);
     if (event) {
-        SYS_ARCH_DECL_PROTECT(lev);
+        SAL_ARCH_DECL_PROTECT(lev);
 
         if (size != sizeof(uint64_t)) {
             return -1;
         }
 
-        SYS_ARCH_PROTECT(lev);
+        SAL_ARCH_PROTECT(lev);
         event->counts += *(uint64_t *)data;
         if (event->counts) {
             event->reads = event->counts;
-            sys_sem_signal(event->psem);
+            sal_sem_signal(event->psem);
         }
-        SYS_ARCH_UNPROTECT(lev);
+        SAL_ARCH_UNPROTECT(lev);
         return size;
     }
     return sal_send(s, data, size, 0);
@@ -554,8 +463,8 @@ void sal_deal_event(int s, enum netconn_evt evt)
     if (!sock) {
         return;
     }
-    //暂时不做连接判断
-    SYS_ARCH_PROTECT(lev);
+    SAL_ARCH_DECL_PROTECT(lev);
+    SAL_ARCH_PROTECT(lev);
     /* Set event as required */
     switch (evt) {
         case NETCONN_EVT_RCVPLUS:
@@ -580,7 +489,7 @@ void sal_deal_event(int s, enum netconn_evt evt)
 
     if (sock->select_waiting == 0) {
         /* noone is waiting for this socket, no need to check select_cb_list */
-        SYS_ARCH_UNPROTECT(lev);
+        SAL_ARCH_UNPROTECT(lev);
         return;
     }
 
@@ -589,7 +498,7 @@ void sal_deal_event(int s, enum netconn_evt evt)
        ONLY IF a select was actually waiting. We go through the list the number
        of waiting select calls + 1. This list is expected to be small. */
 
-    /* At this point, SYS_ARCH is still protected! */
+    /* At this point, SAL_ARCH is still protected! */
 again:
     for (scb = select_cb_list; scb != NULL; scb = scb->next) {
         /* remember the state of select_cb_list to detect changes */
@@ -615,21 +524,21 @@ again:
             }
             if (do_signal) {
                 scb->sem_signalled = 1;
-                /* Don't call SYS_ARCH_UNPROTECT() before signaling the semaphore, as this might
+                /* Don't call SAL_ARCH_UNPROTECT() before signaling the semaphore, as this might
                    lead to the select thread taking itself off the list, invalidating the semaphore. */
-                sys_sem_signal(SELECT_SEM_PTR(scb->sem));
+                sal_sem_signal(SELECT_SEM_PTR(scb->sem));
             }
         }
         /* unlock interrupts with each step */
-        SYS_ARCH_UNPROTECT(lev);
+        SAL_ARCH_UNPROTECT(lev);
         /* this makes sure interrupt protection time is short */
-        SYS_ARCH_PROTECT(lev);
+        SAL_ARCH_PROTECT(lev);
         if (last_select_cb_ctr != select_cb_ctr) {
             /* someone has changed select_cb_list, restart at the beginning */
             goto again;
         }
     }
-    SYS_ARCH_UNPROTECT(lev);
+    SAL_ARCH_UNPROTECT(lev);
 
 }
 
@@ -646,17 +555,17 @@ again:
 static int alloc_socket(at_conn_t *newconn, int accepted)
 {
     int i;
-    SYS_ARCH_DECL_PROTECT(lev);
+    SAL_ARCH_DECL_PROTECT(lev);
 
     /* allocate a new socket identifier */
     for (i = 0; i < NUM_SOCKETS; ++i) {
         /* Protect socket array */
-        SYS_ARCH_PROTECT(lev);
+        SAL_ARCH_PROTECT(lev);
         if (!sockets[i].conn) {
             sockets[i].conn       = newconn;
             /* The socket is not yet known to anyone, so no need to protect
                after having marked it as used. */
-            SYS_ARCH_UNPROTECT(lev);
+            SAL_ARCH_UNPROTECT(lev);
             sockets[i].lastdata   = NULL;
             sockets[i].lastoffset = 0;
             sockets[i].rcvevent   = 0;
@@ -669,7 +578,7 @@ static int alloc_socket(at_conn_t *newconn, int accepted)
             sockets[i].select_waiting = 0;
             return i + SAL_SOCKET_OFFSET;
         }
-        SYS_ARCH_UNPROTECT(lev);
+        SAL_ARCH_UNPROTECT(lev);
     }
     return -1;
 }
@@ -818,7 +727,7 @@ static void free_socket(struct sal_sock *sock)
   sock->err        = 0;
 
   /* Protect socket array */
-  SYS_ARCH_SET(sock->conn, NULL);
+  SAL_ARCH_SET(sock->conn, NULL);
   /* don't use 'sock' after this line, as another task might have allocated it */
 }
 
