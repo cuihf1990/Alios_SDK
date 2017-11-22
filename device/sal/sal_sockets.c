@@ -1,4 +1,5 @@
 #include <aos/aos.h>
+#include <stdio.h>
 #include <string.h>
 #include "sal_sockets.h"
 #include "sal_arch.h"
@@ -667,11 +668,40 @@ int sal_init()
     return sal_op.init(); /* Low level init. */
 }
 
+#define SWAPS(s) ((((s) & 0xff) << 8) | (((s) & 0xff00) >> 8))
+
+static void ip4_sockaddr_to_ipstr_port(const struct sockadd *name,
+                                       char *ip, uint32_t *port)
+{
+    struct sockadd_in *saddr;
+    uint32_t ip_n;
+
+    if (!name || !ip || !port) return;
+
+    saddr = (struct sockaddr_in *)name;
+    memset(ip, 0, 16);
+    *port = 0;
+
+    /* Convert network order ip_addr to ip str (dot number fomrat) */
+    ip_n = saddr->sin_addr;
+    snprintf(ip, 15, "%d.%d.%d.%d", ip_n[0], ip_n[1], ip_n[2], ip_n[3]);
+
+    /* Netwwork order port_t to host order port number */
+    if (BYTE_ORDER == LITTLE_ENDIAN)
+        *port = SWAPS(saddr->sin_port);
+    else
+        *port = saddr->sin_port;
+
+    SAL_DEBUG("Socket address coverted to %s:%d", ip, port);
+}
+
 int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
     struct sal_sock *sock;
     err_t err;
     at_conn_t *c;
+    char ip_str[16] = {0};
+    uint32_t port;
 
     sock = get_socket(s);
     if (!sock) {
@@ -696,11 +726,16 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 
     /* Do connection */
     c = sock->conn;
+    ip4_sockaddr_to_ipstr_port(name, ip, &port);
+    c->addr = ip;
+    c->r_port = port;
     if ((err = sal_op.start(c)) != 0) {
         SAL_ERROR("sal_start failed.");
         sock_set_errno(sock, err_to_errno(ERR_IF));
         return -1;
     }
+
+    /* Update conn state here <TODO> */
 
     if (err != ERR_OK) {
         SAL_ERROR("sal_connect(%d) failed, err=%d\n", s, err);
