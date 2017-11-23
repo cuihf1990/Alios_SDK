@@ -703,6 +703,33 @@ static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name,
     SAL_DEBUG("Socket address coverted to %s:%d", ip, port);
 }
 
+// Caller to ensure a valid ip string
+static int ipstr_to_u32(char *ipstr, uint32_t *ip32)
+{
+    uint8_t *q = (uint8_t *)&ip32, n = 0, stridx = 0, dotnum = 0;
+    char *p = ipstr;
+
+    if (!ipstr || !n) return -1;
+
+    for (n = 0, stridx = 0, dotnum = 0;
+         *p != '\0' && stridx < 15 && dotnum < 4;
+         stridx++, p++) {
+        if (*p == '.') {
+            q[dotnum] = n; // saved in network order
+            n = 0;
+            dotnum++;
+            continue
+        }
+        if (*p < '0' || * > '9') return -1;
+        n = n * 10 + *p - '0';
+    }
+
+    if (dotnum >=4 || stridx >= 15) return -1;
+    else q[dotnum] = n; // the last number
+
+    return 0;
+} 
+
 int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
     struct sal_sock *sock;
@@ -813,3 +840,136 @@ int sal_close(int s)
   set_errno(0);
   return 0;
 }
+
+struct hostent* sal_gethostbyname(const char *name)
+{
+  ip_addr_t addr;
+  char ip_str[16] = {0};
+
+  static struct hostent s_hostent;
+  static char *s_aliases;
+  static ip_addr_t s_hostent_addr;
+  static ip_addr_t *s_phostent_addr[2];
+  static char s_hostname[DNS_MAX_NAME_LENGTH + 1];
+
+  if (!name) {
+    SAL_ERROR("%s failed, invalid argument.", __func__);
+    return NULL;
+  }
+
+  if (sal_op.domain_to_ip(name, ip_str) != 0) {
+    SAL_ERROR("domain to ip failed.");
+    return NULL;
+  }
+
+  addr.type = IPADDR_TYPE_V4;
+  if (ipstr_to_u32(ip_str, &(addr.u_addr.ip4.addr)) != 0) {
+    SAL_ERROR("ip_2_u32 failed");
+    return NULL;
+  }
+
+  /* fill hostent */
+  s_hostent_addr = addr;
+  s_phostent_addr[0] = &s_hostent_addr;
+  s_phostent_addr[1] = NULL;
+  strncpy(s_hostname, name, DNS_MAX_NAME_LENGTH);
+  s_hostname[DNS_MAX_NAME_LENGTH] = 0;
+  s_hostent.h_name = s_hostname;
+  s_aliases = NULL;
+  s_hostent.h_aliases = &s_aliases;
+  s_hostent.h_addrtype = AF_INET;
+  s_hostent.h_length = sizeof(ip_addr_t);
+  s_hostent.h_addr_list = (char**)&s_phostent_addr;
+
+  /* not thread safe, <TODO> */
+  return &s_hostent;
+}
+
+int sal_getsockopt(int s, int level, int optname,
+                   void *optval, socklen_t *optlen)
+{
+    u8_t err = 0;
+    struct sal_sock *sock = get_socket(s);
+
+    if (!sock) {
+        return -1;
+    }
+
+    if ((NULL == optval) || (NULL == optlen)) {
+        sock_set_errno(sock, EFAULT);
+        return -1;
+    }
+
+    /* Only support SOL_SOCKET/SO_ERROR for now. */
+    switch(level): {
+    case SOL_SOCKET:
+        switch(optname): {
+        case SO_ERROR:
+            if (*optlen < sizeof(int)) return EINVAL;
+            /* only overwrite ERR_OK or temporary errors */
+            if (((sock->err == 0) || (sock->err == EINPROGRESS)) &&
+              (sock->conn != NULL)) {
+                sock_set_errno(sock, err_to_errno(sock->conn->last_err));
+            }
+            *(int *)optval = (sock->err == 0xFF ? (int)-1 : (int)sock->err);
+            sock->err = 0;
+            SAL_DEBUG("sal_getsockopt(%d, SOL_SOCKET, SO_ERROR) = %d\n",
+                      s, *(int *)optval);
+            break;
+        default:
+            SAL_DEBUG("sal_getsockopt(%d, SOL_SOCKET, UNIMPL: optname=0x%x, ..)\n",
+                      s, optname);
+            err = ENOPROTOOPT;
+            break;
+        }
+        break;
+    default:
+        SAL_DEBUG("sal_getsockopt(%d, level=0x%x, UNIMPL: optname=0x%x, ..)\n",
+                  s, level, optname));
+        err = ENOPROTOOPT;
+        break;
+  }
+
+  sock_set_errno(sock, err);
+  return err ? -1 : 0;
+}
+
+int sal_setsockopt(int s, int level, int optname,
+                   const void *optval, socklen_t optlen)
+{
+    u8_t err = 0;
+    struct lwip_sock *sock = get_socket(s);
+
+    if (!sock) {
+        return -1;
+    }
+
+    if (NULL == optval) {
+        sock_set_errno(sock, EFAULT);
+        return -1;
+    }
+
+    switch(level): {
+    case SOL_SOCKET:
+        switch(optname): {
+            case SO_RCVTIMEO:
+                sock->conn->recv_timeout = 0; // don't actually used
+                break;
+            default:
+                SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: optname=0x%x, ..)\n",
+                          s, optname);
+                err = ENOPROTOOPT;
+                break;
+        }
+        break;
+    default:
+        SAL_DEBUG("sal_setsockopt(%d, level=0x%x, UNIMPL: optname=0x%x, ..)\n",
+                  s, level, optname);
+        err = ENOPROTOOPT;
+        break;
+    }
+
+    sock_set_errno(sock, err);
+    return err ? -1 : 0;
+}
+
