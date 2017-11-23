@@ -6,6 +6,7 @@
 #include <aos/aos.h>
 #include "vfs_conf.h"
 #include "sal_arch.h"
+#include "sal_pcb.h"
 #include "sal.h"
 
 #ifdef __cplusplus
@@ -107,6 +108,10 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen);
 #define SAL_DEBUG(format, ...)  LOGD(SAL_TAG, format, ##__VA_ARGS__)
 #define SAL_ERROR(format, ...)  LOGE(SAL_TAG, format, ##__VA_ARGS__)
 
+/* Helpers to process several netconn_types by the same code */
+#define NETCONNTYPE_GROUP(t)         ((t)&0xF0)
+#define NETCONNTYPE_DATAGRAM(t)      ((t)&0xE0)
+
 #if SAL_NETCONN_SEM_PER_THREAD
 #define SELECT_SEM_T        sal_sem_t*
 #define SELECT_SEM_PTR(sem) (sem)
@@ -171,6 +176,87 @@ enum netconn_state {
     NETCONN_CONNECT,
     NETCONN_CLOSE
 };
+
+/** @ingroup netconn_common
+ * Protocol family and type of the netconn
+ */
+enum netconn_type {
+  NETCONN_INVALID     = 0,
+  /** TCP IPv4 */
+  NETCONN_TCP         = 0x10,
+#if SAL_IPV6
+  /** TCP IPv6 */
+  NETCONN_TCP_IPV6    = NETCONN_TCP | NETCONN_TYPE_IPV6 /* 0x18 */,
+#endif /* SAL_IPV6 */
+  /** UDP IPv4 */
+  NETCONN_UDP         = 0x20,
+  /** UDP IPv4 lite */
+  NETCONN_UDPLITE     = 0x21,
+  /** UDP IPv4 no checksum */
+  NETCONN_UDPNOCHKSUM = 0x22,
+
+#if SAL_IPV6
+  /** UDP IPv6 (dual-stack by default, unless you call @ref netconn_set_ipv6only) */
+  NETCONN_UDP_IPV6         = NETCONN_UDP | NETCONN_TYPE_IPV6 /* 0x28 */,
+  /** UDP IPv6 lite (dual-stack by default, unless you call @ref netconn_set_ipv6only) */
+  NETCONN_UDPLITE_IPV6     = NETCONN_UDPLITE | NETCONN_TYPE_IPV6 /* 0x29 */,
+  /** UDP IPv6 no checksum (dual-stack by default, unless you call @ref netconn_set_ipv6only) */
+  NETCONN_UDPNOCHKSUM_IPV6 = NETCONN_UDPNOCHKSUM | NETCONN_TYPE_IPV6 /* 0x2a */,
+#endif /* SAL_IPV6 */
+
+  /** Raw connection IPv4 */
+  NETCONN_RAW         = 0x40
+#if SAL_IPV6
+  /** Raw connection IPv6 (dual-stack by default, unless you call @ref netconn_set_ipv6only) */
+  , NETCONN_RAW_IPV6    = NETCONN_RAW | NETCONN_TYPE_IPV6 /* 0x48 */
+#endif /* SAL_IPV6 */
+};
+
+struct sal_netconn;
+/** A callback prototype to inform about events for a netconn */
+typedef void (* netconn_callback)(struct sal_netconn *conn, enum netconn_evt, u16_t len);
+
+/** A netconn descriptor */
+typedef struct sal_netconn {
+  int socket;
+    /** type of the netconn (TCP, UDP or RAW) */
+  enum netconn_type type;
+  /** current state of the netconn */
+  enum netconn_state state;
+
+    /** the SAL internal protocol control block */
+  union {
+    struct ip_pcb  *ip;
+    struct tcp_pcb *tcp;
+    struct udp_pcb *udp;
+    struct raw_pcb *raw;
+  } pcb;
+  /** the last error this netconn had */
+  err_t last_err;
+  /** flags holding more netconn-internal state, see NETCONN_FLAG_* defines */
+  u8_t flags;
+#if SAL_SNDTIMEO
+  /** timeout to wait for sending data (which means enqueueing data for sending
+      in internal buffers) in milliseconds */
+  s32_t send_timeout;
+#endif /* SAL_SNDTIMEO */
+#if SAL_RCVTIMEO
+  /** timeout in milliseconds to wait for new data to be received
+      (or connections to arrive for listening netconns) */
+  int recv_timeout;
+#endif /* SAL_RCVTIMEO */
+#if SAL_RCVBUF
+  /** maximum amount of bytes queued in recvmbox
+      not used for TCP: adjust TCP_WND instead! */
+  int recv_bufsize;
+  /** number of bytes currently in recvmbox to be received,
+      tested against recv_bufsize to limit bytes on recvmbox
+      for UDP and RAW, used for FIONREAD */
+  int recv_avail;
+#endif /* SAL_RCVBUF */
+  /** A callback function that is informed about events for this netconn */
+  netconn_callback callback;
+}sal_netconn_t;
 
 #define AF_UNSPEC       0
 #define AF_INET         2

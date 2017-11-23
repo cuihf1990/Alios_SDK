@@ -41,7 +41,7 @@ struct sal_event {
 struct sal_sock {
     /** sockets currently are built on netconns, each socket has one netconn */
     /*conn may delete in sal*/
-     at_conn_t *conn;
+     sal_netconn_t *conn;
     /** data that was left from the previous read */
     void *lastdata;
     /** offset in the data that was left from the previous read */
@@ -558,7 +558,7 @@ again:
  *                 0 if socket has been created by socket()
  * @return the index of the new socket; -1 on error
  */
-static int alloc_socket(at_conn_t *newconn, int accepted)
+static int alloc_socket(sal_netconn_t *newconn, int accepted)
 {
     int i;
     SAL_ARCH_DECL_PROTECT(lev);
@@ -577,11 +577,10 @@ static int alloc_socket(at_conn_t *newconn, int accepted)
             sockets[i].rcvevent   = 0;
             /* TCP sendbuf is empty, but the socket is not yet writable until connected
              * (unless it has been created by accept()). */
-            //发送事件暂不支持
-            // sockets[i].sendevent  = (NETCONNTYPE_GROUP(newconn->type) == NETCONN_TCP ? (accepted != 0) : 1);
+            sockets[i].sendevent  = (NETCONNTYPE_GROUP(newconn->type) == NETCONN_TCP ? (accepted != 0) : 1);
             sockets[i].errevent   = 0;
             sockets[i].err        = 0;
-            sockets[i].select_waiting = 0;
+            sockets[i].select_waiting = 0;  
             return i + SAL_SOCKET_OFFSET;
         }
         SAL_ARCH_UNPROTECT(lev);
@@ -589,28 +588,28 @@ static int alloc_socket(at_conn_t *newconn, int accepted)
     return -1;
 }
 
-at_conn_t* netconn_new(CONN_TYPE t)
+sal_netconn_t* netconn_new(CONN_TYPE t)
 {
-  at_conn_t *conn;
+  sal_netconn_t *conn;
 
-  conn = (at_conn_t *)malloc(sizeof(at_conn_t));
+  conn = (sal_netconn_t *)malloc(sizeof(sal_netconn_t));
 
   if (conn == NULL) {
     return NULL;
   }
 
-  memset(conn,0,sizeof(at_conn_t));
+  memset(conn,0,sizeof(sal_netconn_t));
    conn->type=t;
   return conn;
 }
 
-err_t netconn_delete(at_conn_t *conn)
+err_t netconn_delete(sal_netconn_t *conn)
 {
   struct sal_sock *sock;
   if (conn == NULL) {
     return ERR_OK;
   }
-  int s =conn->fd;
+  int s =conn->socket;
   sock=get_socket(s);
   if(sock){
      sock->conn=NULL; 
@@ -623,7 +622,7 @@ err_t netconn_delete(at_conn_t *conn)
 
 int sal_socket(int domain, int type, int protocol)
 {
-  at_conn_t *conn;
+  sal_netconn_t *conn;
   int i;
 
 // #if !SAL_IPV6
@@ -659,7 +658,7 @@ int sal_socket(int domain, int type, int protocol)
     set_errno(ENFILE);
     return -1;
   }
-  conn->fd = i;
+  conn->socket = i;
   SAL_DEBUG("sal_socket new fd %d", i);
   set_errno(0);
   return i;
@@ -708,7 +707,7 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
     struct sal_sock *sock;
     err_t err;
-    at_conn_t *c;
+    sal_netconn_t *c;
     char ip_str[16] = {0};
     uint32_t port;
 
@@ -736,13 +735,16 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
     /* Do connection */
     c = sock->conn;
     ip4_sockaddr_to_ipstr_port(name, ip_str, &port);
-    c->addr = ip_str;
-    c->r_port = port;
-    if ((err = sal_op.start(c)) != 0) {
-        SAL_ERROR("sal_start failed.");
-        sock_set_errno(sock, err_to_errno(ERR_IF));
-        return -1;
-    }
+ 
+ //待整改！！
+
+    // c->addr = ip_str; 
+    // c->r_port = port;
+    // if ((err = sal_op.start(c)) != 0) {
+    //     SAL_ERROR("sal_start failed.");
+    //     sock_set_errno(sock, err_to_errno(ERR_IF));
+    //     return -1;
+    // }
 
     /* Update conn state here <TODO> */
 
