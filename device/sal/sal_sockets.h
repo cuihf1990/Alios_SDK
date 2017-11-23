@@ -83,6 +83,43 @@ struct sockaddr_in6 {
   u32_t           sin6_scope_id; /* Set of interfaces for scope */
 };
 
+struct hostent {
+    char  *h_name;      /* Official name of the host. */
+    char **h_aliases;   /* A pointer to an array of pointers to alternative host names,
+                           terminated by a null pointer. */
+    int    h_addrtype;  /* Address type. */
+    int    h_length;    /* The length, in bytes, of the address. */
+    char **h_addr_list; /* A pointer to an array of pointers to network addresses (in
+                           network byte order) for the host, terminated by a null pointer. */
+#define h_addr h_addr_list[0] /* for backward compatibility */
+};
+
+enum sal_ip_addr_type {
+  /** IPv4 */
+  IPADDR_TYPE_V4 =   0U,
+  /** IPv6 */
+  IPADDR_TYPE_V6 =   6U,
+  /** IPv4+IPv6 ("dual-stack") */
+  IPADDR_TYPE_ANY = 46U
+};
+
+typedef struct ip4_addr {
+  u32_t addr;
+} ip4_addr_t;
+
+typedef struct ip6_addr {
+  u32_t addr[4];
+} ip6_addr_t;
+
+typedef struct _ip_addr {
+  union {
+    ip6_addr_t ip6;
+    ip4_addr_t ip4;
+  } u_addr;
+  /** @ref sal_ip_addr_type */
+  u8_t type;
+} ip_addr_t;
+
 int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
                struct timeval *timeout);
 
@@ -266,6 +303,8 @@ typedef struct sal_netconn {
 #define PF_UNSPEC       AF_UNSPEC
 
 void sal_deal_event(int s, enum netconn_evt evt);
+
+#define DNS_MAX_NAME_LENGTH 256
 
 #define API_EVENT_SIMPLE(s,e) sal_deal_event(s,e)
 
