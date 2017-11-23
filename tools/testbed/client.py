@@ -41,10 +41,10 @@ class Client:
         self.poll_str += 'm'
 
     def send_device_list(self):
-        device_list = list(self.devices)
-        for port in device_list:
-            if self.devices[port]['valid'] != True:
-                device_list.remove(port)
+        device_list = []
+        for port in list(self.devices):
+            if self.devices[port]['valid']:
+                device_list.append(port)
         content = ':'.join(device_list)
         data = TBframe.construct(TBframe.CLIENT_DEV, content);
         try:

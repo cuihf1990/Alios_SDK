@@ -12,6 +12,14 @@ def allocate_devices(at, model, number, timeout):
         return []
     return allocated
 
+def print_device_list(devices):
+    device_list = list(devices)
+    device_list.sort()
+    print 'allocated devices:'
+    for device in device_list:
+        print '  {0}:{1}'.format(device, devices[device])
+    print ''
+
 #subscribe and reboot devices
 def subscribe_and_reboot_devices(at, devices):
     if at.device_subscribe(devices) == False:
@@ -33,16 +41,15 @@ def program_devices(at, devices, model, firmware):
     addr = models[model]
     for device in device_list:
         succeed = False; retry = 5
-        print 'programming device {0} ...'.format(devices[device])
         for i in range(retry):
             if at.device_program(device, addr, firmware) == True:
                 succeed = True
                 break
             time.sleep(0.5)
         if succeed == False:
-            print 'error: program device {0} failed'.format(devices[device])
+            print 'error: program device {0}:{1} failed'.format(device, devices[device])
             return False
-        print 'program device {0} succeed'.format(devices[device])
+    print 'program devices succeed\n'
     return True
 
 #reboot and get device mac address
@@ -58,7 +65,7 @@ def reboot_and_get_mac(at, device_list, device_attr):
             time.sleep(2.5)
             if mac and len(mac) == 1:
                 mac = mac[0].split()[-1]
-                mac = mac.replace('-', '')
+                mac = mac.replace('-', '') + '0000'
                 device_attr[device] = {'mac':mac}
                 succeed = True
                 break;
@@ -67,15 +74,54 @@ def reboot_and_get_mac(at, device_list, device_attr):
             return False
     return True
 
-#set random extnetid to isolate teset network
-def set_random_extnetid_and_stop_mesh(at, device_list):
+#set random extnetid to isolate the network
+def set_random_extnetid(at, device_list):
     bytes = os.urandom(6)
     extnetid = ''
     for byte in bytes:
         extnetid = extnetid + '{0:02x}'.format(ord(byte))
     for device in device_list:
         at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
-        at.device_run_cmd(device, ['umesh', 'stop'])
+
+#start devices
+def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
+    filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
+    for device in device_list:
+        succeed = False; retry = 5
+        role = device_attr[device]['role']
+        while retry > 0:
+            at.device_run_cmd(device, ['umesh', 'stop'])
+            for nbr in device_attr[device]['nbrs']:
+                at.device_run_cmd(device, ['umesh', 'whitelist', 'add', nbr])
+            at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
+            at.device_run_cmd(device, ['umesh', 'whitelist'])
+            if role == 'leader':
+                at.device_run_cmd(device, ['netmgr', 'connect', ap_ssid, ap_pass])
+                time.sleep(30)
+                uuid = at.device_run_cmd(device, ['uuid'], 1, 1.5, ['uuid:', 'not connected'])
+
+                state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
+                if uuid and 'uuid:' in uuid[0] and state == [role]:
+                    succeed = True
+                    break
+            else:
+                at.device_run_cmd(device, ['umesh', 'start'])
+                time.sleep(5)
+                state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
+                if state == [role]:
+                    succeed = True
+                    break
+            at.device_run_cmd(device, ['netmgr', 'clear'])
+            at.device_run_cmd(device, ['kv', 'del', 'alink'])
+            at.device_control(device, 'reset')
+            time.sleep(3)
+            retry -= 1
+        if succeed == False:
+            print "error: start {0} as {1} failed".format(device, role)
+            return False
+    print "form desired mesh network succeed\n"
+    return True
+
 
 #get device ips
 def get_device_ips(at, device_list, device_attr):
@@ -102,6 +148,7 @@ def print_device_attrs(device_attr):
     device_list.sort()
     for device in device_list:
         print "{0}:{1}".format(device, device_attr[device])
+    print ''
 
 #ping test
 def ping_test(at, device_list, device_attr):
@@ -128,13 +175,13 @@ def ping_test(at, device_list, device_attr):
                     else:
                         pass_num += 1
                         break
-    print 'ping: pass-{0}, fail-{1}'.format(pass_num, fail_num)
+    print 'ping: pass-{0}, fail-{1}\n'.format(pass_num, fail_num)
     return [pass_num, fail_num]
 
 #udp test
 def udp_test(at, device_list, device_attr):
     retry = 5
-    print '\ntest connectivity with udp:'
+    print 'test connectivity with udp:'
     pass_num = 0; fail_num = 0
     for device in device_list:
         for other in device_list:
@@ -156,7 +203,7 @@ def udp_test(at, device_list, device_attr):
                     else:
                         pass_num += 1
                         break
-    print 'udp: pass-{0}, fail-{1}'.format(pass_num, fail_num)
+    print 'udp: pass-{0}, fail-{1}\n'.format(pass_num, fail_num)
     return [pass_num, fail_num]
 
 def mcast_test(at, device_list, device_attr):

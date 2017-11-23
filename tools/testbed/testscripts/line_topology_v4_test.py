@@ -2,12 +2,11 @@ import os, sys, time
 from autotest import Autotest
 from mesh_common import *
 
-def main(firmware='~/lb-all.bin', model='mk3060'):
+def main(firmware='lb-mk3060.bin', model='mk3060'):
     ap_ssid = 'aos_test_01'
     ap_pass = 'Alios@Embedded'
     server = '10.125.52.132'
     port = 34568
-    models={'mk3060':'0x13200', 'esp32':'0x10000'}
 
     #parse input
     i = 1
@@ -58,6 +57,7 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
     device_list = list(devices)
     device_list.sort()
     device_attr={}
+    print_device_list(devices)
 
     #subscribe and reboot devices
     result = subscribe_and_reboot_devices(at, devices)
@@ -74,63 +74,41 @@ def main(firmware='~/lb-all.bin', model='mk3060'):
     if result == False:
         return [1, 'reboot and get macaddr failed']
 
-    #set random extnetid and stop mesh
-    set_random_extnetid_and_stop_mesh(at, device_list)
+    #set random extnetid to isolate the network
+    set_random_extnetid(at, device_list)
 
     #setup whitelist for line topology
     print "topology:"
     print "A <--> B <--> C <--> D <--> E\n"
-    for i in range(len(device_list)):
-        device = device_list[i]
-        at.device_run_cmd(device, ['umesh', 'whitelist', 'clear'])
-        if (i-1) >= 0:
-            prev_dev = device_list[i-1]
-            at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr[prev_dev]['mac']+'0000'])
-        if (i+1) < len(device_list):
-            next_dev = device_list[i+1]
-            at.device_run_cmd(device, ['umesh', 'whitelist', 'add', device_attr[next_dev]['mac']+'0000'])
-        at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
-        at.device_run_cmd(device, ['umesh', 'whitelist'])
+    device = 'A'
+    device_attr[device]['nbrs'] = []
+    device_attr[device]['nbrs'].append(device_attr['B']['mac'])
+    device_attr[device]['role'] = 'leader'
+    device = 'B'
+    device_attr[device]['nbrs'] = []
+    device_attr[device]['nbrs'].append(device_attr['A']['mac'])
+    device_attr[device]['nbrs'].append(device_attr['C']['mac'])
+    device_attr[device]['role'] = 'router'
+    device = 'C'
+    device_attr[device]['nbrs'] = []
+    device_attr[device]['nbrs'].append(device_attr['B']['mac'])
+    device_attr[device]['nbrs'].append(device_attr['D']['mac'])
+    device_attr[device]['role'] = 'router'
+    device = 'D'
+    device_attr[device]['nbrs'] = []
+    device_attr[device]['nbrs'].append(device_attr['C']['mac'])
+    device_attr[device]['nbrs'].append(device_attr['E']['mac'])
+    device_attr[device]['role'] = 'router'
+    device = 'E'
+    device_attr[device]['nbrs'] = []
+    device_attr[device]['nbrs'].append(device_attr['D']['mac'])
+    device_attr[device]['role'] = 'leaf'
 
     #start devices to form mesh network
-    filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
-    for i in range(len(device_list)):
-        device = device_list[i]
-        if i == 0:
-            at.device_run_cmd(device, ['netmgr', 'connect', ap_ssid, ap_pass])
-            time.sleep(12)
-            uuid = at.device_run_cmd(device, ['uuid'], 1, 1.5, ['uuid:', 'not connected'])
-            if uuid == False or len(uuid) != 1 or 'uuid:' not in uuid[0]:
-                print 'error: connect device {0} to alink failed, response = {1}'.format(devices[device], uuid)
-                restore_device_status(at, device_list)
-                return [1, 'connect alink failed']
-        else:
-            at.device_run_cmd(device, ['umesh', 'start'])
-            time.sleep(5)
-
-        if i == 0:
-            expected_state = 'leader'
-        elif i < len(device_list) - 1:
-            expected_state = 'router'
-        else:
-            expected_state = 'leaf'
-
-        succeed = False; retry = 5
-        while retry > 0:
-            state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
-            if state == [expected_state]:
-                succeed = True
-                break
-            at.device_run_cmd(device, ['umesh', 'stop'], 1, 1)
-            at.device_run_cmd(device, ['umesh', 'start'], 5, 1)
-            time.sleep(5)
-            retry -= 1
-        if succeed == True:
-            print '{0} connect to mesh as {1} succeed'.format(device, expected_state)
-        else:
-            print 'error: {0} connect to mesh as {1} failed'.format(device, expected_state)
-            restore_device_status(at, device_list)
-            return [1, 'form desired mesh network failed']
+    result = start_devices(at, device_list, device_attr, ap_ssid, ap_pass)
+    if result == False:
+        restore_device_status(at, device_list)
+        return [1, 'form desired mesh network failed']
 
     #get device ips
     get_device_ips(at, device_list, device_attr)
