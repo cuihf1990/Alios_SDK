@@ -373,5 +373,5 @@ int cloud_is_connected(void)
 {
     return accs.state == SERVICE_STATE_READY;
 }
-AOS_EXPORT(int, cloud_is_connected, void)
+AOS_EXPORT(int, cloud_is_connected, void);
 

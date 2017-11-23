@@ -17,15 +17,15 @@
 /*
  * symbols to export
  */
-AOS_EXPORT(ur_error_t, umesh_init, node_mode_t)
-AOS_EXPORT(ur_error_t, umesh_start, void)
-AOS_EXPORT(ur_error_t, umesh_stop, void)
-AOS_EXPORT(uint8_t, umesh_get_device_state, void)
-AOS_EXPORT(uint8_t, umesh_get_mode, void)
-AOS_EXPORT(ur_error_t, umesh_set_mode, uint8_t)
-AOS_EXPORT(const mac_address_t *, umesh_get_mac_address, media_type_t)
-AOS_EXPORT(const void *, ur_adapter_get_default_ipaddr, void)
-AOS_EXPORT(const void *, ur_adapter_get_mcast_ipaddr, void)
+AOS_EXPORT(ur_error_t, umesh_init, node_mode_t);
+AOS_EXPORT(ur_error_t, umesh_start, void);
+AOS_EXPORT(ur_error_t, umesh_stop, void);
+AOS_EXPORT(uint8_t, umesh_get_device_state, void);
+AOS_EXPORT(uint8_t, umesh_get_mode, void);
+AOS_EXPORT(ur_error_t, umesh_set_mode, uint8_t);
+AOS_EXPORT(const mac_address_t *, umesh_get_mac_address, media_type_t);
+AOS_EXPORT(const void *, ur_adapter_get_default_ipaddr, void);
+AOS_EXPORT(const void *, ur_adapter_get_mcast_ipaddr, void);
 
 void *umesh_pal_malloc(int sz)
 {

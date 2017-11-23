@@ -360,7 +360,7 @@ def main():
     syscall_stage = sys.argv[2]
     logging.info(sys.argv[2])
 
-    search_string = r"AOS_EXPORT\((.*?)\s*?\,\s*?[\\|\s]\s*?(\S*?)\s*?\,\s*?(.*?)\)$"
+    search_string = r"AOS_EXPORT\((.*?)\s*?\,\s*?[\\|\s]\s*?(\S*?)\s*?\,\s*?(.*?)\);$"
     copyright_path = r"./build/copyright"
     ksearch_rootdirs = syscall_path + r"/precompile/kernel"
     ksearch_rootdirs_additional = r"kernel/ksyscall"

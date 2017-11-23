@@ -40,7 +40,7 @@ void *sys_aos_malloc(unsigned int size, size_t allocator)
 
     return tmp;
 }
-AOS_EXPORT(void *, sys_aos_malloc, unsigned int, size_t)
+AOS_EXPORT(void *, sys_aos_malloc, unsigned int, size_t);
 
 void *sys_aos_realloc(void *mem, unsigned int size, size_t allocator)
 {
@@ -58,7 +58,7 @@ void *sys_aos_realloc(void *mem, unsigned int size, size_t allocator)
 
     return tmp;
 }
-AOS_EXPORT(void *, sys_aos_realloc, void *, unsigned int, size_t)
+AOS_EXPORT(void *, sys_aos_realloc, void *, unsigned int, size_t);
 
 void *sys_aos_zalloc(unsigned int size, size_t allocator)
 {
@@ -76,31 +76,31 @@ void *sys_aos_zalloc(unsigned int size, size_t allocator)
 
     return tmp;
 }
-AOS_EXPORT(void *, sys_aos_zalloc, unsigned int, size_t)
+AOS_EXPORT(void *, sys_aos_zalloc, unsigned int, size_t);
 
 int get_errno(void)
 {
     return errno;
 }
-AOS_EXPORT(int, get_errno, void)
+AOS_EXPORT(int, get_errno, void);
 
 void set_errno(int err)
 {
     errno = err;
 }
-AOS_EXPORT(void, set_errno, int)
+AOS_EXPORT(void, set_errno, int);
 
 #ifdef CONFIG_ALICRYPTO
-AOS_EXPORT(ali_crypto_result, ali_aes_get_ctx_size, aes_type_t, size_t *)
-AOS_EXPORT(ali_crypto_result, ali_aes_init, aes_type_t, bool, const uint8_t *, const uint8_t *, size_t, const uint8_t *, void *)
-AOS_EXPORT(ali_crypto_result, ali_aes_finish, const uint8_t *, size_t, uint8_t *, size_t *, sym_padding_t, void *)
+AOS_EXPORT(ali_crypto_result, ali_aes_get_ctx_size, aes_type_t, size_t *);
+AOS_EXPORT(ali_crypto_result, ali_aes_init, aes_type_t, bool, const uint8_t *, const uint8_t *, size_t, const uint8_t *, void *);
+AOS_EXPORT(ali_crypto_result, ali_aes_finish, const uint8_t *, size_t, uint8_t *, size_t *, sym_padding_t, void *);
 #endif
 
 #ifdef MBEDTLS_IN_KERNEL
-AOS_EXPORT(void *, mbedtls_ssl_connect, void *, const char *, int)
-AOS_EXPORT(int, mbedtls_ssl_send, void *, const char *, int)
-AOS_EXPORT(int, mbedtls_ssl_recv, void *, char *, int)
-AOS_EXPORT(int, mbedtls_ssl_close, void *)
+AOS_EXPORT(void *, mbedtls_ssl_connect, void *, const char *, int);
+AOS_EXPORT(int, mbedtls_ssl_send, void *, const char *, int);
+AOS_EXPORT(int, mbedtls_ssl_recv, void *, char *, int);
+AOS_EXPORT(int, mbedtls_ssl_close, void *);
 #endif
 
 
