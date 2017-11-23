@@ -253,7 +253,7 @@ int32_t hal_uart_init(uart_dev_t *uart)
     char out[128];
     int fd;
     struct termios t_opt;
-    speed_t baud = B921600;
+    speed_t baud = (speed_t)(uart->config.baud_rate);
 
     if (uart->port != AT_UART_PORT) return 0;
 
@@ -275,14 +275,35 @@ int32_t hal_uart_init(uart_dev_t *uart)
     if (0 != cfsetospeed(&t_opt, baud))
         return -1;
 
+    // 8N1, flow control, etc.
     t_opt.c_cflag |= (CLOCAL | CREAD);
-    t_opt.c_cflag &= ~PARENB;
-    // 8N1
-    t_opt.c_cflag &= ~CSTOPB;
+    if (uart->config.parity == NO_PARITY)
+        t_opt.c_cflag &= ~PARENB;
+    if (uart->config.stop_bits == STOP_BITS_1)
+        t_opt.c_cflag &= ~CSTOPB;
+    else
+        t_opt.c_cflag |= CSTOPB;
     t_opt.c_cflag &= ~CSIZE;
-    t_opt.c_cflag |= CS8;
+    switch (uart->config.data_width) {
+    case DATA_WIDTH_5BIT:
+        t_opt.c_cflag |= CS5;
+        break;
+    case DATA_WIDTH_6BIT:
+        t_opt.c_cflag |= CS6;
+        break;
+    case DATA_WIDTH_7BIT:
+        t_opt.c_cflag |= CS7;
+        break;
+    case DATA_WIDTH_8BIT:
+        t_opt.c_cflag |= CS8;
+        break;
+    default:
+        t_opt.c_cflag |= CS8;
+        break;
+    }
     t_opt.c_lflag &= ~(ECHO | ECHOE | ISIG | ICANON);
-    t_opt.c_cflag &= ~CRTSCTS;
+    if (uart->config.flow_control == FLOW_CONTROL_DISABLED)
+        t_opt.c_cflag &= ~CRTSCTS;
 
     /**
      * AT is going to use a binary protocol, so make sure to
