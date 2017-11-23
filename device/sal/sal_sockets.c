@@ -675,11 +675,14 @@ int sal_init()
 
 #define SWAPS(s) ((((s) & 0xff) << 8) | (((s) & 0xff00) >> 8))
 
-static void ip4_sockaddr_to_ipstr_port(const struct sockadd *name,
+static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name,
                                        char *ip, uint32_t *port)
 {
-    struct sockadd_in *saddr;
-    uint32_t ip_n;
+    struct sockaddr_in *saddr;
+    union {
+        uint32_t ip_u32;
+        uint8_t ip_u8[4];
+    } ip_u;
 
     if (!name || !ip || !port) return;
 
@@ -688,14 +691,15 @@ static void ip4_sockaddr_to_ipstr_port(const struct sockadd *name,
     *port = 0;
 
     /* Convert network order ip_addr to ip str (dot number fomrat) */
-    ip_n = saddr->sin_addr;
-    snprintf(ip, 15, "%d.%d.%d.%d", ip_n[0], ip_n[1], ip_n[2], ip_n[3]);
+    ip_u.ip_u32 = (uint32_t)(saddr->sin_addr.s_addr);
+    snprintf(ip, 15, "%d.%d.%d.%d", ip_u.ip_u8[0], ip_u.ip_u8[1],
+             ip_u.ip_u8[2], ip_u.ip_u8[3]);
 
     /* Netwwork order port_t to host order port number */
     if (BYTE_ORDER == LITTLE_ENDIAN)
-        *port = SWAPS(saddr->sin_port);
+        *port = (uint32_t)(SWAPS(saddr->sin_port));
     else
-        *port = saddr->sin_port;
+        *port = (uint32_t)(saddr->sin_port);
 
     SAL_DEBUG("Socket address coverted to %s:%d", ip, port);
 }
@@ -731,8 +735,8 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 
     /* Do connection */
     c = sock->conn;
-    ip4_sockaddr_to_ipstr_port(name, ip, &port);
-    c->addr = ip;
+    ip4_sockaddr_to_ipstr_port(name, ip_str, &port);
+    c->addr = ip_str;
     c->r_port = port;
     if ((err = sal_op.start(c)) != 0) {
         SAL_ERROR("sal_start failed.");
