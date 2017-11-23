@@ -52,8 +52,7 @@ GLOBAL_INCLUDES += mx108/mx378/func/mxchip/lwip-2.0.2/port \
                    mx108/mx378/os/include \
                    mx108/mx378/driver/include \
                    mx108/mx378/driver/common \
-                   mx108/mx378/ip/common \
-                   mx108/mx378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es
+                   mx108/mx378/ip/common
 
 $(NAME)_COMPONENTS += protocols.net
 
@@ -166,10 +165,7 @@ $(NAME)_INCLUDES := mx108/mx378/ip/common \
                     mx108/mx378/func/rwnx_intf \
                     mx108/mx378/app \
                     mx108/mx378/app/ftp \
-                    mx108/mx378/app/led \
-                    mx108/mx378/os/FreeRTOSv9.0.0/FreeRTOS/Source/portable/Keil/ARM968es \
-                    mx108/mx378/os/FreeRTOSv9.0.0/FreeRTOS/Source/include \
-                    mx108/mx378/os/FreeRTOSv9.0.0
+                    mx108/mx378/app/led
 
 $(NAME)_SOURCES :=  aos/aos_main.c
 $(NAME)_INCLUDES += aos
