@@ -125,12 +125,12 @@ def main(firmware='~/lb-all.bin', model='mk3060', duration = 12 * 3600, withalin
 
     print "pass: {0}, fail: {1}, success_rate: {2:.02f}%".format(pass_cnt, fail_cnt, pass_cnt*100.0/(pass_cnt+fail_cnt))
     if succeed:
-        print "Passed statbility test in {0} hours".format(duration/3600)
-        return [0, 'succeed. duration={0} hours'.format(duration/3600) ]
+        print "Passed statbility test in {0:0.3f} hours".format(duration/3600)
+        return [0, 'succeed. duration={0:0.3f} hours'.format(duration/3600) ]
     else:
         duration = end_time - start_time
-        print "Failed stability test, device went dead in {0} hours".format(duration/3600)
-        return [1, 'failed. duration={0} hours'.format(duration/3600) ]
+        print "Failed stability test, device went dead in {0:0.3f} hours".format(duration/3600)
+        return [1, 'failed. duration={0:0.3f} hours'.format(duration/3600) ]
 
 if __name__ == '__main__':
     [code, msg] = main()

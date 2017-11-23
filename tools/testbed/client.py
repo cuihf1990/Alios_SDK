@@ -33,6 +33,7 @@ class Client:
         self.devices = {}
         self.keep_running = True
         self.connected = False
+        self.models = ['mk3060', 'esp32']
         bytes = os.urandom(4)
         self.poll_str = '\x1b[t'
         for byte in bytes:
@@ -40,7 +41,11 @@ class Client:
         self.poll_str += 'm'
 
     def send_device_list(self):
-        content = ':'.join(list(self.devices))
+        device_list = list(self.devices)
+        for port in device_list:
+            if self.devices[port]['valid'] != True:
+                device_list.remove(port)
+        content = ':'.join(device_list)
         data = TBframe.construct(TBframe.CLIENT_DEV, content);
         try:
             self.service_socket.send(data)
@@ -106,7 +111,7 @@ class Client:
             self.devices[port]['filter'] = {}
         return response
 
-    def device_status_poll(self, port):
+    def device_cmd_process(self, port):
         poll_interval = 60
         poll_fail_num = 0
         poll_timeout = time.time() + poll_interval
@@ -116,7 +121,7 @@ class Client:
             data = TBframe.construct(TBframe.DEVICE_STATUS, content)
             self.service_socket.send(data)
         time.sleep(2)
-        while port in self.devices:
+        while os.path.exists(port):
             try:
                 if self.devices[port]['serial'].isOpen() == False:
                     time.sleep(0.02)
@@ -134,32 +139,37 @@ class Client:
 
                 block=True
                 timeout=0
-                [term, cmd] = [None, None]
                 try:
+                    args = None
                     if self.devices[port]['queue'].empty() == True and poll_queue.empty() == True:
-                        [term, cmd] = self.devices[port]['queue'].get(block=True, timeout=0.2)
+                        args = self.devices[port]['queue'].get(block=True, timeout=0.1)
                     elif self.devices[port]['queue'].empty() == False:
-                        [term, cmd] = self.devices[port]['queue'].get()
+                        args = self.devices[port]['queue'].get()
                 except Queue.Empty:
-                    [term, cmd] = [None, None]
+                    args = None
                     continue
                 except:
                     if DEBUG: Traceback.print_exc()
-                    [term, cmd] = [None, None]
+                    args = None
                     continue
 
-                if cmd != None:
-                    with self.devices[port]['wlock']:
-                        try:
-                            self.devices[port]['serial'].write(cmd)
-                            result='success'
-                        except:
-                            Traceback.print_exc()
-                            result='fail'
-                    print 'device', port, 'run command:', cmd[:-1]+', succeed'
-                    content = ','.join(term) + ',' + result
-                    self.send_packet(TBframe.DEVICE_CMD, content)
-                    [term, cmd] = [None, None]
+                if args != None:
+                    type = args[0]
+                    term = args[1]
+                    if type == TBframe.DEVICE_ERASE:
+                        self.device_erase(port, term)
+                    elif type == TBframe.DEVICE_PROGRAM:
+                        address = args[2]
+                        filename = args[3]
+                        self.device_program(port, address, filename, term)
+                    elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
+                        self.device_control(port, type, term)
+                    elif type == TBframe.DEVICE_CMD:
+                        cmd = args[2]
+                        self.device_run_cmd(port, cmd, term)
+                    else:
+                        print "error: unknown operation tyep {0}".format(repr(type))
+                    args = None
                     time.sleep(0.05)
                     continue
 
@@ -190,7 +200,7 @@ class Client:
                             if 'kernel version :' in line:
                                 self.devices[port]['attributes']['kernel_version'] = line.replace('kernel version :AOS-', '')
                             if 'app version :' in line:
-                                self.devices[port]['attributes']['app_version'] = line.replace('app version :APP-', '')
+                                self.devices[port]['attributes']['app_version'] = line.replace('app version :app-', '')
                     else:
                         poll_fail_num += 1
                 elif cmd == 'umesh status': #poll mesh status
@@ -259,65 +269,47 @@ class Client:
         log = ''
         if LOCALLOG:
             logfile= 'client/' + port.split('/')[-1] + '.log'
-            flog = open(logfile, 'a')
-        while self.keep_running:
-            if self.connected == False:
-                time.sleep(0.1)
+            flog = open(logfile, 'a+')
+        while os.path.exists(port):
+            if self.connected == False or self.devices[port]['serial'].isOpen() == False:
+                time.sleep(0.05)
                 continue
-            if self.devices[port]['rlock'].acquire(False):
-                if self.devices[port]['serial'].isOpen() == False:
-                    try:
-                        self.devices[port]['serial'].open()
-                    except:
-                        if os.path.exists(port) == True:
-                            print 'device_serve_thread, error: unable to open {0}'.format(port)
-                        self.devices[port]['rlock'].release()
-                        time.sleep(0.1)
-                        break
-                self.devices[port]['rlock'].release()
-                newline = False
+
+            newline = False
+            while self.devices[port]['rlock'].acquire(False) == True:
                 try:
-                    while self.devices[port]['rlock'].acquire(False) == True:
-                        try:
-                            c = self.devices[port]['serial'].read(1)
-                        except:
-                            if DEBUG: traceback.print_exc()
-                            time.sleep(0.02)
-                            c = ''
-                            self.devices[port]['serial'].close()
-                        finally:
-                            self.devices[port]['rlock'].release()
-                        if c != '':
-                            if log == '':
-                                log_time = time.time()
-                            log += c
-                            if c == '\n':
-                                newline = True
-                                break
-                        else:
-                            break
+                    c = self.devices[port]['serial'].read(1)
                 except:
-                    if DEBUG: traceback.print_exc()
+                    c = ''
+                finally:
+                    self.devices[port]['rlock'].release()
+
+                if c == '':
                     break
-                if log != '' and newline == True:
-                    self.response_filter(port, log)
-                    log = port + ':{0:.3f}:'.format(log_time) + log
-                    if LOCALLOG:
-                        flog.write(log)
-                    data = TBframe.construct(TBframe.DEVICE_LOG,log)
-                    log = ''
-                    try:
-                        self.service_socket.send(data)
-                    except:
-                        self.connected == False
-                        continue
-            else:
-                time.sleep(0.02)
-        self.devices[port]['serial'].close()
-        self.devices.pop(port)
+
+                if log == '':
+                    log_time = time.time()
+                log += c
+                if c == '\n':
+                    newline = True
+                    break
+
+            if log != '' and newline == True:
+                self.response_filter(port, log)
+                log = port + ':{0:.3f}:'.format(log_time) + log
+                if LOCALLOG:
+                    flog.write(log)
+                data = TBframe.construct(TBframe.DEVICE_LOG,log)
+                log = ''
+                try:
+                    self.service_socket.send(data)
+                except:
+                    self.connected == False
+                    continue
         if LOCALLOG:
             flog.close()
         print 'device {0} removed'.format(port)
+        self.devices[port]['valid'] = False
         self.send_device_list()
         print 'device log poll thread for {0} exited'.format(port)
 
@@ -345,7 +337,10 @@ class Client:
             devices_new.sort()
             for port in devices_new:
                 if port in list(self.devices):
-                    continue
+                    if self.devices[port]['valid'] == True:
+                        continue
+                    else:
+                        self.devices.pop(port)
                 try:
                     if 'mxchip' in port:
                         ser = serial.Serial(port, 921600, timeout = 0.02)
@@ -361,7 +356,8 @@ class Client:
                     print 'device_monitor, error: unable to open {0}'.format(port)
                     continue
                 print 'device {0} added'.format(port)
-                self.devices[port] = {'rlock':threading.RLock(), \
+                self.devices[port] = {'valid':True, \
+                                      'rlock':threading.RLock(), \
                                       'wlock':threading.RLock(), \
                                       'serial':ser, \
                                       'event':threading.Event(), \
@@ -375,15 +371,13 @@ class Client:
                     self.devices[port]['attributes']['model'] = 'ESP32'
                 self.devices[port]['attributes']['status'] = 'inactive'
                 thread.start_new_thread(self.device_log_poll, (port,))
-                thread.start_new_thread(self.device_status_poll, (port,))
+                thread.start_new_thread(self.device_cmd_process, (port,))
                 self.send_device_list()
             time.sleep(0.1)
         print 'device monitor thread exited'
         self.keep_running = False
 
     def esp32_erase(self, port):
-        if self.devices[port]['serial'].isOpen() == True:
-            self.devices[port]['serial'].close()
         retry = 3
         baudrate = 230400
         error = 'fail'
@@ -406,29 +400,34 @@ class Client:
         return error
 
     def device_erase(self, port, term):
-        ret = 'fail'
         model = 'unknown'
         if 'model' in self.devices[port]['attributes']:
             model = self.devices[port]['attributes']['model']
         model = model.lower()
 
-        if model == 'esp32':
-            self.devices[port]['rlock'].acquire()
-            self.devices[port]['wlock'].acquire()
+        if model != 'esp32':
+            print "error: erasing dose not support model '{0}'".format(model)
+            content = ','.join(term) + ',' + 'unknow model'
+            self.send_packet(TBframe.DEVICE_ERASE, content)
+            return
+
+        self.devices[port]['rlock'].acquire()
+        self.devices[port]['wlock'].acquire()
+        try:
             self.devices[port]['serial'].close()
             ret = esp32_erase(port)
             self.devices[port]['serial'].open()
+        except:
+            if DEBUG: traceback.print_exc()
+            ret = 'fail'
+        finally:
             self.devices[port]['wlock'].release()
             self.devices[port]['rlock'].release()
-            print 'erasing', port, '...', ret
-        else:
-            print "error: erasing dose not support device '{0}'".format(model)
+        print 'erasing', port, '...', ret
         content = ','.join(term) + ',' + ret
         self.send_packet(TBframe.DEVICE_ERASE, content)
 
     def esp32_program(self, port, address, file):
-        if self.devices[port]['serial'].isOpen() == True:
-            self.devices[port]['serial'].close()
         retry = 3
         baudrate = 230400
         error = 'fail'
@@ -481,50 +480,52 @@ class Client:
         return error
 
     def device_program(self, port, address, file, term):
-        ret = 'fail'
-        model = 'unknown'
+        if os.path.exists(port) == False or port not in self.devices:
+            print "error: progamming nonexist port {0}".format(port)
+            content = ','.join(term) + ',' + 'device nonexist'
+            self.send_packet(TBframe.DEVICE_PROGRAM, content)
+            return
 
+        model = 'unknown'
         if 'model' in self.devices[port]['attributes']:
             model = self.devices[port]['attributes']['model']
         model = model.lower()
+        if model not in self.models:
+            print "error: programing dose not support model '{0}'".format(model)
+            content = ','.join(term) + ',' + 'unknown model'
+            self.send_packet(TBframe.DEVICE_PROGRAM, content)
+            return
 
-        if model == 'esp32':
-            self.devices[port]['rlock'].acquire()
-            self.devices[port]['wlock'].acquire()
+        self.devices[port]['rlock'].acquire()
+        self.devices[port]['wlock'].acquire()
+        try:
             self.devices[port]['serial'].close()
-            ret = self.esp32_program(port, address, file)
+            if model == 'esp32':
+                ret = self.esp32_program(port, address, file)
+            elif model == 'mk3060':
+                ret = self.mxchip_program(port, address, file)
             self.devices[port]['serial'].open()
+        except:
+            if DEBUG: Traceback.print_exc()
+            ret = 'fail'
+        finally:
             self.devices[port]['wlock'].release()
             self.devices[port]['rlock'].release()
-            print 'programming', file, 'to', port, '@', address, '...', ret
-        elif model == 'mk3060':
-            self.devices[port]['rlock'].acquire()
-            self.devices[port]['wlock'].acquire()
-            self.devices[port]['serial'].close()
-            ret = self.mxchip_program(port, address, file)
-            self.devices[port]['serial'].open()
-            self.devices[port]['wlock'].release()
-            self.devices[port]['rlock'].release()
-            print 'programming', file, 'to', port, '@', address, '...', ret
-        else:
-            print "error: programing dose not support device '{0}'".format(model)
+        print 'programming', file, 'to', port, '@', address, '...', ret
         content = ','.join(term) + ',' + ret
         self.send_packet(TBframe.DEVICE_PROGRAM, content)
 
     def esp32_control(self, port, operation):
         try:
             if operation == TBframe.DEVICE_RESET:
-                print 'reset', port
                 self.devices[port]['serial'].setDTR(False)
                 time.sleep(0.1)
                 self.devices[port]['serial'].setDTR(True)
                 return 'success'
             elif operation == TBframe.DEVICE_STOP:
-                print 'stop', port
                 self.devices[port]['serial'].setDTR(False)
                 return 'success'
             elif operation == TBframe.DEVICE_START:
-                print 'start', port
                 self.devices[port]['serial'].setDTR(True)
                 return 'success'
         except:
@@ -534,48 +535,69 @@ class Client:
     def mxchip_control(self, port, operation):
         try:
             if operation == TBframe.DEVICE_RESET:
-                print 'reset', port
                 self.devices[port]['serial'].setRTS(True)
                 time.sleep(0.1)
                 self.devices[port]['serial'].setRTS(False)
                 return 'success'
             elif operation == TBframe.DEVICE_STOP:
-                print 'stop', port
                 self.devices[port]['serial'].setRTS(True)
                 return 'success'
             elif operation == TBframe.DEVICE_START:
-                print 'start', port
                 self.devices[port]['serial'].setRTS(False)
                 return 'success'
         except:
             pass
         return 'fail'
 
-    def device_control(self, port, operation):
-        if port not in self.devices:
-            return 'error'
+    def device_control(self, port, type, term):
+        operations= {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_STOP:'stop', TBframe.DEVICE_START:'start'}
+        if os.path.exists(port) == False or port not in self.devices:
+            print "error: controlling nonexist port {0}".format(port)
+            content = ','.join(term) + ',' + 'device nonexist'
+            self.send_packet(type, content)
+            return
 
-        ret = 'busy'
         model = 'unknown'
         if 'model' in self.devices[port]['attributes']:
             model = self.devices[port]['attributes']['model']
         model = model.lower()
+        if model not in self.models:
+            print "error: controlling unsupported model '{0}'".format(model)
+            content = ','.join(term) + ',' + 'unknown model'
+            self.send_packet(type, content)
+            return
 
-        if self.devices[port]['wlock'].acquire(False) == True:
+        with self.devices[port]['wlock']:
             try:
                 if model == 'esp32':
-                    ret = self.esp32_control(port, operation)
+                    ret = self.esp32_control(port, type)
                 elif model == 'mk3060':
-                    ret = self.mxchip_control(port, operation)
-                else:
-                    ret = 'fail'
+                    ret = self.mxchip_control(port, type)
             except:
                 if DEBUG: traceback.print_exc()
-            self.devices[port]['wlock'].release()
-        else:
-            operate= {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_STOP:'stop', TBframe.DEVICE_START:'start'}
-            print operate[operation], port, 'failed, device busy'
-        return ret
+                ret = 'fail'
+        print operations[type], port, ret
+        content = ','.join(term) + ',' + ret
+        self.send_packet(type, content)
+
+    def device_run_cmd(self, port, cmd, term):
+        if os.path.exists(port) == False or port not in self.devices:
+            print "error: run command at nonexist port {0}".format(port)
+            content = ','.join(term) + ',' + 'device nonexist'
+            self.send_packet(TBframe.DEVICE_CMD, content)
+            return
+
+        with self.devices[port]['wlock']:
+            try:
+                self.devices[port]['serial'].write(cmd+'\r')
+                result='success'
+                print "run command '{0}' at {1} succeed".format(cmd, port)
+            except:
+                Traceback.print_exc()
+                result='fail'
+                print "run command '{0}' at {1} failed".format(cmd, port)
+        content = ','.join(term) + ',' + result
+        self.send_packet(TBframe.DEVICE_CMD, content)
 
     def heartbeat_func(self):
         heartbeat_timeout = time.time() + 10
@@ -713,7 +735,18 @@ class Client:
                             continue
                         term = args[0:2]
                         port = args[2]
-                        thread.start_new_thread(self.device_erase, (port, term,))
+                        if os.path.exists(port) and port in self.devices:
+                            if self.devices[port]['queue'].full() == False:
+                                self.devices[port]['queue'].put([type, term])
+                                continue
+                            else:
+                                result = 'busy'
+                                print 'erase', port,  'failed, device busy'
+                        else:
+                            result = 'nonexist'
+                            print 'erase', port,  'failed, device nonexist'
+                        content = ','.join(term) + ',' + result
+                        self.send_packet(type, content)
                     elif type == TBframe.DEVICE_PROGRAM:
                         args = value.split(',')
                         if len(args) != 5:
@@ -727,14 +760,35 @@ class Client:
                             self.send_packet(type, content)
                             continue
                         filename = file_received[hash]
-                        thread.start_new_thread(self.device_program, (port, address, filename, term,))
+                        if os.path.exists(port) and port in self.devices:
+                            if self.devices[port]['queue'].full() == False:
+                                self.devices[port]['queue'].put([type, term, address, filename])
+                                continue
+                            else:
+                                result = 'busy'
+                                print 'program {0} to {1} @ {2} failed, device busy'.format(filename, port, address)
+                        else:
+                            result = 'error'
+                            print 'program {0} to {1} @ {2} failed, device nonexist'.format(filename, port, address)
+                        content = ','.join(term) + ',' + result
+                        self.send_packet(type, content)
                     elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
+                        operations = {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_START:'start', TBframe.DEVICE_STOP:'stop'}
                         args = value.split(',')
                         if len(args) != 3:
                             continue
                         term = args[0:2]
                         port = args[2]
-                        result = self.device_control(port, type)
+                        if os.path.exists(port) and port in self.devices:
+                            if self.devices[port]['queue'].full() == False:
+                                self.devices[port]['queue'].put([type, term])
+                                continue
+                            else:
+                                result = 'busy'
+                                print operations[type], port, 'failed, device busy'
+                        else:
+                            result = 'nonexist'
+                            print operations[type], port, 'failed, device nonexist'
                         content = ','.join(term) + ',' + result
                         self.send_packet(type, content)
                     elif type == TBframe.DEVICE_CMD:
@@ -744,16 +798,17 @@ class Client:
                         term = args[0:2]
                         port = args[2]
                         cmd = value[arglen:].split('|')
-                        cmd = ' '.join(cmd) +'\r'
-                        if port in self.devices:
+                        cmd = ' '.join(cmd)
+                        if os.path.exists(port):
                             if self.devices[port]['queue'].full() == False:
-                                self.devices[port]['queue'].put([term, cmd])
+                                self.devices[port]['queue'].put([type, term, cmd])
                                 continue
                             else:
                                 result = 'busy'
-                                print 'device', port, 'run command:', cmd[:-1]+', failed, device busy'
+                                print "run command '{0}' at {1} failed, device busy".format(cmd, port)
                         else:
-                            result = 'error'
+                            result = 'nonexist'
+                            print "run command '{0}' at {1} failed, device nonexist".format(cmd, port)
                         content = ','.join(term) + ',' + result
                         self.send_packet(type, content)
             except ConnetionLost:
