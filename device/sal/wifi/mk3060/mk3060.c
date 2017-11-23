@@ -157,6 +157,9 @@ static void handle_socket_data()
 
     /* Socket data into the tail of slink list */
     if (aos_mutex_lock(&g_data_mutex, AOS_WAIT_FOREVER) != 0) {
+        if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+            g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_ERROR);
+        }
         LOGE(TAG, "Failed to lock mutex.");
         return;
     }
@@ -392,6 +395,10 @@ static int sal_wifi_send(int fd,
 
     at.send_data_2stage((const char *)cmd, (const char *)data, len, out);
     LOGD(TAG, "The AT response is: %s", out);
+
+    if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_SENDPLUS);
+    }
     if (strstr(out, CMD_FAIL_RSP) != NULL) {
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
         return -1;
@@ -439,19 +446,28 @@ static int sal_wifi_recv(int fd,
         /* Update total_read and offset */
         total_read += to_read;
         node->offset += to_read;
+        if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+            g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVMINUS);
+        }
         /* Delete node if it's exhausted */
         if (node->offset >= (node->len - 1)) {
             if (aos_mutex_lock(&g_data_mutex, AOS_WAIT_FOREVER) != 0) {
                 LOGE(TAG, "Failed to lock mutex (%s).", __func__);
+                if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+                    g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_ERROR);
+                }
                 return -1;
             }
             slist_del(&node->next, &g_data);
             aos_mutex_unlock(&g_data_mutex);
             aos_free((void *)node);
+
+    
         }
         /* Continue or stop here? */
         if (total_read >= *plen) break;
     }
+
 
     /* Reflect the real read length, caller to check this ret value */
     *plen = total_read;
@@ -554,6 +570,12 @@ static int sal_wifi_close(int fd,
         aos_sem_free(&g_link[link_id].sem_close);
         g_link[link_id].sem_close.hdl = NULL;
         LOGD(TAG, "%s sem_wait succeed.", __func__);
+    }
+
+    if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVPLUS);
+        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_SENDPLUS);
+        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_ERROR);
     }
 
     return 0;
