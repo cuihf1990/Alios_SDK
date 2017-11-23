@@ -19,28 +19,37 @@ if [ $# -gt 1 ]; then
     esp32firmware=$2
 fi
 
-echo -e "Start Alink 2PPS and 5PPS test\n" > ${logfile}
+echo -e "Start Alink 5PPS/2PPS and stability tests\n" > ${logfile}
 alinkpids=""
 prefix=
 if [ -f ${mk3060firmware} ]; then
     model=mk3060
     python alink_testrun.py --testname=${prefix}5pps --firmware=${mk3060firmware} --model=${model} > ~/${model}_5pps.txt 2>&1 &
-    mk3060_5ppsPid=$!
+    mk3060_5pps_pid=$!
     sleep 30
     python alink_testrun.py --testname=${prefix}2pps --firmware=${mk3060firmware} --model=${model} > ~/${model}_2pps.txt 2>&1 &
-    mk3060_2ppsPid=$!
-    alinkpids="${alinkpids} ${mk3060_5ppsPid} ${mk3060_2ppsPid}"
+    mk3060_2pps_pid=$!
+    python stability_test.py --firmware=${mk3060firmware} --model=${model} --withalink=1 > ~/${model}_stability_alink.txt 2>&1 &
+    mk3060_stability_alink_pid=$!
+    python stability_test.py --firmware=${mk3060firmware} --model=${model} --withalink=0 > ~/${model}_stability_noalink.txt 2>&1 &
+    mk3060_stability_noalink_pid=$!
+    alinkpids="${alinkpids} ${mk3060_5pps_pid} ${mk3060_2pps_pid} ${mk3060_stability_alink_pid} ${mk3060_stability_noalink_pid}"
 fi
 if [ -f ${esp32firmware} ]; then
     model=esp32
     python alink_testrun.py --testname=${prefix}5pps --firmware=${esp32firmware} --model=${model} > ~/${model}_5pps.txt 2>&1 &
-    esp32_5ppsPid=$!
+    esp32_5pps_pid=$!
     sleep 30
     python alink_testrun.py --testname=${prefix}2pps --firmware=${esp32firmware} --model=${model} > ~/${model}_2pps.txt 2>&1 &
-    esp32_2ppsPid=$!
-    alinkpids="${alinkpids} ${esp32_5ppsPid} ${esp32_2ppsPid}"
+    esp32_2pps_pid=$!
+    python stability_test.py --firmware=${esp32firmware} --model=${model} --withalink=1 > ~/${model}_stability_alink.txt 2>&1 &
+    esp32_stability_alink_pid=$!
+    python stability_test.py --firmware=${esp32firmware} --model=${model} --withalink=0 > ~/${model}_stability_noalink.txt 2>&1 &
+    esp32_stability_noalink_pid=$!
+    alinkpids="${alinkpids} ${esp32_5pps_pid} ${esp32_2pps_pid} ${esp32_stability_alink_pid} ${esp32_stability_noalink_pid}"
 fi
 
+title=""
 if [ -f ${mk3060firmware} ]; then
     model="mk3060"
     mesh_pass=0
@@ -64,7 +73,7 @@ if [ -f ${mk3060firmware} ]; then
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     echo -e "Finished MESH functional autotest with ${model}, PASS:${mesh_pass} FAIL:${mesh_fail}\n" >> ${logfile}
 
-    title=" ${model}-PASS-${mesh_pass} FAIL-${mesh_fail};"
+    title="${title} ${model}-PASS-${mesh_pass} FAIL-${mesh_fail};"
 fi
 if [ -f ${esp32firmware} ]; then
     model="esp32"
@@ -89,7 +98,7 @@ if [ -f ${esp32firmware} ]; then
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     echo -e "Finished MESH functional automactic test with ${model}, PASS:${mesh_pass} FAIL:${mesh_fail}\n" >> ${logfile}
 
-    title=" ${model}-PASS:${mesh_pass} FAIL:${mesh_fail};"
+    title="${title} ${model}-PASS:${mesh_pass} FAIL:${mesh_fail};"
 fi
 
 #send result to mesh group first
@@ -119,59 +128,111 @@ done
 
 title=""
 if [ -f ${mk3060firmware} ]; then
-    wait ${mk3060_5ppsPid}
-    mk3060_5ppsRet=$?
-    wait ${mk3060_2ppsPid}
-    mk3060_2ppsRet=$?
+    model=mk3060
+    wait ${mk3060_5pps_pid}
+    mk3060_5pps_ret=$?
+    wait ${mk3060_2pps_pid}
+    mk3060_2pps_ret=$?
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
-    if [ ${mk3060_5ppsRet} -eq 0 ]; then
-        echo -e "run Alink 5PPS test with mk3060 succeed, log:\n" >> ${logfile}
+    if [ ${mk3060_5pps_ret} -eq 0 ]; then
+        echo -e "run Alink 5PPS test with ${model} succeed, log:\n" >> ${logfile}
         title="${title} MK3060: 5PPS-PASS"
     else
-        echo -e "run Alink 5PPS test with mk3060 failed, log:\n" >> ${logfile}
+        echo -e "run Alink 5PPS test with ${model} failed, log:\n" >> ${logfile}
         title="${title} MK3060: 5PPS-FAIL"
     fi
-    cat ~/mk3060_5pps.txt >> ${logfile}
-    rm -f ~/mk3060_5pps.txt
+    cat ~/${model}_5pps.txt >> ${logfile}
+    rm -f ~/${model}_5pps.txt
 
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
-    if [ ${mk3060_2ppsRet} -eq 0 ]; then
-        echo -e "run Alink 2PPS test with mk3060 succeed, log:\n" >> ${logfile}
+    if [ ${mk3060_2pps_ret} -eq 0 ]; then
+        echo -e "run Alink 2PPS test with ${model} succeed, log:\n" >> ${logfile}
         title="${title} 2PPS-PASS;"
     else
-        echo -e "run Alink 2PPS test with mk3060 failed, log:\n" >> ${logfile}
+        echo -e "run Alink 2PPS test with ${model} failed, log:\n" >> ${logfile}
         title="${title} 2PPS-FAIL;"
     fi
-    cat ~/mk3060_2pps.txt >> ${logfile}
-    rm -f ~/mk3060_2pps.txt
+    cat ~/${model}_2pps.txt >> ${logfile}
+    rm -f ~/${model}_2pps.txt
 fi
 
 if [ -f ${esp32firmware} ]; then
-    wait ${esp32_5ppsPid}
-    esp32_5ppsRet=$?
-    wait ${esp32_2ppsPid}
-    esp32_2ppsRet=$?
+    model=esp32
+    wait ${esp32_5pps_pid}
+    esp32_5pps_ret=$?
+    wait ${esp32_2pps_pid}
+    esp32_2pps_ret=$?
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
-    if [ ${esp32_5ppsRet} -eq 0 ]; then
-        echo -e "run Alink 5PPS test with esp32 succeed, log:\n" >> ${logfile}
+    if [ ${esp32_5pps_ret} -eq 0 ]; then
+        echo -e "run Alink 5PPS test with ${model} succeed, log:\n" >> ${logfile}
         title="${title} ESP32: 5PPS-PASS"
     else
-        echo -e "run Alink 5PPS test with esp32 failed, log:\n" >> ${logfile}
+        echo -e "run Alink 5PPS test with ${model} failed, log:\n" >> ${logfile}
         title="${title} ESP32: 5PPS-FAIL"
     fi
-    cat ~/esp32_5pps.txt >> ${logfile}
-    rm -f ~/esp32_5pps.txt
+    cat ~/${model}_5pps.txt >> ${logfile}
+    rm -f ~/${model}_5pps.txt
 
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
-    if [ ${esp32_2ppsRet} -eq 0 ]; then
-        echo -e "run Alink 2PPS test with esp32 succeed, log:\n" >> ${logfile}
+    if [ ${esp32_2pps_ret} -eq 0 ]; then
+        echo -e "run Alink 2PPS test with ${model} succeed, log:\n" >> ${logfile}
         title="${title} 2PPS-PASS;"
     else
-        echo -e "run Alink 2PPS test with esp32 failed, log:\n" >> ${logfile}
+        echo -e "run Alink 2PPS test with ${model} failed, log:\n" >> ${logfile}
         title="${title} 2PPS-FAIL;"
     fi
-    cat ~/esp32_2pps.txt >> ${logfile}
-    rm -f ~/esp32_2pps.txt
+    cat ~/${model}_2pps.txt >> ${logfile}
+    rm -f ~/${model}_2pps.txt
+fi
+
+if [ -f ${mk3060firmware} ]; then
+    model=mk3060
+    wait ${mk3060_stability_alink_pid}
+    mk3060_stability_alink_ret=$?
+    wait ${mk3060_stability_noalink_pid}
+    mk3060_stability_noalink_ret=$?
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    if [ ${mk3060_stability_alink_ret} -eq 0 ]; then
+        echo -e "run stability test with alink connected at ${model} succeed, log:\n" >> ${logfile}
+    else
+        echo -e "run stability test with alink connected at ${model} failed, log:\n" >> ${logfile}
+    fi
+    cat ~/${model}_stability_alink.txt >> ${logfile}
+    rm -f ~/${model}_stability_alink.txt
+
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    if [ ${mk3060_stability_noalink_ret} -eq 0 ]; then
+        echo -e "run stability test with alink disconnected at ${model} succeed, log:\n" >> ${logfile}
+    else
+        echo -e "run stability test with alink disconnected at ${model} failed, log:\n" >> ${logfile}
+    fi
+    cat ~/${model}_stability_noalink.txt >> ${logfile}
+    rm -f ~/${model}_stability_noalink.txt
+fi
+
+if [ -f ${esp32firmware} ]; then
+    model=esp32
+    wait ${esp32_stability_alink_pid}
+    esp32_stability_alink_ret=$?
+    wait ${esp32_stability_noalink_pid}
+    esp32_stability_noalink_ret=$?
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    if [ ${esp32_stability_alink_ret} -eq 0 ]; then
+        echo -e "run stability test with alink connected at ${model} succeed, log:\n" >> ${logfile}
+    else
+        echo -e "run stability test with alink connected at ${model} failed, log:\n" >> ${logfile}
+    fi
+    cat ~/${model}_stability_alink.txt >> ${logfile}
+    rm -f ~/${model}_stability_alink.txt
+
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    if [ ${esp32_stability_noalink_ret} -eq 0 ]; then
+        echo -e "run stability test with alink disconnected at ${model} succeed, log:\n" >> ${logfile}
+    else
+        echo -e "run stability test with alink disconnected at ${model} failed, log:\n" >> ${logfile}
+    fi
+    cat ~/${model}_stability_noalink.txt >> ${logfile}
+    rm -f ~/${model}_stability_noalink.txt
 fi
 
 #send email
