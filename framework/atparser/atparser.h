@@ -93,8 +93,8 @@ typedef struct {
     * @param recv_delimiter string of characters to use as line delimiters for receiving
     * @param timeout timeout of the connection
     */
-    void (*init)(uart_dev_t *u, const char *recv_delimiter,
-                 const char *send_delimiter, int timeout);
+    int (*init)(uart_dev_t *u, const char *recv_delimiter,
+                const char *send_delimiter, int timeout);
 
     void (*set_mode)(at_mode_t m);
 

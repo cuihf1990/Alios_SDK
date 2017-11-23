@@ -348,7 +348,9 @@ int application_start(int argc, char *argv[])
     uart_1.config.stop_bits    = AT_UART_STOP_BITS;
     uart_1.config.flow_control = AT_UART_FLOW_CONTROL;
 
-    at.init(&uart_1, AT_RECV_DELIMITER, AT_SEND_DELIMITER, 1000);
+    if (at.init(&uart_1, AT_RECV_DELIMITER, AT_SEND_DELIMITER, 1000) != 0)
+        return -1;
+
     at.set_mode(ASYN);
 
     aos_register_event_filter(EV_WIFI, wifi_event_handler, NULL);

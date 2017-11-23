@@ -13,10 +13,11 @@
 
 static void at_worker(void *arg);
 
-static void at_init_uart(uart_dev_t *u)
+static int at_init_uart(uart_dev_t *u)
 {
     at._uart = *u;
-    hal_uart_init(u);
+    if (hal_uart_init(u) != 0) return -1;
+    else return 0;
 }
 
 static void at_set_timeout(int timeout)
@@ -54,15 +55,15 @@ static int at_init_mutex()
     return 0;
 }
 
-static void at_init(uart_dev_t *u, const char *recv_delimiter,
+static int at_init(uart_dev_t *u, const char *recv_delimiter,
                     const char *send_delimiter, int timeout)
 {
     if (!u || !recv_delimiter || !send_delimiter || (timeout < 0)) {
         LOGE(MODULE_NAME, "%s: invalid argument", __func__);
-        return;
+        return -1;
     }
 
-    at_init_uart(u);
+    if (at_init_uart(u) != 0) return -1;
     at_set_timeout(timeout);
     at_set_recv_delimiter(recv_delimiter);
     at_set_send_delimiter(send_delimiter);
@@ -71,6 +72,8 @@ static void at_init(uart_dev_t *u, const char *recv_delimiter,
         slist_init(&at.task_l);
         aos_task_new("at_worker", at_worker, NULL, 4096);
     }
+
+    return 0;
 }
 
 static void at_set_mode(at_mode_t m)
