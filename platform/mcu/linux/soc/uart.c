@@ -198,21 +198,113 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
+#include <assert.h>
+#include <hal/soc/atcmd.h>
 
-#define AT_UART_PORT 1
-#define AT_UART_DEV "/dev/ttyUSB1"
 static int at_uart_fd = -1;
+
+static int read_and_discard_all_data(const int fd)
+{
+    int was_msg_already_printed = 0;
+
+    while (1) {
+        char buffer[1024];
+        const ssize_t read_count = read(fd, buffer, sizeof(buffer));
+
+        if (read_count == 0) {
+            /* "EOF" or "connection closed at the other end"*/
+            return 0;
+        }
+
+        if (read_count > 0) {
+            if (!was_msg_already_printed) {
+                printf("Some stale data was discarded.\r\n");
+                was_msg_already_printed = 1;
+            }
+
+            continue;
+        }
+
+        assert(read_count == -1);  /* According to the specification. */
+
+        const int errno_code = errno;
+
+        if (errno_code == EINTR)
+            continue;
+
+        if (errno_code == EAGAIN ||
+            errno_code == EWOULDBLOCK) {
+            /**
+             * We know that the file descriptor has been opened with
+             * O_NONBLOCK or O_NDELAY, and these codes mean that there
+             * is no data to read at present.
+             */
+            return 0;
+        }
+
+        /* Some other error has occurred. */
+        return -1;
+    }
+}
 
 int32_t hal_uart_init(uart_dev_t *uart)
 {
+    char out[128];
+    int fd;
+    struct termios t_opt;
+    speed_t baud = B921600;
+
     if (uart->port != AT_UART_PORT) return 0;
 
-    // still have problem with below stty setting <TODO>
-    //system("stty -F /dev/ttyUSB1 ispeed 115200 ospeed 115200 -echo cs8 -cstopb -parenb");
-    if ((at_uart_fd = open(AT_UART_DEV, O_RDWR | O_NOCTTY)) == -1) {
+    if ((at_uart_fd = open(AT_UART_LINUX_DEV,
+      O_RDWR | O_NOCTTY | O_NDELAY)) == -1) {
         printf("open at uart failed\r\n");
         return -1;
     }
+
+    fd = at_uart_fd;
+    /* set the serial port parameters */
+    fcntl(fd, F_SETFL, 0);
+    if (0 != tcgetattr(fd, &t_opt))
+        return -1;
+
+    if (0 != cfsetispeed(&t_opt, baud))
+        return -1;
+
+    if (0 != cfsetospeed(&t_opt, baud))
+        return -1;
+
+    t_opt.c_cflag |= (CLOCAL | CREAD);
+    t_opt.c_cflag &= ~PARENB;
+    // 8N1
+    t_opt.c_cflag &= ~CSTOPB;
+    t_opt.c_cflag &= ~CSIZE;
+    t_opt.c_cflag |= CS8;
+    t_opt.c_lflag &= ~(ECHO | ECHOE | ISIG | ICANON);
+    t_opt.c_cflag &= ~CRTSCTS;
+
+    /**
+     * AT is going to use a binary protocol, so make sure to
+     * turn off any CR/LF translation and the like.
+     */
+    t_opt.c_iflag &= ~(IXON | IXOFF | IXANY | INLCR | ICRNL);
+
+    t_opt.c_oflag &= ~OPOST;
+    t_opt.c_cc[VMIN] = 0;
+    t_opt.c_cc[VTIME] = 5;
+
+    if (0 != tcsetattr(fd, TCSANOW, &t_opt)) {
+        return -1;
+    }
+
+    printf("open at uart succeed\r\n");
+
+    // turn off AT echo
+    write(fd, AT_CMD_EHCO_OFF, strlen(AT_CMD_EHCO_OFF));
+    write(fd, AT_SEND_DELIMITER, strlen(AT_SEND_DELIMITER));
+    // clear uart buffer
+    read_and_discard_all_data(fd);
 
     return 0;
 }
@@ -223,18 +315,30 @@ int32_t hal_uart_finalize(uart_dev_t *uart)
     return 0;
 }
 
-int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
+int32_t hal_uart_send(uart_dev_t *uart, const void *data,
+                      uint32_t size, uint32_t timeout)
 {
+    uint32_t ret, rmd = size;
+
     if (uart->port == AT_UART_PORT) {
-        write(at_uart_fd, data, size);
+        while (rmd > 0) {
+            ret = write(at_uart_fd, data + size - rmd, rmd);
+            if (ret == -1) {
+                printf("write uart fd failed on error: %d.\r\n", errno);
+                return -1;
+            }
+            rmd -= ret;
+        }
     }
     else write(1, data, size);
     return 0;
 }
 
-int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout)
+int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,
+                      uint32_t *recv_size, uint32_t timeout)
 {
     int fd, n;
+
     if (uart->port == AT_UART_PORT) fd = at_uart_fd;
     else fd = 1;
 
