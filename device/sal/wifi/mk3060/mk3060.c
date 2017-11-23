@@ -30,7 +30,7 @@ typedef struct {
 } at_conn_t;
 #endif
 
-#define MAX_DOMAIN_LEN 64
+#define MAX_DOMAIN_LEN DNS_MAX_NAME_LENGTH
 #define DATA_LEN_MAX 10
 #define LINK_ID_MAX 5
 //static int g_fd_map[LINK_ID_MAX] = {-1};
