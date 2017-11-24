@@ -30,18 +30,7 @@ void be_jse_symbol_table_init()
     }
     gSymbolTable[BE_JSE_SYMBOL_TABLE_SIZE-1].next_sibling = 0;
 
-    gSymbolTableFirstFreeSlotID = 0;
-    be_jse_symbol_t *lastEmpty = 0;
-    for (i=0; i<BE_JSE_SYMBOL_TABLE_SIZE; i++) {
-        if (gSymbolTable[i].refs == SYM_TABLE_UNUSED_REF) {
-            gSymbolTable[i].next_sibling = 0;
-            if (lastEmpty)
-                lastEmpty->next_sibling = get_symbol_node_id(&gSymbolTable[i]);
-            else
-                gSymbolTableFirstFreeSlotID = get_symbol_node_id(&gSymbolTable[i]);
-            lastEmpty = &gSymbolTable[i];
-        }
-    }
+    gSymbolTableFirstFreeSlotID = 1;
 
 }
 
