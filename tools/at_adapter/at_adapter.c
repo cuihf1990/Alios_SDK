@@ -109,6 +109,7 @@ static void wifi_event_handler(input_event_t *event, void *priv_data)
     if (event->code == CODE_WIFI_ON_GOT_IP) {
         LOGD(TAG, "AT adapter interface is going to be up.");
 
+        at.oob(AT_EVENT_ENET_DATA, enet_raw_data_handler, NULL);
         enter_enet_raw_mode();
 
         if (hal_wifi_get_ip_stat(NULL, &ip_stat, STATION) != 0) {
@@ -152,6 +153,7 @@ static void enet_raw_data_handler_helper(void *arg)
         if (err == ERR_OK) {
             LOGD(TAG, "at_netif input finished.");
         } else {
+            pbuf_free(pbuf);
             LOGE(TAG, "at_netif input failed, err: %d", err);
         }
     }
@@ -220,6 +222,5 @@ static void enet_raw_data_handler()
 int at_adapter_init()
 {
     aos_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
-    at.oob(AT_EVENT_ENET_DATA, enet_raw_data_handler, NULL);
     return 0;
 }
