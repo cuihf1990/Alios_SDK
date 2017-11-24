@@ -56,9 +56,10 @@ class Client:
         if self.devices[port]['event'].is_set():
             return
 
-        if self.devices[port]['flock'].acquire(False) == False:
+        if self.devices[port]['flock'].locked():
             return
 
+        self.devices[port]['flock'].acquire()
         if len(self.devices[port]['filter']) == 0:
             self.devices[port]['flock'].release()
             return
@@ -84,7 +85,7 @@ class Client:
                 self.devices[port]['event'].set()
         self.devices[port]['flock'].release()
 
-    def poll_run_command(self, port, command, lines_expect, timeout):
+    def run_poll_command(self, port, command, lines_expect, timeout):
         filter = {}
         filter['cmd_str'] = self.poll_str + command
         filter['lines_exp'] = lines_expect
@@ -94,39 +95,29 @@ class Client:
         with self.devices[port]['flock']:
             self.devices[port]['filter'] = filter
         ser = self.devices[port]['serial']
-        if self.devices[port]['wlock'].acquire(False):
-            self.devices[port]['event'].clear()
-            try:
-                ser.write(filter['cmd_str'] + '\r')
-                self.devices[port]['wlock'].release()
-                self.devices[port]['event'].wait(timeout)
-            except:
-                if DEBUG: traceback.print_exc()
-                self.devices[port]['wlock'].release()
-            with self.devices[port]['flock']:
-                response = self.devices[port]['filter']['response']
-        else:
-            response = []
+        self.devices[port]['event'].clear()
+        try:
+            ser.write(filter['cmd_str'] + '\r')
+            self.devices[port]['event'].wait(timeout)
+        except:
+            if DEBUG: traceback.print_exc()
         with self.devices[port]['flock']:
+            response = self.devices[port]['filter']['response']
             self.devices[port]['filter'] = {}
+        #print command, response
         return response
 
     def device_cmd_process(self, port):
         poll_interval = 60
         poll_fail_num = 0
-        poll_timeout = time.time() + poll_interval
         poll_queue = Queue.Queue(12)
         if self.devices[port]['attributes'] != {}:
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
             data = TBframe.construct(TBframe.DEVICE_STATUS, content)
             self.service_socket.send(data)
-        time.sleep(2)
+        poll_timeout = time.time() + 3
         while os.path.exists(port):
             try:
-                if self.devices[port]['serial'].isOpen() == False:
-                    time.sleep(0.02)
-                    continue
-
                 if time.time() >= poll_timeout:
                     poll_timeout += poll_interval
                     poll_queue.put(['devname', 1, 0.1])
@@ -149,7 +140,7 @@ class Client:
                     args = None
                     continue
                 except:
-                    if DEBUG: Traceback.print_exc()
+                    if DEBUG: traceback.print_exc()
                     args = None
                     continue
 
@@ -177,7 +168,7 @@ class Client:
                     continue
 
                 [cmd, lines, timeout] = poll_queue.get()
-                response = self.poll_run_command(port, cmd, lines, timeout)
+                response = self.run_poll_command(port, cmd, lines, timeout)
 
                 if cmd == 'devname': #poll device model
                     if len(response) == lines and response[0].startswith('device name:'):
@@ -259,10 +250,12 @@ class Client:
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
                 self.service_socket.send(data)
             except:
-                if port not in self.devices:
+                if os.path.exists(port) == False or self.devices[port]['valid'] == False:
                     break
                 if DEBUG: traceback.print_exc()
-        print 'devie status poll thread for {0} exited'.format(port)
+                self.devices[port]['serial'].close()
+                self.devices[port]['serial'].open()
+        print 'devie command process thread for {0} exited'.format(port)
 
     def device_log_poll(self, port):
         log_time = time.time()
@@ -271,18 +264,19 @@ class Client:
             logfile= 'client/' + port.split('/')[-1] + '.log'
             flog = open(logfile, 'a+')
         while os.path.exists(port):
-            if self.connected == False or self.devices[port]['serial'].isOpen() == False:
-                time.sleep(0.05)
+            if self.connected == False or self.devices[port]['slock'].locked():
+                time.sleep(0.01)
                 continue
 
             newline = False
-            while self.devices[port]['rlock'].acquire(False) == True:
+            while self.devices[port]['slock'].acquire(False) == True:
                 try:
                     c = self.devices[port]['serial'].read(1)
                 except:
+                    if DEBUG: traceback.print_exc()
                     c = ''
                 finally:
-                    self.devices[port]['rlock'].release()
+                    self.devices[port]['slock'].release()
 
                 if c == '':
                     break
@@ -294,7 +288,7 @@ class Client:
                     newline = True
                     break
 
-            if log != '' and newline == True:
+            if newline == True and log != '':
                 self.response_filter(port, log)
                 log = port + ':{0:.3f}:'.format(log_time) + log
                 if LOCALLOG:
@@ -310,6 +304,7 @@ class Client:
             flog.close()
         print 'device {0} removed'.format(port)
         self.devices[port]['valid'] = False
+        self.devices[port]['serial'].close()
         self.send_device_list()
         print 'device log poll thread for {0} exited'.format(port)
 
@@ -336,39 +331,48 @@ class Client:
 
             devices_new.sort()
             for port in devices_new:
-                if port in list(self.devices):
-                    if self.devices[port]['valid'] == True:
-                        continue
-                    else:
-                        self.devices.pop(port)
-                try:
-                    if 'mxchip' in port:
-                        ser = serial.Serial(port, 921600, timeout = 0.02)
-                        ser.setRTS(False)
-                    elif 'espif' in port:
-                        ser = serial.Serial(port, 115200, timeout = 0.02)
-                        ser.setDTR(True)
-                        ser.setRTS(True)
-                    else:
-                        ser = serial.Serial(port, 921600, timeout = 0.02)
-                        ser.setRTS(False)
-                except:
-                    print 'device_monitor, error: unable to open {0}'.format(port)
+                if port in self.devices and self.devices[port]['valid']:
                     continue
+                if port in self.devices:
+                    self.devices[port]['serial'].close()
+                    self.devices[port]['serial'].open()
+                    if self.devices[port]['slock'].locked():
+                        self.devices[port]['slock'].release()
+                    if self.devices[port]['flock'].locked():
+                        self.devices[port]['flock'].release()
+                    while self.devices[port]['queue'].empty() == False:
+                        self.devices[port]['queue'].get()
+                    self.devices[port]['event'].set()
+                    self.devices[port]['valid'] = True
+                else:
+                    if 'mxchip' in port:
+                        baudrate = 921600
+                    elif 'espif' in port:
+                        baudrate = 115200
+                    else:
+                        baudrate = 115200
+
+                    try:
+                        ser = serial.Serial(port, baudrate, timeout = 0.02)
+                    except:
+                        print 'device_monitor, error: unable to open {0}'.format(port)
+                        continue
+                    self.devices[port] = {'valid':True, \
+                                          'serial':ser, \
+                                          'slock':threading.Lock(), \
+                                          'event':threading.Event(), \
+                                          'queue':Queue.Queue(12),
+                                          'attributes':{}, \
+                                          'filter':{}, \
+                                          'flock':threading.Lock()}
                 print 'device {0} added'.format(port)
-                self.devices[port] = {'valid':True, \
-                                      'rlock':threading.RLock(), \
-                                      'wlock':threading.RLock(), \
-                                      'serial':ser, \
-                                      'event':threading.Event(), \
-                                      'queue':Queue.Queue(12),
-                                      'attributes':{}, \
-                                      'filter':{}, \
-                                      'flock':threading.RLock()}
                 if 'mxchip' in port:
                     self.devices[port]['attributes']['model'] = 'MK3060'
+                    ser.setRTS(False)
                 if 'espif' in port:
                     self.devices[port]['attributes']['model'] = 'ESP32'
+                    ser.setDTR(True)
+                    ser.setRTS(True)
                 self.devices[port]['attributes']['status'] = 'inactive'
                 thread.start_new_thread(self.device_log_poll, (port,))
                 thread.start_new_thread(self.device_cmd_process, (port,))
@@ -411,8 +415,7 @@ class Client:
             self.send_packet(TBframe.DEVICE_ERASE, content)
             return
 
-        self.devices[port]['rlock'].acquire()
-        self.devices[port]['wlock'].acquire()
+        self.devices[port]['slock'].acquire()
         try:
             self.devices[port]['serial'].close()
             ret = esp32_erase(port)
@@ -421,8 +424,7 @@ class Client:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
         finally:
-            self.devices[port]['wlock'].release()
-            self.devices[port]['rlock'].release()
+            self.devices[port]['slock'].release()
         print 'erasing', port, '...', ret
         content = ','.join(term) + ',' + ret
         self.send_packet(TBframe.DEVICE_ERASE, content)
@@ -496,8 +498,7 @@ class Client:
             self.send_packet(TBframe.DEVICE_PROGRAM, content)
             return
 
-        self.devices[port]['rlock'].acquire()
-        self.devices[port]['wlock'].acquire()
+        self.devices[port]['slock'].acquire()
         try:
             self.devices[port]['serial'].close()
             if model == 'esp32':
@@ -506,11 +507,10 @@ class Client:
                 ret = self.mxchip_program(port, address, file)
             self.devices[port]['serial'].open()
         except:
-            if DEBUG: Traceback.print_exc()
+            if DEBUG: traceback.print_exc()
             ret = 'fail'
         finally:
-            self.devices[port]['wlock'].release()
-            self.devices[port]['rlock'].release()
+            self.devices[port]['slock'].release()
         print 'programming', file, 'to', port, '@', address, '...', ret
         content = ','.join(term) + ',' + ret
         self.send_packet(TBframe.DEVICE_PROGRAM, content)
@@ -567,15 +567,14 @@ class Client:
             self.send_packet(type, content)
             return
 
-        with self.devices[port]['wlock']:
-            try:
-                if model == 'esp32':
-                    ret = self.esp32_control(port, type)
-                elif model == 'mk3060':
-                    ret = self.mxchip_control(port, type)
-            except:
-                if DEBUG: traceback.print_exc()
-                ret = 'fail'
+        try:
+            if model == 'esp32':
+                ret = self.esp32_control(port, type)
+            elif model == 'mk3060':
+                ret = self.mxchip_control(port, type)
+        except:
+            if DEBUG: traceback.print_exc()
+            ret = 'fail'
         print operations[type], port, ret
         content = ','.join(term) + ',' + ret
         self.send_packet(type, content)
@@ -587,15 +586,14 @@ class Client:
             self.send_packet(TBframe.DEVICE_CMD, content)
             return
 
-        with self.devices[port]['wlock']:
-            try:
-                self.devices[port]['serial'].write(cmd+'\r')
-                result='success'
-                print "run command '{0}' at {1} succeed".format(cmd, port)
-            except:
-                Traceback.print_exc()
-                result='fail'
-                print "run command '{0}' at {1} failed".format(cmd, port)
+        try:
+            self.devices[port]['serial'].write(cmd+'\r')
+            result='success'
+            print "run command '{0}' at {1} succeed".format(cmd, port)
+        except:
+            if DEBUG: traceback.print_exc()
+            result='fail'
+            print "run command '{0}' at {1} failed".format(cmd, port)
         content = ','.join(term) + ',' + result
         self.send_packet(TBframe.DEVICE_CMD, content)
 
