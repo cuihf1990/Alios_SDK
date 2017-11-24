@@ -133,7 +133,7 @@ static int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic
 static int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *version)
 {
     int ret;
-#ifdef CONFIG_FOTA_DOWNLOAD_COAP    
+#ifdef FOTA_DOWNLOAD_COAP    
     ret = snprintf(buf,
                    buf_len,
                    "{\"id\":%d,\"params\":{\"mode\":\"coap\",\"version\":\"%s\"}}",
@@ -297,11 +297,36 @@ int8_t platform_ota_parse_response(const char *response, int buf_len, ota_respon
             OTA_LOG_E("resourceUrl back.");
             goto parse_failed;
         }
+
         strncpy(response_parmas->download_url, resourceUrl->valuestring,
                 (sizeof response_parmas->download_url)-1);
 
         OTA_LOG_D(" response_parmas->download_url %s",
                   response_parmas->download_url);
+
+        cJSON *resourceVer = cJSON_GetObjectItem(json_obj, "version");
+        if (!resourceVer) {
+            OTA_LOG_E("resourceVer back.");
+            goto parse_failed;
+        }
+
+        OTA_LOG_D(" response version %s", resourceVer->valuestring);
+        char *upgrade_version = strtok(resourceVer->valuestring, "_");
+        if (!upgrade_version) {
+            strncpy(response_parmas->primary_version, resourceVer->valuestring,
+                    (sizeof response_parmas->primary_version)-1);
+        } else {
+            strncpy(response_parmas->primary_version, upgrade_version,
+                    (sizeof response_parmas->primary_version)-1);
+
+            upgrade_version = strtok(NULL, "_");
+            if (upgrade_version) {
+                strncpy(response_parmas->secondary_version, upgrade_version,
+                        (sizeof response_parmas->secondary_version)-1);
+            }
+            OTA_LOG_I("response primary_version = %s, secondary_version = %s",
+                      response_parmas->primary_version, response_parmas->secondary_version);
+        }
 
         cJSON *md5 = cJSON_GetObjectItem(json_obj, "md5");
         if (!md5) {
@@ -387,7 +412,7 @@ int8_t platform_ota_status_post(int status, int progress)
         progress = 0;
     }
 
-    ret = otalib_GenReportMsg(msg_reported, MSG_REPORT_LEN, 0, progress, msg_reported);
+    ret = otalib_GenReportMsg(msg_reported, MSG_REPORT_LEN, 0, progress, NULL);
     if (0 != ret) {
         OTA_LOG_E("generate reported message failed");
         return -1;
