@@ -212,7 +212,7 @@ kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
     NULL_PARA_CHK(work);
     NULL_PARA_CHK(handle);
 
-    dly = dly / RHINO_CONFIG_TIMER_RATE;
+    memset(work, 0, sizeof(kwork_t));
 
     klist_init(&(work->work_node));
     work->handle  = handle;

@@ -56,23 +56,25 @@ static void WORK_aosapi_kernel_workqueue_custom(void *arg)
 }
 static void CASE_aosapi_kernel_workqueue_custom()
 {
-	int ret = 0;
+    int ret = 0;
 
-	ret = aos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+    ret = aos_sem_new(&sync_sem, 0);
+    YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
-	ret = aos_workqueue_create(&workqueue, 10, 1024);
-	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+    ret = aos_workqueue_create(&workqueue, 10, 1024);
+    YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
-	ret = aos_work_init(&work, WORK_aosapi_kernel_workqueue_custom, NULL, 100);
-	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+    ret = aos_work_init(&work, WORK_aosapi_kernel_workqueue_custom, NULL, 100);
+    YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
-	ret = aos_work_run(&workqueue, &work);
-	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+    ret = aos_work_run(&workqueue, &work);
+    YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
 
-	ret = aos_sem_wait(&sync_sem, RHINO_WAIT_FOREVER);
-	YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
-	aos_workqueue_del(&workqueue);
+    ret = aos_sem_wait(&sync_sem, RHINO_WAIT_FOREVER);
+    YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
+    aos_workqueue_del(&workqueue);
+    aos_sem_free(&sync_sem);
+    aos_work_destroy(&work);
 }
 
 static void WORK_aosapi_kernel_work_param(void* arg)
