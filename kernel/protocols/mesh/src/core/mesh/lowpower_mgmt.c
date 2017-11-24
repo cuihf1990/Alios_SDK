@@ -25,6 +25,8 @@ typedef struct lowpower_state_s {
     ur_timer_t wakeup_timer;
     ur_timer_t parent_sleep_timer;
     ur_timer_t sleep_timer;
+    time_slot_t parent_time_slot;  // indicates parent time slot when wake up
+    int16_t parent_bufqueue_size;
     mm_cb_t interface_callback;
     slist_t lowpower_callback;
 } lowpower_state_t;
@@ -80,15 +82,31 @@ static void update_schedule_timer(schedule_type_t type)
                         g_lowpower_state.slot_num, g_lowpower_state.timestamp);
     } else {
         attach = umesh_mm_get_attach_node();
-        slot = attach->time_slot.slot_num;
+        slot = g_lowpower_state.parent_time_slot.slot_num;
         next_slot = get_next_slot_num(attach->mac, slot);
         offset = (next_slot + SLOTS_SIZE - slot - 1) * SLOT_INTERVAL;
-        offset -= attach->time_slot.offset;
+        offset -= g_lowpower_state.parent_time_slot.offset;
         g_lowpower_state.parent_wakeup_timer = ur_start_timer(offset, handle_parent_wakeup_timer, schedule_type);
-        attach->time_slot.slot_num = next_slot;
-        attach->time_slot.offset = 0;
+        g_lowpower_state.parent_time_slot.slot_num = next_slot;
+        g_lowpower_state.parent_time_slot.offset = 0;
         MESH_LOG_DEBUG("wakeup at parent schedule, slot %d, at %d",
-                        attach->time_slot.slot_num, umesh_now_ms() + offset);
+                        g_lowpower_state.parent_time_slot.slot_num, umesh_now_ms() + offset);
+    }
+}
+
+static void set_neighbors_state_sleep(void)
+{
+    slist_t *nbrs;
+    neighbor_t *nbr;
+    slist_t *hals;
+    hal_context_t *hal;
+
+    hals = get_hal_contexts();
+    slist_for_each_entry(hals, hal, hal_context_t, next) {
+        nbrs = umesh_get_nbrs(hal->module->type);
+        slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
+            nbr->flags &= (~NBR_WAKEUP);
+        }
     }
 }
 
@@ -97,6 +115,11 @@ static void sleep_timer_handler(void *args)
     schedule_type_t type = *(schedule_type_t *)args;
 
     ur_mem_free(args, sizeof(schedule_type_t));
+
+    if (type == SCHEDULE) {
+        set_neighbors_state_sleep();
+    }
+
     if (g_lowpower_state.enabled == true) {
         update_schedule_timer(type);
         if ((umesh_get_mode() & MODE_RX_ON) == 0 && g_lowpower_state.sleep_timer == NULL &&
@@ -153,7 +176,7 @@ static ur_error_t mesh_interface_up(void)
 {
     uint8_t state = umesh_get_device_state();
 
-    if ((umesh_mm_get_mode() & MODE_RX_ON) == 0 &&
+    if ((umesh_get_mode() & MODE_RX_ON) == 0 &&
         state != DEVICE_STATE_LEADER && state != DEVICE_STATE_SUPER_ROUTER) {
         MESH_LOG_DEBUG("lowpower interface up");
         update_schedule_timer(PARENT_SCHEDULE);
@@ -180,31 +203,57 @@ void lowpower_init(void)
     g_lowpower_state.timestamp = umesh_now_ms();
     update_schedule_timer(SCHEDULE);
 
-    if ((umesh_mm_get_mode() & MODE_RX_ON) == 0) {
+    if ((umesh_get_mode() & MODE_RX_ON) == 0) {
         g_lowpower_state.enabled = true;
     }
 }
 
-void lowpower_update_time_slot(neighbor_t *nbr, uint8_t *tlvs, uint16_t length)
+void lowpower_update_info(neighbor_t *nbr, uint8_t *tlvs, uint16_t length)
 {
     mm_time_slot_tv_t *time_slot;
+    mm_bufqueue_size_tv_t *bufqueue_size;
+    schedule_type_t type = PARENT_SCHEDULE;
 
     time_slot = (mm_time_slot_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_TIME_SLOT);
+    bufqueue_size = (mm_bufqueue_size_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_BUFQUEUE_SIZE);
     if (time_slot) {
-        nbr->time_slot.slot_num = time_slot->slot_num;
-        nbr->time_slot.offset = time_slot->offset;
+        g_lowpower_state.parent_time_slot.slot_num = time_slot->slot_num;
+        g_lowpower_state.parent_timer_slot.offset = time_slot->offset;
+    }
+    if (bufqueue_size) {
+        g_lowpower_state.parent_bufqueue_size = bufqueue_size->size;
+        if (g_lowpower_state.parent_bufqueue_size == 0) {
+            sleep_timer_handler(&type);
+        }
     }
 }
 
-uint16_t lowpower_set_time_slot(uint8_t *data)
+uint16_t lowpower_set_info(uint8_t type, uint8_t *data, void *context)
 {
-    mm_time_slot_tv_t *time_slot;
+    uint16_t size;
 
-    time_slot = (mm_time_slot_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)time_slot, TYPE_TIME_SLOT);
-    time_slot->slot_num = g_lowpower_state.slot_num;
-    time_slot->offset = umesh_now_ms() - g_lowpower_state.timestamp;
-    return sizeof(mm_time_slot_tv_t);
+    switch (type) {
+        case TYPE_TIME_SLOT:
+            mm_time_slot_tv_t *time_slot;
+            time_slot = (mm_time_slot_tv_t *)data;
+            umesh_mm_init_tv_base((mm_tv_t *)time_slot, TYPE_TIME_SLOT);
+            time_slot->slot_num = g_lowpower_state.slot_num;
+            time_slot->offset = umesh_now_ms() - g_lowpower_state.timestamp;
+            size = sizeof(mm_time_slot_tv_t);
+            break;
+        case TYPE_BUFQUEUE_SIZE:
+            neighbor_t * nbr = (neighbor_t *)context;
+            mm_bufqueue_size_tv_t *bufqueue_size;
+            bufqueue_size = (mm_bufqueue_sise_tv_t *)data;
+            umesh_mm_init_tv_base((mm_tv_t *)bufqueue_size, TYPE_BUFQUEUE_SIZE);
+            bufqueue_size->size = size;
+            size = sizeof(mm_bufqueue_size_tv_t);
+            break;
+        default:
+            assert(0);
+    }
+
+    return size;
 }
 
 void lowpower_register_callback(lowpower_events_handler_t *handler)

@@ -36,6 +36,4 @@ ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor);
 neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr);
 neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
                                 uint16_t meshnetid);
-neighbor_t *get_neighbors(uint16_t *num);
-
 #endif  /* UR_LINK_MGMT_H */
