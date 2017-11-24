@@ -253,7 +253,7 @@ int32_t hal_uart_init(uart_dev_t *uart)
     char out[128];
     int fd;
     struct termios t_opt;
-    speed_t baud = (speed_t)(uart->config.baud_rate);
+    speed_t baud;
 
     if (uart->port != AT_UART_PORT) return 0;
 
@@ -261,6 +261,12 @@ int32_t hal_uart_init(uart_dev_t *uart)
       O_RDWR | O_NOCTTY | O_NDELAY)) == -1) {
         printf("open at uart failed\r\n");
         return -1;
+    }
+
+    switch(uart->config.baud_rate) {
+        case 115200: baud = B115200; break;
+        case 921600: baud = B921600; break;
+        default: baud = B115200; break;
     }
 
     fd = at_uart_fd;
