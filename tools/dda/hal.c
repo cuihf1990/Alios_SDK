@@ -211,7 +211,7 @@ static umesh_hal_module_t linuxhost_ur_wifi_module = {
 };
 
 static umesh_hal_module_t linuxhost_ur_ble_module;
-static const uint8_t g_ble_channels[] = {0, 1};
+static const uint8_t g_ble_channels[] = {1, 2};
 static mesh_hal_priv_t ble_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = 24,

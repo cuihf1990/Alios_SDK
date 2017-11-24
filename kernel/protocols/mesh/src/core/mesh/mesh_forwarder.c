@@ -19,10 +19,13 @@
 #include "core/link_mgmt.h"
 #include "core/crypto.h"
 #include "core/address_mgmt.h"
+#include "core/fragments.h"
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+#include "core/lowpower_mgmt.h"
+#endif
 #include "hal/interface_context.h"
 #include "hal/interfaces.h"
 #include "tools/diags.h"
-#include "core/fragments.h"
 
 typedef struct received_frame_s {
     hal_context_t *hal;
@@ -39,6 +42,14 @@ enum {
     SENT_FAIL = -1,
     SENT_DROP = -2,
 };
+
+typedef struct mesh_fwd_state_s {
+    mm_cb_t interface_callback;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    lowpower_events_handler_t lowpower_callback;
+#endif
+} mesh_fwd_state_t;
+static mesh_fwd_state_t g_mf_state;
 
 static void send_datagram(void *args);
 static void handle_datagram(void *message);
@@ -1184,6 +1195,35 @@ const ur_link_stats_t *mf_get_stats(hal_context_t *hal)
     return &hal->link_stats;
 }
 
+static ur_error_t mesh_interface_up(void)
+{
+    return UR_ERROR_NONE;
+}
+
+static ur_error_t mesh_interface_down(void)
+{
+    slist_t *hals;
+    hal_context_t *hal;
+
+    hals = get_hal_contexts();
+    slist_for_each_entry(hals, hal, hal_context_t, next) {
+        ur_stop_timer(&hal->sending_timer, hal);
+        hal->frag_info.tag = 0;
+        hal->frag_info.offset = 0;
+    }
+    return UR_ERROR_NONE;
+}
+
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+static void lowpower_radio_down_handler(void)
+{
+}
+
+static void lowpower_radio_up_handler(void)
+{
+}
+#endif
+
 ur_error_t mf_init(void)
 {
     slist_t *hals;
@@ -1192,22 +1232,15 @@ ur_error_t mf_init(void)
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         hal_umesh_register_receiver(hal->module, handle_received_frame, hal);
-        ur_stop_timer(&hal->sending_timer, hal);
-        hal->frag_info.tag = 0;
-        hal->frag_info.offset = 0;
-    }
-    return UR_ERROR_NONE;
-}
-
-ur_error_t mf_deinit(void)
-{
-    slist_t *hals;
-    hal_context_t *hal;
-
-    hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        ur_stop_timer(&hal->sending_timer, hal);
     }
 
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    g_mf_state.lowpower_callback.radio_down = lowpower_radio_down_handler;
+    g_mf_state.lowpower_callback.radio_up = lowpower_radio_up_handler;
+    lowpower_register_callback(&g_mf_state.lowpower_callback);
+#endif
+    g_mf_state.interface_callback.interface_up = mesh_interface_up;
+    g_mf_state.interface_callback.interface_down = mesh_interface_down;
+    umesh_mm_register_callback(&g_mf_state.interface_callback);
     return UR_ERROR_NONE;
 }

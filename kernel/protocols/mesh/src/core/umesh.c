@@ -299,7 +299,8 @@ ur_error_t umesh_init(node_mode_t mode)
     interface_init();
 
     umesh_mm_init(mode, &g_um_state.mm_cb);
-    neighbors_init();
+    link_mgmt_init();
+    address_mgmt_init();
     mf_init();
     nd_init();
 #ifdef CONFIG_AOS_MESH_LOWPOWER

@@ -8,7 +8,6 @@
 #include "core/mesh_mgmt.h"
 
 enum {
-    LINK_ESTIMATE_TIMES           = 4,
     LINK_ESTIMATE_SENT_THRESHOLD  = 4,
     LINK_ESTIMATE_COEF            = 256,
     LINK_ESTIMATE_UPDATE_ALPHA    = 32,
@@ -16,6 +15,7 @@ enum {
     LINK_COST_THRESHOLD           = 384,
 };
 
+void link_mgmt_init(void);
 ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
                              uint8_t *tlvs, uint8_t tlvs_length);
 
@@ -27,16 +27,12 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
                                message_info_t *info, int16_t hdr_ies_limit);
 ur_error_t handle_mesh_header_ies(message_t *message);
 
-void start_neighbor_updater(void);
-void stop_neighbor_updater(void);
-
 typedef void (* neighbor_updated_t)(neighbor_t *nbr);
 ur_error_t register_neighbor_updater(neighbor_updated_t updater);
 
-void       neighbors_init(void);
 neighbor_t *update_neighbor(const message_info_t *info,
                             uint8_t *tlvs, uint16_t length, bool is_attach);
-void       set_state_to_neighbor(void);
+ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor);
 neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr);
 neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
                                 uint16_t meshnetid);

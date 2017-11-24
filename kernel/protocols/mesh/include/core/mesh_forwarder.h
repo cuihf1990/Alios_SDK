@@ -128,7 +128,6 @@ enum {
 };
 
 ur_error_t mf_init(void);
-ur_error_t mf_deinit(void);
 message_t *mf_build_message(uint8_t type, uint8_t cmd_type, uint8_t *data,
                             uint16_t len, uint8_t debug);
 ur_error_t mf_send_message(message_t *message);

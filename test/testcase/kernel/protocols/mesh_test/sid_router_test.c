@@ -16,12 +16,14 @@ void test_uradar_sid_router_case(void)
         .meshnetid = 0x100,
         .attach_state = ATTACH_DONE
     };
+    netids_t netids;
 
-    ur_router_register_module();
     YUNIT_ASSERT(UR_ERROR_NONE == ur_router_set_default_router(SID_ROUTER));
     network.router = ur_get_router_by_id(SID_ROUTER);
-    YUNIT_ASSERT(UR_ERROR_NONE == ur_router_start(&network));
-    ur_router_sid_updated(&network, 0x1000);
+    network.router->cb.start();
+    netids.meshnetid = network.meshnetid;
+    netids.sid = 0x1000;
+    network.router->cb.handle_subscribe_event(EVENT_SID_UPDATED, (uint8_t *)&netids, sizeof(netids_t));
     YUNIT_ASSERT(0x1000 == ur_router_get_next_hop(&network, 0x1000));
     YUNIT_ASSERT(0x0000 == ur_router_get_next_hop(&network, 0x0000));
     YUNIT_ASSERT(0x0000 == ur_router_get_next_hop(&network, 0x2000));

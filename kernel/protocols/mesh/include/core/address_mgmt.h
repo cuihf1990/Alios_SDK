@@ -45,7 +45,7 @@ enum {
     TARGET_QUERY = 1,
 };
 
-void address_resolver_init(void);
+void address_mgmt_init(void);
 ur_error_t address_resolve(message_t *message);
 ur_error_t handle_address_query(message_t *message);
 ur_error_t handle_address_query_response(message_t *message);
@@ -56,9 +56,6 @@ ur_error_t send_address_notification(network_context_t *network,
                                      ur_addr_t *dest);
 ur_error_t send_address_unreachable(network_context_t *network,
                                     ur_addr_t *dest, ur_addr_t *target);
-
-void start_addr_cache(void);
-void stop_addr_cache(void);
 
 ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
                                 ur_node_id_t *attach);

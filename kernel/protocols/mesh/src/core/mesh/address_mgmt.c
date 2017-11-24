@@ -5,12 +5,16 @@
 #include <assert.h>
 #include <string.h>
 
+#include "umesh.h"
 #include "core/address_mgmt.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
 #include "core/router_mgr.h"
 #include "core/network_data.h"
 #include "core/link_mgmt.h"
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+#include "core/lowpower_mgmt.h"
+#endif
 #include "hal/hals.h"
 #include "hal/interfaces.h"
 #include "umesh_utils.h"
@@ -26,8 +30,17 @@ typedef struct address_cache_state_s {
     ur_timer_t timer;
 } address_cache_state_t;
 
+typedef struct address_mgmt_s {
+    ur_timer_t alive_timer;
+    mm_cb_t interface_callback;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    lowpower_events_handler_t lowpower_callback;
+#endif
+} address_mgmt_t;
+
 static address_resolver_state_t g_ar_state;
 static address_cache_state_t g_ac_state;
+static address_mgmt_t g_am_state;
 
 static ur_error_t send_address_query(network_context_t *network,
                                      ur_addr_t *dest,
@@ -723,11 +736,6 @@ exit:
     return error;
 }
 
-void address_resolver_init(void)
-{
-    memset(g_ar_state.cache, 0, sizeof(g_ar_state.cache));
-}
-
 static void handle_addr_cache_timer(void *args)
 {
     sid_node_t        *node;
@@ -765,6 +773,79 @@ static void handle_addr_cache_timer(void *args)
                                       handle_addr_cache_timer, NULL);
 }
 
+static void start_alive_timer(void *args)
+{
+    network_context_t *network = get_default_network_context();
+
+    if (umesh_get_device_state() != DEVICE_STATE_LEADER) {
+        send_address_notification(network, NULL);
+        ur_stop_timer(&g_am_state.alive_timer, NULL);
+        g_am_state.alive_timer = ur_start_timer(network->notification_interval,
+                                                start_alive_timer, NULL);
+    }
+}
+
+static void cleanup_addr_cache(void)
+{
+    sid_node_t *node;
+
+    while (!slist_empty(&g_ac_state.cache_list)) {
+        node = slist_first_entry(&g_ac_state.cache_list, sid_node_t, next);
+        slist_del(&node->next, &g_ac_state.cache_list);
+        ur_mem_free(node, sizeof(sid_node_t));
+    }
+    g_ac_state.cache_num = 0;
+}
+
+static ur_error_t mesh_interface_up(void)
+{
+    memset(g_ar_state.cache, 0, sizeof(g_ar_state.cache));
+
+    cleanup_addr_cache();
+    if (umesh_get_mode() & MODE_RX_ON)  {
+        ur_stop_timer(&g_ac_state.timer, NULL);
+        g_ac_state.timer = ur_start_timer(ADDR_CACHE_CHECK_INTERVAL,
+                                          handle_addr_cache_timer, NULL);
+        start_alive_timer(NULL);
+    }
+
+    return UR_ERROR_NONE;
+}
+
+static ur_error_t mesh_interface_down(void)
+{
+    ur_stop_timer(&g_ac_state.timer, NULL);
+    ur_stop_timer(&g_am_state.alive_timer, NULL);
+    cleanup_addr_cache();
+    return UR_ERROR_NONE;
+}
+
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+static void lowpower_radio_down_handler(void)
+{
+
+}
+
+static void lowpower_radio_up_handler(void)
+{
+    network_context_t *network = get_default_network_context();
+
+    send_address_notification(network, NULL);
+}
+#endif
+
+void address_mgmt_init(void)
+{
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    g_am_state.lowpower_callback.radio_down = lowpower_radio_down_handler;
+    g_am_state.lowpower_callback.radio_up = lowpower_radio_up_handler;
+    lowpower_register_callback(&g_am_state.lowpower_callback);
+#endif
+    g_am_state.interface_callback.interface_up = mesh_interface_up;
+    g_am_state.interface_callback.interface_down = mesh_interface_down;
+    umesh_mm_register_callback(&g_am_state.interface_callback);
+}
+
 ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
                                 ur_node_id_t *attach)
 {
@@ -797,26 +878,4 @@ ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
                    node->node_id.ueid[0], node->node_id.sid, node->node_id.meshnetid,
                    node->node_id.attach_sid);
     return UR_ERROR_NONE;
-}
-
-void start_addr_cache(void)
-{
-    slist_init(&g_ac_state.cache_list);
-    g_ac_state.cache_num = 0;
-    g_ac_state.timer = ur_start_timer(ADDR_CACHE_CHECK_INTERVAL,
-                                      handle_addr_cache_timer, NULL);
-}
-
-void stop_addr_cache(void)
-{
-    sid_node_t *node;
-
-    while (!slist_empty(&g_ac_state.cache_list)) {
-        node = slist_first_entry(&g_ac_state.cache_list, sid_node_t, next);
-        slist_del(&node->next, &g_ac_state.cache_list);
-        ur_mem_free(node, sizeof(sid_node_t));
-    }
-
-    ur_stop_timer(&g_ac_state.timer, NULL);
-    g_ac_state.cache_num = 0;
 }

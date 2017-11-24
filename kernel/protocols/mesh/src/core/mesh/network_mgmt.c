@@ -20,8 +20,6 @@ static void handle_discovery_timer(void *args);
 static ur_error_t send_discovery_request(network_context_t *netowrk);
 static ur_error_t send_discovery_response(network_context_t *network,
                                           ur_addr_t *dest);
-extern void lowpower_start(void);
-
 static void handle_discovery_timer(void *args)
 {
     network_context_t *network = (network_context_t *)args;
@@ -75,9 +73,6 @@ static void handle_discovery_timer(void *args)
     }
 
 exit:
-#ifdef CONFIG_AOS_MESH_LOWPOWER
-    lowpower_start();
-#endif
     g_nm_started = false;
     return;
 }
