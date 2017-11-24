@@ -778,12 +778,12 @@ static bool proxy_check(message_t *message)
         }
 
         network = get_network_context_by_meshnetid(info->dest.netid);
-        if (info->dest.netid != BCAST_NETID &&
+        if (is_unique_netid(info->dest.netid) &&
             (network == NULL || info->dest.addr.short_addr != umesh_mm_get_local_sid())) {
             return false;
         }
 
-        if (info->dest.netid != BCAST_NETID &&
+        if (is_unique_netid(info->dest.netid) &&
             (info->dest2.addr.len != SHORT_ADDR_SIZE ||
              is_bcast_sid(&info->dest2)) == false) {
             return false;
@@ -840,7 +840,7 @@ static void message_handler(void *args)
                sizeof(info->dest.addr)) == 0) {
         recv = true;
     } else if (info->dest.addr.len == SHORT_ADDR_SIZE) {
-        if (info->dest.netid != BCAST_NETID &&
+        if (is_unique_netid(info->dest.netid) &&
             is_same_mainnet(info->dest.netid, mm_get_main_netid(network))) {
             network = get_network_context_by_meshnetid(info->dest.netid);
             if (info->dest.addr.short_addr == BCAST_SID ||
