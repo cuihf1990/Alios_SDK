@@ -242,7 +242,7 @@ int mqtt_client_example(void)
         rc = -1;
         goto do_exit;
     }
-    
+
 
     /* Subscribe the specific topic */
     rc = IOT_MQTT_Subscribe(pclient, TOPIC_DATA, IOTX_MQTT_QOS1, _demo_message_arrive, NULL);
@@ -417,7 +417,8 @@ int application_start(int argc, char *argv[])
 }
 
 #ifdef AOS_FOTA
-static void ota_init(){
+static void ota_init()
+{
     input_event_t event;
     event.type = EV_SYS;
     event.code = CODE_SYS_ON_START_FOTA;
