@@ -73,16 +73,14 @@ PendSV_Handler
     VSTMFD  r0!, {d8 - d15}
     ENDIF
 
-    SUBS    R0, R0, #0x20                   
-    STM     R0, {R4-R11}
+    SUBS    R0, R0, #0x24                   
+    STM     R0, {R4-R11, LR}
 
     LDR     R1, =g_active_task              
     LDR     R1, [R1]
     STR     R0, [R1]                      
 
-    PUSH    {R14}
     bl      krhino_stack_ovf_check
-    POP     {R14}
 
 _pendsv_handler_nosave
     LDR     R0, =g_active_task         
@@ -91,17 +89,20 @@ _pendsv_handler_nosave
     STR     R2, [R0]
 
     LDR     R0, [R2]                         
-    LDM     R0, {R4-R11}                  
-    ADDS    R0, R0, #0x20
+    LDM     R0, {R4-R11, LR}                  
+    ADDS    R0, R0, #0x24
 
     IF	    {FPU} != "SoftVFP"
     VLDMFD  r0!, {d8 - d15}
     ENDIF
-	
+
+    ;return stack = PSP
     MSR     PSP, R0               
-    ORR     LR, LR, #0x04                
+    ORR     LR, LR, #0x04
+    
     CPSIE   I
     BX      LR 
 
+    ALIGN   ;align to avoid warning A1581W
     END
 
