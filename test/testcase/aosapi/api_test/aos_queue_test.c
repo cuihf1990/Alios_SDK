@@ -29,13 +29,12 @@ static aos_sem_t sync_sem;
 static Message send_msg;
 static Message recv_msg;
 static unsigned int recv_size = 0;
-
+static aos_sem_t tmp_sem;
+static aos_queue_t queue;
 
 static void CASE_aosapi_kernel_queue_param()
 {
 	int ret;
-	aos_sem_t tmp_sem;
-	aos_queue_t queue;
 
 	/* aos_queue_new invalid param test */
 #if 0
@@ -111,6 +110,7 @@ static void CASE_aosapi_kernel_queue_param()
 //	aos_sem_free(&tmp_sem); // already free
 #endif
 }
+
 
 static void TASK_aosapi_kernel_queue_recv(void *arg)
 {

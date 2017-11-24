@@ -57,6 +57,7 @@ static void CASE_aosapi_kernel_timer_param()
 static void TIMER_aosapi_kernel_timer_norepeat()
 {
 	timer_trigger_count++;
+    aos_timer_stop(&g_timer);
 }
 static void CASE_aosapi_kernel_timer_norepeat()
 {
@@ -92,45 +93,15 @@ static void CASE_aosapi_kernel_timer_repeat()
 	timer_trigger_count = 0;
 	ret = aos_timer_new(&g_timer, TIMER_aosapi_kernel_timer_repeat, NULL, 100, 1);
 	YUNIT_ASSERT(ret==RHINO_SUCCESS);
-
 	aos_msleep(1500);
 	YUNIT_ASSERT(timer_trigger_count==10);
 	aos_timer_free(&g_timer);
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-static void TIMER_aosapi_kernel_timer_change()
-{
-	timer_trigger_count++;
-	if(timer_trigger_count==10) {
-		aos_timer_change(&g_timer, 50);
-	}
-	else if(timer_trigger_count==20) {
-		aos_timer_stop(&g_timer);
-	}
-}
-static void CASE_aosapi_kernel_timer_change()
-{
-	int ret;
-
-	ret = aos_sem_new(&sync_sem, 0);
-	YUNIT_ASSERT(ret==RHINO_SUCCESS);
-
-	timer_trigger_count = 0;
-	ret = aos_timer_new(&g_timer, TIMER_aosapi_kernel_timer_change, NULL, 100, 1);
-	YUNIT_ASSERT(ret==RHINO_SUCCESS);
-
-	aos_msleep(2000);
-	YUNIT_ASSERT(timer_trigger_count==20);
-	aos_timer_free(&g_timer);
-}
-
 
 void aosapi_kernel_timer_test_entry(yunit_test_suite_t *suite)
 {
 	yunit_add_test_case(suite, "kernel.timer.param", CASE_aosapi_kernel_timer_param);
 	yunit_add_test_case(suite, "kernel.timer.norepeat", CASE_aosapi_kernel_timer_norepeat);
 	yunit_add_test_case(suite, "kernel.timer.repeat", CASE_aosapi_kernel_timer_repeat);
-	yunit_add_test_case(suite, "kernel.timer.change", CASE_aosapi_kernel_timer_change);
 }
 
