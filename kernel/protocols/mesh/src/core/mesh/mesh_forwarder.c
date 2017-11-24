@@ -648,8 +648,7 @@ static void set_dest_encrypt_flag(message_info_t *info)
     }
 }
 
-neighbor_t *mf_get_neighbor(uint8_t type, uint16_t meshnetid,
-                            mac_address_t *addr)
+neighbor_t *mf_get_neighbor(uint16_t meshnetid, mac_address_t *addr)
 {
     network_context_t *network;
     neighbor_t *nbr = NULL;

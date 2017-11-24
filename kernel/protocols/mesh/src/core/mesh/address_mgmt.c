@@ -170,7 +170,7 @@ ur_error_t address_resolve(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    nbr = mf_get_neighbor(info->type, info->dest.netid, &info->dest.addr);
+    nbr = mf_get_neighbor(info->dest.netid, &info->dest.addr);
     if (nbr) {
         set_mesh_ext_addr(&info->dest, nbr->netid, nbr->mac);
         return UR_ERROR_NONE;
