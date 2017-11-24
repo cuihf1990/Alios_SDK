@@ -132,8 +132,7 @@ ur_error_t mf_deinit(void);
 message_t *mf_build_message(uint8_t type, uint8_t cmd_type, uint8_t *data,
                             uint16_t len, uint8_t debug);
 ur_error_t mf_send_message(message_t *message);
-neighbor_t *mf_get_neighbor(uint8_t type, uint16_t meshnetid,
-                            mac_address_t *addr);
+neighbor_t *mf_get_neighbor(uint16_t meshnetid, mac_address_t *addr);
 const ur_link_stats_t *mf_get_stats(hal_context_t *hal);
 
 #ifdef __cplusplus
