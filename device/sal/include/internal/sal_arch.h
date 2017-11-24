@@ -1,9 +1,8 @@
 #ifndef _SAL_ARCH_H_
 #define _SAL_ARCH_H_
 
-
 #include <aos/aos.h>
-#include <err.h>
+#include "sal_err.h"
 
 #ifdef __cplusplus
 extern "C" {

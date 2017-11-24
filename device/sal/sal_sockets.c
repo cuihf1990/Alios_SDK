@@ -1,9 +1,9 @@
 #include <aos/aos.h>
 #include <stdio.h>
 #include <string.h>
-#include "sal_sockets.h"
-#include "sal_arch.h"
-#include "err.h"
+#include "internal/sal_sockets_internal.h"
+#include "internal/sal_arch.h"
+#include "sal_err.h"
 
 #define TAG  "sal_socket"
 
@@ -18,13 +18,13 @@
 #define SELWAIT_T uint8_t
 #endif
 
-static int  sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_set *exceptset_in,
-                        fd_set *readset_out, fd_set *writeset_out, fd_set *exceptset_out);
+static int  sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in,
+                        fd_set *exceptset_in, fd_set *readset_out,
+                        fd_set *writeset_out, fd_set *exceptset_out);
 
 static struct sal_sock *tryget_socket(int s);
 
 static struct sal_event *tryget_event(int s);
-
 
 struct sal_event {
     uint64_t counts;
@@ -34,8 +34,6 @@ struct sal_event {
     /** semaphore to wake up a task waiting for select */
     sal_sem_t *psem;
 };
-
-
 
 /** Contains all internal pointers and states used for a socket */
 struct sal_sock {
@@ -49,24 +47,27 @@ struct sal_sock {
     /** number of times data was received, set by event_callback(),
         tested by the receive and select functions */
     int16_t rcvevent;
-    /** number of times data was ACKed (free send buffer), set by event_callback(),
-        tested by select */
+    /** number of times data was ACKed (free send buffer),
+        set by event_callback(), tested by select */
     uint16_t sendevent;
-    /** error happened for this socket, set by event_callback(), tested by select */
+    /** error happened for this socket, set by event_callback(),
+        tested by select */
     uint16_t errevent;
-    /** last error that occurred on this socket (in fact, all our errnos fit into an uint8_t) */
+    /** last error that occurred on this socket (in fact,
+        all our errnos fit into an uint8_t) */
     uint8_t err;
     /** counter of how many threads are waiting for this socket using select */
     SELWAIT_T select_waiting;
 };
 
-#define IS_SOCK_ADDR_LEN_VALID(namelen)  ((namelen) == sizeof(struct sockaddr_in))
+#define IS_SOCK_ADDR_LEN_VALID(namelen)  \
+        ((namelen) == sizeof(struct sockaddr_in))
 
 #ifndef set_errno
 #define set_errno(err) do { if (err) { errno = (err); } } while(0)
 #endif
 
-#define sock_set_errno(sk, e) do { \
+#define sock_set_errno(sk,e) do { \
   const int sockerr = (e); \
   sk->err = (u8_t)sockerr; \
   set_errno(sockerr); \
@@ -81,6 +82,8 @@ static struct sal_select_cb *select_cb_list;
 /** This counter is increased from sal_select when the list is changed
     and checked in event_callback to see if it has changed. */
 static volatile int select_cb_ctr;
+
+static sal_netconn_t* netconn_new(enum netconn_type t);
 
 int sal_eventfd(unsigned int initval, int flags)
 {
@@ -106,10 +109,8 @@ int sal_eventfd(unsigned int initval, int flags)
     return -1;
 }
 
-
-
-int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-               struct timeval *timeout)
+int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset,
+               fd_set *exceptset, struct timeval *timeout)
 {
     uint32_t waitres = 0;
     int nready;
@@ -124,15 +125,18 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
     SAL_ARCH_DECL_PROTECT(lev);
 
     SAL_DEBUG("sal_select(%d, %p, %p, %p, tvsec=%d tvusec=%d)",
-                    maxfdp1, (void *)readset, (void *) writeset, (void *) exceptset,
+                    maxfdp1, (void *)readset,
+                    (void *) writeset, (void *) exceptset,
                     timeout ? (int32_t)timeout->tv_sec : (int32_t) - 1,
                     timeout ? (int32_t)timeout->tv_usec : (int32_t) - 1);
 
     /* Go through each socket in each list to count number of sockets which
        currently match */
-    nready = sal_selscan(maxfdp1, readset, writeset, exceptset, &lreadset, &lwriteset, &lexceptset);
+    nready = sal_selscan(maxfdp1, readset, writeset, exceptset,
+                         &lreadset, &lwriteset, &lexceptset);
 
-    /* If we don't have any current events, then suspend if we are supposed to */
+    /* If we don't have any current events, then suspend
+       if we are supposed to */
     if (!nready) {
         if (timeout && timeout->tv_sec == 0 && timeout->tv_usec == 0) {
             SAL_DEBUG("sal_select: no timeout, returning 0");
@@ -171,7 +175,8 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
             select_cb_list->prev = &select_cb;
         }
         select_cb_list = &select_cb;
-        /* Increasing this counter tells event_callback that the list has changed. */
+        /* Increasing this counter tells event_callback
+           that the list has changed. */
         select_cb_ctr++;
 
         /* Now we can safely unprotect */
@@ -190,7 +195,8 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
                 event = tryget_event(i);
                 if (sock != NULL) {
                     sock->select_waiting++;
-                    SAL_ASSERT("sock->select_waiting > 0", sock->select_waiting > 0);
+                    SAL_ASSERT("sock->select_waiting > 0",
+                               sock->select_waiting > 0);
                 } else if (event != NULL) {
                     event->psem = SELECT_SEM_PTR(select_cb.sem);
                 } else {
@@ -207,21 +213,24 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
         if (nready >= 0) {
             /* Call sal_selscan again: there could have been events between
                the last scan (without us on the list) and putting us on the list! */
-            nready = sal_selscan(maxfdp1, readset, writeset, exceptset, &lreadset, &lwriteset, &lexceptset);
+            nready = sal_selscan(maxfdp1, readset, writeset, exceptset,
+                                 &lreadset, &lwriteset, &lexceptset);
             if (!nready) {
                 /* Still none ready, just wait to be woken */
                 if (timeout == 0) {
                     /* Wait forever */
                     msectimeout = 0;
                 } else {
-                    msectimeout =  ((timeout->tv_sec * 1000) + ((timeout->tv_usec + 500) / 1000));
+                    msectimeout =  ((timeout->tv_sec * 1000) + \
+                                   ((timeout->tv_usec + 500) / 1000));
                     if (msectimeout == 0) {
                         /* Wait 1ms at least (0 means wait forever) */
                         msectimeout = 1;
                     }
                 }
 
-                waitres = sal_arch_sem_wait(SELECT_SEM_PTR(select_cb.sem), msectimeout);
+                waitres = sal_arch_sem_wait(SELECT_SEM_PTR(select_cb.sem),
+                                            msectimeout);
 #if SAL_NETCONN_SEM_PER_THREAD
                 waited = 1;
 #endif
@@ -239,10 +248,12 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
                 sock = tryget_socket(i);
                 event = tryget_event(i);
                 if (sock != NULL) {
-                    /* @todo: what if this is a new socket (reallocated?) in this case,
-                       select_waiting-- would be wrong (a global 'sockalloc' counter,
-                       stored per socket could help) */
-                    SAL_ASSERT("sock->select_waiting > 0", sock->select_waiting > 0);
+                    /* @todo: what if this is a new socket (reallocated?)
+                       in this case, select_waiting-- would be wrong
+                       (a global 'sockalloc' counter, stored per socket
+                       could help) */
+                    SAL_ASSERT("sock->select_waiting > 0",
+                               sock->select_waiting > 0);
                     if (sock->select_waiting > 0) {
                         sock->select_waiting--;
                     }
@@ -267,12 +278,14 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
             SAL_ASSERT("select_cb.prev != NULL", select_cb.prev != NULL);
             select_cb.prev->next = select_cb.next;
         }
-        /* Increasing this counter tells event_callback that the list has changed. */
+        /* Increasing this counter tells event_callback
+           that the list has changed. */
         select_cb_ctr++;
         SAL_ARCH_UNPROTECT(lev);
 
 #if SAL_NETCONN_SEM_PER_THREAD
-        if (select_cb.sem_signalled && (!waited || (waitres == SAL_ARCH_TIMEOUT))) {
+        if (select_cb.sem_signalled && (!waited || \
+            (waitres == SAL_ARCH_TIMEOUT))) {
             /* don't leave the thread-local semaphore signalled */
             sal_arch_sem_wait(select_cb.sem, 1);
         }
@@ -295,7 +308,8 @@ int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset
         }
 
         /* See what's set */
-        nready = sal_selscan(maxfdp1, readset, writeset, exceptset, &lreadset, &lwriteset, &lexceptset);
+        nready = sal_selscan(maxfdp1, readset, writeset, exceptset,
+                             &lreadset, &lwriteset, &lexceptset);
     }
 
     SAL_DEBUG("sal_select: nready=%d", nready);
@@ -314,8 +328,9 @@ return_copy_fdsets:
 }
 
 //把有事件的标出来
-static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_set *exceptset_in,
-                       fd_set *readset_out, fd_set *writeset_out, fd_set *exceptset_out)
+static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in,
+                       fd_set *exceptset_in, fd_set *readset_out,
+                       fd_set *writeset_out, fd_set *exceptset_out)
 {
     int i, nready = 0;
     fd_set lreadset, lwriteset, lexceptset;
@@ -347,7 +362,8 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_
             uint16_t errevent = sock ? sock->errevent : 0;
             SAL_ARCH_UNPROTECT(lev);
             /* See if netconn of this socket is ready for read */
-            if (readset_in && FD_ISSET(i, readset_in) && ((lastdata != NULL) || (rcvevent > 0))) {
+            if (readset_in && FD_ISSET(i, readset_in) && \
+                ((lastdata != NULL) || (rcvevent > 0))) {
                 FD_SET(i, &lreadset);
                 SAL_DEBUG("sal_selscan: fd=%d ready for reading", i);
                 nready++;
@@ -436,11 +452,10 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
        const struct sockaddr *to, socklen_t tolen)
 {
     struct sal_sock *pstsalsock =NULL;
-    at_conn_t       statconn = {0};
     err_t           err = ERR_OK;
     
     if (NULL == data || size == 0 || size > SAL_SOCKET_MAX_PAYLOAD_SIZE){
-        SAL_ERROR(TAG, "sal_send fail to data to send is %p or size is %d\n" data, size);
+        SAL_ERROR(TAG, "sal_send fail to data (%d)\n", s);
         return -ERR_ARG;
     }
 
@@ -456,34 +471,37 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
     }
 
     /*TO DO if to != NULL, check sockaddr match socket type or not*/
-    if (to){
+    if (to) {
         /*udp 一般可以直接通过sendto 来发送数据，所以先需要start一下*/
-        if (pstsalsock->conn->state == NETCONN_NONE){
+        if (pstsalsock->conn->state == NETCONN_NONE) {
             err = sal_connect(pstsalsock->conn->socket, to, tolen);
-            if (ERR_OK != err){
+            if (ERR_OK != err) {
                 SAL_ERROR(TAG, "sal_sendto fail to connect socket %d\n", s);
                 return err;
             }
         }
-    }else{
+    } else {
         /*如果没有建立连接又没有传过来remote ip 信息，直接返回失败*/
-        if (pstsalsock->conn->state == NETCONN_NONE){
-            SAL_ERROR(TAG, "sal_sendto  socket %d is not connected and input addr is null, cannot send packet\n", s);
-            return ERR_ARG
+        if (pstsalsock->conn->state == NETCONN_NONE) {
+            SAL_ERROR(TAG, "sal_sendto  socket %d is not connected and "
+                      "input addr is null, cannot send packet\n", s);
+            return -ERR_ARG;
         }
     }
     
-    err_t = sal_op.send(pstsalsock->conn->socket, data, size, NULL, -1);
+    err = (sal_op.send)(pstsalsock->conn->socket,
+                        (uint8_t *)data, size, NULL, -1);
     
     return (err == ERR_OK ? size : -1);
 }
 
 int sal_send(int s, const void *data, size_t size, int flags)
 {
-    LOGD(TAG, "sal_send(%d, data=%p, size=%"SZT_F", flags=0x%x)\n", s, data, size, flags);
+    SAL_DEBUG(TAG, "sal_send(%d, flags=0x%x)\n", s, flags);
     
     return sal_sendto(s, data, size, flags, NULL, 0);
-    /*TODO: 1、先认为remote adrr和port可以通过conn中获取, 具体的remote ip 和port信息的填写需要再分析
+    /*TODO: 1、先认为remote adrr和port可以通过conn中获取, 具体的remote ip
+               和port信息的填写需要再分析
             2、先不考虑ipv6
             3、发包控制的pcb暂时没有，所以目前发包最大长度先写死一个宏
     */
@@ -571,19 +589,22 @@ again:
                 }
             }
             if (sock->sendevent != 0) {
-                if (!do_signal && scb->writeset && FD_ISSET(s, scb->writeset)) {
+                if (!do_signal && scb->writeset && \
+                    FD_ISSET(s, scb->writeset)) {
                     do_signal = 1;
                 }
             }
             if (sock->errevent != 0) {
-                if (!do_signal && scb->exceptset && FD_ISSET(s, scb->exceptset)) {
+                if (!do_signal && scb->exceptset && \
+                    FD_ISSET(s, scb->exceptset)) {
                     do_signal = 1;
                 }
             }
             if (do_signal) {
                 scb->sem_signalled = 1;
-                /* Don't call SAL_ARCH_UNPROTECT() before signaling the semaphore, as this might
-                   lead to the select thread taking itself off the list, invalidating the semaphore. */
+                /* Don't call SAL_ARCH_UNPROTECT() before signaling the
+                   semaphore, as this might lead to the select thread taking
+                   itself off the list, invalidating the semaphore. */
                 sal_sem_signal(SELECT_SEM_PTR(scb->sem));
             }
         }
@@ -599,8 +620,6 @@ again:
     SAL_ARCH_UNPROTECT(lev);
 
 }
-
-
 
 /**
  * Allocate a new socket for a given netconn.
@@ -627,9 +646,10 @@ static int alloc_socket(sal_netconn_t *newconn, int accepted)
             sockets[i].lastdata   = NULL;
             sockets[i].lastoffset = 0;
             sockets[i].rcvevent   = 0;
-            /* TCP sendbuf is empty, but the socket is not yet writable until connected
-             * (unless it has been created by accept()). */
-            sockets[i].sendevent  = (NETCONNTYPE_GROUP(newconn->type) == NETCONN_TCP ? (accepted != 0) : 1);
+            /* TCP sendbuf is empty, but the socket is not yet writable
+               until connected (unless it has been created by accept()). */
+            sockets[i].sendevent  = (NETCONNTYPE_GROUP(newconn->type) == \
+                                    NETCONN_TCP ? (accepted != 0) : 1);
             sockets[i].errevent   = 0;
             sockets[i].err        = 0;
             sockets[i].select_waiting = 0;
@@ -640,7 +660,7 @@ static int alloc_socket(sal_netconn_t *newconn, int accepted)
     return -1;
 }
 
-sal_netconn_t* netconn_new(netconn_type t)
+static sal_netconn_t* netconn_new(enum netconn_type t)
 {
     sal_netconn_t *conn;
 
@@ -656,7 +676,7 @@ sal_netconn_t* netconn_new(netconn_type t)
     return conn;
 }
 
-err_t netconn_delete(sal_netconn_t *conn)
+static err_t netconn_delete(sal_netconn_t *conn)
 {
     struct sal_sock *sock;
     int s;
@@ -692,10 +712,10 @@ int sal_socket(int domain, int type, int protocol)
     return -1;
     break;
   case SOCK_DGRAM:
-    conn =netconn_new(NETCONN_UDP);
+    conn = netconn_new(NETCONN_UDP);
     break;
   case SOCK_STREAM:
-    conn =netconn_new(NETCONN_TCP);
+    conn = netconn_new(NETCONN_TCP);
     break;
   default:
     set_errno(EINVAL);
@@ -728,7 +748,10 @@ int sal_init()
     return sal_op.init(); /* Low level init. */
 }
 
-static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name, char *ip)
+#define SWAPS(s) ((((s) & 0xff) << 8) | (((s) & 0xff00) >> 8))
+
+static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name,
+                                       char *ip, uint32_t *port)
 {
     struct sockaddr_in *saddr;
     union {
@@ -746,8 +769,14 @@ static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name, char *ip)
     ip_u.ip_u32 = (uint32_t)(saddr->sin_addr.s_addr);
     snprintf(ip, SAL_SOCKET_IP4_ADDR_LEN - 1, "%d.%d.%d.%d", ip_u.ip_u8[0], ip_u.ip_u8[1], ip_u.ip_u8[2], ip_u.ip_u8[3]);
     ip[SAL_SOCKET_IP4_ADDR_LEN] = '\0';
-    
-    SAL_DEBUG("Socket address coverted to %s\n", ip);
+
+    /* Netwwork order port_t to host order port number */
+    if (BYTE_ORDER == LITTLE_ENDIAN)
+        *port = SWAPS(saddr->sin_port);
+    else
+        *port = saddr->sin_port;
+
+    SAL_DEBUG("Socket address coverted to %s:%d", ip, port);
 }
 
 // Caller to ensure a valid ip string
@@ -765,9 +794,9 @@ static int ipstr_to_u32(char *ipstr, uint32_t *ip32)
             q[dotnum] = n; // saved in network order
             n = 0;
             dotnum++;
-            continue
+            continue;
         }
-        if (*p < '0' || * > '9') return -1;
+        if (*p < '0' || *p > '9') return -1;
         n = n * 10 + *p - '0';
     }
 
@@ -780,9 +809,9 @@ static int ipstr_to_u32(char *ipstr, uint32_t *ip32)
 int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
 {
     struct sal_sock *sock = NULL;
-    ip_addr_t       local_addr;
-    u16_t           local_port;
-    err_t  err = ERR_OK;
+    //ip_addr_t       local_addr;
+    //u16_t           local_port;
+    //err_t  err = ERR_OK;
 
     /*TODO check family and alignment of 'name' */
     if (NULL == name || !IS_SOCK_ADDR_LEN_VALID(namelen)){
@@ -791,29 +820,32 @@ int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
         return -1;
     }
 
-    SOCKADDR_TO_IPADDR_PORT(name, &local_addr, local_port);
-    
+    //SOCKADDR_TO_IPADDR_PORT(name, &local_addr, local_port);
+
+    return 0;    
 }
 
-err_t netconn_disconnect(struct netconn *conn)
+#if 0
+static err_t netconn_disconnect(sal_netconn_t *conn)
 {
+    return 0;
     if (NETCONNTYPE_GROUP(conn->type) != NETCONN_UDP){
         return ERR_VAL;
     }
     
     ip_addr_set_any(IP_IS_V6_VAL(conn->pcb.udp->remote_ip), &(conn->pcb.udp->remote_ip));
     conn->pcb.udp->remote_port = 0;
-    return ERR_OK
+    return ERR_OK;
 }
+#endif
 
 int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
-    struct sal_sock *sock = NULL;
-    err_t err = ERR_OK;
-    at_conn_t statconn = {0};
-    ip_addr_t remote_addr;
-    u16_t     remote_port;
-    int8_t   ip_str[SAL_SOCKET_IP4_ADDR_LEN] = {0};
+    struct sal_sock *sock;
+    err_t err;
+    at_conn_t c = {0};
+    char ip_str[16] = {0};
+    uint32_t port;
 
     sock = get_socket(s);
     if (!sock) {
@@ -821,67 +853,59 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
         sock_set_errno(sock, err_to_errno(ERR_VAL));
         return -1;
     }
-    
-    if (!sock->conn){
-        SAL_ERROR("fail to get socket %d conn info\n.", s);
-        sock_set_errno(sock, err_to_errno(ERR_VAL));
-        return -1;
-    }
-    
-    if (!SOCK_ADDR_TYPE_MATCH_OR_UNSPEC(name, sock)) {
-        /* sockaddr does not match socket type (IPv4/IPv6) */
+
+    /* Only IPv4 is supported. */
+    if (name->sa_family != AF_INET) {
+        SAL_ERROR("Not supported (only IPv4 for now)!");
         sock_set_errno(sock, err_to_errno(ERR_VAL));
         return -1;
     }
 
-    if (name->sa_family == AF_UNSPEC){
-        err = netconn_disconnect(sock->conn);
-    }else{
-        SOCKADDR_TO_IPADDR_PORT(name, &remote_addr, remote_port);
-        ip4_sockaddr_to_ipstr_port(name, ip_str);
-        statconn.fd = sock->conn->socket;
-        statconn.addr = ip_str;
-        statconn.r_port = remote_port;
-         
+    /* Check size */
+    if (namelen != sizeof(struct sockaddr_in)) {
+        SAL_ERROR("sal_connect: invalid address");
+        sock_set_errno(sock, err_to_errno(ERR_ARG));
+        return -1;
     }
-    
-    switch(NETCONNTYPE_GROUP(sock->conn->type)) {
-    case NETCONN_RAW:
-        /*for now wifi module did not support raw socket yet*/
-        SAL_ERROR("sal_connect invalid connect type.\n");
-        return ERR_VAL;
-    case NETCONN_UDP:
-        /*TODO double check if udp double connect */ 
-        statconn.type = UDP_UNICAST;
-        err = sal_op.start(&statconn);
-        if (ERR_OK != err){
-            SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", ip_str, remote_port);
-            return -1;
-        }
-        ip_addr_set_ipaddr(&(sock->conn->pcb.udp->remote_ip), remote_addr);
-        sock->conn->pcb.udp->remote_port = remote_port;
-        break;
+
+    /* Do connection */
+    ip4_sockaddr_to_ipstr_port(name, ip_str, &port);
+    c.addr = ip_str;
+    c.r_port = port;
+    c.l_port = -1;
+    c.fd = s;
+    switch(sock->conn->type) {
     case NETCONN_TCP:
-        if (sock->conn->state != NETCONN_NONE)
-            return ERR_ISCONN;
-        err = sal_op.start(&statconn);
-        if (ERR_OK != err){
-            SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", ip_str, remote_port);
-            return -1;
-        }
-        statconn.type = TCP_CLIENT;
-        ip_addr_set_ipaddr(&(sock->conn->pcb.tcp->remote_ip), remote_addr);
-        sock->conn->pcb.tcp->remote_port = remote_port;
+        c.type = TCP_CLIENT;
+        break;
+    case NETCONN_UDP:
+        c.type = UDP_UNICAST;
         break;
     default:
-        SAL_ERROR("sal_connect invalid connect type.\n");
-        return ERR_ARG;
+        SAL_ERROR("Unsupported sal connection type.");
+        sock_set_errno(sock, err_to_errno(ERR_ARG));
+        return -1;
     }
-    
-    sock->conn.state = NETCONN_CONNECT;
-    SAL_DEBUG("sal_connect(%d) succeeded\n", s);
+
+    if ((err = sal_op.start(&c)) != 0) {
+        SAL_ERROR("sal_start failed.");
+        sock_set_errno(sock, err_to_errno(ERR_IF));
+        return -1;
+    }
+
+    if (err != ERR_OK) {
+        SAL_ERROR("sal_connect(%d) failed, err=%d", s, err);
+        sock_set_errno(sock, err_to_errno(err));
+        return -1;
+    }
+
+    SAL_DEBUG("sal_connect(%d) succeeded", s);
+
+    /* Update sal conn state here */
+    sock->conn->state = NETCONN_CONNECT;
+
     sock_set_errno(sock, 0);
-    return err;
+    return 0;
 }
 
 /**
@@ -899,7 +923,8 @@ static void free_socket(struct sal_sock *sock)
 
   /* Protect socket array */
   SAL_ARCH_SET(sock->conn, NULL);
-  /* don't use 'sock' after this line, as another task might have allocated it */
+  /* don't use 'sock' after this line, as another task
+     might have allocated it */
 }
 
 int sal_close(int s)
@@ -921,7 +946,7 @@ int sal_close(int s)
     return -1;
   }
 
-  if (sal_op.close(s, -1) != 0) {
+  if ((sal_op.close)(s, -1) != 0) {
     SAL_ERROR("sal_op.close failed.");
     sock_set_errno(sock, err_to_errno(ERR_IF));
     return -1;
@@ -955,7 +980,7 @@ struct hostent* sal_gethostbyname(const char *name)
     return NULL;
   }
 
-  if (sal_op.domain_to_ip(name, ip_str) != 0) {
+  if (sal_op.domain_to_ip((char *)name, ip_str) != 0) {
     SAL_ERROR("domain to ip failed.");
     return NULL;
   }
@@ -999,9 +1024,9 @@ int sal_getsockopt(int s, int level, int optname,
     }
 
     /* Only support SOL_SOCKET/SO_ERROR for now. */
-    switch(level): {
+    switch(level) {
     case SOL_SOCKET:
-        switch(optname): {
+        switch(optname) {
         case SO_ERROR:
             if (*optlen < sizeof(int)) return EINVAL;
             /* only overwrite ERR_OK or temporary errors */
@@ -1015,15 +1040,15 @@ int sal_getsockopt(int s, int level, int optname,
                       s, *(int *)optval);
             break;
         default:
-            SAL_DEBUG("sal_getsockopt(%d, SOL_SOCKET, UNIMPL: optname=0x%x, ..)\n",
-                      s, optname);
+            SAL_DEBUG("sal_getsockopt(%d, SOL_SOCKET, UNIMPL: "
+                      "optname=0x%x, ..)\n", s, optname);
             err = ENOPROTOOPT;
             break;
         }
         break;
     default:
         SAL_DEBUG("sal_getsockopt(%d, level=0x%x, UNIMPL: optname=0x%x, ..)\n",
-                  s, level, optname));
+                  s, level, optname);
         err = ENOPROTOOPT;
         break;
   }
@@ -1036,7 +1061,7 @@ int sal_setsockopt(int s, int level, int optname,
                    const void *optval, socklen_t optlen)
 {
     u8_t err = 0;
-    struct lwip_sock *sock = get_socket(s);
+    struct sal_sock *sock = get_socket(s);
 
     if (!sock) {
         return -1;
@@ -1047,15 +1072,17 @@ int sal_setsockopt(int s, int level, int optname,
         return -1;
     }
 
-    switch(level): {
+    switch(level) {
     case SOL_SOCKET:
-        switch(optname): {
+        switch(optname) {
             case SO_RCVTIMEO:
+#if SAL_RCVTIMEO
                 sock->conn->recv_timeout = 0; // don't actually used
+#endif
                 break;
             default:
-                SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: optname=0x%x, ..)\n",
-                          s, optname);
+                SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: "
+                          "optname=0x%x, ..)\n", s, optname);
                 err = ENOPROTOOPT;
                 break;
         }

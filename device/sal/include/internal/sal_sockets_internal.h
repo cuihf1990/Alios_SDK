@@ -1,5 +1,5 @@
-#ifndef AOS_SAL_SOCKET_H
-#define AOS_SAL_SOCKET_H
+#ifndef _SAL_SOCKET_H_
+#define _SAL_SOCKET_H_
 
 #include <sys/time.h>
 #include <stdlib.h>
@@ -8,139 +8,16 @@
 #include "sal_arch.h"
 #include "sal_pcb.h"
 #include "sal.h"
+#include "sal_sockets.h"
+#include "sal_err.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Socket protocol types (TCP/UDP/RAW) */
-#define SOCK_STREAM     1
-#define SOCK_DGRAM      2
-#define SOCK_RAW        3
-
-/* Define generic types used in sal */
-#if !SAL_NO_STDINT_H
-#include <stdint.h>
-typedef uint8_t   u8_t;
-typedef int8_t    s8_t;
-typedef uint16_t  u16_t;
-typedef int16_t   s16_t;
-typedef uint32_t  u32_t;
-typedef int32_t   s32_t;
-typedef uintptr_t mem_ptr_t;
-#endif
-
-/* If your port already typedef's sa_family_t, define SA_FAMILY_T_DEFINED
-   to prevent this code from redefining it. */
-#if !defined(sa_family_t) && !defined(SA_FAMILY_T_DEFINED)
-typedef u8_t sa_family_t;
-#endif
-/* If your port already typedef's in_port_t, define IN_PORT_T_DEFINED
-   to prevent this code from redefining it. */
-#if !defined(in_port_t) && !defined(IN_PORT_T_DEFINED)
-typedef u16_t in_port_t;
-#endif
-
-struct sockaddr {
-  u8_t        sa_len;
-  sa_family_t sa_family;
-  char        sa_data[14];
-};
-
-/* If your port already typedef's in_addr_t, define IN_ADDR_T_DEFINED
-   to prevent this code from redefining it. */
-#if !defined(in_addr_t) && !defined(IN_ADDR_T_DEFINED)
-typedef u32_t in_addr_t;
-#endif
-
-struct in_addr {
-  in_addr_t s_addr;
-};
-
-struct in6_addr {
-  union {
-    u32_t u32_addr[4];
-    u8_t  u8_addr[16];
-  } un;
-#define s6_addr  un.u8_addr
-};
-
-/* members are in network byte order */
-struct sockaddr_in {
-  u8_t            sin_len;
-  sa_family_t     sin_family;
-  in_port_t       sin_port;
-  struct in_addr  sin_addr;
-#define SIN_ZERO_LEN 8
-  char            sin_zero[SIN_ZERO_LEN];
-};
-
-struct sockaddr_in6 {
-  u8_t            sin6_len;      /* length of this structure    */
-  sa_family_t     sin6_family;   /* AF_INET6                    */
-  in_port_t       sin6_port;     /* Transport layer port #      */
-  u32_t           sin6_flowinfo; /* IPv6 flow information       */
-  struct in6_addr sin6_addr;     /* IPv6 address                */
-  u32_t           sin6_scope_id; /* Set of interfaces for scope */
-};
-
-struct hostent {
-    char  *h_name;      /* Official name of the host. */
-    char **h_aliases;   /* A pointer to an array of pointers to alternative host names,
-                           terminated by a null pointer. */
-    int    h_addrtype;  /* Address type. */
-    int    h_length;    /* The length, in bytes, of the address. */
-    char **h_addr_list; /* A pointer to an array of pointers to network addresses (in
-                           network byte order) for the host, terminated by a null pointer. */
-#define h_addr h_addr_list[0] /* for backward compatibility */
-};
-
-enum sal_ip_addr_type {
-  /** IPv4 */
-  IPADDR_TYPE_V4 =   0U,
-  /** IPv6 */
-  IPADDR_TYPE_V6 =   6U,
-  /** IPv4+IPv6 ("dual-stack") */
-  IPADDR_TYPE_ANY = 46U
-};
-
-typedef struct ip4_addr {
-  u32_t addr;
-} ip4_addr_t;
-
-typedef struct ip6_addr {
-  u32_t addr[4];
-} ip6_addr_t;
-
-typedef struct _ip_addr {
-  union {
-    ip6_addr_t ip6;
-    ip4_addr_t ip4;
-  } u_addr;
-  /** @ref sal_ip_addr_type */
-  u8_t type;
-} ip_addr_t;
-
-int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-               struct timeval *timeout);
-
-int sal_socket(int domain, int type, int protocol);
-
-int sal_write(int s, const void *data, size_t size);
-
-int sal_connect(int s, const struct sockaddr *name, socklen_t namelen);
-
-#define select(maxfdp1,readset,writeset,exceptset,timeout)     sal_select(maxfdp1,readset,writeset,exceptset,timeout)
-
-#define write(s, data, size)                                   sal_write(s,data,size)
-
-#define socket(domain,type,protocol)                           sal_socket( domain,type,protocol)
-
-#define connect(s, name, namelen)                              sal_connect(s, name, namelen)
 
 #define MEMP_NUM_NETCONN     5//(MAX_SOCKETS_TCP + MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
 
 #define SAL_TAG  "sal"
-
 
 #define SAL_DEBUG(format, ...)  LOGD(SAL_TAG, format, ##__VA_ARGS__)
 #define SAL_ERROR(format, ...)  LOGE(SAL_TAG, format, ##__VA_ARGS__)
@@ -293,18 +170,28 @@ typedef struct sal_netconn {
 #endif /* SAL_RCVBUF */
   /** A callback function that is informed about events for this netconn */
   netconn_callback callback;
-}sal_netconn_t;
+} sal_netconn_t;
 
-#define AF_UNSPEC       0
-#define AF_INET         2
-#define AF_INET6        10
-#define PF_INET         AF_INET
-#define PF_INET6        AF_INET6
-#define PF_UNSPEC       AF_UNSPEC
+#if BYTE_ORDER == BIG_ENDIAN
+#define sal_htons(x) (x)
+#define sal_ntohs(x) (x)
+#define sal_htonl(x) (x)
+#define sal_ntohl(x) (x)
+#else
+#define sal_htons(x) ((((x) & 0xff) << 8) | (((x) & 0xff00) >> 8))
+#define sal_ntohs(x) sal_htons(x)
+#define sal_htonl(x) ((((x) & 0xff) << 24) | \
+                     (((x) & 0xff00) << 8) | \
+                     (((x) & 0xff0000UL) >> 8) | \
+                     (((x) & 0xff000000UL) >> 24))
+#define sal_ntohl(x) sal_htonl(x)
+#endif
+
+#define SAL_SOCKET_MAX_PAYLOAD_SIZE  1512
+#define SAL_SOCKET_IP4_ANY_ADDR      "0.0.0.0"
+#define SAL_SOCKET_IP4_ADDR_LEN      16
 
 void sal_deal_event(int s, enum netconn_evt evt);
-
-#define DNS_MAX_NAME_LENGTH 256
 
 #define API_EVENT_SIMPLE(s,e) sal_deal_event(s,e)
 

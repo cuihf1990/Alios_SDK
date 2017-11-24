@@ -3,23 +3,13 @@
 
 
 #include <aos/aos.h>
-#include <err.h>
+#include "sal_err.h"
+#include "sal_sockets.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Define generic types used in sal */
-#if !SAL_NO_STDINT_H
-#include <stdint.h>
-typedef uint8_t   u8_t;
-typedef int8_t    s8_t;
-typedef uint16_t  u16_t;
-typedef int16_t   s16_t;
-typedef uint32_t  u32_t;
-typedef int32_t   s32_t;
-typedef uintptr_t mem_ptr_t;
-#endif
 #if SAL_NETIF_HWADDRHINT
 #define IP_PCB_ADDRHINT ;u8_t addr_hint
 #else
@@ -67,30 +57,6 @@ struct pbuf {
     u16_t ref;
 #endif
 };
-/** This is the aligned version of ip6_addr_t,
-    used as local variable, on the stack, etc. */
-typedef struct ip6_addr {
-  u32_t addr[4];
-}ip6_addr_t;
-
-/** This is the aligned version of ip4_addr_t,
-   used as local variable, on the stack, etc. */
-typedef struct ip4_addr {
-  u32_t addr;
-}ip4_addr_t;
-/**
- * @ingroup ipaddr
- * A union struct for both IP version's addresses.
- * ATTENTION: watch out for its size when adding IPv6 address scope!
- */
-typedef struct _ip_addr {
-  union {
-    ip6_addr_t ip6;
-    ip4_addr_t ip4;
-  } u_addr;
-  /** @ref sal_ip_addr_type */
-  u8_t type;
-} ip_addr_t;
 /** This is the common part of all PCB types. It needs to be at the
    beginning of a PCB type definition. It is located here so that
    changes to this common part are made in one location instead of

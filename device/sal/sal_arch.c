@@ -1,7 +1,7 @@
 /* system includes */
 #include <aos/aos.h>
-#include "sal_arch.h"
-#include "err.h"
+#include "internal/sal_arch.h"
+#include "sal_err.h"
 
 static aos_mutex_t sal_arch_mutex;
 
