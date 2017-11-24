@@ -399,16 +399,15 @@ static void timer_task(void *pa)
     (void)pa;
 
     while (RHINO_TRUE) {
-        tick_start = krhino_sys_tick_get();
         err        = krhino_queue_recv(&g_timer_queue, RHINO_CONFIG_NEXT_INTRPT_TICKS, &msg);
         tick_end   = krhino_sys_tick_get();
 
         if (err == RHINO_BLK_TIMEOUT) {
-            g_timer_count += RHINO_CONFIG_NEXT_INTRPT_TICKS;
+            g_timer_count = tick_end;
             continue;
         }
         else if (err == RHINO_SUCCESS) {
-            g_timer_count += (tick_t)(tick_end - tick_start);
+            g_timer_count = tick_end;;
         }
         else {
             k_err_proc(RHINO_SYS_FATAL_ERR);
@@ -429,10 +428,10 @@ static void timer_task(void *pa)
 
                 tick_end = krhino_sys_tick_get();
                 if (err == RHINO_BLK_TIMEOUT) {
-                    g_timer_count += (tick_t)(tick_end - tick_start);
+                    g_timer_count = tick_end;
                 }
                 else if (err == RHINO_SUCCESS) {
-                    g_timer_count += (tick_t)(tick_end - tick_start);
+                    g_timer_count = tick_end;
                     memcpy(&cb_msg, msg, sizeof(k_timer_queue_cb));
                     krhino_mblk_free(&g_timer_pool, msg);
                     cb = &cb_msg;
@@ -441,6 +440,9 @@ static void timer_task(void *pa)
                 else {
                     k_err_proc(RHINO_SYS_FATAL_ERR);
                 }
+            }
+            else {
+                g_timer_count = tick_start;
             }
                 timer_cb_proc();
         }

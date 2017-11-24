@@ -39,20 +39,9 @@ static void CASE_aosapi_kernel_mm_allocfree()
 	ptr = NULL;
 }
 
-static void CASE_aosapi_kernel_mm_alloclarge()
-{
-	char *p = NULL;
-	p = aos_malloc(102400000L);
-	if(p) {
-		aos_free(p);
-	}
-}
-
-
 void aosapi_kernel_mm_test_entry(yunit_test_suite_t *suite)
 {
 	yunit_add_test_case(suite, "kernel.mm.param", CASE_aosapi_kernel_mm_param);
 	yunit_add_test_case(suite, "kernel.mm.allocfree", CASE_aosapi_kernel_mm_allocfree);
-	yunit_add_test_case(suite, "kernel.mm.alloclarge", CASE_aosapi_kernel_mm_alloclarge);
 }
 

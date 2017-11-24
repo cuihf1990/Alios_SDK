@@ -446,30 +446,21 @@ int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat)
 {
     kstat_t   ret;
-    ktimer_t *t;
 
     if (timer == NULL) {
         return -EINVAL;
     }
 
-    t = aos_malloc(sizeof(ktimer_t));
-    if (t == NULL) {
-        return -ENOMEM;
-    }
-
     if (repeat == 0) {
-        ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
+        ret = krhino_timer_dyn_create(((ktimer_t **)(&timer->hdl)), "AOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, 1);
     } else {
-        ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
+        ret = krhino_timer_dyn_create(((ktimer_t **)(&timer->hdl)), "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
                                   arg, 1);
     }
 
     if (ret != RHINO_SUCCESS) {
-        aos_free(t);
         ERRNO_MAPPING(ret);
     }
-
-    timer->hdl = t;
 
     return 0;
 }
@@ -479,30 +470,21 @@ int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat, unsigned char auto_run)
 {
     kstat_t   ret;
-    ktimer_t *t;
 
     if (timer == NULL) {
         return -EINVAL;
     }
 
-    t = aos_malloc(sizeof(ktimer_t));
-    if (t == NULL) {
-        return -ENOMEM;
-    }
-
     if (repeat == 0) {
-        ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, auto_run);
+        ret = krhino_timer_dyn_create(((ktimer_t **)(&timer->hdl)), "AOS", (timer_cb_t)fn, MS2TICK(ms), 0, arg, auto_run);
     } else {
-        ret = krhino_timer_create(t, "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
+        ret = krhino_timer_dyn_create(((ktimer_t **)(&timer->hdl)), "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(ms),
                                   arg, auto_run);
     }
 
     if (ret != RHINO_SUCCESS) {
-        aos_free(t);
         ERRNO_MAPPING(ret);
     }
-
-    timer->hdl = t;
 
     return 0;
 }
@@ -514,10 +496,7 @@ void aos_timer_free(aos_timer_t *timer)
         return;
     }
 
-    krhino_timer_del(timer->hdl);
-
-    aos_free(timer->hdl);
-
+    krhino_timer_dyn_del(timer->hdl);
     timer->hdl = NULL;
 }
 AOS_EXPORT(void, aos_timer_free, aos_timer_t *);

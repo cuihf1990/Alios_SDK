@@ -41,6 +41,7 @@ void test_aosapi()
 	aosapi_kernel_mutex_test_entry(suite);
 	aosapi_kernel_sem_test_entry(suite);
 	aosapi_kernel_timer_test_entry(suite);
+
 	aosapi_kernel_queue_test_entry(suite);
 	aosapi_kernel_mm_test_entry(suite);
 	aosapi_kernel_workqueue_test_entry(suite);
