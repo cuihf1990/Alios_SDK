@@ -308,6 +308,12 @@ kstat_t krhino_work_cancel(kwork_t *work)
         RHINO_CRITICAL_EXIT();
         return RHINO_WORKQUEUE_WORK_RUNNING;
     }
+
+    if (work->work_exit == 1) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_WORKQUEUE_WORK_EXIST;
+    }
+
     klist_rm_init(&(work->work_node));
     work->wq      = NULL;
     RHINO_CRITICAL_EXIT();
