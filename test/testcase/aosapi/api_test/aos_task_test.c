@@ -46,7 +46,7 @@ static void CASE_aosapi_kernel_task_new_batch()
 	int i = 0;
 	int success_count = 0;
 	int ret = RHINO_SUCCESS;
-	const int TASK_COUNT = 100;
+	const int TASK_COUNT = 10;
 	for(i=0; i<TASK_COUNT; i++) {
 		ret = aos_sem_new(&sync_sem, 0);
 		YUNIT_ASSERT_MSG(ret==RHINO_SUCCESS, "ret=%d", ret);
