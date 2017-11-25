@@ -700,7 +700,7 @@ int aos_work_cancel(aos_work_t *work)
     }
 
     ret = krhino_work_cancel(work->hdl);
-    if (ret == RHINO_WORKQUEUE_WORK_RUNNING) {
+    if (ret != RHINO_SUCCESS) {
         return -EBUSY;
     }
 
