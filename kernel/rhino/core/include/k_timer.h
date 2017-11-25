@@ -27,7 +27,7 @@ typedef struct {
     tick_t        remain;
     tick_t        init_count;
     tick_t        round_ticks;
-    void         *timeout_param;
+    void         *priv;
     kobj_type_t   obj_type;
     uint8_t       timer_state;
     uint8_t       mm_alloc_flag;

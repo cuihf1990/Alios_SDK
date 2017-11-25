@@ -167,7 +167,8 @@ static void work_timer_cb(void *timer, void *arg)
     CPSR_ALLOC();
 
     kstat_t       ret;
-    kwork_t      *work = krhino_list_entry(timer, kwork_t, timer);
+    kwork_t      *work = ((ktimer_t *)timer)->priv;
+
     kworkqueue_t *wq   = (kworkqueue_t *)arg;
 
     RHINO_CRITICAL_ENTER();
@@ -221,8 +222,8 @@ kstat_t krhino_work_init(kwork_t *work, work_handle_t handle, void *arg,
     work->wq      = NULL;
 
     if (dly > 0) {
-        ret = krhino_timer_create(&(work->timer), "WORK-TIMER", work_timer_cb,
-                                  work->dly, 0, (void *)work, 0);
+        ret = krhino_timer_dyn_create((ktimer_t **)(&work->timer), "WORK-TIMER", work_timer_cb,
+                                       work->dly, 0, (void *)work, 0);
         if (ret != RHINO_SUCCESS) {
             return ret;
         }
@@ -268,10 +269,13 @@ kstat_t krhino_work_run(kworkqueue_t *workqueue, kwork_t *work)
         }
 
     } else {
-        krhino_timer_stop(&work->timer);
-        krhino_timer_arg_change(&work->timer, (void *)workqueue);
+        RHINO_CRITICAL_ENTER();
+        work->timer->priv = work;
+        RHINO_CRITICAL_EXIT();
 
-        ret = krhino_timer_start(&(work->timer));
+        krhino_timer_stop(work->timer);
+        krhino_timer_arg_change(work->timer, (void *)workqueue);
+        ret = krhino_timer_start(work->timer);
         if (ret != RHINO_SUCCESS) {
             return ret;
         }
@@ -296,8 +300,8 @@ kstat_t krhino_work_cancel(kwork_t *work)
 
     if (wq == NULL) {
         if (work->dly > 0) {
-            krhino_timer_stop(&(work->timer));
-            krhino_timer_del(&(work->timer));
+            krhino_timer_stop(work->timer);
+            krhino_timer_del(work->timer);
         }
 
         return RHINO_SUCCESS;
