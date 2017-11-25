@@ -604,7 +604,7 @@ void aos_workqueue_del(aos_workqueue_t *workqueue)
 
     while (1) {
         ret = krhino_workqueue_del(workqueue->hdl);
-        if (ret == RHINO_TRY_AGAIN) {
+        if (ret != RHINO_SUCCESS) {
             continue;
         }
         else {
@@ -648,9 +648,16 @@ AOS_EXPORT(int, aos_work_init, aos_work_t *, void (*)(void *), void *, int);
 
 void aos_work_destroy(aos_work_t *work)
 {
+    kwork_t *w;
+
     if (work == NULL) {
         return;
     }
+
+    w = work->hdl;
+
+    krhino_timer_stop(w->timer);
+    krhino_timer_dyn_del(w->timer);
 
     aos_free(work->hdl);
     work->hdl = NULL;
