@@ -656,8 +656,10 @@ void aos_work_destroy(aos_work_t *work)
 
     w = work->hdl;
 
-    krhino_timer_stop(w->timer);
-    krhino_timer_dyn_del(w->timer);
+    if (w->timer != NULL) {
+        krhino_timer_stop(w->timer);
+        krhino_timer_dyn_del(w->timer);
+    }
 
     aos_free(work->hdl);
     work->hdl = NULL;
