@@ -301,9 +301,7 @@ kstat_t krhino_work_cancel(kwork_t *work)
     if (wq == NULL) {
         if (work->dly > 0) {
             krhino_timer_stop(work->timer);
-            krhino_timer_del(work->timer);
         }
-
         return RHINO_SUCCESS;
     }
 
