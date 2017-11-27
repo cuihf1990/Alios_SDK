@@ -2,30 +2,19 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <string.h>
+#ifdef __ICCARM__
+#include <stdarg.h>
+#include <sys/types.h>
+#include <time.h>
 #include <stdio.h>
-#include <sys/time.h>
-
-#if defined (__CC_ARM) && defined(__MICROLIB)
-void __aeabi_assert(const char *expr, const char *file, int line)
-{
-    while (1);
-}
-extern long long aos_now_ms(void);
-int gettimeofday(struct timeval *tv, void *tzp)
-{
-    uint64_t t = aos_now_ms();
-    tv->tv_sec = t / 1000;
-    tv->tv_usec = (t % 1000) * 1000;
-    return 0;
-}
 
 extern void *aos_malloc(unsigned int size);
 extern void aos_alloc_trace(void *addr, size_t allocator);
 extern void aos_free(void *mem);
 extern void *aos_realloc(void *mem, unsigned int size);
+extern long long aos_now_ms(void);
 
-void *malloc(size_t size)
+__ATTRIBUTES void *malloc(unsigned int size)
 {
     void *mem;
 
@@ -38,12 +27,7 @@ void *malloc(size_t size)
     return mem;
 }
 
-void free(void *mem)
-{
-    aos_free(mem);
-}
-
-void *realloc(void *old, size_t newlen)
+__ATTRIBUTES void *realloc(void *old, unsigned int newlen)
 {
     void *mem;
 
@@ -56,7 +40,7 @@ void *realloc(void *old, size_t newlen)
     return mem;
 }
 
-void *calloc(size_t len, size_t elsize)
+__ATTRIBUTES void *calloc(size_t len, size_t elsize)
 {
     void *mem;
 
@@ -73,12 +57,25 @@ void *calloc(size_t len, size_t elsize)
     return mem;
 }
 
-char * strdup(const char *s)
+__ATTRIBUTES void free(void *mem)
 {
-    size_t  len = strlen(s) +1;
-    void *dup_str = aos_malloc(len);
-    if (dup_str == NULL)
-        return NULL;
-    return (char *)memcpy(dup_str, s, len);
+    aos_free(mem);
 }
-#endif
+
+__ATTRIBUTES time_t time(time_t *tod)
+{
+    uint64_t t = aos_now_ms();
+    return (time_t)(t / 1000);
+}
+
+int *__errno _PARAMS ((void))
+{
+    return 0;
+}
+
+void __assert_func(const char * a, int b, const char * c, const char *d)
+{
+    while (1);
+}
+
+ #endif

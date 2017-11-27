@@ -409,7 +409,7 @@ int CoAPMessage_cycle(CoAPContext *context)
     CoAPMessage_recv(context, COAP_WAIT_TIME_MS);
 
     CoAPSendNode *node = NULL, *next = NULL;
-    list_for_each_entry_safe(node, next, &context->list.sendlist, sendlist) {
+    list_for_each_entry_safe(node, next, &context->list.sendlist, CoAPSendNode, sendlist) {
         if (NULL != node) {
             if (node->timeout == 0) {
                 if (node->retrans_count < COAP_MAX_RERTY_COUNT && (0 == node->acked)) {

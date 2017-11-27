@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include "stm32_wifi.h"
 #include "soc_init.h"
-#define AOS_START_STACK 2048
+#define AOS_START_STACK 4096
 
 #define WIFI_PRODUCT_INFO_SIZE                      ES_WIFI_MAX_SSID_NAME_SIZE
 
@@ -95,7 +95,7 @@ static void sys_start(void)
     aos_start();
 }
 
-#if defined (__CC_ARM) /* Keil / armcc */
+#if defined (__CC_ARM) || defined(__ICCARM__) /* Keil / armcc */
 int main(void)
 {
     sys_start();

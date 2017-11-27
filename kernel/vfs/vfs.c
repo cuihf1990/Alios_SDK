@@ -13,6 +13,10 @@
 #include <limits.h>
 #include <string.h>
 
+#ifdef __ICCARM__
+#include <sys/select.h>
+#endif
+
 extern uart_dev_t uart_0;
 
 static uint8_t    g_vfs_init;

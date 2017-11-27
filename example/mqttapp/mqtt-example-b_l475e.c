@@ -55,8 +55,8 @@ typedef struct ota_device_info {
 } OTA_device_info_t;
 
 OTA_device_info_t ota_device_info;
-
-static void ota_init();
+extern void ota_service_event(input_event_t *event, void *priv_data);
+static void ota_init(void);
 #endif
 
 extern int init_sensors(void);
@@ -425,7 +425,7 @@ static void ota_init()
     ota_device_info.product_key=PRODUCT_KEY;
     ota_device_info.device_name=DEVICE_NAME;
     ota_device_info.pclient=pclient;
-    event.value = &ota_device_info;
+    event.value = (unsigned long)&ota_device_info;
     ota_service_event(&event, NULL);
 }
 #endif
