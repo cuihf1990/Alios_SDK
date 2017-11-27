@@ -168,7 +168,15 @@ ENDIAN_CXXFLAGS_LITTLE := -mlittle-endian
 ENDIAN_ASMFLAGS_LITTLE :=
 ENDIAN_LDFLAGS_LITTLE  := -mlittle-endian
 CLIB_LDFLAGS_NANO      := --specs=nano.specs
+ifeq ($(BINS),)
 CLIB_LDFLAGS_NANO_FLOAT:= --specs=nano.specs -u _printf_float
+else ifeq ($(BINS),kernel)
+CLIB_LDFLAGS_NANO_FLOAT:= --specs=nano.specs -u _printf_float
+else ifeq ($(BINS),framework)
+CLIB_LDFLAGS_NANO_FLOAT:= --specs=nano.specs
+else ifeq ($(BINS),app)
+CLIB_LDFLAGS_NANO_FLOAT:= --specs=nano.specs
+endif
 
 # Chip specific flags for GCC
 

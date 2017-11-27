@@ -184,3 +184,5 @@
 1 183 umesh_stop "ur_error_t" " void"
 1 184 ur_adapter_get_default_ipaddr "const void *" " void"
 1 185 ur_adapter_get_mcast_ipaddr "const void *" " void"
+1 186 aos_fflush "int" " FILE *"
+1 187 aos_vprintf "int" " char *, va_list"

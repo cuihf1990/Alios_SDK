@@ -103,6 +103,18 @@ AOS_EXPORT(int, mbedtls_ssl_recv, void *, char *, int);
 AOS_EXPORT(int, mbedtls_ssl_close, void *);
 #endif
 
+int aos_vprintf(char *format, va_list param)
+{
+    return vprintf(format, param);
+}
+AOS_EXPORT(int, aos_vprintf, char *, va_list);
+
+int aos_fflush(FILE *stream)
+{
+    return fflush(stream);
+}
+AOS_EXPORT(int, aos_fflush, FILE *);
+
 
 /* for syscall_ktbl.h, on the last */
 #include <syscall_ktbl.h>

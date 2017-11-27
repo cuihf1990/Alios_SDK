@@ -75,4 +75,14 @@ void *aos_zalloc(unsigned int size)
 }
 #endif
 
+int __wrap_vprintf(char *format, va_list param)
+{
+    return aos_vprintf(format, param);
+}
+
+int __wrap_fflush(FILE *stream)
+{
+    return aos_fflush(stream);
+}
+
 /* ---------------------syscall function--------------------- */
