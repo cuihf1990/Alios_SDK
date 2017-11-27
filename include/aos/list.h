@@ -15,7 +15,7 @@ extern "C" {
  * @param[in]   type     the type of the struct this is embedded in.
  * @param[in]   member   the name of the variable within the struct.
  */
-#define aos_offsetof(type, member)   (size_t)&(((type *)0)->member)
+#define aos_offsetof(type, member)   ((size_t)&(((type *)0)->member))
 
 /*
  * Get the struct for this entry.
