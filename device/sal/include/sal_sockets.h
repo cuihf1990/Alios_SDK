@@ -118,6 +118,30 @@ typedef struct _ip_addr {
   u8_t type;
 } ip_addr_t;
 
+#if BYTE_ORDER == BIG_ENDIAN
+#define sal_htons(x) (x)
+#define sal_ntohs(x) (x)
+#define sal_htonl(x) (x)
+#define sal_ntohl(x) (x)
+#else
+#define sal_htons(x) ((((x) & 0xff) << 8) | (((x) & 0xff00) >> 8))
+#define sal_ntohs(x) sal_htons(x)
+#define sal_htonl(x) ((((x) & 0xff) << 24) | \
+                     (((x) & 0xff00) << 8) | \
+                     (((x) & 0xff0000UL) >> 8) | \
+                     (((x) & 0xff000000UL) >> 24))
+#define sal_ntohl(x) sal_htonl(x)
+#endif
+
+/** 255.255.255.255 */
+#define IPADDR_NONE         ((u32_t)0xffffffffUL)
+/** 127.0.0.1 */
+#define IPADDR_LOOPBACK     ((u32_t)0x7f000001UL)
+/** 0.0.0.0 */
+#define IPADDR_ANY          ((u32_t)0x00000000UL)
+/** 255.255.255.255 */
+#define IPADDR_BROADCAST    ((u32_t)0xffffffffUL)
+
 #define  SOL_SOCKET  0xfff    /* options for socket level */
 
 /*
@@ -174,6 +198,8 @@ int sal_init();
 
 int sal_send(int s, const void *data, size_t size, int flags);
 
+in_addr_t ipaddr_addr(const char *cp);
+
 #define select(maxfdp1,readset,writeset,exceptset,timeout) \
         sal_select(maxfdp1,readset,writeset,exceptset,timeout)
 
@@ -203,5 +229,13 @@ int sal_send(int s, const void *data, size_t size, int flags);
 
 #define send(s,data,size,flags) \
         sal_send(s,data,size,flags)
+
+#define htons(h) sal_htons(h)
+
+#define ntohs(n) sal_ntohs(n)
+
+#define inet_addr(cp) ipaddr_addr(cp)
+#define inet_aton(cp,addr) ip4addr_aton(cp,(ip4_addr_t*)addr)
+#define inet_ntoa(addr) ip4addr_ntoa((const ip4_addr_t*)&(addr))
 
 #endif
