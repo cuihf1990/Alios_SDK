@@ -21,15 +21,8 @@ $(NAME)_SOURCES := mqtt_client.c
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_MQTT := linux
 #NETWORK_MQTT := linuxsock
-else ifeq ($(findstring mk108, $(BUILD_STRING)), mk108)
+else 
 PLATFORM_MQTT := rhino
-#NETWORK_MQTT := rhinosock
-else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
-PLATFORM_MQTT := rhino
-#NETWORK_MQTT := rhinosock
-else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
-PLATFORM_MQTT := rhino
-#NETWORK_MQTT := rhinosock
 endif
 
 

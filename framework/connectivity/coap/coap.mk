@@ -16,11 +16,7 @@ $(NAME)_INCLUDES :=  \
     
 ifeq ($(findstring linuxhost, $(BUILD_STRING)), linuxhost)
 PLATFORM_COAP := linux
-else ifeq ($(findstring mk3060, $(BUILD_STRING)), mk3060)
-PLATFORM_COAP := rhino
-else ifeq ($(findstring mk108, $(BUILD_STRING)), mk108)
-PLATFORM_COAP := rhino
-else ifeq ($(findstring b_l475e, $(BUILD_STRING)), b_l475e)
+else 
 PLATFORM_COAP := rhino
 endif
 
