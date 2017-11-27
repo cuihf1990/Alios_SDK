@@ -461,8 +461,6 @@ static int sal_wifi_recv(int fd,
             slist_del(&node->next, &g_data);
             aos_mutex_unlock(&g_data_mutex);
             aos_free((void *)node);
-
-    
         }
         /* Continue or stop here? */
         if (total_read >= *plen) break;
