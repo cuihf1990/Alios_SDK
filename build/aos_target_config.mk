@@ -19,6 +19,7 @@ COMPONENT_DIRECTORIES := . \
 
 ifneq ($(ONLY_BUILD_LIBRARY), yes)
 COMPONENT_DIRECTORIES += $(OUTPUT_DIR)/syscall
+COMPONENT_DIRECTORIES += $(OUTPUT_DIR)
 endif
 
 COMPONENT_DIRECTORIES += $(APPDIR)
@@ -206,6 +207,10 @@ endif
 # Process all the components + AOS
 
 COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall vfs init
+
+ifneq ($(ONLY_BUILD_LIBRARY), yes)
+COMPONENTS += auto_component
+endif
 
 ifeq ($(BINS),app)
 COMPONENTS += syscall_kapi syscall_fapi ksyscall fsyscall

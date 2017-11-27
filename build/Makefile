@@ -140,6 +140,8 @@ ifneq ($(BUILD_STRING),)
 
 
 $(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
+	$(QUIET)$(call MKDIR, $(AUTO_COMPONENT_DIR))
+	$(QUIET)$(PYTHON) $(MAKEFILES_PATH)/scripts/auto_component.py $(AUTO_COMPONENT_DIR)
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/precompile))
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/syscall/syscall_kapi))
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/syscall/syscall_fapi))
