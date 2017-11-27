@@ -126,11 +126,10 @@ static int otacoap_GenTopicName(char *buf, size_t buf_len, const char *ota_topic
     return 0;
 }
 
-
 //Generate firmware information according to @id, @version
 //and then copy to @buf.
 //0, successful; -1, failed
-static int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *version)
+static int otalib_GenReqMsg(char *buf, size_t buf_len, uint32_t id, const char *version)
 {
     int ret;
 #ifdef FOTA_DOWNLOAD_COAP    
@@ -146,6 +145,26 @@ static int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char 
                    id,
                    version);
 #endif
+    if (ret < 0) {
+        OTA_LOG_E("snprintf failed");
+        return -1;
+    }
+
+    return 0;
+}
+//Generate firmware information according to @id, @version
+//and then copy to @buf.
+//0, successful; -1, failed
+static int otalib_GenInfoMsg(char *buf, size_t buf_len, uint32_t id, const char *version)
+{
+    int ret;
+
+    ret = snprintf(buf,
+                   buf_len,
+                   "{\"id\":%d,\"params\":{\"version\":\"%s\"}}",
+                   id,
+                   version);
+
     if (ret < 0) {
         OTA_LOG_E("snprintf failed");
         return -1;
@@ -204,7 +223,7 @@ static int otacoap_report_version(const char *version)
         return -1;
     }
 
-    ret = otalib_GenInfoMsg(msg_informed, MSG_INFORM_LEN, 0, version);
+    ret = otalib_GenReqMsg(msg_informed, MSG_INFORM_LEN, 0, version);
     if (ret != 0) {
         OTA_LOG_E("generate inform message failed");
         return -1;
