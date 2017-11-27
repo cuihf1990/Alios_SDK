@@ -21,6 +21,14 @@ extern "C" {
 
 #define SAL_DEBUG(format, ...)  LOGD(SAL_TAG, format, ##__VA_ARGS__)
 #define SAL_ERROR(format, ...)  LOGE(SAL_TAG, format, ##__VA_ARGS__)
+#define SAL_ASSERT(msg, assertion) do { \
+        LOGE(SAL_TAG, msg); \
+    } while (0)
+
+/** IPv4 only: set the IP address given as an u32_t */
+#define ip4_addr_set_u32(dest_ipaddr, src_u32) ((dest_ipaddr)->addr = (src_u32))
+/** IPv4 only: get the IP address as an u32_t */
+#define ip4_addr_get_u32(src_ipaddr) ((src_ipaddr)->addr)
 
 /* Helpers to process several netconn_types by the same code */
 #define NETCONNTYPE_GROUP(t)         ((t)&0xF0)
@@ -171,21 +179,6 @@ typedef struct sal_netconn {
   /** A callback function that is informed about events for this netconn */
   netconn_callback callback;
 } sal_netconn_t;
-
-#if BYTE_ORDER == BIG_ENDIAN
-#define sal_htons(x) (x)
-#define sal_ntohs(x) (x)
-#define sal_htonl(x) (x)
-#define sal_ntohl(x) (x)
-#else
-#define sal_htons(x) ((((x) & 0xff) << 8) | (((x) & 0xff00) >> 8))
-#define sal_ntohs(x) sal_htons(x)
-#define sal_htonl(x) ((((x) & 0xff) << 24) | \
-                     (((x) & 0xff00) << 8) | \
-                     (((x) & 0xff0000UL) >> 8) | \
-                     (((x) & 0xff000000UL) >> 24))
-#define sal_ntohl(x) sal_htonl(x)
-#endif
 
 #define SAL_SOCKET_MAX_PAYLOAD_SIZE  1512
 #define SAL_SOCKET_IP4_ANY_ADDR      "0.0.0.0"
