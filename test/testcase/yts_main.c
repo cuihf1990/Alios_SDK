@@ -40,6 +40,7 @@ extern void test_alicrypto(void);
 extern void test_fatfs(void);
 extern void test_mqtt(void);
 extern void test_coap(void);
+extern void test_deviceIO(void);
 
 static void add_test(void);
 
@@ -138,6 +139,8 @@ void add_test(void)
     test_tfs();
 
     test_fatfs();
+
+    test_deviceIO();
 
 #ifdef CONFIG_AOS_MESH
     test_uradar();

@@ -20,6 +20,7 @@ $(NAME)_COMPONENTS  += testcase.framework.wifi_hal_test
 
 ifneq (,$(findstring linux, $(BUILD_STRING)))
 $(NAME)_COMPONENTS  += testcase.kernel.modules.fatfs_test
+$(NAME)_COMPONENTS  += testcase.kernel.deviceIO_test
 
 # framework testcase
 $(NAME)_COMPONENTS  += testcase.framework.alink_test
