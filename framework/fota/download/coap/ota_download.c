@@ -105,11 +105,11 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
     }
     aos_sem_signal(&sem_rec);
 
-    if (block_more == 0) {
+    if (block_more == 0&&block_cur_num) {
         OTA_LOG_I("----OTA_DOWNLOAD_FINISH------");
         ota_set_update_breakpoint(0);
         ret = OTA_DOWNLOAD_FINISH;
-    } else if (coap_client_running ==0) {
+    } else {
         OTA_LOG_E("download read error %s" , strerror(errno));
         save_state(total_size, &g_ctx);
         ret = OTA_DOWNLOAD_FAILED;
@@ -137,11 +137,14 @@ static void iotx_response_block_handler(void * arg, void * p_response)
             OTA_LOG_I("[block]: cur_num: %d, more: %d,size: %d \r\n",cur_num,more,size);
 
             block_size=size;
-            if(more==0){
-                block_more=0;
-            }
+
             if(cur_num==block_cur_num){
-                block_cur_num++;
+                if(more==0){
+                    block_more=0;
+                }
+                else{
+                    block_cur_num++;
+                }
                 total_size += len;
 
                 //OTA_LOG_I("size nbytes %d, %d", size, nbytes);
