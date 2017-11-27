@@ -946,10 +946,12 @@ int sal_close(int s)
     return -1;
   }
 
-  if ((sal_op.close)(s, -1) != 0) {
-    SAL_ERROR("sal_op.close failed.");
-    sock_set_errno(sock, err_to_errno(ERR_IF));
-    return -1;
+  if (sock->conn->state == NETCONN_CONNECT) {
+    if ((sal_op.close)(s, -1) != 0) {
+      SAL_ERROR("sal_op.close failed.");
+      sock_set_errno(sock, err_to_errno(ERR_IF));
+      return -1;
+    }
   }
 
   err = netconn_delete(sock->conn);
