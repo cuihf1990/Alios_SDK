@@ -10,8 +10,6 @@
 #define NUM_SOCKETS MEMP_NUM_NETCONN
 #define NUM_EVENTS  MEMP_NUM_NETCONN
 
-#define SAL_ASSERT(message, assertion)
-
 #define SAL_EVENT_OFFSET (NUM_SOCKETS + SAL_SOCKET_OFFSET)
 
 #ifndef SELWAIT_T
@@ -744,6 +742,7 @@ int sal_socket(int domain, int type, int protocol)
 int sal_init()
 {
     LOGI("sal", "Initializing SAL ...");
+    sal_mutex_init();
     sal_op.register_netconn_evt_cb(&sal_deal_event);
     return sal_op.init(); /* Low level init. */
 }
@@ -933,7 +932,7 @@ int sal_close(int s)
   struct sal_event *event;
   err_t err;
 
-  SAL_DEBUG("sal_close(%d)\n");
+  SAL_DEBUG("sal_close(%d)\n", s);
 
   event = tryget_event(s);
   if (event) {
