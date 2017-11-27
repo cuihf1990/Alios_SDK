@@ -51,7 +51,7 @@ fi
 
 title=""
 if [ -f ${mk3060firmware} ]; then
-    model="mk3060"
+    model=mk3060
     mesh_pass=0
     mesh_fail=0
     echo -e "Start MESH functional autotest with ${model} ...\n" >> ${logfile}
@@ -76,14 +76,14 @@ if [ -f ${mk3060firmware} ]; then
     title="${title} ${model}-PASS-${mesh_pass} FAIL-${mesh_fail};"
 fi
 if [ -f ${esp32firmware} ]; then
-    model="esp32"
+    model=esp32
     mesh_pass=0
     mesh_fail=0
     echo -e "Start MESH functional autotest with ${model} ...\n" >> ${logfile}
     for test in ${mesh_tests}; do
         echo -e "\n---------------------------------------------------------\n" >> ${logfile}
         echo -e "start ${test}\n" >> ${logfile}
-        python ${test} --firmware=${esp32firmware} --model={model} >> ${logfile} 2>&1
+        python ${test} --firmware=${esp32firmware} --model=${model} >> ${logfile} 2>&1
         if [ $? -eq 0 ]; then
             ret="success"
             mesh_pass_total=$((mesh_pass_total+1))
