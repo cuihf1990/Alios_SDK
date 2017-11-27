@@ -49,7 +49,7 @@ ifeq ($(HOST_OS),Linux32)
 ################
 # Linux 32-bit settings
 ################
-export PATH=$(PATH):$(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Linux32/bin
+export PATH := $(PATH):$(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Linux32/bin
 TOOLCHAIN_PATH ?=
 GDB_KILL_OPENOCD   = 'shell killall openocd'
 GDBINIT_STRING     = 'shell $(COMMON_TOOLS_PATH)dash -c "trap \\"\\" 2;$(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE) &"'
@@ -64,7 +64,7 @@ ifeq ($(HOST_OS),Linux64)
 ################
 # Linux 64-bit settings
 ################
-export PATH=$(PATH):$(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Linux64/bin
+export PATH := $(PATH):$(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Linux64/bin
 TOOLCHAIN_PATH ?=
 GDB_KILL_OPENOCD   = 'shell killall openocd'
 GDBINIT_STRING     = 'shell $(COMMON_TOOLS_PATH)dash -c "trap \\"\\" 2;$(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE) &"'
