@@ -1151,7 +1151,11 @@ void *krhino_mm_alloc(size_t size)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if (app_malloc == 0) {
+#if defined (__CC_ARM)
+        krhino_owner_attach(g_kmm_head, tmp, __return_address());
+#elif defined (__GNUC__)
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif /* __CC_ARM */
     }
 #endif
 
@@ -1176,7 +1180,11 @@ void *krhino_mm_realloc(void *oldmem, size_t newsize)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if (app_malloc == 0) {
+#if defined (__CC_ARM)
+        krhino_owner_attach(g_kmm_head, tmp, __return_address());
+#elif defined (__GNUC__)
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif /* __CC_ARM */
     }
 #endif
     if (tmp == NULL && newsize != 0) {

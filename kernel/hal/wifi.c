@@ -259,7 +259,7 @@ void hal_wifi_start_debug_mode(hal_wifi_module_t *m)
         return;
     }
 
-    return m->start_debug_mode(m);
+    m->start_debug_mode(m);
 }
 
 void hal_wifi_stop_debug_mode(hal_wifi_module_t *m)
@@ -272,5 +272,5 @@ void hal_wifi_stop_debug_mode(hal_wifi_module_t *m)
         return;
     }
 
-    return m->stop_debug_mode(m);
+    m->stop_debug_mode(m);
 }

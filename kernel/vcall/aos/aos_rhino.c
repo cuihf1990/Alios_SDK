@@ -730,7 +730,11 @@ void *aos_zalloc(unsigned int size)
         tmp = krhino_mm_alloc(size | AOS_UNSIGNED_INT_MSB);
 
 #ifndef AOS_BINS
+#if defined (__CC_ARM)
+        krhino_owner_attach(g_kmm_head, tmp, __return_address());
+#elif defined (__GNUC__)
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif /* __CC_ARM */
 #endif
     } else {
         tmp = krhino_mm_alloc(size);
@@ -760,7 +764,11 @@ void *aos_malloc(unsigned int size)
         tmp = krhino_mm_alloc(size | AOS_UNSIGNED_INT_MSB);
 
 #ifndef AOS_BINS
+#if defined (__CC_ARM)
+        krhino_owner_attach(g_kmm_head, tmp, __return_address());
+#elif defined (__GNUC__)
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif /* __CC_ARM */
 #endif
     } else {
         tmp = krhino_mm_alloc(size);
@@ -782,7 +790,11 @@ void *aos_realloc(void *mem, unsigned int size)
         tmp = krhino_mm_realloc(mem, size | AOS_UNSIGNED_INT_MSB);
 
 #ifndef AOS_BINS
+#if defined (__CC_ARM)
+        krhino_owner_attach(g_kmm_head, tmp, __return_address());
+#elif defined (__GNUC__)
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif /* __CC_ARM */
 #endif
     } else {
         tmp = krhino_mm_realloc(mem, size);

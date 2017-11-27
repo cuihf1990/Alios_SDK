@@ -332,7 +332,7 @@ int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
     }
     //subscribe the OTA topic: "/ota/device/upgrade/$(product_key)/$(device_name)"
     ret = IOT_MQTT_Subscribe(g_ota_device_info.pclient, g_upgrad_topic, IOTX_MQTT_QOS1,
-                             aliot_mqtt_ota_callback, msgCallback);
+                             aliot_mqtt_ota_callback, (void*)msgCallback);
     if (ret < 0) {
         OTA_LOG_E("mqtt subscribe failed");
         goto do_exit;
