@@ -3,7 +3,6 @@
  */
 
 #include <k_api.h>
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
