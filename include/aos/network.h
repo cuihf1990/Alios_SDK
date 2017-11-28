@@ -17,6 +17,8 @@ extern "C" {
 #include <lwip/def.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
+#elif defined(WITH_SAL)
+#include <sal_sockets.h>
 #elif !defined(CONFIG_NO_TCPIP)
 #include <netdb.h>
 #include <sys/types.h>

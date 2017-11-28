@@ -11,26 +11,29 @@
 
 #define TAG "salapp"
 
+static void yloop_action(void *arg);
+
+static void yloop_action(void *arg)
+{
+    LOG("Hello, %s");
+    aos_post_delayed_action(5000, yloop_action, NULL);
+}
+
 static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
 {
-    char *ptype, *pip, *pport, *pdata;
-    ssize_t siz;
-
-    if (argc != 5) {
-        LOGE(TAG, "Invalid argument!");
-        return;
-    }
-
-    ptype = argv[1];
-    pip = argv[2];
-    pport = argv[3];
-    pdata = argv[4];
+    char *ptype = argc > 1 ? argv[1] : "default";
 
     /* TCP client case */
     if (strcmp(ptype, "tcp_c") == 0) {
+        char *pip, *pport, *pdata;
+        ssize_t siz;
         int fd;
         struct sockaddr_in addr;
         fd = socket(AF_INET,SOCK_STREAM,0);
+
+        pip = argv[2];
+        pport = argv[3];
+        pdata = argv[4];
 
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
@@ -53,6 +56,8 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
         aos_msleep(10000);
 
         close(fd);
+    } else if (strcmp(ptype, "yloop") == 0) {
+        yloop_action(NULL);
     }
 }
 

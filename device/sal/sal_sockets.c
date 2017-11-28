@@ -1099,3 +1099,21 @@ int sal_setsockopt(int s, int level, int optname,
     return err ? -1 : 0;
 }
 
+void sal_freeaddrinfo(struct addrinfo *ai)
+{
+    SAL_ERROR("Not implemented yet!!!");
+}
+
+int sal_shutdown(int s, int how)
+{
+    SAL_ERROR("Not implemeted yet!!!");
+    return -1;
+}
+
+int
+sal_getaddrinfo(const char *nodename, const char *servname,
+       const struct addrinfo *hints, struct addrinfo **res)
+{
+    SAL_ERROR("Not implemeted yet");
+    return -1;
+}

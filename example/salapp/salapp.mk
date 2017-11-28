@@ -4,7 +4,7 @@ vcall ?= posix
 
 $(NAME)_SOURCES := salapp.c
 
-$(NAME)_COMPONENTS += netmgr sal atparser cli
+$(NAME)_COMPONENTS += netmgr sal atparser cli yloop
 
 sal := 1
 

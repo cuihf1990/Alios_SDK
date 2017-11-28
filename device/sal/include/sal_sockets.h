@@ -8,6 +8,11 @@
 #define PF_INET6        AF_INET6
 #define PF_UNSPEC       AF_UNSPEC
 
+#define IPPROTO_IP      0
+#define IPPROTO_ICMP    1
+#define IPPROTO_TCP     6
+#define IPPROTO_UDP     17
+
 /* Socket protocol types (TCP/UDP/RAW) */
 #define SOCK_STREAM     1
 #define SOCK_DGRAM      2
@@ -47,6 +52,10 @@ struct sockaddr {
    to prevent this code from redefining it. */
 #if !defined(in_addr_t) && !defined(IN_ADDR_T_DEFINED)
 typedef u32_t in_addr_t;
+#endif
+
+#if !defined(socklen_t) && !defined(SOCKLEN_T_DEFINED)
+typedef u32_t socklen_t;
 #endif
 
 struct in_addr {
@@ -90,6 +99,17 @@ struct hostent {
                            addresses (in network byte order) for the host,
                            terminated by a null pointer. */
 #define h_addr h_addr_list[0] /* for backward compatibility */
+};
+
+struct addrinfo {
+    int               ai_flags;      /* Input flags. */
+    int               ai_family;     /* Address family of socket. */
+    int               ai_socktype;   /* Socket type. */
+    int               ai_protocol;   /* Protocol of socket. */
+    socklen_t         ai_addrlen;    /* Length of socket address. */
+    struct sockaddr  *ai_addr;       /* Socket address of socket. */
+    char             *ai_canonname;  /* Canonical name of service location. */
+    struct addrinfo  *ai_next;       /* Pointer to next in list. */
 };
 
 enum sal_ip_addr_type {
@@ -200,6 +220,13 @@ int sal_send(int s, const void *data, size_t size, int flags);
 
 in_addr_t ipaddr_addr(const char *cp);
 
+void sal_freeaddrinfo(struct addrinfo *ai);
+
+int sal_shutdown(int s, int how);
+
+int sal_getaddrinfo(const char *nodename, const char *servname,
+                    const struct addrinfo *hints, struct addrinfo **res);
+
 #define select(maxfdp1,readset,writeset,exceptset,timeout) \
         sal_select(maxfdp1,readset,writeset,exceptset,timeout)
 
@@ -237,5 +264,12 @@ in_addr_t ipaddr_addr(const char *cp);
 #define inet_addr(cp) ipaddr_addr(cp)
 #define inet_aton(cp,addr) ip4addr_aton(cp,(ip4_addr_t*)addr)
 #define inet_ntoa(addr) ip4addr_ntoa((const ip4_addr_t*)&(addr))
+
+#define freeaddrinfo(ai) sal_freeaddrinfo(ai)
+
+#define shutdown(s,how) sal_shutdown(s,how)
+
+#define getaddrinfo(nodename,servname,hints,res) \
+        sal_getaddrinfo(nodename,servname,hints,res)
 
 #endif
