@@ -222,6 +222,7 @@ int sal_shutdown(int s, int how);
 int sal_getaddrinfo(const char *nodename, const char *servname,
                     const struct addrinfo *hints, struct addrinfo **res);
 
+int sal_fcntl(int s, int cmd, int val);
 #define select(maxfdp1,readset,writeset,exceptset,timeout) \
         sal_select(maxfdp1,readset,writeset,exceptset,timeout)
 
@@ -260,5 +261,5 @@ int sal_getaddrinfo(const char *nodename, const char *servname,
 #define getaddrinfo(nodname, servname, hints, res) \
        sal_getaddrinfo(nodname, servname, hints, res)
 
-
+#define fcntl(s,cmd,val)  sal_fcntl(s,cmd,val)
 #endif

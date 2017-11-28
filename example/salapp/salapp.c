@@ -60,7 +60,7 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
 
         close(fd);
     } else if (strcmp(ptype, "yloop") == 0) {
-        yloop_action(NULL);
+        aos_schedule_call(yloop_action,NULL);
     }
 }
 

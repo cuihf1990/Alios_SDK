@@ -49,9 +49,25 @@ extern "C" {
 #define SELECT_SEM_PTR(sem) (&(sem))
 #endif /* SAL_NETCONN_SEM_PER_THREAD */
 
-#if defined(AOS_CONFIG_VFS_DEV_NODES)
-#define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
-#endif
+/* Flags for struct netconn.flags (u8_t) */
+/** Should this netconn avoid blocking? */
+#define NETCONN_FLAG_NON_BLOCKING             0x02
+/** Was the last connect action a non-blocking one? */
+#define NETCONN_FLAG_IN_NONBLOCKING_CONNECT   0x04
+
+/** Set the blocking status of netconn calls (@todo: write/send is missing) */
+#define netconn_set_nonblocking(conn, val)  do { if(val) { \
+  (conn)->flags |= NETCONN_FLAG_NON_BLOCKING; \
+} else { \
+  (conn)->flags &= ~ NETCONN_FLAG_NON_BLOCKING; }} while(0)
+/** Get the blocking status of netconn calls (@todo: write/send is missing) */
+#define netconn_is_nonblocking(conn)        (((conn)->flags & NETCONN_FLAG_NON_BLOCKING) != 0)
+
+
+// #if defined(AOS_CONFIG_VFS_DEV_NODES)
+// #define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
+// #endif
+#define  SAL_SOCKET_OFFSET      0
 
 /* Flags we can use with send and recv. */
 #define MSG_PEEK       0x01    /* Peeks at an incoming message */
