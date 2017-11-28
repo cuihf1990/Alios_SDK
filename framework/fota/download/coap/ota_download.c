@@ -97,7 +97,7 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
     aos_sem_new(&sem_send, 0);
     aos_sem_new(&sem_rec, 0);
 
-    aos_task_new("coap rec", task_rec, 0, 2048);
+    aos_task_new("coap rec", task_rec, 0, 4096);
     while(coap_client_running&&block_more){
         iotx_req_block_from_server(download_topic_buf);
         aos_sem_signal(&sem_rec);
