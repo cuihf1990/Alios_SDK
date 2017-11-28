@@ -648,6 +648,18 @@ esp_err_t esp_wifi_set_promiscuous_filter(const wifi_promiscuous_filter_t *filte
 esp_err_t esp_wifi_get_promiscuous_filter(wifi_promiscuous_filter_t *filter);
 
 /**
+  * Description: enable/disable autoack in promiscous mode and set MAC address of promiscous interface.
+  *
+  * Param: autoack: true - enable autoack in promiscous mode
+  *                 false - disable autoack in promiscous mode
+  *        mac - MAC address of promiscous interface, 6 bytes
+  *
+  * return: ESP_ERR_WIFI_OK - succeed
+  *         ESP_ERR_WIFI_ARG - mac is NULL
+**/
+esp_err_t esp_wifi_set_promiscous_autoack(bool autoack, uint8_t *mac);
+
+/**
   * @brief     Set the configuration of the ESP32 STA or AP
   *
   * @attention 1. This API can be called only when specified interface is enabled, otherwise, API fail
