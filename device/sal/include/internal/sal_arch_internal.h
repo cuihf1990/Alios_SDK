@@ -1,12 +1,19 @@
-#ifndef _SAL_ARCH_H_
-#define _SAL_ARCH_H_
+#ifndef _SAL_ARCH_INTERNAL_H_
+#define _SAL_ARCH_INTERNAL_H_
 
 #include <aos/aos.h>
-#include "sal_err.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @ingroup sys_time
+ * Returns the current time in milliseconds,
+ * may be the same as sys_jiffies or at least based on it.
+ */
+uint32_t sys_now(void);
+
 //#define EVENT_SIMPLE
 #define SAL_ARCH_TIMEOUT 0xffffffffUL
 

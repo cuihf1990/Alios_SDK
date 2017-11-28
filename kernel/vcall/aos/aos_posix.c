@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #undef WITH_LWIP
+#undef WITH_SAL
 #include <aos/aos.h>
 #include <poll.h>
 

@@ -2,10 +2,6 @@
 #define _SAL_PCB_H_
 
 
-#include <aos/aos.h>
-#include "sal_err.h"
-#include "sal_sockets.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

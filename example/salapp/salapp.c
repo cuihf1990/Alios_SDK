@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <aos/aos.h>
 #include <sal.h>
+#include <sal_arch.h>
+#include <sal_def.h>
+#include <sal_ipaddr.h>
 #include <sal_sockets.h>
 #include <sal_err.h>
 #include <hal/soc/atcmd.h>
