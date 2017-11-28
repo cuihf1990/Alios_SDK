@@ -381,7 +381,7 @@ static const frame_stats_t *beken_wifi_mesh_get_stats(
 }
 
 static umesh_hal_module_t beken_wifi_mesh_module;
-static const uint8_t g_wifi_channels[] = {1, 4, 6, 9, 11};
+static const uint8_t g_wifi_channels[] = {1,2,3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 static mesh_hal_priv_t g_wifi_priv = {
     .u_mtu = DEFAULT_MTU_SIZE,
     .b_mtu = DEFAULT_MTU_SIZE,
