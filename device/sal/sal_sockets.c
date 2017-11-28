@@ -3,8 +3,6 @@
 #include <string.h>
 #include "internal/sal_sockets_internal.h"
 
-#define TAG  "sal_socket"
-
 #define IPADDR_ANY          ((u32_t)0x00000000UL)
 
 /** Safely copy one IPv6 address to another (src may be NULL) */
@@ -1382,3 +1380,38 @@ int sal_setsockopt(int s, int level, int optname,
     return err ? -1 : 0;
 }
 
+/** A minimal implementation of fcntl.
+ * Currently only the commands F_GETFL and F_SETFL are implemented.
+ * Only the flag O_NONBLOCK is implemented.
+ */
+int sal_fcntl(int s, int cmd, int val)
+{
+  struct sal_sock *sock = get_socket(s);
+  int ret = -1;
+
+  if (!sock) {
+    return -1;
+  }
+
+  switch (cmd) {
+  case F_GETFL:
+    ret = netconn_is_nonblocking(sock->conn) ? O_NONBLOCK : 0;
+    sock_set_errno(sock, 0);
+    break;
+  case F_SETFL:
+    if ((val & ~O_NONBLOCK) == 0) {
+      /* only O_NONBLOCK, all other bits are zero */
+      netconn_set_nonblocking(sock->conn, val & O_NONBLOCK);
+      ret = 0;
+      sock_set_errno(sock, 0);
+    } else {
+      sock_set_errno(sock, ENOSYS); /* not yet implemented */
+    }
+    break;
+  default:
+    SAL_DEBUG("sal_fcntl(%d, UNIMPL: %d, %d)\n", s, cmd, val);
+    sock_set_errno(sock, ENOSYS); /* not yet implemented */
+    break;
+  }
+  return ret;
+}
