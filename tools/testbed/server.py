@@ -33,9 +33,13 @@ class Server:
     def construct_dev_list(self):
         l = []
         for client in self.client_list:
+            if client['valid'] == False:
+                continue
             devices = client['addr'][0]
             devices += ','+ str(client['addr'][1])
             for port in client['devices']:
+                if client['devices'][port]['valid'] == False:
+                    continue
                 devices += ',' + port + '|' + str(client['devices'][port]['using'])
             l.append(devices)
         data = ':'.join(l)
@@ -55,9 +59,10 @@ class Server:
             except:
                 continue
 
-    def client_serve_thread(self, client):
-        client['socket'].settimeout(1)
+    def client_serve_thread(self, conn, addr):
+        conn.settimeout(1)
         heartbeat_timeout = time.time() + 30
+        client = None
         file = {}
         msg = ''
         while self.keep_running:
@@ -66,7 +71,7 @@ class Server:
                     print "client {0} heartbeat timeout".format(client['addr'])
                     break
 
-                new_msg = client['socket'].recv(MAX_MSG_LENTH)
+                new_msg = conn.recv(MAX_MSG_LENTH)
                 if new_msg == '':
                     break
 
@@ -76,37 +81,75 @@ class Server:
                     if type == TBframe.TYPE_NONE:
                         break
 
+                    if not client:
+                        if type != TBframe.CLIENT_UUID:
+                            continue
+                        for c in self.client_list:
+                            if c['uuid'] != value:
+                                continue
+                            client = c
+                            break
+                        if not client:
+                            client = {'uuid':value,
+                                      'valid': True,
+                                      'socket': conn,
+                                      'addr':addr,
+                                      'devices':{}}
+                            self.client_list.append(client)
+                            print "new client {0} connected @ {1}".format(value, addr)
+                        else:
+                            client['socket'] = socket
+                            client['addr'] = addr
+                            client['valid'] = True
+                            print "client {0} re-connected @ {1}".format(value, addr)
+                        continue
+
                     heartbeat_timeout = time.time() + 30
                     if type == TBframe.CLIENT_DEV:
                         new_devices = value.split(':')
                         for port in new_devices:
-                            if port != "" and port not in client['devices']:
-                                print "device {0} added to client {1}".format(port, client['addr'])
+                            if port == "":
+                                continue
+                            if port in client['devices'] and client['devices'][port]['valid'] == True:
+                                continue
+                            if port not in client['devices']:
+                                print "new device {0} added to client {1}".format(port, client['uuid'])
                                 client['devices'][port] = {
                                         'lock':threading.Lock(),
+                                        'valid':True,
                                         'using':0,
                                         'status':'{}',
                                         'log_subscribe':[],
                                         'status_subscribe':[]
                                         }
+                            else:
+                                print "device {0} re-added to client {1}".format(port, client['uuid'])
+                                client['devices'][port]['status'] = '{}'
+                                client['devices'][port]['valid'] = True
 
                         for port in list(client['devices']):
-                            if port not in new_devices:
-                                print "device {0} removed from client {1}".format(port, client['addr'])
-                                client['devices'].pop(port)
+                            if port in new_devices:
+                                continue
+                            if client['devices'][port]['valid'] == False:
+                                continue
+                            client['devices'][port]['status'] = '{}'
+                            client['devices'][port]['valid'] = False
+                            print "device {0} removed from client {1}".format(port, client['uuid'])
 
                         for port in list(client['devices']):
-                            if port !="" and port not in file:
-                                try:
-                                    filename = 'server/' + client['addr'][0] + '-' + port[5:] + '.log'
-                                    file[port] = open(filename, 'a')
-                                except:
-                                    print "error: can not open/create file ", filename
-                                    continue
-                        for f in list(file):
-                            if f not in client['devices']:
-                                file[f].close()
-                                file.pop(f)
+                            if port in file:
+                                continue
+                            try:
+                                filename = 'server/' + client['addr'][0] + '-' + port[5:] + '.log'
+                                file[port] = open(filename, 'a')
+                            except:
+                                print "error: can not open/create file ", filename
+                                continue
+                        for port in list(file):
+                            if client['devices'][port]['valid'] == True:
+                                continue
+                            file[port].close()
+                            file.pop(port)
                         self.send_device_list_to_all()
                     elif type == TBframe.DEVICE_LOG:
                         port = value.split(':')[0]
@@ -175,10 +218,19 @@ class Server:
             except:
                 if DEBUG: traceback.print_exc()
                 break
-        client['socket'].close()
-        print "client ", client['addr'], "disconnected"
-        self.client_list.remove(client)
-        self.send_device_list_to_all()
+        conn.close()
+        if client:
+            for port in client['devices']:
+                if client['devices'][port]['valid'] == False:
+                    continue
+                client['devices'][port]['status'] = '{}'
+                client['devices'][port]['valid'] = False
+                print "device {0} removed from client {1}".format(port, client['uuid'])
+            client['valid'] = False
+            print "client {0} @ {1} disconnected".format(client['uuid'], addr)
+            self.send_device_list_to_all()
+        else:
+            print "client @ {0} disconnected".format(addr)
 
     def send_file_to_someone(self, dst, filename):
         if os.path.exists(filename) == False:
@@ -217,6 +269,8 @@ class Server:
         ret = None
         for client in self.client_list:
             if client['addr'] != addr:
+                continue
+            if client['valid'] == False:
                 continue
             ret = client
             break
@@ -529,10 +583,7 @@ class Server:
         self.client_socket.listen(5)
         while self.keep_running:
             conn, addr = self.client_socket.accept()
-            client = {'socket':conn, 'addr':addr, 'devices':{}}
-            print "client ", addr," connected"
-            self.client_list.append(client)
-            thread.start_new_thread(self.client_serve_thread, (client,))
+            thread.start_new_thread(self.client_serve_thread, (conn, addr,))
 
     def terminal_listen_thread(self):
         self.terminal_socket.listen(5)
@@ -576,6 +627,8 @@ class Server:
 
     def deinit(self):
         for c in self.client_list:
+            if c['valid'] == False:
+                continue
             c['socket'].close()
         for t in self.terminal_list:
             t['socket'].close()

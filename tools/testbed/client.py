@@ -34,11 +34,12 @@ class Client:
         self.keep_running = True
         self.connected = False
         self.models = ['mk3060', 'esp32']
-        bytes = os.urandom(4)
         self.poll_str = '\x1b[t'
+        bytes = os.urandom(4)
         for byte in bytes:
             self.poll_str += '{0:02x}'.format(ord(byte))
         self.poll_str += 'm'
+        self.uuid = ''
 
     def send_device_list(self):
         device_list = []
@@ -628,8 +629,27 @@ class Client:
 
         if os.path.exists('client') == False:
             os.mkdir('client')
+        if os.path.exists('client/.uuid') == True:
+            try:
+                file = open('client/.uuid','rb')
+                self.uuid = json.load(file)
+                file.close()
+            except:
+                print "read uuid from file failed"
+        if not self.uuid:
+            bytes = os.urandom(6)
+            self.uuid = ''
+            for byte in bytes:
+                self.uuid += '{0:02x}'.format(ord(byte))
+            try:
+                file = open('client/.uuid','w')
+                file.write(json.dumps(self.uuid))
+                file.close()
+            except:
+                print "save uuid to file failed"
         signal.signal(signal.SIGINT, signal_handler)
 
+        self.send_packet(TBframe.CLIENT_UUID, self.uuid)
         self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
         thread.start_new_thread(self.device_monitor,())
         thread.start_new_thread(self.heartbeat_func,())
@@ -820,6 +840,7 @@ class Client:
                         self.service_socket.connect((server_ip, server_port))
                         self.connected = True
                         self.send_device_list()
+                        self.send_packet(TBframe.CLIENT_UUID, self.uuid)
                         self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
                         break
                     except:
