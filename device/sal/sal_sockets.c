@@ -105,6 +105,10 @@
 #define SELWAIT_T uint8_t
 #endif
 
+#define ipaddr_aton(cp,addr) ip4addr_aton(cp,addr)
+
+int ip4addr_aton(const char *cp, ip4_addr_t *addr);
+
 static int  sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in,
                         fd_set *exceptset_in, fd_set *readset_out,
                         fd_set *writeset_out, fd_set *exceptset_out);
@@ -1169,12 +1173,6 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
     return err;
 }
 
-int sal_shutdown(int s, int how)
-{
-    SAL_ERROR("sal_shutdown(%d) stub\n", s);
-    return 0;
-}
-
 /**
  * Free a socket. The socket's netconn must have been
  * delete before!
@@ -1275,19 +1273,6 @@ struct hostent* sal_gethostbyname(const char *name)
 
   /* not thread safe, <TODO> */
   return &s_hostent;
-}
-
-int sal_getaddrinfo(const char *nodename, const char *servname,
-       const struct addrinfo *hints, struct addrinfo **res)
-{
-    SAL_ERROR("call sal_getaddrinfo stub\n");
-    return 0;
-}
-
-void sal_freeaddrinfo(struct addrinfo *ai)
-{
-    SAL_ERROR("call sal_freeaddrinfo stub\n");
-    return;
 }
 
 int sal_getsockopt(int s, int level, int optname,
@@ -1414,4 +1399,174 @@ int sal_fcntl(int s, int cmd, int val)
     break;
   }
   return ret;
+}
+
+int sal_shutdown(int s, int how)
+{
+    SAL_ERROR("Nothing implemeted yet in %s!!!", __func__);
+    return 0;
+}
+
+int sal_getaddrinfo(const char *nodename, const char *servname,
+       const struct addrinfo *hints, struct addrinfo **res)
+{
+  //err_t err;
+  ip_addr_t addr;
+  struct addrinfo *ai;
+  struct sockaddr_storage *sa = NULL;
+  int port_nr = 0;
+  size_t total_size;
+  size_t namelen = 0;
+  int ai_family;
+
+  if (res == NULL) {
+    return EAI_FAIL;
+  }
+  *res = NULL;
+  if ((nodename == NULL) && (servname == NULL)) {
+    return EAI_NONAME;
+  }
+
+  if (hints != NULL) {
+    ai_family = hints->ai_family;
+    if ((ai_family != AF_UNSPEC)
+#if LWIP_IPV4
+      && (ai_family != AF_INET)
+#endif /* LWIP_IPV4 */
+#if LWIP_IPV6
+      && (ai_family != AF_INET6)
+#endif /* LWIP_IPV6 */
+      ) {
+      return EAI_FAMILY;
+    }
+  } else {
+    ai_family = AF_UNSPEC;
+  }
+
+  if (servname != NULL) {
+    /* service name specified: convert to port number
+     * @todo?: currently, only ASCII integers (port numbers) are supported (AI_NUMERICSERV)! */
+    port_nr = atoi(servname);
+    if ((port_nr <= 0) || (port_nr > 0xffff)) {
+      return EAI_SERVICE;
+    }
+  }
+
+  if (nodename != NULL) {
+    /* service location specified, try to resolve */
+    if ((hints != NULL) && (hints->ai_flags & AI_NUMERICHOST)) {
+      /* no DNS lookup, just parse for an address string */
+      if (!ipaddr_aton(nodename, (ip4_addr_t *)&addr)) {
+        return EAI_NONAME;
+      }
+#if LWIP_IPV4 && LWIP_IPV6
+      if ((IP_IS_V6_VAL(addr) && ai_family == AF_INET) ||
+          (IP_IS_V4_VAL(addr) && ai_family == AF_INET6)) {
+        return EAI_NONAME;
+      }
+#endif /* LWIP_IPV4 && LWIP_IPV6 */
+    } else {
+#if 0
+#if LWIP_IPV4 && LWIP_IPV6
+      /* AF_UNSPEC: prefer IPv4 */
+      u8_t type = NETCONN_DNS_IPV4_IPV6;
+      if (ai_family == AF_INET) {
+        type = NETCONN_DNS_IPV4;
+      } else if (ai_family == AF_INET6) {
+        type = NETCONN_DNS_IPV6;
+      }
+#endif /* LWIP_IPV4 && LWIP_IPV6 */
+#endif
+      //ip_addr_t addr;
+      char ip_str[16] = {0};
+      if (sal_op.domain_to_ip((char *)nodename, ip_str) != 0) {
+        SAL_ERROR("domain to ip failed.");
+        return EAI_FAIL;
+      }
+
+      // Currently only v4 is supported by AT firmware
+      addr.type = IPADDR_TYPE_V4;
+      if (ipstr_to_u32(ip_str, &(addr.u_addr.ip4.addr)) != 0) {
+        SAL_ERROR("ip_2_u32 failed");
+        return EAI_FAIL;
+      }
+    }
+  } else {
+#if 0
+    /* service location specified, use loopback address */
+    if ((hints != NULL) && (hints->ai_flags & AI_PASSIVE)) {
+      ip_addr_set_any(ai_family == AF_INET6, &addr);
+    } else {
+      ip_addr_set_loopback(ai_family == AF_INET6, &addr);
+    }
+#endif
+  }
+
+  total_size = sizeof(struct addrinfo) + sizeof(struct sockaddr_storage);
+  if (nodename != NULL) {
+    namelen = strlen(nodename);
+    if (namelen > DNS_MAX_NAME_LENGTH) {
+      /* invalid name length */
+      return EAI_FAIL;
+    }
+    SAL_ASSERT("namelen is too long", total_size + namelen + 1 > total_size);
+    total_size += namelen + 1;
+  }
+  /* If this fails, please report to lwip-devel! :-) */
+  SAL_ASSERT("total_size <= NETDB_ELEM_SIZE: please report this!",
+    total_size <= NETDB_ELEM_SIZE);
+  ai = (struct addrinfo *)aos_malloc(sizeof(struct addrinfo));
+  if (ai == NULL) {
+    return EAI_MEMORY;
+  }
+  memset(ai, 0, total_size);
+  /* cast through void* to get rid of alignment warnings */
+  sa = (struct sockaddr_storage *)(void*)((u8_t*)ai + sizeof(struct addrinfo));
+  if (IP_IS_V6_VAL(addr)) {
+#if LWIP_IPV6
+    struct sockaddr_in6 *sa6 = (struct sockaddr_in6*)sa;
+    /* set up sockaddr */
+    inet6_addr_from_ip6addr(&sa6->sin6_addr, ip_2_ip6(&addr));
+    sa6->sin6_family = AF_INET6;
+    sa6->sin6_len = sizeof(struct sockaddr_in6);
+    sa6->sin6_port = sal_htons((u16_t)port_nr);
+    ai->ai_family = AF_INET6;
+#endif /* LWIP_IPV6 */
+  } else {
+#if LWIP_IPV4
+    struct sockaddr_in *sa4 = (struct sockaddr_in*)sa;
+    /* set up sockaddr */
+    inet_addr_from_ipaddr(&sa4->sin_addr, ip_2_ip4(&addr));
+    sa4->sin_family = AF_INET;
+    sa4->sin_len = sizeof(struct sockaddr_in);
+    sa4->sin_port = lwip_htons((u16_t)port_nr);
+    ai->ai_family = AF_INET;
+#endif /* LWIP_IPV4 */
+  }
+
+  /* set up addrinfo */
+  if (hints != NULL) {
+    /* copy socktype & protocol from hints if specified */
+    ai->ai_socktype = hints->ai_socktype;
+    ai->ai_protocol = hints->ai_protocol;
+  }
+  if (nodename != NULL) {
+    /* copy nodename to canonname if specified */
+    ai->ai_canonname = ((char*)ai + sizeof(struct addrinfo) + sizeof(struct sockaddr_storage));
+    memcpy(ai->ai_canonname, nodename, namelen);
+    ai->ai_canonname[namelen] = 0;
+  }
+  ai->ai_addrlen = sizeof(struct sockaddr_storage);
+  ai->ai_addr = (struct sockaddr*)sa;
+
+  *res = ai;
+
+  return 0;
+}
+
+void sal_freeaddrinfo(struct addrinfo *ai)
+{
+  if (ai != NULL) {
+    aos_free(ai);
+  }
 }
