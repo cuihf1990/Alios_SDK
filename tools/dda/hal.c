@@ -28,6 +28,8 @@ typedef struct {
     umesh_hal_module_t *module;
 } mesh_hal_priv_t;
 
+static bool g_radio_wakeup = true;
+
 static void linuxhost_mesh_recv(frame_t *frm, frame_info_t *fino, void *cb_data)
 {
     mesh_hal_priv_t *priv = cb_data;
@@ -57,6 +59,10 @@ static int send_frame(umesh_hal_module_t *module, frame_t *frame, mac_address_t 
             .key_index = frame->key_index,
         },
     };
+
+    if (g_radio_wakeup == false) {
+        return 3;  // drop the pkt
+    }
     dda_mesh_send_data(TYPE_MESH, CMD_MESH_DATA, cmd_priv.opaque, dst_id, frame->data, frame->len);
 
     return 0;
@@ -182,6 +188,18 @@ static int linuxhost_ur_get_channel(umesh_hal_module_t *module)
     return priv->channel;
 }
 
+int linuxhost_umesh_hal_radio_wakeup(struct umesh_hal_module_s *module)
+{
+    g_radio_wakeup = true;
+    return 0;
+}
+
+int linuxhost_umesh_hal_radio_sleep(struct umesh_hal_module_s *module)
+{
+    g_radio_wakeup = false;
+    return 0;
+}
+
 static umesh_hal_module_t linuxhost_ur_wifi_module;
 static const uint8_t g_wifi_channels[] = {1, 6, 11};
 static mesh_hal_priv_t wifi_priv = {
@@ -236,6 +254,8 @@ static umesh_hal_module_t linuxhost_ur_ble_module = {
     .umesh_hal_set_channel = linuxhost_ur_hal_set_channel,
     .umesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
     .umesh_hal_get_channel = linuxhost_ur_get_channel,
+    .umesh_hal_radio_wakeup = linuxhost_umesh_hal_radio_wakeup,
+    .umesh_hal_radio_sleep = linuxhost_umesh_hal_radio_sleep,
 };
 
 int csp_get_args(const char ***pargv);
