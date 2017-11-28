@@ -38,7 +38,7 @@ void board_init(void)
 
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_owner            = HAL_FLASH_EMBEDDED;
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_description      = "PARAMETER4";
-    hal_partitions[HAL_PARTITION_PARAMETER_4].partition_start_addr       = 0x080FF000;
+    hal_partitions[HAL_PARTITION_PARAMETER_4].partition_start_addr       = 0x080FE000;
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_length           = 0x1000; //4k bytes
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_options          = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN;
 }
