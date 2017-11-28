@@ -159,18 +159,18 @@ static int ota_gen_report_msg(char *buf, size_t buf_len, uint32_t id, int progre
     if (NULL == msg_detail) {
         ret = snprintf(buf,
                        buf_len,
-                       "{\"id\":%d,\"params\":\{\"step\": \"%d\"}}",
+                       "{\"id\":%d,\"params\":{\"step\": \"%d\",\"desc\":\"%d%%\"}}",
                        id,
+                       progress,
                        progress);
     } else {
         ret = snprintf(buf,
                        buf_len,
-                       "{\"id\":%d,\"params\":\{\"step\": \"%d\",\"desc\":\"%s\"}}",
+                       "{\"id\":%d,\"params\":{\"step\": \"%d\",\"desc\":\"%s\"}}",
                        id,
                        progress,
                        msg_detail);
     }
-
 
     if (ret < 0) {
         OTA_LOG_E("snprintf failed");
