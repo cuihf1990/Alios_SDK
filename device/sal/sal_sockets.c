@@ -2,10 +2,101 @@
 #include <stdio.h>
 #include <string.h>
 #include "internal/sal_sockets_internal.h"
-#include "internal/sal_arch.h"
-#include "sal_err.h"
 
 #define TAG  "sal_socket"
+
+#define IPADDR_ANY          ((u32_t)0x00000000UL)
+
+/** Safely copy one IPv6 address to another (src may be NULL) */
+#define ip6_addr_set(dest, src) do{(dest)->addr[0] = (src) == NULL ? 0 : (src)->addr[0]; \
+                                   (dest)->addr[1] = (src) == NULL ? 0 : (src)->addr[1]; \
+                                   (dest)->addr[2] = (src) == NULL ? 0 : (src)->addr[2]; \
+                                   (dest)->addr[3] = (src) == NULL ? 0 : (src)->addr[3];}while(0)
+
+/** Safely copy one IP address to another (src may be NULL) */
+#define ip4_addr_set(dest, src) ((dest)->addr = \
+                                        ((src) == NULL ? 0 : \
+                                        (src)->addr))
+
+/** Set complete address to zero */
+#define ip6_addr_set_zero(ip6addr)    do{(ip6addr)->addr[0] = 0; \
+                                         (ip6addr)->addr[1] = 0; \
+                                         (ip6addr)->addr[2] = 0; \
+                                         (ip6addr)->addr[3] = 0;}while(0)
+
+/** Set address to ipv6 'any' (no need for lwip_htonl()) */
+#define ip6_addr_set_any(ip6addr)       ip6_addr_set_zero(ip6addr)
+
+#define ip4_addr_set_any(ipaddr)      ((ipaddr)->addr = IPADDR_ANY)
+
+/** @ingroup ip6addr
+ * Convert generic ip address to specific protocol version
+ */
+#define ip_2_ip6(ipaddr)   (&((ipaddr)->u_addr.ip6))
+/** @ingroup ip4addr
+ * Convert generic ip address to specific protocol version
+ */
+#define ip_2_ip4(ipaddr)   (&((ipaddr)->u_addr.ip4))
+
+
+/** IPv4 only: set the IP address given as an u32_t */
+#define ip4_addr_set_u32(dest_ipaddr, src_u32) ((dest_ipaddr)->addr = (src_u32))
+/** IPv4 only: get the IP address as an u32_t */
+#define ip4_addr_get_u32(src_ipaddr) ((src_ipaddr)->addr)
+
+
+
+#define IP_SET_TYPE_VAL(ipaddr, iptype) do { (ipaddr).type = (iptype); }while(0)
+#define IP_SET_TYPE(ipaddr, iptype)     do { if((ipaddr) != NULL) { IP_SET_TYPE_VAL(*(ipaddr), iptype); }}while(0)
+#define IP_GET_TYPE(ipaddr)           ((ipaddr)->type)
+/** @ingroup ip4addr */
+#define IP_IS_V4_VAL(ipaddr)          (IP_GET_TYPE(&ipaddr) == IPADDR_TYPE_V4)
+/** @ingroup ip6addr */
+#define IP_IS_V6_VAL(ipaddr)          (IP_GET_TYPE(&ipaddr) == IPADDR_TYPE_V6)
+/** @ingroup ip4addr */
+#define IP_IS_V4(ipaddr)              (((ipaddr) == NULL) || IP_IS_V4_VAL(*(ipaddr)))
+/** @ingroup ip6addr */
+#define IP_IS_V6(ipaddr)              (((ipaddr) != NULL) && IP_IS_V6_VAL(*(ipaddr)))
+
+#define ip_addr_set(dest, src) do{ IP_SET_TYPE(dest, IP_GET_TYPE(src)); if(IP_IS_V6(src)){ \
+  ip6_addr_set(ip_2_ip6(dest), ip_2_ip6(src)); }else{ \
+  ip4_addr_set(ip_2_ip4(dest), ip_2_ip4(src)); }}while(0)
+/** @ingroup ipaddr */
+#define ip_addr_set_ipaddr(dest, src) ip_addr_set(dest, src)
+
+/** @ingroup ipaddr */
+#define ip_addr_set_any(is_ipv6, ipaddr)      do{if(is_ipv6){ \
+  ip6_addr_set_any(ip_2_ip6(ipaddr)); IP_SET_TYPE(ipaddr, IPADDR_TYPE_V6); }else{ \
+  ip4_addr_set_any(ip_2_ip4(ipaddr)); IP_SET_TYPE(ipaddr, IPADDR_TYPE_V4); }}while(0)
+
+#define inet_addr_from_ipaddr(target_inaddr, source_ipaddr) ((target_inaddr)->s_addr = ip4_addr_get_u32(source_ipaddr))
+#define inet_addr_to_ipaddr(target_ipaddr, source_inaddr)   (ip4_addr_set_u32(target_ipaddr, (source_inaddr)->s_addr))
+/* ATTENTION: the next define only works because both s_addr and ip_addr_t are an u32_t effectively! */
+#define inet_addr_to_ipaddr_p(target_ipaddr_p, source_inaddr)   ((target_ipaddr_p) = (ip_addr_t*)&((source_inaddr)->s_addr))
+
+#define IP4ADDR_PORT_TO_SOCKADDR(sin, ipaddr, port) do { \
+      (sin)->sin_len = sizeof(struct sockaddr_in); \
+      (sin)->sin_family = AF_INET; \
+      (sin)->sin_port = sal_htons((port)); \
+      inet_addr_from_ipaddr(&(sin)->sin_addr, ipaddr); \
+      memset((sin)->sin_zero, 0, SIN_ZERO_LEN); }while(0)
+      
+#define SOCKADDR4_TO_IP4ADDR_PORT(sin, ipaddr, port) do { \
+    inet_addr_to_ipaddr(ip_2_ip4(ipaddr), &((sin)->sin_addr)); \
+    (port) = sal_htons((sin)->sin_port); }while(0)
+
+#define IPADDR_PORT_TO_SOCKADDR(sockaddr, ipaddr, port) \
+        IP4ADDR_PORT_TO_SOCKADDR((struct sockaddr_in*)(void*)(sockaddr), ip_2_ip4(ipaddr), port)
+        
+#define NETCONN_TYPE_IPV6            0x08
+#define NETCONNTYPE_ISIPV6(t)        (((t)&NETCONN_TYPE_IPV6) != 0)
+
+#define SOCK_ADDR_TYPE_MATCH(name, sock) \
+       ((((name)->sa_family == AF_INET) && !(NETCONNTYPE_ISIPV6((sock)->conn->type))) || \
+       (((name)->sa_family == AF_INET6) && (NETCONNTYPE_ISIPV6((sock)->conn->type))))
+
+#define SOCK_ADDR_TYPE_MATCH_OR_UNSPEC(name, sock) (((name)->sa_family == AF_UNSPEC) || \
+                                                    SOCK_ADDR_TYPE_MATCH(name, sock))
 
 #define NUM_SOCKETS MEMP_NUM_NETCONN
 #define NUM_EVENTS  MEMP_NUM_NETCONN
@@ -58,6 +149,15 @@ struct sal_sock {
     SELWAIT_T select_waiting;
 };
 
+/** A struct sockaddr replacement that has the same alignment as sockaddr_in/
+ *  sockaddr_in6 if instantiated.
+ */
+union sockaddr_aligned {
+   struct sockaddr sa;
+   struct sockaddr_in6 sin6;
+   struct sockaddr_in sin;
+};
+
 #define IS_SOCK_ADDR_LEN_VALID(namelen)  \
         ((namelen) == sizeof(struct sockaddr_in))
 
@@ -82,6 +182,61 @@ static struct sal_select_cb *select_cb_list;
 static volatile int select_cb_ctr;
 
 static sal_netconn_t* netconn_new(enum netconn_type t);
+
+static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name, char *ip)
+{
+    struct sockaddr_in *saddr;
+    union {
+        uint32_t ip_u32;
+        uint8_t ip_u8[4];
+    } ip_u;
+
+    if (!name || !ip ) 
+        return;
+
+    saddr = (struct sockaddr_in *)name;
+    memset(ip, 0, 16);
+
+    /* Convert network order ip_addr to ip str (dot number fomrat) */
+    ip_u.ip_u32 = (uint32_t)(saddr->sin_addr.s_addr);
+    snprintf(ip, SAL_SOCKET_IP4_ADDR_LEN - 1, "%d.%d.%d.%d", ip_u.ip_u8[0], ip_u.ip_u8[1], ip_u.ip_u8[2], ip_u.ip_u8[3]);
+    ip[SAL_SOCKET_IP4_ADDR_LEN] = '\0';
+
+    SAL_DEBUG("Socket address coverted to %s\n", ip);
+}
+
+// Caller to ensure a valid ip string
+static int ipstr_to_u32(char *ipstr, uint32_t *ip32)
+{
+    uint8_t *q = (uint8_t *)&ip32, n = 0, stridx = 0, dotnum = 0;
+    char *p = ipstr;
+
+    if (!ipstr || !n) return -1;
+
+    for (n = 0, stridx = 0, dotnum = 0;
+         *p != '\0' && stridx < 15 && dotnum < 4;
+         stridx++, p++) {
+        if (*p == '.') {
+            q[dotnum] = n; // saved in network order
+            n = 0;
+            dotnum++;
+            continue;
+        }
+        if (*p < '0' || *p > '9') return -1;
+        n = n * 10 + *p - '0';
+    }
+
+    if (dotnum >=4 || stridx >= 15) return -1;
+    else q[dotnum] = n; // the last number
+
+    return 0;
+} 
+
+static void sockaddr_to_ipaddr_port(const struct sockaddr* sockaddr, ip_addr_t* ipaddr, u16_t* port)
+{
+    SOCKADDR4_TO_IP4ADDR_PORT((const struct sockaddr_in*)(const void*)(sockaddr), ipaddr, *port);
+    ipaddr->type = IPADDR_TYPE_V4;
+}
 
 int sal_eventfd(unsigned int initval, int flags)
 {
@@ -446,6 +601,100 @@ static struct sal_sock *get_socket(int s)
     return sock;
 }
 
+int sal_recvfrom(int s, void *mem, size_t len, int flags,
+              struct sockaddr *from, socklen_t *fromlen)
+{
+    struct sal_sock        *pstsock = NULL;
+    uint8_t                *pucrecvbuf = NULL;
+    uint32_t               uirecvlen = 0;
+    uint32_t               uitotalrecvlen = 0;
+    #if SAL_RCVTIMEO
+    uint32_t               begin_ms = 0;
+    uint32_t               end_ms = 0;
+    #endif
+    err_t                  err = ERR_OK;
+    uint8_t                done = 0;
+    int8_t                 ipstr[SAL_SOCKET_IP4_ADDR_LEN] = {0};
+    int32_t                remoteport = 0;
+    ip_addr_t              fromaddr;
+    union sockaddr_aligned saddr;
+    
+    if (NULL == mem || 0 == len){
+        SAL_ERROR("sal_recvfrom invalid input\n");
+        return -1;
+    }
+    
+    pstsock = get_socket(s);
+    if (NULL == pstsock){
+        SAL_ERROR("sal_recvfrom cannot get socket %d\n", s);
+        return -1;
+    }
+    
+    /* If this is non-blocking call, then check first */
+    if (((flags & MSG_DONTWAIT) || netconn_is_nonblocking(pstsock->conn)) &&
+          (pstsock->rcvevent <= 0)){
+        SAL_ERROR("sal_recvfrom(%d): returning EWOULDBLOCK\n", s);
+        sock_set_errno(pstsock, EWOULDBLOCK);
+        return -1;
+    }
+          
+    pucrecvbuf = (uint8_t*)mem;
+    uirecvlen = len;
+    #if SAL_RCVTIMEO
+    begin_ms = sys_now();
+    #endif
+    do{
+        err = sal_op.recv(s, (uint8_t*)(pucrecvbuf + uitotalrecvlen), &uirecvlen, (char *)ipstr, remoteport);
+        if (err != ERR_OK){
+            SAL_ERROR("sal_recvfrom(%d): sal_op.recv returning %d\n", s, err);
+            return -1;
+        }
+        
+        if (uirecvlen == 0){
+            aos_msleep(2);
+            #if SAL_RCVTIMEO
+            if (pstsock->conn->recv_timeout != 0){
+                end_ms = sys_now();
+                if (end_ms - begin_ms >= pstsock->conn->recv_timeout){
+                    SAL_ERROR("sal_recvfrom(%d): recv timeout\n");
+                    return ERR_TIMEOUT;
+                }
+            }
+            #endif
+            continue;
+        }
+
+        if (uitotalrecvlen < len){
+            uitotalrecvlen += uirecvlen;
+            uirecvlen = len - uirecvlen;
+        }else{
+            done = 1;
+            if (from && fromlen){
+                fromaddr.type = IPADDR_TYPE_V4;
+                ipstr_to_u32((char *)ipstr, &(fromaddr.u_addr.ip4.addr));
+                IPADDR_PORT_TO_SOCKADDR(&saddr, &fromaddr, remoteport);
+                if (*fromlen > saddr.sa.sa_len) {
+                    *fromlen = saddr.sa.sa_len;
+                }
+                memcpy(from, &saddr, *fromlen);
+            }
+        }
+    }while(!done);
+        
+    sock_set_errno(pstsock, 0);
+    return uitotalrecvlen;
+}
+
+int sal_read(int s, void *mem, size_t len)
+{
+    return sal_recvfrom(s, mem, len, 0, NULL, NULL);
+}
+
+int sal_recv(int s, void *mem, size_t len, int flags)
+{
+    return sal_recvfrom(s, mem, len, flags, NULL, NULL);
+}
+
 int sal_sendto(int s, const void *data, size_t size, int flags,
        const struct sockaddr *to, socklen_t tolen)
 {
@@ -453,18 +702,18 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
     err_t           err = ERR_OK;
     
     if (NULL == data || size == 0 || size > SAL_SOCKET_MAX_PAYLOAD_SIZE){
-        SAL_ERROR(TAG, "sal_send fail to data (%d)\n", s);
+        SAL_ERROR("sal_send fail to data to send is %p or size is %d\n", data, size);
         return -ERR_ARG;
     }
 
     pstsalsock = get_socket(s);
     if (NULL == pstsalsock){
-        SAL_ERROR(TAG, "sal_sendto fail to get sal socket by fd %d \n", s);
+        SAL_ERROR("sal_sendto fail to get sal socket by fd %d \n", s);
         return -ERR_ARG;
     }
 
     if (pstsalsock->conn == NULL){
-        SAL_ERROR(TAG, "sal_sendto sal socket %d conn is null\n", s);
+        SAL_ERROR("sal_sendto sal socket %d conn is null\n", s);
         return -ERR_ARG;
     }
 
@@ -474,14 +723,14 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
         if (pstsalsock->conn->state == NETCONN_NONE) {
             err = sal_connect(pstsalsock->conn->socket, to, tolen);
             if (ERR_OK != err) {
-                SAL_ERROR(TAG, "sal_sendto fail to connect socket %d\n", s);
+                SAL_ERROR("sal_sendto fail to connect socket %d\n", s);
                 return err;
             }
         }
     } else {
         /*如果没有建立连接又没有传过来remote ip 信息，直接返回失败*/
         if (pstsalsock->conn->state == NETCONN_NONE) {
-            SAL_ERROR(TAG, "sal_sendto  socket %d is not connected and "
+            SAL_ERROR("sal_sendto  socket %d is not connected and "
                       "input addr is null, cannot send packet\n", s);
             return -ERR_ARG;
         }
@@ -495,7 +744,7 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
 
 int sal_send(int s, const void *data, size_t size, int flags)
 {
-    SAL_DEBUG(TAG, "sal_send(%d, flags=0x%x)\n", s, flags);
+    SAL_DEBUG("sal_send(%d, flags=0x%x)\n", s, flags);
     
     return sal_sendto(s, data, size, flags, NULL, 0);
     /*TODO: 1、先认为remote adrr和port可以通过conn中获取, 具体的remote ip
@@ -698,7 +947,6 @@ int sal_socket(int domain, int type, int protocol)
 {
   sal_netconn_t *conn;
   int i;
-
 // #if !SAL_IPV6
 //   SAL_UNUSED_ARG(domain); /* @todo: check this */
 // #endif /* SAL_IPV6 */
@@ -741,93 +989,100 @@ int sal_socket(int domain, int type, int protocol)
 /* Call this during the init process. */
 int sal_init()
 {
-    LOGI("sal", "Initializing SAL ...");
+    SAL_DEBUG("Initializing SAL ...");
     sal_mutex_init();
     sal_op.register_netconn_evt_cb(&sal_deal_event);
     return sal_op.init(); /* Low level init. */
 }
 
-#define SWAPS(s) ((((s) & 0xff) << 8) | (((s) & 0xff00) >> 8))
-
-static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name,
-                                       char *ip, uint32_t *port)
+int sal_listen(int s, int backlog)
 {
-    struct sockaddr_in *saddr;
-    union {
-        uint32_t ip_u32;
-        uint8_t ip_u8[4];
-    } ip_u;
+    struct sal_sock *sock;
 
-    if (!name || !ip ) 
-        return;
+    /*there is nothing to do at atmode */
+    SAL_DEBUG("sal_listen(%d, backlog=%d)\n", s, backlog);
 
-    saddr = (struct sockaddr_in *)name;
-    memset(ip, 0, 16);
-
-    /* Convert network order ip_addr to ip str (dot number fomrat) */
-    ip_u.ip_u32 = (uint32_t)(saddr->sin_addr.s_addr);
-    snprintf(ip, SAL_SOCKET_IP4_ADDR_LEN - 1, "%d.%d.%d.%d", ip_u.ip_u8[0], ip_u.ip_u8[1], ip_u.ip_u8[2], ip_u.ip_u8[3]);
-    ip[SAL_SOCKET_IP4_ADDR_LEN] = '\0';
-
-    /* Netwwork order port_t to host order port number */
-    if (BYTE_ORDER == LITTLE_ENDIAN)
-        *port = SWAPS(saddr->sin_port);
-    else
-        *port = saddr->sin_port;
-
-    SAL_DEBUG("Socket address coverted to %s:%d", ip, port);
-}
-
-// Caller to ensure a valid ip string
-static int ipstr_to_u32(char *ipstr, uint32_t *ip32)
-{
-    uint8_t *q = (uint8_t *)&ip32, n = 0, stridx = 0, dotnum = 0;
-    char *p = ipstr;
-
-    if (!ipstr || !n) return -1;
-
-    for (n = 0, stridx = 0, dotnum = 0;
-         *p != '\0' && stridx < 15 && dotnum < 4;
-         stridx++, p++) {
-        if (*p == '.') {
-            q[dotnum] = n; // saved in network order
-            n = 0;
-            dotnum++;
-            continue;
-        }
-        if (*p < '0' || *p > '9') return -1;
-        n = n * 10 + *p - '0';
+    sock = get_socket(s);
+    if (!sock) {
+        return -1;
     }
 
-    if (dotnum >=4 || stridx >= 15) return -1;
-    else q[dotnum] = n; // the last number
-
+    if (NETCONNTYPE_GROUP(sock->conn->type) != NETCONN_TCP){
+        sock_set_errno(sock, err_to_errno(ERR_ARG)); 
+        SAL_ERROR("sal_listen is not conn type is not tcp\n");
+        return -1;
+    }
+    
+    sock_set_errno(sock, 0);
     return 0;
-} 
+}
 
 int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
 {
     struct sal_sock *sock = NULL;
-    //ip_addr_t       local_addr;
-    //u16_t           local_port;
-    //err_t  err = ERR_OK;
+    sal_netconn_t   *pstconn = NULL;
+    at_conn_t       statconn = {0};
+    ip_addr_t       local_addr;
+    u16_t           local_port;
+    err_t           err = ERR_OK;
 
     /*TODO check family and alignment of 'name' */
-    if (NULL == name || !IS_SOCK_ADDR_LEN_VALID(namelen)){
-        sock_set_errno(sock, err_to_errno(ERR_ARG)); 
+    if (NULL == name || !IS_SOCK_ADDR_LEN_VALID(namelen)){ 
         SAL_ERROR("sal_bind invalid input arg\n");
         return -1;
     }
 
-    //SOCKADDR_TO_IPADDR_PORT(name, &local_addr, local_port);
+    sock = get_socket(s);
+    if (NULL == sock){
+        SAL_ERROR("sal bind get socket failed.");
+        return -1;
+    }
 
-    return 0;    
+    pstconn = sock->conn;
+    if (NULL == pstconn){
+        SAL_ERROR("sal bind fail to get socket %d conn info\n.", s);
+        sock_set_errno(sock, err_to_errno(ERR_VAL));
+        return -1;
+    }
+    
+    sockaddr_to_ipaddr_port(name, &local_addr, &local_port);
+    switch(NETCONNTYPE_GROUP(pstconn->type)){
+        case NETCONN_UDP:
+            ip_addr_set_ipaddr(&(pstconn->pcb.udp->local_ip), &local_addr);
+            pstconn->pcb.udp->local_port = local_port;
+            break;
+        case NETCONN_TCP:
+            if (pstconn->state != NETCONN_NONE){
+                SAL_ERROR("sal bind sock %d state is %d ,fail to bind\n.", s, pstconn->state);
+                sock_set_errno(sock, err_to_errno(ERR_VAL));
+                return -1;
+            }
+            statconn.fd = s;
+            statconn.l_port = local_port;
+            statconn.type = TCP_SERVER;
+            err = sal_op.start(&statconn);
+            if (ERR_OK != err){
+                SAL_ERROR("sal_bind fail to start socket %d tcp server.\n", s);
+                sock_set_errno(sock, err_to_errno(ERR_VAL));
+                return -1;
+            }
+            ip_addr_set_ipaddr(&(pstconn->pcb.tcp->local_ip), &local_addr);
+            pstconn->pcb.tcp->local_port = local_port;
+            break;
+        case NETCONN_RAW:
+        default:
+            /*for now wifi module did not support raw socket yet*/
+            SAL_ERROR("sal_bind invalid connect type %d.\n", NETCONNTYPE_GROUP(pstconn->type));
+            return ERR_VAL;
+    }
+    
+    SAL_DEBUG("sal_bind(%d) succeeded\n", s);
+    sock_set_errno(sock, 0);
+    return 0;
 }
 
-#if 0
 static err_t netconn_disconnect(sal_netconn_t *conn)
 {
-    return 0;
     if (NETCONNTYPE_GROUP(conn->type) != NETCONN_UDP){
         return ERR_VAL;
     }
@@ -836,74 +1091,89 @@ static err_t netconn_disconnect(sal_netconn_t *conn)
     conn->pcb.udp->remote_port = 0;
     return ERR_OK;
 }
-#endif
+
 
 int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
-    struct sal_sock *sock;
-    err_t err;
-    at_conn_t c = {0};
-    char ip_str[16] = {0};
-    uint32_t port;
+    struct sal_sock *sock = NULL;
+    err_t err = ERR_OK;
+    at_conn_t statconn = {0};
+    ip_addr_t remote_addr;
+    u16_t     remote_port;
+    int8_t   ip_str[SAL_SOCKET_IP4_ADDR_LEN] = {0};
 
     sock = get_socket(s);
     if (!sock) {
         SAL_ERROR("get_socket failed.");
+        return -1;
+    }
+    
+    if (!sock->conn){
+        SAL_ERROR("fail to get socket %d conn info\n.", s);
         sock_set_errno(sock, err_to_errno(ERR_VAL));
         return -1;
     }
 
-    /* Only IPv4 is supported. */
-    if (name->sa_family != AF_INET) {
-        SAL_ERROR("Not supported (only IPv4 for now)!");
+    if (!SOCK_ADDR_TYPE_MATCH_OR_UNSPEC(name, sock)) {
+        /* sockaddr does not match socket type (IPv4/IPv6) */
         sock_set_errno(sock, err_to_errno(ERR_VAL));
         return -1;
     }
 
-    /* Check size */
-    if (namelen != sizeof(struct sockaddr_in)) {
-        SAL_ERROR("sal_connect: invalid address");
-        sock_set_errno(sock, err_to_errno(ERR_ARG));
-        return -1;
+    if (name->sa_family == AF_UNSPEC){
+        err = netconn_disconnect(sock->conn);
+        return err;
     }
+    
+    sockaddr_to_ipaddr_port(name, &remote_addr, &remote_port);
+    ip4_sockaddr_to_ipstr_port(name, (char *)ip_str);
+    statconn.fd = sock->conn->socket;
+    statconn.addr = (char *)ip_str;
+    statconn.r_port = remote_port;
 
-    /* Do connection */
-    ip4_sockaddr_to_ipstr_port(name, ip_str, &port);
-    c.addr = ip_str;
-    c.r_port = port;
-    c.l_port = -1;
-    c.fd = s;
-    switch(sock->conn->type) {
-    case NETCONN_TCP:
-        c.type = TCP_CLIENT;
-        break;
+    switch(NETCONNTYPE_GROUP(sock->conn->type)) {
+    case NETCONN_RAW:
+        /*for now wifi module did not support raw socket yet*/
+        SAL_ERROR("sal_connect invalid connect type.\n");
+        return ERR_VAL;
     case NETCONN_UDP:
-        c.type = UDP_UNICAST;
+        /*TODO double check if udp double connect */ 
+        statconn.type = UDP_UNICAST;
+        err = sal_op.start(&statconn);
+        if (ERR_OK != err){
+            SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", ip_str, remote_port);
+            return -1;
+        }
+        ip_addr_set_ipaddr(&(sock->conn->pcb.udp->remote_ip), &remote_addr);
+        sock->conn->pcb.udp->remote_port = remote_port;
+        break;
+    case NETCONN_TCP:
+        if (sock->conn->state != NETCONN_NONE)
+            return ERR_ISCONN;
+        err = sal_op.start(&statconn);
+        if (ERR_OK != err){
+            SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", ip_str, remote_port);
+            return -1;
+        }
+        statconn.type = TCP_CLIENT;
+        ip_addr_set_ipaddr(&(sock->conn->pcb.tcp->remote_ip), &remote_addr);
+        sock->conn->pcb.tcp->remote_port = remote_port;
         break;
     default:
-        SAL_ERROR("Unsupported sal connection type.");
-        sock_set_errno(sock, err_to_errno(ERR_ARG));
-        return -1;
+        SAL_ERROR("sal_connect invalid connect type.\n");
+        return ERR_ARG;
     }
-
-    if ((err = sal_op.start(&c)) != 0) {
-        SAL_ERROR("sal_start failed.");
-        sock_set_errno(sock, err_to_errno(ERR_IF));
-        return -1;
-    }
-
-    if (err != ERR_OK) {
-        SAL_ERROR("sal_connect(%d) failed, err=%d", s, err);
-        sock_set_errno(sock, err_to_errno(err));
-        return -1;
-    }
-
-    SAL_DEBUG("sal_connect(%d) succeeded", s);
 
     /* Update sal conn state here */
     sock->conn->state = NETCONN_CONNECT;
-
+    SAL_DEBUG("sal_connect(%d) succeeded\n", s);
     sock_set_errno(sock, 0);
+    return err;
+}
+
+int sal_shutdown(int s, int how)
+{
+    SAL_ERROR("sal_shutdown(%d) stub\n", s);
     return 0;
 }
 
@@ -1009,6 +1279,19 @@ struct hostent* sal_gethostbyname(const char *name)
   return &s_hostent;
 }
 
+int sal_getaddrinfo(const char *nodename, const char *servname,
+       const struct addrinfo *hints, struct addrinfo **res)
+{
+    SAL_ERROR("call sal_getaddrinfo stub\n");
+    return 0;
+}
+
+void sal_freeaddrinfo(struct addrinfo *ai)
+{
+    SAL_ERROR("call sal_freeaddrinfo stub\n");
+    return;
+}
+
 int sal_getsockopt(int s, int level, int optname,
                    void *optval, socklen_t *optlen)
 {
@@ -1078,7 +1361,7 @@ int sal_setsockopt(int s, int level, int optname,
         switch(optname) {
             case SO_RCVTIMEO:
 #if SAL_RCVTIMEO
-                sock->conn->recv_timeout = 0; // don't actually used
+                sock->conn->recv_timeout = SAL_SO_SNDRCVTIMEO_GET_MS(optval);
 #endif
                 break;
             default:
@@ -1099,21 +1382,3 @@ int sal_setsockopt(int s, int level, int optname,
     return err ? -1 : 0;
 }
 
-void sal_freeaddrinfo(struct addrinfo *ai)
-{
-    SAL_ERROR("Not implemented yet!!!");
-}
-
-int sal_shutdown(int s, int how)
-{
-    SAL_ERROR("Not implemeted yet!!!");
-    return -1;
-}
-
-int
-sal_getaddrinfo(const char *nodename, const char *servname,
-       const struct addrinfo *hints, struct addrinfo **res)
-{
-    SAL_ERROR("Not implemeted yet");
-    return -1;
-}
