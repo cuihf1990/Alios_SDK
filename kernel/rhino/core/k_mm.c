@@ -481,7 +481,7 @@ static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
 
     sta = krhino_mblk_free((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, ptr);
     if (sta != RHINO_SUCCESS) {
-        assert(0);
+        k_err_proc(RHINO_SYS_FATAL_ERR);
     }
 
     stats_removesize(mmhead, DEF_FIX_BLK_SIZE);
