@@ -1027,7 +1027,7 @@ int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
     err_t           err = ERR_OK;
 
     /*TODO check family and alignment of 'name' */
-    if (NULL == name || !IS_SOCK_ADDR_LEN_VALID(namelen)){ 
+    if (NULL == name || !IS_SOCK_ADDR_LEN_VALID(namelen)){
         SAL_ERROR("sal_bind invalid input arg\n");
         return -1;
     }
