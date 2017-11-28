@@ -78,6 +78,9 @@ typedef struct _ip_addr {
 
 
 in_addr_t ipaddr_addr(const char *cp);
+int ip4addr_aton(const char *cp, ip4_addr_t *addr);
+char *ip4addr_ntoa(const ip4_addr_t *addr);
+
 #define inet_addr(cp) ipaddr_addr(cp)
 #define inet_aton(cp,addr) ip4addr_aton(cp,(ip4_addr_t*)addr)
 #define inet_ntoa(addr) ip4addr_ntoa((const ip4_addr_t*)&(addr))
