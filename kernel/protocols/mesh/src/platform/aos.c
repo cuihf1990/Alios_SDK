@@ -263,6 +263,7 @@ static void umesh_command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     umesh_cli_cmd(cookie->buf, strlen(cookie->buf), handle_cli_response, cookie);
 
     aos_sem_wait(&cookie->sem, AOS_WAIT_FOREVER);
+    aos_sem_free(&cookie->sem);
     aos_free(cookie);
 }
 

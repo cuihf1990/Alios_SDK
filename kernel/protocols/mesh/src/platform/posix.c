@@ -165,6 +165,7 @@ static void umesh_command(char *buf)
     umesh_cli_cmd(cookie.buf, strlen(cookie.buf), handle_cli_response, &cookie);
 
     umesh_pal_sem_wait(&cookie.sem, -1);
+    umesh_pal_sem_free(&cookie.sem);
 }
 
 #include <readline/readline.h>
