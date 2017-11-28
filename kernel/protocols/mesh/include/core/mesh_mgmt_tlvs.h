@@ -49,6 +49,7 @@ typedef enum {
     TYPE_UCAST_CHANNEL     = 0xa3,  /* ucast channel */
     TYPE_BCAST_CHANNEL     = 0xa4,  /* bcast channel */
     TYPE_TIME_SLOT         = 0xa5,  /* time slot */
+    TYPE_BUFQUEUE_SIZE     = 0xa6,  /* buffer queue size */
     TYPE_MESH_PREFIX       = 0x0,   /* mesh prefix TLV */
     TYPE_TLV_REQUEST       = 0x1,   /* TLV requests TLV */
     TYPE_HEADER_IES_TERMINATOR = 0x7f,  /* header TLVs terminator */
@@ -182,6 +183,11 @@ typedef struct mesh_mgmt_time_slot_s {
     uint8_t slot_num;
     uint16_t offset;
 } __attribute__((packed)) mm_time_slot_tv_t;
+
+typedef struct mesh_mgmt_bufqueue_size_tv_s {
+    mm_tv_t base;
+    int16_t size;
+} __attribute__((packed)) mm_bufqueue_size_tv_t;
 
 typedef struct mesh_mgmt_prefix_tlv_s {
     mm_tlv_t        base;

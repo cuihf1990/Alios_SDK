@@ -456,6 +456,13 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
         set_mesh_short_addr(&info->dest, info->dest.netid, next_node->sid);
     }
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    if (next_node && (next_node->mode & MODE_RX_ON) == 0 && (next_node->flags & NBR_WAKEUP) == 0) {
+        message_queue_dequeue(message);
+        message_queue_enqueue(&next_node->buffer_queue, message);
+        return UR_ERROR_BUFFER;
+    }
+#endif
 
     if (info->flags & INSERT_MESH_HEADER) {
         header_length = insert_mesh_header(network, info);
@@ -1195,12 +1202,7 @@ const ur_link_stats_t *mf_get_stats(hal_context_t *hal)
     return &hal->link_stats;
 }
 
-static ur_error_t mesh_interface_up(void)
-{
-    return UR_ERROR_NONE;
-}
-
-static ur_error_t mesh_interface_down(void)
+static void cleanup_sending_message(void)
 {
     slist_t *hals;
     hal_context_t *hal;
@@ -1208,19 +1210,36 @@ static ur_error_t mesh_interface_down(void)
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         ur_stop_timer(&hal->sending_timer, hal);
+        if (hal->send_message) {
+            message_queue_dequeue(hal->send_message);
+            message_free(hal->send_message);
+            hal->send_message = NULL;
+        }
         hal->frag_info.tag = 0;
         hal->frag_info.offset = 0;
     }
+}
+
+static ur_error_t mesh_interface_up(void)
+{
+    return UR_ERROR_NONE;
+}
+
+static ur_error_t mesh_interface_down(void)
+{
+    cleanup_sending_message();
     return UR_ERROR_NONE;
 }
 
 #ifdef CONFIG_AOS_MESH_LOWPOWER
 static void lowpower_radio_down_handler(void)
 {
+    cleanup_sending_messaage();
 }
 
 static void lowpower_radio_up_handler(void)
 {
+
 }
 #endif
 

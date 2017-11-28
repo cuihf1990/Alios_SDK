@@ -384,6 +384,7 @@ static uint8_t get_tv_value_length(uint8_t type)
         case TYPE_PATH_COST:
         case TYPE_LINK_COST:
         case TYPE_WEIGHT:
+        case TYPE_BUFQUEUE_SIZE:
             length = 2;
             break;
         case TYPE_SSID_INFO:
@@ -419,31 +420,34 @@ static uint8_t get_tv_value_length(uint8_t type)
 }
 
 static uint8_t get_tv_value(network_context_t *network,
-                            uint8_t *data, uint8_t type)
+                            uint8_t *data, uint8_t type, void *context)
 {
-    uint8_t  length = 1;
+    uint8_t length = 0;
 
-    *data = type;
-    data++;
     switch (type) {
         case TYPE_VERSION:
+            *data = type;
+            data++;
             *data = (nd_get_stable_main_version() << STABLE_MAIN_VERSION_OFFSET) |
                     nd_get_stable_minor_version();
-            length += 1;
+            length = 2;
             break;
         case TYPE_MCAST_ADDR:
-            memcpy(data, nd_get_subscribed_mcast(), 16);
-            length += 16;
+            length += set_mm_mcast_tv(data);
             break;
         case TYPE_TARGET_UEID:
-            memcpy(data, umesh_mm_get_local_ueid(), 8);
-            length += 8;
+            length += set_mm_ueid_tv(data, type, umesh_mm_get_local_ueid());
             break;
         case TYPE_UCAST_CHANNEL:
         case TYPE_BCAST_CHANNEL:
-            *data = hal_umesh_get_channel(network->hal->module);
-            length += 1;
+            length += set_mm_channel_tv(network, data);
             break;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+        case TYPE_TIME_SLOT:
+        case TYPE_BUFQUEUE_SIZE:
+            length += lowpower_set_info(type, data, context);
+            break;
+#endif
         default:
             assert(0);
             break;
@@ -451,15 +455,15 @@ static uint8_t get_tv_value(network_context_t *network,
     return length;
 }
 
-uint16_t tlvs_set_value(network_context_t *network,
-                        uint8_t *buf, const uint8_t *tlvs, uint8_t tlvs_length)
+uint16_t tlvs_set_value(network_context_t *network, uint8_t *buf,
+                        const uint8_t *tlvs, uint8_t tlvs_length, void *context)
 {
     uint8_t index;
     uint8_t *base = buf;
 
     for (index = 0; index < tlvs_length; index++) {
         if (tlvs[index] & TYPE_LENGTH_FIXED_FLAG) {
-            buf += get_tv_value(network, buf, tlvs[index]);
+            buf += get_tv_value(network, buf, tlvs[index], context);
         }
     }
 
