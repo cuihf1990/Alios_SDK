@@ -19,7 +19,7 @@ void task_yield_1_entry(void *arg)
 
     while (1) {
         krhino_task_yield();
-        while (1);
+        krhino_task_dyn_del(krhino_cur_task_get());
     }
 
 }
