@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     /* WiFi */
     TCP_SERVER,
@@ -123,5 +127,9 @@ typedef struct sal_op_s {
 
 /* Define it in platform code. */
 extern sal_op_t sal_op;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

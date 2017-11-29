@@ -4,6 +4,9 @@
 #include <stddef.h> /* for size_t */
 #include <sys/time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define AF_UNSPEC       0
 #define AF_INET         2
@@ -201,6 +204,10 @@ int sal_send(int s, const void *data, size_t size, int flags);
 
 int sal_shutdown(int s, int how);
 
+int sal_recv(int s, void *mem, size_t len, int flags);
+
+int sal_read(int s, void *mem, size_t len);
+
 void sal_freeaddrinfo(struct addrinfo *ai);
 
 int sal_getaddrinfo(const char *nodename, const char *servname,
@@ -249,10 +256,21 @@ int sal_fcntl(int s, int cmd, int val);
 #define send(s,data,size,flags) \
         sal_send(s,data,size,flags)
 
+#define recv(s,data,size,flags) \
+        sal_recv(s,data,size,flags)
+
+#define read(s,data,size) \
+        sal_read(s,data,size)
+
 #define freeaddrinfo(addrinfo) sal_freeaddrinfo(addrinfo)
 
 #define getaddrinfo(nodname, servname, hints, res) \
        sal_getaddrinfo(nodname, servname, hints, res)
 
 #define fcntl(s,cmd,val)  sal_fcntl(s,cmd,val)
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

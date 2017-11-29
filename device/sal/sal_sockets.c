@@ -647,40 +647,38 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
     begin_ms = sys_now();
     #endif
     do{
-        err = sal_op.recv(s, (uint8_t*)(pucrecvbuf + uitotalrecvlen), &uirecvlen, (char *)ipstr, remoteport);
+        err = (sal_op.recv)(s, (uint8_t*)(pucrecvbuf + uitotalrecvlen), &uirecvlen, (char *)ipstr, remoteport);
         if (err != ERR_OK){
             SAL_ERROR("sal_recvfrom(%d): sal_op.recv returning %d\n", s, err);
             return -1;
         }
+
+        uitotalrecvlen += uirecvlen;
+        uirecvlen = len - uirecvlen;
         
-        if (uirecvlen == 0){
-            aos_msleep(2);
+        if (uitotalrecvlen == 0){
+            aos_msleep(20);
             #if SAL_RCVTIMEO
             if (pstsock->conn->recv_timeout != 0){
                 end_ms = sys_now();
                 if (end_ms - begin_ms >= pstsock->conn->recv_timeout){
-                    SAL_ERROR("sal_recvfrom(%d): recv timeout\n");
+                    SAL_ERROR("sal_recvfrom(%d): recv timeout\n", s);
                     return ERR_TIMEOUT;
                 }
             }
             #endif
             continue;
         }
-
-        if (uitotalrecvlen < len){
-            uitotalrecvlen += uirecvlen;
-            uirecvlen = len - uirecvlen;
-        }else{
-            done = 1;
-            if (from && fromlen){
-                fromaddr.type = IPADDR_TYPE_V4;
-                ipstr_to_u32((char *)ipstr, &(fromaddr.u_addr.ip4.addr));
-                IPADDR_PORT_TO_SOCKADDR(&saddr, &fromaddr, remoteport);
-                if (*fromlen > saddr.sa.sa_len) {
-                    *fromlen = saddr.sa.sa_len;
-                }
-                memcpy(from, &saddr, *fromlen);
+        
+        done = 1;
+        if (from && fromlen){
+            fromaddr.type = IPADDR_TYPE_V4;
+            ipstr_to_u32((char *)ipstr, &(fromaddr.u_addr.ip4.addr));
+            IPADDR_PORT_TO_SOCKADDR(&saddr, &fromaddr, remoteport);
+            if (*fromlen > saddr.sa.sa_len) {
+                *fromlen = saddr.sa.sa_len;
             }
+            memcpy(from, &saddr, *fromlen);
         }
     }while(!done);
         
@@ -1173,7 +1171,7 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
     statconn.fd = sock->conn->socket;
     statconn.addr = (char *)ip_str;
     statconn.r_port = remote_port;
-
+    statconn.l_port = -1;
     switch(NETCONNTYPE_GROUP(sock->conn->type)) {
     case NETCONN_UDP:
         /*TODO double check if udp double connect */ 
@@ -1199,7 +1197,8 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
         sock->conn->pcb.tcp->remote_port = remote_port;
         break;
     default:
-        SAL_ERROR("sal_connect invalid connect type.\n");
+        SAL_ERROR("Unsupported sal connection type.\n");
+        sock_set_errno(sock, err_to_errno(ERR_ARG));
         return ERR_ARG;
     }
 
