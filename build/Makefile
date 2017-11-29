@@ -134,7 +134,7 @@ clean:
 	$(QUIET)$(ECHO) Done
 
 ifneq ($(BUILD_STRING),)
--include $(OUTPUT_DIR)/config.mk
+#-include $(OUTPUT_DIR)/config.mk
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
