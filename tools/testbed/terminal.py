@@ -365,8 +365,6 @@ class Terminal:
                         for dev in list(self.device_list):
                             if dev not in list(new_list):
                                 self.device_list.pop(dev)
-                                if dev in self.log_subscribed:
-                                    self.log_subscribed.remove(dev)
                         self.device_list_display()
                     if type == TBframe.DEVICE_LOG:
                         dev = value.split(':')[0]

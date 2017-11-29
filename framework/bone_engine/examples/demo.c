@@ -508,8 +508,8 @@ int application_start(int argc, char *argv[])
     auto_netmgr = false;
     netmgr_ap_config_t apconfig;
     memset(&apconfig, 0, sizeof(apconfig));
-    strcpy(apconfig.ssid,"Xiaomi_296E_rock");
-    strcpy(apconfig.pwd, "rockzhou");
+    strcpy(apconfig.ssid,"xxxxxxxx");
+    strcpy(apconfig.pwd, "xxxxxxxx");
     netmgr_set_ap_config(&apconfig);
 #endif
 
