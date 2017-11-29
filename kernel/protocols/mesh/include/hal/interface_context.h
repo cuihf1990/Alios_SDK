@@ -15,6 +15,14 @@
 typedef enum interface_state_s {
     INTERFACE_UP,
     INTERFACE_DOWN,
+    INTERFACE_DOWN_PSID_CHANGED,  // parent sid changed
+    INTERFACE_DOWN_PNETID_CHANGED,  // parent netid changed
+    INTERFACE_DOWN_ATTACH_FAIL,  //  attaching fail
+    INTERFACE_DOWN_DISCOVER_FAIL,  // discovering fail
+    INTERFACE_DOWN_MESH_START,  // mesh started
+    INTERFACE_DOWN_MESH_STOP,  // mesh stopped
+    INTERFACE_DOWN_LEADER_MODE,  // leader mode is larger then local
+    INTERFACE_DOWN_LEADER_REBOOT,  // leader reboot
 } interface_state_t;
 
 typedef enum attach_state_s {
@@ -28,18 +36,6 @@ typedef struct channel_list_s {
     const uint8_t *channels;
     uint8_t num;
 } channel_list_t;
-
-typedef struct scan_result_s {
-    slist_t       next;
-    mac_address_t addr;
-    uint16_t      meshnetid;
-    uint8_t       channel;
-    int8_t        rssi;
-    node_mode_t   leader_mode;
-    uint16_t      net_size;
-} scan_result_t;
-
-typedef void (* discovered_handler_t)(neighbor_t *nbr);
 
 typedef struct network_data_s {
     uint8_t  version;
@@ -122,13 +118,6 @@ typedef struct hal_context_s {
     ur_timer_t            update_nbr_timer;
     ur_timer_t            link_quality_update_timer;
 
-    // discovery
-    uint8_t               discovery_channel;
-    uint8_t               discovery_times;
-    ur_timer_t            discovery_timer;
-    scan_result_t         discovery_result;
-    discovered_handler_t  discovered_handler;
-
     // hal configurations
     uint32_t              discovery_interval;
     uint32_t              attach_request_interval;
@@ -166,7 +155,6 @@ typedef struct network_context_s {
     ur_timer_t        migrate_wait_timer;
     uint32_t          migrate_interval;
     uint32_t          notification_interval;
-    uint32_t          net_scan_interval;
     uint16_t          prev_netid;
     uint16_t          prev_path_cost;
 

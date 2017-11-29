@@ -181,7 +181,7 @@ typedef struct mesh_mgmt_channel_tv_s {
 typedef struct mesh_mgmt_time_slot_s {
     mm_tv_t base;
     uint8_t slot_num;
-    uint16_t offset;
+    uint32_t offset;
 } __attribute__((packed)) mm_time_slot_tv_t;
 
 typedef struct mesh_mgmt_bufqueue_size_tv_s {

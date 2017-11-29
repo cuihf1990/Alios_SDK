@@ -574,11 +574,11 @@ void process_nbrs(int argc, char *argv[])
         response_append("\t<<hal type %s>>\r\n", mediatype2str(hal->module->type));
         nbrs = umesh_get_nbrs(hal->module->type);
         slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
-            response_append("\t" EXT_ADDR_FMT ",%s,0x%04x,0x%04x,%d,%d,%d,%d,%d,%d\r\n", \
+            response_append("\t" EXT_ADDR_FMT ",%s,0x%04x,0x%04x,%d,%d,%d,%d,%d,%d,%d\r\n", \
                             EXT_ADDR_DATA(nbr->mac), nbrstate2str(nbr->state), \
                             nbr->netid, nbr->sid, nbr->stats.link_cost, nbr->ssid_info.child_num, \
                             nbr->channel, nbr->stats.reverse_rssi, nbr->stats.forward_rssi, \
-                            nbr->last_heard);
+                            (nbr->flags & NBR_WAKEUP)? 1: 0, nbr->last_heard);
             num++;
         }
         response_append("\tnum=%d\r\n", num);

@@ -10,6 +10,9 @@
 #include "core/router_mgr.h"
 #include "hal/interfaces.h"
 #include "umesh_utils.h"
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+#include "core/lowpower_mgmt.h"
+#endif
 
 #ifndef DEFAULT_ROUTER
 #define DEFAULT_ROUTER SID_ROUTER
@@ -336,6 +339,7 @@ static ur_error_t mesh_interface_up(void)
     router_t *router;
     netids_t netids;
 
+    MESH_LOG_DEBUG("router mgr mesh interface up handler");
     networks = get_network_contexts();
     default_network = get_default_network_context();
     slist_for_each_entry(networks, network, network_context_t, next) {
@@ -351,10 +355,11 @@ static ur_error_t mesh_interface_up(void)
     return UR_ERROR_NONE;
 }
 
-static ur_error_t mesh_interface_down(void)
+static ur_error_t mesh_interface_down(interface_state_t state)
 {
     router_t *router;
 
+    MESH_LOG_DEBUG("router mgr mesh interface down handler, reason %d", state);
     slist_for_each_entry(&g_rm_state.router_list, router, router_t, next) {
         if (router->cb.stop) {
             router->cb.stop();
@@ -364,16 +369,12 @@ static ur_error_t mesh_interface_down(void)
 }
 
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-static void lowpower_radio_down_handler(void)
+static void lowpower_radio_down_handler(schedule_type_t type)
 {
-
 }
 
-static void lowpower_radio_up_handler(void)
+static void lowpower_radio_up_handler(schedule_type_t type)
 {
-    network_context_t *network = get_default_network_context();
-
-    send_address_notification(network, NULL);
 }
 #endif
 

@@ -85,7 +85,7 @@ enum {
 };
 
 typedef ur_error_t (* interface_up_t)(void);
-typedef ur_error_t (* interface_down_t)(void);
+typedef ur_error_t (* interface_down_t)(interface_state_t state);
 
 typedef struct mm_cb_s {
     slist_t next;
@@ -99,7 +99,6 @@ ur_error_t umesh_mm_stop(void);
 
 bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
                               mm_netinfo_tv_t *netinfo);
-void umesh_mm_start_net_scan_timer(void);
 uint8_t umesh_mm_get_prev_channel(void);
 void umesh_mm_set_prev_channel(void);
 
@@ -133,9 +132,6 @@ void       umesh_mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
 mm_tv_t    *umesh_mm_get_tv(const uint8_t *data, const uint16_t length,
                             uint8_t type);
 ur_error_t umesh_mm_handle_frame_received(message_t *message);
-
-void become_leader(void);
-void become_detached(void);
 
 uint16_t tlvs_set_value(network_context_t *network,
                         uint8_t *buf, const uint8_t *tlvs,
