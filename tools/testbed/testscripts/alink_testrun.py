@@ -32,7 +32,7 @@ caseids['938F2BFC13AE8F6C4098289BB2D02B93'] = 27640 #espif-2.2.2
 caseids['FD1FC11D9B9F6511FBD6E86168822072'] = 27657 #espif-2.2.3
 caseids['D5D8715DA640D401D3836A3C854C4021'] = 27674 #espif-2.3
 caseids['A007D2D3AE28C4B501A7D57D93B253B4'] = 27044 #espif-2.4
-caseids['A2A268CC74FEB91744C68E652AE89266'] = 27691 #espif-9.1
+caseids['A2A268CC74FEB91744C68E652AE89266'] = 29862 #espif-9.1
 caseids['9EA130B3F97FEDD4A40B58E223B0EA23'] = 27708 #espif-9.2.1
 caseids['785A61C6F5656AD16D57A919F0CEDFB4'] = 27015 #espif-9.2.2
 caseids['2363A965CE3C548993F485EF5883F6CA'] = 26689 #espif-9.2.3
@@ -233,7 +233,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
 
         #connect device to alink
         at.device_run_cmd(device, ['netmgr', 'connect', wifissid, wifipass], timeout=1.5)
-        time.sleep(15)
+        time.sleep(30)
         filter = ['uuid:', 'alink is not connected']
         response = at.device_run_cmd(device, ['uuid'], 1, 1.5, filter)
         if response == False or len(response) != 1 or 'uuid:' not in response[0]:

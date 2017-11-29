@@ -27,7 +27,7 @@ def subscribe_and_reboot_devices(at, devices):
         return False
     for device in list(devices):
         at.device_control(device, 'reset')
-    time.sleep(3)
+    time.sleep(5)
     return True
 
 #program devices
@@ -45,7 +45,7 @@ def program_devices(at, devices, model, firmware):
             if at.device_program(device, addr, firmware) == True:
                 succeed = True
                 break
-            time.sleep(0.5)
+            time.sleep(1)
         if succeed == False:
             print 'error: program device {0}:{1} failed'.format(device, devices[device])
             return False
@@ -62,7 +62,7 @@ def reboot_and_get_mac(at, device_list, device_attr):
             at.device_run_cmd(device, ['kv', 'del', 'alink'])
             mac =  at.device_run_cmd(device, ['mac'], 1, 0.8, ['MAC address:'])
             at.device_control(device, 'reset')
-            time.sleep(2.5)
+            time.sleep(5)
             if mac and len(mac) == 1:
                 mac = mac[0].split()[-1]
                 mac = mac.replace('-', '') + '0000'
@@ -87,8 +87,11 @@ def set_random_extnetid(at, device_list):
 def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
     filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
     for device in device_list:
+        at.device_run_cmd(device, ['umesh', 'stop'])
+    for device in device_list:
         succeed = False; retry = 5
         role = device_attr[device]['role']
+        state = []
         while retry > 0:
             at.device_run_cmd(device, ['umesh', 'stop'])
             for nbr in device_attr[device]['nbrs']:
@@ -106,7 +109,7 @@ def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
                     break
             else:
                 at.device_run_cmd(device, ['umesh', 'start'])
-                time.sleep(5)
+                time.sleep(15)
                 state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
                 if state == [role]:
                     succeed = True
@@ -114,10 +117,10 @@ def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
             at.device_run_cmd(device, ['netmgr', 'clear'])
             at.device_run_cmd(device, ['kv', 'del', 'alink'])
             at.device_control(device, 'reset')
-            time.sleep(3)
+            time.sleep(5)
             retry -= 1
         if succeed == False:
-            print "error: start {0} as {1} failed".format(device, role)
+            print "error: start {0} as {1} failed, state={2}".format(device, role, state)
             return False
     print "form desired mesh network succeed\n"
     return True
