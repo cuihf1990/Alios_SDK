@@ -13,6 +13,8 @@
 #include <netmgr.h>
 
 #define TAG "salapp"
+#define SALAPP_BUFFER_MAX_SIZE  1512
+
 
 static void yloop_action(void *arg);
 
@@ -25,7 +27,8 @@ static void yloop_action(void *arg)
 static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
 {
     char *ptype = argc > 1 ? argv[1] : "default";
-
+    char buf[SALAPP_BUFFER_MAX_SIZE] = {0};
+    int  readlen = 0;
     /* TCP client case */
     if (strcmp(ptype, "tcp_c") == 0) {
         char *pip, *pport, *pdata;
@@ -56,6 +59,26 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
             return;
         }
 
+        aos_msleep(10000);
+        while(1){
+            readlen = read(fd, buf, SALAPP_BUFFER_MAX_SIZE - 1);
+            if (readlen < 0){
+                LOGE(TAG, "recv failed, errno = %d.", errno);
+                close(fd);
+                return;
+            }
+
+            if (readlen == 0){
+                continue;
+            }
+            
+            LOGD(TAG, "recv server reply len %d info %s \n", readlen, buf);
+            if (strstr(buf, pdata)){
+                LOGI(TAG, "Goodbye! See you! (%d)\n", fd);
+                break;
+            }
+        }
+        
         close(fd);
         LOGI(TAG, "sal tcp_c test successful.");
     } else if (strcmp(ptype, "yloop") == 0) {
