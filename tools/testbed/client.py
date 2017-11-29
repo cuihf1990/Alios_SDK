@@ -1,4 +1,4 @@
-import os, sys, time, platform, json, traceback
+import os, sys, time, platform, json, traceback, random
 import socket, thread, threading, subprocess, signal, Queue
 import TBframe
 
@@ -39,6 +39,7 @@ class Client:
         for byte in bytes:
             self.poll_str += '{0:02x}'.format(ord(byte))
         self.poll_str += 'm'
+        self.poll_interval = 60
         self.uuid = ''
 
     def send_device_list(self):
@@ -53,81 +54,57 @@ class Client:
         except:
             self.connected = False
 
-    def response_filter(self, port, logstr):
-        if self.devices[port]['event'].is_set():
-            return
-
-        if self.devices[port]['flock'].locked():
-            return
-
-        self.devices[port]['flock'].acquire()
-        if len(self.devices[port]['filter']) == 0:
-            self.devices[port]['flock'].release()
-            return
-
-        filter = self.devices[port]['filter']
-        if filter['lines_num'] == 0:
-            if filter['cmd_str'] in logstr:
-                self.devices[port]['filter']['lines_num'] += 1
-        elif filter['lines_num'] <= filter['lines_exp']:
-            log = logstr.replace('\r', '')
-            log = log.replace('\n', '')
-            if log != '':
-                for filterstr in filter['filters']:
-                    if filterstr not in log:
-                        continue
-                    else:
-                        log = log.replace(self.poll_str, '')
-                        if log != '':
-                            self.devices[port]['filter']['response'].append(log)
-                            self.devices[port]['filter']['lines_num'] += 1
-                        break
-            if self.devices[port]['filter']['lines_num'] > filter['lines_exp']:
-                self.devices[port]['event'].set()
-        self.devices[port]['flock'].release()
-
     def run_poll_command(self, port, command, lines_expect, timeout):
         filter = {}
-        filter['cmd_str'] = self.poll_str + command
-        filter['lines_exp'] = lines_expect
-        filter['lines_num'] = 0
-        filter['filters'] = [self.poll_str]
-        filter['response'] = []
-        with self.devices[port]['flock']:
-            self.devices[port]['filter'] = filter
-        ser = self.devices[port]['serial']
-        self.devices[port]['event'].clear()
-        try:
-            ser.write(filter['cmd_str'] + '\r')
-            self.devices[port]['event'].wait(timeout)
-        except:
-            if DEBUG: traceback.print_exc()
-        with self.devices[port]['flock']:
-            response = self.devices[port]['filter']['response']
-            self.devices[port]['filter'] = {}
-        #print command, response
+        response = []
+        while self.devices[port]['fqueue'].empty() == False:
+            self.devices[port]['fqueue'].get()
+        self.devices[port]['serial'].write(self.poll_str + command + '\r')
+        start = time.time()
+        while True:
+            try:
+                log = self.devices[port]['fqueue'].get(False)
+            except:
+                log = None
+            if time.time() - start >= timeout:
+                break
+            if log == None:
+                time.sleep(0.01)
+                continue
+            log = log.replace('\r', '')
+            log = log.replace('\n', '')
+            log = log.replace(self.poll_str, '')
+            if log == '':
+                continue
+            response.append(log)
+            if len(response) > lines_expect:
+                break
+
+        if len(response) > 0:
+            response.pop(0)
+        if not response:
+            print "device {0} run poll commad '{1}' faild".format(port, command)
         return response
 
     def device_cmd_process(self, port, exit_condition):
-        poll_interval = 60
         poll_fail_num = 0
         poll_queue = Queue.Queue(12)
         if self.devices[port]['attributes'] != {}:
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
             data = TBframe.construct(TBframe.DEVICE_STATUS, content)
             self.service_socket.send(data)
-        poll_timeout = time.time() + 3
+        poll_timeout = time.time() + 5 + random.uniform(0, self.poll_interval/3)
         while os.path.exists(port) and exit_condition.is_set() == False:
             try:
                 if time.time() >= poll_timeout:
-                    poll_timeout += poll_interval
-                    poll_queue.put(['devname', 1, 0.1])
-                    poll_queue.put(['mac', 1, 0.1])
-                    poll_queue.put(['version', 2, 0.1])
-                    poll_queue.put(['umesh status', 11, 0.1])
-                    poll_queue.put(['umesh nbrs', 33, 0.2])
-                    poll_queue.put(['umesh extnetid', 1, 0.1])
-                    poll_queue.put(['uuid', 1, 0.1])
+                    poll_timeout += self.poll_interval
+                    poll_queue.put(['devname', 1, 0.2])
+                    poll_queue.put(['mac', 1, 0.2])
+                    poll_queue.put(['version', 2, 0.2])
+                    poll_queue.put(['uuid', 1, 0.2])
+                    poll_queue.put(['umesh status', 11, 0.2])
+                    poll_queue.put(['umesh extnetid', 1, 0.2])
+                    poll_queue.put(['umesh nbrs', 33, 0.3])
 
                 block=True
                 timeout=0
@@ -227,7 +204,7 @@ class Client:
                     else:
                         poll_fail_num += 1
                 elif cmd == 'umesh extnetid': #poll mesh extnetid
-                    if len(response) == 1:
+                    if len(response) == 1 and response[0].count(':') == 5:
                         poll_fail_num += 1
                         self.devices[port]['attributes']['extnetid'] = response[0]
                     else:
@@ -243,10 +220,16 @@ class Client:
                     continue
 
                 if poll_fail_num >= 7:
+                    if self.devices[port]['attributes']['status'] == 'active':
+                        print "device {0} become inactive".format(port)
                     self.devices[port]['attributes']['status'] = 'inactive'
                 else:
+                    if self.devices[port]['attributes']['status'] == 'inactive':
+                        print "device {0} become active".format(port)
                     self.devices[port]['attributes']['status'] = 'active'
 
+                if poll_queue.empty() == False:
+                    continue
                 content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
                 try:
@@ -293,10 +276,11 @@ class Client:
                     break
 
             if newline == True and log != '':
-                self.response_filter(port, log)
-                log = port + ':{0:.3f}:'.format(log_time) + log
+                if self.poll_str in log:
+                    self.devices[port]['fqueue'].put(log, False)
                 if LOCALLOG:
-                    flog.write(log)
+                    flog.write('{0:.3f}:'.format(log_time) + log)
+                log = port + ':{0:.3f}:'.format(log_time) + log
                 data = TBframe.construct(TBframe.DEVICE_LOG,log)
                 log = ''
                 try:
@@ -343,11 +327,10 @@ class Client:
                     self.devices[port]['serial'].open()
                     if self.devices[port]['slock'].locked():
                         self.devices[port]['slock'].release()
-                    if self.devices[port]['flock'].locked():
-                        self.devices[port]['flock'].release()
                     while self.devices[port]['queue'].empty() == False:
                         self.devices[port]['queue'].get()
-                    self.devices[port]['event'].set()
+                    while self.devices[port]['fqueue'].empty() == False:
+                        self.devices[port]['fqueue'].get()
                     self.devices[port]['valid'] = True
                 else:
                     if 'mxchip' in port:
@@ -365,19 +348,19 @@ class Client:
                     self.devices[port] = {'valid':True, \
                                           'serial':ser, \
                                           'slock':threading.Lock(), \
-                                          'event':threading.Event(), \
-                                          'queue':Queue.Queue(12),
+                                          'queue':Queue.Queue(12), \
                                           'attributes':{}, \
-                                          'filter':{}, \
-                                          'flock':threading.Lock()}
+                                          'fqueue':Queue.Queue(64)}
                 print 'device {0} added'.format(port)
                 if 'mxchip' in port:
                     self.devices[port]['attributes']['model'] = 'MK3060'
                     ser.setRTS(False)
                 if 'espif' in port:
                     self.devices[port]['attributes']['model'] = 'ESP32'
-                    ser.setDTR(True)
                     ser.setRTS(True)
+                    ser.setDTR(False)
+                    time.sleep(0.1)
+                    ser.setDTR(True)
                 self.devices[port]['attributes']['status'] = 'inactive'
                 exit_condition = threading.Event()
                 thread.start_new_thread(self.device_log_poll, (port, exit_condition,))
@@ -839,6 +822,11 @@ class Client:
                             print "run command '{0}' at {1} failed, device nonexist".format(cmd, port)
                         content = ','.join(term) + ',' + result
                         self.send_packet(type, content)
+                    elif type == TBframe.CLIENT_UUID:
+                        print 'server request UUID'
+                        self.send_packet(TBframe.CLIENT_UUID, self.uuid)
+                        self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
+                        self.send_device_list()
             except ConnectionLost:
                 self.connected = False
                 print 'connection to server lost, try reconnecting...'
