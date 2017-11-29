@@ -185,10 +185,7 @@ static volatile int select_cb_ctr;
 
 static sal_netconn_t* netconn_new(enum netconn_type t);
 
-#define SWAPS(s) ((((s) & 0xff) << 8) | (((s) & 0xff00) >> 8))
-
-static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name,
-                                       char *ip, uint32_t *port)
+void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name, char *ip)
 {
     struct sockaddr_in *saddr;
     union {
@@ -208,13 +205,7 @@ static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name,
              ip_u.ip_u8[0], ip_u.ip_u8[1], ip_u.ip_u8[2], ip_u.ip_u8[3]);
     ip[SAL_SOCKET_IP4_ADDR_LEN] = '\0';
 
-    /* Netwwork order port_t to host order port number */
-    if (BYTE_ORDER == LITTLE_ENDIAN)
-        *port = SWAPS(saddr->sin_port);
-    else
-        *port = saddr->sin_port;
-
-    SAL_DEBUG("Socket address coverted to %s:%d", ip, port);
+    SAL_DEBUG("Socket address coverted to %s\n", ip);
 }
 
 // Caller to ensure a valid ip string
@@ -919,10 +910,51 @@ static int alloc_socket(sal_netconn_t *newconn, int accepted)
     return -1;
 }
 
+static int pcb_new(sal_netconn_t *conn)
+{
+    if (NULL == conn){
+        SAL_ERROR("pcb_new fail invalid input\n");
+        return -1;
+    }
+    
+    if (NULL != conn->pcb.tcp){
+        SAL_ERROR("pcb_new conn %p already have a pcb\n", conn);
+        return -1;
+    }
+
+    switch(NETCONNTYPE_GROUP(conn->type)){
+        case NETCONN_RAW:
+            conn->pcb.raw = malloc(sizeof(struct raw_pcb));
+            if (NULL == conn->pcb.raw){
+                return ERR_MEM;
+            }
+            memset(conn->pcb.raw, 0, sizeof(struct raw_pcb));
+            break;
+        case NETCONN_UDP:
+            conn->pcb.udp = malloc(sizeof(struct udp_pcb));
+            if (NULL == conn->pcb.udp){
+                return ERR_MEM;
+            }
+            memset(conn->pcb.udp, 0, sizeof(struct udp_pcb));
+            break;
+        case NETCONN_TCP:
+            conn->pcb.tcp = malloc(sizeof(struct tcp_pcb));
+            if (NULL == conn->pcb.tcp){
+                return ERR_MEM;
+            }
+            memset(conn->pcb.tcp, 0, sizeof(struct tcp_pcb));
+            break;
+        default:
+            return ERR_VAL;
+    }
+    return ERR_OK;
+}
+
 static sal_netconn_t* netconn_new(enum netconn_type t)
 {
     sal_netconn_t *conn;
-
+    err_t         err = ERR_OK;
+    
     conn = (sal_netconn_t *)malloc(sizeof(sal_netconn_t));
     if (conn == NULL) {
         SAL_ERROR("netconn_new fail to new net conn \n");
@@ -930,8 +962,13 @@ static sal_netconn_t* netconn_new(enum netconn_type t)
     }
     
     memset(conn,0,sizeof(sal_netconn_t));
-
     conn->type = t;
+    err = pcb_new(conn);
+    if (ERR_OK != err){
+        SAL_ERROR("netconn_new fail to new pcb return value is %d \n", err);
+        free(conn);
+        return NULL;
+    }
     return conn;
 }
 
@@ -942,6 +979,10 @@ static err_t netconn_delete(sal_netconn_t *conn)
     
     if (conn == NULL) {
         return ERR_OK;
+    }
+    
+    if (NULL != conn->pcb.tcp){
+        free(conn->pcb.tcp);
     }
     
     s = conn->socket;
@@ -1095,19 +1136,24 @@ int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
 
 int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
-    struct sal_sock *sock;
-    err_t err;
-    at_conn_t c = {0};
-    char ip_str[16] = {0};
-    uint32_t port;
+    struct sal_sock *sock = NULL;
+    err_t err = ERR_OK;
+    at_conn_t statconn = {0};
+    ip_addr_t remote_addr;
+    u16_t     remote_port;
+    int8_t   ip_str[SAL_SOCKET_IP4_ADDR_LEN] = {0};
 
     sock = get_socket(s);
     if (!sock) {
         SAL_ERROR("get_socket failed.");
+        return -1;
+    }
+    
+    if (!sock->conn){
+        SAL_ERROR("fail to get socket %d conn info\n.", s);
         sock_set_errno(sock, err_to_errno(ERR_VAL));
         return -1;
     }
-
     /* Only IPv4 is supported. */
     if (name->sa_family != AF_INET) {
         SAL_ERROR("Not supported (only IPv4 for now)!");
@@ -1121,45 +1167,47 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
         sock_set_errno(sock, err_to_errno(ERR_ARG));
         return -1;
     }
+    
+    sockaddr_to_ipaddr_port(name, &remote_addr, &remote_port);
+    ip4_sockaddr_to_ipstr_port(name, (char *)ip_str);
+    statconn.fd = sock->conn->socket;
+    statconn.addr = (char *)ip_str;
+    statconn.r_port = remote_port;
 
-    /* Do connection */
-    ip4_sockaddr_to_ipstr_port(name, ip_str, &port);
-    c.addr = ip_str;
-    c.r_port = port;
-    c.l_port = -1;
-    c.fd = s;
-    switch(sock->conn->type) {
-    case NETCONN_TCP:
-        c.type = TCP_CLIENT;
-        break;
+    switch(NETCONNTYPE_GROUP(sock->conn->type)) {
     case NETCONN_UDP:
-        c.type = UDP_UNICAST;
+        /*TODO double check if udp double connect */ 
+        statconn.type = UDP_UNICAST;
+        err = sal_op.start(&statconn);
+        if (ERR_OK != err){
+            SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", ip_str, remote_port);
+            return -1;
+        }
+        ip_addr_set_ipaddr(&(sock->conn->pcb.udp->remote_ip), &remote_addr);
+        sock->conn->pcb.udp->remote_port = remote_port;
+        break;
+    case NETCONN_TCP:
+        if (sock->conn->state != NETCONN_NONE)
+            return ERR_ISCONN;
+        statconn.type = TCP_CLIENT;
+        err = sal_op.start(&statconn);
+        if (ERR_OK != err){
+            SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", ip_str, remote_port);
+            return -1;
+        }
+        ip_addr_set_ipaddr(&(sock->conn->pcb.tcp->remote_ip), &remote_addr);
+        sock->conn->pcb.tcp->remote_port = remote_port;
         break;
     default:
-        SAL_ERROR("Unsupported sal connection type.");
-        sock_set_errno(sock, err_to_errno(ERR_ARG));
-        return -1;
+        SAL_ERROR("sal_connect invalid connect type.\n");
+        return ERR_ARG;
     }
-
-    if ((err = sal_op.start(&c)) != 0) {
-        SAL_ERROR("sal_start failed.");
-        sock_set_errno(sock, err_to_errno(ERR_IF));
-        return -1;
-    }
-
-    if (err != ERR_OK) {
-        SAL_ERROR("sal_connect(%d) failed, err=%d", s, err);
-        sock_set_errno(sock, err_to_errno(err));
-        return -1;
-    }
-
-    SAL_DEBUG("sal_connect(%d) succeeded", s);
 
     /* Update sal conn state here */
     sock->conn->state = NETCONN_CONNECT;
-
+    SAL_DEBUG("sal_connect(%d) succeeded\n", s);
     sock_set_errno(sock, 0);
-    return 0;
+    return err;
 }
 
 /**
