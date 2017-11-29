@@ -764,9 +764,6 @@ kstat_t krhino_task_del(ktask_t *task)
 kstat_t krhino_task_dyn_del(ktask_t *task)
 {
     CPSR_ALLOC();
-
-    kstat_t ret;
-
     uint8_t cur_cpu_num;
 
     RHINO_CRITICAL_ENTER();
@@ -812,21 +809,15 @@ kstat_t krhino_task_dyn_del(ktask_t *task)
         return RHINO_INV_TASK_STATE;
     }
 
+    if ((g_dyn_queue.msg_q.size - g_dyn_queue.msg_q.cur_num) < 2u) {
+        RHINO_CRITICAL_EXIT();
+        k_err_proc(RHINO_QUEUE_FULL);
+        return RHINO_QUEUE_FULL;
+    }
+
     g_sched_lock[cpu_cur_get()]++;
-    ret = krhino_queue_back_send(&g_dyn_queue, task->task_stack_base);
-    if (ret != RHINO_SUCCESS) {
-        g_sched_lock[cpu_cur_get()]--;
-        RHINO_CRITICAL_EXIT();
-        return ret;
-    }
-
-    ret = krhino_queue_back_send(&g_dyn_queue, task);
-    if (ret != RHINO_SUCCESS) {
-        g_sched_lock[cpu_cur_get()]--;
-        RHINO_CRITICAL_EXIT();
-        return ret;
-    }
-
+    krhino_queue_back_send(&g_dyn_queue, task->task_stack_base);
+    krhino_queue_back_send(&g_dyn_queue, task);
     g_sched_lock[cpu_cur_get()]--;
 
     /* free all the mutex which task hold */
