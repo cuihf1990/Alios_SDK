@@ -856,7 +856,10 @@ static ur_error_t handle_attach_request(message_t *message)
         if (is_bcast_sid(&info->dest) == false &&
             (info->mode & MODE_LOW_MASK) == 0 &&
             (network->router->sid_type == STRUCTURED_SID)) {
-            sid_allocator_alloc(network, &node_id);
+            error = sid_allocator_alloc(network, &node_id);
+            if (error != UR_ERROR_NONE) {
+                node_id.sid = INVALID_SID;
+            }
         }
         send_attach_response(network, &info->src_mac, &node_id);
         MESH_LOG_INFO("attach response to " EXT_ADDR_FMT "",
