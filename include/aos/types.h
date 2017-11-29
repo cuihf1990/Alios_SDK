@@ -31,7 +31,14 @@ struct pollfd {
  * define the AOS_EXPORT macro*
  */
 
-#define AOS_EXPORT(rvalue, fun, argstype...)
+#define AOS_EXPORT(ret, fun, argstype...)
+#endif
+
+#ifndef AOS_COMPONENT_INIT
+/**
+ * define the AOS_COMPONENT_INIT macro
+ */
+#define AOS_COMPONENT_INIT(fun, args...)
 #endif
 
 #endif /* AOS_TYPES_H */
