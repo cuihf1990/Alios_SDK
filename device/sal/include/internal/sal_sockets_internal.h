@@ -26,10 +26,15 @@ extern "C" {
 
 #define SAL_TAG  "sal"
 
+#ifdef SAL_USE_DEBUG
 #define SAL_DEBUG(format, ...)  LOGD(SAL_TAG, format, ##__VA_ARGS__)
+#else
+#define SAL_DEBUG(format, ...)  
+#endif 
+
 #define SAL_ERROR(format, ...)  LOGE(SAL_TAG, format, ##__VA_ARGS__)
-#define SAL_ASSERT(msg, assertion) do { \
-        LOGE(SAL_TAG, msg); \
+#define SAL_ASSERT(msg, assertion) do { if (!(assertion)) { \
+        LOGE(SAL_TAG, msg);} \
     } while (0)
 
 /** IPv4 only: set the IP address given as an u32_t */
@@ -68,6 +73,8 @@ extern "C" {
 // #define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
 // #endif
 #define  SAL_SOCKET_OFFSET      0
+
+#define NETDB_ELEM_SIZE           (sizeof(struct addrinfo) + sizeof(struct sockaddr_storage) + DNS_MAX_NAME_LENGTH + 1)
 
 /* Flags we can use with send and recv. */
 #define MSG_PEEK       0x01    /* Peeks at an incoming message */
