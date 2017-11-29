@@ -274,7 +274,8 @@ static char *start_cmd_type_str[] = {"tcp_server", "tcp_client", \
 int sal_wifi_start(at_conn_t *c)
 {
     int link_id;
-    char cmd[START_CMD_LEN] = {0}, out[256];
+    char cmd[START_CMD_LEN] = {0};
+    char out[256] = {0};
 
     if (!c || !c->addr) {
         LOGE(TAG, "%s %d - invalid argument", __func__, __LINE__);
