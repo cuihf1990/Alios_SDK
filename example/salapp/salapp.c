@@ -56,18 +56,98 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
             return;
         }
 
-        aos_msleep(10000);
-
         close(fd);
+        LOGI(TAG, "sal tcp_c test successful.");
     } else if (strcmp(ptype, "yloop") == 0) {
         aos_schedule_call(yloop_action,NULL);
+    } else if (strcmp(ptype, "otaapi") == 0) {
+        char domain[] = "www.baidu.com";
+        int port = 8080;
+        struct hostent *host;
+        struct timeval timeout;
+        int fd;
+        struct sockaddr_in server_addr;
+
+        if ((host = gethostbyname(domain)) == NULL) {
+            LOGE(TAG, "gethostbyname failed, errno: %d", errno);
+            return;
+        }
+
+        if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+            LOGE(TAG, "Socket failed, errno: %d", errno);
+            return;
+        }
+
+        timeout.tv_sec = 10;
+        timeout.tv_usec = 0;
+
+        if (setsockopt (fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                        sizeof(timeout)) < 0) {
+            LOGE(TAG, "setsockopt failed, errno: %d", errno);
+            close(fd);
+        }
+
+        memset(&server_addr, 0, sizeof(server_addr));
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(port);
+        server_addr.sin_addr = *((struct in_addr *)host->h_addr);
+
+        if (connect(fd, (struct sockaddr *) (&server_addr),
+            sizeof(struct sockaddr)) == -1) {
+            LOGE(TAG, "Connect failed, errno: %d", errno);
+            close(fd);
+            return;
+        }
+
+        close(fd);
+        LOGI(TAG, "sal otaapi test successful.");
+    } else if (strcmp(ptype, "mbedtlsapi") == 0) {
+        struct addrinfo hints, *addr_list;
+        int proto = 0; // 0 - tcp, 1 - udp
+        char nodename[] = "www.baidu.com";
+        char *port = "8080";
+        int fd, ret;
+
+        memset( &hints, 0, sizeof( hints ) );
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = proto ? SOCK_DGRAM : SOCK_STREAM;
+        hints.ai_protocol = proto ? IPPROTO_UDP : IPPROTO_TCP;
+
+        // getaddrinfo only returns 1 addr
+        if (getaddrinfo(nodename, port, &hints, &addr_list) != 0) {
+            LOGE(TAG, "getaddrinfo faied, errno: %d", errno);
+            return;
+        }
+
+        fd = socket(addr_list->ai_family, addr_list->ai_socktype,
+                    addr_list->ai_protocol);
+        if (fd < 0) {
+            LOGE(TAG, "socket failed, errno: %d", errno);
+            return;
+        }
+
+        do {
+            ret = connect(fd, addr_list->ai_addr, addr_list->ai_addrlen);
+            if (ret == -1) {
+                close(fd);
+                freeaddrinfo(addr_list);
+            } else {
+                if (errno == EINTR) {
+                    continue;
+                }
+                break;
+           }
+        } while(1);
+
+        close(fd);
+        freeaddrinfo(addr_list);
     }
 }
 
 static struct cli_command salcmds[] = {
     {
         .name = "sal",
-        .help = "sal [tcp_c|udp_c] remote_ip remote_port data",
+        .help = "sal tcp_c|udp_c|yloop|otaapi|mbedtlsapi [remote_ip remote_port data]",
         .function = handle_sal
     }
 };

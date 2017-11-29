@@ -185,7 +185,10 @@ static volatile int select_cb_ctr;
 
 static sal_netconn_t* netconn_new(enum netconn_type t);
 
-static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name, char *ip)
+#define SWAPS(s) ((((s) & 0xff) << 8) | (((s) & 0xff00) >> 8))
+
+static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name,
+                                       char *ip, uint32_t *port)
 {
     struct sockaddr_in *saddr;
     union {
@@ -201,19 +204,26 @@ static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name, char *ip)
 
     /* Convert network order ip_addr to ip str (dot number fomrat) */
     ip_u.ip_u32 = (uint32_t)(saddr->sin_addr.s_addr);
-    snprintf(ip, SAL_SOCKET_IP4_ADDR_LEN - 1, "%d.%d.%d.%d", ip_u.ip_u8[0], ip_u.ip_u8[1], ip_u.ip_u8[2], ip_u.ip_u8[3]);
+    snprintf(ip, SAL_SOCKET_IP4_ADDR_LEN, "%d.%d.%d.%d",
+             ip_u.ip_u8[0], ip_u.ip_u8[1], ip_u.ip_u8[2], ip_u.ip_u8[3]);
     ip[SAL_SOCKET_IP4_ADDR_LEN] = '\0';
 
-    SAL_DEBUG("Socket address coverted to %s\n", ip);
+    /* Netwwork order port_t to host order port number */
+    if (BYTE_ORDER == LITTLE_ENDIAN)
+        *port = SWAPS(saddr->sin_port);
+    else
+        *port = saddr->sin_port;
+
+    SAL_DEBUG("Socket address coverted to %s:%d", ip, port);
 }
 
 // Caller to ensure a valid ip string
-static int ipstr_to_u32(char *ipstr, uint32_t *ip32)
+int ipstr_to_u32(char *ipstr, uint32_t *ip32)
 {
-    uint8_t *q = (uint8_t *)&ip32, n = 0, stridx = 0, dotnum = 0;
+    uint8_t *q = (uint8_t *)ip32, n = 0, stridx = 0, dotnum = 0;
     char *p = ipstr;
 
-    if (!ipstr || !n) return -1;
+    if (!ipstr || !ip32) return -1;
 
     for (n = 0, stridx = 0, dotnum = 0;
          *p != '\0' && stridx < 15 && dotnum < 4;
@@ -228,7 +238,7 @@ static int ipstr_to_u32(char *ipstr, uint32_t *ip32)
         n = n * 10 + *p - '0';
     }
 
-    if (dotnum >=4 || stridx >= 15) return -1;
+    if (dotnum >=4 || stridx > 15) return -1;
     else q[dotnum] = n; // the last number
 
     return 0;
@@ -1083,94 +1093,73 @@ int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
     return 0;
 }
 
-static err_t netconn_disconnect(sal_netconn_t *conn)
-{
-    if (NETCONNTYPE_GROUP(conn->type) != NETCONN_UDP){
-        return ERR_VAL;
-    }
-    
-    ip_addr_set_any(IP_IS_V6_VAL(conn->pcb.udp->remote_ip), &(conn->pcb.udp->remote_ip));
-    conn->pcb.udp->remote_port = 0;
-    return ERR_OK;
-}
-
-
 int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
-    struct sal_sock *sock = NULL;
-    err_t err = ERR_OK;
-    at_conn_t statconn = {0};
-    ip_addr_t remote_addr;
-    u16_t     remote_port;
-    int8_t   ip_str[SAL_SOCKET_IP4_ADDR_LEN] = {0};
+    struct sal_sock *sock;
+    err_t err;
+    at_conn_t c = {0};
+    char ip_str[16] = {0};
+    uint32_t port;
 
     sock = get_socket(s);
     if (!sock) {
         SAL_ERROR("get_socket failed.");
-        return -1;
-    }
-    
-    if (!sock->conn){
-        SAL_ERROR("fail to get socket %d conn info\n.", s);
         sock_set_errno(sock, err_to_errno(ERR_VAL));
         return -1;
     }
 
-    if (!SOCK_ADDR_TYPE_MATCH_OR_UNSPEC(name, sock)) {
-        /* sockaddr does not match socket type (IPv4/IPv6) */
+    /* Only IPv4 is supported. */
+    if (name->sa_family != AF_INET) {
+        SAL_ERROR("Not supported (only IPv4 for now)!");
         sock_set_errno(sock, err_to_errno(ERR_VAL));
         return -1;
     }
 
-    if (name->sa_family == AF_UNSPEC){
-        err = netconn_disconnect(sock->conn);
-        return err;
+    /* Check size */
+    if (namelen != sizeof(struct sockaddr_in)) {
+        SAL_ERROR("sal_connect: invalid address");
+        sock_set_errno(sock, err_to_errno(ERR_ARG));
+        return -1;
     }
-    
-    sockaddr_to_ipaddr_port(name, &remote_addr, &remote_port);
-    ip4_sockaddr_to_ipstr_port(name, (char *)ip_str);
-    statconn.fd = sock->conn->socket;
-    statconn.addr = (char *)ip_str;
-    statconn.r_port = remote_port;
 
-    switch(NETCONNTYPE_GROUP(sock->conn->type)) {
-    case NETCONN_RAW:
-        /*for now wifi module did not support raw socket yet*/
-        SAL_ERROR("sal_connect invalid connect type.\n");
-        return ERR_VAL;
-    case NETCONN_UDP:
-        /*TODO double check if udp double connect */ 
-        statconn.type = UDP_UNICAST;
-        err = sal_op.start(&statconn);
-        if (ERR_OK != err){
-            SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", ip_str, remote_port);
-            return -1;
-        }
-        ip_addr_set_ipaddr(&(sock->conn->pcb.udp->remote_ip), &remote_addr);
-        sock->conn->pcb.udp->remote_port = remote_port;
-        break;
+    /* Do connection */
+    ip4_sockaddr_to_ipstr_port(name, ip_str, &port);
+    c.addr = ip_str;
+    c.r_port = port;
+    c.l_port = -1;
+    c.fd = s;
+    switch(sock->conn->type) {
     case NETCONN_TCP:
-        if (sock->conn->state != NETCONN_NONE)
-            return ERR_ISCONN;
-        err = sal_op.start(&statconn);
-        if (ERR_OK != err){
-            SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", ip_str, remote_port);
-            return -1;
-        }
-        statconn.type = TCP_CLIENT;
-        ip_addr_set_ipaddr(&(sock->conn->pcb.tcp->remote_ip), &remote_addr);
-        sock->conn->pcb.tcp->remote_port = remote_port;
+        c.type = TCP_CLIENT;
+        break;
+    case NETCONN_UDP:
+        c.type = UDP_UNICAST;
         break;
     default:
-        SAL_ERROR("sal_connect invalid connect type.\n");
-        return ERR_ARG;
+        SAL_ERROR("Unsupported sal connection type.");
+        sock_set_errno(sock, err_to_errno(ERR_ARG));
+        return -1;
     }
+
+    if ((err = sal_op.start(&c)) != 0) {
+        SAL_ERROR("sal_start failed.");
+        sock_set_errno(sock, err_to_errno(ERR_IF));
+        return -1;
+    }
+
+    if (err != ERR_OK) {
+        SAL_ERROR("sal_connect(%d) failed, err=%d", s, err);
+        sock_set_errno(sock, err_to_errno(err));
+        return -1;
+    }
+
+    SAL_DEBUG("sal_connect(%d) succeeded", s);
 
     /* Update sal conn state here */
     sock->conn->state = NETCONN_CONNECT;
-    SAL_DEBUG("sal_connect(%d) succeeded\n", s);
+
     sock_set_errno(sock, 0);
-    return err;
+    return 0;
 }
 
 /**
@@ -1430,12 +1419,7 @@ int sal_getaddrinfo(const char *nodename, const char *servname,
   if (hints != NULL) {
     ai_family = hints->ai_family;
     if ((ai_family != AF_UNSPEC)
-#if LWIP_IPV4
       && (ai_family != AF_INET)
-#endif /* LWIP_IPV4 */
-#if LWIP_IPV6
-      && (ai_family != AF_INET6)
-#endif /* LWIP_IPV6 */
       ) {
       return EAI_FAMILY;
     }
@@ -1515,34 +1499,20 @@ int sal_getaddrinfo(const char *nodename, const char *servname,
   /* If this fails, please report to lwip-devel! :-) */
   SAL_ASSERT("total_size <= NETDB_ELEM_SIZE: please report this!",
     total_size <= NETDB_ELEM_SIZE);
-  ai = (struct addrinfo *)aos_malloc(sizeof(struct addrinfo));
+  ai = (struct addrinfo *)aos_malloc(total_size);
   if (ai == NULL) {
     return EAI_MEMORY;
   }
   memset(ai, 0, total_size);
   /* cast through void* to get rid of alignment warnings */
   sa = (struct sockaddr_storage *)(void*)((u8_t*)ai + sizeof(struct addrinfo));
-  if (IP_IS_V6_VAL(addr)) {
-#if LWIP_IPV6
-    struct sockaddr_in6 *sa6 = (struct sockaddr_in6*)sa;
-    /* set up sockaddr */
-    inet6_addr_from_ip6addr(&sa6->sin6_addr, ip_2_ip6(&addr));
-    sa6->sin6_family = AF_INET6;
-    sa6->sin6_len = sizeof(struct sockaddr_in6);
-    sa6->sin6_port = sal_htons((u16_t)port_nr);
-    ai->ai_family = AF_INET6;
-#endif /* LWIP_IPV6 */
-  } else {
-#if LWIP_IPV4
-    struct sockaddr_in *sa4 = (struct sockaddr_in*)sa;
-    /* set up sockaddr */
-    inet_addr_from_ipaddr(&sa4->sin_addr, ip_2_ip4(&addr));
-    sa4->sin_family = AF_INET;
-    sa4->sin_len = sizeof(struct sockaddr_in);
-    sa4->sin_port = lwip_htons((u16_t)port_nr);
-    ai->ai_family = AF_INET;
-#endif /* LWIP_IPV4 */
-  }
+  struct sockaddr_in *sa4 = (struct sockaddr_in*)sa;
+  /* set up sockaddr */
+  inet_addr_from_ipaddr(&sa4->sin_addr, ip_2_ip4(&addr));
+  sa4->sin_family = AF_INET;
+  sa4->sin_len = sizeof(struct sockaddr_in);
+  sa4->sin_port = sal_htons((u16_t)port_nr);
+  ai->ai_family = AF_INET;
 
   /* set up addrinfo */
   if (hints != NULL) {
@@ -1552,7 +1522,8 @@ int sal_getaddrinfo(const char *nodename, const char *servname,
   }
   if (nodename != NULL) {
     /* copy nodename to canonname if specified */
-    ai->ai_canonname = ((char*)ai + sizeof(struct addrinfo) + sizeof(struct sockaddr_storage));
+    ai->ai_canonname = ((char*)ai + sizeof(struct addrinfo) + \
+                       sizeof(struct sockaddr_storage));
     memcpy(ai->ai_canonname, nodename, namelen);
     ai->ai_canonname[namelen] = 0;
   }
