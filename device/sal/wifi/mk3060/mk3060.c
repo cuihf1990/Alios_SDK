@@ -509,7 +509,7 @@ static int sal_wifi_domain_to_ip(char *domain,
         goto err;
 
     head++;
-    if (memcpy(head, at._recv_delimiter, strlen(at._recv_delimiter)) != 0)
+    if (memcmp(head, at._recv_delimiter, strlen(at._recv_delimiter)) != 0)
         goto err;
 
    /* We find the IP head */
@@ -517,11 +517,11 @@ static int sal_wifi_domain_to_ip(char *domain,
 
    end = head;
    while (((end - head) < 15) && (*end != at._recv_delimiter[0])) end++;
-   if (((end - head) < 6) || ((end -head) >= 15)) goto err;
+   if (((end - head) < 6) || ((end -head) > 15)) goto err;
 
    /* We find a good IP, save it. */
-   *end = '\0';
-   memcpy(ip, head, end - head + 2);
+   memcpy(ip, head, end - head);
+   ip[end-head] = '\0';
 
    return 0;
 

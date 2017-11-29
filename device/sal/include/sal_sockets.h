@@ -91,14 +91,6 @@ struct addrinfo {
 
 #define  SOL_SOCKET  0xfff    /* options for socket level */
 
-#define AF_UNSPEC       0
-#define AF_INET         2
-#define AF_INET6        10
-
-#define PF_INET         AF_INET
-#define PF_INET6        AF_INET6
-#define PF_UNSPEC       AF_UNSPEC
-
 #define IPPROTO_IP      0
 #define IPPROTO_ICMP    1
 #define IPPROTO_TCP     6
