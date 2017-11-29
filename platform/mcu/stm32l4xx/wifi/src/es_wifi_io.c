@@ -52,6 +52,7 @@
 #include <string.h>
 #include "aos/kernel.h"
 #include "k_types.h"
+#include "es_wifi_conf.h"
 
 /* Private define ------------------------------------------------------------*/
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
@@ -273,7 +274,7 @@ int16_t SPI_WIFI_ReceiveData(uint8_t *pData, uint16_t len, uint32_t timeout)
 	  /* let some time to hardware to change CMDDATA signal */
       if(tmp[1] == 0x15)
       {
-       SPI_WIFI_Delay(1);
+        SPI_WIFI_Delay(1);
       }
       /*This the last data */
       if(!WIFI_IS_CMDDATA_READY())
@@ -290,6 +291,13 @@ int16_t SPI_WIFI_ReceiveData(uint8_t *pData, uint16_t len, uint32_t timeout)
       pData[1] = tmp[1];
       length += 2;
       pData  += 2;
+
+      if (length >= ES_WIFI_DATA_SIZE) {
+        printf("SPI_WIFI_ReceiveData: Buffer overflow, receive length = %d!\n", length);
+        WIFI_DISABLE_NSS();
+        aos_mutex_unlock(&spi_rx_mutex);
+        return -1;
+      }
       
       if((HAL_GetTick() - tickstart ) > timeout)
       {

@@ -7,6 +7,7 @@
 
 extern const hal_logic_partition_t hal_partitions[];
 extern int FLASH_read_at(uint32_t address, uint64_t *pData, uint32_t len_bytes);
+extern int FLASH_bank1_enabled(void);
 
 hal_logic_partition_t *hal_flash_get_info(hal_partition_t pno)
 {

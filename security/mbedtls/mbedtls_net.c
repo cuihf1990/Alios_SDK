@@ -54,6 +54,9 @@ int mbedtls_net_send(void *ctx, const unsigned char *buf, size_t len)
 {
     WIFI_Status_t ret;
     uint16_t send_size;
+    uint16_t once_len;
+    uint8_t *pdata = (uint8_t *)buf;
+    uint16_t send_total = 0;
     int fd = ((mbedtls_net_context *) ctx)->fd;
 
     if (fd < 0) {
@@ -61,15 +64,28 @@ int mbedtls_net_send(void *ctx, const unsigned char *buf, size_t len)
         return MBEDTLS_ERR_NET_INVALID_CONTEXT;
     }
 
-    ret = WIFI_SendData((uint8_t)fd,
-                        (uint8_t *)buf, len,
-                        &send_size, WIFI_WRITE_TIMEOUT);
-    if (ret != WIFI_STATUS_OK) {
-        MBEDTLS_NET_PRINT("net_send: send data fail - %d\n", ret);
-        return MBEDTLS_ERR_NET_SEND_FAILED;
-    }
+    do {
+        if (len > WIFI_PAYLOAD_SIZE) {
+            MBEDTLS_NET_PRINT("net_send: buffer length = %d, split data sending\n", len);
+            once_len = WIFI_PAYLOAD_SIZE;
+            len -= WIFI_PAYLOAD_SIZE;
+        } else {
+            once_len = len;
+            len = 0;
+        }
 
-    return send_size;
+        ret = WIFI_SendData((uint8_t)fd,
+                            pdata, once_len,
+                            &send_size, WIFI_WRITE_TIMEOUT);
+        if (ret != WIFI_STATUS_OK) {
+            MBEDTLS_NET_PRINT("net_send: send data fail - %d\n", ret);
+            return MBEDTLS_ERR_NET_SEND_FAILED;
+        }
+        pdata += once_len;
+        send_total += send_size;
+    } while (len > 0);
+
+    return send_total;
 }
 
 int mbedtls_net_recv(void *ctx, unsigned char *buf, size_t len)
