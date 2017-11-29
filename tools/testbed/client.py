@@ -24,7 +24,7 @@ def signal_handler(sig, frame):
     print "received SIGINT"
     raise KeyboardInterrupt
 
-class ConnetionLost(Exception):
+class ConnectionLost(Exception):
     pass
 
 class Client:
@@ -249,7 +249,11 @@ class Client:
 
                 content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
-                self.service_socket.send(data)
+                try:
+                    self.service_socket.send(data)
+                except:
+                    self.connected = False
+                    continue
             except:
                 if os.path.exists(port) == False or exit_condition.is_set() == True:
                     break
@@ -388,8 +392,7 @@ class Client:
         baudrate = 230400
         error = 'fail'
         while retry > 0:
-            script = ['python']
-            script += [os.environ['ESPTOOL_PATH'] + '/esptool.py']
+            script = ['python', 'esptool.py']
             script += ['--chip']
             script += ['esp32']
             script += ['--port']
@@ -420,12 +423,14 @@ class Client:
         self.devices[port]['slock'].acquire()
         try:
             self.devices[port]['serial'].close()
-            ret = esp32_erase(port)
-            self.devices[port]['serial'].open()
+            ret = self.esp32_erase(port)
         except:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
         finally:
+            if os.path.exists(port) and \
+               self.devices[port]['serial'].isOpen() == False:
+                self.devices[port]['serial'].open()
             self.devices[port]['slock'].release()
         print 'erasing', port, '...', ret
         content = ','.join(term) + ',' + ret
@@ -512,6 +517,9 @@ class Client:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
         finally:
+            if os.path.exists(port) and \
+               self.devices[port]['serial'].isOpen() == False:
+                self.devices[port]['serial'].open()
             self.devices[port]['slock'].release()
         print 'programming', file, 'to', port, '@', address, '...', ret
         content = ','.join(term) + ',' + ret
@@ -603,19 +611,20 @@ class Client:
         heartbeat_timeout = time.time() + 10
         while self.keep_running:
             time.sleep(0.05)
-            if self.connected == True and time.time() >= heartbeat_timeout:
-                try:
-                    self.service_socket.send(TBframe.construct(TBframe.HEARTBEAT, ''))
-                    heartbeat_timeout += 10
-                except:
-                    continue
+            if time.time() < heartbeat_timeout:
+                continue
+            try:
+                self.service_socket.send(TBframe.construct(TBframe.HEARTBEAT, ''))
+            except:
+                continue
+            heartbeat_timeout += 10
 
     def send_packet(self, type, content):
         data = TBframe.construct(type, content)
         try:
             self.service_socket.send(data)
         except:
-            raise ConnetionLost
+            raise ConnectionLost
 
     def client_func(self, server_ip, server_port):
         self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -661,7 +670,7 @@ class Client:
             try:
                 new_msg = self.service_socket.recv(MAX_MSG_LENTH)
                 if new_msg == '':
-                    raise ConnetionLost
+                    raise ConnectionLost
                     break
 
                 msg += new_msg
@@ -830,7 +839,7 @@ class Client:
                             print "run command '{0}' at {1} failed, device nonexist".format(cmd, port)
                         content = ','.join(term) + ',' + result
                         self.send_packet(type, content)
-            except ConnetionLost:
+            except ConnectionLost:
                 self.connected = False
                 print 'connection to server lost, try reconnecting...'
                 self.service_socket.close()
@@ -838,10 +847,11 @@ class Client:
                 while True:
                     try:
                         self.service_socket.connect((server_ip, server_port))
+                        time.sleep(0.1)
                         self.connected = True
-                        self.send_device_list()
                         self.send_packet(TBframe.CLIENT_UUID, self.uuid)
                         self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
+                        self.send_device_list()
                         break
                     except:
                         try:

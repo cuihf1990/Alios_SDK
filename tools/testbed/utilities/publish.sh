@@ -1,34 +1,32 @@
-#!/user/bin/env bash
+#!/bin/bash
 
+targets="server lab1 lab2 lab3 Pi1 Pi2 Pi1-SH Pi2-SH"
+server=tc1
 cd $(git rev-parse --show-toplevel)
 cd tools/testbed/
 
-echo -e "publish and restart server at kfcserver\n"
-scp *.py kfcserver:/home/lc122798/testbed/
-ssh kfcserver 'tbserver_start'
-sleep 1
+if [ $# -gt 0 ]; then
+    targets=$@
+fi
 
-echo -e "\npublish and restart client at Pi1\n"
-scp *.py Pi1:/home/pi/testbed/
-ssh Pi1 'tbclient_start'
-
-echo -e "\npublish and restart client at Pishanghai\n"
-scp *.py Pishanghai:/home/pi/testbed/
-ssh Pishanghai 'tbclient_start'
-
-echo -e "\npublish and restart client at aoslab01\n"
-scp *.py lab1:/home/iot/testbed/
-ssh lab1 'tbclient_start'
-
-echo -e "\npublish and restart client at aoslab02\n"
-scp *.py lab2:/home/iot/testbed/
-ssh lab2 'tbclient_start'
-
-echo -e "\npublish and restart client at aoslab03\n"
-scp *.py lab3:/home/iot/testbed/
-ssh lab3 'tbclient_start'
-
-echo -e "\nsynchronize to mac and windows\n"
-scp *.py macpro:/Users/charlie/Downloads/share/testbed
-
+for target in $@; do
+    if [ "${target}" = "server" ]; then
+        echo -e "publish and restart server\n"
+        scp *.py ${server}:/home/lc122798/testbed/
+        ssh ${server} 'tbserver_start'
+        sleep 2
+    elif [[ ${target} == lab* ]]; then
+        echo -e "\npublish and restart client at aos${target}\n"
+        scp *.py ${target}:/home/iot/testbed/
+        ssh ${target} 'tbclient_start'
+        sleep 2
+    elif [[ ${target} == Pi* ]]; then
+        echo -e "\npublish and restart client at ${target}\n"
+        scp *.py ${target}:/home/pi/testbed/
+        ssh ${target} 'tbclient_start'
+        sleep 2
+    else
+        echo -e "\nerror: unkonw publish target ${target}\n"
+    fi
+done
 echo -e "\ndone"
