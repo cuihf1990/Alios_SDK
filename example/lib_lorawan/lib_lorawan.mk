@@ -42,7 +42,7 @@ $(NAME)_SOURCES := Lora/Crypto/aes.c                \
                    Lora/Mac/region/RegionKR920.c    \
                    Lora/Mac/region/RegionUS915.c    \
                    Lora/Mac/region/RegionUS915-Hybrid.c \
-                   Lora/Mac/LoRaMaC.c               \
+                   Lora/Mac/LoRaMac.c               \
                    Lora/Mac/LoRaMacCrypto.c    \
                    BSP/EML3047/eml3047.c    \
 				   BSP/sx1276/sx1276.c              \
