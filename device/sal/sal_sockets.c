@@ -657,7 +657,7 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
         uirecvlen = len - uirecvlen;
         
         if (uitotalrecvlen == 0){
-            aos_msleep(20);
+            aos_msleep(5);
             #if SAL_RCVTIMEO
             if (pstsock->conn->recv_timeout != 0){
                 end_ms = sys_now();
@@ -670,7 +670,8 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
             continue;
         }
         
-        done = 1;
+        if (uitotalrecvlen >= len) done = 1;
+
         if (from && fromlen){
             fromaddr.type = IPADDR_TYPE_V4;
             ipstr_to_u32((char *)ipstr, &(fromaddr.u_addr.ip4.addr));

@@ -458,6 +458,7 @@ static int sal_wifi_recv(int fd,
 
     if (g_link[link_id].data_total == 0) {
         LOGD(TAG, "No data left for fd (%d) on link %d", fd, link_id);
+        *plen = 0;
         return 0;
     }
 
