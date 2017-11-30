@@ -96,7 +96,7 @@
    ---------- IP options ----------
 */
 #define LWIP_IPV4                       1
-#define LWIP_IPV6                       1
+#define LWIP_IPV6                       0
 #define IP_FORWARD                      0
 #define IP_OPTIONS_ALLOWED              1
 #define IP_REASSEMBLY                   0
@@ -162,7 +162,7 @@
 /*
    ---------- Pbuf options ----------
 */
-#define PBUF_LINK_HLEN                  16
+#define PBUF_LINK_HLEN                  (8 + 12 + 4 + 2 + 14)
 
 //#define PBUF_POOL_BUFSIZE               LWIP_MEM_ALIGN_SIZE(TCP_MSS+40+PBUF_LINK_HLEN)
 #define PBUF_POOL_BUFSIZE               512
@@ -177,8 +177,16 @@
 #define LWIP_NETIF_LOOPBACK             1
 #define LWIP_HAVE_LOOPIF                1
 #define LWIP_NETIF_LOOPBACK_MULTITHREADING       1
-#define LWIP_LOOPBACK_MAX_PBUFS         8
 
+/**
+ * LWIP_NETIF_STATUS_CALLBACK==1: Support a callback function whenever an interface
+ * changes its up/down status (i.e., due to DHCP IP acquistion)
+ */
+#define LWIP_NETIF_STATUS_CALLBACK      1
+
+#define LWIP_NETIF_HOSTNAME 1
+#define LWIP_NETIF_LINK_CALLBACK  1
+#define LWIP_IPV6_SEND_ROUTER_SOLICIT 0
 /*
    ---------- Thread options ----------
 */
@@ -251,26 +259,28 @@
 
 #define MEM_DEBUG                       LWIP_DBG_OFF
 #define MEMP_DEBUG                      LWIP_DBG_OFF
-#define PBUF_DEBUG                      LWIP_DBG_ON
-#define API_LIB_DEBUG                   LWIP_DBG_ON
-#define API_MSG_DEBUG                   LWIP_DBG_ON
-#define TCPIP_DEBUG                     LWIP_DBG_ON
-#define NETIF_DEBUG                     LWIP_DBG_ON
-#define SOCKETS_DEBUG                   LWIP_DBG_ON
-#define IP_DEBUG                        LWIP_DBG_ON
-#define IP_REASS_DEBUG                  LWIP_DBG_ON
-#define RAW_DEBUG                       LWIP_DBG_ON
-#define ICMP_DEBUG                      LWIP_DBG_ON
-#define UDP_DEBUG                       LWIP_DBG_ON
-#define TCP_DEBUG                       LWIP_DBG_ON
-#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
-#define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
-#define TCP_RTO_DEBUG                   LWIP_DBG_ON
-#define TCP_CWND_DEBUG                  LWIP_DBG_ON
-#define TCP_WND_DEBUG                   LWIP_DBG_ON
-#define TCP_FR_DEBUG                    LWIP_DBG_ON
-#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
-#define TCP_RST_DEBUG                   LWIP_DBG_ON
+#define PBUF_DEBUG                      LWIP_DBG_OFF
+#define API_LIB_DEBUG                   LWIP_DBG_OFF
+#define API_MSG_DEBUG                   LWIP_DBG_OFF
+#define TCPIP_DEBUG                     LWIP_DBG_OFF
+#define NETIF_DEBUG                     LWIP_DBG_OFF
+#define SOCKETS_DEBUG                   LWIP_DBG_OFF
+#define IP_DEBUG                        LWIP_DBG_OFF
+#define IP_REASS_DEBUG                  LWIP_DBG_OFF
+#define RAW_DEBUG                       LWIP_DBG_OFF
+#define ICMP_DEBUG                      LWIP_DBG_OFF
+#define UDP_DEBUG                       LWIP_DBG_OFF
+#define TCP_DEBUG                       LWIP_DBG_OFF
+#define TCP_INPUT_DEBUG                 LWIP_DBG_OFF
+#define TCP_OUTPUT_DEBUG                LWIP_DBG_OFF
+#define TCP_RTO_DEBUG                   LWIP_DBG_OFF
+#define TCP_CWND_DEBUG                  LWIP_DBG_OFF
+#define TCP_WND_DEBUG                   LWIP_DBG_OFF
+#define TCP_FR_DEBUG                    LWIP_DBG_OFF
+#define TCP_QLEN_DEBUG                  LWIP_DBG_OFF
+#define TCP_RST_DEBUG                   LWIP_DBG_OFF
+#define DHCP_DEBUG                      LWIP_DBG_OFF
+#define ETHARP_DEBUG                    LWIP_DBG_OFF
 
 /*
    ---------- Performance tracking options ----------
@@ -280,5 +290,8 @@
    ---------- PPP options ----------
 */
 #define PPP_SUPPORT                     0
+#define LWIP_RANDOMIZE_INITIAL_LOCAL_PORTS 1
+
+#define TCP_QUEUE_OOSEQ 1
 
 #endif /* LWIP_LWIPOPTS_H */
