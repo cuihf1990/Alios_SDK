@@ -83,3 +83,9 @@ void hw_start_hal(void)
 }
 
 
+int stdio_hardfault( char* data, uint32_t size )
+{
+  hal_uart_send(&uart_0, data, size, 1000);
+  return 0;
+}
+

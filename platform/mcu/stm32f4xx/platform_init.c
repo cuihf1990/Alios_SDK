@@ -241,18 +241,7 @@ void init_architecture( void )
 
 }
 
-OSStatus stdio_hardfault( char* data, uint32_t size )
-{
-#ifndef MICO_DISABLE_STDIO
-  uint32_t idx;
-  for(idx = 0; idx < size; idx++){
-    while ( ( platform_uart_peripherals[ STDIO_UART ].port->SR & USART_SR_TXE ) == 0 );
-    platform_uart_peripherals[ STDIO_UART ].port->DR = (data[idx] & (uint16_t)0x01FF);
-    
-  }
-#endif
-  return kNoErr;
-}
+
 
 static char global_cid[25] = { 0 };
 const char *mico_generate_cid( uint8_t* length )
@@ -307,16 +296,6 @@ void SysTick_Handler(void)
 void NMI_Handler(void)
 {
     while (1)
-  {
-  }
-}
-
-/**
-* @brief This function handles Hard fault interrupt.
-*/
-void HardFault_Handler(void)
-{
-  while (1)
   {
   }
 }

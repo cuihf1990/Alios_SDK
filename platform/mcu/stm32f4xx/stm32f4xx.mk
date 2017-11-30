@@ -87,6 +87,7 @@ $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
 $(NAME)_SOURCES := platform_init.c          \
                    platform_vector_table.c \
+                   hardfault_handler.c \
                    startup/startup_stm32f4xx.s \
                    wifi/wifi_port.c  \
                    GCC/platform_unhandled_isr.c \
