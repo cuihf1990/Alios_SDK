@@ -41,5 +41,12 @@ struct pollfd {
 #define AOS_COMPONENT_INIT(fun, args...)
 #endif
 
+#ifndef AOS_TESTCASE
+/**
+ * define the AOS_TESTCASE macro
+ */
+#define AOS_TESTCASE(fun, args...)
+#endif
+
 #endif /* AOS_TYPES_H */
 

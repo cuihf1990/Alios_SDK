@@ -17,6 +17,8 @@ COMPONENT_DIRECTORIES := . \
                          device    \
                          security
 
+TEST_COMPONENT_DIRECTORIES := test
+
 ifneq ($(ONLY_BUILD_LIBRARY), yes)
 COMPONENT_DIRECTORIES += $(OUTPUT_DIR)/syscall
 COMPONENT_DIRECTORIES += $(OUTPUT_DIR)
@@ -78,6 +80,7 @@ $(eval CONVERTER_OUTPUT_FILE:=)
 $(eval BIN_OUTPUT_FILE:=)
 $(eval OLD_CURDIR := $(CURDIR))
 $(eval CURDIR := $(CURDIR)$(dir $(TEMP_MAKEFILE)))
+$(eval TEST_COMPONENTS :=)
 
 # Cache the last valid RTOS/NS combination for iterative filtering.
 $(eval TEMP_VALID_OSNS_COMBOS := $(VALID_OSNS_COMBOS))
@@ -133,6 +136,10 @@ AOS_SDK_FINAL_OUTPUT_FILE += $(BIN_OUTPUT_FILE)
 $(eval PROCESSED_COMPONENTS += $(NAME))
 $(eval PROCESSED_COMPONENTS_LOCS += $(COMP))
 $(eval COMPONENTS += $($(NAME)_COMPONENTS))
+
+$(if $(TEST_COMPONENTS), $(call RECURSE_DIR_COMPONENT_SEARCH, $(patsubst %/,%,$(TEST_COMPONENT_DIRECTORIES)), TEST_COMPONENT_LIST) \
+$(eval TEST_COMPONENTS := $(addprefix %., $(addsuffix _test, $(TEST_COMPONENTS)))) \
+$(eval COMPONENTS += $(filter $(TEST_COMPONENTS),  $(subst /,.,$(strip $(TEST_COMPONENT_LIST))))))
 
 DEPENDENCY += '$(NAME)': '$($(NAME)_COMPONENTS)',
 
