@@ -59,11 +59,11 @@ static link_t g_link[LINK_ID_MAX];// = {{-1, {NULL}}};
 static aos_mutex_t g_link_mutex;
 static netconn_evt_cb_t g_netconn_evt_cb;
 
-static void handle_server_conn_state(uint8_t link_id)
+static void handle_tcp_udp_client_conn_state(uint8_t link_id)
 {
     char s[32];
 
-    at.read(s, 13);
+    at.read(s, 6);
     if (strstr(s, "CLOSED") != NULL) {
         LOGI(TAG, "Server closed event.");
         // Clear fd_map here
@@ -94,11 +94,6 @@ static void handle_server_conn_state(uint8_t link_id)
 }
 
 static void handle_client_conn_state()
-{
-
-}
-
-static void handle_udp_conn_state()
 {
 
 }
@@ -197,7 +192,7 @@ static void handle_socket_data()
 static void net_event_handler(void *arg)
 {
     char c;
-
+    char s[32] = {0}; 
     LOGD(TAG, "%s entry.", __func__);
 
     at.read(&c, 1);
@@ -211,10 +206,22 @@ static void net_event_handler(void *arg)
         at.read(&c, 1);
         if (c == 'S') {
             LOGD(TAG, "%s server conn state event, linkid: %d.", __func__, link_id);
-            handle_server_conn_state(link_id);
+            /* Eat the "ERVER," */
+            at.read(s, 6);
+            if (memcmp(s, "ERVER,", strlen("ERVER,")) != 0) {
+                LOGE(TAG, "%s invalid event format!!!");
+                assert(0);
+            }
+            handle_tcp_udp_client_conn_state(link_id);
         } else if (c == 'U') {
             LOGD(TAG, "%s UDP conn state event.", __func__);
-            handle_udp_conn_state();
+            /* Eat the "DP," */
+            at.read(s, 3);
+            if (memcmp(s, "DP,", strlen("DP,")) != 0) {
+                LOGE(TAG, "%s invalid event format!!!");
+                assert(0);
+            }
+            handle_tcp_udp_client_conn_state(link_id);
         } else {
             LOGE(TAG, "!!!Error: wrong CIPEVENT string.");
             assert(0);
@@ -326,11 +333,6 @@ int sal_wifi_start(at_conn_t *c)
           c->addr, c->r_port);
         if (c->l_port >= 0)
             snprintf(cmd + strlen(cmd), 7, ",%d", c->l_port);
-        if (aos_sem_new(&g_link[link_id].sem_start, 0) != 0) {
-            LOGE(TAG, "failed to allocate semaphore %s", __func__);
-            g_link[link_id].fd = -1;
-            return -1;
-        }
         break;
     case UDP_BROADCAST:
     case UDP_UNICAST:
@@ -353,7 +355,13 @@ int sal_wifi_start(at_conn_t *c)
         g_link[link_id].fd = -1;
         return -1;
     }
-
+    
+    if (aos_sem_new(&g_link[link_id].sem_start, 0) != 0) {
+       LOGE(TAG, "failed to allocate semaphore %s", __func__);
+            g_link[link_id].fd = -1;
+       return -1;
+    } 
+    
     if (aos_sem_is_valid(&g_link[link_id].sem_start)) {
         if (aos_sem_wait(&g_link[link_id].sem_start, AOS_WAIT_FOREVER) != 0) {
             LOGE(TAG, "%s sem_wait failed", __func__);

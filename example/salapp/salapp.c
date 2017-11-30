@@ -92,6 +92,46 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
         
         close(g_fd);
         LOGI(TAG, "sal tcp_c test successful.");
+    }else if (strcmp(ptype, "udp_c") == 0) {
+        char *pip, *pport, *pdata;
+        ssize_t siz;
+
+        struct sockaddr_in addr;
+        g_fd = socket(AF_INET,SOCK_DGRAM,0);
+
+        pip = argv[2];
+        pport = argv[3];
+        pdata = argv[4];
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons((short)atoi(pport));
+        addr.sin_addr.s_addr = inet_addr(pip);
+#if 0
+        if (connect(g_fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
+            LOGE(TAG, "Connect failed, errno = %d", errno);
+            close(g_fd);
+            return;
+        }
+
+        // send-recv
+        if ((siz = send(g_fd, pdata, strlen(pdata), 0)) <= 0) {
+            LOGE(TAG, "send failed, errno = %d.", errno);
+            close(g_fd);
+            return;
+        }
+#else
+        siz = sendto(g_fd, pdata, strlen(pdata), 0, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
+        if (siz <= 0){
+            LOGE(TAG, "sendto failed, errno = %d.", errno);
+            close(g_fd);
+            return;
+        }
+#endif
+        aos_msleep(10000);
+        
+        close(g_fd);
+        LOGI(TAG, "sal udp_c test successful.");
     } else if (strcmp(ptype, "otaapi") == 0) {
         char domain[] = "www.baidu.com";
         int port = 8080;
