@@ -757,7 +757,6 @@ int sal_send(int s, const void *data, size_t size, int flags)
 
 int sal_write(int s, const void *data, size_t size)
 {
-    s -= SAL_SOCKET_OFFSET;
     struct sal_event *event = tryget_event(s);
     if (event) {
         SAL_ARCH_DECL_PROTECT(lev);
