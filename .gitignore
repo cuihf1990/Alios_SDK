@@ -24,3 +24,7 @@ si
 .project
 *.pyc
 aos_partition_6.bin
+OSX
+example/flash/flash.mk
+example/flash/main.c
+example/flash/README.md

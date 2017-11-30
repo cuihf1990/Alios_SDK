@@ -133,7 +133,7 @@ OSStatus mico_rtos_init_semaphore( mico_semaphore_t* semaphore, int count )
 {
     kstat_t ret;
 
-    ret = krhino_sem_dyn_create((ksem_t **)semaphore, "sema", count);
+    ret = krhino_sem_dyn_create((ksem_t **)semaphore, "sema", 0);
 
     if (ret == RHINO_SUCCESS) {
         return kNoErr;
