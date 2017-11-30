@@ -46,7 +46,7 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
 
     #request device allocation
     number = 7
-    timeout = 3600
+    timeout = 300
     allocated = allocate_devices(at, model, number, timeout)
     if len(allocated) != number:
         return [1, 'allocate device failed']

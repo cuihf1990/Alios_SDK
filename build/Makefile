@@ -138,8 +138,11 @@ ifneq ($(BUILD_STRING),)
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
+AUTO_COMPONENT = $(AUTO_COMPONENT_DIR)/auto_component.mk
+$(AUTO_COMPONENT):
+	$(QUIET)$(PYTHON) $(MAKEFILES_PATH)/scripts/auto_component.py $(AUTO_COMPONENT_DIR)
 
-$(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES)
+$(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES) $(AUTO_COMPONENT)
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/precompile))
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/syscall/syscall_kapi))
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/syscall/syscall_fapi))
@@ -166,6 +169,7 @@ main_app: $(OUTPUT_DIR)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/ao
 	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/modules)
 	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/libraries)
 	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/resources)
+	$(QUIET)$(PYTHON) $(MAKEFILES_PATH)/scripts/component_init.py $(OUTPUT_DIR)/config.mk $(AUTO_COMPONENT_DIR)
 	$(QUIET)$(MAKE) -r $(JOBSNO) $(SILENT) -f $(MAKEFILES_PATH)/aos_target_build.mk $(CLEANED_BUILD_STRING) $(PASSDOWN_TARGETS)
 	$(QUIET)$(ECHO) Build complete
 

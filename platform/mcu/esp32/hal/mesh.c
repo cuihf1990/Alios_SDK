@@ -149,9 +149,12 @@ static int esp32_wifi_mesh_enable(umesh_hal_module_t *module)
 {
     bool enable;
     esp_err_t esp_err;
+    uint8_t mac[6];
 
     esp_err = esp_wifi_get_promiscuous(&enable);
     if (enable == false) {
+        ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_STA, mac));
+        ESP_ERROR_CHECK(esp_wifi_set_promiscous_autoack(true, mac));
         ESP_ERROR_CHECK(esp_wifi_set_promiscuous(1));
         ESP_ERROR_CHECK(esp_wifi_set_promiscuous_rx_cb(mesh_promiscuous_rx_cb));
     }

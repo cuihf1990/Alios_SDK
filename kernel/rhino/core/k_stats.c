@@ -9,8 +9,10 @@ void kobj_list_init(void)
 {
     klist_init(&(g_kobj_list.task_head));
     klist_init(&(g_kobj_list.mutex_head));
-    //klist_init(&(g_kobj_list.mmpool_head));
+
+#if (RHINO_CONFIG_MM_BLK > 0)
     klist_init(&(g_kobj_list.mblkpool_head));
+#endif
 
 #if (RHINO_CONFIG_SEM > 0)
     klist_init(&(g_kobj_list.sem_head));

@@ -26,11 +26,11 @@ static kstat_t sem_create(ksem_t *sem, const name_t *name, sem_count_t count,
 #endif
     sem->mm_alloc_flag      = mm_alloc_flag;
 
-#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     RHINO_CRITICAL_ENTER();
+#if (RHINO_CONFIG_SYSTEM_STATS > 0)
     klist_insert(&(g_kobj_list.sem_head), &sem->sem_item);
-    RHINO_CRITICAL_EXIT();
 #endif
+    RHINO_CRITICAL_EXIT();
 
     sem->blk_obj.obj_type = RHINO_SEM_OBJ_TYPE;
 

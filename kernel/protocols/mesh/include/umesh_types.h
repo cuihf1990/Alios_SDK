@@ -27,8 +27,8 @@ typedef enum ur_error_s {
     UR_ERROR_ROUTE         = 5,
     UR_ERROR_PARSE         = 6,
     UR_ERROR_ADDRESS_QUERY = 7,
-}
-ur_error_t;
+    UR_ERROR_BUFFER = 8,
+} ur_error_t;
 
 typedef enum media_type_s {
     MEDIA_TYPE_DFL = 0,

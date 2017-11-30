@@ -35,10 +35,6 @@ void test_uradar_mesh_mgmt_case(void)
     uint8_t *ueid;
     YUNIT_ASSERT_PTR_NOT_NULL((ueid = umesh_mm_get_local_ueid()));
     YUNIT_ASSERT(0 != memcmp(ueid, INVALID_UEID, 8));
-    uint16_t num;
-    YUNIT_ASSERT_PTR_NULL(get_neighbors(&num));
-    YUNIT_ASSERT(0 == num);
-    YUNIT_ASSERT_PTR_NULL(get_neighbors(NULL));
 
     mac_address_t mac_addr;
     mac_addr.len = sizeof(mac_addr.addr);

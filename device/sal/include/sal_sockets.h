@@ -1,5 +1,12 @@
-#ifndef _SAL_SOCKETS_INTERNAL_H_
-#define _SAL_SOCKETS_INTERNAL_H_
+#ifndef _SAL_SOCKET_H_
+#define _SAL_SOCKET_H_
+
+#include <stddef.h> /* for size_t */
+#include <sys/time.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define AF_UNSPEC       0
 #define AF_INET         2
@@ -8,21 +15,15 @@
 #define PF_INET6        AF_INET6
 #define PF_UNSPEC       AF_UNSPEC
 
+#define IPPROTO_IP      0
+#define IPPROTO_ICMP    1
+#define IPPROTO_TCP     6
+#define IPPROTO_UDP     17
+
 /* Socket protocol types (TCP/UDP/RAW) */
 #define SOCK_STREAM     1
 #define SOCK_DGRAM      2
 #define SOCK_RAW        3
-
-/* Define generic types used in sal */
-#if !SAL_NO_STDINT_H
-#include <stdint.h>
-typedef uint8_t   u8_t;
-typedef int8_t    s8_t;
-typedef uint16_t  u16_t;
-typedef int16_t   s16_t;
-typedef uint32_t  u32_t;
-typedef int32_t   s32_t;
-#endif
 
 /* If your port already typedef's sa_family_t, define SA_FAMILY_T_DEFINED
    to prevent this code from redefining it. */
@@ -41,24 +42,6 @@ struct sockaddr {
   u8_t        sa_len;
   sa_family_t sa_family;
   char        sa_data[14];
-};
-
-/* If your port already typedef's in_addr_t, define IN_ADDR_T_DEFINED
-   to prevent this code from redefining it. */
-#if !defined(in_addr_t) && !defined(IN_ADDR_T_DEFINED)
-typedef u32_t in_addr_t;
-#endif
-
-struct in_addr {
-  in_addr_t s_addr;
-};
-
-struct in6_addr {
-  union {
-    u32_t u32_addr[4];
-    u8_t  u8_addr[16];
-  } un;
-#define s6_addr  un.u8_addr
 };
 
 /* members are in network byte order */
@@ -80,6 +63,12 @@ struct sockaddr_in6 {
   u32_t           sin6_scope_id; /* Set of interfaces for scope */
 };
 
+/* If your port already typedef's socklen_t, define SOCKLEN_T_DEFINED
+   to prevent this code from redefining it. */
+#if !defined(socklen_t) && !defined(SOCKLEN_T_DEFINED)
+typedef u32_t socklen_t;
+#endif
+
 struct hostent {
     char  *h_name;      /* Official name of the host. */
     char **h_aliases;   /* A pointer to an array of pointers to alternative
@@ -92,33 +81,72 @@ struct hostent {
 #define h_addr h_addr_list[0] /* for backward compatibility */
 };
 
-enum sal_ip_addr_type {
-  /** IPv4 */
-  IPADDR_TYPE_V4 =   0U,
-  /** IPv6 */
-  IPADDR_TYPE_V6 =   6U,
-  /** IPv4+IPv6 ("dual-stack") */
-  IPADDR_TYPE_ANY = 46U
+struct addrinfo {
+    int               ai_flags;      /* Input flags. */
+    int               ai_family;     /* Address family of socket. */
+    int               ai_socktype;   /* Socket type. */
+    int               ai_protocol;   /* Protocol of socket. */
+    socklen_t         ai_addrlen;    /* Length of socket address. */
+    struct sockaddr  *ai_addr;       /* Socket address of socket. */
+    char             *ai_canonname;  /* Canonical name of service location. */
+    struct addrinfo  *ai_next;       /* Pointer to next in list. */
 };
 
-typedef struct ip4_addr {
-  u32_t addr;
-} ip4_addr_t;
-
-typedef struct ip6_addr {
-  u32_t addr[4];
-} ip6_addr_t;
-
-typedef struct _ip_addr {
-  union {
-    ip6_addr_t ip6;
-    ip4_addr_t ip4;
-  } u_addr;
-  /** @ref sal_ip_addr_type */
-  u8_t type;
-} ip_addr_t;
-
 #define  SOL_SOCKET  0xfff    /* options for socket level */
+
+#define IPPROTO_IP      0
+#define IPPROTO_ICMP    1
+#define IPPROTO_TCP     6
+#define IPPROTO_UDP     17
+
+#define IPPROTO_IPV6    41
+#define IPPROTO_ICMPV6  58
+
+#define IPPROTO_UDPLITE 136
+#define IPPROTO_RAW     255
+
+
+#define MEMP_NUM_NETCONN     5//(MAX_SOCKETS_TCP + MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
+
+#if !defined(FD_SET) && defined(AOS_CONFIG_VFS_DEV_NODES)
+#define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
+#endif
+
+/* FD_SET used for event_select */
+#ifndef FD_SET
+#undef  FD_SETSIZE
+/* Make FD_SETSIZE match NUM_SOCKETS in socket.c */
+#define FD_SETSIZE    MEMP_NUM_NETCONN
+#define FDSETSAFESET(n, code) do { \
+  if (((n) - SAL_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - SAL_SOCKET_OFFSET) >= 0)) { \
+  code; }} while(0)
+#define FDSETSAFEGET(n, code) (((n) - SAL_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - SAL_SOCKET_OFFSET) >= 0) ?\
+  (code) : 0)
+//#define FD_SET(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-SAL_SOCKET_OFFSET)/8] |=  (1 << (((n)-SAL_SOCKET_OFFSET) & 7)))
+#define FD_CLR(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-SAL_SOCKET_OFFSET)/8] &= ~(1 << (((n)-SAL_SOCKET_OFFSET) & 7)))
+#define FD_ISSET(n,p) FDSETSAFEGET(n, (p)->fd_bits[((n)-SAL_SOCKET_OFFSET)/8] &   (1 << (((n)-SAL_SOCKET_OFFSET) & 7)))
+#define FD_ZERO(p)    memset((void*)(p), 0, sizeof(*(p)))
+
+typedef struct fd_set {
+    unsigned char fd_bits [(FD_SETSIZE * 2 + 7) / 8];
+} fd_set;
+
+#elif SAL_SOCKET_OFFSET
+#error SAL_SOCKET_OFFSET does not work with external FD_SET!
+#else
+#include <fcntl.h>
+#endif /* FD_SET */
+
+/*
+ * Options and types related to multicast membership
+ */
+#define IP_ADD_MEMBERSHIP  3
+#define IP_DROP_MEMBERSHIP 4
+
+typedef struct ip_mreq {
+    struct in_addr imr_multiaddr; /* IP multicast address of group */
+    struct in_addr imr_interface; /* local IP address of interface */
+} ip_mreq;
 
 /*
  * Option flags per-socket. These must match the SOF_ flags in ip.h (checked in init.c)
@@ -174,6 +202,27 @@ int sal_init();
 
 int sal_send(int s, const void *data, size_t size, int flags);
 
+int sal_shutdown(int s, int how);
+
+int sal_recv(int s, void *mem, size_t len, int flags);
+
+int sal_read(int s, void *mem, size_t len);
+
+void sal_freeaddrinfo(struct addrinfo *ai);
+
+int sal_getaddrinfo(const char *nodename, const char *servname,
+       const struct addrinfo *hints, struct addrinfo **res);
+
+
+
+void sal_freeaddrinfo(struct addrinfo *ai);
+
+int sal_shutdown(int s, int how);
+
+int sal_getaddrinfo(const char *nodename, const char *servname,
+                    const struct addrinfo *hints, struct addrinfo **res);
+
+int sal_fcntl(int s, int cmd, int val);
 #define select(maxfdp1,readset,writeset,exceptset,timeout) \
         sal_select(maxfdp1,readset,writeset,exceptset,timeout)
 
@@ -185,6 +234,9 @@ int sal_send(int s, const void *data, size_t size, int flags);
 
 #define connect(s,name,namelen) \
         sal_connect(s,name,namelen)
+
+#define shutdown(s,how) \
+        sal_shutdown(s,how)
 
 #define eventfd(initval,flags) \
         sal_eventfd(initval,flags)
@@ -203,5 +255,22 @@ int sal_send(int s, const void *data, size_t size, int flags);
 
 #define send(s,data,size,flags) \
         sal_send(s,data,size,flags)
+
+#define recv(s,data,size,flags) \
+        sal_recv(s,data,size,flags)
+
+#define read(s,data,size) \
+        sal_read(s,data,size)
+
+#define freeaddrinfo(addrinfo) sal_freeaddrinfo(addrinfo)
+
+#define getaddrinfo(nodname, servname, hints, res) \
+       sal_getaddrinfo(nodname, servname, hints, res)
+
+#define fcntl(s,cmd,val)  sal_fcntl(s,cmd,val)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

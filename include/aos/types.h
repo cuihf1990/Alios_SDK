@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#if defined(WITH_LWIP) || defined(CONFIG_NO_TCPIP)
+#if defined(WITH_LWIP) || defined(CONFIG_NO_TCPIP) || defined(WITH_SAL)
 #define POLLIN  0x1
 #define POLLOUT 0x2
 #define POLLERR 0x4
@@ -31,7 +31,14 @@ struct pollfd {
  * define the AOS_EXPORT macro*
  */
 
-#define AOS_EXPORT(rvalue, fun, argstype...)
+#define AOS_EXPORT(ret, fun, argstype...)
+#endif
+
+#ifndef AOS_COMPONENT_INIT
+/**
+ * define the AOS_COMPONENT_INIT macro
+ */
+#define AOS_COMPONENT_INIT(fun, args...)
 #endif
 
 #endif /* AOS_TYPES_H */

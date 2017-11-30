@@ -12,7 +12,7 @@ extern void ota_service_init(void);
 extern int aos_framework_init(void);
 extern void trace_start(void);
 extern int application_start(int argc, char **argv);
-
+extern void aos_components_init(void);
 
 #ifdef AOS_BINS
 extern void *syscall_ktbl[];
@@ -77,6 +77,8 @@ int aos_kernel_init(kinit_t *kinit)
 #ifdef AOS_FOTA 
     ota_service_init();
 #endif
+
+    aos_components_init();
 
 #ifdef AOS_BINS
     app_pre_init();

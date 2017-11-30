@@ -3,7 +3,6 @@
  */
 
 #include <k_api.h>
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -481,7 +480,7 @@ static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
 
     sta = krhino_mblk_free((mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer, ptr);
     if (sta != RHINO_SUCCESS) {
-        assert(0);
+        k_err_proc(RHINO_SYS_FATAL_ERR);
     }
 
     stats_removesize(mmhead, DEF_FIX_BLK_SIZE);
@@ -1151,7 +1150,11 @@ void *krhino_mm_alloc(size_t size)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if (app_malloc == 0) {
+#if defined (__CC_ARM)
+        krhino_owner_attach(g_kmm_head, tmp, __return_address());
+#elif defined (__GNUC__)
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif /* __CC_ARM */
     }
 #endif
 
@@ -1176,7 +1179,11 @@ void *krhino_mm_realloc(void *oldmem, size_t newsize)
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
     if (app_malloc == 0) {
+#if defined (__CC_ARM)
+        krhino_owner_attach(g_kmm_head, tmp, __return_address());
+#elif defined (__GNUC__)
         krhino_owner_attach(g_kmm_head, tmp, (size_t)__builtin_return_address(0));
+#endif /* __CC_ARM */
     }
 #endif
     if (tmp == NULL && newsize != 0) {

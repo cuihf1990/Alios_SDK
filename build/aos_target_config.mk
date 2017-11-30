@@ -19,6 +19,7 @@ COMPONENT_DIRECTORIES := . \
 
 ifneq ($(ONLY_BUILD_LIBRARY), yes)
 COMPONENT_DIRECTORIES += $(OUTPUT_DIR)/syscall
+COMPONENT_DIRECTORIES += $(OUTPUT_DIR)
 endif
 
 COMPONENT_DIRECTORIES += $(APPDIR)
@@ -207,14 +208,20 @@ endif
 
 COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall vfs init
 
+ifneq ($(ONLY_BUILD_LIBRARY), yes)
+COMPONENTS += auto_component
+endif
+
 ifeq ($(BINS),app)
 COMPONENTS += syscall_kapi syscall_fapi ksyscall fsyscall
 AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/syscall/syscall_kapi -I$(OUTPUT_DIR)/syscall/syscall_fapi
 AOS_SDK_DEFINES += BUILD_APP
+AOS_SDK_LDFLAGS += -Wl,-wrap,vprintf -Wl,-wrap,fflush
 else ifeq ($(BINS),framework)
 COMPONENTS += fsyscall syscall_kapi ksyscall
 AOS_SDK_DEFINES += BUILD_FRAMEWORK
 AOS_SDK_INCLUDES += -I$(OUTPUT_DIR)/syscall/syscall_kapi -I$(OUTPUT_DIR)/syscall/syscall_fapi
+AOS_SDK_LDFLAGS += -Wl,-wrap,vprintf -Wl,-wrap,fflush
 else ifeq ($(BINS),kernel)
 COMPONENTS += ksyscall
 AOS_SDK_DEFINES += BUILD_KERNEL

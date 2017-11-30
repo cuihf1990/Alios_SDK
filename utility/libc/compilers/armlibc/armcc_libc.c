@@ -21,9 +21,9 @@ int gettimeofday(struct timeval *tv, void *tzp)
 }
 
 extern void *aos_malloc(unsigned int size);
-void aos_alloc_trace(void *addr, size_t allocator);
-void aos_free(void *mem);
-void *aos_realloc(void *mem, unsigned int size);
+extern void aos_alloc_trace(void *addr, size_t allocator);
+extern void aos_free(void *mem);
+extern void *aos_realloc(void *mem, unsigned int size);
 
 void *malloc(size_t size)
 {
@@ -71,5 +71,14 @@ void *calloc(size_t len, size_t elsize)
     }
 
     return mem;
+}
+
+char * strdup(const char *s)
+{
+    size_t  len = strlen(s) +1;
+    void *dup_str = aos_malloc(len);
+    if (dup_str == NULL)
+        return NULL;
+    return (char *)memcpy(dup_str, s, len);
 }
 #endif

@@ -139,7 +139,7 @@ void become_detached(void);
 
 uint16_t tlvs_set_value(network_context_t *network,
                         uint8_t *buf, const uint8_t *tlvs,
-                        uint8_t tlvs_length);
+                        uint8_t tlvs_length, void *context);
 int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length);
 
 void get_leader_addr(ur_addr_t *addr);

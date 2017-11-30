@@ -51,6 +51,11 @@
 #include "aos/kernel.h"
 #include "k_types.h"
 #include "errno.h"
+
+#if defined(__ICCARM__)
+#include "sys/errno.h"
+#endif
+
 /* Global variables ---------------------------------------------------------*/
 RTC_HandleTypeDef hrtc;
 RNG_HandleTypeDef hrng;
@@ -266,6 +271,9 @@ static int UART_Init(COM_TypeDef com)
 
 
 #if defined (__CC_ARM) && defined(__MICROLIB)
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#define GETCHAR_PROTOTYPE int fgetc(FILE *f)
+#elif defined(__ICCARM__)
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #define GETCHAR_PROTOTYPE int fgetc(FILE *f)
 #else

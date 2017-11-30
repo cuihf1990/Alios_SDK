@@ -34,11 +34,12 @@ class Client:
         self.keep_running = True
         self.connected = False
         self.models = ['mk3060', 'esp32']
-        bytes = os.urandom(4)
         self.poll_str = '\x1b[t'
+        bytes = os.urandom(4)
         for byte in bytes:
             self.poll_str += '{0:02x}'.format(ord(byte))
         self.poll_str += 'm'
+        self.uuid = ''
 
     def send_device_list(self):
         device_list = []
@@ -107,7 +108,7 @@ class Client:
         #print command, response
         return response
 
-    def device_cmd_process(self, port):
+    def device_cmd_process(self, port, exit_condition):
         poll_interval = 60
         poll_fail_num = 0
         poll_queue = Queue.Queue(12)
@@ -116,7 +117,7 @@ class Client:
             data = TBframe.construct(TBframe.DEVICE_STATUS, content)
             self.service_socket.send(data)
         poll_timeout = time.time() + 3
-        while os.path.exists(port):
+        while os.path.exists(port) and exit_condition.is_set() == False:
             try:
                 if time.time() >= poll_timeout:
                     poll_timeout += poll_interval
@@ -250,14 +251,14 @@ class Client:
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
                 self.service_socket.send(data)
             except:
-                if os.path.exists(port) == False or self.devices[port]['valid'] == False:
+                if os.path.exists(port) == False or exit_condition.is_set() == True:
                     break
                 if DEBUG: traceback.print_exc()
                 self.devices[port]['serial'].close()
                 self.devices[port]['serial'].open()
         print 'devie command process thread for {0} exited'.format(port)
 
-    def device_log_poll(self, port):
+    def device_log_poll(self, port, exit_condition):
         log_time = time.time()
         log = ''
         if LOCALLOG:
@@ -273,7 +274,6 @@ class Client:
                 try:
                     c = self.devices[port]['serial'].read(1)
                 except:
-                    if DEBUG: traceback.print_exc()
                     c = ''
                 finally:
                     self.devices[port]['slock'].release()
@@ -304,6 +304,7 @@ class Client:
             flog.close()
         print 'device {0} removed'.format(port)
         self.devices[port]['valid'] = False
+        exit_condition.set()
         self.devices[port]['serial'].close()
         self.send_device_list()
         print 'device log poll thread for {0} exited'.format(port)
@@ -374,8 +375,9 @@ class Client:
                     ser.setDTR(True)
                     ser.setRTS(True)
                 self.devices[port]['attributes']['status'] = 'inactive'
-                thread.start_new_thread(self.device_log_poll, (port,))
-                thread.start_new_thread(self.device_cmd_process, (port,))
+                exit_condition = threading.Event()
+                thread.start_new_thread(self.device_log_poll, (port, exit_condition,))
+                thread.start_new_thread(self.device_cmd_process, (port, exit_condition,))
                 self.send_device_list()
             time.sleep(0.1)
         print 'device monitor thread exited'
@@ -627,8 +629,27 @@ class Client:
 
         if os.path.exists('client') == False:
             os.mkdir('client')
+        if os.path.exists('client/.uuid') == True:
+            try:
+                file = open('client/.uuid','rb')
+                self.uuid = json.load(file)
+                file.close()
+            except:
+                print "read uuid from file failed"
+        if not self.uuid:
+            bytes = os.urandom(6)
+            self.uuid = ''
+            for byte in bytes:
+                self.uuid += '{0:02x}'.format(ord(byte))
+            try:
+                file = open('client/.uuid','w')
+                file.write(json.dumps(self.uuid))
+                file.close()
+            except:
+                print "save uuid to file failed"
         signal.signal(signal.SIGINT, signal_handler)
 
+        self.send_packet(TBframe.CLIENT_UUID, self.uuid)
         self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
         thread.start_new_thread(self.device_monitor,())
         thread.start_new_thread(self.heartbeat_func,())
@@ -819,6 +840,7 @@ class Client:
                         self.service_socket.connect((server_ip, server_port))
                         self.connected = True
                         self.send_device_list()
+                        self.send_packet(TBframe.CLIENT_UUID, self.uuid)
                         self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
                         break
                     except:

@@ -288,6 +288,9 @@ static int wifi_getset_ops(hal_wifi_module_t *m, hal_wifi_getset_cmd_t cmd, ...)
         break;
     }
     case HAL_WIFI_PROMISCUOUS_START: {
+        uint8_t mac[6];
+        ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_STA, mac));
+        ESP_ERROR_CHECK(esp_wifi_set_promiscous_autoack(true, mac));
         ESP_ERROR_CHECK(esp_wifi_set_promiscuous(1));
         ESP_ERROR_CHECK(esp_wifi_set_promiscuous_rx_cb(promiscuous_rx_cb));
         break;

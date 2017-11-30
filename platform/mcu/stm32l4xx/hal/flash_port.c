@@ -7,6 +7,7 @@
 
 extern const hal_logic_partition_t hal_partitions[];
 extern int FLASH_read_at(uint32_t address, uint64_t *pData, uint32_t len_bytes);
+extern int FLASH_bank1_enabled(void);
 
 hal_logic_partition_t *hal_flash_get_info(hal_partition_t pno)
 {
@@ -21,17 +22,27 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
 {
     uint32_t start_addr;
     hal_logic_partition_t *partition_info;
+    hal_partition_t real_pno;
 
 #ifdef CONFIG_AOS_KV_MULTIPTN_MODE
-        if (pno == CONFIG_AOS_KV_PTN) {
-            if ((*poff) >= CONFIG_AOS_KV_PTN_SIZE) {
-                pno = (hal_partition_t)CONFIG_AOS_KV_SECOND_PTN;
-                *poff = (*poff) - CONFIG_AOS_KV_PTN_SIZE;
-            }
+    if (pno == CONFIG_AOS_KV_PTN) {
+        if ((*poff) >= CONFIG_AOS_KV_PTN_SIZE) {
+            pno = (hal_partition_t)CONFIG_AOS_KV_SECOND_PTN;
+            *poff = (*poff) - CONFIG_AOS_KV_PTN_SIZE;
         }
+    }
 #endif
+    real_pno = pno;
 
-    partition_info = hal_flash_get_info( pno );
+    if (!FLASH_bank1_enabled()) {
+        if (pno == CONFIG_AOS_KV_PTN) {
+            real_pno = HAL_PARTITION_PARAMETER_4;
+        } else if (pno == CONFIG_AOS_KV_SECOND_PTN) {
+            real_pno = HAL_PARTITION_PARAMETER_1;
+        }
+    }
+
+    partition_info = hal_flash_get_info( real_pno );
     start_addr = partition_info->partition_start_addr + *poff;
     if (0 != FLASH_update(start_addr, buf, buf_size)) {
         printf("FLASH_update failed!\n");
@@ -44,6 +55,7 @@ int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t 
 {
     uint32_t start_addr;
     hal_logic_partition_t *partition_info;
+    hal_partition_t real_pno;
 
 #ifdef CONFIG_AOS_KV_MULTIPTN_MODE
     if (pno == CONFIG_AOS_KV_PTN) {
@@ -53,8 +65,17 @@ int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t 
         }
     }
 #endif
+    real_pno = pno;
 
-    partition_info = hal_flash_get_info( pno );
+    if (!FLASH_bank1_enabled()) {
+        if (pno == CONFIG_AOS_KV_PTN) {
+            real_pno = HAL_PARTITION_PARAMETER_4;
+        } else if (pno == CONFIG_AOS_KV_SECOND_PTN) {
+            real_pno = HAL_PARTITION_PARAMETER_1;
+        }
+    }
+
+    partition_info = hal_flash_get_info( real_pno );
 
     if(poff == NULL || buf == NULL || *poff + buf_size > partition_info->partition_length)
         return -1;
@@ -70,17 +91,27 @@ int32_t hal_flash_erase(hal_partition_t pno, uint32_t off_set,
 {
     uint32_t start_addr;
     hal_logic_partition_t *partition_info;
+    hal_partition_t real_pno;
 
 #ifdef CONFIG_AOS_KV_MULTIPTN_MODE
-        if (pno == CONFIG_AOS_KV_PTN) {
-            if (off_set >= CONFIG_AOS_KV_PTN_SIZE) {
-                pno = (hal_partition_t)CONFIG_AOS_KV_SECOND_PTN;
-                off_set -= CONFIG_AOS_KV_PTN_SIZE;
-            }
+    if (pno == CONFIG_AOS_KV_PTN) {
+        if (off_set >= CONFIG_AOS_KV_PTN_SIZE) {
+            pno = (hal_partition_t)CONFIG_AOS_KV_SECOND_PTN;
+            off_set -= CONFIG_AOS_KV_PTN_SIZE;
         }
+    }
 #endif
+    real_pno = pno;
 
-    partition_info = hal_flash_get_info( pno );
+    if (!FLASH_bank1_enabled()) {
+        if (pno == CONFIG_AOS_KV_PTN) {
+            real_pno = HAL_PARTITION_PARAMETER_4;
+        } else if (pno == CONFIG_AOS_KV_SECOND_PTN) {
+            real_pno = HAL_PARTITION_PARAMETER_1;
+        }
+    }
+
+    partition_info = hal_flash_get_info( real_pno );
     if(size + off_set > partition_info->partition_length)
         return -1;
 

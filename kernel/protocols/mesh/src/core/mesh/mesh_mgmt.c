@@ -66,6 +66,7 @@ static ur_error_t send_advertisement(network_context_t *network);
 static void mesh_interface_state_callback(bool up);
 
 static void write_prev_netinfo(void);
+static uint16_t compute_network_metric(uint16_t size, uint16_t path_cost);
 
 static void nbr_discovered_handler(neighbor_t *nbr)
 {
@@ -88,17 +89,20 @@ static void neighbor_updated_handler(neighbor_t *nbr)
 
     network = get_default_network_context();
     if (network->attach_node != nbr) {
-        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT));
-        return;
+        goto exit;
     }
 
-    if (nbr->state == STATE_INVALID || nbr->flags & NBR_SID_CHANGED ||
-        nbr->flags & NBR_NETID_CHANGED) {
+    if (nbr->state == STATE_INVALID || (nbr->flags & NBR_NETID_CHANGED)) {
         become_detached();
-        nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT));
-        attach_start(NULL);
+        nm_start_discovery(nbr_discovered_handler);
+        goto exit;
+    } else if (nbr->flags & NBR_SID_CHANGED) {
+        become_detached();
+        attach_start(nbr);
     }
     update_channel(network->hal, nbr->channel);
+exit:
+    nbr->flags &= (~(NBR_NETID_CHANGED | NBR_SID_CHANGED | NBR_REBOOT));
 }
 
 static void set_default_network_data(void)
@@ -384,6 +388,7 @@ static uint8_t get_tv_value_length(uint8_t type)
         case TYPE_PATH_COST:
         case TYPE_LINK_COST:
         case TYPE_WEIGHT:
+        case TYPE_BUFQUEUE_SIZE:
             length = 2;
             break;
         case TYPE_SSID_INFO:
@@ -419,31 +424,34 @@ static uint8_t get_tv_value_length(uint8_t type)
 }
 
 static uint8_t get_tv_value(network_context_t *network,
-                            uint8_t *data, uint8_t type)
+                            uint8_t *data, uint8_t type, void *context)
 {
-    uint8_t  length = 1;
+    uint8_t length = 0;
 
-    *data = type;
-    data++;
     switch (type) {
         case TYPE_VERSION:
+            *data = type;
+            data++;
             *data = (nd_get_stable_main_version() << STABLE_MAIN_VERSION_OFFSET) |
                     nd_get_stable_minor_version();
-            length += 1;
+            length = 2;
             break;
         case TYPE_MCAST_ADDR:
-            memcpy(data, nd_get_subscribed_mcast(), 16);
-            length += 16;
+            length += set_mm_mcast_tv(data);
             break;
         case TYPE_TARGET_UEID:
-            memcpy(data, umesh_mm_get_local_ueid(), 8);
-            length += 8;
+            length += set_mm_ueid_tv(data, type, umesh_mm_get_local_ueid());
             break;
         case TYPE_UCAST_CHANNEL:
         case TYPE_BCAST_CHANNEL:
-            *data = hal_umesh_get_channel(network->hal->module);
-            length += 1;
+            length += set_mm_channel_tv(network, data);
             break;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+        case TYPE_TIME_SLOT:
+        case TYPE_BUFQUEUE_SIZE:
+            length += lowpower_set_info(type, data, context);
+            break;
+#endif
         default:
             assert(0);
             break;
@@ -451,15 +459,15 @@ static uint8_t get_tv_value(network_context_t *network,
     return length;
 }
 
-uint16_t tlvs_set_value(network_context_t *network,
-                        uint8_t *buf, const uint8_t *tlvs, uint8_t tlvs_length)
+uint16_t tlvs_set_value(network_context_t *network, uint8_t *buf,
+                        const uint8_t *tlvs, uint8_t tlvs_length, void *context)
 {
     uint8_t index;
     uint8_t *base = buf;
 
     for (index = 0; index < tlvs_length; index++) {
         if (tlvs[index] & TYPE_LENGTH_FIXED_FLAG) {
-            buf += get_tv_value(network, buf, tlvs[index]);
+            buf += get_tv_value(network, buf, tlvs[index], context);
         }
     }
 
@@ -531,7 +539,6 @@ static void handle_attach_timer(void *args)
                                                        handle_attach_timer, args);
             } else {
                 detached = true;
-                network->leader_times = BECOME_LEADER_TIMEOUT;
             }
             break;
         case ATTACH_SID_REQUEST:
@@ -555,7 +562,7 @@ static void handle_attach_timer(void *args)
         if (g_mm_state.device.state < DEVICE_STATE_LEAF) {
             network->leader_times++;
             if (network->leader_times < BECOME_LEADER_TIMEOUT) {
-                attach_start(NULL);
+                nm_start_discovery(nbr_discovered_handler);
             } else {
                 network->leader_times = 0;
                 if ((g_mm_state.device.mode & MODE_MOBILE) == 0) {
@@ -665,6 +672,10 @@ static ur_error_t send_attach_request(network_context_t *network)
     uint32_t time;
     const mac_address_t *mac;
 
+    if (network->attach_candidate == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
     length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) +
              sizeof(mm_timestamp_tv_t);
     data = ur_mem_alloc(length);
@@ -693,14 +704,8 @@ static ur_error_t send_attach_request(network_context_t *network)
 
     mac = umesh_mm_get_mac_address();
     calculate_one_time_key(network->one_time_key, time, mac->addr);
-    // dest
-    if (network->attach_candidate) {
-        set_mesh_short_addr(&info->dest, network->attach_candidate->netid,
-                            network->attach_candidate->sid);
-    } else {
-        set_mesh_short_addr(&info->dest, network->candidate_meshnetid,
-                            BCAST_SID);
-    }
+    set_mesh_short_addr(&info->dest, network->attach_candidate->netid,
+                        network->attach_candidate->sid);
     error = mf_send_message(message);
     ur_mem_free(data_orig, length);
 
@@ -733,6 +738,8 @@ static ur_error_t send_attach_response(network_context_t *network,
     if (node_id->sid != INVALID_SID && node_id->sid != BCAST_SID) {
         length += (sizeof(mm_sid_tv_t) + sizeof(mm_node_type_tv_t) +
                    sizeof(mm_netinfo_tv_t) + sizeof(mm_mcast_addr_tv_t));
+    } else if ((node_id->mode & MODE_MOBILE) == 0 && network->router->sid_type == STRUCTURED_SID) {
+        return UR_ERROR_FAIL;
     }
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     if ((node_id->mode & MODE_RX_ON) == 0) {
@@ -852,7 +859,10 @@ static ur_error_t handle_attach_request(message_t *message)
         if (is_bcast_sid(&info->dest) == false &&
             (info->mode & MODE_LOW_MASK) == 0 &&
             (network->router->sid_type == STRUCTURED_SID)) {
-            sid_allocator_alloc(network, &node_id);
+            error = sid_allocator_alloc(network, &node_id);
+            if (error != UR_ERROR_NONE) {
+                node_id.sid = INVALID_SID;
+            }
         }
         send_attach_response(network, &info->src_mac, &node_id);
         MESH_LOG_INFO("attach response to " EXT_ADDR_FMT "",
@@ -1225,7 +1235,6 @@ ur_error_t handle_address_error(message_t *message)
     }
 
     attach_start(network->attach_node);
-
     return error;
 }
 
@@ -1253,9 +1262,41 @@ void become_detached(void)
     MESH_LOG_INFO("become detached");
 }
 
+static neighbor_t *choose_attach_candidate(neighbor_t *nbr)
+{
+    hal_context_t *hal = get_default_hal_context();
+    slist_t *nbrs;
+    int8_t cmp_mode;
+    network_context_t *network = get_default_network_context();
+    neighbor_t *attach_candidate = NULL;
+    uint16_t cur_metric;
+    uint16_t new_metric;
+
+    if (nbr && nbr->attach_candidate_timeout == 0) {
+        return nbr;
+    }
+    nbrs = umesh_get_nbrs(hal->module->type);
+    slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
+        cmp_mode = umesh_mm_compare_mode(g_mm_state.device.mode, nbr->mode);
+        if (cmp_mode < 0 || nbr->attach_candidate_timeout > 0 || (nbr->mode & MODE_MOBILE) ||
+            (network->router->sid_type == STRUCTURED_SID && nbr->ssid_info.free_slots < 1)) {
+            continue;
+        }
+        if (attach_candidate == NULL) {
+            attach_candidate = nbr;
+        } else {
+            cur_metric = compute_network_metric(0, attach_candidate->path_cost);
+            new_metric = compute_network_metric(0, nbr->path_cost);
+            if (new_metric < cur_metric) {
+                attach_candidate = nbr;
+            }
+        }
+    }
+    return attach_candidate;
+}
+
 static ur_error_t attach_start(neighbor_t *nbr)
 {
-    ur_error_t        error = UR_ERROR_NONE;
     network_context_t *network = NULL;
 
     network = get_default_network_context();
@@ -1265,25 +1306,14 @@ static ur_error_t attach_start(neighbor_t *nbr)
         return UR_ERROR_BUSY;
     }
 
-    if (nbr == NULL && g_mm_state.device.state > DEVICE_STATE_DETACHED) {
-        become_detached();
+    nbr = choose_attach_candidate(nbr);
+    if (nbr == NULL) {
+        return UR_ERROR_FAIL;
     }
-    if (nbr && nbr->attach_candidate_timeout > 0) {
-        nbr = NULL;
-    } else if (nbr) {
-        nbr->attach_candidate_timeout = ATTACH_CANDIDATE_TIMEOUT;
-    }
-
-    if (nbr == NULL && g_mm_state.device.state > DEVICE_STATE_ATTACHED) {
-        return error;
-    }
-
-    network->attach_state = ATTACH_REQUEST;
     network->attach_candidate = nbr;
-    if (nbr) {
-        update_channel(network->hal, nbr->channel);
-        network->candidate_meshnetid = nbr->netid;
-    }
+    network->attach_state = ATTACH_REQUEST;
+    update_channel(network->hal, nbr->channel);
+    network->candidate_meshnetid = nbr->netid;
     send_attach_request(network);
     ur_stop_timer(&network->attach_timer, network);
     network->attach_timer = ur_start_timer(network->hal->attach_request_interval,
@@ -1297,7 +1327,7 @@ static ur_error_t attach_start(neighbor_t *nbr)
                   network->meshnetid, nbr ? nbr->sid : 0,
                   network->candidate_meshnetid);
 
-    return error;
+    return UR_ERROR_NONE;
 }
 
 static uint16_t compute_network_metric(uint16_t size, uint16_t path_cost)
@@ -1842,8 +1872,7 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
             return false;
         }
     } else {
-        if (nbr->netid == INVALID_NETID ||
-            nbr->netid == BCAST_NETID ||
+        if (!is_unique_netid(nbr->netid) ||
             ((nbr->netid == network->prev_netid) &&
              (network->prev_path_cost < nbr->path_cost))) {
             return false;

@@ -1,26 +1,46 @@
-#ifndef _SAL_SOCKET_H_
-#define _SAL_SOCKET_H_
+#ifndef _SAL_SOCKETS_INTERNAL_H_
+#define _SAL_SOCKETS_INTERNAL_H_
 
 #include <sys/time.h>
 #include <stdlib.h>
 #include <aos/aos.h>
 #include "vfs_conf.h"
 #include "sal_arch.h"
+#include "sal_def.h"
+#include "sal_ipaddr.h"
+#include "sal_err.h"
 #include "sal_pcb.h"
+#include "sal_arch_internal.h"
 #include "sal.h"
 #include "sal_sockets.h"
-#include "sal_err.h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define SAL_SOCKET_MAX_PAYLOAD_SIZE  1512
+#define SAL_SOCKET_IP4_ANY_ADDR      "0.0.0.0"
+#define SAL_SOCKET_IP4_ADDR_LEN      16
 #define MEMP_NUM_NETCONN     5//(MAX_SOCKETS_TCP + MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
 
 #define SAL_TAG  "sal"
 
+#ifdef SAL_USE_DEBUG
 #define SAL_DEBUG(format, ...)  LOGD(SAL_TAG, format, ##__VA_ARGS__)
+#else
+#define SAL_DEBUG(format, ...)  
+#endif 
+
 #define SAL_ERROR(format, ...)  LOGE(SAL_TAG, format, ##__VA_ARGS__)
+#define SAL_ASSERT(msg, assertion) do { if (!(assertion)) { \
+        LOGE(SAL_TAG, msg);} \
+    } while (0)
+
+/** IPv4 only: set the IP address given as an u32_t */
+#define ip4_addr_set_u32(dest_ipaddr, src_u32) ((dest_ipaddr)->addr = (src_u32))
+/** IPv4 only: get the IP address as an u32_t */
+#define ip4_addr_get_u32(src_ipaddr) ((src_ipaddr)->addr)
 
 /* Helpers to process several netconn_types by the same code */
 #define NETCONNTYPE_GROUP(t)         ((t)&0xF0)
@@ -34,34 +54,34 @@ extern "C" {
 #define SELECT_SEM_PTR(sem) (&(sem))
 #endif /* SAL_NETCONN_SEM_PER_THREAD */
 
-/* FD_SET used for event_select */
-#ifndef FD_SET
-#undef  FD_SETSIZE
-/* Make FD_SETSIZE match NUM_SOCKETS in socket.c */
-#define FD_SETSIZE    MEMP_NUM_NETCONN
-#define FDSETSAFESET(n, code) do { \
-  if (((n) - SAL_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - SAL_SOCKET_OFFSET) >= 0)) { \
-  code; }} while(0)
-#define FDSETSAFEGET(n, code) (((n) - SAL_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - SAL_SOCKET_OFFSET) >= 0) ?\
-  (code) : 0)
-//#define FD_SET(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-SAL_SOCKET_OFFSET)/8] |=  (1 << (((n)-SAL_SOCKET_OFFSET) & 7)))
-#define FD_CLR(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-SAL_SOCKET_OFFSET)/8] &= ~(1 << (((n)-SAL_SOCKET_OFFSET) & 7)))
-#define FD_ISSET(n,p) FDSETSAFEGET(n, (p)->fd_bits[((n)-SAL_SOCKET_OFFSET)/8] &   (1 << (((n)-SAL_SOCKET_OFFSET) & 7)))
-#define FD_ZERO(p)    memset((void*)(p), 0, sizeof(*(p)))
+/* Flags for struct netconn.flags (u8_t) */
+/** Should this netconn avoid blocking? */
+#define NETCONN_FLAG_NON_BLOCKING             0x02
+/** Was the last connect action a non-blocking one? */
+#define NETCONN_FLAG_IN_NONBLOCKING_CONNECT   0x04
 
-typedef struct fd_set {
-    unsigned char fd_bits [(FD_SETSIZE * 2 + 7) / 8];
-} fd_set;
+/** Set the blocking status of netconn calls (@todo: write/send is missing) */
+#define netconn_set_nonblocking(conn, val)  do { if(val) { \
+  (conn)->flags |= NETCONN_FLAG_NON_BLOCKING; \
+} else { \
+  (conn)->flags &= ~ NETCONN_FLAG_NON_BLOCKING; }} while(0)
+/** Get the blocking status of netconn calls (@todo: write/send is missing) */
+#define netconn_is_nonblocking(conn)        (((conn)->flags & NETCONN_FLAG_NON_BLOCKING) != 0)
 
-#elif SAL_SOCKET_OFFSET
-#error SAL_SOCKET_OFFSET does not work with external FD_SET!
-#else
-#include <fcntl.h>
-#endif /* FD_SET */
 
-#if defined(AOS_CONFIG_VFS_DEV_NODES)
-#define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
-#endif
+// #if defined(AOS_CONFIG_VFS_DEV_NODES)
+// #define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
+// #endif
+#define  SAL_SOCKET_OFFSET      0
+
+#define NETDB_ELEM_SIZE           (sizeof(struct addrinfo) + sizeof(struct sockaddr_storage) + DNS_MAX_NAME_LENGTH + 1)
+
+/* Flags we can use with send and recv. */
+#define MSG_PEEK       0x01    /* Peeks at an incoming message */
+#define MSG_WAITALL    0x02    /* Unimplemented: Requests that the function block until the full amount of data requested can be returned */
+#define MSG_OOB        0x04    /* Unimplemented: Requests out-of-band data. The significance and semantics of out-of-band data are protocol-specific */
+#define MSG_DONTWAIT   0x08    /* Nonblocking i/o for this operation only */
+#define MSG_MORE       0x10    /* Sender will send more */
 
 /** Description for a task waiting in select */
 struct sal_select_cb {
@@ -90,6 +110,19 @@ enum netconn_state {
     NETCONN_CONNECT,
     NETCONN_CLOSE
 };
+    
+/* Flags for struct netconn.flags (u8_t) */
+/** Should this netconn avoid blocking? */
+#define NETCONN_FLAG_NON_BLOCKING             0x02
+    /** Was the last connect action a non-blocking one? */
+#define NETCONN_FLAG_IN_NONBLOCKING_CONNECT   0x04
+    /** If a nonblocking write has been rejected before, poll_tcp needs to
+        check if the netconn is writable again */
+#define NETCONN_FLAG_CHECK_WRITESPACE         0x10
+    /** If this flag is set then only IPv6 communication is allowed on the
+        netconn. As per RFC#3493 this features defaults to OFF allowing
+        dual-stack usage by default. */
+#define NETCONN_FLAG_IPV6_V6ONLY              0x20
 
 /** @ingroup netconn_common
  * Protocol family and type of the netconn
@@ -172,20 +205,15 @@ typedef struct sal_netconn {
   netconn_callback callback;
 } sal_netconn_t;
 
-#if BYTE_ORDER == BIG_ENDIAN
-#define sal_htons(x) (x)
-#define sal_ntohs(x) (x)
-#define sal_htonl(x) (x)
-#define sal_ntohl(x) (x)
-#else
-#define sal_htons(x) ((((x) & 0xff) << 8) | (((x) & 0xff00) >> 8))
-#define sal_ntohs(x) sal_htons(x)
-#define sal_htonl(x) ((((x) & 0xff) << 24) | \
-                     (((x) & 0xff00) << 8) | \
-                     (((x) & 0xff0000UL) >> 8) | \
-                     (((x) & 0xff000000UL) >> 24))
-#define sal_ntohl(x) sal_htonl(x)
-#endif
+/** Set the blocking status of netconn calls (@todo: write/send is missing) */
+#define netconn_set_nonblocking(conn, val)  do { if(val) { \
+  (conn)->flags |= NETCONN_FLAG_NON_BLOCKING; \
+} else { \
+  (conn)->flags &= ~ NETCONN_FLAG_NON_BLOCKING; }} while(0)
+/** Get the blocking status of netconn calls (@todo: write/send is missing) */
+#define netconn_is_nonblocking(conn)        (((conn)->flags & NETCONN_FLAG_NON_BLOCKING) != 0)
+
+#define SAL_SO_SNDRCVTIMEO_GET_MS(optval) ((((const struct timeval *)(optval))->tv_sec * 1000U) + (((const struct timeval *)(optval))->tv_usec / 1000U))
 
 #define SAL_SOCKET_MAX_PAYLOAD_SIZE  1512
 #define SAL_SOCKET_IP4_ANY_ADDR      "0.0.0.0"
@@ -194,6 +222,36 @@ typedef struct sal_netconn {
 void sal_deal_event(int s, enum netconn_evt evt);
 
 #define API_EVENT_SIMPLE(s,e) sal_deal_event(s,e)
+
+#define EAI_NONAME      200
+#define EAI_SERVICE     201
+#define EAI_FAIL        202
+#define EAI_MEMORY      203
+#define EAI_FAMILY      204
+
+#define HOST_NOT_FOUND  210
+#define NO_DATA         211
+#define NO_RECOVERY     212
+#define TRY_AGAIN       213
+
+/* input flags for struct addrinfo */
+#define AI_PASSIVE      0x01
+#define AI_CANONNAME    0x02
+#define AI_NUMERICHOST  0x04
+#define AI_NUMERICSERV  0x08
+#define AI_V4MAPPED     0x10
+#define AI_ALL          0x20
+#define AI_ADDRCONFIG   0x40
+
+struct sockaddr_storage {
+  u8_t        s2_len;
+  sa_family_t ss_family;
+  char        s2_data1[2];
+  u32_t       s2_data2[3];
+#if LWIP_IPV6
+  u32_t       s2_data3[3];
+#endif /* LWIP_IPV6 */
+};
 
 #ifdef __cplusplus
 }

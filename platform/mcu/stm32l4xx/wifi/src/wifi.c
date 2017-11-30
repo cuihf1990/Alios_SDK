@@ -46,6 +46,7 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "stm32_wifi.h"
+#include <k_api.h>
 
 /* Private define ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -174,12 +175,13 @@ WIFI_Status_t WIFI_GetIP_Address (uint8_t  *ipaddr)
   */
 WIFI_Status_t WIFI_Disconnect(void)
 {
-  WIFI_Status_t ret = WIFI_STATUS_ERROR;    
+  WIFI_Status_t ret = WIFI_STATUS_ERROR;
+  krhino_sched_disable();
   if( ES_WIFI_Disconnect(&EsWifiObj)== ES_WIFI_STATUS_OK)
   {
       ret = WIFI_STATUS_OK; 
   }
-  
+  krhino_sched_enable();
   return ret;
 }
 
@@ -203,11 +205,13 @@ WIFI_Status_t WIFI_ConfigureAP(uint8_t *ssid, uint8_t *pass, WIFI_Ecn_t ecn, uin
   ApConfig.Channel = channel;
   ApConfig.MaxConnections = WIFI_MAX_CONNECTED_STATIONS;
   ApConfig.Security = (ES_WIFI_SecurityType_t)ecn;
-  
+
+  krhino_sched_disable();
   if(ES_WIFI_ActivateAP(&EsWifiObj, &ApConfig) == ES_WIFI_STATUS_OK)
   {
       ret = WIFI_STATUS_OK; 
   }
+  krhino_sched_enable();
   return ret;
 }
 
@@ -220,7 +224,8 @@ WIFI_Status_t WIFI_HandleAPEvents(WIFI_APSettings_t *setting)
 {
   WIFI_Status_t ret = WIFI_STATUS_OK;   
   ES_WIFI_APState_t State;
-  
+
+  krhino_sched_disable();
   State= ES_WIFI_WaitAPStateChange(&EsWifiObj);
   
   switch (State)
@@ -244,7 +249,7 @@ WIFI_Status_t WIFI_HandleAPEvents(WIFI_APSettings_t *setting)
   default:
     break;
   }
-  
+  krhino_sched_enable();
   return ret;
 }
 
@@ -303,10 +308,12 @@ WIFI_Status_t WIFI_OpenClientConnection(uint32_t socket, WIFI_Protocol_t type, c
   conn.RemoteIP[1] = ipaddr[1];
   conn.RemoteIP[2] = ipaddr[2];
   conn.RemoteIP[3] = ipaddr[3];
+  krhino_sched_disable();
   if(ES_WIFI_StartClientConnection(&EsWifiObj, &conn)== ES_WIFI_STATUS_OK)
   {
     ret = WIFI_STATUS_OK;
   }
+  krhino_sched_enable();
   return ret;
 }
 
@@ -324,11 +331,12 @@ WIFI_Status_t WIFI_CloseClientConnection(uint32_t socket)
   WIFI_Status_t ret = WIFI_STATUS_ERROR;  
   ES_WIFI_Conn_t conn;
   conn.Number = socket;
-  
+  krhino_sched_disable();
   if(ES_WIFI_StopClientConnection(&EsWifiObj, &conn)== ES_WIFI_STATUS_OK)
   {
     ret = WIFI_STATUS_OK;
   }
+  krhino_sched_enable();
   return ret; 
 }
 
@@ -346,10 +354,12 @@ WIFI_Status_t WIFI_StartServer(uint32_t socket, WIFI_Protocol_t protocol, const 
   conn.Number = socket;
   conn.LocalPort = port;
   conn.Type = (protocol == WIFI_TCP_PROTOCOL)? ES_WIFI_TCP_CONNECTION : ES_WIFI_UDP_CONNECTION;
+  krhino_sched_disable();
   if(ES_WIFI_StartServerSingleConn(&EsWifiObj, &conn)== ES_WIFI_STATUS_OK)
   {
     ret = WIFI_STATUS_OK;
   }
+  krhino_sched_enable();
   return ret;
 }
 
@@ -360,11 +370,13 @@ WIFI_Status_t WIFI_StartServer(uint32_t socket, WIFI_Protocol_t protocol, const 
 WIFI_Status_t WIFI_StopServer(uint32_t socket)
 {
   WIFI_Status_t ret = WIFI_STATUS_ERROR;
-  
+
+  krhino_sched_disable();
   if(ES_WIFI_StopServerSingleConn(&EsWifiObj)== ES_WIFI_STATUS_OK)
   {
     ret = WIFI_STATUS_OK;
   }
+  krhino_sched_enable();
   return ret;
 }
 /**
@@ -377,10 +389,12 @@ WIFI_Status_t WIFI_SendData(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, uin
 {
   WIFI_Status_t ret = WIFI_STATUS_ERROR;
 
+    krhino_sched_disable();
     if(ES_WIFI_SendData(&EsWifiObj, socket, pdata, Reqlen, SentDatalen, Timeout) == ES_WIFI_STATUS_OK)
     {
       ret = WIFI_STATUS_OK;
     }
+    krhino_sched_enable();
 
   return ret;
 }
@@ -411,7 +425,8 @@ WIFI_Status_t WIFI_ReceiveData(uint8_t socket, uint8_t *pdata, uint16_t Reqlen, 
 WIFI_Status_t WIFI_SetOEMProperties(const char *name, uint8_t *Mac)
 {
   WIFI_Status_t ret = WIFI_STATUS_ERROR; 
-  
+
+  krhino_sched_disable();
   if(ES_WIFI_SetProductName(&EsWifiObj, (uint8_t *)name) == ES_WIFI_STATUS_OK)
   {
     if(ES_WIFI_SetMACAddress(&EsWifiObj, Mac) == ES_WIFI_STATUS_OK)
@@ -419,6 +434,7 @@ WIFI_Status_t WIFI_SetOEMProperties(const char *name, uint8_t *Mac)
       ret = WIFI_STATUS_OK;
     }
   }
+  krhino_sched_enable();
   return ret;
 }
 
@@ -429,11 +445,13 @@ WIFI_Status_t WIFI_SetOEMProperties(const char *name, uint8_t *Mac)
 WIFI_Status_t WIFI_ResetModule(void)
 {
   WIFI_Status_t ret = WIFI_STATUS_ERROR; 
-  
+
+  krhino_sched_disable();
   if(ES_WIFI_ResetModule(&EsWifiObj) == ES_WIFI_STATUS_OK)
   {
       ret = WIFI_STATUS_OK;
   }
+  krhino_sched_enable();
   return ret;
 }
 
@@ -444,11 +462,13 @@ WIFI_Status_t WIFI_ResetModule(void)
 WIFI_Status_t WIFI_SetModuleDefault(void)
 {
   WIFI_Status_t ret = WIFI_STATUS_ERROR; 
-  
+
+  krhino_sched_disable();
   if(ES_WIFI_ResetToFactoryDefault(&EsWifiObj) == ES_WIFI_STATUS_OK)
   {
       ret = WIFI_STATUS_OK;
   }
+  krhino_sched_enable();
   return ret;
 }
 

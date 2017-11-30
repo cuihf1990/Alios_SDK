@@ -12,9 +12,14 @@ enum {
     SLOT_INTERVAL = 600,
 };
 
+typedef struct time_slot_s {
+    uint8_t slot_num;
+    uint16_t offset;
+} time_slot_t;
+
 void lowpower_init(void);
-void lowpower_update_time_slot(neighbor_t *nbr, uint8_t *tlvs, uint16_t length);
-uint16_t lowpower_set_time_slot(uint8_t *data);
+void lowpower_update_info(neighbor_t *nbr, uint8_t *tlvs, uint16_t length);
+uint16_t lowpower_set_info(uint8_t type, uint8_t *data, void *context);
 
 typedef void (* lowpower_radio_down_t)(void);
 typedef void (* lowpower_radio_up_t)(void);

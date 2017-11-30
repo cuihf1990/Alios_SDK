@@ -31,7 +31,6 @@ static int stm32l475_ota_write(hal_ota_module_t *m, volatile uint32_t* off_set, 
 static int stm32l475_ota_read(hal_ota_module_t *m,  volatile uint32_t* off_set, uint8_t* out_buf, uint32_t out_buf_len);
 static int stm32l475_ota_set_boot(hal_ota_module_t *m, void *something);
 
-struct hal_ota_module_s stm32l475_ota_module;
 
 int hal_ota_switch_to_new_fw()
 {
@@ -51,12 +50,7 @@ static int stm32l475_ota_init(hal_ota_module_t *m, void *something)
     hal_logic_partition_t *partition_info;
     hal_partition_t pno = HAL_PARTITION_OTA_TEMP;
 
-    stm32l475_ota_module.init = stm32l475_ota_init;
-    stm32l475_ota_module.ota_write = stm32l475_ota_write;
-    stm32l475_ota_module.ota_read = stm32l475_ota_read;
-    stm32l475_ota_module.ota_set_boot = stm32l475_ota_set_boot;
-
-    LOG("set ota init---------------\n");
+    LOG("ota module init\n");
     _off_set = *(uint32_t*)something;
     ota_info.ota_len=_off_set;
 
@@ -118,7 +112,7 @@ static int stm32l475_ota_set_boot(hal_ota_module_t *m, void *something)
     if (param->result_type==OTA_FINISH)
     {
         CRC16_Final( &contex, (uint16_t *)&ota_info.ota_crc );
-        LOG("set boot---------------\n");
+        LOG("switch boot bank\n");
         hal_ota_switch_to_new_fw();
         memset(&ota_info, 0 , sizeof ota_info);
     } else if (param->result_type==OTA_BREAKPOINT) {
@@ -140,4 +134,11 @@ static void  hal_ota_save_crc16(uint16_t crc16)
 {
     aos_kv_set(KV_HAL_OTA_CRC16, &crc16, 2, 1);
 }
+
+struct hal_ota_module_s stm32l475_ota_module = {
+    .init = stm32l475_ota_init,
+    .ota_write = stm32l475_ota_write,
+    .ota_read = stm32l475_ota_read,
+    .ota_set_boot = stm32l475_ota_set_boot,
+};
 

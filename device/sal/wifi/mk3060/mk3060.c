@@ -274,7 +274,8 @@ static char *start_cmd_type_str[] = {"tcp_server", "tcp_client", \
 int sal_wifi_start(at_conn_t *c)
 {
     int link_id;
-    char cmd[START_CMD_LEN] = {0}, out[256];
+    char cmd[START_CMD_LEN] = {0};
+    char out[256] = {0};
 
     if (!c || !c->addr) {
         LOGE(TAG, "%s %d - invalid argument", __func__, __LINE__);
@@ -461,8 +462,6 @@ static int sal_wifi_recv(int fd,
             slist_del(&node->next, &g_data);
             aos_mutex_unlock(&g_data_mutex);
             aos_free((void *)node);
-
-    
         }
         /* Continue or stop here? */
         if (total_read >= *plen) break;
@@ -511,7 +510,7 @@ static int sal_wifi_domain_to_ip(char *domain,
         goto err;
 
     head++;
-    if (memcpy(head, at._recv_delimiter, strlen(at._recv_delimiter)) != 0)
+    if (memcmp(head, at._recv_delimiter, strlen(at._recv_delimiter)) != 0)
         goto err;
 
    /* We find the IP head */
@@ -519,11 +518,11 @@ static int sal_wifi_domain_to_ip(char *domain,
 
    end = head;
    while (((end - head) < 15) && (*end != at._recv_delimiter[0])) end++;
-   if (((end - head) < 6) || ((end -head) >= 15)) goto err;
+   if (((end - head) < 6) || ((end -head) > 15)) goto err;
 
    /* We find a good IP, save it. */
-   *end = '\0';
-   memcpy(ip, head, end - head + 2);
+   memcpy(ip, head, end - head);
+   ip[end-head] = '\0';
 
    return 0;
 
