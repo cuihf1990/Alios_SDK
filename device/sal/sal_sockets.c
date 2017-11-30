@@ -791,10 +791,10 @@ void sal_deal_event(int s, enum netconn_evt evt)
     /* Set event as required */
     switch (evt) {
         case NETCONN_EVT_RCVPLUS:
-            sock->rcvevent++;
+            sock->rcvevent = 1;
             break;
         case NETCONN_EVT_RCVMINUS:
-            sock->rcvevent--;
+            sock->rcvevent = 0;
             break;
         case NETCONN_EVT_SENDPLUS:
             sock->sendevent = 1;
@@ -1381,6 +1381,8 @@ int sal_setsockopt(int s, int level, int optname,
 #if SAL_RCVTIMEO
                 sock->conn->recv_timeout = SAL_SO_SNDRCVTIMEO_GET_MS(optval);
 #endif
+                break;
+            case SO_REUSEADDR:
                 break;
             default:
                 SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: "
