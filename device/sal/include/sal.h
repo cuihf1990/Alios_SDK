@@ -28,6 +28,7 @@ typedef struct {
     uint32_t tcp_keep_alive; /* tcp keep alive value (set to 0 if not used) */
 } at_conn_t;
 
+/* Socket data state indicator. */
 typedef enum netconn_evt {
     NETCONN_EVT_RCVPLUS,
     NETCONN_EVT_RCVMINUS,
@@ -42,7 +43,7 @@ typedef struct sal_op_s {
     char *version; /* Reserved for furture use. */
 
     /**
-     * Init SAL and call low level AT init.
+     * AT low level init so that it's ready to setup socket connection.
      *
      * @return  0 - success, -1 - failure
      */
@@ -65,8 +66,8 @@ typedef struct sal_op_s {
      * @param[in]  fd - the file descripter to operate on.
      * @param[in]  data - pointer to data to send.
      * @param[in]  len - length of the data.
-     * @param[in]  remote_ip - remote port number.
-     * @param[in]  remote_port - remote port number.
+     * @param[in]  remote_ip - remote port number (optional).
+     * @param[in]  remote_port - remote port number (optional).
      *
      * @return  0 - success, -1 - failure
      */
@@ -75,7 +76,7 @@ typedef struct sal_op_s {
 
     /**
      * Receive data from AT.
-     * This function returns either because expected length data read,
+     * This function returns either when expected length data read,
      * or no more data left. This OUT "len" reflects the real length read.
      * The caller is epected to check the returned len.
      *
@@ -83,8 +84,9 @@ typedef struct sal_op_s {
      * @param[out]  data - pointer to data to send.
      * @param[out]  len - expected length of the data when IN,
      *                    and real read len when OUT.
-     * @param[out]  remote_ip - remote ip address. Caller manages the memory.
-     * @param[out]  remote_port - remote port number.
+     * @param[out]  remote_ip - remote ip address. Caller manages the
+                                memory (optional).
+     * @param[out]  remote_port - remote port number (optional).
      *
      * @return  0 - success, -1 - failure
      */
@@ -93,7 +95,8 @@ typedef struct sal_op_s {
 
     /**
      * Get IP information of the corresponding domain.
-     * Currently only one IP string is returned.
+     * Currently only one IP string is returned (even when the domain
+     * coresponses to mutliple IPs). Note: only IPv4 is supported.
      *
      * @param[in]   domain - the domain string.
      * @param[out]  ip - the place to hold the dot-formatted ip string.
@@ -106,7 +109,7 @@ typedef struct sal_op_s {
      * Close the socket connection.
      *
      * @param[in]  fd - the file descripter to operate on.
-     * @param[in]  remote_port - remote port number.
+     * @param[in]  remote_port - remote port number (optional).
      *
      * @return  0 - success, -1 - failure
      */
@@ -121,6 +124,20 @@ typedef struct sal_op_s {
 
     /**
      * Register network connection event callback function.
+     * This callback should be called by following below rules:
+     *
+     *   1. When there is socket data available for a specific fd, call as:
+     *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVPLUS);
+     *   2. When there is no more socket data for a specific fd, call as:
+     *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVMINUS);
+     *   3. When a send action is finished for a specific fd, call as:
+     *      g_netconn_evt_cb(fd, NETCONN_EVT_SENDPLUS);
+     *   4. When there is an fatal error occured, call as:
+     *      g_netconn_evt_cb(fd, NETCONN_EVT_ERROR);
+     *   5. Whenever a socket is going to be closed, call as:
+     *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVPLUS);
+     *      g_netconn_evt_cb(fd, NETCONN_EVT_SENDPLUS);
+     *      g_netconn_evt_cb(fd, NETCONN_EVT_ERROR);
      */
     int (*register_netconn_evt_cb)(netconn_evt_cb_t cb);
 } sal_op_t;
