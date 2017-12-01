@@ -1176,6 +1176,8 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
     case NETCONN_UDP:
         /*TODO double check if udp double connect */ 
         statconn.type = UDP_UNICAST;
+        /*if local port have not*/
+        statconn.l_port = 0xc000;
         err = sal_op.start(&statconn);
         if (ERR_OK != err){
             SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", ip_str, remote_port);

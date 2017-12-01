@@ -200,6 +200,8 @@ int sal_close(int s);
 
 int sal_init();
 
+int sal_sendto(int s, const void * data, size_t size, int flags, const struct sockaddr * to, socklen_t tolen);
+
 int sal_send(int s, const void *data, size_t size, int flags);
 
 int sal_shutdown(int s, int how);
@@ -252,6 +254,9 @@ int sal_fcntl(int s, int cmd, int val);
 
 #define close(s) \
         sal_close(s)
+
+#define sendto(s,dataptr,size,flags,to,tolen) \
+        sal_sendto(s,dataptr,size,flags,to,tolen)
 
 #define send(s,data,size,flags) \
         sal_send(s,data,size,flags)
