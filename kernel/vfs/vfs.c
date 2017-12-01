@@ -17,6 +17,10 @@
 #include <sys/select.h>
 #endif
 
+#ifndef PATH_MAX
+#define PATH_MAX 256
+#endif
+
 extern uart_dev_t uart_0;
 
 static uint8_t    g_vfs_init;
