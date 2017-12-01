@@ -369,13 +369,15 @@ static void test_mqtt_case2(void)
     YUNIT_ASSERT(NULL == pclient);
 }
 
-// IOT_MQTT_Construct:param=uninitialized pointer
 static void test_mqtt_case3(void)
 {
     void *pclient = NULL;
-    // iotx_mqtt_param_pt mqtt_param;
+    /* uninitialized pointer can not be passed as a param otherwise it may cause crash on linux host */
+    #if 0
     iotx_mqtt_param_t *mqtt_param;
     pclient = IOT_MQTT_Construct(mqtt_param);
+    #endif
+
     YUNIT_ASSERT(NULL == pclient);
 }
 
