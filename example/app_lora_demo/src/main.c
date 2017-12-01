@@ -67,7 +67,7 @@
 #include "version.h"
 #include "radio.h"
 #include "sx1276Regs-Fsk.h"
-#include "sx1276Regs-Lora.h"
+#include "sx1276Regs-LoRa.h"
 #include "delay.h"
 
 /* Private typedef -----------------------------------------------------------*/
