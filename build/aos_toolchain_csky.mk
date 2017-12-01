@@ -1,4 +1,3 @@
-$(info host arch $(HOST_ARCH))
 ifneq ($(filter $(HOST_ARCH), ck802),)
 
 TOOL_PATH := $(shell pwd)
