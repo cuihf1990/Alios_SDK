@@ -86,6 +86,9 @@ class Server:
                     heartbeat_timeout = time.time() + 30
                     if client == None:
                         if type != TBframe.CLIENT_UUID:
+                            data = TBframe.construct(TBframe.CLIENT_UUID, 'give me your uuid first')
+                            conn.send(data)
+                            time.sleep(0.1)
                             continue
                         for c in self.client_list:
                             if c['uuid'] != value:
