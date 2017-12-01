@@ -52,6 +52,9 @@ bool esp_ota_prepare()
             break;
 
         default:
+
+            ESP_LOGE(TAG, "esp_ota cur partition=%d!",esp_current_partition->subtype);
+            find_partition.subtype = ESP_PARTITION_SUBTYPE_APP_OTA_0;
             break;
     }
 
