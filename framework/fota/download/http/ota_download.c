@@ -154,12 +154,11 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
         OTA_LOG_I("%d bytes send OK!\n ", totalsend);
     }
     int size = 0;
-    memset(http_buffer, 0, OTA_BUFFER_MAX_SIZE);
-    // char headbuf[OTA_BUFFER_MAX_SIZE + 1] = {0};
     int header_found = 0;
     char *pos = 0;
     int file_size = 0;
 
+    memset(http_buffer, 0, OTA_BUFFER_MAX_SIZE);
     while ((nbytes = ota_socket_recv(sockfd, http_buffer, OTA_BUFFER_MAX_SIZE - 1))) {
         //aos_msleep(25);//for slow-motion test
         if (nbytes < 0) {
@@ -216,6 +215,7 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
         if (ota_get_status() == OTA_CANCEL) {
             break;
         }
+        memset(http_buffer, 0, OTA_BUFFER_MAX_SIZE);
     }
 
     if (nbytes < 0) {

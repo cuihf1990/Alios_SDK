@@ -86,14 +86,14 @@ end:
     if (ap_records)
         free(ap_records);
     if (result) {
-        free(result);
         if (result->ap_list)
             free(result->ap_list);
+        free(result);
     }
     if (result_adv) {
-        free(result_adv);
         if (result_adv->ap_list)
             free(result_adv->ap_list);
+        free(result_adv);
     }
 }
 
@@ -316,6 +316,7 @@ static int wifi_getset_ops(hal_wifi_module_t *m, hal_wifi_getset_cmd_t cmd, ...)
         va_start(args, cmd);
         hal_mode = va_arg(args, int);
         mac = va_arg(args, uint8_t*);
+        va_end(args);
         if (hal_mode == HAL_WIFI_MODE_SOFTAP) {
             ESP_ERROR_CHECK(esp_wifi_get_mac(WIFI_IF_AP, mac));
         } else if (hal_mode == HAL_WIFI_MODE_STATION) {
@@ -323,7 +324,6 @@ static int wifi_getset_ops(hal_wifi_module_t *m, hal_wifi_getset_cmd_t cmd, ...)
         } else {
             return -1;
         }
-        va_end(args);
         break;
     }
     case HAL_WIFI_GET_AP_RSSI: {

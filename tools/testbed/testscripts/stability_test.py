@@ -84,6 +84,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', duration = 12 * 3600, withalin
     result = program_devices(at, devices, model, firmware)
     if result == False:
         return [1, 'program device failed']
+    time.sleep(5)
 
     #restore state to default
     restore_device_status(at, devices)

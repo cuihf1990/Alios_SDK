@@ -45,10 +45,12 @@ int32_t hal_uart_recv(aos_uart_dev_t *uart, void *data, uint32_t expect_size, ui
 int32_t hal_uart_init(aos_uart_dev_t *uart)
 {
     uart_driver_install(uart->port, 256, 0, 0, NULL, 0);
+    return 0;
 }
 
 int32_t hal_uart_finalize(aos_uart_dev_t *uart)
 {
+    return 0;
 }
 
 

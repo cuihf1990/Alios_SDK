@@ -581,6 +581,7 @@ static int gateway_cloud_report(const char *method, const char *json_buffer)
     send_sock(pstate->sockfd, buf, len, &pstate->gw_addr);
 
     aos_free(buf);
+    return 0;
 }
 
 static void handle_connack(gateway_state_t *pstate, void *pmsg, int len)
@@ -803,9 +804,14 @@ static struct cli_command gatewaycmd = {
 
 int gateway_service_init(void)
 {
+    ali_crypto_result result;
     gateway_state_t *pstate = &gateway_state;
 
-    ali_aes_get_ctx_size(AES_CTR, &aes_ctx_size);
+    result = ali_aes_get_ctx_size(AES_CTR, &aes_ctx_size);
+    if (result != ALI_CRYPTO_SUCCESS) {
+        LOGE(MODULE_NAME, "ali aes get ctx size fail(%08x)", result);
+        return 1;
+    }
 
     pstate->gateway_mode = false;
     pstate->yunio_connected = false;

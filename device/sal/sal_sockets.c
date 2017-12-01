@@ -657,7 +657,7 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
         uirecvlen = len - uirecvlen;
         
         if (uitotalrecvlen == 0){
-            aos_msleep(20);
+            aos_msleep(5);
             #if SAL_RCVTIMEO
             if (pstsock->conn->recv_timeout != 0){
                 end_ms = sys_now();
@@ -670,7 +670,8 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
             continue;
         }
         
-        done = 1;
+        if (uitotalrecvlen >= len) done = 1;
+
         if (from && fromlen){
             fromaddr.type = IPADDR_TYPE_V4;
             ipstr_to_u32((char *)ipstr, &(fromaddr.u_addr.ip4.addr));
@@ -757,7 +758,6 @@ int sal_send(int s, const void *data, size_t size, int flags)
 
 int sal_write(int s, const void *data, size_t size)
 {
-    s -= SAL_SOCKET_OFFSET;
     struct sal_event *event = tryget_event(s);
     if (event) {
         SAL_ARCH_DECL_PROTECT(lev);
@@ -792,10 +792,10 @@ void sal_deal_event(int s, enum netconn_evt evt)
     /* Set event as required */
     switch (evt) {
         case NETCONN_EVT_RCVPLUS:
-            sock->rcvevent++;
+            sock->rcvevent = 1;
             break;
         case NETCONN_EVT_RCVMINUS:
-            sock->rcvevent--;
+            sock->rcvevent = 0;
             break;
         case NETCONN_EVT_SENDPLUS:
             sock->sendevent = 1;
@@ -1176,6 +1176,8 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
     case NETCONN_UDP:
         /*TODO double check if udp double connect */ 
         statconn.type = UDP_UNICAST;
+        /*if local port have not*/
+        statconn.l_port = 0xc000;
         err = sal_op.start(&statconn);
         if (ERR_OK != err){
             SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", ip_str, remote_port);
@@ -1382,6 +1384,8 @@ int sal_setsockopt(int s, int level, int optname,
 #if SAL_RCVTIMEO
                 sock->conn->recv_timeout = SAL_SO_SNDRCVTIMEO_GET_MS(optval);
 #endif
+                break;
+            case SO_REUSEADDR:
                 break;
             default:
                 SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: "

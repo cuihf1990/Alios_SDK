@@ -101,6 +101,7 @@ kstat_t krhino_timer_del(ktimer_t *timer)
     cb->cb_num = TIMER_CMD_DEL;
     err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
     if (err != RHINO_SUCCESS) {
+        krhino_mblk_free(&g_timer_pool, cb);
         return err;
     }
 
@@ -152,6 +153,7 @@ kstat_t krhino_timer_dyn_del(ktimer_t *timer)
     err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
 
     if (err != RHINO_SUCCESS) {
+        krhino_mblk_free(&g_timer_pool, cb);
         return err;
     }
 
@@ -175,6 +177,7 @@ kstat_t krhino_timer_start(ktimer_t *timer)
     cb->cb_num = TIMER_CMD_START;
     err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
     if (err != RHINO_SUCCESS) {
+        krhino_mblk_free(&g_timer_pool, cb);
         return err;
     }
 
@@ -197,6 +200,7 @@ kstat_t krhino_timer_stop(ktimer_t *timer)
     cb->cb_num = TIMER_CMD_STOP;
     err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
     if (err != RHINO_SUCCESS) {
+        krhino_mblk_free(&g_timer_pool, cb);
         return err;
     }
 
@@ -221,6 +225,7 @@ kstat_t krhino_timer_change(ktimer_t *timer, tick_t first, tick_t round)
     cb->cb_num = TIMER_CMD_CHG;
     err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
     if (err != RHINO_SUCCESS) {
+        krhino_mblk_free(&g_timer_pool, cb);
         return err;
     }
 
@@ -245,6 +250,7 @@ kstat_t krhino_timer_arg_change(ktimer_t *timer, void *arg)
 
     err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
     if (err != RHINO_SUCCESS) {
+        krhino_mblk_free(&g_timer_pool, cb);
         return err;
     }
 

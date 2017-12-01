@@ -15,14 +15,25 @@
 #define TAG "salapp"
 #define SALAPP_BUFFER_MAX_SIZE  1512
 
+static int g_fd;
+static char read_temp[64]={0};
 
 static void yloop_action(void *arg);
+
+ void yloop_socket_event_cb(int fd, void *arg)
+ {
+     LOG("====yloop_socket_event_cb===");
+     int rec=read(g_fd, read_temp, sizeof(read_temp)-1);
+     LOG("===get socket event,fd=%d= read rec=%d,read=%s ",g_fd,rec,read_temp);
+ }
 
 static void yloop_action(void *arg)
 {
     LOG("Hello, %s");
     aos_post_delayed_action(5000, yloop_action, NULL);
+    aos_poll_read_fd(g_fd, yloop_socket_event_cb, NULL);
 }
+
 
 static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
 {
@@ -33,9 +44,9 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
     if (strcmp(ptype, "tcp_c") == 0) {
         char *pip, *pport, *pdata;
         ssize_t siz;
-        int fd;
+
         struct sockaddr_in addr;
-        fd = socket(AF_INET,SOCK_STREAM,0);
+        g_fd = socket(AF_INET,SOCK_STREAM,0);
 
         pip = argv[2];
         pport = argv[3];
@@ -46,25 +57,25 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
         addr.sin_port = htons((short)atoi(pport));
         addr.sin_addr.s_addr = inet_addr(pip);
 
-        if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
+        if (connect(g_fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
             LOGE(TAG, "Connect failed, errno = %d", errno);
-            close(fd);
+            close(g_fd);
             return;
         }
 
         // send-recv
-        if ((siz = send(fd, pdata, strlen(pdata), 0)) <= 0) {
+        if ((siz = send(g_fd, pdata, strlen(pdata), 0)) <= 0) {
             LOGE(TAG, "send failed, errno = %d.", errno);
-            close(fd);
+            close(g_fd);
             return;
         }
 
         aos_msleep(10000);
         while(1){
-            readlen = read(fd, buf, SALAPP_BUFFER_MAX_SIZE - 1);
+            readlen = read(g_fd, buf, SALAPP_BUFFER_MAX_SIZE - 1);
             if (readlen < 0){
                 LOGE(TAG, "recv failed, errno = %d.", errno);
-                close(fd);
+                close(g_fd);
                 return;
             }
 
@@ -74,21 +85,59 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
             
             LOGD(TAG, "recv server reply len %d info %s \n", readlen, buf);
             if (strstr(buf, pdata)){
-                LOGI(TAG, "Goodbye! See you! (%d)\n", fd);
+                LOGI(TAG, "Goodbye! See you! (%d)\n", g_fd);
                 break;
             }
         }
         
-        close(fd);
+        close(g_fd);
         LOGI(TAG, "sal tcp_c test successful.");
-    } else if (strcmp(ptype, "yloop") == 0) {
-        aos_schedule_call(yloop_action,NULL);
+    }else if (strcmp(ptype, "udp_c") == 0) {
+        char *pip, *pport, *pdata;
+        ssize_t siz;
+
+        struct sockaddr_in addr;
+        g_fd = socket(AF_INET,SOCK_DGRAM,0);
+
+        pip = argv[2];
+        pport = argv[3];
+        pdata = argv[4];
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons((short)atoi(pport));
+        addr.sin_addr.s_addr = inet_addr(pip);
+#if 0
+        if (connect(g_fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
+            LOGE(TAG, "Connect failed, errno = %d", errno);
+            close(g_fd);
+            return;
+        }
+
+        // send-recv
+        if ((siz = send(g_fd, pdata, strlen(pdata), 0)) <= 0) {
+            LOGE(TAG, "send failed, errno = %d.", errno);
+            close(g_fd);
+            return;
+        }
+#else
+        siz = sendto(g_fd, pdata, strlen(pdata), 0, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
+        if (siz <= 0){
+            LOGE(TAG, "sendto failed, errno = %d.", errno);
+            close(g_fd);
+            return;
+        }
+#endif
+        aos_msleep(10000);
+        
+        close(g_fd);
+        LOGI(TAG, "sal udp_c test successful.");
     } else if (strcmp(ptype, "otaapi") == 0) {
         char domain[] = "www.baidu.com";
         int port = 8080;
         struct hostent *host;
         struct timeval timeout;
-        int fd;
+
         struct sockaddr_in server_addr;
 
         if ((host = gethostbyname(domain)) == NULL) {
@@ -96,7 +145,7 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
             return;
         }
 
-        if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        if ((g_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
             LOGE(TAG, "Socket failed, errno: %d", errno);
             return;
         }
@@ -104,10 +153,10 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
         timeout.tv_sec = 10;
         timeout.tv_usec = 0;
 
-        if (setsockopt (fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+        if (setsockopt (g_fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
                         sizeof(timeout)) < 0) {
             LOGE(TAG, "setsockopt failed, errno: %d", errno);
-            close(fd);
+            close(g_fd);
         }
 
         memset(&server_addr, 0, sizeof(server_addr));
@@ -115,21 +164,63 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
         server_addr.sin_port = htons(port);
         server_addr.sin_addr = *((struct in_addr *)host->h_addr);
 
-        if (connect(fd, (struct sockaddr *) (&server_addr),
+        if (connect(g_fd, (struct sockaddr *) (&server_addr),
             sizeof(struct sockaddr)) == -1) {
             LOGE(TAG, "Connect failed, errno: %d", errno);
-            close(fd);
+            close(g_fd);
+            return;
+        }
+        close(g_fd);
+        LOGI(TAG, "sal otaapi test successful.");
+    } 
+    else if (strcmp(ptype, "yloop") == 0) {
+        char domain[] = "192.168.16.114";
+        int port = 8099;
+        struct hostent *host;
+        struct timeval timeout;
+
+        struct sockaddr_in server_addr;
+
+        if ((host = gethostbyname(domain)) == NULL) {
+            LOGE(TAG, "gethostbyname failed, errno: %d", errno);
             return;
         }
 
-        close(fd);
+        if ((g_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+            LOGE(TAG, "Socket failed, errno: %d", errno);
+            return;
+        }
+
+        timeout.tv_sec = 10;
+        timeout.tv_usec = 0;
+
+        if (setsockopt (g_fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                        sizeof(timeout)) < 0) {
+            LOGE(TAG, "setsockopt failed, errno: %d", errno);
+            close(g_fd);
+        }
+
+        memset(&server_addr, 0, sizeof(server_addr));
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(port);
+        server_addr.sin_addr = *((struct in_addr *)host->h_addr);
+
+        if (connect(g_fd, (struct sockaddr *) (&server_addr),
+            sizeof(struct sockaddr)) == -1) {
+            LOGE(TAG, "Connect failed, errno: %d", errno);
+            close(g_fd);
+            return;
+        }
+        aos_schedule_call(yloop_action,NULL);
+
         LOGI(TAG, "sal otaapi test successful.");
-    } else if (strcmp(ptype, "mbedtlsapi") == 0) {
+    } 
+    else if (strcmp(ptype, "mbedtlsapi") == 0) {
         struct addrinfo hints, *addr_list;
         int proto = 0; // 0 - tcp, 1 - udp
         char nodename[] = "www.baidu.com";
         char *port = "8080";
-        int fd, ret;
+        int ret;
 
         memset( &hints, 0, sizeof( hints ) );
         hints.ai_family = AF_UNSPEC;
@@ -142,17 +233,17 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
             return;
         }
 
-        fd = socket(addr_list->ai_family, addr_list->ai_socktype,
+        g_fd = socket(addr_list->ai_family, addr_list->ai_socktype,
                     addr_list->ai_protocol);
-        if (fd < 0) {
+        if (g_fd < 0) {
             LOGE(TAG, "socket failed, errno: %d", errno);
             return;
         }
 
         do {
-            ret = connect(fd, addr_list->ai_addr, addr_list->ai_addrlen);
+            ret = connect(g_fd, addr_list->ai_addr, addr_list->ai_addrlen);
             if (ret == -1) {
-                close(fd);
+                close(g_fd);
                 freeaddrinfo(addr_list);
             } else {
                 if (errno == EINTR) {
@@ -162,8 +253,10 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
            }
         } while(1);
 
-        close(fd);
+        close(g_fd);
         freeaddrinfo(addr_list);
+    }else if (strcmp(ptype, "close") == 0) {
+        close(g_fd);
     }
 }
 
@@ -206,7 +299,6 @@ int application_start(int argc, char *argv[])
     at.set_mode(ASYN);
 
     sal_init();
-
     aos_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
 
     aos_cli_register_commands((const struct cli_command *)&salcmds[0],

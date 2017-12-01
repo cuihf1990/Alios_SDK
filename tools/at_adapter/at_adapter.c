@@ -91,6 +91,8 @@ static void enter_enet_raw_mode()
         LOGE(TAG, "AT enter enet raw mode failed.");
 }
 
+static void enet_raw_data_handler();
+
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 static void wifi_event_handler(input_event_t *event, void *priv_data)
 {

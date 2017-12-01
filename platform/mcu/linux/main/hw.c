@@ -105,7 +105,12 @@ exit:
 
 int32_t hal_flash_read(hal_partition_t pno, uint32_t* poff, void* buf, uint32_t buf_size)
 {
-    int flash_fd = open_flash(pno, false);
+    int flash_fd;
+
+    if (poff == NULL)
+        return -1;
+
+    flash_fd = open_flash(pno, false);
     if (flash_fd < 0)
         return -1;
 

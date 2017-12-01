@@ -49,6 +49,7 @@ def program_devices(at, devices, model, firmware):
         if succeed == False:
             print 'error: program device {0}:{1} failed'.format(device, devices[device])
             return False
+    time.sleep(5)
     print 'program devices succeed\n'
     return True
 
@@ -62,16 +63,17 @@ def reboot_and_get_mac(at, device_list, device_attr):
             at.device_run_cmd(device, ['kv', 'del', 'alink'])
             mac =  at.device_run_cmd(device, ['mac'], 1, 0.8, ['MAC address:'])
             at.device_control(device, 'reset')
-            time.sleep(5)
             if mac and len(mac) == 1:
                 mac = mac[0].split()[-1]
                 mac = mac.replace('-', '') + '0000'
                 device_attr[device] = {'mac':mac}
                 succeed = True
                 break;
+            time.sleep(5)
         if succeed == False:
             print 'error: reboot and get mac addr for device {0} failed'.format(device)
             return False
+    time.sleep(5)
     return True
 
 #set random extnetid to isolate the network

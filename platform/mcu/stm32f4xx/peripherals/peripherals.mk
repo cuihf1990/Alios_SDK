@@ -12,7 +12,7 @@ NAME = STM32F4xx_Peripheral_Drivers
 GLOBAL_INCLUDES := .
 
 # Include STM32F2xx Standard Peripheral Libraries
-$(NAME)_COMPONENTS += MCU/STM32F4xx/peripherals/libraries
+$(NAME)_COMPONENTS += mcu/stm32f4xx/peripherals/libraries
 
 $(NAME)_SOURCES := platform_adc.c \
                    platform_rtc.c \

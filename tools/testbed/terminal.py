@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os, sys, time, curses, socket, pdb
+import os, sys, time, curses, socket, random
 import subprocess, thread, threading, pickle
 from operator import itemgetter
 import TBframe
@@ -15,6 +15,9 @@ MOUSE_SCROLL_UP = 0x80000
 MOUSE_SCROLL_DOWN = 0x8000000
 DEBUG = True
 
+class ConnectionLost(Exception):
+    pass
+
 class Terminal:
     def __init__(self):
         self.stdscr = 0
@@ -22,6 +25,7 @@ class Terminal:
         self.dev_window = 0
         self.cmd_window = 0
         self.keep_running = True
+        self.connected = False
         self.device_list= {}
         self.service_socket = 0
         self.cmd_excute_state = 'idle'
@@ -30,20 +34,14 @@ class Terminal:
         self.log_content = []
         self.log_curr_line = -1
         self.log_subscribed = []
+        self.using_list = []
         self.max_log_width = 0
         self.cur_color_pair = 7
         self.alias_tuples = {}
         self.cmd_history = []
         self.last_runcmd_dev = []
 
-    def init(self, server_ip, server_port):
-        #connect to server
-        self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.service_socket.connect((server_ip, server_port))
-        except:
-            print "connect to server {0}:{1} failed".format(server_ip, server_port)
-            return "connect failed"
+    def init(self):
         if os.path.exists('terminal') == False:
             subprocess.call(['mkdir','terminal'])
 
@@ -61,7 +59,7 @@ class Terminal:
                 self.cmd_history = pickle.load(file)
                 file.close()
             except:
-                print "read alias record failed"
+                print "read command history failed"
 
         #initialize UI
         try:
@@ -247,20 +245,20 @@ class Terminal:
         devices = list(self.device_list)
         devices.sort()
         if len(self.device_list) > 0:
-            caddr = devices[0].split(',')[0:2]
+            cuuid = devices[0].split(',')[0]
         linenum = 1
         for i in range(len(devices)):
             devfull = devices[i]
             dev = devfull.split(',')
-            if dev[0:2] != caddr:
-                caddr = dev[0:2]
+            if dev[0] != cuuid:
+                cuuid = dev[0]
                 linenum += 1
             if dev[0] in self.alias_tuples:
                 dev_str = str(i) + '.' + self.alias_tuples[dev[0]] + ':'
             else:
                 dev_str = str(i) + '.' + dev[0] + ':'
             mid_len = DEV_WINDOW_WIDTH - len(dev_str) - 5
-            devpath = dev[2].replace('/dev/','')
+            devpath = dev[1].replace('/dev/','')
             if mid_len >= len(devpath):
                 dev_str += devpath + ' '*(mid_len - len(devpath))
             else:
@@ -296,16 +294,20 @@ class Terminal:
         self.cmd_window.refresh()
         self.curseslock.release()
 
+    def send_data(self, data):
+        try:
+            self.service_socket.send(data)
+        except:
+            self.connected = False
+
     def heartbeat_func(self):
         heartbeat_timeout = time.time() + 10
         while self.keep_running:
             time.sleep(0.05)
-            if time.time() >= heartbeat_timeout:
-                try:
-                    self.service_socket.send(TBframe.construct(TBframe.HEARTBEAT, ''))
-                    heartbeat_timeout += 10
-                except:
-                    continue
+            if time.time() < heartbeat_timeout:
+                continue
+            self.send_data(TBframe.construct(TBframe.HEARTBEAT, ''))
+            heartbeat_timeout += 10
 
     def get_devstr_by_index(self, index):
         devices = list(self.device_list)
@@ -323,6 +325,7 @@ class Terminal:
             try:
                 new_msg = self.service_socket.recv(MAX_MSG_LENTH)
                 if new_msg == '':
+                    raise ConnectionLost
                     break
 
                 msg += new_msg
@@ -350,14 +353,13 @@ class Terminal:
                             if c == '':
                                 continue
                             devs = c.split(',')
-                            ip = devs[0]
-                            port = devs[1]
-                            devs = devs[2:]
+                            uuid = devs[0]
+                            devs = devs[1:]
                             for d in devs:
                                 if d == '':
                                     continue
                                 [dev, using] = d.split('|')
-                                new_list[ip+','+port+','+dev] = using
+                                new_list[uuid + ',' + dev] = using
 
                         for dev in list(new_list):
                             self.device_list[dev] = new_list[dev]
@@ -369,7 +371,7 @@ class Terminal:
                     if type == TBframe.DEVICE_LOG:
                         dev = value.split(':')[0]
                         logtime = value.split(':')[1]
-                        log =value[len(dev) + 1 + len(logtime):]
+                        log = value[len(dev) + 1 + len(logtime):]
                         try:
                             logtime = float(logtime)
                         except:
@@ -388,6 +390,27 @@ class Terminal:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
                         self.cmd_excute_event.set()
+            except ConnectionLost:
+                self.connected = False
+                self.cmdrun_status_display('connection to server lost, try reconnecting...')
+                self.service_socket.close()
+                self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                while True:
+                    try:
+                        self.service_socket.connect((self.server_ip, self.server_port))
+                        self.connected = True
+                        break
+                    except:
+                        time.sleep(1)
+                self.cmdrun_status_display('connection to server resumed')
+                random.seed()
+                time.sleep(1.2 + random.random())
+                for dev_str in self.log_subscribed:
+                    data = TBframe.construct(TBframe.LOG_SUB, dev_str)
+                    self.send_data(data)
+                for dev_str in self.using_list:
+                    data = TBframe.construct(TBframe.DEVICE_CMD, dev_str + ':help')
+                    self.send_data(data)
             except:
                 if DEBUG:
                     raise
@@ -434,7 +457,7 @@ class Terminal:
             self.cmd_excute_state = "timeout"
 
     def send_file_to_client(self, filename, index):
-        status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0:2])
+        status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0])
         self.cmdrun_status_display(status_str)
         filehash = TBframe.hash_of_file(filename)
         devstr = self.get_devstr_by_index(index)
@@ -444,7 +467,7 @@ class Terminal:
         data = TBframe.construct(TBframe.FILE_BEGIN, content)
         retry = 4
         while retry > 0:
-            self.service_socket.send(data)
+            self.send_data(data)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_state == 'timeout':
                 retry -= 1;
@@ -477,7 +500,7 @@ class Terminal:
             data = TBframe.construct(TBframe.FILE_DATA, header + content)
             retry = 4
             while retry > 0:
-                self.service_socket.send(data)
+                self.send_data(data)
                 self.wait_cmd_excute_done(0.2)
                 if self.cmd_excute_return == None:
                     retry -= 1;
@@ -505,7 +528,7 @@ class Terminal:
         data = TBframe.construct(TBframe.FILE_END, content)
         retry = 4
         while retry > 0:
-            self.service_socket.send(data)
+            self.send_data(data)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_return == None:
                 retry -= 1;
@@ -539,9 +562,9 @@ class Terminal:
             for index in indexes:
                 status_str = 'erasing {0}.{1}...'.format(index, self.get_devstr_by_index(index))
                 self.cmdrun_status_display(status_str)
-                content = self.get_devstr_by_index(index)
-                data = TBframe.construct(TBframe.DEVICE_ERASE, content);
-                self.service_socket.send(data)
+                dev_str = self.get_devstr_by_index(index)
+                data = TBframe.construct(TBframe.DEVICE_ERASE, dev_str);
+                self.send_data(data)
                 self.wait_cmd_excute_done(10)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
@@ -550,6 +573,8 @@ class Terminal:
                 else:
                     failed.append(index)
                 self.cmd_excute_state = 'idle'
+                if dev_str not in self.using_list:
+                    self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
             status_str += "succeed: {0}".format(succeed)
@@ -590,17 +615,18 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
             for index in indexes:
-                device = self.get_devstr_by_index(index).split(',')
-                if device[0:2] not in file_exist_at:
+                dev_str = self.get_devstr_by_index(index)
+                [uuid, port] = dev_str.split(',')
+                if uuid not in file_exist_at:
                     if self.send_file_to_client(expandname, index) == False:
                         failed.append(index)
                         continue
-                    file_exist_at.append(device[0:2])
-                status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, device[0], device[2])
+                    file_exist_at.append(uuid)
+                status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, uuid, port.replace('/dev/', ''))
                 self.cmdrun_status_display(status_str)
-                content = ','.join(device) + ',' + address + ',' + filehash
+                content = dev_str + ',' + address + ',' + filehash
                 data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
-                self.service_socket.send(data)
+                self.send_data(data)
                 self.wait_cmd_excute_done(270)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
@@ -609,6 +635,8 @@ class Terminal:
                 else:
                     failed.append(index)
                 self.cmd_excute_state = 'idle'
+                if dev_str not in self.using_list:
+                    self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
             status_str += "succeed: {0}".format(succeed)
@@ -633,15 +661,17 @@ class Terminal:
                 return False
 
             for index in indexes:
-                content = self.get_devstr_by_index(index)
-                data = TBframe.construct(operate, content)
-                self.service_socket.send(data)
+                dev_str = self.get_devstr_by_index(index)
+                data = TBframe.construct(operate, dev_str)
+                self.send_data(data)
                 self.wait_cmd_excute_done(1.5)
                 if self.cmd_excute_state == "done":
                     succeed.append(index)
                 else:
                     failed.append(index)
                 self.cmd_excute_state = 'idle'
+                if dev_str not in self.using_list:
+                    self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
             status_str += "succeed: {0}".format(succeed)
@@ -670,15 +700,15 @@ class Terminal:
                 self.cmdrun_status_display('invalid device index {0}'.format(dev))
                 continue
             for index in indexes:
-                device = self.get_devstr_by_index(index)
-                if (type == TBframe.LOG_SUB) and (device not in self.log_subscribed):
-                    data = TBframe.construct(type, device)
-                    self.service_socket.send(data)
-                    self.log_subscribed.append(device)
-                elif (type == TBframe.LOG_UNSUB) and (device in self.log_subscribed):
-                    data = TBframe.construct(type, device)
-                    self.service_socket.send(data)
-                    self.log_subscribed.remove(device)
+                dev_str = self.get_devstr_by_index(index)
+                if type == TBframe.LOG_SUB and dev_str not in self.log_subscribed:
+                    data = TBframe.construct(type, dev_str)
+                    self.send_data(data)
+                    self.log_subscribed.append(dev_str)
+                elif type == TBframe.LOG_UNSUB and dev_str in self.log_subscribed:
+                    data = TBframe.construct(type, dev_str)
+                    self.send_data(data)
+                    self.log_subscribed.remove(dev_str)
 
     def log_download(self, args):
         if len(args) < 1:
@@ -693,11 +723,11 @@ class Terminal:
                 return False
             for index in indexes:
                 device = self.get_devstr_by_index(index).split(',')
-                status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[2])
+                status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[1].replace('/dev/', ''))
                 self.cmdrun_status_display(status_str)
                 content = ','.join(device)
                 data = TBframe.construct(TBframe.LOG_DOWNLOAD, content)
-                self.service_socket.send(data)
+                self.send_data(data)
                 self.wait_cmd_excute_done(480)
                 if self.cmd_excute_state == "done":
                     succeed.append(index)
@@ -742,10 +772,10 @@ class Terminal:
 
         succeed = []; failed = []
         for index in indexes:
-            content = self.get_devstr_by_index(index)
-            content += ':' + '|'.join(args)
+            dev_str = self.get_devstr_by_index(index)
+            content = dev_str + ':' + '|'.join(args)
             data = TBframe.construct(TBframe.DEVICE_CMD, content)
-            self.service_socket.send(data)
+            self.send_data(data)
             self.wait_cmd_excute_done(1.5)
             if self.cmd_excute_state == "done":
                 succeed.append(index)
@@ -756,6 +786,8 @@ class Terminal:
                 self.cmd_excute_return = "timeout"
             status_str = '{0} run: '.format(index) + ' '.join(args) + ", " + self.cmd_excute_return
             self.cmdrun_status_display(status_str)
+            if dev_str not in self.using_list:
+                self.using_list.append(dev_str)
         if len(indexes) == 1:
             return True
         status_str = ''
@@ -770,7 +802,7 @@ class Terminal:
 
     def client_alias(self, args):
         if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: alias ip0:name0 [ip1:name1 ... ipN:nameN]")
+            self.cmdrun_status_display("Usage error, usage: alias id0:name0 [id1:name1 ... idN:nameN]")
 
         for arg in args:
             alias = arg.split(':')
@@ -807,11 +839,13 @@ class Terminal:
         self.log_display(time.time(), "           example: log on 1 2 5-8; log off 2-5 7")
         self.log_display(time.time(), " 9.logdownload[ld]: download log file of device from server")
         self.log_display(time.time(), "           example: logdownload 0-2 5")
-        self.log_display(time.time(), " 10.alias     [al]: alias names to ips")
-        self.log_display(time.time(), "           example: alias 192.168.1.10:Pi1@HZ")
+        self.log_display(time.time(), " 10.alias     [al]: alias names to client ids")
+        self.log_display(time.time(), "           example: alias 123456789012:Pi1@HZ")
         self.log_display(time.time(), " 11.help          : print help infomation")
 
     def process_cmd(self, cmd):
+        if self.connected == False:
+            self.cmdrun_status_display("process command '{0}' failed, connection to server lost".format(cmd))
         cmd_argv = cmd.split(' ')
         self.cmdrun_status_display('')
         cmd = cmd_argv[0]; args = cmd_argv[1:]
@@ -939,7 +973,17 @@ class Terminal:
                     continue
                 self.cmdrun_command_display(cmd, p)
 
-    def run(self):
+    def run(self, server_ip, server_port):
+        #connect to server
+        self.server_ip = server_ip
+        self.server_port = server_port
+        self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.service_socket.connect((server_ip, server_port))
+            self.connected = True
+        except:
+            print "connect to server {0}:{1} failed".format(server_ip, server_port)
+            return
         thread.start_new_thread(self.server_interaction, ())
         thread.start_new_thread(self.heartbeat_func, ())
         while self.keep_running:
@@ -967,10 +1011,9 @@ class Terminal:
             self.cmdrun_status_display("error: save command history failed")
 
     def terminal_func(self, server_ip, server_port):
-        ret = self.init(server_ip, server_port + 1)
+        ret = self.init()
         if ret == "success":
-            self.run()
-        if ret != "connect failed":
-            self.deinit()
+            self.run(server_ip, server_port + 1)
         if ret == "UI failed":
             print "initilize UI window failed, try increase your terminal window size first"
+        self.deinit()

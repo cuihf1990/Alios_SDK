@@ -47,6 +47,7 @@ typedef struct sk_data_s {
 /* Change to include data slink for each link id respectively. <TODO> */
 typedef struct link_s {
     int fd;
+    int data_total;
     aos_sem_t sem_start;
     aos_sem_t sem_close;
 } link_t;
@@ -58,12 +59,13 @@ static link_t g_link[LINK_ID_MAX];// = {{-1, {NULL}}};
 static aos_mutex_t g_link_mutex;
 static netconn_evt_cb_t g_netconn_evt_cb;
 
-static void handle_server_conn_state(uint8_t link_id)
+static void handle_tcp_udp_client_conn_state(uint8_t link_id)
 {
     char s[32];
 
-    at.read(s, 13);
+    at.read(s, 6);
     if (strstr(s, "CLOSED") != NULL) {
+        LOGI(TAG, "Server closed event.");
         // Clear fd_map here
         if (aos_mutex_lock(&g_link_mutex, AOS_WAIT_FOREVER) != 0) {
             LOGE(TAG, "Failed to lock mutex (%s).", __func__);
@@ -83,15 +85,15 @@ static void handle_server_conn_state(uint8_t link_id)
             LOGD(TAG, "sem is going to be waked up: 0x%x", &g_link[link_id].sem_start);
             aos_sem_signal(&g_link[link_id].sem_start); // wakeup send task
         }
+    } else if (strstr(s, "DISCON") != NULL) {
+        LOGI(TAG, "Server conn (%d) disconnected.", link_id);
+        at.read(s, 6);
+    } else {
+        LOGW(TAG, "No one handle this unkown event!!!");
     }
 }
 
 static void handle_client_conn_state()
-{
-
-}
-
-static void handle_udp_conn_state()
 {
 
 }
@@ -165,13 +167,16 @@ static void handle_socket_data()
     }
     /* Early data in fron and late ones in the end. */
     slist_add_tail(&sk_data->next, &g_data);
-    aos_mutex_unlock(&g_data_mutex);
+    g_link[link_id].data_total += len;
 
-    LOGD(TAG, "%s socket data with length %d saved to slist", __func__, len);
+    LOGD(TAG, "%s socket data on link %d with length %d saved to slist",
+         __func__, link_id, len);
 
     if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
         g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVPLUS);
     }
+
+    aos_mutex_unlock(&g_data_mutex);
 }
 
 /**
@@ -187,7 +192,7 @@ static void handle_socket_data()
 static void net_event_handler(void *arg)
 {
     char c;
-
+    char s[32] = {0}; 
     LOGD(TAG, "%s entry.", __func__);
 
     at.read(&c, 1);
@@ -200,11 +205,23 @@ static void net_event_handler(void *arg)
         }
         at.read(&c, 1);
         if (c == 'S') {
-            LOGD(TAG, "%s server conn state event.", __func__);
-            handle_server_conn_state(link_id);
+            LOGD(TAG, "%s server conn state event, linkid: %d.", __func__, link_id);
+            /* Eat the "ERVER," */
+            at.read(s, 6);
+            if (memcmp(s, "ERVER,", strlen("ERVER,")) != 0) {
+                LOGE(TAG, "%s invalid event format!!!");
+                assert(0);
+            }
+            handle_tcp_udp_client_conn_state(link_id);
         } else if (c == 'U') {
             LOGD(TAG, "%s UDP conn state event.", __func__);
-            handle_udp_conn_state();
+            /* Eat the "DP," */
+            at.read(s, 3);
+            if (memcmp(s, "DP,", strlen("DP,")) != 0) {
+                LOGE(TAG, "%s invalid event format!!!");
+                assert(0);
+            }
+            handle_tcp_udp_client_conn_state(link_id);
         } else {
             LOGE(TAG, "!!!Error: wrong CIPEVENT string.");
             assert(0);
@@ -246,8 +263,10 @@ static int sal_wifi_init(void)
     }
 
     memset(g_link, 0, sizeof(g_link));
-    for (link = 0; link < LINK_ID_MAX; link++)
+    for (link = 0; link < LINK_ID_MAX; link++) {
         g_link[link].fd = -1;
+        g_link[link].data_total = 0;
+    }
 
     at.oob(NET_OOB_PREFIX, net_event_handler, NULL);
 
@@ -314,10 +333,6 @@ int sal_wifi_start(at_conn_t *c)
           c->addr, c->r_port);
         if (c->l_port >= 0)
             snprintf(cmd + strlen(cmd), 7, ",%d", c->l_port);
-        if (aos_sem_new(&g_link[link_id].sem_start, 0) != 0) {
-            LOGE(TAG, "failed to allocate semaphore %s", __func__);
-            return -1;
-        }
         break;
     case UDP_BROADCAST:
     case UDP_UNICAST:
@@ -327,6 +342,7 @@ int sal_wifi_start(at_conn_t *c)
         break;
     default:
         LOGE(TAG, "Invalid connection type.");
+        g_link[link_id].fd = -1;
         return -1;
     }
 
@@ -336,12 +352,20 @@ int sal_wifi_start(at_conn_t *c)
     LOGD(TAG, "The AT response is: %s", out);
     if (strstr(out, CMD_FAIL_RSP) != NULL) {
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
+        g_link[link_id].fd = -1;
         return -1;
     }
-
+    
+    if (aos_sem_new(&g_link[link_id].sem_start, 0) != 0) {
+       LOGE(TAG, "failed to allocate semaphore %s", __func__);
+            g_link[link_id].fd = -1;
+       return -1;
+    } 
+    
     if (aos_sem_is_valid(&g_link[link_id].sem_start)) {
         if (aos_sem_wait(&g_link[link_id].sem_start, AOS_WAIT_FOREVER) != 0) {
             LOGE(TAG, "%s sem_wait failed", __func__);
+            g_link[link_id].fd = -1;
             return -1;
         }
         aos_sem_free(&g_link[link_id].sem_start);
@@ -440,6 +464,20 @@ static int sal_wifi_recv(int fd,
         return -1;
     }
 
+    if (g_link[link_id].data_total == 0) {
+        LOGD(TAG, "No data left for fd (%d) on link %d", fd, link_id);
+        *plen = 0;
+        return 0;
+    }
+
+    if (aos_mutex_lock(&g_data_mutex, AOS_WAIT_FOREVER) != 0) {
+        LOGE(TAG, "Failed to lock mutex (%s).", __func__);
+        if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+            g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_ERROR);
+        }
+        return -1;
+    }
+
     slist_for_each_entry_safe(&g_data, tmp, node, sk_data_t, next) {
         if (node->id != link_id) continue;
         to_read = MIN(*plen - total_read, node->len - node->offset);
@@ -447,26 +485,28 @@ static int sal_wifi_recv(int fd,
         /* Update total_read and offset */
         total_read += to_read;
         node->offset += to_read;
-        if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-            g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVMINUS);
-        }
+        //if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+        //    g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVMINUS);
+        //}
         /* Delete node if it's exhausted */
         if (node->offset >= (node->len - 1)) {
-            if (aos_mutex_lock(&g_data_mutex, AOS_WAIT_FOREVER) != 0) {
-                LOGE(TAG, "Failed to lock mutex (%s).", __func__);
-                if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-                    g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_ERROR);
-                }
-                return -1;
-            }
             slist_del(&node->next, &g_data);
-            aos_mutex_unlock(&g_data_mutex);
             aos_free((void *)node);
         }
+        /* Reflect the left data on link */
+        g_link[link_id].data_total -= to_read;
         /* Continue or stop here? */
         if (total_read >= *plen) break;
     }
 
+    if (g_link[link_id].data_total == 0) {
+        if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
+            g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVMINUS);
+        }
+    }
+
+    /* Safe to unlock now */
+    aos_mutex_unlock(&g_data_mutex);
 
     /* Reflect the real read length, caller to check this ret value */
     *plen = total_read;

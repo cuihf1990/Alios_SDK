@@ -1,18 +1,22 @@
 #!/usr/bin/python
 
 import os, sys, time, socket, re, pdb, traceback
-import subprocess, thread, threading, pickle
+import subprocess, thread, threading, random
 from operator import itemgetter
 import TBframe
 
 MAX_MSG_LENTH = 2000
 DEBUG = True
 
+class ConnectionLost(Exception):
+    pass
+
 class Autotest:
     def __init__(self):
         self.keep_running = True
         self.device_list= {}
         self.service_socket = 0
+        self.connected = False
         self.cmd_excute_state = 'idle'
         self.cmd_excute_return = ''
         self.cmd_excute_event = threading.Event()
@@ -24,16 +28,20 @@ class Autotest:
         self.filter_event.set()
         self.esc_seq = re.compile(r'\x1b[^m]*m')
 
+    def send_data(self, data):
+        try:
+            self.service_socket.send(data)
+        except:
+            self.connected = False
+
     def heartbeat_func(self):
         heartbeat_timeout = time.time() + 10
         while self.keep_running:
             time.sleep(0.05)
-            if time.time() >= heartbeat_timeout:
-                try:
-                    self.service_socket.send(TBframe.construct(TBframe.HEARTBEAT, ''))
-                    heartbeat_timeout += 10
-                except:
-                    continue
+            if time.time() < heartbeat_timeout:
+                continue
+            self.send_data(TBframe.construct(TBframe.HEARTBEAT, ''))
+            heartbeat_timeout += 10
 
     def get_devname_by_devstr(self, devstr):
         if devstr in list(self.subscribed_reverse):
@@ -89,6 +97,7 @@ class Autotest:
             try:
                 new_msg = self.service_socket.recv(MAX_MSG_LENTH)
                 if new_msg == '':
+                    raise ConnectionLost
                     break
 
                 msg += new_msg
@@ -105,25 +114,20 @@ class Autotest:
                             if c == '':
                                 continue
                             devs = c.split(',')
-                            ip = devs[0]
-                            port = devs[1]
-                            devs = devs[2:]
+                            uuid = devs[0]
+                            devs = devs[1:]
                             for d in devs:
                                 if d == '':
                                     continue
                                 [dev, using] = d.split('|')
-                                new_list[ip+','+port+','+dev] = using
+                                new_list[uuid + ',' + dev] = using
 
                         for dev in list(new_list):
                             self.device_list[dev] = new_list[dev]
-
-                        for dev in list(self.device_list):
-                            if dev not in list(new_list):
-                                self.device_list.pop(dev)
                     if type == TBframe.DEVICE_LOG:
                         dev = value.split(':')[0]
                         logtime = value.split(':')[1]
-                        log =value[len(dev) + 1 + len(logtime) + 1:]
+                        log = value[len(dev) + 1 + len(logtime) + 1:]
                         try:
                             logtime = float(logtime)
                             logtimestr = time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(logtime));
@@ -158,6 +162,26 @@ class Autotest:
                         self.cmd_excute_return = allocated
                         self.cmd_excute_state = 'done'
                         self.cmd_excute_event.set()
+            except ConnectionLost:
+                self.connected = False
+                print 'connection to server lost, try reconnecting...'
+                self.service_socket.close()
+                self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                while True:
+                    try:
+                        self.service_socket.connect((self.server_ip, self.server_port))
+                        self.connected = True
+                        break
+                    except:
+                        time.sleep(1)
+                print 'connection to server resumed'
+                random.seed()
+                time.sleep(1.2 + random.random())
+                for devname in self.subscribed:
+                    data = TBframe.construct(TBframe.LOG_SUB, self.subscribed[devname])
+                    self.send_data(data)
+                    data = TBframe.construct(TBframe.DEVICE_CMD, self.subscribed[devname] + ':help')
+                    self.send_data(data)
             except:
                 if DEBUG:
                     traceback.print_exc()
@@ -203,7 +227,7 @@ class Autotest:
         data = TBframe.construct(TBframe.FILE_BEGIN, content)
         retry = 4
         while retry > 0:
-            self.service_socket.send(data)
+            self.send_data(data)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_state == 'timeout':
                 retry -= 1;
@@ -232,7 +256,7 @@ class Autotest:
             data = TBframe.construct(TBframe.FILE_DATA, header + content)
             retry = 4
             while retry > 0:
-                self.service_socket.send(data)
+                self.send_data(data)
                 self.wait_cmd_excute_done(0.2)
                 if self.cmd_excute_return == None:
                     retry -= 1;
@@ -256,7 +280,7 @@ class Autotest:
         data = TBframe.construct(TBframe.FILE_END, content)
         retry = 4
         while retry > 0:
-            self.service_socket.send(data)
+            self.send_data(data)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_return == None:
                 retry -= 1;
@@ -269,11 +293,13 @@ class Autotest:
         return True
 
     def device_allocate(self, type, number, timeout, purpose='general'):
+        if self.connected == False:
+            return []
         content = ','.join([type, str(number), purpose])
         data = TBframe.construct(TBframe.DEVICE_ALLOC, content)
         timeout += time.time()
         while time.time() < timeout:
-            self.service_socket.send(data)
+            self.send_data(data)
             self.wait_cmd_excute_done(0.8)
             if self.cmd_excute_return == None or self.cmd_excute_return == []:
                 time.sleep(8)
@@ -286,6 +312,8 @@ class Autotest:
         return self.cmd_excute_return
 
     def device_subscribe(self, devices):
+        if self.connected == False:
+            return False
         for devname in list(devices):
             devstr = self.get_devstr_by_partialstr(devices[devname])
             if devstr == "":
@@ -297,7 +325,7 @@ class Autotest:
                 self.subscribed_reverse[devstr] = devname
         for devname in devices:
             data = TBframe.construct(TBframe.LOG_SUB, self.subscribed[devname])
-            self.service_socket.send(data)
+            self.send_data(data)
         return True
 
     def device_unsubscribe(self, devices):
@@ -305,17 +333,19 @@ class Autotest:
             if devname not in self.subscribed:
                 continue
             data = TBframe.construct(TBframe.LOG_UNSUB, self.subscribed[devname])
-            self.service_socket.send(data)
+            self.send_data(data)
             self.subscribed_reverse.pop(self.subscribed[devname])
             self.subscribed.pop(devname)
 
     def device_erase(self, devname):
+        if self.connected == False:
+            return False
         if devname not in self.subscribed:
             print "error: device {0} not subscribed".format(devname)
             return False
         content = self.subscribed[devname]
         data = TBframe.construct(TBframe.DEVICE_ERASE, content);
-        self.service_socket.send(data)
+        self.send_data(data)
         self.wait_cmd_excute_done(10)
         if self.cmd_excute_state == "done":
             ret = True
@@ -325,6 +355,8 @@ class Autotest:
         return ret
 
     def device_program(self, devname, address, filename):
+        if self.connected == False:
+            return False
         if devname not in self.subscribed:
             print "error: device {0} not subscribed".format(devname)
             return False
@@ -345,7 +377,7 @@ class Autotest:
         filehash = TBframe.hash_of_file(expandname)
         content = self.subscribed[devname] + ',' + address + ',' + filehash
         data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
-        self.service_socket.send(data)
+        self.send_data(data)
         self.wait_cmd_excute_done(270)
         if self.cmd_excute_state == "done":
             ret = True
@@ -357,6 +389,8 @@ class Autotest:
     def device_control(self, devname, operation):
         operations = {"start":TBframe.DEVICE_START, "stop":TBframe.DEVICE_STOP, "reset":TBframe.DEVICE_RESET}
 
+        if self.connected == False:
+            return False
         if devname not in self.subscribed:
             return False
         if operation not in list(operations):
@@ -364,10 +398,12 @@ class Autotest:
 
         content = self.subscribed[devname]
         data = TBframe.construct(operations[operation], content)
-        self.service_socket.send(data)
+        self.send_data(data)
         return True
 
     def device_run_cmd(self, devname, args, expect_lines = 0, timeout=0.8, filters=[""]):
+        if self.connected == False:
+            return False
         if devname not in self.subscribed:
             return False
         if len(args) == 0:
@@ -385,7 +421,7 @@ class Autotest:
 
         retry = 3
         while retry > 0:
-            self.service_socket.send(data)
+            self.send_data(data)
             self.filter_event.clear()
             self.filter_event.wait(timeout)
             if self.filter['lines_num'] > 0:
@@ -401,6 +437,8 @@ class Autotest:
 
     def start(self, server_ip, server_port, logname=None):
         #connect to server
+        self.server_ip = server_ip
+        self.server_port = server_port
         self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.service_socket.connect((server_ip, server_port))
@@ -408,6 +446,7 @@ class Autotest:
             print "connect to server {0}:{1} failed".format(server_ip, server_port)
             return False
 
+        self.connected = True
         self.logfile = None
         if logname != None:
             if os.path.exists('testlog') == False:
@@ -427,4 +466,5 @@ class Autotest:
     def stop(self):
         self.keep_running = False
         time.sleep(0.2)
-        self.service_socket.close()
+        if self.connected:
+            self.service_socket.close()

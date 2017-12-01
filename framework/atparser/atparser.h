@@ -9,7 +9,7 @@
 #include <hal/soc/uart.h>
 #include <aos/aos.h>
 
-#ifdef AOS_AT_ADAPTER
+#ifdef AOS_ATCMD
 #include <hal/soc/atcmd.h>
 #endif
 
