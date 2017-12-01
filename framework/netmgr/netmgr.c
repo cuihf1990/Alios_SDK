@@ -9,6 +9,11 @@
 #include <aos/network.h>
 #include <hal/hal.h>
 
+#ifdef WITH_LWIP
+#include <lwip/priv/tcp_priv.h>
+#include <lwip/udp.h>
+#endif
+
 #include "netmgr.h"
 
 #ifdef CONFIG_AOS_MESH
@@ -137,8 +142,16 @@ static void netmgr_ip_got_event(hal_wifi_module_t *m,
 static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
                                   void *arg)
 {
+#ifdef WITH_LWIP
+    long long ts = aos_now();
+#endif
     switch (stat) {
         case NOTIFY_STATION_UP:
+#ifdef WITH_LWIP
+            srand((unsigned int)ts);
+            tcp_init();
+            udp_init();
+#endif
             g_station_is_up = true;
             aos_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED,
                            (unsigned long)g_netmgr_cxt.ap_config.ssid);
