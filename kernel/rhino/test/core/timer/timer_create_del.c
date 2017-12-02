@@ -13,7 +13,9 @@
 
 static ktask_t  *task_0_test;
 static ktimer_t timer_0_test;
+static ktimer_t timer_1_test;
 static ksem_t   sem_0_test;
+static ktimer_t timer;
 
 static void timer_0_func(ktimer_t *timer, void *arg)
 {
@@ -23,6 +25,13 @@ static void timer_0_func(ktimer_t *timer, void *arg)
     krhino_sem_give(&sem_0_test);
 }
 
+static void timer_1_func(ktimer_t *timer, void *arg)
+{
+    TIMER_VAL_CHK(timer == &timer_1_test);
+    TIMER_VAL_CHK((size_t)arg == TIMER0_MAGIC);
+
+    krhino_sem_give(&sem_0_test);
+}
 
 static void timer_create_param_test(void)
 {
@@ -49,7 +58,6 @@ static void timer_create_param_test(void)
 static void timer_del_param_test(void)
 {
     kstat_t ret;
-    ktimer_t timer;
 
     memset(&timer, 0, sizeof(ktimer_t));
 
@@ -75,10 +83,10 @@ static void task_timer0_entry(void *arg)
 
     while (1) {
         /* check krhino_timer_create */
-        timer_create_param_test();
+        //timer_create_param_test();
 
         /* check krhino_timer_del */
-        timer_del_param_test();
+        //timer_del_param_test();
 
         ret = krhino_sem_create(&sem_0_test, "sem_0_test", 0);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
@@ -91,20 +99,20 @@ static void task_timer0_entry(void *arg)
         ret = krhino_timer_del(&timer_0_test);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
-        ret = krhino_timer_create(&timer_0_test, "timer_0_test",
-                                  (timer_cb_t)timer_0_func,
+        ret = krhino_timer_create(&timer_1_test, "timer_0_test",
+                                  (timer_cb_t)timer_1_func,
                                   TIMER0_ROUND, TIMER0_ROUND, (void *)TIMER0_MAGIC, 1);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
         ret = krhino_sem_take(&sem_0_test, RHINO_WAIT_FOREVER);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
-        ret = krhino_timer_stop(&timer_0_test);
+        ret = krhino_timer_stop(&timer_1_test);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
-        ret = krhino_timer_dyn_del(&timer_0_test);
+        ret = krhino_timer_dyn_del(&timer_1_test);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
 
-        ret = krhino_timer_del(&timer_0_test);
+        ret = krhino_timer_del(&timer_1_test);
         if (ret == RHINO_SUCCESS) {
             test_case_success++;
             PRINT_RESULT("timer create&del", PASS);
