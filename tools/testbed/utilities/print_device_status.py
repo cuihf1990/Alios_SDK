@@ -49,14 +49,13 @@ class Autotest:
                             if c == '':
                                 continue
                             devs = c.split(',')
-                            ip = devs[0]
-                            port = devs[1]
-                            devs = devs[2:]
+                            uuid = devs[0]
+                            devs = devs[1:]
                             for d in devs:
                                 if d == '':
                                     continue
                                 [dev, using] = d.split('|')
-                                new_list[ip+','+port+','+dev] = using
+                                new_list[uuid + ',' + dev] = using
 
                         old_list = list(self.device_list)
                         for dev in list(new_list):
