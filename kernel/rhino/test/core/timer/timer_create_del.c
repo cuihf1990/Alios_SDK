@@ -83,10 +83,10 @@ static void task_timer0_entry(void *arg)
 
     while (1) {
         /* check krhino_timer_create */
-        //timer_create_param_test();
+        timer_create_param_test();
 
         /* check krhino_timer_del */
-        //timer_del_param_test();
+        timer_del_param_test();
 
         ret = krhino_sem_create(&sem_0_test, "sem_0_test", 0);
         TIMER_VAL_CHK(ret == RHINO_SUCCESS);
