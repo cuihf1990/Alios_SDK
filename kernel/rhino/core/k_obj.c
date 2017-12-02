@@ -81,8 +81,6 @@ ctx_switch_t g_sys_ctx_switch_times;
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kqueue_t    g_dyn_queue;
 void       *g_dyn_queue_msg[RHINO_CONFIG_K_DYN_QUEUE_MSG];
-ktask_t     g_dyn_mem_proc_task;
-cpu_stack_t g_dyn_mem_proc_stack[RHINO_CONFIG_K_DYN_TASK_STACK];
 #endif
 
 #if (RHINO_CONFIG_WORKQUEUE > 0)
