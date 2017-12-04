@@ -29,6 +29,7 @@ static void test_fota_case(void)
     input_event_t event;
     event.type = EV_SYS;
     event.code = CODE_SYS_ON_START_FOTA;
+    event.value=NULL;
     ota_service_event(&event, NULL);
     ota_check_update("",1);
     ota_download_start(NULL);
