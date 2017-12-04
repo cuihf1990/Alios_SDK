@@ -105,6 +105,12 @@ struct addrinfo {
 #define IPPROTO_UDPLITE 136
 #define IPPROTO_RAW     255
 
+/* Flags we can use with send and recv. */
+#define MSG_PEEK       0x01    /* Peeks at an incoming message */
+#define MSG_WAITALL    0x02    /* Unimplemented: Requests that the function block until the full amount of data requested can be returned */
+#define MSG_OOB        0x04    /* Unimplemented: Requests out-of-band data. The significance and semantics of out-of-band data are protocol-specific */
+#define MSG_DONTWAIT   0x08    /* Nonblocking i/o for this operation only */
+#define MSG_MORE       0x10    /* Sender will send more */
 
 #define MEMP_NUM_NETCONN     5//(MAX_SOCKETS_TCP + MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
 
@@ -177,6 +183,9 @@ typedef struct ip_mreq {
 #define SO_CONTIMEO    0x1009 /* Unimplemented: connect timeout */
 #define SO_NO_CHECK    0x100a /* don't create UDP checksum */
 
+const void *ur_adapter_get_default_ipaddr(void);
+const void *ur_adapter_get_mcast_ipaddr(void);
+
 int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset,
                fd_set *exceptset, struct timeval *timeout);
 
@@ -185,6 +194,8 @@ int sal_socket(int domain, int type, int protocol);
 int sal_write(int s, const void *data, size_t size);
 
 int sal_connect(int s, const struct sockaddr *name, socklen_t namelen);
+
+int sal_bind(int s, const struct sockaddr *name, socklen_t namelen);
 
 int sal_eventfd(unsigned int initval, int flags);
 
@@ -205,6 +216,9 @@ int sal_sendto(int s, const void * data, size_t size, int flags, const struct so
 int sal_send(int s, const void *data, size_t size, int flags);
 
 int sal_shutdown(int s, int how);
+
+int sal_recvfrom(int s, void *mem, size_t len, int flags,
+              struct sockaddr *from, socklen_t *fromlen);
 
 int sal_recv(int s, void *mem, size_t len, int flags);
 
@@ -237,6 +251,9 @@ int sal_fcntl(int s, int cmd, int val);
 #define connect(s,name,namelen) \
         sal_connect(s,name,namelen)
 
+#define bind(s,name,namelen) \
+        sal_bind(s,name,namelen)
+
 #define shutdown(s,how) \
         sal_shutdown(s,how)
 
@@ -257,6 +274,9 @@ int sal_fcntl(int s, int cmd, int val);
 
 #define sendto(s,dataptr,size,flags,to,tolen) \
         sal_sendto(s,dataptr,size,flags,to,tolen)
+
+#define recvfrom(s,mem,len,flags,from,fromlen) \
+            sal_recvfrom(s,mem,len,flags,from,fromlen)
 
 #define send(s,data,size,flags) \
         sal_send(s,data,size,flags)

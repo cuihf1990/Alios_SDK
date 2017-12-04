@@ -20,9 +20,13 @@ extern "C" {
 #define sal_ntohl(x) sal_htonl(x)
 #endif
 
-#define htons(h) sal_htons(h)
+#define htons(x) sal_htons(x)
 
-#define ntohs(n) sal_ntohs(n)
+#define ntohs(x) sal_ntohs(x)
+
+#define htonl(x) sal_htonl(x)
+
+#define ntohl(x) sal_ntohl(x)
 
 #ifdef __cplusplus
 }
