@@ -186,3 +186,5 @@
 1 185 ur_adapter_get_mcast_ipaddr "const void *" " void"
 1 186 aos_fflush "int" " FILE *"
 1 187 aos_vprintf "int" " char *, va_list"
+1 188 tcp_init "void" " void"
+1 189 udp_init "void" " void"
