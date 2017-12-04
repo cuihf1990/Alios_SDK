@@ -9,6 +9,7 @@ endif
 
 ifeq ($(at_adapter),1)
 $(NAME)_COMPONENTS += at_adapter
+LWIP = 1
 endif
 
 ifneq (,$(filter linux,$(HOST_MCU_FAMILY)))
