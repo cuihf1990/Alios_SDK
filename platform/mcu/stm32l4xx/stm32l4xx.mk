@@ -56,10 +56,7 @@ GLOBAL_LDFLAGS += -mcpu=cortex-m4        \
                   --specs=nosys.specs \
                   $(CLIB_LDFLAGS_NANO_FLOAT)
 
-$(NAME)_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration
-$(NAME)_CFLAGS  += -Wno-type-limits -Wno-sign-compare -Wno-pointer-sign -Wno-uninitialized
-$(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-variable
-$(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
+$(NAME)_CFLAGS  += -Wall -Werror 
 
 GLOBAL_LDFLAGS += -T platform/mcu/stm32l4xx/STM32L475VGTx_FLASH.ld
 
