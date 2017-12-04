@@ -89,6 +89,16 @@ endif
 total:
 	@:
 
+ifeq (,$(BINS))
+BINS_DOWNLOAD_ADDR = 0x13200
+else ifeq (app,$(BINS))
+BINS_DOWNLOAD_ADDR = $(call PARSE_DOWNLOAD_ADDR, "app_download_addr")
+else ifeq (framework,$(BINS))
+BINS_DOWNLOAD_ADDR = $(call PARSE_DOWNLOAD_ADDR, "framework_download_addr")
+else ifeq (kernel,$(BINS))
+BINS_DOWNLOAD_ADDR = $(call PARSE_DOWNLOAD_ADDR, "kernel_download_addr")
+endif
+
 ifeq ($(BOOTLOADER_APP),1)
 download_app: $(STRIPPED_LINK_OUTPUT_FILE) display_map_summary sflash_write_app kill_openocd
 	$(eval IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(BIN_OUTPUT_FILE)))
@@ -104,7 +114,7 @@ endif
 download_app: $(STRIPPED_LINK_OUTPUT_FILE) display_map_summary download_bootloader sflash_write_app kill_openocd
 	$(eval IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(BIN_OUTPUT_FILE)))
 	$(QUIET)$(ECHO) Downloading application to partition: $(APPLICATION_FIRMWARE_PARTITION_TCL) size: $(IMAGE_SIZE) bytes... 
-	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c flash_boot_check -c "flash_program $(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.ota$(BIN_OUTPUT_SUFFIX)) 0x13200" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed. See $(OPENOCD_LOG_FILE) for detail.
+	$(call CONV_SLASHES, $(OPENOCD_FULL_NAME)) -s $(SOURCE_ROOT) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -c init -c flash_boot_check -c "flash_program $(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.ota$(BIN_OUTPUT_SUFFIX)) $(BINS_DOWNLOAD_ADDR)" -c shutdown $(DOWNLOAD_LOG) 2>&1 && $(ECHO) Download complete && $(ECHO_BLANK_LINE) || $(ECHO) Download failed. See $(OPENOCD_LOG_FILE) for detail.
 
 endif
 

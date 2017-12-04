@@ -225,12 +225,15 @@ LOAD_SYMBOL_ADDRSTR = $(shell $(READELF) -S $(READELF_STR) | findstr ".text")
 LOAD_SYMBOL_ADDR    = 0x$(wordlist 5, 5, $(LOAD_SYMBOL_ADDRSTR))
 endif  # Win32
 ifeq ($(HOST_OS),Linux32)
+PARSE_DOWNLOAD_ADDR = `$(TOOLS_ROOT)/cmd/linux32/grep -nr $1 $(OUTPUT_DIR)/ld | $(TOOLS_ROOT)/cmd/linux32/awk -F '=' '{print $$2}' | $(TOOLS_ROOT)/cmd/linux32/awk -F ')' '{print $$1}'`
 LOAD_SYMBOL_ADDR    = 0x`$(READELF) -S $(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING).$(BINSTYPE_LOWER)$(LINK_OUTPUT_SUFFIX) | $(TOOLS_ROOT)/cmd/linux32/grep ".text" | $(TOOLS_ROOT)/cmd/linux32/awk '{print $$5}'`
 endif  # Linux32
 ifeq ($(HOST_OS),Linux64)
+PARSE_DOWNLOAD_ADDR = `$(TOOLS_ROOT)/cmd/linux64/grep -nr $1 $(OUTPUT_DIR)/ld | $(TOOLS_ROOT)/cmd/linux64/awk -F '=' '{print $$2}' | $(TOOLS_ROOT)/cmd/linux64/awk -F ')' '{print $$1}'`
 LOAD_SYMBOL_ADDR    = 0x`$(READELF) -S $(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING).$(BINSTYPE_LOWER)$(LINK_OUTPUT_SUFFIX) | $(TOOLS_ROOT)/cmd/linux64/grep ".text" | $(TOOLS_ROOT)/cmd/linux64/awk '{print $$5}'`
 endif  # Linux64
 ifeq ($(HOST_OS),OSX)
+PARSE_DOWNLOAD_ADDR = `$(TOOLS_ROOT)/cmd/osx/grep -nr $1 $(OUTPUT_DIR)/ld | $(TOOLS_ROOT)/cmd/osx/awk -F '=' '{print $$2}' | $(TOOLS_ROOT)/cmd/osx/awk -F ')' '{print $$1}'`
 LOAD_SYMBOL_ADDR    = 0x`$(READELF) -S $(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING).$(BINSTYPE_LOWER)$(LINK_OUTPUT_SUFFIX) | $(TOOLS_ROOT)/cmd/osx/grep ".text" | $(TOOLS_ROOT)/cmd/osx/awk '{print $$5}'`
 endif  # OSX
 SUBGDBINIT_STRING   = add-symbol-file $(BUILD_DIR)/eclipse_debug/$(BINSTYPE_LOWER)_built.elf $(LOAD_SYMBOL_ADDR)
