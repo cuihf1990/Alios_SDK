@@ -243,30 +243,6 @@ static const mac_address_t *linux_80211_mesh_get_mac_address(
     return &addr;
 }
 
-static int linux_80211_mesh_set_key(struct umesh_hal_module_s *module,
-                                uint8_t index, uint8_t *key, uint8_t length)
-{
-    mesh_hal_priv_t *priv = module->base.priv_dev;
-
-    if (index > 1) {
-        return -1;
-    }
-
-    if (length > KEY_SIZE) {
-        priv->keys[index].len = 0;
-        return -1;
-    }
-    priv->keys[index].len = length;
-    memcpy(priv->keys[index].key, key, length);
-
-    return 0;
-}
-
-static int linux_80211_mesh_is_sec_enabled(struct umesh_hal_module_s *module)
-{
-    return 0;
-}
-
 static int linux_80211_mesh_hal_get_channel(umesh_hal_module_t *module)
 {
     mesh_hal_priv_t *priv = module->base.priv_dev;
@@ -349,8 +325,6 @@ static umesh_hal_module_t linux_80211_mesh_wifi_module = {
     .umesh_hal_get_channel = linux_80211_mesh_hal_get_channel,
     .umesh_hal_set_channel = linux_80211_mesh_hal_set_channel,
     .umesh_hal_get_chnlist = linux_80211_mesh_get_channel_list,
-    .umesh_hal_set_key = linux_80211_mesh_set_key,
-    .umesh_hal_is_sec_enabled = linux_80211_mesh_is_sec_enabled,
     .umesh_hal_get_stats = linux_80211_mesh_get_stats,
     .umesh_hal_set_extnetid = linux_80211_wifi_mesh_set_extnetid,
     .umesh_hal_get_extnetid = linux_80211_wifi_mesh_get_extnetid,
