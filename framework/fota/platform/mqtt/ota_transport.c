@@ -341,7 +341,7 @@ int8_t platform_ota_subscribe_upgrade(aos_cloud_cb_t msgCallback)
     return ret;
 do_exit:
     if (NULL != g_upgrad_topic) {
-        free(g_upgrad_topic);
+        aos_free(g_upgrad_topic);
         g_upgrad_topic = NULL;
     }
 
@@ -421,7 +421,7 @@ const char *platform_ota_get_id(void)
 int OTA_Deinit(void *handle)
 {
     if (g_upgrad_topic) {
-        free(g_upgrad_topic);
+        aos_free(g_upgrad_topic);
         g_upgrad_topic = NULL;
     }
     return 0;
