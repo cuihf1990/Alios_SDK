@@ -89,16 +89,6 @@ endif
 total:
 	@:
 
-ifeq (,$(BINS))
-BINS_DOWNLOAD_ADDR = 0x13200
-else ifeq (app,$(BINS))
-BINS_DOWNLOAD_ADDR = $(call PARSE_DOWNLOAD_ADDR, "app_download_addr")
-else ifeq (framework,$(BINS))
-BINS_DOWNLOAD_ADDR = $(call PARSE_DOWNLOAD_ADDR, "framework_download_addr")
-else ifeq (kernel,$(BINS))
-BINS_DOWNLOAD_ADDR = $(call PARSE_DOWNLOAD_ADDR, "kernel_download_addr")
-endif
-
 ifeq ($(BOOTLOADER_APP),1)
 download_app: $(STRIPPED_LINK_OUTPUT_FILE) display_map_summary sflash_write_app kill_openocd
 	$(eval IMAGE_SIZE := $(shell $(PYTHON) $(IMAGE_SIZE_SCRIPT) $(BIN_OUTPUT_FILE)))
