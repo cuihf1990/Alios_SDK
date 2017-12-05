@@ -7,6 +7,8 @@
 #ifdef WITH_LWIP
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
+#include <lwip/priv/tcp_priv.h>
+#include <lwip/udp.h>
 #endif
 #include <hal/hal.h>
 #ifdef CONFIG_AOS_MESH
