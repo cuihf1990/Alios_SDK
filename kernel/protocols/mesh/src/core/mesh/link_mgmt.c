@@ -146,12 +146,6 @@ static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
 {
     neighbor_t *nbr;
 
-    slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-        if (nbr->state == STATE_INVALID) {
-            goto get_nbr;
-        }
-    }
-
     if (hal->neighbors_num < MAX_NEIGHBORS_NUM) {
         nbr = (neighbor_t *)ur_mem_alloc(sizeof(neighbor_t));
         memset(nbr, 0, sizeof(neighbor_t));
