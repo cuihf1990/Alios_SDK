@@ -51,13 +51,30 @@ def process_component_test(source_directory):
 
     
     for code in code_list:
-        source_codes +=  "\nextern void %s(void);\n"%(code)
+        source_codes +=  "extern void %s(void);\n"%(code)
 
-    source_codes += "\nvoid add_test(void) {\n"
+    source_codes += "\nvoid add_test(void) {\n\n"
+
+    # temporary work around for the process sequence of mesh & netmgr testcase
+    uradar_test_code = ""
+    netmgr_test_code = ""
 
     for code in code_list:
-        source_codes += "    %s();\n"%(code)
-       
+        if code.find("uradar") == -1 and code.find("netmgr") == -1 :
+            source_codes += "    %s();\n\n"%(code)
+        else:
+            if code.find("uradar") == -1:
+                netmgr_test_code = code
+            else:
+                uradar_test_code = code
+
+    if uradar_test_code:
+        source_codes += "    %s();\n\n"%(uradar_test_code)
+
+    if netmgr_test_code:
+        source_codes += "    %s();\n\n"%(netmgr_test_code)
+
+
     source_codes += "}"
 
     with open(os.path.join(source_directory, test_register_src), "w") as f:

@@ -702,3 +702,4 @@ void test_mqtt(void)
 {    
     yunit_add_test_suites(suites);
 }
+AOS_TESTCASE(test_mqtt);

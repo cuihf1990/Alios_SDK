@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <aos/kernel.h>
+#include <aos/types.h>
 
 #include "yunit.h"
 #include <k_api.h>
@@ -11,6 +12,8 @@
 
 
 #define RHINO_TEST_TASK_PRI 9
+
+extern void test_rhino_port(void);
 
 static int init(void)
 {
@@ -59,5 +62,9 @@ void test_rhino(void)
     }
 
     yunit_add_test_case(suite, "rhino test stats", rhino_ytest_fn);
-}
 
+#ifdef YTS_LINUX
+    test_rhino_port();
+#endif
+}
+AOS_TESTCASE(test_rhino);

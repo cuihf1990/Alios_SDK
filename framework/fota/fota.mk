@@ -12,7 +12,7 @@ $(NAME)_SOURCES += \
     ota_update_manifest.c \
     ota_version.c
 
-$(NAME)_COMPONENTS += fota.platform fota.download  digest_algorithm 
+$(NAME)_COMPONENTS += fota.platform fota.download  digest_algorithm cjson 
 
 $(NAME)_INCLUDES := \
     ./platform \

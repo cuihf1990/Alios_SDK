@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <yunit.h>
 #include <yts.h>
+#include <aos/types.h>
 #include "mico_rtos.h"
 #include "mico_rtos_common.h"
 #include "common.h"
@@ -141,4 +142,4 @@ void test_vcall(void)
 {
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_vcall);

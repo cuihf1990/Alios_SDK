@@ -378,3 +378,4 @@ void test_deviceIO(void)
 {
     yunit_add_test_suites(suites);
 }
+AOS_TESTCASE(test_deviceIO);

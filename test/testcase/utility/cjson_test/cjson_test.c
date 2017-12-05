@@ -57,4 +57,4 @@ void test_cjson(void)
 {
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_cjson);

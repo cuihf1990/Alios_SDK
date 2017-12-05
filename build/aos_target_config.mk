@@ -35,6 +35,15 @@ AOS_SDK_VERSION ?= $(AOS_SDK_VERSION_MAJOR).$(AOS_SDK_VERSION_MINOR).$(AOS_SDK_V
 # $(1) is component
 GET_BARE_LOCATION =$(patsubst $(call ESCAPE_BACKSLASHES,$(SOURCE_ROOT))%,%,$(strip $($(1)_LOCATION)))
 
+define PREPROCESS_TEST_COMPONENT
+$(if $(filter yts,$(COMPONENTS)), \
+$(if $(test), $(eval TEST_COMPONENTS := $(test)),) \
+$(if $(TEST_COMPONENTS), $(call RECURSE_DIR_COMPONENT_SEARCH, $(patsubst %/,%,$(TEST_COMPONENT_DIRECTORIES)), TEST_COMPONENT_LIST) \
+$(eval TEST_COMPONENTS := $(addprefix %., $(addsuffix _test, $(TEST_COMPONENTS)))) \
+$(eval COMPONENTS += $(filter $(TEST_COMPONENTS),  $(subst /,.,$(strip $(TEST_COMPONENT_LIST)))))))
+endef
+
+
 #####################################################################################
 # Macro PROCESS_COMPONENT
 # $(1) is the list of components left to process. $(COMP) is set as the first element in the list
@@ -137,9 +146,7 @@ $(eval PROCESSED_COMPONENTS += $(NAME))
 $(eval PROCESSED_COMPONENTS_LOCS += $(COMP))
 $(eval COMPONENTS += $($(NAME)_COMPONENTS))
 
-$(if $(TEST_COMPONENTS), $(call RECURSE_DIR_COMPONENT_SEARCH, $(patsubst %/,%,$(TEST_COMPONENT_DIRECTORIES)), TEST_COMPONENT_LIST) \
-$(eval TEST_COMPONENTS := $(addprefix %., $(addsuffix _test, $(TEST_COMPONENTS)))) \
-$(eval COMPONENTS += $(filter $(TEST_COMPONENTS),  $(subst /,.,$(strip $(TEST_COMPONENT_LIST))))))
+$(call PREPROCESS_TEST_COMPONENT, $(COMPONENTS), $(TEST_COMPONENTS))
 
 DEPENDENCY += '$(NAME)': '$($(NAME)_COMPONENTS)',
 
