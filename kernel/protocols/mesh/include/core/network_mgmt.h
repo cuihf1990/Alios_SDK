@@ -9,12 +9,15 @@
 
 enum {
     DISCOVERY_RETRY_TIMES = 4,
+    ACTIVE_DISCOVER_INTERVAL = 300000,  // 5 mins
 };
+
+typedef void (* discovered_handler_t)(neighbor_t *nbr);
 
 ur_error_t handle_discovery_request(message_t *message);
 ur_error_t handle_discovery_response(message_t *message);
-ur_error_t nm_start_discovery(discovered_handler_t handler);
-ur_error_t nm_stop_discovery(void);
+void umesh_network_mgmt_init(void);
+void umesh_network_mgmt_register_callback(discovered_handler_t handler);
 
 #endif  /* UR_NETWORK_MGMT_H */
 

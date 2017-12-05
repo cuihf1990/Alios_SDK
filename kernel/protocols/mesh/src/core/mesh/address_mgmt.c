@@ -796,21 +796,23 @@ static void cleanup_addr_cache(void)
 
 static ur_error_t mesh_interface_up(void)
 {
-    memset(g_ar_state.cache, 0, sizeof(g_ar_state.cache));
+    MESH_LOG_DEBUG("address mgmt mesh interface up handler");
 
+    memset(g_ar_state.cache, 0, sizeof(g_ar_state.cache));
     cleanup_addr_cache();
-    if (umesh_get_mode() & MODE_RX_ON)  {
+    if (umesh_get_mode() & MODE_RX_ON) {
         ur_stop_timer(&g_ac_state.timer, NULL);
         g_ac_state.timer = ur_start_timer(ADDR_CACHE_CHECK_INTERVAL,
                                           handle_addr_cache_timer, NULL);
         start_alive_timer(NULL);
     }
-
     return UR_ERROR_NONE;
 }
 
-static ur_error_t mesh_interface_down(void)
+static ur_error_t mesh_interface_down(interface_state_t state)
 {
+    MESH_LOG_DEBUG("address mgmt mesh interface down handler, reason %d", state);
+
     ur_stop_timer(&g_ac_state.timer, NULL);
     ur_stop_timer(&g_am_state.alive_timer, NULL);
     cleanup_addr_cache();
@@ -818,16 +820,20 @@ static ur_error_t mesh_interface_down(void)
 }
 
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-static void lowpower_radio_down_handler(void)
+static void lowpower_radio_down_handler(schedule_type_t type)
 {
-
 }
 
-static void lowpower_radio_up_handler(void)
+static void lowpower_radio_up_handler(schedule_type_t type)
 {
     network_context_t *network = get_default_network_context();
 
-    send_address_notification(network, NULL);
+    if (umesh_get_mode() & MODE_RX_ON) {
+        return;
+    }
+    if (type == LOWPOWER_PARENT_SCHEDULE) {
+        send_address_notification(network, NULL);
+    }
 }
 #endif
 

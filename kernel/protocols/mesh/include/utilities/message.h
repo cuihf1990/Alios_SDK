@@ -81,9 +81,8 @@ message_t *message_queue_get_head(message_queue_t *queue);
 ur_error_t message_queue_enqueue(message_queue_t *queue, message_t *message);
 ur_error_t message_queue_dequeue(message_t *message);
 uint16_t message_queue_get_size(message_queue_t *queue);
-
-void message_stats_reset(void);
 const ur_message_stats_t *message_get_stats(void);
+void umesh_message_init(void);
 
 #define for_each_message(msg, queue) \
     dlist_t *__tmp; \

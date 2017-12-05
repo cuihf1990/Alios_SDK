@@ -228,7 +228,7 @@ uint16_t message_queue_get_size(message_queue_t *queue)
     return dlist_entry_number(queue);
 }
 
-void message_stats_reset(void)
+void umesh_message_init(void)
 {
     memset(&g_message_stats, 0, sizeof(g_message_stats));
 }

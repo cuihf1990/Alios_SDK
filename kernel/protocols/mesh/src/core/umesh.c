@@ -19,6 +19,7 @@
 #include "core/crypto.h"
 #include "core/address_mgmt.h"
 #include "core/fragments.h"
+#include "core/network_mgmt.h"
 #if (defined CONFIG_NET_LWIP)
 #include "ip/compress6.h"
 #include "ip/lwip_adapter.h"
@@ -55,7 +56,7 @@ static ur_error_t umesh_interface_up(void)
     return UR_ERROR_NONE;
 }
 
-static ur_error_t umesh_interface_down(void)
+static ur_error_t umesh_interface_down(interface_state_t state)
 {
     ur_adapter_callback_t *callback;
 
@@ -307,7 +308,8 @@ ur_error_t umesh_init(node_mode_t mode)
     extern void lowpower_init(void);
     lowpower_init();
 #endif
-    message_stats_reset();
+    umesh_message_init();
+    umesh_network_mgmt_init();
     g_um_state.initialized = true;
     mesh_cli_init();
 

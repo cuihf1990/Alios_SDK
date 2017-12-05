@@ -1074,7 +1074,6 @@ static void handle_received_frame(void *context, frame_t *frame,
     memcpy(message->info, &info, sizeof(info));
     message_copy_from(message, frame->data, frame->len);
     rx_frame->message = message;
-
     if (umesh_task_schedule_call(enqueue_msg, rx_frame) != UR_ERROR_NONE) {
         hal->link_stats.in_drops++;
         message_free(message);
@@ -1222,22 +1221,27 @@ static void cleanup_sending_message(void)
 
 static ur_error_t mesh_interface_up(void)
 {
+    MESH_LOG_DEBUG("mesh forwarder mesh interface up handler");
     return UR_ERROR_NONE;
 }
 
-static ur_error_t mesh_interface_down(void)
+static ur_error_t mesh_interface_down(interface_state_t state)
 {
+    MESH_LOG_DEBUG("mesh forwarder mesh interface down handler, reason %d", state);
     cleanup_sending_message();
     return UR_ERROR_NONE;
 }
 
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-static void lowpower_radio_down_handler(void)
+static void lowpower_radio_down_handler(schedule_type_t type)
 {
-    cleanup_sending_messaage();
+    if (umesh_get_mode() & MODE_RX_ON) {
+        return;
+    }
+    cleanup_sending_message();
 }
 
-static void lowpower_radio_up_handler(void)
+static void lowpower_radio_up_handler(schedule_type_t type)
 {
 
 }

@@ -282,12 +282,12 @@ void umesh_pal_init(void)
 {
 }
 
-void umesh_pal_sleep(void)
+void umesh_pal_radio_sleep(void)
 {
 
 }
 
-void umesh_pal_wakeup(void)
+void umesh_pal_radio_wakeup(void)
 {
 
 }

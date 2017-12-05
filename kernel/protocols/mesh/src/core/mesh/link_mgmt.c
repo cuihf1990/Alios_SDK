@@ -83,7 +83,7 @@ ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     slist_del(&neighbor->next, &hal->neighbors_list);
     ur_mem_free(neighbor->one_time_key, KEY_SIZE);
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-    while ((message = message_queue_get_head(neighbor->buffer_queue))) {
+    while ((message = message_queue_get_head(&neighbor->buffer_queue))) {
         message_queue_dequeue(message);
         message_free(message);
     }
@@ -93,10 +93,16 @@ ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     return UR_ERROR_NONE;
 }
 
-static void build_and_send_link_request(neighbor_t *nbr)
+static void build_and_send_link_request(bool send)
 {
+    neighbor_t *nbr = umesh_mm_get_attach_node();
     network_context_t *network = get_default_network_context();
     ur_addr_t addr;
+
+    if (nbr == NULL || (send == false && (nbr->flags & NBR_LINK_ESTIMATED))) {
+        return;
+    }
+
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     uint8_t tlv_types[3] = {TYPE_UCAST_CHANNEL, TYPE_TIME_SLOT, TYPE_BUFQUEUE_SIZE};
     uint8_t tlv_length = (umesh_get_mode() & MODE_RX_ON)? 1: 3;
@@ -124,8 +130,6 @@ static void update_neighbors_link_cost(hal_context_t *hal)
             nbr->state = STATE_INVALID;
             g_lm_state.neighbor_updater(nbr);
             remove_neighbor(hal, nbr);
-        } else if (nbr == umesh_mm_get_attach_node() && (nbr->flags & NBR_LINK_ESTIMATED) == 0) {
-            build_and_send_link_request(nbr);
         }
     }
 }
@@ -139,6 +143,7 @@ static void handle_link_quality_timer(void *args)
     hal->link_quality_update_timer = ur_start_timer(hal->link_quality_update_interval,
                                                     handle_link_quality_timer, hal);
     update_neighbors_link_cost(hal);
+    build_and_send_link_request(false);
 }
 
 static neighbor_t *new_neighbor(hal_context_t *hal, const mac_address_t *addr,
@@ -180,14 +185,17 @@ get_nbr:
     memcpy(nbr->mac, addr->addr, sizeof(nbr->mac));
     nbr->netid = BCAST_NETID;
     nbr->sid = BCAST_SID;
-    nbr->path_cost          = INFINITY_PATH_COST;
-    nbr->mode               = 0;
-    nbr->stats.link_cost    = 256;
+    nbr->path_cost = INFINITY_PATH_COST;
+    nbr->mode = 0;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    dlist_init(&nbr->buffer_queue);
+#endif
+    nbr->stats.link_cost = 256;
     nbr->stats.link_request = 0;
-    nbr->stats.link_accept  = 0;
-    nbr->state              = STATE_INVALID;
-    nbr->flags              = 0;
-    nbr->last_heard         = umesh_now_ms();
+    nbr->stats.link_accept = 0;
+    nbr->state = STATE_INVALID;
+    nbr->flags = 0;
+    nbr->last_heard = umesh_now_ms();
     return nbr;
 }
 
@@ -197,8 +205,14 @@ static bool neighbor_is_alive(hal_context_t *hal, neighbor_t *nbr)
     int32_t time_offset = umesh_now_ms() - nbr->last_heard;
     bool ret;
 
-    threshold = (nbr->mode & MODE_RX_ON)? hal->neighbor_alive_interval: \
-                hal->link_quality_update_interval * LINK_ESTIMATE_SENT_THRESHOLD;
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    if ((umesh_get_mode() & MODE_RX_ON) == 0 || (nbr->mode & MODE_RX_ON) == 0) {
+        threshold = SLOT_INTERVAL * SLOTS_SIZE * LINK_ESTIMATE_SENT_THRESHOLD;
+    } else
+#endif
+    {
+        threshold = hal->neighbor_alive_interval;
+    }
     ret = (time_offset < threshold)? true: false;
     return ret;
 }
@@ -254,6 +268,7 @@ static ur_error_t mesh_interface_up(void)
     slist_t *hals;
     hal_context_t *hal;
 
+    MESH_LOG_DEBUG("link mgmt mesh interface up handler");
     if (umesh_get_mode() & MODE_RX_ON) {
         hals = get_hal_contexts();
         slist_for_each_entry(hals, hal, hal_context_t, next) {
@@ -265,11 +280,12 @@ static ur_error_t mesh_interface_up(void)
     return UR_ERROR_NONE;
 }
 
-static ur_error_t mesh_interface_down(void)
+static ur_error_t mesh_interface_down(interface_state_t state)
 {
     slist_t *hals;
     hal_context_t *hal;
 
+    MESH_LOG_DEBUG("link mgmt mesh interface down handler, reason %d", state);
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         ur_stop_timer(&hal->link_quality_update_timer, hal);
@@ -279,19 +295,26 @@ static ur_error_t mesh_interface_down(void)
 }
 
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-static void lowpower_radio_down_handler(void)
+static void lowpower_radio_down_handler(schedule_type_t type)
 {
 
 }
 
-static void lowpower_radio_up_handler(void)
+static void lowpower_radio_up_handler(schedule_type_t type)
 {
     slist_t *hals = get_hal_contexts();
     hal_context_t *hal;
 
+    if (umesh_get_mode() & MODE_RX_ON) {
+        return;
+    }
+
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         update_neighbors_link_cost(hal);
         handle_update_nbr_timer(hal);
+    }
+    if (type == LOWPOWER_PARENT_SCHEDULE) {
+        build_and_send_link_request(true);
     }
 }
 #endif
@@ -554,6 +577,7 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
     }
     ur_mem_free(data_orig, length);
     node->stats.link_request++;
+
     MESH_LOG_DEBUG("send link accept and request, len %d", length);
     return error;
 }
@@ -629,10 +653,9 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
     nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
                               info->dest.netid);
     if (nbr) {
-        rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset +
-                                offset);
+        rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
         umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_REVERSE_RSSI);
-        if ((nbr->flags & NBR_LINK_ESTIMATED) == 0) {
+        if ((umesh_get_mode() & MODE_RX_ON) && (nbr->flags & NBR_LINK_ESTIMATED) == 0) {
             if (nbr->stats.reverse_rssi > RSSI_THRESHOLD) {
                 nbr->flags |= NBR_LINK_ESTIMATED;
             }
@@ -648,9 +671,7 @@ exit:
     tv = (mm_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
     tv->type = TYPE_HEADER_IES_TERMINATOR;
     offset += sizeof(mm_tv_t);
-
     info->payload_offset += offset;
-
     return offset;
 }
 
@@ -703,16 +724,24 @@ ur_error_t handle_mesh_header_ies(message_t *message)
 ur_error_t handle_link_request(message_t *message)
 {
     mm_tlv_request_tlv_t *tlvs_request;
-    uint8_t              *tlvs;
-    uint16_t             tlvs_length;
-    message_info_t       *info;
-    network_context_t    *network;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
+    message_info_t *info = message->info;
+    network_context_t *network;
     uint8_t *data;
     uint16_t length;
 
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    neighbor_t *node;
+    node = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
+    if (node == NULL) {
+        return UR_ERROR_NONE;
+    }
+    node->flags |= NBR_WAKEUP;
+#endif
+
     MESH_LOG_DEBUG("handle link request");
 
-    info = message->info;
     network = info->network;
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
     data = ur_mem_alloc(tlvs_length);
@@ -797,7 +826,7 @@ ur_error_t handle_link_accept(message_t *message)
     neighbor_t *node;
     message_info_t *info;
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-    message_t *message;
+    hal_context_t *hal;
 #endif
 
     MESH_LOG_DEBUG("handle link accept");
@@ -812,10 +841,11 @@ ur_error_t handle_link_accept(message_t *message)
     while ((message = message_queue_get_head(&node->buffer_queue))) {
         message_queue_dequeue(message);
         info = message->info;
+        hal = get_hal_context(info->hal_type);
         if (info->type == MESH_FRAME_TYPE_CMD) {
-            message_queue_enqueue(hal->send_queue[CMD_QUEUE], message);
+            message_queue_enqueue(&hal->send_queue[CMD_QUEUE], message);
         } else {
-            message_queue_enqueue(hal->send_queue[DATA_QUEUE], message);
+            message_queue_enqueue(&hal->send_queue[DATA_QUEUE], message);
         }
     }
 #endif
