@@ -34,3 +34,7 @@ GLOBAL_CFLAGS += -m32  -std=gnu99
 GLOBAL_LDFLAGS += -m32
 
 GLOBAL_INCLUDES += .
+
+TEST_COMPONENTS += basic api cjson digest_algorithm hashtable
+TEST_COMPONENTS += rhino vfs yloop kv deviceIO vcall fatfs
+TEST_COMPONENTS += alink mqtt fota netmgr wifi_hal mesh alicrypto tfs tls

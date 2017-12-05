@@ -8,13 +8,13 @@
 #include <yts.h>
 #include <kvmgr.h>
 
-#ifdef CONFIG_AOS_YTS_ALL
+#ifdef YTS_LINUX
 #include <dda.h>
 #endif
 
 int application_start(int argc, char **argv)
 {
-#ifdef CONFIG_AOS_YTS_ALL
+#ifdef YTS_LINUX
     const char *mode = argc > 1 ? argv[1] : "";
     if (strcmp(mode, "--mesh-node") == 0) {
         dda_enable(atoi(argv[argc-1]));

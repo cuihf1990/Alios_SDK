@@ -51,4 +51,4 @@ void test_alicrypto(void)
 {
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_alicrypto);

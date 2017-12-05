@@ -339,4 +339,4 @@ void test_tls(void)
 {
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_tls);

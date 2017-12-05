@@ -84,6 +84,7 @@ static void test_kv_del(void)
     YUNIT_ASSERT(len != strlen(g_val_3)+1);
 }
 
+#ifdef YTS_LINUX
 static void test_kv_loop(void)
 {
     int i, j, count, ret = 0;
@@ -233,6 +234,7 @@ static void test_kv_error(void)
         aos_free(buf);
     return;
 }
+#endif
 
 static int init(void)
 {
@@ -264,7 +266,7 @@ static yunit_test_case_t aos_kv_testcases[] = {
     { "kv_add", test_kv_add },
     { "kv_find", test_kv_find },
     { "kv_del", test_kv_del },
-#ifdef CONFIG_AOS_YTS_ALL
+#ifdef YTS_LINUX
     { "kv_loop", test_kv_loop},
     { "kv_error", test_kv_error},
 #endif
@@ -280,4 +282,4 @@ void test_kv(void)
 {    
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_kv);

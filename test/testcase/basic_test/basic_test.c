@@ -190,4 +190,4 @@ void test_basic(void)
 {
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_basic);

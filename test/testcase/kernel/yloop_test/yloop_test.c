@@ -226,4 +226,4 @@ void test_yloop(void)
 {
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_yloop);

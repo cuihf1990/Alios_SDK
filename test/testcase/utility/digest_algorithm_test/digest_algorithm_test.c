@@ -7,6 +7,7 @@
 
 #include <yunit.h>
 #include <yts.h>
+#include <aos/types.h>
 #include "digest_algorithm.h"
 #include "crc.h"
 
@@ -151,4 +152,4 @@ void test_digest_algorithm(void)
 {    
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_digest_algorithm);

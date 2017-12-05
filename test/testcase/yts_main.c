@@ -11,38 +11,7 @@
 #include "yunit.h"
 #include "yts.h"
 
-extern void test_basic(void);
-extern void test_fota(void);
-extern void test_rhino(void);
-extern void test_rhino_port(void);
-extern void test_csp(void);
-extern void test_vfs(void);
-extern void test_crypto(void);
-extern void test_time(void);
-extern void test_wifi(void);
-extern void test_audio(void);
-extern void test_mesh(void);
-extern void test_netconf(void);
-extern void test_uradar(void);
-extern void test_yloop(void);
-extern void test_cjson(void);
-extern void test_hashtable(void);
-extern void test_kv(void);
-extern void test_hal(void);
-extern void test_tls(void);
-extern void test_tfs(void);
-extern void test_aosapi(void);
-extern void test_vfs(void);
-extern void test_vcall(void);
-extern void test_netmgr(void);
-extern void test_digest_algorithm(void);
-extern void test_alicrypto(void);
-extern void test_fatfs(void);
-extern void test_mqtt(void);
-extern void test_coap(void);
-extern void test_deviceIO(void);
-
-static void add_test(void);
+extern void add_test(void);
 
 static int yts_argc;
 static char **yts_argv;
@@ -99,60 +68,5 @@ void yts_run(int argc, char **argv)
     yunit_test_print_result();
 
     yunit_test_deinit();
-}
-
-void add_test(void)
-{
-#ifdef YTS_COAP
-    test_coap();
-#else
-
-    test_basic();
-
-    test_yloop();
-
-    test_hal();
-
-    test_cjson();
-
-    test_hashtable();
-
-    test_digest_algorithm();
-
-    test_vcall();
-
-    test_rhino();
-
-    test_vfs();
-
-    test_kv();
-
-#ifdef CONFIG_AOS_YTS_ALL
-    test_mqtt();
-
-    test_fota();
-
-    test_rhino_port();
-
-    test_tls();
-
-    test_tfs();
-
-    test_fatfs();
-
-    test_deviceIO();
-
-#ifdef CONFIG_AOS_MESH
-    test_uradar();
-#endif /* CONFIG_AOS_MESH */
-
-    test_netmgr();
-
-    test_alicrypto();
-
-    test_aosapi();    
-#endif /* CONFIG_AOS_YTS_ALL */
-
-#endif /* YTS_COAP */
 }
 

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <aos/types.h>
 #include <yunit.h>
 #include <yts.h>
 #include "alink_export.h"
@@ -84,4 +85,4 @@ void test_alink(void)
 {    
     yunit_add_test_suites(suites);
 }
-
+AOS_TESTCASE(test_alink);
