@@ -276,7 +276,7 @@ class Client:
                     break
 
             if newline == True and log != '':
-                if self.poll_str in log:
+                if self.poll_str in log and self.devices[port]['fqueue'].full() == False:
                     self.devices[port]['fqueue'].put(log, False)
                 if LOCALLOG:
                     flog.write('{0:.3f}:'.format(log_time) + log)
@@ -323,8 +323,12 @@ class Client:
                 if port in self.devices and self.devices[port]['valid']:
                     continue
                 if port in self.devices:
-                    self.devices[port]['serial'].close()
-                    self.devices[port]['serial'].open()
+                    try:
+                        self.devices[port]['serial'].close()
+                        self.devices[port]['serial'].open()
+                    except:
+                        print 'device_monitor, error: unable to open {0}'.format(port)
+                        continue
                     if self.devices[port]['slock'].locked():
                         self.devices[port]['slock'].release()
                     while self.devices[port]['queue'].empty() == False:
