@@ -14,5 +14,10 @@ $(NAME)_CFLAGS  += -Wno-type-limits -Wno-sign-compare -Wno-pointer-sign -Wno-uni
 $(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-variable
 $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
-$(NAME)_COMPONENTS += cjson protocols.net protocols.mesh protocol.alink gateway.devmgr gateway.msdp
+$(NAME)_COMPONENTS += cjson protocols.mesh protocol.alink gateway.devmgr gateway.msdp
+
+ifneq ($(sal),1)
+$(NAME)_COMPONENTS += protocols.net
+endif
+
 GLOBAL_DEFINES += CONFIG_GATEWAY

@@ -1592,3 +1592,16 @@ void sal_freeaddrinfo(struct addrinfo *ai)
     aos_free(ai);
   }
 }
+
+const void *ur_adapter_get_default_ipaddr(void)
+{
+    SAL_ERROR("Error: Calling %s stub !\n", __FUNCTION__);
+    return NULL;
+}
+
+const void *ur_adapter_get_mcast_ipaddr(void)
+{
+    SAL_ERROR("Error: Calling %s stub !\n", __FUNCTION__);
+    return NULL;
+}
+

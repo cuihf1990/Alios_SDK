@@ -12,10 +12,6 @@ $(NAME)_COMPONENTS += at_adapter
 LWIP = 1
 endif
 
-ifeq ($(sal),1)
-$(NAME)_COMPONENTS += sal
-endif
-
 ifneq (,$(filter linux,$(HOST_MCU_FAMILY)))
 gateway ?= 0
 else

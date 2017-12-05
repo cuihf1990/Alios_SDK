@@ -6,13 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <lwip/def.h>
-#include <lwip/netdb.h>
-#include <lwip/sockets.h>
-
 #include <aos/aos.h>
-#include <lwip/sockets.h>
-#include <lwip/apps/tftp.h>
+#include <aos/network.h>
 #include "umesh.h"
 #include "cJSON.h"
 #include "devmgr.h"
@@ -754,7 +749,7 @@ static void gateway_worker(void *arg)
         FD_ZERO(&rfds);
         FD_SET(gateway_state.sockfd, &rfds);
 
-        int ret = lwip_select(sockfd + 1, &rfds, NULL, NULL, &timeout);
+        int ret = select(sockfd + 1, &rfds, NULL, NULL, &timeout);
         if (ret < 0) {
             if (errno != EINTR) {
                 LOGD(MODULE_NAME, "select error %d", errno);
