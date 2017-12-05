@@ -18,6 +18,7 @@
 
 #ifdef CONFIG_AOS_MESH_TAPIF
 static bool is_router;
+static bool is_goto_gateway;
 int umesh_tapif_init(const char *ifname);
 void umesh_tapif_deinit(void);
 void umesh_tapif_send_pbuf(struct pbuf *pbuf);
@@ -107,8 +108,7 @@ ur_error_t ur_adapter_resolve_ip(const void *ipaddr, ur_addr_t *addr)
                ip4_addr_cmp(ip4_addr, netif_ip4_gw(netif))) {
 #ifdef CONFIG_AOS_MESH_TAPIF
         if (is_router) {
-            MESH_LOG_DEBUG("should go to gateway\n");
-            umesh_tapif_send_pbuf(p);
+            is_goto_gateway = true;
             return UR_ERROR_FAIL;
         }
 #endif
@@ -139,6 +139,15 @@ static err_t ur_adapter_ipv4_output(struct netif *netif, struct pbuf *p,
     ur_addr_t addr;
 
     error = ur_adapter_resolve_ip(dest, &addr);
+
+#ifdef CONFIG_AOS_MESH_TAPIF
+    if (error == UR_ERROR_FAIL && is_goto_gateway) {
+        MESH_LOG_DEBUG("should go to gateway\n");
+        umesh_tapif_send_pbuf(p);
+        is_goto_gateway = false;
+    }
+#endif
+
     if (error == UR_ERROR_NONE) {
         error = umesh_output_sid(p, addr.netid, addr.addr.short_addr);
     }
