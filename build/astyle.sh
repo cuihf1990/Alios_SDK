@@ -2,7 +2,7 @@
 
 ## http://astyle.sourceforge.net/astyle.html
 
-DIRS=(devices
+DIRS=(device
       framework
       include
       kernel/hal

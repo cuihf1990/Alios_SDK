@@ -6,7 +6,7 @@ import time,logging
 
 rootdirs = ['./board',         \
             './bootloader',    \
-            './devices',       \
+            './device',       \
             './example',       \
             './framework',     \
             './include',       \

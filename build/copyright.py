@@ -7,7 +7,7 @@ rootdirs = ['./board/linuxhost',         \
             './board/mk108',             \
             './board/mk3060',            \
             './bootloader',              \
-            './devices',                 \
+            './device',                 \
             './example',                 \
             './framework',               \
             './include',                 \
