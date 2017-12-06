@@ -22,23 +22,24 @@ caseids['3BD14E6396E3074B61CB83F9257A4F01'] = 27504 #DN02X30B
 caseids['47112F8E0A5CDFBE05B570F4C7306801'] = 26587 #DN02X30H
 #esp32
 caseids['7D917B0B8CF687EC496B3B7788CE6186'] = 27932 #espif-1.1
-caseids['F30F0804BC3752D2E6F43EF35DBE8E29'] = 27538 #espif-1.2.2
-caseids['F731214AA77B4134FD988BC89E7B7B00'] = 27555 #espif-1.2.3
-caseids['59ED5E3E36FF2BDCB81B0FBCE9E997BF'] = 27572 #espif-1.3
-caseids['0CD754231D66D79A38CBD8416F37A4E8'] = 27589 #espif-1.4
-caseids['41DB75B637872CFEB194C79476568F59'] = 27606 #espif-2.1
-caseids['A4FFC78630480DB8768D04091B282D54'] = 27623 #espif-2.2.1
-caseids['938F2BFC13AE8F6C4098289BB2D02B93'] = 27640 #espif-2.2.2
+caseids['0CD754231D66D79A38CBD8416F37A4E8'] = 27589 #espif-1.2.1
+caseids['785A61C6F5656AD16D57A919F0CEDFB4'] = 27015 #espif-1.2.2
+caseids['1A2D6B99CF19A1DE70E197798F2D68FE'] = 27061 #espif-1.2.3
+caseids['2363A965CE3C548993F485EF5883F6CA'] = 26689 #espif-1.3
+caseids['5ED76F329769F485FC59B94CC4D1A3F8'] = 30765 #espif-1.4
+caseids['A2A268CC74FEB91744C68E652AE89266'] = 29862 #espif-2.1
+caseids['9EA130B3F97FEDD4A40B58E223B0EA23'] = 27708 #espif-2.2.1
+caseids['A007D2D3AE28C4B501A7D57D93B253B4'] = 27044 #espif-2.2.2
 caseids['FD1FC11D9B9F6511FBD6E86168822072'] = 27657 #espif-2.2.3
-caseids['D5D8715DA640D401D3836A3C854C4021'] = 27674 #espif-2.3
-caseids['A007D2D3AE28C4B501A7D57D93B253B4'] = 27044 #espif-2.4
-caseids['A2A268CC74FEB91744C68E652AE89266'] = 29862 #espif-9.1
-caseids['9EA130B3F97FEDD4A40B58E223B0EA23'] = 27708 #espif-9.2.1
-caseids['785A61C6F5656AD16D57A919F0CEDFB4'] = 27015 #espif-9.2.2
-caseids['2363A965CE3C548993F485EF5883F6CA'] = 26689 #espif-9.2.3
-caseids['1A2D6B99CF19A1DE70E197798F2D68FE'] = 27061 #espif-9.3
-caseids['33688B9B824E66254D109CDAC1C66CF4'] = 26998 #espif-9.4
-caseids['794736BDFF2E591F6BFEC2FE3EE383E6'] = 26638 #espif-x
+caseids['33688B9B824E66254D109CDAC1C66CF4'] = 26998 #espif-2.3
+caseids['59ED5E3E36FF2BDCB81B0FBCE9E997BF'] = 27572 #espif-2.4
+caseids['794736BDFF2E591F6BFEC2FE3EE383E6'] = 26638 #espif-9.1
+caseids['F30F0804BC3752D2E6F43EF35DBE8E29'] = 27538 #espif-9.2.1
+caseids['41DB75B637872CFEB194C79476568F59'] = 27606 #espif-9.2.2
+caseids['938F2BFC13AE8F6C4098289BB2D02B93'] = 27640 #espif-9.2.3
+caseids['F731214AA77B4134FD988BC89E7B7B00'] = 27555 #espif-9.3
+caseids['D5D8715DA640D401D3836A3C854C4021'] = 27674 #espif-9.4
+caseids['A4FFC78630480DB8768D04091B282D54'] = 27623 #espif-x
 caseids['E55F17709F0A11180D36AE83720EC22B'] = 27078 #espif-x
 
 DEBUG = False
@@ -235,11 +236,18 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         at.device_run_cmd(device, ['netmgr', 'connect', wifissid, wifipass], timeout=1.5)
         time.sleep(30)
         filter = ['uuid:', 'alink is not connected']
+        role = at.device_run_cmd(device, ['umesh', 'status'], 1, 1.5, ['state\t'])
         response = at.device_run_cmd(device, ['uuid'], 1, 1.5, filter)
+        if role == False or len(role) != 1 or 'leader' not in role[0]:
+            retry -= 1
+            continue
         if response == False or len(response) != 1 or 'uuid:' not in response[0]:
             retry -= 1
             continue
         uuid = response[0].split()[-1]
+        if len(uuid) != 32:
+            retry -= 1
+            continue
         print "connect alink succeed, uuid: {0}".format(uuid)
         succeed = True
         break;

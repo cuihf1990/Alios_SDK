@@ -238,7 +238,10 @@ class Client:
                     self.connected = False
                     continue
             except:
-                if os.path.exists(port) == False or exit_condition.is_set() == True:
+                if os.path.exists(port) == False:
+                    exit_condition.set()
+                    break
+                if exit_condition.is_set() == True:
                     break
                 if DEBUG: traceback.print_exc()
                 self.devices[port]['serial'].close()
@@ -251,7 +254,7 @@ class Client:
         if LOCALLOG:
             logfile= 'client/' + port.split('/')[-1] + '.log'
             flog = open(logfile, 'a+')
-        while os.path.exists(port):
+        while os.path.exists(port) and exit_condition.is_set() == False:
             if self.connected == False or self.devices[port]['slock'].locked():
                 time.sleep(0.01)
                 continue
@@ -355,16 +358,20 @@ class Client:
                                           'queue':Queue.Queue(12), \
                                           'attributes':{}, \
                                           'fqueue':Queue.Queue(64)}
+                try:
+                    if 'mxchip' in port:
+                        self.devices[port]['attributes']['model'] = 'MK3060'
+                        ser.setRTS(False)
+                    if 'espif' in port:
+                        self.devices[port]['attributes']['model'] = 'ESP32'
+                        ser.setRTS(True)
+                        ser.setDTR(False)
+                        time.sleep(0.1)
+                        ser.setDTR(True)
+                except:
+                    self.devices[port]['valid'] = False
+                    continue
                 print 'device {0} added'.format(port)
-                if 'mxchip' in port:
-                    self.devices[port]['attributes']['model'] = 'MK3060'
-                    ser.setRTS(False)
-                if 'espif' in port:
-                    self.devices[port]['attributes']['model'] = 'ESP32'
-                    ser.setRTS(True)
-                    ser.setDTR(False)
-                    time.sleep(0.1)
-                    ser.setDTR(True)
                 self.devices[port]['attributes']['status'] = 'inactive'
                 exit_condition = threading.Event()
                 thread.start_new_thread(self.device_log_poll, (port, exit_condition,))
@@ -814,7 +821,8 @@ class Client:
                         port = args[2]
                         cmd = value[arglen:].split('|')
                         cmd = ' '.join(cmd)
-                        if os.path.exists(port):
+                        if os.path.exists(port) and port in self.devices and \
+                            self.devices[port]['valid'] == True:
                             if self.devices[port]['queue'].full() == False:
                                 self.devices[port]['queue'].put([type, term, cmd])
                                 continue
