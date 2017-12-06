@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdint.h>
 const char brcm_patch_version[] = "BCM20703A1_001.001.005.0276.0000_Generic_UART_40MHz_flood_mesh_fcbga_BU.hcd";
 const uint8_t brcm_patchram_format = 0x01;
