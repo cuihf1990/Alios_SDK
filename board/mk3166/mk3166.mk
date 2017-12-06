@@ -6,7 +6,8 @@ $(NAME)_TYPE := kernel
 MODULE               := 3166
 HOST_ARCH            := Cortex-M4
 HOST_MCU_FAMILY      := stm32f4xx
-HOST_MCU_VARIANT     	:= STM32F412
+HOST_MCU_VARIANT     := STM32F412
+SUPPORT_BINS         := no
 
 BUS := SDIO
 

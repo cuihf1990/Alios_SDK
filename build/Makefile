@@ -85,24 +85,26 @@ BINSTYPE_UPPER :=APP
 BINSTYPE_LOWER :=app
 UNDERLINE :=_
 RADIXPOINT :=.
+CREATE_SYSCALLFILE :=$(MAKEFILES_PATH)/scripts/gen_syscalls.py
+PARSE_RESOURSE_TO_SYSCALL_FILE = $(PYTHON) $(CREATE_SYSCALLFILE) $(1) $(2)
 else ifeq (framework,$(BINS))
 BINSTYPE_UPPER :=FRAMEWORK
 BINSTYPE_LOWER :=framework
 UNDERLINE :=_
 RADIXPOINT :=.
+CREATE_SYSCALLFILE :=$(MAKEFILES_PATH)/scripts/gen_syscalls.py
+PARSE_RESOURSE_TO_SYSCALL_FILE = $(PYTHON) $(CREATE_SYSCALLFILE) $(1) $(2)
 else ifeq (kernel,$(BINS))
 BINSTYPE_UPPER :=KERNEL
 BINSTYPE_LOWER :=kernel
 UNDERLINE :=_
 RADIXPOINT :=.
-else
-$(error BINS Error, Valid BINS: [BINS=app BINS=kernel BINS=framework])
-endif
-
-ifneq ($(BINS),)
 CREATE_SYSCALLFILE :=$(MAKEFILES_PATH)/scripts/gen_syscalls.py
 PARSE_RESOURSE_TO_SYSCALL_FILE = $(PYTHON) $(CREATE_SYSCALLFILE) $(1) $(2)
+else
+$(error ***** BINS Error, Valid BINS: [BINS=app BINS=kernel BINS=framework] ***** ***)
 endif
+
 ############################
 # Extra options:
 #                CHECK_HEADERS=1 : builds header files to test for their completeness
@@ -151,6 +153,15 @@ $(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH
 	$(QUIET)$(MAKE) -r $(SILENT) -f $(MAKEFILES_PATH)/aos_target_config.mk $(CLEANED_BUILD_STRING)
 endif
 
+define BINS_EXIT
+$(error ***** This Platform Not Support Multi-Binsi! [SUPPORT_BINS:=$(SUPPORT_BINS)] Not Use Option:[BINs=*] ***** ***)
+endef
+
+ifneq ($(BINS),)
+ifneq ($(SUPPORT_BINS),yes)
+BINS_ERROR := error
+endif
+endif
 
 JOBS ?=4
 ifeq (,$(SUB_BUILD))
@@ -164,6 +175,7 @@ $(PASSDOWN_TARGETS):
 $(BUILD_STRING): main_app $(if $(SUB_BUILD),,.gdbinit .gdbinit$(BINSTYPE_LOWER))
 
 main_app: $(OUTPUT_DIR)/config.mk $(YOS_SDK_PRE_APP_BUILDS) $(MAKEFILES_PATH)/aos_target_build.mk
+	$(if $(BINS_ERROR), $(call BINS_EXIT))
 	$(QUIET)$(ECHO) Build AOS Now
 	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/binary)
 	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/modules)
