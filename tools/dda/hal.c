@@ -226,6 +226,8 @@ static umesh_hal_module_t linuxhost_ur_wifi_module = {
     .umesh_hal_set_channel = linuxhost_ur_hal_set_channel,
     .umesh_hal_get_chnlist = linuxhost_ur_get_channel_list,
     .umesh_hal_get_channel = linuxhost_ur_get_channel,
+    .umesh_hal_radio_wakeup = linuxhost_umesh_hal_radio_wakeup,
+    .umesh_hal_radio_sleep = linuxhost_umesh_hal_radio_sleep,
 };
 
 static umesh_hal_module_t linuxhost_ur_ble_module;
