@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef LIBC_FCNTL_H__
 #define LIBC_FCNTL_H__
 

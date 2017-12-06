@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /* This header file provides the reentrancy.  */
 
 /* WARNING: All identifiers here must begin with an underscore.  This file is

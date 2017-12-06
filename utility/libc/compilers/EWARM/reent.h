@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /* This header file provides the reentrancy.  */
 
 /* The reentrant system calls here serve two purposes:
