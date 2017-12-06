@@ -104,10 +104,10 @@ static void build_and_send_link_request(bool send)
     }
 
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-    uint8_t tlv_types[3] = {TYPE_UCAST_CHANNEL, TYPE_TIME_SLOT, TYPE_BUFQUEUE_SIZE};
+    uint8_t tlv_types[4] = {TYPE_UCAST_CHANNEL, TYPE_TIME_SLOT, TYPE_BUFQUEUE_SIZE, TYPE_TIMESTAMP};
     uint8_t tlv_length = (umesh_get_mode() & MODE_RX_ON)? 1: 3;
 #else
-    uint8_t tlv_types[1] = {TYPE_UCAST_CHANNEL};
+    uint8_t tlv_types[2] = {TYPE_UCAST_CHANNEL, TYPE_TIMESTAMP};
     uint8_t tlv_length = 1;
 #endif
 
@@ -684,6 +684,7 @@ ur_error_t handle_mesh_header_ies(message_t *message)
     mm_tv_t tv;
     mm_rssi_tv_t rssi;
     mm_mode_tv_t mode;
+    uint8_t tlv_types[1] = {TYPE_TIMESTAMP};
 
     info = message->info;
     offset = info->header_ies_offset;
@@ -694,7 +695,7 @@ ur_error_t handle_mesh_header_ies(message_t *message)
             case TYPE_REVERSE_RSSI:
                 message_copy_to(message, offset, (uint8_t *)&rssi, sizeof(rssi));
                 if (rssi.rssi == 127) {
-                    send_link_accept(info->network, &info->src_mac, NULL, 0);
+                    send_link_accept(info->network, &info->src_mac, tlv_types, sizeof(tlv_types));
                 }
                 info->forward_rssi = rssi.rssi;
                 len = sizeof(mm_rssi_tv_t);
@@ -797,16 +798,14 @@ ur_error_t handle_link_accept_and_request(message_t *message)
     }
     tlvs = data;
     message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
-
-    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_UCAST_CHANNEL);
+    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_UCAST_CHANNEL);
     if (channel) {
         local_channel = umesh_mm_get_channel(network->hal);
         if (local_channel != channel->channel) {
             umesh_mm_set_channel(network->hal, channel->channel);
         }
     }
-
+    update_mm_timestamp(tlvs, tlvs_length);
     tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                            TYPE_TLV_REQUEST);
     if (tlvs_request) {
@@ -823,6 +822,8 @@ ur_error_t handle_link_accept_and_request(message_t *message)
 
 ur_error_t handle_link_accept(message_t *message)
 {
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
     neighbor_t *node;
     message_info_t *info;
 #ifdef CONFIG_AOS_MESH_LOWPOWER
@@ -836,6 +837,16 @@ ur_error_t handle_link_accept(message_t *message)
         return UR_ERROR_NONE;
     }
 
+    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
+    if (tlvs_length) {
+        tlvs = ur_mem_alloc(tlvs_length);
+        if (tlvs == NULL) {
+            return UR_ERROR_MEM;
+        }
+        message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
+        update_mm_timestamp(tlvs, tlvs_length);
+        ur_mem_free(tlvs, tlvs_length);
+    }
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     node->flags |= NBR_WAKEUP;
     while ((message = message_queue_get_head(&node->buffer_queue))) {

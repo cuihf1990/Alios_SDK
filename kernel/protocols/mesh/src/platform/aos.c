@@ -27,6 +27,7 @@ AOS_EXPORT(const mac_address_t *, umesh_get_mac_address, media_type_t);
 AOS_EXPORT(const void *, ur_adapter_get_default_ipaddr, void);
 AOS_EXPORT(const void *, ur_adapter_get_mcast_ipaddr, void);
 
+static uint32_t g_time_offset = 0;
 void *umesh_pal_malloc(int sz)
 {
     return aos_malloc(sz);
@@ -40,6 +41,16 @@ void umesh_pal_free(void *ptr)
 uint32_t umesh_pal_now_ms(void)
 {
     return aos_now_ms();
+}
+
+uint32_t umesh_pal_get_timestamp(void)
+{
+    return aos_now_ms() + g_time_offset;
+}
+
+void umesh_pal_set_timestamp(uint32_t timestamp)
+{
+    g_time_offset = timestamp - umesh_pal_now_ms();
 }
 
 int umesh_pal_kv_get(const char *key, void *buf, int *len)

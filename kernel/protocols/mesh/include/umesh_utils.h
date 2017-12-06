@@ -28,6 +28,8 @@
 #define umesh_malloc umesh_pal_malloc
 #define umesh_free umesh_pal_free
 #define umesh_now_ms umesh_pal_now_ms
+#define umesh_get_timestamp umesh_pal_get_timestamp
+#define umesh_set_timestamp umesh_pal_set_timestamp
 #define umesh_post_event umesh_pal_post_event
 #define umesh_log umesh_pal_log
 #define umesh_task_schedule_call umesh_pal_schedule_call

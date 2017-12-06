@@ -28,6 +28,7 @@ void umesh_pal_free(void *ptr)
 }
 
 static struct timeval sys_start_time;
+static int32_t g_time_offset;
 uint32_t umesh_pal_now_ms(void)
 {
     struct timeval tv;
@@ -37,6 +38,16 @@ uint32_t umesh_pal_now_ms(void)
     timersub(&tv, &sys_start_time, &tv);
     ms = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
     return ms;
+}
+
+uint32_t umesh_pal_get_timestamp(void)
+{
+    return umesh_pal_now_ms() + g_time_offset;
+}
+
+void umesh_pal_set_timestamp(uint32_t timestamp)
+{
+    g_time_offset = timestamp - umesh_pal_now_ms();
 }
 
 int umesh_pal_kv_get(const char *key, void *buf, int *len)
