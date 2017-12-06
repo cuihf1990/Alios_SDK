@@ -12,6 +12,8 @@ int umesh_pal_kv_set(const char *key, void *buf, int len, int sync);
 void *umesh_pal_malloc(int sz);
 void umesh_pal_free(void *);
 uint32_t umesh_pal_now_ms(void);
+uint32_t umesh_pal_get_timestamp(void);
+void umesh_pal_set_timestamp(uint32_t timestamp);
 void umesh_pal_post_event(int code, unsigned long value);
 void umesh_pal_log(const char *fmt, ...);
 

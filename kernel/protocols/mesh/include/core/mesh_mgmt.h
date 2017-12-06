@@ -169,5 +169,8 @@ uint8_t set_mm_sid_tv(uint8_t *data, uint8_t type, uint16_t sid);
 uint8_t set_mm_mode_tv(uint8_t *data);
 uint8_t set_mm_allocated_node_type_tv(uint8_t *data, uint8_t type);
 uint8_t set_mm_mcast_tv(uint8_t *data);
+uint8_t set_mm_timestamp_tv(uint8_t *data, uint32_t timestamp);
+
+void update_mm_timestamp(uint8_t *tlvs, uint16_t tlvs_length);
 
 #endif  /* UR_MM_H */
