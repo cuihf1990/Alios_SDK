@@ -37,7 +37,7 @@ GET_BARE_LOCATION =$(patsubst $(call ESCAPE_BACKSLASHES,$(SOURCE_ROOT))%,%,$(str
 
 define PREPROCESS_TEST_COMPONENT
 $(if $(filter yts,$(COMPONENTS)), \
-$(if $(test), $(eval TEST_COMPONENTS := $(test)),) \
+$(if $(test), $(eval TEST_COMPONENTS := $(strip $(subst $(COMMA), $(SPACE), $(test)))),) \
 $(if $(TEST_COMPONENTS), $(call RECURSE_DIR_COMPONENT_SEARCH, $(patsubst %/,%,$(TEST_COMPONENT_DIRECTORIES)), TEST_COMPONENT_LIST) \
 $(eval TEST_COMPONENTS := $(addprefix %., $(addsuffix _test, $(TEST_COMPONENTS)))) \
 $(eval COMPONENTS += $(filter $(TEST_COMPONENTS),  $(subst /,.,$(strip $(TEST_COMPONENT_LIST)))))))
