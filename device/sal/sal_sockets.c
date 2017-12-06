@@ -183,7 +183,221 @@ static struct sal_select_cb *select_cb_list;
     and checked in event_callback to see if it has changed. */
 static volatile int select_cb_ctr;
 
-static sal_netconn_t* netconn_new(enum netconn_type t);
+/* From http://www.iana.org/assignments/port-numbers:
+   "The Dynamic and/or Private Ports are those from 49152 through 65535" */
+#define LOCAL_PORT_RANGE_START  0xc000
+#define LOCAL_PORT_RANGE_END    0xffff
+#define ENSURE_LOCAL_PORT_RANGE(port) ((u16_t)(((port) & ~LOCAL_PORT_RANGE_START) + LOCAL_PORT_RANGE_START))
+
+struct udp_pcb *sal_udp_pcbs;
+
+struct tcp_pcb *sal_tcp_pcbs;
+
+sal_mutex_t    lock_sal_core;
+
+#define LOCK_SAL_CORE    sal_mutex_lock(&lock_sal_core)
+
+#define UNLOCK_SAL_CORE  sal_mutex_unlock(&lock_sal_core)
+
+static u16_t sal_tcp_new_port(void)
+{
+	static u16_t tcp_port = 0;
+	u16_t        n = 0;
+	struct tcp_pcb *pcb = NULL;
+
+	if (tcp_port == 0){
+		tcp_port = ENSURE_LOCAL_PORT_RANGE(rand());
+	}
+again:
+	if (tcp_port++ == LOCAL_PORT_RANGE_END){
+		tcp_port = LOCAL_PORT_RANGE_START;
+	}
+	
+	for(pcb = sal_tcp_pcbs; pcb != NULL; pcb = pcb->next){
+		if (pcb->local_port == tcp_port){
+			if (++n > (LOCAL_PORT_RANGE_END - LOCAL_PORT_RANGE_START)){
+				return 0;
+			}
+			
+			goto again;
+		}
+	}
+	
+	return tcp_port;
+}
+
+err_t sal_tcp_bind(struct tcp_pcb *pcb, const ip_addr_t *ipaddr, u16_t port)
+{
+	struct tcp_pcb *pstpcb = NULL;
+	u8_t            rebind = 0;
+
+	/*for local ip addr is not used for now,
+	  if ip addr is used there is something else need to check link udp_bind*/
+	if (pcb == NULL){
+		return ERR_VAL;
+	}
+
+	for(pstpcb = sal_tcp_pcbs; pstpcb != NULL; pstpcb = pstpcb->next){
+		if (pstpcb == pcb){
+			rebind = 1;
+			break;
+		}
+	}
+	
+	if (port == 0){
+		port = sal_tcp_new_port();
+		if (port == 0){
+			SAL_ERROR("sal_tcp_bind: out of free tcp ports\n");
+			return ERR_BUF;
+		}
+	}else{
+		for(pstpcb = sal_tcp_pcbs; pstpcb != NULL; pstpcb = pstpcb->next){
+			if (pcb != pstpcb){
+				/*By default, we don't allow to bind a port that any other udp pcb is already bound to.
+			      ip add port are matches */
+				if (pstpcb->local_port == port){
+					return ERR_USE;
+				}
+			}
+		}
+	}
+	/*TODO ipaddr = null means any addr*/
+	if (NULL != ipaddr)
+		ip_addr_set_ipaddr(&(pcb->local_ip), ipaddr);
+	
+	pcb->local_port = port;
+	/* pcb not active yet? */
+	if (rebind == 0) {
+		/* place the PCB on the active list if not already there */
+		pcb->next = sal_tcp_pcbs;
+		sal_tcp_pcbs = pcb;
+	}
+	
+	return ERR_OK;
+	
+}
+
+void sal_tcp_remove(struct tcp_pcb *pcb)
+{
+	struct tcp_pcb *pstpcb;
+	/* pcb to be removed is first in list? */
+	if (sal_tcp_pcbs == pcb) {
+		/* make list start at 2nd pcb */
+		sal_tcp_pcbs = sal_tcp_pcbs->next;
+		/* pcb not 1st in list */
+	} else {
+		for (pstpcb = sal_tcp_pcbs; pstpcb != NULL; pstpcb = pstpcb->next) {
+			/* find pcb in udp_pcbs list */
+			if (pstpcb->next != NULL && pstpcb->next == pcb) {
+				/* remove pcb from list */
+				pstpcb->next = pcb->next;
+				break;
+			}
+		}
+	}
+	aos_free(pcb);
+
+}
+
+static u16_t sal_udp_new_port(void)
+{
+	static u16_t   udp_port = 0;
+	u16_t          n = 0;
+	struct udp_pcb *pcb;
+
+	if (udp_port == 0){
+		udp_port = ENSURE_LOCAL_PORT_RANGE(rand());
+	}
+again:
+	if (udp_port++ == LOCAL_PORT_RANGE_END){
+		udp_port = LOCAL_PORT_RANGE_START;
+	}
+	
+	for(pcb = sal_udp_pcbs; pcb != NULL; pcb = pcb->next){
+		if (pcb->local_port == udp_port){
+			if (++n > (LOCAL_PORT_RANGE_END - LOCAL_PORT_RANGE_START)){
+				return 0;
+			}
+			
+			goto again;
+		}
+	}
+	
+	return udp_port;
+}
+
+err_t sal_udp_bind(struct udp_pcb *pcb, const ip_addr_t *ipaddr, u16_t port)
+{
+	struct udp_pcb *pstpcb = NULL;
+	u8_t            rebind = 0;
+
+	/*for local ip addr is not used for now,
+	  if ip addr is used there is something else need to check link udp_bind*/
+	if (pcb == NULL){
+		return ERR_VAL;
+	}
+	
+	for(pstpcb = sal_udp_pcbs; pstpcb != NULL; pstpcb = pstpcb->next){
+		if (pstpcb == pcb){
+			rebind = 1;
+			break;
+		}
+	}
+	
+	if (port == 0){
+		port = sal_udp_new_port();
+		if (port == 0){
+			SAL_ERROR("sal_udp_bind: out of free udp ports\n");
+			return ERR_BUF;
+		}
+	}else{
+		for(pstpcb = sal_udp_pcbs; pstpcb != NULL; pstpcb = pstpcb->next){
+			if (pcb != pstpcb){
+				/*By default, we don't allow to bind a port that any other udp pcb is already bound to.
+			      ip add port are matches */
+				if (pstpcb->local_port == port){
+					return ERR_USE;
+				}
+			}
+		}
+	}
+	/*TODO ipaddr = null means any addr*/
+	if (NULL != ipaddr)
+		ip_addr_set_ipaddr(&(pcb->local_ip), ipaddr);
+	
+	pcb->local_port = port;
+	/* pcb not active yet? */
+	if (rebind == 0) {
+		/* place the PCB on the active list if not already there */
+		pcb->next = sal_udp_pcbs;
+		sal_udp_pcbs = pcb;
+	}
+	
+	return ERR_OK;
+	
+}
+
+void sal_udp_remove(struct udp_pcb *pcb)
+{
+	struct udp_pcb *pstpcb;
+	/* pcb to be removed is first in list? */
+	if (sal_udp_pcbs == pcb) {
+		/* make list start at 2nd pcb */
+		sal_udp_pcbs = sal_udp_pcbs->next;
+		/* pcb not 1st in list */
+	} else {
+		for (pstpcb = sal_udp_pcbs; pstpcb != NULL; pstpcb = pstpcb->next) {
+			/* find pcb in udp_pcbs list */
+			if (pstpcb->next != NULL && pstpcb->next == pcb) {
+				/* remove pcb from list */
+				pstpcb->next = pcb->next;
+				break;
+			}
+		}
+	}
+	aos_free(pcb);
+
+}
 
 void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name, char *ip)
 {
@@ -263,6 +477,313 @@ int sal_eventfd(unsigned int initval, int flags)
     }
 
     return -1;
+}
+
+static struct sal_event *
+tryget_event(int s)
+{
+    s -= SAL_EVENT_OFFSET;
+    if ((s < 0) || (s >= NUM_EVENTS)) {
+        return NULL;
+    }
+    if (!events[s].used) {
+        return NULL;
+    }
+    return &events[s];
+}
+
+/**
+ * Same as get_socket but doesn't set errno
+ *
+ * @param s externally used socket index
+ * @return struct sal_sock for the socket or NULL if not found
+ */
+static struct sal_sock *tryget_socket(int s)
+{
+    s -= SAL_SOCKET_OFFSET;
+    if ((s < 0) || (s >= NUM_SOCKETS)) {
+        return NULL;
+    }
+    if (!sockets[s].conn) {
+        return NULL;
+    }
+    return &sockets[s];
+}
+
+static struct sal_sock *get_socket(int s)
+{
+    struct sal_sock *sock;
+
+    s -= SAL_SOCKET_OFFSET;
+
+    if ((s < 0) || (s >= NUM_SOCKETS)) {
+        SAL_DEBUG("get_socket(%d): invalid", s + SAL_SOCKET_OFFSET);
+        set_errno(EBADF);
+        return NULL;
+    }
+
+    sock = &sockets[s];
+
+    if (!sock->conn) {
+        SAL_DEBUG("get_socket(%d): not active", s + SAL_SOCKET_OFFSET);
+        set_errno(EBADF);
+        return NULL;
+    }
+
+    return sock;
+}
+
+static int salpcb_new(sal_netconn_t *conn)
+{
+    if (NULL == conn){
+        SAL_ERROR("salpcb_new fail invalid input\n");
+        return -1;
+    }
+    
+    if (NULL != conn->pcb.tcp){
+        SAL_ERROR("salpcb_new conn %p already have a pcb\n", conn);
+        return -1;
+    }
+
+    switch(NETCONNTYPE_GROUP(conn->type)){
+        case NETCONN_RAW:
+            conn->pcb.raw = aos_malloc(sizeof(struct raw_pcb));
+            if (NULL == conn->pcb.raw){
+                return ERR_MEM;
+            }
+            memset(conn->pcb.raw, 0, sizeof(struct raw_pcb));
+            break;
+        case NETCONN_UDP:
+            conn->pcb.udp = aos_malloc(sizeof(struct udp_pcb));
+            if (NULL == conn->pcb.udp){
+                return ERR_MEM;
+            }
+            memset(conn->pcb.udp, 0, sizeof(struct udp_pcb));
+            break;
+        case NETCONN_TCP:
+            conn->pcb.tcp = aos_malloc(sizeof(struct tcp_pcb));
+            if (NULL == conn->pcb.tcp){
+                return ERR_MEM;
+            }
+            memset(conn->pcb.tcp, 0, sizeof(struct tcp_pcb));
+            break;
+        default:
+            return ERR_VAL;
+    }
+    return ERR_OK;
+}
+
+
+
+static sal_netconn_t* salnetconn_new(enum netconn_type t)
+{
+    sal_netconn_t *conn;
+    err_t         err = ERR_OK;
+	
+    conn = (sal_netconn_t *)aos_malloc(sizeof(sal_netconn_t));
+    if (conn == NULL) {
+        SAL_ERROR("salnetconn_new fail to new net conn \n");
+		UNLOCK_SAL_CORE;
+        return NULL;
+    }
+    
+    memset(conn,0,sizeof(sal_netconn_t));
+    conn->type = t;
+    err = salpcb_new(conn);
+    if (ERR_OK != err){
+        SAL_ERROR("salnetconn_new fail to new pcb return value is %d \n", err);
+        aos_free(conn);
+		UNLOCK_SAL_CORE;
+        return NULL;
+    }
+	
+    return conn;
+}
+
+static err_t salnetconn_delete(sal_netconn_t *conn)
+{
+    struct sal_sock *sock;
+    int s;
+    
+    if (conn == NULL) {
+        return ERR_OK;
+    }
+
+    if (NULL != conn->pcb.tcp){
+		switch (NETCONNTYPE_GROUP(conn->type)) {
+		  case NETCONN_TCP:
+		  	sal_tcp_remove(conn->pcb.tcp);
+		    break;
+		  case NETCONN_UDP:
+		    sal_udp_remove(conn->pcb.udp);
+		    break;
+		  default:
+		  	SAL_ERROR("Unsupported connect type 0x%x\n", conn->type);
+		    break;
+		  }
+		conn->pcb.tcp = NULL;
+		aos_free(conn->pcb.tcp);
+    }
+    
+    s = conn->socket;
+    sock = get_socket(s);
+    if (sock) {
+       sock->conn = NULL; 
+    }
+    aos_free(conn);
+    conn=NULL;
+	
+    return ERR_OK;
+}
+
+err_t salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
+{
+    at_conn_t statconn = {0};
+	ip_addr_t remoteipaddr;
+	char *ipv4anyadrr = "0.0.0.0";
+	err_t err = ERR_OK;
+	
+	if (NULL == conn){
+		SAL_ERROR("salnetconn_connect: invalid conn\n");
+		return ERR_ARG;	
+	}
+
+	if (conn->state != NETCONN_NONE){
+		SAL_ERROR("salnetconn_connect: socket %d is connect state is %d \n", conn->socket, conn->state);
+		return ERR_ARG;
+	}
+
+	statconn.fd = conn->socket;
+    statconn.r_port = port;
+    statconn.l_port = -1;
+	statconn.addr = (char *)addr;
+	if (NULL == addr){
+		statconn.addr = ipv4anyadrr;
+	}
+    
+	switch(NETCONNTYPE_GROUP(conn->type)) {
+    case NETCONN_UDP:
+        statconn.type = UDP_UNICAST;
+        if (conn->pcb.udp->local_port == 0){
+	        statconn.l_port = sal_udp_new_port();
+    	}
+        err = sal_op.start(&statconn);
+        if (ERR_OK != err){
+            SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", statconn.addr, port);
+            return -1;
+        }
+		
+		if (conn->pcb.udp->local_port == 0){
+			err = sal_udp_bind(conn->pcb.udp, NULL, statconn.l_port);
+			if (err != ERR_OK){
+				SAL_ERROR("sal_connect udp pcb %p bind local port %d fail.\n", conn->pcb.udp, statconn.l_port);
+				return err;
+			}
+		}
+		ipstr_to_u32(statconn.addr, &(remoteipaddr.u_addr.ip4.addr));
+        ip_addr_set_ipaddr(&(conn->pcb.udp->remote_ip), &remoteipaddr);
+        conn->pcb.udp->remote_port = port;
+        break;
+    case NETCONN_TCP:
+        statconn.type = TCP_CLIENT;
+        err = sal_op.start(&statconn);
+        if (ERR_OK != err){
+            SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", statconn.addr, port);
+            return -1;
+        }
+		ipstr_to_u32(statconn.addr, &(remoteipaddr.u_addr.ip4.addr));
+        ip_addr_set_ipaddr(&(conn->pcb.tcp->remote_ip), &remoteipaddr);
+        conn->pcb.tcp->remote_port = port;
+        break;
+    default:
+        SAL_ERROR("Unsupported sal connection type.\n");
+        return ERR_ARG;
+    }
+
+    /* Update sal conn state here */
+    conn->state = NETCONN_CONNECT;
+
+	return ERR_OK;
+	
+}
+
+err_t salnetconn_listen(sal_netconn_t *conn)
+{
+	err_t err = ERR_OK;
+	at_conn_t statconn = {0};
+	
+	if (NULL == conn || NULL == conn->pcb.tcp){
+		return ERR_ARG;
+	}
+	
+	if (NETCONNTYPE_GROUP(conn->type) != NETCONN_TCP){
+        SAL_ERROR("sal_listen is not conn type is not tcp\n");
+        return ERR_ARG;
+    }
+
+	if (conn->state == NETCONN_LISTEN){
+		return ERR_OK;
+	}
+
+	if (conn->state != NETCONN_NONE){
+		SAL_ERROR("socket connect state is %d, can not listen\n", conn->socket);
+		return ERR_ARG;
+	}
+
+	/*TO DO If local port is 0, what can we do*/
+	statconn.fd = conn->socket;
+    statconn.l_port = conn->pcb.tcp->local_port;
+	statconn.type = TCP_SERVER;
+    err = sal_op.start(&statconn);
+    if (ERR_OK != err){
+        SAL_ERROR("fail to listen %d, local port is %d.\n", conn->socket, statconn.l_port);
+        return ERR_ARG;
+    }
+	conn->state = NETCONN_LISTEN;
+	
+	return err;
+}
+
+err_t salnetconn_bind(sal_netconn_t *conn, const ip_addr_t *addr, u16_t port)
+{
+	err_t err = ERR_OK;
+	
+	if (NULL == conn){
+		SAL_ERROR("salnetconn_bind: invalid conn\n");
+		return ERR_ARG;	
+	}
+	
+	switch(NETCONNTYPE_GROUP(conn->type)){
+        case NETCONN_UDP:
+            err = sal_udp_bind(conn->pcb.udp, addr, port);
+			if (err != ERR_OK){
+				SAL_ERROR("salnetconn_bind sock %d udp bind fail\n.", conn->socket);
+                return err;
+			}
+            break;
+        case NETCONN_TCP:
+			#if 0
+			if (conn->state != CLOSED){
+				SAL_ERROR("salnetconn_bind tcp can only bind in state closed \n");
+				UNLOCK_SAL_CORE;
+				return ERR_VAL;
+			}
+			#endif
+            err = sal_tcp_bind(conn->pcb.tcp, addr, port);
+            if (err != ERR_OK){
+				SAL_ERROR("salnetconn_bind sock %d tcp bind fail\n.", conn->socket);
+                return err;
+			}
+            break;
+        case NETCONN_RAW:
+        default:
+            /*for now wifi module did not support raw socket yet*/
+            SAL_ERROR("salnetconn_bind invalid connect type %d.\n", NETCONNTYPE_GROUP(conn->type));
+            return ERR_VAL;
+    }
+	
+	return ERR_OK;
+	
 }
 
 int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset,
@@ -549,61 +1070,7 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in,
     SAL_ASSERT("nready >= 0", nready >= 0);
     return nready;
 }
-
-static struct sal_event *
-tryget_event(int s)
-{
-    s -= SAL_EVENT_OFFSET;
-    if ((s < 0) || (s >= NUM_EVENTS)) {
-        return NULL;
-    }
-    if (!events[s].used) {
-        return NULL;
-    }
-    return &events[s];
-}
-
-/**
- * Same as get_socket but doesn't set errno
- *
- * @param s externally used socket index
- * @return struct sal_sock for the socket or NULL if not found
- */
-static struct sal_sock *tryget_socket(int s)
-{
-    s -= SAL_SOCKET_OFFSET;
-    if ((s < 0) || (s >= NUM_SOCKETS)) {
-        return NULL;
-    }
-    if (!sockets[s].conn) {
-        return NULL;
-    }
-    return &sockets[s];
-}
-
-static struct sal_sock *get_socket(int s)
-{
-    struct sal_sock *sock;
-
-    s -= SAL_SOCKET_OFFSET;
-
-    if ((s < 0) || (s >= NUM_SOCKETS)) {
-        SAL_DEBUG("get_socket(%d): invalid", s + SAL_SOCKET_OFFSET);
-        set_errno(EBADF);
-        return NULL;
-    }
-
-    sock = &sockets[s];
-
-    if (!sock->conn) {
-        SAL_DEBUG("get_socket(%d): not active", s + SAL_SOCKET_OFFSET);
-        set_errno(EBADF);
-        return NULL;
-    }
-
-    return sock;
-}
-
+					   
 int sal_recvfrom(int s, void *mem, size_t len, int flags,
               struct sockaddr *from, socklen_t *fromlen)
 {
@@ -619,7 +1086,7 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
     uint8_t                done = 0;
     int8_t                 ipstr[SAL_SOCKET_IP4_ADDR_LEN] = {0};
     int32_t                remoteport = 0;
-    ip_addr_t              fromaddr;
+	ip_addr_t              fromaddr;
     union sockaddr_aligned saddr;
     
     if (NULL == mem || 0 == len){
@@ -670,7 +1137,7 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
             continue;
         }
         
-        if (uitotalrecvlen >= len) done = 1;
+        if (uitotalrecvlen > 0) done = 1;
 
         if (from && fromlen){
             fromaddr.type = IPADDR_TYPE_V4;
@@ -702,7 +1169,10 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
 {
     struct sal_sock *pstsalsock =NULL;
     err_t           err = ERR_OK;
-    
+    ip_addr_t       remote_addr;
+    u16_t           remote_port;
+	int8_t          ip_str[SAL_SOCKET_IP4_ADDR_LEN] = {0};
+	
     if (NULL == data || size == 0 || size > SAL_SOCKET_MAX_PAYLOAD_SIZE){
         SAL_ERROR("sal_send fail to data to send is %p or size is %d\n", data, size);
         return -ERR_ARG;
@@ -711,35 +1181,50 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
     pstsalsock = get_socket(s);
     if (NULL == pstsalsock){
         SAL_ERROR("sal_sendto fail to get sal socket by fd %d \n", s);
-        return -ERR_ARG;
+        return ERR_ARG;
     }
 
     if (pstsalsock->conn == NULL){
         SAL_ERROR("sal_sendto sal socket %d conn is null\n", s);
-        return -ERR_ARG;
+        return ERR_ARG;
     }
+	
+	LOCK_SAL_CORE;
+	/* TODO have no consider tcp server send to client*/
+	if (NETCONNTYPE_GROUP(pstsalsock->conn->type) == NETCONN_TCP){
+		if (pstsalsock->conn->state == NETCONN_NONE){
+			SAL_ERROR("sal_sendto socket %d connect state is %d\n", s, pstsalsock->conn->state);
+			UNLOCK_SAL_CORE;
+			return ERR_VAL;
+		}
+	}
 
-    /*TO DO if to != NULL, check sockaddr match socket type or not*/
-    if (to) {
-        /*udp 一般可以直接通过sendto 来发送数据，所以先需要start一下*/
-        if (pstsalsock->conn->state == NETCONN_NONE) {
-            err = sal_connect(pstsalsock->conn->socket, to, tolen);
-            if (ERR_OK != err) {
-                SAL_ERROR("sal_sendto fail to connect socket %d\n", s);
-                return err;
-            }
-        }
-    } else {
-        /*如果没有建立连接又没有传过来remote ip 信息，直接返回失败*/
-        if (pstsalsock->conn->state == NETCONN_NONE) {
-            SAL_ERROR("sal_sendto  socket %d is not connected and "
-                      "input addr is null, cannot send packet\n", s);
-            return -ERR_ARG;
-        }
-    }
-    
+	if (NETCONNTYPE_GROUP(pstsalsock->conn->type) == NETCONN_UDP){ 
+	    /*TO DO if to != NULL, check sockaddr match socket type or not*/
+	    if (to) {
+	        if (pstsalsock->conn->state == NETCONN_NONE) {
+				sockaddr_to_ipaddr_port(to, &remote_addr, &remote_port);
+				ip4_sockaddr_to_ipstr_port(to, (char *)ip_str);
+				err = salnetconn_connect(pstsalsock->conn, ip_str, remote_port);
+	            if (ERR_OK != err) {
+	                SAL_ERROR("sal_sendto fail to connect socket %d\n", s);
+					UNLOCK_SAL_CORE;
+	                return err;
+	            }
+	        }
+	    } else {
+	        if (pstsalsock->conn->state == NETCONN_NONE) {
+	            SAL_ERROR("sal_sendto  socket %d is not connected and "
+	                      "input addr is null, cannot send packet\n", s);
+				UNLOCK_SAL_CORE;
+	            return ERR_ARG;
+	        }
+	    }
+	}
+	
     err = (sal_op.send)(pstsalsock->conn->socket,
                         (uint8_t *)data, size, NULL, -1);
+	UNLOCK_SAL_CORE;
     
     return (err == ERR_OK ? size : -1);
 }
@@ -908,149 +1393,89 @@ static int alloc_socket(sal_netconn_t *newconn, int accepted)
     return -1;
 }
 
-static int pcb_new(sal_netconn_t *conn)
-{
-    if (NULL == conn){
-        SAL_ERROR("pcb_new fail invalid input\n");
-        return -1;
-    }
-    
-    if (NULL != conn->pcb.tcp){
-        SAL_ERROR("pcb_new conn %p already have a pcb\n", conn);
-        return -1;
-    }
-
-    switch(NETCONNTYPE_GROUP(conn->type)){
-        case NETCONN_RAW:
-            conn->pcb.raw = malloc(sizeof(struct raw_pcb));
-            if (NULL == conn->pcb.raw){
-                return ERR_MEM;
-            }
-            memset(conn->pcb.raw, 0, sizeof(struct raw_pcb));
-            break;
-        case NETCONN_UDP:
-            conn->pcb.udp = malloc(sizeof(struct udp_pcb));
-            if (NULL == conn->pcb.udp){
-                return ERR_MEM;
-            }
-            memset(conn->pcb.udp, 0, sizeof(struct udp_pcb));
-            break;
-        case NETCONN_TCP:
-            conn->pcb.tcp = malloc(sizeof(struct tcp_pcb));
-            if (NULL == conn->pcb.tcp){
-                return ERR_MEM;
-            }
-            memset(conn->pcb.tcp, 0, sizeof(struct tcp_pcb));
-            break;
-        default:
-            return ERR_VAL;
-    }
-    return ERR_OK;
-}
-
-static sal_netconn_t* netconn_new(enum netconn_type t)
-{
-    sal_netconn_t *conn;
-    err_t         err = ERR_OK;
-    
-    conn = (sal_netconn_t *)malloc(sizeof(sal_netconn_t));
-    if (conn == NULL) {
-        SAL_ERROR("netconn_new fail to new net conn \n");
-        return NULL;
-    }
-    
-    memset(conn,0,sizeof(sal_netconn_t));
-    conn->type = t;
-    err = pcb_new(conn);
-    if (ERR_OK != err){
-        SAL_ERROR("netconn_new fail to new pcb return value is %d \n", err);
-        free(conn);
-        return NULL;
-    }
-    return conn;
-}
-
-static err_t netconn_delete(sal_netconn_t *conn)
-{
-    struct sal_sock *sock;
-    int s;
-    
-    if (conn == NULL) {
-        return ERR_OK;
-    }
-    
-    if (NULL != conn->pcb.tcp){
-        free(conn->pcb.tcp);
-    }
-    
-    s = conn->socket;
-    sock = get_socket(s);
-    if (sock) {
-       sock->conn = NULL; 
-    }
-    free(conn);
-    conn=NULL;
-
-    return ERR_OK;
-}
-
 int sal_socket(int domain, int type, int protocol)
 {
-  sal_netconn_t *conn;
-  int i;
-// #if !SAL_IPV6
-//   SAL_UNUSED_ARG(domain); /* @todo: check this */
-// #endif /* SAL_IPV6 */
+	sal_netconn_t *conn;
+	int i;
+	// #if !SAL_IPV6
+	//   SAL_UNUSED_ARG(domain); /* @todo: check this */
+	// #endif /* SAL_IPV6 */
+	LOCK_SAL_CORE;
+	/* create a netconn */
+	switch (type) {
+	case SOCK_RAW://暂不支持
+		set_errno(EINVAL);
+		UNLOCK_SAL_CORE;
+		return -1;
+	case SOCK_DGRAM:
+		conn = salnetconn_new(NETCONN_UDP);
+		break;
+	case SOCK_STREAM:
+		conn = salnetconn_new(NETCONN_TCP);
+		break;
+	default:
+		set_errno(EINVAL);
+		UNLOCK_SAL_CORE;
+		return -1;
+	}
 
-  /* create a netconn */
-  switch (type) {
-  case SOCK_RAW://暂不支持
-    set_errno(EINVAL);
-    return -1;
-    break;
-  case SOCK_DGRAM:
-    conn = netconn_new(NETCONN_UDP);
-    break;
-  case SOCK_STREAM:
-    conn = netconn_new(NETCONN_TCP);
-    break;
-  default:
-    set_errno(EINVAL);
-    return -1;
-  }
+	if (!conn) {
+		UNLOCK_SAL_CORE;
+		set_errno(ENOBUFS);
+		return -1;
+	}
 
-  if (!conn) {
-    set_errno(ENOBUFS);
-    return -1;
-  }
+	i = alloc_socket(conn, 0);
 
-  i = alloc_socket(conn, 0);
-
-  if (i == -1) {
-    netconn_delete(conn);
-    set_errno(ENFILE);
-    return -1;
-  }
-  conn->socket = i;
-  SAL_DEBUG("sal_socket new fd %d", i);
-  set_errno(0);
-  return i;
+	if (i == -1) {
+		salnetconn_delete(conn);
+		set_errno(ENFILE);
+		UNLOCK_SAL_CORE;
+		return -1;
+	}
+	conn->socket = i;
+	UNLOCK_SAL_CORE;
+	SAL_DEBUG("sal_socket new fd %d", i);
+	set_errno(0);
+	return i;
 }
 
 /* Call this during the init process. */
 int sal_init()
 {
+	static bool sal_init_done = 0;
+	
+	if (sal_init_done){
+		SAL_ERROR("sal have already init done\n");
+		return 0;
+	}
+	
     SAL_DEBUG("Initializing SAL ...");
     sal_mutex_init();
-    sal_op.register_netconn_evt_cb(&sal_deal_event);
-    return sal_op.init(); /* Low level init. */
+	if (sal_mutex_new(&lock_sal_core) != ERR_OK){
+		SAL_ERROR("failed to creat lock_sal_core \n");
+		return -1;
+	}
+	
+    if (sal_op.register_netconn_evt_cb(&sal_deal_event) != ERR_OK){
+		SAL_ERROR("failed to reg sal evnet cb\n");
+		return -1;
+	}
+	
+	/* Low level init. */
+	if (sal_op.init() != ERR_OK){
+		SAL_ERROR("sal low level init fail\n");
+		return -1;
+	} 
+	
+    return 0 ;
 }
 
 int sal_listen(int s, int backlog)
 {
     struct sal_sock *sock;
-
-    /*there is nothing to do at atmode */
+	err_t           err = ERR_OK;
+    /*there is nothing to do at sal for now */
     SAL_DEBUG("sal_listen(%d, backlog=%d)\n", s, backlog);
 
     sock = get_socket(s);
@@ -1058,12 +1483,20 @@ int sal_listen(int s, int backlog)
         return -1;
     }
 
-    if (NETCONNTYPE_GROUP(sock->conn->type) != NETCONN_TCP){
-        sock_set_errno(sock, err_to_errno(ERR_ARG)); 
-        SAL_ERROR("sal_listen is not conn type is not tcp\n");
+    if (NULL == sock->conn){
+        SAL_ERROR("sal listen fail to get socket %d conn info\n.", s);
+        sock_set_errno(sock, err_to_errno(ERR_ARG));
         return -1;
     }
-    
+	LOCK_SAL_CORE;
+	err = salnetconn_listen(sock->conn);
+	UNLOCK_SAL_CORE;
+	if (err != ERR_OK){
+		SAL_ERROR("sal_listen %d failed, err=%d\n", s, err);
+		sock_set_errno(sock, err_to_errno(err));
+        return -1;
+	}
+	
     sock_set_errno(sock, 0);
     return 0;
 }
@@ -1072,7 +1505,6 @@ int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
 {
     struct sal_sock *sock = NULL;
     sal_netconn_t   *pstconn = NULL;
-    at_conn_t       statconn = {0};
     ip_addr_t       local_addr;
     u16_t           local_port;
     err_t           err = ERR_OK;
@@ -1086,46 +1518,25 @@ int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
     sock = get_socket(s);
     if (NULL == sock){
         SAL_ERROR("sal bind get socket failed.");
-        return -1;
+        return ERR_ARG;
     }
 
     pstconn = sock->conn;
     if (NULL == pstconn){
         SAL_ERROR("sal bind fail to get socket %d conn info\n.", s);
         sock_set_errno(sock, err_to_errno(ERR_VAL));
-        return -1;
+        return ERR_ARG;
     }
     
     sockaddr_to_ipaddr_port(name, &local_addr, &local_port);
-    switch(NETCONNTYPE_GROUP(pstconn->type)){
-        case NETCONN_UDP:
-            ip_addr_set_ipaddr(&(pstconn->pcb.udp->local_ip), &local_addr);
-            pstconn->pcb.udp->local_port = local_port;
-            break;
-        case NETCONN_TCP:
-            if (pstconn->state != NETCONN_NONE){
-                SAL_ERROR("sal bind sock %d state is %d ,fail to bind\n.", s, pstconn->state);
-                sock_set_errno(sock, err_to_errno(ERR_VAL));
-                return -1;
-            }
-            statconn.fd = s;
-            statconn.l_port = local_port;
-            statconn.type = TCP_SERVER;
-            err = sal_op.start(&statconn);
-            if (ERR_OK != err){
-                SAL_ERROR("sal_bind fail to start socket %d tcp server.\n", s);
-                sock_set_errno(sock, err_to_errno(ERR_VAL));
-                return -1;
-            }
-            ip_addr_set_ipaddr(&(pstconn->pcb.tcp->local_ip), &local_addr);
-            pstconn->pcb.tcp->local_port = local_port;
-            break;
-        case NETCONN_RAW:
-        default:
-            /*for now wifi module did not support raw socket yet*/
-            SAL_ERROR("sal_bind invalid connect type %d.\n", NETCONNTYPE_GROUP(pstconn->type));
-            return ERR_VAL;
-    }
+	LOCK_SAL_CORE;
+    err = salnetconn_bind(pstconn, &local_addr, local_port);
+	UNLOCK_SAL_CORE;
+	if (ERR_OK != err){
+		SAL_ERROR("sal_bind %d failed, err=%d\n", s, err);
+		sock_set_errno(sock, err_to_errno(err));
+        return -1;
+	}
     
     SAL_DEBUG("sal_bind(%d) succeeded\n", s);
     sock_set_errno(sock, 0);
@@ -1135,11 +1546,11 @@ int sal_bind(int s, const struct sockaddr *name, socklen_t namelen)
 int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
     struct sal_sock *sock = NULL;
-    err_t err = ERR_OK;
-    at_conn_t statconn = {0};
-    ip_addr_t remote_addr;
+	ip_addr_t remote_addr;
     u16_t     remote_port;
-    int8_t   ip_str[SAL_SOCKET_IP4_ADDR_LEN] = {0};
+	int8_t    ip_str[SAL_SOCKET_IP4_ADDR_LEN] = {0};
+    err_t err = ERR_OK;
+
 
     sock = get_socket(s);
     if (!sock) {
@@ -1166,46 +1577,17 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
         return -1;
     }
     
-    sockaddr_to_ipaddr_port(name, &remote_addr, &remote_port);
+	sockaddr_to_ipaddr_port(name, &remote_addr, &remote_port);
     ip4_sockaddr_to_ipstr_port(name, (char *)ip_str);
-    statconn.fd = sock->conn->socket;
-    statconn.addr = (char *)ip_str;
-    statconn.r_port = remote_port;
-    statconn.l_port = -1;
-    switch(NETCONNTYPE_GROUP(sock->conn->type)) {
-    case NETCONN_UDP:
-        /*TODO double check if udp double connect */ 
-        statconn.type = UDP_UNICAST;
-        /*if local port have not*/
-        statconn.l_port = 0xc000;
-        err = sal_op.start(&statconn);
-        if (ERR_OK != err){
-            SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", ip_str, remote_port);
-            return -1;
-        }
-        ip_addr_set_ipaddr(&(sock->conn->pcb.udp->remote_ip), &remote_addr);
-        sock->conn->pcb.udp->remote_port = remote_port;
-        break;
-    case NETCONN_TCP:
-        if (sock->conn->state != NETCONN_NONE)
-            return ERR_ISCONN;
-        statconn.type = TCP_CLIENT;
-        err = sal_op.start(&statconn);
-        if (ERR_OK != err){
-            SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", ip_str, remote_port);
-            return -1;
-        }
-        ip_addr_set_ipaddr(&(sock->conn->pcb.tcp->remote_ip), &remote_addr);
-        sock->conn->pcb.tcp->remote_port = remote_port;
-        break;
-    default:
-        SAL_ERROR("Unsupported sal connection type.\n");
-        sock_set_errno(sock, err_to_errno(ERR_ARG));
-        return ERR_ARG;
-    }
-
-    /* Update sal conn state here */
-    sock->conn->state = NETCONN_CONNECT;
+	LOCK_SAL_CORE;
+	err = salnetconn_connect(sock->conn, ip_str, remote_port);
+	UNLOCK_SAL_CORE;
+    if (ERR_OK != err){
+		SAL_ERROR("sal_connect failed, err=%d\n", err);
+		sock_set_errno(sock, err_to_errno(err));
+		return -1;
+	}
+	
     SAL_DEBUG("sal_connect(%d) succeeded\n", s);
     sock_set_errno(sock, 0);
     return err;
@@ -1232,41 +1614,47 @@ static void free_socket(struct sal_sock *sock)
 
 int sal_close(int s)
 {
-  struct sal_sock *sock;
-  struct sal_event *event;
-  err_t err;
+	struct sal_sock *sock;
+	struct sal_event *event;
+	err_t err;
 
-  SAL_DEBUG("sal_close(%d)\n", s);
+	SAL_DEBUG("sal_close(%d)\n", s);
 
-  event = tryget_event(s);
-  if (event) {
-    event->used = 0;
-    return 0;
-  }
+	event = tryget_event(s);
+	if (event) {
+		event->used = 0;
+		return 0;
+	}
 
-  sock = get_socket(s);
-  if (!sock) {
-    return -1;
-  }
+	sock = get_socket(s);
+	if (!sock) {
+		return -1;
+	}
+	if (!sock->conn){
+		return -1;
+	}
+	
+	LOCK_SAL_CORE;
+	if (sock->conn->state == NETCONN_CONNECT) {
+		if ((sal_op.close)(s, -1) != 0) {
+			SAL_ERROR("sal_op.close failed.");
+			sock_set_errno(sock, err_to_errno(ERR_IF));
+			UNLOCK_SAL_CORE;
+			return -1;
+		}
+	}
 
-  if (sock->conn->state == NETCONN_CONNECT) {
-    if ((sal_op.close)(s, -1) != 0) {
-      SAL_ERROR("sal_op.close failed.");
-      sock_set_errno(sock, err_to_errno(ERR_IF));
-      return -1;
-    }
-  }
+	err = salnetconn_delete(sock->conn);
+	UNLOCK_SAL_CORE;
+	if (err != ERR_OK) {
+		SAL_ERROR("salnetconn_delete failed in %s.", __func__);
+		sock_set_errno(sock, err_to_errno(err));
+		return -1;
+	}
 
-  err = netconn_delete(sock->conn);
-  if (err != ERR_OK) {
-    SAL_ERROR("netconn_delete failed in %s.", __func__);
-    sock_set_errno(sock, err_to_errno(err));
-    return -1;
-  }
-
-  free_socket(sock);
-  set_errno(0);
-  return 0;
+	free_socket(sock);
+	set_errno(0);
+	return 0;
 }
 
 struct hostent* sal_gethostbyname(const char *name)
