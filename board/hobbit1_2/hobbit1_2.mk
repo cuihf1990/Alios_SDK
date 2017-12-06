@@ -5,6 +5,7 @@ JTAG := jlink
 MODULE               := HOBBIT1_2
 HOST_ARCH            := ck802
 HOST_MCU_FAMILY      := csky
+SUPPORT_BINS         := no
 
 $(NAME)_SOURCES := board_init.c
 

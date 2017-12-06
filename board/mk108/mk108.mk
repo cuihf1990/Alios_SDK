@@ -5,6 +5,7 @@ JTAG := jlink
 MODULE               := MOC108
 HOST_ARCH            := ARM968E-S
 HOST_MCU_FAMILY      := moc108
+SUPPORT_BINS         := no
 
 $(NAME)_SOURCES := board.c
 

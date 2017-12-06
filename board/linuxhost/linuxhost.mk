@@ -4,6 +4,7 @@ NAME := board_linuxhost
 MODULE              := 1062
 HOST_ARCH           := linux
 HOST_MCU_FAMILY     := linux
+SUPPORT_BINS        := no
 
 $(NAME)_COMPONENTS  :=  tfs
 

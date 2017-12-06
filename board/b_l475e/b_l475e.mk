@@ -6,6 +6,7 @@ $(NAME)_TYPE := kernel
 MODULE               := 1062
 HOST_ARCH            := Cortex-M4
 HOST_MCU_FAMILY      := stm32l4xx
+SUPPORT_BINS         := no
 
 $(NAME)_SOURCES := board.c osa_flash.c
 
