@@ -219,10 +219,10 @@ kstat_t krhino_timer_change(ktimer_t *timer, tick_t first, tick_t round)
         return err;
     }
 
-    cb->timer  = timer;
-    cb->first  = first;
-    cb->round  = round;
-    cb->cb_num = TIMER_CMD_CHG;
+    cb->timer   = timer;
+    cb->first   = first;
+    cb->u.round = round;
+    cb->cb_num  = TIMER_CMD_CHG;
     err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
     if (err != RHINO_SUCCESS) {
         krhino_mblk_free(&g_timer_pool, cb);
@@ -245,7 +245,7 @@ kstat_t krhino_timer_arg_change(ktimer_t *timer, void *arg)
     }
 
     cb->timer  = timer;
-    cb->arg    = arg;
+    cb->u.arg  = arg;
     cb->cb_num = TIMER_ARG_CHG;
 
     err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
@@ -338,7 +338,7 @@ static void timer_cmd_proc(k_timer_queue_cb *cb)
             }
 
             timer->init_count  = cb->first;
-            timer->round_ticks = cb->round;
+            timer->round_ticks = cb->u.round;
             break;
         case TIMER_ARG_CHG:
             if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {
@@ -349,7 +349,7 @@ static void timer_cmd_proc(k_timer_queue_cb *cb)
                 break;
             }
 
-            timer->timer_cb_arg  = cb->arg;
+            timer->timer_cb_arg = cb->u.arg;
             break;
         case TIMER_CMD_DEL:
             if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {
