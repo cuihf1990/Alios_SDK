@@ -34,11 +34,13 @@ typedef struct {
 } ktimer_t;
 
 typedef struct {
-    ktimer_t *timer;
-    tick_t    first;
-    tick_t    round;
-    void     *arg;
-    uint8_t   cb_num;
+    ktimer_t  *timer;
+    tick_t     first;
+    union {
+        tick_t round;
+        void  *arg;
+    } u;
+    uint8_t    cb_num;
 } k_timer_queue_cb;
 
 typedef enum {
