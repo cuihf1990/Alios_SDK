@@ -418,30 +418,6 @@ void *aos_queue_buf_ptr(aos_queue_t *queue)
     return ((kbuf_queue_t *)queue->hdl)->buf;
 }
 
-int aos_sched_disable()
-{
-    int ret;
-
-    ret = (int)krhino_sched_disable();
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    ERRNO_MAPPING(ret);
-}
-
-int aos_sched_enable()
-{
-    int ret;
-
-    ret = (int)krhino_sched_enable();
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    ERRNO_MAPPING(ret);
-}
-
 int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat)
 {

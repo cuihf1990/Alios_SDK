@@ -286,20 +286,6 @@ int aos_queue_is_valid(aos_queue_t *queue);
 void *aos_queue_buf_ptr(aos_queue_t *queue);
 
 /**
- * This function will disable kernel sched.
- *
- * @return  the operation status, 0 is OK, others is error.
- */
-int aos_sched_disable(void);
-
-/**
- * This function will enable kernel sched.
- *
- * @return  0: success.
- */
-int aos_sched_enable(void);
-
-/**
  * This function will create a timer and run auto.
  *
  * @param[in]  timer   pointer to the timer.
