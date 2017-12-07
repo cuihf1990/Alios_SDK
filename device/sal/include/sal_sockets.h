@@ -39,28 +39,28 @@ typedef u16_t in_port_t;
 #define DNS_MAX_NAME_LENGTH 256
 
 struct sockaddr {
-  u8_t        sa_len;
-  sa_family_t sa_family;
-  char        sa_data[14];
+    u8_t        sa_len;
+    sa_family_t sa_family;
+    char        sa_data[14];
 };
 
 /* members are in network byte order */
 struct sockaddr_in {
-  u8_t            sin_len;
-  sa_family_t     sin_family;
-  in_port_t       sin_port;
-  struct in_addr  sin_addr;
+    u8_t            sin_len;
+    sa_family_t     sin_family;
+    in_port_t       sin_port;
+    struct in_addr  sin_addr;
 #define SIN_ZERO_LEN 8
-  char            sin_zero[SIN_ZERO_LEN];
+    char            sin_zero[SIN_ZERO_LEN];
 };
 
 struct sockaddr_in6 {
-  u8_t            sin6_len;      /* length of this structure    */
-  sa_family_t     sin6_family;   /* AF_INET6                    */
-  in_port_t       sin6_port;     /* Transport layer port #      */
-  u32_t           sin6_flowinfo; /* IPv6 flow information       */
-  struct in6_addr sin6_addr;     /* IPv6 address                */
-  u32_t           sin6_scope_id; /* Set of interfaces for scope */
+    u8_t            sin6_len;      /* length of this structure    */
+    sa_family_t     sin6_family;   /* AF_INET6                    */
+    in_port_t       sin6_port;     /* Transport layer port #      */
+    u32_t           sin6_flowinfo; /* IPv6 flow information       */
+    struct in6_addr sin6_addr;     /* IPv6 address                */
+    u32_t           sin6_scope_id; /* Set of interfaces for scope */
 };
 
 /* If your port already typedef's socklen_t, define SOCKLEN_T_DEFINED
@@ -205,20 +205,20 @@ int sal_setsockopt(int s, int level, int optname,
 int sal_getsockopt(int s, int level, int optname,
                    void *optval, socklen_t *optlen);
 
-struct hostent* sal_gethostbyname(const char *name);
+struct hostent *sal_gethostbyname(const char *name);
 
 int sal_close(int s);
 
 int sal_init();
 
-int sal_sendto(int s, const void * data, size_t size, int flags, const struct sockaddr * to, socklen_t tolen);
+int sal_sendto(int s, const void *data, size_t size, int flags, const struct sockaddr *to, socklen_t tolen);
 
 int sal_send(int s, const void *data, size_t size, int flags);
 
 int sal_shutdown(int s, int how);
 
 int sal_recvfrom(int s, void *mem, size_t len, int flags,
-              struct sockaddr *from, socklen_t *fromlen);
+                 struct sockaddr *from, socklen_t *fromlen);
 
 int sal_recv(int s, void *mem, size_t len, int flags);
 
@@ -227,7 +227,7 @@ int sal_read(int s, void *mem, size_t len);
 void sal_freeaddrinfo(struct addrinfo *ai);
 
 int sal_getaddrinfo(const char *nodename, const char *servname,
-       const struct addrinfo *hints, struct addrinfo **res);
+                    const struct addrinfo *hints, struct addrinfo **res);
 
 
 
