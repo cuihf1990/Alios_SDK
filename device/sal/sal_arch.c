@@ -206,8 +206,13 @@ void sal_arch_assert(const char *file, int line)
 
     Is called to initialize the sal_arch layer.
 */
-void sal_mutex_init(void)
+void sal_mutex_arch_init(void)
 {
     aos_mutex_new(&sal_arch_mutex);
+}
+
+void sal_mutex_arch_free(void)
+{
+    aos_mutex_free(&sal_arch_mutex);
 }
 

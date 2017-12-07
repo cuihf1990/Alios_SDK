@@ -132,8 +132,6 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
             return;
         }
 #endif
-        aos_msleep(10000);
-        
         close(g_fd);
         LOGI(TAG, "sal udp_c test successful.");
     } else if (strcmp(ptype, "otaapi") == 0) {

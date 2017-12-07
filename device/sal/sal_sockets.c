@@ -646,9 +646,9 @@ static err_t salnetconn_delete(sal_netconn_t *conn)
     return ERR_OK;
 }
 
-err_t static salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
+static err_t salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
 {
-    at_conn_t statconn = {0};
+    sal_conn_t statconn = {0};
     ip_addr_t remoteipaddr;
     char *ipv4anyadrr = "0.0.0.0";
     err_t err = ERR_OK;
@@ -677,7 +677,7 @@ err_t static salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
             if (conn->pcb.udp->local_port == 0) {
                 statconn.l_port = sal_udp_new_port();
             }
-            err = sal_op.start(&statconn);
+            err = sal_module_start(&statconn);
             if (ERR_OK != err) {
                 SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", statconn.addr, port);
                 return -1;
@@ -696,7 +696,7 @@ err_t static salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
             break;
         case NETCONN_TCP:
             statconn.type = TCP_CLIENT;
-            err = sal_op.start(&statconn);
+            err = sal_module_start(&statconn);
             if (ERR_OK != err) {
                 SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", statconn.addr, port);
                 return -1;
@@ -720,7 +720,7 @@ err_t static salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
 static err_t salnetconn_listen(sal_netconn_t *conn)
 {
     err_t err = ERR_OK;
-    at_conn_t statconn = {0};
+    sal_conn_t statconn = {0};
 
     if (NULL == conn || NULL == conn->pcb.tcp) {
         return ERR_ARG;
@@ -744,7 +744,7 @@ static err_t salnetconn_listen(sal_netconn_t *conn)
     statconn.fd = conn->socket;
     statconn.l_port = conn->pcb.tcp->local_port;
     statconn.type = TCP_SERVER;
-    err = sal_op.start(&statconn);
+    err = sal_module_start(&statconn);
     if (ERR_OK != err) {
         SAL_ERROR("fail to listen %d, local port is %d.\n", conn->socket, statconn.l_port);
         return ERR_ARG;
@@ -1117,9 +1117,9 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
     begin_ms = sys_now();
 #endif
     do {
-        err = (sal_op.recv)(s, (uint8_t *)(pucrecvbuf + uitotalrecvlen), &uirecvlen, (char *)ipstr, remoteport);
+        err = sal_module_recv(s, (uint8_t *)(pucrecvbuf + uitotalrecvlen), &uirecvlen, (char *)ipstr, remoteport);
         if (err != ERR_OK) {
-            SAL_ERROR("sal_recvfrom(%d): sal_op.recv returning %d\n", s, err);
+            SAL_ERROR("sal_recvfrom(%d): sal_module_recv returning %d\n", s, err);
             return -1;
         }
 
@@ -1227,7 +1227,7 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
         }
     }
 
-    err = (sal_op.send)(pstsalsock->conn->socket,
+    err = sal_module_send(pstsalsock->conn->socket,
                         (uint8_t *)data, size, NULL, -1);
     UNLOCK_SAL_CORE;
 
@@ -1456,23 +1456,39 @@ int sal_init()
     }
 
     SAL_DEBUG("Initializing SAL ...");
-    sal_mutex_init();
+    sal_mutex_arch_init();
     if (sal_mutex_new(&lock_sal_core) != ERR_OK) {
         SAL_ERROR("failed to creat lock_sal_core \n");
+        sal_mutex_arch_free();
         return -1;
     }
 
-    if (sal_op.register_netconn_evt_cb(&sal_deal_event) != ERR_OK) {
+#ifdef CONFIG_AOS_SAL_MODULE
+    extern int module_sal_init(void);
+    if (module_sal_init()){
+        SAL_ERROR("module sal init\n");
+        sal_mutex_arch_free();
+        sal_mutex_free(&lock_sal_core);
+        return -1;
+    }
+#endif
+
+    if (sal_module_register_netconn_evt_cb(&sal_deal_event) != ERR_OK) {
         SAL_ERROR("failed to reg sal evnet cb\n");
+        sal_mutex_arch_free();
+        sal_mutex_free(&lock_sal_core);
         return -1;
     }
 
     /* Low level init. */
-    if (sal_op.init() != ERR_OK) {
+    if (sal_module_init() != ERR_OK) {
         SAL_ERROR("sal low level init fail\n");
+        sal_mutex_arch_free();
+        sal_mutex_free(&lock_sal_core);
         return -1;
     }
-
+    
+    sal_init_done = 1;
     return 0 ;
 }
 
@@ -1641,8 +1657,8 @@ int sal_close(int s)
 
     LOCK_SAL_CORE;
     if (sock->conn->state == NETCONN_CONNECT) {
-        if ((sal_op.close)(s, -1) != 0) {
-            SAL_ERROR("sal_op.close failed.");
+        if (sal_module_close(s, -1) != 0) {
+            SAL_ERROR("sal_module_close failed.");
             sock_set_errno(sock, err_to_errno(ERR_IF));
             UNLOCK_SAL_CORE;
             return -1;
@@ -1678,7 +1694,7 @@ struct hostent *sal_gethostbyname(const char *name)
         return NULL;
     }
 
-    if (sal_op.domain_to_ip((char *)name, ip_str) != 0) {
+    if (sal_module_domain_to_ip((char *)name, ip_str) != 0) {
         SAL_ERROR("domain to ip failed.");
         return NULL;
     }
@@ -1897,7 +1913,7 @@ int sal_getaddrinfo(const char *nodename, const char *servname,
         } else {
             //ip_addr_t addr;
             char ip_str[16] = {0};
-            if (sal_op.domain_to_ip((char *)nodename, ip_str) != 0) {
+            if (sal_module_domain_to_ip((char *)nodename, ip_str) != 0) {
                 SAL_ERROR("domain to ip failed.");
                 return EAI_FAIL;
             }
