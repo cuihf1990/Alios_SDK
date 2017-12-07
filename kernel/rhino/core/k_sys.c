@@ -35,8 +35,11 @@ kstat_t krhino_init(void)
     kobj_list_init();
 #endif
 
-#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
     k_mm_init();
+#endif
+
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
     krhino_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
                         RHINO_CONFIG_K_DYN_QUEUE_MSG);
     dyn_mem_proc_task_start();
