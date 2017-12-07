@@ -19,9 +19,9 @@
 * [CSKY ABIV ELF](https://pan.baidu.com/s/1nvKdhED passwd:62q6)
    $ tar -zxf csky-abiv2-elf-tools-x86_64-minilibc-20160704.tar.gz -C build/compiler/
 2. Compiling csky hobbit project
-   $ aos make helloworld@hobbit1_2
+   $ aos make helloworld@hobbit1_evb
 3. initialize gdbinit
    $ cp platform/mcu/csky/config/hobbit_gdbinit .gdbinit
 4. download bin file to hobbit1_2 board by cds tool
 5. run
-   $ csky-abiv2-elf-gdb out/helloworld@hobbit1_2/binary/helloworld@hobbit1_2.elf 
+   $ csky-abiv2-elf-gdb out/helloworld@hobbit1_2/binary/helloworld@hobbit1_evb.elf 
