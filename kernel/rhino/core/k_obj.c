@@ -79,8 +79,8 @@ ctx_switch_t g_sys_ctx_switch_times;
 #endif
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-kqueue_t    g_dyn_queue;
-void       *g_dyn_queue_msg[RHINO_CONFIG_K_DYN_QUEUE_MSG];
+ksem_t       g_res_sem;
+klist_t      g_res_list;
 #endif
 
 #if (RHINO_CONFIG_WORKQUEUE > 0)
