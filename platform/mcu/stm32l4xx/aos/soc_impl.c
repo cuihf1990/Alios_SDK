@@ -54,6 +54,7 @@ tick_t soc_elapsed_ticks_get(void)
 }
 #endif
 
+#if (RHINO_CONFIG_MM_TLF > 0)
 
 #if !defined (__CC_ARM) /* Keil / armcc */
 extern void         *heap_start;
@@ -74,6 +75,8 @@ k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len},{(uint8
 #endif
 int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 
+#endif
+
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
 
 extern int __bss_start__, __bss_end__, _sdata, _edata;
@@ -88,6 +91,7 @@ void aos_mm_leak_region_init(void)
 
 #endif
 
+
 #if (RHINO_CONFIG_TASK_STACK_CUR_CHECK > 0)
 size_t soc_get_cur_sp()
 {
@@ -99,7 +103,6 @@ size_t soc_get_cur_sp()
 #endif
     return sp;
 }
-#endif
 static void soc_print_stack()
 {
     void    *cur, *end;
@@ -120,10 +123,15 @@ static void soc_print_stack()
     printf("\r\n");
     return;
 }
+#endif
+
 void soc_err_proc(kstat_t err)
 {
     (void)err;
+    
+    #if (RHINO_CONFIG_TASK_STACK_CUR_CHECK > 0)
     soc_print_stack();
+    #endif
     assert(0);
 }
 

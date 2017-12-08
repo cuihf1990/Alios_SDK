@@ -418,6 +418,8 @@ void *aos_queue_buf_ptr(aos_queue_t *queue)
     return ((kbuf_queue_t *)queue->hdl)->buf;
 }
 
+
+#if (RHINO_CONFIG_TIMER > 0)
 int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat)
 {
@@ -528,6 +530,7 @@ int aos_timer_change(aos_timer_t *timer, int ms)
 }
 AOS_EXPORT(int, aos_timer_change, aos_timer_t *, int);
 
+#endif
 #if (RHINO_CONFIG_WORKQUEUE  > 0)
 int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
 {
