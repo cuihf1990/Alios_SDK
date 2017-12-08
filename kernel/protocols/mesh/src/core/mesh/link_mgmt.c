@@ -104,13 +104,12 @@ static void build_and_send_link_request(bool send)
     }
 
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-    uint8_t tlv_types[4] = {TYPE_UCAST_CHANNEL, TYPE_TIME_SLOT, TYPE_BUFQUEUE_SIZE, TYPE_TIMESTAMP};
-    uint8_t tlv_length = (umesh_get_mode() & MODE_RX_ON)? 1: 3;
+    uint8_t tlv_types[4] = {TYPE_UCAST_CHANNEL, TYPE_TIMESTAMP, TYPE_TIME_SLOT, TYPE_BUFQUEUE_SIZE};
+    uint8_t tlv_length = (umesh_get_mode() & MODE_RX_ON)? 2: sizeof(tlv_types);
 #else
     uint8_t tlv_types[2] = {TYPE_UCAST_CHANNEL, TYPE_TIMESTAMP};
-    uint8_t tlv_length = 1;
+    uint8_t tlv_length = sizeof(tlv_types);
 #endif
-
     set_mesh_short_addr(&addr, nbr->netid, nbr->sid);
     send_link_request(network, &addr, tlv_types, tlv_length);
 }
@@ -731,15 +730,7 @@ ur_error_t handle_link_request(message_t *message)
     network_context_t *network;
     uint8_t *data;
     uint16_t length;
-
-#ifdef CONFIG_AOS_MESH_LOWPOWER
-    neighbor_t *node;
-    node = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
-    if (node == NULL) {
-        return UR_ERROR_NONE;
-    }
-    node->flags |= NBR_WAKEUP;
-#endif
+    neighbor_t *nbr;
 
     MESH_LOG_DEBUG("handle link request");
 
@@ -752,6 +743,14 @@ ur_error_t handle_link_request(message_t *message)
     }
     tlvs = data;
     message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
+    nbr = update_neighbor(info, tlvs, tlvs_length, true);
+    if (nbr == NULL) {
+        goto exit;
+    }
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    nbr->flags |= NBR_WAKEUP;
+#endif
+
     tlvs_request = (mm_tlv_request_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                            TYPE_TLV_REQUEST);
     if (tlvs_request) {
@@ -762,6 +761,8 @@ ur_error_t handle_link_request(message_t *message)
         tlvs_length = 0;
     }
     send_link_accept_and_request(network, &info->src_mac, tlvs, tlvs_length);
+
+exit:
     ur_mem_free(data, length);
     return UR_ERROR_NONE;
 }

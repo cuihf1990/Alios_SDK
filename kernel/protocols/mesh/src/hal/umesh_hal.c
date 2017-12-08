@@ -2,6 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
+#include <stdio.h>
 #include <stddef.h>
 
 #include "umesh_hal.h"
@@ -264,6 +265,32 @@ const mac_address_t *hal_umesh_get_mac_address(umesh_hal_module_t *m)
     }
 
     return NULL;
+}
+
+int hal_umesh_radio_wakeup(umesh_hal_module_t *m)
+{
+    if (m == NULL) {
+        m = hal_umesh_get_default_module();
+    }
+
+    if ((m != NULL) && (m->umesh_hal_radio_wakeup != NULL)) {
+        return m->umesh_hal_radio_wakeup(m);
+    }
+
+    return -1;
+}
+
+int hal_umesh_radio_sleep(umesh_hal_module_t *m)
+{
+    if (m == NULL) {
+        m = hal_umesh_get_default_module();
+    }
+
+    if ((m != NULL) && (m->umesh_hal_radio_sleep != NULL)) {
+        return m->umesh_hal_radio_sleep(m);
+    }
+
+    return -1;
 }
 
 const frame_stats_t *hal_umesh_get_stats(umesh_hal_module_t *m)

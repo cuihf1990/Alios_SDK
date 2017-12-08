@@ -12,6 +12,7 @@
 #endif
 
 #include <umesh.h>
+#include <umesh_hal.h>
 #include <umesh_pal.h>
 
 /*
@@ -295,11 +296,10 @@ void umesh_pal_init(void)
 
 void umesh_pal_radio_sleep(void)
 {
-
+    hal_umesh_radio_sleep(NULL);
 }
 
 void umesh_pal_radio_wakeup(void)
 {
-
+    hal_umesh_radio_wakeup(NULL);
 }
-

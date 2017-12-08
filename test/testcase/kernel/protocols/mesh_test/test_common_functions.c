@@ -38,5 +38,5 @@ void topo_test_function(uint16_t first_node, uint16_t num, uint32_t timeout)
     for (index = 1; index < num; index++) {
         stop_node(index + first_node);
     }
-    cmd_to_agent("stop");
+    umesh_stop();
 }

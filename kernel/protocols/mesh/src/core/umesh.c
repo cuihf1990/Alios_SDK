@@ -337,7 +337,7 @@ ur_error_t umesh_start(void)
     }
 
     g_um_state.started = true;
-
+    umesh_pal_radio_wakeup();
     interface_start();
     umesh_mm_start();
     lp_start();
@@ -364,13 +364,13 @@ ur_error_t umesh_stop(void)
     }
 
     g_um_state.started = false;
-    hal = hal_umesh_get_default_module();
-    assert(hal);
-    hal_umesh_disable(hal);
-
     lp_stop();
     umesh_mm_stop();
     interface_stop();
+
+    hal = hal_umesh_get_default_module();
+    assert(hal);
+    hal_umesh_disable(hal);
     return UR_ERROR_NONE;
 }
 

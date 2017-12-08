@@ -74,12 +74,8 @@ static void handle_discovery_timer(void *args)
             migrate = true;
         }
     }
-    if (g_nm_state.discover_times > 0 && migrate) {
-        umesh_mm_set_channel(hal, g_nm_state.discover_result.channel);
-        nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr);
-        g_nm_state.handler(nbr);
-        goto exit;
-    } else if (g_nm_state.discover_times < DISCOVERY_RETRY_TIMES) {
+
+    if (g_nm_state.discover_times < DISCOVERY_RETRY_TIMES && migrate == false) {
         if (umesh_mm_get_prev_channel() == g_nm_state.discover_channel) {
             g_nm_state.discover_channel++;
         }
@@ -89,16 +85,19 @@ static void handle_discovery_timer(void *args)
                                                    handle_discovery_timer, NULL);
         g_nm_state.discover_channel++;
         return;
+    }
+
+    g_nm_state.started = false;
+    if (migrate) {
+        umesh_mm_set_channel(hal, g_nm_state.discover_result.channel);
+        nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr);
+        g_nm_state.handler(nbr);
     } else if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
         umesh_mm_set_channel(hal, umesh_mm_get_prev_channel());
     } else {
         umesh_mm_set_channel(hal, hal->def_channel);
         g_nm_state.handler(NULL);
     }
-
-exit:
-    g_nm_state.started = false;
-    return;
 }
 
 static ur_error_t send_discovery_request(network_context_t *network)
@@ -301,7 +300,7 @@ static void start_discover(void)
     g_nm_state.discover_times = 0;
     ur_stop_timer(&g_nm_state.discover_timer, NULL);
     g_nm_state.discover_timer = ur_start_timer(hal->discovery_interval,
-                                          handle_discovery_timer, NULL);
+                                               handle_discovery_timer, NULL);
     memset(&g_nm_state.discover_result, 0, sizeof(g_nm_state.discover_result));
     g_nm_state.discover_result.meshnetid = BCAST_NETID;
     umesh_mm_set_prev_channel();

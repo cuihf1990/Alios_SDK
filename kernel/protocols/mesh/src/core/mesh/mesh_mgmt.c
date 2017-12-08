@@ -24,9 +24,6 @@
 #endif
 #include "hal/interfaces.h"
 #include "hal/hals.h"
-#ifdef CONFIG_AOS_MESH_LOWPOWER
-#include "core/lowpower_mgmt.h"
-#endif
 
 typedef struct mm_device_s {
     node_state_t state;
@@ -712,6 +709,7 @@ static ur_error_t send_attach_response(network_context_t *network,
 
     length = sizeof(mm_header_t) + sizeof(mm_cost_tv_t) +
              sizeof(mm_ueid_tv_t) + sizeof(mm_timestamp_tv_t);
+
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         length += sizeof(mm_symmetric_key_tv_t);
     }
