@@ -28,6 +28,7 @@ void lowpower_init(void);
 void lowpower_update_info(neighbor_t *nbr, uint8_t *tlvs, uint16_t length);
 uint16_t lowpower_set_info(uint8_t type, uint8_t *data, void *context);
 bool lowpower_is_radio_up(void);
+uint32_t lowpower_get_sleep_time(void);
 
 typedef void (* lowpower_radio_down_t)(schedule_type_t type);
 typedef void (* lowpower_radio_up_t)(schedule_type_t type);

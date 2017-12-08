@@ -16,6 +16,9 @@
 #include "core/sid_allocator.h"
 #include "core/link_mgmt.h"
 #include "core/router_mgr.h"
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+#include "core/lowpower_mgmt.h"
+#endif
 #include "hal/interfaces.h"
 #include "tools/cli.h"
 
@@ -693,6 +696,11 @@ static void process_status(int argc, char *argv[])
                         hal_umesh_get_bcast_mtu(network->hal->module));
         response_append("\tucast_mtu\t%d\r\n",
                         hal_umesh_get_ucast_mtu(network->hal->module));
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+        response_append("\tsleetime\t%d, ratio %d\%\r\n",
+                lowpower_get_sleep_time(), (lowpower_get_sleep_time() * 100) / umesh_now_ms());
+#endif
+        response_append("\tuptime\t%d\r\n", umesh_now_ms());
     }
 
     get_channel(&channel);
