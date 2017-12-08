@@ -81,9 +81,8 @@ extern ctx_switch_t g_sys_ctx_switch_times;
 #endif
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-extern kqueue_t  g_dyn_queue;
-extern void     *g_dyn_queue_msg[RHINO_CONFIG_K_DYN_QUEUE_MSG];
-extern ktask_t   g_dyn_mem_proc_task;
+extern ksem_t       g_res_sem;
+extern klist_t      g_res_list;
 #endif
 
 #if (RHINO_CONFIG_WORKQUEUE > 0)
@@ -114,6 +113,14 @@ extern kspinlock_t   g_sys_lock;
                 return RHINO_NOT_CALLED_BY_INTRPT; \
             }                                      \
         } while (0)
+
+#define RES_FREE_NUM 5
+
+typedef struct {
+    klist_t res_list;
+    uint8_t cnt;
+    void   *res[RES_FREE_NUM];
+} res_free_t;
 
 void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num);
 

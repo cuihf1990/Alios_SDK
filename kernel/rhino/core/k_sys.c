@@ -40,8 +40,8 @@ kstat_t krhino_init(void)
 #endif
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
-    krhino_queue_create(&g_dyn_queue, "Kobj_dyn_queue", (void **)&g_dyn_queue_msg,
-                        RHINO_CONFIG_K_DYN_QUEUE_MSG);
+    klist_init(&g_res_list);
+    krhino_sem_create(&g_res_sem, "res_sem", 0);
     dyn_mem_proc_task_start();
 #endif
 

@@ -37,7 +37,7 @@ void yunos_task_create_hook(ktask_t *task)
 
 }
 
-void yunos_task_del_hook(ktask_t *task)
+void yunos_task_del_hook(ktask_t *task, res_free_t *arg)
 {
 
 }
