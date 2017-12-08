@@ -11,7 +11,7 @@ NAME := STM32L4xx
 
 HOST_OPENOCD := stm32l4x
 
-SPI_WIFI_ENABLED := true
+STM32_NONSTD_SOCKET := true
 
 $(NAME)_TYPE := kernel
 
