@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+#if (RHINO_CONFIG_MM_DEBUG > 0)
 extern void         *heap_start;
 extern void         *heap_len;
 
@@ -19,15 +20,20 @@ void aos_mm_leak_region_init(void)
     krhino_mm_leak_region_init(&__bss_start__, &__bss_end__);
     krhino_mm_leak_region_init(&_sdata, &_edata);
 }
+#endif
+
 
 size_t soc_get_cur_sp()
 {
     size_t sp = 0;
-    asm volatile(
+#if defined (__GNUC__)&&!defined(__CC_ARM)
+	asm volatile(
         "mov %0,sp\n"
         :"=r"(sp));
+#endif
     return sp;
 }
+
 
 static void soc_print_stack()
 {
