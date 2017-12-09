@@ -290,12 +290,12 @@ static void timer_cb_proc(void)
     }
 }
 
-static void timer_cmd_proc(k_timer_queue_cb *cb)
+static void cmd_proc(k_timer_queue_cb *cb, uint8_t cmd)
 {
     ktimer_t *timer;
     timer = cb->timer;
 
-    switch (cb->cb_num) {
+    switch (cmd) {
         case TIMER_CMD_START:
             if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {  
                 break;
@@ -389,6 +389,11 @@ static void timer_cmd_proc(k_timer_queue_cb *cb)
             break;
     }   
 
+}
+
+static void timer_cmd_proc(k_timer_queue_cb *cb)
+{
+    cmd_proc(cb, cb->cb_num);
 }
 
 static void timer_task(void *pa)
