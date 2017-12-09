@@ -581,7 +581,7 @@ void process_nbrs(int argc, char *argv[])
                             EXT_ADDR_DATA(nbr->mac), nbrstate2str(nbr->state), \
                             nbr->netid, nbr->sid, nbr->stats.link_cost, nbr->ssid_info.child_num, \
                             nbr->channel, nbr->stats.reverse_rssi, nbr->stats.forward_rssi, \
-                            (nbr->flags & NBR_WAKEUP)? 1: 0, nbr->last_heard);
+                            nbr->last_heard, (nbr->flags & NBR_WAKEUP)? 1: 0);
             num++;
         }
         response_append("\tnum=%d\r\n", num);
@@ -696,11 +696,11 @@ static void process_status(int argc, char *argv[])
                         hal_umesh_get_bcast_mtu(network->hal->module));
         response_append("\tucast_mtu\t%d\r\n",
                         hal_umesh_get_ucast_mtu(network->hal->module));
+        response_append("\tuptime\t%d\r\n", umesh_now_ms());
 #ifdef CONFIG_AOS_MESH_LOWPOWER
         response_append("\tsleetime\t%d, ratio %d\%\r\n",
                 lowpower_get_sleep_time(), (lowpower_get_sleep_time() * 100) / umesh_now_ms());
 #endif
-        response_append("\tuptime\t%d\r\n", umesh_now_ms());
     }
 
     get_channel(&channel);

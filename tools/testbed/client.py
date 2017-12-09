@@ -169,7 +169,10 @@ class Client:
                             if 'kernel version :' in line:
                                 self.devices[port]['attributes']['kernel_version'] = line.replace('kernel version :AOS-', '')
                             if 'app version :' in line:
-                                self.devices[port]['attributes']['app_version'] = line.replace('app version :app-', '')
+                                line = line.replace('app version :', '')
+                                line = line.replace('app-', '')
+                                line = line.replace('APP-', '')
+                                self.devices[port]['attributes']['app_version'] = line
                     else:
                         poll_fail_num += 1
                 elif cmd == 'umesh status': #poll mesh status
@@ -193,14 +196,26 @@ class Client:
                 elif cmd == 'umesh nbrs': #poll mesh nbrs
                     if len(response) > 0 and 'num=' in response[-1]:
                         poll_fail_num = 0
-                        self.devices[port]['attributes']['nbrs'] = {}
-                        index = 0
+                        nbrs = {}
                         for line in response:
                             if '\t' not in line or ',' not in line:
                                 continue
                             line = line.replace('\t', '')
-                            self.devices[port]['attributes']['nbrs']['{0:02d}'.format(index)] = line
-                            index += 1
+                            nbr_info = line.split(',')
+                            if len(nbr_info) < 10:
+                                continue
+                            nbrs[nbr_info[0]] = {'relation':nbr_info[1], \
+                                                 'netid':nbr_info[2], \
+                                                 'sid':nbr_info[3], \
+                                                 'link_cost':nbr_info[4], \
+                                                 'child_num':nbr_info[5], \
+                                                 'channel':nbr_info[6], \
+                                                 'reverse_rssi':nbr_info[7], \
+                                                 'forward_rssi':nbr_info[8], \
+                                                 'last_heard':nbr_info[9]}
+                            if len(nbr_info) > 10:
+                                nbrs[nbr_info[0]]['awake'] = nbr_info[10]
+                        self.devices[port]['attributes']['nbrs'] = nbrs
                     else:
                         poll_fail_num += 1
                 elif cmd == 'umesh extnetid': #poll mesh extnetid
