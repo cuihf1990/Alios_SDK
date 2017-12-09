@@ -11,6 +11,7 @@ enum {
     TIMER_CMD_STOP,
     TIMER_CMD_CHG,
     TIMER_ARG_CHG,
+    TIMER_ARG_CHG_AUTO,
     TIMER_CMD_DEL,
     TIMER_CMD_DYN_DEL
 };
@@ -114,6 +115,15 @@ kstat_t krhino_timer_stop(ktimer_t *timer);
  * @return  the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_timer_change(ktimer_t *timer, tick_t first, tick_t round);
+
+/**
+ * This function will change attributes of a timer without stop and start
+ * @param[in]  timer  pointer to the timer
+ * @param[in]  first  ticks of the first timer triger
+ * @param[in]  round  ticks of the normal timer triger
+ * @return  the operation status, RHINO_SUCCESS is OK, others is error
+ */
+kstat_t krhino_timer_arg_change_auto(ktimer_t *timer, void *arg);
 
 /**
  * This function will change callback arg attributes of a timer

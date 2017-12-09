@@ -682,12 +682,10 @@ kstat_t krhino_task_del(ktask_t *task)
     uint8_t    cur_cpu_num;
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    res_free_t res_free;
-    memset(&res_free, 0, sizeof(res_free));
+    res_free_t *res_free;
 #endif
 
     RHINO_CRITICAL_ENTER();
-
     cur_cpu_num = cpu_cur_get();
 
     INTRPT_NESTED_LEVEL_CHK();
@@ -757,7 +755,13 @@ kstat_t krhino_task_del(ktask_t *task)
     TRACE_TASK_DEL(g_active_task[cur_cpu_num], task);
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    krhino_task_del_hook(task, &res_free);
+#if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
+    res_free = (res_free_t *)(task->task_stack_base + 1u);
+#else
+    (res_free_t *) = (res_free_t *)(task->task_stack_base + task->stack_size - 2u);
+#endif
+    memset(res_free, 0, sizeof(res_free_t));
+    krhino_task_del_hook(task, res_free);
 #endif
 
     RHINO_CRITICAL_EXIT_SCHED();
@@ -772,9 +776,8 @@ kstat_t krhino_task_dyn_del(ktask_t *task)
 
     kstat_t    ret;
     uint8_t    cur_cpu_num;
-    res_free_t res_free;
+    res_free_t *res_free;
 
-    memset(&res_free, 0, sizeof(res_free));
     RHINO_CRITICAL_ENTER();
 
     cur_cpu_num = cpu_cur_get();
@@ -818,11 +821,17 @@ kstat_t krhino_task_dyn_del(ktask_t *task)
         return RHINO_INV_TASK_STATE;
     }
 
+#if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
+    res_free  = (res_free_t *)(task->task_stack_base + 1u);
+#else
+    res_free = (res_free_t *)(task->task_stack_base + task->stack_size - 2u);
+#endif
+    memset(res_free, 0, sizeof(res_free_t));
     g_sched_lock[cpu_cur_get()]++;
-    klist_insert(&g_res_list, &res_free.res_list);
-    res_free.res[0] = task->task_stack_base;
-    res_free.res[1] = task;
-    res_free.cnt += 2;
+    klist_insert(&g_res_list, &res_free->res_list);
+    res_free->res[0] = task->task_stack_base;
+    res_free->res[1] = task;
+    res_free->cnt += 2;
     ret = krhino_sem_give(&g_res_sem);
     g_sched_lock[cpu_cur_get()]--;
 
@@ -867,7 +876,7 @@ kstat_t krhino_task_dyn_del(ktask_t *task)
     TRACE_TASK_DEL(g_active_task[cpu_cur_get()], task);
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    krhino_task_del_hook(task, &res_free);
+    krhino_task_del_hook(task, res_free);
 #endif
 
     RHINO_CRITICAL_EXIT_SCHED();

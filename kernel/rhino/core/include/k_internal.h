@@ -117,9 +117,9 @@ extern kspinlock_t   g_sys_lock;
 #define RES_FREE_NUM 5
 
 typedef struct {
+    void   *res[RES_FREE_NUM];
     klist_t res_list;
     uint8_t cnt;
-    void   *res[RES_FREE_NUM];
 } res_free_t;
 
 void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num);
