@@ -272,10 +272,7 @@ kstat_t krhino_work_run(kworkqueue_t *workqueue, kwork_t *work)
         RHINO_CRITICAL_ENTER();
         work->timer->priv = work;
         RHINO_CRITICAL_EXIT();
-
-        krhino_timer_stop(work->timer);
-        krhino_timer_arg_change(work->timer, (void *)workqueue);
-        ret = krhino_timer_start(work->timer);
+        ret = krhino_timer_arg_change_auto(work->timer, (void *)workqueue);
         if (ret != RHINO_SUCCESS) {
             return ret;
         }

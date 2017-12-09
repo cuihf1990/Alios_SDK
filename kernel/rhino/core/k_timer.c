@@ -290,6 +290,31 @@ static void timer_cb_proc(void)
     }
 }
 
+kstat_t krhino_timer_arg_change_auto(ktimer_t *timer, void *arg)
+{
+    k_timer_queue_cb *cb;
+    kstat_t err;
+
+    NULL_PARA_CHK(timer);
+
+    err = krhino_mblk_alloc(&g_timer_pool, (void **)&cb);
+    if (err != RHINO_SUCCESS) {
+        return err;
+    }
+
+    cb->timer  = timer;
+    cb->u.arg  = arg;
+    cb->cb_num = TIMER_ARG_CHG_AUTO;
+
+    err = krhino_queue_back_send(&g_timer_queue, (void *)cb);
+    if (err != RHINO_SUCCESS) {
+        krhino_mblk_free(&g_timer_pool, cb);
+        return err;
+    }
+
+    return RHINO_SUCCESS;
+}
+
 static void cmd_proc(k_timer_queue_cb *cb, uint8_t cmd)
 {
     ktimer_t *timer;
@@ -393,7 +418,14 @@ static void cmd_proc(k_timer_queue_cb *cb, uint8_t cmd)
 
 static void timer_cmd_proc(k_timer_queue_cb *cb)
 {
-    cmd_proc(cb, cb->cb_num);
+    if (cb->cb_num == TIMER_ARG_CHG_AUTO) {
+        cmd_proc(cb, TIMER_CMD_STOP);
+        cmd_proc(cb, TIMER_ARG_CHG);
+        cmd_proc(cb, TIMER_CMD_START);
+    }
+    else {
+        cmd_proc(cb, cb->cb_num);
+    }
 }
 
 static void timer_task(void *pa)
