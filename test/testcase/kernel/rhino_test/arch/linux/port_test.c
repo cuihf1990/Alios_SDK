@@ -53,8 +53,6 @@ static void test_event_pthread_handler(const void *arg)
 {
     int ret;
 
-    YUNIT_ASSERT(TID == main_tid);
-
     YUNIT_ASSERT(arg == &main_tid);
 
     ret = sem_post(&pthread_sem);
