@@ -407,7 +407,7 @@ static uint8_t insert_mesh_header(network_context_t *network,
 
 static void handle_sending_timer(void *args)
 {
-    hal_context_t *hal = args;
+    hal_context_t *hal = (hal_context_t *)args;
 
     hal->sending_timer = NULL;
     if (hal->send_message == NULL) {
@@ -988,7 +988,7 @@ exit:
 
 static void enqueue_msg(void *arg)
 {
-    received_frame_t  *rx_frame = arg;
+    received_frame_t  *rx_frame = (received_frame_t *)arg;
     hal_context_t *hal = rx_frame->hal;
 
     message_queue_enqueue(&hal->recv_queue, rx_frame->message);
