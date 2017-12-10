@@ -13,14 +13,18 @@ include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 # Filenames
 ##################################
 
-LINK_OUTPUT_FILE          :=$(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(RADIXPOINT)$(BINSTYPE_LOWER)$(LINK_OUTPUT_SUFFIX)        	# out/helloworld@mk108/binary/helloworld@mk108.elf
-STRIPPED_LINK_OUTPUT_FILE :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.stripped$(LINK_OUTPUT_SUFFIX)) 	# out/helloworld@mk108/binary/helloworld@mk108.stripped.elf
-BIN_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(BIN_OUTPUT_SUFFIX))         		# out/helloworld@mk108/binary/helloworld@mk108.bin
-HEX_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(HEX_OUTPUT_SUFFIX))         		# out/helloworld@mk108/binary/helloworld@mk108.bin
-
-MAP_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.map)     							# out/helloworld@mk108/binary/helloworld@mk108.map
-MAP_CSV_OUTPUT_FILE       :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=_map.csv) 							# out/helloworld@mk108/binary/helloworld@mk108_map.csv
-
+LINK_OUTPUT_FILE          :=$(OUTPUT_DIR)/binary/$(CLEANED_BUILD_STRING)$(RADIXPOINT)$(BINSTYPE_LOWER)$(LINK_OUTPUT_SUFFIX)
+# out/helloworld@xx/binary/helloworld@xx.elf
+STRIPPED_LINK_OUTPUT_FILE :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.stripped$(LINK_OUTPUT_SUFFIX))
+# out/helloworld@xx/binary/helloworld@xx.stripped.elf
+BIN_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(BIN_OUTPUT_SUFFIX))
+# out/helloworld@xx/binary/helloworld@xx.bin
+HEX_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=$(HEX_OUTPUT_SUFFIX))
+# out/helloworld@xx/binary/helloworld@xx.bin
+MAP_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.map)
+# out/helloworld@xx/binary/helloworld@xx.map
+MAP_CSV_OUTPUT_FILE       :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=_map.csv)
+# out/helloworld@xx/binary/helloworld@xx_map.csv
 
 OPENOCD_LOG_FILE          ?= $(OUTPUT_DIR)/openocd_log.txt
 
