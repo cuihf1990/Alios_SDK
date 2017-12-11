@@ -18,7 +18,6 @@ gateway := 0
 endif
 
 ifneq (,$(module))
-GLOBAL_DEFINES += CONFIG_AOS_SAL_MODULE
 $(NAME)_COMPONENTS += sal.$(module)
 endif
 

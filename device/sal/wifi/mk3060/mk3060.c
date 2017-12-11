@@ -290,7 +290,7 @@ static int sal_wifi_deinit(void)
 static char *start_cmd_type_str[] = {"tcp_server", "tcp_client", \
   "ssl_client", "udp_broadcast", "udp_unicast"};
 
-int sal_wifi_start(at_conn_t *c)
+int sal_wifi_start(sal_conn_t *c)
 {
     int link_id;
     char cmd[START_CMD_LEN] = {0};
@@ -637,3 +637,9 @@ sal_op_t sal_op = {
     .deinit = sal_wifi_deinit,
     .register_netconn_evt_cb = sal_wifi_register_netconn_evt_cb
 };
+
+int mk3060_sal_init(void)
+{
+    return sal_module_register(&sal_op);
+}
+

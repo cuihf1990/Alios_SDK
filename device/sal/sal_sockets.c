@@ -1463,16 +1463,6 @@ int sal_init()
         return -1;
     }
 
-#ifdef CONFIG_AOS_SAL_MODULE
-    extern int module_sal_init(void);
-    if (module_sal_init()){
-        SAL_ERROR("module sal init\n");
-        sal_mutex_arch_free();
-        sal_mutex_free(&lock_sal_core);
-        return -1;
-    }
-#endif
-
     if (sal_module_register_netconn_evt_cb(&sal_deal_event) != ERR_OK) {
         SAL_ERROR("failed to reg sal evnet cb\n");
         sal_mutex_arch_free();

@@ -4,4 +4,4 @@ $(NAME)_COMPONENTS += sal atparser
 
 $(NAME)_SOURCES += mk3060.c
 
-GLOBAL_DEFINES += WITH_SAL_WIFI # for wifi specific use
+GLOBAL_DEFINES += DEV_SAL_MK3060
