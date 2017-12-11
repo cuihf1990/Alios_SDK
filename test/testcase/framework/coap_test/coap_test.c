@@ -94,7 +94,7 @@ static void user_code_start()
     int ret;
 
     iotx_post_data_to_server((void *)p_ctx);
-    ret = IOT_CoAP_Yield(p_ctx);
+    //ret = IOT_CoAP_Yield(p_ctx);
     YUNIT_ASSERT(IOTX_SUCCESS == ret); 
     if (m_coap_client_running) {
         aos_post_delayed_action(3000,user_code_start,NULL);
@@ -142,7 +142,7 @@ static void test_coap_start(void)
         do{
             times ++;
             iotx_post_data_to_server((void *)p_ctx);
-            ret = IOT_CoAP_Yield(p_ctx);
+            //ret = IOT_CoAP_Yield(p_ctx);
             YUNIT_ASSERT(IOTX_SUCCESS == ret); 
         }while(times<2);
         IOT_CoAP_Deinit(&p_ctx);
@@ -254,11 +254,11 @@ static void ut_coap_sendmsg(void)
 }
 
 // IOT_CoAP_Yield(NULL)
-static void ut_coap_yield(void)
-{
-    int ret = IOT_CoAP_Yield(NULL);
-    YUNIT_ASSERT(ret<0);
-}
+// static void ut_coap_yield(void)
+// {
+//     int ret = IOT_CoAP_Yield(NULL);
+//     YUNIT_ASSERT(ret<0);
+// }
 
 // IOT_CoAP_GetMessageCode(NULL,NULL)
 static void ut_coap_getmsg(void)
@@ -288,7 +288,7 @@ static yunit_test_case_t aos_coap_testcases[] = {
     { "auth", ut_coap_auth},
     { "sendmsg", ut_coap_sendmsg},
     { "getmsg", ut_coap_getmsg},
-    { "yield", ut_coap_yield},
+    // { "yield", ut_coap_yield},
     { "null_case", ut_coap_nullcase},
     { "coap_start", test_coap_start},
     YUNIT_TEST_CASE_NULL

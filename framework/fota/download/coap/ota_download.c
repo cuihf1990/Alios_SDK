@@ -43,7 +43,7 @@ static int coap_client_running=0;
 static int retry_cnt;
 
 static aos_sem_t sem_send;
-static aos_sem_t sem_rec;  
+//static aos_sem_t sem_rec;  
 
 static void iotx_response_block_handler(void * arg, void * p_response);
 static void iotx_req_block_from_server( char  *path);
@@ -95,15 +95,15 @@ int ota_download(char *url, write_flash_cb_t func, char *md5)
 
     coap_client_running=1;
     aos_sem_new(&sem_send, 0);
-    aos_sem_new(&sem_rec, 0);
+    //aos_sem_new(&sem_rec, 0);
 
-    aos_task_new("coap rec", task_rec, 0, 4096);
+    //aos_task_new("coap rec", task_rec, 0, 4096);
     while(coap_client_running&&block_more){
         iotx_req_block_from_server(download_topic_buf);
-        aos_sem_signal(&sem_rec);
-        aos_sem_wait(&sem_send, 2000);
+        //aos_sem_signal(&sem_rec);
+        aos_sem_wait(&sem_send, 5000);
     }
-    aos_sem_signal(&sem_rec);
+    //aos_sem_signal(&sem_rec);
 
     if (block_more == 0&&block_cur_num) {
         OTA_LOG_I("----OTA_DOWNLOAD_FINISH------");
@@ -129,10 +129,10 @@ static void iotx_response_block_handler(void * arg, void * p_response)
     iotx_coap_resp_code_t resp_code;
     
     IOT_CoAP_GetMessageCode(p_response, &resp_code);
-
+    OTA_LOG_D("Message response code: %d\r\n", resp_code);
     if(resp_code==0x45){
         IOT_CoAP_GetMessagePayload(p_response, &p_payload, &len);
-        OTA_LOG_D("[APPL]: Message response code: %d\r\n", resp_code);
+
         if(IOT_CoAP_ParseOption_block(p_response,COAP_OPTION_BLOCK2,&cur_num,&more,&size)){
             OTA_LOG_I("[block]: cur_num: %d, more: %d,size: %d \r\n",cur_num,more,size);
 
@@ -154,8 +154,6 @@ static void iotx_response_block_handler(void * arg, void * p_response)
                 }
                 
             }
-
-            aos_sem_signal(&sem_send);
         }else{
             if(retry_cnt++>MAX_RETRY){
                 coap_client_running=0; 
@@ -166,6 +164,7 @@ static void iotx_response_block_handler(void * arg, void * p_response)
             coap_client_running=0; 
         }        
     }
+    aos_sem_signal(&sem_send);
 }
 
 static void iotx_req_block_from_server( char * path)
@@ -186,13 +185,14 @@ static void iotx_req_block_from_server( char * path)
 }
 
 
-static void task_rec(void *para)
-{
-    while(coap_client_running&&block_more){
-        aos_sem_wait(&sem_rec, AOS_WAIT_FOREVER);
-      IOT_CoAP_Yield(g_ota_device_info.h_coap);
-    }   
-}
+// static void task_rec(void *para)
+
+// {
+//     while(coap_client_running&&block_more){
+//         aos_sem_wait(&sem_rec, AOS_WAIT_FOREVER);
+//       IOT_CoAP_Yield(g_ota_device_info.h_coap);
+//     }   
+// }
 
 int check_md5(const char *buffer, const int32_t len)
 {

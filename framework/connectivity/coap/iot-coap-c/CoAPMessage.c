@@ -364,7 +364,7 @@ static void CoAPMessage_handle(CoAPContext *context,
     memset(&message, 0x00, sizeof(CoAPMessage));
 
     ret = CoAPDeserialize_Message(&message, buf, datalen);
-    COAP_DEBUG("-----payload: %s---\r\n", message.payload);
+    // COAP_DEBUG("-----payload: %s---\r\n", message.payload);
     COAP_DEBUG("-----code   : 0x%x---\r\n", message.header.code);
     COAP_DEBUG("-----type   : 0x%x---\r\n", message.header.type);
     COAP_DEBUG("-----msgid  : %d---\r\n", message.header.msgid);
