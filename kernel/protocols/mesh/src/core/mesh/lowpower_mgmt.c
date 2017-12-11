@@ -78,7 +78,7 @@ static void update_schedule_timer(schedule_type_t type)
         g_lowpower_state.slot_num = g_lowpower_state.next_slot_num;
         next_slot = get_next_slot_num(mac, g_lowpower_state.slot_num);
         offset = (next_slot + SLOTS_SIZE - g_lowpower_state.slot_num) * SLOT_INTERVAL;
-        g_lowpower_state.wakeup_timer = ur_start_timer(offset, handle_wakeup_timer, NULL);
+        ur_start_timer(&g_lowpower_state.wakeup_timer, offset, handle_wakeup_timer, NULL);
         g_lowpower_state.next_slot_num = next_slot;
         g_lowpower_state.timestamp = umesh_now_ms();
         g_lowpower_state.schedule_type = type;
@@ -92,8 +92,8 @@ static void update_schedule_timer(schedule_type_t type)
         if (offset < 0) {
             wakeup_timer_handler(LOWPOWER_PARENT_SCHEDULE, SLOT_INTERVAL + offset);
         } else {
-            g_lowpower_state.parent_wakeup_timer =
-                         ur_start_timer(offset, handle_parent_wakeup_timer, NULL);
+            ur_start_timer(&g_lowpower_state.parent_wakeup_timer, offset,
+                           handle_parent_wakeup_timer, NULL);
         }
         g_lowpower_state.parent_time_slot.slot_num = next_slot;
         g_lowpower_state.parent_time_slot.offset = 0;
@@ -172,11 +172,10 @@ static void wakeup_timer_handler(schedule_type_t type, uint32_t wakeup_interval)
     }
 
     if (type == LOWPOWER_ATTACHED_SCHEDULE) {
-        g_lowpower_state.sleep_timer = ur_start_timer(wakeup_interval,
-                                                      handle_sleep_timer, NULL);
+        ur_start_timer(&g_lowpower_state.sleep_timer, wakeup_interval, handle_sleep_timer, NULL);
     } else if (g_lowpower_state.attach_node && type == LOWPOWER_PARENT_SCHEDULE) {
-        g_lowpower_state.parent_sleep_timer = ur_start_timer(wakeup_interval,
-                                                             handle_parent_sleep_timer, NULL);
+        ur_start_timer(&g_lowpower_state.parent_sleep_timer, wakeup_interval,
+                       handle_parent_sleep_timer, NULL);
     }
 }
 

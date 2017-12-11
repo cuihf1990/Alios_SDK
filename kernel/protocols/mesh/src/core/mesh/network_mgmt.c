@@ -81,8 +81,8 @@ static void handle_discovery_timer(void *args)
         }
         umesh_mm_set_channel(hal, hal->channel_list.channels[g_nm_state.discover_channel]);
         send_discovery_request(network);
-        g_nm_state.discover_timer = ur_start_timer(hal->discovery_interval,
-                                                   handle_discovery_timer, NULL);
+        ur_start_timer(&g_nm_state.discover_timer, hal->discovery_interval,
+                       handle_discovery_timer, NULL);
         g_nm_state.discover_channel++;
         return;
     }
@@ -300,9 +300,8 @@ static void start_discover(void)
     hal = network->hal;
     g_nm_state.discover_channel = 0;
     g_nm_state.discover_times = 0;
-    ur_stop_timer(&g_nm_state.discover_timer, NULL);
-    g_nm_state.discover_timer = ur_start_timer(hal->discovery_interval,
-                                               handle_discovery_timer, NULL);
+    ur_start_timer(&g_nm_state.discover_timer, hal->discovery_interval,
+                   handle_discovery_timer, NULL);
     memset(&g_nm_state.discover_result, 0, sizeof(g_nm_state.discover_result));
     g_nm_state.discover_result.meshnetid = BCAST_NETID;
 }
@@ -319,10 +318,8 @@ static void handle_start_discover_timer(void *args)
 
 static void start_discover_timer(void)
 {
-    if (g_nm_state.discover_start_timer == NULL) {
-        g_nm_state.discover_start_timer = ur_start_timer(ACTIVE_DISCOVER_INTERVAL,
-                                                         handle_start_discover_timer, NULL);
-    }
+    ur_start_timer(&g_nm_state.discover_start_timer, ACTIVE_DISCOVER_INTERVAL,
+                   handle_start_discover_timer, NULL);
 }
 
 static ur_error_t mesh_interface_up(void)

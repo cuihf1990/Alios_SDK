@@ -170,14 +170,15 @@ void frags_cleanup(bool force)
 static void frags_handle_timer(void *args)
 {
     frags_cleanup(false);
-    g_frags_state.reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL, frags_handle_timer, NULL);
+    ur_start_timer(&g_frags_state.reass_timer, REASSEMBLE_TICK_INTERVAL, frags_handle_timer, NULL);
 }
 
 static ur_error_t mesh_interface_up(void)
 {
     frags_cleanup(true);
     if (umesh_get_mode() & MODE_RX_ON) {
-        g_frags_state.reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL, frags_handle_timer, NULL);
+        ur_start_timer(&g_frags_state.reass_timer, REASSEMBLE_TICK_INTERVAL,
+                       frags_handle_timer, NULL);
     }
     return UR_ERROR_NONE;
 }
@@ -199,8 +200,8 @@ static void lowpower_radio_down_handler(schedule_type_t type)
 static void lowpower_radio_up_handler(schedule_type_t type)
 {
     if ((umesh_get_mode() & MODE_RX_ON) == 0) {
-        ur_stop_timer(&g_frags_state.reass_timer, NULL);
-        g_frags_state.reass_timer = ur_start_timer(REASSEMBLE_TICK_INTERVAL, frags_handle_timer, NULL);
+        ur_start_timer(&g_frags_state.reass_timer, REASSEMBLE_TICK_INTERVAL,
+                       frags_handle_timer, NULL);
     }
 }
 #endif

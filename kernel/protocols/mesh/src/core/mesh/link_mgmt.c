@@ -139,8 +139,8 @@ static void handle_link_quality_timer(void *args)
 
     MESH_LOG_DEBUG("handle link quality update timer");
 
-    hal->link_quality_update_timer = ur_start_timer(hal->link_quality_update_interval,
-                                                    handle_link_quality_timer, hal);
+    ur_start_timer(&hal->link_quality_update_timer, hal->link_quality_update_interval,
+                   handle_link_quality_timer, hal);
     update_neighbors_link_cost(hal);
     build_and_send_link_request(false);
 }
@@ -219,14 +219,14 @@ static bool neighbor_is_alive(hal_context_t *hal, neighbor_t *nbr)
 static void start_update_nbr_timer(hal_context_t *hal)
 {
     if (hal->update_nbr_timer == NULL && (umesh_get_mode() & MODE_RX_ON)) {
-        hal->update_nbr_timer = ur_start_timer(hal->advertisement_interval,
-                                               handle_update_nbr_timer, hal);
+        ur_start_timer(&hal->update_nbr_timer, hal->advertisement_interval,
+                       handle_update_nbr_timer, hal);
     }
 }
 
 static void handle_update_nbr_timer(void *args)
 {
-    neighbor_t    *node;
+    neighbor_t *node;
     hal_context_t *hal = (hal_context_t *)args;
     uint16_t sid = umesh_mm_get_local_sid();
     network_context_t *network = NULL;
@@ -271,9 +271,8 @@ static ur_error_t mesh_interface_up(void)
     if (umesh_get_mode() & MODE_RX_ON) {
         hals = get_hal_contexts();
         slist_for_each_entry(hals, hal, hal_context_t, next) {
-            hal->link_quality_update_timer =
-                 ur_start_timer(hal->link_quality_update_interval,
-                                handle_link_quality_timer, hal);
+            ur_start_timer(&hal->link_quality_update_timer, hal->link_quality_update_interval,
+                           handle_link_quality_timer, hal);
         }
     }
     return UR_ERROR_NONE;
