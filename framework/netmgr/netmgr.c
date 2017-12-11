@@ -16,6 +16,10 @@
 
 #include "netmgr.h"
 
+#ifdef CONFIG_AOS_MESHYTS
+#undef CONFIG_AOS_MESH
+#endif
+
 #ifdef CONFIG_AOS_MESH
 #include "umesh.h"
 #endif
