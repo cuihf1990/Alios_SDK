@@ -29,7 +29,7 @@
 
 typedef struct received_frame_s {
     hal_context_t *hal;
-    message_t    *message;
+    message_t *message;
     frame_info_t frame_info;
 } received_frame_t;
 
@@ -111,6 +111,12 @@ void message_sent_task(void *args)
     uint16_t msg_length;
     bool free_msg = false;
 
+    if (hal->last_sent == UR_ERROR_BUFFER) {
+        hal->send_message = NULL;
+        hal->frag_info.offset = 0;
+        return;
+    }
+
     ur_stop_timer(&hal->sending_timer, hal);
     if (hal->send_message == NULL) {
         return;
@@ -119,17 +125,17 @@ void message_sent_task(void *args)
     msg_length = message_get_msglen(message);
 
     if (hal->frag_info.offset >= msg_length &&
-        hal->last_sent == SENT_SUCCESS) {
+        hal->last_sent == UR_ERROR_NONE) {
         free_msg = true;
-    } else if (hal->last_sent == SENT_FAIL &&
+    } else if (hal->last_sent == UR_ERROR_FAIL &&
                message->retries >= MESSAGE_RETRIES) {
         free_msg = true;
-    } else if (hal->last_sent == SENT_DROP) {
+    } else if (hal->last_sent == UR_ERROR_DROP) {
         free_msg = true;
     }
 
     if (free_msg == false) {
-        if (hal->last_sent == SENT_SUCCESS) {
+        if (hal->last_sent == UR_ERROR_NONE) {
             message->frag_offset = hal->frag_info.offset;
             message->retries = 0;
         } else {
@@ -147,16 +153,28 @@ void message_sent_task(void *args)
     send_datagram(hal);
 }
 
+static ur_error_t mapping_error(int error)
+{
+    if (error == SENT_SUCCESS) {
+        return UR_ERROR_NONE;
+    } else if (error == SENT_DROP) {
+        return UR_ERROR_DROP;
+    } else {
+        return UR_ERROR_FAIL;
+    }
+}
+
 static void handle_sent(void *context, frame_t *frame, int error)
 {
     hal_context_t *hal = (hal_context_t *)context;
+    ur_error_t umesh_error;
 
     hal->link_stats.out_frames++;
-    if (error != SENT_SUCCESS) {
-        error = SENT_FAIL;
+    umesh_error = mapping_error(error);
+    if (umesh_error != UR_ERROR_NONE) {
         hal->link_stats.out_errors++;
     }
-    hal->last_sent = error;
+    hal->last_sent = umesh_error;
     umesh_task_schedule_call(message_sent_task, hal);
 }
 
@@ -413,25 +431,26 @@ static void handle_sending_timer(void *args)
     if (hal->send_message == NULL) {
         return;
     }
-    hal->last_sent = SENT_FAIL;
+    hal->last_sent = UR_ERROR_FAIL;
     message_sent_task(hal);
     hal->link_stats.sending_timeouts++;
 }
 
 static ur_error_t send_fragment(network_context_t *network, message_t *message)
 {
-    ur_error_t     error = UR_ERROR_NONE;
-    uint16_t       frag_length;
-    uint16_t       msg_length;
+    ur_error_t umesh_error = UR_ERROR_NONE;
+    int error;
+    uint16_t frag_length;
+    uint16_t msg_length;
     uint8_t header_ies_length;
     frag_header_t  frag_header;
-    uint16_t       mtu;
+    uint16_t mtu;
     message_info_t *info;
-    uint8_t        header_length = 0;
-    uint16_t       append_length = 0;
-    hal_context_t  *hal;
-    neighbor_t     *next_node = NULL;
-    uint8_t        *payload;
+    uint8_t header_length = 0;
+    uint16_t append_length = 0;
+    hal_context_t *hal;
+    neighbor_t *next_node = NULL;
+    uint8_t *payload;
     const uint8_t *key;
     mac_address_t mac;
     int16_t hdr_ies_limit;
@@ -458,6 +477,9 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     }
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     if (next_node && (next_node->mode & MODE_RX_ON) == 0 && (next_node->flags & NBR_WAKEUP) == 0) {
+        if (message->frag_offset) {
+            return UR_ERROR_DROP;
+        }
         message_queue_dequeue(message);
         message_queue_enqueue(&next_node->buffer_queue, message);
         return UR_ERROR_BUFFER;
@@ -553,11 +575,8 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         error = hal_umesh_send_bcast_request(network->hal->module, &hal->frame,
                                              handle_sent, hal);
     }
-
-    if (error != UR_ERROR_NONE) {
-        error = UR_ERROR_FAIL;  // wait for handle_sent
-    }
-    return error;
+    umesh_error = mapping_error(error);
+    return umesh_error;
 }
 
 static neighbor_t *get_next_node(message_info_t *info)
@@ -715,6 +734,7 @@ ur_error_t mf_send_message(message_t *message)
     set_src_info(info);
     network = info->network;
     tx_hal = network->hal;
+    info->hal_type = tx_hal->module->type;
     if (info->type == MESH_FRAME_TYPE_DATA) {
         message_queue_enqueue(&tx_hal->send_queue[DATA_QUEUE], message);
         umesh_task_schedule_call(send_datagram, tx_hal);
@@ -963,7 +983,7 @@ static void message_handler(void *args)
     message_set_payload_offset(message, -info->payload_offset);
     nexth = message_get_payload(message);
     if (is_fragment_header(*nexth)) {
-        error = lp_reassemble(message, &assemble_message);
+        error = frags_reassemble(message, &assemble_message);
         if (error == UR_ERROR_NONE && assemble_message) {
             message = assemble_message;
         } else {
@@ -1119,8 +1139,8 @@ static void send_datagram(void *args)
     if (error == UR_ERROR_NONE) {
         hal->sending_timer = ur_start_timer(SENDING_TIMEOUT,
                                             handle_sending_timer, hal);
-    } else if (error == UR_ERROR_DROP) {
-        hal->last_sent = SENT_DROP;
+    } else {
+        hal->last_sent = error;
         umesh_task_schedule_call(message_sent_task, hal);
     }
 }
@@ -1243,7 +1263,6 @@ static void lowpower_radio_down_handler(schedule_type_t type)
 
 static void lowpower_radio_up_handler(schedule_type_t type)
 {
-
 }
 #endif
 

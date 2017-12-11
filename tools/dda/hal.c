@@ -61,7 +61,7 @@ static int send_frame(umesh_hal_module_t *module, frame_t *frame, mac_address_t 
     };
 
     if (g_radio_wakeup == false) {
-        return 3;  // drop the pkt
+        return -2;  // drop the pkt
     }
     dda_mesh_send_data(TYPE_MESH, CMD_MESH_DATA, cmd_priv.opaque, dst_id, frame->data, frame->len);
 

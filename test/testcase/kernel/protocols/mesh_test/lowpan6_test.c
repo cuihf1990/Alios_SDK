@@ -40,7 +40,6 @@ void test_uradar_6lowpan_case(void)
     ur_addr_t src;
     ur_addr_t dest;
 
-    lp_start();
     get_addr_prefix(&prefix);
 
     /*********test header compress and decompress functions*********/
@@ -247,10 +246,10 @@ void test_uradar_6lowpan_case(void)
     data[3] = 0x01;
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x1000;
-    YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
-    YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(NULL, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_FAIL == frags_reassemble(NULL, &reass_pkt));
 
     message = message_alloc(length + sizeof(frag_header_t) - 1, UT_MSG);
     info = message->info;
@@ -261,7 +260,7 @@ void test_uradar_6lowpan_case(void)
     data[3] = 0x01;
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x1000;
-    YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_FAIL == frags_reassemble(message, &reass_pkt));
     message_free(message);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1, UT_MSG);
@@ -273,7 +272,7 @@ void test_uradar_6lowpan_case(void)
     data[3] = 0x02;
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x2000;
-    YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     offset = length;
@@ -287,7 +286,7 @@ void test_uradar_6lowpan_case(void)
     data[4] = (offset >> 3);
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x2000;
-    YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     message = message_alloc(length + sizeof(frag_header_t), UT_MSG);
@@ -300,7 +299,7 @@ void test_uradar_6lowpan_case(void)
     data[4] = (offset >> 3);
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x2000;
-    YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_FAIL == frags_reassemble(message, &reass_pkt));
     message_free(message);
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
@@ -315,7 +314,7 @@ void test_uradar_6lowpan_case(void)
     data[4] = (offset >> 3);
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x2000;
-    YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NOT_NULL(reass_pkt);
 
     offset += length;
@@ -329,7 +328,7 @@ void test_uradar_6lowpan_case(void)
     data[4] = (offset >> 3);
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x2000;
-    YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_FAIL == frags_reassemble(message, &reass_pkt));
     message_free(message);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1, UT_MSG);
@@ -341,7 +340,7 @@ void test_uradar_6lowpan_case(void)
     data[3] = 0x04;
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x2000;
-    YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     offset += length;
@@ -356,11 +355,8 @@ void test_uradar_6lowpan_case(void)
     data[4] = (offset >> 3);
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x2000;
-    YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_FAIL == frags_reassemble(message, &reass_pkt));
     message_free(message);
-
-    lp_stop();
-    lp_start();
 
     message = message_alloc(length + sizeof(frag_header_t) - 1, UT_MSG);
     info = message->info;
@@ -371,7 +367,7 @@ void test_uradar_6lowpan_case(void)
     data[3] = 0x02;
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x3000;
-    YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1, UT_MSG);
@@ -383,7 +379,7 @@ void test_uradar_6lowpan_case(void)
     data[3] = 0x02;
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = 0x4000;
-    YUNIT_ASSERT(UR_ERROR_NONE == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     message = message_alloc(length + sizeof(frag_header_t), UT_MSG);
@@ -394,14 +390,11 @@ void test_uradar_6lowpan_case(void)
     data[2] = 0x00;
     data[3] = 0x02;
     data[4] = (offset >> 3);
-    YUNIT_ASSERT(UR_ERROR_FAIL == lp_reassemble(message, &reass_pkt));
+    YUNIT_ASSERT(UR_ERROR_FAIL == frags_reassemble(message, &reass_pkt));
     message_free(message);
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
 
     message_free(reass_pkt);
-    extern void lp_handle_timer(void *args);
-    for (size = 0; size < 8; size++) { /* delete incomplete fragments */
-        lp_handle_timer(NULL);
-    }
-    lp_stop();
+    extern void frags_cleanup(bool force);
+    frags_cleanup(true);
 }

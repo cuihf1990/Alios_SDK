@@ -9,7 +9,11 @@
 
 enum {
     DISCOVERY_RETRY_TIMES = 4,
+#ifndef CONFIG_AOS_DDA
     ACTIVE_DISCOVER_INTERVAL = 300000,  // 5 mins
+#else
+    ACTIVE_DISCOVER_INTERVAL = 30000,  // 30 s
+#endif
 };
 
 typedef void (* discovered_handler_t)(neighbor_t *nbr);

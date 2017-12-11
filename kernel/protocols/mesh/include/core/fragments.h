@@ -27,9 +27,8 @@ typedef struct frag_header_s {
     uint8_t  offset;
 } __attribute__((packed)) frag_header_t;
 
-ur_error_t lp_reassemble(message_t *p, message_t **reass_p);
-void lp_start(void);
-void lp_stop(void);
+void frags_init(void);
+ur_error_t frags_reassemble(message_t *p, message_t **reass_p);
 
 #ifdef __cplusplus
 }
