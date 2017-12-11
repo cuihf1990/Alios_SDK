@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef __HAL_I2C_STM32_H
-#define __HAL_I2C_STM32_H
+#ifndef __HAL_I2C_STM32L4_H
+#define __HAL_I2C_STM32L4_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -98,4 +98,4 @@
 }
 #endif
 
-#endif /* __HAL_I2C_STM32_H */
+#endif /* __HAL_I2C_STM32L4_H */
