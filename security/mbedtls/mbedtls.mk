@@ -39,11 +39,15 @@ endif
 else ifeq ($(HOST_ARCH), xtensa)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
 ifeq ($(DEBUG), yes)
-$(info using debug version mbedtls)
+$(info using libmbedtls debug version)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a.dbg
 endif
 else
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
+ifeq ($(DEBUG), yes)
+$(info using libmbedtls debug version)
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a.dbg
+endif
 endif
 
 $(NAME)_SOURCES     := mbedtls_net.c
