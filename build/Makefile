@@ -141,8 +141,20 @@ ifneq ($(BUILD_STRING),)
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 
 AUTO_COMPONENT = $(AUTO_COMPONENT_DIR)/auto_component.mk
-$(AUTO_COMPONENT):
+ifneq ($(test), )
+TEST_COMPONENT_COLLECTION = $(AUTO_COMPONENT_DIR)/test_collection.$(test)
+else
+TEST_COMPONENT_COLLECTION = $(AUTO_COMPONENT_DIR)/test_collection.default
+endif
+
+$(AUTO_COMPONENT): $(TEST_COMPONENT_COLLECTION)
 	$(QUIET)$(PYTHON) $(MAKEFILES_PATH)/scripts/auto_component.py $(AUTO_COMPONENT_DIR)
+
+$(TEST_COMPONENT_COLLECTION):
+	$(QUIET)$(RM) -rf $(AUTO_COMPONENT)
+	$(QUIET)$(RM) -rf $(AUTO_COMPONENT_DIR)/test_collection.*
+	$(QUIET)$(MKDIR) -p $(AUTO_COMPONENT_DIR)
+	$(QUIET)$(TOUCH) $(TEST_COMPONENT_COLLECTION)
 
 $(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES) $(AUTO_COMPONENT)
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/precompile))
