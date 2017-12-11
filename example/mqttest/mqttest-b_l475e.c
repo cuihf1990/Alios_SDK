@@ -247,7 +247,7 @@ int mqtt_client_example(void)
 
     while (1) {
         /* handle the MQTT packet received from TCP or SSL connection */
-        if (0 < IOT_MQTT_Yield(pclient, 200)) {
+        if (0 < IOT_MQTT_Yield(pclient, 2000)) {
             EXAMPLE_TRACE("IOT_MQTT_Yield failed!");
             break;
         }
