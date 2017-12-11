@@ -61,7 +61,7 @@ if [ ! -d xtensa-esp32-elf ]; then
 fi
 exist=`cat ~/.bashrc | grep xtensa-esp32-elf/bin`
 if [ "${exist}" = "" ]; then
-    echo "export PATH=\"\$PATH:\$HOME/tools/xtensa-esp32-elf/bin\"" >> ~/.bashrc
+    echo "export PATH=\"\$HOME/tools/xtensa-esp32-elf/bin:\$PATH\"" >> ~/.bashrc
 fi
 
 #add alink test server to /etc/hosts
@@ -89,7 +89,7 @@ if [ ! -d CloudSparrow ]; then
 fi
 exist=`cat ~/.bashrc | grep CloudSparrow/ADB/linux`
 if [ "${exist}" = "" ]; then
-    echo "PATH=\"\$PATH:\$HOME/tools/CloudSparrow/ADB/linux\"" >> ~/.bashrc
+    echo "export PATH=\"\$HOME/tools/CloudSparrow/ADB/linux:\$PATH\"" >> ~/.bashrc
 fi
 
 
