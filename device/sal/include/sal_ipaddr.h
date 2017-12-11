@@ -12,41 +12,41 @@ typedef u32_t in_addr_t;
 #endif
 
 struct in_addr {
-  in_addr_t s_addr;
+    in_addr_t s_addr;
 };
 
 struct in6_addr {
-  union {
-    u32_t u32_addr[4];
-    u8_t  u8_addr[16];
-  } un;
+    union {
+        u32_t u32_addr[4];
+        u8_t  u8_addr[16];
+    } un;
 #define s6_addr  un.u8_addr
 };
 
 enum sal_ip_addr_type {
-  /** IPv4 */
-  IPADDR_TYPE_V4 =   0U,
-  /** IPv6 */
-  IPADDR_TYPE_V6 =   6U,
-  /** IPv4+IPv6 ("dual-stack") */
-  IPADDR_TYPE_ANY = 46U
+    /** IPv4 */
+    IPADDR_TYPE_V4 =   0U,
+    /** IPv6 */
+    IPADDR_TYPE_V6 =   6U,
+    /** IPv4+IPv6 ("dual-stack") */
+    IPADDR_TYPE_ANY = 46U
 };
 
 typedef struct ip4_addr {
-  u32_t addr;
+    u32_t addr;
 } ip4_addr_t;
 
 typedef struct ip6_addr {
-  u32_t addr[4];
+    u32_t addr[4];
 } ip6_addr_t;
 
 typedef struct _ip_addr {
-  union {
-    ip6_addr_t ip6;
-    ip4_addr_t ip4;
-  } u_addr;
-  /** @ref sal_ip_addr_type */
-  u8_t type;
+    union {
+        ip6_addr_t ip6;
+        ip4_addr_t ip4;
+    } u_addr;
+    /** @ref sal_ip_addr_type */
+    u8_t type;
 } ip_addr_t;
 
 /** 255.255.255.255 */

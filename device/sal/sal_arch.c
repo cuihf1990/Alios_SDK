@@ -21,7 +21,7 @@ static aos_mutex_t sal_arch_mutex;
 err_t sal_sem_new(sal_sem_t *sem, uint8_t count)
 {
     err_t ret = ERR_MEM;
-    int stat = aos_sem_new(sem,count);
+    int stat = aos_sem_new(sem, count);
 
     if (stat == 0) {
         ret = ERR_OK;
@@ -76,14 +76,15 @@ uint32_t sal_arch_sem_wait(sal_sem_t *sem, uint32_t timeout)
     uint32_t begin_ms, end_ms, elapsed_ms;
     uint32_t ret;
 
-    if (sem == NULL)
+    if (sem == NULL) {
         return SAL_ARCH_TIMEOUT;
+    }
 
     begin_ms = sal_now();
 
-    if( timeout != 0UL ) {
-        ret = aos_sem_wait(sem,timeout);
-        if(ret == 0) {
+    if ( timeout != 0UL ) {
+        ret = aos_sem_wait(sem, timeout);
+        if (ret == 0) {
             end_ms = sal_now();
 
             elapsed_ms = end_ms - begin_ms;
@@ -93,12 +94,12 @@ uint32_t sal_arch_sem_wait(sal_sem_t *sem, uint32_t timeout)
             ret = SAL_ARCH_TIMEOUT;
         }
     } else {
-        while( !(aos_sem_wait(sem, AOS_WAIT_FOREVER) == 0));
+        while ( !(aos_sem_wait(sem, AOS_WAIT_FOREVER) == 0));
         end_ms = sal_now();
 
         elapsed_ms = end_ms - begin_ms;
 
-        if( elapsed_ms == 0UL ) {
+        if ( elapsed_ms == 0UL ) {
             elapsed_ms = 1UL;
         }
 
@@ -129,7 +130,7 @@ err_t sal_mutex_new(sal_mutex_t *mutex)
  **/
 void sal_mutex_lock(sal_mutex_t *mutex)
 {
-    aos_mutex_lock(mutex,AOS_WAIT_FOREVER);
+    aos_mutex_lock(mutex, AOS_WAIT_FOREVER);
 }
 
 /** Unlock a mutex
@@ -205,8 +206,13 @@ void sal_arch_assert(const char *file, int line)
 
     Is called to initialize the sal_arch layer.
 */
-void sal_mutex_init(void)
+void sal_mutex_arch_init(void)
 {
     aos_mutex_new(&sal_arch_mutex);
+}
+
+void sal_mutex_arch_free(void)
+{
+    aos_mutex_free(&sal_arch_mutex);
 }
 

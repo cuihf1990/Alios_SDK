@@ -14,6 +14,10 @@ extern void trace_start(void);
 extern int application_start(int argc, char **argv);
 extern void aos_components_init(void);
 
+#ifdef WITH_SAL
+extern int sal_device_init(void);
+#endif
+
 #ifdef AOS_BINS
 extern void *syscall_ktbl[];
 extern char  app_info_addr;
@@ -65,7 +69,11 @@ int aos_kernel_init(kinit_t *kinit)
 #ifdef AOS_KV
     aos_kv_init();
 #endif
-    
+
+#ifdef WITH_SAL
+    sal_device_init();
+#endif
+
 #ifdef AOS_LOOP
     aos_loop_init();
 #endif

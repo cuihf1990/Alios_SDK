@@ -12,6 +12,15 @@ $(NAME)_COMPONENTS += at_adapter
 LWIP = 1
 endif
 
+ifeq ($(sal),1)
+$(NAME)_COMPONENTS += sal
+gateway := 0
+endif
+
+ifneq (,$(module))
+$(NAME)_COMPONENTS += sal.$(module)
+endif
+
 ifneq (,$(filter linux,$(HOST_MCU_FAMILY)))
 gateway ?= 0
 else

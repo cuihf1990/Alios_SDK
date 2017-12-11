@@ -134,8 +134,11 @@ void sal_sem_set_invalid(sal_sem_t *sem);
 #define sal_sem_set_invalid_val(sem) sal_sem_set_invalid(&(sem))
 #endif
 
-/* sal_mutex_init() must be called before anything else. */
-void sal_mutex_init(void);
+/* sal_mutex_arch_init() must be called before anything else. */
+void sal_mutex_arch_init(void);
+
+void sal_mutex_arch_free(void);
+
 
 /**
  * @ingroup sal_time

@@ -194,12 +194,12 @@ static void handle_test_at_enet(char *pwbuf, int len, int argc, char **argv)
 #ifdef WITH_SAL
 #include <sal.h>
 struct socket_arg {
-    at_conn_t *c;
+    sal_conn_t *c;
     uint8_t *data;
 };
 
 #define SOCKET_MAX 7
-static at_conn_t c[SOCKET_MAX];
+static sal_conn_t c[SOCKET_MAX];
 static struct socket_arg arg[SOCKET_MAX];
 static void do_tcp_socket(void *in);
 static void handle_sal_wifi_api(char *pwbuf, int len, int argc, char **argv) 
@@ -213,7 +213,7 @@ static void handle_sal_wifi_api(char *pwbuf, int len, int argc, char **argv)
     if (argc < 2) return;
     type = argv[1];
 
-    sal_op.init();
+    sal_module_init();
 
     if (strcmp(type, "tcp_c") == 0) {
         if (argc < 5) {
@@ -246,7 +246,7 @@ static void handle_sal_wifi_api(char *pwbuf, int len, int argc, char **argv)
 static void do_tcp_socket(void *in)
 {
     uint32_t read_len = 0, tmp_read = 0;
-    at_conn_t *c;
+    sal_conn_t *c;
     char buf[128] = {0}, tmp[10] = {0};
     uint8_t *data;
     struct socket_arg *arg = in;
@@ -257,21 +257,21 @@ static void do_tcp_socket(void *in)
 
     LOGD("atapp", "%s entry (%d).", __func__, c->fd);
 
-    if (sal_op.start(c) != 0) {
-        LOGE("atapp", "sal_op.start failed (%d).", c->fd);
+    if (sal_module_start(c) != 0) {
+        LOGE("atapp", "sal_module_start failed (%d).", c->fd);
         return;
     }
 
     LOGD("atapp", "%s to send on fd %d.", __func__, c->fd);
-    if (sal_op.send(c->fd, data, strlen((const char *)data), NULL, -1) != 0) {
-        LOGE("atapp", "sal_op.send failed (%d).", c->fd);
+    if (sal_module_send(c->fd, data, strlen((const char *)data), NULL, -1) != 0) {
+        LOGE("atapp", "sal_module_send failed (%d).", c->fd);
         goto end;
     }
 
     while (1) {
         tmp_read = sizeof(tmp) - 1;
-        if(sal_op.recv(c->fd, (uint8_t *)tmp, &tmp_read, NULL, -1) < 0) {
-            LOGE("atapp", "sal_op.recv failed (%d).", c->fd);
+        if(sal_module_recv(c->fd, (uint8_t *)tmp, &tmp_read, NULL, -1) < 0) {
+            LOGE("atapp", "sal_module_recv failed (%d).", c->fd);
             break;
         }
         if (strstr(buf, "Goodbye") != NULL) {
@@ -292,12 +292,12 @@ static void do_tcp_socket(void *in)
     }
 
 end:
-    if (sal_op.close(c->fd, c->r_port) != 0) {
-        LOGE("atapp", "sal_op.stop failed (%d).", c->fd);
+    if (sal_module_close(c->fd, c->r_port) != 0) {
+        LOGE("atapp", "sal_module_stop failed (%d).", c->fd);
         return;
     }
 
-    sal_op.deinit();
+    sal_module_deinit();
 
     LOGD("atapp", "%s exit (%d).", __func__, c->fd);
 }

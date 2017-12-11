@@ -10,7 +10,7 @@ extern "C" {
 #define IP_PCB_ADDRHINT ;u8_t addr_hint
 #else
 #define IP_PCB_ADDRHINT
-#endif 
+#endif
 
 /** Main packet buffer struct */
 struct pbuf {
@@ -71,13 +71,13 @@ struct pbuf {
   IP_PCB_ADDRHINT
 
 struct ip_pcb {
-/* Common members of all PCB types */
-  IP_PCB;
+    /* Common members of all PCB types */
+    IP_PCB;
 };
 
 struct tcp_pcb;
 typedef void (*tcp_recv_fn)(void *arg, struct tcp_pcb *pcb, struct pbuf *p,
-    const ip_addr_t *addr, u16_t port);
+                            const ip_addr_t *addr, u16_t port);
 /**
  * members common to struct tcp_pcb and struct tcp_listen_pcb
  */
@@ -87,20 +87,20 @@ typedef void (*tcp_recv_fn)(void *arg, struct tcp_pcb *pcb, struct pbuf *p,
   u8_t prio; \
   /* ports are in host byte order */ \
   u16_t local_port
-  
+
 /** the TCP protocol control block */
 struct tcp_pcb {
-/** common PCB members */
-  IP_PCB;
-/** protocol specific PCB members */
-  TCP_PCB_COMMON(struct tcp_pcb);
+    /** common PCB members */
+    IP_PCB;
+    /** protocol specific PCB members */
+    TCP_PCB_COMMON(struct tcp_pcb);
 
-  /* ports are in host byte order */
-  u16_t remote_port;
-  /** receive callback function */
-  tcp_recv_fn recv;
-   /* user-supplied argument for the recv callback */
-   void *recv_arg;
+    /* ports are in host byte order */
+    u16_t remote_port;
+    /** receive callback function */
+    tcp_recv_fn recv;
+    /* user-supplied argument for the recv callback */
+    void *recv_arg;
 };
 
 struct udp_pcb;
@@ -120,37 +120,37 @@ struct udp_pcb;
  * @param port the remote port from which the packet was received
  */
 typedef void (*udp_recv_fn)(void *arg, struct udp_pcb *pcb, struct pbuf *p,
-    const ip_addr_t *addr, u16_t port);
+                            const ip_addr_t *addr, u16_t port);
 
 /** the UDP protocol control block */
 struct udp_pcb {
-/** Common members of all PCB types */
-  IP_PCB;
+    /** Common members of all PCB types */
+    IP_PCB;
 
-/* Protocol specific PCB members */
+    /* Protocol specific PCB members */
 
-  struct udp_pcb *next;
+    struct udp_pcb *next;
 
-  u8_t flags;
-  /** ports are in host byte order */
-  u16_t local_port, remote_port;
+    u8_t flags;
+    /** ports are in host byte order */
+    u16_t local_port, remote_port;
 
 #if SAL_MULTICAST_TX_OPTIONS
-  /** outgoing network interface for multicast packets */
-  ip_addr_t multicast_ip;
-  /** TTL for outgoing multicast packets */
-  u8_t mcast_ttl;
+    /** outgoing network interface for multicast packets */
+    ip_addr_t multicast_ip;
+    /** TTL for outgoing multicast packets */
+    u8_t mcast_ttl;
 #endif /* SAL_MULTICAST_TX_OPTIONS */
 
 #if SAL_UDPLITE
-  /** used for UDP_LITE only */
-  u16_t chksum_len_rx, chksum_len_tx;
+    /** used for UDP_LITE only */
+    u16_t chksum_len_rx, chksum_len_tx;
 #endif /* SAL_UDPLITE */
 
-  /** receive callback function */
-  udp_recv_fn recv;
-  /** user-supplied argument for the recv callback */
-  void *recv_arg;
+    /** receive callback function */
+    udp_recv_fn recv;
+    /** user-supplied argument for the recv callback */
+    void *recv_arg;
 };
 
 struct raw_pcb;
@@ -166,25 +166,25 @@ struct raw_pcb;
  * if it's not used any more.
  */
 typedef u8_t (*raw_recv_fn)(void *arg, struct raw_pcb *pcb, struct pbuf *p,
-    const ip_addr_t *addr);
+                            const ip_addr_t *addr);
 
 /** the RAW protocol control block */
 struct raw_pcb {
-  /* Common members of all PCB types */
-  IP_PCB;
+    /* Common members of all PCB types */
+    IP_PCB;
 
-  struct raw_pcb *next;
+    struct raw_pcb *next;
 
-  u8_t protocol;
+    u8_t protocol;
 
-  /** receive callback function */
-  raw_recv_fn recv;
-  /* user-supplied argument for the recv callback */
-  void *recv_arg;
+    /** receive callback function */
+    raw_recv_fn recv;
+    /* user-supplied argument for the recv callback */
+    void *recv_arg;
 #if SAL_IPV6
-  /* fields for handling checksum computations as per RFC3542. */
-  u16_t chksum_offset;
-  u8_t  chksum_reqd;
+    /* fields for handling checksum computations as per RFC3542. */
+    u16_t chksum_offset;
+    u8_t  chksum_reqd;
 #endif
 };
 
