@@ -205,8 +205,13 @@ EXTRA_CFLAGS :=    -DAOS_SDK_VERSION_MAJOR=$(AOS_SDK_VERSION_MAJOR) \
 # Load platform makefile to make variables like WLAN_CHIP, HOST_OPENOCD & HOST_ARCH available to all makefiles
 $(eval CURDIR := $(SOURCE_ROOT)board/$(PLATFORM_DIRECTORY)/)
 include $(SOURCE_ROOT)board/$(PLATFORM_DIRECTORY)/$(notdir $(PLATFORM_DIRECTORY)).mk
-$(eval CURDIR := $(SOURCE_ROOT)/platform/mcu/$(HOST_MCU_FAMILY)/)
-include $(SOURCE_ROOT)platform/mcu/$(HOST_MCU_FAMILY)/$(HOST_MCU_FAMILY).mk
+
+PLATFORM_MCU_BOARD	:=$(subst .,/,$(HOST_MCU_FAMILY))
+PLATFORM_MCU_BD :=$(subst ., ,$(HOST_MCU_FAMILY))
+PLATFORM_MCU_MK :=$(if ($(words $(PLATFORM_MCU_BD)):1= $(PLATFORM_MCU_BD)),$(word $(words $(PLATFORM_MCU_BD)),$(PLATFORM_MCU_BD)))
+
+$(eval CURDIR := $(SOURCE_ROOT)/platform/mcu/$(PLATFORM_MCU_BOARD)/)
+include $(SOURCE_ROOT)platform/mcu/$(PLATFORM_MCU_BOARD)/$(PLATFORM_MCU_MK).mk
 MAIN_COMPONENT_PROCESSING :=1
 
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
@@ -220,7 +225,7 @@ endif
 
 # Process all the components + AOS
 
-COMPONENTS += platform/mcu/$(HOST_MCU_FAMILY) vcall vfs init
+COMPONENTS += platform/mcu/$(PLATFORM_MCU_BOARD) vcall vfs init
 
 ifneq ($(ONLY_BUILD_LIBRARY), yes)
 COMPONENTS += auto_component

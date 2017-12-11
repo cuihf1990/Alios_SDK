@@ -5,7 +5,7 @@ JTAG := jlink_swd
 $(NAME)_TYPE := kernel
 MODULE               := 1062
 HOST_ARCH            := Cortex-M0
-HOST_MCU_FAMILY      := stm32l0xx
+HOST_MCU_FAMILY      := stm32l0xx.stm32l071kb
 SUPPORT_BINS         := no
 
 $(NAME)_SOURCES := board.c
