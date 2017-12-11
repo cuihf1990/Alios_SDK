@@ -22,7 +22,6 @@ static const test_case_t tasksem_case_runner[] = {
     tasksem_count_test,
     tasksem_opr_test,
     tasksem_coopr1_test,
-    tasksem_coopr2_test,
     NULL
 };
 
