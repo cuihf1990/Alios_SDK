@@ -26,7 +26,8 @@ GLOBAL_DEFINES += CONFIG_AOS_KV_SECOND_PTN=7
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN_SIZE=4096
 GLOBAL_DEFINES += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
-GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4
+GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4 \
+                   ../../../include/hal
 GLOBAL_INCLUDES += include \
                    startup    \
                    driver  \
@@ -114,6 +115,7 @@ $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    hal/wifi_port.c              \
                    hal/flash_port.c              \
                    hal/ota_port.c              \
+                   hal/hal_i2c_stm32l4.c       \
                    sensor/vl53l0x_platform.c \
                    sensor/vl53l0x_proximity.c \
                    sensor/sensors_data.c \
