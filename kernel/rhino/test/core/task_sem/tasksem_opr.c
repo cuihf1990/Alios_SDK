@@ -12,6 +12,8 @@
 
 #define LOOP_CNT    8
 
+static void task_tasksem_co2_entry(void *arg);
+
 static uint8_t tasksem_opr_case1(void)
 {
     kstat_t ret;
@@ -56,6 +58,16 @@ static void task_tasksem_co1_entry(void *arg)
     kstat_t  ret;
     uint8_t  cnt = 0;
 
+    ret = krhino_task_sem_create(krhino_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == RHINO_SUCCESS);
+
+    ret = krhino_task_dyn_create(&task_tasksem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 1,
+                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co2_entry, 1);
+    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
+        test_case_fail++;
+        PRINT_RESULT(MODULE_NAME_CO1, FAIL);
+    }
+
     while (1) {
         ret = krhino_task_sem_take(RHINO_WAIT_FOREVER);
         MYASSERT_INFO(ret == RHINO_SUCCESS);
@@ -79,13 +91,12 @@ static void task_tasksem_co2_entry(void *arg)
     kstat_t ret;
     uint8_t cnt = 0;
 
-    while (1) {
-        krhino_sched_disable();
+    ret = krhino_task_sem_create(krhino_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
+    MYASSERT_INFO(ret == RHINO_SUCCESS);
 
+    while (1) {
         ret = krhino_task_sem_give(task_tasksem_co1);
         MYASSERT_INFO(ret == RHINO_SUCCESS);
-
-        krhino_sched_enable();
 
         ret = krhino_task_sem_take(RHINO_WAIT_FOREVER);
         if (ret == RHINO_BLK_TIMEOUT) {
@@ -113,12 +124,6 @@ void tasksem_coopr1_test(void)
 {
     kstat_t ret;
 
-    ret = krhino_task_sem_create(krhino_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == RHINO_SUCCESS);
-
-    ret = krhino_task_sem_create(krhino_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == RHINO_SUCCESS);
-
     ret = krhino_task_dyn_create(&task_tasksem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
                                  0, TASK_TEST_STACK_SIZE, task_tasksem_co1_entry, 1);
     if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
@@ -126,86 +131,5 @@ void tasksem_coopr1_test(void)
         PRINT_RESULT(MODULE_NAME_CO1, FAIL);
     }
 
-    ret = krhino_task_dyn_create(&task_tasksem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 1,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co2_entry, 1);
-    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
-        test_case_fail++;
-        PRINT_RESULT(MODULE_NAME_CO1, FAIL);
-    }
-}
-
-static void task_tasksem_co3_entry(void *arg)
-{
-    kstat_t ret;
-    uint8_t cnt = 0;
-
-    while (1) {
-        krhino_task_sleep(5);
-
-        ret = krhino_task_sem_give(task_tasksem_co2);
-        MYASSERT_INFO(ret == RHINO_SUCCESS);
-
-        cnt++;
-        if (cnt >= LOOP_CNT) {
-            break;
-        }
-    }
-
-    krhino_task_sem_del(krhino_cur_task_get());
-
-    krhino_task_dyn_del(krhino_cur_task_get());
-}
-
-static void task_tasksem_co4_entry(void *arg)
-{
-    kstat_t ret;
-    uint8_t cnt = 0;
-
-    while (1) {
-        ret = krhino_task_sem_take(RHINO_WAIT_FOREVER);
-        if (ret == RHINO_BLK_TIMEOUT) {
-            test_case_fail++;
-            PRINT_RESULT(MODULE_NAME_CO2, FAIL);
-            break;
-        }
-
-        cnt++;
-        if (cnt >= LOOP_CNT) {
-            break;
-        }
-    }
-
-    test_case_success++;
-    PRINT_RESULT(MODULE_NAME_CO2, PASS);
-
-    krhino_task_sem_del(krhino_cur_task_get());
-
-    next_test_case_notify();
-    krhino_task_dyn_del(krhino_cur_task_get());
-}
-
-void tasksem_coopr2_test(void)
-{
-    kstat_t ret;
-
-    ret = krhino_task_sem_create(krhino_cur_task_get(), &test_tasksem_co1, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == RHINO_SUCCESS);
-
-    ret = krhino_task_sem_create(krhino_cur_task_get(), &test_tasksem_co2, MODULE_NAME, 0);
-    MYASSERT_INFO(ret == RHINO_SUCCESS);
-
-    ret = krhino_task_dyn_create(&task_tasksem_co1, MODULE_NAME, 0, TASK_SEM_PRI,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co3_entry, 1);
-    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
-        test_case_fail++;
-        PRINT_RESULT(MODULE_NAME_CO2, FAIL);
-    }
-
-    ret = krhino_task_dyn_create(&task_tasksem_co2, MODULE_NAME, 0, TASK_SEM_PRI + 1,
-                                 0, TASK_TEST_STACK_SIZE, task_tasksem_co4_entry, 1);
-    if ((ret != RHINO_SUCCESS) && (ret != RHINO_STOPPED)) {
-        test_case_fail++;
-        PRINT_RESULT(MODULE_NAME_CO2, FAIL);
-    }
 }
 
