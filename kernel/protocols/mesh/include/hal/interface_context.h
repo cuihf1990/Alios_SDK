@@ -43,17 +43,6 @@ typedef struct network_data_s {
 } network_data_t;
 
 enum {
-    MCAST_CACHE_ENTRIES_SIZE = 32,
-};
-
-typedef struct mcast_entry_s {
-    uint8_t subnetid;
-    uint16_t sid;
-    uint8_t  sequence;
-    uint8_t  lifetime;
-} mcast_entry_t;
-
-enum {
     CMD_QUEUE,
     DATA_QUEUE,
     PENDING_QUEUE,
@@ -163,11 +152,6 @@ typedef struct network_context_s {
 
     // sid
     allocator_t       sid_base;
-
-    // mcast
-    uint8_t           mcast_sequence;
-    ur_timer_t        mcast_timer;
-    mcast_entry_t     mcast_entry[MCAST_CACHE_ENTRIES_SIZE];
 
     // routing
     router_t          *router;

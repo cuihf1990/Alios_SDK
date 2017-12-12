@@ -305,6 +305,7 @@ ur_error_t umesh_init(node_mode_t mode)
     address_mgmt_init();
     mf_init();
     nd_init();
+    mcast_init();
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     extern void lowpower_init(void);
     lowpower_init();
