@@ -59,10 +59,10 @@
     
 	<Cincludes>
 	   <include>Inc</include>
-	   <include>Drivers\STM32L0xx_HAL_Driver\Inc</include>
-	   <include>Drivers\STM32L0xx_HAL_Driver\Inc\Legacy</include>
-	   <include>Drivers\CMSIS\Device\ST\STM32L0xx\Include</include>
-	   <include>Drivers\CMSIS\Include</include>
+	   <include>..\Drivers\STM32L0xx_HAL_Driver\Inc</include>
+	   <include>..\Drivers\STM32L0xx_HAL_Driver\Inc\Legacy</include>
+	   <include>..\Drivers\CMSIS\Device\ST\STM32L0xx\Include</include>
+	   <include>..\Drivers\CMSIS\Include</include>
 
     </Cincludes>
       </config>
@@ -75,61 +75,61 @@
 		   <group>
 		 		<name>STM32L0xx_HAL_Driver</name>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c_ex.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c_ex.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc_ex.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc_ex.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ramfunc.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ramfunc.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ex.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ex.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_gpio.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_gpio.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_dma.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_dma.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr_ex.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr_ex.c</name>
 						</file>
 						<file>
-							<name>Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_cortex.c</name>
+							<name>..\Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_cortex.c</name>
 						</file>
 		    </group>
 		    <group>
 		    	<name>CMSIS</name>
 							<file>
-								<name>Src/system_stm32l0xx.c</name>
+								<name>../src/STM32L071KB/runapp/system_stm32l0xx.c</name>
 							</file>
 		    	</group>
 	  </group>   
@@ -138,15 +138,15 @@
 	    <group>
 	      <name>User</name>  
                                 <file>
-                                 <name>Src\main.c</name>
+                                 <name>../src/STM32L071KB/runapp\main.c</name>
                                 </file>
 
                                 <file>
-                                 <name>Src\stm32l0xx_it.c</name>
+                                 <name>../src/STM32L071KB/runapp\stm32l0xx_it.c</name>
                                 </file>
 
                                 <file>
-                                 <name>Src\stm32l0xx_hal_msp.c</name>
+                                 <name>../src/STM32L071KB/runapp\stm32l0xx_hal_msp.c</name>
                                 </file>
 
 

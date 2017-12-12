@@ -48,16 +48,16 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Src/stm32l0xx_hal_msp.c \
+../src/STM32L071KB/runapp/stm32l0xx_hal_msp.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_gpio.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_dma.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c_ex.c \
-Src/main.c \
+../src/STM32L071KB/runapp/main.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal.c \
-Src/system_stm32l0xx.c \
+../src/STM32L071KB/runapp/system_stm32l0xx.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ramfunc.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc_ex.c \
@@ -67,12 +67,12 @@ Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ex.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr.c \
-Src/stm32l0xx_it.c \
+../src/STM32L071KB/runapp/stm32l0xx_it.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_cortex.c  
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32l071xx.s
+../src/STM32L071KB/startup_stm32l071xx_gcc.s
 
 
 ######################################
