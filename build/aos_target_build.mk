@@ -5,7 +5,14 @@ CONFIG_FILE := $(OUTPUT_DIR)/config.mk
 include $(CONFIG_FILE)
 
 # Include all toolchain makefiles - one of them will handle the architecture
+# default gcc
+ifeq ($(COMPILER),)
 include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
+else ifeq ($(COMPILER),gcc)
+include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
+else ifeq ($(COMPILER),armcc)
+include $(MAKEFILES_PATH)/aos_toolchain_armcc.mk
+endif
 
 .PHONY: display_map_summary build_done
 
