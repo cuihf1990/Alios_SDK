@@ -78,6 +78,10 @@ static void me_as_router_lowpower(void)
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd icmp_acked", 30);
 
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT " 1400", IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
+    cmd_to_master(ping_cmd);
+    check_p2p_str_wait("2", 12, "testcmd icmp_acked", 30);
+
     umesh_stop();
     umesh_set_mode(MODE_RX_ON);
     stop_node(12);
@@ -98,7 +102,7 @@ static void me_as_leader_lowpower(void)
 
     aos_msleep(18 * 1000);
     myaddr = ur_adapter_get_default_ipaddr();
-    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT, IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
+    snprintf(ping_cmd, sizeof ping_cmd, "send 12 ping " IP6_ADDR_FMT " 1400", IP6_ADDR_DATA(((ur_ip6_addr_t *)myaddr)));
     cmd_to_master(ping_cmd);
 
     aos_msleep(6 * 1000);
