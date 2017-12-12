@@ -130,11 +130,7 @@ COMPILER_SPECIFIC_RELEASE_LDFLAGS  := -Wl,--gc-sections -Wl,$(COMPILER_SPECIFIC_
 COMPILER_SPECIFIC_DEPS_FLAG        := -MD
 COMPILER_SPECIFIC_COMP_ONLY_FLAG   := -c
 COMPILER_SPECIFIC_LINK_MAP         =  -Wl,-Map,$(1)
-ifeq ($(HOST_ARCH), Cortex-M0)
 COMPILER_SPECIFIC_LINK_FILES       =  -Wl,--whole-archive -Wl,--start-group $(1) -Wl,--end-group -Wl,-no-whole-archive
-else
-COMPILER_SPECIFIC_LINK_FILES       =  -Wl,--start-group $(1) -Wl,--end-group
-endif
 COMPILER_SPECIFIC_LINK_SCRIPT_DEFINE_OPTION = -Wl$(COMMA)-T
 COMPILER_SPECIFIC_LINK_SCRIPT      =  $(addprefix -Wl$(COMMA)-T ,$(1))
 LINKER                             := $(CC) --static -Wl,-static -Wl,--warn-common
