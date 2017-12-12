@@ -1,10 +1,13 @@
 NAME := fota
 
 $(NAME)_TYPE := kernel
-$(NAME)_CFLAGS += \
-	-Wall \
-	-Werror \
-	-Wno-unused-function
+
+#default gcc
+ifeq ($(COMPILER),)
+$(NAME)_CFLAGS      += -Wall -Werror
+else ifeq ($(COMPILER),gcc)
+$(NAME)_CFLAGS      += -Wall -Werror
+endif
 
 $(NAME)_SOURCES += \
     ota_service.c \

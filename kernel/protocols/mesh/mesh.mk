@@ -73,5 +73,11 @@ $(NAME)_SOURCES += src/utilities/mem/pbuf.c
 $(NAME)_SOURCES += src/utilities/mem/def.c
 endif
 
-$(NAME)_CFLAGS += -Wall -Werror
+#default gcc
+ifeq ($(COMPILER),)
+$(NAME)_CFLAGS      += -Wall -Werror
+else ifeq ($(COMPILER),gcc)
+$(NAME)_CFLAGS      += -Wall -Werror
+endif
+
 GLOBAL_DEFINES += CONFIG_AOS_MESH
