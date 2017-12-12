@@ -2320,51 +2320,51 @@
                         </option>
                         <option>
                             <name>CCIncludePath2</name>
-								<state>$PROJ_DIR$\..\..\..\framework\fota\socket\stm32wifi</state>
-								<state>$PROJ_DIR$\..\..\..\framework\fota\platform\mqtt</state>
-								<state>$PROJ_DIR$\..\..\..\utility\iotx-utils\device</state>
-								<state>$PROJ_DIR$\..\..\..\security\alicrypto\inc</state>
-								<state>$PROJ_DIR$\..\..\..\security\alicrypto\test</state>
-								<state>$PROJ_DIR$\..\..\..\kernel\modules\fs\kv\include</state>
-								<state>$PROJ_DIR$\..\..\..\framework\fota\socket\</state>
-								<state>$PROJ_DIR$\..\..\..\framework\fota\platform\</state>
-								<state>$PROJ_DIR$\..\..\..\utility\iotx-utils\guider</state>
-								<state>$PROJ_DIR$\..\..\..\utility\iotx-utils\device</state>
-								<state>$PROJ_DIR$\..\..\..\utility\iotx-utils\LITE-utils</state>
-								<state>$PROJ_DIR$\..\..\..\utility\iotx-utils\LITE-log</state>
-								<state>$PROJ_DIR$\..\..\..\utility\iotx-utils\misc</state>
-								<state>$PROJ_DIR$\..\..\..\utility\iotx-utils\digest</state>
-								<state>$PROJ_DIR$\..\..\..\utility\iotx-utils\sdk-impl</state>
-								<state>$PROJ_DIR$\..\..\..\utility\security\tfs</state>
-								<state>$PROJ_DIR$\..\..\..\utility\digest_algorithm</state>
-								<state>$PROJ_DIR$\..\..\..\security\mbedtls\include</state>
-								<state>$PROJ_DIR$\..\..\..\kernel\rhino\core\include</state>
-								<state>$PROJ_DIR$\..\..\..\framework\netmgr\include</state>
-								<state>$PROJ_DIR$\..\..\..\framework\protocol\alink\os\platform</state>
-								<state>$PROJ_DIR$\..\..\..\framework\fota</state>
-								<state>$PROJ_DIR$\..\..\..\utility\cjson\include</state>
-								<state>$PROJ_DIR$\..\..\..\tools\cli\include</state>
-								<state>$PROJ_DIR$\..\..\..\kernel\vfs\include</state>
-								<state>$PROJ_DIR$\..\..\..\kernel\vcall\mico\include</state>
-								<state>$PROJ_DIR$\..\..\..\platform\arch\arm\armv7m\EWARM\m4</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\common\csp\wifi\inc</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\include</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Inc</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Inc\Legacy</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\es_wifi</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\hts221</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lis3mdl</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lps22hb</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lsm6dsl</state>
-								<state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x</state>
-								<state>$PROJ_DIR$\..\..\..\board\b_l475e</state>
-								<state>$PROJ_DIR$\..\..\..\include</state>
-								<state>$PROJ_DIR$\..\..\..\example\mqttapp</state>
-								<state>$PROJ_DIR$\..\..\..\utility\libc\compilers\EWARM</state>
-								<state>$PROJ_DIR$\..\..\..\framework\fota\download\http\socket</state>
-								<state>$PROJ_DIR$\..\..\..\framework\fota\download</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota\socket\stm32wifi</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota\platform\mqtt</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\device</state>
+                            <state>$PROJ_DIR$\..\..\..\security\alicrypto\inc</state>
+                            <state>$PROJ_DIR$\..\..\..\security\alicrypto\test</state>
+                            <state>$PROJ_DIR$\..\..\..\kernel\modules\fs\kv\include</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota\socket\</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota\platform\</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\guider</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\device</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\LITE-utils</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\LITE-log</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\misc</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\digest</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\sdk-impl</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\security\tfs</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\digest_algorithm</state>
+                            <state>$PROJ_DIR$\..\..\..\security\mbedtls\include</state>
+                            <state>$PROJ_DIR$\..\..\..\kernel\rhino\core\include</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\netmgr\include</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\protocol\alink\os\platform</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\cjson\include</state>
+                            <state>$PROJ_DIR$\..\..\..\tools\cli\include</state>
+                            <state>$PROJ_DIR$\..\..\..\kernel\vfs\include</state>
+                            <state>$PROJ_DIR$\..\..\..\kernel\vcall\mico\include</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\arch\arm\armv7m\EWARM\m4</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\common\csp\wifi\inc</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\include</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Inc</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Inc\Legacy</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\es_wifi</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\hts221</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lis3mdl</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lps22hb</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lsm6dsl</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x</state>
+                            <state>$PROJ_DIR$\..\..\..\board\b_l475e</state>
+                            <state>$PROJ_DIR$\..\..\..\include</state>
+                            <state>$PROJ_DIR$\..\..\..\example\mqttapp</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\libc\compilers\EWARM</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota\download\http\socket</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota\download</state>
                         </option>
                         <option>
                             <name>CCStdIncCheck</name>
@@ -2751,6 +2751,9 @@
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp\aos.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\es_wifi\es_wifi.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\common\csp\wifi\src\es_wifi_io.c</name>
                 </file>
                 <file>
@@ -2760,22 +2763,25 @@
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\flash_port.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\hts221\hts221.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\hw.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lis3mdl\lis3mdl.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lps22hb\lps22hb.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lsm6dsl\lsm6dsl.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\ota_port.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\qspi.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\sensors.c</name>
-                </file>
-                <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\sensors_data.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\sensors_test.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\aos\soc_impl.c</name>
@@ -2886,7 +2892,25 @@
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\aos\trace_impl.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_calibration.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_core.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_ranging.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_strings.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\vl53l0x_platform.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_platform_log.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\vl53l0x_proximity.c</name>
@@ -3082,15 +3106,15 @@
                         </option>
                         <option>
                             <name>CCIncludePath2</name>
-                            <state>$PROJ_DIR$\..\..\..\framework\fota\socket\stm32wifi\</state>
-                            <state>$PROJ_DIR$\..\..\..\framework\fota\platform\mqtt\</state>
-                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\device\</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota\socket\stm32wifi</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\fota\platform\mqtt</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\device</state>
                             <state>$PROJ_DIR$\..\..\..\security\alicrypto\inc</state>
                             <state>$PROJ_DIR$\..\..\..\security\alicrypto\test</state>
                             <state>$PROJ_DIR$\..\..\..\kernel\modules\fs\kv\include</state>
                             <state>$PROJ_DIR$\..\..\..\framework\fota\socket\</state>
                             <state>$PROJ_DIR$\..\..\..\framework\fota\platform\</state>
-                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\guider\</state>
+                            <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\guider</state>
                             <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\device</state>
                             <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\LITE-utils</state>
                             <state>$PROJ_DIR$\..\..\..\utility\iotx-utils\LITE-log</state>
@@ -3102,24 +3126,25 @@
                             <state>$PROJ_DIR$\..\..\..\security\mbedtls\include</state>
                             <state>$PROJ_DIR$\..\..\..\kernel\rhino\core\include</state>
                             <state>$PROJ_DIR$\..\..\..\framework\netmgr\include</state>
-                            <state>$PROJ_DIR$\..\..\..\framework\protocol\alink\os\platform\</state>
+                            <state>$PROJ_DIR$\..\..\..\framework\protocol\alink\os\platform</state>
                             <state>$PROJ_DIR$\..\..\..\framework\fota</state>
                             <state>$PROJ_DIR$\..\..\..\utility\cjson\include</state>
                             <state>$PROJ_DIR$\..\..\..\tools\cli\include</state>
                             <state>$PROJ_DIR$\..\..\..\kernel\vfs\include</state>
                             <state>$PROJ_DIR$\..\..\..\kernel\vcall\mico\include</state>
                             <state>$PROJ_DIR$\..\..\..\platform\arch\arm\armv7m\EWARM\m4</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\include</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\startup</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\driver</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\bsp\Components\es_wifi</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\bsp\Components\hts221</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\bsp\Components\lis3mdl</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\bsp\Components\lps22hb</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\bsp\Components\lsm6dsl</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\bsp\Components\vl53l0x</state>
-                            <state>$PROJ_DIR$\..\..\..\platform\mcu\stm32l4xx\wifi\inc</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\common\csp\wifi\inc</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\include</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Inc</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Inc\Legacy</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\es_wifi</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\hts221</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lis3mdl</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lps22hb</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lsm6dsl</state>
+                            <state>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x</state>
                             <state>$PROJ_DIR$\..\..\..\board\b_l475e</state>
                             <state>$PROJ_DIR$\..\..\..\include</state>
                             <state>$PROJ_DIR$\..\..\..\example\mqttapp</state>

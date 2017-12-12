@@ -2661,6 +2661,9 @@
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp\aos.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\es_wifi\es_wifi.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\common\csp\wifi\src\es_wifi_io.c</name>
                 </file>
                 <file>
@@ -2670,22 +2673,25 @@
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\flash_port.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\hts221\hts221.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\hw.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lis3mdl\lis3mdl.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lps22hb\lps22hb.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lsm6dsl\lsm6dsl.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\ota_port.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\qspi.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\sensors.c</name>
-                </file>
-                <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\sensors_data.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\sensors_test.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\aos\soc_impl.c</name>
@@ -2796,7 +2802,25 @@
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\aos\trace_impl.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_calibration.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_core.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_ranging.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_strings.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\vl53l0x_platform.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_platform_log.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\vl53l0x_proximity.c</name>
