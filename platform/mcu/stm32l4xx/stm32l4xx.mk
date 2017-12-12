@@ -121,5 +121,3 @@ $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    sensor/sensors_data.c \
                    sensor/sensors.c \
                    sensor/qspi.c \
-                   ../../arch/arm/armv7m/gcc/m4/port_c.c \
-                   ../../arch/arm/armv7m/gcc/m4/port_s.S
