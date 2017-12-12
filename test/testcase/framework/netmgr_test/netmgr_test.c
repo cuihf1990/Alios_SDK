@@ -10,7 +10,6 @@
 #include <yts.h>
 
 #include "netmgr.h"
-#include "umesh.h"
 
 enum {
     SMART_CONFIG_FLAG = 1 << 0,
@@ -81,7 +80,6 @@ static void netmgr_test_entry(void *arg)
 
 static void netmgr_test_exit(void *arg)
 {
-    umesh_stop();
     aos_loop_exit();
 }
 
@@ -97,10 +95,6 @@ static void test_netmgr_connect_case(void)
 
 static int init(void)
 {
-#ifdef CONFIG_AOS_MESH
-    extern void linuxhost_hal_urmesh_register(void);
-    linuxhost_hal_urmesh_register();
-#endif
     done_flag = 0;
     return 0;
 }
