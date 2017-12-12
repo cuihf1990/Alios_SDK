@@ -5,7 +5,12 @@ $(NAME)_COMPONENTS += rhino
 
 GLOBAL_INCLUDES += core/include
 
-$(NAME)_CFLAGS += -Wall -Werror
+#default gcc
+ifeq ($(COMPILER),)
+$(NAME)_CFLAGS      += -Wall -Werror
+else ifeq ($(COMPILER),gcc)
+$(NAME)_CFLAGS      += -Wall -Werror
+endif
 
 CONFIG_SYSINFO_KERNEL_VERSION = AOS-R-1.1.1
 GLOBAL_CFLAGS += -DSYSINFO_KERNEL_VERSION=\"$(CONFIG_SYSINFO_KERNEL_VERSION)\"
