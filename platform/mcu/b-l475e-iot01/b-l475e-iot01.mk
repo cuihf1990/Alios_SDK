@@ -59,7 +59,7 @@ GLOBAL_LDFLAGS += -mcpu=cortex-m4        \
 
 $(NAME)_CFLAGS  += -Wall -Werror 
 
-GLOBAL_LDFLAGS += -T platform/mcu/stm32l4xx/STM32L475VGTx_FLASH.ld
+GLOBAL_LDFLAGS += -T platform/mcu/b-l475e-iot01/STM32L475VGTx_FLASH.ld
 
 $(NAME)_SOURCES := startup/startup_stm32l475xx.s \
                    startup/stm32l4xx_hal_msp.c      \
